@@ -45,7 +45,7 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	update := identityproviderv2.IamV2IdentityProviderUpdate{Id: identityproviderv2.PtrString(args[0])}
+	update := identityproviderv2.IamV2IdentityProvider{Id: identityproviderv2.PtrString(args[0])}
 	if name != "" {
 		update.DisplayName = identityproviderv2.PtrString(name)
 	}
