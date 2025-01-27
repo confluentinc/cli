@@ -13,11 +13,12 @@ import (
 
 type LspInterface interface {
 	Initialize() (*lsp.InitializeResult, error)
-	DidOpen() error
+	DidOpen() (lsp.DocumentURI, error)
 	DidChange(newText string) error
 	DidChangeConfiguration(settings any) error
 	Completion(position lsp.Position) (lsp.CompletionList, error)
 	ShutdownAndExit()
+	CurrentDocumentUri() string
 }
 
 type LSPClient struct {
@@ -30,16 +31,18 @@ type CliContext struct {
 	Catalog             string
 	Database            string
 	ComputePoolId       string
+	LspDocumentUri      string
 	StatementProperties map[string]string
 }
 
-func NewLSPClient(conn types.JSONRpcConn) *LSPClient {
+func NewLSPClientImpl(conn types.JSONRpcConn) *LSPClient {
 	return &LSPClient{
 		conn: conn,
 	}
 }
 
 func (c *LSPClient) Initialize() (*lsp.InitializeResult, error) {
+	log.CliLogger.Debugf("Initialize called")
 	var resp lsp.InitializeResult
 
 	initializeParams := lsp.InitializeParams{}
@@ -57,7 +60,9 @@ func (c *LSPClient) Initialize() (*lsp.InitializeResult, error) {
 	return &resp, err
 }
 
-func (c *LSPClient) DidOpen() error {
+func (c *LSPClient) DidOpen() (lsp.DocumentURI, error) {
+	log.CliLogger.Debugf("DidOpen called")
+
 	var resp interface{}
 
 	documentURI := lsp.DocumentURI("temp_session_" + uuid.New().String() + ".sql")
@@ -70,20 +75,21 @@ func (c *LSPClient) DidOpen() error {
 	}
 
 	if c.conn == nil {
-		return errors.New("connection to LSP server not established/nil")
+		return documentURI, errors.New("connection to LSP server not established/nil")
 	}
 
 	err := c.conn.Call(context.Background(), "textDocument/didOpen", didOpenParams, &resp)
 
 	if err != nil {
 		log.CliLogger.Debugf("Error sending request: %v\n", err)
-		return err
+		return documentURI, err
 	}
 	c.documentURI = &documentURI
-	return nil
+	return documentURI, nil
 }
 
 func (c *LSPClient) DidChange(newText string) error {
+	log.CliLogger.Debugf("DidChange called")
 	if c.conn == nil || c.documentURI == nil {
 		return errors.New("connection to LSP server not established/nil")
 	}
@@ -109,6 +115,7 @@ func (c *LSPClient) DidChange(newText string) error {
 }
 
 func (c *LSPClient) DidChangeConfiguration(settings any) error {
+	log.CliLogger.Debugf("DidChangeConfiguration called")
 	if c.conn == nil {
 		return errors.New("connection to LSP server not established/nil")
 	}
@@ -127,6 +134,7 @@ func (c *LSPClient) DidChangeConfiguration(settings any) error {
 }
 
 func (c *LSPClient) Completion(position lsp.Position) (lsp.CompletionList, error) {
+	log.CliLogger.Debugf("Completion called")
 	var resp lsp.CompletionList
 
 	if c.conn == nil || c.documentURI == nil {
@@ -151,6 +159,7 @@ func (c *LSPClient) Completion(position lsp.Position) (lsp.CompletionList, error
 }
 
 func (c *LSPClient) ShutdownAndExit() {
+	log.CliLogger.Debugf("ShutdownAndExit called")
 	if c.conn == nil {
 		return
 	}
@@ -167,4 +176,13 @@ func (c *LSPClient) ShutdownAndExit() {
 	if err != nil {
 		log.CliLogger.Debugf("Error exiting lsp server: %v\n", err)
 	}
+}
+
+// CurrentDocumentUri returns the currently opened document. Obs.: This CLI LSP interface currently only supports one document at a time.
+func (c *LSPClient) CurrentDocumentUri() string {
+	if c.documentURI == nil {
+		return ""
+	}
+
+	return string(*c.documentURI)
 }
