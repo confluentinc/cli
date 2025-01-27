@@ -30,6 +30,7 @@ func (c *serviceAccountCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("description", "", "Description of the service account.")
+	pcmd.AddResourceOwnerFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -50,6 +51,11 @@ func (c *serviceAccountCommand) create(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
+	assignedResourceOwner, err := cmd.Flags().GetString("resource-owner")
+	if err != nil {
+		return err
+	}
+
 	if err := requireLen(description, descriptionLength, "description"); err != nil {
 		return err
 	}
@@ -58,7 +64,7 @@ func (c *serviceAccountCommand) create(cmd *cobra.Command, args []string) error 
 		DisplayName: iamv2.PtrString(name),
 		Description: iamv2.PtrString(description),
 	}
-	serviceAccount, httpResp, err := c.V2Client.CreateIamServiceAccount(createServiceAccount)
+	serviceAccount, httpResp, err := c.V2Client.CreateIamServiceAccount(createServiceAccount, assignedResourceOwner)
 	if err != nil {
 		return errors.CatchServiceNameInUseError(err, httpResp, name)
 	}
