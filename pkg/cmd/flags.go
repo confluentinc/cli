@@ -329,6 +329,53 @@ func AddProviderFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 	})
 }
 
+func AddResourceOwnerFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
+	items := []string{"user", "group-mapping", "service-account", "identity-pool"}
+	cmd.Flags().String("resource-owner", "",
+		fmt.Sprintf("The resource_id of the principal who will be assigned resource owner on the "+
+			"created resource. Principal can be a %s.", utils.ArrayToCommaDelimitedString(items, "or")))
+
+	RegisterFlagCompletionFunc(cmd, "resource-owner", func(cmd *cobra.Command, args []string) []string {
+		if err := command.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		return AutocompleteResourceOwners(command.V2Client)
+	})
+}
+func AutocompleteResourceOwners(client *ccloudv2.Client) []string {
+	users, err := client.ListIamUsers()
+	if err != nil {
+		return nil
+	}
+	groupMappings, err := client.ListGroupMappings()
+	if err != nil {
+		return nil
+	}
+	serviceAccounts, err := client.ListIamServiceAccounts()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(users)+len(groupMappings)+len(serviceAccounts))
+	offset := 0
+	for i, user := range users {
+		description := user.GetFullName()
+		suggestions[i] = fmt.Sprintf("%s\t%s", user.GetId(), description)
+	}
+	offset += len(users)
+	for i, groupMapping := range groupMappings {
+		description := fmt.Sprintf("%s: %s", groupMapping.GetDisplayName(), groupMapping.GetDescription())
+		suggestions[i+offset] = fmt.Sprintf("%s\t%s", groupMapping.GetId(), description)
+	}
+	offset += len(groupMappings)
+	for i, serviceAccount := range serviceAccounts {
+		description := fmt.Sprintf("%s: %s", serviceAccount.GetDisplayName(), serviceAccount.GetDisplayName())
+		suggestions[i+offset] = fmt.Sprintf("%s\t%s", serviceAccount.GetId(), description)
+	}
+	return suggestions
+}
+
 func AutocompleteIdentityProviders(client *ccloudv2.Client) []string {
 	identityProviders, err := client.ListIdentityProviders()
 	if err != nil {

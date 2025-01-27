@@ -12,6 +12,7 @@ Flags:
       --provider string         REQUIRED: ID of this pool's identity provider.
       --identity-claim string   REQUIRED: Claim specifying the external identity using this identity pool.
       --description string      Description of the identity pool.
+      --resource-owner string   The resource_id of the principal who will be assigned resource owner on the created resource. Principal can be a "user", "group-mapping", "service-account", or "identity-pool".
       --filter string           A supported Common Expression Language (CEL) filter expression. (default "true")
       --context string          CLI context name.
   -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
