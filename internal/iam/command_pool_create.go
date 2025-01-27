@@ -24,9 +24,9 @@ func (c *poolCommand) newCreateCommand() *cobra.Command {
 	}
 
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddResourceOwnerFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
 	cmd.Flags().String("description", "", "Description of the identity pool.")
+	pcmd.AddResourceOwnerFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddFilterFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
