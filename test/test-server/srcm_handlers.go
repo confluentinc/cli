@@ -59,7 +59,7 @@ func getSchemaRegistryClusterV3(packageType, endpoint string) srcmv3.SrcmV3Clust
 			Package:                      srcmv3.PtrString(packageType),
 			HttpEndpoint:                 srcmv3.PtrString(endpoint),
 			PrivateHttpEndpoint:          srcmv3.PtrString("http://127.0.0.1:1029"),
-			PrivateHttpRegionalEndpoints: &map[string]string{"key1": "value1", "key2": "value2"},
+			PrivateHttpRegionalEndpoints: &map[string]string{"us-east-1": "https://lsrc-stk1d.us-east-1.aws.private.stag.cpdev.cloud", "us-west-2": "https://lsrc-stgvk1d.us-west-2.aws.private.stag.cpdev.cloud"},
 			CatalogHttpEndpoint:          srcmv3.PtrString("http://127.0.0.1:1030"),
 			Environment:                  &srcmv3.GlobalObjectReference{Id: SRApiEnvId},
 			Region:                       srcmv3.PtrString(regionSpec),
