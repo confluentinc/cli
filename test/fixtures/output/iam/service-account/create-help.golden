@@ -10,7 +10,7 @@ Create a service account named "my-service-account".
 
 Flags:
       --description string      REQUIRED: Description of the service account.
-      --resource-owner string   The resource_id of the principal who will be assigned resource owner on the created service account. Principal can be a "user", "group-mapping", "service-account", or "identity-pool".
+      --resource-owner string   The resource_id of the principal who will be assigned resource owner on the created resource. Principal can be a "user", "group-mapping", "service-account", or "identity-pool".
       --context string          CLI context name.
   -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
 
@@ -18,3 +18,4 @@ Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+  
