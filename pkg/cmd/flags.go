@@ -360,7 +360,7 @@ func AutocompleteResourceOwners(client *ccloudv2.Client) []string {
 	suggestions := make([]string, len(users)+len(groupMappings)+len(serviceAccounts))
 	offset := 0
 	for i, user := range users {
-		description := fmt.Sprintf("%s", user.GetFullName())
+		description := fmt.Sprintf(user.GetFullName())
 		suggestions[i] = fmt.Sprintf("%s\t%s", user.GetId(), description)
 	}
 	offset += len(users)
