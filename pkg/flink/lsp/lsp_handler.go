@@ -14,6 +14,8 @@ type LSPHandler struct {
 
 //  All we do here is to pass the request to the channel since the controller that has to process and do something with the request is the InputController
 func (h *LSPHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) {
+	log.CliLogger.Debugf("Received lsp message with method: %s", req.Method)
+
 	select {
 	case h.handlerCh <- req:
 		// Successfully sent the request
