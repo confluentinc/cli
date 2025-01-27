@@ -1,17 +1,17 @@
-+-------------------------------+-------------------------+
-| Name                          | account schema-registry |
-| Cluster                       | lsrc-1234               |
-| Endpoint URL                  | http://127.0.0.1:1027   |
-| Private Endpoint URL          | http://127.0.0.1:1029   |
-| Private Regional Endpoint URL | key1=value1             |
-|                               | key2=value2             |
-| Catalog Endpoint URL          | http://127.0.0.1:1030   |
-| Used Schemas                  | 0                       |
-| Available Schemas             | 1000                    |
-| Free Schemas Limit            | 1000                    |
-| Global Compatibility          | FULL                    |
-| Mode                          | READWRITE               |
-| Cloud                         | aws                     |
-| Region                        | us-west-2               |
-| Package                       | essentials              |
-+-------------------------------+-------------------------+
++-------------------------------+-----------------------------------------------------------------------+
+| Name                          | account schema-registry                                               |
+| Cluster                       | lsrc-1234                                                             |
+| Endpoint URL                  | http://127.0.0.1:1027                                                 |
+| Private Endpoint URL          | http://127.0.0.1:1029                                                 |
+| Private Regional Endpoint URL | us-east-1=https://lsrc-stk1d.us-east-1.aws.private.stag.cpdev.cloud   |
+|                               | us-west-2=https://lsrc-stgvk1d.us-west-2.aws.private.stag.cpdev.cloud |
+| Catalog Endpoint URL          | http://127.0.0.1:1030                                                 |
+| Used Schemas                  | 0                                                                     |
+| Available Schemas             | 1000                                                                  |
+| Free Schemas Limit            | 1000                                                                  |
+| Global Compatibility          | FULL                                                                  |
+| Mode                          | READWRITE                                                             |
+| Cloud                         | aws                                                                   |
+| Region                        | us-west-2                                                             |
+| Package                       | essentials                                                            |
++-------------------------------+-----------------------------------------------------------------------+
