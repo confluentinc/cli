@@ -51,7 +51,7 @@ func (c *serviceAccountCommand) create(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	assignedResourceOwner, err := cmd.Flags().GetString("resource-owner")
+	resourceOwner, err := cmd.Flags().GetString("resource-owner")
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func (c *serviceAccountCommand) create(cmd *cobra.Command, args []string) error 
 		DisplayName: iamv2.PtrString(name),
 		Description: iamv2.PtrString(description),
 	}
-	serviceAccount, httpResp, err := c.V2Client.CreateIamServiceAccount(createServiceAccount, assignedResourceOwner)
+	serviceAccount, httpResp, err := c.V2Client.CreateIamServiceAccount(createServiceAccount, resourceOwner)
 	if err != nil {
 		return errors.CatchServiceNameInUseError(err, httpResp, name)
 	}

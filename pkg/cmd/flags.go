@@ -331,10 +331,9 @@ func AddProviderFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 
 func AddResourceOwnerFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 	items := []string{"user", "group-mapping", "service-account", "identity-pool"}
-	cmd.Flags().String("resource-owner", "",
-		fmt.Sprintf("The resource ID of the principal who will be assigned resource owner on the "+
-			"created resource. Principal can be a %s.", utils.ArrayToCommaDelimitedString(items, "or")))
-
+	description := fmt.Sprintf("The resource ID of the principal who will be assigned resource owner on the "+
+		"created resource. Principal can be a %s.", utils.ArrayToCommaDelimitedString(items, "or"))
+	cmd.Flags().String("resource-owner", "", description)
 	RegisterFlagCompletionFunc(cmd, "resource-owner", func(cmd *cobra.Command, args []string) []string {
 		if err := command.PersistentPreRunE(cmd, args); err != nil {
 			return nil
