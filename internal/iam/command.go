@@ -53,10 +53,10 @@ func addResourceOwnerFlag(cmd *cobra.Command, cliCommand *pcmd.AuthenticatedCLIC
 			return nil
 		}
 
-		return AutocompleteResourceOwners(cliCommand.V2Client)
+		return autocompleteResourceOwners(cliCommand.V2Client)
 	})
 }
-func AutocompleteResourceOwners(client *ccloudv2.Client) []string {
+func autocompleteResourceOwners(client *ccloudv2.Client) []string {
 	users, err := client.ListIamUsers()
 	if err != nil {
 		return nil
