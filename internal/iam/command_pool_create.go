@@ -58,7 +58,7 @@ func (c *poolCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	assignedResourceOwner, err := cmd.Flags().GetString("resource-owner")
+	resourceOwner, err := cmd.Flags().GetString("resource-owner")
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (c *poolCommand) create(cmd *cobra.Command, args []string) error {
 		IdentityClaim: identityproviderv2.PtrString(identityClaim),
 		Filter:        identityproviderv2.PtrString(filter),
 	}
-	pool, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider, assignedResourceOwner)
+	pool, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider, resourceOwner)
 	if err != nil {
 		return err
 	}
