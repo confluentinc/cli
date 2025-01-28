@@ -26,7 +26,7 @@ func (c *poolCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
 	cmd.Flags().String("description", "", "Description of the identity pool.")
-	pcmd.AddResourceOwnerFlag(cmd, c.AuthenticatedCLICommand)
+	AddResourceOwnerFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddFilterFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -58,7 +58,7 @@ func (c *poolCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	resourceOwner, err := cmd.Flags().GetString("resource-owner")
+	assignedResourceOwner, err := cmd.Flags().GetString("resource-owner")
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (c *poolCommand) create(cmd *cobra.Command, args []string) error {
 		IdentityClaim: identityproviderv2.PtrString(identityClaim),
 		Filter:        identityproviderv2.PtrString(filter),
 	}
-	pool, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider, resourceOwner)
+	pool, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider, assignedResourceOwner)
 	if err != nil {
 		return err
 	}
