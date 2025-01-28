@@ -30,7 +30,7 @@ func (c *serviceAccountCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("description", "", "Description of the service account.")
-	AddResourceOwnerFlag(cmd, c.AuthenticatedCLICommand)
+	addResourceOwnerFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 

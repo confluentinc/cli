@@ -43,7 +43,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	return cmd
 }
 
-func AddResourceOwnerFlag(cmd *cobra.Command, cliCommand *pcmd.AuthenticatedCLICommand) {
+func addResourceOwnerFlag(cmd *cobra.Command, cliCommand *pcmd.AuthenticatedCLICommand) {
 	items := []string{"user", "group-mapping", "service-account", "identity-pool"}
 	description := fmt.Sprintf("The resource ID of the principal who will be assigned resource owner on the "+
 		"created resource. Principal can be a %s.", utils.ArrayToCommaDelimitedString(items, "or"))
