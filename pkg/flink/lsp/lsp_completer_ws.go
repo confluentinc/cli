@@ -30,7 +30,7 @@ func (w *WebsocketLSPClient) Initialize() (*lsp.InitializeResult, error) {
 	return w.client().Initialize()
 }
 
-func (w *WebsocketLSPClient) DidOpen() error {
+func (w *WebsocketLSPClient) DidOpen() (lsp.DocumentURI, error) {
 	return w.client().DidOpen()
 }
 
@@ -51,6 +51,10 @@ func (w *WebsocketLSPClient) ShutdownAndExit() {
 	close(w.handlerCh)
 }
 
+func (w *WebsocketLSPClient) CurrentDocumentUri() string {
+	return w.client().CurrentDocumentUri()
+}
+
 func (w *WebsocketLSPClient) client() LspInterface {
 	w.Lock()
 	defer w.Unlock()
@@ -62,26 +66,62 @@ func (w *WebsocketLSPClient) client() LspInterface {
 func (w *WebsocketLSPClient) refreshWebsocketConnection() {
 	select {
 	case _, isConnected := <-w.conn.DisconnectNotify():
+		log.CliLogger.Debugf("Language service websocket disconnected, reconnecting")
 		// this shouldn't happen, but if we are connected do nothing
 		if isConnected {
 			break
 		}
 
 		// we only update client and conn if there was no error, otherwise we leave them as is
-		if lspClient, conn, err := newLSPConnection(w.baseUrl, w.getAuthToken(), w.organizationId, w.environmentId, w.handlerCh); err == nil {
+		if lspClient, conn, err := NewLSPConnection(w.baseUrl, w.getAuthToken(), w.organizationId, w.environmentId, w.handlerCh); err == nil {
 			w.lspClient = lspClient
 			w.conn = conn
+			_, err := InitLspClient(w.lspClient)
+			if err != nil {
+				log.CliLogger.Debugf("Error initializing lsp connection: %v\n", err)
+			}
 		}
 	default:
 		// we need the default case here, otherwise the select/case will block until the channel has data
 	}
 }
 
-func NewWebsocketClient(getAuthToken func() string, baseUrl, organizationId, environmentId string, handlerCh chan *jsonrpc2.Request) (LspInterface, error) {
-	lspClient, conn, err := newLSPConnection(baseUrl, getAuthToken(), organizationId, environmentId, handlerCh)
+func NewInitializedLspClient(getAuthToken func() string, baseUrl, organizationId, environmentId string, handlerCh chan *jsonrpc2.Request) (LspInterface, string, error) {
+	client, _, err := NewLSPClient(getAuthToken, baseUrl, organizationId, environmentId, handlerCh)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
+
+	docUri, err := InitLspClient(client)
+
+	if err != nil {
+		return nil, docUri, err
+	}
+
+	return client, docUri, nil
+}
+
+func InitLspClient(client LspInterface) (string, error) {
+	_, err := client.Initialize()
+	if err != nil {
+		return "", err
+	}
+	log.CliLogger.Debugf("Language service intialized")
+
+	docUri, err := client.DidOpen()
+	log.CliLogger.Debugf("Language service opened document: %s", docUri)
+	if err != nil {
+		return "", err
+	}
+	return string(docUri), nil
+}
+
+func NewLSPClient(getAuthToken func() string, baseUrl, organizationId, environmentId string, handlerCh chan *jsonrpc2.Request) (*WebsocketLSPClient, *jsonrpc2.Conn, error) {
+	lspClient, conn, err := NewLSPConnection(baseUrl, getAuthToken(), organizationId, environmentId, handlerCh)
+	if err != nil {
+		return nil, conn, err
+	}
+
 	websocketClient := &WebsocketLSPClient{
 		baseUrl:        baseUrl,
 		getAuthToken:   getAuthToken,
@@ -91,11 +131,12 @@ func NewWebsocketClient(getAuthToken func() string, baseUrl, organizationId, env
 		lspClient:      lspClient,
 		conn:           conn,
 	}
-	return websocketClient, nil
+
+	return websocketClient, websocketClient.conn, nil
 }
 
-func newLSPConnection(baseUrl, authToken, organizationId, environmentId string, handlerCh chan *jsonrpc2.Request) (LspInterface, *jsonrpc2.Conn, error) {
-	stream, err := newWSObjectStream(baseUrl, authToken, organizationId, environmentId)
+func NewLSPConnection(baseUrl, authToken, organizationId, environmentId string, handlerCh chan *jsonrpc2.Request) (*LSPClient, *jsonrpc2.Conn, error) {
+	stream, err := NewWSObjectStream(baseUrl, authToken, organizationId, environmentId)
 	if err != nil {
 		log.CliLogger.Debugf("Error dialing websocket: %v\n", err)
 		return nil, nil, err
@@ -109,25 +150,12 @@ func newLSPConnection(baseUrl, authToken, organizationId, environmentId string, 
 		lspHandler,
 		nil,
 	)
-	lspClient := NewLSPClient(conn)
-
-	lspInitParams, err := lspClient.Initialize()
-	if err != nil {
-		log.CliLogger.Debugf("Error opening lsp connection: %v\n", err)
-		return nil, nil, err
-	}
-
-	log.CliLogger.Trace("LSP init params: ", lspInitParams)
-	err = lspClient.DidOpen()
-	if err != nil {
-		log.CliLogger.Debugf("Error opening lsp connection: %v\n", err)
-		return nil, nil, err
-	}
+	lspClient := NewLSPClientImpl(conn)
 
 	return lspClient, conn, nil
 }
 
-func newWSObjectStream(socketUrl, authToken, organizationId, environmentId string) (jsonrpc2.ObjectStream, error) {
+func NewWSObjectStream(socketUrl, authToken, organizationId, environmentId string) (jsonrpc2.ObjectStream, error) {
 	requestHeaders := http.Header{}
 	requestHeaders.Add("Authorization", fmt.Sprintf("Bearer %s", authToken))
 	requestHeaders.Add("Organization-ID", organizationId)

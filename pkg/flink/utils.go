@@ -1,7 +1,7 @@
 package flink
 
 var (
-	ConnectionTypes             = []string{"openai", "azureml", "azureopenai", "bedrock", "sagemaker", "googleai", "vertexai", "mongodb", "elastic", "pinecone"}
+	ConnectionTypes             = []string{"openai", "azureml", "azureopenai", "bedrock", "sagemaker", "googleai", "vertexai", "mongodb", "elastic", "pinecone", "couchbase"}
 	ConnectionTypeSecretMapping = map[string][]string{
 		"openai":      {"api-key"},
 		"azureml":     {"api-key"},
@@ -13,6 +13,7 @@ var (
 		"mongodb":     {"username", "password"},
 		"elastic":     {"api-key"},
 		"pinecone":    {"api-key"},
+		"couchbase":   {"username", "password"},
 	}
 
 	ConnectionSecretTypeMapping = map[string][]string{
@@ -21,8 +22,8 @@ var (
 		"aws-secret-key":    {"bedrock", "sagemaker"},
 		"aws-session-token": {"bedrock", "sagemaker"},
 		"service-key":       {"vertexai"},
-		"username":          {"mongodb"},
-		"password":          {"mongodb"},
+		"username":          {"mongodb", "couchbase"},
+		"password":          {"mongodb", "couchbase"},
 	}
 
 	ConnectionRequiredSecretMapping = map[string][]string{
@@ -36,6 +37,7 @@ var (
 		"mongodb":     {"username", "password"},
 		"elastic":     {"api-key"},
 		"pinecone":    {"api-key"},
+		"couchbase":   {"username", "password"},
 	}
 	ConnectionSecretBackendKeyMapping = map[string]string{
 		"api-key":           "API_KEY",

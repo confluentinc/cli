@@ -115,6 +115,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(ccl.New(cfg, prerunner))
 	cmd.AddCommand(environment.New(prerunner))
 	cmd.AddCommand(feedback.New(prerunner))
+	cmd.AddCommand(flink.New(cfg, prerunner))
 	cmd.AddCommand(iam.New(cfg, prerunner))
 	cmd.AddCommand(kafka.New(cfg, prerunner))
 	cmd.AddCommand(ksql.New(cfg, prerunner))
@@ -138,9 +139,6 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	_ = cfg.ParseFlagsIntoConfig(cmd)
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.ai.enable", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(ai.New(prerunner))
-	}
-	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
-		cmd.AddCommand(flink.New(cfg, prerunner))
 	}
 
 	changeDefaults(cmd, cfg)
