@@ -110,6 +110,7 @@ func (h *LoginCredentialsManagerImpl) getCredentialsFromEnvVarFunc(envVars envir
 			log.CliLogger.Debugf("%s=%s belongs to an SSO user.", ConfluentCloudEmail, email)
 			return &Credentials{Username: email, IsSSO: true}, nil
 		} else if h.isMFARequired(email, organizationId) {
+			log.CliLogger.Debugf("%s=%s belongs to an MFA user.", ConfluentCloudEmail, email)
 			return &Credentials{Username: email, IsMfa: true}, nil
 		}
 
