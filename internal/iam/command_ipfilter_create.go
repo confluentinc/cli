@@ -46,13 +46,14 @@ func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
 	if isSrEnabled || isFlinkEnabled {
 		cmd.Flags().String("environment", "", "Id of the environment for which this filter applies. By default will apply to the organization only.")
-		if isSrEnabled && isFlinkEnabled {
-			cmd.Flags().StringSlice("operations", nil, fmt.Sprintf("A comma-separated list of operation groups: %s.", utils.ArrayToCommaDelimitedString([]string{"MANAGEMENT", "SCHEMA", "FLINK"}, "or")))
-		} else if isSrEnabled {
-			cmd.Flags().StringSlice("operations", nil, fmt.Sprintf("A comma-separated list of operation groups: %s.", utils.ArrayToCommaDelimitedString([]string{"MANAGEMENT", "SCHEMA"}, "or")))
-		} else {
-			cmd.Flags().StringSlice("operations", nil, fmt.Sprintf("A comma-separated list of operation groups: %s.", utils.ArrayToCommaDelimitedString([]string{"MANAGEMENT", "FLINK"}, "or")))
+		opGroups := []string{"MANAGEMENT"}
+		if isSrEnabled {
+			opGroups = append(opGroups, "SCHEMA")
 		}
+		if isFlinkEnabled {
+			opGroups = append(opGroups, "FLINK")
+		}
+		cmd.Flags().StringSlice("operations", nil, fmt.Sprintf("A comma-separated list of operation groups: %s.", utils.ArrayToCommaDelimitedString(opGroups, "or")))
 		cmd.Flags().Bool("no-public-networks", false, "Use in place of ip-groups to reference the no public networks IP Group.")
 		cmd.MarkFlagsMutuallyExclusive("ip-groups", "no-public-networks")
 		cmd.MarkFlagsMutuallyExclusive("resource-group", "operations")
