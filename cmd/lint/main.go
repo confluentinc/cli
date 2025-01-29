@@ -216,6 +216,7 @@ var vocabWords = []string{
 	"config",
 	"configs",
 	"consumer.config",
+	"couchbase",
 	"cpp",
 	"crl",
 	"crn",
