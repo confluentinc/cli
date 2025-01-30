@@ -3,7 +3,6 @@ package testserver
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,31 +12,37 @@ import (
 
 func (c *CloudRouter) HandleAllRolesRoute(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		namespace := r.URL.Query().Get("namespace")
-		namespaces := strings.Split(namespace, ",")
-
-		var allRoles []mdsv2alpha1.Role
-		for _, ns := range namespaces {
-			switch ns {
-			case "ksql":
-				allRoles = append(allRoles, rbacKsqlRoles()...)
-			case "datagovernance":
-				allRoles = append(allRoles, rbacSRRoles()...)
-			case "dataplane":
-				allRoles = append(allRoles, rbacDataPlaneRoles()...)
-			case "public":
-				allRoles = append(allRoles, rbacPublicRoles()...)
-			case "streamcatalog":
-				allRoles = append(allRoles, rbacStreamCatalogRoles()...)
-			default:
-				allRoles = append(allRoles, rbacPublicRoles()...)
-			}
-		}
-
+		allRoles := generateAllRolesList()
 		allRolesResponse, _ := json.Marshal(allRoles)
 		_, err := w.Write(allRolesResponse)
 		require.NoError(t, err)
 	}
+}
+
+func generateAllRolesList() []mdsv2alpha1.Role {
+	var allRoles []mdsv2alpha1.Role
+	/*
+	 * This is the specific order in which roles are added to the list
+	 * during our mocked tests. It includes the same namespace multiple
+	 * times due to some legacy behavior, which prints the same role more
+	 * than once.
+	 *
+	 * TODO:
+	 * In the future, this should be cleaned up. For now, this is intentionally
+	 * left "as is" in order to prove that our RBAC API changes have not
+	 * fundamentally changed the user experience when using the CLI.
+	 */
+
+	allRoles = append(allRoles, rbacDataPlaneRoles()...)
+	allRoles = append(allRoles, rbacSRRoles()...)
+	allRoles = append(allRoles, rbacPublicRoles()...)
+	allRoles = append(allRoles, rbacKsqlRoles()...)
+	allRoles = append(allRoles, rbacPublicRoles()...)
+	allRoles = append(allRoles, rbacStreamCatalogRoles()...)
+	allRoles = append(allRoles, rbacPublicRoles()...)
+	allRoles = append(allRoles, rbacPublicRoles()...)
+
+	return allRoles
 }
 
 func rbacDataPlaneRoles() []mdsv2alpha1.Role {
