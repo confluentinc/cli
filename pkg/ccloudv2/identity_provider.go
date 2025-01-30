@@ -42,8 +42,8 @@ func (c *Client) GetIdentityProvider(id string) (identityproviderv2.IamV2Identit
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateIdentityProvider(update identityproviderv2.IamV2IdentityProvider) (identityproviderv2.IamV2IdentityProvider, error) {
-	resp, httpResp, err := c.IdentityProviderClient.IdentityProvidersIamV2Api.UpdateIamV2IdentityProvider(c.identityProviderApiContext(), *update.Id).IamV2IdentityProvider(update).Execute()
+func (c *Client) UpdateIdentityProvider(update identityproviderv2.IamV2IdentityProviderUpdate) (identityproviderv2.IamV2IdentityProvider, error) {
+	resp, httpResp, err := c.IdentityProviderClient.IdentityProvidersIamV2Api.UpdateIamV2IdentityProvider(c.identityProviderApiContext(), *update.Id).IamV2IdentityProviderUpdate(update).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
@@ -75,11 +75,8 @@ func (c *Client) executeListIdentityProviders(pageToken string) (identityprovide
 	return req.Execute()
 }
 
-func (c *Client) CreateIdentityPool(identityPool identityproviderv2.IamV2IdentityPool, providerId string, assignedResourceOwner string) (identityproviderv2.IamV2IdentityPool, error) {
-	resp, httpResp, err := c.IdentityProviderClient.IdentityPoolsIamV2Api.
-		CreateIamV2IdentityPool(c.identityPoolApiContext(), providerId).
-		AssignedResourceOwner(assignedResourceOwner).
-		IamV2IdentityPool(identityPool).Execute()
+func (c *Client) CreateIdentityPool(identityPool identityproviderv2.IamV2IdentityPool, providerId string) (identityproviderv2.IamV2IdentityPool, error) {
+	resp, httpResp, err := c.IdentityProviderClient.IdentityPoolsIamV2Api.CreateIamV2IdentityPool(c.identityPoolApiContext(), providerId).IamV2IdentityPool(identityPool).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
