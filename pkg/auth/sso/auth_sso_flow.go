@@ -13,7 +13,7 @@ import (
 )
 
 func Login(authURL string, noBrowser bool, connectionName string) (string, string, error) {
-	state, err := newState(authURL, noBrowser)
+	state, err := NewState(authURL, noBrowser)
 	if err != nil {
 		return "", "", err
 	}
@@ -46,8 +46,8 @@ func Login(authURL string, noBrowser bool, connectionName string) (string, strin
 	} else {
 		// we need to start a background HTTP server to support the authorization code flow with PKCE
 		// described at https://auth0.com/docs/flows/guides/auth-code-pkce/call-api-auth-code-pkce
-		server := newServer(state)
-		if err := server.startServer(); err != nil {
+		server := NewServer(state)
+		if err := server.StartServer(); err != nil {
 			return "", "", fmt.Errorf("unable to start HTTP server: %w", err)
 		}
 
@@ -57,7 +57,7 @@ func Login(authURL string, noBrowser bool, connectionName string) (string, strin
 			return "", "", fmt.Errorf("unable to open web browser for authorization: %w", err)
 		}
 
-		if err := server.awaitAuthorizationCode(30 * time.Second); err != nil {
+		if err := server.AwaitAuthorizationCode(30 * time.Second); err != nil {
 			return "", "", err
 		}
 	}
@@ -71,7 +71,7 @@ func Login(authURL string, noBrowser bool, connectionName string) (string, strin
 }
 
 func RefreshTokens(authURL, refreshToken string) (string, string, error) {
-	state, err := newState(authURL, false)
+	state, err := NewState(authURL, false)
 	if err != nil {
 		return "", "", err
 	}

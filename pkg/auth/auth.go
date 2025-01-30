@@ -84,7 +84,7 @@ func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials,
 	}
 
 	ctxName := GenerateContextName(username, url, caCertPath)
-	return addOrUpdateContext(cfg, false, credentials, ctxName, url, state, caCertPath, "", save)
+	return addOrUpdateContext(cfg, false, credentials, ctxName, url, state, caCertPath, "", save, false)
 }
 
 func PersistCCloudCredentialsToConfig(config *config.Config, client *ccloudv1.Client, url string, credentials *Credentials, save bool) (string, *ccloudv1.Organization, error) {
@@ -97,7 +97,7 @@ func PersistCCloudCredentialsToConfig(config *config.Config, client *ccloudv1.Cl
 
 	state := getCCloudContextState(credentials.AuthToken, credentials.AuthRefreshToken, user)
 
-	if err := addOrUpdateContext(config, true, credentials, ctxName, url, state, "", user.GetOrganization().GetResourceId(), save); err != nil {
+	if err := addOrUpdateContext(config, true, credentials, ctxName, url, state, "", user.GetOrganization().GetResourceId(), save, credentials.IsMfa); err != nil {
 		return "", nil, err
 	}
 
@@ -112,7 +112,7 @@ func PersistCCloudCredentialsToConfig(config *config.Config, client *ccloudv1.Cl
 	return ctx.CurrentEnvironment, user.GetOrganization(), nil
 }
 
-func addOrUpdateContext(cfg *config.Config, isCloud bool, credentials *Credentials, ctxName, url string, state *config.ContextState, caCertPath, organizationId string, save bool) error {
+func addOrUpdateContext(cfg *config.Config, isCloud bool, credentials *Credentials, ctxName, url string, state *config.ContextState, caCertPath, organizationId string, save, IsMfa bool) error {
 	platform := &config.Platform{
 		Name:       strings.TrimSuffix(strings.TrimPrefix(url, "https://"), "/"),
 		Server:     url,
@@ -171,8 +171,9 @@ func addOrUpdateContext(cfg *config.Config, isCloud bool, credentials *Credentia
 		ctx.Credential = credential
 		ctx.CredentialName = credential.Name
 		ctx.LastOrgId = organizationId
+		ctx.IsMfa = IsMfa
 	} else {
-		if err := cfg.AddContext(ctxName, platform.Name, credential.Name, map[string]*config.KafkaClusterConfig{}, "", state, organizationId, ""); err != nil {
+		if err := cfg.AddContext(ctxName, platform.Name, credential.Name, map[string]*config.KafkaClusterConfig{}, "", state, organizationId, "", IsMfa); err != nil {
 			return err
 		}
 	}
