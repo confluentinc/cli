@@ -656,10 +656,10 @@ func handleIamIpGroups(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(iamipfilteringv2.IamV2IpGroupList{Data: []iamipfilteringv2.IamV2IpGroup{ipGroup}})
 			require.NoError(t, err)
 		case http.MethodPost:
-			var req iamipfilteringv2.IamV2IpGroup
+			var req iamv2.IamV2IpGroup
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			ipGroup := &iamipfilteringv2.IamV2IpGroup{
+			ipGroup := &iamv2.IamV2IpGroup{
 				Id:         iamv2.PtrString(ipGroupId),
 				GroupName:  req.GroupName,
 				CidrBlocks: req.CidrBlocks,
@@ -675,10 +675,10 @@ func handleIamIpGroup(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPatch:
-			var req iamipfilteringv2.IamV2IpGroup
+			var req iamv2.IamV2IpGroup
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			res := &iamipfilteringv2.IamV2IpGroup{
+			res := &iamv2.IamV2IpGroup{
 				Id:         req.Id,
 				GroupName:  req.GroupName,
 				CidrBlocks: req.CidrBlocks,
