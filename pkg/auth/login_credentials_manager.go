@@ -186,6 +186,7 @@ func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *config
 
 		credentials := &Credentials{
 			IsSSO:            ctx.GetUser().GetAuthType() == ccloudv1.AuthType_AUTH_TYPE_SSO || ctx.GetUser().GetSocialConnection() != "",
+			IsMfa:            ctx.IsMfa,
 			Username:         ctx.GetUser().GetEmail(),
 			AuthToken:        ctx.GetAuthToken(),
 			AuthRefreshToken: ctx.GetAuthRefreshToken(),
