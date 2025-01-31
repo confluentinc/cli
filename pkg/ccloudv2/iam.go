@@ -25,8 +25,10 @@ func (c *Client) iamApiContext() context.Context {
 
 // iam service-account api calls
 
-func (c *Client) CreateIamServiceAccount(serviceAccount iamv2.IamV2ServiceAccount) (iamv2.IamV2ServiceAccount, *http.Response, error) {
-	return c.IamClient.ServiceAccountsIamV2Api.CreateIamV2ServiceAccount(c.iamApiContext()).IamV2ServiceAccount(serviceAccount).Execute()
+func (c *Client) CreateIamServiceAccount(serviceAccount iamv2.IamV2ServiceAccount, assignedResourceOwner string) (iamv2.IamV2ServiceAccount, *http.Response, error) {
+	return c.IamClient.ServiceAccountsIamV2Api.CreateIamV2ServiceAccount(c.iamApiContext()).
+		AssignedResourceOwner(assignedResourceOwner).
+		IamV2ServiceAccount(serviceAccount).Execute()
 }
 
 func (c *Client) DeleteIamServiceAccount(id string) error {
@@ -38,8 +40,8 @@ func (c *Client) GetIamServiceAccount(id string) (iamv2.IamV2ServiceAccount, *ht
 	return c.IamClient.ServiceAccountsIamV2Api.GetIamV2ServiceAccount(c.iamApiContext(), id).Execute()
 }
 
-func (c *Client) UpdateIamServiceAccount(id string, update iamv2.IamV2ServiceAccountUpdate) (iamv2.IamV2ServiceAccount, *http.Response, error) {
-	return c.IamClient.ServiceAccountsIamV2Api.UpdateIamV2ServiceAccount(c.iamApiContext(), id).IamV2ServiceAccountUpdate(update).Execute()
+func (c *Client) UpdateIamServiceAccount(id string, update iamv2.IamV2ServiceAccount) (iamv2.IamV2ServiceAccount, *http.Response, error) {
+	return c.IamClient.ServiceAccountsIamV2Api.UpdateIamV2ServiceAccount(c.iamApiContext(), id).IamV2ServiceAccount(update).Execute()
 }
 
 func (c *Client) ListIamServiceAccounts() ([]iamv2.IamV2ServiceAccount, error) {

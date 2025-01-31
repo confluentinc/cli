@@ -153,6 +153,7 @@ func (s *CLITestSuite) TestIamRbacRoleBindingList_OnPrem() {
 func (s *CLITestSuite) TestIamServiceAccount() {
 	tests := []CLITest{
 		{args: "iam service-account create human-service --description human-output", fixture: "iam/service-account/create.golden"},
+		{args: "iam service-account create human-service --description human-output --resource-owner u-123", fixture: "iam/service-account/create.golden"},
 		{args: "iam service-account create json-service --description json-output -o json", fixture: "iam/service-account/create-json.golden"},
 		{args: "iam service-account create yaml-service --description yaml-output -o yaml", fixture: "iam/service-account/create-yaml.golden"},
 		{args: "iam service-account delete sa-12345 --force", fixture: "iam/service-account/delete.golden"},
