@@ -45,7 +45,7 @@ func newIpFilterCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Com
 	return cmd
 }
 
-func printIpFilter(cmd *cobra.Command, ipFilter iamipfilteringv2.IamV2IpFilter, isSrEnabled bool, isFlinkEnabled bool) error {
+func printIpFilter(cmd *cobra.Command, ipFilter iamipfilteringv2.IamV2IpFilter, isSrEnabled, isFlinkEnabled bool) error {
 	ipGroupIds := convertIpGroupsToIds(ipFilter.GetIpGroups())
 	slices.Sort(ipGroupIds)
 	table := output.NewTable(cmd)

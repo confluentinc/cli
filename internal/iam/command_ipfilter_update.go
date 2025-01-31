@@ -28,14 +28,17 @@ func (c *ipFilterCommand) newUpdateCommand(cfg *config.Config) *cobra.Command {
 	isSrEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
 	isFlinkEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.flink.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
 	if isSrEnabled || isFlinkEnabled {
-		operationGroup := "FLINK"
+		operationGroups := []string{}
 		if isSrEnabled {
-			operationGroup = "SCHEMA"
+			operationGroups = append(operationGroups, "SCHEMA")
+		}
+		if isFlinkEnabled {
+			operationGroups = append(operationGroups, "FLINK")
 		}
 		cmd.Example = examples.BuildExampleString(
 			examples.Example{
 				Text: `Update the name and add an IP group and operation group to IP filter "ipf-abcde":`,
-				Code: fmt.Sprintf(`confluent iam ip-filter update ipf-abcde --name "New Filter Name" --add-ip-groups ipg-12345 --add-operation-groups %s`, operationGroup),
+				Code: fmt.Sprintf(`confluent iam ip-filter update ipf-abcde --name "New Filter Name" --add-ip-groups ipg-12345 --add-operation-groups %s`, strings.Join(operationGroups, ",")),
 			},
 		)
 	} else {
@@ -47,7 +50,7 @@ func (c *ipFilterCommand) newUpdateCommand(cfg *config.Config) *cobra.Command {
 		)
 	}
 	cmd.Flags().String("name", "", "Updated name of the IP filter.")
-	pcmd.AddResourceGroupFlag(isSrEnabled, isFlinkEnabled, cmd)
+	pcmd.AddResourceGroupFlag(cmd, isSrEnabled, isFlinkEnabled)
 
 	cmd.Flags().StringSlice("add-ip-groups", []string{}, "A comma-separated list of IP groups to add.")
 	cmd.Flags().StringSlice("remove-ip-groups", []string{}, "A comma-separated list of IP groups to remove.")

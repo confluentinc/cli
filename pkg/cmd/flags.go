@@ -370,7 +370,7 @@ func AutocompleteIdentityPools(client *ccloudv2.Client, providerId string) []str
 	return suggestions
 }
 
-func AddResourceGroupFlag(isSrEnabled bool, isFlinkEnabled bool, cmd *cobra.Command) {
+func AddResourceGroupFlag(cmd *cobra.Command, isSrEnabled, isFlinkEnabled bool) {
 	var arr []string = []string{"management"}
 	if isSrEnabled || isFlinkEnabled {
 		arr = append(arr, "multiple")
