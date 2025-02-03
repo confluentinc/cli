@@ -354,7 +354,7 @@ func (c *command) getURL(cmd *cobra.Command) (string, error) {
 }
 
 func (c *command) saveLoginToKeychain(isCloud bool, url string, credentials *pauth.Credentials) error {
-	if credentials.IsSSO || credentials.IsMfa {
+	if credentials.IsSSO || credentials.IsMFA {
 		output.ErrPrintln(c.cfg.EnableColor, "The `--save` flag was ignored since SSO or MFA credentials are not stored on keychain.")
 		return nil
 	}

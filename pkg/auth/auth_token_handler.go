@@ -42,8 +42,8 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 			if token, refreshToken, err := a.refreshCCloudSSOToken(client, credentials.AuthRefreshToken, organizationId); err == nil {
 				return token, refreshToken, nil
 			}
-		} else if credentials.IsMfa {
-			if token, refreshToken, err := a.refreshCCloudMfaToken(client, credentials.AuthRefreshToken, organizationId, credentials.Username); err == nil {
+		} else if credentials.IsMFA {
+			if token, refreshToken, err := a.refreshCCloudMFAToken(client, credentials.AuthRefreshToken, organizationId, credentials.Username); err == nil {
 				return token, refreshToken, nil
 			}
 		} else {
@@ -70,7 +70,7 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 		return token, refreshToken, err
 	}
 
-	if credentials.IsMfa {
+	if credentials.IsMFA {
 		token, refreshToken, err := a.getCCloudMFAToken(client, credentials.Username, organizationId)
 		if err != nil {
 			return "", "", err
@@ -209,7 +209,7 @@ func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloudv1.Client, re
 
 	return res.GetToken(), refreshToken, err
 }
-func (a *AuthTokenHandlerImpl) refreshCCloudMfaToken(client *ccloudv1.Client, refreshToken, organizationId, email string) (string, string, error) {
+func (a *AuthTokenHandlerImpl) refreshCCloudMFAToken(client *ccloudv1.Client, refreshToken, organizationId, email string) (string, string, error) {
 	idToken, refreshToken, err := mfa.RefreshTokens(client.BaseURL, refreshToken, email)
 	if err != nil {
 		return "", "", err
@@ -220,7 +220,7 @@ func (a *AuthTokenHandlerImpl) refreshCCloudMfaToken(client *ccloudv1.Client, re
 		OrgResourceId: organizationId,
 	}
 
-	res, err := client.Auth.Login(req)
+	res, err := login(client, req)
 	if err != nil {
 		return "", "", err
 	}

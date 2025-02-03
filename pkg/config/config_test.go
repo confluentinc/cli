@@ -603,7 +603,7 @@ func TestConfig_AddContext(t *testing.T) {
 		kafka:              context.KafkaClusterContext.ActiveKafkaCluster,
 		state:              context.State,
 		filename:           filename,
-		isMFA:              context.IsMfa,
+		isMFA:              context.IsMFA,
 	}
 
 	addValidContextTest := test

@@ -56,7 +56,7 @@ func TestGetAuthorizationUrl(t *testing.T) {
 	authCodeUrlDevel := state.getAuthorizationCodeUrl(false, "connection1")
 	expectedUri := "/authorize?challenge_mfa=true" +
 		"&response_type=code" +
-		"&email=" + encodeEmail(state.email) +
+		"&email=" + encodeEmail(state.Email) +
 		"&from_cli=true&mfa_from_cli=true" +
 		"&code_challenge=" + state.CodeChallenge +
 		"&code_challenge_method=S256" +

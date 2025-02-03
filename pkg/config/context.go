@@ -25,7 +25,7 @@ type Context struct {
 	KafkaClusterContext *KafkaClusterContext           `json:"kafka_cluster_context"`
 	LastOrgId           string                         `json:"last_org_id,omitempty"`
 	FeatureFlags        *FeatureFlags                  `json:"feature_flags,omitempty"`
-	IsMfa               bool                           `json:"is_mfa,omitempty"`
+	IsMFA               bool                           `json:"is_mfa,omitempty"`
 
 	// Deprecated
 	NetrcMachineName       string                            `json:"netrc_machine_name,omitempty"`
@@ -39,7 +39,7 @@ type Context struct {
 
 var noEnvError = "no environment found"
 
-func newContext(name string, platform *Platform, credential *Credential, kafkaClusters map[string]*KafkaClusterConfig, kafka string, state *ContextState, config *Config, organizationId, environmentId string, isMfa bool) (*Context, error) {
+func newContext(name string, platform *Platform, credential *Credential, kafkaClusters map[string]*KafkaClusterConfig, kafka string, state *ContextState, config *Config, organizationId, environmentId string, isMFA bool) (*Context, error) {
 	ctx := &Context{
 		Name:               name,
 		MachineName:        name,
@@ -52,7 +52,7 @@ func newContext(name string, platform *Platform, credential *Credential, kafkaCl
 		State:              state,
 		Config:             config,
 		LastOrgId:          organizationId,
-		IsMfa:              isMfa,
+		IsMFA:              isMFA,
 	}
 	ctx.KafkaClusterContext = NewKafkaClusterContext(ctx, kafka, kafkaClusters)
 	if err := ctx.validate(); err != nil {
