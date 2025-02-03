@@ -28,7 +28,7 @@ type Credentials struct {
 	Username string
 	Password string
 	IsSSO    bool
-	IsMfa    bool
+	IsMFA    bool
 	Salt     []byte
 	Nonce    []byte
 
@@ -41,7 +41,7 @@ type Credentials struct {
 }
 
 func (c *Credentials) IsFullSet() bool {
-	return c.Username != "" && (c.IsSSO || c.IsMfa || c.Password != "" || c.AuthRefreshToken != "")
+	return c.Username != "" && (c.IsSSO || c.IsMFA || c.Password != "" || c.AuthRefreshToken != "")
 }
 
 type environmentVariables struct {
@@ -111,7 +111,7 @@ func (h *LoginCredentialsManagerImpl) getCredentialsFromEnvVarFunc(envVars envir
 			return &Credentials{Username: email, IsSSO: true}, nil
 		} else if h.isMFARequired(email, organizationId) {
 			log.CliLogger.Debugf("%s=%s belongs to an MFA user.", ConfluentCloudEmail, email)
-			return &Credentials{Username: email, IsMfa: true}, nil
+			return &Credentials{Username: email, IsMFA: true}, nil
 		}
 
 		if password == "" {
@@ -186,7 +186,7 @@ func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *config
 
 		credentials := &Credentials{
 			IsSSO:            ctx.GetUser().GetAuthType() == ccloudv1.AuthType_AUTH_TYPE_SSO || ctx.GetUser().GetSocialConnection() != "",
-			IsMfa:            ctx.IsMfa,
+			IsMFA:            ctx.IsMFA,
 			Username:         ctx.GetUser().GetEmail(),
 			AuthToken:        ctx.GetAuthToken(),
 			AuthRefreshToken: ctx.GetAuthRefreshToken(),
@@ -251,7 +251,7 @@ func (h *LoginCredentialsManagerImpl) GetCloudCredentialsFromPrompt(organization
 			log.CliLogger.Debug("Entered email belongs to an SSO user.")
 			return &Credentials{Username: email, IsSSO: true}, nil
 		} else if h.isMFARequired(email, organizationId) {
-			return &Credentials{Username: email, IsMfa: true}, nil
+			return &Credentials{Username: email, IsMFA: true}, nil
 		}
 		password := h.promptForPassword()
 		return &Credentials{Username: email, Password: password}, nil

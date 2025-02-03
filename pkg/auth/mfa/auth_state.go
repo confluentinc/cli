@@ -25,7 +25,7 @@ type authState struct {
 	MFAProviderIDToken            string
 	MFAProviderRefreshToken       string
 	MFAProviderState              string
-	email                         string
+	Email                         string
 	MFAProviderCallbackUrl        string
 	MFAProviderHost               string
 	MFAProviderClientID           string
@@ -44,7 +44,7 @@ func newState(authUrl, email string) (*authState, error) {
 		MFAProviderHost:        "https://" + sso.SsoConfigs[env].SsoProviderDomain,
 		MFAProviderCallbackUrl: mfaProviderCallbackLocalURL,
 		MFAProviderClientID:    sso.GetAuth0CCloudClientIdFromBaseUrl(authUrl),
-		email:                  email,
+		Email:                  email,
 		MFAProviderIdentifier:  sso.SsoConfigs[env].SsoProviderIdentifier,
 		MFAProviderScope:       sso.SsoConfigs[env].SsoProviderScope,
 	}
@@ -81,7 +81,7 @@ func (s *authState) generateCodes() error {
 func (s *authState) getAuthorizationCodeUrl(isOkta bool, mfaProviderConnectionName string) string {
 	url := s.MFAProviderHost + "/authorize?challenge_mfa=true" +
 		"&response_type=code" +
-		"&email=" + encodeEmail(s.email) +
+		"&email=" + encodeEmail(s.Email) +
 		"&from_cli=true&mfa_from_cli=true" +
 		"&code_challenge=" + s.CodeChallenge +
 		"&code_challenge_method=S256" +
