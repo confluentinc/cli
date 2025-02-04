@@ -2,6 +2,7 @@ package iam
 
 import (
 	"fmt"
+
 	"github.com/confluentinc/cli/v4/pkg/config"
 
 	"github.com/spf13/cobra"
