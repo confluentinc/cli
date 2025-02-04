@@ -6,6 +6,7 @@ import (
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -21,7 +22,7 @@ type poolOut struct {
 	Filter        string `human:"Filter" serialized:"filter"`
 }
 
-func newPoolCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newPoolCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "pool",
 		Short:       "Manage identity pools.",
@@ -30,7 +31,7 @@ func newPoolCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &poolCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	cmd.AddCommand(c.newCreateCommand())
+	cmd.AddCommand(c.newCreateCommand(cfg))
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
