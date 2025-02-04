@@ -4,14 +4,15 @@ Usage:
   confluent schema-registry dek describe [flags]
 
 Flags:
-      --kek-name string      REQUIRED: Name of the Key Encryption Key (KEK).
-      --subject string       REQUIRED: Subject of the Data Encryption Key (DEK).
-      --algorithm string     Use algorithm "AES128_GCM", "AES256_GCM", or "AES256_SIV" for the Data Encryption Key (DEK).
-      --version string       Version of the Data Encryption Key (DEK). (default "1")
-      --all                  Include soft-deleted Data Encryption Key (DEK).
-      --context string       CLI context name.
-      --environment string   Environment ID.
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+      --kek-name string                   REQUIRED: Name of the Key Encryption Key (KEK).
+      --subject string                    REQUIRED: Subject of the Data Encryption Key (DEK).
+      --algorithm string                  Use algorithm "AES128_GCM", "AES256_GCM", or "AES256_SIV" for the Data Encryption Key (DEK).
+      --version string                    Version of the Data Encryption Key (DEK). (default "1")
+      --all                               Include soft-deleted Data Encryption Key (DEK).
+      --context string                    CLI context name.
+      --environment string                Environment ID.
+      --schema-registry-endpoint string   The URL of the Schema Registry cluster.
+  -o, --output string                     Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
