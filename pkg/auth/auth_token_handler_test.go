@@ -1,10 +1,11 @@
 package auth
 
 import (
-	"github.com/gogo/protobuf/types"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/gogo/protobuf/types"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestConvertToTypeMapString(t *testing.T) {
