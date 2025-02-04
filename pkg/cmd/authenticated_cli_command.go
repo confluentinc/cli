@@ -220,7 +220,24 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 		configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(c.Config, unsafeTrace)
 
 		schemaRegistryEndpoint, _ := cmd.Flags().GetString("schema-registry-endpoint")
-		if schemaRegistryEndpoint != "" {
+		if schemaRegistryEndpoint != "" && c.Config.IsCloudLogin() {
+			clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
+			if err != nil {
+				return nil, err
+			}
+			if len(clusters) == 0 {
+				return nil, schemaregistry.ErrNotEnabled
+			}
+			u, err := url.Parse(schemaRegistryEndpoint)
+			if err != nil {
+				return nil, err
+			}
+			if u.Scheme != "http" && u.Scheme != "https" {
+				u.Scheme = "https"
+			}
+			configuration.Servers = srsdk.ServerConfigurations{{URL: u.String()}}
+			configuration.DefaultHeader = map[string]string{"target-sr-cluster": clusters[0].GetId()}
+		} else if schemaRegistryEndpoint != "" {
 			u, err := url.Parse(schemaRegistryEndpoint)
 			if err != nil {
 				return nil, err
@@ -252,11 +269,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			if len(clusters) == 0 {
 				return nil, schemaregistry.ErrNotEnabled
 			}
-			if clusters[0].Spec.GetHttpEndpoint() != "" {
-				configuration.Servers = srsdk.ServerConfigurations{{URL: clusters[0].Spec.GetHttpEndpoint()}}
-			} else {
-				configuration.Servers = srsdk.ServerConfigurations{{URL: clusters[0].Spec.GetPrivateHttpEndpoint()}}
-			}
+			configuration.Servers = srsdk.ServerConfigurations{{URL: clusters[0].Spec.GetHttpEndpoint()}}
 			configuration.DefaultHeader = map[string]string{"target-sr-cluster": clusters[0].GetId()}
 		} else {
 			return nil, errors.NewErrorWithSuggestions(
