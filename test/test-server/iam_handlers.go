@@ -634,11 +634,15 @@ func handleIamIpFilter(t *testing.T) http.HandlerFunc {
 			if len(segments) > 0 {
 				filterId = segments[len(segments)-1] // "ipf-34dq3"
 			}
+			var operationGroups []string
 			if filterId == "ipf-34dq4" {
-				ipFilter = buildIamIpFilter(ipFilterId, "demo-ip-filter", "multiple", []string{"ipg-12345", "ipg-abcde"}, "crn://confluent.cloud/organization=org123", []string{"MANAGEMENT", "SCHEMA"})
+				operationGroups = []string{"MANAGEMENT", "SCHEMA"}
+			} else if filterId == "ipf-34dq6" {
+				operationGroups = []string{"MANAGEMENT", "SCHEMA", "FLINK"}
 			} else {
-				ipFilter = buildIamIpFilter(ipFilterId, "demo-ip-filter", "multiple", []string{"ipg-12345", "ipg-abcde"}, "crn://confluent.cloud/organization=org123", []string{"MANAGEMENT"})
+				operationGroups = []string{"MANAGEMENT"}
 			}
+			ipFilter = buildIamIpFilter(ipFilterId, "demo-ip-filter", "multiple", []string{"ipg-12345", "ipg-abcde"}, "crn://confluent.cloud/organization=org123", operationGroups)
 			err := json.NewEncoder(w).Encode(ipFilter)
 			require.NoError(t, err)
 		case http.MethodDelete:
