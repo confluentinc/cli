@@ -1,6 +1,8 @@
 package iam
 
 import (
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/spf13/cobra"
 
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
@@ -9,7 +11,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
-func (c *poolCommand) newCreateCommand() *cobra.Command {
+func (c *poolCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create an identity pool.",
@@ -26,7 +28,12 @@ func (c *poolCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
 	cmd.Flags().String("description", "", "Description of the identity pool.")
-	addResourceOwnerFlag(cmd, c.AuthenticatedCLICommand)
+	isResourceOwnerEnabled := cfg.IsTest ||
+		(cfg.Context() != nil &&
+			featureflags.Manager.BoolVariation("auth.workload_identity.resource_owner.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
+	if isResourceOwnerEnabled {
+		addResourceOwnerFlag(cmd, c.AuthenticatedCLICommand)
+	}
 	pcmd.AddFilterFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -58,9 +65,15 @@ func (c *poolCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	resourceOwner, err := cmd.Flags().GetString("resource-owner")
-	if err != nil {
-		return err
+	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
+	isResourceOwnerEnabled := c.Config.IsTest ||
+		featureflags.Manager.BoolVariation("auth.workload_identity.resource_owner.enabled", c.Context, ldClient, true, false)
+	resourceOwner, err := "", nil
+	if isResourceOwnerEnabled {
+		resourceOwner, err = cmd.Flags().GetString("resource-owner")
+		if err != nil {
+			return err
+		}
 	}
 
 	createIdentityPool := identityproviderv2.IamV2IdentityPool{

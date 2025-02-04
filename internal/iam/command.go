@@ -35,10 +35,10 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(newCertificatePoolCommand(cfg, prerunner))
 	cmd.AddCommand(newIpFilterCommand(cfg, prerunner))
 	cmd.AddCommand(newIpGroupCommand(prerunner))
-	cmd.AddCommand(newPoolCommand(prerunner))
+	cmd.AddCommand(newPoolCommand(cfg, prerunner))
 	cmd.AddCommand(newProviderCommand(prerunner))
 	cmd.AddCommand(newRbacCommand(cfg, prerunner))
-	cmd.AddCommand(newServiceAccountCommand(prerunner))
+	cmd.AddCommand(newServiceAccountCommand(cfg, prerunner))
 	cmd.AddCommand(newUserCommand(cfg, prerunner))
 
 	return cmd

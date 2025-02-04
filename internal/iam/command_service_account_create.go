@@ -1,6 +1,8 @@
 package iam
 
 import (
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/spf13/cobra"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
@@ -15,7 +17,7 @@ const (
 	descriptionLength = 128
 )
 
-func (c *serviceAccountCommand) newCreateCommand() *cobra.Command {
+func (c *serviceAccountCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a service account.",
@@ -28,9 +30,13 @@ func (c *serviceAccountCommand) newCreateCommand() *cobra.Command {
 			},
 		),
 	}
-
+	isResourceOwnerEnabled := cfg.IsTest ||
+		(cfg.Context() != nil &&
+			featureflags.Manager.BoolVariation("auth.workload_identity.resource_owner.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
 	cmd.Flags().String("description", "", "Description of the service account.")
-	addResourceOwnerFlag(cmd, c.AuthenticatedCLICommand)
+	if isResourceOwnerEnabled {
+		addResourceOwnerFlag(cmd, c.AuthenticatedCLICommand)
+	}
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -51,11 +57,16 @@ func (c *serviceAccountCommand) create(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	resourceOwner, err := cmd.Flags().GetString("resource-owner")
-	if err != nil {
-		return err
+	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
+	isResourceOwnerEnabled := c.Config.IsTest ||
+		featureflags.Manager.BoolVariation("auth.workload_identity.resource_owner.enabled", c.Context, ldClient, true, false)
+	resourceOwner, err := "", nil
+	if isResourceOwnerEnabled {
+		resourceOwner, err = cmd.Flags().GetString("resource-owner")
+		if err != nil {
+			return err
+		}
 	}
-
 	if err := requireLen(description, descriptionLength, "description"); err != nil {
 		return err
 	}
