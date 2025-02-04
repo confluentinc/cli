@@ -9,9 +9,9 @@ import (
 
 type listEndpoint struct {
 	Public          string            `human:"Public Endpoint URL" serialized:"public_endpoint_url"`
-	Private         string            `human:"Private Endpoint URL" serialized:"public_endpoint_url"`
-	PrivateRegional map[string]string `human:"Private Regional Endpoint URL" serialized:"public_endpoint_url"`
-	Catalog         string            `human:"Catalog Endpoint URL" serialized:"public_endpoint_url"`
+	Private         string            `human:"Private Endpoint URL" serialized:"private_endpoint_url"`
+	PrivateRegional map[string]string `human:"Private Regional Endpoint URL" serialized:"private_regional_endpoint_url"`
+	Catalog         string            `human:"Catalog Endpoint URL" serialized:"catalog_endpoint_url"`
 }
 
 func (c *command) newEndpointsList() *cobra.Command {
