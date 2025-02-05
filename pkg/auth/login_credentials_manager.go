@@ -28,6 +28,7 @@ type Credentials struct {
 	Username string
 	Password string
 	IsSSO    bool
+	IsMFA    bool
 	Salt     []byte
 	Nonce    []byte
 
@@ -40,7 +41,7 @@ type Credentials struct {
 }
 
 func (c *Credentials) IsFullSet() bool {
-	return c.Username != "" && (c.IsSSO || c.Password != "" || c.AuthRefreshToken != "")
+	return c.Username != "" && (c.IsSSO || c.IsMFA || c.Password != "" || c.AuthRefreshToken != "")
 }
 
 type environmentVariables struct {
@@ -108,6 +109,9 @@ func (h *LoginCredentialsManagerImpl) getCredentialsFromEnvVarFunc(envVars envir
 		if h.isSSOUser(email, organizationId) {
 			log.CliLogger.Debugf("%s=%s belongs to an SSO user.", ConfluentCloudEmail, email)
 			return &Credentials{Username: email, IsSSO: true}, nil
+		} else if h.isMFARequired(email, organizationId) {
+			log.CliLogger.Debugf("%s=%s belongs to an MFA user.", ConfluentCloudEmail, email)
+			return &Credentials{Username: email, IsMFA: true}, nil
 		}
 
 		if password == "" {
@@ -182,6 +186,7 @@ func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *config
 
 		credentials := &Credentials{
 			IsSSO:            ctx.GetUser().GetAuthType() == ccloudv1.AuthType_AUTH_TYPE_SSO || ctx.GetUser().GetSocialConnection() != "",
+			IsMFA:            ctx.IsMFA,
 			Username:         ctx.GetUser().GetEmail(),
 			AuthToken:        ctx.GetAuthToken(),
 			AuthRefreshToken: ctx.GetAuthRefreshToken(),
@@ -245,6 +250,8 @@ func (h *LoginCredentialsManagerImpl) GetCloudCredentialsFromPrompt(organization
 		if h.isSSOUser(email, organizationId) {
 			log.CliLogger.Debug("Entered email belongs to an SSO user.")
 			return &Credentials{Username: email, IsSSO: true}, nil
+		} else if h.isMFARequired(email, organizationId) {
+			return &Credentials{Username: email, IsMFA: true}, nil
 		}
 		password := h.promptForPassword()
 		return &Credentials{Username: email, Password: password}, nil
@@ -276,6 +283,25 @@ func (h *LoginCredentialsManagerImpl) promptForPassword() string {
 		return ""
 	}
 	return f.Responses[passwordField].(string)
+}
+
+func (h *LoginCredentialsManagerImpl) isMFARequired(email, organizationId string) bool {
+	if h.client == nil {
+		return false
+	}
+
+	auth0ClientId := sso.GetAuth0CCloudClientIdFromBaseUrl(h.client.BaseURL)
+	log.CliLogger.Tracef("h.client.BaseURL: %s", h.client.BaseURL)
+	log.CliLogger.Tracef("auth0ClientId: %s", auth0ClientId)
+	req := &ccloudv1.GetLoginRealmRequest{
+		Email:         email,
+		ClientId:      auth0ClientId,
+		OrgResourceId: organizationId,
+	}
+	res, err := h.client.User.LoginRealm(req)
+	// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious
+	// email, we want to silently continue and give the illusion of password prompt.
+	return err == nil && res.GetMfaRequired()
 }
 
 func (h *LoginCredentialsManagerImpl) isSSOUser(email, organizationId string) bool {
