@@ -348,8 +348,5 @@ func convertDateFormat(mfaEnforcedAt *types.Timestamp) string {
 		return "Invalid Date"
 	}
 	date := time.Unix(mfaEnforcedAt.Seconds, int64(mfaEnforcedAt.Nanos)).UTC().Truncate(time.Microsecond)
-	if (date.Year() <= 1970 && date.Month() <= 01 && date.Day() <= 01) || date.Year() > 2100 {
-		return "Invalid Date"
-	}
 	return date.Format("01/02/2006")
 }

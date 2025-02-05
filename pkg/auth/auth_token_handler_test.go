@@ -25,14 +25,7 @@ func TestConvertDateFormatToString(t *testing.T) {
 	})
 	t.Run("fail, nil", func(t *testing.T) {
 		actual := convertDateFormat(&types.Timestamp{})
-		expected := "Invalid Date"
-		assert.Equal(t, expected, actual)
-	})
-	t.Run("fail, outside range", func(t *testing.T) {
-		date := time.Date(2199, time.April, 16, 12, 0, 0, 0, time.UTC)
-		timestamp := &types.Timestamp{Seconds: date.Unix()}
-		actual := convertDateFormat(timestamp)
-		expected := "Invalid Date"
+		expected := "01/01/1970"
 		assert.Equal(t, expected, actual)
 	})
 }
