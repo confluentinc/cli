@@ -12,6 +12,7 @@ import (
 )
 
 func TestServerTimeout(t *testing.T) {
+	//MFA Server
 	state, err := newState("https://devel.cpdev.cloud", "test+mfa@confluent.io")
 	require.NoError(t, err)
 	server := newServer(state)
@@ -37,6 +38,7 @@ func TestServerTimeout(t *testing.T) {
 }
 
 func TestCallback(t *testing.T) {
+	//MFA Callback
 	state, err := newState("https://devel.cpdev.cloud", "test+mfa@confluent.io")
 	require.NoError(t, err)
 	server := newServer(state)

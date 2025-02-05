@@ -69,17 +69,17 @@ func (s *authState) generateCodes() error {
 
 	s.CodeVerifier = base64.RawURLEncoding.EncodeToString(randomBytes)
 
-	hasher := sha256.New()
-	if _, err := hasher.Write([]byte(s.CodeVerifier)); err != nil {
+	hash := sha256.New()
+	if _, err := hash.Write([]byte(s.CodeVerifier)); err != nil {
 		return fmt.Errorf("unable to compute hash for code challenge: %w", err)
 	}
-	s.CodeChallenge = base64.RawURLEncoding.EncodeToString(hasher.Sum(nil))
+	s.CodeChallenge = base64.RawURLEncoding.EncodeToString(hash.Sum(nil))
 
 	return nil
 }
 
 func (s *authState) getAuthorizationCodeUrl(isOkta bool, mfaProviderConnectionName string) string {
-	url := s.MFAProviderHost + "/authorize?challenge_mfa=true" +
+	urlMFA := s.MFAProviderHost + "/authorize?challenge_mfa=true" +
 		"&response_type=code" +
 		"&email=" + encodeEmail(s.Email) +
 		"&from_cli=true&mfa_from_cli=true" +
@@ -91,23 +91,23 @@ func (s *authState) getAuthorizationCodeUrl(isOkta bool, mfaProviderConnectionNa
 		"&state=" + s.MFAProviderState
 
 	if s.MFAProviderIdentifier != "" {
-		url += "&audience=" + s.MFAProviderIdentifier
+		urlMFA += "&audience=" + s.MFAProviderIdentifier
 	}
 
 	if isOkta {
-		url += "&idp=" + mfaProviderConnectionName
+		urlMFA += "&idp=" + mfaProviderConnectionName
 	} else {
-		url += "&connection=" + mfaProviderConnectionName
+		urlMFA += "&connection=" + mfaProviderConnectionName
 	}
 
-	return url
+	return urlMFA
 }
 
 func (s *authState) saveOAuthTokenResponse(data map[string]any) error {
 	if token, ok := data["id_token"]; ok {
 		s.MFAProviderIDToken = token.(string)
 	} else {
-		return fmt.Errorf("Incorrect token added. Please try to login again.")
+		return fmt.Errorf("incorrect token added. Please try to login again")
 	}
 
 	if token, ok := data["refresh_token"]; ok {
