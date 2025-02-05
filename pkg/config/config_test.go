@@ -588,6 +588,7 @@ func TestConfig_AddContext(t *testing.T) {
 		state              *ContextState
 		Version            *pversion.Version
 		filename           string
+		isMFA              bool
 		want               *Config
 		wantErr            bool
 	}
@@ -602,6 +603,7 @@ func TestConfig_AddContext(t *testing.T) {
 		kafka:              context.KafkaClusterContext.ActiveKafkaCluster,
 		state:              context.State,
 		filename:           filename,
+		isMFA:              context.IsMFA,
 	}
 
 	addValidContextTest := test
@@ -620,7 +622,7 @@ func TestConfig_AddContext(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			err := test.config.AddContext(test.contextName, test.platformName, test.credentialName, test.kafkaClusters, test.kafka, test.state, MockOrgResourceId, test.currentEnvironment)
+			err := test.config.AddContext(test.contextName, test.platformName, test.credentialName, test.kafkaClusters, test.kafka, test.state, MockOrgResourceId, test.currentEnvironment, test.isMFA)
 			if (err != nil) != test.wantErr {
 				t.Errorf("AddContext() error = %v, wantErr %v", err, test.wantErr)
 			}
