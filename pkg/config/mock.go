@@ -107,7 +107,7 @@ func AuthenticatedConfigMock(params mockConfigParams) *Config {
 	cfg := New()
 	cfg.IsTest = true
 
-	ctx, err := newContext(params.contextName, platform, credential, kafkaClusters, kafkaCluster.ID, contextState, cfg, params.orgResourceId, params.envId)
+	ctx, err := newContext(params.contextName, platform, credential, kafkaClusters, kafkaCluster.ID, contextState, cfg, params.orgResourceId, params.envId, false)
 	if err != nil {
 		panic(err)
 	}
