@@ -15,49 +15,49 @@ import (
 )
 
 var (
-	ssoProviderCallbackEndpoint = "/cli_callback"
-	ssoProviderCallbackLocalURL = fmt.Sprintf("http://127.0.0.1:%d", port) + ssoProviderCallbackEndpoint
+	SsoProviderCallbackEndpoint = "/cli_callback"
+	ssoProviderCallbackLocalURL = fmt.Sprintf("http://127.0.0.1:%d", port) + SsoProviderCallbackEndpoint
 
-	ssoConfigs = map[string]ssoConfig{
+	SsoConfigs = map[string]ssoConfig{
 		"devel": {
-			ssoProviderDomain:     "login.confluent-dev.io/oauth",
-			ssoProviderIdentifier: "https://confluent-dev.auth0.com/api/v2/",
-			ssoProviderScope:      "email%20openid%20offline_access",
+			SsoProviderDomain:     "login.confluent-dev.io/oauth",
+			SsoProviderIdentifier: "https://confluent-dev.auth0.com/api/v2/",
+			SsoProviderScope:      "email%20openid%20offline_access",
 		},
 		"devel-us-gov": {
-			ssoProviderDomain: "confluent-devel-us-gov.oktapreview.com/oauth2/v1",
-			ssoProviderScope:  "openid+profile+email+offline_access",
+			SsoProviderDomain: "confluent-devel-us-gov.oktapreview.com/oauth2/v1",
+			SsoProviderScope:  "openid+profile+email+offline_access",
 		},
 		"infra-us-gov": {
-			ssoProviderDomain: "confluent-infra-us-gov.okta.com/oauth2/v1",
-			ssoProviderScope:  "openid+profile+email+offline_access",
+			SsoProviderDomain: "confluent-infra-us-gov.okta.com/oauth2/v1",
+			SsoProviderScope:  "openid+profile+email+offline_access",
 		},
 		"prod": {
-			ssoProviderDomain:     "login.confluent.io/oauth",
-			ssoProviderIdentifier: "https://confluent.auth0.com/api/v2/",
-			ssoProviderScope:      "email%20openid%20offline_access",
+			SsoProviderDomain:     "login.confluent.io/oauth",
+			SsoProviderIdentifier: "https://confluent.auth0.com/api/v2/",
+			SsoProviderScope:      "email%20openid%20offline_access",
 		},
 		"prod-us-gov": {
-			ssoProviderDomain: "confluent-prod-us-gov.okta.com/oauth2/v1",
-			ssoProviderScope:  "openid+profile+email+offline_access",
+			SsoProviderDomain: "confluent-prod-us-gov.okta.com/oauth2/v1",
+			SsoProviderScope:  "openid+profile+email+offline_access",
 		},
 		"stag": {
-			ssoProviderDomain:     "login-stag.confluent-dev.io/oauth",
-			ssoProviderIdentifier: "https://confluent-stag.auth0.com/api/v2/",
-			ssoProviderScope:      "email%20openid%20offline_access",
+			SsoProviderDomain:     "login-stag.confluent-dev.io/oauth",
+			SsoProviderIdentifier: "https://confluent-stag.auth0.com/api/v2/",
+			SsoProviderScope:      "email%20openid%20offline_access",
 		},
 		"test": {
-			ssoProviderDomain:     "test.com/oauth",
-			ssoProviderIdentifier: "https://test.auth0.com/api/v2/",
-			ssoProviderScope:      "email%20openid%20offline_access",
+			SsoProviderDomain:     "test.com/oauth",
+			SsoProviderIdentifier: "https://test.auth0.com/api/v2/",
+			SsoProviderScope:      "email%20openid%20offline_access",
 		},
 	}
 )
 
 type ssoConfig struct {
-	ssoProviderDomain     string
-	ssoProviderIdentifier string
-	ssoProviderScope      string
+	SsoProviderDomain     string
+	SsoProviderIdentifier string
+	SsoProviderScope      string
 }
 
 /*
@@ -81,7 +81,7 @@ type authState struct {
 // InitState generates various auth0 related codes and hashes
 // and tweaks certain variables for internal development and testing of the CLIs
 // auth0 server / SSO integration.
-func newState(authUrl string, noBrowser bool) (*authState, error) {
+func NewState(authUrl string, noBrowser bool) (*authState, error) {
 	if authUrl == "" {
 		authUrl = "https://confluent.cloud"
 	}
@@ -89,11 +89,11 @@ func newState(authUrl string, noBrowser bool) (*authState, error) {
 	env := GetCCloudEnvFromBaseUrl(authUrl)
 
 	state := &authState{
-		SSOProviderCallbackUrl: strings.TrimSuffix(authUrl, "/") + ssoProviderCallbackEndpoint,
-		SSOProviderHost:        "https://" + ssoConfigs[env].ssoProviderDomain,
+		SSOProviderCallbackUrl: strings.TrimSuffix(authUrl, "/") + SsoProviderCallbackEndpoint,
+		SSOProviderHost:        "https://" + SsoConfigs[env].SsoProviderDomain,
 		SSOProviderClientID:    GetAuth0CCloudClientIdFromBaseUrl(authUrl),
-		SSOProviderIdentifier:  ssoConfigs[env].ssoProviderIdentifier,
-		SSOProviderScope:       ssoConfigs[env].ssoProviderScope,
+		SSOProviderIdentifier:  SsoConfigs[env].SsoProviderIdentifier,
+		SSOProviderScope:       SsoConfigs[env].SsoProviderScope,
 	}
 
 	if !noBrowser {
