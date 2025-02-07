@@ -348,14 +348,6 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	srApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
-	if err != nil {
-		return err
-	}
-	srApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
-	if err != nil {
-		return err
-	}
 
 	var token string
 	if c.Config.IsOnPremLogin() {
@@ -425,8 +417,6 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 
 	groupHandler := &GroupHandler{
 		SrClient:          srClient,
-		SrApiKey:          srApiKey,
-		SrApiSecret:       srApiSecret,
 		SrClusterEndpoint: srEndpoint,
 		Token:             token,
 		KeyFormat:         keyFormat,
