@@ -14,7 +14,7 @@ require (
 	github.com/charmbracelet/glamour v0.7.0
 	github.com/charmbracelet/lipgloss v0.11.0
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
-	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230822191820-abc0b42e8715
+	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20250205171805-d4709871c4f3
 	github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0
@@ -29,9 +29,9 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/flink v0.9.0
 	github.com/confluentinc/ccloud-sdk-go-v2/flink-artifact v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.17.0
-	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.11.0
+	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.15.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering v0.5.0
-	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0
+	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.22.0
 	github.com/confluentinc/ccloud-sdk-go-v2/ksql v0.2.0

@@ -45,8 +45,9 @@ func TestLSPdidOpen(t *testing.T) {
 
 	lspClient := &LSPClient{conn: conn}
 	require.Nil(t, lspClient.documentURI)
-	err := lspClient.DidOpen()
+	docUri, err := lspClient.DidOpen()
 	require.NotNil(t, lspClient.documentURI)
+	require.Equal(t, docUri, *lspClient.documentURI)
 	require.NoError(t, err)
 }
 
@@ -56,14 +57,14 @@ func TestLSPdidOpenCallErr(t *testing.T) {
 
 	lspClient := &LSPClient{conn: conn}
 	require.Nil(t, lspClient.documentURI)
-	err := lspClient.DidOpen()
+	_, err := lspClient.DidOpen()
 	require.Nil(t, lspClient.documentURI)
 	require.Error(t, err)
 }
 
 func TestLSPdidOpenNoConnErr(t *testing.T) {
 	lspClient := &LSPClient{conn: nil}
-	err := lspClient.DidOpen()
+	_, err := lspClient.DidOpen()
 	require.Error(t, err)
 }
 

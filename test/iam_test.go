@@ -153,6 +153,7 @@ func (s *CLITestSuite) TestIamRbacRoleBindingList_OnPrem() {
 func (s *CLITestSuite) TestIamServiceAccount() {
 	tests := []CLITest{
 		{args: "iam service-account create human-service --description human-output", fixture: "iam/service-account/create.golden"},
+		{args: "iam service-account create human-service --description human-output --resource-owner u-123", fixture: "iam/service-account/create.golden"},
 		{args: "iam service-account create json-service --description json-output -o json", fixture: "iam/service-account/create-json.golden"},
 		{args: "iam service-account create yaml-service --description yaml-output -o yaml", fixture: "iam/service-account/create-yaml.golden"},
 		{args: "iam service-account delete sa-12345 --force", fixture: "iam/service-account/delete.golden"},
@@ -412,6 +413,8 @@ func (s *CLITestSuite) TestIamIpFilter() {
 		{args: "iam ip-filter update ipf-34dq3 --add-ip-groups ipg-hjkil --remove-ip-groups ipg-fedbc", fixture: "iam/ip-filter/update-resource-remove-not-exist.golden"},
 		{args: "iam ip-filter update ipf-34dq5 --resource-group multiple --add-operation-groups SCHEMA", fixture: "iam/ip-filter/update-add-operation-group.golden"},
 		{args: "iam ip-filter update ipf-34dq4 --remove-operation-groups SCHEMA", fixture: "iam/ip-filter/update-remove-operation-group.golden"},
+		{args: "iam ip-filter update ipf-34dq4 --resource-group multiple --add-operation-groups FLINK", fixture: "iam/ip-filter/update-add-flink-operation-group.golden"},
+		{args: "iam ip-filter update ipf-34dq6 --remove-operation-groups SCHEMA,FLINK", fixture: "iam/ip-filter/update-remove-sr-and-flink-operation-group.golden"},
 	}
 
 	for _, test := range tests {

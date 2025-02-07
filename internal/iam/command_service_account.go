@@ -8,6 +8,7 @@ import (
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -21,7 +22,7 @@ type serviceAccountOut struct {
 	Description string `human:"Description" serialized:"description"`
 }
 
-func newServiceAccountCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newServiceAccountCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "service-account",
 		Aliases:     []string{"sa"},
@@ -31,7 +32,7 @@ func newServiceAccountCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &serviceAccountCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	cmd.AddCommand(c.newCreateCommand())
+	cmd.AddCommand(c.newCreateCommand(cfg))
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
