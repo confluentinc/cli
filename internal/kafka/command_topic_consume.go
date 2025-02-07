@@ -344,6 +344,10 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	srEndpoint, err := cmd.Flags().GetString("schema-registry-endpoint")
+	if err != nil {
+		return err
+	}
 	srApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
 	if err != nil {
 		return err
@@ -352,15 +356,10 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	token, err := auth.GetDataplaneToken(c.Context)
-	if err != nil {
-		return err
-	}
 
-	// Fetch the current SR cluster id and endpoint
-	srClusterId, srEndpoint, err := c.GetCurrentSchemaRegistryClusterIdAndEndpoint()
-	if err != nil {
-		return err
+	var token string
+	if c.Config.IsOnPremLogin() {
+		token = c.Config.Context().GetAuthToken()
 	}
 
 	consumer, err := newOnPremConsumer(cmd, c.clientID, configFile, config)
@@ -428,7 +427,6 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 		SrClient:          srClient,
 		SrApiKey:          srApiKey,
 		SrApiSecret:       srApiSecret,
-		SrClusterId:       srClusterId,
 		SrClusterEndpoint: srEndpoint,
 		Token:             token,
 		KeyFormat:         keyFormat,
