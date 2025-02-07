@@ -3,7 +3,6 @@ package mfa
 import (
 	"bufio"
 	"fmt"
-	"github.com/confluentinc/cli/v4/pkg/output"
 	"os"
 	"strings"
 	"time"
@@ -11,6 +10,7 @@ import (
 	"github.com/pkg/browser"
 
 	"github.com/confluentinc/cli/v4/pkg/auth/sso"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func Login(authURL, email, connectionName string, noBrowser bool) (string, string, error) {
@@ -45,7 +45,6 @@ func Login(authURL, email, connectionName string, noBrowser bool) (string, strin
 
 		state.MFAProviderAuthenticationCode = split[1]
 	} else {
-
 		server := newServer(state)
 		if err := server.startServer(); err != nil {
 			return "", "", fmt.Errorf("unable to start HTTP server: %w", err)
