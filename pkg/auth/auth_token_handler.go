@@ -71,7 +71,7 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 	}
 
 	if credentials.IsMFA {
-		token, refreshToken, err := a.getCCloudMFAToken(client, credentials.Username, organizationId)
+		token, refreshToken, err := a.getCCloudMFAToken(client, noBrowser, credentials.Username, organizationId)
 		if err != nil {
 			return "", "", err
 		}
@@ -133,7 +133,7 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloudv1.Client, noBrow
 	return res.GetToken(), refreshToken, err
 }
 
-func (a *AuthTokenHandlerImpl) getCCloudMFAToken(client *ccloudv1.Client, email, organizationId string) (string, string, error) {
+func (a *AuthTokenHandlerImpl) getCCloudMFAToken(client *ccloudv1.Client, noBrowser bool, email, organizationId string) (string, string, error) {
 	connectionName, err := a.getMfaConnectionName(client, email, organizationId)
 	if err != nil {
 		return "", "", fmt.Errorf(`unable to obtain MFA info for user "%s: %v"`, email, err)
@@ -142,7 +142,7 @@ func (a *AuthTokenHandlerImpl) getCCloudMFAToken(client *ccloudv1.Client, email,
 		return "", "", fmt.Errorf(`tried to obtain MFA token for non MFA user "%s"`, email)
 	}
 
-	idToken, refreshToken, err := mfa.Login(client.BaseURL, email, connectionName)
+	idToken, refreshToken, err := mfa.Login(client.BaseURL, email, connectionName, noBrowser)
 	if err != nil {
 		return "", "", err
 	}
