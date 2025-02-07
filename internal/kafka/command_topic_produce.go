@@ -279,14 +279,6 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	srApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
-	if err != nil {
-		return err
-	}
-	srApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
-	if err != nil {
-		return err
-	}
 
 	var token string
 	if c.Config.IsOnPremLogin() {
@@ -300,7 +292,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		keySchemaId = int(binary.BigEndian.Uint32(keyMetaInfo[1:5]))
 	}
 
-	if err := keySerializer.InitSerializer(srEndpoint, "", "key", srApiKey, srApiSecret, token, keySchemaId); err != nil {
+	if err := keySerializer.InitSerializer(srEndpoint, "", "key", "", "", token, keySchemaId); err != nil {
 		return err
 	}
 	if err := keySerializer.LoadSchema(keySchema, keyReferencePathMap); err != nil {
