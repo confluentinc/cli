@@ -318,7 +318,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	if len(valueMetaInfo) >= messageOffset {
 		valueSchemaId = int(binary.BigEndian.Uint32(valueMetaInfo[1:messageOffset]))
 	}
-	if err := valueSerializer.InitSerializer(srEndpoint, "", "value", srApiKey, srApiSecret, token, valueSchemaId); err != nil {
+	if err := valueSerializer.InitSerializer(srEndpoint, "", "value", "", "", token, valueSchemaId); err != nil {
 		return err
 	}
 	if err := valueSerializer.LoadSchema(schema, referencePathMap); err != nil {
