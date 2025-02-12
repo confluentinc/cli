@@ -1,14 +1,14 @@
 package iam
 
 import (
-	"github.com/confluentinc/cli/v4/pkg/config"
-	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/spf13/cobra"
 
 	certificateauthorityv2 "github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority/v2"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
 )
 
 func (c *certificatePoolCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
