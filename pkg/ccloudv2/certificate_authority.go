@@ -75,8 +75,11 @@ func (c *Client) executeListCertificateAuthorities(pageToken string) (certificat
 	return req.Execute()
 }
 
-func (c *Client) CreateCertificatePool(certificatePool certificateauthorityv2.IamV2CertificateIdentityPool, provider string) (certificateauthorityv2.IamV2CertificateIdentityPool, error) {
-	resp, httpResp, err := c.CertificateAuthorityClient.CertificateIdentityPoolsIamV2Api.CreateIamV2CertificateIdentityPool(c.certificatePoolApiContext(), provider).IamV2CertificateIdentityPool(certificatePool).Execute()
+func (c *Client) CreateCertificatePool(certificatePool certificateauthorityv2.IamV2CertificateIdentityPool, provider string, resourceOwner string) (certificateauthorityv2.IamV2CertificateIdentityPool, error) {
+	resp, httpResp, err := c.CertificateAuthorityClient.CertificateIdentityPoolsIamV2Api.
+		CreateIamV2CertificateIdentityPool(c.certificatePoolApiContext(), provider).
+		AssignedResourceOwner(resourceOwner).
+		IamV2CertificateIdentityPool(certificatePool).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
