@@ -14,16 +14,13 @@ import (
 func TestNewStateDev(t *testing.T) {
 	state, err := newState("https://devel.cpdev.cloud/", "test+mfa@conluent.io", false)
 	require.NoError(t, err)
-	// randomly generated
 	require.True(t, len(state.CodeVerifier) > 10)
 	require.True(t, len(state.CodeChallenge) > 10)
 	require.True(t, len(state.MFAProviderState) > 10)
-	// make sure we didn't so something dumb generating the hashes
 	require.True(t,
 		(state.CodeVerifier != state.CodeChallenge) &&
 			(state.CodeVerifier != state.MFAProviderState) &&
 			(state.CodeChallenge != state.MFAProviderState))
-	// dev configs
 	require.Equal(t, "https://login.confluent-dev.io/oauth", state.MFAProviderHost)
 	require.Equal(t, "sPhOuMMVRSFFR7HfB606KLxf1RAU4SXg", state.MFAProviderClientID)
 	require.Equal(t, "http://127.0.0.1:26635/cli_callback", state.MFAProviderCallbackUrl)
@@ -31,7 +28,6 @@ func TestNewStateDev(t *testing.T) {
 	require.Empty(t, state.MFAProviderAuthenticationCode)
 	require.Empty(t, state.MFAProviderIDToken)
 
-	// check stag configs
 	stateStag, err := newState("https://stag.cpdev.cloud/", "test+mfa@conluent.io", false)
 	require.NoError(t, err)
 	require.Equal(t, "https://login-stag.confluent-dev.io/oauth", stateStag.MFAProviderHost)
@@ -45,17 +41,14 @@ func TestNewStateDev(t *testing.T) {
 func TestNewStateDevNoBrowser(t *testing.T) {
 	state, err := newState("https://devel.cpdev.cloud", "test+mfa@conluent.io", true)
 	require.NoError(t, err)
-	// randomly generated
 	require.True(t, len(state.CodeVerifier) > 10)
 	require.True(t, len(state.CodeChallenge) > 10)
 	require.True(t, len(state.MFAProviderState) > 10)
-	// make sure we didn't so something dumb generating the hashes
 	require.True(t,
 		(state.CodeVerifier != state.CodeChallenge) &&
 			(state.CodeVerifier != state.MFAProviderState) &&
 			(state.CodeChallenge != state.MFAProviderState))
 
-	// dev configs
 	require.Equal(t, "https://login.confluent-dev.io/oauth", state.MFAProviderHost)
 	require.Equal(t, "sPhOuMMVRSFFR7HfB606KLxf1RAU4SXg", state.MFAProviderClientID)
 	require.Equal(t, "https://devel.cpdev.cloud/cli_callback", state.MFAProviderCallbackUrl)
@@ -63,7 +56,6 @@ func TestNewStateDevNoBrowser(t *testing.T) {
 	require.Empty(t, state.MFAProviderAuthenticationCode)
 	require.Empty(t, state.MFAProviderIDToken)
 
-	// check stag configs
 	stateStag, err := newState("https://stag.cpdev.cloud", "test+mfa@conluent.io", true)
 	require.NoError(t, err)
 	require.Equal(t, "https://login-stag.confluent-dev.io/oauth", stateStag.MFAProviderHost)
@@ -77,11 +69,9 @@ func TestNewStateDevNoBrowser(t *testing.T) {
 func TestNewStateProd(t *testing.T) {
 	state, err := newState("https://confluent.cloud", "test+mfa@conluent.io", false)
 	require.NoError(t, err)
-	// randomly generated
 	require.True(t, len(state.CodeVerifier) > 10)
 	require.True(t, len(state.CodeChallenge) > 10)
 	require.True(t, len(state.MFAProviderState) > 10)
-	// make sure we didn't so something dumb generating the hashes
 	require.True(t,
 		(state.CodeVerifier != state.CodeChallenge) &&
 			(state.CodeVerifier != state.MFAProviderState) &&
@@ -99,12 +89,10 @@ func TestNewStateProdNoBrowser(t *testing.T) {
 		state, err := newState(authURL, "test+mfa@conluent.io", true)
 		require.NoError(t, err)
 
-		// randomly generated
 		require.True(t, len(state.CodeVerifier) > 10)
 		require.True(t, len(state.CodeChallenge) > 10)
 		require.True(t, len(state.MFAProviderState) > 10)
 
-		// make sure we didn't so something dumb generating the hashes
 		require.True(t,
 			(state.CodeVerifier != state.CodeChallenge) &&
 				(state.CodeVerifier != state.MFAProviderState) &&
@@ -129,7 +117,6 @@ func TestGetAuthorizationUrl(t *testing.T) {
 	state, err := newState("https://devel.cpdev.cloud", "test+mfa@confluent.io", false)
 	require.NoError(t, err)
 
-	// test get auth code url
 	authCodeUrlDevel := state.getAuthorizationCodeUrl(false, "connection1")
 	expectedUri := "/authorize?challenge_mfa=true" +
 		"&response_type=code" +
@@ -147,9 +134,7 @@ func TestGetAuthorizationUrl(t *testing.T) {
 	require.Equal(t, authCodeUrlDevel, expectedUrl)
 
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		// Test request parameters
 		require.Equal(t, req.URL.String(), expectedUri)
-		// Send response to be tested
 		_, e := rw.Write([]byte(`OK`))
 		require.NoError(t, e)
 	}))
@@ -172,21 +157,18 @@ func TestGetOAuthToken(t *testing.T) {
 
 	mockIDToken := "foobar"
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		// Test request parameters
 		require.Equal(t, req.URL.String(), expectedUri)
 		body, err := io.ReadAll(req.Body)
 		require.NoError(t, err)
 		require.True(t, len(body) > 0)
 		require.Equal(t, expectedPayload, string(body))
 
-		// mock response
 		_, err = rw.Write([]byte(fmt.Sprintf(`{"id_token": "%s", "refresh_token": "%s"}`, mockIDToken, mockRefreshToken)))
 		require.NoError(t, err)
 	}))
 	defer server.Close()
 	serverPort := strings.Split(server.URL, ":")[2]
 
-	// mock auth0 endpoint with local test server
 	state.MFAProviderHost = "http://127.0.0.1:" + serverPort
 
 	err = state.getOAuthToken()
@@ -211,21 +193,18 @@ func TestRefreshOAuthToken(t *testing.T) {
 
 	mockIDToken := "foobar"
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		// Test request parameters
 		require.Equal(t, req.URL.String(), expectedUri)
 		body, err := io.ReadAll(req.Body)
 		require.NoError(t, err)
 		require.True(t, len(body) > 0)
 		require.Equal(t, expectedPayload, string(body))
 
-		// mock response
 		_, err = rw.Write([]byte(fmt.Sprintf(`{"id_token": "%s", "refresh_token": "%s"}`, mockIDToken, mockRefreshToken2)))
 		require.NoError(t, err)
 	}))
 	defer server.Close()
 	serverPort := strings.Split(server.URL, ":")[2]
 
-	// mock auth0 endpoint with local test server
 	state.MFAProviderHost = "http://127.0.0.1:" + serverPort
 
 	err = state.refreshOAuthToken()

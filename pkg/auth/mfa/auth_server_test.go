@@ -53,7 +53,6 @@ func TestCallback(t *testing.T) {
 	ch := make(chan bool)
 	go func() {
 		<-ch
-		// send mock request to server's callback endpoint
 		req, err := http.NewRequest(http.MethodGet, mockUri, nil)
 		require.NoError(t, err)
 		_, err = http.DefaultClient.Do(req)
@@ -61,7 +60,6 @@ func TestCallback(t *testing.T) {
 	}()
 
 	go func() {
-		// trigger the callback function after waiting a sec
 		time.Sleep(500)
 		close(ch)
 	}()
@@ -84,7 +82,6 @@ func TestCallback(t *testing.T) {
 	c := make(chan bool)
 	go func() {
 		<-c
-		// send mock request to server's callback endpoint
 		req, err := http.NewRequest(http.MethodGet, mockUriSSO, nil)
 		require.NoError(t, err)
 		_, err = http.DefaultClient.Do(req)
@@ -92,7 +89,6 @@ func TestCallback(t *testing.T) {
 	}()
 
 	go func() {
-		// trigger the callback function after waiting a sec
 		time.Sleep(500)
 		close(c)
 	}()
