@@ -1,6 +1,8 @@
 package iam
 
 import (
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/spf13/cobra"
 
 	certificateauthorityv2 "github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority/v2"
@@ -9,7 +11,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
-func (c *certificatePoolCommand) newCreateCommand() *cobra.Command {
+func (c *certificatePoolCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "create <name>",
 		Short:             "Create a certificate pool.",
@@ -30,7 +32,12 @@ func (c *certificatePoolCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddExternalIdentifierFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
-
+	isResourceOwnerEnabled := cfg.IsTest ||
+		(cfg.Context() != nil &&
+			featureflags.Manager.BoolVariation("auth.workload_identity.resource_owner.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
+	if isResourceOwnerEnabled {
+		addResourceOwnerFlag(cmd, c.AuthenticatedCLICommand)
+	}
 	cobra.CheckErr(cmd.MarkFlagRequired("provider"))
 
 	return cmd
@@ -56,6 +63,16 @@ func (c *certificatePoolCommand) create(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
+	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
+	isResourceOwnerEnabled := c.Config.IsTest ||
+		featureflags.Manager.BoolVariation("auth.workload_identity.resource_owner.enabled", c.Context, ldClient, true, false)
+	resourceOwner, err := "", nil
+	if isResourceOwnerEnabled {
+		resourceOwner, err = cmd.Flags().GetString("resource-owner")
+		if err != nil {
+			return err
+		}
+	}
 
 	createCertificatePool := certificateauthorityv2.IamV2CertificateIdentityPool{
 		DisplayName:        certificateauthorityv2.PtrString(args[0]),
@@ -63,7 +80,7 @@ func (c *certificatePoolCommand) create(cmd *cobra.Command, args []string) error
 		Filter:             certificateauthorityv2.PtrString(filter),
 		ExternalIdentifier: certificateauthorityv2.PtrString(externalIdentifier),
 	}
-	certificatePool, err := c.V2Client.CreateCertificatePool(createCertificatePool, provider)
+	certificatePool, err := c.V2Client.CreateCertificatePool(createCertificatePool, provider, resourceOwner)
 	if err != nil {
 		return err
 	}

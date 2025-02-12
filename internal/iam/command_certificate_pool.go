@@ -33,7 +33,7 @@ func newCertificatePoolCommand(cfg *config.Config, prerunner pcmd.PreRunner) *co
 
 	c := &certificatePoolCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	cmd.AddCommand(c.newCreateCommand())
+	cmd.AddCommand(c.newCreateCommand(cfg))
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
