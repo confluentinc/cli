@@ -33,7 +33,7 @@ type authState struct {
 	MFAProviderIdentifier         string
 }
 
-func newState(authUrl, email string) (*authState, error) {
+func newState(authUrl, email string, noBrowser bool) (*authState, error) {
 	if authUrl == "" {
 		authUrl = "https://confluent.cloud"
 	}
@@ -42,12 +42,18 @@ func newState(authUrl, email string) (*authState, error) {
 
 	state := &authState{
 		MFAProviderHost:        "https://" + sso.SsoConfigs[env].SsoProviderDomain,
-		MFAProviderCallbackUrl: mfaProviderCallbackLocalURL,
+		MFAProviderCallbackUrl: strings.TrimSuffix(authUrl, "/") + sso.SsoProviderCallbackEndpoint,
 		MFAProviderClientID:    sso.GetAuth0CCloudClientIdFromBaseUrl(authUrl),
 		Email:                  email,
 		MFAProviderIdentifier:  sso.SsoConfigs[env].SsoProviderIdentifier,
 		MFAProviderScope:       sso.SsoConfigs[env].SsoProviderScope,
 	}
+
+	if !noBrowser {
+		// if we're not using the no browser flow, the callback will always be localhost regardless of environment
+		state.MFAProviderCallbackUrl = mfaProviderCallbackLocalURL
+	}
+
 	if err := state.generateCodes(); err != nil {
 		return nil, err
 	}

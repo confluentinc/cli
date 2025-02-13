@@ -68,7 +68,7 @@ func (s *authServer) startServer() error {
 	return nil
 }
 
-// GetAuthorizationCode takes the code verifier/challenge and gets an authorization code from the SSO provider
+// GetAuthorizationCode takes the code verifier/challenge and gets an authorization code from the MFA provider
 func (s *authServer) awaitAuthorizationCode(timeout time.Duration) error {
 	// Wait until flow is finished / callback is called (or timeout...)
 	go func() {
