@@ -200,8 +200,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/ccl v0.4.0 h1:dUFB7PM/eQbI/AhRHyMh4Pd7x
 github.com/confluentinc/ccloud-sdk-go-v2/ccl v0.4.0/go.mod h1:SJdOAgzigkv8NbZo6+8N1isiZ/HXTg+TOtQg1o1PhKY=
 github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5 h1:w0Z2hFxg8ng8gycWKRZFdus1R+q8D/I5AmN06NZso5s=
 github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5/go.mod h1:L8U9xs2duASJnjIYkwGrSbZNpApsbh+vlxsJlZMHJPA=
-github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority v0.0.0-20240921001517-750d06dd7c27 h1:prbOJKQGZ6VgBFRDN3mzE942apQnlS5d68L7HyA2Gz8=
-github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority v0.0.0-20240921001517-750d06dd7c27/go.mod h1:xqB2YHUtcYF5cbwctSDzXoYw0YXaawj13d0lzcvphEA=
+github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority v0.0.2 h1:stsiO1JIRX6ITdw4DCsidQ0w7uhsyKDsYXwzxvi14GI=
+github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority v0.0.2/go.mod h1:OU1RGuP2y5l54jX5rA++QBAKeRvSa7GmkfNgJvB9J6M=
 github.com/confluentinc/ccloud-sdk-go-v2/cli v0.3.0 h1:OOFNqtZN3Spuzz4TX6K6JfDM7zNDIE6BE1TtK78jFHQ=
 github.com/confluentinc/ccloud-sdk-go-v2/cli v0.3.0/go.mod h1:Mv0WTsBXUfKjmF+r2t2Dv/xJzZf17shhf5J1cttU2Qo=
 github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.21.0 h1:ioG3TsP8FwskPtwitfGfvBgTdprYKutHB0oxG5F4Dj8=

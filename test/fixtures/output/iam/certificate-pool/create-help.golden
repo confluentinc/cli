@@ -15,6 +15,7 @@ Flags:
       --external-identifier string   External Identifier for this pool.
       --context string               CLI context name.
   -o, --output string                Specify the output format as "human", "json", or "yaml". (default "human")
+      --resource-owner string        The resource ID of the principal who will be assigned resource owner on the created resource. Principal can be a "user", "group-mapping", "service-account", or "identity-pool".
 
 Global Flags:
   -h, --help            Show help for this command.
