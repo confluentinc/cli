@@ -13,14 +13,15 @@ Update schema exporter configuration.
   $ confluent schema-registry exporter update my-exporter --config config.txt
 
 Flags:
-      --config strings          A comma-separated list of "key=value" pairs, or path to a configuration file containing a newline-separated list of "key=value" pairs.
-      --subjects strings        A comma-separated list of exporter subjects.
-      --subject-format string   Exporter subject rename format. The format string can contain ${subject}, which will be replaced with the default subject name. (default "${subject}")
-      --context-type string     Exporter context type. One of "auto", "custom", or "none". (default "auto")
-      --context-name string     Exporter context name.
-      --context string          CLI context name.
-      --environment string      Environment ID.
-  -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
+      --config strings                    A comma-separated list of "key=value" pairs, or path to a configuration file containing a newline-separated list of "key=value" pairs.
+      --subjects strings                  A comma-separated list of exporter subjects.
+      --subject-format string             Exporter subject rename format. The format string can contain ${subject}, which will be replaced with the default subject name. (default "${subject}")
+      --context-type string               Exporter context type. One of "auto", "custom", or "none". (default "auto")
+      --context-name string               Exporter context name.
+      --context string                    CLI context name.
+      --environment string                Environment ID.
+      --schema-registry-endpoint string   The URL of the Schema Registry cluster.
+  -o, --output string                     Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

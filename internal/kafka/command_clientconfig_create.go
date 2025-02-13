@@ -138,6 +138,7 @@ func (c *clientConfigCommand) newCreateClientCommand(clientConfig *clientConfig)
 	if clientConfig.isSrApiAvailable {
 		cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
 		cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API secret.")
+		cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
 	}
 
 	return cmd

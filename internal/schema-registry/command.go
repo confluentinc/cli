@@ -32,6 +32,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newClusterCommand(cfg))
 	cmd.AddCommand(c.newConfigurationCommand(cfg))
 	cmd.AddCommand(c.newDekCommand(cfg))
+	cmd.AddCommand(c.newEndpointsCommand())
 	cmd.AddCommand(c.newExporterCommand(cfg))
 	cmd.AddCommand(c.newKekCommand(cfg))
 	cmd.AddCommand(c.newSchemaCommand(cfg))

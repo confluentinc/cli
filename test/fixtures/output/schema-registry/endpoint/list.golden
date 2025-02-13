@@ -1,0 +1,4 @@
+   Public Endpoint URL  | Private Endpoint URL  |                     Private Regional Endpoint URL                     | Catalog Endpoint URL   
+------------------------+-----------------------+-----------------------------------------------------------------------+------------------------
+  http://127.0.0.1:1027 | http://127.0.0.1:1029 | us-east-1=https://lsrc-stk1d.us-east-1.aws.private.stag.cpdev.cloud   | http://127.0.0.1:1030  
+                        |                       | us-west-2=https://lsrc-stgvk1d.us-west-2.aws.private.stag.cpdev.cloud |                        
