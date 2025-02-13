@@ -202,7 +202,6 @@ func TestRefreshOAuthToken(t *testing.T) {
 	}))
 	defer server.Close()
 	serverPort := strings.Split(server.URL, ":")[2]
-	
 	state.SSOProviderHost = "http://127.0.0.1:" + serverPort
 
 	err = state.refreshOAuthToken()
