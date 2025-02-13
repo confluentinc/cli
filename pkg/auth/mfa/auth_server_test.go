@@ -13,7 +13,7 @@ import (
 
 func TestServerTimeout(t *testing.T) {
 	//MFA Server
-	state, err := newState("https://devel.cpdev.cloud", "test+mfa@confluent.io")
+	state, err := newState("https://devel.cpdev.cloud", "test+mfa@confluent.io", false)
 	require.NoError(t, err)
 	server := newServer(state)
 
@@ -39,7 +39,7 @@ func TestServerTimeout(t *testing.T) {
 
 func TestCallback(t *testing.T) {
 	//MFA Callback
-	state, err := newState("https://devel.cpdev.cloud", "test+mfa@confluent.io")
+	state, err := newState("https://devel.cpdev.cloud", "test+mfa@confluent.io", false)
 	require.NoError(t, err)
 	server := newServer(state)
 
@@ -53,7 +53,6 @@ func TestCallback(t *testing.T) {
 	ch := make(chan bool)
 	go func() {
 		<-ch
-		// send mock request to server's callback endpoint
 		req, err := http.NewRequest(http.MethodGet, mockUri, nil)
 		require.NoError(t, err)
 		_, err = http.DefaultClient.Do(req)
@@ -61,7 +60,6 @@ func TestCallback(t *testing.T) {
 	}()
 
 	go func() {
-		// trigger the callback function after waiting a sec
 		time.Sleep(500)
 		close(ch)
 	}()
@@ -84,7 +82,6 @@ func TestCallback(t *testing.T) {
 	c := make(chan bool)
 	go func() {
 		<-c
-		// send mock request to server's callback endpoint
 		req, err := http.NewRequest(http.MethodGet, mockUriSSO, nil)
 		require.NoError(t, err)
 		_, err = http.DefaultClient.Do(req)
@@ -92,7 +89,6 @@ func TestCallback(t *testing.T) {
 	}()
 
 	go func() {
-		// trigger the callback function after waiting a sec
 		time.Sleep(500)
 		close(c)
 	}()
