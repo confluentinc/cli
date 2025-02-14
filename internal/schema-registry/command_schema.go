@@ -6,16 +6,14 @@ import (
 
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 func (c *command) newSchemaCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "schema",
-		Short:       "Manage Schema Registry schemas.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
+		Use:   "schema",
+		Short: "Manage Schema Registry schemas.",
 	}
 
 	cmd.AddCommand(c.newSchemaCompatibilityCommand(cfg))

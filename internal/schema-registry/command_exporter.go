@@ -14,9 +14,8 @@ const exporterActionMsg = "%s schema exporter \"%s\".\n"
 
 func (c *command) newExporterCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "exporter",
-		Short:       "Manage Schema Registry exporters.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
+		Use:   "exporter",
+		Short: "Manage Schema Registry exporters.",
 	}
 
 	cmd.AddCommand(c.newExporterCreateCommand(cfg))

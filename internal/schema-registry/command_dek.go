@@ -5,16 +5,14 @@ import (
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
-	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c *command) newDekCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "dek",
-		Short:       "Manage Schema Registry Data Encryption Keys (DEKs).",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
+		Use:   "dek",
+		Short: "Manage Schema Registry Data Encryption Keys (DEKs).",
 	}
 
 	cmd.AddCommand(c.newDekCreateCommand(cfg))
