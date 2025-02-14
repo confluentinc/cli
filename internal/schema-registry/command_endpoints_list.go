@@ -47,7 +47,7 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	list.Add(&listEndpoint{
 		Public:          cluster.Spec.GetHttpEndpoint(),
 		Private:         cluster.Spec.GetPrivateHttpEndpoint(),
-		PrivateRegional: cluster.Spec.GetPrivateHttpRegionalEndpoints(),
+		PrivateRegional: cluster.Spec.PrivateNetworkingConfig.GetRegionalEndpoints(),
 		Catalog:         cluster.Spec.GetCatalogHttpEndpoint(),
 	})
 
