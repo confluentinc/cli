@@ -144,7 +144,7 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 		Cluster:                    cluster.GetId(),
 		EndpointUrl:                cluster.Spec.GetHttpEndpoint(),
 		PrivateEndpointUrl:         cluster.Spec.GetPrivateHttpEndpoint(),
-		PrivateRegionalEndpointUrl: cluster.Spec.GetPrivateHttpRegionalEndpoints(),
+		PrivateRegionalEndpointUrl: cluster.Spec.PrivateNetworkingConfig.GetRegionalEndpoints(),
 		CatalogEndpointUrl:         cluster.Spec.GetCatalogHttpEndpoint(),
 		Cloud:                      cluster.Spec.GetCloud(),
 		Region:                     cluster.Spec.GetRegion(),
