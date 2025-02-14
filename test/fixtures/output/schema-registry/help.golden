@@ -10,6 +10,7 @@ Available Commands:
   cluster       Manage Schema Registry cluster.
   configuration Manage Schema Registry configuration.
   dek           Manage Schema Registry Data Encryption Keys (DEKs).
+  endpoint      Manage Schema Registry endpoints.
   exporter      Manage Schema Registry exporters.
   kek           Manage Schema Registry Key Encryption Keys (KEKs).
   schema        Manage Schema Registry schemas.
