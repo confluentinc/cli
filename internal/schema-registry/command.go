@@ -16,10 +16,9 @@ type command struct {
 
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "schema-registry",
-		Aliases:     []string{"sr"},
-		Short:       "Manage Schema Registry.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
+		Use:     "schema-registry",
+		Aliases: []string{"sr"},
+		Short:   "Manage Schema Registry.",
 	}
 
 	c := &command{}

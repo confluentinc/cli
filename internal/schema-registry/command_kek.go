@@ -5,7 +5,6 @@ import (
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
-	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -18,9 +17,8 @@ const (
 
 func (c *command) newKekCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "kek",
-		Short:       "Manage Schema Registry Key Encryption Keys (KEKs).",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
+		Use:   "kek",
+		Short: "Manage Schema Registry Key Encryption Keys (KEKs).",
 	}
 
 	cmd.AddCommand(c.newKekCreateCommand(cfg))
