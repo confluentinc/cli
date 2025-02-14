@@ -3,14 +3,12 @@ package schemaregistry
 import (
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
 func (c *command) newClusterCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "cluster",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
+		Use: "cluster",
 	}
 
 	if cfg.IsCloudLogin() {
