@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tidwall/pretty"
 
-	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
@@ -22,10 +21,9 @@ type configOut struct {
 
 func (c *command) newConfigurationCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "configuration",
-		Aliases:     []string{"config"},
-		Short:       "Manage Schema Registry configuration.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
+		Use:     "configuration",
+		Aliases: []string{"config"},
+		Short:   "Manage Schema Registry configuration.",
 	}
 
 	cmd.AddCommand(c.newConfigurationDeleteCommand(cfg))
