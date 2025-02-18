@@ -1,4 +1,4 @@
 Error: 404 Not Found
 
 Suggestions:
-    List available environments with `confluent environment list`.
+    List available environment with `confluent environment list`.
