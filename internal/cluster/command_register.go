@@ -14,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
 type registerCommand struct {
