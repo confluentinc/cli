@@ -14,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
 type registerCommand struct {
@@ -26,6 +27,16 @@ func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Register cluster.",
 		Long:  "Register cluster with the MDS cluster registry.",
 		Args:  cobra.NoArgs,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Register a new Confluent Platform cluster:",
+				Code: "confluent cluster register --cluster-name myKafkaCluster --kafka-cluster kafka-ID --hosts 10.6.6.6:9000,10.3.3.3:9003 --protocol SASL_PLAINTEXT",
+			},
+			examples.Example{
+				Text: "For more information, see https://docs.confluent.io/platform/current/security/cluster-registry.html#registering-clusters.",
+			},
+		),
+
 	}
 
 	c := &registerCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
