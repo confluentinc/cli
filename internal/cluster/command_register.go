@@ -28,8 +28,8 @@ func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Args:  cobra.NoArgs,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Register a new Confluent Platform cluster; substitute the value in <> with your information:",
-				Code: "confluent cluster register --cluster-name <myKafkaCluster> --kafka-cluster <kafka-ID> --hosts <10.6.6.6:9000,10.3.3.3:9003> --protocol SASL_PLAINTEXT",
+				Text: "Register a new Confluent Platform cluster:",
+				Code: "confluent cluster register --cluster-name myKafkaCluster --kafka-cluster kafka-ID --hosts 10.6.6.6:9000,10.3.3.3:9003 --protocol SASL_PLAINTEXT",
 			},
 			examples.Example{
 				Text: "For more information, see https://docs.confluent.io/platform/current/security/cluster-registry.html#registering-clusters.",
