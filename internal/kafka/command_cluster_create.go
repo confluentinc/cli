@@ -175,7 +175,7 @@ func stringToAvailability(s string, sku ccstructs.Sku) (string, error) {
 	}
 	return "", errors.NewErrorWithSuggestions(
 		fmt.Sprintf("invalid value \"%s\" for `--availability` flag", s),
-		fmt.Sprintf("Allowed values for `--availability` flag are: %s, %s.", singleZone, multiZone),
+		fmt.Sprintf("Allowed values for `--availability` flag are: %s, %s, %s, %s.", singleZone, multiZone, low, high),
 	)
 }
 
