@@ -10,29 +10,35 @@ import (
 )
 
 const (
-	singleZone       = "single-zone"
-	multiZone        = "multi-zone"
-	lowAvailability  = "SINGLE_ZONE"
-	highAvailability = "MULTI_ZONE"
-	low              = "LOW"
-	high             = "HIGH"
+	singleZone             = "single-zone"
+	multiZone              = "multi-zone"
+	singleZoneAvailability = "SINGLE_ZONE"
+	multiZoneAvailability  = "MULTI_ZONE"
+	low                    = "low"
+	high                   = "high"
+	lowAvailability        = "LOW"
+	highAvailability       = "HIGH"
 )
 
 var availabilitiesToHuman = map[string]string{
-	lowAvailability:  singleZone,
-	highAvailability: multiZone,
-	low:              singleZone,
-	high:             multiZone,
+	singleZoneAvailability: singleZone,
+	multiZoneAvailability:  multiZone,
+	lowAvailability:        low,
+	highAvailability:       high,
 }
 
 var availabilitiesToModel = map[string]string{
-	singleZone: lowAvailability,
-	multiZone:  highAvailability,
+	singleZone: singleZoneAvailability,
+	multiZone:  multiZoneAvailability,
+	low:        lowAvailability,
+	high:       highAvailability,
 }
 
 var availabilitiesToFreightModel = map[string]string{
 	singleZone: low,
 	multiZone:  high,
+	low:        lowAvailability,
+	high:       highAvailability,
 }
 
 type clusterCommand struct {
