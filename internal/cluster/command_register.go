@@ -36,7 +36,6 @@ func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 				Text: "For more information, see https://docs.confluent.io/platform/current/security/cluster-registry.html#registering-clusters.",
 			},
 		),
-
 	}
 
 	c := &registerCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
