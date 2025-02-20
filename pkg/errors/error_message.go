@@ -13,7 +13,7 @@ const (
 	EndOfFreeTrialSuggestions         = "To continue using Confluent Cloud, please enter a credit card with `confluent admin payment update` or claim a promo code with `confluent admin promo add`. To enter payment via the UI, please go to https://confluent.cloud/login."
 	EnsureCpSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."
 	ExactlyOneSetErrorMsg             = "exactly one of %v must be set"
-	ListResourceSuggestions           = "List available %ss with `%s list`."
+	ListResourceSuggestions           = "List available %s with `%s list`."
 	MoreThanOneNonKafkaErrorMsg       = "cannot specify more than one non-Kafka cluster ID for a scope"
 	MustSetAllowOrDenyErrorMsg        = "`--allow` or `--deny` must be set when adding or deleting an ACL"
 	MustSetResourceTypeErrorMsg       = "exactly one resource type (%s) must be set"
