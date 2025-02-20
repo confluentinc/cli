@@ -45,7 +45,7 @@ func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 	pcmd.AddResourceGroupFlag(cmd, isSrEnabled, isFlinkEnabled)
 	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
 	if isSrEnabled || isFlinkEnabled {
-		cmd.Flags().String("environment", "", "Id of the environment for which this filter applies. By default will apply to the organization only.")
+		cmd.Flags().String("environment", "", "Identifier of the environment for which this filter applies. Without this flag, applies only to the organization.")
 		opGroups := []string{"MANAGEMENT"}
 		if isSrEnabled {
 			opGroups = append(opGroups, "SCHEMA")
