@@ -27,10 +27,11 @@ blocks:
             - make lint
             - make test
             - make test-installer
-        - name: "Build linux/amd64 (GLIBC)"
-          commands:
-            - checkout
-            - docker build . --file docker/Dockerfile_build_linux_amd64 --tag test-build
+# Temporarily disable these builds until rate limiting is resolved
+#        - name: "Build linux/amd64 (GLIBC)"
+#          commands:
+#            - checkout
+#            - docker build . --file docker/Dockerfile_build_linux_amd64 --tag test-build
         - name: "Build linux/amd64 (Alpine)"
           commands:
             - checkout
@@ -50,10 +51,11 @@ blocks:
         machine:
           type: s1-prod-ubuntu20-04-arm64-1
       jobs:
-        - name: "Build linux/arm64 (GLIBC)"
-          commands:
-            - checkout
-            - docker build . --file docker/Dockerfile_build_linux_arm64 --tag test-build
+# Temporarily disable these builds until rate limiting is resolved
+#        - name: "Build linux/arm64 (GLIBC)"
+#          commands:
+#            - checkout
+#            - docker build . --file docker/Dockerfile_build_linux_arm64 --tag test-build
         - name: "Build linux/arm64 (Alpine)"
           commands:
             - checkout
