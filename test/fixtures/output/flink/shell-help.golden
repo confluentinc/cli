@@ -4,7 +4,6 @@ Usage:
   confluent flink shell [flags]
 
 Examples:
-
 For a Quick Start with examples in context, see https://docs.confluent.io/cloud/current/flink/get-started/quick-start-shell.html.
 
 Flags:
