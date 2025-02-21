@@ -140,6 +140,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 			accountDetails.channelDetails = channelDetails{
 				currentTopic:   topic,
 				currentSubject: subject,
+				examples:       make(map[string]any),
 			}
 			if err := c.getChannelDetails(accountDetails, flags); err != nil {
 				if err.Error() == protobufErrorMessage {
@@ -174,6 +175,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *command) getChannelDetails(details *accountDetails, flags *flags) error {
+	topic := details.channelDetails.currentTopic.GetTopicName()
 	if err := details.getSchemaDetails(); err != nil {
 		if err.Error() == protobufErrorMessage {
 			return err
@@ -183,15 +185,14 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	if err := details.getTags(); err != nil {
 		log.CliLogger.Warnf("Failed to get tags: %v", err)
 	}
-	details.channelDetails.example = nil
 	if flags.consumeExamples {
-		example, err := c.getMessageExamples(details.consumer, details.channelDetails.currentTopic.GetTopicName(), details.channelDetails.contentType, details.srClient, flags.valueFormat)
+		example, err := c.getMessageExamples(details.consumer, topic, details.channelDetails.contentType, details.srClient, flags.valueFormat)
 		if err != nil {
 			log.CliLogger.Warn(err)
 		}
-		details.channelDetails.example = example
+		details.channelDetails.examples[topic] = example
 	}
-	bindings, err := c.getBindings(details.channelDetails.currentTopic.GetTopicName())
+	bindings, err := c.getBindings(topic)
 	if err != nil {
 		log.CliLogger.Warnf("Bindings not found: %v", err)
 	}
@@ -205,7 +206,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 		log.CliLogger.Warnf("Failed to get subject's compatibility type: %v", err)
 	}
 	details.channelDetails.mapOfMessageCompat = mapOfMessageCompat
-	output.Printf(c.Config.EnableColor, "Added topic \"%s\".\n", details.channelDetails.currentTopic.GetTopicName())
+	output.Printf(c.Config.EnableColor, "Added topic \"%s\".\n", topic)
 	return nil
 }
 
@@ -311,7 +312,12 @@ func (c *command) getMessageExamples(consumer *ckgo.Consumer, topicName, content
 	if err != nil {
 		return nil, fmt.Errorf("failed to deserialize example: %v", err)
 	}
-	return jsonMessage, nil
+
+	var jsonObject map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonMessage), &jsonObject); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON message: %v", err)
+	}
+	return jsonObject, nil
 }
 
 func (c *command) getBindings(topicName string) (*bindings, error) {
