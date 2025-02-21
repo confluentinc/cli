@@ -44,6 +44,10 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 				Code: "confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --type dedicated --cku 1 --byok cck-a123z",
 			},
 			examples.Example{
+				Text: "Create a new freight cluster that uses a customer-managed encryption key in AWS:",
+				Code: "confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --type freight --cku 1 --byok cck-a123z --availability high",
+			},
+			examples.Example{
 				Text: "For more information, see https://docs.confluent.io/current/cloud/clusters/byok-encrypted-clusters.html.",
 			},
 		),
@@ -175,7 +179,7 @@ func stringToAvailability(s string, sku ccstructs.Sku) (string, error) {
 	}
 	return "", errors.NewErrorWithSuggestions(
 		fmt.Sprintf("invalid value \"%s\" for `--availability` flag", s),
-		fmt.Sprintf("Allowed values for `--availability` flag are: %s, %s.", singleZone, multiZone),
+		fmt.Sprintf("Allowed values for `--availability` flag are: %s, %s, %s, %s.", "single-zone", "multi-zone", "low", "high"),
 	)
 }
 
