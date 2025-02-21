@@ -1,4 +1,6 @@
 single-zone
 multi-zone
+low
+high
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp

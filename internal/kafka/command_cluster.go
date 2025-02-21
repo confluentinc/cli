@@ -2,37 +2,31 @@ package kafka
 
 import (
 	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
-const (
-	singleZone       = "single-zone"
-	multiZone        = "multi-zone"
-	lowAvailability  = "SINGLE_ZONE"
-	highAvailability = "MULTI_ZONE"
-	low              = "LOW"
-	high             = "HIGH"
-)
-
 var availabilitiesToHuman = map[string]string{
-	lowAvailability:  singleZone,
-	highAvailability: multiZone,
-	low:              singleZone,
-	high:             multiZone,
+	"SINGLE_ZONE": "single-zone",
+	"MULTI_ZONE":  "multi-zone",
+	"LOW":         "low",
+	"HIGH":        "high",
 }
 
 var availabilitiesToModel = map[string]string{
-	singleZone: lowAvailability,
-	multiZone:  highAvailability,
+	"single-zone": "SINGLE_ZONE",
+	"multi-zone":  "MULTI_ZONE",
+	"low":         "LOW",
+	"high":        "HIGH",
 }
 
 var availabilitiesToFreightModel = map[string]string{
-	singleZone: low,
-	multiZone:  high,
+	"single-zone": "LOW",
+	"multi-zone":  "HIGH",
+	"low":         "LOW",
+	"high":        "HIGH",
 }
 
 type clusterCommand struct {
