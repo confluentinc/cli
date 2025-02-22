@@ -296,7 +296,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		keySchemaId = int(binary.BigEndian.Uint32(keyMetaInfo[1:5]))
 	}
 	// Fetch the current SR cluster id and endpoint
-	srClusterId, srEndpoint, err := c.GetCurrentSchemaRegistryClusterIdAndEndpoint()
+	srClusterId, srEndpoint, err := c.GetCurrentSchemaRegistryClusterIdAndEndpoint(cmd)
 	if err != nil {
 		return err
 	}
@@ -642,7 +642,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 
 	var srClusterId string
 	if (schemaId.IsSet() || schema != "") && srEndpoint == "" {
-		srClusterId, srEndpoint, err = c.GetCurrentSchemaRegistryClusterIdAndEndpoint()
+		srClusterId, srEndpoint, err = c.GetCurrentSchemaRegistryClusterIdAndEndpoint(cmd)
 		if err != nil {
 			return nil, nil, err
 		}
