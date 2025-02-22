@@ -23,8 +23,8 @@ var availabilitiesToModel = map[string]string{
 }
 
 var availabilitiesToFreightModel = map[string]string{
-	"single-zone": "LOW",
-	"multi-zone":  "HIGH",
+	"single-zone": "LOW",  // TODO: This mapping are deprecated and will be removed in v5
+	"multi-zone":  "HIGH", // TODO: This mapping are deprecated and will be removed in v5
 	"low":         "LOW",
 	"high":        "HIGH",
 }
