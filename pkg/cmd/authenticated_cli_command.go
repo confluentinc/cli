@@ -266,7 +266,19 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				}
 				configuration.HTTPClient = caClient
 			}
+		} else if c.Context.GetSchemaRegistryEndpoint() != "" {
+			configuration.Servers = srsdk.ServerConfigurations{{URL: c.Context.GetSchemaRegistryEndpoint()}}
+			clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
+			if err != nil {
+				return nil, err
+			}
+			if len(clusters) == 0 {
+				return nil, schemaregistry.ErrNotEnabled
+			}
+			configuration.DefaultHeader = map[string]string{"target-sr-cluster": clusters[0].GetId()}
+
 		} else if c.Config.IsCloudLogin() {
+			fmt.Println("HERE, BUT ONLY ONCE")
 			clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
 			if err != nil {
 				return nil, err
@@ -278,11 +290,27 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				if !isValid {
 					isValid = c.validateEndpoint(clusters[0], schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration)
 				} else {
+					err := c.Context.SetSchemaRegistryEndpoint(urlPrivate)
+					if err != nil {
+						return nil, err
+					}
+					if err := c.Config.Save(); err != nil {
+						return nil, err
+					}
 					continue
 				}
 			}
 			if !isValid {
 				isValid = c.validateEndpoint(clusters[0], schemaRegistryApiKey, schemaRegistryApiSecret, clusters[0].Spec.GetHttpEndpoint(), *configuration)
+				if isValid {
+					err := c.Context.SetSchemaRegistryEndpoint(clusters[0].Spec.GetHttpEndpoint())
+					if err != nil {
+						return nil, err
+					}
+					if err := c.Config.Save(); err != nil {
+						return nil, err
+					}
+				}
 			}
 			if !isValid {
 				return nil, errors.NewErrorWithSuggestions(
