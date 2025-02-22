@@ -102,7 +102,7 @@ func (c *clusterCommand) validateResize(cku int32, currentCluster *cmkv2.CmkV2Cl
 		return 0, fmt.Errorf("failed to update Kafka cluster: cluster resize is only supported on dedicated clusters")
 	}
 	// Durability Checks
-	if currentCluster.Spec.GetAvailability() == highAvailability && cku <= 1 {
+	if currentCluster.Spec.GetAvailability() == "MULTI_ZONE" && cku <= 1 {
 		return 0, fmt.Errorf("`--cku` value must be greater than 1 for high durability")
 	}
 	if cku == 0 {
