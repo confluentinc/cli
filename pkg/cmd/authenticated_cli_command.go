@@ -337,7 +337,7 @@ func (c *AuthenticatedCLICommand) validateEndpoint(cluster srcmv3.SrcmV3Cluster,
 	return false
 }
 
-func (c *AuthenticatedCLICommand) GetCurrentSchemaRegistryClusterIdAndEndpoint() (string, string, error) {
+func (c *AuthenticatedCLICommand) GetCurrentSchemaRegistryClusterIdAndEndpoint(cmd *cobra.Command) (string, string, error) {
 	clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
 	if err != nil {
 		return "", "", err
@@ -346,13 +346,41 @@ func (c *AuthenticatedCLICommand) GetCurrentSchemaRegistryClusterIdAndEndpoint()
 		return "", "", schemaregistry.ErrNotEnabled
 	}
 	cluster := clusters[0]
-	var endpoint string
-
-	if cluster.Spec.GetHttpEndpoint() != "" {
-		endpoint = cluster.Spec.GetHttpEndpoint()
-	} else {
-		endpoint = cluster.Spec.GetPrivateHttpEndpoint()
+	endpoint, err := c.GetValidSchemaRegistryClusterIdAndEndpoint(cmd, cluster)
+	if err != nil {
+		return "", "", err
 	}
-
 	return cluster.GetId(), endpoint, nil
+}
+
+func (c *AuthenticatedCLICommand) GetValidSchemaRegistryClusterIdAndEndpoint(cmd *cobra.Command, cluster srcmv3.SrcmV3Cluster) (string, error) {
+	unsafeTrace, _ := cmd.Flags().GetBool("unsafe-trace")
+	configuration := srsdk.NewConfiguration()
+	configuration.UserAgent = c.Config.Version.UserAgent
+	configuration.Debug = unsafeTrace
+	configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(c.Config, unsafeTrace)
+
+	schemaRegistryApiKey, _ := cmd.Flags().GetString("schema-registry-api-key")
+	schemaRegistryApiSecret, _ := cmd.Flags().GetString("schema-registry-api-secret")
+	isValid := false
+	var endpoint string
+	for _, urlPrivate := range cluster.Spec.PrivateNetworkingConfig.GetRegionalEndpoints() {
+		if !isValid {
+			isValid = c.validateEndpoint(cluster, schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration)
+		} else {
+			endpoint = urlPrivate
+			continue
+		}
+	}
+	if !isValid {
+		isValid = c.validateEndpoint(cluster, schemaRegistryApiKey, schemaRegistryApiSecret, cluster.Spec.GetHttpEndpoint(), *configuration)
+		endpoint = cluster.Spec.GetHttpEndpoint()
+	}
+	if !isValid {
+		return "", errors.NewErrorWithSuggestions(
+			"Schema Registry endpoint not found",
+			"Log in to Confluent Cloud with `confluent login`.\nSupply a Schema Registry endpoint with `--schema-registry-endpoint`.",
+		)
+	}
+	return endpoint, nil
 }
