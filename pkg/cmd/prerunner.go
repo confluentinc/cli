@@ -498,13 +498,14 @@ func (r *PreRun) createMDSClient(ctx *config.Context, ver *pversion.Version, uns
 	}
 	mdsConfig.BasePath = ctx.GetPlatformServer()
 	mdsConfig.UserAgent = ver.UserAgent
-	if ctx.Platform.CaCertPath == "" {
+	if ctx.GetPlatform().GetCaCertPath() == "" {
 		return mdsv1.NewAPIClient(mdsConfig)
 	}
-	caCertPath := ctx.Platform.CaCertPath
+	caCertPath := ctx.GetPlatform().GetCaCertPath()
+	clientCertPath, clientKeyPath := ctx.GetPlatform().GetClientCertAndKeyPaths()
 	// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
 	// be a --certificate-authority-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
-	client, err := utils.SelfSignedCertClientFromPath(caCertPath)
+	client, err := utils.CustomCAAndClientCertClient(caCertPath, clientCertPath, clientKeyPath)
 	if err != nil {
 		log.CliLogger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --certificate-authority-path flag.", caCertPath, err.Error())
 	} else {
