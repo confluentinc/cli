@@ -278,7 +278,6 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			configuration.DefaultHeader = map[string]string{"target-sr-cluster": clusters[0].GetId()}
 
 		} else if c.Config.IsCloudLogin() {
-			fmt.Println("HERE, BUT ONLY ONCE")
 			clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
 			if err != nil {
 				return nil, err
