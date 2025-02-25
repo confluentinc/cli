@@ -57,6 +57,10 @@ func PersistLogout(config *config.Config) error {
 		return err
 	}
 	ctx.Config.CurrentContext = ""
+	err := ctx.SetSchemaRegistryEndpoint("")
+	if err != nil {
+		return err
+	}
 	return config.Save()
 }
 
