@@ -1,4 +1,4 @@
 Error: invalid value "oops-zone" for `--availability` flag
 
 Suggestions:
-    Allowed values for `--availability` flag are: single-zone, multi-zone, low, high.
+    Allowed values for `--availability` flag are: "single-zone", "multi-zone", "low", or "high".
