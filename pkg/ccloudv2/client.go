@@ -32,7 +32,6 @@ import (
 	srcmv3 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v3"
 	srcmv3Access "github.com/confluentinc/ccloud-sdk-go-v2/srcmv3access/v1"
 	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
-	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/config"
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
@@ -73,7 +72,6 @@ type Client struct {
 	SrcmClient                   *srcmv3.APIClient
 	SrcmV3AcessClient            *srcmv3Access.APIClient
 	SsoClient                    *ssov2.APIClient
-	StreamDesignerClient         *streamdesignerv1.APIClient
 }
 
 func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
@@ -120,6 +118,5 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		SrcmClient:                   newSrcmClient(httpClient, url, userAgent, unsafeTrace),
 		SrcmV3AcessClient:            newSrcmV3AccessClient(httpClient, url, userAgent, unsafeTrace),
 		SsoClient:                    newSsoClient(httpClient, url, userAgent, unsafeTrace),
-		StreamDesignerClient:         newStreamDesignerClient(httpClient, url, userAgent, unsafeTrace),
 	}
 }
