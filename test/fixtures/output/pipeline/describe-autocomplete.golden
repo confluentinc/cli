@@ -1,4 +1,0 @@
-pipe-12345	testPipeline
-pipe-12346	testPipeline2
-:4
-Completion ended with directive: ShellCompDirectiveNoFileComp

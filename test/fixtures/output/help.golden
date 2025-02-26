@@ -28,7 +28,6 @@ Available Commands:
   logout               Log out of Confluent Cloud.
   network              Manage Confluent Cloud networks.
   organization         Manage your Confluent Cloud organizations.
-  pipeline             Manage Stream Designer pipelines.
   plugin               Manage Confluent plugins.
   prompt               Add Confluent CLI context to your terminal prompt.
   provider-integration Manage Confluent Cloud provider integrations.

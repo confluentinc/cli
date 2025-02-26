@@ -109,8 +109,6 @@ var ccloudV2Routes = []route{
 	{"/org/v2/organizations/{id}", handleOrgOrganization},
 	{"/pim/v1/integrations", handleProviderIntegrations},
 	{"/pim/v1/integrations/{id}", handleProviderIntegration},
-	{"/sd/v1/pipelines", handlePipelines},
-	{"/sd/v1/pipelines/{id}", handlePipeline},
 	{"/service-quota/v1/applied-quotas", handleAppliedQuotas},
 	{"/service-quota/v2/applied-quotas", handleAppliedQuotas},
 	{"/srcm/v3/clusters", handleSchemaRegistryClustersV3},
