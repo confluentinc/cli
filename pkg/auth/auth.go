@@ -57,10 +57,6 @@ func PersistLogout(config *config.Config) error {
 		return err
 	}
 	ctx.Config.CurrentContext = ""
-	err := ctx.SetSchemaRegistryEndpoint("")
-	if err != nil {
-		return err
-	}
 	return config.Save()
 }
 
@@ -106,6 +102,13 @@ func PersistCCloudCredentialsToConfig(config *config.Config, client *ccloudv1.Cl
 	}
 
 	ctx := config.Context()
+	for _, env := range ctx.Environments {
+		env.CurrentSchemaRegistryEndpoint = ""
+	}
+	if err := config.Save(); err != nil {
+		return "", nil, err
+	}
+
 	if ctx.CurrentEnvironment == "" && len(user.GetAccounts()) > 0 {
 		ctx.SetCurrentEnvironment(user.GetAccounts()[0].GetId())
 		if err := config.Save(); err != nil {
