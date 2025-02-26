@@ -7,9 +7,10 @@ import (
 	"strings"
 
 	shell "github.com/brianstrauch/cobra-shell"
+	"github.com/spf13/cobra"
+
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
-	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v4/internal/ai"
 	apikey "github.com/confluentinc/cli/v4/internal/api-key"
