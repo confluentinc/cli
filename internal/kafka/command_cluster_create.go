@@ -26,6 +26,11 @@ const (
 	skuDedicated  = "dedicated"
 )
 
+var (
+	allowedEnterpriseAvailabilities = []string{"single-zone", "multi-zone", "low", "high"}
+	allowedFreightAvailabilities    = []string{"low", "high"}
+)
+
 func (c *clusterCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create <name>",
@@ -42,6 +47,10 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 			examples.Example{
 				Text: "Create a new dedicated cluster that uses a customer-managed encryption key in AWS:",
 				Code: "confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --type dedicated --cku 1 --byok cck-a123z",
+			},
+			examples.Example{
+				Text: "Create a new Freight cluster that uses a customer-managed encryption key in AWS:",
+				Code: "confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --type freight --cku 1 --byok cck-a123z --availability high",
 			},
 			examples.Example{
 				Text: "For more information, see https://docs.confluent.io/current/cloud/clusters/byok-encrypted-clusters.html.",
@@ -168,15 +177,19 @@ func stringToAvailability(s string, sku ccstructs.Sku) (string, error) {
 		if modelAvailability, ok := availabilitiesToFreightModel[s]; ok {
 			return modelAvailability, nil
 		}
+		return "", errors.NewErrorWithSuggestions(
+			fmt.Sprintf("invalid value \"%s\" for `--availability` flag", s),
+			fmt.Sprintf("Allowed values for `--availability` flag are: %s.", utils.ArrayToCommaDelimitedString(allowedFreightAvailabilities, "or")),
+		)
 	} else {
 		if modelAvailability, ok := availabilitiesToModel[s]; ok {
 			return modelAvailability, nil
 		}
+		return "", errors.NewErrorWithSuggestions(
+			fmt.Sprintf("invalid value \"%s\" for `--availability` flag", s),
+			fmt.Sprintf("Allowed values for `--availability` flag are: %s.", utils.ArrayToCommaDelimitedString(allowedEnterpriseAvailabilities, "or")),
+		)
 	}
-	return "", errors.NewErrorWithSuggestions(
-		fmt.Sprintf("invalid value \"%s\" for `--availability` flag", s),
-		fmt.Sprintf("Allowed values for `--availability` flag are: %s, %s.", singleZone, multiZone),
-	)
 }
 
 func stringToSku(skuType string) (ccstructs.Sku, error) {
