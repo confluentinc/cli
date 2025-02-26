@@ -36,7 +36,6 @@ import (
 	"github.com/confluentinc/cli/v4/internal/logout"
 	"github.com/confluentinc/cli/v4/internal/network"
 	"github.com/confluentinc/cli/v4/internal/organization"
-	"github.com/confluentinc/cli/v4/internal/pipeline"
 	"github.com/confluentinc/cli/v4/internal/plugin"
 	"github.com/confluentinc/cli/v4/internal/prompt"
 	providerintegration "github.com/confluentinc/cli/v4/internal/provider-integration"
@@ -124,7 +123,6 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(logout.New(cfg, prerunner, authTokenHandler))
 	cmd.AddCommand(network.New(prerunner))
 	cmd.AddCommand(organization.New(prerunner))
-	cmd.AddCommand(pipeline.New(prerunner))
 	cmd.AddCommand(plugin.New(cfg, prerunner))
 	cmd.AddCommand(prompt.New(cfg))
 	cmd.AddCommand(providerintegration.New(prerunner))
