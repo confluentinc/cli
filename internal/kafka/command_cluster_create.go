@@ -26,6 +26,11 @@ const (
 	skuDedicated  = "dedicated"
 )
 
+var (
+	allowedEnterpriseAvailabilities = []string{"single-zone", "multi-zone", "low", "high"}
+	allowedFreightAvailabilities    = []string{"low", "high"}
+)
+
 func (c *clusterCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create <name>",
@@ -174,7 +179,7 @@ func stringToAvailability(s string, sku ccstructs.Sku) (string, error) {
 		}
 		return "", errors.NewErrorWithSuggestions(
 			fmt.Sprintf("invalid value \"%s\" for `--availability` flag", s),
-			fmt.Sprintf("Allowed values for `--availability` flag are: %s, %s.", "low", "high"),
+			fmt.Sprintf("Allowed values for `--availability` flag are: %s.", utils.ArrayToCommaDelimitedString(allowedFreightAvailabilities, "or")),
 		)
 	} else {
 		if modelAvailability, ok := availabilitiesToModel[s]; ok {
@@ -182,7 +187,7 @@ func stringToAvailability(s string, sku ccstructs.Sku) (string, error) {
 		}
 		return "", errors.NewErrorWithSuggestions(
 			fmt.Sprintf("invalid value \"%s\" for `--availability` flag", s),
-			fmt.Sprintf("Allowed values for `--availability` flag are: %s, %s, %s, %s.", "single-zone", "multi-zone", "low", "high"),
+			fmt.Sprintf("Allowed values for `--availability` flag are: %s.", utils.ArrayToCommaDelimitedString(allowedEnterpriseAvailabilities, "or")),
 		)
 	}
 }

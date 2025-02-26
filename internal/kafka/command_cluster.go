@@ -8,13 +8,6 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
-var availabilitiesToHuman = map[string]string{
-	"SINGLE_ZONE": "single-zone",
-	"MULTI_ZONE":  "multi-zone",
-	"LOW":         "low",
-	"HIGH":        "high",
-}
-
 var availabilitiesToModel = map[string]string{
 	"single-zone": "SINGLE_ZONE",
 	"multi-zone":  "MULTI_ZONE",
