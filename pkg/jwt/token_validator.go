@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-jose/go-jose/v3/jwt"
+	"github.com/go-jose/go-jose/v4/jwt"
 	"github.com/jonboulle/clockwork"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
