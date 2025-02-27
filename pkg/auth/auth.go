@@ -102,6 +102,7 @@ func PersistCCloudCredentialsToConfig(config *config.Config, client *ccloudv1.Cl
 	}
 
 	ctx := config.Context()
+	// Need to reset CurrentSchemaRegistryEndpoint for every environment because this context is per environment per login
 	for _, env := range ctx.Environments {
 		env.CurrentSchemaRegistryEndpoint = ""
 	}

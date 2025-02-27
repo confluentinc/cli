@@ -4,7 +4,7 @@ Usage:
   confluent schema-registry endpoint [command]
 
 Available Commands:
-  list        List all schema endpoints.
+  list        List all schema registry endpoints.
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -225,102 +225,99 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 		schemaRegistryApiKey, _ := cmd.Flags().GetString("schema-registry-api-key")
 		schemaRegistryApiSecret, _ := cmd.Flags().GetString("schema-registry-api-secret")
 		isValid := false
-		if schemaRegistryEndpoint != "" && c.Config.IsCloudLogin() {
-			clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
-			if err != nil {
-				return nil, err
-			}
-			if len(clusters) == 0 {
-				return nil, schemaregistry.ErrNotEnabled
-			}
-			u, err := url.Parse(schemaRegistryEndpoint)
-			if err != nil {
-				return nil, err
-			}
-			if u.Scheme != "http" && u.Scheme != "https" {
-				u.Scheme = "https"
-			}
-			configuration.Servers = srsdk.ServerConfigurations{{URL: u.String()}}
-			configuration.DefaultHeader = map[string]string{"target-sr-cluster": clusters[0].GetId()}
-		} else if schemaRegistryEndpoint != "" {
-			u, err := url.Parse(schemaRegistryEndpoint)
-			if err != nil {
-				return nil, err
-			}
-			if u.Scheme != "http" && u.Scheme != "https" {
-				u.Scheme = "https"
-			}
-			configuration.Servers = srsdk.ServerConfigurations{{URL: u.String()}}
-
-			certificateAuthorityPath, err := cmd.Flags().GetString("certificate-authority-path")
-			if err != nil {
-				return nil, err
-			}
-			if certificateAuthorityPath == "" {
-				certificateAuthorityPath = os.Getenv(auth.ConfluentPlatformCertificateAuthorityPath)
-			}
-			if certificateAuthorityPath != "" {
-				caClient, err := utils.GetCAClient(certificateAuthorityPath)
+		if c.Config.IsCloudLogin() {
+			if schemaRegistryEndpoint != "" {
+				clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
 				if err != nil {
 					return nil, err
 				}
-				configuration.HTTPClient = caClient
-			}
-		} else if c.Context.GetSchemaRegistryEndpoint() != "" {
-			configuration.Servers = srsdk.ServerConfigurations{{URL: c.Context.GetSchemaRegistryEndpoint()}}
-			clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
-			if err != nil {
-				return nil, err
-			}
-			if len(clusters) == 0 {
-				return nil, schemaregistry.ErrNotEnabled
-			}
-			configuration.DefaultHeader = map[string]string{"target-sr-cluster": clusters[0].GetId()}
-		} else if c.Config.IsCloudLogin() {
-			clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
-			if err != nil {
-				return nil, err
-			}
-			if len(clusters) == 0 {
-				return nil, schemaregistry.ErrNotEnabled
-			}
-			for _, urlPrivate := range clusters[0].Spec.PrivateNetworkingConfig.GetRegionalEndpoints() {
+				if len(clusters) == 0 {
+					return nil, schemaregistry.ErrNotEnabled
+				}
+				u, err := url.Parse(schemaRegistryEndpoint)
+				if err != nil {
+					return nil, err
+				}
+				if u.Scheme != "http" && u.Scheme != "https" {
+					u.Scheme = "https"
+				}
+				configuration.Servers = srsdk.ServerConfigurations{{URL: u.String()}}
+				configuration.DefaultHeader = map[string]string{"target-sr-cluster": clusters[0].GetId()}
+			} else if c.Context.GetSchemaRegistryEndpoint() != "" {
+				configuration.Servers = srsdk.ServerConfigurations{{URL: c.Context.GetSchemaRegistryEndpoint()}}
+				clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
+				if err != nil {
+					return nil, err
+				}
+				if len(clusters) == 0 {
+					return nil, schemaregistry.ErrNotEnabled
+				}
+				configuration.DefaultHeader = map[string]string{"target-sr-cluster": clusters[0].GetId()}
+			} else {
+				clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
+				if err != nil {
+					return nil, err
+				}
+				if len(clusters) == 0 {
+					return nil, schemaregistry.ErrNotEnabled
+				}
+				for _, urlPrivate := range clusters[0].Spec.PrivateNetworkingConfig.GetRegionalEndpoints() {
+					isValid = c.validateEndpointAndSetClient(clusters[0], schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration)
+					if isValid {
+						err := c.saveToConfig(urlPrivate)
+						if err != nil {
+							return nil, err
+						}
+						break
+					}
+				}
 				if !isValid {
-					isValid = c.validateEndpoint(clusters[0], schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration)
-				} else {
-					err := c.Context.SetSchemaRegistryEndpoint(urlPrivate)
+					isValid = c.validateEndpointAndSetClient(clusters[0], schemaRegistryApiKey, schemaRegistryApiSecret, clusters[0].Spec.GetHttpEndpoint(), *configuration)
+					if isValid {
+						err := c.saveToConfig(clusters[0].Spec.GetHttpEndpoint())
+						if err != nil {
+							return nil, err
+						}
+					}
+				}
+				if !isValid {
+					return nil, errors.NewErrorWithSuggestions(
+						"Schema Registry endpoint not found",
+						"Supply a Schema Registry endpoint with `--schema-registry-endpoint`.",
+					)
+				}
+			}
+		} else { //this is the on-prem case
+			if schemaRegistryEndpoint != "" {
+				u, err := url.Parse(schemaRegistryEndpoint)
+				if err != nil {
+					return nil, err
+				}
+				if u.Scheme != "http" && u.Scheme != "https" {
+					u.Scheme = "https"
+				}
+				configuration.Servers = srsdk.ServerConfigurations{{URL: u.String()}}
+
+				certificateAuthorityPath, err := cmd.Flags().GetString("certificate-authority-path")
+				if err != nil {
+					return nil, err
+				}
+				if certificateAuthorityPath == "" {
+					certificateAuthorityPath = os.Getenv(auth.ConfluentPlatformCertificateAuthorityPath)
+				}
+				if certificateAuthorityPath != "" {
+					caClient, err := utils.GetCAClient(certificateAuthorityPath)
 					if err != nil {
 						return nil, err
 					}
-					if err := c.Config.Save(); err != nil {
-						return nil, err
-					}
-					continue
+					configuration.HTTPClient = caClient
 				}
-			}
-			if !isValid {
-				isValid = c.validateEndpoint(clusters[0], schemaRegistryApiKey, schemaRegistryApiSecret, clusters[0].Spec.GetHttpEndpoint(), *configuration)
-				if isValid {
-					err := c.Context.SetSchemaRegistryEndpoint(clusters[0].Spec.GetHttpEndpoint())
-					if err != nil {
-						return nil, err
-					}
-					if err := c.Config.Save(); err != nil {
-						return nil, err
-					}
-				}
-			}
-			if !isValid {
+			} else {
 				return nil, errors.NewErrorWithSuggestions(
 					"Schema Registry endpoint not found",
 					"Log in to Confluent Cloud with `confluent login`.\nSupply a Schema Registry endpoint with `--schema-registry-endpoint`.",
 				)
 			}
-		} else {
-			return nil, errors.NewErrorWithSuggestions(
-				"Schema Registry endpoint not found",
-				"Log in to Confluent Cloud with `confluent login`.\nSupply a Schema Registry endpoint with `--schema-registry-endpoint`.",
-			)
 		}
 		if !isValid {
 			if schemaRegistryApiKey != "" && schemaRegistryApiSecret != "" {
@@ -341,7 +338,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 
 	return c.schemaRegistryClient, nil
 }
-func (c *AuthenticatedCLICommand) validateEndpoint(cluster srcmv3.SrcmV3Cluster, schemaRegistryApiKey, schemaRegistryApiSecret, url string, configuration srsdk.Configuration) bool {
+func (c *AuthenticatedCLICommand) validateEndpointAndSetClient(cluster srcmv3.SrcmV3Cluster, schemaRegistryApiKey, schemaRegistryApiSecret, url string, configuration srsdk.Configuration) bool {
 	configuration.Servers = srsdk.ServerConfigurations{{URL: url}}
 	configuration.DefaultHeader = map[string]string{"target-sr-cluster": cluster.GetId()}
 
@@ -392,15 +389,26 @@ func (c *AuthenticatedCLICommand) GetValidSchemaRegistryClusterIdAndEndpoint(cmd
 	var endpoint string
 	for _, urlPrivate := range cluster.Spec.PrivateNetworkingConfig.GetRegionalEndpoints() {
 		if !isValid {
-			isValid = c.validateEndpoint(cluster, schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration)
-		} else {
-			endpoint = urlPrivate
-			continue
+			isValid = c.validateEndpointAndSetClient(cluster, schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration)
+			if isValid {
+				endpoint = urlPrivate
+				err := c.saveToConfig(urlPrivate)
+				if err != nil {
+					return "", err
+				}
+				break
+			}
 		}
 	}
 	if !isValid {
-		isValid = c.validateEndpoint(cluster, schemaRegistryApiKey, schemaRegistryApiSecret, cluster.Spec.GetHttpEndpoint(), *configuration)
-		endpoint = cluster.Spec.GetHttpEndpoint()
+		isValid = c.validateEndpointAndSetClient(cluster, schemaRegistryApiKey, schemaRegistryApiSecret, cluster.Spec.GetHttpEndpoint(), *configuration)
+		if isValid {
+			endpoint = cluster.Spec.GetHttpEndpoint()
+			err := c.saveToConfig(cluster.Spec.GetHttpEndpoint())
+			if err != nil {
+				return "", err
+			}
+		}
 	}
 	if !isValid {
 		return "", errors.NewErrorWithSuggestions(
@@ -409,4 +417,15 @@ func (c *AuthenticatedCLICommand) GetValidSchemaRegistryClusterIdAndEndpoint(cmd
 		)
 	}
 	return endpoint, nil
+}
+
+func (c *AuthenticatedCLICommand) saveToConfig(url string) error {
+	err := c.Context.SetSchemaRegistryEndpoint(url)
+	if err != nil {
+		return err
+	}
+	if err := c.Config.Save(); err != nil {
+		return err
+	}
+	return nil
 }
