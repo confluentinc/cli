@@ -369,9 +369,14 @@ func (c *AuthenticatedCLICommand) GetCurrentSchemaRegistryClusterIdAndEndpoint(c
 		return "", "", schemaregistry.ErrNotEnabled
 	}
 	cluster := clusters[0]
-	endpoint, err := c.GetValidSchemaRegistryClusterIdAndEndpoint(cmd, cluster)
-	if err != nil {
-		return "", "", err
+	var endpoint string
+	if c.Context.GetSchemaRegistryEndpoint() != "" {
+		endpoint = c.Context.GetSchemaRegistryEndpoint()
+	} else {
+		endpoint, err = c.GetValidSchemaRegistryClusterIdAndEndpoint(cmd, cluster)
+		if err != nil {
+			return "", "", err
+		}
 	}
 	return cluster.GetId(), endpoint, nil
 }
