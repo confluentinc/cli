@@ -43,13 +43,13 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 		return schemaregistry.ErrNotEnabled
 	}
 	cluster := clusters[0]
-	list := output.NewTable(cmd)
-	list.Add(&listEndpoint{
+	table := output.NewTable(cmd)
+	table.Add(&listEndpoint{
 		Public:          cluster.Spec.GetHttpEndpoint(),
 		Private:         cluster.Spec.GetPrivateHttpEndpoint(),
 		PrivateRegional: cluster.Spec.PrivateNetworkingConfig.GetRegionalEndpoints(),
 		Catalog:         cluster.Spec.GetCatalogHttpEndpoint(),
 	})
 
-	return list.Print()
+	return table.Print()
 }
