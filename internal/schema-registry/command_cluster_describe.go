@@ -18,19 +18,20 @@ import (
 )
 
 type clusterOut struct {
-	Name                string `human:"Name" serialized:"name"`
-	Cluster             string `human:"Cluster" serialized:"cluster"`
-	EndpointUrl         string `human:"Endpoint URL,omitempty" serialized:"endpoint_url,omitempty"`
-	PrivateEndpointUrl  string `human:"Private Endpoint URL,omitempty" serialized:"private_endpoint_url,omitempty"`
-	CatalogEndpointUrl  string `human:"Catalog Endpoint URL,omitempty" serialized:"catalog_endpoint_url,omitempty"`
-	UsedSchemas         string `human:"Used Schemas" serialized:"used_schemas"`
-	AvailableSchemas    string `human:"Available Schemas" serialized:"available_schemas"`
-	FreeSchemasLimit    int    `human:"Free Schemas Limit" serialized:"free_schemas_limit"`
-	GlobalCompatibility string `human:"Global Compatibility" serialized:"global_compatibility"`
-	Mode                string `human:"Mode" serialized:"mode"`
-	Cloud               string `human:"Cloud" serialized:"cloud"`
-	Region              string `human:"Region" serialized:"region"`
-	Package             string `human:"Package" serialized:"package"`
+	Name                        string            `human:"Name" serialized:"name"`
+	Cluster                     string            `human:"Cluster" serialized:"cluster"`
+	EndpointUrl                 string            `human:"Endpoint URL,omitempty" serialized:"endpoint_url,omitempty"`
+	PrivateEndpointUrl          string            `human:"Private Endpoint URL,omitempty" serialized:"private_endpoint_url,omitempty"`
+	PrivateRegionalEndpointUrls map[string]string `human:"Private Regional Endpoint URLs,omitempty" serialized:"private_regional_endpoint_urls,omitempty"`
+	CatalogEndpointUrl          string            `human:"Catalog Endpoint URL,omitempty" serialized:"catalog_endpoint_url,omitempty"`
+	UsedSchemas                 string            `human:"Used Schemas" serialized:"used_schemas"`
+	AvailableSchemas            string            `human:"Available Schemas" serialized:"available_schemas"`
+	FreeSchemasLimit            int               `human:"Free Schemas Limit" serialized:"free_schemas_limit"`
+	GlobalCompatibility         string            `human:"Global Compatibility" serialized:"global_compatibility"`
+	Mode                        string            `human:"Mode" serialized:"mode"`
+	Cloud                       string            `human:"Cloud" serialized:"cloud"`
+	Region                      string            `human:"Region" serialized:"region"`
+	Package                     string            `human:"Package" serialized:"package"`
 }
 
 const (
@@ -52,6 +53,7 @@ func (c *command) newClusterDescribeCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
+	addSchemaRegistryEndpointFlag(cmd)
 
 	return cmd
 }
@@ -138,19 +140,20 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&clusterOut{
-		Name:                cluster.Spec.GetDisplayName(),
-		Cluster:             cluster.GetId(),
-		EndpointUrl:         cluster.Spec.GetHttpEndpoint(),
-		PrivateEndpointUrl:  cluster.Spec.GetPrivateHttpEndpoint(),
-		CatalogEndpointUrl:  cluster.Spec.GetCatalogHttpEndpoint(),
-		Cloud:               cluster.Spec.GetCloud(),
-		Region:              cluster.Spec.GetRegion(),
-		Package:             cluster.Spec.GetPackage(),
-		UsedSchemas:         numSchemas,
-		AvailableSchemas:    availableSchemas,
-		FreeSchemasLimit:    freeSchemasLimit,
-		GlobalCompatibility: config.GetCompatibilityLevel(),
-		Mode:                mode.GetMode(),
+		Name:                        cluster.Spec.GetDisplayName(),
+		Cluster:                     cluster.GetId(),
+		EndpointUrl:                 cluster.Spec.GetHttpEndpoint(),
+		PrivateEndpointUrl:          cluster.Spec.GetPrivateHttpEndpoint(),
+		PrivateRegionalEndpointUrls: cluster.Spec.PrivateNetworkingConfig.GetRegionalEndpoints(),
+		CatalogEndpointUrl:          cluster.Spec.GetCatalogHttpEndpoint(),
+		Cloud:                       cluster.Spec.GetCloud(),
+		Region:                      cluster.Spec.GetRegion(),
+		Package:                     cluster.Spec.GetPackage(),
+		UsedSchemas:                 numSchemas,
+		AvailableSchemas:            availableSchemas,
+		FreeSchemasLimit:            freeSchemasLimit,
+		GlobalCompatibility:         config.GetCompatibilityLevel(),
+		Mode:                        mode.GetMode(),
 	})
 	return table.Print()
 }
