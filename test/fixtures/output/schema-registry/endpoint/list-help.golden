@@ -1,4 +1,4 @@
-List all schema endpoints.
+List all schema registry endpoints.
 
 Usage:
   confluent schema-registry endpoint list [flags]

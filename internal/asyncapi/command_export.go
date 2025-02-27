@@ -284,7 +284,10 @@ func (c *command) getMessageExamples(consumer *ckgo.Consumer, topicName, content
 	if err != nil {
 		return nil, err
 	}
-	schemaRegistryEndpoint, _ := cmd.Flags().GetString("schema-registry-endpoint")
+	schemaRegistryEndpoint, err := cmd.Flags().GetString("schema-registry-endpoint")
+	if err != nil {
+		return nil, err
+	}
 	var srClusterId, srEndpoint string
 	if schemaRegistryEndpoint != "" {
 		srEndpoint = schemaRegistryEndpoint
@@ -472,7 +475,10 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags, cmd *
 	// kafkaUrl is used in exported file, while kafkaBootstrapUrl is used to create Kafka consumer
 	details.kafkaUrl = kafkaREST.CloudClient.GetUrl()
 	details.kafkaBootstrapUrl = cluster.Bootstrap
-	schemaRegistryEndpoint, _ := cmd.Flags().GetString("schema-registry-endpoint")
+	schemaRegistryEndpoint, err := cmd.Flags().GetString("schema-registry-endpoint")
+	if err != nil {
+		return err
+	}
 	if schemaRegistryEndpoint != "" {
 		details.schemaRegistryUrl = schemaRegistryEndpoint
 	} else {

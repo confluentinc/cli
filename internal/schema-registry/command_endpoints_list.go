@@ -11,14 +11,14 @@ import (
 type listEndpoint struct {
 	Public          string            `human:"Public Endpoint URL" serialized:"public_endpoint_url"`
 	Private         string            `human:"Private Endpoint URL" serialized:"private_endpoint_url"`
-	PrivateRegional map[string]string `human:"Private Regional Endpoint URL" serialized:"private_regional_endpoint_url"`
+	PrivateRegional map[string]string `human:"Private Regional Endpoint URLs" serialized:"private_regional_endpoint_urls"`
 	Catalog         string            `human:"Catalog Endpoint URL" serialized:"catalog_endpoint_url"`
 }
 
 func (c *command) newEndpointsList() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List all schema endpoints.",
+		Short: "List all schema registry endpoints.",
 		Args:  cobra.NoArgs,
 		RunE:  c.endpointList,
 	}
@@ -43,7 +43,7 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 		return schemaregistry.ErrNotEnabled
 	}
 	cluster := clusters[0]
-	list := output.NewList(cmd)
+	list := output.NewTable(cmd)
 	list.Add(&listEndpoint{
 		Public:          cluster.Spec.GetHttpEndpoint(),
 		Private:         cluster.Spec.GetPrivateHttpEndpoint(),
