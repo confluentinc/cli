@@ -43,7 +43,7 @@ var cmkByokCluster = cmkv2.CmkV2Cluster{
 		Cloud:        cmkv2.PtrString("gcp"),
 		Region:       cmkv2.PtrString("us-central1"),
 		Config:       setCmkClusterConfig("dedicated", 1),
-		Availability: cmkv2.PtrString(lowAvailability),
+		Availability: cmkv2.PtrString("SINGLE_ZONE"),
 	},
 	Id: cmkv2.PtrString("lkc-xyz"),
 	Status: &cmkv2.CmkV2ClusterStatus{
