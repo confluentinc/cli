@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -16,8 +17,8 @@ var availabilitiesToModel = map[string]string{
 }
 
 var availabilitiesToFreightModel = map[string]string{
-	"single-zone": "LOW",  // TODO: This mapping are deprecated and will be removed in v5
-	"multi-zone":  "HIGH", // TODO: This mapping are deprecated and will be removed in v5
+	"single-zone": "LOW",  // TODO: This mapping is deprecated and will be removed in v5
+	"multi-zone":  "HIGH", // TODO: This mapping is deprecated and will be removed in v5
 	"low":         "LOW",
 	"high":        "HIGH",
 }
