@@ -224,7 +224,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 		schemaRegistryEndpoint, _ := cmd.Flags().GetString("schema-registry-endpoint")
 		schemaRegistryApiKey, _ := cmd.Flags().GetString("schema-registry-api-key")
 		schemaRegistryApiSecret, _ := cmd.Flags().GetString("schema-registry-api-secret")
-		isValid := false
+		isCloudEndpointAutoFound := false
 		if c.Config.IsCloudLogin() {
 			if schemaRegistryEndpoint != "" {
 				clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
@@ -262,8 +262,8 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 					return nil, schemaregistry.ErrNotEnabled
 				}
 				for _, urlPrivate := range clusters[0].Spec.PrivateNetworkingConfig.GetRegionalEndpoints() {
-					isValid = c.validateEndpointAndSetClient(clusters[0], schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration)
-					if isValid {
+					isCloudEndpointAutoFound = c.validateEndpointAndSetClient(clusters[0], schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration)
+					if isCloudEndpointAutoFound {
 						err := c.saveToConfig(urlPrivate)
 						if err != nil {
 							return nil, err
@@ -271,16 +271,16 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 						break
 					}
 				}
-				if !isValid {
-					isValid = c.validateEndpointAndSetClient(clusters[0], schemaRegistryApiKey, schemaRegistryApiSecret, clusters[0].Spec.GetHttpEndpoint(), *configuration)
-					if isValid {
+				if !isCloudEndpointAutoFound {
+					isCloudEndpointAutoFound = c.validateEndpointAndSetClient(clusters[0], schemaRegistryApiKey, schemaRegistryApiSecret, clusters[0].Spec.GetHttpEndpoint(), *configuration)
+					if isCloudEndpointAutoFound {
 						err := c.saveToConfig(clusters[0].Spec.GetHttpEndpoint())
 						if err != nil {
 							return nil, err
 						}
 					}
 				}
-				if !isValid {
+				if !isCloudEndpointAutoFound {
 					return nil, errors.NewErrorWithSuggestions(
 						"Schema Registry endpoint not found",
 						"Supply a Schema Registry endpoint with `--schema-registry-endpoint`.",
@@ -319,7 +319,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				)
 			}
 		}
-		if !isValid {
+		if !isCloudEndpointAutoFound {
 			if schemaRegistryApiKey != "" && schemaRegistryApiSecret != "" {
 				apiKey := srsdk.BasicAuth{
 					UserName: schemaRegistryApiKey,
@@ -390,12 +390,12 @@ func (c *AuthenticatedCLICommand) GetValidSchemaRegistryClusterIdAndEndpoint(cmd
 
 	schemaRegistryApiKey, _ := cmd.Flags().GetString("schema-registry-api-key")
 	schemaRegistryApiSecret, _ := cmd.Flags().GetString("schema-registry-api-secret")
-	isValid := false
+	isCloudEndpointAutoFound := false
 	var endpoint string
 	for _, urlPrivate := range cluster.Spec.PrivateNetworkingConfig.GetRegionalEndpoints() {
-		if !isValid {
-			isValid = c.validateEndpointAndSetClient(cluster, schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration)
-			if isValid {
+		if !isCloudEndpointAutoFound {
+			isCloudEndpointAutoFound = c.validateEndpointAndSetClient(cluster, schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration)
+			if isCloudEndpointAutoFound {
 				endpoint = urlPrivate
 				err := c.saveToConfig(urlPrivate)
 				if err != nil {
@@ -405,9 +405,9 @@ func (c *AuthenticatedCLICommand) GetValidSchemaRegistryClusterIdAndEndpoint(cmd
 			}
 		}
 	}
-	if !isValid {
-		isValid = c.validateEndpointAndSetClient(cluster, schemaRegistryApiKey, schemaRegistryApiSecret, cluster.Spec.GetHttpEndpoint(), *configuration)
-		if isValid {
+	if !isCloudEndpointAutoFound {
+		isCloudEndpointAutoFound = c.validateEndpointAndSetClient(cluster, schemaRegistryApiKey, schemaRegistryApiSecret, cluster.Spec.GetHttpEndpoint(), *configuration)
+		if isCloudEndpointAutoFound {
 			endpoint = cluster.Spec.GetHttpEndpoint()
 			err := c.saveToConfig(cluster.Spec.GetHttpEndpoint())
 			if err != nil {
@@ -415,7 +415,7 @@ func (c *AuthenticatedCLICommand) GetValidSchemaRegistryClusterIdAndEndpoint(cmd
 			}
 		}
 	}
-	if !isValid {
+	if !isCloudEndpointAutoFound {
 		return "", errors.NewErrorWithSuggestions(
 			"Schema Registry endpoint not found",
 			"Log in to Confluent Cloud with `confluent login`.\nSupply a Schema Registry endpoint with `--schema-registry-endpoint`.",
