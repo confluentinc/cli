@@ -6,16 +6,28 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
-var fields = []string{"private", "public"}
+const (
+	publicEndpointType  = "public_endpoint"
+	privateEndpointType = "private_endpoint"
+	ccnEndpointType     = "ccn_endpoint"
+)
 
-func (c *command) newConnectivityTypeCommand() *cobra.Command {
+type flinkEndpointOut struct {
+	Endpoint string `human:"Endpoint" serialized:"endpoint"`
+	Cloud    string `human:"Cloud" serialized:"cloud"`
+	Region   string `human:"Region" serialized:"region"`
+	Type     string `human:"Type" serialized:"type"`
+}
+
+func (c *command) newEndpointCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "connectivity-type",
-		Short:       "Manage Flink connectivity type.",
+		Use:         "endpoint",
+		Short:       "Manage Flink endpoint.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	cmd.AddCommand(c.newUseCommand())
+	cmd.AddCommand(c.newEndpointListCommand())
+	cmd.AddCommand(c.newEndpointUseCommand())
 
 	return cmd
 }
