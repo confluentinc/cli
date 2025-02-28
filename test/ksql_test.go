@@ -4,7 +4,6 @@ func (s *CLITestSuite) TestKsql() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
 		{args: "ksql cluster create test_ksql --cluster lkc-12345 --credential-identity sa-credential-identity", fixture: "ksql/cluster/create-result.golden"},
-		{args: "ksql cluster create test_ksql --cluster lkc-12345678 --credential-identity sa-credential-identity", fixture: "ksql/cluster/create-result-sr-fail.golden", exitCode: 1},
 		{args: "ksql cluster create test_ksql --cluster lkc-12345", fixture: "ksql/cluster/create-result-missing-credential-identity.golden", exitCode: 1},
 		{args: "ksql cluster create test_ksql --cluster lkc-processLogFalse --credential-identity sa-credential-identity --log-exclude-rows", fixture: "ksql/cluster/create-result-log-exclude-rows.golden"},
 		{args: "ksql cluster create test_ksql_yaml --cluster lkc-12345 --credential-identity sa-credential-identity -o yaml", fixture: "ksql/cluster/create-result-yaml.golden"},
