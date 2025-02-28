@@ -393,16 +393,14 @@ func (c *AuthenticatedCLICommand) GetValidSchemaRegistryClusterIdAndEndpoint(cmd
 	isCloudEndpointAutoFound := false
 	var endpoint string
 	for _, urlPrivate := range cluster.Spec.PrivateNetworkingConfig.GetRegionalEndpoints() {
-		if !isCloudEndpointAutoFound {
-			isCloudEndpointAutoFound = c.validateEndpointAndSetClient(cluster, schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration)
-			if isCloudEndpointAutoFound {
-				endpoint = urlPrivate
-				err := c.saveToConfig(urlPrivate)
-				if err != nil {
-					return "", err
-				}
-				break
+		isCloudEndpointAutoFound = c.validateEndpointAndSetClient(cluster, schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration)
+		if isCloudEndpointAutoFound {
+			endpoint = urlPrivate
+			err := c.saveToConfig(urlPrivate)
+			if err != nil {
+				return "", err
 			}
+			break
 		}
 	}
 	if !isCloudEndpointAutoFound {
