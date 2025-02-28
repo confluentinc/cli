@@ -11,6 +11,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	client "github.com/confluentinc/cli/v4/pkg/flink/app"
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
@@ -24,6 +25,11 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Use:         "shell",
 		Short:       "Start Flink interactive SQL client.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "For a Quick Start with examples in context, see https://docs.confluent.io/cloud/current/flink/get-started/quick-start-shell.html.",
+			},
+		),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return c.startFlinkSqlClient(prerunner, cmd)
 		},
