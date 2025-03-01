@@ -1,0 +1,7 @@
++-------------------------+--------------+
+| ID                      | plattc-gcp   |
+| Name                    | gcp-plattc   |
+| Cloud                   | GCP          |
+| Private Link Attachment | platt-gcp    |
+| Phase                   | PROVISIONING |
++-------------------------+--------------+

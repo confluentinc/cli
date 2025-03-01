@@ -82,6 +82,8 @@ func (c *command) privateLinkAttachmentList(cmd *cobra.Command, _ []string) erro
 			case attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus != nil:
 				out.AzurePrivateLinkServiceAlias = attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus.PrivateLinkService.GetPrivateLinkServiceAlias()
 				out.AzurePrivateLinkServiceId = attachment.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentStatus.PrivateLinkService.GetPrivateLinkServiceResourceId()
+			case attachment.Status.Cloud.NetworkingV1GcpPrivateLinkAttachmentStatus != nil:
+				out.GCPServiceAttachmentId = attachment.Status.Cloud.NetworkingV1GcpPrivateLinkAttachmentStatus.GetServiceAttachment().PrivateServiceConnectServiceAttachment
 			}
 		}
 

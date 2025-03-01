@@ -27,7 +27,7 @@ func (c *command) newPrivateLinkAttachmentConnectionCreateCommand() *cobra.Comma
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	cmd.Flags().String("endpoint", "", "ID of an endpoint that is connected to either AWS VPC endpoint service or Azure PrivateLink service.")
+	cmd.Flags().String("endpoint", "", "ID of an endpoint that is connected to either AWS VPC endpoint service, Azure PrivateLink service, or GCP Private Service Connect service.")
 	c.addPrivateLinkAttachmentFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
