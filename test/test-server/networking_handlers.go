@@ -1602,6 +1602,7 @@ func getPrivateLinkAttachmentConnection(id, name, phase string, cloud string) ne
 			connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus.PrivateLinkServiceAlias = "azure-vnet-privatelink-1.a0a0aa00-a000-0aa0-a00a-0aaa0000a00a.eastus2.azure.privatelinkservice"
 			connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus.PrivateLinkServiceResourceId = "/subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/azure-vnet/providers/Microsoft.Network/privateLinkServices/azure-vnet-privatelink-1"
 		case "gcp":
+			connection.Status.Cloud.NetworkingV1GcpPrivateLinkAttachmentConnectionStatus.PrivateServiceConnectConnectionId = "123456789"
 			connection.Status.Cloud.NetworkingV1GcpPrivateLinkAttachmentConnectionStatus.PrivateServiceConnectServiceAttachment = "projects/xxxxxxx/regions/us-central1/serviceAttachments/plattg-123456-service-attachment"
 		}
 	}

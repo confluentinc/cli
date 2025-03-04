@@ -35,16 +35,4 @@
     "azure_private_link_service_alias": "azure-vnet-privatelink-1.a0a0aa00-a000-0aa0-a00a-0aaa0000a00a.eastus2.azure.privatelinkservice",
     "azure_private_link_service_id": "/subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/azure-vnet/providers/Microsoft.Network/privateLinkServices/azure-vnet-privatelink-1"
   }
-  {
-    "id": "plattc-gcp",
-    "name": "gcp-plattc-1",
-    "cloud": "GCP",
-    "private_link_attachment": "platt-111111",
-    "phase": "READY",
-    "azure_private_endpoint_resource_id": "azure-private-endpoint-id",
-    "azure_private_link_service_alias": "azure-vnet-privatelink-1.a0a0aa00-a000-0aa0-a00a-0aaa0000a00a.eastus2.azure.privatelinkservice",
-    "azure_private_link_service_id": "/subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/azure-vnet/providers/Microsoft.Network/privateLinkServices/azure-vnet-privatelink-1"
-	"gcp_service_attachment_id": "projects/xxxxxxx/regions/us-central1/serviceAttachments/plattg-123456-service-attachment"
-	"gcp_private_service_connect_connection_id": "123123123123"
-  }
 ]

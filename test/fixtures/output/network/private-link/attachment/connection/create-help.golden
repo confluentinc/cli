@@ -10,7 +10,7 @@ Create a Private Link attachment connection named "aws-private-link-attachment-c
 
 Flags:
       --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
-      --endpoint string      REQUIRED: ID of an endpoint that is connected to either AWS VPC endpoint service, Azure PrivateLink service or GCP Private Service Connect
+      --endpoint string      REQUIRED: ID of an endpoint that is connected to either AWS VPC endpoint service, Azure PrivateLink service, or GCP Private Service Connect service.
       --attachment string    REQUIRED: Private link attachment ID.
       --context string       CLI context name.
       --environment string   Environment ID.
