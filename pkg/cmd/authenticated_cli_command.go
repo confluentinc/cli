@@ -282,8 +282,8 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				}
 				if !isCloudEndpointAutoFound {
 					return nil, errors.NewErrorWithSuggestions(
-						"Schema Registry endpoint not found",
-						"Supply a Schema Registry endpoint with `--schema-registry-endpoint`.",
+						"Schema Registry could not be reached. Check if Schema Registry is accessible.",
+						"If Schema Registry is accessible, supply a Schema Registry endpoint with `--schema-registry-endpoint`.",
 					)
 				}
 			}
