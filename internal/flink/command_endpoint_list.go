@@ -59,38 +59,37 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-	regionsList, err := c.V2Client.ListFlinkRegions(strings.ToUpper(cloud))
+	flinkRegions, err := c.V2Client.ListFlinkRegions(strings.ToUpper(cloud), region)
 
-	// 1 - List all the public endpoint based on cloud and region
-	for _, regionResult := range regionsList {
+	// 1 - List all the public endpoints based optionally on cloud and region
+	for _, flinkRegion := range flinkRegions {
 		publicEndpoint := &flinkEndpointOut{
-			Endpoint: regionResult.GetHttpEndpoint(),
-			Cloud:    regionResult.GetCloud(),
-			Region:   regionResult.GetRegionName(),
+			Endpoint: flinkRegion.GetHttpEndpoint(),
+			Cloud:    flinkRegion.GetCloud(),
+			Region:   flinkRegion.GetRegionName(),
 			Type:     publicEndpointType,
 		}
 		list.Add(publicEndpoint)
 	}
 
-	// 2 - List all the private endpoint based on the presence of PrivateLinkAttachments as filter
-	// TODO: double check with Flink team on the filtering implementation
+	// 2 - List all the private endpoints based on the presence of PrivateLinkAttachments as filter
 	platts, err := c.V2Client.ListPrivateLinkAttachments(environmentId, []string{}, []string{cloud}, []string{region}, []string{"READY"})
 	if err != nil {
 		return err
 	}
-	filterKeyMap := buildCloudRegionKeyFilterMap(platts)
+	filterKeyMap := buildCloudRegionKeyFilterMapFromPrivateLinkAttachments(platts)
 
-	for _, regionResult := range regionsList {
+	for _, flinkRegion := range flinkRegions {
 		key := CloudRegionKey{
-			cloud:  regionResult.GetCloud(),
-			region: regionResult.GetRegionName(),
+			cloud:  flinkRegion.GetCloud(),
+			region: flinkRegion.GetRegionName(),
 		}
 
 		if _, ok := filterKeyMap[key]; ok {
 			privateEndpoint := &flinkEndpointOut{
-				Endpoint: regionResult.GetPrivateHttpEndpoint(),
-				Cloud:    regionResult.GetCloud(),
-				Region:   regionResult.GetRegionName(),
+				Endpoint: flinkRegion.GetPrivateHttpEndpoint(),
+				Cloud:    flinkRegion.GetCloud(),
+				Region:   flinkRegion.GetRegionName(),
 				Type:     privateEndpointType,
 			}
 			list.Add(privateEndpoint)
@@ -98,7 +97,6 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	}
 
 	// 3 - List all the CCN endpoint with the list of network domains
-	// TODO: check about the empty slice parameters
 	networks, err := c.V2Client.ListNetworks(environmentId, []string{}, []string{cloud}, []string{region}, []string{""}, []string{""}, []string{""})
 	for _, network := range networks {
 		suffix := network.Status.GetEndpointSuffix()
@@ -114,7 +112,7 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	return list.Print()
 }
 
-func buildCloudRegionKeyFilterMap(platts []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment) map[CloudRegionKey]bool {
+func buildCloudRegionKeyFilterMapFromPrivateLinkAttachments(platts []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment) map[CloudRegionKey]bool {
 	result := make(map[CloudRegionKey]bool, len(platts))
 	for _, platt := range platts {
 		compositeKey := CloudRegionKey{

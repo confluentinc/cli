@@ -49,7 +49,7 @@ func (c *command) regionUse(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	regions, err := c.V2Client.ListFlinkRegions(cloud)
+	regions, err := c.V2Client.ListFlinkRegions(cloud, region)
 	if err != nil {
 		return err
 	}
