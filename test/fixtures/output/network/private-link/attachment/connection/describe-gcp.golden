@@ -1,0 +1,10 @@
++--------------------------------+------------------------------------------------------------------------------------------+
+| ID                             | plattc-gcp                                                                               |
+| Name                           | my-gcp-platt-connection                                                                  |
+| Cloud                          | GCP                                                                                      |
+| Private Link Attachment        | platt-111111                                                                             |
+| Phase                          | READY                                                                                    |
+| GCP Service Attachment ID      | projects/xxxxxxx/regions/us-central1/serviceAttachments/plattg-123456-service-attachment |
+| GCP Private Service Connect    | 123456789                                                                                |
+| Connection ID                  |                                                                                          |
++--------------------------------+------------------------------------------------------------------------------------------+
