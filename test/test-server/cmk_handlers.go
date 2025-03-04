@@ -36,8 +36,9 @@ func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 
 		if req.Spec.Config.CmkV2Dedicated != nil {
 			cluster.Spec.Config.CmkV2Dedicated = &cmkv2.CmkV2Dedicated{
-				Kind: "Dedicated",
-				Cku:  req.Spec.Config.CmkV2Dedicated.Cku,
+				Kind:  "Dedicated",
+				Cku:   req.Spec.Config.CmkV2Dedicated.Cku,
+				Zones: req.Spec.Config.CmkV2Dedicated.Zones,
 			}
 			if req.Spec.GetDisplayName() == "gcp-byok-test" {
 				cluster.Spec.Config.CmkV2Dedicated.EncryptionKey = cmkv2.PtrString("xyz")
