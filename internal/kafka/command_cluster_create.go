@@ -155,8 +155,8 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		if clusterType != skuDedicated {
-			return errors.NewErrorWithSuggestions("the `--zone` flag can only be used when creating a dedicated Kafka cluster", "Specify a dedicated cluster with `--zone`.")
+		if clusterType != skuDedicated || availability != "SINGLE_ZONE" {
+			return errors.NewErrorWithSuggestions("the `--zone` flag can only be used when creating a single zone dedicated Kafka cluster", "Specify a dedicated cluster with `--zone`.")
 		}
 
 		setClusterConfigZones(&createCluster, zone)
