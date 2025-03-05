@@ -9,6 +9,7 @@
   "storage": "Infinite",
   "cloud": "aws",
   "region": "us-west-2",
+  "zone": ["use1-az3"],
   "availability": "single-zone",
   "status": "UP",
   "endpoint": "SASL_SSL://kafka-endpoint",
