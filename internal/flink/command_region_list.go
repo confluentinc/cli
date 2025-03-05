@@ -11,10 +11,12 @@ import (
 )
 
 type regionOut struct {
-	IsCurrent bool   `human:"Current" serialized:"is_current"`
-	Name      string `human:"Name" serialized:"name"`
-	Cloud     string `human:"Cloud" serialized:"cloud"`
-	Region    string `human:"Region" serialized:"region"`
+	IsCurrent       bool   `human:"Current" serialized:"is_current"`
+	Name            string `human:"Name" serialized:"name"`
+	Cloud           string `human:"Cloud" serialized:"cloud"`
+	Region          string `human:"Region" serialized:"region"`
+	PublicEndpoint  string `human:"PublicEndpoint" serialized:"public_endpoint"`
+	PrivateEndpoint string `human:"PrivateEndpoint" serialized:"private_endpoint"`
 }
 
 func (c *command) newRegionListCommand() *cobra.Command {
@@ -44,7 +46,7 @@ func (c *command) regionList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	regions, err := c.V2Client.ListFlinkRegions(strings.ToUpper(cloud))
+	regions, err := c.V2Client.ListFlinkRegions(strings.ToUpper(cloud), "")
 	if err != nil {
 		return err
 	}

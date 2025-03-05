@@ -131,7 +131,7 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(access, id string)
 }
 
 func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(accessType, provider, region string) (string, error) {
-	regions, err := c.V2Client.ListFlinkRegions(provider)
+	regions, err := c.V2Client.ListFlinkRegions(provider, region)
 	if err != nil {
 		return "", err
 	}
