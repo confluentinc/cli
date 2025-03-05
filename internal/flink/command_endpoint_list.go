@@ -2,6 +2,7 @@ package flink
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -35,6 +36,7 @@ func (c *command) newEndpointListCommand() *cobra.Command {
 		),
 	}
 
+	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -47,6 +49,7 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	cloud = strings.ToUpper(cloud)
 
 	region, err := cmd.Flags().GetString("region")
 	if err != nil {
@@ -59,26 +62,27 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-	flinkRegions, err := c.V2Client.ListFlinkRegions(strings.ToUpper(cloud), region)
+	var results []*flinkEndpointOut
+	flinkRegions, err := c.V2Client.ListFlinkRegions(cloud, region)
 
-	// 1 - List all the public endpoints based optionally on cloud and region
+	// 1 - List all the public endpoints based optionally on cloud(upper case) and region(lower case)
 	for _, flinkRegion := range flinkRegions {
-		publicEndpoint := &flinkEndpointOut{
+		results = append(results, &flinkEndpointOut{
 			Endpoint: flinkRegion.GetHttpEndpoint(),
 			Cloud:    flinkRegion.GetCloud(),
 			Region:   flinkRegion.GetRegionName(),
-			Type:     publicEndpointType,
-		}
-		list.Add(publicEndpoint)
+			Type:     publicFlinkEndpointType,
+		})
 	}
 
-	// 2 - List all the private endpoints based on the presence of PrivateLinkAttachments as filter
+	// 2 - List all the private endpoints based on the presence of "READY" PrivateLinkAttachments as filter
 	platts, err := c.V2Client.ListPrivateLinkAttachments(environmentId, []string{}, []string{cloud}, []string{region}, []string{"READY"})
 	if err != nil {
 		return err
 	}
 	filterKeyMap := buildCloudRegionKeyFilterMapFromPrivateLinkAttachments(platts)
 
+	// TODO: De-duplications are needed
 	for _, flinkRegion := range flinkRegions {
 		key := CloudRegionKey{
 			cloud:  flinkRegion.GetCloud(),
@@ -86,29 +90,52 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 		}
 
 		if _, ok := filterKeyMap[key]; ok {
-			privateEndpoint := &flinkEndpointOut{
+			results = append(results, &flinkEndpointOut{
 				Endpoint: flinkRegion.GetPrivateHttpEndpoint(),
 				Cloud:    flinkRegion.GetCloud(),
 				Region:   flinkRegion.GetRegionName(),
-				Type:     privateEndpointType,
-			}
-			list.Add(privateEndpoint)
+				Type:     privateFlinkEndpointType,
+			})
 		}
 	}
 
-	// 3 - List all the CCN endpoint with the list of network domains
-	networks, err := c.V2Client.ListNetworks(environmentId, []string{}, []string{cloud}, []string{region}, []string{""}, []string{""}, []string{""})
+	// 3 - List all the CCN endpoint with the list of "READY" network domains
+	networks, err := c.V2Client.ListNetworks(environmentId, nil, []string{cloud}, []string{region}, nil, []string{"READY"}, nil)
 	for _, network := range networks {
 		suffix := network.Status.GetEndpointSuffix()
-		ccnEndpoint := &flinkEndpointOut{
-			Endpoint: fmt.Sprintf("flink%s", suffix),
+		results = append(results, &flinkEndpointOut{
+			Endpoint: fmt.Sprintf("https://flink%s", suffix),
 			Cloud:    network.Spec.GetCloud(),
 			Region:   network.Spec.GetRegion(),
-			Type:     ccnEndpointType,
-		}
-		list.Add(ccnEndpoint)
+			Type:     ccnFlinkEndpointType,
+		})
 	}
 
+	// Sort the results order by cloud, then region, then type, then endpoint
+	sort.Slice(results, func(i, j int) bool {
+		if results[i].Cloud != results[j].Cloud {
+			return results[i].Cloud < results[j].Cloud
+		}
+		if results[i].Region != results[j].Region {
+			return results[i].Region < results[j].Region
+		}
+		if results[i].Type != results[j].Type {
+			return results[i].Type < results[j].Type
+		}
+		return results[i].Endpoint < results[j].Endpoint
+	})
+
+	for _, result := range results {
+		list.Add(&flinkEndpointOut{
+			Endpoint: result.Endpoint,
+			Cloud:    result.Cloud,
+			Region:   result.Region,
+			Type:     result.Type,
+		})
+	}
+
+	// Disable the default sort to use the custom sort above
+	list.Sort(false)
 	return list.Print()
 }
 
