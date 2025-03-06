@@ -1,6 +1,8 @@
 module github.com/confluentinc/cli/v4
 
-go 1.22.7
+go 1.23.0
+
+toolchain go1.24.1
 
 require (
 	github.com/antihax/optional v1.0.0
@@ -108,7 +110,7 @@ require (
 	go.uber.org/mock v0.4.0
 	golang.org/x/crypto v0.31.0
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
-	golang.org/x/oauth2 v0.22.0
+	golang.org/x/oauth2 v0.27.0
 	golang.org/x/term v0.27.0
 	golang.org/x/text v0.21.0
 	google.golang.org/protobuf v1.34.2
