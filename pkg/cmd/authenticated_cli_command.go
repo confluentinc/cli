@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"net/url"
+	purl "net/url"
 	"os"
 	"strings"
 
@@ -100,7 +100,7 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(access, id string)
 		return "", err
 	}
 
-	u, err := url.Parse(c.Context.GetPlatformServer())
+	u, err := purl.Parse(c.Context.GetPlatformServer())
 	if err != nil {
 		return "", err
 	}
@@ -166,7 +166,7 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(accessType, provider, r
 		return "", errors.NewErrorWithSuggestions("invalid region", "Please select a valid region - use `confluent flink region list` to see available regions")
 	}
 
-	u, err := url.Parse(hostUrl)
+	u, err := purl.Parse(hostUrl)
 	if err != nil {
 		return "", err
 	}
@@ -221,7 +221,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 
 		schemaRegistryEndpoint, _ := cmd.Flags().GetString("schema-registry-endpoint")
 		if schemaRegistryEndpoint != "" {
-			u, err := url.Parse(schemaRegistryEndpoint)
+			u, err := purl.Parse(schemaRegistryEndpoint)
 			if err != nil {
 				return nil, err
 			}
