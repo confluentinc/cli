@@ -1,6 +1,7 @@
 package flink
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -34,9 +35,16 @@ func (c *command) endpointUse(_ *cobra.Command, args []string) error {
 	region := c.Context.GetCurrentFlinkRegion()
 	endpoint := args[0]
 
-	if valid := validateFlinkEndpointBeforeUse(cloud, region, endpoint); !valid {
-		return errors.NewErrorWithSuggestions("endpoint doesn't match cloud provider and region selected", "Select a different endpoint, or select a cloud provider and region with `confluent flink region use` or `--cloud` and `--region` first.")
+	if valid := validateFlinkEndpointFormat(endpoint); !valid {
+		suggestion := fmt.Sprintf(`Please use "confluent flink endpoint list" to select a valid Flink endpoint starting with "https://flink"`)
+		return errors.NewErrorWithSuggestions("this endpoint format is invalid", suggestion)
 	}
+
+	if valid := validateFlinkEndpointMatchCloudAndRegion(cloud, region, endpoint); !valid {
+		suggestion := fmt.Sprintf(`Please use "confluent flink endpoint list" to select a different endpoint to match cloud = %s and region = %s, or select a different cloud provider and region with "confluent flink region use" command to match this endpoint`, cloud, region)
+		return errors.NewErrorWithSuggestions("this endpoint doesn't match cloud provider and region selected", suggestion)
+	}
+
 	if err := c.Context.SetCurrentFlinkEndpoint(endpoint); err != nil {
 		return err
 	}
@@ -48,10 +56,14 @@ func (c *command) endpointUse(_ *cobra.Command, args []string) error {
 	return nil
 }
 
-func validateFlinkEndpointBeforeUse(cloud, region, endpoint string) bool {
+func validateFlinkEndpointFormat(endpoint string) bool {
 	if !strings.HasPrefix(endpoint, "https://flink") {
 		return false
 	}
+	return true
+}
+
+func validateFlinkEndpointMatchCloudAndRegion(cloud, region, endpoint string) bool {
 	if cloud == "" && region == "" {
 		return true
 	}

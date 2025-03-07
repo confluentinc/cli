@@ -18,6 +18,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/schemaregistry"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
@@ -56,7 +57,9 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 		var url string
 		var err error
 
-		if computePoolOnly {
+		if c.Context.GetCurrentFlinkEndpoint() != "" {
+			url = c.Context.GetCurrentFlinkEndpoint()
+		} else if computePoolOnly {
 			if computePoolId := c.Context.GetCurrentFlinkComputePool(); computePoolId != "" {
 				url, err = c.getGatewayUrlForComputePool(c.Context.GetCurrentFlinkAccessType(), computePoolId)
 				if err != nil {
@@ -84,6 +87,7 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 			return nil, err
 		}
 
+		log.CliLogger.Debug("The Flink client url: %s", url)
 		c.flinkGatewayClient = ccloudv2.NewFlinkGatewayClient(url, c.Version.UserAgent, unsafeTrace, dataplaneToken)
 	}
 
