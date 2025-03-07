@@ -381,7 +381,7 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 	}
 	log.CliLogger.Tracef("Create consumer succeeded")
 
-	if err := c.refreshOAuthBearerToken(cmd, consumer); err != nil {
+	if err := c.refreshOAuthBearerToken(cmd, consumer, ckgo.OAuthBearerTokenRefresh{Config: oauthConfig}); err != nil {
 		return err
 	}
 
