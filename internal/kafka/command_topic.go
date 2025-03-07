@@ -206,7 +206,7 @@ func addApiKeyToCluster(cmd *cobra.Command, cluster *config.KafkaClusterConfig) 
 	return nil
 }
 
-func ProduceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte, topic string, keySerializer serdes.SerializationProvider, valueSerializer serdes.SerializationProvider, producer *ckgo.Producer) error {
+func (c *command) produceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte, topic string, keySerializer serdes.SerializationProvider, valueSerializer serdes.SerializationProvider, producer *ckgo.Producer) error {
 	keys := "Ctrl-C or Ctrl-D"
 	if runtime.GOOS == "windows" {
 		keys = "Ctrl-C"
@@ -223,6 +223,19 @@ func ProduceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte
 		<-signals
 		input <- EOF
 	}()
+	go func(eventsChan chan ckgo.Event) {
+		for ev := range eventsChan {
+			oart, ok := ev.(ckgo.OAuthBearerTokenRefresh)
+			if !ok {
+				// Ignore other event types
+				continue
+			}
+			err := c.refreshOAuthBearerToken(cmd, producer, oart)
+			if err != nil {
+				return
+			}
+		}
+	}(producer.Events())
 	// Prime reader
 	go scan()
 
@@ -238,7 +251,7 @@ func ProduceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte
 			break
 		}
 
-		message, err := getProduceMessage(cmd, keyMetaInfo, valueMetaInfo, topic, data, keySerializer, valueSerializer)
+		message, err := GetProduceMessage(cmd, keyMetaInfo, valueMetaInfo, topic, data, keySerializer, valueSerializer)
 		if err != nil {
 			return err
 		}
