@@ -139,7 +139,7 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Con
 		Endpoint:           cluster.Spec.GetKafkaBootstrapEndpoint(),
 		ByokKeyId:          getCmkByokId(cluster),
 		EncryptionKeyId:    getCmkEncryptionKey(cluster),
-		Zone:               cluster.GetSpec().Config.CmkV2Dedicated.GetZones(),
+		Zone:               getCmkZones(cluster),
 		RestEndpoint:       cluster.Spec.GetHttpEndpoint(),
 	}
 }
