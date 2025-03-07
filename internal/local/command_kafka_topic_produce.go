@@ -77,7 +77,7 @@ func (c *command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return ProduceToTopic(cmd, []byte{}, []byte{}, topicName, serializationProvider, serializationProvider, producer)
+	return produceToTopic(cmd, []byte{}, []byte{}, topicName, serializationProvider, serializationProvider, producer)
 }
 
 func newOnPremProducer(cmd *cobra.Command, bootstrap string) (*ckgo.Producer, error) {
@@ -111,7 +111,7 @@ func newOnPremProducer(cmd *cobra.Command, bootstrap string) (*ckgo.Producer, er
 	return ckgo.NewProducer(configMap)
 }
 
-func ProduceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte, topic string, keySerializer serdes.SerializationProvider, valueSerializer serdes.SerializationProvider, producer *ckgo.Producer) error {
+func produceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte, topic string, keySerializer serdes.SerializationProvider, valueSerializer serdes.SerializationProvider, producer *ckgo.Producer) error {
 	keys := "Ctrl-C or Ctrl-D"
 	if runtime.GOOS == "windows" {
 		keys = "Ctrl-C"
