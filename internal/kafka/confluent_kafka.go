@@ -69,7 +69,7 @@ type GroupHandler struct {
 	Properties        ConsumerProperties
 }
 
-func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckgo.Handle) error {
+func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckgo.Handle, oart ckgo.OAuthBearerTokenRefresh) error {
 	protocol, err := cmd.Flags().GetString("protocol")
 	if err != nil {
 		return err
@@ -79,7 +79,6 @@ func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckgo.Handle
 		return err
 	}
 	if protocol == "SASL_SSL" && saslMechanism == "OAUTHBEARER" {
-		oart := ckgo.OAuthBearerTokenRefresh{Config: oauthConfig}
 		if c.Context.GetState() == nil { // require log-in to use oauthbearer token
 			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
