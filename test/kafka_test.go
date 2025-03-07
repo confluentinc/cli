@@ -91,7 +91,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster describe lkc-describe-dedicated-provisioning", fixture: "kafka/cluster-describe-dedicated-provisioning.golden"},
 
 		{args: "kafka cluster describe lkc-unknown", fixture: "kafka/48.golden", exitCode: 1},
-		{args: "kafka cluster describe lkc-unknown-type --unsafe-trace", fixture: "kafka/describe-unknown-cluster-type.golden"},
+		{args: "kafka cluster describe lkc-unknown-type", fixture: "kafka/describe-unknown-cluster-type.golden"},
 
 		{args: "kafka acl list --cluster lkc-acls", fixture: "kafka/acl/list-cloud.golden"},
 		{args: "kafka acl list --cluster lkc-acls --all", fixture: "kafka/acl/list-cloud-all.golden"},
@@ -136,6 +136,43 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o json", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-json.golden"},
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o yaml", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-yaml.golden"},
 		{args: "kafka topic update topic-exist-rest --config num.partitions=6", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-partitions-count.golden"},
+	}
+
+	if runtime.GOOS != "windows" {
+		noSchemaTest := CLITest{args: "kafka topic produce topic-exist --value-format protobuf --api-key key --api-secret secret", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/produce-no-schema.golden", exitCode: 1}
+		tests = append(tests, noSchemaTest)
+	}
+
+	resetConfiguration(s.T(), false)
+
+	for _, test := range tests {
+		test.login = "cloud"
+		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+
+	tests = []CLITest{
+		{args: fmt.Sprintf("kafka link describe link-1 --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/describe-onprem.golden"},
+		{args: fmt.Sprintf("kafka link task list link-5 --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem.golden"},
+		{args: fmt.Sprintf("kafka link task list link-5 --url %s -o yaml", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem-yaml.golden"},
+		{args: fmt.Sprintf("kafka link task list link-5 --url %s -o json", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestKafkaDedicatedCluster() {
+	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
+	createLinkConfigFile := getCreateLinkConfigFile()
+	defer os.Remove(createLinkConfigFile)
+	createBidirectionalLinkConfigFile := getCreateBidirectionalLinkConfigFile()
+	defer os.Remove(createBidirectionalLinkConfigFile)
+	tests := []CLITest{
+		//{args: "kafka cluster create my-dedicated-cluster --cloud aws --region us-east-1 --zone use1-az3 --type dedicated --cku 1 --verbose", fixture: "kafka/22.golden"},
+		{args: "kafka cluster describe lkc-unknown-type", fixture: "kafka/describe-unknown-cluster-type.golden"},
 	}
 
 	if runtime.GOOS != "windows" {
