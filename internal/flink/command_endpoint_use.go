@@ -14,17 +14,17 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
-func (c *command) newRegionUseCommand() *cobra.Command {
+func (c *command) newEndpointUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "use",
-		Short: "Use a Flink region in subsequent commands.",
-		Long:  "Choose a Flink region to be used in subsequent commands which support passing a region with the `--region` flag.",
+		Short: "Use a Flink endpoint in subsequent commands.",
+		Long:  "Choose a Flink endpoint to be used in subsequent commands which support passing a region with the `--region` flag.",
 		Args:  cobra.NoArgs,
-		RunE:  c.regionUse,
+		RunE:  c.endpointUse,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Select region "N. Virginia (us-east-1)" for use in subsequent Flink commands.`,
-				Code: "confluent flink region use --cloud aws --region us-east-1",
+				Text: `Select region "xxx" for use in subsequent Flink commands.`,
+				Code: "confluent flink endpoint use xxx",
 			},
 		),
 	}
@@ -38,7 +38,7 @@ func (c *command) newRegionUseCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) regionUse(cmd *cobra.Command, _ []string) error {
+func (c *command) endpointUse(cmd *cobra.Command, _ []string) error {
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return err
