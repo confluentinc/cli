@@ -182,7 +182,7 @@ func (c *command) produceCloud(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return c.produceToTopic(cmd, keyMetaInfo, valueMetaInfo, topic, keySerializer, valueSerializer, producer)
+	return c.produceToTopic(cmd, keyMetaInfo, valueMetaInfo, topic, keySerializer, valueSerializer, producer, false)
 }
 
 func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
@@ -240,7 +240,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return c.produceToTopic(cmd, keyMetaInfo, valueMetaInfo, topic, keySerializer, valueSerializer, producer)
+	return c.produceToTopic(cmd, keyMetaInfo, valueMetaInfo, topic, keySerializer, valueSerializer, producer, true)
 }
 
 func (c *command) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *schemaregistry.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
