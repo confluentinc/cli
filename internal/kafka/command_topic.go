@@ -206,13 +206,27 @@ func addApiKeyToCluster(cmd *cobra.Command, cluster *config.KafkaClusterConfig) 
 	return nil
 }
 
-func ProduceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte, topic string, keySerializer serdes.SerializationProvider, valueSerializer serdes.SerializationProvider, producer *ckgo.Producer) error {
+func (c *command) produceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte, topic string, keySerializer serdes.SerializationProvider, valueSerializer serdes.SerializationProvider, producer *ckgo.Producer, isOnPrem bool) error {
 	keys := "Ctrl-C or Ctrl-D"
 	if runtime.GOOS == "windows" {
 		keys = "Ctrl-C"
 	}
 	output.ErrPrintf(false, "Starting Kafka Producer. Use %s to exit.\n", keys)
-
+	if isOnPrem {
+		go func(eventsChan chan ckgo.Event) {
+			for ev := range eventsChan {
+				oart, ok := ev.(ckgo.OAuthBearerTokenRefresh)
+				err := c.refreshOAuthBearerToken(cmd, producer, oart)
+				if !ok {
+					continue
+				}
+				fmt.Println("CLI MESSAGE: Auth token refreshed.")
+				if err != nil {
+					return
+				}
+			}
+		}(producer.Events())
+	}
 	var scanErr error
 	input, scan := PrepareInputChannel(&scanErr)
 
@@ -238,7 +252,7 @@ func ProduceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte
 			break
 		}
 
-		message, err := getProduceMessage(cmd, keyMetaInfo, valueMetaInfo, topic, data, keySerializer, valueSerializer)
+		message, err := GetProduceMessage(cmd, keyMetaInfo, valueMetaInfo, topic, data, keySerializer, valueSerializer)
 		if err != nil {
 			return err
 		}
