@@ -179,7 +179,7 @@ func (c *command) produceCloud(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return c.produceToTopic(cmd, keyMetaInfo, valueMetaInfo, topic, keySerializer, valueSerializer, producer)
+	return c.produceToTopic(cmd, keyMetaInfo, valueMetaInfo, topic, keySerializer, valueSerializer, producer, false)
 }
 
 func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
@@ -333,7 +333,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return c.produceToTopic(cmd, keyMetaInfo, valueMetaInfo, topic, keySerializer, valueSerializer, producer)
+	return c.produceToTopic(cmd, keyMetaInfo, valueMetaInfo, topic, keySerializer, valueSerializer, producer, true)
 }
 
 func prepareSerializer(cmd *cobra.Command, topic, mode string) (string, string, serdes.SerializationProvider, error) {

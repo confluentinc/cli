@@ -1,9 +1,12 @@
 package kafka
 
 import (
+	"context"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"github.com/confluentinc/cli/v4/pkg/jwt"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"io"
 	"os"
 	"os/signal"
@@ -82,7 +85,15 @@ func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckgo.Handle
 		if c.Context.GetState() == nil { // require log-in to use oauthbearer token
 			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
-		oauthBearerToken, retrieveErr := retrieveUnsecuredToken(oart, c.Context.GetAuthToken())
+		req := mdsv1.ExtendAuthRequest{
+			AccessToken:  c.Context.GetAuthToken(),
+			RefreshToken: c.Context.GetAuthRefreshToken(),
+		}
+		resp, _, err := c.MDSClient.SSODeviceAuthorizationApi.ExtendDeviceAuth(context.Background(), req)
+		if err != nil {
+			return err
+		}
+		oauthBearerToken, retrieveErr := retrieveUnsecuredToken(oart, resp.AuthToken, c)
 		if retrieveErr != nil {
 			_ = client.SetOAuthBearerTokenFailure(retrieveErr.Error())
 			return fmt.Errorf("token retrieval error: %w", retrieveErr)
@@ -97,7 +108,7 @@ func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckgo.Handle
 	return nil
 }
 
-func retrieveUnsecuredToken(e ckgo.OAuthBearerTokenRefresh, tokenValue string) (ckgo.OAuthBearerToken, error) {
+func retrieveUnsecuredToken(e ckgo.OAuthBearerTokenRefresh, tokenValue string, c *command) (ckgo.OAuthBearerToken, error) {
 	config := e.Config
 	if !oauthbearerConfigRegex.MatchString(config) {
 		return ckgo.OAuthBearerToken{}, fmt.Errorf("ignoring event %T due to malformed config: %s", e, config)
@@ -118,7 +129,15 @@ func retrieveUnsecuredToken(e ckgo.OAuthBearerTokenRefresh, tokenValue string) (
 	}
 
 	now := time.Now()
-	expiration := now.Add(time.Second * time.Duration(3600)) // timeout after 60 mins. TODO: re-authenticate after timout
+	expClaim, err := jwt.GetClaim(c.Context.GetAuthToken(), "exp")
+	if err != nil {
+		return ckgo.OAuthBearerToken{}, err
+	}
+	exp, ok := expClaim.(float64)
+	if !ok {
+		return ckgo.OAuthBearerToken{}, fmt.Errorf(errors.MalformedTokenErrorMsg, "exp")
+	}
+	expiration := now.Add(time.Second * time.Duration(exp))
 	oauthBearerToken := ckgo.OAuthBearerToken{
 		TokenValue: tokenValue,
 		Expiration: expiration,
