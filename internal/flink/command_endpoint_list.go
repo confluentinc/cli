@@ -76,13 +76,21 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	}
 
 	// 2 - List all the private endpoints based on the presence of "READY" PrivateLinkAttachments as filter
-	platts, err := c.V2Client.ListPrivateLinkAttachments(environmentId, []string{}, []string{cloud}, []string{region}, []string{"READY"})
+	// Note the cloudFilter and regionFilter have to be `nil` instead of empty slice in case of no filter
+	var cloudFilter, regionFilter []string
+	if cloud != "" {
+		cloudFilter = []string{cloud}
+	}
+	if region != "" {
+		regionFilter = []string{region}
+	}
+
+	platts, err := c.V2Client.ListPrivateLinkAttachments(environmentId, nil, cloudFilter, regionFilter, []string{"READY"})
 	if err != nil {
 		return err
 	}
 	filterKeyMap := buildCloudRegionKeyFilterMapFromPrivateLinkAttachments(platts)
 
-	// TODO: De-duplications are needed
 	for _, flinkRegion := range flinkRegions {
 		key := CloudRegionKey{
 			cloud:  flinkRegion.GetCloud(),
@@ -100,6 +108,7 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	}
 
 	// 3 - List all the CCN endpoint with the list of "READY" network domains
+	// Note the cloud and region have to be empty slice instead of `nil` in case of no filter
 	networks, err := c.V2Client.ListNetworks(environmentId, nil, []string{cloud}, []string{region}, nil, []string{"READY"}, nil)
 	for _, network := range networks {
 		suffix := network.Status.GetEndpointSuffix()
@@ -111,7 +120,7 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 		})
 	}
 
-	// Sort the results order by cloud, then region, then type, then endpoint
+	// Sort the results order by cloud, region, type and endpoint
 	sort.Slice(results, func(i, j int) bool {
 		if results[i].Cloud != results[j].Cloud {
 			return results[i].Cloud < results[j].Cloud
@@ -139,6 +148,15 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	return list.Print()
 }
 
+// buildCloudRegionKeyFilterMapFromPrivateLinkAttachments creates a map of unique cloud/region pairs from PrivateLinkAttachments.
+// This function helps deduplicate scenarios where users have multiple private link attachments in the same cloud region.
+// Each unique combination of cloud and region is represented as a CloudRegionKey in the returned map.
+//
+// Parameters:
+//   - platts: A slice of NetworkingV1PrivateLinkAttachment objects to process
+//
+// Returns:
+//   - A map with CloudRegionKey as keys and boolean 'true' as values for each unique cloud/region combination
 func buildCloudRegionKeyFilterMapFromPrivateLinkAttachments(platts []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment) map[CloudRegionKey]bool {
 	result := make(map[CloudRegionKey]bool, len(platts))
 	for _, platt := range platts {

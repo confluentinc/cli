@@ -11,12 +11,10 @@ import (
 )
 
 type regionOut struct {
-	IsCurrent       bool   `human:"Current" serialized:"is_current"`
-	Name            string `human:"Name" serialized:"name"`
-	Cloud           string `human:"Cloud" serialized:"cloud"`
-	Region          string `human:"Region" serialized:"region"`
-	PublicEndpoint  string `human:"PublicEndpoint" serialized:"public_endpoint"`
-	PrivateEndpoint string `human:"PrivateEndpoint" serialized:"private_endpoint"`
+	IsCurrent bool   `human:"Current" serialized:"is_current"`
+	Name      string `human:"Name" serialized:"name"`
+	Cloud     string `human:"Cloud" serialized:"cloud"`
+	Region    string `human:"Region" serialized:"region"`
 }
 
 func (c *command) newRegionListCommand() *cobra.Command {
