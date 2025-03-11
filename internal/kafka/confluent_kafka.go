@@ -225,7 +225,7 @@ func GetRebalanceCallback(offset ckgo.Offset, partitionFilter PartitionFilter) f
 	}
 }
 
-func consumeMessage(message *ckgo.Message, h *GroupHandler) error {
+func ConsumeMessage(message *ckgo.Message, h *GroupHandler) error {
 	srAuth := serdes.SchemaRegistryAuth{
 		ApiKey:                   h.SrApiKey,
 		ApiSecret:                h.SrApiSecret,
@@ -331,7 +331,7 @@ func getMessageString(message *ckgo.Message, valueDeserializer serdes.Deserializ
 	return messageString, nil
 }
 
-func RunConsumer(consumer *ckgo.Consumer, groupHandler *GroupHandler) error {
+func (c *command) runConsumer(consumer *ckgo.Consumer, groupHandler *GroupHandler, cmd *cobra.Command) error {
 	run := true
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
@@ -351,7 +351,7 @@ func RunConsumer(consumer *ckgo.Consumer, groupHandler *GroupHandler) error {
 			}
 			switch e := event.(type) {
 			case *ckgo.Message:
-				if err := consumeMessage(e, groupHandler); err != nil {
+				if err := ConsumeMessage(e, groupHandler); err != nil {
 					commitErrCh := make(chan error, 1)
 					go func() {
 						_, err := consumer.Commit()
@@ -367,6 +367,11 @@ func RunConsumer(consumer *ckgo.Consumer, groupHandler *GroupHandler) error {
 						log.CliLogger.Warnf("Commit operation timed out")
 					}
 
+					return err
+				}
+			case ckgo.OAuthBearerTokenRefresh:
+				err := c.refreshOAuthBearerToken(cmd, consumer, e)
+				if err != nil {
 					return err
 				}
 			case ckgo.Error:

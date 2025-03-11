@@ -299,7 +299,7 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 			Timestamp:   timestamp,
 		},
 	}
-	return RunConsumer(consumer, groupHandler)
+	return c.runConsumer(consumer, groupHandler, cmd)
 }
 
 func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
@@ -453,5 +453,5 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 			Timestamp:   timestamp,
 		},
 	}
-	return RunConsumer(consumer, groupHandler)
+	return c.runConsumer(consumer, groupHandler, cmd)
 }
