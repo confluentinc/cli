@@ -118,10 +118,6 @@ func (c *command) mdsRequest() error {
 	if err != nil {
 		return err
 	}
-
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
