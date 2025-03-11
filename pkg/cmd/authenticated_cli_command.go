@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"net/url"
+	purl "net/url"
 	"os"
 	"strings"
 
@@ -18,6 +18,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/schemaregistry"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
@@ -56,7 +57,9 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 		var url string
 		var err error
 
-		if computePoolOnly {
+		if c.Context.GetCurrentFlinkEndpoint() != "" {
+			url = c.Context.GetCurrentFlinkEndpoint()
+		} else if computePoolOnly {
 			if computePoolId := c.Context.GetCurrentFlinkComputePool(); computePoolId != "" {
 				url, err = c.getGatewayUrlForComputePool(c.Context.GetCurrentFlinkAccessType(), computePoolId)
 				if err != nil {
@@ -84,6 +87,7 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 			return nil, err
 		}
 
+		log.CliLogger.Debug("The Flink client url: %s", url)
 		c.flinkGatewayClient = ccloudv2.NewFlinkGatewayClient(url, c.Version.UserAgent, unsafeTrace, dataplaneToken)
 	}
 
@@ -100,7 +104,7 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(access, id string)
 		return "", err
 	}
 
-	u, err := url.Parse(c.Context.GetPlatformServer())
+	u, err := purl.Parse(c.Context.GetPlatformServer())
 	if err != nil {
 		return "", err
 	}
@@ -131,7 +135,7 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(access, id string)
 }
 
 func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(accessType, provider, region string) (string, error) {
-	regions, err := c.V2Client.ListFlinkRegions(provider)
+	regions, err := c.V2Client.ListFlinkRegions(provider, region)
 	if err != nil {
 		return "", err
 	}
@@ -166,7 +170,7 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(accessType, provider, r
 		return "", errors.NewErrorWithSuggestions("invalid region", "Please select a valid region - use `confluent flink region list` to see available regions")
 	}
 
-	u, err := url.Parse(hostUrl)
+	u, err := purl.Parse(hostUrl)
 	if err != nil {
 		return "", err
 	}
@@ -221,7 +225,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 
 		schemaRegistryEndpoint, _ := cmd.Flags().GetString("schema-registry-endpoint")
 		if schemaRegistryEndpoint != "" {
-			u, err := url.Parse(schemaRegistryEndpoint)
+			u, err := purl.Parse(schemaRegistryEndpoint)
 			if err != nil {
 				return nil, err
 			}

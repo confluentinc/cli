@@ -526,7 +526,7 @@ func filterNetworkList(networkList []networkingv1.NetworkingV1Network, name, clo
 			(slices.Contains(region, networkSpec.Spec.GetRegion()) || region == nil) &&
 			(slices.Contains(cidr, networkSpec.Spec.GetCidr()) || cidr == nil) &&
 			(slices.Contains(phase, networkSpec.Status.GetPhase()) || phase == nil) &&
-			(containsFilter(connection, networkSpec.Status.GetActiveConnectionTypes().Items) || connection == nil) {
+			(containsFilter(connection, networkSpec.Status.GetActiveConnectionTypes()) || connection == nil) {
 			filteredNetworkList = append(filteredNetworkList, networkSpec)
 		}
 	}
@@ -555,7 +555,7 @@ func handleNetworkingNetworkCreate(t *testing.T) http.HandlerFunc {
 		err := json.NewDecoder(r.Body).Decode(body)
 		require.NoError(t, err)
 
-		connectionTypes := body.Spec.ConnectionTypes.Items
+		connectionTypes := *body.Spec.ConnectionTypes
 
 		if slices.Contains(connectionTypes, "TRANSITGATEWAY") && (body.Spec.Cidr == nil && body.Spec.ZonesInfo == nil) {
 			w.WriteHeader(http.StatusBadRequest)
@@ -573,8 +573,8 @@ func handleNetworkingNetworkCreate(t *testing.T) http.HandlerFunc {
 
 				Status: &networkingv1.NetworkingV1NetworkStatus{
 					Phase:                    "PROVISIONING",
-					SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: connectionTypes},
-					ActiveConnectionTypes:    networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
+					SupportedConnectionTypes: connectionTypes,
+					ActiveConnectionTypes:    []string{},
 				},
 			}
 
@@ -643,8 +643,8 @@ func getAwsNetwork(id, name, phase string, connectionTypes []string) networkingv
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
-			SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: connectionTypes},
-			ActiveConnectionTypes:    networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
+			SupportedConnectionTypes: connectionTypes,
+			ActiveConnectionTypes:    []string{},
 			Cloud: &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
 				NetworkingV1AwsNetwork: &networkingv1.NetworkingV1AwsNetwork{
 					Kind: "AwsNetwork",
@@ -671,7 +671,7 @@ func getAwsNetwork(id, name, phase string, connectionTypes []string) networkingv
 	}
 
 	if phase == "READY" {
-		network.Status.ActiveConnectionTypes = networkingv1.NetworkingV1ConnectionTypes{Items: connectionTypes}
+		network.Status.ActiveConnectionTypes = connectionTypes
 		network.Status.Cloud.NetworkingV1AwsNetwork.Vpc = "vpc-00000000000000000"
 		network.Status.Cloud.NetworkingV1AwsNetwork.Account = "000000000000"
 	}
@@ -698,8 +698,8 @@ func getGcpNetwork(id, name, phase string, connectionTypes []string) networkingv
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
-			SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: connectionTypes},
-			ActiveConnectionTypes:    networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
+			SupportedConnectionTypes: connectionTypes,
+			ActiveConnectionTypes:    []string{},
 			Cloud: &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
 				NetworkingV1GcpNetwork: &networkingv1.NetworkingV1GcpNetwork{
 					Kind: "GcpNetwork",
@@ -729,7 +729,7 @@ func getGcpNetwork(id, name, phase string, connectionTypes []string) networkingv
 	}
 
 	if phase == "READY" {
-		network.Status.ActiveConnectionTypes = networkingv1.NetworkingV1ConnectionTypes{Items: connectionTypes}
+		network.Status.ActiveConnectionTypes = connectionTypes
 		network.Status.Cloud.NetworkingV1GcpNetwork.Project = "gcp-project"
 		network.Status.Cloud.NetworkingV1GcpNetwork.VpcNetwork = "gcp-vpc"
 	}
@@ -750,8 +750,8 @@ func getAzureNetwork(id, name, phase string, connectionTypes []string) networkin
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
-			SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: connectionTypes},
-			ActiveConnectionTypes:    networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
+			SupportedConnectionTypes: connectionTypes,
+			ActiveConnectionTypes:    []string{},
 			Cloud: &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
 				NetworkingV1AzureNetwork: &networkingv1.NetworkingV1AzureNetwork{
 					Kind: "AzureNetwork",
@@ -787,7 +787,7 @@ func getAzureNetwork(id, name, phase string, connectionTypes []string) networkin
 	}
 
 	if phase == "READY" {
-		network.Status.ActiveConnectionTypes = networkingv1.NetworkingV1ConnectionTypes{Items: connectionTypes}
+		network.Status.ActiveConnectionTypes = connectionTypes
 		network.Status.Cloud.NetworkingV1AzureNetwork.Vnet = "azure-vnet"
 		network.Status.Cloud.NetworkingV1AzureNetwork.Subscription = "aa000000-a000-0a00-00aa-0000aaa0a0a0"
 	}

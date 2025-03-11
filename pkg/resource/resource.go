@@ -40,6 +40,7 @@ const (
 	FlinkApplication                = "Flink application"
 	FlinkEnvironment                = "Flink environment"
 	FlinkRegion                     = "Flink region"
+	FlinkEndpoint                   = "Flink endpoint"
 	FlinkStatement                  = "Flink SQL statement"
 	FlinkConnection                 = "Flink connection"
 	Gateway                         = "gateway"
