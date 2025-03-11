@@ -76,6 +76,9 @@ func (c *command) privateLinkAttachmentConnectionList(cmd *cobra.Command, _ []st
 			case connection.Spec.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnection != nil:
 				out.Cloud = pcloud.Azure
 				out.AzurePrivateEndpointResourceId = connection.Spec.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnection.GetPrivateEndpointResourceId()
+			case connection.Spec.Cloud.NetworkingV1GcpPrivateLinkAttachmentConnection != nil:
+				out.Cloud = pcloud.Gcp
+				out.GcpPrivateServiceConnectConnectionId = connection.Spec.Cloud.NetworkingV1GcpPrivateLinkAttachmentConnection.GetPrivateServiceConnectConnectionId()
 			}
 		}
 
@@ -86,6 +89,8 @@ func (c *command) privateLinkAttachmentConnectionList(cmd *cobra.Command, _ []st
 			case connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus != nil:
 				out.AzurePrivateLinkServiceAlias = connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus.GetPrivateLinkServiceAlias()
 				out.AzurePrivateLinkServiceId = connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus.GetPrivateLinkServiceResourceId()
+			case connection.Status.Cloud.NetworkingV1GcpPrivateLinkAttachmentConnectionStatus != nil:
+				out.GcpServiceAttachmentId = connection.Status.Cloud.NetworkingV1GcpPrivateLinkAttachmentConnectionStatus.GetPrivateServiceConnectServiceAttachment()
 			}
 		}
 
