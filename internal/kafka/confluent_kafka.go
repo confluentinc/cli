@@ -110,6 +110,9 @@ func (c *command) mdsRequest() error {
 		RefreshToken: c.Context.GetAuthRefreshToken(),
 	}
 	resp, _, err := c.MDSClient.SSODeviceAuthorizationApi.ExtendDeviceAuth(context.Background(), req)
+	if err != nil {
+		return err
+	}
 	c.Context.State.AuthToken = resp.AuthToken
 	err = c.Context.Save()
 	if err != nil {
