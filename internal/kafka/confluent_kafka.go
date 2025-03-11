@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"context"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -16,10 +17,12 @@ import (
 	"github.com/spf13/cobra"
 
 	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/jwt"
 	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/schemaregistry"
@@ -69,7 +72,7 @@ type GroupHandler struct {
 	Properties        ConsumerProperties
 }
 
-func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckgo.Handle) error {
+func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckgo.Handle, oart ckgo.OAuthBearerTokenRefresh) error {
 	protocol, err := cmd.Flags().GetString("protocol")
 	if err != nil {
 		return err
@@ -79,11 +82,14 @@ func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckgo.Handle
 		return err
 	}
 	if protocol == "SASL_SSL" && saslMechanism == "OAUTHBEARER" {
-		oart := ckgo.OAuthBearerTokenRefresh{Config: oauthConfig}
 		if c.Context.GetState() == nil { // require log-in to use oauthbearer token
 			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
-		oauthBearerToken, retrieveErr := retrieveUnsecuredToken(oart, c.Context.GetAuthToken())
+		err := c.mdsRequest()
+		if err != nil {
+			return err
+		}
+		oauthBearerToken, retrieveErr := c.retrieveUnsecuredToken(oart)
 		if retrieveErr != nil {
 			_ = client.SetOAuthBearerTokenFailure(retrieveErr.Error())
 			return fmt.Errorf("token retrieval error: %w", retrieveErr)
@@ -98,7 +104,24 @@ func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckgo.Handle
 	return nil
 }
 
-func retrieveUnsecuredToken(e ckgo.OAuthBearerTokenRefresh, tokenValue string) (ckgo.OAuthBearerToken, error) {
+func (c *command) mdsRequest() error {
+	req := mdsv1.ExtendAuthRequest{
+		AccessToken:  c.Context.GetAuthToken(),
+		RefreshToken: c.Context.GetAuthRefreshToken(),
+	}
+	resp, _, err := c.MDSClient.SSODeviceAuthorizationApi.ExtendDeviceAuth(context.Background(), req)
+	if err != nil {
+		return err
+	}
+	c.Context.State.AuthToken = resp.AuthToken
+	err = c.Context.Save()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *command) retrieveUnsecuredToken(e ckgo.OAuthBearerTokenRefresh) (ckgo.OAuthBearerToken, error) {
 	config := e.Config
 	if !oauthbearerConfigRegex.MatchString(config) {
 		return ckgo.OAuthBearerToken{}, fmt.Errorf("ignoring event %T due to malformed config: %s", e, config)
@@ -118,10 +141,17 @@ func retrieveUnsecuredToken(e ckgo.OAuthBearerTokenRefresh, tokenValue string) (
 		return ckgo.OAuthBearerToken{}, fmt.Errorf("ignoring event %T: unrecognized key(s): %s", e, config)
 	}
 
-	now := time.Now()
-	expiration := now.Add(time.Second * time.Duration(3600)) // timeout after 60 mins. TODO: re-authenticate after timout
+	expClaim, err := jwt.GetClaim(c.Context.GetAuthToken(), "exp")
+	if err != nil {
+		return ckgo.OAuthBearerToken{}, err
+	}
+	exp, ok := expClaim.(float64)
+	if !ok {
+		return ckgo.OAuthBearerToken{}, fmt.Errorf(errors.MalformedTokenErrorMsg, "exp")
+	}
+	expiration := time.Unix(int64(exp), 0).UTC()
 	oauthBearerToken := ckgo.OAuthBearerToken{
-		TokenValue: tokenValue,
+		TokenValue: c.Context.GetAuthToken(),
 		Expiration: expiration,
 		Principal:  principal,
 	}
