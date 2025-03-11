@@ -5,8 +5,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"github.com/confluentinc/cli/v4/pkg/jwt"
-	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"io"
 	"os"
 	"os/signal"
@@ -19,10 +17,12 @@ import (
 	"github.com/spf13/cobra"
 
 	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/jwt"
 	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/schemaregistry"
@@ -96,7 +96,7 @@ func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckgo.Handle
 		if err != nil {
 			return err
 		}
-		oauthBearerToken, retrieveErr := retrieveUnsecuredToken(oart, resp.AuthToken, c)
+		oauthBearerToken, retrieveErr := c.retrieveUnsecuredToken(oart, resp.AuthToken)
 		if retrieveErr != nil {
 			_ = client.SetOAuthBearerTokenFailure(retrieveErr.Error())
 			return fmt.Errorf("token retrieval error: %w", retrieveErr)
@@ -111,7 +111,7 @@ func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckgo.Handle
 	return nil
 }
 
-func retrieveUnsecuredToken(e ckgo.OAuthBearerTokenRefresh, tokenValue string, c *command) (ckgo.OAuthBearerToken, error) {
+func (c *command) retrieveUnsecuredToken(e ckgo.OAuthBearerTokenRefresh, tokenValue string) (ckgo.OAuthBearerToken, error) {
 	config := e.Config
 	if !oauthbearerConfigRegex.MatchString(config) {
 		return ckgo.OAuthBearerToken{}, fmt.Errorf("ignoring event %T due to malformed config: %s", e, config)
@@ -131,7 +131,6 @@ func retrieveUnsecuredToken(e ckgo.OAuthBearerTokenRefresh, tokenValue string, c
 		return ckgo.OAuthBearerToken{}, fmt.Errorf("ignoring event %T: unrecognized key(s): %s", e, config)
 	}
 
-	now := time.Now()
 	expClaim, err := jwt.GetClaim(c.Context.GetAuthToken(), "exp")
 	if err != nil {
 		return ckgo.OAuthBearerToken{}, err
@@ -140,7 +139,7 @@ func retrieveUnsecuredToken(e ckgo.OAuthBearerTokenRefresh, tokenValue string, c
 	if !ok {
 		return ckgo.OAuthBearerToken{}, fmt.Errorf(errors.MalformedTokenErrorMsg, "exp")
 	}
-	expiration := now.Add(time.Second * time.Duration(exp))
+	expiration := time.Now().Add(time.Second * time.Duration(exp))
 	oauthBearerToken := ckgo.OAuthBearerToken{
 		TokenValue: tokenValue,
 		Expiration: expiration,
