@@ -216,14 +216,11 @@ func (c *command) produceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMe
 		go func(eventsChan chan ckgo.Event) {
 			for ev := range eventsChan {
 				oart, ok := ev.(ckgo.OAuthBearerTokenRefresh)
-				err := c.refreshOAuthBearerToken(cmd, producer, oart)
+				_ = c.refreshOAuthBearerToken(cmd, producer, oart)
 				if !ok {
 					continue
 				}
 				fmt.Println("CLI MESSAGE: Auth token refreshed.")
-				if err != nil {
-					return
-				}
 			}
 		}(producer.Events())
 	}
