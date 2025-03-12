@@ -42,8 +42,8 @@ func (c *command) newConfigurationDeleteCommand(cfg *config.Config) *cobra.Comma
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
 		addCaLocationFlag(cmd)
-		addSchemaRegistryEndpointFlag(cmd)
 	}
+	addSchemaRegistryEndpointFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddForceFlag(cmd)
 

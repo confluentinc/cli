@@ -29,8 +29,8 @@ func (c *command) newDekSubjectListCommand(cfg *config.Config) *cobra.Command {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
 		addCaLocationFlag(cmd)
-		addSchemaRegistryEndpointFlag(cmd)
 	}
+	addSchemaRegistryEndpointFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("kek-name"))

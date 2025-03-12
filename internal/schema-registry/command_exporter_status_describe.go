@@ -31,8 +31,8 @@ func (c *command) newExporterStatusDescribeCommand(cfg *config.Config) *cobra.Co
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
 		addCaLocationFlag(cmd)
-		addSchemaRegistryEndpointFlag(cmd)
 	}
+	addSchemaRegistryEndpointFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

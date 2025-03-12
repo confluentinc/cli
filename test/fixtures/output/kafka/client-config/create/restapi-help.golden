@@ -28,6 +28,7 @@ Flags:
       --api-secret string                   API secret.
       --schema-registry-api-key string      Schema registry API key.
       --schema-registry-api-secret string   Schema registry API secret.
+      --schema-registry-endpoint string     The URL of the Schema Registry cluster.
 
 Global Flags:
   -h, --help            Show help for this command.

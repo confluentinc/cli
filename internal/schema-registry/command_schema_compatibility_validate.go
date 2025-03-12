@@ -46,8 +46,8 @@ func (c *command) newSchemaCompatibilityValidateCommand(cfg *config.Config) *cob
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
 		addCaLocationFlag(cmd)
-		addSchemaRegistryEndpointFlag(cmd)
 	}
+	addSchemaRegistryEndpointFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))

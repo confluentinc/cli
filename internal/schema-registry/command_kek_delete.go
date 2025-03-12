@@ -24,8 +24,8 @@ func (c *command) newKekDeleteCommand(cfg *config.Config) *cobra.Command {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
 		addCaLocationFlag(cmd)
-		addSchemaRegistryEndpointFlag(cmd)
 	}
+	addSchemaRegistryEndpointFlag(cmd)
 
 	return cmd
 }

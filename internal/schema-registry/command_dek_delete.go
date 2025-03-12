@@ -31,8 +31,8 @@ func (c *command) newDekDeleteCommand(cfg *config.Config) *cobra.Command {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
 		addCaLocationFlag(cmd)
-		addSchemaRegistryEndpointFlag(cmd)
 	}
+	addSchemaRegistryEndpointFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("kek-name"))
 	cobra.CheckErr(cmd.MarkFlagRequired("subject"))

@@ -46,6 +46,7 @@ func (c *command) newClusterUpdateCommand() *cobra.Command {
 	addModeFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	addSchemaRegistryEndpointFlag(cmd)
 
 	return cmd
 }

@@ -258,6 +258,23 @@ func (c *Context) SetCurrentFlinkComputePool(id string) error {
 	return nil
 }
 
+func (c *Context) SetSchemaRegistryEndpoint(endpoint string) error {
+	ctx := c.GetCurrentEnvironmentContext()
+	if ctx == nil {
+		return fmt.Errorf(noEnvError)
+	}
+
+	ctx.CurrentSchemaRegistryEndpoint = endpoint
+	return nil
+}
+
+func (c *Context) GetSchemaRegistryEndpoint() string {
+	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
+		return ctx.CurrentSchemaRegistryEndpoint
+	}
+	return ""
+}
+
 func (c *Context) SetCurrentFlinkAccessType(name string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
