@@ -18,6 +18,7 @@ func (c *command) newUseCommand() *cobra.Command {
 		RunE:      c.ConnectivityTypeUse,
 	}
 }
+
 func (c *command) ConnectivityTypeUse(_ *cobra.Command, args []string) error {
 	if err := c.Context.SetCurrentFlinkAccessType(args[0]); err != nil {
 		return err

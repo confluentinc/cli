@@ -70,10 +70,11 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	// 1 - List all the public endpoints based optionally on cloud(upper case) and region(lower case)
 	for _, flinkRegion := range flinkRegions {
 		results = append(results, &flinkEndpointOut{
-			Endpoint: flinkRegion.GetHttpEndpoint(),
-			Cloud:    flinkRegion.GetCloud(),
-			Region:   flinkRegion.GetRegionName(),
-			Type:     publicFlinkEndpointType,
+			IsCurrent: flinkRegion.GetHttpEndpoint() == c.Context.GetCurrentFlinkEndpoint(),
+			Endpoint:  flinkRegion.GetHttpEndpoint(),
+			Cloud:     flinkRegion.GetCloud(),
+			Region:    flinkRegion.GetRegionName(),
+			Type:      publicFlinkEndpointType,
 		})
 	}
 
@@ -93,10 +94,11 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 
 		if _, ok := filterKeyMap[key]; ok {
 			results = append(results, &flinkEndpointOut{
-				Endpoint: flinkRegion.GetPrivateHttpEndpoint(),
-				Cloud:    flinkRegion.GetCloud(),
-				Region:   flinkRegion.GetRegionName(),
-				Type:     privateFlinkEndpointType,
+				IsCurrent: flinkRegion.GetPrivateHttpEndpoint() == c.Context.GetCurrentFlinkEndpoint(),
+				Endpoint:  flinkRegion.GetPrivateHttpEndpoint(),
+				Cloud:     flinkRegion.GetCloud(),
+				Region:    flinkRegion.GetRegionName(),
+				Type:      privateFlinkEndpointType,
 			})
 		}
 	}
@@ -106,11 +108,13 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	networks, err := c.V2Client.ListNetworks(environmentId, nil, []string{cloud}, []string{region}, nil, []string{"READY"}, nil)
 	for _, network := range networks {
 		suffix := network.Status.GetEndpointSuffix()
+		endpoint := fmt.Sprintf("https://flink%s", suffix)
 		results = append(results, &flinkEndpointOut{
-			Endpoint: fmt.Sprintf("https://flink%s", suffix),
-			Cloud:    network.Spec.GetCloud(),
-			Region:   network.Spec.GetRegion(),
-			Type:     privateFlinkEndpointType,
+			IsCurrent: endpoint == c.Context.GetCurrentFlinkEndpoint(),
+			Endpoint:  endpoint,
+			Cloud:     network.Spec.GetCloud(),
+			Region:    network.Spec.GetRegion(),
+			Type:      privateFlinkEndpointType,
 		})
 	}
 
@@ -130,10 +134,11 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 
 	for _, result := range results {
 		list.Add(&flinkEndpointOut{
-			Endpoint: result.Endpoint,
-			Cloud:    result.Cloud,
-			Region:   result.Region,
-			Type:     result.Type,
+			IsCurrent: result.IsCurrent,
+			Endpoint:  result.Endpoint,
+			Cloud:     result.Cloud,
+			Region:    result.Region,
+			Type:      result.Type,
 		})
 	}
 
