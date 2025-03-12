@@ -45,7 +45,7 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	if cloud == "" {
 		return errors.NewErrorWithSuggestions(
 			fmt.Sprintf(`Current Flink cloud provider is empty`),
-			"Run `confluent flink region use` to set the Flink cloud provider first.",
+			"Run `confluent flink region use --cloud <cloud> --region <region>` to set the Flink cloud provider first.",
 		)
 	}
 	cloud = strings.ToUpper(cloud)
@@ -54,7 +54,7 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	if region == "" {
 		return errors.NewErrorWithSuggestions(
 			fmt.Sprintf(`Current Flink region is empty`),
-			"Run `confluent flink region use` to set the Flink region first.",
+			"Run `confluent flink region use --cloud <cloud> --region <region>` to set the Flink region first.",
 		)
 	}
 

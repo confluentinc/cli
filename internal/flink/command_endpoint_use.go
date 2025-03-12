@@ -32,7 +32,21 @@ func (c *command) newEndpointUseCommand() *cobra.Command {
 
 func (c *command) endpointUse(_ *cobra.Command, args []string) error {
 	cloud := c.Context.GetCurrentFlinkCloudProvider()
+	if cloud == "" {
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(`Current Flink cloud provider is empty`),
+			"Run `confluent flink region use --cloud <cloud> --region <region>` to set the Flink cloud provider first.",
+		)
+	}
+
 	region := c.Context.GetCurrentFlinkRegion()
+	if region == "" {
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(`Current Flink region is empty`),
+			"Run `confluent flink region use --cloud <cloud> --region <region>` to set the Flink region first.",
+		)
+	}
+
 	endpoint := args[0]
 
 	if valid := validateFlinkEndpointFormat(endpoint); !valid {
@@ -40,9 +54,9 @@ func (c *command) endpointUse(_ *cobra.Command, args []string) error {
 		return errors.NewErrorWithSuggestions("this endpoint format is invalid", suggestion)
 	}
 
-	if valid := validateFlinkEndpointMatchCloudAndRegion(cloud, region, endpoint); !valid {
-		suggestion := fmt.Sprintf(`Please use "confluent flink endpoint list" to select a different endpoint to match cloud = %s and region = %s, or select a different cloud provider and region with "confluent flink region use" command to match this endpoint`, cloud, region)
-		return errors.NewErrorWithSuggestions("this endpoint doesn't match cloud provider and region selected", suggestion)
+	if valid := validateFlinkEndpointMatchCurrentCloudAndRegion(cloud, region, endpoint); !valid {
+		suggestion := fmt.Sprintf(`Please use "confluent flink endpoint list" to select a different endpoint to match your current cloud = %s and region = %s, or select a different cloud provider and region with "confluent flink region use --cloud <cloud> --region <region>"`, cloud, region)
+		return errors.NewErrorWithSuggestions("this endpoint doesn't match cloud provider and region selected currently", suggestion)
 	}
 
 	if err := c.Context.SetCurrentFlinkEndpoint(endpoint); err != nil {
@@ -63,11 +77,7 @@ func validateFlinkEndpointFormat(endpoint string) bool {
 	return true
 }
 
-func validateFlinkEndpointMatchCloudAndRegion(cloud, region, endpoint string) bool {
-	if cloud == "" && region == "" {
-		return true
-	}
-
+func validateFlinkEndpointMatchCurrentCloudAndRegion(cloud, region, endpoint string) bool {
 	cloud = strings.ToLower(cloud)
 	region = strings.ToLower(region)
 	return strings.Contains(endpoint, cloud) && strings.Contains(endpoint, region)
