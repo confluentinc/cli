@@ -87,7 +87,7 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 			return nil, err
 		}
 
-		log.CliLogger.Debug("The Flink client url: %s", url)
+		log.CliLogger.Debug("The final url used for Flink dataplane client is: %s", url)
 		c.flinkGatewayClient = ccloudv2.NewFlinkGatewayClient(url, c.Version.UserAgent, unsafeTrace, dataplaneToken)
 	}
 
@@ -109,29 +109,16 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(access, id string)
 		return "", err
 	}
 
-	environmentId, err := c.Context.EnvironmentId()
-	if err != nil {
-		return "", err
-	}
-
 	privateURL := fmt.Sprintf("https://flink.%s.%s.private.%s", computePool.Spec.GetRegion(), strings.ToLower(computePool.Spec.GetCloud()), u.Host)
 	publicURL := fmt.Sprintf("https://flink.%s.%s.%s", computePool.Spec.GetRegion(), strings.ToLower(computePool.Spec.GetCloud()), u.Host)
 
 	if access == "private" {
 		return privateURL, nil
-	} else if access == "public" {
-		return publicURL, nil
-	} else {
-		list, err := c.V2Client.ListPrivateLinkAttachments(environmentId, nil, []string{"AWS"}, nil, []string{"READY"})
-		if err != nil {
-			return "", err
-		}
-		if len(list) > 0 {
-			return privateURL, nil
-		} else {
-			return publicURL, nil
-		}
 	}
+	if access == "" {
+		log.CliLogger.Warn("No Flink connectivity-type is specified, defaulting to public")
+	}
+	return publicURL, nil
 }
 
 func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(accessType, provider, region string) (string, error) {
@@ -140,34 +127,22 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(accessType, provider, r
 		return "", err
 	}
 
-	environmentId, err := c.Context.EnvironmentId()
-	if err != nil {
-		return "", err
-	}
-
 	var hostUrl string
 	for _, flinkRegion := range regions {
 		if flinkRegion.GetRegionName() == region {
-			if accessType == "public" {
-				hostUrl = flinkRegion.GetHttpEndpoint()
-			} else if accessType == "private" {
+			if accessType == "private" {
 				hostUrl = flinkRegion.GetPrivateHttpEndpoint()
 			} else {
-				list, err := c.V2Client.ListPrivateLinkAttachments(environmentId, nil, []string{"AWS"}, nil, []string{"READY"})
-				if err != nil {
-					return "", err
-				}
-				if len(list) > 0 {
-					hostUrl = flinkRegion.GetPrivateHttpEndpoint()
-				} else {
-					hostUrl = flinkRegion.GetHttpEndpoint()
-				}
+				hostUrl = flinkRegion.GetHttpEndpoint()
 			}
 			break
 		}
 	}
 	if hostUrl == "" {
 		return "", errors.NewErrorWithSuggestions("invalid region", "Please select a valid region - use `confluent flink region list` to see available regions")
+	}
+	if accessType == "" {
+		log.CliLogger.Warn("No Flink connectivity-type is specified, defaulting to public")
 	}
 
 	u, err := purl.Parse(hostUrl)
