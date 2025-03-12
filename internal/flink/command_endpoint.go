@@ -9,7 +9,6 @@ import (
 const (
 	publicFlinkEndpointType  = "PUBLIC"
 	privateFlinkEndpointType = "PRIVATE"
-	ccnFlinkEndpointType     = "CCN"
 )
 
 type flinkEndpointOut struct {

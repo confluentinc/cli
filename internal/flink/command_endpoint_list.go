@@ -10,6 +10,7 @@ import (
 	networkingprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
@@ -26,18 +27,12 @@ func (c *command) newEndpointListCommand() *cobra.Command {
 		Short: "List Flink endpoint.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List the available Flink endpoints.",
+				Text: "List the available Flink endpoints with current Flink cloud provider and region.",
 				Code: "confluent flink endpoint list",
-			},
-			examples.Example{
-				Text: "List the available Flink endpoints for AWS on region us-west-2.",
-				Code: "confluent flink endpoint list --cloud aws --region us-west-2",
 			},
 		),
 	}
 
-	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddCloudFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -45,15 +40,22 @@ func (c *command) newEndpointListCommand() *cobra.Command {
 }
 
 func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
-	cloud, err := cmd.Flags().GetString("cloud")
-	if err != nil {
-		return err
+	// Get the current Flink cloud and region
+	cloud := c.Context.GetCurrentFlinkCloudProvider()
+	if cloud == "" {
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(`Current Flink cloud provider is empty`),
+			"Run `confluent flink region use` to set the Flink cloud provider first.",
+		)
 	}
 	cloud = strings.ToUpper(cloud)
 
-	region, err := cmd.Flags().GetString("region")
-	if err != nil {
-		return err
+	region := c.Context.GetCurrentFlinkRegion()
+	if region == "" {
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(`Current Flink region is empty`),
+			"Run `confluent flink region use` to set the Flink region first.",
+		)
 	}
 
 	environmentId, err := c.Context.EnvironmentId()
@@ -76,16 +78,8 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	}
 
 	// 2 - List all the private endpoints based on the presence of "READY" PrivateLinkAttachments as filter
-	// Note the cloudFilter and regionFilter have to be `nil` instead of empty slice in case of no filter
-	var cloudFilter, regionFilter []string
-	if cloud != "" {
-		cloudFilter = []string{cloud}
-	}
-	if region != "" {
-		regionFilter = []string{region}
-	}
-
-	platts, err := c.V2Client.ListPrivateLinkAttachments(environmentId, nil, cloudFilter, regionFilter, []string{"READY"})
+	// Note the `cloud` and `region` parameters have to be `nil` instead of empty slice in case of no filter
+	platts, err := c.V2Client.ListPrivateLinkAttachments(environmentId, nil, nil, nil, []string{"READY"})
 	if err != nil {
 		return err
 	}
@@ -116,7 +110,7 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 			Endpoint: fmt.Sprintf("https://flink%s", suffix),
 			Cloud:    network.Spec.GetCloud(),
 			Region:   network.Spec.GetRegion(),
-			Type:     ccnFlinkEndpointType,
+			Type:     privateFlinkEndpointType,
 		})
 	}
 
