@@ -18,8 +18,8 @@ import (
 
 const archivePath = "test/fixtures/input/connect/test-plugin.zip"
 
-func newManifest() *cpstructs.Manifest {
-	return &cpstructs.Manifest{
+var pluginManifestMap = map[string]*cpstructs.Manifest{
+	"/api/plugins/confluentinc/bad-md5": {
 		Name:    "integration-test-plugin",
 		Title:   "Integration Test Plugin",
 		Version: "0.1.0",
@@ -33,15 +33,98 @@ func newManifest() *cpstructs.Manifest {
 				Url:  "https://www.apache.org/licenses/LICENSE-2.0",
 			},
 		},
+	},
+	"/api/plugins/confluentinc/bad-sha1": {
+		Name:    "integration-test-plugin",
+		Title:   "Integration Test Plugin",
+		Version: "0.1.0",
+		Owner: cpstructs.Owner{
+			Username: "confluentinc",
+			Name:     "Confluent, Inc.",
+		},
+		Licenses: []cpstructs.License{
+			{
+				Name: "Apache License 2.0",
+				Url:  "https://www.apache.org/licenses/LICENSE-2.0",
+			},
+		},
+	},
+	"/api/plugins/confluentinc/integration-test-plugin": {
+		Name:    "integration-test-plugin",
+		Title:   "Integration Test Plugin",
+		Version: "0.1.0",
+		Owner: cpstructs.Owner{
+			Username: "confluentinc",
+			Name:     "Confluent, Inc.",
+		},
+		Licenses: []cpstructs.License{
+			{
+				Name: "Apache License 2.0",
+				Url:  "https://www.apache.org/licenses/LICENSE-2.0",
+			},
+		},
+	},
+	"/api/plugins/confluentinc/integration-test-plugin/versions/0.1.0": {
+		Name:    "integration-test-plugin",
+		Title:   "Integration Test Plugin",
+		Version: "0.1.0",
+		Owner: cpstructs.Owner{
+			Username: "confluentinc",
+			Name:     "Confluent, Inc.",
+		},
+		Licenses: []cpstructs.License{
+			{
+				Name: "Apache License 2.0",
+				Url:  "https://www.apache.org/licenses/LICENSE-2.0",
+			},
+		},
+	},
+	"/api/plugins/confluentinc/integration-test-plugin/versions/0.0.5": {
+		Name:    "integration-test-plugin",
+		Title:   "Integration Test Plugin",
+		Version: "0.0.5",
+		Owner: cpstructs.Owner{
+			Username: "confluentinc",
+			Name:     "Confluent, Inc.",
+		},
+		Licenses: []cpstructs.License{
+			{
+				Name: "Apache License 2.0",
+				Url:  "https://www.apache.org/licenses/LICENSE-2.0",
+			},
+		},
+	},
+	"/api/plugins/confluentinc/integration-test-plugin/versions/0.0.4": {
+		Name:    "integration-test-plugin",
+		Title:   "Integration Test Plugin",
+		Version: "0.0.4",
+		Owner: cpstructs.Owner{
+			Username: "confluentinc",
+			Name:     "Confluent, Inc.",
+		},
+		Licenses: []cpstructs.License{
+			{
+				Name: "Apache License 2.0",
+				Url:  "https://www.apache.org/licenses/LICENSE-2.0",
+			},
+		},
+		EndOfLifeAt: "2025-06-01T00:00:00Z",
+	},
+}
+
+func newManifest(urlPath string) *cpstructs.Manifest {
+	manifest, ok := pluginManifestMap[urlPath]
+	if !ok {
+		return nil
 	}
+	return manifest
 }
 
 // Handler for: "/api/plugins/{owner}/{id}"
 func handleHubPlugin(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		id := vars["id"]
-		if id == "dne-connector" || vars["owner"] != "confluentinc" {
+		responseManifest := newManifest(r.URL.Path)
+		if responseManifest == nil {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return
@@ -49,7 +132,6 @@ func handleHubPlugin(t *testing.T) http.HandlerFunc {
 
 		switch r.Method {
 		case http.MethodGet:
-			responseManifest := newManifest()
 			if utils.DoesPathExist(archivePath) {
 				archive, err := os.ReadFile(archivePath)
 				require.NoError(t, err)
@@ -59,6 +141,7 @@ func handleHubPlugin(t *testing.T) http.HandlerFunc {
 					Md5:  fmt.Sprintf("%x", md5.Sum(archive)),
 					Sha1: fmt.Sprintf("%x", sha1.Sum(archive)),
 				}
+				id := mux.Vars(r)["id"]
 				if id == "bad-md5" {
 					responseManifest.Archive.Md5 = "12345"
 				}
@@ -77,8 +160,8 @@ func handleHubPlugin(t *testing.T) http.HandlerFunc {
 // Handler for: "/api/plugins/{owner}/{id}/versions/{version}"
 func handleHubPluginVersion(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		if vars["id"] == "dne-connector" || vars["owner"] != "confluentinc" || vars["version"] != "0.0.5" {
+		responseManifest := newManifest(r.URL.Path)
+		if responseManifest == nil {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return
@@ -86,8 +169,6 @@ func handleHubPluginVersion(t *testing.T) http.HandlerFunc {
 
 		switch r.Method {
 		case http.MethodGet:
-			responseManifest := newManifest()
-			responseManifest.Version = "0.0.5"
 			if utils.DoesPathExist(archivePath) {
 				archive, err := os.ReadFile(archivePath)
 				require.NoError(t, err)
