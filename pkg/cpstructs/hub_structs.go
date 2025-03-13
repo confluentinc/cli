@@ -1,12 +1,13 @@
 package cpstructs
 
 type Manifest struct {
-	Name     string    `json:"name"`
-	Title    string    `json:"title"`
-	Version  string    `json:"version"`
-	Owner    Owner     `json:"owner"`
-	Archive  Archive   `json:"archive"`
-	Licenses []License `json:"license"`
+	Name        string    `json:"name"`
+	Title       string    `json:"title"`
+	Version     string    `json:"version"`
+	Owner       Owner     `json:"owner"`
+	Archive     Archive   `json:"archive"`
+	Licenses    []License `json:"license"`
+	EndOfLifeAt string    `json:"end_of_life_at"`
 }
 
 type Owner struct {
