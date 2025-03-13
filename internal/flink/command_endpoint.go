@@ -28,6 +28,7 @@ func (c *command) newEndpointCommand() *cobra.Command {
 
 	cmd.AddCommand(c.newEndpointListCommand())
 	cmd.AddCommand(c.newEndpointUseCommand())
+	cmd.AddCommand(c.newEndpointUnsetCommand())
 
 	return cmd
 }

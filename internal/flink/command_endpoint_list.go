@@ -27,7 +27,7 @@ func (c *command) newEndpointListCommand() *cobra.Command {
 		Short: "List Flink endpoint.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List the available Flink endpoints with current Flink cloud provider and region.",
+				Text: "List the available Flink endpoints with current cloud provider and region.",
 				Code: "confluent flink endpoint list",
 			},
 		),
