@@ -88,7 +88,7 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 			return nil, err
 		}
 
-		log.CliLogger.Debug("The final url used for Flink dataplane client is: %s", url)
+		log.CliLogger.Debugf("The final url used for Flink dataplane client is: %s", url)
 		c.flinkGatewayClient = ccloudv2.NewFlinkGatewayClient(url, c.Version.UserAgent, unsafeTrace, dataplaneToken)
 	}
 
