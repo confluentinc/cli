@@ -88,7 +88,7 @@ func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckgo.Handle
 		if c.Context.GetState() == nil { // require log-in to use oauthbearer token
 			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
-		err := c.mdsRequest()
+		err := c.mdsRequestAndAuthTokenUpdate()
 		if err != nil {
 			return err
 		}
@@ -107,7 +107,7 @@ func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckgo.Handle
 	return nil
 }
 
-func (c *command) mdsRequest() error {
+func (c *command) mdsRequestAndAuthTokenUpdate() error {
 	req := mdsv1.ExtendAuthRequest{
 		AccessToken:  c.Context.GetAuthToken(),
 		RefreshToken: c.Context.GetAuthRefreshToken(),
@@ -152,7 +152,7 @@ func (c *command) retrieveUnsecuredToken(e ckgo.OAuthBearerTokenRefresh) (ckgo.O
 	if !ok {
 		return ckgo.OAuthBearerToken{}, fmt.Errorf(errors.MalformedTokenErrorMsg, "exp")
 	}
-	expiration := time.Unix(int64(exp), 0).UTC()
+	expiration := time.Unix(int64(exp), 0)
 	oauthBearerToken := ckgo.OAuthBearerToken{
 		TokenValue: c.Context.GetAuthToken(),
 		Expiration: expiration,
