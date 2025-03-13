@@ -10,6 +10,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/resource"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 func (c *command) newEndpointUseCommand() *cobra.Command {
@@ -35,7 +36,7 @@ func (c *command) endpointUse(_ *cobra.Command, args []string) error {
 	if cloud == "" {
 		return errors.NewErrorWithSuggestions(
 			fmt.Sprintf(`Current Flink cloud provider is empty`),
-			"Run `confluent flink region use --cloud <cloud> --region <region>` to set the Flink cloud provider first.",
+			"Please run `confluent flink region use --cloud <cloud> --region <region>` to set the Flink cloud provider first.",
 		)
 	}
 
@@ -43,20 +44,14 @@ func (c *command) endpointUse(_ *cobra.Command, args []string) error {
 	if region == "" {
 		return errors.NewErrorWithSuggestions(
 			fmt.Sprintf(`Current Flink region is empty`),
-			"Run `confluent flink region use --cloud <cloud> --region <region>` to set the Flink region first.",
+			"Please run `confluent flink region use --cloud <cloud> --region <region>` to set the Flink region first.",
 		)
 	}
 
 	endpoint := args[0]
-
-	if valid := validateFlinkEndpointFormat(endpoint); !valid {
-		suggestion := fmt.Sprintf(`Please use "confluent flink endpoint list" to select a valid Flink endpoint starting with "https://flink"`)
-		return errors.NewErrorWithSuggestions("this endpoint format is invalid", suggestion)
-	}
-
-	if valid := validateFlinkEndpointMatchCurrentCloudAndRegion(cloud, region, endpoint); !valid {
-		suggestion := fmt.Sprintf(`Please use "confluent flink endpoint list" to select a different endpoint to match your current cloud = %s and region = %s, or select a different cloud provider and region with "confluent flink region use --cloud <cloud> --region <region>"`, cloud, region)
-		return errors.NewErrorWithSuggestions("this endpoint doesn't match cloud provider and region selected currently", suggestion)
+	if valid := validateUserProvidedFlinkEndpoint(endpoint, cloud, region, c); !valid {
+		suggestion := fmt.Sprintf(`Please run "confluent flink endpoint list" to see all available Flink endpoints, or "confluent flink region use" to switch to a different cloud or region.`)
+		return errors.NewErrorWithSuggestions(fmt.Sprintf("Flink endpoint %q is invalid for cloud = %q and region = %q", endpoint, cloud, region), suggestion)
 	}
 
 	if err := c.Context.SetCurrentFlinkEndpoint(endpoint); err != nil {
@@ -70,15 +65,68 @@ func (c *command) endpointUse(_ *cobra.Command, args []string) error {
 	return nil
 }
 
-func validateFlinkEndpointFormat(endpoint string) bool {
-	if !strings.HasPrefix(endpoint, "https://flink") {
+// validateUserProvidedFlinkEndpoint verifies if the provided Flink endpoint is valid for the given cloud and region.
+// It performs validation against three endpoint types:
+// 1. Public endpoints
+// 2. Private endpoints associated with PrivateLink attachments
+// 3. Private endpoints associated with Confluent Cloud Networks
+// Returns true if the endpoint is valid, false otherwise.
+func validateUserProvidedFlinkEndpoint(endpoint, cloud, region string, c *command) bool {
+	if endpoint == "" || cloud == "" || region == "" {
+		log.CliLogger.Debug("Invalid input: endpoint, cloud, or region is empty")
 		return false
 	}
-	return true
-}
 
-func validateFlinkEndpointMatchCurrentCloudAndRegion(cloud, region, endpoint string) bool {
-	cloud = strings.ToLower(cloud)
-	region = strings.ToLower(region)
-	return strings.Contains(endpoint, cloud) && strings.Contains(endpoint, region)
+	cloud = strings.ToUpper(cloud)
+	// Check if the endpoint is PUBLIC
+	flinkRegions, err := c.V2Client.ListFlinkRegions(cloud, region)
+	if err != nil {
+		log.CliLogger.Debugf("Error listing Flink regions: %v", err)
+		return false
+	}
+
+	for _, r := range flinkRegions {
+		if r.GetHttpEndpoint() == endpoint {
+			log.CliLogger.Debugf("Flink endpoint %q is a valid PUBLIC endpoint", endpoint)
+			return true
+		}
+	}
+
+	// Check if the endpoint is PRIVATE associated with PLATT
+	platts, err := c.V2Client.ListPrivateLinkAttachments(c.Context.GetCurrentEnvironment(), nil, nil, nil, []string{"READY"})
+	if err != nil {
+		log.CliLogger.Debugf("Error listing PrivateLink attachments: %v", err)
+		return false
+	} else {
+		filterKeyMap := buildCloudRegionKeyFilterMapFromPrivateLinkAttachments(platts)
+
+		for _, r := range flinkRegions {
+			key := CloudRegionKey{
+				cloud:  r.GetCloud(),
+				region: r.GetRegionName(),
+			}
+			if _, ok := filterKeyMap[key]; ok && r.GetPrivateHttpEndpoint() == endpoint {
+				log.CliLogger.Debugf("Flink endpoint %q is a valid PRIVATE endpoint associated with a private link attachment", endpoint)
+				return true
+			}
+		}
+	}
+
+	// Check if the endpoint is PRIVATE associated with CCN
+	networks, err := c.V2Client.ListNetworks(c.Context.GetCurrentEnvironment(), nil, []string{cloud}, []string{region}, nil, []string{"READY"}, nil)
+	if err != nil {
+		log.CliLogger.Debugf("Error listing networks: %v", err)
+		return false
+	}
+
+	for _, network := range networks {
+		suffix := network.Status.GetEndpointSuffix()
+		validEndpoint := fmt.Sprintf("https://flink%s", suffix)
+		if endpoint == validEndpoint {
+			log.CliLogger.Debugf("Flink endpoint %q is a valid PRIVATE CCN endpoint", endpoint)
+			return true
+		}
+	}
+
+	return false
 }
