@@ -31,7 +31,7 @@ const (
 	invalidDirectoryErrorMsg       = `plugin directory "%s" does not exist`
 	unexpectedInstallationErrorMsg = "unexpected installation type: %s"
 	workerProcessRegexStr          = `org\.apache\.kafka\.connect\.cli\.Connect(Distributed|Standalone)`
-	deprecatedPluginWarningMsg     = `[WARN] This version of the connector is nearing its end of life and will not be downloadable from %s. Please upgrade to the minimum connector version supported for continued support. Refer https://docs.confluent.io/platform/current/connect/supported-connector-versions-7.8.html#minimum-connector-version-7-8`
+	deprecatedPluginWarningMsg     = `[WARN] This version of the connector is nearing its end of life and will not be downloadable from %s. Please upgrade to the minimum connector version supported for continued support. Refer to https://docs.confluent.io/platform/current/connect/supported-connector-versions-7.8.html#minimum-connector-version-7-8`
 )
 
 type pluginInstallCommand struct {
