@@ -275,18 +275,14 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	srApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
-	if err != nil {
-		return err
-	}
-	srApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
+	srEndpoint, err := cmd.Flags().GetString("schema-registry-endpoint")
 	if err != nil {
 		return err
 	}
 
-	token, err := auth.GetDataplaneToken(c.Context)
-	if err != nil {
-		return err
+	var token string
+	if c.Config.IsOnPremLogin() {
+		token = c.Config.Context().GetAuthToken()
 	}
 
 	// Initialize the key serializer with the same SR endpoint during registration
@@ -295,12 +291,8 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	if len(keyMetaInfo) >= 5 {
 		keySchemaId = int(binary.BigEndian.Uint32(keyMetaInfo[1:5]))
 	}
-	// Fetch the current SR cluster id and endpoint
-	srClusterId, srEndpoint, err := c.GetCurrentSchemaRegistryClusterIdAndEndpoint()
-	if err != nil {
-		return err
-	}
-	if err := keySerializer.InitSerializer(srEndpoint, srClusterId, "key", srApiKey, srApiSecret, token, keySchemaId); err != nil {
+
+	if err := keySerializer.InitSerializer(srEndpoint, "", "key", "", "", token, keySchemaId); err != nil {
 		return err
 	}
 	if err := keySerializer.LoadSchema(keySchema, keyReferencePathMap); err != nil {
@@ -326,7 +318,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	if len(valueMetaInfo) >= messageOffset {
 		valueSchemaId = int(binary.BigEndian.Uint32(valueMetaInfo[1:messageOffset]))
 	}
-	if err := valueSerializer.InitSerializer(srEndpoint, srClusterId, "value", srApiKey, srApiSecret, token, valueSchemaId); err != nil {
+	if err := valueSerializer.InitSerializer(srEndpoint, "", "value", "", "", token, valueSchemaId); err != nil {
 		return err
 	}
 	if err := valueSerializer.LoadSchema(schema, referencePathMap); err != nil {
