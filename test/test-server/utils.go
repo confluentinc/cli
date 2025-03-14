@@ -361,7 +361,7 @@ func getCmkDedicatedDescribeCluster(id, name string, cku int32) *cmkv2.CmkV2Clus
 			Cloud:       cmkv2.PtrString("aws"),
 			Region:      cmkv2.PtrString("us-west-2"),
 			Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
-				CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: cku},
+				CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: cku, Zones: &[]string{"use1-az3"}},
 			},
 			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
 			HttpEndpoint:           cmkv2.PtrString(TestKafkaRestProxyUrl.String()),

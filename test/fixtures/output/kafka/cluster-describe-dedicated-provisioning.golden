@@ -9,6 +9,7 @@
 | Storage              | Infinite                            |
 | Cloud                | aws                                 |
 | Region               | us-west-2                           |
+| Zone                 | use1-az3                            |
 | Availability         | single-zone                         |
 | Network              | n-abcde1                            |
 | Status               | PROVISIONING                        |
