@@ -44,7 +44,8 @@ func PrintOptionState(prefix string, isEnabled bool, maxCol int) {
 
 		// This prints to the console the exact amount of empty characters to fill the line might have autocompletions before
 		// This is to avoid the linter to complain about not using the
-		output.Println(false, strings.Repeat(" ", maxCol-runewidth.StringWidth(line)))
+		count := max(maxCol-runewidth.StringWidth(line), 0)
+		output.Println(false, strings.Repeat(" ", count))
 	}
 }
 
