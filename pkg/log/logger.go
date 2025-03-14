@@ -43,6 +43,8 @@ const (
 	DEBUG
 	// TRACE is intended to be used for the tracing of actions in code, such as function enters/exits, etc
 	TRACE
+	// UNSAFE_TRACE is for printing sensitive information such as HTTP requests and responses
+	UNSAFE_TRACE
 )
 
 // New creates and configures a new Logger
@@ -57,13 +59,24 @@ func New(level Level, output io.Writer) *Logger {
 }
 
 func (l *Logger) SetVerbosity(verbosity int) {
-	level := Level(verbosity)
-	if verbosity > int(TRACE) {
-		level = TRACE
-	}
+	level := min(Level(verbosity), UNSAFE_TRACE)
 
 	l.Level = level
 	l.logger.SetLevel(mapToHclogLevel(level))
+}
+
+func (l *Logger) UnsafeTrace(args ...any) {
+	message := fmt.Sprint(args...)
+	// HACK: hclog.NoLevel = 0, which corresponds to UNSAFE_TRACE
+	if l.logger.GetLevel() == hclog.NoLevel {
+		l.logger.Trace(message)
+	} else {
+		l.append(TRACE, message)
+	}
+}
+
+func (l *Logger) UnsafeTracef(format string, args ...any) {
+	l.Trace(fmt.Sprintf(format, args...))
 }
 
 func (l *Logger) Trace(args ...any) {
@@ -152,6 +165,8 @@ func (l *Logger) Flush() {
 			l.Debug(lm.message)
 		case TRACE:
 			l.Trace(lm.message)
+		case UNSAFE_TRACE:
+			l.UnsafeTrace(lm.message)
 		}
 	}
 

@@ -88,17 +88,21 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 			featureflags.PrintAnnouncements(r.Config, featureflags.DeprecationNotices, cmd)
 		}
 
+		// 1-4
 		verbosity, err := cmd.Flags().GetCount("verbose")
 		if err != nil {
 			return err
 		}
+
+		// 5
 		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
 		if err != nil {
 			return err
 		}
 		if unsafeTrace {
-			verbosity = int(log.TRACE)
+			verbosity = int(log.UNSAFE_TRACE)
 		}
+
 		log.CliLogger.SetVerbosity(verbosity)
 		log.CliLogger.Flush()
 
