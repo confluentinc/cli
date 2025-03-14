@@ -1,0 +1,7 @@
++-------------------------+-------------------------+
+| ID                      | plattc-gcp-2            |
+| Name                    | my-gcp-platt-connection |
+| Cloud                   | GCP                     |
+| Private Link Attachment | platt-111111            |
+| Phase                   | PROVISIONING            |
++-------------------------+-------------------------+
