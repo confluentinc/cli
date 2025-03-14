@@ -108,7 +108,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			Zones:                 network.Spec.GetZones(),
 			DnsResolution:         network.Spec.DnsConfig.GetResolution(),
 			Phase:                 network.Status.GetPhase(),
-			ActiveConnectionTypes: network.Status.GetActiveConnectionTypes().Items,
+			ActiveConnectionTypes: network.Status.GetActiveConnectionTypes(),
 		})
 	}
 	list.Sort(false)

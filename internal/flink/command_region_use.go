@@ -49,7 +49,7 @@ func (c *command) regionUse(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	regions, err := c.V2Client.ListFlinkRegions(cloud)
+	regions, err := c.V2Client.ListFlinkRegions(cloud, region)
 	if err != nil {
 		return err
 	}
@@ -67,6 +67,12 @@ func (c *command) regionUse(cmd *cobra.Command, _ []string) error {
 			fmt.Sprintf(`Flink region "%s" is not available for cloud provider "%s"`, region, cloud),
 			"Run `confluent flink region list` to see available regions.",
 		)
+	}
+
+	// Unset the current Flink endpoint if there is a cloud/region change based on discussion with Flink product team
+	output.Println(c.Config.EnableColor, "Reset the current Flink endpoint to empty due to the cloud or region switch")
+	if err := c.Context.SetCurrentFlinkEndpoint(""); err != nil {
+		return err
 	}
 
 	if err := c.Context.SetCurrentFlinkCloudProvider(cloud); err != nil {

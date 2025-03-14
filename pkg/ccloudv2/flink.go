@@ -48,10 +48,13 @@ func (c *Client) ListFlinkComputePools(environment, specRegion string) ([]flinkv
 	return res.GetData(), errors.CatchCCloudV2ResourceNotFoundError(err, resource.Environment, httpResp)
 }
 
-func (c *Client) ListFlinkRegions(cloud string) ([]flinkv2.FcpmV2Region, error) {
+func (c *Client) ListFlinkRegions(cloud, region string) ([]flinkv2.FcpmV2Region, error) {
 	req := c.FlinkClient.RegionsFcpmV2Api.ListFcpmV2Regions(c.flinkApiContext()).PageSize(ccloudV2ListPageSize)
 	if cloud != "" {
 		req = req.Cloud(cloud)
+	}
+	if region != "" {
+		req = req.RegionName(region)
 	}
 	res, httpResp, err := req.Execute()
 	return res.GetData(), errors.CatchCCloudV2Error(err, httpResp)
