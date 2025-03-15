@@ -337,7 +337,7 @@ func SetProducerDebugOption(configMap *ckgo.ConfigMap) error {
 	switch log.CliLogger.Level {
 	case log.DEBUG:
 		return configMap.Set("debug=broker, topic, msg, protocol")
-	case log.TRACE:
+	case log.TRACE, log.UNSAFE_TRACE:
 		return configMap.Set("debug=all")
 	}
 	return nil
@@ -347,7 +347,7 @@ func SetConsumerDebugOption(configMap *ckgo.ConfigMap) error {
 	switch log.CliLogger.Level {
 	case log.DEBUG:
 		return configMap.Set("debug=broker, topic, msg, protocol, consumer, cgrp, fetch")
-	case log.TRACE:
+	case log.TRACE, log.UNSAFE_TRACE:
 		return configMap.Set("debug=all")
 	}
 	return nil
