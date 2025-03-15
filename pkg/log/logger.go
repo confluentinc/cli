@@ -71,12 +71,12 @@ func (l *Logger) UnsafeTrace(args ...any) {
 	if l.logger.GetLevel() == hclog.NoLevel {
 		l.logger.Trace(message)
 	} else {
-		l.append(TRACE, message)
+		l.append(UNSAFE_TRACE, message)
 	}
 }
 
 func (l *Logger) UnsafeTracef(format string, args ...any) {
-	l.Trace(fmt.Sprintf(format, args...))
+	l.UnsafeTrace(fmt.Sprintf(format, args...))
 }
 
 func (l *Logger) Trace(args ...any) {
