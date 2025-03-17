@@ -2,6 +2,9 @@ package local
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+	"runtime"
 
 	"github.com/spf13/cobra"
 
@@ -12,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/serdes"
 )
 
@@ -73,7 +77,7 @@ func (c *command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return kafka.ProduceToTopic(cmd, []byte{}, []byte{}, topicName, serializationProvider, serializationProvider, producer)
+	return produceToTopic(cmd, []byte{}, []byte{}, topicName, serializationProvider, serializationProvider, producer)
 }
 
 func newOnPremProducer(cmd *cobra.Command, bootstrap string) (*ckgo.Producer, error) {
@@ -105,4 +109,59 @@ func newOnPremProducer(cmd *cobra.Command, bootstrap string) (*ckgo.Producer, er
 	}
 
 	return ckgo.NewProducer(configMap)
+}
+
+func produceToTopic(cmd *cobra.Command, keyMetaInfo []byte, valueMetaInfo []byte, topic string, keySerializer serdes.SerializationProvider, valueSerializer serdes.SerializationProvider, producer *ckgo.Producer) error {
+	keys := "Ctrl-C or Ctrl-D"
+	if runtime.GOOS == "windows" {
+		keys = "Ctrl-C"
+	}
+	output.ErrPrintf(false, "Starting Kafka Producer. Use %s to exit.\n", keys)
+
+	var scanErr error
+	input, scan := kafka.PrepareInputChannel(&scanErr)
+
+	// Trap SIGINT to trigger a shutdown.
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
+	go func() {
+		<-signals
+		input <- kafka.EOF
+	}()
+	// Prime reader
+	go scan()
+
+	deliveryChan := make(chan ckgo.Event)
+	for data := range input {
+		if data == "" {
+			if scanErr != nil {
+				break
+			}
+			go scan()
+			continue
+		} else if data == kafka.EOF {
+			break
+		}
+
+		message, err := kafka.GetProduceMessage(cmd, keyMetaInfo, valueMetaInfo, topic, data, keySerializer, valueSerializer)
+		if err != nil {
+			return err
+		}
+		if err := producer.Produce(message, deliveryChan); err != nil {
+			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topic)
+			if isProduceToCompactedTopicError {
+				scanErr = err
+				break
+			}
+			output.ErrPrintf(false, errors.FailedToProduceErrorMsg, message.TopicPartition.Offset, err)
+		}
+
+		e := <-deliveryChan                // read a ckafka event from the channel
+		m := e.(*ckgo.Message)             // extract the message from the event
+		if m.TopicPartition.Error != nil { // catch all other errors
+			output.ErrPrintf(false, errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
+		}
+		go scan()
+	}
+	return scanErr
 }
