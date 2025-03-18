@@ -256,6 +256,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/srcmv3access v0.0.1 h1:q5KwLTkKIyCf2Tnp
 github.com/confluentinc/ccloud-sdk-go-v2/srcmv3access v0.0.1/go.mod h1:zDElXJ9Q4RlIF31dBqmGVrH3nhQWIQiIkJhfcuoeleM=
 github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1 h1:WZJYfgXJrvTIYQpCFps/qHF7T8ekgPlX/SFqx4EY2zQ=
 github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1/go.mod h1:kB+MXWYYg9ohrTCb27LlfpTbuexAzyYAmum105ow0ho=
+github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.1.0 h1:dNpNo4hUrZ5v3L+gJp00aa1VvuPaIANPR6BV0MFCb8A=
+github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.1.0/go.mod h1:s76DpQdEVXWWk3K97xrUUFqCWBHyp9fIbOa/rdWmGzk=
 github.com/confluentinc/cmf-sdk-go v0.0.2 h1:Sn7j9UwOBrcUhC42l7aCrUh50S9CUF6qgHrEO0VxHcM=
 github.com/confluentinc/cmf-sdk-go v0.0.2/go.mod h1:VXiUwzPStdks1l355KHNaCy/oRCOIMMzTPZJAD4OyJM=
 github.com/confluentinc/confluent-kafka-go/v2 v2.8.0 h1:0HlcSNWg4LpLA9nIjzUMIqWHI+w0S68UN7alXAc3TeA=
