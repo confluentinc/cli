@@ -1,0 +1,30 @@
+Update a catalog integration.
+
+Usage:
+  confluent tableflow catalog-integration update <id> [flags]
+
+Examples:
+Update a catalog integration name.
+
+  $ confluent tableflow catalog-integration update tci-abc123 --name new-name
+
+Create a Snowflake catalog integration.
+
+  $ confluent tableflow catalog-integration update tc-abc123 --endpoint https://vuser1_polaris.snowflakecomputing.com/ --warehouse catalog-name --allowed-scope session:role:R1 --client-id $CLIENT_ID --client-secret $CLIENT_SECRET
+
+Flags:
+      --name string            Name of the catalog integration.
+      --endpoint string        Specify the The catalog integration connection endpoint for Snowflake Open Catalog.
+      --warehouse string       Specify the warehouse name of the Snowflake Open Catalog.
+      --allowed-scope string   Specify the allowed scope of the Snowflake Open Catalog.
+      --client-id string       Specify the client id.
+      --client-secret string   Specify the client secret.
+      --cluster string         Kafka cluster ID.
+      --environment string     Environment ID.
+      --context string         CLI context name.
+  -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
