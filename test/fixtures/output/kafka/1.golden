@@ -9,7 +9,7 @@ Create a new dedicated cluster that uses a customer-managed encryption key in GC
 
 Create a new dedicated cluster that uses a customer-managed encryption key in AWS:
 
-  $ confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --zone usw2-az1 --type dedicated --cku 1 --byok cck-a123z
+  $ confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --zone usw2-az1 --type dedicated --cku 1 --byok cck-a123z --network n-abc123
 
 Create a new Freight cluster that uses a customer-managed encryption key in AWS:
 
@@ -23,7 +23,7 @@ Flags:
       --availability string   Specify the availability of the cluster as "single-zone", "multi-zone", "low", or "high". (default "single-zone")
       --type string           Specify the type of the Kafka cluster as "basic", "standard", "enterprise", "freight", or "dedicated". (default "basic")
       --cku int               Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type "dedicated".
-      --zone string           Specify zone selection for single zone clusters. Optional for Kafka clusters of type "dedicated".
+      --zone string           Specify zone selection for single zone clusters. Optional for private network Kafka clusters of type "dedicated" with the input of a Network ID.
       --byok string           Confluent Cloud Key ID of a registered encryption key (use "confluent byok create" to register a key).
       --network string        Network ID.
       --context string        CLI context name.
