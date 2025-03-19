@@ -48,25 +48,6 @@ var ksqlCluster2 = ksqlv2.KsqldbcmV2Cluster{
 	},
 }
 
-var ksqlCluster3 = ksqlv2.KsqldbcmV2Cluster{
-	Id: ksqlv2.PtrString("lksqlc-ksql5-fail"),
-	Spec: &ksqlv2.KsqldbcmV2ClusterSpec{
-		DisplayName: ksqlv2.PtrString("account ksql"),
-		KafkaCluster: &ksqlv2.ObjectReference{
-			Id:          "lkc-qwerty",
-			Environment: ksqlv2.PtrString("env-12345"),
-		},
-		Environment:              &ksqlv2.ObjectReference{Id: "env-12345"},
-		UseDetailedProcessingLog: ksqlv2.PtrBool(true),
-	},
-	Status: &ksqlv2.KsqldbcmV2ClusterStatus{
-		HttpEndpoint: ksqlv2.PtrString("SASL_SSL://ksql-endpoint"),
-		TopicPrefix:  ksqlv2.PtrString("pksqlc-abcdefghi"),
-		Storage:      111,
-		Phase:        "PROVISIONING",
-	},
-}
-
 var ksqlClusterForDetailedProcessingLogFalse = ksqlv2.KsqldbcmV2Cluster{
 	Id: ksqlv2.PtrString("lksqlc-woooo"),
 	Spec: &ksqlv2.KsqldbcmV2ClusterSpec{
@@ -97,11 +78,7 @@ func handleKsqlClusters(t *testing.T) http.HandlerFunc {
 
 			var cluster ksqlv2.KsqldbcmV2Cluster
 			if req.Spec.GetUseDetailedProcessingLog() {
-				if req.Spec.KafkaCluster.GetId() == "lkc-12345678" {
-					cluster = ksqlCluster3
-				} else {
-					cluster = ksqlCluster1
-				}
+				cluster = ksqlCluster1
 			} else {
 				cluster = ksqlClusterForDetailedProcessingLogFalse
 			}
