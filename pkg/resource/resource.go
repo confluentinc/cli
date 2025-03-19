@@ -18,6 +18,7 @@ const (
 	ApiKey                          = "API key"
 	Broker                          = "broker"
 	ByokKey                         = "self-managed key"
+	CatalogIntegration              = "catalog integration"
 	CertificateAuthority            = "certificate authority"
 	CertificatePool                 = "certificate pool"
 	ClientQuota                     = "client quota"
@@ -77,6 +78,7 @@ const (
 
 const (
 	AccessPointPrefix           = "ap"
+	CatalogIntegrationPrefix    = "tci"
 	ConnectorPrefix             = "lcc"
 	DnsRecordPrefix             = "dnsrec"
 	EnvironmentPrefix           = "env"
@@ -94,6 +96,7 @@ const (
 
 var prefixToResource = map[string]string{
 	AccessPointPrefix:           AccessPoint,
+	CatalogIntegrationPrefix:    CatalogIntegration,
 	ConnectorPrefix:             Connector,
 	DnsRecordPrefix:             DnsRecord,
 	EnvironmentPrefix:           Environment,
@@ -111,6 +114,7 @@ var prefixToResource = map[string]string{
 
 var resourceToPrefix = map[string]string{
 	AccessPoint:           AccessPointPrefix,
+	CatalogIntegration:    CatalogIntegrationPrefix,
 	DnsRecord:             DnsRecordPrefix,
 	Environment:           EnvironmentPrefix,
 	IdentityPool:          IdentityPoolPrefix,

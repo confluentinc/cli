@@ -1,0 +1,24 @@
+[
+  {
+    "id": "tci-abc123",
+    "name": "my-aws-glue-ci",
+    "environment": "env-596",
+    "kafka_cluster": "lkc-123456",
+    "type": "aws",
+    "provider_integration_id": "cspi-stgce89r7",
+    "suspended": false,
+    "phase": "CONNECTED"
+  },
+  {
+    "id": "tci-def456",
+    "name": "my-snowflake-ci",
+    "environment": "env-596",
+    "kafka_cluster": "lkc-123456",
+    "type": "snowflake",
+    "endpoint": "https://vuser1_polaris.snowflakecomputing.com/",
+    "warehouse": "warehouse",
+    "allowed_scope": "allowed-scope",
+    "suspended": false,
+    "phase": "PENDING"
+  }
+]

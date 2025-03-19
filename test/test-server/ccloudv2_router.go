@@ -114,6 +114,10 @@ var ccloudV2Routes = []route{
 	{"/srcm/v3/clusters", handleSchemaRegistryClustersV3},
 	{"/srcm/v3/clusters/{id}", handleSchemaRegistryClusterV3},
 	{"/srcm/v3/clusters/{id}/access", handleSchemaRegistryClusterV3Access},
+	{"/tableflow/v1/catalog-integrations/{id}", handleCatalogIntegration},
+	{"/tableflow/v1/catalog-integrations", handleCatalogIntegrations},
+	{"/tableflow/v1/tableflow-topics/{display_name}", handleTableflowTopic},
+	{"/tableflow/v1/tableflow-topics", handleTableflowTopics},
 	{"/v2/metrics/cloud/query", handleMetricsQuery},
 }
 
