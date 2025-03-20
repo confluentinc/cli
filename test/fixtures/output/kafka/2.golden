@@ -14,4 +14,3 @@ It may take up to 5 minutes for the Kafka cluster to be ready.
 | Endpoint             | SASL_SSL://kafka-endpoint |
 | REST Endpoint        | https://pkc-endpoint      |
 +----------------------+---------------------------+
-Your Basic cluster is being provisioned. Did you know you can upgrade to Standard for enhanced features? Use confluent kafka cluster update <cluster-id> --type standard to upgrade.
