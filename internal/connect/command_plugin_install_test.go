@@ -196,3 +196,53 @@ func TestRunningWorkerConfigLocations(t *testing.T) {
 	}
 	require.Equal(t, runningWorkerConfigs, expectedConfigs)
 }
+
+func TestCheckPluginVersionDeprecation(t *testing.T) {
+	tests := []struct {
+		name          string
+		endOfLifeAt   string
+		expectError   bool
+		expectMessage string
+	}{
+		{
+			name:          "valid end of life date",
+			endOfLifeAt:   "2025-03-13T00:00:00Z",
+			expectError:   false,
+			expectMessage: fmt.Sprintf(deprecatedPluginWarningMsg, "March 13, 2025"),
+		},
+		{
+			name:          "no end of life date",
+			endOfLifeAt:   "",
+			expectError:   false,
+			expectMessage: "",
+		},
+		{
+			name:          "invalid end of life date",
+			endOfLifeAt:   "invalid-date",
+			expectError:   true,
+			expectMessage: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pluginManifest := &cpstructs.Manifest{
+				EndOfLifeAt: tt.endOfLifeAt,
+			}
+
+			deprecationMsg, err := checkPluginVersionDeprecation(pluginManifest)
+
+			if tt.expectError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+
+			if tt.expectMessage != "" {
+				require.Equal(t, deprecationMsg, tt.expectMessage)
+			} else {
+				require.Empty(t, deprecationMsg)
+			}
+		})
+	}
+}
