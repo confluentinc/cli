@@ -19,7 +19,7 @@ type describeCommand struct {
 }
 
 type metadata interface {
-	DescribeCluster(url, caCertPath string) (*ScopedId, error)
+	DescribeCluster(url, caCertPath, clientCertPath, clientKeyPath string) (*ScopedId, error)
 }
 
 type out struct {
@@ -54,7 +54,11 @@ func newDescribeCommand(prerunner pcmd.PreRunner, userAgent string) *cobra.Comma
 
 	cmd.Flags().String("url", "", "URL to a Confluent cluster.")
 	cmd.Flags().String("certificate-authority-path", "", "Self-signed certificate chain in PEM format.")
+	cmd.Flags().String("client-cert-path", "", "Path to client cert to be verified by MDS. Include for mTLS authentication.")
+	cmd.Flags().String("client-key-path", "", "Path to client private key, include for mTLS authentication.")
 	pcmd.AddOutputFlag(cmd)
+
+	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 
 	return cmd
 }
@@ -70,7 +74,12 @@ func (c *describeCommand) describe(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	meta, err := c.client.DescribeCluster(url, caCertPath)
+	clientCertPath, clientKeyPath, err := getCllientCertAndKeyPaths(cmd)
+	if err != nil {
+		return err
+	}
+
+	meta, err := c.client.DescribeCluster(url, caCertPath, clientCertPath, clientKeyPath)
 	if err != nil {
 		return err
 	}
@@ -98,6 +107,24 @@ func getCACertPath(cmd *cobra.Command) (string, error) {
 	}
 
 	return os.Getenv(pauth.ConfluentPlatformCertificateAuthorityPath), nil
+}
+
+func getCllientCertAndKeyPaths(cmd *cobra.Command) (string, string, error) {
+	// Order of precedence: flags > env vars
+	clientCertPath, err := cmd.Flags().GetString("client-cert-path")
+	if err != nil {
+		return "", "", err
+	}
+	if clientCertPath != "" {
+		clientKeyPath, err := cmd.Flags().GetString("client-key-path")
+		if err != nil {
+			return "", "", err
+		}
+
+		return clientCertPath, clientKeyPath, nil
+	}
+
+	return os.Getenv(pauth.ConfluentPlatformClientCertPath), os.Getenv(pauth.ConfluentPlatformClientKeyPath), nil
 }
 
 func printDescribe(cmd *cobra.Command, meta *ScopedId) error {

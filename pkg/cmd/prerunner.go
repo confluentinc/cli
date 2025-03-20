@@ -790,18 +790,7 @@ func (r *PreRun) createMDSv2Client(ctx *config.Context, ver *pversion.Version, u
 	}
 	mdsv2Config.BasePath = ctx.GetPlatformServer() + "/api/metadata/security/v2alpha1"
 	mdsv2Config.UserAgent = ver.UserAgent
-	if ctx.Platform.CaCertPath == "" {
-		return mdsv2alpha1.NewAPIClient(mdsv2Config)
-	}
-	caCertPath := ctx.Platform.CaCertPath
-	// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
-	// be a --certificate-authority-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
-	client, err := utils.SelfSignedCertClientFromPath(caCertPath)
-	if err != nil {
-		log.CliLogger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --certificate-authority-path flag.", caCertPath, err.Error())
-	} else {
-		mdsv2Config.HTTPClient = client
-	}
+
 	return mdsv2alpha1.NewAPIClient(mdsv2Config)
 }
 
