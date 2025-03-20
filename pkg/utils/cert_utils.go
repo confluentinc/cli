@@ -15,19 +15,44 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
-func GetCAClient(caCertPath string) (*http.Client, error) {
-	caCert, err := os.ReadFile(caCertPath)
+func GetCAAndClientCertClient(caCertPath, clientCertPath, clientKeyPath string) (*http.Client, error) {
+	caCertPath, err := filepath.Abs(caCertPath)
+	if err != nil {
+		return nil, err
+	}
+	log.CliLogger.Debugf("Attempting to load certificate from absolute path %s", caCertPath)
+	caCertReader, err := os.Open(caCertPath)
 	if err != nil {
 		return nil, errors.NewErrorWithSuggestions(
 			"no Certificate Authority certificate specified",
 			"Please specify `--certificate-authority-path` to enable Schema Registry client.",
 		)
 	}
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
-	transport := DefaultTransport()
-	transport.TLSClientConfig.RootCAs = caCertPool
-	return DefaultClientWithTransport(transport), nil
+	defer caCertReader.Close()
+	log.CliLogger.Tracef("Successfully read CA certificate")
+
+	var cert tls.Certificate
+	if clientCertPath != "" {
+		clientCertPath, err := filepath.Abs(clientCertPath)
+		if err != nil {
+			return nil, err
+		}
+		clientKeyPath, err = filepath.Abs(clientKeyPath)
+		if err != nil {
+			return nil, err
+		}
+		log.CliLogger.Debugf("Attempting to load client key pair from absolute client cert path %s and absolute client key path %s", clientCertPath, clientKeyPath)
+		cert, err = tls.LoadX509KeyPair(clientCertPath, clientKeyPath)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	client, err := SelfSignedCertClient(caCertReader, cert)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
 }
 
 func SelfSignedCertClientFromPath(caCertPath string) (*http.Client, error) {
@@ -159,8 +184,4 @@ func DefaultClient() *http.Client {
 	return &http.Client{
 		Transport: DefaultTransport(),
 	}
-}
-
-func DefaultClientWithTransport(transport *http.Transport) *http.Client {
-	return &http.Client{Transport: transport}
 }
