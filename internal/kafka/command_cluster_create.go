@@ -159,7 +159,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 			return errors.NewErrorWithSuggestions("the `--zone` flag can only be used when creating a single zone dedicated Kafka cluster", "Specify a dedicated cluster with `--zone`.")
 		}
 
-		createCluster.Spec.Config.CmkV2Dedicated.SetZones([]string{zone})
+		createCluster.Spec.GetConfig().CmkV2Dedicated.SetZones([]string{zone})
 	}
 
 	if cmd.Flags().Changed("network") {
