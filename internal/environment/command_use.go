@@ -2,13 +2,13 @@ package environment
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/v4/pkg/plural"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/plural"
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 

@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/confluentinc/cli/v4/pkg/plural"
-
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/plural"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 

@@ -11,10 +11,11 @@ import (
 	"strings"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	"github.com/confluentinc/cli/v4/pkg/plural"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+
+	"github.com/confluentinc/cli/v4/pkg/plural"
 )
 
 /*

@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/v4/pkg/plural"
 	"strconv"
 
 	"github.com/antihax/optional"
@@ -14,6 +13,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/deletion"
 	"github.com/confluentinc/cli/v4/pkg/kafkarest"
 	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/plural"
 	"github.com/confluentinc/cli/v4/pkg/resource"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )

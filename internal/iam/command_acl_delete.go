@@ -2,7 +2,6 @@ package iam
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/v4/pkg/plural"
 
 	"github.com/spf13/cobra"
 
@@ -10,6 +9,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/deletion"
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/plural"
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 

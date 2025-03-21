@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/v4/pkg/plural"
 
 	"github.com/spf13/cobra"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/deletion"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/plural"
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
