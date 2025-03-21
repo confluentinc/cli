@@ -50,6 +50,12 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster update lkc-update-dedicated-shrink --cku 1", fixture: "kafka/45.golden"},
 		{args: "kafka cluster update lkc-update-dedicated-shrink-multi --cku 1", fixture: "kafka/cluster/update-dedicated-shrink-error.golden", exitCode: 1},
 		{args: "kafka cluster update lkc-update --cku 1", fixture: "kafka/cluster/update-resize-error.golden", exitCode: 1},
+		// Type upgrade tests
+		{args: "kafka cluster update lkc-update --type standard", fixture: "kafka/cluster/update-type-success.golden"},
+		{args: "kafka cluster update lkc-update --type Standard", fixture: "kafka/cluster/update-type-success.golden"},
+		{args: "kafka cluster update lkc-update --type", fixture: "kafka/cluster/update-type-empty-error.golden", exitCode: 1},
+		{args: "kafka cluster update lkc-update --type basic", fixture: "kafka/cluster/update-type-invalid-error.golden", exitCode: 1},
+		{args: "kafka cluster update lkc-update-dedicated-expand --type standard", fixture: "kafka/cluster/update-type-dedicated-error.golden", exitCode: 1},
 
 		{args: "kafka cluster delete --force", fixture: "kafka/3.golden", exitCode: 1},
 		{args: "kafka cluster delete lkc-unknown --force", fixture: "kafka/cluster/delete-unknown-error.golden", exitCode: 1},

@@ -1,4 +1,4 @@
-Error: at least one of the flags in the group [name cku type] is required
+Error: flag needs an argument: --type
 Usage:
   confluent kafka cluster update <id> [flags]
 
