@@ -30,7 +30,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster create my-failed-cluster --cloud aws --region oops --availability single-zone", fixture: "kafka/cluster/create-cloud-region-error.golden", exitCode: 1},
 		{args: "kafka cluster create my-failed-cluster --cloud aws --region us-east-1 --availability single-zone --type oops", fixture: "kafka/cluster/create-type-error.golden", exitCode: 1},
 		{args: "kafka cluster create my-failed-cluster --cloud aws --region us-east-1 --availability single-zone --type dedicated --cku 0", fixture: "kafka/cluster/create-cku-error.golden", exitCode: 1},
-		{args: "kafka cluster create my-dedicated-cluster --cloud aws --region us-east-1 --type dedicated --cku 1", fixture: "kafka/22.golden"},
+		{args: "kafka cluster create my-dedicated-cluster --cloud aws --region us-east-1 --zone use1-az3 --type dedicated --cku 1", fixture: "kafka/22.golden"},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --availability single-zone -o json", fixture: "kafka/23.golden"},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --availability single-zone -o yaml", fixture: "kafka/24.golden"},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --availability oops-zone", fixture: "kafka/cluster/create-availability-zone-error.golden", exitCode: 1},
