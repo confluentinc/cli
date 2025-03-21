@@ -46,7 +46,7 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: "Create a new dedicated cluster that uses a customer-managed encryption key in AWS:",
-				Code: "confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --type dedicated --cku 1 --byok cck-a123z",
+				Code: "confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --zone usw2-az1 --type dedicated --cku 1 --byok cck-a123z --network n-abc123",
 			},
 			examples.Example{
 				Text: "Create a new Freight cluster that uses a customer-managed encryption key in AWS:",
@@ -63,6 +63,7 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddAvailabilityFlag(cmd)
 	pcmd.AddTypeFlag(cmd)
 	cmd.Flags().Int("cku", 0, `Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type "dedicated".`)
+	cmd.Flags().String("zone", "", `Specify zone selection for single zone clusters. Optional for private network Kafka clusters of type "dedicated" with the input of a Network ID.`)
 	pcmd.AddByokKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddNetworkFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -147,6 +148,18 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf(errors.CkuMoreThanZeroErrorMsg)
 		}
 		setClusterConfigCku(&createCluster, int32(cku))
+	}
+
+	if cmd.Flags().Changed("zone") {
+		zone, err := cmd.Flags().GetString("zone")
+		if err != nil {
+			return err
+		}
+		if clusterType != skuDedicated || availability != "SINGLE_ZONE" {
+			return errors.NewErrorWithSuggestions("the `--zone` flag can only be used when creating a single zone dedicated Kafka cluster", "Specify a dedicated cluster with `--zone`.")
+		}
+
+		createCluster.Spec.Config.CmkV2Dedicated.SetZones([]string{zone})
 	}
 
 	if cmd.Flags().Changed("network") {
