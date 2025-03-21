@@ -162,7 +162,7 @@ func getKafkaClusterDescribeFields(cluster *cmkv2.CmkV2Cluster, basicFields []st
 		if cluster.Spec.Config.CmkV2Dedicated.EncryptionKey != nil && *cluster.Spec.Config.CmkV2Dedicated.EncryptionKey != "" {
 			describeFields = append(describeFields, "EncryptionKeyId")
 		}
-		if cluster.GetSpec().Config.CmkV2Dedicated.Zones != nil && len(*cluster.GetSpec().Config.CmkV2Dedicated.Zones) != 0 {
+		if len(cluster.GetSpec().Config.CmkV2Dedicated.GetZones()) != 0 {
 			describeFields = append(describeFields, "Zone")
 		}
 		if cluster.Spec.Byok != nil {

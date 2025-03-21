@@ -159,7 +159,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 			return errors.NewErrorWithSuggestions("the `--zone` flag can only be used when creating a single zone dedicated Kafka cluster", "Specify a dedicated cluster with `--zone`.")
 		}
 
-		setClusterConfigZones(&createCluster, zone)
+		createCluster.Spec.Config.CmkV2Dedicated.SetZones([]string{zone})
 	}
 
 	if cmd.Flags().Changed("network") {
@@ -238,11 +238,6 @@ func setCmkClusterConfig(typeString string, cku int32) *cmkv2.CmkV2ClusterSpecCo
 
 func setClusterConfigCku(cluster *cmkv2.CmkV2Cluster, cku int32) {
 	cluster.Spec.Config.CmkV2Dedicated.Cku = cku
-}
-
-func setClusterConfigZones(cluster *cmkv2.CmkV2Cluster, zone string) {
-	zoneSlice := []string{zone}
-	cluster.GetSpec().Config.CmkV2Dedicated.Zones = &zoneSlice
 }
 
 func getKafkaProvisionEstimate(sku ccstructs.Sku) string {

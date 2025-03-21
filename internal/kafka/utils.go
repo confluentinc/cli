@@ -135,7 +135,7 @@ func getCmkEncryptionKey(cluster *cmkv2.CmkV2Cluster) string {
 }
 
 func getCmkZones(cluster *cmkv2.CmkV2Cluster) []string {
-	if isDedicated(cluster) && cluster.Spec.Config.CmkV2Dedicated.Zones != nil {
+	if isDedicated(cluster) && cluster.GetSpec().Config.CmkV2Dedicated.GetZones() != nil {
 		return cluster.GetSpec().Config.CmkV2Dedicated.GetZones()
 	}
 	return []string{}
