@@ -10,6 +10,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/form"
 	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/plural"
 	"github.com/confluentinc/cli/v4/pkg/resource"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
@@ -79,7 +80,7 @@ func Delete(args []string, callDeleteEndpoint func(string) error, resourceType s
 	if len(deletedIds) == 1 {
 		output.Printf(false, DeletedResourceMsg, resourceType, fmt.Sprintf(`"%s"`, deletedIds[0]))
 	} else if len(deletedIds) > 1 {
-		output.Printf(false, DeletedResourceMsg, resource.Plural(resourceType), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
+		output.Printf(false, DeletedResourceMsg, plural.Plural(resourceType), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
 	}
 
 	return deletedIds, err
@@ -91,7 +92,7 @@ func DefaultYesNoDeletePromptString(resourceType string, idList []string, extraW
 		promptMsg = fmt.Sprintf(`Are you sure you want to delete %s "%s"?`, resourceType, idList[0])
 		promptMsg += extraWarning
 	} else {
-		plural := resource.Plural(resourceType)
+		plural := plural.Plural(resourceType)
 		promptMsg = fmt.Sprintf("Are you sure you want to delete %s %s?", plural, utils.ArrayToCommaDelimitedString(idList, "and"))
 		promptMsg += extraWarning
 	}
@@ -132,7 +133,7 @@ func Undelete(args []string, callUndeleteEndpoint func(string) error, resourceTy
 	if len(undeletedIds) == 1 {
 		output.Printf(false, UndeletedResourceMsg, resourceType, fmt.Sprintf(`"%s"`, undeletedIds[0]))
 	} else if len(undeletedIds) > 1 {
-		output.Printf(false, UndeletedResourceMsg, resource.Plural(resourceType), utils.ArrayToCommaDelimitedString(undeletedIds, "and"))
+		output.Printf(false, UndeletedResourceMsg, plural.Plural(resourceType), utils.ArrayToCommaDelimitedString(undeletedIds, "and"))
 	}
 
 	return undeletedIds, err

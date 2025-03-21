@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/kafka"
 	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/plural"
 	"github.com/confluentinc/cli/v4/pkg/resource"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )

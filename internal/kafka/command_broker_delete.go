@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/v4/pkg/plural"
 	"strconv"
 
 	"github.com/antihax/optional"
@@ -64,7 +65,7 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 	if len(deletedIds) == 1 {
 		output.Printf(c.Config.EnableColor, deleteMsg, resource.Broker, fmt.Sprintf("\"%s\"", deletedIds[0]))
 	} else if len(deletedIds) > 1 {
-		output.Printf(c.Config.EnableColor, deleteMsg, resource.Plural(resource.Broker), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
+		output.Printf(c.Config.EnableColor, deleteMsg, plural.Plural(resource.Broker), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
 	}
 
 	return err

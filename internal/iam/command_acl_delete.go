@@ -2,6 +2,7 @@ package iam
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/v4/pkg/plural"
 
 	"github.com/spf13/cobra"
 
@@ -51,7 +52,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 
 	promptMsg := fmt.Sprintf(pacl.DeleteACLConfirmMsg, resource.ACL)
 	if len(bindings) > 1 {
-		promptMsg = fmt.Sprintf(pacl.DeleteACLConfirmMsg, resource.Plural(resource.ACL))
+		promptMsg = fmt.Sprintf(pacl.DeleteACLConfirmMsg, plural.Plural(resource.ACL))
 	}
 	if err := deletion.ConfirmPrompt(cmd, promptMsg); err != nil {
 		return err
