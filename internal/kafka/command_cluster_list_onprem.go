@@ -24,16 +24,24 @@ func (c *clusterCommand) newListCommandOnPrem() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
+	cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
+
+	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 
 	return cmd
 }
 
 func (c *clusterCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
 	clustertype := &mdsv1.ClusterRegistryListOpts{ClusterType: optional.NewString(kafkaClusterTypeName)}
 
-	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(c.createContext(), clustertype)
+	clusterInfos, response, err := client.ClusterRegistryApi.ClusterRegistryList(c.createContext(), clustertype)
 	if err != nil {
 		return cluster.HandleClusterError(err, response)
 	}

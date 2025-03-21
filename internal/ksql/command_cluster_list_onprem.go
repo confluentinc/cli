@@ -23,17 +23,25 @@ func (c *ksqlCommand) newListCommandOnPrem() *cobra.Command {
 		RunE:  c.listOnPrem,
 	}
 
+	cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
+
+	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 
 	return cmd
 }
 
 func (c *ksqlCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
 	ctx := context.WithValue(context.Background(), mdsv1.ContextAccessToken, c.Context.GetAuthToken())
 	ksqlClusterType := &mdsv1.ClusterRegistryListOpts{ClusterType: optional.NewString(clusterType)}
 
-	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(ctx, ksqlClusterType)
+	clusterInfos, response, err := client.ClusterRegistryApi.ClusterRegistryList(ctx, ksqlClusterType)
 	if err != nil {
 		return pcluster.HandleClusterError(err, response)
 	}

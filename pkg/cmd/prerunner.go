@@ -15,7 +15,6 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 
 	pauth "github.com/confluentinc/cli/v4/pkg/auth"
@@ -384,13 +383,13 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 			return err
 		}
 
-		setContextErr := r.setAuthenticatedWithMDSContext(command)
+		setContextErr := r.setAuthenticatedContext(command)
 		if setContextErr != nil {
 			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
 				if err := r.confluentAutoLogin(cmd); err != nil {
 					log.CliLogger.Debugf("Auto login failed: %v", err)
 				} else {
-					setContextErr = r.setAuthenticatedWithMDSContext(command)
+					setContextErr = r.setAuthenticatedContext(command)
 				}
 			} else {
 				return setContextErr
@@ -419,22 +418,6 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 
 		return nil
 	}
-}
-
-func (r *PreRun) setAuthenticatedWithMDSContext(cliCommand *AuthenticatedCLICommand) error {
-	ctx := cliCommand.Config.Context()
-	if !ctx.HasLogin() {
-		return new(errors.NotLoggedInError)
-	}
-	cliCommand.Context = ctx
-
-	unsafeTrace, err := cliCommand.Flags().GetBool("unsafe-trace")
-	if err != nil {
-		return err
-	}
-
-	r.setConfluentClient(cliCommand, unsafeTrace)
-	return nil
 }
 
 func (r *PreRun) confluentAutoLogin(cmd *cobra.Command) error {
@@ -482,35 +465,6 @@ func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command) (string, st
 	}
 
 	return token, refreshToken, credentials, err
-}
-
-func (r *PreRun) setConfluentClient(cliCmd *AuthenticatedCLICommand, unsafeTrace bool) {
-	ctx := cliCmd.Config.Context()
-	cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version, unsafeTrace)
-}
-
-func (r *PreRun) createMDSClient(ctx *config.Context, ver *pversion.Version, unsafeTrace bool) *mdsv1.APIClient {
-	mdsConfig := mdsv1.NewConfiguration()
-	mdsConfig.HTTPClient = utils.DefaultClient()
-	mdsConfig.Debug = unsafeTrace
-	if ctx == nil {
-		return mdsv1.NewAPIClient(mdsConfig)
-	}
-	mdsConfig.BasePath = ctx.GetPlatformServer()
-	mdsConfig.UserAgent = ver.UserAgent
-	if ctx.Platform.CaCertPath == "" {
-		return mdsv1.NewAPIClient(mdsConfig)
-	}
-	caCertPath := ctx.Platform.CaCertPath
-	// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
-	// be a --certificate-authority-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
-	client, err := utils.SelfSignedCertClientFromPath(caCertPath)
-	if err != nil {
-		log.CliLogger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --certificate-authority-path flag.", caCertPath, err.Error())
-	} else {
-		mdsConfig.HTTPClient = client
-	}
-	return mdsv1.NewAPIClient(mdsConfig)
 }
 
 // InitializeOnPremKafkaRest provides PreRun operations for on-prem commands that require a Kafka REST Proxy client. (ccloud RP commands use Authenticated prerun)

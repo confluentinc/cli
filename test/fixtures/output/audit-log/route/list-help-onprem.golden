@@ -4,8 +4,10 @@ Usage:
   confluent audit-log route list [flags]
 
 Flags:
-      --resource string   REQUIRED: The Confluent resource name (CRN) that is the subject of the query.
-      --context string    CLI context name.
+      --resource string           REQUIRED: The Confluent resource name (CRN) that is the subject of the query.
+      --client-cert-path string   Path to client cert to be verified by MDS. Include for mTLS authentication.
+      --client-key-path string    Path to client private key, include for mTLS authentication.
+      --context string            CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

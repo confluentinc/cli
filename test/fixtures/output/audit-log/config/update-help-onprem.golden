@@ -4,9 +4,11 @@ Usage:
   confluent audit-log config update [flags]
 
 Flags:
-      --file string      A local file path to the JSON configuration file, read as input. Otherwise the command will read from standard input.
-      --force            Updates the configuration, overwriting any concurrent modifications.
-      --context string   CLI context name.
+      --file string               A local file path to the JSON configuration file, read as input. Otherwise the command will read from standard input.
+      --force                     Updates the configuration, overwriting any concurrent modifications.
+      --client-cert-path string   Path to client cert to be verified by MDS. Include for mTLS authentication.
+      --client-key-path string    Path to client private key, include for mTLS authentication.
+      --context string            CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.
