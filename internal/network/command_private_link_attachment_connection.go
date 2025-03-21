@@ -80,7 +80,6 @@ func printPrivateLinkAttachmentConnectionTable(cmd *cobra.Command, connection ne
 			out.AzurePrivateLinkServiceId = connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus.GetPrivateLinkServiceResourceId()
 		case connection.Status.Cloud.NetworkingV1GcpPrivateLinkAttachmentConnectionStatus != nil:
 			out.GcpServiceAttachmentId = connection.Status.Cloud.NetworkingV1GcpPrivateLinkAttachmentConnectionStatus.GetPrivateServiceConnectServiceAttachment()
-			out.GcpPrivateServiceConnectConnectionId = connection.Status.Cloud.NetworkingV1GcpPrivateLinkAttachmentConnectionStatus.GetPrivateServiceConnectConnectionId()
 		}
 	}
 
