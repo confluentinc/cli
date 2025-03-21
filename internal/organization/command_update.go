@@ -46,7 +46,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 
 	organization, httpResp, err := c.V2Client.UpdateOrgOrganization(c.Context.GetCurrentOrganization(), organization)
 	if err != nil {
-		return errors.CatchCCloudV2ResourceNotFoundError(err, resource.Organization+"s", httpResp)
+		return errors.CatchCCloudV2ResourceNotFoundError(err, resource.Plural(resource.Organization), httpResp)
 	}
 
 	table := output.NewTable(cmd)
