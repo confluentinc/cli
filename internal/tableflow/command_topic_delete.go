@@ -73,7 +73,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if len(deletedTopic) == 1 {
 		output.Printf(c.Config.EnableColor, deleteMsg, resource.Topic, fmt.Sprintf(`"%s"`, deletedTopic[0]))
 	} else if len(deletedTopic) > 1 {
-		output.Printf(c.Config.EnableColor, deleteMsg, resource.Plural(resource.Topic), utils.ArrayToCommaDelimitedString(deletedTopic, "and"))
+		output.Printf(c.Config.EnableColor, deleteMsg, plural.Plural(resource.Topic), utils.ArrayToCommaDelimitedString(deletedTopic, "and"))
 	}
 
 	return err
