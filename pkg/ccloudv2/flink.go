@@ -45,7 +45,7 @@ func (c *Client) ListFlinkComputePools(environment, specRegion string) ([]flinkv
 		req = req.SpecRegion(specRegion)
 	}
 	res, httpResp, err := req.Execute()
-	return res.GetData(), errors.CatchCCloudV2ResourceNotFoundError(err, resource.Environment, httpResp)
+	return res.GetData(), errors.CatchCCloudV2ResourceNotFoundError(err, resource.Plural(resource.Environment), httpResp)
 }
 
 func (c *Client) ListFlinkRegions(cloud string) ([]flinkv2.FcpmV2Region, error) {
