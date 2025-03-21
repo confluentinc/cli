@@ -129,7 +129,7 @@ deleteMsg := "Started deletion of %s %s. To monitor a remove-broker task run `co
 if len(deletedIds) == 1 {
     output.Printf(deleteMsg, resource.Broker, fmt.Sprintf(`"%s"`, deletedIds[0]))
 } else if len(deletedIds) > 1 {
-    output.Printf(deleteMsg, resource.Plural(resource.Broker), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
+    output.Printf(deleteMsg, plural.Plural(resource.Broker), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
 }
 
 return err

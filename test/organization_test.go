@@ -1,5 +1,11 @@
 package test
 
+import (
+	"testing"
+
+	testserver "github.com/confluentinc/cli/v4/test/test-server"
+)
+
 func (s *CLITestSuite) TestOrganization() {
 	tests := []CLITest{
 		{args: "organization describe", fixture: "organization/describe.golden"},
@@ -14,4 +20,31 @@ func (s *CLITestSuite) TestOrganization() {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
+
+	// Test organization not found error
+	s.T().Run("organization describe not found", func(t *testing.T) {
+		testserver.TestOrgNotFound = true
+		defer func() { testserver.TestOrgNotFound = false }()
+
+		test := CLITest{
+			args:     "organization describe",
+			fixture:  "organization/describe-not-found.golden",
+			exitCode: 1,
+			login:    "cloud",
+		}
+		s.runIntegrationTest(test)
+	})
+
+	s.T().Run("organization describe not found json", func(t *testing.T) {
+		testserver.TestOrgNotFound = true
+		defer func() { testserver.TestOrgNotFound = false }()
+
+		test := CLITest{
+			args:     "organization describe -o json",
+			fixture:  "organization/describe-not-found-json.golden",
+			exitCode: 1,
+			login:    "cloud",
+		}
+		s.runIntegrationTest(test)
+	})
 }

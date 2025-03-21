@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
-	"github.com/confluentinc/cli/v4/pkg/types"
+	"github.com/confluentinc/cli/v4/pkg/plural"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
@@ -190,7 +190,7 @@ func ResourcesNotFoundError(cmd *cobra.Command, resourceType string, invalidArgs
 	notFoundErrorMsg := `%s %s not found`
 	invalidArgsErrMsg := fmt.Sprintf(notFoundErrorMsg, resourceType, utils.ArrayToCommaDelimitedString(invalidArgs, "and"))
 	if len(invalidArgs) > 1 {
-		invalidArgsErrMsg = fmt.Sprintf(notFoundErrorMsg, Plural(resourceType), utils.ArrayToCommaDelimitedString(invalidArgs, "and"))
+		invalidArgsErrMsg = fmt.Sprintf(notFoundErrorMsg, plural.Plural(resourceType), utils.ArrayToCommaDelimitedString(invalidArgs, "and"))
 	}
 
 	// Find the full parent command string for use in the suggestion message
@@ -203,29 +203,7 @@ func ResourcesNotFoundError(cmd *cobra.Command, resourceType string, invalidArgs
 		fullParentCommand = fmt.Sprintf("%s %s", cmd.Parent().Name(), fullParentCommand)
 		cmd = cmd.Parent()
 	}
-	invalidResourceSuggestion := fmt.Sprintf("List available %s with `%s list`.", Plural(resourceType), fullParentCommand)
+	invalidResourceSuggestion := fmt.Sprintf("List available %s with `%s list`.", plural.Plural(resourceType), fullParentCommand)
 
 	return errors.NewErrorWithSuggestions(invalidArgsErrMsg, invalidResourceSuggestion)
-}
-
-func Plural(resource string) string {
-	if resource == "" {
-		return ""
-	}
-
-	// Words ending in `-ty` generally replace it with `-ties` in their plural forms
-	if strings.HasSuffix(resource, "ty") {
-		return strings.TrimSuffix(resource, "y") + "ies"
-	}
-
-	// Singular words ending w/ these suffixes generally add an extra -es syllable in their plural forms
-	var pluralExtraSyllableSuffix = types.NewSet("s", "x", "z", "ch", "sh")
-
-	for suffix := range pluralExtraSyllableSuffix {
-		if strings.HasSuffix(resource, suffix) {
-			return resource + "es"
-		}
-	}
-
-	return resource + "s"
 }
