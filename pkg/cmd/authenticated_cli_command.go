@@ -29,6 +29,7 @@ type AuthenticatedCLICommand struct {
 
 	Client            *ccloudv1.Client
 	KafkaRESTProvider *KafkaRESTProvider
+	MDSClient         *mdsv1.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	V2Client          *ccloudv2.Client
 
@@ -307,38 +308,42 @@ func (c *AuthenticatedCLICommand) GetCurrentSchemaRegistryClusterIdAndEndpoint()
 }
 
 func (c *AuthenticatedCLICommand) GetMDSClient(cmd *cobra.Command) (*mdsv1.APIClient, error) {
-	unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
-	if err != nil {
-		return nil, err
+	if c.MDSClient == nil {
+		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+		if err != nil {
+			return nil, err
+		}
+
+		clientCertPath, clientKeyPath, err := GetClientCertAndKeyPaths(cmd)
+		if err != nil {
+			return nil, err
+		}
+
+		configuration := mdsv1.NewConfiguration()
+		configuration.HTTPClient = utils.DefaultClient()
+		configuration.Debug = unsafeTrace
+		if c.Context == nil {
+			c.MDSClient = mdsv1.NewAPIClient(configuration)
+		}
+		configuration.BasePath = c.Context.GetPlatformServer()
+		configuration.UserAgent = c.Config.Version.UserAgent
+		if c.Context.Platform.CaCertPath == "" {
+			c.MDSClient = mdsv1.NewAPIClient(configuration)
+		}
+
+		caCertPath := c.Context.Platform.CaCertPath
+		// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
+		// be a --certificate-authority-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
+		client, err := utils.CustomCAAndClientCertClient(caCertPath, clientCertPath, clientKeyPath)
+		if err != nil {
+			log.CliLogger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --certificate-authority-path flag.", caCertPath, err.Error())
+		} else {
+			configuration.HTTPClient = client
+		}
+		c.MDSClient = mdsv1.NewAPIClient(configuration)
 	}
 
-	clientCertPath, clientKeyPath, err := GetClientCertAndKeyPaths(cmd)
-	if err != nil {
-		return nil, err
-	}
-
-	configuration := mdsv1.NewConfiguration()
-	configuration.HTTPClient = utils.DefaultClient()
-	configuration.Debug = unsafeTrace
-	if c.Context == nil {
-		return mdsv1.NewAPIClient(configuration), nil
-	}
-	configuration.BasePath = c.Context.GetPlatformServer()
-	configuration.UserAgent = c.Config.Version.UserAgent
-	if c.Context.Platform.CaCertPath == "" {
-		return mdsv1.NewAPIClient(configuration), nil
-	}
-
-	caCertPath := c.Context.Platform.CaCertPath
-	// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
-	// be a --certificate-authority-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
-	client, err := utils.CustomCAAndClientCertClient(caCertPath, clientCertPath, clientKeyPath)
-	if err != nil {
-		log.CliLogger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --certificate-authority-path flag.", caCertPath, err.Error())
-	} else {
-		configuration.HTTPClient = client
-	}
-	return mdsv1.NewAPIClient(configuration), nil
+	return c.MDSClient, nil
 }
 
 func GetClientCertAndKeyPaths(cmd *cobra.Command) (string, string, error) {
