@@ -455,7 +455,7 @@ func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command) (string, st
 		return "", "", nil, err
 	}
 
-	client, err := r.MDSClientManager.GetMDSClient(credentials.PrerunLoginURL, credentials.PrerunLoginCaCertPath, unsafeTrace)
+	client, err := r.MDSClientManager.GetMDSClient(credentials.PrerunLoginURL, credentials.PrerunLoginCaCertPath, "", "", unsafeTrace)
 	if err != nil {
 		return "", "", nil, err
 	}
@@ -658,7 +658,7 @@ func (r *PreRun) getUpdatedAuthToken(ctx *config.Context, unsafeTrace bool) (str
 		}
 
 		mdsClientManager := pauth.MDSClientManagerImpl{}
-		client, err := mdsClientManager.GetMDSClient(ctx.GetPlatformServer(), ctx.Platform.CaCertPath, unsafeTrace)
+		client, err := mdsClientManager.GetMDSClient(ctx.GetPlatformServer(), ctx.Platform.CaCertPath, "", "", unsafeTrace)
 		if err != nil {
 			return "", "", err
 		}

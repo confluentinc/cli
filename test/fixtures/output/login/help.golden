@@ -47,6 +47,8 @@ Log in to Confluent Platform with SSO even if `CONFLUENT_PLATFORM_USERNAME` and 
 Flags:
       --url string                          Metadata Service (MDS) URL, for on-premises deployments.
       --certificate-authority-path string   Self-signed certificate chain in PEM format, for on-premises deployments.
+      --client-cert-path string             Path to client cert to be verified by MDS. Include for mTLS authentication.
+      --client-key-path string              Path to client private key, include for mTLS authentication.
       --no-browser                          Do not open a browser window when authenticating using Single Sign-On (SSO).
       --organization string                 The Confluent Cloud organization to log in to. If empty, log in to the default organization.
       --prompt                              Bypass non-interactive login and prompt for login credentials.
