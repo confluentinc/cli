@@ -1,0 +1,4 @@
+tci-abc123	my-aws-glue-ci
+tci-def456	my-snowflake-ci
+:4
+Completion ended with directive: ShellCompDirectiveNoFileComp

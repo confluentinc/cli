@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -27,16 +28,21 @@ func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 				Text: "Update the name and CKU count of a Kafka cluster:",
 				Code: `confluent kafka cluster update lkc-123456 --name "New Cluster Name" --cku 3`,
 			},
+			examples.Example{
+				Text: `Update the type of a Kafka cluster from "Basic" to "Standard":`,
+				Code: `confluent kafka cluster update lkc-123456 --type "standard"`,
+			},
 		),
 	}
 
 	cmd.Flags().String("name", "", "Name of the Kafka cluster.")
 	cmd.Flags().Uint32("cku", 0, `Number of Confluent Kafka Units. For Kafka clusters of type "dedicated" only. When shrinking a cluster, you must reduce capacity one CKU at a time.`)
+	cmd.Flags().String("type", "", `Type of the Kafka cluster. Only supports upgrading from "Basic" to "Standard".`)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cmd.MarkFlagsOneRequired("name", "cku")
+	cmd.MarkFlagsOneRequired("name", "cku", "type")
 
 	return cmd
 }
@@ -82,6 +88,29 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		update.Spec.Config = &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: updatedCku}}
+	}
+
+	if cmd.Flags().Changed("type") {
+		newType, err := cmd.Flags().GetString("type")
+		if err != nil {
+			return err
+		}
+		if newType == "" {
+			return fmt.Errorf("`--type` flag value must not be empty")
+		}
+
+		// Validate cluster type upgrade
+		currentConfig := currentCluster.GetSpec().Config
+		if currentConfig.CmkV2Basic == nil || strings.ToLower(newType) != "standard" {
+			return fmt.Errorf(`clusters can only be upgraded from "Basic" to "Standard"`)
+		}
+
+		// Set the new cluster type
+		update.Spec.Config = &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{
+			CmkV2Standard: &cmkv2.CmkV2Standard{
+				Kind: "Standard",
+			},
+		}
 	}
 
 	updatedCluster, err := c.V2Client.UpdateKafkaCluster(id, update)
