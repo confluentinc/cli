@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -100,19 +101,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 
 		// Validate cluster type upgrade
 		currentConfig := currentCluster.GetSpec().Config
-		if currentConfig.CmkV2Standard != nil {
-			return fmt.Errorf("cluster type cannot be changed for Standard clusters")
-		}
-		if currentConfig.CmkV2Enterprise != nil {
-			return fmt.Errorf("cluster type cannot be changed for Enterprise clusters")
-		}
-		if currentConfig.CmkV2Dedicated != nil {
-			return fmt.Errorf("cluster type cannot be changed for Dedicated clusters")
-		}
-		if currentConfig.CmkV2Freight != nil {
-			return fmt.Errorf("cluster type cannot be changed for Freight clusters")
-		}
-		if currentConfig.CmkV2Basic == nil || newType != "standard" && newType != "Standard" {
+		if currentConfig.CmkV2Basic == nil || strings.ToLower(newType) != "standard" {
 			return fmt.Errorf("clusters can only be upgraded from 'Basic' to 'Standard'")
 		}
 
