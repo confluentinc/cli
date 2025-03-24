@@ -14,7 +14,7 @@ Update the type of a Kafka cluster from "Basic" to "Standard":
 Flags:
       --name string          Name of the Kafka cluster.
       --cku uint32           Number of Confluent Kafka Units. For Kafka clusters of type "dedicated" only. When shrinking a cluster, you must reduce capacity one CKU at a time.
-      --type string          Type of the Kafka cluster. Only supports upgrading from 'Basic' to 'Standard'.
+      --type string          Type of the Kafka cluster. Only supports upgrading from "Basic" to "Standard".
       --context string       CLI context name.
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")

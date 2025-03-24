@@ -37,7 +37,7 @@ func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 
 	cmd.Flags().String("name", "", "Name of the Kafka cluster.")
 	cmd.Flags().Uint32("cku", 0, `Number of Confluent Kafka Units. For Kafka clusters of type "dedicated" only. When shrinking a cluster, you must reduce capacity one CKU at a time.`)
-	cmd.Flags().String("type", "", "Type of the Kafka cluster. Only supports upgrading from 'Basic' to 'Standard'.")
+	cmd.Flags().String("type", "", `Type of the Kafka cluster. Only supports upgrading from "Basic" to "Standard".`)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -102,7 +102,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		// Validate cluster type upgrade
 		currentConfig := currentCluster.GetSpec().Config
 		if currentConfig.CmkV2Basic == nil || strings.ToLower(newType) != "standard" {
-			return fmt.Errorf("clusters can only be upgraded from 'Basic' to 'Standard'")
+			return fmt.Errorf(`clusters can only be upgraded from "Basic" to "Standard"`)
 		}
 
 		// Set the new cluster type
