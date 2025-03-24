@@ -9,6 +9,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/deletion"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/plural"
 	"github.com/confluentinc/cli/v4/pkg/resource"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
@@ -56,7 +57,7 @@ func (c *command) gatewayDelete(cmd *cobra.Command, args []string) error {
 	if len(deletedIds) == 1 {
 		output.Printf(c.Config.EnableColor, deleteMsg, resource.Gateway, fmt.Sprintf(`"%s"`, deletedIds[0]))
 	} else if len(deletedIds) > 1 {
-		output.Printf(c.Config.EnableColor, deleteMsg, resource.Plural(resource.Gateway), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
+		output.Printf(c.Config.EnableColor, deleteMsg, plural.Plural(resource.Gateway), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
 	}
 
 	return err
