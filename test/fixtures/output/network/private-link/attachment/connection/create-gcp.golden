@@ -1,7 +1,9 @@
-+-------------------------+--------------+
-| ID                      | plattc-gcp   |
-| Name                    | gcp-plattc   |
-| Cloud                   | GCP          |
-| Private Link Attachment | platt-gcp    |
-| Phase                   | PROVISIONING |
-+-------------------------+--------------+
++--------------------------------+-----------------+
+| ID                             | plattc-gcp      |
+| Name                           | gcp-plattc      |
+| Cloud                          | GCP             |
+| Private Link Attachment        | platt-gcp       |
+| Phase                          | PROVISIONING    |
+| GCP Private Service Connect    | gcp-pl-endpoint |
+| Connection ID                  |                 |
++--------------------------------+-----------------+

@@ -19,7 +19,7 @@ type privateLinkAttachmentOut struct {
 	AwsVpcEndpointService        string `human:"AWS VPC Endpoint Service,omitempty" serialized:"aws_vpc_endpoint_service,omitempty"`
 	AzurePrivateLinkServiceAlias string `human:"Azure Private Link Service Alias,omitempty" serialized:"azure_private_link_service_alias,omitempty"`
 	AzurePrivateLinkServiceId    string `human:"Azure Private Link Service ID,omitempty" serialized:"azure_private_link_service_id,omitempty"`
-	GCPServiceAttachmentId       string `human:"GCP Service Attachment Id,omitempty" serialized:"gcp_service_attachment_id,omitempty"`
+	GCPServiceAttachmentId       string `human:"GCP Service Attachment ID,omitempty" serialized:"gcp_service_attachment_id,omitempty"`
 	Phase                        string `human:"Phase" serialized:"phase"`
 }
 
