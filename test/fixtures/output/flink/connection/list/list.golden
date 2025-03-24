@@ -1,3 +1,4 @@
+No Flink endpoint is specified, defaulting to public endpoint: `http://127.0.0.1:1026`
           Creation Date         |         Name         | Environment | Cloud |  Region   |  Type  |                  Endpoint                  |    Data    |  Status   |      Status Detail        
 --------------------------------+----------------------+-------------+-------+-----------+--------+--------------------------------------------+------------+-----------+---------------------------
   2022-01-01 00:00:00 +0000 UTC | 22222222-2222-2222-2 | env-596     | aws   | eu-west-1 | OPENAI | https://api.openai.com/v1/chat/completions | <REDACTED> | COMPLETED | Connection2 is completed  

@@ -19,10 +19,10 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/schemaregistry"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
-	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 type AuthenticatedCLICommand struct {
@@ -88,7 +88,7 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 			return nil, err
 		}
 
-		log.CliLogger.Debugf("The final url used for Flink dataplane client is: %s", url)
+		log.CliLogger.Debugf("The final url used for Flink dataplane client is: %s\n", url)
 		c.flinkGatewayClient = ccloudv2.NewFlinkGatewayClient(url, c.Version.UserAgent, unsafeTrace, dataplaneToken)
 	}
 
@@ -117,7 +117,7 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(access, id string)
 		return privateURL, nil
 	}
 	if access == "" {
-		output.Println(c.Config.EnableColor, "No Flink connectivity-type is specified, defaulting to public")
+		output.Printf(c.Config.EnableColor, "No Flink endpoint is specified, defaulting to public endpoint: `%s`\n", publicURL)
 	}
 	return publicURL, nil
 }
@@ -143,7 +143,7 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(accessType, provider, r
 		return "", errors.NewErrorWithSuggestions("invalid region", "Please select a valid region - use `confluent flink region list` to see available regions")
 	}
 	if accessType == "" {
-		output.Println(c.Config.EnableColor, "No Flink connectivity-type is specified, defaulting to public")
+		output.Printf(c.Config.EnableColor, "No Flink endpoint is specified, defaulting to public endpoint: `%s`\n", hostUrl)
 	}
 
 	u, err := purl.Parse(hostUrl)
