@@ -7,7 +7,7 @@ Update the name and CKU count of a Kafka cluster:
 
   $ confluent kafka cluster update lkc-123456 --name "New Cluster Name" --cku 3
 
-Update the type of a Kafka cluster from 'Basic' to 'Standard':
+Update the type of a Kafka cluster from "Basic" to "Standard":
 
   $ confluent kafka cluster update lkc-123456 --type "standard"
 

@@ -29,7 +29,7 @@ func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 				Code: `confluent kafka cluster update lkc-123456 --name "New Cluster Name" --cku 3`,
 			},
 			examples.Example{
-				Text: "Update the type of a Kafka cluster from 'Basic' to 'Standard':",
+				Text: `Update the type of a Kafka cluster from "Basic" to "Standard":`,
 				Code: `confluent kafka cluster update lkc-123456 --type "standard"`,
 			},
 		),
