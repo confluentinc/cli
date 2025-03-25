@@ -109,13 +109,15 @@ var ccloudV2Routes = []route{
 	{"/org/v2/organizations/{id}", handleOrgOrganization},
 	{"/pim/v1/integrations", handleProviderIntegrations},
 	{"/pim/v1/integrations/{id}", handleProviderIntegration},
-	{"/sd/v1/pipelines", handlePipelines},
-	{"/sd/v1/pipelines/{id}", handlePipeline},
 	{"/service-quota/v1/applied-quotas", handleAppliedQuotas},
 	{"/service-quota/v2/applied-quotas", handleAppliedQuotas},
 	{"/srcm/v3/clusters", handleSchemaRegistryClustersV3},
 	{"/srcm/v3/clusters/{id}", handleSchemaRegistryClusterV3},
 	{"/srcm/v3/clusters/{id}/access", handleSchemaRegistryClusterV3Access},
+	{"/tableflow/v1/catalog-integrations/{id}", handleCatalogIntegration},
+	{"/tableflow/v1/catalog-integrations", handleCatalogIntegrations},
+	{"/tableflow/v1/tableflow-topics/{display_name}", handleTableflowTopic},
+	{"/tableflow/v1/tableflow-topics", handleTableflowTopics},
 	{"/v2/metrics/cloud/query", handleMetricsQuery},
 }
 

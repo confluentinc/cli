@@ -1,0 +1,4 @@
+Error: catalog integration "tci-invalid" not found
+
+Suggestions:
+    List available catalog integrations with `confluent tableflow catalog-integration list`.

@@ -1,0 +1,16 @@
+{
+  "kafka_cluster": "lkc-123456",
+  "topic_name": "topic-byob",
+  "enable_compaction": true,
+  "enable_partitioning": true,
+  "environment": "env-596",
+  "record_failure_strategy": "SKIP",
+  "retention_ms": "604800000",
+  "storage_type": "BYOS",
+  "provider_integration_id": "cspi-stgce89r7",
+  "bucket_name": "bucket_1",
+  "bucket_region": "us-east-1",
+  "suspended": false,
+  "table_formats": "ICEBERG",
+  "phase": "RUNNING"
+}

@@ -1,0 +1,4 @@
+      ID     |      Name       | Environment | Kafka Cluster |   Type    | Provider Integration ID |                    Endpoint                    | Warehouse | Allowed Scope | Suspended |   Phase   | Error Message  
+-------------+-----------------+-------------+---------------+-----------+-------------------------+------------------------------------------------+-----------+---------------+-----------+-----------+----------------
+  tci-abc123 | my-aws-glue-ci  | env-596     | lkc-123456    | aws       | cspi-stgce89r7          |                                                |           |               | false     | CONNECTED |                
+  tci-def456 | my-snowflake-ci | env-596     | lkc-123456    | snowflake |                         | https://vuser1_polaris.snowflakecomputing.com/ | warehouse | allowed-scope | false     | PENDING   |                
