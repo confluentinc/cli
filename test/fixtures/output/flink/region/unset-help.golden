@@ -1,7 +1,12 @@
-Select a Flink connectivity type for the current environment as "public" or "private". If unspecified, the CLI will default to public connectivity type.
+Unset the current Flink region that was set with the `use` command.
 
 Usage:
-  confluent flink connectivity-type use <region-access> [flags]
+  confluent flink region unset [flags]
+
+Examples:
+Unset the current Flink region us-west-1 with cloud provider = AWS.
+
+  $ confluent flink region unset
 
 Global Flags:
   -h, --help            Show help for this command.
