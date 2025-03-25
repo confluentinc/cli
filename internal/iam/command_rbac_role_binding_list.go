@@ -106,8 +106,11 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 		cmd.Flags().String("connect-cluster", "", "Kafka Connect cluster ID, which specifies the Connect cluster scope.")
 		cmd.Flags().String("cmf", "", "Confluent Managed Flink (CMF) ID, which specifies the CMF scope.")
 		cmd.Flags().String("flink-environment", "", "Flink environment ID, which specifies the Flink environment scope.")
-		cmd.Flags().String("cluster-name", "", "Cluster name, which specifies the cluster scope.")
+		cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
+		cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 		pcmd.AddContextFlag(cmd, c.CLICommand)
+
+		cmd.Flags().String("cluster-name", "", "Cluster name, which specifies the cluster scope.")
 	}
 
 	cmd.Flags().String("resource", "", `Resource type and identifier using "Prefix:ID" format. If specified with "--role" and no principals, list all principals and role bindings.`)
@@ -198,6 +201,11 @@ func (c *roleBindingCommand) confluentList(cmd *cobra.Command, options *roleBind
 }
 
 func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options *roleBindingOptions) error {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
 	scope := &options.mdsScope
 	principal := options.principal
 
@@ -210,7 +218,7 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 		role = r
 	}
 
-	principalsRolesResourcePatterns, response, err := c.MDSClient.RBACRoleBindingSummariesApi.LookupResourcesForPrincipal(c.createContext(), principal, *scope)
+	principalsRolesResourcePatterns, response, err := client.RBACRoleBindingSummariesApi.LookupResourcesForPrincipal(c.createContext(), principal, *scope)
 	if err != nil {
 		if response != nil && response.StatusCode == http.StatusNotFound {
 			return c.listPrincipalResourcesV1(cmd, scope, principal, role)
@@ -257,10 +265,14 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 }
 
 func (c *roleBindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, mdsScope *mdsv1.MdsScope, principal, role string) error {
-	var err error
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
 	roleNames := []string{role}
 	if role == "*" {
-		roleNames, _, err = c.MDSClient.RBACRoleBindingSummariesApi.ScopedPrincipalRolenames(c.createContext(), principal, *mdsScope)
+		roleNames, _, err = client.RBACRoleBindingSummariesApi.ScopedPrincipalRolenames(c.createContext(), principal, *mdsScope)
 		if err != nil {
 			return err
 		}
@@ -268,7 +280,7 @@ func (c *roleBindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, mdsSco
 
 	list := output.NewList(cmd)
 	for _, roleName := range roleNames {
-		resourcePatterns, _, err := c.MDSClient.RBACRoleBindingCRUDApi.GetRoleResourcesForPrincipal(c.createContext(), principal, roleName, *mdsScope)
+		resourcePatterns, _, err := client.RBACRoleBindingCRUDApi.GetRoleResourcesForPrincipal(c.createContext(), principal, roleName, *mdsScope)
 		if err != nil {
 			return err
 		}
@@ -292,6 +304,11 @@ func (c *roleBindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, mdsSco
 }
 
 func (c *roleBindingCommand) confluentListRolePrincipals(cmd *cobra.Command, options *roleBindingOptions) error {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
 	scope := &options.mdsScope
 	role := options.role
 
@@ -307,17 +324,17 @@ func (c *roleBindingCommand) confluentListRolePrincipals(cmd *cobra.Command, opt
 			return err
 		}
 
-		if err := c.validateRoleAndResourceTypeV1(role, resourcePattern.ResourceType); err != nil {
+		if err := c.validateRoleAndResourceTypeV1(cmd, role, resourcePattern.ResourceType); err != nil {
 			return err
 		}
 
-		principals, _, err = c.MDSClient.RBACRoleBindingSummariesApi.LookupPrincipalsWithRoleOnResource(c.createContext(), role, resourcePattern.ResourceType, resourcePattern.Name, *scope)
+		principals, _, err = client.RBACRoleBindingSummariesApi.LookupPrincipalsWithRoleOnResource(c.createContext(), role, resourcePattern.ResourceType, resourcePattern.Name, *scope)
 		if err != nil {
 			return err
 		}
 	} else {
 		var err error
-		principals, _, err = c.MDSClient.RBACRoleBindingSummariesApi.LookupPrincipalsWithRole(c.createContext(), role, *scope)
+		principals, _, err = client.RBACRoleBindingSummariesApi.LookupPrincipalsWithRole(c.createContext(), role, *scope)
 		if err != nil {
 			return err
 		}

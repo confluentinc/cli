@@ -30,10 +30,6 @@ func GetCAClient(caCertPath string) (*http.Client, error) {
 	return DefaultClientWithTransport(transport), nil
 }
 
-func SelfSignedCertClientFromPath(caCertPath string) (*http.Client, error) {
-	return CustomCAAndClientCertClient(caCertPath, "", "")
-}
-
 func CustomCAAndClientCertClient(caCertPath, clientCertPath, clientKeyPath string) (*http.Client, error) {
 	var caCertReader *os.File
 	if caCertPath != "" {
