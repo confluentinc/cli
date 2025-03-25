@@ -240,10 +240,12 @@ func (s *CLITestSuite) TestFlinkComputePoolUse() {
 
 func (s *CLITestSuite) TestFlinkRegion() {
 	tests := []CLITest{
-		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use.golden"},
+		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
 		{args: "flink region list", fixture: "flink/region/list.golden"},
 		{args: "flink region list -o json", fixture: "flink/region/list-json.golden"},
-		{args: "flink region list --cloud aws", fixture: "flink/region/list-cloud.golden"},
+		{args: "flink region list --cloud aws", fixture: "flink/region/list-aws.golden"},
+		{args: "flink region list --cloud azure", fixture: "flink/region/list-azure.golden"},
+		{args: "flink region use --cloud azure --region eastus", fixture: "flink/region/use-azure.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -307,10 +309,14 @@ func (s *CLITestSuite) TestFlinkStatementCreate() {
 
 func (s *CLITestSuite) TestFlinkEndpointList() {
 	tests := []CLITest{
-		{args: "flink endpoint list", fixture: "flink/endpoint/list-empty-cloud.golden", exitCode: 1},
-		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use.golden"},
-		{args: "flink endpoint list", fixture: "flink/endpoint/list.golden"},
-		{args: "flink region use --cloud gcp --region eu-west-1", fixture: "flink/region/use.golden"},
+		{args: "flink region unset", fixture: "flink/region/unset.golden"},
+		{args: "flink endpoint list", fixture: "flink/endpoint/list-fail.golden", exitCode: 1},
+		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
+		{args: "flink endpoint list", fixture: "flink/endpoint/list-aws.golden"},
+		{args: "flink region use --cloud gcp --region europe-west3-a", fixture: "flink/region/use-gcp.golden"},
+		{args: "flink endpoint list", fixture: "flink/endpoint/list-gcp.golden"},
+		{args: "flink region use --cloud azure --region eastus", fixture: "flink/region/use-azure.golden", exitCode: 1},
+		{args: "flink endpoint list", fixture: "flink/endpoint/list-azure.golden"},
 	}
 
 	for _, test := range tests {
