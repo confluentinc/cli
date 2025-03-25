@@ -27,6 +27,8 @@ const (
 	ConfluentPlatformPassword                 = "CONFLUENT_PLATFORM_PASSWORD"
 	ConfluentPlatformMDSURL                   = "CONFLUENT_PLATFORM_MDS_URL"
 	ConfluentPlatformCertificateAuthorityPath = "CONFLUENT_PLATFORM_CERTIFICATE_AUTHORITY_PATH"
+	ConfluentPlatformClientCertPath           = "CONFLUENT_PLATFORM_CLIENT_CERT_PATH"
+	ConfluentPlatformClientKeyPath            = "CONFLUENT_PLATFORM_CLIENT_KEY_PATH"
 	ConfluentPlatformSSO                      = "CONFLUENT_PLATFORM_SSO"
 
 	// Confluent Platform CMF environment variables

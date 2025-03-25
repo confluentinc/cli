@@ -34,8 +34,10 @@ Flags:
       --connect-cluster string           Kafka Connect cluster ID, which specifies the Connect cluster scope.
       --cmf string                       Confluent Managed Flink (CMF) ID, which specifies the CMF scope.
       --flink-environment string         Flink environment ID, which specifies the Flink environment scope.
-      --cluster-name string              Cluster name, which specifies the cluster scope.
+      --client-cert-path string          Path to client cert to be verified by MDS. Include for mTLS authentication.
+      --client-key-path string           Path to client private key, include for mTLS authentication.
       --context string                   CLI context name.
+      --cluster-name string              Cluster name, which specifies the cluster scope.
       --resource string                  Resource type and identifier using "Prefix:ID" format. If specified with "--role" and no principals, list all principals and role bindings.
       --inclusive                        List role bindings for specified scopes and nested scopes. Otherwise, list role bindings for the specified scopes. If scopes are unspecified, list only organization-scoped role bindings.
   -o, --output string                    Specify the output format as "human", "json", or "yaml". (default "human")
