@@ -1,16 +1,14 @@
-Manage Flink regions.
+Unset the current Flink region that was set with the `use` command.
 
 Usage:
-  confluent flink region [command]
+  confluent flink region unset [flags]
 
-Available Commands:
-  list        List Flink regions.
-  unset       Unset the current Flink region.
-  use         Use a Flink region in subsequent commands.
+Examples:
+Unset the current Flink region us-west-1 with cloud provider = AWS.
+
+  $ confluent flink region unset
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-
-Use "confluent flink region [command] --help" for more information about a command.

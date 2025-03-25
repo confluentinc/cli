@@ -11,9 +11,8 @@ var fields = []string{"private", "public"}
 func (c *command) newConnectivityTypeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "connectivity-type",
-		Short:       "Manage Flink connectivity type.",
+		Short:       "Manage Flink connectivity type (being deprecated).",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
-		Deprecated:  `please run "confluent flink endpoint list" and "confluent flink endpoint use" to specify the Flink client endpoint`,
 	}
 
 	cmd.AddCommand(c.newUseCommand())

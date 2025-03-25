@@ -16,8 +16,8 @@ import (
 func (c *command) newEndpointUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "use",
-		Short: "Use a Flink endpoint in current environment.",
-		Long:  "Use a Flink endpoint in current environment for subsequent Flink dataplane commands, namely `flink connection`, `flink statement` and `flink shell`",
+		Short: "Use a Flink endpoint.",
+		Long:  "Use a Flink endpoint as active endpoint for all subsequent Flink dataplane commands in current environment, such as `flink connection`, `flink statement` and `flink shell`",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.endpointUse,
 		Example: examples.BuildExampleString(

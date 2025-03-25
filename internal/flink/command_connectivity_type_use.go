@@ -10,17 +10,19 @@ import (
 
 func (c *command) newUseCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:        "use <region-access>",
-		Short:      "Select a Flink connectivity type.",
-		Long:       "Select a Flink connectivity type for the current environment as \"public\" or \"private\". If unspecified, the CLI will default to the connectivity type that was set at the organization level.",
-		Args:       cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
-		ValidArgs:  fields,
-		RunE:       c.ConnectivityTypeUse,
-		Deprecated: `please run "confluent flink endpoint list" and "confluent flink endpoint use" to specify the Flink client endpoint`,
+		Use:       "use <region-access>",
+		Short:     "Select a Flink connectivity type.",
+		Long:      "Select a Flink connectivity type for the current environment as \"public\" or \"private\". If unspecified, the CLI will default to public connectivity type.",
+		Args:      cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
+		ValidArgs: fields,
+		RunE:      c.ConnectivityTypeUse,
 	}
 }
 
 func (c *command) ConnectivityTypeUse(_ *cobra.Command, args []string) error {
+	warning := errors.NewWarningWithSuggestions("This command is being deprecated and will be removed in next CLI major release", `please run "confluent flink endpoint list" and "confluent flink endpoint use" to specify an active Flink client endpoint`)
+	output.ErrPrint(c.Config.EnableColor, warning.DisplayWarningWithSuggestions())
+
 	if err := c.Context.SetCurrentFlinkAccessType(args[0]); err != nil {
 		return err
 	}

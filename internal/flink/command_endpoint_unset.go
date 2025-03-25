@@ -13,7 +13,7 @@ func (c *command) newEndpointUnsetCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unset",
 		Short: "Unset the current Flink endpoint.",
-		Long:  "Unset the current Flink endpoint that was set with the `use` command.",
+		Long:  "Unset the current Flink endpoint that was previously set with the `use` command.",
 		Args:  cobra.NoArgs,
 		RunE:  c.endpointUnset,
 		Example: examples.BuildExampleString(
