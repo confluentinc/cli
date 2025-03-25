@@ -445,8 +445,9 @@ func AddRegionFlagFlink(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 		}
 
 		cloud, _ := cmd.Flags().GetString("cloud")
+		regionName, _ := cmd.Flags().GetString("region")
 
-		regions, err := command.V2Client.ListFlinkRegions(strings.ToUpper(cloud))
+		regions, err := command.V2Client.ListFlinkRegions(strings.ToUpper(cloud), regionName)
 		if err != nil {
 			return nil
 		}
