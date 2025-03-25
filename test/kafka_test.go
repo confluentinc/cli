@@ -93,10 +93,20 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster describe lkc-describe-infinite -o json", fixture: "kafka/42.golden"},
 		{args: "kafka cluster describe lkc-describe-infinite -o yaml", fixture: "kafka/43.golden"},
 
+		{args: "kafka cluster describe lkc-describe-dedicated-with-zone-selection", fixture: "kafka/50.golden"},
+		{args: "kafka cluster describe lkc-describe-dedicated-with-zone-selection -o json", fixture: "kafka/51.golden"},
+		{args: "kafka cluster describe lkc-describe-dedicated-with-zone-selection -o yaml", fixture: "kafka/52.golden"},
+
 		{args: "kafka cluster describe lkc-describe-dedicated-provisioning", fixture: "kafka/cluster-describe-dedicated-provisioning.golden"},
 
 		{args: "kafka cluster describe lkc-unknown", fixture: "kafka/48.golden", exitCode: 1},
 		{args: "kafka cluster describe lkc-unknown-type", fixture: "kafka/describe-unknown-cluster-type.golden"},
+
+		{args: "kafka cluster create my-dedicated-cluster-zone-selected --cloud aws --region us-east-1 --zone use1-az3 --type dedicated --cku 1 --network n-abcde1", fixture: "kafka/49.golden"},
+		{args: "kafka cluster create my-dedicated-cluster-invalid --cloud aws --region us-east-1 --zone use1-az3 --type dedicated --cku 1", fixture: "kafka/cluster/create-network-not-specified-error.golden", exitCode: 1},
+		{args: "kafka cluster create my-dedicated-cluster-invalid --cloud aws --region us-east-1 --zone use1-az3 --type dedicated --cku 1 --network n-abcde1 --availability multi-zone", fixture: "kafka/cluster/create-zone-selection-availability-error.golden", exitCode: 1},
+		{args: "kafka cluster create my-dedicated-cluster-invalid --cloud aws --region us-east-1 --zone use1-az3 --type standard --cku 1 --network n-abcde1", fixture: "kafka/cluster/create-standard-cluster-with-zone-error.golden", exitCode: 1},
+		{args: "kafka cluster create my-dedicated-cluster-invalid --cloud aws --region us-east-1 --zone invalid-zone --type dedicated --cku 1 --network n-abcde1", fixture: "kafka/cluster/create-cluster-with-invalid-zone-error.golden", exitCode: 1},
 
 		{args: "kafka acl list --cluster lkc-acls", fixture: "kafka/acl/list-cloud.golden"},
 		{args: "kafka acl list --cluster lkc-acls --all", fixture: "kafka/acl/list-cloud-all.golden"},
@@ -165,6 +175,38 @@ func (s *CLITestSuite) TestKafka() {
 
 	for _, test := range tests {
 		test.login = "onprem"
+		s.runIntegrationTest(test)
+	}
+}
+
+// /////////////////////////////////// INTERNAL TESTING PURPOSE ONLY - TO BE DELETED //////////////////////////////////////////////////
+func (s *CLITestSuite) TestKafkaMyTest() {
+	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
+	createLinkConfigFile := getCreateLinkConfigFile()
+	defer os.Remove(createLinkConfigFile)
+	createBidirectionalLinkConfigFile := getCreateBidirectionalLinkConfigFile()
+	defer os.Remove(createBidirectionalLinkConfigFile)
+	tests := []CLITest{
+		//{args: "kafka cluster describe lkc-describe-dedicated-with-zone-selection", fixture: "kafka/50.golden"},
+		//{args: "kafka cluster describe lkc-describe-dedicated-with-zone-selection -o json", fixture: "kafka/51.golden"},
+		//{args: "kafka cluster describe lkc-describe-dedicated-with-zone-selection -o yaml", fixture: "kafka/52.golden"},
+		//
+		//{args: "kafka cluster create my-dedicated-cluster-zone-selected --cloud aws --region us-east-1 --zone use1-az3 --type dedicated --cku 1 --network n-abcde1", fixture: "kafka/49.golden"},
+		//{args: "kafka cluster create my-dedicated-cluster-invalid --cloud aws --region us-east-1 --zone use1-az3 --type dedicated --cku 1", fixture: "kafka/cluster/create-network-not-specified-error.golden", exitCode: 1},
+		//{args: "kafka cluster create my-dedicated-cluster-invalid --cloud aws --region us-east-1 --zone use1-az3 --type dedicated --cku 1 --network n-abcde1 --availability multi-zone", fixture: "kafka/cluster/create-zone-selection-availability-error.golden", exitCode: 1},
+		//{args: "kafka cluster create my-dedicated-cluster-invalid --cloud aws --region us-east-1 --zone use1-az3 --type standard --cku 1 --network n-abcde1", fixture: "kafka/cluster/create-standard-cluster-with-zone-error.golden", exitCode: 1},
+		//{args: "kafka cluster create my-dedicated-cluster-invalid --cloud aws --region us-east-1 --zone invalid-zone --type dedicated --cku 1 --network n-abcde1", fixture: "kafka/cluster/create-cluster-with-invalid-zone-error.golden", exitCode: 1},
+		//{args: "kafka cluster update lkc-update-dedicated-cluster-zone-selected --name my-updated-dedicated-cluster-zone-selected", fixture: "kafka/50.golden"},
+		//{args: "kafka cluster describe my-updated-dedicated-cluster-zone-selected", fixture: "kafka/51.golden"},
+
+		{args: "kafka cluster create my-dedicated-cluster --cloud aws --region us-east-1 --type dedicated --cku 1 --verbose", fixture: "kafka/22.golden"},
+	}
+
+	resetConfiguration(s.T(), false)
+
+	for _, test := range tests {
+		test.login = "cloud"
+		test.workflow = true
 		s.runIntegrationTest(test)
 	}
 }

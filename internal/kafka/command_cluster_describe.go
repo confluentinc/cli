@@ -20,25 +20,26 @@ import (
 var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "IngressLimit", "EgressLimit", "Storage", "Cloud", "Availability", "Region", "Network", "Status", "Endpoint", "RestEndpoint"}
 
 type describeStruct struct {
-	IsCurrent          bool   `human:"Current" serialized:"is_current"`
-	Id                 string `human:"ID" serialized:"id"`
-	Name               string `human:"Name" serialized:"name"`
-	Type               string `human:"Type" serialized:"type"`
-	ClusterSize        int32  `human:"Cluster Size" serialized:"cluster_size"`
-	PendingClusterSize int32  `human:"Pending Cluster Size" serialized:"pending_cluster_size"`
-	IngressLimit       int32  `human:"Ingress Limit (MB/s)" serialized:"ingress_limit"`
-	EgressLimit        int32  `human:"Egress Limit (MB/s)" serialized:"egress_limit"`
-	Storage            string `human:"Storage" serialized:"storage"`
-	Cloud              string `human:"Cloud" serialized:"cloud"`
-	Region             string `human:"Region" serialized:"region"`
-	Availability       string `human:"Availability" serialized:"availability"`
-	Network            string `human:"Network,omitempty" serialized:"network,omitempty"`
-	Status             string `human:"Status" serialized:"status"`
-	Endpoint           string `human:"Endpoint" serialized:"endpoint"`
-	ByokKeyId          string `human:"BYOK Key ID" serialized:"byok_key_id"`
-	EncryptionKeyId    string `human:"Encryption Key ID" serialized:"encryption_key_id"`
-	RestEndpoint       string `human:"REST Endpoint" serialized:"rest_endpoint"`
-	TopicCount         int    `human:"Topic Count,omitempty" serialized:"topic_count,omitempty"`
+	IsCurrent          bool     `human:"Current" serialized:"is_current"`
+	Id                 string   `human:"ID" serialized:"id"`
+	Name               string   `human:"Name" serialized:"name"`
+	Type               string   `human:"Type" serialized:"type"`
+	ClusterSize        int32    `human:"Cluster Size" serialized:"cluster_size"`
+	PendingClusterSize int32    `human:"Pending Cluster Size" serialized:"pending_cluster_size"`
+	IngressLimit       int32    `human:"Ingress Limit (MB/s)" serialized:"ingress_limit"`
+	EgressLimit        int32    `human:"Egress Limit (MB/s)" serialized:"egress_limit"`
+	Storage            string   `human:"Storage" serialized:"storage"`
+	Cloud              string   `human:"Cloud" serialized:"cloud"`
+	Region             string   `human:"Region" serialized:"region"`
+	Zones              []string `human:"Zones,omitempty" serialized:"zones,omitempty"`
+	Availability       string   `human:"Availability" serialized:"availability"`
+	Network            string   `human:"Network,omitempty" serialized:"network,omitempty"`
+	Status             string   `human:"Status" serialized:"status"`
+	Endpoint           string   `human:"Endpoint" serialized:"endpoint"`
+	ByokKeyId          string   `human:"BYOK Key ID" serialized:"byok_key_id"`
+	EncryptionKeyId    string   `human:"Encryption Key ID" serialized:"encryption_key_id"`
+	RestEndpoint       string   `human:"REST Endpoint" serialized:"rest_endpoint"`
+	TopicCount         int      `human:"Topic Count,omitempty" serialized:"topic_count,omitempty"`
 }
 
 func (c *clusterCommand) newDescribeCommand() *cobra.Command {
@@ -138,6 +139,7 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Con
 		Endpoint:           cluster.Spec.GetKafkaBootstrapEndpoint(),
 		ByokKeyId:          getCmkByokId(cluster),
 		EncryptionKeyId:    getCmkEncryptionKey(cluster),
+		Zones:              getCmkZones(cluster),
 		RestEndpoint:       cluster.Spec.GetHttpEndpoint(),
 	}
 }
@@ -159,6 +161,9 @@ func getKafkaClusterDescribeFields(cluster *cmkv2.CmkV2Cluster, basicFields []st
 		}
 		if cluster.Spec.Config.CmkV2Dedicated.EncryptionKey != nil && *cluster.Spec.Config.CmkV2Dedicated.EncryptionKey != "" {
 			describeFields = append(describeFields, "EncryptionKeyId")
+		}
+		if len(cluster.GetSpec().Config.CmkV2Dedicated.GetZones()) != 0 {
+			describeFields = append(describeFields, "Zones")
 		}
 		if cluster.Spec.Byok != nil {
 			describeFields = append(describeFields, "ByokId")
