@@ -336,6 +336,7 @@ func (h *LoginCredentialsManagerImpl) isOnPremSSOUser(url, caCertPath, clientCer
 
 	featuresInfo, _, err := client.MetadataServiceOperationsApi.Features(context.Background())
 	if err != nil {
+		log.CliLogger.Debug(err)
 		return false
 	}
 	return featuresInfo.Features["oidc.login.device.1.enabled"]
