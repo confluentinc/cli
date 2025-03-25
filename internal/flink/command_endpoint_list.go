@@ -42,21 +42,14 @@ func (c *command) newEndpointListCommand() *cobra.Command {
 func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	// Get the current Flink cloud and region
 	cloud := c.Context.GetCurrentFlinkCloudProvider()
-	if cloud == "" {
+	region := c.Context.GetCurrentFlinkRegion()
+	if cloud == "" || region == "" {
 		return errors.NewErrorWithSuggestions(
-			fmt.Sprintf(`Current Flink cloud provider is empty`),
-			"Run `confluent flink region use --cloud <cloud> --region <region>` to set the Flink cloud provider first.",
+			fmt.Sprintf(`Current Flink cloud provider or region is empty`),
+			"Run `confluent flink region use --cloud <cloud> --region <region>` to set the Flink cloud provider and region first.",
 		)
 	}
 	cloud = strings.ToUpper(cloud)
-
-	region := c.Context.GetCurrentFlinkRegion()
-	if region == "" {
-		return errors.NewErrorWithSuggestions(
-			fmt.Sprintf(`Current Flink region is empty`),
-			"Run `confluent flink region use --cloud <cloud> --region <region>` to set the Flink region first.",
-		)
-	}
 
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {

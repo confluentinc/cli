@@ -1286,30 +1286,30 @@ func handleNetworkingPrivateLinkAttachmentGet(t *testing.T, id string) http.Hand
 			w.WriteHeader(http.StatusNotFound)
 			return
 		case "platt-111111":
-			attachment := getPrivateLinkAttachment("platt-111111", "aws-platt", "WAITING_FOR_CONNECTIONS", "aws")
+			attachment := getPrivateLinkAttachment("platt-111111", "aws-platt", "WAITING_FOR_CONNECTIONS", "aws", "us-west-2")
 			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		case "platt-111112":
-			attachment := getPrivateLinkAttachment("platt-111112", "aws-platt", "PROVISIONING", "aws")
+			attachment := getPrivateLinkAttachment("platt-111112", "aws-platt", "PROVISIONING", "aws", "us-west-2")
 			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		case "platt-azure":
-			attachment := getPrivateLinkAttachment("platt-azure", "my-azure-private-link-attachment", "WAITING_FOR_CONNECTIONS", "azure")
+			attachment := getPrivateLinkAttachment("platt-azure", "my-azure-private-link-attachment", "WAITING_FOR_CONNECTIONS", "azure", "us-west-2")
 			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		case "platt-azure-2":
-			attachment := getPrivateLinkAttachment("platt-azure-2", "my-azure-private-link-attachment", "PROVISIONING", "azure")
+			attachment := getPrivateLinkAttachment("platt-azure-2", "my-azure-private-link-attachment", "PROVISIONING", "azure", "us-west-2")
 			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		}
 	}
 }
 
-func getPrivateLinkAttachment(id, name, phase, cloud string) networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment {
+func getPrivateLinkAttachment(id, name, phase, cloud, region string) networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment {
 	attachment := networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment{
 		Id: networkingv1.PtrString(id),
 		Spec: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentSpec{
-			Region:      networkingprivatelinkv1.PtrString("us-west-2"),
+			Region:      networkingprivatelinkv1.PtrString(region),
 			DisplayName: networkingprivatelinkv1.PtrString(name),
 			Environment: &networkingprivatelinkv1.ObjectReference{Id: "env-00000"},
 		},
@@ -1321,6 +1321,8 @@ func getPrivateLinkAttachment(id, name, phase, cloud string) networkingprivateli
 		attachment.Spec.Cloud = networkingprivatelinkv1.PtrString("AWS")
 	case "azure":
 		attachment.Spec.Cloud = networkingprivatelinkv1.PtrString("Azure")
+	case "gcp":
+		attachment.Spec.Cloud = networkingprivatelinkv1.PtrString("GCP")
 	}
 
 	if phase != "PROVISIONING" {
@@ -1342,6 +1344,18 @@ func getPrivateLinkAttachment(id, name, phase, cloud string) networkingprivateli
 					},
 				},
 			}
+		case "gcp":
+			attachment.Status.Cloud = &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentStatusCloudOneOf{
+				NetworkingV1GcpPrivateLinkAttachmentStatus: &networkingprivatelinkv1.NetworkingV1GcpPrivateLinkAttachmentStatus{
+					Kind: "GcpPrivateLinkAttachmentStatus",
+					ServiceAttachments: []networkingprivatelinkv1.NetworkingV1GcpPscServiceAttachment{
+						{
+							Zone:                                   "zone1",
+							PrivateServiceConnectServiceAttachment: "service1",
+						},
+					},
+				},
+			}
 		}
 	}
 
@@ -1359,10 +1373,13 @@ func handleNetworkingPrivateLinkAttachmentList(t *testing.T) http.HandlerFunc {
 		)
 
 		attachments := []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment{
-			getPrivateLinkAttachment("platt-111111", "aws-platt-1", "PROVISIONING", "aws"),
-			getPrivateLinkAttachment("platt-111112", "aws-platt-2", "WAITING_FOR_CONNECTIONS", "aws"),
-			getPrivateLinkAttachment("platt-111113", "aws-platt-3", "WAITING_FOR_CONNECTIONS", "aws"),
-			getPrivateLinkAttachment("platt-azure", "azure-platt-1", "WAITING_FOR_CONNECTIONS", "azure"),
+			getPrivateLinkAttachment("platt-111111", "aws-platt-1", "PROVISIONING", "aws", "us-west-2"),
+			getPrivateLinkAttachment("platt-111112", "aws-platt-2", "WAITING_FOR_CONNECTIONS", "aws", "us-west-2"),
+			getPrivateLinkAttachment("platt-111113", "aws-platt-3", "WAITING_FOR_CONNECTIONS", "aws", "us-west-2"),
+			getPrivateLinkAttachment("platt-azure", "azure-platt-1", "WAITING_FOR_CONNECTIONS", "azure", "us-west-2"),
+			getPrivateLinkAttachment("platt-111114", "aws-platt-1-for-flink", "READY", "aws", "eu-west-1"),
+			getPrivateLinkAttachment("platt-111115", "aws-platt-2-for-flink", "READY", "aws", "eu-west-2"),
+			getPrivateLinkAttachment("platt-111116", "gcp-platt-1-for-flink", "READY", "gcp", "europe-west3-a"),
 		}
 
 		var filteredAttachments []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment
@@ -1393,7 +1410,7 @@ func handleNetworkingPrivateLinkAttachmentUpdate(t *testing.T, id string) http.H
 			err := json.NewDecoder(r.Body).Decode(body)
 			require.NoError(t, err)
 
-			attachment := getPrivateLinkAttachment("platt-111111", body.Spec.GetDisplayName(), "WAITING_FOR_CONNECTIONS", "aws")
+			attachment := getPrivateLinkAttachment("platt-111111", body.Spec.GetDisplayName(), "WAITING_FOR_CONNECTIONS", "aws", "us-west-2")
 			err = json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		}

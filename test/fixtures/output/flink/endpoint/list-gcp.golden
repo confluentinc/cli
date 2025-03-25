@@ -1,3 +1,4 @@
-  Current |       Endpoint        | Cloud |     Region     |  Type   
-----------+-----------------------+-------+----------------+---------
-          | http://127.0.0.1:1026 | GCP   | europe-west3-a | PUBLIC  
+  Current |       Endpoint        | Cloud |     Region     |  Type    
+----------+-----------------------+-------+----------------+----------
+          | http://127.0.0.1:1040 | GCP   | europe-west3-a | PRIVATE  
+          | http://127.0.0.1:1026 | GCP   | europe-west3-a | PUBLIC   

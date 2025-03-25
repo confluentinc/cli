@@ -245,7 +245,9 @@ func (s *CLITestSuite) TestFlinkRegion() {
 		{args: "flink region list -o json", fixture: "flink/region/list-json.golden"},
 		{args: "flink region list --cloud aws", fixture: "flink/region/list-aws.golden"},
 		{args: "flink region list --cloud azure", fixture: "flink/region/list-azure.golden"},
-		{args: "flink region use --cloud azure --region eastus", fixture: "flink/region/use-azure.golden", exitCode: 1},
+		{args: "flink region list --cloud gcp", fixture: "flink/region/list-gcp.golden"},
+		{args: "flink region use --cloud azure --region eastus", fixture: "flink/region/use-azure-fail.golden", exitCode: 1},
+		{args: "flink region use --cloud azure --region centralus", fixture: "flink/region/use-azure.golden"},
 	}
 
 	for _, test := range tests {
@@ -315,7 +317,9 @@ func (s *CLITestSuite) TestFlinkEndpointList() {
 		{args: "flink endpoint list", fixture: "flink/endpoint/list-aws.golden"},
 		{args: "flink region use --cloud gcp --region europe-west3-a", fixture: "flink/region/use-gcp.golden"},
 		{args: "flink endpoint list", fixture: "flink/endpoint/list-gcp.golden"},
-		{args: "flink region use --cloud azure --region eastus", fixture: "flink/region/use-azure.golden", exitCode: 1},
+		{args: "flink region use --cloud azure --region eastus", fixture: "flink/region/use-azure-fail.golden", exitCode: 1},
+		{args: "flink endpoint list", fixture: "flink/endpoint/list-gcp.golden"},
+		{args: "flink region use --cloud azure --region centralus", fixture: "flink/region/use-azure.golden"},
 		{args: "flink endpoint list", fixture: "flink/endpoint/list-azure.golden"},
 	}
 
