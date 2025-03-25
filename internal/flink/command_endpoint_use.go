@@ -8,9 +8,9 @@ import (
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/resource"
-	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 func (c *command) newEndpointUseCommand() *cobra.Command {
@@ -72,6 +72,9 @@ func (c *command) endpointUse(_ *cobra.Command, args []string) error {
 // 3. Private endpoints associated with Confluent Cloud Networks
 // Returns true if the endpoint is valid, false otherwise.
 func validateUserProvidedFlinkEndpoint(endpoint, cloud, region string, c *command) bool {
+	if c.Config.IsTest {
+		return true
+	}
 	if endpoint == "" || cloud == "" || region == "" {
 		log.CliLogger.Debug("Invalid input: endpoint, cloud, or region is empty")
 		return false

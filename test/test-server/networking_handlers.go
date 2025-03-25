@@ -508,9 +508,14 @@ func getNetworkList(filterName, filterCloud, filterRegion, filterCidr, filterPha
 	awsNetwork.Metadata = &networkingv1.ObjectMeta{CreatedAt: networkingv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))}
 	awsNetwork3.Metadata = &networkingv1.ObjectMeta{CreatedAt: networkingv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 1, time.UTC))}
 
+	// Flink CCN endpoint testing with mocking endpoint suffix
+	awsNetwork4 := getAwsNetwork("n-abcde6", "prod-aws-eu-west1", "READY", []string{"TRANSITGATEWAY", "PEERING"})
+	awsNetwork4.Spec.SetRegion("eu-west-1")
+	awsNetwork4.Status.SetEndpointSuffix("-n-abcde6.eu-west-1.aws.confluent.cloud")
+
 	networkList := networkingv1.NetworkingV1NetworkList{
 		Data: []networkingv1.NetworkingV1Network{
-			gcpNetwork, azureNetwork, awsNetwork, awsNetwork2, awsNetwork3,
+			gcpNetwork, azureNetwork, awsNetwork, awsNetwork2, awsNetwork3, awsNetwork4,
 		},
 	}
 	networkList.Data = filterNetworkList(networkList.Data, filterName, filterCloud, filterRegion, filterCidr, filterPhase, filterConnection)

@@ -314,7 +314,7 @@ func (s *CLITestSuite) TestFlinkEndpointList() {
 		{args: "flink region unset", fixture: "flink/region/unset.golden"},
 		{args: "flink endpoint list", fixture: "flink/endpoint/list-fail.golden", exitCode: 1},
 		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
-		{args: "flink endpoint list", fixture: "flink/endpoint/list-aws.golden"},
+		{args: "flink endpoint list", fixture: "flink/endpoint/list-aws-with-ccn.golden"},
 		{args: "flink region use --cloud gcp --region europe-west3-a", fixture: "flink/region/use-gcp.golden"},
 		{args: "flink endpoint list", fixture: "flink/endpoint/list-gcp.golden"},
 		{args: "flink region use --cloud azure --region eastus", fixture: "flink/region/use-azure-fail.golden", exitCode: 1},
@@ -331,20 +331,19 @@ func (s *CLITestSuite) TestFlinkEndpointList() {
 }
 
 func (s *CLITestSuite) TestFlinkEndpointUse() {
-	tests := []CLITest{}
+	tests := []CLITest{
+		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
+		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
+		{args: "flink endpoint list", fixture: "flink/endpoint/list-aws-after-use.golden"},
+		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/describe.golden"},
+		{args: "flink endpoint use http://127.0.0.1:1040", fixture: "flink/endpoint/use-private.golden"},
+		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/describe-failure.golden", exitCode: 1},
+		{args: "flink endpoint unset", fixture: "flink/endpoint/unset.golden"},
+	}
 
 	for _, test := range tests {
 		test.login = "cloud"
 		test.workflow = true
-		s.runIntegrationTest(test)
-	}
-}
-
-func (s *CLITestSuite) TestFlinkEndpointUnset() {
-	tests := []CLITest{}
-
-	for _, test := range tests {
-		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
 }
