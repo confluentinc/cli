@@ -9,7 +9,7 @@
 | Storage              | Infinite                  |
 | Cloud                | aws                       |
 | Region               | us-west-2                 |
-| Zone                 | use1-az3                  |
+| Zones                | auto-selected             |
 | Availability         | single-zone               |
 | Status               | UP                        |
 | Endpoint             | SASL_SSL://kafka-endpoint |

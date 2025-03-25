@@ -46,7 +46,11 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: "Create a new dedicated cluster that uses a customer-managed encryption key in AWS:",
-				Code: "confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --zone usw2-az1 --type dedicated --cku 1 --byok cck-a123z --network n-abc123",
+				Code: "confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --type dedicated --cku 1 --byok cck-a123z",
+			},
+			examples.Example{
+				Text: "Create a new dedicated cluster with specified zone selection in AWS:",
+				Code: "confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --zone usw2-az1 --type dedicated --cku 1 --network n-abc123",
 			},
 			examples.Example{
 				Text: "Create a new Freight cluster that uses a customer-managed encryption key in AWS:",
@@ -63,7 +67,7 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddAvailabilityFlag(cmd)
 	pcmd.AddTypeFlag(cmd)
 	cmd.Flags().Int("cku", 0, `Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type "dedicated".`)
-	cmd.Flags().String("zone", "", `Specify zone selection for single zone clusters. Optional for private network Kafka clusters of type "dedicated" with the input of a Network ID.`)
+	cmd.Flags().String("zone", "", `Optional flag to specify zone selection for "dedicated" cluster type with "SINGLE_ZONE" availability only.`)
 	pcmd.AddByokKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddNetworkFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -155,8 +159,8 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		if clusterType != skuDedicated || availability != "SINGLE_ZONE" {
-			return errors.NewErrorWithSuggestions("the `--zone` flag can only be used when creating a single zone dedicated Kafka cluster", "Specify a dedicated cluster with `--zone`.")
+		if clusterType != skuDedicated || availability != "SINGLE_ZONE" || !cmd.Flags().Changed("network") {
+			return errors.NewErrorWithSuggestions("the `--zone` flag can only be used when creating a single zone dedicated Kafka cluster on private network", "Specify a dedicated cluster with `--zone` and `--network`.")
 		}
 
 		createCluster.Spec.GetConfig().CmkV2Dedicated.SetZones([]string{zone})

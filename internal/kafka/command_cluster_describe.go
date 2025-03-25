@@ -31,7 +31,7 @@ type describeStruct struct {
 	Storage            string   `human:"Storage" serialized:"storage"`
 	Cloud              string   `human:"Cloud" serialized:"cloud"`
 	Region             string   `human:"Region" serialized:"region"`
-	Zone               []string `human:"Zone,omitempty" serialized:"zone,omitempty"`
+	Zones              []string `human:"Zones,omitempty" serialized:"zones,omitempty"`
 	Availability       string   `human:"Availability" serialized:"availability"`
 	Network            string   `human:"Network,omitempty" serialized:"network,omitempty"`
 	Status             string   `human:"Status" serialized:"status"`
@@ -139,7 +139,7 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Con
 		Endpoint:           cluster.Spec.GetKafkaBootstrapEndpoint(),
 		ByokKeyId:          getCmkByokId(cluster),
 		EncryptionKeyId:    getCmkEncryptionKey(cluster),
-		Zone:               getCmkZones(cluster),
+		Zones:              getCmkZones(cluster),
 		RestEndpoint:       cluster.Spec.GetHttpEndpoint(),
 	}
 }
@@ -163,7 +163,7 @@ func getKafkaClusterDescribeFields(cluster *cmkv2.CmkV2Cluster, basicFields []st
 			describeFields = append(describeFields, "EncryptionKeyId")
 		}
 		if len(cluster.GetSpec().Config.CmkV2Dedicated.GetZones()) != 0 {
-			describeFields = append(describeFields, "Zone")
+			describeFields = append(describeFields, "Zones")
 		}
 		if cluster.Spec.Byok != nil {
 			describeFields = append(describeFields, "ByokId")
