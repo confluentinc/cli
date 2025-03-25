@@ -39,6 +39,6 @@ func (c *command) endpointUnset(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Printf(c.Config.EnableColor, errors.UnsetResourceMsg, resource.FlinkComputePool, endpointToUnset)
+	output.Printf(c.Config.EnableColor, errors.UnsetResourceMsg, resource.FlinkEndpoint, endpointToUnset)
 	return nil
 }

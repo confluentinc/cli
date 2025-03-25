@@ -1,1 +1,2 @@
+Command "use" is deprecated, please run "confluent flink endpoint list" and "confluent flink endpoint use" to specify the Flink client endpoint
 Using Flink connectivity type "public".

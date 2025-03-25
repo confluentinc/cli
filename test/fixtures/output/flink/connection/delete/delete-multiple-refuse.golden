@@ -1,2 +1,1 @@
-No Flink endpoint is specified, defaulting to public endpoint: `http://127.0.0.1:1026`
 Are you sure you want to delete Flink connections "my-connection" and "my-connection-1"? (y/n): 
