@@ -49,6 +49,10 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 				Code: "confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --type dedicated --cku 1 --byok cck-a123z",
 			},
 			examples.Example{
+				Text: "Create a new dedicated cluster with specified zone selection `usw2-az1` in AWS:",
+				Code: "confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --zone usw2-az1 --type dedicated --cku 1 --network n-abc123",
+			},
+			examples.Example{
 				Text: "Create a new Freight cluster that uses a customer-managed encryption key in AWS:",
 				Code: "confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --type freight --cku 1 --byok cck-a123z --availability high",
 			},
@@ -63,6 +67,7 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddAvailabilityFlag(cmd)
 	pcmd.AddTypeFlag(cmd)
 	cmd.Flags().Int("cku", 0, `Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type "dedicated".`)
+	cmd.Flags().String("zone", "", `Optional flag to specify zone selection for "dedicated" cluster type with "SINGLE_ZONE" availability only.`)
 	pcmd.AddByokKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddNetworkFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -147,6 +152,18 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf(errors.CkuMoreThanZeroErrorMsg)
 		}
 		setClusterConfigCku(&createCluster, int32(cku))
+	}
+
+	if cmd.Flags().Changed("zone") {
+		zone, err := cmd.Flags().GetString("zone")
+		if err != nil {
+			return err
+		}
+		if clusterType != skuDedicated || availability != "SINGLE_ZONE" || !cmd.Flags().Changed("network") {
+			return errors.NewErrorWithSuggestions("the `--zone` flag can only be used when creating a single zone dedicated Kafka cluster on private network", "Specify a dedicated cluster with `--zone` and `--network` flags.")
+		}
+
+		createCluster.Spec.GetConfig().CmkV2Dedicated.SetZones([]string{zone})
 	}
 
 	if cmd.Flags().Changed("network") {
