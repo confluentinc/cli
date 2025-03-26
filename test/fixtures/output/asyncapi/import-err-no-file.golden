@@ -8,9 +8,10 @@ Import an AsyncAPI specification file to populate an existing Kafka cluster and 
   $ confluent asyncapi import --file spec.yaml
 
 Flags:
-      --file string            REQUIRED: Input filename.
-      --overwrite              Overwrite existing topics with the same name.
-      --kafka-api-key string   Kafka cluster API key.
+      --file string                       REQUIRED: Input filename.
+      --overwrite                         Overwrite existing topics with the same name.
+      --kafka-api-key string              Kafka cluster API key.
+      --schema-registry-endpoint string   The URL of the Schema Registry cluster.
 
 Global Flags:
   -h, --help            Show help for this command.
