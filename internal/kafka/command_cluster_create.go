@@ -49,7 +49,7 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 				Code: "confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --type dedicated --cku 1 --byok cck-a123z",
 			},
 			examples.Example{
-				Text: "Create a new dedicated cluster with specified zone selection in AWS:",
+				Text: "Create a new dedicated cluster with specified zone selection `usw2-az1` in AWS:",
 				Code: "confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --zone usw2-az1 --type dedicated --cku 1 --network n-abc123",
 			},
 			examples.Example{
@@ -160,7 +160,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		if clusterType != skuDedicated || availability != "SINGLE_ZONE" || !cmd.Flags().Changed("network") {
-			return errors.NewErrorWithSuggestions("the `--zone` flag can only be used when creating a single zone dedicated Kafka cluster on private network", "Specify a dedicated cluster with `--zone` and `--network`.")
+			return errors.NewErrorWithSuggestions("the `--zone` flag can only be used when creating a single zone dedicated Kafka cluster on private network", "Specify a dedicated cluster with `--zone` and `--network` flags.")
 		}
 
 		createCluster.Spec.GetConfig().CmkV2Dedicated.SetZones([]string{zone})

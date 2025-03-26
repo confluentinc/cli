@@ -49,7 +49,7 @@ func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 				require.NoError(t, err)
 				return
 			}
-			if zones == nil || len(zones) == 0 {
+			if len(zones) == 0 {
 				zones = []string{"auto-selected"}
 			}
 
