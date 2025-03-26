@@ -27,6 +27,8 @@ const (
 	ConfluentPlatformPassword                 = "CONFLUENT_PLATFORM_PASSWORD"
 	ConfluentPlatformMDSURL                   = "CONFLUENT_PLATFORM_MDS_URL"
 	ConfluentPlatformCertificateAuthorityPath = "CONFLUENT_PLATFORM_CERTIFICATE_AUTHORITY_PATH"
+	ConfluentPlatformClientCertPath           = "CONFLUENT_PLATFORM_CLIENT_CERT_PATH"
+	ConfluentPlatformClientKeyPath            = "CONFLUENT_PLATFORM_CLIENT_KEY_PATH"
 	ConfluentPlatformSSO                      = "CONFLUENT_PLATFORM_SSO"
 
 	// Confluent Platform CMF environment variables
@@ -61,9 +63,10 @@ func PersistLogout(config *config.Config) error {
 }
 
 func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials, url, token, refreshToken, caCertPath string, save bool) error {
-	if credentials.IsSSO {
-		// on-prem SSO login does not use a username or email
-		// the sub claim is used in place of a username since it is a unique identifier
+	if credentials.IsSSO || credentials.IsCertificateOnly {
+		// on-prem SSO or mTLS certificate only login does not use a username or email
+		// For SSO, the sub claim is used in place of a username since it is a unique identifier
+		// For mTLS, the sub claim is the certificate SN, and we use the CN field as the username
 		subClaim, err := jwt.GetClaim(token, "sub")
 		if err != nil {
 			return err
