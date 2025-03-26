@@ -92,7 +92,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		principal = s.appOptions.GetContext().GetUser().GetResourceId()
 	}
 
-	utils.OutputInfof("Statement name: %s\nSubmitting statement...", statementName)
+	utils.OutputInfof("Creating statement: %s\n", statementName)
 	statementObj, err := s.authenticatedGatewayClient().CreateStatement(
 		createSqlV1Statement(statement, statementName, computePoolId, properties),
 		principal,
