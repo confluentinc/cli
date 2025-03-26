@@ -78,8 +78,8 @@ func (s ProcessedStatement) printStatusMessageOfNonLocalStatement() {
 	}
 
 	if s.StatusDetail != "" {
-		utils.OutputInfof(fmt.Sprintf("Details: "))
-		utils.OutputWarn(fmt.Sprintf("%s", s.StatusDetail))
+		utils.OutputInfof("Details: ")
+		utils.OutputWarn(s.StatusDetail)
 	}
 }
 
@@ -93,8 +93,8 @@ func (s ProcessedStatement) PrintOutputDryRunStatement() {
 			" your statement with \"set 'sql.dry-run' = 'false';\"")
 	} else {
 		utils.OutputErr(fmt.Sprintf("Dry run statement execution resulted in unexpected status.\nStatus: %s", s.Status))
-		utils.OutputInfof(fmt.Sprintf("Details: "))
-		utils.OutputErr(fmt.Sprintf("%s", s.StatusDetail))
+		utils.OutputInfof("Details: ")
+		utils.OutputErr(s.StatusDetail)
 	}
 }
 
