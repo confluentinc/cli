@@ -28,6 +28,8 @@ func (c *command) newRegionUnsetCommand() *cobra.Command {
 func (c *command) regionUnset(_ *cobra.Command, _ []string) error {
 	regionToUnset := c.Context.GetCurrentFlinkRegion()
 	cloudToUnset := c.Context.GetCurrentFlinkCloudProvider()
+	output.Println(c.Config.EnableColor, "Unset the current Flink region")
+
 	if cloudToUnset == "" && regionToUnset == "" {
 		return nil
 	}
@@ -41,6 +43,5 @@ func (c *command) regionUnset(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Println(c.Config.EnableColor, "Unset the current Flink region")
 	return nil
 }
