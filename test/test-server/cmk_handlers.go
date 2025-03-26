@@ -287,8 +287,23 @@ func handleCmkKafkaClusterUpdateRequest(t *testing.T) http.HandlerFunc {
 			var req cmkv2.CmkV2Cluster
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
+			req.Id = cmkv2.PtrString("lkc-update")
+
+			// Handle type upgrade case
+			if req.Spec.Config != nil && req.Spec.Config.CmkV2Standard != nil {
+				cluster := getCmkBasicDescribeCluster(req.GetId(), req.Spec.GetDisplayName())
+				cluster.Spec.Config = &cmkv2.CmkV2ClusterSpecConfigOneOf{
+					CmkV2Standard: &cmkv2.CmkV2Standard{
+						Kind: "Standard",
+					},
+				}
+				err := json.NewEncoder(w).Encode(cluster)
+				require.NoError(t, err)
+				return
+			}
+
+			// Handle other update cases
 			if req.Spec.Config == nil || req.Spec.Config.CmkV2Dedicated.Cku == 0 {
-				req.Id = cmkv2.PtrString("lkc-update")
 				cluster := getCmkBasicDescribeCluster(req.GetId(), req.Spec.GetDisplayName())
 				err := json.NewEncoder(w).Encode(cluster)
 				require.NoError(t, err)
