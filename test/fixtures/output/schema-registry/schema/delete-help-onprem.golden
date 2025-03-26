@@ -14,6 +14,8 @@ Flags:
       --permanent                           Permanently delete the schema.
       --context string                      CLI context name.
       --certificate-authority-path string   File or directory path to Certificate Authority certificates to authenticate the Schema Registry client.
+      --client-cert-path string             File or directory path to client certificate to authenticate the Schema Registry client.
+      --client-key-path string              File or directory path to client key to authenticate the Schema Registry client.
       --schema-registry-endpoint string     The URL of the Schema Registry cluster.
       --force                               Skip the deletion confirmation prompt.
 
