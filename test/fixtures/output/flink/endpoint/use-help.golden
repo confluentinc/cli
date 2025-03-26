@@ -1,4 +1,4 @@
-Use a Flink endpoint as active endpoint for all subsequent Flink dataplane commands in current environment, such as `flink connection`, `flink statement` and `flink shell`
+Use a Flink endpoint as active endpoint for all subsequent Flink dataplane commands in current environment, such as `flink connection`, `flink statement` and `flink shell`.
 
 Usage:
   confluent flink endpoint use [flags]

@@ -45,7 +45,7 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	region := c.Context.GetCurrentFlinkRegion()
 	if cloud == "" || region == "" {
 		return errors.NewErrorWithSuggestions(
-			fmt.Sprintf(`Current Flink cloud provider or region is empty`),
+			"Current Flink cloud provider or region is empty",
 			"Run `confluent flink region use --cloud <cloud> --region <region>` to set the Flink cloud provider and region first.",
 		)
 	}
@@ -57,8 +57,11 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-	var results []*flinkEndpointOut
 	flinkRegions, err := c.V2Client.ListFlinkRegions(cloud, region)
+	if err != nil {
+		return fmt.Errorf("unable to list Flink endpoint, failed to list Flink regions: %w", err)
+	}
+	results := make([]*flinkEndpointOut, len(flinkRegions)*2)
 
 	// 1 - List all the public endpoints based optionally on cloud(upper case) and region(lower case)
 	for _, flinkRegion := range flinkRegions {
@@ -75,8 +78,9 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	// Note the `cloud` and `region` parameters have to be `nil` instead of empty slice in case of no filter
 	platts, err := c.V2Client.ListPrivateLinkAttachments(environmentId, nil, nil, nil, []string{"READY"})
 	if err != nil {
-		return err
+		return fmt.Errorf("unable to list Flink endpoint, failed to list private link attachments: %w", err)
 	}
+
 	filterKeyMap := buildCloudRegionKeyFilterMapFromPrivateLinkAttachments(platts)
 
 	for _, flinkRegion := range flinkRegions {
@@ -99,6 +103,10 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	// 3 - List all the CCN endpoint with the list of "READY" network domains
 	// Note the cloud and region have to be empty slice instead of `nil` in case of no filter
 	networks, err := c.V2Client.ListNetworks(environmentId, nil, []string{cloud}, []string{region}, nil, []string{"READY"}, nil)
+	if err != nil {
+		return fmt.Errorf("unable to list Flink endpoint, failed to list networks: %w", err)
+	}
+
 	for _, network := range networks {
 		suffix := network.Status.GetEndpointSuffix()
 		endpoint := fmt.Sprintf("https://flink%s", suffix)

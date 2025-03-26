@@ -17,7 +17,7 @@ func (c *command) newEndpointUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "use",
 		Short: "Use a Flink endpoint.",
-		Long:  "Use a Flink endpoint as active endpoint for all subsequent Flink dataplane commands in current environment, such as `flink connection`, `flink statement` and `flink shell`",
+		Long:  "Use a Flink endpoint as active endpoint for all subsequent Flink dataplane commands in current environment, such as `flink connection`, `flink statement` and `flink shell`.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.endpointUse,
 		Example: examples.BuildExampleString(
@@ -35,7 +35,7 @@ func (c *command) endpointUse(_ *cobra.Command, args []string) error {
 	cloud := c.Context.GetCurrentFlinkCloudProvider()
 	if cloud == "" {
 		return errors.NewErrorWithSuggestions(
-			fmt.Sprintf(`Current Flink cloud provider is empty`),
+			"Current Flink cloud provider is empty",
 			"Please run `confluent flink region use --cloud <cloud> --region <region>` to set the Flink cloud provider first.",
 		)
 	}
@@ -43,14 +43,14 @@ func (c *command) endpointUse(_ *cobra.Command, args []string) error {
 	region := c.Context.GetCurrentFlinkRegion()
 	if region == "" {
 		return errors.NewErrorWithSuggestions(
-			fmt.Sprintf(`Current Flink region is empty`),
+			"Current Flink region is empty",
 			"Please run `confluent flink region use --cloud <cloud> --region <region>` to set the Flink region first.",
 		)
 	}
 
 	endpoint := args[0]
 	if valid := validateUserProvidedFlinkEndpoint(endpoint, cloud, region, c); !valid {
-		suggestion := fmt.Sprintf(`Please run "confluent flink endpoint list" to see all available Flink endpoints, or "confluent flink region use" to switch to a different cloud or region.`)
+		suggestion := `Please run "confluent flink endpoint list" to see all available Flink endpoints, or "confluent flink region use" to switch to a different cloud or region.`
 		return errors.NewErrorWithSuggestions(fmt.Sprintf("Flink endpoint %q is invalid for cloud = %q and region = %q", endpoint, cloud, region), suggestion)
 	}
 
