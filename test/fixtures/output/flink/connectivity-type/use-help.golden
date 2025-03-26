@@ -1,4 +1,4 @@
-Select a Flink connectivity type for the current environment as "public" or "private". If unspecified, the CLI will default to the connectivity type that was set at the organization level.
+Select a Flink connectivity type for the current environment as "public" or "private". If unspecified, the CLI will default to public connectivity type.
 
 Usage:
   confluent flink connectivity-type use <region-access> [flags]
