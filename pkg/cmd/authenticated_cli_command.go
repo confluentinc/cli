@@ -18,6 +18,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/schemaregistry"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
@@ -234,15 +235,23 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			if err != nil {
 				return nil, err
 			}
+			clientCertificatePath, err := cmd.Flags().GetString("client-cert-path")
+			if err != nil {
+				return nil, err
+			}
+			clientKeyPath, err := cmd.Flags().GetString("client-key-path")
+			if err != nil {
+				return nil, err
+			}
 			if certificateAuthorityPath == "" {
 				certificateAuthorityPath = os.Getenv(auth.ConfluentPlatformCertificateAuthorityPath)
 			}
 			if certificateAuthorityPath != "" {
-				caClient, err := utils.GetCAClient(certificateAuthorityPath)
+				client, err := utils.GetCAAndClientCertClient(certificateAuthorityPath, clientCertificatePath, clientKeyPath)
 				if err != nil {
 					return nil, err
 				}
-				configuration.HTTPClient = caClient
+				configuration.HTTPClient = client
 			}
 		} else if c.Config.IsCloudLogin() {
 			clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
@@ -304,4 +313,61 @@ func (c *AuthenticatedCLICommand) GetCurrentSchemaRegistryClusterIdAndEndpoint()
 	}
 
 	return cluster.GetId(), endpoint, nil
+}
+
+func (c *AuthenticatedCLICommand) GetMDSClient(cmd *cobra.Command) (*mdsv1.APIClient, error) {
+	if c.MDSClient == nil {
+		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+		if err != nil {
+			return nil, err
+		}
+
+		clientCertPath, clientKeyPath, err := GetClientCertAndKeyPaths(cmd)
+		if err != nil {
+			return nil, err
+		}
+
+		configuration := mdsv1.NewConfiguration()
+		configuration.HTTPClient = utils.DefaultClient()
+		configuration.Debug = unsafeTrace
+		if c.Context == nil {
+			c.MDSClient = mdsv1.NewAPIClient(configuration)
+		}
+		configuration.BasePath = c.Context.GetPlatformServer()
+		configuration.UserAgent = c.Config.Version.UserAgent
+		if c.Context.Platform.CaCertPath == "" {
+			c.MDSClient = mdsv1.NewAPIClient(configuration)
+		}
+
+		caCertPath := c.Context.Platform.CaCertPath
+		// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
+		// be a --certificate-authority-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
+		client, err := utils.CustomCAAndClientCertClient(caCertPath, clientCertPath, clientKeyPath)
+		if err != nil {
+			log.CliLogger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --certificate-authority-path flag.", caCertPath, err.Error())
+		} else {
+			configuration.HTTPClient = client
+		}
+		c.MDSClient = mdsv1.NewAPIClient(configuration)
+	}
+
+	return c.MDSClient, nil
+}
+
+func GetClientCertAndKeyPaths(cmd *cobra.Command) (string, string, error) {
+	// Order of precedence: flags > env vars
+	clientCertPath, err := cmd.Flags().GetString("client-cert-path")
+	if err != nil {
+		return "", "", err
+	}
+	if clientCertPath != "" {
+		clientKeyPath, err := cmd.Flags().GetString("client-key-path")
+		if err != nil {
+			return "", "", err
+		}
+
+		return clientCertPath, clientKeyPath, nil
+	}
+
+	return os.Getenv(auth.ConfluentPlatformClientCertPath), os.Getenv(auth.ConfluentPlatformClientKeyPath), nil
 }
