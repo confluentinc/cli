@@ -32,6 +32,9 @@ type LoginCredentialsManager struct {
 	lockGetOnPremSsoCredentialsFromConfig sync.Mutex
 	GetOnPremSsoCredentialsFromConfigFunc func(arg0 *github_com_confluentinc_cli_v4_pkg_config.Config, arg1 bool) func() (*github_com_confluentinc_cli_v4_pkg_auth.Credentials, error)
 
+	lockGetOnPremCertOnlyCredentials sync.Mutex
+	GetOnPremCertOnlyCredentialsFunc func(certificateOnly bool) func() (*github_com_confluentinc_cli_v4_pkg_auth.Credentials, error)
+
 	lockGetCloudCredentialsFromPrompt sync.Mutex
 	GetCloudCredentialsFromPromptFunc func(arg0 string) func() (*github_com_confluentinc_cli_v4_pkg_auth.Credentials, error)
 
@@ -72,6 +75,9 @@ type LoginCredentialsManager struct {
 		GetOnPremSsoCredentialsFromConfig []struct {
 			Arg0 *github_com_confluentinc_cli_v4_pkg_config.Config
 			Arg1 bool
+		}
+		GetOnPremCertOnlyCredentials []struct {
+			CertificateOnly bool
 		}
 		GetCloudCredentialsFromPrompt []struct {
 			Arg0 string
@@ -337,6 +343,44 @@ func (m *LoginCredentialsManager) GetOnPremSsoCredentialsFromConfigCalls() []str
 	return m.calls.GetOnPremSsoCredentialsFromConfig
 }
 
+// GetOnPremCertOnlyCredentials mocks base method by wrapping the associated func.
+func (m *LoginCredentialsManager) GetOnPremCertOnlyCredentials(certificateOnly bool) func() (*github_com_confluentinc_cli_v4_pkg_auth.Credentials, error) {
+	m.lockGetOnPremCertOnlyCredentials.Lock()
+	defer m.lockGetOnPremCertOnlyCredentials.Unlock()
+
+	if m.GetOnPremCertOnlyCredentialsFunc == nil {
+		panic("mocker: LoginCredentialsManager.GetOnPremCertOnlyCredentialsFunc is nil but LoginCredentialsManager.GetOnPremCertOnlyCredentials was called.")
+	}
+
+	call := struct {
+		CertificateOnly bool
+	}{
+		CertificateOnly: certificateOnly,
+	}
+
+	m.calls.GetOnPremCertOnlyCredentials = append(m.calls.GetOnPremCertOnlyCredentials, call)
+
+	return m.GetOnPremCertOnlyCredentialsFunc(certificateOnly)
+}
+
+// GetOnPremCertOnlyCredentialsCalled returns true if GetOnPremCertOnlyCredentials was called at least once.
+func (m *LoginCredentialsManager) GetOnPremCertOnlyCredentialsCalled() bool {
+	m.lockGetOnPremCertOnlyCredentials.Lock()
+	defer m.lockGetOnPremCertOnlyCredentials.Unlock()
+
+	return len(m.calls.GetOnPremCertOnlyCredentials) > 0
+}
+
+// GetOnPremCertOnlyCredentialsCalls returns the calls made to GetOnPremCertOnlyCredentials.
+func (m *LoginCredentialsManager) GetOnPremCertOnlyCredentialsCalls() []struct {
+	CertificateOnly bool
+} {
+	m.lockGetOnPremCertOnlyCredentials.Lock()
+	defer m.lockGetOnPremCertOnlyCredentials.Unlock()
+
+	return m.calls.GetOnPremCertOnlyCredentials
+}
+
 // GetCloudCredentialsFromPrompt mocks base method by wrapping the associated func.
 func (m *LoginCredentialsManager) GetCloudCredentialsFromPrompt(arg0 string) func() (*github_com_confluentinc_cli_v4_pkg_auth.Credentials, error) {
 	m.lockGetCloudCredentialsFromPrompt.Lock()
@@ -539,6 +583,9 @@ func (m *LoginCredentialsManager) Reset() {
 	m.lockGetOnPremSsoCredentialsFromConfig.Lock()
 	m.calls.GetOnPremSsoCredentialsFromConfig = nil
 	m.lockGetOnPremSsoCredentialsFromConfig.Unlock()
+	m.lockGetOnPremCertOnlyCredentials.Lock()
+	m.calls.GetOnPremCertOnlyCredentials = nil
+	m.lockGetOnPremCertOnlyCredentials.Unlock()
 	m.lockGetCloudCredentialsFromPrompt.Lock()
 	m.calls.GetCloudCredentialsFromPrompt = nil
 	m.lockGetCloudCredentialsFromPrompt.Unlock()
