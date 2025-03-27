@@ -484,7 +484,7 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags, cmd *
 	} else if c.Context.GetSchemaRegistryEndpoint() != "" {
 		details.schemaRegistryUrl = c.Context.GetSchemaRegistryEndpoint()
 	} else {
-		endpoint, err := c.GetValidSchemaRegistryClusterIdAndEndpoint(cmd, clusters[0])
+		endpoint, err := c.GetValidSchemaRegistryClusterEndpoint(cmd, clusters[0])
 		if err != nil {
 			return err
 		}

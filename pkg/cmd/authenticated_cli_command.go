@@ -262,7 +262,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 					return nil, schemaregistry.ErrNotEnabled
 				}
 				for _, urlPrivate := range clusters[0].Spec.PrivateNetworkingConfig.GetRegionalEndpoints() {
-					isCloudEndpointAutoFound = c.validateEndpointAndSetClient(clusters[0], schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration)
+					isCloudEndpointAutoFound = c.validateSchemaRegistryEndpointAndSetClient(clusters[0], schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration)
 					if isCloudEndpointAutoFound {
 						err := c.saveToConfig(urlPrivate)
 						if err != nil {
@@ -272,7 +272,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 					}
 				}
 				if !isCloudEndpointAutoFound {
-					isCloudEndpointAutoFound = c.validateEndpointAndSetClient(clusters[0], schemaRegistryApiKey, schemaRegistryApiSecret, clusters[0].Spec.GetHttpEndpoint(), *configuration)
+					isCloudEndpointAutoFound = c.validateSchemaRegistryEndpointAndSetClient(clusters[0], schemaRegistryApiKey, schemaRegistryApiSecret, clusters[0].Spec.GetHttpEndpoint(), *configuration)
 					if isCloudEndpointAutoFound {
 						err := c.saveToConfig(clusters[0].Spec.GetHttpEndpoint())
 						if err != nil {
@@ -319,6 +319,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				)
 			}
 		}
+
 		if !isCloudEndpointAutoFound {
 			if schemaRegistryApiKey != "" && schemaRegistryApiSecret != "" {
 				apiKey := srsdk.BasicAuth{
@@ -338,7 +339,8 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 
 	return c.schemaRegistryClient, nil
 }
-func (c *AuthenticatedCLICommand) validateEndpointAndSetClient(cluster srcmv3.SrcmV3Cluster, schemaRegistryApiKey, schemaRegistryApiSecret, url string, configuration srsdk.Configuration) bool {
+
+func (c *AuthenticatedCLICommand) validateSchemaRegistryEndpointAndSetClient(cluster srcmv3.SrcmV3Cluster, schemaRegistryApiKey, schemaRegistryApiSecret, url string, configuration srsdk.Configuration) bool {
 	configuration.Servers = srsdk.ServerConfigurations{{URL: url}}
 	configuration.DefaultHeader = map[string]string{"target-sr-cluster": cluster.GetId()}
 
@@ -373,7 +375,7 @@ func (c *AuthenticatedCLICommand) GetCurrentSchemaRegistryClusterIdAndEndpoint(c
 	if c.Context.GetSchemaRegistryEndpoint() != "" {
 		endpoint = c.Context.GetSchemaRegistryEndpoint()
 	} else {
-		endpoint, err = c.GetValidSchemaRegistryClusterIdAndEndpoint(cmd, cluster)
+		endpoint, err = c.GetValidSchemaRegistryClusterEndpoint(cmd, cluster)
 		if err != nil {
 			return "", "", err
 		}
@@ -381,7 +383,7 @@ func (c *AuthenticatedCLICommand) GetCurrentSchemaRegistryClusterIdAndEndpoint(c
 	return cluster.GetId(), endpoint, nil
 }
 
-func (c *AuthenticatedCLICommand) GetValidSchemaRegistryClusterIdAndEndpoint(cmd *cobra.Command, cluster srcmv3.SrcmV3Cluster) (string, error) {
+func (c *AuthenticatedCLICommand) GetValidSchemaRegistryClusterEndpoint(cmd *cobra.Command, cluster srcmv3.SrcmV3Cluster) (string, error) {
 	unsafeTrace, _ := cmd.Flags().GetBool("unsafe-trace")
 	configuration := srsdk.NewConfiguration()
 	configuration.UserAgent = c.Config.Version.UserAgent
@@ -393,7 +395,7 @@ func (c *AuthenticatedCLICommand) GetValidSchemaRegistryClusterIdAndEndpoint(cmd
 	isCloudEndpointAutoFound := false
 	var endpoint string
 	for _, urlPrivate := range cluster.Spec.PrivateNetworkingConfig.GetRegionalEndpoints() {
-		isCloudEndpointAutoFound = c.validateEndpointAndSetClient(cluster, schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration)
+		isCloudEndpointAutoFound = c.validateSchemaRegistryEndpointAndSetClient(cluster, schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration)
 		if isCloudEndpointAutoFound {
 			endpoint = urlPrivate
 			err := c.saveToConfig(urlPrivate)
@@ -404,7 +406,7 @@ func (c *AuthenticatedCLICommand) GetValidSchemaRegistryClusterIdAndEndpoint(cmd
 		}
 	}
 	if !isCloudEndpointAutoFound {
-		isCloudEndpointAutoFound = c.validateEndpointAndSetClient(cluster, schemaRegistryApiKey, schemaRegistryApiSecret, cluster.Spec.GetHttpEndpoint(), *configuration)
+		isCloudEndpointAutoFound = c.validateSchemaRegistryEndpointAndSetClient(cluster, schemaRegistryApiKey, schemaRegistryApiSecret, cluster.Spec.GetHttpEndpoint(), *configuration)
 		if isCloudEndpointAutoFound {
 			endpoint = cluster.Spec.GetHttpEndpoint()
 			err := c.saveToConfig(cluster.Spec.GetHttpEndpoint())
