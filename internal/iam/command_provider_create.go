@@ -27,9 +27,9 @@ func (c *identityProviderCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("jwks-uri", "", "JWKS (JSON Web Key Set) URI of the identity provider.")
 	cmd.Flags().String("description", "", "Description of the identity provider.")
 	cmd.Flags().String("identity-claim", "", "The JSON Web Token (JWT) claim to extract the authenticating identity to Confluent resources from\n"+
-		"[Registered Claim Names](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1). This appears\n          "+
-		"in audit log records. Note: if the client specifies mapping to one identity pool ID, the identity\n          "+
-		"claim configured with that pool will be used instead..")
+		"[Registered Claim Names](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1). This appears\n"+
+		"in audit log records. Note: if the client specifies mapping to one identity pool ID, the identity\n"+
+		"claim configured with that pool will be used instead.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
