@@ -110,7 +110,7 @@ func printWarnings(cmd *cobra.Command, depth int) []string {
 	}
 
 	if cmd.CommandPath() == "confluent schema-registry cluster describe" {
-		note := "Please note that `Private Endpoint URL` output field is deprecated. Please use the `Private Regional Endpoint URLs` field instead, which supersedes the `Private Endpoint URL` field."
+		note := "The `Private Endpoint URL` output field is deprecated. Please use the `Private Regional Endpoint URLs` field instead, which supersedes the `Private Endpoint URL` field."
 		rows = append(rows, printSphinxBlock("warning", note, nil)...)
 	}
 
