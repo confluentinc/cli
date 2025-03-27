@@ -21,8 +21,8 @@ func (c *command) newExporterConfigurationDescribeCommand(cfg *config.Config) *c
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
 		addCaLocationFlag(cmd)
-		addSchemaRegistryEndpointFlag(cmd)
 	}
+	addSchemaRegistryEndpointFlag(cmd)
 	pcmd.AddOutputFlagWithDefaultValue(cmd, output.JSON.String())
 
 	return cmd
