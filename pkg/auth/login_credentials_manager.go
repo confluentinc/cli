@@ -25,12 +25,13 @@ import (
 const stopNonInteractiveMsg = "remove these credentials or use the `--prompt` flag to bypass non-interactive login"
 
 type Credentials struct {
-	Username string
-	Password string
-	IsSSO    bool
-	IsMFA    bool
-	Salt     []byte
-	Nonce    []byte
+	Username          string
+	Password          string
+	IsSSO             bool
+	IsMFA             bool
+	IsCertificateOnly bool
+	Salt              []byte
+	Nonce             []byte
 
 	AuthToken        string
 	AuthRefreshToken string
@@ -41,7 +42,7 @@ type Credentials struct {
 }
 
 func (c *Credentials) IsFullSet() bool {
-	return c.Username != "" && (c.IsSSO || c.IsMFA || c.Password != "" || c.AuthRefreshToken != "")
+	return c.Username != "" && (c.IsSSO || c.IsMFA || c.IsCertificateOnly || c.Password != "" || c.AuthRefreshToken != "")
 }
 
 type environmentVariables struct {
@@ -73,6 +74,7 @@ type LoginCredentialsManager interface {
 	GetCredentialsFromKeychain(bool, string, string) func() (*Credentials, error)
 	GetOnPremSsoCredentials(url, caCertPath, clientCertPath, clientKeyPath string, unsafeTrace bool) func() (*Credentials, error)
 	GetOnPremSsoCredentialsFromConfig(*config.Config, bool) func() (*Credentials, error)
+	GetOnPremCertOnlyCredentials(certificateOnly bool) func() (*Credentials, error)
 	GetCloudCredentialsFromPrompt(string) func() (*Credentials, error)
 	GetOnPremCredentialsFromPrompt() func() (*Credentials, error)
 
@@ -243,6 +245,15 @@ func (h *LoginCredentialsManagerImpl) GetOnPremSsoCredentials(url, caCertPath, c
 	}
 }
 
+func (h *LoginCredentialsManagerImpl) GetOnPremCertOnlyCredentials(certificateOnly bool) func() (*Credentials, error) {
+	return func() (*Credentials, error) {
+		return &Credentials{
+			Username:          "placeholder",
+			IsCertificateOnly: certificateOnly,
+		}, nil
+	}
+}
+
 func (h *LoginCredentialsManagerImpl) GetCloudCredentialsFromPrompt(organizationId string) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		output.Println(false, "Enter your Confluent Cloud credentials:")
@@ -336,6 +347,7 @@ func (h *LoginCredentialsManagerImpl) isOnPremSSOUser(url, caCertPath, clientCer
 
 	featuresInfo, _, err := client.MetadataServiceOperationsApi.Features(context.Background())
 	if err != nil {
+		log.CliLogger.Debug(err)
 		return false
 	}
 	return featuresInfo.Features["oidc.login.device.1.enabled"]
