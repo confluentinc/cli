@@ -501,7 +501,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 				return nil, err
 			}
 			client := kafkarestv3.NewAPIClient(cfg)
-			if restFlags.noAuth || restFlags.clientCertPath != "" { // credentials not needed for mTLS auth
+			if restFlags.noAuth {
 				return &KafkaREST{
 					Client:  client,
 					Context: context.Background(),
@@ -511,6 +511,8 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 			if useMdsToken && !restFlags.prompt {
 				log.CliLogger.Debug("found mds token to use as bearer")
 				restContext = context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, command.Context.GetAuthToken())
+			} else if restFlags.clientCertPath != "" && !restFlags.prompt { // credentials not needed for mTLS auth
+				restContext = context.Background()
 			} else { // no mds token, then prompt for basic auth creds
 				if !restFlags.prompt {
 					output.Println(r.Config.EnableColor, "No session token found, please enter user credentials. To avoid being prompted, run `confluent login`.")

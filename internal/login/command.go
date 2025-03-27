@@ -81,6 +81,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth
 	cmd.Flags().Bool("us-gov", false, "Log in to the Confluent Cloud US Gov environment.")
 	cmd.Flags().String("certificate-authority-path", "", "Self-signed certificate chain in PEM format, for on-premises deployments.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
+	cmd.Flags().Bool("certificate-only", false, "Authenticate using mTLS certificate and key without SSO or username/password.")
 	cmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating using Single Sign-On (SSO).")
 	cmd.Flags().String("organization", "", "The Confluent Cloud organization to log in to. If empty, log in to the default organization.")
 	cmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
@@ -315,6 +316,18 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url, caCertPath, c
 	unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
 	if err != nil {
 		return nil, err
+	}
+
+	certificateOnly, err := cmd.Flags().GetBool("certificate-only")
+	if err != nil {
+		return nil, err
+	}
+
+	if certificateOnly {
+		return pauth.GetLoginCredentials(
+			c.loginCredentialsManager.GetOnPremCertOnlyCredentials(certificateOnly),
+			c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(),
+		)
 	}
 
 	if pauth.IsOnPremSSOEnv() {
