@@ -336,9 +336,9 @@ func (s *CLITestSuite) TestFlinkEndpointUse() {
 		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
 		{args: "flink endpoint list", fixture: "flink/endpoint/list-aws-after-use.golden"},
 		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/describe.golden"},
+		{args: "flink endpoint unset", fixture: "flink/endpoint/unset.golden"},
 		{args: "flink endpoint use http://127.0.0.1:1040", fixture: "flink/endpoint/use-private.golden"},
 		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/describe-failure.golden", exitCode: 1},
-		{args: "flink endpoint unset", fixture: "flink/endpoint/unset.golden"},
 	}
 
 	for _, test := range tests {

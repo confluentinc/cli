@@ -61,7 +61,7 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return fmt.Errorf("unable to list Flink endpoint, failed to list Flink regions: %w", err)
 	}
-	results := make([]*flinkEndpointOut, len(flinkRegions)*2)
+	results := make([]*flinkEndpointOut, 0, len(flinkRegions)*2)
 
 	// 1 - List all the public endpoints based optionally on cloud(upper case) and region(lower case)
 	for _, flinkRegion := range flinkRegions {
