@@ -33,7 +33,7 @@ func (s *CLITestSuite) TestLogin_VariousOrgSuspensionStatus() {
 		output := runCommand(t, testBin, env, args, 0, "")
 		require.Contains(t, output, loggedInAsWithOrgOutput)
 		require.Contains(t, output, loggedInEnvOutput)
-		require.Contains(t, output, "Free credits: $40.00 USD remaining\nYou are currently using a free trial version of Confluent Cloud. Add a payment method with `confluent admin payment update` to avoid an interruption in service once your trial ends.\n")
+		require.Contains(t, output, "Free credits: $40.00 USD remaining\nYou are currently using a free trial version of Confluent Cloud. Add a payment method with `confluent billing payment update` to avoid an interruption in service once your trial ends.\n")
 	})
 
 	s.T().Run("non-free-trial organization login", func(t *testing.T) {
