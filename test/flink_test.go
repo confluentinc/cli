@@ -88,7 +88,6 @@ func (s *CLITestSuite) TestFlinkConnection() {
 		{args: "flink connection update my-connection --cloud aws --region eu-west-1 --api-key 0000000000000000", fixture: "flink/connection/update/update.golden"},
 		{args: "flink connection update nonexist-connection --cloud aws --region eu-west-1 --api-key 0000000000000000", fixture: "flink/connection/update/update-nonexist.golden", exitCode: 1},
 		{args: "flink connection update my-connection --cloud aws --region eu-west-1 --service-key 0000000000000000", fixture: "flink/connection/update/update-wrong-secret.golden", exitCode: 1},
-		{args: "flink endpoint unset", fixture: "flink/endpoint/unset.golden"},
 	}
 
 	for _, test := range tests {
@@ -121,7 +120,6 @@ func (s *CLITestSuite) TestFlinkConnectionDelete() {
 		{args: "flink connection delete my-connection my-connection-1 --cloud aws --region eu-west-1", input: "n\n", fixture: "flink/connection/delete/delete-multiple-refuse.golden"},
 		{args: "flink connection delete my-connection my-connection-1 --cloud aws --region eu-west-1", input: "y\n", fixture: "flink/connection/delete/delete-multiple-success.golden"},
 		{args: "flink connection delete my-connection nonexist-connection --cloud aws --region eu-west-1", fixture: "flink/connection/delete/delete-multiple-failure.golden", exitCode: 1},
-		{args: "flink endpoint unset", fixture: "flink/endpoint/unset.golden"},
 	}
 
 	for _, test := range tests {
@@ -139,7 +137,6 @@ func (s *CLITestSuite) TestFlinkConnectionCreateFailure() {
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type openai --endpoint https://api.openai.com/v1/chat/completions --username username", fixture: "flink/connection/create/create-wrong-secret-type.golden", exitCode: 1},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type bedrock --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000 --aws-access-key 0000000000000000 --aws-secret-key 0000000000000000 --aws-session-token 0000000000000000", fixture: "flink/connection/create/create-extra-secret.golden", exitCode: 1},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type bedrock --endpoint https://api.openai.com/v1/chat/completions --aws-secret-key 0000000000000000 --aws-session-token 0000000000000000", fixture: "flink/connection/create/create-missing-required-secret.golden", exitCode: 1},
-		{args: "flink endpoint unset", fixture: "flink/endpoint/unset.golden"},
 	}
 
 	for _, test := range tests {
@@ -165,7 +162,6 @@ func (s *CLITestSuite) TestFlinkConnectionCreateSuccess() {
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type elastic --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000", fixture: "flink/connection/create/create-elastic.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type pinecone --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000", fixture: "flink/connection/create/create-pinecone.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type couchbase --endpoint https://api.openai.com/v1/chat/completions --username name --password pass", fixture: "flink/connection/create/create-couchbase.golden"},
-		{args: "flink endpoint unset", fixture: "flink/endpoint/unset.golden"},
 	}
 
 	for _, test := range tests {
@@ -285,7 +281,6 @@ func (s *CLITestSuite) TestFlinkStatement() {
 		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --stopped=false --compute-pool lfcp-123456 --principal u-123456", fixture: "flink/statement/update-stopped.golden"},
 		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --stopped=false --compute-pool lfcp-654321", fixture: "flink/statement/update-invalid-compute-pool.golden", exitCode: 1},
 		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --stopped=false --principal u-654321", fixture: "flink/statement/update-invalid-principal.golden", exitCode: 1},
-		{args: "flink endpoint unset", fixture: "flink/endpoint/unset.golden"},
 	}
 
 	for _, test := range tests {
