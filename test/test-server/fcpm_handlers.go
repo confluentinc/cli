@@ -137,16 +137,38 @@ func handleFcpmRegions(t *testing.T) http.HandlerFunc {
 			PrivateHttpEndpoint: flinkv2.PtrString(TestFlinkGatewayUrlPrivate.String()),
 		}
 		gcp := flinkv2.FcpmV2Region{
-			Id:           flinkv2.PtrString("gcp.europe-west3-a"),
-			DisplayName:  flinkv2.PtrString("Frankfurt (europe-west3-a)"),
-			Cloud:        flinkv2.PtrString("GCP"),
-			RegionName:   flinkv2.PtrString("europe-west3-a"),
-			HttpEndpoint: flinkv2.PtrString(TestFlinkGatewayUrl.String()),
+			Id:                  flinkv2.PtrString("gcp.europe-west3-a"),
+			DisplayName:         flinkv2.PtrString("Frankfurt (europe-west3-a)"),
+			Cloud:               flinkv2.PtrString("GCP"),
+			RegionName:          flinkv2.PtrString("europe-west3-a"),
+			HttpEndpoint:        flinkv2.PtrString(TestFlinkGatewayUrl.String()),
+			PrivateHttpEndpoint: flinkv2.PtrString(TestFlinkGatewayUrlPrivate.String()),
+		}
+		azure := flinkv2.FcpmV2Region{
+			Id:                  flinkv2.PtrString("azure.centralus"),
+			DisplayName:         flinkv2.PtrString("Iowa (centralus)"),
+			Cloud:               flinkv2.PtrString("AZURE"),
+			RegionName:          flinkv2.PtrString("centralus"),
+			HttpEndpoint:        flinkv2.PtrString(TestFlinkGatewayUrl.String()),
+			PrivateHttpEndpoint: flinkv2.PtrString(TestFlinkGatewayUrlPrivate.String()),
 		}
 
-		regions := []flinkv2.FcpmV2Region{awsEuWest1, awsEuWest2, gcp}
+		// Allowing flexible mock results based on query parameters
+		regions := []flinkv2.FcpmV2Region{awsEuWest1, awsEuWest2, gcp, azure}
 		if r.URL.Query().Get("cloud") == "AWS" {
 			regions = []flinkv2.FcpmV2Region{awsEuWest1, awsEuWest2}
+			if r.URL.Query().Get("region_name") == "eu-west-1" {
+				regions = []flinkv2.FcpmV2Region{awsEuWest1}
+			} else if r.URL.Query().Get("region_name") == "eu-west-2" {
+				regions = []flinkv2.FcpmV2Region{awsEuWest2}
+			}
+		} else if r.URL.Query().Get("cloud") == "GCP" {
+			regions = []flinkv2.FcpmV2Region{gcp}
+		} else if r.URL.Query().Get("cloud") == "AZURE" {
+			regions = []flinkv2.FcpmV2Region{azure}
+			if r.URL.Query().Get("region_name") == "eastus" {
+				regions = []flinkv2.FcpmV2Region{}
+			}
 		}
 
 		err := json.NewEncoder(w).Encode(flinkv2.FcpmV2RegionList{Data: regions})
