@@ -31,7 +31,10 @@ func (c *roleCommand) newDescribeCommand() *cobra.Command {
 	}
 
 	if c.cfg.IsOnPremLogin() {
+		cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
 		pcmd.AddContextFlag(cmd, c.CLICommand)
+
+		cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 	}
 	pcmd.AddOutputFlag(cmd)
 
@@ -101,10 +104,15 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 }
 
 func (c *roleCommand) confluentDescribe(cmd *cobra.Command, role string) error {
-	details, httpResp, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role)
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
+	details, httpResp, err := client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role)
 	if err != nil {
 		if httpResp.StatusCode == http.StatusNoContent {
-			availableRoleNames, _, err := c.MDSClient.RBACRoleDefinitionsApi.Rolenames(c.createContext())
+			availableRoleNames, _, err := client.RBACRoleDefinitionsApi.Rolenames(c.createContext())
 			if err != nil {
 				return err
 			}

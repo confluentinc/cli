@@ -80,6 +80,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth
 	cmd.Flags().String("url", "", "Metadata Service (MDS) URL, for on-premises deployments.")
 	cmd.Flags().Bool("us-gov", false, "Log in to the Confluent Cloud US Gov environment.")
 	cmd.Flags().String("certificate-authority-path", "", "Self-signed certificate chain in PEM format, for on-premises deployments.")
+	cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
 	cmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating using Single Sign-On (SSO).")
 	cmd.Flags().String("organization", "", "The Confluent Cloud organization to log in to. If empty, log in to the default organization.")
 	cmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
@@ -88,6 +89,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth
 	cobra.CheckErr(cmd.Flags().MarkHidden("us-gov"))
 
 	cmd.MarkFlagsMutuallyExclusive("url", "us-gov")
+	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 
 	return cmd
 }
@@ -224,12 +226,17 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, organization str
 }
 
 func (c *command) loginMDS(cmd *cobra.Command, url string) error {
-	credentials, err := c.getConfluentCredentials(cmd, url)
+	caCertPath, err := c.getCaCertPath(cmd)
 	if err != nil {
 		return err
 	}
 
-	caCertPath, err := c.getCaCertPath(cmd)
+	clientCertPath, clientKeyPath, err := pcmd.GetClientCertAndKeyPaths(cmd)
+	if err != nil {
+		return err
+	}
+
+	credentials, err := c.getConfluentCredentials(cmd, url, caCertPath, clientCertPath, clientKeyPath)
 	if err != nil {
 		return err
 	}
@@ -239,7 +246,7 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	client, err := c.mdsClientManager.GetMDSClient(url, caCertPath, unsafeTrace)
+	client, err := c.mdsClientManager.GetMDSClient(url, caCertPath, clientCertPath, clientKeyPath, unsafeTrace)
 	if err != nil {
 		return err
 	}
@@ -296,18 +303,13 @@ func (c *command) getCaCertPath(cmd *cobra.Command) (string, error) {
 // Order of precedence: prompt flag > environment variables (SSO > LDAP) > LDAP (keychain > config) > SSO > LDAP (prompt)
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
 // SSO and LDAP (basic auth) can be enabled simultaneously
-func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
+func (c *command) getConfluentCredentials(cmd *cobra.Command, url, caCertPath, clientCertPath, clientKeyPath string) (*pauth.Credentials, error) {
 	prompt, err := cmd.Flags().GetBool("prompt")
 	if err != nil {
 		return nil, err
 	}
 	if prompt {
 		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetOnPremCredentialsFromPrompt())
-	}
-
-	caCertPath, err := c.getCaCertPath(cmd)
-	if err != nil {
-		return nil, err
 	}
 
 	unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
@@ -317,14 +319,14 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 
 	if pauth.IsOnPremSSOEnv() {
 		return pauth.GetLoginCredentials(
-			c.loginCredentialsManager.GetOnPremSsoCredentials(url, caCertPath, unsafeTrace),
+			c.loginCredentialsManager.GetOnPremSsoCredentials(url, caCertPath, clientCertPath, clientKeyPath, unsafeTrace),
 			c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(),
 		)
 	}
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
-		c.loginCredentialsManager.GetOnPremSsoCredentials(url, caCertPath, unsafeTrace),
+		c.loginCredentialsManager.GetOnPremSsoCredentials(url, caCertPath, clientCertPath, clientKeyPath, unsafeTrace),
 		c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(),
 	)
 }
