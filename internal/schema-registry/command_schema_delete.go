@@ -37,7 +37,7 @@ func (c *command) newSchemaDeleteCommand(cfg *config.Config) *cobra.Command {
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
-		addCaLocationFlag(cmd)
+		addCaLocationAndClientPathFlags(cmd)
 		addSchemaRegistryEndpointFlag(cmd)
 	}
 	pcmd.AddForceFlag(cmd)

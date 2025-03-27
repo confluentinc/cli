@@ -77,8 +77,11 @@ func addModeFlag(cmd *cobra.Command) {
 	pcmd.RegisterFlagCompletionFunc(cmd, "mode", func(_ *cobra.Command, _ []string) []string { return modes })
 }
 
-func addCaLocationFlag(cmd *cobra.Command) {
+func addCaLocationAndClientPathFlags(cmd *cobra.Command) {
 	cmd.Flags().String("certificate-authority-path", "", "File or directory path to Certificate Authority certificates to authenticate the Schema Registry client.")
+	cmd.Flags().String("client-cert-path", "", "File or directory path to client certificate to authenticate the Schema Registry client.")
+	cmd.Flags().String("client-key-path", "", "File or directory path to client key to authenticate the Schema Registry client.")
+	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 }
 
 func addSchemaRegistryEndpointFlag(cmd *cobra.Command) {
