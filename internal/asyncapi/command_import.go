@@ -130,6 +130,8 @@ func (c *command) newImportCommand() *cobra.Command {
 	cmd.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
 	cobra.CheckErr(cmd.Flags().MarkHidden("schema-registry-api-secret"))
 
+	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
+
 	cobra.CheckErr(cmd.MarkFlagRequired("file"))
 	cobra.CheckErr(cmd.MarkFlagFilename("file", "yaml", "yml"))
 
