@@ -12,3 +12,9 @@ gitignore:
 semaphore:
   enable: true
   pipeline_enable: false
+make:
+  enable: true
+sonarqube:
+  enable: true
+  languages: go
+  main_branch: main
