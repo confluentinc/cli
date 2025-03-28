@@ -26,6 +26,7 @@ func (c *identityProviderCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("issuer-uri", "", "URI of the identity provider issuer.")
 	cmd.Flags().String("jwks-uri", "", "JWKS (JSON Web Key Set) URI of the identity provider.")
 	cmd.Flags().String("description", "", "Description of the identity provider.")
+	cmd.Flags().String("identity-claim", "", "The JSON Web Token (JWT) claim to extract the authenticating identity to Confluent resources from Registered Claim Names. ")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -51,11 +52,17 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
+	identityClaim, err := cmd.Flags().GetString("identity-claim")
+	if err != nil {
+		return err
+	}
+
 	createIdentityProvider := identityproviderv2.IamV2IdentityProvider{
-		DisplayName: identityproviderv2.PtrString(args[0]),
-		Description: identityproviderv2.PtrString(description),
-		Issuer:      identityproviderv2.PtrString(issuerUri),
-		JwksUri:     identityproviderv2.PtrString(jwksUri),
+		DisplayName:   identityproviderv2.PtrString(args[0]),
+		Description:   identityproviderv2.PtrString(description),
+		IdentityClaim: identityproviderv2.PtrString(identityClaim),
+		Issuer:        identityproviderv2.PtrString(issuerUri),
+		JwksUri:       identityproviderv2.PtrString(jwksUri),
 	}
 	provider, err := c.V2Client.CreateIdentityProvider(createIdentityProvider)
 	if err != nil {

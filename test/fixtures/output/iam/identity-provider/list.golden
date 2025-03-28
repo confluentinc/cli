@@ -1,4 +1,5 @@
-     ID    |       Name        |      Description      |          Issuer URI          |                  JWKS URI                    
------------+-------------------+-----------------------+------------------------------+----------------------------------------------
-  op-12345 | identity-provider | providing identities. | https://company.provider.com | https://company.provider.com/oauth2/v1/keys  
-  op-abc   | another-provider  | providing identities. | https://company.provider.com | https://company.provider.com/oauth2/v1/keys  
+     ID    |           Name           |      Description      | Identity Claim |            Issuer URI            |                    JWKS URI                      
+-----------+--------------------------+-----------------------+----------------+----------------------------------+--------------------------------------------------
+  op-12345 | identity-provider        | providing identities. |                | https://company.provider.com     | https://company.provider.com/oauth2/v1/keys      
+  op-67890 | okta-with-identity-claim | new description.      | claims.sub     | https://company.new-provider.com | https://company.new-provider.com/oauth2/v1/keys  
+  op-abc   | another-provider         | providing identities. |                | https://company.provider.com     | https://company.provider.com/oauth2/v1/keys      
