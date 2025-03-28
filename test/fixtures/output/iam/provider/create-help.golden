@@ -9,11 +9,15 @@ Create an identity provider named "demo-identity-provider".
   $ confluent iam provider create demo-identity-provider --description "new description" --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com
 
 Flags:
-      --issuer-uri string    REQUIRED: URI of the identity provider issuer.
-      --jwks-uri string      REQUIRED: JWKS (JSON Web Key Set) URI of the identity provider.
-      --description string   Description of the identity provider.
-      --context string       CLI context name.
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+      --issuer-uri string       REQUIRED: URI of the identity provider issuer.
+      --jwks-uri string         REQUIRED: JWKS (JSON Web Key Set) URI of the identity provider.
+      --description string      Description of the identity provider.
+      --identity-claim string   The JSON Web Token (JWT) claim to extract the authenticating identity to Confluent resources from
+                                [Registered Claim Names](https://datatracker.ietf.org/doc/html/rfc7519#section-4.1). This appears
+                                in audit log records. Note: if the client specifies mapping to one identity pool ID, the identity
+                                claim configured with that pool will be used instead.
+      --context string          CLI context name.
+  -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
