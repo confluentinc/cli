@@ -365,7 +365,9 @@ func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 			if id == "op-67890" {
 				res.IdentityClaim = req.IdentityClaim
 				res.DisplayName = identityproviderv2.PtrString("okta-with-identity-claim")
-				res.Description = identityproviderv2.PtrString("providing identities.")
+				res.Description = identityproviderv2.PtrString("providing identities with identity claim.")
+				res.Issuer = identityproviderv2.PtrString("https://company.new-provider.com")
+				res.JwksUri = identityproviderv2.PtrString("https://company.new-provider.com/oauth2/v1/keys")
 			}
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
@@ -377,7 +379,7 @@ func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 				err := json.NewEncoder(w).Encode(identityProvider)
 				require.NoError(t, err)
 			} else if id == "op-67890" {
-				identityProviderIdentityClaim := buildIamProvider(id, "okta-with-identity-claim", "providing identities.", "https://company.provider.com", "https://company.provider.com/oauth2/v1/keys", "claims.sub")
+				identityProviderIdentityClaim := buildIamProvider(id, "okta-with-identity-claim", "new description.", "https://company.new-provider.com", "https://company.new-provider.com/oauth2/v1/keys", "claims.sub")
 				err := json.NewEncoder(w).Encode(identityProviderIdentityClaim)
 				require.NoError(t, err)
 			}
@@ -392,7 +394,7 @@ func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			identityProvider := buildIamProvider(identityProviderId, "identity-provider", "providing identities.", "https://company.provider.com", "https://company.provider.com/oauth2/v1/keys", "")
 			anotherIdentityProvider := buildIamProvider("op-abc", "another-provider", "providing identities.", "https://company.provider.com", "https://company.provider.com/oauth2/v1/keys", "")
-			identityProviderIdentityClaim := buildIamProvider("op-67890", "okta-with-identity-claim", "providing identities.", "https://company.provider.com", "https://company.provider.com/oauth2/v1/keys", "claims.sub")
+			identityProviderIdentityClaim := buildIamProvider("op-67890", "okta-with-identity-claim", "new description.", "https://company.new-provider.com", "https://company.new-provider.com/oauth2/v1/keys", "claims.sub")
 			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityProviderList{Data: []identityproviderv2.IamV2IdentityProvider{identityProvider, anotherIdentityProvider, identityProviderIdentityClaim}})
 			require.NoError(t, err)
 		case http.MethodPost:
@@ -410,6 +412,9 @@ func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
 			} else if *req.DisplayName == "okta-with-identity-claim" {
 				identityProvider.Id = identityproviderv2.PtrString("op-67890")
 				identityProvider.IdentityClaim = req.IdentityClaim
+				identityProvider.Description = identityproviderv2.PtrString("new description.")
+				identityProvider.Issuer = identityproviderv2.PtrString("https://company.new-provider.com")
+				identityProvider.JwksUri = identityproviderv2.PtrString("https://company.new-provider.com/oauth2/v1/keys")
 			}
 			err = json.NewEncoder(w).Encode(identityProvider)
 			require.NoError(t, err)

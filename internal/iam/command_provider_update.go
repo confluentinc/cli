@@ -26,10 +26,7 @@ func (c *identityProviderCommand) newUpdateCommand() *cobra.Command {
 
 	cmd.Flags().String("name", "", "Name of the identity provider.")
 	cmd.Flags().String("description", "", "Description of the identity provider.")
-	cmd.Flags().String("identity-claim", "", "The JSON Web Token (JWT) claim to extract the authenticating identity to Confluent resources from "+
-		"Registered Claim Names. This appears in audit log records. "+
-		"Note: if the client specifies mapping to one identity pool ID, the identity "+
-		"claim configured with that pool will be used instead.")
+	cmd.Flags().String("identity-claim", "", "The JSON Web Token (JWT) claim to extract the authenticating identity to Confluent resources from Registered Claim Names. ")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
