@@ -1,8 +1,8 @@
 +----------------+---------------------------------------------+
-| ID             | op-12345                                    |
-| Name           | updated-name                                |
-| Description    | updated description                         |
-| Identity Claim |                                             |
+| ID             | op-67890                                    |
+| Name           | okta-with-identity-claim                    |
+| Description    | new description                             |
+| Identity Claim | claims.sub                                  |
 | Issuer URI     | https://company.provider.com                |
 | JWKS URI       | https://company.provider.com/oauth2/v1/keys |
 +----------------+---------------------------------------------+
