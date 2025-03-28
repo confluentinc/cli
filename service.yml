@@ -1,4 +1,10 @@
 name: cli
+contact:
+  name: api
+  jira_project_key: CLI
+  email: api-team@confluent.io
+  slack_team_channel: cli-eng
+  slack_oncall_channel: cli-oncall
 lang: go
 lang_version: 1.22.7
 git:
