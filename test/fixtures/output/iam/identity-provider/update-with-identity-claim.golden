@@ -1,0 +1,9 @@
++----------------+-------------------------------------------------+
+| ID             | op-67890                                        |
+| Name           | okta-with-identity-claim                        |
+| Description    | providing identities with                       |
+|                | identity claim.                                 |
+| Identity Claim | claims.sub.updated                              |
+| Issuer URI     | https://company.new-provider.com                |
+| JWKS URI       | https://company.new-provider.com/oauth2/v1/keys |
++----------------+-------------------------------------------------+
