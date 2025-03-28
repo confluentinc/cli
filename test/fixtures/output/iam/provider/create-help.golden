@@ -12,7 +12,7 @@ Flags:
       --issuer-uri string       REQUIRED: URI of the identity provider issuer.
       --jwks-uri string         REQUIRED: JWKS (JSON Web Key Set) URI of the identity provider.
       --description string      Description of the identity provider.
-      --identity-claim string   The JSON Web Token (JWT) claim to extract the authenticating identity to Confluent resources from Registered Claim Names. 
+      --identity-claim string   The JSON Web Token (JWT) claim to extract the authenticating identity to Confluent resources from Registered Claim Names.
       --context string          CLI context name.
   -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
 
