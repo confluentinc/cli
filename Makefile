@@ -57,8 +57,6 @@ else
 	TAGS=$(TAGS) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) goreleaser build --clean --single-target --snapshot
 endif
 
-include ./mk-include/cc-sonarqube.mk
-
 include ./mk-files/semver.mk
 include ./mk-files/docs.mk
 include ./mk-files/dry-run.mk
