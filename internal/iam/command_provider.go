@@ -17,7 +17,7 @@ type identityProviderOut struct {
 	Id            string `human:"ID" serialized:"id"`
 	Name          string `human:"Name" serialized:"name"`
 	Description   string `human:"Description" serialized:"description"`
-	IdentityClaim string `human:"Identity Claim" serialized:"identity_claim"`
+	IdentityClaim string `human:"Identity Claim,omitempty" serialized:"identity_claim,omitempty"`
 	IssuerUri     string `human:"Issuer URI" serialized:"issuer_uri"`
 	JwksUri       string `human:"JWKS URI" serialized:"jwks_uri"`
 }
