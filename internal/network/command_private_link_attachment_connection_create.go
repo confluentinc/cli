@@ -23,11 +23,15 @@ func (c *command) newPrivateLinkAttachmentConnectionCreateCommand() *cobra.Comma
 				Text: `Create a Private Link attachment connection named "aws-private-link-attachment-connection".`,
 				Code: "confluent network private-link attachment connection create aws-private-link-attachment-connection --cloud aws --endpoint vpce-1234567890abcdef0 --attachment platt-123456",
 			},
+			examples.Example{
+				Text: `Create a Private Link attachment connection named "gcp-private-link-attachment-connection".`,
+				Code: "confluent network private-link attachment connection create gcp-private-link-attachment-connection --cloud gcp --endpoint 1234567890123456 --attachment platt-123456",
+			},
 		),
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	cmd.Flags().String("endpoint", "", "ID of an endpoint that is connected to either AWS VPC endpoint service or Azure PrivateLink service.")
+	cmd.Flags().String("endpoint", "", "ID of an endpoint that is connected to either AWS VPC endpoint service, Azure PrivateLink service, or GCP Private Service Connect service.")
 	c.addPrivateLinkAttachmentFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
