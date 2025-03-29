@@ -4,5 +4,6 @@ n-abcde2	prod-azure-eastus2
 n-abcde3	prod-aws-us-east1
 n-abcde4	prod-aws-us-east1
 n-abcde5
+n-abcde6	prod-aws-eu-west1
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp

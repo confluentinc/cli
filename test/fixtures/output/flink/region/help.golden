@@ -1,10 +1,11 @@
-List Flink regions.
+Manage Flink regions.
 
 Usage:
   confluent flink region [command]
 
 Available Commands:
   list        List Flink regions.
+  unset       Unset the current Flink region.
   use         Use a Flink region in subsequent commands.
 
 Global Flags:

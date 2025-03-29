@@ -1,1 +1,6 @@
+[WARN] This command is being deprecated and will be removed in next CLI major release
+
+Suggestions:
+    please run "confluent flink endpoint list" and "confluent flink endpoint use" to specify an active Flink client endpoint
+
 Using Flink connectivity type "private".

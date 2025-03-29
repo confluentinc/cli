@@ -70,13 +70,13 @@ func (c *Client) executeListFlinkComputePools(environment, specRegion, pageToken
 	return req.Execute()
 }
 
-func (c *Client) ListFlinkRegions(cloud string) ([]flinkv2.FcpmV2Region, error) {
+func (c *Client) ListFlinkRegions(cloud, region string) ([]flinkv2.FcpmV2Region, error) {
 	var list []flinkv2.FcpmV2Region
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, httpResp, err := c.executeListFlinkRegions(cloud, pageToken)
+		page, httpResp, err := c.executeListFlinkRegions(cloud, region, pageToken)
 		if err != nil {
 			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
@@ -91,10 +91,13 @@ func (c *Client) ListFlinkRegions(cloud string) ([]flinkv2.FcpmV2Region, error) 
 	return list, nil
 }
 
-func (c *Client) executeListFlinkRegions(cloud, pageToken string) (flinkv2.FcpmV2RegionList, *http.Response, error) {
+func (c *Client) executeListFlinkRegions(cloud, region, pageToken string) (flinkv2.FcpmV2RegionList, *http.Response, error) {
 	req := c.FlinkClient.RegionsFcpmV2Api.ListFcpmV2Regions(c.flinkApiContext()).PageSize(ccloudV2ListPageSize)
 	if cloud != "" {
 		req = req.Cloud(cloud)
+	}
+	if region != "" {
+		req = req.RegionName(region)
 	}
 	if pageToken != "" {
 		req = req.PageToken(pageToken)

@@ -1,0 +1,4 @@
+Error: Current Flink cloud provider or region is empty
+
+Suggestions:
+    Run `confluent flink region use --cloud <cloud> --region <region>` to set the Flink cloud provider and region first.

@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"net/url"
+	purl "net/url"
 	"os"
 	"strings"
 
@@ -20,6 +20,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/schemaregistry"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
@@ -58,7 +59,9 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 		var url string
 		var err error
 
-		if computePoolOnly {
+		if c.Context.GetCurrentFlinkEndpoint() != "" {
+			url = c.Context.GetCurrentFlinkEndpoint()
+		} else if computePoolOnly {
 			if computePoolId := c.Context.GetCurrentFlinkComputePool(); computePoolId != "" {
 				url, err = c.getGatewayUrlForComputePool(c.Context.GetCurrentFlinkAccessType(), computePoolId)
 				if err != nil {
@@ -86,6 +89,7 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 			return nil, err
 		}
 
+		log.CliLogger.Debugf("The final url used for setting up Flink dataplane client is: %s\n", url)
 		c.flinkGatewayClient = ccloudv2.NewFlinkGatewayClient(url, c.Version.UserAgent, unsafeTrace, dataplaneToken)
 	}
 
@@ -102,12 +106,7 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(access, id string)
 		return "", err
 	}
 
-	u, err := url.Parse(c.Context.GetPlatformServer())
-	if err != nil {
-		return "", err
-	}
-
-	environmentId, err := c.Context.EnvironmentId()
+	u, err := purl.Parse(c.Context.GetPlatformServer())
 	if err != nil {
 		return "", err
 	}
@@ -117,28 +116,15 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(access, id string)
 
 	if access == "private" {
 		return privateURL, nil
-	} else if access == "public" {
-		return publicURL, nil
-	} else {
-		list, err := c.V2Client.ListPrivateLinkAttachments(environmentId, nil, []string{"AWS"}, nil, []string{"READY"})
-		if err != nil {
-			return "", err
-		}
-		if len(list) > 0 {
-			return privateURL, nil
-		} else {
-			return publicURL, nil
-		}
 	}
+	if access == "" {
+		output.Printf(c.Config.EnableColor, "No Flink endpoint is specified, defaulting to public endpoint: `%s`\n", publicURL)
+	}
+	return publicURL, nil
 }
 
 func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(accessType, provider, region string) (string, error) {
-	regions, err := c.V2Client.ListFlinkRegions(provider)
-	if err != nil {
-		return "", err
-	}
-
-	environmentId, err := c.Context.EnvironmentId()
+	regions, err := c.V2Client.ListFlinkRegions(provider, region)
 	if err != nil {
 		return "", err
 	}
@@ -146,20 +132,10 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(accessType, provider, r
 	var hostUrl string
 	for _, flinkRegion := range regions {
 		if flinkRegion.GetRegionName() == region {
-			if accessType == "public" {
-				hostUrl = flinkRegion.GetHttpEndpoint()
-			} else if accessType == "private" {
+			if accessType == "private" {
 				hostUrl = flinkRegion.GetPrivateHttpEndpoint()
 			} else {
-				list, err := c.V2Client.ListPrivateLinkAttachments(environmentId, nil, []string{"AWS"}, nil, []string{"READY"})
-				if err != nil {
-					return "", err
-				}
-				if len(list) > 0 {
-					hostUrl = flinkRegion.GetPrivateHttpEndpoint()
-				} else {
-					hostUrl = flinkRegion.GetHttpEndpoint()
-				}
+				hostUrl = flinkRegion.GetHttpEndpoint()
 			}
 			break
 		}
@@ -167,8 +143,11 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(accessType, provider, r
 	if hostUrl == "" {
 		return "", errors.NewErrorWithSuggestions("invalid region", "Please select a valid region - use `confluent flink region list` to see available regions")
 	}
+	if accessType == "" {
+		output.Printf(c.Config.EnableColor, "No Flink endpoint is specified, defaulting to public endpoint: `%s`\n", hostUrl)
+	}
 
-	u, err := url.Parse(hostUrl)
+	u, err := purl.Parse(hostUrl)
 	if err != nil {
 		return "", err
 	}
@@ -234,7 +213,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				if len(clusters) == 0 {
 					return nil, schemaregistry.ErrNotEnabled
 				}
-				u, err := url.Parse(schemaRegistryEndpoint)
+				u, err := purl.Parse(schemaRegistryEndpoint)
 				if err != nil {
 					return nil, err
 				}
@@ -289,7 +268,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 			}
 		} else { //this is the on-prem case
 			if schemaRegistryEndpoint != "" {
-				u, err := url.Parse(schemaRegistryEndpoint)
+				u, err := purl.Parse(schemaRegistryEndpoint)
 				if err != nil {
 					return nil, err
 				}

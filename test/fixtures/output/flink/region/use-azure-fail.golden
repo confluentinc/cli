@@ -1,0 +1,4 @@
+Error: Flink region "eastus" is not available for cloud provider "azure"
+
+Suggestions:
+    Run `confluent flink region list` to see available regions.

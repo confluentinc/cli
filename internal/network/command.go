@@ -93,7 +93,7 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 
 	cloud := network.Spec.GetCloud()
 	phase := network.Status.GetPhase()
-	supportedConnectionTypes := network.Status.GetSupportedConnectionTypes().Items
+	supportedConnectionTypes := network.Status.GetSupportedConnectionTypes()
 
 	human := &out{
 		Id:                       network.GetId(),
@@ -105,7 +105,7 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 		Zones:                    network.Spec.GetZones(),
 		Phase:                    phase,
 		SupportedConnectionTypes: supportedConnectionTypes,
-		ActiveConnectionTypes:    network.Status.GetActiveConnectionTypes().Items,
+		ActiveConnectionTypes:    network.Status.GetActiveConnectionTypes(),
 	}
 
 	describeFields := []string{"Id", "Environment", "Name", "Gateway", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
