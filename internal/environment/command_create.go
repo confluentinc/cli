@@ -8,6 +8,7 @@ import (
 
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 
+	"github.com/confluentinc/cli/v4/internal/kafka"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/utils"
@@ -52,6 +53,27 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	})
 	if err := table.Print(); err != nil {
 		return err
+	}
+
+	// Show upgrade suggestion for Essentials package
+	if strings.ToLower(governancePackage) == "essentials" {
+		orgId := c.Context.GetCurrentOrganization()
+		if orgId == "" {
+			return nil
+		}
+
+		copyManager, err := kafka.NewCopyManager()
+		if err != nil {
+			return nil
+		}
+
+		content, cta, err := copyManager.GetCopy("stream_governance_upgrade_essentials_to_advanced", orgId)
+		if err != nil {
+			return nil
+		}
+
+		formattedCopy := copyManager.FormatCopy(content, cta, environment.GetId())
+		output.Println(c.Config.EnableColor, "\n"+formattedCopy)
 	}
 
 	c.Context.AddEnvironment(environment.GetId())

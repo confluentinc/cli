@@ -91,6 +91,11 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// If no type specified, default to basic
+	if clusterType == "" {
+		clusterType = skuBasic
+	}
+
 	sku, err := stringToSku(clusterType)
 	if err != nil {
 		return err
@@ -160,7 +165,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		createCluster.Spec.Network = &cmkv2.EnvScopedObjectReference{Id: network}
 	}
 
-	kafkaCluster, httpResp, err := c.V2Client.CreateKafkaCluster(createCluster)
+	cluster, httpResp, err := c.V2Client.CreateKafkaCluster(createCluster)
 	if err != nil {
 		return catchClusterConfigurationNotValidError(err, httpResp, cloud, region)
 	}
@@ -169,7 +174,31 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		output.ErrPrintln(c.Config.EnableColor, getKafkaProvisionEstimate(sku))
 	}
 
-	return c.outputKafkaClusterDescription(cmd, &kafkaCluster, false)
+	if err := c.outputKafkaClusterDescription(cmd, &cluster, false); err != nil {
+		return err
+	}
+
+	if strings.ToLower(clusterType) == strings.ToLower(skuBasic) {
+		orgId := c.Context.GetCurrentOrganization()
+		if orgId == "" {
+			return nil
+		}
+
+		copyManager, err := NewCopyManager()
+		if err != nil {
+			return nil
+		}
+
+		content, cta, err := copyManager.GetCopy("cluster_upgrade_basic_to_standard", orgId)
+		if err != nil {
+			return nil
+		}
+
+		formattedCopy := copyManager.FormatCopy(content, cta, cluster.GetId())
+		output.Println(c.Config.EnableColor, "\n"+formattedCopy)
+	}
+
+	return nil
 }
 
 func stringToAvailability(s string, sku ccstructs.Sku) (string, error) {
