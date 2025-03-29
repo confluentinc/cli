@@ -774,6 +774,7 @@ func TestProtobufSerdesValidWithRuleSet(t *testing.T) {
 	}`
 	schemaPath := filepath.Join(tempDir, "person-schema-ruleset.proto")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
+	defer os.Remove(schemaPath)
 
 	expectedString := `{"name":"abc","page":1,"result":2.5}`
 
