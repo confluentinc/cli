@@ -563,7 +563,12 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 			return nil, nil, err
 		}
 	}
-	err = serializationProvider.InitSerializer(srEndpoint, srClusterId, mode, srApiKey, srApiSecret, token, parsedSchemaId)
+	srAuth := serdes.SchemaRegistryAuth{
+		ApiKey:    srApiKey,
+		ApiSecret: srApiSecret,
+		Token:     token,
+	}
+	err = serializationProvider.InitSerializer(srEndpoint, srClusterId, mode, parsedSchemaId, srAuth)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -677,11 +682,29 @@ func (c *command) initSchemaAndGetInfoOnPrem(cmd *cobra.Command, topic, mode str
 		parsedSchemaId = int(binary.BigEndian.Uint32(metaInfo[1:5]))
 	}
 
+	certificateAuthorityPath, err := cmd.Flags().GetString("certificate-authority-path")
+	if err != nil {
+		return nil, nil, err
+	}
+	clientCertPath, err := cmd.Flags().GetString("client-cert-path")
+	if err != nil {
+		return nil, nil, err
+	}
+	clientKeyPath, err := cmd.Flags().GetString("client-key-path")
+	if err != nil {
+		return nil, nil, err
+	}
 	var token string
 	if c.Config.IsOnPremLogin() {
 		token = c.Config.Context().GetAuthToken()
 	}
-	err = serializationProvider.InitSerializer(srEndpoint, "", mode, "", "", token, parsedSchemaId)
+	srAuth := serdes.SchemaRegistryAuth{
+		CertificateAuthorityPath: certificateAuthorityPath,
+		ClientCertPath:           clientCertPath,
+		ClientKeyPath:            clientKeyPath,
+		Token:                    token,
+	}
+	err = serializationProvider.InitSerializer(srEndpoint, "", mode, parsedSchemaId, srAuth)
 	if err != nil {
 		return nil, nil, err
 	}
