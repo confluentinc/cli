@@ -72,6 +72,9 @@ func (c *command) newConsumeCommand() *cobra.Command {
 	cmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet())
 	pcmd.AddProtocolFlag(cmd)
 	pcmd.AddMechanismFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().String("client-cert-path", "", "File or directory path to client certificate to authenticate the Schema Registry client.")
+	cmd.Flags().String("client-key-path", "", "File or directory path to client key to authenticate the Schema Registry client.")
+	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
 
@@ -344,23 +347,29 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	srApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
-	if err != nil {
-		return err
-	}
-	srApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
-	if err != nil {
-		return err
-	}
-	token, err := auth.GetDataplaneToken(c.Context)
+	srEndpoint, err := cmd.Flags().GetString("schema-registry-endpoint")
 	if err != nil {
 		return err
 	}
 
-	// Fetch the current SR cluster id and endpoint
-	srClusterId, srEndpoint, err := c.GetCurrentSchemaRegistryClusterIdAndEndpoint()
+	certificateAuthorityPath, err := cmd.Flags().GetString("certificate-authority-path")
 	if err != nil {
 		return err
+	}
+
+	clientCertPath, err := cmd.Flags().GetString("client-cert-path")
+	if err != nil {
+		return err
+	}
+
+	clientKeyPath, err := cmd.Flags().GetString("client-key-path")
+	if err != nil {
+		return err
+	}
+
+	var token string
+	if c.Config.IsOnPremLogin() {
+		token = c.Config.Context().GetAuthToken()
 	}
 
 	consumer, err := newOnPremConsumer(cmd, c.clientID, configFile, config)
@@ -425,16 +434,16 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 	}()
 
 	groupHandler := &GroupHandler{
-		SrClient:          srClient,
-		SrApiKey:          srApiKey,
-		SrApiSecret:       srApiSecret,
-		SrClusterId:       srClusterId,
-		SrClusterEndpoint: srEndpoint,
-		Token:             token,
-		KeyFormat:         keyFormat,
-		ValueFormat:       valueFormat,
-		Out:               cmd.OutOrStdout(),
-		Topic:             topicName,
+		SrClient:                 srClient,
+		SrClusterEndpoint:        srEndpoint,
+		Token:                    token,
+		CertificateAuthorityPath: certificateAuthorityPath,
+		ClientCertPath:           clientCertPath,
+		ClientKeyPath:            clientKeyPath,
+		KeyFormat:                keyFormat,
+		ValueFormat:              valueFormat,
+		Out:                      cmd.OutOrStdout(),
+		Topic:                    topicName,
 		Properties: ConsumerProperties{
 			Delimiter:   delimiter,
 			FullHeader:  fullHeader,

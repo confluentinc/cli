@@ -288,7 +288,7 @@ func (c *command) getMessageExamples(consumer *ckgo.Consumer, topicName, content
 		return nil, err
 	}
 
-	err = deserializationProvider.InitDeserializer(srEndpoint, srClusterId, "value", "", "", token, nil)
+	err = deserializationProvider.InitDeserializer(srEndpoint, srClusterId, "value", serdes.SchemaRegistryAuth{Token: token}, nil)
 	if err != nil {
 		return nil, err
 	}
