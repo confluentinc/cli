@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   list        List Flink regions.
-  unset       Unset the current Flink region.
+  unset       Unset the current Flink cloud and region.
   use         Use a Flink region in subsequent commands.
 
 Global Flags:

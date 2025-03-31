@@ -20,7 +20,10 @@ func (c *command) newUseCommand() *cobra.Command {
 }
 
 func (c *command) ConnectivityTypeUse(_ *cobra.Command, args []string) error {
-	warning := errors.NewWarningWithSuggestions(`The current command "confluent flink endpoint list" still works to specify a public or private Flink dataplane endpoint`, `\nAlternatively, you can run "confluent flink endpoint list" and "confluent flink endpoint use" to view and specify a custom endpoint for Flink dataplane client, including CCN endpoints.`)
+	warning := errors.NewWarningWithSuggestions(
+		`This command still works to select the connectivity type and set a public or private endpoint for Flink dataplane client.`,
+		`\nAlternatively, you can run "confluent flink endpoint list" and "confluent flink endpoint use" to view and specify an active endpoint for Flink dataplane client, including CCN endpoints.`,
+	)
 	output.ErrPrint(true, warning.DisplayWarningWithSuggestions())
 
 	if err := c.Context.SetCurrentFlinkAccessType(args[0]); err != nil {

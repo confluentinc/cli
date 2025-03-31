@@ -1,6 +1,6 @@
-[WARN] This command is being deprecated and will be removed in next CLI major release
+[WARN] This command still works to select the connectivity type and set an public or private endpoint for Flink dataplane client.
 
 Suggestions:
-    please run "confluent flink endpoint list" and "confluent flink endpoint use" to specify an active Flink client endpoint
+    \nAlternatively, you can run "confluent flink endpoint list" and "confluent flink endpoint use" to view and specify an active endpoint for Flink dataplane client, including CCN endpoints.
 
 Using Flink connectivity type "private".

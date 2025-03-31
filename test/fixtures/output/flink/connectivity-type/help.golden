@@ -1,4 +1,4 @@
-Manage Flink connectivity type (being deprecated).
+Manage Flink connectivity type.
 
 Usage:
   confluent flink connectivity-type [command]

@@ -7,7 +7,7 @@ Available Commands:
   artifact          Manage Flink UDF artifacts.
   compute-pool      Manage Flink compute pools.
   connection        Manage Flink connections.
-  connectivity-type Manage Flink connectivity type (being deprecated).
+  connectivity-type Manage Flink connectivity type.
   endpoint          Manage Flink endpoint.
   region            Manage Flink regions.
   shell             Start Flink interactive SQL client.
