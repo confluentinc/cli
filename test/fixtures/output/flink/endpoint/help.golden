@@ -1,0 +1,16 @@
+Manage Flink endpoint.
+
+Usage:
+  confluent flink endpoint [command]
+
+Available Commands:
+  list        List Flink endpoint.
+  unset       Unset the current Flink endpoint.
+  use         Use a Flink endpoint.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent flink endpoint [command] --help" for more information about a command.
