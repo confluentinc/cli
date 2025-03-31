@@ -20,8 +20,8 @@ func (c *command) newUseCommand() *cobra.Command {
 }
 
 func (c *command) ConnectivityTypeUse(_ *cobra.Command, args []string) error {
-	warning := errors.NewWarningWithSuggestions("This command is being deprecated and will be removed in next CLI major release", `please run "confluent flink endpoint list" and "confluent flink endpoint use" to specify an active Flink client endpoint`)
-	output.ErrPrint(c.Config.EnableColor, warning.DisplayWarningWithSuggestions())
+	warning := errors.NewWarningWithSuggestions(`The current command "confluent flink endpoint list" still works to specify a public or private Flink dataplane endpoint`, `\nAlternatively, you can run "confluent flink endpoint list" and "confluent flink endpoint use" to view and specify a custom endpoint for Flink dataplane client, including CCN endpoints.`)
+	output.ErrPrint(true, warning.DisplayWarningWithSuggestions())
 
 	if err := c.Context.SetCurrentFlinkAccessType(args[0]); err != nil {
 		return err
