@@ -14,11 +14,12 @@ type identityProviderCommand struct {
 }
 
 type identityProviderOut struct {
-	Id          string `human:"ID" serialized:"id"`
-	Name        string `human:"Name" serialized:"name"`
-	Description string `human:"Description" serialized:"description"`
-	IssuerUri   string `human:"Issuer URI" serialized:"issuer_uri"`
-	JwksUri     string `human:"JWKS URI" serialized:"jwks_uri"`
+	Id            string `human:"ID" serialized:"id"`
+	Name          string `human:"Name" serialized:"name"`
+	Description   string `human:"Description" serialized:"description"`
+	IdentityClaim string `human:"Identity Claim,omitempty" serialized:"identity_claim,omitempty"`
+	IssuerUri     string `human:"Issuer URI" serialized:"issuer_uri"`
+	JwksUri       string `human:"JWKS URI" serialized:"jwks_uri"`
 }
 
 func newProviderCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -42,11 +43,12 @@ func newProviderCommand(prerunner pcmd.PreRunner) *cobra.Command {
 func printIdentityProvider(cmd *cobra.Command, provider identityproviderv2.IamV2IdentityProvider) error {
 	table := output.NewTable(cmd)
 	table.Add(&identityProviderOut{
-		Id:          provider.GetId(),
-		Name:        provider.GetDisplayName(),
-		Description: provider.GetDescription(),
-		IssuerUri:   provider.GetIssuer(),
-		JwksUri:     provider.GetJwksUri(),
+		Id:            provider.GetId(),
+		Name:          provider.GetDisplayName(),
+		Description:   provider.GetDescription(),
+		IdentityClaim: provider.GetIdentityClaim(),
+		IssuerUri:     provider.GetIssuer(),
+		JwksUri:       provider.GetJwksUri(),
 	})
 	return table.Print()
 }
