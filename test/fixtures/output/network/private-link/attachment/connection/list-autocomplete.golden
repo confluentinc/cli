@@ -5,5 +5,6 @@ platt-azure	azure-platt-1
 platt-111114	aws-platt-1-for-flink
 platt-111115	aws-platt-2-for-flink
 platt-111116	gcp-platt-1-for-flink
+platt-gcp	gcp-platt-1
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp

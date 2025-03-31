@@ -1306,6 +1306,14 @@ func handleNetworkingPrivateLinkAttachmentGet(t *testing.T, id string) http.Hand
 			attachment := getPrivateLinkAttachment("platt-azure-2", "my-azure-private-link-attachment", "PROVISIONING", "azure", "us-west-2")
 			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
+		case "platt-gcp":
+			attachment := getPrivateLinkAttachment("platt-gcp", "my-gcp-private-link-attachment", "WAITING_FOR_CONNECTIONS", "gcp", "")
+			err := json.NewEncoder(w).Encode(attachment)
+			require.NoError(t, err)
+		case "platt-gcp-2":
+			attachment := getPrivateLinkAttachment("platt-gcp-2", "my-gcp-private-link-attachment", "PROVISIONING", "gcp", "")
+			err := json.NewEncoder(w).Encode(attachment)
+			require.NoError(t, err)
 		}
 	}
 }
@@ -1328,6 +1336,7 @@ func getPrivateLinkAttachment(id, name, phase, cloud, region string) networkingp
 		attachment.Spec.Cloud = networkingprivatelinkv1.PtrString("Azure")
 	case "gcp":
 		attachment.Spec.Cloud = networkingprivatelinkv1.PtrString("GCP")
+		attachment.Spec.Region = networkingprivatelinkv1.PtrString("us-central1")
 	}
 
 	if phase != "PROVISIONING" {
@@ -1356,7 +1365,7 @@ func getPrivateLinkAttachment(id, name, phase, cloud, region string) networkingp
 					ServiceAttachments: []networkingprivatelinkv1.NetworkingV1GcpPscServiceAttachment{
 						{
 							Zone:                                   "zone1",
-							PrivateServiceConnectServiceAttachment: "service1",
+							PrivateServiceConnectServiceAttachment: "projects/xxxxxxx/regions/us-central1/serviceAttachments/plattg-123456-service-attachment",
 						},
 					},
 				},
@@ -1382,6 +1391,7 @@ func handleNetworkingPrivateLinkAttachmentList(t *testing.T) http.HandlerFunc {
 			getPrivateLinkAttachment("platt-111112", "aws-platt-2", "WAITING_FOR_CONNECTIONS", "aws", "us-west-2"),
 			getPrivateLinkAttachment("platt-111113", "aws-platt-3", "WAITING_FOR_CONNECTIONS", "aws", "us-west-2"),
 			getPrivateLinkAttachment("platt-azure", "azure-platt-1", "WAITING_FOR_CONNECTIONS", "azure", "us-west-2"),
+			getPrivateLinkAttachment("platt-gcp", "gcp-platt-1", "WAITING_FOR_CONNECTIONS", "gcp", "europe-west3-a"),
 			getPrivateLinkAttachment("platt-111114", "aws-platt-1-for-flink", "READY", "aws", "eu-west-1"),
 			getPrivateLinkAttachment("platt-111115", "aws-platt-2-for-flink", "READY", "aws", "eu-west-2"),
 			getPrivateLinkAttachment("platt-111116", "gcp-platt-1-for-flink", "READY", "gcp", "europe-west3-a"),
@@ -1483,6 +1493,22 @@ func handleNetworkingPrivateLinkAttachmentCreate(t *testing.T) http.HandlerFunc 
 			}
 			err = json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
+		case "GCP":
+			attachment := networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment{
+				Id:   networkingprivatelinkv1.PtrString("pla-123456-gcp"),
+				Kind: networkingprivatelinkv1.PtrString("PrivateLinkAttachment"),
+				Spec: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentSpec{
+					Cloud:       networkingprivatelinkv1.PtrString(cloud),
+					Region:      networkingprivatelinkv1.PtrString(region),
+					DisplayName: networkingprivatelinkv1.PtrString(body.Spec.GetDisplayName()),
+					Environment: &networkingprivatelinkv1.ObjectReference{Id: body.Spec.Environment.GetId()},
+				},
+				Status: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentStatus{
+					Phase: "PROVISIONING",
+				},
+			}
+			err = json.NewEncoder(w).Encode(attachment)
+			require.NoError(t, err)
 		default:
 			w.WriteHeader(http.StatusBadRequest)
 			err := writeErrorJson(w, fmt.Sprintf("The private link attachment region '%s' for the cloud provider '%s' is not supported.", region, strings.ToLower(cloud)))
@@ -1511,6 +1537,14 @@ func handleNetworkingPrivateLinkAttachmentConnectionGet(t *testing.T, id string)
 			require.NoError(t, err)
 		case "plattc-azure-2":
 			connection := getPrivateLinkAttachmentConnection("plattc-azure-2", "my-azure-platt-connection", "PROVISIONING", "azure")
+			err := json.NewEncoder(w).Encode(connection)
+			require.NoError(t, err)
+		case "plattc-gcp":
+			connection := getPrivateLinkAttachmentConnection("plattc-gcp", "my-gcp-platt-connection", "READY", "gcp")
+			err := json.NewEncoder(w).Encode(connection)
+			require.NoError(t, err)
+		case "plattc-gcp-2":
+			connection := getPrivateLinkAttachmentConnection("plattc-gcp-2", "my-gcp-platt-connection", "PROVISIONING", "gcp")
 			err := json.NewEncoder(w).Encode(connection)
 			require.NoError(t, err)
 		}
@@ -1557,6 +1591,18 @@ func getPrivateLinkAttachmentConnection(id, name, phase string, cloud string) ne
 				Kind: "AzurePrivateLinkAttachmentConnectionStatus",
 			},
 		}
+	case "gcp":
+		connection.Spec.Cloud = &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionSpecCloudOneOf{
+			NetworkingV1GcpPrivateLinkAttachmentConnection: &networkingprivatelinkv1.NetworkingV1GcpPrivateLinkAttachmentConnection{
+				Kind:                              "GcpPrivateLinkAttachmentConnection",
+				PrivateServiceConnectConnectionId: "gcp-private-service-connect-id",
+			},
+		}
+		connection.Status.Cloud = &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionStatusCloudOneOf{
+			NetworkingV1GcpPrivateLinkAttachmentConnectionStatus: &networkingprivatelinkv1.NetworkingV1GcpPrivateLinkAttachmentConnectionStatus{
+				Kind: "GcpPrivateLinkAttachmentConnectionStatus",
+			},
+		}
 	}
 
 	if phase != "PROVISIONING" {
@@ -1566,6 +1612,8 @@ func getPrivateLinkAttachmentConnection(id, name, phase string, cloud string) ne
 		case "azure":
 			connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus.PrivateLinkServiceAlias = "azure-vnet-privatelink-1.a0a0aa00-a000-0aa0-a00a-0aaa0000a00a.eastus2.azure.privatelinkservice"
 			connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus.PrivateLinkServiceResourceId = "/subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/azure-vnet/providers/Microsoft.Network/privateLinkServices/azure-vnet-privatelink-1"
+		case "gcp":
+			connection.Status.Cloud.NetworkingV1GcpPrivateLinkAttachmentConnectionStatus.PrivateServiceConnectServiceAttachment = "projects/xxxxxxx/regions/us-central1/serviceAttachments/plattg-123456-service-attachment"
 		}
 	}
 
@@ -1578,6 +1626,7 @@ func handleNetworkingPrivateLinkAttachmentConnectionList(t *testing.T) http.Hand
 		connection2 := getPrivateLinkAttachmentConnection("plattc-111112", "aws-plattc-2", "READY", "aws")
 		connection3 := getPrivateLinkAttachmentConnection("plattc-111113", "aws-plattc-3", "READY", "aws")
 		connection4 := getPrivateLinkAttachmentConnection("plattc-azure", "azure-plattc-1", "READY", "azure")
+		connection5 := getPrivateLinkAttachmentConnection("plattc-gcp", "gcp-plattc-1", "READY", "gcp")
 
 		privateLinkAttachment := r.URL.Query().Get("spec.private_link_attachment")
 		switch privateLinkAttachment {
@@ -1604,6 +1653,11 @@ func handleNetworkingPrivateLinkAttachmentConnectionList(t *testing.T) http.Hand
 			case "azure-plattc-1":
 				connectionList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList{
 					Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{connection4},
+					Metadata: networkingprivatelinkv1.ListMeta{},
+				}
+			case "gcp-plattc-1":
+				connectionList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList{
+					Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{connection5},
 					Metadata: networkingprivatelinkv1.ListMeta{},
 				}
 			default:
@@ -1708,9 +1762,26 @@ func handleNetworkingPrivateLinkAttachmentConnectionCreate(t *testing.T) http.Ha
 			}
 		case *networkingprivatelinkv1.NetworkingV1GcpPrivateLinkAttachmentConnection:
 			switch name {
-			case "gcp-plattc-wrong-platt-cloud":
-				w.WriteHeader(http.StatusBadRequest)
-				err := writeErrorJson(w, "The AWS spec for the private link attachment connection must be provided.")
+			case "gcp-plattc":
+				connection := networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{
+					Id:   networkingprivatelinkv1.PtrString("plattc-gcp"),
+					Kind: networkingprivatelinkv1.PtrString("PrivateLinkAttachmentConnection"),
+					Spec: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionSpec{
+						Cloud:                 body.Spec.Cloud,
+						DisplayName:           body.Spec.DisplayName,
+						Environment:           &networkingprivatelinkv1.ObjectReference{Id: body.Spec.Environment.GetId()},
+						PrivateLinkAttachment: &networkingprivatelinkv1.ObjectReference{Id: body.Spec.PrivateLinkAttachment.GetId()},
+					},
+					Status: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionStatus{
+						Phase: "PROVISIONING",
+						Cloud: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionStatusCloudOneOf{
+							NetworkingV1GcpPrivateLinkAttachmentConnectionStatus: &networkingprivatelinkv1.NetworkingV1GcpPrivateLinkAttachmentConnectionStatus{
+								Kind: "GcpPrivateLinkAttachmentConnectionStatus",
+							},
+						},
+					},
+				}
+				err = json.NewEncoder(w).Encode(connection)
 				require.NoError(t, err)
 			}
 		case *networkingprivatelinkv1.NetworkingV1AzurePrivateLinkAttachmentConnection:
