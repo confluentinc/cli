@@ -12,11 +12,11 @@ const (
 )
 
 type flinkEndpointOut struct {
-	IsCurrent bool   `human:"Current" serialized:"is_current,omitempty"`
-	Endpoint  string `human:"Endpoint" serialized:"endpoint,omitempty"`
-	Cloud     string `human:"Cloud" serialized:"cloud,omitempty"`
-	Region    string `human:"Region" serialized:"region,omitempty"`
-	Type      string `human:"Type" serialized:"type,omitempty"`
+	IsCurrent bool   `human:"Current" serialized:"is_current"`
+	Endpoint  string `human:"Endpoint" serialized:"endpoint"`
+	Cloud     string `human:"Cloud" serialized:"cloud"`
+	Region    string `human:"Region" serialized:"region"`
+	Type      string `human:"Type" serialized:"type"`
 }
 
 func (c *command) newEndpointCommand() *cobra.Command {
