@@ -65,7 +65,7 @@ type SchemaRegistryAuth struct {
 }
 
 type SerializationProvider interface {
-	InitSerializer(srClientUrl string, srClusterId string, mode string, schemaId int, srAuth SchemaRegistryAuth) error
+	InitSerializer(srClientUrl, srClusterId, mode string, schemaId int, srAuth SchemaRegistryAuth) error
 	LoadSchema(string, map[string]string) error
 	Serialize(string, string) ([]byte, error)
 	GetSchemaName() string
@@ -73,7 +73,7 @@ type SerializationProvider interface {
 }
 
 type DeserializationProvider interface {
-	InitDeserializer(string, string, string, string, string, string, any) error
+	InitDeserializer(srClientUrl, srClusterId, mode string, srAuth SchemaRegistryAuth, existingClient any) error
 	LoadSchema(string, map[string]string) error
 	Deserialize(string, []byte) (string, error)
 }
