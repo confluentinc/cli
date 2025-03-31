@@ -1,2 +1,2 @@
-Reset the current Flink endpoint to empty due to the cloud or region switch
+The current Flink endpoint has been unset due to the cloud or region change.
 Using Flink region "Europe (eu-west-1)".

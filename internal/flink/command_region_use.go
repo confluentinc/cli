@@ -70,7 +70,7 @@ func (c *command) regionUse(cmd *cobra.Command, _ []string) error {
 	}
 
 	// Unset the current Flink endpoint if there is a cloud/region change based on discussion with Flink product team
-	output.Println(c.Config.EnableColor, "Reset the current Flink endpoint to empty due to the cloud or region switch")
+	output.Println(c.Config.EnableColor, "The current Flink endpoint has been unset due to the cloud or region change.")
 	if err := c.Context.SetCurrentFlinkEndpoint(""); err != nil {
 		return err
 	}

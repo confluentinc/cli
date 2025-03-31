@@ -10,10 +10,10 @@ import (
 func (c *command) newRegionUnsetCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unset",
-		Short: "Unset the current Flink region.",
-		Long:  "Unset the current Flink region that was set with the `use` command.",
+		Short: "Unset the current Flink cloud and region.",
+		Long:  "Unset the current Flink cloud and region that was set with the `use` command.",
 		Args:  cobra.NoArgs,
-		RunE:  c.regionUnset,
+		RunE:  c.regionAndCloudUnset,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Unset the current Flink region us-west-1 with cloud provider = AWS.`,
@@ -25,10 +25,10 @@ func (c *command) newRegionUnsetCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) regionUnset(_ *cobra.Command, _ []string) error {
+func (c *command) regionAndCloudUnset(_ *cobra.Command, _ []string) error {
 	regionToUnset := c.Context.GetCurrentFlinkRegion()
 	cloudToUnset := c.Context.GetCurrentFlinkCloudProvider()
-	output.Println(c.Config.EnableColor, "Unset the current Flink region")
+	output.Println(c.Config.EnableColor, "Unset the current Flink cloud and region")
 
 	if cloudToUnset == "" && regionToUnset == "" {
 		return nil

@@ -75,8 +75,8 @@ func validateUserProvidedFlinkEndpoint(endpoint, cloud, region string, c *comman
 	if c.Config.IsTest {
 		return true
 	}
-	if endpoint == "" || cloud == "" || region == "" {
-		log.CliLogger.Debug("Invalid input: endpoint, cloud, or region is empty")
+	if endpoint == "" {
+		log.CliLogger.Debug("Invalid input: given endpoint is empty")
 		return false
 	}
 
