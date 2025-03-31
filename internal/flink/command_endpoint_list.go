@@ -160,6 +160,9 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 func buildCloudRegionKeyFilterMapFromPrivateLinkAttachments(platts []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment) map[CloudRegionKey]bool {
 	result := make(map[CloudRegionKey]bool, len(platts))
 	for _, platt := range platts {
+		if platt.Spec.GetCloud() == "" || platt.Spec.GetRegion() == "" {
+			continue
+		}
 		compositeKey := CloudRegionKey{
 			cloud:  platt.Spec.GetCloud(),
 			region: platt.Spec.GetRegion(),

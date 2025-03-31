@@ -14,8 +14,8 @@ func (c *command) newRegionCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(c.newRegionListCommand())
-	cmd.AddCommand(c.newRegionUseCommand())
 	cmd.AddCommand(c.newRegionUnsetCommand())
+	cmd.AddCommand(c.newRegionUseCommand())
 
 	return cmd
 }
