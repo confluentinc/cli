@@ -1,5 +1,15 @@
 [
   {
+    "id": "n-abcde6",
+    "name": "prod-aws-eu-west1",
+    "cloud": "AWS",
+    "region": "eu-west-1",
+    "cidr": "10.200.0.0/16",
+    "zones": ["use1-az1", "use1-az2", "use1-az3"],
+    "phase": "READY",
+    "active_connection_types": ["TRANSITGATEWAY", "PEERING"]
+  },
+  {
     "id": "n-abcde3",
     "name": "prod-aws-us-east1",
     "cloud": "AWS",

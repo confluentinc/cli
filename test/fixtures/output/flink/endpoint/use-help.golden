@@ -1,0 +1,14 @@
+Use a Flink endpoint as active endpoint for all subsequent Flink dataplane commands in current environment, such as `flink connection`, `flink statement` and `flink shell`.
+
+Usage:
+  confluent flink endpoint use [flags]
+
+Examples:
+Use "https://flink.us-east-1.aws.confluent.cloud" for subsequent Flink dataplane commands.
+
+  $ confluent flink endpoint use "https://flink.us-east-1.aws.confluent.cloud"
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
