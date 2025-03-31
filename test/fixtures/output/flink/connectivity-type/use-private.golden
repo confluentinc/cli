@@ -1,4 +1,4 @@
-[WARN] This command still works to select the connectivity type and set an public or private endpoint for Flink dataplane client.
+[WARN] This command still works to select the connectivity type and set a public or private endpoint for Flink dataplane client.
 
 Suggestions:
     \nAlternatively, you can run "confluent flink endpoint list" and "confluent flink endpoint use" to view and specify an active endpoint for Flink dataplane client, including CCN endpoints.
