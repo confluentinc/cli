@@ -508,9 +508,14 @@ func getNetworkList(filterName, filterCloud, filterRegion, filterCidr, filterPha
 	awsNetwork.Metadata = &networkingv1.ObjectMeta{CreatedAt: networkingv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))}
 	awsNetwork3.Metadata = &networkingv1.ObjectMeta{CreatedAt: networkingv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 1, time.UTC))}
 
+	// Flink CCN endpoint testing with mocking endpoint suffix
+	awsNetwork4 := getAwsNetwork("n-abcde6", "prod-aws-eu-west1", "READY", []string{"TRANSITGATEWAY", "PEERING"})
+	awsNetwork4.Spec.SetRegion("eu-west-1")
+	awsNetwork4.Status.SetEndpointSuffix("-n-abcde6.eu-west-1.aws.confluent.cloud")
+
 	networkList := networkingv1.NetworkingV1NetworkList{
 		Data: []networkingv1.NetworkingV1Network{
-			gcpNetwork, azureNetwork, awsNetwork, awsNetwork2, awsNetwork3,
+			gcpNetwork, azureNetwork, awsNetwork, awsNetwork2, awsNetwork3, awsNetwork4,
 		},
 	}
 	networkList.Data = filterNetworkList(networkList.Data, filterName, filterCloud, filterRegion, filterCidr, filterPhase, filterConnection)
@@ -526,7 +531,7 @@ func filterNetworkList(networkList []networkingv1.NetworkingV1Network, name, clo
 			(slices.Contains(region, networkSpec.Spec.GetRegion()) || region == nil) &&
 			(slices.Contains(cidr, networkSpec.Spec.GetCidr()) || cidr == nil) &&
 			(slices.Contains(phase, networkSpec.Status.GetPhase()) || phase == nil) &&
-			(containsFilter(connection, networkSpec.Status.GetActiveConnectionTypes().Items) || connection == nil) {
+			(containsFilter(connection, networkSpec.Status.GetActiveConnectionTypes()) || connection == nil) {
 			filteredNetworkList = append(filteredNetworkList, networkSpec)
 		}
 	}
@@ -555,7 +560,7 @@ func handleNetworkingNetworkCreate(t *testing.T) http.HandlerFunc {
 		err := json.NewDecoder(r.Body).Decode(body)
 		require.NoError(t, err)
 
-		connectionTypes := body.Spec.ConnectionTypes.Items
+		connectionTypes := *body.Spec.ConnectionTypes
 
 		if slices.Contains(connectionTypes, "TRANSITGATEWAY") && (body.Spec.Cidr == nil && body.Spec.ZonesInfo == nil) {
 			w.WriteHeader(http.StatusBadRequest)
@@ -573,8 +578,8 @@ func handleNetworkingNetworkCreate(t *testing.T) http.HandlerFunc {
 
 				Status: &networkingv1.NetworkingV1NetworkStatus{
 					Phase:                    "PROVISIONING",
-					SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: connectionTypes},
-					ActiveConnectionTypes:    networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
+					SupportedConnectionTypes: connectionTypes,
+					ActiveConnectionTypes:    []string{},
 				},
 			}
 
@@ -643,8 +648,8 @@ func getAwsNetwork(id, name, phase string, connectionTypes []string) networkingv
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
-			SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: connectionTypes},
-			ActiveConnectionTypes:    networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
+			SupportedConnectionTypes: connectionTypes,
+			ActiveConnectionTypes:    []string{},
 			Cloud: &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
 				NetworkingV1AwsNetwork: &networkingv1.NetworkingV1AwsNetwork{
 					Kind: "AwsNetwork",
@@ -671,7 +676,7 @@ func getAwsNetwork(id, name, phase string, connectionTypes []string) networkingv
 	}
 
 	if phase == "READY" {
-		network.Status.ActiveConnectionTypes = networkingv1.NetworkingV1ConnectionTypes{Items: connectionTypes}
+		network.Status.ActiveConnectionTypes = connectionTypes
 		network.Status.Cloud.NetworkingV1AwsNetwork.Vpc = "vpc-00000000000000000"
 		network.Status.Cloud.NetworkingV1AwsNetwork.Account = "000000000000"
 	}
@@ -698,8 +703,8 @@ func getGcpNetwork(id, name, phase string, connectionTypes []string) networkingv
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
-			SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: connectionTypes},
-			ActiveConnectionTypes:    networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
+			SupportedConnectionTypes: connectionTypes,
+			ActiveConnectionTypes:    []string{},
 			Cloud: &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
 				NetworkingV1GcpNetwork: &networkingv1.NetworkingV1GcpNetwork{
 					Kind: "GcpNetwork",
@@ -729,7 +734,7 @@ func getGcpNetwork(id, name, phase string, connectionTypes []string) networkingv
 	}
 
 	if phase == "READY" {
-		network.Status.ActiveConnectionTypes = networkingv1.NetworkingV1ConnectionTypes{Items: connectionTypes}
+		network.Status.ActiveConnectionTypes = connectionTypes
 		network.Status.Cloud.NetworkingV1GcpNetwork.Project = "gcp-project"
 		network.Status.Cloud.NetworkingV1GcpNetwork.VpcNetwork = "gcp-vpc"
 	}
@@ -750,8 +755,8 @@ func getAzureNetwork(id, name, phase string, connectionTypes []string) networkin
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
-			SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: connectionTypes},
-			ActiveConnectionTypes:    networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
+			SupportedConnectionTypes: connectionTypes,
+			ActiveConnectionTypes:    []string{},
 			Cloud: &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
 				NetworkingV1AzureNetwork: &networkingv1.NetworkingV1AzureNetwork{
 					Kind: "AzureNetwork",
@@ -787,7 +792,7 @@ func getAzureNetwork(id, name, phase string, connectionTypes []string) networkin
 	}
 
 	if phase == "READY" {
-		network.Status.ActiveConnectionTypes = networkingv1.NetworkingV1ConnectionTypes{Items: connectionTypes}
+		network.Status.ActiveConnectionTypes = connectionTypes
 		network.Status.Cloud.NetworkingV1AzureNetwork.Vnet = "azure-vnet"
 		network.Status.Cloud.NetworkingV1AzureNetwork.Subscription = "aa000000-a000-0a00-00aa-0000aaa0a0a0"
 	}
@@ -1286,38 +1291,38 @@ func handleNetworkingPrivateLinkAttachmentGet(t *testing.T, id string) http.Hand
 			w.WriteHeader(http.StatusNotFound)
 			return
 		case "platt-111111":
-			attachment := getPrivateLinkAttachment("platt-111111", "aws-platt", "WAITING_FOR_CONNECTIONS", "aws")
+			attachment := getPrivateLinkAttachment("platt-111111", "aws-platt", "WAITING_FOR_CONNECTIONS", "aws", "us-west-2")
 			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		case "platt-111112":
-			attachment := getPrivateLinkAttachment("platt-111112", "aws-platt", "PROVISIONING", "aws")
+			attachment := getPrivateLinkAttachment("platt-111112", "aws-platt", "PROVISIONING", "aws", "us-west-2")
 			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		case "platt-azure":
-			attachment := getPrivateLinkAttachment("platt-azure", "my-azure-private-link-attachment", "WAITING_FOR_CONNECTIONS", "azure")
+			attachment := getPrivateLinkAttachment("platt-azure", "my-azure-private-link-attachment", "WAITING_FOR_CONNECTIONS", "azure", "us-west-2")
 			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		case "platt-azure-2":
-			attachment := getPrivateLinkAttachment("platt-azure-2", "my-azure-private-link-attachment", "PROVISIONING", "azure")
+			attachment := getPrivateLinkAttachment("platt-azure-2", "my-azure-private-link-attachment", "PROVISIONING", "azure", "us-west-2")
 			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		case "platt-gcp":
-			attachment := getPrivateLinkAttachment("platt-gcp", "my-gcp-private-link-attachment", "WAITING_FOR_CONNECTIONS", "gcp")
+			attachment := getPrivateLinkAttachment("platt-gcp", "my-gcp-private-link-attachment", "WAITING_FOR_CONNECTIONS", "gcp", "us-central1")
 			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		case "platt-gcp-2":
-			attachment := getPrivateLinkAttachment("platt-gcp-2", "my-gcp-private-link-attachment", "PROVISIONING", "gcp")
+			attachment := getPrivateLinkAttachment("platt-gcp-2", "my-gcp-private-link-attachment", "PROVISIONING", "gcp", "us-central1")
 			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		}
 	}
 }
 
-func getPrivateLinkAttachment(id, name, phase, cloud string) networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment {
+func getPrivateLinkAttachment(id, name, phase, cloud, region string) networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment {
 	attachment := networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment{
 		Id: networkingv1.PtrString(id),
 		Spec: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentSpec{
-			Region:      networkingprivatelinkv1.PtrString("us-west-2"),
+			Region:      networkingprivatelinkv1.PtrString(region),
 			DisplayName: networkingprivatelinkv1.PtrString(name),
 			Environment: &networkingprivatelinkv1.ObjectReference{Id: "env-00000"},
 		},
@@ -1331,7 +1336,6 @@ func getPrivateLinkAttachment(id, name, phase, cloud string) networkingprivateli
 		attachment.Spec.Cloud = networkingprivatelinkv1.PtrString("Azure")
 	case "gcp":
 		attachment.Spec.Cloud = networkingprivatelinkv1.PtrString("GCP")
-		attachment.Spec.Region = networkingprivatelinkv1.PtrString("us-central1")
 	}
 
 	if phase != "PROVISIONING" {
@@ -1379,11 +1383,14 @@ func handleNetworkingPrivateLinkAttachmentList(t *testing.T) http.HandlerFunc {
 		)
 
 		attachments := []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment{
-			getPrivateLinkAttachment("platt-111111", "aws-platt-1", "PROVISIONING", "aws"),
-			getPrivateLinkAttachment("platt-111112", "aws-platt-2", "WAITING_FOR_CONNECTIONS", "aws"),
-			getPrivateLinkAttachment("platt-111113", "aws-platt-3", "WAITING_FOR_CONNECTIONS", "aws"),
-			getPrivateLinkAttachment("platt-azure", "azure-platt-1", "WAITING_FOR_CONNECTIONS", "azure"),
-			getPrivateLinkAttachment("platt-gcp", "gcp-platt-1", "WAITING_FOR_CONNECTIONS", "gcp"),
+			getPrivateLinkAttachment("platt-111111", "aws-platt-1", "PROVISIONING", "aws", "us-west-2"),
+			getPrivateLinkAttachment("platt-111112", "aws-platt-2", "WAITING_FOR_CONNECTIONS", "aws", "us-west-2"),
+			getPrivateLinkAttachment("platt-111113", "aws-platt-3", "WAITING_FOR_CONNECTIONS", "aws", "us-west-2"),
+			getPrivateLinkAttachment("platt-azure", "azure-platt-1", "WAITING_FOR_CONNECTIONS", "azure", "us-west-2"),
+			getPrivateLinkAttachment("platt-gcp", "gcp-platt-1", "WAITING_FOR_CONNECTIONS", "gcp", "europe-west3-a"),
+			getPrivateLinkAttachment("platt-111114", "aws-platt-1-for-flink", "READY", "aws", "eu-west-1"),
+			getPrivateLinkAttachment("platt-111115", "aws-platt-2-for-flink", "READY", "aws", "eu-west-2"),
+			getPrivateLinkAttachment("platt-111116", "gcp-platt-1-for-flink", "READY", "gcp", "europe-west3-a"),
 		}
 
 		var filteredAttachments []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment
@@ -1414,7 +1421,7 @@ func handleNetworkingPrivateLinkAttachmentUpdate(t *testing.T, id string) http.H
 			err := json.NewDecoder(r.Body).Decode(body)
 			require.NoError(t, err)
 
-			attachment := getPrivateLinkAttachment("platt-111111", body.Spec.GetDisplayName(), "WAITING_FOR_CONNECTIONS", "aws")
+			attachment := getPrivateLinkAttachment("platt-111111", body.Spec.GetDisplayName(), "WAITING_FOR_CONNECTIONS", "aws", "us-west-2")
 			err = json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		}

@@ -8,5 +8,6 @@ type EnvironmentContext struct {
 	CurrentFlinkRegion            string `json:"current_flink_region,omitempty"`
 	CurrentServiceAccount         string `json:"current_service_account,omitempty"`
 	CurrentFlinkAccessType        string `json:"current_flink_access_type,omitempty"`
+	CurrentFlinkEndpoint          string `json:"current_flink_endpoint,omitempty"`
 	CurrentSchemaRegistryEndpoint string `json:"current_schema_registry_endpoint,omitempty"`
 }
