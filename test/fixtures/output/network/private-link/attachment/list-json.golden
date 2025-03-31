@@ -43,6 +43,7 @@
     "name": "gcp-platt-1-for-flink",
     "cloud": "GCP",
     "region": "europe-west3-a",
+    "gcp_service_attachment_id": "projects/xxxxxxx/regions/us-central1/serviceAttachments/plattg-123456-service-attachment",
     "phase": "READY"
   },
   {
@@ -58,7 +59,7 @@
     "id": "platt-gcp",
     "name": "gcp-platt-1",
     "cloud": "GCP",
-    "region": "us-central1",
+    "region": "europe-west3-a",
     "gcp_service_attachment_id": "projects/xxxxxxx/regions/us-central1/serviceAttachments/plattg-123456-service-attachment",
     "phase": "WAITING_FOR_CONNECTIONS"
   }

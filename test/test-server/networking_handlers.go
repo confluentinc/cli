@@ -1307,11 +1307,11 @@ func handleNetworkingPrivateLinkAttachmentGet(t *testing.T, id string) http.Hand
 			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		case "platt-gcp":
-			attachment := getPrivateLinkAttachment("platt-gcp", "my-gcp-private-link-attachment", "WAITING_FOR_CONNECTIONS", "gcp", "")
+			attachment := getPrivateLinkAttachment("platt-gcp", "my-gcp-private-link-attachment", "WAITING_FOR_CONNECTIONS", "gcp", "us-central1")
 			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		case "platt-gcp-2":
-			attachment := getPrivateLinkAttachment("platt-gcp-2", "my-gcp-private-link-attachment", "PROVISIONING", "gcp", "")
+			attachment := getPrivateLinkAttachment("platt-gcp-2", "my-gcp-private-link-attachment", "PROVISIONING", "gcp", "us-central1")
 			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		}
@@ -1336,7 +1336,6 @@ func getPrivateLinkAttachment(id, name, phase, cloud, region string) networkingp
 		attachment.Spec.Cloud = networkingprivatelinkv1.PtrString("Azure")
 	case "gcp":
 		attachment.Spec.Cloud = networkingprivatelinkv1.PtrString("GCP")
-		attachment.Spec.Region = networkingprivatelinkv1.PtrString("us-central1")
 	}
 
 	if phase != "PROVISIONING" {
@@ -1362,11 +1361,8 @@ func getPrivateLinkAttachment(id, name, phase, cloud, region string) networkingp
 			attachment.Status.Cloud = &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentStatusCloudOneOf{
 				NetworkingV1GcpPrivateLinkAttachmentStatus: &networkingprivatelinkv1.NetworkingV1GcpPrivateLinkAttachmentStatus{
 					Kind: "GcpPrivateLinkAttachmentStatus",
-					ServiceAttachments: []networkingprivatelinkv1.NetworkingV1GcpPscServiceAttachment{
-						{
-							Zone:                                   "zone1",
-							PrivateServiceConnectServiceAttachment: "projects/xxxxxxx/regions/us-central1/serviceAttachments/plattg-123456-service-attachment",
-						},
+					ServiceAttachment: networkingprivatelinkv1.NetworkingV1GcpPscServiceAttachment{
+						PrivateServiceConnectServiceAttachment: "projects/xxxxxxx/regions/us-central1/serviceAttachments/plattg-123456-service-attachment",
 					},
 				},
 			}
