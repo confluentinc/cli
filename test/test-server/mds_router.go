@@ -14,6 +14,9 @@ import (
 )
 
 var mdsRoutes = []route{
+	{"/security/1.0/audit/config", handleAuditConfig},
+	{"/security/1.0/audit/lookup", handleAuditLookup},
+	{"/security/1.0/audit/routes", handleAuditRoutes},
 	{"/security/1.0/authenticate", handleAuthenticate},
 	{"/security/1.0/features", handleFeatures},
 	{"/security/1.0/oidc/device/authenticate", handleDeviceAuthenticate},

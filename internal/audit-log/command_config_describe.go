@@ -17,13 +17,21 @@ func (c *configCommand) newDescribeCommand() *cobra.Command {
 		RunE:  c.describe,
 	}
 
+	cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+
+	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 
 	return cmd
 }
 
-func (c *configCommand) describe(_ *cobra.Command, _ []string) error {
-	spec, response, err := c.MDSClient.AuditLogConfigurationApi.GetConfig(c.createContext())
+func (c *configCommand) describe(cmd *cobra.Command, _ []string) error {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
+	spec, response, err := client.AuditLogConfigurationApi.GetConfig(c.createContext())
 	if err != nil {
 		return HandleMdsAuditLogApiError(err, response)
 	}

@@ -2,6 +2,9 @@ package local
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
@@ -65,15 +68,6 @@ func (c *command) kafkaTopicConsume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	srApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
-	if err != nil {
-		return err
-	}
-	srApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
-	if err != nil {
-		return err
-	}
-
 	if c.Config.LocalPorts == nil {
 		return errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
 	}
@@ -123,19 +117,16 @@ func (c *command) kafkaTopicConsume(cmd *cobra.Command, args []string) error {
 	output.ErrPrintln(c.Config.EnableColor, errors.StartingConsumerMsg)
 
 	groupHandler := &kafka.GroupHandler{
-		SrApiKey:    srApiKey,
-		SrApiSecret: srApiSecret,
 		Out:         cmd.OutOrStdout(),
 		KeyFormat:   "string",
 		ValueFormat: "string",
-		Topic:       topicName,
 		Properties: kafka.ConsumerProperties{
 			PrintKey:  printKey,
 			Timestamp: timestamp,
 			Delimiter: delimiter,
 		},
 	}
-	return kafka.RunConsumer(consumer, groupHandler)
+	return runConsumer(consumer, groupHandler)
 }
 
 func newOnPremConsumer(cmd *cobra.Command, bootstrap string) (*ckgo.Consumer, error) {
@@ -176,4 +167,52 @@ func newOnPremConsumer(cmd *cobra.Command, bootstrap string) (*ckgo.Consumer, er
 	}
 
 	return ckgo.NewConsumer(configMap)
+}
+func runConsumer(consumer *ckgo.Consumer, groupHandler *kafka.GroupHandler) error {
+	run := true
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
+	for run {
+		select {
+		case <-signals: // Trap SIGINT to trigger a shutdown.
+			output.ErrPrintln(false, "Stopping Consumer.")
+			if _, err := consumer.Commit(); err != nil {
+				log.CliLogger.Warnf("Failed to commit current consumer offset: %v", err)
+			}
+			consumer.Close()
+			run = false
+		default:
+			event := consumer.Poll(100) // polling event from consumer with a timeout of 100ms
+			if event == nil {
+				continue
+			}
+			switch e := event.(type) {
+			case *ckgo.Message:
+				if err := kafka.ConsumeMessage(e, groupHandler); err != nil {
+					commitErrCh := make(chan error, 1)
+					go func() {
+						_, err := consumer.Commit()
+						commitErrCh <- err
+					}()
+					select {
+					case commitErr := <-commitErrCh:
+						if commitErr != nil {
+							log.CliLogger.Warnf("Failed to commit current consumer offset: %v", commitErr)
+						}
+					// Time out in case consumer has lost connection to Kafka and commit would hang
+					case <-time.After(5 * time.Second):
+						log.CliLogger.Warnf("Commit operation timed out")
+					}
+
+					return err
+				}
+			case ckgo.Error:
+				fmt.Fprintf(groupHandler.Out, "%% Error: %v: %v\n", e.Code(), e)
+				if e.Code() == ckgo.ErrAllBrokersDown {
+					run = false
+				}
+			}
+		}
+	}
+	return nil
 }

@@ -36,22 +36,29 @@ func (c *aclCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(aclFlags())
+	cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("kafka-cluster"))
 	cobra.CheckErr(cmd.MarkFlagRequired("principal"))
 	cobra.CheckErr(cmd.MarkFlagRequired("operation"))
+	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 
 	return cmd
 }
 
 func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
 	acl := validateACLAddDelete(parse(cmd))
 	if acl.errors != nil {
 		return acl.errors
 	}
 
-	response, err := c.MDSClient.KafkaACLManagementApi.AddAclBinding(c.createContext(), *acl.CreateAclRequest)
+	response, err := client.KafkaACLManagementApi.AddAclBinding(c.createContext(), *acl.CreateAclRequest)
 	if err != nil {
 		return c.handleAclError(cmd, err, response)
 	}

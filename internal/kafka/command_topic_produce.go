@@ -80,6 +80,9 @@ func (c *command) newProduceCommand() *cobra.Command {
 	cmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet())
 	pcmd.AddProtocolFlag(cmd)
 	pcmd.AddMechanismFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().String("client-cert-path", "", "File or directory path to client certificate to authenticate the Schema Registry client.")
+	cmd.Flags().String("client-key-path", "", "File or directory path to client key to authenticate the Schema Registry client.")
+	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 
 	pcmd.AddOutputFlag(cmd) // Deprecated
 	cobra.CheckErr(cmd.Flags().MarkHidden("output"))
@@ -179,10 +182,31 @@ func (c *command) produceCloud(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return ProduceToTopic(cmd, keyMetaInfo, valueMetaInfo, topic, keySerializer, valueSerializer, producer)
+	return c.produceToTopic(cmd, keyMetaInfo, valueMetaInfo, topic, keySerializer, valueSerializer, producer, false)
 }
 
 func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
+	topic := args[0]
+
+	keySerializer, keyMetaInfo, err := c.initSchemaAndGetInfoOnPrem(cmd, topic, "key")
+	if err != nil {
+		return err
+	}
+
+	valueSerializer, valueMetaInfo, err := c.initSchemaAndGetInfoOnPrem(cmd, topic, "value")
+	if err != nil {
+		return err
+	}
+
+	parseKey, err := cmd.Flags().GetBool("parse-key")
+	if err != nil {
+		return err
+	}
+
+	if cmd.Flags().Changed("key-format") && !parseKey {
+		return fmt.Errorf("`--parse-key` must be set when `key-format` is set")
+	}
+
 	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return err
@@ -202,7 +226,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	defer producer.Close()
 	log.CliLogger.Tracef("Create producer succeeded")
 
-	if err := c.refreshOAuthBearerToken(cmd, producer); err != nil {
+	if err := c.refreshOAuthBearerToken(cmd, producer, ckgo.OAuthBearerTokenRefresh{Config: oauthConfig}); err != nil {
 		return err
 	}
 
@@ -212,142 +236,11 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	}
 	defer adminClient.Close()
 
-	topic := args[0]
 	if err := ValidateTopic(adminClient, topic); err != nil {
 		return err
 	}
 
-	keyFormat, keySubject, keySerializer, err := prepareSerializer(cmd, topic, "key")
-	if err != nil {
-		return err
-	}
-
-	valueFormat, valueSubject, valueSerializer, err := prepareSerializer(cmd, topic, "value")
-	if err != nil {
-		return err
-	}
-
-	parseKey, err := cmd.Flags().GetBool("parse-key")
-	if err != nil {
-		return err
-	}
-
-	if cmd.Flags().Changed("key-format") && !parseKey {
-		return fmt.Errorf("`--parse-key` must be set when `key-format` is set")
-	}
-
-	keySchema, err := cmd.Flags().GetString("key-schema")
-	if err != nil {
-		return err
-	}
-
-	schema, err := cmd.Flags().GetString("schema")
-	if err != nil {
-		return err
-	}
-
-	references, err := cmd.Flags().GetString("references")
-	if err != nil {
-		return err
-	}
-	refs, err := schemaregistry.ReadSchemaReferences(references)
-	if err != nil {
-		return err
-	}
-
-	dir, err := createTempDir()
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = os.RemoveAll(dir)
-	}()
-
-	keySchemaConfigs := &schemaregistry.RegisterSchemaConfigs{
-		Subject:    keySubject,
-		SchemaDir:  dir,
-		SchemaType: keySerializer.GetSchemaName(),
-		Format:     keyFormat,
-		SchemaPath: keySchema,
-		Refs:       refs,
-	}
-	keyMetaInfo, keyReferencePathMap, err := c.registerSchemaOnPrem(cmd, keySchemaConfigs)
-	if err != nil {
-		return err
-	}
-	srApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
-	if err != nil {
-		return err
-	}
-	srApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
-	if err != nil {
-		return err
-	}
-
-	token, err := auth.GetDataplaneToken(c.Context)
-	if err != nil {
-		return err
-	}
-
-	// Initialize the key serializer with the same SR endpoint during registration
-	// The associated schema ID is also required to initialize the serializer
-	var keySchemaId = -1
-	if len(keyMetaInfo) >= 5 {
-		keySchemaId = int(binary.BigEndian.Uint32(keyMetaInfo[1:5]))
-	}
-	// Fetch the current SR cluster id and endpoint
-	srClusterId, srEndpoint, err := c.GetCurrentSchemaRegistryClusterIdAndEndpoint(cmd)
-	if err != nil {
-		return err
-	}
-	if err := keySerializer.InitSerializer(srEndpoint, srClusterId, "key", srApiKey, srApiSecret, token, keySchemaId); err != nil {
-		return err
-	}
-	if err := keySerializer.LoadSchema(keySchema, keyReferencePathMap); err != nil {
-		return err
-	}
-
-	valueSchemaConfigs := &schemaregistry.RegisterSchemaConfigs{
-		Subject:    valueSubject,
-		SchemaDir:  dir,
-		SchemaType: valueSerializer.GetSchemaName(),
-		Format:     valueFormat,
-		SchemaPath: schema,
-		Refs:       refs,
-	}
-	valueMetaInfo, referencePathMap, err := c.registerSchemaOnPrem(cmd, valueSchemaConfigs)
-	if err != nil {
-		return err
-	}
-
-	// Initialize the value serializer with the same SR endpoint during registration
-	// The associated schema ID is also required to initialize the serializer
-	var valueSchemaId = -1
-	if len(valueMetaInfo) >= messageOffset {
-		valueSchemaId = int(binary.BigEndian.Uint32(valueMetaInfo[1:messageOffset]))
-	}
-	if err := valueSerializer.InitSerializer(srEndpoint, srClusterId, "value", srApiKey, srApiSecret, token, valueSchemaId); err != nil {
-		return err
-	}
-	if err := valueSerializer.LoadSchema(schema, referencePathMap); err != nil {
-		return err
-	}
-
-	return ProduceToTopic(cmd, keyMetaInfo, valueMetaInfo, topic, keySerializer, valueSerializer, producer)
-}
-
-func prepareSerializer(cmd *cobra.Command, topic, mode string) (string, string, serdes.SerializationProvider, error) {
-	valueFormat, err := cmd.Flags().GetString(fmt.Sprintf("%s-format", mode))
-	if err != nil {
-		return "", "", nil, err
-	}
-
-	serializer, err := serdes.GetSerializationProvider(valueFormat)
-	if err != nil {
-		return "", "", nil, err
-	}
-
-	return valueFormat, topicNameStrategy(topic, mode), serializer, nil
+	return c.produceToTopic(cmd, keyMetaInfo, valueMetaInfo, topic, keySerializer, valueSerializer, producer, true)
 }
 
 func (c *command) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *schemaregistry.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
@@ -447,7 +340,7 @@ func PrepareInputChannel(scanErr *error) (chan string, func()) {
 	}
 }
 
-func getProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, topic, data string, keySerializer, valueSerializer serdes.SerializationProvider) (*ckgo.Message, error) {
+func GetProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, topic, data string, keySerializer, valueSerializer serdes.SerializationProvider) (*ckgo.Message, error) {
 	parseKey, err := cmd.Flags().GetBool("parse-key")
 	if err != nil {
 		return nil, err
@@ -670,7 +563,148 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 			return nil, nil, err
 		}
 	}
-	err = serializationProvider.InitSerializer(srEndpoint, srClusterId, mode, srApiKey, srApiSecret, token, parsedSchemaId)
+	srAuth := serdes.SchemaRegistryAuth{
+		ApiKey:    srApiKey,
+		ApiSecret: srApiSecret,
+		Token:     token,
+	}
+	err = serializationProvider.InitSerializer(srEndpoint, srClusterId, mode, parsedSchemaId, srAuth)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// LoadSchema() is only required for schemas with PROTOBUF format
+	if err := serializationProvider.LoadSchema(schema, referencePathMap); err != nil {
+		return nil, nil, errors.NewWrapErrorWithSuggestions(err, "failed to load schema", "Specify a schema by passing a schema ID or the path to a schema file to the `--schema` flag.")
+	}
+
+	return serializationProvider, metaInfo, nil
+}
+
+func (c *command) initSchemaAndGetInfoOnPrem(cmd *cobra.Command, topic, mode string) (serdes.SerializationProvider, []byte, error) {
+	schemaDir, err := createTempDir()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	subject := topicNameStrategy(topic, mode)
+
+	// Deprecated
+	var schemaId optional.Int32
+	schemaFlagName := "schema"
+	if mode == "key" {
+		schemaFlagName = "key-schema"
+	}
+	schema, err := cmd.Flags().GetString(schemaFlagName)
+	if err != nil {
+		return nil, nil, err
+	}
+	if id, err := strconv.ParseInt(schema, 10, 32); err == nil {
+		schemaId = optional.NewInt32(int32(id))
+	}
+
+	var format string
+	referencePathMap := map[string]string{}
+	metaInfo := []byte{}
+
+	if schemaId.IsSet() {
+		client, err := c.GetSchemaRegistryClient(cmd)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		schemaString, err := client.GetSchema(schemaId.Value(), subject)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		format, err = serdes.FormatTranslation(schemaString.GetSchemaType())
+		if err != nil {
+			return nil, nil, err
+		}
+
+		schema, referencePathMap, err = setSchemaPathRef(schemaString, schemaDir, subject, schemaId.Value(), client)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		metaInfo = getMetaInfoFromSchemaId(schemaId.Value())
+	} else {
+		format, err = cmd.Flags().GetString(fmt.Sprintf("%s-format", mode))
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	serializationProvider, err := serdes.GetSerializationProvider(format)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if schema != "" && !schemaId.IsSet() {
+		// read schema info from local file and register schema
+		schemaCfg := &schemaregistry.RegisterSchemaConfigs{
+			SchemaDir:  schemaDir,
+			SchemaPath: schema,
+			Subject:    subject,
+			Format:     format,
+			SchemaType: serializationProvider.GetSchemaName(),
+		}
+
+		flag := "references"
+		if mode == "key" {
+			flag = "key-references"
+		}
+		references, err := cmd.Flags().GetString(flag)
+		if err != nil {
+			return nil, nil, err
+		}
+		refs, err := schemaregistry.ReadSchemaReferences(references)
+		if err != nil {
+			return nil, nil, err
+		}
+		schemaCfg.Refs = refs
+
+		metaInfo, referencePathMap, err = c.registerSchemaOnPrem(cmd, schemaCfg)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	// Fetch the SR client endpoint during schema registration
+	srEndpoint, err := cmd.Flags().GetString("schema-registry-endpoint")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var parsedSchemaId = -1
+	if len(metaInfo) >= 5 {
+		parsedSchemaId = int(binary.BigEndian.Uint32(metaInfo[1:5]))
+	}
+
+	certificateAuthorityPath, err := cmd.Flags().GetString("certificate-authority-path")
+	if err != nil {
+		return nil, nil, err
+	}
+	clientCertPath, err := cmd.Flags().GetString("client-cert-path")
+	if err != nil {
+		return nil, nil, err
+	}
+	clientKeyPath, err := cmd.Flags().GetString("client-key-path")
+	if err != nil {
+		return nil, nil, err
+	}
+	var token string
+	if c.Config.IsOnPremLogin() {
+		token = c.Config.Context().GetAuthToken()
+	}
+	srAuth := serdes.SchemaRegistryAuth{
+		CertificateAuthorityPath: certificateAuthorityPath,
+		ClientCertPath:           clientCertPath,
+		ClientKeyPath:            clientKeyPath,
+		Token:                    token,
+	}
+	err = serializationProvider.InitSerializer(srEndpoint, "", mode, parsedSchemaId, srAuth)
 	if err != nil {
 		return nil, nil, err
 	}
