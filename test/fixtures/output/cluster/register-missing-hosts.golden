@@ -19,6 +19,8 @@ Flags:
       --connect-cluster string           Kafka Connect cluster ID.
       --cmf string                       Confluent Managed Flink (CMF) ID.
       --flink-environment string         Flink environment ID.
+      --client-cert-path string          Path to client cert to be verified by MDS. Include for mTLS authentication.
+      --client-key-path string           Path to client private key, include for mTLS authentication.
       --context string                   CLI context name.
 
 Global Flags:

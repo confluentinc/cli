@@ -4,7 +4,9 @@ Usage:
   confluent audit-log route lookup <crn> [flags]
 
 Flags:
-      --context string   CLI context name.
+      --client-cert-path string   Path to client cert to be verified by MDS. Include for mTLS authentication.
+      --client-key-path string    Path to client private key, include for mTLS authentication.
+      --context string            CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

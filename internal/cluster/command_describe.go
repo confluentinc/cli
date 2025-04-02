@@ -19,7 +19,7 @@ type describeCommand struct {
 }
 
 type metadata interface {
-	DescribeCluster(url, caCertPath string) (*ScopedId, error)
+	DescribeCluster(url, caCertPath, clientCertPath, clientKeyPath string) (*ScopedId, error)
 }
 
 type out struct {
@@ -54,7 +54,10 @@ func newDescribeCommand(prerunner pcmd.PreRunner, userAgent string) *cobra.Comma
 
 	cmd.Flags().String("url", "", "URL to a Confluent cluster.")
 	cmd.Flags().String("certificate-authority-path", "", "Self-signed certificate chain in PEM format.")
+	cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
 	pcmd.AddOutputFlag(cmd)
+
+	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 
 	return cmd
 }
@@ -70,7 +73,12 @@ func (c *describeCommand) describe(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	meta, err := c.client.DescribeCluster(url, caCertPath)
+	clientCertPath, clientKeyPath, err := pcmd.GetClientCertAndKeyPaths(cmd)
+	if err != nil {
+		return err
+	}
+
+	meta, err := c.client.DescribeCluster(url, caCertPath, clientCertPath, clientKeyPath)
 	if err != nil {
 		return err
 	}
