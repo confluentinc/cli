@@ -4,9 +4,10 @@ Usage:
   confluent schema-registry exporter resume <name> [flags]
 
 Flags:
-      --context string       CLI context name.
-      --environment string   Environment ID.
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+      --context string                    CLI context name.
+      --environment string                Environment ID.
+      --schema-registry-endpoint string   The URL of the Schema Registry cluster.
+  -o, --output string                     Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
