@@ -38,8 +38,8 @@ func (c *command) newSchemaDeleteCommand(cfg *config.Config) *cobra.Command {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
 		addCaLocationAndClientPathFlags(cmd)
-		addSchemaRegistryEndpointFlag(cmd)
 	}
+	addSchemaRegistryEndpointFlag(cmd)
 	pcmd.AddForceFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("subject"))

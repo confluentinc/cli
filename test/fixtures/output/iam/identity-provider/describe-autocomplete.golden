@@ -1,4 +1,5 @@
 op-12345	identity-provider: providing identities.
 op-abc	another-provider: providing identities.
+op-67890	okta-with-identity-claim: new description.
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp

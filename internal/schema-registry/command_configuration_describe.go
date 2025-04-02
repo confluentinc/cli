@@ -41,8 +41,8 @@ func (c *command) newConfigurationDescribeCommand(cfg *config.Config) *cobra.Com
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
 		addCaLocationAndClientPathFlags(cmd)
-		addSchemaRegistryEndpointFlag(cmd)
 	}
+	addSchemaRegistryEndpointFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

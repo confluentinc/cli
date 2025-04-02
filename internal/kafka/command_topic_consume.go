@@ -254,7 +254,7 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 		}
 		// Fetch the current SR cluster id and endpoint
 		if srEndpoint == "" {
-			srClusterId, srEndpoint, err = c.GetCurrentSchemaRegistryClusterIdAndEndpoint()
+			srClusterId, srEndpoint, err = c.GetCurrentSchemaRegistryClusterIdAndEndpoint(cmd)
 			if err != nil {
 				return err
 			}

@@ -535,7 +535,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 
 	var srClusterId string
 	if (schemaId.IsSet() || schema != "") && srEndpoint == "" {
-		srClusterId, srEndpoint, err = c.GetCurrentSchemaRegistryClusterIdAndEndpoint()
+		srClusterId, srEndpoint, err = c.GetCurrentSchemaRegistryClusterIdAndEndpoint(cmd)
 		if err != nil {
 			return nil, nil, err
 		}

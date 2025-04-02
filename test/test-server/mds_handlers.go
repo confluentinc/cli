@@ -161,3 +161,95 @@ func handleDeviceExtendAuth(t *testing.T) http.HandlerFunc {
 		w.WriteHeader(http.StatusUnauthorized)
 	}
 }
+
+// Handler for: "/security/1.0/audit/config"
+func handleAuditConfig(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			config := mdsv1.AuditLogConfigSpec{
+				Destinations: mdsv1.AuditLogConfigDestinations{
+					Topics: map[string]mdsv1.AuditLogConfigDestinationConfig{
+						"confluent-audit-log-events_general_allowed_events": {RetentionMs: 2592000000},
+						"confluent-audit-log-events_general_denied_events":  {RetentionMs: 7776000000},
+					},
+				},
+				ExcludedPrincipals: &[]string{"User:Alice", "User:service_account_id"},
+				DefaultTopics: mdsv1.AuditLogConfigDefaultTopics{
+					Allowed: "confluent-audit-log-events_general_allowed_events",
+					Denied:  "confluent-audit-log-events_general_denied_events",
+				},
+				Routes: &map[string]mdsv1.AuditLogConfigRouteCategories{
+					"crn://mds1.example.com/kafka=*/topic=*": {
+						Authorize: &mdsv1.AuditLogConfigRouteCategoryTopics{
+							Allowed: ptrString("confluent-audit-log-events_general_allowed_events"),
+							Denied:  ptrString("confluent-audit-log-events_general_denied_events"),
+						},
+					},
+				},
+				Metadata: &mdsv1.AuditLogConfigMetadata{
+					ResourceVersion: "ASNFZ4mrze8BI0VniavN7w",
+				},
+			}
+			err := json.NewEncoder(w).Encode(config)
+			require.NoError(t, err)
+		}
+		if r.Method == http.MethodPut {
+			var configSpec mdsv1.AuditLogConfigSpec
+			err := json.NewDecoder(r.Body).Decode(&configSpec)
+			require.NoError(t, err)
+			err = json.NewEncoder(w).Encode(configSpec)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/security/1.0/audit/lookup"
+func handleAuditLookup(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			lookup := mdsv1.AuditLogConfigResolveResourceRouteResponse{
+				Route: "crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/topic=qa-test",
+				Categories: mdsv1.AuditLogConfigRouteCategories{
+					Authorize: &mdsv1.AuditLogConfigRouteCategoryTopics{
+						Allowed: ptrString("confluent-audit-log-events_general_allowed_events"),
+						Denied:  ptrString("confluent-audit-log-events_general_denied_events"),
+					},
+					Consume: &mdsv1.AuditLogConfigRouteCategoryTopics{
+						Denied: ptrString("confluent-audit-log-events_finance_denied"),
+					},
+					Management: &mdsv1.AuditLogConfigRouteCategoryTopics{
+						Allowed: ptrString("confluent-audit-log-events_general_allowed_events"),
+						Denied:  ptrString("confluent-audit-log-events_general_denied_events"),
+					},
+					Produce: &mdsv1.AuditLogConfigRouteCategoryTopics{
+						Allowed: ptrString("confluent-audit-log-events_finance_produce_allowed"),
+						Denied:  ptrString("confluent-audit-log-events_finance_denied"),
+					},
+				},
+			}
+			err := json.NewEncoder(w).Encode(lookup)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/security/1.0/audit/routes"
+func handleAuditRoutes(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			routes := mdsv1.AuditLogConfigListRoutesResponse{
+				DefaultTopics: mdsv1.AuditLogConfigDefaultTopics{
+					Allowed: "confluent-audit-log-events_general_allowed_events",
+					Denied:  "confluent-audit-log-events_general_denied_events",
+				},
+				Routes: &map[string]mdsv1.AuditLogConfigRouteCategories{
+					"crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=qa-test/connector=from-db4": {
+						Management: &mdsv1.AuditLogConfigRouteCategoryTopics{Allowed: ptrString(""), Denied: ptrString("")},
+					},
+				},
+			}
+			err := json.NewEncoder(w).Encode(routes)
+			require.NoError(t, err)
+		}
+	}
+}
