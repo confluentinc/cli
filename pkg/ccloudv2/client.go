@@ -99,6 +99,7 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		CmkClient:                    newCmkClient(httpClient, url, userAgent, unsafeTrace),
 		ConnectClient:                newConnectClient(httpClient, url, userAgent, unsafeTrace),
 		ConnectCustomPluginClient:    newConnectCustomPluginClient(httpClient, url, userAgent, unsafeTrace),
+		ConnectArtifactClient:        newConnectArtifactClient(httpClient, url, userAgent, unsafeTrace),
 		Cclv1Client:                  newCclClient(httpClient, url, userAgent, unsafeTrace),
 		FlinkArtifactClient:          newFlinkArtifactClient(httpClient, url, userAgent, unsafeTrace),
 		FlinkClient:                  newFlinkClient(httpClient, url, userAgent, unsafeTrace),
