@@ -14,6 +14,8 @@ import (
 )
 
 var mdsRoutes = []route{
+	{"/security/1.0/acls", handleAcls},
+	{"/security/1.0/acls:search", handleAclsSearch},
 	{"/security/1.0/audit/config", handleAuditConfig},
 	{"/security/1.0/audit/lookup", handleAuditLookup},
 	{"/security/1.0/audit/routes", handleAuditRoutes},
