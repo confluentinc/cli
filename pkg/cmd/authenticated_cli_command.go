@@ -281,11 +281,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				if err != nil {
 					return nil, err
 				}
-				clientCertificatePath, err := cmd.Flags().GetString("client-cert-path")
-				if err != nil {
-					return nil, err
-				}
-				clientKeyPath, err := cmd.Flags().GetString("client-key-path")
+				clientCertificatePath, clientKeyPath, err := GetClientCertAndKeyPaths(cmd)
 				if err != nil {
 					return nil, err
 				}
