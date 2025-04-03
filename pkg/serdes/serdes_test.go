@@ -93,7 +93,7 @@ func TestAvroSerdesValid(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -115,7 +115,7 @@ func TestAvroSerdesValid(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(avroSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
 	actualString, err := deserializationProvider.Deserialize("topic1", data)
@@ -133,7 +133,7 @@ func TestAvroSerdesInvalid(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -151,7 +151,7 @@ func TestAvroSerdesInvalid(t *testing.T) {
 	deserializationProvider, _ := GetDeserializationProvider(avroSchemaName)
 	req.Nil(err)
 
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
 	brokenString := `{"f1"`
@@ -181,7 +181,7 @@ func TestAvroSerdesNestedValid(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -203,7 +203,7 @@ func TestAvroSerdesNestedValid(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(avroSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
 	actualString, err := deserializationProvider.Deserialize("topic1", expectedBytes)
@@ -225,7 +225,7 @@ func TestAvroSerdesValidWithRuleSet(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -263,7 +263,7 @@ func TestAvroSerdesValidWithRuleSet(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(avroSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
 	actualString, err := deserializationProvider.Deserialize("topic1", data)
@@ -284,7 +284,7 @@ func TestJsonSerdesValid(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -306,7 +306,7 @@ func TestJsonSerdesValid(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(jsonSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
@@ -340,7 +340,7 @@ func TestJsonSerdesReference(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
-	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -370,7 +370,7 @@ func TestJsonSerdesReference(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(jsonSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
@@ -389,7 +389,7 @@ func TestJsonSerdesInvalid(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -405,7 +405,7 @@ func TestJsonSerdesInvalid(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(jsonSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
 	brokenString := `{"f1":`
@@ -442,7 +442,7 @@ func TestJsonSerdesNestedValid(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -464,7 +464,7 @@ func TestJsonSerdesNestedValid(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(jsonSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
 	actualString, err := deserializationProvider.Deserialize("topic1", expectedBytes)
@@ -485,7 +485,7 @@ func TestJsonSerdesValidWithRuleSet(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -523,7 +523,7 @@ func TestJsonSerdesValidWithRuleSet(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(jsonSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
 	actualString, err := deserializationProvider.Deserialize("topic1", data)
@@ -548,7 +548,7 @@ func TestProtobufSerdesValid(t *testing.T) {
 	expectedString := `{"name":"abc","page":1,"result":2.5}`
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -566,7 +566,7 @@ func TestProtobufSerdesValid(t *testing.T) {
 	req.Nil(err)
 
 	deserializationProvider, _ := GetDeserializationProvider(protobufSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -610,7 +610,7 @@ message Person {
 	expectedString := `{"name":"abc","address":{"city":"LA"},"result":2}`
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{"address.proto": referencePath})
 	req.Nil(err)
@@ -642,7 +642,7 @@ message Person {
 	req.Nil(err)
 
 	deserializationProvider, _ := GetDeserializationProvider(protobufSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{"address.proto": referencePath})
 	req.Nil(err)
@@ -665,7 +665,7 @@ func TestProtobufSerdesInvalid(t *testing.T) {
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -680,7 +680,7 @@ func TestProtobufSerdesInvalid(t *testing.T) {
 	req.Nil(err)
 
 	deserializationProvider, _ := GetDeserializationProvider(protobufSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -728,7 +728,7 @@ func TestProtobufSerdesNestedValid(t *testing.T) {
 	expectedString := `{"name":"abc","id":2,"add":{"zip":"123","street":"def"},"phones":{"number":"234"}}`
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -746,7 +746,7 @@ func TestProtobufSerdesNestedValid(t *testing.T) {
 	req.Nil(err)
 
 	deserializationProvider, _ := GetDeserializationProvider(protobufSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -778,7 +778,7 @@ func TestProtobufSerdesValidWithRuleSet(t *testing.T) {
 	expectedString := `{"name":"abc","page":1,"result":2.5}`
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", "", "", "", -1)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -815,7 +815,7 @@ func TestProtobufSerdesValidWithRuleSet(t *testing.T) {
 	req.Nil(err)
 
 	deserializationProvider, _ := GetDeserializationProvider(protobufSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", "", "", "", client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)

@@ -25,18 +25,20 @@ type AvroSerializationProvider struct {
 	mode     string
 }
 
-func (a *AvroSerializationProvider) InitSerializer(srClientUrl, srClusterId, mode, srApiKey, srApiSecret, token string, schemaId int) error {
+func (a *AvroSerializationProvider) InitSerializer(srClientUrl, srClusterId, mode string, schemaId int, srAuth SchemaRegistryAuth) error {
 	var serdeClientConfig *schemaregistry.Config
 	if srClientUrl == mockClientUrl {
 		serdeClientConfig = schemaregistry.NewConfig(srClientUrl)
-	} else if srApiKey != "" && srApiSecret != "" {
-		serdeClientConfig = schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srApiKey, srApiSecret)
-	} else if token != "" {
-		serdeClientConfig = schemaregistry.NewConfigWithBearerAuthentication(srClientUrl, token, srClusterId, "")
+	} else if srAuth.ApiKey != "" && srAuth.ApiSecret != "" {
+		serdeClientConfig = schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srAuth.ApiKey, srAuth.ApiSecret)
+	} else if srAuth.Token != "" {
+		serdeClientConfig = schemaregistry.NewConfigWithBearerAuthentication(srClientUrl, srAuth.Token, srClusterId, "")
 	} else {
 		return fmt.Errorf("schema registry client authentication should be provider to initialize serializer")
 	}
-
+	serdeClientConfig.SslCaLocation = srAuth.CertificateAuthorityPath
+	serdeClientConfig.SslCertificateLocation = srAuth.ClientCertPath
+	serdeClientConfig.SslKeyLocation = srAuth.ClientKeyPath
 	serdeClient, err := schemaregistry.NewClient(serdeClientConfig)
 
 	// Register the KMS drivers and the field-level encryption executor
