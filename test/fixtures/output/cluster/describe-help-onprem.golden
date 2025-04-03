@@ -11,6 +11,8 @@ Discover the cluster ID and Kafka ID for Connect.
 Flags:
       --url string                          URL to a Confluent cluster.
       --certificate-authority-path string   Self-signed certificate chain in PEM format.
+      --client-cert-path string             Path to client cert to be verified by MDS. Include for mTLS authentication.
+      --client-key-path string              Path to client private key, include for mTLS authentication.
   -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

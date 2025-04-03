@@ -1,0 +1,3 @@
+  Kafka Cluster | Principal | Permission |    Operation     | Host | Resource Type | Resource Name | Pattern Type  
+----------------+-----------+------------+------------------+------+---------------+---------------+---------------
+  testcluster   | User:42   | DENY       | IDEMPOTENT_WRITE | *    | CLUSTER       | kafka-cluster | LITERAL       

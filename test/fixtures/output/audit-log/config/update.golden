@@ -1,0 +1,22 @@
+{
+  "destinations": {
+    "bootstrap_servers": [
+      "two:8090"
+    ],
+    "topics": {
+      "confluent-audit-log-events": {
+        "retention_ms": 1728000000
+      }
+    }
+  },
+  "excluded_principals": [],
+  "default_topics": {
+    "allowed": "confluent-audit-log-events",
+    "denied": "confluent-audit-log-events"
+  },
+  "routes": {},
+  "metadata": {
+    "resource_version": "one",
+    "updated_at": "2025-03-31T17:36:21.903776-07:00"
+  }
+}

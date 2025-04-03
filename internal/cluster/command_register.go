@@ -50,16 +50,24 @@ func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("connect-cluster", "", "Kafka Connect cluster ID.")
 	cmd.Flags().String("cmf", "", "Confluent Managed Flink (CMF) ID.")
 	cmd.Flags().String("flink-environment", "", "Flink environment ID.")
+	cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("cluster-name"))
 	cobra.CheckErr(cmd.MarkFlagRequired("hosts"))
 	cobra.CheckErr(cmd.MarkFlagRequired("protocol"))
 
+	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
+
 	return cmd
 }
 
 func (c *registerCommand) register(cmd *cobra.Command, _ []string) error {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
 	clusterName, err := cmd.Flags().GetString("cluster-name")
 	if err != nil {
 		return err
@@ -83,7 +91,7 @@ func (c *registerCommand) register(cmd *cobra.Command, _ []string) error {
 	ctx := context.WithValue(context.Background(), mdsv1.ContextAccessToken, c.Context.GetAuthToken())
 	clusterInfo := mdsv1.ClusterInfo{ClusterName: clusterName, Scope: mdsv1.Scope{Clusters: *scopeClusters}, Hosts: hosts, Protocol: protocol}
 
-	response, err := c.MDSClient.ClusterRegistryApi.UpdateClusters(ctx, []mdsv1.ClusterInfo{clusterInfo})
+	response, err := client.ClusterRegistryApi.UpdateClusters(ctx, []mdsv1.ClusterInfo{clusterInfo})
 	if err != nil {
 		return cluster.HandleClusterError(err, response)
 	}
