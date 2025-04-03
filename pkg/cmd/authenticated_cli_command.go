@@ -281,15 +281,23 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				if err != nil {
 					return nil, err
 				}
+				clientCertificatePath, err := cmd.Flags().GetString("client-cert-path")
+				if err != nil {
+					return nil, err
+				}
+				clientKeyPath, err := cmd.Flags().GetString("client-key-path")
+				if err != nil {
+					return nil, err
+				}
 				if certificateAuthorityPath == "" {
 					certificateAuthorityPath = os.Getenv(auth.ConfluentPlatformCertificateAuthorityPath)
 				}
 				if certificateAuthorityPath != "" {
-					caClient, err := utils.GetCAClient(certificateAuthorityPath)
+					client, err := utils.GetCAAndClientCertClient(certificateAuthorityPath, clientCertificatePath, clientKeyPath)
 					if err != nil {
 						return nil, err
 					}
-					configuration.HTTPClient = caClient
+					configuration.HTTPClient = client
 				}
 			} else {
 				return nil, errors.NewErrorWithSuggestions(
