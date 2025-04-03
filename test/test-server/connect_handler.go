@@ -440,6 +440,16 @@ func handleCustomConnectorPluginsId(t *testing.T) http.HandlerFunc {
 					Cloud:                     connectcustompluginv1.PtrString("AWS"),
 					SensitiveConfigProperties: &sensitiveProperties,
 				}
+			} else if id == "ccp-401432" {
+				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+					Id:                        connectcustompluginv1.PtrString("ccp-401432"),
+					DisplayName:               connectcustompluginv1.PtrString("CliPluginTest"),
+					Description:               connectcustompluginv1.PtrString("Source datagen plugin"),
+					ConnectorType:             connectcustompluginv1.PtrString("source"),
+					ConnectorClass:            connectcustompluginv1.PtrString("io.confluent.kafka.connect.test"),
+					Cloud:                     connectcustompluginv1.PtrString("GCP"),
+					SensitiveConfigProperties: &[]string{"gcp.key", "gcp.secret"},
+				}
 			} else {
 				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
 					Id:             connectcustompluginv1.PtrString("ccp-789013"),
