@@ -88,7 +88,7 @@ func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckgo.Handle
 		if c.Context.GetState() == nil { // require log-in to use oauthbearer token
 			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
-		err := c.mdsRequestAndAuthTokenUpdate()
+		err := c.mdsRequestAndAuthTokenUpdate(cmd)
 		if err != nil {
 			return err
 		}
@@ -107,12 +107,17 @@ func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckgo.Handle
 	return nil
 }
 
-func (c *command) mdsRequestAndAuthTokenUpdate() error {
+func (c *command) mdsRequestAndAuthTokenUpdate(cmd *cobra.Command) error {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
 	req := mdsv1.ExtendAuthRequest{
 		AccessToken:  c.Context.GetAuthToken(),
 		RefreshToken: c.Context.GetAuthRefreshToken(),
 	}
-	resp, _, err := c.MDSClient.SSODeviceAuthorizationApi.ExtendDeviceAuth(context.Background(), req)
+	resp, _, err := client.SSODeviceAuthorizationApi.ExtendDeviceAuth(context.Background(), req)
 	if err != nil {
 		return err
 	}
