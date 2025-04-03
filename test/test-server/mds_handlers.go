@@ -253,3 +253,159 @@ func handleAuditRoutes(t *testing.T) http.HandlerFunc {
 		}
 	}
 }
+
+// Handler for: "/security/1.0/acls"
+func handleAcls(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			var createAclRequest mdsv1.CreateAclRequest
+			err := json.NewDecoder(r.Body).Decode(&createAclRequest)
+			require.NoError(t, err)
+
+			acls := []mdsv1.AclBinding{
+				{
+					Pattern: mdsv1.KafkaResourcePattern{
+						ResourceType: createAclRequest.AclBinding.Pattern.ResourceType,
+						Name:         createAclRequest.AclBinding.Pattern.Name,
+						PatternType:  createAclRequest.AclBinding.Pattern.PatternType,
+					},
+					Entry: mdsv1.AccessControlEntry{
+						Principal:      createAclRequest.AclBinding.Entry.Principal,
+						Host:           createAclRequest.AclBinding.Entry.Host,
+						Operation:      createAclRequest.AclBinding.Entry.Operation,
+						PermissionType: createAclRequest.AclBinding.Entry.PermissionType,
+					},
+				},
+			}
+			err = json.NewEncoder(w).Encode(acls)
+			require.NoError(t, err)
+		}
+		if r.Method == http.MethodDelete {
+			var aclFilterRequest mdsv1.AclFilterRequest
+			err := json.NewDecoder(r.Body).Decode(&aclFilterRequest)
+			require.NoError(t, err)
+
+			principal := aclFilterRequest.AclBindingFilter.EntryFilter.Principal
+			if principal == "" {
+				principal = "User:abc123"
+			}
+
+			var acls []mdsv1.AclBinding
+			if principal == "User:def456" {
+				acls = []mdsv1.AclBinding{
+					{
+						Pattern: mdsv1.KafkaResourcePattern{
+							ResourceType: mdsv1.ACLRESOURCETYPE_CLUSTER,
+							Name:         "kafka-cluster",
+							PatternType:  mdsv1.PATTERNTYPE_LITERAL,
+						},
+						Entry: mdsv1.AccessControlEntry{
+							Principal:      principal,
+							Host:           "*",
+							Operation:      mdsv1.ACLOPERATION_ANY,
+							PermissionType: mdsv1.ACLPERMISSIONTYPE_ANY,
+						},
+					},
+					{
+						Pattern: mdsv1.KafkaResourcePattern{
+							ResourceType: mdsv1.ACLRESOURCETYPE_TOPIC,
+							Name:         "test-topic",
+							PatternType:  mdsv1.PATTERNTYPE_LITERAL,
+						},
+						Entry: mdsv1.AccessControlEntry{
+							Principal:      principal,
+							Host:           "*",
+							Operation:      mdsv1.ACLOPERATION_ANY,
+							PermissionType: mdsv1.ACLPERMISSIONTYPE_ANY,
+						},
+					},
+				}
+			} else {
+				acls = []mdsv1.AclBinding{
+					{
+						Pattern: mdsv1.KafkaResourcePattern{
+							ResourceType: aclFilterRequest.AclBindingFilter.PatternFilter.ResourceType,
+							Name:         aclFilterRequest.AclBindingFilter.PatternFilter.Name,
+							PatternType:  aclFilterRequest.AclBindingFilter.PatternFilter.PatternType,
+						},
+						Entry: mdsv1.AccessControlEntry{
+							Principal:      principal,
+							Host:           "*",
+							Operation:      mdsv1.ACLOPERATION_ANY,
+							PermissionType: mdsv1.ACLPERMISSIONTYPE_ANY,
+						},
+					},
+				}
+			}
+
+			err = json.NewEncoder(w).Encode(acls)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/security/1.0/acls:search"
+func handleAclsSearch(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			var aclFilterRequest mdsv1.AclFilterRequest
+			err := json.NewDecoder(r.Body).Decode(&aclFilterRequest)
+			require.NoError(t, err)
+
+			principal := aclFilterRequest.AclBindingFilter.EntryFilter.Principal
+			if principal == "" {
+				principal = "User:abc123"
+			}
+
+			var acls []mdsv1.AclBinding
+			if principal == "User:def456" {
+				acls = []mdsv1.AclBinding{
+					{
+						Pattern: mdsv1.KafkaResourcePattern{
+							ResourceType: mdsv1.ACLRESOURCETYPE_CLUSTER,
+							Name:         "kafka-cluster",
+							PatternType:  mdsv1.PATTERNTYPE_LITERAL,
+						},
+						Entry: mdsv1.AccessControlEntry{
+							Principal:      principal,
+							Host:           "*",
+							Operation:      mdsv1.ACLOPERATION_ANY,
+							PermissionType: mdsv1.ACLPERMISSIONTYPE_ANY,
+						},
+					},
+					{
+						Pattern: mdsv1.KafkaResourcePattern{
+							ResourceType: mdsv1.ACLRESOURCETYPE_TOPIC,
+							Name:         "test-topic",
+							PatternType:  mdsv1.PATTERNTYPE_LITERAL,
+						},
+						Entry: mdsv1.AccessControlEntry{
+							Principal:      principal,
+							Host:           "*",
+							Operation:      mdsv1.ACLOPERATION_ANY,
+							PermissionType: mdsv1.ACLPERMISSIONTYPE_ANY,
+						},
+					},
+				}
+			} else {
+				acls = []mdsv1.AclBinding{
+					{
+						Pattern: mdsv1.KafkaResourcePattern{
+							ResourceType: aclFilterRequest.AclBindingFilter.PatternFilter.ResourceType,
+							Name:         aclFilterRequest.AclBindingFilter.PatternFilter.Name,
+							PatternType:  aclFilterRequest.AclBindingFilter.PatternFilter.PatternType,
+						},
+						Entry: mdsv1.AccessControlEntry{
+							Principal:      principal,
+							Host:           "*",
+							Operation:      mdsv1.ACLOPERATION_ANY,
+							PermissionType: mdsv1.ACLPERMISSIONTYPE_ANY,
+						},
+					},
+				}
+			}
+			err = json.NewEncoder(w).Encode(acls)
+			require.NoError(t, err)
+		}
+	}
+}
