@@ -54,8 +54,18 @@ const (
 	protobufSchemaBackendName = "PROTOBUF"
 )
 
+// Struct to hold strings/filepaths relating to Schema Registry authentication or authorization
+type SchemaRegistryAuth struct {
+	ApiKey                   string
+	ApiSecret                string
+	CertificateAuthorityPath string
+	ClientCertPath           string
+	ClientKeyPath            string
+	Token                    string
+}
+
 type SerializationProvider interface {
-	InitSerializer(string, string, string, string, string, string, int) error
+	InitSerializer(srClientUrl, srClusterId, mode string, schemaId int, srAuth SchemaRegistryAuth) error
 	LoadSchema(string, map[string]string) error
 	Serialize(string, string) ([]byte, error)
 	GetSchemaName() string
@@ -63,7 +73,7 @@ type SerializationProvider interface {
 }
 
 type DeserializationProvider interface {
-	InitDeserializer(string, string, string, string, string, string, any) error
+	InitDeserializer(srClientUrl, srClusterId, mode string, srAuth SchemaRegistryAuth, existingClient any) error
 	LoadSchema(string, map[string]string) error
 	Deserialize(string, []byte) (string, error)
 }

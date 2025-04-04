@@ -8,7 +8,7 @@ import (
 
 type DoubleDeserializationProvider struct{}
 
-func (DoubleDeserializationProvider) InitDeserializer(_, _, _, _, _, _ string, _ any) error {
+func (DoubleDeserializationProvider) InitDeserializer(_, _, _ string, _ SchemaRegistryAuth, _ any) error {
 	return nil
 }
 
