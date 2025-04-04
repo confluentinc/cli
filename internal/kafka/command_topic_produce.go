@@ -182,7 +182,7 @@ func (c *command) produceCloud(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return ProduceToTopic(cmd, keyMetaInfo, valueMetaInfo, topic, keySerializer, valueSerializer, producer)
+	return c.produceToTopic(cmd, keyMetaInfo, valueMetaInfo, topic, keySerializer, valueSerializer, producer, false)
 }
 
 func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
@@ -226,7 +226,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	defer producer.Close()
 	log.CliLogger.Tracef("Create producer succeeded")
 
-	if err := c.refreshOAuthBearerToken(cmd, producer); err != nil {
+	if err := c.refreshOAuthBearerToken(cmd, producer, ckgo.OAuthBearerTokenRefresh{Config: oauthConfig}); err != nil {
 		return err
 	}
 
@@ -240,7 +240,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return ProduceToTopic(cmd, keyMetaInfo, valueMetaInfo, topic, keySerializer, valueSerializer, producer)
+	return c.produceToTopic(cmd, keyMetaInfo, valueMetaInfo, topic, keySerializer, valueSerializer, producer, true)
 }
 
 func (c *command) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *schemaregistry.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
@@ -340,7 +340,7 @@ func PrepareInputChannel(scanErr *error) (chan string, func()) {
 	}
 }
 
-func getProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, topic, data string, keySerializer, valueSerializer serdes.SerializationProvider) (*ckgo.Message, error) {
+func GetProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, topic, data string, keySerializer, valueSerializer serdes.SerializationProvider) (*ckgo.Message, error) {
 	parseKey, err := cmd.Flags().GetBool("parse-key")
 	if err != nil {
 		return nil, err
