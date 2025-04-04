@@ -548,8 +548,7 @@ type onPremKafkaRestFlagValues struct {
 func resolveOnPremKafkaRestFlags(cmd *cobra.Command) (*onPremKafkaRestFlagValues, error) {
 	url, _ := cmd.Flags().GetString("url")
 	certificateAAuthorityPath, _ := cmd.Flags().GetString("certificate-authority-path")
-	clientCertPath, _ := cmd.Flags().GetString("client-cert-path")
-	clientKeyPath, _ := cmd.Flags().GetString("client-key-path")
+	clientCertPath, clientKeyPath, _ := GetClientCertAndKeyPaths(cmd)
 	noAuthentication, _ := cmd.Flags().GetBool("no-authentication")
 	prompt, _ := cmd.Flags().GetBool("prompt")
 
