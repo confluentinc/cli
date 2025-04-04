@@ -1,11 +1,34 @@
 package test
 
-import (
-	"fmt"
-)
+import "fmt"
 
 func (s *CLITestSuite) TestAuditLogDescribe() {
 	s.runIntegrationTest(CLITest{args: "audit-log describe", login: "cloud", fixture: "audit-log/describe.golden"})
+}
+
+func (s *CLITestSuite) TestAuditLogRoute() {
+	tests := []CLITest{
+		{args: "audit-log route list --resource crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=qa-test", fixture: "audit-log/route/list.golden"},
+		{args: "audit-log route lookup crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/topic=qa-test", fixture: "audit-log/route/lookup.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestAuditLogConfig() {
+	tests := []CLITest{
+		{args: "audit-log config describe", fixture: "audit-log/config/describe.golden"},
+		{args: "audit-log config update --file test/fixtures/input/audit-log/config-spec-update.json", fixture: "audit-log/config/update.golden"},
+		{args: "audit-log config update --force --file test/fixtures/input/audit-log/config-spec-update.json", fixture: "audit-log/config/update-force.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		s.runIntegrationTest(test)
+	}
 }
 
 func (s *CLITestSuite) TestAuditLogConfigMigrate() {
