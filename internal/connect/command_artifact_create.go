@@ -43,7 +43,7 @@ func (c *artifactCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create connect artifact "my-connect-artifact".`,
-				Code: "confluent connect artifact create my-connect-artifact --artifact-file artifact.jar --cloud aws --region us-west-2 --environment env-111111 --description newArtifact",
+				Code: "confluent connect artifact create my-connect-artifact --artifact-file artifact.jar --cloud aws --region us-west-2 --environment env-abc123 --description newArtifact",
 			},
 		),
 	}

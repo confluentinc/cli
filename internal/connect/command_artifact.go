@@ -18,15 +18,15 @@ type artifactOut struct {
 	// TODO: double check all the fields
 	Id string `human:"ID" serialized:"id"`
 	//ArtifactFile  string `human:"Artifact File" serialized:"artifact_file"`
+	Name          string `human:"Name" serialized:"name"`
+	Description   string `human:"Description" serialized:"description"`
 	Cloud         string `human:"Cloud" serialized:"cloud"`
 	Region        string `human:"Region" serialized:"region"`
 	Environment   string `human:"Environment" serialized:"environment"`
-	Name          string `human:"Name" serialized:"name"`
-	Description   string `human:"Description" serialized:"description"`
 	ContentFormat string `human:"Content Format" serialized:"content_format"`
-	UploadSource  string `human:"Upload Source" serialized:"upload_source"`
-	Plugins       string `human:"Plugins" serialized:"plugins"`
-	Usages        string `human:"Usages" serialized:"usages"`
+	//UploadSource  string `human:"Upload Source" serialized:"upload_source"`
+	//Plugins       string `human:"Plugins" serialized:"plugins"`
+	//Usages        string `human:"Usages" serialized:"usages"`
 }
 
 func newArtifactCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -56,11 +56,11 @@ func printArtifactTable(cmd *cobra.Command, artifact camv1.CamV1ConnectArtifact)
 		// TODO: double check all the fields
 		Id: artifact.GetId(),
 		//ArtifactFile:  artifact.GetArtifactFile(),
+		Name:          artifact.Spec.GetDisplayName(),
+		Description:   artifact.Spec.GetDescription(),
 		Cloud:         artifact.Spec.GetCloud(),
 		Region:        artifact.Spec.GetRegion(),
 		Environment:   artifact.Spec.GetEnvironment(),
-		Name:          artifact.Spec.GetDisplayName(),
-		Description:   artifact.Spec.GetDescription(),
 		ContentFormat: artifact.Spec.GetContentFormat(),
 		//UploadSource:  artifact.Spec.GetUploadSource(),
 		//Plugins: artifact.Spec.GetPlugins(),
