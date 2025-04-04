@@ -55,18 +55,21 @@ type ConsumerProperties struct {
 
 // GroupHandler instances are used to handle individual topic-partition claims.
 type GroupHandler struct {
-	SrClient          *schemaregistry.Client
-	SrApiKey          string
-	SrApiSecret       string
-	SrClusterId       string
-	SrClusterEndpoint string
-	Token             string
-	KeyFormat         string
-	ValueFormat       string
-	Out               io.Writer
-	Subject           string
-	Topic             string
-	Properties        ConsumerProperties
+	SrClient                 *schemaregistry.Client
+	SrApiKey                 string
+	SrApiSecret              string
+	SrClusterId              string
+	SrClusterEndpoint        string
+	Token                    string
+	CertificateAuthorityPath string
+	ClientCertPath           string
+	ClientKeyPath            string
+	KeyFormat                string
+	ValueFormat              string
+	Out                      io.Writer
+	Subject                  string
+	Topic                    string
+	Properties               ConsumerProperties
 }
 
 func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckgo.Handle) error {
@@ -193,13 +196,22 @@ func GetRebalanceCallback(offset ckgo.Offset, partitionFilter PartitionFilter) f
 }
 
 func consumeMessage(message *ckgo.Message, h *GroupHandler) error {
+	srAuth := serdes.SchemaRegistryAuth{
+		ApiKey:                   h.SrApiKey,
+		ApiSecret:                h.SrApiSecret,
+		CertificateAuthorityPath: h.CertificateAuthorityPath,
+		ClientCertPath:           h.ClientCertPath,
+		ClientKeyPath:            h.ClientKeyPath,
+		Token:                    h.Token,
+	}
+
 	if h.Properties.PrintKey {
 		keyDeserializer, err := serdes.GetDeserializationProvider(h.KeyFormat)
 		if err != nil {
 			return err
 		}
 
-		err = keyDeserializer.InitDeserializer(h.SrClusterEndpoint, h.SrClusterId, "key", h.SrApiKey, h.SrApiSecret, h.Token, nil)
+		err = keyDeserializer.InitDeserializer(h.SrClusterEndpoint, h.SrClusterId, "key", srAuth, nil)
 		if err != nil {
 			return err
 		}
@@ -232,7 +244,7 @@ func consumeMessage(message *ckgo.Message, h *GroupHandler) error {
 		return err
 	}
 
-	err = valueDeserializer.InitDeserializer(h.SrClusterEndpoint, h.SrClusterId, "value", h.SrApiKey, h.SrApiSecret, h.Token, nil)
+	err = valueDeserializer.InitDeserializer(h.SrClusterEndpoint, h.SrClusterId, "value", srAuth, nil)
 	if err != nil {
 		return err
 	}
