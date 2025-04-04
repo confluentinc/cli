@@ -357,12 +357,7 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	clientCertPath, err := cmd.Flags().GetString("client-cert-path")
-	if err != nil {
-		return err
-	}
-
-	clientKeyPath, err := cmd.Flags().GetString("client-key-path")
+	clientCertPath, clientKeyPath, err := pcmd.GetClientCertAndKeyPaths(cmd)
 	if err != nil {
 		return err
 	}

@@ -686,11 +686,7 @@ func (c *command) initSchemaAndGetInfoOnPrem(cmd *cobra.Command, topic, mode str
 	if err != nil {
 		return nil, nil, err
 	}
-	clientCertPath, err := cmd.Flags().GetString("client-cert-path")
-	if err != nil {
-		return nil, nil, err
-	}
-	clientKeyPath, err := cmd.Flags().GetString("client-key-path")
+	clientCertPath, clientKeyPath, err := pcmd.GetClientCertAndKeyPaths(cmd)
 	if err != nil {
 		return nil, nil, err
 	}
