@@ -326,6 +326,11 @@ func (s *CLITestSuite) TestFlinkEndpointList() {
 }
 
 func (s *CLITestSuite) TestFlinkEndpointUse() {
+	describeFailureFixture := "flink/statement/describe-failure.golden"
+	if runtime.GOOS == "windows" { // Error message is different on Windows
+		describeFailureFixture = "flink/statement/describe-failure-windows.golden"
+	}
+
 	tests := []CLITest{
 		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
 		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
@@ -333,7 +338,7 @@ func (s *CLITestSuite) TestFlinkEndpointUse() {
 		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/describe.golden"},
 		{args: "flink endpoint unset", fixture: "flink/endpoint/unset.golden"},
 		{args: "flink endpoint use http://127.0.0.1:1040", fixture: "flink/endpoint/use-private.golden"},
-		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/describe-failure.golden", exitCode: 1},
+		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: describeFailureFixture, exitCode: 1},
 	}
 
 	for _, test := range tests {
