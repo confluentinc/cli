@@ -203,8 +203,8 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if cmd.Flags().Changed("key-format") && !parseKey {
-		return fmt.Errorf("`--parse-key` must be set when `key-format` is set")
+	if (cmd.Flags().Changed("key-format") || cmd.Flags().Changed("key-schema")) && !parseKey {
+		return fmt.Errorf("`--parse-key` must be set when `key-format` or `key-schema` is set")
 	}
 
 	configFile, err := cmd.Flags().GetString("config-file")
