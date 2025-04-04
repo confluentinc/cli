@@ -362,6 +362,64 @@ func (c *AuthenticatedCLICommand) GetCurrentSchemaRegistryClusterIdAndEndpoint(c
 	return cluster.GetId(), endpoint, nil
 }
 
+func (c *AuthenticatedCLICommand) GetMDSClient(cmd *cobra.Command) (*mdsv1.APIClient, error) {
+	if c.MDSClient == nil {
+		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+		if err != nil {
+			return nil, err
+		}
+
+		clientCertPath, clientKeyPath, err := GetClientCertAndKeyPaths(cmd)
+		if err != nil {
+			return nil, err
+		}
+
+		configuration := mdsv1.NewConfiguration()
+		configuration.HTTPClient = utils.DefaultClient()
+		configuration.Debug = unsafeTrace
+		if c.Context == nil {
+			c.MDSClient = mdsv1.NewAPIClient(configuration)
+		}
+		configuration.BasePath = c.Context.GetPlatformServer()
+		configuration.UserAgent = c.Config.Version.UserAgent
+		if c.Context.Platform.CaCertPath == "" {
+			c.MDSClient = mdsv1.NewAPIClient(configuration)
+		}
+
+		caCertPath := c.Context.Platform.CaCertPath
+		// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
+		// be a --certificate-authority-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
+		client, err := utils.CustomCAAndClientCertClient(caCertPath, clientCertPath, clientKeyPath)
+		if err != nil {
+			log.CliLogger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --certificate-authority-path flag.", caCertPath, err.Error())
+		} else {
+			configuration.HTTPClient = client
+		}
+		c.MDSClient = mdsv1.NewAPIClient(configuration)
+	}
+
+	return c.MDSClient, nil
+}
+
+func GetClientCertAndKeyPaths(cmd *cobra.Command) (string, string, error) {
+	// Order of precedence: flags > env vars
+	clientCertPath, err := cmd.Flags().GetString("client-cert-path")
+	if err != nil {
+		return "", "", err
+	}
+	clientKeyPath, err := cmd.Flags().GetString("client-key-path")
+	if err != nil {
+		return "", "", err
+	}
+
+	if clientCertPath == "" && clientKeyPath == "" {
+		clientCertPath = os.Getenv(auth.ConfluentPlatformClientCertPath)
+		clientKeyPath = os.Getenv(auth.ConfluentPlatformClientKeyPath)
+	}
+
+	return clientCertPath, clientKeyPath, nil
+}
+
 func (c *AuthenticatedCLICommand) GetValidSchemaRegistryClusterEndpoint(cmd *cobra.Command, cluster srcmv3.SrcmV3Cluster) (string, error) {
 	unsafeTrace, _ := cmd.Flags().GetBool("unsafe-trace")
 	configuration := srsdk.NewConfiguration()
