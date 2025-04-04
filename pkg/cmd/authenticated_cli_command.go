@@ -407,16 +407,17 @@ func GetClientCertAndKeyPaths(cmd *cobra.Command) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-	if clientCertPath != "" {
-		clientKeyPath, err := cmd.Flags().GetString("client-key-path")
-		if err != nil {
-			return "", "", err
-		}
-
-		return clientCertPath, clientKeyPath, nil
+	clientKeyPath, err := cmd.Flags().GetString("client-key-path")
+	if err != nil {
+		return "", "", err
 	}
 
-	return os.Getenv(auth.ConfluentPlatformClientCertPath), os.Getenv(auth.ConfluentPlatformClientKeyPath), nil
+	if clientCertPath == "" && clientKeyPath == "" {
+		clientCertPath = os.Getenv(auth.ConfluentPlatformClientCertPath)
+		clientKeyPath = os.Getenv(auth.ConfluentPlatformClientKeyPath)
+	}
+
+	return clientCertPath, clientKeyPath, nil
 }
 
 func (c *AuthenticatedCLICommand) GetValidSchemaRegistryClusterEndpoint(cmd *cobra.Command, cluster srcmv3.SrcmV3Cluster) (string, error) {
