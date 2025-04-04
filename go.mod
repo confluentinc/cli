@@ -58,7 +58,7 @@ require (
 	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.18
 	github.com/confluentinc/mds-sdk-go-public/mdsv1 v0.0.0-20240923163156-b922b35891f9
 	github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1 v0.0.0-20240923163156-b922b35891f9
-	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
+	github.com/confluentinc/properties v1.8.1
 	github.com/confluentinc/schema-registry-sdk-go v0.1.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dghubble/sling v1.4.2
