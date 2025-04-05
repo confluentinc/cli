@@ -5,7 +5,6 @@ Usage:
 
 Available Commands:
   connect         Manage Connect.
-  control-center  Manage Control Center.
   kafka           Manage Apache Kafka®.
   kafka-rest      Manage Kafka REST.
   ksql-server     Manage ksqlDB Server.
