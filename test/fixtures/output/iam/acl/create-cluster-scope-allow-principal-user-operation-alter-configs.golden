@@ -1,0 +1,3 @@
+  Kafka Cluster | Principal | Permission |   Operation   | Host | Resource Type | Resource Name | Pattern Type  
+----------------+-----------+------------+---------------+------+---------------+---------------+---------------
+  testcluster   | User:42   | ALLOW      | ALTER_CONFIGS | *    | CLUSTER       | kafka-cluster | LITERAL       
