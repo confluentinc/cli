@@ -73,8 +73,7 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("resource", "", `Resource type and identifier using "Prefix:ID" format.`)
 	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	if c.cfg.IsOnPremLogin() {
-		cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
-		cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
+		pcmd.AddMDSOnPremMTLSFlags(cmd)
 	}
 	pcmd.AddOutputFlag(cmd)
 

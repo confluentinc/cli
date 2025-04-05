@@ -106,8 +106,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 		cmd.Flags().String("connect-cluster", "", "Kafka Connect cluster ID, which specifies the Connect cluster scope.")
 		cmd.Flags().String("cmf", "", "Confluent Managed Flink (CMF) ID, which specifies the CMF scope.")
 		cmd.Flags().String("flink-environment", "", "Flink environment ID, which specifies the Flink environment scope.")
-		cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
-		cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
+		pcmd.AddMDSOnPremMTLSFlags(cmd)
 		pcmd.AddContextFlag(cmd, c.CLICommand)
 
 		cmd.Flags().String("cluster-name", "", "Cluster name, which specifies the cluster scope.")
