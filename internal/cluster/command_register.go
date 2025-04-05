@@ -50,14 +50,12 @@ func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("connect-cluster", "", "Kafka Connect cluster ID.")
 	cmd.Flags().String("cmf", "", "Confluent Managed Flink (CMF) ID.")
 	cmd.Flags().String("flink-environment", "", "Flink environment ID.")
-	cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
+	pcmd.AddMDSOnPremMTLSFlags(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("cluster-name"))
 	cobra.CheckErr(cmd.MarkFlagRequired("hosts"))
 	cobra.CheckErr(cmd.MarkFlagRequired("protocol"))
-
-	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 
 	return cmd
 }

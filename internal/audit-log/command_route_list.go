@@ -21,11 +21,10 @@ func (c *routeCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("resource", "", "The Confluent resource name (CRN) that is the subject of the query.")
-	cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
+	pcmd.AddMDSOnPremMTLSFlags(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("resource"))
-	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 
 	return cmd
 }

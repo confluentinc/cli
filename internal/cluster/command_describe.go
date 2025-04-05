@@ -54,10 +54,8 @@ func newDescribeCommand(prerunner pcmd.PreRunner, userAgent string) *cobra.Comma
 
 	cmd.Flags().String("url", "", "URL to a Confluent cluster.")
 	cmd.Flags().String("certificate-authority-path", "", "Self-signed certificate chain in PEM format.")
-	cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
+	pcmd.AddMDSOnPremMTLSFlags(cmd)
 	pcmd.AddOutputFlag(cmd)
-
-	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 
 	return cmd
 }

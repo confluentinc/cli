@@ -25,11 +25,3 @@ func OnPremAuthenticationSet() *pflag.FlagSet {
 	set.SortFlags = false
 	return set
 }
-
-func OnPremMTLSSet() *pflag.FlagSet {
-	set := pflag.NewFlagSet("onprem-mds-mtls", pflag.ExitOnError)
-	set.String("client-cert-path", "", "Path to client cert to be verified by MDS. Include for mTLS authentication.")
-	set.String("client-key-path", "", "Path to client private key, include for mTLS authentication.")
-	set.SortFlags = false
-	return set
-}
