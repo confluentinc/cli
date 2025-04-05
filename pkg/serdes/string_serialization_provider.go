@@ -4,7 +4,7 @@ import "github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 
 type StringSerializationProvider struct{}
 
-func (s *StringSerializationProvider) InitSerializer(_, _, _, _, _, _ string, _ int) error {
+func (s *StringSerializationProvider) InitSerializer(_, _, _ string, _ int, _ SchemaRegistryAuth) error {
 	return nil
 }
 
