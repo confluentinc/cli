@@ -23,11 +23,9 @@ func (c *ksqlCommand) newListCommandOnPrem() *cobra.Command {
 		RunE:  c.listOnPrem,
 	}
 
-	cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
+	pcmd.AddMDSOnPremMTLSFlags(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
-
-	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 
 	return cmd
 }

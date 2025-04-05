@@ -28,7 +28,7 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(aclFlags())
-	cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
+	pcmd.AddMDSOnPremMTLSFlags(cmd)
 	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
@@ -36,7 +36,6 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 	cobra.CheckErr(cmd.MarkFlagRequired("principal"))
 	cobra.CheckErr(cmd.MarkFlagRequired("operation"))
 	cobra.CheckErr(cmd.MarkFlagRequired("host"))
-	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 
 	return cmd
 }
