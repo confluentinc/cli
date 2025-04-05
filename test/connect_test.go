@@ -45,6 +45,29 @@ func (s *CLITestSuite) TestConnect() {
 	}
 }
 
+func (s *CLITestSuite) TestConnectArtifact() {
+	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
+	tests := []CLITest{
+		{args: `connect artifact create my-connect-artifact --artifact-file artifact.jar --cloud aws --region us-west-2 --environment env-abc123 --description newArtifact`, fixture: "connect/artifact/create.golden"},
+		{args: `connect artifact create my-connect-artifact --artifact-file artifact.jpg --cloud aws --region us-west-2 --environment env-abc123 --description newArtifact`, fixture: "connect/artifact/create-invalid-file-type.golden", exitCode: 1},
+		{args: "connect artifact list", fixture: "connect/custom-plugin/list.golden"},
+		{args: "connect artifact list --cloud aws", fixture: "connect/custom-plugin/list-aws.golden"},
+		{args: "connect artifact list -o json", fixture: "connect/custom-plugin/list-json.golden"},
+		{args: "connect artifact list -o yaml", fixture: "connect/custom-plugin/list-yaml.golden"},
+		{args: "connect artifact describe cfa-abc123", fixture: "connect/custom-plugin/describe.golden"},
+		{args: "connect artifact describe cfa-666666", fixture: "connect/custom-plugin/describe-nonexistent-artifact.golden", exitCode: 1},
+		{args: "connect artifact describe cfa-abc123 -o json", fixture: "connect/custom-plugin/describe-json.golden"},
+		{args: "connect artifact describe cfa-abc123 -o yaml", fixture: "connect/custom-plugin/describe-yaml.golden"},
+		{args: "connect artifact delete cfa-abc123 --force", fixture: "connect/custom-plugin/delete-force.golden"},
+		{args: "connect artifact delete cfa-abc123", input: "y\n", fixture: "connect/custom-plugin/delete-prompt.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestConnectClusterPause() {
 	tests := []CLITest{
 		{args: "connect cluster pause lcc-000000 --cluster lkc-123456", fixture: "connect/cluster/pause-unknown.golden", exitCode: 1},

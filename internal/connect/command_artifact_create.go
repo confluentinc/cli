@@ -126,7 +126,7 @@ func (c *artifactCommand) createArtifact(cmd *cobra.Command, args []string) erro
 			Region:      region,
 			Environment: environment,
 			Description: camv1.PtrString(description),
-			UploadSource: camv1.CamV1ConnectArtifactSpecUploadSourceOneOf{
+			UploadSource: &camv1.CamV1ConnectArtifactSpecUploadSourceOneOf{
 				CamV1UploadSourcePresignedUrl: &camv1.CamV1UploadSourcePresignedUrl{
 					Location: "PRESIGNED_URL_LOCATION",
 					UploadId: resp.GetUploadId(),

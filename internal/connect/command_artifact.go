@@ -42,7 +42,7 @@ func newArtifactCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Com
 	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	// TODO: delete operation is out of scope?
-	// cmd.AddCommand(c.newDeleteCommand())
+	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newListCommand())
 	// cmd.AddCommand(c.newUpdateCommand())
 

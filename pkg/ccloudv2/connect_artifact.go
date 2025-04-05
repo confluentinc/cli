@@ -29,7 +29,7 @@ func (c *Client) GetArtifactPresignedUrl(request camv1.CamV1PresignedUrlRequest)
 }
 
 func (c *Client) CreateConnectArtifact(createArtifactRequest camv1.CamV1ConnectArtifact) (camv1.CamV1ConnectArtifact, error) {
-	resp, httpResp, err := c.ConnectArtifactClient.ConnectArtifactsCamV1Api.CreateCamV1ConnectArtifact(c.connectArtifactApiContext()).CamV1ConnectArtifact(createArtifactRequest).Execute()
+	resp, httpResp, err := c.ConnectArtifactClient.ConnectArtifactsCamV1Api.CreateCamV1ConnectArtifact(c.connectArtifactApiContext()).SpecCloud(createArtifactRequest.GetSpec().Cloud).SpecRegion(createArtifactRequest.GetSpec().Region).CamV1ConnectArtifact(createArtifactRequest).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
