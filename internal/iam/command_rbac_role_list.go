@@ -18,10 +18,8 @@ func (c *roleCommand) newListCommand() *cobra.Command {
 	}
 
 	if c.cfg.IsOnPremLogin() {
-		cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
+		pcmd.AddMDSOnPremMTLSFlags(cmd)
 		pcmd.AddContextFlag(cmd, c.CLICommand)
-
-		cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 	}
 	pcmd.AddOutputFlag(cmd)
 

@@ -17,10 +17,8 @@ func (c *configCommand) newDescribeCommand() *cobra.Command {
 		RunE:  c.describe,
 	}
 
-	cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
+	pcmd.AddMDSOnPremMTLSFlags(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-
-	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 
 	return cmd
 }

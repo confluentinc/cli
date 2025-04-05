@@ -31,11 +31,10 @@ func newUnregisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.RunE = c.unregister
 
 	cmd.Flags().String("cluster-name", "", "Cluster Name.")
-	cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
+	pcmd.AddMDSOnPremMTLSFlags(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("cluster-name"))
-	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 
 	return cmd
 }

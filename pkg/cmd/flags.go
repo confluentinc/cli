@@ -610,3 +610,9 @@ func AutocompleteNetworks(environmentId string, client *ccloudv2.Client) []strin
 	}
 	return suggestions
 }
+
+func AddMDSOnPremMTLSFlags(cmd *cobra.Command) {
+	cmd.Flags().String("client-cert-path", "", "Path to client cert to be verified by MDS. Include for mTLS authentication.")
+	cmd.Flags().String("client-key-path", "", "Path to client private key, include for mTLS authentication.")
+	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
+}

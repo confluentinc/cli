@@ -20,10 +20,8 @@ func (c *routeCommand) newLookupCommand() *cobra.Command {
 		RunE:  c.lookup,
 	}
 
-	cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
+	pcmd.AddMDSOnPremMTLSFlags(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-
-	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 
 	return cmd
 }

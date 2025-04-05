@@ -26,12 +26,11 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(aclFlags())
-	cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
+	pcmd.AddMDSOnPremMTLSFlags(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("kafka-cluster"))
-	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 
 	return cmd
 }

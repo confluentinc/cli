@@ -80,7 +80,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth
 	cmd.Flags().String("url", "", "Metadata Service (MDS) URL, for on-premises deployments.")
 	cmd.Flags().Bool("us-gov", false, "Log in to the Confluent Cloud US Gov environment.")
 	cmd.Flags().String("certificate-authority-path", "", "Self-signed certificate chain in PEM format, for on-premises deployments.")
-	cmd.Flags().AddFlagSet(pcmd.OnPremMTLSSet())
+	pcmd.AddMDSOnPremMTLSFlags(cmd)
 	cmd.Flags().Bool("certificate-only", false, "Authenticate using mTLS certificate and key without SSO or username/password.")
 	cmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating using Single Sign-On (SSO).")
 	cmd.Flags().String("organization", "", "The Confluent Cloud organization to log in to. If empty, log in to the default organization.")
@@ -90,7 +90,6 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth
 	cobra.CheckErr(cmd.Flags().MarkHidden("us-gov"))
 
 	cmd.MarkFlagsMutuallyExclusive("url", "us-gov")
-	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 
 	return cmd
 }
