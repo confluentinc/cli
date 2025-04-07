@@ -108,14 +108,13 @@ func (c *artifactCommand) createArtifact(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	if strings.ToLower(cloud) == "azure" {
-		if err := utils.UploadFileToAzureBlob(resp.GetUploadUrl(), artifactFile, strings.ToLower(resp.GetContentFormat())); err != nil {
-			return err
-		}
-	} else {
+	// only accepts cloud == AWS
+	if strings.ToLower(cloud) == "aws" {
 		if err := utils.UploadFile(resp.GetUploadUrl(), artifactFile, resp.GetUploadFormData()); err != nil {
 			return err
 		}
+	} else {
+		return fmt.Errorf("only cloud supported is `AWS`")
 	}
 
 	createArtifactRequest := camv1.CamV1ConnectArtifact{
