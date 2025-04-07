@@ -7,7 +7,7 @@ import (
 
 type IntegerDeserializationProvider struct{}
 
-func (IntegerDeserializationProvider) InitDeserializer(_, _, _, _, _, _ string, _ any) error {
+func (IntegerDeserializationProvider) InitDeserializer(_, _, _ string, _ SchemaRegistryAuth, _ any) error {
 	return nil
 }
 
