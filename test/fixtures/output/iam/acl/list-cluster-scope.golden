@@ -1,0 +1,3 @@
+  Kafka Cluster |  Principal  | Permission | Operation | Host | Resource Type | Resource Name | Pattern Type  
+----------------+-------------+------------+-----------+------+---------------+---------------+---------------
+  testcluster   | User:abc123 | ANY        | ANY       | *    | CLUSTER       | kafka-cluster | LITERAL       

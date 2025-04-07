@@ -21,6 +21,7 @@ func (c *routeCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("resource", "", "The Confluent resource name (CRN) that is the subject of the query.")
+	pcmd.AddMDSOnPremMTLSFlags(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("resource"))
@@ -29,6 +30,11 @@ func (c *routeCommand) newListCommand() *cobra.Command {
 }
 
 func (c *routeCommand) list(cmd *cobra.Command, _ []string) error {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
 	var opts *mdsv1.ListRoutesOpts
 	if cmd.Flags().Changed("resource") {
 		resource, err := cmd.Flags().GetString("resource")
@@ -39,7 +45,7 @@ func (c *routeCommand) list(cmd *cobra.Command, _ []string) error {
 	} else {
 		opts = &mdsv1.ListRoutesOpts{Q: optional.EmptyString()}
 	}
-	result, response, err := c.MDSClient.AuditLogConfigurationApi.ListRoutes(c.createContext(), opts)
+	result, response, err := client.AuditLogConfigurationApi.ListRoutes(c.createContext(), opts)
 	if err != nil {
 		return HandleMdsAuditLogApiError(err, response)
 	}

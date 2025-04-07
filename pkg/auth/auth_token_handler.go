@@ -230,6 +230,13 @@ func (a *AuthTokenHandlerImpl) refreshCCloudMFAToken(client *ccloudv1.Client, re
 
 func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mdsv1.APIClient, credentials *Credentials, noBrowser bool) (string, string, error) {
 	ctx := utils.GetContext()
+	if credentials.IsCertificateOnly {
+		resp, _, err := mdsClient.TokensAndAuthenticationApi.GetToken(context.Background())
+		if err != nil {
+			return "", "", err
+		}
+		return resp.AuthToken, "", nil
+	}
 	if credentials.IsSSO {
 		if credentials.AuthRefreshToken != "" {
 			if authToken, err := refreshConfluentToken(mdsClient, credentials); err == nil {

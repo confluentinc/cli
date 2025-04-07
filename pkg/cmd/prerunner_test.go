@@ -95,7 +95,7 @@ func getPreRunBase() *pcmd.PreRun {
 			},
 		},
 		MDSClientManager: &climock.MDSClientManager{
-			GetMDSClientFunc: func(_, _ string, _ bool) (*mdsv1.APIClient, error) {
+			GetMDSClientFunc: func(_, _, _, _ string, _ bool) (*mdsv1.APIClient, error) {
 				return &mdsv1.APIClient{}, nil
 			},
 		},
