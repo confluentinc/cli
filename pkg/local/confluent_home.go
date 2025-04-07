@@ -140,8 +140,9 @@ func (ch *ConfluentHomeManager) FindFile(pattern string) ([]string, error) {
 }
 
 func (ch *ConfluentHomeManager) IsConfluentPlatform() (bool, error) {
-	controlCenter := "share/java/confluent-control-center/control-center-*.jar"
-	files, err := ch.FindFile(controlCenter)
+	// check for rebalancer because it is enterprise only
+	rebalancer := "share/java/confluent-rebalancer/confluent-rebalancer-*.jar"
+	files, err := ch.FindFile(rebalancer)
 	if err != nil {
 		return false, err
 	}
