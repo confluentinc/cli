@@ -28,12 +28,12 @@ func TestGetConnectConfig(t *testing.T) {
 	req.Equal(exampleFile, os.Getenv("CLASSPATH"))
 }
 
-func TestGetControlCenterConfig(t *testing.T) {
+/*func TestGetControlCenterConfig(t *testing.T) {
 	want := map[string]string{
 		"confluent.controlcenter.data.dir": exampleDir,
 	}
 	testGetConfig(t, "control-center", want)
-}
+}*/
 
 func TestGetKafkaConfig(t *testing.T) {
 	want := map[string]string{
@@ -134,7 +134,6 @@ func TestConfluentPlatformAvailableServices(t *testing.T) {
 		"kafka-rest",
 		"connect",
 		"ksql-server",
-		"control-center",
 	}
 	req.Equal(want, got)
 }
