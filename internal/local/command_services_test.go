@@ -134,6 +134,7 @@ func TestConfluentPlatformAvailableServices(t *testing.T) {
 		"kafka-rest",
 		"connect",
 		"ksql-server",
+		//"control-center",
 	}
 	req.Equal(want, got)
 }
