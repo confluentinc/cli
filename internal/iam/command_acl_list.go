@@ -26,6 +26,7 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(aclFlags())
+	pcmd.AddMDSOnPremMTLSFlags(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -35,9 +36,14 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 }
 
 func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
 	acl := parse(cmd)
 
-	bindings, response, err := c.MDSClient.KafkaACLManagementApi.SearchAclBinding(c.createContext(), convertToAclFilterRequest(acl.CreateAclRequest))
+	bindings, response, err := client.KafkaACLManagementApi.SearchAclBinding(c.createContext(), convertToAclFilterRequest(acl.CreateAclRequest))
 	if err != nil {
 		return c.handleAclError(cmd, err, response)
 	}

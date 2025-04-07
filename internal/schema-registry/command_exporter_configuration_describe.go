@@ -20,7 +20,7 @@ func (c *command) newExporterConfigurationDescribeCommand(cfg *config.Config) *c
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
-		addCaLocationFlag(cmd)
+		addCaLocationAndClientPathFlags(cmd)
 	}
 	addSchemaRegistryEndpointFlag(cmd)
 	pcmd.AddOutputFlagWithDefaultValue(cmd, output.JSON.String())

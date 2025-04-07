@@ -25,12 +25,13 @@ import (
 const stopNonInteractiveMsg = "remove these credentials or use the `--prompt` flag to bypass non-interactive login"
 
 type Credentials struct {
-	Username string
-	Password string
-	IsSSO    bool
-	IsMFA    bool
-	Salt     []byte
-	Nonce    []byte
+	Username          string
+	Password          string
+	IsSSO             bool
+	IsMFA             bool
+	IsCertificateOnly bool
+	Salt              []byte
+	Nonce             []byte
 
 	AuthToken        string
 	AuthRefreshToken string
@@ -41,7 +42,7 @@ type Credentials struct {
 }
 
 func (c *Credentials) IsFullSet() bool {
-	return c.Username != "" && (c.IsSSO || c.IsMFA || c.Password != "" || c.AuthRefreshToken != "")
+	return c.Username != "" && (c.IsSSO || c.IsMFA || c.IsCertificateOnly || c.Password != "" || c.AuthRefreshToken != "")
 }
 
 type environmentVariables struct {
@@ -71,8 +72,9 @@ type LoginCredentialsManager interface {
 	GetOnPremCredentialsFromEnvVar() func() (*Credentials, error)
 	GetCredentialsFromConfig(*config.Config, config.MachineParams) func() (*Credentials, error)
 	GetCredentialsFromKeychain(bool, string, string) func() (*Credentials, error)
-	GetOnPremSsoCredentials(url, caCertPath string, unsafeTrace bool) func() (*Credentials, error)
+	GetOnPremSsoCredentials(url, caCertPath, clientCertPath, clientKeyPath string, unsafeTrace bool) func() (*Credentials, error)
 	GetOnPremSsoCredentialsFromConfig(*config.Config, bool) func() (*Credentials, error)
+	GetOnPremCertOnlyCredentials(certificateOnly bool) func() (*Credentials, error)
 	GetCloudCredentialsFromPrompt(string) func() (*Credentials, error)
 	GetOnPremCredentialsFromPrompt() func() (*Credentials, error)
 
@@ -222,7 +224,7 @@ func (h *LoginCredentialsManagerImpl) GetOnPremSsoCredentialsFromConfig(cfg *con
 		if GenerateContextName(sub, url, caCertPath) == ctx.Name {
 			return &Credentials{
 				Username:         sub,
-				IsSSO:            h.isOnPremSSOUser(url, caCertPath, unsafeTrace),
+				IsSSO:            h.isOnPremSSOUser(url, caCertPath, "", "", unsafeTrace),
 				AuthToken:        ctx.GetAuthToken(),
 				AuthRefreshToken: ctx.GetAuthRefreshToken(),
 			}, nil
@@ -232,13 +234,22 @@ func (h *LoginCredentialsManagerImpl) GetOnPremSsoCredentialsFromConfig(cfg *con
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) GetOnPremSsoCredentials(url, caCertPath string, unsafeTrace bool) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetOnPremSsoCredentials(url, caCertPath, clientCertPath, clientKeyPath string, unsafeTrace bool) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		// For on-prem SSO logins, the sub claim of the Confluent Token is used in place of the Username
 		// A placeholder is used here since we don't have the token yet
 		return &Credentials{
 			Username: "placeholder",
-			IsSSO:    h.isOnPremSSOUser(url, caCertPath, unsafeTrace),
+			IsSSO:    h.isOnPremSSOUser(url, caCertPath, clientCertPath, clientKeyPath, unsafeTrace),
+		}, nil
+	}
+}
+
+func (h *LoginCredentialsManagerImpl) GetOnPremCertOnlyCredentials(certificateOnly bool) func() (*Credentials, error) {
+	return func() (*Credentials, error) {
+		return &Credentials{
+			Username:          "placeholder",
+			IsCertificateOnly: certificateOnly,
 		}, nil
 	}
 }
@@ -327,15 +338,16 @@ func (h *LoginCredentialsManagerImpl) isSSOUser(email, organizationId string) bo
 	return err == nil && res.GetIsSso()
 }
 
-func (h *LoginCredentialsManagerImpl) isOnPremSSOUser(url, caCertPath string, unsafeTrace bool) bool {
+func (h *LoginCredentialsManagerImpl) isOnPremSSOUser(url, caCertPath, clientCertPath, clientKeyPath string, unsafeTrace bool) bool {
 	clientManager := &MDSClientManagerImpl{}
-	client, err := clientManager.GetMDSClient(url, caCertPath, unsafeTrace)
+	client, err := clientManager.GetMDSClient(url, caCertPath, clientCertPath, clientKeyPath, unsafeTrace)
 	if err != nil {
 		return false
 	}
 
 	featuresInfo, _, err := client.MetadataServiceOperationsApi.Features(context.Background())
 	if err != nil {
+		log.CliLogger.Debug(err)
 		return false
 	}
 	return featuresInfo.Features["oidc.login.device.1.enabled"]
