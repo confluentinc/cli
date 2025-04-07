@@ -168,6 +168,7 @@ func newOnPremConsumer(cmd *cobra.Command, bootstrap string) (*ckgo.Consumer, er
 
 	return ckgo.NewConsumer(configMap)
 }
+
 func runConsumer(consumer *ckgo.Consumer, groupHandler *kafka.GroupHandler) error {
 	run := true
 	signals := make(chan os.Signal, 1)
