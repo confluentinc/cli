@@ -114,7 +114,7 @@ func createTemporaryConfluentHome() (string, error) {
 		return "", err
 	}
 
-	path := filepath.Join(dir, "share/java/confluent-control-center/control-center-0.0.0.jar")
+	path := filepath.Join(dir, "share/java/confluent-rebalancer/confluent-rebalancer-0.0.0.jar")
 
 	if err := os.MkdirAll(filepath.Dir(path), 0777); err != nil {
 		return "", err
