@@ -261,7 +261,7 @@ func (c *Context) SetCurrentFlinkComputePool(id string) error {
 func (c *Context) SetCurrentFlinkEndpoint(endpoint string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
-		return fmt.Errorf(noEnvError)
+		return errors.New(noEnvError)
 	}
 
 	ctx.CurrentFlinkEndpoint = endpoint
@@ -271,7 +271,7 @@ func (c *Context) SetCurrentFlinkEndpoint(endpoint string) error {
 func (c *Context) SetSchemaRegistryEndpoint(endpoint string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
-		return fmt.Errorf(noEnvError)
+		return errors.New(noEnvError)
 	}
 
 	ctx.CurrentSchemaRegistryEndpoint = endpoint
