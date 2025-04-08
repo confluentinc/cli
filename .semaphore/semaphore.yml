@@ -107,6 +107,8 @@ blocks:
             - go env -w CGO_LDFLAGS="-fstack-protector $Env:EXISTING_FLAGS"
             - $Env:GOCOVERDIR = "test/coverage"
             - New-Item $Env:GOCOVERDIR -ItemType Directory
+            - go version
+            - echo $Env:PATH
             - go install gotest.tools/gotestsum@v1.8.2
             - gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
             - gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v $(go list ./... | Select-String test)
