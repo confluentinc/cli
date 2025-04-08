@@ -22,6 +22,7 @@ func (c *clusterCommand) newListCommandOnPrem() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
+	pcmd.AddMDSOnPremMTLSFlags(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -29,10 +30,15 @@ func (c *clusterCommand) newListCommandOnPrem() *cobra.Command {
 }
 
 func (c *clusterCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
 	ctx := context.WithValue(context.Background(), mdsv1.ContextAccessToken, c.Context.GetAuthToken())
 	opts := &mdsv1.ClusterRegistryListOpts{ClusterType: optional.NewString(clusterType)}
 
-	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(ctx, opts)
+	clusterInfos, response, err := client.ClusterRegistryApi.ClusterRegistryList(ctx, opts)
 	if err != nil {
 		return cluster.HandleClusterError(err, response)
 	}

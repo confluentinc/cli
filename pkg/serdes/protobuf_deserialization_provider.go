@@ -18,7 +18,7 @@ type ProtobufDeserializationProvider struct {
 	message gproto.Message
 }
 
-func (p *ProtobufDeserializationProvider) InitDeserializer(srClientUrl, srClusterId, mode, srApiKey, srApiSecret, token string, existingClient any) error {
+func (p *ProtobufDeserializationProvider) InitDeserializer(srClientUrl, srClusterId, mode string, srAuth SchemaRegistryAuth, existingClient any) error {
 	// Note: Now Serializer/Deserializer are tightly coupled with Schema Registry
 	// If existingClient is not nil, we should share this client between ser and deser.
 	// As the shared client is referred as mock client to store the same set of schemas in cache
@@ -34,13 +34,16 @@ func (p *ProtobufDeserializationProvider) InitDeserializer(srClientUrl, srCluste
 		}
 	} else {
 		var serdeClientConfig *schemaregistry.Config
-		if srApiKey != "" && srApiSecret != "" {
-			serdeClientConfig = schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srApiKey, srApiSecret)
-		} else if token != "" {
-			serdeClientConfig = schemaregistry.NewConfigWithBearerAuthentication(srClientUrl, token, srClusterId, "")
+		if srAuth.ApiKey != "" && srAuth.ApiSecret != "" {
+			serdeClientConfig = schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srAuth.ApiKey, srAuth.ApiSecret)
+		} else if srAuth.Token != "" {
+			serdeClientConfig = schemaregistry.NewConfigWithBearerAuthentication(srClientUrl, srAuth.Token, srClusterId, "")
 		} else {
 			return fmt.Errorf("schema registry client authentication should be provider to initialize deserializer")
 		}
+		serdeClientConfig.SslCaLocation = srAuth.CertificateAuthorityPath
+		serdeClientConfig.SslCertificateLocation = srAuth.ClientCertPath
+		serdeClientConfig.SslKeyLocation = srAuth.ClientKeyPath
 		serdeClient, err = schemaregistry.NewClient(serdeClientConfig)
 	}
 

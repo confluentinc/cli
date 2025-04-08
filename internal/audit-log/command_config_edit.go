@@ -23,13 +23,19 @@ func (c *configCommand) newEditCommand() *cobra.Command {
 		RunE:  c.edit,
 	}
 
+	pcmd.AddMDSOnPremMTLSFlags(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	return cmd
 }
 
-func (c *configCommand) edit(_ *cobra.Command, _ []string) error {
-	gotSpec, response, err := c.MDSClient.AuditLogConfigurationApi.GetConfig(c.createContext())
+func (c *configCommand) edit(cmd *cobra.Command, _ []string) error {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
+	gotSpec, response, err := client.AuditLogConfigurationApi.GetConfig(c.createContext())
 	if err != nil {
 		return HandleMdsAuditLogApiError(err, response)
 	}
@@ -49,7 +55,7 @@ func (c *configCommand) edit(_ *cobra.Command, _ []string) error {
 	}
 	enc := json.NewEncoder(c.OutOrStdout())
 	enc.SetIndent("", "  ")
-	result, httpResp, err := c.MDSClient.AuditLogConfigurationApi.PutConfig(c.createContext(), putSpec)
+	result, httpResp, err := client.AuditLogConfigurationApi.PutConfig(c.createContext(), putSpec)
 	if err != nil {
 		if httpResp.StatusCode == http.StatusConflict {
 			_ = enc.Encode(result)

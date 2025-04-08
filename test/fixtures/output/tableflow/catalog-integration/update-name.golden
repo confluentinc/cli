@@ -1,0 +1,10 @@
++-------------------------+----------------+
+| ID                      | tci-abc456     |
+| Name                    | new-name       |
+| Environment             | env-596        |
+| Kafka Cluster           | lkc-123456     |
+| Type                    | aws            |
+| Provider Integration ID | cspi-stgce89r7 |
+| Suspended               | false          |
+| Phase                   | CONNECTED      |
++-------------------------+----------------+

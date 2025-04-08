@@ -32,11 +32,11 @@ func newScopedIdService(userAgent string) *ScopedIdService {
 	return &ScopedIdService{userAgent: userAgent}
 }
 
-func (s *ScopedIdService) DescribeCluster(url, caCertPath string) (*ScopedId, error) {
+func (s *ScopedIdService) DescribeCluster(url, caCertPath, clientCertPath, clientKeyPath string) (*ScopedId, error) {
 	var httpClient *http.Client
-	if caCertPath != "" {
+	if caCertPath != "" || (clientCertPath != "" && clientKeyPath != "") {
 		var err error
-		httpClient, err = utils.SelfSignedCertClientFromPath(caCertPath)
+		httpClient, err = utils.CustomCAAndClientCertClient(caCertPath, clientCertPath, clientKeyPath)
 		if err != nil {
 			return nil, err
 		}

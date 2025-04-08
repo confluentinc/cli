@@ -13,11 +13,12 @@ Describe the schema with subject "payments" and version "latest".
   $ confluent schema-registry schema describe --subject payments --version latest
 
 Flags:
-      --subject string       Subject of the schema.
-      --version string       Version of the schema. Can be a specific version or "latest".
-      --show-references      Display the entire schema graph, including references.
-      --context string       CLI context name.
-      --environment string   Environment ID.
+      --subject string                    Subject of the schema.
+      --version string                    Version of the schema. Can be a specific version or "latest".
+      --show-references                   Display the entire schema graph, including references.
+      --context string                    CLI context name.
+      --environment string                Environment ID.
+      --schema-registry-endpoint string   The URL of the Schema Registry cluster.
 
 Global Flags:
   -h, --help            Show help for this command.

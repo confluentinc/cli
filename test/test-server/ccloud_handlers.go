@@ -161,7 +161,7 @@ func handleLoginRealm(t *testing.T) http.HandlerFunc {
 func handlePaymentInfo(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case http.MethodPost: // admin payment update
+		case http.MethodPost: // billing payment update
 			req := &ccloudv1.UpdatePaymentInfoRequest{}
 			err := ccstructs.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
@@ -170,7 +170,7 @@ func handlePaymentInfo(t *testing.T) http.HandlerFunc {
 			res := &ccloudv1.UpdatePaymentInfoReply{}
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
-		case http.MethodGet: // admin payment describe
+		case http.MethodGet: // billing payment describe
 			res := ccloudv1.GetPaymentInfoReply{
 				Card: &ccloudv1.Card{
 					Cardholder: "Miles Todzo",

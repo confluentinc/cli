@@ -44,9 +44,9 @@ func (c *command) newExporterCreateCommand(cfg *config.Config) *cobra.Command {
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
-		addCaLocationFlag(cmd)
-		addSchemaRegistryEndpointFlag(cmd)
+		addCaLocationAndClientPathFlags(cmd)
 	}
+	addSchemaRegistryEndpointFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
 	// Deprecated

@@ -10,12 +10,12 @@ import (
 
 // Made it an interface so that we can inject MDS client for testing through GetMDSClient
 type MDSClientManager interface {
-	GetMDSClient(url, caCertPath string, unsafeTrace bool) (*mdsv1.APIClient, error)
+	GetMDSClient(url, caCertPath, clientCertPath, clientKeyPath string, unsafeTrace bool) (*mdsv1.APIClient, error)
 }
 
 type MDSClientManagerImpl struct{}
 
-func (m *MDSClientManagerImpl) GetMDSClient(url, caCertPath string, unsafeTrace bool) (*mdsv1.APIClient, error) {
+func (m *MDSClientManagerImpl) GetMDSClient(url, caCertPath, clientCertPath, clientKeyPath string, unsafeTrace bool) (*mdsv1.APIClient, error) {
 	mdsConfig := mdsv1.NewConfiguration()
 	mdsConfig.Debug = unsafeTrace
 
@@ -23,7 +23,7 @@ func (m *MDSClientManagerImpl) GetMDSClient(url, caCertPath string, unsafeTrace 
 		log.CliLogger.Debugf("CA certificate path was specified.  Note, the set of supported ciphers for the CLI can be found at https://golang.org/pkg/crypto/tls/#pkg-constants")
 		var err error
 
-		mdsConfig.HTTPClient, err = utils.SelfSignedCertClientFromPath(caCertPath)
+		mdsConfig.HTTPClient, err = utils.CustomCAAndClientCertClient(caCertPath, clientCertPath, clientKeyPath)
 		if err != nil {
 			return nil, err
 		}

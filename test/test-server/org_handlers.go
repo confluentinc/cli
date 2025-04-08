@@ -14,16 +14,20 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
-var OrgEnvironments = []*orgv2.OrgV2Environment{
-	{Id: orgv2.PtrString("env-596"), DisplayName: orgv2.PtrString("default"),
-		StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: "ESSENTIALS"}},
-	{Id: orgv2.PtrString("env-595"), DisplayName: orgv2.PtrString("other"),
-		StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: "ADVANCED"}},
-	{Id: orgv2.PtrString("env-123"), DisplayName: orgv2.PtrString("env123"),
-		StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: "ESSENTIALS"}},
-	{Id: orgv2.PtrString(SRApiEnvId), DisplayName: orgv2.PtrString("srUpdate"),
-		StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: "ESSENTIALS"}},
-}
+var (
+	OrgEnvironments = []*orgv2.OrgV2Environment{
+		{Id: orgv2.PtrString("env-596"), DisplayName: orgv2.PtrString("default"),
+			StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: "ESSENTIALS"}},
+		{Id: orgv2.PtrString("env-595"), DisplayName: orgv2.PtrString("other"),
+			StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: "ADVANCED"}},
+		{Id: orgv2.PtrString("env-123"), DisplayName: orgv2.PtrString("env123"),
+			StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: "ESSENTIALS"}},
+		{Id: orgv2.PtrString(SRApiEnvId), DisplayName: orgv2.PtrString("srUpdate"),
+			StreamGovernanceConfig: &orgv2.OrgV2StreamGovernanceConfig{Package: "ESSENTIALS"}},
+	}
+	// Test flag to control organization not found error
+	TestOrgNotFound = false
+)
 
 // Handler for: "/org/v2/environments/{id}"
 func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
@@ -104,6 +108,17 @@ func handleOrgOrganization(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
+
+		// Return 403 for organization describe test
+		if TestOrgNotFound {
+			w.WriteHeader(http.StatusForbidden)
+			resp := errors.ErrorResponseBody{Errors: []errors.ErrorDetail{
+				{Detail: "Resource not found or access forbidden"},
+			}}
+			err := json.NewEncoder(w).Encode(resp)
+			require.NoError(t, err)
+			return
+		}
 
 		displayName := "default"
 		switch r.Method {

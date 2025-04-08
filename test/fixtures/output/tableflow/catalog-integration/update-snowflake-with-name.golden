@@ -1,0 +1,12 @@
++---------------+------------------------------------------------+
+| ID            | tci-def456                                     |
+| Name          | new-name                                       |
+| Environment   | env-596                                        |
+| Kafka Cluster | lkc-123456                                     |
+| Type          | snowflake                                      |
+| Endpoint      | https://vuser2_polaris.snowflakecomputing.com/ |
+| Warehouse     | warehouse-2                                    |
+| Allowed Scope | allowed-scope-2                                |
+| Suspended     | false                                          |
+| Phase         | CONNECTED                                      |
++---------------+------------------------------------------------+

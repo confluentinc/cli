@@ -18,6 +18,7 @@ func (c *roleCommand) newListCommand() *cobra.Command {
 	}
 
 	if c.cfg.IsOnPremLogin() {
+		pcmd.AddMDSOnPremMTLSFlags(cmd)
 		pcmd.AddContextFlag(cmd, c.CLICommand)
 	}
 	pcmd.AddOutputFlag(cmd)
@@ -56,7 +57,12 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 }
 
 func (c *roleCommand) confluentList(cmd *cobra.Command) error {
-	roles, _, err := c.MDSClient.RBACRoleDefinitionsApi.Roles(c.createContext())
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
+	roles, _, err := client.RBACRoleDefinitionsApi.Roles(c.createContext())
 	if err != nil {
 		return err
 	}

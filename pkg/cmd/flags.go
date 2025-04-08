@@ -445,8 +445,9 @@ func AddRegionFlagFlink(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 		}
 
 		cloud, _ := cmd.Flags().GetString("cloud")
+		regionName, _ := cmd.Flags().GetString("region")
 
-		regions, err := command.V2Client.ListFlinkRegions(strings.ToUpper(cloud))
+		regions, err := command.V2Client.ListFlinkRegions(strings.ToUpper(cloud), regionName)
 		if err != nil {
 			return nil
 		}
@@ -608,4 +609,10 @@ func AutocompleteNetworks(environmentId string, client *ccloudv2.Client) []strin
 		suggestions[i] = fmt.Sprintf("%s\t%s", network.GetId(), network.Spec.GetDisplayName())
 	}
 	return suggestions
+}
+
+func AddMDSOnPremMTLSFlags(cmd *cobra.Command) {
+	cmd.Flags().String("client-cert-path", "", "Path to client cert to be verified by MDS. Include for mTLS authentication.")
+	cmd.Flags().String("client-key-path", "", "Path to client private key, include for mTLS authentication.")
+	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 }

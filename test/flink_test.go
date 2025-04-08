@@ -77,6 +77,8 @@ func (s *CLITestSuite) TestFlinkComputePool() {
 
 func (s *CLITestSuite) TestFlinkConnection() {
 	tests := []CLITest{
+		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
+		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type openai --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000", fixture: "flink/connection/create/create.golden"},
 		{args: "flink connection describe my-connection --cloud aws --region eu-west-1", fixture: "flink/connection/describe/describe.golden"},
 		{args: "flink connection describe nonexist-connection --cloud aws --region eu-west-1", fixture: "flink/connection/describe/describe-nonexist.golden", exitCode: 1},
@@ -89,6 +91,7 @@ func (s *CLITestSuite) TestFlinkConnection() {
 	}
 
 	for _, test := range tests {
+		test.workflow = true
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
@@ -111,6 +114,8 @@ func (s *CLITestSuite) TestFlinkConnectionWrongEnv() {
 
 func (s *CLITestSuite) TestFlinkConnectionDelete() {
 	tests := []CLITest{
+		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
+		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
 		{args: "flink connection delete my-connection --force --cloud aws --region eu-west-1", fixture: "flink/connection/delete/delete.golden"},
 		{args: "flink connection delete my-connection my-connection-1 --cloud aws --region eu-west-1", input: "n\n", fixture: "flink/connection/delete/delete-multiple-refuse.golden"},
 		{args: "flink connection delete my-connection my-connection-1 --cloud aws --region eu-west-1", input: "y\n", fixture: "flink/connection/delete/delete-multiple-success.golden"},
@@ -118,6 +123,7 @@ func (s *CLITestSuite) TestFlinkConnectionDelete() {
 	}
 
 	for _, test := range tests {
+		test.workflow = true
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
@@ -125,6 +131,8 @@ func (s *CLITestSuite) TestFlinkConnectionDelete() {
 
 func (s *CLITestSuite) TestFlinkConnectionCreateFailure() {
 	tests := []CLITest{
+		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
+		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type OPENAI --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000", fixture: "flink/connection/create/create-wrong-type.golden", exitCode: 1},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type openai --endpoint https://api.openai.com/v1/chat/completions --username username", fixture: "flink/connection/create/create-wrong-secret-type.golden", exitCode: 1},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type bedrock --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000 --aws-access-key 0000000000000000 --aws-secret-key 0000000000000000 --aws-session-token 0000000000000000", fixture: "flink/connection/create/create-extra-secret.golden", exitCode: 1},
@@ -132,6 +140,7 @@ func (s *CLITestSuite) TestFlinkConnectionCreateFailure() {
 	}
 
 	for _, test := range tests {
+		test.workflow = true
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
@@ -139,6 +148,8 @@ func (s *CLITestSuite) TestFlinkConnectionCreateFailure() {
 
 func (s *CLITestSuite) TestFlinkConnectionCreateSuccess() {
 	tests := []CLITest{
+		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
+		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
 		{args: "flink connection create my-connection --cloud azure --region eu-west-1 --type azureml --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000", fixture: "flink/connection/create/create-azure.golden"},
 		{args: "flink connection create my-connection --cloud azure --region eu-west-1 --type azureopenai --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000", fixture: "flink/connection/create/create-azureopenai.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type bedrock --endpoint https://api.openai.com/v1/chat/completions --aws-access-key 0000000000000000 --aws-secret-key 0000000000000000 --aws-session-token 0000000000000000", fixture: "flink/connection/create/create-bedrock.golden"},
@@ -154,6 +165,7 @@ func (s *CLITestSuite) TestFlinkConnectionCreateSuccess() {
 	}
 
 	for _, test := range tests {
+		test.workflow = true
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
@@ -224,10 +236,14 @@ func (s *CLITestSuite) TestFlinkComputePoolUse() {
 
 func (s *CLITestSuite) TestFlinkRegion() {
 	tests := []CLITest{
-		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use.golden"},
+		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
 		{args: "flink region list", fixture: "flink/region/list.golden"},
 		{args: "flink region list -o json", fixture: "flink/region/list-json.golden"},
-		{args: "flink region list --cloud aws", fixture: "flink/region/list-cloud.golden"},
+		{args: "flink region list --cloud aws", fixture: "flink/region/list-aws.golden"},
+		{args: "flink region list --cloud azure", fixture: "flink/region/list-azure.golden"},
+		{args: "flink region list --cloud gcp", fixture: "flink/region/list-gcp.golden"},
+		{args: "flink region use --cloud azure --region eastus", fixture: "flink/region/use-azure-fail.golden", exitCode: 1},
+		{args: "flink region use --cloud azure --region centralus", fixture: "flink/region/use-azure.golden"},
 	}
 
 	for _, test := range tests {
@@ -239,6 +255,8 @@ func (s *CLITestSuite) TestFlinkRegion() {
 
 func (s *CLITestSuite) TestFlinkStatement() {
 	tests := []CLITest{
+		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
+		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
 		{args: "flink statement delete my-statement --force --cloud aws --region eu-west-1", fixture: "flink/statement/delete.golden"},
 		{args: "flink statement describe my-statement --cloud aws --region eu-west-1 -o yaml", fixture: "flink/statement/describe-yaml.golden"},
 		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/describe.golden"},
@@ -266,6 +284,7 @@ func (s *CLITestSuite) TestFlinkStatement() {
 	}
 
 	for _, test := range tests {
+		test.workflow = true
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
@@ -281,6 +300,50 @@ func (s *CLITestSuite) TestFlinkStatementCreate() {
 
 	for _, test := range tests {
 		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestFlinkEndpointList() {
+	tests := []CLITest{
+		{args: "flink region unset", fixture: "flink/region/unset.golden"},
+		{args: "flink endpoint list", fixture: "flink/endpoint/list-fail.golden", exitCode: 1},
+		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
+		{args: "flink endpoint list", fixture: "flink/endpoint/list-aws-with-ccn.golden"},
+		{args: "flink region use --cloud gcp --region europe-west3-a", fixture: "flink/region/use-gcp.golden"},
+		{args: "flink endpoint list", fixture: "flink/endpoint/list-gcp.golden"},
+		{args: "flink region use --cloud azure --region eastus", fixture: "flink/region/use-azure-fail.golden", exitCode: 1},
+		{args: "flink endpoint list", fixture: "flink/endpoint/list-gcp.golden"},
+		{args: "flink region use --cloud azure --region centralus", fixture: "flink/region/use-azure.golden"},
+		{args: "flink endpoint list", fixture: "flink/endpoint/list-azure.golden"},
+	}
+
+	for _, test := range tests {
+		test.workflow = true
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestFlinkEndpointUse() {
+	describeFailureFixture := "flink/statement/describe-failure.golden"
+	if runtime.GOOS == "windows" { // Error message is different on Windows
+		describeFailureFixture = "flink/statement/describe-failure-windows.golden"
+	}
+
+	tests := []CLITest{
+		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
+		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
+		{args: "flink endpoint list", fixture: "flink/endpoint/list-aws-after-use.golden"},
+		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/describe.golden"},
+		{args: "flink endpoint unset", fixture: "flink/endpoint/unset.golden"},
+		{args: "flink endpoint use http://127.0.0.1:1040", fixture: "flink/endpoint/use-private.golden"},
+		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: describeFailureFixture, exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		test.workflow = true
 		s.runIntegrationTest(test)
 	}
 }
