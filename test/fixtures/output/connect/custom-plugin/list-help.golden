@@ -9,7 +9,7 @@ List custom connector plugins in the org
   $ confluent connect custom-plugin list --cloud aws
 
 Flags:
-      --cloud string     Specify the cloud provider as "aws" or "azure".
+      --cloud string     Specify the cloud provider as "aws", "azure", or "gcp".
       --context string   CLI context name.
   -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")
 
