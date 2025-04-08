@@ -35,7 +35,7 @@ func handleSchemaRegistries(t *testing.T) http.HandlerFunc {
 
 			b, err := ccloudv1.MarshalJSONToBytes(createReply)
 			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
+			_, err = io.Writer.Write(w, b)
 			require.NoError(t, err)
 		}
 	}

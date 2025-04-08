@@ -174,7 +174,7 @@ func getPolicyCommand(key byokv1.ByokV1Key) (string, error) {
 func renderAWSEncryptionPolicy(roles []string) (string, error) {
 	buf := new(bytes.Buffer)
 	if err := encryptionKeyPolicyAws.Execute(buf, roles); err != nil {
-		return "", fmt.Errorf(failedToRenderKeyPolicyErrorMsg)
+		return "", errors.New(failedToRenderKeyPolicyErrorMsg)
 	}
 	return buf.String(), nil
 }
@@ -185,7 +185,7 @@ func renderAzureEncryptionPolicy(key byokv1.ByokV1Key) (string, error) {
 	regex := regexp.MustCompile(`^https://([^/.]+).vault.azure.net`)
 	matches := regex.FindStringSubmatch(key.Key.ByokV1AzureKey.KeyId)
 	if matches == nil {
-		return "", fmt.Errorf(failedToRenderKeyPolicyErrorMsg)
+		return "", errors.New(failedToRenderKeyPolicyErrorMsg)
 	}
 
 	vaultName := matches[1]
