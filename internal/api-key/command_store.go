@@ -57,7 +57,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.V2Client)
 	if err == nil && clusterId != "" {
 		if resourceType != resource.KafkaCluster {
-			return fmt.Errorf(nonKafkaNotImplementedErrorMsg)
+			return errors.New(nonKafkaNotImplementedErrorMsg)
 		}
 		cluster, err = kafka.FindCluster(c.V2Client, c.Context, clusterId)
 		if err != nil {

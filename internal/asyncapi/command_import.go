@@ -215,7 +215,7 @@ func (c *command) addChannelToCluster(details *accountDetails, spec *Spec, topic
 	}
 	// If topic exists and overwrite flag is false, move to the next channel in spec
 	if topicExistedAlready && !overwrite {
-		return fmt.Errorf(parseErrorMessage)
+		return errors.New(parseErrorMessage)
 	}
 	// Register schema
 	schemaId, err := registerSchema(details, topicName, spec.Components)
