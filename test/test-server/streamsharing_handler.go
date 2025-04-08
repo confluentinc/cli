@@ -71,12 +71,12 @@ func handleStreamSharingProviderShares(t *testing.T) http.HandlerFunc {
 			}
 			b, err := json.Marshal(&list)
 			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
+			_, err = io.Writer.Write(w, b)
 			require.NoError(t, err)
 		case http.MethodPost:
 			b, err := json.Marshal(getTestProviderShare("ss-12345"))
 			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
+			_, err = io.Writer.Write(w, b)
 			require.NoError(t, err)
 		}
 	}
@@ -95,7 +95,7 @@ func handleStreamSharingProviderShare(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			b, err := json.Marshal(getTestProviderShare(id))
 			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
+			_, err = io.Writer.Write(w, b)
 			require.NoError(t, err)
 		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
@@ -111,7 +111,7 @@ func handleStreamSharingConsumerShares(t *testing.T) http.HandlerFunc {
 		}
 		b, err := json.Marshal(&list)
 		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
+		_, err = io.Writer.Write(w, b)
 		require.NoError(t, err)
 	}
 }
@@ -129,7 +129,7 @@ func handleStreamSharingConsumerShare(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			b, err := json.Marshal(getTestConsumerShare(id))
 			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
+			_, err = io.Writer.Write(w, b)
 			require.NoError(t, err)
 		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
@@ -165,7 +165,7 @@ func handleStreamSharingRedeemToken(t *testing.T) http.HandlerFunc {
 		}
 		b, err := json.Marshal(&response)
 		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
+		_, err = io.Writer.Write(w, b)
 		require.NoError(t, err)
 	}
 }
@@ -176,7 +176,7 @@ func handleConsumerSharedResources(t *testing.T) http.HandlerFunc {
 		list := &cdxv1.CdxV1ConsumerSharedResourceList{Data: []cdxv1.CdxV1ConsumerSharedResource{getTestConsumerSharedResource()}}
 		b, err := json.Marshal(list)
 		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
+		_, err = io.Writer.Write(w, b)
 		require.NoError(t, err)
 	}
 }
@@ -192,7 +192,7 @@ func handlePrivateLinkNetworkConfig(t *testing.T) http.HandlerFunc {
 		}
 		b, err := json.Marshal(&network)
 		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
+		_, err = io.Writer.Write(w, b)
 		require.NoError(t, err)
 	}
 }
@@ -207,7 +207,7 @@ func handleOptInOptOut(t *testing.T) http.HandlerFunc {
 		network := &cdxv1.CdxV1OptIn{StreamShareEnabled: reqBody.StreamShareEnabled}
 		b, err := json.Marshal(&network)
 		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
+		_, err = io.Writer.Write(w, b)
 		require.NoError(t, err)
 	}
 }
