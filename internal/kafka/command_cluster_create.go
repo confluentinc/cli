@@ -81,7 +81,7 @@ func (c *clusterCommand) isBasicToStandardUpgradeSuggestionEnabled() bool {
 		return true
 	}
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
-	return featureflags.Manager.BoolVariation("cli.basic-to-standard-cluster-upgrade-suggestion", c.Context, ldClient, true, false)
+	return featureflags.Manager.BoolVariation("cli.basic_to_standard_cluster_upgrade_suggestion.enable", c.Context, ldClient, true, false)
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
