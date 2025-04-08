@@ -97,7 +97,7 @@ cmd/lint/en_US.dic:
 .PHONY: unit-test
 unit-test:
 ifdef CI
-	go install gotest.tools/gotestsum@v1.8.2 && \
+	go install gotest.tools/gotestsum@v1.12.1 && \
 	gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test)
 else
 	go test -timeout 0 -v $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test) $(UNIT_TEST_ARGS)
@@ -122,7 +122,7 @@ endif
 .PHONY: integration-test
 integration-test:
 ifdef CI
-	go install gotest.tools/gotestsum@v1.8.2 && \
+	go install gotest.tools/gotestsum@v1.12.1 && \
 	export GOCOVERDIR=test/coverage && \
 	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
 	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
