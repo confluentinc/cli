@@ -1,8 +1,13 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 )
+
+func New(msg string) error {
+	return errors.New(msg)
+}
 
 func CustomMultierrorList(errors []error) string {
 	if len(errors) == 1 {

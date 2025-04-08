@@ -514,7 +514,7 @@ func serializeMessage(_, _ []byte, topic, data, delimiter string, parseKey bool,
 func getKeyAndValue(schemaBased bool, data, delimiter string) (string, string, error) {
 	dataSplit := strings.Split(data, delimiter)
 	if len(dataSplit) < 2 {
-		return "", "", fmt.Errorf(missingKeyOrValueErrorMsg)
+		return "", "", errors.New(missingKeyOrValueErrorMsg)
 	}
 
 	if !schemaBased {
@@ -533,7 +533,7 @@ func getKeyAndValue(schemaBased bool, data, delimiter string) (string, string, e
 		}
 	}
 
-	return "", "", fmt.Errorf(missingOrMalformedKeyErrorMsg)
+	return "", "", errors.New(missingOrMalformedKeyErrorMsg)
 }
 
 func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (serdes.SerializationProvider, []byte, error) {

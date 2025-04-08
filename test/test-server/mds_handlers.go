@@ -107,7 +107,7 @@ func handleAuthenticate(t *testing.T) http.HandlerFunc {
 		}
 		b, err := json.Marshal(&reply)
 		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
+		_, err = io.Writer.Write(w, b)
 		require.NoError(t, err)
 	}
 }
@@ -120,7 +120,7 @@ func handleFeatures(t *testing.T) http.HandlerFunc {
 		}
 		b, err := json.Marshal(&reply)
 		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
+		_, err = io.Writer.Write(w, b)
 		require.NoError(t, err)
 	}
 }
@@ -135,7 +135,7 @@ func handleDeviceAuthenticate(t *testing.T) http.HandlerFunc {
 		}
 		b, err := json.Marshal(&reply)
 		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
+		_, err = io.Writer.Write(w, b)
 		require.NoError(t, err)
 	}
 }
@@ -150,7 +150,7 @@ func handleDeviceCheckAuth(t *testing.T) http.HandlerFunc {
 		}
 		b, err := json.Marshal(&reply)
 		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
+		_, err = io.Writer.Write(w, b)
 		require.NoError(t, err)
 	}
 }

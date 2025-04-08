@@ -1,8 +1,6 @@
 package byok
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
@@ -50,7 +48,7 @@ func (c *command) outputByokKeyDescription(cmd *cobra.Command, key byokv1.ByokV1
 		keyString = key.Key.ByokV1GcpKey.KeyId
 		roles = append(roles, key.Key.ByokV1GcpKey.GetSecurityGroup())
 	default:
-		return fmt.Errorf(byokUnknownKeyTypeErrorMsg)
+		return errors.New(byokUnknownKeyTypeErrorMsg)
 	}
 
 	table := output.NewTable(cmd)

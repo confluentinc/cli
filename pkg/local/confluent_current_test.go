@@ -28,7 +28,7 @@ func TestCreateAndTrackCurrentDir(t *testing.T) {
 	req.NoError(err)
 	defer os.RemoveAll(dir)
 
-	req.NoError(os.Setenv("CONFLUENT_CURRENT", dir))
+	t.Setenv("CONFLUENT_CURRENT", dir)
 	defer os.Clearenv()
 
 	cc := NewConfluentCurrentManager()
@@ -169,7 +169,7 @@ func TestGetTrackingFile(t *testing.T) {
 	req := require.New(t)
 
 	cc := NewConfluentCurrentManager()
-	req.NoError(os.Setenv("CONFLUENT_CURRENT", exampleDir))
+	t.Setenv("CONFLUENT_CURRENT", exampleDir)
 	defer os.Clearenv()
 
 	path := filepath.Join(exampleDir, "confluent.current")

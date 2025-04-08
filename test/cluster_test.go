@@ -108,7 +108,7 @@ func serveClusterScopedId(meta *cluster.ScopedId, t *testing.T) *httptest.Server
 	router.HandleFunc("/v1/metadata/id", func(w http.ResponseWriter, r *http.Request) {
 		b, err := json.Marshal(meta)
 		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
+		_, err = io.Writer.Write(w, b)
 		require.NoError(t, err)
 	})
 	return httptest.NewServer(router)

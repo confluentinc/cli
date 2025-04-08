@@ -251,7 +251,7 @@ func (c *Context) GetCurrentFlinkComputePool() string {
 func (c *Context) SetCurrentFlinkComputePool(id string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
-		return fmt.Errorf(noEnvError)
+		return errors.New(noEnvError)
 	}
 
 	ctx.CurrentFlinkComputePool = id
@@ -261,7 +261,7 @@ func (c *Context) SetCurrentFlinkComputePool(id string) error {
 func (c *Context) SetCurrentFlinkAccessType(name string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
-		return fmt.Errorf(noEnvError)
+		return errors.New(noEnvError)
 	}
 
 	ctx.CurrentFlinkAccessType = name
@@ -278,7 +278,7 @@ func (c *Context) GetCurrentFlinkCloudProvider() string {
 func (c *Context) SetCurrentFlinkCloudProvider(cloud string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
-		return fmt.Errorf(noEnvError)
+		return errors.New(noEnvError)
 	}
 
 	ctx.CurrentFlinkCloudProvider = cloud
@@ -294,7 +294,7 @@ func (c *Context) GetCurrentFlinkRegion() string {
 func (c *Context) SetCurrentFlinkRegion(id string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
-		return fmt.Errorf(noEnvError)
+		return errors.New(noEnvError)
 	}
 
 	ctx.CurrentFlinkRegion = id
@@ -311,7 +311,7 @@ func (c *Context) GetCurrentFlinkCatalog() string {
 func (c *Context) SetCurrentFlinkCatalog(id string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
-		return fmt.Errorf(noEnvError)
+		return errors.New(noEnvError)
 	}
 
 	ctx.CurrentFlinkCatalog = id
@@ -328,7 +328,7 @@ func (c *Context) GetCurrentFlinkDatabase() string {
 func (c *Context) SetCurrentFlinkDatabase(id string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
-		return fmt.Errorf(noEnvError)
+		return errors.New(noEnvError)
 	}
 
 	ctx.CurrentFlinkDatabase = id
@@ -352,7 +352,7 @@ func (c *Context) GetCurrentServiceAccount() string {
 func (c *Context) SetCurrentServiceAccount(id string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
-		return fmt.Errorf(noEnvError)
+		return errors.New(noEnvError)
 	}
 
 	ctx.CurrentServiceAccount = id
