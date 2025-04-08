@@ -368,16 +368,36 @@ func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 			var decodeRespone connectcustompluginv1.ConnectV1CustomConnectorPlugin
 			require.NoError(t, json.NewDecoder(r.Body).Decode(&decodeRespone))
 			var plugin connectcustompluginv1.ConnectV1CustomConnectorPlugin
-			switch strings.ToLower(decodeRespone.GetRuntimeLanguage()) {
-			case "java", "":
-				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-					Id:             connectcustompluginv1.PtrString("ccp-123456"),
-					DisplayName:    connectcustompluginv1.PtrString("my-custom-plugin"),
-					Cloud:          connectcustompluginv1.PtrString("AWS"),
-					ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
-					ContentFormat:  connectcustompluginv1.PtrString("JAR"),
+			runtimeLanguage := strings.ToLower(decodeRespone.GetRuntimeLanguage())
+			cloud := strings.ToLower(decodeRespone.GetCloud())
+
+			if runtimeLanguage == "java" || runtimeLanguage == "" {
+				if cloud == "gcp" {
+					plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+						Id:             connectcustompluginv1.PtrString("ccp-123456"),
+						DisplayName:    connectcustompluginv1.PtrString("my-custom-plugin-gcp"),
+						Cloud:          connectcustompluginv1.PtrString("GCP"),
+						ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
+						ContentFormat:  connectcustompluginv1.PtrString("JAR"),
+					}
+				} else if cloud == "azure" {
+					plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+						Id:             connectcustompluginv1.PtrString("ccp-123456"),
+						DisplayName:    connectcustompluginv1.PtrString("my-custom-plugin-azure"),
+						Cloud:          connectcustompluginv1.PtrString("AZURE"),
+						ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
+						ContentFormat:  connectcustompluginv1.PtrString("JAR"),
+					}
+				} else {
+					plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+						Id:             connectcustompluginv1.PtrString("ccp-123456"),
+						DisplayName:    connectcustompluginv1.PtrString("my-custom-plugin"),
+						Cloud:          connectcustompluginv1.PtrString("AWS"),
+						ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
+						ContentFormat:  connectcustompluginv1.PtrString("JAR"),
+					}
 				}
-			case "python":
+			} else if runtimeLanguage == "python" {
 				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
 					Id:             connectcustompluginv1.PtrString("ccp-789012"),
 					DisplayName:    connectcustompluginv1.PtrString("my-custom-python-plugin"),

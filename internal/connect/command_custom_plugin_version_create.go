@@ -113,10 +113,6 @@ func (c *customPluginCommand) createCustomPluginVersion(cmd *cobra.Command, args
 		if err := utils.UploadFileToAzureBlob(resp.GetUploadUrl(), pluginFile, strings.ToLower(resp.GetContentFormat())); err != nil {
 			return err
 		}
-	} else if cloud == "GCP" {
-		if err := utils.UploadFileToGoogleCloudStorage(resp.GetUploadUrl(), pluginFile, strings.ToLower(resp.GetContentFormat())); err != nil {
-			return err
-		}
 	} else {
 		if err := utils.UploadFile(resp.GetUploadUrl(), pluginFile, resp.GetUploadFormData()); err != nil {
 			return err
