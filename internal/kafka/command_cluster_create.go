@@ -13,6 +13,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/confluentinc/cli/v4/pkg/kafka"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/utils"
@@ -73,6 +74,14 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 	cobra.CheckErr(cmd.MarkFlagRequired("region"))
 
 	return cmd
+}
+
+func (c *clusterCommand) isBasicToStandardUpgradeSuggestionEnabled() bool {
+	if c.Config.IsTest {
+		return true
+	}
+	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
+	return featureflags.Manager.BoolVariation("cli.basic-to-standard-cluster-upgrade-suggestion", c.Context, ldClient, true, false)
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
@@ -181,6 +190,10 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	if strings.ToLower(clusterType) == strings.ToLower(skuBasic) {
 		orgId := c.Context.GetCurrentOrganization()
 		if orgId == "" {
+			return nil
+		}
+
+		if !c.isBasicToStandardUpgradeSuggestionEnabled() {
 			return nil
 		}
 
