@@ -202,7 +202,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 			return nil
 		}
 
-		content, cta, err := copyManager.GetCopy("cluster_upgrade_basic_to_standard", orgId)
+		content, cta, err := copyManager.GetCopy("cluster_upgrade_basic_to_standard")
 		if err != nil {
 			return nil
 		}
