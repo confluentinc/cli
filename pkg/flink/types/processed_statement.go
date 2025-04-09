@@ -90,7 +90,7 @@ func (s ProcessedStatement) PrintOutputDryRunStatement() {
 	} else if s.Status == "COMPLETED" {
 		utils.OutputInfo("Dry run statement was verified and there were no issues found.")
 		utils.OutputWarn("If you wish to submit your statement, disable dry run mode before " +
-			" your statement with \"set 'sql.dry-run' = 'false';\"")
+			"your statement with \"set 'sql.dry-run' = 'false';\"")
 	} else {
 		utils.OutputErr(fmt.Sprintf("Dry run statement execution resulted in unexpected status.\nStatus: %s", s.Status))
 		utils.OutputInfof("Details: ")
