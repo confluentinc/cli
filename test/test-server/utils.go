@@ -310,7 +310,7 @@ func writeErrorJson(w http.ResponseWriter, message string) error {
 	if err != nil {
 		return err
 	}
-	_, err = io.WriteString(w, string(errorJson))
+	_, err = io.Writer.Write(w, errorJson)
 	return err
 }
 

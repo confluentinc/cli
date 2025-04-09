@@ -38,7 +38,7 @@ func initKafkaRest(c *pcmd.AuthenticatedCLICommand, cmd *cobra.Command) (*kafkar
 	if err != nil {
 		return nil, nil, "", kafkarest.NewError(kafkaRestClient.GetConfig().BasePath, err, httpResp)
 	}
-	if clusters.Data == nil || len(clusters.Data) == 0 {
+	if len(clusters.Data) == 0 {
 		return nil, nil, "", errors.NewErrorWithSuggestions(errors.NoClustersFoundErrorMsg, errors.NoClustersFoundSuggestions)
 	}
 

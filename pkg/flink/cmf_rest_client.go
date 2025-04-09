@@ -2,7 +2,6 @@ package flink
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -16,7 +15,7 @@ import (
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/auth"
-	perrors "github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
@@ -62,7 +61,7 @@ func NewCmfRestClient(cfg *cmfsdk.Configuration, restFlags *OnPremCMFRestFlagVal
 	// Set the base path if it's not set (it'll be already set in case of tests).
 	if cfg.BasePath == "" {
 		if restFlags.url == "" {
-			return nil, perrors.NewErrorWithSuggestions("url is required", "Specify a URL with `--url` or set the variable \"CONFLUENT_CMF_URL\" in place of this flag.")
+			return nil, errors.NewErrorWithSuggestions("url is required", "Specify a URL with `--url` or set the variable \"CONFLUENT_CMF_URL\" in place of this flag.")
 		}
 		cfg.BasePath, err = url.JoinPath(restFlags.url, "/cmf/api/v1")
 		if err != nil {
