@@ -31,6 +31,7 @@ func newUnregisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.RunE = c.unregister
 
 	cmd.Flags().String("cluster-name", "", "Cluster Name.")
+	pcmd.AddMDSOnPremMTLSFlags(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("cluster-name"))
@@ -39,6 +40,11 @@ func newUnregisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *unregisterCommand) unregister(cmd *cobra.Command, _ []string) error {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
 	ctx := context.WithValue(context.Background(), mdsv1.ContextAccessToken, c.Context.GetAuthToken())
 
 	clusterName, err := cmd.Flags().GetString("cluster-name")
@@ -46,7 +52,7 @@ func (c *unregisterCommand) unregister(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	clusterInfos, httpResp, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(ctx, &mdsv1.ClusterRegistryListOpts{})
+	clusterInfos, httpResp, err := client.ClusterRegistryApi.ClusterRegistryList(ctx, &mdsv1.ClusterRegistryListOpts{})
 	if err != nil {
 		return pcluster.HandleClusterError(err, httpResp)
 	}
@@ -58,7 +64,7 @@ func (c *unregisterCommand) unregister(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf(`unknown cluster "%s"`, clusterName)
 	}
 
-	httpResp, err = c.MDSClient.ClusterRegistryApi.DeleteNamedCluster(ctx, clusterName)
+	httpResp, err = client.ClusterRegistryApi.DeleteNamedCluster(ctx, clusterName)
 	if err != nil {
 		return cluster.HandleClusterError(err, httpResp)
 	}
