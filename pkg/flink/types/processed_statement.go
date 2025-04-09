@@ -62,29 +62,39 @@ func (s ProcessedStatement) printStatusMessageOfLocalStatement() {
 	if s.Status == "FAILED" {
 		utils.OutputErr(fmt.Sprintf("Error: %s", "couldn't process statement, please check your statement and try again"))
 	} else {
-		utils.OutputInfo("Statement successfully submitted.")
+		utils.OutputInfo("Statement successfully created.")
 	}
 }
 
 func (s ProcessedStatement) printStatusMessageOfNonLocalStatement() {
 	if s.Status == "FAILED" {
-		utils.OutputErr(fmt.Sprintf("Error: %s", "statement submission failed"))
+		utils.OutputErr(fmt.Sprintf("Error: %s", "statement creation failed"))
 	} else {
-		utils.OutputInfo("Statement successfully submitted.")
-		utils.OutputInfo(fmt.Sprintf("Waiting for statement to be ready. Statement phase is %s.", s.Status))
+		utils.OutputInfo("Statement successfully created.")
+
+		if s.Status != "COMPLETED" {
+			utils.OutputInfo(fmt.Sprintf("Waiting for statement to be ready. Statement phase: %s.", s.Status))
+		}
+	}
+
+	if s.StatusDetail != "" {
+		utils.OutputInfof("Details: ")
+		utils.OutputWarn(s.StatusDetail)
 	}
 }
 
 func (s ProcessedStatement) PrintOutputDryRunStatement() {
-	utils.OutputInfo(fmt.Sprintf("Statement successfully submitted. Statement phase is %s.", s.Status))
+	utils.OutputInfo(fmt.Sprintf("Statement successfully created. Statement phase: %s.", s.Status))
 	if s.Status == "FAILED" {
 		utils.OutputErr(fmt.Sprintf("Dry run statement was verified and there were issues found.\nError: %s", s.StatusDetail))
 	} else if s.Status == "COMPLETED" {
 		utils.OutputInfo("Dry run statement was verified and there were no issues found.")
-		utils.OutputWarn("If you wish to submit your statement, disable dry run mode before submitting your statement with \"set 'sql.dry-run' = 'false';\"")
+		utils.OutputWarn("If you wish to submit your statement, disable dry run mode before " +
+			"your statement with \"set 'sql.dry-run' = 'false';\"")
 	} else {
 		utils.OutputErr(fmt.Sprintf("Dry run statement execution resulted in unexpected status.\nStatus: %s", s.Status))
-		utils.OutputErr(fmt.Sprintf("Details: %s", s.StatusDetail))
+		utils.OutputInfof("Details: ")
+		utils.OutputErr(s.StatusDetail)
 	}
 }
 
@@ -94,10 +104,10 @@ func (s ProcessedStatement) GetPageSize() int {
 
 func (s ProcessedStatement) PrintStatementDoneStatus() {
 	if s.Status != "" {
-		output.Printf(false, "Statement phase is %s.\n", s.Status)
+		output.Printf(false, "Finished statement execution. Statement phase: %s.\n", s.Status)
 	}
 	if s.StatusDetail != "" {
-		output.Printf(false, "%s.\n", s.StatusDetail)
+		output.Printf(false, "Details: %s.\n", s.StatusDetail)
 	}
 }
 
