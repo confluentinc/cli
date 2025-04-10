@@ -28,8 +28,7 @@ func (c *artifactCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	//TODO: see if we can autocomplete similar to pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().String("region", "", `Cloud region for connect artifact.`)
+	cmd.Flags().String("region", "", `Cloud region for connect artifact, ex. "us-west-2".`)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddForceFlag(cmd)
@@ -68,8 +67,6 @@ func (c *artifactCommand) delete(cmd *cobra.Command, args []string) error {
 		return ok
 	}
 
-	fmt.Println("#################################################### 1 command_artifact_delete.go ####################################################")
-
 	if err := deletion.ValidateAndConfirmWithExtraWarning(cmd, args, existenceFunc, resource.ConnectArtifact, extraWarning); err != nil {
 		return err
 	}
@@ -78,16 +75,12 @@ func (c *artifactCommand) delete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteConnectArtifact(cloud, region, environment, id)
 	}
 
-	fmt.Println("#################################################### 2 command_artifact_delete.go ####################################################")
-
 	_, err = deletion.Delete(args, deleteFunc, resource.ConnectArtifact)
 
-	fmt.Println("#################################################### 3 command_artifact_delete.go ####################################################")
 	return err
 }
 
 func (c *artifactCommand) mapArtifactIdToName(cloud string, region string, environment string) (map[string]string, error) {
-	fmt.Println("########################################################################################################")
 
 	artifacts, err := c.V2Client.ListConnectArtifacts(cloud, region, environment)
 	if err != nil {

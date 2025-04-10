@@ -11,7 +11,6 @@ import (
 )
 
 type artifactOutList struct {
-	// TODO: double check all the fields
 	Id            string `human:"ID" serialized:"id"`
 	Name          string `human:"Name" serialized:"name"`
 	Description   string `human:"Description" serialized:"description"`
@@ -77,18 +76,13 @@ func (c *artifactCommand) list(cmd *cobra.Command, _ []string) error {
 	list.Sort(false)
 	for _, artifact := range artifacts {
 		list.Add(&artifactOutList{
-			// TODO: double check all the fields
-			Id: artifact.GetId(),
-			//ArtifactFile:  artifact.GetArtifactFile(),
+			Id:            artifact.GetId(),
 			Name:          artifact.Spec.GetDisplayName(),
 			Description:   artifact.Spec.GetDescription(),
 			Cloud:         artifact.Spec.GetCloud(),
 			Region:        artifact.Spec.GetRegion(),
 			Environment:   artifact.Spec.GetEnvironment(),
 			ContentFormat: artifact.Spec.GetContentFormat(),
-			//UploadSource:  artifact.Spec.GetUploadSource(),
-			//Plugins: artifact.Spec.GetPlugins(),
-			//Usages:  artifact.Spec.GetUsages(),
 		})
 	}
 

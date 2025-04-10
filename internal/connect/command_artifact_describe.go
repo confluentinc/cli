@@ -24,8 +24,7 @@ func (c *artifactCommand) newDescribeCommand() *cobra.Command {
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	//TODO: see if we can autocomplete similar to pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().String("region", "", `Cloud region for connect artifact.`)
+	cmd.Flags().String("region", "", `Cloud region for connect artifact, ex. "us-west-2".`)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
