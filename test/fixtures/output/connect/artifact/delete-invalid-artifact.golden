@@ -1,0 +1,6 @@
+#################################################### 1 command_artifact_delete.go ####################################################
+########################################################################################################
+Error: Connect Artifact "cfa-invalid" not found
+
+Suggestions:
+    List available Connect Artifacts with `confluent connect artifact list`.

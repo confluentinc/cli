@@ -49,6 +49,7 @@ func (c *artifactCommand) newListCommand() *cobra.Command {
 }
 
 func (c *artifactCommand) list(cmd *cobra.Command, _ []string) error {
+
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return err
@@ -90,5 +91,6 @@ func (c *artifactCommand) list(cmd *cobra.Command, _ []string) error {
 			//Usages:  artifact.Spec.GetUsages(),
 		})
 	}
+
 	return list.Print()
 }

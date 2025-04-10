@@ -68,6 +68,8 @@ func (c *artifactCommand) delete(cmd *cobra.Command, args []string) error {
 		return ok
 	}
 
+	fmt.Println("#################################################### 1 command_artifact_delete.go ####################################################")
+
 	if err := deletion.ValidateAndConfirmWithExtraWarning(cmd, args, existenceFunc, resource.ConnectArtifact, extraWarning); err != nil {
 		return err
 	}
@@ -76,11 +78,17 @@ func (c *artifactCommand) delete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteConnectArtifact(cloud, region, environment, id)
 	}
 
+	fmt.Println("#################################################### 2 command_artifact_delete.go ####################################################")
+
 	_, err = deletion.Delete(args, deleteFunc, resource.ConnectArtifact)
+
+	fmt.Println("#################################################### 3 command_artifact_delete.go ####################################################")
 	return err
 }
 
 func (c *artifactCommand) mapArtifactIdToName(cloud string, region string, environment string) (map[string]string, error) {
+	fmt.Println("########################################################################################################")
+
 	artifacts, err := c.V2Client.ListConnectArtifacts(cloud, region, environment)
 	if err != nil {
 		return nil, err

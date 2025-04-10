@@ -20,6 +20,7 @@ var ccloudV2Routes = []route{
 	{"/cam/v1/connect-artifacts", handleConnectArtifacts},
 	{"/cam/v1/connect-artifacts/{id}", handleConnectArtifactId},
 	{"/cam/v1/presigned-upload-url", handleConnectArtifactUploadUrl},
+	{"/cam/v1/dummy-presigned-url", handleConnectArtifactUploadFile},
 	{"/cdx/v1/consumer-shared-resources", handleConsumerSharedResources},
 	{"/cdx/v1/consumer-shared-resources/{id}:network", handlePrivateLinkNetworkConfig},
 	{"/cdx/v1/consumer-shares", handleStreamSharingConsumerShares},

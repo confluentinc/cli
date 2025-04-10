@@ -63,11 +63,6 @@ func (c *Client) DeleteConnectArtifact(cloud, region, environment, id string) er
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-//func (c *Client) UpdateConnectArtifact(id string, updateArtifactRequest camv1.CamV1ConnectArtifactUpdate) (camv1.CamV1ConnectArtifact, error) {
-//	resp, httpResp, err := c.ConnectArtifactClient.ConnectArtifactsCamV1Api.UpdateCamV1ConnectArtifact(c.connectArtifactApiContext(), id).CamV1ConnectArtifactUpdate(updateArtifactRequest).Execute()
-//	return resp, errors.CatchCCloudV2Error(err, httpResp)
-//}
-
 func (c *Client) executeListConnectArtifacts(pageToken, cloud, region, env string) (camv1.CamV1ConnectArtifactList, *http.Response, error) {
 	req := c.ConnectArtifactClient.ConnectArtifactsCamV1Api.ListCamV1ConnectArtifacts(c.connectArtifactApiContext()).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {

@@ -28,10 +28,10 @@ type artifactCreateOut struct {
 	Environment   string `human:"Environment" serialized:"environment"`
 	Description   string `human:"Description" serialized:"description"`
 	ContentFormat string `human:"Content Format" serialized:"content_format"`
-	UploadSource  string `human:"Upload Source" serialized:"upload_source"`
-	Plugins       string `human:"Plugins" serialized:"plugins"`
-	Usages        string `human:"Usages" serialized:"usages"`
-	ErrorTrace    string `human:"Error Trace,omitempty" serialized:"error_trace,omitempty"`
+	//UploadSource  string `human:"Upload Source" serialized:"upload_source"`
+	//Plugins       string `human:"Plugins" serialized:"plugins"`
+	//Usages        string `human:"Usages" serialized:"usages"`
+	//ErrorTrace    string `human:"Error Trace,omitempty" serialized:"error_trace,omitempty"`
 }
 
 func (c *artifactCommand) newCreateCommand() *cobra.Command {
@@ -66,6 +66,7 @@ func (c *artifactCommand) newCreateCommand() *cobra.Command {
 }
 
 func (c *artifactCommand) createArtifact(cmd *cobra.Command, args []string) error {
+
 	displayName := args[0]
 	artifactFile, err := cmd.Flags().GetString("artifact-file")
 	if err != nil {
@@ -110,6 +111,7 @@ func (c *artifactCommand) createArtifact(cmd *cobra.Command, args []string) erro
 
 	// only accepts cloud == AWS
 	if strings.ToLower(cloud) == "aws" {
+
 		if err := utils.UploadFile(resp.GetUploadUrl(), artifactFile, resp.GetUploadFormData()); err != nil {
 			return err
 		}
@@ -139,11 +141,6 @@ func (c *artifactCommand) createArtifact(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	//var artifactVersion = ""
-	//if versions := artifact.GetVersions(); len(versions) > 0 {
-	//	artifactVersion = versions[0].GetVersion()
-	//}
-
 	table := output.NewTable(cmd)
 	table.Add(&artifactCreateOut{
 		// TODO: double check on what to output
@@ -156,5 +153,6 @@ func (c *artifactCommand) createArtifact(cmd *cobra.Command, args []string) erro
 		ContentFormat: artifact.Spec.GetContentFormat(),
 		Description:   artifact.Spec.GetDescription(),
 	})
+
 	return table.Print()
 }
