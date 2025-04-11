@@ -702,7 +702,7 @@ func (c *command) checkJavaVersion(service string) error {
 	re := regexp.MustCompile(`.+ version "([\d._]+)"`)
 	javaVersion := string(re.FindSubmatch(data)[1])
 
-	isValid, err := isValidJavaVersion(service, javaVersion)
+	isValid, err := isValidJavaVersion(javaVersion)
 	if err != nil {
 		return err
 	}
@@ -715,7 +715,7 @@ func (c *command) checkJavaVersion(service string) error {
 	return nil
 }
 
-func isValidJavaVersion(service, javaVersion string) (bool, error) {
+func isValidJavaVersion(javaVersion string) (bool, error) {
 	// 1.8.0_152 -> 8.0_152 -> 8.0
 	javaVersion = strings.TrimPrefix(javaVersion, "1.")
 	javaVersion = strings.Split(javaVersion, "_")[0]
@@ -773,7 +773,6 @@ func (c *command) setupMetaProperties(service string) error {
 		metaFile = filepath.Join(dataDir, "kraft-controller-logs", "meta.properties")
 	case "kafka":
 		metaFile = filepath.Join(dataDir, "kraft-broker-logs", "meta.properties")
-
 	}
 	if utils.FileExists(metaFile) { // formatting the properties file twice results in an error
 		return nil
@@ -801,6 +800,9 @@ func (c *command) setupMetaProperties(service string) error {
 		}
 		controllerMetaFile := filepath.Join(controllerDataDir, "kraft-controller-logs", "meta.properties")
 		controllerMetaProperties, err := properties.LoadFile(controllerMetaFile, properties.UTF8)
+		if err != nil {
+			return err
+		}
 		uuid, ok = controllerMetaProperties.Get("cluster.id")
 		if !ok {
 			return errors.New("unable to retrieve cluster id from KRaft controller meta.properties file")
