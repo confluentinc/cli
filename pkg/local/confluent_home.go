@@ -26,27 +26,27 @@ var (
 	scripts = map[string]string{
 		"connect":          "connect-distributed",
 		"control-center":   "control-center-%s",
-		"kraft-controller": "kafka-server-%s",
 		"kafka":            "kafka-server-%s",
 		"kafka-rest":       "kafka-rest-%s",
+		"kraft-controller": "kafka-server-%s",
 		"ksql-server":      "ksql-server-%s",
 		"schema-registry":  "schema-registry-%s",
 	}
 	serviceConfigs = map[string]string{
 		"connect":          "schema-registry/connect-avro-distributed.properties",
 		"control-center":   "confluent-control-center/control-center-dev.properties",
-		"kraft-controller": "kafka/kraft/controller.properties",
 		"kafka":            "kafka/kraft/broker.properties",
 		"kafka-rest":       "kafka-rest/kafka-rest.properties",
+		"kraft-controller": "kafka/kraft/controller.properties",
 		"ksql-server":      "ksqldb/ksql-server.properties",
 		"schema-registry":  "schema-registry/schema-registry.properties",
 	}
 	servicePortKeys = map[string]string{
 		"connect":          "rest.port",
 		"control-center":   "listeners",
-		"kraft-controller": "listeners",
 		"kafka":            "listeners",
 		"kafka-rest":       "listeners",
+		"kraft-controller": "listeners",
 		"ksql-server":      "listeners",
 		"schema-registry":  "listeners",
 	}
