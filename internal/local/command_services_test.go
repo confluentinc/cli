@@ -79,8 +79,12 @@ func TestGetSchemaRegistryConfig(t *testing.T) {
 }
 
 func TestGetKraftControllerConfig(t *testing.T) {
+	logDirs := fmt.Sprintf("%s/kraft-controller-logs", exampleDir)
+	if runtime.GOOS == "windows" {
+		logDirs = fmt.Sprintf("%s\\kraft-controller-logs", exampleDir)
+	}
 	want := map[string]string{
-		"log.dirs":         fmt.Sprintf("%s/kraft-controller-logs", exampleDir),
+		"log.dirs":         logDirs,
 		"metric.reporters": "io.confluent.metrics.reporter.ConfluentMetricsReporter",
 		"confluent.metrics.reporter.bootstrap.servers": "localhost:9092",
 		"confluent.metrics.reporter.topic.replicas":    "1",
