@@ -5,7 +5,7 @@ Available Services:
   Connect
   Kafka
   Kafka REST
+  KRaft Controller
   ksqlDB Server
   Schema Registry
-  ZooKeeper
 

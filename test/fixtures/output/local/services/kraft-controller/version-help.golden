@@ -1,7 +1,7 @@
-View resource usage for Apache ZooKeeper™.
+Print the current version of KRaft Controller.
 
 Usage:
-  confluent local services zookeeper top [flags]
+  confluent local services kraft-controller version [flags]
 
 Global Flags:
   -h, --help            Show help for this command.
