@@ -196,6 +196,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0 h1:a2EaPzwLEYkgil7rlsqRU
 github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0/go.mod h1:c7nUjQ5pQCqz4LagF1qatcj5NX4icoiSTaCxfdxAwsY=
 github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.2 h1:BV/dPTFVovJPylrcr9lcSmukCVxBxyUeHBr6hp7zUNk=
 github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.2/go.mod h1:MMtRTfg1g32bQrRwfqvGpe+grS5pQzeq9V+L5GKydV4=
+github.com/confluentinc/ccloud-sdk-go-v2/cam v0.2.0 h1:kn54sB+/iDIyjxB23KEjkJs4t5AkL/C1eVj1zFhhueg=
+github.com/confluentinc/ccloud-sdk-go-v2/cam v0.2.0/go.mod h1:C8wyHqXaX0KtA9aKg4mLwQdsaQV1O6uGrXXlLx/Lonw=
 github.com/confluentinc/ccloud-sdk-go-v2/ccl v0.4.0 h1:dUFB7PM/eQbI/AhRHyMh4Pd7xsDDlhonE3/+kwvXVnY=
 github.com/confluentinc/ccloud-sdk-go-v2/ccl v0.4.0/go.mod h1:SJdOAgzigkv8NbZo6+8N1isiZ/HXTg+TOtQg1o1PhKY=
 github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5 h1:w0Z2hFxg8ng8gycWKRZFdus1R+q8D/I5AmN06NZso5s=

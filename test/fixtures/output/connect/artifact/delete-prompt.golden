@@ -1,0 +1,7 @@
+#################################################### 1 command_artifact_delete.go ####################################################
+########################################################################################################
+Are you sure you want to delete Connect Artifact "cfa-zip123"?
+This action is irreversible and is going to break all custom SMTs using this Artifact!
+Do you still want to proceed? (y/n): #################################################### 2 command_artifact_delete.go ####################################################
+Deleted Connect Artifact "cfa-zip123".
+#################################################### 3 command_artifact_delete.go ####################################################

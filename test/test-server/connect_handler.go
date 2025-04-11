@@ -11,9 +11,167 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
+	camv1 "github.com/confluentinc/ccloud-sdk-go-v2/cam/v1"
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 )
+
+//var jarArtifact = camv1.CamV1ConnectArtifact{
+//	Id: camv1.PtrString("cfa-jar123"),
+//	Spec: &camv1.CamV1ConnectArtifactSpec{
+//		DisplayName:   "my-connect-artifact-jar",
+//		Cloud:         "AWS",
+//		Region:        "us-west-2",
+//		Environment:   "env-123456",
+//		Description:   camv1.PtrString("new-jar-artifact"),
+//		ContentFormat: camv1.PtrString("JAR"),
+//	},
+//}
+//
+//var zipArtifact = camv1.CamV1ConnectArtifact{
+//	Id: camv1.PtrString("cfa-zip123"),
+//	Spec: &camv1.CamV1ConnectArtifactSpec{
+//		DisplayName:   "my-connect-artifact-zip",
+//		Cloud:         "AWS",
+//		Region:        "us-west-2",
+//		Environment:   "env-123456",
+//		Description:   camv1.PtrString("new-zip-artifact"),
+//		ContentFormat: camv1.PtrString("ZIP"),
+//	},
+//}
+
+// Handler for: "/api/cam/v1/connect-artifacts"
+func handleConnectArtifacts(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			artifact := &camv1.CamV1ConnectArtifact{}
+
+			require.NoError(t, json.NewDecoder(r.Body).Decode(artifact))
+
+			switch artifact.Spec.GetDisplayName() {
+			case "my-connect-artifact-jar":
+				artifact.SetId("cfa-jar123")
+				artifact.Spec.SetContentFormat("JAR")
+			case "my-connect-artifact-zip":
+				artifact.SetId("cfa-zip123")
+				artifact.Spec.SetContentFormat("ZIP")
+			}
+
+			err := json.NewEncoder(w).Encode(artifact)
+			require.NoError(t, err)
+		case http.MethodGet:
+			artifact1 := camv1.CamV1ConnectArtifact{
+				Id: camv1.PtrString("cfa-jar123"),
+				Spec: &camv1.CamV1ConnectArtifactSpec{
+					DisplayName:   "my-connect-artifact-jar",
+					Cloud:         "AWS",
+					Region:        "us-west-2",
+					Environment:   "env-123456",
+					Description:   camv1.PtrString("new-jar-artifact"),
+					ContentFormat: camv1.PtrString("JAR"),
+				},
+			}
+
+			artifact2 := camv1.CamV1ConnectArtifact{
+				Id: camv1.PtrString("cfa-zip123"),
+				Spec: &camv1.CamV1ConnectArtifactSpec{
+					DisplayName:   "my-connect-artifact-zip",
+					Cloud:         "AWS",
+					Region:        "us-west-2",
+					Environment:   "env-123456",
+					Description:   camv1.PtrString("new-zip-artifact"),
+					ContentFormat: camv1.PtrString("ZIP"),
+				},
+			}
+
+			err := json.NewEncoder(w).Encode(camv1.CamV1ConnectArtifactList{Data: []camv1.CamV1ConnectArtifact{artifact1, artifact2}})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "api/cam/v1/connect-artifacts/{id}"
+func handleConnectArtifactId(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			vars := mux.Vars(r)
+			id := vars["id"]
+			var artifact camv1.CamV1ConnectArtifact
+			if id == "cfa-jar123" {
+				artifact = camv1.CamV1ConnectArtifact{
+					Id: camv1.PtrString("cfa-jar123"),
+					Spec: &camv1.CamV1ConnectArtifactSpec{
+						DisplayName:   "my-connect-artifact-jar",
+						Cloud:         "AWS",
+						Region:        "us-west-2",
+						Environment:   "env-123456",
+						Description:   camv1.PtrString("new-jar-artifact"),
+						ContentFormat: camv1.PtrString("JAR"),
+					},
+				}
+			} else if id == "cfa-zip123" {
+				artifact = camv1.CamV1ConnectArtifact{
+					Id: camv1.PtrString("cfa-zip123"),
+					Spec: &camv1.CamV1ConnectArtifactSpec{
+						DisplayName:   "my-connect-artifact-zip",
+						Cloud:         "AWS",
+						Region:        "us-west-2",
+						Environment:   "env-123456",
+						Description:   camv1.PtrString("new-zip-artifact"),
+						ContentFormat: camv1.PtrString("ZIP"),
+					},
+				}
+			} else if id == "cfa-invalid" {
+				w.WriteHeader(http.StatusNotFound)
+				err := writeErrorJson(w, "The connect artifact was not found.")
+				require.NoError(t, err)
+			}
+			err := json.NewEncoder(w).Encode(artifact)
+			require.NoError(t, err)
+		case http.MethodDelete:
+			vars := mux.Vars(r)
+			id := vars["id"]
+			switch id {
+			case "cfa-invalid":
+				w.WriteHeader(http.StatusNotFound)
+				err := writeErrorJson(w, "The Connect Artifact was not found.")
+				require.NoError(t, err)
+			case "cfa-zip123":
+				w.WriteHeader(http.StatusNoContent)
+			}
+
+		}
+	}
+}
+
+// Handler for: "/cam/v1/presigned-upload-url"
+func handleConnectArtifactUploadUrl(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			uploadUrl := camv1.CamV1PresignedUrl{
+				Cloud:     camv1.PtrString("AWS"),
+				Region:    camv1.PtrString("us-west-2"),
+				UploadId:  camv1.PtrString("e53bb2e8-8de3-49fa-9fb1-4e3fd9a16b66"),
+				UploadUrl: camv1.PtrString(fmt.Sprintf("%s/cam/v1/dummy-presigned-url", TestV2CloudUrl.String())),
+			}
+			err := json.NewEncoder(w).Encode(uploadUrl)
+			require.NoError(t, err)
+		}
+
+	}
+}
+
+// Handler for: "/cam/v1/dummy-presigned-url"
+func handleConnectArtifactUploadFile(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			err := json.NewEncoder(w).Encode(camv1.PtrString("Success"))
+			require.NoError(t, err)
+		}
+	}
+}
 
 // Handler for: "/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}"
 func handleConnector(t *testing.T) http.HandlerFunc {
