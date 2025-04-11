@@ -253,7 +253,7 @@ func (c *command) runServiceVersionCommand(cmd *cobra.Command, _ []string) error
 }
 
 func (c *command) startService(service, configFile string) error {
-	if err := c.checkJavaVersion(service); err != nil {
+	if err := c.checkJavaVersion(); err != nil {
 		return err
 	}
 
@@ -681,7 +681,7 @@ func (c *command) checkOSVersion() error {
 	return nil
 }
 
-func (c *command) checkJavaVersion(service string) error {
+func (c *command) checkJavaVersion() error {
 	java := filepath.Join(os.Getenv("JAVA_HOME"), "/bin/java")
 	if os.Getenv("JAVA_HOME") == "" {
 		out, err := exec.Command("which", "java").Output()
