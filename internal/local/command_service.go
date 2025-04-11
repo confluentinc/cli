@@ -31,8 +31,6 @@ func NewServiceCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
 	}
 
 	switch service {
-	case "zookeeper":
-		cmd.Aliases = []string{"zk"}
 	case "schema-registry":
 		cmd.Aliases = []string{"sr"}
 	}
@@ -726,7 +724,7 @@ func isValidJavaVersion(service, javaVersion string) (bool, error) {
 		return false, nil
 	}
 
-	if service == "zookeeper" || service == "kafka" {
+	if service == "kafka" {
 		return true, nil
 	}
 
@@ -737,8 +735,6 @@ func writeOfficialServiceName(service string) string {
 	switch service {
 	case "kafka":
 		return "Apache Kafka®"
-	case "zookeeper":
-		return "Apache ZooKeeper™"
 	default:
 		return writeServiceName(service)
 	}
@@ -750,8 +746,8 @@ func writeServiceName(service string) string {
 		return "Kafka REST"
 	case "ksql-server":
 		return "ksqlDB Server"
-	case "zookeeper":
-		return "ZooKeeper"
+	case "kraft-controller":
+		return "KRaft Controller"
 	default:
 		service = strings.ReplaceAll(service, "-", " ")
 		return cases.Title(language.Und).String(service)
