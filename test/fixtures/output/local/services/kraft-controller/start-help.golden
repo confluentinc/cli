@@ -1,10 +1,10 @@
-Print logs showing Apache ZooKeeper™ output.
+Start KRaft Controller.
 
 Usage:
-  confluent local services zookeeper log [flags]
+  confluent local services kraft-controller start [flags]
 
 Flags:
-  -f, --follow   Log additional output until the command is interrupted.
+  -c, --config string   Configure KRaft Controller with a specific properties file.
 
 Global Flags:
   -h, --help            Show help for this command.
