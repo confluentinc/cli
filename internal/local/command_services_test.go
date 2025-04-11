@@ -3,6 +3,7 @@ package local
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -37,8 +38,12 @@ func TestGetConnectConfig(t *testing.T) {
 }*/
 
 func TestGetKafkaConfig(t *testing.T) {
+	logDirs := fmt.Sprintf("%s/kraft-broker-logs", exampleDir)
+	if runtime.GOOS == "windows" {
+		logDirs = fmt.Sprintf("%s\\kraft-broker-logs", exampleDir)
+	}
 	want := map[string]string{
-		"log.dirs":         fmt.Sprintf("%s/kraft-broker-logs", exampleDir),
+		"log.dirs":         logDirs,
 		"metric.reporters": "io.confluent.metrics.reporter.ConfluentMetricsReporter",
 		"confluent.metrics.reporter.bootstrap.servers": "localhost:9092",
 		"confluent.metrics.reporter.topic.replicas":    "1",
