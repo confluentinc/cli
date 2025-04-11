@@ -8,7 +8,7 @@ Start all available services:
 
   $ confluent local services start
 
-Start Apache Kafka® and ZooKeeper as its dependency:
+Start Apache Kafka® and KRaft controller as its dependency:
 
   $ confluent local services kafka start
 
