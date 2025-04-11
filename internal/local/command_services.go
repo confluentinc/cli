@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"slices"
 	"sort"
@@ -111,7 +112,7 @@ var (
 			},
 			port:                    9093,
 			isConfluentPlatformOnly: false,
-			envPrefix:               "KRAFT_CONTROLLER",
+			envPrefix:               "SAVED_KAFKA",
 		},
 	}
 
@@ -396,14 +397,14 @@ func (c *command) getConfig(service string) (map[string]string, error) {
 	case "control-center":
 		config["confluent.controlcenter.data.dir"] = data
 	case "kraft-controller":
-		//config["log.dirs"] = data
+		config["log.dirs"] = filepath.Join(data, "kraft-controller-logs")
 		if isCP {
 			config["metric.reporters"] = "io.confluent.metrics.reporter.ConfluentMetricsReporter"
 			config["confluent.metrics.reporter.bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
 			config["confluent.metrics.reporter.topic.replicas"] = "1"
 		}
 	case "kafka":
-		//config["log.dirs"] = data
+		config["log.dirs"] = filepath.Join(data, "kraft-broker-logs")
 		if isCP {
 			config["metric.reporters"] = "io.confluent.metrics.reporter.ConfluentMetricsReporter"
 			config["confluent.metrics.reporter.bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
