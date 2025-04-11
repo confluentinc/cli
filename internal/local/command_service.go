@@ -732,10 +732,6 @@ func isValidJavaVersion(service, javaVersion string) (bool, error) {
 		return false, nil
 	}
 
-	if service == "kafka" {
-		return true, nil
-	}
-
 	return true, nil
 }
 
