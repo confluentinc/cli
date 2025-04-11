@@ -24,31 +24,31 @@ CONFLUENT_HOME/
 
 var (
 	scripts = map[string]string{
-		"connect":         "connect-distributed",
-		"control-center":  "control-center-%s",
-		"kafka":           "kafka-server-%s",
-		"kafka-rest":      "kafka-rest-%s",
-		"ksql-server":     "ksql-server-%s",
-		"schema-registry": "schema-registry-%s",
-		"zookeeper":       "zookeeper-server-%s",
+		"connect":          "connect-distributed",
+		"control-center":   "control-center-%s",
+		"kraft-controller": "kafka-server-%s",
+		"kafka":            "kafka-server-%s",
+		"kafka-rest":       "kafka-rest-%s",
+		"ksql-server":      "ksql-server-%s",
+		"schema-registry":  "schema-registry-%s",
 	}
 	serviceConfigs = map[string]string{
-		"connect":         "schema-registry/connect-avro-distributed.properties",
-		"control-center":  "confluent-control-center/control-center-dev.properties",
-		"kafka":           "kafka/server.properties",
-		"kafka-rest":      "kafka-rest/kafka-rest.properties",
-		"ksql-server":     "ksqldb/ksql-server.properties",
-		"schema-registry": "schema-registry/schema-registry.properties",
-		"zookeeper":       "kafka/zookeeper.properties",
+		"connect":          "schema-registry/connect-avro-distributed.properties",
+		"control-center":   "confluent-control-center/control-center-dev.properties",
+		"kraft-controller": "kafka/kraft/controller.properties",
+		"kafka":            "kafka/kraft/broker.properties",
+		"kafka-rest":       "kafka-rest/kafka-rest.properties",
+		"ksql-server":      "ksqldb/ksql-server.properties",
+		"schema-registry":  "schema-registry/schema-registry.properties",
 	}
 	servicePortKeys = map[string]string{
-		"connect":         "rest.port",
-		"control-center":  "listeners",
-		"kafka":           "listeners",
-		"kafka-rest":      "listeners",
-		"ksql-server":     "listeners",
-		"schema-registry": "listeners",
-		"zookeeper":       "clientPort",
+		"connect":          "rest.port",
+		"control-center":   "listeners",
+		"kraft-controller": "listeners",
+		"kafka":            "listeners",
+		"kafka-rest":       "listeners",
+		"ksql-server":      "listeners",
+		"schema-registry":  "listeners",
 	}
 	connectorConfigs = map[string]string{
 		"elasticsearch-sink": "kafka-connect-elasticsearch/quickstart-elasticsearch.properties",
@@ -62,8 +62,6 @@ var (
 	versionFiles = map[string]string{
 		"Confluent Platform":           "share/java/kafka-connect-replicator/connect-replicator-*.jar",
 		"Confluent Community Software": "share/java/confluent-common/common-config-*.jar",
-		"kafka":                        "share/java/kafka/kafka-clients-*.jar",
-		"zookeeper":                    "share/java/kafka/zookeeper-*.jar",
 	}
 )
 
