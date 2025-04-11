@@ -1,6 +1,7 @@
 package local
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -37,7 +38,7 @@ func TestGetConnectConfig(t *testing.T) {
 
 func TestGetKafkaConfig(t *testing.T) {
 	want := map[string]string{
-		"log.dirs":         exampleDir,
+		"log.dirs":         fmt.Sprintf("%s/kraft-broker-logs", exampleDir),
 		"metric.reporters": "io.confluent.metrics.reporter.ConfluentMetricsReporter",
 		"confluent.metrics.reporter.bootstrap.servers": "localhost:9092",
 		"confluent.metrics.reporter.topic.replicas":    "1",
@@ -48,7 +49,6 @@ func TestGetKafkaConfig(t *testing.T) {
 func TestGetKafkaRestConfig(t *testing.T) {
 	want := map[string]string{
 		"schema.registry.url":          "http://localhost:8081",
-		"zookeeper.connect":            "localhost:2181",
 		"consumer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
 		"producer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor",
 	}
@@ -57,7 +57,6 @@ func TestGetKafkaRestConfig(t *testing.T) {
 
 func TestGetKsqlServerConfig(t *testing.T) {
 	want := map[string]string{
-		"kafkastore.connection.url":    "localhost:2181",
 		"ksql.schema.registry.url":     "http://localhost:8081",
 		"state.dir":                    exampleDir,
 		"consumer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
@@ -68,18 +67,20 @@ func TestGetKsqlServerConfig(t *testing.T) {
 
 func TestGetSchemaRegistryConfig(t *testing.T) {
 	want := map[string]string{
-		"kafkastore.connection.url":    "localhost:2181",
 		"consumer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
 		"producer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor",
 	}
 	testGetConfig(t, "schema-registry", want)
 }
 
-func TestGetZookeeperConfig(t *testing.T) {
+func TestGetKraftControllerConfig(t *testing.T) {
 	want := map[string]string{
-		"dataDir": exampleDir,
+		"log.dirs":         fmt.Sprintf("%s/kraft-controller-logs", exampleDir),
+		"metric.reporters": "io.confluent.metrics.reporter.ConfluentMetricsReporter",
+		"confluent.metrics.reporter.bootstrap.servers": "localhost:9092",
+		"confluent.metrics.reporter.topic.replicas":    "1",
 	}
-	testGetConfig(t, "zookeeper", want)
+	testGetConfig(t, "kraft-controller", want)
 }
 
 func testGetConfig(t *testing.T, service string, want map[string]string) {
@@ -128,7 +129,7 @@ func TestConfluentPlatformAvailableServices(t *testing.T) {
 	req.NoError(err)
 
 	want := []string{
-		"zookeeper",
+		"kraft-controller",
 		"kafka",
 		"schema-registry",
 		"kafka-rest",
@@ -154,7 +155,7 @@ func TestConfluentCommunitySoftwareAvailableServices(t *testing.T) {
 	req.NoError(err)
 
 	want := []string{
-		"zookeeper",
+		"kraft-controller",
 		"kafka",
 		"schema-registry",
 		"kafka-rest",
