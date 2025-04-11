@@ -1,7 +1,10 @@
-Print the current version of Apache ZooKeeper™.
+Print logs showing KRaft Controller output.
 
 Usage:
-  confluent local services zookeeper version [flags]
+  confluent local services kraft-controller log [flags]
+
+Flags:
+  -f, --follow   Log additional output until the command is interrupted.
 
 Global Flags:
   -h, --help            Show help for this command.
