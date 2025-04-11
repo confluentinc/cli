@@ -7,5 +7,5 @@ Connect is \[DOWN\]
 Kafka REST is \[DOWN\]
 Schema Registry is \[DOWN\]
 Kafka is \[DOWN\]
-ZooKeeper is \[DOWN\]
+KRaft Controller is \[DOWN\]
 Deleting: .+confluent.\d{6}

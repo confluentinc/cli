@@ -62,7 +62,6 @@ var (
 	versionFiles = map[string]string{
 		"Confluent Platform":           "share/java/kafka-connect-replicator/connect-replicator-*.jar",
 		"Confluent Community Software": "share/java/confluent-common/common-config-*.jar",
-		"kafka":                        "share/java/kafka/kafka-clients-*.jar",
 	}
 )
 
