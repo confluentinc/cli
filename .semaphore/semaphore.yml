@@ -3,7 +3,7 @@ name: Confluent CLI
 
 agent:
   machine:
-    type: s1-prod-ubuntu20-04-amd64-1
+    type: s1-prod-ubuntu24-04-amd64-1
 
 auto_cancel:
   running:
@@ -20,6 +20,8 @@ blocks:
         - name: "Test linux/amd64"
           commands:
             - checkout
+            - . vault-sem-get-secret v1/ci/kv/apif/cli/sonar_token
+            - make sonar-scan
             - sem-version go $(cat .go-version)
             - export PATH=$(go env GOPATH)/bin:$PATH
             - make generate-packaging-patch
@@ -49,7 +51,7 @@ blocks:
     task:
       agent:
         machine:
-          type: s1-prod-ubuntu20-04-arm64-1
+          type: s1-prod-ubuntu24-04-arm64-1
       jobs:
 # Temporarily disable these builds until rate limiting is resolved
 #        - name: "Build linux/arm64 (GLIBC)"
