@@ -20,6 +20,8 @@ blocks:
         - name: "Test linux/amd64"
           commands:
             - checkout
+            - . vault-sem-get-secret v1/ci/kv/apif/cli/sonar_token
+            - make sonar-scan
             - sem-version go $(cat .go-version)
             - export PATH=$(go env GOPATH)/bin:$PATH
             - make generate-packaging-patch
