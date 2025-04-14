@@ -105,12 +105,12 @@ endif
 include ./mk-include/cc-begin.mk
 include ./mk-include/cc-semver.mk
 include ./mk-include/cc-semaphore.mk
-include ./mk-include/cc-go.mk
 include ./mk-include/cc-testbreak.mk
 include ./mk-include/cc-vault.mk
 include ./mk-include/cc-sonarqube.mk
 include ./mk-include/cc-end.mk
 ### END INCLUDES ###
+
 SHELL := /bin/bash
 GORELEASER_VERSION := v1.21.2
 
