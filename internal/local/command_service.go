@@ -17,13 +17,10 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
-	"github.com/confluentinc/properties"
-
 	"github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/spinner"
-	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 func NewServiceCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
@@ -34,6 +31,8 @@ func NewServiceCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
 	}
 
 	switch service {
+	case "zookeeper":
+		cmd.Aliases = []string{"zk"}
 	case "schema-registry":
 		cmd.Aliases = []string{"sr"}
 	}
@@ -253,7 +252,7 @@ func (c *command) runServiceVersionCommand(cmd *cobra.Command, _ []string) error
 }
 
 func (c *command) startService(service, configFile string) error {
-	if err := c.checkJavaVersion(); err != nil {
+	if err := c.checkJavaVersion(service); err != nil {
 		return err
 	}
 
@@ -367,11 +366,6 @@ func (c *command) startProcess(service string) error {
 	}
 
 	configFile, err := c.cc.GetConfigFile(service)
-	if err != nil {
-		return err
-	}
-
-	err = c.setupMetaProperties(service)
 	if err != nil {
 		return err
 	}
@@ -681,7 +675,7 @@ func (c *command) checkOSVersion() error {
 	return nil
 }
 
-func (c *command) checkJavaVersion() error {
+func (c *command) checkJavaVersion(service string) error {
 	java := filepath.Join(os.Getenv("JAVA_HOME"), "/bin/java")
 	if os.Getenv("JAVA_HOME") == "" {
 		out, err := exec.Command("which", "java").Output()
@@ -702,7 +696,7 @@ func (c *command) checkJavaVersion() error {
 	re := regexp.MustCompile(`.+ version "([\d._]+)"`)
 	javaVersion := string(re.FindSubmatch(data)[1])
 
-	isValid, err := isValidJavaVersion(javaVersion)
+	isValid, err := isValidJavaVersion(service, javaVersion)
 	if err != nil {
 		return err
 	}
@@ -715,7 +709,7 @@ func (c *command) checkJavaVersion() error {
 	return nil
 }
 
-func isValidJavaVersion(javaVersion string) (bool, error) {
+func isValidJavaVersion(service, javaVersion string) (bool, error) {
 	// 1.8.0_152 -> 8.0_152 -> 8.0
 	javaVersion = strings.TrimPrefix(javaVersion, "1.")
 	javaVersion = strings.Split(javaVersion, "_")[0]
@@ -732,6 +726,10 @@ func isValidJavaVersion(javaVersion string) (bool, error) {
 		return false, nil
 	}
 
+	if service == "zookeeper" || service == "kafka" {
+		return true, nil
+	}
+
 	return true, nil
 }
 
@@ -739,6 +737,8 @@ func writeOfficialServiceName(service string) string {
 	switch service {
 	case "kafka":
 		return "Apache Kafka®"
+	case "zookeeper":
+		return "Apache ZooKeeper™"
 	default:
 		return writeServiceName(service)
 	}
@@ -750,69 +750,10 @@ func writeServiceName(service string) string {
 		return "Kafka REST"
 	case "ksql-server":
 		return "ksqlDB Server"
-	case "kraft-controller":
-		return "KRaft Controller"
+	case "zookeeper":
+		return "ZooKeeper"
 	default:
 		service = strings.ReplaceAll(service, "-", " ")
 		return cases.Title(language.Und).String(service)
 	}
-}
-
-func (c *command) setupMetaProperties(service string) error {
-	if service != "kraft-controller" && service != "kafka" {
-		return nil
-	}
-
-	dataDir, err := c.cc.GetDataDir(service)
-	if err != nil {
-		return err
-	}
-	var metaFile string
-	switch service {
-	case "kraft-controller":
-		metaFile = filepath.Join(dataDir, "kraft-controller-logs", "meta.properties")
-	case "kafka":
-		metaFile = filepath.Join(dataDir, "kraft-broker-logs", "meta.properties")
-	}
-	if utils.FileExists(metaFile) { // formatting the properties file twice results in an error
-		return nil
-	}
-
-	kafkaStorage, err := c.ch.GetFile("bin", "kafka-storage")
-	if err != nil {
-		return err
-	}
-
-	var uuid string
-	var ok bool
-	if service == "kraft-controller" {
-		out, err := exec.Command(kafkaStorage, "random-uuid").Output()
-		if err != nil {
-			return err
-		}
-		uuid = strings.TrimSuffix(string(out), "\n")
-	} else if service == "kafka" {
-		// read the uuid from the controller meta.properties file since the broker needs to use the same id
-		// this file should exist since the controller is a dependency of the broker, and hence started first
-		controllerDataDir, err := c.cc.GetDataDir("kraft-controller")
-		if err != nil {
-			return err
-		}
-		controllerMetaFile := filepath.Join(controllerDataDir, "kraft-controller-logs", "meta.properties")
-		controllerMetaProperties, err := properties.LoadFile(controllerMetaFile, properties.UTF8)
-		if err != nil {
-			return err
-		}
-		uuid, ok = controllerMetaProperties.Get("cluster.id")
-		if !ok {
-			return errors.New("unable to retrieve cluster id from KRaft controller meta.properties file")
-		}
-	}
-
-	configFile, err := c.cc.GetConfigFile(service)
-	if err != nil {
-		return err
-	}
-
-	return exec.Command(kafkaStorage, "format", "-t", uuid, "-c", configFile).Run()
 }

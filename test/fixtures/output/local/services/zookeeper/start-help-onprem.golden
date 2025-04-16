@@ -1,7 +1,10 @@
-Check if KRaft Controller is running.
+Start Apache ZooKeeper™.
 
 Usage:
-  confluent local services kraft-controller status [flags]
+  confluent local services zookeeper start [flags]
+
+Flags:
+  -c, --config string   Configure Apache ZooKeeper™ with a specific properties file.
 
 Global Flags:
   -h, --help            Show help for this command.

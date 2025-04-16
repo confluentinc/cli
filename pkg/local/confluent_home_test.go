@@ -14,7 +14,7 @@ import (
 const (
 	exampleDir     = "dir"
 	exampleFile    = "file"
-	exampleService = "Confluent Community Software"
+	exampleService = "kafka"
 	exampleVersion = "0.0.0"
 )
 

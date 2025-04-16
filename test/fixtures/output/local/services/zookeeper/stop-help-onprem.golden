@@ -1,7 +1,7 @@
-Stop KRaft Controller.
+Stop Apache ZooKeeper™.
 
 Usage:
-  confluent local services kraft-controller stop [flags]
+  confluent local services zookeeper stop [flags]
 
 Global Flags:
   -h, --help            Show help for this command.
