@@ -1,0 +1,8 @@
++----------------+-------------------------+
+| ID             | cfa-jar123              |
+| Name           | my-connect-artifact-jar |
+| Cloud          | aws                     |
+| Environment    | env-123456              |
+| Description    | new-jar-artifact        |
+| Content Format | JAR                     |
++----------------+-------------------------+
