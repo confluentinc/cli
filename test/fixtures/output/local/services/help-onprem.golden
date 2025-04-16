@@ -4,17 +4,18 @@ Usage:
   confluent local services [command]
 
 Available Commands:
-  connect          Manage Connect.
-  kafka            Manage Apache Kafka®.
-  kafka-rest       Manage Kafka REST.
-  kraft-controller Manage KRaft Controller.
-  ksql-server      Manage ksqlDB Server.
-  list             List all Confluent Platform services.
-  schema-registry  Manage Schema Registry.
-  start            Start all Confluent Platform services.
-  status           Check the status of all Confluent Platform services.
-  stop             Stop all Confluent Platform services.
-  top              View resource usage for all Confluent Platform services.
+  connect         Manage Connect.
+  control-center  Manage Control Center.
+  kafka           Manage Apache Kafka®.
+  kafka-rest      Manage Kafka REST.
+  ksql-server     Manage ksqlDB Server.
+  list            List all Confluent Platform services.
+  schema-registry Manage Schema Registry.
+  start           Start all Confluent Platform services.
+  status          Check the status of all Confluent Platform services.
+  stop            Stop all Confluent Platform services.
+  top             View resource usage for all Confluent Platform services.
+  zookeeper       Manage Apache ZooKeeper™.
 
 Global Flags:
   -h, --help            Show help for this command.

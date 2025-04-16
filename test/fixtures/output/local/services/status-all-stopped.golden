@@ -3,8 +3,9 @@ As of Confluent Platform 8.0, Java 8 will no longer be supported.
 
 Using CONFLUENT_CURRENT: .+confluent.\d{6}
 Connect is \[DOWN\]
+Control Center is \[DOWN\]
 Kafka is \[DOWN\]
 Kafka REST is \[DOWN\]
-KRaft Controller is \[DOWN\]
 ksqlDB Server is \[DOWN\]
 Schema Registry is \[DOWN\]
+ZooKeeper is \[DOWN\]

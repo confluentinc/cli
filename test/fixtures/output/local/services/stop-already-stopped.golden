@@ -2,9 +2,10 @@ The local commands are intended for a single-node development environment only, 
 As of Confluent Platform 8.0, Java 8 will no longer be supported.
 
 Using CONFLUENT_CURRENT: .+confluent.\d{6}
+Control Center is \[DOWN\]
 ksqlDB Server is \[DOWN\]
 Connect is \[DOWN\]
 Kafka REST is \[DOWN\]
 Schema Registry is \[DOWN\]
 Kafka is \[DOWN\]
-KRaft Controller is \[DOWN\]
+ZooKeeper is \[DOWN\]

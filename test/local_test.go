@@ -9,7 +9,7 @@ import (
 
 func (s *CLITestSuite) TestLocalLifecycle() {
 	s.createCH([]string{
-		"share/java/confluent-rebalancer/confluent-rebalancer-5.5.0.jar",
+		"share/java/confluent-control-center/control-center-5.5.0.jar",
 	})
 	s.createCC()
 	defer s.destroy()
@@ -45,7 +45,7 @@ func (s *CLITestSuite) TestLocalConfluentCommunitySoftware() {
 
 func (s *CLITestSuite) TestLocalVersion() {
 	s.createCH([]string{
-		"share/java/confluent-rebalancer/confluent-rebalancer-5.5.0.jar",
+		"share/java/confluent-control-center/control-center-5.5.0.jar",
 		"share/java/kafka-connect-replicator/connect-replicator-5.5.0.jar",
 	})
 	defer s.destroy()
@@ -62,7 +62,7 @@ func (s *CLITestSuite) TestLocalVersion() {
 
 func (s *CLITestSuite) TestLocalServicesList() {
 	s.createCH([]string{
-		"share/java/confluent-rebalancer/confluent-rebalancer-5.5.0.jar",
+		"share/java/confluent-control-center/control-center-5.5.0.jar",
 	})
 	defer s.destroy()
 
@@ -78,7 +78,7 @@ func (s *CLITestSuite) TestLocalServicesList() {
 
 func (s *CLITestSuite) TestLocalServicesLifecycle() {
 	s.createCH([]string{
-		"share/java/confluent-rebalancer/confluent-rebalancer-5.5.0.jar",
+		"share/java/confluent-control-center/control-center-5.5.0.jar",
 	})
 	defer s.destroy()
 
@@ -95,11 +95,17 @@ func (s *CLITestSuite) TestLocalServicesLifecycle() {
 }
 
 func (s *CLITestSuite) TestLocalZookeeperLifecycle() {
+	s.createCH([]string{
+		"share/java/kafka/zookeeper-5.5.0.jar",
+	})
+	defer s.destroy()
+
 	tests := []CLITest{
-		{args: "local services kraft-controller log", fixture: "local/kraft-controller/log-error.golden", exitCode: 1},
-		{args: "local services kraft-controller status", fixture: "local/kraft-controller/status-stopped.golden", regex: true},
-		{args: "local services kraft-controller stop", fixture: "local/kraft-controller/stop-already-stopped.golden", regex: true},
-		{args: "local services kraft-controller top", fixture: "local/kraft-controller/top-stopped.golden"},
+		{args: "local services zookeeper log", fixture: "local/zookeeper/log-error.golden", exitCode: 1},
+		{args: "local services zookeeper status", fixture: "local/zookeeper/status-stopped.golden", regex: true},
+		{args: "local services zookeeper stop", fixture: "local/zookeeper/stop-already-stopped.golden", regex: true},
+		{args: "local services zookeeper top", fixture: "local/zookeeper/top-stopped.golden"},
+		{args: "local services zookeeper version", fixture: "local/zookeeper/version.golden"},
 	}
 
 	for _, tt := range tests {

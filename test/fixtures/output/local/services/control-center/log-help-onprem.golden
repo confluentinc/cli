@@ -1,7 +1,7 @@
-Print logs showing KRaft Controller output.
+Print logs showing Control Center output.
 
 Usage:
-  confluent local services kraft-controller log [flags]
+  confluent local services control-center log [flags]
 
 Flags:
   -f, --follow   Log additional output until the command is interrupted.

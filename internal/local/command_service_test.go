@@ -62,15 +62,15 @@ func TestIsValidJavaVersion(t *testing.T) {
 	var isValid bool
 	var err error
 
-	isValid, err = isValidJavaVersion("1.8.0_152")
+	isValid, err = isValidJavaVersion("", "1.8.0_152")
 	req.NoError(err)
 	req.True(isValid)
 
-	isValid, err = isValidJavaVersion("9.0.4")
+	isValid, err = isValidJavaVersion("", "9.0.4")
 	req.NoError(err)
 	req.False(isValid)
 
-	isValid, err = isValidJavaVersion("13")
+	isValid, err = isValidJavaVersion("zookeeper", "13")
 	req.NoError(err)
 	req.True(isValid)
 }
