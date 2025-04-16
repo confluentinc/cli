@@ -48,21 +48,20 @@ func (s *CLITestSuite) TestConnect() {
 func (s *CLITestSuite) TestConnectArtifact() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
-		{args: `connect artifact create my-connect-artifact-jar --artifact-file "test/fixtures/input/connect/artifact-example.jar" --cloud aws --region us-west-2 --environment env-123456 --description new-jar-artifact`, fixture: "connect/artifact/create-jar.golden"},
-		{args: `connect artifact create my-connect-artifact-zip --artifact-file "test/fixtures/input/connect/artifact-example.zip" --cloud aws --region us-west-2 --environment env-123456 --description new-zip-artifact`, fixture: "connect/artifact/create-zip.golden"},
-		{args: `connect artifact create my-connect-artifact --artifact-file "test/fixtures/input/connect/artifact-example.zip" --cloud azure --region us-west-2 --environment env-123456 --description new-invalid-artifact`, fixture: "connect/artifact/create-invalid-cloud-type.golden", exitCode: 1},
-		{args: `connect artifact create my-connect-artifact --artifact-file "test/fixtures/input/connect/artifact-example.jpg" --cloud aws --region us-west-2 --environment env-123456 --description new-invalid-artifact`, fixture: "connect/artifact/create-invalid-file-type.golden", exitCode: 1},
-		{args: "connect artifact list --cloud aws --region us-west-2 --environment env-123456", fixture: "connect/artifact/list.golden"},
-		{args: "connect artifact list --cloud aws --region us-west-2 --environment env-123456 -o json", fixture: "connect/artifact/list-json.golden"},
-		{args: "connect artifact list --cloud aws --region us-west-2 --environment env-123456 -o yaml", fixture: "connect/artifact/list-yaml.golden"},
-		{args: "connect artifact describe cfa-zip123 --cloud aws --region us-west-2 --environment env-123456", fixture: "connect/artifact/describe-zip.golden"},
-		{args: "connect artifact describe cfa-jar123 --cloud aws --region us-west-2 --environment env-123456", fixture: "connect/artifact/describe-jar.golden"},
-		{args: "connect artifact describe cfa-jar123 --cloud aws --region us-west-2 --environment env-123456 -o json", fixture: "connect/artifact/describe-json.golden"},
-		{args: "connect artifact describe cfa-jar123 --cloud aws --region us-west-2 --environment env-123456 -o yaml", fixture: "connect/artifact/describe-yaml.golden"},
-		//{args: "connect artifact describe cfa-invalid --cloud aws --region us-west-2 --environment env-123456 -vvvv", fixture: "connect/artifact/describe-nonexistent-artifact.golden", exitCode: 1},
-		{args: "connect artifact delete cfa-zip123 --cloud aws --region us-west-2 --environment env-123456 --force", fixture: "connect/artifact/delete-force.golden"},
-		{args: "connect artifact delete cfa-zip123 --cloud aws --region us-west-2 --environment env-123456", input: "y\n", fixture: "connect/artifact/delete-prompt.golden"},
-		{args: "connect artifact delete cfa-invalid --cloud aws --region us-west-2 --environment env-123456", fixture: "connect/artifact/delete-invalid-artifact.golden", exitCode: 1},
+		{args: `connect artifact create my-connect-artifact-jar --artifact-file "test/fixtures/input/connect/artifact-example.jar" --cloud aws --environment env-123456 --description new-jar-artifact`, fixture: "connect/artifact/create-jar.golden"},
+		{args: `connect artifact create my-connect-artifact-zip --artifact-file "test/fixtures/input/connect/artifact-example.zip" --cloud aws --environment env-123456 --description new-zip-artifact`, fixture: "connect/artifact/create-zip.golden"},
+		{args: `connect artifact create my-connect-artifact --artifact-file "test/fixtures/input/connect/artifact-example.zip" --cloud azure --environment env-123456 --description new-invalid-artifact`, fixture: "connect/artifact/create-invalid-cloud-type.golden", exitCode: 1},
+		{args: `connect artifact create my-connect-artifact --artifact-file "test/fixtures/input/connect/artifact-example.jpg" --cloud aws --environment env-123456 --description new-invalid-artifact`, fixture: "connect/artifact/create-invalid-file-type.golden", exitCode: 1},
+		{args: "connect artifact list --cloud aws --environment env-123456", fixture: "connect/artifact/list.golden"},
+		{args: "connect artifact list --cloud aws --environment env-123456 -o json", fixture: "connect/artifact/list-json.golden"},
+		{args: "connect artifact list --cloud aws --environment env-123456 -o yaml", fixture: "connect/artifact/list-yaml.golden"},
+		{args: "connect artifact describe cfa-zip123 --cloud aws --environment env-123456", fixture: "connect/artifact/describe-zip.golden"},
+		{args: "connect artifact describe cfa-jar123 --cloud aws --environment env-123456", fixture: "connect/artifact/describe-jar.golden"},
+		{args: "connect artifact describe cfa-jar123 --cloud aws --environment env-123456 -o json", fixture: "connect/artifact/describe-json.golden"},
+		{args: "connect artifact describe cfa-jar123 --cloud aws --environment env-123456 -o yaml", fixture: "connect/artifact/describe-yaml.golden"},
+		{args: "connect artifact delete cfa-zip123 --cloud aws --environment env-123456 --force", fixture: "connect/artifact/delete-force.golden"},
+		{args: "connect artifact delete cfa-zip123 --cloud aws --environment env-123456", input: "y\n", fixture: "connect/artifact/delete-prompt.golden"},
+		{args: "connect artifact delete cfa-invalid --cloud aws --environment env-123456", fixture: "connect/artifact/delete-invalid-artifact.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {

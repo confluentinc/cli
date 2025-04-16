@@ -6,11 +6,10 @@ Usage:
 Examples:
 Delete connect artifact.
 
-  $ confluent connect artifact delete --cloud aws --region us-west-2 --environment env-abc123 cfa-abc123
+  $ confluent connect artifact delete --cloud aws --environment env-abc123 cfa-abc123
 
 Flags:
-      --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
-      --region string        REQUIRED: Cloud region for connect artifact, ex. "us-west-2".
+      --cloud string         REQUIRED: Specify the cloud provider as "aws".
       --environment string   Environment ID.
       --context string       CLI context name.
       --force                Skip the deletion confirmation prompt.

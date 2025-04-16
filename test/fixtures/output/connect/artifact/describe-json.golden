@@ -3,7 +3,6 @@
   "name": "my-connect-artifact-jar",
   "description": "new-jar-artifact",
   "cloud": "AWS",
-  "region": "us-west-2",
   "environment": "env-123456",
   "content_format": "JAR"
 }

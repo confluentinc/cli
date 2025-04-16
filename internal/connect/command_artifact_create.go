@@ -44,7 +44,7 @@ func (c *artifactCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("artifact-file", "", "Connect artifact JAR file or ZIP file.")
-	pcmd.AddCloudFlag(cmd)
+	pcmd.AddCloudAwsFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("description", "", "Specify the connect artifact description.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -126,7 +126,6 @@ func (c *artifactCommand) createArtifact(cmd *cobra.Command, args []string) erro
 
 	table := output.NewTable(cmd)
 	table.Add(&artifactCreateOut{
-		// TODO: double check on what to output
 		Name:          artifact.Spec.GetDisplayName(),
 		Id:            artifact.GetId(),
 		Cloud:         cloud,

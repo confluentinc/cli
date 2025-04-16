@@ -4,7 +4,6 @@
     "name": "my-connect-artifact-jar",
     "description": "new-jar-artifact",
     "cloud": "AWS",
-    "region": "us-west-2",
     "environment": "env-123456",
     "content_format": "JAR"
   },
@@ -13,7 +12,6 @@
     "name": "my-connect-artifact-zip",
     "description": "new-zip-artifact",
     "cloud": "AWS",
-    "region": "us-west-2",
     "environment": "env-123456",
     "content_format": "ZIP"
   }

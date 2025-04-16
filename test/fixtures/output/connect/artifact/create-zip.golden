@@ -1,15 +1,7 @@
-###################### enter UploadFile 
-###################### filePath:  test/fixtures/input/connect/artifact-example.zip
-###################### 1 UploadFile 
-###################### 2 UploadFile 
-###################### 3 UploadFile 
-###################### 4 UploadFile 
-###################### exit UploadFile 
 +----------------+-------------------------+
 | ID             | cfa-zip123              |
 | Name           | my-connect-artifact-zip |
 | Cloud          | aws                     |
-| Region         | us-west-2               |
 | Environment    | env-123456              |
 | Description    | new-zip-artifact        |
 | Content Format | ZIP                     |

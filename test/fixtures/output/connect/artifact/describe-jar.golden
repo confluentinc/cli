@@ -3,7 +3,6 @@
 | Name           | my-connect-artifact-jar |
 | Description    | new-jar-artifact        |
 | Cloud          | AWS                     |
-| Region         | us-west-2               |
 | Environment    | env-123456              |
 | Content Format | JAR                     |
 +----------------+-------------------------+

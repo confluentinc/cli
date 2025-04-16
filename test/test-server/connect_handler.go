@@ -122,9 +122,10 @@ func handleConnectArtifactUploadUrl(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			uploadUrl := camv1.CamV1PresignedUrl{
-				Cloud:     camv1.PtrString("AWS"),
-				UploadId:  camv1.PtrString("e53bb2e8-8de3-49fa-9fb1-4e3fd9a16b66"),
-				UploadUrl: camv1.PtrString(fmt.Sprintf("%s/cam/v1/dummy-presigned-url", TestV2CloudUrl.String())),
+				Cloud:       camv1.PtrString("AWS"),
+				Environment: camv1.PtrString("env-123456"),
+				UploadId:    camv1.PtrString("e53bb2e8-8de3-49fa-9fb1-4e3fd9a16b66"),
+				UploadUrl:   camv1.PtrString(fmt.Sprintf("%s/cam/v1/dummy-presigned-url", TestV2CloudUrl.String())),
 			}
 			err := json.NewEncoder(w).Encode(uploadUrl)
 			require.NoError(t, err)

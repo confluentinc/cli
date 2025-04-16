@@ -6,11 +6,10 @@ Usage:
 Examples:
 Describe a connect artifact.
 
-  $ confluent connect artifact describe --cloud aws --region us-west-2 --environment env-abc123 cfa-abc123
+  $ confluent connect artifact describe --cloud aws --environment env-abc123 cfa-abc123
 
 Flags:
-      --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
-      --region string        REQUIRED: Cloud region for connect artifact, ex. "us-west-2".
+      --cloud string         REQUIRED: Specify the cloud provider as "aws".
       --environment string   Environment ID.
       --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
