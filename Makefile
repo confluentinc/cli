@@ -102,8 +102,9 @@ endif
 # additional mk files, please add them before or after this generated block.
 # For more information, please refer to the page:
 # https://confluentinc.atlassian.net/wiki/spaces/Foundations/pages/2871328913/Add+Make
-
+include ./mk-include/cc-begin.mk
 include ./mk-include/cc-sonarqube.mk
+include ./mk-include/cc-end.mk
 ### END INCLUDES ###
 
 SHELL := /bin/bash
