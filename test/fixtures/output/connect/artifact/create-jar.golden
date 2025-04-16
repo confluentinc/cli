@@ -1,0 +1,16 @@
+###################### enter UploadFile 
+###################### filePath:  test/fixtures/input/connect/artifact-example.jar
+###################### 1 UploadFile 
+###################### 2 UploadFile 
+###################### 3 UploadFile 
+###################### 4 UploadFile 
+###################### exit UploadFile 
++----------------+-------------------------+
+| ID             | cfa-jar123              |
+| Name           | my-connect-artifact-jar |
+| Cloud          | aws                     |
+| Region         | us-west-2               |
+| Environment    | env-123456              |
+| Description    | new-jar-artifact        |
+| Content Format | JAR                     |
++----------------+-------------------------+
