@@ -1,16 +1,10 @@
-Start all Confluent Platform services.
+Start Apache ZooKeeper™.
 
 Usage:
-  confluent local services start [flags]
+  confluent local services zookeeper start [flags]
 
-Examples:
-Start all available services:
-
-  $ confluent local services start
-
-Start Apache Kafka® and ZooKeeper as its dependency:
-
-  $ confluent local services kafka start
+Flags:
+  -c, --config string   Configure Apache ZooKeeper™ with a specific properties file.
 
 Global Flags:
   -h, --help            Show help for this command.

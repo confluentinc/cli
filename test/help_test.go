@@ -15,7 +15,7 @@ import (
 
 func (s *CLITestSuite) TestHelp() {
 	s.createCH([]string{ // Include Control Center in help tests even if Confluent Platform is not installed locally
-		"share/java/confluent-rebalancer/confluent-rebalancer-0.0.0.jar",
+		"share/java/confluent-control-center/control-center-0.0.0.jar",
 	})
 	defer s.destroy()
 

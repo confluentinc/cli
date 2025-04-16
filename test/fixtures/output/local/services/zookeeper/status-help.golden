@@ -1,7 +1,7 @@
-Check if KRaft Controller is running.
+Check if Apache ZooKeeper™ is running.
 
 Usage:
-  confluent local services kraft-controller status [flags]
+  confluent local services zookeeper status [flags]
 
 Global Flags:
   -h, --help            Show help for this command.

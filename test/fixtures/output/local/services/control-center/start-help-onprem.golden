@@ -1,16 +1,10 @@
-Start all Confluent Platform services.
+Start Control Center.
 
 Usage:
-  confluent local services start [flags]
+  confluent local services control-center start [flags]
 
-Examples:
-Start all available services:
-
-  $ confluent local services start
-
-Start Apache Kafka® and ZooKeeper as its dependency:
-
-  $ confluent local services kafka start
+Flags:
+  -c, --config string   Configure Control Center with a specific properties file.
 
 Global Flags:
   -h, --help            Show help for this command.

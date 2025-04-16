@@ -1,7 +1,7 @@
-View resource usage for KRaft Controller.
+Print the current version of Control Center.
 
 Usage:
-  confluent local services kraft-controller top [flags]
+  confluent local services control-center version [flags]
 
 Global Flags:
   -h, --help            Show help for this command.
