@@ -6,7 +6,6 @@ import (
 	camv1 "github.com/confluentinc/ccloud-sdk-go-v2/cam/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -19,12 +18,11 @@ type artifactOut struct {
 	Name          string `human:"Name" serialized:"name"`
 	Description   string `human:"Description" serialized:"description"`
 	Cloud         string `human:"Cloud" serialized:"cloud"`
-	Region        string `human:"Region" serialized:"region"`
 	Environment   string `human:"Environment" serialized:"environment"`
 	ContentFormat string `human:"Content Format" serialized:"content_format"`
 }
 
-func newArtifactCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newArtifactCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "artifact",
 		Short:       "Manage connect artifacts.",
@@ -49,7 +47,6 @@ func printArtifactTable(cmd *cobra.Command, artifact camv1.CamV1ConnectArtifact)
 		Name:          artifact.Spec.GetDisplayName(),
 		Description:   artifact.Spec.GetDescription(),
 		Cloud:         artifact.Spec.GetCloud(),
-		Region:        artifact.Spec.GetRegion(),
 		Environment:   artifact.Spec.GetEnvironment(),
 		ContentFormat: artifact.Spec.GetContentFormat(),
 	})

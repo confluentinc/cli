@@ -29,17 +29,17 @@ func (c *Client) GetArtifactPresignedUrl(request camv1.CamV1PresignedUrlRequest)
 }
 
 func (c *Client) CreateConnectArtifact(createArtifactRequest camv1.CamV1ConnectArtifact) (camv1.CamV1ConnectArtifact, error) {
-	resp, httpResp, err := c.ConnectArtifactClient.ConnectArtifactsCamV1Api.CreateCamV1ConnectArtifact(c.connectArtifactApiContext()).SpecCloud(createArtifactRequest.GetSpec().Cloud).SpecRegion(createArtifactRequest.GetSpec().Region).CamV1ConnectArtifact(createArtifactRequest).Execute()
+	resp, httpResp, err := c.ConnectArtifactClient.ConnectArtifactsCamV1Api.CreateCamV1ConnectArtifact(c.connectArtifactApiContext()).SpecCloud(createArtifactRequest.GetSpec().Cloud).CamV1ConnectArtifact(createArtifactRequest).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListConnectArtifacts(cloud, region, env string) ([]camv1.CamV1ConnectArtifact, error) {
+func (c *Client) ListConnectArtifacts(cloud, env string) ([]camv1.CamV1ConnectArtifact, error) {
 	var list []camv1.CamV1ConnectArtifact
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, httpResp, err := c.executeListConnectArtifacts(pageToken, cloud, region, env)
+		page, httpResp, err := c.executeListConnectArtifacts(pageToken, cloud, env)
 		if err != nil {
 			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
@@ -53,26 +53,23 @@ func (c *Client) ListConnectArtifacts(cloud, region, env string) ([]camv1.CamV1C
 	return list, nil
 }
 
-func (c *Client) DescribeConnectArtifact(cloud, region, environment, id string) (camv1.CamV1ConnectArtifact, error) {
-	resp, httpResp, err := c.ConnectArtifactClient.ConnectArtifactsCamV1Api.GetCamV1ConnectArtifact(c.connectArtifactApiContext(), id).SpecCloud(cloud).SpecRegion(region).Environment(environment).Execute()
+func (c *Client) DescribeConnectArtifact(cloud, environment, id string) (camv1.CamV1ConnectArtifact, error) {
+	resp, httpResp, err := c.ConnectArtifactClient.ConnectArtifactsCamV1Api.GetCamV1ConnectArtifact(c.connectArtifactApiContext(), id).SpecCloud(cloud).Environment(environment).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DeleteConnectArtifact(cloud, region, environment, id string) error {
-	httpResp, err := c.ConnectArtifactClient.ConnectArtifactsCamV1Api.DeleteCamV1ConnectArtifact(c.connectArtifactApiContext(), id).SpecCloud(cloud).SpecRegion(region).Environment(environment).Execute()
+func (c *Client) DeleteConnectArtifact(cloud, environment, id string) error {
+	httpResp, err := c.ConnectArtifactClient.ConnectArtifactsCamV1Api.DeleteCamV1ConnectArtifact(c.connectArtifactApiContext(), id).SpecCloud(cloud).Environment(environment).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) executeListConnectArtifacts(pageToken, cloud, region, env string) (camv1.CamV1ConnectArtifactList, *http.Response, error) {
+func (c *Client) executeListConnectArtifacts(pageToken, cloud, env string) (camv1.CamV1ConnectArtifactList, *http.Response, error) {
 	req := c.ConnectArtifactClient.ConnectArtifactsCamV1Api.ListCamV1ConnectArtifacts(c.connectArtifactApiContext()).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
 	if cloud != "" {
 		req = req.SpecCloud(cloud)
-	}
-	if region != "" {
-		req = req.SpecRegion(region)
 	}
 	if env != "" {
 		req = req.Environment(env)

@@ -16,30 +16,6 @@ import (
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 )
 
-//var jarArtifact = camv1.CamV1ConnectArtifact{
-//	Id: camv1.PtrString("cfa-jar123"),
-//	Spec: &camv1.CamV1ConnectArtifactSpec{
-//		DisplayName:   "my-connect-artifact-jar",
-//		Cloud:         "AWS",
-//		Region:        "us-west-2",
-//		Environment:   "env-123456",
-//		Description:   camv1.PtrString("new-jar-artifact"),
-//		ContentFormat: camv1.PtrString("JAR"),
-//	},
-//}
-//
-//var zipArtifact = camv1.CamV1ConnectArtifact{
-//	Id: camv1.PtrString("cfa-zip123"),
-//	Spec: &camv1.CamV1ConnectArtifactSpec{
-//		DisplayName:   "my-connect-artifact-zip",
-//		Cloud:         "AWS",
-//		Region:        "us-west-2",
-//		Environment:   "env-123456",
-//		Description:   camv1.PtrString("new-zip-artifact"),
-//		ContentFormat: camv1.PtrString("ZIP"),
-//	},
-//}
-
 // Handler for: "/api/cam/v1/connect-artifacts"
 func handleConnectArtifacts(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +42,6 @@ func handleConnectArtifacts(t *testing.T) http.HandlerFunc {
 				Spec: &camv1.CamV1ConnectArtifactSpec{
 					DisplayName:   "my-connect-artifact-jar",
 					Cloud:         "AWS",
-					Region:        "us-west-2",
 					Environment:   "env-123456",
 					Description:   camv1.PtrString("new-jar-artifact"),
 					ContentFormat: camv1.PtrString("JAR"),
@@ -78,7 +53,6 @@ func handleConnectArtifacts(t *testing.T) http.HandlerFunc {
 				Spec: &camv1.CamV1ConnectArtifactSpec{
 					DisplayName:   "my-connect-artifact-zip",
 					Cloud:         "AWS",
-					Region:        "us-west-2",
 					Environment:   "env-123456",
 					Description:   camv1.PtrString("new-zip-artifact"),
 					ContentFormat: camv1.PtrString("ZIP"),
@@ -105,7 +79,6 @@ func handleConnectArtifactId(t *testing.T) http.HandlerFunc {
 					Spec: &camv1.CamV1ConnectArtifactSpec{
 						DisplayName:   "my-connect-artifact-jar",
 						Cloud:         "AWS",
-						Region:        "us-west-2",
 						Environment:   "env-123456",
 						Description:   camv1.PtrString("new-jar-artifact"),
 						ContentFormat: camv1.PtrString("JAR"),
@@ -117,7 +90,6 @@ func handleConnectArtifactId(t *testing.T) http.HandlerFunc {
 					Spec: &camv1.CamV1ConnectArtifactSpec{
 						DisplayName:   "my-connect-artifact-zip",
 						Cloud:         "AWS",
-						Region:        "us-west-2",
 						Environment:   "env-123456",
 						Description:   camv1.PtrString("new-zip-artifact"),
 						ContentFormat: camv1.PtrString("ZIP"),
@@ -141,7 +113,6 @@ func handleConnectArtifactId(t *testing.T) http.HandlerFunc {
 			case "cfa-zip123":
 				w.WriteHeader(http.StatusNoContent)
 			}
-
 		}
 	}
 }
@@ -152,14 +123,12 @@ func handleConnectArtifactUploadUrl(t *testing.T) http.HandlerFunc {
 		if r.Method == http.MethodPost {
 			uploadUrl := camv1.CamV1PresignedUrl{
 				Cloud:     camv1.PtrString("AWS"),
-				Region:    camv1.PtrString("us-west-2"),
 				UploadId:  camv1.PtrString("e53bb2e8-8de3-49fa-9fb1-4e3fd9a16b66"),
 				UploadUrl: camv1.PtrString(fmt.Sprintf("%s/cam/v1/dummy-presigned-url", TestV2CloudUrl.String())),
 			}
 			err := json.NewEncoder(w).Encode(uploadUrl)
 			require.NoError(t, err)
 		}
-
 	}
 }
 

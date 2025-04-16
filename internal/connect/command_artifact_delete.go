@@ -22,30 +22,23 @@ func (c *artifactCommand) newDeleteCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete connect artifact.",
-				Code: "confluent connect artifact delete --cloud aws --region us-west-2 --environment env-abc123 cfa-abc123",
+				Code: "confluent connect artifact delete --cloud aws --environment env-abc123 cfa-abc123",
 			},
 		),
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	cmd.Flags().String("region", "", `Cloud region for connect artifact, ex. "us-west-2".`)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddForceFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
-	cobra.CheckErr(cmd.MarkFlagRequired("region"))
 
 	return cmd
 }
 
 func (c *artifactCommand) delete(cmd *cobra.Command, args []string) error {
 	cloud, err := cmd.Flags().GetString("cloud")
-	if err != nil {
-		return err
-	}
-
-	region, err := cmd.Flags().GetString("region")
 	if err != nil {
 		return err
 	}
@@ -59,7 +52,7 @@ func (c *artifactCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	existenceFunc := func(id string) bool {
-		artifactIdToName, err := c.mapArtifactIdToName(cloud, region, environment)
+		artifactIdToName, err := c.mapArtifactIdToName(cloud, environment)
 		if err != nil {
 			return false
 		}
@@ -72,7 +65,7 @@ func (c *artifactCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		return c.V2Client.DeleteConnectArtifact(cloud, region, environment, id)
+		return c.V2Client.DeleteConnectArtifact(cloud, environment, id)
 	}
 
 	_, err = deletion.Delete(args, deleteFunc, resource.ConnectArtifact)
@@ -80,9 +73,8 @@ func (c *artifactCommand) delete(cmd *cobra.Command, args []string) error {
 	return err
 }
 
-func (c *artifactCommand) mapArtifactIdToName(cloud string, region string, environment string) (map[string]string, error) {
-
-	artifacts, err := c.V2Client.ListConnectArtifacts(cloud, region, environment)
+func (c *artifactCommand) mapArtifactIdToName(cloud string, environment string) (map[string]string, error) {
+	artifacts, err := c.V2Client.ListConnectArtifacts(cloud, environment)
 	if err != nil {
 		return nil, err
 	}
