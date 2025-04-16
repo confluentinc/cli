@@ -73,7 +73,7 @@ func (s *ConfluentHomeTestSuite) TestHasFile() {
 func (s *ConfluentHomeTestSuite) TestIsConfluentPlatform() {
 	req := require.New(s.T())
 
-	file := "share/java/confluent-rebalancer/confluent-rebalancer-0.0.0.jar"
+	file := "share/java/confluent-control-center/control-center-0.0.0.jar"
 	req.NoError(s.createTestConfluentFile(file))
 
 	isCP, err := s.ch.IsConfluentPlatform()

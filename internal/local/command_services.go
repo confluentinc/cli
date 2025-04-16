@@ -39,7 +39,7 @@ var (
 			isConfluentPlatformOnly: false,
 			envPrefix:               "CONNECT",
 		},
-		/*"control-center": {
+		"control-center": {
 			startDependencies: []string{
 				"zookeeper",
 				"kafka",
@@ -51,13 +51,13 @@ var (
 			port:                    9021,
 			isConfluentPlatformOnly: true,
 			envPrefix:               "CONTROL_CENTER",
-		},*/
+		},
 		"kafka": {
 			startDependencies: []string{
 				"zookeeper",
 			},
 			stopDependencies: []string{
-				//"control-center",
+				"control-center",
 				"ksql-server",
 				"connect",
 				"kafka-rest",
@@ -102,7 +102,7 @@ var (
 		"zookeeper": {
 			startDependencies: []string{},
 			stopDependencies: []string{
-				//"control-center",
+				"control-center",
 				"ksql-server",
 				"connect",
 				"kafka-rest",
@@ -122,7 +122,7 @@ var (
 		"kafka-rest",
 		"connect",
 		"ksql-server",
-		//"control-center",
+		"control-center",
 	}
 )
 
