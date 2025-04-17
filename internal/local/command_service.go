@@ -854,5 +854,10 @@ func (c *command) setupMetaProperties(service string) error {
 		return err
 	}
 
-	return exec.Command(kafkaStorage, "format", "-t", uuid, "-c", configFile).Run()
+	kafkaStorageArgs := []string{"format", "-t", uuid, "-c", configFile}
+	if service == "kraft-controller" {
+		kafkaStorageArgs = append(kafkaStorageArgs, "-s")
+	}
+
+	return exec.Command(kafkaStorage, kafkaStorageArgs...).Run()
 }

@@ -544,7 +544,7 @@ func (c *command) isCompatibleService(service string) (bool, error) {
 		return false, err
 	}
 
-	return constraints.Check(ver), nil
+	return constraints.Check(ver.Core()), nil
 }
 
 func (c *command) notifyConfluentCurrent() error {
