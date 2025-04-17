@@ -121,6 +121,9 @@ func TestConfluentPlatformAvailableServices(t *testing.T) {
 			IsConfluentPlatformFunc: func() (bool, error) {
 				return true, nil
 			},
+			GetConfluentVersionFunc: func() (string, error) {
+				return "7.9.0", nil
+			},
 		},
 	}
 
@@ -146,6 +149,9 @@ func TestConfluentCommunitySoftwareAvailableServices(t *testing.T) {
 		ch: &climock.MockConfluentHome{
 			IsConfluentPlatformFunc: func() (bool, error) {
 				return false, nil
+			},
+			GetConfluentVersionFunc: func() (string, error) {
+				return "7.9.0", nil
 			},
 		},
 	}
