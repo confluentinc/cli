@@ -78,6 +78,23 @@ func (s *CLITestSuite) TestLocalServicesList() {
 	}
 }
 
+func (s *CLITestSuite) TestLocalServicesList_8_0() {
+	s.createCH([]string{
+		"share/java/confluent-rebalancer/confluent-rebalancer-8.0.0.jar",
+		"share/java/kafka-connect-replicator/connect-replicator-8.0.0.jar",
+	})
+	defer s.destroy()
+
+	tests := []CLITest{
+		{args: "local services list", fixture: "local/services/list-cp-8-0.golden"},
+	}
+
+	for _, tt := range tests {
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
+	}
+}
+
 func (s *CLITestSuite) TestLocalServicesLifecycle() {
 	s.createCH([]string{
 		"share/java/confluent-rebalancer/confluent-rebalancer-5.5.0.jar",
