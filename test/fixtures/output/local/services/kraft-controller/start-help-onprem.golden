@@ -1,16 +1,10 @@
-Start all Confluent Platform services.
+Start KRaft Controller.
 
 Usage:
-  confluent local services start [flags]
+  confluent local services kraft-controller start [flags]
 
-Examples:
-Start all available services:
-
-  $ confluent local services start
-
-Start Apache Kafka® and its dependency:
-
-  $ confluent local services kafka start
+Flags:
+  -c, --config string   Configure KRaft Controller with a specific properties file.
 
 Global Flags:
   -h, --help            Show help for this command.
