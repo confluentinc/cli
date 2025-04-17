@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/go-version"
 	"github.com/spf13/cobra"
 
@@ -460,20 +461,24 @@ func top(pids []int) error {
 }
 
 func (c *command) getAvailableServices() ([]string, error) {
+	var errs *multierror.Error
 	isCP, err := c.ch.IsConfluentPlatform()
+	errs = multierror.Append(err)
 
 	var available []string
 	for _, service := range orderedServices {
 		compatible, err := c.isCompatibleService(service)
-		if err != nil {
-			return nil, err
+		errs = multierror.Append(err)
+		if !compatible {
+			continue
 		}
-		if (isCP || !services[service].isConfluentPlatformOnly) && compatible {
+
+		if isCP || !services[service].isConfluentPlatformOnly {
 			available = append(available, service)
 		}
 	}
 
-	return available, err
+	return available, errs.ErrorOrNil()
 }
 
 func (c *command) isCompatibleService(service string) (bool, error) {
