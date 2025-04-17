@@ -132,6 +132,13 @@ func (c *command) runServiceStartCommand(cmd *cobra.Command, _ []string) error {
 	}
 
 	for _, dependency := range services[service].startDependencies {
+		compatible, err := c.isCompatibleService(dependency)
+		if err != nil {
+			return err
+		}
+		if !compatible {
+			continue
+		}
 		if err := c.startService(dependency, ""); err != nil {
 			return err
 		}
@@ -187,6 +194,13 @@ func (c *command) runServiceStopCommand(cmd *cobra.Command, _ []string) error {
 	}
 
 	for _, dependency := range services[service].stopDependencies {
+		compatible, err := c.isCompatibleService(dependency)
+		if err != nil {
+			return err
+		}
+		if !compatible {
+			continue
+		}
 		if err := c.stopService(dependency); err != nil {
 			return err
 		}

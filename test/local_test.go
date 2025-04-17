@@ -9,7 +9,8 @@ import (
 
 func (s *CLITestSuite) TestLocalLifecycle() {
 	s.createCH([]string{
-		"share/java/confluent-control-center/control-center-5.5.0.jar",
+		"share/java/confluent-rebalancer/confluent-rebalancer-5.5.0.jar",
+		"share/java/kafka-connect-replicator/connect-replicator-5.5.0.jar",
 	})
 	s.createCC()
 	defer s.destroy()
@@ -45,7 +46,7 @@ func (s *CLITestSuite) TestLocalConfluentCommunitySoftware() {
 
 func (s *CLITestSuite) TestLocalVersion() {
 	s.createCH([]string{
-		"share/java/confluent-control-center/control-center-5.5.0.jar",
+		"share/java/confluent-rebalancer/confluent-rebalancer-5.5.0.jar",
 		"share/java/kafka-connect-replicator/connect-replicator-5.5.0.jar",
 	})
 	defer s.destroy()
@@ -62,7 +63,8 @@ func (s *CLITestSuite) TestLocalVersion() {
 
 func (s *CLITestSuite) TestLocalServicesList() {
 	s.createCH([]string{
-		"share/java/confluent-control-center/control-center-5.5.0.jar",
+		"share/java/confluent-rebalancer/confluent-rebalancer-5.5.0.jar",
+		"share/java/kafka-connect-replicator/connect-replicator-5.5.0.jar",
 	})
 	defer s.destroy()
 
@@ -78,7 +80,8 @@ func (s *CLITestSuite) TestLocalServicesList() {
 
 func (s *CLITestSuite) TestLocalServicesLifecycle() {
 	s.createCH([]string{
-		"share/java/confluent-control-center/control-center-5.5.0.jar",
+		"share/java/confluent-rebalancer/confluent-rebalancer-5.5.0.jar",
+		"share/java/kafka-connect-replicator/connect-replicator-5.5.0.jar",
 	})
 	defer s.destroy()
 
@@ -96,6 +99,7 @@ func (s *CLITestSuite) TestLocalServicesLifecycle() {
 
 func (s *CLITestSuite) TestLocalZookeeperLifecycle() {
 	s.createCH([]string{
+		"share/java/confluent-common/common-config-5.5.0.jar",
 		"share/java/kafka/zookeeper-5.5.0.jar",
 	})
 	defer s.destroy()

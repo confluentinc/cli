@@ -10,9 +10,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hashicorp/go-version"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/local"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -24,6 +26,7 @@ type Service struct {
 	port                    int
 	isConfluentPlatformOnly bool
 	envPrefix               string
+	versionConstraints      string
 }
 
 var (
@@ -51,6 +54,7 @@ var (
 			port:                    9021,
 			isConfluentPlatformOnly: true,
 			envPrefix:               "CONTROL_CENTER",
+			versionConstraints:      "< 8.0",
 		},
 		"kafka": {
 			startDependencies: []string{
@@ -112,6 +116,7 @@ var (
 			port:                    2181,
 			isConfluentPlatformOnly: false,
 			envPrefix:               "ZOOKEEPER",
+			versionConstraints:      "< 8.0",
 		},
 	}
 
@@ -126,7 +131,7 @@ var (
 	}
 )
 
-func NewServicesCommand(prerunner cmd.PreRunner) *cobra.Command {
+func NewServicesCommand(cfg *config.Config, prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "services",
@@ -135,6 +140,9 @@ func NewServicesCommand(prerunner cmd.PreRunner) *cobra.Command {
 		}, prerunner)
 
 	availableServices, _ := c.getAvailableServices()
+	if cfg.IsTest {
+		availableServices = orderedServices
+	}
 
 	for _, service := range availableServices {
 		c.AddCommand(NewServiceCommand(service, prerunner))
@@ -456,12 +464,39 @@ func (c *command) getAvailableServices() ([]string, error) {
 
 	var available []string
 	for _, service := range orderedServices {
-		if isCP || !services[service].isConfluentPlatformOnly {
+		compatible, err := c.isCompatibleService(service)
+		if err != nil {
+			return nil, err
+		}
+		if (isCP || !services[service].isConfluentPlatformOnly) && compatible {
 			available = append(available, service)
 		}
 	}
 
 	return available, err
+}
+
+func (c *command) isCompatibleService(service string) (bool, error) {
+	if services[service].versionConstraints == "" {
+		return true, nil
+	}
+
+	confluentVersion, err := c.ch.GetConfluentVersion()
+	if err != nil {
+		return false, err
+	}
+
+	constraints, err := version.NewConstraint(services[service].versionConstraints)
+	if err != nil {
+		return false, err
+	}
+
+	ver, err := version.NewVersion(confluentVersion)
+	if err != nil {
+		return false, err
+	}
+
+	return constraints.Check(ver), nil
 }
 
 func (c *command) notifyConfluentCurrent() error {
