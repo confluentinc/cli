@@ -105,7 +105,7 @@ func (s *ConfluentHomeTestSuite) TestGetVersion() {
 	file := strings.ReplaceAll(versionFiles[exampleService], "*", exampleVersion)
 	req.NoError(s.createTestConfluentFile(file))
 
-	version, err := s.ch.GetVersion(exampleService)
+	version, err := s.ch.GetVersion(exampleService, true)
 	req.NoError(err)
 	req.Equal(exampleVersion, version)
 }
@@ -113,7 +113,7 @@ func (s *ConfluentHomeTestSuite) TestGetVersion() {
 func (s *ConfluentHomeTestSuite) TestGetVersionNoMatchError() {
 	req := require.New(s.T())
 
-	_, err := s.ch.GetVersion(exampleService)
+	_, err := s.ch.GetVersion(exampleService, true)
 	req.Error(err)
 }
 

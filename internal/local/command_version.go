@@ -30,7 +30,7 @@ func (c *command) runVersionCommand(_ *cobra.Command, _ []string) error {
 		flavor = "Confluent Platform"
 	}
 
-	version, err := c.ch.GetVersion(flavor)
+	version, err := c.ch.GetVersion(flavor, false)
 	if err != nil {
 		return err
 	}

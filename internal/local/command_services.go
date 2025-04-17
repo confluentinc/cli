@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"slices"
 	"sort"
@@ -35,6 +36,7 @@ var (
 		"connect": {
 			startDependencies: []string{
 				"zookeeper",
+				"kraft-controller",
 				"kafka",
 				"schema-registry",
 			},
@@ -60,6 +62,7 @@ var (
 		"kafka": {
 			startDependencies: []string{
 				"zookeeper",
+				"kraft-controller",
 			},
 			stopDependencies: []string{
 				"control-center",
@@ -75,6 +78,7 @@ var (
 		"kafka-rest": {
 			startDependencies: []string{
 				"zookeeper",
+				"kraft-controller",
 				"kafka",
 				"schema-registry",
 			},
@@ -83,9 +87,24 @@ var (
 			isConfluentPlatformOnly: false,
 			envPrefix:               "KAFKAREST",
 		},
+		"kraft-controller": {
+			startDependencies: []string{},
+			stopDependencies: []string{
+				"ksql-server",
+				"connect",
+				"kafka-rest",
+				"schema-registry",
+				"kafka",
+			},
+			port:                    9093,
+			isConfluentPlatformOnly: false,
+			envPrefix:               "SAVED_KAFKA",
+			versionConstraints:      ">= 8.0",
+		},
 		"ksql-server": {
 			startDependencies: []string{
 				"zookeeper",
+				"kraft-controller",
 				"kafka",
 				"schema-registry",
 			},
@@ -97,6 +116,7 @@ var (
 		"schema-registry": {
 			startDependencies: []string{
 				"zookeeper",
+				"kraft-controller",
 				"kafka",
 			},
 			stopDependencies:        []string{},
@@ -123,6 +143,7 @@ var (
 
 	orderedServices = []string{
 		"zookeeper",
+		"kraft-controller",
 		"kafka",
 		"schema-registry",
 		"kafka-rest",
@@ -200,7 +221,7 @@ func NewServicesStartCommand(prerunner cmd.PreRunner) *cobra.Command {
 					Code: "confluent local services start",
 				},
 				examples.Example{
-					Text: "Start Apache Kafka® and ZooKeeper as its dependency:",
+					Text: "Start Apache Kafka® and its dependency:",
 					Code: "confluent local services kafka start",
 				},
 			),
@@ -361,13 +382,18 @@ func (c *command) getConfig(service string) (map[string]string, error) {
 		return map[string]string{}, err
 	}
 
+	zookeeperMode, err := c.isZookeeperMode()
+	if err != nil {
+		return map[string]string{}, err
+	}
+
 	config := make(map[string]string)
 
 	switch service {
 	case "connect":
 		config["bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
 
-		data, err := c.ch.ReadServiceConfig(service)
+		data, err := c.ch.ReadServiceConfig(service, zookeeperMode)
 		if err != nil {
 			return map[string]string{}, err
 		}
@@ -405,7 +431,11 @@ func (c *command) getConfig(service string) (map[string]string, error) {
 	case "control-center":
 		config["confluent.controlcenter.data.dir"] = data
 	case "kafka":
-		config["log.dirs"] = data
+		if zookeeperMode {
+			config["log.dirs"] = data
+		} else {
+			config["log.dirs"] = filepath.Join(data, "kraft-broker-logs")
+		}
 		if isCP {
 			config["metric.reporters"] = "io.confluent.metrics.reporter.ConfluentMetricsReporter"
 			config["confluent.metrics.reporter.bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
@@ -413,13 +443,26 @@ func (c *command) getConfig(service string) (map[string]string, error) {
 		}
 	case "kafka-rest":
 		config["schema.registry.url"] = fmt.Sprintf("http://localhost:%d", services["schema-registry"].port)
-		config["zookeeper.connect"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
+		if zookeeperMode {
+			config["zookeeper.connect"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
+		}
+	case "kraft-controller":
+		config["log.dirs"] = filepath.Join(data, "kraft-controller-logs")
+		if isCP {
+			config["metric.reporters"] = "io.confluent.metrics.reporter.ConfluentMetricsReporter"
+			config["confluent.metrics.reporter.bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
+			config["confluent.metrics.reporter.topic.replicas"] = "1"
+		}
 	case "ksql-server":
-		config["kafkastore.connection.url"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
+		if zookeeperMode {
+			config["kafkastore.connection.url"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
+		}
 		config["ksql.schema.registry.url"] = fmt.Sprintf("http://localhost:%d", services["schema-registry"].port)
 		config["state.dir"] = data
 	case "schema-registry":
-		config["kafkastore.connection.url"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
+		if zookeeperMode {
+			config["kafkastore.connection.url"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
+		}
 	case "zookeeper":
 		config["dataDir"] = data
 	}
@@ -512,4 +555,13 @@ func (c *command) notifyConfluentCurrent() error {
 
 	output.Printf(c.Config.EnableColor, "Using CONFLUENT_CURRENT: %s\n", dir)
 	return nil
+}
+
+func (c *command) isZookeeperMode() (bool, error) {
+	availableServices, err := c.getAvailableServices()
+	if err != nil {
+		return false, err
+	}
+
+	return slices.Contains(availableServices, "zookeeper"), nil
 }
