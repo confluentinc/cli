@@ -157,6 +157,7 @@ func (ch *ConfluentHomeManager) GetConfluentVersion() (string, error) {
 		return "", err
 	}
 
+	// The bool value doesn't matter when we pass in "Confluent Platform" or "Confluent Community Software", so we just choose "false"
 	if isCP {
 		return ch.GetVersion("Confluent Platform", false)
 	} else {
