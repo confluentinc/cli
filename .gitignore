@@ -253,7 +253,7 @@ flycheck_*.el
 # Built Visual Studio Code Extensions
 *.vsix
 
-/mk-include/
+/mk-include
 /.mk-include-timestamp
 
 /coverage.txt
