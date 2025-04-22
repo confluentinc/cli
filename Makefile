@@ -103,6 +103,10 @@ endif
 # For more information, please refer to the page:
 # https://confluentinc.atlassian.net/wiki/spaces/Foundations/pages/2871328913/Add+Make
 include ./mk-include/cc-begin.mk
+include ./mk-include/cc-semver.mk
+include ./mk-include/cc-semaphore.mk
+include ./mk-include/cc-testbreak.mk
+include ./mk-include/cc-vault.mk
 include ./mk-include/cc-sonarqube.mk
 include ./mk-include/cc-end.mk
 ### END INCLUDES ###
@@ -207,9 +211,9 @@ cmd/lint/en_US.dic:
 unit-test:
 ifdef CI
 	go install gotest.tools/gotestsum@v1.12.1 && \
-	gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test)
+	gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -race -coverprofile=coverage.unit.out -covermode=atomic $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test)
 else
-	go test -timeout 0 -v $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test) $(UNIT_TEST_ARGS)
+	go test -timeout 0 -v -coverprofile=coverage.unit.out -covermode=atomic $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test) $(UNIT_TEST_ARGS)
 endif
 
 .PHONY: build-for-integration-test
@@ -234,15 +238,31 @@ ifdef CI
 	go install gotest.tools/gotestsum@v1.12.1 && \
 	export GOCOVERDIR=test/coverage && \
 	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
-	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
+	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race -coverprofile=coverage.integration.out -covermode=atomic $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
 	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
 else
-	go test -timeout 0 -v $$(go list ./... | grep github.com/confluentinc/cli/v4/test) $(INTEGRATION_TEST_ARGS)
+	go test -timeout 0 -v -coverprofile=coverage.integration.out -covermode=atomic $$(go list ./... | grep github.com/confluentinc/cli/v4/test) $(INTEGRATION_TEST_ARGS)
 endif
 
 .PHONY: test
 test: unit-test integration-test
+	@echo "mode: atomic" > coverage.txt
+	@tail -n +2 coverage.unit.out >> coverage.txt
+	@tail -n +2 coverage.integration.out >> coverage.txt
+	@echo "Coverage data saved to: coverage.txt"
 
 .PHONY: generate-packaging-patch
 generate-packaging-patch:
 	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
+
+.PHONY: coverage
+coverage: test
+	@echo "Merging coverage data..."
+	@echo "mode: atomic" > coverage.out
+	@tail -n +2 coverage.unit.out >> coverage.out
+	@tail -n +2 coverage.integration.out >> coverage.out
+	@echo "Generating coverage reports..."
+	go tool cover -html=coverage.out -o coverage.html
+	go tool cover -func=coverage.out
+	@echo "Coverage report generated: coverage.html"
+	@echo "Coverage data saved to: coverage.out"

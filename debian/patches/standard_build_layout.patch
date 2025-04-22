@@ -1,6 +1,6 @@
---- cli/Makefile	2025-04-14 14:52:35.972431467 -0500
+--- cli/Makefile	2025-04-22 11:54:49.446208592 -0500
 +++ debian/Makefile	2025-02-12 09:00:49.891230440 -0600
-@@ -1,252 +1,163 @@
+@@ -1,268 +1,163 @@
 -### BEGIN HEADERS ###
 -# This block is managed by ServiceBot plugin - Make. The content in this block is created using a common
 -# template and configurations in service.yml.
@@ -91,7 +91,8 @@
 -ifneq ($(UPDATE_MK_INCLUDE),)
 -    $(error mk-include update failed)
 -endif
--
++SHELL=/bin/bash
+ 
 -# Export the (empty) .mk-include-check-FORCE target to allow users to trigger the mk-include
 -# download code above via make but without having to run any of the other targets, e.g. build.
 -.PHONY: .mk-include-check-FORCE
@@ -130,8 +131,10 @@
 -	endif
 -else # darwin
 -	$(MAKE) cli-builder
--endif
--
++ifndef VERSION
++	VERSION=$(CLI_VERSION)
+ endif
+ 
 -# Cross-compile from darwin to any of the OS/Arch pairs below
 -.PHONY: cross-build
 -cross-build:
@@ -150,7 +153,10 @@
 -		$(MAKE) cli-builder
 -	endif
 -endif
--
++export PACKAGE_TITLE=cli
++export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
++export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
+ 
 -.PHONY: cli-builder
 -cli-builder:
 -	GOOS="" GOARCH="" CC="" CXX="" CGO_LDFLAGS="" go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION)
@@ -171,28 +177,22 @@
 -	rm -rf go go-openssl go$$(cat .go-version).src.tar.gz
 -else
 -	TAGS=$(TAGS) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) goreleaser build --clean --single-target --snapshot
-+SHELL=/bin/bash
-+
-+ifndef VERSION
-+	VERSION=$(CLI_VERSION)
- endif
+-endif
++# Defaults that are likely to vary by platform. These are cleanly separated so
++# it should be easy to maintain altered values on platform-specific branches
++# when the values aren't overridden by the script invoking the Makefile
  
 -include ./mk-files/semver.mk
 -include ./mk-files/docs.mk
 -include ./mk-files/dry-run.mk
 -include ./mk-files/release.mk
 -include ./mk-files/release-test.mk
-+export PACKAGE_TITLE=cli
-+export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
-+export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
- 
+-
 -S3_DEB_RPM_BUCKET_NAME=confluent-cli-release
 -S3_DEB_RPM_PROD_PREFIX=confluent-cli
 -S3_DEB_RPM_PROD_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/$(S3_DEB_RPM_PROD_PREFIX)
 -S3_DEB_RPM_STAG_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/confluent-cli-staging
-+# Defaults that are likely to vary by platform. These are cleanly separated so
-+# it should be easy to maintain altered values on platform-specific branches
-+# when the values aren't overridden by the script invoking the Makefile
++APPLY_PATCHES?=yes
  
 -.PHONY: clean
 -clean:
@@ -224,35 +224,37 @@
 -unit-test:
 -ifdef CI
 -	go install gotest.tools/gotestsum@v1.12.1 && \
--	gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test)
+-	gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -race -coverprofile=coverage.unit.out -covermode=atomic $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test)
 -else
--	go test -timeout 0 -v $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test) $(UNIT_TEST_ARGS)
--endif
-+APPLY_PATCHES?=yes
+-	go test -timeout 0 -v -coverprofile=coverage.unit.out -covermode=atomic $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test) $(UNIT_TEST_ARGS)
++# DESTDIR may be overridden by e.g. debian packaging
++ifeq ($(DESTDIR),)
++DESTDIR=$(CURDIR)/BUILD/
+ endif
  
 -.PHONY: build-for-integration-test
 -build-for-integration-test:
 -ifdef CI
 -	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
--else
++ifeq ($(PACKAGE_TYPE),archive)
++PREFIX=$(PACKAGE_NAME)
++SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
+ else
 -	go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
-+# DESTDIR may be overridden by e.g. debian packaging
-+ifeq ($(DESTDIR),)
-+DESTDIR=$(CURDIR)/BUILD/
++PREFIX=/usr
++SYSCONFDIR=/etc/$(PACKAGE_TITLE)
  endif
  
 -.PHONY: build-for-integration-test-windows
 -build-for-integration-test-windows:
 -ifdef CI
 -	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
-+ifeq ($(PACKAGE_TYPE),archive)
-+PREFIX=$(PACKAGE_NAME)
-+SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
- else
+-else
 -	go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
-+PREFIX=/usr
-+SYSCONFDIR=/etc/$(PACKAGE_TITLE)
- endif
+-endif
++_empty :=
++_space := $(_empty) $(empty)
++split_version := $(subst .,$(_space),$(CLI_VERSION))
  
 -.PHONY: integration-test
 -integration-test:
@@ -260,14 +262,10 @@
 -	go install gotest.tools/gotestsum@v1.12.1 && \
 -	export GOCOVERDIR=test/coverage && \
 -	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
--	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
+-	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race -coverprofile=coverage.integration.out -covermode=atomic $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
 -	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
 -else
--	go test -timeout 0 -v $$(go list ./... | grep github.com/confluentinc/cli/v4/test) $(INTEGRATION_TEST_ARGS)
-+_empty :=
-+_space := $(_empty) $(empty)
-+split_version := $(subst .,$(_space),$(CLI_VERSION))
-+
+-	go test -timeout 0 -v -coverprofile=coverage.integration.out -covermode=atomic $$(go list ./... | grep github.com/confluentinc/cli/v4/test) $(INTEGRATION_TEST_ARGS)
 +all: install
 +
 +archive: install
@@ -282,6 +280,26 @@
  
 -.PHONY: test
 -test: unit-test integration-test
+-	@echo "mode: atomic" > coverage.txt
+-	@tail -n +2 coverage.unit.out >> coverage.txt
+-	@tail -n +2 coverage.integration.out >> coverage.txt
+-	@echo "Coverage data saved to: coverage.txt"
+-
+-.PHONY: generate-packaging-patch
+-generate-packaging-patch:
+-	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
+-
+-.PHONY: coverage
+-coverage: test
+-	@echo "Merging coverage data..."
+-	@echo "mode: atomic" > coverage.out
+-	@tail -n +2 coverage.unit.out >> coverage.out
+-	@tail -n +2 coverage.integration.out >> coverage.out
+-	@echo "Generating coverage reports..."
+-	go tool cover -html=coverage.out -o coverage.html
+-	go tool cover -func=coverage.out
+-	@echo "Coverage report generated: coverage.html"
+-	@echo "Coverage data saved to: coverage.out"
 +BINPATH=$(PREFIX)/bin
 +LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
 +DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
@@ -397,9 +415,6 @@
 +
 +RPM_BUILDING/%:
 +	mkdir -p $@
- 
--.PHONY: generate-packaging-patch
--generate-packaging-patch:
--	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
++
 +RELEASE_%:
 +	echo 0 > $@
