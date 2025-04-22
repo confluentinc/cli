@@ -1,4 +1,4 @@
---- cli/Makefile	2025-04-22 11:54:49.446208592 -0500
+--- cli/Makefile	2025-04-22 12:26:19.771232015 -0500
 +++ debian/Makefile	2025-02-12 09:00:49.891230440 -0600
 @@ -1,268 +1,163 @@
 -### BEGIN HEADERS ###
@@ -38,7 +38,7 @@
 -# If this latest validated release is breaking you, please file a ticket with DevProd describing the issue, and
 -# if necessary you can temporarily override MK_INCLUDE_VERSION above the managed section headers until the bad
 -# release is yanked.
--MK_INCLUDE_VERSION ?= v0.1346.0
+-MK_INCLUDE_VERSION ?= v0.1356.0
 -
 -# Make sure we always have a copy of the latest cc-mk-include release less than $(MK_INCLUDE_TIMEOUT_MINS) old:
 -# Note: The simply-expanded make variable makes sure this is run once per make invocation.
