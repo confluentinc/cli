@@ -221,7 +221,7 @@ build-for-integration-test:
 ifdef CI
 	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 else
-	go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 endif
 
 .PHONY: build-for-integration-test-windows
@@ -229,40 +229,29 @@ build-for-integration-test-windows:
 ifdef CI
 	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
 else
-	go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
+	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
 endif
 
 .PHONY: integration-test
 integration-test:
 ifdef CI
 	go install gotest.tools/gotestsum@v1.12.1 && \
-	export GOCOVERDIR=test/coverage && \
-	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
-	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race -coverprofile=coverage.integration.out -covermode=atomic $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
-	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
+	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race -coverprofile=coverage.integration.out -covermode=atomic $$(go list ./... | grep github.com/confluentinc/cli/v4/test)
 else
 	go test -timeout 0 -v -coverprofile=coverage.integration.out -covermode=atomic $$(go list ./... | grep github.com/confluentinc/cli/v4/test) $(INTEGRATION_TEST_ARGS)
 endif
 
 .PHONY: test
-test: unit-test integration-test
-	@echo "mode: atomic" > coverage.txt
-	@tail -n +2 coverage.unit.out >> coverage.txt
-	@tail -n +2 coverage.integration.out >> coverage.txt
-	@echo "Coverage data saved to: coverage.txt"
+test: unit-test integration-test coverage ## Run all tests and merge coverage data
 
 .PHONY: generate-packaging-patch
 generate-packaging-patch:
 	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
 
 .PHONY: coverage
-coverage: test
+coverage: ## Merge coverage data from unit and integration tests into coverage.txt
 	@echo "Merging coverage data..."
-	@echo "mode: atomic" > coverage.out
-	@tail -n +2 coverage.unit.out >> coverage.out
-	@tail -n +2 coverage.integration.out >> coverage.out
-	@echo "Generating coverage reports..."
-	go tool cover -html=coverage.out -o coverage.html
-	go tool cover -func=coverage.out
-	@echo "Coverage report generated: coverage.html"
-	@echo "Coverage data saved to: coverage.out"
+	@echo "mode: atomic" > coverage.txt
+	@tail -n +2 coverage.unit.out >> coverage.txt
+	@tail -n +2 coverage.integration.out >> coverage.txt
+	@echo "Coverage data saved to: coverage.txt"
