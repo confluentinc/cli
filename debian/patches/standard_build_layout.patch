@@ -1,6 +1,6 @@
---- cli/Makefile	2025-04-22 12:26:19.771232015 -0500
+--- cli/Makefile	2025-04-22 14:23:29.774111275 -0500
 +++ debian/Makefile	2025-02-12 09:00:49.891230440 -0600
-@@ -1,268 +1,163 @@
+@@ -1,257 +1,163 @@
 -### BEGIN HEADERS ###
 -# This block is managed by ServiceBot plugin - Make. The content in this block is created using a common
 -# template and configurations in service.yml.
@@ -240,7 +240,7 @@
 +PREFIX=$(PACKAGE_NAME)
 +SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
  else
--	go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+-	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 +PREFIX=/usr
 +SYSCONFDIR=/etc/$(PACKAGE_TITLE)
  endif
@@ -250,7 +250,7 @@
 -ifdef CI
 -	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
 -else
--	go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
+-	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
 -endif
 +_empty :=
 +_space := $(_empty) $(empty)
@@ -260,10 +260,7 @@
 -integration-test:
 -ifdef CI
 -	go install gotest.tools/gotestsum@v1.12.1 && \
--	export GOCOVERDIR=test/coverage && \
--	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
--	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race -coverprofile=coverage.integration.out -covermode=atomic $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
--	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
+-	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race -coverprofile=coverage.integration.out -covermode=atomic $$(go list ./... | grep github.com/confluentinc/cli/v4/test)
 -else
 -	go test -timeout 0 -v -coverprofile=coverage.integration.out -covermode=atomic $$(go list ./... | grep github.com/confluentinc/cli/v4/test) $(INTEGRATION_TEST_ARGS)
 +all: install
@@ -279,27 +276,7 @@
  endif
  
 -.PHONY: test
--test: unit-test integration-test
--	@echo "mode: atomic" > coverage.txt
--	@tail -n +2 coverage.unit.out >> coverage.txt
--	@tail -n +2 coverage.integration.out >> coverage.txt
--	@echo "Coverage data saved to: coverage.txt"
--
--.PHONY: generate-packaging-patch
--generate-packaging-patch:
--	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
--
--.PHONY: coverage
--coverage: test
--	@echo "Merging coverage data..."
--	@echo "mode: atomic" > coverage.out
--	@tail -n +2 coverage.unit.out >> coverage.out
--	@tail -n +2 coverage.integration.out >> coverage.out
--	@echo "Generating coverage reports..."
--	go tool cover -html=coverage.out -o coverage.html
--	go tool cover -func=coverage.out
--	@echo "Coverage report generated: coverage.html"
--	@echo "Coverage data saved to: coverage.out"
+-test: unit-test integration-test coverage ## Run all tests and merge coverage data
 +BINPATH=$(PREFIX)/bin
 +LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
 +DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
@@ -415,6 +392,18 @@
 +
 +RPM_BUILDING/%:
 +	mkdir -p $@
-+
+ 
+-.PHONY: generate-packaging-patch
+-generate-packaging-patch:
+-	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
+-
+-.PHONY: coverage
+-coverage: ## Merge coverage data from unit and integration tests into coverage.txt
+-	@echo "Merging coverage data..."
+-	@echo "mode: atomic" > coverage.txt
+-	@tail -n +2 coverage.unit.out >> coverage.txt
+-	@tail -n +2 coverage.integration.out >> coverage.txt
+-	@echo "Coverage data saved to: coverage.txt"
+\ No newline at end of file
 +RELEASE_%:
 +	echo 0 > $@
