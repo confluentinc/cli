@@ -20,6 +20,7 @@ blocks:
         - name: "Test linux/amd64"
           commands:
             - checkout
+            - . vault-sem-get-secret v1/ci/kv/apif/cli/sonar_token
             - sem-version go $(cat .go-version)
             - export PATH=$(go env GOPATH)/bin:$PATH
             - make generate-packaging-patch
@@ -27,7 +28,8 @@ blocks:
             - make lint
             - make test
             - make test-installer
-# Temporarily disable these builds until rate limiting is resolved
+            - make sonar-scan
+        # Temporarily disable these builds until rate limiting is resolved
 #        - name: "Build linux/amd64 (GLIBC)"
 #          commands:
 #            - checkout
