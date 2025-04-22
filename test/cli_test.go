@@ -82,14 +82,20 @@ func (s *CLITestSuite) SetupSuite() {
 	err := os.Chdir("..")
 	req.NoError(err)
 
-	target := "build-for-integration-test"
 	if runtime.GOOS == "windows" {
-		target += "-windows"
-		testBin += ".exe"
+		// On Windows, build directly with go instead of using make
+		testBin = "test/bin/confluent.exe"
+		// Ensure the test/bin directory exists
+		err = os.MkdirAll("test/bin", 0755)
+		req.NoError(err)
+		output, err := exec.Command("go", "build", "-o", testBin, "./cmd/confluent").CombinedOutput()
+		req.NoError(err, string(output))
+	} else {
+		// On Unix-like systems, use make
+		target := "build-for-integration-test"
+		output, err := exec.Command("make", target).CombinedOutput()
+		req.NoError(err, string(output))
 	}
-
-	output, err := exec.Command("make", target).CombinedOutput()
-	req.NoError(err, string(output))
 
 	s.TestBackend = testserver.StartTestBackend(s.T(), true) // by default do not disable audit-log
 	os.Setenv("DISABLE_AUDIT_LOG", "false")
