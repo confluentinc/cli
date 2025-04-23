@@ -12,7 +12,7 @@ import (
 func (c *artifactCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <id>",
-		Short: "Describe a connect artifact.",
+		Short: "Describe a Connect artifact.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.describe,
 		Example: examples.BuildExampleString(

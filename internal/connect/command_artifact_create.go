@@ -32,7 +32,7 @@ type artifactCreateOut struct {
 func (c *artifactCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
-		Short: "Create a connect artifact.",
+		Short: "Create a Connect artifact.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.createArtifact,
 		Example: examples.BuildExampleString(

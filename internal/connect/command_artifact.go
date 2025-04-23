@@ -25,7 +25,7 @@ type artifactOut struct {
 func newArtifactCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "artifact",
-		Short:       "Manage connect artifacts.",
+		Short:       "Manage Connect artifacts.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 

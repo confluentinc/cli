@@ -22,7 +22,7 @@ type artifactOutList struct {
 func (c *artifactCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List connect artifacts.",
+		Short: "List Connect artifacts.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 		Example: examples.BuildExampleString(

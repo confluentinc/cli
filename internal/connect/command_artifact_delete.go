@@ -16,7 +16,7 @@ var extraWarning = "\nThis action is irreversible and is going to break all cust
 func (c *artifactCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <id-1> [id-2] ... [id-n]",
-		Short: "Delete one or more connect artifacts.",
+		Short: "Delete one or more Connect artifacts.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.delete,
 		Example: examples.BuildExampleString(
