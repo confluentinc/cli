@@ -24,22 +24,24 @@ CONFLUENT_HOME/
 
 var (
 	scripts = map[string]string{
-		"connect":         "connect-distributed",
-		"control-center":  "control-center-%s",
-		"kafka":           "kafka-server-%s",
-		"kafka-rest":      "kafka-rest-%s",
-		"ksql-server":     "ksql-server-%s",
-		"schema-registry": "schema-registry-%s",
-		"zookeeper":       "zookeeper-server-%s",
+		"connect":          "connect-distributed",
+		"control-center":   "control-center-%s",
+		"kafka":            "kafka-server-%s",
+		"kafka-rest":       "kafka-rest-%s",
+		"kraft-controller": "kafka-server-%s",
+		"ksql-server":      "ksql-server-%s",
+		"schema-registry":  "schema-registry-%s",
+		"zookeeper":        "zookeeper-server-%s",
 	}
 	serviceConfigs = map[string]string{
-		"connect":         "schema-registry/connect-avro-distributed.properties",
-		"control-center":  "confluent-control-center/control-center-dev.properties",
-		"kafka":           "kafka/server.properties",
-		"kafka-rest":      "kafka-rest/kafka-rest.properties",
-		"ksql-server":     "ksqldb/ksql-server.properties",
-		"schema-registry": "schema-registry/schema-registry.properties",
-		"zookeeper":       "kafka/zookeeper.properties",
+		"connect":          "schema-registry/connect-avro-distributed.properties",
+		"control-center":   "confluent-control-center/control-center-dev.properties",
+		"kafka":            "kafka/broker.properties",
+		"kafka-rest":       "kafka-rest/kafka-rest.properties",
+		"kraft-controller": "kafka/controller.properties",
+		"ksql-server":      "ksqldb/ksql-server.properties",
+		"schema-registry":  "schema-registry/schema-registry.properties",
+		"zookeeper":        "kafka/zookeeper.properties",
 	}
 	servicePortKeys = map[string]string{
 		"connect":         "rest.port",
@@ -77,9 +79,9 @@ type ConfluentHome interface {
 	IsAtLeastVersion(targetVersion string) (bool, error)
 
 	GetServiceScript(action, service string) (string, error)
-	ReadServiceConfig(service string) ([]byte, error)
-	ReadServicePort(service string) (int, error)
-	GetVersion(service string) (string, error)
+	ReadServiceConfig(service string, zookeeperMode bool) ([]byte, error)
+	ReadServicePort(service string, zookeeperMode bool) (int, error)
+	GetVersion(service string, zookeeperMode bool) (string, error)
 
 	GetConnectorConfigFile(connector string) (string, error)
 	GetKafkaScript(mode, format string) (string, error)
@@ -155,10 +157,11 @@ func (ch *ConfluentHomeManager) GetConfluentVersion() (string, error) {
 		return "", err
 	}
 
+	// The bool value doesn't matter when we pass in "Confluent Platform" or "Confluent Community Software", so we just choose "false"
 	if isCP {
-		return ch.GetVersion("Confluent Platform")
+		return ch.GetVersion("Confluent Platform", false)
 	} else {
-		return ch.GetVersion("Confluent Community Software")
+		return ch.GetVersion("Confluent Community Software", false)
 	}
 }
 
@@ -173,10 +176,17 @@ func (ch *ConfluentHomeManager) GetServiceScript(action, service string) (string
 	return ch.GetFile("bin", fmt.Sprintf(scripts[service], action))
 }
 
-func (ch *ConfluentHomeManager) ReadServiceConfig(service string) ([]byte, error) {
+func (ch *ConfluentHomeManager) ReadServiceConfig(service string, zookeeperMode bool) ([]byte, error) {
 	file, err := ch.GetFile("etc", serviceConfigs[service])
 	if err != nil {
 		return []byte{}, err
+	}
+
+	if service == "kafka" && zookeeperMode {
+		file, err = ch.GetFile("etc", "kafka/server.properties")
+		if err != nil {
+			return []byte{}, err
+		}
 	}
 
 	if service == "ksql-server" {
@@ -195,8 +205,8 @@ func (ch *ConfluentHomeManager) ReadServiceConfig(service string) ([]byte, error
 	return os.ReadFile(file)
 }
 
-func (ch *ConfluentHomeManager) ReadServicePort(service string) (int, error) {
-	data, err := ch.ReadServiceConfig(service)
+func (ch *ConfluentHomeManager) ReadServicePort(service string, zookeeperMode bool) (int, error) {
+	data, err := ch.ReadServiceConfig(service, zookeeperMode)
 	if err != nil {
 		return 0, err
 	}
@@ -222,9 +232,9 @@ func (ch *ConfluentHomeManager) ReadServicePort(service string) (int, error) {
 	return port, nil
 }
 
-func (ch *ConfluentHomeManager) GetVersion(service string) (string, error) {
+func (ch *ConfluentHomeManager) GetVersion(service string, zookeeperMode bool) (string, error) {
 	pattern, ok := versionFiles[service]
-	if !ok {
+	if !ok || (service == "kafka" && !zookeeperMode) {
 		return ch.GetConfluentVersion()
 	}
 

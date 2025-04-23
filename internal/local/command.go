@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/local"
 )
 
@@ -21,7 +22,7 @@ func NewLocalCommand(cmd *cobra.Command, prerunner pcmd.PreRunner) *command {
 	}
 }
 
-func New(prerunner pcmd.PreRunner) *cobra.Command {
+func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "local",
 		Short: "Manage a local Confluent Platform development environment.",
@@ -35,7 +36,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c.AddCommand(NewCurrentCommand(prerunner))
 	c.AddCommand(NewDestroyCommand(prerunner))
-	c.AddCommand(NewServicesCommand(prerunner))
+	c.AddCommand(NewServicesCommand(cfg, prerunner))
 	c.AddCommand(NewVersionCommand(prerunner))
 
 	return cmd
