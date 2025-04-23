@@ -257,8 +257,3 @@ coverage: ## Merge coverage data from unit and integration tests into coverage.t
 	@tail -n +2 coverage.unit.out >> coverage.txt
 	@tail -n +2 coverage.integration.out >> coverage.txt
 	@echo "Coverage data saved to: coverage.txt"
-	@echo "Coverage summary:"
-	@go tool cover -func=coverage.txt
-	@echo "Generating HTML coverage report..."
-	@go tool cover -html=coverage.txt -o coverage.html
-	@echo "Coverage HTML report saved to: coverage.html"
