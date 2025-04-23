@@ -1,4 +1,4 @@
---- cli/Makefile	2025-04-23 10:54:54.409925168 -0500
+--- cli/Makefile	2025-04-23 13:29:34.604820937 -0500
 +++ debian/Makefile	2025-02-12 09:00:49.891230440 -0600
 @@ -1,264 +1,163 @@
 -### BEGIN HEADERS ###
@@ -235,12 +235,12 @@
 -.PHONY: build-for-integration-test
 -build-for-integration-test:
 -ifdef CI
--	go build -cover -coverprofile=coverage.integration.out -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+-	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 +ifeq ($(PACKAGE_TYPE),archive)
 +PREFIX=$(PACKAGE_NAME)
 +SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
  else
--	go build -cover -coverprofile=coverage.integration.out -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+-	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 +PREFIX=/usr
 +SYSCONFDIR=/etc/$(PACKAGE_TITLE)
  endif
