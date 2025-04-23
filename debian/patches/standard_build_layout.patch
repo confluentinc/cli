@@ -1,6 +1,6 @@
---- cli/Makefile	2025-04-22 14:23:29.774111275 -0500
+--- cli/Makefile	2025-04-23 10:54:54.409925168 -0500
 +++ debian/Makefile	2025-02-12 09:00:49.891230440 -0600
-@@ -1,257 +1,163 @@
+@@ -1,264 +1,163 @@
 -### BEGIN HEADERS ###
 -# This block is managed by ServiceBot plugin - Make. The content in this block is created using a common
 -# template and configurations in service.yml.
@@ -235,12 +235,12 @@
 -.PHONY: build-for-integration-test
 -build-for-integration-test:
 -ifdef CI
--	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+-	go build -cover -coverprofile=coverage.integration.out -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 +ifeq ($(PACKAGE_TYPE),archive)
 +PREFIX=$(PACKAGE_NAME)
 +SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
  else
--	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+-	go build -cover -coverprofile=coverage.integration.out -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 +PREFIX=/usr
 +SYSCONFDIR=/etc/$(PACKAGE_TITLE)
  endif
@@ -260,9 +260,11 @@
 -integration-test:
 -ifdef CI
 -	go install gotest.tools/gotestsum@v1.12.1 && \
--	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race -coverprofile=coverage.integration.out -covermode=atomic $$(go list ./... | grep github.com/confluentinc/cli/v4/test)
+-	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race -coverprofile=coverage.integration.out -covermode=atomic $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
+-	go tool cover -func=coverage.integration.out
 -else
--	go test -timeout 0 -v -coverprofile=coverage.integration.out -covermode=atomic $$(go list ./... | grep github.com/confluentinc/cli/v4/test) $(INTEGRATION_TEST_ARGS)
+-	go test -timeout 0 -v -coverprofile=coverage.integration.out -covermode=atomic $$(go list ./... | grep github.com/confluentinc/cli/v4/test) $(INTEGRATION_TEST_ARGS) && \
+-	go tool cover -func=coverage.integration.out
 +all: install
 +
 +archive: install
@@ -404,6 +406,11 @@
 -	@tail -n +2 coverage.unit.out >> coverage.txt
 -	@tail -n +2 coverage.integration.out >> coverage.txt
 -	@echo "Coverage data saved to: coverage.txt"
+-	@echo "Coverage summary:"
+-	@go tool cover -func=coverage.txt
+-	@echo "Generating HTML coverage report..."
+-	@go tool cover -html=coverage.txt -o coverage.html
+-	@echo "Coverage HTML report saved to: coverage.html"
 \ No newline at end of file
 +RELEASE_%:
 +	echo 0 > $@
