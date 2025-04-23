@@ -1,0 +1,17 @@
+Manage connect artifacts.
+
+Usage:
+  confluent connect artifact [command]
+
+Available Commands:
+  create      Create a connect artifact.
+  delete      Delete one or more connect artifacts.
+  describe    Describe a connect artifact.
+  list        List connect artifacts.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent connect artifact [command] --help" for more information about a command.
