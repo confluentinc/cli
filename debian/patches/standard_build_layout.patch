@@ -1,6 +1,6 @@
---- cli/Makefile	2025-04-23 13:29:34.604820937 -0500
+--- cli/Makefile	2025-04-23 13:59:38.488718780 -0500
 +++ debian/Makefile	2025-02-12 09:00:49.891230440 -0600
-@@ -1,264 +1,163 @@
+@@ -1,259 +1,163 @@
 -### BEGIN HEADERS ###
 -# This block is managed by ServiceBot plugin - Make. The content in this block is created using a common
 -# template and configurations in service.yml.
@@ -406,11 +406,6 @@
 -	@tail -n +2 coverage.unit.out >> coverage.txt
 -	@tail -n +2 coverage.integration.out >> coverage.txt
 -	@echo "Coverage data saved to: coverage.txt"
--	@echo "Coverage summary:"
--	@go tool cover -func=coverage.txt
--	@echo "Generating HTML coverage report..."
--	@go tool cover -html=coverage.txt -o coverage.html
--	@echo "Coverage HTML report saved to: coverage.html"
 \ No newline at end of file
 +RELEASE_%:
 +	echo 0 > $@
