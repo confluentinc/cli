@@ -1,8 +1,8 @@
 +----------------+-------------------------+
 | ID             | cfa-zip123              |
 | Name           | my-connect-artifact-zip |
+| Description    | new-zip-artifact        |
 | Cloud          | aws                     |
 | Environment    | env-123456              |
-| Description    | new-zip-artifact        |
 | Content Format | ZIP                     |
 +----------------+-------------------------+
