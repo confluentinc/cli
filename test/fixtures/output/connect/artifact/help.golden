@@ -1,13 +1,13 @@
-Manage connect artifacts.
+Manage Connect artifacts.
 
 Usage:
   confluent connect artifact [command]
 
 Available Commands:
-  create      Create a connect artifact.
-  delete      Delete one or more connect artifacts.
-  describe    Describe a connect artifact.
-  list        List connect artifacts.
+  create      Create a Connect artifact.
+  delete      Delete one or more Connect artifacts.
+  describe    Describe a Connect artifact.
+  list        List Connect artifacts.
 
 Global Flags:
   -h, --help            Show help for this command.

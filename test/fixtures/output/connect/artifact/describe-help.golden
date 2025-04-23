@@ -1,4 +1,4 @@
-Describe a connect artifact.
+Describe a Connect artifact.
 
 Usage:
   confluent connect artifact describe <id> [flags]

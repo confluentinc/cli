@@ -1,4 +1,4 @@
-Delete one or more connect artifacts.
+Delete one or more Connect artifacts.
 
 Usage:
   confluent connect artifact delete <id-1> [id-2] ... [id-n] [flags]

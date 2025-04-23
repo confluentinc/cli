@@ -90,17 +90,17 @@ func (c *artifactCommand) createArtifact(cmd *cobra.Command, args []string) erro
 		Environment:   camv1.PtrString(environment),
 	}
 
+	if strings.ToLower(cloud) != "aws" {
+		return fmt.Errorf("only cloud supported is `AWS`")
+	}
+
 	resp, err := c.V2Client.GetArtifactPresignedUrl(request)
 	if err != nil {
 		return err
 	}
 
-	if strings.ToLower(cloud) == "aws" {
-		if err := utils.UploadFile(resp.GetUploadUrl(), artifactFile, resp.GetUploadFormData()); err != nil {
-			return err
-		}
-	} else {
-		return fmt.Errorf("only cloud supported is `AWS`")
+	if err := utils.UploadFile(resp.GetUploadUrl(), artifactFile, resp.GetUploadFormData()); err != nil {
+		return err
 	}
 
 	createArtifactRequest := camv1.CamV1ConnectArtifact{

@@ -1,4 +1,4 @@
-List connect artifacts.
+List Connect artifacts.
 
 Usage:
   confluent connect artifact list [flags]
