@@ -10,15 +10,6 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-type artifactOutList struct {
-	Id            string `human:"ID" serialized:"id"`
-	Name          string `human:"Name" serialized:"name"`
-	Description   string `human:"Description" serialized:"description"`
-	Cloud         string `human:"Cloud" serialized:"cloud"`
-	Environment   string `human:"Environment" serialized:"environment"`
-	ContentFormat string `human:"Content Format" serialized:"content_format"`
-}
-
 func (c *artifactCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -65,7 +56,7 @@ func (c *artifactCommand) list(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	list.Sort(false)
 	for _, artifact := range artifacts {
-		list.Add(&artifactOutList{
+		list.Add(&artifactOut{
 			Id:            artifact.GetId(),
 			Name:          artifact.Spec.GetDisplayName(),
 			Description:   artifact.Spec.GetDescription(),

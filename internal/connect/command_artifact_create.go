@@ -20,15 +20,6 @@ var (
 	allowedFileExtensions = []string{"jar", "zip"}
 )
 
-type artifactCreateOut struct {
-	Id            string `human:"ID" serialized:"id"`
-	Name          string `human:"Name" serialized:"name"`
-	Cloud         string `human:"Cloud" serialized:"cloud"`
-	Environment   string `human:"Environment" serialized:"environment"`
-	Description   string `human:"Description" serialized:"description"`
-	ContentFormat string `human:"Content Format" serialized:"content_format"`
-}
-
 func (c *artifactCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
@@ -125,7 +116,7 @@ func (c *artifactCommand) createArtifact(cmd *cobra.Command, args []string) erro
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(&artifactCreateOut{
+	table.Add(&artifactOut{
 		Name:          artifact.Spec.GetDisplayName(),
 		Id:            artifact.GetId(),
 		Cloud:         cloud,
