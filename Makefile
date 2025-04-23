@@ -219,9 +219,9 @@ endif
 .PHONY: build-for-integration-test
 build-for-integration-test:
 ifdef CI
-	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+	go build -cover -coverprofile=coverage.integration.out -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 else
-	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+	go build -cover -coverprofile=coverage.integration.out -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 endif
 
 .PHONY: build-for-integration-test-windows
@@ -236,9 +236,11 @@ endif
 integration-test:
 ifdef CI
 	go install gotest.tools/gotestsum@v1.12.1 && \
-	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race -coverprofile=coverage.integration.out -covermode=atomic $$(go list ./... | grep github.com/confluentinc/cli/v4/test)
+	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race -coverprofile=coverage.integration.out -covermode=atomic $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
+	go tool cover -func=coverage.integration.out
 else
-	go test -timeout 0 -v -coverprofile=coverage.integration.out -covermode=atomic $$(go list ./... | grep github.com/confluentinc/cli/v4/test) $(INTEGRATION_TEST_ARGS)
+	go test -timeout 0 -v -coverprofile=coverage.integration.out -covermode=atomic $$(go list ./... | grep github.com/confluentinc/cli/v4/test) $(INTEGRATION_TEST_ARGS) && \
+	go tool cover -func=coverage.integration.out
 endif
 
 .PHONY: test
@@ -255,3 +257,8 @@ coverage: ## Merge coverage data from unit and integration tests into coverage.t
 	@tail -n +2 coverage.unit.out >> coverage.txt
 	@tail -n +2 coverage.integration.out >> coverage.txt
 	@echo "Coverage data saved to: coverage.txt"
+	@echo "Coverage summary:"
+	@go tool cover -func=coverage.txt
+	@echo "Generating HTML coverage report..."
+	@go tool cover -html=coverage.txt -o coverage.html
+	@echo "Coverage HTML report saved to: coverage.html"
