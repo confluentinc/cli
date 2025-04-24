@@ -1,4 +1,4 @@
---- cli/Makefile	2025-04-24 14:19:49.634975290 -0500
+--- cli/Makefile	2025-04-24 14:51:39.823486888 -0500
 +++ debian/Makefile	2025-02-12 09:00:49.891230440 -0600
 @@ -1,147 +1,163 @@
 -SHELL := /bin/bash
@@ -284,7 +284,7 @@
 +rpm-build-area: RPM_BUILDING/BUILD RPM_BUILDING/RPMS RPM_BUILDING/SOURCES RPM_BUILDING/SPECS RPM_BUILDING/SRPMS
  
 -.PHONY: test
--test: unit-test integration-test coverage ## Run all tests and merge coverage data
+-test: unit-test integration-test
 +RPM_BUILDING/%:
 +	mkdir -p $@
  

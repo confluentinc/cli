@@ -131,7 +131,7 @@ else
 endif
 
 .PHONY: test
-test: unit-test integration-test coverage ## Run all tests and merge coverage data
+test: unit-test integration-test
 
 .PHONY: generate-packaging-patch
 generate-packaging-patch:
