@@ -123,11 +123,15 @@ endif
 integration-test:
 ifdef CI
 	go install gotest.tools/gotestsum@v1.12.1 && \
-	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race -coverprofile=coverage.integration.out -covermode=atomic $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
-	go tool cover -func=coverage.integration.out
+	export GOCOVERDIR=test/coverage && \
+	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
+	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
+	go tool covdata textfmt -i $${GOCOVERDIR} -o coverage.integration.out
 else
-	go test -timeout 0 -v -coverprofile=coverage.integration.out -covermode=atomic $$(go list ./... | grep github.com/confluentinc/cli/v4/test) $(INTEGRATION_TEST_ARGS) && \
-	go tool cover -func=coverage.integration.out
+	export GOCOVERDIR=test/coverage && \
+	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
+	go test -timeout 0 -v $$(go list ./... | grep github.com/confluentinc/cli/v4/test) $(INTEGRATION_TEST_ARGS) && \
+	go tool covdata textfmt -i $${GOCOVERDIR} -o coverage.integration.out
 endif
 
 .PHONY: test
