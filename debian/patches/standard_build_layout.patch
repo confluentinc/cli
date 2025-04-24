@@ -1,6 +1,6 @@
---- cli/Makefile	2025-04-08 14:28:12.578002798 -0700
-+++ debian/Makefile	2025-04-08 08:10:32.221837084 -0700
-@@ -1,139 +1,163 @@
+--- cli/Makefile	2025-04-24 14:51:39.823486888 -0500
++++ debian/Makefile	2025-02-12 09:00:49.891230440 -0600
+@@ -1,147 +1,163 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v1.21.2
 +SHELL=/bin/bash
@@ -184,9 +184,9 @@
 -unit-test:
 -ifdef CI
 -	go install gotest.tools/gotestsum@v1.12.1 && \
--	gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test)
+-	gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -race -coverprofile=coverage.unit.out -covermode=atomic $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test)
 -else
--	go test -timeout 0 -v $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test) $(UNIT_TEST_ARGS)
+-	go test -timeout 0 -v -coverprofile=coverage.unit.out -covermode=atomic $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test) $(UNIT_TEST_ARGS)
 -endif
 +	chown -R root:root $(DESTDIR)$(PREFIX)
  
@@ -195,7 +195,7 @@
 -ifdef CI
 -	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 -else
--	go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+-	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 -endif
 -
 -.PHONY: build-for-integration-test-windows
@@ -203,7 +203,7 @@
 -ifdef CI
 -	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
 -else
--	go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
+-	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
 -endif
 +clean:
 +	rm -rf $(CURDIR)/$(PACKAGE_NAME)*
@@ -275,12 +275,11 @@
 -integration-test:
 -ifdef CI
 -	go install gotest.tools/gotestsum@v1.12.1 && \
--	export GOCOVERDIR=test/coverage && \
--	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
--	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
--	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
+-	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race -coverprofile=coverage.integration.out -covermode=atomic $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
+-	go tool cover -func=coverage.integration.out
 -else
--	go test -timeout 0 -v $$(go list ./... | grep github.com/confluentinc/cli/v4/test) $(INTEGRATION_TEST_ARGS)
+-	go test -timeout 0 -v -coverprofile=coverage.integration.out -covermode=atomic $$(go list ./... | grep github.com/confluentinc/cli/v4/test) $(INTEGRATION_TEST_ARGS) && \
+-	go tool cover -func=coverage.integration.out
 -endif
 +rpm-build-area: RPM_BUILDING/BUILD RPM_BUILDING/RPMS RPM_BUILDING/SOURCES RPM_BUILDING/SPECS RPM_BUILDING/SRPMS
  
@@ -292,5 +291,15 @@
 -.PHONY: generate-packaging-patch
 -generate-packaging-patch:
 -	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
+-
+-.PHONY: coverage
+-coverage: ## Merge coverage data from unit and integration tests into coverage.txt
+-	@echo "Merging coverage data..."
+-	@echo "mode: atomic" > coverage.txt
+-	@tail -n +2 coverage.unit.out >> coverage.txt
+-	@tail -n +2 coverage.integration.out >> coverage.txt
+-	@echo "Coverage data saved to: coverage.txt"
+-	@artifact push workflow coverage.txt
+\ No newline at end of file
 +RELEASE_%:
 +	echo 0 > $@

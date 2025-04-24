@@ -20,12 +20,14 @@ blocks:
         - name: "Test linux/amd64"
           commands:
             - checkout
+            - . vault-sem-get-secret v1/ci/kv/apif/cli/sonar_token
             - sem-version go $(cat .go-version)
             - export PATH=$(go env GOPATH)/bin:$PATH
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
             - make lint
             - make test
+            - make coverage
             - make test-installer
 # Temporarily disable these builds until rate limiting is resolved
 #        - name: "Build linux/amd64 (GLIBC)"
@@ -122,3 +124,8 @@ after_pipeline:
       - name: Publish Results
         commands:
           - test-results gen-pipeline-report
+      - name: Report SonarQube Results
+        commands:
+          - checkout
+          - sem-version java 11
+          - emit-sonarqube-data
