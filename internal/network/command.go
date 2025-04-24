@@ -44,6 +44,7 @@ type out struct {
 	DnsResolution                              string            `human:"DNS Resolution,omitempty" serialized:"dns_resolution,omitempty"`
 	DnsDomain                                  string            `human:"DNS Domain,omitempty" serialized:"dns_domain,omitempty"`
 	ZonalSubdomains                            map[string]string `human:"Zonal Subdomains,omitempty" serialized:"zonal_subdomains,omitempty"`
+	ZoneInfo                                   []string          `human:"Zone Info,omitempty" serialized:"zone_info,omitempty"`
 	IdleSince                                  time.Time         `human:"Idle Since,omitempty" serialized:"idle_since,omitempty"`
 }
 
@@ -103,12 +104,13 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 		Cloud:                    cloud,
 		Region:                   network.Spec.GetRegion(),
 		Zones:                    network.Spec.GetZones(),
+		ZoneInfo:                 network.Spec.GetZonesInfo(),
 		Phase:                    phase,
 		SupportedConnectionTypes: supportedConnectionTypes,
 		ActiveConnectionTypes:    network.Status.GetActiveConnectionTypes(),
 	}
 
-	describeFields := []string{"Id", "Environment", "Name", "Gateway", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
+	describeFields := []string{"Id", "Environment", "Name", "Gateway", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes", "ZoneInfo"}
 
 	if slices.Contains(supportedConnectionTypes, "PRIVATELINK") {
 		human.DnsResolution = network.Spec.DnsConfig.GetResolution()
