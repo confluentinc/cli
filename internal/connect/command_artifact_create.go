@@ -119,7 +119,7 @@ func (c *artifactCommand) createArtifact(cmd *cobra.Command, args []string) erro
 	table.Add(&artifactOut{
 		Name:          artifact.Spec.GetDisplayName(),
 		Id:            artifact.GetId(),
-		Cloud:         cloud,
+		Cloud:         strings.ToUpper(cloud),
 		Environment:   environment,
 		ContentFormat: artifact.Spec.GetContentFormat(),
 		Description:   artifact.Spec.GetDescription(),

@@ -2,6 +2,7 @@ package connect
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -60,7 +61,7 @@ func (c *artifactCommand) list(cmd *cobra.Command, _ []string) error {
 			Id:            artifact.GetId(),
 			Name:          artifact.Spec.GetDisplayName(),
 			Description:   artifact.Spec.GetDescription(),
-			Cloud:         artifact.Spec.GetCloud(),
+			Cloud:         strings.ToUpper(artifact.Spec.GetCloud()),
 			Environment:   artifact.Spec.GetEnvironment(),
 			ContentFormat: artifact.Spec.GetContentFormat(),
 		})

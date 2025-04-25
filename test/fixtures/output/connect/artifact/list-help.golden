@@ -4,7 +4,7 @@ Usage:
   confluent connect artifact list [flags]
 
 Examples:
-List connect artifacts.
+List Connect artifacts.
 
   $ confluent connect artifact list --cloud aws --environment env-abc123
 

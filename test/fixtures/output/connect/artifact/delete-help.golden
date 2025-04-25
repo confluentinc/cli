@@ -4,7 +4,7 @@ Usage:
   confluent connect artifact delete <id-1> [id-2] ... [id-n] [flags]
 
 Examples:
-Delete connect artifact.
+Delete Connect artifact.
 
   $ confluent connect artifact delete --cloud aws --environment env-abc123 cfa-abc123
 

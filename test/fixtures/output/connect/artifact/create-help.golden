@@ -4,15 +4,15 @@ Usage:
   confluent connect artifact create <name> [flags]
 
 Examples:
-Create connect artifact "my-connect-artifact".
+Create Connect artifact "my-connect-artifact".
 
-  $ confluent connect artifact create my-connect-artifact --artifact-file artifact.jar --cloud aws --environment env-abc123 --description newArtifact
+  $ confluent connect artifact create my-connect-artifact --artifact-file artifact.jar --cloud aws --environment env-abc123 --description "This is my new Connect artifact"
 
 Flags:
       --artifact-file string   REQUIRED: Connect artifact JAR file or ZIP file.
       --cloud string           REQUIRED: Specify the cloud provider as "aws".
       --environment string     Environment ID.
-      --description string     Specify the connect artifact description.
+      --description string     Specify the Connect artifact description.
       --context string         CLI context name.
   -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
 

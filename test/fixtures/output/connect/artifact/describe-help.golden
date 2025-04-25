@@ -4,7 +4,7 @@ Usage:
   confluent connect artifact describe <id> [flags]
 
 Examples:
-Describe a connect artifact.
+Describe a Connect artifact.
 
   $ confluent connect artifact describe --cloud aws --environment env-abc123 cfa-abc123
 

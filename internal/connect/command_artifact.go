@@ -2,6 +2,7 @@ package connect
 
 import (
 	"github.com/spf13/cobra"
+	"strings"
 
 	camv1 "github.com/confluentinc/ccloud-sdk-go-v2/cam/v1"
 
@@ -46,7 +47,7 @@ func printArtifactTable(cmd *cobra.Command, artifact camv1.CamV1ConnectArtifact)
 		Id:            artifact.GetId(),
 		Name:          artifact.Spec.GetDisplayName(),
 		Description:   artifact.Spec.GetDescription(),
-		Cloud:         artifact.Spec.GetCloud(),
+		Cloud:         strings.ToUpper(artifact.Spec.GetCloud()),
 		Environment:   artifact.Spec.GetEnvironment(),
 		ContentFormat: artifact.Spec.GetContentFormat(),
 	})
