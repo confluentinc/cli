@@ -17,7 +17,7 @@ func (c *artifactCommand) newDescribeCommand() *cobra.Command {
 		RunE:  c.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe a connect artifact.",
+				Text: "Describe a Connect artifact.",
 				Code: "confluent connect artifact describe --cloud aws --environment env-abc123 cfa-abc123",
 			},
 		),

@@ -28,8 +28,8 @@ func (c *artifactCommand) newCreateCommand() *cobra.Command {
 		RunE:  c.createArtifact,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create connect artifact "my-connect-artifact".`,
-				Code: "confluent connect artifact create my-connect-artifact --artifact-file artifact.jar --cloud aws --environment env-abc123 --description newArtifact",
+				Text: `Create Connect artifact "my-connect-artifact".`,
+				Code: "confluent connect artifact create my-connect-artifact --artifact-file artifact.jar --cloud aws --environment env-abc123 --description \"This is my new Connect artifact\"",
 			},
 		),
 	}
@@ -37,7 +37,7 @@ func (c *artifactCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("artifact-file", "", "Connect artifact JAR file or ZIP file.")
 	pcmd.AddCloudAwsFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().String("description", "", "Specify the connect artifact description.")
+	cmd.Flags().String("description", "", "Specify the Connect artifact description.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 

@@ -18,7 +18,7 @@ func (c *artifactCommand) newListCommand() *cobra.Command {
 		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List connect artifacts.",
+				Text: "List Connect artifacts.",
 				Code: "confluent connect artifact list --cloud aws --environment env-abc123",
 			},
 		),
