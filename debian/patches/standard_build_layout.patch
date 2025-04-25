@@ -1,6 +1,6 @@
---- cli/Makefile	2025-04-08 14:28:12.578002798 -0700
-+++ debian/Makefile	2025-04-08 08:10:32.221837084 -0700
-@@ -1,139 +1,163 @@
+--- cli/Makefile	2025-04-24 16:07:56.961999373 -0500
++++ debian/Makefile	2025-02-12 09:00:49.891230440 -0600
+@@ -1,151 +1,163 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v1.21.2
 +SHELL=/bin/bash
@@ -146,16 +146,18 @@
 +	filepath=windows_amd64/confluent.exe; \
 +	curl -fs https://$${baseurl}/confluent-cli/binaries/$(CLI_VERSION)/confluent$${version}_windows_amd64.exe -o $${filepath}; \
 +	chmod 755 $${filepath}
++
++	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
++	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
  
 -S3_DEB_RPM_BUCKET_NAME=confluent-cli-release
 -S3_DEB_RPM_PROD_PREFIX=confluent-cli
 -S3_DEB_RPM_PROD_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/$(S3_DEB_RPM_PROD_PREFIX)
 -S3_DEB_RPM_STAG_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/confluent-cli-staging
-+	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
-+	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
++	chown -R root:root $(DESTDIR)$(PREFIX)
  
 -.PHONY: clean
--clean:
+ clean:
 -	for dir in bin dist docs legal prebuilt release-notes; do \
 -		[ -d $$dir ] && rm -r $$dir || true; \
 -	done
@@ -184,28 +186,10 @@
 -unit-test:
 -ifdef CI
 -	go install gotest.tools/gotestsum@v1.12.1 && \
--	gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test)
+-	gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -race -coverprofile=coverage.unit.out -covermode=atomic $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test)
 -else
--	go test -timeout 0 -v $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test) $(UNIT_TEST_ARGS)
+-	go test -timeout 0 -v -coverprofile=coverage.unit.out -covermode=atomic $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test) $(UNIT_TEST_ARGS)
 -endif
-+	chown -R root:root $(DESTDIR)$(PREFIX)
- 
--.PHONY: build-for-integration-test
--build-for-integration-test:
--ifdef CI
--	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
--else
--	go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
--endif
--
--.PHONY: build-for-integration-test-windows
--build-for-integration-test-windows:
--ifdef CI
--	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
--else
--	go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
--endif
-+clean:
 +	rm -rf $(CURDIR)/$(PACKAGE_NAME)*
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)*rpm
 +	rm -rf RPM_BUILDING
@@ -271,6 +255,25 @@
 +	rm -f $@ && tar -czf RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
  
+-.PHONY: build-for-integration-test
+-build-for-integration-test:
+-ifdef CI
+-	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+-else
+-	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+-endif
++rpm-build-area: RPM_BUILDING/BUILD RPM_BUILDING/RPMS RPM_BUILDING/SOURCES RPM_BUILDING/SPECS RPM_BUILDING/SRPMS
+ 
+-.PHONY: build-for-integration-test-windows
+-build-for-integration-test-windows:
+-ifdef CI
+-	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
+-else
+-	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
+-endif
++RPM_BUILDING/%:
++	mkdir -p $@
+ 
 -.PHONY: integration-test
 -integration-test:
 -ifdef CI
@@ -278,19 +281,29 @@
 -	export GOCOVERDIR=test/coverage && \
 -	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
 -	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
--	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
+-	go tool covdata textfmt -i $${GOCOVERDIR} -o coverage.integration.out
 -else
--	go test -timeout 0 -v $$(go list ./... | grep github.com/confluentinc/cli/v4/test) $(INTEGRATION_TEST_ARGS)
+-	export GOCOVERDIR=test/coverage && \
+-	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
+-	go test -timeout 0 -v $$(go list ./... | grep github.com/confluentinc/cli/v4/test) $(INTEGRATION_TEST_ARGS) && \
+-	go tool covdata textfmt -i $${GOCOVERDIR} -o coverage.integration.out
 -endif
-+rpm-build-area: RPM_BUILDING/BUILD RPM_BUILDING/RPMS RPM_BUILDING/SOURCES RPM_BUILDING/SPECS RPM_BUILDING/SRPMS
- 
+-
 -.PHONY: test
 -test: unit-test integration-test
-+RPM_BUILDING/%:
-+	mkdir -p $@
- 
+-
 -.PHONY: generate-packaging-patch
 -generate-packaging-patch:
 -	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
+-
+-.PHONY: coverage
+-coverage: ## Merge coverage data from unit and integration tests into coverage.txt
+-	@echo "Merging coverage data..."
+-	@echo "mode: atomic" > coverage.txt
+-	@tail -n +2 coverage.unit.out >> coverage.txt
+-	@tail -n +2 coverage.integration.out >> coverage.txt
+-	@echo "Coverage data saved to: coverage.txt"
+-	@artifact push workflow coverage.txt
+\ No newline at end of file
 +RELEASE_%:
 +	echo 0 > $@
