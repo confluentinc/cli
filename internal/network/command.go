@@ -96,6 +96,11 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 	phase := network.Status.GetPhase()
 	supportedConnectionTypes := network.Status.GetSupportedConnectionTypes()
 
+	zoneInfoStr, err := formatZoneInfoItems(network.Spec.GetZonesInfo())
+	if err != nil {
+		return err
+	}
+
 	human := &out{
 		Id:                       network.GetId(),
 		Environment:              network.Spec.Environment.GetId(),
@@ -104,7 +109,7 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 		Cloud:                    cloud,
 		Region:                   network.Spec.GetRegion(),
 		Zones:                    network.Spec.GetZones(),
-		ZoneInfo:                 network.Spec.GetZonesInfo(),
+		ZoneInfo:                 zoneInfoStr,
 		Phase:                    phase,
 		SupportedConnectionTypes: supportedConnectionTypes,
 		ActiveConnectionTypes:    network.Status.GetActiveConnectionTypes(),
@@ -387,4 +392,20 @@ func addGatewayFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {
 
 		return autocompleteGateways(c.V2Client, environmentId)
 	})
+}
+
+func formatZoneInfoItems(zoneInfoItems []networkingv1.NetworkingV1ZoneInfo) ([]string, error) {
+	var formattedItems []string
+
+	for _, item := range zoneInfoItems {
+		if item.ZoneId != nil && item.Cidr != nil {
+			formattedItems = append(formattedItems, fmt.Sprintf("%s=%s", *item.ZoneId, *item.Cidr))
+		} else if item.Cidr != nil {
+			formattedItems = append(formattedItems, *item.Cidr)
+		} else {
+			return []string{}, fmt.Errorf("zone info item is missing CIDR")
+		}
+	}
+
+	return formattedItems, nil
 }

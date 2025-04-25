@@ -97,6 +97,11 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status")
 		}
 
+		zoneInfoStr, err := formatZoneInfoItems(network.Spec.GetZonesInfo())
+		if err != nil {
+			return err
+		}
+
 		list.Add(&out{
 			Id:                    network.GetId(),
 			Name:                  network.Spec.GetDisplayName(),
@@ -106,7 +111,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			Region:                network.Spec.GetRegion(),
 			Cidr:                  network.Spec.GetCidr(),
 			Zones:                 network.Spec.GetZones(),
-			ZoneInfo:              network.Spec.GetZonesInfo(),
+			ZoneInfo:              zoneInfoStr,
 			DnsResolution:         network.Spec.DnsConfig.GetResolution(),
 			Phase:                 network.Status.GetPhase(),
 			ActiveConnectionTypes: network.Status.GetActiveConnectionTypes(),
