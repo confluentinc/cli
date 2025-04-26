@@ -645,6 +645,20 @@ func getAwsNetwork(id, name, phase string, connectionTypes []string) networkingv
 			Region:      networkingv1.PtrString("us-east-1"),
 			Cidr:        networkingv1.PtrString("10.200.0.0/16"),
 			Zones:       &[]string{"use1-az1", "use1-az2", "use1-az3"},
+			ZonesInfo: &[]networkingv1.NetworkingV1ZoneInfo{
+				{
+					ZoneId: ptrString("use1-az1"),
+					Cidr:   ptrString("10.200.0.0/27"),
+				},
+				{
+					ZoneId: ptrString("use1-az2"),
+					Cidr:   ptrString("10.200.0.32/27"),
+				},
+				{
+					ZoneId: ptrString("use1-az3"),
+					Cidr:   ptrString("10.200.0.64/27"),
+				},
+			},
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
@@ -700,6 +714,20 @@ func getGcpNetwork(id, name, phase string, connectionTypes []string) networkingv
 					Environment: networkingv1.PtrString("env-00000"),
 				},
 			),
+			ZonesInfo: &[]networkingv1.NetworkingV1ZoneInfo{
+				{
+					ZoneId: ptrString("us-central1-a"),
+					Cidr:   ptrString("10.200.0.0/27"),
+				},
+				{
+					ZoneId: ptrString("us-central1-b"),
+					Cidr:   ptrString("10.200.0.32/27"),
+				},
+				{
+					ZoneId: ptrString("us-central1-c"),
+					Cidr:   ptrString("10.200.0.64/27"),
+				},
+			},
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
@@ -752,6 +780,20 @@ func getAzureNetwork(id, name, phase string, connectionTypes []string) networkin
 			Region:      networkingv1.PtrString("eastus2"),
 			Cidr:        networkingv1.PtrString("10.0.0.0/16"),
 			Zones:       &[]string{"1", "2", "3"},
+			ZonesInfo: &[]networkingv1.NetworkingV1ZoneInfo{
+				{
+					ZoneId: ptrString("1"),
+					Cidr:   ptrString("10.200.0.0/27"),
+				},
+				{
+					ZoneId: ptrString("2"),
+					Cidr:   ptrString("10.200.0.32/27"),
+				},
+				{
+					ZoneId: ptrString("3"),
+					Cidr:   ptrString("10.200.0.64/27"),
+				},
+			},
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
