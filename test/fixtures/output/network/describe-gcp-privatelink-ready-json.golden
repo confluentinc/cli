@@ -22,5 +22,10 @@
     "us-central1-a": "us-central1-a.0123456789abcdef.us-central1.gcp.devel.cpdev.cloud",
     "us-central1-b": "us-central1-b.0123456789abcdef.us-central1.gcp.devel.cpdev.cloud",
     "us-central1-c": "us-central1-c.0123456789abcdef.us-central1.gcp.devel.cpdev.cloud"
-  }
+  },
+  "zone_info": [
+    "us-central1-a=10.200.0.0/27",
+    "us-central1-b=10.200.0.32/27",
+    "us-central1-c=10.200.0.64/27"
+  ]
 }
