@@ -467,7 +467,7 @@ func (c *command) getConfig(service string) (map[string]string, error) {
 		config["dataDir"] = data
 	}
 
-	if isCP && slices.Contains([]string{"connect", "kafka-rest", "ksql-server", "schema-registry"}, service) {
+	if isCP && slices.Contains([]string{"connect", "kafka-rest", "ksql-server", "schema-registry"}, service) && zookeeperMode {
 		config["consumer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
 		config["producer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
 	}
