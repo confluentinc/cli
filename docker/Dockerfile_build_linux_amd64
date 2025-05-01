@@ -1,12 +1,11 @@
+# AlmaLinux 8.10 chosen for current GLIBC requirement of 2.28
 FROM --platform=linux/amd64 almalinux:8.10
 
 SHELL ["/bin/bash", "-c"]
 
 RUN yum -y update
 
-RUN yum -y install make sudo
-
-RUN sudo yum -y install git wget gcc-toolset-9
+RUN yum -y install make git wget gcc-toolset-9
 
 RUN scl enable gcc-toolset-9 bash
 
@@ -14,7 +13,7 @@ COPY . /cli/
 
 RUN export GO_VERSION=$(cat /cli/.go-version) && \
     wget "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" && \
-    sudo tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"
+    tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"
 
 ENV PATH=${PATH}:/usr/local/go/bin:/root/go/bin
 

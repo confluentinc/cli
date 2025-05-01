@@ -1,0 +1,23 @@
+FROM --platform=linux/amd64 ubuntu:24.04
+
+SHELL ["/bin/bash", "-c"]
+
+RUN apt -y update
+
+RUN apt -y install make git wget musl-tools curl
+
+RUN curl -O -L "https://github.com/sigstore/cosign/releases/download/v2.2.4/cosign_2.2.4_amd64.deb"
+
+RUN dpkg -i cosign_2.2.4_amd64.deb
+
+COPY . /cli-release/
+
+RUN export GO_VERSION=$(cat /cli-release/cli/.go-version) && \
+    wget "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" && \
+    tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"
+
+ENV PATH=${PATH}:/usr/local/go/bin:/root/go/bin
+
+RUN cd /cli-release/cli/ && \
+    go install github.com/goreleaser/goreleaser/v2@v2.0.1 && \
+    goreleaser build --config ../.goreleaser-linux-alpine.yml --single-target
