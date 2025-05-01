@@ -19,6 +19,7 @@ func (c *command) newComputePoolDeleteCommand() *cobra.Command {
 		Short:             "Delete one or more Flink compute pools.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validComputePoolArgsMultiple),
+		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		RunE:              c.computePoolDelete,
 	}
 
@@ -82,7 +83,7 @@ func validateAndConfirmComputePoolDeletion(cmd *cobra.Command, args []string, ch
 	return deletion.ConfirmPrompt(cmd, confirmComputePoolDeletionString(args))
 }
 
-func (c *command) removePoolFromConfigIfCurrent(deletedIds []string) error {
+func (c *computePoolCmd) removePoolFromConfigIfCurrent(deletedIds []string) error {
 	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
 	for _, id := range deletedIds {
 		if id == c.Context.GetCurrentFlinkComputePool() {
