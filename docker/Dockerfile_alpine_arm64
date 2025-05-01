@@ -10,7 +10,7 @@ RUN curl -O -L "https://github.com/sigstore/cosign/releases/download/v2.2.4/cosi
 
 RUN dpkg -i cosign_2.2.4_arm64.deb
 
-COPY . /cli-release/
+COPY . /cli/
 
 RUN export GO_VERSION=$(cat /cli-release/cli/.go-version) && \
     wget "https://go.dev/dl/go${GO_VERSION}.linux-arm64.tar.gz" && \
