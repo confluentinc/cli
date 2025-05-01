@@ -1,4 +1,4 @@
-FROM --platform=linux/arm64/v8 ubuntu:24.04
+FROM --platform=linux/arm64/v8 ubuntu:20.04
 
 SHELL ["/bin/bash", "-c"]
 
