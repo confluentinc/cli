@@ -1,13 +1,14 @@
 package flink
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
@@ -16,15 +17,16 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *command) newApplicationUpdateCommand() *cobra.Command {
+func (c *command) newComputePoolCreateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <resourceFilePath>",
-		Short: "Update a Flink application.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.applicationUpdate,
+		Use:         "create <resourceFilePath>",
+		Short:       "Create a Flink Compute Pool.",
+		Args:        cobra.ExactArgs(1),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
+		RunE:        c.computePoolCreateOnPrem,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment to update the Flink application.")
+	cmd.Flags().String("environment", "", "Name of the environment to create the Flink Compute Pool.")
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlagWithHumanRestricted(cmd)
 
@@ -33,7 +35,7 @@ func (c *command) newApplicationUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) applicationUpdate(cmd *cobra.Command, args []string) error {
+func (c *command) computePoolCreateOnPrem(cmd *cobra.Command, args []string) error {
 	environment, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err
@@ -44,7 +46,7 @@ func (c *command) applicationUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Check if the application already exists
+	// Check if the compute pool already exists
 	resourceFilePath := args[0]
 	// Read file contents
 	data, err := os.ReadFile(resourceFilePath)
@@ -52,13 +54,13 @@ func (c *command) applicationUpdate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to read file: %v", err)
 	}
 
-	var application cmfsdk.Application
+	var computePool cmfsdk.ComputePool
 	ext := filepath.Ext(resourceFilePath)
 	switch ext {
 	case ".json":
-		err = json.Unmarshal(data, &application)
+		err = json.Unmarshal(data, &computePool)
 	case ".yaml", ".yml":
-		err = yaml.Unmarshal(data, &application)
+		err = yaml.Unmarshal(data, &computePool)
 	default:
 		return errors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
 	}
@@ -66,10 +68,13 @@ func (c *command) applicationUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	outputApplication, err := client.UpdateApplication(c.createContext(), environment, application)
+	// Get the context from the command
+	ctx := context.WithValue(context.Background(), cmfsdk.ContextAccessToken, c.Context.GetAuthToken())
+
+	outputComputePool, err := client.CreateComputePool(ctx, environment, computePool)
 	if err != nil {
 		return err
 	}
 
-	return output.SerializedOutput(cmd, outputApplication)
+	return output.SerializedOutput(cmd, outputComputePool)
 }

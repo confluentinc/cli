@@ -281,6 +281,173 @@ func (cmfClient *CmfRestClient) UpdateEnvironment(ctx context.Context, postEnvir
 	return outputEnvironment, nil
 }
 
+func (cmfClient *CmfRestClient) CreateComputePool(ctx context.Context, environment string, computePool cmfsdk.ComputePool) (cmfsdk.ComputePool, error) {
+	computePoolName := computePool.Metadata.Name
+	if computePoolName == "" {
+		return cmfsdk.ComputePool{}, fmt.Errorf("compute pool name is required")
+	}
+	outputComputePool, httpResponse, err := cmfClient.DefaultApi.CreateComputePool(ctx, environment, computePool)
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.ComputePool{}, fmt.Errorf(`failed to create compute pool "%s" in the environment "%s": %s`, computePoolName, environment, parsedErr)
+	}
+	return outputComputePool, nil
+}
+
+func (cmfClient *CmfRestClient) DeleteComputePool(ctx context.Context, environment, computePool string) error {
+	httpResp, err := cmfClient.DefaultApi.DeleteComputePool(ctx, environment, computePool)
+	return parseSdkError(httpResp, err)
+}
+
+func (cmfClient *CmfRestClient) DescribeComputePool(ctx context.Context, environment, computePool string) (cmfsdk.ComputePool, error) {
+	cmfComputePool, httpResponse, err := cmfClient.DefaultApi.GetComputePool(ctx, environment, computePool)
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.ComputePool{}, fmt.Errorf(`failed to describe compute pool "%s" in the environment "%s": %s`, computePool, environment, parsedErr)
+	}
+	return cmfComputePool, nil
+}
+
+func (cmfClient *CmfRestClient) ListComputePools(ctx context.Context, environment string) ([]cmfsdk.ComputePool, error) {
+	computePools := make([]cmfsdk.ComputePool, 0)
+	currentPageNumber := 0
+	done := false
+	// 100 is an arbitrary page size we've chosen.
+	const pageSize = 100
+
+	pagingOptions := &cmfsdk.GetComputePoolsOpts{
+		Page: optional.NewInt32(int32(currentPageNumber)),
+		Size: optional.NewInt32(pageSize),
+	}
+
+	for !done {
+		computePoolsPage, httpResponse, err := cmfClient.DefaultApi.GetComputePools(ctx, environment, pagingOptions)
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list compute pools in the environment "%s": %s`, environment, parsedErr)
+		}
+		computePools = append(computePools, computePoolsPage.Items...)
+		currentPageNumber, done = extractPageOptions(len(computePoolsPage.Items), currentPageNumber)
+		pagingOptions.Page = optional.NewInt32(int32(currentPageNumber))
+	}
+
+	return computePools, nil
+}
+
+func (cmfClient *CmfRestClient) CreateStatement(ctx context.Context, environment string, statement cmfsdk.Statement) (cmfsdk.Statement, error) {
+	statementName := statement.Metadata.Name
+	outputStatement, httpResponse, err := cmfClient.DefaultApi.CreateStatement(ctx, environment, statement)
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.Statement{}, fmt.Errorf(`failed to create Flink SQL statement "%s" in the environment "%s": %s`, statementName, environment, parsedErr)
+	}
+	return outputStatement, nil
+}
+
+func (cmfClient *CmfRestClient) GetStatement(ctx context.Context, environment, name string) (cmfsdk.Statement, error) {
+	statement, httpResponse, err := cmfClient.DefaultApi.GetStatement(ctx, environment, name)
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.Statement{}, fmt.Errorf(`failed to get Flink SQL statement "%s" in the environment "%s": %s`, name, environment, parsedErr)
+	}
+	return statement, nil
+}
+
+func (cmfClient *CmfRestClient) UpdateStatement(ctx context.Context, environment, statementName string, statement cmfsdk.Statement) error {
+	httpResponse, err := cmfClient.DefaultApi.UpdateStatement(ctx, environment, statementName, statement)
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return fmt.Errorf(`failed to update statement "%s" in the environment "%s": %s`, statementName, environment, parsedErr)
+	}
+	return nil
+}
+
+func (cmfClient *CmfRestClient) DeleteStatement(ctx context.Context, environment, statement string) error {
+	httpResp, err := cmfClient.DefaultApi.DeleteStatement(ctx, environment, statement)
+	return parseSdkError(httpResp, err)
+}
+
+func (cmfClient *CmfRestClient) ListStatements(ctx context.Context, environment, computePool, status string) ([]cmfsdk.Statement, error) {
+	statements := make([]cmfsdk.Statement, 0)
+	currentPageNumber := 0
+	done := false
+	// 100 is an arbitrary page size we've chosen.
+	const pageSize = 100
+
+	pagingOptions := &cmfsdk.GetStatementsOpts{
+		Page: optional.NewInt32(int32(currentPageNumber)),
+		Size: optional.NewInt32(pageSize),
+	}
+	if computePool != "" {
+		pagingOptions.ComputePool = optional.NewString(computePool)
+	}
+	if status != "" {
+		pagingOptions.Phase = optional.NewString(status)
+	}
+
+	for !done {
+		statementsPage, httpResponse, err := cmfClient.DefaultApi.GetStatements(ctx, environment, pagingOptions)
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list statements in the environment "%s": %s`, environment, parsedErr)
+		}
+		statements = append(statements, statementsPage.Items...)
+		currentPageNumber, done = extractPageOptions(len(statementsPage.Items), currentPageNumber)
+		pagingOptions.Page = optional.NewInt32(int32(currentPageNumber))
+	}
+
+	return statements, nil
+}
+
+// TODO: Check with Fabian to see if the pagination is needed for this exception list command
+func (cmfClient *CmfRestClient) ListStatementExceptions(ctx context.Context, environment, statementName string) (cmfsdk.StatementExceptionList, error) {
+	exceptionList, httpResponse, err := cmfClient.DefaultApi.GetStatementExceptions(ctx, environment, statementName)
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.StatementExceptionList{}, fmt.Errorf(`failed to list exceptions for statement "%s" in the environment "%s": %s`, statementName, environment, parsedErr)
+	}
+	return exceptionList, nil
+}
+
+func (cmfClient *CmfRestClient) CreateCatalog(ctx context.Context, kafkaCatalog cmfsdk.KafkaCatalog) (cmfsdk.KafkaCatalog, error) {
+	catalogName := kafkaCatalog.Metadata.Name
+	outputCatalog, httpResponse, err := cmfClient.DefaultApi.CreateKafkaCatalog(ctx, kafkaCatalog)
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.KafkaCatalog{}, fmt.Errorf(`failed to create Kafka Catalog "%s": %s`, catalogName, parsedErr)
+	}
+	return outputCatalog, nil
+}
+
+func (cmfClient *CmfRestClient) DescribeCatalog(ctx context.Context, catalogName string) (cmfsdk.KafkaCatalog, error) {
+	outputCatalog, httpResponse, err := cmfClient.DefaultApi.GetKafkaCatalog(ctx, catalogName)
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.KafkaCatalog{}, fmt.Errorf(`failed to get Kafka Catalog "%s": %s`, catalogName, parsedErr)
+	}
+	return outputCatalog, nil
+}
+
+func (cmfClient *CmfRestClient) ListCatalog(ctx context.Context) ([]cmfsdk.KafkaCatalog, error) {
+	catalogs := make([]cmfsdk.KafkaCatalog, 0)
+	currentPageNumber := 0
+	done := false
+	// 100 is an arbitrary page size we've chosen.
+	const pageSize = 100
+
+	pagingOptions := &cmfsdk.GetKafkaCatalogsOpts{
+		Page: optional.NewInt32(int32(currentPageNumber)),
+		Size: optional.NewInt32(pageSize),
+	}
+
+	for !done {
+		catalogPage, httpResponse, err := cmfClient.DefaultApi.GetKafkaCatalogs(ctx, pagingOptions)
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list Kafka Catalog: %s`, parsedErr)
+		}
+		catalogs = append(catalogs, catalogPage.Items...)
+		currentPageNumber, done = extractPageOptions(len(catalogPage.Items), currentPageNumber)
+		pagingOptions.Page = optional.NewInt32(int32(currentPageNumber))
+	}
+
+	return catalogs, nil
+}
+
+func (cmfClient *CmfRestClient) DeleteCatalog(ctx context.Context, catalogName string) error {
+	httpResp, err := cmfClient.DefaultApi.DeleteKafkaCatalog(ctx, catalogName)
+	return parseSdkError(httpResp, err)
+}
+
 // Returns the next page number and whether we need to fetch more pages or not.
 func extractPageOptions(receivedItemsLength int, currentPageNumber int) (int, bool) {
 	if receivedItemsLength == 0 {

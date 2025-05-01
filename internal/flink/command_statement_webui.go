@@ -2,9 +2,9 @@ package flink
 
 import (
 	"fmt"
+	"os"
 	"net"
 	"net/http"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -14,15 +14,15 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *command) newApplicationWebUiForwardCommand() *cobra.Command {
+func (c *command) newStatementWebUiForwardCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "web-ui-forward <name>",
-		Short: "Forward the web UI of a Flink application.",
+		Short: "Forward the web UI of a Flink statement in Confluent Platform.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.applicationWebUiForward,
+		RunE:  c.statementWebUiForward,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment to forward the Flink application to web UI.")
+	cmd.Flags().String("environment", "", "Name of the environment to forward the Flink statement to web UI.")
 	addCmfFlagSet(cmd)
 	cmd.Flags().Uint16("port", 0, "Port to forward the web UI to. If not provided, a random, OS-assigned port will be used.")
 
@@ -31,7 +31,7 @@ func (c *command) newApplicationWebUiForwardCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) applicationWebUiForward(cmd *cobra.Command, args []string) error {
+func (c *command) statementWebUiForward(cmd *cobra.Command, args []string) error {
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
 		return err
@@ -58,9 +58,9 @@ func (c *command) applicationWebUiForward(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	// Get the name of the application and check for its existence
-	applicationName := args[0]
-	_, err = cmfClient.DescribeApplication(c.createContext(), environment, applicationName)
+	// Get the name of the statement and check for its existence
+	statementName := args[0]
+	_, err = cmfClient.GetStatement(c.createContext(), environment, statementName)
 	if err != nil {
 		return fmt.Errorf(`failed to forward web UI: %s`, err)
 	}
@@ -76,7 +76,7 @@ func (c *command) applicationWebUiForward(cmd *cobra.Command, args []string) err
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		c.handleFlinkWebUiForwardRequest(w, r, url, environment, "applications", applicationName, cmfClient.APIClient.GetConfig().UserAgent, client)
+		c.handleFlinkWebUiForwardRequest(w, r, url, environment, "statements", statementName, cmfClient.APIClient.GetConfig().UserAgent, client)
 	})
 
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
