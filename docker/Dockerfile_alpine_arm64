@@ -12,11 +12,11 @@ RUN dpkg -i cosign_2.2.4_arm64.deb
 
 COPY . /cli/
 
-RUN export GO_VERSION=$(cat /cli-release/cli/.go-version) && \
+RUN export GO_VERSION=$(cat /cli/.go-version) && \
     wget "https://go.dev/dl/go${GO_VERSION}.linux-arm64.tar.gz" && \
     tar -C /usr/local -xzf "go${GO_VERSION}.linux-arm64.tar.gz"
 
 ENV PATH=${PATH}:/usr/local/go/bin:/root/go/bin
 
-RUN cd /cli-release/cli/ && \
+RUN cd /cli/ && \
     CC=musl-gcc CGO_LDFLAGS="-static" CGO_ENABLED=1 GOEXPERIMENT=boringcrypto go build -tags musl -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" ./cmd/confluent
