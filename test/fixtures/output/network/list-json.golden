@@ -68,8 +68,7 @@
     "zones": ["1", "2", "3"],
     "phase": "READY",
     "active_connection_types": ["PRIVATELINK"],
-    "dns_resolution": "PRIVATE",
-    "zone_info": ["1=10.200.0.0/27", "2=10.200.0.32/27", "3=10.200.0.64/27"]
+    "dns_resolution": "PRIVATE"
   },
   {
     "id": "n-abcde1",

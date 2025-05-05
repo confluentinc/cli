@@ -591,7 +591,7 @@ func handleNetworkingNetworkCreate(t *testing.T) http.HandlerFunc {
 				network.Spec.SetDnsConfig(networkingv1.NetworkingV1DnsConfig{Resolution: body.Spec.DnsConfig.Resolution})
 			}
 
-			if body.Spec.ZonesInfo != nil {
+			if body.Spec.ZonesInfo != nil && (slices.Contains(connectionTypes, "TRANSITGATEWAY") || slices.Contains(connectionTypes, "PEERING")) {
 				network.Spec.SetZonesInfo(*body.Spec.ZonesInfo)
 			}
 
@@ -673,6 +673,10 @@ func getAwsNetwork(id, name, phase string, connectionTypes []string) networkingv
 		},
 	}
 
+	if !slices.Contains(connectionTypes, "TRANSITGATEWAY") && !slices.Contains(connectionTypes, "PEERING") {
+		network.Spec.ZonesInfo = &[]networkingv1.NetworkingV1ZoneInfo{}
+	}
+
 	if slices.Contains(connectionTypes, "PRIVATELINK") {
 		network.Spec.DnsConfig = &networkingv1.NetworkingV1DnsConfig{Resolution: "PRIVATE"}
 		network.Status.DnsDomain = networkingv1.PtrString("")
@@ -741,6 +745,10 @@ func getGcpNetwork(id, name, phase string, connectionTypes []string) networkingv
 		},
 	}
 
+	if !slices.Contains(connectionTypes, "TRANSITGATEWAY") && !slices.Contains(connectionTypes, "PEERING") {
+		network.Spec.ZonesInfo = &[]networkingv1.NetworkingV1ZoneInfo{}
+	}
+
 	if slices.Contains(connectionTypes, "PRIVATELINK") {
 		network.Spec.DnsConfig = &networkingv1.NetworkingV1DnsConfig{Resolution: "PRIVATE"}
 		network.Status.DnsDomain = networkingv1.PtrString("")
@@ -805,6 +813,10 @@ func getAzureNetwork(id, name, phase string, connectionTypes []string) networkin
 				},
 			},
 		},
+	}
+
+	if !slices.Contains(connectionTypes, "TRANSITGATEWAY") && !slices.Contains(connectionTypes, "PEERING") {
+		network.Spec.ZonesInfo = &[]networkingv1.NetworkingV1ZoneInfo{}
 	}
 
 	if slices.Contains(connectionTypes, "PRIVATELINK") {
