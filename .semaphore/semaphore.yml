@@ -3,7 +3,7 @@ name: Confluent CLI
 
 agent:
   machine:
-    type: s1-prod-ubuntu20-04-amd64-1
+    type: s1-prod-ubuntu24-04-amd64-1
 
 auto_cancel:
   running:
@@ -20,12 +20,14 @@ blocks:
         - name: "Test linux/amd64"
           commands:
             - checkout
+            - . vault-sem-get-secret v1/ci/kv/apif/cli/sonar_token
             - sem-version go $(cat .go-version)
             - export PATH=$(go env GOPATH)/bin:$PATH
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
             - make lint
             - make test
+            - make coverage
             - make test-installer
 # Temporarily disable these builds until rate limiting is resolved
 #        - name: "Build linux/amd64 (GLIBC)"
@@ -35,10 +37,7 @@ blocks:
         - name: "Build linux/amd64 (Alpine)"
           commands:
             - checkout
-            - sem-version go $(cat .go-version)
-            - export PATH=$(go env GOPATH)/bin:$PATH
-            - sudo apt install musl-tools --yes
-            - CC=musl-gcc CGO_LDFLAGS="-static" CGO_ENABLED=1 GOEXPERIMENT=boringcrypto go build -tags musl -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" ./cmd/confluent
+            - docker build . --file docker/Dockerfile_alpine_amd64 --tag test-build
       epilogue:
         always:
           commands:
@@ -49,7 +48,7 @@ blocks:
     task:
       agent:
         machine:
-          type: s1-prod-ubuntu20-04-arm64-1
+          type: s1-prod-ubuntu24-04-arm64-1
       jobs:
 # Temporarily disable these builds until rate limiting is resolved
 #        - name: "Build linux/arm64 (GLIBC)"
@@ -59,10 +58,7 @@ blocks:
         - name: "Build linux/arm64 (Alpine)"
           commands:
             - checkout
-            - sem-version go $(cat .go-version)
-            - export PATH=$(go env GOPATH)/bin:$PATH
-            - sudo apt install musl-tools --yes
-            - CC=musl-gcc CGO_LDFLAGS="-static" CGO_ENABLED=1 GOEXPERIMENT=boringcrypto go build -tags musl -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" ./cmd/confluent
+            - docker build . --file docker/Dockerfile_alpine_arm64 --tag test-build
 
   - name: darwin
     dependencies: []
@@ -122,3 +118,8 @@ after_pipeline:
       - name: Publish Results
         commands:
           - test-results gen-pipeline-report
+      - name: Report SonarQube Results
+        commands:
+          - checkout
+          - sem-version java 11
+          - emit-sonarqube-data -a coverage.txt
