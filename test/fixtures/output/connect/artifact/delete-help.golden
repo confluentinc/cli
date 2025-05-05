@@ -1,0 +1,20 @@
+Delete one or more Connect artifacts.
+
+Usage:
+  confluent connect artifact delete <id-1> [id-2] ... [id-n] [flags]
+
+Examples:
+Delete Connect artifact.
+
+  $ confluent connect artifact delete --cloud aws --environment env-abc123 cfa-abc123
+
+Flags:
+      --cloud string         REQUIRED: Specify the cloud provider as "aws".
+      --environment string   Environment ID.
+      --context string       CLI context name.
+      --force                Skip the deletion confirmation prompt.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
