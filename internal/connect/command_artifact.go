@@ -1,8 +1,9 @@
 package connect
 
 import (
-	"github.com/spf13/cobra"
 	"strings"
+
+	"github.com/spf13/cobra"
 
 	camv1 "github.com/confluentinc/ccloud-sdk-go-v2/cam/v1"
 
