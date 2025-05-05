@@ -3,7 +3,7 @@
     "id": "cfa-jar123",
     "name": "my-connect-artifact-jar",
     "description": "new-jar-artifact",
-    "cloud": "aws",
+    "cloud": "AWS",
     "environment": "env-123456",
     "content_format": "JAR"
   },
@@ -11,7 +11,7 @@
     "id": "cfa-zip123",
     "name": "my-connect-artifact-zip",
     "description": "new-zip-artifact",
-    "cloud": "aws",
+    "cloud": "AWS",
     "environment": "env-123456",
     "content_format": "ZIP"
   }

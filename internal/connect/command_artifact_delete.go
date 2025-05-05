@@ -11,8 +11,6 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
-var extraWarning = "\nThis action is irreversible and is going to break all custom SMTs using this Artifact!\nDo you still want to proceed?"
-
 func (c *artifactCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <id-1> [id-2] ... [id-n]",
@@ -60,7 +58,7 @@ func (c *artifactCommand) delete(cmd *cobra.Command, args []string) error {
 		return ok
 	}
 
-	if err := deletion.ValidateAndConfirmWithExtraWarning(cmd, args, existenceFunc, resource.ConnectArtifact, extraWarning); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.ConnectArtifact); err != nil {
 		return err
 	}
 
