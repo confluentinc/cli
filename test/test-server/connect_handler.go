@@ -26,6 +26,8 @@ func handleConnectArtifacts(t *testing.T) http.HandlerFunc {
 			artifact := &camv1.CamV1ConnectArtifact{}
 			require.NoError(t, json.NewDecoder(r.Body).Decode(artifact))
 
+			artifact.Spec.Cloud = strings.ToUpper(artifact.Spec.GetCloud())
+
 			switch artifact.Spec.GetDisplayName() {
 			case "my-connect-artifact-jar":
 				artifact.SetId("cfa-jar123")
