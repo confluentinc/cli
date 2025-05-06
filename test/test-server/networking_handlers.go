@@ -388,6 +388,45 @@ func handleNetworkingNetworkGet(t *testing.T, id string) http.HandlerFunc {
 			w.WriteHeader(http.StatusNotFound)
 			err := writeErrorJson(w, "The network n-invalid was not found.")
 			require.NoError(t, err)
+		case "n-invalid-2":
+			network := networkingv1.NetworkingV1Network{
+				Id: networkingv1.PtrString(id),
+				Spec: &networkingv1.NetworkingV1NetworkSpec{
+					Environment: &networkingv1.ObjectReference{Id: "env-00000"},
+					DisplayName: networkingv1.PtrString("prod-invalid-2"),
+					Cloud:       networkingv1.PtrString("AWS"),
+					Region:      networkingv1.PtrString("us-east-1"),
+					Cidr:        networkingv1.PtrString("10.200.0.0/16"),
+					Zones:       &[]string{"use1-az1", "use1-az2", "use1-az3"},
+					ZonesInfo: &[]networkingv1.NetworkingV1ZoneInfo{
+						{
+							ZoneId: ptrString("use1-az1"),
+							Cidr:   nil,
+						},
+						{
+							ZoneId: ptrString("use1-az2"),
+							Cidr:   nil,
+						},
+						{
+							ZoneId: ptrString("use1-az3"),
+							Cidr:   nil,
+						},
+					},
+				},
+				Status: &networkingv1.NetworkingV1NetworkStatus{
+					Phase:                    "READY",
+					SupportedConnectionTypes: []string{"TRANSITGATEWAY", "PEERING"},
+					ActiveConnectionTypes:    []string{},
+					Cloud: &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
+						NetworkingV1AwsNetwork: &networkingv1.NetworkingV1AwsNetwork{
+							Kind: "AwsNetwork",
+						},
+					},
+					IdleSince: networkingv1.PtrTime(time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)),
+				},
+			}
+			err := json.NewEncoder(w).Encode(network)
+			require.NoError(t, err)
 		case "n-abcde1":
 			network := getAwsNetwork("n-abcde1", "prod-aws-us-east1", "READY", []string{"TRANSITGATEWAY", "PEERING"})
 			err := json.NewEncoder(w).Encode(network)
