@@ -28,6 +28,7 @@ func (s *CLITestSuite) TestNetworkDescribe() {
 		{args: "network describe n-abcde13 --output json", fixture: "network/describe-gateway-json.golden"},
 		{args: "network describe", fixture: "network/describe-missing-id.golden", exitCode: 1},
 		{args: "network describe n-invalid", fixture: "network/describe-invalid.golden", exitCode: 1},
+		{args: "network describe n-invalid-2", fixture: "network/describe-invalid-2.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -93,6 +94,7 @@ func (s *CLITestSuite) TestNetworkCreate() {
 		{args: "network create aws-peering --cloud aws --region us-west-2 --connection-types peering --zone-info usw2-az1=10.10.0.0/27,usw2-az3=10.10.0.32/27,usw2-az4=10.10.0.64/27 --reserved-cidr 172.16.10.0/24 --environment env-00000", fixture: "network/create-peering-zone-info-pairs.golden"},
 		{args: "network create aws-peering --cloud aws --region us-west-2 --connection-types peering --zone-info usw2-az1=10.10.0.0/27,usw2-az3=10.10.0.32/27=usw2-az4=10.10.0.64/27 --reserved-cidr 172.16.10.0/24 --environment env-00000", fixture: "network/create-peering-zone-info-invalid.golden", exitCode: 1},
 		{args: "network create aws-tgw-peering --cloud aws --region us-west-2 --connection-types transitgateway,peering --zones usw2-az1,usw2-az3,usw2-az4 --zone-info 192.168.1.0/27,192.168.2.0/27,192.168.3.0/27 --environment env-00000", fixture: "network/create-tgw-peering.golden"},
+		{args: "network create aws-tgw-peering --cloud aws --region us-west-2 --connection-types transitgateway,peering --zones usw2-az1,usw2-az3,usw2-az4 --zone-info 192.168.1.0/27,192.168.2.0/27,192.168.3.0/27 --environment env-00000 --output json", fixture: "network/create-tgw-peering-json.golden"},
 		{args: "network create gcp-pl --cloud gcp --connection-types privatelink --region us-central1", fixture: "network/create-gcp-pl.golden"},
 	}
 

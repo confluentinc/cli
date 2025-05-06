@@ -1,0 +1,11 @@
+{
+  "id": "n-abcde1",
+  "environment": "env-00000",
+  "name": "aws-tgw-peering",
+  "cloud": "AWS",
+  "region": "us-west-2",
+  "zones": ["usw2-az1", "usw2-az3", "usw2-az4"],
+  "phase": "PROVISIONING",
+  "supported_connection_types": ["TRANSITGATEWAY", "PEERING"],
+  "zone_info": ["192.168.1.0/27", "192.168.2.0/27", "192.168.3.0/27"]
+}
