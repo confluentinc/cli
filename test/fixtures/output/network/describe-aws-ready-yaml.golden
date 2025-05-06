@@ -17,4 +17,8 @@ active_connection_types:
     - PEERING
 aws_vpc: vpc-00000000000000000
 aws_account: "000000000000"
+zone_info:
+    - use1-az1=10.200.0.0/27
+    - use1-az2=10.200.0.32/27
+    - use1-az3=10.200.0.64/27
 idle_since: 2021-01-01T00:00:00Z

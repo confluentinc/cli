@@ -1,9 +1,12 @@
-+----------------------------+--------------+
-| ID                         | n-abcde1     |
-| Environment                | env-00000    |
-| Name                       | aws-peering  |
-| Cloud                      | AWS          |
-| Region                     | us-west-2    |
-| Phase                      | PROVISIONING |
-| Supported Connection Types | PEERING      |
-+----------------------------+--------------+
++----------------------------+--------------------------------+
+| ID                         | n-abcde1                       |
+| Environment                | env-00000                      |
+| Name                       | aws-peering                    |
+| Cloud                      | AWS                            |
+| Region                     | us-west-2                      |
+| Phase                      | PROVISIONING                   |
+| Supported Connection Types | PEERING                        |
+| Zone Info                  | usw2-az1=10.10.0.0/27,         |
+|                            | usw2-az3=10.10.0.32/27,        |
+|                            | usw2-az4=10.10.0.64/27         |
++----------------------------+--------------------------------+
