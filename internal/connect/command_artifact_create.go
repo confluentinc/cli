@@ -12,7 +12,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
-	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
@@ -95,7 +94,6 @@ func (c *artifactCommand) createArtifact(cmd *cobra.Command, args []string) erro
 	}
 
 	createArtifactRequest := camv1.CamV1ConnectArtifact{
-
 		Spec: &camv1.CamV1ConnectArtifactSpec{
 			DisplayName: displayName,
 			Cloud:       cloud,
@@ -115,15 +113,5 @@ func (c *artifactCommand) createArtifact(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(&artifactOut{
-		Name:          artifact.Spec.GetDisplayName(),
-		Id:            artifact.GetId(),
-		Cloud:         strings.ToUpper(cloud),
-		Environment:   environment,
-		ContentFormat: artifact.Spec.GetContentFormat(),
-		Description:   artifact.Spec.GetDescription(),
-	})
-
-	return table.Print()
+	return printArtifactTable(cmd, artifact)
 }

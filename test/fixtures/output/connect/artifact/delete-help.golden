@@ -6,7 +6,7 @@ Usage:
 Examples:
 Delete Connect artifact.
 
-  $ confluent connect artifact delete --cloud aws --environment env-abc123 cfa-abc123
+  $ confluent connect artifact delete cfa-abc123 --cloud aws --environment env-abc123
 
 Flags:
       --cloud string         REQUIRED: Specify the cloud provider as "aws".

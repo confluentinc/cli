@@ -20,7 +20,7 @@ func (c *artifactCommand) newDeleteCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete Connect artifact.",
-				Code: "confluent connect artifact delete --cloud aws --environment env-abc123 cfa-abc123",
+				Code: "confluent connect artifact delete cfa-abc123 --cloud aws --environment env-abc123",
 			},
 		),
 	}
