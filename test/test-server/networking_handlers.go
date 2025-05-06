@@ -630,7 +630,7 @@ func handleNetworkingNetworkCreate(t *testing.T) http.HandlerFunc {
 				network.Spec.SetDnsConfig(networkingv1.NetworkingV1DnsConfig{Resolution: body.Spec.DnsConfig.Resolution})
 			}
 
-			if body.Spec.ZonesInfo != nil && (slices.Contains(connectionTypes, "TRANSITGATEWAY") || slices.Contains(connectionTypes, "PEERING")) {
+			if body.Spec.ZonesInfo != nil {
 				network.Spec.SetZonesInfo(*body.Spec.ZonesInfo)
 			}
 
@@ -656,6 +656,22 @@ func handleNetworkingNetworkCreate(t *testing.T) http.HandlerFunc {
 				}
 				if slices.Contains(connectionTypes, "PRIVATELINK") {
 					network.Status.Cloud.NetworkingV1AwsNetwork.PrivateLinkEndpointService = networkingv1.PtrString("")
+				}
+				if body.Spec.ZonesInfo == nil && (slices.Contains(connectionTypes, "TRANSITGATEWAY") || slices.Contains(connectionTypes, "PEERING")) {
+					network.Spec.ZonesInfo = &[]networkingv1.NetworkingV1ZoneInfo{
+						{
+							ZoneId: ptrString("usw2-az1"),
+							Cidr:   ptrString("10.1.0.0/27"),
+						},
+						{
+							ZoneId: ptrString("usw2-az2"),
+							Cidr:   ptrString("10.1.0.32/27"),
+						},
+						{
+							ZoneId: ptrString("usw2-az4"),
+							Cidr:   ptrString("10.1.0.64/27"),
+						},
+					}
 				}
 			case "GCP":
 				network.Status.Cloud = &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
