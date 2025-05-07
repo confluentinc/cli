@@ -1,11 +1,7 @@
 package flink
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
-
-	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/deletion"
@@ -16,7 +12,8 @@ import (
 func (c *command) newComputePoolDeleteCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "delete <name-1> [name-2] ... [name-n]",
-		Short:       "Delete one or more Flink Compute Pools.",
+		Short:       "Delete one or more Flink Compute Pools in Confluent Platform.",
+		Long:        `Delete one or more Flink Compute Pools in Confluent Platform, a compute pool can only be deleted if there are no statements associated with it.`,
 		Args:        cobra.MinimumNArgs(1),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 		RunE:        c.computePoolDeleteOnPrem,
@@ -32,20 +29,18 @@ func (c *command) newComputePoolDeleteCommandOnPrem() *cobra.Command {
 }
 
 func (c *command) computePoolDeleteOnPrem(cmd *cobra.Command, args []string) error {
-	environment, err := cmd.Flags().GetString("environment")
-	if err != nil {
-		return err
-	}
 	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	// Get the context from the command
-	ctx := context.WithValue(context.Background(), cmfsdk.ContextAccessToken, c.Context.GetAuthToken())
+	environment, err := cmd.Flags().GetString("environment")
+	if err != nil {
+		return err
+	}
 
 	existenceFunc := func(name string) bool {
-		_, err := client.DescribeComputePool(ctx, environment, name)
+		_, err := client.DescribeComputePool(c.createContext(), environment, name)
 		return err == nil
 	}
 
@@ -58,7 +53,7 @@ func (c *command) computePoolDeleteOnPrem(cmd *cobra.Command, args []string) err
 	}
 
 	deleteFunc := func(name string) error {
-		return client.DeleteComputePool(ctx, environment, name)
+		return client.DeleteComputePool(c.createContext(), environment, name)
 	}
 
 	_, err = deletion.Delete(args, deleteFunc, resource.FlinkComputePool)

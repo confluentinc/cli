@@ -10,7 +10,7 @@ import (
 func (c *command) newCatalogListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List Flink Catalog.",
+		Short: "List Flink Catalog in Confluent Platform.",
 		Args:  cobra.NoArgs,
 		RunE:  c.catalogList,
 	}
@@ -36,7 +36,9 @@ func (c *command) catalogList(cmd *cobra.Command, _ []string) error {
 		list := output.NewList(cmd)
 		for _, catalog := range catalogs {
 			list.Add(&catalogOut{
-				Name: catalog.Metadata.Name,
+				Name:         catalog.Metadata.Name,
+				ID:           catalog.Metadata.Uid,
+				CreationTime: catalog.Metadata.CreationTimestamp,
 			})
 		}
 		return list.Print()

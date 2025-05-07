@@ -1,11 +1,7 @@
 package flink
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
-
-	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -14,7 +10,7 @@ import (
 func (c *command) newComputePoolListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
-		Short:       "List Flink Compute Pools.",
+		Short:       "List Flink Compute Pools in Confluent Platform.",
 		Args:        cobra.NoArgs,
 		RunE:        c.computePoolListOnPrem,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
@@ -39,10 +35,7 @@ func (c *command) computePoolListOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	// Get the context from the command
-	ctx := context.WithValue(context.Background(), cmfsdk.ContextAccessToken, c.Context.GetAuthToken())
-
-	computePools, err := client.ListComputePools(ctx, environment)
+	computePools, err := client.ListComputePools(c.createContext(), environment)
 	if err != nil {
 		return err
 	}
@@ -50,15 +43,12 @@ func (c *command) computePoolListOnPrem(cmd *cobra.Command, _ []string) error {
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
 		for _, pool := range computePools {
-			envInPool, ok := pool.Spec.ClusterSpec["environment"].(string)
-			if !ok {
-				envInPool = environment
-			}
 			list.Add(&computePoolOutOnPrem{
-				Name:        pool.Metadata.Name,
-				ID:          pool.Metadata.Uid,
-				Environment: envInPool,
-				Phase:       pool.Status.Phase,
+				Name:         pool.Metadata.Name,
+				ID:           pool.Metadata.Uid,
+				Type:         pool.Spec.Type,
+				Phase:        pool.Status.Phase,
+				CreationTime: pool.Metadata.CreationTimestamp,
 			})
 		}
 		return list.Print()

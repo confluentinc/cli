@@ -86,6 +86,7 @@ func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
 	}
 	postEnvironment.KubernetesNamespace = kubernetesNamespace
 
+	// TODO: Modify the PostEnvironment struct to include default compute pool and statement
 	outputEnvironment, err := client.CreateEnvironment(c.createContext(), postEnvironment)
 	if err != nil {
 		return err

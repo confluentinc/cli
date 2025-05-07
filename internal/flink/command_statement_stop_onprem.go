@@ -43,6 +43,8 @@ func (c *command) statementStopOnPrem(cmd *cobra.Command, args []string) error {
 	// Construct the statement to be stopped
 	// TODO: Check with Fabian if this is enough or not
 	statement := cmfsdk.Statement{
+		ApiVersion: "cmf.confluent.io/v1",
+		Kind:       "Statement",
 		Metadata: cmfsdk.StatementMetadata{
 			Name: name,
 		},

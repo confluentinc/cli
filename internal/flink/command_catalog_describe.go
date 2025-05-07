@@ -10,7 +10,7 @@ import (
 func (c *command) newCatalogDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <name>",
-		Short: "Describe a Flink Catalog.",
+		Short: "Describe a Flink Catalog in Confluent Platform.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.catalogDescribe,
 	}
@@ -22,18 +22,17 @@ func (c *command) newCatalogDescribeCommand() *cobra.Command {
 }
 
 func (c *command) catalogDescribe(cmd *cobra.Command, args []string) error {
+	name := args[0]
+
 	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
-
-	name := args[0]
 
 	outputCatalog, err := client.DescribeCatalog(c.createContext(), name)
 	if err != nil {
 		return err
 	}
 
-	// TODO: Check what needs to be exposed with catalog
 	return output.SerializedOutput(cmd, outputCatalog)
 }

@@ -19,7 +19,8 @@ import (
 func (c *command) newCatalogCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <resourceFilePath>",
-		Short: "Create a Flink Catalog.",
+		Short: "Create a Flink Catalog in Confluent Platform.",
+		Long:  "Create a Flink Catalog in Confluent Platform that provides metadata about tables and other database objects such as views and functions.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.catalogCreate,
 	}
@@ -32,13 +33,13 @@ func (c *command) newCatalogCreateCommand() *cobra.Command {
 }
 
 func (c *command) catalogCreate(cmd *cobra.Command, args []string) error {
+	resourceFilePath := args[0]
+
 	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	// Check if the Catalog already exists
-	resourceFilePath := args[0]
 	// Read file contents
 	data, err := os.ReadFile(resourceFilePath)
 	if err != nil {

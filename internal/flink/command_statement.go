@@ -20,7 +20,7 @@ type statementOut struct {
 }
 
 type statementOutOnPrem struct {
-	CreationDate time.Time         `human:"Creation Date" serialized:"creation_date"`
+	CreationTime string            `human:"Creation Time" serialized:"creation_time"`
 	Name         string            `human:"Name" serialized:"name"`
 	Statement    string            `human:"Statement" serialized:"statement"`
 	ComputePool  string            `human:"Compute Pool" serialized:"compute_pool"`
@@ -45,12 +45,13 @@ func (c *command) newStatementCommand(cfg *config.Config) *cobra.Command {
 		cmd.AddCommand(c.newStatementUpdateCommand())
 	} else {
 		cmd.AddCommand(c.newStatementCreateCommandOnPrem())
-		cmd.AddCommand(c.newStatementDescribeCommandOnPrem())
 		cmd.AddCommand(c.newStatementDeleteCommandOnPrem())
+		cmd.AddCommand(c.newStatementDescribeCommandOnPrem())
 		cmd.AddCommand(c.newStatementListCommandOnPrem())
 		cmd.AddCommand(c.newStatementRescaleCommandOnPrem())
 		cmd.AddCommand(c.newStatementResumeCommandOnPrem())
 		cmd.AddCommand(c.newStatementStopCommandOnPrem())
+		cmd.AddCommand(c.newStatementWebUiForwardCommand())
 	}
 	cmd.AddCommand(c.newStatementExceptionCommand(cfg))
 

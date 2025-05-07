@@ -31,7 +31,7 @@ func (c *command) newStatementCreateCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("sql", "", "The Flink SQL statement.")
 	cmd.Flags().String("environment", "", "Name of the environment to create the Flink SQL statement.")
 	cmd.Flags().String("compute-pool", "", "The compute pool name to execute the Flink SQL statement.")
-	cmd.Flags().Uint16("parallelism", 1, "The parallelism the statement, default value is 1.")
+	cmd.Flags().Uint16("parallelism", 4, "The parallelism the statement, default value is 4.")
 	cmd.Flags().String("catalog", "", "The name of the default catalog.")
 	cmd.Flags().String("database", "", "The name of the default database.")
 	cmd.Flags().String("flink-configuration", "", "The file path to hold the Flink configuration for the statement.")
@@ -90,10 +90,10 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 
 	properties := map[string]string{}
 	if database != "" {
-		properties["database"] = database
+		properties["sql.current-database"] = database
 	}
 	if catalog != "" {
-		properties["catalog"] = catalog
+		properties["sql.current-catalog"] = catalog
 	}
 
 	configFilePath, err := cmd.Flags().GetString("flink-configuration")
@@ -119,22 +119,20 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 		}
 	}
 
-	statementSpec := cmfsdk.StatementSpec{
-		Statement:          sql,
-		Properties:         properties,
-		FlinkConfiguration: flinkConfiguration,
-		ComputePoolName:    computePool,
-		Parallelism:        int32(parallelism),
-		Stopped:            false,
-	}
-
-	metaData := cmfsdk.StatementMetadata{
-		Name: name,
-	}
-
 	statement := cmfsdk.Statement{
-		Metadata: metaData,
-		Spec:     statementSpec,
+		ApiVersion: "cmf.confluent.io/v1",
+		Kind:       "Statement",
+		Metadata: cmfsdk.StatementMetadata{
+			Name: name,
+		},
+		Spec: cmfsdk.StatementSpec{
+			Statement:          sql,
+			Properties:         properties,
+			FlinkConfiguration: flinkConfiguration,
+			ComputePoolName:    computePool,
+			Parallelism:        int32(parallelism),
+			Stopped:            false,
+		},
 	}
 
 	wait, err := cmd.Flags().GetBool("wait")
@@ -176,7 +174,7 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 		StatusDetail: outputStatement.Status.Detail,
 		Properties:   outputStatement.Spec.Properties,
 	})
-	table.Filter([]string{"CreationDate", "Name", "Statement", "ComputePool", "Status", "StatusDetail", "Properties"})
+	table.Filter([]string{"CreationTime", "Name", "Statement", "ComputePool", "Status", "StatusDetail", "Properties"})
 
 	return table.Print()
 }

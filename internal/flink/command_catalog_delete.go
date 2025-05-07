@@ -12,7 +12,7 @@ import (
 func (c *command) newCatalogDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <name-1> [name-2] ... [name-n]",
-		Short: "Delete one or more Flink Catalog.",
+		Short: "Delete one or more Flink Catalog in Confluent Platform.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.catalogDelete,
 	}

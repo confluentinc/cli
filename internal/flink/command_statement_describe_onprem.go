@@ -56,7 +56,7 @@ func (c *command) statementDescribeOnPrem(cmd *cobra.Command, args []string) err
 		StatusDetail: outputStatement.Status.Detail,
 		Properties:   outputStatement.Spec.Properties,
 	})
-	table.Filter([]string{"CreationDate", "Name", "Statement", "ComputePool", "Status", "StatusDetail", "Properties"})
+	table.Filter([]string{"CreationTime", "Name", "Statement", "ComputePool", "Status", "StatusDetail", "Properties"})
 
 	return table.Print()
 }

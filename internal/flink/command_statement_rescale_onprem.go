@@ -50,6 +50,8 @@ func (c *command) statementRescaleOnPrem(cmd *cobra.Command, args []string) erro
 	// Construct the statement to be stopped first
 	// TODO: Check with Fabian if this is enough or not
 	statementToStop := cmfsdk.Statement{
+		ApiVersion: "cmf.confluent.io/v1",
+		Kind:       "Statement",
 		Metadata: cmfsdk.StatementMetadata{
 			Name: name,
 		},
@@ -64,6 +66,8 @@ func (c *command) statementRescaleOnPrem(cmd *cobra.Command, args []string) erro
 
 	// Construct the statement to resume later with different parallelism
 	statementToResume := cmfsdk.Statement{
+		ApiVersion: "cmf.confluent.io/v1",
+		Kind:       "Statement",
 		Metadata: cmfsdk.StatementMetadata{
 			Name: name,
 		},

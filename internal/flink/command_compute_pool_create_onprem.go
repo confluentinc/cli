@@ -1,7 +1,6 @@
 package flink
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"gopkg.in/yaml.v3"
@@ -20,7 +19,7 @@ import (
 func (c *command) newComputePoolCreateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create <resourceFilePath>",
-		Short:       "Create a Flink Compute Pool.",
+		Short:       "Create a Flink Compute Pool in Confluent Platform.",
 		Args:        cobra.ExactArgs(1),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 		RunE:        c.computePoolCreateOnPrem,
@@ -46,7 +45,6 @@ func (c *command) computePoolCreateOnPrem(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	// Check if the compute pool already exists
 	resourceFilePath := args[0]
 	// Read file contents
 	data, err := os.ReadFile(resourceFilePath)
@@ -54,6 +52,7 @@ func (c *command) computePoolCreateOnPrem(cmd *cobra.Command, args []string) err
 		return fmt.Errorf("failed to read file: %v", err)
 	}
 
+	// TODO: Check with Fabian to ensure if we just need to resource file to initiate the compute pool creation
 	var computePool cmfsdk.ComputePool
 	ext := filepath.Ext(resourceFilePath)
 	switch ext {
@@ -68,10 +67,7 @@ func (c *command) computePoolCreateOnPrem(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	// Get the context from the command
-	ctx := context.WithValue(context.Background(), cmfsdk.ContextAccessToken, c.Context.GetAuthToken())
-
-	outputComputePool, err := client.CreateComputePool(ctx, environment, computePool)
+	outputComputePool, err := client.CreateComputePool(c.createContext(), environment, computePool)
 	if err != nil {
 		return err
 	}

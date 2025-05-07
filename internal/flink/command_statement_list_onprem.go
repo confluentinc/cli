@@ -3,8 +3,6 @@ package flink
 import (
 	"slices"
 	"strings"
-	"time"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -67,7 +65,7 @@ func (c *command) statementListOnPrem(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, statement := range statements {
 		list.Add(&statementOutOnPrem{
-			CreationDate: time.Now(), // Use actual timestamp from statement if available
+			CreationTime: statement.Metadata.CreationTimestamp,
 			Name:         statement.Metadata.Name,
 			Statement:    statement.Spec.Statement,
 			ComputePool:  statement.Spec.ComputePoolName,
