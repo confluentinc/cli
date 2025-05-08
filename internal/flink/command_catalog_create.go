@@ -3,11 +3,11 @@ package flink
 import (
 	"encoding/json"
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
@@ -16,49 +16,43 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *command) newApplicationUpdateCommand() *cobra.Command {
+func (c *command) newCatalogCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <resourceFilePath>",
-		Short: "Update a Flink application.",
+		Use:   "create <resourceFilePath>",
+		Short: "Create a Flink Catalog in Confluent Platform.",
+		Long:  "Create a Flink Catalog in Confluent Platform that provides metadata about tables and other database objects such as views and functions.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.applicationUpdate,
+		RunE:  c.catalogCreate,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment to update the Flink application.")
+	cmd.Flags().String("environment", "", "Name of the environment to create the Flink Catalog.")
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlagWithHumanRestricted(cmd)
-
-	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
 
 	return cmd
 }
 
-func (c *command) applicationUpdate(cmd *cobra.Command, args []string) error {
-	environment, err := cmd.Flags().GetString("environment")
-	if err != nil {
-		return err
-	}
+func (c *command) catalogCreate(cmd *cobra.Command, args []string) error {
+	resourceFilePath := args[0]
 
 	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	// Check if the application already exists
-	resourceFilePath := args[0]
 	// Read file contents
 	data, err := os.ReadFile(resourceFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to read file: %v", err)
 	}
 
-	var application cmfsdk.Application
+	var catalog cmfsdk.KafkaCatalog
 	ext := filepath.Ext(resourceFilePath)
 	switch ext {
 	case ".json":
-		err = json.Unmarshal(data, &application)
+		err = json.Unmarshal(data, &catalog)
 	case ".yaml", ".yml":
-		err = yaml.Unmarshal(data, &application)
+		err = yaml.Unmarshal(data, &catalog)
 	default:
 		return errors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
 	}
@@ -66,10 +60,10 @@ func (c *command) applicationUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	outputApplication, err := client.UpdateApplication(c.createContext(), environment, application)
+	outputCatalog, err := client.CreateCatalog(c.createContext(), catalog)
 	if err != nil {
 		return err
 	}
 
-	return output.SerializedOutput(cmd, outputApplication)
+	return output.SerializedOutput(cmd, outputCatalog)
 }
