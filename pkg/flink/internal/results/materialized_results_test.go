@@ -215,6 +215,96 @@ func (s *MaterializedStatementResultsTestSuite) TestCleanup() {
 	require.Equal(s.T(), 1, materializedStatementResults.GetTableSize())
 }
 
+func (s *MaterializedStatementResultsTestSuite) TestCleanupCacheBehaviorWithUpsertKeys() {
+	headers := []string{"ID", "Data"}
+	// Upsert on ID, capacity set to 2
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 2, &[]int32{0})
+
+	// R1
+	appendRow(&materializedStatementResults, types.Insert, types.Varchar, "K1", "A")
+	// R2
+	appendRow(&materializedStatementResults, types.Insert, types.Varchar, "K2", "X")
+	// Table: [ (K1,A), (K2,X) ], size 2. Cache[K1]:[ptrR1], Cache[K2]:[ptrR2]
+	require.Equal(s.T(), 2, materializedStatementResults.GetTableSize())
+
+	// R3
+	appendRow(&materializedStatementResults, types.Insert, types.Varchar, "K1", "B")
+	// Table before cleanup would be: [ (K1,A), (K2,X), (K1,B) ], size 3. Cache[K1]:[ptrR1, ptrR3], Cache[K2]:[ptrR2]
+	// Cleanup is triggered (3 > 2).
+	// removedElement is (K1,A). removedRowKey is "K1".
+	// Cache for "K1" is [ptrR1, ptrR3]. listPtrs[0] (ptrR1) == removedElement (ptrR1).
+	// Cache for "K1" becomes [ptrR3].
+	// Table becomes: [ (K2,X), (K1,B) ], size 2.
+	require.Equal(s.T(), 2, materializedStatementResults.GetTableSize(), "Table size after cleanup (1st)")
+	require.Equal(s.T(), [][]string{
+		{"K2", "X"}, // K2X was R2, K1A (R1) was removed
+		{"K1", "B"}, // K1B was R3
+	}, toSlice(&materializedStatementResults), "Table content after cleanup (1st)")
+
+	// R4
+	appendRow(&materializedStatementResults, types.Insert, types.Varchar, "K3", "Y")
+	// Table before cleanup: [ (K2,X), (K1,B), (K3,Y) ], size 3. Cache[K1]:[ptrR3], Cache[K2]:[ptrR2], Cache[K3]:[ptrR4]
+	// Cleanup is triggered (3 > 2).
+	// removedElement is (K2,X). removedRowKey is "K2".
+	// Cache for "K2" is [ptrR2]. listPtrs[0] (ptrR2) == removedElement (ptrR2).
+	// Cache for "K2" is deleted.
+	// Table becomes: [ (K1,B), (K3,Y) ], size 2.
+	require.Equal(s.T(), 2, materializedStatementResults.GetTableSize(), "Table size after cleanup (2nd)")
+	require.Equal(s.T(), [][]string{
+		{"K1", "B"}, // K1B was R3
+		{"K3", "Y"}, // K3Y was R4
+	}, toSlice(&materializedStatementResults), "Table content after cleanup (2nd)")
+
+	// Verify that a key whose only element was removed via cleanup is gone from cache (indirectly)
+	// Add K2 again, then K4, K2 should be cleaned up.
+	appendRow(&materializedStatementResults, types.Insert, types.Varchar, "K2", "Z") // R5. Table: [K1B, K3Y, K2Z]. Cleanup K1B. Table: [K3Y, K2Z]
+	appendRow(&materializedStatementResults, types.Insert, types.Varchar, "K4", "W") // R6. Table: [K3Y, K2Z, K4W]. Cleanup K3Y. Table: [K2Z, K4W]
+	require.Equal(s.T(), 2, materializedStatementResults.GetTableSize(), "Table size after more cleanups")
+	require.Equal(s.T(), [][]string{
+		{"K2", "Z"},
+		{"K4", "W"},
+	}, toSlice(&materializedStatementResults), "Table content after more cleanups")
+}
+
+func (s *MaterializedStatementResultsTestSuite) TestCleanupCacheBehaviorNoUpsertKeys() {
+	headers := []string{"Data1", "Data2"}
+	// No upsert columns (nil)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10, nil)
+
+	// Insert three identical rows. They will have the same cache key.
+	appendRow(&materializedStatementResults, types.Insert, types.Varchar, "V1", "V2") // R1
+	appendRow(&materializedStatementResults, types.Insert, types.Varchar, "V1", "V2") // R2
+	appendRow(&materializedStatementResults, types.Insert, types.Varchar, "V1", "V2") // R3
+
+	require.Equal(s.T(), 3, materializedStatementResults.GetTableSize(), "Table should have 3 identical rows")
+	require.Equal(s.T(), [][]string{
+		{"V1", "V2"},
+		{"V1", "V2"},
+		{"V1", "V2"},
+	}, toSlice(&materializedStatementResults))
+
+	// Delete operation should remove the last added identical row (R3)
+	// In non-upsert mode, a Delete operation still uses the rowKey which is based on all fields.
+	appendRow(&materializedStatementResults, types.Delete, types.Varchar, "V1", "V2")
+	require.Equal(s.T(), 2, materializedStatementResults.GetTableSize(), "Table size after deleting one of three identical rows")
+	require.Equal(s.T(), [][]string{
+		{"V1", "V2"},
+		{"V1", "V2"},
+	}, toSlice(&materializedStatementResults), "Table should have two identical rows left")
+
+	// Delete again, should remove R2
+	appendRow(&materializedStatementResults, types.Delete, types.Varchar, "V1", "V2")
+	require.Equal(s.T(), 1, materializedStatementResults.GetTableSize(), "Table size after deleting two of three identical rows")
+	require.Equal(s.T(), [][]string{
+		{"V1", "V2"},
+	}, toSlice(&materializedStatementResults), "Table should have one row left")
+
+	// Delete last one, should remove R1
+	appendRow(&materializedStatementResults, types.Delete, types.Varchar, "V1", "V2")
+	require.Equal(s.T(), 0, materializedStatementResults.GetTableSize(), "Table size after deleting all identical rows")
+	require.Empty(s.T(), toSlice(&materializedStatementResults), "Table should be empty")
+}
+
 func (s *MaterializedStatementResultsTestSuite) TestOnlyAllowAppendWithSameSchema() {
 	invalidHeaders := []string{"Count"}
 	row := types.StatementResultRow{
@@ -476,6 +566,80 @@ func (s *MaterializedStatementResultsTestSuite) TestUpsertColumns() {
 	require.Equal(s.T(), [][]string{
 		{"key1", "2", "key2"},
 	}, toSlice(&materializedStatementResults))
+}
+
+func (s *MaterializedStatementResultsTestSuite) TestUpsertColumnsMultipleInserts() {
+	headers := []string{"key", "val"}
+	upsertCols := &[]int32{0} // Upsert on "key"
+
+	// Part 1: Lifecycle with multiple entries for the same key (Inserts, UpdateAfter, Deletes)
+	results := types.NewMaterializedStatementResults(headers, 10, upsertCols)
+
+	// Inserts for keyA
+	appendRow(&results, types.Insert, types.Varchar, "keyA", "val1") // R1
+	appendRow(&results, types.Insert, types.Varchar, "keyA", "val2") // R2
+	appendRow(&results, types.Insert, types.Varchar, "keyA", "val3") // R3
+	require.Equal(s.T(), 3, results.GetTableSize(), "After 3 inserts for keyA")
+	require.Equal(s.T(), [][]string{
+		{"keyA", "val1"},
+		{"keyA", "val2"},
+		{"keyA", "val3"},
+	}, toSlice(&results), "Content after 3 inserts for keyA")
+
+	// UpdateAfter affects the last entry for keyA (R3)
+	appendRow(&results, types.UpdateAfter, types.Varchar, "keyA", "val3_updated")
+	require.Equal(s.T(), 3, results.GetTableSize(), "After UpdateAfter on keyA")
+	require.Equal(s.T(), [][]string{
+		{"keyA", "val1"},
+		{"keyA", "val2"},
+		{"keyA", "val3_updated"},
+	}, toSlice(&results), "Content after UpdateAfter on keyA")
+
+	// Deletes affect the last entry for keyA progressively
+	appendRow(&results, types.Delete, types.Varchar, "keyA", "any_val") // Deletes R3 (val3_updated)
+	require.Equal(s.T(), 2, results.GetTableSize(), "After 1st delete on keyA")
+	require.Equal(s.T(), [][]string{
+		{"keyA", "val1"},
+		{"keyA", "val2"},
+	}, toSlice(&results), "Content after 1st delete on keyA")
+
+	appendRow(&results, types.Delete, types.Varchar, "keyA", "any_val") // Deletes R2 (val2)
+	require.Equal(s.T(), 1, results.GetTableSize(), "After 2nd delete on keyA")
+	require.Equal(s.T(), [][]string{
+		{"keyA", "val1"},
+	}, toSlice(&results), "Content after 2nd delete on keyA")
+
+	appendRow(&results, types.Delete, types.Varchar, "keyA", "any_val") // Deletes R1 (val1)
+	require.Equal(s.T(), 0, results.GetTableSize(), "After 3rd delete on keyA")
+	require.Empty(s.T(), toSlice(&results), "Content after all deletes for keyA")
+
+	// Part 2: UpdateAfter on a new key acts as Insert
+	results = types.NewMaterializedStatementResults(headers, 10, upsertCols)
+	appendRow(&results, types.Insert, types.Varchar, "keyB", "valB1") // Pre-existing data
+
+	appendRow(&results, types.UpdateAfter, types.Varchar, "keyC", "valC1") // UA on new keyC
+	require.Equal(s.T(), 2, results.GetTableSize(), "After UA on new keyC")
+	require.Contains(s.T(), toSlice(&results), []string{"keyB", "valB1"})
+	require.Contains(s.T(), toSlice(&results), []string{"keyC", "valC1"})
+
+	// Part 3: UpdateBefore is ignored for table state in upsert mode
+	results = types.NewMaterializedStatementResults(headers, 10, upsertCols)
+	appendRow(&results, types.Insert, types.Varchar, "keyD", "valD1")
+	appendRow(&results, types.Insert, types.Varchar, "keyD", "valD2")
+
+	initialTableContents := toSlice(&results)
+	initialTableSize := results.GetTableSize()
+	initialChangelogSize := results.GetChangelogSize()
+
+	appendRow(&results, types.UpdateBefore, types.Varchar, "keyD", "valD2") // UB for last element
+	require.Equal(s.T(), initialTableSize, results.GetTableSize(), "Table size after UB (1st)")
+	require.Equal(s.T(), initialTableContents, toSlice(&results), "Table content after UB (1st)")
+	require.Equal(s.T(), initialChangelogSize+1, results.GetChangelogSize(), "Changelog size after UB (1st)")
+
+	appendRow(&results, types.UpdateBefore, types.Varchar, "keyD", "valD1") // UB for first element
+	require.Equal(s.T(), initialTableSize, results.GetTableSize(), "Table size after UB (2nd)")
+	require.Equal(s.T(), initialTableContents, toSlice(&results), "Table content after UB (2nd)")
+	require.Equal(s.T(), initialChangelogSize+2, results.GetChangelogSize(), "Changelog size after UB (2nd)")
 }
 
 func (s *MaterializedStatementResultsTestSuite) TestFallbackToEntireRowAsKeyIfUpsertColumnsFail() {
