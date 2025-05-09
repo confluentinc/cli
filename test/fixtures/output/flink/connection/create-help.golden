@@ -11,15 +11,15 @@ Create Flink connection "my-connection" in AWS us-west-2 for OpenAPI with endpoi
 Flags:
       --cloud string               REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
       --region string              REQUIRED: Cloud region for Flink (use "confluent flink region list" to see all).
-      --type string                REQUIRED: Specify the connection type as "openai", "azureml", "azureopenai", "bedrock", "sagemaker", "googleai", "vertexai", "mongodb", "elastic", "pinecone", or "couchbase".
+      --type string                REQUIRED: Specify the connection type as "openai", "azureml", "azureopenai", "bedrock", "sagemaker", "googleai", "vertexai", "mongodb", "elastic", "pinecone", "couchbase" or "confluent-jdbc".
       --endpoint string            REQUIRED: Specify endpoint for the connection.
       --api-key string             Specify API key for the type: "openai", "azureml", "azureopenai", "googleai", "elastic", or "pinecone".
       --aws-access-key string      Specify access key for the type: "bedrock" or "sagemaker".
       --aws-secret-key string      Specify secret key for the type: "bedrock" or "sagemaker".
       --aws-session-token string   Specify session token for the type: "bedrock" or "sagemaker".
       --service-key string         Specify service key for the type: "vertexai".
-      --username string            Specify username for the type: "mongodb" or "couchbase".
-      --password string            Specify password for the type: "mongodb" or "couchbase".
+      --username string            Specify username for the type: "mongodb", "confluent-jdbc" or "couchbase".
+      --password string            Specify password for the type: "mongodb", "confluent-jdbc" or "couchbase".
       --environment string         Environment ID.
   -o, --output string              Specify the output format as "human", "json", or "yaml". (default "human")
 
