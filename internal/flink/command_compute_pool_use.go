@@ -16,6 +16,7 @@ func (c *command) newComputePoolUseCommand() *cobra.Command {
 		Long:              "Choose a Flink compute pool to be used in subsequent commands which support passing a compute pool with the `--compute-pool` flag.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validComputePoolArgs),
+		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		RunE:              c.computePoolUse,
 	}
 }

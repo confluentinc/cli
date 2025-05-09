@@ -12,10 +12,11 @@ import (
 
 func (c *command) newComputePoolCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create <name>",
-		Short: "Create a Flink compute pool.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.computePoolCreate,
+		Use:         "create <name>",
+		Short:       "Create a Flink compute pool.",
+		Args:        cobra.ExactArgs(1),
+		RunE:        c.computePoolCreate,
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create Flink compute pool "my-compute-pool" in AWS with 5 CFUs.`,
