@@ -4,6 +4,7 @@ Usage:
   confluent connect [command]
 
 Available Commands:
+  artifact      Manage Connect artifacts.
   cluster       Manage Connect clusters.
   custom-plugin Manage custom connector plugins.
   event         Manage log events for managed connectors.
