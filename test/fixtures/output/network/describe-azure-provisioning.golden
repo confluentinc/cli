@@ -1,11 +1,14 @@
-+----------------------------+--------------------+
-| ID                         | n-abcde6           |
-| Environment                | env-00000          |
-| Name                       | prod-azure-eastus2 |
-| Cloud                      | AZURE              |
-| Region                     | eastus2            |
-| CIDR                       | 10.0.0.0/16        |
-| Zones                      | 1, 2, 3            |
-| Phase                      | PROVISIONING       |
-| Supported Connection Types | PEERING            |
-+----------------------------+--------------------+
++----------------------------+--------------------------------+
+| ID                         | n-abcde6                       |
+| Environment                | env-00000                      |
+| Name                       | prod-azure-eastus2             |
+| Cloud                      | AZURE                          |
+| Region                     | eastus2                        |
+| CIDR                       | 10.0.0.0/16                    |
+| Zones                      | 1, 2, 3                        |
+| Phase                      | PROVISIONING                   |
+| Supported Connection Types | PEERING                        |
+| Zone Info                  | 1=10.200.0.0/27,               |
+|                            | 2=10.200.0.32/27,              |
+|                            | 3=10.200.0.64/27               |
++----------------------------+--------------------------------+

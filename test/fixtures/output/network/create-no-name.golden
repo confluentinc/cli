@@ -1,10 +1,13 @@
-+----------------------------+------------------------------+
-| ID                         | n-abcde1                     |
-| Environment                | env-00000                    |
-| Cloud                      | AWS                          |
-| Region                     | us-west-2                    |
-| CIDR                       | 10.1.0.0/16                  |
-| Zones                      | usw2-az1, usw2-az2, usw2-az4 |
-| Phase                      | PROVISIONING                 |
-| Supported Connection Types | TRANSITGATEWAY               |
-+----------------------------+------------------------------+
++----------------------------+--------------------------------+
+| ID                         | n-abcde1                       |
+| Environment                | env-00000                      |
+| Cloud                      | AWS                            |
+| Region                     | us-west-2                      |
+| CIDR                       | 10.1.0.0/16                    |
+| Zones                      | usw2-az1, usw2-az2, usw2-az4   |
+| Phase                      | PROVISIONING                   |
+| Supported Connection Types | TRANSITGATEWAY                 |
+| Zone Info                  | usw2-az1=10.1.0.0/27,          |
+|                            | usw2-az2=10.1.0.32/27,         |
+|                            | usw2-az4=10.1.0.64/27          |
++----------------------------+--------------------------------+
