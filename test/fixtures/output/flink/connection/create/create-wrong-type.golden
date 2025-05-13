@@ -1,4 +1,4 @@
 Error: invalid connection type OPENAI
 
 Suggestions:
-    Specify the connection type as "openai", "azureml", "azureopenai", "bedrock", "sagemaker", "googleai", "vertexai", "mongodb", "elastic", "pinecone", "couchbase" or "confluent-jdbc".
+    Specify the connection type as "openai", "azureml", "azureopenai", "bedrock", "sagemaker", "googleai", "vertexai", "mongodb", "elastic", "pinecone", "couchbase", or "confluent-jdbc".
