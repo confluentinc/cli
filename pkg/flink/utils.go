@@ -14,7 +14,7 @@ var (
 		"elastic":        {"api-key"},
 		"pinecone":       {"api-key"},
 		"couchbase":      {"username", "password"},
-		"confluent-jdbc": {"username", "password"},
+		"confluent-jdbc": {"username", "password", "auth"},
 	}
 
 	ConnectionSecretTypeMapping = map[string][]string{
@@ -25,6 +25,7 @@ var (
 		"service-key":       {"vertexai"},
 		"username":          {"mongodb", "couchbase", "confluent-jdbc"},
 		"password":          {"mongodb", "couchbase", "confluent-jdbc"},
+		"auth":              {"confluent-jdbc"},
 	}
 
 	ConnectionRequiredSecretMapping = map[string][]string{
@@ -49,5 +50,6 @@ var (
 		"service-key":       "SERVICE_KEY",
 		"username":          "USERNAME",
 		"password":          "PASSWORD",
+		"auth":              "AUTH",
 	}
 )
