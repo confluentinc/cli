@@ -13,9 +13,10 @@ import (
 	"time"
 
 	"github.com/bradleyjkemp/cupaloy/v2"
-	"github.com/confluentinc/go-prompt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/go-prompt"
 
 	pauth "github.com/confluentinc/cli/v4/pkg/auth"
 )
