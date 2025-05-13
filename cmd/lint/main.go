@@ -218,6 +218,7 @@ var vocabWords = []string{
 	"codec",
 	"config",
 	"configs",
+	"confluent-jdbc",
 	"consumer.config",
 	"couchbase",
 	"cpp",
