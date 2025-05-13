@@ -250,6 +250,7 @@ var vocabWords = []string{
 	"io",
 	"ip",
 	"ips",
+	"jdbc",
 	"json",
 	"jit",
 	"jsonschema",

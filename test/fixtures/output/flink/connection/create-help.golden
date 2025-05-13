@@ -18,7 +18,7 @@ Flags:
       --aws-secret-key string      Specify secret key for the type: "bedrock" or "sagemaker".
       --aws-session-token string   Specify session token for the type: "bedrock" or "sagemaker".
       --service-key string         Specify service key for the type: "vertexai".
-      --auth string                Specify auth type for: "confluent-jdbc".
+      --auth string                Specify auth for the type: "confluent-jdbc"
       --username string            Specify username for the type: "mongodb", "couchbase", or "confluent-jdbc".
       --password string            Specify password for the type: "mongodb", "couchbase", or "confluent-jdbc".
       --environment string         Environment ID.
