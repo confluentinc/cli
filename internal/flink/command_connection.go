@@ -87,7 +87,6 @@ func AddConnectionSecretFlags(cmd *cobra.Command) {
 	cmd.Flags().String("service-key", "", fmt.Sprintf("Specify service key for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["service-key"], "or")))
 	cmd.Flags().String("username", "", fmt.Sprintf("Specify username for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["username"], "or")))
 	cmd.Flags().String("password", "", fmt.Sprintf("Specify password for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["password"], "or")))
-	cmd.Flags().String("auth", "", fmt.Sprintf("Specify auth for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["auth"], "or")))
 }
 
 func validateConnectionType(connectionType string) error {

@@ -18,7 +18,6 @@ Flags:
       --service-key string         Specify service key for the type: "vertexai".
       --username string            Specify username for the type: "mongodb", "couchbase", or "confluent-jdbc".
       --password string            Specify password for the type: "mongodb", "couchbase", or "confluent-jdbc".
-      --auth string                Specify auth for the type: "confluent-jdbc".
       --environment string         Environment ID.
   -o, --output string              Specify the output format as "human", "json", or "yaml". (default "human")
 
