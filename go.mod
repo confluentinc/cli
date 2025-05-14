@@ -283,4 +283,4 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-replace github.com/confluentinc/cmf-sdk-go => github.com/confluentinc/airlock-cmf-sdk-go v0.0.0-20250328131355-6fcb64b3eb77
+replace github.com/confluentinc/cmf-sdk-go => /Users/channingdong/cmf-sdk-go

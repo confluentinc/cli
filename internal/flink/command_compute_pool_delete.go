@@ -83,7 +83,7 @@ func validateAndConfirmComputePoolDeletion(cmd *cobra.Command, args []string, ch
 	return deletion.ConfirmPrompt(cmd, confirmComputePoolDeletionString(args))
 }
 
-func (c *computePoolCmd) removePoolFromConfigIfCurrent(deletedIds []string) error {
+func (c *command) removePoolFromConfigIfCurrent(deletedIds []string) error {
 	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
 	for _, id := range deletedIds {
 		if id == c.Context.GetCurrentFlinkComputePool() {

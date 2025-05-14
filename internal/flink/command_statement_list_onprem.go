@@ -3,6 +3,7 @@ package flink
 import (
 	"slices"
 	"strings"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -65,13 +66,13 @@ func (c *command) statementListOnPrem(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, statement := range statements {
 		list.Add(&statementOutOnPrem{
-			CreationTime: statement.Metadata.CreationTimestamp,
+			CreationDate: statement.Metadata.GetCreationTimestamp(),
 			Name:         statement.Metadata.Name,
 			Statement:    statement.Spec.Statement,
 			ComputePool:  statement.Spec.ComputePoolName,
 			Status:       statement.Status.Phase,
-			StatusDetail: statement.Status.Detail,
-			Properties:   statement.Spec.Properties,
+			StatusDetail: statement.Status.GetDetail(),
+			Properties:   statement.Spec.GetProperties(),
 		})
 	}
 	return list.Print()

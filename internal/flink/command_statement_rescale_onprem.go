@@ -48,7 +48,6 @@ func (c *command) statementRescaleOnPrem(cmd *cobra.Command, args []string) erro
 	}
 
 	// Construct the statement to be stopped first
-	// TODO: Check with Fabian if this is enough or not
 	statementToStop := cmfsdk.Statement{
 		ApiVersion: "cmf.confluent.io/v1",
 		Kind:       "Statement",
@@ -56,7 +55,7 @@ func (c *command) statementRescaleOnPrem(cmd *cobra.Command, args []string) erro
 			Name: name,
 		},
 		Spec: cmfsdk.StatementSpec{
-			Stopped: true,
+			Stopped: cmfsdk.PtrBool(true),
 		},
 	}
 
@@ -72,8 +71,8 @@ func (c *command) statementRescaleOnPrem(cmd *cobra.Command, args []string) erro
 			Name: name,
 		},
 		Spec: cmfsdk.StatementSpec{
-			Stopped:     false,
-			Parallelism: parallelism,
+			Stopped:     cmfsdk.PtrBool(false),
+			Parallelism: cmfsdk.PtrInt32(parallelism),
 		},
 	}
 

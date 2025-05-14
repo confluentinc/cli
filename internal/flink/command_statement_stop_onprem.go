@@ -49,7 +49,7 @@ func (c *command) statementStopOnPrem(cmd *cobra.Command, args []string) error {
 			Name: name,
 		},
 		Spec: cmfsdk.StatementSpec{
-			Stopped: true,
+			Stopped: cmfsdk.PtrBool(true),
 		},
 	}
 

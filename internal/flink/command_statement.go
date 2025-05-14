@@ -20,7 +20,7 @@ type statementOut struct {
 }
 
 type statementOutOnPrem struct {
-	CreationTime string            `human:"Creation Time" serialized:"creation_time"`
+	CreationDate string            `human:"Creation Date" serialized:"creation_date"`
 	Name         string            `human:"Name" serialized:"name"`
 	Statement    string            `human:"Statement" serialized:"statement"`
 	ComputePool  string            `human:"Compute Pool" serialized:"compute_pool"`

@@ -10,7 +10,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
@@ -18,6 +17,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/auth"
 	perrors "github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/utils"
+	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
 type OnPremCMFRestFlagValues struct {
@@ -55,26 +55,46 @@ func NewCmfRestHttpClient(restFlags *OnPremCMFRestFlagValues) (*http.Client, err
 	return httpClient, nil
 }
 
-func NewCmfRestClient(cfg *cmfsdk.Configuration, restFlags *OnPremCMFRestFlagValues) (*CmfRestClient, error) {
+func NewCmfRestClient(cfg *cmfsdk.Configuration, restFlags *OnPremCMFRestFlagValues, isTest bool) (*CmfRestClient, error) {
 	var err error
 	cmfRestClient := &CmfRestClient{}
 
-	// Set the base path if it's not set (it'll be already set in case of tests).
-	if cfg.BasePath == "" {
-		if restFlags.url == "" {
-			return nil, perrors.NewErrorWithSuggestions("url is required", "Specify a URL with `--url` or set the variable \"CONFLUENT_CMF_URL\" in place of this flag.")
+	// Set server URL based on test or flag input
+	if isTest {
+		cfg.Servers = cmfsdk.ServerConfigurations{
+			{
+				URL:         testserver.TestCmfUrl.String() + "/cmf/api/v1",
+				Description: "Test CMF Server",
+			},
 		}
-		cfg.BasePath, err = url.JoinPath(restFlags.url, "/cmf/api/v1")
+	} else {
+		if restFlags.url == "" {
+			return nil, perrors.NewErrorWithSuggestions(
+				"url is required",
+				"Specify a URL with `--url` or set the variable \"CONFLUENT_CMF_URL\".",
+			)
+		}
+
+		serverURL, err := url.JoinPath(restFlags.url, "/cmf/api/v1")
 		if err != nil {
 			return nil, err
 		}
+
+		cfg.Servers = cmfsdk.ServerConfigurations{
+			{
+				URL:         serverURL,
+				Description: "Configured CMF Server",
+			},
+		}
 	}
 
+	// Set HTTP client
 	cfg.HTTPClient, err = NewCmfRestHttpClient(restFlags)
 	if err != nil {
 		return nil, err
 	}
 
+	// Build client
 	client := cmfsdk.NewAPIClient(cfg)
 	cmfRestClient.APIClient = client
 	return cmfRestClient, nil
@@ -122,95 +142,89 @@ func ResolveOnPremCmfRestFlags(cmd *cobra.Command) (*OnPremCMFRestFlagValues, er
 	return values, nil
 }
 
-// Create an application in the specified environment.
+// CreateApplication Create a Flink application in the specified environment.
 // Internally, since the call for Create and Update is the same, we check if the environment doesn't contain said application before creation.
-func (cmfClient *CmfRestClient) CreateApplication(ctx context.Context, environment string, application cmfsdk.Application) (cmfsdk.Application, error) {
+func (cmfClient *CmfRestClient) CreateApplication(ctx context.Context, environment string, application cmfsdk.FlinkApplication) (cmfsdk.FlinkApplication, error) {
 	// Get the name of the application
 	applicationName := application.Metadata["name"].(string)
-	_, httpResponse, _ := cmfClient.DefaultApi.GetApplication(ctx, environment, applicationName)
+	_, httpResponse, _ := cmfClient.DefaultApi.GetApplication(ctx, environment, applicationName).Execute()
 	// check if the application exists by checking the status code
 	if httpResponse != nil && httpResponse.StatusCode == http.StatusOK {
-		return cmfsdk.Application{}, fmt.Errorf(`application "%s" already exists in the environment "%s"`, applicationName, environment)
+		return cmfsdk.FlinkApplication{}, fmt.Errorf(`application "%s" already exists in the environment "%s"`, applicationName, environment)
 	}
 
-	outputApplication, httpResponse, err := cmfClient.DefaultApi.CreateOrUpdateApplication(ctx, environment, application)
+	outputApplication, httpResponse, err := cmfClient.DefaultApi.CreateOrUpdateApplication(ctx, environment).FlinkApplication(application).Execute()
 	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
-		return cmfsdk.Application{}, fmt.Errorf(`failed to create application "%s" in the environment "%s": %s`, applicationName, environment, parsedErr)
+		return cmfsdk.FlinkApplication{}, fmt.Errorf(`failed to create application "%s" in the environment "%s": %s`, applicationName, environment, parsedErr)
 	}
 	return outputApplication, nil
 }
 
 func (cmfClient *CmfRestClient) DeleteApplication(ctx context.Context, environment, application string) error {
-	httpResp, err := cmfClient.DefaultApi.DeleteApplication(ctx, environment, application)
+	httpResp, err := cmfClient.DefaultApi.DeleteApplication(ctx, environment, application).Execute()
 	return parseSdkError(httpResp, err)
 }
 
-func (cmfClient *CmfRestClient) DescribeApplication(ctx context.Context, environment, application string) (cmfsdk.Application, error) {
-	cmfApplication, httpResponse, err := cmfClient.DefaultApi.GetApplication(ctx, environment, application)
+func (cmfClient *CmfRestClient) DescribeApplication(ctx context.Context, environment, application string) (cmfsdk.FlinkApplication, error) {
+	cmfApplication, httpResponse, err := cmfClient.DefaultApi.GetApplication(ctx, environment, application).Execute()
 	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
-		return cmfsdk.Application{}, fmt.Errorf(`failed to describe application "%s" in the environment "%s": %s`, application, environment, parsedErr)
+		return cmfsdk.FlinkApplication{}, fmt.Errorf(`failed to describe application "%s" in the environment "%s": %s`, application, environment, parsedErr)
 	}
 	return cmfApplication, nil
 }
 
-func (cmfClient *CmfRestClient) ListApplications(ctx context.Context, environment string) ([]cmfsdk.Application, error) {
-	applications := make([]cmfsdk.Application, 0)
-	currentPageNumber := 0
-	done := false
+func (cmfClient *CmfRestClient) ListApplications(ctx context.Context, environment string) ([]cmfsdk.FlinkApplication, error) {
+	applications := make([]cmfsdk.FlinkApplication, 0)
 	// 100 is an arbitrary page size we've chosen.
+	var currentPageNumber int32 = 0
 	const pageSize = 100
-
-	pagingOptions := &cmfsdk.GetApplicationsOpts{
-		Page: optional.NewInt32(int32(currentPageNumber)),
-		Size: optional.NewInt32(pageSize),
-	}
+	done := false
 
 	for !done {
-		applicationsPage, httpResponse, err := cmfClient.DefaultApi.GetApplications(ctx, environment, pagingOptions)
+		applicationsPage, httpResponse, err := cmfClient.DefaultApi.GetApplications(ctx, environment).Page(currentPageNumber).Size(pageSize).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list applications in the environment "%s": %s`, environment, parsedErr)
 		}
-		applications = append(applications, applicationsPage.Items...)
-		currentPageNumber, done = extractPageOptions(len(applicationsPage.Items), currentPageNumber)
-		pagingOptions.Page = optional.NewInt32(int32(currentPageNumber))
+		applications = append(applications, applicationsPage.GetItems()...)
+		currentPageNumber, done = extractPageOptions(len(applicationsPage.GetItems()), currentPageNumber)
 	}
 
 	return applications, nil
 }
 
-// Update an application in the specified environment.
+// UpdateApplication Update an application in the specified environment.
 // Internally, since the call for Create and Update is the same, we check if the environment contains said application before updation.
-func (cmfClient *CmfRestClient) UpdateApplication(ctx context.Context, environment string, application cmfsdk.Application) (cmfsdk.Application, error) {
+func (cmfClient *CmfRestClient) UpdateApplication(ctx context.Context, environment string, application cmfsdk.FlinkApplication) (cmfsdk.FlinkApplication, error) {
 	// Get the name of the application
 	applicationName := application.Metadata["name"].(string)
-	_, httpResponse, err := cmfClient.DefaultApi.GetApplication(ctx, environment, applicationName)
+	_, httpResponse, err := cmfClient.DefaultApi.GetApplication(ctx, environment, applicationName).Execute()
 	// check if the application exists by checking the status code
 	if httpResponse != nil && httpResponse.StatusCode == http.StatusNotFound {
-		return cmfsdk.Application{}, fmt.Errorf(`application "%s" does not exist in the environment "%s"`, applicationName, environment)
+		return cmfsdk.FlinkApplication{}, fmt.Errorf(`application "%s" does not exist in the environment "%s"`, applicationName, environment)
 	} else if httpResponse == nil || httpResponse.StatusCode != http.StatusOK {
 		// Any failure other than 404 is an error in the response and shouldn't be treated as the application not existing.
 		parsedErr := parseSdkError(httpResponse, err)
-		return cmfsdk.Application{}, fmt.Errorf(`failed to update application "%s" in the environment "%s": %s`, applicationName, environment, parsedErr)
+		return cmfsdk.FlinkApplication{}, fmt.Errorf(`failed to update application "%s" in the environment "%s": %s`, applicationName, environment, parsedErr)
 	}
 
-	outputApplication, httpResponse, err := cmfClient.DefaultApi.CreateOrUpdateApplication(ctx, environment, application)
+	outputApplication, httpResponse, err := cmfClient.DefaultApi.CreateOrUpdateApplication(ctx, environment).FlinkApplication(application).Execute()
 	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
-		return cmfsdk.Application{}, fmt.Errorf(`failed to update application "%s" in the environment "%s": %s`, applicationName, environment, parsedErr)
+		return cmfsdk.FlinkApplication{}, fmt.Errorf(`failed to update application "%s" in the environment "%s": %s`, applicationName, environment, parsedErr)
 	}
 	return outputApplication, nil
 }
 
-// Create an environment.
+// CreateEnvironment Create an environment.
 // Internally, since the call for Create and Update is the same, we check if the environment exists before creation.
 func (cmfClient *CmfRestClient) CreateEnvironment(ctx context.Context, postEnvironment cmfsdk.PostEnvironment) (cmfsdk.Environment, error) {
 	environmentName := postEnvironment.Name
-	_, httpResponse, _ := cmfClient.DefaultApi.GetEnvironment(ctx, environmentName)
+	_, httpResponse, _ := cmfClient.DefaultApi.GetEnvironment(ctx, environmentName).Execute()
 	// check if the environment exists by checking the status code
 	if httpResponse != nil && httpResponse.StatusCode == http.StatusOK {
 		return cmfsdk.Environment{}, fmt.Errorf(`environment "%s" already exists`, environmentName)
 	}
 
-	outputEnvironment, httpResponse, err := cmfClient.DefaultApi.CreateOrUpdateEnvironment(ctx, postEnvironment)
+	outputEnvironment, httpResponse, err := cmfClient.DefaultApi.CreateOrUpdateEnvironment(ctx).PostEnvironment(postEnvironment).Execute()
 	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 		return cmfsdk.Environment{}, fmt.Errorf(`failed to create environment "%s": %s`, environmentName, parsedErr)
 	}
@@ -218,12 +232,12 @@ func (cmfClient *CmfRestClient) CreateEnvironment(ctx context.Context, postEnvir
 }
 
 func (cmfClient *CmfRestClient) DeleteEnvironment(ctx context.Context, environment string) error {
-	httpResp, err := cmfClient.DefaultApi.DeleteEnvironment(ctx, environment)
+	httpResp, err := cmfClient.DefaultApi.DeleteEnvironment(ctx, environment).Execute()
 	return parseSdkError(httpResp, err)
 }
 
 func (cmfClient *CmfRestClient) DescribeEnvironment(ctx context.Context, environment string) (cmfsdk.Environment, error) {
-	cmfEnvironment, httpResponse, err := cmfClient.DefaultApi.GetEnvironment(ctx, environment)
+	cmfEnvironment, httpResponse, err := cmfClient.DefaultApi.GetEnvironment(ctx, environment).Execute()
 
 	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 		return cmfsdk.Environment{}, fmt.Errorf(`failed to describe environment "%s": %s`, environment, parsedErr)
@@ -232,39 +246,32 @@ func (cmfClient *CmfRestClient) DescribeEnvironment(ctx context.Context, environ
 	return cmfEnvironment, nil
 }
 
-// Run through all the pages until we get an empty page, in that case, return.
+// ListEnvironments Run through all the pages until we get an empty page, in that case, return.
 func (cmfClient *CmfRestClient) ListEnvironments(ctx context.Context) ([]cmfsdk.Environment, error) {
 	environments := make([]cmfsdk.Environment, 0)
-	currentPageNumber := 0
 	done := false
 	// 100 is an arbitrary page size we've chosen.
 	const pageSize = 100
-
-	pagingOptions := &cmfsdk.GetEnvironmentsOpts{
-		Page: optional.NewInt32(int32(currentPageNumber)),
-		// 100 is an arbitrary page size we've chosen.
-		Size: optional.NewInt32(pageSize),
-	}
+	var currentPageNumber int32 = 0
 
 	for !done {
-		environmentsPage, httpResponse, err := cmfClient.DefaultApi.GetEnvironments(ctx, pagingOptions)
+		environmentsPage, httpResponse, err := cmfClient.DefaultApi.GetEnvironments(ctx).Page(currentPageNumber).Size(pageSize).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf("failed to list environments: %s", parsedErr)
 		}
 
-		environments = append(environments, environmentsPage.Items...)
-		currentPageNumber, done = extractPageOptions(len(environmentsPage.Items), currentPageNumber)
-		pagingOptions.Page = optional.NewInt32(int32(currentPageNumber))
+		environments = append(environments, environmentsPage.GetItems()...)
+		currentPageNumber, done = extractPageOptions(len(environmentsPage.GetItems()), currentPageNumber)
 	}
 
 	return environments, nil
 }
 
-// Create an environment.
+// UpdateEnvironment Create an environment.
 // Internally, since the call for Create and Update is the same, we check if the environment exists before updation.
 func (cmfClient *CmfRestClient) UpdateEnvironment(ctx context.Context, postEnvironment cmfsdk.PostEnvironment) (cmfsdk.Environment, error) {
 	environmentName := postEnvironment.Name
-	_, httpResponse, err := cmfClient.DefaultApi.GetEnvironment(ctx, environmentName)
+	_, httpResponse, err := cmfClient.DefaultApi.GetEnvironment(ctx, environmentName).Execute()
 	// check if the environment exists by checking the status code
 	if httpResponse != nil && httpResponse.StatusCode == http.StatusNotFound {
 		return cmfsdk.Environment{}, fmt.Errorf(`environment "%s" does not exist`, environmentName)
@@ -274,7 +281,7 @@ func (cmfClient *CmfRestClient) UpdateEnvironment(ctx context.Context, postEnvir
 		return cmfsdk.Environment{}, fmt.Errorf(`failed to update environment "%s": %s`, environmentName, parsedErr)
 	}
 
-	outputEnvironment, httpResponse, err := cmfClient.DefaultApi.CreateOrUpdateEnvironment(ctx, postEnvironment)
+	outputEnvironment, httpResponse, err := cmfClient.DefaultApi.CreateOrUpdateEnvironment(ctx).PostEnvironment(postEnvironment).Execute()
 	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 		return cmfsdk.Environment{}, fmt.Errorf(`failed to update environment "%s": %s`, environmentName, parsedErr)
 	}
@@ -286,7 +293,7 @@ func (cmfClient *CmfRestClient) CreateComputePool(ctx context.Context, environme
 	if computePoolName == "" {
 		return cmfsdk.ComputePool{}, fmt.Errorf("compute pool name is required")
 	}
-	outputComputePool, httpResponse, err := cmfClient.DefaultApi.CreateComputePool(ctx, environment, computePool)
+	outputComputePool, httpResponse, err := cmfClient.DefaultApi.CreateComputePool(ctx, environment).ComputePool(computePool).Execute()
 	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 		return cmfsdk.ComputePool{}, fmt.Errorf(`failed to create compute pool "%s" in the environment "%s": %s`, computePoolName, environment, parsedErr)
 	}
@@ -294,12 +301,12 @@ func (cmfClient *CmfRestClient) CreateComputePool(ctx context.Context, environme
 }
 
 func (cmfClient *CmfRestClient) DeleteComputePool(ctx context.Context, environment, computePool string) error {
-	httpResp, err := cmfClient.DefaultApi.DeleteComputePool(ctx, environment, computePool)
+	httpResp, err := cmfClient.DefaultApi.DeleteComputePool(ctx, environment, computePool).Execute()
 	return parseSdkError(httpResp, err)
 }
 
 func (cmfClient *CmfRestClient) DescribeComputePool(ctx context.Context, environment, computePool string) (cmfsdk.ComputePool, error) {
-	cmfComputePool, httpResponse, err := cmfClient.DefaultApi.GetComputePool(ctx, environment, computePool)
+	cmfComputePool, httpResponse, err := cmfClient.DefaultApi.GetComputePool(ctx, environment, computePool).Execute()
 	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 		return cmfsdk.ComputePool{}, fmt.Errorf(`failed to describe compute pool "%s" in the environment "%s": %s`, computePool, environment, parsedErr)
 	}
@@ -308,24 +315,18 @@ func (cmfClient *CmfRestClient) DescribeComputePool(ctx context.Context, environ
 
 func (cmfClient *CmfRestClient) ListComputePools(ctx context.Context, environment string) ([]cmfsdk.ComputePool, error) {
 	computePools := make([]cmfsdk.ComputePool, 0)
-	currentPageNumber := 0
 	done := false
 	// 100 is an arbitrary page size we've chosen.
 	const pageSize = 100
-
-	pagingOptions := &cmfsdk.GetComputePoolsOpts{
-		Page: optional.NewInt32(int32(currentPageNumber)),
-		Size: optional.NewInt32(pageSize),
-	}
+	var currentPageNumber int32 = 0
 
 	for !done {
-		computePoolsPage, httpResponse, err := cmfClient.DefaultApi.GetComputePools(ctx, environment, pagingOptions)
+		computePoolsPage, httpResponse, err := cmfClient.DefaultApi.GetComputePools(ctx, environment).Page(currentPageNumber).Size(pageSize).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list compute pools in the environment "%s": %s`, environment, parsedErr)
 		}
-		computePools = append(computePools, computePoolsPage.Items...)
-		currentPageNumber, done = extractPageOptions(len(computePoolsPage.Items), currentPageNumber)
-		pagingOptions.Page = optional.NewInt32(int32(currentPageNumber))
+		computePools = append(computePools, computePoolsPage.GetItems()...)
+		currentPageNumber, done = extractPageOptions(len(computePoolsPage.GetItems()), currentPageNumber)
 	}
 
 	return computePools, nil
@@ -333,7 +334,7 @@ func (cmfClient *CmfRestClient) ListComputePools(ctx context.Context, environmen
 
 func (cmfClient *CmfRestClient) CreateStatement(ctx context.Context, environment string, statement cmfsdk.Statement) (cmfsdk.Statement, error) {
 	statementName := statement.Metadata.Name
-	outputStatement, httpResponse, err := cmfClient.DefaultApi.CreateStatement(ctx, environment, statement)
+	outputStatement, httpResponse, err := cmfClient.DefaultApi.CreateStatement(ctx, environment).Statement(statement).Execute()
 	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 		return cmfsdk.Statement{}, fmt.Errorf(`failed to create Flink SQL statement "%s" in the environment "%s": %s`, statementName, environment, parsedErr)
 	}
@@ -341,7 +342,7 @@ func (cmfClient *CmfRestClient) CreateStatement(ctx context.Context, environment
 }
 
 func (cmfClient *CmfRestClient) GetStatement(ctx context.Context, environment, name string) (cmfsdk.Statement, error) {
-	statement, httpResponse, err := cmfClient.DefaultApi.GetStatement(ctx, environment, name)
+	statement, httpResponse, err := cmfClient.DefaultApi.GetStatement(ctx, environment, name).Execute()
 	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 		return cmfsdk.Statement{}, fmt.Errorf(`failed to get Flink SQL statement "%s" in the environment "%s": %s`, name, environment, parsedErr)
 	}
@@ -349,7 +350,7 @@ func (cmfClient *CmfRestClient) GetStatement(ctx context.Context, environment, n
 }
 
 func (cmfClient *CmfRestClient) UpdateStatement(ctx context.Context, environment, statementName string, statement cmfsdk.Statement) error {
-	httpResponse, err := cmfClient.DefaultApi.UpdateStatement(ctx, environment, statementName, statement)
+	httpResponse, err := cmfClient.DefaultApi.UpdateStatement(ctx, environment, statementName).Statement(statement).Execute()
 	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 		return fmt.Errorf(`failed to update statement "%s" in the environment "%s": %s`, statementName, environment, parsedErr)
 	}
@@ -357,44 +358,39 @@ func (cmfClient *CmfRestClient) UpdateStatement(ctx context.Context, environment
 }
 
 func (cmfClient *CmfRestClient) DeleteStatement(ctx context.Context, environment, statement string) error {
-	httpResp, err := cmfClient.DefaultApi.DeleteStatement(ctx, environment, statement)
+	httpResp, err := cmfClient.DefaultApi.DeleteStatement(ctx, environment, statement).Execute()
 	return parseSdkError(httpResp, err)
 }
 
 func (cmfClient *CmfRestClient) ListStatements(ctx context.Context, environment, computePool, status string) ([]cmfsdk.Statement, error) {
 	statements := make([]cmfsdk.Statement, 0)
-	currentPageNumber := 0
 	done := false
 	// 100 is an arbitrary page size we've chosen.
 	const pageSize = 100
+	var currentPageNumber int32 = 0
 
-	pagingOptions := &cmfsdk.GetStatementsOpts{
-		Page: optional.NewInt32(int32(currentPageNumber)),
-		Size: optional.NewInt32(pageSize),
-	}
+	request := cmfClient.DefaultApi.GetStatements(ctx, environment)
 	if computePool != "" {
-		pagingOptions.ComputePool = optional.NewString(computePool)
+		request = request.ComputePool(computePool)
 	}
 	if status != "" {
-		pagingOptions.Phase = optional.NewString(status)
+		request = request.Phase(status)
 	}
 
 	for !done {
-		statementsPage, httpResponse, err := cmfClient.DefaultApi.GetStatements(ctx, environment, pagingOptions)
+		statementsPage, httpResponse, err := request.Page(currentPageNumber).Size(pageSize).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list statements in the environment "%s": %s`, environment, parsedErr)
 		}
-		statements = append(statements, statementsPage.Items...)
-		currentPageNumber, done = extractPageOptions(len(statementsPage.Items), currentPageNumber)
-		pagingOptions.Page = optional.NewInt32(int32(currentPageNumber))
+		statements = append(statements, statementsPage.GetItems()...)
+		currentPageNumber, done = extractPageOptions(len(statementsPage.GetItems()), currentPageNumber)
 	}
 
 	return statements, nil
 }
 
-// TODO: Check with Fabian to see if the pagination is needed for this exception list command
 func (cmfClient *CmfRestClient) ListStatementExceptions(ctx context.Context, environment, statementName string) (cmfsdk.StatementExceptionList, error) {
-	exceptionList, httpResponse, err := cmfClient.DefaultApi.GetStatementExceptions(ctx, environment, statementName)
+	exceptionList, httpResponse, err := cmfClient.DefaultApi.GetStatementExceptions(ctx, environment, statementName).Execute()
 	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 		return cmfsdk.StatementExceptionList{}, fmt.Errorf(`failed to list exceptions for statement "%s" in the environment "%s": %s`, statementName, environment, parsedErr)
 	}
@@ -403,7 +399,7 @@ func (cmfClient *CmfRestClient) ListStatementExceptions(ctx context.Context, env
 
 func (cmfClient *CmfRestClient) CreateCatalog(ctx context.Context, kafkaCatalog cmfsdk.KafkaCatalog) (cmfsdk.KafkaCatalog, error) {
 	catalogName := kafkaCatalog.Metadata.Name
-	outputCatalog, httpResponse, err := cmfClient.DefaultApi.CreateKafkaCatalog(ctx, kafkaCatalog)
+	outputCatalog, httpResponse, err := cmfClient.DefaultApi.CreateKafkaCatalog(ctx).KafkaCatalog(kafkaCatalog).Execute()
 	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 		return cmfsdk.KafkaCatalog{}, fmt.Errorf(`failed to create Kafka Catalog "%s": %s`, catalogName, parsedErr)
 	}
@@ -411,7 +407,7 @@ func (cmfClient *CmfRestClient) CreateCatalog(ctx context.Context, kafkaCatalog 
 }
 
 func (cmfClient *CmfRestClient) DescribeCatalog(ctx context.Context, catalogName string) (cmfsdk.KafkaCatalog, error) {
-	outputCatalog, httpResponse, err := cmfClient.DefaultApi.GetKafkaCatalog(ctx, catalogName)
+	outputCatalog, httpResponse, err := cmfClient.DefaultApi.GetKafkaCatalog(ctx, catalogName).Execute()
 	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 		return cmfsdk.KafkaCatalog{}, fmt.Errorf(`failed to get Kafka Catalog "%s": %s`, catalogName, parsedErr)
 	}
@@ -420,36 +416,30 @@ func (cmfClient *CmfRestClient) DescribeCatalog(ctx context.Context, catalogName
 
 func (cmfClient *CmfRestClient) ListCatalog(ctx context.Context) ([]cmfsdk.KafkaCatalog, error) {
 	catalogs := make([]cmfsdk.KafkaCatalog, 0)
-	currentPageNumber := 0
 	done := false
 	// 100 is an arbitrary page size we've chosen.
 	const pageSize = 100
-
-	pagingOptions := &cmfsdk.GetKafkaCatalogsOpts{
-		Page: optional.NewInt32(int32(currentPageNumber)),
-		Size: optional.NewInt32(pageSize),
-	}
+	var currentPageNumber int32 = 0
 
 	for !done {
-		catalogPage, httpResponse, err := cmfClient.DefaultApi.GetKafkaCatalogs(ctx, pagingOptions)
+		catalogPage, httpResponse, err := cmfClient.DefaultApi.GetKafkaCatalogs(ctx).Page(currentPageNumber).Size(pageSize).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list Kafka Catalog: %s`, parsedErr)
 		}
-		catalogs = append(catalogs, catalogPage.Items...)
-		currentPageNumber, done = extractPageOptions(len(catalogPage.Items), currentPageNumber)
-		pagingOptions.Page = optional.NewInt32(int32(currentPageNumber))
+		catalogs = append(catalogs, catalogPage.GetItems()...)
+		currentPageNumber, done = extractPageOptions(len(catalogPage.GetItems()), currentPageNumber)
 	}
 
 	return catalogs, nil
 }
 
 func (cmfClient *CmfRestClient) DeleteCatalog(ctx context.Context, catalogName string) error {
-	httpResp, err := cmfClient.DefaultApi.DeleteKafkaCatalog(ctx, catalogName)
+	httpResp, err := cmfClient.DefaultApi.DeleteKafkaCatalog(ctx, catalogName).Execute()
 	return parseSdkError(httpResp, err)
 }
 
 // Returns the next page number and whether we need to fetch more pages or not.
-func extractPageOptions(receivedItemsLength int, currentPageNumber int) (int, bool) {
+func extractPageOptions(receivedItemsLength int, currentPageNumber int32) (int32, bool) {
 	if receivedItemsLength == 0 {
 		return currentPageNumber, true
 	}

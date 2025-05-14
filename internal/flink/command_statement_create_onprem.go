@@ -127,11 +127,11 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 		},
 		Spec: cmfsdk.StatementSpec{
 			Statement:          sql,
-			Properties:         properties,
-			FlinkConfiguration: flinkConfiguration,
+			Properties:         &properties,
+			FlinkConfiguration: &flinkConfiguration,
 			ComputePoolName:    computePool,
-			Parallelism:        int32(parallelism),
-			Stopped:            false,
+			Parallelism:        cmfsdk.PtrInt32(int32(parallelism)),
+			Stopped:            cmfsdk.PtrBool(false),
 		},
 	}
 
@@ -166,13 +166,13 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 
 	table := output.NewTable(cmd)
 	table.Add(&statementOutOnPrem{
-		CreationDate: time.Now(),
+		CreationDate: time.Now().Format(time.RFC3339),
 		Name:         outputStatement.Metadata.Name,
 		Statement:    outputStatement.Spec.Statement,
 		ComputePool:  outputStatement.Spec.ComputePoolName,
 		Status:       outputStatement.Status.Phase,
-		StatusDetail: outputStatement.Status.Detail,
-		Properties:   outputStatement.Spec.Properties,
+		StatusDetail: outputStatement.Status.GetDetail(),
+		Properties:   outputStatement.Spec.GetProperties(),
 	})
 	table.Filter([]string{"CreationTime", "Name", "Statement", "ComputePool", "Status", "StatusDetail", "Properties"})
 

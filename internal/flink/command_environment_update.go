@@ -76,9 +76,9 @@ func (c *command) environmentUpdate(cmd *cobra.Command, args []string) error {
 
 	var postEnvironment cmfsdk.PostEnvironment
 	postEnvironment.Name = environmentName
-	postEnvironment.FlinkApplicationDefaults = defaultsApplicationParsed
-	postEnvironment.StatementDefaults = defaultsStatementParsed
-	postEnvironment.ComputePoolDefaults = defaultsComputePoolParsed
+	postEnvironment.FlinkApplicationDefaults = &defaultsApplicationParsed
+	postEnvironment.StatementDefaults = &defaultsStatementParsed
+	postEnvironment.ComputePoolDefaults = &defaultsComputePoolParsed
 
 	outputEnvironment, err := client.UpdateEnvironment(c.createContext(), postEnvironment)
 	if err != nil {

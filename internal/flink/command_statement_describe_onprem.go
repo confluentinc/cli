@@ -45,18 +45,17 @@ func (c *command) statementDescribeOnPrem(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	// TODO: Check with Fabian to see what's important to show in the output.
 	table := output.NewTable(cmd)
 	table.Add(&statementOutOnPrem{
-		CreationDate: time.Now(),
+		CreationDate: time.Now().Format(time.RFC3339),
 		Name:         outputStatement.Metadata.Name,
 		Statement:    outputStatement.Spec.Statement,
 		ComputePool:  outputStatement.Spec.ComputePoolName,
 		Status:       outputStatement.Status.Phase,
-		StatusDetail: outputStatement.Status.Detail,
-		Properties:   outputStatement.Spec.Properties,
+		StatusDetail: outputStatement.Status.GetDetail(),
+		Properties:   outputStatement.Spec.GetProperties(),
 	})
-	table.Filter([]string{"CreationTime", "Name", "Statement", "ComputePool", "Status", "StatusDetail", "Properties"})
+	table.Filter([]string{"CreationDate", "Name", "Statement", "ComputePool", "Status", "StatusDetail", "Properties"})
 
 	return table.Print()
 }

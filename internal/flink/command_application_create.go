@@ -52,7 +52,7 @@ func (c *command) applicationCreate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to read file: %v", err)
 	}
 
-	var application cmfsdk.Application
+	var application cmfsdk.FlinkApplication
 	ext := filepath.Ext(resourceFilePath)
 	switch ext {
 	case ".json":

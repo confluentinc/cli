@@ -41,7 +41,6 @@ func (c *command) statementResumeOnPrem(cmd *cobra.Command, args []string) error
 	}
 
 	// Construct the statement to be resumed
-	// TODO: Check with Fabian if this is enough or not
 	statement := cmfsdk.Statement{
 		ApiVersion: "cmf.confluent.io/v1",
 		Kind:       "Statement",
@@ -49,7 +48,7 @@ func (c *command) statementResumeOnPrem(cmd *cobra.Command, args []string) error
 			Name: name,
 		},
 		Spec: cmfsdk.StatementSpec{
-			Stopped: false,
+			Stopped: cmfsdk.PtrBool(false),
 		},
 	}
 

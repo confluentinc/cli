@@ -45,10 +45,10 @@ func (c *command) computePoolListOnPrem(cmd *cobra.Command, _ []string) error {
 		for _, pool := range computePools {
 			list.Add(&computePoolOutOnPrem{
 				Name:         pool.Metadata.Name,
-				ID:           pool.Metadata.Uid,
+				ID:           pool.Metadata.GetUid(),
 				Type:         pool.Spec.Type,
 				Phase:        pool.Status.Phase,
-				CreationTime: pool.Metadata.CreationTimestamp,
+				CreationTime: pool.Metadata.GetCreationTimestamp(),
 			})
 		}
 		return list.Print()

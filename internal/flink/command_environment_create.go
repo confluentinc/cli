@@ -87,10 +87,10 @@ func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
 
 	var postEnvironment cmfsdk.PostEnvironment
 	postEnvironment.Name = environmentName
-	postEnvironment.FlinkApplicationDefaults = defaultsApplicationParsed
-	postEnvironment.KubernetesNamespace = kubernetesNamespace
-	postEnvironment.StatementDefaults = defaultsStatementParsed
-	postEnvironment.ComputePoolDefaults = defaultsComputePoolParsed
+	postEnvironment.FlinkApplicationDefaults = &defaultsApplicationParsed
+	postEnvironment.KubernetesNamespace = &kubernetesNamespace
+	postEnvironment.StatementDefaults = &defaultsStatementParsed
+	postEnvironment.ComputePoolDefaults = &defaultsComputePoolParsed
 
 	outputEnvironment, err := client.CreateEnvironment(c.createContext(), postEnvironment)
 	if err != nil {

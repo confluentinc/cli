@@ -37,8 +37,8 @@ func (c *command) catalogList(cmd *cobra.Command, _ []string) error {
 		for _, catalog := range catalogs {
 			list.Add(&catalogOut{
 				Name:         catalog.Metadata.Name,
-				ID:           catalog.Metadata.Uid,
-				CreationTime: catalog.Metadata.CreationTimestamp,
+				ID:           catalog.Metadata.GetUid(),
+				CreationTime: catalog.Metadata.GetCreationTimestamp(),
 			})
 		}
 		return list.Print()
