@@ -1,4 +1,1 @@
-*                                @confluentinc/cli
-pkg/flink/                       @confluentinc/flink-sql @confluentinc/cloud-surfaces
-pkg/ccloudv2/flink_gateway.go    @confluentinc/flink-sql @confluentinc/cloud-surfaces
-test/fixures/output/flink/shell/ @confluentinc/flink-sql @confluentinc/cloud-surfaces
+*  @confluentinc/cli
