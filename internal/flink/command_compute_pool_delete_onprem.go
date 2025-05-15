@@ -19,7 +19,7 @@ func (c *command) newComputePoolDeleteCommandOnPrem() *cobra.Command {
 		RunE:        c.computePoolDeleteOnPrem,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment to delete the Flink Compute Pool from.")
+	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	addCmfFlagSet(cmd)
 	pcmd.AddForceFlag(cmd)
 

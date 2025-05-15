@@ -22,7 +22,7 @@ func (c *command) newApplicationWebUiForwardCommand() *cobra.Command {
 		RunE:  c.applicationWebUiForward,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment to forward the Flink application to web UI.")
+	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	addCmfFlagSet(cmd)
 	cmd.Flags().Uint16("port", 0, "Port to forward the web UI to. If not provided, a random, OS-assigned port will be used.")
 

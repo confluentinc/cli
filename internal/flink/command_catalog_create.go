@@ -25,7 +25,6 @@ func (c *command) newCatalogCreateCommand() *cobra.Command {
 		RunE:  c.catalogCreate,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment to create the Flink Catalog.")
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlagWithHumanRestricted(cmd)
 

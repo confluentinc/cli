@@ -12,7 +12,7 @@ import (
 func (c *command) newCatalogDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <name-1> [name-2] ... [name-n]",
-		Short: "Delete one or more Flink Catalog in Confluent Platform.",
+		Short: "Delete one or more Flink Catalogs in Confluent Platform.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.catalogDelete,
 	}
@@ -33,7 +33,6 @@ func (c *command) catalogDelete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	// TODO: Check the logic here just to double check if additional logic is needed.
 	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.FlinkCatalog); err != nil {
 		// We are validating only the existence of the resources (there is no prefix validation).
 		// Thus, we can add some extra context for the error.

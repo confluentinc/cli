@@ -10,7 +10,7 @@ import (
 func (c *command) newCatalogListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List Flink Catalog in Confluent Platform.",
+		Short: "List Flink Catalogs in Confluent Platform.",
 		Args:  cobra.NoArgs,
 		RunE:  c.catalogList,
 	}

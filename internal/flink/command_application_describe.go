@@ -15,7 +15,7 @@ func (c *command) newApplicationDescribeCommand() *cobra.Command {
 		RunE:  c.applicationDescribe,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment to describe the Flink application.")
+	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlagWithHumanRestricted(cmd)
 

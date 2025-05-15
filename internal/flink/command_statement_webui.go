@@ -2,17 +2,17 @@ package flink
 
 import (
 	"fmt"
-	"os"
 	"net"
 	"net/http"
+	"os"
 
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v4/pkg/auth"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/flink"
 	"github.com/confluentinc/cli/v4/pkg/output"
-	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
 func (c *command) newStatementWebUiForwardCommand() *cobra.Command {
@@ -24,7 +24,7 @@ func (c *command) newStatementWebUiForwardCommand() *cobra.Command {
 		RunE:        c.statementWebUiForward,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment to forward the Flink statement to web UI.")
+	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	addCmfFlagSet(cmd)
 	cmd.Flags().Uint16("port", 0, "Port to forward the web UI to. If not provided, a random, OS-assigned port will be used.")
 

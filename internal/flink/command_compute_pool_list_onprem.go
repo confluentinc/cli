@@ -16,7 +16,7 @@ func (c *command) newComputePoolListCommandOnPrem() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment to list Flink Compute Pools from.")
+	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlagWithHumanRestricted(cmd)
 	cobra.CheckErr(cmd.MarkFlagRequired("environment"))

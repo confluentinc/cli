@@ -25,7 +25,7 @@ func (c *command) newComputePoolCreateCommandOnPrem() *cobra.Command {
 		RunE:        c.computePoolCreateOnPrem,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment to create the Flink Compute Pool.")
+	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlagWithHumanRestricted(cmd)
 

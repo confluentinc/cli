@@ -20,7 +20,7 @@ func (c *command) newStatementListCommandOnPrem() *cobra.Command {
 		RunE:        c.statementListOnPrem,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment to list Flink SQL statements from.")
+	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	cmd.Flags().String("compute-pool", "", "Optional flag to filter the Flink statements by compute pool ID.")
 	cmd.Flags().String("status", "", "Optional flag to filter the Flink statements by statement status.")
 	addCmfFlagSet(cmd)

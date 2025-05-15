@@ -16,7 +16,7 @@ func (c *command) newStatementExceptionListCommandOnPrem() *cobra.Command {
 		RunE:        c.statementExceptionListOnPrem,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment to list the Flink SQL statement exceptions.")
+	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 

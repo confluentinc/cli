@@ -19,7 +19,7 @@ func (c *command) newStatementResumeCommandOnPrem() *cobra.Command {
 		RunE:        c.statementResumeOnPrem,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment to resume the Flink SQL statement.")
+	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	addCmfFlagSet(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("environment"))

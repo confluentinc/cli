@@ -29,7 +29,7 @@ func (c *command) newStatementCreateCommandOnPrem() *cobra.Command {
 	}
 
 	cmd.Flags().String("sql", "", "The Flink SQL statement.")
-	cmd.Flags().String("environment", "", "Name of the environment to create the Flink SQL statement.")
+	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	cmd.Flags().String("compute-pool", "", "The compute pool name to execute the Flink SQL statement.")
 	cmd.Flags().Uint16("parallelism", 4, "The parallelism the statement, default value is 4.")
 	cmd.Flags().String("catalog", "", "The name of the default catalog.")

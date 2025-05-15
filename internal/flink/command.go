@@ -1,8 +1,11 @@
 package flink
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"net/http"
 
 	"github.com/spf13/cobra"
 
@@ -11,10 +14,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/featureflags"
-	"net/http"
-	"io"
 	"github.com/confluentinc/cli/v4/pkg/output"
-	"bytes"
 )
 
 type command struct {
@@ -43,8 +43,8 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	// On-Prem and Cloud Commands
 	cmd.AddCommand(c.newComputePoolCommand(cfg))
-	cmd.AddCommand(c.newStatementCommand(cfg))
 	cmd.AddCommand(c.newShellCommand(prerunner))
+	cmd.AddCommand(c.newStatementCommand(cfg))
 
 	// Cloud Specific Commands
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink", cfg.Context(), config.CliLaunchDarklyClient, true, false) {

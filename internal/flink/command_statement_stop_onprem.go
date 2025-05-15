@@ -19,7 +19,7 @@ func (c *command) newStatementStopCommandOnPrem() *cobra.Command {
 		RunE:        c.statementStopOnPrem,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment to stop the Flink SQL statement.")
+	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	addCmfFlagSet(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("environment"))

@@ -59,7 +59,6 @@ func NewCmfRestClient(cfg *cmfsdk.Configuration, restFlags *OnPremCMFRestFlagVal
 	cmfRestClient := &CmfRestClient{}
 
 	// Set server URL based on test or flag input
-	// TODO: Check to make sure the server URL should not contain the "/cmf/api/v1" suffix
 	if isTest {
 		cfg.Servers = cmfsdk.ServerConfigurations{
 			{

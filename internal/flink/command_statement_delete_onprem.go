@@ -18,7 +18,7 @@ func (c *command) newStatementDeleteCommandOnPrem() *cobra.Command {
 		RunE:        c.statementDeleteOnPrem,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment to delete the Flink SQL statement from.")
+	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	addCmfFlagSet(cmd)
 	pcmd.AddForceFlag(cmd)
 

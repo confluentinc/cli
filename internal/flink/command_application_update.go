@@ -24,7 +24,7 @@ func (c *command) newApplicationUpdateCommand() *cobra.Command {
 		RunE:  c.applicationUpdate,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment to update the Flink application.")
+	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlagWithHumanRestricted(cmd)
 

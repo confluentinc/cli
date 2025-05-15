@@ -19,7 +19,7 @@ func (c *command) newStatementRescaleCommandOnPrem() *cobra.Command {
 		RunE:        c.statementRescaleOnPrem,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment to rescale the Flink SQL statement.")
+	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	cmd.Flags().Int32("parallelism", 4, "New parallelism of the Flink SQL statement.")
 	addCmfFlagSet(cmd)
 

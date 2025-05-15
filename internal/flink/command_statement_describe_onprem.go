@@ -18,7 +18,7 @@ func (c *command) newStatementDescribeCommandOnPrem() *cobra.Command {
 		RunE:        c.statementDescribeOnPrem,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment to create the Flink SQL statement.")
+	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
