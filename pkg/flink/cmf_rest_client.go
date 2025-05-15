@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"strings"
 
@@ -60,11 +59,12 @@ func NewCmfRestClient(cfg *cmfsdk.Configuration, restFlags *OnPremCMFRestFlagVal
 	cmfRestClient := &CmfRestClient{}
 
 	// Set server URL based on test or flag input
+	// TODO: Check to make sure the server URL should not contain the "/cmf/api/v1" suffix
 	if isTest {
 		cfg.Servers = cmfsdk.ServerConfigurations{
 			{
-				URL:         testserver.TestCmfUrl.String() + "/cmf/api/v1",
-				Description: "Test CMF Server",
+				URL:         testserver.TestCmfUrl.String(),
+				Description: "Confluent Platform test CMF Server",
 			},
 		}
 	} else {
@@ -75,20 +75,15 @@ func NewCmfRestClient(cfg *cmfsdk.Configuration, restFlags *OnPremCMFRestFlagVal
 			)
 		}
 
-		serverURL, err := url.JoinPath(restFlags.url, "/cmf/api/v1")
-		if err != nil {
-			return nil, err
-		}
-
 		cfg.Servers = cmfsdk.ServerConfigurations{
 			{
-				URL:         serverURL,
-				Description: "Configured CMF Server",
+				URL:         restFlags.url,
+				Description: "Confluent Platform default CMF Server",
 			},
 		}
 	}
 
-	// Set HTTP client
+	// Set the CMF specific HTTP client
 	cfg.HTTPClient, err = NewCmfRestHttpClient(restFlags)
 	if err != nil {
 		return nil, err
