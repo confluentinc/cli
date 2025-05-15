@@ -27,11 +27,8 @@ func TestMain(m *testing.M) {
 	time.Sleep(2 * time.Second)
 
 	// Cleanup directory here will always run after all test(s) have been executed.
-	if runtime.GOOS == "windows" {
-		// attempt to delete the temp folder but don't fail the test over it on Windows
-		// At least one of the .proto files is sometimes still locked on Windows by this point
-		defer os.RemoveAll(tempDir)
-	} else {
+	// Skip this for now on Windows because a .proto file is sometimes locked here in Windows
+	if runtime.GOOS != "windows" {
 		if err := os.RemoveAll(tempDir); err != nil {
 			fmt.Printf("failed to remove temporary directory: %s", err)
 			code = 1
