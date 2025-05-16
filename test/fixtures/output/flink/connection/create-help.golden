@@ -19,7 +19,7 @@ Flags:
       --aws-session-token string   Specify session token for the type: "bedrock" or "sagemaker".
       --service-key string         Specify service key for the type: "vertexai".
       --username string            Specify username for the type: "mongodb", "couchbase", or "confluent_jdbc".
-      --password string            Specify username for the type: "mongodb", "couchbase", or "confluent_jdbc".
+      --password string            Specify password for the type: "mongodb", "couchbase", or "confluent_jdbc".
       --environment string         Environment ID.
   -o, --output string              Specify the output format as "human", "json", or "yaml". (default "human")
 
