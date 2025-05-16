@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -26,9 +27,12 @@ func TestMain(m *testing.M) {
 	time.Sleep(2 * time.Second)
 
 	// Cleanup directory here will always run after all test(s) have been executed.
-	if err := os.RemoveAll(tempDir); err != nil {
-		fmt.Printf("failed to remove temporary directory: %s", err)
-		code = 1
+	// Skip this for now on Windows because a .proto file is sometimes locked here in Windows
+	if runtime.GOOS != "windows" {
+		if err := os.RemoveAll(tempDir); err != nil {
+			fmt.Printf("failed to remove temporary directory: %s", err)
+			code = 1
+		}
 	}
 
 	os.Exit(code)
