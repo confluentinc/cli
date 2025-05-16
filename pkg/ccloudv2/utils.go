@@ -24,7 +24,7 @@ const (
 )
 
 var (
-	ByocSupportClouds = []string{"aws", "azure"}
+	ByocSupportClouds = []string{"aws", "azure", "gcp"}
 )
 
 var (
