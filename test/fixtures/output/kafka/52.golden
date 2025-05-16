@@ -1,5 +1,5 @@
 is_current: true
-id: lkc-describe-dedicated-with-encryption
+id: lkc-describe-dedicated-with-zone-selection
 name: kafka-cluster
 type: DEDICATED
 cluster_size: 1
@@ -9,10 +9,9 @@ storage: Infinite
 cloud: aws
 region: us-west-2
 zones:
-    - auto-selected
+    - use1-az3
 availability: single-zone
 status: UP
 endpoint: SASL_SSL://kafka-endpoint
-encryption_key_id: abc123
 rest_endpoint: http://127.0.0.1:1025
 topic_count: 2
