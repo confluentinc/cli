@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
@@ -30,6 +31,7 @@ const (
 	invalidDirectoryErrorMsg       = `plugin directory "%s" does not exist`
 	unexpectedInstallationErrorMsg = "unexpected installation type: %s"
 	workerProcessRegexStr          = `org\.apache\.kafka\.connect\.cli\.Connect(Distributed|Standalone)`
+	deprecatedPluginWarningMsg     = `[WARN] This version of the connector is nearing its end of life and will not be downloadable from %s. Please upgrade to the minimum connector version supported for continued support. Refer to https://docs.confluent.io/platform/current/connect/supported-connector-versions-7.8.html#minimum-connector-version-7-8`
 )
 
 type pluginInstallCommand struct {
@@ -95,6 +97,14 @@ func (c *pluginInstallCommand) install(cmd *cobra.Command, args []string) error 
 	pluginManifest, err := getManifest(client, args[0])
 	if err != nil {
 		return err
+	}
+
+	deprecationMsg, err := checkPluginVersionDeprecation(pluginManifest)
+	if err != nil {
+		return err
+	}
+	if deprecationMsg != "" {
+		output.ErrPrintln(c.Config.EnableColor, deprecationMsg)
 	}
 
 	pluginDir, err := getPluginDirFromFlag(cmd)
@@ -478,4 +488,18 @@ func (c *pluginInstallCommand) GetHubClient() (*hub.Client, error) {
 	}
 
 	return hub.NewClient(c.Config.Version.UserAgent, c.Config.IsTest, unsafeTrace), nil
+}
+
+// checkPluginVersionDeprecation checks if the plugin version is nearing its end of life
+// and returns a warning message if it is.
+func checkPluginVersionDeprecation(pluginManifest *cpstructs.Manifest) (string, error) {
+	if pluginManifest.EndOfLifeAt != "" {
+		endOfLifeTimestamp, err := time.Parse(time.RFC3339, pluginManifest.EndOfLifeAt)
+		if err != nil {
+			return "", fmt.Errorf("failed to parse end of life timestamp: %w", err)
+		}
+		return fmt.Sprintf(deprecatedPluginWarningMsg,
+			endOfLifeTimestamp.Format("January 2, 2006")), nil
+	}
+	return "", nil
 }
