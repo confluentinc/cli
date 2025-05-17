@@ -355,26 +355,74 @@ func (s *ResultFormatterTestSuite) TestTruncateMultiLineStringShouldNotTruncate(
 		maxCharCountToDisplay int
 	}{
 		{
+			input:                 "SELECT * FROM \n",
+			expected:              "SELECT * FROM \n",
+			maxCharCountToDisplay: 15,
+		},
+		{
 			input:                 "SELECT * FROM \n table",
 			expected:              "SELECT * FROM \n table",
 			maxCharCountToDisplay: 15,
 		},
 		{
 			input:                 "SELECT * FROM \n table",
-			expected:              "SELECT * FR...",
-			maxCharCountToDisplay: 14,
+			expected:              "SELECT ...\n table",
+			maxCharCountToDisplay: 10,
 		},
-		// this looks strange in a table, because not the whole width of the cell is used, but then the text
-		// is still suddenly truncated. We could improve this case to only truncate starting from the line that actually
-		// crossed the max width threshold. The desired output in this case would be:
-		// SELECT * FROM
-		// table-with-a-real...
 		{
-			input:    "SELECT * FROM \n table-with-a-really-long-table-name",
-			expected: "SELECT * FROM \n t...",
-			// TODO: we should fix this to output this instead
-			// expected:              "SELECT * FROM \n table-with-a-real...",
+			input:                 "SELECT * FROM \n table-with-a-really-long-table-name",
+			expected:              "SELECT * FROM \n table-with-a-rea...",
 			maxCharCountToDisplay: 20,
+		},
+	}
+
+	for idx, testCase := range testCases {
+		fmt.Printf("Evaluating test case #%d\n", idx)
+		require.Equal(s.T(), testCase.expected, TruncateString(testCase.input, testCase.maxCharCountToDisplay))
+	}
+}
+
+func (s *ResultFormatterTestSuite) TestTruncateMultibyteCharacters() {
+	testCases := []struct {
+		input                 string
+		expected              string
+		maxCharCountToDisplay int
+	}{
+		{
+			input:                 "あああ",  // The string width here is 6 since each character is 2 bytes wide.
+			expected:              "あ...", // あ... is exactly 5 bytes wide.
+			maxCharCountToDisplay: 5,
+		},
+		{
+			input:                 "SELECT `あ` FROM ",
+			expected:              "SELECT `あ` FROM ",
+			maxCharCountToDisplay: 17,
+		},
+		{
+			input:                 "SELECT `あ` FROM \n table",
+			expected:              "SELECT `あ` FROM \n table",
+			maxCharCountToDisplay: 17,
+		},
+		{
+			input:                 "SELECT `あ` FROM \n table",
+			expected:              "SELECT ...\n table",
+			maxCharCountToDisplay: 10,
+		},
+		{
+			input:                 "SELECT `あああああああああああああ`",
+			expected:              "SELECT `ああああ...",
+			maxCharCountToDisplay: 20,
+		},
+		{
+			input:                 "SELECT `あ` FROM \n `🎄🚀👍😀🎄🚀👍🎄🚀👍😀🎄🚀👍`",
+			expected:              "SELECT `あ` FROM \n `🎄🚀👍😀🎄🚀👍...",
+			maxCharCountToDisplay: 20,
+		},
+		// There are non-standard emojis like the ones below that can be represented as 1 or 2 width characters
+		{
+			input:                 "⚒️⚖️",
+			expected:              "⚒️⚖️",
+			maxCharCountToDisplay: 2,
 		},
 	}
 

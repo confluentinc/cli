@@ -13,7 +13,7 @@ import (
 
 var (
 	codeSnippetRegexp = regexp.MustCompile("`[^`]+`")
-	linkRegexp        = regexp.MustCompile(`https?://([a-z\-]+\.)?[a-z\-]+\.[/a-z\-]+(.[a-z]+)?`)
+	linkRegexp        = regexp.MustCompile(`https?://([a-z\-]+\.)?[a-z\-]+\.[/a-z\-]+([\.\?][a-z]+)?`)
 	resourceRegexp    = regexp.MustCompile(`"[^"]+"`)
 )
 

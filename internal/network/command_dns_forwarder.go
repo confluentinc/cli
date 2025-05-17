@@ -13,13 +13,14 @@ import (
 )
 
 type dnsForwarderOut struct {
-	Id           string   `human:"ID" serialized:"id"`
-	Name         string   `human:"Name,omitempty" serialized:"name,omitempty"`
-	Domains      []string `human:"Domains,omitempty" serialized:"domains,omitempty"`
-	DnsServerIps []string `human:"DNS Server IPs" serialized:"dns_server_ips"`
-	Environment  string   `human:"Environment" serialized:"environment"`
-	Gateway      string   `human:"Gateway" serialized:"gateway"`
-	Phase        string   `human:"Phase" serialized:"phase"`
+	Id                string            `human:"ID" serialized:"id"`
+	Name              string            `human:"Name,omitempty" serialized:"name,omitempty"`
+	Domains           []string          `human:"Domains,omitempty" serialized:"domains,omitempty"`
+	DnsServerIps      []string          `human:"DNS Server IPs,omitempty" serialized:"dns_server_ips,omitempty"`
+	DnsDomainMappings map[string]string `human:"DNS Domain Mappings,omitempty" serialized:"dns_domain_mappings,omitempty"`
+	Environment       string            `human:"Environment" serialized:"environment"`
+	Gateway           string            `human:"Gateway" serialized:"gateway"`
+	Phase             string            `human:"Phase" serialized:"phase"`
 }
 
 func (c *command) newDnsForwarderCommand() *cobra.Command {
@@ -86,13 +87,26 @@ func printDnsForwarderTable(cmd *cobra.Command, forwarder networkingdnsforwarder
 	table := output.NewTable(cmd)
 
 	table.Add(&dnsForwarderOut{
-		Id:           forwarder.GetId(),
-		Name:         forwarder.Spec.GetDisplayName(),
-		Domains:      forwarder.Spec.GetDomains(),
-		DnsServerIps: forwarder.Spec.Config.NetworkingV1ForwardViaIp.GetDnsServerIps(),
-		Gateway:      forwarder.Spec.Gateway.GetId(),
-		Environment:  forwarder.Spec.Environment.GetId(),
-		Phase:        forwarder.Status.GetPhase(),
+		Id:                forwarder.GetId(),
+		Name:              forwarder.Spec.GetDisplayName(),
+		Domains:           forwarder.Spec.GetDomains(),
+		DnsServerIps:      forwarder.Spec.Config.NetworkingV1ForwardViaIp.GetDnsServerIps(),
+		DnsDomainMappings: convertToTypeMapString(forwarder.Spec.Config.NetworkingV1ForwardViaGcpDnsZones.GetDomainMappings()),
+		Gateway:           forwarder.Spec.Gateway.GetId(),
+		Environment:       forwarder.Spec.Environment.GetId(),
+		Phase:             forwarder.Status.GetPhase(),
 	})
 	return table.Print()
+}
+
+func convertToTypeMapString(input map[string]networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZonesDomainMappings) map[string]string {
+	myMap := make(map[string]string)
+	for key, value := range input {
+		zone, zoneOk := value.GetZoneOk()
+		project, projectOk := value.GetProjectOk()
+		if zoneOk && projectOk {
+			myMap[key] = fmt.Sprintf("{%s, %s}", *zone, *project)
+		}
+	}
+	return myMap
 }

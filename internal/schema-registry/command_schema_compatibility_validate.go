@@ -45,9 +45,9 @@ func (c *command) newSchemaCompatibilityValidateCommand(cfg *config.Config) *cob
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
-		addCaLocationFlag(cmd)
-		addSchemaRegistryEndpointFlag(cmd)
+		addCaLocationAndClientPathFlags(cmd)
 	}
+	addSchemaRegistryEndpointFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))

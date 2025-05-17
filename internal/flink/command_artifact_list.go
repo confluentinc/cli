@@ -69,6 +69,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
+	list.Sort(false)
 	for _, artifact := range artifacts {
 		list.Add(&artifactOutList{
 			Name:        artifact.GetDisplayName(),

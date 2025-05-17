@@ -28,7 +28,7 @@ func (c *command) environmentList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	environments, err := client.ListEnvironments(cmd.Context())
+	environments, err := client.ListEnvironments(c.createContext())
 	if err != nil {
 		return err
 	}

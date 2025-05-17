@@ -33,7 +33,7 @@ func (c *command) environmentDescribe(cmd *cobra.Command, args []string) error {
 
 	// Get the name of the environment to be retrieved
 	environmentName := args[0]
-	environment, err := client.DescribeEnvironment(cmd.Context(), environmentName)
+	environment, err := client.DescribeEnvironment(c.createContext(), environmentName)
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,7 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/confluentinc/cli/v4/pkg/log"
@@ -99,7 +100,7 @@ func NewCorruptedConfigError(format, contextName, configFile string) CLITypedErr
 	if contextName != "" {
 		errorWithStackTrace = fmt.Errorf(format, contextName)
 	} else {
-		errorWithStackTrace = fmt.Errorf(format)
+		errorWithStackTrace = errors.New(format)
 	}
 	// logging stack trace of the error use pkg/errors error type
 	log.CliLogger.Debugf("%+v", errorWithStackTrace)

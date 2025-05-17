@@ -12,6 +12,8 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 )
 
+const SRApiEnvId = "env-srUpdate"
+
 // Handler for: "/"
 func handleSRGet(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

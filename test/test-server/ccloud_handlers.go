@@ -104,7 +104,7 @@ func handleMe(t *testing.T, isAuditLogEnabled bool) http.HandlerFunc {
 			Organization: org,
 		})
 		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
+		_, err = io.Writer.Write(w, b)
 		require.NoError(t, err)
 	}
 }
@@ -161,7 +161,7 @@ func handleLoginRealm(t *testing.T) http.HandlerFunc {
 func handlePaymentInfo(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case http.MethodPost: // admin payment update
+		case http.MethodPost: // billing payment update
 			req := &ccloudv1.UpdatePaymentInfoRequest{}
 			err := ccstructs.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
@@ -170,7 +170,7 @@ func handlePaymentInfo(t *testing.T) http.HandlerFunc {
 			res := &ccloudv1.UpdatePaymentInfoReply{}
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
-		case http.MethodGet: // admin payment describe
+		case http.MethodGet: // billing payment describe
 			res := ccloudv1.GetPaymentInfoReply{
 				Card: &ccloudv1.Card{
 					Cardholder: "Miles Todzo",
@@ -212,7 +212,7 @@ func handleServiceAccounts(t *testing.T) http.HandlerFunc {
 			}
 			listReply, err := ccstructs.MarshalJSONToBytes(res)
 			require.NoError(t, err)
-			_, err = io.WriteString(w, string(listReply))
+			_, err = io.Writer.Write(w, listReply)
 			require.NoError(t, err)
 		}
 	}
@@ -336,7 +336,7 @@ func handleEnvMetadata(t *testing.T) http.HandlerFunc {
 			Clouds: clouds,
 		})
 		require.NoError(t, err)
-		_, err = io.WriteString(w, string(reply))
+		_, err = io.Writer.Write(w, reply)
 		require.NoError(t, err)
 	}
 }
@@ -395,7 +395,7 @@ func handleV2Authenticate(t *testing.T) http.HandlerFunc {
 		}
 		b, err := json.Marshal(&reply)
 		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
+		_, err = io.Writer.Write(w, b)
 		require.NoError(t, err)
 	}
 }

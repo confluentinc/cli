@@ -3,7 +3,6 @@ package testserver
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,115 +12,14 @@ import (
 
 func (c *CloudRouter) HandleAllRolesRoute(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		namespace := r.URL.Query().Get("namespace")
-		namespaces := strings.Split(namespace, ",")
-
-		var allRoles []mdsv2alpha1.Role
-		for _, ns := range namespaces {
-			switch ns {
-			case "ksql":
-				allRoles = append(allRoles, rbacKsqlRoles()...)
-			case "datagovernance":
-				allRoles = append(allRoles, rbacSRRoles()...)
-			case "dataplane":
-				allRoles = append(allRoles, rbacDataPlaneRoles()...)
-			case "public":
-				allRoles = append(allRoles, rbacPublicRoles()...)
-			case "streamcatalog":
-				allRoles = append(allRoles, rbacStreamCatalogRoles()...)
-			default:
-				allRoles = append(allRoles, rbacPublicRoles()...)
-			}
-		}
-
-		allRolesResponse, _ := json.Marshal(allRoles)
-		_, err := w.Write(allRolesResponse)
+		roles := rbacPublicRoles()
+		rolesResponse, _ := json.Marshal(roles)
+		_, err := w.Write(rolesResponse)
 		require.NoError(t, err)
 	}
 }
 
-func rbacDataPlaneRoles() []mdsv2alpha1.Role {
-	developerManageRole := mdsv2alpha1.Role{
-		Name: "DeveloperManage",
-		Policies: []mdsv2alpha1.AccessPolicy{
-			{
-				BindingScope: "cloud-cluster",
-				AllowedOperations: []mdsv2alpha1.Operation{
-					{ResourceType: "CloudCluster", Operations: []string{"Describe"}},
-				},
-			},
-			{
-				BindingScope: "cluster",
-				AllowedOperations: []mdsv2alpha1.Operation{
-					{ResourceType: "Cluster", Operations: []string{"View", "AccessWithToken"}},
-					{ResourceType: "OwnKafkaClusterApiKey", Operations: []string{"Describe", "Alter", "Delete", "Create"}},
-					{ResourceType: "OwnClusterApiKey", Operations: []string{"Describe", "Alter", "Delete", "Create"}},
-				},
-			},
-			{
-				BindingScope:     "cluster",
-				BindWithResource: true,
-				AllowedOperations: []mdsv2alpha1.Operation{
-					{ResourceType: "Topic", Operations: []string{"Delete", "Describe", "Create", "DescribeConfigs"}},
-					{ResourceType: "Cluster", Operations: []string{"Create", "DescribeConfigs"}},
-					{ResourceType: "TransactionalId", Operations: []string{"Describe"}},
-					{ResourceType: "Group", Operations: []string{"Describe", "Delete"}},
-				},
-			},
-		},
-	}
-
-	return []mdsv2alpha1.Role{developerManageRole}
-}
-
-func rbacKsqlRoles() []mdsv2alpha1.Role {
-	resourceOwnerRole := mdsv2alpha1.Role{
-		Name: "ResourceOwner",
-		Policies: []mdsv2alpha1.AccessPolicy{
-			{
-				BindingScope:     "ksql-cluster",
-				BindWithResource: true,
-				AllowedOperations: []mdsv2alpha1.Operation{
-					{ResourceType: "KsqlCluster", Operations: []string{"Describe", "AlterAccess", "Contribute", "DescribeAccess", "Terminate"}},
-				},
-			},
-		},
-	}
-
-	return []mdsv2alpha1.Role{resourceOwnerRole}
-}
-
-func rbacSRRoles() []mdsv2alpha1.Role {
-	resourceOwnerRole := mdsv2alpha1.Role{
-		Name: "ResourceOwner",
-		Policies: []mdsv2alpha1.AccessPolicy{
-			{
-				BindingScope:     "schema-registry-cluster",
-				BindWithResource: true,
-				AllowedOperations: []mdsv2alpha1.Operation{
-					{ResourceType: "Subject", Operations: []string{"Delete", "Read", "Write", "ReadCompatibility", "AlterAccess", "WriteCompatibility", "DescribeAccess"}},
-				},
-			},
-		},
-	}
-
-	return []mdsv2alpha1.Role{resourceOwnerRole}
-}
-
 func rbacPublicRoles() []mdsv2alpha1.Role {
-	ccloudRoleBindingAdminRole := mdsv2alpha1.Role{
-		Name: "CCloudRoleBindingAdmin",
-		Policies: []mdsv2alpha1.AccessPolicy{
-			{
-				BindingScope: "root",
-				AllowedOperations: []mdsv2alpha1.Operation{
-					{ResourceType: "SecurityMetadata", Operations: []string{"Describe", "Alter"}},
-					{ResourceType: "Organization", Operations: []string{"AlterAccess", "DescribeAccess"}},
-				},
-			},
-		},
-	}
-
 	cloudClusterAdminRole := mdsv2alpha1.Role{
 		Name: "CloudClusterAdmin",
 		Policies: []mdsv2alpha1.AccessPolicy{
@@ -235,55 +133,7 @@ func rbacPublicRoles() []mdsv2alpha1.Role {
 		},
 	}
 
-	return []mdsv2alpha1.Role{ccloudRoleBindingAdminRole, cloudClusterAdminRole, environmentAdminRole, organizationAdminRole, resourceOwnerRole}
-}
-
-func rbacStreamCatalogRoles() []mdsv2alpha1.Role {
-	dataDiscoveryRole := mdsv2alpha1.Role{
-		Name: "DataDiscovery",
-		Policies: []mdsv2alpha1.AccessPolicy{
-			{
-				BindingScope:     "environment",
-				BindWithResource: false,
-				AllowedOperations: []mdsv2alpha1.Operation{
-					{ResourceType: "CatalogTagDefinition", Operations: []string{"Read"}},
-					{ResourceType: "Topic", Operations: []string{"ReadCatalog"}},
-					{ResourceType: "Subject", Operations: []string{"Read", "ReadCatalog", "ReadCompatibility"}},
-					{ResourceType: "CatalogBusinessMetadataDefinition", Operations: []string{"Read"}},
-				},
-			},
-		},
-	}
-
-	dataStewardRole := mdsv2alpha1.Role{
-		Name: "DataSteward",
-		Policies: []mdsv2alpha1.AccessPolicy{
-			{
-				BindingScope:     "environment",
-				BindWithResource: false,
-				AllowedOperations: []mdsv2alpha1.Operation{
-					{
-						ResourceType: "CatalogTagDefinition",
-						Operations:   []string{"Read", "Write", "Delete"},
-					},
-					{
-						ResourceType: "Topic",
-						Operations:   []string{"ReadCatalog", "WriteCatalog"},
-					},
-					{
-						ResourceType: "Subject",
-						Operations:   []string{"Delete", "Read", "ReadCatalog", "ReadCompatibility", "Write", "WriteCatalog", "WriteCompatibility"},
-					},
-					{
-						ResourceType: "CatalogBusinessMetadataDefinition",
-						Operations:   []string{"Read", "Write", "Delete"},
-					},
-				},
-			},
-		},
-	}
-
-	return []mdsv2alpha1.Role{dataDiscoveryRole, dataStewardRole}
+	return []mdsv2alpha1.Role{cloudClusterAdminRole, environmentAdminRole, organizationAdminRole, resourceOwnerRole}
 }
 
 func rolesListToJsonMap(roles []mdsv2alpha1.Role) map[string]string {

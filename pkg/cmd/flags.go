@@ -370,9 +370,14 @@ func AutocompleteIdentityPools(client *ccloudv2.Client, providerId string) []str
 	return suggestions
 }
 
-func AddResourceGroupFlag(cmd *cobra.Command) {
-	arr := []string{"management", "multiple"}
-	cmd.Flags().String("resource-group", "", fmt.Sprintf("Name of resource group: %s.", utils.ArrayToCommaDelimitedString(arr, "or")))
+func AddResourceGroupFlag(cmd *cobra.Command, isSrEnabled, isFlinkEnabled bool) {
+	var arr []string = []string{"management"}
+	if isSrEnabled || isFlinkEnabled {
+		arr = append(arr, "multiple")
+		cmd.Flags().String("resource-group", "multiple", fmt.Sprintf("Name of resource group: %s.", utils.ArrayToCommaDelimitedString(arr, "or")))
+	} else {
+		cmd.Flags().String("resource-group", "management", "Name of resource group. Currently, only \"management\" is supported.")
+	}
 	RegisterFlagCompletionFunc(cmd, "resource-group", func(_ *cobra.Command, _ []string) []string {
 		return arr
 	})
@@ -440,8 +445,9 @@ func AddRegionFlagFlink(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 		}
 
 		cloud, _ := cmd.Flags().GetString("cloud")
+		regionName, _ := cmd.Flags().GetString("region")
 
-		regions, err := command.V2Client.ListFlinkRegions(strings.ToUpper(cloud))
+		regions, err := command.V2Client.ListFlinkRegions(strings.ToUpper(cloud), regionName)
 		if err != nil {
 			return nil
 		}
@@ -603,4 +609,10 @@ func AutocompleteNetworks(environmentId string, client *ccloudv2.Client) []strin
 		suggestions[i] = fmt.Sprintf("%s\t%s", network.GetId(), network.Spec.GetDisplayName())
 	}
 	return suggestions
+}
+
+func AddMDSOnPremMTLSFlags(cmd *cobra.Command) {
+	cmd.Flags().String("client-cert-path", "", "Path to client cert to be verified by MDS. Include for mTLS authentication.")
+	cmd.Flags().String("client-key-path", "", "Path to client private key, include for mTLS authentication.")
+	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 }

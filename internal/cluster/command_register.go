@@ -14,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
 type registerCommand struct {
@@ -26,6 +27,15 @@ func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Register cluster.",
 		Long:  "Register cluster with the MDS cluster registry.",
 		Args:  cobra.NoArgs,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Register a new Confluent Platform cluster:",
+				Code: "confluent cluster register --cluster-name myKafkaCluster --kafka-cluster kafka-ID --hosts 10.6.6.6:9000,10.3.3.3:9003 --protocol SASL_PLAINTEXT",
+			},
+			examples.Example{
+				Text: "For more information, see https://docs.confluent.io/platform/current/security/cluster-registry.html#registering-clusters.",
+			},
+		),
 	}
 
 	c := &registerCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
@@ -40,6 +50,7 @@ func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("connect-cluster", "", "Kafka Connect cluster ID.")
 	cmd.Flags().String("cmf", "", "Confluent Managed Flink (CMF) ID.")
 	cmd.Flags().String("flink-environment", "", "Flink environment ID.")
+	pcmd.AddMDSOnPremMTLSFlags(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("cluster-name"))
@@ -50,6 +61,11 @@ func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *registerCommand) register(cmd *cobra.Command, _ []string) error {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
 	clusterName, err := cmd.Flags().GetString("cluster-name")
 	if err != nil {
 		return err
@@ -73,7 +89,7 @@ func (c *registerCommand) register(cmd *cobra.Command, _ []string) error {
 	ctx := context.WithValue(context.Background(), mdsv1.ContextAccessToken, c.Context.GetAuthToken())
 	clusterInfo := mdsv1.ClusterInfo{ClusterName: clusterName, Scope: mdsv1.Scope{Clusters: *scopeClusters}, Hosts: hosts, Protocol: protocol}
 
-	response, err := c.MDSClient.ClusterRegistryApi.UpdateClusters(ctx, []mdsv1.ClusterInfo{clusterInfo})
+	response, err := client.ClusterRegistryApi.UpdateClusters(ctx, []mdsv1.ClusterInfo{clusterInfo})
 	if err != nil {
 		return cluster.HandleClusterError(err, response)
 	}

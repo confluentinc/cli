@@ -2,6 +2,7 @@ package iam
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -21,9 +22,11 @@ func (c *ipFilterCommand) newListCommand(cfg *config.Config) *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}
-	if cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false)) {
-		cmd.Flags().String("environment", "", "Name of the environment for which this filter applies. By default will apply to the org only.")
-		cmd.Flags().Bool("include-parent-scope", true, "If an environment is specified, include organization scoped filters.")
+	isSrEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
+	isFlinkEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.flink.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
+	if isSrEnabled || isFlinkEnabled {
+		cmd.Flags().String("environment", "", "Identifier of the environment for which this filter applies. Without this flag, applies only to the organization.")
+		cmd.Flags().Bool("include-parent-scopes", false, "Include organization scoped filters when listing filters in an environment.")
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -35,7 +38,9 @@ func (c *ipFilterCommand) newListCommand(cfg *config.Config) *cobra.Command {
 func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 	var ipFilters []iamipfilteringv2.IamV2IpFilter
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
-	if featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false) {
+	isSrEnabled := c.Config.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
+	isFlinkEnabled := c.Config.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.flink.cli.enabled", c.Context, ldClient, true, false)
+	if isSrEnabled || isFlinkEnabled {
 		orgId := c.Context.GetCurrentOrganization()
 		environment, err := cmd.Flags().GetString("environment")
 		if err != nil {
@@ -45,15 +50,15 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 		if environment != "" {
 			resourceScope = fmt.Sprintf(resourceScopeStr, orgId, environment)
 		}
-		includeParentScope, err := cmd.Flags().GetBool("include-parent-scope")
+		includeParentScopes, err := cmd.Flags().GetBool("include-parent-scopes")
 		if err != nil {
 			return err
 		}
-		parentScope := ""
-		if cmd.Flags().Changed("include-parent-scope") {
-			parentScope = strconv.FormatBool(includeParentScope)
+		parentScopes := ""
+		if cmd.Flags().Changed("include-parent-scopes") {
+			parentScopes = strconv.FormatBool(includeParentScopes)
 		}
-		ipFilters, err = c.V2Client.ListIamIpFilters(resourceScope, parentScope)
+		ipFilters, err = c.V2Client.ListIamIpFilters(resourceScope, parentScopes)
 		if err != nil {
 			return err
 		}
@@ -66,14 +71,20 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 	list := output.NewList(cmd)
 	for _, filter := range ipFilters {
-		list.Add(&ipFilterOut{
-			ID:              filter.GetId(),
-			Name:            filter.GetFilterName(),
-			ResourceGroup:   filter.GetResourceGroup(),
-			IpGroups:        convertIpGroupObjectsToIpGroupIds(filter),
-			OperationGroups: filter.GetOperationGroups(),
-			ResourceScope:   filter.GetResourceScope(),
-		})
+		filterOut := ipFilterOut{
+			ID:            filter.GetId(),
+			Name:          filter.GetFilterName(),
+			ResourceGroup: filter.GetResourceGroup(),
+			IpGroups:      convertIpGroupObjectsToIpGroupIds(filter),
+		}
+		if isSrEnabled || isFlinkEnabled {
+			filterOut.ResourceScope = filter.GetResourceScope()
+			if filter.OperationGroups != nil {
+				sort.Strings(*filter.OperationGroups)
+			}
+			filterOut.OperationGroups = filter.GetOperationGroups()
+		}
+		list.Add(&filterOut)
 	}
 	return list.Print()
 }

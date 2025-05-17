@@ -33,9 +33,9 @@ func (c *command) newDekCreateCommand(cfg *config.Config) *cobra.Command {
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
-		addCaLocationFlag(cmd)
-		addSchemaRegistryEndpointFlag(cmd)
+		addCaLocationAndClientPathFlags(cmd)
 	}
+	addSchemaRegistryEndpointFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("kek-name"))

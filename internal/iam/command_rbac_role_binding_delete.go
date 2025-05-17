@@ -47,6 +47,9 @@ func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 	addClusterFlags(cmd, c.cfg, c.CLICommand)
 	cmd.Flags().String("resource", "", `Resource type and identifier using "Prefix:ID" format.`)
 	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
+	if c.cfg.IsOnPremLogin() {
+		pcmd.AddMDSOnPremMTLSFlags(cmd)
+	}
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("principal"))
@@ -118,18 +121,23 @@ func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, deleteRoleBinding 
 }
 
 func (c *roleBindingCommand) confluentDelete(cmd *cobra.Command, options *roleBindingOptions) (*http.Response, error) {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return nil, err
+	}
+
 	if err := deletion.ConfirmPrompt(cmd, rbacPromptMsg); err != nil {
 		return nil, err
 	}
 
 	if options.resource != "" {
-		return c.MDSClient.RBACRoleBindingCRUDApi.RemoveRoleResourcesForPrincipal(
+		return client.RBACRoleBindingCRUDApi.RemoveRoleResourcesForPrincipal(
 			c.createContext(),
 			options.principal,
 			options.role,
 			options.resourcesRequest)
 	} else {
-		return c.MDSClient.RBACRoleBindingCRUDApi.DeleteRoleForPrincipal(
+		return client.RBACRoleBindingCRUDApi.DeleteRoleForPrincipal(
 			c.createContext(),
 			options.principal,
 			options.role,

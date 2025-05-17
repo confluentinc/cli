@@ -3,6 +3,13 @@ Register cluster with the MDS cluster registry.
 Usage:
   confluent cluster register [flags]
 
+Examples:
+Register a new Confluent Platform cluster:
+
+  $ confluent cluster register --cluster-name myKafkaCluster --kafka-cluster kafka-ID --hosts 10.6.6.6:9000,10.3.3.3:9003 --protocol SASL_PLAINTEXT
+
+For more information, see https://docs.confluent.io/platform/current/security/cluster-registry.html#registering-clusters.
+
 Flags:
       --hosts strings                    REQUIRED: A comma-separated list of hosts.
       --protocol string                  REQUIRED: Security protocol.
@@ -13,6 +20,8 @@ Flags:
       --connect-cluster string           Kafka Connect cluster ID.
       --cmf string                       Confluent Managed Flink (CMF) ID.
       --flink-environment string         Flink environment ID.
+      --client-cert-path string          Path to client cert to be verified by MDS. Include for mTLS authentication.
+      --client-key-path string           Path to client private key, include for mTLS authentication.
       --context string                   CLI context name.
 
 Global Flags:

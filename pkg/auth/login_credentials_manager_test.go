@@ -72,9 +72,12 @@ func (suite *LoginCredentialsManagerTestSuite) SetupSuite() {
 		User: &ccloudv1mock.UserInterface{
 			LoginRealmFunc: func(req *ccloudv1.GetLoginRealmRequest) (*ccloudv1.GetLoginRealmReply, error) {
 				if req.Email == "test+sso@confluent.io" {
-					return &ccloudv1.GetLoginRealmReply{IsSso: true, Realm: "ccloud-local"}, nil
+					return &ccloudv1.GetLoginRealmReply{IsSso: true, MfaRequired: false, Realm: "ccloud-local"}, nil
 				}
-				return &ccloudv1.GetLoginRealmReply{IsSso: false, Realm: "ccloud-local"}, nil
+				if req.Email == "test+mfa@confluent.io" {
+					return &ccloudv1.GetLoginRealmReply{MfaRequired: true, Realm: "ccloud-local"}, nil
+				}
+				return &ccloudv1.GetLoginRealmReply{IsSso: false, MfaRequired: false, Realm: "ccloud-local"}, nil
 			},
 		},
 	}
@@ -106,6 +109,11 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCCloudCredentialsFromEnvVa
 	creds, err = suite.loginCredentialsManager.GetCloudCredentialsFromEnvVar("")()
 	suite.require.NoError(err)
 	suite.compareCredentials(&Credentials{Username: "test+sso@confluent.io", IsSSO: true, Password: ""}, creds)
+
+	suite.require.NoError(os.Setenv(ConfluentCloudEmail, "test+mfa@confluent.io"))
+	creds, err = suite.loginCredentialsManager.GetCloudCredentialsFromEnvVar("")()
+	suite.require.NoError(err)
+	suite.compareCredentials(&Credentials{Username: "test+mfa@confluent.io", IsMFA: true, Password: ""}, creds)
 
 	suite.setCCEnvVars()
 	creds, err = suite.loginCredentialsManager.GetCloudCredentialsFromEnvVar("")()

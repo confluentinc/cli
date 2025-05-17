@@ -2,6 +2,7 @@ package asyncapi
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -28,7 +29,7 @@ type channelDetails struct {
 	topicLevelTags          []spec.Tag
 	schemaLevelTags         []spec.Tag
 	bindings                *bindings
-	example                 any
+	examples                map[string]any
 }
 
 type accountDetails struct {
@@ -132,8 +133,9 @@ func (d *accountDetails) buildMessageEntity() *spec.MessageEntity {
 	// Name
 	entityProducer.WithName(msgName(d.channelDetails.currentTopic.GetTopicName()))
 	// Example
-	if d.channelDetails.example != nil {
-		entityProducer.WithExamples(spec.MessageOneOf1OneOf1ExamplesItems{Payload: &d.channelDetails.example})
+	if d.channelDetails.examples != nil && d.channelDetails.examples[d.channelDetails.currentTopic.GetTopicName()] != nil {
+		topicExample := d.channelDetails.examples[d.channelDetails.currentTopic.GetTopicName()]
+		entityProducer.WithExamples(spec.MessageOneOf1OneOf1ExamplesItems{Payload: &topicExample})
 	}
 	if d.channelDetails.bindings != nil {
 		entityProducer.WithBindings(d.channelDetails.bindings.messageBinding)
@@ -146,7 +148,7 @@ func (d *accountDetails) buildMessageEntity() *spec.MessageEntity {
 
 func catchOpenAPIError(err error) error {
 	if openAPIError, ok := err.(srsdk.GenericOpenAPIError); ok {
-		return fmt.Errorf(string(openAPIError.Body()))
+		return errors.New(string(openAPIError.Body()))
 	}
 	return err
 }

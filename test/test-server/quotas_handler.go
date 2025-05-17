@@ -69,7 +69,7 @@ func handleAppliedQuotas(t *testing.T) http.HandlerFunc {
 
 		reply, err := json.Marshal(quotaList)
 		require.NoError(t, err)
-		_, err = io.WriteString(w, string(reply))
+		_, err = io.Writer.Write(w, reply)
 		require.NoError(t, err)
 	}
 }

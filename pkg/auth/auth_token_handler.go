@@ -7,11 +7,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/pkg/browser"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
+	"github.com/confluentinc/cli/v4/pkg/auth/mfa"
 	"github.com/confluentinc/cli/v4/pkg/auth/sso"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/form"
@@ -40,11 +42,16 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 			if token, refreshToken, err := a.refreshCCloudSSOToken(client, credentials.AuthRefreshToken, organizationId); err == nil {
 				return token, refreshToken, nil
 			}
+		} else if credentials.IsMFA {
+			if token, refreshToken, err := a.refreshCCloudMFAToken(client, credentials.AuthRefreshToken, organizationId, credentials.Username); err == nil {
+				return token, refreshToken, nil
+			}
 		} else {
 			req := &ccloudv1.AuthenticateRequest{
 				RefreshToken:  credentials.AuthRefreshToken,
 				OrgResourceId: organizationId,
 			}
+
 			if res, err := client.Auth.Login(req); err == nil {
 				return res.GetToken(), res.GetRefreshToken(), nil
 			}
@@ -63,6 +70,17 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 		return token, refreshToken, err
 	}
 
+	if credentials.IsMFA {
+		token, refreshToken, err := a.getCCloudMFAToken(client, noBrowser, credentials.Username, organizationId)
+		if err != nil {
+			return "", "", err
+		}
+
+		client = clientFactory.JwtHTTPClientFactory(context.Background(), token, url)
+		err = a.checkMFAEmailMatchesLogin(client, credentials.Username)
+		return token, refreshToken, err
+	}
+
 	client.HttpClient.Timeout = 30 * time.Second
 	log.CliLogger.Debugf("Making login request for %s for org id %s", credentials.Username, organizationId)
 
@@ -75,6 +93,9 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 	res, err := client.Auth.Login(req)
 	if err != nil {
 		return "", "", err
+	}
+	if res.GetOrganization().GetMfaEnforcedAt() != nil && res.GetUser().GetAuthType() == ccloudv1.AuthType_AUTH_TYPE_LOCAL {
+		output.Printf(false, "Please be aware that you will be required to enroll in MFA by %s\n", convertDateFormat(res.GetOrganization().GetMfaEnforcedAt()))
 	}
 
 	if utils.IsOrgEndOfFreeTrialSuspended(res.GetOrganization().GetSuspensionStatus()) {
@@ -112,6 +133,32 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloudv1.Client, noBrow
 	return res.GetToken(), refreshToken, err
 }
 
+func (a *AuthTokenHandlerImpl) getCCloudMFAToken(client *ccloudv1.Client, noBrowser bool, email, organizationId string) (string, string, error) {
+	connectionName, err := a.getMfaConnectionName(client, email, organizationId)
+	if err != nil {
+		return "", "", fmt.Errorf(`unable to obtain MFA info for user "%s: %v"`, email, err)
+	}
+	if connectionName == "" {
+		return "", "", fmt.Errorf(`tried to obtain MFA token for non MFA user "%s"`, email)
+	}
+
+	idToken, refreshToken, err := mfa.Login(client.BaseURL, email, connectionName, noBrowser)
+	if err != nil {
+		return "", "", err
+	}
+
+	req := &ccloudv1.AuthenticateRequest{
+		IdToken:       idToken,
+		OrgResourceId: organizationId,
+	}
+	res, err := client.Auth.Login(req)
+	if err != nil {
+		return "", "", err
+	}
+
+	return res.GetToken(), refreshToken, err
+}
+
 func (a *AuthTokenHandlerImpl) getSsoConnectionName(client *ccloudv1.Client, email, organizationId string) (string, error) {
 	req := &ccloudv1.GetLoginRealmRequest{
 		Email:         email,
@@ -123,6 +170,22 @@ func (a *AuthTokenHandlerImpl) getSsoConnectionName(client *ccloudv1.Client, ema
 		return "", err
 	}
 	if loginRealmReply.GetIsSso() {
+		return loginRealmReply.GetRealm(), nil
+	}
+	return "", nil
+}
+
+func (a *AuthTokenHandlerImpl) getMfaConnectionName(client *ccloudv1.Client, email, organizationId string) (string, error) {
+	req := &ccloudv1.GetLoginRealmRequest{
+		Email:         email,
+		ClientId:      sso.GetAuth0CCloudClientIdFromBaseUrl(client.BaseURL),
+		OrgResourceId: organizationId,
+	}
+	loginRealmReply, err := client.User.LoginRealm(req)
+	if err != nil {
+		return "", err
+	}
+	if loginRealmReply.GetMfaRequired() {
 		return loginRealmReply.GetRealm(), nil
 	}
 	return "", nil
@@ -146,9 +209,34 @@ func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloudv1.Client, re
 
 	return res.GetToken(), refreshToken, err
 }
+func (a *AuthTokenHandlerImpl) refreshCCloudMFAToken(client *ccloudv1.Client, refreshToken, organizationId, email string) (string, string, error) {
+	idToken, refreshToken, err := mfa.RefreshTokens(client.BaseURL, refreshToken, email)
+	if err != nil {
+		return "", "", err
+	}
+
+	req := &ccloudv1.AuthenticateRequest{
+		IdToken:       idToken,
+		OrgResourceId: organizationId,
+	}
+
+	res, err := login(client, req)
+	if err != nil {
+		return "", "", err
+	}
+
+	return res.GetToken(), refreshToken, err
+}
 
 func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mdsv1.APIClient, credentials *Credentials, noBrowser bool) (string, string, error) {
 	ctx := utils.GetContext()
+	if credentials.IsCertificateOnly {
+		resp, _, err := mdsClient.TokensAndAuthenticationApi.GetToken(context.Background())
+		if err != nil {
+			return "", "", err
+		}
+		return resp.AuthToken, "", nil
+	}
 	if credentials.IsSSO {
 		if credentials.AuthRefreshToken != "" {
 			if authToken, err := refreshConfluentToken(mdsClient, credentials); err == nil {
@@ -226,6 +314,20 @@ func refreshConfluentToken(mdsClient *mdsv1.APIClient, credentials *Credentials)
 	return resp.AuthToken, nil
 }
 
+func (a *AuthTokenHandlerImpl) checkMFAEmailMatchesLogin(client *ccloudv1.Client, loginEmail string) error {
+	getMeReply, err := client.Auth.User()
+	if err != nil {
+		return err
+	}
+	if !strings.EqualFold(getMeReply.GetUser().GetEmail(), loginEmail) {
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf("expected login credentials for %s but got credentials for %s", loginEmail, getMeReply.GetUser().GetEmail()),
+			"Please re-login and use the same email at the prompt and in the login portal.",
+		)
+	}
+	return nil
+}
+
 func (a *AuthTokenHandlerImpl) checkSSOEmailMatchesLogin(client *ccloudv1.Client, loginEmail string) error {
 	getMeReply, err := client.Auth.User()
 	if err != nil {
@@ -246,4 +348,12 @@ func login(client *ccloudv1.Client, req *ccloudv1.AuthenticateRequest) (*ccloudv
 	} else {
 		return client.Auth.Login(req)
 	}
+}
+
+func convertDateFormat(mfaEnforcedAt *types.Timestamp) string {
+	if mfaEnforcedAt == nil {
+		return "Invalid Date"
+	}
+	date := time.Unix(mfaEnforcedAt.Seconds, int64(mfaEnforcedAt.Nanos)).UTC().Truncate(time.Microsecond)
+	return date.Format("01/02/2006")
 }

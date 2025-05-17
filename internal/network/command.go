@@ -93,7 +93,7 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 
 	cloud := network.Spec.GetCloud()
 	phase := network.Status.GetPhase()
-	supportedConnectionTypes := network.Status.GetSupportedConnectionTypes().Items
+	supportedConnectionTypes := network.Status.GetSupportedConnectionTypes()
 
 	human := &out{
 		Id:                       network.GetId(),
@@ -105,7 +105,7 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 		Zones:                    network.Spec.GetZones(),
 		Phase:                    phase,
 		SupportedConnectionTypes: supportedConnectionTypes,
-		ActiveConnectionTypes:    network.Status.GetActiveConnectionTypes().Items,
+		ActiveConnectionTypes:    network.Status.GetActiveConnectionTypes(),
 	}
 
 	describeFields := []string{"Id", "Environment", "Name", "Gateway", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
@@ -366,8 +366,9 @@ func toUpper(strSlice []string) []string {
 }
 
 func addForwarderFlags(cmd *cobra.Command) {
-	cmd.Flags().StringSlice("dns-server-ips", nil, "A comma-separated list of IP addresses for the DNS server.")
 	cmd.Flags().StringSlice("domains", nil, "A comma-separated list of domains for the DNS forwarder to use.")
+	cmd.Flags().StringSlice("dns-server-ips", nil, "A comma-separated list of IP addresses for the DNS server.")
+	cmd.Flags().String("domain-mapping", "", "Path to a domain mapping file containing domain mappings. Each mapping should have the format of domain=zone,project. Mappings are separated by new-line characters.")
 }
 
 func addGatewayFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {

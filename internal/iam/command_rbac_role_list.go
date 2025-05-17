@@ -1,13 +1,10 @@
 package iam
 
 import (
-	"strings"
-
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -21,6 +18,7 @@ func (c *roleCommand) newListCommand() *cobra.Command {
 	}
 
 	if c.cfg.IsOnPremLogin() {
+		pcmd.AddMDSOnPremMTLSFlags(cmd)
 		pcmd.AddContextFlag(cmd, c.CLICommand)
 	}
 	pcmd.AddOutputFlag(cmd)
@@ -37,41 +35,10 @@ func (c *roleCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
-	// add roles from all publicly released namespaces
-	namespaces := []string{
-		dataplaneNamespace.Value(),
-		dataGovernanceNamespace.Value(),
-		identityNamespace.Value(),
-		ksqlNamespace.Value(),
-		publicNamespace.Value(),
-		streamCatalogNamespace.Value(),
-	}
-	opt := optional.NewString(strings.Join(namespaces, ","))
-	roles, err := c.namespaceRoles(opt)
+	// Get all production public roles by passing in default empty namespace
+	roles, err := c.namespaceRoles(optional.EmptyString())
 	if err != nil {
 		return err
-	}
-
-	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
-	if featureflags.Manager.BoolVariation("flink.rbac.namespace.cli.enable", c.Context, ldClient, true, false) {
-		flinkRoles, err := c.namespaceRoles(flinkNamespace)
-		if err != nil {
-			return err
-		}
-		roles = append(roles, flinkRoles...)
-		workloadRoles, err := c.namespaceRoles(workloadNamespace)
-		if err != nil {
-			return err
-		}
-		roles = append(roles, workloadRoles...)
-	}
-
-	if featureflags.Manager.BoolVariation("flink.model.rbac.namespace.cli.enable", c.Context, ldClient, true, false) {
-		flinkModelRoles, err := c.namespaceRoles(flinkModelNamespace)
-		if err != nil {
-			return err
-		}
-		roles = append(roles, flinkModelRoles...)
 	}
 
 	if output.GetFormat(cmd).IsSerialized() {
@@ -90,7 +57,12 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 }
 
 func (c *roleCommand) confluentList(cmd *cobra.Command) error {
-	roles, _, err := c.MDSClient.RBACRoleDefinitionsApi.Roles(c.createContext())
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
+	roles, _, err := client.RBACRoleDefinitionsApi.Roles(c.createContext())
 	if err != nil {
 		return err
 	}

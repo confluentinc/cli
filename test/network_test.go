@@ -1,5 +1,7 @@
 package test
 
+import "os"
+
 func (s *CLITestSuite) TestNetworkDescribe() {
 	tests := []CLITest{
 		{args: "network describe n-abcde1", fixture: "network/describe-aws-ready.golden"},
@@ -91,6 +93,7 @@ func (s *CLITestSuite) TestNetworkCreate() {
 		{args: "network create aws-peering --cloud aws --region us-west-2 --connection-types peering --zone-info usw2-az1=10.10.0.0/27,usw2-az3=10.10.0.32/27,usw2-az4=10.10.0.64/27 --reserved-cidr 172.16.10.0/24 --environment env-00000", fixture: "network/create-peering-zone-info-pairs.golden"},
 		{args: "network create aws-peering --cloud aws --region us-west-2 --connection-types peering --zone-info usw2-az1=10.10.0.0/27,usw2-az3=10.10.0.32/27=usw2-az4=10.10.0.64/27 --reserved-cidr 172.16.10.0/24 --environment env-00000", fixture: "network/create-peering-zone-info-invalid.golden", exitCode: 1},
 		{args: "network create aws-tgw-peering --cloud aws --region us-west-2 --connection-types transitgateway,peering --zones usw2-az1,usw2-az3,usw2-az4 --zone-info 192.168.1.0/27,192.168.2.0/27,192.168.3.0/27 --environment env-00000", fixture: "network/create-tgw-peering.golden"},
+		{args: "network create gcp-pl --cloud gcp --connection-types privatelink --region us-central1", fixture: "network/create-gcp-pl.golden"},
 	}
 
 	for _, test := range tests {
@@ -136,6 +139,8 @@ func (s *CLITestSuite) TestNetworkGatewayDescribe() {
 	tests := []CLITest{
 		{args: "network gateway describe gw-12345", fixture: "network/gateway/describe-aws.golden"},
 		{args: "network gateway describe gw-54321", fixture: "network/gateway/describe-aws-private-network-interface.golden"},
+		{args: "network gateway describe gw-13570", fixture: "network/gateway/describe-gcp-dns-peering.golden"},
+		{args: "network gateway describe gw-07531", fixture: "network/gateway/describe-gcp.golden"},
 		{args: "network gateway describe gw-67890", fixture: "network/gateway/describe-azure.golden"},
 		{args: "network gateway describe gw-12345 --output json", fixture: "network/gateway/describe-aws-json.golden"},
 	}
@@ -474,6 +479,8 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentDescribe() {
 		{args: "network private-link attachment describe platt-invalid", fixture: "network/private-link/attachment/describe-invalid.golden", exitCode: 1},
 		{args: "network private-link attachment describe platt-azure", fixture: "network/private-link/attachment/describe-azure.golden"},
 		{args: "network private-link attachment describe platt-azure-2", fixture: "network/private-link/attachment/describe-azure-provisioning.golden"},
+		{args: "network private-link attachment describe platt-gcp", fixture: "network/private-link/attachment/describe-gcp.golden"},
+		{args: "network private-link attachment describe platt-gcp-2", fixture: "network/private-link/attachment/describe-gcp-provisioning.golden"},
 	}
 
 	for _, test := range tests {
@@ -518,7 +525,7 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentCreate() {
 		{args: "network private-link attachment create platt", fixture: "network/private-link/attachment/create-missing-flags.golden", exitCode: 1},
 		{args: "network private-link attachment create --cloud aws --region us-west-2", fixture: "network/private-link/attachment/create-no-name.golden", exitCode: 1},
 		{args: "network private-link attachment create aws-platt --cloud aws --region us-west-2", fixture: "network/private-link/attachment/create-aws.golden"},
-		{args: "network private-link attachment create gcp-platt --cloud gcp --region us-central1", fixture: "network/private-link/attachment/create-gcp-fail.golden", exitCode: 1},
+		{args: "network private-link attachment create gcp-platt --cloud gcp --region us-central1", fixture: "network/private-link/attachment/create-gcp.golden"},
 		{args: "network private-link attachment create azure-platt --cloud azure --region eastus2", fixture: "network/private-link/attachment/create-azure.golden"},
 	}
 
@@ -566,6 +573,8 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnectionDescribe() {
 		{args: "network private-link attachment connection describe plattc-invalid", fixture: "network/private-link/attachment/connection/describe-invalid.golden", exitCode: 1},
 		{args: "network private-link attachment connection describe plattc-azure", fixture: "network/private-link/attachment/connection/describe-azure.golden"},
 		{args: "network private-link attachment connection describe plattc-azure-2", fixture: "network/private-link/attachment/connection/describe-azure-provisioning.golden"},
+		{args: "network private-link attachment connection describe plattc-gcp", fixture: "network/private-link/attachment/connection/describe-gcp.golden"},
+		{args: "network private-link attachment connection describe plattc-gcp-2", fixture: "network/private-link/attachment/connection/describe-gcp-provisioning.golden"},
 	}
 
 	for _, test := range tests {
@@ -613,8 +622,8 @@ func (s *CLITestSuite) TestNetworkPrivateLinkAttachmentConnectionCreate() {
 		{args: "network private-link attachment connection create aws-plattc --cloud aws --endpoint vpce-1234567890abcdef0 --attachment platt-123456", fixture: "network/private-link/attachment/connection/create-aws.golden"},
 		{args: "network private-link attachment connection create aws-plattc-wrong-endpoint --cloud aws --endpoint vpce-invalid --attachment platt-123456", fixture: "network/private-link/attachment/connection/create-aws-invalid-endpoint.golden", exitCode: 1},
 		{args: "network private-link attachment connection create aws-plattc-invalid-platt --cloud aws --endpoint vpce-1234567890abcdef0 --attachment platt-invalid", fixture: "network/private-link/attachment/connection/create-aws-platt-not-found.golden", exitCode: 1},
-		{args: "network private-link attachment connection create gcp-plattc-wrong-platt-cloud --cloud gcp --endpoint vpce-1234567890abcdef0 --attachment platt-aws123", fixture: "network/private-link/attachment/connection/create-wrong-platt-cloud.golden", exitCode: 1},
 		{args: "network private-link attachment connection create azure-plattc --cloud azure --endpoint azure-pl-endpoint --attachment platt-azure", fixture: "network/private-link/attachment/connection/create-azure.golden"},
+		{args: "network private-link attachment connection create gcp-plattc --cloud gcp --endpoint gcp-pl-endpoint --attachment platt-gcp", fixture: "network/private-link/attachment/connection/create-gcp.golden"},
 	}
 
 	for _, test := range tests {
@@ -927,11 +936,25 @@ func (s *CLITestSuite) TestNetworkDnsForwarderDelete() {
 }
 
 func (s *CLITestSuite) TestNetworkDnsForwarderUpdate() {
+	file, _ := os.CreateTemp(os.TempDir(), "test")
+	_, _ = file.Write([]byte("abc.com=zone1,project1"))
+	defer func() {
+		_ = os.Remove(file.Name())
+	}()
+
+	fileUpdated, _ := os.CreateTemp(os.TempDir(), "test")
+	_, _ = fileUpdated.Write([]byte("abc.com=zone2,project2"))
+	if fileUpdated != nil {
+		defer os.Remove(fileUpdated.Name())
+	}
+
 	tests := []CLITest{
 		{args: "network dns forwarder update", fixture: "network/dns/forwarder/update-missing-args.golden", exitCode: 1},
 		{args: "network dns forwarder update dnsf-111111", fixture: "network/dns/forwarder/update-missing-flags.golden", exitCode: 1},
 		{args: "network dns forwarder update dnsf-111111 --name my-new-dns-forwarder --domains ghi.com,jkl.com,xyz.com", fixture: "network/dns/forwarder/update.golden"},
 		{args: "network dns forwarder update dnsf-111111 --dns-server-ips 10.208.0.0,10.209.0.0", fixture: "network/dns/forwarder/update-ips.golden"},
+		{args: "network dns forwarder create my-dns-forwarder-file --gateway gw-123456 --domains abc.com,def.com,xyz.com --domain-mapping " + file.Name(), fixture: "network/dns/forwarder/create_file.golden"},
+		{args: "network dns forwarder update my-dns-forwarder-file --domain-mapping " + fileUpdated.Name(), fixture: "network/dns/forwarder/update-mappings.golden"},
 		{args: "network dns forwarder update dnsf-invalid --name my-new-dns-forwarder", fixture: "network/dns/forwarder/update-dnsf-not-exist.golden", exitCode: 1},
 	}
 
@@ -942,12 +965,19 @@ func (s *CLITestSuite) TestNetworkDnsForwarderUpdate() {
 }
 
 func (s *CLITestSuite) TestNetworkDnsForwarderCreate() {
+	file, _ := os.CreateTemp(os.TempDir(), "test")
+	_, _ = file.Write([]byte("abc.com=zone1,project1"))
+	defer func() {
+		_ = os.Remove(file.Name())
+	}()
+
 	tests := []CLITest{
 		{args: "network dns forwarder create my-dns-forwarder", fixture: "network/dns/forwarder/create-missing-flags.golden", exitCode: 1},
 		{args: "network dns forwarder create dnsf-invalid-gateway --dns-server-ips 10.200.0.0 --gateway gw-123456 --domains abc.com", fixture: "network/dns/forwarder/create-invalid-gateway.golden", exitCode: 1},
 		{args: "network dns forwarder create dnsf-duplicate --dns-server-ips 10.200.0.0 --gateway gw-123456 --domains abc.com", fixture: "network/dns/forwarder/create-duplicate.golden", exitCode: 1},
 		{args: "network dns forwarder create dnsf-exceed-quota --dns-server-ips 10.200.0.0 --gateway gw-123456 --domains abc.com", fixture: "network/dns/forwarder/create-exceed-quota.golden", exitCode: 1},
 		{args: "network dns forwarder create my-dns-forwarder --dns-server-ips 10.200.0.0 --gateway gw-123456 --domains abc.com,def.com,xyz.com", fixture: "network/dns/forwarder/create.golden"},
+		{args: "network dns forwarder create my-dns-forwarder-file --gateway gw-123456 --domains abc.com,def.com,xyz.com --domain-mapping " + file.Name(), fixture: "network/dns/forwarder/create_file.golden"},
 		{args: "network dns forwarder create --dns-server-ips 10.200.0.0 --gateway gw-123456 --domains abc.com,def.com,xyz.com", fixture: "network/dns/forwarder/create-no-name.golden"},
 	}
 
@@ -1064,6 +1094,7 @@ func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointCreate() {
 	tests := []CLITest{
 		{args: "network access-point private-link egress-endpoint create --cloud aws --gateway gw-123456 --service com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000 --high-availability", fixture: "network/access-point/private-link/egress-endpoint/create-aws.golden"},
 		{args: "network access-point private-link egress-endpoint create my-egress-endpoint --cloud azure --gateway gw-123456 --service /subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName --subresource subresource1", fixture: "network/access-point/private-link/egress-endpoint/create-azure.golden"},
+		{args: "network access-point private-link egress-endpoint create my-egress-endpoint --cloud gcp --gateway gw-123456 --service projects/projectName/regions/us-central1/serviceAttachments/serviceAttachmentName", fixture: "network/access-point/private-link/egress-endpoint/create-gcp.golden"},
 	}
 
 	for _, test := range tests {
@@ -1077,6 +1108,7 @@ func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointDescribe()
 		{args: "network access-point private-link egress-endpoint describe ap-12345", fixture: "network/access-point/private-link/egress-endpoint/describe-aws.golden"},
 		{args: "network access-point private-link egress-endpoint describe ap-67890", fixture: "network/access-point/private-link/egress-endpoint/describe-azure.golden"},
 		{args: "network access-point private-link egress-endpoint describe ap-12345 --output json", fixture: "network/access-point/private-link/egress-endpoint/describe-aws-json.golden"},
+		{args: "network access-point private-link egress-endpoint describe ap-88888", fixture: "network/access-point/private-link/egress-endpoint/describe-gcp.golden"},
 	}
 
 	for _, test := range tests {
@@ -1101,6 +1133,7 @@ func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpointUpdate() {
 	tests := []CLITest{
 		{args: "network access-point private-link egress-endpoint update ap-12345 --name my-new-aws-egress-access-point", input: "y\n", fixture: "network/access-point/private-link/egress-endpoint/update-aws.golden"},
 		{args: "network access-point private-link egress-endpoint update ap-67890 --name my-new-azure-egress-access-point", input: "y\n", fixture: "network/access-point/private-link/egress-endpoint/update-azure.golden"},
+		{args: "network access-point private-link egress-endpoint update ap-88888 --name my-new-gcp-egress-access-point", input: "y\n", fixture: "network/access-point/private-link/egress-endpoint/update-gcp.golden"},
 	}
 
 	for _, test := range tests {

@@ -36,7 +36,6 @@ import (
 	"github.com/confluentinc/cli/v4/internal/logout"
 	"github.com/confluentinc/cli/v4/internal/network"
 	"github.com/confluentinc/cli/v4/internal/organization"
-	"github.com/confluentinc/cli/v4/internal/pipeline"
 	"github.com/confluentinc/cli/v4/internal/plugin"
 	"github.com/confluentinc/cli/v4/internal/prompt"
 	providerintegration "github.com/confluentinc/cli/v4/internal/provider-integration"
@@ -44,6 +43,7 @@ import (
 	"github.com/confluentinc/cli/v4/internal/secret"
 	servicequota "github.com/confluentinc/cli/v4/internal/service-quota"
 	streamshare "github.com/confluentinc/cli/v4/internal/stream-share"
+	"github.com/confluentinc/cli/v4/internal/tableflow"
 	"github.com/confluentinc/cli/v4/internal/update"
 	"github.com/confluentinc/cli/v4/internal/version"
 	pauth "github.com/confluentinc/cli/v4/pkg/auth"
@@ -115,15 +115,15 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(ccl.New(cfg, prerunner))
 	cmd.AddCommand(environment.New(prerunner))
 	cmd.AddCommand(feedback.New(prerunner))
+	cmd.AddCommand(flink.New(cfg, prerunner))
 	cmd.AddCommand(iam.New(cfg, prerunner))
 	cmd.AddCommand(kafka.New(cfg, prerunner))
 	cmd.AddCommand(ksql.New(cfg, prerunner))
-	cmd.AddCommand(local.New(prerunner))
+	cmd.AddCommand(local.New(cfg, prerunner))
 	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, loginCredentialsManager, loginOrganizationManager, authTokenHandler))
 	cmd.AddCommand(logout.New(cfg, prerunner, authTokenHandler))
 	cmd.AddCommand(network.New(prerunner))
 	cmd.AddCommand(organization.New(prerunner))
-	cmd.AddCommand(pipeline.New(prerunner))
 	cmd.AddCommand(plugin.New(cfg, prerunner))
 	cmd.AddCommand(prompt.New(cfg))
 	cmd.AddCommand(providerintegration.New(prerunner))
@@ -132,15 +132,13 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(secret.New(prerunner, secrets.NewPasswordProtectionPlugin()))
 	cmd.AddCommand(shell.New(cmd, func() *cobra.Command { return NewConfluentCommand(cfg) }))
 	cmd.AddCommand(streamshare.New(prerunner))
+	cmd.AddCommand(tableflow.New(prerunner))
 	cmd.AddCommand(update.New(cfg, prerunner))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
 
 	_ = cfg.ParseFlagsIntoConfig(cmd)
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.ai.enable", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(ai.New(prerunner))
-	}
-	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
-		cmd.AddCommand(flink.New(cfg, prerunner))
 	}
 
 	changeDefaults(cmd, cfg)

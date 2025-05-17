@@ -1,5 +1,7 @@
 package test
 
+import "fmt"
+
 func (s *CLITestSuite) TestIamRbacRole_OnPrem() {
 	tests := []CLITest{
 		{args: "iam rbac role describe DeveloperRead -o json", fixture: "iam/rbac/role/describe-json-onprem.golden"},
@@ -153,6 +155,7 @@ func (s *CLITestSuite) TestIamRbacRoleBindingList_OnPrem() {
 func (s *CLITestSuite) TestIamServiceAccount() {
 	tests := []CLITest{
 		{args: "iam service-account create human-service --description human-output", fixture: "iam/service-account/create.golden"},
+		{args: "iam service-account create human-service --description human-output --resource-owner u-123", fixture: "iam/service-account/create.golden"},
 		{args: "iam service-account create json-service --description json-output -o json", fixture: "iam/service-account/create-json.golden"},
 		{args: "iam service-account create yaml-service --description yaml-output -o yaml", fixture: "iam/service-account/create-yaml.golden"},
 		{args: "iam service-account delete sa-12345 --force", fixture: "iam/service-account/delete.golden"},
@@ -269,6 +272,7 @@ func (s *CLITestSuite) TestIamUserInvitationList() {
 func (s *CLITestSuite) TestIamProvider() {
 	tests := []CLITest{
 		{args: "iam provider create okta --description 'new description' --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com", fixture: "iam/identity-provider/create.golden"},
+		{args: "iam provider create okta-with-identity-claim --description 'new description' --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com --identity-claim claims.sub", fixture: "iam/identity-provider/create-with-identity-claim.golden"},
 		{args: "iam provider delete op-12345 --force", fixture: "iam/identity-provider/delete.golden"},
 		{args: "iam provider delete op-12345 op-54321", fixture: "iam/identity-provider/delete-multiple-fail.golden", exitCode: 1},
 		{args: "iam provider delete op-12345 op-67890", input: "n\n", fixture: "iam/identity-provider/delete-multiple-refuse.golden"},
@@ -276,7 +280,9 @@ func (s *CLITestSuite) TestIamProvider() {
 		{args: "iam provider delete op-12345", input: "y\n", fixture: "iam/identity-provider/delete-prompt.golden"},
 		{args: "iam provider delete op-1 --force", fixture: "iam/identity-provider/delete-dne.golden", exitCode: 1},
 		{args: "iam provider describe op-12345", fixture: "iam/identity-provider/describe.golden"},
+		{args: "iam provider describe op-67890", fixture: "iam/identity-provider/describe-with-identity-claim.golden"},
 		{args: "iam provider update op-12345 --name updated-name --description 'updated description'", fixture: "iam/identity-provider/update.golden"},
+		{args: "iam provider update op-67890 --identity-claim claims.sub.updated", fixture: "iam/identity-provider/update-with-identity-claim.golden"},
 		{args: "iam provider list", fixture: "iam/identity-provider/list.golden"},
 	}
 
@@ -401,8 +407,8 @@ func (s *CLITestSuite) TestIamIpGroup() {
 func (s *CLITestSuite) TestIamIpFilter() {
 	tests := []CLITest{
 		{args: "iam ip-filter create demo-ip-filter1 --resource-group management --ip-groups ipg-3g5jw,ipg-wjnde", fixture: "iam/ip-filter/create.golden"},
-		{args: "iam ip-filter create demo-ip-filter3 --resource-group multiple --operations MANAGEMENT --ip-groups ipg-3g5jw,ipg-wjnde", fixture: "iam/ip-filter/create-operation-groups.golden"},
-		{args: "iam ip-filter create demo-ip-filter4 --resource-group multiple --operations MANAGEMENT --no-public-networks", fixture: "iam/ip-filter/create-npn-group.golden"},
+		{args: "iam ip-filter create demo-ip-filter3 --operations MANAGEMENT --ip-groups ipg-3g5jw,ipg-wjnde", fixture: "iam/ip-filter/create-operation-groups.golden"},
+		{args: "iam ip-filter create demo-ip-filter4 --operations MANAGEMENT --no-public-networks", fixture: "iam/ip-filter/create-npn-group.golden"},
 		{args: "iam ip-filter list", fixture: "iam/ip-filter/list.golden"},
 		{args: "iam ip-filter describe ipf-34dq3", fixture: "iam/ip-filter/describe.golden"},
 		{args: "iam ip-filter delete ipf-34dq3", fixture: "iam/ip-filter/delete.golden"},
@@ -410,12 +416,175 @@ func (s *CLITestSuite) TestIamIpFilter() {
 		{args: "iam ip-filter update ipf-34dq3 --add-ip-groups ipg-abcde --remove-ip-groups ipg-12345", fixture: "iam/ip-filter/update-resource-duplicate.golden"},
 		{args: "iam ip-filter update ipf-34dq3 --add-ip-groups ipg-azbye --remove-ip-groups ipg-azbye", fixture: "iam/ip-filter/update-resource-add-and-remove.golden"},
 		{args: "iam ip-filter update ipf-34dq3 --add-ip-groups ipg-hjkil --remove-ip-groups ipg-fedbc", fixture: "iam/ip-filter/update-resource-remove-not-exist.golden"},
-		{args: "iam ip-filter update ipf-34dq3 --resource-group multiple --add-operation-groups SCHEMA", fixture: "iam/ip-filter/update-add-operation-group.golden"},
-		{args: "iam ip-filter update ipf-34dq3 --remove-operation-groups SCHEMA", fixture: "iam/ip-filter/update-remove-operation-group.golden"},
+		{args: "iam ip-filter update ipf-34dq5 --resource-group multiple --add-operation-groups SCHEMA", fixture: "iam/ip-filter/update-add-operation-group.golden"},
+		{args: "iam ip-filter update ipf-34dq4 --remove-operation-groups SCHEMA", fixture: "iam/ip-filter/update-remove-operation-group.golden"},
+		{args: "iam ip-filter update ipf-34dq4 --resource-group multiple --add-operation-groups FLINK", fixture: "iam/ip-filter/update-add-flink-operation-group.golden"},
+		{args: "iam ip-filter update ipf-34dq6 --remove-operation-groups SCHEMA,FLINK", fixture: "iam/ip-filter/update-remove-sr-and-flink-operation-group.golden"},
 	}
 
 	for _, test := range tests {
 		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+var mdsResourcePatterns = []struct {
+	Args string
+	Name string
+}{
+	{
+		Args: "--cluster-scope",
+		Name: "cluster-scope",
+	},
+	{
+		Args: "--topic test-topic",
+		Name: "topic",
+	},
+	{
+		Args: "--topic test-topic --prefix",
+		Name: "topic-prefix",
+	},
+	{
+		Args: "--consumer-group test-group",
+		Name: "consumer-group",
+	},
+	{
+		Args: "--consumer-group test-group --prefix",
+		Name: "consumer-group-prefix",
+	},
+	{
+		Args: "--transactional-id test-transactional-id",
+		Name: "transactional-id",
+	},
+	{
+		Args: "--transactional-id test-transactional-id --prefix",
+		Name: "transactional-id-prefix",
+	},
+}
+
+var mdsAclEntries = []struct {
+	Args string
+	Name string
+}{
+	{
+		Args: "--allow --principal User:42 --operation read",
+		Name: "allow-principal-user-operation-read",
+	},
+	{
+		Args: "--deny --principal User:42 --host testhost --operation read",
+		Name: "deny-principal-host-operation-read",
+	},
+	{
+		Args: "--allow --principal User:42 --host * --operation write",
+		Name: "allow-principal-host-star-operation-write",
+	},
+	{
+		Args: "--deny --principal User:42 --operation write",
+		Name: "deny-principal-user-operation-write",
+	},
+	{
+		Args: "--allow --principal User:42 --operation create",
+		Name: "allow-principal-user-operation-create",
+	},
+	{
+		Args: "--deny --principal User:42 --operation create",
+		Name: "deny-principal-user-operation-create",
+	},
+	{
+		Args: "--allow --principal User:42 --operation delete",
+		Name: "allow-principal-user-operation-delete",
+	},
+	{
+		Args: "--deny --principal User:42 --operation delete",
+		Name: "deny-principal-user-operation-delete",
+	},
+	{
+		Args: "--allow --principal User:42 --operation alter",
+		Name: "allow-principal-user-operation-alter",
+	},
+	{
+		Args: "--deny --principal User:42 --operation alter",
+		Name: "deny-principal-user-operation-alter",
+	},
+	{
+		Args: "--allow --principal User:42 --operation describe",
+		Name: "allow-principal-user-operation-describe",
+	},
+	{
+		Args: "--deny --principal User:42 --operation describe",
+		Name: "deny-principal-user-operation-describe",
+	},
+	{
+		Args: "--allow --principal User:42 --operation cluster-action",
+		Name: "allow-principal-user-operation-cluster-action",
+	},
+	{
+		Args: "--deny --principal User:42 --operation cluster-action",
+		Name: "deny-principal-user-operation-cluster-action",
+	},
+	{
+		Args: "--allow --principal User:42 --operation describe-configs",
+		Name: "allow-principal-user-operation-describe-configs",
+	},
+	{
+		Args: "--deny --principal User:42 --operation describe-configs",
+		Name: "deny-principal-user-operation-describe-configs",
+	},
+	{
+		Args: "--allow --principal User:42 --operation alter-configs",
+		Name: "allow-principal-user-operation-alter-configs",
+	},
+	{
+		Args: "--deny --principal User:42 --operation alter-configs",
+		Name: "deny-principal-user-operation-alter-configs",
+	},
+	{
+		Args: "--allow --principal User:42 --operation idempotent-write",
+		Name: "allow-principal-user-operation-idempotent-write",
+	},
+	{
+		Args: "--deny --principal User:42 --operation idempotent-write",
+		Name: "deny-principal-user-operation-idempotent-write",
+	},
+}
+
+func (s *CLITestSuite) TestIamAclList() {
+	tests := []CLITest{
+		{args: "iam acl list --kafka-cluster testcluster --principal User:42", fixture: "iam/acl/list-principal-user.golden"},
+	}
+	for _, mdsResourcePattern := range mdsResourcePatterns {
+		tests = append(tests, CLITest{args: fmt.Sprintf("iam acl list --kafka-cluster testcluster %s", mdsResourcePattern.Args), fixture: fmt.Sprintf("iam/acl/list-%s.golden", mdsResourcePattern.Name)})
+		tests = append(tests, CLITest{args: fmt.Sprintf("iam acl list --kafka-cluster testcluster %s --principal User:42", mdsResourcePattern.Args), fixture: fmt.Sprintf("iam/acl/list-%s-principal-user.golden", mdsResourcePattern.Name)})
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIamAclCreate() {
+	tests := []CLITest{
+		{args: "iam acl create --kafka-cluster testcluster --allow --operation read --principal User:42 --topic resource1 --consumer-group resource2", fixture: "iam/acl/create-exactly-one-set-error.golden", exitCode: 1},
+	}
+	for _, mdsAclEntry := range mdsAclEntries {
+		tests = append(tests, CLITest{args: fmt.Sprintf("iam acl create --kafka-cluster testcluster --cluster-scope %s", mdsAclEntry.Args), fixture: fmt.Sprintf("iam/acl/create-cluster-scope-%s.golden", mdsAclEntry.Name)})
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIamAclDelete() {
+	tests := []CLITest{
+		{args: `iam acl delete --kafka-cluster testcluster --cluster-scope --principal User:abc123 --operation write --host "*" --force`, fixture: "iam/acl/delete.golden"},
+		{args: `iam acl delete --kafka-cluster testcluster --principal User:def456 --operation any --host "*" --force`, fixture: "iam/acl/delet-multiple.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
 		s.runIntegrationTest(test)
 	}
 }

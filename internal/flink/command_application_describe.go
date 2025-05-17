@@ -36,7 +36,7 @@ func (c *command) applicationDescribe(cmd *cobra.Command, args []string) error {
 	}
 
 	applicationName := args[0]
-	application, err := client.DescribeApplication(cmd.Context(), environment, applicationName)
+	application, err := client.DescribeApplication(c.createContext(), environment, applicationName)
 	if err != nil {
 		return err
 	}

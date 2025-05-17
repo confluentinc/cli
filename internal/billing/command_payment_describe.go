@@ -35,7 +35,7 @@ func (c *command) describe(_ *cobra.Command, _ []string) error {
 	}
 
 	if card == nil {
-		output.Println(c.Config.EnableColor, "No credit card found. Add one using `confluent admin payment update`.")
+		output.Println(c.Config.EnableColor, "No credit card found. Add one using `confluent billing payment update`.")
 
 		ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 		if featureflags.Manager.BoolVariation("cloud_growth.marketplace_linking_advertisement_experiment.enable", c.Context, ldClient, true, false) {

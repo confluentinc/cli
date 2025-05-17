@@ -362,14 +362,27 @@ func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
 				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
 			}
+			if id == "op-67890" {
+				res.IdentityClaim = req.IdentityClaim
+				res.DisplayName = identityproviderv2.PtrString("okta-with-identity-claim")
+				res.Description = identityproviderv2.PtrString("providing identities with identity claim.")
+				res.Issuer = identityproviderv2.PtrString("https://company.new-provider.com")
+				res.JwksUri = identityproviderv2.PtrString("https://company.new-provider.com/oauth2/v1/keys")
+			}
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
 		case http.MethodGet:
-			identityProvider := buildIamProvider(id, "identity-provider", "providing identities.", "https://company.provider.com", "https://company.provider.com/oauth2/v1/keys")
-			err := json.NewEncoder(w).Encode(identityProvider)
-			require.NoError(t, err)
+			if id == identityProviderId {
+				identityProvider := buildIamProvider(id, "identity-provider", "providing identities.", "https://company.provider.com", "https://company.provider.com/oauth2/v1/keys", "")
+				err := json.NewEncoder(w).Encode(identityProvider)
+				require.NoError(t, err)
+			} else if id == "op-67890" {
+				identityProviderIdentityClaim := buildIamProvider(id, "okta-with-identity-claim", "new description.", "https://company.new-provider.com", "https://company.new-provider.com/oauth2/v1/keys", "claims.sub")
+				err := json.NewEncoder(w).Encode(identityProviderIdentityClaim)
+				require.NoError(t, err)
+			}
 		}
 	}
 }
@@ -379,20 +392,29 @@ func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			identityProvider := buildIamProvider(identityProviderId, "identity-provider", "providing identities.", "https://company.provider.com", "https://company.provider.com/oauth2/v1/keys")
-			anotherIdentityProvider := buildIamProvider("op-abc", "another-provider", "providing identities.", "https://company.provider.com", "https://company.provider.com/oauth2/v1/keys")
-			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityProviderList{Data: []identityproviderv2.IamV2IdentityProvider{identityProvider, anotherIdentityProvider}})
+			identityProvider := buildIamProvider(identityProviderId, "identity-provider", "providing identities.", "https://company.provider.com", "https://company.provider.com/oauth2/v1/keys", "")
+			anotherIdentityProvider := buildIamProvider("op-abc", "another-provider", "providing identities.", "https://company.provider.com", "https://company.provider.com/oauth2/v1/keys", "")
+			identityProviderIdentityClaim := buildIamProvider("op-67890", "okta-with-identity-claim", "new description.", "https://company.new-provider.com", "https://company.new-provider.com/oauth2/v1/keys", "claims.sub")
+			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityProviderList{Data: []identityproviderv2.IamV2IdentityProvider{identityProvider, anotherIdentityProvider, identityProviderIdentityClaim}})
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req identityproviderv2.IamV2IdentityProvider
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 			identityProvider := &identityproviderv2.IamV2IdentityProvider{
-				Id:          identityproviderv2.PtrString("op-55555"),
 				DisplayName: req.DisplayName,
 				Description: req.Description,
 				Issuer:      req.Issuer,
 				JwksUri:     req.JwksUri,
+			}
+			if *req.DisplayName == "okta" {
+				identityProvider.Id = identityproviderv2.PtrString("op-55555")
+			} else if *req.DisplayName == "okta-with-identity-claim" {
+				identityProvider.Id = identityproviderv2.PtrString("op-67890")
+				identityProvider.IdentityClaim = req.IdentityClaim
+				identityProvider.Description = identityproviderv2.PtrString("new description.")
+				identityProvider.Issuer = identityproviderv2.PtrString("https://company.new-provider.com")
+				identityProvider.JwksUri = identityproviderv2.PtrString("https://company.new-provider.com/oauth2/v1/keys")
 			}
 			err = json.NewEncoder(w).Encode(identityProvider)
 			require.NoError(t, err)
@@ -590,14 +612,18 @@ func handleIamIpFilters(t *testing.T) http.HandlerFunc {
 			var req iamipfilteringv2.IamV2IpFilter
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-
+			opGroups := req.OperationGroups
+			if *req.ResourceGroup == "management" {
+				opGroups = &[]string{"MANAGEMENT"}
+				req.ResourceGroup = iamipfilteringv2.PtrString("multiple")
+			}
 			ipFilter := &iamipfilteringv2.IamV2IpFilter{
 				Id:              iamipfilteringv2.PtrString(ipFilterId),
 				FilterName:      req.FilterName,
 				ResourceGroup:   req.ResourceGroup,
 				IpGroups:        req.IpGroups,
-				ResourceScope:   req.ResourceScope,
-				OperationGroups: req.OperationGroups,
+				ResourceScope:   iamipfilteringv2.PtrString("crn://confluent.cloud/organization=org123"),
+				OperationGroups: opGroups,
 			}
 			err = json.NewEncoder(w).Encode(ipFilter)
 			require.NoError(t, err)
@@ -624,7 +650,21 @@ func handleIamIpFilter(t *testing.T) http.HandlerFunc {
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodGet:
-			ipFilter := buildIamIpFilter(ipFilterId, "demo-ip-filter", "multiple", []string{"ipg-12345", "ipg-abcde"}, "", []string{"MANAGEMENT"})
+			var ipFilter iamipfilteringv2.IamV2IpFilter
+			segments := strings.Split(r.URL.String(), "/")
+			var filterId string
+			if len(segments) > 0 {
+				filterId = segments[len(segments)-1] // "ipf-34dq3"
+			}
+			var operationGroups []string
+			if filterId == "ipf-34dq4" {
+				operationGroups = []string{"MANAGEMENT", "SCHEMA"}
+			} else if filterId == "ipf-34dq6" {
+				operationGroups = []string{"MANAGEMENT", "SCHEMA", "FLINK"}
+			} else {
+				operationGroups = []string{"MANAGEMENT"}
+			}
+			ipFilter = buildIamIpFilter(ipFilterId, "demo-ip-filter", "multiple", []string{"ipg-12345", "ipg-abcde"}, "crn://confluent.cloud/organization=org123", operationGroups)
 			err := json.NewEncoder(w).Encode(ipFilter)
 			require.NoError(t, err)
 		case http.MethodDelete:
@@ -642,10 +682,10 @@ func handleIamIpGroups(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(iamipfilteringv2.IamV2IpGroupList{Data: []iamipfilteringv2.IamV2IpGroup{ipGroup}})
 			require.NoError(t, err)
 		case http.MethodPost:
-			var req iamv2.IamV2IpGroup
+			var req iamipfilteringv2.IamV2IpGroup
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			ipGroup := &iamv2.IamV2IpGroup{
+			ipGroup := &iamipfilteringv2.IamV2IpGroup{
 				Id:         iamv2.PtrString(ipGroupId),
 				GroupName:  req.GroupName,
 				CidrBlocks: req.CidrBlocks,
@@ -661,10 +701,10 @@ func handleIamIpGroup(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPatch:
-			var req iamv2.IamV2IpGroup
+			var req iamipfilteringv2.IamV2IpGroup
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			res := &iamv2.IamV2IpGroup{
+			res := &iamipfilteringv2.IamV2IpGroup{
 				Id:         req.Id,
 				GroupName:  req.GroupName,
 				CidrBlocks: req.CidrBlocks,
@@ -841,13 +881,14 @@ func buildIamCertificatePool(id, name, description, externalIdentifier, filter s
 	}
 }
 
-func buildIamProvider(id, name, description, issuer, jwksUri string) identityproviderv2.IamV2IdentityProvider {
+func buildIamProvider(id, name, description, issuer, jwksUri, identityClaim string) identityproviderv2.IamV2IdentityProvider {
 	return identityproviderv2.IamV2IdentityProvider{
-		Id:          iamv2.PtrString(id),
-		DisplayName: iamv2.PtrString(name),
-		Description: iamv2.PtrString(description),
-		Issuer:      iamv2.PtrString(issuer),
-		JwksUri:     iamv2.PtrString(jwksUri),
+		Id:            iamv2.PtrString(id),
+		DisplayName:   iamv2.PtrString(name),
+		Description:   iamv2.PtrString(description),
+		IdentityClaim: iamv2.PtrString(identityClaim),
+		Issuer:        iamv2.PtrString(issuer),
+		JwksUri:       iamv2.PtrString(jwksUri),
 	}
 }
 

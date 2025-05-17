@@ -26,10 +26,11 @@ func (c *identityProviderCommand) newUpdateCommand() *cobra.Command {
 
 	cmd.Flags().String("name", "", "Name of the identity provider.")
 	cmd.Flags().String("description", "", "Description of the identity provider.")
+	cmd.Flags().String("identity-claim", "", "The JSON Web Token (JWT) claim to extract the authenticating identity to Confluent resources from Registered Claim Names.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cmd.MarkFlagsOneRequired("name", "description")
+	cmd.MarkFlagsOneRequired("name", "description", "identity-claim")
 
 	return cmd
 }
@@ -45,9 +46,17 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	update := identityproviderv2.IamV2IdentityProviderUpdate{Id: identityproviderv2.PtrString(args[0])}
+	identityClaim, err := cmd.Flags().GetString("identity-claim")
+	if err != nil {
+		return err
+	}
+
+	update := identityproviderv2.IamV2IdentityProvider{Id: identityproviderv2.PtrString(args[0])}
 	if name != "" {
 		update.DisplayName = identityproviderv2.PtrString(name)
+	}
+	if identityClaim != "" {
+		update.IdentityClaim = identityproviderv2.PtrString(identityClaim)
 	}
 	if description != "" {
 		update.Description = identityproviderv2.PtrString(description)

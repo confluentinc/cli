@@ -102,7 +102,7 @@ func (c *Commander) ParseFlagsIntoContext(command *pcmd.CLICommand) func(*cobra.
 func (c *Commander) setClient(command *pcmd.AuthenticatedCLICommand) {
 	command.Client = c.Client
 	command.V2Client = c.V2Client
-	command.MDSClient = c.MDSClient
+	//command.MDSClient = c.MDSClient
 	command.MDSv2Client = c.MDSv2Client
 	command.KafkaRESTProvider = c.KafkaRESTProvider
 }

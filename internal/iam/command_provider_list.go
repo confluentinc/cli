@@ -30,11 +30,12 @@ func (c *identityProviderCommand) list(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, provider := range identityProviders {
 		list.Add(&identityProviderOut{
-			Id:          provider.GetId(),
-			Name:        provider.GetDisplayName(),
-			Description: provider.GetDescription(),
-			IssuerUri:   provider.GetIssuer(),
-			JwksUri:     provider.GetJwksUri(),
+			Id:            provider.GetId(),
+			Name:          provider.GetDisplayName(),
+			Description:   provider.GetDescription(),
+			IdentityClaim: provider.GetIdentityClaim(),
+			IssuerUri:     provider.GetIssuer(),
+			JwksUri:       provider.GetJwksUri(),
 		})
 	}
 	return list.Print()

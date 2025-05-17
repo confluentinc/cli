@@ -80,6 +80,8 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth
 	cmd.Flags().String("url", "", "Metadata Service (MDS) URL, for on-premises deployments.")
 	cmd.Flags().Bool("us-gov", false, "Log in to the Confluent Cloud US Gov environment.")
 	cmd.Flags().String("certificate-authority-path", "", "Self-signed certificate chain in PEM format, for on-premises deployments.")
+	pcmd.AddMDSOnPremMTLSFlags(cmd)
+	cmd.Flags().Bool("certificate-only", false, "Authenticate using mTLS certificate and key without SSO or username/password.")
 	cmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating using Single Sign-On (SSO).")
 	cmd.Flags().String("organization", "", "The Confluent Cloud organization to log in to. If empty, log in to the default organization.")
 	cmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
@@ -199,7 +201,7 @@ func (c *command) printRemainingFreeCredit(client *ccloudv1.Client, currentOrg *
 	// only print remaining free credit if there is any unexpired promo code and there is no payment method yet
 	if remainingFreeCredit > 0 {
 		output.ErrPrintf(c.Config.EnableColor, "Free credits: $%.2f USD remaining\n", billing.ConvertToUSD(remainingFreeCredit))
-		output.ErrPrintln(c.Config.EnableColor, "You are currently using a free trial version of Confluent Cloud. Add a payment method with `confluent admin payment update` to avoid an interruption in service once your trial ends.")
+		output.ErrPrintln(c.Config.EnableColor, "You are currently using a free trial version of Confluent Cloud. Add a payment method with `confluent billing payment update` to avoid an interruption in service once your trial ends.")
 	}
 }
 
@@ -224,12 +226,17 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, organization str
 }
 
 func (c *command) loginMDS(cmd *cobra.Command, url string) error {
-	credentials, err := c.getConfluentCredentials(cmd, url)
+	caCertPath, err := c.getCaCertPath(cmd)
 	if err != nil {
 		return err
 	}
 
-	caCertPath, err := c.getCaCertPath(cmd)
+	clientCertPath, clientKeyPath, err := pcmd.GetClientCertAndKeyPaths(cmd)
+	if err != nil {
+		return err
+	}
+
+	credentials, err := c.getConfluentCredentials(cmd, url, caCertPath, clientCertPath, clientKeyPath)
 	if err != nil {
 		return err
 	}
@@ -239,7 +246,7 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	client, err := c.mdsClientManager.GetMDSClient(url, caCertPath, unsafeTrace)
+	client, err := c.mdsClientManager.GetMDSClient(url, caCertPath, clientCertPath, clientKeyPath, unsafeTrace)
 	if err != nil {
 		return err
 	}
@@ -296,7 +303,7 @@ func (c *command) getCaCertPath(cmd *cobra.Command) (string, error) {
 // Order of precedence: prompt flag > environment variables (SSO > LDAP) > LDAP (keychain > config) > SSO > LDAP (prompt)
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
 // SSO and LDAP (basic auth) can be enabled simultaneously
-func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
+func (c *command) getConfluentCredentials(cmd *cobra.Command, url, caCertPath, clientCertPath, clientKeyPath string) (*pauth.Credentials, error) {
 	prompt, err := cmd.Flags().GetBool("prompt")
 	if err != nil {
 		return nil, err
@@ -305,26 +312,33 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetOnPremCredentialsFromPrompt())
 	}
 
-	caCertPath, err := c.getCaCertPath(cmd)
-	if err != nil {
-		return nil, err
-	}
-
 	unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
 	if err != nil {
 		return nil, err
 	}
 
+	certificateOnly, err := cmd.Flags().GetBool("certificate-only")
+	if err != nil {
+		return nil, err
+	}
+
+	if certificateOnly {
+		return pauth.GetLoginCredentials(
+			c.loginCredentialsManager.GetOnPremCertOnlyCredentials(certificateOnly),
+			c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(),
+		)
+	}
+
 	if pauth.IsOnPremSSOEnv() {
 		return pauth.GetLoginCredentials(
-			c.loginCredentialsManager.GetOnPremSsoCredentials(url, caCertPath, unsafeTrace),
+			c.loginCredentialsManager.GetOnPremSsoCredentials(url, caCertPath, clientCertPath, clientKeyPath, unsafeTrace),
 			c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(),
 		)
 	}
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
-		c.loginCredentialsManager.GetOnPremSsoCredentials(url, caCertPath, unsafeTrace),
+		c.loginCredentialsManager.GetOnPremSsoCredentials(url, caCertPath, clientCertPath, clientKeyPath, unsafeTrace),
 		c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(),
 	)
 }
@@ -354,8 +368,8 @@ func (c *command) getURL(cmd *cobra.Command) (string, error) {
 }
 
 func (c *command) saveLoginToKeychain(isCloud bool, url string, credentials *pauth.Credentials) error {
-	if credentials.IsSSO {
-		output.ErrPrintln(c.cfg.EnableColor, "The `--save` flag was ignored since SSO credentials are not stored locally.")
+	if credentials.IsSSO || credentials.IsMFA {
+		output.ErrPrintln(c.cfg.EnableColor, "The `--save` flag was ignored since SSO or MFA credentials are not stored on keychain.")
 		return nil
 	}
 

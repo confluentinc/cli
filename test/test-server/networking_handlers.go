@@ -508,9 +508,14 @@ func getNetworkList(filterName, filterCloud, filterRegion, filterCidr, filterPha
 	awsNetwork.Metadata = &networkingv1.ObjectMeta{CreatedAt: networkingv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))}
 	awsNetwork3.Metadata = &networkingv1.ObjectMeta{CreatedAt: networkingv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 1, time.UTC))}
 
+	// Flink CCN endpoint testing with mocking endpoint suffix
+	awsNetwork4 := getAwsNetwork("n-abcde6", "prod-aws-eu-west1", "READY", []string{"TRANSITGATEWAY", "PEERING"})
+	awsNetwork4.Spec.SetRegion("eu-west-1")
+	awsNetwork4.Status.SetEndpointSuffix("-n-abcde6.eu-west-1.aws.confluent.cloud")
+
 	networkList := networkingv1.NetworkingV1NetworkList{
 		Data: []networkingv1.NetworkingV1Network{
-			gcpNetwork, azureNetwork, awsNetwork, awsNetwork2, awsNetwork3,
+			gcpNetwork, azureNetwork, awsNetwork, awsNetwork2, awsNetwork3, awsNetwork4,
 		},
 	}
 	networkList.Data = filterNetworkList(networkList.Data, filterName, filterCloud, filterRegion, filterCidr, filterPhase, filterConnection)
@@ -526,7 +531,7 @@ func filterNetworkList(networkList []networkingv1.NetworkingV1Network, name, clo
 			(slices.Contains(region, networkSpec.Spec.GetRegion()) || region == nil) &&
 			(slices.Contains(cidr, networkSpec.Spec.GetCidr()) || cidr == nil) &&
 			(slices.Contains(phase, networkSpec.Status.GetPhase()) || phase == nil) &&
-			(containsFilter(connection, networkSpec.Status.GetActiveConnectionTypes().Items) || connection == nil) {
+			(containsFilter(connection, networkSpec.Status.GetActiveConnectionTypes()) || connection == nil) {
 			filteredNetworkList = append(filteredNetworkList, networkSpec)
 		}
 	}
@@ -555,7 +560,7 @@ func handleNetworkingNetworkCreate(t *testing.T) http.HandlerFunc {
 		err := json.NewDecoder(r.Body).Decode(body)
 		require.NoError(t, err)
 
-		connectionTypes := body.Spec.ConnectionTypes.Items
+		connectionTypes := *body.Spec.ConnectionTypes
 
 		if slices.Contains(connectionTypes, "TRANSITGATEWAY") && (body.Spec.Cidr == nil && body.Spec.ZonesInfo == nil) {
 			w.WriteHeader(http.StatusBadRequest)
@@ -573,8 +578,8 @@ func handleNetworkingNetworkCreate(t *testing.T) http.HandlerFunc {
 
 				Status: &networkingv1.NetworkingV1NetworkStatus{
 					Phase:                    "PROVISIONING",
-					SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: connectionTypes},
-					ActiveConnectionTypes:    networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
+					SupportedConnectionTypes: connectionTypes,
+					ActiveConnectionTypes:    []string{},
 				},
 			}
 
@@ -613,6 +618,15 @@ func handleNetworkingNetworkCreate(t *testing.T) http.HandlerFunc {
 				if slices.Contains(connectionTypes, "PRIVATELINK") {
 					network.Status.Cloud.NetworkingV1AwsNetwork.PrivateLinkEndpointService = networkingv1.PtrString("")
 				}
+			case "GCP":
+				network.Status.Cloud = &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
+					NetworkingV1GcpNetwork: &networkingv1.NetworkingV1GcpNetwork{
+						Kind: "GcpNetwork",
+					},
+				}
+				if slices.Contains(connectionTypes, "PRIVATELINK") {
+					network.Status.Cloud.NetworkingV1GcpNetwork.PrivateServiceConnectServiceAttachments = &map[string]string{}
+				}
 			}
 
 			err = json.NewEncoder(w).Encode(network)
@@ -634,8 +648,8 @@ func getAwsNetwork(id, name, phase string, connectionTypes []string) networkingv
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
-			SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: connectionTypes},
-			ActiveConnectionTypes:    networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
+			SupportedConnectionTypes: connectionTypes,
+			ActiveConnectionTypes:    []string{},
 			Cloud: &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
 				NetworkingV1AwsNetwork: &networkingv1.NetworkingV1AwsNetwork{
 					Kind: "AwsNetwork",
@@ -662,7 +676,7 @@ func getAwsNetwork(id, name, phase string, connectionTypes []string) networkingv
 	}
 
 	if phase == "READY" {
-		network.Status.ActiveConnectionTypes = networkingv1.NetworkingV1ConnectionTypes{Items: connectionTypes}
+		network.Status.ActiveConnectionTypes = connectionTypes
 		network.Status.Cloud.NetworkingV1AwsNetwork.Vpc = "vpc-00000000000000000"
 		network.Status.Cloud.NetworkingV1AwsNetwork.Account = "000000000000"
 	}
@@ -680,11 +694,17 @@ func getGcpNetwork(id, name, phase string, connectionTypes []string) networkingv
 			Region:      networkingv1.PtrString("us-central1"),
 			Cidr:        networkingv1.PtrString("10.1.0.0/16"),
 			Zones:       &[]string{"us-central1-a", "us-central1-b", "us-central1-c"},
+			Gateway: *networkingv1.NewNullableTypedEnvScopedObjectReference(
+				&networkingv1.TypedEnvScopedObjectReference{
+					Id:          "gateway-12345",
+					Environment: networkingv1.PtrString("env-00000"),
+				},
+			),
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
-			SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: connectionTypes},
-			ActiveConnectionTypes:    networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
+			SupportedConnectionTypes: connectionTypes,
+			ActiveConnectionTypes:    []string{},
 			Cloud: &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
 				NetworkingV1GcpNetwork: &networkingv1.NetworkingV1GcpNetwork{
 					Kind: "GcpNetwork",
@@ -714,7 +734,7 @@ func getGcpNetwork(id, name, phase string, connectionTypes []string) networkingv
 	}
 
 	if phase == "READY" {
-		network.Status.ActiveConnectionTypes = networkingv1.NetworkingV1ConnectionTypes{Items: connectionTypes}
+		network.Status.ActiveConnectionTypes = connectionTypes
 		network.Status.Cloud.NetworkingV1GcpNetwork.Project = "gcp-project"
 		network.Status.Cloud.NetworkingV1GcpNetwork.VpcNetwork = "gcp-vpc"
 	}
@@ -735,8 +755,8 @@ func getAzureNetwork(id, name, phase string, connectionTypes []string) networkin
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
-			SupportedConnectionTypes: networkingv1.NetworkingV1SupportedConnectionTypes{Items: connectionTypes},
-			ActiveConnectionTypes:    networkingv1.NetworkingV1ConnectionTypes{Items: []string{}},
+			SupportedConnectionTypes: connectionTypes,
+			ActiveConnectionTypes:    []string{},
 			Cloud: &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
 				NetworkingV1AzureNetwork: &networkingv1.NetworkingV1AzureNetwork{
 					Kind: "AzureNetwork",
@@ -772,7 +792,7 @@ func getAzureNetwork(id, name, phase string, connectionTypes []string) networkin
 	}
 
 	if phase == "READY" {
-		network.Status.ActiveConnectionTypes = networkingv1.NetworkingV1ConnectionTypes{Items: connectionTypes}
+		network.Status.ActiveConnectionTypes = connectionTypes
 		network.Status.Cloud.NetworkingV1AzureNetwork.Vnet = "azure-vnet"
 		network.Status.Cloud.NetworkingV1AzureNetwork.Subscription = "aa000000-a000-0a00-00aa-0000aaa0a0a0"
 	}
@@ -1271,30 +1291,38 @@ func handleNetworkingPrivateLinkAttachmentGet(t *testing.T, id string) http.Hand
 			w.WriteHeader(http.StatusNotFound)
 			return
 		case "platt-111111":
-			attachment := getPrivateLinkAttachment("platt-111111", "aws-platt", "WAITING_FOR_CONNECTIONS", "aws")
+			attachment := getPrivateLinkAttachment("platt-111111", "aws-platt", "WAITING_FOR_CONNECTIONS", "aws", "us-west-2")
 			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		case "platt-111112":
-			attachment := getPrivateLinkAttachment("platt-111112", "aws-platt", "PROVISIONING", "aws")
+			attachment := getPrivateLinkAttachment("platt-111112", "aws-platt", "PROVISIONING", "aws", "us-west-2")
 			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		case "platt-azure":
-			attachment := getPrivateLinkAttachment("platt-azure", "my-azure-private-link-attachment", "WAITING_FOR_CONNECTIONS", "azure")
+			attachment := getPrivateLinkAttachment("platt-azure", "my-azure-private-link-attachment", "WAITING_FOR_CONNECTIONS", "azure", "us-west-2")
 			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		case "platt-azure-2":
-			attachment := getPrivateLinkAttachment("platt-azure-2", "my-azure-private-link-attachment", "PROVISIONING", "azure")
+			attachment := getPrivateLinkAttachment("platt-azure-2", "my-azure-private-link-attachment", "PROVISIONING", "azure", "us-west-2")
+			err := json.NewEncoder(w).Encode(attachment)
+			require.NoError(t, err)
+		case "platt-gcp":
+			attachment := getPrivateLinkAttachment("platt-gcp", "my-gcp-private-link-attachment", "WAITING_FOR_CONNECTIONS", "gcp", "us-central1")
+			err := json.NewEncoder(w).Encode(attachment)
+			require.NoError(t, err)
+		case "platt-gcp-2":
+			attachment := getPrivateLinkAttachment("platt-gcp-2", "my-gcp-private-link-attachment", "PROVISIONING", "gcp", "us-central1")
 			err := json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		}
 	}
 }
 
-func getPrivateLinkAttachment(id, name, phase, cloud string) networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment {
+func getPrivateLinkAttachment(id, name, phase, cloud, region string) networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment {
 	attachment := networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment{
 		Id: networkingv1.PtrString(id),
 		Spec: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentSpec{
-			Region:      networkingprivatelinkv1.PtrString("us-west-2"),
+			Region:      networkingprivatelinkv1.PtrString(region),
 			DisplayName: networkingprivatelinkv1.PtrString(name),
 			Environment: &networkingprivatelinkv1.ObjectReference{Id: "env-00000"},
 		},
@@ -1306,6 +1334,8 @@ func getPrivateLinkAttachment(id, name, phase, cloud string) networkingprivateli
 		attachment.Spec.Cloud = networkingprivatelinkv1.PtrString("AWS")
 	case "azure":
 		attachment.Spec.Cloud = networkingprivatelinkv1.PtrString("Azure")
+	case "gcp":
+		attachment.Spec.Cloud = networkingprivatelinkv1.PtrString("GCP")
 	}
 
 	if phase != "PROVISIONING" {
@@ -1327,6 +1357,15 @@ func getPrivateLinkAttachment(id, name, phase, cloud string) networkingprivateli
 					},
 				},
 			}
+		case "gcp":
+			attachment.Status.Cloud = &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentStatusCloudOneOf{
+				NetworkingV1GcpPrivateLinkAttachmentStatus: &networkingprivatelinkv1.NetworkingV1GcpPrivateLinkAttachmentStatus{
+					Kind: "GcpPrivateLinkAttachmentStatus",
+					ServiceAttachment: networkingprivatelinkv1.NetworkingV1GcpPscServiceAttachment{
+						PrivateServiceConnectServiceAttachment: "projects/xxxxxxx/regions/us-central1/serviceAttachments/plattg-123456-service-attachment",
+					},
+				},
+			}
 		}
 	}
 
@@ -1344,10 +1383,14 @@ func handleNetworkingPrivateLinkAttachmentList(t *testing.T) http.HandlerFunc {
 		)
 
 		attachments := []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment{
-			getPrivateLinkAttachment("platt-111111", "aws-platt-1", "PROVISIONING", "aws"),
-			getPrivateLinkAttachment("platt-111112", "aws-platt-2", "WAITING_FOR_CONNECTIONS", "aws"),
-			getPrivateLinkAttachment("platt-111113", "aws-platt-3", "WAITING_FOR_CONNECTIONS", "aws"),
-			getPrivateLinkAttachment("platt-azure", "azure-platt-1", "WAITING_FOR_CONNECTIONS", "azure"),
+			getPrivateLinkAttachment("platt-111111", "aws-platt-1", "PROVISIONING", "aws", "us-west-2"),
+			getPrivateLinkAttachment("platt-111112", "aws-platt-2", "WAITING_FOR_CONNECTIONS", "aws", "us-west-2"),
+			getPrivateLinkAttachment("platt-111113", "aws-platt-3", "WAITING_FOR_CONNECTIONS", "aws", "us-west-2"),
+			getPrivateLinkAttachment("platt-azure", "azure-platt-1", "WAITING_FOR_CONNECTIONS", "azure", "us-west-2"),
+			getPrivateLinkAttachment("platt-gcp", "gcp-platt-1", "WAITING_FOR_CONNECTIONS", "gcp", "europe-west3-a"),
+			getPrivateLinkAttachment("platt-111114", "aws-platt-1-for-flink", "READY", "aws", "eu-west-1"),
+			getPrivateLinkAttachment("platt-111115", "aws-platt-2-for-flink", "READY", "aws", "eu-west-2"),
+			getPrivateLinkAttachment("platt-111116", "gcp-platt-1-for-flink", "READY", "gcp", "europe-west3-a"),
 		}
 
 		var filteredAttachments []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment
@@ -1378,7 +1421,7 @@ func handleNetworkingPrivateLinkAttachmentUpdate(t *testing.T, id string) http.H
 			err := json.NewDecoder(r.Body).Decode(body)
 			require.NoError(t, err)
 
-			attachment := getPrivateLinkAttachment("platt-111111", body.Spec.GetDisplayName(), "WAITING_FOR_CONNECTIONS", "aws")
+			attachment := getPrivateLinkAttachment("platt-111111", body.Spec.GetDisplayName(), "WAITING_FOR_CONNECTIONS", "aws", "us-west-2")
 			err = json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
 		}
@@ -1446,6 +1489,22 @@ func handleNetworkingPrivateLinkAttachmentCreate(t *testing.T) http.HandlerFunc 
 			}
 			err = json.NewEncoder(w).Encode(attachment)
 			require.NoError(t, err)
+		case "GCP":
+			attachment := networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment{
+				Id:   networkingprivatelinkv1.PtrString("pla-123456-gcp"),
+				Kind: networkingprivatelinkv1.PtrString("PrivateLinkAttachment"),
+				Spec: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentSpec{
+					Cloud:       networkingprivatelinkv1.PtrString(cloud),
+					Region:      networkingprivatelinkv1.PtrString(region),
+					DisplayName: networkingprivatelinkv1.PtrString(body.Spec.GetDisplayName()),
+					Environment: &networkingprivatelinkv1.ObjectReference{Id: body.Spec.Environment.GetId()},
+				},
+				Status: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentStatus{
+					Phase: "PROVISIONING",
+				},
+			}
+			err = json.NewEncoder(w).Encode(attachment)
+			require.NoError(t, err)
 		default:
 			w.WriteHeader(http.StatusBadRequest)
 			err := writeErrorJson(w, fmt.Sprintf("The private link attachment region '%s' for the cloud provider '%s' is not supported.", region, strings.ToLower(cloud)))
@@ -1474,6 +1533,14 @@ func handleNetworkingPrivateLinkAttachmentConnectionGet(t *testing.T, id string)
 			require.NoError(t, err)
 		case "plattc-azure-2":
 			connection := getPrivateLinkAttachmentConnection("plattc-azure-2", "my-azure-platt-connection", "PROVISIONING", "azure")
+			err := json.NewEncoder(w).Encode(connection)
+			require.NoError(t, err)
+		case "plattc-gcp":
+			connection := getPrivateLinkAttachmentConnection("plattc-gcp", "my-gcp-platt-connection", "READY", "gcp")
+			err := json.NewEncoder(w).Encode(connection)
+			require.NoError(t, err)
+		case "plattc-gcp-2":
+			connection := getPrivateLinkAttachmentConnection("plattc-gcp-2", "my-gcp-platt-connection", "PROVISIONING", "gcp")
 			err := json.NewEncoder(w).Encode(connection)
 			require.NoError(t, err)
 		}
@@ -1520,6 +1587,18 @@ func getPrivateLinkAttachmentConnection(id, name, phase string, cloud string) ne
 				Kind: "AzurePrivateLinkAttachmentConnectionStatus",
 			},
 		}
+	case "gcp":
+		connection.Spec.Cloud = &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionSpecCloudOneOf{
+			NetworkingV1GcpPrivateLinkAttachmentConnection: &networkingprivatelinkv1.NetworkingV1GcpPrivateLinkAttachmentConnection{
+				Kind:                              "GcpPrivateLinkAttachmentConnection",
+				PrivateServiceConnectConnectionId: "gcp-private-service-connect-id",
+			},
+		}
+		connection.Status.Cloud = &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionStatusCloudOneOf{
+			NetworkingV1GcpPrivateLinkAttachmentConnectionStatus: &networkingprivatelinkv1.NetworkingV1GcpPrivateLinkAttachmentConnectionStatus{
+				Kind: "GcpPrivateLinkAttachmentConnectionStatus",
+			},
+		}
 	}
 
 	if phase != "PROVISIONING" {
@@ -1529,6 +1608,8 @@ func getPrivateLinkAttachmentConnection(id, name, phase string, cloud string) ne
 		case "azure":
 			connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus.PrivateLinkServiceAlias = "azure-vnet-privatelink-1.a0a0aa00-a000-0aa0-a00a-0aaa0000a00a.eastus2.azure.privatelinkservice"
 			connection.Status.Cloud.NetworkingV1AzurePrivateLinkAttachmentConnectionStatus.PrivateLinkServiceResourceId = "/subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/azure-vnet/providers/Microsoft.Network/privateLinkServices/azure-vnet-privatelink-1"
+		case "gcp":
+			connection.Status.Cloud.NetworkingV1GcpPrivateLinkAttachmentConnectionStatus.PrivateServiceConnectServiceAttachment = "projects/xxxxxxx/regions/us-central1/serviceAttachments/plattg-123456-service-attachment"
 		}
 	}
 
@@ -1541,6 +1622,7 @@ func handleNetworkingPrivateLinkAttachmentConnectionList(t *testing.T) http.Hand
 		connection2 := getPrivateLinkAttachmentConnection("plattc-111112", "aws-plattc-2", "READY", "aws")
 		connection3 := getPrivateLinkAttachmentConnection("plattc-111113", "aws-plattc-3", "READY", "aws")
 		connection4 := getPrivateLinkAttachmentConnection("plattc-azure", "azure-plattc-1", "READY", "azure")
+		connection5 := getPrivateLinkAttachmentConnection("plattc-gcp", "gcp-plattc-1", "READY", "gcp")
 
 		privateLinkAttachment := r.URL.Query().Get("spec.private_link_attachment")
 		switch privateLinkAttachment {
@@ -1567,6 +1649,11 @@ func handleNetworkingPrivateLinkAttachmentConnectionList(t *testing.T) http.Hand
 			case "azure-plattc-1":
 				connectionList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList{
 					Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{connection4},
+					Metadata: networkingprivatelinkv1.ListMeta{},
+				}
+			case "gcp-plattc-1":
+				connectionList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList{
+					Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{connection5},
 					Metadata: networkingprivatelinkv1.ListMeta{},
 				}
 			default:
@@ -1671,9 +1758,26 @@ func handleNetworkingPrivateLinkAttachmentConnectionCreate(t *testing.T) http.Ha
 			}
 		case *networkingprivatelinkv1.NetworkingV1GcpPrivateLinkAttachmentConnection:
 			switch name {
-			case "gcp-plattc-wrong-platt-cloud":
-				w.WriteHeader(http.StatusBadRequest)
-				err := writeErrorJson(w, "The AWS spec for the private link attachment connection must be provided.")
+			case "gcp-plattc":
+				connection := networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{
+					Id:   networkingprivatelinkv1.PtrString("plattc-gcp"),
+					Kind: networkingprivatelinkv1.PtrString("PrivateLinkAttachmentConnection"),
+					Spec: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionSpec{
+						Cloud:                 body.Spec.Cloud,
+						DisplayName:           body.Spec.DisplayName,
+						Environment:           &networkingprivatelinkv1.ObjectReference{Id: body.Spec.Environment.GetId()},
+						PrivateLinkAttachment: &networkingprivatelinkv1.ObjectReference{Id: body.Spec.PrivateLinkAttachment.GetId()},
+					},
+					Status: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionStatus{
+						Phase: "PROVISIONING",
+						Cloud: &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionStatusCloudOneOf{
+							NetworkingV1GcpPrivateLinkAttachmentConnectionStatus: &networkingprivatelinkv1.NetworkingV1GcpPrivateLinkAttachmentConnectionStatus{
+								Kind: "GcpPrivateLinkAttachmentConnectionStatus",
+							},
+						},
+					},
+				}
+				err = json.NewEncoder(w).Encode(connection)
 				require.NoError(t, err)
 			}
 		case *networkingprivatelinkv1.NetworkingV1AzurePrivateLinkAttachmentConnection:
@@ -2178,6 +2282,16 @@ func getGateway(id, environment, name, specConfigKind, statusCloudGatewayKind st
 			Kind:   specConfigKind,
 			Region: "eastus2",
 		}))
+	case "GcpEgressPrivateServiceConnectGatewaySpec":
+		gateway.Spec.SetConfig(networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec{
+			Kind:   specConfigKind,
+			Region: "eastus",
+		}))
+	case "GcpPeeringGatewaySpec":
+		gateway.Spec.SetConfig(networkinggatewayv1.NetworkingV1GcpPeeringGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkinggatewayv1.NetworkingV1GcpPeeringGatewaySpec{
+			Kind:   specConfigKind,
+			Region: "eastus2",
+		}))
 	}
 
 	switch statusCloudGatewayKind {
@@ -2195,6 +2309,16 @@ func getGateway(id, environment, name, specConfigKind, statusCloudGatewayKind st
 		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewayStatus{
 			Kind:         statusCloudGatewayKind,
 			Subscription: networkinggatewayv1.PtrString("aa000000-a000-0a00-00aa-0000aaa0a0a0"),
+		}))
+	case "GcpEgressPrivateServiceConnectGatewayStatus":
+		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatus{
+			Kind:    statusCloudGatewayKind,
+			Project: networkinggatewayv1.PtrString("project-12345"),
+		}))
+	case "GcpPeeringGatewayStatus":
+		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatus{
+			Kind:         statusCloudGatewayKind,
+			IamPrincipal: networkinggatewayv1.PtrString("g000000-a000-0a00-00aa-0000aaa0a0a0"),
 		}))
 	}
 
@@ -2218,6 +2342,14 @@ func handleNetworkingGatewayGet(t *testing.T, id, environment string) http.Handl
 			require.NoError(t, err)
 		case "gw-67890":
 			record := getGateway(id, environment, "my-azure-gateway", "AzureEgressPrivateLinkGatewaySpec", "AzureEgressPrivateLinkGatewayStatus")
+			err := json.NewEncoder(w).Encode(record)
+			require.NoError(t, err)
+		case "gw-13570":
+			record := getGateway(id, environment, "my-gcp-gateway", "GcpPeeringGatewaySpec", "GcpPeeringGatewayStatus")
+			err := json.NewEncoder(w).Encode(record)
+			require.NoError(t, err)
+		case "gw-07531":
+			record := getGateway(id, environment, "my-gcp-gateway", "GcpEgressPrivateServiceConnectGatewaySpec", "GcpEgressPrivateServiceConnectGatewayStatus")
 			err := json.NewEncoder(w).Encode(record)
 			require.NoError(t, err)
 		}
@@ -2263,6 +2395,16 @@ func handleNetworkingGatewayPost(t *testing.T) http.HandlerFunc {
 				Kind:         "AzureEgressPrivateLinkGatewayStatus",
 				Subscription: networkingv1.PtrString("aa000000-a000-0a00-00aa-0000aaa0a0a0"),
 			}))
+		} else if body.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec != nil {
+			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatus{
+				Kind:    "GcpEgressPrivateServiceConnectGatewayStatus",
+				Project: networkingv1.PtrString("project-12345"),
+			}))
+		} else if body.Spec.Config.NetworkingV1GcpPeeringGatewaySpec != nil {
+			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatus{
+				Kind:         "GcpPeeringGatewayStatus",
+				IamPrincipal: networkingv1.PtrString("g000000-a000-0a00-00aa-0000aaa0a0a0"),
+			}))
 		}
 
 		err = json.NewEncoder(w).Encode(gateway)
@@ -2277,8 +2419,10 @@ func handleNetworkingGatewayList(t *testing.T, environment string) http.HandlerF
 		gatewayThree := getGateway("gw-23456", environment, "my-aws-gateway", "AwsPrivateNetworkInterfaceGatewaySpec", "AwsPrivateNetworkInterfaceGatewayStatus")
 		gatewayFour := getGateway("gw-67890", environment, "my-azure-gateway", "AzureEgressPrivateLinkGatewaySpec", "AzureEgressPrivateLinkGatewayStatus")
 		gatewayFive := getGateway("gw-09876", environment, "my-azure-peering-gateway", "AzurePeeringGatewaySpec", "")
+		gatewaySix := getGateway("gw-13570", environment, "my-gcp-peering-gateway", "GcpPeeringGatewaySpec", "GcpPeeringGatewayStatus")
+		gatewaySeven := getGateway("gw-07531", environment, "my-gcp-gateway", "GcpEgressPrivateServiceConnectGatewaySpec", "GcpEgressPrivateServiceConnectGatewayStatus")
 
-		recordList := networkinggatewayv1.NetworkingV1GatewayList{Data: []networkinggatewayv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour, gatewayFive}}
+		recordList := networkinggatewayv1.NetworkingV1GatewayList{Data: []networkinggatewayv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour, gatewayFive, gatewaySix, gatewaySeven}}
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
 	}
@@ -2389,6 +2533,10 @@ func handleNetworkingDnsForwarderGet(t *testing.T, id string) http.HandlerFunc {
 			w.WriteHeader(http.StatusNotFound)
 			err := writeErrorJson(w, "The dns forwarder dnsf-invalid was not found.")
 			require.NoError(t, err)
+		case "my-dns-forwarder-file":
+			dnsf := getDnsForwarderGCP(id, "my-dns-forwarder-file")
+			err := json.NewEncoder(w).Encode(dnsf)
+			require.NoError(t, err)
 		default:
 			dnsf := getDnsForwarder(id, "my-dns-forwarder")
 			err := json.NewEncoder(w).Encode(dnsf)
@@ -2429,6 +2577,31 @@ func getDnsForwarder(id, name string) networkingdnsforwarderv1.NetworkingV1DnsFo
 	return forwarder
 }
 
+func getDnsForwarderGCP(id, name string) networkingdnsforwarderv1.NetworkingV1DnsForwarder {
+	forwarder := networkingdnsforwarderv1.NetworkingV1DnsForwarder{
+		Id: networkingdnsforwarderv1.PtrString(id),
+		Spec: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpec{
+			DisplayName: networkingdnsforwarderv1.PtrString(name),
+			Domains:     &[]string{"abc.com", "def.com", "example.domain", "xyz.com", "my.dns.forwarder.example.domain"},
+			Config: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecConfigOneOf{
+				NetworkingV1ForwardViaGcpDnsZones: &networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZones{
+					Kind: "ForwardViaGcpDnsZones",
+					DomainMappings: map[string]networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZonesDomainMappings{
+						"abc.com": {
+							Zone:    ptrString("zone1"),
+							Project: ptrString("project1"),
+						},
+					},
+				},
+			},
+			Environment: &networkingdnsforwarderv1.ObjectReference{Id: "env-00000"},
+			Gateway:     &networkingdnsforwarderv1.ObjectReference{Id: "gw-111111"},
+		},
+		Status: &networkingdnsforwarderv1.NetworkingV1DnsForwarderStatus{Phase: "READY"},
+	}
+	return forwarder
+}
+
 func handleNetworkingDnsForwarderDelete(t *testing.T, id string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch id {
@@ -2447,14 +2620,20 @@ func handleNetworkingDnsForwarderList(t *testing.T) http.HandlerFunc {
 		forwarder1 := getDnsForwarder("dnsf-abcde1", "my-dns-forwarder-1")
 		forwarder2 := getDnsForwarder("dnsf-abcde2", "my-dns-forwarder-2")
 		forwarder3 := getDnsForwarder("dnsf-abcde3", "my-dns-forwarder-3")
+		forwarder4 := getDnsForwarderGCP("dnsf-abcde4", "my-dns-forwarder-4")
 
 		pageToken := r.URL.Query().Get("page_token")
 		var dnsForwarderList networkingdnsforwarderv1.NetworkingV1DnsForwarderList
 		switch pageToken {
+		case "my-dns-forwarder-4":
+			dnsForwarderList = networkingdnsforwarderv1.NetworkingV1DnsForwarderList{
+				Data:     []networkingdnsforwarderv1.NetworkingV1DnsForwarder{forwarder4},
+				Metadata: networkingdnsforwarderv1.ListMeta{},
+			}
 		case "my-dns-forwarder-3":
 			dnsForwarderList = networkingdnsforwarderv1.NetworkingV1DnsForwarderList{
 				Data:     []networkingdnsforwarderv1.NetworkingV1DnsForwarder{forwarder3},
-				Metadata: networkingdnsforwarderv1.ListMeta{},
+				Metadata: networkingdnsforwarderv1.ListMeta{Next: *networkingdnsforwarderv1.NewNullableString(networkingdnsforwarderv1.PtrString("/networking/v1/dns-forwarder?environment=a-595&page_size=1&page_token=my-dns-forwarder-4"))},
 			}
 		case "my-dns-forwarder-2":
 			dnsForwarderList = networkingdnsforwarderv1.NetworkingV1DnsForwarderList{
@@ -2492,8 +2671,12 @@ func handleNetworkingDnsForwarderUpdate(t *testing.T, id string) http.HandlerFun
 			if body.Spec.Domains != nil {
 				forwarder.Spec.SetDomains(body.Spec.GetDomains())
 			}
-			if body.Spec.Config != nil {
+			if body.Spec.Config != nil && len(body.Spec.Config.NetworkingV1ForwardViaIp.GetDnsServerIps()) != 0 {
 				forwarder.Spec.Config.NetworkingV1ForwardViaIp.SetDnsServerIps(body.Spec.Config.NetworkingV1ForwardViaIp.GetDnsServerIps())
+			}
+			if body.Spec.Config != nil && len(body.Spec.Config.NetworkingV1ForwardViaGcpDnsZones.GetDomainMappings()) != 0 {
+				forwarder = getDnsForwarderGCP(id, "my-dns-forwarder")
+				forwarder.Spec.Config.NetworkingV1ForwardViaGcpDnsZones.SetDomainMappings(body.Spec.Config.NetworkingV1ForwardViaGcpDnsZones.GetDomainMappings())
 			}
 			err = json.NewEncoder(w).Encode(forwarder)
 			require.NoError(t, err)
@@ -2526,24 +2709,45 @@ func handleNetworkingDnsForwarderCreate(t *testing.T) http.HandlerFunc {
 			err := writeErrorJson(w, message)
 			require.NoError(t, err)
 		default:
-			forwarder := networkingdnsforwarderv1.NetworkingV1DnsForwarder{
-				Id: networkingdnsforwarderv1.PtrString("dnsf-abcde1"),
-				Spec: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpec{
-					DisplayName: networkingdnsforwarderv1.PtrString(name),
-					Domains:     body.Spec.Domains,
-					Config: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecConfigOneOf{
-						NetworkingV1ForwardViaIp: &networkingdnsforwarderv1.NetworkingV1ForwardViaIp{
-							Kind:         body.Spec.Config.NetworkingV1ForwardViaIp.Kind,
-							DnsServerIps: body.Spec.Config.NetworkingV1ForwardViaIp.DnsServerIps,
+			if numDnsServerIps == 0 {
+				forwarder := networkingdnsforwarderv1.NetworkingV1DnsForwarder{
+					Id: networkingdnsforwarderv1.PtrString("dnsf-abcde1"),
+					Spec: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpec{
+						DisplayName: networkingdnsforwarderv1.PtrString(name),
+						Domains:     body.Spec.Domains,
+						Config: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecConfigOneOf{
+							NetworkingV1ForwardViaGcpDnsZones: &networkingdnsforwarderv1.NetworkingV1ForwardViaGcpDnsZones{
+								Kind:           body.Spec.Config.NetworkingV1ForwardViaGcpDnsZones.Kind,
+								DomainMappings: body.Spec.Config.NetworkingV1ForwardViaGcpDnsZones.DomainMappings,
+							},
 						},
+						Environment: &networkingdnsforwarderv1.ObjectReference{Id: "env-00000"},
+						Gateway:     body.Spec.Gateway,
 					},
-					Environment: &networkingdnsforwarderv1.ObjectReference{Id: "env-00000"},
-					Gateway:     body.Spec.Gateway,
-				},
-				Status: &networkingdnsforwarderv1.NetworkingV1DnsForwarderStatus{Phase: "READY"},
+					Status: &networkingdnsforwarderv1.NetworkingV1DnsForwarderStatus{Phase: "READY"},
+				}
+				err = json.NewEncoder(w).Encode(forwarder)
+				require.NoError(t, err)
+			} else {
+				forwarder := networkingdnsforwarderv1.NetworkingV1DnsForwarder{
+					Id: networkingdnsforwarderv1.PtrString("dnsf-abcde1"),
+					Spec: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpec{
+						DisplayName: networkingdnsforwarderv1.PtrString(name),
+						Domains:     body.Spec.Domains,
+						Config: &networkingdnsforwarderv1.NetworkingV1DnsForwarderSpecConfigOneOf{
+							NetworkingV1ForwardViaIp: &networkingdnsforwarderv1.NetworkingV1ForwardViaIp{
+								Kind:         body.Spec.Config.NetworkingV1ForwardViaIp.Kind,
+								DnsServerIps: body.Spec.Config.NetworkingV1ForwardViaIp.DnsServerIps,
+							},
+						},
+						Environment: &networkingdnsforwarderv1.ObjectReference{Id: "env-00000"},
+						Gateway:     body.Spec.Gateway,
+					},
+					Status: &networkingdnsforwarderv1.NetworkingV1DnsForwarderStatus{Phase: "READY"},
+				}
+				err = json.NewEncoder(w).Encode(forwarder)
+				require.NoError(t, err)
 			}
-			err = json.NewEncoder(w).Encode(forwarder)
-			require.NoError(t, err)
 		}
 	}
 }
@@ -2627,6 +2831,34 @@ func getAzureEgressAccessPoint(id, environment, name string) networkingaccesspoi
 	}
 }
 
+func getGcpEgressAccessPoint(id, environment, name string) networkingaccesspointv1.NetworkingV1AccessPoint {
+	return networkingaccesspointv1.NetworkingV1AccessPoint{
+		Id: networkingaccesspointv1.PtrString(id),
+		Spec: &networkingaccesspointv1.NetworkingV1AccessPointSpec{
+			DisplayName: networkingaccesspointv1.PtrString(name),
+			Config: &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
+				NetworkingV1GcpEgressPrivateServiceConnectEndpoint: &networkingaccesspointv1.NetworkingV1GcpEgressPrivateServiceConnectEndpoint{
+					Kind:                                "GcpEgressPrivateServiceConnectEndpoint",
+					PrivateServiceConnectEndpointTarget: "projects/projectName/regions/us-central1/serviceAttachments/serviceAttachmentName",
+				},
+			},
+			Environment: &networkingaccesspointv1.ObjectReference{Id: environment},
+			Gateway:     &networkingaccesspointv1.ObjectReference{Id: "gw-12345"},
+		},
+		Status: &networkingaccesspointv1.NetworkingV1AccessPointStatus{
+			Phase: "READY",
+			Config: &networkingaccesspointv1.NetworkingV1AccessPointStatusConfigOneOf{
+				NetworkingV1GcpEgressPrivateServiceConnectEndpointStatus: &networkingaccesspointv1.NetworkingV1GcpEgressPrivateServiceConnectEndpointStatus{
+					Kind: "GcpEgressPrivateLinkEndpointStatus",
+					PrivateServiceConnectEndpointConnectionId: "111111111111111111",
+					PrivateServiceConnectEndpointName:         "private-service-connect-endpoint-name",
+					PrivateServiceConnectEndpointIpAddress:    "10.2.0.68",
+				},
+			},
+		},
+	}
+}
+
 func handleNetworkingAccessPointGet(t *testing.T, id, environment string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var accessPoint networkingaccesspointv1.NetworkingV1AccessPoint
@@ -2639,6 +2871,8 @@ func handleNetworkingAccessPointGet(t *testing.T, id, environment string) http.H
 			accessPoint = getAwsPrivateNetworkInterfaceAccessPoint(id, environment, "my-aws-private-network-interface-access-point")
 		case "ap-67890":
 			accessPoint = getAzureEgressAccessPoint(id, environment, "my-azure-egress-access-point")
+		case "ap-88888":
+			accessPoint = getGcpEgressAccessPoint(id, environment, "my-gcp-egress-access-point")
 		}
 		err := json.NewEncoder(w).Encode(accessPoint)
 		require.NoError(t, err)
@@ -2668,6 +2902,8 @@ func handleNetworkingAccessPointUpdate(t *testing.T, id string) http.HandlerFunc
 			}
 		case "ap-67890":
 			accessPoint = getAzureEgressAccessPoint(id, body.Spec.Environment.GetId(), "my-azure-egress-access-point")
+		case "ap-88888":
+			accessPoint = getGcpEgressAccessPoint(id, body.Spec.Environment.GetId(), "my-gcp-egress-access-point")
 		}
 
 		accessPoint.Spec.SetDisplayName(body.Spec.GetDisplayName())
@@ -2682,8 +2918,9 @@ func handleNetworkingAccessPointList(t *testing.T, environment string) http.Hand
 		accessPointOne := getAwsEgressAccessPoint("ap-12345", environment, "my-aws-egress-access-point")
 		accessPointTwo := getAzureEgressAccessPoint("ap-67890", environment, "my-azure-egress-access-point")
 		accessPointThree := getAwsPrivateNetworkInterfaceAccessPoint("ap-54321", environment, "my-aws-private-network-interface-access-point")
+		accessPointFour := getGcpEgressAccessPoint("ap-88888", environment, "my-gcp-egress-access-point")
 
-		recordList := networkingaccesspointv1.NetworkingV1AccessPointList{Data: []networkingaccesspointv1.NetworkingV1AccessPoint{accessPointOne, accessPointTwo, accessPointThree}}
+		recordList := networkingaccesspointv1.NetworkingV1AccessPointList{Data: []networkingaccesspointv1.NetworkingV1AccessPoint{accessPointOne, accessPointTwo, accessPointThree, accessPointFour}}
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
 	}
@@ -2723,6 +2960,19 @@ func handleNetworkingAccessPointCreate(t *testing.T) http.HandlerFunc {
 						PrivateEndpointDomain:                 networkingaccesspointv1.PtrString("domain.com"),
 						PrivateEndpointIpAddress:              "10.2.0.68",
 						PrivateEndpointCustomDnsConfigDomains: &[]string{"dbname.database.windows.net", "dbname-region.database.windows.net"},
+					},
+				},
+			}
+		} else if accessPoint.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectEndpoint != nil {
+			accessPoint.SetId("ap-88888")
+			accessPoint.Status = &networkingaccesspointv1.NetworkingV1AccessPointStatus{
+				Phase: "READY",
+				Config: &networkingaccesspointv1.NetworkingV1AccessPointStatusConfigOneOf{
+					NetworkingV1GcpEgressPrivateServiceConnectEndpointStatus: &networkingaccesspointv1.NetworkingV1GcpEgressPrivateServiceConnectEndpointStatus{
+						Kind: "GcpEgressPrivateServiceConnectEndpointStatus",
+						PrivateServiceConnectEndpointConnectionId: "111111111111111111",
+						PrivateServiceConnectEndpointName:         "private-service-connect-endpoint-name",
+						PrivateServiceConnectEndpointIpAddress:    "10.2.0.68",
 					},
 				},
 			}
