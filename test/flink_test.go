@@ -587,3 +587,31 @@ func (s *CLITestSuite) TestFlinkStatmentExceptionList() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestFlinkEmptyCloudProvider() {
+	tests := []CLITest{
+		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-no-cloud.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestFlinkEmptyRegion() {
+	tests := []CLITest{
+		// It appears we cannot actually test a scenario with cloud provider set but no region
+		// as the region unset command always unsets both, and region use requires both.
+		// So we'll just test that the endpoint use command fails when neither is set for now.
+		{args: "flink region unset", fixture: "flink/region/unset.golden"},
+		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-no-cloud.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
