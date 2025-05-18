@@ -7,7 +7,7 @@ import (
 
 var (
 	suggestionsMessageHeader = "\nSuggestions:\n"
-	suggestionsLineFormat    = "    %s\n"
+	suggestionsLineFormat    = "    %s"
 )
 
 type ErrorWithSuggestions interface {
@@ -54,8 +54,11 @@ func DisplaySuggestionsMessage(err error) string {
 func ComposeSuggestionsMessage(msg string) string {
 	lines := strings.Split(msg, "\n")
 	suggestionsMsg := suggestionsMessageHeader
-	for _, line := range lines {
+	for i, line := range lines {
 		suggestionsMsg += fmt.Sprintf(suggestionsLineFormat, line)
+		if i < len(lines)-1 {
+			suggestionsMsg += "\n"
+		}
 	}
 	return suggestionsMsg
 }

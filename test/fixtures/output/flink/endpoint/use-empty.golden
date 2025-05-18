@@ -1,0 +1,4 @@
+Error: accepts 1 arg(s), received 0
+
+Suggestions:
+    Please run "confluent flink endpoint list" to see all available Flink endpoints, or "confluent flink region use" to switch to a different cloud or region. 

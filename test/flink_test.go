@@ -587,3 +587,29 @@ func (s *CLITestSuite) TestFlinkStatmentExceptionList() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestFlinkEmptyCloudProvider() {
+	tests := []CLITest{
+		// Try to use endpoint without setting cloud provider first
+		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-no-cloud.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestFlinkEmptyRegion() {
+	tests := []CLITest{
+		// Set only cloud via environment to test empty region case
+		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-no-region.golden", exitCode: 1, env: []string{"CONFLUENT_CLOUD_PROVIDER=aws"}},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
