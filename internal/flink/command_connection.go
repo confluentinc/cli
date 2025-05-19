@@ -87,6 +87,11 @@ func AddConnectionSecretFlags(cmd *cobra.Command) {
 	cmd.Flags().String("service-key", "", fmt.Sprintf("Specify service key for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["service-key"], "or")))
 	cmd.Flags().String("username", "", fmt.Sprintf("Specify username for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["username"], "or")))
 	cmd.Flags().String("password", "", fmt.Sprintf("Specify password for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["password"], "or")))
+	cmd.Flags().String("bearer-token", "", fmt.Sprintf("Specify bearer token for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["bearer-token"], "or")))
+	cmd.Flags().String("oauth-token-endpoint", "", fmt.Sprintf("Specify OAuth2 token endpoint for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["oauth-token-endpoint"], "or")))
+	cmd.Flags().String("oauth-client-id", "", fmt.Sprintf("Specify OAuth2 client ID for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["oauth-client-id"], "or")))
+	cmd.Flags().String("oauth-client-secret", "", fmt.Sprintf("Specify OAuth2 client secret for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["oauth-client-secret"], "or")))
+	cmd.Flags().String("oauth-scope", "", fmt.Sprintf("Specify OAuth2 scope for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["oauth-scope"], "or")))
 }
 
 func validateConnectionType(connectionType string) error {
