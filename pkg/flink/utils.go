@@ -1,7 +1,7 @@
 package flink
 
 var (
-	ConnectionTypes             = []string{"openai", "azureml", "azureopenai", "bedrock", "sagemaker", "googleai", "vertexai", "mongodb", "elastic", "pinecone", "couchbase", "confluent_jdbc", "rest"}
+	ConnectionTypes             = []string{"openai", "azureml", "azureopenai", "bedrock", "sagemaker", "googleai", "vertexai", "mongodb", "elastic", "pinecone", "couchbase", "confluent_jdbc", "rest", "mcp_server"}
 	ConnectionTypeSecretMapping = map[string][]string{
 		"openai":         {"api-key"},
 		"azureml":        {"api-key"},
@@ -16,22 +16,23 @@ var (
 		"couchbase":      {"username", "password"},
 		"confluent_jdbc": {"username", "password"},
 		"rest":           {"username", "password", "auth-type", "token", "token-endpoint", "client-id", "client-secret", "scope"},
+		"mcp_server":     {"auth-type", "api-key", "token", "token-endpoint", "client-id", "client-secret", "scope"},
 	}
 
 	ConnectionSecretTypeMapping = map[string][]string{
-		"api-key":           {"openai", "azureml", "azureopenai", "googleai", "elastic", "pinecone"},
+		"api-key":           {"openai", "azureml", "azureopenai", "googleai", "elastic", "pinecone", "mcp_server"},
 		"aws-access-key":    {"bedrock", "sagemaker"},
 		"aws-secret-key":    {"bedrock", "sagemaker"},
 		"aws-session-token": {"bedrock", "sagemaker"},
 		"service-key":       {"vertexai"},
 		"username":          {"mongodb", "couchbase", "confluent_jdbc", "rest"},
 		"password":          {"mongodb", "couchbase", "confluent_jdbc", "rest"},
-		"auth-type":         {"rest"},
-		"token":             {"rest"},
-		"token-endpoint":    {"rest"},
-		"client-id":         {"rest"},
-		"client-secret":     {"rest"},
-		"scope":             {"rest"},
+		"auth-type":         {"rest", "mcp_server"},
+		"token":             {"rest", "mcp_server"},
+		"token-endpoint":    {"rest", "mcp_server"},
+		"client-id":         {"rest", "mcp_server"},
+		"client-secret":     {"rest", "mcp_server"},
+		"scope":             {"rest", "mcp_server"},
 	}
 
 	ConnectionRequiredSecretMapping = map[string][]string{
@@ -48,6 +49,7 @@ var (
 		"couchbase":      {"username", "password"},
 		"confluent_jdbc": {"username", "password"},
 		"rest":           {"auth-type"},
+		"mcp_server":     {"auth-type"},
 	}
 
 	ConnectionDynamicSecretMapping = map[string]map[string]map[string][]string{
@@ -55,6 +57,14 @@ var (
 			"auth-type": {
 				"no_auth": {},
 				"basic":   {"username", "password"},
+				"bearer":  {"token"},
+				"oauth2":  {"token-endpoint", "client-id", "client-secret", "scope"},
+			},
+		},
+		"mcp_server": {
+			"auth-type": {
+				"no_auth": {},
+				"api_key": {"api-key"},
 				"bearer":  {"token"},
 				"oauth2":  {"token-endpoint", "client-id", "client-secret", "scope"},
 			},
