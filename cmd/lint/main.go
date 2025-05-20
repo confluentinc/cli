@@ -270,6 +270,7 @@ var vocabWords = []string{
 	"lifecycle",
 	"lkc",
 	"lz4",
+	"mcp_server",
 	"md",
 	"mds",
 	"mongodb",
