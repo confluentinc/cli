@@ -1,7 +1,7 @@
 package flink
 
 var (
-	ConnectionTypes             = []string{"openai", "azureml", "azureopenai", "bedrock", "sagemaker", "googleai", "vertexai", "mongodb", "elastic", "pinecone", "couchbase", "confluent_jdbc"}
+	ConnectionTypes             = []string{"openai", "azureml", "azureopenai", "bedrock", "sagemaker", "googleai", "vertexai", "mongodb", "elastic", "pinecone", "couchbase", "confluent_jdbc", "rest"}
 	ConnectionTypeSecretMapping = map[string][]string{
 		"openai":         {"api-key"},
 		"azureml":        {"api-key"},
@@ -15,6 +15,7 @@ var (
 		"pinecone":       {"api-key"},
 		"couchbase":      {"username", "password"},
 		"confluent_jdbc": {"username", "password"},
+		"rest":           {"username", "password", "auth-type", "token", "token-endpoint", "client-id", "client-secret", "scope"},
 	}
 
 	ConnectionSecretTypeMapping = map[string][]string{
@@ -23,8 +24,14 @@ var (
 		"aws-secret-key":    {"bedrock", "sagemaker"},
 		"aws-session-token": {"bedrock", "sagemaker"},
 		"service-key":       {"vertexai"},
-		"username":          {"mongodb", "couchbase", "confluent_jdbc"},
-		"password":          {"mongodb", "couchbase", "confluent_jdbc"},
+		"username":          {"mongodb", "couchbase", "confluent_jdbc", "rest"},
+		"password":          {"mongodb", "couchbase", "confluent_jdbc", "rest"},
+		"auth-type":         {"rest"},
+		"token":             {"rest"},
+		"token-endpoint":    {"rest"},
+		"client-id":         {"rest"},
+		"client-secret":     {"rest"},
+		"scope":             {"rest"},
 	}
 
 	ConnectionRequiredSecretMapping = map[string][]string{
@@ -40,7 +47,20 @@ var (
 		"pinecone":       {"api-key"},
 		"couchbase":      {"username", "password"},
 		"confluent_jdbc": {"username", "password"},
+		"rest":           {"auth-type"},
 	}
+
+	ConnectionDynamicSecretMapping = map[string]map[string]map[string][]string{
+		"rest": {
+			"auth-type": {
+				"no_auth": {},
+				"basic":   {"username", "password"},
+				"bearer":  {"token"},
+				"oauth2":  {"token-endpoint", "client-id", "client-secret", "scope"},
+			},
+		},
+	}
+
 	ConnectionSecretBackendKeyMapping = map[string]string{
 		"api-key":           "API_KEY",
 		"aws-access-key":    "AWS_ACCESS_KEY_ID",
@@ -49,5 +69,11 @@ var (
 		"service-key":       "SERVICE_KEY",
 		"username":          "USERNAME",
 		"password":          "PASSWORD",
+		"auth-type":         "AUTH_TYPE",
+		"token":             "BEARER_TOKEN",
+		"token-endpoint":    "OAUTH2_TOKEN_ENDPOINT",
+		"client-id":         "OAUTH2_CLIENT_ID",
+		"client-secret":     "OAUTH2_CLIENT_SECRET",
+		"scope":             "OAUTH2_SCOPE",
 	}
 )
