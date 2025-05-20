@@ -1,8 +1,6 @@
 package flink
 
 import (
-	"time"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -45,17 +43,5 @@ func (c *command) statementDescribeOnPrem(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(&statementOutOnPrem{
-		CreationDate: time.Now().Format(time.RFC3339),
-		Name:         outputStatement.Metadata.Name,
-		Statement:    outputStatement.Spec.Statement,
-		ComputePool:  outputStatement.Spec.ComputePoolName,
-		Status:       outputStatement.Status.Phase,
-		StatusDetail: outputStatement.Status.GetDetail(),
-		Properties:   outputStatement.Spec.GetProperties(),
-	})
-	table.Filter([]string{"CreationDate", "Name", "Statement", "ComputePool", "Status", "StatusDetail", "Properties"})
-
-	return table.Print()
+	return output.SerializedOutput(cmd, outputStatement)
 }

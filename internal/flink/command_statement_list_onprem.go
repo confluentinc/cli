@@ -58,22 +58,31 @@ func (c *command) statementListOnPrem(cmd *cobra.Command, _ []string) error {
 	}
 
 	// TODO: Check with Fabian to see if the filtering by compute pool and status is correct.
+	// TODO: The filter by "status" doesn't seem to be working in the API.
 	statements, err := client.ListStatements(c.createContext(), environment, computePool, status)
 	if err != nil {
 		return err
 	}
 
-	list := output.NewList(cmd)
-	for _, statement := range statements {
-		list.Add(&statementOutOnPrem{
-			CreationDate: statement.Metadata.GetCreationTimestamp(),
-			Name:         statement.Metadata.Name,
-			Statement:    statement.Spec.Statement,
-			ComputePool:  statement.Spec.ComputePoolName,
-			Status:       statement.Status.Phase,
-			StatusDetail: statement.Status.GetDetail(),
-			Properties:   statement.Spec.GetProperties(),
-		})
+	if output.GetFormat(cmd) == output.Human {
+		list := output.NewList(cmd)
+		for _, statement := range statements {
+			list.Add(&statementOutOnPrem{
+				CreationDate: statement.Metadata.GetCreationTimestamp(),
+				Name:         statement.Metadata.Name,
+				Statement:    statement.Spec.Statement,
+				ComputePool:  statement.Spec.ComputePoolName,
+				Status:       statement.Status.Phase,
+				StatusDetail: statement.Status.GetDetail(),
+				Parallelism:  statement.Spec.GetParallelism(),
+				Stopped:      statement.Spec.GetStopped(),
+				SqlKind:      statement.Status.Traits.GetSqlKind(),
+				AppendOnly:   statement.Status.Traits.GetIsAppendOnly(),
+				Bounded:      statement.Status.Traits.GetIsBounded(),
+			})
+		}
+		return list.Print()
 	}
-	return list.Print()
+
+	return output.SerializedOutput(cmd, statements)
 }

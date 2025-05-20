@@ -47,36 +47,47 @@ func (c *command) statementRescaleOnPrem(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	// Construct the statement to be stopped first
-	statementToStop := cmfsdk.Statement{
-		ApiVersion: "cmf.confluent.io/v1",
-		Kind:       "Statement",
-		Metadata: cmfsdk.StatementMetadata{
-			Name: name,
-		},
-		Spec: cmfsdk.StatementSpec{
-			Stopped: cmfsdk.PtrBool(true),
-		},
+	statement, err := client.GetStatement(c.createContext(), environment, name)
+	if err != nil {
+		return err
 	}
 
-	if err = client.UpdateStatement(c.createContext(), environment, name, statementToStop); err != nil {
+	// Construct the statement to be stopped first
+	statement = cmfsdk.Statement{
+		ApiVersion: statement.GetApiVersion(),
+		Kind:       statement.GetKind(),
+		Metadata: cmfsdk.StatementMetadata{
+			Name: statement.GetMetadata().Name,
+		},
+		Spec: statement.GetSpec(),
+	}
+
+	statement.Spec.SetStopped(true)
+
+	if err = client.UpdateStatement(c.createContext(), environment, name, statement); err != nil {
+		return err
+	}
+
+	// Read the statement again to get the latest state
+	statement, err = client.GetStatement(c.createContext(), environment, name)
+	if err != nil {
 		return err
 	}
 
 	// Construct the statement to resume later with different parallelism
-	statementToResume := cmfsdk.Statement{
-		ApiVersion: "cmf.confluent.io/v1",
-		Kind:       "Statement",
+	statement = cmfsdk.Statement{
+		ApiVersion: statement.GetApiVersion(),
+		Kind:       statement.GetKind(),
 		Metadata: cmfsdk.StatementMetadata{
-			Name: name,
+			Name: statement.GetMetadata().Name,
 		},
-		Spec: cmfsdk.StatementSpec{
-			Stopped:     cmfsdk.PtrBool(false),
-			Parallelism: cmfsdk.PtrInt32(parallelism),
-		},
+		Spec: statement.GetSpec(),
 	}
 
-	if err = client.UpdateStatement(c.createContext(), environment, name, statementToResume); err != nil {
+	statement.Spec.SetStopped(false)
+	statement.Spec.SetParallelism(parallelism)
+
+	if err = client.UpdateStatement(c.createContext(), environment, name, statement); err != nil {
 		return err
 	}
 	output.Printf(c.Config.EnableColor, "Requested to rescale %s \"%s\" with new parallelism = %d.\n", resource.FlinkStatement, name, parallelism)

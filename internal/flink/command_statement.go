@@ -20,13 +20,17 @@ type statementOut struct {
 }
 
 type statementOutOnPrem struct {
-	CreationDate string            `human:"Creation Date" serialized:"creation_date"`
-	Name         string            `human:"Name" serialized:"name"`
-	Statement    string            `human:"Statement" serialized:"statement"`
-	ComputePool  string            `human:"Compute Pool" serialized:"compute_pool"`
-	Status       string            `human:"Status" serialized:"status"`
-	StatusDetail string            `human:"Status Detail,omitempty" serialized:"status_detail,omitempty"`
-	Properties   map[string]string `human:"Properties" serialized:"properties"`
+	CreationDate string `human:"Creation Date" serialized:"creation_date"`
+	Name         string `human:"Name" serialized:"name"`
+	Statement    string `human:"Statement" serialized:"statement"`
+	ComputePool  string `human:"Compute Pool" serialized:"compute_pool"`
+	Status       string `human:"Status" serialized:"status"`
+	StatusDetail string `human:"Status Detail,omitempty" serialized:"status_detail,omitempty"`
+	Parallelism  int32  `human:"Parallelism" serialized:"parallelism"`
+	Stopped      bool   `human:"Stopped" serialized:"stopped"`
+	SqlKind      string `human:"Sql Kind,omitempty" serialized:"sql_kind,omitempty"`
+	AppendOnly   bool   `human:"Append Only,omitempty" serialized:"append_only,omitempty"`
+	Bounded      bool   `human:"Bounded,omitempty" serialized:"bounded,omitempty"`
 }
 
 func (c *command) newStatementCommand(cfg *config.Config) *cobra.Command {

@@ -26,7 +26,7 @@ func (c *command) newCatalogCreateCommand() *cobra.Command {
 	}
 
 	addCmfFlagSet(cmd)
-	pcmd.AddOutputFlagWithHumanRestricted(cmd)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }

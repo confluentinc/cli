@@ -18,7 +18,7 @@ func (c *command) newComputePoolListCommandOnPrem() *cobra.Command {
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	addCmfFlagSet(cmd)
-	pcmd.AddOutputFlagWithHumanRestricted(cmd)
+	pcmd.AddOutputFlag(cmd)
 	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
 
 	return cmd
@@ -44,11 +44,10 @@ func (c *command) computePoolListOnPrem(cmd *cobra.Command, _ []string) error {
 		list := output.NewList(cmd)
 		for _, pool := range computePools {
 			list.Add(&computePoolOutOnPrem{
+				CreationTime: pool.Metadata.GetCreationTimestamp(),
 				Name:         pool.Metadata.Name,
-				ID:           pool.Metadata.GetUid(),
 				Type:         pool.Spec.Type,
 				Phase:        pool.Status.Phase,
-				CreationTime: pool.Metadata.GetCreationTimestamp(),
 			})
 		}
 		return list.Print()

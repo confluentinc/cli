@@ -27,7 +27,7 @@ func (c *command) newComputePoolCreateCommandOnPrem() *cobra.Command {
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	addCmfFlagSet(cmd)
-	pcmd.AddOutputFlagWithHumanRestricted(cmd)
+	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
 

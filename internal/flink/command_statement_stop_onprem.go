@@ -40,18 +40,22 @@ func (c *command) statementStopOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Construct the statement to be stopped
-	// TODO: Check with Fabian if this is enough or not
-	statement := cmfsdk.Statement{
-		ApiVersion: "cmf.confluent.io/v1",
-		Kind:       "Statement",
-		Metadata: cmfsdk.StatementMetadata{
-			Name: name,
-		},
-		Spec: cmfsdk.StatementSpec{
-			Stopped: cmfsdk.PtrBool(true),
-		},
+	statement, err := client.GetStatement(c.createContext(), environment, name)
+	if err != nil {
+		return err
 	}
+
+	// Construct the statement to be stopped
+	statement = cmfsdk.Statement{
+		ApiVersion: statement.GetApiVersion(),
+		Kind:       statement.GetKind(),
+		Metadata: cmfsdk.StatementMetadata{
+			Name: statement.GetMetadata().Name,
+		},
+		Spec: statement.GetSpec(),
+	}
+
+	statement.Spec.SetStopped(true)
 
 	if err := client.UpdateStatement(c.createContext(), environment, name, statement); err != nil {
 		return err

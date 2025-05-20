@@ -16,7 +16,7 @@ func (c *command) newCatalogListCommand() *cobra.Command {
 	}
 
 	addCmfFlagSet(cmd)
-	pcmd.AddOutputFlagWithHumanRestricted(cmd)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
@@ -35,10 +35,16 @@ func (c *command) catalogList(cmd *cobra.Command, _ []string) error {
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
 		for _, catalog := range catalogs {
+			// Populate the databases field with the names of the databases
+			databases := make([]string, 0, len(catalog.Spec.KafkaClusters))
+			for _, kafkaCluster := range catalog.Spec.KafkaClusters {
+				databases = append(databases, kafkaCluster.DatabaseName)
+			}
+
 			list.Add(&catalogOut{
-				Name:         catalog.Metadata.Name,
-				ID:           catalog.Metadata.GetUid(),
 				CreationTime: catalog.Metadata.GetCreationTimestamp(),
+				Name:         catalog.Metadata.Name,
+				Databases:    databases,
 			})
 		}
 		return list.Print()

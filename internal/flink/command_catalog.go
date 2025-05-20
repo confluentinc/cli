@@ -7,9 +7,9 @@ import (
 )
 
 type catalogOut struct {
-	Name         string `human:"Name" serialized:"name"`
-	ID           string `human:"ID" serialized:"id"`
-	CreationTime string `human:"CreationTime" serialized:"creation_time"`
+	Name         string   `human:"Name" serialized:"name"`
+	CreationTime string   `human:"CreationTime" serialized:"creation_time"`
+	Databases    []string `human:"Databases" serialized:"databases"`
 }
 
 func (c *command) newCatalogCommand() *cobra.Command {

@@ -164,17 +164,5 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 		}
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(&statementOutOnPrem{
-		CreationDate: time.Now().Format(time.RFC3339),
-		Name:         outputStatement.Metadata.Name,
-		Statement:    outputStatement.Spec.Statement,
-		ComputePool:  outputStatement.Spec.ComputePoolName,
-		Status:       outputStatement.Status.Phase,
-		StatusDetail: outputStatement.Status.GetDetail(),
-		Properties:   outputStatement.Spec.GetProperties(),
-	})
-	table.Filter([]string{"CreationTime", "Name", "Statement", "ComputePool", "Status", "StatusDetail", "Properties"})
-
-	return table.Print()
+	return output.SerializedOutput(cmd, outputStatement)
 }
