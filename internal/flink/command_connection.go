@@ -3,9 +3,9 @@ package flink
 import (
 	"fmt"
 	"slices"
-	"strings"
 	"time"
 
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -15,6 +15,7 @@ import (
 )
 
 const envNotFoundErrorMsg = "Failed to get environment '%s'. List available environments with `confluent environment list`."
+const authType = "AUTH_TYPE"
 
 type connectionOut struct {
 	CreationDate time.Time `human:"Creation Date" serialized:"creation_date"`
@@ -88,12 +89,15 @@ func AddConnectionSecretFlags(cmd *cobra.Command) {
 	cmd.Flags().String("service-key", "", fmt.Sprintf("Specify service key for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["service-key"], "or")))
 	cmd.Flags().String("username", "", fmt.Sprintf("Specify username for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["username"], "or")))
 	cmd.Flags().String("password", "", fmt.Sprintf("Specify password for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["password"], "or")))
-	cmd.Flags().String("auth-type", "", fmt.Sprintf("Specify authentication type for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["auth-type"], "or")))
 	cmd.Flags().String("token", "", fmt.Sprintf("Specify bearer token for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["token"], "or")))
 	cmd.Flags().String("token-endpoint", "", fmt.Sprintf("Specify OAuth2 token endpoint for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["token-endpoint"], "or")))
 	cmd.Flags().String("client-id", "", fmt.Sprintf("Specify OAuth2 client ID for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["client-id"], "or")))
 	cmd.Flags().String("client-secret", "", fmt.Sprintf("Specify OAuth2 client secret for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["client-secret"], "or")))
 	cmd.Flags().String("scope", "", fmt.Sprintf("Specify OAuth2 scope for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["scope"], "or")))
+	cmd.MarkFlagsRequiredTogether("username", "password")
+	cmd.MarkFlagsRequiredTogether("aws-access-key", "aws-secret-key")
+	cmd.MarkFlagsRequiredTogether("token-endpoint", "client-id", "client-secret", "scope")
+	cmd.MarkFlagsMutuallyExclusive("username", "client-id", "api-key", "token")
 }
 
 func validateConnectionType(connectionType string) error {
@@ -122,16 +126,6 @@ func validateConnectionSecrets(cmd *cobra.Command, connectionType string) (map[s
 	for _, secretKey := range flink.ConnectionTypeSecretMapping[connectionType] {
 		if !slices.Contains(requiredSecretKeys, secretKey) {
 			optionalSecretKeys = append(optionalSecretKeys, secretKey)
-		}
-	}
-
-	for dynamicKey, dynamicMapping := range flink.ConnectionDynamicSecretMapping[connectionType] {
-		secret, err := cmd.Flags().GetString(dynamicKey)
-		if err != nil {
-			return nil, err
-		}
-		if secret != "" {
-			requiredSecretKeys = append(requiredSecretKeys, dynamicMapping[strings.ToLower(secret)]...)
 		}
 	}
 
@@ -165,6 +159,30 @@ func validateConnectionSecrets(cmd *cobra.Command, connectionType string) (map[s
 		if secret != "" {
 			secretMap[backendKey] = secret
 		}
+	}
+
+	for _, key := range lo.Keys(secretMap) {
+		switch key {
+		case "API_KEY":
+			secretMap[authType] = key
+			break
+		case "USERNAME":
+			secretMap[authType] = "BASIC"
+			break
+		case "BEARER_TOKEN":
+			secretMap[authType] = "BEARER"
+			break
+		case "OAUTH2_CLIENT_ID":
+			secretMap[authType] = "OAUTH2"
+			break
+		}
+	}
+
+	if secretMap[authType] == "" && slices.Contains(lo.Keys(flink.ConnectionOneOfRequiredSecretsMapping), connectionType) {
+		return nil, fmt.Errorf("no secrets provided for type %s, one of the required secrets %s must be provided", connectionType,
+			utils.ArrayToCommaDelimitedString(lo.Map(flink.ConnectionOneOfRequiredSecretsMapping[connectionType], func(item []string, _ int) string {
+				return fmt.Sprintf("%s", item)
+			}), "or"))
 	}
 
 	return secretMap, nil

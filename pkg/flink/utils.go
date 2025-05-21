@@ -15,8 +15,8 @@ var (
 		"pinecone":       {"api-key"},
 		"couchbase":      {"username", "password"},
 		"confluent_jdbc": {"username", "password"},
-		"rest":           {"username", "password", "auth-type", "token", "token-endpoint", "client-id", "client-secret", "scope"},
-		"mcp_server":     {"auth-type", "api-key", "token", "token-endpoint", "client-id", "client-secret", "scope"},
+		"rest":           {"username", "password", "token", "token-endpoint", "client-id", "client-secret", "scope"},
+		"mcp_server":     {"api-key", "token", "token-endpoint", "client-id", "client-secret", "scope"},
 	}
 
 	ConnectionSecretTypeMapping = map[string][]string{
@@ -27,7 +27,6 @@ var (
 		"service-key":       {"vertexai"},
 		"username":          {"mongodb", "couchbase", "confluent_jdbc", "rest"},
 		"password":          {"mongodb", "couchbase", "confluent_jdbc", "rest"},
-		"auth-type":         {"rest", "mcp_server"},
 		"token":             {"rest", "mcp_server"},
 		"token-endpoint":    {"rest", "mcp_server"},
 		"client-id":         {"rest", "mcp_server"},
@@ -48,27 +47,13 @@ var (
 		"pinecone":       {"api-key"},
 		"couchbase":      {"username", "password"},
 		"confluent_jdbc": {"username", "password"},
-		"rest":           {"auth-type"},
-		"mcp_server":     {"auth-type"},
+		"rest":           {},
+		"mcp_server":     {},
 	}
 
-	ConnectionDynamicSecretMapping = map[string]map[string]map[string][]string{
-		"rest": {
-			"auth-type": {
-				"no_auth": {},
-				"basic":   {"username", "password"},
-				"bearer":  {"token"},
-				"oauth2":  {"token-endpoint", "client-id", "client-secret", "scope"},
-			},
-		},
-		"mcp_server": {
-			"auth-type": {
-				"no_auth": {},
-				"api_key": {"api-key"},
-				"bearer":  {"token"},
-				"oauth2":  {"token-endpoint", "client-id", "client-secret", "scope"},
-			},
-		},
+	ConnectionOneOfRequiredSecretsMapping = map[string][][]string{
+		"rest":       {{"username", "password"}, {"token"}, {"token-endpoint", "client-id", "client-secret", "scope"}},
+		"mcp_server": {{"api-key"}, {"token"}, {"token-endpoint", "client-id", "client-secret", "scope"}},
 	}
 
 	ConnectionSecretBackendKeyMapping = map[string]string{
@@ -79,7 +64,6 @@ var (
 		"service-key":       "SERVICE_KEY",
 		"username":          "USERNAME",
 		"password":          "PASSWORD",
-		"auth-type":         "AUTH_TYPE",
 		"token":             "BEARER_TOKEN",
 		"token-endpoint":    "OAUTH2_TOKEN_ENDPOINT",
 		"client-id":         "OAUTH2_CLIENT_ID",
