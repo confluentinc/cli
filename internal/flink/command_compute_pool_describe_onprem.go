@@ -42,5 +42,16 @@ func (c *command) computePoolDescribeOnPrem(cmd *cobra.Command, args []string) e
 		return err
 	}
 
+	if output.GetFormat(cmd) == output.Human {
+		table := output.NewTable(cmd)
+		table.Add(&computePoolOutOnPrem{
+			CreationTime: computePool.Metadata.GetCreationTimestamp(),
+			Name:         computePool.Metadata.Name,
+			Type:         computePool.Spec.Type,
+			Phase:        computePool.Status.Phase,
+		})
+		return table.Print()
+	}
+
 	return output.SerializedOutput(cmd, computePool)
 }

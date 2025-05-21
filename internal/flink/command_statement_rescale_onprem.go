@@ -20,7 +20,7 @@ func (c *command) newStatementRescaleCommandOnPrem() *cobra.Command {
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
-	cmd.Flags().Int32("parallelism", 4, "New parallelism of the Flink SQL statement.")
+	cmd.Flags().Int32("parallelism", 1, "New parallelism of the Flink SQL statement.")
 	addCmfFlagSet(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
@@ -52,7 +52,7 @@ func (c *command) statementRescaleOnPrem(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	// Construct the statement to be stopped first
+	// Construct the statement to rescale with different parallelism
 	statement = cmfsdk.Statement{
 		ApiVersion: statement.GetApiVersion(),
 		Kind:       statement.GetKind(),
@@ -62,29 +62,6 @@ func (c *command) statementRescaleOnPrem(cmd *cobra.Command, args []string) erro
 		Spec: statement.GetSpec(),
 	}
 
-	statement.Spec.SetStopped(true)
-
-	if err = client.UpdateStatement(c.createContext(), environment, name, statement); err != nil {
-		return err
-	}
-
-	// Read the statement again to get the latest state
-	statement, err = client.GetStatement(c.createContext(), environment, name)
-	if err != nil {
-		return err
-	}
-
-	// Construct the statement to resume later with different parallelism
-	statement = cmfsdk.Statement{
-		ApiVersion: statement.GetApiVersion(),
-		Kind:       statement.GetKind(),
-		Metadata: cmfsdk.StatementMetadata{
-			Name: statement.GetMetadata().Name,
-		},
-		Spec: statement.GetSpec(),
-	}
-
-	statement.Spec.SetStopped(false)
 	statement.Spec.SetParallelism(parallelism)
 
 	if err = client.UpdateStatement(c.createContext(), environment, name, statement); err != nil {

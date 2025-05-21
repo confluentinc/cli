@@ -7,8 +7,8 @@ import (
 )
 
 type catalogOut struct {
-	Name         string   `human:"Name" serialized:"name"`
 	CreationTime string   `human:"CreationTime" serialized:"creation_time"`
+	Name         string   `human:"Name" serialized:"name"`
 	Databases    []string `human:"Databases" serialized:"databases"`
 }
 

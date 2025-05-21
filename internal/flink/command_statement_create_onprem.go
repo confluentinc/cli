@@ -31,7 +31,7 @@ func (c *command) newStatementCreateCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("sql", "", "The Flink SQL statement.")
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	cmd.Flags().String("compute-pool", "", "The compute pool name to execute the Flink SQL statement.")
-	cmd.Flags().Uint16("parallelism", 4, "The parallelism the statement, default value is 4.")
+	cmd.Flags().Uint16("parallelism", 1, "The parallelism the statement, default value is 1.")
 	cmd.Flags().String("catalog", "", "The name of the default catalog.")
 	cmd.Flags().String("database", "", "The name of the default database.")
 	cmd.Flags().String("flink-configuration", "", "The file path to hold the Flink configuration for the statement.")
@@ -162,6 +162,24 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 		if err != nil {
 			return err
 		}
+	}
+
+	if output.GetFormat(cmd) == output.Human {
+		table := output.NewTable(cmd)
+		table.Add(&statementOutOnPrem{
+			CreationDate: outputStatement.Metadata.GetCreationTimestamp(),
+			Name:         outputStatement.Metadata.Name,
+			Statement:    outputStatement.Spec.Statement,
+			ComputePool:  outputStatement.Spec.ComputePoolName,
+			Status:       outputStatement.Status.Phase,
+			StatusDetail: outputStatement.Status.GetDetail(),
+			Parallelism:  outputStatement.Spec.GetParallelism(),
+			Stopped:      outputStatement.Spec.GetStopped(),
+			SqlKind:      outputStatement.Status.Traits.GetSqlKind(),
+			AppendOnly:   outputStatement.Status.Traits.GetIsAppendOnly(),
+			Bounded:      outputStatement.Status.Traits.GetIsBounded(),
+		})
+		return table.Print()
 	}
 
 	return output.SerializedOutput(cmd, outputStatement)

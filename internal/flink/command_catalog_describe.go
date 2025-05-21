@@ -34,5 +34,22 @@ func (c *command) catalogDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if output.GetFormat(cmd) == output.Human {
+		table := output.NewTable(cmd)
+
+		// Populate the databases field with the names of the databases
+		databases := make([]string, 0, len(outputCatalog.Spec.KafkaClusters))
+		for _, kafkaCluster := range outputCatalog.Spec.KafkaClusters {
+			databases = append(databases, kafkaCluster.DatabaseName)
+		}
+
+		table.Add(&catalogOut{
+			CreationTime: outputCatalog.Metadata.GetCreationTimestamp(),
+			Name:         outputCatalog.Metadata.Name,
+			Databases:    databases,
+		})
+		return table.Print()
+	}
+
 	return output.SerializedOutput(cmd, outputCatalog)
 }

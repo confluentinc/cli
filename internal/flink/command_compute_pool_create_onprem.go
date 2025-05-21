@@ -52,7 +52,6 @@ func (c *command) computePoolCreateOnPrem(cmd *cobra.Command, args []string) err
 		return fmt.Errorf("failed to read file: %v", err)
 	}
 
-	// TODO: Check with Fabian to ensure if we just need to resource file to initiate the compute pool creation
 	var computePool cmfsdk.ComputePool
 	ext := filepath.Ext(resourceFilePath)
 	switch ext {
@@ -70,6 +69,17 @@ func (c *command) computePoolCreateOnPrem(cmd *cobra.Command, args []string) err
 	outputComputePool, err := client.CreateComputePool(c.createContext(), environment, computePool)
 	if err != nil {
 		return err
+	}
+
+	if output.GetFormat(cmd) == output.Human {
+		table := output.NewTable(cmd)
+		table.Add(&computePoolOutOnPrem{
+			CreationTime: computePool.Metadata.GetCreationTimestamp(),
+			Name:         computePool.Metadata.Name,
+			Type:         computePool.Spec.Type,
+			Phase:        computePool.Status.Phase,
+		})
+		return table.Print()
 	}
 
 	return output.SerializedOutput(cmd, outputComputePool)

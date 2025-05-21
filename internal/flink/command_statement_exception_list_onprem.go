@@ -43,14 +43,17 @@ func (c *command) statementExceptionListOnPrem(cmd *cobra.Command, args []string
 		return err
 	}
 
-	list := output.NewList(cmd)
-	for _, exception := range exceptionList.Data {
-		list.Add(&exceptionOutOnPrem{
-			Name:      exception.Name,
-			Timestamp: exception.Timestamp,
-			Message:   exception.Message,
-		})
+	if output.GetFormat(cmd) == output.Human {
+		list := output.NewList(cmd)
+		for _, exception := range exceptionList.Data {
+			list.Add(&exceptionOutOnPrem{
+				Name:      exception.Name,
+				Timestamp: exception.Timestamp,
+				Message:   exception.Message,
+			})
+		}
+		return list.Print()
 	}
 
-	return list.Print()
+	return output.SerializedOutput(cmd, exceptionList)
 }

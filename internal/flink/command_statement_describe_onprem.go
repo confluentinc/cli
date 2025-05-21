@@ -43,5 +43,22 @@ func (c *command) statementDescribeOnPrem(cmd *cobra.Command, args []string) err
 		return err
 	}
 
+	if output.GetFormat(cmd) == output.Human {
+		table := output.NewTable(cmd)
+		table.Add(&statementOutOnPrem{
+			CreationDate: outputStatement.Metadata.GetCreationTimestamp(),
+			Name:         outputStatement.Metadata.Name,
+			Statement:    outputStatement.Spec.Statement,
+			ComputePool:  outputStatement.Spec.ComputePoolName,
+			Status:       outputStatement.Status.Phase,
+			StatusDetail: outputStatement.Status.GetDetail(),
+			Parallelism:  outputStatement.Spec.GetParallelism(),
+			Stopped:      outputStatement.Spec.GetStopped(),
+			SqlKind:      outputStatement.Status.Traits.GetSqlKind(),
+			AppendOnly:   outputStatement.Status.Traits.GetIsAppendOnly(),
+			Bounded:      outputStatement.Status.Traits.GetIsBounded(),
+		})
+		return table.Print()
+	}
 	return output.SerializedOutput(cmd, outputStatement)
 }
