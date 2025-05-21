@@ -5,6 +5,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -87,6 +88,16 @@ func AddConnectionSecretFlags(cmd *cobra.Command) {
 	cmd.Flags().String("service-key", "", fmt.Sprintf("Specify service key for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["service-key"], "or")))
 	cmd.Flags().String("username", "", fmt.Sprintf("Specify username for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["username"], "or")))
 	cmd.Flags().String("password", "", fmt.Sprintf("Specify password for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["password"], "or")))
+	cmd.Flags().String("token", "", fmt.Sprintf("Specify bearer token for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["token"], "or")))
+	cmd.Flags().String("token-endpoint", "", fmt.Sprintf("Specify OAuth2 token endpoint for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["token-endpoint"], "or")))
+	cmd.Flags().String("client-id", "", fmt.Sprintf("Specify OAuth2 client ID for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["client-id"], "or")))
+	cmd.Flags().String("client-secret", "", fmt.Sprintf("Specify OAuth2 client secret for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["client-secret"], "or")))
+	cmd.Flags().String("scope", "", fmt.Sprintf("Specify OAuth2 scope for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["scope"], "or")))
+	cmd.Flags().Bool("no-auth", false, fmt.Sprintf("Specify no authentication for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["no-auth"], "or")))
+	cmd.MarkFlagsRequiredTogether("username", "password")
+	cmd.MarkFlagsRequiredTogether("aws-access-key", "aws-secret-key")
+	cmd.MarkFlagsRequiredTogether("token-endpoint", "client-id", "client-secret", "scope")
+	cmd.MarkFlagsMutuallyExclusive("username", "client-id", "api-key", "token", "no-auth")
 }
 
 func validateConnectionType(connectionType string) error {
@@ -101,37 +112,70 @@ func validateConnectionSecrets(cmd *cobra.Command, connectionType string) (map[s
 	connectionSecrets = append(connectionSecrets, flink.ConnectionTypeSecretMapping[connectionType]...)
 
 	for key := range flink.ConnectionSecretTypeMapping {
-		secret, err := cmd.Flags().GetString(key)
-		if err != nil {
-			return nil, err
-		}
-		if secret != "" && !slices.Contains(connectionSecrets, key) {
-			return nil, errors.NewErrorWithSuggestions(fmt.Sprintf("%s is invalid for connection %s.", key, connectionType), fmt.Sprintf("Valid secret types are %s.", utils.ArrayToCommaDelimitedString(connectionSecrets, "or")))
+		if key == "no-auth" {
+			secret, err := cmd.Flags().GetBool(key)
+			if err != nil {
+				return nil, err
+			}
+			if secret && !slices.Contains(connectionSecrets, key) {
+				return nil, errors.NewErrorWithSuggestions(fmt.Sprintf("%s is invalid for connection %s.", key, connectionType), fmt.Sprintf("Valid secret types are %s.", utils.ArrayToCommaDelimitedString(connectionSecrets, "or")))
+			}
+		} else {
+			secret, err := cmd.Flags().GetString(key)
+			if err != nil {
+				return nil, err
+			}
+			if secret != "" && !slices.Contains(connectionSecrets, key) {
+				return nil, errors.NewErrorWithSuggestions(fmt.Sprintf("%s is invalid for connection %s.", key, connectionType), fmt.Sprintf("Valid secret types are %s.", utils.ArrayToCommaDelimitedString(connectionSecrets, "or")))
+			}
 		}
 	}
 
 	requiredSecretKeys := flink.ConnectionRequiredSecretMapping[connectionType]
 	var optionalSecretKeys []string
 	for _, secretKey := range flink.ConnectionTypeSecretMapping[connectionType] {
-		if !slices.Contains(requiredSecretKeys, secretKey) {
+		if !slices.Contains(requiredSecretKeys, secretKey) && secretKey != "no-auth" {
 			optionalSecretKeys = append(optionalSecretKeys, secretKey)
 		}
 	}
 
 	secretMap := map[string]string{}
-	for _, requiredKey := range requiredSecretKeys {
-		secret, err := cmd.Flags().GetString(requiredKey)
-		if err != nil {
-			return nil, err
+	if noAuth, err := cmd.Flags().GetBool("no-auth"); err != nil {
+		return nil, err
+	} else if noAuth {
+		secretMap["AUTH_TYPE"] = "NO_AUTH"
+	} else {
+		for _, requiredKey := range requiredSecretKeys {
+			secret, err := cmd.Flags().GetString(requiredKey)
+			if err != nil {
+				return nil, err
+			}
+			if secret == "" {
+				return nil, fmt.Errorf("must provide %s for type %s", requiredKey, connectionType)
+			}
+			backendKey, ok := flink.ConnectionSecretBackendKeyMapping[requiredKey]
+			if !ok {
+				return nil, fmt.Errorf(`backend key not found for "%s"`, requiredKey)
+			}
+			secretMap[backendKey] = secret
 		}
-		if secret == "" {
-			return nil, fmt.Errorf("must provide %s for type %s", requiredKey, connectionType)
+	}
+
+	for _, key := range lo.Keys(secretMap) {
+		switch key {
+		case "API_KEY":
+			secretMap["AUTH_TYPE"] = key
+			break
+		case "USERNAME":
+			secretMap["AUTH_TYPE"] = "BASIC"
+			break
+		case "TOKEN":
+			secretMap["AUTH_TYPE"] = "BEARER"
+			break
+		case "CLIENT_ID":
+			secretMap["AUTH_TYPE"] = "OAUTH2"
+			break
 		}
-		backendKey, ok := flink.ConnectionSecretBackendKeyMapping[requiredKey]
-		if !ok {
-			return nil, fmt.Errorf(`backend key not found for "%s"`, requiredKey)
-		}
-		secretMap[backendKey] = secret
 	}
 
 	for _, optionalSecretKey := range optionalSecretKeys {
