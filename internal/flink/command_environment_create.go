@@ -156,10 +156,10 @@ func printEnvironmentOutTable(cmd *cobra.Command, outputEnvironment cmfsdk.Envir
 	if defaultComputePoolOutput, err = jsonMarshalHelper(outputEnvironment.ComputePoolDefaults, "Flink compute-pool defaults"); err != nil {
 		return err
 	}
-	if defaultsDetachedStatementOutput, err = jsonMarshalHelper(outputEnvironment.StatementDefaults.Detached, "Flink detached statement defaults"); err != nil {
+	if defaultsDetachedStatementOutput, err = jsonMarshalHelper(outputEnvironment.GetStatementDefaults().Detached, "Flink detached statement defaults"); err != nil {
 		return err
 	}
-	if defaultsInteractiveStatementOutput, err = jsonMarshalHelper(outputEnvironment.StatementDefaults.Interactive, "Flink interactive statement defaults"); err != nil {
+	if defaultsInteractiveStatementOutput, err = jsonMarshalHelper(outputEnvironment.GetStatementDefaults().Interactive, "Flink interactive statement defaults"); err != nil {
 		return err
 	}
 
