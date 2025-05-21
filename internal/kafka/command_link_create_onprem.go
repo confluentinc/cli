@@ -36,10 +36,16 @@ func (c *linkCommand) newCreateCommandOnPrem() *cobra.Command {
 
 	cmd.Flags().String(destinationClusterIdFlagName, "", "Destination cluster ID.")
 	cmd.Flags().String(destinationBootstrapServerFlagName, "", `Bootstrap server address of the destination cluster. Can alternatively be set in the configuration file using key "bootstrap.servers".`)
+	cmd.Flags().String(remoteClusterIdFlagName, "", "Remote cluster ID for bidirectional cluster links.")
+	cmd.Flags().String(remoteBootstrapServerFlagName, "", `Bootstrap server address of the remote cluster for bidirectional links. Can alternatively be set in the configuration file using key "bootstrap.servers".`)
 	cmd.Flags().String(sourceApiKeyFlagName, "", "An API key for the source cluster. For links at destination cluster, this is used for remote cluster authentication. For links at source cluster, this is used for local cluster authentication. "+authHelperMsg)
 	cmd.Flags().String(sourceApiSecretFlagName, "", "An API secret for the source cluster. For links at destination cluster, this is used for remote cluster authentication. For links at source cluster, this is used for local cluster authentication. "+authHelperMsg)
 	cmd.Flags().String(destinationApiKeyFlagName, "", "An API key for the destination cluster. This is used for remote cluster authentication links at the source cluster. "+authHelperMsg)
 	cmd.Flags().String(destinationApiSecretFlagName, "", "An API secret for the destination cluster. This is used for remote cluster authentication for links at the source cluster. "+authHelperMsg)
+	cmd.Flags().String(remoteApiKeyFlagName, "", "An API key for the remote cluster for bidirectional links. This is used for remote cluster authentication. "+authHelperMsg)
+	cmd.Flags().String(remoteApiSecretFlagName, "", "An API secret for the remote cluster for bidirectional links. This is used for remote cluster authentication. "+authHelperMsg)
+	cmd.Flags().String(localApiKeyFlagName, "", "An API key for the local cluster for bidirectional links. This is used for local cluster authentication if remote link's connection mode is Inbound. "+authHelperMsg)
+	cmd.Flags().String(localApiSecretFlagName, "", "An API secret for the local cluster for bidirectional links. This is used for local cluster authentication if remote link's connection mode is Inbound. "+authHelperMsg)
 	pcmd.AddConfigFlag(cmd)
 	cmd.Flags().Bool(dryrunFlagName, false, "Validate a link, but do not create it.")
 	cmd.Flags().Bool(noValidateFlagName, false, "Create a link even if the source cluster cannot be reached.")
@@ -51,7 +57,7 @@ func (c *linkCommand) newCreateCommandOnPrem() *cobra.Command {
 	cobra.CheckErr(cmd.Flags().MarkHidden(configFileFlagName))
 	cmd.MarkFlagsMutuallyExclusive("config", configFileFlagName)
 
-	cobra.CheckErr(cmd.MarkFlagRequired(destinationClusterIdFlagName))
+	cmd.MarkFlagsOneRequired(destinationClusterIdFlagName, remoteClusterIdFlagName)
 
 	return cmd
 }
@@ -112,13 +118,14 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 	}
 
 	data := kafkarestv3.CreateLinkRequestData{Configs: toCreateTopicConfigsOnPrem(configMap)}
-	if linkMode == Destination {
-		if remoteClusterId != "" {
-			data.SourceClusterId = remoteClusterId
-		}
-	} else {
-		if remoteClusterId != "" {
+	if remoteClusterId != "" {
+		switch linkMode {
+		case Source:
 			data.DestinationClusterId = remoteClusterId
+		case Bidirectional:
+			data.RemoteClusterId = remoteClusterId
+		default:
+			return unrecognizedLinkModeErr(linkModeMetadata.name)
 		}
 	}
 
