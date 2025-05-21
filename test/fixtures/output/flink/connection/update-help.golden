@@ -18,7 +18,6 @@ Flags:
       --service-key string         Specify service key for the type: "vertexai".
       --username string            Specify username for the type: "mongodb", "couchbase", "confluent_jdbc", or "rest".
       --password string            Specify password for the type: "mongodb", "couchbase", "confluent_jdbc", or "rest".
-      --auth-type string           Specify authentication type for the type: "rest" or "mcp_server".
       --token string               Specify bearer token for the type: "rest" or "mcp_server".
       --token-endpoint string      Specify OAuth2 token endpoint for the type: "rest" or "mcp_server".
       --client-id string           Specify OAuth2 client ID for the type: "rest" or "mcp_server".

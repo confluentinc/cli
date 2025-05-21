@@ -3,9 +3,9 @@ package flink
 import (
 	"fmt"
 	"slices"
-	"strings"
 	"time"
 
+	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -88,7 +88,6 @@ func AddConnectionSecretFlags(cmd *cobra.Command) {
 	cmd.Flags().String("service-key", "", fmt.Sprintf("Specify service key for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["service-key"], "or")))
 	cmd.Flags().String("username", "", fmt.Sprintf("Specify username for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["username"], "or")))
 	cmd.Flags().String("password", "", fmt.Sprintf("Specify password for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["password"], "or")))
-	cmd.Flags().String("auth-type", "", fmt.Sprintf("Specify authentication type for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["auth-type"], "or")))
 	cmd.Flags().String("token", "", fmt.Sprintf("Specify bearer token for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["token"], "or")))
 	cmd.Flags().String("token-endpoint", "", fmt.Sprintf("Specify OAuth2 token endpoint for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["token-endpoint"], "or")))
 	cmd.Flags().String("client-id", "", fmt.Sprintf("Specify OAuth2 client ID for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["client-id"], "or")))
@@ -117,38 +116,71 @@ func validateConnectionSecrets(cmd *cobra.Command, connectionType string) (map[s
 		}
 	}
 
-	requiredSecretKeys := flink.ConnectionRequiredSecretMapping[connectionType]
+	requiredSecretKeysGroups := map[string][]string{}
+	for _, secretGroup := range flink.ConnectionRequiredSecretGroupsMapping[connectionType] {
+		requiredSecretKeysGroups[secretGroup] = flink.ConnectionSecretGroupMapping[secretGroup]
+	}
+
 	var optionalSecretKeys []string
 	for _, secretKey := range flink.ConnectionTypeSecretMapping[connectionType] {
-		if !slices.Contains(requiredSecretKeys, secretKey) {
+		if !slices.Contains(lo.Flatten(lo.Values(requiredSecretKeysGroups)), secretKey) {
 			optionalSecretKeys = append(optionalSecretKeys, secretKey)
 		}
 	}
 
-	for dynamicKey, dynamicMapping := range flink.ConnectionDynamicSecretMapping[connectionType] {
-		secret, err := cmd.Flags().GetString(dynamicKey)
-		if err != nil {
-			return nil, err
-		}
-		if secret != "" {
-			requiredSecretKeys = append(requiredSecretKeys, dynamicMapping[strings.ToLower(secret)]...)
+	secretMap := map[string]string{}
+	found := map[string][]string{}
+	for secretGroup, requiredSecretKeysGroup := range requiredSecretKeysGroups {
+		for _, requiredKey := range requiredSecretKeysGroup {
+			secret, err := cmd.Flags().GetString(requiredKey)
+			if err != nil {
+				return nil, err
+			}
+			// If there is only one required secret key group, we need to return immediately
+			// if any of the required secret is missing
+			if secret == "" && len(requiredSecretKeysGroups) == 1 {
+				return nil, fmt.Errorf("must provide %s for type %s", requiredKey, connectionType)
+			}
+			backendKey, ok := flink.ConnectionSecretBackendKeyMapping[requiredKey]
+			if !ok {
+				return nil, fmt.Errorf(`backend key not found for "%s"`, requiredKey)
+			}
+			if secret != "" {
+				secretMap[backendKey] = secret
+				found[secretGroup] = append(found[secretGroup], requiredKey)
+			}
 		}
 	}
 
-	secretMap := map[string]string{}
-	for _, requiredKey := range requiredSecretKeys {
-		secret, err := cmd.Flags().GetString(requiredKey)
-		if err != nil {
-			return nil, err
+	switch {
+	case len(found) == 0:
+		secretMap["AUTH_TYPE"] = "no_auth"
+	case len(found) == 1:
+		key := lo.Keys(found)[0]
+		if len(found[key]) != len(requiredSecretKeysGroups[key]) {
+			return nil, fmt.Errorf("not all required keys are provided for type %s, provided %s, "+
+				"required %s", connectionType, found[key], requiredSecretKeysGroups[key])
+		} else {
+			secretMap["AUTH_TYPE"] = key
 		}
-		if secret == "" {
-			return nil, fmt.Errorf("must provide %s for type %s", requiredKey, connectionType)
-		}
-		backendKey, ok := flink.ConnectionSecretBackendKeyMapping[requiredKey]
-		if !ok {
-			return nil, fmt.Errorf(`backend key not found for "%s"`, requiredKey)
-		}
-		secretMap[backendKey] = secret
+	case len(found) > 1:
+		foundValues := lo.Values(found)
+		slices.SortFunc(foundValues, func(a, b []string) int {
+			// Compare the arrays lexicographically
+			for i := 0; i < len(a) && i < len(b); i++ {
+				if a[i] != b[i] {
+					if a[i] < b[i] {
+						return -1
+					}
+					return 1
+				}
+			}
+			return len(a) - len(b)
+		})
+		return nil, fmt.Errorf("there are multiple secrets that are mutually exclusive to each other for type %s, "+
+			"they are %s", connectionType, utils.ArrayToCommaDelimitedString(lo.Map(foundValues, func(v []string, _ int) string {
+			return fmt.Sprintf("[%s]", utils.ArrayToCommaDelimitedString(v, "and"))
+		}), "and"))
 	}
 
 	for _, optionalSecretKey := range optionalSecretKeys {
