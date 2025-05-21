@@ -72,6 +72,9 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 	addClusterFlags(cmd, c.cfg, c.CLICommand)
 	cmd.Flags().String("resource", "", `Resource type and identifier using "Prefix:ID" format.`)
 	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
+	if c.cfg.IsOnPremLogin() {
+		pcmd.AddMDSOnPremMTLSFlags(cmd)
+	}
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("role"))
@@ -101,7 +104,7 @@ func (c *roleBindingCommand) create(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		httpResp, err := c.confluentCreate(options)
+		httpResp, err := c.confluentCreate(cmd, options)
 		if err != nil {
 			return err
 		}
@@ -117,15 +120,20 @@ func (c *roleBindingCommand) create(cmd *cobra.Command, _ []string) error {
 	}
 }
 
-func (c *roleBindingCommand) confluentCreate(options *roleBindingOptions) (*http.Response, error) {
+func (c *roleBindingCommand) confluentCreate(cmd *cobra.Command, options *roleBindingOptions) (*http.Response, error) {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return nil, err
+	}
+
 	if options.resource != "" {
-		return c.MDSClient.RBACRoleBindingCRUDApi.AddRoleResourcesForPrincipal(
+		return client.RBACRoleBindingCRUDApi.AddRoleResourcesForPrincipal(
 			c.createContext(),
 			options.principal,
 			options.role,
 			options.resourcesRequest)
 	} else {
-		return c.MDSClient.RBACRoleBindingCRUDApi.AddRoleForPrincipal(
+		return client.RBACRoleBindingCRUDApi.AddRoleForPrincipal(
 			c.createContext(),
 			options.principal,
 			options.role,

@@ -21,6 +21,8 @@ Flags:
       --context string                   CLI context name.
       --resource string                  Resource type and identifier using "Prefix:ID" format.
       --prefix                           Whether the provided resource name is treated as a prefix pattern.
+      --client-cert-path string          Path to client cert to be verified by MDS. Include for mTLS authentication.
+      --client-key-path string           Path to client private key, include for mTLS authentication.
   -o, --output string                    Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

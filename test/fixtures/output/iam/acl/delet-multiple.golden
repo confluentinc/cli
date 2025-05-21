@@ -1,0 +1,4 @@
+  Kafka Cluster |  Principal  | Permission | Operation | Host | Resource Type | Resource Name | Pattern Type  
+----------------+-------------+------------+-----------+------+---------------+---------------+---------------
+  testcluster   | User:def456 | ANY        | ANY       | *    | CLUSTER       | kafka-cluster | LITERAL       
+  testcluster   | User:def456 | ANY        | ANY       | *    | TOPIC         | test-topic    | LITERAL       

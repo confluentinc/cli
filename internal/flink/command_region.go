@@ -9,11 +9,12 @@ import (
 func (c *command) newRegionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "region",
-		Short:       "List Flink regions.",
+		Short:       "Manage Flink regions.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
 	cmd.AddCommand(c.newRegionListCommand())
+	cmd.AddCommand(c.newRegionUnsetCommand())
 	cmd.AddCommand(c.newRegionUseCommand())
 
 	return cmd

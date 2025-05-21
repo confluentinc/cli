@@ -43,6 +43,7 @@ import (
 	"github.com/confluentinc/cli/v4/internal/secret"
 	servicequota "github.com/confluentinc/cli/v4/internal/service-quota"
 	streamshare "github.com/confluentinc/cli/v4/internal/stream-share"
+	"github.com/confluentinc/cli/v4/internal/tableflow"
 	"github.com/confluentinc/cli/v4/internal/update"
 	"github.com/confluentinc/cli/v4/internal/version"
 	pauth "github.com/confluentinc/cli/v4/pkg/auth"
@@ -118,7 +119,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(iam.New(cfg, prerunner))
 	cmd.AddCommand(kafka.New(cfg, prerunner))
 	cmd.AddCommand(ksql.New(cfg, prerunner))
-	cmd.AddCommand(local.New(prerunner))
+	cmd.AddCommand(local.New(cfg, prerunner))
 	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, loginCredentialsManager, loginOrganizationManager, authTokenHandler))
 	cmd.AddCommand(logout.New(cfg, prerunner, authTokenHandler))
 	cmd.AddCommand(network.New(prerunner))
@@ -131,6 +132,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(secret.New(prerunner, secrets.NewPasswordProtectionPlugin()))
 	cmd.AddCommand(shell.New(cmd, func() *cobra.Command { return NewConfluentCommand(cfg) }))
 	cmd.AddCommand(streamshare.New(prerunner))
+	cmd.AddCommand(tableflow.New(prerunner))
 	cmd.AddCommand(update.New(cfg, prerunner))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
 

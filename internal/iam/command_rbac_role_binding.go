@@ -149,11 +149,11 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 		// we have to loop over the possible resource types for all roles (this is what
 		// validateResourceTypeV1 does).
 		if role != "" {
-			if err := c.validateRoleAndResourceTypeV1(role, parsedResourcePattern.ResourceType); err != nil {
+			if err := c.validateRoleAndResourceTypeV1(cmd, role, parsedResourcePattern.ResourceType); err != nil {
 				return nil, err
 			}
 		} else {
-			if err := c.validateResourceTypeV1(parsedResourcePattern.ResourceType); err != nil {
+			if err := c.validateResourceTypeV1(cmd, parsedResourcePattern.ResourceType); err != nil {
 				return nil, err
 			}
 		}
@@ -312,10 +312,15 @@ func parseAndValidateResourcePattern(resource string, prefix bool) (mdsv1.Resour
 	return result, nil
 }
 
-func (c *roleBindingCommand) validateRoleAndResourceTypeV1(roleName, resourceType string) error {
+func (c *roleBindingCommand) validateRoleAndResourceTypeV1(cmd *cobra.Command, roleName, resourceType string) error {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
 	errorMsg := fmt.Sprintf(`failed to look up role "%s"`, roleName)
 
-	role, resp, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), roleName)
+	role, resp, err := client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), roleName)
 	if err != nil {
 		return errors.NewWrapErrorWithSuggestions(err, errorMsg, lookUpRoleSuggestions)
 	}
@@ -343,9 +348,14 @@ func (c *roleBindingCommand) validateRoleAndResourceTypeV1(roleName, resourceTyp
 	return nil
 }
 
-func (c *roleBindingCommand) validateResourceTypeV1(resourceType string) error {
+func (c *roleBindingCommand) validateResourceTypeV1(cmd *cobra.Command, resourceType string) error {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
 	ctx := c.createContext()
-	roles, _, err := c.MDSClient.RBACRoleDefinitionsApi.Roles(ctx)
+	roles, _, err := client.RBACRoleDefinitionsApi.Roles(ctx)
 	if err != nil {
 		return err
 	}
@@ -613,15 +623,15 @@ func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, 
 			return "", err
 		}
 		if clusterScopedRolesV2.Contains(role) && !cmd.Flags().Changed("cloud-cluster") {
-			return "", fmt.Errorf(specifyCloudClusterErrorMsg)
+			return "", errors.New(specifyCloudClusterErrorMsg)
 		}
 		if (environmentScopedRoles[role] || clusterScopedRolesV2.Contains(role)) && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
-			return "", fmt.Errorf(specifyEnvironmentErrorMsg)
+			return "", errors.New(specifyEnvironmentErrorMsg)
 		}
 	}
 
 	if cmd.Flags().Changed("cloud-cluster") && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
-		return "", fmt.Errorf(specifyEnvironmentErrorMsg)
+		return "", errors.New(specifyEnvironmentErrorMsg)
 	}
 	return crnPattern, nil
 }

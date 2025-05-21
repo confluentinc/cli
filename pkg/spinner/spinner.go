@@ -38,17 +38,17 @@ func (s *Spinner) run() {
 	for {
 		select {
 		case <-s.stop:
-			clear()
+			clearTicker()
 			close(s.wait)
 			return
 		case <-ticker.C:
-			clear()
+			clearTicker()
 			output.ErrPrint(false, frames[i])
 			i = (i + 1) % len(frames)
 		}
 	}
 }
 
-func clear() {
+func clearTicker() {
 	output.ErrPrint(false, "\033[1D")
 }

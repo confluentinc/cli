@@ -2,6 +2,7 @@ package asyncapi
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -147,7 +148,7 @@ func (d *accountDetails) buildMessageEntity() *spec.MessageEntity {
 
 func catchOpenAPIError(err error) error {
 	if openAPIError, ok := err.(srsdk.GenericOpenAPIError); ok {
-		return fmt.Errorf(string(openAPIError.Body()))
+		return errors.New(string(openAPIError.Body()))
 	}
 	return err
 }
