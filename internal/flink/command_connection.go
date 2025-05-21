@@ -161,21 +161,14 @@ func validateConnectionSecrets(cmd *cobra.Command, connectionType string) (map[s
 		}
 	}
 
-	for _, key := range lo.Keys(secretMap) {
-		switch key {
-		case "API_KEY":
-			secretMap[authType] = key
-			break
-		case "USERNAME":
-			secretMap[authType] = "BASIC"
-			break
-		case "BEARER_TOKEN":
-			secretMap[authType] = "BEARER"
-			break
-		case "OAUTH2_CLIENT_ID":
-			secretMap[authType] = "OAUTH2"
-			break
-		}
+	if _, ok := secretMap["API_KEY"]; ok {
+		secretMap[authType] = "API_KEY"
+	} else if _, ok := secretMap["USERNAME"]; ok {
+		secretMap[authType] = "BASIC"
+	} else if _, ok := secretMap["BEARER_TOKEN"]; ok {
+		secretMap[authType] = "BEARER"
+	} else if _, ok := secretMap["OAUTH2_CLIENT_ID"]; ok {
+		secretMap[authType] = "OAUTH2"
 	}
 
 	if secretMap[authType] == "" && slices.Contains(lo.Keys(flink.ConnectionOneOfRequiredSecretsMapping), connectionType) {
