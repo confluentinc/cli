@@ -7,11 +7,6 @@ import (
 )
 
 func (s *CLITestSuite) TestKafka() {
-	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
-	createLinkConfigFile := getCreateLinkConfigFile()
-	defer os.Remove(createLinkConfigFile)
-	createBidirectionalLinkConfigFile := getCreateBidirectionalLinkConfigFile()
-	defer os.Remove(createBidirectionalLinkConfigFile)
 	tests := []CLITest{
 		{args: "environment use env-596", fixture: "kafka/0.golden"},
 		{args: "kafka cluster list", fixture: "kafka/6.golden"},
@@ -343,6 +338,16 @@ func (s *CLITestSuite) TestKafkaLink() {
 
 	for _, test := range tests {
 		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+
+	tests = []CLITest{
+		{args: "kafka link create bidirectional_link --remote-cluster lkc-abc123 --remote-bootstrap-server SASL_SSL://pkc-12345.us-west-2.aws.confluent.cloud:9092 --remote-api-key remoteKey --remote-api-secret remoteSecret --local-api-key localUser --local-api-secret localPassword --config " + getCreateBidirectionalLinkConfigFile(), fixture: "kafka/link/create-bidirectional-link-onprem.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		test.env = []string{"CONFLUENT_REST_URL=" + s.TestBackend.GetKafkaRestUrl()}
 		s.runIntegrationTest(test)
 	}
 }
