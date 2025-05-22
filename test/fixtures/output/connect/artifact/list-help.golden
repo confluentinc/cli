@@ -1,0 +1,20 @@
+List Connect artifacts.
+
+Usage:
+  confluent connect artifact list [flags]
+
+Examples:
+List Connect artifacts.
+
+  $ confluent connect artifact list --cloud aws --environment env-abc123
+
+Flags:
+      --cloud string         REQUIRED: Specify the cloud provider as "aws".
+      --environment string   Environment ID.
+      --context string       CLI context name.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
