@@ -99,11 +99,6 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	linkMode := linkModeMetadata.mode
-	if linkMode != Source && linkMode != Bidirectional {
-		return fmt.Errorf("only source-initiated or bidirectional links can be created for Confluent Platform from the CLI")
-	}
-
 	if err := c.addSecurityConfigToMap(cmd, linkModeMetadata, configMap); err != nil {
 		return err
 	}
@@ -119,7 +114,9 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 
 	data := kafkarestv3.CreateLinkRequestData{Configs: toCreateTopicConfigsOnPrem(configMap)}
 	if remoteClusterId != "" {
-		switch linkMode {
+		switch linkModeMetadata.mode {
+		case Destination:
+			data.SourceClusterId = remoteClusterId
 		case Source:
 			data.DestinationClusterId = remoteClusterId
 		case Bidirectional:
