@@ -57,16 +57,7 @@ else
 	TAGS=$(TAGS) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) goreleaser build --clean --single-target --snapshot
 endif
 
-include ./mk-files/semver.mk
-include ./mk-files/docs.mk
-include ./mk-files/dry-run.mk
-include ./mk-files/release.mk
-include ./mk-files/release-test.mk
 
-S3_DEB_RPM_BUCKET_NAME=confluent-cli-release
-S3_DEB_RPM_PROD_PREFIX=confluent-cli
-S3_DEB_RPM_PROD_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/$(S3_DEB_RPM_PROD_PREFIX)
-S3_DEB_RPM_STAG_PATH=s3://$(S3_DEB_RPM_BUCKET_NAME)/confluent-cli-staging
 
 .PHONY: clean
 clean:
