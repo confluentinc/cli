@@ -7,7 +7,12 @@
     "cidr": "10.200.0.0/16",
     "zones": ["use1-az1", "use1-az2", "use1-az3"],
     "phase": "READY",
-    "active_connection_types": ["TRANSITGATEWAY", "PEERING"]
+    "active_connection_types": ["TRANSITGATEWAY", "PEERING"],
+    "zone_info": [
+      "use1-az1=10.200.0.0/27",
+      "use1-az2=10.200.0.32/27",
+      "use1-az3=10.200.0.64/27"
+    ]
   },
   {
     "id": "n-abcde3",
@@ -17,7 +22,12 @@
     "cidr": "10.200.0.0/16",
     "zones": ["use1-az1", "use1-az2", "use1-az3"],
     "phase": "READY",
-    "active_connection_types": ["TRANSITGATEWAY", "PEERING"]
+    "active_connection_types": ["TRANSITGATEWAY", "PEERING"],
+    "zone_info": [
+      "use1-az1=10.200.0.0/27",
+      "use1-az2=10.200.0.32/27",
+      "use1-az3=10.200.0.64/27"
+    ]
   },
   {
     "id": "n-abcde5",
@@ -26,7 +36,12 @@
     "cidr": "10.200.0.0/16",
     "zones": ["use1-az1", "use1-az2", "use1-az3"],
     "phase": "READY",
-    "active_connection_types": ["TRANSITGATEWAY", "PEERING"]
+    "active_connection_types": ["TRANSITGATEWAY", "PEERING"],
+    "zone_info": [
+      "use1-az1=10.200.0.0/27",
+      "use1-az2=10.200.0.32/27",
+      "use1-az3=10.200.0.64/27"
+    ]
   },
   {
     "id": "n-abcde4",
@@ -37,7 +52,12 @@
     "cidr": "10.200.0.0/16",
     "zones": ["use1-az1", "use1-az2", "use1-az3"],
     "phase": "READY",
-    "active_connection_types": ["TRANSITGATEWAY", "PEERING"]
+    "active_connection_types": ["TRANSITGATEWAY", "PEERING"],
+    "zone_info": [
+      "use1-az1=10.200.0.0/27",
+      "use1-az2=10.200.0.32/27",
+      "use1-az3=10.200.0.64/27"
+    ]
   },
   {
     "id": "n-abcde2",
@@ -59,6 +79,11 @@
     "cidr": "10.1.0.0/16",
     "zones": ["us-central1-a", "us-central1-b", "us-central1-c"],
     "phase": "READY",
-    "active_connection_types": ["PEERING"]
+    "active_connection_types": ["PEERING"],
+    "zone_info": [
+      "us-central1-a=10.200.0.0/27",
+      "us-central1-b=10.200.0.32/27",
+      "us-central1-c=10.200.0.64/27"
+    ]
   }
 ]

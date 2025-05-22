@@ -388,6 +388,45 @@ func handleNetworkingNetworkGet(t *testing.T, id string) http.HandlerFunc {
 			w.WriteHeader(http.StatusNotFound)
 			err := writeErrorJson(w, "The network n-invalid was not found.")
 			require.NoError(t, err)
+		case "n-invalid-2":
+			network := networkingv1.NetworkingV1Network{
+				Id: networkingv1.PtrString(id),
+				Spec: &networkingv1.NetworkingV1NetworkSpec{
+					Environment: &networkingv1.ObjectReference{Id: "env-00000"},
+					DisplayName: networkingv1.PtrString("prod-invalid-2"),
+					Cloud:       networkingv1.PtrString("AWS"),
+					Region:      networkingv1.PtrString("us-east-1"),
+					Cidr:        networkingv1.PtrString("10.200.0.0/16"),
+					Zones:       &[]string{"use1-az1", "use1-az2", "use1-az3"},
+					ZonesInfo: &[]networkingv1.NetworkingV1ZoneInfo{
+						{
+							ZoneId: ptrString("use1-az1"),
+							Cidr:   nil,
+						},
+						{
+							ZoneId: ptrString("use1-az2"),
+							Cidr:   nil,
+						},
+						{
+							ZoneId: ptrString("use1-az3"),
+							Cidr:   nil,
+						},
+					},
+				},
+				Status: &networkingv1.NetworkingV1NetworkStatus{
+					Phase:                    "READY",
+					SupportedConnectionTypes: []string{"TRANSITGATEWAY", "PEERING"},
+					ActiveConnectionTypes:    []string{},
+					Cloud: &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
+						NetworkingV1AwsNetwork: &networkingv1.NetworkingV1AwsNetwork{
+							Kind: "AwsNetwork",
+						},
+					},
+					IdleSince: networkingv1.PtrTime(time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)),
+				},
+			}
+			err := json.NewEncoder(w).Encode(network)
+			require.NoError(t, err)
 		case "n-abcde1":
 			network := getAwsNetwork("n-abcde1", "prod-aws-us-east1", "READY", []string{"TRANSITGATEWAY", "PEERING"})
 			err := json.NewEncoder(w).Encode(network)
@@ -618,6 +657,22 @@ func handleNetworkingNetworkCreate(t *testing.T) http.HandlerFunc {
 				if slices.Contains(connectionTypes, "PRIVATELINK") {
 					network.Status.Cloud.NetworkingV1AwsNetwork.PrivateLinkEndpointService = networkingv1.PtrString("")
 				}
+				if body.Spec.ZonesInfo == nil && (slices.Contains(connectionTypes, "TRANSITGATEWAY") || slices.Contains(connectionTypes, "PEERING")) {
+					network.Spec.ZonesInfo = &[]networkingv1.NetworkingV1ZoneInfo{
+						{
+							ZoneId: ptrString("usw2-az1"),
+							Cidr:   ptrString("10.1.0.0/27"),
+						},
+						{
+							ZoneId: ptrString("usw2-az2"),
+							Cidr:   ptrString("10.1.0.32/27"),
+						},
+						{
+							ZoneId: ptrString("usw2-az4"),
+							Cidr:   ptrString("10.1.0.64/27"),
+						},
+					}
+				}
 			case "GCP":
 				network.Status.Cloud = &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
 					NetworkingV1GcpNetwork: &networkingv1.NetworkingV1GcpNetwork{
@@ -645,6 +700,20 @@ func getAwsNetwork(id, name, phase string, connectionTypes []string) networkingv
 			Region:      networkingv1.PtrString("us-east-1"),
 			Cidr:        networkingv1.PtrString("10.200.0.0/16"),
 			Zones:       &[]string{"use1-az1", "use1-az2", "use1-az3"},
+			ZonesInfo: &[]networkingv1.NetworkingV1ZoneInfo{
+				{
+					ZoneId: ptrString("use1-az1"),
+					Cidr:   ptrString("10.200.0.0/27"),
+				},
+				{
+					ZoneId: ptrString("use1-az2"),
+					Cidr:   ptrString("10.200.0.32/27"),
+				},
+				{
+					ZoneId: ptrString("use1-az3"),
+					Cidr:   ptrString("10.200.0.64/27"),
+				},
+			},
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
@@ -657,6 +726,10 @@ func getAwsNetwork(id, name, phase string, connectionTypes []string) networkingv
 			},
 			IdleSince: networkingv1.PtrTime(time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)),
 		},
+	}
+
+	if !slices.Contains(connectionTypes, "TRANSITGATEWAY") && !slices.Contains(connectionTypes, "PEERING") {
+		network.Spec.ZonesInfo = &[]networkingv1.NetworkingV1ZoneInfo{}
 	}
 
 	if slices.Contains(connectionTypes, "PRIVATELINK") {
@@ -700,6 +773,20 @@ func getGcpNetwork(id, name, phase string, connectionTypes []string) networkingv
 					Environment: networkingv1.PtrString("env-00000"),
 				},
 			),
+			ZonesInfo: &[]networkingv1.NetworkingV1ZoneInfo{
+				{
+					ZoneId: ptrString("us-central1-a"),
+					Cidr:   ptrString("10.200.0.0/27"),
+				},
+				{
+					ZoneId: ptrString("us-central1-b"),
+					Cidr:   ptrString("10.200.0.32/27"),
+				},
+				{
+					ZoneId: ptrString("us-central1-c"),
+					Cidr:   ptrString("10.200.0.64/27"),
+				},
+			},
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
@@ -711,6 +798,10 @@ func getGcpNetwork(id, name, phase string, connectionTypes []string) networkingv
 				},
 			},
 		},
+	}
+
+	if !slices.Contains(connectionTypes, "TRANSITGATEWAY") && !slices.Contains(connectionTypes, "PEERING") {
+		network.Spec.ZonesInfo = &[]networkingv1.NetworkingV1ZoneInfo{}
 	}
 
 	if slices.Contains(connectionTypes, "PRIVATELINK") {
@@ -752,6 +843,20 @@ func getAzureNetwork(id, name, phase string, connectionTypes []string) networkin
 			Region:      networkingv1.PtrString("eastus2"),
 			Cidr:        networkingv1.PtrString("10.0.0.0/16"),
 			Zones:       &[]string{"1", "2", "3"},
+			ZonesInfo: &[]networkingv1.NetworkingV1ZoneInfo{
+				{
+					ZoneId: ptrString("1"),
+					Cidr:   ptrString("10.200.0.0/27"),
+				},
+				{
+					ZoneId: ptrString("2"),
+					Cidr:   ptrString("10.200.0.32/27"),
+				},
+				{
+					ZoneId: ptrString("3"),
+					Cidr:   ptrString("10.200.0.64/27"),
+				},
+			},
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
@@ -763,6 +868,10 @@ func getAzureNetwork(id, name, phase string, connectionTypes []string) networkin
 				},
 			},
 		},
+	}
+
+	if !slices.Contains(connectionTypes, "TRANSITGATEWAY") && !slices.Contains(connectionTypes, "PEERING") {
+		network.Spec.ZonesInfo = &[]networkingv1.NetworkingV1ZoneInfo{}
 	}
 
 	if slices.Contains(connectionTypes, "PRIVATELINK") {

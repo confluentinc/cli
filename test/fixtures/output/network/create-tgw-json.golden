@@ -7,5 +7,10 @@
   "cidr": "10.1.0.0/16",
   "zones": ["usw2-az1", "usw2-az2", "usw2-az4"],
   "phase": "PROVISIONING",
-  "supported_connection_types": ["TRANSITGATEWAY"]
+  "supported_connection_types": ["TRANSITGATEWAY"],
+  "zone_info": [
+    "usw2-az1=10.1.0.0/27",
+    "usw2-az2=10.1.0.32/27",
+    "usw2-az4=10.1.0.64/27"
+  ]
 }

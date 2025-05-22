@@ -28,6 +28,7 @@ func (s *CLITestSuite) TestNetworkDescribe() {
 		{args: "network describe n-abcde13 --output json", fixture: "network/describe-gateway-json.golden"},
 		{args: "network describe", fixture: "network/describe-missing-id.golden", exitCode: 1},
 		{args: "network describe n-invalid", fixture: "network/describe-invalid.golden", exitCode: 1},
+		{args: "network describe n-invalid-2", fixture: "network/describe-invalid-2.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
