@@ -13,20 +13,21 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/kafka"
 )
 
-func (c *command) newTopicCreateCommand() *cobra.Command {
+func (c *command) newTopicEnableCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create <name>",
-		Short: "Create a topic.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.create,
+		Use:     "enable <name>",
+		Aliases: []string{"create"},
+		Short:   "Enable a topic.",
+		Args:    cobra.ExactArgs(1),
+		RunE:    c.enable,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a BYOS Tableflow topic related to a Kafka cluster.",
-				Code: "confluent tableflow topic create my-tableflow-topic --cluster lkc-123456 --retention-ms 604800000 --storage-type BYOS --provider-integration cspi-stgce89r7 --bucket-name bucket_1",
+				Text: "Enable a BYOS Tableflow topic related to a Kafka cluster.",
+				Code: "confluent tableflow topic enable my-tableflow-topic --cluster lkc-123456 --retention-ms 604800000 --storage-type BYOS --provider-integration cspi-stgce89r7 --bucket-name bucket_1",
 			},
 			examples.Example{
-				Text: "Create a confluent managed Tableflow topic related to a Kafka cluster.",
-				Code: "confluent tableflow topic create my-tableflow-topic --cluster lkc-123456 --retention-ms 604800000 --storage-type MANAGED",
+				Text: "Enable a confluent managed Tableflow topic related to a Kafka cluster.",
+				Code: "confluent tableflow topic enable my-tableflow-topic --cluster lkc-123456 --retention-ms 604800000 --storage-type MANAGED",
 			},
 		),
 	}
@@ -47,7 +48,7 @@ func (c *command) newTopicCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) create(cmd *cobra.Command, args []string) error {
+func (c *command) enable(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	environmentId, err := c.Context.EnvironmentId()
