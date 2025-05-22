@@ -10,7 +10,7 @@ Create a cluster link, using a configuration file.
 
 Create a cluster link using command line flags.
 
-  $ confluent kafka link create my-link --destination-cluster 123456789 --destination-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret
+  $ confluent kafka link create my-link --destination-cluster 123456789 --destination-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret --config link.mode=SOURCE
 
 Flags:
       --destination-cluster string            Destination cluster ID.

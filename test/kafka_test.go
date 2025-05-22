@@ -343,6 +343,7 @@ func (s *CLITestSuite) TestKafkaLink() {
 
 	tests = []CLITest{
 		{args: "kafka link create bidirectional_link --remote-cluster lkc-abc123 --remote-bootstrap-server SASL_SSL://pkc-12345.us-west-2.aws.confluent.cloud:9092 --remote-api-key remoteKey --remote-api-secret remoteSecret --local-api-key localUser --local-api-secret localPassword --config " + getCreateBidirectionalLinkConfigFile(), fixture: "kafka/link/create-bidirectional-link-onprem.golden"},
+		{args: "kafka link create source_initiated_link --destination-cluster 123456789 --destination-bootstrap-server my-host:1234 --source-api-key sourceKey --source-api-secret sourceSecret --config link.mode=SOURCE", fixture: "kafka/link/create-source-link-onprem.golden"},
 	}
 
 	for _, test := range tests {

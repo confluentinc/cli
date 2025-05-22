@@ -29,7 +29,7 @@ func (c *linkCommand) newCreateCommandOnPrem() *cobra.Command {
 			},
 			examples.Example{
 				Text: "Create a cluster link using command line flags.",
-				Code: "confluent kafka link create my-link --destination-cluster 123456789 --destination-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret",
+				Code: "confluent kafka link create my-link --destination-cluster 123456789 --destination-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret --config link.mode=SOURCE",
 			},
 		),
 	}
