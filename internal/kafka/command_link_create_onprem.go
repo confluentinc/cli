@@ -34,6 +34,8 @@ func (c *linkCommand) newCreateCommandOnPrem() *cobra.Command {
 		),
 	}
 
+	cmd.Flags().String(sourceClusterIdFlagName, "", "Source cluster ID.")
+	cmd.Flags().String(sourceBootstrapServerFlagName, "", `Bootstrap server address of the source cluster. Can alternatively be set in the configuration file using key "bootstrap.servers".`)
 	cmd.Flags().String(destinationClusterIdFlagName, "", "Destination cluster ID.")
 	cmd.Flags().String(destinationBootstrapServerFlagName, "", `Bootstrap server address of the destination cluster. Can alternatively be set in the configuration file using key "bootstrap.servers".`)
 	cmd.Flags().String(remoteClusterIdFlagName, "", "Remote cluster ID for bidirectional cluster links.")
@@ -57,7 +59,7 @@ func (c *linkCommand) newCreateCommandOnPrem() *cobra.Command {
 	cobra.CheckErr(cmd.Flags().MarkHidden(configFileFlagName))
 	cmd.MarkFlagsMutuallyExclusive("config", configFileFlagName)
 
-	cmd.MarkFlagsOneRequired(destinationClusterIdFlagName, remoteClusterIdFlagName)
+	cmd.MarkFlagsOneRequired(sourceClusterIdFlagName, destinationClusterIdFlagName, remoteClusterIdFlagName)
 
 	return cmd
 }
