@@ -3,12 +3,12 @@ package flink
 import (
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
@@ -103,8 +103,9 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 
 	var flinkConfiguration = map[string]string{}
 	if configFilePath != "" {
+		var data []byte
 		// Read configuration file contents
-		data, err := os.ReadFile(configFilePath)
+		data, err = os.ReadFile(configFilePath)
 		if err != nil {
 			return fmt.Errorf("failed to read Flink configuration file: %v", err)
 		}
@@ -116,6 +117,9 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 			err = yaml.Unmarshal(data, &flinkConfiguration)
 		default:
 			return errors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
+		}
+		if err != nil {
+			return err
 		}
 	}
 
