@@ -15,7 +15,7 @@ type catalogOut struct {
 func (c *command) newCatalogCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "catalog",
-		Short:       "Manage Flink Catalog in Confluent Platform.",
+		Short:       "Manage Flink catalog in Confluent Platform.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 	}
 

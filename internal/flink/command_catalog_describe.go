@@ -10,7 +10,7 @@ import (
 func (c *command) newCatalogDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <name>",
-		Short: "Describe a Flink Catalog in Confluent Platform.",
+		Short: "Describe a Flink catalog in Confluent Platform.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.catalogDescribe,
 	}

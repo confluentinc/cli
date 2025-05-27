@@ -19,7 +19,7 @@ import (
 func (c *command) newComputePoolCreateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create <resourceFilePath>",
-		Short:       "Create a Flink Compute Pool in Confluent Platform.",
+		Short:       "Create a Flink compute pool in Confluent Platform.",
 		Args:        cobra.ExactArgs(1),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 		RunE:        c.computePoolCreateOnPrem,

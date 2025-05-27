@@ -13,7 +13,8 @@ import (
 func (c *command) newStatementRescaleCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "rescale <statement-name>",
-		Short:       "Rescale a Flink SQL statement in Confluent Platform.",
+		Short:       "Rescale a Flink SQL statement.",
+		Long:        "Rescale a Flink SQL statement in Confluent Platform.",
 		Args:        cobra.ExactArgs(1),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 		RunE:        c.statementRescaleOnPrem,

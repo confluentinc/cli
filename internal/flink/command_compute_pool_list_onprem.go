@@ -10,7 +10,7 @@ import (
 func (c *command) newComputePoolListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
-		Short:       "List Flink Compute Pools in Confluent Platform.",
+		Short:       "List Flink compute pools in Confluent Platform.",
 		Args:        cobra.NoArgs,
 		RunE:        c.computePoolListOnPrem,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},

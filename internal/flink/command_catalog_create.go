@@ -19,8 +19,8 @@ import (
 func (c *command) newCatalogCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <resourceFilePath>",
-		Short: "Create a Flink Catalog in Confluent Platform.",
-		Long:  "Create a Flink Catalog in Confluent Platform that provides metadata about tables and other database objects such as views and functions.",
+		Short: "Create a Flink catalog.",
+		Long:  "Create a Flink catalog in Confluent Platform that provides metadata about tables and other database objects such as views and functions.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.catalogCreate,
 	}

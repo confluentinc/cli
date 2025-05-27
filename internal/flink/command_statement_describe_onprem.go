@@ -10,7 +10,8 @@ import (
 func (c *command) newStatementDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "describe [name]",
-		Short:       "Describe a Flink SQL statement in Confluent Platform.",
+		Short:       "Describe a Flink SQL statement.",
+		Long:        "Describe a Flink SQL statement in Confluent Platform.",
 		Args:        cobra.ExactArgs(1),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 		RunE:        c.statementDescribeOnPrem,
