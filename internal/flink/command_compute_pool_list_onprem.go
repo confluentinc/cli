@@ -43,11 +43,19 @@ func (c *command) computePoolListOnPrem(cmd *cobra.Command, _ []string) error {
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
 		for _, pool := range computePools {
+			// nil pointer handling for creation timestamp
+			var creationTime string
+			if pool.GetMetadata().CreationTimestamp != nil {
+				creationTime = *pool.GetMetadata().CreationTimestamp
+			} else {
+				creationTime = ""
+			}
+
 			list.Add(&computePoolOutOnPrem{
-				CreationTime: pool.Metadata.GetCreationTimestamp(),
-				Name:         pool.Metadata.Name,
-				Type:         pool.Spec.Type,
-				Phase:        pool.Status.Phase,
+				CreationTime: creationTime,
+				Name:         pool.GetMetadata().Name,
+				Type:         pool.GetSpec().Type,
+				Phase:        pool.GetStatus().Phase,
 			})
 		}
 		return list.Print()

@@ -45,11 +45,11 @@ func (c *command) statementExceptionListOnPrem(cmd *cobra.Command, args []string
 
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
-		for _, exception := range exceptionList.Data {
+		for _, exception := range exceptionList.GetData() {
 			list.Add(&exceptionOutOnPrem{
-				Name:      exception.Name,
-				Timestamp: exception.Timestamp,
-				Message:   exception.Message,
+				Name:      exception.GetName(),
+				Timestamp: exception.GetTimestamp(),
+				Message:   exception.GetMessage(),
 			})
 		}
 		return list.Print()

@@ -44,11 +44,19 @@ func (c *command) computePoolDescribeOnPrem(cmd *cobra.Command, args []string) e
 
 	if output.GetFormat(cmd) == output.Human {
 		table := output.NewTable(cmd)
+		// nil pointer handling for creation timestamp
+		var creationTime string
+		if computePool.GetMetadata().CreationTimestamp != nil {
+			creationTime = *computePool.GetMetadata().CreationTimestamp
+		} else {
+			creationTime = ""
+		}
+
 		table.Add(&computePoolOutOnPrem{
-			CreationTime: computePool.Metadata.GetCreationTimestamp(),
-			Name:         computePool.Metadata.Name,
-			Type:         computePool.Spec.Type,
-			Phase:        computePool.Status.Phase,
+			CreationTime: creationTime,
+			Name:         computePool.GetMetadata().Name,
+			Type:         computePool.GetSpec().Type,
+			Phase:        computePool.GetStatus().Phase,
 		})
 		return table.Print()
 	}

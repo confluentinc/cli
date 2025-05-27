@@ -153,8 +153,8 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 				return err
 			}
 
-			if statement.Status.Phase == "PENDING" {
-				return fmt.Errorf(`statement phase is "%s"`, statement.Status.Phase)
+			if statement.GetStatus().Phase == "PENDING" {
+				return fmt.Errorf(`statement phase is "%s"`, statement.GetStatus().Phase)
 			}
 
 			return nil
@@ -168,10 +168,10 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 		table := output.NewTable(cmd)
 		table.Add(&statementOutOnPrem{
 			CreationDate: outputStatement.Metadata.GetCreationTimestamp(),
-			Name:         outputStatement.Metadata.Name,
-			Statement:    outputStatement.Spec.Statement,
-			ComputePool:  outputStatement.Spec.ComputePoolName,
-			Status:       outputStatement.Status.Phase,
+			Name:         outputStatement.Metadata.GetName(),
+			Statement:    outputStatement.Spec.GetStatement(),
+			ComputePool:  outputStatement.Spec.GetComputePoolName(),
+			Status:       outputStatement.Status.GetPhase(),
 			StatusDetail: outputStatement.Status.GetDetail(),
 			Parallelism:  outputStatement.Spec.GetParallelism(),
 			Stopped:      outputStatement.Spec.GetStopped(),
