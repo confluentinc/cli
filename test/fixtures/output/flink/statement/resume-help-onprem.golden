@@ -1,7 +1,7 @@
-Describe a Flink application.
+Resume a Flink SQL statement in Confluent Platform.
 
 Usage:
-  confluent flink application describe <name> [flags]
+  confluent flink statement resume <statement-name> [flags]
 
 Flags:
       --environment string                  REQUIRED: Name of the Flink environment.
@@ -9,7 +9,6 @@ Flags:
       --client-key-path string              Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.
       --client-cert-path string             Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_CERT_PATH" may be set in place of this flag.
       --certificate-authority-path string   Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CMF_CERTIFICATE_AUTHORITY_PATH" may be set in place of this flag.
-  -o, --output string                       Specify the output format as "json" or "yaml". (default "json")
 
 Global Flags:
   -h, --help            Show help for this command.

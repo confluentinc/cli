@@ -1,7 +1,7 @@
-Describe a Flink application.
+Forward the web UI of a Flink statement in Confluent Platform.
 
 Usage:
-  confluent flink application describe <name> [flags]
+  confluent flink statement web-ui-forward <name> [flags]
 
 Flags:
       --environment string                  REQUIRED: Name of the Flink environment.
@@ -9,7 +9,7 @@ Flags:
       --client-key-path string              Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.
       --client-cert-path string             Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_CERT_PATH" may be set in place of this flag.
       --certificate-authority-path string   Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CMF_CERTIFICATE_AUTHORITY_PATH" may be set in place of this flag.
-  -o, --output string                       Specify the output format as "json" or "yaml". (default "json")
+      --port uint16                         Port to forward the web UI to. If not provided, a random, OS-assigned port will be used.
 
 Global Flags:
   -h, --help            Show help for this command.
