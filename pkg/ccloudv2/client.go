@@ -31,7 +31,6 @@ import (
 	pi "github.com/confluentinc/ccloud-sdk-go-v2/provider-integration/v1"
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 	srcmv3 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v3"
-	srcmv3Access "github.com/confluentinc/ccloud-sdk-go-v2/srcmv3access/v1"
 	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
 	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2/tableflow/v1"
 
@@ -73,7 +72,6 @@ type Client struct {
 	ProviderIntegrationClient    *pi.APIClient
 	ServiceQuotaClient           *servicequotav1.APIClient
 	SrcmClient                   *srcmv3.APIClient
-	SrcmV3AcessClient            *srcmv3Access.APIClient
 	SsoClient                    *ssov2.APIClient
 	TableflowClient              *tableflowv1.APIClient
 }
@@ -121,7 +119,6 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		ProviderIntegrationClient:    newProviderIntegrationClient(httpClient, url, userAgent, unsafeTrace),
 		ServiceQuotaClient:           newServiceQuotaClient(httpClient, url, userAgent, unsafeTrace),
 		SrcmClient:                   newSrcmClient(httpClient, url, userAgent, unsafeTrace),
-		SrcmV3AcessClient:            newSrcmV3AccessClient(httpClient, url, userAgent, unsafeTrace),
 		SsoClient:                    newSsoClient(httpClient, url, userAgent, unsafeTrace),
 		TableflowClient:              newTableflowClient(httpClient, url, userAgent, unsafeTrace),
 	}

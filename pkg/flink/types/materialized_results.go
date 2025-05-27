@@ -73,12 +73,15 @@ func (i *MaterializedStatementResultsIterator) Move(stepsToMove int) *StatementR
 }
 
 type MaterializedStatementResults struct {
-	isTableMode   bool
-	maxCapacity   int
-	headers       []string
-	changelog     LinkedList[StatementResultRow]
-	table         LinkedList[StatementResultRow]
-	cache         map[string]*ListElement[StatementResultRow]
+	isTableMode bool
+	maxCapacity int
+	headers     []string
+	changelog   LinkedList[StatementResultRow]
+	table       LinkedList[StatementResultRow]
+	// Cache is a map of row keys to slices of pointers to the list elements in the table.
+	// We have a slice of pointers to the list elements because there can be multiple rows with the same key since
+	// primary keys are NOT ENFORCED in flink and clients can insert rows for the same key.
+	cache         map[string][]*ListElement[StatementResultRow]
 	lock          sync.RWMutex
 	upsertColumns *[]int32
 }
@@ -90,7 +93,7 @@ func NewMaterializedStatementResults(headers []string, maxCapacity int, upsertCo
 		headers:       headers,
 		changelog:     NewLinkedList[StatementResultRow](),
 		table:         NewLinkedList[StatementResultRow](),
-		cache:         map[string]*ListElement[StatementResultRow]{},
+		cache:         map[string][]*ListElement[StatementResultRow]{},
 		upsertColumns: upsertColumns,
 	}
 }
@@ -125,9 +128,28 @@ func (s *MaterializedStatementResults) cleanup() {
 	}
 
 	if s.table.Len() > s.maxCapacity {
-		removedRow := s.table.RemoveFront()
-		removedRowKey, _ := removedRow.GetRowKey(s.upsertColumns)
-		delete(s.cache, removedRowKey)
+		removedElement := s.table.RemoveFront()
+		if removedElement != nil {
+			removedRowKey, _ := removedElement.GetRowKey(s.upsertColumns)
+
+			if listPtrs, ok := s.cache[removedRowKey]; ok && len(listPtrs) > 0 {
+				firstCachedElement := listPtrs[0]
+				if firstCachedElement.Value() == removedElement {
+					remainingListPtrs := listPtrs[1:]
+					if len(remainingListPtrs) == 0 {
+						delete(s.cache, removedRowKey)
+					} else {
+						s.cache[removedRowKey] = remainingListPtrs
+					}
+				} else {
+					// The oldest removed the table should be the first element in the cached slice for that key.
+					// This is a cache inconsistency and bug in the logic.
+					log.CliLogger.Warnf("Materializing results error: Cache inconsistency during cleanup:"+
+						" removed table element for key '%s' did not match the first cached element."+
+						" Table element: %p, Cached element: %p", removedRowKey, removedElement, firstCachedElement)
+				}
+			}
+		}
 	}
 }
 
@@ -149,7 +171,6 @@ func (s *MaterializedStatementResults) Append(rows ...StatementResultRow) bool {
 			s.processRowWithoutUpsertColumns(row, rowKey)
 		}
 
-		// if we are now over the capacity we need to remove some records
 		s.cleanup()
 	}
 	return allValuesInserted
@@ -157,23 +178,29 @@ func (s *MaterializedStatementResults) Append(rows ...StatementResultRow) bool {
 
 func (s *MaterializedStatementResults) processRowWithUpsertColumns(row StatementResultRow, rowKey string) {
 	switch row.Operation {
-	case Insert, UpdateAfter:
-		// treat Insert and UpdateAfter both as upsert events
-		listPtr, ok := s.cache[rowKey]
-		if ok {
-			listPtr.element.Value = row
+	case Insert:
+		listPtr := s.table.PushBack(row)
+		s.cache[rowKey] = append(s.cache[rowKey], listPtr)
+	case UpdateAfter:
+		listPtrs, ok := s.cache[rowKey]
+		if ok && len(listPtrs) > 0 {
+			lastPtr := listPtrs[len(listPtrs)-1]
+			lastPtr.element.Value = row
 		} else {
-			listPtr = s.table.PushBack(row)
-			s.cache[rowKey] = listPtr
+			listPtr := s.table.PushBack(row)
+			s.cache[rowKey] = []*ListElement[StatementResultRow]{listPtr}
 		}
 	case UpdateBefore:
-		// ignore update before, when using upsert columns
 		return
 	case Delete:
-		listPtr, ok := s.cache[rowKey]
-		if ok {
-			s.table.Remove(listPtr)
-			delete(s.cache, rowKey)
+		listPtrs, ok := s.cache[rowKey]
+		if ok && len(listPtrs) > 0 {
+			lastPtr := listPtrs[len(listPtrs)-1]
+			s.table.Remove(lastPtr)
+			s.cache[rowKey] = listPtrs[:len(listPtrs)-1]
+			if len(s.cache[rowKey]) == 0 {
+				delete(s.cache, rowKey)
+			}
 		}
 	default:
 		log.CliLogger.Warnf("unknown operation received: %f\n", row.Operation)
@@ -184,15 +211,21 @@ func (s *MaterializedStatementResults) processRowWithoutUpsertColumns(row Statem
 	// insert row at the end
 	if row.Operation.IsInsertOperation() {
 		listPtr := s.table.PushBack(row)
-		s.cache[rowKey] = listPtr
+
+		// We need to add the list pointer to the cache for this row key
+		s.cache[rowKey] = append(s.cache[rowKey], listPtr)
 		return
 	}
 
 	// delete row
-	listPtr, ok := s.cache[rowKey]
-	if ok {
-		s.table.Remove(listPtr)
-		delete(s.cache, rowKey)
+	listPtrs, ok := s.cache[rowKey]
+	if ok && len(listPtrs) > 0 {
+		lastPtr := listPtrs[len(listPtrs)-1]
+		s.table.Remove(lastPtr)
+		s.cache[rowKey] = listPtrs[:len(listPtrs)-1]
+		if len(s.cache[rowKey]) == 0 {
+			delete(s.cache, rowKey)
+		}
 	}
 }
 
