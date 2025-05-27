@@ -28,6 +28,7 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(aclFlags())
+	pcmd.AddMDSOnPremMTLSFlags(cmd)
 	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
@@ -40,12 +41,17 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
 	acl := parse(cmd)
 	if acl.errors != nil {
 		return acl.errors
 	}
 
-	bindings, response, err := c.MDSClient.KafkaACLManagementApi.SearchAclBinding(c.createContext(), convertToAclFilterRequest(acl.CreateAclRequest))
+	bindings, response, err := client.KafkaACLManagementApi.SearchAclBinding(c.createContext(), convertToAclFilterRequest(acl.CreateAclRequest))
 	if err != nil {
 		return c.handleAclError(cmd, err, response)
 	}
@@ -58,7 +64,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	bindings, response, err = c.MDSClient.KafkaACLManagementApi.RemoveAclBindings(c.createContext(), convertToAclFilterRequest(acl.CreateAclRequest))
+	bindings, response, err = client.KafkaACLManagementApi.RemoveAclBindings(c.createContext(), convertToAclFilterRequest(acl.CreateAclRequest))
 	if err != nil {
 		return c.handleAclError(cmd, err, response)
 	}

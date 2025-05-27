@@ -162,6 +162,7 @@ func (s *CLITestSuite) TestFlinkConnectionCreateSuccess() {
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type elastic --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000", fixture: "flink/connection/create/create-elastic.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type pinecone --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000", fixture: "flink/connection/create/create-pinecone.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type couchbase --endpoint https://api.openai.com/v1/chat/completions --username name --password pass", fixture: "flink/connection/create/create-couchbase.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type confluent_jdbc --endpoint jdbc:mysql://custom.com:3306/customerdb --username name --password pass", fixture: "flink/connection/create/create-confluent_jdbc.golden"},
 	}
 
 	for _, test := range tests {
@@ -533,7 +534,7 @@ func executeCommands(stdin *os.File, commands []string, stdoutScanner *bufio.Sca
 			return "", err
 		}
 
-		output.WriteString(waitForLine(stdoutScanner, "Statement successfully submitted."))
+		output.WriteString(waitForLine(stdoutScanner, "Statement successfully created."))
 	}
 	return output.String(), nil
 }

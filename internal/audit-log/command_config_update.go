@@ -24,6 +24,7 @@ func (c *configCommand) newUpdateCommand() *cobra.Command {
 
 	cmd.Flags().String("file", "", "A local file path to the JSON configuration file, read as input. Otherwise the command will read from standard input.")
 	cmd.Flags().Bool("force", false, "Updates the configuration, overwriting any concurrent modifications.")
+	pcmd.AddMDSOnPremMTLSFlags(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagFilename("file", "json"))
@@ -32,8 +33,12 @@ func (c *configCommand) newUpdateCommand() *cobra.Command {
 }
 
 func (c *configCommand) update(cmd *cobra.Command, _ []string) error {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
 	var data []byte
-	var err error
 	if cmd.Flags().Changed("file") {
 		file, err := cmd.Flags().GetString("file")
 		if err != nil {
@@ -62,7 +67,7 @@ func (c *configCommand) update(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 		if force {
-			gotSpec, response, err := c.MDSClient.AuditLogConfigurationApi.GetConfig(c.createContext())
+			gotSpec, response, err := client.AuditLogConfigurationApi.GetConfig(c.createContext())
 			if err != nil {
 				return HandleMdsAuditLogApiError(err, response)
 			}
@@ -80,7 +85,7 @@ func (c *configCommand) update(cmd *cobra.Command, _ []string) error {
 
 	enc := json.NewEncoder(c.OutOrStdout())
 	enc.SetIndent("", "  ")
-	result, httpResp, err := c.MDSClient.AuditLogConfigurationApi.PutConfig(c.createContext(), *putSpec)
+	result, httpResp, err := client.AuditLogConfigurationApi.PutConfig(c.createContext(), *putSpec)
 	if err != nil {
 		if httpResp != nil && httpResp.StatusCode == http.StatusConflict {
 			if apiError, ok := err.(mdsv1.GenericOpenAPIError); ok {

@@ -312,6 +312,27 @@ func (s *StatementControllerTestSuite) TestExecuteStatementReturnsWhenUserDetach
 	cupaloy.SnapshotT(s.T(), stdout)
 }
 
+func (s *StatementControllerTestSuite) TestExecuteStatementWithWarning() {
+	statementToExecute := "insert into users values ('test');"
+	warning := "[Warning] The primary key does not match the upsert key derived from the query. If the primary key and upsert key don't match, the system needs to add a state-intensive operation for correction. Please revisit the query (upsert key: [customer_name]) or the table declaration for `default`.`dmvk`.`o` (primary key: [total_orders])"
+	processedStatement := types.ProcessedStatement{Status: types.PENDING, Principal: "sa-123", StatusDetail: warning}
+	runningStatement := types.ProcessedStatement{Status: types.RUNNING, StatusDetail: warning}
+	completedStatement := types.ProcessedStatement{Status: types.COMPLETED}
+	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
+	s.consoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
+	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&runningStatement, nil)
+	s.store.EXPECT().FetchStatementResults(runningStatement).Return(&runningStatement, nil)
+	s.store.EXPECT().WaitForTerminalStatementState(gomock.Any(), runningStatement).Return(&completedStatement, nil)
+
+	stdout := testUtils.RunAndCaptureSTDOUT(s.T(), func() {
+		returnedStatement, err := s.statementController.ExecuteStatement(statementToExecute)
+		require.Nil(s.T(), err)
+		require.Equal(s.T(), &completedStatement, returnedStatement)
+	})
+
+	cupaloy.SnapshotT(s.T(), stdout)
+}
+
 func (s *StatementControllerTestSuite) TestRenderMsgAndStatusLocalStatements() {
 	tests := []struct {
 		name      string

@@ -46,6 +46,8 @@ Flags:
       --key-password string                 Private key passphrase for SSL authentication.
       --protocol string                     Specify the broker communication protocol as "PLAINTEXT", "SASL_SSL", or "SSL". (default "SSL")
       --sasl-mechanism string               SASL_SSL mechanism used for authentication. (default "PLAIN")
+      --client-cert-path string             File or directory path to client certificate to authenticate the Schema Registry client.
+      --client-key-path string              File or directory path to client key to authenticate the Schema Registry client.
 
 Global Flags:
   -h, --help            Show help for this command.
