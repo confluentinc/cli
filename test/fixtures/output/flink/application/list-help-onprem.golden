@@ -4,7 +4,7 @@ Usage:
   confluent flink application list [flags]
 
 Flags:
-      --environment string                  REQUIRED: Name of the environment to delete the Flink application from.
+      --environment string                  REQUIRED: Name of the Flink environment.
       --url string                          Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.
       --client-key-path string              Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.
       --client-cert-path string             Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_CERT_PATH" may be set in place of this flag.
