@@ -7,11 +7,14 @@ import (
 )
 
 type flinkEnvironmentOutput struct {
-	Name                     string `human:"Name" serialized:"name"`
-	KubernetesNamespace      string `human:"Kubernetes Namespace" serialized:"kubernetes_namespace"`
-	CreatedTime              string `human:"Created Time" serialized:"created_time"`
-	UpdatedTime              string `human:"Updated Time" serialized:"updated_time"`
-	FlinkApplicationDefaults string `human:"Flink Application Defaults" serialized:"flink_application_defaults"`
+	Name                         string `human:"Name" serialized:"name"`
+	KubernetesNamespace          string `human:"Kubernetes Namespace" serialized:"kubernetes_namespace"`
+	CreatedTime                  string `human:"Created Time" serialized:"created_time"`
+	UpdatedTime                  string `human:"Updated Time" serialized:"updated_time"`
+	FlinkApplicationDefaults     string `human:"Flink Application Defaults,omitempty" serialized:"flink_application_defaults,omitempty"`
+	ComputePoolDefaults          string `human:"Flink Compute Pool Defaults,omitempty" serialized:"flink_compute_pool_defaults,omitempty"`
+	DetachedStatementDefaults    string `human:"Detached Statement Defaults,omitempty" serialized:"detached_statement_defaults,omitempty"`
+	InteractiveStatementDefaults string `human:"Interactive Statement Defaults,omitempty" serialized:"interactive_statement_defaults,omitempty"`
 }
 
 func (c *command) newEnvironmentCommand() *cobra.Command {

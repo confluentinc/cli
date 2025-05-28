@@ -1,0 +1,17 @@
+Manage Flink catalogs in Confluent Platform.
+
+Usage:
+  confluent flink catalog [command]
+
+Available Commands:
+  create      Create a Flink catalog.
+  delete      Delete one or more Flink catalogs in Confluent Platform.
+  describe    Describe a Flink catalog in Confluent Platform.
+  list        List Flink catalogs in Confluent Platform.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent flink catalog [command] --help" for more information about a command.

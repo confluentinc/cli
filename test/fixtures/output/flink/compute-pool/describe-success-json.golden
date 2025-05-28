@@ -1,0 +1,15 @@
+{
+  "apiVersion": "",
+  "kind": "",
+  "metadata": {
+    "creationTimestamp": "2025-03-12 23:42:00 +0000 UTC",
+    "name": "test-pool"
+  },
+  "spec": {
+    "clusterSpec": null,
+    "type": "DEDICATED"
+  },
+  "status": {
+    "phase": "RUNNING"
+  }
+}

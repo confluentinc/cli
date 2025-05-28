@@ -1,0 +1,12 @@
+{
+  "detached": {
+    "flinkConfiguration": {
+      "key1": "value1"
+    }
+  },
+  "interactive": {
+    "flinkConfiguration": {
+      "key2": "value2"
+    }
+  }
+}
