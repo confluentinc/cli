@@ -112,12 +112,20 @@ func (s *CLITestSuite) TestFlinkEnvironmentCreate() {
 		// success
 		{args: "flink environment create default-2 --kubernetes-namespace default-staging", fixture: "flink/environment/create-success.golden"},
 		{args: "flink environment create default-2 --kubernetes-namespace default-staging --output yaml", fixture: "flink/environment/create-success-yaml.golden"},
-		{args: "flink environment create default-2 --defaults test/fixtures/input/flink/environment/create-success-with-defaults.json --kubernetes-namespace default-staging", fixture: "flink/environment/create-success-with-defaults.golden"},
-		{args: "flink environment create default-2 --defaults test/fixtures/input/flink/environment/create-success-with-defaults.json --kubernetes-namespace default-staging --output json", fixture: "flink/environment/create-success-with-defaults-json.golden"},
+		{args: "flink environment create default-2 --defaults test/fixtures/input/flink/environment/application-defaults.json --kubernetes-namespace default-staging", fixture: "flink/environment/create-success-with-defaults.golden"},
+		{args: "flink environment create default-2 --defaults test/fixtures/input/flink/environment/application-defaults.json --kubernetes-namespace default-staging --output json", fixture: "flink/environment/create-success-with-defaults-json.golden"},
 		// failure
 		{args: "flink environment create default-failure --kubernetes-namespace default-staging", fixture: "flink/environment/create-failure.golden", exitCode: 1},
 		{args: "flink environment create default --kubernetes-namespace default-staging", fixture: "flink/environment/create-existing.golden", exitCode: 1},
 		{args: "flink environment create default", fixture: "flink/environment/create-no-namespace.golden", exitCode: 1},
+		// success with application, statement and compute pool defaults
+		{args: "flink environment create default-2" +
+			" --defaults test/fixtures/input/flink/environment/application-defaults.json" +
+			" --statement-defaults test/fixtures/input/flink/environment/statement-defaults.json" +
+			" --compute-pool-defaults test/fixtures/input/flink/environment/compute-pool-defaults.json" +
+			" --kubernetes-namespace default-staging",
+			fixture: "flink/environment/create-success-with-defaults-all.golden",
+		},
 	}
 
 	runIntegrationTestsWithMultipleAuth(s, tests)
@@ -130,9 +138,17 @@ func (s *CLITestSuite) TestFlinkEnvironmentUpdate() {
 		{args: "flink environment update default --defaults '{\"property\": \"value\"}' --output yaml", fixture: "flink/environment/update-success-yaml.golden"},
 		{args: "flink environment update default --defaults '{\"property\": \"value\"}' --output json", fixture: "flink/environment/update-success-json.golden"},
 		// failure
-		{args: "flink environment update update-failure", fixture: "flink/environment/update-failure.golden", exitCode: 1},
-		{args: "flink environment update non-existent", fixture: "flink/environment/update-non-existent.golden", exitCode: 1},
-		{args: "flink environment update get-failure", fixture: "flink/environment/update-get-failure.golden", exitCode: 1},
+		{args: "flink environment update update-failure --defaults '{\"property\": \"value\"}'", fixture: "flink/environment/update-failure.golden", exitCode: 1},
+		{args: "flink environment update non-existent --defaults '{\"property\": \"value\"}'", fixture: "flink/environment/update-non-existent.golden", exitCode: 1},
+		{args: "flink environment update get-failure --defaults '{\"property\": \"value\"}'", fixture: "flink/environment/update-get-failure.golden", exitCode: 1},
+		{args: "flink environment update missing-flag-failure", fixture: "flink/environment/missing-flag-failure.golden", exitCode: 1},
+		// success with application, statement and compute pool defaults
+		{args: "flink environment update default" +
+			" --defaults test/fixtures/input/flink/environment/application-defaults.json" +
+			" --statement-defaults test/fixtures/input/flink/environment/statement-defaults.json" +
+			" --compute-pool-defaults test/fixtures/input/flink/environment/compute-pool-defaults.json",
+			fixture: "flink/environment/update-success-with-defaults-all.golden",
+		},
 	}
 
 	runIntegrationTestsWithMultipleAuth(s, tests)
@@ -144,6 +160,7 @@ func (s *CLITestSuite) TestFlinkEnvironmentDescribe() {
 		{args: "flink environment describe default", fixture: "flink/environment/describe-success.golden"},
 		{args: "flink environment describe default --output json", fixture: "flink/environment/describe-success-json.golden"},
 		{args: "flink environment describe default --output yaml", fixture: "flink/environment/describe-success-yaml.golden"},
+		{args: "flink environment describe defaults-all", fixture: "flink/environment/describe-success-with-defaults.golden"},
 		// failure
 		{args: "flink environment describe non-existent", fixture: "flink/environment/describe-non-existent.golden", exitCode: 1},
 		{args: "flink environment describe", fixture: "flink/environment/describe-no-environment.golden", exitCode: 1},

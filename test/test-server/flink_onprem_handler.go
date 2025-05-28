@@ -17,8 +17,55 @@ import (
 )
 
 // Helper function to create a Flink application.
-func createApplication(name string, environment string) cmfsdk.Application {
-	return cmfsdk.Application{
+func createApplication(name string, environment string) cmfsdk.FlinkApplication {
+	status := map[string]interface{}{
+		"jobStatus": map[string]interface{}{
+			"jobName":    "State machine job",
+			"jobId":      "dcabb1ad6c40495bc2d7fa7a0097c5aa",
+			"state":      "RECONCILING",
+			"startTime":  "1726640263746",
+			"updateTime": "1726640280561",
+			"savepointInfo": map[string]interface{}{
+				"lastSavepoint":                  nil,
+				"triggerId":                      nil,
+				"triggerTimestamp":               nil,
+				"triggerType":                    nil,
+				"formatType":                     nil,
+				"savepointHistory":               []interface{}{},
+				"lastPeriodicSavepointTimestamp": 0,
+			},
+			"checkpointInfo": map[string]interface{}{
+				"lastCheckpoint":                  nil,
+				"triggerId":                       nil,
+				"triggerTimestamp":                nil,
+				"triggerType":                     nil,
+				"formatType":                      nil,
+				"lastPeriodicCheckpointTimestamp": 0,
+			},
+		},
+		"error":              nil,
+		"observedGeneration": 4,
+		"lifecycleState":     "DEPLOYED",
+		"clusterInfo": map[string]interface{}{
+			"flink-revision": "89d0b8f @ 2024-06-22T13:19:31+02:00",
+			"flink-version":  "1.19.1-cp1",
+			"total-cpu":      "3.0",
+			"total-memory":   "3296722944",
+		},
+		"jobManagerDeploymentStatus": "DEPLOYING",
+		"reconciliationStatus": map[string]interface{}{
+			"reconciliationTimestamp": 1726640346899,
+			"lastReconciledSpec":      "",
+			"lastStableSpec":          "",
+			"state":                   "DEPLOYED",
+		},
+		"taskManager": map[string]interface{}{
+			"labelSelector": "component=taskmanager,app=basic-example",
+			"replicas":      1,
+		},
+	}
+
+	return cmfsdk.FlinkApplication{
 		ApiVersion: "cmf.confluent.io/v1alpha1",
 		Kind:       "FlinkApplication",
 		Metadata: map[string]interface{}{
@@ -53,62 +100,70 @@ func createApplication(name string, environment string) cmfsdk.Application {
 				"upgradeMode": "stateless",
 			},
 		},
-		Status: map[string]interface{}{
-			"jobStatus": map[string]interface{}{
-				"jobName":    "State machine job",
-				"jobId":      "dcabb1ad6c40495bc2d7fa7a0097c5aa",
-				"state":      "RECONCILING",
-				"startTime":  "1726640263746",
-				"updateTime": "1726640280561",
-				"savepointInfo": map[string]interface{}{
-					"lastSavepoint":                  nil,
-					"triggerId":                      nil,
-					"triggerTimestamp":               nil,
-					"triggerType":                    nil,
-					"formatType":                     nil,
-					"savepointHistory":               []interface{}{},
-					"lastPeriodicSavepointTimestamp": 0,
-				},
-				"checkpointInfo": map[string]interface{}{
-					"lastCheckpoint":                  nil,
-					"triggerId":                       nil,
-					"triggerTimestamp":                nil,
-					"triggerType":                     nil,
-					"formatType":                      nil,
-					"lastPeriodicCheckpointTimestamp": 0,
-				},
-			},
-			"error":              nil,
-			"observedGeneration": 4,
-			"lifecycleState":     "DEPLOYED",
-			"clusterInfo": map[string]interface{}{
-				"flink-revision": "89d0b8f @ 2024-06-22T13:19:31+02:00",
-				"flink-version":  "1.19.1-cp1",
-				"total-cpu":      "3.0",
-				"total-memory":   "3296722944",
-			},
-			"jobManagerDeploymentStatus": "DEPLOYING",
-			"reconciliationStatus": map[string]interface{}{
-				"reconciliationTimestamp": 1726640346899,
-				"lastReconciledSpec":      "",
-				"lastStableSpec":          "",
-				"state":                   "DEPLOYED",
-			},
-			"taskManager": map[string]interface{}{
-				"labelSelector": "component=taskmanager,app=basic-example",
-				"replicas":      1,
-			},
-		},
+		Status: &status,
 	}
 }
 
 // Helper function to create a Flink environment.
 func createEnvironment(name string, namespace string) cmfsdk.Environment {
+	createdTime := time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC)
+	updatedTime := time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC)
+
 	return cmfsdk.Environment{
 		Name:                name,
 		KubernetesNamespace: namespace,
-		CreatedTime:         time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
-		UpdatedTime:         time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC),
+		CreatedTime:         &createdTime,
+		UpdatedTime:         &updatedTime,
+	}
+}
+
+// Helper function to create a Flink environment with default application, compute pool and statement.
+func createEnvironmentWithDefaults(name string, namespace string) cmfsdk.Environment {
+	createdTime := time.Date(2025, time.September, 25, 12, 29, 0, 0, time.UTC)
+	updatedTime := time.Date(2025, time.September, 25, 12, 29, 0, 0, time.UTC)
+
+	applicationDefaults := map[string]interface{}{
+		"metadata": map[string]interface{}{
+			"annotations": map[string]interface{}{
+				"fmc.platform.confluent.io/intra-cluster-ssl": "false",
+			},
+		},
+		"spec": map[string]interface{}{
+			"flinkConfiguration": map[string]interface{}{
+				"taskmanager.numberOfTaskSlots": "8",
+			},
+		},
+	}
+
+	computePoolDefaults := map[string]interface{}{
+		"metadata": map[string]interface{}{
+			"name": "test-pool",
+		},
+		"spec": map[string]interface{}{
+			"type": "DEDICATED",
+		},
+	}
+
+	detachedConfig := map[string]string{"key1": "value1"}
+	interactiveConfig := map[string]string{"key2": "value2"}
+
+	statementDefaults := cmfsdk.AllStatementDefaults1{
+		Detached: &cmfsdk.StatementDefaults{
+			FlinkConfiguration: &detachedConfig,
+		},
+		Interactive: &cmfsdk.StatementDefaults{
+			FlinkConfiguration: &interactiveConfig,
+		},
+	}
+
+	return cmfsdk.Environment{
+		Name:                     name,
+		KubernetesNamespace:      namespace,
+		CreatedTime:              &createdTime,
+		UpdatedTime:              &updatedTime,
+		FlinkApplicationDefaults: &applicationDefaults,
+		ComputePoolDefaults:      &computePoolDefaults,
+		StatementDefaults:        &statementDefaults,
 	}
 }
 
@@ -185,14 +240,18 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 				outputEnvironment := createEnvironment(environment.Name, environment.Name+"-namespace")
 				// This is a dummy update - only the defaults can be updated anyway.
 				outputEnvironment.FlinkApplicationDefaults = environment.FlinkApplicationDefaults
+				outputEnvironment.ComputePoolDefaults = environment.ComputePoolDefaults
+				outputEnvironment.StatementDefaults = environment.StatementDefaults
 				err = json.NewEncoder(w).Encode(outputEnvironment)
 				require.NoError(t, err)
 				return
 			}
 
 			// New environment: create
-			outputEnvironment := createEnvironment(environment.Name, environment.KubernetesNamespace)
+			outputEnvironment := createEnvironment(environment.Name, environment.GetKubernetesNamespace())
 			outputEnvironment.FlinkApplicationDefaults = environment.FlinkApplicationDefaults
+			outputEnvironment.ComputePoolDefaults = environment.ComputePoolDefaults
+			outputEnvironment.StatementDefaults = environment.StatementDefaults
 			err = json.NewEncoder(w).Encode(outputEnvironment)
 			require.NoError(t, err)
 			return
@@ -214,6 +273,13 @@ func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			if environment == "default" || environment == "test" || environment == "update-failure" {
 				outputEnvironment := createEnvironment(environment, environment+"-namespace")
+				err := json.NewEncoder(w).Encode(outputEnvironment)
+				require.NoError(t, err)
+				return
+			}
+
+			if environment == "defaults-all" {
+				outputEnvironment := createEnvironmentWithDefaults(environment, environment+"-namespace")
 				err := json.NewEncoder(w).Encode(outputEnvironment)
 				require.NoError(t, err)
 				return
@@ -264,20 +330,20 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 			// For the 'default' environment, return applications but only on page 0.
 			// For the 'update-failure' environment, return the 'update-failure-application' application.
 			applicationsPage := map[string]interface{}{
-				"items": []cmfsdk.Application{},
+				"items": []cmfsdk.FlinkApplication{},
 			}
 
 			page := r.URL.Query().Get("page")
 
 			if environment == "default" && page == "0" {
-				items := []cmfsdk.Application{createApplication("default-application-1", "default"), createApplication("default-application-2", "default")}
+				items := []cmfsdk.FlinkApplication{createApplication("default-application-1", "default"), createApplication("default-application-2", "default")}
 				applicationsPage = map[string]interface{}{
 					"items": items,
 				}
 			}
 
 			if environment == "update-failure" && page == "0" {
-				items := []cmfsdk.Application{createApplication("update-failure-application", "update-failure")}
+				items := []cmfsdk.FlinkApplication{createApplication("update-failure-application", "update-failure")}
 				applicationsPage = map[string]interface{}{
 					"items": items,
 				}
@@ -295,7 +361,7 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 
 			reqBody, err := io.ReadAll(r.Body)
 			require.NoError(t, err)
-			var application cmfsdk.Application
+			var application cmfsdk.FlinkApplication
 			err = json.Unmarshal(reqBody, &application)
 			require.NoError(t, err)
 

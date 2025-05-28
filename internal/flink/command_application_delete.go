@@ -17,7 +17,7 @@ func (c *command) newApplicationDeleteCommand() *cobra.Command {
 		RunE:  c.applicationDelete,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment to delete the Flink application from.")
+	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	addCmfFlagSet(cmd)
 	pcmd.AddForceFlag(cmd)
 

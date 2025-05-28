@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -25,6 +26,8 @@ func (c *command) newEnvironmentCreateCommand() *cobra.Command {
 
 	cmd.Flags().String("kubernetes-namespace", "", "Kubernetes namespace to deploy Flink applications to.")
 	cmd.Flags().String("defaults", "", "JSON string defining the environment's Flink application defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).")
+	cmd.Flags().String("statement-defaults", "", "JSON string defining the environment's Flink statement defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).")
+	cmd.Flags().String("compute-pool-defaults", "", "JSON string defining the environment's Flink compute pool defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).")
 
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
@@ -48,43 +51,46 @@ func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	// Read file contents or parse defaults if applicable
-	var defaultsParsed map[string]interface{}
-	defaults, err := cmd.Flags().GetString("defaults")
+	var defaultsApplicationParsed, defaultsComputePoolParsed map[string]interface{}
+	var defaultsStatementParsed cmfsdk.AllStatementDefaults1
+
+	defaultsApplication, err := cmd.Flags().GetString("defaults")
 	if err != nil {
-		return fmt.Errorf("failed to read file: %v", err)
+		return fmt.Errorf("failed to read defaults application: %v", err)
 	}
 
-	if defaults != "" {
-		defaultsParsed = make(map[string]interface{})
-		if strings.HasSuffix(defaults, ".json") {
-			var data []byte
-			data, err = os.ReadFile(defaults)
-			if err != nil {
-				return fmt.Errorf("failed to read defaults file: %v", err)
-			}
-			err = json.Unmarshal(data, &defaultsParsed)
-		} else if strings.HasSuffix(defaults, ".yaml") || strings.HasSuffix(defaults, ".yml") {
-			var data []byte
-			data, err = os.ReadFile(defaults)
-			if err != nil {
-				return fmt.Errorf("failed to read defaults file: %v", err)
-			}
-			err = yaml.Unmarshal(data, &defaultsParsed)
-		} else {
-			err = json.Unmarshal([]byte(defaults), &defaultsParsed)
-		}
+	defaultsComputePool, err := cmd.Flags().GetString("compute-pool-defaults")
+	if err != nil {
+		return fmt.Errorf("failed to read defaults compute pool: %v", err)
+	}
 
-		if err != nil {
-			return fmt.Errorf("failed to parse defaults: %v", err)
+	defaultsStatement, err := cmd.Flags().GetString("statement-defaults")
+	if err != nil {
+		return fmt.Errorf("failed to read defaults statement: %v", err)
+	}
+
+	if defaultsApplication != "" {
+		if defaultsApplicationParsed, err = parseDefaultsAsGenericType[map[string]interface{}](defaultsApplication, "application"); err != nil {
+			return err
+		}
+	}
+	if defaultsComputePool != "" {
+		if defaultsComputePoolParsed, err = parseDefaultsAsGenericType[map[string]interface{}](defaultsComputePool, "compute-pool"); err != nil {
+			return err
+		}
+	}
+	if defaultsStatement != "" {
+		if defaultsStatementParsed, err = parseDefaultsAsGenericType[cmfsdk.AllStatementDefaults1](defaultsStatement, "statement"); err != nil {
+			return err
 		}
 	}
 
 	var postEnvironment cmfsdk.PostEnvironment
 	postEnvironment.Name = environmentName
-	if defaultsParsed != nil {
-		postEnvironment.FlinkApplicationDefaults = defaultsParsed
-	}
-	postEnvironment.KubernetesNamespace = kubernetesNamespace
+	postEnvironment.FlinkApplicationDefaults = &defaultsApplicationParsed
+	postEnvironment.KubernetesNamespace = &kubernetesNamespace
+	postEnvironment.StatementDefaults = &defaultsStatementParsed
+	postEnvironment.ComputePoolDefaults = &defaultsComputePoolParsed
 
 	outputEnvironment, err := client.CreateEnvironment(c.createContext(), postEnvironment)
 	if err != nil {
@@ -92,22 +98,80 @@ func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		table := output.NewTable(cmd)
-		var defaultsBytes []byte
-		defaultsBytes, err = json.Marshal(outputEnvironment.FlinkApplicationDefaults)
-		if err != nil {
-			return fmt.Errorf("failed to marshal defaults: %s", err)
-		}
-
-		table.Add(&flinkEnvironmentOutput{
-			Name:                     outputEnvironment.Name,
-			KubernetesNamespace:      outputEnvironment.KubernetesNamespace,
-			FlinkApplicationDefaults: string(defaultsBytes),
-			CreatedTime:              outputEnvironment.CreatedTime.String(),
-			UpdatedTime:              outputEnvironment.UpdatedTime.String(),
-		})
-		return table.Print()
+		return printEnvironmentOutTable(cmd, outputEnvironment)
 	}
 
 	return output.SerializedOutput(cmd, outputEnvironment)
+}
+
+func parseDefaultsAsGenericType[T any](input, label string) (T, error) {
+	var out T
+	var data []byte
+	var err error
+
+	ext := strings.ToLower(filepath.Ext(input))
+	switch ext {
+	case ".json":
+		data, err = os.ReadFile(input)
+		if err != nil {
+			return out, fmt.Errorf("failed to read %s defaults JSON file: %w", label, err)
+		}
+		err = json.Unmarshal(data, &out)
+
+	case ".yaml", ".yml":
+		data, err = os.ReadFile(input)
+		if err != nil {
+			return out, fmt.Errorf("failed to read %s defaults YAML file: %w", label, err)
+		}
+		err = yaml.Unmarshal(data, &out)
+
+	default:
+		// inline JSON string
+		err = json.Unmarshal([]byte(input), &out)
+	}
+
+	if err != nil {
+		return out, fmt.Errorf("failed to parse %s defaults: %w", label, err)
+	}
+	return out, nil
+}
+
+func jsonMarshalHelper(v interface{}, label string) (string, error) {
+	data, err := json.Marshal(v)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal %s: %v", label, err)
+	}
+	return string(data), nil
+}
+
+func printEnvironmentOutTable(cmd *cobra.Command, outputEnvironment cmfsdk.Environment) error {
+	table := output.NewTable(cmd)
+	var defaultsApplicationOutput, defaultComputePoolOutput string
+	var defaultsDetachedStatementOutput, defaultsInteractiveStatementOutput string
+	var err error
+
+	if defaultsApplicationOutput, err = jsonMarshalHelper(outputEnvironment.FlinkApplicationDefaults, "Flink application defaults"); err != nil {
+		return err
+	}
+	if defaultComputePoolOutput, err = jsonMarshalHelper(outputEnvironment.ComputePoolDefaults, "Flink compute-pool defaults"); err != nil {
+		return err
+	}
+	if defaultsDetachedStatementOutput, err = jsonMarshalHelper(outputEnvironment.GetStatementDefaults().Detached, "Flink detached statement defaults"); err != nil {
+		return err
+	}
+	if defaultsInteractiveStatementOutput, err = jsonMarshalHelper(outputEnvironment.GetStatementDefaults().Interactive, "Flink interactive statement defaults"); err != nil {
+		return err
+	}
+
+	table.Add(&flinkEnvironmentOutput{
+		Name:                         outputEnvironment.Name,
+		KubernetesNamespace:          outputEnvironment.KubernetesNamespace,
+		FlinkApplicationDefaults:     defaultsApplicationOutput,
+		ComputePoolDefaults:          defaultComputePoolOutput,
+		DetachedStatementDefaults:    defaultsDetachedStatementOutput,
+		InteractiveStatementDefaults: defaultsInteractiveStatementOutput,
+		CreatedTime:                  outputEnvironment.CreatedTime.String(),
+		UpdatedTime:                  outputEnvironment.UpdatedTime.String(),
+	})
+	return table.Print()
 }
