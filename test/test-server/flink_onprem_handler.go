@@ -167,6 +167,25 @@ func createEnvironmentWithDefaults(name string, namespace string) cmfsdk.Environ
 	}
 }
 
+func createComputePool(poolName, phase string) cmfsdk.ComputePool {
+	timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
+
+	status := cmfsdk.ComputePoolStatus{
+		Phase: phase,
+	}
+
+	return cmfsdk.ComputePool{
+		Metadata: cmfsdk.ComputePoolMetadata{
+			Name:              poolName,
+			CreationTimestamp: &timeStamp,
+		},
+		Spec: cmfsdk.ComputePoolSpec{
+			Type: "DEDICATED",
+		},
+		Status: &status,
+	}
+}
+
 // Helper function to check that the login type is either empty or onprem, and if it's onprem,
 // that the headers are correct.
 func handleLoginType(t *testing.T, r *http.Request) {
@@ -443,6 +462,106 @@ func handleCmfApplication(t *testing.T) http.HandlerFunc {
 			}
 
 			http.Error(w, "Application not found", http.StatusNotFound)
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+// Handler for "cmf/api/v1/environments/{envName}/compute-pools"
+// Used by list, create compute pools, no update compute pools.
+func handleCmfComputePools(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		environment := vars["environment"]
+
+		if environment == "non-exist" {
+			http.Error(w, "Environment not found", http.StatusNotFound)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			computePool1 := createComputePool("test-pool1", "RUNNING")
+			computePool2 := createComputePool("test-pool2", "PENDING")
+			computePool3 := createComputePool("test-pool3", "COMPLETE")
+
+			computePools := []cmfsdk.ComputePool{computePool1, computePool2, computePool3}
+			computePoolsPage := cmfsdk.ComputePoolsPage{}
+			page := r.URL.Query().Get("page")
+
+			if page == "0" {
+				computePoolsPage.SetItems(computePools)
+			}
+
+			err := json.NewEncoder(w).Encode(computePoolsPage)
+			require.NoError(t, err)
+			return
+
+		case http.MethodPost:
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var computePool cmfsdk.ComputePool
+			err = json.Unmarshal(reqBody, &computePool)
+			require.NoError(t, err)
+
+			poolName := computePool.GetMetadata().Name
+
+			if poolName == "invalid-pool" {
+				http.Error(w, "The compute pool is invalid", http.StatusUnprocessableEntity)
+				return
+			}
+			if poolName == "existing-pool" {
+				http.Error(w, "The compute pool name already exists, please try with another compute pool name", http.StatusConflict)
+				return
+			}
+
+			timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
+			computePool.Metadata.CreationTimestamp = &timeStamp
+			err = json.NewEncoder(w).Encode(computePool)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+// Handler for "cmf/api/v1/environments/{envName}/compute-pools/{poolName}"
+// Used by describe, delete compute pools, no update compute pools.
+func handleCmfComputePool(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		environment := vars["environment"]
+		poolName := vars["poolName"]
+
+		if environment == "non-exist" {
+			http.Error(w, "Environment not found", http.StatusNotFound)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			if poolName == "invalid-pool" {
+				http.Error(w, "The compute pool is invalid", http.StatusNotFound)
+				return
+			}
+
+			computePool := createComputePool(poolName, "RUNNING")
+			err := json.NewEncoder(w).Encode(computePool)
+			require.NoError(t, err)
+			return
+		case http.MethodDelete:
+			if poolName == "non-exist-pool" {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			return
 		default:
 			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
 		}

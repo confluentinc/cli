@@ -203,6 +203,66 @@ func (s *CLITestSuite) TestFlinkApplicationWebUiForward() {
 	s.runIntegrationTest(noUrlSetTest)
 }
 
+func (s *CLITestSuite) TestFlinkComputePoolCreateOnPrem() {
+	tests := []CLITest{
+		// success
+		{args: "flink compute-pool create test/fixtures/input/flink/compute-pool/create-successful.json --environment default", fixture: "flink/compute-pool/create-success.golden"},
+		{args: "flink compute-pool create test/fixtures/input/flink/compute-pool/create-successful.json --environment default --output yaml", fixture: "flink/compute-pool/create-success-yaml.golden"},
+		{args: "flink compute-pool create test/fixtures/input/flink/compute-pool/create-successful.json --environment default --output json", fixture: "flink/compute-pool/create-success-json.golden"},
+		// failure
+		{args: "flink compute-pool create test/fixtures/input/flink/compute-pool/create-invalid-failure.json --environment default", fixture: "flink/compute-pool/create-invalid-failure.golden", exitCode: 1},
+		{args: "flink compute-pool create test/fixtures/input/flink/compute-pool/create-existing-failure.json --environment default", fixture: "flink/compute-pool/create-existing-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkComputePoolDeleteOnPrem() {
+	tests := []CLITest{
+		// success scenarios
+		{args: "flink compute-pool delete test-pool1 --environment default", input: "y\n", fixture: "flink/compute-pool/delete-single-successful.golden"},
+		{args: "flink compute-pool delete test-pool1 test-pool2 --environment default", input: "y\n", fixture: "flink/compute-pool/delete-multiple-successful.golden"},
+		{args: "flink compute-pool delete test-pool1 --environment default --force", fixture: "flink/compute-pool/delete-single-force.golden"},
+		// failure scenarios
+		{args: "flink compute-pool delete test-pool1", fixture: "flink/compute-pool/delete-missing-env-flag-failure.golden", exitCode: 1},
+		{args: "flink compute-pool delete test-pool1 --environment non-exist", fixture: "flink/compute-pool/delete-non-exist-env-failure.golden", exitCode: 1},
+		{args: "flink compute-pool delete non-exist-pool --environment default", input: "y\n", fixture: "flink/compute-pool/delete-non-exist-pool-failure.golden", exitCode: 1},
+		// mixed scenarios
+		{args: "flink compute-pool delete test-pool1 non-exist-pool --environment default --force", fixture: "flink/compute-pool/delete-multiple-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkComputePoolDescribeOnPrem() {
+	tests := []CLITest{
+		// success
+		{args: "flink compute-pool describe test-pool --environment default", fixture: "flink/compute-pool/describe-success.golden"},
+		{args: "flink compute-pool describe test-pool --environment default --output yaml", fixture: "flink/compute-pool/describe-success-yaml.golden"},
+		{args: "flink compute-pool describe test-pool --environment default --output json", fixture: "flink/compute-pool/describe-success-json.golden"},
+		// failure
+		{args: "flink compute-pool describe invalid-pool --environment default", fixture: "flink/compute-pool/describe-invalid-pool-failure.golden", exitCode: 1},
+		{args: "flink compute-pool describe test-pool --environment non-exist", fixture: "flink/compute-pool/describe-non-exist-environment-failure.golden", exitCode: 1},
+		{args: "flink compute-pool describe test-pool", fixture: "flink/compute-pool/describe-missing-env-flag-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkComputePoolListOnPrem() {
+	tests := []CLITest{
+		// success scenarios
+		{args: "flink compute-pool list --environment default", fixture: "flink/compute-pool/list-successful.golden"},
+		{args: "flink compute-pool list --environment default  --output json", fixture: "flink/compute-pool/list-json.golden"},
+		{args: "flink compute-pool list --environment default  --output human", fixture: "flink/compute-pool/list-human.golden"},
+		// failure scenarios
+		{args: "flink compute-pool list", fixture: "flink/compute-pool/list-missing-env-flag-failure.golden", exitCode: 1},
+		{args: "flink compute-pool list --environment non-exist", fixture: "flink/compute-pool/list-non-exist-environment-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
 func (s *CLITestSuite) TestFlinkOnPremWithCloudLogin() {
 	test := CLITest{args: "flink environment list --output json", fixture: "flink/environment/list-cloud.golden", login: "cloud", exitCode: 1}
 	s.runIntegrationTest(test)
