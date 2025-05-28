@@ -7,7 +7,7 @@ import (
 )
 
 type catalogOut struct {
-	CreationTime string   `human:"CreationTime" serialized:"creation_time"`
+	CreationTime string   `human:"Creation Time" serialized:"creation_time"`
 	Name         string   `human:"Name" serialized:"name"`
 	Databases    []string `human:"Databases" serialized:"databases"`
 }
@@ -15,7 +15,7 @@ type catalogOut struct {
 func (c *command) newCatalogCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "catalog",
-		Short:       "Manage Flink catalog in Confluent Platform.",
+		Short:       "Manage Flink catalogs in Confluent Platform.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 	}
 

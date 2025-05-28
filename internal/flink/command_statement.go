@@ -28,7 +28,7 @@ type statementOutOnPrem struct {
 	StatusDetail string `human:"Status Detail,omitempty" serialized:"status_detail,omitempty"`
 	Parallelism  int32  `human:"Parallelism" serialized:"parallelism"`
 	Stopped      bool   `human:"Stopped" serialized:"stopped"`
-	SqlKind      string `human:"Sql Kind,omitempty" serialized:"sql_kind,omitempty"`
+	SqlKind      string `human:"SQL Kind,omitempty" serialized:"sql_kind,omitempty"`
 	AppendOnly   bool   `human:"Append Only,omitempty" serialized:"append_only,omitempty"`
 	Bounded      bool   `human:"Bounded,omitempty" serialized:"bounded,omitempty"`
 }

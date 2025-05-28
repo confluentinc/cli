@@ -1,4 +1,4 @@
-Manage Flink catalog in Confluent Platform.
+Manage Flink catalogs in Confluent Platform.
 
 Usage:
   confluent flink catalog [command]
