@@ -186,6 +186,26 @@ func createComputePool(poolName, phase string) cmfsdk.ComputePool {
 	}
 }
 
+func createKafkaCatalog(catName string) cmfsdk.KafkaCatalog {
+	timeStamp := time.Date(2025, time.August, 5, 12, 00, 0, 0, time.UTC).String()
+	return cmfsdk.KafkaCatalog{
+		Metadata: cmfsdk.CatalogMetadata{
+			Name:              catName,
+			CreationTimestamp: &timeStamp,
+		},
+		Spec: cmfsdk.KafkaCatalogSpec{
+			KafkaClusters: []cmfsdk.KafkaCatalogSpecKafkaClusters{
+				{
+					DatabaseName: "test-database",
+				},
+				{
+					DatabaseName: "test-database-2",
+				},
+			},
+		},
+	}
+}
+
 // Helper function to check that the login type is either empty or onprem, and if it's onprem,
 // that the headers are correct.
 func handleLoginType(t *testing.T, r *http.Request) {
@@ -510,7 +530,7 @@ func handleCmfComputePools(t *testing.T) http.HandlerFunc {
 			poolName := computePool.GetMetadata().Name
 
 			if poolName == "invalid-pool" {
-				http.Error(w, "The compute pool is invalid", http.StatusUnprocessableEntity)
+				http.Error(w, "The compute pool object from resource file is invalid", http.StatusUnprocessableEntity)
 				return
 			}
 			if poolName == "existing-pool" {
@@ -557,6 +577,90 @@ func handleCmfComputePool(t *testing.T) http.HandlerFunc {
 			return
 		case http.MethodDelete:
 			if poolName == "non-exist-pool" {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+// Handler for "cmf/api/v1/catalogs/kafka"
+// Used by list, create Kafka catalogs
+func handleCmfCatalogs(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+		switch r.Method {
+		case http.MethodGet:
+			catalog1 := createKafkaCatalog("test-catalog1")
+			catalog2 := createKafkaCatalog("test-catalog2")
+			catalog3 := createKafkaCatalog("test-catalog3")
+
+			catalogs := []cmfsdk.KafkaCatalog{catalog1, catalog2, catalog3}
+			catalogsPage := cmfsdk.KafkaCatalogsPage{}
+			page := r.URL.Query().Get("page")
+
+			if page == "0" {
+				catalogsPage.SetItems(catalogs)
+			}
+
+			err := json.NewEncoder(w).Encode(catalogsPage)
+			require.NoError(t, err)
+			return
+		case http.MethodPost:
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var catalog cmfsdk.KafkaCatalog
+			err = json.Unmarshal(reqBody, &catalog)
+			require.NoError(t, err)
+
+			catName := catalog.GetMetadata().Name
+
+			if catName == "invalid-catalog" {
+				http.Error(w, "The Kafka catalog object from resource file is invalid", http.StatusUnprocessableEntity)
+				return
+			}
+			if catName == "existing-catalog" {
+				http.Error(w, "The Kafka catalog name already exists, please try with another catalog name", http.StatusConflict)
+				return
+			}
+
+			timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
+			catalog.Metadata.CreationTimestamp = &timeStamp
+			err = json.NewEncoder(w).Encode(catalog)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+// Handler for "cmf/api/v1/catalogs/kafka/{catName}"
+// Used by describe, delete catalog, no update catalog.
+func handleCmfCatalog(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		catalogName := vars["catName"]
+
+		switch r.Method {
+		case http.MethodGet:
+			if catalogName == "invalid-catalog" {
+				http.Error(w, "The catalog name is invalid", http.StatusNotFound)
+				return
+			}
+
+			catalog := createKafkaCatalog(catalogName)
+			err := json.NewEncoder(w).Encode(catalog)
+			require.NoError(t, err)
+			return
+		case http.MethodDelete:
+			if catalogName == "non-exist-catalog" {
 				http.Error(w, "", http.StatusNotFound)
 				return
 			}

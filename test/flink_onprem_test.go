@@ -253,11 +253,64 @@ func (s *CLITestSuite) TestFlinkComputePoolListOnPrem() {
 	tests := []CLITest{
 		// success scenarios
 		{args: "flink compute-pool list --environment default", fixture: "flink/compute-pool/list-successful.golden"},
-		{args: "flink compute-pool list --environment default  --output json", fixture: "flink/compute-pool/list-json.golden"},
-		{args: "flink compute-pool list --environment default  --output human", fixture: "flink/compute-pool/list-human.golden"},
+		{args: "flink compute-pool list --environment default --output json", fixture: "flink/compute-pool/list-json.golden"},
+		{args: "flink compute-pool list --environment default --output yaml", fixture: "flink/compute-pool/list-yaml.golden"},
 		// failure scenarios
 		{args: "flink compute-pool list", fixture: "flink/compute-pool/list-missing-env-flag-failure.golden", exitCode: 1},
 		{args: "flink compute-pool list --environment non-exist", fixture: "flink/compute-pool/list-non-exist-environment-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkCatalogCreateOnPrem() {
+	tests := []CLITest{
+		// success
+		{args: "flink catalog create test/fixtures/input/flink/catalog/create-successful.json", fixture: "flink/catalog/create-success.golden"},
+		{args: "flink catalog create test/fixtures/input/flink/catalog/create-successful.json --output yaml", fixture: "flink/catalog/create-success-yaml.golden"},
+		{args: "flink catalog create test/fixtures/input/flink/catalog/create-successful.json --output json", fixture: "flink/catalog/create-success-json.golden"},
+		// failure
+		{args: "flink catalog create test/fixtures/input/flink/catalog/create-invalid-failure.json", fixture: "flink/catalog/create-invalid-failure.golden", exitCode: 1},
+		{args: "flink catalog create test/fixtures/input/flink/catalog/create-existing-failure.json", fixture: "flink/catalog/create-existing-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkCatalogDeleteOnPrem() {
+	tests := []CLITest{
+		// success scenarios
+		{args: "flink catalog delete test-catalog1", input: "y\n", fixture: "flink/catalog/delete-single-successful.golden"},
+		{args: "flink catalog delete test-catalog1 test-catalog2", input: "y\n", fixture: "flink/catalog/delete-multiple-successful.golden"},
+		{args: "flink catalog delete test-catalog1 --force", fixture: "flink/catalog/delete-single-force.golden"},
+		// failure scenarios
+		{args: "flink catalog delete non-exist-catalog", input: "y\n", fixture: "flink/catalog/delete-non-exist-catalog-failure.golden", exitCode: 1},
+		// mixed scenarios
+		{args: "flink catalog delete test-catalog1 non-exist-catalog --force", fixture: "flink/catalog/delete-multiple-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkCatalogDescribeOnPrem() {
+	tests := []CLITest{
+		// success
+		{args: "flink catalog describe test-catalog1", fixture: "flink/catalog/describe-success.golden"},
+		{args: "flink catalog describe test-catalog1 --output yaml", fixture: "flink/catalog/describe-success-yaml.golden"},
+		{args: "flink catalog describe test-catalog1 --output json", fixture: "flink/catalog/describe-success-json.golden"},
+		// failure
+		{args: "flink catalog describe invalid-catalog", fixture: "flink/catalog/describe-non-exist-catalog-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkCatalogListOnPrem() {
+	tests := []CLITest{
+		// success scenarios
+		{args: "flink catalog list", fixture: "flink/catalog/list-successful.golden"},
+		{args: "flink catalog list --output json", fixture: "flink/catalog/list-json.golden"},
+		{args: "flink catalog list --output yaml", fixture: "flink/catalog/list-yaml.golden"},
 	}
 
 	runIntegrationTestsWithMultipleAuth(s, tests)
