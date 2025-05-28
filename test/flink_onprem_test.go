@@ -160,6 +160,7 @@ func (s *CLITestSuite) TestFlinkEnvironmentDescribe() {
 		{args: "flink environment describe default", fixture: "flink/environment/describe-success.golden"},
 		{args: "flink environment describe default --output json", fixture: "flink/environment/describe-success-json.golden"},
 		{args: "flink environment describe default --output yaml", fixture: "flink/environment/describe-success-yaml.golden"},
+		{args: "flink environment describe defaults-all", fixture: "flink/environment/describe-success-with-defaults.golden"},
 		// failure
 		{args: "flink environment describe non-existent", fixture: "flink/environment/describe-non-existent.golden", exitCode: 1},
 		{args: "flink environment describe", fixture: "flink/environment/describe-no-environment.golden", exitCode: 1},

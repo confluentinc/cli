@@ -117,6 +117,56 @@ func createEnvironment(name string, namespace string) cmfsdk.Environment {
 	}
 }
 
+// Helper function to create a Flink environment with default application, compute pool and statement.
+func createEnvironmentWithDefaults(name string, namespace string) cmfsdk.Environment {
+	createdTime := time.Date(2025, time.September, 25, 12, 29, 0, 0, time.UTC)
+	updatedTime := time.Date(2025, time.September, 25, 12, 29, 0, 0, time.UTC)
+
+	applicationDefaults := map[string]interface{}{
+		"metadata": map[string]interface{}{
+			"annotations": map[string]interface{}{
+				"fmc.platform.confluent.io/intra-cluster-ssl": "false",
+			},
+		},
+		"spec": map[string]interface{}{
+			"flinkConfiguration": map[string]interface{}{
+				"taskmanager.numberOfTaskSlots": "8",
+			},
+		},
+	}
+
+	computePoolDefaults := map[string]interface{}{
+		"metadata": map[string]interface{}{
+			"name": "test-pool",
+		},
+		"spec": map[string]interface{}{
+			"type": "DEDICATED",
+		},
+	}
+
+	detachedConfig := map[string]string{"key1": "value1"}
+	interactiveConfig := map[string]string{"key2": "value2"}
+
+	statementDefaults := cmfsdk.AllStatementDefaults1{
+		Detached: &cmfsdk.StatementDefaults{
+			FlinkConfiguration: &detachedConfig,
+		},
+		Interactive: &cmfsdk.StatementDefaults{
+			FlinkConfiguration: &interactiveConfig,
+		},
+	}
+
+	return cmfsdk.Environment{
+		Name:                     name,
+		KubernetesNamespace:      namespace,
+		CreatedTime:              &createdTime,
+		UpdatedTime:              &updatedTime,
+		FlinkApplicationDefaults: &applicationDefaults,
+		ComputePoolDefaults:      &computePoolDefaults,
+		StatementDefaults:        &statementDefaults,
+	}
+}
+
 // Helper function to check that the login type is either empty or onprem, and if it's onprem,
 // that the headers are correct.
 func handleLoginType(t *testing.T, r *http.Request) {
@@ -223,6 +273,13 @@ func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			if environment == "default" || environment == "test" || environment == "update-failure" {
 				outputEnvironment := createEnvironment(environment, environment+"-namespace")
+				err := json.NewEncoder(w).Encode(outputEnvironment)
+				require.NoError(t, err)
+				return
+			}
+
+			if environment == "defaults-all" {
+				outputEnvironment := createEnvironmentWithDefaults(environment, environment+"-namespace")
 				err := json.NewEncoder(w).Encode(outputEnvironment)
 				require.NoError(t, err)
 				return

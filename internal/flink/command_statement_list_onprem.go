@@ -56,7 +56,6 @@ func (c *command) statementListOnPrem(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	
 	statements, err := client.ListStatements(c.createContext(), environment, computePool, status)
 	if err != nil {
 		return err
