@@ -66,5 +66,6 @@ func (c *artifactCommand) list(cmd *cobra.Command, _ []string) error {
 		})
 	}
 
+	list.Sort(true)
 	return list.Print()
 }
