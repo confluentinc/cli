@@ -282,3 +282,5 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.1.0 => github.com/confluentinc/ccloud-sdk-go-v2-internal/tableflow v0.20.0
