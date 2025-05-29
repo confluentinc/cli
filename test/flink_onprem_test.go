@@ -316,6 +316,51 @@ func (s *CLITestSuite) TestFlinkCatalogListOnPrem() {
 	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
+func (s *CLITestSuite) TestFlinkStatementCreateOnPrem() {
+	tests := []CLITest{
+		// success
+		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool`, fixture: "flink/statement/create-success.golden"},
+		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool -o json`, fixture: "flink/statement/create-success-json.golden"},
+		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool -o yaml`, fixture: "flink/statement/create-success-yaml.golden"},
+		// failure
+		{args: "flink statement create test-stmt --environment default --compute-pool test-pool", fixture: "flink/statement/create-missing-sql-failure.golden", exitCode: 1},
+		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table"`, fixture: "flink/statement/create-missing-compute-pool-failure.golden", exitCode: 1},
+		{args: `flink statement create invalid-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool`, fixture: "flink/statement/create-invalid-stmt-failure.golden", exitCode: 1},
+		{args: `flink statement create existing-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool`, fixture: "flink/statement/create-existing-stmt-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkStatementDescribeOnPrem() {
+	tests := []CLITest{
+		// success
+		{args: "flink statement describe test-stmt --environment default", fixture: "flink/statement/describe-success.golden"},
+		{args: "flink statement describe test-stmt --environment default -o json", fixture: "flink/statement/describe-success-json.golden"},
+		{args: "flink statement describe test-stmt --environment default -o yaml", fixture: "flink/statement/describe-success-yaml.golden"},
+		// failure
+		{args: "flink statement describe test-stmt", fixture: "flink/statement/describe-env-missing-failure.golden", exitCode: 1},
+		{args: "flink statement describe test-stmt --environment non-exist", fixture: "flink/statement/describe-non-exist-env-failure.golden", exitCode: 1},
+		{args: "flink statement describe invalid-stmt --environment default", fixture: "flink/statement/describe-invalid-stmt-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkStatementListOnPrem() {
+	tests := []CLITest{
+		// success
+		{args: "flink statement list --environment default", fixture: "flink/statement/list-success.golden"},
+		{args: "flink statement list --environment default -o json", fixture: "flink/statement/list-success-json.golden"},
+		{args: "flink statement list --environment default -o yaml", fixture: "flink/statement/list-success-yaml.golden"},
+		// failure
+		{args: "flink statement list", fixture: "flink/statement/list-env-missing-failure.golden", exitCode: 1},
+		{args: "flink statement list --environment non-exist", fixture: "flink/statement/list-non-exist-env-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
 func (s *CLITestSuite) TestFlinkOnPremWithCloudLogin() {
 	test := CLITest{args: "flink environment list --output json", fixture: "flink/environment/list-cloud.golden", login: "cloud", exitCode: 1}
 	s.runIntegrationTest(test)

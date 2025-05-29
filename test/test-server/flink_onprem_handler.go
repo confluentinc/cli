@@ -206,6 +206,33 @@ func createKafkaCatalog(catName string) cmfsdk.KafkaCatalog {
 	}
 }
 
+func createFlinkStatement(stmtName string, stopped bool, parallelism int32) cmfsdk.Statement {
+	timeStamp := time.Date(2025, time.August, 5, 12, 00, 0, 0, time.UTC).String()
+	status := cmfsdk.StatementStatus{
+		Phase:  "PENDING",
+		Detail: cmfsdk.PtrString("Statement is pending execution."),
+		Traits: &cmfsdk.StatementTraits{
+			SqlKind:      cmfsdk.PtrString("SELECT"),
+			IsAppendOnly: cmfsdk.PtrBool(false),
+			IsBounded:    cmfsdk.PtrBool(false),
+		},
+	}
+
+	return cmfsdk.Statement{
+		Metadata: cmfsdk.StatementMetadata{
+			Name:              stmtName,
+			CreationTimestamp: &timeStamp,
+		},
+		Spec: cmfsdk.StatementSpec{
+			Statement:       "SELECT * FROM test_table",
+			ComputePoolName: "test-pool",
+			Parallelism:     cmfsdk.PtrInt32(parallelism),
+			Stopped:         cmfsdk.PtrBool(stopped),
+		},
+		Status: &status,
+	}
+}
+
 // Helper function to check that the login type is either empty or onprem, and if it's onprem,
 // that the headers are correct.
 func handleLoginType(t *testing.T, r *http.Request) {
@@ -665,6 +692,129 @@ func handleCmfCatalog(t *testing.T) http.HandlerFunc {
 				return
 			}
 			w.WriteHeader(http.StatusOK)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+// Handler for "/cmf/api/v1/environments/{envName}/statements/{stmtName}"
+// Used by describe, delete or update Flink statement.
+func handleCmfStatement(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		stmtName := vars["stmtName"]
+		environment := vars["environment"]
+
+		if environment == "non-exist" {
+			http.Error(w, "Environment not found", http.StatusNotFound)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			if stmtName == "invalid-stmt" {
+				http.Error(w, "The statement name is invalid", http.StatusNotFound)
+				return
+			}
+
+			stmt := createFlinkStatement(stmtName, false, 1)
+			err := json.NewEncoder(w).Encode(stmt)
+			require.NoError(t, err)
+			return
+		case http.MethodDelete:
+			if stmtName == "non-exist-stmt" {
+				http.Error(w, "The statement name can't be found", http.StatusNotFound)
+				return
+			}
+			w.WriteHeader(http.StatusNoContent)
+			return
+		case http.MethodPut:
+			if stmtName == "non-exist-stmt" {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+			// Read the existing statement from the request body and return it as the updated statement.
+			req := new(cmfsdk.Statement)
+			err := json.NewDecoder(r.Body).Decode(req)
+			require.NoError(t, err)
+
+			w.WriteHeader(http.StatusOK)
+			err = json.NewEncoder(w).Encode(cmfsdk.Statement{})
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+// Handler for "/cmf/api/v1/environments/{envName}/statements"
+// Used by list, create Flink statements
+func handleCmfStatements(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		environment := vars["environment"]
+
+		if environment == "non-exist" {
+			http.Error(w, "Environment not found", http.StatusNotFound)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			stmt1 := createFlinkStatement("test-stmt1", false, 1)
+			stmt2 := createFlinkStatement("test-stmt2", false, 2)
+			stmt3 := createFlinkStatement("test-stmt3", true, 4)
+
+			stmts := []cmfsdk.Statement{stmt1, stmt2, stmt3}
+			stmtsPage := cmfsdk.StatementsPage{}
+			page := r.URL.Query().Get("page")
+
+			if page == "0" {
+				stmtsPage.SetItems(stmts)
+			}
+
+			err := json.NewEncoder(w).Encode(stmtsPage)
+			require.NoError(t, err)
+			return
+		case http.MethodPost:
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var stmt cmfsdk.Statement
+			err = json.Unmarshal(reqBody, &stmt)
+			require.NoError(t, err)
+
+			stmtName := stmt.GetMetadata().Name
+
+			if stmtName == "invalid-stmt" {
+				http.Error(w, "The Flink statement is invalid", http.StatusUnprocessableEntity)
+				return
+			}
+			if stmtName == "existing-stmt" {
+				http.Error(w, "The Flink statement name already exists, please try with another statement name", http.StatusConflict)
+				return
+			}
+
+			timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
+			stmt.Metadata.CreationTimestamp = &timeStamp
+			status := cmfsdk.StatementStatus{
+				Phase:  "PENDING",
+				Detail: cmfsdk.PtrString("Statement is pending execution."),
+				Traits: &cmfsdk.StatementTraits{
+					SqlKind:      cmfsdk.PtrString("SELECT"),
+					IsAppendOnly: cmfsdk.PtrBool(false),
+					IsBounded:    cmfsdk.PtrBool(false),
+				},
+			}
+			stmt.Status = &status
+			err = json.NewEncoder(w).Encode(stmt)
+			require.NoError(t, err)
 			return
 		default:
 			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
