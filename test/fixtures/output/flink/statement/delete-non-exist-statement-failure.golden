@@ -1,0 +1,1 @@
+Are you sure you want to delete Flink SQL statement "non-exist-stmt"? (y/n): Error: failed to delete non-exist-stmt: The statement name can't be found
