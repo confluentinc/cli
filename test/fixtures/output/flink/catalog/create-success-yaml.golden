@@ -1,0 +1,19 @@
+apiversion: cmf/api/v1/catalog
+kind: KafkaCatalog
+metadata:
+    name: test-catalog
+    creationtimestamp: 2025-03-12 23:42:00 +0000 UTC
+    uid: null
+    labels: null
+    annotations: null
+spec:
+    srinstance:
+        connectionconfig: {}
+        connectionsecretid: null
+    kafkaclusters:
+        - databasename: dev
+          connectionconfig: {}
+          connectionsecretid: null
+        - databasename: prod
+          connectionconfig: {}
+          connectionsecretid: null

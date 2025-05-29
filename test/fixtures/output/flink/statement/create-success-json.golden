@@ -1,0 +1,25 @@
+{
+  "apiVersion": "cmf.confluent.io/v1",
+  "kind": "Statement",
+  "metadata": {
+    "creationTimestamp": "2025-03-12 23:42:00 +0000 UTC",
+    "name": "test-stmt"
+  },
+  "spec": {
+    "computePoolName": "test-pool",
+    "flinkConfiguration": {},
+    "parallelism": 1,
+    "properties": {},
+    "statement": "SELECT * FROM test_table",
+    "stopped": false
+  },
+  "status": {
+    "detail": "Statement is pending execution.",
+    "phase": "PENDING",
+    "traits": {
+      "isAppendOnly": false,
+      "isBounded": false,
+      "sqlKind": "SELECT"
+    }
+  }
+}
