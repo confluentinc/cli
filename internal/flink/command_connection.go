@@ -11,6 +11,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/flink"
+	"github.com/confluentinc/cli/v4/pkg/types"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
@@ -171,7 +172,7 @@ func validateConnectionSecrets(cmd *cobra.Command, connectionType string) (map[s
 		secretMap[authType] = "OAUTH2"
 	}
 
-	if secretMap[authType] == "" && slices.Contains(lo.Keys(flink.ConnectionOneOfRequiredSecretsMapping), connectionType) {
+	if secretMap[authType] == "" && slices.Contains(types.GetKeys(flink.ConnectionOneOfRequiredSecretsMapping), connectionType) {
 		return nil, fmt.Errorf("no secrets provided for type %s, one of the required secrets %s must be provided", connectionType,
 			utils.ArrayToCommaDelimitedString(lo.Map(flink.ConnectionOneOfRequiredSecretsMapping[connectionType], func(item []string, _ int) string {
 				return fmt.Sprintf("%s", item)
