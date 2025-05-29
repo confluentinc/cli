@@ -233,6 +233,21 @@ func createFlinkStatement(stmtName string, stopped bool, parallelism int32) cmfs
 	}
 }
 
+func createStatementExceptionData() []cmfsdk.StatementException {
+	return []cmfsdk.StatementException{
+		{
+			Name:      "statement-exception-1",
+			Message:   "This is a test exception message.",
+			Timestamp: "2025-08-05T12:00:00Z",
+		},
+		{
+			Name:      "statement-exception-2",
+			Message:   "This is another test exception message.",
+			Timestamp: "2025-08-05T12:01:00Z",
+		},
+	}
+}
+
 // Helper function to check that the login type is either empty or onprem, and if it's onprem,
 // that the headers are correct.
 func handleLoginType(t *testing.T, r *http.Request) {
@@ -814,6 +829,38 @@ func handleCmfStatements(t *testing.T) http.HandlerFunc {
 			}
 			stmt.Status = &status
 			err = json.NewEncoder(w).Encode(stmt)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func handleCmfStatementExceptions(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		environment := vars["environment"]
+		stmtName := vars["stmtName"]
+
+		if environment == "non-exist" {
+			http.Error(w, "Environment not found", http.StatusNotFound)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			if stmtName == "invalid-stmt" {
+				http.Error(w, "The Flink statement is invalid", http.StatusUnprocessableEntity)
+				return
+			}
+			data := createStatementExceptionData()
+			exceptions := cmfsdk.StatementExceptionList{
+				Data: data,
+			}
+			err := json.NewEncoder(w).Encode(exceptions)
 			require.NoError(t, err)
 			return
 		default:

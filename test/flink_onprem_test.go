@@ -347,6 +347,23 @@ func (s *CLITestSuite) TestFlinkStatementDescribeOnPrem() {
 	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
+func (s *CLITestSuite) TestFlinkStatementDeleteOnPrem() {
+	tests := []CLITest{
+		// success scenarios
+		{args: "flink statement delete test-stmt1 --environment default", input: "y\n", fixture: "flink/statement/delete-single-successful.golden"},
+		{args: "flink statement delete test-stmt1 test-stmt2 --environment default", input: "y\n", fixture: "flink/statement/delete-multiple-successful.golden"},
+		{args: "flink statement delete test-stmt1 --environment default --force", fixture: "flink/statement/delete-single-force.golden"},
+		// failure scenarios
+		{args: "flink statement delete non-exist-stmt --environment default", input: "y\n", fixture: "flink/statement/delete-non-exist-statement-failure.golden", exitCode: 1},
+		{args: "flink statement delete test-stmt1 --environment non-exist", input: "y\n", fixture: "flink/statement/delete-non-exist-env-failure.golden", exitCode: 1},
+		{args: "flink statement delete test-stmt1", input: "y\n", fixture: "flink/statement/delete-missing-env-failure.golden", exitCode: 1},
+		// mixed scenarios
+		{args: "flink statement delete test-stmt1 non-exist-stmt --environment default --force", fixture: "flink/statement/delete-multiple-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
 func (s *CLITestSuite) TestFlinkStatementListOnPrem() {
 	tests := []CLITest{
 		// success
@@ -356,6 +373,40 @@ func (s *CLITestSuite) TestFlinkStatementListOnPrem() {
 		// failure
 		{args: "flink statement list", fixture: "flink/statement/list-env-missing-failure.golden", exitCode: 1},
 		{args: "flink statement list --environment non-exist", fixture: "flink/statement/list-non-exist-env-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkStatementUpdateOnPrem() {
+	tests := []CLITest{
+		// stop scenarios:
+		{args: "flink statement stop test-stmt1 --environment default", fixture: "flink/statement/stop-successful.golden"},
+		{args: "flink statement stop non-exist-stmt --environment default", fixture: "flink/statement/stop-failure.golden", exitCode: 1},
+		{args: "flink statement stop test-stmt1", fixture: "flink/statement/stop-missing-env-failure.golden", exitCode: 1},
+
+		// resume scenarios:
+		{args: "flink statement resume test-stmt1 --environment default", fixture: "flink/statement/resume-successful.golden"},
+		{args: "flink statement resume non-exist-stmt --environment default", fixture: "flink/statement/resume-failure.golden", exitCode: 1},
+		{args: "flink statement resume test-stmt1", fixture: "flink/statement/resume-missing-env-failure.golden", exitCode: 1},
+
+		// rescale scenarios:
+		{args: "flink statement rescale test-stmt1 --parallelism 4 --environment default", fixture: "flink/statement/rescale-successful.golden"},
+		{args: "flink statement rescale non-exist-stmt --environment default", fixture: "flink/statement/rescale-failure.golden", exitCode: 1},
+		{args: "flink statement rescale test-stmt1 --parallelism 4", fixture: "flink/statement/rescale-missing-env-failure.golden", exitCode: 1},
+		{args: "flink statement rescale test-stmt1 --environment default", fixture: "flink/statement/rescale-missing-parallelism-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkStatementExceptionListOnPrem() {
+	tests := []CLITest{
+		// success scenarios
+		{args: "flink statement exception list test-stmt1 --environment default", fixture: "flink/statement/list-exceptions-successful.golden"},
+		// failure scenarios
+		{args: "flink statement exception list test-stmt1 --environment non-exist", fixture: "flink/statement/list-exceptions-non-exist-env-failure.golden", exitCode: 1},
+		{args: "flink statement exception list invalid-stmt --environment default", fixture: "flink/statement/list-exceptions-invalid-stmt-failure.golden", exitCode: 1},
 	}
 
 	runIntegrationTestsWithMultipleAuth(s, tests)
