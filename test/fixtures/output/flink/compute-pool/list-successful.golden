@@ -1,0 +1,5 @@
+          Creation Time         |    Name    |   Type    |  Phase    
+--------------------------------+------------+-----------+-----------
+  2025-03-12 23:42:00 +0000 UTC | test-pool1 | DEDICATED | RUNNING   
+  2025-03-12 23:42:00 +0000 UTC | test-pool2 | DEDICATED | PENDING   
+  2025-03-12 23:42:00 +0000 UTC | test-pool3 | DEDICATED | COMPLETE  

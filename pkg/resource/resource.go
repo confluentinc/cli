@@ -40,6 +40,7 @@ const (
 	FlinkConnectivityType           = "Flink connectivity type"
 	FlinkComputePool                = "Flink compute pool"
 	FlinkApplication                = "Flink application"
+	FlinkCatalog                    = "Flink catalog"
 	FlinkEnvironment                = "Flink environment"
 	FlinkRegion                     = "Flink region"
 	FlinkEndpoint                   = "Flink endpoint"

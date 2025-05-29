@@ -1,0 +1,1 @@
+Error: failed to create Kafka Catalog "existing-catalog": The Kafka catalog name already exists, please try with another catalog name
