@@ -12,5 +12,6 @@
 | Bucket Region           | us-east-1      |
 | Suspended               | false          |
 | Table Formats           | ICEBERG        |
+| Table Path              |                |
 | Phase                   | RUNNING        |
 +-------------------------+----------------+
