@@ -1,6 +1,6 @@
 {
   "is_current": true,
-  "id": "lkc-describe-dedicated",
+  "id": "lkc-describe-dedicated-with-zone-selection",
   "name": "kafka-cluster",
   "type": "DEDICATED",
   "cluster_size": 1,
@@ -9,7 +9,7 @@
   "storage": "Infinite",
   "cloud": "aws",
   "region": "us-west-2",
-  "zones": ["auto-selected"],
+  "zones": ["use1-az3"],
   "availability": "single-zone",
   "status": "UP",
   "endpoint": "SASL_SSL://kafka-endpoint",
