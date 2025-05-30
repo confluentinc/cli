@@ -1,0 +1,8 @@
+Created cluster link "source_initiated_link" with configs:
+"bootstrap.servers"="my-host:1234"
+"link.mode"="SOURCE"
+"local.sasl.mechanism"="PLAIN"
+"local.security.protocol"="SASL_SSL"
+"sasl.mechanism"="PLAIN"
+"security.protocol"="SASL_SSL"
+
