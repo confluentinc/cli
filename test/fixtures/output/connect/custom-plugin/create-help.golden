@@ -15,7 +15,7 @@ Flags:
       --description string             Description of custom plugin.
       --documentation-link string      Document link of custom plugin.
       --sensitive-properties strings   A comma-separated list of sensitive property names.
-      --cloud string                   Specify the cloud provider as "aws" or "azure". (default "aws")
+      --cloud string                   Specify the cloud provider as "aws", "azure", or "gcp". (default "aws")
       --context string                 CLI context name.
   -o, --output string                  Specify the output format as "human", "json", or "yaml". (default "human")
 
