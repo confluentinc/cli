@@ -153,7 +153,7 @@ func (s *StoreOnPrem) FetchStatementResults(statement types.ProcessedStatementOn
 	}
 
 	statementResults := statementResultObj.GetResults()
-	convertedResults, err := results.ConvertToInternalResultsOnPrem(statementResults.GetData(), statement.Traits.GetSchema())
+	convertedResults, err := results.ConvertToInternalResultsOnPrem(statementResults, statement.Traits.GetSchema())
 	if err != nil {
 		return nil, types.NewStatementError(err)
 	}
