@@ -276,7 +276,7 @@ func handleKafkaRestTopicConfigs(t *testing.T) http.HandlerFunc {
 				}
 				reply, err := json.Marshal(topicConfigList)
 				require.NoError(t, err)
-				_, err = io.WriteString(w, string(reply))
+				_, err = io.Writer.Write(w, reply)
 				require.NoError(t, err)
 			} else if topicName == "topic-exist-rest" {
 				topicConfigList := cpkafkarestv3.TopicConfigDataList{
@@ -294,7 +294,7 @@ func handleKafkaRestTopicConfigs(t *testing.T) http.HandlerFunc {
 				}
 				reply, err := json.Marshal(topicConfigList)
 				require.NoError(t, err)
-				_, err = io.WriteString(w, string(reply))
+				_, err = io.Writer.Write(w, reply)
 				require.NoError(t, err)
 			} else if topicName == "topic1" {
 				topicConfigList := cckafkarestv3.TopicConfigDataList{
@@ -311,7 +311,7 @@ func handleKafkaRestTopicConfigs(t *testing.T) http.HandlerFunc {
 				}
 				reply, err := json.Marshal(topicConfigList)
 				require.NoError(t, err)
-				_, err = io.WriteString(w, string(reply))
+				_, err = io.Writer.Write(w, reply)
 				require.NoError(t, err)
 			} else { // if topic not exist
 				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))

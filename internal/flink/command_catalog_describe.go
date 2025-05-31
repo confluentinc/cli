@@ -10,7 +10,7 @@ import (
 func (c *command) newCatalogDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <name>",
-		Short: "Describe a Flink Catalog in Confluent Platform.",
+		Short: "Describe a Flink catalog in Confluent Platform.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.catalogDescribe,
 	}
@@ -38,14 +38,22 @@ func (c *command) catalogDescribe(cmd *cobra.Command, args []string) error {
 		table := output.NewTable(cmd)
 
 		// Populate the databases field with the names of the databases
-		databases := make([]string, 0, len(outputCatalog.Spec.KafkaClusters))
-		for _, kafkaCluster := range outputCatalog.Spec.KafkaClusters {
+		databases := make([]string, 0, len(outputCatalog.GetSpec().KafkaClusters))
+		for _, kafkaCluster := range outputCatalog.GetSpec().KafkaClusters {
 			databases = append(databases, kafkaCluster.DatabaseName)
 		}
 
+		// nil pointer handling for creation timestamp
+		var creationTime string
+		if outputCatalog.GetMetadata().CreationTimestamp != nil {
+			creationTime = *outputCatalog.GetMetadata().CreationTimestamp
+		} else {
+			creationTime = ""
+		}
+
 		table.Add(&catalogOut{
-			CreationTime: outputCatalog.Metadata.GetCreationTimestamp(),
-			Name:         outputCatalog.Metadata.Name,
+			CreationTime: creationTime,
+			Name:         outputCatalog.GetMetadata().Name,
 			Databases:    databases,
 		})
 		return table.Print()

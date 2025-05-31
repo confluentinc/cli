@@ -2,6 +2,7 @@ package hub
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,11 +12,11 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
-const clientNotInitializedErrorMsg = "Hub client not initialized"
+const clientNotInitializedErrorMsg = "hub client not initialized"
 
 func (c *Client) GetRemoteManifest(owner, name, version string) (*cpstructs.Manifest, error) {
 	if c == nil {
-		return nil, fmt.Errorf(clientNotInitializedErrorMsg)
+		return nil, errors.New(clientNotInitializedErrorMsg)
 	}
 
 	manifestUrl := fmt.Sprintf("%s/api/plugins/%s/%s", c.URL, owner, name)
@@ -75,7 +76,7 @@ func (c *Client) GetRemoteManifest(owner, name, version string) (*cpstructs.Mani
 
 func (c *Client) GetRemoteArchive(pluginManifest *cpstructs.Manifest) ([]byte, error) {
 	if c == nil {
-		return nil, fmt.Errorf(clientNotInitializedErrorMsg)
+		return nil, errors.New(clientNotInitializedErrorMsg)
 	}
 
 	req, err := http.NewRequest(http.MethodGet, pluginManifest.Archive.Url, nil)

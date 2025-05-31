@@ -3,11 +3,11 @@ package flink
 import (
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
@@ -19,7 +19,7 @@ import (
 func (c *command) newComputePoolCreateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create <resourceFilePath>",
-		Short:       "Create a Flink Compute Pool in Confluent Platform.",
+		Short:       "Create a Flink compute pool in Confluent Platform.",
 		Args:        cobra.ExactArgs(1),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 		RunE:        c.computePoolCreateOnPrem,
@@ -73,11 +73,20 @@ func (c *command) computePoolCreateOnPrem(cmd *cobra.Command, args []string) err
 
 	if output.GetFormat(cmd) == output.Human {
 		table := output.NewTable(cmd)
+
+		// nil pointer handling for creation timestamp
+		var creationTime string
+		if outputComputePool.GetMetadata().CreationTimestamp != nil {
+			creationTime = *outputComputePool.GetMetadata().CreationTimestamp
+		} else {
+			creationTime = ""
+		}
+
 		table.Add(&computePoolOutOnPrem{
-			CreationTime: computePool.Metadata.GetCreationTimestamp(),
-			Name:         computePool.Metadata.Name,
-			Type:         computePool.Spec.Type,
-			Phase:        computePool.Status.Phase,
+			CreationTime: creationTime,
+			Name:         computePool.GetMetadata().Name,
+			Type:         computePool.GetSpec().Type,
+			Phase:        computePool.GetStatus().Phase,
 		})
 		return table.Print()
 	}

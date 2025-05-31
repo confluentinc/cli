@@ -1,0 +1,31 @@
+{
+  "destinations": {
+    "topics": {
+      "confluent-audit-log-events_general_allowed_events": {
+        "retention_ms": 2592000000
+      },
+      "confluent-audit-log-events_general_denied_events": {
+        "retention_ms": 7776000000
+      }
+    }
+  },
+  "excluded_principals": [
+    "User:Alice",
+    "User:service_account_id"
+  ],
+  "default_topics": {
+    "allowed": "confluent-audit-log-events_general_allowed_events",
+    "denied": "confluent-audit-log-events_general_denied_events"
+  },
+  "routes": {
+    "crn://mds1.example.com/kafka=*/topic=*": {
+      "authorize": {
+        "allowed": "confluent-audit-log-events_general_allowed_events",
+        "denied": "confluent-audit-log-events_general_denied_events"
+      }
+    }
+  },
+  "metadata": {
+    "resource_version": "ASNFZ4mrze8BI0VniavN7w"
+  }
+}

@@ -20,15 +20,21 @@ func (c *routeCommand) newLookupCommand() *cobra.Command {
 		RunE:  c.lookup,
 	}
 
+	pcmd.AddMDSOnPremMTLSFlags(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	return cmd
 }
 
-func (c *routeCommand) lookup(_ *cobra.Command, args []string) error {
+func (c *routeCommand) lookup(cmd *cobra.Command, args []string) error {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
 	resource := args[0]
 	opts := &mdsv1.ResolveResourceRouteOpts{Crn: optional.NewString(resource)}
-	result, response, err := c.MDSClient.AuditLogConfigurationApi.ResolveResourceRoute(c.createContext(), opts)
+	result, response, err := client.AuditLogConfigurationApi.ResolveResourceRoute(c.createContext(), opts)
 	if err != nil {
 		return HandleMdsAuditLogApiError(err, response)
 	}

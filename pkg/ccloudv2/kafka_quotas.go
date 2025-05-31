@@ -29,13 +29,12 @@ func (c *Client) ListKafkaQuotas(clusterId, envId string) ([]kafkaquotasv1.Kafka
 	done := false
 	pageToken := ""
 	for !done {
-		page, httpResp, err := c.listQuotas(clusterId, envId, pageToken)
+		page, httpResp, err := c.executeListQuotas(clusterId, envId, pageToken)
 		if err != nil {
 			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
 		list = append(list, page.GetData()...)
 
-		// nextPageUrlStringNullable is nil for the last page
 		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
@@ -44,10 +43,10 @@ func (c *Client) ListKafkaQuotas(clusterId, envId string) ([]kafkaquotasv1.Kafka
 	return list, nil
 }
 
-func (c *Client) listQuotas(clusterId, envId, pageToken string) (kafkaquotasv1.KafkaQuotasV1ClientQuotaList, *http.Response, error) {
+func (c *Client) executeListQuotas(clusterId, envId, pageToken string) (kafkaquotasv1.KafkaQuotasV1ClientQuotaList, *http.Response, error) {
 	req := c.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.ListKafkaQuotasV1ClientQuotas(c.kafkaQuotasContext()).PageSize(ccloudV2ListPageSize).SpecCluster(clusterId).Environment(envId)
 	if pageToken != "" {
-		req.PageToken(pageToken)
+		req = req.PageToken(pageToken)
 	}
 	return req.Execute()
 }

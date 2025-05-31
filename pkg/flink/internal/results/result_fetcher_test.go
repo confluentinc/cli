@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
+	"pgregory.net/rapid"
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
@@ -200,6 +201,37 @@ func (s *ResultFetcherTestSuite) TestGetResults() {
 	s.resultFetcher.Init(mockStatement)
 
 	require.Equal(s.T(), &s.resultFetcher.materializedStatementResults, s.resultFetcher.GetMaterializedStatementResults())
+}
+
+func (s *ResultFetcherTestSuite) TestChangelogMode() {
+	rapid.Check(s.T(), func(t *rapid.T) {
+		// generate some results
+		numColumns := rapid.IntRange(1, 10).Draw(t, "max nesting depth")
+		results := generators.MockResults(numColumns, -1).Draw(t, "mock results")
+		statementResults := results.StatementResults.Results.GetData()
+		convertedResults, err := ConvertToInternalResults(statementResults, results.ResultSchema)
+		require.NotNil(t, convertedResults)
+		require.NoError(t, err)
+
+		// test if in changelog mode all the rows are there and in the correct order
+		materializedStatementResults := types.NewMaterializedStatementResults(convertedResults.GetHeaders(), 100, nil)
+		materializedStatementResults.SetTableMode(false)
+		materializedStatementResults.Append(convertedResults.GetRows()...)
+		// in changelog mode we have an additional column "Operation"
+		require.Equal(t, append([]string{"Operation"}, convertedResults.GetHeaders()...), materializedStatementResults.GetHeaders())
+		require.Equal(t, len(convertedResults.GetRows()), materializedStatementResults.GetChangelogSize())
+		iterator := materializedStatementResults.Iterator(false)
+		for _, expectedRow := range convertedResults.GetRows() {
+			actualRow := iterator.GetNext()
+			operationField := types.AtomicStatementResultField{
+				Type:  types.Varchar,
+				Value: expectedRow.Operation.String(),
+			}
+			require.Equal(t, expectedRow.Operation, actualRow.Operation)
+			// in changelog mode we have an additional column "Operation"
+			require.Equal(t, append([]types.StatementResultField{operationField}, expectedRow.Fields...), actualRow.Fields)
+		}
+	})
 }
 
 func (s *ResultFetcherTestSuite) TestReturnHeadersFromStatementResults() {

@@ -13,7 +13,8 @@ import (
 func (c *command) newStatementResumeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "resume <statement-name>",
-		Short:       "Resume a Flink SQL statement in Confluent Platform.",
+		Short:       "Resume a Flink SQL statement.",
+		Long:        "Resume a Flink SQL statement in Confluent Platform.",
 		Args:        cobra.ExactArgs(1),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 		RunE:        c.statementResumeOnPrem,

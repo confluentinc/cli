@@ -45,7 +45,6 @@ func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
 		for _, app := range applications {
-			// TODO: double check if the job status is a map of map
 			status := app.GetStatus()
 			rawJobStatus, ok := status["jobStatus"]
 			if !ok {

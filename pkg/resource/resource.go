@@ -25,6 +25,7 @@ const (
 	Cloud                           = "cloud"
 	ClusterLink                     = "cluster link"
 	Connector                       = "connector"
+	ConnectArtifact                 = "Connect Artifact"
 	CustomConnectorPlugin           = "custom connector plugin"
 	CustomConnectorPluginVersion    = "custom connector plugin version"
 	CustomCodeLogging               = "custom code logging"

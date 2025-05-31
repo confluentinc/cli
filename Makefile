@@ -79,7 +79,7 @@ lint: lint-go lint-cli
 
 .PHONY: lint-go
 lint-go:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.0 && \
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8 && \
 	golangci-lint run --timeout 10m
 	@echo "✅  golangci-lint"
 
@@ -97,10 +97,10 @@ cmd/lint/en_US.dic:
 .PHONY: unit-test
 unit-test:
 ifdef CI
-	go install gotest.tools/gotestsum@v1.8.2 && \
-	gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test)
+	go install gotest.tools/gotestsum@v1.12.1 && \
+	gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -race -coverprofile=coverage.unit.out -covermode=atomic $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test)
 else
-	go test -timeout 0 -v $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test) $(UNIT_TEST_ARGS)
+	go test -timeout 0 -v -coverprofile=coverage.unit.out -covermode=atomic $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test) $(UNIT_TEST_ARGS)
 endif
 
 .PHONY: build-for-integration-test
@@ -108,7 +108,7 @@ build-for-integration-test:
 ifdef CI
 	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 else
-	go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 endif
 
 .PHONY: build-for-integration-test-windows
@@ -116,19 +116,22 @@ build-for-integration-test-windows:
 ifdef CI
 	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
 else
-	go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
+	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
 endif
 
 .PHONY: integration-test
 integration-test:
 ifdef CI
-	go install gotest.tools/gotestsum@v1.8.2 && \
+	go install gotest.tools/gotestsum@v1.12.1 && \
 	export GOCOVERDIR=test/coverage && \
 	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
 	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
-	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
+	go tool covdata textfmt -i $${GOCOVERDIR} -o coverage.integration.out
 else
-	go test -timeout 0 -v $$(go list ./... | grep github.com/confluentinc/cli/v4/test) $(INTEGRATION_TEST_ARGS)
+	export GOCOVERDIR=test/coverage && \
+	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
+	go test -timeout 0 -v $$(go list ./... | grep github.com/confluentinc/cli/v4/test) $(INTEGRATION_TEST_ARGS) && \
+	go tool covdata textfmt -i $${GOCOVERDIR} -o coverage.integration.out
 endif
 
 .PHONY: test
@@ -137,3 +140,12 @@ test: unit-test integration-test
 .PHONY: generate-packaging-patch
 generate-packaging-patch:
 	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
+
+.PHONY: coverage
+coverage: ## Merge coverage data from unit and integration tests into coverage.txt
+	@echo "Merging coverage data..."
+	@echo "mode: atomic" > coverage.txt
+	@tail -n +2 coverage.unit.out >> coverage.txt
+	@tail -n +2 coverage.integration.out >> coverage.txt
+	@echo "Coverage data saved to: coverage.txt"
+	@artifact push workflow coverage.txt

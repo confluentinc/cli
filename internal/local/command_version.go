@@ -30,7 +30,8 @@ func (c *command) runVersionCommand(_ *cobra.Command, _ []string) error {
 		flavor = "Confluent Platform"
 	}
 
-	version, err := c.ch.GetVersion(flavor)
+	// The bool value doesn't matter when we pass in "Confluent Platform" or "Confluent Community Software", so we just choose "false"
+	version, err := c.ch.GetVersion(flavor, false)
 	if err != nil {
 		return err
 	}

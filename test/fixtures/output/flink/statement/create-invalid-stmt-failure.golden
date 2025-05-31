@@ -1,0 +1,1 @@
+Error: failed to create Flink SQL statement "invalid-stmt" in the environment "default": The Flink statement is invalid

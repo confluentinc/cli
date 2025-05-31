@@ -42,7 +42,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		if resource.LookupType(resourceId) != resource.KafkaCluster {
-			return fmt.Errorf(nonKafkaNotImplementedErrorMsg)
+			return errors.New(nonKafkaNotImplementedErrorMsg)
 		}
 		clusterId = resourceId
 	} else {

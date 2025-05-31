@@ -13,7 +13,8 @@ import (
 func (c *command) newStatementStopCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "stop <statement-name>",
-		Short:       "Stop a Flink SQL statement in Confluent Platform.",
+		Short:       "Stop a Flink SQL statement.",
+		Long:        "Stop a Flink SQL statement in Confluent Platform.",
 		Args:        cobra.ExactArgs(1),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 		RunE:        c.statementStopOnPrem,

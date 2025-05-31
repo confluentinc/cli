@@ -306,7 +306,7 @@ func (c *command) getMessageExamples(consumer *ckgo.Consumer, topicName, content
 		return nil, err
 	}
 
-	err = deserializationProvider.InitDeserializer(srEndpoint, srClusterId, "value", "", "", token, nil)
+	err = deserializationProvider.InitDeserializer(srEndpoint, srClusterId, "value", serdes.SchemaRegistryAuth{Token: token}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -335,7 +335,66 @@ func (c *command) getMessageExamples(consumer *ckgo.Consumer, topicName, content
 	if err := json.Unmarshal([]byte(jsonMessage), &jsonObject); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON message: %v", err)
 	}
+
+	if valueFormat == "avro" {
+		processUnionTypes(jsonObject)
+	}
+
 	return jsonObject, nil
+}
+
+// Valid avro types
+var avroTypes = map[string]bool{
+	"string":  true,
+	"array":   true,
+	"int":     true,
+	"long":    true,
+	"float":   true,
+	"double":  true,
+	"boolean": true,
+	"null":    true,
+	"bytes":   true,
+}
+
+// processUnionTypes recursively processes the message map to handle union types
+func processUnionTypes(m map[string]any) {
+	for k, v := range m {
+		switch val := v.(type) {
+		case map[string]any:
+			// Handle Avro union types
+			if len(val) == 1 {
+				for typeName, actualValue := range val {
+					if avroTypes[typeName] {
+						m[k] = actualValue
+						continue
+					}
+				}
+			}
+			// Handle arrays
+			if arrayVal, ok := val["array"]; ok {
+				if array, ok := arrayVal.([]any); ok {
+					for i, item := range array {
+						if itemMap, ok := item.(map[string]any); ok {
+							processUnionTypes(itemMap)
+							array[i] = itemMap
+						}
+					}
+					m[k] = array
+					continue
+				}
+			}
+			// Process nested maps
+			processUnionTypes(val)
+		case []any:
+			// Handle arrays that might contain union types
+			for i, item := range val {
+				if itemMap, ok := item.(map[string]any); ok {
+					processUnionTypes(itemMap)
+					val[i] = itemMap
+				}
+			}
+		}
+	}
 }
 
 func (c *command) getBindings(topicName string) (*bindings, error) {

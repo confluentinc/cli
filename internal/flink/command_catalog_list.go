@@ -10,7 +10,7 @@ import (
 func (c *command) newCatalogListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List Flink Catalogs in Confluent Platform.",
+		Short: "List Flink catalogs in Confluent Platform.",
 		Args:  cobra.NoArgs,
 		RunE:  c.catalogList,
 	}
@@ -36,13 +36,21 @@ func (c *command) catalogList(cmd *cobra.Command, _ []string) error {
 		list := output.NewList(cmd)
 		for _, catalog := range catalogs {
 			// Populate the databases field with the names of the databases
-			databases := make([]string, 0, len(catalog.Spec.KafkaClusters))
-			for _, kafkaCluster := range catalog.Spec.KafkaClusters {
+			databases := make([]string, 0, len(catalog.GetSpec().KafkaClusters))
+			for _, kafkaCluster := range catalog.GetSpec().KafkaClusters {
 				databases = append(databases, kafkaCluster.DatabaseName)
 			}
 
+			// nil pointer handling for creation timestamp
+			var creationTime string
+			if catalog.GetMetadata().CreationTimestamp != nil {
+				creationTime = *catalog.GetMetadata().CreationTimestamp
+			} else {
+				creationTime = ""
+			}
+
 			list.Add(&catalogOut{
-				CreationTime: catalog.Metadata.GetCreationTimestamp(),
+				CreationTime: creationTime,
 				Name:         catalog.Metadata.Name,
 				Databases:    databases,
 			})

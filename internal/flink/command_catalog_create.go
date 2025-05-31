@@ -3,11 +3,11 @@ package flink
 import (
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
@@ -19,8 +19,8 @@ import (
 func (c *command) newCatalogCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <resourceFilePath>",
-		Short: "Create a Flink Catalog in Confluent Platform.",
-		Long:  "Create a Flink Catalog in Confluent Platform that provides metadata about tables and other database objects such as views and functions.",
+		Short: "Create a Flink catalog.",
+		Long:  "Create a Flink catalog in Confluent Platform that provides metadata about tables and other database objects such as views and functions.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.catalogCreate,
 	}
@@ -68,14 +68,22 @@ func (c *command) catalogCreate(cmd *cobra.Command, args []string) error {
 		table := output.NewTable(cmd)
 
 		// Populate the databases field with the names of the databases
-		databases := make([]string, 0, len(outputCatalog.Spec.KafkaClusters))
-		for _, kafkaCluster := range outputCatalog.Spec.KafkaClusters {
+		databases := make([]string, 0, len(outputCatalog.GetSpec().KafkaClusters))
+		for _, kafkaCluster := range outputCatalog.GetSpec().KafkaClusters {
 			databases = append(databases, kafkaCluster.DatabaseName)
 		}
 
+		// nil pointer handling for creation timestamp
+		var creationTime string
+		if outputCatalog.GetMetadata().CreationTimestamp != nil {
+			creationTime = *outputCatalog.GetMetadata().CreationTimestamp
+		} else {
+			creationTime = ""
+		}
+
 		table.Add(&catalogOut{
-			CreationTime: outputCatalog.Metadata.GetCreationTimestamp(),
-			Name:         outputCatalog.Metadata.Name,
+			CreationTime: creationTime,
+			Name:         outputCatalog.GetMetadata().Name,
 			Databases:    databases,
 		})
 		return table.Print()

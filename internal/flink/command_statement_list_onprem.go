@@ -56,9 +56,6 @@ func (c *command) statementListOnPrem(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-
-	// TODO: Check with Fabian to see if the filtering by compute pool and status is correct.
-	// TODO: The filter by "status" doesn't seem to be working in the API.
 	statements, err := client.ListStatements(c.createContext(), environment, computePool, status)
 	if err != nil {
 		return err

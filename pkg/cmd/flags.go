@@ -94,6 +94,11 @@ func AddCloudAwsAzureFlag(cmd *cobra.Command) {
 	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return kafka.Clouds[:2] })
 }
 
+func AddCloudAwsFlag(cmd *cobra.Command) {
+	cmd.Flags().String("cloud", "", fmt.Sprintf("Specify the cloud provider as %s.", utils.ArrayToCommaDelimitedString(kafka.Clouds[:1], "or")))
+	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return kafka.Clouds[:1] })
+}
+
 func AddListCloudFlag(cmd *cobra.Command) {
 	cmd.Flags().StringSlice("cloud", nil, "A comma-separated list of cloud providers.")
 	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return kafka.Clouds })
@@ -609,4 +614,10 @@ func AutocompleteNetworks(environmentId string, client *ccloudv2.Client) []strin
 		suggestions[i] = fmt.Sprintf("%s\t%s", network.GetId(), network.Spec.GetDisplayName())
 	}
 	return suggestions
+}
+
+func AddMDSOnPremMTLSFlags(cmd *cobra.Command) {
+	cmd.Flags().String("client-cert-path", "", "Path to client cert to be verified by MDS. Include for mTLS authentication.")
+	cmd.Flags().String("client-key-path", "", "Path to client private key, include for mTLS authentication.")
+	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
 }

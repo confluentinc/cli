@@ -10,7 +10,7 @@ import (
 func (c *command) newComputePoolDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "describe <name>",
-		Short:       "Describe a Flink Compute Pool in Confluent Platform.",
+		Short:       "Describe a Flink compute pool in Confluent Platform.",
 		Args:        cobra.ExactArgs(1),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 		RunE:        c.computePoolDescribeOnPrem,
@@ -44,11 +44,19 @@ func (c *command) computePoolDescribeOnPrem(cmd *cobra.Command, args []string) e
 
 	if output.GetFormat(cmd) == output.Human {
 		table := output.NewTable(cmd)
+		// nil pointer handling for creation timestamp
+		var creationTime string
+		if computePool.GetMetadata().CreationTimestamp != nil {
+			creationTime = *computePool.GetMetadata().CreationTimestamp
+		} else {
+			creationTime = ""
+		}
+
 		table.Add(&computePoolOutOnPrem{
-			CreationTime: computePool.Metadata.GetCreationTimestamp(),
-			Name:         computePool.Metadata.Name,
-			Type:         computePool.Spec.Type,
-			Phase:        computePool.Status.Phase,
+			CreationTime: creationTime,
+			Name:         computePool.GetMetadata().Name,
+			Type:         computePool.GetSpec().Type,
+			Phase:        computePool.GetStatus().Phase,
 		})
 		return table.Print()
 	}

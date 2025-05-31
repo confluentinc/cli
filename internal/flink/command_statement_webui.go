@@ -18,7 +18,8 @@ import (
 func (c *command) newStatementWebUiForwardCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "web-ui-forward <name>",
-		Short:       "Forward the web UI of a Flink statement in Confluent Platform.",
+		Short:       "Forward the web UI of a Flink statement.",
+		Long:        "Forward the web UI of a Flink statement in Confluent Platform.",
 		Args:        cobra.ExactArgs(1),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 		RunE:        c.statementWebUiForward,

@@ -1,0 +1,1 @@
+Error: failed to create compute pool "existing-pool" in the environment "default": The compute pool name already exists, please try with another compute pool name

@@ -1,11 +1,10 @@
 package byok
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -66,7 +65,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		case key.Key.ByokV1GcpKey != nil:
 			keyString = key.Key.ByokV1GcpKey.KeyId
 		default:
-			return fmt.Errorf(byokUnknownKeyTypeErrorMsg)
+			return errors.New(byokUnknownKeyTypeErrorMsg)
 		}
 
 		list.Add(&out{

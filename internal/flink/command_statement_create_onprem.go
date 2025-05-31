@@ -3,12 +3,12 @@ package flink
 import (
 	"encoding/json"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
@@ -22,7 +22,8 @@ import (
 func (c *command) newStatementCreateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create [name]",
-		Short:       "Create a Flink SQL statement in Confluent Platform.",
+		Short:       "Create a Flink SQL statement.",
+		Long:        "Create a Flink SQL statement in Confluent Platform.",
 		Args:        cobra.MaximumNArgs(1),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 		RunE:        c.statementCreateOnPrem,
@@ -103,8 +104,9 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 
 	var flinkConfiguration = map[string]string{}
 	if configFilePath != "" {
+		var data []byte
 		// Read configuration file contents
-		data, err := os.ReadFile(configFilePath)
+		data, err = os.ReadFile(configFilePath)
 		if err != nil {
 			return fmt.Errorf("failed to read Flink configuration file: %v", err)
 		}
@@ -116,6 +118,9 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 			err = yaml.Unmarshal(data, &flinkConfiguration)
 		default:
 			return errors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
+		}
+		if err != nil {
+			return err
 		}
 	}
 
@@ -153,8 +158,8 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 				return err
 			}
 
-			if statement.Status.Phase == "PENDING" {
-				return fmt.Errorf(`statement phase is "%s"`, statement.Status.Phase)
+			if statement.GetStatus().Phase == "PENDING" {
+				return fmt.Errorf(`statement phase is "%s"`, statement.GetStatus().Phase)
 			}
 
 			return nil
@@ -168,10 +173,10 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 		table := output.NewTable(cmd)
 		table.Add(&statementOutOnPrem{
 			CreationDate: outputStatement.Metadata.GetCreationTimestamp(),
-			Name:         outputStatement.Metadata.Name,
-			Statement:    outputStatement.Spec.Statement,
-			ComputePool:  outputStatement.Spec.ComputePoolName,
-			Status:       outputStatement.Status.Phase,
+			Name:         outputStatement.Metadata.GetName(),
+			Statement:    outputStatement.Spec.GetStatement(),
+			ComputePool:  outputStatement.Spec.GetComputePoolName(),
+			Status:       outputStatement.Status.GetPhase(),
 			StatusDetail: outputStatement.Status.GetDetail(),
 			Parallelism:  outputStatement.Spec.GetParallelism(),
 			Stopped:      outputStatement.Spec.GetStopped(),

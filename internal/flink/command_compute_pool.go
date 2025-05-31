@@ -19,7 +19,7 @@ type computePoolOut struct {
 }
 
 type computePoolOutOnPrem struct {
-	CreationTime string `human:"CreationTime" serialized:"creation_time"`
+	CreationTime string `human:"Creation Time" serialized:"creation_time"`
 	Name         string `human:"Name" serialized:"name"`
 	Type         string `human:"Type" serialized:"type"`
 	Phase        string `human:"Phase" serialized:"phase"`
@@ -41,9 +41,9 @@ func (c *command) newComputePoolCommand(cfg *config.Config) *cobra.Command {
 		cmd.AddCommand(c.newComputePoolUseCommand())
 	} else {
 		cmd.AddCommand(c.newComputePoolCreateCommandOnPrem())
+		cmd.AddCommand(c.newComputePoolDeleteCommandOnPrem())
 		cmd.AddCommand(c.newComputePoolDescribeCommandOnPrem())
 		cmd.AddCommand(c.newComputePoolListCommandOnPrem())
-		cmd.AddCommand(c.newComputePoolDeleteCommandOnPrem())
 	}
 
 	return cmd

@@ -10,7 +10,8 @@ import (
 func (c *command) newStatementDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "describe [name]",
-		Short:       "Describe a Flink SQL statement in Confluent Platform.",
+		Short:       "Describe a Flink SQL statement.",
+		Long:        "Describe a Flink SQL statement in Confluent Platform.",
 		Args:        cobra.ExactArgs(1),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 		RunE:        c.statementDescribeOnPrem,
@@ -47,10 +48,10 @@ func (c *command) statementDescribeOnPrem(cmd *cobra.Command, args []string) err
 		table := output.NewTable(cmd)
 		table.Add(&statementOutOnPrem{
 			CreationDate: outputStatement.Metadata.GetCreationTimestamp(),
-			Name:         outputStatement.Metadata.Name,
-			Statement:    outputStatement.Spec.Statement,
-			ComputePool:  outputStatement.Spec.ComputePoolName,
-			Status:       outputStatement.Status.Phase,
+			Name:         outputStatement.Metadata.GetName(),
+			Statement:    outputStatement.Spec.GetStatement(),
+			ComputePool:  outputStatement.Spec.GetComputePoolName(),
+			Status:       outputStatement.Status.GetPhase(),
 			StatusDetail: outputStatement.Status.GetDetail(),
 			Parallelism:  outputStatement.Spec.GetParallelism(),
 			Stopped:      outputStatement.Spec.GetStopped(),
