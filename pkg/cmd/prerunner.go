@@ -187,6 +187,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 
 		setContextErr := r.setAuthenticatedContext(command)
 		if setContextErr != nil {
+			log.CliLogger.Debug("Error setting authenticated context; now attempting auto login.")
 			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
 				var machineName string
 				if ctx := command.Config.Context(); ctx != nil {
@@ -196,6 +197,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 				if err := r.ccloudAutoLogin(machineName); err != nil {
 					log.CliLogger.Debugf("Auto login failed: %v", err)
 				} else {
+					log.CliLogger.Info("Auto login successful. Now setting context.")
 					setContextErr = r.setAuthenticatedContext(command)
 				}
 			} else {
@@ -209,6 +211,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 		}
 
 		if setContextErr != nil {
+			log.CliLogger.Debug("Failed to validate login context.")
 			return setContextErr
 		}
 
@@ -599,10 +602,12 @@ func createOnPremKafkaRestClient(ctx *config.Context, caCertPath, clientCertPath
 
 func (r *PreRun) ValidateToken(config *config.Config) error {
 	if config == nil {
+		log.CliLogger.Debug("Failed to validate token: config is missing")
 		return new(errors.NotLoggedInError)
 	}
 	ctx := config.Context()
 	if ctx == nil {
+		log.CliLogger.Debug("Failed to validate token: context is missing")
 		return new(errors.NotLoggedInError)
 	}
 	return r.JWTValidator.Validate(ctx)

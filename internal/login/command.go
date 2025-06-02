@@ -20,6 +20,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/jwt"
 	"github.com/confluentinc/cli/v4/pkg/keychain"
 	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -159,6 +160,10 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 	}
 
 	output.Printf(c.Config.EnableColor, errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.GetResourceId(), currentOrg.GetName())
+	expirationTime, err := jwt.GetExpiration(token)
+	if err == nil {
+		log.CliLogger.Info("Authentication token will expire at ", expirationTime)
+	}
 	if currentEnvironment != "" {
 		log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnvironment)
 	}

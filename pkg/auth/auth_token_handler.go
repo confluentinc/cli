@@ -38,6 +38,7 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 	client := clientFactory.AnonHTTPClientFactory(url)
 
 	if credentials.AuthRefreshToken != "" {
+		log.CliLogger.Info("Refresh token found: using refresh token to retrieve a new auth token.")
 		if credentials.IsSSO {
 			if token, refreshToken, err := a.refreshCCloudSSOToken(client, credentials.AuthRefreshToken, organizationId); err == nil {
 				return token, refreshToken, nil
@@ -60,6 +61,7 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 
 	// If SSO refresh token is missing or expired, ask for a new one
 	if credentials.IsSSO {
+		log.CliLogger.Info("No refresh token found.")
 		token, refreshToken, err := a.getCCloudSSOToken(client, noBrowser, credentials.Username, organizationId)
 		if err != nil {
 			return "", "", err

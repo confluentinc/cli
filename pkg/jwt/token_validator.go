@@ -68,3 +68,17 @@ func GetClaim(jwtToken, claim string) (any, error) {
 
 	return val, nil
 }
+
+func GetExpiration(jwtToken string) (time.Time, error) {
+	expClaim, err := GetClaim(jwtToken, "exp")
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	exp, ok := expClaim.(float64)
+	if !ok {
+		return time.Time{}, fmt.Errorf(errors.MalformedTokenErrorMsg, "exp")
+	}
+
+	return time.Unix(int64(exp), 0).Local(), nil
+}
