@@ -488,6 +488,7 @@ func handleNetworkingNetworkList(t *testing.T) http.HandlerFunc {
 		connection := q["spec.connection_types"]
 
 		networkList := getNetworkList(name, cloud, region, cidr, phase, connection)
+		setLastPage(&networkList, &networkList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(networkList)
 		require.NoError(t, err)
 	}
@@ -808,6 +809,7 @@ func handleNetworkingPeeringList(t *testing.T) http.HandlerFunc {
 		phase := q["status.phase"]
 
 		peeringList := getPeeringList(name, network, phase)
+		setLastPage(&peeringList, &peeringList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(peeringList)
 		require.NoError(t, err)
 	}
@@ -979,6 +981,7 @@ func handleNetworkingTransitGatewayAttachmentList(t *testing.T) http.HandlerFunc
 		phase := q["status.phase"]
 
 		tgwaList := getTransitGatewayAttachmentList(name, network, phase)
+		setLastPage(&tgwaList, &tgwaList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(tgwaList)
 		require.NoError(t, err)
 	}
@@ -1185,6 +1188,7 @@ func handleNetworkingPrivateLinkAccessList(t *testing.T) http.HandlerFunc {
 		phase := q["status.phase"]
 
 		plaList := getPrivateLinkAccessList(name, network, phase)
+		setLastPage(&plaList, &plaList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(plaList)
 		require.NoError(t, err)
 	}
@@ -1404,7 +1408,7 @@ func handleNetworkingPrivateLinkAttachmentList(t *testing.T) http.HandlerFunc {
 		}
 
 		attachmentList := networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentList{Data: filteredAttachments}
-
+		setLastPage(&attachmentList, &attachmentList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(attachmentList)
 		require.NoError(t, err)
 	}
@@ -1622,7 +1626,6 @@ func handleNetworkingPrivateLinkAttachmentConnectionList(t *testing.T) http.Hand
 		connection2 := getPrivateLinkAttachmentConnection("plattc-111112", "aws-plattc-2", "READY", "aws")
 		connection3 := getPrivateLinkAttachmentConnection("plattc-111113", "aws-plattc-3", "READY", "aws")
 		connection4 := getPrivateLinkAttachmentConnection("plattc-azure", "azure-plattc-1", "READY", "azure")
-		connection5 := getPrivateLinkAttachmentConnection("plattc-gcp", "gcp-plattc-1", "READY", "gcp")
 
 		privateLinkAttachment := r.URL.Query().Get("spec.private_link_attachment")
 		switch privateLinkAttachment {
@@ -1633,36 +1636,8 @@ func handleNetworkingPrivateLinkAttachmentConnectionList(t *testing.T) http.Hand
 			})
 			require.NoError(t, err)
 		case "platt-111111":
-			pageToken := r.URL.Query().Get("page_token")
-			var connectionList networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList
-			switch pageToken {
-			case "aws-plattc-3":
-				connectionList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList{
-					Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{connection3},
-					Metadata: networkingprivatelinkv1.ListMeta{Next: *networkingprivatelinkv1.NewNullableString(networkingprivatelinkv1.PtrString("/networking/v1/private-link-attachments?environment=env-00000&page_size=1&page_token=azure-plattc-1"))},
-				}
-			case "aws-plattc-2":
-				connectionList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList{
-					Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{connection2},
-					Metadata: networkingprivatelinkv1.ListMeta{Next: *networkingprivatelinkv1.NewNullableString(networkingprivatelinkv1.PtrString("/networking/v1/private-link-attachments?environment=env-00000&page_size=1&page_token=aws-plattc-3"))},
-				}
-			case "azure-plattc-1":
-				connectionList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList{
-					Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{connection4},
-					Metadata: networkingprivatelinkv1.ListMeta{},
-				}
-			case "gcp-plattc-1":
-				connectionList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList{
-					Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{connection5},
-					Metadata: networkingprivatelinkv1.ListMeta{},
-				}
-			default:
-				connectionList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList{
-					Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{connection1},
-					Metadata: networkingprivatelinkv1.ListMeta{Next: *networkingprivatelinkv1.NewNullableString(networkingprivatelinkv1.PtrString("/networking/v1/private-link-attachments?environment=env-00000&page_size=1&page_token=aws-plattc-2"))},
-				}
-			}
-
+			connectionList := &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList{Data: []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{connection1, connection2, connection3, connection4}}
+			setLastPage(connectionList, &connectionList.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(connectionList)
 			require.NoError(t, err)
 		}
@@ -1863,6 +1838,7 @@ func handleNetworkingNetworkLinkServiceList(t *testing.T) http.HandlerFunc {
 		phase := q["status.phase"]
 
 		nlsList := getNetworkLinkServiceList(name, network, phase)
+		setLastPage(&nlsList, &nlsList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(nlsList)
 		require.NoError(t, err)
 	}
@@ -2009,6 +1985,7 @@ func handleNetworkingNetworkLinkEndpointList(t *testing.T) http.HandlerFunc {
 		service := q["spec.network_link_service"]
 
 		nleList := getNetworkLinkEndpointList(name, network, phase, service)
+		setLastPage(&nleList, &nleList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(nleList)
 		require.NoError(t, err)
 	}
@@ -2158,6 +2135,7 @@ func handleNetworkingNetworkLinkServiceAssociationList(t *testing.T) http.Handle
 			require.NoError(t, err)
 		default:
 			nlsList := getNetworkLinkServiceAssociationList(networkLinkService, phase)
+			setLastPage(&nlsList, &nlsList.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(nlsList)
 			require.NoError(t, err)
 		}
@@ -2200,6 +2178,7 @@ func handleNetworkingIpAddressList(t *testing.T) http.HandlerFunc {
 		addressType := q["address_type"]
 
 		ipList := getIpAddressList(cloud, region, services, addressType)
+		setLastPage(&ipList, &ipList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(ipList)
 		require.NoError(t, err)
 	}
@@ -2423,6 +2402,7 @@ func handleNetworkingGatewayList(t *testing.T, environment string) http.HandlerF
 		gatewaySeven := getGateway("gw-07531", environment, "my-gcp-gateway", "GcpEgressPrivateServiceConnectGatewaySpec", "GcpEgressPrivateServiceConnectGatewayStatus")
 
 		recordList := networkinggatewayv1.NetworkingV1GatewayList{Data: []networkinggatewayv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour, gatewayFive, gatewaySix, gatewaySeven}}
+		setLastPage(&recordList, &recordList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
 	}
@@ -2507,6 +2487,7 @@ func handleNetworkingDnsRecordList(t *testing.T, environment string) http.Handle
 		recordTwo.Status.SetPhase("PROVISIONING")
 
 		recordList := networkingaccesspointv1.NetworkingV1DnsRecordList{Data: []networkingaccesspointv1.NetworkingV1DnsRecord{recordOne, recordTwo}}
+		setLastPage(&recordList, &recordList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
 	}
@@ -2622,31 +2603,8 @@ func handleNetworkingDnsForwarderList(t *testing.T) http.HandlerFunc {
 		forwarder3 := getDnsForwarder("dnsf-abcde3", "my-dns-forwarder-3")
 		forwarder4 := getDnsForwarderGCP("dnsf-abcde4", "my-dns-forwarder-4")
 
-		pageToken := r.URL.Query().Get("page_token")
-		var dnsForwarderList networkingdnsforwarderv1.NetworkingV1DnsForwarderList
-		switch pageToken {
-		case "my-dns-forwarder-4":
-			dnsForwarderList = networkingdnsforwarderv1.NetworkingV1DnsForwarderList{
-				Data:     []networkingdnsforwarderv1.NetworkingV1DnsForwarder{forwarder4},
-				Metadata: networkingdnsforwarderv1.ListMeta{},
-			}
-		case "my-dns-forwarder-3":
-			dnsForwarderList = networkingdnsforwarderv1.NetworkingV1DnsForwarderList{
-				Data:     []networkingdnsforwarderv1.NetworkingV1DnsForwarder{forwarder3},
-				Metadata: networkingdnsforwarderv1.ListMeta{Next: *networkingdnsforwarderv1.NewNullableString(networkingdnsforwarderv1.PtrString("/networking/v1/dns-forwarder?environment=a-595&page_size=1&page_token=my-dns-forwarder-4"))},
-			}
-		case "my-dns-forwarder-2":
-			dnsForwarderList = networkingdnsforwarderv1.NetworkingV1DnsForwarderList{
-				Data:     []networkingdnsforwarderv1.NetworkingV1DnsForwarder{forwarder2},
-				Metadata: networkingdnsforwarderv1.ListMeta{Next: *networkingdnsforwarderv1.NewNullableString(networkingdnsforwarderv1.PtrString("/networking/v1/dns-forwarder?environment=a-595&page_size=1&page_token=my-dns-forwarder-3"))},
-			}
-		default:
-			dnsForwarderList = networkingdnsforwarderv1.NetworkingV1DnsForwarderList{
-				Data:     []networkingdnsforwarderv1.NetworkingV1DnsForwarder{forwarder1},
-				Metadata: networkingdnsforwarderv1.ListMeta{Next: *networkingdnsforwarderv1.NewNullableString(networkingdnsforwarderv1.PtrString("/networking/v1/dns-forwarders?environment=a-595&page_size=1&page_token=my-dns-forwarder-2"))},
-			}
-		}
-
+		dnsForwarderList := &networkingdnsforwarderv1.NetworkingV1DnsForwarderList{Data: []networkingdnsforwarderv1.NetworkingV1DnsForwarder{forwarder1, forwarder2, forwarder3, forwarder4}}
+		setLastPage(dnsForwarderList, &dnsForwarderList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(dnsForwarderList)
 		require.NoError(t, err)
 	}
@@ -2921,6 +2879,7 @@ func handleNetworkingAccessPointList(t *testing.T, environment string) http.Hand
 		accessPointFour := getGcpEgressAccessPoint("ap-88888", environment, "my-gcp-egress-access-point")
 
 		recordList := networkingaccesspointv1.NetworkingV1AccessPointList{Data: []networkingaccesspointv1.NetworkingV1AccessPoint{accessPointOne, accessPointTwo, accessPointThree, accessPointFour}}
+		setLastPage(&recordList, &recordList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
 	}

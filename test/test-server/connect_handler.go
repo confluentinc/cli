@@ -389,25 +389,30 @@ func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(plugin)
 			require.NoError(t, err)
 		case http.MethodGet:
-			plugin1 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:          connectcustompluginv1.PtrString("ccp-123456"),
-				DisplayName: connectcustompluginv1.PtrString("CliPluginTest1"),
-				Cloud:       connectcustompluginv1.PtrString("AWS"),
+			customPluginList := &connectcustompluginv1.ConnectV1CustomConnectorPluginList{
+				Data: []connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+					{
+						Id:          connectcustompluginv1.PtrString("ccp-123456"),
+						DisplayName: connectcustompluginv1.PtrString("CliPluginTest1"),
+						Cloud:       connectcustompluginv1.PtrString("AWS"),
+					},
+					{
+						Id:          connectcustompluginv1.PtrString("ccp-789012"),
+						DisplayName: connectcustompluginv1.PtrString("CliPluginTest2"),
+						Cloud:       connectcustompluginv1.PtrString("AWS"),
+					},
+					{
+						Id:             connectcustompluginv1.PtrString("ccp-789013"),
+						DisplayName:    connectcustompluginv1.PtrString("CliPluginTest3"),
+						ConnectorType:  connectcustompluginv1.PtrString("flink_udf"),
+						Cloud:          connectcustompluginv1.PtrString("AWS"),
+						ConnectorClass: connectcustompluginv1.PtrString("ver_123456"),
+						ContentFormat:  connectcustompluginv1.PtrString("JAR"),
+					},
+				},
 			}
-			plugin2 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:          connectcustompluginv1.PtrString("ccp-789012"),
-				DisplayName: connectcustompluginv1.PtrString("CliPluginTest2"),
-				Cloud:       connectcustompluginv1.PtrString("AWS"),
-			}
-			plugin3 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:             connectcustompluginv1.PtrString("ccp-789013"),
-				DisplayName:    connectcustompluginv1.PtrString("CliPluginTest3"),
-				ConnectorType:  connectcustompluginv1.PtrString("flink_udf"),
-				Cloud:          connectcustompluginv1.PtrString("AWS"),
-				ConnectorClass: connectcustompluginv1.PtrString("ver_123456"),
-				ContentFormat:  connectcustompluginv1.PtrString("JAR"),
-			}
-			err := json.NewEncoder(w).Encode(connectcustompluginv1.ConnectV1CustomConnectorPluginList{Data: []connectcustompluginv1.ConnectV1CustomConnectorPlugin{plugin1, plugin2, plugin3}})
+			setLastPage(customPluginList, &customPluginList.Metadata, r.URL)
+			err := json.NewEncoder(w).Encode(customPluginList)
 			require.NoError(t, err)
 		}
 	}
@@ -501,23 +506,27 @@ func handleCustomConnectorPluginsVersions(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(version)
 			require.NoError(t, err)
 		case http.MethodGet:
-			version1 := connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{
-				Id:      connectcustompluginv1.PtrString("ver-123456"),
-				Version: connectcustompluginv1.PtrString("0.0.0"),
-				IsBeta:  connectcustompluginv1.PtrString("false"),
+			customPluginVersionList := &connectcustompluginv1.ConnectV1CustomConnectorPluginVersionList{
+				Data: []connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{
+					{
+						Id:      connectcustompluginv1.PtrString("ver-123456"),
+						Version: connectcustompluginv1.PtrString("0.0.0"),
+						IsBeta:  connectcustompluginv1.PtrString("false"),
+					},
+					{
+						Id:      connectcustompluginv1.PtrString("ver-123456"),
+						Version: connectcustompluginv1.PtrString("0.0.1"),
+						IsBeta:  connectcustompluginv1.PtrString("false"),
+					},
+					{
+						Id:      connectcustompluginv1.PtrString("ver-123456"),
+						Version: connectcustompluginv1.PtrString("0.0.2"),
+						IsBeta:  connectcustompluginv1.PtrString("true"),
+					},
+				},
 			}
-			version2 := connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{
-				Id:      connectcustompluginv1.PtrString("ver-123456"),
-				Version: connectcustompluginv1.PtrString("0.0.1"),
-				IsBeta:  connectcustompluginv1.PtrString("false"),
-			}
-			version3 := connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{
-				Id:      connectcustompluginv1.PtrString("ver-123456"),
-				Version: connectcustompluginv1.PtrString("0.0.2"),
-				IsBeta:  connectcustompluginv1.PtrString("true"),
-			}
-
-			err := json.NewEncoder(w).Encode(connectcustompluginv1.ConnectV1CustomConnectorPluginVersionList{Data: []connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{version1, version2, version3}})
+			setLastPage(customPluginVersionList, &customPluginVersionList.Metadata, r.URL)
+			err := json.NewEncoder(w).Encode(customPluginVersionList)
 			require.NoError(t, err)
 		}
 	}
