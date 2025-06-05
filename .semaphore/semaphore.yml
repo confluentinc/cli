@@ -94,6 +94,7 @@ blocks:
         - name: "Build & Test windows/amd64"
           commands:
             - checkout
+            - Set-Variable ProgressPreference SilentlyContinue
             # https://confluentinc.atlassian.net/browse/DP-9532
             # Do not install Go with Chocolatey since it is community maintained and may not have the latest version
             - Invoke-WebRequest -OutFile Go.zip -Uri https://go.dev/dl/go$(Get-Content .go-version).windows-amd64.zip -UseBasicParsing
