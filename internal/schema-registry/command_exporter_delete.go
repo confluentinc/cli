@@ -49,6 +49,6 @@ func (c *command) exporterDelete(cmd *cobra.Command, args []string) error {
 		return client.DeleteExporter(id)
 	}
 
-	_, err = deletion.Delete(args, deleteFunc, resource.SchemaExporter)
+	_, err = deletion.Delete(cmd, args, deleteFunc, resource.SchemaExporter)
 	return err
 }
