@@ -7,7 +7,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/deletion"
-	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/kafka"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -62,13 +61,10 @@ func (c *command) disable(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		if err := c.V2Client.DeleteTableflowTopic(environmentId, cluster.GetId(), id); err != nil {
-			return fmt.Errorf(errors.DeleteResourceErrorMsg, resource.Topic, id, err)
-		}
-		return nil
+		return c.V2Client.DeleteTableflowTopic(environmentId, cluster.GetId(), id)
 	}
 
-	deletedTopic, err := deletion.DeleteWithoutMessage(args, deleteFunc)
+	deletedTopic, err := deletion.DeleteWithoutMessage(cmd, args, deleteFunc)
 
 	deleteMsg := "Requested to disable %s %s.\n"
 	if len(deletedTopic) == 1 {

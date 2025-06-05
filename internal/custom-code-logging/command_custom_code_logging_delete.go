@@ -38,6 +38,6 @@ func (c *customCodeLoggingCommand) delete(cmd *cobra.Command, args []string) err
 	deleteFunc := func(id string) error {
 		return c.V2Client.DeleteCustomCodeLogging(id, environment)
 	}
-	_, err = deletion.Delete(args, deleteFunc, resource.CustomCodeLogging)
+	_, err = deletion.Delete(cmd, args, deleteFunc, resource.CustomCodeLogging)
 	return err
 }
