@@ -42,8 +42,8 @@ func (c *command) newTopicCommand() *cobra.Command {
 		Short: "Manage Tableflow topics.",
 	}
 
-	cmd.AddCommand(c.newTopicDeleteCommand())
 	cmd.AddCommand(c.newTopicDescribeCommand())
+	cmd.AddCommand(c.newTopicDisableCommand())
 	cmd.AddCommand(c.newTopicEnableCommand())
 	cmd.AddCommand(c.newTopicListCommand())
 	cmd.AddCommand(c.newTopicUpdateCommand())

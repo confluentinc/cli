@@ -1,12 +1,15 @@
-Delete topics.
+Disable topics.
 
 Usage:
-  confluent tableflow topic delete <name-1> [name-2] ... [name-n] [flags]
+  confluent tableflow topic disable <name-1> [name-2] ... [name-n] [flags]
+
+Aliases:
+  disable, delete
 
 Examples:
-Delete a Tableflow topic "my-tableflow-topic" related to a Kafka cluster "lkc-123456".
+Disable a Tableflow topic "my-tableflow-topic" related to a Kafka cluster "lkc-123456".
 
-  $ confluent tableflow topic delete my-tableflow-topic --cluster lkc-123456
+  $ confluent tableflow topic disable my-tableflow-topic --cluster lkc-123456
 
 Flags:
       --cluster string       Kafka cluster ID.
