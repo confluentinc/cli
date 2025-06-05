@@ -48,8 +48,8 @@ func (s *CLITestSuite) TestTableflowTopic() {
 	tests := []CLITest{
 		{args: "tableflow topic enable topic-byob --cluster lkc-123456 --retention-ms 604800000 --storage-type BYOS --provider-integration cspi-stgce89r7 --bucket-name bucket_1 --record-failure-strategy SKIP", fixture: "tableflow/topic/enable-topic-byob.golden"},
 		{args: "tableflow topic enable topic-managed --cluster lkc-123456 --retention-ms 604800000 --storage-type MANAGED --table-formats DELTA", fixture: "tableflow/topic/enable-topic-managed.golden"},
-		{args: "tableflow topic create topic-byob --cluster lkc-123456 --retention-ms 604800000 --storage-type BYOS --provider-integration cspi-stgce89r7 --bucket-name bucket_1 --record-failure-strategy SKIP", fixture: "tableflow/topic/create-topic-byob.golden"},
-		{args: "tableflow topic create topic-managed --cluster lkc-123456 --retention-ms 604800000 --storage-type MANAGED --table-formats DELTA", fixture: "tableflow/topic/create-topic-managed.golden"},
+		{args: "tableflow topic create topic-byob --cluster lkc-123456 --retention-ms 604800000 --storage-type BYOS --provider-integration cspi-stgce89r7 --bucket-name bucket_1 --record-failure-strategy SKIP", fixture: "tableflow/topic/enable-topic-byob.golden"},
+		{args: "tableflow topic create topic-managed --cluster lkc-123456 --retention-ms 604800000 --storage-type MANAGED --table-formats DELTA", fixture: "tableflow/topic/enable-topic-managed.golden"},
 		{args: "tableflow topic update topic-byob --cluster lkc-123456 --retention-ms 432000000", fixture: "tableflow/topic/update-topic.golden"},
 		{args: "tableflow topic disable topic-managed --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/disable-topic.golden"},
 		{args: "tableflow topic disable topic-managed topic-byob --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/disable-multiple-topics.golden"},
