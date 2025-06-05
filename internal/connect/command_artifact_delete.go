@@ -66,7 +66,7 @@ func (c *artifactCommand) delete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteConnectArtifact(cloud, environment, id)
 	}
 
-	_, err = deletion.Delete(args, deleteFunc, resource.ConnectArtifact)
+	_, err = deletion.Delete(cmd, args, deleteFunc, resource.ConnectArtifact)
 
 	return err
 }
