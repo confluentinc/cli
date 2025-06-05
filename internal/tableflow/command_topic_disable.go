@@ -70,7 +70,7 @@ func (c *command) disable(cmd *cobra.Command, args []string) error {
 
 	deletedTopic, err := deletion.DeleteWithoutMessage(args, deleteFunc)
 
-	deleteMsg := "Requested to delete %s %s.\n"
+	deleteMsg := "Requested to disable %s %s.\n"
 	if len(deletedTopic) == 1 {
 		output.Printf(c.Config.EnableColor, deleteMsg, resource.Topic, fmt.Sprintf(`"%s"`, deletedTopic[0]))
 	} else if len(deletedTopic) > 1 {
