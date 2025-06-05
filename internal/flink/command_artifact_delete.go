@@ -75,7 +75,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteFlinkArtifact(cloud, region, environment, id)
 	}
 
-	_, err = deletion.Delete(args, deleteFunc, resource.FlinkArtifact)
+	_, err = deletion.Delete(cmd, args, deleteFunc, resource.FlinkArtifact)
 	return err
 }
 
