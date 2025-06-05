@@ -62,7 +62,7 @@ func ConfirmPrompt(cmd *cobra.Command, promptMsg string) error {
 
 func DeleteWithoutMessage(cmd *cobra.Command, args []string, callDeleteEndpoint func(string) error) ([]string, error) {
 	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
-	operation := cmd.Name()
+	operation := cmd.CalledAs()
 	var deletedIds []string
 	for _, id := range args {
 		if err := callDeleteEndpoint(id); err != nil {
@@ -78,7 +78,7 @@ func DeleteWithoutMessage(cmd *cobra.Command, args []string, callDeleteEndpoint 
 func Delete(cmd *cobra.Command, args []string, callDeleteEndpoint func(string) error, resourceType string) ([]string, error) {
 	deletedIds, err := DeleteWithoutMessage(cmd, args, callDeleteEndpoint)
 
-	operation := cases.Title(language.Und).String(pastTenseMap[cmd.Name()])
+	operation := cases.Title(language.Und).String(pastTenseMap[cmd.CalledAs()])
 	DeletedResourceMsg := "%s %s %s.\n"
 	if len(deletedIds) == 1 {
 		output.Printf(false, DeletedResourceMsg, operation, resourceType, fmt.Sprintf(`"%s"`, deletedIds[0]))
@@ -90,7 +90,7 @@ func Delete(cmd *cobra.Command, args []string, callDeleteEndpoint func(string) e
 }
 
 func DefaultYesNoPromptString(cmd *cobra.Command, resourceType string, idList []string, extraWarning string) string {
-	operation := cmd.Name()
+	operation := cmd.CalledAs()
 	var promptMsg string
 	if len(idList) == 1 {
 		promptMsg = fmt.Sprintf(`Are you sure you want to %s %s "%s"?`, operation, resourceType, idList[0])

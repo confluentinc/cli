@@ -66,11 +66,12 @@ func (c *command) disable(cmd *cobra.Command, args []string) error {
 
 	deletedTopic, err := deletion.DeleteWithoutMessage(cmd, args, deleteFunc)
 
-	deleteMsg := "Requested to disable %s %s.\n"
+	deleteMsg := "Requested to %s %s %s.\n"
+	operation := cmd.CalledAs() // disable or delete depending on whether the user entered the alias
 	if len(deletedTopic) == 1 {
-		output.Printf(c.Config.EnableColor, deleteMsg, resource.Topic, fmt.Sprintf(`"%s"`, deletedTopic[0]))
+		output.Printf(c.Config.EnableColor, deleteMsg, operation, resource.Topic, fmt.Sprintf(`"%s"`, deletedTopic[0]))
 	} else if len(deletedTopic) > 1 {
-		output.Printf(c.Config.EnableColor, deleteMsg, plural.Plural(resource.Topic), utils.ArrayToCommaDelimitedString(deletedTopic, "and"))
+		output.Printf(c.Config.EnableColor, deleteMsg, operation, plural.Plural(resource.Topic), utils.ArrayToCommaDelimitedString(deletedTopic, "and"))
 	}
 
 	return err
