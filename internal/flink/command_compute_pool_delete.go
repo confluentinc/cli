@@ -53,7 +53,7 @@ func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteFlinkComputePool(id, environmentId)
 	}
 
-	deletedIds, err := deletion.Delete(args, deleteFunc, resource.FlinkComputePool)
+	deletedIds, err := deletion.Delete(cmd, args, deleteFunc, resource.FlinkComputePool)
 
 	errs := multierror.Append(err, c.removePoolFromConfigIfCurrent(deletedIds))
 

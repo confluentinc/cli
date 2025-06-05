@@ -69,6 +69,6 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	_, err = deletion.Delete(args, deleteFunc, resource.Topic)
+	_, err = deletion.Delete(cmd, args, deleteFunc, resource.Topic)
 	return err
 }
