@@ -38,49 +38,54 @@ func handleCustomCodeLoggings(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(customCodeLogging)
 			require.NoError(t, err)
 		case http.MethodGet:
-			customCodeLogging1 := cclv1.CclV1CustomCodeLogging{
-				Id:          cclv1.PtrString("ccl-123456"),
-				Cloud:       cclv1.PtrString("AWS"),
-				Region:      cclv1.PtrString("us-west-2"),
-				Environment: &cclv1.EnvScopedObjectReference{Id: "env-000000"},
-				DestinationSettings: &cclv1.CclV1CustomCodeLoggingDestinationSettingsOneOf{
-					CclV1KafkaDestinationSettings: &cclv1.CclV1KafkaDestinationSettings{
-						Kind:      KAFKA,
-						Topic:     "topic-123",
-						ClusterId: "cluster-123",
-						LogLevel:  cclv1.PtrString("INFO"),
+			customCodeLoggingList := &cclv1.CclV1CustomCodeLoggingList{
+				Data: []cclv1.CclV1CustomCodeLogging{
+					{
+						Id:          cclv1.PtrString("ccl-123456"),
+						Cloud:       cclv1.PtrString("AWS"),
+						Region:      cclv1.PtrString("us-west-2"),
+						Environment: &cclv1.EnvScopedObjectReference{Id: "env-000000"},
+						DestinationSettings: &cclv1.CclV1CustomCodeLoggingDestinationSettingsOneOf{
+							CclV1KafkaDestinationSettings: &cclv1.CclV1KafkaDestinationSettings{
+								Kind:      KAFKA,
+								Topic:     "topic-123",
+								ClusterId: "cluster-123",
+								LogLevel:  cclv1.PtrString("INFO"),
+							},
+						},
+					},
+					{
+						Id:          cclv1.PtrString("ccl-456789"),
+						Cloud:       cclv1.PtrString("AWS"),
+						Region:      cclv1.PtrString("us-west-2"),
+						Environment: &cclv1.EnvScopedObjectReference{Id: "env-111111"},
+						DestinationSettings: &cclv1.CclV1CustomCodeLoggingDestinationSettingsOneOf{
+							CclV1KafkaDestinationSettings: &cclv1.CclV1KafkaDestinationSettings{
+								Kind:      KAFKA,
+								Topic:     "topic-456",
+								ClusterId: "cluster-456",
+								LogLevel:  cclv1.PtrString("ERROR"),
+							},
+						},
+					},
+					{
+						Id:          cclv1.PtrString("ccl-789012"),
+						Cloud:       cclv1.PtrString("AWS"),
+						Region:      cclv1.PtrString("us-west-2"),
+						Environment: &cclv1.EnvScopedObjectReference{Id: "env-222222"},
+						DestinationSettings: &cclv1.CclV1CustomCodeLoggingDestinationSettingsOneOf{
+							CclV1KafkaDestinationSettings: &cclv1.CclV1KafkaDestinationSettings{
+								Kind:      KAFKA,
+								Topic:     "topic-789",
+								ClusterId: "cluster-789",
+								LogLevel:  cclv1.PtrString("DEBUG"),
+							},
+						},
 					},
 				},
 			}
-			customCodeLogging2 := cclv1.CclV1CustomCodeLogging{
-				Id:          cclv1.PtrString("ccl-456789"),
-				Cloud:       cclv1.PtrString("AWS"),
-				Region:      cclv1.PtrString("us-west-2"),
-				Environment: &cclv1.EnvScopedObjectReference{Id: "env-111111"},
-				DestinationSettings: &cclv1.CclV1CustomCodeLoggingDestinationSettingsOneOf{
-					CclV1KafkaDestinationSettings: &cclv1.CclV1KafkaDestinationSettings{
-						Kind:      KAFKA,
-						Topic:     "topic-456",
-						ClusterId: "cluster-456",
-						LogLevel:  cclv1.PtrString("ERROR"),
-					},
-				},
-			}
-			customCodeLogging3 := cclv1.CclV1CustomCodeLogging{
-				Id:          cclv1.PtrString("ccl-789012"),
-				Cloud:       cclv1.PtrString("AWS"),
-				Region:      cclv1.PtrString("us-west-2"),
-				Environment: &cclv1.EnvScopedObjectReference{Id: "env-222222"},
-				DestinationSettings: &cclv1.CclV1CustomCodeLoggingDestinationSettingsOneOf{
-					CclV1KafkaDestinationSettings: &cclv1.CclV1KafkaDestinationSettings{
-						Kind:      KAFKA,
-						Topic:     "topic-789",
-						ClusterId: "cluster-789",
-						LogLevel:  cclv1.PtrString("DEBUG"),
-					},
-				},
-			}
-			err := json.NewEncoder(w).Encode(cclv1.CclV1CustomCodeLoggingList{Data: []cclv1.CclV1CustomCodeLogging{customCodeLogging1, customCodeLogging2, customCodeLogging3}})
+			setPageToken(customCodeLoggingList, &customCodeLoggingList.Metadata, r.URL)
+			err := json.NewEncoder(w).Encode(customCodeLoggingList)
 			require.NoError(t, err)
 		}
 	}

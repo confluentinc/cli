@@ -85,6 +85,7 @@ func handleOrgEnvironments(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			environmentList := &orgv2.OrgV2EnvironmentList{Data: getOrgEnvironmentsList(OrgEnvironments)}
+			setPageToken(environmentList, &environmentList.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(environmentList)
 			require.NoError(t, err)
 		case http.MethodPost:
@@ -149,6 +150,7 @@ func handleOrgOrganizations(t *testing.T) http.HandlerFunc {
 				{Id: orgv2.PtrString("abc-456"), DisplayName: orgv2.PtrString("org2"), JitEnabled: orgv2.PtrBool(true)},
 				{Id: orgv2.PtrString("abc-789"), DisplayName: orgv2.PtrString("org3"), JitEnabled: orgv2.PtrBool(true)},
 			}}
+			setPageToken(organizationList, &organizationList.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(organizationList)
 			require.NoError(t, err)
 		}

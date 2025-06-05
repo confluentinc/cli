@@ -69,6 +69,7 @@ func handleStreamSharingProviderShares(t *testing.T) http.HandlerFunc {
 			list := cdxv1.CdxV1ProviderShareList{
 				Data: []cdxv1.CdxV1ProviderShare{getTestProviderShare("ss-12345")},
 			}
+			setPageToken(&list, &list.Metadata, r.URL)
 			b, err := json.Marshal(&list)
 			require.NoError(t, err)
 			_, err = io.Writer.Write(w, b)
@@ -109,6 +110,7 @@ func handleStreamSharingConsumerShares(t *testing.T) http.HandlerFunc {
 		list := cdxv1.CdxV1ConsumerShareList{
 			Data: []cdxv1.CdxV1ConsumerShare{getTestConsumerShare("ss-12345")},
 		}
+		setPageToken(&list, &list.Metadata, r.URL)
 		b, err := json.Marshal(&list)
 		require.NoError(t, err)
 		_, err = io.Writer.Write(w, b)

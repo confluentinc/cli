@@ -114,7 +114,9 @@ func handleFlinkArtifacts(t *testing.T) http.HandlerFunc {
 				artifact1 = awsJavaArtifact
 				artifact2 = awsPythonArtifact
 			}
-			err := json.NewEncoder(w).Encode(flinkartifactv1.ArtifactV1FlinkArtifactList{Data: []flinkartifactv1.ArtifactV1FlinkArtifact{artifact1, artifact2}})
+			artifactList := &flinkartifactv1.ArtifactV1FlinkArtifactList{Data: []flinkartifactv1.ArtifactV1FlinkArtifact{artifact1, artifact2}}
+			setPageToken(artifactList, &artifactList.Metadata, r.URL)
+			err := json.NewEncoder(w).Encode(artifactList)
 			require.NoError(t, err)
 		}
 	}
