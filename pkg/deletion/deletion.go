@@ -24,7 +24,7 @@ func ValidateAndConfirm(cmd *cobra.Command, args []string, checkExistence func(s
 		return err
 	}
 
-	return ConfirmPrompt(cmd, DefaultYesNoDeletePromptString(resourceType, args, ""))
+	return ConfirmPrompt(cmd, DefaultYesNoDeletePromptString(cmd, resourceType, args, ""))
 }
 
 func ValidateAndConfirmWithExtraWarning(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType string, extraWarning string) error {
@@ -36,7 +36,7 @@ func ValidateAndConfirmWithExtraWarning(cmd *cobra.Command, args []string, check
 		return err
 	}
 
-	return ConfirmPrompt(cmd, DefaultYesNoDeletePromptString(resourceType, args, extraWarning))
+	return ConfirmPrompt(cmd, DefaultYesNoDeletePromptString(cmd, resourceType, args, extraWarning))
 }
 
 func ConfirmPrompt(cmd *cobra.Command, promptMsg string) error {
@@ -86,14 +86,15 @@ func Delete(args []string, callDeleteEndpoint func(string) error, resourceType s
 	return deletedIds, err
 }
 
-func DefaultYesNoDeletePromptString(resourceType string, idList []string, extraWarning string) string {
+func DefaultYesNoDeletePromptString(cmd *cobra.Command, resourceType string, idList []string, extraWarning string) string {
+	action := cmd.Name()
 	var promptMsg string
 	if len(idList) == 1 {
-		promptMsg = fmt.Sprintf(`Are you sure you want to delete %s "%s"?`, resourceType, idList[0])
+		promptMsg = fmt.Sprintf(`Are you sure you want to %s %s "%s"?`, action, resourceType, idList[0])
 		promptMsg += extraWarning
 	} else {
 		plural := plural.Plural(resourceType)
-		promptMsg = fmt.Sprintf("Are you sure you want to delete %s %s?", plural, utils.ArrayToCommaDelimitedString(idList, "and"))
+		promptMsg = fmt.Sprintf("Are you sure you want to %s %s %s?", action, plural, utils.ArrayToCommaDelimitedString(idList, "and"))
 		promptMsg += extraWarning
 	}
 

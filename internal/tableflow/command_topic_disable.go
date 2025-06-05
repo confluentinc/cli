@@ -16,17 +16,18 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
-func (c *command) newTopicDeleteCommand() *cobra.Command {
+func (c *command) newTopicDisableCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <name-1> [name-2] ... [name-n]",
-		Short:             "Delete topics.",
+		Use:               "disable <name-1> [name-2] ... [name-n]",
+		Aliases:           []string{"delete"},
+		Short:             "Disable topics.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validTopicArgsMultiple),
-		RunE:              c.delete,
+		RunE:              c.disable,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Delete a Tableflow topic "my-tableflow-topic" related to a Kafka cluster "lkc-123456".`,
-				Code: "confluent tableflow topic delete my-tableflow-topic --cluster lkc-123456",
+				Text: `Disable a Tableflow topic "my-tableflow-topic" related to a Kafka cluster "lkc-123456".`,
+				Code: "confluent tableflow topic disable my-tableflow-topic --cluster lkc-123456",
 			},
 		),
 	}
@@ -40,7 +41,7 @@ func (c *command) newTopicDeleteCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) delete(cmd *cobra.Command, args []string) error {
+func (c *command) disable(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
@@ -69,7 +70,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 
 	deletedTopic, err := deletion.DeleteWithoutMessage(args, deleteFunc)
 
-	deleteMsg := "Requested to delete %s %s.\n"
+	deleteMsg := "Requested to disable %s %s.\n"
 	if len(deletedTopic) == 1 {
 		output.Printf(c.Config.EnableColor, deleteMsg, resource.Topic, fmt.Sprintf(`"%s"`, deletedTopic[0]))
 	} else if len(deletedTopic) > 1 {
