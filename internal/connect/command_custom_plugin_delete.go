@@ -41,7 +41,7 @@ func (c *customPluginCommand) delete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteCustomPlugin(id)
 	}
 
-	_, err = deletion.Delete(args, deleteFunc, resource.CustomConnectorPlugin)
+	_, err = deletion.Delete(cmd, args, deleteFunc, resource.CustomConnectorPlugin)
 	return err
 }
 
