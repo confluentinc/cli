@@ -92,7 +92,7 @@ func handleKsqlClusters(t *testing.T) http.HandlerFunc {
 					ksqlCluster2,
 				},
 			}
-			setLastPage(&clusterList, &clusterList.Metadata, r.URL)
+			setPageToken(&clusterList, &clusterList.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(clusterList)
 			require.NoError(t, err)
 		default:

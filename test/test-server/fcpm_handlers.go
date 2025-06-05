@@ -48,7 +48,7 @@ func handleFcpmComputePools(t *testing.T) http.HandlerFunc {
 				computePools = []flinkv2.FcpmV2ComputePool{euWest2}
 			}
 			v := flinkv2.FcpmV2ComputePoolList{Data: computePools}
-			setLastPage(&v, &v.Metadata, r.URL)
+			setPageToken(&v, &v.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(v)
 			require.NoError(t, err)
 		case http.MethodPost:
@@ -171,7 +171,7 @@ func handleFcpmRegions(t *testing.T) http.HandlerFunc {
 			}
 		}
 		regionsList := &flinkv2.FcpmV2RegionList{Data: regions}
-		setLastPage(regionsList, &regionsList.Metadata, r.URL)
+		setPageToken(regionsList, &regionsList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(regionsList)
 		require.NoError(t, err)
 	}

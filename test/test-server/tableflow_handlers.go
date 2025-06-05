@@ -116,7 +116,7 @@ func handleTableflowTopicsList(t *testing.T, environmentId, clusterId string) ht
 		topicTwo := getTopicManaged("topic-managed", environmentId, clusterId)
 
 		recordList := tableflowv1.TableflowV1TableflowTopicList{Data: []tableflowv1.TableflowV1TableflowTopic{topicOne, topicTwo}}
-		setLastPage(&recordList, &recordList.Metadata, r.URL)
+		setPageToken(&recordList, &recordList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
 	}
@@ -283,7 +283,7 @@ func handleCatalogIntegrationList(t *testing.T, environment, clusterId string) h
 		catalogIntegrationTwo.Status.SetPhase("PENDING")
 
 		recordList := tableflowv1.TableflowV1CatalogIntegrationList{Data: []tableflowv1.TableflowV1CatalogIntegration{catalogIntegrationOne, catalogIntegrationTwo}}
-		setLastPage(&recordList, &recordList.Metadata, r.URL)
+		setPageToken(&recordList, &recordList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
 	}

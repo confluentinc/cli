@@ -84,7 +84,7 @@ func handleCustomCodeLoggings(t *testing.T) http.HandlerFunc {
 					},
 				},
 			}
-			setLastPage(customCodeLoggingList, &customCodeLoggingList.Metadata, r.URL)
+			setPageToken(customCodeLoggingList, &customCodeLoggingList.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(customCodeLoggingList)
 			require.NoError(t, err)
 		}

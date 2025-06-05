@@ -411,7 +411,7 @@ func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 					},
 				},
 			}
-			setLastPage(customPluginList, &customPluginList.Metadata, r.URL)
+			setPageToken(customPluginList, &customPluginList.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(customPluginList)
 			require.NoError(t, err)
 		}
@@ -525,7 +525,7 @@ func handleCustomConnectorPluginsVersions(t *testing.T) http.HandlerFunc {
 					},
 				},
 			}
-			setLastPage(customPluginVersionList, &customPluginVersionList.Metadata, r.URL)
+			setPageToken(customPluginVersionList, &customPluginVersionList.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(customPluginVersionList)
 			require.NoError(t, err)
 		}

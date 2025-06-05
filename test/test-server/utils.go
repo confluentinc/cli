@@ -408,11 +408,12 @@ func buildUser(id int32, email, firstName, lastName, resourceId string) *ccloudv
 	}
 }
 
-func setLastPage[T any](resourceList ResourceList[T], meta ListMeta, url *url.URL) {
-	if url.Query().Get("page_token") == "" {
+// Set a page token for an empty second page
+func setPageToken[T any](resourceList ResourceList[T], meta ListMeta, url *url.URL) {
+	if url.Query().Get("page_token") == "" { // Initial response: set a page token
 		nextPage := fmt.Sprintf("%s&%s", url.String(), "page_token=UvmDWOB1iwfAIBPj6EYb")
 		meta.SetNext(nextPage)
-	} else {
+	} else { // Second response: set no page token, and return an empty data list
 		var zero T
 		resourceList.SetData(zero)
 	}

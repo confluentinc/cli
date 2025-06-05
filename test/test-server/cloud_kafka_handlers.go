@@ -87,7 +87,7 @@ func handleKafkaClientQuotas(t *testing.T) http.HandlerFunc {
 					},
 				},
 			}
-			setLastPage(&resp, &resp.Metadata, r.URL)
+			setPageToken(&resp, &resp.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(resp)
 			require.NoError(t, err)
 		case http.MethodPost:
