@@ -44,6 +44,7 @@ type out struct {
 	DnsResolution                              string            `human:"DNS Resolution,omitempty" serialized:"dns_resolution,omitempty"`
 	DnsDomain                                  string            `human:"DNS Domain,omitempty" serialized:"dns_domain,omitempty"`
 	ZonalSubdomains                            map[string]string `human:"Zonal Subdomains,omitempty" serialized:"zonal_subdomains,omitempty"`
+	ZoneInfo                                   []string          `human:"Zone Info,omitempty" serialized:"zone_info,omitempty"`
 	IdleSince                                  time.Time         `human:"Idle Since,omitempty" serialized:"idle_since,omitempty"`
 }
 
@@ -95,6 +96,11 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 	phase := network.Status.GetPhase()
 	supportedConnectionTypes := network.Status.GetSupportedConnectionTypes()
 
+	zoneInfoStr, err := formatZoneInfoItems(network.Spec.GetZonesInfo())
+	if err != nil {
+		return err
+	}
+
 	human := &out{
 		Id:                       network.GetId(),
 		Environment:              network.Spec.Environment.GetId(),
@@ -103,12 +109,13 @@ func printTable(cmd *cobra.Command, network networkingv1.NetworkingV1Network) er
 		Cloud:                    cloud,
 		Region:                   network.Spec.GetRegion(),
 		Zones:                    network.Spec.GetZones(),
+		ZoneInfo:                 zoneInfoStr,
 		Phase:                    phase,
 		SupportedConnectionTypes: supportedConnectionTypes,
 		ActiveConnectionTypes:    network.Status.GetActiveConnectionTypes(),
 	}
 
-	describeFields := []string{"Id", "Environment", "Name", "Gateway", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes"}
+	describeFields := []string{"Id", "Environment", "Name", "Gateway", "Cloud", "Region", "Zones", "Phase", "SupportedConnectionTypes", "ActiveConnectionTypes", "ZoneInfo"}
 
 	if slices.Contains(supportedConnectionTypes, "PRIVATELINK") {
 		human.DnsResolution = network.Spec.DnsConfig.GetResolution()
@@ -385,4 +392,20 @@ func addGatewayFlag(cmd *cobra.Command, c *pcmd.AuthenticatedCLICommand) {
 
 		return autocompleteGateways(c.V2Client, environmentId)
 	})
+}
+
+func formatZoneInfoItems(zoneInfoItems []networkingv1.NetworkingV1ZoneInfo) ([]string, error) {
+	var formattedItems []string
+
+	for _, item := range zoneInfoItems {
+		if item.ZoneId != nil && item.Cidr != nil {
+			formattedItems = append(formattedItems, fmt.Sprintf("%s=%s", *item.ZoneId, *item.Cidr))
+		} else if item.Cidr != nil {
+			formattedItems = append(formattedItems, *item.Cidr)
+		} else {
+			return []string{}, fmt.Errorf("zone info item is missing CIDR")
+		}
+	}
+
+	return formattedItems, nil
 }
