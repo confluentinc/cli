@@ -45,6 +45,6 @@ func (c *command) catalogDelete(cmd *cobra.Command, args []string) error {
 		return client.DeleteCatalog(c.createContext(), name)
 	}
 
-	_, err = deletion.Delete(args, deleteFunc, resource.FlinkCatalog)
+	_, err = deletion.Delete(cmd, args, deleteFunc, resource.FlinkCatalog)
 	return err
 }

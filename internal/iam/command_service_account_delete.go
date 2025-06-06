@@ -1,13 +1,10 @@
 package iam
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/deletion"
-	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
@@ -44,12 +41,9 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 	}
 
 	deleteFunc := func(id string) error {
-		if err := c.V2Client.DeleteIamServiceAccount(id); err != nil {
-			return fmt.Errorf(errors.DeleteResourceErrorMsg, resource.ServiceAccount, id, err)
-		}
-		return nil
+		return c.V2Client.DeleteIamServiceAccount(id)
 	}
 
-	_, err := deletion.Delete(args, deleteFunc, resource.ServiceAccount)
+	_, err := deletion.Delete(cmd, args, deleteFunc, resource.ServiceAccount)
 	return err
 }

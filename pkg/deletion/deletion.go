@@ -6,6 +6,8 @@ import (
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/form"
@@ -15,16 +17,15 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
+var pastTenseMap = map[string]string{
+	"delete":    "deleted",
+	"disable":   "disabled",
+	"undelete":  "undeleted",
+	"uninstall": "uninstalled",
+}
+
 func ValidateAndConfirm(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType string) error {
-	if err := resource.ValidatePrefixes(resourceType, args); err != nil {
-		return err
-	}
-
-	if err := resource.ValidateArgs(cmd, args, resourceType, checkExistence); err != nil {
-		return err
-	}
-
-	return ConfirmPrompt(cmd, DefaultYesNoDeletePromptString(resourceType, args, ""))
+	return ValidateAndConfirmWithExtraWarning(cmd, args, checkExistence, resourceType, "")
 }
 
 func ValidateAndConfirmWithExtraWarning(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType string, extraWarning string) error {
@@ -36,7 +37,7 @@ func ValidateAndConfirmWithExtraWarning(cmd *cobra.Command, args []string, check
 		return err
 	}
 
-	return ConfirmPrompt(cmd, DefaultYesNoDeletePromptString(resourceType, args, extraWarning))
+	return ConfirmPrompt(cmd, DefaultYesNoPromptString(cmd, resourceType, args, extraWarning))
 }
 
 func ConfirmPrompt(cmd *cobra.Command, promptMsg string) error {
@@ -59,12 +60,13 @@ func ConfirmPrompt(cmd *cobra.Command, promptMsg string) error {
 	return nil
 }
 
-func DeleteWithoutMessage(args []string, callDeleteEndpoint func(string) error) ([]string, error) {
+func DeleteWithoutMessage(cmd *cobra.Command, args []string, callDeleteEndpoint func(string) error) ([]string, error) {
 	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
+	operation := cmd.CalledAs()
 	var deletedIds []string
 	for _, id := range args {
 		if err := callDeleteEndpoint(id); err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("failed to delete %s: %w", id, err))
+			errs = multierror.Append(errs, fmt.Errorf("failed to %s %s: %w", operation, id, err))
 		} else {
 			deletedIds = append(deletedIds, id)
 		}
@@ -73,43 +75,31 @@ func DeleteWithoutMessage(args []string, callDeleteEndpoint func(string) error) 
 	return deletedIds, errs.ErrorOrNil()
 }
 
-func Delete(args []string, callDeleteEndpoint func(string) error, resourceType string) ([]string, error) {
-	deletedIds, err := DeleteWithoutMessage(args, callDeleteEndpoint)
+func Delete(cmd *cobra.Command, args []string, callDeleteEndpoint func(string) error, resourceType string) ([]string, error) {
+	deletedIds, err := DeleteWithoutMessage(cmd, args, callDeleteEndpoint)
 
-	DeletedResourceMsg := "Deleted %s %s.\n"
+	operation := cases.Title(language.Und).String(pastTenseMap[cmd.CalledAs()])
+	DeletedResourceMsg := "%s %s %s.\n"
 	if len(deletedIds) == 1 {
-		output.Printf(false, DeletedResourceMsg, resourceType, fmt.Sprintf(`"%s"`, deletedIds[0]))
+		output.Printf(false, DeletedResourceMsg, operation, resourceType, fmt.Sprintf(`"%s"`, deletedIds[0]))
 	} else if len(deletedIds) > 1 {
-		output.Printf(false, DeletedResourceMsg, plural.Plural(resourceType), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
+		output.Printf(false, DeletedResourceMsg, operation, plural.Plural(resourceType), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
 	}
 
 	return deletedIds, err
 }
 
-func DefaultYesNoDeletePromptString(resourceType string, idList []string, extraWarning string) string {
+func DefaultYesNoPromptString(cmd *cobra.Command, resourceType string, idList []string, extraWarning string) string {
+	operation := cmd.CalledAs()
 	var promptMsg string
 	if len(idList) == 1 {
-		promptMsg = fmt.Sprintf(`Are you sure you want to delete %s "%s"?`, resourceType, idList[0])
-		promptMsg += extraWarning
+		promptMsg = fmt.Sprintf(`Are you sure you want to %s %s "%s"?`, operation, resourceType, idList[0])
 	} else {
-		plural := plural.Plural(resourceType)
-		promptMsg = fmt.Sprintf("Are you sure you want to delete %s %s?", plural, utils.ArrayToCommaDelimitedString(idList, "and"))
-		promptMsg += extraWarning
+		promptMsg = fmt.Sprintf("Are you sure you want to %s %s %s?", operation, plural.Plural(resourceType), utils.ArrayToCommaDelimitedString(idList, "and"))
 	}
+	promptMsg += extraWarning
 
 	return promptMsg
-}
-
-func ValidateAndConfirmUndeletion(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType, name string) error {
-	if err := resource.ValidatePrefixes(resourceType, args); err != nil {
-		return err
-	}
-
-	if err := resource.ValidateArgs(cmd, args, resourceType, checkExistence); err != nil {
-		return err
-	}
-
-	return ConfirmPrompt(cmd, DefaultYesNoUndeletePromptString(resourceType, args))
 }
 
 func UndeleteWithoutMessage(args []string, callUndeleteEndpoint func(string) error) ([]string, error) {
@@ -137,15 +127,4 @@ func Undelete(args []string, callUndeleteEndpoint func(string) error, resourceTy
 	}
 
 	return undeletedIds, err
-}
-
-func DefaultYesNoUndeletePromptString(resourceType string, idList []string) string {
-	var promptMsg string
-	if len(idList) == 1 {
-		promptMsg = fmt.Sprintf(`Are you sure you want to undelete %s "%s"?`, resourceType, idList[0])
-	} else {
-		promptMsg = fmt.Sprintf("Are you sure you want to undelete %ss %s?", resourceType, utils.ArrayToCommaDelimitedString(idList, "and"))
-	}
-
-	return promptMsg
 }

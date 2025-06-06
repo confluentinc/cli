@@ -43,6 +43,6 @@ func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteProviderShare(id)
 	}
 
-	_, err := deletion.Delete(args, deleteFunc, resource.ProviderShare)
+	_, err := deletion.Delete(cmd, args, deleteFunc, resource.ProviderShare)
 	return err
 }

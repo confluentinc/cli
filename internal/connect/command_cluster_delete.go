@@ -67,7 +67,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	_, err = deletion.Delete(args, deleteFunc, resource.Connector)
+	_, err = deletion.Delete(cmd, args, deleteFunc, resource.Connector)
 	return err
 }
 

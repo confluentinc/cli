@@ -50,7 +50,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	deletedIds, err := deletion.Delete(args, deleteFunc, resource.KafkaCluster)
+	deletedIds, err := deletion.Delete(cmd, args, deleteFunc, resource.KafkaCluster)
 
 	errs := multierror.Append(err, c.removeKafkaClusterConfigs(deletedIds))
 	if errs.ErrorOrNil() != nil {
