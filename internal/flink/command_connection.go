@@ -87,6 +87,12 @@ func AddConnectionSecretFlags(cmd *cobra.Command) {
 	cmd.Flags().String("service-key", "", fmt.Sprintf("Specify service key for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["service-key"], "or")))
 	cmd.Flags().String("username", "", fmt.Sprintf("Specify username for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["username"], "or")))
 	cmd.Flags().String("password", "", fmt.Sprintf("Specify password for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["password"], "or")))
+	cmd.Flags().String("auth-type", "", fmt.Sprintf("Specify authentication type for the type : %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["auth-type"], "or")))
+	cmd.Flags().String("bearer-token", "", fmt.Sprintf("Specify bearer token for BEARER authentication type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["bearer-token"], "or")))
+	cmd.Flags().String("oauth2-token-endpoint", "", fmt.Sprintf("Specify oauth2 token endpoint: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["oauth2-token-endpoint"], "or")))
+	cmd.Flags().String("oauth2-client-id", "", fmt.Sprintf("Specify oauth2 client id: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["oauth2-client-id"], "or")))
+	cmd.Flags().String("oauth2-client-secret", "", fmt.Sprintf("Specify oauth2 client secret: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["oauth2-client-secret"], "or")))
+	cmd.Flags().String("oauth2-scope", "", fmt.Sprintf("Specify oauth2 scope: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["oauth2-scope"], "or")))
 }
 
 func validateConnectionType(connectionType string) error {
@@ -100,53 +106,138 @@ func validateConnectionSecrets(cmd *cobra.Command, connectionType string) (map[s
 	var connectionSecrets []string
 	connectionSecrets = append(connectionSecrets, flink.ConnectionTypeSecretMapping[connectionType]...)
 
-	for key := range flink.ConnectionSecretTypeMapping {
-		secret, err := cmd.Flags().GetString(key)
-		if err != nil {
-			return nil, err
-		}
-		if secret != "" && !slices.Contains(connectionSecrets, key) {
-			return nil, errors.NewErrorWithSuggestions(fmt.Sprintf("%s is invalid for connection %s.", key, connectionType), fmt.Sprintf("Valid secret types are %s.", utils.ArrayToCommaDelimitedString(connectionSecrets, "or")))
-		}
-	}
-
-	requiredSecretKeys := flink.ConnectionRequiredSecretMapping[connectionType]
-	var optionalSecretKeys []string
-	for _, secretKey := range flink.ConnectionTypeSecretMapping[connectionType] {
-		if !slices.Contains(requiredSecretKeys, secretKey) {
-			optionalSecretKeys = append(optionalSecretKeys, secretKey)
-		}
-	}
-
 	secretMap := map[string]string{}
-	for _, requiredKey := range requiredSecretKeys {
-		secret, err := cmd.Flags().GetString(requiredKey)
+	var requiredSecretKeys []string
+	var optionalSecretKeys []string
+
+	dynamicKey, hasDynamicKey := flink.ConnectionTypeDynamicKeyMapping[connectionType]
+	if hasDynamicKey {
+		dynamicKeyValue, err := cmd.Flags().GetString(dynamicKey)
 		if err != nil {
 			return nil, err
 		}
-		if secret == "" {
-			return nil, fmt.Errorf("must provide %s for type %s", requiredKey, connectionType)
+		if dynamicKeyValue == "" {
+			return nil, fmt.Errorf("must provide %s for connection %s", dynamicKey, connectionType)
 		}
-		backendKey, ok := flink.ConnectionSecretBackendKeyMapping[requiredKey]
+
+		backendKey, ok := flink.ConnectionSecretBackendKeyMapping[dynamicKey]
 		if !ok {
-			return nil, fmt.Errorf(`backend key not found for "%s"`, requiredKey)
+			return nil, fmt.Errorf(`backend key not found for "%s"`, dynamicKey)
 		}
-		secretMap[backendKey] = secret
-	}
+		secretMap[backendKey] = dynamicKeyValue
 
-	for _, optionalSecretKey := range optionalSecretKeys {
-		secret, err := cmd.Flags().GetString(optionalSecretKey)
-		if err != nil {
-			return nil, err
+		requiredSecretKeys, exists := flink.ConnectionDynamicRequiredSecretMapping[connectionType][dynamicKeyValue]
+		if !exists {
+			validTypes := make([]string, 0, len(flink.ConnectionDynamicRequiredSecretMapping[connectionType]))
+			for k := range flink.ConnectionDynamicRequiredSecretMapping[connectionType] {
+				validTypes = append(validTypes, k)
+			}
+			return nil, errors.NewErrorWithSuggestions(
+				fmt.Sprintf("invalid %s %s for connection %s", dynamicKey, dynamicKeyValue, connectionType),
+				fmt.Sprintf("Valid types are %s.", utils.ArrayToCommaDelimitedString(validTypes, "or")),
+			)
 		}
 
-		backendKey, ok := flink.ConnectionSecretBackendKeyMapping[optionalSecretKey]
-		if !ok {
-			return nil, fmt.Errorf("backend key not found for %s", optionalSecretKey)
+		allPossibleKeys, exists := flink.ConnectionDynamicSecretMapping[connectionType][dynamicKeyValue]
+		if exists {
+			connectionSecrets = append(connectionSecrets, allPossibleKeys...)
 		}
 
-		if secret != "" {
+		for key := range flink.ConnectionSecretTypeMapping {
+			secret, err := cmd.Flags().GetString(key)
+			if err != nil {
+				return nil, err
+			}
+			if secret != "" && !slices.Contains(connectionSecrets, key) {
+				return nil, errors.NewErrorWithSuggestions(
+					fmt.Sprintf("%s is invalid for connection %s with %s %s.", key, connectionType, dynamicKey, dynamicKeyValue),
+					fmt.Sprintf("Valid secret types are %s.", utils.ArrayToCommaDelimitedString(connectionSecrets, "or")),
+				)
+			}
+		}
+
+		for _, secretKey := range allPossibleKeys {
+			if !slices.Contains(requiredSecretKeys, secretKey) {
+				optionalSecretKeys = append(optionalSecretKeys, secretKey)
+			}
+		}
+
+		for _, requiredKey := range requiredSecretKeys {
+			secret, err := cmd.Flags().GetString(requiredKey)
+			if err != nil {
+				return nil, err
+			}
+			if secret == "" {
+				return nil, fmt.Errorf("must provide %s for %s %s on connection %s", requiredKey, dynamicKey, dynamicKeyValue, connectionType)
+			}
+			backendKey, ok := flink.ConnectionSecretBackendKeyMapping[requiredKey]
+			if !ok {
+				return nil, fmt.Errorf(`backend key not found for "%s"`, requiredKey)
+			}
 			secretMap[backendKey] = secret
+		}
+
+		for _, optionalKey := range optionalSecretKeys {
+			secret, err := cmd.Flags().GetString(optionalKey)
+			if err != nil {
+				return nil, err
+			}
+			if secret != "" {
+				backendKey, ok := flink.ConnectionSecretBackendKeyMapping[optionalKey]
+				if !ok {
+					return nil, fmt.Errorf(`backend key not found for "%s"`, optionalKey)
+				}
+				secretMap[backendKey] = secret
+			}
+		}
+	} else {
+		for key := range flink.ConnectionSecretTypeMapping {
+			secret, err := cmd.Flags().GetString(key)
+			if err != nil {
+				return nil, err
+			}
+			if secret != "" && !slices.Contains(connectionSecrets, key) {
+				return nil, errors.NewErrorWithSuggestions(
+					fmt.Sprintf("%s is invalid for connection %s.", key, connectionType),
+					fmt.Sprintf("Valid secret types are %s.", utils.ArrayToCommaDelimitedString(connectionSecrets, "or")),
+				)
+			}
+		}
+
+		requiredSecretKeys = flink.ConnectionRequiredSecretMapping[connectionType]
+		for _, secretKey := range flink.ConnectionTypeSecretMapping[connectionType] {
+			if !slices.Contains(requiredSecretKeys, secretKey) {
+				optionalSecretKeys = append(optionalSecretKeys, secretKey)
+			}
+		}
+
+		for _, requiredKey := range requiredSecretKeys {
+			secret, err := cmd.Flags().GetString(requiredKey)
+			if err != nil {
+				return nil, err
+			}
+			if secret == "" {
+				return nil, fmt.Errorf("must provide %s for type %s", requiredKey, connectionType)
+			}
+			backendKey, ok := flink.ConnectionSecretBackendKeyMapping[requiredKey]
+			if !ok {
+				return nil, fmt.Errorf(`backend key not found for "%s"`, requiredKey)
+			}
+			secretMap[backendKey] = secret
+		}
+
+		for _, optionalKey := range optionalSecretKeys {
+			secret, err := cmd.Flags().GetString(optionalKey)
+			if err != nil {
+				return nil, err
+			}
+			if secret != "" {
+				backendKey, ok := flink.ConnectionSecretBackendKeyMapping[optionalKey]
+				if !ok {
+					return nil, fmt.Errorf("backend key not found for %s", optionalKey)
+				}
+				secretMap[backendKey] = secret
+			}
 		}
 	}
 
