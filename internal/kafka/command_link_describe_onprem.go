@@ -42,6 +42,6 @@ func (c *linkCommand) describeOnPrem(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(newLinkOnPrem(data, ""))
-	table.Filter(getListFieldsOnPrem(false))
+	table.Filter(getListFields(false))
 	return table.Print()
 }
