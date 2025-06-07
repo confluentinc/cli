@@ -153,13 +153,3 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 
 	return nil
 }
-
-func getListFieldsOnPrem(includeTopics bool) []string {
-	x := []string{"Name"}
-
-	if includeTopics {
-		x = append(x, "TopicName")
-	}
-
-	return append(x, "SourceCluster", "DestinationCluster", "RemoteCluster", "State", "Error", "ErrorMessage")
-}
