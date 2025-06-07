@@ -1,0 +1,4 @@
+Error: the `--cku` flag can only be used when creating a dedicated Kafka cluster
+
+Suggestions:
+    Specify a dedicated cluster with `--type`.
