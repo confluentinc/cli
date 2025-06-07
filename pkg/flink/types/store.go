@@ -12,3 +12,12 @@ type StoreInterface interface {
 	WaitPendingStatement(ctx context.Context, statement ProcessedStatement) (*ProcessedStatement, *StatementError)
 	WaitForTerminalStatementState(ctx context.Context, statement ProcessedStatement) (*ProcessedStatement, *StatementError)
 }
+
+type StoreInterfaceOnPrem interface {
+	ProcessStatement(statement string) (*ProcessedStatementOnPrem, *StatementError)
+	FetchStatementResults(prem ProcessedStatementOnPrem) (*ProcessedStatementOnPrem, *StatementError)
+	StopStatement(statementName string) bool
+	DeleteStatement(statementName string) bool
+	WaitPendingStatement(ctx context.Context, statement ProcessedStatementOnPrem) (*ProcessedStatementOnPrem, *StatementError)
+	WaitForTerminalStatementState(ctx context.Context, statement ProcessedStatementOnPrem) (*ProcessedStatementOnPrem, *StatementError)
+}

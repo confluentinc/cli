@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 )
@@ -54,4 +55,9 @@ func ConvertToInternalResults(results []any, resultSchema flinkgatewayv1.SqlV1Re
 		Headers: headers,
 		Rows:    convertedResults,
 	}, nil
+}
+
+// TODO: Fix this function to make it compatible with the CMF way of handling the results.
+func ConvertToInternalResultsOnPrem(results cmfsdk.StatementResults, resultSchema cmfsdk.ResultSchema) (*types.StatementResults, error) {
+	return &types.StatementResults{}, nil
 }

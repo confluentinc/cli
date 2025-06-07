@@ -38,3 +38,17 @@ type ResultFetcherInterface interface {
 	GetMaterializedStatementResults() *MaterializedStatementResults
 	GetLastRefreshTimestamp() *time.Time
 }
+
+type ResultFetcherInterfaceOnPrem interface {
+	GetRefreshState() RefreshState
+	IsTableMode() bool
+	ToggleTableMode()
+	ToggleRefresh()
+	IsRefreshRunning() bool
+	Init(statement ProcessedStatementOnPrem)
+	Close()
+	SetRefreshCallback(func())
+	GetStatement() ProcessedStatementOnPrem
+	GetMaterializedStatementResults() *MaterializedStatementResults
+	GetLastRefreshTimestamp() *time.Time
+}

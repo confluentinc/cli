@@ -26,6 +26,16 @@ type OnPremCMFRestFlagValues struct {
 	clientKeyPath  string
 }
 
+type CmfClientInterface interface {
+	GetStatement(ctx context.Context, environment, name string) (cmfsdk.Statement, error)
+	ListStatements(ctx context.Context, environment, computePool, status string) ([]cmfsdk.Statement, error)
+	CreateStatement(ctx context.Context, environment string, statement cmfsdk.Statement) (cmfsdk.Statement, error)
+	ListStatementExceptions(ctx context.Context, environment, statementName string) (cmfsdk.StatementExceptionList, error)
+	DeleteStatement(ctx context.Context, environment, statement string) error
+	UpdateStatement(ctx context.Context, environment, statementName string, statement cmfsdk.Statement) error
+}
+
+// TODO: check if we need the AuthToken as the CCloudClient does
 type CmfRestClient struct {
 	*cmfsdk.APIClient
 }
@@ -389,6 +399,18 @@ func (cmfClient *CmfRestClient) ListStatementExceptions(ctx context.Context, env
 		return cmfsdk.StatementExceptionList{}, fmt.Errorf(`failed to list exceptions for statement "%s" in the environment "%s": %s`, statementName, environment, parsedErr)
 	}
 	return exceptionList, nil
+}
+
+func (cmfClient *CmfRestClient) GetStatementResults(ctx context.Context, environment, statementName, pageToken string) (cmfsdk.StatementResult, error) {
+	req := cmfClient.DefaultApi.GetStatementResult(ctx, environment, statementName)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+	resp, httpResponse, err := req.Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.StatementResult{}, fmt.Errorf(`failed to get result for statement "%s" in the environment "%s": %s`, statementName, environment, parsedErr)
+	}
+	return resp, nil
 }
 
 func (cmfClient *CmfRestClient) CreateCatalog(ctx context.Context, kafkaCatalog cmfsdk.KafkaCatalog) (cmfsdk.KafkaCatalog, error) {

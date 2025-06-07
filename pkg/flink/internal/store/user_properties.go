@@ -45,7 +45,7 @@ func NewUserProperties(appOptions *types.ApplicationOptions) types.UserPropertie
 	return NewUserPropertiesWithDefaults(getDefaultProperties(appOptions), getInitialProperties(appOptions))
 }
 
-// add initial props
+// NewUserPropertiesWithDefaults add initial props
 func NewUserPropertiesWithDefaults(defaultProperties map[string]string, initialProperties map[string]string) types.UserPropertiesInterface {
 	userProperties := UserProperties{
 		defaultProperties: defaultProperties,
