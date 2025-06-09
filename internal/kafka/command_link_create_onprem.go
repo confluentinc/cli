@@ -28,8 +28,16 @@ func (c *linkCommand) newCreateCommandOnPrem() *cobra.Command {
 				Code: "confluent kafka link create my-link --destination-cluster 123456789 --config config.txt",
 			},
 			examples.Example{
-				Text: "Create a cluster link using command line flags.",
-				Code: "confluent kafka link create my-link --destination-cluster 123456789 --destination-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret --config link.mode=SOURCE",
+				Text: "Create a source cluster link using command line flags.",
+				Code: "confluent kafka link create my-link --destination-cluster 123456789 --destination-bootstrap-server my-host:1234 --destination-api-key remote-key --destination-api-secret remote-secret --source-api-key local-key --source-api-secret local-secret --config link.mode=SOURCE,connection.mode=OUTBOUND",
+			},
+			examples.Example{
+				Text: "Create a destination cluster link using command line flags.",
+				Code: "confluent kafka link create my-link --source-cluster 123456789 --source-bootstrap-server my-host:1234 --source-api-key remote-key --source-api-secret remote-secret --config link.mode=DESTINATION,connection.mode=INBOUND",
+			},
+			examples.Example{
+				Text: "Create a bidirectional cluster link using command line flags.",
+				Code: "confluent kafka link create my-link --remote-cluster 123456789 --remote-bootstrap-server my-host:1234 --remote-api-key remote-key --remote-api-secret remote-secret --local-api-key local-key --local-api-secret local-secret --config link.mode=BIDIRECTIONAL",
 			},
 		),
 	}
