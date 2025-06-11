@@ -1,6 +1,1 @@
-Created cluster link "destination_initiated_link" with configs:
-"bootstrap.servers"="my-host:1234"
-"link.mode"="DESTINATION"
-"sasl.mechanism"="PLAIN"
-"security.protocol"="SASL_SSL"
-
+Error: only source-initiated or bidirectional links can be created for Confluent Platform from the CLI
