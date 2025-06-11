@@ -78,6 +78,6 @@ func (c *linkCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 			list.Add(newLinkOnPrem(link, ""))
 		}
 	}
-	list.Filter(getListFields(includeTopics))
+	list.Filter(getListFieldsOnPrem(includeTopics))
 	return list.Print()
 }

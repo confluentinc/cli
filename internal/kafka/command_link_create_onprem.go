@@ -32,10 +32,6 @@ func (c *linkCommand) newCreateCommandOnPrem() *cobra.Command {
 				Code: "confluent kafka link create my-link --destination-cluster 123456789 --destination-bootstrap-server my-host:1234 --destination-api-key remote-key --destination-api-secret remote-secret --source-api-key local-key --source-api-secret local-secret --config link.mode=SOURCE,connection.mode=OUTBOUND",
 			},
 			examples.Example{
-				Text: "Create a destination cluster link using command line flags.",
-				Code: "confluent kafka link create my-link --source-cluster 123456789 --source-bootstrap-server my-host:1234 --source-api-key remote-key --source-api-secret remote-secret --config link.mode=DESTINATION,connection.mode=INBOUND",
-			},
-			examples.Example{
 				Text: "Create a bidirectional cluster link using command line flags.",
 				Code: "confluent kafka link create my-link --remote-cluster 123456789 --remote-bootstrap-server my-host:1234 --remote-api-key remote-key --remote-api-secret remote-secret --local-api-key local-key --local-api-secret local-secret --config link.mode=BIDIRECTIONAL",
 			},
@@ -66,6 +62,10 @@ func (c *linkCommand) newCreateCommandOnPrem() *cobra.Command {
 	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link configuration. Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	cobra.CheckErr(cmd.Flags().MarkHidden(configFileFlagName))
 	cmd.MarkFlagsMutuallyExclusive("config", configFileFlagName)
+
+	// Hide flags for destination links; removing them causes a flag read error instead of the proper error
+	cobra.CheckErr(cmd.Flags().MarkHidden(sourceClusterIdFlagName))
+	cobra.CheckErr(cmd.Flags().MarkHidden(sourceBootstrapServerFlagName))
 
 	cmd.MarkFlagsOneRequired(sourceClusterIdFlagName, destinationClusterIdFlagName, remoteClusterIdFlagName)
 
@@ -107,6 +107,11 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 	configMap, linkModeMetadata, err := c.getConfigMapAndLinkMode(configMap)
 	if err != nil {
 		return err
+	}
+
+	linkMode := linkModeMetadata.mode
+	if linkMode != Source && linkMode != Bidirectional {
+		return fmt.Errorf("only source-initiated or bidirectional links can be created for Confluent Platform from the CLI")
 	}
 
 	if err := c.addSecurityConfigToMap(cmd, linkModeMetadata, configMap); err != nil {
@@ -160,4 +165,14 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 	output.Println(c.Config.EnableColor, linkConfigsCommandOutput(configMap))
 
 	return nil
+}
+
+func getListFieldsOnPrem(includeTopics bool) []string {
+	x := []string{"Name"}
+
+	if includeTopics {
+		x = append(x, "TopicName")
+	}
+
+	return append(x, "DestinationCluster", "RemoteCluster")
 }
