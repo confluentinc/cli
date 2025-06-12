@@ -655,7 +655,8 @@ func getAwsNetwork(id, name, phase string, connectionTypes []string) networkingv
 					Kind: "AwsNetwork",
 				},
 			},
-			IdleSince: networkingv1.PtrTime(time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)),
+			IdleSince:      networkingv1.PtrTime(time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)),
+			EndpointSuffix: networkingv1.PtrString("-"),
 		},
 	}
 
