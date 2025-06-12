@@ -98,7 +98,6 @@ func (s *StoreOnPrem) ProcessStatement(statement string) (*types.ProcessedStatem
 }
 
 // TODO: having the Flink configuration can be hard, ignore it for now
-// TODO: also check how the properties are passed
 func createSqlV1StatementOnPrem(statement string, statementName string, computePoolName string, properties map[string]string) cmfsdk.Statement {
 	return cmfsdk.Statement{
 		ApiVersion: "cmf.confluent.io/v1",
