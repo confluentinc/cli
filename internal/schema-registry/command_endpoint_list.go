@@ -1,8 +1,11 @@
 package schemaregistry
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/v4/pkg/cloud"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/schemaregistry"
@@ -43,11 +46,32 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 		return schemaregistry.ErrNotEnabled
 	}
 	cluster := clusters[0]
+
+	privateRegionalEndpoints := cluster.Spec.PrivateNetworkingConfig.GetRegionalEndpoints()
+	if privateRegionalEndpoints == nil {
+		privateRegionalEndpoints = make(map[string]string)
+	}
+
+	// Note the region has to be empty slice instead of `nil` in case of no filter
+	// Filter out non-AWS networks for initial release
+	networks, err := c.V2Client.ListNetworks(environmentId, nil, []string{cloud.Aws}, []string{}, nil, []string{"READY"}, nil)
+	if err != nil {
+		return fmt.Errorf("unable to list Schema Registry endpoints: failed to list networks: %w", err)
+	}
+	for _, network := range networks {
+		suffix := network.Status.GetEndpointSuffix()
+		if suffix == "-" {
+			continue
+		}
+		endpoint := fmt.Sprintf("https://%s%s", cluster.GetId(), suffix)
+		privateRegionalEndpoints[network.GetId()] = endpoint
+	}
+
 	table := output.NewTable(cmd)
 	table.Add(&listEndpoint{
 		Public:          cluster.Spec.GetHttpEndpoint(),
 		Private:         cluster.Spec.GetPrivateHttpEndpoint(),
-		PrivateRegional: cluster.Spec.PrivateNetworkingConfig.GetRegionalEndpoints(),
+		PrivateRegional: privateRegionalEndpoints,
 		Catalog:         cluster.Spec.GetCatalogHttpEndpoint(),
 	})
 
