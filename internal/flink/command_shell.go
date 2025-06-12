@@ -253,7 +253,7 @@ func (c *command) startFlinkSqlClientOnPrem(prerunner pcmd.PreRunner, cmd *cobra
 	}
 
 	//TODO: may need to double check the MDS authentication
-	return client.StartAppOnPrem(flinkCmfClient, c.authenticated(prerunner.AuthenticatedWithMDS(c.AuthenticatedCLICommand), cmd, jwtValidator), opts, reportUsage(cmd, c.Config, unsafeTrace))
+	return client.StartAppOnPrem(flinkCmfClient, c.authenticated(prerunner.AuthenticatedWithMDS(c.AuthenticatedCLICommand), cmd, jwtValidator), opts)
 }
 
 func (c *command) startWithLocalMode(configKeys, configValues []string) error {

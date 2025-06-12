@@ -26,11 +26,10 @@ type ApplicationOnPrem struct {
 	interactiveOutputController types.OutputControllerInterface
 	baseOutputController        types.OutputControllerInterface
 	refreshToken                func() error
-	reportUsage                 func()
 	appOptions                  types.ApplicationOptions
 }
 
-func StartAppOnPrem(flinkCmfClient *flink.CmfRestClient, tokenRefreshFunc func() error, appOptions types.ApplicationOptions, reportUsageFunc func()) error {
+func StartAppOnPrem(flinkCmfClient *flink.CmfRestClient, tokenRefreshFunc func() error, appOptions types.ApplicationOptions) error {
 	// TODO: Check with Santwana to see how should we refresh the token for CP Flink
 	synchronizedTokenRefreshFunc := synchronizedTokenRefresh(tokenRefreshFunc)
 
@@ -74,7 +73,6 @@ func StartAppOnPrem(flinkCmfClient *flink.CmfRestClient, tokenRefreshFunc func()
 		interactiveOutputController: interactiveOutputController,
 		baseOutputController:        baseOutputController,
 		refreshToken:                synchronizedTokenRefreshFunc,
-		reportUsage:                 reportUsageFunc,
 		appOptions:                  appOptions,
 	}
 	components.PrintWelcomeHeader(appOptions)
@@ -121,7 +119,6 @@ func (a *ApplicationOnPrem) panicRecovery() {
 	log.CliLogger.Warn("Internal error occurred. Executing panic recovery.")
 	a.statementController.CleanupStatement()
 	a.interactiveOutputController = controller.NewInteractiveOutputControllerOnPrem(components.NewTableView(), a.resultFetcher, a.userProperties, a.appOptions.GetVerbose())
-	a.reportUsage()
 }
 
 func (a *ApplicationOnPrem) isAuthenticated() bool {
