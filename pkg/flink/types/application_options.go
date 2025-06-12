@@ -15,13 +15,13 @@ type ApplicationOptions struct {
 	UserAgent        string
 	EnvironmentId    string
 	EnvironmentName  string
-	OrganizationId   string
+	OrganizationId   string // Cloud only
 	Database         string
 	ComputePoolId    string
-	ServiceAccountId string
+	ServiceAccountId string // Cloud only
 	Verbose          bool
-	LSPBaseUrl       string
-	GatewayUrl       string
+	LSPBaseUrl       string // Cloud only
+	GatewayUrl       string // Cloud only
 	Context          *config.Context
 }
 
