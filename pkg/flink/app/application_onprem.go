@@ -35,8 +35,7 @@ func StartAppOnPrem(flinkCmfClient *flink.CmfRestClient, tokenRefreshFunc func()
 	synchronizedTokenRefreshFunc := synchronizedTokenRefresh(tokenRefreshFunc)
 
 	// Load history of previous commands from cache file
-	// TODO: Separate the history file location based on CCloud or OnPrem
-	historyStore := history.LoadHistory()
+	historyStore := history.LoadHistoryOnPrem()
 
 	// Instantiate Application Controller - this is the top level controller that will be passed down to all other controllers
 	// and should be used for functions that are not specific to a component
