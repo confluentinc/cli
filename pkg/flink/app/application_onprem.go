@@ -3,18 +3,14 @@ package app
 import (
 	"time"
 
-	"github.com/sourcegraph/jsonrpc2"
-
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/flink"
 	"github.com/confluentinc/cli/v4/pkg/flink/components"
-	"github.com/confluentinc/cli/v4/pkg/flink/config"
 	"github.com/confluentinc/cli/v4/pkg/flink/internal/controller"
 	"github.com/confluentinc/cli/v4/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/v4/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/v4/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/v4/pkg/flink/internal/utils"
-	"github.com/confluentinc/cli/v4/pkg/flink/lsp"
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 	"github.com/confluentinc/cli/v4/pkg/log"
 )
@@ -35,14 +31,8 @@ type ApplicationOnPrem struct {
 }
 
 func StartAppOnPrem(flinkCmfClient *flink.CmfRestClient, tokenRefreshFunc func() error, appOptions types.ApplicationOptions, reportUsageFunc func()) error {
-	synchronizedTokenRefreshFunc := synchronizedTokenRefresh(tokenRefreshFunc)
 	// TODO: Check with Santwana to see how should we refresh the token for CP Flink
-	getAuthToken := func() string {
-		if authErr := synchronizedTokenRefreshFunc(); authErr != nil {
-			log.CliLogger.Warnf("Failed to refresh token: %v", authErr)
-		}
-		return ""
-	}
+	synchronizedTokenRefreshFunc := synchronizedTokenRefresh(tokenRefreshFunc)
 
 	// Load history of previous commands from cache file
 	// TODO: Separate the history file location based on CCloud or OnPrem
@@ -57,18 +47,6 @@ func StartAppOnPrem(flinkCmfClient *flink.CmfRestClient, tokenRefreshFunc func()
 	dataStore := store.NewStoreOnPrem(flinkCmfClient, appController.ExitApplication, userProperties, &appOptions, synchronizedTokenRefreshFunc)
 	resultFetcher := results.NewResultFetcherOnPrem(dataStore)
 
-	// TODO: remove this LSP code block since CP Flink does not support LSP
-	// Instantiate LSP
-	handlerCh := make(chan *jsonrpc2.Request) // This is the channel used for the messages received by the language to be passed through to the input controller
-	lspClient, _, err := lsp.NewInitializedLspClient(getAuthToken, appOptions.GetLSPBaseUrl(), appOptions.GetOrganizationId(), appOptions.GetEnvironmentId(), handlerCh)
-	if err != nil {
-		log.CliLogger.Errorf("Failed to connect to the language service. Check your network."+
-			" If you're using private networking, you might still be able to submit queries. If that's the case and you"+
-			"want to uso language features like autocompletion, error highlighting and up to date syntax highlighting,"+
-			" you or your system admin might need to setup DNS resolution for both \"flink\" AND \"flinkpls\""+
-			" (e.g. flinkpls.us-east-2.aws.private.confluent.cloud). Contact support for assistance. Error: %s", err.Error())
-	}
-
 	stdinBefore := utils.GetStdin()
 	consoleParser, err := utils.GetConsoleParser()
 	if err != nil {
@@ -78,24 +56,10 @@ func StartAppOnPrem(flinkCmfClient *flink.CmfRestClient, tokenRefreshFunc func()
 	appController.AddCleanupFunction(func() {
 		utils.TearDownConsoleParser(consoleParser)
 		utils.RestoreStdin(stdinBefore)
-		if lspClient != nil {
-			lspClient.ShutdownAndExit()
-		}
 	})
 
 	// Instantiate Component Controllers
-	lspCompleter := lsp.LspCompleter(lspClient, func() lsp.CliContext {
-		return lsp.CliContext{
-			AuthToken:           getAuthToken(),
-			Catalog:             userProperties.Get(config.KeyCatalog),
-			Database:            userProperties.Get(config.KeyDatabase),
-			ComputePoolId:       appOptions.GetComputePoolId(),
-			LspDocumentUri:      lspClient.CurrentDocumentUri(),
-			StatementProperties: userProperties.GetMaskedNonLocalProperties(),
-		}
-	})
-
-	inputController := controller.NewInputController(historyStore, lspCompleter, handlerCh)
+	inputController := controller.NewInputController(historyStore, nil, nil)
 	statementController := controller.NewStatementControllerOnPrem(appController, dataStore, consoleParser)
 	interactiveOutputController := controller.NewInteractiveOutputControllerOnPrem(components.NewTableView(), resultFetcher, userProperties, appOptions.GetVerbose())
 	baseOutputController := controller.NewBaseOutputControllerOnPrem(resultFetcher, inputController.GetWindowWidth, userProperties)
