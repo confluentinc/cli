@@ -59,6 +59,8 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner, cfg *config.Config) 
 		}
 		cmd.Flags().String("compute-pool", "", "The compute pool name to execute the Flink SQL statement.")
 		cmd.Flags().String("environment", "", "Name of the Flink environment.")
+		cmd.Flags().String("catalog", "", "The name of the default catalog.")
+		cmd.Flags().String("database", "", "The name of the default database.")
 		addCmfFlagSet(cmd)
 		pcmd.AddOutputFlag(cmd)
 
@@ -216,6 +218,16 @@ func (c *command) startFlinkSqlClientOnPrem(prerunner pcmd.PreRunner, cmd *cobra
 		return err
 	}
 
+	catalog, err := cmd.Flags().GetString("catalog")
+	if err != nil {
+		return err
+	}
+
+	database, err := cmd.Flags().GetString("database")
+	if err != nil {
+		return err
+	}
+
 	unsafeTrace, err := c.Command.Flags().GetBool("unsafe-trace")
 	if err != nil {
 		return err
@@ -230,17 +242,14 @@ func (c *command) startFlinkSqlClientOnPrem(prerunner pcmd.PreRunner, cmd *cobra
 	verbose, _ := cmd.Flags().GetCount("verbose")
 
 	opts := types.ApplicationOptions{
-		Context:          c.Context,
-		UnsafeTrace:      unsafeTrace,
-		UserAgent:        c.Version.UserAgent,
-		EnvironmentName:  environment,
-		EnvironmentId:    "",
-		OrganizationId:   "",
-		Database:         "",
-		ComputePoolId:    computePool,
-		ServiceAccountId: "",
-		Verbose:          verbose > 0,
-		LSPBaseUrl:       "",
+		Context:         c.Context,
+		UnsafeTrace:     unsafeTrace,
+		UserAgent:       c.Version.UserAgent,
+		EnvironmentName: catalog,
+		EnvironmentId:   environment,
+		Database:        database,
+		ComputePoolId:   computePool,
+		Verbose:         verbose > 0,
 	}
 
 	//TODO: may need to double check the MDS authentication
