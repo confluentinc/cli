@@ -354,14 +354,18 @@ func getCmkBasicDescribeCluster(id, name string) *cmkv2.CmkV2Cluster {
 	}
 }
 
-func getCmkDedicatedDescribeCluster(id, name string, cku int32) *cmkv2.CmkV2Cluster {
+func getCmkDedicatedDescribeCluster(id, name string, cku int32, zones []string) *cmkv2.CmkV2Cluster {
+	if len(zones) == 0 {
+		zones = []string{"auto-selected"}
+	}
+
 	return &cmkv2.CmkV2Cluster{
 		Spec: &cmkv2.CmkV2ClusterSpec{
 			DisplayName: cmkv2.PtrString(name),
 			Cloud:       cmkv2.PtrString("aws"),
 			Region:      cmkv2.PtrString("us-west-2"),
 			Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
-				CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: cku},
+				CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: cku, Zones: &zones},
 			},
 			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
 			HttpEndpoint:           cmkv2.PtrString(TestKafkaRestProxyUrl.String()),
