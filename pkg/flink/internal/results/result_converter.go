@@ -21,6 +21,18 @@ func convertToInternalField(field any, details flinkgatewayv1.ColumnDetails) typ
 	}
 }
 
+func convertToInternalFieldOnPrem(field any, details cmfsdk.ResultSchemaColumn) types.StatementResultField {
+	converter := GetConverterForTypeOnPrem(details.GetType())
+	if converter != nil {
+		return converter(field)
+	}
+
+	return types.AtomicStatementResultField{
+		Type:  types.Null,
+		Value: "NULL",
+	}
+}
+
 func ConvertToInternalResults(results []any, resultSchema flinkgatewayv1.SqlV1ResultSchema) (*types.StatementResults, error) {
 	headers := make([]string, len(resultSchema.GetColumns()))
 	for idx, column := range resultSchema.GetColumns() {
@@ -57,7 +69,33 @@ func ConvertToInternalResults(results []any, resultSchema flinkgatewayv1.SqlV1Re
 	}, nil
 }
 
-// TODO: Fix this function to make it compatible with the CMF way of handling the results.
 func ConvertToInternalResultsOnPrem(results cmfsdk.StatementResults, resultSchema cmfsdk.ResultSchema) (*types.StatementResults, error) {
-	return &types.StatementResults{}, nil
+	headers := make([]string, len(resultSchema.GetColumns()))
+	for idx, column := range resultSchema.GetColumns() {
+		headers[idx] = column.GetName()
+	}
+
+	convertedResults := make([]types.StatementResultRow, len(results.GetData()))
+	for rowIdx, resultItem := range results.GetData() {
+		items, _ := resultItem["row"].([]any)
+		if len(items) != len(resultSchema.GetColumns()) {
+			return nil, fmt.Errorf("given result row does not match the provided schema")
+		}
+
+		convertedFields := make([]types.StatementResultField, len(items))
+		for colIdx, field := range items {
+			columnSchema := resultSchema.GetColumns()[colIdx]
+			convertedFields[colIdx] = convertToInternalFieldOnPrem(field, columnSchema)
+		}
+
+		op, _ := resultItem["op"].(float64)
+		convertedResults[rowIdx] = types.StatementResultRow{
+			Operation: types.StatementResultOperation(op),
+			Fields:    convertedFields,
+		}
+	}
+	return &types.StatementResults{
+		Headers: headers,
+		Rows:    convertedResults,
+	}, nil
 }
