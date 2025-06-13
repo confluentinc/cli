@@ -158,7 +158,12 @@ func (s *StoreOnPrem) FetchStatementResults(statement types.ProcessedStatementOn
 	}
 	statement.StatementResults = convertedResults
 
-	//TODO: we have CCloud page token here, CMF SDK does not support it yet, double check with Fabian
+	statementMetadata := statementResultObj.GetMetadata()
+	extractedToken, err := extractPageToken(statementMetadata.GetAnnotations()["nextPageToken"])
+	if err != nil {
+		return nil, types.NewStatementError(err)
+	}
+	statement.PageToken = extractedToken
 	return &statement, nil
 }
 
