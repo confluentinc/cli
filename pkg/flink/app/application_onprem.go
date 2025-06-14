@@ -30,7 +30,6 @@ type ApplicationOnPrem struct {
 }
 
 func StartAppOnPrem(flinkCmfClient *flink.CmfRestClient, tokenRefreshFunc func() error, appOptions types.ApplicationOptions) error {
-	// TODO: Check with Santwana to see how should we refresh the token for CP Flink
 	synchronizedTokenRefreshFunc := synchronizedTokenRefresh(tokenRefreshFunc)
 
 	// Load history of previous commands from cache file

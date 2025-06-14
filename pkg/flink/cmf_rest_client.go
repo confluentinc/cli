@@ -35,9 +35,9 @@ type CmfClientInterface interface {
 	UpdateStatement(ctx context.Context, environment, statementName string, statement cmfsdk.Statement) error
 }
 
-// TODO: check if we need the AuthToken as the CCloudClient does
 type CmfRestClient struct {
 	*cmfsdk.APIClient
+	AuthToken string
 }
 
 func NewCmfRestHttpClient(restFlags *OnPremCMFRestFlagValues) (*http.Client, error) {
@@ -144,6 +144,13 @@ func ResolveOnPremCmfRestFlags(cmd *cobra.Command) (*OnPremCMFRestFlagValues, er
 		clientKeyPath:  clientKeyPath,
 	}
 	return values, nil
+}
+
+func (cmfClient *CmfRestClient) CmfApiContext() context.Context {
+	if cmfClient.AuthToken == "" {
+		return context.Background()
+	}
+	return context.WithValue(context.Background(), cmfsdk.ContextAccessToken, cmfClient.AuthToken)
 }
 
 // CreateApplication Create a Flink application in the specified environment.

@@ -84,8 +84,9 @@ func (s *StoreOnPrem) ProcessStatement(statement string) (*types.ProcessedStatem
 	properties := s.Properties.GetNonLocalProperties()
 
 	utils.OutputInfof("Statement name: %s\nSubmitting statement...", statementName)
-	statementObj, err := s.authenticatedCmfClient().CreateStatement(
-		context.Background(),
+	client := s.authenticatedCmfClient()
+	statementObj, err := client.CreateStatement(
+		client.CmfApiContext(),
 		s.appOptions.GetEnvironmentId(),
 		createSqlV1StatementOnPrem(statement, statementName, computePoolId, properties),
 	)
@@ -146,7 +147,8 @@ func (s *StoreOnPrem) FetchStatementResults(statement types.ProcessedStatementOn
 	}
 
 	// Process remote statements that are now running or completed
-	statementResultObj, err := s.authenticatedCmfClient().GetStatementResults(context.Background(), s.appOptions.GetEnvironmentId(), statement.StatementName, "")
+	client := s.authenticatedCmfClient()
+	statementResultObj, err := client.GetStatementResults(client.CmfApiContext(), s.appOptions.GetEnvironmentId(), statement.StatementName, "")
 	if err != nil {
 		return nil, &types.StatementError{Message: err.Error()}
 	}
@@ -168,8 +170,8 @@ func (s *StoreOnPrem) FetchStatementResults(statement types.ProcessedStatementOn
 }
 
 func (s *StoreOnPrem) DeleteStatement(statementName string) bool {
-	// TODO: check if the context should be propagated from the caller
-	if err := s.authenticatedCmfClient().DeleteStatement(context.Background(), s.appOptions.EnvironmentName, statementName); err != nil {
+	client := s.authenticatedCmfClient()
+	if err := client.DeleteStatement(client.CmfApiContext(), s.appOptions.EnvironmentName, statementName); err != nil {
 		log.CliLogger.Warnf("Failed to delete the statement: %v", err)
 		return false
 	}
@@ -178,8 +180,8 @@ func (s *StoreOnPrem) DeleteStatement(statementName string) bool {
 }
 
 func (s *StoreOnPrem) StopStatement(statementName string) bool {
-	// TODO: check if the context should be propagated from the caller
-	statement, err := s.authenticatedCmfClient().GetStatement(context.Background(), s.appOptions.EnvironmentName, statementName)
+	client := s.authenticatedCmfClient()
+	statement, err := client.GetStatement(client.CmfApiContext(), s.appOptions.EnvironmentName, statementName)
 
 	if err != nil {
 		log.CliLogger.Warnf("Failed to fetch statement to stop it: %v", err)
@@ -193,7 +195,7 @@ func (s *StoreOnPrem) StopStatement(statementName string) bool {
 	}
 	spec.SetStopped(true)
 
-	if err := s.authenticatedCmfClient().UpdateStatement(context.Background(), statementName, s.appOptions.GetEnvironmentName(), statement); err != nil {
+	if err := client.UpdateStatement(client.CmfApiContext(), statementName, s.appOptions.GetEnvironmentName(), statement); err != nil {
 		log.CliLogger.Warnf("Failed to stop the statement: %v", err)
 		return false
 	}
@@ -219,7 +221,8 @@ func (s *StoreOnPrem) waitForPendingStatement(ctx context.Context, statementName
 			return nil, &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", StatusCode: 499}
 		default:
 			start := time.Now()
-			statementObj, err := s.authenticatedCmfClient().GetStatement(context.Background(), s.appOptions.GetEnvironmentId(), statementName)
+			client := s.authenticatedCmfClient()
+			statementObj, err := client.GetStatement(client.CmfApiContext(), s.appOptions.GetEnvironmentId(), statementName)
 			getRequestDuration = time.Since(start)
 
 			statusDetail := s.getStatusDetail(statementObj)
@@ -289,7 +292,8 @@ func (s *StoreOnPrem) getStatusDetail(statementObj cmfsdk.Statement) string {
 	}
 
 	// if the status detail field is empty, we check if there's an exception instead
-	exceptionList, err := s.authenticatedCmfClient().ListStatementExceptions(context.Background(), s.appOptions.GetEnvironmentId(), statementObj.Metadata.GetName())
+	client := s.authenticatedCmfClient()
+	exceptionList, err := client.ListStatementExceptions(client.CmfApiContext(), s.appOptions.GetEnvironmentId(), statementObj.Metadata.GetName())
 	if err != nil {
 		return ""
 	}
@@ -320,7 +324,8 @@ func (s *StoreOnPrem) WaitForTerminalStatementState(ctx context.Context, stateme
 			output.Println(false, "Detached from statement.")
 			return &statement, nil
 		default:
-			statementObj, err := s.authenticatedCmfClient().GetStatement(context.Background(), s.appOptions.GetEnvironmentId(), statement.StatementName)
+			client := s.authenticatedCmfClient()
+			statementObj, err := client.GetStatement(client.CmfApiContext(), s.appOptions.GetEnvironmentId(), statement.StatementName)
 			status := statementObj.GetStatus()
 			statusDetail := status.GetDetail()
 			if err != nil {

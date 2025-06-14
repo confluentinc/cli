@@ -101,6 +101,32 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 	}
 }
 
+func (c *command) authenticatedOnPrem(authenticated func(*cobra.Command, []string) error, cmd *cobra.Command) func() error {
+	return func() error {
+		if !c.Config.IsOnPremLogin() { // don't refresh tokens when running in unauthenticated mode
+			return nil
+		}
+
+		authToken := c.Context.GetAuthToken()
+		authRefreshToken := c.Context.GetAuthRefreshToken()
+		if err := c.Context.UpdateAuthTokens(authToken, authRefreshToken); err != nil {
+			return err
+		}
+
+		if err := authenticated(cmd, nil); err != nil {
+			return err
+		}
+
+		cmfClient, err := c.GetCmfClient(cmd)
+		if err != nil {
+			return err
+		}
+		cmfClient.AuthToken = c.Context.GetAuthToken()
+
+		return nil
+	}
+}
+
 func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Command) error {
 	if featureflags.Manager.BoolVariation("cli.flink.internal", c.Context, config.CliLaunchDarklyClient, true, false) {
 		// get config keys and values from flags
@@ -237,8 +263,8 @@ func (c *command) startFlinkSqlClientOnPrem(prerunner pcmd.PreRunner, cmd *cobra
 	if err != nil {
 		return err
 	}
+	flinkCmfClient.AuthToken = c.Context.GetAuthToken()
 
-	jwtValidator := jwt.NewValidator()
 	verbose, _ := cmd.Flags().GetCount("verbose")
 
 	opts := types.ApplicationOptions{
@@ -252,8 +278,7 @@ func (c *command) startFlinkSqlClientOnPrem(prerunner pcmd.PreRunner, cmd *cobra
 		Verbose:         verbose > 0,
 	}
 
-	//TODO: may need to double check the MDS authentication
-	return client.StartAppOnPrem(flinkCmfClient, c.authenticated(prerunner.AuthenticatedWithMDS(c.AuthenticatedCLICommand), cmd, jwtValidator), opts)
+	return client.StartAppOnPrem(flinkCmfClient, c.authenticatedOnPrem(prerunner.AuthenticatedWithMDS(c.AuthenticatedCLICommand), cmd), opts)
 }
 
 func (c *command) startWithLocalMode(configKeys, configValues []string) error {
