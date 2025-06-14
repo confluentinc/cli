@@ -13,14 +13,23 @@ func newLinkOnPrem(data kafkarestv3.ListLinksResponseData, topic string) *linkOu
 	listEntry := &linkOut{
 		Name:      data.LinkName,
 		TopicName: topic,
+		State:     data.LinkState,
 	}
 
 	if data.SourceClusterId != nil {
 		listEntry.SourceCluster = *data.SourceClusterId
 	}
-
 	if data.DestinationClusterId != nil {
 		listEntry.DestinationCluster = *data.DestinationClusterId
+	}
+	if data.RemoteClusterId != nil {
+		listEntry.RemoteCluster = *data.RemoteClusterId
+	}
+	if data.LinkError != "NO_ERROR" {
+		listEntry.Error = data.LinkError
+	}
+	if data.LinkErrorMessage != nil {
+		listEntry.ErrorMessage = *data.LinkErrorMessage
 	}
 
 	return listEntry
