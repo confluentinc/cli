@@ -75,7 +75,7 @@ func (k *KafkaClusterContext) GetActiveKafkaClusterConfig() *KafkaClusterConfig 
 	return kafkaEnvContext.KafkaClusterConfigs[kafkaEnvContext.ActiveKafkaCluster]
 }
 
-func (k *KafkaClusterContext) GetActiveKafkaClusterEndpointConfig() *KafkaClusterConfig {
+func (k *KafkaClusterContext) GetActiveKafkaClusterEndpoint() *KafkaClusterConfig {
 	// TODO: double check about pull value from config...
 	if !k.EnvContext {
 		return k.KafkaClusterConfigs[k.ActiveKafkaClusterEndpoint]

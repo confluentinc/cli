@@ -8,11 +8,15 @@ import (
 )
 
 type endpointOut struct {
-	IsCurrent bool   `human:"Current" serialized:"is_current"`
-	Endpoint  string `human:"Endpoint" serialized:"endpoint"`
-	Cloud     string `human:"Cloud" serialized:"cloud"`
-	Region    string `human:"Region" serialized:"region"`
-	Type      string `human:"Type" serialized:"type"`
+	IsCurrent bool `human:"Current" serialized:"is_current"`
+	//Endpoint  string `human:"Endpoint" serialized:"endpoint"`
+	//Cloud     string `human:"Cloud" serialized:"cloud"`
+	//Region    string `human:"Region" serialized:"region"`
+	//Type      string `human:"Type" serialized:"type"`
+	Endpoint               string `human:"Endpoint" serialized:"endpoint"`
+	KafkaBootstrapEndpoint string `human:"Kafka Bootstrap Endpoint" serialized:"kafka_bootstrap_endpoint"`
+	HttpEndpoint           string `human:"Http Endpoint" serialized:"http_endpoint"`
+	ConnectionType         string `human:"Connection Type" serialized:"connection_type"`
 }
 
 func (c *clusterCommand) newEndpointCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {

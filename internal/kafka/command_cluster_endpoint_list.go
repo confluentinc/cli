@@ -2,10 +2,13 @@ package kafka
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/spf13/cobra"
 )
 
 func (c *command) newEndpointListCommand() *cobra.Command {
@@ -29,26 +32,6 @@ func (c *command) newEndpointListCommand() *cobra.Command {
 	return cmd
 }
 
-/*
-cmk SDK
-- name: endpoints
-        $ref: '#/components/schemas/cmk.v2.EndpointsMap'
-        description: |
-          A map of endpoints for connecting to the Kafka cluster,
-          keyed by access_point_id. Access Point ID 'public' and 'privatelink' are reserved.
-          These can be used for different network access methods or regions.
-        read_only: true
-        example:
-          "ap1pni123":
-            kafka_bootstrap_endpoint: "lkc-s1232-00000.us-central1.gcp.private.confluent.cloud:9092"
-            http_endpoint: "https://lkc-s1232.us-central1.gcp.private.confluent.cloud:443"
-            connection_type: "PRIVATENETWORKINTERFACE"
-          "ap2platt67890":
-            kafka_bootstrap_endpoint: "lkc-00000-00000.us-central1.gcp.glb.confluent.cloud:9092"
-            http_endpoint: "https://lkc-00000-00000.us-central1.gcp.glb.confluent.cloud"
-            connection_type: "PRIVATELINK"
-*/
-
 func (c *command) endpointList(cmd *cobra.Command, args []string) error {
 	// Add logic for displaying endpoint, layer by layer
 	// check current environment... cloud... region...
@@ -67,5 +50,27 @@ func (c *command) endpointList(cmd *cobra.Command, args []string) error {
 
 	// display the endpoints corresponding to the specified cluster
 
-	return nil
+	clusterConfigs, _, err := c.V2Client.DescribeKafkaCluster(cluster, c.Context.GetCurrentEnvironment())
+	if err != nil {
+		log.CliLogger.Debugf("Error describing Kafka Cluster: %v", err)
+		return fmt.Errorf("Error retrieving configs for cluster %q", cluster)
+	}
+
+	clusterEndpoints := clusterConfigs.GetEndpoints()
+
+	list := output.NewList(cmd)
+	for accessPointId, attributes := range clusterEndpoints {
+
+		out := &endpointOut{
+			IsCurrent:              attributes.HttpEndpoint == c.Context.KafkaClusterContext.GetActiveKafkaClusterEndpoint(),
+			Endpoint:               accessPointId,
+			KafkaBootstrapEndpoint: attributes.KafkaBootstrapEndpoint,
+			HttpEndpoint:           attributes.HttpEndpoint,
+			ConnectionType:         attributes.ConnectionType,
+		}
+
+		list.Add(out)
+	}
+
+	return list.Print()
 }

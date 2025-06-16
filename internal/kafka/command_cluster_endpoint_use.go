@@ -2,11 +2,12 @@ package kafka
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/v4/pkg/errors"
-	"github.com/confluentinc/cli/v4/pkg/log"
+
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 func (c *command) newEndpointUseCommand() *cobra.Command {
@@ -82,7 +83,7 @@ func validateUserProvidedKafkaClusterEndpoint(endpoint, activeCluster string, c 
 
 	activeClusterEndpoints := activeClusterConfigs.GetEndpoints()
 
-	for k, v := range activeClusterEndpoints {
+	for _, v := range activeClusterEndpoints {
 		if v.GetHttpEndpoint() == endpoint {
 			log.CliLogger.Debugf("The specified endpoint %q is a valid %q endpoint", endpoint, v.GetConnectionType())
 			return true

@@ -66,6 +66,7 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().Int("cku", 0, `Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type "dedicated".`)
 	pcmd.AddByokKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddNetworkFlag(cmd, c.AuthenticatedCLICommand)
+	// is this possible??
 	cmd.Flags().String("endpoint", "", "Endpoint to be used for this Kafka cluster.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -140,7 +141,8 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		Availability: cmkv2.PtrString(availability),
 		Config:       setCmkClusterConfig(clusterType, 1),
 		Byok:         keyGlobalObjectReference,
-		// Any "endpoint" attribute are readOnly & immutable, does that mean we can't really specify with --endpoint?
+		// Can we specify cluster creation with --endpoint?
+		// does the user "have power" to specify an attribute in CREATE cluster operation?
 		// https://github.com/confluentinc/api/blob/master/cmk/minispec.yaml#L125-#L143
 		Endpoint: cmkv2.PtrString(endpoint),
 	}}
