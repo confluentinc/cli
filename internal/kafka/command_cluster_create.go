@@ -140,8 +140,9 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		Availability: cmkv2.PtrString(availability),
 		Config:       setCmkClusterConfig(clusterType, 1),
 		Byok:         keyGlobalObjectReference,
-		// maybe put it below?
-		ApiEndpoint: cmkv2.PtrString(endpoint),
+		// Any "endpoint" attribute are readOnly & immutable, does that mean we can't really specify with --endpoint?
+		// https://github.com/confluentinc/api/blob/master/cmk/minispec.yaml#L125-#L143
+		Endpoint: cmkv2.PtrString(endpoint),
 	}}
 
 	if cmd.Flags().Changed("cku") {
