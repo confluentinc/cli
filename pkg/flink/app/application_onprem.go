@@ -74,7 +74,7 @@ func StartAppOnPrem(flinkCmfClient *flink.CmfRestClient, tokenRefreshFunc func()
 		refreshToken:                synchronizedTokenRefreshFunc,
 		appOptions:                  appOptions,
 	}
-	components.PrintWelcomeHeader(appOptions)
+	components.PrintWelcomeHeaderOnPrem(appOptions)
 	return app.readEvalPrintLoop()
 }
 
