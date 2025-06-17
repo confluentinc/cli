@@ -21,6 +21,9 @@ func (c *consumerCommand) newGroupDescribeCommand() *cobra.Command {
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+
+	// add endpoint flag for all commands that calls GetKafkaREST()
+
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
