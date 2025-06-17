@@ -53,21 +53,25 @@ func (c *command) endpointList(cmd *cobra.Command, args []string) error {
 	clusterConfigs, _, err := c.V2Client.DescribeKafkaCluster(cluster, c.Context.GetCurrentEnvironment())
 	if err != nil {
 		log.CliLogger.Debugf("Error describing Kafka Cluster: %v", err)
-		return fmt.Errorf("Error retrieving configs for cluster %q", cluster)
+		return fmt.Errorf("error retrieving configs for cluster %q", cluster)
 	}
 
-	clusterEndpoints := clusterConfigs.GetEndpoints()
+	clusterEndpoints := clusterConfigs.Spec.GetEndpoints()
 
 	list := output.NewList(cmd)
 	for accessPointId, attributes := range clusterEndpoints {
 
 		out := &endpointOut{
-			IsCurrent:              attributes.HttpEndpoint == c.Context.KafkaClusterContext.GetActiveKafkaClusterEndpoint(),
-			Endpoint:               accessPointId,
-			KafkaBootstrapEndpoint: attributes.KafkaBootstrapEndpoint,
-			HttpEndpoint:           attributes.HttpEndpoint,
-			ConnectionType:         attributes.ConnectionType,
+			IsCurrent: attributes.HttpEndpoint == c.Context.KafkaClusterContext.GetActiveKafkaClusterEndpoint(),
+			Endpoint:  accessPointId,
+			//KafkaBootstrapEndpoint: attributes.KafkaBootstrapEndpoint,
+			HttpEndpoint:   attributes.HttpEndpoint,
+			ConnectionType: attributes.ConnectionType,
 		}
+
+		// between kafka_bootstrap_endpoint and http_endpoint, which one we want to display to customer? Which is more useful to display
+
+		// * | ap1pni123 | http... | PNI
 
 		list.Add(out)
 	}

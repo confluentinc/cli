@@ -48,13 +48,13 @@ func (c *command) endpointUse(cmd *cobra.Command, args []string) error {
 		)
 	}
 
-	endpoint := args[0]
-	if endpoint == "" {
-		return errors.NewErrorWithSuggestions(
-			"Invalid input: received endpoint is empty",
-			"Please specify a valid Kafka cluster endpoint.",
-		)
-	}
+	//endpoint := args[0]
+	//if endpoint == "" {
+	//	return errors.NewErrorWithSuggestions(
+	//		"Invalid input: received endpoint is empty",
+	//		"Please specify a valid Kafka cluster endpoint.",
+	//	)
+	//}
 
 	if valid := validateUserProvidedKafkaClusterEndpoint(endpoint, activeCluster, c); !valid {
 		suggestion := `Please run "confluent kafka cluster endpoint list" to see all available Kafka cluster endpoints, or "confluent kafka cluster use" to switch to a different cluster.`
@@ -84,6 +84,8 @@ func validateUserProvidedKafkaClusterEndpoint(endpoint, activeCluster string, c 
 	activeClusterEndpoints := activeClusterConfigs.GetEndpoints()
 
 	for _, v := range activeClusterEndpoints {
+		// check how complete this GetHttpEndpoint() returns, we're fine if returns everything.
+		// Add additional checks if the GetHttpEndpoint() returns partial endpoints
 		if v.GetHttpEndpoint() == endpoint {
 			log.CliLogger.Debugf("The specified endpoint %q is a valid %q endpoint", endpoint, v.GetConnectionType())
 			return true
