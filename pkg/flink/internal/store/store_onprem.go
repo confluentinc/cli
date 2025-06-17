@@ -213,7 +213,6 @@ func (s *StoreOnPrem) waitForPendingStatement(ctx context.Context, statementName
 	elapsedWaitTime := time.Millisecond * 300
 	// Variable used to we inform the user every 5 seconds that we're still fetching for results (waiting for them to be ready)
 	lastProgressUpdateTime := time.Second * 0
-	var capturedErrors []string
 	var phase types.PHASE
 	capturedErrorsLimit := 5
 	var getRequestDuration time.Duration
@@ -239,19 +238,6 @@ func (s *StoreOnPrem) waitForPendingStatement(ctx context.Context, statementName
 				processedStatement.StatusDetail = statusDetail
 				return processedStatement, nil
 			}
-
-			// if status.detail is filled we encountered a retryable server response
-			if statusDetail != "" {
-				capturedErrors = append(capturedErrors, statusDetail)
-			}
-		}
-
-		if len(capturedErrors) > capturedErrorsLimit {
-			return nil, &types.StatementError{
-				Message: fmt.Sprintf("the server can't process this statement right now, exiting after %d retries",
-					len(capturedErrors)),
-				FailureMessage: fmt.Sprintf("captured retryable errors: %s", strings.Join(capturedErrors, "; ")),
-			}
 		}
 
 		if getRequestDuration > waitTime {
@@ -276,15 +262,9 @@ func (s *StoreOnPrem) waitForPendingStatement(ctx context.Context, statementName
 		retries++
 	}
 
-	var errorsMsg string
-	if len(capturedErrors) > 0 {
-		errorsMsg = fmt.Sprintf("captured retryable errors: %s", strings.Join(capturedErrors, "; "))
-	}
-
 	return nil, &types.StatementError{
 		Message: fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET '%s'='10000';\" to adjust the maximum timeout in milliseconds.",
 			timeout.Seconds(), config.KeyResultsTimeout),
-		FailureMessage: errorsMsg,
 	}
 }
 
