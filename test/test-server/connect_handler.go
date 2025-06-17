@@ -16,6 +16,85 @@ import (
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 )
 
+type LoggingLogEntry struct {
+	Timestamp string `json:"timestamp"`
+	Level     string `json:"level"`
+	Message   string `json:"message"`
+	TaskId    string `json:"task_id,omitempty"`
+	Id        string `json:"id,omitempty"`
+}
+
+type LoggingSearchResponse struct {
+	Data       []LoggingLogEntry `json:"data"`
+	ApiVersion string            `json:"api_version"`
+	Kind       string            `json:"kind"`
+}
+
+func handleLogsSearch(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		// Set content type
+		w.Header().Set("Content-Type", "application/json")
+
+		var req struct {
+			CRN string `json:"crn"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		// Extract connector name from CRN
+		connectorName := ""
+		parts := strings.Split(req.CRN, "/")
+		for _, part := range parts {
+			if strings.HasPrefix(part, "connector=") {
+				connectorName = strings.TrimPrefix(part, "connector=")
+				break
+			}
+		}
+
+		if connectorName == "test-connector" {
+			response := LoggingSearchResponse{
+				Data: []LoggingLogEntry{
+					{
+						Timestamp: "2025-06-16T05:44:23.761Z",
+						Level:     "INFO",
+						Message:   "WorkerSourceTask{id=lcc-devc9myo50-0} Committing offsets for 130 acknowledged messages",
+						TaskId:    "task-0",
+						Id:        "lcc-devc9myo50",
+					},
+					{
+						Timestamp: "2025-06-16T05:43:23.757Z",
+						Level:     "INFO",
+						Message:   "WorkerSourceTask{id=lcc-devc9myo50-0} Committing offsets for 128 acknowledged messages",
+						TaskId:    "task-0",
+						Id:        "lcc-devc9myo50",
+					},
+				},
+				ApiVersion: "v1",
+				Kind:       "LoggingSearchResponse",
+			}
+			err := json.NewEncoder(w).Encode(response)
+			require.NoError(t, err)
+			return
+		}
+
+		// Return empty response for unknown connector names
+		response := LoggingSearchResponse{
+			Data:       []LoggingLogEntry{},
+			ApiVersion: "v1",
+			Kind:       "LoggingSearchResponse",
+		}
+		err := json.NewEncoder(w).Encode(response)
+		require.NoError(t, err)
+	}
+}
+
 var artifactStore = make(map[string]camv1.CamV1ConnectArtifact)
 
 // Handler for: "/api/cam/v1/connect-artifacts"
@@ -323,9 +402,25 @@ func handleConnectors(t *testing.T) http.HandlerFunc {
 					Name:   connectv1.PtrString("az-connector-2"),
 				},
 			}
+			thirdConnectorExpansion := connectv1.ConnectV1ConnectorExpansion{
+				Id: &connectv1.ConnectV1ConnectorExpansionId{Id: connectv1.PtrString("lcc-devc9myo50")},
+				Status: &connectv1.ConnectV1ConnectorExpansionStatus{
+					Name: "test-connector",
+					Connector: connectv1.ConnectV1ConnectorExpansionStatusConnector{
+						State: "RUNNING",
+					},
+					Tasks: &[]connectv1.InlineResponse2001Tasks{{Id: 1, State: "RUNNING"}},
+					Type:  "Sink",
+				},
+				Info: &connectv1.ConnectV1ConnectorExpansionInfo{
+					Config: &map[string]string{},
+					Name:   connectv1.PtrString("test-connector"),
+				},
+			}
 			err := json.NewEncoder(w).Encode(map[string]connectv1.ConnectV1ConnectorExpansion{
 				"az-connector":   firstConnectorExpansion,
 				"az-connector-2": secondConnectorExpansion,
+				"test-connector": thirdConnectorExpansion,
 			})
 			require.NoError(t, err)
 		} else if r.Method == http.MethodPost {
