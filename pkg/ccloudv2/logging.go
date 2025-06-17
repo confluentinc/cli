@@ -52,9 +52,7 @@ type LoggingSearchResponse struct {
 	Kind       string            `json:"kind"`
 }
 
-// SearchConnectorLogs searches logs for a specific connector using the Logging API
 func (c *Client) SearchConnectorLogs(environmentId, kafkaClusterId, connectorId, startTime, endTime string, levels []string, searchText string, pageSize int, pageToken string) (*LoggingSearchResponse, error) {
-	// Build the CRN for the connector
 	crn := fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/cloud-cluster=%s/connector=%s",
 		c.cfg.Context().GetCurrentOrganization(),
 		environmentId,
@@ -62,30 +60,12 @@ func (c *Client) SearchConnectorLogs(environmentId, kafkaClusterId, connectorId,
 		connectorId,
 	)
 
-	// Build the logging API URL using the specific logging subdomain
 	baseURL := c.cfg.Context().GetPlatformServer()
-	u, err := url.Parse(baseURL)
+	loggingURL, err := getLoggingUrl(baseURL)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse platform server URL: %w", err)
+		return nil, fmt.Errorf("failed to get logging API URL: %w", err)
 	}
 
-	// Use the logging-specific subdomain
-	if u.Host == "127.0.0.1:1024" || u.Host == "localhost:1024" {
-		// In test/mock environments, do not rewrite the host
-	} else if strings.Contains(u.Host, "devel.cpdev.cloud") {
-		u.Host = "api.logging.devel.cpdev.cloud"
-	} else if strings.Contains(u.Host, "stag.cpdev.cloud") {
-		u.Host = "api.logging.stag.cpdev.cloud"
-	} else if strings.Contains(u.Host, "confluent.cloud") {
-		u.Host = "api.logging.confluent.cloud"
-	} else {
-		// Fallback for other environments
-		u.Host = "api.logging." + strings.TrimPrefix(u.Host, "api.")
-	}
-	u.Path = "/logs/v1/search"
-	loggingURL := u.String()
-
-	// Build the request body
 	request := LoggingSearchRequest{
 		CRN: crn,
 		Search: LoggingSearchParams{
@@ -97,18 +77,51 @@ func (c *Client) SearchConnectorLogs(environmentId, kafkaClusterId, connectorId,
 		EndTime:   endTime,
 	}
 
-	// Marshal the request body
+	dataplaneToken, err := auth.GetDataplaneToken(c.cfg.Context())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get data plane token: %w", err)
+	}
+
+	req, err := getLoggingRequest(loggingURL, request, dataplaneToken, pageSize, pageToken)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create logging API request: %w", err)
+	}
+
+	httpClient := NewRetryableHttpClient(c.cfg, false)
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make HTTP request to logging API: %w\n", err)
+	}
+	defer resp.Body.Close()
+
+	responseBody, readErr := io.ReadAll(resp.Body)
+	if readErr != nil {
+		return nil, fmt.Errorf("logging API request failed with status %d and failed to read response body: %w", resp.StatusCode, readErr)
+	}
+
+	err = getResponseErrorMessage(resp.StatusCode, responseBody, crn)
+	if err != nil {
+		return nil, err
+	}
+
+	var logsResponse LoggingSearchResponse
+	if err := json.Unmarshal(responseBody, &logsResponse); err != nil {
+		return nil, fmt.Errorf("failed to decode logging API response: %w\nResponse body: %s\nResponse status: %d", err, string(responseBody), resp.StatusCode)
+	}
+
+	return &logsResponse, nil
+}
+
+func getLoggingRequest(loggingURL string, request LoggingSearchRequest, dataplaneToken string, pageSize int, pageToken string) (*http.Request, error) {
 	requestBody, err := json.Marshal(request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request body: %w", err)
 	}
 
-	// Build the URL with query parameters
-	u, err = url.Parse(loggingURL)
+	u, err := url.Parse(loggingURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse logging URL: %w", err)
 	}
-
 	query := u.Query()
 	if pageSize > 0 {
 		query.Set("page_size", strconv.Itoa(pageSize))
@@ -118,56 +131,47 @@ func (c *Client) SearchConnectorLogs(environmentId, kafkaClusterId, connectorId,
 	}
 	u.RawQuery = query.Encode()
 
-	// Create the HTTP request
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, u.String(), bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
 	}
-
-	// Set headers
 	req.Header.Set("Content-Type", "application/json")
-
-	// Get data plane token instead of control plane token
-	dataplaneToken, err := auth.GetDataplaneToken(c.cfg.Context())
-	if err != nil {
-		return nil, fmt.Errorf("failed to get data plane token: %w", err)
-	}
-
 	req.Header.Set("Authorization", "Bearer "+dataplaneToken)
+	return req, nil
+}
 
-	// Get HTTP client using the same pattern as other clients
-	httpClient := NewRetryableHttpClient(c.cfg, false)
-
-	// Make the HTTP request
-	resp, err := httpClient.Do(req)
+func getLoggingUrl(baseURL string) (string, error) {
+	u, err := url.Parse(baseURL)
 	if err != nil {
-		return nil, fmt.Errorf("failed to make HTTP request to logging API: %w\nRequest URL: %s\nRequest method: %s", err, u.String(), req.Method)
-	}
-	defer resp.Body.Close()
-
-	// Read response body for error details
-	responseBody, readErr := io.ReadAll(resp.Body)
-	if readErr != nil {
-		return nil, fmt.Errorf("logging API request failed with status %d and failed to read response body: %w", resp.StatusCode, readErr)
+		return "", fmt.Errorf("failed to parse platform server URL: %w", err)
 	}
 
-	// Check for HTTP errors with detailed information
-	if resp.StatusCode != http.StatusOK {
-		errorMsg := fmt.Sprintf("logging API request failed with status %d", resp.StatusCode)
+	if u.Host == "127.0.0.1:1024" || u.Host == "localhost:1024" {
+		// In test/mock environments, do not rewrite the host
+	} else if strings.Contains(u.Host, "devel.cpdev.cloud") {
+		u.Host = "api.logging.devel.cpdev.cloud"
+	} else if strings.Contains(u.Host, "stag.cpdev.cloud") {
+		u.Host = "api.logging.stag.cpdev.cloud"
+	} else if strings.Contains(u.Host, "confluent.cloud") {
+		u.Host = "api.logging.confluent.cloud"
+	} else {
+		u.Host = "api.logging." + strings.TrimPrefix(u.Host, "api.")
+	}
+	u.Path = "/logs/v1/search"
+	loggingURL := u.String()
+	return loggingURL, nil
+}
 
-		// Add response body if available
+func getResponseErrorMessage(statusCode int, responseBody []byte, crn string) error {
+	if statusCode != http.StatusOK {
+		errorMsg := fmt.Sprintf("logging API request failed with status %d", statusCode)
+
 		if len(responseBody) > 0 {
 			errorMsg += fmt.Sprintf("\nResponse body: %s", string(responseBody))
 		}
-
-		// Add request details for debugging
-		errorMsg += fmt.Sprintf("\nRequest URL: %s", u.String())
 		errorMsg += fmt.Sprintf("\nRequest CRN: %s", crn)
-		errorMsg += fmt.Sprintf("\nRequest time range: %s to %s", startTime, endTime)
-
-		// Add specific suggestions based on status code
 		var suggestions string
-		switch resp.StatusCode {
+		switch statusCode {
 		case http.StatusUnauthorized:
 			suggestions = "Please check your authentication. Try running 'confluent login' to refresh your credentials."
 		case http.StatusForbidden:
@@ -183,15 +187,7 @@ func (c *Client) SearchConnectorLogs(environmentId, kafkaClusterId, connectorId,
 		default:
 			suggestions = "Please check your connector ID, environment, cluster settings, and ensure you have proper permissions to access logs."
 		}
-
-		return nil, errors.NewErrorWithSuggestions(errorMsg, suggestions)
+		return errors.NewErrorWithSuggestions(errorMsg, suggestions)
 	}
-
-	// Parse the response (recreate reader since we already read the body)
-	var logsResponse LoggingSearchResponse
-	if err := json.Unmarshal(responseBody, &logsResponse); err != nil {
-		return nil, fmt.Errorf("failed to decode logging API response: %w\nResponse body: %s\nResponse status: %d", err, string(responseBody), resp.StatusCode)
-	}
-
-	return &logsResponse, nil
+	return nil
 }

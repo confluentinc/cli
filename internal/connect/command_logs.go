@@ -224,14 +224,12 @@ func (c *logsCommand) storeQueryInContext(logs *ccloudv2.LoggingSearchResponse, 
 }
 
 func writeLogsToFile(outputFile string, logs *ccloudv2.LoggingSearchResponse) error {
-	// Open file in append mode, create if it doesn't exist
 	file, err := os.OpenFile(outputFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return fmt.Errorf("failed to open file %s: %w", outputFile, err)
 	}
 	defer file.Close()
 
-	// Write each log entry individually
 	for _, log := range logs.Data {
 		logEntry := &logEntryOut{
 			Timestamp: log.Timestamp,
@@ -245,12 +243,10 @@ func writeLogsToFile(outputFile string, logs *ccloudv2.LoggingSearchResponse) er
 			return fmt.Errorf("failed to marshal log entry to JSON: %w", err)
 		}
 
-		// Write the log entry as a single line (JSONL format)
 		if _, err := file.Write(data); err != nil {
 			return fmt.Errorf("failed to write log entry to file %s: %w", outputFile, err)
 		}
 
-		// Add newline after each log entry
 		if _, err := file.WriteString("\n"); err != nil {
 			return fmt.Errorf("failed to write newline to file %s: %w", outputFile, err)
 		}
