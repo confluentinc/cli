@@ -58,22 +58,22 @@ func handleLogsSearch(t *testing.T) http.HandlerFunc {
 			}
 		}
 
-		if connectorName == "test-connector" {
+		if connectorName == "az-connector" {
 			response := LoggingSearchResponse{
 				Data: []LoggingLogEntry{
 					{
 						Timestamp: "2025-06-16T05:44:23.761Z",
 						Level:     "INFO",
-						Message:   "WorkerSourceTask{id=lcc-devc9myo50-0} Committing offsets for 130 acknowledged messages",
+						Message:   "WorkerSourceTask{id=lcc-123-0} Committing offsets for 130 acknowledged messages",
 						TaskId:    "task-0",
-						Id:        "lcc-devc9myo50",
+						Id:        "lcc-123",
 					},
 					{
 						Timestamp: "2025-06-16T05:43:23.757Z",
 						Level:     "INFO",
-						Message:   "WorkerSourceTask{id=lcc-devc9myo50-0} Committing offsets for 128 acknowledged messages",
+						Message:   "WorkerSourceTask{id=lcc-123-0} Committing offsets for 128 acknowledged messages",
 						TaskId:    "task-0",
-						Id:        "lcc-devc9myo50",
+						Id:        "lcc-123",
 					},
 				},
 				ApiVersion: "v1",

@@ -279,10 +279,10 @@ func (s *CLITestSuite) TestConnectOffset() {
 
 func (s *CLITestSuite) TestConnectLogs() {
 	tests := []CLITest{
-		{args: "connect logs lcc-devc9myo50 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z", fixture: "connect/logs/logs.golden"},
-		{args: "connect logs lcc-devc9myo50 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z -o json", fixture: "connect/logs/logs-json.golden"},
-		{args: "connect logs lcc-devc9myo50 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z -o yaml", fixture: "connect/logs/logs-yaml.golden"},
-		{args: "connect logs lcc-devc9myo50 --cluster lkc-123 --help", fixture: "connect/logs/logs-help.golden"},
+		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z", fixture: "connect/logs/logs.golden"},
+		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z -o json", fixture: "connect/logs/logs-json.golden"},
+		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z -o yaml", fixture: "connect/logs/logs-yaml.golden"},
+		{args: "connect logs lcc-123 --cluster lkc-123 --help", fixture: "connect/logs/logs-help.golden"},
 	}
 
 	for _, test := range tests {
