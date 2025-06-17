@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -39,6 +40,10 @@ func newLogsCommand(prerunner pcmd.PreRunner) *cobra.Command {
 				Code: `confluent connect logs lcc-123456 --level ERROR --start-time "2025-02-01T00:00:00Z" --end-time "2025-02-01T23:59:59Z"`,
 			},
 			examples.Example{
+				Text: "Query connector logs with log level ERROR and WARN between the provided time window:",
+				Code: `confluent connect logs lcc-123456 --level "ERROR|WARN" --start-time "2025-02-01T00:00:00Z" --end-time "2025-02-01T23:59:59Z"`,
+			},
+			examples.Example{
 				Text: "Query next page of connector logs for the same query by running the command repeatedly until \"No more logs for the current query\" is printed to the console:",
 				Code: `confluent connect logs lcc-123456 --level ERROR --start-time "2025-02-01T00:00:00Z" --end-time "2025-02-01T23:59:59Z" --next`,
 			},
@@ -58,7 +63,7 @@ func newLogsCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.RunE = c.queryLogs
 	cmd.Flags().String("start-time", "", "Start time for log query (e.g., 2025-02-01T00:00:00Z).")
 	cmd.Flags().String("end-time", "", "End time for log query (e.g., 2025-02-01T23:59:59Z).")
-	cmd.Flags().String("level", "ERROR", "Log level filter (INFO, WARN, ERROR). Defaults to ERROR.")
+	cmd.Flags().String("level", "ERROR", "Log level filter (INFO, WARN, ERROR). Defaults to ERROR. Use '|' to specify multiple levels (e.g., ERROR|WARN).")
 	cmd.Flags().String("search-text", "", "Search text within logs (optional).")
 	cmd.Flags().String("output-file", "", "Output file path to append connector logs (optional).")
 	cmd.Flags().Bool("next", false, "Whether to fetch next page of logs after the next execution of the command (optional).")
@@ -75,6 +80,9 @@ func newLogsCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 	connectorId := args[0]
+	if connectorId == "" {
+		return fmt.Errorf("connector ID cannot be empty")
+	}
 
 	startTime, err := cmd.Flags().GetString("start-time")
 	if err != nil {
@@ -90,6 +98,7 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	levels := strings.Split(level, "|")
 
 	searchText, err := cmd.Flags().GetString("search-text")
 	if err != nil {
@@ -106,6 +115,14 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if err := validateTimeFormat(startTime); err != nil {
+		return fmt.Errorf("invalid start-time format: %w", err)
+	}
+
+	if err := validateTimeFormat(endTime); err != nil {
+		return fmt.Errorf("invalid end-time format: %w", err)
+	}
+
 	currentLogQuery := &config.ConnectLogsQueryState{
 		StartTime:   startTime,
 		EndTime:     endTime,
@@ -113,14 +130,6 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 		SearchText:  searchText,
 		ConnectorId: connectorId,
 		PageToken:   "",
-	}
-	// Validate time format
-	if err := validateTimeFormat(startTime); err != nil {
-		return fmt.Errorf("invalid start-time format: %w", err)
-	}
-
-	if err := validateTimeFormat(endTime); err != nil {
-		return fmt.Errorf("invalid end-time format: %w", err)
 	}
 
 	kafkaCluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
@@ -133,59 +142,67 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to get environment ID: %w\nPlease ensure you have set an environment context with 'confluent environment use <env-id>' or specify --environment flag", err)
 	}
 
-	// Validate connector ID format (basic validation)
-	if connectorId == "" {
-		return fmt.Errorf("connector ID cannot be empty")
-	}
-
-	// Query logs using the V2Client
-	levels := []string{level}
-
-	// Add debug information for verbose mode
-	if verbosity, _ := cmd.Flags().GetCount("verbose"); verbosity >= 2 { // info level
-		output.Printf(c.Config.EnableColor, "Making logs API request with:\n")
-		output.Printf(c.Config.EnableColor, "  Connector ID: %s\n", connectorId)
-		output.Printf(c.Config.EnableColor, "  Environment: %s\n", environmentId)
-		output.Printf(c.Config.EnableColor, "  Cluster: %s\n", kafkaCluster.ID)
-		output.Printf(c.Config.EnableColor, "  Time range: %s to %s\n", startTime, endTime)
-		output.Printf(c.Config.EnableColor, "  Log levels: %v\n", levels)
-		if searchText != "" {
-			output.Printf(c.Config.EnableColor, "  Search text: %s\n", searchText)
-		}
-	}
-
 	connector, err := c.V2Client.GetConnectorExpansionById(connectorId, environmentId, kafkaCluster.ID)
 	if err != nil {
 		return err
 	}
-
 	connectorName := connector.Info.GetName()
-	lastLogQuery := c.Context.GetConnectLogsQueryState()
-	var lastQueryPageToken string
-	if next {
-		if lastLogQuery != nil && (lastLogQuery.StartTime == startTime &&
-			lastLogQuery.EndTime == endTime &&
-			lastLogQuery.Level == level &&
-			lastLogQuery.SearchText == searchText &&
-			lastLogQuery.ConnectorId == connectorId) {
-			lastQueryPageToken = lastLogQuery.PageToken
-			if lastQueryPageToken == "" {
-				output.Printf(c.Config.EnableColor, "No more logs for the current query\n")
-				return nil
-			}
-		} else {
-			lastQueryPageToken = ""
-		}
-	} else {
-		lastQueryPageToken = ""
+
+	lastQueryPageToken, err := c.getPageTokenFromStoredQuery(next, currentLogQuery)
+	// if error not nil this means that there are no further pages for current query hence return
+	if err != nil {
+		return nil
 	}
 
 	logs, err := c.V2Client.SearchConnectorLogs(environmentId, kafkaCluster.ID, connectorName, startTime, endTime, levels, searchText, 200, lastQueryPageToken)
 	if err != nil {
-		// Add context to the error
 		return fmt.Errorf("failed to query connector logs: %w", err)
 	}
 
+	err = c.storeQueryInContext(logs, currentLogQuery)
+	if err != nil {
+		return err
+	}
+
+	if outputFile != "" {
+		return writeLogsToFile(outputFile, logs)
+	}
+
+	if output.GetFormat(cmd).IsSerialized() {
+		return output.SerializedOutput(cmd, logs.Data)
+	}
+
+	return printHumanLogs(cmd, logs, connectorId)
+}
+
+func (c *logsCommand) getPageTokenFromStoredQuery(next bool, currentLogQuery *config.ConnectLogsQueryState) (string, error) {
+	lastLogQuery := c.Context.GetConnectLogsQueryState()
+	var lastQueryPageToken string
+	if next {
+		if lastLogQuery != nil && (lastLogQuery.StartTime == currentLogQuery.StartTime &&
+			lastLogQuery.EndTime == currentLogQuery.EndTime &&
+			lastLogQuery.Level == currentLogQuery.Level &&
+			lastLogQuery.SearchText == currentLogQuery.SearchText &&
+			lastLogQuery.ConnectorId == currentLogQuery.ConnectorId) {
+			lastQueryPageToken = lastLogQuery.PageToken
+			// If page token for the last query is empty, it means there are no more logs for the current query
+			if lastQueryPageToken == "" {
+				output.Printf(false, "No more logs for the current query\n")
+				return "", fmt.Errorf("no more logs for the current query")
+			}
+		} else {
+			// If the last query is not the same as the current query or there was no last query,, reset the page token
+			lastQueryPageToken = ""
+		}
+	} else {
+		// If the next flag is not set, reset the page token
+		lastQueryPageToken = ""
+	}
+	return lastQueryPageToken, nil
+}
+
+func (c *logsCommand) storeQueryInContext(logs *ccloudv2.LoggingSearchResponse, currentLogQuery *config.ConnectLogsQueryState) error {
+	var err error
 	if logs.Metadata != nil {
 		currentLogQuery.PageToken, err = extractPageToken(logs.Metadata.Next)
 		if err != nil {
@@ -195,6 +212,7 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 		currentLogQuery.PageToken = ""
 	}
 
+	// Update the context with the current query state
 	err = c.Context.SetConnectLogsQueryState(currentLogQuery)
 	if err != nil {
 		return fmt.Errorf("failed to set connect logs query state: %w", err)
@@ -202,36 +220,7 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 	if err := c.Config.Save(); err != nil {
 		return err
 	}
-
-	// Handle output to file if specified
-	if outputFile != "" {
-		return writeLogsToFile(outputFile, logs)
-	}
-
-	// Display logs in the specified format
-	if output.GetFormat(cmd).IsSerialized() {
-		return output.SerializedOutput(cmd, logs.Data)
-	}
-
-	// Human-readable format
-	list := output.NewList(cmd)
-	for _, log := range logs.Data {
-		logOut := &logEntryOut{
-			Timestamp: log.Timestamp,
-			Level:     log.Level,
-			TaskId:    log.TaskId,
-			Message:   log.Message,
-		}
-		list.Add(logOut)
-	}
-
-	if len(logs.Data) == 0 {
-		output.Println(c.Config.EnableColor, "No more logs for the current query")
-		return nil
-	}
-
-	output.Printf(c.Config.EnableColor, "Found %d log entries for connector %s:\n\n", len(logs.Data), connectorId)
-	return list.Print()
+	return nil
 }
 
 func writeLogsToFile(outputFile string, logs *ccloudv2.LoggingSearchResponse) error {
@@ -286,4 +275,25 @@ func extractPageToken(urlStr string) (string, error) {
 	pageToken := queryParams.Get("page_token")
 
 	return pageToken, nil
+}
+
+func printHumanLogs(cmd *cobra.Command, logs *ccloudv2.LoggingSearchResponse, connectorId string) error {
+	list := output.NewList(cmd)
+	for _, log := range logs.Data {
+		logOut := &logEntryOut{
+			Timestamp: log.Timestamp,
+			Level:     log.Level,
+			TaskId:    log.TaskId,
+			Message:   log.Message,
+		}
+		list.Add(logOut)
+	}
+
+	if len(logs.Data) == 0 {
+		output.Println(false, "No more logs for the current query")
+		return nil
+	}
+
+	output.Printf(false, "Found %d log entries for connector %s:\n\n", len(logs.Data), connectorId)
+	return list.Print()
 }
