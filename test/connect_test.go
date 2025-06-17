@@ -276,3 +276,16 @@ func (s *CLITestSuite) TestConnectOffset() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestConnectLogs() {
+	tests := []CLITest{
+		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z", fixture: "connect/logs/logs.golden"},
+		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z -o json", fixture: "connect/logs/logs-json.golden"},
+		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z -o yaml", fixture: "connect/logs/logs-yaml.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
