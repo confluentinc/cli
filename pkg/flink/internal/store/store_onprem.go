@@ -77,6 +77,9 @@ func (s *StoreOnPrem) ProcessStatement(statement string) (*types.ProcessedStatem
 	}
 
 	statementName := s.Properties.GetOrDefault(config.KeyStatementName, types.GenerateStatementName())
+	if len(statementName) > 45 { // on-prem name length limit
+		statementName = statementName[0:45]
+	}
 	defer s.Properties.Delete(config.KeyStatementName)
 
 	// Process remote statements
