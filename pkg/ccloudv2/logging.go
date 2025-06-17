@@ -16,24 +16,16 @@ import (
 )
 
 type LoggingSearchRequest struct {
-	CRN         string                    `json:"crn"`
-	Search      LoggingSearchParams       `json:"search"`
-	Aggregation *LoggingAggregationParams `json:"aggregation,omitempty"`
-	Sort        string                    `json:"sort"`
-	StartTime   string                    `json:"start_time"`
-	EndTime     string                    `json:"end_time"`
+	CRN       string              `json:"crn"`
+	Search    LoggingSearchParams `json:"search"`
+	Sort      string              `json:"sort"`
+	StartTime string              `json:"start_time"`
+	EndTime   string              `json:"end_time"`
 }
 
 type LoggingSearchParams struct {
 	Level      []string `json:"level,omitempty"`
 	SearchText string   `json:"search_text,omitempty"`
-	TaskId     string   `json:"task_id,omitempty"`
-}
-
-type LoggingAggregationParams struct {
-	Field    string `json:"field"`
-	Interval string `json:"interval"`
-	GroupBy  string `json:"group_by,omitempty"`
 }
 
 type LoggingLogEntry struct {
@@ -49,43 +41,19 @@ type LoggingException struct {
 	Stacktrace string `json:"stacktrace,omitempty"`
 }
 
-type LoggingAggregationBucket struct {
-	Key             string                  `json:"key"`
-	Count           int                     `json:"count"`
-	AggregatedTerms *LoggingAggregatedTerms `json:"aggregated_terms,omitempty"`
-}
-
-type LoggingAggregatedTerms struct {
-	Buckets []LoggingTermBucket `json:"buckets"`
-}
-
-type LoggingTermBucket struct {
-	Key   string `json:"key"`
-	Count int    `json:"count"`
-}
-
-type LoggingTimestampHistogram struct {
-	Buckets []LoggingAggregationBucket `json:"buckets"`
-}
-
-type LoggingAggregations struct {
-	TimestampHistogram LoggingTimestampHistogram `json:"timestamp_histogram"`
-}
-
 type LoggingMetadata struct {
 	Next string `json:"next,omitempty"`
 }
 
 type LoggingSearchResponse struct {
-	Data         []LoggingLogEntry    `json:"data"`
-	Aggregations *LoggingAggregations `json:"aggregations,omitempty"`
-	Metadata     *LoggingMetadata     `json:"metadata,omitempty"`
-	ApiVersion   string               `json:"api_version"`
-	Kind         string               `json:"kind"`
+	Data       []LoggingLogEntry `json:"data"`
+	Metadata   *LoggingMetadata  `json:"metadata,omitempty"`
+	ApiVersion string            `json:"api_version"`
+	Kind       string            `json:"kind"`
 }
 
 // SearchConnectorLogs searches logs for a specific connector using the Logging API
-func (c *Client) SearchConnectorLogs(environmentId, kafkaClusterId, connectorId, startTime, endTime string, levels []string, taskId, searchText string, pageSize int, pageToken string) (*LoggingSearchResponse, error) {
+func (c *Client) SearchConnectorLogs(environmentId, kafkaClusterId, connectorId, startTime, endTime string, levels []string, searchText string, pageSize int, pageToken string) (*LoggingSearchResponse, error) {
 	// Build the CRN for the connector
 	crn := fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/cloud-cluster=%s/connector=%s",
 		c.cfg.Context().GetCurrentOrganization(),
@@ -123,7 +91,6 @@ func (c *Client) SearchConnectorLogs(environmentId, kafkaClusterId, connectorId,
 		Search: LoggingSearchParams{
 			Level:      levels,
 			SearchText: searchText,
-			TaskId:     taskId,
 		},
 		Sort:      "desc",
 		StartTime: startTime,

@@ -40,7 +40,7 @@ func newLogsCommand(prerunner pcmd.PreRunner) *cobra.Command {
 			},
 			examples.Example{
 				Text: "Query next page of connector logs for the same query by running the command repeatedly until \"No more logs for the current query\" is printed to the console:",
-				Code: `confluent connect logs lcc-123456 --level ERROR --start-time "2025-02-01T00:00:00Z" --end-time "2025-02-01T23:59:59Z" --next "TRUE"`,
+				Code: `confluent connect logs lcc-123456 --level ERROR --start-time "2025-02-01T00:00:00Z" --end-time "2025-02-01T23:59:59Z" --next`,
 			},
 			examples.Example{
 				Text: "Query all connector logs between the provided time window:",
@@ -59,10 +59,9 @@ func newLogsCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("start-time", "", "Start time for log query (e.g., 2025-02-01T00:00:00Z).")
 	cmd.Flags().String("end-time", "", "End time for log query (e.g., 2025-02-01T23:59:59Z).")
 	cmd.Flags().String("level", "ERROR", "Log level filter (INFO, WARN, ERROR). Defaults to ERROR.")
-	cmd.Flags().String("task-id", "", "Task ID filter (optional).")
 	cmd.Flags().String("search-text", "", "Search text within logs (optional).")
 	cmd.Flags().String("output-file", "", "Output file path to append connector logs (optional).")
-	cmd.Flags().String("next", "FALSE", "Whether to fetch next page of logs (TRUE, FALSE) after the next execution of the command (optional).")
+	cmd.Flags().Bool("next", false, "Whether to fetch next page of logs after the next execution of the command (optional).")
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -92,11 +91,6 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	taskId, err := cmd.Flags().GetString("task-id")
-	if err != nil {
-		return err
-	}
-
 	searchText, err := cmd.Flags().GetString("search-text")
 	if err != nil {
 		return err
@@ -107,7 +101,7 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	next, err := cmd.Flags().GetString("next")
+	next, err := cmd.Flags().GetBool("next")
 	if err != nil {
 		return err
 	}
@@ -116,7 +110,6 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 		StartTime:   startTime,
 		EndTime:     endTime,
 		Level:       level,
-		TaskId:      taskId,
 		SearchText:  searchText,
 		ConnectorId: connectorId,
 		PageToken:   "",
@@ -156,9 +149,6 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 		output.Printf(c.Config.EnableColor, "  Cluster: %s\n", kafkaCluster.ID)
 		output.Printf(c.Config.EnableColor, "  Time range: %s to %s\n", startTime, endTime)
 		output.Printf(c.Config.EnableColor, "  Log levels: %v\n", levels)
-		if taskId != "" {
-			output.Printf(c.Config.EnableColor, "  Task ID: %s\n", taskId)
-		}
 		if searchText != "" {
 			output.Printf(c.Config.EnableColor, "  Search text: %s\n", searchText)
 		}
@@ -172,11 +162,10 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 	connectorName := connector.Info.GetName()
 	lastLogQuery := c.Context.GetConnectLogsQueryState()
 	var lastQueryPageToken string
-	if next == "TRUE" {
+	if next {
 		if lastLogQuery != nil && (lastLogQuery.StartTime == startTime &&
 			lastLogQuery.EndTime == endTime &&
 			lastLogQuery.Level == level &&
-			lastLogQuery.TaskId == taskId &&
 			lastLogQuery.SearchText == searchText &&
 			lastLogQuery.ConnectorId == connectorId) {
 			lastQueryPageToken = lastLogQuery.PageToken
@@ -191,7 +180,7 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 		lastQueryPageToken = ""
 	}
 
-	logs, err := c.V2Client.SearchConnectorLogs(environmentId, kafkaCluster.ID, connectorName, startTime, endTime, levels, taskId, searchText, 200, lastQueryPageToken)
+	logs, err := c.V2Client.SearchConnectorLogs(environmentId, kafkaCluster.ID, connectorName, startTime, endTime, levels, searchText, 200, lastQueryPageToken)
 	if err != nil {
 		// Add context to the error
 		return fmt.Errorf("failed to query connector logs: %w", err)
@@ -216,7 +205,7 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 
 	// Handle output to file if specified
 	if outputFile != "" {
-		return c.writeLogsToFile(outputFile, logs)
+		return writeLogsToFile(outputFile, logs)
 	}
 
 	// Display logs in the specified format
@@ -245,7 +234,7 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 	return list.Print()
 }
 
-func (c *logsCommand) writeLogsToFile(outputFile string, logs *ccloudv2.LoggingSearchResponse) error {
+func writeLogsToFile(outputFile string, logs *ccloudv2.LoggingSearchResponse) error {
 	// Open file in append mode, create if it doesn't exist
 	file, err := os.OpenFile(outputFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {

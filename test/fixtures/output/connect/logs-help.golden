@@ -10,7 +10,7 @@ Query connector logs with log level ERROR between the provided time window:
 
 Query next page of connector logs for the same query by running the command repeatedly until "No more logs for the current query" is printed to the console:
 
-  $ confluent connect logs lcc-123456 --level ERROR --start-time "2025-02-01T00:00:00Z" --end-time "2025-02-01T23:59:59Z" --next "TRUE"
+  $ confluent connect logs lcc-123456 --level ERROR --start-time "2025-02-01T00:00:00Z" --end-time "2025-02-01T23:59:59Z" --next
 
 Query all connector logs between the provided time window:
 
@@ -24,10 +24,9 @@ Flags:
       --start-time string    REQUIRED: Start time for log query (e.g., 2025-02-01T00:00:00Z).
       --end-time string      REQUIRED: End time for log query (e.g., 2025-02-01T23:59:59Z).
       --level string         Log level filter (INFO, WARN, ERROR). Defaults to ERROR. (default "ERROR")
-      --task-id string       Task ID filter (optional).
       --search-text string   Search text within logs (optional).
       --output-file string   Output file path to append connector logs (optional).
-      --next string          Whether to fetch next page of logs (TRUE, FALSE) after the next execution of the command (optional). (default "FALSE")
+      --next                 Whether to fetch next page of logs after the next execution of the command (optional).
       --cluster string       Kafka cluster ID.
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
