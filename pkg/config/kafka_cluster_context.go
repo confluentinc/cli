@@ -75,13 +75,13 @@ func (k *KafkaClusterContext) GetActiveKafkaClusterConfig() *KafkaClusterConfig 
 	return kafkaEnvContext.KafkaClusterConfigs[kafkaEnvContext.ActiveKafkaCluster]
 }
 
-func (k *KafkaClusterContext) GetActiveKafkaClusterEndpoint() *KafkaClusterConfig {
+func (k *KafkaClusterContext) GetActiveKafkaClusterEndpoint() string {
 	// TODO: double check about pull value from config...
 	if !k.EnvContext {
-		return k.KafkaClusterConfigs[k.ActiveKafkaClusterEndpoint]
+		return k.ActiveKafkaClusterEndpoint
 	}
 	kafkaEnvContext := k.GetCurrentKafkaEnvContext()
-	return kafkaEnvContext.KafkaClusterConfigs[kafkaEnvContext.ActiveKafkaClusterEndpoint]
+	return kafkaEnvContext.ActiveKafkaClusterEndpoint
 }
 
 func (k *KafkaClusterContext) SetActiveKafkaCluster(clusterId string) {

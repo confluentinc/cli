@@ -26,14 +26,8 @@ func (c *clusterCommand) newEndpointCommand(cfg *config.Config, prerunner pcmd.P
 	}
 
 	if cfg.IsCloudLogin() {
-		cmd.AddCommand(c.newEndpointListCommand())
-		cmd.AddCommand(c.newEndpointUseCommand())
-	} else {
-		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
-
-		// QUESTION: do we even support endpoint on-prem? Assuming so here...
-		cmd.AddCommand(c.newEndpointListCommandOnPrem())
-		cmd.AddCommand(c.newEndpointUseCommandOnPrem())
+		//cmd.AddCommand(c.newEndpointListCommand())
+		//cmd.AddCommand(c.newEndpointUseCommand())
 	}
 
 	return cmd

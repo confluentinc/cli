@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/v4/pkg/kafka"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 
@@ -37,13 +38,13 @@ func (c *command) endpointList(cmd *cobra.Command, args []string) error {
 	// check current environment... cloud... region...
 	// PNI -> privatelink -> public
 
-	cluster, err := cmd.Flags().GetString("cluster")
+	cluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
+	clusterId := cluster.GetId()
 	if err != nil {
 		return err
 	}
-	if cluster == "" {
-		cluster = c.Context.KafkaClusterContext.GetActiveKafkaClusterId()
-		if cluster == "" {
+	if clusterId == "" {
+		if clusterId = c.Context.KafkaClusterContext.GetActiveKafkaClusterId(); clusterId == "" {
 			return fmt.Errorf("No cluster specified and no active cluster found, please specify a Kafka cluster Id.")
 		}
 	}
@@ -61,17 +62,17 @@ func (c *command) endpointList(cmd *cobra.Command, args []string) error {
 	list := output.NewList(cmd)
 	for accessPointId, attributes := range clusterEndpoints {
 
-		out := &endpointOut{
-			IsCurrent: attributes.HttpEndpoint == c.Context.KafkaClusterContext.GetActiveKafkaClusterEndpoint(),
-			Endpoint:  accessPointId,
-			//KafkaBootstrapEndpoint: attributes.KafkaBootstrapEndpoint,
-			HttpEndpoint:   attributes.HttpEndpoint,
-			ConnectionType: attributes.ConnectionType,
-		}
-
-		// between kafka_bootstrap_endpoint and http_endpoint, which one we want to display to customer? Which is more useful to display
-
+		// basically in the format of:
 		// * | ap1pni123 | http... | PNI
+		out := &endpointOut{
+			IsCurrent: attributes.GetHttpEndpoint() == c.Context.KafkaClusterContext.GetActiveKafkaClusterEndpoint(),
+			Endpoint:  accessPointId,
+			// don't wanna display multiple long strings (KafkaBootstrapEndpoint & HttpEndpoint) as one row in output
+			// between kafka_bootstrap_endpoint and http_endpoint, which one we want to display to customer? Which is more useful to display
+			//KafkaBootstrapEndpoint: attributes.KafkaBootstrapEndpoint,
+			HttpEndpoint:   attributes.GetHttpEndpoint(),
+			ConnectionType: attributes.GetConnectionType(),
+		}
 
 		list.Add(out)
 	}

@@ -40,7 +40,6 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 		RunE:        c.create,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
-			// TODO: update examples with --endpoint flag
 			examples.Example{
 				Text: "Create a new dedicated cluster that uses a customer-managed encryption key in GCP:",
 				Code: "confluent kafka cluster create sales092020 --cloud gcp --region asia-southeast1 --type dedicated --cku 1 --byok cck-a123z",
@@ -66,8 +65,6 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().Int("cku", 0, `Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type "dedicated".`)
 	pcmd.AddByokKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddNetworkFlag(cmd, c.AuthenticatedCLICommand)
-	// is this possible??
-	cmd.Flags().String("endpoint", "", "Endpoint to be used for this Kafka cluster.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -119,10 +116,10 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	endpoint, err := cmd.Flags().GetString("endpoint")
-	if err != nil {
-		return err
-	}
+	//endpoint, err := cmd.Flags().GetString("endpoint")
+	//if err != nil {
+	//	return err
+	//}
 
 	var keyGlobalObjectReference *cmkv2.GlobalObjectReference
 	if byok != "" {
@@ -144,7 +141,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		// Can we specify cluster creation with --endpoint?
 		// does the user "have power" to specify an attribute in CREATE cluster operation?
 		// https://github.com/confluentinc/api/blob/master/cmk/minispec.yaml#L125-#L143
-		Endpoint: cmkv2.PtrString(endpoint),
+		//Endpoint: cmkv2.PtrString(endpoint),
 	}}
 
 	if cmd.Flags().Changed("cku") {
@@ -170,11 +167,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 			return errors.NewErrorWithSuggestions("the `--network` flag can only be used when creating a dedicated Kafka cluster", "Specify a dedicated cluster with `--type dedicated`.")
 		}
 		createCluster.Spec.Network = &cmkv2.EnvScopedObjectReference{Id: network}
-	}
-
-	// maybe better here so we can add in case handling, we'll see
-	if cmd.Flags().Changed("endpoint") {
-
 	}
 
 	kafkaCluster, httpResp, err := c.V2Client.CreateKafkaCluster(createCluster)
