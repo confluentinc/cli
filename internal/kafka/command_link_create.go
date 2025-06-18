@@ -105,6 +105,7 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddConfigFlag(cmd)
 	cmd.Flags().Bool(dryrunFlagName, false, "Validate a link, but do not create it.")
 	cmd.Flags().Bool(noValidateFlagName, false, "Create a link even if the source cluster cannot be reached.")
+	cmd.Flags().String("endpoint", "", "Endpoint to be used for this Kafka cluster.")
 	cmd.MarkFlagsRequiredTogether(sourceApiKeyFlagName, sourceApiSecretFlagName)
 	cmd.MarkFlagsRequiredTogether(destinationApiKeyFlagName, destinationApiSecretFlagName)
 	cmd.MarkFlagsRequiredTogether(localApiKeyFlagName, localApiSecretFlagName)
@@ -185,6 +186,11 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		default:
 			return unrecognizedLinkModeErr(linkModeMetadata.name)
 		}
+	}
+
+	err = pcmd.SpecifyEndpoint(cmd, c.AuthenticatedCLICommand)
+	if err != nil {
+		return err
 	}
 
 	kafkaREST, err := c.GetKafkaREST()

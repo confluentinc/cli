@@ -61,6 +61,6 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 	for _, cluster := range clusters {
 		list.Add(convertClusterToDescribeStruct(&cluster, c.Context))
 	}
-	list.Filter([]string{"IsCurrent", "Id", "Name", "Type", "Cloud", "Region", "Availability", "Network", "Status"})
+	list.Filter([]string{"IsCurrent", "Id", "Name", "Type", "Cloud", "Region", "Availability", "Network", "Status", "Endpoint"})
 	return list.Print()
 }

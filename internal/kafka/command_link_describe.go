@@ -33,6 +33,7 @@ func (c *linkCommand) newDescribeCommand() *cobra.Command {
 		RunE:              c.describe,
 	}
 
+	cmd.Flags().String("endpoint", "", "Endpoint to be used for this Kafka cluster.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -43,6 +44,11 @@ func (c *linkCommand) newDescribeCommand() *cobra.Command {
 
 func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
+
+	err := pcmd.SpecifyEndpoint(cmd, c.AuthenticatedCLICommand)
+	if err != nil {
+		return err
+	}
 
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {

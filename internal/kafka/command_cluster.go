@@ -47,6 +47,7 @@ func newClusterCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Comm
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newUpdateCommand())
 	cmd.AddCommand(c.newUseCommand())
+	//cmd.AddCommand(c.newEndpointCommand(cfg, prerunner))
 
 	if cfg.IsCloudLogin() {
 		cmd.AddCommand(c.newListCommand())

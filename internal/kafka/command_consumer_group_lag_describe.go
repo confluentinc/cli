@@ -26,6 +26,7 @@ func (c *consumerCommand) newLagDescribeCommand() *cobra.Command {
 
 	cmd.Flags().String("topic", "", "Topic name.")
 	cmd.Flags().Int32("partition", 0, "Partition ID.")
+	cmd.Flags().String("endpoint", "", "Endpoint to be used for this Kafka cluster.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -48,6 +49,11 @@ func (c *consumerCommand) groupLagDescribe(cmd *cobra.Command, args []string) er
 	}
 
 	partition, err := cmd.Flags().GetInt32("partition")
+	if err != nil {
+		return err
+	}
+
+	err = pcmd.SpecifyEndpoint(cmd, c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}
