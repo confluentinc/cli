@@ -55,6 +55,8 @@ func newContext(name string, platform *Platform, credential *Credential, kafkaCl
 		IsMFA:              isMFA,
 	}
 	ctx.KafkaClusterContext = NewKafkaClusterContext(ctx, kafka, kafkaClusters)
+	//ctx.KafkaClusterContext = NewKafkaClusterContext(ctx, kafka, kafkaEndpoint, kafkaClusters)
+
 	if err := ctx.validate(); err != nil {
 		return nil, err
 	}
