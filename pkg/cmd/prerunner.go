@@ -345,6 +345,7 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 
 		activeEndpoint := c.Context.KafkaClusterContext.GetActiveKafkaClusterEndpoint()
 
+		// stored config precedes default value
 		// set restEndpoint to value stored in CLI config if present
 		if activeEndpoint != "" {
 			restEndpoint = activeEndpoint

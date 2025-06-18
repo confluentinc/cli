@@ -62,6 +62,7 @@ func (c *linkCommand) newLinkTaskListCommand() *cobra.Command {
 		RunE:              c.taskList,
 	}
 
+	cmd.Flags().String("endpoint", "", "Endpoint to be used for this Kafka cluster.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -72,6 +73,11 @@ func (c *linkCommand) newLinkTaskListCommand() *cobra.Command {
 
 func (c *linkCommand) taskList(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
+
+	err := pcmd.SpecifyEndpoint(cmd, c.AuthenticatedCLICommand)
+	if err != nil {
+		return err
+	}
 
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {

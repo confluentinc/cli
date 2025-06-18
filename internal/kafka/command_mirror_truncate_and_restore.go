@@ -27,6 +27,7 @@ func (c *mirrorCommand) newTruncateAndRestoreCommand() *cobra.Command {
 	pcmd.AddLinkFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually truncate the local topic, but simply validates it.")
 	cmd.Flags().Bool(includePartitionDataFlagName, false, "If set, returns the number of messages truncated per partition.")
+	cmd.Flags().String("endpoint", "", "Endpoint to be used for this Kafka cluster.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -49,6 +50,11 @@ func (c *mirrorCommand) truncateAndRestore(cmd *cobra.Command, args []string) er
 	}
 
 	includePartitionData, err := cmd.Flags().GetBool(includePartitionDataFlagName)
+	if err != nil {
+		return err
+	}
+
+	err = pcmd.SpecifyEndpoint(cmd, c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}

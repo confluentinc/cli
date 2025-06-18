@@ -23,6 +23,7 @@ func (c *consumerCommand) newListCommand() *cobra.Command {
 	}
 
 	c.addConsumerGroupFlag(cmd)
+	cmd.Flags().String("endpoint", "", "Endpoint to be used for this Kafka cluster.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -34,6 +35,11 @@ func (c *consumerCommand) newListCommand() *cobra.Command {
 }
 
 func (c *consumerCommand) list(cmd *cobra.Command, _ []string) error {
+	err := pcmd.SpecifyEndpoint(cmd, c.AuthenticatedCLICommand)
+	if err != nil {
+		return err
+	}
+
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err

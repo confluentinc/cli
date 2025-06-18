@@ -17,6 +17,7 @@ func (c *linkCommand) newDeleteCommand() *cobra.Command {
 		RunE:              c.delete,
 	}
 
+	cmd.Flags().String("endpoint", "", "Endpoint to be used for this Kafka cluster.")
 	pcmd.AddForceFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -26,6 +27,11 @@ func (c *linkCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
+	err := pcmd.SpecifyEndpoint(cmd, c.AuthenticatedCLICommand)
+	if err != nil {
+		return err
+	}
+
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err

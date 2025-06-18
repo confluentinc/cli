@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"github.com/confluentinc/cli/v4/pkg/kafka"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -19,35 +18,20 @@ func (c *consumerCommand) newGroupDescribeCommand() *cobra.Command {
 		RunE:              c.groupDescribe,
 	}
 
+	// add endpoint flag for all commands that calls GetKafkaREST()
+	cmd.Flags().String("endpoint", "", "Endpoint to be used for this Kafka cluster.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-
-	// add endpoint flag for all commands that calls GetKafkaREST()
-	cmd.Flags().String("endpoint", "", "Endpoint to be used for this Kafka cluster.")
-
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
 func (c *consumerCommand) groupDescribe(cmd *cobra.Command, args []string) error {
-
-	cluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
-	clusterId := cluster.GetId()
+	err := pcmd.SpecifyEndpoint(cmd, c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
-	}
-
-	// If the endpoint flag is set, use its value; otherwise, use the value from config.RestEndpoint
-	endpoint, err := cmd.Flags().GetString("endpoint")
-	if err != nil {
-		return err
-	}
-
-	if endpoint != "" {
-		config := c.Context.KafkaClusterContext.GetKafkaClusterConfig(clusterId)
-		config.RestEndpoint = endpoint
 	}
 
 	kafkaREST, err := c.GetKafkaREST()

@@ -51,7 +51,7 @@ func (c *command) endpointList(cmd *cobra.Command, args []string) error {
 
 	// display the endpoints corresponding to the specified cluster
 
-	clusterConfigs, _, err := c.V2Client.DescribeKafkaCluster(cluster, c.Context.GetCurrentEnvironment())
+	clusterConfigs, _, err := c.V2Client.DescribeKafkaCluster(clusterId, c.Context.GetCurrentEnvironment())
 	if err != nil {
 		log.CliLogger.Debugf("Error describing Kafka Cluster: %v", err)
 		return fmt.Errorf("error retrieving configs for cluster %q", cluster)
