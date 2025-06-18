@@ -150,25 +150,37 @@ func (s *StoreOnPrem) FetchStatementResults(statement types.ProcessedStatementOn
 	}
 
 	// Process remote statements that are now running or completed
+	var statementResults cmfsdk.StatementResults
 	client := s.authenticatedCmfClient()
-	statementResultObj, err := client.GetStatementResults(client.CmfApiContext(), s.appOptions.GetEnvironmentId(), statement.StatementName, "")
-	if err != nil {
-		return nil, &types.StatementError{Message: err.Error()}
+	if statement.IsSelectStatement() {
+		// results
+		statementResultObj, err := client.GetStatementResults(client.CmfApiContext(), s.appOptions.GetEnvironmentId(), statement.StatementName, statement.PageToken)
+		if err != nil {
+			return nil, &types.StatementError{Message: err.Error()}
+		}
+		statementResults = statementResultObj.GetResults()
+
+		// page token
+		statementMetadata := statementResultObj.GetMetadata()
+		extractedToken, err := extractPageToken(statementMetadata.GetAnnotations()["nextPageToken"])
+		if err != nil {
+			return nil, types.NewStatementError(err)
+		}
+		statement.PageToken = extractedToken
+	} else { // For statements other than SELECT, the results are returned in the Statement API
+		statementResultObj, err := client.GetStatement(client.CmfApiContext(), s.appOptions.GetEnvironmentId(), statement.StatementName)
+		if err != nil {
+			return nil, &types.StatementError{Message: err.Error()}
+		}
+		statementResults = statementResultObj.Result.GetResults()
 	}
 
-	statementResults := statementResultObj.GetResults()
 	convertedResults, err := results.ConvertToInternalResultsOnPrem(statementResults, statement.Traits.GetSchema())
 	if err != nil {
 		return nil, types.NewStatementError(err)
 	}
 	statement.StatementResults = convertedResults
 
-	statementMetadata := statementResultObj.GetMetadata()
-	extractedToken, err := extractPageToken(statementMetadata.GetAnnotations()["nextPageToken"])
-	if err != nil {
-		return nil, types.NewStatementError(err)
-	}
-	statement.PageToken = extractedToken
 	return &statement, nil
 }
 
