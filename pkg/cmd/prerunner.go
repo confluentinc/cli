@@ -337,13 +337,20 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 		if cluster.Status.Phase == ccloudv2.StatusProvisioning {
 			return nil, fmt.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
 		}
-		if restEndpoint == "" {
-			return nil, fmt.Errorf("Kafka REST is not enabled: the operation is only supported with Kafka REST proxy")
-		}
 
 		dataplaneToken, err := pauth.GetDataplaneToken(c.Context)
 		if err != nil {
 			return nil, err
+		}
+
+		activeEndpoint := c.Context.KafkaClusterContext.GetActiveKafkaClusterEndpoint()
+
+		// stored config precedes default value
+		// set restEndpoint to value stored in CLI config if present
+		if activeEndpoint != "" {
+			restEndpoint = activeEndpoint
+		} else if restEndpoint == "" {
+			return nil, fmt.Errorf("Kafka REST is not enabled: the operation is only supported with Kafka REST proxy")
 		}
 
 		kafkaRest := &KafkaREST{

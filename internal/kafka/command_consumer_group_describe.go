@@ -18,6 +18,8 @@ func (c *consumerCommand) newGroupDescribeCommand() *cobra.Command {
 		RunE:              c.groupDescribe,
 	}
 
+	// add endpoint flag for all commands that calls GetKafkaREST()
+	cmd.Flags().String("endpoint", "", "Endpoint to be used for this Kafka cluster.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -27,6 +29,11 @@ func (c *consumerCommand) newGroupDescribeCommand() *cobra.Command {
 }
 
 func (c *consumerCommand) groupDescribe(cmd *cobra.Command, args []string) error {
+	err := pcmd.SpecifyEndpoint(cmd, c.AuthenticatedCLICommand)
+	if err != nil {
+		return err
+	}
+
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
