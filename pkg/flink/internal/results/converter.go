@@ -2,6 +2,7 @@ package results
 
 import (
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 )
@@ -33,6 +34,31 @@ func GetConverterForType(dataType flinkgatewayv1.DataType) SDKToStatementResultF
 	case types.Row:
 		elementTypes := dataType.GetFields()
 		return toRowStatementResultFieldConverter(elementTypes)
+	default:
+		return toAtomicStatementResultFieldConverter(fieldType)
+	}
+}
+
+func GetConverterForTypeOnPrem(dataType cmfsdk.DataType) SDKToStatementResultFieldConverter {
+	fieldType := types.NewResultFieldTypeOnPrem(dataType)
+	switch fieldType {
+	case types.Array:
+		elementType := dataType.GetElementType()
+		return toArrayStatementResultFieldConverterOnPrem(elementType)
+	case types.Multiset:
+		keyType := dataType.GetElementType()
+		valueType := cmfsdk.DataType{
+			Nullable: false,
+			Type:     "INTEGER",
+		}
+		return toMapStatementResultFieldConverterOnPrem(fieldType, keyType, valueType)
+	case types.Map:
+		keyType := dataType.GetKeyType()
+		valueType := dataType.GetValueType()
+		return toMapStatementResultFieldConverterOnPrem(fieldType, keyType, valueType)
+	case types.Row:
+		elementTypes := dataType.GetFields()
+		return toRowStatementResultFieldConverterOnPrem(elementTypes)
 	default:
 		return toAtomicStatementResultFieldConverter(fieldType)
 	}
@@ -70,6 +96,25 @@ func toArrayStatementResultFieldConverter(elementType flinkgatewayv1.DataType) S
 	}
 }
 
+func toArrayStatementResultFieldConverterOnPrem(elementType cmfsdk.DataType) SDKToStatementResultFieldConverter {
+	toStatementResultFieldConverter := GetConverterForTypeOnPrem(elementType)
+	return func(field any) types.StatementResultField {
+		arrayField, ok := field.([]any)
+		if !ok {
+			return nullField
+		}
+		var values []types.StatementResultField
+		for _, item := range arrayField {
+			values = append(values, toStatementResultFieldConverter(item))
+		}
+		return types.ArrayStatementResultField{
+			Type:        types.Array,
+			ElementType: types.NewResultFieldTypeOnPrem(elementType),
+			Values:      values,
+		}
+	}
+}
+
 func toMapStatementResultFieldConverter(fieldType types.StatementResultFieldType, keyType, valueType flinkgatewayv1.DataType) SDKToStatementResultFieldConverter {
 	keyToStatementResultFieldConverter := GetConverterForType(keyType)
 	valueToStatementResultFieldConverter := GetConverterForType(valueType)
@@ -102,6 +147,38 @@ func toMapStatementResultFieldConverter(fieldType types.StatementResultFieldType
 	}
 }
 
+func toMapStatementResultFieldConverterOnPrem(fieldType types.StatementResultFieldType, keyType, valueType cmfsdk.DataType) SDKToStatementResultFieldConverter {
+	keyToStatementResultFieldConverter := GetConverterForTypeOnPrem(keyType)
+	valueToStatementResultFieldConverter := GetConverterForTypeOnPrem(valueType)
+	return func(field any) types.StatementResultField {
+		mapField, ok := field.([]any)
+		if !ok {
+			return nullField
+		}
+		var entries []types.MapStatementResultFieldEntry
+		for _, mapEntry := range mapField {
+			mapEntry, ok := mapEntry.([]any)
+			if !ok || len(mapEntry) != 2 {
+				return nullField
+			}
+
+			key := mapEntry[0]
+			value := mapEntry[1]
+			entry := types.MapStatementResultFieldEntry{
+				Key:   keyToStatementResultFieldConverter(key),
+				Value: valueToStatementResultFieldConverter(value),
+			}
+			entries = append(entries, entry)
+		}
+		return types.MapStatementResultField{
+			Type:      fieldType,
+			KeyType:   types.NewResultFieldTypeOnPrem(keyType),
+			ValueType: types.NewResultFieldTypeOnPrem(valueType),
+			Entries:   entries,
+		}
+	}
+}
+
 func toRowStatementResultFieldConverter(elementTypes []flinkgatewayv1.RowFieldType) SDKToStatementResultFieldConverter {
 	return func(field any) types.StatementResultField {
 		rowField, ok := field.([]any)
@@ -113,6 +190,29 @@ func toRowStatementResultFieldConverter(elementTypes []flinkgatewayv1.RowFieldTy
 		for idx, item := range rowField {
 			elementType := elementTypes[idx].GetFieldType()
 			toStatementResultFieldConverter := GetConverterForType(elementType)
+			convertedElement := toStatementResultFieldConverter(item)
+			elementResultFieldTypes = append(elementResultFieldTypes, convertedElement.GetType())
+			values = append(values, convertedElement)
+		}
+		return types.RowStatementResultField{
+			Type:         types.Row,
+			ElementTypes: elementResultFieldTypes,
+			Values:       values,
+		}
+	}
+}
+
+func toRowStatementResultFieldConverterOnPrem(elementTypes []cmfsdk.DataTypeField) SDKToStatementResultFieldConverter {
+	return func(field any) types.StatementResultField {
+		rowField, ok := field.([]any)
+		if !ok || len(rowField) != len(elementTypes) {
+			return nullField
+		}
+		var elementResultFieldTypes []types.StatementResultFieldType
+		var values []types.StatementResultField
+		for idx, item := range rowField {
+			elementType := elementTypes[idx].GetFieldType()
+			toStatementResultFieldConverter := GetConverterForTypeOnPrem(elementType)
 			convertedElement := toStatementResultFieldConverter(item)
 			elementResultFieldTypes = append(elementResultFieldTypes, convertedElement.GetType())
 			values = append(values, convertedElement)
