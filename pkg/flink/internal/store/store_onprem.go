@@ -102,7 +102,6 @@ func (s *StoreOnPrem) ProcessStatement(statement string) (*types.ProcessedStatem
 	return types.NewProcessedStatementOnPrem(statementObj), nil
 }
 
-// TODO: having the Flink configuration can be hard, ignore it for now
 func createSqlV1StatementOnPrem(statement string, statementName string, computePoolName string, properties map[string]string, flinkConfiguration map[string]string) cmfsdk.Statement {
 	return cmfsdk.Statement{
 		ApiVersion: "cmf.confluent.io/v1",
@@ -111,11 +110,12 @@ func createSqlV1StatementOnPrem(statement string, statementName string, computeP
 			Name: statementName,
 		},
 		Spec: cmfsdk.StatementSpec{
-			Statement:       statement,
-			Properties:      &properties,
-			ComputePoolName: computePoolName,
-			Parallelism:     cmfsdk.PtrInt32(int32(1)),
-			Stopped:         cmfsdk.PtrBool(false),
+			Statement:          statement,
+			Properties:         &properties,
+			ComputePoolName:    computePoolName,
+			FlinkConfiguration: &flinkConfiguration,
+			Parallelism:        cmfsdk.PtrInt32(int32(1)),
+			Stopped:            cmfsdk.PtrBool(false),
 		},
 	}
 }
