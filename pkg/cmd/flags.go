@@ -132,6 +132,15 @@ func AutocompleteClusters(environmentId string, client *ccloudv2.Client) []strin
 	return suggestions
 }
 
+func AddEndpointFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
+	cmd.Flags().String("kafka-endpoint", "", "Endpoint to be used for this Kafka cluster.")
+}
+
+func AutocompleteEndpoints(environmentId string, client *ccloudv2.Client) []string {
+	// nice-to-have, tracked by JIRA
+	return nil
+}
+
 func AddConfigFlag(cmd *cobra.Command) {
 	cmd.Flags().StringSlice("config", []string{}, `A comma-separated list of "key=value" pairs, or path to a configuration file containing a newline-separated list of "key=value" pairs.`)
 }

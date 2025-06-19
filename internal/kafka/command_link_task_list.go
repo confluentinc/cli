@@ -62,6 +62,7 @@ func (c *linkCommand) newLinkTaskListCommand() *cobra.Command {
 		RunE:              c.taskList,
 	}
 
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

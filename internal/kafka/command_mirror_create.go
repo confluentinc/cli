@@ -40,6 +40,7 @@ func (c *mirrorCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().Int32("replication-factor", 3, "Replication factor.")
 	pcmd.AddConfigFlag(cmd)
 	cmd.Flags().String("source-topic", "", "Name of the source topic to be mirrored over the cluster link. Only required when there is a prefix configured on the link.")
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

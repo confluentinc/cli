@@ -29,6 +29,7 @@ func (c *clusterCommand) newConfigurationUpdateCommand() *cobra.Command {
 		),
 	}
 
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddConfigFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

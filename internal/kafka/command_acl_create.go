@@ -38,6 +38,7 @@ func (c *aclCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("consumer-group", "", "Modify ACLs for the specified consumer group resource.")
 	cmd.Flags().String("transactional-id", "", "Modify ACLs for the specified TransactionalID resource.")
 	cmd.Flags().Bool("prefix", false, "When this flag is set, the specified resource name is interpreted as a prefix.")
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
