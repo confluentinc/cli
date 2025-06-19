@@ -84,6 +84,7 @@ func (s *StoreOnPrem) ProcessStatement(statement string) (*types.ProcessedStatem
 
 	// Process remote statements
 	computePoolId := s.appOptions.GetComputePoolId()
+	flinkConfiguration := s.appOptions.GetFlinkConfiguration()
 	properties := s.Properties.GetNonLocalProperties()
 
 	utils.OutputInfof("Statement name: %s\nSubmitting statement...", statementName)
@@ -91,7 +92,7 @@ func (s *StoreOnPrem) ProcessStatement(statement string) (*types.ProcessedStatem
 	statementObj, err := client.CreateStatement(
 		client.CmfApiContext(),
 		s.appOptions.GetEnvironmentId(),
-		createSqlV1StatementOnPrem(statement, statementName, computePoolId, properties),
+		createSqlV1StatementOnPrem(statement, statementName, computePoolId, properties, flinkConfiguration),
 	)
 
 	if err != nil {
@@ -102,7 +103,7 @@ func (s *StoreOnPrem) ProcessStatement(statement string) (*types.ProcessedStatem
 }
 
 // TODO: having the Flink configuration can be hard, ignore it for now
-func createSqlV1StatementOnPrem(statement string, statementName string, computePoolName string, properties map[string]string) cmfsdk.Statement {
+func createSqlV1StatementOnPrem(statement string, statementName string, computePoolName string, properties map[string]string, flinkConfiguration map[string]string) cmfsdk.Statement {
 	return cmfsdk.Statement{
 		ApiVersion: "cmf.confluent.io/v1",
 		Kind:       "Statement",

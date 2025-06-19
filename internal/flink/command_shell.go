@@ -1,10 +1,15 @@
 package flink
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 
 	"github.com/confluentinc/cli/v4/pkg/auth"
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
@@ -61,6 +66,7 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner, cfg *config.Config) 
 		cmd.Flags().String("environment", "", "Name of the Flink environment.")
 		cmd.Flags().String("catalog", "", "The name of the default catalog.")
 		cmd.Flags().String("database", "", "The name of the default database.")
+		cmd.Flags().String("flink-configuration", "", "The file path to hold the Flink configuration.")
 		addCmfFlagSet(cmd)
 		pcmd.AddOutputFlag(cmd)
 
@@ -259,6 +265,33 @@ func (c *command) startFlinkSqlClientOnPrem(prerunner pcmd.PreRunner, cmd *cobra
 		return err
 	}
 
+	configFilePath, err := cmd.Flags().GetString("flink-configuration")
+	if err != nil {
+		return err
+	}
+
+	flinkConfiguration := map[string]string{}
+	if configFilePath != "" {
+		var data []byte
+		// Read configuration file contents
+		data, err = os.ReadFile(configFilePath)
+		if err != nil {
+			return fmt.Errorf("failed to read Flink configuration file: %v", err)
+		}
+		ext := filepath.Ext(configFilePath)
+		switch ext {
+		case ".json":
+			err = json.Unmarshal(data, &flinkConfiguration)
+		case ".yaml", ".yml":
+			err = yaml.Unmarshal(data, &flinkConfiguration)
+		default:
+			return errors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
+		}
+		if err != nil {
+			return err
+		}
+	}
+
 	flinkCmfClient, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
@@ -268,14 +301,15 @@ func (c *command) startFlinkSqlClientOnPrem(prerunner pcmd.PreRunner, cmd *cobra
 	verbose, _ := cmd.Flags().GetCount("verbose")
 
 	opts := types.ApplicationOptions{
-		Context:         c.Context,
-		UnsafeTrace:     unsafeTrace,
-		UserAgent:       c.Version.UserAgent,
-		EnvironmentName: catalog,
-		EnvironmentId:   environment,
-		Database:        database,
-		ComputePoolId:   computePool,
-		Verbose:         verbose > 0,
+		Context:            c.Context,
+		UnsafeTrace:        unsafeTrace,
+		UserAgent:          c.Version.UserAgent,
+		EnvironmentName:    catalog,
+		EnvironmentId:      environment,
+		Database:           database,
+		ComputePoolId:      computePool,
+		FlinkConfiguration: flinkConfiguration,
+		Verbose:            verbose > 0,
 	}
 
 	return client.StartAppOnPrem(flinkCmfClient, c.authenticatedOnPrem(prerunner.AuthenticatedWithMDS(c.AuthenticatedCLICommand), cmd), opts)
