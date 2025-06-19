@@ -36,7 +36,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 
 	cmd.Flags().Uint32("partitions", 0, "Number of topic partitions.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the topic being created.`)
-	cmd.Flags().String("endpoint", "", "Endpoint to be used for this Kafka cluster.")
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddDryRunFlag(cmd)
 	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -70,11 +70,6 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 	ifNotExists, err := cmd.Flags().GetBool("if-not-exists")
-	if err != nil {
-		return err
-	}
-
-	err = pcmd.SpecifyEndpoint(cmd, c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}

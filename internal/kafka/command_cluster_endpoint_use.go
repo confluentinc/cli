@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
-func (c *command) newEndpointUseCommand() *cobra.Command {
+func (c *clusterCommand) newEndpointUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "use",
 		Short: "Use a Kafka Cluster endpoint.",
@@ -28,7 +28,7 @@ func (c *command) newEndpointUseCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) endpointUse(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) endpointUse(cmd *cobra.Command, args []string) error {
 	// TODO: add logic and endpoint validation here! Sanity checks!
 
 	currEnvironment := c.Context.GetCurrentEnvironment()
@@ -64,7 +64,7 @@ func (c *command) endpointUse(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func validateUserProvidedKafkaClusterEndpoint(endpoint, activeCluster string, c *command) bool {
+func validateUserProvidedKafkaClusterEndpoint(endpoint, activeCluster string, c *clusterCommand) bool {
 
 	// check if the specified endpoint exists in the endpoint list, error out if not
 	// check if the specified endpoint corresponds to active cluster (cloud & region), and error out if not

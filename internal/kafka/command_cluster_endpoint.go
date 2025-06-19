@@ -26,8 +26,8 @@ func (c *clusterCommand) newEndpointCommand(cfg *config.Config, prerunner pcmd.P
 	}
 
 	if cfg.IsCloudLogin() {
-		//cmd.AddCommand(c.newEndpointListCommand())
-		//cmd.AddCommand(c.newEndpointUseCommand())
+		cmd.AddCommand(c.newEndpointListCommand())
+		cmd.AddCommand(c.newEndpointUseCommand())
 	}
 
 	return cmd

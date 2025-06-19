@@ -26,7 +26,7 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("principal", "", `Principal for this operation, prefixed with "User:".`)
 	cmd.Flags().Bool("all", false, "Include ACLs for deleted principals with integer IDs.")
-	cmd.Flags().String("endpoint", "", "Endpoint to be used for this Kafka cluster.")
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cmd.MarkFlagsMutuallyExclusive("service-account", "principal")
@@ -42,11 +42,6 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 
 	if acl[0].errors != nil {
 		return acl[0].errors
-	}
-
-	err = pcmd.SpecifyEndpoint(cmd, c.AuthenticatedCLICommand)
-	if err != nil {
-		return err
 	}
 
 	kafkaREST, err := c.GetKafkaREST()

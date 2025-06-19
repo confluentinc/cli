@@ -26,7 +26,7 @@ func (c *mirrorCommand) newReverseAndStartMirrorCommand() *cobra.Command {
 
 	pcmd.AddLinkFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually reverse the local mirror topic and starts the remote mirror topic, but simply validates it.")
-	cmd.Flags().String("endpoint", "", "Endpoint to be used for this Kafka cluster.")
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -44,11 +44,6 @@ func (c *mirrorCommand) reverseAndStartMirror(cmd *cobra.Command, args []string)
 	}
 
 	dryRun, err := cmd.Flags().GetBool(dryrunFlagName)
-	if err != nil {
-		return err
-	}
-
-	err = pcmd.SpecifyEndpoint(cmd, c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}

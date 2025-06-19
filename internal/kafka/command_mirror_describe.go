@@ -23,7 +23,7 @@ func (c *mirrorCommand) newDescribeCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("endpoint", "", "Endpoint to be used for this Kafka cluster.")
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddLinkFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -39,11 +39,6 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 	mirrorTopicName := args[0]
 
 	link, err := cmd.Flags().GetString("link")
-	if err != nil {
-		return err
-	}
-
-	err = pcmd.SpecifyEndpoint(cmd, c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}

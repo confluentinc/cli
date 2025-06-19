@@ -38,7 +38,7 @@ func (c *linkCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().Bool(includeTopicsFlagName, false, "If set, will list mirrored topics for the links returned.")
-	cmd.Flags().String("endpoint", "", "Endpoint to be used for this Kafka cluster.")
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -49,11 +49,6 @@ func (c *linkCommand) newListCommand() *cobra.Command {
 
 func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 	includeTopics, err := cmd.Flags().GetBool(includeTopicsFlagName)
-	if err != nil {
-		return err
-	}
-
-	err = pcmd.SpecifyEndpoint(cmd, c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}

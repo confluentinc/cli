@@ -40,7 +40,7 @@ func (c *mirrorCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().Int32("replication-factor", 3, "Replication factor.")
 	pcmd.AddConfigFlag(cmd)
 	cmd.Flags().String("source-topic", "", "Name of the source topic to be mirrored over the cluster link. Only required when there is a prefix configured on the link.")
-	cmd.Flags().String("endpoint", "", "Endpoint to be used for this Kafka cluster.")
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -91,11 +91,6 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	configMap, err := properties.GetMap(config)
-	if err != nil {
-		return err
-	}
-
-	err = pcmd.SpecifyEndpoint(cmd, c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}

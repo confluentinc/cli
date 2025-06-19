@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *command) newEndpointListCommand() *cobra.Command {
+func (c *clusterCommand) newEndpointListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		RunE:  c.endpointList,
@@ -33,7 +33,7 @@ func (c *command) newEndpointListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) endpointList(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) endpointList(cmd *cobra.Command, args []string) error {
 	// Add logic for displaying endpoint, layer by layer
 	// check current environment... cloud... region...
 	// PNI -> privatelink -> public

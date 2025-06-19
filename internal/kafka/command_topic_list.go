@@ -25,7 +25,7 @@ func (c *command) newListCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	cmd.Flags().String("endpoint", "", "Endpoint to be used for this Kafka cluster.")
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -53,11 +53,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *command) getTopics(cmd *cobra.Command) ([]kafkarestv3.TopicData, error) {
-	err := pcmd.SpecifyEndpoint(cmd, c.AuthenticatedCLICommand)
-	if err != nil {
-		return nil, err
-	}
-
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return nil, err

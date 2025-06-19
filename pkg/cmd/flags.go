@@ -133,22 +133,11 @@ func AutocompleteClusters(environmentId string, client *ccloudv2.Client) []strin
 }
 
 func AddEndpointFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
-	cmd.Flags().String("endpoint", "", "Endpoint to be used for this Kafka cluster.")
-	RegisterFlagCompletionFunc(cmd, "endpoint", func(cmd *cobra.Command, args []string) []string {
-		if err := c.PersistentPreRunE(cmd, args); err != nil {
-			return nil
-		}
-
-		environmentId, err := c.Context.EnvironmentId()
-		if err != nil {
-			return nil
-		}
-		return AutocompleteClusters(environmentId, c.V2Client)
-	})
+	cmd.Flags().String("kafka-endpoint", "", "Endpoint to be used for this Kafka cluster.")
 }
 
 func AutocompleteEndpoints(environmentId string, client *ccloudv2.Client) []string {
-	// doesn't seem possible given that outputing a list of endpoints requires specifying the clusterID
+	// nice-to-have, tracked by JIRA
 	return nil
 }
 
@@ -640,27 +629,4 @@ func AddMDSOnPremMTLSFlags(cmd *cobra.Command) {
 	cmd.Flags().String("client-cert-path", "", "Path to client cert to be verified by MDS. Include for mTLS authentication.")
 	cmd.Flags().String("client-key-path", "", "Path to client private key, include for mTLS authentication.")
 	cmd.MarkFlagsRequiredTogether("client-cert-path", "client-key-path")
-}
-
-func SpecifyEndpoint(cmd *cobra.Command, c *AuthenticatedCLICommand) error {
-	cluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
-	clusterId := cluster.GetId()
-	if err != nil {
-		return err
-	}
-
-	endpoint, err := cmd.Flags().GetString("endpoint")
-	if err != nil {
-		return err
-	}
-
-	// input flag precedes stored config value
-	// If the endpoint flag is set, use its value; otherwise, use the value from config.RestEndpoint
-	if endpoint != "" {
-		config := c.Context.KafkaClusterContext.GetKafkaClusterConfig(clusterId)
-		// is this successfully setting value? Or should we write a new method SetRestEndpoint and use it
-		config.RestEndpoint = endpoint
-	}
-
-	return nil
 }

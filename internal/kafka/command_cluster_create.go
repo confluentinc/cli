@@ -116,11 +116,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	//endpoint, err := cmd.Flags().GetString("endpoint")
-	//if err != nil {
-	//	return err
-	//}
-
 	var keyGlobalObjectReference *cmkv2.GlobalObjectReference
 	if byok != "" {
 		key, httpResp, err := c.V2Client.GetByokKey(byok)

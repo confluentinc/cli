@@ -25,7 +25,7 @@ func (c *clusterCommand) newConfigurationDescribeCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("endpoint", "", "Endpoint to be used for this Kafka cluster.")
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -35,11 +35,6 @@ func (c *clusterCommand) newConfigurationDescribeCommand() *cobra.Command {
 }
 
 func (c *clusterCommand) configurationDescribe(cmd *cobra.Command, args []string) error {
-	err := pcmd.SpecifyEndpoint(cmd, c.AuthenticatedCLICommand)
-	if err != nil {
-		return err
-	}
-
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
