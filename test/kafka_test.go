@@ -92,6 +92,16 @@ func (s *CLITestSuite) TestKafka() {
 
 		{args: "kafka cluster describe lkc-unknown", fixture: "kafka/48.golden", exitCode: 1},
 		{args: "kafka cluster describe lkc-unknown-type", fixture: "kafka/describe-unknown-cluster-type.golden"},
+		//
+		//{args: "kafka cluster endpoint list --cluster my-dedicated-cluster", fixture: "kafka/endpoint/list-dedicated-cluster.golden"},
+		//{args: "kafka cluster endpoint list --cluster my-new-cluster", fixture: "kafka/endpoint/list-new-cluster.golden"},
+		//{args: "kafka cluster endpoint list --cluster my-invalid-cluster", fixture: "kafka/endpoint/list-new-cluster.golden", exitCode: 1},
+		//{args: "kafka cluster endpoint list --cluster my-dedicated-cluster -o json", fixture: "kafka/endpoint/list-dedicated-cluster-json.golden"},
+		//{args: "kafka cluster endpoint list --cluster my-dedicated-cluster -o yaml", fixture: "kafka/endpoint/list-dedicated-cluster-yaml.golden"},
+		//
+		//{args: "kafka cluster endpoint use --cluster my-dedicated-cluster", fixture: "kafka/endpoint/use-dedicated-cluster.golden"},
+		//{args: "kafka cluster endpoint use --cluster my-new-cluster", fixture: "kafka/endpoint/use-new-cluster.golden"},
+		//{args: "kafka cluster endpoint use --cluster my-invalid-cluster", fixture: "kafka/endpoint/use-invalid-cluster.golden", exitCode: 1},
 
 		{args: "kafka acl list --cluster lkc-acls", fixture: "kafka/acl/list-cloud.golden"},
 		{args: "kafka acl list --cluster lkc-acls --all", fixture: "kafka/acl/list-cloud-all.golden"},
@@ -160,11 +170,58 @@ func (s *CLITestSuite) TestKafka() {
 		{args: fmt.Sprintf("kafka link task list link-5 --url %s -o json", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem-json.golden"},
 	}
 
+	resetConfiguration(s.T(), false)
+
 	for _, test := range tests {
-		test.login = "onprem"
+		test.login = "cloud"
+		test.workflow = true
 		s.runIntegrationTest(test)
 	}
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+func (s *CLITestSuite) Testaaa() {
+	tests := []CLITest{
+		{args: "kafka acl list --cluster lkc-acls -vvvv", fixture: "kafka/acl/list-cloud.golden"},
+	}
+
+	//if runtime.GOOS != "windows" {
+	//	noSchemaTest := CLITest{args: "kafka topic produce topic-exist --value-format protobuf --api-key key --api-secret secret", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/produce-no-schema.golden", exitCode: 1}
+	//	tests = append(tests, noSchemaTest)
+	//}
+
+	resetConfiguration(s.T(), false)
+
+	for _, test := range tests {
+		test.login = "cloud"
+		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+
+	tests = []CLITest{
+		//{args: fmt.Sprintf("kafka link describe link-1 --url %s -vvvv", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/describe-onprem.golden"},
+		//{args: fmt.Sprintf("kafka link describe link-3 --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/describe-error-onprem.golden"},
+		//{args: fmt.Sprintf("kafka link list --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-error-onprem.golden"},
+		//{args: fmt.Sprintf("kafka link task list link-5 --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem.golden"},
+		//{args: fmt.Sprintf("kafka link task list link-5 --url %s -o yaml", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem-yaml.golden"},
+		//{args: fmt.Sprintf("kafka link task list link-5 --url %s -o json", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem-json.golden"},
+	}
+
+	resetConfiguration(s.T(), false)
+
+	for _, test := range tests {
+		test.login = "cloud"
+		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func (s *CLITestSuite) TestKafkaClusterCreate_Byok() {
 	test := CLITest{

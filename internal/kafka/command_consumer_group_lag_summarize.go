@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/kafka"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -29,6 +30,7 @@ func (c *consumerCommand) newLagSummarizeCommand() *cobra.Command {
 		RunE:              c.groupLagSummarize,
 	}
 
+	cmd.Flags().String("endpoint", "", "Endpoint to be used for this Kafka cluster.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -42,7 +44,23 @@ func (c *consumerCommand) groupLagSummarize(cmd *cobra.Command, args []string) e
 		return err
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	cluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
+	clusterId := cluster.GetId()
+	if err != nil {
+		return err
+	}
+
+	endpoint, err := cmd.Flags().GetString("endpoint")
+	if err != nil {
+		return err
+	}
+
+	if endpoint != "" {
+		config := c.Context.KafkaClusterContext.GetKafkaClusterConfig(clusterId)
+		config.RestEndpoint = endpoint
+	}
+
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}
