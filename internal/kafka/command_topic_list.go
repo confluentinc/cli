@@ -35,7 +35,7 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	topics, err := c.getTopics(cmd)
+	topics, err := c.getTopics()
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	return list.Print()
 }
 
-func (c *command) getTopics(cmd *cobra.Command) ([]kafkarestv3.TopicData, error) {
+func (c *command) getTopics() ([]kafkarestv3.TopicData, error) {
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return nil, err
