@@ -58,7 +58,32 @@ func (c *command) applicationCreate(cmd *cobra.Command, args []string) error {
 	case ".json":
 		err = json.Unmarshal(data, &application)
 	case ".yaml", ".yml":
-		err = yaml.Unmarshal(data, &application)
+		// First unmarshal into a generic map to preserve the case
+		var raw map[string]interface{}
+		if err = yaml.Unmarshal(data, &raw); err != nil {
+			return fmt.Errorf("failed to unmarshal YAML: %v", err)
+		}
+
+		// Convert to JSON bytes to use the struct's JSON tags
+		jsonBytes, err := json.Marshal(raw)
+		if err != nil {
+			return fmt.Errorf("failed to convert to JSON: %v", err)
+		}
+
+		// Now unmarshal into the struct using JSON unmarshaler
+		// This will respect the json tags in the struct
+		if err = json.Unmarshal(jsonBytes, &application); err != nil {
+			return fmt.Errorf("failed to unmarshal JSON: %v", err)
+		}
+
+		// Verify the apiVersion was set correctly
+		if application.ApiVersion == "" {
+			// If still empty, try to get it directly from the raw map
+			if apiVer, ok := raw["apiVersion"].(string); ok {
+				application.ApiVersion = apiVer
+			}
+		}
+
 	default:
 		return errors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
 	}
