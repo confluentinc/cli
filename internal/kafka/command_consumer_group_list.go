@@ -25,7 +25,7 @@ func (c *consumerCommand) newGroupListCommand() *cobra.Command {
 }
 
 func (c *consumerCommand) groupList(cmd *cobra.Command, _ []string) error {
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}

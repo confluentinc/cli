@@ -63,7 +63,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		filters[i] = convertToFilter(acl.ACLBinding)
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}

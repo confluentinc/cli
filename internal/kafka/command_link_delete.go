@@ -27,7 +27,7 @@ func (c *linkCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}

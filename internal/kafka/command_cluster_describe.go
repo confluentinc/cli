@@ -102,7 +102,7 @@ func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, clust
 	out := convertClusterToDescribeStruct(cluster, c.Context)
 
 	if getTopicCount {
-		topicCount, err := c.getTopicCountForKafkaCluster(cluster)
+		topicCount, err := c.getTopicCountForKafkaCluster(cmd, cluster)
 		// topicCount is 0 when err != nil, and will be omitted by `omitempty`
 		if err != nil {
 			log.CliLogger.Infof("The topic count will be omitted as Kafka topics for this cluster could not be retrieved: %v", err)
@@ -172,12 +172,12 @@ func getKafkaClusterDescribeFields(cluster *cmkv2.CmkV2Cluster, basicFields []st
 	return describeFields
 }
 
-func (c *clusterCommand) getTopicCountForKafkaCluster(cluster *cmkv2.CmkV2Cluster) (int, error) {
+func (c *clusterCommand) getTopicCountForKafkaCluster(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster) (int, error) {
 	if getCmkClusterStatus(cluster) == ccloudv2.StatusProvisioning {
 		return 0, nil
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return 0, err
 	}

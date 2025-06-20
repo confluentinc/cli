@@ -28,7 +28,6 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 	cmd.Flags().Bool("all", false, "Include ACLs for deleted principals with integer IDs.")
 	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
-
 	cmd.MarkFlagsMutuallyExclusive("service-account", "principal")
 
 	return cmd
@@ -44,7 +43,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return acl[0].errors
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}

@@ -74,7 +74,7 @@ func (c *linkCommand) newLinkTaskListCommand() *cobra.Command {
 func (c *linkCommand) taskList(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}

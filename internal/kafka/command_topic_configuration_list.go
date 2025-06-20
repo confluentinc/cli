@@ -40,7 +40,7 @@ func (c *command) newConfigurationListCommand() *cobra.Command {
 func (c *command) configurationList(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}

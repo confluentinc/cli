@@ -54,7 +54,7 @@ func (c *mirrorCommand) truncateAndRestore(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}

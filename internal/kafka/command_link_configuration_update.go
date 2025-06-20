@@ -64,7 +64,7 @@ func (c *linkCommand) configurationUpdate(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}

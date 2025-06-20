@@ -41,7 +41,7 @@ func (c *clusterCommand) newConfigurationUpdateCommand() *cobra.Command {
 }
 
 func (c *clusterCommand) configurationUpdate(cmd *cobra.Command, _ []string) error {
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}

@@ -35,7 +35,7 @@ func (c *consumerCommand) newListCommand() *cobra.Command {
 }
 
 func (c *consumerCommand) list(cmd *cobra.Command, _ []string) error {
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}

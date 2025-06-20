@@ -66,7 +66,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		bindings[i] = acl.ACLBinding
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}

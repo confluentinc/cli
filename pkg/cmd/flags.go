@@ -539,15 +539,15 @@ func AddValueFormatFlag(cmd *cobra.Command) {
 	RegisterFlagCompletionFunc(cmd, "value-format", func(_ *cobra.Command, _ []string) []string { return serdes.Formats })
 }
 
-func AddLinkFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
+func AddLinkFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 	cmd.Flags().String("link", "", "Name of cluster link.")
 
 	RegisterFlagCompletionFunc(cmd, "link", func(cmd *cobra.Command, args []string) []string {
-		if err := command.PersistentPreRunE(cmd, args); err != nil {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
 			return nil
 		}
 
-		return AutocompleteLinks(command)
+		return AutocompleteLinks(cmd, c)
 	})
 }
 
@@ -561,8 +561,8 @@ func AddKmsTypeFlag(cmd *cobra.Command) {
 	RegisterFlagCompletionFunc(cmd, "kms-type", func(_ *cobra.Command, _ []string) []string { return serdes.KmsTypes })
 }
 
-func AutocompleteLinks(command *AuthenticatedCLICommand) []string {
-	kafkaREST, err := command.GetKafkaREST()
+func AutocompleteLinks(cmd *cobra.Command, c *AuthenticatedCLICommand) []string {
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return nil
 	}
@@ -579,8 +579,8 @@ func AutocompleteLinks(command *AuthenticatedCLICommand) []string {
 	return suggestions
 }
 
-func AutocompleteConsumerGroups(command *AuthenticatedCLICommand) []string {
-	kafkaREST, err := command.GetKafkaREST()
+func AutocompleteConsumerGroups(cmd *cobra.Command, c *AuthenticatedCLICommand) []string {
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return nil
 	}

@@ -60,7 +60,7 @@ func (c *consumerCommand) groupLagSummarize(cmd *cobra.Command, args []string) e
 		config.RestEndpoint = endpoint
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}

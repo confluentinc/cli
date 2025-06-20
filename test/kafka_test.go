@@ -179,18 +179,49 @@ func (s *CLITestSuite) TestKafka() {
 	}
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 func (s *CLITestSuite) Testaaa() {
-	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
-		{args: fmt.Sprintf("kafka link describe link-1 --url %s -vvvv", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/describe-onprem.golden"},
+		{args: "kafka acl list --cluster lkc-acls -vvvv", fixture: "kafka/acl/list-cloud.golden"},
 	}
+
+	//if runtime.GOOS != "windows" {
+	//	noSchemaTest := CLITest{args: "kafka topic produce topic-exist --value-format protobuf --api-key key --api-secret secret", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/produce-no-schema.golden", exitCode: 1}
+	//	tests = append(tests, noSchemaTest)
+	//}
+
+	resetConfiguration(s.T(), false)
 
 	for _, test := range tests {
 		test.login = "cloud"
-		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+
+	tests = []CLITest{
+		//{args: fmt.Sprintf("kafka link describe link-1 --url %s -vvvv", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/describe-onprem.golden"},
+		//{args: fmt.Sprintf("kafka link describe link-3 --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/describe-error-onprem.golden"},
+		//{args: fmt.Sprintf("kafka link list --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-error-onprem.golden"},
+		//{args: fmt.Sprintf("kafka link task list link-5 --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem.golden"},
+		//{args: fmt.Sprintf("kafka link task list link-5 --url %s -o yaml", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem-yaml.golden"},
+		//{args: fmt.Sprintf("kafka link task list link-5 --url %s -o json", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem-json.golden"},
+	}
+
+	resetConfiguration(s.T(), false)
+
+	for _, test := range tests {
+		test.login = "cloud"
+		test.workflow = true
 		s.runIntegrationTest(test)
 	}
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func (s *CLITestSuite) TestKafkaClusterCreate_Byok() {
 	test := CLITest{

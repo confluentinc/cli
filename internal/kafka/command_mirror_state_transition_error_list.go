@@ -59,7 +59,7 @@ func (c *mirrorCommand) stateTransitionErrorList(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}
