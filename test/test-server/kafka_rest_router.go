@@ -218,7 +218,7 @@ func handleKafkaRestTopics(t *testing.T) http.HandlerFunc {
 				}
 				// TODO: check for compression.type
 			}
-			// no errors = successfully created
+			// no errors = successfully submitted
 			w.WriteHeader(http.StatusCreated)
 			response := fmt.Sprintf(`{
 					"kind": "KafkaTopic",

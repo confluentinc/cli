@@ -64,3 +64,14 @@ func PrintWelcomeHeader(appOtions types.ApplicationOptions) {
 		output.Printf(false, "[Ctrl-Q] %s [Ctrl-S] %s \n", c.Sprint("Quit"), c.Sprint("Toggle Completions"))
 	}
 }
+
+func PrintWelcomeHeaderOnPrem(appOtions types.ApplicationOptions) {
+	// Print welcome message
+	output.Print(false, "Welcome! \n")
+	output.Print(false, "To exit, press Ctrl-Q or type \"exit\". \n\n")
+
+	// Print shortcuts
+	c := fColor.New(color.AccentColor)
+
+	output.Printf(false, "[Ctrl-Q] %s [Ctrl-S] %s \n", c.Sprint("Quit"), c.Sprint("Toggle Completions"))
+}
