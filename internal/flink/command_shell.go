@@ -68,7 +68,6 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner, cfg *config.Config) 
 		cmd.Flags().String("database", "", "The name of the default database.")
 		cmd.Flags().String("flink-configuration", "", "The file path to hold the Flink configuration.")
 		addCmfFlagSet(cmd)
-		pcmd.AddOutputFlag(cmd)
 
 		cobra.CheckErr(cmd.MarkFlagRequired("environment"))
 		cobra.CheckErr(cmd.MarkFlagRequired("compute-pool"))
