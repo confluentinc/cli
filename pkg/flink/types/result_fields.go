@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
 const (
@@ -37,6 +38,59 @@ const (
 type StatementResultFieldType string
 
 func NewResultFieldType(obj flinkgatewayv1.DataType) StatementResultFieldType {
+	switch obj.Type {
+	case "CHAR":
+		return Char
+	case "VARCHAR":
+		return Varchar
+	case "BOOLEAN":
+		return Boolean
+	case "BINARY":
+		return Binary
+	case "VARBINARY":
+		return Varbinary
+	case "DECIMAL":
+		return Decimal
+	case "TINYINT":
+		return Tinyint
+	case "SMALLINT":
+		return Smallint
+	case "INTEGER":
+		return Integer
+	case "BIGINT":
+		return Bigint
+	case "FLOAT":
+		return Float
+	case "DOUBLE":
+		return Double
+	case "DATE":
+		return Date
+	case "TIME_WITHOUT_TIME_ZONE":
+		return TimeWithoutTimeZone
+	case "TIMESTAMP_WITHOUT_TIME_ZONE":
+		return TimestampWithoutTimeZone
+	case "TIMESTAMP_WITH_TIME_ZONE":
+		return TimestampWithTimeZone
+	case "TIMESTAMP_WITH_LOCAL_TIME_ZONE":
+		return TimestampWithLocalTimeZone
+	case "INTERVAL_YEAR_MONTH":
+		return IntervalYearMonth
+	case "INTERVAL_DAY_TIME":
+		return IntervalDayTime
+	case "ARRAY":
+		return Array
+	case "MULTISET":
+		return Multiset
+	case "MAP":
+		return Map
+	case "ROW":
+		return Row
+	default:
+		return Null
+	}
+}
+
+func NewResultFieldTypeOnPrem(obj cmfsdk.DataType) StatementResultFieldType {
 	switch obj.Type {
 	case "CHAR":
 		return Char
