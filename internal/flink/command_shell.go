@@ -1,10 +1,15 @@
 package flink
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 
 	"github.com/confluentinc/cli/v4/pkg/auth"
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
@@ -20,30 +25,53 @@ import (
 	ppanic "github.com/confluentinc/cli/v4/pkg/panic-recovery"
 )
 
-func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newShellCommand(prerunner pcmd.PreRunner, cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "shell",
-		Short:       "Start Flink interactive SQL client.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
-		Example: examples.BuildExampleString(
+		Use:   "shell",
+		Short: "Start Flink interactive SQL client.",
+	}
+
+	// CCloud implementation for the shell command
+	if cfg.IsCloudLogin() {
+		cmd.Annotations = map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin}
+		cmd.Example = examples.BuildExampleString(
 			examples.Example{
 				Text: "For a Quick Start with examples in context, see https://docs.confluent.io/cloud/current/flink/get-started/quick-start-shell.html.",
 			},
-		),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		)
+		cmd.RunE = func(cmd *cobra.Command, args []string) error {
 			return c.startFlinkSqlClient(prerunner, cmd)
-		},
-	}
+		}
+		c.addComputePoolFlag(cmd)
+		pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
+		c.addDatabaseFlag(cmd)
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+		pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	c.addComputePoolFlag(cmd)
-	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
-	c.addDatabaseFlag(cmd)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddContextFlag(cmd, c.CLICommand)
+		if featureflags.Manager.BoolVariation("cli.flink.internal", c.Context, config.CliLaunchDarklyClient, true, false) {
+			cmd.Flags().StringSlice("config-key", []string{}, "App option keys for local mode.")
+			cmd.Flags().StringSlice("config-value", []string{}, "App option values for local mode.")
+		}
+	} else { // On-Prem implementation for the shell command
+		cmd.Annotations = map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout}
+		cmd.Example = examples.BuildExampleString(
+			examples.Example{
+				Text: "For a Quick Start with examples in context, see https://docs.confluent.io/cli/current/flink/get-started/quick-start-shell.html.",
+			},
+		)
+		cmd.RunE = func(cmd *cobra.Command, args []string) error {
+			return c.startFlinkSqlClientOnPrem(prerunner, cmd)
+		}
+		cmd.Flags().String("compute-pool", "", "The compute pool name to execute the Flink SQL statement.")
+		cmd.Flags().String("environment", "", "Name of the Flink environment.")
+		cmd.Flags().String("catalog", "", "The name of the default catalog.")
+		cmd.Flags().String("database", "", "The name of the default database.")
+		cmd.Flags().String("flink-configuration", "", "The file path to hold the Flink configuration.")
+		addCmfFlagSet(cmd)
+		pcmd.AddOutputFlag(cmd)
 
-	if featureflags.Manager.BoolVariation("cli.flink.internal", c.Context, config.CliLaunchDarklyClient, true, false) {
-		cmd.Flags().StringSlice("config-key", []string{}, "App option keys for local mode.")
-		cmd.Flags().StringSlice("config-value", []string{}, "App option values for local mode.")
+		cobra.CheckErr(cmd.MarkFlagRequired("environment"))
+		cobra.CheckErr(cmd.MarkFlagRequired("compute-pool"))
 	}
 
 	return cmd
@@ -74,6 +102,32 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 			}
 			flinkGatewayClient.AuthToken = dataplaneToken
 		}
+
+		return nil
+	}
+}
+
+func (c *command) authenticatedOnPrem(authenticated func(*cobra.Command, []string) error, cmd *cobra.Command) func() error {
+	return func() error {
+		if !c.Config.IsOnPremLogin() { // don't refresh tokens when running in unauthenticated mode
+			return nil
+		}
+
+		authToken := c.Context.GetAuthToken()
+		authRefreshToken := c.Context.GetAuthRefreshToken()
+		if err := c.Context.UpdateAuthTokens(authToken, authRefreshToken); err != nil {
+			return err
+		}
+
+		if err := authenticated(cmd, nil); err != nil {
+			return err
+		}
+
+		cmfClient, err := c.GetCmfClient(cmd)
+		if err != nil {
+			return err
+		}
+		cmfClient.AuthToken = c.Context.GetAuthToken()
 
 		return nil
 	}
@@ -183,6 +237,82 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 	}
 
 	return client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), opts, reportUsage(cmd, c.Config, unsafeTrace))
+}
+
+func (c *command) startFlinkSqlClientOnPrem(prerunner pcmd.PreRunner, cmd *cobra.Command) error {
+	environment, err := cmd.Flags().GetString("environment")
+	if err != nil {
+		return err
+	}
+
+	computePool, err := cmd.Flags().GetString("compute-pool")
+	if err != nil {
+		return err
+	}
+
+	catalog, err := cmd.Flags().GetString("catalog")
+	if err != nil {
+		return err
+	}
+
+	database, err := cmd.Flags().GetString("database")
+	if err != nil {
+		return err
+	}
+
+	unsafeTrace, err := c.Command.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return err
+	}
+
+	configFilePath, err := cmd.Flags().GetString("flink-configuration")
+	if err != nil {
+		return err
+	}
+
+	flinkConfiguration := map[string]string{}
+	if configFilePath != "" {
+		var data []byte
+		// Read configuration file contents
+		data, err = os.ReadFile(configFilePath)
+		if err != nil {
+			return fmt.Errorf("failed to read Flink configuration file: %v", err)
+		}
+		ext := filepath.Ext(configFilePath)
+		switch ext {
+		case ".json":
+			err = json.Unmarshal(data, &flinkConfiguration)
+		case ".yaml", ".yml":
+			err = yaml.Unmarshal(data, &flinkConfiguration)
+		default:
+			return errors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	flinkCmfClient, err := c.GetCmfClient(cmd)
+	if err != nil {
+		return err
+	}
+	flinkCmfClient.AuthToken = c.Context.GetAuthToken()
+
+	verbose, _ := cmd.Flags().GetCount("verbose")
+
+	opts := types.ApplicationOptions{
+		Context:            c.Context,
+		UnsafeTrace:        unsafeTrace,
+		UserAgent:          c.Version.UserAgent,
+		EnvironmentName:    catalog,
+		EnvironmentId:      environment,
+		Database:           database,
+		ComputePoolId:      computePool,
+		FlinkConfiguration: flinkConfiguration,
+		Verbose:            verbose > 0,
+	}
+
+	return client.StartAppOnPrem(flinkCmfClient, c.authenticatedOnPrem(prerunner.AuthenticatedWithMDS(c.AuthenticatedCLICommand), cmd), opts)
 }
 
 func (c *command) startWithLocalMode(configKeys, configValues []string) error {
