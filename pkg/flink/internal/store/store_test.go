@@ -1177,7 +1177,7 @@ func TestTimeout(t *testing.T) {
 	// Iterate over test cases and run the function for each input, comparing output to expected value
 	for _, tc := range testCases {
 		store := Store{Properties: NewUserPropertiesWithDefaults(tc.properties, map[string]string{})}
-		result := store.getTimeout()
+		result := getTimeout(store.Properties)
 		require.Equal(t, tc.expected, result, tc.name)
 	}
 }
