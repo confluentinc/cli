@@ -1,4 +1,4 @@
-Statement successfully created. Statement phase: COMPLETED.
+Statement successfully submitted. Statement phase: COMPLETED.
 Dry run statement was verified and there were no issues found.
-If you wish to submit your statement, disable dry run mode before your statement with "set 'sql.dry-run' = 'false';"
+If you wish to submit your statement, disable dry run mode before submitting your statement with "set 'sql.dry-run' = 'false';"
 
