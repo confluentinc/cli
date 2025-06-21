@@ -15,7 +15,7 @@ var nullField = types.AtomicStatementResultField{
 type SDKToStatementResultFieldConverter func(any) types.StatementResultField
 
 func GetConverterForType(dataType flinkgatewayv1.DataType) SDKToStatementResultFieldConverter {
-	fieldType := types.NewResultFieldType(dataType)
+	fieldType := types.NewResultFieldType(dataType.GetType())
 	switch fieldType {
 	case types.Array:
 		elementType := dataType.GetElementType()
@@ -40,7 +40,7 @@ func GetConverterForType(dataType flinkgatewayv1.DataType) SDKToStatementResultF
 }
 
 func GetConverterForTypeOnPrem(dataType cmfsdk.DataType) SDKToStatementResultFieldConverter {
-	fieldType := types.NewResultFieldTypeOnPrem(dataType)
+	fieldType := types.NewResultFieldType(dataType.GetType())
 	switch fieldType {
 	case types.Array:
 		elementType := dataType.GetElementType()
@@ -90,7 +90,7 @@ func toArrayStatementResultFieldConverter(elementType flinkgatewayv1.DataType) S
 		}
 		return types.ArrayStatementResultField{
 			Type:        types.Array,
-			ElementType: types.NewResultFieldType(elementType),
+			ElementType: types.NewResultFieldType(elementType.GetType()),
 			Values:      values,
 		}
 	}
@@ -109,7 +109,7 @@ func toArrayStatementResultFieldConverterOnPrem(elementType cmfsdk.DataType) SDK
 		}
 		return types.ArrayStatementResultField{
 			Type:        types.Array,
-			ElementType: types.NewResultFieldTypeOnPrem(elementType),
+			ElementType: types.NewResultFieldType(elementType.GetType()),
 			Values:      values,
 		}
 	}
@@ -140,8 +140,8 @@ func toMapStatementResultFieldConverter(fieldType types.StatementResultFieldType
 		}
 		return types.MapStatementResultField{
 			Type:      fieldType,
-			KeyType:   types.NewResultFieldType(keyType),
-			ValueType: types.NewResultFieldType(valueType),
+			KeyType:   types.NewResultFieldType(keyType.GetType()),
+			ValueType: types.NewResultFieldType(valueType.GetType()),
 			Entries:   entries,
 		}
 	}
@@ -172,8 +172,8 @@ func toMapStatementResultFieldConverterOnPrem(fieldType types.StatementResultFie
 		}
 		return types.MapStatementResultField{
 			Type:      fieldType,
-			KeyType:   types.NewResultFieldTypeOnPrem(keyType),
-			ValueType: types.NewResultFieldTypeOnPrem(valueType),
+			KeyType:   types.NewResultFieldType(keyType.GetType()),
+			ValueType: types.NewResultFieldType(valueType.GetType()),
 			Entries:   entries,
 		}
 	}
