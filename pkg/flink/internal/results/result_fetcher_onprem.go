@@ -10,7 +10,7 @@ import (
 
 type ResultFetcherOnPrem struct {
 	store                        types.StoreInterfaceOnPrem
-	statement                    types.ProcessedStatementOnPrem
+	statement                    types.ProcessedStatement
 	statementLock                sync.RWMutex
 	materializedStatementResults types.MaterializedStatementResults
 	refreshState                 refreshState
@@ -80,7 +80,7 @@ func (t *ResultFetcherOnPrem) fetchNextPageAndUpdateState() {
 	t.updateState(newResults, err)
 }
 
-func (t *ResultFetcherOnPrem) updateState(newResults *types.ProcessedStatementOnPrem, err *types.StatementError) {
+func (t *ResultFetcherOnPrem) updateState(newResults *types.ProcessedStatement, err *types.StatementError) {
 	// don't fetch if we're already at the last page, otherwise we would fetch the first page again
 	if t.GetRefreshState() == types.Completed {
 		return
@@ -107,30 +107,30 @@ func (t *ResultFetcherOnPrem) updateState(newResults *types.ProcessedStatementOn
 	t.refreshState.setState(types.Running)
 }
 
-func (t *ResultFetcherOnPrem) GetStatement() types.ProcessedStatementOnPrem {
+func (t *ResultFetcherOnPrem) GetStatement() types.ProcessedStatement {
 	t.statementLock.RLock()
 	defer t.statementLock.RUnlock()
 
 	return t.statement
 }
 
-func (t *ResultFetcherOnPrem) setStatement(statement types.ProcessedStatementOnPrem) {
+func (t *ResultFetcherOnPrem) setStatement(statement types.ProcessedStatement) {
 	t.statementLock.Lock()
 	defer t.statementLock.Unlock()
 
 	t.statement = statement
 }
 
-func (t *ResultFetcherOnPrem) Init(statement types.ProcessedStatementOnPrem) {
+func (t *ResultFetcherOnPrem) Init(statement types.ProcessedStatement) {
 	t.setStatement(statement)
 	t.setInitialRefreshState(statement)
 	headers := t.getResultHeadersOrCreateFromResultSchema(statement)
-	t.materializedStatementResults = types.NewMaterializedStatementResults(headers, MaxResultsCapacity, statement.Traits.UpsertColumns)
+	t.materializedStatementResults = types.NewMaterializedStatementResults(headers, MaxResultsCapacity, statement.Traits.GetUpsertColumns())
 	t.materializedStatementResults.SetTableMode(true)
 	t.materializedStatementResults.Append(statement.StatementResults.GetRows()...)
 }
 
-func (t *ResultFetcherOnPrem) setInitialRefreshState(statement types.ProcessedStatementOnPrem) {
+func (t *ResultFetcherOnPrem) setInitialRefreshState(statement types.ProcessedStatement) {
 	if statement.PageToken == "" {
 		t.refreshState.setState(types.Completed)
 		return
@@ -138,15 +138,11 @@ func (t *ResultFetcherOnPrem) setInitialRefreshState(statement types.ProcessedSt
 	t.refreshState.setState(types.Paused)
 }
 
-func (t *ResultFetcherOnPrem) getResultHeadersOrCreateFromResultSchema(statement types.ProcessedStatementOnPrem) []string {
+func (t *ResultFetcherOnPrem) getResultHeadersOrCreateFromResultSchema(statement types.ProcessedStatement) []string {
 	if len(statement.StatementResults.GetHeaders()) > 0 {
 		return statement.StatementResults.GetHeaders()
 	}
-	headers := make([]string, len(statement.Traits.Schema.GetColumns()))
-	for idx, column := range statement.Traits.Schema.GetColumns() {
-		headers[idx] = column.GetName()
-	}
-	return headers
+	return statement.Traits.GetColumnNames()
 }
 
 func (t *ResultFetcherOnPrem) Close() {

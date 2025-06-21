@@ -45,10 +45,10 @@ type ResultFetcherInterfaceOnPrem interface {
 	ToggleTableMode()
 	ToggleRefresh()
 	IsRefreshRunning() bool
-	Init(statement ProcessedStatementOnPrem)
+	Init(statement ProcessedStatement)
 	Close()
 	SetRefreshCallback(func())
-	GetStatement() ProcessedStatementOnPrem
+	GetStatement() ProcessedStatement
 	GetMaterializedStatementResults() *MaterializedStatementResults
 	GetLastRefreshTimestamp() *time.Time
 }

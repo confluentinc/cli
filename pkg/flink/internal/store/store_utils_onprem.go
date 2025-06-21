@@ -10,13 +10,13 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 )
 
-func (s *StoreOnPrem) processSetStatement(statement string) (*types.ProcessedStatementOnPrem, *types.StatementError) {
+func (s *StoreOnPrem) processSetStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
 	configKey, configVal, err := parseSetStatement(statement)
 	if err != nil {
 		return nil, err.(*types.StatementError)
 	}
 	if configKey == "" {
-		return &types.ProcessedStatementOnPrem{
+		return &types.ProcessedStatement{
 			Kind:             config.OpSet,
 			Status:           types.COMPLETED,
 			StatementResults: createStatementResults([]string{"Key", "Value"}, s.Properties.ToSortedSlice(true)),
@@ -47,7 +47,7 @@ func (s *StoreOnPrem) processSetStatement(statement string) (*types.ProcessedSta
 	}
 
 	s.Properties.Set(configKey, configVal)
-	return &types.ProcessedStatementOnPrem{
+	return &types.ProcessedStatement{
 		Kind:                 config.OpSet,
 		StatusDetail:         "configuration updated successfully",
 		Status:               types.COMPLETED,
@@ -57,14 +57,14 @@ func (s *StoreOnPrem) processSetStatement(statement string) (*types.ProcessedSta
 	}, nil
 }
 
-func (s *StoreOnPrem) processResetStatement(statement string) (*types.ProcessedStatementOnPrem, *types.StatementError) {
+func (s *StoreOnPrem) processResetStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
 	configKey, err := parseResetStatement(statement)
 	if err != nil {
 		return nil, &types.StatementError{Message: err.Error()}
 	}
 	if configKey == "" {
 		s.Properties.Clear()
-		return &types.ProcessedStatementOnPrem{
+		return &types.ProcessedStatement{
 			Kind:             config.OpReset,
 			StatusDetail:     "configuration has been reset successfully",
 			Status:           types.COMPLETED,
@@ -81,7 +81,7 @@ func (s *StoreOnPrem) processResetStatement(statement string) (*types.ProcessedS
 	}
 
 	s.Properties.Delete(configKey)
-	return &types.ProcessedStatementOnPrem{
+	return &types.ProcessedStatement{
 		Kind:             config.OpReset,
 		StatusDetail:     fmt.Sprintf(`configuration key "%s" has been reset successfully`, configKey),
 		Status:           types.COMPLETED,
@@ -90,7 +90,7 @@ func (s *StoreOnPrem) processResetStatement(statement string) (*types.ProcessedS
 	}, nil
 }
 
-func (s *StoreOnPrem) processUseStatement(statement string) (*types.ProcessedStatementOnPrem, *types.StatementError) {
+func (s *StoreOnPrem) processUseStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
 	catalog, database, err := parseUseStatement(statement)
 	if err != nil {
 		return nil, &types.StatementError{Message: err.Error()}
@@ -128,7 +128,7 @@ func (s *StoreOnPrem) processUseStatement(statement string) (*types.ProcessedSta
 		return nil, useError()
 	}
 
-	return &types.ProcessedStatementOnPrem{
+	return &types.ProcessedStatement{
 		Kind:             config.OpUse,
 		StatusDetail:     "configuration updated successfully",
 		Status:           types.COMPLETED,

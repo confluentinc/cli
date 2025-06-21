@@ -30,7 +30,7 @@ func NewStatementControllerOnPrem(applicationController types.ApplicationControl
 	}
 }
 
-func (c *StatementControllerOnPrem) ExecuteStatement(statementToExecute string) (*types.ProcessedStatementOnPrem, *types.StatementError) {
+func (c *StatementControllerOnPrem) ExecuteStatement(statementToExecute string) (*types.ProcessedStatement, *types.StatementError) {
 	processedStatement, err := c.store.ProcessStatement(statementToExecute)
 	if err != nil {
 		c.handleStatementError(*err)
@@ -68,7 +68,7 @@ func (c *StatementControllerOnPrem) handleStatementError(err types.StatementErro
 	}
 }
 
-func (c *StatementControllerOnPrem) waitForStatementToBeReadyOrError(processedStatement types.ProcessedStatementOnPrem) (*types.ProcessedStatementOnPrem, *types.StatementError) {
+func (c *StatementControllerOnPrem) waitForStatementToBeReadyOrError(processedStatement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
 	ctx, cancelWaitPendingStatement := context.WithCancel(context.Background())
 	defer cancelWaitPendingStatement()
 
@@ -98,7 +98,7 @@ func (c *StatementControllerOnPrem) listenForUserInputEvent(ctx context.Context,
 	}
 }
 
-func (c *StatementControllerOnPrem) waitForStatementToBeInTerminalStateOrError(processedStatement types.ProcessedStatementOnPrem) (*types.ProcessedStatementOnPrem, *types.StatementError) {
+func (c *StatementControllerOnPrem) waitForStatementToBeInTerminalStateOrError(processedStatement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
 	readyStatementWithResults, err := c.store.FetchStatementResults(processedStatement)
 	if err != nil {
 		return nil, err

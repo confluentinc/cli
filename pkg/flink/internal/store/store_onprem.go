@@ -33,7 +33,7 @@ func (s *StoreOnPrem) authenticatedCmfClient() *flink.CmfRestClient {
 	return s.client
 }
 
-func (s *StoreOnPrem) ProcessLocalStatement(statement string) (*types.ProcessedStatementOnPrem, *types.StatementError) {
+func (s *StoreOnPrem) ProcessLocalStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
 	defer s.persistUserProperties()
 	switch statementType := parseStatementType(statement); statementType {
 	case SetStatement:
@@ -66,7 +66,7 @@ func (s *StoreOnPrem) persistUserProperties() {
 	}
 }
 
-func (s *StoreOnPrem) ProcessStatement(statement string) (*types.ProcessedStatementOnPrem, *types.StatementError) {
+func (s *StoreOnPrem) ProcessStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
 	// We trim the statement here once so we don't have to do it in every function
 	statement = strings.TrimSpace(statement)
 
@@ -120,7 +120,7 @@ func createSqlV1StatementOnPrem(statement string, statementName string, computeP
 	}
 }
 
-func (s *StoreOnPrem) WaitPendingStatement(ctx context.Context, statement types.ProcessedStatementOnPrem) (*types.ProcessedStatementOnPrem, *types.StatementError) {
+func (s *StoreOnPrem) WaitPendingStatement(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
 	statementStatus := statement.Status
 	if statementStatus != types.COMPLETED && statementStatus != types.RUNNING {
 		updatedStatement, err := s.waitForPendingStatement(ctx, statement.StatementName, s.getTimeout())
@@ -144,7 +144,7 @@ func (s *StoreOnPrem) WaitPendingStatement(ctx context.Context, statement types.
 }
 
 // FetchStatementResults TODO: need to revisit this function on how should we present the SQL statement
-func (s *StoreOnPrem) FetchStatementResults(statement types.ProcessedStatementOnPrem) (*types.ProcessedStatementOnPrem, *types.StatementError) {
+func (s *StoreOnPrem) FetchStatementResults(statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
 	// Process local statements
 	if statement.IsLocalStatement {
 		return &statement, nil
@@ -176,7 +176,7 @@ func (s *StoreOnPrem) FetchStatementResults(statement types.ProcessedStatementOn
 		statementResults = statementResultObj.Result.GetResults()
 	}
 
-	convertedResults, err := results.ConvertToInternalResultsOnPrem(statementResults, statement.Traits.GetSchema())
+	convertedResults, err := results.ConvertToInternalResultsOnPrem(statementResults, statement.Traits.CmfStatementTraits.GetSchema())
 	if err != nil {
 		return nil, types.NewStatementError(err)
 	}
@@ -220,7 +220,7 @@ func (s *StoreOnPrem) StopStatement(statementName string) bool {
 	return true
 }
 
-func (s *StoreOnPrem) waitForPendingStatement(ctx context.Context, statementName string, timeout time.Duration) (*types.ProcessedStatementOnPrem, *types.StatementError) {
+func (s *StoreOnPrem) waitForPendingStatement(ctx context.Context, statementName string, timeout time.Duration) (*types.ProcessedStatement, *types.StatementError) {
 	retries := 0
 	waitTime := calcWaitTime(retries)
 	elapsedWaitTime := time.Millisecond * 300
@@ -313,7 +313,7 @@ func NewStoreOnPrem(client *flink.CmfRestClient, exitApplication func(), userPro
 	}
 }
 
-func (s *StoreOnPrem) WaitForTerminalStatementState(ctx context.Context, statement types.ProcessedStatementOnPrem) (*types.ProcessedStatementOnPrem, *types.StatementError) {
+func (s *StoreOnPrem) WaitForTerminalStatementState(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
 	for !statement.IsTerminalState() {
 		select {
 		case <-ctx.Done():

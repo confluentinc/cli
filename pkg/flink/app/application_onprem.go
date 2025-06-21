@@ -129,7 +129,7 @@ func (a *ApplicationOnPrem) isAuthenticated() bool {
 	return true
 }
 
-func (a *ApplicationOnPrem) getOutputController(processedStatementWithResults types.ProcessedStatementOnPrem) types.OutputControllerInterface {
+func (a *ApplicationOnPrem) getOutputController(processedStatementWithResults types.ProcessedStatement) types.OutputControllerInterface {
 	if processedStatementWithResults.IsLocalStatement {
 		return a.baseOutputController
 	}

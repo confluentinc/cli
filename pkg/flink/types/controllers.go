@@ -23,7 +23,7 @@ type StatementControllerInterface interface {
 }
 
 type StatementControllerInterfaceOnPrem interface {
-	ExecuteStatement(statementToExecute string) (*ProcessedStatementOnPrem, *StatementError)
+	ExecuteStatement(statementToExecute string) (*ProcessedStatement, *StatementError)
 	CleanupStatement()
 }
 

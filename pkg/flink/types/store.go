@@ -14,10 +14,10 @@ type StoreInterface interface {
 }
 
 type StoreInterfaceOnPrem interface {
-	ProcessStatement(statement string) (*ProcessedStatementOnPrem, *StatementError)
-	FetchStatementResults(prem ProcessedStatementOnPrem) (*ProcessedStatementOnPrem, *StatementError)
+	ProcessStatement(statement string) (*ProcessedStatement, *StatementError)
+	FetchStatementResults(prem ProcessedStatement) (*ProcessedStatement, *StatementError)
 	StopStatement(statementName string) bool
 	DeleteStatement(statementName string) bool
-	WaitPendingStatement(ctx context.Context, statement ProcessedStatementOnPrem) (*ProcessedStatementOnPrem, *StatementError)
-	WaitForTerminalStatementState(ctx context.Context, statement ProcessedStatementOnPrem) (*ProcessedStatementOnPrem, *StatementError)
+	WaitPendingStatement(ctx context.Context, statement ProcessedStatement) (*ProcessedStatement, *StatementError)
+	WaitForTerminalStatementState(ctx context.Context, statement ProcessedStatement) (*ProcessedStatement, *StatementError)
 }
