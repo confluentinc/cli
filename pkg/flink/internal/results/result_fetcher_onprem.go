@@ -9,7 +9,7 @@ import (
 )
 
 type ResultFetcherOnPrem struct {
-	store                        types.StoreInterfaceOnPrem
+	store                        types.StoreInterface
 	statement                    types.ProcessedStatement
 	statementLock                sync.RWMutex
 	materializedStatementResults types.MaterializedStatementResults
@@ -18,7 +18,7 @@ type ResultFetcherOnPrem struct {
 	fetchLock                    sync.Mutex
 }
 
-func NewResultFetcherOnPrem(store types.StoreInterfaceOnPrem) types.ResultFetcherInterfaceOnPrem {
+func NewResultFetcherOnPrem(store types.StoreInterface) types.ResultFetcherInterfaceOnPrem {
 	return &ResultFetcherOnPrem{
 		store:           store,
 		refreshCallback: func() {},

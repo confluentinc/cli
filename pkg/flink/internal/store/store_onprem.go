@@ -303,7 +303,7 @@ func (s *StoreOnPrem) getStatusDetail(statementObj cmfsdk.Statement) string {
 	return topException.GetMessage()
 }
 
-func NewStoreOnPrem(client *flink.CmfRestClient, exitApplication func(), userProperties types.UserPropertiesInterface, appOptions *types.ApplicationOptions, tokenRefreshFunc func() error) types.StoreInterfaceOnPrem {
+func NewStoreOnPrem(client *flink.CmfRestClient, exitApplication func(), userProperties types.UserPropertiesInterface, appOptions *types.ApplicationOptions, tokenRefreshFunc func() error) types.StoreInterface {
 	return &StoreOnPrem{
 		Properties:       userProperties,
 		client:           client,

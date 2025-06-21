@@ -18,7 +18,7 @@ import (
 type ApplicationOnPrem struct {
 	history                     *history.History
 	userProperties              types.UserPropertiesInterface
-	store                       types.StoreInterfaceOnPrem
+	store                       types.StoreInterface
 	resultFetcher               types.ResultFetcherInterfaceOnPrem
 	appController               types.ApplicationControllerInterface
 	inputController             types.InputControllerInterface

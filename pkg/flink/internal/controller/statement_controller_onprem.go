@@ -17,12 +17,12 @@ import (
 
 type StatementControllerOnPrem struct {
 	applicationController types.ApplicationControllerInterface
-	store                 types.StoreInterfaceOnPrem
+	store                 types.StoreInterface
 	consoleParser         prompt.ConsoleParser
 	createdStatementName  string
 }
 
-func NewStatementControllerOnPrem(applicationController types.ApplicationControllerInterface, store types.StoreInterfaceOnPrem, consoleParser prompt.ConsoleParser) types.StatementControllerInterfaceOnPrem {
+func NewStatementControllerOnPrem(applicationController types.ApplicationControllerInterface, store types.StoreInterface, consoleParser prompt.ConsoleParser) types.StatementControllerInterfaceOnPrem {
 	return &StatementControllerOnPrem{
 		applicationController: applicationController,
 		store:                 store,
