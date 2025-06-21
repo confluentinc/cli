@@ -58,7 +58,7 @@ func StartAppOnPrem(flinkCmfClient *flink.CmfRestClient, tokenRefreshFunc func()
 	// Instantiate Component Controllers
 	inputController := controller.NewInputController(historyStore, nil, nil)
 	statementController := controller.NewStatementController(appController, dataStore, consoleParser)
-	interactiveOutputController := controller.NewInteractiveOutputControllerOnPrem(components.NewTableView(), resultFetcher, userProperties, appOptions.GetVerbose())
+	interactiveOutputController := controller.NewInteractiveOutputController(components.NewTableView(), resultFetcher, userProperties, appOptions.GetVerbose())
 	baseOutputController := controller.NewBaseOutputControllerOnPrem(resultFetcher, inputController.GetWindowWidth, userProperties)
 
 	app := ApplicationOnPrem{
@@ -117,7 +117,7 @@ func (a *ApplicationOnPrem) readEvalPrint() {
 func (a *ApplicationOnPrem) panicRecovery() {
 	log.CliLogger.Warn("Internal error occurred. Executing panic recovery.")
 	a.statementController.CleanupStatement()
-	a.interactiveOutputController = controller.NewInteractiveOutputControllerOnPrem(components.NewTableView(), a.resultFetcher, a.userProperties, a.appOptions.GetVerbose())
+	a.interactiveOutputController = controller.NewInteractiveOutputController(components.NewTableView(), a.resultFetcher, a.userProperties, a.appOptions.GetVerbose())
 }
 
 func (a *ApplicationOnPrem) isAuthenticated() bool {
