@@ -22,11 +22,6 @@ type StatementControllerInterface interface {
 	CleanupStatement()
 }
 
-type StatementControllerInterfaceOnPrem interface {
-	ExecuteStatement(statementToExecute string) (*ProcessedStatement, *StatementError)
-	CleanupStatement()
-}
-
 type OutputControllerInterface interface {
 	VisualizeResults()
 }

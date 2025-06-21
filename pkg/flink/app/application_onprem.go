@@ -22,7 +22,7 @@ type ApplicationOnPrem struct {
 	resultFetcher               types.ResultFetcherInterface
 	appController               types.ApplicationControllerInterface
 	inputController             types.InputControllerInterface
-	statementController         types.StatementControllerInterfaceOnPrem
+	statementController         types.StatementControllerInterface
 	interactiveOutputController types.OutputControllerInterface
 	baseOutputController        types.OutputControllerInterface
 	refreshToken                func() error
@@ -57,7 +57,7 @@ func StartAppOnPrem(flinkCmfClient *flink.CmfRestClient, tokenRefreshFunc func()
 
 	// Instantiate Component Controllers
 	inputController := controller.NewInputController(historyStore, nil, nil)
-	statementController := controller.NewStatementControllerOnPrem(appController, dataStore, consoleParser)
+	statementController := controller.NewStatementController(appController, dataStore, consoleParser)
 	interactiveOutputController := controller.NewInteractiveOutputControllerOnPrem(components.NewTableView(), resultFetcher, userProperties, appOptions.GetVerbose())
 	baseOutputController := controller.NewBaseOutputControllerOnPrem(resultFetcher, inputController.GetWindowWidth, userProperties)
 
