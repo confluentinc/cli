@@ -4,13 +4,12 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
-	"net/url"
 	"strings"
 	"time"
 
-	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
-	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v4/pkg/flink"
 	"github.com/confluentinc/cli/v4/pkg/flink/config"
 	"github.com/confluentinc/cli/v4/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/v4/pkg/flink/internal/utils"
@@ -19,22 +18,22 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-type Store struct {
+type StoreOnPrem struct {
 	Properties       types.UserPropertiesInterface
 	exitApplication  func()
-	client           ccloudv2.GatewayClientInterface
+	client           *flink.CmfRestClient
 	appOptions       *types.ApplicationOptions
 	tokenRefreshFunc func() error
 }
 
-func (s *Store) authenticatedGatewayClient() ccloudv2.GatewayClientInterface {
+func (s *StoreOnPrem) authenticatedCmfClient() *flink.CmfRestClient {
 	if authErr := s.tokenRefreshFunc(); authErr != nil {
 		log.CliLogger.Warnf("Failed to refresh token: %v", authErr)
 	}
 	return s.client
 }
 
-func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
+func (s *StoreOnPrem) ProcessLocalStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
 	defer s.persistUserProperties()
 	switch statementType := parseStatementType(statement); statementType {
 	case SetStatement:
@@ -51,7 +50,7 @@ func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStateme
 	}
 }
 
-func (s *Store) persistUserProperties() {
+func (s *StoreOnPrem) persistUserProperties() {
 	if s.appOptions.GetContext() != nil {
 		if err := s.appOptions.Context.SetCurrentFlinkCatalog(s.Properties.Get(config.KeyCatalog)); err != nil {
 			log.CliLogger.Errorf("error persisting current flink catalog: %v", err)
@@ -67,7 +66,7 @@ func (s *Store) persistUserProperties() {
 	}
 }
 
-func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
+func (s *StoreOnPrem) ProcessStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
 	// We trim the statement here once so we don't have to do it in every function
 	statement = strings.TrimSpace(statement)
 
@@ -78,46 +77,50 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	}
 
 	statementName := s.Properties.GetOrDefault(config.KeyStatementName, types.GenerateStatementName())
+	if len(statementName) > 45 { // on-prem name length limit
+		statementName = statementName[0:45]
+	}
 	defer s.Properties.Delete(config.KeyStatementName)
 
 	// Process remote statements
 	computePoolId := s.appOptions.GetComputePoolId()
+	flinkConfiguration := s.appOptions.GetFlinkConfiguration()
 	properties := s.Properties.GetNonLocalProperties()
 
-	var principal string
-	serviceAccount := s.Properties.Get(config.KeyServiceAccount)
-	if serviceAccount != "" {
-		principal = serviceAccount
-	} else {
-		principal = s.appOptions.GetContext().GetUser().GetResourceId()
-	}
-
-	utils.OutputInfof("Creating statement: %s\n", statementName)
-	statementObj, err := s.authenticatedGatewayClient().CreateStatement(
-		createSqlV1Statement(statement, statementName, computePoolId, properties),
-		principal,
+	utils.OutputInfof("Statement name: %s\nSubmitting statement...", statementName)
+	client := s.authenticatedCmfClient()
+	statementObj, err := client.CreateStatement(
+		client.CmfApiContext(),
 		s.appOptions.GetEnvironmentId(),
-		s.appOptions.GetOrganizationId(),
+		createSqlV1StatementOnPrem(statement, statementName, computePoolId, properties, flinkConfiguration),
 	)
+
 	if err != nil {
 		status := statementObj.GetStatus()
 		return nil, types.NewStatementErrorFailureMsg(err, status.GetDetail())
 	}
-	return types.NewProcessedStatement(statementObj), nil
+	return types.NewProcessedStatementOnPrem(statementObj), nil
 }
 
-func createSqlV1Statement(statement string, statementName string, computePoolId string, properties map[string]string) flinkgatewayv1.SqlV1Statement {
-	return flinkgatewayv1.SqlV1Statement{
-		Name: &statementName,
-		Spec: &flinkgatewayv1.SqlV1StatementSpec{
-			Statement:     &statement,
-			ComputePoolId: &computePoolId,
-			Properties:    &properties,
+func createSqlV1StatementOnPrem(statement string, statementName string, computePoolName string, properties map[string]string, flinkConfiguration map[string]string) cmfsdk.Statement {
+	return cmfsdk.Statement{
+		ApiVersion: "cmf.confluent.io/v1",
+		Kind:       "Statement",
+		Metadata: cmfsdk.StatementMetadata{
+			Name: statementName,
+		},
+		Spec: cmfsdk.StatementSpec{
+			Statement:          statement,
+			Properties:         &properties,
+			ComputePoolName:    computePoolName,
+			FlinkConfiguration: &flinkConfiguration,
+			Parallelism:        cmfsdk.PtrInt32(int32(1)),
+			Stopped:            cmfsdk.PtrBool(false),
 		},
 	}
 }
 
-func (s *Store) WaitPendingStatement(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
+func (s *StoreOnPrem) WaitPendingStatement(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
 	statementStatus := statement.Status
 	if statementStatus != types.COMPLETED && statementStatus != types.RUNNING {
 		updatedStatement, err := s.waitForPendingStatement(ctx, statement.StatementName, getTimeout(s.Properties))
@@ -140,36 +143,51 @@ func (s *Store) WaitPendingStatement(ctx context.Context, statement types.Proces
 	return &statement, nil
 }
 
-func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
+// FetchStatementResults TODO: need to revisit this function on how should we present the SQL statement
+func (s *StoreOnPrem) FetchStatementResults(statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
 	// Process local statements
 	if statement.IsLocalStatement {
 		return &statement, nil
 	}
 
 	// Process remote statements that are now running or completed
-	statementResultObj, err := s.authenticatedGatewayClient().GetStatementResults(s.appOptions.GetEnvironmentId(), statement.StatementName, s.appOptions.GetOrganizationId(), statement.PageToken)
-	if err != nil {
-		return nil, &types.StatementError{Message: err.Error()}
+	var statementResults cmfsdk.StatementResults
+	client := s.authenticatedCmfClient()
+	if statement.IsSelectStatement() {
+		// results
+		statementResultObj, err := client.GetStatementResults(client.CmfApiContext(), s.appOptions.GetEnvironmentId(), statement.StatementName, statement.PageToken)
+		if err != nil {
+			return nil, &types.StatementError{Message: err.Error()}
+		}
+		statementResults = statementResultObj.GetResults()
+
+		// page token
+		statementMetadata := statementResultObj.GetMetadata()
+		extractedToken, err := extractPageToken(statementMetadata.GetAnnotations()["nextPageToken"])
+		if err != nil {
+			return nil, types.NewStatementError(err)
+		}
+		statement.PageToken = extractedToken
+	} else { // For statements other than SELECT, the results are returned in the Statement API
+		statementResultObj, err := client.GetStatement(client.CmfApiContext(), s.appOptions.GetEnvironmentId(), statement.StatementName)
+		if err != nil {
+			return nil, &types.StatementError{Message: err.Error()}
+		}
+		statementResults = statementResultObj.Result.GetResults()
 	}
 
-	statementResults := statementResultObj.GetResults()
-	convertedResults, err := results.ConvertToInternalResults(statementResults.GetData(), statement.Traits.FlinkGatewayv1StatementTraits.GetSchema())
+	convertedResults, err := results.ConvertToInternalResultsOnPrem(statementResults, statement.Traits.CmfStatementTraits.GetSchema())
 	if err != nil {
 		return nil, types.NewStatementError(err)
 	}
 	statement.StatementResults = convertedResults
 
-	statementMetadata := statementResultObj.GetMetadata()
-	extractedToken, err := extractPageToken(statementMetadata.GetNext())
-	if err != nil {
-		return nil, types.NewStatementError(err)
-	}
-	statement.PageToken = extractedToken
 	return &statement, nil
 }
 
-func (s *Store) DeleteStatement(statementName string) bool {
-	if err := s.authenticatedGatewayClient().DeleteStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrganizationId()); err != nil {
+func (s *StoreOnPrem) DeleteStatement(statementName string) bool {
+	client := s.authenticatedCmfClient()
+	if err := client.DeleteStatement(client.CmfApiContext(), s.appOptions.EnvironmentName, statementName); err != nil {
 		log.CliLogger.Warnf("Failed to delete the statement: %v", err)
 		return false
 	}
@@ -177,8 +195,9 @@ func (s *Store) DeleteStatement(statementName string) bool {
 	return true
 }
 
-func (s *Store) StopStatement(statementName string) bool {
-	statement, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrganizationId())
+func (s *StoreOnPrem) StopStatement(statementName string) bool {
+	client := s.authenticatedCmfClient()
+	statement, err := client.GetStatement(client.CmfApiContext(), s.appOptions.EnvironmentName, statementName)
 
 	if err != nil {
 		log.CliLogger.Warnf("Failed to fetch statement to stop it: %v", err)
@@ -192,7 +211,7 @@ func (s *Store) StopStatement(statementName string) bool {
 	}
 	spec.SetStopped(true)
 
-	if err := s.authenticatedGatewayClient().UpdateStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrganizationId(), statement); err != nil {
+	if err := client.UpdateStatement(client.CmfApiContext(), statementName, s.appOptions.GetEnvironmentName(), statement); err != nil {
 		log.CliLogger.Warnf("Failed to stop the statement: %v", err)
 		return false
 	}
@@ -201,13 +220,12 @@ func (s *Store) StopStatement(statementName string) bool {
 	return true
 }
 
-func (s *Store) waitForPendingStatement(ctx context.Context, statementName string, timeout time.Duration) (*types.ProcessedStatement, *types.StatementError) {
+func (s *StoreOnPrem) waitForPendingStatement(ctx context.Context, statementName string, timeout time.Duration) (*types.ProcessedStatement, *types.StatementError) {
 	retries := 0
 	waitTime := calcWaitTime(retries)
 	elapsedWaitTime := time.Millisecond * 300
 	// Variable used to we inform the user every 5 seconds that we're still fetching for results (waiting for them to be ready)
 	lastProgressUpdateTime := time.Second * 0
-	var capturedErrors []string
 	var phase types.PHASE
 	capturedErrorsLimit := 5
 	var getRequestDuration time.Duration
@@ -218,7 +236,8 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 			return nil, &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", StatusCode: 499}
 		default:
 			start := time.Now()
-			statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrganizationId())
+			client := s.authenticatedCmfClient()
+			statementObj, err := client.GetStatement(client.CmfApiContext(), s.appOptions.GetEnvironmentId(), statementName)
 			getRequestDuration = time.Since(start)
 
 			statusDetail := s.getStatusDetail(statementObj)
@@ -228,22 +247,9 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 
 			phase = types.PHASE(statementObj.Status.GetPhase())
 			if phase != types.PENDING {
-				processedStatement := types.NewProcessedStatement(statementObj)
+				processedStatement := types.NewProcessedStatementOnPrem(statementObj)
 				processedStatement.StatusDetail = statusDetail
 				return processedStatement, nil
-			}
-
-			// if status.detail is filled we encountered a retryable server response
-			if statusDetail != "" {
-				capturedErrors = append(capturedErrors, statusDetail)
-			}
-		}
-
-		if len(capturedErrors) > capturedErrorsLimit {
-			return nil, &types.StatementError{
-				Message: fmt.Sprintf("the server can't process this statement right now, exiting after %d retries",
-					len(capturedErrors)),
-				FailureMessage: fmt.Sprintf("captured retryable errors: %s", strings.Join(capturedErrors, "; ")),
 			}
 		}
 
@@ -269,54 +275,36 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 		retries++
 	}
 
-	var errorsMsg string
-	if len(capturedErrors) > 0 {
-		errorsMsg = fmt.Sprintf("captured retryable errors: %s", strings.Join(capturedErrors, "; "))
-	}
-
 	return nil, &types.StatementError{
 		Message: fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET '%s'='10000';\" to adjust the maximum timeout in milliseconds.",
 			timeout.Seconds(), config.KeyResultsTimeout),
-		FailureMessage: errorsMsg,
 	}
 }
 
-func (s *Store) getStatusDetail(statementObj flinkgatewayv1.SqlV1Statement) string {
+func (s *StoreOnPrem) getStatusDetail(statementObj cmfsdk.Statement) string {
 	status := statementObj.GetStatus()
 	if status.GetDetail() != "" {
 		return status.GetDetail()
 	}
 
 	// if the status detail field is empty, we check if there's an exception instead
-	exceptions, err := s.authenticatedGatewayClient().GetExceptions(s.appOptions.GetEnvironmentId(), statementObj.GetName(), s.appOptions.GetOrganizationId())
+	client := s.authenticatedCmfClient()
+	exceptionList, err := client.ListStatementExceptions(client.CmfApiContext(), s.appOptions.GetEnvironmentId(), statementObj.Metadata.GetName())
 	if err != nil {
 		return ""
 	}
+	exceptions := exceptionList.GetData()
 	if len(exceptions) < 1 {
 		return ""
 	}
 
 	// most recent exception is on top of the returned list
-	return exceptions[0].GetMessage()
+	topException := &exceptions[0]
+	return topException.GetMessage()
 }
 
-func extractPageToken(nextUrl string) (string, error) {
-	if nextUrl == "" {
-		return "", nil
-	}
-	myUrl, err := url.Parse(nextUrl)
-	if err != nil {
-		return "", err
-	}
-	params, err := url.ParseQuery(myUrl.RawQuery)
-	if err != nil {
-		return "", err
-	}
-	return params.Get("page_token"), nil
-}
-
-func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), userProperties types.UserPropertiesInterface, appOptions *types.ApplicationOptions, tokenRefreshFunc func() error) types.StoreInterface {
-	return &Store{
+func NewStoreOnPrem(client *flink.CmfRestClient, exitApplication func(), userProperties types.UserPropertiesInterface, appOptions *types.ApplicationOptions, tokenRefreshFunc func() error) types.StoreInterface {
+	return &StoreOnPrem{
 		Properties:       userProperties,
 		client:           client,
 		exitApplication:  exitApplication,
@@ -325,14 +313,15 @@ func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), us
 	}
 }
 
-func (s *Store) WaitForTerminalStatementState(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
+func (s *StoreOnPrem) WaitForTerminalStatementState(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
 	for !statement.IsTerminalState() {
 		select {
 		case <-ctx.Done():
 			output.Println(false, "Detached from statement.")
 			return &statement, nil
 		default:
-			statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statement.StatementName, s.appOptions.GetOrganizationId())
+			client := s.authenticatedCmfClient()
+			statementObj, err := client.GetStatement(client.CmfApiContext(), s.appOptions.GetEnvironmentId(), statement.StatementName)
 			status := statementObj.GetStatus()
 			statusDetail := status.GetDetail()
 			if err != nil {
@@ -343,7 +332,7 @@ func (s *Store) WaitForTerminalStatementState(ctx context.Context, statement typ
 				}
 			}
 
-			statement.Status = types.PHASE(statementObj.Status.GetPhase())
+			statement.Status = types.PHASE(status.GetPhase())
 			statement.StatusDetail = statusDetail
 			if statement.IsTerminalState() {
 				break
