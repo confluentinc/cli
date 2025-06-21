@@ -93,7 +93,11 @@ func (s ProcessedStatement) printStatusMessageOfNonLocalStatement() {
 	}
 
 	if s.StatusDetail != "" {
-		utils.OutputErr(fmt.Sprintf("Details: %s", s.StatusDetail))
+		if s.Status == "FAILED" {
+			utils.OutputErr(fmt.Sprintf("Details: %s", s.StatusDetail))
+		} else {
+			utils.OutputInfo(fmt.Sprintf("Details: %s", s.StatusDetail))
+		}
 	}
 }
 
