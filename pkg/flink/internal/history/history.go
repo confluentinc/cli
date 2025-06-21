@@ -22,12 +22,12 @@ type History struct {
 }
 
 func LoadHistory() *History {
-	history := initPath()
+	history := initPath(filename)
 	return loadFromPath(history)
 }
 
 func LoadHistoryOnPrem() *History {
-	history := initPathOnPrem()
+	history := initPath(filenameOnPrem)
 	return loadFromPath(history)
 }
 
@@ -51,7 +51,7 @@ func loadFromPath(history *History) *History {
 	return history
 }
 
-func initPath() *History {
+func initPath(file string) *History {
 	home, osHomedirErr := os.UserHomeDir()
 	if osHomedirErr != nil {
 		log.CliLogger.Warnf("Couldn't get homedir with os.UserHomeDir(): %v", osHomedirErr)
@@ -63,28 +63,7 @@ func initPath() *History {
 		confluentDir = config.HomeConfluentPathDefault
 	}
 	confluentPath := filepath.Join(home, confluentDir)
-	historyPath := filepath.Join(confluentPath, filename)
-
-	return &History{
-		Data:          nil,
-		confluentPath: confluentPath,
-		historyPath:   historyPath,
-	}
-}
-
-func initPathOnPrem() *History {
-	home, osHomedirErr := os.UserHomeDir()
-	if osHomedirErr != nil {
-		log.CliLogger.Warnf("Couldn't get homedir with os.UserHomeDir(): %v", osHomedirErr)
-		return nil
-	}
-
-	confluentDir := os.Getenv(config.HomeConfluentPathEnvVar)
-	if confluentDir == "" {
-		confluentDir = config.HomeConfluentPathDefault
-	}
-	confluentPath := filepath.Join(home, confluentDir)
-	historyPath := filepath.Join(confluentPath, filenameOnPrem)
+	historyPath := filepath.Join(confluentPath, file)
 
 	return &History{
 		Data:          nil,
