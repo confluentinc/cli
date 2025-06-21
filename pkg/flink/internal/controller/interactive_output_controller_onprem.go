@@ -19,13 +19,13 @@ import (
 type InteractiveOutputControllerOnPrem struct {
 	app            *tview.Application
 	tableView      components.TableViewInterface
-	resultFetcher  types.ResultFetcherInterfaceOnPrem
+	resultFetcher  types.ResultFetcherInterface
 	isRowViewOpen  bool
 	userProperties types.UserPropertiesInterface
 	debug          bool
 }
 
-func NewInteractiveOutputControllerOnPrem(tableView components.TableViewInterface, resultFetcher types.ResultFetcherInterfaceOnPrem, userProperties types.UserPropertiesInterface, debug bool) types.OutputControllerInterface {
+func NewInteractiveOutputControllerOnPrem(tableView components.TableViewInterface, resultFetcher types.ResultFetcherInterface, userProperties types.UserPropertiesInterface, debug bool) types.OutputControllerInterface {
 	return &InteractiveOutputControllerOnPrem{
 		app:            tview.NewApplication(),
 		tableView:      tableView,

@@ -12,13 +12,13 @@ import (
 )
 
 type BaseOutputControllerOnPrem struct {
-	resultFetcher  types.ResultFetcherInterfaceOnPrem
+	resultFetcher  types.ResultFetcherInterface
 	getWindowSize  func() int
 	userProperties types.UserPropertiesInterface
 }
 
 // NewBaseOutputControllerOnPrem This controller is responsible for both Standard and Plain Text output formats
-func NewBaseOutputControllerOnPrem(resultFetcher types.ResultFetcherInterfaceOnPrem, getWindowWidth func() int, userProperties types.UserPropertiesInterface) types.OutputControllerInterface {
+func NewBaseOutputControllerOnPrem(resultFetcher types.ResultFetcherInterface, getWindowWidth func() int, userProperties types.UserPropertiesInterface) types.OutputControllerInterface {
 	return &BaseOutputControllerOnPrem{
 		resultFetcher:  resultFetcher,
 		getWindowSize:  getWindowWidth,

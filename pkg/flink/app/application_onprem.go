@@ -19,7 +19,7 @@ type ApplicationOnPrem struct {
 	history                     *history.History
 	userProperties              types.UserPropertiesInterface
 	store                       types.StoreInterface
-	resultFetcher               types.ResultFetcherInterfaceOnPrem
+	resultFetcher               types.ResultFetcherInterface
 	appController               types.ApplicationControllerInterface
 	inputController             types.InputControllerInterface
 	statementController         types.StatementControllerInterfaceOnPrem
@@ -42,7 +42,7 @@ func StartAppOnPrem(flinkCmfClient *flink.CmfRestClient, tokenRefreshFunc func()
 	// Store used to process statements and store local properties
 	userProperties := store.NewUserProperties(&appOptions)
 	dataStore := store.NewStoreOnPrem(flinkCmfClient, appController.ExitApplication, userProperties, &appOptions, synchronizedTokenRefreshFunc)
-	resultFetcher := results.NewResultFetcherOnPrem(dataStore)
+	resultFetcher := results.NewResultFetcher(dataStore)
 
 	stdinBefore := utils.GetStdin()
 	consoleParser, err := utils.GetConsoleParser()
