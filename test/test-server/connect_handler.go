@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -23,11 +24,14 @@ type LoggingLogEntry struct {
 	TaskId    string `json:"task_id,omitempty"`
 	Id        string `json:"id,omitempty"`
 }
-
 type LoggingSearchResponse struct {
 	Data       []LoggingLogEntry `json:"data"`
 	ApiVersion string            `json:"api_version"`
 	Kind       string            `json:"kind"`
+}
+type LoggingSearchParams struct {
+	Level      []string `json:"level,omitempty"`
+	SearchText string   `json:"search_text,omitempty"`
 }
 
 func handleLogsSearch(t *testing.T) http.HandlerFunc {
@@ -41,7 +45,8 @@ func handleLogsSearch(t *testing.T) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 
 		var req struct {
-			CRN string `json:"crn"`
+			CRN    string              `json:"crn"`
+			Search LoggingSearchParams `json:"search"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -75,10 +80,47 @@ func handleLogsSearch(t *testing.T) http.HandlerFunc {
 						TaskId:    "task-0",
 						Id:        "lcc-123",
 					},
+					{
+						Timestamp: "2025-06-16T05:44:23.761Z",
+						Level:     "ERROR",
+						Message:   "WorkerSourceTask{id=lcc-123-0} Committing offsets for 130 acknowledged messages",
+						TaskId:    "task-0",
+						Id:        "lcc-123",
+					},
 				},
 				ApiVersion: "v1",
 				Kind:       "LoggingSearchResponse",
 			}
+			filteredResponse := LoggingSearchResponse{
+				Data:       []LoggingLogEntry{},
+				ApiVersion: "v1",
+				Kind:       "LoggingSearchResponse",
+			}
+			if req.Search.SearchText != "" {
+				for _, log := range response.Data {
+					if strings.Contains(log.Message, req.Search.SearchText) {
+						filteredResponse.Data = append(filteredResponse.Data, log)
+					}
+				}
+			} else {
+				filteredResponse = response
+			}
+			response = filteredResponse
+			filteredResponse = LoggingSearchResponse{
+				Data:       []LoggingLogEntry{},
+				ApiVersion: "v1",
+				Kind:       "LoggingSearchResponse",
+			}
+			if len(req.Search.Level) > 0 {
+				for _, log := range response.Data {
+					if slices.Contains(req.Search.Level, log.Level) {
+						filteredResponse.Data = append(filteredResponse.Data, log)
+					}
+				}
+			} else {
+				filteredResponse = response
+			}
+			response = filteredResponse
 			err := json.NewEncoder(w).Encode(response)
 			require.NoError(t, err)
 			return
