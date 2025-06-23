@@ -92,13 +92,13 @@ func (s *CLITestSuite) TestKafka() {
 
 		{args: "kafka cluster describe lkc-unknown", fixture: "kafka/48.golden", exitCode: 1},
 		{args: "kafka cluster describe lkc-unknown-type", fixture: "kafka/describe-unknown-cluster-type.golden"},
-		//
-		//{args: "kafka cluster endpoint list --cluster my-dedicated-cluster", fixture: "kafka/endpoint/list-dedicated-cluster.golden"},
-		//{args: "kafka cluster endpoint list --cluster my-new-cluster", fixture: "kafka/endpoint/list-new-cluster.golden"},
-		//{args: "kafka cluster endpoint list --cluster my-invalid-cluster", fixture: "kafka/endpoint/list-new-cluster.golden", exitCode: 1},
-		//{args: "kafka cluster endpoint list --cluster my-dedicated-cluster -o json", fixture: "kafka/endpoint/list-dedicated-cluster-json.golden"},
-		//{args: "kafka cluster endpoint list --cluster my-dedicated-cluster -o yaml", fixture: "kafka/endpoint/list-dedicated-cluster-yaml.golden"},
-		//
+
+		{args: "kafka cluster endpoint list --cluster lkc-describe", fixture: "kafka/endpoint/list-dedicated-cluster.golden"},
+		{args: "kafka cluster endpoint list --cluster lkc-describe-dedicated", fixture: "kafka/endpoint/list-new-cluster.golden"},
+		{args: "kafka cluster endpoint list --cluster lkc-unknown", fixture: "kafka/endpoint/list-new-cluster.golden", exitCode: 1},
+		{args: "kafka cluster endpoint list --cluster lkc-describe-dedicated -o json", fixture: "kafka/endpoint/list-dedicated-cluster-json.golden"},
+		{args: "kafka cluster endpoint list --cluster lkc-describe-dedicated -o yaml", fixture: "kafka/endpoint/list-dedicated-cluster-yaml.golden"},
+
 		//{args: "kafka cluster endpoint use --cluster my-dedicated-cluster", fixture: "kafka/endpoint/use-dedicated-cluster.golden"},
 		//{args: "kafka cluster endpoint use --cluster my-new-cluster", fixture: "kafka/endpoint/use-new-cluster.golden"},
 		//{args: "kafka cluster endpoint use --cluster my-invalid-cluster", fixture: "kafka/endpoint/use-invalid-cluster.golden", exitCode: 1},
@@ -185,7 +185,15 @@ func (s *CLITestSuite) TestKafka() {
 
 func (s *CLITestSuite) Testaaa() {
 	tests := []CLITest{
-		{args: "kafka acl list --cluster lkc-acls -vvvv", fixture: "kafka/acl/list-cloud.golden"},
+		{args: "kafka cluster endpoint list --cluster lkc-describe", fixture: "kafka/endpoint/list-dedicated-cluster.golden"},
+		{args: "kafka cluster endpoint list --cluster lkc-describe-dedicated", fixture: "kafka/endpoint/list-new-cluster.golden"},
+		{args: "kafka cluster endpoint list --cluster lkc-unknown", fixture: "kafka/endpoint/list-new-cluster.golden", exitCode: 1},
+		{args: "kafka cluster endpoint list --cluster lkc-describe-dedicated -o json", fixture: "kafka/endpoint/list-dedicated-cluster-json.golden"},
+		{args: "kafka cluster endpoint list --cluster lkc-describe-dedicated -o yaml", fixture: "kafka/endpoint/list-dedicated-cluster-yaml.golden"},
+
+		//	{args: "kafka cluster endpoint use --cluster my-dedicated-cluster", fixture: "kafka/endpoint/use-dedicated-cluster.golden"},
+		//	{args: "kafka cluster endpoint use --cluster my-new-cluster", fixture: "kafka/endpoint/use-new-cluster.golden"},
+		//	{args: "kafka cluster endpoint use --cluster my-invalid-cluster", fixture: "kafka/endpoint/use-invalid-cluster.golden", exitCode: 1},
 	}
 
 	//if runtime.GOOS != "windows" {

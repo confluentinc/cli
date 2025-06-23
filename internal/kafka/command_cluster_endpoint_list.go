@@ -37,7 +37,6 @@ func (c *clusterCommand) endpointList(cmd *cobra.Command, args []string) error {
 	// Add logic for displaying endpoint, layer by layer
 	// check current environment... cloud... region...
 	// PNI -> privatelink -> public
-
 	cluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	clusterId := cluster.GetId()
 	if err != nil {

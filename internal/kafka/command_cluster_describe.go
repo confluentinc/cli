@@ -54,6 +54,7 @@ func (c *clusterCommand) newDescribeCommand() *cobra.Command {
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -181,7 +182,6 @@ func (c *clusterCommand) getTopicCountForKafkaCluster(cmd *cobra.Command, cluste
 	if err != nil {
 		return 0, err
 	}
-
 	topics, err := kafkaREST.CloudClient.ListKafkaTopics()
 	if err != nil {
 		return 0, err
