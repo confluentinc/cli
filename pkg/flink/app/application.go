@@ -105,7 +105,7 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 		}
 	})
 
-	inputController := controller.NewInputController(historyStore, lspCompleter, handlerCh)
+	inputController := controller.NewInputController(historyStore, lspCompleter, handlerCh, true)
 	statementController := controller.NewStatementController(appController, dataStore, consoleParser)
 	interactiveOutputController := controller.NewInteractiveOutputController(components.NewTableView(), resultFetcher, userProperties, appOptions.GetVerbose())
 	baseOutputController := controller.NewBaseOutputController(resultFetcher, inputController.GetWindowWidth, userProperties)
@@ -155,7 +155,7 @@ func StartAppOnPrem(flinkCmfClient *flink.CmfRestClient, tokenRefreshFunc func()
 	})
 
 	// Instantiate Component Controllers
-	inputController := controller.NewInputController(historyStore, nil, nil)
+	inputController := controller.NewInputController(historyStore, nil, nil, false)
 	statementController := controller.NewStatementController(appController, dataStore, consoleParser)
 	interactiveOutputController := controller.NewInteractiveOutputController(components.NewTableView(), resultFetcher, userProperties, appOptions.GetVerbose())
 	baseOutputController := controller.NewBaseOutputController(resultFetcher, inputController.GetWindowWidth, userProperties)
