@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -61,8 +61,8 @@ func newLogsCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &logsCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	cmd.RunE = c.queryLogs
-	cmd.Flags().String("start-time", "", "Start time for log query in RFC3339 format with UTC timezone i.e. YYYY-MM-DDTHH:MM:SSZ (e.g., 2025-02-01T00:00:00Z).")
-	cmd.Flags().String("end-time", "", "End time for log query in RFC3339 format with UTC timezone i.e. YYYY-MM-DDTHH:MM:SSZ (e.g., 2025-02-01T23:59:59Z).")
+	cmd.Flags().String("start-time", "", "Start time for log query in RFC3339 format with UTC timezone (e.g., 2025-02-01T00:00:00Z).")
+	cmd.Flags().String("end-time", "", "End time for log query in RFC3339 format with UTC timezone (e.g., 2025-02-01T23:59:59Z).")
 	cmd.Flags().String("level", "ERROR", "Log level filter (INFO, WARN, ERROR). Defaults to ERROR. Use '|' to specify multiple levels (e.g., ERROR|WARN).")
 	cmd.Flags().String("search-text", "", "Search text within logs (optional).")
 	cmd.Flags().String("output-file", "", "Output file path to append connector logs (optional).")
@@ -274,8 +274,15 @@ func writeLogsToFile(outputFile string, logs *ccloudv2.LoggingSearchResponse) er
 }
 
 func validateTimeFormat(timeStr string) error {
-	_, err := time.Parse(time.RFC3339, timeStr)
-	return err
+	pattern := `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$`
+	match, err := regexp.MatchString(pattern, timeStr)
+	if err != nil {
+		return fmt.Errorf("must be formatted as: YYYY-MM-DDTHH:MM:SSZ")
+	}
+	if !match {
+		return fmt.Errorf("must be in RFC3339 format with UTC timezone")
+	}
+	return nil
 }
 
 func extractPageToken(urlStr string) (string, error) {
