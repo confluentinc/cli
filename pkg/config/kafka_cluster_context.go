@@ -103,6 +103,15 @@ func (k *KafkaClusterContext) SetActiveKafkaClusterEndpoint(endpoint string) {
 	}
 }
 
+func (k *KafkaClusterContext) UnsetActiveKafkaClusterEndpoint() {
+	if !k.EnvContext {
+		k.ActiveKafkaClusterEndpoint = ""
+	} else {
+		kafkaEnvContext := k.GetCurrentKafkaEnvContext()
+		kafkaEnvContext.ActiveKafkaClusterEndpoint = ""
+	}
+}
+
 func (k *KafkaClusterContext) GetKafkaClusterConfig(clusterId string) *KafkaClusterConfig {
 	if !k.EnvContext {
 		return k.KafkaClusterConfigs[clusterId]

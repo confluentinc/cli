@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/v4/pkg/output"
 
 	"github.com/spf13/cobra"
 
@@ -82,6 +83,8 @@ func validateUserProvidedKafkaClusterEndpoint(endpoint, activeCluster string, c 
 		// Add additional checks if the GetHttpEndpoint() returns partial endpoints
 		if v.GetHttpEndpoint() == endpoint {
 			log.CliLogger.Debugf("The specified endpoint %q is a valid %q endpoint", endpoint, v.GetConnectionType())
+			output.ErrPrintf(c.Config.EnableColor, "Set Kafka endpoint \"%s\" as the active endpoint for Kafka cluster \"%s\".\n", endpoint, activeCluster)
+
 			return true
 		}
 	}

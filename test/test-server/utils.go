@@ -347,24 +347,24 @@ func getCmkBasicDescribeCluster(id, name string) *cmkv2.CmkV2Cluster {
 			HttpEndpoint:           cmkv2.PtrString(TestKafkaRestProxyUrl.String()),
 			Availability:           cmkv2.PtrString("SINGLE_ZONE"),
 			Endpoints: &cmkv2.ModelMap{
-				"pni-abc123": cmkv2.CmkV2Endpoints{
-					KafkaBootstrapEndpoint: "SASL_SSL://pni-abc123.kafka.us-west-2.aws.confluent.cloud:9092",
-					HttpEndpoint:           "https://pni-abc123.rest.us-west-2.aws.confluent.cloud",
+				"pni-abc123-basic": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pni-abc123-basic.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pni-abc123-basic.rest.us-west-2.aws.confluent.cloud",
 					ConnectionType:         "PNI",
 				},
-				"privatelink-uvw456": cmkv2.CmkV2Endpoints{
-					KafkaBootstrapEndpoint: "SASL_SSL://pl-uvw456.kafka.us-west-2.aws.confluent.cloud:9092",
-					HttpEndpoint:           "https://pl-uvw456.rest.us-west-2.aws.confluent.cloud",
+				"privatelink-uvw456-basic": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pl-uvw456-basic.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pl-uvw456-basic.rest.us-west-2.aws.confluent.cloud",
 					ConnectionType:         "PRIVATELINK",
 				},
-				"privatelink-xyz789": cmkv2.CmkV2Endpoints{
-					KafkaBootstrapEndpoint: "SASL_SSL://pl-xyz789.kafka.us-west-2.aws.confluent.cloud:9092",
-					HttpEndpoint:           "https://pl-xyz789.rest.us-west-2.aws.confluent.cloud",
+				"privatelink-xyz789-basic": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pl-xyz789-basic.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pl-xyz789-basic.rest.us-west-2.aws.confluent.cloud",
 					ConnectionType:         "PRIVATELINK",
 				},
-				"public-0001": cmkv2.CmkV2Endpoints{
-					KafkaBootstrapEndpoint: "SASL_SSL://public-0001.kafka.us-west-2.aws.confluent.cloud:9092",
-					HttpEndpoint:           "https://public-0001.rest.us-west-2.aws.confluent.cloud",
+				"public-0001-basic": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://public-0001-basic.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://public-0001-basic.rest.us-west-2.aws.confluent.cloud",
 					ConnectionType:         "PUBLIC",
 				},
 			},
@@ -389,24 +389,24 @@ func getCmkDedicatedDescribeCluster(id, name string, cku int32) *cmkv2.CmkV2Clus
 			HttpEndpoint:           cmkv2.PtrString(TestKafkaRestProxyUrl.String()),
 			Availability:           cmkv2.PtrString("SINGLE_ZONE"),
 			Endpoints: &cmkv2.ModelMap{
-				"pni-abc123": cmkv2.CmkV2Endpoints{
-					KafkaBootstrapEndpoint: "SASL_SSL://pni-abc123.kafka.us-west-2.aws.confluent.cloud:9092",
-					HttpEndpoint:           "https://pni-abc123.rest.us-west-2.aws.confluent.cloud",
+				"pni-abc123-dedicated": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pni-abc123-dedicated.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pni-abc123-dedicated.rest.us-west-2.aws.confluent.cloud",
 					ConnectionType:         "PNI",
 				},
-				"privatelink-uvw456": cmkv2.CmkV2Endpoints{
-					KafkaBootstrapEndpoint: "SASL_SSL://pl-uvw456.kafka.us-west-2.aws.confluent.cloud:9092",
-					HttpEndpoint:           "https://pl-uvw456.rest.us-west-2.aws.confluent.cloud",
+				"privatelink-uvw456-dedicated": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pl-uvw456-dedicated.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pl-uvw456-dedicated.rest.us-west-2.aws.confluent.cloud",
 					ConnectionType:         "PRIVATELINK",
 				},
-				"privatelink-xyz789": cmkv2.CmkV2Endpoints{
-					KafkaBootstrapEndpoint: "SASL_SSL://pl-xyz789.kafka.us-west-2.aws.confluent.cloud:9092",
-					HttpEndpoint:           "https://pl-xyz789.rest.us-west-2.aws.confluent.cloud",
+				"privatelink-xyz789-dedicated": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pl-xyz789-dedicated.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pl-xyz789-dedicated.rest.us-west-2.aws.confluent.cloud",
 					ConnectionType:         "PRIVATELINK",
 				},
-				"public-0001": cmkv2.CmkV2Endpoints{
-					KafkaBootstrapEndpoint: "SASL_SSL://public-0001.kafka.us-west-2.aws.confluent.cloud:9092",
-					HttpEndpoint:           "https://public-0001.rest.us-west-2.aws.confluent.cloud",
+				"public-0001-dedicated": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://public-0001-dedicated.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://public-0001-dedicated.rest.us-west-2.aws.confluent.cloud",
 					ConnectionType:         "PUBLIC",
 				},
 			},
@@ -429,24 +429,24 @@ func getCmkUnknownDescribeCluster(id, name string) *cmkv2.CmkV2Cluster {
 			HttpEndpoint:           cmkv2.PtrString(TestKafkaRestProxyUrl.String()),
 			Availability:           cmkv2.PtrString("SINGLE_ZONE"),
 			Endpoints: &cmkv2.ModelMap{
-				"pni-abc123": cmkv2.CmkV2Endpoints{
-					KafkaBootstrapEndpoint: "SASL_SSL://pni-abc123.kafka.us-west-2.aws.confluent.cloud:9092",
-					HttpEndpoint:           "https://pni-abc123.rest.us-west-2.aws.confluent.cloud",
+				"pni-abc123-unknown": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pni-abc123-unknown.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pni-abc123-unknown.rest.us-west-2.aws.confluent.cloud",
 					ConnectionType:         "PNI",
 				},
-				"privatelink-uvw456": cmkv2.CmkV2Endpoints{
-					KafkaBootstrapEndpoint: "SASL_SSL://pl-uvw456.kafka.us-west-2.aws.confluent.cloud:9092",
-					HttpEndpoint:           "https://pl-uvw456.rest.us-west-2.aws.confluent.cloud",
+				"privatelink-uvw456-unknown": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pl-uvw456-unknown.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pl-uvw456-unknown.rest.us-west-2.aws.confluent.cloud",
 					ConnectionType:         "PRIVATELINK",
 				},
-				"privatelink-xyz789": cmkv2.CmkV2Endpoints{
-					KafkaBootstrapEndpoint: "SASL_SSL://pl-xyz789.kafka.us-west-2.aws.confluent.cloud:9092",
-					HttpEndpoint:           "https://pl-xyz789.rest.us-west-2.aws.confluent.cloud",
+				"privatelink-xyz789-unknown": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pl-xyz789-unknown.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pl-xyz789-unknown.rest.us-west-2.aws.confluent.cloud",
 					ConnectionType:         "PRIVATELINK",
 				},
-				"public-0001": cmkv2.CmkV2Endpoints{
+				"public-0001-unknown": cmkv2.CmkV2Endpoints{
 					KafkaBootstrapEndpoint: "SASL_SSL://public-0001.kafka.us-west-2.aws.confluent.cloud:9092",
-					HttpEndpoint:           "https://public-0001.rest.us-west-2.aws.confluent.cloud",
+					HttpEndpoint:           "https://public-0001-unknown.rest.us-west-2.aws.confluent.cloud",
 					ConnectionType:         "PUBLIC",
 				},
 			},

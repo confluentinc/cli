@@ -1,6 +1,0 @@
-  Current |      Endpoint      | Kafka Bootstrap Endpoint |                     Http Endpoint                      | Connection Type  
-----------+--------------------+--------------------------+--------------------------------------------------------+------------------
-          | pni-abc123         |                          | https://pni-abc123.rest.us-west-2.aws.confluent.cloud  | PNI              
-          | privatelink-uvw456 |                          | https://pl-uvw456.rest.us-west-2.aws.confluent.cloud   | PRIVATELINK      
-          | privatelink-xyz789 |                          | https://pl-xyz789.rest.us-west-2.aws.confluent.cloud   | PRIVATELINK      
-          | public-0001        |                          | https://public-0001.rest.us-west-2.aws.confluent.cloud | PUBLIC           
