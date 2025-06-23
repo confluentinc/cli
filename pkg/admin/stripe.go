@@ -1,7 +1,7 @@
 package admin
 
 import (
-	"fmt"
+	"errors"
 	"strings"
 
 	"github.com/stripe/stripe-go/v76"
@@ -31,7 +31,7 @@ func NewStripeToken(cfg *config.Config, number, expiration, cvc, name string) (*
 	stripeToken, err := token.New(params)
 	if err != nil {
 		if stripeErr, ok := err.(*stripe.Error); ok {
-			return nil, fmt.Errorf(stripeErr.Msg)
+			return nil, errors.New(stripeErr.Msg)
 		}
 		return nil, err
 	}
