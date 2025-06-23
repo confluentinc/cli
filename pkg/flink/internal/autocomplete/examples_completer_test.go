@@ -28,6 +28,7 @@ func TestAlterExampleAutoCompletionSnapshot(t *testing.T) {
 	buffer.InsertText(input, false, true)
 
 	completer := NewCompleterBuilder(mockCompletionsEnabled).
+		AddCompleter(ExamplesCompleterCloud).
 		AddCompleter(ExamplesCompleter).
 		BuildCompleter()
 
