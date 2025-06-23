@@ -276,11 +276,8 @@ func writeLogsToFile(outputFile string, logs *ccloudv2.LoggingSearchResponse) er
 func validateTimeFormat(timeStr string) error {
 	pattern := `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$`
 	match, err := regexp.MatchString(pattern, timeStr)
-	if err != nil {
+	if !match || err != nil {
 		return fmt.Errorf("must be formatted as: YYYY-MM-DDTHH:MM:SSZ")
-	}
-	if !match {
-		return fmt.Errorf("must be in RFC3339 format with UTC timezone")
 	}
 	return nil
 }
