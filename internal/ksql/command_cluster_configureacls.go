@@ -84,7 +84,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 		return acl.PrintACLs(cmd, bindings)
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}

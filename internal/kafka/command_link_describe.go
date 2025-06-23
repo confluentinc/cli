@@ -33,6 +33,7 @@ func (c *linkCommand) newDescribeCommand() *cobra.Command {
 		RunE:              c.describe,
 	}
 
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -44,7 +45,7 @@ func (c *linkCommand) newDescribeCommand() *cobra.Command {
 func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}

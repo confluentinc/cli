@@ -9,12 +9,13 @@ Describe the consumer lag for topic "my-topic" partition "0" consumed by consume
   $ confluent kafka consumer group lag describe my-consumer-group --topic my-topic --partition 0
 
 Flags:
-      --topic string         REQUIRED: Topic name.
-      --partition int32      REQUIRED: Partition ID.
-      --cluster string       Kafka cluster ID.
-      --context string       CLI context name.
-      --environment string   Environment ID.
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+      --topic string            REQUIRED: Topic name.
+      --partition int32         REQUIRED: Partition ID.
+      --kafka-endpoint string   Endpoint to be used for this Kafka cluster.
+      --cluster string          Kafka cluster ID.
+      --context string          CLI context name.
+      --environment string      Environment ID.
+  -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
