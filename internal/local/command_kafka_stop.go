@@ -43,7 +43,7 @@ func (c *command) stopAndRemoveConfluentLocal(dockerClient *client.Client) error
 
 	for _, dockerContainer := range dockerContainers {
 		if dockerContainer.Image == dockerImageName {
-			log.CliLogger.Tracef("Stopping Confluent Local container " + getShortenedContainerId(dockerContainer.ID))
+			log.CliLogger.Tracef("Stopping Confluent Local container %s", getShortenedContainerId(dockerContainer.ID))
 			noWaitTimeout := 0 // to not wait for the container to exit gracefully
 			if err := dockerClient.ContainerStop(context.Background(), dockerContainer.ID, container.StopOptions{Timeout: &noWaitTimeout}); err != nil {
 				return err
