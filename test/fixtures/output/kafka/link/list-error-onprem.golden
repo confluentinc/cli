@@ -1,0 +1,7 @@
+   Name  | Destination Cluster | Remote Cluster  
+---------+---------------------+-----------------
+  link-1 | cluster-2           |                 
+  link-2 | cluster-2           |                 
+  link-3 | cluster-2           |                 
+  link-4 |                     | cluster-2       
+  link-5 |                     | cluster-2       

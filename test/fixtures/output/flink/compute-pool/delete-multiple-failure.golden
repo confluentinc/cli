@@ -1,0 +1,2 @@
+Deleted Flink compute pool "test-pool1".
+Error: failed to delete non-exist-pool: 404 Not Found

@@ -5,6 +5,7 @@ import (
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	billingv1 "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
+	camv1 "github.com/confluentinc/ccloud-sdk-go-v2/cam/v1"
 	cclv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccl/v1"
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	certificateauthorityv2 "github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority/v2"
@@ -30,7 +31,6 @@ import (
 	pi "github.com/confluentinc/ccloud-sdk-go-v2/provider-integration/v1"
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 	srcmv3 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v3"
-	srcmv3Access "github.com/confluentinc/ccloud-sdk-go-v2/srcmv3access/v1"
 	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
 	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2/tableflow/v1"
 
@@ -51,6 +51,7 @@ type Client struct {
 	CliClient                    *cliv1.APIClient
 	CmkClient                    *cmkv2.APIClient
 	ConnectClient                *connectv1.APIClient
+	ConnectArtifactClient        *camv1.APIClient
 	ConnectCustomPluginClient    *connectcustompluginv1.APIClient
 	Cclv1Client                  *cclv1.APIClient
 	FlinkArtifactClient          *flinkartifactv1.APIClient
@@ -71,7 +72,6 @@ type Client struct {
 	ProviderIntegrationClient    *pi.APIClient
 	ServiceQuotaClient           *servicequotav1.APIClient
 	SrcmClient                   *srcmv3.APIClient
-	SrcmV3AcessClient            *srcmv3Access.APIClient
 	SsoClient                    *ssov2.APIClient
 	TableflowClient              *tableflowv1.APIClient
 }
@@ -99,6 +99,7 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		CmkClient:                    newCmkClient(httpClient, url, userAgent, unsafeTrace),
 		ConnectClient:                newConnectClient(httpClient, url, userAgent, unsafeTrace),
 		ConnectCustomPluginClient:    newConnectCustomPluginClient(httpClient, url, userAgent, unsafeTrace),
+		ConnectArtifactClient:        newConnectArtifactClient(httpClient, url, userAgent, unsafeTrace),
 		Cclv1Client:                  newCclClient(httpClient, url, userAgent, unsafeTrace),
 		FlinkArtifactClient:          newFlinkArtifactClient(httpClient, url, userAgent, unsafeTrace),
 		FlinkClient:                  newFlinkClient(httpClient, url, userAgent, unsafeTrace),
@@ -118,7 +119,6 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		ProviderIntegrationClient:    newProviderIntegrationClient(httpClient, url, userAgent, unsafeTrace),
 		ServiceQuotaClient:           newServiceQuotaClient(httpClient, url, userAgent, unsafeTrace),
 		SrcmClient:                   newSrcmClient(httpClient, url, userAgent, unsafeTrace),
-		SrcmV3AcessClient:            newSrcmV3AccessClient(httpClient, url, userAgent, unsafeTrace),
 		SsoClient:                    newSsoClient(httpClient, url, userAgent, unsafeTrace),
 		TableflowClient:              newTableflowClient(httpClient, url, userAgent, unsafeTrace),
 	}
