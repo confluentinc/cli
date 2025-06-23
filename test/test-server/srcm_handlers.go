@@ -24,6 +24,7 @@ func handleSchemaRegistryClustersV3(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			sgClusterList := getSchemaRegistryClusterListV3(TestSchemaRegistryUrl.String())
+			setPageToken(&sgClusterList, &sgClusterList.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(sgClusterList)
 			require.NoError(t, err)
 		}

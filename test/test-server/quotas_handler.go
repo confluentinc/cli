@@ -66,7 +66,7 @@ func handleAppliedQuotas(t *testing.T) http.HandlerFunc {
 			Kind:       "AppliedQuotaList",
 			Data:       filteredData,
 		}
-
+		setPageToken(quotaList, &quotaList.Metadata, r.URL)
 		reply, err := json.Marshal(quotaList)
 		require.NoError(t, err)
 		_, err = io.Writer.Write(w, reply)
