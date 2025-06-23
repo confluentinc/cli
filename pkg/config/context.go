@@ -39,7 +39,7 @@ type Context struct {
 
 var noEnvError = "no environment found"
 
-func newContext(name string, platform *Platform, credential *Credential, kafkaClusters map[string]*KafkaClusterConfig, kafka string, state *ContextState, config *Config, organizationId, environmentId string, isMFA bool) (*Context, error) {
+func newContext(name string, platform *Platform, credential *Credential, kafkaClusters map[string]*KafkaClusterConfig, kafka string, kafkaEndpoint string, state *ContextState, config *Config, organizationId, environmentId string, isMFA bool) (*Context, error) {
 	ctx := &Context{
 		Name:               name,
 		MachineName:        name,
@@ -54,7 +54,8 @@ func newContext(name string, platform *Platform, credential *Credential, kafkaCl
 		LastOrgId:          organizationId,
 		IsMFA:              isMFA,
 	}
-	ctx.KafkaClusterContext = NewKafkaClusterContext(ctx, kafka, kafkaClusters)
+	ctx.KafkaClusterContext = NewKafkaClusterContext(ctx, kafka, kafkaEndpoint, kafkaClusters)
+
 	if err := ctx.validate(); err != nil {
 		return nil, err
 	}
