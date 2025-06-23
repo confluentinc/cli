@@ -15,6 +15,10 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
+const (
+	LogsPageSize = 200
+)
+
 type LoggingSearchRequest struct {
 	CRN       string              `json:"crn"`
 	Search    LoggingSearchParams `json:"search"`
@@ -52,14 +56,7 @@ type LoggingSearchResponse struct {
 	Kind       string            `json:"kind"`
 }
 
-func (c *Client) SearchConnectorLogs(environmentId, kafkaClusterId, connectorId, startTime, endTime string, levels []string, searchText string, pageSize int, pageToken string) (*LoggingSearchResponse, error) {
-	crn := fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/cloud-cluster=%s/connector=%s",
-		c.cfg.Context().GetCurrentOrganization(),
-		environmentId,
-		kafkaClusterId,
-		connectorId,
-	)
-
+func (c *Client) SearchConnectorLogs(crn, startTime, endTime string, levels []string, searchText string, pageToken string) (*LoggingSearchResponse, error) {
 	baseURL := c.cfg.Context().GetPlatformServer()
 	loggingURL, err := getLoggingUrl(baseURL)
 	if err != nil {
@@ -82,7 +79,7 @@ func (c *Client) SearchConnectorLogs(environmentId, kafkaClusterId, connectorId,
 		return nil, fmt.Errorf("failed to get data plane token: %w", err)
 	}
 
-	req, err := getLoggingRequest(loggingURL, request, dataplaneToken, pageSize, pageToken)
+	req, err := getLoggingRequest(loggingURL, request, dataplaneToken, LogsPageSize, pageToken)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create logging API request: %w", err)
 	}

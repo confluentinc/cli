@@ -25,14 +25,14 @@ type logsCommand struct {
 type logEntryOut struct {
 	Timestamp string `human:"Timestamp" serialized:"timestamp"`
 	Level     string `human:"Level" serialized:"level"`
-	TaskId    string `human:"Task ID,omitempty" serialized:"task_id,omitempty"`
+	TaskId    string `human:"Task ID" serialized:"task_id"`
 	Message   string `human:"Message" serialized:"message"`
 }
 
 func newLogsCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "logs <id>",
-		Short: "Query logs for connectors.",
+		Short: "Manage logs for connectors.",
 		Args:  cobra.ExactArgs(1),
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -61,8 +61,8 @@ func newLogsCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &logsCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	cmd.RunE = c.queryLogs
-	cmd.Flags().String("start-time", "", "Start time for log query (e.g., 2025-02-01T00:00:00Z).")
-	cmd.Flags().String("end-time", "", "End time for log query (e.g., 2025-02-01T23:59:59Z).")
+	cmd.Flags().String("start-time", "", "Start time for log query in RFC3339 format with UTC timezone i.e. YYYY-MM-DDTHH:MM:SSZ (e.g., 2025-02-01T00:00:00Z).")
+	cmd.Flags().String("end-time", "", "End time for log query in RFC3339 format with UTC timezone i.e. YYYY-MM-DDTHH:MM:SSZ (e.g., 2025-02-01T23:59:59Z).")
 	cmd.Flags().String("level", "ERROR", "Log level filter (INFO, WARN, ERROR). Defaults to ERROR. Use '|' to specify multiple levels (e.g., ERROR|WARN).")
 	cmd.Flags().String("search-text", "", "Search text within logs (optional).")
 	cmd.Flags().String("output-file", "", "Output file path to append connector logs (optional).")
@@ -137,16 +137,26 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to get Kafka cluster information: %w\nPlease ensure you have set a cluster context with 'confluent kafka cluster use <cluster-id>' or specify --cluster flag", err)
 	}
 
+	kafkaClusterId := kafkaCluster.GetId()
+	if kafkaClusterId == "" {
+		return fmt.Errorf("failed to get Kafka cluster ID: %w\nPlease ensure you have set a cluster context with 'confluent kafka cluster use <cluster-id>' or specify --cluster flag", err)
+	}
+
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return fmt.Errorf("failed to get environment ID: %w\nPlease ensure you have set an environment context with 'confluent environment use <env-id>' or specify --environment flag", err)
 	}
 
-	connector, err := c.V2Client.GetConnectorExpansionById(connectorId, environmentId, kafkaCluster.ID)
+	connector, err := c.V2Client.GetConnectorExpansionById(connectorId, environmentId, kafkaClusterId)
 	if err != nil {
 		return err
 	}
-	connectorName := connector.Info.GetName()
+
+	connectorInfo := connector.GetInfo()
+	connectorName := connectorInfo.GetName()
+	if connectorName == "" {
+		return fmt.Errorf("failed to get connector name")
+	}
 
 	lastQueryPageToken, err := c.getPageTokenFromStoredQuery(next, currentLogQuery)
 	// if error not nil this means that there are no further pages for current query hence return
@@ -154,7 +164,14 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	logs, err := c.V2Client.SearchConnectorLogs(environmentId, kafkaCluster.ID, connectorName, startTime, endTime, levels, searchText, 200, lastQueryPageToken)
+	crn := fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/cloud-cluster=%s/connector=%s",
+		c.Context.GetCurrentOrganization(),
+		environmentId,
+		kafkaClusterId,
+		connectorName,
+	)
+
+	logs, err := c.V2Client.SearchConnectorLogs(crn, startTime, endTime, levels, searchText, lastQueryPageToken)
 	if err != nil {
 		return fmt.Errorf("failed to query connector logs: %w", err)
 	}
@@ -202,18 +219,18 @@ func (c *logsCommand) getPageTokenFromStoredQuery(next bool, currentLogQuery *co
 }
 
 func (c *logsCommand) storeQueryInContext(logs *ccloudv2.LoggingSearchResponse, currentLogQuery *config.ConnectLogsQueryState) error {
-	var err error
 	if logs.Metadata != nil {
-		currentLogQuery.PageToken, err = extractPageToken(logs.Metadata.Next)
+		pageToken, err := extractPageToken(logs.Metadata.Next)
+		currentLogQuery.SetPageToken(pageToken)
 		if err != nil {
 			return fmt.Errorf("failed to extract page token: %w", err)
 		}
 	} else {
-		currentLogQuery.PageToken = ""
+		currentLogQuery.SetPageToken("")
 	}
 
 	// Update the context with the current query state
-	err = c.Context.SetConnectLogsQueryState(currentLogQuery)
+	err := c.Context.SetConnectLogsQueryState(currentLogQuery)
 	if err != nil {
 		return fmt.Errorf("failed to set connect logs query state: %w", err)
 	}

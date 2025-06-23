@@ -8,3 +8,7 @@ type ConnectLogsQueryState struct {
 	SearchText  string `json:"search_text,omitempty"`
 	ConnectorId string `json:"connector_id,omitempty"`
 }
+
+func (c *ConnectLogsQueryState) SetPageToken(pageToken string) {
+	c.PageToken = pageToken
+}

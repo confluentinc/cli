@@ -8,7 +8,7 @@ Available Commands:
   cluster       Manage Connect clusters.
   custom-plugin Manage custom connector plugins.
   event         Manage log events for managed connectors.
-  logs          Query logs for connectors.
+  logs          Manage logs for connectors.
   offset        Manage offsets for managed connectors.
   plugin        Manage plugins for managed connectors.
 
