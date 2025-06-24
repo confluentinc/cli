@@ -17,10 +17,12 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors/flink"
+	pflink "github.com/confluentinc/cli/v4/pkg/flink"
 	flinkconfig "github.com/confluentinc/cli/v4/pkg/flink/config"
 	"github.com/confluentinc/cli/v4/pkg/flink/test"
 	"github.com/confluentinc/cli/v4/pkg/flink/test/mock"
@@ -48,7 +50,10 @@ func (s *StoreTestSuite) TestGenerateStatementName() {
 }
 
 func TestStoreProcessLocalStatement(t *testing.T) {
-	// Create a new store
+	// Create new stores
+	stores := make([]types.StoreInterface, 2)
+
+	// Cloud store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
 	mockAppController := mock.NewMockApplicationControllerInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
@@ -57,45 +62,44 @@ func TestStoreProcessLocalStatement(t *testing.T) {
 		Database:        "database",
 	}
 	userProperties := NewUserProperties(&appOptions)
-	s := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc).(*Store)
+	stores[0] = NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc).(*Store)
 
-	result, err := s.ProcessLocalStatement("SET 'foo'='bar';")
-	assert.Nil(t, err)
-	assert.NotNil(t, result)
-	assert.True(t, result.IsLocalStatement)
+	// On-prem store
+	cmfClient, err := pflink.NewCmfRestClient(cmfsdk.NewConfiguration(), &pflink.OnPremCMFRestFlagValues{}, true)
+	require.NoError(t, err)
+	userProperties = NewUserProperties(&appOptions)
+	stores[1] = NewStoreOnPrem(cmfClient, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc).(*StoreOnPrem)
 
-	result, err = s.ProcessLocalStatement("RESET;")
-	assert.Nil(t, err)
-	assert.NotNil(t, result)
-	assert.True(t, result.IsLocalStatement)
+	for _, s := range stores {
+		result, err := s.ProcessLocalStatement("SET 'foo'='bar';")
+		assert.Nil(t, err)
+		assert.NotNil(t, result)
+		assert.True(t, result.IsLocalStatement)
 
-	result, err = s.ProcessLocalStatement("USE CATALOG my_catalog;")
-	assert.Nil(t, err)
-	assert.NotNil(t, result)
-	assert.True(t, result.IsLocalStatement)
+		result, err = s.ProcessLocalStatement("RESET;")
+		assert.Nil(t, err)
+		assert.NotNil(t, result)
+		assert.True(t, result.IsLocalStatement)
 
-	result, err = s.ProcessLocalStatement("SELECT * FROM users;")
-	assert.Nil(t, err)
-	assert.Nil(t, result)
+		result, err = s.ProcessLocalStatement("USE CATALOG my_catalog;")
+		assert.Nil(t, err)
+		assert.NotNil(t, result)
+		assert.True(t, result.IsLocalStatement)
 
-	mockAppController.EXPECT().ExitApplication()
-	result, err = s.ProcessLocalStatement("EXIT;")
-	assert.Nil(t, err)
-	assert.Nil(t, result)
-}
+		result, err = s.ProcessLocalStatement("SELECT * FROM users;")
+		assert.Nil(t, err)
+		assert.Nil(t, result)
 
-func TestStoreProcessLocalQuitStatement(t *testing.T) {
-	// Create a new store
-	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
-	mockAppController := mock.NewMockApplicationControllerInterface(gomock.NewController(t))
-	appOptions := types.ApplicationOptions{}
-	userProperties := NewUserProperties(&appOptions)
-	s := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc).(*Store)
+		mockAppController.EXPECT().ExitApplication()
+		result, err = s.ProcessLocalStatement("EXIT;")
+		assert.Nil(t, err)
+		assert.Nil(t, result)
 
-	mockAppController.EXPECT().ExitApplication()
-	result, err := s.ProcessLocalStatement("quit")
-	assert.Nil(t, err)
-	assert.Nil(t, result)
+		mockAppController.EXPECT().ExitApplication()
+		result, err = s.ProcessLocalStatement("quit")
+		assert.Nil(t, err)
+		assert.Nil(t, result)
+	}
 }
 
 func TestWaitForPendingStatement3(t *testing.T) {
@@ -125,6 +129,35 @@ func TestWaitForPendingStatement3(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, processedStatement)
 	assert.Equal(t, types.NewProcessedStatement(statementObj), processedStatement)
+}
+
+func TestWaitForPendingStatement3_OnPrem(t *testing.T) {
+	statementName := "statementName"
+
+	client := mock.NewMockCmfClientInterface(gomock.NewController(t))
+	appOptions := types.ApplicationOptions{
+		EnvironmentId: "envId",
+	}
+	s := &StoreOnPrem{
+		client:           client,
+		appOptions:       &appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+
+	// Test case 1: Statement is not pending
+	statementObj := cmfsdk.Statement{
+		Status: &cmfsdk.StatementStatus{
+			Phase:  "COMPLETED",
+			Detail: cmfsdk.PtrString("Test status detail message"),
+		},
+	}
+	client.EXPECT().CmfApiContext().Return(context.Background())
+	client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(statementObj, nil)
+
+	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10))
+	assert.Nil(t, err)
+	assert.NotNil(t, processedStatement)
+	assert.Equal(t, types.NewProcessedStatementOnPrem(statementObj), processedStatement)
 }
 
 func TestWaitForPendingTimesout(t *testing.T) {
@@ -1177,7 +1210,7 @@ func TestTimeout(t *testing.T) {
 	// Iterate over test cases and run the function for each input, comparing output to expected value
 	for _, tc := range testCases {
 		store := Store{Properties: NewUserPropertiesWithDefaults(tc.properties, map[string]string{})}
-		result := store.getTimeout()
+		result := getTimeout(store.Properties)
 		require.Equal(t, tc.expected, result, tc.name)
 	}
 }
