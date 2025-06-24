@@ -51,6 +51,10 @@ func newLogsCommand(prerunner pcmd.PreRunner) *cobra.Command {
 				Text: "Query connector logs with log level ERROR and containing \"example error\" in logs between the provided time window, and store in file:",
 				Code: `confluent connect logs lcc-123456 --level "ERROR" --search-text "example error" --start-time "2025-02-01T00:00:00Z" --end-time "2025-02-01T23:59:59Z" --output-file errors.json`,
 			},
+			examples.Example{
+				Text: "Query connector logs with log level ERROR and matching regex \"exa*\" in logs between the provided time window, and store in file:",
+				Code: `confluent connect logs lcc-123456 --level "ERROR" --search-text "exa*" --start-time "2025-02-01T00:00:00Z" --end-time "2025-02-01T23:59:59Z" --output-file errors.json`,
+			},
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
