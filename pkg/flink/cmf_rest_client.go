@@ -33,6 +33,8 @@ type CmfClientInterface interface {
 	ListStatementExceptions(ctx context.Context, environment, statementName string) (cmfsdk.StatementExceptionList, error)
 	DeleteStatement(ctx context.Context, environment, statement string) error
 	UpdateStatement(ctx context.Context, environment, statementName string, statement cmfsdk.Statement) error
+	GetStatementResults(ctx context.Context, environment, statementName, pageToken string) (cmfsdk.StatementResult, error)
+	CmfApiContext() context.Context
 }
 
 type CmfRestClient struct {

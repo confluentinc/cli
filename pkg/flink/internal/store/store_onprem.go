@@ -21,12 +21,12 @@ import (
 type StoreOnPrem struct {
 	Properties       types.UserPropertiesInterface
 	exitApplication  func()
-	client           *flink.CmfRestClient
+	client           flink.CmfClientInterface
 	appOptions       *types.ApplicationOptions
 	tokenRefreshFunc func() error
 }
 
-func (s *StoreOnPrem) authenticatedCmfClient() *flink.CmfRestClient {
+func (s *StoreOnPrem) authenticatedCmfClient() flink.CmfClientInterface {
 	if authErr := s.tokenRefreshFunc(); authErr != nil {
 		log.CliLogger.Warnf("Failed to refresh token: %v", authErr)
 	}
