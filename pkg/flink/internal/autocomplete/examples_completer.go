@@ -5,7 +5,7 @@ import (
 )
 
 // Common examples for cloud and on-prem
-func ExamplesCompleter(in prompt.Document) []prompt.Suggest {
+func ExamplesCompleterCommon(in prompt.Document) []prompt.Suggest {
 	s := []prompt.Suggest{
 		{Text: "DESCRIBE ", Description: "Describe the schema of a table or a view"},
 		{Text: "INSERT INTO ", Description: "Add rows to a table"},

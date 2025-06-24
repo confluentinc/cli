@@ -172,9 +172,12 @@ func (c *InputController) promptCompleter(cloud bool) prompt.Completer {
 			completer.AddCompleter(autocomplete.ExamplesCompleterCloud)
 		}
 		completer.
-			AddCompleter(autocomplete.ExamplesCompleter).
-			AddCompleter(autocomplete.SetCompleter).
-			AddCompleter(autocomplete.ShowCompleter)
+			AddCompleter(autocomplete.ExamplesCompleterCommon).
+			AddCompleter(autocomplete.SetCompleterCommon)
+		if cloud {
+			completer.AddCompleter(autocomplete.SetCompleterCloud)
+		}
+		completer.AddCompleter(autocomplete.ShowCompleter)
 	} else {
 		completer.AddCompleter(c.lspCompleter)
 	}

@@ -14,7 +14,7 @@ func TestSelectExampleAutoCompletionSnapshot(t *testing.T) {
 	buffer.InsertText(input, false, true)
 
 	completer := NewCompleterBuilder(mockCompletionsEnabled).
-		AddCompleter(ExamplesCompleter).
+		AddCompleter(ExamplesCompleterCommon).
 		BuildCompleter()
 
 	actual := completer(*buffer.Document())
@@ -29,7 +29,7 @@ func TestAlterExampleAutoCompletionSnapshot(t *testing.T) {
 
 	completer := NewCompleterBuilder(mockCompletionsEnabled).
 		AddCompleter(ExamplesCompleterCloud).
-		AddCompleter(ExamplesCompleter).
+		AddCompleter(ExamplesCompleterCommon).
 		BuildCompleter()
 
 	actual := completer(*buffer.Document())
@@ -43,7 +43,7 @@ func TestInserttExampleAutoCompletionSnapshot(t *testing.T) {
 	buffer.InsertText(input, false, true)
 
 	completer := NewCompleterBuilder(mockCompletionsEnabled).
-		AddCompleter(ExamplesCompleter).
+		AddCompleter(ExamplesCompleterCommon).
 		BuildCompleter()
 
 	actual := completer(*buffer.Document())
@@ -57,7 +57,7 @@ func TestDescribeExampleAutoCompletionSnapshot(t *testing.T) {
 	buffer.InsertText(input, false, true)
 
 	completer := NewCompleterBuilder(mockCompletionsEnabled).
-		AddCompleter(ExamplesCompleter).
+		AddCompleter(ExamplesCompleterCommon).
 		BuildCompleter()
 
 	actual := completer(*buffer.Document())
@@ -71,7 +71,7 @@ func TestUseExampleAutoCompletionSnapshot(t *testing.T) {
 	buffer.InsertText(input, false, true)
 
 	completer := NewCompleterBuilder(mockCompletionsEnabled).
-		AddCompleter(ExamplesCompleter).
+		AddCompleter(ExamplesCompleterCommon).
 		BuildCompleter()
 
 	actual := completer(*buffer.Document())
@@ -85,7 +85,7 @@ func TestSetExampleAutoCompletionSnapshot(t *testing.T) {
 	buffer.InsertText(input, false, true)
 
 	completer := NewCompleterBuilder(mockCompletionsEnabled).
-		AddCompleter(ExamplesCompleter).
+		AddCompleter(ExamplesCompleterCommon).
 		BuildCompleter()
 
 	actual := completer(*buffer.Document())
@@ -99,7 +99,7 @@ func TestResetExampleAutoCompletionSnapshot(t *testing.T) {
 	buffer.InsertText(input, false, true)
 
 	completer := NewCompleterBuilder(mockCompletionsEnabled).
-		AddCompleter(ExamplesCompleter).
+		AddCompleter(ExamplesCompleterCommon).
 		BuildCompleter()
 
 	actual := completer(*buffer.Document())
