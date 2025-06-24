@@ -534,7 +534,7 @@ func executeCommands(stdin *os.File, commands []string, stdoutScanner *bufio.Sca
 			return "", err
 		}
 
-		output.WriteString(waitForLine(stdoutScanner, "Statement successfully created."))
+		output.WriteString(waitForLine(stdoutScanner, "Statement successfully submitted."))
 	}
 	return output.String(), nil
 }
