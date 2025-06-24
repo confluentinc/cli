@@ -292,6 +292,7 @@ func (s *CLITestSuite) TestConnectLogs() {
 		{args: "connect logs lcc-110 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z --level INFO", fixture: "connect/logs/logs-unknown-connector.golden", exitCode: 1},
 		{args: "connect logs --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z --level INFO", fixture: "connect/logs/logs-connector-flag-missing.golden", exitCode: 1},
 		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z --level INFO --output-file logs.txt", fixture: "connect/logs/logs-output-file.golden"},
+		{args: "connect logs \"\" --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z --level INFO", fixture: "connect/logs/logs-empty-connector-id.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {

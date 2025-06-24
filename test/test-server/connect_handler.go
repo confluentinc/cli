@@ -24,8 +24,12 @@ type LoggingLogEntry struct {
 	TaskId    string `json:"task_id,omitempty"`
 	Id        string `json:"id,omitempty"`
 }
+type LoggingMetadata struct {
+	Next string `json:"next,omitempty"`
+}
 type LoggingSearchResponse struct {
 	Data       []LoggingLogEntry `json:"data"`
+	Metadata   *LoggingMetadata  `json:"metadata,omitempty"`
 	ApiVersion string            `json:"api_version"`
 	Kind       string            `json:"kind"`
 }
@@ -88,11 +92,17 @@ func handleLogsSearch(t *testing.T) http.HandlerFunc {
 						Id:        "lcc-123",
 					},
 				},
+				Metadata: &LoggingMetadata{
+					Next: "https://api.logging.devel.cpdev.cloud/logs/v1/search?page_token=next-page-token",
+				},
 				ApiVersion: "v1",
 				Kind:       "LoggingSearchResponse",
 			}
 			filteredResponse := LoggingSearchResponse{
-				Data:       []LoggingLogEntry{},
+				Data: []LoggingLogEntry{},
+				Metadata: &LoggingMetadata{
+					Next: "https://api.logging.devel.cpdev.cloud/logs/v1/search?page_token=next-page-token",
+				},
 				ApiVersion: "v1",
 				Kind:       "LoggingSearchResponse",
 			}
@@ -107,7 +117,10 @@ func handleLogsSearch(t *testing.T) http.HandlerFunc {
 			}
 			response = filteredResponse
 			filteredResponse = LoggingSearchResponse{
-				Data:       []LoggingLogEntry{},
+				Data: []LoggingLogEntry{},
+				Metadata: &LoggingMetadata{
+					Next: "https://api.logging.devel.cpdev.cloud/logs/v1/search?page_token=next-page-token",
+				},
 				ApiVersion: "v1",
 				Kind:       "LoggingSearchResponse",
 			}
@@ -128,7 +141,10 @@ func handleLogsSearch(t *testing.T) http.HandlerFunc {
 
 		// Return empty response for unknown connector names
 		response := LoggingSearchResponse{
-			Data:       []LoggingLogEntry{},
+			Data: []LoggingLogEntry{},
+			Metadata: &LoggingMetadata{
+				Next: "https://api.logging.devel.cpdev.cloud/logs/v1/search?page_token=next-page-token",
+			},
 			ApiVersion: "v1",
 			Kind:       "LoggingSearchResponse",
 		}
