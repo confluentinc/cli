@@ -166,7 +166,7 @@ func getResponseErrorMessage(statusCode int, responseBody []byte, crn string) er
 			errorMsg += fmt.Sprintf("\nResponse body: %s", string(responseBody))
 		}
 		errorMsg += fmt.Sprintf("\nRequest CRN: %s", crn)
-		return fmt.Errorf(errorMsg)
+		return fmt.Errorf("%s\n", errorMsg)
 	}
 	return nil
 }
