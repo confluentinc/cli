@@ -136,26 +136,16 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to get Kafka cluster information: %w\nPlease ensure you have set a cluster context with 'confluent kafka cluster use <cluster-id>' or specify --cluster flag", err)
 	}
-
 	kafkaClusterId := kafkaCluster.GetId()
-	if kafkaClusterId == "" {
-		return fmt.Errorf("failed to get Kafka cluster ID: %w\nPlease ensure you have set a cluster context with 'confluent kafka cluster use <cluster-id>' or specify --cluster flag", err)
-	}
 
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return fmt.Errorf("failed to get environment ID: %w\nPlease ensure you have set an environment context with 'confluent environment use <env-id>' or specify --environment flag", err)
 	}
 
-	connector, err := c.V2Client.GetConnectorExpansionById(connectorId, environmentId, kafkaClusterId)
-	if err != nil {
-		return err
-	}
-
-	connectorInfo := connector.GetInfo()
-	connectorName := connectorInfo.GetName()
+	connectorName, err := c.getConnectorName(connectorId, environmentId, kafkaClusterId)
 	if connectorName == "" {
-		return fmt.Errorf("failed to get connector name")
+		return fmt.Errorf("failed to get connector name: %w", err)
 	}
 
 	lastQueryPageToken, err := c.getPageTokenFromStoredQuery(next, currentLogQuery)
@@ -238,6 +228,15 @@ func (c *logsCommand) storeQueryInContext(logs *ccloudv2.LoggingSearchResponse, 
 		return err
 	}
 	return nil
+}
+
+func (c *logsCommand) getConnectorName(connectorId, environmentId, kafkaClusterId string) (string, error) {
+	connector, err := c.V2Client.GetConnectorExpansionById(connectorId, environmentId, kafkaClusterId)
+	if err != nil {
+		return "", err
+	}
+	connectorInfo := connector.GetInfo()
+	return connectorInfo.GetName(), nil
 }
 
 func writeLogsToFile(outputFile string, logs *ccloudv2.LoggingSearchResponse) error {
