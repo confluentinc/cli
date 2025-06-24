@@ -31,7 +31,7 @@ func (s *ResultConverterTestSuite) TestConvertField() {
 			Type: dataType,
 		})
 		require.NotNil(t, resultField)
-		require.Equal(t, types.NewResultFieldType(dataType), resultField.GetType())
+		require.Equal(t, types.NewResultFieldType(dataType.GetType()), resultField.GetType())
 		if maxNestingDepth == 0 {
 			require.IsType(t, types.AtomicStatementResultField{}, resultField)
 		}
