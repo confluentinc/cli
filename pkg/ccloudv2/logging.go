@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/confluentinc/cli/v4/pkg/auth"
-	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 const (
@@ -167,24 +166,7 @@ func getResponseErrorMessage(statusCode int, responseBody []byte, crn string) er
 			errorMsg += fmt.Sprintf("\nResponse body: %s", string(responseBody))
 		}
 		errorMsg += fmt.Sprintf("\nRequest CRN: %s", crn)
-		var suggestions string
-		switch statusCode {
-		case http.StatusUnauthorized:
-			suggestions = "Please check your authentication. Try running 'confluent login' to refresh your credentials."
-		case http.StatusForbidden:
-			suggestions = "You don't have permission to access logs for this connector. Please check your RBAC permissions."
-		case http.StatusNotFound:
-			suggestions = "The connector or resource was not found. Please verify the connector ID, environment, and cluster are correct."
-		case http.StatusBadRequest:
-			suggestions = "The request parameters are invalid. Please check your time format (RFC3339), connector ID, and other parameters."
-		case http.StatusTooManyRequests:
-			suggestions = "Rate limit exceeded. Please wait a moment before retrying."
-		case http.StatusInternalServerError:
-			suggestions = "Internal server error occurred. Please try again later or contact support if the issue persists."
-		default:
-			suggestions = "Please check your connector ID, environment, cluster settings, and ensure you have proper permissions to access logs."
-		}
-		return errors.NewErrorWithSuggestions(errorMsg, suggestions)
+		return fmt.Errorf(errorMsg)
 	}
 	return nil
 }
