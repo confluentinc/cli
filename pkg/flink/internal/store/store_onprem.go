@@ -187,7 +187,7 @@ func (s *StoreOnPrem) FetchStatementResults(statement types.ProcessedStatement) 
 
 func (s *StoreOnPrem) DeleteStatement(statementName string) bool {
 	client := s.authenticatedCmfClient()
-	if err := client.DeleteStatement(client.CmfApiContext(), s.appOptions.EnvironmentName, statementName); err != nil {
+	if err := client.DeleteStatement(client.CmfApiContext(), s.appOptions.GetEnvironmentId(), statementName); err != nil {
 		log.CliLogger.Warnf("Failed to delete the statement: %v", err)
 		return false
 	}
@@ -197,7 +197,7 @@ func (s *StoreOnPrem) DeleteStatement(statementName string) bool {
 
 func (s *StoreOnPrem) StopStatement(statementName string) bool {
 	client := s.authenticatedCmfClient()
-	statement, err := client.GetStatement(client.CmfApiContext(), s.appOptions.EnvironmentName, statementName)
+	statement, err := client.GetStatement(client.CmfApiContext(), s.appOptions.GetEnvironmentId(), statementName)
 
 	if err != nil {
 		log.CliLogger.Warnf("Failed to fetch statement to stop it: %v", err)
@@ -211,7 +211,7 @@ func (s *StoreOnPrem) StopStatement(statementName string) bool {
 	}
 	spec.SetStopped(true)
 
-	if err := client.UpdateStatement(client.CmfApiContext(), statementName, s.appOptions.GetEnvironmentName(), statement); err != nil {
+	if err := client.UpdateStatement(client.CmfApiContext(), s.appOptions.GetEnvironmentId(), statementName, statement); err != nil {
 		log.CliLogger.Warnf("Failed to stop the statement: %v", err)
 		return false
 	}

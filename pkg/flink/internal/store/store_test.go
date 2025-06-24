@@ -102,98 +102,117 @@ func TestStoreProcessLocalStatement(t *testing.T) {
 	}
 }
 
-func TestWaitForPendingStatement3(t *testing.T) {
+func TestWaitForPendingCompletedStatement(t *testing.T) {
 	statementName := "statementName"
 
-	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
-	appOptions := types.ApplicationOptions{
-		OrganizationId: "orgId",
-		EnvironmentId:  "envId",
-	}
-	s := &Store{
-		client:           client,
-		appOptions:       &appOptions,
-		tokenRefreshFunc: tokenRefreshFunc,
-	}
+	{ // Cloud store
+		client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+		s := &Store{
+			client: client,
+			appOptions: &types.ApplicationOptions{
+				OrganizationId: "orgId",
+				EnvironmentId:  "envId",
+			},
+			tokenRefreshFunc: tokenRefreshFunc,
+		}
 
-	// Test case 1: Statement is not pending
-	statementObj := flinkgatewayv1.SqlV1Statement{
-		Status: &flinkgatewayv1.SqlV1StatementStatus{
-			Phase:  "COMPLETED",
-			Detail: flinkgatewayv1.PtrString("Test status detail message"),
-		},
-	}
-	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil)
+		statementObj := flinkgatewayv1.SqlV1Statement{
+			Status: &flinkgatewayv1.SqlV1StatementStatus{
+				Phase:  "COMPLETED",
+				Detail: flinkgatewayv1.PtrString("Test status detail message"),
+			},
+		}
+		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil)
 
-	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10))
-	assert.Nil(t, err)
-	assert.NotNil(t, processedStatement)
-	assert.Equal(t, types.NewProcessedStatement(statementObj), processedStatement)
+		processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10))
+		assert.Nil(t, err)
+		assert.NotNil(t, processedStatement)
+		assert.Equal(t, types.NewProcessedStatement(statementObj), processedStatement)
+	}
+	{ // On-prem store
+		client := mock.NewMockCmfClientInterface(gomock.NewController(t))
+		s := &StoreOnPrem{
+			client:           client,
+			appOptions:       &types.ApplicationOptions{EnvironmentId: "envId"},
+			tokenRefreshFunc: tokenRefreshFunc,
+		}
+
+		statementObj := cmfsdk.Statement{
+			Status: &cmfsdk.StatementStatus{
+				Phase:  "COMPLETED",
+				Detail: cmfsdk.PtrString("Test status detail message"),
+			},
+		}
+		client.EXPECT().CmfApiContext().Return(context.Background())
+		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(statementObj, nil)
+
+		processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10))
+		assert.Nil(t, err)
+		assert.NotNil(t, processedStatement)
+		assert.Equal(t, types.NewProcessedStatementOnPrem(statementObj), processedStatement)
+	}
 }
 
-func TestWaitForPendingStatement3_OnPrem(t *testing.T) {
-	statementName := "statementName"
-
-	client := mock.NewMockCmfClientInterface(gomock.NewController(t))
-	appOptions := types.ApplicationOptions{
-		EnvironmentId: "envId",
-	}
-	s := &StoreOnPrem{
-		client:           client,
-		appOptions:       &appOptions,
-		tokenRefreshFunc: tokenRefreshFunc,
-	}
-
-	// Test case 1: Statement is not pending
-	statementObj := cmfsdk.Statement{
-		Status: &cmfsdk.StatementStatus{
-			Phase:  "COMPLETED",
-			Detail: cmfsdk.PtrString("Test status detail message"),
-		},
-	}
-	client.EXPECT().CmfApiContext().Return(context.Background())
-	client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(statementObj, nil)
-
-	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10))
-	assert.Nil(t, err)
-	assert.NotNil(t, processedStatement)
-	assert.Equal(t, types.NewProcessedStatementOnPrem(statementObj), processedStatement)
-}
-
-func TestWaitForPendingTimesout(t *testing.T) {
+func TestWaitForPendingTimesOut(t *testing.T) {
 	statementName := "statementName"
 	timeout := time.Duration(10) * time.Millisecond
-
-	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
-	appOptions := types.ApplicationOptions{
-		OrganizationId: "orgId",
-		EnvironmentId:  "envId",
-	}
-	s := &Store{
-		client:           client,
-		appOptions:       &appOptions,
-		tokenRefreshFunc: tokenRefreshFunc,
-	}
-
 	statusDetailMessage := "test status detail message"
-	statementObj := flinkgatewayv1.SqlV1Statement{
-		Status: &flinkgatewayv1.SqlV1StatementStatus{
-			Phase:  "PENDING",
-			Detail: &statusDetailMessage,
-		},
-	}
-	expectedError := &types.StatementError{
-		Message: fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET '%s'='10000';\" to adjust the maximum timeout in milliseconds.",
-			timeout.Seconds(), flinkconfig.KeyResultsTimeout),
-		FailureMessage: fmt.Sprintf("captured retryable errors: %s", statusDetailMessage),
-	}
-	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
-	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, timeout)
+	statementErrorMessage := fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET '%s'='10000';\" to adjust the maximum timeout in milliseconds.", timeout.Seconds(), flinkconfig.KeyResultsTimeout)
 
-	assert.Equal(t, expectedError, err)
-	assert.Nil(t, processedStatement)
+	{ // Cloud store
+		client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+		s := &Store{
+			client: client,
+			appOptions: &types.ApplicationOptions{
+				OrganizationId: "orgId",
+				EnvironmentId:  "envId",
+			},
+			tokenRefreshFunc: tokenRefreshFunc,
+		}
+
+		statementObj := flinkgatewayv1.SqlV1Statement{
+			Status: &flinkgatewayv1.SqlV1StatementStatus{
+				Phase:  "PENDING",
+				Detail: &statusDetailMessage,
+			},
+		}
+		expectedError := &types.StatementError{
+			Message:        statementErrorMessage,
+			FailureMessage: fmt.Sprintf("captured retryable errors: %s", statusDetailMessage),
+		}
+		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
+		processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, timeout)
+
+		assert.Equal(t, expectedError, err)
+		assert.Nil(t, processedStatement)
+	}
+	{ // On-prem store
+		client := mock.NewMockCmfClientInterface(gomock.NewController(t))
+		s := &StoreOnPrem{
+			client:           client,
+			appOptions:       &types.ApplicationOptions{EnvironmentId: "envId"},
+			tokenRefreshFunc: tokenRefreshFunc,
+		}
+
+		statementObj := cmfsdk.Statement{
+			Status: &cmfsdk.StatementStatus{
+				Phase:  "PENDING",
+				Detail: cmfsdk.PtrString(statusDetailMessage),
+			},
+		}
+		expectedError := &types.StatementError{
+			Message: statementErrorMessage,
+		}
+		client.EXPECT().CmfApiContext().Return(context.Background()).AnyTimes()
+		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(statementObj, nil).AnyTimes()
+		processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, timeout)
+
+		assert.Equal(t, expectedError, err)
+		assert.Nil(t, processedStatement)
+	}
 }
 
+// Cloud only; On-prem does not have retryable errors
 func TestWaitForPendingHitsErrorRetryLimit(t *testing.T) {
 	statementName := "statementName"
 	timeout := 10 * time.Second
@@ -229,113 +248,197 @@ func TestWaitForPendingHitsErrorRetryLimit(t *testing.T) {
 
 func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 	statementName := "statementName"
-
-	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
-	appOptions := types.ApplicationOptions{
-		OrganizationId: "orgId",
-		EnvironmentId:  "envId",
-	}
-	s := &Store{
-		client:           client,
-		appOptions:       &appOptions,
-		tokenRefreshFunc: tokenRefreshFunc,
-	}
-
 	transientStatusDetailMessage := "Transient status detail message"
-	statementObj := flinkgatewayv1.SqlV1Statement{
-		Status: &flinkgatewayv1.SqlV1StatementStatus{
-			Phase:  "PENDING",
-			Detail: &transientStatusDetailMessage,
-		},
-	}
-
 	finalStatusDetailMessage := "Final status detail message"
-	statementObjCompleted := flinkgatewayv1.SqlV1Statement{
-		Status: &flinkgatewayv1.SqlV1StatementStatus{
-			Phase:  "COMPLETED",
-			Detail: &finalStatusDetailMessage,
-		},
-	}
-	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).Times(3)
-	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObjCompleted, nil)
 
-	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10)*time.Second)
-	assert.Nil(t, err)
-	assert.NotNil(t, processedStatement)
-	assert.Equal(t, types.NewProcessedStatement(statementObjCompleted), processedStatement)
+	{ // Cloud store
+		client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+		s := &Store{
+			client: client,
+			appOptions: &types.ApplicationOptions{
+				OrganizationId: "orgId",
+				EnvironmentId:  "envId",
+			},
+			tokenRefreshFunc: tokenRefreshFunc,
+		}
+
+		statementObj := flinkgatewayv1.SqlV1Statement{
+			Status: &flinkgatewayv1.SqlV1StatementStatus{
+				Phase:  "PENDING",
+				Detail: &transientStatusDetailMessage,
+			},
+		}
+
+		statementObjCompleted := flinkgatewayv1.SqlV1Statement{
+			Status: &flinkgatewayv1.SqlV1StatementStatus{
+				Phase:  "COMPLETED",
+				Detail: &finalStatusDetailMessage,
+			},
+		}
+		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).Times(3)
+		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObjCompleted, nil)
+
+		processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10)*time.Second)
+		assert.Nil(t, err)
+		assert.NotNil(t, processedStatement)
+		assert.Equal(t, types.NewProcessedStatement(statementObjCompleted), processedStatement)
+	}
+	{ // On-prem store
+		client := mock.NewMockCmfClientInterface(gomock.NewController(t))
+		s := &StoreOnPrem{
+			client:           client,
+			appOptions:       &types.ApplicationOptions{EnvironmentId: "envId"},
+			tokenRefreshFunc: tokenRefreshFunc,
+		}
+
+		statementObj := cmfsdk.Statement{
+			Status: &cmfsdk.StatementStatus{
+				Phase:  "PENDING",
+				Detail: cmfsdk.PtrString(transientStatusDetailMessage),
+			},
+		}
+
+		statementObjCompleted := cmfsdk.Statement{
+			Status: &cmfsdk.StatementStatus{
+				Phase:  "COMPLETED",
+				Detail: cmfsdk.PtrString(finalStatusDetailMessage),
+			},
+		}
+		client.EXPECT().CmfApiContext().Return(context.Background()).Times(4)
+		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(statementObj, nil).Times(3)
+		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(statementObjCompleted, nil)
+
+		processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10)*time.Second)
+		assert.Nil(t, err)
+		assert.NotNil(t, processedStatement)
+		assert.Equal(t, types.NewProcessedStatementOnPrem(statementObjCompleted), processedStatement)
+	}
 }
 
 func TestWaitForPendingStatementErrors(t *testing.T) {
 	statementName := "statementName"
 	waitTime := time.Millisecond * 1
-	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
-	appOptions := types.ApplicationOptions{
-		OrganizationId: "orgId",
-		EnvironmentId:  "envId",
-	}
-	s := &Store{
-		client:           client,
-		appOptions:       &appOptions,
-		tokenRefreshFunc: tokenRefreshFunc,
-	}
 	statusDetailMessage := "Test status detail message"
-	statementObj := flinkgatewayv1.SqlV1Statement{
-		Status: &flinkgatewayv1.SqlV1StatementStatus{
-			Phase:  "COMPLETED",
-			Detail: &statusDetailMessage,
-		},
-	}
-
 	returnedError := flink.NewError("couldn't get statement", "", http.StatusInternalServerError)
 	expectedError := &types.StatementError{
 		Message:        returnedError.Error(),
 		FailureMessage: statusDetailMessage,
 		StatusCode:     http.StatusInternalServerError,
 	}
-	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, returnedError)
-	_, err := s.waitForPendingStatement(context.Background(), statementName, waitTime)
-	assert.Equal(t, expectedError, err)
+
+	{ // Cloud store
+		client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+		s := &Store{
+			client: client,
+			appOptions: &types.ApplicationOptions{
+				OrganizationId: "orgId",
+				EnvironmentId:  "envId",
+			},
+			tokenRefreshFunc: tokenRefreshFunc,
+		}
+		statementObj := flinkgatewayv1.SqlV1Statement{
+			Status: &flinkgatewayv1.SqlV1StatementStatus{
+				Phase:  "COMPLETED",
+				Detail: &statusDetailMessage,
+			},
+		}
+
+		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, returnedError)
+		_, err := s.waitForPendingStatement(context.Background(), statementName, waitTime)
+		assert.Equal(t, expectedError, err)
+	}
+	{ // On-prem store
+		client := mock.NewMockCmfClientInterface(gomock.NewController(t))
+		s := &StoreOnPrem{
+			client:           client,
+			appOptions:       &types.ApplicationOptions{EnvironmentId: "envId"},
+			tokenRefreshFunc: tokenRefreshFunc,
+		}
+		statementObj := cmfsdk.Statement{
+			Status: &cmfsdk.StatementStatus{
+				Phase:  "COMPLETED",
+				Detail: cmfsdk.PtrString(statusDetailMessage),
+			},
+		}
+
+		client.EXPECT().CmfApiContext().Return(context.Background()).AnyTimes()
+		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(statementObj, returnedError)
+		_, err := s.waitForPendingStatement(context.Background(), statementName, waitTime)
+		assert.Equal(t, expectedError, err)
+	}
 }
 
 func TestCancelPendingStatement(t *testing.T) {
 	statementName := "statementName"
 	waitTime := time.Second * 1
 	ctx, cancelFunc := context.WithCancel(context.Background())
-
-	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
-	appOptions := types.ApplicationOptions{
-		OrganizationId: "orgId",
-		EnvironmentId:  "envId",
-	}
-	s := &Store{
-		client:           client,
-		appOptions:       &appOptions,
-		tokenRefreshFunc: tokenRefreshFunc,
-	}
-
-	statementObj := flinkgatewayv1.SqlV1Statement{
-		Name: &statementName,
-		Status: &flinkgatewayv1.SqlV1StatementStatus{
-			Phase: "PENDING",
-		},
-	}
-
 	flinkError := flink.NewError("error", "", http.StatusInternalServerError)
 	expectedErr := &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", StatusCode: http.StatusInternalServerError}
-	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
-	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(nil).AnyTimes()
-	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return([]flinkgatewayv1.SqlV1StatementException{}, flinkError).AnyTimes()
 
-	// Schedule routine to cancel context
-	go func() {
-		time.Sleep(time.Millisecond * 20)
-		cancelFunc()
-	}()
+	{ // Cloud store
+		client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+		s := &Store{
+			client: client,
+			appOptions: &types.ApplicationOptions{
+				OrganizationId: "orgId",
+				EnvironmentId:  "envId",
+			},
+			tokenRefreshFunc: tokenRefreshFunc,
+		}
 
-	res, err := s.waitForPendingStatement(ctx, statementName, waitTime)
+		statementObj := flinkgatewayv1.SqlV1Statement{
+			Name: &statementName,
+			Status: &flinkgatewayv1.SqlV1StatementStatus{
+				Phase: "PENDING",
+			},
+		}
 
-	assert.Nil(t, res)
-	assert.EqualError(t, err, expectedErr.Error())
+		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
+		client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(nil).AnyTimes()
+		client.EXPECT().GetExceptions("envId", statementName, "orgId").Return([]flinkgatewayv1.SqlV1StatementException{}, flinkError).AnyTimes()
+
+		// Schedule routine to cancel context
+		go func() {
+			time.Sleep(time.Millisecond * 20)
+			cancelFunc()
+		}()
+
+		res, err := s.waitForPendingStatement(ctx, statementName, waitTime)
+		assert.Nil(t, res)
+		assert.EqualError(t, err, expectedErr.Error())
+	}
+	{ // On-prem store
+		client := mock.NewMockCmfClientInterface(gomock.NewController(t))
+		s := &StoreOnPrem{
+			client:           client,
+			appOptions:       &types.ApplicationOptions{EnvironmentId: "envId"},
+			tokenRefreshFunc: tokenRefreshFunc,
+		}
+
+		statementObj := cmfsdk.Statement{
+			Metadata: cmfsdk.StatementMetadata{
+				Name: statementName,
+			},
+			Status: &cmfsdk.StatementStatus{
+				Phase: "PENDING",
+			},
+		}
+
+		client.EXPECT().CmfApiContext().Return(context.Background()).AnyTimes()
+		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(statementObj, nil).AnyTimes()
+		client.EXPECT().DeleteStatement(context.Background(), "envId", statementName).Return(nil).AnyTimes()
+		client.EXPECT().ListStatementExceptions(context.Background(), "envId", statementName).Return(cmfsdk.StatementExceptionList{}, flinkError).AnyTimes()
+
+		// Schedule routine to cancel context
+		go func() {
+			time.Sleep(time.Millisecond * 20)
+			cancelFunc()
+		}()
+
+		res, err := s.waitForPendingStatement(ctx, statementName, waitTime)
+		assert.Nil(t, res)
+		assert.EqualError(t, err, expectedErr.Error())
+	}
 }
 
 func (s *StoreTestSuite) TestIsSetStatement() {
