@@ -276,3 +276,27 @@ func (s *CLITestSuite) TestConnectOffset() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestConnectLogs() {
+	tests := []CLITest{
+		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z --level INFO", fixture: "connect/logs/logs.golden"},
+		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z --level INFO --next", fixture: "connect/logs/logs.golden"},
+		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z --level INFO -o json", fixture: "connect/logs/logs-json.golden"},
+		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z --level INFO -o yaml", fixture: "connect/logs/logs-yaml.golden"},
+		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z --level INFO --search-text \"130\" -o json", fixture: "connect/logs/logs-json-search.golden"},
+		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z --level ERROR -o json", fixture: "connect/logs/logs-json-error.golden"},
+		{args: "connect logs lcc-111 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z --level INFO", fixture: "connect/logs/logs-empty-response.golden"},
+		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-06-16T05:43:00.000Z --end-time 2025-06-16T05:45:00.000Z --level INFO", fixture: "connect/logs/logs-incorrect-time-format.golden", exitCode: 1},
+		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-06-22T05:35:00Z --level INFO", fixture: "connect/logs/logs-missing-end-time.golden", exitCode: 1},
+		{args: "connect logs lcc-123 --cluster lkc-123 --end-time 2025-06-22T05:45:00Z --level INFO", fixture: "connect/logs/logs-missing-start-time.golden", exitCode: 1},
+		{args: "connect logs lcc-110 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z --level INFO", fixture: "connect/logs/logs-unknown-connector.golden", exitCode: 1},
+		{args: "connect logs --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z --level INFO", fixture: "connect/logs/logs-connector-flag-missing.golden", exitCode: 1},
+		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z --level INFO --output-file logs.txt", fixture: "connect/logs/logs-output-file.golden"},
+		{args: "connect logs \"\" --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z --level INFO", fixture: "connect/logs/logs-empty-connector-id.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
