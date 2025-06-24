@@ -222,6 +222,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 	verbose, _ := cmd.Flags().GetCount("verbose")
 
 	opts := types.ApplicationOptions{
+		Cloud:            true,
 		Context:          c.Context,
 		UnsafeTrace:      unsafeTrace,
 		UserAgent:        c.Version.UserAgent,
@@ -300,6 +301,7 @@ func (c *command) startFlinkSqlClientOnPrem(prerunner pcmd.PreRunner, cmd *cobra
 	verbose, _ := cmd.Flags().GetCount("verbose")
 
 	opts := types.ApplicationOptions{
+		Cloud:              false,
 		Context:            c.Context,
 		UnsafeTrace:        unsafeTrace,
 		UserAgent:          c.Version.UserAgent,
@@ -320,6 +322,7 @@ func (c *command) startWithLocalMode(configKeys, configValues []string) error {
 	if err != nil {
 		return err
 	}
+	appOptions.Cloud = true
 
 	// validate app options
 	if err := appOptions.Validate(); err != nil {

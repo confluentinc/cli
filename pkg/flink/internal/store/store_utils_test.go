@@ -39,7 +39,10 @@ func TestRemoveStatementTerminator(t *testing.T) {
 func TestProcessSetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
-	appOptions := &types.ApplicationOptions{EnvironmentName: "env-123"}
+	appOptions := &types.ApplicationOptions{
+		Cloud:           true,
+		EnvironmentName: "env-123",
+	}
 	userProperties := NewUserProperties(appOptions)
 	s := NewStore(client, nil, userProperties, &types.ApplicationOptions{EnvironmentName: "env-123"}, tokenRefreshFunc).(*Store)
 	// This is just a string, so really doesn't matter
@@ -129,6 +132,7 @@ func TestProcessResetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
 	appOptions := types.ApplicationOptions{
+		Cloud:            true,
 		OrganizationId:   "orgId",
 		EnvironmentName:  "envName",
 		Database:         "database",

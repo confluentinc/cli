@@ -11,6 +11,7 @@ import (
 )
 
 type ApplicationOptions struct {
+	Cloud              bool
 	UnsafeTrace        bool
 	UserAgent          string
 	EnvironmentId      string
