@@ -15,10 +15,6 @@ Query next page of connector logs for the same query by running the command repe
 
   $ confluent connect logs lcc-123456 --level ERROR --start-time "2025-02-01T00:00:00Z" --end-time "2025-02-01T23:59:59Z" --next
 
-Query all connector logs between the provided time window:
-
-  $ confluent connect logs lcc-123456 --start-time "2025-02-01T00:00:00Z" --end-time "2025-02-01T23:59:59Z"
-
 Query connector logs with log level ERROR and containing "example error" in logs between the provided time window, and store in file:
 
   $ confluent connect logs lcc-123456 --level "ERROR" --search-text "example error" --start-time "2025-02-01T00:00:00Z" --end-time "2025-02-01T23:59:59Z" --output-file errors.json
