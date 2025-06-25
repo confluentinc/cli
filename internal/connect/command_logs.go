@@ -149,7 +149,6 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 	}
 
 	lastQueryPageToken, err := c.getPageTokenFromStoredQuery(next, currentLogQuery)
-	// if error not nil this means that there are no further pages for current query hence return
 	if err != nil {
 		return nil
 	}
@@ -192,17 +191,14 @@ func (c *logsCommand) getPageTokenFromStoredQuery(next bool, currentLogQuery *co
 			lastLogQuery.SearchText == currentLogQuery.SearchText &&
 			lastLogQuery.ConnectorId == currentLogQuery.ConnectorId) {
 			lastQueryPageToken = lastLogQuery.PageToken
-			// If page token for the last query is empty, it means there are no more logs for the current query
 			if lastQueryPageToken == "" {
 				output.Printf(false, "No more logs for the current query\n")
 				return "", fmt.Errorf("no more logs for the current query")
 			}
 		} else {
-			// If the last query is not the same as the current query or there was no last query,, reset the page token
 			lastQueryPageToken = ""
 		}
 	} else {
-		// If the next flag is not set, reset the page token
 		lastQueryPageToken = ""
 	}
 	return lastQueryPageToken, nil
@@ -219,7 +215,6 @@ func (c *logsCommand) storeQueryInContext(logs *ccloudv2.LoggingSearchResponse, 
 		currentLogQuery.SetPageToken("")
 	}
 
-	// Update the context with the current query state
 	err := c.Context.SetConnectLogsQueryState(currentLogQuery)
 	if err != nil {
 		return fmt.Errorf("failed to set connect logs query state: %w", err)

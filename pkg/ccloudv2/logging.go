@@ -143,7 +143,7 @@ func getLoggingUrl(baseURL string) (string, error) {
 	}
 
 	if u.Host == "127.0.0.1:1024" || u.Host == "localhost:1024" {
-		// In test/mock environments, do not rewrite the host
+
 	} else if strings.Contains(u.Host, "devel.cpdev.cloud") {
 		u.Host = "api.logging.devel.cpdev.cloud"
 	} else if strings.Contains(u.Host, "stag.cpdev.cloud") {

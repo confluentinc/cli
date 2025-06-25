@@ -45,7 +45,6 @@ func handleLogsSearch(t *testing.T) http.HandlerFunc {
 			return
 		}
 
-		// Set content type
 		w.Header().Set("Content-Type", "application/json")
 
 		var req struct {
@@ -57,7 +56,6 @@ func handleLogsSearch(t *testing.T) http.HandlerFunc {
 			return
 		}
 
-		// Extract connector name from CRN
 		connectorName := ""
 		parts := strings.Split(req.CRN, "/")
 		for _, part := range parts {
@@ -139,7 +137,6 @@ func handleLogsSearch(t *testing.T) http.HandlerFunc {
 			return
 		}
 
-		// Return empty response for unknown connector names
 		response := LoggingSearchResponse{
 			Data: []LoggingLogEntry{},
 			Metadata: &LoggingMetadata{
