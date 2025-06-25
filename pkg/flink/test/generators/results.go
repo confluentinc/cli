@@ -13,7 +13,7 @@ import (
 )
 
 func GetResultItemGeneratorForType(dataType flinkgatewayv1.DataType) *rapid.Generator[any] {
-	fieldType := types.NewResultFieldType(dataType)
+	fieldType := types.NewResultFieldType(dataType.GetType())
 	switch fieldType {
 	case types.Array:
 		elementType := dataType.GetElementType()
@@ -282,7 +282,7 @@ func MockResultColumns(numColumns, maxNestingDepth int) *rapid.Generator[[]flink
 		for i := 0; i < numColumns; i++ {
 			dataType := DataType(maxNestingDepth).Draw(t, "column type")
 			columnDetails = append(columnDetails, flinkgatewayv1.ColumnDetails{
-				Name: string(types.NewResultFieldType(dataType)),
+				Name: string(types.NewResultFieldType(dataType.GetType())),
 				Type: dataType,
 			})
 		}
