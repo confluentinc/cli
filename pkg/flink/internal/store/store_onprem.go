@@ -194,10 +194,20 @@ func (s *StoreOnPrem) DeleteStatement(statementName string) bool {
 func (s *StoreOnPrem) StopStatement(statementName string) bool {
 	client := s.authenticatedCmfClient()
 	statement, err := client.GetStatement(client.CmfApiContext(), s.appOptions.GetEnvironmentId(), statementName)
-
 	if err != nil {
 		log.CliLogger.Warnf("Failed to fetch statement to stop it: %v", err)
 		return false
+	}
+
+	// Construct the statement to be stopped
+	// The original statement object contains immutable fields that can not be sent in the request body
+	statement = cmfsdk.Statement{
+		ApiVersion: statement.GetApiVersion(),
+		Kind:       statement.GetKind(),
+		Metadata: cmfsdk.StatementMetadata{
+			Name: statement.GetMetadata().Name,
+		},
+		Spec: statement.GetSpec(),
 	}
 
 	spec, isSpecOk := statement.GetSpecOk()
