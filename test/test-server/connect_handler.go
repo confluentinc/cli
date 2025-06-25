@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -15,6 +16,139 @@ import (
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 )
+
+type LoggingLogEntry struct {
+	Timestamp string `json:"timestamp"`
+	Level     string `json:"level"`
+	Message   string `json:"message"`
+	TaskId    string `json:"task_id,omitempty"`
+	Id        string `json:"id,omitempty"`
+}
+type LoggingMetadata struct {
+	Next string `json:"next,omitempty"`
+}
+type LoggingSearchResponse struct {
+	Data       []LoggingLogEntry `json:"data"`
+	Metadata   *LoggingMetadata  `json:"metadata,omitempty"`
+	ApiVersion string            `json:"api_version"`
+	Kind       string            `json:"kind"`
+}
+type LoggingSearchParams struct {
+	Level      []string `json:"level,omitempty"`
+	SearchText string   `json:"search_text,omitempty"`
+}
+
+func handleLogsSearch(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		var req struct {
+			CRN    string              `json:"crn"`
+			Search LoggingSearchParams `json:"search"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		connectorName := ""
+		parts := strings.Split(req.CRN, "/")
+		for _, part := range parts {
+			if strings.HasPrefix(part, "connector=") {
+				connectorName = strings.TrimPrefix(part, "connector=")
+				break
+			}
+		}
+
+		if connectorName == "az-connector" {
+			response := LoggingSearchResponse{
+				Data: []LoggingLogEntry{
+					{
+						Timestamp: "2025-06-16T05:44:23.761Z",
+						Level:     "INFO",
+						Message:   "WorkerSourceTask{id=lcc-123-0} Committing offsets for 130 acknowledged messages",
+						TaskId:    "task-0",
+						Id:        "lcc-123",
+					},
+					{
+						Timestamp: "2025-06-16T05:43:23.757Z",
+						Level:     "INFO",
+						Message:   "WorkerSourceTask{id=lcc-123-0} Committing offsets for 128 acknowledged messages",
+						TaskId:    "task-0",
+						Id:        "lcc-123",
+					},
+					{
+						Timestamp: "2025-06-16T05:44:23.761Z",
+						Level:     "ERROR",
+						Message:   "WorkerSourceTask{id=lcc-123-0} Committing offsets for 130 acknowledged messages",
+						TaskId:    "task-0",
+						Id:        "lcc-123",
+					},
+				},
+				Metadata: &LoggingMetadata{
+					Next: "https://api.logging.devel.cpdev.cloud/logs/v1/search?page_token=next-page-token",
+				},
+				ApiVersion: "v1",
+				Kind:       "LoggingSearchResponse",
+			}
+			filteredResponse := LoggingSearchResponse{
+				Data: []LoggingLogEntry{},
+				Metadata: &LoggingMetadata{
+					Next: "https://api.logging.devel.cpdev.cloud/logs/v1/search?page_token=next-page-token",
+				},
+				ApiVersion: "v1",
+				Kind:       "LoggingSearchResponse",
+			}
+			if req.Search.SearchText != "" {
+				for _, log := range response.Data {
+					if strings.Contains(log.Message, req.Search.SearchText) {
+						filteredResponse.Data = append(filteredResponse.Data, log)
+					}
+				}
+			} else {
+				filteredResponse = response
+			}
+			response = filteredResponse
+			filteredResponse = LoggingSearchResponse{
+				Data: []LoggingLogEntry{},
+				Metadata: &LoggingMetadata{
+					Next: "https://api.logging.devel.cpdev.cloud/logs/v1/search?page_token=next-page-token",
+				},
+				ApiVersion: "v1",
+				Kind:       "LoggingSearchResponse",
+			}
+			if len(req.Search.Level) > 0 {
+				for _, log := range response.Data {
+					if slices.Contains(req.Search.Level, log.Level) {
+						filteredResponse.Data = append(filteredResponse.Data, log)
+					}
+				}
+			} else {
+				filteredResponse = response
+			}
+			response = filteredResponse
+			err := json.NewEncoder(w).Encode(response)
+			require.NoError(t, err)
+			return
+		}
+
+		response := LoggingSearchResponse{
+			Data: []LoggingLogEntry{},
+			Metadata: &LoggingMetadata{
+				Next: "https://api.logging.devel.cpdev.cloud/logs/v1/search?page_token=next-page-token",
+			},
+			ApiVersion: "v1",
+			Kind:       "LoggingSearchResponse",
+		}
+		err := json.NewEncoder(w).Encode(response)
+		require.NoError(t, err)
+	}
+}
 
 var artifactStore = make(map[string]camv1.CamV1ConnectArtifact)
 
