@@ -242,15 +242,12 @@ func (s *ResultFetcherTestSuite) TestReturnHeadersFromStatementResults() {
 	require.Equal(s.T(), s.resultFetcher.materializedStatementResults.GetHeaders(), mockStatement.StatementResults.GetHeaders())
 }
 
-func (s *ResultFetcherTestSuite) TestReturnHeadersFromResultSchema() {
+func (s *ResultFetcherTestSuite) TestReturnHeadersFromResultSchema_Cloud() {
 	mockStatement := getStatementWithResultsExample()
 	mockStatement.StatementResults.Headers = nil
 	columnDetails := generators.MockResultColumns(2, 1).Example()
-	mockStatement.Traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &columnDetails}
-	headers := make([]string, len(mockStatement.Traits.Schema.GetColumns()))
-	for idx, column := range mockStatement.Traits.Schema.GetColumns() {
-		headers[idx] = column.GetName()
-	}
+	mockStatement.Traits.FlinkGatewayv1StatementTraits = &flinkgatewayv1.SqlV1StatementTraits{Schema: &flinkgatewayv1.SqlV1ResultSchema{Columns: &columnDetails}}
+	headers := mockStatement.Traits.GetColumnNames()
 
 	s.resultFetcher.Init(mockStatement)
 
