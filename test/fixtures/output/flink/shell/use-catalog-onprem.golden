@@ -1,6 +1,6 @@
 Welcome!
 To exit, press Ctrl-Q or type "exit".
-[Ctrl-Q] Quit [Ctrl-S] Toggle Completions [Ctrl-G] Toggle Diagnostics
+[Ctrl-Q] Quit [Ctrl-S] Toggle Completions
 > use catalog default;
 Statement successfully submitted.
 Finished statement execution. Statement phase: COMPLETED.
@@ -13,13 +13,11 @@ Details: configuration updated successfully.
 > set;
 Statement successfully submitted.
 Finished statement execution. Statement phase: COMPLETED.
-+------------------------+---------------------+
-|          Key           |        Value        |
-+------------------------+---------------------+
-| client.output-format   | standard (default)  |
-| client.service-account | <unset> (default)   |
-| sql.current-catalog    | default             |
-| sql.local-time-zone    | GMT+00:00 (default) |
-+------------------------+---------------------+
++----------------------+--------------------+
+|         Key          |       Value        |
++----------------------+--------------------+
+| client.output-format | standard (default) |
+| sql.current-catalog  | default            |
++----------------------+--------------------+
 > exit
 

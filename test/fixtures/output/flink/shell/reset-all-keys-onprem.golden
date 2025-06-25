@@ -1,6 +1,6 @@
 Welcome!
 To exit, press Ctrl-Q or type "exit".
-[Ctrl-Q] Quit [Ctrl-S] Toggle Completions [Ctrl-G] Toggle Diagnostics
+[Ctrl-Q] Quit [Ctrl-S] Toggle Completions
 > set 'cli.a-key'='a value';
 Statement successfully submitted.
 Finished statement execution. Statement phase: COMPLETED.
@@ -23,22 +23,18 @@ Details: configuration updated successfully.
 Statement successfully submitted.
 Finished statement execution. Statement phase: COMPLETED.
 Details: configuration has been reset successfully.
-+------------------------+---------------------+
-|          Key           |        Value        |
-+------------------------+---------------------+
-| client.output-format   | standard (default)  |
-| client.service-account | <unset> (default)   |
-| sql.local-time-zone    | GMT+00:00 (default) |
-+------------------------+---------------------+
++----------------------+--------------------+
+|         Key          |       Value        |
++----------------------+--------------------+
+| client.output-format | standard (default) |
++----------------------+--------------------+
 > set;
 Statement successfully submitted.
 Finished statement execution. Statement phase: COMPLETED.
-+------------------------+---------------------+
-|          Key           |        Value        |
-+------------------------+---------------------+
-| client.output-format   | standard (default)  |
-| client.service-account | <unset> (default)   |
-| sql.local-time-zone    | GMT+00:00 (default) |
-+------------------------+---------------------+
++----------------------+--------------------+
+|         Key          |       Value        |
++----------------------+--------------------+
+| client.output-format | standard (default) |
++----------------------+--------------------+
 > exit
 
