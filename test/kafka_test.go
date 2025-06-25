@@ -160,32 +160,11 @@ func (s *CLITestSuite) TestKafka() {
 		{args: fmt.Sprintf("kafka link task list link-5 --url %s -o json", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem-json.golden"},
 	}
 
-	resetConfiguration(s.T(), false)
-
 	for _, test := range tests {
-		test.login = "cloud"
-		test.workflow = true
+		test.login = "onprem"
 		s.runIntegrationTest(test)
 	}
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-func (s *CLITestSuite) Testaaa() {
-	tests := []CLITest{}
-
-	resetConfiguration(s.T(), false)
-
-	for _, test := range tests {
-		test.login = "cloud"
-		test.workflow = true
-		s.runIntegrationTest(test)
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 func (s *CLITestSuite) TestKafkaClusterCreate_Byok() {
 	test := CLITest{
