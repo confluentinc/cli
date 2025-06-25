@@ -1548,6 +1548,7 @@ func TestTimeout(t *testing.T) {
 	}
 }
 
+// Cloud only; On-prem does not use service accounts
 func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	appOptions := &types.ApplicationOptions{
@@ -1593,6 +1594,7 @@ func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
 	require.Equal(s.T(), types.NewProcessedStatement(statementObj), processedStatement)
 }
 
+// Cloud only; On-prem does not set user identity
 func (s *StoreTestSuite) TestProcessStatementWithUserIdentity() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 
@@ -1650,6 +1652,49 @@ func (s *StoreTestSuite) TestProcessStatementWithUserIdentity() {
 	cupaloy.SnapshotT(s.T(), stdout)
 	require.Nil(s.T(), err)
 	require.Equal(s.T(), types.NewProcessedStatement(statementObj), processedStatement)
+}
+
+func (s *StoreTestSuite) TestProcessStatementOnPrem() {
+	client := mock.NewMockCmfClientInterface(gomock.NewController(s.T()))
+	store := StoreOnPrem{
+		Properties: NewUserPropertiesWithDefaults(
+			map[string]string{"client.statement-name": "statement-name"}, map[string]string{},
+		),
+		client: client,
+		appOptions: &types.ApplicationOptions{
+			EnvironmentId:   "envId",
+			EnvironmentName: "envName",
+			Database:        "database",
+		},
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+
+	statement := "SELECT * FROM table"
+	statusDetailMessage := "Test status detail message"
+	nonLocalProperties := store.Properties.GetNonLocalProperties()
+	statementObj := cmfsdk.Statement{
+		Status: &cmfsdk.StatementStatus{
+			Phase:  "PENDING",
+			Detail: &statusDetailMessage,
+		},
+		Spec: cmfsdk.StatementSpec{
+			Properties: &nonLocalProperties,
+			Statement:  statement,
+		},
+	}
+
+	client.EXPECT().CmfApiContext().Return(context.Background())
+	client.EXPECT().CreateStatement(context.Background(), "envId", CmfStatementMatcher{statementObj}).Return(statementObj, nil)
+
+	var processedStatement *types.ProcessedStatement
+	var err *types.StatementError
+	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
+		processedStatement, err = store.ProcessStatement(statement)
+	})
+
+	cupaloy.SnapshotT(s.T(), stdout)
+	require.Nil(s.T(), err)
+	require.Equal(s.T(), types.NewProcessedStatementOnPrem(statementObj), processedStatement)
 }
 
 func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
@@ -2224,5 +2269,27 @@ func (p SqlV1StatementMatcher) Matches(x interface{}) bool {
 }
 
 func (p SqlV1StatementMatcher) String() string {
+	return fmt.Sprintf("%v", p.Expected)
+}
+
+type CmfStatementMatcher struct {
+	Expected cmfsdk.Statement
+}
+
+func (p CmfStatementMatcher) Matches(x interface{}) bool {
+	actual, ok := x.(cmfsdk.Statement)
+	if !ok {
+		return false
+	}
+	statementMatches := actual.Spec.ComputePoolName == p.Expected.Spec.ComputePoolName &&
+		reflect.DeepEqual(actual.Spec.Properties, p.Expected.Spec.Properties) &&
+		actual.Spec.Statement == p.Expected.Spec.Statement
+	if p.Expected.Metadata.Name == "" {
+		return statementMatches
+	}
+	return statementMatches && actual.Metadata.Name == p.Expected.Metadata.Name
+}
+
+func (p CmfStatementMatcher) String() string {
 	return fmt.Sprintf("%v", p.Expected)
 }
