@@ -32,6 +32,7 @@ type LoggingSearchResponse struct {
 	Metadata   *LoggingMetadata  `json:"metadata,omitempty"`
 	ApiVersion string            `json:"api_version"`
 	Kind       string            `json:"kind"`
+	CRN        string            `json:"crn"`
 }
 type LoggingSearchParams struct {
 	Level      []string `json:"level,omitempty"`
@@ -95,6 +96,7 @@ func handleLogsSearch(t *testing.T) http.HandlerFunc {
 				},
 				ApiVersion: "v1",
 				Kind:       "LoggingSearchResponse",
+				CRN:        "crn",
 			}
 			filteredResponse := LoggingSearchResponse{
 				Data: []LoggingLogEntry{},
@@ -103,6 +105,7 @@ func handleLogsSearch(t *testing.T) http.HandlerFunc {
 				},
 				ApiVersion: "v1",
 				Kind:       "LoggingSearchResponse",
+				CRN:        "crn",
 			}
 			if req.Search.SearchText != "" {
 				for _, log := range response.Data {
@@ -121,6 +124,7 @@ func handleLogsSearch(t *testing.T) http.HandlerFunc {
 				},
 				ApiVersion: "v1",
 				Kind:       "LoggingSearchResponse",
+				CRN:        "crn",
 			}
 			if len(req.Search.Level) > 0 {
 				for _, log := range response.Data {
@@ -144,6 +148,7 @@ func handleLogsSearch(t *testing.T) http.HandlerFunc {
 			},
 			ApiVersion: "v1",
 			Kind:       "LoggingSearchResponse",
+			CRN:        "crn",
 		}
 		err := json.NewEncoder(w).Encode(response)
 		require.NoError(t, err)

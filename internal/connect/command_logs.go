@@ -44,7 +44,7 @@ func newLogsCommand(prerunner pcmd.PreRunner) *cobra.Command {
 				Code: `confluent connect logs lcc-123456 --level "ERROR|WARN" --start-time "2025-02-01T00:00:00Z" --end-time "2025-02-01T23:59:59Z"`,
 			},
 			examples.Example{
-				Text: "Query next page of connector logs for the same query by running the command repeatedly until \"No more logs for the current query\" is printed to the console:",
+				Text: "Query subsequent pages of connector logs for the same query by executing the command with next flag until \"No more logs for the current query\" is printed to the console:",
 				Code: `confluent connect logs lcc-123456 --level ERROR --start-time "2025-02-01T00:00:00Z" --end-time "2025-02-01T23:59:59Z" --next`,
 			},
 			examples.Example{
