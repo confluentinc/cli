@@ -231,7 +231,7 @@ func GetDataplaneToken(ctx *config.Context) (string, error) {
 		return "", err
 	}
 	if res.Error != "" {
-		return "", fmt.Errorf(res.Error)
+		return "", errors.New(res.Error)
 	}
 	return res.Token, nil
 }
