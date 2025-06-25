@@ -9,11 +9,12 @@ List the partitions of topic "my_topic".
   $ confluent kafka partition list --topic my_topic
 
 Flags:
-      --topic string         REQUIRED: Topic name to list partitions of.
-      --cluster string       Kafka cluster ID.
-      --context string       CLI context name.
-      --environment string   Environment ID.
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+      --topic string            REQUIRED: Topic name to list partitions of.
+      --kafka-endpoint string   Endpoint to be used for this Kafka cluster.
+      --cluster string          Kafka cluster ID.
+      --context string          CLI context name.
+      --environment string      Environment ID.
+  -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
