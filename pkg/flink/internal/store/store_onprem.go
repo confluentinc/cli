@@ -163,11 +163,7 @@ func (s *StoreOnPrem) FetchStatementResults(statement types.ProcessedStatement) 
 
 		// page token
 		statementMetadata := statementResultObj.GetMetadata()
-		extractedToken, err := extractPageToken(statementMetadata.GetAnnotations()["nextPageToken"])
-		if err != nil {
-			return nil, types.NewStatementError(err)
-		}
-		statement.PageToken = extractedToken
+		statement.PageToken = statementMetadata.GetAnnotations()["nextPageToken"]
 	} else { // For statements other than SELECT, the results are returned in the Statement API
 		statementResultObj, err := client.GetStatement(client.CmfApiContext(), s.appOptions.GetEnvironmentId(), statement.StatementName)
 		if err != nil {

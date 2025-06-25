@@ -1183,168 +1183,307 @@ func (s *StoreTestSuite) TestStopStatementFailsOnUpdateError() {
 
 func (s *StoreTestSuite) TestDeleteStatement() {
 	ctrl := gomock.NewController(s.T())
-
-	// create objects
-	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	appOptions := types.ApplicationOptions{
-		OrganizationId:  "orgId",
-		EnvironmentId:   "envId",
-		EnvironmentName: "envName",
-		Database:        "database",
-	}
-	userProperties := NewUserProperties(&appOptions)
-	store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
-
 	statementName := "TEST_STATEMENT"
-	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(nil)
 
-	wasStatementDeleted := store.DeleteStatement(statementName)
-	require.True(s.T(), wasStatementDeleted)
+	{ // Cloud store
+		client := mock.NewMockGatewayClientInterface(ctrl)
+		appOptions := types.ApplicationOptions{
+			OrganizationId:  "orgId",
+			EnvironmentId:   "envId",
+			EnvironmentName: "envName",
+			Database:        "database",
+		}
+		userProperties := NewUserProperties(&appOptions)
+		store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+
+		client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(nil)
+
+		wasStatementDeleted := store.DeleteStatement(statementName)
+		require.True(s.T(), wasStatementDeleted)
+	}
+	{ // On-prem store
+		client := mock.NewMockCmfClientInterface(ctrl)
+		appOptions := types.ApplicationOptions{
+			EnvironmentId:   "envId",
+			EnvironmentName: "envName",
+			Database:        "database",
+		}
+		userProperties := NewUserProperties(&appOptions)
+		store := NewStoreOnPrem(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+
+		client.EXPECT().CmfApiContext().Return(context.Background())
+		client.EXPECT().DeleteStatement(context.Background(), "envId", statementName).Return(nil)
+
+		wasStatementDeleted := store.DeleteStatement(statementName)
+		require.True(s.T(), wasStatementDeleted)
+	}
 }
 
 func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 	ctrl := gomock.NewController(s.T())
-
-	// create objects
-	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	appOptions := types.ApplicationOptions{
-		OrganizationId:  "orgId",
-		EnvironmentId:   "envId",
-		EnvironmentName: "envName",
-		Database:        "database",
-	}
-	userProperties := NewUserProperties(&appOptions)
-	store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
-
 	statementName := "TEST_STATEMENT"
 
-	flinkError := flink.NewError("error", "", http.StatusInternalServerError)
-	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(flinkError)
-	wasStatementDeleted := store.DeleteStatement(statementName)
-	require.False(s.T(), wasStatementDeleted)
+	{ // Cloud store
+		client := mock.NewMockGatewayClientInterface(ctrl)
+		appOptions := types.ApplicationOptions{
+			OrganizationId:  "orgId",
+			EnvironmentId:   "envId",
+			EnvironmentName: "envName",
+			Database:        "database",
+		}
+		userProperties := NewUserProperties(&appOptions)
+		store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+
+		flinkError := flink.NewError("error", "", http.StatusInternalServerError)
+		client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(flinkError)
+		wasStatementDeleted := store.DeleteStatement(statementName)
+		require.False(s.T(), wasStatementDeleted)
+	}
+	{ // On-prem store
+		client := mock.NewMockCmfClientInterface(ctrl)
+		appOptions := types.ApplicationOptions{
+			EnvironmentId:   "envId",
+			EnvironmentName: "envName",
+			Database:        "database",
+		}
+		userProperties := NewUserProperties(&appOptions)
+		store := NewStoreOnPrem(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+
+		client.EXPECT().CmfApiContext().Return(context.Background())
+		flinkError := flink.NewError("error", "", http.StatusInternalServerError)
+		client.EXPECT().DeleteStatement(context.Background(), "envId", statementName).Return(flinkError)
+		wasStatementDeleted := store.DeleteStatement(statementName)
+		require.False(s.T(), wasStatementDeleted)
+	}
 }
 
 func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 	ctrl := gomock.NewController(s.T())
-
-	// create objects
-	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	appOptions := types.ApplicationOptions{
-		OrganizationId:  "orgId",
-		EnvironmentId:   "envId",
-		EnvironmentName: "envName",
-		Database:        "database",
-	}
-	userProperties := NewUserProperties(&appOptions)
-	store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
-
 	statement := types.ProcessedStatement{
 		StatementName: "TEST_STATEMENT",
 		Status:        types.COMPLETED,
 	}
-	statementResultObj := flinkgatewayv1.SqlV1StatementResult{
-		Metadata: flinkgatewayv1.ResultListMeta{},
-		Results:  &flinkgatewayv1.SqlV1StatementResultResults{},
-	}
-	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
 
-	statementResults, err := store.FetchStatementResults(statement)
-	require.NotNil(s.T(), statementResults)
-	require.Nil(s.T(), err)
+	{ // Cloud store
+		client := mock.NewMockGatewayClientInterface(ctrl)
+		appOptions := types.ApplicationOptions{
+			OrganizationId:  "orgId",
+			EnvironmentId:   "envId",
+			EnvironmentName: "envName",
+			Database:        "database",
+		}
+		userProperties := NewUserProperties(&appOptions)
+		store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+
+		statementResultObj := flinkgatewayv1.SqlV1StatementResult{
+			Metadata: flinkgatewayv1.ResultListMeta{},
+			Results:  &flinkgatewayv1.SqlV1StatementResultResults{},
+		}
+		client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
+
+		statementResults, err := store.FetchStatementResults(statement)
+		require.NotNil(s.T(), statementResults)
+		require.Nil(s.T(), err)
+	}
+	{ // On-prem store
+		client := mock.NewMockCmfClientInterface(ctrl)
+		appOptions := types.ApplicationOptions{
+			EnvironmentId:   "envId",
+			EnvironmentName: "envName",
+			Database:        "database",
+		}
+		userProperties := NewUserProperties(&appOptions)
+		store := NewStoreOnPrem(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+
+		client.EXPECT().CmfApiContext().Return(context.Background())
+		statementResultObj := cmfsdk.Statement{
+			Result: &cmfsdk.StatementResult{},
+		}
+		client.EXPECT().GetStatement(context.Background(), "envId", statement.StatementName).Return(statementResultObj, nil)
+
+		statementResults, err := store.FetchStatementResults(statement)
+		require.NotNil(s.T(), statementResults)
+		require.Nil(s.T(), err)
+	}
 }
 
 func (s *StoreTestSuite) TestFetchResultsWithRunningStatement() {
 	ctrl := gomock.NewController(s.T())
-
-	// create objects
-	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	appOptions := types.ApplicationOptions{
-		OrganizationId:  "orgId",
-		EnvironmentId:   "envId",
-		EnvironmentName: "envName",
-		Database:        "database",
-	}
-	userProperties := NewUserProperties(&appOptions)
-	store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
-
 	statement := types.ProcessedStatement{
 		StatementName: "TEST_STATEMENT",
 		Status:        types.RUNNING,
 	}
-	statementResultObj := flinkgatewayv1.SqlV1StatementResult{
-		Metadata: flinkgatewayv1.ResultListMeta{},
-		Results:  &flinkgatewayv1.SqlV1StatementResultResults{},
-	}
-	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
 
-	statementResults, err := store.FetchStatementResults(statement)
-	require.NotNil(s.T(), statementResults)
-	require.Nil(s.T(), err)
+	{ // Cloud store
+		client := mock.NewMockGatewayClientInterface(ctrl)
+		appOptions := types.ApplicationOptions{
+			OrganizationId:  "orgId",
+			EnvironmentId:   "envId",
+			EnvironmentName: "envName",
+			Database:        "database",
+		}
+		userProperties := NewUserProperties(&appOptions)
+		store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+
+		statementResultObj := flinkgatewayv1.SqlV1StatementResult{
+			Metadata: flinkgatewayv1.ResultListMeta{},
+			Results:  &flinkgatewayv1.SqlV1StatementResultResults{},
+		}
+		client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
+
+		statementResults, err := store.FetchStatementResults(statement)
+		require.NotNil(s.T(), statementResults)
+		require.Nil(s.T(), err)
+	}
+	{ // On-prem store
+		client := mock.NewMockCmfClientInterface(ctrl)
+		appOptions := types.ApplicationOptions{
+			EnvironmentId:   "envId",
+			EnvironmentName: "envName",
+			Database:        "database",
+		}
+		userProperties := NewUserProperties(&appOptions)
+		store := NewStoreOnPrem(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+
+		client.EXPECT().CmfApiContext().Return(context.Background())
+		statement.Traits.CmfStatementTraits = &cmfsdk.StatementTraits{
+			SqlKind: cmfsdk.PtrString("SELECT"),
+		}
+		statementResultObj := cmfsdk.StatementResult{
+			Results: cmfsdk.StatementResults{},
+		}
+		client.EXPECT().GetStatementResults(context.Background(), "envId", statement.StatementName, "").Return(statementResultObj, nil)
+
+		statementResults, err := store.FetchStatementResults(statement)
+		require.NotNil(s.T(), statementResults)
+		require.Nil(s.T(), err)
+	}
 }
 
 func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
 	ctrl := gomock.NewController(s.T())
-
-	// create objects
-	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	appOptions := types.ApplicationOptions{
-		OrganizationId:  "orgId",
-		EnvironmentId:   "envId",
-		EnvironmentName: "envName",
-		Database:        "database",
-	}
-	userProperties := NewUserProperties(&appOptions)
-	store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
-
 	statement := types.ProcessedStatement{
 		StatementName: "TEST_STATEMENT",
 		Status:        types.RUNNING,
 	}
-	nextPage := "https://devel.cpdev.cloud/some/results?page_token=eyJWZX"
-	statementResultObj := flinkgatewayv1.SqlV1StatementResult{
-		Metadata: flinkgatewayv1.ResultListMeta{Next: &nextPage},
-		Results:  &flinkgatewayv1.SqlV1StatementResultResults{},
-	}
-	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
 
-	statementResults, err := store.FetchStatementResults(statement)
-	require.NotNil(s.T(), statementResults)
-	require.Nil(s.T(), err)
+	{ // Cloud store
+		client := mock.NewMockGatewayClientInterface(ctrl)
+
+		appOptions := types.ApplicationOptions{
+			OrganizationId:  "orgId",
+			EnvironmentId:   "envId",
+			EnvironmentName: "envName",
+			Database:        "database",
+		}
+		userProperties := NewUserProperties(&appOptions)
+		store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+
+		nextPage := "https://devel.cpdev.cloud/some/results?page_token=eyJWZX"
+		statementResultObj := flinkgatewayv1.SqlV1StatementResult{
+			Metadata: flinkgatewayv1.ResultListMeta{Next: &nextPage},
+			Results:  &flinkgatewayv1.SqlV1StatementResultResults{},
+		}
+		client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
+
+		statementResults, err := store.FetchStatementResults(statement)
+		require.NotNil(s.T(), statementResults)
+		require.Nil(s.T(), err)
+	}
+	{ // On-prem store
+		client := mock.NewMockCmfClientInterface(ctrl)
+		appOptions := types.ApplicationOptions{
+			EnvironmentId:   "envId",
+			EnvironmentName: "envName",
+			Database:        "database",
+		}
+		userProperties := NewUserProperties(&appOptions)
+		store := NewStoreOnPrem(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+
+		client.EXPECT().CmfApiContext().Return(context.Background()).Times(2)
+		statement.Traits.CmfStatementTraits = &cmfsdk.StatementTraits{
+			SqlKind: cmfsdk.PtrString("SELECT"),
+		}
+		statementResultObj := cmfsdk.StatementResult{
+			Metadata: cmfsdk.StatementResultMetadata{
+				Annotations: &map[string]string{"nextPageToken": "eyJWZX"},
+			},
+			Results: cmfsdk.StatementResults{},
+		}
+		client.EXPECT().GetStatementResults(context.Background(), "envId", statement.StatementName, "").Return(statementResultObj, nil)
+
+		firstPageResults, err := store.FetchStatementResults(statement)
+		require.NotNil(s.T(), firstPageResults)
+		require.Nil(s.T(), err)
+		require.Equal(s.T(), "eyJWZX", firstPageResults.PageToken)
+
+		statementResultObj.Metadata.SetAnnotations(nil)
+		client.EXPECT().GetStatementResults(context.Background(), "envId", statement.StatementName, "eyJWZX").Return(statementResultObj, nil)
+
+		secondPageResults, err := store.FetchStatementResults(*firstPageResults)
+		require.NotNil(s.T(), secondPageResults)
+		require.Nil(s.T(), err)
+		require.Equal(s.T(), "", secondPageResults.PageToken)
+	}
 }
 
 func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
 	ctrl := gomock.NewController(s.T())
-
-	// create objects
-	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	appOptions := types.ApplicationOptions{
-		OrganizationId:  "orgId",
-		EnvironmentId:   "envId",
-		EnvironmentName: "envName",
-		Database:        "database",
-	}
-	userProperties := NewUserProperties(&appOptions)
-	store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
-
 	statement := types.ProcessedStatement{
 		StatementName: "TEST_STATEMENT",
 		Status:        types.RUNNING,
 	}
-	statementResultObj := flinkgatewayv1.SqlV1StatementResult{
-		Metadata: flinkgatewayv1.ResultListMeta{},
-		Results:  &flinkgatewayv1.SqlV1StatementResultResults{Data: &[]any{map[string]any{"op": 0}}},
-	}
-	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
 
-	statementResults, err := store.FetchStatementResults(statement)
-	require.NotNil(s.T(), statementResults)
-	require.Nil(s.T(), err)
+	{ // Cloud store
+		client := mock.NewMockGatewayClientInterface(ctrl)
+		appOptions := types.ApplicationOptions{
+			OrganizationId:  "orgId",
+			EnvironmentId:   "envId",
+			EnvironmentName: "envName",
+			Database:        "database",
+		}
+		userProperties := NewUserProperties(&appOptions)
+		store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+
+		statementResultObj := flinkgatewayv1.SqlV1StatementResult{
+			Metadata: flinkgatewayv1.ResultListMeta{},
+			Results:  &flinkgatewayv1.SqlV1StatementResultResults{Data: &[]any{map[string]any{"op": 0}}},
+		}
+		client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
+
+		statementResults, err := store.FetchStatementResults(statement)
+		require.NotNil(s.T(), statementResults)
+		require.Nil(s.T(), err)
+	}
+	{ // On-prem store
+		client := mock.NewMockCmfClientInterface(ctrl)
+		appOptions := types.ApplicationOptions{
+			EnvironmentId:   "envId",
+			EnvironmentName: "envName",
+			Database:        "database",
+		}
+		userProperties := NewUserProperties(&appOptions)
+		store := NewStoreOnPrem(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+
+		client.EXPECT().CmfApiContext().Return(context.Background())
+		statement.Traits.CmfStatementTraits = &cmfsdk.StatementTraits{
+			SqlKind: cmfsdk.PtrString("SELECT"),
+		}
+		statementResultObj := cmfsdk.StatementResult{
+			Results: cmfsdk.StatementResults{Data: &[]map[string]interface{}{{"op": 0}}},
+		}
+		client.EXPECT().GetStatementResults(context.Background(), "envId", statement.StatementName, "").Return(statementResultObj, nil)
+
+		statementResults, err := store.FetchStatementResults(statement)
+		require.NotNil(s.T(), statementResults)
+		require.Nil(s.T(), err)
+	}
 }
 
 func (s *StoreTestSuite) TestExtractPageToken() {
