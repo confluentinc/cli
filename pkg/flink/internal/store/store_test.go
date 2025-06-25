@@ -981,113 +981,204 @@ func (s *StoreTestSuite) TestParseResetStatementError() {
 
 func (s *StoreTestSuite) TestStopStatement() {
 	ctrl := gomock.NewController(s.T())
-	statementName := "TEST_STATEMENT"
-	statementObj := flinkgatewayv1.NewSqlV1StatementWithDefaults()
-	spec := flinkgatewayv1.NewSqlV1StatementSpecWithDefaults()
-	statementObj.SetName(statementName)
-	statementObj.SetSpec(*spec)
-
-	// create objects
-	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	appOptions := types.ApplicationOptions{
-		OrganizationId:  "orgId",
-		EnvironmentId:   "envId",
-		EnvironmentName: "envName",
-		Database:        "database",
+	statementName := "TEST_STATEMENT"
+
+	{ // Cloud store
+		client := mock.NewMockGatewayClientInterface(ctrl)
+		appOptions := types.ApplicationOptions{
+			OrganizationId:  "orgId",
+			EnvironmentId:   "envId",
+			EnvironmentName: "envName",
+			Database:        "database",
+		}
+		userProperties := NewUserProperties(&appOptions)
+		store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+
+		statementObj := flinkgatewayv1.NewSqlV1StatementWithDefaults()
+		spec := flinkgatewayv1.NewSqlV1StatementSpecWithDefaults()
+		statementObj.SetName(statementName)
+		statementObj.SetSpec(*spec)
+		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(*statementObj, nil)
+
+		statementUpdated := flinkgatewayv1.NewSqlV1StatementWithDefaults()
+		specUpdated := flinkgatewayv1.NewSqlV1StatementSpecWithDefaults()
+		statementUpdated.SetName(statementName)
+		specUpdated.SetStopped(true)
+		statementUpdated.SetSpec(*specUpdated)
+		client.EXPECT().UpdateStatement("envId", statementName, "orgId", *statementUpdated).Return(nil)
+
+		wasStatementDeleted := store.StopStatement(statementName)
+		require.True(s.T(), wasStatementDeleted)
 	}
-	userProperties := NewUserProperties(&appOptions)
-	store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+	{ // On-prem store
+		client := mock.NewMockCmfClientInterface(ctrl)
+		appOptions := types.ApplicationOptions{
+			EnvironmentId:   "envId",
+			EnvironmentName: "envName",
+			Database:        "database",
+		}
+		userProperties := NewUserProperties(&appOptions)
+		store := NewStoreOnPrem(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
 
-	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(*statementObj, nil)
+		client.EXPECT().CmfApiContext().Return(context.Background()).Times(2)
+		statementObj := cmfsdk.NewStatementWithDefaults()
+		spec := cmfsdk.NewStatementSpecWithDefaults()
+		statementObj.Metadata.SetName(statementName)
+		statementObj.SetSpec(*spec)
+		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(*statementObj, nil)
 
-	statementUpdated := flinkgatewayv1.NewSqlV1StatementWithDefaults()
-	specUpdated := flinkgatewayv1.NewSqlV1StatementSpecWithDefaults()
-	statementUpdated.SetName(statementName)
-	specUpdated.SetStopped(true)
-	statementUpdated.SetSpec(*specUpdated)
+		statementUpdated := cmfsdk.NewStatementWithDefaults()
+		specUpdated := cmfsdk.NewStatementSpecWithDefaults()
+		statementUpdated.Metadata.SetName(statementName)
+		specUpdated.SetStopped(true)
+		statementUpdated.SetSpec(*specUpdated)
+		client.EXPECT().UpdateStatement(context.Background(), "envId", statementName, *statementUpdated).Return(nil)
 
-	client.EXPECT().UpdateStatement("envId", statementName, "orgId", *statementUpdated).Return(nil)
-
-	wasStatementDeleted := store.StopStatement(statementName)
-	require.True(s.T(), wasStatementDeleted)
+		wasStatementDeleted := store.StopStatement(statementName)
+		require.True(s.T(), wasStatementDeleted)
+	}
 }
 
 func (s *StoreTestSuite) TestStopStatementFailsOnGetError() {
 	ctrl := gomock.NewController(s.T())
+	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	statementName := "TEST_STATEMENT"
 
-	// create objects
-	client := mock.NewMockGatewayClientInterface(ctrl)
-	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	appOptions := types.ApplicationOptions{
-		OrganizationId:  "orgId",
-		EnvironmentId:   "envId",
-		EnvironmentName: "envName",
-		Database:        "database",
+	{ // Cloud store
+		client := mock.NewMockGatewayClientInterface(ctrl)
+		appOptions := types.ApplicationOptions{
+			OrganizationId:  "orgId",
+			EnvironmentId:   "envId",
+			EnvironmentName: "envName",
+			Database:        "database",
+		}
+
+		userProperties := NewUserProperties(&appOptions)
+		store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+
+		flinkError := flink.NewError("error", "", http.StatusInternalServerError)
+		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(flinkgatewayv1.SqlV1Statement{}, flinkError)
+
+		wasStatementDeleted := store.StopStatement(statementName)
+		require.False(s.T(), wasStatementDeleted)
 	}
-	userProperties := NewUserProperties(&appOptions)
-	store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+	{ // On-prem store
+		client := mock.NewMockCmfClientInterface(ctrl)
+		appOptions := types.ApplicationOptions{
+			EnvironmentId:   "envId",
+			EnvironmentName: "envName",
+			Database:        "database",
+		}
+		userProperties := NewUserProperties(&appOptions)
+		store := NewStoreOnPrem(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
 
-	flinkError := flink.NewError("error", "", http.StatusInternalServerError)
-	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(flinkgatewayv1.SqlV1Statement{}, flinkError)
+		client.EXPECT().CmfApiContext().Return(context.Background())
+		flinkError := flink.NewError("error", "", http.StatusInternalServerError)
+		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(cmfsdk.Statement{}, flinkError)
 
-	wasStatementDeleted := store.StopStatement(statementName)
-	require.False(s.T(), wasStatementDeleted)
+		wasStatementDeleted := store.StopStatement(statementName)
+		require.False(s.T(), wasStatementDeleted)
+	}
 }
 
 func (s *StoreTestSuite) TestStopStatementFailsOnNilSpecError() {
 	ctrl := gomock.NewController(s.T())
+	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	statementName := "TEST_STATEMENT"
 	statementObj := flinkgatewayv1.NewSqlV1StatementWithDefaults()
 	statementObj.SetName(statementName)
 
-	// create objects
-	client := mock.NewMockGatewayClientInterface(ctrl)
-	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	appOptions := types.ApplicationOptions{
-		OrganizationId:  "orgId",
-		EnvironmentId:   "envId",
-		EnvironmentName: "envName",
-		Database:        "database",
+	{ // Cloud store
+		client := mock.NewMockGatewayClientInterface(ctrl)
+		appOptions := types.ApplicationOptions{
+			OrganizationId:  "orgId",
+			EnvironmentId:   "envId",
+			EnvironmentName: "envName",
+			Database:        "database",
+		}
+		userProperties := NewUserProperties(&appOptions)
+		store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+
+		flinkError := flink.NewError("error", "", http.StatusInternalServerError)
+		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(flinkgatewayv1.SqlV1Statement{}, flinkError)
+
+		wasStatementDeleted := store.StopStatement(statementName)
+		require.False(s.T(), wasStatementDeleted)
 	}
-	userProperties := NewUserProperties(&appOptions)
-	store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+	{ // On-prem store
+		client := mock.NewMockCmfClientInterface(ctrl)
+		appOptions := types.ApplicationOptions{
+			EnvironmentId:   "envId",
+			EnvironmentName: "envName",
+			Database:        "database",
+		}
+		userProperties := NewUserProperties(&appOptions)
+		store := NewStoreOnPrem(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
 
-	flinkError := flink.NewError("error", "", http.StatusInternalServerError)
-	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(flinkgatewayv1.SqlV1Statement{}, flinkError)
+		client.EXPECT().CmfApiContext().Return(context.Background())
+		flinkError := flink.NewError("error", "", http.StatusInternalServerError)
+		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(cmfsdk.Statement{}, flinkError)
 
-	wasStatementDeleted := store.StopStatement(statementName)
-	require.False(s.T(), wasStatementDeleted)
+		wasStatementDeleted := store.StopStatement(statementName)
+		require.False(s.T(), wasStatementDeleted)
+	}
 }
 
 func (s *StoreTestSuite) TestStopStatementFailsOnUpdateError() {
 	ctrl := gomock.NewController(s.T())
-	statementName := "TEST_STATEMENT"
-	statementObj := flinkgatewayv1.NewSqlV1StatementWithDefaults()
-	spec := flinkgatewayv1.NewSqlV1StatementSpecWithDefaults()
-	statementObj.SetName(statementName)
-	statementObj.SetSpec(*spec)
-
-	// create objects
-	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	appOptions := types.ApplicationOptions{
-		OrganizationId:  "orgId",
-		EnvironmentId:   "envId",
-		EnvironmentName: "envName",
-		Database:        "database",
+	statementName := "TEST_STATEMENT"
+
+	{ // Cloud store
+		client := mock.NewMockGatewayClientInterface(ctrl)
+
+		appOptions := types.ApplicationOptions{
+			OrganizationId:  "orgId",
+			EnvironmentId:   "envId",
+			EnvironmentName: "envName",
+			Database:        "database",
+		}
+		userProperties := NewUserProperties(&appOptions)
+		store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+
+		statementObj := flinkgatewayv1.NewSqlV1StatementWithDefaults()
+		spec := flinkgatewayv1.NewSqlV1StatementSpecWithDefaults()
+		statementObj.SetName(statementName)
+		statementObj.SetSpec(*spec)
+
+		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(*statementObj, nil)
+		statementObj.Spec.SetStopped(true)
+		flinkError := flink.NewError("error", "", http.StatusInternalServerError)
+		client.EXPECT().UpdateStatement("envId", statementName, "orgId", *statementObj).Return(flinkError)
+
+		wasStatementDeleted := store.StopStatement(statementName)
+		require.False(s.T(), wasStatementDeleted)
 	}
-	userProperties := NewUserProperties(&appOptions)
-	store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+	{ // On-prem store
+		client := mock.NewMockCmfClientInterface(ctrl)
+		appOptions := types.ApplicationOptions{
+			EnvironmentId:   "envId",
+			EnvironmentName: "envName",
+			Database:        "database",
+		}
+		userProperties := NewUserProperties(&appOptions)
+		store := NewStoreOnPrem(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
 
-	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(*statementObj, nil)
-	statementObj.Spec.SetStopped(true)
-	flinkError := flink.NewError("error", "", http.StatusInternalServerError)
-	client.EXPECT().UpdateStatement("envId", statementName, "orgId", *statementObj).Return(flinkError)
+		client.EXPECT().CmfApiContext().Return(context.Background()).Times(2)
+		statementObj := cmfsdk.NewStatementWithDefaults()
+		spec := cmfsdk.NewStatementSpecWithDefaults()
+		statementObj.Metadata.SetName(statementName)
+		statementObj.SetSpec(*spec)
 
-	wasStatementDeleted := store.StopStatement(statementName)
-	require.False(s.T(), wasStatementDeleted)
+		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(*statementObj, nil)
+		statementObj.Spec.SetStopped(true)
+		flinkError := flink.NewError("error", "", http.StatusInternalServerError)
+		client.EXPECT().UpdateStatement(context.Background(), "envId", statementName, *statementObj).Return(flinkError)
+
+		wasStatementDeleted := store.StopStatement(statementName)
+		require.False(s.T(), wasStatementDeleted)
+	}
 }
 
 func (s *StoreTestSuite) TestDeleteStatement() {
