@@ -25,8 +25,8 @@ type logsCommand struct {
 type logEntryOut struct {
 	Timestamp string `human:"Timestamp" serialized:"timestamp"`
 	Level     string `human:"Level" serialized:"level"`
-	Message   string `human:"Message" serialized:"message"`
 	TaskId    string `human:"Task ID" serialized:"task_id"`
+	Message   string `human:"Message" serialized:"message"`
 	Exception string `human:"Exception" serialized:"exception"`
 }
 
