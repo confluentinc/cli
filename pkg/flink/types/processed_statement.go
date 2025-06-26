@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/flink/config"
 	"github.com/confluentinc/cli/v4/pkg/flink/internal/utils"
@@ -18,6 +19,8 @@ const (
 	RUNNING   PHASE = "RUNNING"   // More results are available (pagination)
 	COMPLETED PHASE = "COMPLETED" // All results were fetched
 	FAILED    PHASE = "FAILED"
+
+	detailsMsg = "Details: %s"
 )
 
 // Custom Internal type that shall be used internally by the client
@@ -26,7 +29,7 @@ type ProcessedStatement struct {
 	StatementName        string `json:"statement_name"`
 	Kind                 string `json:"kind"`
 	ComputePool          string `json:"compute_pool"`
-	Principal            string `json:"principal"`
+	Principal            string `json:"principal"` // Cloud only
 	Status               PHASE  `json:"status"`
 	StatusDetail         string `json:"status_detail,omitempty"` // Shown at the top before the table
 	IsLocalStatement     bool
@@ -34,10 +37,11 @@ type ProcessedStatement struct {
 	PageToken            string
 	Properties           map[string]string
 	StatementResults     *StatementResults
-	Traits               flinkgatewayv1.SqlV1StatementTraits
+	Traits               StatementTraits
 }
 
 func NewProcessedStatement(statementObj flinkgatewayv1.SqlV1Statement) *ProcessedStatement {
+	traits := statementObj.Status.GetTraits()
 	return &ProcessedStatement{
 		Statement:     statementObj.Spec.GetStatement(),
 		StatementName: statementObj.GetName(),
@@ -46,7 +50,20 @@ func NewProcessedStatement(statementObj flinkgatewayv1.SqlV1Statement) *Processe
 		StatusDetail:  statementObj.Status.GetDetail(),
 		Status:        PHASE(statementObj.Status.GetPhase()),
 		Properties:    statementObj.Spec.GetProperties(),
-		Traits:        statementObj.Status.GetTraits(),
+		Traits:        StatementTraits{FlinkGatewayv1StatementTraits: &traits},
+	}
+}
+
+func NewProcessedStatementOnPrem(statementObj cmfsdk.Statement) *ProcessedStatement {
+	traits := statementObj.Status.GetTraits()
+	return &ProcessedStatement{
+		Statement:     statementObj.Spec.GetStatement(),
+		StatementName: statementObj.Metadata.GetName(),
+		ComputePool:   statementObj.Spec.GetComputePoolName(),
+		StatusDetail:  statementObj.Status.GetDetail(),
+		Status:        PHASE(statementObj.Status.GetPhase()),
+		Properties:    statementObj.Spec.GetProperties(),
+		Traits:        StatementTraits{CmfStatementTraits: &traits},
 	}
 }
 
@@ -62,15 +79,15 @@ func (s ProcessedStatement) printStatusMessageOfLocalStatement() {
 	if s.Status == "FAILED" {
 		utils.OutputErr(fmt.Sprintf("Error: %s", "couldn't process statement, please check your statement and try again"))
 	} else {
-		utils.OutputInfo("Statement successfully created.")
+		utils.OutputInfo("Statement successfully submitted.")
 	}
 }
 
 func (s ProcessedStatement) printStatusMessageOfNonLocalStatement() {
 	if s.Status == "FAILED" {
-		utils.OutputErr(fmt.Sprintf("Error: %s", "statement creation failed"))
+		utils.OutputErr(fmt.Sprintf("Error: %s", "statement submission failed"))
 	} else {
-		utils.OutputInfo("Statement successfully created.")
+		utils.OutputInfo("Statement successfully submitted.")
 
 		if s.Status != "COMPLETED" {
 			utils.OutputInfo(fmt.Sprintf("Waiting for statement to be ready. Statement phase: %s.", s.Status))
@@ -78,23 +95,25 @@ func (s ProcessedStatement) printStatusMessageOfNonLocalStatement() {
 	}
 
 	if s.StatusDetail != "" {
-		utils.OutputInfof("Details: ")
-		utils.OutputWarn(s.StatusDetail)
+		details := fmt.Sprintf(detailsMsg, s.StatusDetail)
+		if s.Status == "FAILED" {
+			utils.OutputErr(details)
+		} else {
+			utils.OutputInfo(details)
+		}
 	}
 }
 
 func (s ProcessedStatement) PrintOutputDryRunStatement() {
-	utils.OutputInfo(fmt.Sprintf("Statement successfully created. Statement phase: %s.", s.Status))
+	utils.OutputInfo(fmt.Sprintf("Statement successfully submitted. Statement phase: %s.", s.Status))
 	if s.Status == "FAILED" {
 		utils.OutputErr(fmt.Sprintf("Dry run statement was verified and there were issues found.\nError: %s", s.StatusDetail))
 	} else if s.Status == "COMPLETED" {
 		utils.OutputInfo("Dry run statement was verified and there were no issues found.")
-		utils.OutputWarn("If you wish to submit your statement, disable dry run mode before " +
-			"your statement with \"set 'sql.dry-run' = 'false';\"")
+		utils.OutputWarn("If you wish to submit your statement, disable dry run mode before submitting your statement with \"set 'sql.dry-run' = 'false';\"")
 	} else {
 		utils.OutputErr(fmt.Sprintf("Dry run statement execution resulted in unexpected status.\nStatus: %s", s.Status))
-		utils.OutputInfof("Details: ")
-		utils.OutputErr(s.StatusDetail)
+		utils.OutputErr(fmt.Sprintf(detailsMsg, s.StatusDetail))
 	}
 }
 
@@ -107,7 +126,7 @@ func (s ProcessedStatement) PrintStatementDoneStatus() {
 		output.Printf(false, "Finished statement execution. Statement phase: %s.\n", s.Status)
 	}
 	if s.StatusDetail != "" {
-		output.Printf(false, "Details: %s.\n", s.StatusDetail)
+		output.Printf(false, detailsMsg+".\n", s.StatusDetail)
 	}
 }
 

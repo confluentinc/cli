@@ -1,9 +1,16 @@
 package test
 
 import (
+	"fmt"
 	"os"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/go-prompt"
 
 	"github.com/confluentinc/cli/v4/pkg/auth"
+	pauth "github.com/confluentinc/cli/v4/pkg/auth"
 )
 
 // Runs the integration test with login = "" and login = "onprem"
@@ -322,7 +329,11 @@ func (s *CLITestSuite) TestFlinkStatementCreateOnPrem() {
 		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool`, fixture: "flink/statement/create-success.golden"},
 		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool -o json`, fixture: "flink/statement/create-success-json.golden"},
 		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool -o yaml`, fixture: "flink/statement/create-success-yaml.golden"},
+		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.json`, fixture: "flink/statement/create-success.golden"},
+		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.yaml`, fixture: "flink/statement/create-success.golden"},
 		// failure
+		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.properties`, fixture: "flink/statement/create-failure-invalid-configuration-file-format.golden", exitCode: 1},
+		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.csv`, fixture: "flink/statement/create-failure-configuration-file-dne.golden", exitCode: 1},
 		{args: "flink statement create test-stmt --environment default --compute-pool test-pool", fixture: "flink/statement/create-missing-sql-failure.golden", exitCode: 1},
 		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table"`, fixture: "flink/statement/create-missing-compute-pool-failure.golden", exitCode: 1},
 		{args: `flink statement create invalid-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool`, fixture: "flink/statement/create-invalid-stmt-failure.golden", exitCode: 1},
@@ -415,4 +426,82 @@ func (s *CLITestSuite) TestFlinkStatementExceptionListOnPrem() {
 func (s *CLITestSuite) TestFlinkOnPremWithCloudLogin() {
 	test := CLITest{args: "flink environment list --output json", fixture: "flink/environment/list-cloud.golden", login: "cloud", exitCode: 1}
 	s.runIntegrationTest(test)
+}
+
+func (s *CLITestSuite) TestFlinkShellOnPrem() {
+	tests := []flinkShellTest{
+		{
+			goldenFile: "use-catalog-onprem.golden",
+			commands: []string{
+				"use catalog default;",
+				"set;",
+			},
+		},
+		{
+			goldenFile: "use-database-onprem.golden",
+			commands: []string{
+				"use catalog default;",
+				"use db1;",
+				"set;",
+			},
+		},
+		{
+			goldenFile: "set-single-key-onprem.golden",
+			commands: []string{
+				"set 'cli.a-key'='a value';",
+				"set;",
+			},
+		},
+		{
+			goldenFile: "reset-single-key-onprem.golden",
+			commands: []string{
+				"set 'cli.a-key'='a value';",
+				"reset 'cli.a-key';",
+				"set;",
+			},
+		},
+		{
+			goldenFile: "reset-all-keys-onprem.golden",
+			commands: []string{
+				"set 'cli.a-key'='a value';",
+				"set 'cli.another-key'='another value';",
+				"reset;",
+				"set;",
+			},
+		},
+	}
+
+	s.setupFlinkShellTestsOnPrem()
+	defer s.tearDownFlinkShellTests()
+
+	for _, test := range tests {
+		test.onprem = true
+		s.runFlinkShellTest(test)
+	}
+	s.loginOnPrem(s.T())
+	for _, test := range tests {
+		test.onprem = true
+		s.runFlinkShellTest(test)
+	}
+
+	resetConfiguration(s.T(), false)
+}
+
+func (s *CLITestSuite) loginOnPrem(t *testing.T) {
+	loginString := fmt.Sprintf("login --url %s", s.TestBackend.GetMdsUrl())
+	env := []string{pauth.ConfluentPlatformUsername + "=fake@user.com", pauth.ConfluentPlatformPassword + "=pass1"}
+	if output := runCommand(t, testBin, env, loginString, 0, ""); *debug {
+		fmt.Println(output)
+	}
+}
+
+func (s *CLITestSuite) setupFlinkShellTestsOnPrem() {
+	// Set the go-prompt file input env var, so go-prompt uses this file as the input stream
+	err := os.Setenv(prompt.EnvVarInputFile, flinkShellInputStreamFile)
+	require.NoError(s.T(), err)
+
+	// Fake the timezone, to ensure CI and local run with the same default timezone.
+	// We use UTC to avoid time zone differences due to daylight savings time.
+	err = os.Setenv(timezoneEnvVar, "UTC")
+	require.NoError(s.T(), err)
 }
