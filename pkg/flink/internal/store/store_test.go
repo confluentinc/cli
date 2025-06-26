@@ -2452,7 +2452,6 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsEmptyWhenNoExceptionsAvailabl
 
 		require.Equal(s.T(), "", store.getStatusDetail(statementObj))
 	}
-
 }
 
 func (s *StoreTestSuite) TestIsSelectStatement() {
