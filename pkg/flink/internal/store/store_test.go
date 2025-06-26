@@ -1548,7 +1548,7 @@ func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
 	}
 	serviceAccountId := "sa-123"
 	store := Store{
-		Properties:       NewUserPropertiesWithDefaults(map[string]string{flinkconfig.KeyServiceAccount: serviceAccountId, flinkconfig.KeyStatementName: "statement-name"}, map[string]string{}),
+		Properties:       NewUserPropertiesWithDefaults(map[string]string{flinkconfig.KeyServiceAccount: serviceAccountId, flinkconfig.KeyStatementName: testStatementName}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1605,7 +1605,7 @@ func (s *StoreTestSuite) TestProcessStatementWithUserIdentity() {
 	}
 	store := Store{
 		Properties: NewUserPropertiesWithDefaults(
-			map[string]string{flinkconfig.KeyStatementName: "statement-name"}, map[string]string{},
+			map[string]string{flinkconfig.KeyStatementName: testStatementName}, map[string]string{},
 		),
 		client:           client,
 		appOptions:       appOptions,
@@ -1643,7 +1643,7 @@ func (s *StoreTestSuite) TestProcessStatementOnPrem() {
 	client := mock.NewMockCmfClientInterface(gomock.NewController(s.T()))
 	store := StoreOnPrem{
 		Properties: NewUserPropertiesWithDefaults(
-			map[string]string{flinkconfig.KeyStatementName: "statement-name"}, map[string]string{},
+			map[string]string{flinkconfig.KeyStatementName: testStatementName}, map[string]string{},
 		),
 		client: client,
 		appOptions: &types.ApplicationOptions{
@@ -1689,7 +1689,7 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 		ComputePoolId:  "computePoolId",
 	}
 	store := Store{
-		Properties:       NewUserPropertiesWithDefaults(map[string]string{flinkconfig.KeyServiceAccount: serviceAccountId, flinkconfig.KeyStatementName: "statement-name"}, map[string]string{}),
+		Properties:       NewUserPropertiesWithDefaults(map[string]string{flinkconfig.KeyServiceAccount: serviceAccountId, flinkconfig.KeyStatementName: testStatementName}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1731,7 +1731,7 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnErrorOnPrem() {
 	client := mock.NewMockCmfClientInterface(gomock.NewController(s.T()))
 	store := StoreOnPrem{
 		Properties: NewUserPropertiesWithDefaults(
-			map[string]string{flinkconfig.KeyStatementName: "statement-name"}, map[string]string{},
+			map[string]string{flinkconfig.KeyStatementName: testStatementName}, map[string]string{},
 		),
 		client: client,
 		appOptions: &types.ApplicationOptions{
@@ -2518,7 +2518,7 @@ func TestWaitForTerminalStateStopsWhenTerminalState(t *testing.T) {
 		}
 
 		statementObj := flinkgatewayv1.SqlV1Statement{
-			Name: flinkgatewayv1.PtrString("statement-name"),
+			Name: flinkgatewayv1.PtrString(testStatementName),
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
 				Phase:  "COMPLETED",
 				Detail: flinkgatewayv1.PtrString(testStatusDetailMessage),
@@ -2545,7 +2545,7 @@ func TestWaitForTerminalStateStopsWhenTerminalState(t *testing.T) {
 
 		statementObj := cmfsdk.Statement{
 			Metadata: cmfsdk.StatementMetadata{
-				Name: "statement-name",
+				Name: testStatementName,
 			},
 			Status: &cmfsdk.StatementStatus{
 				Phase: "COMPLETED",
@@ -2553,7 +2553,7 @@ func TestWaitForTerminalStateStopsWhenTerminalState(t *testing.T) {
 		}
 
 		client.EXPECT().CmfApiContext().Return(context.Background())
-		client.EXPECT().GetStatement(context.Background(), "envId", "statement-name").Return(statementObj, nil)
+		client.EXPECT().GetStatement(context.Background(), "envId", testStatementName).Return(statementObj, nil)
 		processedStatement := types.NewProcessedStatementOnPrem(statementObj)
 		processedStatement.Status = types.RUNNING
 
@@ -2576,7 +2576,7 @@ func TestWaitForTerminalStateStopsWhenUserDetaches(t *testing.T) {
 			tokenRefreshFunc: tokenRefreshFunc,
 		}
 		statementObj := flinkgatewayv1.SqlV1Statement{
-			Name: flinkgatewayv1.PtrString("statement-name"),
+			Name: flinkgatewayv1.PtrString(testStatementName),
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
 				Phase:  "RUNNING",
 				Detail: flinkgatewayv1.PtrString(testStatusDetailMessage),
@@ -2607,7 +2607,7 @@ func TestWaitForTerminalStateStopsWhenUserDetaches(t *testing.T) {
 
 		statementObj := cmfsdk.Statement{
 			Metadata: cmfsdk.StatementMetadata{
-				Name: "statement-name",
+				Name: testStatementName,
 			},
 			Status: &cmfsdk.StatementStatus{
 				Phase:  "RUNNING",
@@ -2616,7 +2616,7 @@ func TestWaitForTerminalStateStopsWhenUserDetaches(t *testing.T) {
 		}
 
 		client.EXPECT().CmfApiContext().Return(context.Background()).AnyTimes()
-		client.EXPECT().GetStatement(context.Background(), "envId", "statement-name").Return(statementObj, nil).AnyTimes()
+		client.EXPECT().GetStatement(context.Background(), "envId", testStatementName).Return(statementObj, nil).AnyTimes()
 		ctx, cancelFunc := context.WithCancel(context.Background())
 		go func() {
 			time.Sleep(2 * time.Second)
@@ -2643,7 +2643,7 @@ func TestWaitForTerminalStateStopsOnError(t *testing.T) {
 			tokenRefreshFunc: tokenRefreshFunc,
 		}
 		statementObj := flinkgatewayv1.SqlV1Statement{
-			Name: flinkgatewayv1.PtrString("statement-name"),
+			Name: flinkgatewayv1.PtrString(testStatementName),
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
 				Phase:  "RUNNING",
 				Detail: flinkgatewayv1.PtrString(testStatusDetailMessage),
@@ -2666,7 +2666,7 @@ func TestWaitForTerminalStateStopsOnError(t *testing.T) {
 		}
 		statementObj := cmfsdk.Statement{
 			Metadata: cmfsdk.StatementMetadata{
-				Name: "statement-name",
+				Name: testStatementName,
 			},
 			Status: &cmfsdk.StatementStatus{
 				Phase:  "RUNNING",
@@ -2674,7 +2674,7 @@ func TestWaitForTerminalStateStopsOnError(t *testing.T) {
 			},
 		}
 		client.EXPECT().CmfApiContext().Return(context.Background())
-		client.EXPECT().GetStatement(context.Background(), "envId", "statement-name").Return(statementObj, fmt.Errorf("error"))
+		client.EXPECT().GetStatement(context.Background(), "envId", testStatementName).Return(statementObj, fmt.Errorf("error"))
 
 		_, err := store.WaitForTerminalStatementState(context.Background(), *types.NewProcessedStatementOnPrem(statementObj))
 

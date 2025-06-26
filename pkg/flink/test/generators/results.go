@@ -12,6 +12,11 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 )
 
+const (
+	resultFieldLabel = "result field type"
+	elementLabel     = "element type"
+)
+
 func GetResultItemGeneratorForType(dataType flinkgatewayv1.DataType) *rapid.Generator[any] {
 	fieldType := types.NewResultFieldType(dataType.GetType())
 	switch fieldType {
@@ -198,8 +203,8 @@ func AtomicDataType() *rapid.Generator[flinkgatewayv1.DataType] {
 // ArrayDataType generates a random array data type
 func ArrayDataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1.DataType] {
 	return rapid.Custom(func(t *rapid.T) flinkgatewayv1.DataType {
-		resultFieldType := GenResultFieldType().Draw(t, "result field type")
-		elementType := getDataTypeGeneratorForType(resultFieldType, maxNestingDepth).Draw(t, "element type")
+		resultFieldType := GenResultFieldType().Draw(t, resultFieldLabel)
+		elementType := getDataTypeGeneratorForType(resultFieldType, maxNestingDepth).Draw(t, elementLabel)
 		return flinkgatewayv1.DataType{
 			Nullable:    false,
 			Type:        "ARRAY",
@@ -211,10 +216,10 @@ func ArrayDataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1.DataType
 // MapDataType generates a random map data type
 func MapDataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1.DataType] {
 	return rapid.Custom(func(t *rapid.T) flinkgatewayv1.DataType {
-		resultFieldKeyType := GenResultFieldType().Draw(t, "result field type")
-		resultFieldValueType := GenResultFieldType().Draw(t, "result field type")
-		keyType := getDataTypeGeneratorForType(resultFieldKeyType, maxNestingDepth).Draw(t, "element type")
-		valueType := getDataTypeGeneratorForType(resultFieldValueType, maxNestingDepth).Draw(t, "element type")
+		resultFieldKeyType := GenResultFieldType().Draw(t, resultFieldLabel)
+		resultFieldValueType := GenResultFieldType().Draw(t, resultFieldLabel)
+		keyType := getDataTypeGeneratorForType(resultFieldKeyType, maxNestingDepth).Draw(t, elementLabel)
+		valueType := getDataTypeGeneratorForType(resultFieldValueType, maxNestingDepth).Draw(t, elementLabel)
 		return flinkgatewayv1.DataType{
 			Nullable:  false,
 			Type:      "MAP",
@@ -227,8 +232,8 @@ func MapDataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1.DataType] 
 // MultisetDataType generates a random map data type
 func MultisetDataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1.DataType] {
 	return rapid.Custom(func(t *rapid.T) flinkgatewayv1.DataType {
-		resultFieldType := GenResultFieldType().Draw(t, "result field type")
-		elementType := getDataTypeGeneratorForType(resultFieldType, maxNestingDepth).Draw(t, "element type")
+		resultFieldType := GenResultFieldType().Draw(t, resultFieldLabel)
+		elementType := getDataTypeGeneratorForType(resultFieldType, maxNestingDepth).Draw(t, elementLabel)
 		return flinkgatewayv1.DataType{
 			Nullable:    false,
 			Type:        "MULTISET",
@@ -243,8 +248,8 @@ func RowDataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1.DataType] 
 		var fieldTypes []flinkgatewayv1.RowFieldType
 		rowSize := rapid.IntRange(1, 3).Draw(t, "array size")
 		for i := 0; i < rowSize; i++ {
-			resultFieldType := GenResultFieldType().Draw(t, "result field type")
-			elementType := getDataTypeGeneratorForType(resultFieldType, maxNestingDepth).Draw(t, "element type")
+			resultFieldType := GenResultFieldType().Draw(t, resultFieldLabel)
+			elementType := getDataTypeGeneratorForType(resultFieldType, maxNestingDepth).Draw(t, elementLabel)
 			fieldTypes = append(fieldTypes, flinkgatewayv1.RowFieldType{
 				Name:      strconv.Itoa(i),
 				FieldType: elementType,
@@ -265,13 +270,13 @@ func GenResultFieldType() *rapid.Generator[types.StatementResultFieldType] {
 		if shouldGenAtomic {
 			return rapid.SampledFrom(AtomicResultFieldTypes).Draw(t, "atomic result field type")
 		}
-		return rapid.SampledFrom(NonAtomicResultFieldTypes).Draw(t, "result field type")
+		return rapid.SampledFrom(NonAtomicResultFieldTypes).Draw(t, resultFieldLabel)
 	})
 }
 
 func DataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1.DataType] {
 	return rapid.Custom(func(t *rapid.T) flinkgatewayv1.DataType {
-		resultFieldType := GenResultFieldType().Draw(t, "result field type")
+		resultFieldType := GenResultFieldType().Draw(t, resultFieldLabel)
 		return getDataTypeGeneratorForType(resultFieldType, maxNestingDepth).Draw(t, "data type")
 	})
 }

@@ -143,7 +143,6 @@ func (s *StoreOnPrem) WaitPendingStatement(ctx context.Context, statement types.
 	return &statement, nil
 }
 
-// FetchStatementResults TODO: need to revisit this function on how should we present the SQL statement
 func (s *StoreOnPrem) FetchStatementResults(statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
 	// Process local statements
 	if statement.IsLocalStatement {

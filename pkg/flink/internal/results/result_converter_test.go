@@ -14,6 +14,11 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 )
 
+const (
+	maxNestingDepthLabel = "max nesting depth"
+	testColumnName       = "Test Column"
+)
+
 type ResultConverterTestSuite struct {
 	suite.Suite
 }
@@ -24,11 +29,11 @@ func TestResultConverterTestSuite(t *testing.T) {
 
 func (s *ResultConverterTestSuite) TestConvertField() {
 	rapid.Check(s.T(), func(t *rapid.T) {
-		maxNestingDepth := rapid.IntRange(0, 5).Draw(t, "max nesting depth")
+		maxNestingDepth := rapid.IntRange(0, 5).Draw(t, maxNestingDepthLabel)
 		dataType := generators.DataType(maxNestingDepth).Draw(t, "data type")
 		field := generators.GetResultItemGeneratorForType(dataType).Draw(t, "a field")
 		resultField := convertToInternalField(field, flinkgatewayv1.ColumnDetails{
-			Name: "Test Column",
+			Name: testColumnName,
 			Type: dataType,
 		})
 		require.NotNil(t, resultField)
@@ -42,11 +47,11 @@ func (s *ResultConverterTestSuite) TestConvertField() {
 
 func (s *ResultConverterTestSuite) TestConvertFieldOnPrem() {
 	rapid.Check(s.T(), func(t *rapid.T) {
-		maxNestingDepth := rapid.IntRange(0, 5).Draw(t, "max nesting depth")
+		maxNestingDepth := rapid.IntRange(0, 5).Draw(t, maxNestingDepthLabel)
 		dataType := generators.DataTypeOnPrem(maxNestingDepth).Draw(t, "data type")
 		field := generators.GetResultItemGeneratorForTypeOnPrem(dataType).Draw(t, "a field")
 		resultField := convertToInternalFieldOnPrem(field, cmfsdk.ResultSchemaColumn{
-			Name: "Test Column",
+			Name: testColumnName,
 			Type: dataType,
 		})
 		require.NotNil(t, resultField)
@@ -62,7 +67,7 @@ func (s *ResultConverterTestSuite) TestConvertFieldFailsForMissingDataType() {
 	dataType := generators.DataType(0).Example()
 	field := generators.GetResultItemGeneratorForType(dataType).Example()
 	resultField := convertToInternalField(field, flinkgatewayv1.ColumnDetails{
-		Name: "Test Column",
+		Name: testColumnName,
 	})
 	require.NotNil(s.T(), resultField)
 	require.Equal(s.T(), types.Null, resultField.GetType())
@@ -73,7 +78,7 @@ func (s *ResultConverterTestSuite) TestConvertFieldFailsForMissingDataTypeOnPrem
 	dataType := generators.DataTypeOnPrem(0).Example()
 	field := generators.GetResultItemGeneratorForTypeOnPrem(dataType).Example()
 	resultField := convertToInternalFieldOnPrem(field, cmfsdk.ResultSchemaColumn{
-		Name: "Test Column",
+		Name: testColumnName,
 	})
 	require.NotNil(s.T(), resultField)
 	require.Equal(s.T(), types.Null, resultField.GetType())
@@ -84,7 +89,7 @@ func (s *ResultConverterTestSuite) TestConvertFieldFailsForEmptyDataType() {
 	dataType := generators.DataType(0).Example()
 	field := generators.GetResultItemGeneratorForType(dataType).Example()
 	resultField := convertToInternalField(field, flinkgatewayv1.ColumnDetails{
-		Name: "Test Column",
+		Name: testColumnName,
 		Type: flinkgatewayv1.DataType{},
 	})
 	require.NotNil(s.T(), resultField)
@@ -96,7 +101,7 @@ func (s *ResultConverterTestSuite) TestConvertFieldFailsForEmptyDataTypeOnPrem()
 	dataType := generators.DataTypeOnPrem(0).Example()
 	field := generators.GetResultItemGeneratorForTypeOnPrem(dataType).Example()
 	resultField := convertToInternalFieldOnPrem(field, cmfsdk.ResultSchemaColumn{
-		Name: "Test Column",
+		Name: testColumnName,
 		Type: cmfsdk.DataType{},
 	})
 	require.NotNil(s.T(), resultField)
@@ -116,7 +121,7 @@ func (s *ResultConverterTestSuite) TestConvertFieldFailsIfDataTypesDiffer() {
 	}
 	arrayField := generators.GetResultItemGeneratorForType(arrayType).Example()
 	resultField := convertToInternalField(arrayField, flinkgatewayv1.ColumnDetails{
-		Name: "Test Column",
+		Name: testColumnName,
 		Type: varcharType,
 	})
 	require.NotNil(s.T(), resultField)
@@ -136,7 +141,7 @@ func (s *ResultConverterTestSuite) TestConvertFieldFailsIfDataTypesDifferOnPrem(
 	}
 	arrayField := generators.GetResultItemGeneratorForTypeOnPrem(arrayType).Example()
 	resultField := convertToInternalFieldOnPrem(arrayField, cmfsdk.ResultSchemaColumn{
-		Name: "Test Column",
+		Name: testColumnName,
 		Type: varcharType,
 	})
 	require.NotNil(s.T(), resultField)
@@ -146,7 +151,7 @@ func (s *ResultConverterTestSuite) TestConvertFieldFailsIfDataTypesDifferOnPrem(
 
 func (s *ResultConverterTestSuite) TestConvertResults() {
 	rapid.Check(s.T(), func(t *rapid.T) {
-		numColumns := rapid.IntRange(1, 10).Draw(t, "max nesting depth")
+		numColumns := rapid.IntRange(1, 10).Draw(t, maxNestingDepthLabel)
 		results := generators.MockResults(numColumns, -1).Draw(t, "mock results")
 		statementResults := results.StatementResults.Results.GetData()
 		convertedResults, err := ConvertToInternalResults(statementResults, results.ResultSchema)
@@ -173,7 +178,7 @@ func (s *ResultConverterTestSuite) TestConvertResults() {
 
 func (s *ResultConverterTestSuite) TestConvertResultsOnPrem() {
 	rapid.Check(s.T(), func(t *rapid.T) {
-		numColumns := rapid.IntRange(1, 10).Draw(t, "max nesting depth")
+		numColumns := rapid.IntRange(1, 10).Draw(t, maxNestingDepthLabel)
 		results := generators.MockResultsOnPrem(numColumns, -1).Draw(t, "mock results")
 		statementResults := results.StatementResults.Results
 		statementResultsData := results.StatementResults.Results.GetData()

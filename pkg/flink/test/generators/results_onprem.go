@@ -127,8 +127,8 @@ func AtomicDataTypeOnPrem() *rapid.Generator[cmfsdk.DataType] {
 // ArrayDataType generates a random array data type
 func ArrayDataTypeOnPrem(maxNestingDepth int) *rapid.Generator[cmfsdk.DataType] {
 	return rapid.Custom(func(t *rapid.T) cmfsdk.DataType {
-		resultFieldType := GenResultFieldType().Draw(t, "result field type")
-		elementType := getDataTypeGeneratorForTypeOnPrem(resultFieldType, maxNestingDepth).Draw(t, "element type")
+		resultFieldType := GenResultFieldType().Draw(t, resultFieldLabel)
+		elementType := getDataTypeGeneratorForTypeOnPrem(resultFieldType, maxNestingDepth).Draw(t, elementLabel)
 		return cmfsdk.DataType{
 			Nullable:    false,
 			Type:        "ARRAY",
@@ -140,10 +140,10 @@ func ArrayDataTypeOnPrem(maxNestingDepth int) *rapid.Generator[cmfsdk.DataType] 
 // MapDataType generates a random map data type
 func MapDataTypeOnPrem(maxNestingDepth int) *rapid.Generator[cmfsdk.DataType] {
 	return rapid.Custom(func(t *rapid.T) cmfsdk.DataType {
-		resultFieldKeyType := GenResultFieldType().Draw(t, "result field type")
-		resultFieldValueType := GenResultFieldType().Draw(t, "result field type")
-		keyType := getDataTypeGeneratorForTypeOnPrem(resultFieldKeyType, maxNestingDepth).Draw(t, "element type")
-		valueType := getDataTypeGeneratorForTypeOnPrem(resultFieldValueType, maxNestingDepth).Draw(t, "element type")
+		resultFieldKeyType := GenResultFieldType().Draw(t, resultFieldLabel)
+		resultFieldValueType := GenResultFieldType().Draw(t, resultFieldLabel)
+		keyType := getDataTypeGeneratorForTypeOnPrem(resultFieldKeyType, maxNestingDepth).Draw(t, elementLabel)
+		valueType := getDataTypeGeneratorForTypeOnPrem(resultFieldValueType, maxNestingDepth).Draw(t, elementLabel)
 		return cmfsdk.DataType{
 			Nullable:  false,
 			Type:      "MAP",
@@ -156,8 +156,8 @@ func MapDataTypeOnPrem(maxNestingDepth int) *rapid.Generator[cmfsdk.DataType] {
 // MultisetDataType generates a random map data type
 func MultisetDataTypeOnPrem(maxNestingDepth int) *rapid.Generator[cmfsdk.DataType] {
 	return rapid.Custom(func(t *rapid.T) cmfsdk.DataType {
-		resultFieldType := GenResultFieldType().Draw(t, "result field type")
-		elementType := getDataTypeGeneratorForTypeOnPrem(resultFieldType, maxNestingDepth).Draw(t, "element type")
+		resultFieldType := GenResultFieldType().Draw(t, resultFieldLabel)
+		elementType := getDataTypeGeneratorForTypeOnPrem(resultFieldType, maxNestingDepth).Draw(t, elementLabel)
 		return cmfsdk.DataType{
 			Nullable:    false,
 			Type:        "MULTISET",
@@ -172,8 +172,8 @@ func RowDataTypeOnPrem(maxNestingDepth int) *rapid.Generator[cmfsdk.DataType] {
 		var fieldTypes []cmfsdk.DataTypeField
 		rowSize := rapid.IntRange(1, 3).Draw(t, "array size")
 		for i := 0; i < rowSize; i++ {
-			resultFieldType := GenResultFieldType().Draw(t, "result field type")
-			elementType := getDataTypeGeneratorForTypeOnPrem(resultFieldType, maxNestingDepth).Draw(t, "element type")
+			resultFieldType := GenResultFieldType().Draw(t, resultFieldLabel)
+			elementType := getDataTypeGeneratorForTypeOnPrem(resultFieldType, maxNestingDepth).Draw(t, elementLabel)
 			fieldTypes = append(fieldTypes, cmfsdk.DataTypeField{
 				Name:      strconv.Itoa(i),
 				FieldType: elementType,
@@ -189,7 +189,7 @@ func RowDataTypeOnPrem(maxNestingDepth int) *rapid.Generator[cmfsdk.DataType] {
 
 func DataTypeOnPrem(maxNestingDepth int) *rapid.Generator[cmfsdk.DataType] {
 	return rapid.Custom(func(t *rapid.T) cmfsdk.DataType {
-		resultFieldType := GenResultFieldType().Draw(t, "result field type")
+		resultFieldType := GenResultFieldType().Draw(t, resultFieldLabel)
 		return getDataTypeGeneratorForTypeOnPrem(resultFieldType, maxNestingDepth).Draw(t, "data type")
 	})
 }

@@ -171,7 +171,7 @@ func StartAppOnPrem(flinkCmfClient *flink.CmfRestClient, tokenRefreshFunc func()
 		interactiveOutputController: interactiveOutputController,
 		baseOutputController:        baseOutputController,
 		refreshToken:                synchronizedTokenRefreshFunc,
-		reportUsage:                 func() {}, // on-prem does not support usage reporting
+		reportUsage:                 func() { /* on-prem does not support usage reporting */ },
 		appOptions:                  appOptions,
 	}
 	components.PrintWelcomeHeaderOnPrem(appOptions)

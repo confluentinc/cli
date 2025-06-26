@@ -206,7 +206,7 @@ func (s *ResultFetcherTestSuite) TestGetResults() {
 func (s *ResultFetcherTestSuite) TestChangelogMode() {
 	rapid.Check(s.T(), func(t *rapid.T) {
 		// generate some results
-		numColumns := rapid.IntRange(1, 10).Draw(t, "max nesting depth")
+		numColumns := rapid.IntRange(1, 10).Draw(t, maxNestingDepthLabel)
 		results := generators.MockResults(numColumns, -1).Draw(t, "mock results")
 		statementResults := results.StatementResults.Results.GetData()
 		convertedResults, err := ConvertToInternalResults(statementResults, results.ResultSchema)
