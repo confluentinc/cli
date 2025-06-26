@@ -469,6 +469,14 @@ func (s *CLITestSuite) TestFlinkShellOnPrem() {
 				"set;",
 			},
 		},
+		{
+			goldenFile: "shell-describe-table-onprem.golden",
+			commands: []string{
+				"set 'client.statement-name'='shell-test-stmt';",
+				"describe clicks;",
+				"set;",
+			},
+		},
 	}
 
 	s.setupFlinkShellTestsOnPrem()
