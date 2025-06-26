@@ -8,8 +8,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
-
 	"github.com/confluentinc/cli/v4/pkg/flink/config"
 	"github.com/confluentinc/cli/v4/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/v4/pkg/flink/test"
@@ -92,7 +90,7 @@ func (s *BasicOutputControllerTestSuite) TestVisualizeResultsShouldPrintPlainTex
 func getStatementWithResultsExample() types.ProcessedStatement {
 	statement := types.ProcessedStatement{
 		StatementName: "example-statement",
-		Traits:        flinkgatewayv1.SqlV1StatementTraits{},
+		Traits:        types.StatementTraits{},
 		StatementResults: &types.StatementResults{
 			Headers: []string{"Count"},
 			Rows:    []types.StatementResultRow{},
