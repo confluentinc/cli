@@ -34,7 +34,6 @@ func (s *StoreOnPrem) authenticatedCmfClient() flink.CmfClientInterface {
 }
 
 func (s *StoreOnPrem) ProcessLocalStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
-	defer s.persistUserProperties()
 	switch statementType := parseStatementType(statement); statementType {
 	case SetStatement:
 		return processSetStatement(s.Properties, statement)
@@ -47,22 +46,6 @@ func (s *StoreOnPrem) ProcessLocalStatement(statement string) (*types.ProcessedS
 		return nil, nil
 	default:
 		return nil, nil
-	}
-}
-
-func (s *StoreOnPrem) persistUserProperties() {
-	if s.appOptions.GetContext() != nil {
-		if err := s.appOptions.Context.SetCurrentFlinkCatalog(s.Properties.Get(config.KeyCatalog)); err != nil {
-			log.CliLogger.Errorf("error persisting current flink catalog: %v", err)
-		}
-
-		if err := s.appOptions.Context.SetCurrentFlinkDatabase(s.Properties.Get(config.KeyDatabase)); err != nil {
-			log.CliLogger.Errorf("error persisting current flink database: %v", err)
-		}
-
-		if err := s.appOptions.Context.Save(); err != nil {
-			log.CliLogger.Errorf("error persisting user properties: %v", err)
-		}
 	}
 }
 
