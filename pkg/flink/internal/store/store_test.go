@@ -34,6 +34,12 @@ type StoreTestSuite struct {
 	suite.Suite
 }
 
+const (
+	testStatementName       = "statement-name"
+	testStatusDetailMessage = "Test status detail message"
+	selectFromStatement     = "SELECT * FROM table"
+)
+
 func TestStoreTestSuite(t *testing.T) {
 	suite.Run(t, new(StoreTestSuite))
 }
@@ -103,8 +109,6 @@ func TestStoreProcessLocalStatement(t *testing.T) {
 }
 
 func TestWaitForPendingCompletedStatement(t *testing.T) {
-	statementName := "statementName"
-
 	{ // Cloud store
 		client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 		s := &Store{
@@ -119,12 +123,12 @@ func TestWaitForPendingCompletedStatement(t *testing.T) {
 		statementObj := flinkgatewayv1.SqlV1Statement{
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
 				Phase:  "COMPLETED",
-				Detail: flinkgatewayv1.PtrString("Test status detail message"),
+				Detail: flinkgatewayv1.PtrString(testStatusDetailMessage),
 			},
 		}
-		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil)
+		client.EXPECT().GetStatement("envId", testStatementName, "orgId").Return(statementObj, nil)
 
-		processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10))
+		processedStatement, err := s.waitForPendingStatement(context.Background(), testStatementName, time.Duration(10))
 		assert.Nil(t, err)
 		assert.NotNil(t, processedStatement)
 		assert.Equal(t, types.NewProcessedStatement(statementObj), processedStatement)
@@ -140,13 +144,13 @@ func TestWaitForPendingCompletedStatement(t *testing.T) {
 		statementObj := cmfsdk.Statement{
 			Status: &cmfsdk.StatementStatus{
 				Phase:  "COMPLETED",
-				Detail: cmfsdk.PtrString("Test status detail message"),
+				Detail: cmfsdk.PtrString(testStatusDetailMessage),
 			},
 		}
 		client.EXPECT().CmfApiContext().Return(context.Background())
-		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(statementObj, nil)
+		client.EXPECT().GetStatement(context.Background(), "envId", testStatementName).Return(statementObj, nil)
 
-		processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10))
+		processedStatement, err := s.waitForPendingStatement(context.Background(), testStatementName, time.Duration(10))
 		assert.Nil(t, err)
 		assert.NotNil(t, processedStatement)
 		assert.Equal(t, types.NewProcessedStatementOnPrem(statementObj), processedStatement)
@@ -154,9 +158,7 @@ func TestWaitForPendingCompletedStatement(t *testing.T) {
 }
 
 func TestWaitForPendingTimesOut(t *testing.T) {
-	statementName := "statementName"
 	timeout := time.Duration(10) * time.Millisecond
-	statusDetailMessage := "test status detail message"
 	statementErrorMessage := fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET '%s'='10000';\" to adjust the maximum timeout in milliseconds.", timeout.Seconds(), flinkconfig.KeyResultsTimeout)
 
 	{ // Cloud store
@@ -173,15 +175,15 @@ func TestWaitForPendingTimesOut(t *testing.T) {
 		statementObj := flinkgatewayv1.SqlV1Statement{
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
 				Phase:  "PENDING",
-				Detail: &statusDetailMessage,
+				Detail: flinkgatewayv1.PtrString(testStatusDetailMessage),
 			},
 		}
 		expectedError := &types.StatementError{
 			Message:        statementErrorMessage,
-			FailureMessage: fmt.Sprintf("captured retryable errors: %s", statusDetailMessage),
+			FailureMessage: fmt.Sprintf("captured retryable errors: %s", testStatusDetailMessage),
 		}
-		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
-		processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, timeout)
+		client.EXPECT().GetStatement("envId", testStatementName, "orgId").Return(statementObj, nil).AnyTimes()
+		processedStatement, err := s.waitForPendingStatement(context.Background(), testStatementName, timeout)
 
 		assert.Equal(t, expectedError, err)
 		assert.Nil(t, processedStatement)
@@ -197,15 +199,15 @@ func TestWaitForPendingTimesOut(t *testing.T) {
 		statementObj := cmfsdk.Statement{
 			Status: &cmfsdk.StatementStatus{
 				Phase:  "PENDING",
-				Detail: cmfsdk.PtrString(statusDetailMessage),
+				Detail: cmfsdk.PtrString(testStatusDetailMessage),
 			},
 		}
 		expectedError := &types.StatementError{
 			Message: statementErrorMessage,
 		}
 		client.EXPECT().CmfApiContext().Return(context.Background()).AnyTimes()
-		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(statementObj, nil).AnyTimes()
-		processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, timeout)
+		client.EXPECT().GetStatement(context.Background(), "envId", testStatementName).Return(statementObj, nil).AnyTimes()
+		processedStatement, err := s.waitForPendingStatement(context.Background(), testStatementName, timeout)
 
 		assert.Equal(t, expectedError, err)
 		assert.Nil(t, processedStatement)
@@ -214,7 +216,6 @@ func TestWaitForPendingTimesOut(t *testing.T) {
 
 // Cloud only; On-prem does not have retryable errors
 func TestWaitForPendingHitsErrorRetryLimit(t *testing.T) {
-	statementName := "statementName"
 	timeout := 10 * time.Second
 
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
@@ -228,26 +229,24 @@ func TestWaitForPendingHitsErrorRetryLimit(t *testing.T) {
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
-	statusDetailMessage := "test status detail message"
 	statementObj := flinkgatewayv1.SqlV1Statement{
 		Status: &flinkgatewayv1.SqlV1StatementStatus{
 			Phase:  "PENDING",
-			Detail: &statusDetailMessage,
+			Detail: flinkgatewayv1.PtrString(testStatusDetailMessage),
 		},
 	}
 	expectedError := &types.StatementError{
 		Message:        "the server can't process this statement right now, exiting after 6 retries",
-		FailureMessage: fmt.Sprintf("captured retryable errors: %s", strings.Repeat(statusDetailMessage+"; ", 5)+statusDetailMessage),
+		FailureMessage: fmt.Sprintf("captured retryable errors: %s", strings.Repeat(testStatusDetailMessage+"; ", 5)+testStatusDetailMessage),
 	}
-	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
-	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, timeout)
+	client.EXPECT().GetStatement("envId", testStatementName, "orgId").Return(statementObj, nil).AnyTimes()
+	processedStatement, err := s.waitForPendingStatement(context.Background(), testStatementName, timeout)
 
 	assert.Equal(t, expectedError, err)
 	assert.Nil(t, processedStatement)
 }
 
 func TestWaitForPendingEventuallyCompletes(t *testing.T) {
-	statementName := "statementName"
 	transientStatusDetailMessage := "Transient status detail message"
 	finalStatusDetailMessage := "Final status detail message"
 
@@ -275,10 +274,10 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 				Detail: &finalStatusDetailMessage,
 			},
 		}
-		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).Times(3)
-		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObjCompleted, nil)
+		client.EXPECT().GetStatement("envId", testStatementName, "orgId").Return(statementObj, nil).Times(3)
+		client.EXPECT().GetStatement("envId", testStatementName, "orgId").Return(statementObjCompleted, nil)
 
-		processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10)*time.Second)
+		processedStatement, err := s.waitForPendingStatement(context.Background(), testStatementName, time.Duration(10)*time.Second)
 		assert.Nil(t, err)
 		assert.NotNil(t, processedStatement)
 		assert.Equal(t, types.NewProcessedStatement(statementObjCompleted), processedStatement)
@@ -305,10 +304,10 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 			},
 		}
 		client.EXPECT().CmfApiContext().Return(context.Background()).Times(4)
-		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(statementObj, nil).Times(3)
-		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(statementObjCompleted, nil)
+		client.EXPECT().GetStatement(context.Background(), "envId", testStatementName).Return(statementObj, nil).Times(3)
+		client.EXPECT().GetStatement(context.Background(), "envId", testStatementName).Return(statementObjCompleted, nil)
 
-		processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10)*time.Second)
+		processedStatement, err := s.waitForPendingStatement(context.Background(), testStatementName, time.Duration(10)*time.Second)
 		assert.Nil(t, err)
 		assert.NotNil(t, processedStatement)
 		assert.Equal(t, types.NewProcessedStatementOnPrem(statementObjCompleted), processedStatement)
@@ -316,13 +315,11 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 }
 
 func TestWaitForPendingStatementErrors(t *testing.T) {
-	statementName := "statementName"
 	waitTime := time.Millisecond * 1
-	statusDetailMessage := "Test status detail message"
 	returnedError := flink.NewError("couldn't get statement", "", http.StatusInternalServerError)
 	expectedError := &types.StatementError{
 		Message:        returnedError.Error(),
-		FailureMessage: statusDetailMessage,
+		FailureMessage: testStatusDetailMessage,
 		StatusCode:     http.StatusInternalServerError,
 	}
 
@@ -339,12 +336,12 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 		statementObj := flinkgatewayv1.SqlV1Statement{
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
 				Phase:  "COMPLETED",
-				Detail: &statusDetailMessage,
+				Detail: flinkgatewayv1.PtrString(testStatusDetailMessage),
 			},
 		}
 
-		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, returnedError)
-		_, err := s.waitForPendingStatement(context.Background(), statementName, waitTime)
+		client.EXPECT().GetStatement("envId", testStatementName, "orgId").Return(statementObj, returnedError)
+		_, err := s.waitForPendingStatement(context.Background(), testStatementName, waitTime)
 		assert.Equal(t, expectedError, err)
 	}
 	{ // On-prem store
@@ -357,19 +354,18 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 		statementObj := cmfsdk.Statement{
 			Status: &cmfsdk.StatementStatus{
 				Phase:  "COMPLETED",
-				Detail: cmfsdk.PtrString(statusDetailMessage),
+				Detail: cmfsdk.PtrString(testStatusDetailMessage),
 			},
 		}
 
 		client.EXPECT().CmfApiContext().Return(context.Background()).AnyTimes()
-		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(statementObj, returnedError)
-		_, err := s.waitForPendingStatement(context.Background(), statementName, waitTime)
+		client.EXPECT().GetStatement(context.Background(), "envId", testStatementName).Return(statementObj, returnedError)
+		_, err := s.waitForPendingStatement(context.Background(), testStatementName, waitTime)
 		assert.Equal(t, expectedError, err)
 	}
 }
 
 func TestCancelPendingStatement(t *testing.T) {
-	statementName := "statementName"
 	waitTime := time.Second * 1
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	flinkError := flink.NewError("error", "", http.StatusInternalServerError)
@@ -387,15 +383,15 @@ func TestCancelPendingStatement(t *testing.T) {
 		}
 
 		statementObj := flinkgatewayv1.SqlV1Statement{
-			Name: &statementName,
+			Name: flinkgatewayv1.PtrString(testStatementName),
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
 				Phase: "PENDING",
 			},
 		}
 
-		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
-		client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(nil).AnyTimes()
-		client.EXPECT().GetExceptions("envId", statementName, "orgId").Return([]flinkgatewayv1.SqlV1StatementException{}, flinkError).AnyTimes()
+		client.EXPECT().GetStatement("envId", testStatementName, "orgId").Return(statementObj, nil).AnyTimes()
+		client.EXPECT().DeleteStatement("envId", testStatementName, "orgId").Return(nil).AnyTimes()
+		client.EXPECT().GetExceptions("envId", testStatementName, "orgId").Return([]flinkgatewayv1.SqlV1StatementException{}, flinkError).AnyTimes()
 
 		// Schedule routine to cancel context
 		go func() {
@@ -403,7 +399,7 @@ func TestCancelPendingStatement(t *testing.T) {
 			cancelFunc()
 		}()
 
-		res, err := s.waitForPendingStatement(ctx, statementName, waitTime)
+		res, err := s.waitForPendingStatement(ctx, testStatementName, waitTime)
 		assert.Nil(t, res)
 		assert.EqualError(t, err, expectedErr.Error())
 	}
@@ -417,7 +413,7 @@ func TestCancelPendingStatement(t *testing.T) {
 
 		statementObj := cmfsdk.Statement{
 			Metadata: cmfsdk.StatementMetadata{
-				Name: statementName,
+				Name: testStatementName,
 			},
 			Status: &cmfsdk.StatementStatus{
 				Phase: "PENDING",
@@ -425,9 +421,9 @@ func TestCancelPendingStatement(t *testing.T) {
 		}
 
 		client.EXPECT().CmfApiContext().Return(context.Background()).AnyTimes()
-		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(statementObj, nil).AnyTimes()
-		client.EXPECT().DeleteStatement(context.Background(), "envId", statementName).Return(nil).AnyTimes()
-		client.EXPECT().ListStatementExceptions(context.Background(), "envId", statementName).Return(cmfsdk.StatementExceptionList{}, flinkError).AnyTimes()
+		client.EXPECT().GetStatement(context.Background(), "envId", testStatementName).Return(statementObj, nil).AnyTimes()
+		client.EXPECT().DeleteStatement(context.Background(), "envId", testStatementName).Return(nil).AnyTimes()
+		client.EXPECT().ListStatementExceptions(context.Background(), "envId", testStatementName).Return(cmfsdk.StatementExceptionList{}, flinkError).AnyTimes()
 
 		// Schedule routine to cancel context
 		go func() {
@@ -435,7 +431,7 @@ func TestCancelPendingStatement(t *testing.T) {
 			cancelFunc()
 		}()
 
-		res, err := s.waitForPendingStatement(ctx, statementName, waitTime)
+		res, err := s.waitForPendingStatement(ctx, testStatementName, waitTime)
 		assert.Nil(t, res)
 		assert.EqualError(t, err, expectedErr.Error())
 	}
@@ -982,7 +978,6 @@ func (s *StoreTestSuite) TestParseResetStatementError() {
 func (s *StoreTestSuite) TestStopStatement() {
 	ctrl := gomock.NewController(s.T())
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	statementName := "TEST_STATEMENT"
 
 	{ // Cloud store
 		client := mock.NewMockGatewayClientInterface(ctrl)
@@ -997,18 +992,18 @@ func (s *StoreTestSuite) TestStopStatement() {
 
 		statementObj := flinkgatewayv1.NewSqlV1StatementWithDefaults()
 		spec := flinkgatewayv1.NewSqlV1StatementSpecWithDefaults()
-		statementObj.SetName(statementName)
+		statementObj.SetName(testStatementName)
 		statementObj.SetSpec(*spec)
-		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(*statementObj, nil)
+		client.EXPECT().GetStatement("envId", testStatementName, "orgId").Return(*statementObj, nil)
 
 		statementUpdated := flinkgatewayv1.NewSqlV1StatementWithDefaults()
 		specUpdated := flinkgatewayv1.NewSqlV1StatementSpecWithDefaults()
-		statementUpdated.SetName(statementName)
+		statementUpdated.SetName(testStatementName)
 		specUpdated.SetStopped(true)
 		statementUpdated.SetSpec(*specUpdated)
-		client.EXPECT().UpdateStatement("envId", statementName, "orgId", *statementUpdated).Return(nil)
+		client.EXPECT().UpdateStatement("envId", testStatementName, "orgId", *statementUpdated).Return(nil)
 
-		wasStatementDeleted := store.StopStatement(statementName)
+		wasStatementDeleted := store.StopStatement(testStatementName)
 		require.True(s.T(), wasStatementDeleted)
 	}
 	{ // On-prem store
@@ -1024,18 +1019,18 @@ func (s *StoreTestSuite) TestStopStatement() {
 		client.EXPECT().CmfApiContext().Return(context.Background()).Times(2)
 		statementObj := cmfsdk.NewStatementWithDefaults()
 		spec := cmfsdk.NewStatementSpecWithDefaults()
-		statementObj.Metadata.SetName(statementName)
+		statementObj.Metadata.SetName(testStatementName)
 		statementObj.SetSpec(*spec)
-		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(*statementObj, nil)
+		client.EXPECT().GetStatement(context.Background(), "envId", testStatementName).Return(*statementObj, nil)
 
 		statementUpdated := cmfsdk.NewStatementWithDefaults()
 		specUpdated := cmfsdk.NewStatementSpecWithDefaults()
-		statementUpdated.Metadata.SetName(statementName)
+		statementUpdated.Metadata.SetName(testStatementName)
 		specUpdated.SetStopped(true)
 		statementUpdated.SetSpec(*specUpdated)
-		client.EXPECT().UpdateStatement(context.Background(), "envId", statementName, *statementUpdated).Return(nil)
+		client.EXPECT().UpdateStatement(context.Background(), "envId", testStatementName, *statementUpdated).Return(nil)
 
-		wasStatementDeleted := store.StopStatement(statementName)
+		wasStatementDeleted := store.StopStatement(testStatementName)
 		require.True(s.T(), wasStatementDeleted)
 	}
 }
@@ -1043,7 +1038,6 @@ func (s *StoreTestSuite) TestStopStatement() {
 func (s *StoreTestSuite) TestStopStatementFailsOnGetError() {
 	ctrl := gomock.NewController(s.T())
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	statementName := "TEST_STATEMENT"
 
 	{ // Cloud store
 		client := mock.NewMockGatewayClientInterface(ctrl)
@@ -1058,9 +1052,9 @@ func (s *StoreTestSuite) TestStopStatementFailsOnGetError() {
 		store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
 
 		flinkError := flink.NewError("error", "", http.StatusInternalServerError)
-		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(flinkgatewayv1.SqlV1Statement{}, flinkError)
+		client.EXPECT().GetStatement("envId", testStatementName, "orgId").Return(flinkgatewayv1.SqlV1Statement{}, flinkError)
 
-		wasStatementDeleted := store.StopStatement(statementName)
+		wasStatementDeleted := store.StopStatement(testStatementName)
 		require.False(s.T(), wasStatementDeleted)
 	}
 	{ // On-prem store
@@ -1075,9 +1069,9 @@ func (s *StoreTestSuite) TestStopStatementFailsOnGetError() {
 
 		client.EXPECT().CmfApiContext().Return(context.Background())
 		flinkError := flink.NewError("error", "", http.StatusInternalServerError)
-		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(cmfsdk.Statement{}, flinkError)
+		client.EXPECT().GetStatement(context.Background(), "envId", testStatementName).Return(cmfsdk.Statement{}, flinkError)
 
-		wasStatementDeleted := store.StopStatement(statementName)
+		wasStatementDeleted := store.StopStatement(testStatementName)
 		require.False(s.T(), wasStatementDeleted)
 	}
 }
@@ -1085,9 +1079,8 @@ func (s *StoreTestSuite) TestStopStatementFailsOnGetError() {
 func (s *StoreTestSuite) TestStopStatementFailsOnNilSpecError() {
 	ctrl := gomock.NewController(s.T())
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	statementName := "TEST_STATEMENT"
 	statementObj := flinkgatewayv1.NewSqlV1StatementWithDefaults()
-	statementObj.SetName(statementName)
+	statementObj.SetName(testStatementName)
 
 	{ // Cloud store
 		client := mock.NewMockGatewayClientInterface(ctrl)
@@ -1101,9 +1094,9 @@ func (s *StoreTestSuite) TestStopStatementFailsOnNilSpecError() {
 		store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
 
 		flinkError := flink.NewError("error", "", http.StatusInternalServerError)
-		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(flinkgatewayv1.SqlV1Statement{}, flinkError)
+		client.EXPECT().GetStatement("envId", testStatementName, "orgId").Return(flinkgatewayv1.SqlV1Statement{}, flinkError)
 
-		wasStatementDeleted := store.StopStatement(statementName)
+		wasStatementDeleted := store.StopStatement(testStatementName)
 		require.False(s.T(), wasStatementDeleted)
 	}
 	{ // On-prem store
@@ -1118,9 +1111,9 @@ func (s *StoreTestSuite) TestStopStatementFailsOnNilSpecError() {
 
 		client.EXPECT().CmfApiContext().Return(context.Background())
 		flinkError := flink.NewError("error", "", http.StatusInternalServerError)
-		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(cmfsdk.Statement{}, flinkError)
+		client.EXPECT().GetStatement(context.Background(), "envId", testStatementName).Return(cmfsdk.Statement{}, flinkError)
 
-		wasStatementDeleted := store.StopStatement(statementName)
+		wasStatementDeleted := store.StopStatement(testStatementName)
 		require.False(s.T(), wasStatementDeleted)
 	}
 }
@@ -1128,7 +1121,6 @@ func (s *StoreTestSuite) TestStopStatementFailsOnNilSpecError() {
 func (s *StoreTestSuite) TestStopStatementFailsOnUpdateError() {
 	ctrl := gomock.NewController(s.T())
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	statementName := "TEST_STATEMENT"
 
 	{ // Cloud store
 		client := mock.NewMockGatewayClientInterface(ctrl)
@@ -1144,15 +1136,15 @@ func (s *StoreTestSuite) TestStopStatementFailsOnUpdateError() {
 
 		statementObj := flinkgatewayv1.NewSqlV1StatementWithDefaults()
 		spec := flinkgatewayv1.NewSqlV1StatementSpecWithDefaults()
-		statementObj.SetName(statementName)
+		statementObj.SetName(testStatementName)
 		statementObj.SetSpec(*spec)
 
-		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(*statementObj, nil)
+		client.EXPECT().GetStatement("envId", testStatementName, "orgId").Return(*statementObj, nil)
 		statementObj.Spec.SetStopped(true)
 		flinkError := flink.NewError("error", "", http.StatusInternalServerError)
-		client.EXPECT().UpdateStatement("envId", statementName, "orgId", *statementObj).Return(flinkError)
+		client.EXPECT().UpdateStatement("envId", testStatementName, "orgId", *statementObj).Return(flinkError)
 
-		wasStatementDeleted := store.StopStatement(statementName)
+		wasStatementDeleted := store.StopStatement(testStatementName)
 		require.False(s.T(), wasStatementDeleted)
 	}
 	{ // On-prem store
@@ -1168,15 +1160,15 @@ func (s *StoreTestSuite) TestStopStatementFailsOnUpdateError() {
 		client.EXPECT().CmfApiContext().Return(context.Background()).Times(2)
 		statementObj := cmfsdk.NewStatementWithDefaults()
 		spec := cmfsdk.NewStatementSpecWithDefaults()
-		statementObj.Metadata.SetName(statementName)
+		statementObj.Metadata.SetName(testStatementName)
 		statementObj.SetSpec(*spec)
 
-		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(*statementObj, nil)
+		client.EXPECT().GetStatement(context.Background(), "envId", testStatementName).Return(*statementObj, nil)
 		statementObj.Spec.SetStopped(true)
 		flinkError := flink.NewError("error", "", http.StatusInternalServerError)
-		client.EXPECT().UpdateStatement(context.Background(), "envId", statementName, *statementObj).Return(flinkError)
+		client.EXPECT().UpdateStatement(context.Background(), "envId", testStatementName, *statementObj).Return(flinkError)
 
-		wasStatementDeleted := store.StopStatement(statementName)
+		wasStatementDeleted := store.StopStatement(testStatementName)
 		require.False(s.T(), wasStatementDeleted)
 	}
 }
@@ -1184,7 +1176,6 @@ func (s *StoreTestSuite) TestStopStatementFailsOnUpdateError() {
 func (s *StoreTestSuite) TestDeleteStatement() {
 	ctrl := gomock.NewController(s.T())
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	statementName := "TEST_STATEMENT"
 
 	{ // Cloud store
 		client := mock.NewMockGatewayClientInterface(ctrl)
@@ -1197,9 +1188,9 @@ func (s *StoreTestSuite) TestDeleteStatement() {
 		userProperties := NewUserProperties(&appOptions)
 		store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
 
-		client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(nil)
+		client.EXPECT().DeleteStatement("envId", testStatementName, "orgId").Return(nil)
 
-		wasStatementDeleted := store.DeleteStatement(statementName)
+		wasStatementDeleted := store.DeleteStatement(testStatementName)
 		require.True(s.T(), wasStatementDeleted)
 	}
 	{ // On-prem store
@@ -1213,9 +1204,9 @@ func (s *StoreTestSuite) TestDeleteStatement() {
 		store := NewStoreOnPrem(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
 
 		client.EXPECT().CmfApiContext().Return(context.Background())
-		client.EXPECT().DeleteStatement(context.Background(), "envId", statementName).Return(nil)
+		client.EXPECT().DeleteStatement(context.Background(), "envId", testStatementName).Return(nil)
 
-		wasStatementDeleted := store.DeleteStatement(statementName)
+		wasStatementDeleted := store.DeleteStatement(testStatementName)
 		require.True(s.T(), wasStatementDeleted)
 	}
 }
@@ -1223,7 +1214,6 @@ func (s *StoreTestSuite) TestDeleteStatement() {
 func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 	ctrl := gomock.NewController(s.T())
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	statementName := "TEST_STATEMENT"
 
 	{ // Cloud store
 		client := mock.NewMockGatewayClientInterface(ctrl)
@@ -1237,8 +1227,8 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 		store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
 
 		flinkError := flink.NewError("error", "", http.StatusInternalServerError)
-		client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(flinkError)
-		wasStatementDeleted := store.DeleteStatement(statementName)
+		client.EXPECT().DeleteStatement("envId", testStatementName, "orgId").Return(flinkError)
+		wasStatementDeleted := store.DeleteStatement(testStatementName)
 		require.False(s.T(), wasStatementDeleted)
 	}
 	{ // On-prem store
@@ -1253,8 +1243,8 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 
 		client.EXPECT().CmfApiContext().Return(context.Background())
 		flinkError := flink.NewError("error", "", http.StatusInternalServerError)
-		client.EXPECT().DeleteStatement(context.Background(), "envId", statementName).Return(flinkError)
-		wasStatementDeleted := store.DeleteStatement(statementName)
+		client.EXPECT().DeleteStatement(context.Background(), "envId", testStatementName).Return(flinkError)
+		wasStatementDeleted := store.DeleteStatement(testStatementName)
 		require.False(s.T(), wasStatementDeleted)
 	}
 }
@@ -1263,7 +1253,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 	ctrl := gomock.NewController(s.T())
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	statement := types.ProcessedStatement{
-		StatementName: "TEST_STATEMENT",
+		StatementName: testStatementName,
 		Status:        types.COMPLETED,
 	}
 
@@ -1314,7 +1304,7 @@ func (s *StoreTestSuite) TestFetchResultsWithRunningStatement() {
 	ctrl := gomock.NewController(s.T())
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	statement := types.ProcessedStatement{
-		StatementName: "TEST_STATEMENT",
+		StatementName: testStatementName,
 		Status:        types.RUNNING,
 	}
 
@@ -1368,7 +1358,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
 	ctrl := gomock.NewController(s.T())
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	statement := types.ProcessedStatement{
-		StatementName: "TEST_STATEMENT",
+		StatementName: testStatementName,
 		Status:        types.RUNNING,
 	}
 
@@ -1436,7 +1426,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
 	ctrl := gomock.NewController(s.T())
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	statement := types.ProcessedStatement{
-		StatementName: "TEST_STATEMENT",
+		StatementName: testStatementName,
 		Status:        types.RUNNING,
 	}
 
@@ -1558,25 +1548,22 @@ func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
 	}
 	serviceAccountId := "sa-123"
 	store := Store{
-		Properties:       NewUserPropertiesWithDefaults(map[string]string{flinkconfig.KeyServiceAccount: serviceAccountId, "client.statement-name": "statement-name"}, map[string]string{}),
+		Properties:       NewUserPropertiesWithDefaults(map[string]string{flinkconfig.KeyServiceAccount: serviceAccountId, flinkconfig.KeyStatementName: "statement-name"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
-	statement := "SELECT * FROM table"
-	statusDetailMessage := "Test status detail message"
-
 	nonLocalProperties := store.Properties.GetNonLocalProperties()
 	statementObj := flinkgatewayv1.SqlV1Statement{
 		Status: &flinkgatewayv1.SqlV1StatementStatus{
 			Phase:  "PENDING",
-			Detail: &statusDetailMessage,
+			Detail: flinkgatewayv1.PtrString(testStatusDetailMessage),
 		},
 		Spec: &flinkgatewayv1.SqlV1StatementSpec{
 			Properties:    &nonLocalProperties, // only non-local properties are passed to the gateway
 			ComputePoolId: &appOptions.ComputePoolId,
-			Statement:     &statement,
+			Statement:     flinkgatewayv1.PtrString(selectFromStatement),
 		},
 	}
 
@@ -1586,7 +1573,7 @@ func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
 	var processedStatement *types.ProcessedStatement
 	var err *types.StatementError
 	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
-		processedStatement, err = store.ProcessStatement(statement)
+		processedStatement, err = store.ProcessStatement(selectFromStatement)
 	})
 
 	cupaloy.SnapshotT(s.T(), stdout)
@@ -1618,25 +1605,23 @@ func (s *StoreTestSuite) TestProcessStatementWithUserIdentity() {
 	}
 	store := Store{
 		Properties: NewUserPropertiesWithDefaults(
-			map[string]string{"client.statement-name": "statement-name"}, map[string]string{},
+			map[string]string{flinkconfig.KeyStatementName: "statement-name"}, map[string]string{},
 		),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
-	statement := "SELECT * FROM table"
-	statusDetailMessage := "Test status detail message"
 	nonLocalProperties := store.Properties.GetNonLocalProperties()
 	statementObj := flinkgatewayv1.SqlV1Statement{
 		Status: &flinkgatewayv1.SqlV1StatementStatus{
 			Phase:  "PENDING",
-			Detail: &statusDetailMessage,
+			Detail: flinkgatewayv1.PtrString(testStatusDetailMessage),
 		},
 		Spec: &flinkgatewayv1.SqlV1StatementSpec{
 			Properties:    &nonLocalProperties, // only non-local properties are passed to the gateway
 			ComputePoolId: &appOptions.ComputePoolId,
-			Statement:     &statement,
+			Statement:     flinkgatewayv1.PtrString(selectFromStatement),
 		},
 	}
 
@@ -1646,7 +1631,7 @@ func (s *StoreTestSuite) TestProcessStatementWithUserIdentity() {
 	var processedStatement *types.ProcessedStatement
 	var err *types.StatementError
 	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
-		processedStatement, err = store.ProcessStatement(statement)
+		processedStatement, err = store.ProcessStatement(selectFromStatement)
 	})
 
 	cupaloy.SnapshotT(s.T(), stdout)
@@ -1658,7 +1643,7 @@ func (s *StoreTestSuite) TestProcessStatementOnPrem() {
 	client := mock.NewMockCmfClientInterface(gomock.NewController(s.T()))
 	store := StoreOnPrem{
 		Properties: NewUserPropertiesWithDefaults(
-			map[string]string{"client.statement-name": "statement-name"}, map[string]string{},
+			map[string]string{flinkconfig.KeyStatementName: "statement-name"}, map[string]string{},
 		),
 		client: client,
 		appOptions: &types.ApplicationOptions{
@@ -1669,17 +1654,15 @@ func (s *StoreTestSuite) TestProcessStatementOnPrem() {
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
-	statement := "SELECT * FROM table"
-	statusDetailMessage := "Test status detail message"
 	nonLocalProperties := store.Properties.GetNonLocalProperties()
 	statementObj := cmfsdk.Statement{
 		Status: &cmfsdk.StatementStatus{
 			Phase:  "PENDING",
-			Detail: &statusDetailMessage,
+			Detail: cmfsdk.PtrString(testStatusDetailMessage),
 		},
 		Spec: cmfsdk.StatementSpec{
 			Properties: &nonLocalProperties,
-			Statement:  statement,
+			Statement:  selectFromStatement,
 		},
 	}
 
@@ -1689,7 +1672,7 @@ func (s *StoreTestSuite) TestProcessStatementOnPrem() {
 	var processedStatement *types.ProcessedStatement
 	var err *types.StatementError
 	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
-		processedStatement, err = store.ProcessStatement(statement)
+		processedStatement, err = store.ProcessStatement(selectFromStatement)
 	})
 
 	cupaloy.SnapshotT(s.T(), stdout)
@@ -1706,23 +1689,21 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 		ComputePoolId:  "computePoolId",
 	}
 	store := Store{
-		Properties:       NewUserPropertiesWithDefaults(map[string]string{flinkconfig.KeyServiceAccount: serviceAccountId, "client.statement-name": "statement-name"}, map[string]string{}),
+		Properties:       NewUserPropertiesWithDefaults(map[string]string{flinkconfig.KeyServiceAccount: serviceAccountId, flinkconfig.KeyStatementName: "statement-name"}, map[string]string{}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
-	statement := "SELECT * FROM table"
-	statusDetailMessage := "test status detail message"
 	nonLocalProperties := store.Properties.GetNonLocalProperties()
 	statementObj := flinkgatewayv1.SqlV1Statement{
 		Status: &flinkgatewayv1.SqlV1StatementStatus{
-			Detail: &statusDetailMessage,
+			Detail: flinkgatewayv1.PtrString(testStatusDetailMessage),
 		},
 		Spec: &flinkgatewayv1.SqlV1StatementSpec{
 			Properties:    &nonLocalProperties, // only non-local properties are passed to the gateway
 			ComputePoolId: &appOptions.ComputePoolId,
-			Statement:     &statement,
+			Statement:     flinkgatewayv1.PtrString(selectFromStatement),
 		},
 	}
 	returnedError := fmt.Errorf("test error")
@@ -1732,13 +1713,13 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 
 	expectedError := &types.StatementError{
 		Message:        returnedError.Error(),
-		FailureMessage: statusDetailMessage,
+		FailureMessage: testStatusDetailMessage,
 	}
 
 	var processedStatement *types.ProcessedStatement
 	var err *types.StatementError
 	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
-		processedStatement, err = store.ProcessStatement(statement)
+		processedStatement, err = store.ProcessStatement(selectFromStatement)
 	})
 
 	cupaloy.SnapshotT(s.T(), stdout)
@@ -1750,7 +1731,7 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnErrorOnPrem() {
 	client := mock.NewMockCmfClientInterface(gomock.NewController(s.T()))
 	store := StoreOnPrem{
 		Properties: NewUserPropertiesWithDefaults(
-			map[string]string{"client.statement-name": "statement-name"}, map[string]string{},
+			map[string]string{flinkconfig.KeyStatementName: "statement-name"}, map[string]string{},
 		),
 		client: client,
 		appOptions: &types.ApplicationOptions{
@@ -1761,16 +1742,14 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnErrorOnPrem() {
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
-	statement := "SELECT * FROM table"
-	statusDetailMessage := "Test status detail message"
 	nonLocalProperties := store.Properties.GetNonLocalProperties()
 	statementObj := cmfsdk.Statement{
 		Status: &cmfsdk.StatementStatus{
-			Detail: &statusDetailMessage,
+			Detail: cmfsdk.PtrString(testStatusDetailMessage),
 		},
 		Spec: cmfsdk.StatementSpec{
 			Properties: &nonLocalProperties,
-			Statement:  statement,
+			Statement:  selectFromStatement,
 		},
 	}
 	returnedError := fmt.Errorf("test error")
@@ -1780,13 +1759,13 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnErrorOnPrem() {
 
 	expectedError := &types.StatementError{
 		Message:        returnedError.Error(),
-		FailureMessage: statusDetailMessage,
+		FailureMessage: testStatusDetailMessage,
 	}
 
 	var processedStatement *types.ProcessedStatement
 	var err *types.StatementError
 	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
-		processedStatement, err = store.ProcessStatement(statement)
+		processedStatement, err = store.ProcessStatement(selectFromStatement)
 	})
 
 	cupaloy.SnapshotT(s.T(), stdout)
@@ -1802,27 +1781,23 @@ func (s *StoreTestSuite) TestProcessStatementUsesUserProvidedStatementName() {
 		ComputePoolId:  "computePoolId",
 	}
 	serviceAccountId := "sa-123"
-	statementName := "test-statement"
 	store := Store{
-		Properties:       NewUserPropertiesWithDefaults(map[string]string{flinkconfig.KeyServiceAccount: serviceAccountId}, map[string]string{flinkconfig.KeyStatementName: statementName}),
+		Properties:       NewUserPropertiesWithDefaults(map[string]string{flinkconfig.KeyServiceAccount: serviceAccountId}, map[string]string{flinkconfig.KeyStatementName: testStatementName}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
-	statement := "SELECT * FROM table"
-	statusDetailMessage := "Test status detail message"
-
 	statementObj := flinkgatewayv1.SqlV1Statement{
-		Name: &statementName,
+		Name: flinkgatewayv1.PtrString(testStatementName),
 		Status: &flinkgatewayv1.SqlV1StatementStatus{
 			Phase:  "PENDING",
-			Detail: &statusDetailMessage,
+			Detail: flinkgatewayv1.PtrString(testStatusDetailMessage),
 		},
 		Spec: &flinkgatewayv1.SqlV1StatementSpec{
 			Properties:    &map[string]string{}, // only sql properties are passed to the gateway
 			ComputePoolId: &appOptions.ComputePoolId,
-			Statement:     &statement,
+			Statement:     flinkgatewayv1.PtrString(selectFromStatement),
 		},
 	}
 
@@ -1832,7 +1807,7 @@ func (s *StoreTestSuite) TestProcessStatementUsesUserProvidedStatementName() {
 	var processedStatement *types.ProcessedStatement
 	var err *types.StatementError
 	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
-		processedStatement, err = store.ProcessStatement(statement)
+		processedStatement, err = store.ProcessStatement(selectFromStatement)
 	})
 
 	cupaloy.SnapshotT(s.T(), stdout)
@@ -1843,10 +1818,9 @@ func (s *StoreTestSuite) TestProcessStatementUsesUserProvidedStatementName() {
 }
 
 func (s *StoreTestSuite) TestProcessStatementUsesUserProvidedStatementNameOnPrem() {
-	statementName := "test-statement"
 	client := mock.NewMockCmfClientInterface(gomock.NewController(s.T()))
 	store := StoreOnPrem{
-		Properties: NewUserPropertiesWithDefaults(map[string]string{}, map[string]string{flinkconfig.KeyStatementName: statementName}),
+		Properties: NewUserPropertiesWithDefaults(map[string]string{}, map[string]string{flinkconfig.KeyStatementName: testStatementName}),
 		client:     client,
 		appOptions: &types.ApplicationOptions{
 			EnvironmentId:   "envId",
@@ -1856,17 +1830,15 @@ func (s *StoreTestSuite) TestProcessStatementUsesUserProvidedStatementNameOnPrem
 		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
-	statement := "SELECT * FROM table"
-	statusDetailMessage := "Test status detail message"
 	nonLocalProperties := store.Properties.GetNonLocalProperties()
 	statementObj := cmfsdk.Statement{
 		Status: &cmfsdk.StatementStatus{
 			Phase:  "PENDING",
-			Detail: &statusDetailMessage,
+			Detail: cmfsdk.PtrString(testStatusDetailMessage),
 		},
 		Spec: cmfsdk.StatementSpec{
 			Properties: &nonLocalProperties,
-			Statement:  statement,
+			Statement:  selectFromStatement,
 		},
 	}
 
@@ -1876,7 +1848,7 @@ func (s *StoreTestSuite) TestProcessStatementUsesUserProvidedStatementNameOnPrem
 	var processedStatement *types.ProcessedStatement
 	var err *types.StatementError
 	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
-		processedStatement, err = store.ProcessStatement(statement)
+		processedStatement, err = store.ProcessStatement(selectFromStatement)
 	})
 
 	cupaloy.SnapshotT(s.T(), stdout)
@@ -1887,9 +1859,6 @@ func (s *StoreTestSuite) TestProcessStatementUsesUserProvidedStatementNameOnPrem
 }
 
 func (s *StoreTestSuite) TestWaitPendingStatement() {
-	statementName := "Test Statement"
-	statusDetailMessage := "Test status detail message"
-
 	{ // Cloud store
 		client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 		appOptions := &types.ApplicationOptions{
@@ -1904,16 +1873,16 @@ func (s *StoreTestSuite) TestWaitPendingStatement() {
 		}
 
 		statementObj := flinkgatewayv1.SqlV1Statement{
-			Name: &statementName,
+			Name: flinkgatewayv1.PtrString(testStatementName),
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
 				Phase:  "COMPLETED",
-				Detail: &statusDetailMessage,
+				Detail: flinkgatewayv1.PtrString(testStatusDetailMessage),
 			},
 		}
-		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil)
+		client.EXPECT().GetStatement("envId", testStatementName, "orgId").Return(statementObj, nil)
 
 		processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
-			StatementName: statementName,
+			StatementName: testStatementName,
 			Status:        types.PENDING,
 		})
 		require.Nil(s.T(), err)
@@ -1933,14 +1902,14 @@ func (s *StoreTestSuite) TestWaitPendingStatement() {
 		statementObj := cmfsdk.Statement{
 			Status: &cmfsdk.StatementStatus{
 				Phase:  "COMPLETED",
-				Detail: &statusDetailMessage,
+				Detail: cmfsdk.PtrString(testStatusDetailMessage),
 			},
 		}
 		client.EXPECT().CmfApiContext().Return(context.Background())
-		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(statementObj, nil)
+		client.EXPECT().GetStatement(context.Background(), "envId", testStatementName).Return(statementObj, nil)
 
 		processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
-			StatementName: statementName,
+			StatementName: testStatementName,
 			Status:        types.PENDING,
 		})
 		require.Nil(s.T(), err)
@@ -2004,12 +1973,10 @@ func (s *StoreTestSuite) TestWaitPendingStatementNoWaitForRunningStatement() {
 }
 
 func (s *StoreTestSuite) TestWaitPendingStatementFailsOnWaitError() {
-	statementName := "Test Statement"
-	statusDetailMessage := "Test status detail message"
 	returnedErr := fmt.Errorf("test error")
 	expectedError := &types.StatementError{
 		Message:        returnedErr.Error(),
-		FailureMessage: statusDetailMessage,
+		FailureMessage: testStatusDetailMessage,
 	}
 
 	{ // Cloud store
@@ -2025,15 +1992,15 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnWaitError() {
 		}
 
 		statementObj := flinkgatewayv1.SqlV1Statement{
-			Name: &statementName,
+			Name: flinkgatewayv1.PtrString(testStatementName),
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
-				Detail: &statusDetailMessage,
+				Detail: flinkgatewayv1.PtrString(testStatusDetailMessage),
 			},
 		}
-		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, returnedErr)
+		client.EXPECT().GetStatement("envId", testStatementName, "orgId").Return(statementObj, returnedErr)
 
 		processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
-			StatementName: statementName,
+			StatementName: testStatementName,
 			Status:        types.PENDING,
 		})
 		require.Nil(s.T(), processedStatement)
@@ -2052,14 +2019,14 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnWaitError() {
 
 		statementObj := cmfsdk.Statement{
 			Status: &cmfsdk.StatementStatus{
-				Detail: &statusDetailMessage,
+				Detail: cmfsdk.PtrString(testStatusDetailMessage),
 			},
 		}
 		client.EXPECT().CmfApiContext().Return(context.Background())
-		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(statementObj, returnedErr)
+		client.EXPECT().GetStatement(context.Background(), "envId", testStatementName).Return(statementObj, returnedErr)
 
 		processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
-			StatementName: statementName,
+			StatementName: testStatementName,
 			Status:        types.PENDING,
 		})
 		require.Nil(s.T(), processedStatement)
@@ -2068,11 +2035,9 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnWaitError() {
 }
 
 func (s *StoreTestSuite) TestWaitPendingStatementFailsOnNonCompletedOrRunningStatementPhase() {
-	statementName := "Test Statement"
-	statusDetailMessage := "Test status detail message"
 	expectedError := &types.StatementError{
 		Message:        "can't fetch results. Statement phase is: FAILED",
-		FailureMessage: statusDetailMessage,
+		FailureMessage: testStatusDetailMessage,
 	}
 
 	{ // Cloud store
@@ -2088,17 +2053,17 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnNonCompletedOrRunningSta
 		}
 
 		statementObj := flinkgatewayv1.SqlV1Statement{
-			Name: &statementName,
+			Name: flinkgatewayv1.PtrString(testStatementName),
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
 				Phase:  "FAILED",
-				Detail: &statusDetailMessage,
+				Detail: flinkgatewayv1.PtrString(testStatusDetailMessage),
 			},
 		}
 
-		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil)
+		client.EXPECT().GetStatement("envId", testStatementName, "orgId").Return(statementObj, nil)
 
 		processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
-			StatementName: statementName,
+			StatementName: testStatementName,
 			Status:        types.PENDING,
 		})
 		require.Nil(s.T(), processedStatement)
@@ -2118,15 +2083,15 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnNonCompletedOrRunningSta
 		statementObj := cmfsdk.Statement{
 			Status: &cmfsdk.StatementStatus{
 				Phase:  "FAILED",
-				Detail: &statusDetailMessage,
+				Detail: cmfsdk.PtrString(testStatusDetailMessage),
 			},
 		}
 
 		client.EXPECT().CmfApiContext().Return(context.Background())
-		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(statementObj, nil)
+		client.EXPECT().GetStatement(context.Background(), "envId", testStatementName).Return(statementObj, nil)
 
 		processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
-			StatementName: statementName,
+			StatementName: testStatementName,
 			Status:        types.PENDING,
 		})
 		require.Nil(s.T(), processedStatement)
@@ -2135,7 +2100,6 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnNonCompletedOrRunningSta
 }
 
 func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStatementWithEmptyStatusDetail() {
-	statementName := "Test Statement"
 	exception1 := "Exception 1"
 	exception2 := "Exception 2"
 	expectedError := &types.StatementError{
@@ -2157,7 +2121,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStateme
 		}
 
 		statementObj := flinkgatewayv1.SqlV1Statement{
-			Name: &statementName,
+			Name: flinkgatewayv1.PtrString(testStatementName),
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
 				Phase: "FAILED",
 			},
@@ -2167,11 +2131,11 @@ func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStateme
 			{Message: &exception2},
 		}
 
-		client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil)
-		client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(exceptionsResponse, nil)
+		client.EXPECT().GetStatement("envId", testStatementName, "orgId").Return(statementObj, nil)
+		client.EXPECT().GetExceptions("envId", testStatementName, "orgId").Return(exceptionsResponse, nil)
 
 		processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
-			StatementName: statementName,
+			StatementName: testStatementName,
 			Status:        types.PENDING,
 		})
 		require.Nil(s.T(), processedStatement)
@@ -2190,7 +2154,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStateme
 
 		statementObj := cmfsdk.Statement{
 			Metadata: cmfsdk.StatementMetadata{
-				Name: statementName,
+				Name: testStatementName,
 			},
 			Status: &cmfsdk.StatementStatus{
 				Phase: "FAILED",
@@ -2205,11 +2169,11 @@ func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStateme
 		}
 
 		client.EXPECT().CmfApiContext().Return(context.Background()).Times(2)
-		client.EXPECT().GetStatement(context.Background(), "envId", statementName).Return(statementObj, nil)
-		client.EXPECT().ListStatementExceptions(context.Background(), "envId", statementName).Return(exceptionsResponse, nil)
+		client.EXPECT().GetStatement(context.Background(), "envId", testStatementName).Return(statementObj, nil)
+		client.EXPECT().ListStatementExceptions(context.Background(), "envId", testStatementName).Return(exceptionsResponse, nil)
 
 		processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
-			StatementName: statementName,
+			StatementName: testStatementName,
 			Status:        types.PENDING,
 		})
 		require.Nil(s.T(), processedStatement)
@@ -2218,7 +2182,6 @@ func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStateme
 }
 
 func (s *StoreTestSuite) TestGetStatusDetail() {
-	statementName := "Test Statement"
 	exception1 := "Exception 1"
 	exception2 := "Exception 2"
 
@@ -2235,7 +2198,7 @@ func (s *StoreTestSuite) TestGetStatusDetail() {
 		}
 
 		statementObj := flinkgatewayv1.SqlV1Statement{
-			Name: &statementName,
+			Name: flinkgatewayv1.PtrString(testStatementName),
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
 				Phase: "FAILED",
 			},
@@ -2246,7 +2209,7 @@ func (s *StoreTestSuite) TestGetStatusDetail() {
 			{Message: &exception2},
 		}
 
-		client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(exceptionsResponse, nil).Times(2)
+		client.EXPECT().GetExceptions("envId", testStatementName, "orgId").Return(exceptionsResponse, nil).Times(2)
 
 		require.Equal(s.T(), exception1, store.getStatusDetail(statementObj))
 		statementObj.Status.Phase = "FAILING"
@@ -2265,7 +2228,7 @@ func (s *StoreTestSuite) TestGetStatusDetail() {
 
 		statementObj := cmfsdk.Statement{
 			Metadata: cmfsdk.StatementMetadata{
-				Name: statementName,
+				Name: testStatementName,
 			},
 			Status: &cmfsdk.StatementStatus{
 				Phase: "FAILED",
@@ -2280,7 +2243,7 @@ func (s *StoreTestSuite) TestGetStatusDetail() {
 		}
 
 		client.EXPECT().CmfApiContext().Return(context.Background()).Times(2)
-		client.EXPECT().ListStatementExceptions(context.Background(), "envId", statementName).Return(exceptionsResponse, nil).Times(2)
+		client.EXPECT().ListStatementExceptions(context.Background(), "envId", testStatementName).Return(exceptionsResponse, nil).Times(2)
 
 		require.Equal(s.T(), exception1, store.getStatusDetail(statementObj))
 		statementObj.Status.Phase = "FAILING"
@@ -2289,9 +2252,6 @@ func (s *StoreTestSuite) TestGetStatusDetail() {
 }
 
 func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusNoFailedOrFailing() {
-	testStatusDetailMessage := "Test Status Detail Message"
-	statementName := "Test Statement"
-
 	{ // Cloud store
 		client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 		store := Store{
@@ -2305,10 +2265,10 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusNoFailedOrFailing()
 		}
 
 		statementObj := flinkgatewayv1.SqlV1Statement{
-			Name: flinkgatewayv1.PtrString(statementName),
+			Name: flinkgatewayv1.PtrString(testStatementName),
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
 				Phase:  "PENDING",
-				Detail: &testStatusDetailMessage,
+				Detail: flinkgatewayv1.PtrString(testStatusDetailMessage),
 			},
 		}
 
@@ -2333,11 +2293,11 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusNoFailedOrFailing()
 
 		statementObj := cmfsdk.Statement{
 			Metadata: cmfsdk.StatementMetadata{
-				Name: statementName,
+				Name: testStatementName,
 			},
 			Status: &cmfsdk.StatementStatus{
 				Phase:  "PENDING",
-				Detail: &testStatusDetailMessage,
+				Detail: cmfsdk.PtrString(testStatusDetailMessage),
 			},
 		}
 
@@ -2352,9 +2312,6 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusNoFailedOrFailing()
 }
 
 func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusDetailFilled() {
-	testStatusDetailMessage := "Test Status Detail Message"
-	statementName := "Test Statement"
-
 	{ // Cloud store
 		client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 		store := Store{
@@ -2368,10 +2325,10 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusDetailFilled() {
 		}
 
 		statementObj := flinkgatewayv1.SqlV1Statement{
-			Name: flinkgatewayv1.PtrString(statementName),
+			Name: flinkgatewayv1.PtrString(testStatementName),
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
 				Phase:  "FAILED",
-				Detail: &testStatusDetailMessage,
+				Detail: cmfsdk.PtrString(testStatusDetailMessage),
 			},
 		}
 
@@ -2390,11 +2347,11 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusDetailFilled() {
 
 		statementObj := cmfsdk.Statement{
 			Metadata: cmfsdk.StatementMetadata{
-				Name: statementName,
+				Name: testStatementName,
 			},
 			Status: &cmfsdk.StatementStatus{
 				Phase:  "FAILED",
-				Detail: &testStatusDetailMessage,
+				Detail: cmfsdk.PtrString(testStatusDetailMessage),
 			},
 		}
 
@@ -2403,8 +2360,6 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusDetailFilled() {
 }
 
 func (s *StoreTestSuite) TestGetStatusDetailReturnsEmptyWhenNoExceptionsAvailable() {
-	statementName := "Test Statement"
-
 	{ // Cloud store
 		client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 		appOptions := &types.ApplicationOptions{
@@ -2419,12 +2374,12 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsEmptyWhenNoExceptionsAvailabl
 		}
 
 		statementObj := flinkgatewayv1.SqlV1Statement{
-			Name:   &statementName,
+			Name:   flinkgatewayv1.PtrString(testStatementName),
 			Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "FAILED"},
 		}
 		exceptionsResponse := []flinkgatewayv1.SqlV1StatementException{}
 
-		client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(exceptionsResponse, nil)
+		client.EXPECT().GetExceptions("envId", testStatementName, "orgId").Return(exceptionsResponse, nil)
 
 		require.Equal(s.T(), "", store.getStatusDetail(statementObj))
 	}
@@ -2441,14 +2396,14 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsEmptyWhenNoExceptionsAvailabl
 
 		statementObj := cmfsdk.Statement{
 			Metadata: cmfsdk.StatementMetadata{
-				Name: statementName,
+				Name: testStatementName,
 			},
 			Status: &cmfsdk.StatementStatus{Phase: "FAILED"},
 		}
 		exceptionsResponse := cmfsdk.StatementExceptionList{}
 
 		client.EXPECT().CmfApiContext().Return(context.Background())
-		client.EXPECT().ListStatementExceptions(context.Background(), "envId", statementName).Return(exceptionsResponse, nil)
+		client.EXPECT().ListStatementExceptions(context.Background(), "envId", testStatementName).Return(exceptionsResponse, nil)
 
 		require.Equal(s.T(), "", store.getStatusDetail(statementObj))
 	}
@@ -2566,7 +2521,7 @@ func TestWaitForTerminalStateStopsWhenTerminalState(t *testing.T) {
 			Name: flinkgatewayv1.PtrString("statement-name"),
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
 				Phase:  "COMPLETED",
-				Detail: flinkgatewayv1.PtrString("Test status detail message"),
+				Detail: flinkgatewayv1.PtrString(testStatusDetailMessage),
 			},
 		}
 		client.EXPECT().GetStatement("envId", statementObj.GetName(), "orgId").Return(statementObj, nil)
@@ -2624,7 +2579,7 @@ func TestWaitForTerminalStateStopsWhenUserDetaches(t *testing.T) {
 			Name: flinkgatewayv1.PtrString("statement-name"),
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
 				Phase:  "RUNNING",
-				Detail: flinkgatewayv1.PtrString("Test status detail message"),
+				Detail: flinkgatewayv1.PtrString(testStatusDetailMessage),
 			},
 		}
 		client.EXPECT().GetStatement("envId", statementObj.GetName(), "orgId").Return(statementObj, nil).AnyTimes()
@@ -2656,7 +2611,7 @@ func TestWaitForTerminalStateStopsWhenUserDetaches(t *testing.T) {
 			},
 			Status: &cmfsdk.StatementStatus{
 				Phase:  "RUNNING",
-				Detail: cmfsdk.PtrString("Test status detail message"),
+				Detail: cmfsdk.PtrString(testStatusDetailMessage),
 			},
 		}
 
@@ -2691,7 +2646,7 @@ func TestWaitForTerminalStateStopsOnError(t *testing.T) {
 			Name: flinkgatewayv1.PtrString("statement-name"),
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
 				Phase:  "RUNNING",
-				Detail: flinkgatewayv1.PtrString("Test status detail message"),
+				Detail: flinkgatewayv1.PtrString(testStatusDetailMessage),
 			},
 		}
 		client.EXPECT().GetStatement("envId", statementObj.GetName(), "orgId").Return(statementObj, fmt.Errorf("error"))
@@ -2715,7 +2670,7 @@ func TestWaitForTerminalStateStopsOnError(t *testing.T) {
 			},
 			Status: &cmfsdk.StatementStatus{
 				Phase:  "RUNNING",
-				Detail: cmfsdk.PtrString("Test status detail message"),
+				Detail: cmfsdk.PtrString(testStatusDetailMessage),
 			},
 		}
 		client.EXPECT().CmfApiContext().Return(context.Background())
