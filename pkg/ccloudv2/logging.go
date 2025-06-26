@@ -36,7 +36,6 @@ type LoggingLogEntry struct {
 	Level     string            `json:"level"`
 	Message   string            `json:"message"`
 	TaskId    string            `json:"task_id,omitempty"`
-	Id        string            `json:"id,omitempty"`
 	Exception *LoggingException `json:"exception,omitempty"`
 }
 

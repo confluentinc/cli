@@ -4,6 +4,8 @@
     "level": "ERROR",
     "message": "WorkerSourceTask{id=lcc-123-0} Committing offsets for 130 acknowledged messages",
     "task_id": "task-0",
-    "id": "lcc-123"
+    "exception": {
+      "stacktrace": "exception"
+    }
   }
 ]

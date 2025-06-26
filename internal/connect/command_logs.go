@@ -25,8 +25,9 @@ type logsCommand struct {
 type logEntryOut struct {
 	Timestamp string `human:"Timestamp" serialized:"timestamp"`
 	Level     string `human:"Level" serialized:"level"`
-	TaskId    string `human:"Task ID" serialized:"task_id"`
 	Message   string `human:"Message" serialized:"message"`
+	TaskId    string `human:"Task ID" serialized:"task_id"`
+	Exception string `human:"Exception" serialized:"exception"`
 }
 
 func newLogsCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -99,6 +100,11 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	levels := strings.Split(level, "|")
+	for _, l := range levels {
+		if l != "INFO" && l != "WARN" && l != "ERROR" {
+			return fmt.Errorf("invalid log level: %s", l)
+		}
+	}
 
 	searchText, err := cmd.Flags().GetString("search-text")
 	if err != nil {
@@ -248,7 +254,9 @@ func writeLogsToFile(outputFile string, logs *ccloudv2.LoggingSearchResponse) er
 			TaskId:    log.TaskId,
 			Message:   log.Message,
 		}
-
+		if log.Exception != nil {
+			logEntry.Exception = log.Exception.Stacktrace
+		}
 		data, err := json.Marshal(logEntry)
 		if err != nil {
 			return fmt.Errorf("failed to marshal log entry to JSON: %w", err)
@@ -296,6 +304,9 @@ func printHumanLogs(cmd *cobra.Command, logs *ccloudv2.LoggingSearchResponse, co
 			Level:     log.Level,
 			TaskId:    log.TaskId,
 			Message:   log.Message,
+		}
+		if log.Exception != nil {
+			logOut.Exception = log.Exception.Stacktrace
 		}
 		list.Add(logOut)
 	}

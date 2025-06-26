@@ -280,6 +280,7 @@ func (s *CLITestSuite) TestConnectOffset() {
 func (s *CLITestSuite) TestConnectLogs() {
 	tests := []CLITest{
 		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z --level INFO", fixture: "connect/logs/logs.golden"},
+		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z --level INFOL", fixture: "connect/logs/logs-invalid-log-level.golden", exitCode: 1},
 		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z --level INFO --next", fixture: "connect/logs/logs.golden"},
 		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z --level INFO -o json", fixture: "connect/logs/logs-json.golden"},
 		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-06-16T05:43:00Z --end-time 2025-06-16T05:45:00Z --level INFO -o yaml", fixture: "connect/logs/logs-yaml.golden"},

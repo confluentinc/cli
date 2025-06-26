@@ -18,11 +18,16 @@ import (
 )
 
 type LoggingLogEntry struct {
-	Timestamp string `json:"timestamp"`
-	Level     string `json:"level"`
-	Message   string `json:"message"`
-	TaskId    string `json:"task_id,omitempty"`
-	Id        string `json:"id,omitempty"`
+	Timestamp string            `json:"timestamp"`
+	Level     string            `json:"level"`
+	Message   string            `json:"message"`
+	TaskId    string            `json:"task_id,omitempty"`
+	Id        string            `json:"id,omitempty"`
+	Exception *LoggingException `json:"exception,omitempty"`
+}
+
+type LoggingException struct {
+	Stacktrace string `json:"stacktrace,omitempty"`
 }
 type LoggingMetadata struct {
 	Next string `json:"next,omitempty"`
@@ -89,6 +94,9 @@ func handleLogsSearch(t *testing.T) http.HandlerFunc {
 						Message:   "WorkerSourceTask{id=lcc-123-0} Committing offsets for 130 acknowledged messages",
 						TaskId:    "task-0",
 						Id:        "lcc-123",
+						Exception: &LoggingException{
+							Stacktrace: "exception",
+						},
 					},
 				},
 				Metadata: &LoggingMetadata{
