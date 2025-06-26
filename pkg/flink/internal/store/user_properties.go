@@ -19,10 +19,10 @@ type UserProperties struct {
 }
 
 func getDefaultProperties(appOptions *types.ApplicationOptions) map[string]string {
-	properties := map[string]string{
-		config.KeyServiceAccount: appOptions.GetServiceAccountId(),
-		config.KeyLocalTimeZone:  getLocalTimezone(),
-		config.KeyOutputFormat:   string(config.OutputFormatStandard),
+	properties := map[string]string{config.KeyOutputFormat: string(config.OutputFormatStandard)}
+	if appOptions.Cloud {
+		properties[config.KeyServiceAccount] = appOptions.GetServiceAccountId()
+		properties[config.KeyLocalTimeZone] = getLocalTimezone()
 	}
 
 	return properties
@@ -45,7 +45,7 @@ func NewUserProperties(appOptions *types.ApplicationOptions) types.UserPropertie
 	return NewUserPropertiesWithDefaults(getDefaultProperties(appOptions), getInitialProperties(appOptions))
 }
 
-// add initial props
+// NewUserPropertiesWithDefaults add initial props
 func NewUserPropertiesWithDefaults(defaultProperties map[string]string, initialProperties map[string]string) types.UserPropertiesInterface {
 	userProperties := UserProperties{
 		defaultProperties: defaultProperties,
