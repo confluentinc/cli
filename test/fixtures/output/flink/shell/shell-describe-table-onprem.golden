@@ -1,0 +1,38 @@
+Welcome!
+To exit, press Ctrl-Q or type "exit".
+[Ctrl-Q] Quit [Ctrl-S] Toggle Completions
+> set 'client.statement-name'='shell-test-stmt';
+Statement successfully submitted.
+Finished statement execution. Statement phase: COMPLETED.
+Details: configuration updated successfully.
++-----------------------+-----------------+
+|          Key          |      Value      |
++-----------------------+-----------------+
+| client.statement-name | shell-test-stmt |
++-----------------------+-----------------+
+> describe clicks;
+Statement name: shell-test-stmt
+Submitting statement...
+Statement successfully submitted.
+Details: Statement execution completed.
+Finished statement execution. Statement phase: COMPLETED.
+Details: Statement execution completed.
++------------+--------+-------+
+|    name    |  type  | null  |
++------------+--------+-------+
+| click_id   | STRING | false |
+| USER_id    | INT    | false |
+| url        | STRING | false |
+| user_agent | STRING | false |
+| view_time  | INT    | false |
++------------+--------+-------+
+> set;
+Statement successfully submitted.
+Finished statement execution. Statement phase: COMPLETED.
++----------------------+--------------------+
+|         Key          |       Value        |
++----------------------+--------------------+
+| client.output-format | standard (default) |
++----------------------+--------------------+
+> exit
+
