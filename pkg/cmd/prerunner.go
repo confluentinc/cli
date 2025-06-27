@@ -374,7 +374,7 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 		}
 
 		// input flag precedes stored config value
-		// If the endpoint flag is set, use its value; otherwise, use the value from config.RestEndpoint
+		// if the endpoint flag is set, use its value; otherwise, use the value from config.RestEndpoint
 		if flagEndpoint != "" {
 			restEndpoint = flagEndpoint
 		}

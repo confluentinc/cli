@@ -137,7 +137,7 @@ func AddEndpointFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 }
 
 func AutocompleteEndpoints(environmentId string, client *ccloudv2.Client) []string {
-	// nice-to-have, tracked by JIRA
+	// nice-to-have, tracked by JIRA ticket APIE-439
 	return nil
 }
 

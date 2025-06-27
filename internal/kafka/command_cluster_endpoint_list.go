@@ -25,7 +25,6 @@ func (c *clusterCommand) newEndpointListCommand() *cobra.Command {
 		),
 	}
 
-	// have a --cluster flag to display endpoint of one specific cluster (use default active cluster if not specified)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -34,9 +33,6 @@ func (c *clusterCommand) newEndpointListCommand() *cobra.Command {
 }
 
 func (c *clusterCommand) endpointList(cmd *cobra.Command, args []string) error {
-	// Add logic for displaying endpoint, layer by layer
-	// check current environment... cloud... region...
-	// PNI -> privatelink -> public
 	cluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	clusterId := cluster.GetId()
 	if err != nil {
@@ -49,7 +45,6 @@ func (c *clusterCommand) endpointList(cmd *cobra.Command, args []string) error {
 	}
 
 	// display the endpoints corresponding to the specified cluster
-
 	clusterConfigs, _, err := c.V2Client.DescribeKafkaCluster(clusterId, c.Context.GetCurrentEnvironment())
 	if err != nil {
 		log.CliLogger.Debugf("Error describing Kafka Cluster: %v", err)
@@ -61,13 +56,9 @@ func (c *clusterCommand) endpointList(cmd *cobra.Command, args []string) error {
 	list := output.NewList(cmd)
 	for accessPointId, attributes := range clusterEndpoints {
 
-		// basically in the format of:
-		// * | ap1pni123 | http... | PNI
 		out := &endpointOut{
 			IsCurrent: attributes.GetHttpEndpoint() == c.Context.KafkaClusterContext.GetActiveKafkaClusterEndpoint(),
 			Endpoint:  accessPointId,
-			// don't wanna display multiple long strings (KafkaBootstrapEndpoint & HttpEndpoint) as one row in output
-			// between kafka_bootstrap_endpoint and http_endpoint, which one we want to display to customer? Which is more useful to display
 			//KafkaBootstrapEndpoint: attributes.KafkaBootstrapEndpoint,
 			HttpEndpoint:   attributes.GetHttpEndpoint(),
 			ConnectionType: attributes.GetConnectionType(),

@@ -67,9 +67,7 @@ func (c *clusterCommand) endpointUse(cmd *cobra.Command, args []string) error {
 
 func validateUserProvidedKafkaClusterEndpoint(endpoint, activeCluster string, c *clusterCommand) bool {
 
-	// check if the specified endpoint exists in the endpoint list, error out if not
-	// check if the specified endpoint corresponds to active cluster (cloud & region), and error out if not
-
+	// check if the specified endpoint exists in the current active cluster's endpoint list, and error out if not
 	activeClusterConfigs, _, err := c.V2Client.DescribeKafkaCluster(activeCluster, c.Context.GetCurrentEnvironment())
 	if err != nil {
 		log.CliLogger.Debugf("Error describing Kafka Cluster: %v", err)
@@ -79,8 +77,6 @@ func validateUserProvidedKafkaClusterEndpoint(endpoint, activeCluster string, c 
 	activeClusterEndpoints := activeClusterConfigs.Spec.GetEndpoints()
 
 	for _, v := range activeClusterEndpoints {
-		// check how complete this GetHttpEndpoint() returns, we're fine if returns everything.
-		// Add additional checks if the GetHttpEndpoint() returns partial endpoints
 		if v.GetHttpEndpoint() == endpoint {
 			log.CliLogger.Debugf("The specified endpoint %q is a valid %q endpoint", endpoint, v.GetConnectionType())
 			output.ErrPrintf(c.Config.EnableColor, "Set Kafka endpoint \"%s\" as the active endpoint for Kafka cluster \"%s\".\n", endpoint, activeCluster)

@@ -38,9 +38,7 @@ func newKafkaClusterEnvironmentContext(activeKafka string, activeKafkaEndpoint s
 	return &KafkaClusterContext{
 		EnvContext: true,
 		KafkaEnvContexts: map[string]*KafkaEnvContext{ctx.GetCurrentEnvironment(): {
-			ActiveKafkaCluster: activeKafka,
-			// TODO: a bit unsure if we should update this...
-			// what's the difference between newKafkaClusterEnvironmentContext and newKafkaClusterNonEnvironmentContext?
+			ActiveKafkaCluster:         activeKafka,
 			ActiveKafkaClusterEndpoint: activeKafkaEndpoint,
 			KafkaClusterConfigs:        kafkaClusters,
 		}},
@@ -50,9 +48,8 @@ func newKafkaClusterEnvironmentContext(activeKafka string, activeKafkaEndpoint s
 
 func newKafkaClusterNonEnvironmentContext(activeKafka string, activeKafkaEndpoint string, kafkaClusters map[string]*KafkaClusterConfig, ctx *Context) *KafkaClusterContext {
 	return &KafkaClusterContext{
-		EnvContext:         false,
-		ActiveKafkaCluster: activeKafka,
-		// TODO: a bit unsure if we should update this...
+		EnvContext:                 false,
+		ActiveKafkaCluster:         activeKafka,
 		ActiveKafkaClusterEndpoint: activeKafkaEndpoint,
 		KafkaClusterConfigs:        kafkaClusters,
 		Context:                    ctx,
@@ -76,7 +73,6 @@ func (k *KafkaClusterContext) GetActiveKafkaClusterConfig() *KafkaClusterConfig 
 }
 
 func (k *KafkaClusterContext) GetActiveKafkaClusterEndpoint() string {
-	// TODO: double check about pull value from config...
 	if !k.EnvContext {
 		return k.ActiveKafkaClusterEndpoint
 	}
@@ -94,7 +90,6 @@ func (k *KafkaClusterContext) SetActiveKafkaCluster(clusterId string) {
 }
 
 func (k *KafkaClusterContext) SetActiveKafkaClusterEndpoint(endpoint string) {
-	// TODO: double check about add value to config...
 	if !k.EnvContext {
 		k.ActiveKafkaClusterEndpoint = endpoint
 	} else {

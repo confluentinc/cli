@@ -133,10 +133,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		Availability: cmkv2.PtrString(availability),
 		Config:       setCmkClusterConfig(clusterType, 1),
 		Byok:         keyGlobalObjectReference,
-		// Can we specify cluster creation with --endpoint?
-		// does the user "have power" to specify an attribute in CREATE cluster operation?
-		// https://github.com/confluentinc/api/blob/master/cmk/minispec.yaml#L125-#L143
-		//Endpoint: cmkv2.PtrString(endpoint),
 	}}
 
 	if cmd.Flags().Changed("cku") {
