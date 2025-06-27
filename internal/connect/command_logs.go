@@ -134,7 +134,7 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("end-time must be greater than start-time")
 	}
 
-	startTimeParsed, err := time.Parse(time.RFC3339, startTime)
+	startTimeParsed, _ := time.Parse(time.RFC3339, startTime)
 	now := time.Now()
 	maxAge := 72 * time.Hour
 	if startTimeParsed.Before(now.Add(-maxAge)) {
