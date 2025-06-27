@@ -19,8 +19,6 @@ const (
 	RUNNING   PHASE = "RUNNING"   // More results are available (pagination)
 	COMPLETED PHASE = "COMPLETED" // All results were fetched
 	FAILED    PHASE = "FAILED"
-
-	detailsMsg = "Details: %s"
 )
 
 // Custom Internal type that shall be used internally by the client
@@ -95,12 +93,8 @@ func (s ProcessedStatement) printStatusMessageOfNonLocalStatement() {
 	}
 
 	if s.StatusDetail != "" {
-		details := fmt.Sprintf(detailsMsg, s.StatusDetail)
-		if s.Status == "FAILED" {
-			utils.OutputErr(details)
-		} else {
-			utils.OutputInfo(details)
-		}
+		utils.OutputInfof("Details: ")
+		utils.OutputWarn(s.StatusDetail)
 	}
 }
 
@@ -113,7 +107,8 @@ func (s ProcessedStatement) PrintOutputDryRunStatement() {
 		utils.OutputWarn("If you wish to submit your statement, disable dry run mode before submitting your statement with \"set 'sql.dry-run' = 'false';\"")
 	} else {
 		utils.OutputErr(fmt.Sprintf("Dry run statement execution resulted in unexpected status.\nStatus: %s", s.Status))
-		utils.OutputErr(fmt.Sprintf(detailsMsg, s.StatusDetail))
+		utils.OutputInfof("Details: ")
+		utils.OutputErr(s.StatusDetail)
 	}
 }
 
@@ -126,7 +121,7 @@ func (s ProcessedStatement) PrintStatementDoneStatus() {
 		output.Printf(false, "Finished statement execution. Statement phase: %s.\n", s.Status)
 	}
 	if s.StatusDetail != "" {
-		output.Printf(false, detailsMsg+".\n", strings.TrimSuffix(s.StatusDetail, "."))
+		output.Printf(false, "Details: %s.\n", strings.TrimSuffix(s.StatusDetail, "."))
 	}
 }
 
