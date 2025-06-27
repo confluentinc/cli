@@ -25,6 +25,15 @@ type computePoolOutOnPrem struct {
 	Phase        string `human:"Phase" serialized:"phase"`
 }
 
+// localComputePoolOnPrem is a local struct with YAML tags that matches the SDK ComputePool structure
+type localComputePoolOnPrem struct {
+	ApiVersion string                  `yaml:"apiVersion" json:"apiVersion"`
+	Kind       string                  `yaml:"kind" json:"kind"`
+	Metadata   map[string]interface{}  `yaml:"metadata" json:"metadata"`
+	Spec       map[string]interface{}  `yaml:"spec" json:"spec"`
+	Status     *map[string]interface{} `yaml:"status,omitempty" json:"status,omitempty"`
+}
+
 func (c *command) newComputePoolCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "compute-pool",

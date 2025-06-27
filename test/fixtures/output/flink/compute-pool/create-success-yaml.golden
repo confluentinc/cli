@@ -18,4 +18,3 @@ spec:
             resource:
                 cpu: 0.5
                 memory: 1024m
-status: null

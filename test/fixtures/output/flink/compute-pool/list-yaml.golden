@@ -1,4 +1,4 @@
-- apiversion: ""
+- apiVersion: ""
   kind: ""
   metadata:
     name: test-pool1
@@ -11,7 +11,7 @@
     clusterspec: {}
   status:
     phase: RUNNING
-- apiversion: ""
+- apiVersion: ""
   kind: ""
   metadata:
     name: test-pool2
@@ -24,7 +24,7 @@
     clusterspec: {}
   status:
     phase: PENDING
-- apiversion: ""
+- apiVersion: ""
   kind: ""
   metadata:
     name: test-pool3

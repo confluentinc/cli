@@ -1,4 +1,4 @@
-apiversion: cmf/api/v1/catalog
+apiVersion: cmf/api/v1/catalog
 kind: KafkaCatalog
 metadata:
     name: test-catalog
