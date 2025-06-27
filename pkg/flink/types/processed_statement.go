@@ -126,7 +126,7 @@ func (s ProcessedStatement) PrintStatementDoneStatus() {
 		output.Printf(false, "Finished statement execution. Statement phase: %s.\n", s.Status)
 	}
 	if s.StatusDetail != "" {
-		output.Printf(false, detailsMsg+".\n", s.StatusDetail)
+		output.Printf(false, detailsMsg+".\n", strings.TrimSuffix(s.StatusDetail, "."))
 	}
 }
 

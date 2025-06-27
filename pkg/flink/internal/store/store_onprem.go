@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	_ "embed"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -70,7 +71,7 @@ func (s *StoreOnPrem) ProcessStatement(statement string) (*types.ProcessedStatem
 	flinkConfiguration := s.appOptions.GetFlinkConfiguration()
 	properties := s.Properties.GetNonLocalProperties()
 
-	utils.OutputInfof("Statement name: %s\nSubmitting statement...", statementName)
+	utils.OutputInfof("Statement name: %s\nSubmitting statement...\n", statementName)
 	client := s.authenticatedCmfClient()
 	statementObj, err := client.CreateStatement(
 		client.CmfApiContext(),
@@ -78,9 +79,11 @@ func (s *StoreOnPrem) ProcessStatement(statement string) (*types.ProcessedStatem
 		createSqlV1StatementOnPrem(statement, statementName, computePoolId, properties, flinkConfiguration),
 	)
 
+	status := statementObj.GetStatus()
 	if err != nil {
-		status := statementObj.GetStatus()
 		return nil, types.NewStatementErrorFailureMsg(err, status.GetDetail())
+	} else if status.GetPhase() == "FAILED" {
+		return nil, types.NewStatementErrorFailureMsg(errors.New("statement phase is: FAILED"), status.GetDetail())
 	}
 	return types.NewProcessedStatementOnPrem(statementObj), nil
 }

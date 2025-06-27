@@ -12,10 +12,11 @@ Details: configuration updated successfully.
 +-----------------------+-----------------+
 > describe clicks;
 Statement name: shell-test-stmt
-Submitting statement...Statement successfully submitted.
+Submitting statement...
+Statement successfully submitted.
 Details: Statement execution completed.
 Finished statement execution. Statement phase: COMPLETED.
-Details: Statement execution completed..
+Details: Statement execution completed.
 +------------+--------+-------+
 |    name    |  type  | null  |
 +------------+--------+-------+
