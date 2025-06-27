@@ -1,4 +1,4 @@
-apiversion: cmf.confluent.io/v1alpha1
+apiVersion: cmf.confluent.io/v1
 kind: FlinkApplication
 metadata:
     name: default-application-3
@@ -24,4 +24,3 @@ spec:
         resource:
             cpu: 1
             memory: 1048m
-status: null

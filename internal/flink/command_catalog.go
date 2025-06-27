@@ -12,6 +12,15 @@ type catalogOut struct {
 	Databases    []string `human:"Databases" serialized:"databases"`
 }
 
+// localCatalog is a local struct with YAML tags that matches the SDK KafkaCatalog structure
+type localCatalog struct {
+	ApiVersion string                  `yaml:"apiVersion" json:"apiVersion"`
+	Kind       string                  `yaml:"kind" json:"kind"`
+	Metadata   map[string]interface{}  `yaml:"metadata" json:"metadata"`
+	Spec       map[string]interface{}  `yaml:"spec" json:"spec"`
+	Status     *map[string]interface{} `yaml:"status,omitempty" json:"status,omitempty"`
+}
+
 func (c *command) newCatalogCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "catalog",
