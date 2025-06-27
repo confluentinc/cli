@@ -13,6 +13,15 @@ type flinkApplicationSummaryOut struct {
 	JobStatus   string `human:"Job Status" serialized:"job_status"`
 }
 
+// localFlinkApplication is a local struct with YAML tags that matches the SDK FlinkApplication structure
+type localFlinkApplication struct {
+	ApiVersion string                  `yaml:"apiVersion" json:"apiVersion"`
+	Kind       string                  `yaml:"kind" json:"kind"`
+	Metadata   map[string]interface{}  `yaml:"metadata" json:"metadata"`
+	Spec       map[string]interface{}  `yaml:"spec" json:"spec"`
+	Status     *map[string]interface{} `yaml:"status,omitempty" json:"status,omitempty"`
+}
+
 func (c *command) newApplicationCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "application",
