@@ -46,12 +46,28 @@ func (c *command) catalogCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	var catalog cmfsdk.KafkaCatalog
+	var localCat localCatalog
 	ext := filepath.Ext(resourceFilePath)
 	switch ext {
 	case ".json":
 		err = json.Unmarshal(data, &catalog)
 	case ".yaml", ".yml":
-		err = yaml.Unmarshal(data, &catalog)
+		// Unmarshal into local struct with YAML tags
+		if err = yaml.Unmarshal(data, &localCat); err != nil {
+			return fmt.Errorf("failed to unmarshal YAML: %v", err)
+		}
+
+		// Convert to JSON bytes to use the SDK struct's JSON tags
+		jsonBytes, err := json.Marshal(localCat)
+		if err != nil {
+			return fmt.Errorf("failed to convert to JSON: %v", err)
+		}
+
+		// Now unmarshal into the SDK struct using JSON unmarshaler
+		if err = json.Unmarshal(jsonBytes, &catalog); err != nil {
+			return fmt.Errorf("failed to unmarshal JSON: %v", err)
+		}
+
 	default:
 		return errors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
 	}
@@ -62,6 +78,42 @@ func (c *command) catalogCreate(cmd *cobra.Command, args []string) error {
 	outputCatalog, err := client.CreateCatalog(c.createContext(), catalog)
 	if err != nil {
 		return err
+	}
+
+	if output.GetFormat(cmd) == output.YAML {
+		// Convert the outputCatalog to our local struct for correct YAML field names
+		// We need to manually map the fields to preserve all data including nil fields
+		var outputLocalCat localCatalog
+		outputLocalCat.ApiVersion = outputCatalog.GetApiVersion()
+		outputLocalCat.Kind = outputCatalog.GetKind()
+
+		// Map metadata
+		outputLocalCat.Metadata.Name = outputCatalog.Metadata.Name
+		outputLocalCat.Metadata.CreationTimestamp = outputCatalog.Metadata.CreationTimestamp
+		outputLocalCat.Metadata.Uid = outputCatalog.Metadata.Uid
+		outputLocalCat.Metadata.Labels = outputCatalog.Metadata.Labels
+		outputLocalCat.Metadata.Annotations = outputCatalog.Metadata.Annotations
+
+		// Map spec
+		outputLocalCat.Spec.SrInstance.ConnectionConfig = outputCatalog.Spec.SrInstance.ConnectionConfig
+		outputLocalCat.Spec.SrInstance.ConnectionSecretId = outputCatalog.Spec.SrInstance.ConnectionSecretId
+
+		// Map kafka clusters
+		outputLocalCat.Spec.KafkaClusters = make([]localKafkaCatalogSpecKafkaCluster, len(outputCatalog.Spec.KafkaClusters))
+		for i, cluster := range outputCatalog.Spec.KafkaClusters {
+			outputLocalCat.Spec.KafkaClusters[i] = localKafkaCatalogSpecKafkaCluster{
+				DatabaseName:       cluster.DatabaseName,
+				ConnectionConfig:   cluster.ConnectionConfig,
+				ConnectionSecretId: cluster.ConnectionSecretId,
+			}
+		}
+		// Output the local struct for correct YAML field names
+		out, err := yaml.Marshal(outputLocalCat)
+		if err != nil {
+			return err
+		}
+		output.Print(false, string(out))
+		return nil
 	}
 
 	if output.GetFormat(cmd) == output.Human {
