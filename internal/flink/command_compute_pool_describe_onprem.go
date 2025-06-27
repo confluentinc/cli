@@ -1,7 +1,10 @@
 package flink
 
 import (
+	"encoding/json"
+
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -59,6 +62,25 @@ func (c *command) computePoolDescribeOnPrem(cmd *cobra.Command, args []string) e
 			Phase:        computePool.GetStatus().Phase,
 		})
 		return table.Print()
+	}
+
+	if output.GetFormat(cmd) == output.YAML {
+		// Convert the computePool to our local struct for correct YAML field names
+		jsonBytes, err := json.Marshal(computePool)
+		if err != nil {
+			return err
+		}
+		var outputLocalPool localComputePoolOnPrem
+		if err = json.Unmarshal(jsonBytes, &outputLocalPool); err != nil {
+			return err
+		}
+		// Output the local struct for correct YAML field names
+		out, err := yaml.Marshal(outputLocalPool)
+		if err != nil {
+			return err
+		}
+		output.Print(false, string(out))
+		return nil
 	}
 
 	return output.SerializedOutput(cmd, computePool)
