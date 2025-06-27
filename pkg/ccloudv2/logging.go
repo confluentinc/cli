@@ -85,7 +85,7 @@ func (c *Client) SearchConnectorLogs(crn, startTime, endTime string, levels []st
 	httpClient := NewRetryableHttpClient(c.cfg, false)
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to make HTTP request to logging API: %w\n", err)
+		return nil, fmt.Errorf("failed to make HTTP request to logging API due to issue connecting to the server")
 	}
 	defer resp.Body.Close()
 

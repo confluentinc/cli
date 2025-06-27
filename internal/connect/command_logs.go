@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -127,6 +128,17 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 
 	if err := validateTimeFormat(endTime); err != nil {
 		return fmt.Errorf("invalid end-time format: %w", err)
+	}
+
+	if endTime < startTime {
+		return fmt.Errorf("end-time must be greater than start-time")
+	}
+
+	startTimeParsed, err := time.Parse(time.RFC3339, startTime)
+	now := time.Now()
+	maxAge := 72 * time.Hour
+	if startTimeParsed.Before(now.Add(-maxAge)) {
+		return fmt.Errorf("start-time cannot be older than 72 hours as API can only return logs for the last 3 days")
 	}
 
 	currentLogQuery := &config.ConnectLogsQueryState{
