@@ -54,7 +54,7 @@ type PreRun struct {
 	JWTValidator            jwt.Validator
 }
 
-type KafkaRESTProvider func() (*KafkaREST, error)
+type KafkaRESTProvider func(cmd *cobra.Command) (*KafkaREST, error)
 
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
 func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cobra.Command, []string) error {
@@ -321,11 +321,12 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 
 	c.MDSv2Client = r.createMDSv2Client(c.Context, c.Version, unsafeTrace)
 
-	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
+	provider := (KafkaRESTProvider)(func(cmd *cobra.Command) (*KafkaREST, error) {
 		restEndpoint, lkc, err := getKafkaRestEndpoint(c.V2Client, c.Context)
 		if err != nil {
 			return nil, err
 		}
+
 		environmentId, err := c.Context.EnvironmentId()
 		if err != nil {
 			return nil, err
@@ -337,13 +338,45 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 		if cluster.Status.Phase == ccloudv2.StatusProvisioning {
 			return nil, fmt.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
 		}
-		if restEndpoint == "" {
-			return nil, fmt.Errorf("Kafka REST is not enabled: the operation is only supported with Kafka REST proxy")
-		}
 
 		dataplaneToken, err := pauth.GetDataplaneToken(c.Context)
 		if err != nil {
 			return nil, err
+		}
+
+		if restEndpoint == "" {
+			return nil, fmt.Errorf("Kafka REST is not enabled: the operation is only supported with Kafka REST proxy")
+		}
+
+		activeEndpoint := c.Context.KafkaClusterContext.GetActiveKafkaClusterEndpoint()
+
+		// sanity check of whether the cluster specified in command corresponds to the endpoint specified
+		endpointMatchCluster := false
+
+		clusterEndpoints := cluster.Spec.GetEndpoints()
+
+		for _, attributes := range clusterEndpoints {
+			if attributes.GetHttpEndpoint() == activeEndpoint {
+				endpointMatchCluster = true
+				break
+			}
+		}
+
+		// stored config precedes default value
+		// set restEndpoint to value stored in CLI config if present
+		if activeEndpoint != "" && endpointMatchCluster {
+			restEndpoint = activeEndpoint
+		}
+
+		flagEndpoint, err := cmd.Flags().GetString("kafka-endpoint")
+		if err != nil {
+			return nil, err
+		}
+
+		// input flag precedes stored config value
+		// if the endpoint flag is set, use its value; otherwise, use the value from config.RestEndpoint
+		if flagEndpoint != "" {
+			restEndpoint = flagEndpoint
 		}
 
 		kafkaRest := &KafkaREST{
@@ -483,7 +516,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 		}
 		useMdsToken := err == nil
 
-		provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
+		provider := (KafkaRESTProvider)(func(_ *cobra.Command) (*KafkaREST, error) {
 			cfg := kafkarestv3.NewConfiguration()
 
 			unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
