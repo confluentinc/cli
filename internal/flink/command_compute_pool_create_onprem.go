@@ -53,12 +53,28 @@ func (c *command) computePoolCreateOnPrem(cmd *cobra.Command, args []string) err
 	}
 
 	var computePool cmfsdk.ComputePool
+	var localPool localComputePoolOnPrem
 	ext := filepath.Ext(resourceFilePath)
 	switch ext {
 	case ".json":
 		err = json.Unmarshal(data, &computePool)
 	case ".yaml", ".yml":
-		err = yaml.Unmarshal(data, &computePool)
+		// Unmarshal into local struct with YAML tags
+		if err = yaml.Unmarshal(data, &localPool); err != nil {
+			return fmt.Errorf("failed to unmarshal YAML: %v", err)
+		}
+
+		// Convert to JSON bytes to use the SDK struct's JSON tags
+		jsonBytes, err := json.Marshal(localPool)
+		if err != nil {
+			return fmt.Errorf("failed to convert to JSON: %v", err)
+		}
+
+		// Now unmarshal into the SDK struct using JSON unmarshaler
+		if err = json.Unmarshal(jsonBytes, &computePool); err != nil {
+			return fmt.Errorf("failed to unmarshal JSON: %v", err)
+		}
+
 	default:
 		return errors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
 	}
@@ -69,6 +85,25 @@ func (c *command) computePoolCreateOnPrem(cmd *cobra.Command, args []string) err
 	outputComputePool, err := client.CreateComputePool(c.createContext(), environment, computePool)
 	if err != nil {
 		return err
+	}
+
+	if output.GetFormat(cmd) == output.YAML {
+		// Convert the outputComputePool to our local struct for correct YAML field names
+		jsonBytes, err := json.Marshal(outputComputePool)
+		if err != nil {
+			return err
+		}
+		var outputLocalPool localComputePoolOnPrem
+		if err = json.Unmarshal(jsonBytes, &outputLocalPool); err != nil {
+			return err
+		}
+		// Output the local struct for correct YAML field names
+		out, err := yaml.Marshal(outputLocalPool)
+		if err != nil {
+			return err
+		}
+		output.Print(false, string(out))
+		return nil
 	}
 
 	if output.GetFormat(cmd) == output.Human {

@@ -33,6 +33,15 @@ type statementOutOnPrem struct {
 	Bounded      bool   `human:"Bounded,omitempty" serialized:"bounded,omitempty"`
 }
 
+// localStatement is a local struct with YAML tags that matches the SDK Statement structure
+type localStatement struct {
+	ApiVersion string                  `yaml:"apiVersion" json:"apiVersion"`
+	Kind       string                  `yaml:"kind" json:"kind"`
+	Metadata   map[string]interface{}  `yaml:"metadata" json:"metadata"`
+	Spec       map[string]interface{}  `yaml:"spec" json:"spec"`
+	Status     *map[string]interface{} `yaml:"status,omitempty" json:"status,omitempty"`
+}
+
 func (c *command) newStatementCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "statement",
