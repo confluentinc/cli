@@ -31,6 +31,7 @@ const (
 type flinkShellTest struct {
 	commands   []string
 	goldenFile string
+	onprem     bool
 }
 
 func (s *CLITestSuite) TestFlinkArtifact() {
@@ -413,6 +414,7 @@ func (s *CLITestSuite) TestFlinkShell() {
 	for _, test := range tests {
 		s.runFlinkShellTest(test)
 	}
+	resetConfiguration(s.T(), false)
 }
 
 func (s *CLITestSuite) setupFlinkShellTests() {
@@ -458,6 +460,9 @@ func (s *CLITestSuite) runFlinkShellTest(flinkShellTest flinkShellTest) {
 		dir, err := os.Getwd()
 		require.NoError(t, err)
 		cmd := exec.Command(filepath.Join(dir, testBin), "flink", "shell", "--compute-pool", "lfcp-123456")
+		if flinkShellTest.onprem {
+			cmd.Args = append(cmd.Args, "--environment", "test")
+		}
 
 		// Register stdout scanner
 		pipe, err := cmd.StdoutPipe()
@@ -534,12 +539,12 @@ func executeCommands(stdin *os.File, commands []string, stdoutScanner *bufio.Sca
 			return "", err
 		}
 
-		output.WriteString(waitForLine(stdoutScanner, "Statement successfully created."))
+		output.WriteString(waitForLine(stdoutScanner, "Statement name:", "Statement successfully submitted."))
 	}
 	return output.String(), nil
 }
 
-func waitForLine(stdoutScanner *bufio.Scanner, lineToWaitFor string) string {
+func waitForLine(stdoutScanner *bufio.Scanner, linesToWaitFor ...string) string {
 	output := strings.Builder{}
 	for stdoutScanner.Scan() {
 		// Strip all terminal control sequences and skip empty lines
@@ -552,10 +557,13 @@ func waitForLine(stdoutScanner *bufio.Scanner, lineToWaitFor string) string {
 		output.WriteString(line + "\n")
 
 		// Once we've seen the line we wanted to wait for, we break.
-		if strings.HasPrefix(line, lineToWaitFor) {
-			break
+		for _, lineToWaitFor := range linesToWaitFor {
+			if strings.HasPrefix(line, lineToWaitFor) {
+				goto end
+			}
 		}
 	}
+end:
 	return output.String()
 }
 
