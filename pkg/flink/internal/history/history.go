@@ -10,7 +10,10 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
-const filename = "flink_statements_history.json"
+const (
+	filename       = "flink_statements_history.json"
+	filenameOnPrem = "flink_statements_history_onprem.json"
+)
 
 type History struct {
 	Data          []string `json:"data"`
@@ -19,7 +22,12 @@ type History struct {
 }
 
 func LoadHistory() *History {
-	history := initPath()
+	history := initPath(filename)
+	return loadFromPath(history)
+}
+
+func LoadHistoryOnPrem() *History {
+	history := initPath(filenameOnPrem)
 	return loadFromPath(history)
 }
 
@@ -43,7 +51,7 @@ func loadFromPath(history *History) *History {
 	return history
 }
 
-func initPath() *History {
+func initPath(file string) *History {
 	home, osHomedirErr := os.UserHomeDir()
 	if osHomedirErr != nil {
 		log.CliLogger.Warnf("Couldn't get homedir with os.UserHomeDir(): %v", osHomedirErr)
@@ -55,7 +63,7 @@ func initPath() *History {
 		confluentDir = config.HomeConfluentPathDefault
 	}
 	confluentPath := filepath.Join(home, confluentDir)
-	historyPath := filepath.Join(confluentPath, filename)
+	historyPath := filepath.Join(confluentPath, file)
 
 	return &History{
 		Data:          nil,
