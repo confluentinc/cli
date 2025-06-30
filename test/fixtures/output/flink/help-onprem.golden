@@ -15,7 +15,4 @@ Global Flags:
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
-Additional help topics:
-  confluent flink shell   Start Flink interactive SQL client.
-
 Use "confluent flink [command] --help" for more information about a command.

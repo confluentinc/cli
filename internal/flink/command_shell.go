@@ -47,7 +47,7 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner, cfg *config.Config) 
 			cmd.Flags().StringSlice("config-key", []string{}, "App option keys for local mode.")
 			cmd.Flags().StringSlice("config-value", []string{}, "App option values for local mode.")
 		}
-	} else if !cfg.IsOnPremLogin() { // On-Prem implementation for the shell command (unauthenticated)
+	} else { // On-Prem implementation for the shell command (unauthenticated)
 		cmd.Annotations = map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout}
 		cmd.Example = examples.BuildExampleString(
 			examples.Example{
