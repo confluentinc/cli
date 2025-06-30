@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	LogsPageSize = 200
+	LogsPageSize = 20
 )
 
 type LoggingSearchRequest struct {

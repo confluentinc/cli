@@ -66,9 +66,9 @@ func newLogsCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("start-time", "", "Start time for log query in RFC3339 format with UTC timezone (e.g., 2025-02-01T00:00:00Z).")
 	cmd.Flags().String("end-time", "", "End time for log query in RFC3339 format with UTC timezone (e.g., 2025-02-01T23:59:59Z).")
 	cmd.Flags().String("level", "ERROR", "Log level filter (INFO, WARN, ERROR). Defaults to ERROR. Use '|' to specify multiple levels (e.g., ERROR|WARN).")
-	cmd.Flags().String("search-text", "", "Search text within logs (optional).")
-	cmd.Flags().String("output-file", "", "Output file path to append connector logs (optional).")
-	cmd.Flags().Bool("next", false, "Whether to fetch next page of logs after the next execution of the command (optional).")
+	cmd.Flags().String("search-text", "", "Search text within logs.")
+	cmd.Flags().String("output-file", "", "Output file path to append connector logs.")
+	cmd.Flags().Bool("next", false, "Whether to fetch next page of logs after the next execution of the command.")
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
