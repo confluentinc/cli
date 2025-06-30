@@ -23,8 +23,8 @@ func TestBasicSelectAutoCompletion(t *testing.T) {
 
 	expected := prompt.Suggest{Text: "SELECT ", Description: "Select data from a database"}
 	completer := NewCompleterBuilder(mockCompletionsEnabled).
-		AddCompleter(ExamplesCompleter).
-		AddCompleter(SetCompleter).
+		AddCompleter(ExamplesCompleterCommon).
+		AddCompleter(SetCompleterCommon).
 		AddCompleter(ShowCompleter).
 		BuildCompleter()
 
@@ -39,8 +39,8 @@ func TestFailingBasicAutoCompletion(t *testing.T) {
 
 	expected := prompt.Suggest{Text: "SELECT", Description: "Select data from a database"}
 	completer := NewCompleterBuilder(mockCompletionsEnabled).
-		AddCompleter(ExamplesCompleter).
-		AddCompleter(SetCompleter).
+		AddCompleter(ExamplesCompleterCommon).
+		AddCompleter(SetCompleterCommon).
 		AddCompleter(ShowCompleter).
 		BuildCompleter()
 
@@ -63,8 +63,8 @@ func TestNoLineBreaksInAutocompletion(t *testing.T) {
 		// when
 		buffer.InsertText(randomStatement.Text, false, true)
 		completer := NewCompleterBuilder(mockCompletionsEnabled).
-			AddCompleter(ExamplesCompleter).
-			AddCompleter(SetCompleter).
+			AddCompleter(ExamplesCompleterCommon).
+			AddCompleter(SetCompleterCommon).
 			AddCompleter(ShowCompleter).
 			BuildCompleter()
 		suggestions := completer(*buffer.Document())

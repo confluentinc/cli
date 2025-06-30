@@ -39,7 +39,7 @@ func (s *InputControllerTestSuite) SetupTest() {
 	s.prompt = mock.NewMockIPrompt(ctrl)
 	s.reverseISearch = mock.NewMockReverseISearch(ctrl)
 	s.handlerCh = make(chan *jsonrpc2.Request)
-	s.inputController = NewInputController(s.history, nil, s.handlerCh).(*InputController)
+	s.inputController = NewInputController(s.history, nil, s.handlerCh, true).(*InputController)
 	s.inputController.reverseISearch = s.reverseISearch
 	s.inputController.prompt = s.prompt
 }
