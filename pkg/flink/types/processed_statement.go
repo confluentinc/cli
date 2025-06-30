@@ -48,7 +48,7 @@ func NewProcessedStatement(statementObj flinkgatewayv1.SqlV1Statement) *Processe
 		StatusDetail:  statementObj.Status.GetDetail(),
 		Status:        PHASE(statementObj.Status.GetPhase()),
 		Properties:    statementObj.Spec.GetProperties(),
-		Traits:        StatementTraits{FlinkGatewayv1StatementTraits: &traits},
+		Traits:        StatementTraits{FlinkGatewayV1StatementTraits: &traits},
 	}
 }
 

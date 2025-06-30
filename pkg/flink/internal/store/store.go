@@ -153,7 +153,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	}
 
 	statementResults := statementResultObj.GetResults()
-	convertedResults, err := results.ConvertToInternalResults(statementResults.GetData(), statement.Traits.FlinkGatewayv1StatementTraits.GetSchema())
+	convertedResults, err := results.ConvertToInternalResults(statementResults.GetData(), statement.Traits.FlinkGatewayV1StatementTraits.GetSchema())
 	if err != nil {
 		return nil, types.NewStatementError(err)
 	}

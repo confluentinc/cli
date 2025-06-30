@@ -10,7 +10,7 @@ import (
 )
 
 func TestGetSqlKind(t *testing.T) {
-	flinkGatewayStatementTraits := StatementTraits{FlinkGatewayv1StatementTraits: &flinkgatewayv1.SqlV1StatementTraits{
+	flinkGatewayStatementTraits := StatementTraits{FlinkGatewayV1StatementTraits: &flinkgatewayv1.SqlV1StatementTraits{
 		SqlKind: flinkgatewayv1.PtrString("SELECT"),
 	}}
 
@@ -21,10 +21,13 @@ func TestGetSqlKind(t *testing.T) {
 	}}
 
 	require.Equal(t, "SELECT", cmfStatementTraits.GetSqlKind())
+
+	emptyStatementTraits := StatementTraits{}
+	require.Equal(t, "", emptyStatementTraits.GetSqlKind())
 }
 
 func TestGetUpsertColumns(t *testing.T) {
-	flinkGatewayStatementTraits := StatementTraits{FlinkGatewayv1StatementTraits: &flinkgatewayv1.SqlV1StatementTraits{
+	flinkGatewayStatementTraits := StatementTraits{FlinkGatewayV1StatementTraits: &flinkgatewayv1.SqlV1StatementTraits{
 		UpsertColumns: &[]int32{0, 1},
 	}}
 
@@ -40,7 +43,7 @@ func TestGetUpsertColumns(t *testing.T) {
 }
 
 func TestGetColumnNames(t *testing.T) {
-	flinkGatewayStatementTraits := StatementTraits{FlinkGatewayv1StatementTraits: &flinkgatewayv1.SqlV1StatementTraits{
+	flinkGatewayStatementTraits := StatementTraits{FlinkGatewayV1StatementTraits: &flinkgatewayv1.SqlV1StatementTraits{
 		Schema: &flinkgatewayv1.SqlV1ResultSchema{
 			Columns: &[]flinkgatewayv1.ColumnDetails{
 				{Name: "column1"},

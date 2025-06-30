@@ -31,7 +31,7 @@ const (
 type flinkShellTest struct {
 	commands   []string
 	goldenFile string
-	onprem     bool
+	isOnPrem   bool
 }
 
 func (s *CLITestSuite) TestFlinkArtifact() {
@@ -460,7 +460,7 @@ func (s *CLITestSuite) runFlinkShellTest(flinkShellTest flinkShellTest) {
 		dir, err := os.Getwd()
 		require.NoError(t, err)
 		cmd := exec.Command(filepath.Join(dir, testBin), "flink", "shell", "--compute-pool", "lfcp-123456")
-		if flinkShellTest.onprem {
+		if flinkShellTest.isOnPrem {
 			cmd.Args = append(cmd.Args, "--environment", "test")
 		}
 

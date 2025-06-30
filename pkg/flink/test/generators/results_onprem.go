@@ -38,7 +38,7 @@ func GetResultItemGeneratorForTypeOnPrem(dataType cmfsdk.DataType) *rapid.Genera
 	}
 }
 
-// ArrayResultItem generates a random ARRAY field
+// ArrayResultItemOnPrem generates a random ARRAY field
 func ArrayResultItemOnPrem(elementDataType cmfsdk.DataType) *rapid.Generator[any] {
 	return rapid.Custom(func(t *rapid.T) any {
 		var arrayItems []any
@@ -51,7 +51,7 @@ func ArrayResultItemOnPrem(elementDataType cmfsdk.DataType) *rapid.Generator[any
 	})
 }
 
-// MapResultItem generates a random MAP field
+// MapResultItemOnPrem generates a random MAP field
 func MapResultItemOnPrem(keyType, valueType cmfsdk.DataType) *rapid.Generator[any] {
 	return rapid.Custom(func(t *rapid.T) any {
 		var mapItems []any
@@ -67,7 +67,7 @@ func MapResultItemOnPrem(keyType, valueType cmfsdk.DataType) *rapid.Generator[an
 	})
 }
 
-// RowResultItem generates a random ROW field
+// RowResultItemOnPrem generates a random ROW field
 func RowResultItemOnPrem(fieldTypes []cmfsdk.DataTypeField) *rapid.Generator[any] {
 	return rapid.Custom(func(t *rapid.T) any {
 		var arrayItems []any
@@ -111,7 +111,7 @@ func getDataTypeGeneratorForTypeOnPrem(fieldType types.StatementResultFieldType,
 	}
 }
 
-// AtomicDataType generates a random atomic data type
+// AtomicDataTypeOnPrem generates a random atomic data type
 func AtomicDataTypeOnPrem() *rapid.Generator[cmfsdk.DataType] {
 	return rapid.Custom(func(t *rapid.T) cmfsdk.DataType {
 		resultFieldType := rapid.SampledFrom(AtomicResultFieldTypes).Draw(t, "atomic result field type")
@@ -124,7 +124,7 @@ func AtomicDataTypeOnPrem() *rapid.Generator[cmfsdk.DataType] {
 	})
 }
 
-// ArrayDataType generates a random array data type
+// ArrayDataTypeOnPrem generates a random array data type
 func ArrayDataTypeOnPrem(maxNestingDepth int) *rapid.Generator[cmfsdk.DataType] {
 	return rapid.Custom(func(t *rapid.T) cmfsdk.DataType {
 		resultFieldType := GenResultFieldType().Draw(t, resultFieldLabel)
@@ -137,7 +137,7 @@ func ArrayDataTypeOnPrem(maxNestingDepth int) *rapid.Generator[cmfsdk.DataType] 
 	})
 }
 
-// MapDataType generates a random map data type
+// MapDataTypeOnPrem generates a random map data type
 func MapDataTypeOnPrem(maxNestingDepth int) *rapid.Generator[cmfsdk.DataType] {
 	return rapid.Custom(func(t *rapid.T) cmfsdk.DataType {
 		resultFieldKeyType := GenResultFieldType().Draw(t, resultFieldLabel)
@@ -153,7 +153,7 @@ func MapDataTypeOnPrem(maxNestingDepth int) *rapid.Generator[cmfsdk.DataType] {
 	})
 }
 
-// MultisetDataType generates a random map data type
+// MultisetDataTypeOnPrem generates a random map data type
 func MultisetDataTypeOnPrem(maxNestingDepth int) *rapid.Generator[cmfsdk.DataType] {
 	return rapid.Custom(func(t *rapid.T) cmfsdk.DataType {
 		resultFieldType := GenResultFieldType().Draw(t, resultFieldLabel)
@@ -166,7 +166,7 @@ func MultisetDataTypeOnPrem(maxNestingDepth int) *rapid.Generator[cmfsdk.DataTyp
 	})
 }
 
-// RowDataType generates a random row data type
+// RowDataTypeOnPrem generates a random row data type
 func RowDataTypeOnPrem(maxNestingDepth int) *rapid.Generator[cmfsdk.DataType] {
 	return rapid.Custom(func(t *rapid.T) cmfsdk.DataType {
 		var fieldTypes []cmfsdk.DataTypeField

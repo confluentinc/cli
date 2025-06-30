@@ -10,6 +10,7 @@ import (
 	"pgregory.net/rapid"
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/flink/test/generators"
 	"github.com/confluentinc/cli/v4/pkg/flink/test/mock"
@@ -246,7 +247,19 @@ func (s *ResultFetcherTestSuite) TestReturnHeadersFromResultSchema_Cloud() {
 	mockStatement := getStatementWithResultsExample()
 	mockStatement.StatementResults.Headers = nil
 	columnDetails := generators.MockResultColumns(2, 1).Example()
-	mockStatement.Traits.FlinkGatewayv1StatementTraits = &flinkgatewayv1.SqlV1StatementTraits{Schema: &flinkgatewayv1.SqlV1ResultSchema{Columns: &columnDetails}}
+	mockStatement.Traits.FlinkGatewayV1StatementTraits = &flinkgatewayv1.SqlV1StatementTraits{Schema: &flinkgatewayv1.SqlV1ResultSchema{Columns: &columnDetails}}
+	headers := mockStatement.Traits.GetColumnNames()
+
+	s.resultFetcher.Init(mockStatement)
+
+	require.Equal(s.T(), headers, s.resultFetcher.materializedStatementResults.GetHeaders())
+}
+
+func (s *ResultFetcherTestSuite) TestReturnHeadersFromResultSchema_Onprem() {
+	mockStatement := getStatementWithResultsExample()
+	mockStatement.StatementResults.Headers = nil
+	columnDetails := generators.MockResultColumnsOnPrem(2, 1).Example()
+	mockStatement.Traits.CmfStatementTraits = &cmfsdk.StatementTraits{Schema: &cmfsdk.ResultSchema{Columns: columnDetails}}
 	headers := mockStatement.Traits.GetColumnNames()
 
 	s.resultFetcher.Init(mockStatement)

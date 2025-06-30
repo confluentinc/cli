@@ -6,13 +6,13 @@ import (
 )
 
 type StatementTraits struct {
-	FlinkGatewayv1StatementTraits *flinkgatewayv1.SqlV1StatementTraits
+	FlinkGatewayV1StatementTraits *flinkgatewayv1.SqlV1StatementTraits
 	CmfStatementTraits            *cmfsdk.StatementTraits
 }
 
 func (s *StatementTraits) GetSqlKind() string {
-	if s.FlinkGatewayv1StatementTraits != nil {
-		return s.FlinkGatewayv1StatementTraits.GetSqlKind()
+	if s.FlinkGatewayV1StatementTraits != nil {
+		return s.FlinkGatewayV1StatementTraits.GetSqlKind()
 	} else if s.CmfStatementTraits != nil {
 		return s.CmfStatementTraits.GetSqlKind()
 	}
@@ -20,8 +20,8 @@ func (s *StatementTraits) GetSqlKind() string {
 }
 
 func (s *StatementTraits) GetUpsertColumns() *[]int32 {
-	if s.FlinkGatewayv1StatementTraits != nil {
-		return s.FlinkGatewayv1StatementTraits.UpsertColumns
+	if s.FlinkGatewayV1StatementTraits != nil {
+		return s.FlinkGatewayV1StatementTraits.UpsertColumns
 	} else if s.CmfStatementTraits != nil {
 		return s.CmfStatementTraits.UpsertColumns
 	}
@@ -30,8 +30,8 @@ func (s *StatementTraits) GetUpsertColumns() *[]int32 {
 
 func (s *StatementTraits) GetColumnNames() []string {
 	var columnNames []string
-	if s.FlinkGatewayv1StatementTraits != nil {
-		columns := s.FlinkGatewayv1StatementTraits.Schema.GetColumns()
+	if s.FlinkGatewayV1StatementTraits != nil {
+		columns := s.FlinkGatewayV1StatementTraits.Schema.GetColumns()
 		columnNames = make([]string, len(columns))
 		for i, column := range columns {
 			columnNames[i] = column.GetName()

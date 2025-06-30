@@ -483,12 +483,12 @@ func (s *CLITestSuite) TestFlinkShellOnPrem() {
 	defer s.tearDownFlinkShellTests()
 
 	for _, test := range tests {
-		test.onprem = true
+		test.isOnPrem = true
 		s.runFlinkShellTest(test)
 	}
 	s.loginOnPrem(s.T())
 	for _, test := range tests {
-		test.onprem = true
+		test.isOnPrem = true
 		s.runFlinkShellTest(test)
 	}
 

@@ -234,7 +234,7 @@ func (s *ApplicationTestSuite) TestShouldUseTView() {
 			name: "select statement should always use TView",
 			statement: types.ProcessedStatement{
 				Traits: types.StatementTraits{
-					FlinkGatewayv1StatementTraits: &flinkgatewayv1.SqlV1StatementTraits{
+					FlinkGatewayV1StatementTraits: &flinkgatewayv1.SqlV1StatementTraits{
 						SqlKind: flinkgatewayv1.PtrString("SELECT"),
 					},
 				},

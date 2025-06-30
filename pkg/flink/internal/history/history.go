@@ -12,7 +12,7 @@ import (
 
 const (
 	filename       = "flink_statements_history.json"
-	filenameOnPrem = "flink_statements_history_on_prem.json"
+	filenameOnPrem = "flink_statements_history_onprem.json"
 )
 
 type History struct {
