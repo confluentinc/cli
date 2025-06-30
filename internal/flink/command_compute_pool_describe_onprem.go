@@ -70,7 +70,7 @@ func (c *command) computePoolDescribeOnPrem(cmd *cobra.Command, args []string) e
 		if err != nil {
 			return err
 		}
-		var outputLocalPool localComputePoolOnPrem
+		var outputLocalPool localComputePool
 		if err = json.Unmarshal(jsonBytes, &outputLocalPool); err != nil {
 			return err
 		}

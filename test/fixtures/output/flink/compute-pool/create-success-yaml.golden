@@ -1,9 +1,10 @@
 apiVersion: ""
 kind: ""
 metadata:
-    creationTimestamp: 2025-03-12 23:42:00 +0000 UTC
     name: test-pool
+    creationTimestamp: 2025-03-12 23:42:00 +0000 UTC
 spec:
+    type: DEDICATED
     clusterSpec:
         flinkConfiguration:
             taskmanager.numberOfTaskSlots: "1"
@@ -14,4 +15,3 @@ spec:
             resource:
                 cpu: 0.5
                 memory: 1024m
-    type: DEDICATED

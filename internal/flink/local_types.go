@@ -21,12 +21,12 @@ type localStatementMetadata struct {
 }
 
 type localStatementSpec struct {
-	Statement          string             `yaml:"statement" json:"statement"`
-	Properties         *map[string]string `yaml:"properties,omitempty" json:"properties,omitempty"`
-	FlinkConfiguration *map[string]string `yaml:"flinkConfiguration,omitempty" json:"flinkConfiguration,omitempty"`
-	ComputePoolName    string             `yaml:"computePoolName" json:"computePoolName"`
-	Parallelism        *int32             `yaml:"parallelism,omitempty" json:"parallelism,omitempty"`
-	Stopped            *bool              `yaml:"stopped,omitempty" json:"stopped,omitempty"`
+	Statement          string                  `yaml:"statement" json:"statement"`
+	Properties         *map[string]interface{} `yaml:"properties,omitempty" json:"properties,omitempty"`
+	FlinkConfiguration *map[string]interface{} `yaml:"flinkConfiguration,omitempty" json:"flinkConfiguration,omitempty"`
+	ComputePoolName    string                  `yaml:"computePoolName" json:"computePoolName"`
+	Parallelism        interface{}             `yaml:"parallelism,omitempty" json:"parallelism,omitempty"`
+	Stopped            *bool                   `yaml:"stopped,omitempty" json:"stopped,omitempty"`
 }
 
 type localStatementStatus struct {
@@ -111,14 +111,14 @@ type localKafkaCatalogSpec struct {
 }
 
 type localKafkaCatalogSpecSrInstance struct {
-	ConnectionConfig   map[string]string `yaml:"connectionConfig" json:"connectionConfig"`
-	ConnectionSecretId *string           `yaml:"connectionSecretId,omitempty" json:"connectionSecretId,omitempty"`
+	ConnectionConfig   map[string]interface{} `yaml:"connectionConfig" json:"connectionConfig"`
+	ConnectionSecretId *string                `yaml:"connectionSecretId,omitempty" json:"connectionSecretId,omitempty"`
 }
 
 type localKafkaCatalogSpecKafkaCluster struct {
-	DatabaseName       string            `yaml:"databaseName" json:"databaseName"`
-	ConnectionConfig   map[string]string `yaml:"connectionConfig" json:"connectionConfig"`
-	ConnectionSecretId *string           `yaml:"connectionSecretId,omitempty" json:"connectionSecretId,omitempty"`
+	DatabaseName       string                 `yaml:"databaseName" json:"databaseName"`
+	ConnectionConfig   map[string]interface{} `yaml:"connectionConfig" json:"connectionConfig"`
+	ConnectionSecretId *string                `yaml:"connectionSecretId,omitempty" json:"connectionSecretId,omitempty"`
 }
 
 // Local struct for ComputePool
@@ -140,10 +140,28 @@ type localComputePoolMetadata struct {
 }
 
 type localComputePoolSpec struct {
-	Environment string `yaml:"environment" json:"environment"`
-	Config      struct {
-		WorkerCount int32 `yaml:"workerCount" json:"workerCount"`
-	} `yaml:"config" json:"config"`
+	Type        string                       `yaml:"type" json:"type"`
+	ClusterSpec *localComputePoolClusterSpec `yaml:"clusterSpec,omitempty" json:"clusterSpec,omitempty"`
+}
+
+type localComputePoolClusterSpec struct {
+	FlinkConfiguration *map[string]interface{}      `yaml:"flinkConfiguration,omitempty" json:"flinkConfiguration,omitempty"`
+	Job                *localComputePoolJob         `yaml:"job,omitempty" json:"job,omitempty"`
+	ServiceAccount     string                       `yaml:"serviceAccount" json:"serviceAccount"`
+	TaskManager        *localComputePoolTaskManager `yaml:"taskManager,omitempty" json:"taskManager,omitempty"`
+}
+
+type localComputePoolJob struct {
+	Parallelism interface{} `yaml:"parallelism" json:"parallelism"`
+}
+
+type localComputePoolTaskManager struct {
+	Resource localComputePoolResource `yaml:"resource" json:"resource"`
+}
+
+type localComputePoolResource struct {
+	CPU    interface{} `yaml:"cpu" json:"cpu"`
+	Memory string      `yaml:"memory" json:"memory"`
 }
 
 // Local struct for FlinkApplication
@@ -165,8 +183,34 @@ type localFlinkApplicationMetadata struct {
 }
 
 type localFlinkApplicationSpec struct {
-	Image   string `yaml:"image" json:"image"`
-	Cluster string `yaml:"cluster" json:"cluster"`
+	FlinkConfiguration *map[string]interface{}           `yaml:"flinkConfiguration,omitempty" json:"flinkConfiguration,omitempty"`
+	FlinkEnvironment   string                            `yaml:"flinkEnvironment" json:"flinkEnvironment"`
+	FlinkVersion       string                            `yaml:"flinkVersion" json:"flinkVersion"`
+	Image              string                            `yaml:"image" json:"image"`
+	Job                *localFlinkApplicationJob         `yaml:"job,omitempty" json:"job,omitempty"`
+	JobManager         *localFlinkApplicationJobManager  `yaml:"jobManager,omitempty" json:"jobManager,omitempty"`
+	ServiceAccount     string                            `yaml:"serviceAccount" json:"serviceAccount"`
+	TaskManager        *localFlinkApplicationTaskManager `yaml:"taskManager,omitempty" json:"taskManager,omitempty"`
+}
+
+type localFlinkApplicationJob struct {
+	JarURI      string      `yaml:"jarURI" json:"jarURI"`
+	Parallelism interface{} `yaml:"parallelism" json:"parallelism"`
+	State       string      `yaml:"state" json:"state"`
+	UpgradeMode string      `yaml:"upgradeMode" json:"upgradeMode"`
+}
+
+type localFlinkApplicationJobManager struct {
+	Resource localFlinkApplicationResource `yaml:"resource" json:"resource"`
+}
+
+type localFlinkApplicationTaskManager struct {
+	Resource localFlinkApplicationResource `yaml:"resource" json:"resource"`
+}
+
+type localFlinkApplicationResource struct {
+	CPU    interface{} `yaml:"cpu" json:"cpu"`
+	Memory string      `yaml:"memory" json:"memory"`
 }
 
 // Summary output struct for Flink Application list

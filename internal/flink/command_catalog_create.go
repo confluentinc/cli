@@ -82,30 +82,13 @@ func (c *command) catalogCreate(cmd *cobra.Command, args []string) error {
 
 	if output.GetFormat(cmd) == output.YAML {
 		// Convert the outputCatalog to our local struct for correct YAML field names
-		// We need to manually map the fields to preserve all data including nil fields
+		jsonBytes, err := json.Marshal(outputCatalog)
+		if err != nil {
+			return err
+		}
 		var outputLocalCat localCatalog
-		outputLocalCat.ApiVersion = outputCatalog.GetApiVersion()
-		outputLocalCat.Kind = outputCatalog.GetKind()
-
-		// Map metadata
-		outputLocalCat.Metadata.Name = outputCatalog.Metadata.Name
-		outputLocalCat.Metadata.CreationTimestamp = outputCatalog.Metadata.CreationTimestamp
-		outputLocalCat.Metadata.Uid = outputCatalog.Metadata.Uid
-		outputLocalCat.Metadata.Labels = outputCatalog.Metadata.Labels
-		outputLocalCat.Metadata.Annotations = outputCatalog.Metadata.Annotations
-
-		// Map spec
-		outputLocalCat.Spec.SrInstance.ConnectionConfig = outputCatalog.Spec.SrInstance.ConnectionConfig
-		outputLocalCat.Spec.SrInstance.ConnectionSecretId = outputCatalog.Spec.SrInstance.ConnectionSecretId
-
-		// Map kafka clusters
-		outputLocalCat.Spec.KafkaClusters = make([]localKafkaCatalogSpecKafkaCluster, len(outputCatalog.Spec.KafkaClusters))
-		for i, cluster := range outputCatalog.Spec.KafkaClusters {
-			outputLocalCat.Spec.KafkaClusters[i] = localKafkaCatalogSpecKafkaCluster{
-				DatabaseName:       cluster.DatabaseName,
-				ConnectionConfig:   cluster.ConnectionConfig,
-				ConnectionSecretId: cluster.ConnectionSecretId,
-			}
+		if err = json.Unmarshal(jsonBytes, &outputLocalCat); err != nil {
+			return err
 		}
 		// Output the local struct for correct YAML field names
 		out, err := yaml.Marshal(outputLocalCat)

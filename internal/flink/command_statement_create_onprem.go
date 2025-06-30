@@ -189,85 +189,14 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 
 	if output.GetFormat(cmd) == output.YAML {
 		// Convert the outputStatement to our local struct for correct YAML field names
-		// We need to manually map the fields to preserve all data including nil fields
+		jsonBytes, err := json.Marshal(outputStatement)
+		if err != nil {
+			return err
+		}
 		var outputLocalStmt localStatement
-		outputLocalStmt.ApiVersion = outputStatement.ApiVersion
-		outputLocalStmt.Kind = outputStatement.Kind
-
-		// Map metadata
-		outputLocalStmt.Metadata.Name = outputStatement.Metadata.Name
-		outputLocalStmt.Metadata.CreationTimestamp = outputStatement.Metadata.CreationTimestamp
-		outputLocalStmt.Metadata.UpdateTimestamp = outputStatement.Metadata.UpdateTimestamp
-		outputLocalStmt.Metadata.Uid = outputStatement.Metadata.Uid
-		outputLocalStmt.Metadata.Labels = outputStatement.Metadata.Labels
-		outputLocalStmt.Metadata.Annotations = outputStatement.Metadata.Annotations
-
-		// Map spec
-		outputLocalStmt.Spec.Statement = outputStatement.Spec.Statement
-		outputLocalStmt.Spec.Properties = outputStatement.Spec.Properties
-		outputLocalStmt.Spec.FlinkConfiguration = outputStatement.Spec.FlinkConfiguration
-		outputLocalStmt.Spec.ComputePoolName = outputStatement.Spec.ComputePoolName
-		outputLocalStmt.Spec.Parallelism = outputStatement.Spec.Parallelism
-		outputLocalStmt.Spec.Stopped = outputStatement.Spec.Stopped
-
-		// Map status if present
-		if outputStatement.Status != nil {
-			outputLocalStmt.Status = &localStatementStatus{
-				Phase:  outputStatement.Status.Phase,
-				Detail: outputStatement.Status.Detail,
-			}
-
-			// Map traits if present
-			if outputStatement.Status.Traits != nil {
-				outputLocalStmt.Status.Traits = &localStatementTraits{
-					SqlKind:       outputStatement.Status.Traits.SqlKind,
-					IsBounded:     outputStatement.Status.Traits.IsBounded,
-					IsAppendOnly:  outputStatement.Status.Traits.IsAppendOnly,
-					UpsertColumns: outputStatement.Status.Traits.UpsertColumns,
-				}
-
-				// Map schema if present
-				if outputStatement.Status.Traits.Schema != nil {
-					outputLocalStmt.Status.Traits.Schema = &localResultSchema{
-						Columns: make([]localResultSchemaColumn, len(outputStatement.Status.Traits.Schema.Columns)),
-					}
-					for i, col := range outputStatement.Status.Traits.Schema.Columns {
-						outputLocalStmt.Status.Traits.Schema.Columns[i] = localResultSchemaColumn{
-							Name: col.Name,
-							Type: localDataType{
-								Type:                col.Type.Type,
-								Nullable:            col.Type.Nullable,
-								Length:              col.Type.Length,
-								Precision:           col.Type.Precision,
-								Scale:               col.Type.Scale,
-								KeyType:             nil, // Would need recursive mapping for complex types
-								ValueType:           nil, // Would need recursive mapping for complex types
-								ElementType:         nil, // Would need recursive mapping for complex types
-								Fields:              nil, // Would need recursive mapping for complex types
-								Resolution:          col.Type.Resolution,
-								FractionalPrecision: col.Type.FractionalPrecision,
-							},
-						}
-					}
-				}
-			}
+		if err = json.Unmarshal(jsonBytes, &outputLocalStmt); err != nil {
+			return err
 		}
-
-		// Map result if present
-		if outputStatement.Result != nil {
-			outputLocalStmt.Result = &localStatementResult{
-				ApiVersion: outputStatement.Result.ApiVersion,
-				Kind:       outputStatement.Result.Kind,
-				Metadata: localStatementResultMetadata{
-					CreationTimestamp: outputStatement.Result.Metadata.CreationTimestamp,
-					Annotations:       outputStatement.Result.Metadata.Annotations,
-				},
-				Results: localStatementResults{
-					Data: outputStatement.Result.Results.Data,
-				},
-			}
-		}
-
 		// Output the local struct for correct YAML field names
 		out, err := yaml.Marshal(outputLocalStmt)
 		if err != nil {

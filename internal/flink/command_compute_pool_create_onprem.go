@@ -93,7 +93,7 @@ func (c *command) computePoolCreateOnPrem(cmd *cobra.Command, args []string) err
 		if err != nil {
 			return err
 		}
-		var outputLocalPool localComputePoolOnPrem
+		var outputLocalPool localComputePool
 		if err = json.Unmarshal(jsonBytes, &outputLocalPool); err != nil {
 			return err
 		}
