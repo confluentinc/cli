@@ -8,6 +8,7 @@ Available Commands:
   catalog           Manage Flink catalogs in Confluent Platform.
   compute-pool      Manage Flink compute pools.
   environment       Manage Flink environments.
+  shell             Start Flink interactive SQL client.
   statement         Manage Flink SQL statements.
 
 Global Flags:
