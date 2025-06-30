@@ -1,16 +1,13 @@
 package test
 
 import (
-	"fmt"
 	"os"
-	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/go-prompt"
 
 	"github.com/confluentinc/cli/v4/pkg/auth"
-	pauth "github.com/confluentinc/cli/v4/pkg/auth"
 )
 
 // Runs the integration test with login = "" and login = "onprem"
@@ -495,13 +492,13 @@ func (s *CLITestSuite) TestFlinkShellOnPrem() {
 	resetConfiguration(s.T(), false)
 }
 
-func (s *CLITestSuite) loginOnPrem(t *testing.T) {
+/*func (s *CLITestSuite) loginOnPrem(t *testing.T) {
 	loginString := fmt.Sprintf("login --url %s", s.TestBackend.GetMdsUrl())
 	env := []string{pauth.ConfluentPlatformUsername + "=fake@user.com", pauth.ConfluentPlatformPassword + "=pass1"}
 	if output := runCommand(t, testBin, env, loginString, 0, ""); *debug {
 		fmt.Println(output)
 	}
-}
+}*/
 
 func (s *CLITestSuite) setupFlinkShellTestsOnPrem() {
 	// Set the go-prompt file input env var, so go-prompt uses this file as the input stream
