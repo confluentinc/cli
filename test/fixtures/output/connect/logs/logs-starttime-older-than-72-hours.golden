@@ -1,0 +1,1 @@
+Error: start-time cannot be older than 72 hours as API can only return logs for the last 3 days
