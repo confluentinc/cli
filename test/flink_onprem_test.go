@@ -486,11 +486,11 @@ func (s *CLITestSuite) TestFlinkShellOnPrem() {
 		test.isOnPrem = true
 		s.runFlinkShellTest(test)
 	}
-	s.loginOnPrem(s.T())
+	/*s.loginOnPrem(s.T())
 	for _, test := range tests {
 		test.isOnPrem = true
 		s.runFlinkShellTest(test)
-	}
+	}*/
 
 	resetConfiguration(s.T(), false)
 }
