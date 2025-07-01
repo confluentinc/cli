@@ -202,8 +202,8 @@ func (c *versionCommand) list(cmd *cobra.Command, args []string) error {
 	}
 
 	// Display results in table format
-	table := output.NewTable(cmd)
-	for _, version := range versions.GetData() {
+	table := output.NewList(cmd)
+	for _, version := range versions {
 		spec, _ := version.GetSpecOk()
 		table.Add(&versionOut{
 			Id:                version.GetId(),

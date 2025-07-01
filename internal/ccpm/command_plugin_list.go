@@ -3,16 +3,9 @@ package ccpm
 import (
 	"github.com/spf13/cobra"
 
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
-
-type pluginOut struct {
-	Id          string `human:"ID" serialized:"id"`
-	Name        string `human:"Name" serialized:"name"`
-	Description string `human:"Description" serialized:"description"`
-	Cloud       string `human:"Cloud" serialized:"cloud"`
-	Language    string `human:"Runtime Language" serialized:"runtime_language"`
-}
 
 func (c *pluginCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -24,8 +17,8 @@ func (c *pluginCommand) newListCommand() *cobra.Command {
 
 	cmd.Flags().String("cloud", "", "Filter by cloud provider (AWS, GCP, AZURE).")
 	cmd.Flags().String("environment", "", "Environment ID.")
-	cmd.MarkFlagRequired("environment")
-
+	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
+	pcmd.AddOutputFlag(cmd)
 	return cmd
 }
 
@@ -34,30 +27,25 @@ func (c *pluginCommand) list(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
 	environment, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err
 	}
-
-	// Use V2Client to call CCPM API
-	pluginList, err := c.V2Client.ListCCPMPlugins(cloud, environment)
+	plugins, err := c.V2Client.ListCCPMPlugins(cloud, environment)
 	if err != nil {
 		return err
 	}
-
-	// Display results in table format
-	table := output.NewTable(cmd)
-	for _, plugin := range pluginList.GetData() {
-		spec, _ := plugin.GetSpecOk()
-		table.Add(&pluginOut{
-			Id:          plugin.GetId(),
-			Name:        spec.GetDisplayName(),
-			Description: spec.GetDescription(),
-			Cloud:       spec.GetCloud(),
-			Language:    spec.GetRuntimeLanguage(),
+	list := output.NewList(cmd)
+	for _, plugin := range plugins {
+		list.Add(&pluginOut{
+			Id:              *plugin.Id,
+			Name:            *plugin.Spec.DisplayName,
+			Description:     *plugin.Spec.Description,
+			Cloud:           *plugin.Spec.Cloud,
+			RuntimeLanguage: *plugin.Spec.RuntimeLanguage,
+			Environment:     plugin.Spec.Environment.Id,
 		})
 	}
-
-	return table.Print()
+	list.Sort(true)
+	return list.Print()
 }

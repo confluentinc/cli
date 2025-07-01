@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
-	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c *pluginCommand) newUpdateCommand() *cobra.Command {
@@ -17,6 +16,8 @@ func (c *pluginCommand) newUpdateCommand() *cobra.Command {
 
 	cmd.Flags().String("name", "", "Display name of the Custom Connect Plugin.")
 	cmd.Flags().String("description", "", "Description of the Custom Connect Plugin.")
+	cmd.Flags().String("environment", "", "Environment ID.")
+	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
 
 	return cmd
 }
@@ -24,35 +25,39 @@ func (c *pluginCommand) newUpdateCommand() *cobra.Command {
 func (c *pluginCommand) update(cmd *cobra.Command, args []string) error {
 	pluginId := args[0]
 
-	name, err := cmd.Flags().GetString("name")
-	if err != nil {
-		return err
-	}
-
-	description, err := cmd.Flags().GetString("description")
-	if err != nil {
-		return err
-	}
-
 	// Create update request
-	update := ccpmv1.CcpmV1CustomConnectPluginUpdate{
+	updateCustomPluginRequest := ccpmv1.CcpmV1CustomConnectPluginUpdate{
 		Spec: &ccpmv1.CcpmV1CustomConnectPluginSpecUpdate{},
 	}
 
-	if name != "" {
-		update.Spec.DisplayName = &name
+	if cmd.Flags().Changed("name") {
+		if name, err := cmd.Flags().GetString("name"); err != nil {
+			return err
+		} else {
+			updateCustomPluginRequest.Spec.SetDisplayName(name)
+		}
 	}
-	if description != "" {
-		update.Spec.Description = &description
+	if cmd.Flags().Changed("description") {
+		if description, err := cmd.Flags().GetString("description"); err != nil {
+			return err
+		} else {
+			updateCustomPluginRequest.Spec.SetDescription(description)
+		}
 	}
 
-	// Use V2Client to call CCPM API
-	plugin, err := c.V2Client.UpdateCCPMPlugin(pluginId, update)
+	// Get environment ID
+	environment, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err
 	}
+	updateCustomPluginRequest.Spec.Environment = &ccpmv1.EnvScopedObjectReference{
+		Id: environment,
+	}
 
-	output.Printf(c.Config.EnableColor, "Updated Custom Connect Plugin \"%s\".\n", plugin.GetId())
-
-	return nil
+	// Use V2Client to call CCPM API
+	plugin, err := c.V2Client.UpdateCCPMPlugin(pluginId, updateCustomPluginRequest)
+	if err != nil {
+		return err
+	}
+	return printCustomConnectPluginTable(cmd, plugin)
 }

@@ -1,9 +1,10 @@
 package ccpm
 
 import (
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/deletion"
+	"github.com/confluentinc/cli/v4/pkg/resource"
 	"github.com/spf13/cobra"
-
-	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c *pluginCommand) newDeleteCommand() *cobra.Command {
@@ -15,26 +16,51 @@ func (c *pluginCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("environment", "", "Environment ID.")
-	cmd.MarkFlagRequired("environment")
+	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
+	pcmd.AddForceFlag(cmd)
 
 	return cmd
 }
 
 func (c *pluginCommand) delete(cmd *cobra.Command, args []string) error {
-	pluginId := args[0]
 
 	environment, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err
 	}
+	cloud := ""
 
-	// Use V2Client to call CCPM API
-	err = c.V2Client.DeleteCCPMPlugin(pluginId, environment)
-	if err != nil {
+	existenceFunc := func(id string) bool {
+		customConnectPluginIdToName, err := c.mapCustomConnectPluginIdToName(cloud, environment)
+		if err != nil {
+			return false
+		}
+		_, ok := customConnectPluginIdToName[id]
+		return ok
+	}
+
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.CCPMCustomConnectorPlugin); err != nil {
 		return err
 	}
 
-	output.Printf(c.Config.EnableColor, "Deleted Custom Connect Plugin \"%s\".\n", pluginId)
+	deleteFunc := func(id string) error {
+		// Use V2Client to call CCPM API
+		return c.V2Client.DeleteCCPMPlugin(id, environment)
+	}
 
-	return nil
+	_, err = deletion.Delete(args, deleteFunc, resource.CCPMCustomConnectorPlugin)
+	return err
+}
+
+func (c *pluginCommand) mapCustomConnectPluginIdToName(cloud, environment string) (map[string]string, error) {
+	plugins, err := c.V2Client.ListCCPMPlugins(cloud, environment)
+	if err != nil {
+		return nil, err
+	}
+
+	customConnectPluginIdToName := make(map[string]string, len(plugins))
+	for _, plugin := range plugins {
+		customConnectPluginIdToName[*plugin.Id] = *plugin.Spec.DisplayName
+	}
+	return customConnectPluginIdToName, nil
 }

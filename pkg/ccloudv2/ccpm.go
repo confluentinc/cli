@@ -28,36 +28,22 @@ func (c *Client) CreateCCPMPlugin(request ccpmv1.CcpmV1CustomConnectPlugin) (ccp
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListCCPMPlugins(cloud, environment string) (ccpmv1.CcpmV1CustomConnectPluginList, error) {
+func (c *Client) ListCCPMPlugins(cloud, environment string) ([]ccpmv1.CcpmV1CustomConnectPlugin, error) {
 	var allPlugins []ccpmv1.CcpmV1CustomConnectPlugin
-	var firstPage ccpmv1.CcpmV1CustomConnectPluginList
-
-	done := false
 	pageToken := ""
+	done := false
 	for !done {
 		page, httpResp, err := c.executeListCCPMPlugins(pageToken, cloud, environment)
 		if err != nil {
-			return ccpmv1.CcpmV1CustomConnectPluginList{}, errors.CatchCCloudV2Error(err, httpResp)
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
-
-		// Store the first page metadata for the final response
-		if pageToken == "" {
-			firstPage = page
-		}
-
 		allPlugins = append(allPlugins, page.GetData()...)
-
 		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
-			return ccpmv1.CcpmV1CustomConnectPluginList{}, err
+			return nil, err
 		}
 	}
-
-	// Create a combined response with all plugins
-	combinedResponse := firstPage
-	combinedResponse.SetData(allPlugins)
-
-	return combinedResponse, nil
+	return allPlugins, nil
 }
 
 func (c *Client) DescribeCCPMPlugin(id, environment string) (ccpmv1.CcpmV1CustomConnectPlugin, error) {
@@ -104,12 +90,31 @@ func (c *Client) DescribeCCPMPluginVersion(pluginId, versionId, environment stri
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListCCPMPluginVersions(pluginId, environment string) (ccpmv1.CcpmV1CustomConnectPluginVersionList, error) {
-	resp, httpResp, err := c.CCPMClient.CustomConnectPluginVersionsCcpmV1Api.ListCcpmV1CustomConnectPluginVersions(c.ccpmApiContext(), pluginId).Environment(environment).Execute()
-	return resp, errors.CatchCCloudV2Error(err, httpResp)
+func (c *Client) ListCCPMPluginVersions(pluginId, environment string) ([]ccpmv1.CcpmV1CustomConnectPluginVersion, error) {
+	var allVersions []ccpmv1.CcpmV1CustomConnectPluginVersion
+	pageToken := ""
+	done := false
+	for !done {
+		page, httpResp, err := c.executeListCCPMPluginVersions(pluginId, environment, pageToken)
+		if err != nil {
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
+		}
+		allVersions = append(allVersions, page.GetData()...)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return allVersions, nil
 }
 
 func (c *Client) DeleteCCPMPluginVersion(pluginId, versionId, environment string) error {
 	httpResp, err := c.CCPMClient.CustomConnectPluginVersionsCcpmV1Api.DeleteCcpmV1CustomConnectPluginVersion(c.ccpmApiContext(), pluginId, versionId).Environment(environment).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) executeListCCPMPluginVersions(pluginId, environment, pageToken string) (ccpmv1.CcpmV1CustomConnectPluginVersionList, *http.Response, error) {
+	req := c.CCPMClient.CustomConnectPluginVersionsCcpmV1Api.ListCcpmV1CustomConnectPluginVersions(c.ccpmApiContext(), pluginId).Environment(environment)
+	// No PageToken method for this endpoint in the SDK
+	return req.Execute()
 }

@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
-	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c *pluginCommand) newCreateCommand() *cobra.Command {
@@ -19,9 +18,9 @@ func (c *pluginCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("description", "", "Description of the Custom Connect Plugin.")
 	cmd.Flags().String("cloud", "", "Cloud provider (AWS, GCP, AZURE).")
 	cmd.Flags().String("environment", "", "Environment ID.")
-	cmd.MarkFlagRequired("name")
-	cmd.MarkFlagRequired("cloud")
-	cmd.MarkFlagRequired("environment")
+	cobra.CheckErr(cmd.MarkFlagRequired("name"))
+	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
+	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
 
 	return cmd
 }
@@ -62,9 +61,5 @@ func (c *pluginCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
-	spec, _ := plugin.GetSpecOk()
-	output.Printf(c.Config.EnableColor, "Created Custom Connect Plugin \"%s\" with ID \"%s\".\n", spec.GetDisplayName(), plugin.GetId())
-
-	return nil
+	return printCustomConnectPluginTable(cmd, plugin)
 }
