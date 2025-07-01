@@ -21,6 +21,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.2
 	github.com/confluentinc/ccloud-sdk-go-v2/cam v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/ccl v0.4.0
+	github.com/confluentinc/ccloud-sdk-go-v2/ccpm v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5
 	github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority v0.0.2
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.3.0
@@ -162,7 +163,6 @@ require (
 	github.com/charmbracelet/x/term v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.1.0 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
-	github.com/confluentinc/ccloud-sdk-go-v2/ccpm v0.0.1 // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.5 // indirect
 	github.com/distribution/reference v0.6.0 // indirect

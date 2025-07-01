@@ -25,7 +25,9 @@ func newVersionCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Manage Custom Connect Plugin Versions.",
 	}
 
-	c := &versionCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	c := &versionCommand{
+		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner),
+	}
 
 	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDescribeCommand())

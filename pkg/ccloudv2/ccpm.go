@@ -12,7 +12,7 @@ func newCCPMClient(httpClient *http.Client, url, userAgent string, unsafeTrace b
 	cfg := ccpmv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
 	cfg.HTTPClient = httpClient
-	cfg.Servers = ccpmv1.ServerConfigurations{{URL: url}}
+	cfg.Servers = ccpmv1.ServerConfigurations{ccpmv1.ServerConfiguration{URL: url}}
 	cfg.UserAgent = userAgent
 
 	return ccpmv1.NewAPIClient(cfg)

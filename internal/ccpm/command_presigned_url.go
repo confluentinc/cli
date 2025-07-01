@@ -18,7 +18,9 @@ func newPresignedUrlCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Manage presigned URLs for Custom Connect Plugin uploads.",
 	}
 
-	c := &presignedUrlCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	c := &presignedUrlCommand{
+		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner),
+	}
 
 	cmd.AddCommand(c.newCreateCommand())
 
