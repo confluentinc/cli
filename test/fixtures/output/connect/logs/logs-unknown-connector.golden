@@ -1,1 +1,1 @@
-Error: failed to get connector name: unknown connector ID "lcc-110"
+Error: Connector not found: unknown connector ID "lcc-110"

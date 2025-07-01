@@ -46,7 +46,7 @@ func newLogsCommand(prerunner pcmd.PreRunner) *cobra.Command {
 				Code: `confluent connect logs lcc-123456 --level "ERROR|WARN" --start-time "2025-02-01T00:00:00Z" --end-time "2025-02-01T23:59:59Z"`,
 			},
 			examples.Example{
-				Text: "Query subsequent pages of connector logs for the same query by executing the command with next flag until \"No more logs for the current query\" is printed to the console:",
+				Text: "Query subsequent pages of connector logs for the same query by executing the command with next flag until \"No logs found for the current query\" is printed to the console:",
 				Code: `confluent connect logs lcc-123456 --level ERROR --start-time "2025-02-01T00:00:00Z" --end-time "2025-02-01T23:59:59Z" --next`,
 			},
 			examples.Example{
@@ -138,7 +138,7 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 	now := time.Now()
 	maxAge := 72 * time.Hour
 	if startTimeParsed.Before(now.Add(-maxAge)) {
-		return fmt.Errorf("start-time cannot be older than 72 hours as API can only return logs for the last 3 days")
+		return fmt.Errorf("start-time cannot be older than 72 hours")
 	}
 
 	currentLogQuery := &config.ConnectLogsQueryState{
@@ -152,18 +152,18 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 
 	kafkaCluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
-		return fmt.Errorf("failed to get Kafka cluster information: %w\nPlease ensure you have set a cluster context with 'confluent kafka cluster use <cluster-id>' or specify --cluster flag", err)
+		return fmt.Errorf("Kafka cluster information not found: %w\nPlease ensure you have set a cluster context with 'confluent kafka cluster use <cluster-id>' or specify --cluster flag", err)
 	}
 	kafkaClusterId := kafkaCluster.GetId()
 
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
-		return fmt.Errorf("failed to get environment ID: %w\nPlease ensure you have set an environment context with 'confluent environment use <env-id>' or specify --environment flag", err)
+		return fmt.Errorf("Environment ID not found: %w\nPlease ensure you have set an environment context with 'confluent environment use <env-id>' or specify --environment flag", err)
 	}
 
 	connectorName, err := c.getConnectorName(connectorId, environmentId, kafkaClusterId)
 	if connectorName == "" {
-		return fmt.Errorf("failed to get connector name: %w", err)
+		return fmt.Errorf("Connector not found: %w", err)
 	}
 
 	lastQueryPageToken, err := c.getPageTokenFromStoredQuery(next, currentLogQuery)
@@ -210,8 +210,8 @@ func (c *logsCommand) getPageTokenFromStoredQuery(next bool, currentLogQuery *co
 			lastLogQuery.ConnectorId == currentLogQuery.ConnectorId) {
 			lastQueryPageToken = lastLogQuery.PageToken
 			if lastQueryPageToken == "" {
-				output.Printf(false, "No more logs for the current query\n")
-				return "", fmt.Errorf("no more logs for the current query")
+				output.Printf(false, "No logs found for the current query\n")
+				return "", fmt.Errorf("No logs found for the current query")
 			}
 		} else {
 			lastQueryPageToken = ""
@@ -324,7 +324,7 @@ func printHumanLogs(cmd *cobra.Command, logs *ccloudv2.LoggingSearchResponse, co
 	}
 
 	if len(logs.Data) == 0 {
-		output.Println(false, "No more logs for the current query")
+		output.Println(false, "No logs found for the current query")
 		return nil
 	}
 
