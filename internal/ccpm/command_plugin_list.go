@@ -24,6 +24,7 @@ func (c *pluginCommand) newListCommand() *cobra.Command {
 
 	cmd.Flags().String("cloud", "", "Filter by cloud provider (AWS, GCP, AZURE).")
 	cmd.Flags().String("environment", "", "Environment ID.")
+	cmd.MarkFlagRequired("environment")
 
 	return cmd
 }
@@ -40,14 +41,14 @@ func (c *pluginCommand) list(cmd *cobra.Command, args []string) error {
 	}
 
 	// Use V2Client to call CCPM API
-	plugins, err := c.V2Client.ListCCPMPlugins(cloud, environment)
+	pluginList, err := c.V2Client.ListCCPMPlugins(cloud, environment)
 	if err != nil {
 		return err
 	}
 
 	// Display results in table format
 	table := output.NewTable(cmd)
-	for _, plugin := range plugins {
+	for _, plugin := range pluginList.GetData() {
 		spec, _ := plugin.GetSpecOk()
 		table.Add(&pluginOut{
 			Id:          plugin.GetId(),

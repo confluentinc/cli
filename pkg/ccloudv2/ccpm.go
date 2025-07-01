@@ -28,33 +28,45 @@ func (c *Client) CreateCCPMPlugin(request ccpmv1.CcpmV1CustomConnectPlugin) (ccp
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListCCPMPlugins(cloud, environment string) ([]ccpmv1.CcpmV1CustomConnectPlugin, error) {
-	var list []ccpmv1.CcpmV1CustomConnectPlugin
+func (c *Client) ListCCPMPlugins(cloud, environment string) (ccpmv1.CcpmV1CustomConnectPluginList, error) {
+	var allPlugins []ccpmv1.CcpmV1CustomConnectPlugin
+	var firstPage ccpmv1.CcpmV1CustomConnectPluginList
 
 	done := false
 	pageToken := ""
 	for !done {
 		page, httpResp, err := c.executeListCCPMPlugins(pageToken, cloud, environment)
 		if err != nil {
-			return nil, errors.CatchCCloudV2Error(err, httpResp)
+			return ccpmv1.CcpmV1CustomConnectPluginList{}, errors.CatchCCloudV2Error(err, httpResp)
 		}
-		list = append(list, page.GetData()...)
+
+		// Store the first page metadata for the final response
+		if pageToken == "" {
+			firstPage = page
+		}
+
+		allPlugins = append(allPlugins, page.GetData()...)
 
 		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
-			return nil, err
+			return ccpmv1.CcpmV1CustomConnectPluginList{}, err
 		}
 	}
-	return list, nil
+
+	// Create a combined response with all plugins
+	combinedResponse := firstPage
+	combinedResponse.SetData(allPlugins)
+
+	return combinedResponse, nil
 }
 
-func (c *Client) DescribeCCPMPlugin(id string) (ccpmv1.CcpmV1CustomConnectPlugin, error) {
-	resp, httpResp, err := c.CCPMClient.CustomConnectPluginsCcpmV1Api.GetCcpmV1CustomConnectPlugin(c.ccpmApiContext(), id).Execute()
+func (c *Client) DescribeCCPMPlugin(id, environment string) (ccpmv1.CcpmV1CustomConnectPlugin, error) {
+	resp, httpResp, err := c.CCPMClient.CustomConnectPluginsCcpmV1Api.GetCcpmV1CustomConnectPlugin(c.ccpmApiContext(), id).Environment(environment).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DeleteCCPMPlugin(id string) error {
-	httpResp, err := c.CCPMClient.CustomConnectPluginsCcpmV1Api.DeleteCcpmV1CustomConnectPlugin(c.ccpmApiContext(), id).Execute()
+func (c *Client) DeleteCCPMPlugin(id, environment string) error {
+	httpResp, err := c.CCPMClient.CustomConnectPluginsCcpmV1Api.DeleteCcpmV1CustomConnectPlugin(c.ccpmApiContext(), id).Environment(environment).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
@@ -87,17 +99,17 @@ func (c *Client) CreateCCPMPluginVersion(pluginId string, request ccpmv1.CcpmV1C
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DescribeCCPMPluginVersion(pluginId, versionId string) (ccpmv1.CcpmV1CustomConnectPluginVersion, error) {
-	resp, httpResp, err := c.CCPMClient.CustomConnectPluginVersionsCcpmV1Api.GetCcpmV1CustomConnectPluginVersion(c.ccpmApiContext(), pluginId, versionId).Execute()
+func (c *Client) DescribeCCPMPluginVersion(pluginId, versionId, environment string) (ccpmv1.CcpmV1CustomConnectPluginVersion, error) {
+	resp, httpResp, err := c.CCPMClient.CustomConnectPluginVersionsCcpmV1Api.GetCcpmV1CustomConnectPluginVersion(c.ccpmApiContext(), pluginId, versionId).Environment(environment).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListCCPMPluginVersions(pluginId string) (ccpmv1.CcpmV1CustomConnectPluginVersionList, error) {
-	resp, httpResp, err := c.CCPMClient.CustomConnectPluginVersionsCcpmV1Api.ListCcpmV1CustomConnectPluginVersions(c.ccpmApiContext(), pluginId).Execute()
+func (c *Client) ListCCPMPluginVersions(pluginId, environment string) (ccpmv1.CcpmV1CustomConnectPluginVersionList, error) {
+	resp, httpResp, err := c.CCPMClient.CustomConnectPluginVersionsCcpmV1Api.ListCcpmV1CustomConnectPluginVersions(c.ccpmApiContext(), pluginId).Environment(environment).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DeleteCCPMPluginVersion(pluginId, versionId string) error {
-	httpResp, err := c.CCPMClient.CustomConnectPluginVersionsCcpmV1Api.DeleteCcpmV1CustomConnectPluginVersion(c.ccpmApiContext(), pluginId, versionId).Execute()
+func (c *Client) DeleteCCPMPluginVersion(pluginId, versionId, environment string) error {
+	httpResp, err := c.CCPMClient.CustomConnectPluginVersionsCcpmV1Api.DeleteCcpmV1CustomConnectPluginVersion(c.ccpmApiContext(), pluginId, versionId).Environment(environment).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }

@@ -14,14 +14,22 @@ func (c *pluginCommand) newDeleteCommand() *cobra.Command {
 		RunE:  c.delete,
 	}
 
+	cmd.Flags().String("environment", "", "Environment ID.")
+	cmd.MarkFlagRequired("environment")
+
 	return cmd
 }
 
 func (c *pluginCommand) delete(cmd *cobra.Command, args []string) error {
 	pluginId := args[0]
 
+	environment, err := cmd.Flags().GetString("environment")
+	if err != nil {
+		return err
+	}
+
 	// Use V2Client to call CCPM API
-	err := c.V2Client.DeleteCCPMPlugin(pluginId)
+	err = c.V2Client.DeleteCCPMPlugin(pluginId, environment)
 	if err != nil {
 		return err
 	}

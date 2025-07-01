@@ -108,6 +108,9 @@ func (c *versionCommand) newDescribeCommand() *cobra.Command {
 		RunE:  c.describe,
 	}
 
+	cmd.Flags().String("environment", "", "Environment ID.")
+	cmd.MarkFlagRequired("environment")
+
 	return cmd
 }
 
@@ -115,8 +118,13 @@ func (c *versionCommand) describe(cmd *cobra.Command, args []string) error {
 	pluginId := args[0]
 	versionId := args[1]
 
+	environment, err := cmd.Flags().GetString("environment")
+	if err != nil {
+		return err
+	}
+
 	// Use V2Client to call CCPM API
-	version, err := c.V2Client.DescribeCCPMPluginVersion(pluginId, versionId)
+	version, err := c.V2Client.DescribeCCPMPluginVersion(pluginId, versionId, environment)
 	if err != nil {
 		return err
 	}
@@ -139,6 +147,9 @@ func (c *versionCommand) newDeleteCommand() *cobra.Command {
 		RunE:  c.delete,
 	}
 
+	cmd.Flags().String("environment", "", "Environment ID.")
+	cmd.MarkFlagRequired("environment")
+
 	return cmd
 }
 
@@ -146,8 +157,13 @@ func (c *versionCommand) delete(cmd *cobra.Command, args []string) error {
 	pluginId := args[0]
 	versionId := args[1]
 
+	environment, err := cmd.Flags().GetString("environment")
+	if err != nil {
+		return err
+	}
+
 	// Use V2Client to call CCPM API
-	err := c.V2Client.DeleteCCPMPluginVersion(pluginId, versionId)
+	err = c.V2Client.DeleteCCPMPluginVersion(pluginId, versionId, environment)
 	if err != nil {
 		return err
 	}
@@ -165,14 +181,22 @@ func (c *versionCommand) newListCommand() *cobra.Command {
 		RunE:  c.list,
 	}
 
+	cmd.Flags().String("environment", "", "Environment ID.")
+	cmd.MarkFlagRequired("environment")
+
 	return cmd
 }
 
 func (c *versionCommand) list(cmd *cobra.Command, args []string) error {
 	pluginId := args[0]
 
+	environment, err := cmd.Flags().GetString("environment")
+	if err != nil {
+		return err
+	}
+
 	// Use V2Client to call CCPM API
-	versions, err := c.V2Client.ListCCPMPluginVersions(pluginId)
+	versions, err := c.V2Client.ListCCPMPluginVersions(pluginId, environment)
 	if err != nil {
 		return err
 	}
