@@ -34,6 +34,7 @@ func newPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newListCommand())
 	cmd.AddCommand(c.newUpdateCommand())
+	cmd.AddCommand(c.newVersionCommand())
 
 	return cmd
 }

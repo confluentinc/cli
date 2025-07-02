@@ -19,18 +19,14 @@ type versionOut struct {
 	DocumentationLink         string   `human:"Documentation Link" serialized:"documentation_link"`
 	SensitiveConfigProperties []string `human:"Sensitive Config Properties" serialized:"sensitive_config_properties"`
 	Phase                     string   `human:"Phase" serialized:"phase"`
-	ErrorMessage              string   `human:"Error Message" serialized:"error_message"`
+	ErrorMessage              string   `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
 	Environment               string   `human:"Environment" serialized:"environment"`
 }
 
-func newVersionCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *pluginCommand) newVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",
 		Short: "Manage Custom Connect Plugin Versions.",
-	}
-
-	c := &versionCommand{
-		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner),
 	}
 
 	cmd.AddCommand(c.newCreateCommand())
