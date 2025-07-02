@@ -63,8 +63,8 @@ func newLogsCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &logsCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	cmd.RunE = c.queryLogs
-	cmd.Flags().String("start-time", "", "Start time for log query in RFC3339 format with UTC timezone (e.g., 2025-02-01T00:00:00Z).")
-	cmd.Flags().String("end-time", "", "End time for log query in RFC3339 format with UTC timezone (e.g., 2025-02-01T23:59:59Z).")
+	cmd.Flags().String("start-time", "", "Start time for log query in ISO 8601 (https://en.wikipedia.org/wiki/ISO_8601) UTC datetime format (e.g., 2025-02-01T00:00:00Z).")
+	cmd.Flags().String("end-time", "", "End time for log query in ISO 8601 (https://en.wikipedia.org/wiki/ISO_8601) UTC datetime format (e.g., 2025-02-01T23:59:59Z).")
 	cmd.Flags().String("level", "ERROR", "Log level filter (INFO, WARN, ERROR). Defaults to ERROR. Use '|' to specify multiple levels (e.g., ERROR|WARN).")
 	cmd.Flags().String("search-text", "", "Search text within logs.")
 	cmd.Flags().String("output-file", "", "Output file path to append connector logs.")
