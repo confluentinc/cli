@@ -209,6 +209,7 @@ var vocabWords = []string{
 	"bedrock",
 	"byok",
 	"byos",
+	"ccpm",
 	"cel",
 	"cfu",
 	"cidr",
