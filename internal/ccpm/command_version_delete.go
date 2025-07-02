@@ -11,9 +11,9 @@ import (
 
 func (c *pluginCommand) newDeleteVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <version-id-1> [version-id-2] ... [version-id-n]",
-		Short: "Delete one or more Custom Connect Plugin Versions.",
-		Args:  cobra.MinimumNArgs(1),
+		Use:   "delete <id>",
+		Short: "Delete a Custom Connect Plugin Versions.",
+		Args:  cobra.ExactArgs(1),
 		RunE:  c.deleteVersion,
 		Example: examples.BuildExampleString(
 			examples.Example{
