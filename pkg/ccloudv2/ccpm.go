@@ -113,8 +113,7 @@ func (c *Client) DeleteCCPMPluginVersion(pluginId, versionId, environment string
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) executeListCCPMPluginVersions(pluginId, environment, pageToken string) (ccpmv1.CcpmV1CustomConnectPluginVersionList, *http.Response, error) {
+func (c *Client) executeListCCPMPluginVersions(pluginId, environment, _ string) (ccpmv1.CcpmV1CustomConnectPluginVersionList, *http.Response, error) {
 	req := c.CCPMClient.CustomConnectPluginVersionsCcpmV1Api.ListCcpmV1CustomConnectPluginVersions(c.ccpmApiContext(), pluginId).Environment(environment)
-	// No PageToken method for this endpoint in the SDK
 	return req.Execute()
 }
