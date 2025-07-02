@@ -1,0 +1,14 @@
+Error: required flag(s) "environment" not set
+Usage:
+  confluent ccpm plugin update <id> [flags]
+
+Flags:
+      --name string          Display name of the Custom Connect Plugin.
+      --description string   Description of the Custom Connect Plugin.
+      --environment string   REQUIRED: Environment ID.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
