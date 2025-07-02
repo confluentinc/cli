@@ -107,7 +107,7 @@ func AuthenticatedConfigMock(params mockConfigParams) *Config {
 	cfg := New()
 	cfg.IsTest = true
 
-	ctx, err := newContext(params.contextName, platform, credential, kafkaClusters, kafkaCluster.ID, contextState, cfg, params.orgResourceId, params.envId, false)
+	ctx, err := newContext(params.contextName, platform, credential, kafkaClusters, kafkaCluster.ID, kafkaCluster.RestEndpoint, contextState, cfg, params.orgResourceId, params.envId, false)
 	if err != nil {
 		panic(err)
 	}
@@ -160,12 +160,13 @@ func createAPIKeyPair(apiKey, apiSecret string) *APIKeyPair {
 
 func createKafkaCluster(id, name string, apiKeyPair *APIKeyPair) *KafkaClusterConfig {
 	return &KafkaClusterConfig{
-		ID:         id,
-		Name:       name,
-		Bootstrap:  bootstrapServer,
-		APIKeys:    map[string]*APIKeyPair{apiKeyPair.Key: apiKeyPair},
-		APIKey:     apiKeyPair.Key,
-		LastUpdate: time.Now(),
+		ID:           id,
+		Name:         name,
+		Bootstrap:    bootstrapServer,
+		RestEndpoint: "",
+		APIKeys:      map[string]*APIKeyPair{apiKeyPair.Key: apiKeyPair},
+		APIKey:       apiKeyPair.Key,
+		LastUpdate:   time.Now(),
 	}
 }
 

@@ -9,13 +9,14 @@ Truncates and restores local topics for "my-topic-1" and "my-topic-2":
   $ confluent kafka mirror truncate-and-restore my-topic-1 my-topic-2 --link my-link
 
 Flags:
-      --link string          REQUIRED: Name of cluster link.
-      --dry-run              If set, does not actually truncate the local topic, but simply validates it.
-      --include-partitions   If set, returns the number of messages truncated per partition.
-      --cluster string       Kafka cluster ID.
-      --context string       CLI context name.
-      --environment string   Environment ID.
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+      --link string             REQUIRED: Name of cluster link.
+      --dry-run                 If set, does not actually truncate the local topic, but simply validates it.
+      --include-partitions      If set, returns the number of messages truncated per partition.
+      --kafka-endpoint string   Endpoint to be used for this Kafka cluster.
+      --cluster string          Kafka cluster ID.
+      --context string          CLI context name.
+      --environment string      Environment ID.
+  -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
