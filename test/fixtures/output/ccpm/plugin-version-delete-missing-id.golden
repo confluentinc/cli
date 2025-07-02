@@ -1,0 +1,19 @@
+Error: accepts 1 arg(s), received 0
+Usage:
+  confluent ccpm plugin version delete <id> [flags]
+
+Examples:
+Delete a specific version of a custom connect plugin.
+
+  $ confluent ccpm plugin version delete ver-789012 --plugin plugin-123456 --environment env-abcdef
+
+Flags:
+      --plugin string        Plugin ID.
+      --environment string   Environment ID.
+      --force                Skip the deletion confirmation prompt.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

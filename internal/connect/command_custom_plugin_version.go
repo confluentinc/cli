@@ -38,7 +38,9 @@ func (c *customPluginCommand) newCustomPluginVersionCommand() *cobra.Command {
 	return cmd
 }
 
-func printTableVersion(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV1CustomConnectorPlugin, version connectcustompluginv1.ConnectV1CustomConnectorPluginVersion) error {
+func printTableVersion(cmd *cobra.Command,
+	plugin connectcustompluginv1.ConnectV1CustomConnectorPlugin,
+	version connectcustompluginv1.ConnectV1CustomConnectorPluginVersion) error {
 	table := output.NewTable(cmd)
 	table.Add(&customPluginVersionOut{
 		Plugin:              plugin.GetId(),
