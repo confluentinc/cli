@@ -3,12 +3,12 @@ package testserver
 import (
 	"encoding/json"
 	"fmt"
-	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"testing"
 
+	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
 	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/require"
 )
 
 // CCPM Plugin handlers
@@ -85,7 +85,8 @@ func handleCCPMPlugins(t *testing.T) http.HandlerFunc {
 			}
 
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(response)
+			err := json.NewEncoder(w).Encode(response)
+			require.NoError(t, err)
 
 		case http.MethodPost:
 			// Create plugin
@@ -147,7 +148,8 @@ func handleCCPMPlugins(t *testing.T) http.HandlerFunc {
 			}
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusCreated)
-			json.NewEncoder(w).Encode(response)
+			err := json.NewEncoder(w).Encode(response)
+			require.NoError(t, err)
 
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -195,9 +197,9 @@ func handleCCPMPluginId(t *testing.T) http.HandlerFunc {
 					},
 				},
 			}
-
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(response)
+			err := json.NewEncoder(w).Encode(response)
+			require.NoError(t, err)
 
 		case http.MethodPatch:
 			// Update plugin
@@ -249,7 +251,8 @@ func handleCCPMPluginId(t *testing.T) http.HandlerFunc {
 			}
 
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(response)
+			err := json.NewEncoder(w).Encode(response)
+			require.NoError(t, err)
 
 		case http.MethodDelete:
 			// Delete plugin
@@ -343,7 +346,8 @@ func handleCCPMPluginVersions(t *testing.T) http.HandlerFunc {
 			}
 
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(response)
+			err := json.NewEncoder(w).Encode(response)
+			require.NoError(t, err)
 
 		case http.MethodPost:
 			// Create version
@@ -393,7 +397,8 @@ func handleCCPMPluginVersions(t *testing.T) http.HandlerFunc {
 
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusCreated)
-			json.NewEncoder(w).Encode(response)
+			err := json.NewEncoder(w).Encode(response)
+			require.NoError(t, err)
 
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -438,7 +443,8 @@ func handleCCPMPluginVersionId(t *testing.T) http.HandlerFunc {
 			}
 
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(response)
+			err := json.NewEncoder(w).Encode(response)
+			require.NoError(t, err)
 
 		case http.MethodDelete:
 			// Delete version
@@ -495,7 +501,8 @@ func handleCCPMPresignedUrl(t *testing.T) http.HandlerFunc {
 
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusCreated)
-			json.NewEncoder(w).Encode(response)
+			err := json.NewEncoder(w).Encode(response)
+			require.NoError(t, err)
 
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

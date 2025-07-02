@@ -23,7 +23,6 @@ func (c *pluginCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *pluginCommand) delete(cmd *cobra.Command, args []string) error {
-
 	environment, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err

@@ -84,7 +84,7 @@ func (c *pluginCommand) createVersion(cmd *cobra.Command, args []string) error {
 	}
 
 	// Parse connector classes
-	var connectorClasses []ccpmv1.CcpmV1ConnectorClass
+	var connectorClasses []ccpmv1.CcpmV1ConnectorClass //nolint:prealloc
 	for _, classStr := range connectorClassesFlag {
 		className, connectorType, err := parseConnectorClass(classStr)
 		if err != nil {
