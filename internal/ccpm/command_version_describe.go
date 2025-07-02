@@ -3,6 +3,7 @@ package ccpm
 import (
 	"github.com/spf13/cobra"
 
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
@@ -26,6 +27,7 @@ func (c *pluginCommand) newDescribeVersionCommand() *cobra.Command {
 
 	cmd.Flags().String("plugin", "", "Plugin ID.")
 	cmd.Flags().String("environment", "", "Environment ID.")
+	pcmd.AddOutputFlag(cmd)
 	cobra.CheckErr(cmd.MarkFlagRequired("plugin"))
 	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
 

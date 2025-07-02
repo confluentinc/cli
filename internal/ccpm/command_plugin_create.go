@@ -1,6 +1,7 @@
 package ccpm
 
 import (
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/spf13/cobra"
 
 	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
@@ -18,6 +19,7 @@ func (c *pluginCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("description", "", "Description of the Custom Connect Plugin.")
 	cmd.Flags().String("cloud", "", "Cloud provider (AWS, GCP, AZURE).")
 	cmd.Flags().String("environment", "", "Environment ID.")
+	pcmd.AddOutputFlag(cmd)
 	cobra.CheckErr(cmd.MarkFlagRequired("name"))
 	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
 	cobra.CheckErr(cmd.MarkFlagRequired("environment"))

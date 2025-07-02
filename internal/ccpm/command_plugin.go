@@ -23,8 +23,9 @@ type pluginOut struct {
 
 func newPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "plugin",
-		Short: "Manage Custom Connect Plugins.",
+		Use:         "plugin",
+		Short:       "Manage Custom Connect Plugins.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
 	c := &pluginCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}

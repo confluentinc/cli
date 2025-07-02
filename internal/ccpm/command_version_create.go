@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
@@ -37,6 +38,7 @@ func (c *pluginCommand) newCreateVersionCommand() *cobra.Command {
 	cmd.Flags().StringSlice("connector-classes", nil, "Comma-separated list of connector classes in format 'class_name:type' (e.g., 'io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE').")
 	cmd.Flags().StringSlice("sensitive-properties", nil, "Comma-separated list of sensitive configuration property names (e.g., 'passwords,keys,tokens').")
 	cmd.Flags().String("documentation-link", "", "URL to the plugin documentation (e.g., 'https://github.com/confluentinc/kafka-connect-datagen').")
+	pcmd.AddOutputFlag(cmd)
 	cobra.CheckErr(cmd.MarkFlagRequired("plugin"))
 	cobra.CheckErr(cmd.MarkFlagRequired("version"))
 	cobra.CheckErr(cmd.MarkFlagRequired("environment"))

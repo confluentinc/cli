@@ -107,7 +107,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(auditlog.New(prerunner))
 	cmd.AddCommand(billing.New(prerunner))
 	cmd.AddCommand(byok.New(prerunner))
-	cmd.AddCommand(ccpm.New(prerunner))
+	cmd.AddCommand(ccpm.New(cfg, prerunner))
 	cmd.AddCommand(cluster.New(prerunner, cfg.Version.UserAgent))
 	cmd.AddCommand(cloudsignup.New(prerunner))
 	cmd.AddCommand(completion.New())

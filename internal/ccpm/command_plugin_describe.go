@@ -1,6 +1,7 @@
 package ccpm
 
 import (
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/spf13/cobra"
 )
 
@@ -14,6 +15,7 @@ func (c *pluginCommand) newDescribeCommand() *cobra.Command {
 
 	cmd.Flags().String("environment", "", "Environment ID.")
 	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
