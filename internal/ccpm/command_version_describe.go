@@ -44,11 +44,15 @@ func (c *pluginCommand) describeVersion(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
+	pluginResp, err := c.V2Client.DescribeCCPMPlugin(pluginId, environment)
+	if err != nil {
+		return err
+	}
 
 	// Use V2Client to call CCPM API
 	version, err := c.V2Client.DescribeCCPMPluginVersion(pluginId, versionId, environment)
 	if err != nil {
 		return err
 	}
-	return c.printVersionTable(cmd, version)
+	return c.printVersionTable(cmd, pluginResp, version)
 }

@@ -8,6 +8,8 @@ import (
 )
 
 type versionOut struct {
+	PluginId                  string   `human:"Plugin ID" serialized:"plugin_id"`
+	PluginName                string   `human:"Plugin Name" serialized:"plugin_name"`
 	Id                        string   `human:"ID" serialized:"id"`
 	Version                   string   `human:"Version" serialized:"version"`
 	ContentFormat             string   `human:"Content Format" serialized:"content_format"`
@@ -32,9 +34,12 @@ func (c *pluginCommand) newVersionCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *pluginCommand) printVersionTable(cmd *cobra.Command, version ccpmv1.CcpmV1CustomConnectPluginVersion) error {
+func (c *pluginCommand) printVersionTable(cmd *cobra.Command,
+	plugin ccpmv1.CcpmV1CustomConnectPlugin, version ccpmv1.CcpmV1CustomConnectPluginVersion) error {
 	table := output.NewTable(cmd)
 	table.Add(&versionOut{
+		PluginId:                  *plugin.Id,
+		PluginName:                *plugin.Spec.DisplayName,
 		Id:                        *version.Id,
 		Version:                   version.Spec.GetVersion(),
 		ContentFormat:             version.Spec.GetContentFormat(),

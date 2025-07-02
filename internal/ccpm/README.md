@@ -6,7 +6,6 @@ This directory contains the CLI commands for managing Custom Connect Plugin Mana
 
 The CCPM CLI provides commands to manage:
 - **Custom Connect Plugins**: The main plugin artifacts containing connector and SMT jars
-- **Presigned URLs**: For uploading plugin archives
 - **Plugin Versions**: Different versions of plugins with specific configurations
 
 ## Command Structure
@@ -24,12 +23,9 @@ confluent ccpm [command]
 - `confluent ccpm plugin update <id>` - Update a Custom Connect Plugin
 - `confluent ccpm plugin delete <id>` - Delete a Custom Connect Plugin
 
-#### Presigned URL Management
-- `confluent ccpm presigned-url create` - Request a presigned upload URL
-
 #### Version Management
 - `confluent ccpm version list <plugin-id>` - List Custom Connect Plugin Versions
-- `confluent ccpm version create <plugin-id>` - Create a Custom Connect Plugin Version
+- `confluent ccpm version create <plugin-id>` - Create a Custom Connect Plugin Version (handles upload internally)
 - `confluent ccpm version describe <plugin-id> <version-id>` - Describe a Custom Connect Plugin Version
 - `confluent ccpm version delete <plugin-id> <version-id>` - Delete a Custom Connect Plugin Version
 
@@ -45,18 +41,6 @@ Based on the CCPM API specification, the following resources are supported:
   - `description`: Description of the plugin
   - `cloud` (required, immutable): Cloud provider (AWS, GCP, AZURE)
   - `runtime_language` (read-only): Runtime language of the plugin
-- **Relationships**:
-  - `environment` (required): Belongs to environment
-
-### PresignedUrl
-- **Path**: `/ccpm/v1/presigned-upload-url`
-- **Operations**: create
-- **Attributes**:
-  - `content_format` (required): Content format (ZIP, JAR)
-  - `cloud` (required): Cloud provider (AWS, GCP, AZURE)
-  - `upload_id` (read-only): Unique identifier of the upload
-  - `upload_url` (read-only): Upload URL for the plugin archive
-  - `upload_form_data` (read-only): Upload form data
 - **Relationships**:
   - `environment` (required): Belongs to environment
 
@@ -97,14 +81,11 @@ confluent ccpm plugin list --environment env-12345
 # Create a plugin
 confluent ccpm plugin create --name "My Custom Plugin" --description "A custom connector" --cloud AWS --environment env-12345
 
-# Request a presigned URL for upload
-confluent ccpm presigned-url create --content-format ZIP --cloud AWS --environment env-12345
-
-# Create a plugin version
-confluent ccpm version create ccp-12345 --version "1.0.0" --environment env-12345 --upload-id upload-67890
+# Create a plugin version (upload handled automatically)
+confluent ccpm version create --plugin plugin-123456 --version 1.0.0 --environment env-abcdef --plugin-file datagen.zip --connector-classes 'io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE'
 
 # List plugin versions
-confluent ccpm version list ccp-12345 --environment env-12345
+confluent ccpm version list --plugin plugin-123456 --environment env-abcdef
 ```
 
 ## File Structure
@@ -118,7 +99,6 @@ internal/ccpm/
 ├── command_plugin_describe.go    # Plugin describe command
 ├── command_plugin_list.go        # Plugin list command
 ├── command_plugin_update.go      # Plugin update command
-├── command_presigned_url.go      # Presigned URL commands
 ├── command_version.go            # Version command structure
 └── README.md                     # This documentation
 ```

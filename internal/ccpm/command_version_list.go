@@ -42,6 +42,11 @@ func (c *pluginCommand) listVersion(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	pluginResp, err := c.V2Client.DescribeCCPMPlugin(pluginId, environment)
+	if err != nil {
+		return err
+	}
+
 	// Use V2Client to call CCPM API
 	versions, err := c.V2Client.ListCCPMPluginVersions(pluginId, environment)
 	if err != nil {
@@ -55,6 +60,8 @@ func (c *pluginCommand) listVersion(cmd *cobra.Command, args []string) error {
 		status, _ := version.GetStatusOk()
 
 		table.Add(&versionOut{
+			PluginId:                  pluginResp.GetId(),
+			PluginName:                pluginResp.Spec.GetDisplayName(),
 			Id:                        version.GetId(),
 			Version:                   spec.GetVersion(),
 			ContentFormat:             spec.GetContentFormat(),

@@ -14,7 +14,5 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	cmd.AddCommand(newPluginCommand(prerunner))
-	cmd.AddCommand(newPresignedUrlCommand(prerunner))
-
 	return cmd
 }
