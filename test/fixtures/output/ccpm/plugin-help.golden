@@ -1,15 +1,15 @@
-Manage Custom Connect Plugins.
+Manage custom Connect plugins.
 
 Usage:
   confluent ccpm plugin [command]
 
 Available Commands:
-  create      Create a Custom Connect Plugin.
-  delete      Delete a Custom Connect Plugin.
-  describe    Describe a Custom Connect Plugin.
-  list        List Custom Connect Plugins.
-  update      Update a Custom Connect Plugin.
-  version     Manage Custom Connect Plugin Versions.
+  create      Create a custom Connect plugin.
+  delete      Delete a custom Connect plugin.
+  describe    Describe a custom Connect plugin.
+  list        List custom Connect plugins.
+  update      Update a custom Connect plugin.
+  version     Manage custom Connect plugin versions.
 
 Global Flags:
   -h, --help            Show help for this command.

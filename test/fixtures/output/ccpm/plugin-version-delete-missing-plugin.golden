@@ -7,6 +7,10 @@ Delete a specific version of a custom connect plugin.
 
   $ confluent ccpm plugin version delete ver-789012 --plugin plugin-123456 --environment env-abcdef
 
+Force delete a plugin version without confirmation.
+
+  $ confluent ccpm plugin version delete ver-789012 --plugin plugin-123456 --environment env-abcdef --force
+
 Flags:
       --plugin string        REQUIRED: Plugin ID.
       --environment string   REQUIRED: Environment ID.

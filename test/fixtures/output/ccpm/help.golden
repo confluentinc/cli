@@ -1,10 +1,10 @@
-Manage Custom Connect Plugin Management (CCPM).
+Manage custom Connect plugin management (CCPM).
 
 Usage:
   confluent ccpm [command]
 
 Available Commands:
-  plugin      Manage Custom Connect Plugins.
+  plugin      Manage custom Connect plugins.
 
 Global Flags:
   -h, --help            Show help for this command.

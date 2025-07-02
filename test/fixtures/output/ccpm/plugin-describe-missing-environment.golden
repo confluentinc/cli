@@ -2,6 +2,11 @@ Error: required flag(s) "environment" not set
 Usage:
   confluent ccpm plugin describe <id> [flags]
 
+Examples:
+Describe a custom Connect plugin by ID.
+
+  $ confluent ccpm plugin describe plugin-123456 --environment env-12345
+
 Flags:
       --environment string   REQUIRED: Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")

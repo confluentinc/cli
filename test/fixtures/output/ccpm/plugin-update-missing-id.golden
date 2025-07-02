@@ -2,10 +2,19 @@ Error: accepts 1 arg(s), received 0
 Usage:
   confluent ccpm plugin update <id> [flags]
 
+Examples:
+Update the name and description of a custom Connect plugin.
+
+  $ confluent ccpm plugin update plugin-123456 --name "Updated Plugin Name" --description "Updated description" --environment env-12345
+
+Update only the name of a custom Connect plugin.
+
+  $ confluent ccpm plugin update plugin-123456 --name "New Plugin Name" --environment env-12345
+
 Flags:
-      --name string          Display name of the Custom Connect Plugin.
-      --description string   Description of the Custom Connect Plugin.
       --environment string   Environment ID.
+      --name string          Display name of the custom Connect plugin.
+      --description string   Description of the custom Connect plugin.
 
 Global Flags:
   -h, --help            Show help for this command.
