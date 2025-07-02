@@ -1,0 +1,19 @@
+Manage Custom Connect Plugins.
+
+Usage:
+  confluent ccpm plugin [command]
+
+Available Commands:
+  create      Create a Custom Connect Plugin.
+  delete      Delete a Custom Connect Plugin.
+  describe    Describe a Custom Connect Plugin.
+  list        List Custom Connect Plugins.
+  update      Update a Custom Connect Plugin.
+  version     Manage Custom Connect Plugin Versions.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent ccpm plugin [command] --help" for more information about a command.
