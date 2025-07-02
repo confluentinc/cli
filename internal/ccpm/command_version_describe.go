@@ -6,12 +6,12 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
-func (c *versionCommand) newDescribeCommand() *cobra.Command {
+func (c *pluginCommand) newDescribeVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <version-id>",
 		Short: "Describe a Custom Connect Plugin Version.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.describe,
+		RunE:  c.describeVersion,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe a specific version of a custom connect plugin.",
@@ -32,7 +32,7 @@ func (c *versionCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *versionCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *pluginCommand) describeVersion(cmd *cobra.Command, args []string) error {
 	versionId := args[0]
 
 	pluginId, err := cmd.Flags().GetString("plugin")

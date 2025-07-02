@@ -8,20 +8,16 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *versionCommand) newListCommand() *cobra.Command {
+func (c *pluginCommand) newListVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Custom Connect Plugin Versions.",
 		Args:  cobra.NoArgs,
-		RunE:  c.list,
+		RunE:  c.listVersion,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all versions of a custom connect plugin.",
 				Code: "confluent ccpm plugin version list --plugin plugin-123456 --environment env-abcdef",
-			},
-			examples.Example{
-				Text: "List versions of a plugin with output in JSON format.",
-				Code: "confluent ccpm plugin version list --plugin plugin-123456 --environment env-abcdef --output json",
 			},
 		),
 	}
@@ -35,7 +31,7 @@ func (c *versionCommand) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *versionCommand) list(cmd *cobra.Command, args []string) error {
+func (c *pluginCommand) listVersion(cmd *cobra.Command, args []string) error {
 	pluginId, err := cmd.Flags().GetString("plugin")
 	if err != nil {
 		return err

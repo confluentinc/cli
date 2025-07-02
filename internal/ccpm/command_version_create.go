@@ -7,12 +7,12 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
-func (c *versionCommand) newCreateCommand() *cobra.Command {
+func (c *pluginCommand) newCreateVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a Custom Connect Plugin Version.",
 		Args:  cobra.NoArgs,
-		RunE:  c.create,
+		RunE:  c.createVersion,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a new version 1.0.0 of a custom connect plugin using an upload ID from a presigned URL.",
@@ -37,7 +37,7 @@ func (c *versionCommand) newCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *versionCommand) create(cmd *cobra.Command, args []string) error {
+func (c *pluginCommand) createVersion(cmd *cobra.Command, args []string) error {
 	pluginId, err := cmd.Flags().GetString("plugin")
 	if err != nil {
 		return err

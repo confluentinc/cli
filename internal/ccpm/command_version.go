@@ -4,13 +4,8 @@ import (
 	"github.com/spf13/cobra"
 
 	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
-	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
-
-type versionCommand struct {
-	*pcmd.AuthenticatedCLICommand
-}
 
 type versionOut struct {
 	Id                        string   `human:"ID" serialized:"id"`
@@ -29,15 +24,15 @@ func (c *pluginCommand) newVersionCommand() *cobra.Command {
 		Short: "Manage Custom Connect Plugin Versions.",
 	}
 
-	cmd.AddCommand(c.newCreateCommand())
-	cmd.AddCommand(c.newDescribeCommand())
-	cmd.AddCommand(c.newDeleteCommand())
-	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newCreateVersionCommand())
+	cmd.AddCommand(c.newDescribeVersionCommand())
+	cmd.AddCommand(c.newDeleteVersionCommand())
+	cmd.AddCommand(c.newListVersionCommand())
 
 	return cmd
 }
 
-func (c *versionCommand) printVersionTable(cmd *cobra.Command, version ccpmv1.CcpmV1CustomConnectPluginVersion) error {
+func (c *pluginCommand) printVersionTable(cmd *cobra.Command, version ccpmv1.CcpmV1CustomConnectPluginVersion) error {
 	table := output.NewTable(cmd)
 	table.Add(&versionOut{
 		Id:                        *version.Id,

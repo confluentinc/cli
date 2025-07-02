@@ -9,12 +9,12 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
-func (c *versionCommand) newDeleteCommand() *cobra.Command {
+func (c *pluginCommand) newDeleteVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <version-id-1> [version-id-2] ... [version-id-n]",
 		Short: "Delete one or more Custom Connect Plugin Versions.",
 		Args:  cobra.MinimumNArgs(1),
-		RunE:  c.delete,
+		RunE:  c.deleteVersion,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete a specific version of a custom connect plugin.",
@@ -36,7 +36,7 @@ func (c *versionCommand) newDeleteCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *versionCommand) delete(cmd *cobra.Command, args []string) error {
+func (c *pluginCommand) deleteVersion(cmd *cobra.Command, args []string) error {
 	pluginId, err := cmd.Flags().GetString("plugin")
 	if err != nil {
 		return err
