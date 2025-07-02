@@ -6,6 +6,7 @@ import (
 	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
 func (c *pluginCommand) newCreateCommand() *cobra.Command {
@@ -14,6 +15,16 @@ func (c *pluginCommand) newCreateCommand() *cobra.Command {
 		Short: "Create a custom Connect plugin.",
 		Args:  cobra.NoArgs,
 		RunE:  c.create,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Create a custom Connect plugin for AWS.",
+				Code: "confluent ccpm plugin create --name \"My Custom Plugin\" --description \"A custom connector for data processing\" --cloud AWS --environment env-12345",
+			},
+			examples.Example{
+				Text: "Create a custom Connect plugin for GCP with minimal description.",
+				Code: "confluent ccpm plugin create --name \"GCP Data Connector\" --cloud GCP --environment env-abcdef",
+			},
+		),
 	}
 
 	cmd.Flags().String("environment", "", "Environment ID.")

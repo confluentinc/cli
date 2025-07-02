@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
 func (c *pluginCommand) newDescribeCommand() *cobra.Command {
@@ -12,6 +13,12 @@ func (c *pluginCommand) newDescribeCommand() *cobra.Command {
 		Short: "Describe a custom Connect plugin.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.describe,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Describe a custom Connect plugin by ID.",
+				Code: "confluent ccpm plugin describe plugin-123456 --environment env-12345",
+			},
+		),
 	}
 
 	cmd.Flags().String("environment", "", "Environment ID.")

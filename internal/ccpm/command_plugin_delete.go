@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/deletion"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
@@ -14,6 +15,16 @@ func (c *pluginCommand) newDeleteCommand() *cobra.Command {
 		Short: "Delete a custom Connect plugin.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.delete,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Delete a custom Connect plugin by ID.",
+				Code: "confluent ccpm plugin delete plugin-123456 --environment env-12345",
+			},
+			examples.Example{
+				Text: "Force delete a custom Connect plugin without confirmation.",
+				Code: "confluent ccpm plugin delete plugin-123456 --environment env-12345 --force",
+			},
+		),
 	}
 
 	cmd.Flags().String("environment", "", "Environment ID.")

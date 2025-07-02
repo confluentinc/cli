@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -13,6 +14,16 @@ func (c *pluginCommand) newListCommand() *cobra.Command {
 		Short: "List custom Connect plugins.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "List all custom Connect plugins in an environment.",
+				Code: "confluent ccpm plugin list --environment env-12345",
+			},
+			examples.Example{
+				Text: "List custom Connect plugins filtered by cloud provider.",
+				Code: "confluent ccpm plugin list --environment env-12345 --cloud AWS",
+			},
+		),
 	}
 
 	cmd.Flags().String("environment", "", "Environment ID.")

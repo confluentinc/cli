@@ -20,6 +20,10 @@ func (c *pluginCommand) newDeleteVersionCommand() *cobra.Command {
 				Text: "Delete a specific version of a custom connect plugin.",
 				Code: "confluent ccpm plugin version delete ver-789012 --plugin plugin-123456 --environment env-abcdef",
 			},
+			examples.Example{
+				Text: "Force delete a plugin version without confirmation.",
+				Code: "confluent ccpm plugin version delete ver-789012 --plugin plugin-123456 --environment env-abcdef --force",
+			},
 		),
 	}
 

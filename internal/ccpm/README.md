@@ -24,10 +24,10 @@ confluent ccpm [command]
 - `confluent ccpm plugin delete <id>` - Delete a Custom Connect Plugin
 
 #### Version Management
-- `confluent ccpm version list <plugin-id>` - List Custom Connect Plugin Versions
-- `confluent ccpm version create <plugin-id>` - Create a Custom Connect Plugin Version (handles upload internally)
-- `confluent ccpm version describe <plugin-id> <version-id>` - Describe a Custom Connect Plugin Version
-- `confluent ccpm version delete <plugin-id> <version-id>` - Delete a Custom Connect Plugin Version
+- `confluent ccpm plugin version list` - List Custom Connect Plugin Versions
+- `confluent ccpm plugin version create` - Create a Custom Connect Plugin Version (handles upload internally)
+- `confluent ccpm plugin version describe <version-id>` - Describe a Custom Connect Plugin Version
+- `confluent ccpm plugin version delete <version-id>` - Delete a Custom Connect Plugin Version
 
 ## API Resources
 
@@ -82,10 +82,10 @@ confluent ccpm plugin list --environment env-12345
 confluent ccpm plugin create --name "My Custom Plugin" --description "A custom connector" --cloud AWS --environment env-12345
 
 # Create a plugin version (upload handled automatically)
-confluent ccpm version create --plugin plugin-123456 --version 1.0.0 --environment env-abcdef --plugin-file datagen.zip --connector-classes 'io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE'
+confluent ccpm plugin version create --plugin plugin-123456 --version 1.0.0 --environment env-abcdef --plugin-file datagen.zip --connector-classes 'io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE'
 
 # List plugin versions
-confluent ccpm version list --plugin plugin-123456 --environment env-abcdef
+confluent ccpm plugin version list --plugin plugin-123456 --environment env-abcdef
 ```
 
 ## File Structure

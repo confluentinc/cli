@@ -4,6 +4,8 @@ import (
 	"github.com/spf13/cobra"
 
 	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
+
+	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
 func (c *pluginCommand) newUpdateCommand() *cobra.Command {
@@ -12,6 +14,16 @@ func (c *pluginCommand) newUpdateCommand() *cobra.Command {
 		Short: "Update a custom Connect plugin.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.update,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Update the name and description of a custom Connect plugin.",
+				Code: "confluent ccpm plugin update plugin-123456 --name \"Updated Plugin Name\" --description \"Updated description\" --environment env-12345",
+			},
+			examples.Example{
+				Text: "Update only the name of a custom Connect plugin.",
+				Code: "confluent ccpm plugin update plugin-123456 --name \"New Plugin Name\" --environment env-12345",
+			},
+		),
 	}
 
 	cmd.Flags().String("environment", "", "Environment ID.")
