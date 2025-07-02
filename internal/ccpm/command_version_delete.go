@@ -12,7 +12,7 @@ import (
 func (c *pluginCommand) newDeleteVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <id>",
-		Short: "Delete a Custom Connect Plugin Versions.",
+		Short: "Delete a custom Connect plugin version.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.deleteVersion,
 		Example: examples.BuildExampleString(

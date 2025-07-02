@@ -10,13 +10,13 @@ import (
 func (c *pluginCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List Custom Connect Plugins.",
+		Short: "List custom Connect plugins.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}
 
-	cmd.Flags().String("cloud", "", "Filter by cloud provider (AWS, GCP, AZURE).")
 	cmd.Flags().String("environment", "", "Environment ID.")
+	cmd.Flags().String("cloud", "", "Filter by cloud provider (AWS, GCP, AZURE).")
 	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
 	pcmd.AddOutputFlag(cmd)
 	return cmd

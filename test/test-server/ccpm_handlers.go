@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"testing"
 
-	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
+
+	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
 )
 
 // CCPM Plugin handlers

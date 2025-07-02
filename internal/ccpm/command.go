@@ -11,7 +11,7 @@ import (
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "ccpm",
-		Short:       "Manage Custom Connect Plugin Management (CCPM).",
+		Short:       "Manage custom Connect plugin management (CCPM).",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Hidden:      !(cfg.IsTest || featureflags.Manager.BoolVariation("custom-connect.plugin.enabled", cfg.Context(), config.CliLaunchDarklyClient, true, false)),
 	}

@@ -1,10 +1,12 @@
 package ccpm
 
 import (
+	"github.com/spf13/cobra"
+
 	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
+
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
-	"github.com/spf13/cobra"
 )
 
 type pluginCommand struct {
@@ -23,7 +25,7 @@ type pluginOut struct {
 func newPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "plugin",
-		Short:       "Manage Custom Connect Plugins.",
+		Short:       "Manage custom Connect plugins.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 

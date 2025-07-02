@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
+
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -23,7 +24,7 @@ type versionOut struct {
 func (c *pluginCommand) newVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",
-		Short: "Manage Custom Connect Plugin Versions.",
+		Short: "Manage custom Connect plugin versions.",
 	}
 
 	cmd.AddCommand(c.newCreateVersionCommand())

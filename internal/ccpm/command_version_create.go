@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
+
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/utils"
@@ -16,7 +17,7 @@ import (
 func (c *pluginCommand) newCreateVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a Custom Connect Plugin Version.",
+		Short: "Create a custom Connect plugin version.",
 		Args:  cobra.NoArgs,
 		RunE:  c.createVersion,
 		Example: examples.BuildExampleString(
@@ -32,12 +33,12 @@ func (c *pluginCommand) newCreateVersionCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("plugin", "", "Plugin ID.")
-	cmd.Flags().String("version", "", "Version of the Custom Connect Plugin (must comply with SemVer).")
+	cmd.Flags().String("version", "", "Version of the custom Connect plugin (must comply with SemVer).")
 	cmd.Flags().String("environment", "", "Environment ID.")
 	cmd.Flags().String("plugin-file", "", "Custom plugin ZIP or JAR file.")
-	cmd.Flags().StringSlice("connector-classes", nil, "Comma-separated list of connector classes in format 'class_name:type' (e.g., 'io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE').")
-	cmd.Flags().StringSlice("sensitive-properties", nil, "Comma-separated list of sensitive configuration property names (e.g., 'passwords,keys,tokens').")
-	cmd.Flags().String("documentation-link", "", "URL to the plugin documentation (e.g., 'https://github.com/confluentinc/kafka-connect-datagen').")
+	cmd.Flags().StringSlice("connector-classes", nil, "A comma-separated list of connector classes in format 'class_name:type' (e.g., 'io.confluent.kafka.connect.source.SourceConnector:SOURCE').")
+	cmd.Flags().StringSlice("sensitive-properties", nil, "A comma-separated list of sensitive configuration property names (e.g., 'passwords,keys,tokens').")
+	cmd.Flags().String("documentation-link", "", "URL to the plugin documentation (e.g., 'https://docs.confluent.io').")
 	pcmd.AddOutputFlag(cmd)
 	cobra.CheckErr(cmd.MarkFlagRequired("plugin"))
 	cobra.CheckErr(cmd.MarkFlagRequired("version"))

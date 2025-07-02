@@ -11,7 +11,7 @@ import (
 func (c *pluginCommand) newListVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List Custom Connect Plugin Versions.",
+		Short: "List custom Connect plugin versions.",
 		Args:  cobra.NoArgs,
 		RunE:  c.listVersion,
 		Example: examples.BuildExampleString(

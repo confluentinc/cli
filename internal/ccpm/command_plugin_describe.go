@@ -1,14 +1,15 @@
 package ccpm
 
 import (
-	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
 func (c *pluginCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <id>",
-		Short: "Describe a Custom Connect Plugin.",
+		Short: "Describe a custom Connect plugin.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.describe,
 	}

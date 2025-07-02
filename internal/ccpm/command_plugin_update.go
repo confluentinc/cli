@@ -9,14 +9,14 @@ import (
 func (c *pluginCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <id>",
-		Short: "Update a Custom Connect Plugin.",
+		Short: "Update a custom Connect plugin.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.update,
 	}
 
-	cmd.Flags().String("name", "", "Display name of the Custom Connect Plugin.")
-	cmd.Flags().String("description", "", "Description of the Custom Connect Plugin.")
 	cmd.Flags().String("environment", "", "Environment ID.")
+	cmd.Flags().String("name", "", "Display name of the custom Connect plugin.")
+	cmd.Flags().String("description", "", "Description of the custom Connect plugin.")
 	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
 
 	return cmd

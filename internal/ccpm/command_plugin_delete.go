@@ -1,16 +1,17 @@
 package ccpm
 
 import (
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/deletion"
 	"github.com/confluentinc/cli/v4/pkg/resource"
-	"github.com/spf13/cobra"
 )
 
 func (c *pluginCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <id>",
-		Short: "Delete a Custom Connect Plugin.",
+		Short: "Delete a custom Connect plugin.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.delete,
 	}
