@@ -57,6 +57,13 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
+	if activeEndpoint := c.Context.KafkaClusterContext.GetActiveKafkaClusterEndpoint(); activeEndpoint != "" {
+		if output.GetFormat(cmd) == output.Human {
+			output.Printf(c.Config.EnableColor, "The current endpoint is set to %q, "+
+				"use `kafka cluster endpoint list` to view the available endpoints\n", activeEndpoint)
+		}
+	}
+
 	list := output.NewList(cmd)
 	for _, cluster := range clusters {
 		list.Add(convertClusterToDescribeStruct(&cluster, c.Context))

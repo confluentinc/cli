@@ -80,6 +80,13 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 	}
 
+	if activeEndpoint := c.Context.KafkaClusterContext.GetActiveKafkaClusterEndpoint(); activeEndpoint != "" {
+		if output.GetFormat(cmd) == output.Human {
+			output.Printf(c.Config.EnableColor, "The current endpoint is set to %q, "+
+				"use `kafka cluster endpoint list` to view the available endpoints\n", activeEndpoint)
+		}
+	}
+
 	return c.outputKafkaClusterDescription(cmd, &cluster, true)
 }
 
