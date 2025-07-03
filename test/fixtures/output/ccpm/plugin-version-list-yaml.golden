@@ -7,6 +7,7 @@
   sensitive_config_properties:
     - password
     - secret
+  connector_classes: io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE
   phase: READY
   environment: env-123456
 - plugin_id: ccp-123456
@@ -16,5 +17,6 @@
   content_format: JAR
   documentation_link: ""
   sensitive_config_properties: []
+  connector_classes: io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE
   phase: READY
   environment: env-123456

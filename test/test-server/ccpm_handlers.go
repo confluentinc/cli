@@ -314,6 +314,12 @@ func handleCCPMPluginVersions(t *testing.T) http.HandlerFunc {
 						"environment": map[string]interface{}{
 							"id": environment,
 						},
+						"connector_classes": []map[string]interface{}{
+							{
+								"class_name": "io.confluent.kafka.connect.datagen.DatagenConnector",
+								"type":       "SOURCE",
+							},
+						},
 					},
 					"status": map[string]interface{}{
 						"phase": "READY",
@@ -334,6 +340,12 @@ func handleCCPMPluginVersions(t *testing.T) http.HandlerFunc {
 						"sensitive_config_properties": []string{},
 						"environment": map[string]interface{}{
 							"id": environment,
+						},
+						"connector_classes": []map[string]interface{}{
+							{
+								"class_name": "io.confluent.kafka.connect.datagen.DatagenConnector",
+								"type":       "SOURCE",
+							},
 						},
 					},
 					"status": map[string]interface{}{
@@ -378,6 +390,12 @@ func handleCCPMPluginVersions(t *testing.T) http.HandlerFunc {
 				http.Error(w, "Missing version", http.StatusBadRequest)
 				return
 			}
+			// class
+			connectorClasses, ok := spec["connector_classes"].([]interface{})
+			if !ok || len(connectorClasses) == 0 {
+				http.Error(w, "Missing connector_classes", http.StatusBadRequest)
+				return
+			}
 
 			response := map[string]interface{}{
 				"api_version": "ccpm/v1",
@@ -393,6 +411,7 @@ func handleCCPMPluginVersions(t *testing.T) http.HandlerFunc {
 					"documentation_link":          spec["documentation_link"],
 					"sensitive_config_properties": spec["sensitive_config_properties"],
 					"environment":                 spec["environment"],
+					"connector_classes":           connectorClasses,
 				},
 				"status": map[string]interface{}{
 					"phase": "READY",
@@ -439,6 +458,12 @@ func handleCCPMPluginVersionId(t *testing.T) http.HandlerFunc {
 					"sensitive_config_properties": []string{"password", "secret"},
 					"environment": map[string]interface{}{
 						"id": environment,
+					},
+					"connector_classes": []map[string]interface{}{
+						{
+							"class_name": "io.confluent.kafka.connect.datagen.DatagenConnector",
+							"type":       "SOURCE",
+						},
 					},
 				},
 				"status": map[string]interface{}{

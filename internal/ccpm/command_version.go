@@ -16,6 +16,7 @@ type versionOut struct {
 	ContentFormat             string   `human:"Content Format" serialized:"content_format"`
 	DocumentationLink         string   `human:"Documentation Link" serialized:"documentation_link"`
 	SensitiveConfigProperties []string `human:"Sensitive Config Properties" serialized:"sensitive_config_properties"`
+	ConnectorClasses          string   `human:"Connector Classes" serialized:"connector_classes"`
 	Phase                     string   `human:"Phase" serialized:"phase"`
 	ErrorMessage              string   `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
 	Environment               string   `human:"Environment" serialized:"environment"`
@@ -47,6 +48,7 @@ func (c *pluginCommand) printVersionTable(cmd *cobra.Command,
 		DocumentationLink:         version.Spec.GetDocumentationLink(),
 		SensitiveConfigProperties: version.Spec.GetSensitiveConfigProperties(),
 		Phase:                     version.Status.GetPhase(),
+		ConnectorClasses:          getConnectorClassesString(version.Spec.GetConnectorClasses()),
 		ErrorMessage:              version.Status.GetErrorMessage(),
 		Environment:               version.Spec.GetEnvironment().Id,
 	})

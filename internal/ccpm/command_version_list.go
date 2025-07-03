@@ -67,6 +67,7 @@ func (c *pluginCommand) listVersion(cmd *cobra.Command, args []string) error {
 			ContentFormat:             spec.GetContentFormat(),
 			DocumentationLink:         spec.GetDocumentationLink(),
 			SensitiveConfigProperties: spec.GetSensitiveConfigProperties(),
+			ConnectorClasses:          getConnectorClassesString(spec.GetConnectorClasses()),
 			Phase:                     status.GetPhase(),
 			ErrorMessage:              status.GetErrorMessage(),
 			Environment:               spec.Environment.Id,

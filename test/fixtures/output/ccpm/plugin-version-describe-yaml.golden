@@ -7,5 +7,6 @@ documentation_link: https://docs.confluent.io
 sensitive_config_properties:
     - password
     - secret
+connector_classes: io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE
 phase: READY
 environment: env-123456

@@ -132,11 +132,6 @@ func (c *pluginCommand) createVersion(cmd *cobra.Command, args []string) error {
 			pluginFile, strings.ToLower(resp.GetContentFormat())); err != nil {
 			return err
 		}
-	} else if cloud == "GCP" {
-		if err := utils.UploadFileToGoogleCloudStorage(resp.GetUploadUrl(),
-			pluginFile, strings.ToLower(resp.GetContentFormat())); err != nil {
-			return err
-		}
 	} else {
 		if err := utils.UploadFile(resp.GetUploadUrl(),
 			pluginFile, resp.GetUploadFormData()); err != nil {
@@ -200,4 +195,19 @@ func parseConnectorClass(classStr string) (string, string, error) {
 	}
 
 	return className, connectorType, nil
+}
+
+func getConnectorClassesString(connectorClasses []ccpmv1.CcpmV1ConnectorClass) string {
+	var classes []string //nolint:prealloc
+	for _, cc := range connectorClasses {
+		className := cc.GetClassName()
+		connectorType := cc.GetType()
+		if className == "" || connectorType == "" {
+			continue // Skip if class name or type is empty
+		}
+		// Format as "class_name:type"
+		formattedClass := fmt.Sprintf("%s:%s", className, strings.ToUpper(connectorType))
+		classes = append(classes, formattedClass)
+	}
+	return strings.Join(classes, ", ")
 }
