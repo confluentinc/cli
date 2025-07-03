@@ -1,4 +1,4 @@
-      ID     |          Name           |   Description    | Cloud | Environment | Content Format  
--------------+-------------------------+------------------+-------+-------------+-----------------
-  cfa-jar123 | my-connect-artifact-jar | new-jar-artifact | AWS   | env-123456  | JAR             
-  cfa-zip123 | my-connect-artifact-zip | new-zip-artifact | AWS   | env-123456  | ZIP             
+      ID     |          Name           |   Description    | Cloud | Environment | Content Format |   Status    
+-------------+-------------------------+------------------+-------+-------------+----------------+-------------
+  cfa-jar123 | my-connect-artifact-jar | new-jar-artifact | AWS   | env-123456  | JAR            | READY       
+  cfa-zip123 | my-connect-artifact-zip | new-zip-artifact | AWS   | env-123456  | ZIP            | PROCESSING  

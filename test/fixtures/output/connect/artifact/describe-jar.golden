@@ -5,4 +5,5 @@
 | Cloud          | AWS                     |
 | Environment    | env-123456              |
 | Content Format | JAR                     |
+| Status         | READY                   |
 +----------------+-------------------------+
