@@ -16,7 +16,7 @@ func (s *CLITestSuite) TestCCPMPlugin() {
 	tests := []CLITest{
 		// Plugin list tests
 		{args: "ccpm plugin list --environment env-123456", fixture: "ccpm/plugin-list.golden"},
-		{args: "ccpm plugin list --environment env-123456 --cloud aws", fixture: "ccpm/plugin-list.golden"},
+		{args: "ccpm plugin list --environment env-123456 --cloud aws", fixture: "ccpm/plugin-list-aws.golden"},
 		{args: "ccpm plugin list --environment env-123456 -o json", fixture: "ccpm/plugin-list-json.golden"},
 		{args: "ccpm plugin list --environment env-123456 -o yaml", fixture: "ccpm/plugin-list-yaml.golden"},
 

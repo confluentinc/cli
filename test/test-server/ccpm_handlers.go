@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -70,8 +71,10 @@ func handleCCPMPlugins(t *testing.T) http.HandlerFunc {
 			// Filter by cloud if specified
 			if cloud != "" {
 				filtered := []map[string]interface{}{}
+				cloudUpper := strings.ToUpper(cloud)
 				for _, plugin := range plugins {
-					if plugin["spec"].(map[string]interface{})["cloud"] == cloud {
+					pluginCloud := plugin["spec"].(map[string]interface{})["cloud"].(string)
+					if pluginCloud == cloudUpper {
 						filtered = append(filtered, plugin)
 					}
 				}
