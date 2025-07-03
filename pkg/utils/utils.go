@@ -187,7 +187,7 @@ func UploadFile(url, filePath string, formFields map[string]any) error {
 	return nil
 }
 
-func UploadFileToAzureBlob(url, filePath, contentFormat string) error {
+func uploadFileInternal(url, filePath string, headers map[string]string) error {
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
 		return err
@@ -231,6 +231,29 @@ func UploadFileToAzureBlob(url, filePath, contentFormat string) error {
 	}
 
 	return nil
+}
+
+func UploadFileToAzureBlob(url, filePath, contentFormat string) error {
+	headers := map[string]string{
+		"x-ms-blob-type": "BlockBlob",
+	}
+	setContentType(headers, contentFormat)
+	return uploadFileInternal(url, filePath, headers)
+}
+
+func UploadFileToGoogleCloudStorage(url, filePath, contentFormat string) error {
+	headers := map[string]string{}
+	setContentType(headers, contentFormat)
+	return uploadFileInternal(url, filePath, headers)
+}
+
+func setContentType(headers map[string]string, contentFormat string) {
+	switch contentFormat {
+	case "zip":
+		headers["Content-Type"] = "application/zip"
+	case "jar":
+		headers["Content-Type"] = "application/java-archive"
+	}
 }
 
 func UploadFileToGoogleCloudStorage(url, filePath, contentFormat string) error {
