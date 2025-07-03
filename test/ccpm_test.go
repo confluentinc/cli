@@ -22,7 +22,7 @@ func (s *CLITestSuite) TestCCPMPlugin() {
 
 		// Plugin create tests
 		{args: "ccpm plugin create --name my-custom-plugin --description Test_plugin --cloud aws --environment env-123456", fixture: "ccpm/plugin-create.golden"},
-		{args: "ccpm plugin create --name my-custom-plugin --cloud aws --environment env-123456", fixture: "ccpm/plugin-create.golden"},
+		{args: "ccpm plugin create --name my-custom-plugin --cloud aws --environment env-123456", fixture: "ccpm/plugin-create-without-description.golden"},
 		{args: "ccpm plugin create --name my-custom-plugin --cloud invalid-cloud --environment env-123456", fixture: "ccpm/plugin-create-invalid-cloud.golden", exitCode: 1},
 
 		// Plugin describe tests - using exact IDs from test-server
