@@ -64,14 +64,6 @@ Based on the CCPM API specification, the following resources are supported:
 
 **Note**: The current implementation contains placeholder commands that display informative messages. The actual API integration will be implemented when the CCPM SDK becomes available.
 
-### TODO Items
-1. Add CCPM SDK dependency to `go.mod`
-2. Implement actual API calls in `pkg/ccloudv2/ccpm.go`
-3. Replace placeholder implementations in command files with real API calls
-4. Add proper error handling and validation
-5. Add comprehensive tests
-6. Add documentation and examples
-
 ## Usage Examples
 
 ```bash
