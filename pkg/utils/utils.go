@@ -232,3 +232,48 @@ func UploadFileToAzureBlob(url, filePath, contentFormat string) error {
 
 	return nil
 }
+
+func UploadFileToGoogleCloudStorage(url, filePath, contentFormat string) error {
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		return err
+	}
+
+	if fileInfo.Size() > maxFileSize {
+		return fmt.Errorf("file size %d exceeds the %dGB limit", fileInfo.Size(), maxFileSizeInGB)
+	}
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	client := &http.Client{Timeout: 20 * time.Minute}
+	request, err := http.NewRequest(http.MethodPut, url, file)
+	if err != nil {
+		return err
+	}
+	switch contentFormat {
+	case "zip":
+		request.Header.Set("Content-Type", "application/zip")
+	case "jar":
+		request.Header.Set("Content-Type", "application/java-archive")
+	}
+	request.ContentLength = fileInfo.Size()
+	response, err := client.Do(request)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode >= 400 {
+		responseBody, err := io.ReadAll(response.Body)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("%s", string(responseBody))
+	}
+
+	return nil
+}
