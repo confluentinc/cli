@@ -1,5 +1,5 @@
 {
-    "apiVersion": "cmf.confluent.io/v1alpha1",
+    "apiVersion": "cmf.confluent.io/v1",
     "kind": "FlinkApplication",
     "metadata": {
         "name": "update-failure-application"

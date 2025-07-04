@@ -165,6 +165,25 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 		return table.Print()
 	}
 
+	if output.GetFormat(cmd) == output.YAML {
+		// Convert the outputStatement to our local struct for correct YAML field names
+		jsonBytes, err := json.Marshal(outputStatement)
+		if err != nil {
+			return err
+		}
+		var outputLocalStmt localStatement
+		if err = json.Unmarshal(jsonBytes, &outputLocalStmt); err != nil {
+			return err
+		}
+		// Output the local struct for correct YAML field names
+		out, err := yaml.Marshal(outputLocalStmt)
+		if err != nil {
+			return err
+		}
+		output.Print(false, string(out))
+		return nil
+	}
+
 	return output.SerializedOutput(cmd, outputStatement)
 }
 

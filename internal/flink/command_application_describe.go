@@ -1,7 +1,10 @@
 package flink
 
 import (
+	"encoding/json"
+
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -39,6 +42,25 @@ func (c *command) applicationDescribe(cmd *cobra.Command, args []string) error {
 	application, err := client.DescribeApplication(c.createContext(), environment, applicationName)
 	if err != nil {
 		return err
+	}
+
+	if output.GetFormat(cmd) == output.YAML {
+		// Convert the application to our local struct for correct YAML field names
+		jsonBytes, err := json.Marshal(application)
+		if err != nil {
+			return err
+		}
+		var outputLocalApp localFlinkApplication
+		if err = json.Unmarshal(jsonBytes, &outputLocalApp); err != nil {
+			return err
+		}
+		// Output the local struct for correct YAML field names
+		out, err := yaml.Marshal(outputLocalApp)
+		if err != nil {
+			return err
+		}
+		output.Print(false, string(out))
+		return nil
 	}
 
 	return output.SerializedOutput(cmd, application)
