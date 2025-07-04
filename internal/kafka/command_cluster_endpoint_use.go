@@ -30,8 +30,6 @@ func (c *clusterCommand) newEndpointUseCommand() *cobra.Command {
 }
 
 func (c *clusterCommand) endpointUse(cmd *cobra.Command, args []string) error {
-	// TODO: add logic and endpoint validation here! Sanity checks!
-
 	currEnvironment := c.Context.GetCurrentEnvironment()
 	if currEnvironment == "" {
 		return errors.NewErrorWithSuggestions(
@@ -44,7 +42,7 @@ func (c *clusterCommand) endpointUse(cmd *cobra.Command, args []string) error {
 	activeCluster := c.Context.KafkaClusterContext.GetActiveKafkaClusterId()
 	if activeCluster == "" {
 		return errors.NewErrorWithSuggestions(
-			"Current active Kafka vluster is empty",
+			"Current active Kafka cluster is empty",
 			"Please run `confluent kafka cluster use` to set the active cluster first.",
 		)
 	}
@@ -57,7 +55,6 @@ func (c *clusterCommand) endpointUse(cmd *cobra.Command, args []string) error {
 	}
 
 	c.Context.KafkaClusterContext.SetActiveKafkaClusterEndpoint(endpoint)
-
 	if err := c.Config.Save(); err != nil {
 		return err
 	}

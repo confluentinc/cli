@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -44,9 +43,9 @@ func (c *clusterCommand) use(_ *cobra.Command, args []string) error {
 
 	if activeEndpoint := c.Context.KafkaClusterContext.GetActiveKafkaClusterEndpoint(); activeEndpoint != "" {
 		c.Context.KafkaClusterContext.UnsetActiveKafkaClusterEndpoint()
+		output.ErrPrintf(c.Config.EnableColor, "Unset current endpoint. "+
+			"Use `kafka cluster endpoint list` to view the available endpoints and use `cluster endpoint use` to set an active endpoint for the current Kafka cluster.\n")
 	}
-	output.ErrPrintf(c.Config.EnableColor, "Unset current endpoint. "+
-		"Use `kafka cluster endpoint list` to view the available endpoints and use `cluster endpoint use` to set an active endpoint for the current Kafka cluster.\n")
 
 	return nil
 }

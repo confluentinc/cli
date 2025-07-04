@@ -241,6 +241,8 @@ func (s *CLITestSuite) TestKafkaClusterEndpoint() {
 		{args: "kafka cluster endpoint use https://pl-uvw456-dedicated.rest.us-west-2.aws.confluent.cloud", fixture: "kafka/endpoint/use-pni-new-cluster.golden"},
 
 		{args: "kafka cluster endpoint list --cluster lkc-describe-dedicated", fixture: "kafka/endpoint/list-new-cluster-endpoints-after-use.golden"},
+
+		{args: "kafka cluster use lkc-describe", fixture: "kafka/cluster/use-another-cluster.golden"},
 	}
 
 	resetConfiguration(s.T(), false)
