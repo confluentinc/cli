@@ -12,12 +12,13 @@ Update the type of a Kafka cluster from "Basic" to "Standard":
   $ confluent kafka cluster update lkc-123456 --type "standard"
 
 Flags:
-      --name string          Name of the Kafka cluster.
-      --cku uint32           Number of Confluent Kafka Units. For Kafka clusters of type "dedicated" only. When shrinking a cluster, you must reduce capacity one CKU at a time.
-      --type string          Type of the Kafka cluster. Only supports upgrading from "Basic" to "Standard".
-      --context string       CLI context name.
-      --environment string   Environment ID.
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+      --name string             Name of the Kafka cluster.
+      --cku uint32              Number of Confluent Kafka Units. For Kafka clusters of type "dedicated" only. When shrinking a cluster, you must reduce capacity one CKU at a time.
+      --type string             Type of the Kafka cluster. Only supports upgrading from "Basic" to "Standard".
+      --context string          CLI context name.
+      --environment string      Environment ID.
+      --kafka-endpoint string   Endpoint to be used for this Kafka cluster.
+  -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

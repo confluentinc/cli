@@ -28,6 +28,7 @@ func (c *linkCommand) newConfigurationUpdateCommand() *cobra.Command {
 		),
 	}
 
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddConfigFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -63,7 +64,7 @@ func (c *linkCommand) configurationUpdate(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}
