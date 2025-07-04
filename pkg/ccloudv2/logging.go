@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	LogsPageSize = 20
+	LogsPageSize = 200
 )
 
 type LoggingSearchRequest struct {
@@ -85,7 +85,7 @@ func (c *Client) SearchConnectorLogs(crn, startTime, endTime string, levels []st
 	httpClient := NewRetryableHttpClient(c.cfg, false)
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to make HTTP request to logging API due to issue connecting to the server")
+		return nil, fmt.Errorf("failed to make HTTP request to logging API due to issue connecting to the server, please make sure you adhere to 5 requests per minute per connector rate limit")
 	}
 	defer resp.Body.Close()
 
