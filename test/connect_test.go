@@ -304,6 +304,7 @@ func (s *CLITestSuite) TestConnectLogs() {
 		{args: fmt.Sprintf("connect logs lcc-123 --cluster lkc-123 --start-time %s --end-time %s --level INFO --output-file logs.txt", startTime, endTime), fixture: "connect/logs/logs-output-file.golden"},
 		{args: fmt.Sprintf("connect logs \"\" --cluster lkc-123 --start-time %s --end-time %s --level INFO", startTime, endTime), fixture: "connect/logs/logs-empty-connector-id.golden", exitCode: 1},
 		{args: fmt.Sprintf("connect logs lcc-123 --cluster lkc-123 --start-time %s --end-time %s --level INFO", endTime, startTime), fixture: "connect/logs/logs-endtime-smaller-than-starttime.golden", exitCode: 1},
+		{args: fmt.Sprintf("connect logs lcc-112 --cluster lkc-123 --start-time %s --end-time %s --level INFO", startTime, endTime), fixture: "connect/logs/logs-server-connection-issue.golden", exitCode: 1},
 		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-01-02T15:04:05Z --end-time 2025-01-02T15:14:05Z --level INFO", fixture: "connect/logs/logs-starttime-older-than-72-hours.golden", exitCode: 1},
 	}
 
