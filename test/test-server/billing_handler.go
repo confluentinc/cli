@@ -55,6 +55,7 @@ func handleBillingCosts(t *testing.T) http.HandlerFunc {
 		}
 		data = append(data, nilFloatValues)
 		costList.Data = data
+		setPageToken(&costList, &costList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(costList)
 		require.NoError(t, err)
 	}
