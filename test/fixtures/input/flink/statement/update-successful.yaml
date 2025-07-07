@@ -1,0 +1,15 @@
+apiVersion: cmf.confluent.io/v1
+kind: Statement
+metadata:
+  name: test-statement
+spec:
+  statement: "SELECT * FROM test_table WHERE id > 100"
+  computePoolName: test-pool
+  parallelism: 4
+  stopped: false
+  properties:
+    checkpoint.interval: 120000
+    state.backend: filesystem
+  flinkConfiguration:
+    taskmanager.numberOfTaskSlots: 4
+    parallelism.default: 2 
