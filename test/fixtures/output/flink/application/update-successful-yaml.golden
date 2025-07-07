@@ -1,7 +1,7 @@
 apiVersion: cmf.confluent.io/v1
 kind: FlinkApplication
 metadata:
-    name: default-application-1
+    name: default-application-2
 spec:
     flinkConfiguration:
         metrics.reporter.prom.factory.class: org.apache.flink.metrics.prometheus.PrometheusReporterFactory
@@ -19,7 +19,7 @@ spec:
         resource:
             cpu: 1
             memory: 1048m
-    serviceAccount: flink
+    serviceAccount: flink-new-service-account
     taskManager:
         resource:
             cpu: 1

@@ -1,7 +1,7 @@
 apiVersion: cmf.confluent.io/v1
 kind: FlinkApplication
 metadata:
-  name: non-existent
+  name: default-application-3
 spec:
   flinkEnvironment: default
   image: confluentinc/cp-flink:1.19.1-cp1

@@ -61,7 +61,7 @@ func (c *command) computePoolCreateOnPrem(cmd *cobra.Command, args []string) err
 	case ".yaml", ".yml":
 		// Unmarshal into local struct with YAML tags
 		if err = yaml.Unmarshal(data, &localPool); err != nil {
-			return fmt.Errorf("failed to unmarshal YAML: %v", err)
+			return fmt.Errorf("failed to unmarshal YAML: %w", err)
 		}
 
 		// Convert to JSON bytes to use the SDK struct's JSON tags

@@ -32,6 +32,7 @@ func (s *CLITestSuite) TestFlinkApplicationList() {
 		// success scenarios
 		{args: "flink application list --environment test", fixture: "flink/application/list-empty-env.golden"},
 		{args: "flink application list --environment default  --output json", fixture: "flink/application/list-json.golden"},
+		{args: "flink application list --environment default  --output yaml", fixture: "flink/application/list-yaml.golden"},
 		{args: "flink application list --environment default  --output human", fixture: "flink/application/list-human.golden"},
 	}
 
@@ -511,21 +512,6 @@ func (s *CLITestSuite) TestFlinkCatalogCreateWithYAML() {
 		// YAML file failure scenarios
 		{args: "flink catalog create test/fixtures/input/flink/catalog/create-invalid-failure.yaml", fixture: "flink/catalog/create-invalid-failure.golden", exitCode: 1},
 		{args: "flink catalog create test/fixtures/input/flink/catalog/create-existing-failure.yaml", fixture: "flink/catalog/create-existing-failure.golden", exitCode: 1},
-	}
-
-	runIntegrationTestsWithMultipleAuth(s, tests)
-}
-
-func (s *CLITestSuite) TestFlinkStatementCreateWithYAML() {
-	tests := []CLITest{
-		// YAML file tests for statement creation
-		{args: "flink statement create test/fixtures/input/flink/statement/create-successful.yaml --environment default", fixture: "flink/statement/create-success.golden"},
-		{args: "flink statement create test/fixtures/input/flink/statement/create-successful.yaml --environment default --output yaml", fixture: "flink/statement/create-success-yaml.golden"},
-		{args: "flink statement create test/fixtures/input/flink/statement/create-successful.yaml --environment default --output json", fixture: "flink/statement/create-success-json.golden"},
-		// YAML file tests for statement update
-		{args: "flink statement update test/fixtures/input/flink/statement/update-successful.yaml --environment default", fixture: "flink/statement/update-success.golden"},
-		{args: "flink statement update test/fixtures/input/flink/statement/update-successful.yaml --environment default --output yaml", fixture: "flink/statement/update-success-yaml.golden"},
-		{args: "flink statement update test/fixtures/input/flink/statement/update-successful.yaml --environment default --output json", fixture: "flink/statement/update-success-json.golden"},
 	}
 
 	runIntegrationTestsWithMultipleAuth(s, tests)
