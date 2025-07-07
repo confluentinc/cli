@@ -1,1 +1,1 @@
-Error: application "default-application-3" does not exist in the environment "default"
+Error: application "non-existent" does not exist in the environment "default"

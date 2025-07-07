@@ -1,0 +1,9 @@
+apiVersion: cmf.confluent.io/v1
+kind: FlinkApplication
+metadata:
+  name: default-application-3
+spec:
+  flinkEnvironment: default
+  # Missing required fields like image, flinkVersion, etc.
+  serviceAccount: flink
+status: null 
