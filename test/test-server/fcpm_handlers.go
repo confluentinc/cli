@@ -14,8 +14,6 @@ import (
 
 func handleFcpmComputePools(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var v any
-
 		switch r.Method {
 		case http.MethodGet:
 			euWest1 := flinkv2.FcpmV2ComputePool{
@@ -49,22 +47,24 @@ func handleFcpmComputePools(t *testing.T) http.HandlerFunc {
 			if r.URL.Query().Get("spec.region") == "eu-west-2" {
 				computePools = []flinkv2.FcpmV2ComputePool{euWest2}
 			}
-			v = flinkv2.FcpmV2ComputePoolList{Data: computePools}
+			v := flinkv2.FcpmV2ComputePoolList{Data: computePools}
+			setPageToken(&v, &v.Metadata, r.URL)
+			err := json.NewEncoder(w).Encode(v)
+			require.NoError(t, err)
 		case http.MethodPost:
 			create := new(flinkv2.FcpmV2ComputePool)
 			err := json.NewDecoder(r.Body).Decode(create)
 			require.NoError(t, err)
 			create.Spec.Cloud = flinkv2.PtrString(strings.ToUpper(create.Spec.GetCloud()))
 
-			v = flinkv2.FcpmV2ComputePool{
+			v := flinkv2.FcpmV2ComputePool{
 				Id:     flinkv2.PtrString("lfcp-123456"),
 				Spec:   create.Spec,
 				Status: &flinkv2.FcpmV2ComputePoolStatus{Phase: "PROVISIONING"},
 			}
+			err = json.NewEncoder(w).Encode(v)
+			require.NoError(t, err)
 		}
-
-		err := json.NewEncoder(w).Encode(v)
-		require.NoError(t, err)
 	}
 }
 
@@ -170,8 +170,9 @@ func handleFcpmRegions(t *testing.T) http.HandlerFunc {
 				regions = []flinkv2.FcpmV2Region{}
 			}
 		}
-
-		err := json.NewEncoder(w).Encode(flinkv2.FcpmV2RegionList{Data: regions})
+		regionsList := &flinkv2.FcpmV2RegionList{Data: regions}
+		setPageToken(regionsList, &regionsList.Metadata, r.URL)
+		err := json.NewEncoder(w).Encode(regionsList)
 		require.NoError(t, err)
 	}
 }
