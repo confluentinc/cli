@@ -97,31 +97,9 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 		properties["sql.current-catalog"] = catalog
 	}
 
-	configFilePath, err := cmd.Flags().GetString("flink-configuration")
+	flinkConfiguration, err := c.readFlinkConfiguration(cmd)
 	if err != nil {
 		return err
-	}
-
-	var flinkConfiguration = map[string]string{}
-	if configFilePath != "" {
-		var data []byte
-		// Read configuration file contents
-		data, err = os.ReadFile(configFilePath)
-		if err != nil {
-			return fmt.Errorf("failed to read Flink configuration file: %v", err)
-		}
-		ext := filepath.Ext(configFilePath)
-		switch ext {
-		case ".json":
-			err = json.Unmarshal(data, &flinkConfiguration)
-		case ".yaml", ".yml":
-			err = yaml.Unmarshal(data, &flinkConfiguration)
-		default:
-			return errors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
-		}
-		if err != nil {
-			return err
-		}
 	}
 
 	statement := cmfsdk.Statement{
@@ -207,4 +185,35 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 	}
 
 	return output.SerializedOutput(cmd, outputStatement)
+}
+
+func (c *command) readFlinkConfiguration(cmd *cobra.Command) (map[string]string, error) {
+	configFilePath, err := cmd.Flags().GetString("flink-configuration")
+	if err != nil {
+		return nil, err
+	}
+
+	flinkConfiguration := map[string]string{}
+	if configFilePath != "" {
+		var data []byte
+		// Read configuration file contents
+		data, err = os.ReadFile(configFilePath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read Flink configuration file: %v", err)
+		}
+		ext := filepath.Ext(configFilePath)
+		switch ext {
+		case ".json":
+			err = json.Unmarshal(data, &flinkConfiguration)
+		case ".yaml", ".yml":
+			err = yaml.Unmarshal(data, &flinkConfiguration)
+		default:
+			return nil, errors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return flinkConfiguration, nil
 }

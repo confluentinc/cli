@@ -736,9 +736,90 @@ func handleCmfStatement(t *testing.T) http.HandlerFunc {
 				return
 			}
 
-			stmt := createFlinkStatement(stmtName, false, 1)
-			err := json.NewEncoder(w).Encode(stmt)
-			require.NoError(t, err)
+			if stmtName == "shell-test-stmt" {
+				stmt := cmfsdk.Statement{
+					Metadata: cmfsdk.StatementMetadata{
+						Name: stmtName,
+					},
+					Status: &cmfsdk.StatementStatus{
+						Phase:  "COMPLETED",
+						Detail: cmfsdk.PtrString("Statement execution completed."),
+						Traits: &cmfsdk.StatementTraits{
+							SqlKind:       cmfsdk.PtrString("DESCRIBE"),
+							UpsertColumns: nil,
+							Schema: &cmfsdk.ResultSchema{
+								Columns: []cmfsdk.ResultSchemaColumn{
+									{
+										Name: "name",
+										Type: cmfsdk.DataType{
+											Type:        "VARCHAR",
+											Nullable:    true,
+											KeyType:     nil,
+											ValueType:   nil,
+											ElementType: nil,
+											Fields:      nil,
+										},
+									},
+									{
+										Name: "type",
+										Type: cmfsdk.DataType{
+											Type:        "VARCHAR",
+											Nullable:    true,
+											KeyType:     nil,
+											ValueType:   nil,
+											ElementType: nil,
+											Fields:      nil,
+										},
+									},
+									{
+										Name: "null",
+										Type: cmfsdk.DataType{
+											Type:        "BOOLEAN",
+											Nullable:    true,
+											KeyType:     nil,
+											ValueType:   nil,
+											ElementType: nil,
+											Fields:      nil,
+										},
+									},
+								},
+							},
+						},
+					},
+					Result: &cmfsdk.StatementResult{
+						Results: cmfsdk.StatementResults{
+							Data: &[]map[string]interface{}{
+								{
+									"op":  0,
+									"row": []string{"click_id", "STRING", "false"},
+								},
+								{
+									"op":  0,
+									"row": []string{"USER_id", "INT", "false"},
+								},
+								{
+									"op":  0,
+									"row": []string{"url", "STRING", "false"},
+								},
+								{
+									"op":  0,
+									"row": []string{"user_agent", "STRING", "false"},
+								},
+								{
+									"op":  0,
+									"row": []string{"view_time", "INT", "false"},
+								},
+							},
+						},
+					},
+				}
+				err := json.NewEncoder(w).Encode(stmt)
+				require.NoError(t, err)
+			} else {
+				stmt := createFlinkStatement(stmtName, false, 1)
+				err := json.NewEncoder(w).Encode(stmt)
+				require.NoError(t, err)
+			}
 			return
 		case http.MethodDelete:
 			if stmtName == "non-exist-stmt" {
@@ -818,14 +899,64 @@ func handleCmfStatements(t *testing.T) http.HandlerFunc {
 
 			timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
 			stmt.Metadata.CreationTimestamp = &timeStamp
-			status := cmfsdk.StatementStatus{
-				Phase:  "PENDING",
-				Detail: cmfsdk.PtrString("Statement is pending execution."),
-				Traits: &cmfsdk.StatementTraits{
-					SqlKind:      cmfsdk.PtrString("SELECT"),
-					IsAppendOnly: cmfsdk.PtrBool(false),
-					IsBounded:    cmfsdk.PtrBool(false),
-				},
+
+			status := cmfsdk.StatementStatus{}
+			if stmtName == "shell-test-stmt" {
+				status = cmfsdk.StatementStatus{
+					Phase:  "COMPLETED",
+					Detail: cmfsdk.PtrString("Statement execution completed."),
+					Traits: &cmfsdk.StatementTraits{
+						SqlKind:       cmfsdk.PtrString("DESCRIBE"),
+						UpsertColumns: nil,
+						Schema: &cmfsdk.ResultSchema{
+							Columns: []cmfsdk.ResultSchemaColumn{
+								{
+									Name: "name",
+									Type: cmfsdk.DataType{
+										Type:        "VARCHAR",
+										Nullable:    true,
+										KeyType:     nil,
+										ValueType:   nil,
+										ElementType: nil,
+										Fields:      nil,
+									},
+								},
+								{
+									Name: "type",
+									Type: cmfsdk.DataType{
+										Type:        "VARCHAR",
+										Nullable:    true,
+										KeyType:     nil,
+										ValueType:   nil,
+										ElementType: nil,
+										Fields:      nil,
+									},
+								},
+								{
+									Name: "null",
+									Type: cmfsdk.DataType{
+										Type:        "BOOLEAN",
+										Nullable:    true,
+										KeyType:     nil,
+										ValueType:   nil,
+										ElementType: nil,
+										Fields:      nil,
+									},
+								},
+							},
+						},
+					},
+				}
+			} else {
+				status = cmfsdk.StatementStatus{
+					Phase:  "PENDING",
+					Detail: cmfsdk.PtrString("Statement is pending execution."),
+					Traits: &cmfsdk.StatementTraits{
+						SqlKind:      cmfsdk.PtrString("SELECT"),
+						IsAppendOnly: cmfsdk.PtrBool(false),
+						IsBounded:    cmfsdk.PtrBool(false),
+					},
+				}
 			}
 			stmt.Status = &status
 			err = json.NewEncoder(w).Encode(stmt)
