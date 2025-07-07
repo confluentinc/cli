@@ -1,0 +1,10 @@
+apiVersion: cmf/api/v1/catalog
+kind: KafkaCatalog
+metadata:
+  name: invalid-catalog
+spec:
+  kafkaClusters:
+    - databaseName: dev
+    - databaseName: prod
+  # Invalid field that doesn't exist in the schema
+  invalidField: "this field should not exist" 

@@ -1,0 +1,5 @@
+apiVersion: cmf/api/v1/catalog
+kind: KafkaCatalog
+metadata:
+  name: test-catalog
+# Missing spec section with required kafkaClusters 

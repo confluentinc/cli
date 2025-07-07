@@ -1,0 +1,1 @@
+Error: failed to read file: open test/fixtures/input/flink/catalog/nonexistent.yaml: no such file or directory 
