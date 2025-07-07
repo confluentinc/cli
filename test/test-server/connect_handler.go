@@ -147,6 +147,9 @@ func handleLogsSearch(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(response)
 			require.NoError(t, err)
 			return
+		} else if connectorName == "az-connector-3" {
+			w.WriteHeader(http.StatusTooManyRequests)
+			return
 		}
 
 		response := LoggingSearchResponse{
@@ -470,9 +473,25 @@ func handleConnectors(t *testing.T) http.HandlerFunc {
 					Name:   connectv1.PtrString("az-connector-2"),
 				},
 			}
+			thirdConnectorExpansion := connectv1.ConnectV1ConnectorExpansion{
+				Id: &connectv1.ConnectV1ConnectorExpansionId{Id: connectv1.PtrString("lcc-112")},
+				Status: &connectv1.ConnectV1ConnectorExpansionStatus{
+					Name: "az-connector-3",
+					Connector: connectv1.ConnectV1ConnectorExpansionStatusConnector{
+						State: "RUNNING",
+					},
+					Tasks: &[]connectv1.InlineResponse2001Tasks{{Id: 1, State: "RUNNING"}},
+					Type:  "Sink",
+				},
+				Info: &connectv1.ConnectV1ConnectorExpansionInfo{
+					Config: &map[string]string{},
+					Name:   connectv1.PtrString("az-connector-3"),
+				},
+			}
 			err := json.NewEncoder(w).Encode(map[string]connectv1.ConnectV1ConnectorExpansion{
 				"az-connector":   firstConnectorExpansion,
 				"az-connector-2": secondConnectorExpansion,
+				"az-connector-3": thirdConnectorExpansion,
 			})
 			require.NoError(t, err)
 		} else if r.Method == http.MethodPost {
