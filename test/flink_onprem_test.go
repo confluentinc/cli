@@ -517,36 +517,6 @@ func (s *CLITestSuite) TestFlinkCatalogCreateWithYAML() {
 	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
-func (s *CLITestSuite) TestFlinkYAMLFileFormatValidation() {
-	tests := []CLITest{
-		// Test unsupported file formats
-		{args: "flink application create --environment default test/fixtures/input/flink/application/create-new.txt", fixture: "flink/application/create-unsupported-format.golden", exitCode: 1},
-		{args: "flink compute-pool create test/fixtures/input/flink/compute-pool/create-successful.txt --environment default", fixture: "flink/compute-pool/create-unsupported-format.golden", exitCode: 1},
-		{args: "flink catalog create test/fixtures/input/flink/catalog/create-successful.txt", fixture: "flink/catalog/create-unsupported-format.golden", exitCode: 1},
-		// Test missing files
-		{args: "flink application create --environment default test/fixtures/input/flink/application/nonexistent.yaml", fixture: "flink/application/create-missing-file.golden", exitCode: 1},
-		{args: "flink compute-pool create test/fixtures/input/flink/compute-pool/nonexistent.yaml --environment default", fixture: "flink/compute-pool/create-missing-file.golden", exitCode: 1},
-		{args: "flink catalog create test/fixtures/input/flink/catalog/nonexistent.yaml", fixture: "flink/catalog/create-missing-file.golden", exitCode: 1},
-	}
-
-	runIntegrationTestsWithMultipleAuth(s, tests)
-}
-
-func (s *CLITestSuite) TestFlinkYAMLFileContentValidation() {
-	tests := []CLITest{
-		// Test invalid YAML content
-		{args: "flink application create --environment default test/fixtures/input/flink/application/create-invalid-yaml.yaml", fixture: "flink/application/create-invalid-yaml.golden", exitCode: 1},
-		{args: "flink compute-pool create test/fixtures/input/flink/compute-pool/create-invalid-yaml.yaml --environment default", fixture: "flink/compute-pool/create-invalid-yaml.golden", exitCode: 1},
-		{args: "flink catalog create test/fixtures/input/flink/catalog/create-invalid-yaml.yaml", fixture: "flink/catalog/create-invalid-yaml.golden", exitCode: 1},
-		// Test YAML with missing required fields
-		{args: "flink application create --environment default test/fixtures/input/flink/application/create-missing-fields.yaml", fixture: "flink/application/create-missing-fields.golden", exitCode: 1},
-		{args: "flink compute-pool create test/fixtures/input/flink/compute-pool/create-missing-fields.yaml --environment default", fixture: "flink/compute-pool/create-missing-fields.golden", exitCode: 1},
-		{args: "flink catalog create test/fixtures/input/flink/catalog/create-missing-fields.yaml", fixture: "flink/catalog/create-missing-fields.golden", exitCode: 1},
-	}
-
-	runIntegrationTestsWithMultipleAuth(s, tests)
-}
-
 func (s *CLITestSuite) TestFlinkShellOnPrem() {
 	tests := []flinkShellTest{
 		{

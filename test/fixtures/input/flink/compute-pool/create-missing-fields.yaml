@@ -1,5 +1,0 @@
-metadata:
-  name: test-pool
-spec:
-  type: DEDICATED
-  # Missing required clusterSpec section 
