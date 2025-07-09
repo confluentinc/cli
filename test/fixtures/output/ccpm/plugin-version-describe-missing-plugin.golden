@@ -1,6 +1,6 @@
-Error: required flag(s) "plugin", "environment" not set
+Error: required flag(s) "plugin" not set
 Usage:
-  confluent ccpm plugin version describe <version-id> [flags]
+  confluent ccpm plugin version describe <id> [flags]
 
 Examples:
 Describe a specific version of a custom connect plugin.
@@ -13,7 +13,7 @@ Get detailed information about version 1.0.0 of a plugin.
 
 Flags:
       --plugin string        REQUIRED: Plugin ID.
-      --environment string   REQUIRED: Environment ID.
+      --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

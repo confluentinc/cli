@@ -5,16 +5,16 @@ Usage:
 Examples:
 Create a custom Connect plugin for AWS.
 
-  $ confluent ccpm plugin create --name "My Custom Plugin" --description "A custom connector for data processing" --cloud AWS --environment env-12345
+  $ confluent ccpm plugin create --name "My Custom Plugin" --cloud AWS --description "A custom connector for data processing" --environment env-12345
 
 Create a custom Connect plugin for GCP with minimal description.
 
   $ confluent ccpm plugin create --name "GCP Data Connector" --cloud GCP --environment env-abcdef
 
 Flags:
-      --environment string   REQUIRED: Environment ID.
-      --cloud string         REQUIRED: Cloud provider (AWS, GCP, AZURE).
       --name string          REQUIRED: Display name of the custom Connect plugin.
+      --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --environment string   Environment ID.
       --description string   Description of the custom Connect plugin.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 

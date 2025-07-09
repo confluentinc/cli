@@ -1,6 +1,6 @@
 Error: accepts 1 arg(s), received 0
 Usage:
-  confluent ccpm plugin version describe <version-id> [flags]
+  confluent ccpm plugin version describe <id> [flags]
 
 Examples:
 Describe a specific version of a custom connect plugin.

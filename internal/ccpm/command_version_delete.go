@@ -11,7 +11,7 @@ import (
 
 func (c *pluginCommand) newDeleteVersionCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete delete <id-1> [id-2] ... [id-n]",
+		Use:   "delete <id-1> [id-2] ... [id-n]",
 		Short: "Delete one or more custom Connect plugin version.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.deleteVersion,
@@ -30,7 +30,6 @@ func (c *pluginCommand) newDeleteVersionCommand() *cobra.Command {
 	cmd.Flags().String("plugin", "", "Plugin ID.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	cobra.CheckErr(cmd.MarkFlagRequired("plugin"))
-	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
 	pcmd.AddForceFlag(cmd)
 
 	return cmd

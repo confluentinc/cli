@@ -1,6 +1,6 @@
-Error: accepts 1 arg(s), received 0
+Error: requires at least 1 arg(s), only received 0
 Usage:
-  confluent ccpm plugin version delete <id> [flags]
+  confluent ccpm plugin version delete <id-1> [id-2] ... [id-n] [flags]
 
 Examples:
 Delete a specific version of a custom connect plugin.

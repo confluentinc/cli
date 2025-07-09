@@ -1,8 +1,9 @@
 package ccpm
 
 import (
-	"github.com/spf13/cobra"
 	"strings"
+
+	"github.com/spf13/cobra"
 
 	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
 
@@ -19,7 +20,7 @@ func (c *pluginCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a custom Connect plugin for AWS.",
-				Code: `confluent ccpm plugin create --name "My Custom Plugin" --description "A custom connector for data processing" --cloud AWS --environment env-12345`,
+				Code: `confluent ccpm plugin create --name "My Custom Plugin" --cloud AWS --description "A custom connector for data processing" --environment env-12345`,
 			},
 			examples.Example{
 				Text: "Create a custom Connect plugin for GCP with minimal description.",
@@ -28,13 +29,13 @@ func (c *pluginCommand) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddCloudFlag(cmd)
 	cmd.Flags().String("name", "", "Display name of the custom Connect plugin.")
+	cobra.CheckErr(cmd.MarkFlagRequired("name"))
+	pcmd.AddCloudFlag(cmd)
+	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("description", "", "Description of the custom Connect plugin.")
 	pcmd.AddOutputFlag(cmd)
-	cobra.CheckErr(cmd.MarkFlagRequired("name"))
-	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
 
 	return cmd
 }

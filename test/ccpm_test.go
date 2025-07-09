@@ -84,17 +84,17 @@ func (s *CLITestSuite) TestCCPMPluginVersion() {
 func (s *CLITestSuite) TestCCPM_Validation() {
 	tests := []CLITest{
 		// Required flag validation tests
-		{args: "ccpm plugin list", fixture: "ccpm/plugin-list-missing-environment.golden", exitCode: 1},
-		{args: "ccpm plugin create --name my-plugin --cloud aws", fixture: "ccpm/plugin-create-missing-environment.golden", exitCode: 1},
+		{args: "ccpm plugin list", fixture: "ccpm/plugin-list-missing-environment.golden"},
+		{args: "ccpm plugin create --name my-plugin --cloud aws", fixture: "ccpm/plugin-create-missing-environment.golden"},
 		{args: "ccpm plugin create --name my-plugin --environment env-123456", fixture: "ccpm/plugin-create-missing-cloud.golden", exitCode: 1},
 		{args: "ccpm plugin create --cloud aws --environment env-123456", fixture: "ccpm/plugin-create-missing-name.golden", exitCode: 1},
-		{args: "ccpm plugin describe ccp-123456", fixture: "ccpm/plugin-describe-missing-environment.golden", exitCode: 1},
-		{args: "ccpm plugin update ccp-123456", fixture: "ccpm/plugin-update-missing-environment.golden", exitCode: 1},
-		{args: "ccpm plugin delete ccp-123456", fixture: "ccpm/plugin-delete-missing-environment.golden", exitCode: 1},
+		{args: "ccpm plugin describe ccp-123456", fixture: "ccpm/plugin-describe-missing-environment.golden"},
+		{args: "ccpm plugin update ccp-123456", fixture: "ccpm/plugin-update-missing-environment.golden"},
+		{args: "ccpm plugin delete ccp-123456 --force", fixture: "ccpm/plugin-delete-missing-environment.golden"},
 
 		// Version command validation tests
 		{args: "ccpm plugin version list", fixture: "ccpm/plugin-version-list-missing-plugin.golden", exitCode: 1},
-		{args: "ccpm plugin version list --plugin ccp-123456", fixture: "ccpm/plugin-version-list-missing-environment.golden", exitCode: 1},
+		{args: "ccpm plugin version list --plugin ccp-123456", fixture: "ccpm/plugin-version-list-missing-environment.golden"},
 		{args: "ccpm plugin version create --plugin ccp-123456 --version 1.0.0", fixture: "ccpm/plugin-version-create-missing-required.golden", exitCode: 1},
 		{args: "ccpm plugin version describe --plugin ccp-123456", fixture: "ccpm/plugin-version-describe-missing-version.golden", exitCode: 1},
 		{args: "ccpm plugin version describe ver-123456", fixture: "ccpm/plugin-version-describe-missing-plugin.golden", exitCode: 1},

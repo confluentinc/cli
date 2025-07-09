@@ -1,19 +1,4 @@
-Error: required flag(s) "environment" not set
-Usage:
-  confluent ccpm plugin version list [flags]
-
-Examples:
-List all versions of a custom connect plugin.
-
-  $ confluent ccpm plugin version list --plugin plugin-123456 --environment env-abcdef
-
-Flags:
-      --plugin string        REQUIRED: Plugin ID.
-      --environment string   REQUIRED: Environment ID.
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
-
-Global Flags:
-  -h, --help            Show help for this command.
-      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
-  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-
+  Plugin ID  |  Plugin Name  |     ID     | Version | Content Format |    Documentation Link     | Sensitive Config Properties |                     Connector Classes                      | Phase | Error Message | Environment  
+-------------+---------------+------------+---------+----------------+---------------------------+-----------------------------+------------------------------------------------------------+-------+---------------+--------------
+  ccp-123456 | CliPluginTest | ver-123456 | 1.0.0   | ZIP            | https://docs.confluent.io | password, secret            | io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE | READY |               | env-596      
+  ccp-123456 | CliPluginTest | ver-789012 | 2.0.0   | JAR            |                           |                             | io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE | READY |               | env-596      
