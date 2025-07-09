@@ -109,7 +109,7 @@ require (
 	go.uber.org/mock v0.4.0
 	golang.org/x/crypto v0.36.0
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
-	golang.org/x/oauth2 v0.22.0
+	golang.org/x/oauth2 v0.27.0
 	golang.org/x/term v0.30.0
 	golang.org/x/text v0.23.0
 	google.golang.org/protobuf v1.34.2
