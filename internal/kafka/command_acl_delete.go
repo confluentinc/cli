@@ -35,6 +35,7 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 	cmd.Flags().String("consumer-group", "", "Modify ACLs for the specified consumer group resource.")
 	cmd.Flags().String("transactional-id", "", "Modify ACLs for the specified TransactionalID resource.")
 	cmd.Flags().Bool("prefix", false, "When this flag is set, the specified resource name is interpreted as a prefix.")
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddForceFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -62,7 +63,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		filters[i] = convertToFilter(acl.ACLBinding)
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}

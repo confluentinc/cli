@@ -79,11 +79,11 @@ func (c *command) validArgsMultiple(cmd *cobra.Command, args []string) []string 
 		return nil
 	}
 
-	return c.autocompleteTopics()
+	return c.autocompleteTopics(cmd)
 }
 
-func (c *command) autocompleteTopics() []string {
-	topics, err := c.getTopics()
+func (c *command) autocompleteTopics(cmd *cobra.Command) []string {
+	topics, err := c.getTopics(cmd)
 	if err != nil {
 		return nil
 	}

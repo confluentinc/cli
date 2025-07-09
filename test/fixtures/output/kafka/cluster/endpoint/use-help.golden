@@ -1,0 +1,14 @@
+Use a Kafka Cluster endpoint as active endpoint for all subsequent Kafka Cluster commands in current environment.
+
+Usage:
+  confluent kafka cluster endpoint use [flags]
+
+Examples:
+Use "https://lkc-s1232.us-west-2.aws.private.confluent.cloud:443" for subsequent Kafka Cluster commands.
+
+  $ confluent kafka cluster endpoint use "https://lkc-s1232.us-west-2.aws.private.confluent.cloud:443"
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

@@ -1,0 +1,6 @@
+  Current |           Endpoint           |                         Kafka Bootstrap Endpoint                          |                          Http Endpoint                           | Connection Type  
+----------+------------------------------+---------------------------------------------------------------------------+------------------------------------------------------------------+------------------
+          | pni-abc123-dedicated         | SASL_SSL://pni-abc123-dedicated.kafka.us-west-2.aws.confluent.cloud:9092  | https://pni-abc123-dedicated.rest.us-west-2.aws.confluent.cloud  | PNI              
+          | privatelink-uvw456-dedicated | SASL_SSL://pl-uvw456-dedicated.kafka.us-west-2.aws.confluent.cloud:9092   | https://pl-uvw456-dedicated.rest.us-west-2.aws.confluent.cloud   | PRIVATELINK      
+          | privatelink-xyz789-dedicated | SASL_SSL://pl-xyz789-dedicated.kafka.us-west-2.aws.confluent.cloud:9092   | https://pl-xyz789-dedicated.rest.us-west-2.aws.confluent.cloud   | PRIVATELINK      
+          | public-0001-dedicated        | SASL_SSL://public-0001-dedicated.kafka.us-west-2.aws.confluent.cloud:9092 | https://public-0001-dedicated.rest.us-west-2.aws.confluent.cloud | PUBLIC           

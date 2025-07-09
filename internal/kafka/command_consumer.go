@@ -49,6 +49,6 @@ func (c *consumerCommand) addConsumerGroupFlag(cmd *cobra.Command) {
 			return nil
 		}
 
-		return pcmd.AutocompleteConsumerGroups(c.AuthenticatedCLICommand)
+		return pcmd.AutocompleteConsumerGroups(cmd, c.AuthenticatedCLICommand)
 	})
 }

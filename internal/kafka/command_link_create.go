@@ -105,6 +105,7 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddConfigFlag(cmd)
 	cmd.Flags().Bool(dryrunFlagName, false, "Validate a link, but do not create it.")
 	cmd.Flags().Bool(noValidateFlagName, false, "Create a link even if the source cluster cannot be reached.")
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.MarkFlagsRequiredTogether(sourceApiKeyFlagName, sourceApiSecretFlagName)
 	cmd.MarkFlagsRequiredTogether(destinationApiKeyFlagName, destinationApiSecretFlagName)
 	cmd.MarkFlagsRequiredTogether(localApiKeyFlagName, localApiSecretFlagName)
@@ -187,7 +188,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}

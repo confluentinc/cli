@@ -26,6 +26,7 @@ func (c *consumerCommand) newLagDescribeCommand() *cobra.Command {
 
 	cmd.Flags().String("topic", "", "Topic name.")
 	cmd.Flags().Int32("partition", 0, "Partition ID.")
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -52,7 +53,7 @@ func (c *consumerCommand) groupLagDescribe(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}
