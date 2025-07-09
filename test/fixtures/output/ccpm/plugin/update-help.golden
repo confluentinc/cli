@@ -1,0 +1,23 @@
+Update a custom Connect plugin.
+
+Usage:
+  confluent ccpm plugin update <id> [flags]
+
+Examples:
+Update the name and description of a custom Connect plugin.
+
+  $ confluent ccpm plugin update plugin-123456 --name "Updated Plugin Name" --description "Updated description" --environment env-12345
+
+Update only the name of a custom Connect plugin.
+
+  $ confluent ccpm plugin update plugin-123456 --name "New Plugin Name" --environment env-12345
+
+Flags:
+      --environment string   Environment ID.
+      --name string          Display name of the custom Connect plugin.
+      --description string   Description of the custom Connect plugin.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
