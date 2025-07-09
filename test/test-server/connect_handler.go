@@ -187,6 +187,10 @@ func handleConnectArtifacts(t *testing.T) http.HandlerFunc {
 				artifact.Spec.SetContentFormat("ZIP")
 			}
 
+			artifact.Status = &camv1.CamV1ConnectArtifactStatus{
+				Phase: "PROCESSING",
+			}
+
 			artifactStore[artifact.GetId()] = *artifact
 
 			err := json.NewEncoder(w).Encode(artifact)
@@ -194,6 +198,11 @@ func handleConnectArtifacts(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			var artifacts []camv1.CamV1ConnectArtifact
 			for _, artifact := range artifactStore {
+				if artifact.GetId() == "cfa-jar123" {
+					artifact.Status = &camv1.CamV1ConnectArtifactStatus{
+						Phase: "READY",
+					}
+				}
 				artifacts = append(artifacts, artifact)
 			}
 
@@ -218,6 +227,11 @@ func handleConnectArtifactId(t *testing.T) http.HandlerFunc {
 				return
 			}
 
+			if id == "cfa-jar123" {
+				artifact.Status = &camv1.CamV1ConnectArtifactStatus{
+					Phase: "READY",
+				}
+			}
 			err := json.NewEncoder(w).Encode(artifact)
 			require.NoError(t, err)
 		case http.MethodDelete:
