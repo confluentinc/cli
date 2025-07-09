@@ -50,8 +50,6 @@ func printTableVersion(cmd *cobra.Command, plugin connectcustompluginv1.ConnectV
 		SensitiveProperties: version.GetSensitiveConfigProperties(),
 		Version:             version.GetId(),
 		VersionNumber:       version.GetVersion(),
-		IsBeta:              version.GetIsBeta() == "true",
-		ReleaseNotes:        version.GetReleaseNotes(),
 	})
 
 	return table.Print()

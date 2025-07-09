@@ -47,8 +47,6 @@ func (c *customPluginCommand) listVersions(cmd *cobra.Command, args []string) er
 		list.Add(&pluginVersionOut{
 			Version:             pluginVersion.GetId(),
 			VersionNumber:       pluginVersion.GetVersion(),
-			IsBeta:              pluginVersion.GetIsBeta(),
-			ReleaseNotes:        pluginVersion.GetReleaseNotes(),
 			SensitiveProperties: pluginVersion.GetSensitiveConfigProperties(),
 		})
 	}
