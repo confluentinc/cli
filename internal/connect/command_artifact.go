@@ -22,6 +22,7 @@ type artifactOut struct {
 	Cloud         string `human:"Cloud" serialized:"cloud"`
 	Environment   string `human:"Environment" serialized:"environment"`
 	ContentFormat string `human:"Content Format" serialized:"content_format"`
+	Status        string `human:"Status" serialized:"status"`
 }
 
 func newArtifactCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -42,17 +43,22 @@ func newArtifactCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Com
 	return cmd
 }
 
-func printArtifactTable(cmd *cobra.Command, artifact camv1.CamV1ConnectArtifact) error {
-	table := output.NewTable(cmd)
-
-	table.Add(&artifactOut{
+func convertToArtifactOut(artifact camv1.CamV1ConnectArtifact) *artifactOut {
+	return &artifactOut{
 		Id:            artifact.GetId(),
 		Name:          artifact.Spec.GetDisplayName(),
 		Description:   artifact.Spec.GetDescription(),
 		Cloud:         artifact.Spec.GetCloud(),
 		Environment:   artifact.Spec.GetEnvironment(),
 		ContentFormat: artifact.Spec.GetContentFormat(),
-	})
+		Status:        artifact.Status.GetPhase(),
+	}
+}
+
+func printArtifactTable(cmd *cobra.Command, artifact camv1.CamV1ConnectArtifact) error {
+	table := output.NewTable(cmd)
+
+	table.Add(convertToArtifactOut(artifact))
 
 	return table.Print()
 }
