@@ -1,0 +1,12 @@
++-----------------------------+------------------------------------------------------------+
+| Plugin ID                   | ccp-123456                                                 |
+| Plugin Name                 | CliPluginTest                                              |
+| ID                          | ver-123456                                                 |
+| Version                     | 1.0.0                                                      |
+| Content Format              | ZIP                                                        |
+| Documentation Link          |                                                            |
+| Sensitive Config Properties |                                                            |
+| Connector Classes           | io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE |
+| Phase                       | READY                                                      |
+| Environment                 | env-123456                                                 |
++-----------------------------+------------------------------------------------------------+
