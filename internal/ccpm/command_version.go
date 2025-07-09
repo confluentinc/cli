@@ -40,9 +40,9 @@ func (c *pluginCommand) printVersionTable(cmd *cobra.Command,
 	plugin ccpmv1.CcpmV1CustomConnectPlugin, version ccpmv1.CcpmV1CustomConnectPluginVersion) error {
 	table := output.NewTable(cmd)
 	table.Add(&versionOut{
-		PluginId:                  *plugin.Id,
-		PluginName:                *plugin.Spec.DisplayName,
-		Id:                        *version.Id,
+		PluginId:                  plugin.GetId(),
+		PluginName:                plugin.Spec.GetDisplayName(),
+		Id:                        version.GetId(),
 		Version:                   version.Spec.GetVersion(),
 		ContentFormat:             version.Spec.GetContentFormat(),
 		DocumentationLink:         version.Spec.GetDocumentationLink(),

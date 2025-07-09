@@ -21,8 +21,7 @@ func (c *pluginCommand) newDescribeCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("environment", "", "Environment ID.")
-	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -31,7 +30,7 @@ func (c *pluginCommand) newDescribeCommand() *cobra.Command {
 func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 	pluginId := args[0]
 
-	environment, err := cmd.Flags().GetString("environment")
+	environment, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}

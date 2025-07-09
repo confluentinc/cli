@@ -2,6 +2,7 @@ package ccpm
 
 import (
 	"github.com/spf13/cobra"
+	"strings"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
@@ -26,19 +27,19 @@ func (c *pluginCommand) newListCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("environment", "", "Environment ID.")
-	cmd.Flags().String("cloud", "", "Filter by cloud provider (AWS, GCP, AZURE).")
-	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddCloudFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 	return cmd
 }
 
 func (c *pluginCommand) list(cmd *cobra.Command, args []string) error {
 	cloud, err := cmd.Flags().GetString("cloud")
+	cloud = strings.ToUpper(cloud)
 	if err != nil {
 		return err
 	}
-	environment, err := cmd.Flags().GetString("environment")
+	environment, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
@@ -49,12 +50,12 @@ func (c *pluginCommand) list(cmd *cobra.Command, args []string) error {
 	list := output.NewList(cmd)
 	for _, plugin := range plugins {
 		list.Add(&pluginOut{
-			Id:              *plugin.Id,
-			Name:            *plugin.Spec.DisplayName,
-			Description:     *plugin.Spec.Description,
-			Cloud:           *plugin.Spec.Cloud,
-			RuntimeLanguage: *plugin.Spec.RuntimeLanguage,
-			Environment:     plugin.Spec.Environment.Id,
+			Id:              plugin.GetId(),
+			Name:            plugin.Spec.GetDisplayName(),
+			Description:     plugin.Spec.GetDescription(),
+			Cloud:           plugin.Spec.GetCloud(),
+			RuntimeLanguage: plugin.Spec.GetRuntimeLanguage(),
+			Environment:     plugin.GetSpec().Environment.GetId(),
 		})
 	}
 	list.Sort(true)

@@ -1,6 +1,7 @@
 package ccpm
 
 import (
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/spf13/cobra"
 
 	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
@@ -17,19 +18,18 @@ func (c *pluginCommand) newUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update the name and description of a custom Connect plugin.",
-				Code: "confluent ccpm plugin update plugin-123456 --name \"Updated Plugin Name\" --description \"Updated description\" --environment env-12345",
+				Code: `confluent ccpm plugin update plugin-123456 --name "Updated Plugin Name" --description "Updated description" --environment env-12345`,
 			},
 			examples.Example{
 				Text: "Update only the name of a custom Connect plugin.",
-				Code: "confluent ccpm plugin update plugin-123456 --name \"New Plugin Name\" --environment env-12345",
+				Code: `confluent ccpm plugin update plugin-123456 --name "New Plugin Name" --environment env-12345`,
 			},
 		),
 	}
 
-	cmd.Flags().String("environment", "", "Environment ID.")
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("name", "", "Display name of the custom Connect plugin.")
 	cmd.Flags().String("description", "", "Description of the custom Connect plugin.")
-	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
 
 	return cmd
 }
@@ -58,7 +58,7 @@ func (c *pluginCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	// Get environment ID
-	environment, err := cmd.Flags().GetString("environment")
+	environment, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}

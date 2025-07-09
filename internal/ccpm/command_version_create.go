@@ -34,15 +34,14 @@ func (c *pluginCommand) newCreateVersionCommand() *cobra.Command {
 
 	cmd.Flags().String("plugin", "", "Plugin ID.")
 	cmd.Flags().String("version", "", "Version of the custom Connect plugin (must comply with SemVer).")
-	cmd.Flags().String("environment", "", "Environment ID.")
 	cmd.Flags().String("plugin-file", "", "Custom plugin ZIP or JAR file.")
 	cmd.Flags().StringSlice("connector-classes", nil, "A comma-separated list of connector classes in format 'class_name:type' (e.g., 'io.confluent.kafka.connect.source.SourceConnector:SOURCE').")
 	cmd.Flags().StringSlice("sensitive-properties", nil, "A comma-separated list of sensitive configuration property names (e.g., 'passwords,keys,tokens').")
 	cmd.Flags().String("documentation-link", "", "URL to the plugin documentation (e.g., 'https://docs.confluent.io').")
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 	cobra.CheckErr(cmd.MarkFlagRequired("plugin"))
 	cobra.CheckErr(cmd.MarkFlagRequired("version"))
-	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
 	cobra.CheckErr(cmd.MarkFlagRequired("plugin-file"))
 	cobra.CheckErr(cmd.MarkFlagRequired("connector-classes"))
 	cobra.CheckErr(cmd.MarkFlagFilename("plugin-file", "zip", "jar"))
@@ -61,7 +60,7 @@ func (c *pluginCommand) createVersion(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	environment, err := cmd.Flags().GetString("environment")
+	environment, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
@@ -77,7 +76,7 @@ func (c *pluginCommand) createVersion(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cloud := *plugin.Spec.Cloud
+	cloud := plugin.Spec.GetCloud()
 
 	connectorClassesFlag, err := cmd.Flags().GetStringSlice("connector-classes")
 	if err != nil {
@@ -129,6 +128,11 @@ func (c *pluginCommand) createVersion(cmd *cobra.Command, args []string) error {
 	// Upload file
 	if cloud == "AZURE" {
 		if err := utils.UploadFileToAzureBlob(resp.GetUploadUrl(),
+			pluginFile, strings.ToLower(resp.GetContentFormat())); err != nil {
+			return err
+		}
+	} else if cloud == "GCP" {
+		if err := utils.UploadFileToGoogleCloudStorage(resp.GetUploadUrl(),
 			pluginFile, strings.ToLower(resp.GetContentFormat())); err != nil {
 			return err
 		}

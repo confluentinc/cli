@@ -32,8 +32,8 @@ func newPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c := &pluginCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
 	cmd.AddCommand(c.newCreateCommand())
-	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newDeleteCommand())
+	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
 	cmd.AddCommand(c.newUpdateCommand())
 	cmd.AddCommand(c.newVersionCommand())
@@ -45,12 +45,12 @@ func printCustomConnectPluginTable(cmd *cobra.Command, plugin ccpmv1.CcpmV1Custo
 	table := output.NewTable(cmd)
 
 	table.Add(&pluginOut{
-		Id:              *plugin.Id,
-		Name:            *plugin.Spec.DisplayName,
-		Description:     *plugin.Spec.Description,
-		Cloud:           *plugin.Spec.Cloud,
-		RuntimeLanguage: *plugin.Spec.RuntimeLanguage,
-		Environment:     plugin.Spec.Environment.Id,
+		Id:              plugin.GetId(),
+		Name:            plugin.Spec.GetDisplayName(),
+		Description:     plugin.Spec.GetDescription(),
+		Cloud:           plugin.Spec.GetCloud(),
+		RuntimeLanguage: plugin.Spec.GetRuntimeLanguage(),
+		Environment:     plugin.GetSpec().Environment.GetId(),
 	})
 
 	return table.Print()

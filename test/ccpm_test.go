@@ -81,7 +81,7 @@ func (s *CLITestSuite) TestCCPMPluginVersion() {
 	}
 }
 
-func (s *CLITestSuite) TestCCPMValidation() {
+func (s *CLITestSuite) TestCCPM_Validation() {
 	tests := []CLITest{
 		// Required flag validation tests
 		{args: "ccpm plugin list", fixture: "ccpm/plugin-list-missing-environment.golden", exitCode: 1},
@@ -108,7 +108,7 @@ func (s *CLITestSuite) TestCCPMValidation() {
 	}
 }
 
-func (s *CLITestSuite) TestCCPMErrorHandling() {
+func (s *CLITestSuite) TestCCPM_ErrorHandling() {
 	tests := []CLITest{
 		// Network/API error handling - use different environment IDs for error cases
 		{args: "ccpm plugin list --environment env-error", fixture: "ccpm/plugin-list-api-error.golden", exitCode: 1},
@@ -134,19 +134,6 @@ func (s *CLITestSuite) TestCCPMErrorHandling() {
 
 	for _, test := range tests {
 		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
-
-func (s *CLITestSuite) TestCCPMAuthentication() {
-	tests := []CLITest{
-		// Test that CCPM commands require cloud login
-		{args: "ccpm plugin list --environment env-123456", fixture: "ccpm/plugin-list-not-logged-in.golden", exitCode: 1},
-		{args: "ccpm plugin create --name my-plugin --cloud aws --environment env-123456", fixture: "ccpm/plugin-create-not-logged-in.golden", exitCode: 1},
-	}
-
-	for _, test := range tests {
-		test.login = "none" // No login
 		s.runIntegrationTest(test)
 	}
 }

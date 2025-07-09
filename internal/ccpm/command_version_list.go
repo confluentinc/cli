@@ -23,9 +23,8 @@ func (c *pluginCommand) newListVersionCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("plugin", "", "Plugin ID.")
-	cmd.Flags().String("environment", "", "Environment ID.")
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	cobra.CheckErr(cmd.MarkFlagRequired("plugin"))
-	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -37,7 +36,7 @@ func (c *pluginCommand) listVersion(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	environment, err := cmd.Flags().GetString("environment")
+	environment, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}

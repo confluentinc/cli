@@ -19,6 +19,8 @@ const (
 	Broker                           = "broker"
 	ByokKey                          = "self-managed key"
 	CatalogIntegration               = "catalog integration"
+	CCPMCustomConnectorPlugin        = "CCPM custom connector plugin"
+	CCPMCustomConnectorPluginVersion = "CCPM custom connector plugin version"
 	CertificateAuthority             = "certificate authority"
 	CertificatePool                  = "certificate pool"
 	ClientQuota                      = "client quota"
@@ -77,8 +79,6 @@ const (
 	Topic                            = "topic"
 	TransitGatewayAttachment         = "transit gateway attachment"
 	User                             = "user"
-	CCPMCustomConnectorPlugin        = "CCPM custom connector plugin"
-	CCPMCustomConnectorPluginVersion = "CCPM custom connector plugin version"
 )
 
 const (
