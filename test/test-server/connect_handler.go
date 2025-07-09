@@ -784,26 +784,20 @@ func handleCustomConnectorPluginsVersions(t *testing.T) http.HandlerFunc {
 			var version connectcustompluginv1.ConnectV1CustomConnectorPluginVersion
 			if id == "ccp-123456" {
 				version = connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{
-					Id:           connectcustompluginv1.PtrString("ver-123456"),
-					Version:      connectcustompluginv1.PtrString("0.0.0"),
-					IsBeta:       connectcustompluginv1.PtrString("false"),
-					ReleaseNotes: connectcustompluginv1.PtrString("test release notes"),
+					Id:      connectcustompluginv1.PtrString("ver-123456"),
+					Version: connectcustompluginv1.PtrString("0.0.0"),
 				}
 			} else if id == "ccp-789012" {
 				sensitiveProperties := []string{"aws.key", "aws.secret"}
 				version = connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{
 					Id:                        connectcustompluginv1.PtrString("ver-123456"),
 					Version:                   connectcustompluginv1.PtrString("0.0.0"),
-					IsBeta:                    connectcustompluginv1.PtrString("false"),
-					ReleaseNotes:              connectcustompluginv1.PtrString("test release notes"),
 					SensitiveConfigProperties: &sensitiveProperties,
 				}
 			} else {
 				version = connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{
-					Id:           connectcustompluginv1.PtrString("ver-123456"),
-					Version:      connectcustompluginv1.PtrString("0.0.0"),
-					IsBeta:       connectcustompluginv1.PtrString("false"),
-					ReleaseNotes: connectcustompluginv1.PtrString("test release notes"),
+					Id:      connectcustompluginv1.PtrString("ver-123456"),
+					Version: connectcustompluginv1.PtrString("0.0.0"),
 				}
 			}
 			err := json.NewEncoder(w).Encode(version)
@@ -812,17 +806,14 @@ func handleCustomConnectorPluginsVersions(t *testing.T) http.HandlerFunc {
 			version1 := connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{
 				Id:      connectcustompluginv1.PtrString("ver-123456"),
 				Version: connectcustompluginv1.PtrString("0.0.0"),
-				IsBeta:  connectcustompluginv1.PtrString("false"),
 			}
 			version2 := connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{
 				Id:      connectcustompluginv1.PtrString("ver-123456"),
 				Version: connectcustompluginv1.PtrString("0.0.1"),
-				IsBeta:  connectcustompluginv1.PtrString("false"),
 			}
 			version3 := connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{
 				Id:      connectcustompluginv1.PtrString("ver-123456"),
 				Version: connectcustompluginv1.PtrString("0.0.2"),
-				IsBeta:  connectcustompluginv1.PtrString("true"),
 			}
 
 			err := json.NewEncoder(w).Encode(connectcustompluginv1.ConnectV1CustomConnectorPluginVersionList{Data: []connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{version1, version2, version3}})
@@ -841,36 +832,28 @@ func handleCustomConnectorPluginsVersionsId(t *testing.T) http.HandlerFunc {
 			var version connectcustompluginv1.ConnectV1CustomConnectorPluginVersion
 			if verId == "ver-123456" {
 				version = connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{
-					Id:           connectcustompluginv1.PtrString("ver-123456"),
-					Version:      connectcustompluginv1.PtrString("0.0.0"),
-					IsBeta:       connectcustompluginv1.PtrString("false"),
-					ReleaseNotes: connectcustompluginv1.PtrString("test release notes"),
+					Id:      connectcustompluginv1.PtrString("ver-123456"),
+					Version: connectcustompluginv1.PtrString("0.0.0"),
 				}
 			} else if verId == "ver-789012" {
 				sensitiveProperties := []string{"aws.key", "aws.secret"}
 				version = connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{
 					Id:                        connectcustompluginv1.PtrString("ver-789012"),
 					Version:                   connectcustompluginv1.PtrString("0.0.0"),
-					IsBeta:                    connectcustompluginv1.PtrString("false"),
-					ReleaseNotes:              connectcustompluginv1.PtrString("test release notes"),
 					SensitiveConfigProperties: &sensitiveProperties,
 				}
 			} else {
 				version = connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{
-					Id:           connectcustompluginv1.PtrString("ver-123456"),
-					Version:      connectcustompluginv1.PtrString("0.0.0"),
-					IsBeta:       connectcustompluginv1.PtrString("false"),
-					ReleaseNotes: connectcustompluginv1.PtrString("test release notes"),
+					Id:      connectcustompluginv1.PtrString("ver-123456"),
+					Version: connectcustompluginv1.PtrString("0.0.0"),
 				}
 			}
 			err := json.NewEncoder(w).Encode(version)
 			require.NoError(t, err)
 		case http.MethodPatch:
 			version1 := connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{
-				Id:           connectcustompluginv1.PtrString("ver-123456"),
-				Version:      connectcustompluginv1.PtrString("0.0.0"),
-				IsBeta:       connectcustompluginv1.PtrString("false"),
-				ReleaseNotes: connectcustompluginv1.PtrString("test release notes"),
+				Id:      connectcustompluginv1.PtrString("ver-123456"),
+				Version: connectcustompluginv1.PtrString("0.0.0"),
 			}
 			err := json.NewEncoder(w).Encode(version1)
 			require.NoError(t, err)

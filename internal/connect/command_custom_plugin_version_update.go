@@ -1,8 +1,6 @@
 package connect
 
 import (
-	"strconv"
-
 	"github.com/spf13/cobra"
 
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
@@ -55,30 +53,8 @@ func (c *customPluginCommand) updateVersion(cmd *cobra.Command, args []string) e
 		return err
 	}
 
-	updateCustomPluginVersionRequest := connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{}
+	updateCustomPluginVersionRequest := connectcustompluginv1.ConnectV1CustomConnectorPluginVersionUpdate{}
 
-	if cmd.Flags().Changed("version-number") {
-		if versionNumber, err := cmd.Flags().GetString("version-number"); err != nil {
-			return err
-		} else {
-			updateCustomPluginVersionRequest.SetVersion(versionNumber)
-		}
-	}
-	if cmd.Flags().Changed("beta") {
-		beta, err := cmd.Flags().GetBool("beta")
-		if err != nil {
-			return err
-		}
-		isBetaString := strconv.FormatBool(beta)
-		updateCustomPluginVersionRequest.SetIsBeta(isBetaString)
-	}
-	if cmd.Flags().Changed("release-notes") {
-		if releaseNotes, err := cmd.Flags().GetString("release-notes"); err != nil {
-			return err
-		} else {
-			updateCustomPluginVersionRequest.SetReleaseNotes(releaseNotes)
-		}
-	}
 	if cmd.Flags().Changed("sensitive-properties") {
 		if sensitiveProperties, err := cmd.Flags().GetStringSlice("sensitive-properties"); err != nil {
 			return err
@@ -94,8 +70,6 @@ func (c *customPluginCommand) updateVersion(cmd *cobra.Command, args []string) e
 		table.Add(&pluginVersionOut{
 			Version:             pluginResp.GetId(),
 			VersionNumber:       pluginResp.GetVersion(),
-			IsBeta:              pluginResp.GetIsBeta(),
-			ReleaseNotes:        pluginResp.GetReleaseNotes(),
 			SensitiveProperties: pluginResp.GetSensitiveConfigProperties(),
 		})
 		return table.Print()
