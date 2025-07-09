@@ -15,11 +15,11 @@ Create a new version 2.1.0 of a custom connect plugin with multiple connector cl
 Flags:
       --plugin string                  REQUIRED: Plugin ID.
       --version string                 REQUIRED: Version of the custom Connect plugin (must comply with SemVer).
-      --environment string             REQUIRED: Environment ID.
       --plugin-file string             REQUIRED: Custom plugin ZIP or JAR file.
       --connector-classes strings      REQUIRED: A comma-separated list of connector classes in format 'class_name:type' (e.g., 'io.confluent.kafka.connect.source.SourceConnector:SOURCE').
       --sensitive-properties strings   A comma-separated list of sensitive configuration property names (e.g., 'passwords,keys,tokens').
       --documentation-link string      URL to the plugin documentation (e.g., 'https://docs.confluent.io').
+      --environment string             Environment ID.
   -o, --output string                  Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

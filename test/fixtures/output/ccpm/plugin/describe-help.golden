@@ -9,7 +9,7 @@ Describe a custom Connect plugin by ID.
   $ confluent ccpm plugin describe plugin-123456 --environment env-12345
 
 Flags:
-      --environment string   REQUIRED: Environment ID.
+      --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

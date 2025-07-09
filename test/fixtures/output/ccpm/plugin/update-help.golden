@@ -13,7 +13,7 @@ Update only the name of a custom Connect plugin.
   $ confluent ccpm plugin update plugin-123456 --name "New Plugin Name" --environment env-12345
 
 Flags:
-      --environment string   REQUIRED: Environment ID.
+      --environment string   Environment ID.
       --name string          Display name of the custom Connect plugin.
       --description string   Description of the custom Connect plugin.
 
