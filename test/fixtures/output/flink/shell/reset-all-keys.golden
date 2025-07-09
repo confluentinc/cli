@@ -3,8 +3,8 @@ To exit, press Ctrl-Q or type "exit".
 [Ctrl-Q] Quit [Ctrl-S] Toggle Completions [Ctrl-G] Toggle Diagnostics
 > set 'cli.a-key'='a value';
 Statement successfully submitted.
-Statement phase is COMPLETED.
-configuration updated successfully.
+Finished statement execution. Statement phase: COMPLETED.
+Details: configuration updated successfully.
 +-----------+---------+
 |    Key    |  Value  |
 +-----------+---------+
@@ -12,8 +12,8 @@ configuration updated successfully.
 +-----------+---------+
 > set 'cli.another-key'='another value';
 Statement successfully submitted.
-Statement phase is COMPLETED.
-configuration updated successfully.
+Finished statement execution. Statement phase: COMPLETED.
+Details: configuration updated successfully.
 +-----------------+---------------+
 |       Key       |     Value     |
 +-----------------+---------------+
@@ -21,8 +21,8 @@ configuration updated successfully.
 +-----------------+---------------+
 > reset;
 Statement successfully submitted.
-Statement phase is COMPLETED.
-configuration has been reset successfully.
+Finished statement execution. Statement phase: COMPLETED.
+Details: configuration has been reset successfully.
 +------------------------+---------------------+
 |          Key           |        Value        |
 +------------------------+---------------------+
@@ -32,7 +32,7 @@ configuration has been reset successfully.
 +------------------------+---------------------+
 > set;
 Statement successfully submitted.
-Statement phase is COMPLETED.
+Finished statement execution. Statement phase: COMPLETED.
 +------------------------+---------------------+
 |          Key           |        Value        |
 +------------------------+---------------------+

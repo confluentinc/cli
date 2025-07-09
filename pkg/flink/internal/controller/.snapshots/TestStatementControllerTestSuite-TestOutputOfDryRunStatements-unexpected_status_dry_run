@@ -1,4 +1,4 @@
-Statement successfully submitted. Statement phase is RUNNING.
+Statement successfully submitted. Statement phase: RUNNING.
 Dry run statement execution resulted in unexpected status.
 Status: RUNNING
 Details: unexpected status

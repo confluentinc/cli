@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/flink/config"
 	"github.com/confluentinc/cli/v4/pkg/flink/internal/utils"
@@ -26,7 +27,7 @@ type ProcessedStatement struct {
 	StatementName        string `json:"statement_name"`
 	Kind                 string `json:"kind"`
 	ComputePool          string `json:"compute_pool"`
-	Principal            string `json:"principal"`
+	Principal            string `json:"principal"` // Cloud only
 	Status               PHASE  `json:"status"`
 	StatusDetail         string `json:"status_detail,omitempty"` // Shown at the top before the table
 	IsLocalStatement     bool
@@ -34,10 +35,11 @@ type ProcessedStatement struct {
 	PageToken            string
 	Properties           map[string]string
 	StatementResults     *StatementResults
-	Traits               flinkgatewayv1.SqlV1StatementTraits
+	Traits               StatementTraits
 }
 
 func NewProcessedStatement(statementObj flinkgatewayv1.SqlV1Statement) *ProcessedStatement {
+	traits := statementObj.Status.GetTraits()
 	return &ProcessedStatement{
 		Statement:     statementObj.Spec.GetStatement(),
 		StatementName: statementObj.GetName(),
@@ -46,7 +48,20 @@ func NewProcessedStatement(statementObj flinkgatewayv1.SqlV1Statement) *Processe
 		StatusDetail:  statementObj.Status.GetDetail(),
 		Status:        PHASE(statementObj.Status.GetPhase()),
 		Properties:    statementObj.Spec.GetProperties(),
-		Traits:        statementObj.Status.GetTraits(),
+		Traits:        StatementTraits{FlinkGatewayV1StatementTraits: &traits},
+	}
+}
+
+func NewProcessedStatementOnPrem(statementObj cmfsdk.Statement) *ProcessedStatement {
+	traits := statementObj.Status.GetTraits()
+	return &ProcessedStatement{
+		Statement:     statementObj.Spec.GetStatement(),
+		StatementName: statementObj.Metadata.GetName(),
+		ComputePool:   statementObj.Spec.GetComputePoolName(),
+		StatusDetail:  statementObj.Status.GetDetail(),
+		Status:        PHASE(statementObj.Status.GetPhase()),
+		Properties:    statementObj.Spec.GetProperties(),
+		Traits:        StatementTraits{CmfStatementTraits: &traits},
 	}
 }
 
@@ -71,12 +86,20 @@ func (s ProcessedStatement) printStatusMessageOfNonLocalStatement() {
 		utils.OutputErr(fmt.Sprintf("Error: %s", "statement submission failed"))
 	} else {
 		utils.OutputInfo("Statement successfully submitted.")
-		utils.OutputInfo(fmt.Sprintf("Waiting for statement to be ready. Statement phase is %s.", s.Status))
+
+		if s.Status != "COMPLETED" {
+			utils.OutputInfo(fmt.Sprintf("Waiting for statement to be ready. Statement phase: %s.", s.Status))
+		}
+	}
+
+	if s.StatusDetail != "" {
+		utils.OutputInfof("Details: ")
+		utils.OutputWarn(s.StatusDetail)
 	}
 }
 
 func (s ProcessedStatement) PrintOutputDryRunStatement() {
-	utils.OutputInfo(fmt.Sprintf("Statement successfully submitted. Statement phase is %s.", s.Status))
+	utils.OutputInfo(fmt.Sprintf("Statement successfully submitted. Statement phase: %s.", s.Status))
 	if s.Status == "FAILED" {
 		utils.OutputErr(fmt.Sprintf("Dry run statement was verified and there were issues found.\nError: %s", s.StatusDetail))
 	} else if s.Status == "COMPLETED" {
@@ -84,7 +107,8 @@ func (s ProcessedStatement) PrintOutputDryRunStatement() {
 		utils.OutputWarn("If you wish to submit your statement, disable dry run mode before submitting your statement with \"set 'sql.dry-run' = 'false';\"")
 	} else {
 		utils.OutputErr(fmt.Sprintf("Dry run statement execution resulted in unexpected status.\nStatus: %s", s.Status))
-		utils.OutputErr(fmt.Sprintf("Details: %s", s.StatusDetail))
+		utils.OutputInfof("Details: ")
+		utils.OutputErr(s.StatusDetail)
 	}
 }
 
@@ -94,10 +118,10 @@ func (s ProcessedStatement) GetPageSize() int {
 
 func (s ProcessedStatement) PrintStatementDoneStatus() {
 	if s.Status != "" {
-		output.Printf(false, "Statement phase is %s.\n", s.Status)
+		output.Printf(false, "Finished statement execution. Statement phase: %s.\n", s.Status)
 	}
 	if s.StatusDetail != "" {
-		output.Printf(false, "%s.\n", s.StatusDetail)
+		output.Printf(false, "Details: %s.\n", strings.TrimSuffix(s.StatusDetail, "."))
 	}
 }
 

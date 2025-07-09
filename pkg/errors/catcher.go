@@ -14,6 +14,8 @@ import (
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+
+	"github.com/confluentinc/cli/v4/pkg/plural"
 )
 
 /*
@@ -128,10 +130,10 @@ func catchOpenAPIError(err error) error {
 		}{}
 
 		if err := json.NewDecoder(r).Decode(formattedErr); err == nil {
-			return fmt.Errorf(formattedErr.Message)
+			return errors.New(formattedErr.Message)
 		}
 
-		return fmt.Errorf(body)
+		return errors.New(body)
 	}
 
 	return err
@@ -169,7 +171,7 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 			return NewErrorWithSuggestions(detail, "Look up Confluent Cloud service quota limits with `confluent service-quota list`.")
 		}
 		if detail != "" {
-			err = fmt.Errorf(strings.TrimSuffix(detail, "\n"))
+			err = errors.New(strings.TrimSuffix(detail, "\n"))
 			if resolution := strings.TrimSuffix(resBody.Errors[0].Resolution, "\n"); resolution != "" {
 				err = NewErrorWithSuggestions(err.Error(), resolution)
 			}
@@ -210,7 +212,7 @@ func CatchCCloudV2ResourceNotFoundError(err error, resourceType string, r *http.
 	}
 
 	if r != nil && r.StatusCode == http.StatusForbidden {
-		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("%s not found or access forbidden", resourceType), fmt.Sprintf(ListResourceSuggestions, resourceType, resourceType))
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("%s not found or access forbidden", resourceType), fmt.Sprintf(ListResourceSuggestions, plural.Plural(resourceType), resourceType))
 	}
 
 	return CatchCCloudV2Error(err, r)

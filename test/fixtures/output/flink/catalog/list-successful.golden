@@ -1,0 +1,5 @@
+          Creation Time         |     Name      |           Databases             
+--------------------------------+---------------+---------------------------------
+  2025-08-05 12:00:00 +0000 UTC | test-catalog1 | test-database, test-database-2  
+  2025-08-05 12:00:00 +0000 UTC | test-catalog2 | test-database, test-database-2  
+  2025-08-05 12:00:00 +0000 UTC | test-catalog3 | test-database, test-database-2  

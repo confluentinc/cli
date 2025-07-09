@@ -25,6 +25,7 @@ func newListCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c := &listCommand{pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
 	cmd.RunE = c.list
 
+	pcmd.AddMDSOnPremMTLSFlags(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -32,8 +33,13 @@ func newListCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *listCommand) list(cmd *cobra.Command, _ []string) error {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
 	ctx := context.WithValue(context.Background(), mdsv1.ContextAccessToken, c.Context.GetAuthToken())
-	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(ctx, &mdsv1.ClusterRegistryListOpts{})
+	clusterInfos, response, err := client.ClusterRegistryApi.ClusterRegistryList(ctx, &mdsv1.ClusterRegistryListOpts{})
 	if err != nil {
 		return pcluster.HandleClusterError(err, response)
 	}

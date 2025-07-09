@@ -7,11 +7,6 @@ import (
 )
 
 func (s *CLITestSuite) TestKafka() {
-	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
-	createLinkConfigFile := getCreateLinkConfigFile()
-	defer os.Remove(createLinkConfigFile)
-	createBidirectionalLinkConfigFile := getCreateBidirectionalLinkConfigFile()
-	defer os.Remove(createBidirectionalLinkConfigFile)
 	tests := []CLITest{
 		{args: "environment use env-596", fixture: "kafka/0.golden"},
 		{args: "kafka cluster list", fixture: "kafka/6.golden"},
@@ -50,6 +45,11 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster update lkc-update-dedicated-shrink --cku 1", fixture: "kafka/45.golden"},
 		{args: "kafka cluster update lkc-update-dedicated-shrink-multi --cku 1", fixture: "kafka/cluster/update-dedicated-shrink-error.golden", exitCode: 1},
 		{args: "kafka cluster update lkc-update --cku 1", fixture: "kafka/cluster/update-resize-error.golden", exitCode: 1},
+		// Type upgrade tests
+		{args: "kafka cluster update lkc-update --type standard", fixture: "kafka/cluster/update-type-success.golden"},
+		{args: "kafka cluster update lkc-update --type Standard", fixture: "kafka/cluster/update-type-success.golden"},
+		{args: "kafka cluster update lkc-update --type", fixture: "kafka/cluster/update-type-empty-error.golden", exitCode: 1},
+		{args: "kafka cluster update lkc-update --type basic", fixture: "kafka/cluster/update-type-invalid-error.golden", exitCode: 1},
 
 		{args: "kafka cluster delete --force", fixture: "kafka/3.golden", exitCode: 1},
 		{args: "kafka cluster delete lkc-unknown --force", fixture: "kafka/cluster/delete-unknown-error.golden", exitCode: 1},
@@ -153,6 +153,8 @@ func (s *CLITestSuite) TestKafka() {
 
 	tests = []CLITest{
 		{args: fmt.Sprintf("kafka link describe link-1 --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/describe-onprem.golden"},
+		{args: fmt.Sprintf("kafka link describe link-3 --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/describe-error-onprem.golden"},
+		{args: fmt.Sprintf("kafka link list --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-error-onprem.golden"},
 		{args: fmt.Sprintf("kafka link task list link-5 --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem.golden"},
 		{args: fmt.Sprintf("kafka link task list link-5 --url %s -o yaml", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem-yaml.golden"},
 		{args: fmt.Sprintf("kafka link task list link-5 --url %s -o json", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem-json.golden"},
@@ -338,6 +340,18 @@ func (s *CLITestSuite) TestKafkaLink() {
 
 	for _, test := range tests {
 		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+
+	tests = []CLITest{
+		{args: "kafka link create bidirectional_link --remote-cluster lkc-abc123 --remote-bootstrap-server SASL_SSL://pkc-12345.us-west-2.aws.confluent.cloud:9092 --remote-api-key remoteKey --remote-api-secret remoteSecret --local-api-key localUser --local-api-secret localPassword --config " + getCreateBidirectionalLinkConfigFile(), fixture: "kafka/link/create-bidirectional-link-onprem.golden"},
+		{args: "kafka link create source_initiated_link --destination-cluster 123456789 --destination-bootstrap-server my-host:1234 --source-api-key sourceKey --source-api-secret sourceSecret --destination-api-key destinationKey --destination-api-secret destinationSecret --config link.mode=SOURCE", fixture: "kafka/link/create-source-link-onprem.golden"},
+		{args: "kafka link create destination_initiated_link --source-cluster 123456789 --source-bootstrap-server my-host:1234 --source-api-key destinationKey --source-api-secret destinationSecret --config link.mode=DESTINATION", fixture: "kafka/link/create-destination-link-onprem.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		test.env = []string{"CONFLUENT_REST_URL=" + s.TestBackend.GetKafkaRestUrl()}
 		s.runIntegrationTest(test)
 	}
 }

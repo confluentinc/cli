@@ -1,7 +1,6 @@
 package kafkarest
 
 import (
-	"fmt"
 	"net/http"
 	neturl "net/url"
 	"testing"
@@ -21,7 +20,7 @@ func TestNewError(t *testing.T) {
 	neturlError := neturl.Error{
 		Op:  "my-op",
 		URL: url,
-		Err: fmt.Errorf(neturlMsg),
+		Err: errors.New(neturlMsg),
 	}
 
 	r := NewError(url, &neturlError, nil)
@@ -30,7 +29,7 @@ func TestNewError(t *testing.T) {
 	req.Contains(r.Error(), url)
 	req.Contains(r.Error(), neturlMsg)
 
-	neturlError.Err = fmt.Errorf(SelfSignedCertError)
+	neturlError.Err = errors.New(SelfSignedCertError)
 	r = NewError(url, &neturlError, nil)
 	req.NotNil(r)
 	req.Contains(r.Error(), "establish")

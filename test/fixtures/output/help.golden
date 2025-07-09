@@ -35,6 +35,7 @@ Available Commands:
   service-quota        Look up Confluent Cloud service quota limits.
   shell                Start an interactive shell.
   stream-share         Manage stream shares.
+  tableflow            Manage Tableflow.
   update               Update the Confluent CLI.
   version              Show version of the Confluent CLI.
 

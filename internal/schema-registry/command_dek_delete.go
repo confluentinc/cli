@@ -30,9 +30,9 @@ func (c *command) newDekDeleteCommand(cfg *config.Config) *cobra.Command {
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
-		addCaLocationFlag(cmd)
-		addSchemaRegistryEndpointFlag(cmd)
+		addCaLocationAndClientPathFlags(cmd)
 	}
+	addSchemaRegistryEndpointFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("kek-name"))
 	cobra.CheckErr(cmd.MarkFlagRequired("subject"))

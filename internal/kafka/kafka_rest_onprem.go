@@ -38,7 +38,7 @@ func initKafkaRest(c *pcmd.AuthenticatedCLICommand, cmd *cobra.Command) (*kafkar
 	if err != nil {
 		return nil, nil, "", kafkarest.NewError(kafkaRestClient.GetConfig().BasePath, err, httpResp)
 	}
-	if clusters.Data == nil || len(clusters.Data) == 0 {
+	if len(clusters.Data) == 0 {
 		return nil, nil, "", errors.NewErrorWithSuggestions(errors.NoClustersFoundErrorMsg, errors.NoClustersFoundSuggestions)
 	}
 
@@ -63,7 +63,7 @@ func SetServerURL(cmd *cobra.Command, client *kafkarestv3.APIClient, url string)
 			protocolMsg = "Assuming http protocol.\n"
 		}
 		if i, _ := cmd.Flags().GetCount("verbose"); i > 0 {
-			output.ErrPrintf(false, protocolMsg)
+			output.ErrPrint(false, protocolMsg)
 		}
 	}
 	client.ChangeBasePath(strings.TrimSuffix(url, "/") + "/v3")

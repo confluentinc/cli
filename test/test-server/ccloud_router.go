@@ -18,12 +18,12 @@ var ccloudHandlers = []route{
 	{"/api/organizations/{id}/payment_info", handlePaymentInfo},
 	{"/api/organizations/{id}/price_table", handlePriceTable},
 	{"/api/organizations/{id}/promo_code_claims", handlePromoCodeClaims},
-	{"/api/schema_registries", handleSchemaRegistries},
 	{"/api/service_accounts", handleServiceAccounts},
 	{"/api/service_accounts/{id}", handleServiceAccount},
 	{"/api/sessions", handleLogin},
 	{"/api/users", handleUsers},
 	{"/ldapi/sdk/eval/{env}/users/{user:[a-zA-Z0-9=\\-\\/]+}", handleLaunchDarkly},
+	{"/logs/v1/search", handleLogsSearch},
 }
 
 type CloudRouter struct {

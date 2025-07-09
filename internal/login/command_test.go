@@ -94,7 +94,7 @@ var (
 				return nil, nil
 			}
 		},
-		GetOnPremSsoCredentialsFunc: func(_ string, _ string, _ bool) func() (*pauth.Credentials, error) {
+		GetOnPremSsoCredentialsFunc: func(_, _, _, _ string, _ bool) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -380,7 +380,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						return nil, nil
 					}
 				},
-				GetOnPremSsoCredentialsFunc: func(_ string, _ string, _ bool) func() (*pauth.Credentials, error) {
+				GetOnPremSsoCredentialsFunc: func(_, _, _, _ string, _ bool) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
@@ -613,7 +613,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *confi
 		SerialNumber: big.NewInt(1234),
 		Subject:      pkix.Name{Organization: []string{"testorg"}},
 	}
-	priv, err := rsa.GenerateKey(rand.Reader, 512)
+	priv, err := rsa.GenerateKey(rand.Reader, 1024)
 	req.NoError(err, "Couldn't generate private key")
 	certBytes, err := x509.CreateCertificate(rand.Reader, ca, ca, &priv.PublicKey, priv)
 	req.NoError(err, "Couldn't generate certificate from private key")
@@ -636,7 +636,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *confi
 		},
 	}
 	mdsClientManager := &climock.MDSClientManager{
-		GetMDSClientFunc: func(_, caCertPath string, _ bool) (*mdsv1.APIClient, error) {
+		GetMDSClientFunc: func(_, caCertPath, _, _ string, _ bool) (*mdsv1.APIClient, error) {
 			// ensure the right caCertPath is used
 			req.Contains(caCertPath, expectedCaCertPath)
 			mdsClient.GetConfig().HTTPClient, err = utils.SelfSignedCertClient(certReader, tls.Certificate{})
@@ -812,7 +812,7 @@ func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterf
 	if !isCloud {
 		mdsClient := climock.NewMdsClientMock(testToken1)
 		mdsClientManager = &climock.MDSClientManager{
-			GetMDSClientFunc: func(_, _ string, _ bool) (*mdsv1.APIClient, error) {
+			GetMDSClientFunc: func(_, _, _, _ string, _ bool) (*mdsv1.APIClient, error) {
 				return mdsClient, nil
 			},
 		}

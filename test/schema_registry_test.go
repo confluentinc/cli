@@ -65,6 +65,18 @@ func (s *CLITestSuite) TestSchemaRegistryConfigDelete() {
 	}
 }
 
+func (s *CLITestSuite) TestSchemaRegistryEndpoint() {
+	tests := []CLITest{
+		{args: fmt.Sprintf("schema-registry endpoint list --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/endpoint/list.golden"},
+		{args: fmt.Sprintf("schema-registry endpoint list --environment %s -o yaml", testserver.SRApiEnvId), fixture: "schema-registry/endpoint/list-yaml.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestSchemaRegistryExporter() {
 	exporterConfigPath := getInputFixturePath("schema-registry", "schema-exporter-config.txt")
 

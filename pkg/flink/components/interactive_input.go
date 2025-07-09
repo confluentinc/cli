@@ -44,11 +44,12 @@ func PrintOptionState(prefix string, isEnabled bool, maxCol int) {
 
 		// This prints to the console the exact amount of empty characters to fill the line might have autocompletions before
 		// This is to avoid the linter to complain about not using the
-		output.Println(false, strings.Repeat(" ", maxCol-runewidth.StringWidth(line)))
+		count := max(maxCol-runewidth.StringWidth(line), 0)
+		output.Println(false, strings.Repeat(" ", count))
 	}
 }
 
-func PrintWelcomeHeader(appOtions types.ApplicationOptions) {
+func PrintWelcomeHeader(appOptions types.ApplicationOptions) {
 	// Print welcome message
 	output.Print(false, "Welcome! \n")
 	output.Print(false, "To exit, press Ctrl-Q or type \"exit\". \n\n")
@@ -56,10 +57,21 @@ func PrintWelcomeHeader(appOtions types.ApplicationOptions) {
 	// Print shortcuts
 	c := fColor.New(color.AccentColor)
 
-	ldClient := featureflags.GetCcloudLaunchDarklyClient(appOtions.Context.PlatformName)
-	if featureflags.Manager.BoolVariation("flink.language_service.enable_diagnostics", appOtions.Context, ldClient, true, false) {
+	ldClient := featureflags.GetCcloudLaunchDarklyClient(appOptions.Context.PlatformName)
+	if featureflags.Manager.BoolVariation("flink.language_service.enable_diagnostics", appOptions.Context, ldClient, true, false) {
 		output.Printf(false, "[Ctrl-Q] %s [Ctrl-S] %s [Ctrl-G] %s \n", c.Sprint("Quit"), c.Sprint("Toggle Completions"), c.Sprint("Toggle Diagnostics"))
 	} else {
 		output.Printf(false, "[Ctrl-Q] %s [Ctrl-S] %s \n", c.Sprint("Quit"), c.Sprint("Toggle Completions"))
 	}
+}
+
+func PrintWelcomeHeaderOnPrem(appOptions types.ApplicationOptions) {
+	// Print welcome message
+	output.Print(false, "Welcome! \n")
+	output.Print(false, "To exit, press Ctrl-Q or type \"exit\". \n\n")
+
+	// Print shortcuts
+	c := fColor.New(color.AccentColor)
+
+	output.Printf(false, "[Ctrl-Q] %s [Ctrl-S] %s \n", c.Sprint("Quit"), c.Sprint("Toggle Completions"))
 }

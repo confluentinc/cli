@@ -9,10 +9,11 @@ Update the description of identity provider "op-123456".
   $ confluent iam provider update op-123456 --description "updated description"
 
 Flags:
-      --name string          Name of the identity provider.
-      --description string   Description of the identity provider.
-      --context string       CLI context name.
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+      --name string             Name of the identity provider.
+      --description string      Description of the identity provider.
+      --identity-claim string   The JSON Web Token (JWT) claim to extract the authenticating identity to Confluent resources from Registered Claim Names.
+      --context string          CLI context name.
+  -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

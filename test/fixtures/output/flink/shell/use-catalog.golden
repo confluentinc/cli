@@ -3,8 +3,8 @@ To exit, press Ctrl-Q or type "exit".
 [Ctrl-Q] Quit [Ctrl-S] Toggle Completions [Ctrl-G] Toggle Diagnostics
 > use catalog default;
 Statement successfully submitted.
-Statement phase is COMPLETED.
-configuration updated successfully.
+Finished statement execution. Statement phase: COMPLETED.
+Details: configuration updated successfully.
 +---------------------+---------+
 |         Key         |  Value  |
 +---------------------+---------+
@@ -12,7 +12,7 @@ configuration updated successfully.
 +---------------------+---------+
 > set;
 Statement successfully submitted.
-Statement phase is COMPLETED.
+Finished statement execution. Statement phase: COMPLETED.
 +------------------------+---------------------+
 |          Key           |        Value        |
 +------------------------+---------------------+

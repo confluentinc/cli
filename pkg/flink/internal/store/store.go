@@ -38,11 +38,11 @@ func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStateme
 	defer s.persistUserProperties()
 	switch statementType := parseStatementType(statement); statementType {
 	case SetStatement:
-		return s.processSetStatement(statement)
+		return processSetStatement(s.Properties, statement)
 	case ResetStatement:
-		return s.processResetStatement(statement)
+		return processResetStatement(s.Properties, statement)
 	case UseStatement:
-		return s.processUseStatement(statement)
+		return processUseStatement(s.Properties, statement)
 	case QuitStatement, ExitStatement:
 		s.exitApplication()
 		return nil, nil
@@ -92,7 +92,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		principal = s.appOptions.GetContext().GetUser().GetResourceId()
 	}
 
-	utils.OutputInfof("Statement name: %s\nSubmitting statement...", statementName)
+	utils.OutputInfof("Creating statement: %s\n", statementName)
 	statementObj, err := s.authenticatedGatewayClient().CreateStatement(
 		createSqlV1Statement(statement, statementName, computePoolId, properties),
 		principal,
@@ -120,7 +120,7 @@ func createSqlV1Statement(statement string, statementName string, computePoolId 
 func (s *Store) WaitPendingStatement(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
 	statementStatus := statement.Status
 	if statementStatus != types.COMPLETED && statementStatus != types.RUNNING {
-		updatedStatement, err := s.waitForPendingStatement(ctx, statement.StatementName, s.getTimeout())
+		updatedStatement, err := s.waitForPendingStatement(ctx, statement.StatementName, getTimeout(s.Properties))
 		if err != nil {
 			return nil, err
 		}
@@ -153,7 +153,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	}
 
 	statementResults := statementResultObj.GetResults()
-	convertedResults, err := results.ConvertToInternalResults(statementResults.GetData(), statement.Traits.GetSchema())
+	convertedResults, err := results.ConvertToInternalResults(statementResults.GetData(), statement.Traits.FlinkGatewayV1StatementTraits.GetSchema())
 	if err != nil {
 		return nil, types.NewStatementError(err)
 	}

@@ -1,0 +1,26 @@
+{
+  "apiVersion": "",
+  "kind": "",
+  "metadata": {
+    "creationTimestamp": "2025-03-12 23:42:00 +0000 UTC",
+    "name": "test-pool"
+  },
+  "spec": {
+    "clusterSpec": {
+      "flinkConfiguration": {
+        "taskmanager.numberOfTaskSlots": "1"
+      },
+      "job": {
+        "parallelism": 1
+      },
+      "serviceAccount": "flink",
+      "taskManager": {
+        "resource": {
+          "cpu": 0.5,
+          "memory": "1024m"
+        }
+      }
+    },
+    "type": "DEDICATED"
+  }
+}

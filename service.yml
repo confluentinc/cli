@@ -1,6 +1,12 @@
 name: cli
+contact:
+  name: api
+  jira_project_key: CLI
+  email: api-team@confluent.io
+  slack_team_channel: cli-eng
+  slack_oncall_channel: cli-oncall
 lang: go
-lang_version: 1.22.7
+lang_version: 1.24.4
 git:
   enable: true
   hooks:
@@ -12,3 +18,9 @@ gitignore:
 semaphore:
   enable: true
   pipeline_enable: false
+make:
+  enable: true
+sonarqube:
+  enable: true
+  languages: go
+  main_branch: main

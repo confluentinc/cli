@@ -218,7 +218,7 @@ func handleKafkaRestTopics(t *testing.T) http.HandlerFunc {
 				}
 				// TODO: check for compression.type
 			}
-			// no errors = successfully created
+			// no errors = successfully submitted
 			w.WriteHeader(http.StatusCreated)
 			response := fmt.Sprintf(`{
 					"kind": "KafkaTopic",
@@ -276,7 +276,7 @@ func handleKafkaRestTopicConfigs(t *testing.T) http.HandlerFunc {
 				}
 				reply, err := json.Marshal(topicConfigList)
 				require.NoError(t, err)
-				_, err = io.WriteString(w, string(reply))
+				_, err = io.Writer.Write(w, reply)
 				require.NoError(t, err)
 			} else if topicName == "topic-exist-rest" {
 				topicConfigList := cpkafkarestv3.TopicConfigDataList{
@@ -294,7 +294,7 @@ func handleKafkaRestTopicConfigs(t *testing.T) http.HandlerFunc {
 				}
 				reply, err := json.Marshal(topicConfigList)
 				require.NoError(t, err)
-				_, err = io.WriteString(w, string(reply))
+				_, err = io.Writer.Write(w, reply)
 				require.NoError(t, err)
 			} else if topicName == "topic1" {
 				topicConfigList := cckafkarestv3.TopicConfigDataList{
@@ -311,7 +311,7 @@ func handleKafkaRestTopicConfigs(t *testing.T) http.HandlerFunc {
 				}
 				reply, err := json.Marshal(topicConfigList)
 				require.NoError(t, err)
-				_, err = io.WriteString(w, string(reply))
+				_, err = io.Writer.Write(w, reply)
 				require.NoError(t, err)
 			} else { // if topic not exist
 				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
@@ -682,6 +682,9 @@ func handleKafkaRestLink(t *testing.T) http.HandlerFunc {
 						Kind:                 "",
 						Metadata:             cpkafkarestv3.ResourceMetadata{},
 						DestinationClusterId: ptrString("cluster-2"),
+						RemoteClusterId:      ptrString("cluster-2"),
+						LinkError:            "NO_ERROR",
+						LinkState:            "ACTIVE",
 						LinkName:             link,
 						ClusterLinkId:        "LINKID1",
 						TopicNames:           []string{"link-1-topic-1", "link-1-topic-2"},
@@ -703,19 +706,36 @@ func handleKafkaRestLink(t *testing.T) http.HandlerFunc {
 					require.NoError(t, err)
 				}
 			} else if link == "link-3" {
-				err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseData{
-					Kind:                 "",
-					Metadata:             cckafkarestv3.ResourceMetadata{},
-					SourceClusterId:      *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString(cluster)),
-					DestinationClusterId: *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("cluster-2")),
-					LinkName:             link,
-					ClusterLinkId:        "LINKID3",
-					TopicNames:           []string{"link-1-topic-1", "link-1-topic-2"},
-					LinkState:            cckafkarestv3.PtrString("UNAVAILABLE"),
-					LinkError:            cckafkarestv3.PtrString("AUTHENTICATION_ERROR"),
-					LinkErrorMessage:     *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("Please check your API key and secret.")),
-				})
-				require.NoError(t, err)
+				switch cluster {
+				case "cluster-1":
+					err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinksResponseData{
+						Kind:                 "",
+						Metadata:             cpkafkarestv3.ResourceMetadata{},
+						DestinationClusterId: ptrString("cluster-2"),
+						RemoteClusterId:      ptrString("cluster-2"),
+						LinkError:            "AUTHENTICATION_ERROR",
+						LinkErrorMessage:     ptrString("Please check your API key and secret"),
+						LinkState:            "UNAVAILABLE",
+						LinkName:             link,
+						ClusterLinkId:        "LINKID1",
+						TopicNames:           []string{"link-1-topic-1", "link-1-topic-2"},
+					})
+					require.NoError(t, err)
+				default:
+					err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseData{
+						Kind:                 "",
+						Metadata:             cckafkarestv3.ResourceMetadata{},
+						SourceClusterId:      *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString(cluster)),
+						DestinationClusterId: *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("cluster-2")),
+						LinkName:             link,
+						ClusterLinkId:        "LINKID3",
+						TopicNames:           []string{"link-1-topic-1", "link-1-topic-2"},
+						LinkState:            cckafkarestv3.PtrString("UNAVAILABLE"),
+						LinkError:            cckafkarestv3.PtrString("AUTHENTICATION_ERROR"),
+						LinkErrorMessage:     *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("Please check your API key and secret.")),
+					})
+					require.NoError(t, err)
+				}
 			} else if link == "link-4" {
 				err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseData{
 					Kind:            "",

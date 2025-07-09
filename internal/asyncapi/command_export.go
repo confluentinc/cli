@@ -85,6 +85,7 @@ func (c *command) newExportCommand() *cobra.Command {
 	cmd.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
 	cmd.Flags().String("schema-context", "default", "Use a specific schema context.")
 	cmd.Flags().StringSlice("topics", nil, "A comma-separated list of topics to export. Supports prefixes ending with a wildcard (*).")
+	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
 	pcmd.AddValueFormatFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -142,7 +143,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 				currentSubject: subject,
 				examples:       make(map[string]any),
 			}
-			if err := c.getChannelDetails(accountDetails, flags); err != nil {
+			if err := c.getChannelDetails(accountDetails, flags, cmd); err != nil {
 				if err.Error() == protobufErrorMessage {
 					log.CliLogger.Info(err.Error())
 					continue
@@ -174,7 +175,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	return os.WriteFile(flags.file, yaml, 0644)
 }
 
-func (c *command) getChannelDetails(details *accountDetails, flags *flags) error {
+func (c *command) getChannelDetails(details *accountDetails, flags *flags, cmd *cobra.Command) error {
 	topic := details.channelDetails.currentTopic.GetTopicName()
 	if err := details.getSchemaDetails(); err != nil {
 		if err.Error() == protobufErrorMessage {
@@ -186,7 +187,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 		log.CliLogger.Warnf("Failed to get tags: %v", err)
 	}
 	if flags.consumeExamples {
-		example, err := c.getMessageExamples(details.consumer, topic, details.channelDetails.contentType, details.srClient, flags.valueFormat)
+		example, err := c.getMessageExamples(details.consumer, topic, details.channelDetails.contentType, details.srClient, flags.valueFormat, cmd)
 		if err != nil {
 			log.CliLogger.Warn(err)
 		}
@@ -212,7 +213,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 
 func (c *command) getAccountDetails(cmd *cobra.Command, flags *flags) (*accountDetails, error) {
 	details := new(accountDetails)
-	if err := c.getClusterDetails(details, flags); err != nil {
+	if err := c.getClusterDetails(details, flags, cmd); err != nil {
 		return nil, err
 	}
 
@@ -258,7 +259,7 @@ func handlePanic() {
 	}
 }
 
-func (c *command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentType string, srClient *schemaregistry.Client, valueFormatFlag string) (any, error) {
+func (c *command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentType string, srClient *schemaregistry.Client, valueFormatFlag string, cmd *cobra.Command) (any, error) {
 	defer handlePanic()
 	if err := consumer.Subscribe(topicName, nil); err != nil {
 		return nil, fmt.Errorf(`failed to subscribe to topic "%s": %w`, topicName, err)
@@ -283,12 +284,29 @@ func (c *command) getMessageExamples(consumer *ckgo.Consumer, topicName, content
 	if err != nil {
 		return nil, err
 	}
-	srClusterId, srEndpoint, err := c.GetCurrentSchemaRegistryClusterIdAndEndpoint()
+	schemaRegistryEndpoint, err := cmd.Flags().GetString("schema-registry-endpoint")
+	if err != nil {
+		return nil, err
+	}
+	var srClusterId, srEndpoint string
+	if schemaRegistryEndpoint != "" {
+		srEndpoint = schemaRegistryEndpoint
+		clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
+		if err != nil {
+			return nil, err
+		}
+		if len(clusters) == 0 {
+			return nil, schemaregistry.ErrNotEnabled
+		}
+		srClusterId = clusters[0].GetId()
+	} else {
+		srClusterId, srEndpoint, err = c.GetCurrentSchemaRegistryClusterIdAndEndpoint(cmd)
+	}
 	if err != nil {
 		return nil, err
 	}
 
-	err = deserializationProvider.InitDeserializer(srEndpoint, srClusterId, "value", "", "", token, nil)
+	err = deserializationProvider.InitDeserializer(srEndpoint, srClusterId, "value", serdes.SchemaRegistryAuth{Token: token}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -317,7 +335,66 @@ func (c *command) getMessageExamples(consumer *ckgo.Consumer, topicName, content
 	if err := json.Unmarshal([]byte(jsonMessage), &jsonObject); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON message: %v", err)
 	}
+
+	if valueFormat == "avro" {
+		processUnionTypes(jsonObject)
+	}
+
 	return jsonObject, nil
+}
+
+// Valid avro types
+var avroTypes = map[string]bool{
+	"string":  true,
+	"array":   true,
+	"int":     true,
+	"long":    true,
+	"float":   true,
+	"double":  true,
+	"boolean": true,
+	"null":    true,
+	"bytes":   true,
+}
+
+// processUnionTypes recursively processes the message map to handle union types
+func processUnionTypes(m map[string]any) {
+	for k, v := range m {
+		switch val := v.(type) {
+		case map[string]any:
+			// Handle Avro union types
+			if len(val) == 1 {
+				for typeName, actualValue := range val {
+					if avroTypes[typeName] {
+						m[k] = actualValue
+						continue
+					}
+				}
+			}
+			// Handle arrays
+			if arrayVal, ok := val["array"]; ok {
+				if array, ok := arrayVal.([]any); ok {
+					for i, item := range array {
+						if itemMap, ok := item.(map[string]any); ok {
+							processUnionTypes(itemMap)
+							array[i] = itemMap
+						}
+					}
+					m[k] = array
+					continue
+				}
+			}
+			// Process nested maps
+			processUnionTypes(val)
+		case []any:
+			// Handle arrays that might contain union types
+			for i, item := range val {
+				if itemMap, ok := item.(map[string]any); ok {
+					processUnionTypes(itemMap)
+					val[i] = itemMap
+				}
+			}
+		}
+	}
 }
 
 func (c *command) getBindings(topicName string) (*bindings, error) {
@@ -390,7 +467,7 @@ func (c *command) getBindings(topicName string) (*bindings, error) {
 	return bindings, nil
 }
 
-func (c *command) getClusterDetails(details *accountDetails, flags *flags) error {
+func (c *command) getClusterDetails(details *accountDetails, flags *flags, cmd *cobra.Command) error {
 	cluster, err := pkafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return fmt.Errorf(`failed to find Kafka cluster: %w`, err)
@@ -457,7 +534,22 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 	// kafkaUrl is used in exported file, while kafkaBootstrapUrl is used to create Kafka consumer
 	details.kafkaUrl = kafkaREST.CloudClient.GetUrl()
 	details.kafkaBootstrapUrl = cluster.Bootstrap
-	details.schemaRegistryUrl = clusters[0].Spec.GetHttpEndpoint()
+	schemaRegistryEndpoint, err := cmd.Flags().GetString("schema-registry-endpoint")
+	if err != nil {
+		return err
+	}
+	if schemaRegistryEndpoint != "" {
+		details.schemaRegistryUrl = schemaRegistryEndpoint
+	} else if c.Context.GetSchemaRegistryEndpoint() != "" {
+		details.schemaRegistryUrl = c.Context.GetSchemaRegistryEndpoint()
+	} else {
+		endpoint, err := c.GetValidSchemaRegistryClusterEndpoint(cmd, clusters[0])
+		if err != nil {
+			return err
+		}
+		details.schemaRegistryUrl = endpoint
+	}
+
 	details.topics = topics.Data
 
 	return nil

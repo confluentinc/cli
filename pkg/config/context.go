@@ -251,17 +251,44 @@ func (c *Context) GetCurrentFlinkComputePool() string {
 func (c *Context) SetCurrentFlinkComputePool(id string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
-		return fmt.Errorf(noEnvError)
+		return errors.New(noEnvError)
 	}
 
 	ctx.CurrentFlinkComputePool = id
 	return nil
 }
 
+func (c *Context) SetCurrentFlinkEndpoint(endpoint string) error {
+	ctx := c.GetCurrentEnvironmentContext()
+	if ctx == nil {
+		return errors.New(noEnvError)
+	}
+
+	ctx.CurrentFlinkEndpoint = endpoint
+	return nil
+}
+
+func (c *Context) SetSchemaRegistryEndpoint(endpoint string) error {
+	ctx := c.GetCurrentEnvironmentContext()
+	if ctx == nil {
+		return errors.New(noEnvError)
+	}
+
+	ctx.CurrentSchemaRegistryEndpoint = endpoint
+	return nil
+}
+
+func (c *Context) GetSchemaRegistryEndpoint() string {
+	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
+		return ctx.CurrentSchemaRegistryEndpoint
+	}
+	return ""
+}
+
 func (c *Context) SetCurrentFlinkAccessType(name string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
-		return fmt.Errorf(noEnvError)
+		return errors.New(noEnvError)
 	}
 
 	ctx.CurrentFlinkAccessType = name
@@ -278,7 +305,7 @@ func (c *Context) GetCurrentFlinkCloudProvider() string {
 func (c *Context) SetCurrentFlinkCloudProvider(cloud string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
-		return fmt.Errorf(noEnvError)
+		return errors.New(noEnvError)
 	}
 
 	ctx.CurrentFlinkCloudProvider = cloud
@@ -294,7 +321,7 @@ func (c *Context) GetCurrentFlinkRegion() string {
 func (c *Context) SetCurrentFlinkRegion(id string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
-		return fmt.Errorf(noEnvError)
+		return errors.New(noEnvError)
 	}
 
 	ctx.CurrentFlinkRegion = id
@@ -311,7 +338,7 @@ func (c *Context) GetCurrentFlinkCatalog() string {
 func (c *Context) SetCurrentFlinkCatalog(id string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
-		return fmt.Errorf(noEnvError)
+		return errors.New(noEnvError)
 	}
 
 	ctx.CurrentFlinkCatalog = id
@@ -328,7 +355,7 @@ func (c *Context) GetCurrentFlinkDatabase() string {
 func (c *Context) SetCurrentFlinkDatabase(id string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
-		return fmt.Errorf(noEnvError)
+		return errors.New(noEnvError)
 	}
 
 	ctx.CurrentFlinkDatabase = id
@@ -338,6 +365,13 @@ func (c *Context) SetCurrentFlinkDatabase(id string) error {
 func (c *Context) GetCurrentFlinkAccessType() string {
 	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
 		return ctx.CurrentFlinkAccessType
+	}
+	return ""
+}
+
+func (c *Context) GetCurrentFlinkEndpoint() string {
+	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
+		return ctx.CurrentFlinkEndpoint
 	}
 	return ""
 }
@@ -352,10 +386,27 @@ func (c *Context) GetCurrentServiceAccount() string {
 func (c *Context) SetCurrentServiceAccount(id string) error {
 	ctx := c.GetCurrentEnvironmentContext()
 	if ctx == nil {
-		return fmt.Errorf(noEnvError)
+		return errors.New(noEnvError)
 	}
 
 	ctx.CurrentServiceAccount = id
+	return nil
+}
+
+func (c *Context) GetConnectLogsQueryState() *ConnectLogsQueryState {
+	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
+		return ctx.ConnectLogsQueryState
+	}
+	return nil
+}
+
+func (c *Context) SetConnectLogsQueryState(state *ConnectLogsQueryState) error {
+	ctx := c.GetCurrentEnvironmentContext()
+	if ctx == nil {
+		return errors.New(noEnvError)
+	}
+
+	ctx.ConnectLogsQueryState = state
 	return nil
 }
 
