@@ -99,7 +99,34 @@ func (c *Client) DeleteCustomPluginVersion(pluginId, versionId string) error {
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateCustomPluginVersion(pluginId, versionId string, versionUpdate connectcustompluginv1.ConnectV1CustomConnectorPluginVersion) (connectcustompluginv1.ConnectV1CustomConnectorPluginVersion, error) {
-	resp, httpResp, err := c.ConnectCustomPluginClient.CustomConnectorPluginVersionsConnectV1Api.UpdateConnectV1CustomConnectorPluginVersion(c.connectCustomPluginApiContext(), pluginId, versionId).ConnectV1CustomConnectorPluginVersion(versionUpdate).Execute()
+func (c *Client) UpdateCustomPluginVersion(pluginId, versionId string, versionUpdate connectcustompluginv1.ConnectV1CustomConnectorPluginVersionUpdate) (connectcustompluginv1.ConnectV1CustomConnectorPluginVersion, error) {
+	resp, httpResp, err := c.ConnectCustomPluginClient.CustomConnectorPluginVersionsConnectV1Api.UpdateConnectV1CustomConnectorPluginVersion(c.connectCustomPluginApiContext(), pluginId, versionId).ConnectV1CustomConnectorPluginVersionUpdate(versionUpdate).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) ListCustomConnectorRuntimes() ([]connectcustompluginv1.ConnectV1CustomConnectorRuntime, error) {
+	var list []connectcustompluginv1.ConnectV1CustomConnectorRuntime
+	done := false
+	pageToken := ""
+	for !done {
+		page, httpResp, err := c.executeListRuntimes(pageToken)
+		if err != nil {
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
+		}
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return list, nil
+}
+
+func (c *Client) executeListRuntimes(pageToken string) (connectcustompluginv1.ConnectV1CustomConnectorRuntimeList, *http.Response, error) {
+	req := c.ConnectCustomPluginClient.CustomConnectorRuntimesConnectV1Api.ListConnectV1CustomConnectorRuntimes(c.connectCustomPluginApiContext()).PageSize(ccloudV2ListPageSize)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+	return req.Execute()
 }

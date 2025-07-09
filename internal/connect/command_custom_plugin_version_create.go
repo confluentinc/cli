@@ -3,7 +3,6 @@ package connect
 import (
 	"fmt"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -78,13 +77,13 @@ func (c *customPluginCommand) createCustomPluginVersion(cmd *cobra.Command, args
 		return err
 	}
 
-	beta, err := cmd.Flags().GetBool("beta")
+	//beta, err := cmd.Flags().GetBool("beta")
 	if err != nil {
 		return err
 	}
-	isBetaString := strconv.FormatBool(beta)
+	//isBetaString := strconv.FormatBool(beta)
 
-	releaseNotes, err := cmd.Flags().GetString("release-notes")
+	//releaseNotes, err := cmd.Flags().GetString("release-notes")
 	if err != nil {
 		return err
 	}
@@ -121,8 +120,6 @@ func (c *customPluginCommand) createCustomPluginVersion(cmd *cobra.Command, args
 
 	createCustomPluginVersionRequest := connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{
 		Version:                   connectcustompluginv1.PtrString(versionNumber),
-		IsBeta:                    connectcustompluginv1.PtrString(isBetaString),
-		ReleaseNotes:              connectcustompluginv1.PtrString(releaseNotes),
 		SensitiveConfigProperties: &sensitiveProperties,
 		UploadSource: &connectcustompluginv1.ConnectV1CustomConnectorPluginVersionUploadSourceOneOf{
 			ConnectV1UploadSourcePresignedUrl: connectcustompluginv1.NewConnectV1UploadSourcePresignedUrl("PRESIGNED_URL_LOCATION", resp.GetUploadId()),
@@ -138,8 +135,6 @@ func (c *customPluginCommand) createCustomPluginVersion(cmd *cobra.Command, args
 	table.Add(&pluginVersionOut{
 		Version:             pluginVersionResp.GetId(),
 		VersionNumber:       pluginVersionResp.GetVersion(),
-		IsBeta:              pluginVersionResp.GetIsBeta(),
-		ReleaseNotes:        pluginVersionResp.GetReleaseNotes(),
 		SensitiveProperties: pluginVersionResp.GetSensitiveConfigProperties(),
 	})
 	return table.Print()
