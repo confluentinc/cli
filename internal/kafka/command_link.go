@@ -63,5 +63,5 @@ func (c *linkCommand) validArgsMultiple(cmd *cobra.Command, args []string) []str
 		return nil
 	}
 
-	return pcmd.AutocompleteLinks(c.AuthenticatedCLICommand)
+	return pcmd.AutocompleteLinks(cmd, c.AuthenticatedCLICommand)
 }
