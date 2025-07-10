@@ -1,4 +1,4 @@
-Delete one or more custom Connect plugin.
+Delete one or more custom Connect plugins.
 
 Usage:
   confluent ccpm plugin delete <id-1> [id-2] ... [id-n] [flags]

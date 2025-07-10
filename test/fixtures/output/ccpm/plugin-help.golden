@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   create      Create a custom Connect plugin.
-  delete      Delete one or more custom Connect plugin.
+  delete      Delete one or more custom Connect plugins.
   describe    Describe a custom Connect plugin.
   list        List custom Connect plugins.
   update      Update a custom Connect plugin.
