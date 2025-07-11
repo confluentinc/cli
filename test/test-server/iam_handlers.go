@@ -120,6 +120,7 @@ func handleIamApiKeys(t *testing.T) http.HandlerFunc {
 			handleIamApiKeysCreate(t)(w, r)
 		} else if r.Method == http.MethodGet {
 			apiKeysList := apiKeysFilterV2(r.URL)
+			setPageToken(apiKeysList, &apiKeysList.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(apiKeysList)
 			require.NoError(t, err)
 		}
@@ -249,6 +250,7 @@ func handleIamUsers(t *testing.T) http.HandlerFunc {
 					}
 				}
 			}
+			setPageToken(&res, &res.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		}
@@ -291,12 +293,17 @@ func handleIamServiceAccounts(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			serviceAccount := iamv2.IamV2ServiceAccount{
-				Id:          iamv2.PtrString(serviceAccountResourceId),
-				DisplayName: iamv2.PtrString("service-account"),
-				Description: iamv2.PtrString("at your service."),
+			serviceAccounts := &iamv2.IamV2ServiceAccountList{
+				Data: []iamv2.IamV2ServiceAccount{
+					{
+						Id:          iamv2.PtrString(serviceAccountResourceId),
+						DisplayName: iamv2.PtrString("service-account"),
+						Description: iamv2.PtrString("at your service."),
+					},
+				},
 			}
-			err := json.NewEncoder(w).Encode(iamv2.IamV2ServiceAccountList{Data: []iamv2.IamV2ServiceAccount{serviceAccount}})
+			setPageToken(serviceAccounts, &serviceAccounts.Metadata, r.URL)
+			err := json.NewEncoder(w).Encode(serviceAccounts)
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req iamv2.IamV2ServiceAccount
@@ -333,6 +340,7 @@ func handleIamRoleBindings(t *testing.T) http.HandlerFunc {
 				}
 			}
 			res := mdsv2.IamV2RoleBindingList{Data: roleBindings}
+			setPageToken(&res, &res.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodPost:
@@ -395,7 +403,9 @@ func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
 			identityProvider := buildIamProvider(identityProviderId, "identity-provider", "providing identities.", "https://company.provider.com", "https://company.provider.com/oauth2/v1/keys", "")
 			anotherIdentityProvider := buildIamProvider("op-abc", "another-provider", "providing identities.", "https://company.provider.com", "https://company.provider.com/oauth2/v1/keys", "")
 			identityProviderIdentityClaim := buildIamProvider("op-67890", "okta-with-identity-claim", "new description.", "https://company.new-provider.com", "https://company.new-provider.com/oauth2/v1/keys", "claims.sub")
-			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityProviderList{Data: []identityproviderv2.IamV2IdentityProvider{identityProvider, anotherIdentityProvider, identityProviderIdentityClaim}})
+			identityProviderList := &identityproviderv2.IamV2IdentityProviderList{Data: []identityproviderv2.IamV2IdentityProvider{identityProvider, anotherIdentityProvider, identityProviderIdentityClaim}}
+			setPageToken(identityProviderList, &identityProviderList.Metadata, r.URL)
+			err := json.NewEncoder(w).Encode(identityProviderList)
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req identityproviderv2.IamV2IdentityProvider
@@ -472,7 +482,9 @@ func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			identityPool := buildIamPool(identityPoolId, "identity-pool", "pooling identities", "sub", `claims.iss="https://company.provider.com"`)
 			anotherIdentityPool := buildIamPool("pool-abc", "another-pool", "another description", "sub", "true")
-			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityPoolList{Data: []identityproviderv2.IamV2IdentityPool{identityPool, anotherIdentityPool}})
+			identityPoolList := &identityproviderv2.IamV2IdentityPoolList{Data: []identityproviderv2.IamV2IdentityPool{identityPool, anotherIdentityPool}}
+			setPageToken(identityPoolList, &identityPoolList.Metadata, r.URL)
+			err := json.NewEncoder(w).Encode(identityPoolList)
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req identityproviderv2.IamV2IdentityPool
@@ -528,6 +540,7 @@ func handleIamCertificateAuthorities(t *testing.T) http.HandlerFunc {
 				buildIamCertificateAuthority("op-54321", "my-ca-2", "my other certificate authority", "certificate-2.pem", "", "DEF456"),
 				buildIamCertificateAuthority("op-67890", "my-ca-3", "my other certificate authority", "certificate-3.pem", "example.url", ""),
 			}}
+			setPageToken(certificateAuthorityList, &certificateAuthorityList.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(certificateAuthorityList)
 			require.NoError(t, err)
 		case http.MethodPost:
@@ -581,7 +594,9 @@ func handleIamCertificatePools(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			certificatePool := buildIamCertificatePool(identityPoolId, "certificate-pool", "certificate pool identities", "external-entity", "true")
 			anotherCertificatePool := buildIamCertificatePool("pool-abc", "another-pool", "another description", "sub", "true")
-			err := json.NewEncoder(w).Encode(certificateauthorityv2.IamV2CertificateIdentityPoolList{Data: []certificateauthorityv2.IamV2CertificateIdentityPool{certificatePool, anotherCertificatePool}})
+			certificatePoolList := &certificateauthorityv2.IamV2CertificateIdentityPoolList{Data: []certificateauthorityv2.IamV2CertificateIdentityPool{certificatePool, anotherCertificatePool}}
+			setPageToken(certificatePoolList, &certificatePoolList.Metadata, r.URL)
+			err := json.NewEncoder(w).Encode(certificatePoolList)
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req certificateauthorityv2.IamV2CertificateIdentityPool
@@ -606,7 +621,9 @@ func handleIamIpFilters(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			ipFilter := buildIamIpFilter(ipFilterId, "demo-ip-filter", "multiple", []string{"ipg-12345", "ipg-abcde"}, "crn://confluent.cloud/organization=org123", []string{"MANAGEMENT"})
-			err := json.NewEncoder(w).Encode(iamipfilteringv2.IamV2IpFilterList{Data: []iamipfilteringv2.IamV2IpFilter{ipFilter}})
+			ipFilterList := &iamipfilteringv2.IamV2IpFilterList{Data: []iamipfilteringv2.IamV2IpFilter{ipFilter}}
+			setPageToken(ipFilterList, &ipFilterList.Metadata, r.URL)
+			err := json.NewEncoder(w).Encode(ipFilterList)
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req iamipfilteringv2.IamV2IpFilter
@@ -679,7 +696,9 @@ func handleIamIpGroups(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			ipGroup := buildIamIpGroup(ipGroupId, "demo-ip-group", []string{"168.150.200.0/24", "147.150.200.0/24"})
-			err := json.NewEncoder(w).Encode(iamipfilteringv2.IamV2IpGroupList{Data: []iamipfilteringv2.IamV2IpGroup{ipGroup}})
+			ipGroupList := &iamipfilteringv2.IamV2IpGroupList{Data: []iamipfilteringv2.IamV2IpGroup{ipGroup}}
+			setPageToken(ipGroupList, &ipGroupList.Metadata, r.URL)
+			err := json.NewEncoder(w).Encode(ipGroupList)
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req iamipfilteringv2.IamV2IpGroup
@@ -730,6 +749,7 @@ func handleIamInvitations(t *testing.T) http.HandlerFunc {
 				buildIamInvitation("i-11111", "u-11aaa@confluent.io", "u-11aaa", "VERIFIED"),
 				buildIamInvitation("i-22222", "u-22bbb@confluent.io", "u-22bbb", "SENT"),
 			}}
+			setPageToken(invitationList, &invitationList.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(invitationList)
 			require.NoError(t, err)
 		case http.MethodPost:
@@ -755,7 +775,9 @@ func handleIamGroupMappings(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			anotherMapping := buildIamGroupMapping(groupMappingId, "another-group-mapping", "another description", "true")
-			err := json.NewEncoder(w).Encode(ssov2.IamV2SsoGroupMappingList{Data: []ssov2.IamV2SsoGroupMapping{groupMapping, anotherMapping}})
+			groupMappingsList := &ssov2.IamV2SsoGroupMappingList{Data: []ssov2.IamV2SsoGroupMapping{groupMapping, anotherMapping}}
+			setPageToken(groupMappingsList, &groupMappingsList.Metadata, r.URL)
+			err := json.NewEncoder(w).Encode(groupMappingsList)
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req ssov2.IamV2SsoGroupMapping

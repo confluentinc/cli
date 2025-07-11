@@ -16,6 +16,14 @@ import (
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 )
 
+type ListMeta interface {
+	SetNext(string)
+}
+
+type ResourceList[T any] interface {
+	SetData(T)
+}
+
 type ErrorJson struct {
 	Message string `json:"message"`
 }
@@ -397,5 +405,16 @@ func buildUser(id int32, email, firstName, lastName, resourceId string) *ccloudv
 		FirstName:  firstName,
 		LastName:   lastName,
 		ResourceId: resourceId,
+	}
+}
+
+// Set a page token for an empty second page
+func setPageToken[T any](resourceList ResourceList[T], meta ListMeta, url *url.URL) {
+	if url.Query().Get("page_token") == "" { // Initial response: set a page token
+		nextPage := fmt.Sprintf("%s&%s", url.String(), "page_token=UvmDWOB1iwfAIBPj6EYb")
+		meta.SetNext(nextPage)
+	} else { // Second response: set no page token, and return an empty data list
+		var zero T
+		resourceList.SetData(zero)
 	}
 }
