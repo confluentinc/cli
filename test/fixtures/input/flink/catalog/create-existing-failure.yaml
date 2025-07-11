@@ -1,0 +1,16 @@
+apiVersion: cmf/api/v1/catalog
+kind: KafkaCatalog
+metadata:
+  name: existing-catalog
+spec:
+  kafkaClusters:
+    - databaseName: dev
+      connectionConfig:
+        dev-k1: dev-v1
+        dev-k2: dev-v2
+        dev-k3: dev-v3
+    - databaseName: prod
+      connectionConfig:
+        dev-k1: prod-v1
+        dev-k2: prod-v2
+        dev-k3: prod-v3 

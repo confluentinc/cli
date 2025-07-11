@@ -1,57 +1,39 @@
-- apiversion: ""
+- apiVersion: ""
   kind: ""
   metadata:
     name: test-catalog1
-    creationtimestamp: 2025-08-05 12:00:00 +0000 UTC
-    uid: null
-    labels: null
-    annotations: null
+    creationTimestamp: 2025-08-05 12:00:00 +0000 UTC
   spec:
-    srinstance:
-        connectionconfig: {}
-        connectionsecretid: null
-    kafkaclusters:
-        - databasename: test-database
-          connectionconfig: {}
-          connectionsecretid: null
-        - databasename: test-database-2
-          connectionconfig: {}
-          connectionsecretid: null
-- apiversion: ""
+    srInstance:
+        connectionConfig: {}
+    kafkaClusters:
+        - databaseName: test-database
+          connectionConfig: {}
+        - databaseName: test-database-2
+          connectionConfig: {}
+- apiVersion: ""
   kind: ""
   metadata:
     name: test-catalog2
-    creationtimestamp: 2025-08-05 12:00:00 +0000 UTC
-    uid: null
-    labels: null
-    annotations: null
+    creationTimestamp: 2025-08-05 12:00:00 +0000 UTC
   spec:
-    srinstance:
-        connectionconfig: {}
-        connectionsecretid: null
-    kafkaclusters:
-        - databasename: test-database
-          connectionconfig: {}
-          connectionsecretid: null
-        - databasename: test-database-2
-          connectionconfig: {}
-          connectionsecretid: null
-- apiversion: ""
+    srInstance:
+        connectionConfig: {}
+    kafkaClusters:
+        - databaseName: test-database
+          connectionConfig: {}
+        - databaseName: test-database-2
+          connectionConfig: {}
+- apiVersion: ""
   kind: ""
   metadata:
     name: test-catalog3
-    creationtimestamp: 2025-08-05 12:00:00 +0000 UTC
-    uid: null
-    labels: null
-    annotations: null
+    creationTimestamp: 2025-08-05 12:00:00 +0000 UTC
   spec:
-    srinstance:
-        connectionconfig: {}
-        connectionsecretid: null
-    kafkaclusters:
-        - databasename: test-database
-          connectionconfig: {}
-          connectionsecretid: null
-        - databasename: test-database-2
-          connectionconfig: {}
-          connectionsecretid: null
+    srInstance:
+        connectionConfig: {}
+    kafkaClusters:
+        - databaseName: test-database
+          connectionConfig: {}
+        - databaseName: test-database-2
+          connectionConfig: {}

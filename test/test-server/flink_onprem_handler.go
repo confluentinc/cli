@@ -66,7 +66,7 @@ func createApplication(name string, environment string) cmfsdk.FlinkApplication 
 	}
 
 	return cmfsdk.FlinkApplication{
-		ApiVersion: "cmf.confluent.io/v1alpha1",
+		ApiVersion: "cmf.confluent.io/v1",
 		Kind:       "FlinkApplication",
 		Metadata: map[string]interface{}{
 			"name": name,

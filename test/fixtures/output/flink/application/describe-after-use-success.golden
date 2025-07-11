@@ -1,6 +1,6 @@
 Using environment from config file: default
 {
-  "apiVersion": "cmf.confluent.io/v1alpha1",
+  "apiVersion": "cmf.confluent.io/v1",
   "kind": "FlinkApplication",
   "metadata": {
     "name": "default-application-1"

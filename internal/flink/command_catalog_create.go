@@ -46,12 +46,28 @@ func (c *command) catalogCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	var catalog cmfsdk.KafkaCatalog
+	var localCat localCatalog
 	ext := filepath.Ext(resourceFilePath)
 	switch ext {
 	case ".json":
 		err = json.Unmarshal(data, &catalog)
 	case ".yaml", ".yml":
-		err = yaml.Unmarshal(data, &catalog)
+		// Unmarshal into local struct with YAML tags
+		if err = yaml.Unmarshal(data, &localCat); err != nil {
+			return fmt.Errorf("failed to unmarshal YAML: %w", err)
+		}
+
+		// Convert to JSON bytes to use the SDK struct's JSON tags
+		jsonBytes, err := json.Marshal(localCat)
+		if err != nil {
+			return fmt.Errorf("failed to convert to JSON: %v", err)
+		}
+
+		// Now unmarshal into the SDK struct using JSON unmarshaler
+		if err = json.Unmarshal(jsonBytes, &catalog); err != nil {
+			return fmt.Errorf("failed to unmarshal JSON: %v", err)
+		}
+
 	default:
 		return errors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
 	}
@@ -62,6 +78,25 @@ func (c *command) catalogCreate(cmd *cobra.Command, args []string) error {
 	outputCatalog, err := client.CreateCatalog(c.createContext(), catalog)
 	if err != nil {
 		return err
+	}
+
+	if output.GetFormat(cmd) == output.YAML {
+		// Convert the outputCatalog to our local struct for correct YAML field names
+		jsonBytes, err := json.Marshal(outputCatalog)
+		if err != nil {
+			return err
+		}
+		var outputLocalCat localCatalog
+		if err = json.Unmarshal(jsonBytes, &outputLocalCat); err != nil {
+			return err
+		}
+		// Output the local struct for correct YAML field names
+		out, err := yaml.Marshal(outputLocalCat)
+		if err != nil {
+			return err
+		}
+		output.Print(false, string(out))
+		return nil
 	}
 
 	if output.GetFormat(cmd) == output.Human {
