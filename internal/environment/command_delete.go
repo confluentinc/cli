@@ -40,7 +40,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteOrgEnvironment(id)
 	}
 
-	deletedIds, err := deletion.Delete(args, deleteFunc, resource.Environment)
+	deletedIds, err := deletion.Delete(cmd, args, deleteFunc, resource.Environment)
 
 	errs := multierror.Append(err, c.deleteEnvironmentsFromConfig(deletedIds))
 

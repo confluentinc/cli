@@ -37,6 +37,6 @@ func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteKafkaQuota(id)
 	}
 
-	_, err := deletion.Delete(args, deleteFunc, resource.ClientQuota)
+	_, err := deletion.Delete(cmd, args, deleteFunc, resource.ClientQuota)
 	return err
 }

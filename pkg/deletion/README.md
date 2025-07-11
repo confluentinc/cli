@@ -87,14 +87,24 @@ For most resources, this is the last step and you can simply return the error to
 
 ```go
 deleteFunc := func(id string) error {
-    if err := c.V2Client.DeleteIamUser(id); err != nil {
-        // You can wrap this error or process it further as needed
-        return fmt.Errorf(errors.DeleteResourceErrorMsg, resource.User, id, err)
-    }
-    return nil
+    return c.V2Client.DeleteIamUser(id)
 }
 
-_, err = deletion.Delete(args, deleteFunc, resource.User)
+_, err = deletion.Delete(cmd, args, deleteFunc, resource.User)
+return err
+```
+
+You can also wrap the errors returned by `deleteFunc`:
+
+```go
+deleteFunc := func(id string) error {
+		if httpResp, err := c.V2Client.DeleteKafkaCluster(id, environmentId); err != nil {
+			return errors.CatchKafkaNotFoundError(err, id, httpResp)
+		}
+		return nil
+}
+
+_, err = deletion.Delete(cmd, args, deleteFunc, resource.User)
 return err
 ```
 
@@ -103,7 +113,7 @@ Any errors resulting from these additional tasks should be appended to the error
 Note that you must call `ErrorOrNil()` for multierrors instead of returning them directly.
 
 ```go
-deletedIds, err := deletion.Delete(args, deleteFunc, resource.ApiKey)
+deletedIds, err := deletion.Delete(cmd, args, deleteFunc, resource.ApiKey)
 
 errs := multierror.Append(err, c.deleteKeysFromKeyStore(deletedIds))
 ```
@@ -111,7 +121,7 @@ errs := multierror.Append(err, c.deleteKeysFromKeyStore(deletedIds))
 Then, either return `errs.ErrorOrNil()` or process the error further:
 
 ```go
-deletedIds, err := deletion.Delete(args, deleteFunc, resource.ApiKey)
+deletedIds, err := deletion.Delete(cmd, args, deleteFunc, resource.ApiKey)
 
 errs := multierror.Append(err, c.deleteKeysFromKeyStore(deletedIds))
 if errs.ErrorOrNil() != nil {
@@ -124,7 +134,7 @@ return nil
 Lastly, if your resource is not immediately deleted, then you should instead call `deletion.DeleteWithoutMessage` and write your own custom deletion message instead:
 
 ```go
-deletedIds, err := deletion.DeleteWithoutMessage(args, deleteFunc)
+deletedIds, err := deletion.DeleteWithoutMessage(cmd, args, deleteFunc)
 deleteMsg := "Started deletion of %s %s. To monitor a remove-broker task run `confluent kafka broker task list <id> --task-type remove-broker`.\n"
 if len(deletedIds) == 1 {
     output.Printf(deleteMsg, resource.Broker, fmt.Sprintf(`"%s"`, deletedIds[0]))

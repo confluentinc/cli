@@ -47,6 +47,6 @@ func (c *command) environmentDelete(cmd *cobra.Command, args []string) error {
 		return client.DeleteEnvironment(c.createContext(), name)
 	}
 
-	_, err = deletion.Delete(args, deleteFunc, resource.FlinkEnvironment)
+	_, err = deletion.Delete(cmd, args, deleteFunc, resource.FlinkEnvironment)
 	return err
 }

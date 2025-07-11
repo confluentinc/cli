@@ -1,13 +1,10 @@
 package network
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/deletion"
-	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
@@ -43,12 +40,9 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		if err := c.V2Client.DeleteNetwork(environmentId, id); err != nil {
-			return fmt.Errorf(errors.DeleteResourceErrorMsg, resource.Network, id, err)
-		}
-		return nil
+		return c.V2Client.DeleteNetwork(environmentId, id)
 	}
 
-	_, err = deletion.Delete(args, deleteFunc, resource.Network)
+	_, err = deletion.Delete(cmd, args, deleteFunc, resource.Network)
 	return err
 }

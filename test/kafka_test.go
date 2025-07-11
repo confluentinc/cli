@@ -158,6 +158,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: fmt.Sprintf("kafka link task list link-5 --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem.golden"},
 		{args: fmt.Sprintf("kafka link task list link-5 --url %s -o yaml", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem-yaml.golden"},
 		{args: fmt.Sprintf("kafka link task list link-5 --url %s -o json", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem-json.golden"},
+		{args: fmt.Sprintf("kafka link delete link-1 --url %s", s.TestBackend.GetKafkaRestUrl()), input: "y\n", fixture: "kafka/link/delete-onprem.golden"},
 	}
 
 	for _, test := range tests {
