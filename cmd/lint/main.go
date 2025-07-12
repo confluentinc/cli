@@ -306,6 +306,7 @@ var vocabWords = []string{
 	"siv",
 	"springboot",
 	"sql",
+	"sse",
 	"ssl",
 	"sso",
 	"subresource",
