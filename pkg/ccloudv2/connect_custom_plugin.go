@@ -79,31 +79,6 @@ func (c *Client) executeListPlugins(pageToken, cloud string) (connectcustomplugi
 	return req.Execute()
 }
 
-func (c *Client) CreateCustomPluginVersion(createCustomPluginVersionRequest connectcustompluginv1.ConnectV1CustomConnectorPluginVersion, id string) (connectcustompluginv1.ConnectV1CustomConnectorPluginVersion, error) {
-	resp, httpResp, err := c.ConnectCustomPluginClient.CustomConnectorPluginVersionsConnectV1Api.CreateConnectV1CustomConnectorPluginVersion(c.connectCustomPluginApiContext(), id).ConnectV1CustomConnectorPluginVersion(createCustomPluginVersionRequest).Execute()
-	return resp, errors.CatchCCloudV2Error(err, httpResp)
-}
-
-func (c *Client) DescribeCustomPluginVersion(pluginId, versionId string) (connectcustompluginv1.ConnectV1CustomConnectorPluginVersion, error) {
-	resp, httpResp, err := c.ConnectCustomPluginClient.CustomConnectorPluginVersionsConnectV1Api.GetConnectV1CustomConnectorPluginVersion(c.connectCustomPluginApiContext(), pluginId, versionId).Execute()
-	return resp, errors.CatchCCloudV2Error(err, httpResp)
-}
-
-func (c *Client) ListCustomPluginVersions(pluginId string) (connectcustompluginv1.ConnectV1CustomConnectorPluginVersionList, error) {
-	resp, httpResp, err := c.ConnectCustomPluginClient.CustomConnectorPluginVersionsConnectV1Api.ListConnectV1CustomConnectorPluginVersions(c.connectCustomPluginApiContext(), pluginId).Execute()
-	return resp, errors.CatchCCloudV2Error(err, httpResp)
-}
-
-func (c *Client) DeleteCustomPluginVersion(pluginId, versionId string) error {
-	httpResp, err := c.ConnectCustomPluginClient.CustomConnectorPluginVersionsConnectV1Api.DeleteConnectV1CustomConnectorPluginVersion(c.connectCustomPluginApiContext(), pluginId, versionId).Execute()
-	return errors.CatchCCloudV2Error(err, httpResp)
-}
-
-func (c *Client) UpdateCustomPluginVersion(pluginId, versionId string, versionUpdate connectcustompluginv1.ConnectV1CustomConnectorPluginVersionUpdate) (connectcustompluginv1.ConnectV1CustomConnectorPluginVersion, error) {
-	resp, httpResp, err := c.ConnectCustomPluginClient.CustomConnectorPluginVersionsConnectV1Api.UpdateConnectV1CustomConnectorPluginVersion(c.connectCustomPluginApiContext(), pluginId, versionId).ConnectV1CustomConnectorPluginVersionUpdate(versionUpdate).Execute()
-	return resp, errors.CatchCCloudV2Error(err, httpResp)
-}
-
 func (c *Client) ListCustomConnectorRuntimes() ([]connectcustompluginv1.ConnectV1CustomConnectorRuntime, error) {
 	var list []connectcustompluginv1.ConnectV1CustomConnectorRuntime
 	done := false
