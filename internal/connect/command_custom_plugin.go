@@ -6,7 +6,6 @@ import (
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -24,7 +23,7 @@ type customPluginOut struct {
 	SensitiveProperties []string `human:"Sensitive Properties" serialized:"sensitive_properties"`
 }
 
-func newCustomPluginCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newCustomPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "custom-plugin",
 		Short:       "Manage custom connector plugins.",
