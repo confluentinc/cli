@@ -16,7 +16,7 @@ var (
 		"couchbase":      {"username", "password"},
 		"confluent_jdbc": {"username", "password"},
 		"rest":           {"username", "password", "token", "token-endpoint", "client-id", "client-secret", "scope"},
-		"mcp_server":     {"api-key", "token", "token-endpoint", "client-id", "client-secret", "scope"},
+		"mcp_server":     {"api-key", "token", "token-endpoint", "client-id", "client-secret", "scope", "sse-endpoint"},
 	}
 
 	ConnectionSecretTypeMapping = map[string][]string{
@@ -32,6 +32,7 @@ var (
 		"client-id":         {"rest", "mcp_server"},
 		"client-secret":     {"rest", "mcp_server"},
 		"scope":             {"rest", "mcp_server"},
+		"sse-endpoint":      {"mcp_server"},
 	}
 
 	ConnectionRequiredSecretMapping = map[string][]string{
@@ -69,5 +70,6 @@ var (
 		"client-id":         "OAUTH2_CLIENT_ID",
 		"client-secret":     "OAUTH2_CLIENT_SECRET",
 		"scope":             "OAUTH2_SCOPE",
+		"sse-endpoint":      "SSE_ENDPOINT",
 	}
 )
