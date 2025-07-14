@@ -41,10 +41,14 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 		if credentials.IsSSO {
 			if token, refreshToken, err := a.refreshCCloudSSOToken(client, credentials.AuthRefreshToken, organizationId); err == nil {
 				return token, refreshToken, nil
+			} else if err != nil {
+				log.CliLogger.Debug(err.Error())
 			}
 		} else if credentials.IsMFA {
 			if token, refreshToken, err := a.refreshCCloudMFAToken(client, credentials.AuthRefreshToken, organizationId, credentials.Username); err == nil {
 				return token, refreshToken, nil
+			} else if err != nil {
+				log.CliLogger.Debug(err.Error())
 			}
 		} else {
 			req := &ccloudv1.AuthenticateRequest{
