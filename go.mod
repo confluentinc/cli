@@ -282,3 +282,6 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+// TODO: Remove once ccloud-sdk-go-v2 is updated
+replace github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin => github.com/confluentinc/ccloud-sdk-go-v2-internal/connect-custom-plugin v0.0.9

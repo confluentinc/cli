@@ -4,13 +4,14 @@ Usage:
   confluent connect [command]
 
 Available Commands:
-  artifact      Manage Connect artifacts.
-  cluster       Manage Connect clusters.
-  custom-plugin Manage custom connector plugins.
-  event         Manage log events for managed connectors.
-  logs          Manage logs for connectors.
-  offset        Manage offsets for managed connectors.
-  plugin        Manage plugins for managed connectors.
+  artifact                 Manage Connect artifacts.
+  cluster                  Manage Connect clusters.
+  custom-connector-runtime Manage custom connector runtimes.
+  custom-plugin            Manage custom connector plugins.
+  event                    Manage log events for managed connectors.
+  logs                     Manage logs for connectors.
+  offset                   Manage offsets for managed connectors.
+  plugin                   Manage plugins for managed connectors.
 
 Global Flags:
   -h, --help            Show help for this command.

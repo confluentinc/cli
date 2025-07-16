@@ -1,15 +1,14 @@
-Manage Kafka Connect.
+Manage custom connector runtimes.
 
 Usage:
-  confluent connect [command]
+  confluent connect custom-connector-runtime [command]
 
 Available Commands:
-  cluster                  Manage Connect clusters.
-  plugin                   Manage plugins for managed connectors.
+  list        List custom connector runtimes.
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
-Use "confluent connect [command] --help" for more information about a command.
+Use "confluent connect custom-connector-runtime [command] --help" for more information about a command.
