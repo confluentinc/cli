@@ -293,9 +293,9 @@ func (s *CLITestSuite) TestConnectLogs() {
 
 func (s *CLITestSuite) TestConnectListRuntimes() {
 	tests := []CLITest{
-		{args: "connect custom-connector-runtime list -o json", fixture: "connect/runtimes/list-json.golden"},
-		{args: "connect custom-connector-runtime list -o yaml", fixture: "connect/runtimes/list-yaml.golden"},
-		{args: "connect custom-connector-runtime list", fixture: "connect/runtimes/list.golden"},
+		{args: "connect custom-connector-runtime list -o json", fixture: "connect/custom-connector-runtime/list-json.golden"},
+		{args: "connect custom-connector-runtime list -o yaml", fixture: "connect/custom-connector-runtime/list-yaml.golden"},
+		{args: "connect custom-connector-runtime list", fixture: "connect/custom-connector-runtime/list.golden"},
 	}
 
 	for _, test := range tests {

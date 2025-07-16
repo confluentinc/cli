@@ -9,7 +9,6 @@ Available Commands:
   describe    Describe a custom connector plugin.
   list        List custom connector plugins.
   update      Update a custom connector plugin configuration.
-  version     Manage custom connector plugin versions.
 
 Global Flags:
   -h, --help            Show help for this command.
