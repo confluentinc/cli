@@ -27,7 +27,7 @@ func initKafkaRest(c *pcmd.AuthenticatedCLICommand, cmd *cobra.Command) (*kafkar
 		output.ErrPrintf(c.Config.EnableColor, "[WARN] This is a Confluent Platform command. Confluent Cloud URLs are not supported.\n")
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return nil, nil, "", err
 	}

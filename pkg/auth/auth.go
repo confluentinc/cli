@@ -184,7 +184,7 @@ func addOrUpdateContext(cfg *config.Config, isCloud bool, credentials *Credentia
 		ctx.LastOrgId = organizationId
 		ctx.IsMFA = isMFA
 	} else {
-		if err := cfg.AddContext(ctxName, platform.Name, credential.Name, map[string]*config.KafkaClusterConfig{}, "", state, organizationId, "", isMFA); err != nil {
+		if err := cfg.AddContext(ctxName, platform.Name, credential.Name, map[string]*config.KafkaClusterConfig{}, "", "", state, organizationId, "", isMFA); err != nil {
 			return err
 		}
 	}

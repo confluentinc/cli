@@ -30,6 +30,7 @@ Flags:
       --config strings                        A comma-separated list of "key=value" pairs, or path to a configuration file containing a newline-separated list of "key=value" pairs.
       --dry-run                               Validate a link, but do not create it.
       --no-validate                           Create a link even if the source cluster cannot be reached.
+      --kafka-endpoint string                 Endpoint to be used for this Kafka cluster.
       --cluster string                        Kafka cluster ID.
       --environment string                    Environment ID.
       --context string                        CLI context name.
