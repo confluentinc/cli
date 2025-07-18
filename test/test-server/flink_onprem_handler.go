@@ -416,14 +416,14 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 			page := r.URL.Query().Get("page")
 
 			if environment == "default" && page == "0" {
-				items := []cmfsdk.FlinkApplication{createApplication("default-application-1", "default"), createApplication("default-application-2", "default")}
+				items := []cmfsdk.FlinkApplication{createApplication("default-application-1"), createApplication("default-application-2")}
 				applicationsPage = map[string]interface{}{
 					"items": items,
 				}
 			}
 
 			if environment == "update-failure" && page == "0" {
-				items := []cmfsdk.FlinkApplication{createApplication("update-failure-application", "update-failure")}
+				items := []cmfsdk.FlinkApplication{createApplication("update-failure-application")}
 				applicationsPage = map[string]interface{}{
 					"items": items,
 				}
