@@ -45,7 +45,7 @@ func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 	}
 	pcmd.AddResourceGroupFlag(cmd, isSrEnabled, isFlinkEnabled, isKafkaEnabled)
 	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
-	if isSrEnabled || isFlinkEnabled {
+	if isSrEnabled || isFlinkEnabled || isKafkaEnabled {
 		cmd.Flags().String("environment", "", "Identifier of the environment for which this filter applies. Without this flag, applies only to the organization.")
 		opGroups := []string{"MANAGEMENT"}
 		if isSrEnabled {
