@@ -97,7 +97,7 @@ blocks:
             # https://confluentinc.atlassian.net/browse/DP-9532
             # Do not install Go with Chocolatey since it is community maintained and may not have the latest version
             - $ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -OutFile Go.zip -Uri https://go.dev/dl/go$(Get-Content .go-version).windows-amd64.zip -UseBasicParsing
-            - Expand-Archive Go.zip -DestinationPath C:\
+            - 7z x Go.zip -oC:\
             - $Env:PATH = "C:\Go\bin;C:\Users\semaphore\go\bin;$Env:PATH"
             - $Env:EXISTING_FLAGS = $(go env CGO_LDFLAGS)
             - go env -w CGO_LDFLAGS="-fstack-protector $Env:EXISTING_FLAGS"
