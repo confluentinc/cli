@@ -24,14 +24,9 @@ func (c *ipFilterCommand) newListCommand(cfg *config.Config) *cobra.Command {
 	}
 	isSrEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
 	isFlinkEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.flink.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
-<<<<<<< Updated upstream
-	if isSrEnabled || isFlinkEnabled {
-		cmd.Flags().String("environment", "", "Identifier of the environment for which this filter applies. Without this flag, applies only to the organization.")
-=======
 	isKafkaEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.kafka.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
 	if isSrEnabled || isFlinkEnabled || isKafkaEnabled {
-		cmd.Flags().String("environment", "", "Id of the environment for which this filter applies. By default will apply to the org only.")
->>>>>>> Stashed changes
+		cmd.Flags().String("environment", "", "Identifier of the environment for which this filter applies. Without this flag, applies only to the organization.")
 		cmd.Flags().Bool("include-parent-scopes", false, "Include organization scoped filters when listing filters in an environment.")
 	}
 
