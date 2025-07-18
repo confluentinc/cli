@@ -613,7 +613,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *confi
 		SerialNumber: big.NewInt(1234),
 		Subject:      pkix.Name{Organization: []string{"testorg"}},
 	}
-	priv, err := rsa.GenerateKey(rand.Reader, 512)
+	priv, err := rsa.GenerateKey(rand.Reader, 1024)
 	req.NoError(err, "Couldn't generate private key")
 	certBytes, err := x509.CreateCertificate(rand.Reader, ca, ca, &priv.PublicKey, priv)
 	req.NoError(err, "Couldn't generate certificate from private key")

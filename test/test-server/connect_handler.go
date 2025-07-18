@@ -37,6 +37,10 @@ func handleConnectArtifacts(t *testing.T) http.HandlerFunc {
 				artifact.Spec.SetContentFormat("ZIP")
 			}
 
+			artifact.Status = &camv1.CamV1ConnectArtifactStatus{
+				Phase: "PROCESSING",
+			}
+
 			artifactStore[artifact.GetId()] = *artifact
 
 			err := json.NewEncoder(w).Encode(artifact)
@@ -44,6 +48,11 @@ func handleConnectArtifacts(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			var artifacts []camv1.CamV1ConnectArtifact
 			for _, artifact := range artifactStore {
+				if artifact.GetId() == "cfa-jar123" {
+					artifact.Status = &camv1.CamV1ConnectArtifactStatus{
+						Phase: "READY",
+					}
+				}
 				artifacts = append(artifacts, artifact)
 			}
 
@@ -68,6 +77,11 @@ func handleConnectArtifactId(t *testing.T) http.HandlerFunc {
 				return
 			}
 
+			if id == "cfa-jar123" {
+				artifact.Status = &camv1.CamV1ConnectArtifactStatus{
+					Phase: "READY",
+				}
+			}
 			err := json.NewEncoder(w).Encode(artifact)
 			require.NoError(t, err)
 		case http.MethodDelete:
@@ -466,16 +480,36 @@ func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 			var decodeRespone connectcustompluginv1.ConnectV1CustomConnectorPlugin
 			require.NoError(t, json.NewDecoder(r.Body).Decode(&decodeRespone))
 			var plugin connectcustompluginv1.ConnectV1CustomConnectorPlugin
-			switch strings.ToLower(decodeRespone.GetRuntimeLanguage()) {
-			case "java", "":
-				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-					Id:             connectcustompluginv1.PtrString("ccp-123456"),
-					DisplayName:    connectcustompluginv1.PtrString("my-custom-plugin"),
-					Cloud:          connectcustompluginv1.PtrString("AWS"),
-					ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
-					ContentFormat:  connectcustompluginv1.PtrString("JAR"),
+			runtimeLanguage := strings.ToLower(decodeRespone.GetRuntimeLanguage())
+			cloud := strings.ToLower(decodeRespone.GetCloud())
+
+			if runtimeLanguage == "java" || runtimeLanguage == "" {
+				if cloud == "gcp" {
+					plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+						Id:             connectcustompluginv1.PtrString("ccp-123456"),
+						DisplayName:    connectcustompluginv1.PtrString("my-custom-plugin-gcp"),
+						Cloud:          connectcustompluginv1.PtrString("GCP"),
+						ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
+						ContentFormat:  connectcustompluginv1.PtrString("JAR"),
+					}
+				} else if cloud == "azure" {
+					plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+						Id:             connectcustompluginv1.PtrString("ccp-123456"),
+						DisplayName:    connectcustompluginv1.PtrString("my-custom-plugin-azure"),
+						Cloud:          connectcustompluginv1.PtrString("AZURE"),
+						ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
+						ContentFormat:  connectcustompluginv1.PtrString("JAR"),
+					}
+				} else {
+					plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+						Id:             connectcustompluginv1.PtrString("ccp-123456"),
+						DisplayName:    connectcustompluginv1.PtrString("my-custom-plugin"),
+						Cloud:          connectcustompluginv1.PtrString("AWS"),
+						ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
+						ContentFormat:  connectcustompluginv1.PtrString("JAR"),
+					}
 				}
-			case "python":
+			} else if runtimeLanguage == "python" {
 				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
 					Id:             connectcustompluginv1.PtrString("ccp-789012"),
 					DisplayName:    connectcustompluginv1.PtrString("my-custom-python-plugin"),
@@ -537,6 +571,16 @@ func handleCustomConnectorPluginsId(t *testing.T) http.HandlerFunc {
 					ConnectorClass:            connectcustompluginv1.PtrString("io.confluent.kafka.connect.test"),
 					Cloud:                     connectcustompluginv1.PtrString("AWS"),
 					SensitiveConfigProperties: &sensitiveProperties,
+				}
+			} else if id == "ccp-401432" {
+				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+					Id:                        connectcustompluginv1.PtrString("ccp-401432"),
+					DisplayName:               connectcustompluginv1.PtrString("CliPluginTest"),
+					Description:               connectcustompluginv1.PtrString("Source datagen plugin"),
+					ConnectorType:             connectcustompluginv1.PtrString("source"),
+					ConnectorClass:            connectcustompluginv1.PtrString("io.confluent.kafka.connect.test"),
+					Cloud:                     connectcustompluginv1.PtrString("GCP"),
+					SensitiveConfigProperties: &[]string{"gcp.key", "gcp.secret"},
 				}
 			} else {
 				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{

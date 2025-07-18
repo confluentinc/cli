@@ -1,0 +1,1 @@
+Error: failed to read Flink configuration file: open test/fixtures/input/flink/statement/flink-configuration\.csv: (no such file or directory|The system cannot find the file specified\.)
