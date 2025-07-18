@@ -1,5 +1,5 @@
 {
-  "apiVersion": "cmf.confluent.io/v1alpha1",
+  "apiVersion": "cmf.confluent.io/v1",
   "kind": "FlinkApplication",
   "metadata": {
     "name": "default-application-1"
@@ -10,7 +10,6 @@
       "metrics.reporter.prom.port": "9249-9250",
       "taskmanager.numberOfTaskSlots": "8"
     },
-    "flinkEnvironment": "default",
     "flinkVersion": "v1_19",
     "image": "confluentinc/cp-flink:1.19.1-cp1",
     "job": {
