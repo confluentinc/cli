@@ -135,9 +135,15 @@ func (s *CLITestSuite) TestFlinkConnectionCreateFailure() {
 		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
 		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type OPENAI --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000", fixture: "flink/connection/create/create-wrong-type.golden", exitCode: 1},
-		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type openai --endpoint https://api.openai.com/v1/chat/completions --username username", fixture: "flink/connection/create/create-wrong-secret-type.golden", exitCode: 1},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type openai --endpoint https://api.openai.com/v1/chat/completions --token token", fixture: "flink/connection/create/create-wrong-secret-type.golden", exitCode: 1},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type bedrock --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000 --aws-access-key 0000000000000000 --aws-secret-key 0000000000000000 --aws-session-token 0000000000000000", fixture: "flink/connection/create/create-extra-secret.golden", exitCode: 1},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type bedrock --endpoint https://api.openai.com/v1/chat/completions --aws-secret-key 0000000000000000 --aws-session-token 0000000000000000", fixture: "flink/connection/create/create-missing-required-secret.golden", exitCode: 1},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type rest --token-endpoint https://api.example.com/oauth2 --endpoint https://api.example.com", fixture: "flink/connection/create/create-rest-missing-required-secret.golden", exitCode: 1},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type rest --token token --username username --password password --endpoint https://api.example.com", fixture: "flink/connection/create/create-rest-mutually-exclusive-secret.golden", exitCode: 1},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com --token-endpoint https://api.example.com/oauth2", fixture: "flink/connection/create/create-mcp_server-missing-required-secret.golden", exitCode: 1},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com --api-key 0000000000000000 --token token", fixture: "flink/connection/create/create-mcp_server-mutually-exclusive-secret.golden", exitCode: 1},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type rest --endpoint https://api.example.com", fixture: "flink/connection/create/create-rest-no-secret.golden", exitCode: 1},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com", fixture: "flink/connection/create/create-mcp_server-no-secret.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -164,6 +170,12 @@ func (s *CLITestSuite) TestFlinkConnectionCreateSuccess() {
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type pinecone --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000", fixture: "flink/connection/create/create-pinecone.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type couchbase --endpoint https://api.openai.com/v1/chat/completions --username name --password pass", fixture: "flink/connection/create/create-couchbase.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type confluent_jdbc --endpoint jdbc:mysql://custom.com:3306/customerdb --username name --password pass", fixture: "flink/connection/create/create-confluent_jdbc.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type rest --endpoint https://api.example.com --username name --password pass", fixture: "flink/connection/create/create-rest.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type rest --endpoint https://api.example.com --token-endpoint https://api.example.com/auth --client-id clientId --client-secret secret --scope test_scope", fixture: "flink/connection/create/create-rest.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type rest --endpoint https://api.example.com --token token", fixture: "flink/connection/create/create-rest.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com --api-key api_key", fixture: "flink/connection/create/create-mcp_server.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com --token-endpoint https://api.example.com/auth --client-id clientId --client-secret secret --scope test_scope", fixture: "flink/connection/create/create-mcp_server.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com --token token", fixture: "flink/connection/create/create-mcp_server.golden"},
 	}
 
 	for _, test := range tests {

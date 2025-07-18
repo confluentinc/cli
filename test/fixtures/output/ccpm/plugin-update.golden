@@ -1,0 +1,8 @@
++------------------+---------------------+
+| ID               | ccp-123456          |
+| Name             | Updated Plugin Name |
+| Description      | Updated description |
+| Cloud            | AWS                 |
+| Runtime Language | JAVA                |
+| Environment      | env-123456          |
++------------------+---------------------+

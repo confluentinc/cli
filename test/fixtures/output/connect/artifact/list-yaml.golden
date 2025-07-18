@@ -4,9 +4,11 @@
   cloud: AWS
   environment: env-123456
   content_format: JAR
+  status: READY
 - id: cfa-zip123
   name: my-connect-artifact-zip
   description: new-zip-artifact
   cloud: AWS
   environment: env-123456
   content_format: ZIP
+  status: PROCESSING
