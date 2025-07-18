@@ -127,6 +127,7 @@ func handleByokKeysCreate(t *testing.T, byokStoreV1 map[string]*byokv1.ByokV1Key
 func handleByokKeysList(t *testing.T, byokStoreV1 map[string]*byokv1.ByokV1Key) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		byokKeyList := byokKeysFilterV1(r.URL, byokStoreV1)
+		setPageToken(byokKeyList, &byokKeyList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(byokKeyList)
 		require.NoError(t, err)
 	}
