@@ -24,7 +24,8 @@ func (c *ipFilterCommand) newListCommand(cfg *config.Config) *cobra.Command {
 	}
 	isSrEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
 	isFlinkEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.flink.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
-	if isSrEnabled || isFlinkEnabled {
+	isKafkaEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.kafka.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
+	if isSrEnabled || isFlinkEnabled || isKafkaEnabled {
 		cmd.Flags().String("environment", "", "Identifier of the environment for which this filter applies. Without this flag, applies only to the organization.")
 		cmd.Flags().Bool("include-parent-scopes", false, "Include organization scoped filters when listing filters in an environment.")
 	}
@@ -40,7 +41,8 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 	isSrEnabled := c.Config.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
 	isFlinkEnabled := c.Config.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.flink.cli.enabled", c.Context, ldClient, true, false)
-	if isSrEnabled || isFlinkEnabled {
+	isKafkaEnabled := c.Config.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.kafka.cli.enabled", c.Context, ldClient, true, false)
+	if isSrEnabled || isFlinkEnabled || isKafkaEnabled {
 		orgId := c.Context.GetCurrentOrganization()
 		environment, err := cmd.Flags().GetString("environment")
 		if err != nil {
@@ -77,7 +79,7 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 			ResourceGroup: filter.GetResourceGroup(),
 			IpGroups:      convertIpGroupObjectsToIpGroupIds(filter),
 		}
-		if isSrEnabled || isFlinkEnabled {
+		if isSrEnabled || isFlinkEnabled || isKafkaEnabled {
 			filterOut.ResourceScope = filter.GetResourceScope()
 			if filter.OperationGroups != nil {
 				sort.Strings(*filter.OperationGroups)

@@ -27,7 +27,8 @@ func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 	}
 	isSrEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
 	isFlinkEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.flink.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
-	if isSrEnabled || isFlinkEnabled {
+	isKafkaEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.kafka.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
+	if isSrEnabled || isFlinkEnabled || isKafkaEnabled {
 		cmd.Example = examples.BuildExampleString(
 			examples.Example{
 				Text: `Create an IP filter named "demo-ip-filter" with operation group "management" and IP groups "ipg-12345" and "ipg-67890":`,
@@ -42,7 +43,7 @@ func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 			},
 		)
 	}
-	pcmd.AddResourceGroupFlag(cmd, isSrEnabled, isFlinkEnabled)
+	pcmd.AddResourceGroupFlag(cmd, isSrEnabled, isFlinkEnabled, isKafkaEnabled)
 	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
 	if isSrEnabled || isFlinkEnabled {
 		cmd.Flags().String("environment", "", "Identifier of the environment for which this filter applies. Without this flag, applies only to the organization.")
@@ -52,6 +53,9 @@ func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 		}
 		if isFlinkEnabled {
 			opGroups = append(opGroups, "FLINK")
+		}
+		if isKafkaEnabled {
+			opGroups = append(opGroups, "KAFKA_MANAGEMENT", "KAFKA_DATA")
 		}
 		cmd.Flags().StringSlice("operations", nil, fmt.Sprintf("A comma-separated list of operation groups: %s.", utils.ArrayToCommaDelimitedString(opGroups, "or")))
 		cmd.Flags().Bool("no-public-networks", false, "Use in place of ip-groups to reference the no public networks IP Group.")
@@ -80,7 +84,8 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 	isSrEnabled := c.Config.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
 	isFlinkEnabled := c.Config.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.flink.cli.enabled", c.Context, ldClient, true, false)
-	if isSrEnabled || isFlinkEnabled {
+	isKafkaEnabled := c.Config.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.kafka.cli.enabled", c.Context, ldClient, true, false)
+	if isSrEnabled || isFlinkEnabled || isKafkaEnabled {
 		orgId := c.Context.GetCurrentOrganization()
 		environment, err := cmd.Flags().GetString("environment")
 		if err != nil {
@@ -145,5 +150,5 @@ func (c *ipFilterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return printIpFilter(cmd, filter, isSrEnabled, isFlinkEnabled)
+	return printIpFilter(cmd, filter, isSrEnabled, isFlinkEnabled, isKafkaEnabled)
 }
