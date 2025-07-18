@@ -17,7 +17,7 @@ import (
 )
 
 // Helper function to create a Flink application.
-func createApplication(name string, environment string) cmfsdk.FlinkApplication {
+func createApplication(name string) cmfsdk.FlinkApplication {
 	status := map[string]interface{}{
 		"jobStatus": map[string]interface{}{
 			"jobName":    "State machine job",
@@ -455,7 +455,7 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 			if applicationName == "default-application-1" || applicationName == "default-application-2" {
 				// The 'update' is going to be spec.serviceAccount. This is just a dummy update,
 				// and we don't do any actual merge logic.
-				outputApplication := createApplication(applicationName, environment)
+				outputApplication := createApplication(applicationName)
 				outputApplication.Spec["serviceAccount"] = application.Spec["serviceAccount"]
 				err = json.NewEncoder(w).Encode(outputApplication)
 				require.NoError(t, err)
@@ -492,14 +492,14 @@ func handleCmfApplication(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			// In case the application actually exists, let the handler return the application.
 			if (application == "default-application-1" || application == "default-application-2") && environment == "default" {
-				outputApplication := createApplication(application, environment)
+				outputApplication := createApplication(application)
 				err := json.NewEncoder(w).Encode(outputApplication)
 				require.NoError(t, err)
 				return
 			}
 
 			if application == "update-failure-application" && environment == "update-failure" {
-				outputApplication := createApplication(application, environment)
+				outputApplication := createApplication(application)
 				err := json.NewEncoder(w).Encode(outputApplication)
 				require.NoError(t, err)
 				return
