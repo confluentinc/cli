@@ -6,6 +6,12 @@
     "type": "Sink"
   },
   {
+    "id": "lcc-112",
+    "name": "az-connector-3",
+    "status": "RUNNING",
+    "type": "Sink"
+  },
+  {
     "id": "lcc-123",
     "name": "az-connector",
     "status": "RUNNING",
