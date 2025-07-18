@@ -17,7 +17,7 @@ import (
 )
 
 // Helper function to create a Flink application.
-func createApplication(name string, environment string) cmfsdk.FlinkApplication {
+func createApplication(name string) cmfsdk.FlinkApplication {
 	status := map[string]interface{}{
 		"jobStatus": map[string]interface{}{
 			"jobName":    "State machine job",
@@ -66,15 +66,14 @@ func createApplication(name string, environment string) cmfsdk.FlinkApplication 
 	}
 
 	return cmfsdk.FlinkApplication{
-		ApiVersion: "cmf.confluent.io/v1alpha1",
+		ApiVersion: "cmf.confluent.io/v1",
 		Kind:       "FlinkApplication",
 		Metadata: map[string]interface{}{
 			"name": name,
 		},
 		Spec: map[string]interface{}{
-			"flinkEnvironment": environment,
-			"image":            "confluentinc/cp-flink:1.19.1-cp1",
-			"flinkVersion":     "v1_19",
+			"image":        "confluentinc/cp-flink:1.19.1-cp1",
+			"flinkVersion": "v1_19",
 			"flinkConfiguration": map[string]interface{}{
 				"taskmanager.numberOfTaskSlots":       "8",
 				"metrics.reporter.prom.factory.class": "org.apache.flink.metrics.prometheus.PrometheusReporterFactory",
@@ -417,14 +416,14 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 			page := r.URL.Query().Get("page")
 
 			if environment == "default" && page == "0" {
-				items := []cmfsdk.FlinkApplication{createApplication("default-application-1", "default"), createApplication("default-application-2", "default")}
+				items := []cmfsdk.FlinkApplication{createApplication("default-application-1"), createApplication("default-application-2")}
 				applicationsPage = map[string]interface{}{
 					"items": items,
 				}
 			}
 
 			if environment == "update-failure" && page == "0" {
-				items := []cmfsdk.FlinkApplication{createApplication("update-failure-application", "update-failure")}
+				items := []cmfsdk.FlinkApplication{createApplication("update-failure-application")}
 				applicationsPage = map[string]interface{}{
 					"items": items,
 				}
@@ -456,7 +455,7 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 			if applicationName == "default-application-1" || applicationName == "default-application-2" {
 				// The 'update' is going to be spec.serviceAccount. This is just a dummy update,
 				// and we don't do any actual merge logic.
-				outputApplication := createApplication(applicationName, environment)
+				outputApplication := createApplication(applicationName)
 				outputApplication.Spec["serviceAccount"] = application.Spec["serviceAccount"]
 				err = json.NewEncoder(w).Encode(outputApplication)
 				require.NoError(t, err)
@@ -493,14 +492,14 @@ func handleCmfApplication(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			// In case the application actually exists, let the handler return the application.
 			if (application == "default-application-1" || application == "default-application-2") && environment == "default" {
-				outputApplication := createApplication(application, environment)
+				outputApplication := createApplication(application)
 				err := json.NewEncoder(w).Encode(outputApplication)
 				require.NoError(t, err)
 				return
 			}
 
 			if application == "update-failure-application" && environment == "update-failure" {
-				outputApplication := createApplication(application, environment)
+				outputApplication := createApplication(application)
 				err := json.NewEncoder(w).Encode(outputApplication)
 				require.NoError(t, err)
 				return
