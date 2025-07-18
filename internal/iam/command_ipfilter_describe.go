@@ -29,5 +29,6 @@ func (c *ipFilterCommand) describe(cmd *cobra.Command, args []string) error {
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 	isSrEnabled := c.Config.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
 	isFlinkEnabled := c.Config.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.flink.cli.enabled", c.Context, ldClient, true, false)
-	return printIpFilter(cmd, filter, isSrEnabled, isFlinkEnabled)
+	isKafkaEnabled := c.Config.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.kafka.cli.enabled", c.Context, ldClient, true, false)
+	return printIpFilter(cmd, filter, isSrEnabled, isFlinkEnabled, isKafkaEnabled)
 }
