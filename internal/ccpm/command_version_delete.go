@@ -59,6 +59,6 @@ func (c *pluginCommand) deleteVersion(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteCCPMPluginVersion(pluginId, id, environment)
 	}
 
-	_, err = deletion.Delete(args, deleteFunc, resource.CCPMCustomConnectorPluginVersion)
+	_, err = deletion.Delete(cmd, args, deleteFunc, resource.CCPMCustomConnectorPluginVersion)
 	return err
 }
