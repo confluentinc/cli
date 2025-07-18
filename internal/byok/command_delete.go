@@ -41,7 +41,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	if _, err := deletion.Delete(args, deleteFunc, resource.ByokKey); err != nil {
+	if _, err := deletion.Delete(cmd, args, deleteFunc, resource.ByokKey); err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), errors.ByokKeyNotFoundSuggestions)
 	}
 
