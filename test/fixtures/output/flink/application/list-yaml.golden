@@ -7,7 +7,6 @@
         metrics.reporter.prom.factory.class: org.apache.flink.metrics.prometheus.PrometheusReporterFactory
         metrics.reporter.prom.port: 9249-9250
         taskmanager.numberOfTaskSlots: "8"
-    flinkEnvironment: default
     flinkVersion: v1_19
     image: confluentinc/cp-flink:1.19.1-cp1
     job:
@@ -72,7 +71,6 @@
         metrics.reporter.prom.factory.class: org.apache.flink.metrics.prometheus.PrometheusReporterFactory
         metrics.reporter.prom.port: 9249-9250
         taskmanager.numberOfTaskSlots: "8"
-    flinkEnvironment: default
     flinkVersion: v1_19
     image: confluentinc/cp-flink:1.19.1-cp1
     job:

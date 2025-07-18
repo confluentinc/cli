@@ -184,7 +184,6 @@ type localFlinkApplicationMetadata struct {
 
 type localFlinkApplicationSpec struct {
 	FlinkConfiguration *map[string]interface{}           `yaml:"flinkConfiguration,omitempty" json:"flinkConfiguration,omitempty"`
-	FlinkEnvironment   string                            `yaml:"flinkEnvironment" json:"flinkEnvironment"`
 	FlinkVersion       string                            `yaml:"flinkVersion" json:"flinkVersion"`
 	Image              string                            `yaml:"image" json:"image"`
 	Job                *localFlinkApplicationJob         `yaml:"job,omitempty" json:"job,omitempty"`
