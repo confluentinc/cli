@@ -375,9 +375,9 @@ func AutocompleteIdentityPools(client *ccloudv2.Client, providerId string) []str
 	return suggestions
 }
 
-func AddResourceGroupFlag(cmd *cobra.Command, isSrEnabled, isFlinkEnabled bool) {
+func AddResourceGroupFlag(cmd *cobra.Command, isSrEnabled, isFlinkEnabled, isKafkaEnabled bool) {
 	var arr []string = []string{"management"}
-	if isSrEnabled || isFlinkEnabled {
+	if isSrEnabled || isFlinkEnabled || isKafkaEnabled {
 		arr = append(arr, "multiple")
 		cmd.Flags().String("resource-group", "multiple", fmt.Sprintf("Name of resource group: %s.", utils.ArrayToCommaDelimitedString(arr, "or")))
 	} else {

@@ -27,13 +27,17 @@ func (c *ipFilterCommand) newUpdateCommand(cfg *config.Config) *cobra.Command {
 	}
 	isSrEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
 	isFlinkEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.flink.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
-	if isSrEnabled || isFlinkEnabled {
+	isKafkaEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.kafka.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
+	if isSrEnabled || isFlinkEnabled || isKafkaEnabled {
 		operationGroups := []string{}
 		if isSrEnabled {
 			operationGroups = append(operationGroups, "SCHEMA")
 		}
 		if isFlinkEnabled {
 			operationGroups = append(operationGroups, "FLINK")
+		}
+		if isKafkaEnabled {
+			operationGroups = append(operationGroups, "KAFKA_MANAGEMENT", "KAFKA_DATA")
 		}
 		cmd.Example = examples.BuildExampleString(
 			examples.Example{
@@ -50,7 +54,7 @@ func (c *ipFilterCommand) newUpdateCommand(cfg *config.Config) *cobra.Command {
 		)
 	}
 	cmd.Flags().String("name", "", "Updated name of the IP filter.")
-	pcmd.AddResourceGroupFlag(cmd, isSrEnabled, isFlinkEnabled)
+	pcmd.AddResourceGroupFlag(cmd, isSrEnabled, isFlinkEnabled, isKafkaEnabled)
 
 	cmd.Flags().StringSlice("add-ip-groups", []string{}, "A comma-separated list of IP groups to add.")
 	cmd.Flags().StringSlice("remove-ip-groups", []string{}, "A comma-separated list of IP groups to remove.")
@@ -132,7 +136,8 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 	isSrEnabled := c.Config.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.sr.cli.enabled", c.Context, ldClient, true, false)
 	isFlinkEnabled := c.Config.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.flink.cli.enabled", c.Context, ldClient, true, false)
-	if isSrEnabled || isFlinkEnabled {
+	isKafkaEnabled := c.Config.IsTest || featureflags.Manager.BoolVariation("auth.ip_filter.kafka.cli.enabled", c.Context, ldClient, true, false)
+	if isSrEnabled || isFlinkEnabled || isKafkaEnabled {
 		addOperationGroups, err := cmd.Flags().GetStringSlice("add-operation-groups")
 		if err != nil {
 			return err
@@ -174,5 +179,5 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return printIpFilter(cmd, filter, isSrEnabled, isFlinkEnabled)
+	return printIpFilter(cmd, filter, isSrEnabled, isFlinkEnabled, isKafkaEnabled)
 }
