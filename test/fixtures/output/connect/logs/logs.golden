@@ -1,0 +1,10 @@
+Found 2 log entries for connector lcc-123:
+
+         Timestamp         | Level | Task ID |            Message             | Exception  
+---------------------------+-------+---------+--------------------------------+------------
+  2025-06-16T05:43:23.757Z | INFO  | task-0  | WorkerSourceTask{id=lcc-123-0} |            
+                           |       |         | Committing offsets for 128     |            
+                           |       |         | acknowledged messages          |            
+  2025-06-16T05:44:23.761Z | INFO  | task-0  | WorkerSourceTask{id=lcc-123-0} |            
+                           |       |         | Committing offsets for 130     |            
+                           |       |         | acknowledged messages          |            
