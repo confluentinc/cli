@@ -3,10 +3,11 @@ package test
 import (
 	"archive/zip"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"io"
 	"os"
 	"runtime"
+
+	"github.com/stretchr/testify/require"
 )
 
 func (s *CLITestSuite) TestConnect() {
