@@ -230,29 +230,6 @@ func (s *CLITestSuite) TestConnectCustomPlugin() {
 	}
 }
 
-func (s *CLITestSuite) TestConnectCustomPluginVersioning() {
-	tests := []CLITest{
-		{args: `connect custom-plugin version create --plugin plugin123 --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.zip" --version-number 0.0.1 `, fixture: "connect/custom-plugin/version/create.golden"},
-		{args: `connect custom-plugin version create --plugin plugin123 --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.zip" --version-number 0.0.1 `, fixture: "connect/custom-plugin/version/create.golden"},
-		{args: `connect custom-plugin version create --plugin plugin123 --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.pdf" --version-number 0.0.1 `, fixture: "connect/custom-plugin/version/create-invalid-extension.golden", exitCode: 1},
-		{args: "connect custom-plugin version list --plugin plugin23", fixture: "connect/custom-plugin/version/list.golden"},
-		{args: "connect custom-plugin version list --plugin plugin23 -o json", fixture: "connect/custom-plugin/version/list-json.golden"},
-		{args: "connect custom-plugin version list --plugin plugin23 -o yaml", fixture: "connect/custom-plugin/version/list-yaml.golden"},
-		{args: "connect custom-plugin version describe --plugin ccp-123456 --version ver-123456", fixture: "connect/custom-plugin/version/describe.golden"},
-		{args: "connect custom-plugin version describe --plugin ccp-789012 --version ver-789012", fixture: "connect/custom-plugin/version/describe-with-sensitive-properties.golden"},
-		{args: "connect custom-plugin version describe --plugin ccp-123456 --version ver-123456 -o json", fixture: "connect/custom-plugin/version/describe-json.golden"},
-		{args: "connect custom-plugin version describe --plugin ccp-123456 --version ver-123456 -o yaml", fixture: "connect/custom-plugin/version/describe-yaml.golden"},
-		{args: "connect custom-plugin version delete --plugin ccp-123456 --version ver-123456 --force", fixture: "connect/custom-plugin/version/delete.golden"},
-		{args: "connect custom-plugin version delete --plugin ccp-123456 --version ver-123456", input: "y\n", fixture: "connect/custom-plugin/version/delete-prompt.golden"},
-		{args: "connect custom-plugin version update --plugin ccp-123456 --version ver-123456 --version-number 0.0.1 ", fixture: "connect/custom-plugin/version/update.golden"},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
-
 func (s *CLITestSuite) TestConnectOffset() {
 	tests := []CLITest{
 		{args: "connect offset describe lcc-123 --cluster lkc-123 -o json", fixture: "connect/offset/describe-offset-json.golden"},
@@ -272,6 +249,19 @@ func (s *CLITestSuite) TestConnectOffset() {
 		{args: "connect offset delete lcc-111 --cluster lkc-123", fixture: "connect/offset/delete-offset.golden"},
 		{args: "connect offset delete lcc-111 --cluster lkc-123 -o json", fixture: "connect/offset/delete-offset-json.golden"},
 		{args: "connect offset delete lcc-111 --cluster lkc-123 -o yaml", fixture: "connect/offset/delete-offset-yaml.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestConnectListRuntimes() {
+	tests := []CLITest{
+		{args: "connect custom-connector-runtime list -o json", fixture: "connect/custom-connector-runtime/list-json.golden"},
+		{args: "connect custom-connector-runtime list -o yaml", fixture: "connect/custom-connector-runtime/list-yaml.golden"},
+		{args: "connect custom-connector-runtime list", fixture: "connect/custom-connector-runtime/list.golden"},
 	}
 
 	for _, test := range tests {
