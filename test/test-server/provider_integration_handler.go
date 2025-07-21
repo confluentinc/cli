@@ -100,6 +100,7 @@ func handleProviderIntegrationList(t *testing.T) http.HandlerFunc {
 			},
 		}
 		result := pi.PimV1IntegrationList{Data: mockResponse}
+		setPageToken(&result, &result.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(result)
 		require.NoError(t, err)
 	}

@@ -36,6 +36,6 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return c.Config.DeleteContext(id)
 	}
 
-	_, err := deletion.Delete(args, deleteFunc, resource.Context)
+	_, err := deletion.Delete(cmd, args, deleteFunc, resource.Context)
 	return err
 }

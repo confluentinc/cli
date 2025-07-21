@@ -7,7 +7,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/deletion"
-	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/plural"
 	"github.com/confluentinc/cli/v4/pkg/resource"
@@ -45,13 +44,10 @@ func (c *command) privateLinkAttachmentConnectionDelete(cmd *cobra.Command, args
 	}
 
 	deleteFunc := func(id string) error {
-		if err := c.V2Client.DeletePrivateLinkAttachmentConnection(environmentId, id); err != nil {
-			return fmt.Errorf(errors.DeleteResourceErrorMsg, resource.PrivateLinkAttachmentConnection, id, err)
-		}
-		return nil
+		return c.V2Client.DeletePrivateLinkAttachmentConnection(environmentId, id)
 	}
 
-	deletedIds, err := deletion.DeleteWithoutMessage(args, deleteFunc)
+	deletedIds, err := deletion.DeleteWithoutMessage(cmd, args, deleteFunc)
 	deleteMsg := "Requested to delete %s %s.\n"
 	if len(deletedIds) == 1 {
 		output.Printf(c.Config.EnableColor, deleteMsg, resource.PrivateLinkAttachmentConnection, fmt.Sprintf(`"%s"`, deletedIds[0]))

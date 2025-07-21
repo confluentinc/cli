@@ -10,6 +10,7 @@ Available Commands:
   audit-log            Manage audit log configuration.
   billing              Manage Confluent Cloud billing.
   byok                 Manage your keys in Confluent Cloud.
+  ccpm                 Manage custom Connect plugin management (CCPM).
   cloud-signup         Sign up for Confluent Cloud.
   completion           Print shell completion code.
   configuration        Configure the Confluent CLI.

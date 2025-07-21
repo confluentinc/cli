@@ -44,6 +44,6 @@ func (c *groupMappingCommand) delete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteGroupMapping(id)
 	}
 
-	_, err := deletion.Delete(args, deleteFunc, resource.SsoGroupMapping)
+	_, err := deletion.Delete(cmd, args, deleteFunc, resource.SsoGroupMapping)
 	return err
 }

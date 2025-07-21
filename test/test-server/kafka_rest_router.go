@@ -1663,6 +1663,7 @@ func handleKafkaRestMirror(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			includeStateTransitionErrors := r.URL.Query().Get("include_state_transition_errors")
+			topicError := "Error1"
 			var mirrorStateTransitionErrors []cckafkarestv3.LinkTaskError
 			if includeStateTransitionErrors == "true" {
 				mirrorStateTransitionErrors = []cckafkarestv3.LinkTaskError{
@@ -1697,6 +1698,7 @@ func handleKafkaRestMirror(t *testing.T) http.HandlerFunc {
 					},
 				},
 				MirrorStatus:                cckafkarestv3.ACTIVE,
+				MirrorTopicError:            &topicError,
 				StateTimeMs:                 111111111,
 				MirrorStateTransitionErrors: &mirrorStateTransitionErrors,
 			})

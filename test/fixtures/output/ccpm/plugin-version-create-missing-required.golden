@@ -1,0 +1,28 @@
+Error: required flag(s) "plugin-file", "connector-classes" not set
+Usage:
+  confluent ccpm plugin version create [flags]
+
+Examples:
+Create a new version 1.0.0 of a custom connect plugin.
+
+  $ confluent ccpm plugin version create --plugin plugin-123456 --version 1.0.0 --environment env-abcdef --plugin-file datagen.zip --connector-classes 'io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE'
+
+Create a new version 2.1.0 of a custom connect plugin with multiple connector classes and optional fields.
+
+  $ confluent ccpm plugin version create --plugin plugin-123456 --version 2.1.0 --environment env-abcdef --plugin-file datagen.zip --connector-classes 'io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE,io.confluent.kafka.connect.sink.SinkConnector:SINK' --sensitive-properties 'passwords,keys,tokens' --documentation-link 'https://github.com/confluentinc/kafka-connect-datagen'
+
+Flags:
+      --plugin string                  REQUIRED: Plugin ID.
+      --version string                 REQUIRED: Version of the custom Connect plugin (must comply with SemVer).
+      --plugin-file string             REQUIRED: Custom plugin ZIP or JAR file.
+      --connector-classes strings      REQUIRED: A comma-separated list of connector classes in format 'class_name:type' (e.g., 'io.confluent.kafka.connect.source.SourceConnector:SOURCE').
+      --sensitive-properties strings   A comma-separated list of sensitive configuration property names (e.g., 'passwords,keys,tokens').
+      --documentation-link string      URL to the plugin documentation (e.g., 'https://docs.confluent.io').
+      --environment string             Environment ID.
+  -o, --output string                  Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

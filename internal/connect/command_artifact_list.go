@@ -56,14 +56,7 @@ func (c *artifactCommand) list(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	list.Sort(false)
 	for _, artifact := range artifacts {
-		list.Add(&artifactOut{
-			Id:            artifact.GetId(),
-			Name:          artifact.Spec.GetDisplayName(),
-			Description:   artifact.Spec.GetDescription(),
-			Cloud:         artifact.Spec.GetCloud(),
-			Environment:   artifact.Spec.GetEnvironment(),
-			ContentFormat: artifact.Spec.GetContentFormat(),
-		})
+		list.Add(convertToArtifactOut(artifact))
 	}
 
 	list.Sort(true)

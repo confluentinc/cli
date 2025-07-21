@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"runtime"
-	"time"
 
 	"github.com/stretchr/testify/require"
 )

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -16,155 +15,6 @@ import (
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 )
-
-type LoggingLogEntry struct {
-	Timestamp string            `json:"timestamp"`
-	Level     string            `json:"level"`
-	Message   string            `json:"message"`
-	TaskId    string            `json:"task_id,omitempty"`
-	Id        string            `json:"id,omitempty"`
-	Exception *LoggingException `json:"exception,omitempty"`
-}
-
-type LoggingException struct {
-	Stacktrace string `json:"stacktrace,omitempty"`
-}
-type LoggingMetadata struct {
-	Next string `json:"next,omitempty"`
-}
-type LoggingSearchResponse struct {
-	Data       []LoggingLogEntry `json:"data"`
-	Metadata   *LoggingMetadata  `json:"metadata,omitempty"`
-	ApiVersion string            `json:"api_version"`
-	Kind       string            `json:"kind"`
-	CRN        string            `json:"crn"`
-}
-type LoggingSearchParams struct {
-	Level      []string `json:"level,omitempty"`
-	SearchText string   `json:"search_text,omitempty"`
-}
-
-func handleLogsSearch(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-
-		var req struct {
-			CRN    string              `json:"crn"`
-			Search LoggingSearchParams `json:"search"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		connectorName := ""
-		parts := strings.Split(req.CRN, "/")
-		for _, part := range parts {
-			if strings.HasPrefix(part, "connector=") {
-				connectorName = strings.TrimPrefix(part, "connector=")
-				break
-			}
-		}
-
-		if connectorName == "az-connector" {
-			response := LoggingSearchResponse{
-				Data: []LoggingLogEntry{
-					{
-						Timestamp: "2025-06-16T05:44:23.761Z",
-						Level:     "INFO",
-						Message:   "WorkerSourceTask{id=lcc-123-0} Committing offsets for 130 acknowledged messages",
-						TaskId:    "task-0",
-						Id:        "lcc-123",
-					},
-					{
-						Timestamp: "2025-06-16T05:43:23.757Z",
-						Level:     "INFO",
-						Message:   "WorkerSourceTask{id=lcc-123-0} Committing offsets for 128 acknowledged messages",
-						TaskId:    "task-0",
-						Id:        "lcc-123",
-					},
-					{
-						Timestamp: "2025-06-16T05:44:23.761Z",
-						Level:     "ERROR",
-						Message:   "WorkerSourceTask{id=lcc-123-0} Committing offsets for 130 acknowledged messages",
-						TaskId:    "task-0",
-						Id:        "lcc-123",
-						Exception: &LoggingException{
-							Stacktrace: "exception",
-						},
-					},
-				},
-				Metadata: &LoggingMetadata{
-					Next: "https://api.logging.devel.cpdev.cloud/logs/v1/search?page_token=next-page-token",
-				},
-				ApiVersion: "v1",
-				Kind:       "LoggingSearchResponse",
-				CRN:        "crn",
-			}
-			filteredResponse := LoggingSearchResponse{
-				Data: []LoggingLogEntry{},
-				Metadata: &LoggingMetadata{
-					Next: "https://api.logging.devel.cpdev.cloud/logs/v1/search?page_token=next-page-token",
-				},
-				ApiVersion: "v1",
-				Kind:       "LoggingSearchResponse",
-				CRN:        "crn",
-			}
-			if req.Search.SearchText != "" {
-				for _, log := range response.Data {
-					if strings.Contains(log.Message, req.Search.SearchText) {
-						filteredResponse.Data = append(filteredResponse.Data, log)
-					}
-				}
-			} else {
-				filteredResponse = response
-			}
-			response = filteredResponse
-			filteredResponse = LoggingSearchResponse{
-				Data: []LoggingLogEntry{},
-				Metadata: &LoggingMetadata{
-					Next: "https://api.logging.devel.cpdev.cloud/logs/v1/search?page_token=next-page-token",
-				},
-				ApiVersion: "v1",
-				Kind:       "LoggingSearchResponse",
-				CRN:        "crn",
-			}
-			if len(req.Search.Level) > 0 {
-				for _, log := range response.Data {
-					if slices.Contains(req.Search.Level, log.Level) {
-						filteredResponse.Data = append(filteredResponse.Data, log)
-					}
-				}
-			} else {
-				filteredResponse = response
-			}
-			response = filteredResponse
-			err := json.NewEncoder(w).Encode(response)
-			require.NoError(t, err)
-			return
-		} else if connectorName == "az-connector-3" {
-			w.WriteHeader(http.StatusTooManyRequests)
-			return
-		}
-
-		response := LoggingSearchResponse{
-			Data: []LoggingLogEntry{},
-			Metadata: &LoggingMetadata{
-				Next: "https://api.logging.devel.cpdev.cloud/logs/v1/search?page_token=next-page-token",
-			},
-			ApiVersion: "v1",
-			Kind:       "LoggingSearchResponse",
-			CRN:        "crn",
-		}
-		err := json.NewEncoder(w).Encode(response)
-		require.NoError(t, err)
-	}
-}
 
 var artifactStore = make(map[string]camv1.CamV1ConnectArtifact)
 
@@ -187,6 +37,10 @@ func handleConnectArtifacts(t *testing.T) http.HandlerFunc {
 				artifact.Spec.SetContentFormat("ZIP")
 			}
 
+			artifact.Status = &camv1.CamV1ConnectArtifactStatus{
+				Phase: "PROCESSING",
+			}
+
 			artifactStore[artifact.GetId()] = *artifact
 
 			err := json.NewEncoder(w).Encode(artifact)
@@ -194,6 +48,11 @@ func handleConnectArtifacts(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			var artifacts []camv1.CamV1ConnectArtifact
 			for _, artifact := range artifactStore {
+				if artifact.GetId() == "cfa-jar123" {
+					artifact.Status = &camv1.CamV1ConnectArtifactStatus{
+						Phase: "READY",
+					}
+				}
 				artifacts = append(artifacts, artifact)
 			}
 
@@ -218,6 +77,11 @@ func handleConnectArtifactId(t *testing.T) http.HandlerFunc {
 				return
 			}
 
+			if id == "cfa-jar123" {
+				artifact.Status = &camv1.CamV1ConnectArtifactStatus{
+					Phase: "READY",
+				}
+			}
 			err := json.NewEncoder(w).Encode(artifact)
 			require.NoError(t, err)
 		case http.MethodDelete:
@@ -473,25 +337,9 @@ func handleConnectors(t *testing.T) http.HandlerFunc {
 					Name:   connectv1.PtrString("az-connector-2"),
 				},
 			}
-			thirdConnectorExpansion := connectv1.ConnectV1ConnectorExpansion{
-				Id: &connectv1.ConnectV1ConnectorExpansionId{Id: connectv1.PtrString("lcc-112")},
-				Status: &connectv1.ConnectV1ConnectorExpansionStatus{
-					Name: "az-connector-3",
-					Connector: connectv1.ConnectV1ConnectorExpansionStatusConnector{
-						State: "RUNNING",
-					},
-					Tasks: &[]connectv1.InlineResponse2001Tasks{{Id: 1, State: "RUNNING"}},
-					Type:  "Sink",
-				},
-				Info: &connectv1.ConnectV1ConnectorExpansionInfo{
-					Config: &map[string]string{},
-					Name:   connectv1.PtrString("az-connector-3"),
-				},
-			}
 			err := json.NewEncoder(w).Encode(map[string]connectv1.ConnectV1ConnectorExpansion{
 				"az-connector":   firstConnectorExpansion,
 				"az-connector-2": secondConnectorExpansion,
-				"az-connector-3": thirdConnectorExpansion,
 			})
 			require.NoError(t, err)
 		} else if r.Method == http.MethodPost {
@@ -673,25 +521,30 @@ func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(plugin)
 			require.NoError(t, err)
 		case http.MethodGet:
-			plugin1 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:          connectcustompluginv1.PtrString("ccp-123456"),
-				DisplayName: connectcustompluginv1.PtrString("CliPluginTest1"),
-				Cloud:       connectcustompluginv1.PtrString("AWS"),
+			customPluginList := &connectcustompluginv1.ConnectV1CustomConnectorPluginList{
+				Data: []connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+					{
+						Id:          connectcustompluginv1.PtrString("ccp-123456"),
+						DisplayName: connectcustompluginv1.PtrString("CliPluginTest1"),
+						Cloud:       connectcustompluginv1.PtrString("AWS"),
+					},
+					{
+						Id:          connectcustompluginv1.PtrString("ccp-789012"),
+						DisplayName: connectcustompluginv1.PtrString("CliPluginTest2"),
+						Cloud:       connectcustompluginv1.PtrString("AWS"),
+					},
+					{
+						Id:             connectcustompluginv1.PtrString("ccp-789013"),
+						DisplayName:    connectcustompluginv1.PtrString("CliPluginTest3"),
+						ConnectorType:  connectcustompluginv1.PtrString("flink_udf"),
+						Cloud:          connectcustompluginv1.PtrString("AWS"),
+						ConnectorClass: connectcustompluginv1.PtrString("ver_123456"),
+						ContentFormat:  connectcustompluginv1.PtrString("JAR"),
+					},
+				},
 			}
-			plugin2 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:          connectcustompluginv1.PtrString("ccp-789012"),
-				DisplayName: connectcustompluginv1.PtrString("CliPluginTest2"),
-				Cloud:       connectcustompluginv1.PtrString("AWS"),
-			}
-			plugin3 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:             connectcustompluginv1.PtrString("ccp-789013"),
-				DisplayName:    connectcustompluginv1.PtrString("CliPluginTest3"),
-				ConnectorType:  connectcustompluginv1.PtrString("flink_udf"),
-				Cloud:          connectcustompluginv1.PtrString("AWS"),
-				ConnectorClass: connectcustompluginv1.PtrString("ver_123456"),
-				ContentFormat:  connectcustompluginv1.PtrString("JAR"),
-			}
-			err := json.NewEncoder(w).Encode(connectcustompluginv1.ConnectV1CustomConnectorPluginList{Data: []connectcustompluginv1.ConnectV1CustomConnectorPlugin{plugin1, plugin2, plugin3}})
+			setPageToken(customPluginList, &customPluginList.Metadata, r.URL)
+			err := json.NewEncoder(w).Encode(customPluginList)
 			require.NoError(t, err)
 		}
 	}

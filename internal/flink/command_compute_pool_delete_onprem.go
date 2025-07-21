@@ -56,6 +56,6 @@ func (c *command) computePoolDeleteOnPrem(cmd *cobra.Command, args []string) err
 		return client.DeleteComputePool(c.createContext(), environment, name)
 	}
 
-	_, err = deletion.Delete(args, deleteFunc, resource.FlinkComputePool)
+	_, err = deletion.Delete(cmd, args, deleteFunc, resource.FlinkComputePool)
 	return err
 }

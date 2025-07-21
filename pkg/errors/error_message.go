@@ -8,7 +8,6 @@ const (
 	ApiKeyNotFoundSuggestions         = "Ensure the API key exists and has not been deleted, or create a new API key via `confluent api-key create`."
 	BadServiceAccountIdErrorMsg       = `failed to parse service account id: ensure service account id begins with "sa-"`
 	ByokKeyNotFoundSuggestions        = "Ensure the self-managed key exists and has not been deleted, or register a new key via `confluent byok register`."
-	DeleteResourceErrorMsg            = `failed to delete %s "%s": %w`
 	EndOfFreeTrialErrorMsg            = `organization "%s" has been suspended because your free trial has ended`
 	EndOfFreeTrialSuggestions         = "To continue using Confluent Cloud, please enter a credit card with `confluent billing payment update` or claim a promo code with `confluent billing promo add`. To enter payment via the UI, please go to https://confluent.cloud/login."
 	EnsureCpSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."

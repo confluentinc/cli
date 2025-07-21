@@ -52,6 +52,6 @@ func (c *poolCommand) delete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteIdentityPool(id, provider)
 	}
 
-	_, err = deletion.Delete(args, deleteFunc, resource.IdentityPool)
+	_, err = deletion.Delete(cmd, args, deleteFunc, resource.IdentityPool)
 	return err
 }
