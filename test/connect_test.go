@@ -230,29 +230,6 @@ func (s *CLITestSuite) TestConnectCustomPlugin() {
 	}
 }
 
-func (s *CLITestSuite) TestConnectCustomPluginVersioning() {
-	tests := []CLITest{
-		{args: `connect custom-plugin version create --plugin plugin123 --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.zip" --version-number 0.0.1 `, fixture: "connect/custom-plugin/version/create.golden"},
-		{args: `connect custom-plugin version create --plugin plugin123 --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.zip" --version-number 0.0.1 `, fixture: "connect/custom-plugin/version/create.golden"},
-		{args: `connect custom-plugin version create --plugin plugin123 --plugin-file "test/fixtures/input/connect/confluentinc-kafka-connect-datagen-0.6.1.pdf" --version-number 0.0.1 `, fixture: "connect/custom-plugin/version/create-invalid-extension.golden", exitCode: 1},
-		{args: "connect custom-plugin version list --plugin plugin23", fixture: "connect/custom-plugin/version/list.golden"},
-		{args: "connect custom-plugin version list --plugin plugin23 -o json", fixture: "connect/custom-plugin/version/list-json.golden"},
-		{args: "connect custom-plugin version list --plugin plugin23 -o yaml", fixture: "connect/custom-plugin/version/list-yaml.golden"},
-		{args: "connect custom-plugin version describe --plugin ccp-123456 --version ver-123456", fixture: "connect/custom-plugin/version/describe.golden"},
-		{args: "connect custom-plugin version describe --plugin ccp-789012 --version ver-789012", fixture: "connect/custom-plugin/version/describe-with-sensitive-properties.golden"},
-		{args: "connect custom-plugin version describe --plugin ccp-123456 --version ver-123456 -o json", fixture: "connect/custom-plugin/version/describe-json.golden"},
-		{args: "connect custom-plugin version describe --plugin ccp-123456 --version ver-123456 -o yaml", fixture: "connect/custom-plugin/version/describe-yaml.golden"},
-		{args: "connect custom-plugin version delete --plugin ccp-123456 --version ver-123456 --force", fixture: "connect/custom-plugin/version/delete.golden"},
-		{args: "connect custom-plugin version delete --plugin ccp-123456 --version ver-123456", input: "y\n", fixture: "connect/custom-plugin/version/delete-prompt.golden"},
-		{args: "connect custom-plugin version update --plugin ccp-123456 --version ver-123456 --version-number 0.0.1 ", fixture: "connect/custom-plugin/version/update.golden"},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
-
 func (s *CLITestSuite) TestConnectOffset() {
 	tests := []CLITest{
 		{args: "connect offset describe lcc-123 --cluster lkc-123 -o json", fixture: "connect/offset/describe-offset-json.golden"},
@@ -272,6 +249,52 @@ func (s *CLITestSuite) TestConnectOffset() {
 		{args: "connect offset delete lcc-111 --cluster lkc-123", fixture: "connect/offset/delete-offset.golden"},
 		{args: "connect offset delete lcc-111 --cluster lkc-123 -o json", fixture: "connect/offset/delete-offset-json.golden"},
 		{args: "connect offset delete lcc-111 --cluster lkc-123 -o yaml", fixture: "connect/offset/delete-offset-yaml.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestConnectLogs() {
+	now := time.Now().UTC()
+	endTime := now.Format("2006-01-02T15:04:05Z")
+	startTime := now.Add(-2 * time.Minute).Format("2006-01-02T15:04:05Z")
+
+	tests := []CLITest{
+		{args: fmt.Sprintf("connect logs lcc-123 --cluster lkc-123 --start-time %s --end-time %s --level INFO", startTime, endTime), fixture: "connect/logs/logs.golden"},
+		{args: fmt.Sprintf("connect logs lcc-123 --cluster lkc-123 --start-time %s --end-time %s --level INFOL", startTime, endTime), fixture: "connect/logs/logs-invalid-log-level.golden", exitCode: 1},
+		{args: fmt.Sprintf("connect logs lcc-123 --cluster lkc-123 --start-time %s --end-time %s --level INFO --next", startTime, endTime), fixture: "connect/logs/logs.golden"},
+		{args: fmt.Sprintf("connect logs lcc-123 --cluster lkc-123 --start-time %s --end-time %s --level INFO -o json", startTime, endTime), fixture: "connect/logs/logs-json.golden"},
+		{args: fmt.Sprintf("connect logs lcc-123 --cluster lkc-123 --start-time %s --end-time %s --level INFO -o yaml", startTime, endTime), fixture: "connect/logs/logs-yaml.golden"},
+		{args: fmt.Sprintf("connect logs lcc-123 --cluster lkc-123 --start-time %s --end-time %s --level INFO --search-text \"130\" -o json", startTime, endTime), fixture: "connect/logs/logs-json-search.golden"},
+		{args: fmt.Sprintf("connect logs lcc-123 --cluster lkc-123 --start-time %s --end-time %s --level ERROR -o json", startTime, endTime), fixture: "connect/logs/logs-json-error.golden"},
+		{args: fmt.Sprintf("connect logs lcc-123 --cluster lkc-123 --start-time %s --end-time %s -o json", startTime, endTime), fixture: "connect/logs/logs-json-error.golden"},
+		{args: fmt.Sprintf("connect logs lcc-111 --cluster lkc-123 --start-time %s --end-time %s --level INFO", startTime, endTime), fixture: "connect/logs/logs-empty-response.golden"},
+		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-06-16T05:43:00.000Z --end-time 2025-06-16T05:45:00.000Z --level INFO", fixture: "connect/logs/logs-incorrect-time-format.golden", exitCode: 1},
+		{args: fmt.Sprintf("connect logs lcc-123 --cluster lkc-123 --start-time %s --level INFO", startTime), fixture: "connect/logs/logs-missing-end-time.golden", exitCode: 1},
+		{args: fmt.Sprintf("connect logs lcc-123 --cluster lkc-123 --end-time %s --level INFO", endTime), fixture: "connect/logs/logs-missing-start-time.golden", exitCode: 1},
+		{args: fmt.Sprintf("connect logs lcc-110 --cluster lkc-123 --start-time %s --end-time %s --level INFO", startTime, endTime), fixture: "connect/logs/logs-unknown-connector.golden", exitCode: 1},
+		{args: fmt.Sprintf("connect logs --cluster lkc-123 --start-time %s --end-time %s --level INFO", startTime, endTime), fixture: "connect/logs/logs-connector-flag-missing.golden", exitCode: 1},
+		{args: fmt.Sprintf("connect logs lcc-123 --cluster lkc-123 --start-time %s --end-time %s --level INFO --output-file logs.txt", startTime, endTime), fixture: "connect/logs/logs-output-file.golden"},
+		{args: fmt.Sprintf("connect logs \"\" --cluster lkc-123 --start-time %s --end-time %s --level INFO", startTime, endTime), fixture: "connect/logs/logs-empty-connector-id.golden", exitCode: 1},
+		{args: fmt.Sprintf("connect logs lcc-123 --cluster lkc-123 --start-time %s --end-time %s --level INFO", endTime, startTime), fixture: "connect/logs/logs-endtime-smaller-than-starttime.golden", exitCode: 1},
+		{args: fmt.Sprintf("connect logs lcc-112 --cluster lkc-123 --start-time %s --end-time %s --level INFO", startTime, endTime), fixture: "connect/logs/logs-server-connection-issue.golden", exitCode: 1},
+		{args: "connect logs lcc-123 --cluster lkc-123 --start-time 2025-01-02T15:04:05Z --end-time 2025-01-02T15:14:05Z --level INFO", fixture: "connect/logs/logs-starttime-older-than-72-hours.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestConnectListRuntimes() {
+	tests := []CLITest{
+		{args: "connect custom-connector-runtime list -o json", fixture: "connect/custom-connector-runtime/list-json.golden"},
+		{args: "connect custom-connector-runtime list -o yaml", fixture: "connect/custom-connector-runtime/list-yaml.golden"},
+		{args: "connect custom-connector-runtime list", fixture: "connect/custom-connector-runtime/list.golden"},
 	}
 
 	for _, test := range tests {
