@@ -9,7 +9,6 @@ Available Commands:
   custom-connector-runtime Manage custom connector runtimes.
   custom-plugin            Manage custom connector plugins.
   event                    Manage log events for managed connectors.
-  logs                     Manage logs for connectors.
   offset                   Manage offsets for managed connectors.
   plugin                   Manage plugins for managed connectors.
 
