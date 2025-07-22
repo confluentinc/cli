@@ -536,6 +536,7 @@ func handleNetworkingNetworkList(t *testing.T) http.HandlerFunc {
 func getNetworkList(filterName, filterCloud, filterRegion, filterCidr, filterPhase, filterConnection []string) networkingv1.NetworkingV1NetworkList {
 	gcpNetwork := getGcpNetwork("n-abcde1", "prod-gcp-us-central1", "READY", []string{"PEERING"})
 	azureNetwork := getAzureNetwork("n-abcde2", "prod-azure-eastus2", "READY", []string{"PRIVATELINK"})
+	azureNetwork.Status.SetEndpointSuffix("-n-abcde2.eastus.azure.confluent.cloud")
 
 	// Same cloud, sort by region
 	awsNetwork := getAwsNetwork("n-abcde3", "prod-aws-us-east1", "READY", []string{"TRANSITGATEWAY", "PEERING"})
