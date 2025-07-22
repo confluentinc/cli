@@ -394,23 +394,6 @@ func (c *Context) SetCurrentServiceAccount(id string) error {
 	return nil
 }
 
-func (c *Context) GetConnectLogsQueryState() *ConnectLogsQueryState {
-	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
-		return ctx.ConnectLogsQueryState
-	}
-	return nil
-}
-
-func (c *Context) SetConnectLogsQueryState(state *ConnectLogsQueryState) error {
-	ctx := c.GetCurrentEnvironmentContext()
-	if ctx == nil {
-		return errors.New(noEnvError)
-	}
-
-	ctx.ConnectLogsQueryState = state
-	return nil
-}
-
 func (c *Context) GetAuthToken() string {
 	if state := c.GetState(); state != nil {
 		return state.AuthToken

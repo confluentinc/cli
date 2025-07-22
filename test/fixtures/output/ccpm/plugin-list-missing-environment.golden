@@ -1,0 +1,4 @@
+      ID     |      Name      | Description | Cloud | Runtime Language | Environment  
+-------------+----------------+-------------+-------+------------------+--------------
+  ccp-123456 | CliPluginTest1 | Test plugin | AWS   | JAVA             | env-596      
+  ccp-789012 | CliPluginTest2 | Test plugin | GCP   | JAVA             | env-596      

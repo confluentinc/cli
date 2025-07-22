@@ -202,6 +202,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/cam v0.3.0 h1:9MMm9VeJ8ZVg9A6ofplPPvLZH
 github.com/confluentinc/ccloud-sdk-go-v2/cam v0.3.0/go.mod h1:vderFceIQXBEdhkulkwTZ0SPxHz4yZ3uDMne/FA4dJ8=
 github.com/confluentinc/ccloud-sdk-go-v2/ccl v0.4.0 h1:dUFB7PM/eQbI/AhRHyMh4Pd7xsDDlhonE3/+kwvXVnY=
 github.com/confluentinc/ccloud-sdk-go-v2/ccl v0.4.0/go.mod h1:SJdOAgzigkv8NbZo6+8N1isiZ/HXTg+TOtQg1o1PhKY=
+github.com/confluentinc/ccloud-sdk-go-v2/ccpm v0.0.1 h1:q++EceNVxARLSE5J9FO3Vbp9/dqPPep0z3AJpVC4HW8=
+github.com/confluentinc/ccloud-sdk-go-v2/ccpm v0.0.1/go.mod h1:toZWg8FVpQZ/80az0XTB4Fv22E5HJtEiMXxt4rU1JoI=
 github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5 h1:w0Z2hFxg8ng8gycWKRZFdus1R+q8D/I5AmN06NZso5s=
 github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5/go.mod h1:L8U9xs2duASJnjIYkwGrSbZNpApsbh+vlxsJlZMHJPA=
 github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority v0.0.2 h1:stsiO1JIRX6ITdw4DCsidQ0w7uhsyKDsYXwzxvi14GI=
@@ -226,8 +228,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.3.0 h1:COUuWIW9GLz
 github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.3.0/go.mod h1:VHpsi0yWBEhN6Hp2oOyGkRaNJjtnaVfYjpbtB8pnNnk=
 github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0 h1:T9e7lNj/VjxE89+tcpX2RS2NE4rWNWbJjxcO2yehEqM=
 github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0/go.mod h1:7gqwWFIyj2MAGpL/kf6SGXm/pi2Z6qpMJIjKlgEEhhg=
-github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.22.0 h1:nnp7SQnGxhAIcSGSjZd0bjRWWN5qV4TPgsxBRSKKD6M=
-github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.22.0/go.mod h1:FOaBPIbG2+RApcd9uriBno/yBRzjDOrGYIeJW2ZmIcY=
+github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.24.0 h1:PLmZLAMnY+zgxw687jemgMlqMPmu6OgJssxGlvsjp8M=
+github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.24.0/go.mod h1:Sb2O1jlHfLgMrZiqLAPqws0WjAVd4HgocZh3D7EZN5k=
 github.com/confluentinc/ccloud-sdk-go-v2/ksql v0.2.0 h1:g6OHa1iW3HO3N/YiTAL9Q6Y7rdjMBAjOPYK37akTt0M=
 github.com/confluentinc/ccloud-sdk-go-v2/ksql v0.2.0/go.mod h1:0LAvd4VqlaRwKU4yvDEkVCtV43yNezt56+hBe9Lmg7Q=
 github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0 h1:jIXXhGi+Xn+XYFCErnMvd035QijbYXla1Bo8W7V7lFM=
@@ -256,8 +258,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.3 h1:ozdDSJHruQIgtxS5hwz8Rp8p
 github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.3/go.mod h1:cD0AeCMBAWBesmWxWCMgVYNABYgHJ/ahCj7b4HP2R2I=
 github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1 h1:WZJYfgXJrvTIYQpCFps/qHF7T8ekgPlX/SFqx4EY2zQ=
 github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1/go.mod h1:kB+MXWYYg9ohrTCb27LlfpTbuexAzyYAmum105ow0ho=
-github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.1.0 h1:dNpNo4hUrZ5v3L+gJp00aa1VvuPaIANPR6BV0MFCb8A=
-github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.1.0/go.mod h1:s76DpQdEVXWWk3K97xrUUFqCWBHyp9fIbOa/rdWmGzk=
+github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.2.0 h1:ALDmQhIbzKjOz8xVgOx0ud89P3YFiOWff6IpXggkEdc=
+github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.2.0/go.mod h1:9eUl1KxQurBT6HgO/Whd7v2mfCBeqkA7FV8IGAjCOPY=
 github.com/confluentinc/cmf-sdk-go v0.0.4 h1:IAzACCIgcp0OAah9pvr6xtqaLUoQNoorxynNzIH5dQQ=
 github.com/confluentinc/cmf-sdk-go v0.0.4/go.mod h1:xY6OWDUc4UtKMgmade99v1C8/YovgWTl8tzeZ23LrEg=
 github.com/confluentinc/confluent-kafka-go/v2 v2.8.0 h1:0HlcSNWg4LpLA9nIjzUMIqWHI+w0S68UN7alXAc3TeA=
@@ -1014,8 +1016,8 @@ golang.org/x/oauth2 v0.0.0-20201109201403-9fd604954f58/go.mod h1:KelEdhl1UZF7XfJ
 golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5/go.mod h1:KelEdhl1UZF7XfJ4dDtk6s++YSgaE7mD/BuKKDLBl4A=
 golang.org/x/oauth2 v0.0.0-20210218202405-ba52d332ba99/go.mod h1:KelEdhl1UZF7XfJ4dDtk6s++YSgaE7mD/BuKKDLBl4A=
 golang.org/x/oauth2 v0.0.0-20210323180902-22b0adad7558/go.mod h1:KelEdhl1UZF7XfJ4dDtk6s++YSgaE7mD/BuKKDLBl4A=
-golang.org/x/oauth2 v0.22.0 h1:BzDx2FehcG7jJwgWLELCdmLuxk2i+x9UDpSiss2u0ZA=
-golang.org/x/oauth2 v0.22.0/go.mod h1:XYTD2NtWslqkgxebSiOHnXEap4TF09sJSc7H1sXbhtI=
+golang.org/x/oauth2 v0.27.0 h1:da9Vo7/tDv5RH/7nZDz1eMGS/q1Vv1N/7FCrBhI9I3M=
+golang.org/x/oauth2 v0.27.0/go.mod h1:onh5ek6nERTohokkhCD/y2cV4Do3fxFHFuAejCkRWT8=
 golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20181108010431-42b317875d0f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=

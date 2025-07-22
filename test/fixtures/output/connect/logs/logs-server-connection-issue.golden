@@ -1,1 +1,0 @@
-Error: failed to query connector logs: failed to make HTTP request to logging API due to issue connecting to the server, please make sure you adhere to 5 requests per minute per connector rate limit

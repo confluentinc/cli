@@ -23,7 +23,6 @@ var ccloudHandlers = []route{
 	{"/api/sessions", handleLogin},
 	{"/api/users", handleUsers},
 	{"/ldapi/sdk/eval/{env}/users/{user:[a-zA-Z0-9=\\-\\/]+}", handleLaunchDarkly},
-	{"/logs/v1/search", handleLogsSearch},
 }
 
 type CloudRouter struct {

@@ -45,6 +45,6 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 		return kafkaREST.CloudClient.DeleteKafkaLink(id)
 	}
 
-	_, err = deletion.Delete(args, deleteFunc, resource.ClusterLink)
+	_, err = deletion.Delete(cmd, args, deleteFunc, resource.ClusterLink)
 	return err
 }

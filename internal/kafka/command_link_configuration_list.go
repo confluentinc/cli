@@ -39,10 +39,10 @@ func (c *linkCommand) configurationList(cmd *cobra.Command, args []string) error
 	}
 
 	configList := append(configs, kafkarestv3.ListLinkConfigsResponseData{
-		Name:      "dest.cluster.id",
-		Value:     kafkaREST.GetClusterId(),
-		ReadOnly:  true,
-		Sensitive: true,
+		Name:        "dest.cluster.id",
+		Value:       kafkaREST.GetClusterId(),
+		IsReadOnly:  true,
+		IsSensitive: true,
 	})
 
 	list := output.NewList(cmd)
@@ -50,8 +50,8 @@ func (c *linkCommand) configurationList(cmd *cobra.Command, args []string) error
 		list.Add(&linkConfigurationOut{
 			ConfigName:  config.GetName(),
 			ConfigValue: config.GetValue(),
-			ReadOnly:    config.GetReadOnly(),
-			Sensitive:   config.GetSensitive(),
+			ReadOnly:    config.GetIsReadOnly(),
+			Sensitive:   config.GetIsSensitive(),
 			Source:      config.GetSource(),
 			Synonyms:    config.GetSynonyms(),
 		})

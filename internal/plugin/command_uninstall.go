@@ -36,6 +36,6 @@ func (c *command) uninstall(cmd *cobra.Command, args []string) error {
 		return os.Remove(pluginMap[name][0])
 	}
 
-	_, err := deletion.Delete(args, deleteFunc, resource.Plugin)
+	_, err := deletion.Delete(cmd, args, deleteFunc, resource.Plugin)
 	return err
 }

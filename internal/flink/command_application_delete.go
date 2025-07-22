@@ -53,6 +53,6 @@ func (c *command) applicationDelete(cmd *cobra.Command, args []string) error {
 		return client.DeleteApplication(c.createContext(), environment, name)
 	}
 
-	_, err = deletion.Delete(args, deleteFunc, resource.FlinkApplication)
+	_, err = deletion.Delete(cmd, args, deleteFunc, resource.FlinkApplication)
 	return err
 }

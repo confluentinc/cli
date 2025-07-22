@@ -52,6 +52,6 @@ func (c *certificatePoolCommand) delete(cmd *cobra.Command, args []string) error
 		return c.V2Client.DeleteCertificatePool(id, provider)
 	}
 
-	_, err = deletion.Delete(args, deleteFunc, resource.CertificatePool)
+	_, err = deletion.Delete(cmd, args, deleteFunc, resource.CertificatePool)
 	return err
 }

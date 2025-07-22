@@ -44,6 +44,6 @@ func (c *certificateAuthorityCommand) delete(cmd *cobra.Command, args []string) 
 		return c.V2Client.DeleteCertificateAuthority(id)
 	}
 
-	_, err := deletion.Delete(args, deleteFunc, resource.CertificateAuthority)
+	_, err := deletion.Delete(cmd, args, deleteFunc, resource.CertificateAuthority)
 	return err
 }

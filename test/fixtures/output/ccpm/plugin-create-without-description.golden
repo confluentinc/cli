@@ -1,0 +1,8 @@
++------------------+------------------+
+| ID               | ccp-123456       |
+| Name             | my-custom-plugin |
+| Description      |                  |
+| Cloud            | AWS              |
+| Runtime Language | JAVA             |
+| Environment      | env-123456       |
++------------------+------------------+

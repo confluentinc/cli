@@ -76,7 +76,7 @@ func handleSqlEnvironmentsEnvironmentConnections(t *testing.T) http.HandlerFunc 
 				},
 				Metadata: &flinkgatewayv1.ObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC))},
 			}}}
-
+			setPageToken(&connections, &connections.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(connections)
 			require.NoError(t, err)
 		case http.MethodPost:
@@ -165,7 +165,7 @@ func handleSqlEnvironmentsEnvironmentStatements(t *testing.T) http.HandlerFunc {
 				},
 				Metadata: &flinkgatewayv1.StatementObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC))},
 			}}}
-
+			setPageToken(&statements, &statements.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(statements)
 			require.NoError(t, err)
 		case http.MethodPost:
