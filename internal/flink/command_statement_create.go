@@ -2,7 +2,6 @@ package flink
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -15,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/flink/config"
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/properties"
 	"github.com/confluentinc/cli/v4/pkg/retry"
 )
 
@@ -30,8 +30,8 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 				Code: `confluent flink statement create --sql "SELECT * FROM table;"`,
 			},
 			examples.Example{
-				Text: `Create a Flink SQL statement named "my-statement" in compute pool "lfcp-123456" with service account "sa-123456" and using Kafka cluster "my-cluster" as the default database.`,
-				Code: `confluent flink statement create my-statement --sql "SELECT * FROM my-topic;" --compute-pool lfcp-123456 --service-account sa-123456 --database my-cluster`,
+				Text: `Create a Flink SQL statement named "my-statement" in compute pool "lfcp-123456" with service account "sa-123456", using Kafka cluster "my-cluster" as the default database, and with additional properties.`,
+				Code: `confluent flink statement create my-statement --sql "SELECT * FROM my-topic;" --compute-pool lfcp-123456 --service-account sa-123456 --database my-cluster --property property1=value1,property2=value2`,
 			},
 		),
 	}
@@ -41,7 +41,7 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	c.addDatabaseFlag(cmd)
 	cmd.Flags().Bool("wait", false, "Block until the statement is running or has failed.")
-	cmd.Flags().String("property", "", "Comma-separated list of key-value pairs in the format 'key1=val1,key2=val2'")
+	cmd.Flags().StringSlice("property", []string{}, "A mechanism to pass properties in the form key=value when creating a Flink statement.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -85,23 +85,20 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	properties := map[string]string{config.KeyCatalog: environment.GetDisplayName()}
+	statementProperties := map[string]string{config.KeyCatalog: environment.GetDisplayName()}
 	if database != "" {
-		properties[config.KeyDatabase] = database
+		statementProperties[config.KeyDatabase] = database
 	}
 
 	// Parse custom properties if provided
-	customProperties, err := cmd.Flags().GetString("property")
-	if err != nil {
-		return err
-	}
-	if customProperties != "" {
-		for _, prop := range strings.Split(customProperties, ",") {
-			parts := strings.SplitN(prop, "=", 2)
-			if len(parts) != 2 {
-				return fmt.Errorf("invalid property format: %s. Expected format: key=value", prop)
-			}
-			properties[parts[0]] = parts[1]
+	configs, err := cmd.Flags().GetStringSlice("property")
+	if len(configs) > 0 {
+		configMap, err := properties.ConfigSliceToMap(configs)
+		if err != nil {
+			return err
+		}
+		for key, value := range configMap {
+			statementProperties[key] = value
 		}
 	}
 
@@ -109,7 +106,7 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		Name: flinkgatewayv1.PtrString(name),
 		Spec: &flinkgatewayv1.SqlV1StatementSpec{
 			Statement:     flinkgatewayv1.PtrString(sql),
-			Properties:    &properties,
+			Properties:    &statementProperties,
 			ComputePoolId: flinkgatewayv1.PtrString(computePool),
 		},
 	}
