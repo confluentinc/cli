@@ -1,17 +1,17 @@
-+-------------------------+----------------+
-| Kafka Cluster           | lkc-123456     |
-| Topic Name              | topic-byob     |
-| Enable Compaction       | true           |
-| Enable Partitioning     | false          |
-| Environment             |                |
-| Record Failure Strategy | SKIP           |
-| Retention Ms            | 604800000      |
-| Storage Type            | BYOS           |
-| Provider Integration ID | cspi-stgce89r7 |
-| Bucket Name             | bucket_1       |
-| Bucket Region           | us-east-1      |
-| Suspended               | false          |
-| Table Formats           | ICEBERG        |
-| Table Path              |                |
-| Phase                   | RUNNING        |
-+-------------------------+----------------+
++-------------------------+--------------------------------------------------------------------------+
+| Kafka Cluster           | lkc-123456                                                               |
+| Topic Name              | topic-byob                                                               |
+| Enable Compaction       | true                                                                     |
+| Enable Partitioning     | false                                                                    |
+| Environment             |                                                                          |
+| Record Failure Strategy | SKIP                                                                     |
+| Retention Ms            | 604800000                                                                |
+| Storage Type            | BYOS                                                                     |
+| Provider Integration ID | cspi-stgce89r7                                                           |
+| Bucket Name             | bucket_1                                                                 |
+| Bucket Region           | us-east-1                                                                |
+| Suspended               | false                                                                    |
+| Table Formats           | ICEBERG                                                                  |
+| Table Path              | s3://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId |
+| Phase                   | RUNNING                                                                  |
++-------------------------+--------------------------------------------------------------------------+

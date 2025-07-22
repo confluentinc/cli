@@ -86,6 +86,7 @@ func handleTableflowTopicsCreate(t *testing.T, environment string) http.HandlerF
 
 		if tableflowTopic.Spec.Storage.TableflowV1ByobAwsSpec != nil {
 			tableflowTopic.Spec.Storage.TableflowV1ByobAwsSpec.SetBucketRegion("us-east-1")
+			tableflowTopic.Spec.Storage.TableflowV1ByobAwsSpec.SetTablePath("s3://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId")
 		} else if tableflowTopic.Spec.Storage.TableflowV1ManagedStorageSpec != nil {
 			tableflowTopic.Spec.Storage.TableflowV1ManagedStorageSpec.SetTablePath("s3://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId")
 		}
