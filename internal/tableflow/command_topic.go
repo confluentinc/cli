@@ -32,6 +32,7 @@ type topicOut struct {
 	BucketRegion          string `human:"Bucket Region,omitempty" serialized:"bucket_region,omitempty"`
 	Suspended             bool   `human:"Suspended" serialized:"suspended"`
 	TableFormats          string `human:"Table Formats" serialized:"table_formats"`
+	TablePath             string `human:"Table Path" serialized:"table_path"`
 	Phase                 string `human:"Phase" serialized:"phase"`
 	ErrorMessage          string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
 }
@@ -136,6 +137,9 @@ func printTopicTable(cmd *cobra.Command, topic tableflowv1.TableflowV1TableflowT
 		out.BucketName = topic.Spec.Storage.TableflowV1ByobAwsSpec.GetBucketName()
 		out.BucketRegion = topic.Spec.Storage.TableflowV1ByobAwsSpec.GetBucketRegion()
 		out.ProviderIntegrationId = topic.Spec.Storage.TableflowV1ByobAwsSpec.GetProviderIntegrationId()
+		out.TablePath = topic.Spec.Storage.TableflowV1ByobAwsSpec.GetTablePath()
+	} else if storageType == managed {
+		out.TablePath = topic.Spec.Storage.TableflowV1ManagedStorageSpec.GetTablePath()
 	}
 
 	table := output.NewTable(cmd)
