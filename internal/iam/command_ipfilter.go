@@ -39,13 +39,13 @@ func newIpFilterCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Com
 	cmd.AddCommand(c.newCreateCommand(cfg))
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
-	cmd.AddCommand(c.newListCommand(cfg))
+	cmd.AddCommand(c.newListCommand())
 	cmd.AddCommand(c.newUpdateCommand(cfg))
 
 	return cmd
 }
 
-func printIpFilter(cmd *cobra.Command, ipFilter iamipfilteringv2.IamV2IpFilter, isSrEnabled, isFlinkEnabled bool) error {
+func printIpFilter(cmd *cobra.Command, ipFilter iamipfilteringv2.IamV2IpFilter) error {
 	ipGroupIds := convertIpGroupsToIds(ipFilter.GetIpGroups())
 	slices.Sort(ipGroupIds)
 	table := output.NewTable(cmd)
@@ -53,15 +53,13 @@ func printIpFilter(cmd *cobra.Command, ipFilter iamipfilteringv2.IamV2IpFilter, 
 		ID:            ipFilter.GetId(),
 		Name:          ipFilter.GetFilterName(),
 		ResourceGroup: ipFilter.GetResourceGroup(),
+		ResourceScope: ipFilter.GetResourceScope(),
 		IpGroups:      ipGroupIds,
 	}
-	if isSrEnabled || isFlinkEnabled {
-		filterOut.ResourceScope = ipFilter.GetResourceScope()
-		if ipFilter.OperationGroups != nil {
-			sort.Strings(*ipFilter.OperationGroups)
-		}
-		filterOut.OperationGroups = ipFilter.GetOperationGroups()
+	if ipFilter.OperationGroups != nil {
+		sort.Strings(*ipFilter.OperationGroups)
 	}
+	filterOut.OperationGroups = ipFilter.GetOperationGroups()
 	table.Add(filterOut)
 	return table.Print()
 }
