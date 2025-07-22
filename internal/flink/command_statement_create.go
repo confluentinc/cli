@@ -101,7 +101,7 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 			if len(parts) != 2 {
 				return fmt.Errorf("invalid property format: %s. Expected format: key=value", prop)
 			}
-			properties[parts[0]] = parts[1]
+			properties[strings.TrimSpace(parts[0])] = strings.TrimSpace(parts[1])
 		}
 	}
 
