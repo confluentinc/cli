@@ -24,7 +24,7 @@ func (c *command) newApplicationCreateCommand() *cobra.Command {
 		RunE:  c.applicationCreate,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment to delete the Flink application from.")
+	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlagWithHumanRestricted(cmd)
 
@@ -52,7 +52,7 @@ func (c *command) applicationCreate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to read file: %v", err)
 	}
 
-	var application cmfsdk.Application
+	var application cmfsdk.FlinkApplication
 	ext := filepath.Ext(resourceFilePath)
 	switch ext {
 	case ".json":

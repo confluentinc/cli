@@ -13,4 +13,7 @@
 | Active Connection Types    | PEERING                        |
 | GCP Project                | gcp-project                    |
 | GCP VPC Network            | gcp-vpc                        |
+| Zone Info                  | us-central1-a=10.200.0.0/27,   |
+|                            | us-central1-b=10.200.0.32/27,  |
+|                            | us-central1-c=10.200.0.64/27   |
 +----------------------------+--------------------------------+

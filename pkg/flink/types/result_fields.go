@@ -3,8 +3,6 @@ package types
 import (
 	"fmt"
 	"strings"
-
-	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 )
 
 const (
@@ -36,8 +34,8 @@ const (
 
 type StatementResultFieldType string
 
-func NewResultFieldType(obj flinkgatewayv1.DataType) StatementResultFieldType {
-	switch obj.Type {
+func NewResultFieldType(objType string) StatementResultFieldType {
+	switch objType {
 	case "CHAR":
 		return Char
 	case "VARCHAR":

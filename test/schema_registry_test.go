@@ -68,6 +68,7 @@ func (s *CLITestSuite) TestSchemaRegistryConfigDelete() {
 func (s *CLITestSuite) TestSchemaRegistryEndpoint() {
 	tests := []CLITest{
 		{args: fmt.Sprintf("schema-registry endpoint list --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/endpoint/list.golden"},
+		{args: fmt.Sprintf("schema-registry endpoint list --environment %s -o yaml", testserver.SRApiEnvId), fixture: "schema-registry/endpoint/list-yaml.golden"},
 	}
 
 	for _, test := range tests {
@@ -152,8 +153,10 @@ func (s *CLITestSuite) TestSchemaRegistryKek() {
 		{args: "schema-registry kek list -o json", fixture: "schema-registry/kek/list-all-json.golden"},
 		{args: "schema-registry kek describe kek-name", fixture: "schema-registry/kek/describe.golden"},
 		{args: "schema-registry kek update kek-name --doc new-description", fixture: "schema-registry/kek/update.golden"},
-		{args: "schema-registry kek delete kek-name --force", fixture: "schema-registry/region/delete.golden"},
-		{args: "schema-registry kek undelete kek-name --force", fixture: "schema-registry/region/undelete.golden"},
+		{args: "schema-registry kek delete kek-name --force", fixture: "schema-registry/kek/delete.golden"},
+		{args: "schema-registry kek delete kek-name ", input: "y\n", fixture: "schema-registry/kek/delete-prompt.golden"},
+		{args: "schema-registry kek undelete kek-name --force", fixture: "schema-registry/kek/undelete.golden"},
+		{args: "schema-registry kek undelete kek-name", input: "y\n", fixture: "schema-registry/kek/undelete-prompt.golden"},
 	}
 
 	for _, test := range tests {

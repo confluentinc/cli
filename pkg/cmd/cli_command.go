@@ -8,7 +8,6 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/flink"
 	"github.com/confluentinc/cli/v4/pkg/version"
-	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
 type CLICommand struct {
@@ -33,31 +32,31 @@ func NewAnonymousCLICommand(cmd *cobra.Command, prerunner PreRunner) *CLICommand
 }
 
 func (c *CLICommand) GetCmfClient(cmd *cobra.Command) (*flink.CmfRestClient, error) {
-	if c.cmfClient == nil {
-		cfg := cmfsdk.NewConfiguration()
-
-		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
-		if err != nil {
-			return nil, err
-		}
-		cfg.Debug = unsafeTrace
-		cfg.UserAgent = c.Version.UserAgent
-
-		restFlags, err := flink.ResolveOnPremCmfRestFlags(cmd)
-		if err != nil {
-			return nil, err
-		}
-
-		if c.Config.IsTest {
-			cfg.BasePath = testserver.TestCmfUrl.String() + "/cmf/api/v1"
-		} else {
-			cfg.BasePath = ""
-		}
-
-		c.cmfClient, err = flink.NewCmfRestClient(cfg, restFlags)
-		if err != nil {
-			return nil, err
-		}
+	if c.cmfClient != nil {
+		return c.cmfClient, nil
 	}
+
+	cfg := cmfsdk.NewConfiguration()
+
+	// Set debug flag and user-agent
+	unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return nil, err
+	}
+	cfg.Debug = unsafeTrace
+	cfg.UserAgent = c.Version.UserAgent
+
+	// Resolve flags
+	restFlags, err := flink.ResolveOnPremCmfRestFlags(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	// Construct CMF client (URL logic fully handled inside NewCmfRestClient)
+	c.cmfClient, err = flink.NewCmfRestClient(cfg, restFlags, c.Config.IsTest)
+	if err != nil {
+		return nil, err
+	}
+
 	return c.cmfClient, nil
 }

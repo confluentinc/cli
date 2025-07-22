@@ -1,0 +1,4 @@
+Error: CCPM custom connector plugin version "invalid-version" not found
+
+Suggestions:
+    List available CCPM custom connector plugin versions with `confluent ccpm plugin version list`.

@@ -6,6 +6,7 @@ import (
 
 type StoreInterface interface {
 	ProcessStatement(statement string) (*ProcessedStatement, *StatementError)
+	ProcessLocalStatement(statement string) (*ProcessedStatement, *StatementError)
 	FetchStatementResults(ProcessedStatement) (*ProcessedStatement, *StatementError)
 	StopStatement(statementName string) bool
 	DeleteStatement(statementName string) bool

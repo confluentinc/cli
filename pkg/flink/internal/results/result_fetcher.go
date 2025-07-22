@@ -159,7 +159,7 @@ func (t *ResultFetcher) Init(statement types.ProcessedStatement) {
 	t.setStatement(statement)
 	t.setInitialRefreshState(statement)
 	headers := t.getResultHeadersOrCreateFromResultSchema(statement)
-	t.materializedStatementResults = types.NewMaterializedStatementResults(headers, MaxResultsCapacity, statement.Traits.UpsertColumns)
+	t.materializedStatementResults = types.NewMaterializedStatementResults(headers, MaxResultsCapacity, statement.Traits.GetUpsertColumns())
 	t.materializedStatementResults.SetTableMode(true)
 	t.materializedStatementResults.Append(statement.StatementResults.GetRows()...)
 }
@@ -176,11 +176,7 @@ func (t *ResultFetcher) getResultHeadersOrCreateFromResultSchema(statement types
 	if len(statement.StatementResults.GetHeaders()) > 0 {
 		return statement.StatementResults.GetHeaders()
 	}
-	headers := make([]string, len(statement.Traits.Schema.GetColumns()))
-	for idx, column := range statement.Traits.Schema.GetColumns() {
-		headers[idx] = column.GetName()
-	}
-	return headers
+	return statement.Traits.GetColumnNames()
 }
 
 func (t *ResultFetcher) Close() {

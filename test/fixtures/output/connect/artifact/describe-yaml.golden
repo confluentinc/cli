@@ -4,3 +4,4 @@ description: new-jar-artifact
 cloud: AWS
 environment: env-123456
 content_format: JAR
+status: READY

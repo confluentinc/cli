@@ -3,7 +3,7 @@ package flink
 import (
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
 type computePoolOut struct {
@@ -18,20 +18,33 @@ type computePoolOut struct {
 	Status      string `human:"Status" serialized:"status"`
 }
 
-func (c *command) newComputePoolCommand() *cobra.Command {
+type computePoolOutOnPrem struct {
+	CreationTime string `human:"Creation Time" serialized:"creation_time"`
+	Name         string `human:"Name" serialized:"name"`
+	Type         string `human:"Type" serialized:"type"`
+	Phase        string `human:"Phase" serialized:"phase"`
+}
+
+func (c *command) newComputePoolCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "compute-pool",
-		Short:       "Manage Flink compute pools.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:   "compute-pool",
+		Short: "Manage Flink compute pools.",
 	}
 
-	cmd.AddCommand(c.newComputePoolCreateCommand())
-	cmd.AddCommand(c.newComputePoolDeleteCommand())
-	cmd.AddCommand(c.newComputePoolDescribeCommand())
-	cmd.AddCommand(c.newComputePoolListCommand())
-	cmd.AddCommand(c.newComputePoolUnsetCommand())
-	cmd.AddCommand(c.newComputePoolUpdateCommand())
-	cmd.AddCommand(c.newComputePoolUseCommand())
+	if cfg.IsCloudLogin() {
+		cmd.AddCommand(c.newComputePoolCreateCommand())
+		cmd.AddCommand(c.newComputePoolDeleteCommand())
+		cmd.AddCommand(c.newComputePoolDescribeCommand())
+		cmd.AddCommand(c.newComputePoolListCommand())
+		cmd.AddCommand(c.newComputePoolUnsetCommand())
+		cmd.AddCommand(c.newComputePoolUpdateCommand())
+		cmd.AddCommand(c.newComputePoolUseCommand())
+	} else {
+		cmd.AddCommand(c.newComputePoolCreateCommandOnPrem())
+		cmd.AddCommand(c.newComputePoolDeleteCommandOnPrem())
+		cmd.AddCommand(c.newComputePoolDescribeCommandOnPrem())
+		cmd.AddCommand(c.newComputePoolListCommandOnPrem())
+	}
 
 	return cmd
 }

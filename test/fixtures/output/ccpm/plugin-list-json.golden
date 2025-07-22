@@ -1,0 +1,18 @@
+[
+  {
+    "id": "ccp-123456",
+    "name": "CliPluginTest1",
+    "description": "Test plugin",
+    "cloud": "AWS",
+    "runtime_language": "JAVA",
+    "environment": "env-123456"
+  },
+  {
+    "id": "ccp-789012",
+    "name": "CliPluginTest2",
+    "description": "Test plugin",
+    "cloud": "GCP",
+    "runtime_language": "JAVA",
+    "environment": "env-123456"
+  }
+]

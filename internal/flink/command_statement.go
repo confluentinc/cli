@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
 type statementOut struct {
@@ -19,21 +19,45 @@ type statementOut struct {
 	LatestOffsetsTimestamp *time.Time        `human:"Latest Offsets Timestamp" serialized:"latest_offsets_timestamp"`
 }
 
-func (c *command) newStatementCommand() *cobra.Command {
+type statementOutOnPrem struct {
+	CreationDate string `human:"Creation Date" serialized:"creation_date"`
+	Name         string `human:"Name" serialized:"name"`
+	Statement    string `human:"Statement" serialized:"statement"`
+	ComputePool  string `human:"Compute Pool" serialized:"compute_pool"`
+	Status       string `human:"Status" serialized:"status"`
+	StatusDetail string `human:"Status Detail,omitempty" serialized:"status_detail,omitempty"`
+	Parallelism  int32  `human:"Parallelism" serialized:"parallelism"`
+	Stopped      bool   `human:"Stopped" serialized:"stopped"`
+	SqlKind      string `human:"SQL Kind,omitempty" serialized:"sql_kind,omitempty"`
+	AppendOnly   bool   `human:"Append Only,omitempty" serialized:"append_only,omitempty"`
+	Bounded      bool   `human:"Bounded,omitempty" serialized:"bounded,omitempty"`
+}
+
+func (c *command) newStatementCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "statement",
-		Short:       "Manage Flink SQL statements.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:   "statement",
+		Short: "Manage Flink SQL statements.",
 	}
 
-	cmd.AddCommand(c.newStatementCreateCommand())
-	cmd.AddCommand(c.newStatementDeleteCommand())
-	cmd.AddCommand(c.newStatementDescribeCommand())
-	cmd.AddCommand(c.newStatementExceptionCommand())
-	cmd.AddCommand(c.newStatementListCommand())
-	cmd.AddCommand(c.newStatementResumeCommand())
-	cmd.AddCommand(c.newStatementStopCommand())
-	cmd.AddCommand(c.newStatementUpdateCommand())
+	if cfg.IsCloudLogin() {
+		cmd.AddCommand(c.newStatementCreateCommand())
+		cmd.AddCommand(c.newStatementDeleteCommand())
+		cmd.AddCommand(c.newStatementDescribeCommand())
+		cmd.AddCommand(c.newStatementListCommand())
+		cmd.AddCommand(c.newStatementResumeCommand())
+		cmd.AddCommand(c.newStatementStopCommand())
+		cmd.AddCommand(c.newStatementUpdateCommand())
+	} else {
+		cmd.AddCommand(c.newStatementCreateCommandOnPrem())
+		cmd.AddCommand(c.newStatementDeleteCommandOnPrem())
+		cmd.AddCommand(c.newStatementDescribeCommandOnPrem())
+		cmd.AddCommand(c.newStatementListCommandOnPrem())
+		cmd.AddCommand(c.newStatementRescaleCommandOnPrem())
+		cmd.AddCommand(c.newStatementResumeCommandOnPrem())
+		cmd.AddCommand(c.newStatementStopCommandOnPrem())
+		cmd.AddCommand(c.newStatementWebUiForwardCommand())
+	}
+	cmd.AddCommand(c.newStatementExceptionCommand(cfg))
 
 	return cmd
 }

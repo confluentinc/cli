@@ -121,6 +121,7 @@ func handleCmkClusters(t *testing.T) http.HandlerFunc {
 			clusterDedicated := getCmkDedicatedDescribeCluster("lkc-789", "ghi", 1)
 			clusterDedicated.Spec.Network = &cmkv2.EnvScopedObjectReference{Id: "n-abcde1"}
 			clusterList := &cmkv2.CmkV2ClusterList{Data: []cmkv2.CmkV2Cluster{cluster, clusterMultizone, *clusterDedicated}}
+			setPageToken(clusterList, &clusterList.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(clusterList)
 			require.NoError(t, err)
 		}

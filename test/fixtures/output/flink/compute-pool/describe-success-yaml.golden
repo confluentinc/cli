@@ -1,0 +1,13 @@
+apiversion: ""
+kind: ""
+metadata:
+    name: test-pool
+    creationtimestamp: 2025-03-12 23:42:00 +0000 UTC
+    uid: null
+    labels: null
+    annotations: null
+spec:
+    type: DEDICATED
+    clusterspec: {}
+status:
+    phase: RUNNING

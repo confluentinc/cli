@@ -11,18 +11,20 @@ import (
 )
 
 type ApplicationOptions struct {
-	UnsafeTrace      bool
-	UserAgent        string
-	EnvironmentId    string
-	EnvironmentName  string
-	OrganizationId   string
-	Database         string
-	ComputePoolId    string
-	ServiceAccountId string
-	Verbose          bool
-	LSPBaseUrl       string
-	GatewayUrl       string
-	Context          *config.Context
+	Cloud              bool
+	UnsafeTrace        bool
+	UserAgent          string
+	EnvironmentId      string
+	EnvironmentName    string
+	OrganizationId     string // Cloud only
+	Database           string
+	ComputePoolId      string
+	ServiceAccountId   string            // Cloud only
+	FlinkConfiguration map[string]string // On-prem only
+	Verbose            bool
+	LSPBaseUrl         string // Cloud only
+	GatewayUrl         string // Cloud only
+	Context            *config.Context
 }
 
 func ParseApplicationOptionsFromSlices(
@@ -160,6 +162,13 @@ func (a *ApplicationOptions) GetComputePoolId() string {
 		return a.ComputePoolId
 	}
 	return ""
+}
+
+func (a *ApplicationOptions) GetFlinkConfiguration() map[string]string {
+	if a != nil {
+		return a.FlinkConfiguration
+	}
+	return nil
 }
 
 func (a *ApplicationOptions) GetServiceAccountId() string {

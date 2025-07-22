@@ -1,0 +1,31 @@
+Welcome!
+To exit, press Ctrl-Q or type "exit".
+[Ctrl-Q] Quit [Ctrl-S] Toggle Completions
+> set 'cli.a-key'='a value';
+Statement successfully submitted.
+Finished statement execution. Statement phase: COMPLETED.
+Details: configuration updated successfully.
++-----------+---------+
+|    Key    |  Value  |
++-----------+---------+
+| cli.a-key | a value |
++-----------+---------+
+> reset 'cli.a-key';
+Statement successfully submitted.
+Finished statement execution. Statement phase: COMPLETED.
+Details: configuration key "cli.a-key" has been reset successfully.
++----------------------+--------------------+
+|         Key          |       Value        |
++----------------------+--------------------+
+| client.output-format | standard (default) |
++----------------------+--------------------+
+> set;
+Statement successfully submitted.
+Finished statement execution. Statement phase: COMPLETED.
++----------------------+--------------------+
+|         Key          |       Value        |
++----------------------+--------------------+
+| client.output-format | standard (default) |
++----------------------+--------------------+
+> exit
+

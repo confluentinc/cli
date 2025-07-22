@@ -37,6 +37,10 @@ func handleConnectArtifacts(t *testing.T) http.HandlerFunc {
 				artifact.Spec.SetContentFormat("ZIP")
 			}
 
+			artifact.Status = &camv1.CamV1ConnectArtifactStatus{
+				Phase: "PROCESSING",
+			}
+
 			artifactStore[artifact.GetId()] = *artifact
 
 			err := json.NewEncoder(w).Encode(artifact)
@@ -44,6 +48,11 @@ func handleConnectArtifacts(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			var artifacts []camv1.CamV1ConnectArtifact
 			for _, artifact := range artifactStore {
+				if artifact.GetId() == "cfa-jar123" {
+					artifact.Status = &camv1.CamV1ConnectArtifactStatus{
+						Phase: "READY",
+					}
+				}
 				artifacts = append(artifacts, artifact)
 			}
 
@@ -68,6 +77,11 @@ func handleConnectArtifactId(t *testing.T) http.HandlerFunc {
 				return
 			}
 
+			if id == "cfa-jar123" {
+				artifact.Status = &camv1.CamV1ConnectArtifactStatus{
+					Phase: "READY",
+				}
+			}
 			err := json.NewEncoder(w).Encode(artifact)
 			require.NoError(t, err)
 		case http.MethodDelete:
@@ -466,16 +480,36 @@ func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 			var decodeRespone connectcustompluginv1.ConnectV1CustomConnectorPlugin
 			require.NoError(t, json.NewDecoder(r.Body).Decode(&decodeRespone))
 			var plugin connectcustompluginv1.ConnectV1CustomConnectorPlugin
-			switch strings.ToLower(decodeRespone.GetRuntimeLanguage()) {
-			case "java", "":
-				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-					Id:             connectcustompluginv1.PtrString("ccp-123456"),
-					DisplayName:    connectcustompluginv1.PtrString("my-custom-plugin"),
-					Cloud:          connectcustompluginv1.PtrString("AWS"),
-					ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
-					ContentFormat:  connectcustompluginv1.PtrString("JAR"),
+			runtimeLanguage := strings.ToLower(decodeRespone.GetRuntimeLanguage())
+			cloud := strings.ToLower(decodeRespone.GetCloud())
+
+			if runtimeLanguage == "java" || runtimeLanguage == "" {
+				if cloud == "gcp" {
+					plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+						Id:             connectcustompluginv1.PtrString("ccp-123456"),
+						DisplayName:    connectcustompluginv1.PtrString("my-custom-plugin-gcp"),
+						Cloud:          connectcustompluginv1.PtrString("GCP"),
+						ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
+						ContentFormat:  connectcustompluginv1.PtrString("JAR"),
+					}
+				} else if cloud == "azure" {
+					plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+						Id:             connectcustompluginv1.PtrString("ccp-123456"),
+						DisplayName:    connectcustompluginv1.PtrString("my-custom-plugin-azure"),
+						Cloud:          connectcustompluginv1.PtrString("AZURE"),
+						ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
+						ContentFormat:  connectcustompluginv1.PtrString("JAR"),
+					}
+				} else {
+					plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+						Id:             connectcustompluginv1.PtrString("ccp-123456"),
+						DisplayName:    connectcustompluginv1.PtrString("my-custom-plugin"),
+						Cloud:          connectcustompluginv1.PtrString("AWS"),
+						ConnectorClass: connectcustompluginv1.PtrString("ver-123456"),
+						ContentFormat:  connectcustompluginv1.PtrString("JAR"),
+					}
 				}
-			case "python":
+			} else if runtimeLanguage == "python" {
 				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
 					Id:             connectcustompluginv1.PtrString("ccp-789012"),
 					DisplayName:    connectcustompluginv1.PtrString("my-custom-python-plugin"),
@@ -487,25 +521,30 @@ func handleCustomConnectorPlugins(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(plugin)
 			require.NoError(t, err)
 		case http.MethodGet:
-			plugin1 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:          connectcustompluginv1.PtrString("ccp-123456"),
-				DisplayName: connectcustompluginv1.PtrString("CliPluginTest1"),
-				Cloud:       connectcustompluginv1.PtrString("AWS"),
+			customPluginList := &connectcustompluginv1.ConnectV1CustomConnectorPluginList{
+				Data: []connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+					{
+						Id:          connectcustompluginv1.PtrString("ccp-123456"),
+						DisplayName: connectcustompluginv1.PtrString("CliPluginTest1"),
+						Cloud:       connectcustompluginv1.PtrString("AWS"),
+					},
+					{
+						Id:          connectcustompluginv1.PtrString("ccp-789012"),
+						DisplayName: connectcustompluginv1.PtrString("CliPluginTest2"),
+						Cloud:       connectcustompluginv1.PtrString("AWS"),
+					},
+					{
+						Id:             connectcustompluginv1.PtrString("ccp-789013"),
+						DisplayName:    connectcustompluginv1.PtrString("CliPluginTest3"),
+						ConnectorType:  connectcustompluginv1.PtrString("flink_udf"),
+						Cloud:          connectcustompluginv1.PtrString("AWS"),
+						ConnectorClass: connectcustompluginv1.PtrString("ver_123456"),
+						ContentFormat:  connectcustompluginv1.PtrString("JAR"),
+					},
+				},
 			}
-			plugin2 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:          connectcustompluginv1.PtrString("ccp-789012"),
-				DisplayName: connectcustompluginv1.PtrString("CliPluginTest2"),
-				Cloud:       connectcustompluginv1.PtrString("AWS"),
-			}
-			plugin3 := connectcustompluginv1.ConnectV1CustomConnectorPlugin{
-				Id:             connectcustompluginv1.PtrString("ccp-789013"),
-				DisplayName:    connectcustompluginv1.PtrString("CliPluginTest3"),
-				ConnectorType:  connectcustompluginv1.PtrString("flink_udf"),
-				Cloud:          connectcustompluginv1.PtrString("AWS"),
-				ConnectorClass: connectcustompluginv1.PtrString("ver_123456"),
-				ContentFormat:  connectcustompluginv1.PtrString("JAR"),
-			}
-			err := json.NewEncoder(w).Encode(connectcustompluginv1.ConnectV1CustomConnectorPluginList{Data: []connectcustompluginv1.ConnectV1CustomConnectorPlugin{plugin1, plugin2, plugin3}})
+			setPageToken(customPluginList, &customPluginList.Metadata, r.URL)
+			err := json.NewEncoder(w).Encode(customPluginList)
 			require.NoError(t, err)
 		}
 	}
@@ -537,6 +576,16 @@ func handleCustomConnectorPluginsId(t *testing.T) http.HandlerFunc {
 					ConnectorClass:            connectcustompluginv1.PtrString("io.confluent.kafka.connect.test"),
 					Cloud:                     connectcustompluginv1.PtrString("AWS"),
 					SensitiveConfigProperties: &sensitiveProperties,
+				}
+			} else if id == "ccp-401432" {
+				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
+					Id:                        connectcustompluginv1.PtrString("ccp-401432"),
+					DisplayName:               connectcustompluginv1.PtrString("CliPluginTest"),
+					Description:               connectcustompluginv1.PtrString("Source datagen plugin"),
+					ConnectorType:             connectcustompluginv1.PtrString("source"),
+					ConnectorClass:            connectcustompluginv1.PtrString("io.confluent.kafka.connect.test"),
+					Cloud:                     connectcustompluginv1.PtrString("GCP"),
+					SensitiveConfigProperties: &[]string{"gcp.key", "gcp.secret"},
 				}
 			} else {
 				plugin = connectcustompluginv1.ConnectV1CustomConnectorPlugin{
@@ -599,23 +648,27 @@ func handleCustomConnectorPluginsVersions(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(version)
 			require.NoError(t, err)
 		case http.MethodGet:
-			version1 := connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{
-				Id:      connectcustompluginv1.PtrString("ver-123456"),
-				Version: connectcustompluginv1.PtrString("0.0.0"),
-				IsBeta:  connectcustompluginv1.PtrString("false"),
+			customPluginVersionList := &connectcustompluginv1.ConnectV1CustomConnectorPluginVersionList{
+				Data: []connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{
+					{
+						Id:      connectcustompluginv1.PtrString("ver-123456"),
+						Version: connectcustompluginv1.PtrString("0.0.0"),
+						IsBeta:  connectcustompluginv1.PtrString("false"),
+					},
+					{
+						Id:      connectcustompluginv1.PtrString("ver-123456"),
+						Version: connectcustompluginv1.PtrString("0.0.1"),
+						IsBeta:  connectcustompluginv1.PtrString("false"),
+					},
+					{
+						Id:      connectcustompluginv1.PtrString("ver-123456"),
+						Version: connectcustompluginv1.PtrString("0.0.2"),
+						IsBeta:  connectcustompluginv1.PtrString("true"),
+					},
+				},
 			}
-			version2 := connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{
-				Id:      connectcustompluginv1.PtrString("ver-123456"),
-				Version: connectcustompluginv1.PtrString("0.0.1"),
-				IsBeta:  connectcustompluginv1.PtrString("false"),
-			}
-			version3 := connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{
-				Id:      connectcustompluginv1.PtrString("ver-123456"),
-				Version: connectcustompluginv1.PtrString("0.0.2"),
-				IsBeta:  connectcustompluginv1.PtrString("true"),
-			}
-
-			err := json.NewEncoder(w).Encode(connectcustompluginv1.ConnectV1CustomConnectorPluginVersionList{Data: []connectcustompluginv1.ConnectV1CustomConnectorPluginVersion{version1, version2, version3}})
+			setPageToken(customPluginVersionList, &customPluginVersionList.Metadata, r.URL)
+			err := json.NewEncoder(w).Encode(customPluginVersionList)
 			require.NoError(t, err)
 		}
 	}

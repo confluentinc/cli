@@ -1,0 +1,26 @@
+apiversion: cmf.confluent.io/v1
+kind: Statement
+metadata:
+    name: test-stmt
+    creationtimestamp: 2025-03-12 23:42:00 +0000 UTC
+    updatetimestamp: null
+    uid: null
+    labels: null
+    annotations: null
+spec:
+    statement: SELECT * FROM test_table
+    properties: {}
+    flinkconfiguration: {}
+    computepoolname: test-pool
+    parallelism: 1
+    stopped: false
+status:
+    phase: PENDING
+    detail: Statement is pending execution.
+    traits:
+        sqlkind: SELECT
+        isbounded: false
+        isappendonly: false
+        upsertcolumns: null
+        schema: null
+result: null

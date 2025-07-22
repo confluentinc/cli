@@ -1,6 +1,8 @@
 package flink
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -15,7 +17,7 @@ func (c *command) newApplicationListCommand() *cobra.Command {
 		RunE:  c.applicationList,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment to delete the Flink application from.")
+	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -43,9 +45,14 @@ func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
 		for _, app := range applications {
-			jobStatus, ok := app.Status["jobStatus"].(map[string]any)
+			status := app.GetStatus()
+			rawJobStatus, ok := status["jobStatus"]
 			if !ok {
-				jobStatus = map[string]any{}
+				return fmt.Errorf("job status not found in flink job status")
+			}
+			jobStatus, ok := rawJobStatus.(map[string]interface{})
+			if !ok {
+				return fmt.Errorf("jobStatus has unexpected type")
 			}
 			envInApp, ok := app.Spec["environment"].(string)
 			if !ok {

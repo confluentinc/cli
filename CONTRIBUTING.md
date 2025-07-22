@@ -280,6 +280,28 @@ That's it! As you can see, the process of adding a new CLI command is pretty str
 
 Note: If there is a JIRA ticket associated with your PR, please format the PR description as "[CLI-1234] Description of PR".
 
+### Breaking Changes
+
+When contributing, avoid making breaking changes outside of major version releases. We consider a breaking change to be any change that could impact a user's workflow. The following are examples of breaking changes:
+* Removing an output field
+* Changing an output field's serialized name
+* Renaming or removing a command
+* Renaming or removing a flag
+* Changing the output format (e.g. table to list)
+* Increasing the GLIBC version requirement for Linux versions
+
+This is not an exhaustive list. Always consider the potential user impact of any change!
+
+Note: For the `confluent local services` command, which interacts with Confluent Platform, we should avoid breaking changes for all supported versions of Confluent Platform.
+
+The following may seem like breaking changes, but *aren't*:
+* Renaming a non-serialized, human readable field name
+* Hiding a deprecated flag (as long as users can still use the flag!)
+
+These criteria apply to commands, flags, or any functionality in the LA (Limited Availability) or GA (General Availability) lifecycle stages, which should have a stable interface.
+
+Functionality in the EA (Early Access) or OP (Open Preview) lifecycle stage *are* allowed to have breaking changes, though we should still try to avoid them if possible for Open Preview features.
+
 ### Detailed Implementation Guides
 
 Please familiarize yourself with the following resources before writing your first CLI command:

@@ -7,10 +7,17 @@ import (
 )
 
 var flinkRoutes = []route{
+	{"/cmf/api/v1/catalogs/kafka", handleCmfCatalogs},
+	{"/cmf/api/v1/catalogs/kafka/{catName}", handleCmfCatalog},
 	{"/cmf/api/v1/environments/{environment}/applications", handleCmfApplications},
 	{"/cmf/api/v1/environments/{environment}/applications/{application}", handleCmfApplication},
 	{"/cmf/api/v1/environments", handleCmfEnvironments},
 	{"/cmf/api/v1/environments/{environment}", handleCmfEnvironment},
+	{"/cmf/api/v1/environments/{environment}/compute-pools", handleCmfComputePools},
+	{"/cmf/api/v1/environments/{environment}/compute-pools/{poolName}", handleCmfComputePool},
+	{"/cmf/api/v1/environments/{environment}/statements/{stmtName}", handleCmfStatement},
+	{"/cmf/api/v1/environments/{environment}/statements/{stmtName}/exceptions", handleCmfStatementExceptions},
+	{"/cmf/api/v1/environments/{environment}/statements", handleCmfStatements},
 }
 
 func NewFlinkOnPremRouter(t *testing.T) *mux.Router {

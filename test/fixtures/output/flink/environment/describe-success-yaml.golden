@@ -1,5 +1,8 @@
+secrets: null
 name: default
 createdtime: 2024-09-10T23:00:00Z
 updatedtime: 2024-09-10T23:00:00Z
-flinkapplicationdefaults: {}
+flinkapplicationdefaults: null
 kubernetesnamespace: default-namespace
+computepooldefaults: null
+statementdefaults: null

@@ -79,7 +79,7 @@ func (s *ResultFormatterTestSuite) TestFormatAtomicField() {
 		})
 
 		val := "NULL"
-		if types.NewResultFieldType(atomicDataType) != types.Null {
+		if types.NewResultFieldType(atomicDataType.GetType()) != types.Null {
 			val, _ = atomicField.(string)
 		}
 

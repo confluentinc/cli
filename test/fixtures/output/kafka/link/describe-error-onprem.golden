@@ -1,0 +1,5 @@
++---------------------+-----------+
+| Name                | link-3    |
+| Destination Cluster | cluster-2 |
+| Remote Cluster      | cluster-2 |
++---------------------+-----------+

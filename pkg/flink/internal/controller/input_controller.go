@@ -36,7 +36,7 @@ type InputController struct {
 
 const defaultWindowSize = 100
 
-func NewInputController(history *history.History, lspCompleter prompt.Completer, handlerCh chan *jsonrpc2.Request) types.InputControllerInterface {
+func NewInputController(history *history.History, lspCompleter prompt.Completer, handlerCh chan *jsonrpc2.Request, isCloud bool) types.InputControllerInterface {
 	inputController := &InputController{
 		History:            history,
 		InitialBuffer:      "",
@@ -46,7 +46,7 @@ func NewInputController(history *history.History, lspCompleter prompt.Completer,
 		reverseISearch:     reverseisearch.NewReverseISearch(),
 		lspCompleter:       lspCompleter,
 	}
-	if prompt, err := inputController.initPrompt(); err == nil {
+	if prompt, err := inputController.initPrompt(isCloud); err == nil {
 		inputController.prompt = prompt
 	}
 	startLspRequestHandler(inputController, handlerCh)
@@ -129,7 +129,7 @@ func (c *InputController) getMaxCol() (int, error) {
 	return int(maxCol), nil
 }
 
-func (c *InputController) initPrompt() (prompt.IPrompt, error) {
+func (c *InputController) initPrompt(isCloud bool) (prompt.IPrompt, error) {
 	options := []prompt.Option{
 		prompt.OptionTitle("sql-prompt"),
 		prompt.OptionHistory(c.History.Data),
@@ -159,19 +159,25 @@ func (c *InputController) initPrompt() (prompt.IPrompt, error) {
 	options = append(options, c.getKeyBindings()...)
 	return prompt.New(
 		nil,
-		c.promptCompleter(),
+		c.promptCompleter(isCloud),
 		options...,
 	)
 }
 
-func (c *InputController) promptCompleter() prompt.Completer {
+func (c *InputController) promptCompleter(isCloud bool) prompt.Completer {
 	completer := autocomplete.NewCompleterBuilder(c.CompletionsEnabled)
 
 	if c.lspCompleter == nil {
+		if isCloud {
+			completer.AddCompleter(autocomplete.ExamplesCompleterCloud)
+		}
 		completer.
-			AddCompleter(autocomplete.ExamplesCompleter).
-			AddCompleter(autocomplete.SetCompleter).
-			AddCompleter(autocomplete.ShowCompleter)
+			AddCompleter(autocomplete.ExamplesCompleterCommon).
+			AddCompleter(autocomplete.SetCompleterCommon)
+		if isCloud {
+			completer.AddCompleter(autocomplete.SetCompleterCloud)
+		}
+		completer.AddCompleter(autocomplete.ShowCompleter)
 	} else {
 		completer.AddCompleter(c.lspCompleter)
 	}

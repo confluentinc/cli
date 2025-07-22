@@ -1,4 +1,4 @@
-Statement successfully created.
+Statement successfully submitted.
 Waiting for statement to be ready. Statement phase: PENDING.
 Details: [Warning] The primary key does not match the upsert key derived from the query. If the primary key and upsert key don't match, the system needs to add a state-intensive operation for correction. Please revisit the query (upsert key: [customer_name]) or the table declaration for `default`.`dmvk`.`o` (primary key: [total_orders])
 Statement phase is RUNNING.

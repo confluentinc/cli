@@ -1,0 +1,22 @@
+Manage Flink SQL statements.
+
+Usage:
+  confluent flink statement [command]
+
+Available Commands:
+  create         Create a Flink SQL statement.
+  delete         Delete one or more Flink SQL statements.
+  describe       Describe a Flink SQL statement.
+  exception      Manage Flink SQL statement exceptions.
+  list           List Flink SQL statements in Confluent Platform.
+  rescale        Rescale a Flink SQL statement.
+  resume         Resume a Flink SQL statement.
+  stop           Stop a Flink SQL statement.
+  web-ui-forward Forward the web UI of a Flink statement.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent flink statement [command] --help" for more information about a command.

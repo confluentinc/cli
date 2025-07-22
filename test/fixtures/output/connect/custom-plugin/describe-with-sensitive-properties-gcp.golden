@@ -1,0 +1,9 @@
++----------------------+---------------------------------+
+| ID                   | ccp-401432                      |
+| Name                 | CliPluginTest                   |
+| Description          | Source datagen plugin           |
+| Cloud                | GCP                             |
+| Connector Class      | io.confluent.kafka.connect.test |
+| Connector Type       | source                          |
+| Sensitive Properties | gcp.key, gcp.secret             |
++----------------------+---------------------------------+

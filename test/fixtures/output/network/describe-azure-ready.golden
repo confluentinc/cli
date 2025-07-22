@@ -11,4 +11,7 @@
 | Active Connection Types    | PEERING                              |
 | Azure VNet                 | azure-vnet                           |
 | Azure Subscription         | aa000000-a000-0a00-00aa-0000aaa0a0a0 |
+| Zone Info                  | 1=10.200.0.0/27,                     |
+|                            | 2=10.200.0.32/27,                    |
+|                            | 3=10.200.0.64/27                     |
 +----------------------------+--------------------------------------+

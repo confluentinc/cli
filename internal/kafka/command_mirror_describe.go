@@ -59,12 +59,13 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 			MirrorTopicName:       mirror.GetMirrorTopicName(),
 			SourceTopicName:       mirror.GetSourceTopicName(),
 			MirrorStatus:          string(mirror.GetMirrorStatus()),
+			MirrorTopicError:      mirror.GetMirrorTopicError(),
 			StatusTimeMs:          mirror.GetStateTimeMs(),
 			Partition:             partitionLag.GetPartition(),
 			PartitionMirrorLag:    partitionLag.GetLag(),
 			LastSourceFetchOffset: partitionLag.GetLastSourceFetchOffset(),
 		})
 	}
-	list.Filter([]string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs", "LastSourceFetchOffset"})
+	list.Filter([]string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "MirrorTopicError", "StatusTimeMs", "LastSourceFetchOffset"})
 	return list.Print()
 }

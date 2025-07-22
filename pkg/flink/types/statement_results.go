@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
 type StatementResults struct {
@@ -97,4 +98,9 @@ func (s StatementResultOperation) String() string {
 type MockStatementResult struct {
 	ResultSchema     flinkgatewayv1.SqlV1ResultSchema
 	StatementResults flinkgatewayv1.SqlV1StatementResult
+}
+
+type MockStatementResultOnPrem struct {
+	ResultSchema     cmfsdk.ResultSchema
+	StatementResults cmfsdk.StatementResult
 }

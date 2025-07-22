@@ -1,0 +1,1 @@
+Error: failed to create Flink SQL statement "existing-stmt" in the environment "default": The Flink statement name already exists, please try with another statement name

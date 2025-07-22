@@ -1,0 +1,33 @@
+Enable a topic.
+
+Usage:
+  confluent tableflow topic enable <name> [flags]
+
+Aliases:
+  enable, create
+
+Examples:
+Enable a BYOS Tableflow topic related to a Kafka cluster.
+
+  $ confluent tableflow topic enable my-tableflow-topic --cluster lkc-123456 --retention-ms 604800000 --storage-type BYOS --provider-integration cspi-stgce89r7 --bucket-name bucket_1
+
+Enable a confluent managed Tableflow topic related to a Kafka cluster.
+
+  $ confluent tableflow topic enable my-tableflow-topic --cluster lkc-123456 --retention-ms 604800000 --storage-type MANAGED
+
+Flags:
+      --cluster string                   Kafka cluster ID.
+      --retention-ms string              Specify the max age of snapshots (Iceberg) or versions (Delta) (snapshot/version expiration) to keep on the table in milliseconds for the Tableflow enabled topic. (default "604800000")
+      --storage-type string              Specify the storage type of the Kafka cluster, one of MANAGED or BYOS. (default "MANAGED")
+      --provider-integration string      Specify the provider integration id.
+      --bucket-name string               Specify the name of the AWS S3 bucket.
+      --table-formats string             Specify the table formats, one of DELTA or ICEBERG. (default "ICEBERG")
+      --record-failure-strategy string   Specify the record failure strategy, one of SUSPEND or SKIP. (default "SUSPEND")
+      --context string                   CLI context name.
+      --environment string               Environment ID.
+  -o, --output string                    Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

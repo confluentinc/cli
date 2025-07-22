@@ -1,0 +1,23 @@
+{
+  "apiVersion": "",
+  "kind": "",
+  "metadata": {
+    "creationTimestamp": "2025-08-05 12:00:00 +0000 UTC",
+    "name": "test-stmt"
+  },
+  "spec": {
+    "computePoolName": "test-pool",
+    "parallelism": 1,
+    "statement": "SELECT * FROM test_table",
+    "stopped": false
+  },
+  "status": {
+    "detail": "Statement is pending execution.",
+    "phase": "PENDING",
+    "traits": {
+      "isAppendOnly": false,
+      "isBounded": false,
+      "sqlKind": "SELECT"
+    }
+  }
+}

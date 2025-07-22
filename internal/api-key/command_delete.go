@@ -43,7 +43,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	deletedIds, err := deletion.Delete(args, deleteFunc, resource.ApiKey)
+	deletedIds, err := deletion.Delete(cmd, args, deleteFunc, resource.ApiKey)
 
 	errs := multierror.Append(err, c.deleteKeysFromKeyStore(deletedIds))
 	if errs.ErrorOrNil() != nil {

@@ -1,9 +1,6 @@
 package flink
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -39,21 +36,7 @@ func (c *command) environmentDescribe(cmd *cobra.Command, args []string) error {
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		table := output.NewTable(cmd)
-		var defaultsBytes []byte
-		defaultsBytes, err = json.Marshal(environment.FlinkApplicationDefaults)
-		if err != nil {
-			return fmt.Errorf(`failed to marshal defaults for environment "%s": %s`, environmentName, err)
-		}
-
-		table.Add(&flinkEnvironmentOutput{
-			Name:                     environment.Name,
-			KubernetesNamespace:      environment.KubernetesNamespace,
-			FlinkApplicationDefaults: string(defaultsBytes),
-			CreatedTime:              environment.CreatedTime.String(),
-			UpdatedTime:              environment.UpdatedTime.String(),
-		})
-		return table.Print()
+		return printEnvironmentOutTable(cmd, environment)
 	}
 	return output.SerializedOutput(cmd, environment)
 }

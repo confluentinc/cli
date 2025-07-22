@@ -1,1 +1,1 @@
-Are you sure you want to delete topic "invalid-topic"? (y/n): Error: failed to delete invalid-topic: failed to delete topic "invalid-topic": The Tableflow topic was not found
+Are you sure you want to delete topic "invalid-topic"? (y/n): Error: failed to delete invalid-topic: The Tableflow topic was not found

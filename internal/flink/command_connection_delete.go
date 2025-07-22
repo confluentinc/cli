@@ -60,6 +60,6 @@ func (c *command) connectionDelete(cmd *cobra.Command, args []string) error {
 		return client.DeleteConnection(environmentId, id, c.Context.GetCurrentOrganization())
 	}
 
-	_, err = deletion.Delete(args, deleteFunc, resource.FlinkConnection)
+	_, err = deletion.Delete(cmd, args, deleteFunc, resource.FlinkConnection)
 	return err
 }

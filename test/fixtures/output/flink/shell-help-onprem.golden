@@ -1,0 +1,23 @@
+Start Flink interactive SQL client.
+
+Usage:
+  confluent flink shell [flags]
+
+Examples:
+For a Quick Start with examples in context, see https://docs.confluent.io/cli/current/flink/get-started/quick-start-shell.html.
+
+Flags:
+      --compute-pool string                 REQUIRED: The compute pool name to execute the Flink SQL statement.
+      --environment string                  REQUIRED: Name of the Flink environment.
+      --catalog string                      The name of the default catalog.
+      --database string                     The name of the default database.
+      --flink-configuration string          The file path to hold the Flink configuration.
+      --url string                          Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.
+      --client-key-path string              Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.
+      --client-cert-path string             Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_CERT_PATH" may be set in place of this flag.
+      --certificate-authority-path string   Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CMF_CERTIFICATE_AUTHORITY_PATH" may be set in place of this flag.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

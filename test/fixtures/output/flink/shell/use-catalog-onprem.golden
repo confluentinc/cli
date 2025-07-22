@@ -1,0 +1,23 @@
+Welcome!
+To exit, press Ctrl-Q or type "exit".
+[Ctrl-Q] Quit [Ctrl-S] Toggle Completions
+> use catalog default;
+Statement successfully submitted.
+Finished statement execution. Statement phase: COMPLETED.
+Details: configuration updated successfully.
++---------------------+---------+
+|         Key         |  Value  |
++---------------------+---------+
+| sql.current-catalog | default |
++---------------------+---------+
+> set;
+Statement successfully submitted.
+Finished statement execution. Statement phase: COMPLETED.
++----------------------+--------------------+
+|         Key          |       Value        |
++----------------------+--------------------+
+| client.output-format | standard (default) |
+| sql.current-catalog  | default            |
++----------------------+--------------------+
+> exit
+

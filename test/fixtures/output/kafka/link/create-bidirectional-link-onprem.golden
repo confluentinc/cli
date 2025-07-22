@@ -1,0 +1,8 @@
+Created cluster link "bidirectional_link" with configs:
+"bootstrap.servers"="SASL_SSL://pkc-12345.us-west-2.aws.confluent.cloud:9092"
+"link.mode"="BIDIRECTIONAL"
+"local.sasl.mechanism"="PLAIN"
+"local.security.protocol"="SASL_SSL"
+"sasl.mechanism"="PLAIN"
+"security.protocol"="SASL_SSL"
+

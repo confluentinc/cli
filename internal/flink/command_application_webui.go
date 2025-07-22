@@ -1,9 +1,7 @@
 package flink
 
 import (
-	"bytes"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"os"
@@ -24,7 +22,7 @@ func (c *command) newApplicationWebUiForwardCommand() *cobra.Command {
 		RunE:  c.applicationWebUiForward,
 	}
 
-	cmd.Flags().String("environment", "", "Name of the environment to delete the Flink application from.")
+	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	addCmfFlagSet(cmd)
 	cmd.Flags().Uint16("port", 0, "Port to forward the web UI to. If not provided, a random, OS-assigned port will be used.")
 
@@ -78,7 +76,7 @@ func (c *command) applicationWebUiForward(cmd *cobra.Command, args []string) err
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		c.handleRequest(w, r, url, environment, applicationName, cmfClient.APIClient.GetConfig().UserAgent, client)
+		c.handleFlinkWebUiForwardRequest(w, r, url, environment, "applications", applicationName, cmfClient.APIClient.GetConfig().UserAgent, client)
 	})
 
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
@@ -91,52 +89,4 @@ func (c *command) applicationWebUiForward(cmd *cobra.Command, args []string) err
 
 	_ = http.Serve(listener, nil)
 	return nil
-}
-
-func (c *command) handleRequest(userResponseWriter http.ResponseWriter, userRequest *http.Request, url, environmentName, applicationName, userAgent string, client *http.Client) {
-	body, err := io.ReadAll(userRequest.Body)
-	if err != nil {
-		http.Error(userResponseWriter, fmt.Sprintf("Failed to read request body: %s", err), http.StatusInternalServerError)
-		return
-	}
-
-	newUrl := fmt.Sprintf("%s/cmf/api/v1/environments/%s/applications/%s/flink-web-ui%s", url, environmentName, applicationName, userRequest.RequestURI)
-	reqToCmf, err := http.NewRequest(userRequest.Method, newUrl, bytes.NewReader(body))
-	if err != nil {
-		http.Error(userResponseWriter, fmt.Sprintf("failed to forward the web UI: %s", err), http.StatusInternalServerError)
-		return
-	}
-	reqToCmf.Header = userRequest.Header
-	reqToCmf.Header.Set("x-confluent-cli-version", userAgent)
-
-	if c.Config.IsOnPremLogin() {
-		accessToken := c.Context.GetAuthToken()
-		reqToCmf.Header.Set("Authorization", fmt.Sprintf("Bearer %s", accessToken))
-	}
-
-	resFromCmf, err := client.Do(reqToCmf)
-	if err != nil {
-		http.Error(userResponseWriter, fmt.Sprintf("failed to forward the request: %s", err), http.StatusInternalServerError)
-		return
-	}
-	defer resFromCmf.Body.Close()
-
-	// Copy response headers - this includes content type.
-	for key, values := range resFromCmf.Header {
-		for _, value := range values {
-			userResponseWriter.Header().Set(key, value)
-		}
-	}
-	userResponseWriter.WriteHeader(resFromCmf.StatusCode)
-
-	// Copy response body.
-	resBody, err := io.ReadAll(resFromCmf.Body)
-	if err != nil {
-		http.Error(userResponseWriter, fmt.Sprintf("failed to return response from the web UI: %s", err), http.StatusInternalServerError)
-		return
-	}
-	_, err = userResponseWriter.Write(resBody)
-	if err != nil {
-		output.ErrPrintf(false, "Failed to write response body: %s", err)
-	}
 }

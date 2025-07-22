@@ -10,4 +10,7 @@
 |                            | us-central1-c                  |
 | Phase                      | PROVISIONING                   |
 | Supported Connection Types | PEERING                        |
+| Zone Info                  | us-central1-a=10.200.0.0/27,   |
+|                            | us-central1-b=10.200.0.32/27,  |
+|                            | us-central1-c=10.200.0.64/27   |
 +----------------------------+--------------------------------+

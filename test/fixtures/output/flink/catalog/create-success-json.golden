@@ -1,0 +1,23 @@
+{
+  "apiVersion": "cmf/api/v1/catalog",
+  "kind": "KafkaCatalog",
+  "metadata": {
+    "creationTimestamp": "2025-03-12 23:42:00 +0000 UTC",
+    "name": "test-catalog"
+  },
+  "spec": {
+    "kafkaClusters": [
+      {
+        "connectionConfig": null,
+        "databaseName": "dev"
+      },
+      {
+        "connectionConfig": null,
+        "databaseName": "prod"
+      }
+    ],
+    "srInstance": {
+      "connectionConfig": null
+    }
+  }
+}

@@ -1,0 +1,10 @@
++--------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Name                           | defaults-all                                                                                                                                             |
+| Kubernetes Namespace           | defaults-all-namespace                                                                                                                                   |
+| Created Time                   | 2025-09-25 12:29:00 +0000 UTC                                                                                                                            |
+| Updated Time                   | 2025-09-25 12:29:00 +0000 UTC                                                                                                                            |
+| Flink Application Defaults     | {"metadata":{"annotations":{"fmc.platform.confluent.io/intra-cluster-ssl":"false"}},"spec":{"flinkConfiguration":{"taskmanager.numberOfTaskSlots":"8"}}} |
+| Flink Compute Pool Defaults    | {"metadata":{"name":"test-pool"},"spec":{"type":"DEDICATED"}}                                                                                            |
+| Detached Statement Defaults    | {"flinkConfiguration":{"key1":"value1"}}                                                                                                                 |
+| Interactive Statement Defaults | {"flinkConfiguration":{"key2":"value2"}}                                                                                                                 |
++--------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------+

@@ -14,7 +14,8 @@ func TestSetAutoCompletionSnapshot(t *testing.T) {
 	buffer.InsertText(input, false, true)
 
 	completer := NewCompleterBuilder(mockCompletionsEnabled).
-		AddCompleter(SetCompleter).
+		AddCompleter(SetCompleterCommon).
+		AddCompleter(SetCompleterCloud).
 		BuildCompleter()
 
 	actual := completer(*buffer.Document())

@@ -7,11 +7,6 @@ import (
 )
 
 func (s *CLITestSuite) TestKafka() {
-	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
-	createLinkConfigFile := getCreateLinkConfigFile()
-	defer os.Remove(createLinkConfigFile)
-	createBidirectionalLinkConfigFile := getCreateBidirectionalLinkConfigFile()
-	defer os.Remove(createBidirectionalLinkConfigFile)
 	tests := []CLITest{
 		{args: "environment use env-596", fixture: "kafka/0.golden"},
 		{args: "kafka cluster list", fixture: "kafka/6.golden"},
@@ -158,9 +153,12 @@ func (s *CLITestSuite) TestKafka() {
 
 	tests = []CLITest{
 		{args: fmt.Sprintf("kafka link describe link-1 --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/describe-onprem.golden"},
+		{args: fmt.Sprintf("kafka link describe link-3 --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/describe-error-onprem.golden"},
+		{args: fmt.Sprintf("kafka link list --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-error-onprem.golden"},
 		{args: fmt.Sprintf("kafka link task list link-5 --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem.golden"},
 		{args: fmt.Sprintf("kafka link task list link-5 --url %s -o yaml", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem-yaml.golden"},
 		{args: fmt.Sprintf("kafka link task list link-5 --url %s -o json", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/list-tasks-onprem-json.golden"},
+		{args: fmt.Sprintf("kafka link delete link-1 --url %s", s.TestBackend.GetKafkaRestUrl()), input: "y\n", fixture: "kafka/link/delete-onprem.golden"},
 	}
 
 	for _, test := range tests {
@@ -343,6 +341,18 @@ func (s *CLITestSuite) TestKafkaLink() {
 
 	for _, test := range tests {
 		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+
+	tests = []CLITest{
+		{args: "kafka link create bidirectional_link --remote-cluster lkc-abc123 --remote-bootstrap-server SASL_SSL://pkc-12345.us-west-2.aws.confluent.cloud:9092 --remote-api-key remoteKey --remote-api-secret remoteSecret --local-api-key localUser --local-api-secret localPassword --config " + getCreateBidirectionalLinkConfigFile(), fixture: "kafka/link/create-bidirectional-link-onprem.golden"},
+		{args: "kafka link create source_initiated_link --destination-cluster 123456789 --destination-bootstrap-server my-host:1234 --source-api-key sourceKey --source-api-secret sourceSecret --destination-api-key destinationKey --destination-api-secret destinationSecret --config link.mode=SOURCE", fixture: "kafka/link/create-source-link-onprem.golden"},
+		{args: "kafka link create destination_initiated_link --source-cluster 123456789 --source-bootstrap-server my-host:1234 --source-api-key destinationKey --source-api-secret destinationSecret --config link.mode=DESTINATION", fixture: "kafka/link/create-destination-link-onprem.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		test.env = []string{"CONFLUENT_REST_URL=" + s.TestBackend.GetKafkaRestUrl()}
 		s.runIntegrationTest(test)
 	}
 }

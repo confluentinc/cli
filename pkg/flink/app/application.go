@@ -8,6 +8,7 @@ import (
 
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/flink"
 	"github.com/confluentinc/cli/v4/pkg/flink/components"
 	"github.com/confluentinc/cli/v4/pkg/flink/config"
 	"github.com/confluentinc/cli/v4/pkg/flink/internal/controller"
@@ -104,7 +105,7 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 		}
 	})
 
-	inputController := controller.NewInputController(historyStore, lspCompleter, handlerCh)
+	inputController := controller.NewInputController(historyStore, lspCompleter, handlerCh, true)
 	statementController := controller.NewStatementController(appController, dataStore, consoleParser)
 	interactiveOutputController := controller.NewInteractiveOutputController(components.NewTableView(), resultFetcher, userProperties, appOptions.GetVerbose())
 	baseOutputController := controller.NewBaseOutputController(resultFetcher, inputController.GetWindowWidth, userProperties)
@@ -124,6 +125,56 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 		appOptions:                  appOptions,
 	}
 	components.PrintWelcomeHeader(appOptions)
+	return app.readEvalPrintLoop()
+}
+
+func StartAppOnPrem(flinkCmfClient *flink.CmfRestClient, tokenRefreshFunc func() error, appOptions types.ApplicationOptions) error {
+	synchronizedTokenRefreshFunc := synchronizedTokenRefresh(tokenRefreshFunc)
+
+	// Load history of previous commands from cache file
+	historyStore := history.LoadHistoryOnPrem()
+
+	// Instantiate Application Controller - this is the top level controller that will be passed down to all other controllers
+	// and should be used for functions that are not specific to a component
+	appController := controller.NewApplicationController(historyStore)
+
+	// Store used to process statements and store local properties
+	userProperties := store.NewUserProperties(&appOptions)
+	dataStore := store.NewStoreOnPrem(flinkCmfClient, appController.ExitApplication, userProperties, &appOptions, synchronizedTokenRefreshFunc)
+	resultFetcher := results.NewResultFetcher(dataStore)
+
+	stdinBefore := utils.GetStdin()
+	consoleParser, err := utils.GetConsoleParser()
+	if err != nil {
+		utils.OutputErr("Error: failed to initialize console parser")
+		return errors.NewErrorWithSuggestions("failed to initialize console parser", "Restart your shell session or try another terminal.")
+	}
+	appController.AddCleanupFunction(func() {
+		utils.TearDownConsoleParser(consoleParser)
+		utils.RestoreStdin(stdinBefore)
+	})
+
+	// Instantiate Component Controllers
+	inputController := controller.NewInputController(historyStore, nil, nil, false)
+	statementController := controller.NewStatementController(appController, dataStore, consoleParser)
+	interactiveOutputController := controller.NewInteractiveOutputController(components.NewTableView(), resultFetcher, userProperties, appOptions.GetVerbose())
+	baseOutputController := controller.NewBaseOutputController(resultFetcher, inputController.GetWindowWidth, userProperties)
+
+	app := Application{
+		history:                     historyStore,
+		userProperties:              userProperties,
+		store:                       dataStore,
+		resultFetcher:               resultFetcher,
+		appController:               appController,
+		inputController:             inputController,
+		statementController:         statementController,
+		interactiveOutputController: interactiveOutputController,
+		baseOutputController:        baseOutputController,
+		refreshToken:                synchronizedTokenRefreshFunc,
+		reportUsage:                 func() { /* on-prem does not support usage reporting */ },
+		appOptions:                  appOptions,
+	}
+	components.PrintWelcomeHeaderOnPrem(appOptions)
 	return app.readEvalPrintLoop()
 }
 

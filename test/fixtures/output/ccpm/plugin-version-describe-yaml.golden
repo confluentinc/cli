@@ -1,0 +1,12 @@
+plugin_id: ccp-123456
+plugin_name: CliPluginTest
+id: ver-123456
+version: 1.0.0
+content_format: ZIP
+documentation_link: https://docs.confluent.io
+sensitive_config_properties:
+    - password
+    - secret
+connector_classes: io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE
+phase: READY
+environment: env-123456

@@ -1,0 +1,6 @@
+       Timestamp       |         Name          |            Message              
+-----------------------+-----------------------+---------------------------------
+  2025-08-05T12:00:00Z | statement-exception-1 | This is a test exception        
+                       |                       | message.                        
+  2025-08-05T12:01:00Z | statement-exception-2 | This is another test exception  
+                       |                       | message.                        

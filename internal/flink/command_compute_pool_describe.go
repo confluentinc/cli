@@ -14,6 +14,7 @@ func (c *command) newComputePoolDescribeCommand() *cobra.Command {
 		Short:             "Describe a Flink compute pool.",
 		Args:              cobra.MaximumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validComputePoolArgs),
+		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		RunE:              c.computePoolDescribe,
 	}
 

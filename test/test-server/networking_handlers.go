@@ -388,6 +388,45 @@ func handleNetworkingNetworkGet(t *testing.T, id string) http.HandlerFunc {
 			w.WriteHeader(http.StatusNotFound)
 			err := writeErrorJson(w, "The network n-invalid was not found.")
 			require.NoError(t, err)
+		case "n-invalid-2":
+			network := networkingv1.NetworkingV1Network{
+				Id: networkingv1.PtrString(id),
+				Spec: &networkingv1.NetworkingV1NetworkSpec{
+					Environment: &networkingv1.ObjectReference{Id: "env-00000"},
+					DisplayName: networkingv1.PtrString("prod-invalid-2"),
+					Cloud:       networkingv1.PtrString("AWS"),
+					Region:      networkingv1.PtrString("us-east-1"),
+					Cidr:        networkingv1.PtrString("10.200.0.0/16"),
+					Zones:       &[]string{"use1-az1", "use1-az2", "use1-az3"},
+					ZonesInfo: &[]networkingv1.NetworkingV1ZoneInfo{
+						{
+							ZoneId: ptrString("use1-az1"),
+							Cidr:   nil,
+						},
+						{
+							ZoneId: ptrString("use1-az2"),
+							Cidr:   nil,
+						},
+						{
+							ZoneId: ptrString("use1-az3"),
+							Cidr:   nil,
+						},
+					},
+				},
+				Status: &networkingv1.NetworkingV1NetworkStatus{
+					Phase:                    "READY",
+					SupportedConnectionTypes: []string{"TRANSITGATEWAY", "PEERING"},
+					ActiveConnectionTypes:    []string{},
+					Cloud: &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
+						NetworkingV1AwsNetwork: &networkingv1.NetworkingV1AwsNetwork{
+							Kind: "AwsNetwork",
+						},
+					},
+					IdleSince: networkingv1.PtrTime(time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)),
+				},
+			}
+			err := json.NewEncoder(w).Encode(network)
+			require.NoError(t, err)
 		case "n-abcde1":
 			network := getAwsNetwork("n-abcde1", "prod-aws-us-east1", "READY", []string{"TRANSITGATEWAY", "PEERING"})
 			err := json.NewEncoder(w).Encode(network)
@@ -488,6 +527,7 @@ func handleNetworkingNetworkList(t *testing.T) http.HandlerFunc {
 		connection := q["spec.connection_types"]
 
 		networkList := getNetworkList(name, cloud, region, cidr, phase, connection)
+		setPageToken(&networkList, &networkList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(networkList)
 		require.NoError(t, err)
 	}
@@ -618,6 +658,22 @@ func handleNetworkingNetworkCreate(t *testing.T) http.HandlerFunc {
 				if slices.Contains(connectionTypes, "PRIVATELINK") {
 					network.Status.Cloud.NetworkingV1AwsNetwork.PrivateLinkEndpointService = networkingv1.PtrString("")
 				}
+				if body.Spec.ZonesInfo == nil && (slices.Contains(connectionTypes, "TRANSITGATEWAY") || slices.Contains(connectionTypes, "PEERING")) {
+					network.Spec.ZonesInfo = &[]networkingv1.NetworkingV1ZoneInfo{
+						{
+							ZoneId: ptrString("usw2-az1"),
+							Cidr:   ptrString("10.1.0.0/27"),
+						},
+						{
+							ZoneId: ptrString("usw2-az2"),
+							Cidr:   ptrString("10.1.0.32/27"),
+						},
+						{
+							ZoneId: ptrString("usw2-az4"),
+							Cidr:   ptrString("10.1.0.64/27"),
+						},
+					}
+				}
 			case "GCP":
 				network.Status.Cloud = &networkingv1.NetworkingV1NetworkStatusCloudOneOf{
 					NetworkingV1GcpNetwork: &networkingv1.NetworkingV1GcpNetwork{
@@ -645,6 +701,20 @@ func getAwsNetwork(id, name, phase string, connectionTypes []string) networkingv
 			Region:      networkingv1.PtrString("us-east-1"),
 			Cidr:        networkingv1.PtrString("10.200.0.0/16"),
 			Zones:       &[]string{"use1-az1", "use1-az2", "use1-az3"},
+			ZonesInfo: &[]networkingv1.NetworkingV1ZoneInfo{
+				{
+					ZoneId: ptrString("use1-az1"),
+					Cidr:   ptrString("10.200.0.0/27"),
+				},
+				{
+					ZoneId: ptrString("use1-az2"),
+					Cidr:   ptrString("10.200.0.32/27"),
+				},
+				{
+					ZoneId: ptrString("use1-az3"),
+					Cidr:   ptrString("10.200.0.64/27"),
+				},
+			},
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
@@ -655,8 +725,13 @@ func getAwsNetwork(id, name, phase string, connectionTypes []string) networkingv
 					Kind: "AwsNetwork",
 				},
 			},
-			IdleSince: networkingv1.PtrTime(time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)),
+			IdleSince:      networkingv1.PtrTime(time.Date(2021, 1, 1, 0, 0, 0, 0, time.UTC)),
+			EndpointSuffix: networkingv1.PtrString("-"),
 		},
+	}
+
+	if !slices.Contains(connectionTypes, "TRANSITGATEWAY") && !slices.Contains(connectionTypes, "PEERING") {
+		network.Spec.ZonesInfo = &[]networkingv1.NetworkingV1ZoneInfo{}
 	}
 
 	if slices.Contains(connectionTypes, "PRIVATELINK") {
@@ -700,6 +775,20 @@ func getGcpNetwork(id, name, phase string, connectionTypes []string) networkingv
 					Environment: networkingv1.PtrString("env-00000"),
 				},
 			),
+			ZonesInfo: &[]networkingv1.NetworkingV1ZoneInfo{
+				{
+					ZoneId: ptrString("us-central1-a"),
+					Cidr:   ptrString("10.200.0.0/27"),
+				},
+				{
+					ZoneId: ptrString("us-central1-b"),
+					Cidr:   ptrString("10.200.0.32/27"),
+				},
+				{
+					ZoneId: ptrString("us-central1-c"),
+					Cidr:   ptrString("10.200.0.64/27"),
+				},
+			},
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
@@ -711,6 +800,10 @@ func getGcpNetwork(id, name, phase string, connectionTypes []string) networkingv
 				},
 			},
 		},
+	}
+
+	if !slices.Contains(connectionTypes, "TRANSITGATEWAY") && !slices.Contains(connectionTypes, "PEERING") {
+		network.Spec.ZonesInfo = &[]networkingv1.NetworkingV1ZoneInfo{}
 	}
 
 	if slices.Contains(connectionTypes, "PRIVATELINK") {
@@ -752,6 +845,20 @@ func getAzureNetwork(id, name, phase string, connectionTypes []string) networkin
 			Region:      networkingv1.PtrString("eastus2"),
 			Cidr:        networkingv1.PtrString("10.0.0.0/16"),
 			Zones:       &[]string{"1", "2", "3"},
+			ZonesInfo: &[]networkingv1.NetworkingV1ZoneInfo{
+				{
+					ZoneId: ptrString("1"),
+					Cidr:   ptrString("10.200.0.0/27"),
+				},
+				{
+					ZoneId: ptrString("2"),
+					Cidr:   ptrString("10.200.0.32/27"),
+				},
+				{
+					ZoneId: ptrString("3"),
+					Cidr:   ptrString("10.200.0.64/27"),
+				},
+			},
 		},
 		Status: &networkingv1.NetworkingV1NetworkStatus{
 			Phase:                    phase,
@@ -763,6 +870,10 @@ func getAzureNetwork(id, name, phase string, connectionTypes []string) networkin
 				},
 			},
 		},
+	}
+
+	if !slices.Contains(connectionTypes, "TRANSITGATEWAY") && !slices.Contains(connectionTypes, "PEERING") {
+		network.Spec.ZonesInfo = &[]networkingv1.NetworkingV1ZoneInfo{}
 	}
 
 	if slices.Contains(connectionTypes, "PRIVATELINK") {
@@ -808,6 +919,7 @@ func handleNetworkingPeeringList(t *testing.T) http.HandlerFunc {
 		phase := q["status.phase"]
 
 		peeringList := getPeeringList(name, network, phase)
+		setPageToken(&peeringList, &peeringList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(peeringList)
 		require.NoError(t, err)
 	}
@@ -979,6 +1091,7 @@ func handleNetworkingTransitGatewayAttachmentList(t *testing.T) http.HandlerFunc
 		phase := q["status.phase"]
 
 		tgwaList := getTransitGatewayAttachmentList(name, network, phase)
+		setPageToken(&tgwaList, &tgwaList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(tgwaList)
 		require.NoError(t, err)
 	}
@@ -1185,6 +1298,7 @@ func handleNetworkingPrivateLinkAccessList(t *testing.T) http.HandlerFunc {
 		phase := q["status.phase"]
 
 		plaList := getPrivateLinkAccessList(name, network, phase)
+		setPageToken(&plaList, &plaList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(plaList)
 		require.NoError(t, err)
 	}
@@ -1404,7 +1518,7 @@ func handleNetworkingPrivateLinkAttachmentList(t *testing.T) http.HandlerFunc {
 		}
 
 		attachmentList := networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentList{Data: filteredAttachments}
-
+		setPageToken(&attachmentList, &attachmentList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(attachmentList)
 		require.NoError(t, err)
 	}
@@ -1622,7 +1736,6 @@ func handleNetworkingPrivateLinkAttachmentConnectionList(t *testing.T) http.Hand
 		connection2 := getPrivateLinkAttachmentConnection("plattc-111112", "aws-plattc-2", "READY", "aws")
 		connection3 := getPrivateLinkAttachmentConnection("plattc-111113", "aws-plattc-3", "READY", "aws")
 		connection4 := getPrivateLinkAttachmentConnection("plattc-azure", "azure-plattc-1", "READY", "azure")
-		connection5 := getPrivateLinkAttachmentConnection("plattc-gcp", "gcp-plattc-1", "READY", "gcp")
 
 		privateLinkAttachment := r.URL.Query().Get("spec.private_link_attachment")
 		switch privateLinkAttachment {
@@ -1633,36 +1746,8 @@ func handleNetworkingPrivateLinkAttachmentConnectionList(t *testing.T) http.Hand
 			})
 			require.NoError(t, err)
 		case "platt-111111":
-			pageToken := r.URL.Query().Get("page_token")
-			var connectionList networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList
-			switch pageToken {
-			case "aws-plattc-3":
-				connectionList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList{
-					Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{connection3},
-					Metadata: networkingprivatelinkv1.ListMeta{Next: *networkingprivatelinkv1.NewNullableString(networkingprivatelinkv1.PtrString("/networking/v1/private-link-attachments?environment=env-00000&page_size=1&page_token=azure-plattc-1"))},
-				}
-			case "aws-plattc-2":
-				connectionList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList{
-					Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{connection2},
-					Metadata: networkingprivatelinkv1.ListMeta{Next: *networkingprivatelinkv1.NewNullableString(networkingprivatelinkv1.PtrString("/networking/v1/private-link-attachments?environment=env-00000&page_size=1&page_token=aws-plattc-3"))},
-				}
-			case "azure-plattc-1":
-				connectionList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList{
-					Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{connection4},
-					Metadata: networkingprivatelinkv1.ListMeta{},
-				}
-			case "gcp-plattc-1":
-				connectionList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList{
-					Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{connection5},
-					Metadata: networkingprivatelinkv1.ListMeta{},
-				}
-			default:
-				connectionList = networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList{
-					Data:     []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{connection1},
-					Metadata: networkingprivatelinkv1.ListMeta{Next: *networkingprivatelinkv1.NewNullableString(networkingprivatelinkv1.PtrString("/networking/v1/private-link-attachments?environment=env-00000&page_size=1&page_token=aws-plattc-2"))},
-				}
-			}
-
+			connectionList := &networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList{Data: []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection{connection1, connection2, connection3, connection4}}
+			setPageToken(connectionList, &connectionList.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(connectionList)
 			require.NoError(t, err)
 		}
@@ -1863,6 +1948,7 @@ func handleNetworkingNetworkLinkServiceList(t *testing.T) http.HandlerFunc {
 		phase := q["status.phase"]
 
 		nlsList := getNetworkLinkServiceList(name, network, phase)
+		setPageToken(&nlsList, &nlsList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(nlsList)
 		require.NoError(t, err)
 	}
@@ -2009,6 +2095,7 @@ func handleNetworkingNetworkLinkEndpointList(t *testing.T) http.HandlerFunc {
 		service := q["spec.network_link_service"]
 
 		nleList := getNetworkLinkEndpointList(name, network, phase, service)
+		setPageToken(&nleList, &nleList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(nleList)
 		require.NoError(t, err)
 	}
@@ -2158,6 +2245,7 @@ func handleNetworkingNetworkLinkServiceAssociationList(t *testing.T) http.Handle
 			require.NoError(t, err)
 		default:
 			nlsList := getNetworkLinkServiceAssociationList(networkLinkService, phase)
+			setPageToken(&nlsList, &nlsList.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(nlsList)
 			require.NoError(t, err)
 		}
@@ -2200,6 +2288,7 @@ func handleNetworkingIpAddressList(t *testing.T) http.HandlerFunc {
 		addressType := q["address_type"]
 
 		ipList := getIpAddressList(cloud, region, services, addressType)
+		setPageToken(&ipList, &ipList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(ipList)
 		require.NoError(t, err)
 	}
@@ -2423,6 +2512,7 @@ func handleNetworkingGatewayList(t *testing.T, environment string) http.HandlerF
 		gatewaySeven := getGateway("gw-07531", environment, "my-gcp-gateway", "GcpEgressPrivateServiceConnectGatewaySpec", "GcpEgressPrivateServiceConnectGatewayStatus")
 
 		recordList := networkinggatewayv1.NetworkingV1GatewayList{Data: []networkinggatewayv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour, gatewayFive, gatewaySix, gatewaySeven}}
+		setPageToken(&recordList, &recordList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
 	}
@@ -2507,6 +2597,7 @@ func handleNetworkingDnsRecordList(t *testing.T, environment string) http.Handle
 		recordTwo.Status.SetPhase("PROVISIONING")
 
 		recordList := networkingaccesspointv1.NetworkingV1DnsRecordList{Data: []networkingaccesspointv1.NetworkingV1DnsRecord{recordOne, recordTwo}}
+		setPageToken(&recordList, &recordList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
 	}
@@ -2622,31 +2713,8 @@ func handleNetworkingDnsForwarderList(t *testing.T) http.HandlerFunc {
 		forwarder3 := getDnsForwarder("dnsf-abcde3", "my-dns-forwarder-3")
 		forwarder4 := getDnsForwarderGCP("dnsf-abcde4", "my-dns-forwarder-4")
 
-		pageToken := r.URL.Query().Get("page_token")
-		var dnsForwarderList networkingdnsforwarderv1.NetworkingV1DnsForwarderList
-		switch pageToken {
-		case "my-dns-forwarder-4":
-			dnsForwarderList = networkingdnsforwarderv1.NetworkingV1DnsForwarderList{
-				Data:     []networkingdnsforwarderv1.NetworkingV1DnsForwarder{forwarder4},
-				Metadata: networkingdnsforwarderv1.ListMeta{},
-			}
-		case "my-dns-forwarder-3":
-			dnsForwarderList = networkingdnsforwarderv1.NetworkingV1DnsForwarderList{
-				Data:     []networkingdnsforwarderv1.NetworkingV1DnsForwarder{forwarder3},
-				Metadata: networkingdnsforwarderv1.ListMeta{Next: *networkingdnsforwarderv1.NewNullableString(networkingdnsforwarderv1.PtrString("/networking/v1/dns-forwarder?environment=a-595&page_size=1&page_token=my-dns-forwarder-4"))},
-			}
-		case "my-dns-forwarder-2":
-			dnsForwarderList = networkingdnsforwarderv1.NetworkingV1DnsForwarderList{
-				Data:     []networkingdnsforwarderv1.NetworkingV1DnsForwarder{forwarder2},
-				Metadata: networkingdnsforwarderv1.ListMeta{Next: *networkingdnsforwarderv1.NewNullableString(networkingdnsforwarderv1.PtrString("/networking/v1/dns-forwarder?environment=a-595&page_size=1&page_token=my-dns-forwarder-3"))},
-			}
-		default:
-			dnsForwarderList = networkingdnsforwarderv1.NetworkingV1DnsForwarderList{
-				Data:     []networkingdnsforwarderv1.NetworkingV1DnsForwarder{forwarder1},
-				Metadata: networkingdnsforwarderv1.ListMeta{Next: *networkingdnsforwarderv1.NewNullableString(networkingdnsforwarderv1.PtrString("/networking/v1/dns-forwarders?environment=a-595&page_size=1&page_token=my-dns-forwarder-2"))},
-			}
-		}
-
+		dnsForwarderList := &networkingdnsforwarderv1.NetworkingV1DnsForwarderList{Data: []networkingdnsforwarderv1.NetworkingV1DnsForwarder{forwarder1, forwarder2, forwarder3, forwarder4}}
+		setPageToken(dnsForwarderList, &dnsForwarderList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(dnsForwarderList)
 		require.NoError(t, err)
 	}
@@ -2921,6 +2989,7 @@ func handleNetworkingAccessPointList(t *testing.T, environment string) http.Hand
 		accessPointFour := getGcpEgressAccessPoint("ap-88888", environment, "my-gcp-egress-access-point")
 
 		recordList := networkingaccesspointv1.NetworkingV1AccessPointList{Data: []networkingaccesspointv1.NetworkingV1AccessPoint{accessPointOne, accessPointTwo, accessPointThree, accessPointFour}}
+		setPageToken(&recordList, &recordList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
 	}

@@ -7,6 +7,7 @@ import (
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
 	camv1 "github.com/confluentinc/ccloud-sdk-go-v2/cam/v1"
 	cclv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccl/v1"
+	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	certificateauthorityv2 "github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority/v2"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
@@ -74,6 +75,7 @@ type Client struct {
 	SrcmClient                   *srcmv3.APIClient
 	SsoClient                    *ssov2.APIClient
 	TableflowClient              *tableflowv1.APIClient
+	CCPMClient                   *ccpmv1.APIClient
 }
 
 func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
@@ -121,5 +123,6 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		SrcmClient:                   newSrcmClient(httpClient, url, userAgent, unsafeTrace),
 		SsoClient:                    newSsoClient(httpClient, url, userAgent, unsafeTrace),
 		TableflowClient:              newTableflowClient(httpClient, url, userAgent, unsafeTrace),
+		CCPMClient:                   newCCPMClient(httpClient, url, userAgent, unsafeTrace),
 	}
 }

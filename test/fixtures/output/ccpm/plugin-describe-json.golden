@@ -1,0 +1,8 @@
+{
+  "id": "ccp-123456",
+  "name": "CliPluginTest",
+  "description": "Test plugin",
+  "cloud": "AWS",
+  "runtime_language": "JAVA",
+  "environment": "env-123456"
+}

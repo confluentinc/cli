@@ -39,19 +39,22 @@ func TestRemoveStatementTerminator(t *testing.T) {
 func TestProcessSetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
-	appOptions := &types.ApplicationOptions{EnvironmentName: "env-123"}
+	appOptions := &types.ApplicationOptions{
+		Cloud:           true,
+		EnvironmentName: "env-123",
+	}
 	userProperties := NewUserProperties(appOptions)
 	s := NewStore(client, nil, userProperties, &types.ApplicationOptions{EnvironmentName: "env-123"}, tokenRefreshFunc).(*Store)
 	// This is just a string, so really doesn't matter
 	s.Properties.Set(config.KeyLocalTimeZone, "London/GMT")
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
-		_, err := s.processSetStatement("se key=value")
+		_, err := processSetStatement(s.Properties, "se key=value")
 		assert.NotNil(t, err)
 	})
 
 	t.Run("should return all keys and values from config if configKey is empty", func(t *testing.T) {
-		result, err := s.processSetStatement("set")
+		result, err := processSetStatement(s.Properties, "set")
 		assert.Nil(t, err)
 		assert.EqualValues(t, types.COMPLETED, result.Status)
 
@@ -61,7 +64,7 @@ func TestProcessSetStatement(t *testing.T) {
 	})
 
 	t.Run("should update config for valid configKey", func(t *testing.T) {
-		result, err := s.processSetStatement("set 'location'='USA'")
+		result, err := processSetStatement(s.Properties, "set 'location'='USA'")
 		assert.Nil(t, err)
 		assert.EqualValues(t, types.COMPLETED, result.Status)
 		assert.Equal(t, "configuration updated successfully", result.StatusDetail)
@@ -69,7 +72,7 @@ func TestProcessSetStatement(t *testing.T) {
 	})
 
 	t.Run("should return all keys and values from config if configKey is empty after updates", func(t *testing.T) {
-		result, err := s.processSetStatement("set")
+		result, err := processSetStatement(s.Properties, "set")
 		assert.Nil(t, err)
 		assert.EqualValues(t, types.COMPLETED, result.Status)
 
@@ -79,7 +82,7 @@ func TestProcessSetStatement(t *testing.T) {
 	})
 
 	t.Run("should fail if user wants to set the catalog", func(t *testing.T) {
-		_, err := s.processSetStatement(fmt.Sprintf("set '%s'='%s'", config.KeyCatalog, "catalog-name"))
+		_, err := processSetStatement(s.Properties, fmt.Sprintf("set '%s'='%s'", config.KeyCatalog, "catalog-name"))
 		assert.Equal(t, &types.StatementError{
 			Message:    "cannot set a catalog or a database with SET command",
 			Suggestion: `please set a catalog with "USE CATALOG catalog-name" and a database with "USE db-name"`,
@@ -87,7 +90,7 @@ func TestProcessSetStatement(t *testing.T) {
 	})
 
 	t.Run("should fail if user wants to set the database", func(t *testing.T) {
-		_, err := s.processSetStatement(fmt.Sprintf("set '%s'='%s'", config.KeyDatabase, "db-name"))
+		_, err := processSetStatement(s.Properties, fmt.Sprintf("set '%s'='%s'", config.KeyDatabase, "db-name"))
 		assert.Equal(t, &types.StatementError{
 			Message:    "cannot set a catalog or a database with SET command",
 			Suggestion: `please set a catalog with "USE CATALOG catalog-name" and a database with "USE db-name"`,
@@ -95,7 +98,7 @@ func TestProcessSetStatement(t *testing.T) {
 	})
 
 	t.Run("should fail if user wants to set an empty statement name", func(t *testing.T) {
-		_, err := s.processSetStatement(fmt.Sprintf("set '%s'='%s'", config.KeyStatementName, ""))
+		_, err := processSetStatement(s.Properties, fmt.Sprintf("set '%s'='%s'", config.KeyStatementName, ""))
 		assert.Equal(t, &types.StatementError{
 			Message:    "cannot set an empty statement name",
 			Suggestion: `please provide a non-empty statement name with "SET 'client.statement-name'='non-empty-name'"`,
@@ -103,23 +106,23 @@ func TestProcessSetStatement(t *testing.T) {
 	})
 
 	t.Run("should parse and identify sensitive set statement", func(t *testing.T) {
-		result, err := s.processSetStatement("set 'sql.secrets.openai' = 'mysecret'")
+		result, err := processSetStatement(s.Properties, "set 'sql.secrets.openai' = 'mysecret'")
 		assert.Nil(t, err)
 		assert.EqualValues(t, true, result.IsSensitiveStatement)
 
-		result, err = s.processSetStatement("set 'sql.secrets.opeenaai' = 'mysecret'")
+		result, err = processSetStatement(s.Properties, "set 'sql.secrets.opeenaai' = 'mysecret'")
 		assert.Nil(t, err)
 		assert.EqualValues(t, true, result.IsSensitiveStatement)
 	})
 
 	t.Run("should parse set statements with equal signs in the value", func(t *testing.T) {
-		result, err := s.processSetStatement("set 'sql.secrets.openai' = 'b64encodedABCD=='")
+		result, err := processSetStatement(s.Properties, "set 'sql.secrets.openai' = 'b64encodedABCD=='")
 		assert.Nil(t, err)
 		assert.EqualValues(t, true, result.IsSensitiveStatement)
 	})
 
 	t.Run("should parse set statements with equal signs in the key", func(t *testing.T) {
-		result, err := s.processSetStatement("set 'sql.secrets.openai==' = 'b64encodedABCD=='")
+		result, err := processSetStatement(s.Properties, "set 'sql.secrets.openai==' = 'b64encodedABCD=='")
 		assert.Nil(t, err)
 		assert.EqualValues(t, true, result.IsSensitiveStatement)
 	})
@@ -129,6 +132,7 @@ func TestProcessResetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
 	appOptions := types.ApplicationOptions{
+		Cloud:            true,
 		OrganizationId:   "orgId",
 		EnvironmentName:  "envName",
 		Database:         "database",
@@ -146,7 +150,7 @@ func TestProcessResetStatement(t *testing.T) {
 	})
 
 	t.Run("should return all keys and values including default and initial values before reseting", func(t *testing.T) {
-		result, err := s.processSetStatement("set")
+		result, err := processSetStatement(s.Properties, "set")
 		assert.Nil(t, err)
 		assert.EqualValues(t, types.COMPLETED, result.Status)
 
@@ -156,14 +160,14 @@ func TestProcessResetStatement(t *testing.T) {
 	})
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
-		_, err := s.processResetStatement("res key")
+		_, err := processResetStatement(s.Properties, "res key")
 		assert.NotNil(t, err)
 	})
 
 	t.Run("should reset all keys and values from config to their default or delete them if no default", func(t *testing.T) {
 		s.Properties.Set(config.KeyCatalog, "job1")
 		s.Properties.Set("timeout", "30")
-		result, _ := s.processResetStatement("reset")
+		result, _ := processResetStatement(s.Properties, "reset")
 		assert.EqualValues(t, types.COMPLETED, result.Status)
 		assert.Equal(t, "configuration has been reset successfully", result.StatusDetail)
 		assert.ElementsMatch(t, defaultSetOutput.GetHeaders(), result.StatementResults.GetHeaders())
@@ -171,7 +175,7 @@ func TestProcessResetStatement(t *testing.T) {
 	})
 
 	t.Run("should return an error message if configKey does not exist", func(t *testing.T) {
-		result, err := s.processResetStatement("reset 'location'")
+		result, err := processResetStatement(s.Properties, "reset 'location'")
 		assert.NotNil(t, err)
 		assert.Equal(t, `Error: configuration key "location" is not set`, err.Error())
 		assert.Nil(t, result)
@@ -179,7 +183,7 @@ func TestProcessResetStatement(t *testing.T) {
 
 	t.Run("should reset config for valid configKey", func(t *testing.T) {
 		s.Properties.Set("catalog", "job1")
-		result, _ := s.processResetStatement("reset 'catalog'")
+		result, _ := processResetStatement(s.Properties, "reset 'catalog'")
 		assert.EqualValues(t, types.COMPLETED, result.Status)
 		assert.Equal(t, `configuration key "catalog" has been reset successfully`, result.StatusDetail)
 		assert.ElementsMatch(t, defaultSetOutput.GetHeaders(), result.StatementResults.GetHeaders())
@@ -190,7 +194,7 @@ func TestProcessResetStatement(t *testing.T) {
 		s.Properties.Set(config.KeyCatalog, "catalog")
 		s.Properties.Set(config.KeyDatabase, "db")
 		statement := fmt.Sprintf("reset '%s'", config.KeyCatalog)
-		_, err := s.processResetStatement(statement)
+		_, err := processResetStatement(s.Properties, statement)
 		assert.Nil(t, err)
 		assert.False(t, s.Properties.HasKey(config.KeyCatalog))
 		assert.False(t, s.Properties.HasKey(config.KeyDatabase))
@@ -209,12 +213,12 @@ func TestProcessUseStatement(t *testing.T) {
 	s := NewStore(client, nil, userProperties, &appOptions, tokenRefreshFunc).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
-		_, err := s.processUseStatement("us")
+		_, err := processUseStatement(s.Properties, "us")
 		require.Error(t, err)
 	})
 
 	t.Run("should update the database name in config", func(t *testing.T) {
-		result, err := s.processUseStatement("use db1")
+		result, err := processUseStatement(s.Properties, "use db1")
 		require.Nil(t, err)
 		require.Equal(t, config.OpUse, result.Kind)
 		require.EqualValues(t, types.COMPLETED, result.Status)
@@ -225,12 +229,12 @@ func TestProcessUseStatement(t *testing.T) {
 	})
 
 	t.Run("should return an error message if catalog name is missing", func(t *testing.T) {
-		_, err := s.processUseStatement("use catalog")
+		_, err := processUseStatement(s.Properties, "use catalog")
 		require.Error(t, err)
 	})
 
 	t.Run("should update the catalog name in config", func(t *testing.T) {
-		result, err := s.processUseStatement("use catalog metadata")
+		result, err := processUseStatement(s.Properties, "use catalog metadata")
 		require.Nil(t, err)
 		require.Equal(t, config.OpUse, result.Kind)
 		require.EqualValues(t, types.COMPLETED, result.Status)
@@ -241,7 +245,7 @@ func TestProcessUseStatement(t *testing.T) {
 	})
 
 	t.Run("should update the catalog and database name in config", func(t *testing.T) {
-		result, err := s.processUseStatement("USE `my catalog`.`my database`")
+		result, err := processUseStatement(s.Properties, "USE `my catalog`.`my database`")
 		require.Nil(t, err)
 		require.Equal(t, config.OpUse, result.Kind)
 		require.EqualValues(t, types.COMPLETED, result.Status)
@@ -256,7 +260,7 @@ func TestProcessUseStatement(t *testing.T) {
 	})
 
 	t.Run("should return an error message for invalid syntax", func(t *testing.T) {
-		_, err := s.processUseStatement("use db1 catalog metadata")
+		_, err := processUseStatement(s.Properties, "use db1 catalog metadata")
 		require.Error(t, err)
 	})
 
@@ -265,7 +269,7 @@ func TestProcessUseStatement(t *testing.T) {
 		catalogName := s.Properties.Get(config.KeyCatalog)
 		s.Properties.Delete(config.KeyCatalog)
 
-		_, err := s.processUseStatement("use db1")
+		_, err := processUseStatement(s.Properties, "use db1")
 		require.Error(t, err)
 
 		// restore previous props state
@@ -278,7 +282,7 @@ func TestProcessUseStatement(t *testing.T) {
 		s.Properties.Set(config.KeyDatabase, "test-db")
 
 		// use catalog should remove the DB property
-		_, err := s.processUseStatement("use catalog test")
+		_, err := processUseStatement(s.Properties, "use catalog test")
 		require.Nil(t, err)
 		require.False(t, s.Properties.HasKey(config.KeyDatabase))
 

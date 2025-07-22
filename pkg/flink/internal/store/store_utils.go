@@ -45,7 +45,7 @@ func createStatementResults(columnNames []string, rows [][]string) *types.Statem
 	}
 }
 
-func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
+func processSetStatement(properties types.UserPropertiesInterface, statement string) (*types.ProcessedStatement, *types.StatementError) {
 	configKey, configVal, err := parseSetStatement(statement)
 	if err != nil {
 		return nil, err.(*types.StatementError)
@@ -54,7 +54,7 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 		return &types.ProcessedStatement{
 			Kind:             config.OpSet,
 			Status:           types.COMPLETED,
-			StatementResults: createStatementResults([]string{"Key", "Value"}, s.Properties.ToSortedSlice(true)),
+			StatementResults: createStatementResults([]string{"Key", "Value"}, properties.ToSortedSlice(true)),
 			IsLocalStatement: true,
 		}, nil
 	}
@@ -81,7 +81,7 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 		}
 	}
 
-	s.Properties.Set(configKey, configVal)
+	properties.Set(configKey, configVal)
 	return &types.ProcessedStatement{
 		Kind:                 config.OpSet,
 		StatusDetail:         "configuration updated successfully",
@@ -92,40 +92,40 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 	}, nil
 }
 
-func (s *Store) processResetStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
+func processResetStatement(properties types.UserPropertiesInterface, statement string) (*types.ProcessedStatement, *types.StatementError) {
 	configKey, err := parseResetStatement(statement)
 	if err != nil {
 		return nil, &types.StatementError{Message: err.Error()}
 	}
 	if configKey == "" {
-		s.Properties.Clear()
+		properties.Clear()
 		return &types.ProcessedStatement{
 			Kind:             config.OpReset,
 			StatusDetail:     "configuration has been reset successfully",
 			Status:           types.COMPLETED,
-			StatementResults: createStatementResults([]string{"Key", "Value"}, s.Properties.ToSortedSlice(true)),
+			StatementResults: createStatementResults([]string{"Key", "Value"}, properties.ToSortedSlice(true)),
 			IsLocalStatement: true,
 		}, nil
 	}
-	if !s.Properties.HasKey(configKey) {
+	if !properties.HasKey(configKey) {
 		return nil, &types.StatementError{Message: fmt.Sprintf(`configuration key "%s" is not set`, configKey)}
 	}
 	// if catalog is reset, also reset the database
 	if configKey == config.KeyCatalog {
-		s.Properties.Delete(config.KeyDatabase)
+		properties.Delete(config.KeyDatabase)
 	}
 
-	s.Properties.Delete(configKey)
+	properties.Delete(configKey)
 	return &types.ProcessedStatement{
 		Kind:             config.OpReset,
 		StatusDetail:     fmt.Sprintf(`configuration key "%s" has been reset successfully`, configKey),
 		Status:           types.COMPLETED,
-		StatementResults: createStatementResults([]string{"Key", "Value"}, s.Properties.ToSortedSlice(true)),
+		StatementResults: createStatementResults([]string{"Key", "Value"}, properties.ToSortedSlice(true)),
 		IsLocalStatement: true,
 	}, nil
 }
 
-func (s *Store) processUseStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
+func processUseStatement(properties types.UserPropertiesInterface, statement string) (*types.ProcessedStatement, *types.StatementError) {
 	catalog, database, err := parseUseStatement(statement)
 	if err != nil {
 		return nil, &types.StatementError{Message: err.Error()}
@@ -135,28 +135,28 @@ func (s *Store) processUseStatement(statement string) (*types.ProcessedStatement
 	// "USE CATALOG catalog_name" statement
 	if catalog != "" && database == "" {
 		// USE CATALOG <catalog> will remove the current database
-		s.Properties.Delete(config.KeyDatabase)
+		properties.Delete(config.KeyDatabase)
 
-		s.Properties.Set(config.KeyCatalog, catalog)
+		properties.Set(config.KeyCatalog, catalog)
 		addedConfig = append(addedConfig, []string{config.KeyCatalog, catalog})
 
 		// "USE database" statement
 	} else if catalog == "" && database != "" {
 		// require catalog to be set before running USE <database>
-		if !s.Properties.HasKey(config.KeyCatalog) {
+		if !properties.HasKey(config.KeyCatalog) {
 			return nil, &types.StatementError{
 				Message:    "no catalog was set",
 				Suggestion: `please set a catalog first with "USE CATALOG catalog-name" or  before setting a database`,
 			}
 		}
 
-		s.Properties.Set(config.KeyDatabase, database)
+		properties.Set(config.KeyDatabase, database)
 		addedConfig = append(addedConfig, []string{config.KeyDatabase, database})
 
 		// "USE `catalog_name`.`database_name`" statement
 	} else if catalog != "" && database != "" {
-		s.Properties.Set(config.KeyCatalog, catalog)
-		s.Properties.Set(config.KeyDatabase, database)
+		properties.Set(config.KeyCatalog, catalog)
+		properties.Set(config.KeyDatabase, database)
 		addedConfig = append(addedConfig, []string{config.KeyCatalog, catalog})
 		addedConfig = append(addedConfig, []string{config.KeyDatabase, database})
 	} else {
@@ -527,9 +527,9 @@ func calcWaitTime(retries int) time.Duration {
 
 // Function to extract timeout for waiting for results.
 // We either use the value set by user using set or use a default value of 10 minutes (as of today)
-func (s *Store) getTimeout() time.Duration {
-	if s.Properties.HasKey(config.KeyResultsTimeout) {
-		timeoutInMilliseconds, err := strconv.Atoi(s.Properties.Get(config.KeyResultsTimeout))
+func getTimeout(properties types.UserPropertiesInterface) time.Duration {
+	if properties.HasKey(config.KeyResultsTimeout) {
+		timeoutInMilliseconds, err := strconv.Atoi(properties.Get(config.KeyResultsTimeout))
 		if err == nil {
 			// TODO - check for error when setting the property so user knows he hasn't set the results-timeout property properly
 			return time.Duration(timeoutInMilliseconds) * time.Millisecond

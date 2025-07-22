@@ -1,0 +1,71 @@
+[
+  {
+    "apiVersion": "",
+    "kind": "",
+    "metadata": {
+      "creationTimestamp": "2025-08-05 12:00:00 +0000 UTC",
+      "name": "test-catalog1"
+    },
+    "spec": {
+      "kafkaClusters": [
+        {
+          "connectionConfig": null,
+          "databaseName": "test-database"
+        },
+        {
+          "connectionConfig": null,
+          "databaseName": "test-database-2"
+        }
+      ],
+      "srInstance": {
+        "connectionConfig": null
+      }
+    }
+  },
+  {
+    "apiVersion": "",
+    "kind": "",
+    "metadata": {
+      "creationTimestamp": "2025-08-05 12:00:00 +0000 UTC",
+      "name": "test-catalog2"
+    },
+    "spec": {
+      "kafkaClusters": [
+        {
+          "connectionConfig": null,
+          "databaseName": "test-database"
+        },
+        {
+          "connectionConfig": null,
+          "databaseName": "test-database-2"
+        }
+      ],
+      "srInstance": {
+        "connectionConfig": null
+      }
+    }
+  },
+  {
+    "apiVersion": "",
+    "kind": "",
+    "metadata": {
+      "creationTimestamp": "2025-08-05 12:00:00 +0000 UTC",
+      "name": "test-catalog3"
+    },
+    "spec": {
+      "kafkaClusters": [
+        {
+          "connectionConfig": null,
+          "databaseName": "test-database"
+        },
+        {
+          "connectionConfig": null,
+          "databaseName": "test-database-2"
+        }
+      ],
+      "srInstance": {
+        "connectionConfig": null
+      }
+    }
+  }
+]
