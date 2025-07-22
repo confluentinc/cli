@@ -55,12 +55,12 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	// Note the region has to be empty slice instead of `nil` in case of no filter
 	awsNetworks, err := c.V2Client.ListNetworks(environmentId, nil, []string{cloud.Aws}, []string{}, nil, []string{"READY"}, nil)
 	if err != nil {
-		return fmt.Errorf("unable to list Schema Registry endpoints: failed to list networks: %w", err)
+		return fmt.Errorf("unable to list Schema Registry endpoints: failed to list AWS networks: %w", err)
 	}
 	// Filter out non-PrivateLink networks for Azure
 	azureNetworks, err := c.V2Client.ListNetworks(environmentId, nil, []string{cloud.Azure}, []string{}, nil, []string{"READY"}, []string{"PRIVATELINK"})
 	if err != nil {
-		return fmt.Errorf("unable to list Schema Registry endpoints: failed to list networks: %w", err)
+		return fmt.Errorf("unable to list Schema Registry endpoints: failed to list Azure networks: %w", err)
 	}
 
 	networks := append(awsNetworks, azureNetworks...)
