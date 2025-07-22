@@ -310,6 +310,8 @@ func (s *CLITestSuite) TestFlinkStatementCreate() {
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456`, fixture: "flink/statement/create-service-account-warning.golden"},
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 --wait`, fixture: "flink/statement/create-wait.golden"},
 		{args: `flink statement create --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 -o yaml`, fixture: "flink/statement/create-no-name-yaml.golden", regex: true},
+		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 --property "key1=val1,key2=val2"`, fixture: "flink/statement/create-with-properties.golden"},
+		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 --property "invalid-format"`, fixture: "flink/statement/create-invalid-property.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {

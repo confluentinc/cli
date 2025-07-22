@@ -18,6 +18,7 @@ Flags:
       --service-account string   Service account ID.
       --database string          The database which will be used as the default database. When using Kafka, this is the cluster ID.
       --wait                     Block until the statement is running or has failed.
+      --property string          Comma-separated list of key-value pairs in the format 'key1=val1,key2=val2'
       --environment string       Environment ID.
       --context string           CLI context name.
   -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
