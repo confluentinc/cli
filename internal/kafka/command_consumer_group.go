@@ -43,5 +43,5 @@ func (c *consumerCommand) validGroupArgs(cmd *cobra.Command, args []string) []st
 		return nil
 	}
 
-	return pcmd.AutocompleteConsumerGroups(c.AuthenticatedCLICommand)
+	return pcmd.AutocompleteConsumerGroups(cmd, c.AuthenticatedCLICommand)
 }

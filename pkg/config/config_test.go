@@ -65,6 +65,7 @@ var (
 type TestInputs struct {
 	kafkaClusters        map[string]*KafkaClusterConfig
 	activeKafka          string
+	activeKafkaEndpoint  string
 	statefulConfig       *Config
 	statelessConfig      *Config
 	twoEnvStatefulConfig *Config
@@ -186,13 +187,13 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 	}
 
 	statefulContext.Config = testInputs.statefulConfig
-	statefulContext.KafkaClusterContext = NewKafkaClusterContext(statefulContext, testInputs.activeKafka, testInputs.kafkaClusters)
+	statefulContext.KafkaClusterContext = NewKafkaClusterContext(statefulContext, testInputs.activeKafka, testInputs.activeKafkaEndpoint, testInputs.kafkaClusters)
 
 	statelessContext.Config = testInputs.statelessConfig
-	statelessContext.KafkaClusterContext = NewKafkaClusterContext(statelessContext, testInputs.activeKafka, testInputs.kafkaClusters)
+	statelessContext.KafkaClusterContext = NewKafkaClusterContext(statelessContext, testInputs.activeKafka, testInputs.activeKafkaEndpoint, testInputs.kafkaClusters)
 
 	twoEnvStatefulContext.Config = testInputs.twoEnvStatefulConfig
-	twoEnvStatefulContext.KafkaClusterContext = NewKafkaClusterContext(twoEnvStatefulContext, testInputs.activeKafka, testInputs.kafkaClusters)
+	twoEnvStatefulContext.KafkaClusterContext = NewKafkaClusterContext(twoEnvStatefulContext, testInputs.activeKafka, testInputs.activeKafkaEndpoint, testInputs.kafkaClusters)
 
 	return testInputs
 }
@@ -585,6 +586,7 @@ func TestConfig_AddContext(t *testing.T) {
 		currentEnvironment string
 		kafkaClusters      map[string]*KafkaClusterConfig
 		kafka              string
+		kafkaEndpoint      string
 		state              *ContextState
 		Version            *pversion.Version
 		filename           string
@@ -622,7 +624,7 @@ func TestConfig_AddContext(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			err := test.config.AddContext(test.contextName, test.platformName, test.credentialName, test.kafkaClusters, test.kafka, test.state, MockOrgResourceId, test.currentEnvironment, test.isMFA)
+			err := test.config.AddContext(test.contextName, test.platformName, test.credentialName, test.kafkaClusters, test.kafka, test.kafkaEndpoint, test.state, MockOrgResourceId, test.currentEnvironment, test.isMFA)
 			if (err != nil) != test.wantErr {
 				t.Errorf("AddContext() error = %v, wantErr %v", err, test.wantErr)
 			}

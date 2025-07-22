@@ -7,7 +7,8 @@
     "cloud": "gcp",
     "region": "us-central1",
     "availability": "single-zone",
-    "status": "PROVISIONING"
+    "status": "PROVISIONING",
+    "endpoint": ""
   },
   {
     "is_current": false,
@@ -17,7 +18,8 @@
     "cloud": "gcp",
     "region": "us-central1",
     "availability": "multi-zone",
-    "status": "PROVISIONING"
+    "status": "PROVISIONING",
+    "endpoint": ""
   },
   {
     "is_current": false,
@@ -28,6 +30,7 @@
     "region": "us-west-2",
     "availability": "single-zone",
     "network": "n-abcde1",
-    "status": "UP"
+    "status": "UP",
+    "endpoint": "SASL_SSL://kafka-endpoint"
   }
 ]
