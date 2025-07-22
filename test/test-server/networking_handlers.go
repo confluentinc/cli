@@ -869,6 +869,7 @@ func getAzureNetwork(id, name, phase string, connectionTypes []string) networkin
 					Kind: "AzureNetwork",
 				},
 			},
+			EndpointSuffix: networkingv1.PtrString("-"),
 		},
 	}
 
