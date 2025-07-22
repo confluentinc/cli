@@ -56,7 +56,7 @@ func printIpFilter(cmd *cobra.Command, ipFilter iamipfilteringv2.IamV2IpFilter) 
 		ResourceScope: ipFilter.GetResourceScope(),
 		IpGroups:      ipGroupIds,
 	}
-	if ipFilter.OperationGroups != nil {
+	if ipFilter.GetOperationGroups() != nil {
 		sort.Strings(*ipFilter.OperationGroups)
 	}
 	filterOut.OperationGroups = ipFilter.GetOperationGroups()

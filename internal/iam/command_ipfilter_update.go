@@ -128,7 +128,7 @@ func (c *ipFilterCommand) update(cmd *cobra.Command, args []string) error {
 	if len(newOperationGroups) == 0 && resourceGroup == "multiple" {
 		newOperationGroups = []string{"MANAGEMENT"}
 	}
-	updateIpFilter.OperationGroups = &newOperationGroups
+	updateIpFilter.SetOperationGroups(newOperationGroups)
 
 	filter, err := c.V2Client.UpdateIamIpFilter(updateIpFilter, currentIpFilterId)
 	if err != nil {
