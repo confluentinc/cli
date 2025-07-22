@@ -59,7 +59,7 @@ func (c *clusterCommand) endpointList(cmd *cobra.Command, args []string) error {
 		out := &endpointOut{
 			IsCurrent:              attributes.GetHttpEndpoint() == c.Context.KafkaClusterContext.GetActiveKafkaClusterEndpoint(),
 			Endpoint:               accessPointId,
-			KafkaBootstrapEndpoint: attributes.KafkaBootstrapEndpoint,
+			KafkaBootstrapEndpoint: attributes.GetKafkaBootstrapEndpoint(),
 			HttpEndpoint:           attributes.GetHttpEndpoint(),
 			ConnectionType:         attributes.GetConnectionType(),
 		}

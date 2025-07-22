@@ -2,13 +2,14 @@ package kafka
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/v4/pkg/output"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c *clusterCommand) newEndpointUseCommand() *cobra.Command {
@@ -55,6 +56,13 @@ func (c *clusterCommand) endpointUse(cmd *cobra.Command, args []string) error {
 	}
 
 	c.Context.KafkaClusterContext.SetActiveKafkaClusterEndpoint(endpoint)
+
+	// reset the last update time if we change the active endpoint
+	activeClusterConfig := c.Context.KafkaClusterContext.GetKafkaClusterConfig(activeCluster)
+	if activeClusterConfig != nil {
+		activeClusterConfig.LastUpdate = time.Time{}
+	}
+
 	if err := c.Config.Save(); err != nil {
 		return err
 	}
