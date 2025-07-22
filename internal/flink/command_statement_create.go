@@ -2,6 +2,7 @@ package flink
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -30,7 +31,7 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: `Create a Flink SQL statement named "my-statement" in compute pool "lfcp-123456" with service account "sa-123456" and using Kafka cluster "my-cluster" as the default database.`,
-				Code: `confluent flink statement create my-statement --sql "SELECT * FROM my-topic;" --compute-pool lfcp-123456 --service-account sa-123456 --database my-cluster`,
+				Code: `confluent flink statement create my-statement --sql "SELECT * FROM my-topic;" --compute-pool lfcp-123456 --service-account sa-123456 --database my-cluster --property property1=value1,property2=value2`,
 			},
 		),
 	}
@@ -40,6 +41,7 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	c.addDatabaseFlag(cmd)
 	cmd.Flags().Bool("wait", false, "Block until the statement is running or has failed.")
+	cmd.Flags().StringSlice("property", []string{}, "A mechanism to pass properties in the form key=value when creating a Flink statement.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -86,6 +88,21 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 	properties := map[string]string{config.KeyCatalog: environment.GetDisplayName()}
 	if database != "" {
 		properties[config.KeyDatabase] = database
+	}
+
+	// Parse custom properties if provided
+	customProperties, err := cmd.Flags().GetStringSlice("property")
+	if err != nil {
+		return err
+	}
+	if len(customProperties) > 0 {
+		for _, prop := range customProperties {
+			parts := strings.SplitN(prop, "=", 2)
+			if len(parts) != 2 {
+				return fmt.Errorf("invalid property format: %s. Expected format: key=value", prop)
+			}
+			properties[strings.TrimSpace(parts[0])] = strings.TrimSpace(parts[1])
+		}
 	}
 
 	statement := flinkgatewayv1.SqlV1Statement{
