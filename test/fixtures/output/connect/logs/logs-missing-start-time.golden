@@ -1,0 +1,41 @@
+Error: required flag(s) "start-time" not set
+Usage:
+  confluent connect logs <id> [flags]
+
+Examples:
+Query connector logs with log level ERROR between the provided time window:
+
+  $ confluent connect logs lcc-123456 --level ERROR --start-time "2025-02-01T00:00:00Z" --end-time "2025-02-01T23:59:59Z"
+
+Query connector logs with log level ERROR and WARN between the provided time window:
+
+  $ confluent connect logs lcc-123456 --level "ERROR|WARN" --start-time "2025-02-01T00:00:00Z" --end-time "2025-02-01T23:59:59Z"
+
+Query subsequent pages of connector logs for the same query by executing the command with next flag until "No logs found for the current query" is printed to the console:
+
+  $ confluent connect logs lcc-123456 --level ERROR --start-time "2025-02-01T00:00:00Z" --end-time "2025-02-01T23:59:59Z" --next
+
+Query connector logs with log level ERROR and containing "example error" in logs between the provided time window, and store in file:
+
+  $ confluent connect logs lcc-123456 --level "ERROR" --search-text "example error" --start-time "2025-02-01T00:00:00Z" --end-time "2025-02-01T23:59:59Z" --output-file errors.json
+
+Query connector logs with log level ERROR and matching regex "exa*" in logs between the provided time window, and store in file:
+
+  $ confluent connect logs lcc-123456 --level "ERROR" --search-text "exa*" --start-time "2025-02-01T00:00:00Z" --end-time "2025-02-01T23:59:59Z" --output-file errors.json
+
+Flags:
+      --start-time string    REQUIRED: Start time for log query in ISO 8601 (https://en.wikipedia.org/wiki/ISO_8601) UTC datetime format (e.g., 2025-02-01T00:00:00Z).
+      --end-time string      REQUIRED: End time for log query in ISO 8601 (https://en.wikipedia.org/wiki/ISO_8601) UTC datetime format (e.g., 2025-02-01T23:59:59Z).
+      --level string         Log level filter (INFO, WARN, ERROR). Defaults to ERROR. Use '|' to specify multiple levels (e.g., ERROR|WARN). (default "ERROR")
+      --search-text string   Search text within logs.
+      --output-file string   Output file path to append connector logs.
+      --next                 Whether to fetch next page of logs after the next execution of the command.
+      --cluster string       Kafka cluster ID.
+      --environment string   Environment ID.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
