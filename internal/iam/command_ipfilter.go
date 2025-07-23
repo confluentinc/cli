@@ -49,17 +49,17 @@ func printIpFilter(cmd *cobra.Command, ipFilter iamipfilteringv2.IamV2IpFilter) 
 	ipGroupIds := convertIpGroupsToIds(ipFilter.GetIpGroups())
 	slices.Sort(ipGroupIds)
 	table := output.NewTable(cmd)
-	filterOut := &ipFilterOut{
-		ID:            ipFilter.GetId(),
-		Name:          ipFilter.GetFilterName(),
-		ResourceGroup: ipFilter.GetResourceGroup(),
-		ResourceScope: ipFilter.GetResourceScope(),
-		IpGroups:      ipGroupIds,
-	}
 	if ipFilter.GetOperationGroups() != nil {
 		sort.Strings(*ipFilter.OperationGroups)
 	}
-	filterOut.OperationGroups = ipFilter.GetOperationGroups()
+	filterOut := &ipFilterOut{
+		ID:              ipFilter.GetId(),
+		Name:            ipFilter.GetFilterName(),
+		ResourceGroup:   ipFilter.GetResourceGroup(),
+		IpGroups:        ipGroupIds,
+		OperationGroups: ipFilter.GetOperationGroups(),
+		ResourceScope:   ipFilter.GetResourceScope(),
+	}
 	table.Add(filterOut)
 	return table.Print()
 }

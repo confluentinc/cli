@@ -54,17 +54,17 @@ func (c *ipFilterCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 	list := output.NewList(cmd)
 	for _, filter := range ipFilters {
-		filterOut := ipFilterOut{
-			ID:            filter.GetId(),
-			Name:          filter.GetFilterName(),
-			ResourceGroup: filter.GetResourceGroup(),
-			ResourceScope: filter.GetResourceScope(),
-			IpGroups:      convertIpGroupObjectsToIpGroupIds(filter),
-		}
-		if filter.OperationGroups != nil {
+		if filter.GetOperationGroups() != nil {
 			sort.Strings(*filter.OperationGroups)
 		}
-		filterOut.OperationGroups = filter.GetOperationGroups()
+		filterOut := ipFilterOut{
+			ID:              filter.GetId(),
+			Name:            filter.GetFilterName(),
+			ResourceGroup:   filter.GetResourceGroup(),
+			ResourceScope:   filter.GetResourceScope(),
+			IpGroups:        convertIpGroupObjectsToIpGroupIds(filter),
+			OperationGroups: filter.GetOperationGroups(),
+		}
 		list.Add(&filterOut)
 	}
 	return list.Print()
