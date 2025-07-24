@@ -602,7 +602,7 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 	t.Run("InitializeOnPremKafkaRest_ValidMdsToken", func(t *testing.T) {
 		err := r.InitializeOnPremKafkaRest(c)(c.Command, []string{})
 		require.NoError(t, err)
-		kafkaREST, err := c.GetKafkaREST(cmd)
+		kafkaREST, err := c.GetKafkaREST(cobraCmd)
 		require.NoError(t, err)
 		auth, ok := kafkaREST.Context.Value(kafkarestv3.ContextAccessToken).(string)
 		require.True(t, ok)

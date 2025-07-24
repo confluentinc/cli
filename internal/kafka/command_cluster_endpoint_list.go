@@ -2,14 +2,14 @@ package kafka
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/v4/pkg/kafka"
+
+	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/kafka"
 	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
-	"github.com/spf13/cobra"
 )
 
 func (c *clusterCommand) newEndpointListCommand() *cobra.Command {
@@ -48,14 +48,13 @@ func (c *clusterCommand) endpointList(cmd *cobra.Command, args []string) error {
 	clusterConfigs, _, err := c.V2Client.DescribeKafkaCluster(clusterId, c.Context.GetCurrentEnvironment())
 	if err != nil {
 		log.CliLogger.Debugf("Error describing Kafka Cluster: %v", err)
-		return fmt.Errorf("error retrieving configs for cluster %q", cluster)
+		return fmt.Errorf("error retrieving configs for cluster %q", clusterId)
 	}
 
 	clusterEndpoints := clusterConfigs.Spec.GetEndpoints()
 
 	list := output.NewList(cmd)
 	for accessPointId, attributes := range clusterEndpoints {
-
 		out := &endpointOut{
 			IsCurrent:              attributes.GetHttpEndpoint() == c.Context.KafkaClusterContext.GetActiveKafkaClusterEndpoint(),
 			Endpoint:               accessPointId,

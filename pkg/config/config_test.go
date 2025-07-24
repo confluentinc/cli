@@ -63,9 +63,9 @@ var (
 )
 
 type TestInputs struct {
-	kafkaClusters        map[string]*KafkaClusterConfig
-	activeKafka          string
-	activeKafkaEndpoint  string
+	kafkaClusters map[string]*KafkaClusterConfig
+	activeKafka   string
+	//activeKafkaEndpoint  string
 	statefulConfig       *Config
 	statelessConfig      *Config
 	twoEnvStatefulConfig *Config
@@ -603,9 +603,10 @@ func TestConfig_AddContext(t *testing.T) {
 		currentEnvironment: context.CurrentEnvironment,
 		kafkaClusters:      context.KafkaClusterContext.KafkaClusterConfigs,
 		kafka:              context.KafkaClusterContext.ActiveKafkaCluster,
-		state:              context.State,
-		filename:           filename,
-		isMFA:              context.IsMFA,
+		//kafkaEndpoint:      context.KafkaClusterContext.ActiveKafkaClusterEndpoint,
+		state:    context.State,
+		filename: filename,
+		isMFA:    context.IsMFA,
 	}
 
 	addValidContextTest := test

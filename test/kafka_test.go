@@ -221,7 +221,7 @@ func (s *CLITestSuite) TestKafkaClusterConfiguration() {
 
 func (s *CLITestSuite) TestKafkaClusterEndpoint() {
 	tests := []CLITest{
-		{args: "kafka cluster use lkc-describe", fixture: "kafka/cluster/use.golden"},
+		{args: "kafka cluster use lkc-describe", fixture: "kafka/endpoint/use.golden"},
 
 		{args: "kafka cluster endpoint list --cluster lkc-describe", fixture: "kafka/endpoint/list-cluster-endpoints.golden"},
 		{args: "kafka cluster endpoint list --cluster lkc-unknown", fixture: "kafka/endpoint/list-unknown-cluster-endpoints.golden", exitCode: 1},

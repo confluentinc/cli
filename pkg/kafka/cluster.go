@@ -65,7 +65,7 @@ func FindCluster(client *ccloudv2.Client, ctx *config.Context, clusterId string)
 		clusterConfigs, _, err := client.DescribeKafkaCluster(clusterId, ctx.GetCurrentEnvironment())
 		if err != nil {
 			log.CliLogger.Debugf("Error describing Kafka Cluster: %v", err)
-			return nil, fmt.Errorf("error retrieving configs for cluster %q", cluster)
+			return nil, fmt.Errorf("error retrieving configs for cluster %q", clusterId)
 		}
 
 		clusterEndpoints := clusterConfigs.Spec.GetEndpoints()

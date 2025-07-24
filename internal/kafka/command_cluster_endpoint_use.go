@@ -71,7 +71,6 @@ func (c *clusterCommand) endpointUse(cmd *cobra.Command, args []string) error {
 }
 
 func validateUserProvidedKafkaClusterEndpoint(endpoint, activeCluster string, c *clusterCommand) bool {
-
 	// check if the specified endpoint exists in the current active cluster's endpoint list, and error out if not
 	activeClusterConfigs, _, err := c.V2Client.DescribeKafkaCluster(activeCluster, c.Context.GetCurrentEnvironment())
 	if err != nil {

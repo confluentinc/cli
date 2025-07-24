@@ -3,7 +3,6 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
@@ -15,7 +14,7 @@ type endpointOut struct {
 	ConnectionType         string `human:"Connection Type" serialized:"connection_type"`
 }
 
-func (c *clusterCommand) newEndpointCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func (c *clusterCommand) newEndpointCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "endpoint",
 		Short: "Manage Kafka cluster endpoint.",
