@@ -17,6 +17,7 @@ func (c *linkCommand) newDeleteCommand() *cobra.Command {
 		RunE:              c.delete,
 	}
 
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddForceFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -26,7 +27,7 @@ func (c *linkCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}
