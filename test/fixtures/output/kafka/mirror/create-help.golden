@@ -21,6 +21,7 @@ Flags:
       --replication-factor int32   Replication factor. (default 3)
       --config strings             A comma-separated list of "key=value" pairs, or path to a configuration file containing a newline-separated list of "key=value" pairs.
       --source-topic string        Name of the source topic to be mirrored over the cluster link. Only required when there is a prefix configured on the link.
+      --kafka-endpoint string      Endpoint to be used for this Kafka cluster.
       --cluster string             Kafka cluster ID.
       --context string             CLI context name.
       --environment string         Environment ID.

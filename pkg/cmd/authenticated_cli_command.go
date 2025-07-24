@@ -156,8 +156,8 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(accessType, provider, r
 	return u.String(), nil
 }
 
-func (c *AuthenticatedCLICommand) GetKafkaREST() (*KafkaREST, error) {
-	return (*c.KafkaRESTProvider)()
+func (c *AuthenticatedCLICommand) GetKafkaREST(cmd *cobra.Command) (*KafkaREST, error) {
+	return (*c.KafkaRESTProvider)(cmd)
 }
 
 func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, error) {
