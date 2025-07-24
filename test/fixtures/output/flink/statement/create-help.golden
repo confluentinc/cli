@@ -8,9 +8,9 @@ Create a Flink SQL statement in the current compute pool.
 
   $ confluent flink statement create --sql "SELECT * FROM table;"
 
-Create a Flink SQL statement named "my-statement" in compute pool "lfcp-123456" with service account "sa-123456" and using Kafka cluster "my-cluster" as the default database.
+Create a Flink SQL statement named "my-statement" in compute pool "lfcp-123456" with service account "sa-123456", using Kafka cluster "my-cluster" as the default database, and with additional properties.
 
-  $ confluent flink statement create my-statement --sql "SELECT * FROM my-topic;" --compute-pool lfcp-123456 --service-account sa-123456 --database my-cluster
+  $ confluent flink statement create my-statement --sql "SELECT * FROM my-topic;" --compute-pool lfcp-123456 --service-account sa-123456 --database my-cluster --property property1=value1,property2=value2
 
 Flags:
       --sql string               REQUIRED: The Flink SQL statement.
@@ -18,6 +18,7 @@ Flags:
       --service-account string   Service account ID.
       --database string          The database which will be used as the default database. When using Kafka, this is the cluster ID.
       --wait                     Block until the statement is running or has failed.
+      --property strings         A mechanism to pass properties in the form key=value when creating a Flink statement.
       --environment string       Environment ID.
       --context string           CLI context name.
   -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
