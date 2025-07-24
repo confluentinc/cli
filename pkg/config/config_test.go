@@ -63,9 +63,9 @@ var (
 )
 
 type TestInputs struct {
-	kafkaClusters map[string]*KafkaClusterConfig
-	activeKafka   string
-	//activeKafkaEndpoint  string
+	kafkaClusters        map[string]*KafkaClusterConfig
+	activeKafka          string
+	activeKafkaEndpoint  string
 	statefulConfig       *Config
 	statelessConfig      *Config
 	twoEnvStatefulConfig *Config
