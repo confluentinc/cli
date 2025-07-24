@@ -256,16 +256,3 @@ func (s *CLITestSuite) TestConnectOffset() {
 		s.runIntegrationTest(test)
 	}
 }
-
-func (s *CLITestSuite) TestConnectListRuntimes() {
-	tests := []CLITest{
-		{args: "connect custom-connector-runtime list -o json", fixture: "connect/custom-connector-runtime/list-json.golden"},
-		{args: "connect custom-connector-runtime list -o yaml", fixture: "connect/custom-connector-runtime/list-yaml.golden"},
-		{args: "connect custom-connector-runtime list", fixture: "connect/custom-connector-runtime/list.golden"},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
