@@ -1,0 +1,4 @@
+{"Timestamp":"2025-06-16T05:44:23.761Z","Level":"INFO","TaskId":"task-0","Message":"WorkerSourceTask{id=lcc-123-0} Committing offsets for 130 acknowledged messages","Exception":""}
+{"Timestamp":"2025-06-16T05:43:23.757Z","Level":"INFO","TaskId":"task-0","Message":"WorkerSourceTask{id=lcc-123-0} Committing offsets for 128 acknowledged messages","Exception":""}
+{"Timestamp":"2025-06-16T05:44:23.761Z","Level":"INFO","TaskId":"task-0","Message":"WorkerSourceTask{id=lcc-123-0} Committing offsets for 130 acknowledged messages","Exception":""}
+{"Timestamp":"2025-06-16T05:43:23.757Z","Level":"INFO","TaskId":"task-0","Message":"WorkerSourceTask{id=lcc-123-0} Committing offsets for 128 acknowledged messages","Exception":""}
