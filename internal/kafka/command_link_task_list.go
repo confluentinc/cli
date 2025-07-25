@@ -62,6 +62,7 @@ func (c *linkCommand) newLinkTaskListCommand() *cobra.Command {
 		RunE:              c.taskList,
 	}
 
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -73,7 +74,7 @@ func (c *linkCommand) newLinkTaskListCommand() *cobra.Command {
 func (c *linkCommand) taskList(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}

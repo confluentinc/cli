@@ -133,6 +133,14 @@ func (c *command) produceCloud(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if cmd.Flags().Changed("bootstrap") {
+		bootstrap, err := cmd.Flags().GetString("bootstrap")
+		if err != nil {
+			return err
+		}
+		cluster.Bootstrap = bootstrap
+	}
+
 	if err := addApiKeyToCluster(cmd, cluster); err != nil {
 		return err
 	}
