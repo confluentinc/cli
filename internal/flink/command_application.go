@@ -5,7 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
-
 type flinkApplicationSummaryOut struct {
 	Name        string `human:"Name" serialized:"name"`
 	Environment string `human:"Environment" serialized:"environment"`

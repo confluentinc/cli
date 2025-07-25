@@ -1,3 +1,4 @@
+//go:generate go run ../../struct-cleaner/main.go -pkgpath "github.com/confluentinc/cmf-sdk-go/v1" -output localTypes.go -pkg main
 package main
 
 import (

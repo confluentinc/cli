@@ -1,6 +1,7 @@
 package flink
 
 import (
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -37,29 +38,47 @@ func (c *command) computePoolDescribeOnPrem(cmd *cobra.Command, args []string) e
 		return err
 	}
 
-	computePool, err := client.DescribeComputePool(c.createContext(), environment, name)
+	sdkComputePool, err := client.DescribeComputePool(c.createContext(), environment, name)
 	if err != nil {
 		return err
 	}
 
 	if output.GetFormat(cmd) == output.Human {
 		table := output.NewTable(cmd)
-		// nil pointer handling for creation timestamp
 		var creationTime string
-		if computePool.GetMetadata().CreationTimestamp != nil {
-			creationTime = *computePool.GetMetadata().CreationTimestamp
-		} else {
-			creationTime = ""
+		if sdkComputePool.GetMetadata().CreationTimestamp != nil {
+			creationTime = *sdkComputePool.GetMetadata().CreationTimestamp
 		}
-
 		table.Add(&computePoolOutOnPrem{
 			CreationTime: creationTime,
-			Name:         computePool.GetMetadata().Name,
-			Type:         computePool.GetSpec().Type,
-			Phase:        computePool.GetStatus().Phase,
+			Name:         sdkComputePool.GetMetadata().Name,
+			Type:         sdkComputePool.GetSpec().Type,
+			Phase:        sdkComputePool.GetStatus().Phase,
 		})
 		return table.Print()
 	}
 
-	return output.SerializedOutput(cmd, computePool)
+	localPool := LocalComputePool{
+		ApiVersion: sdkComputePool.ApiVersion,
+		Kind:       sdkComputePool.Kind,
+		Metadata: LocalComputePoolMetadata{
+			Name:              sdkComputePool.Metadata.Name,
+			CreationTimestamp: sdkComputePool.Metadata.CreationTimestamp,
+			Uid:               sdkComputePool.Metadata.Uid,
+			Labels:            sdkComputePool.Metadata.Labels,
+			Annotations:       sdkComputePool.Metadata.Annotations,
+		},
+		Spec: LocalComputePoolSpec{
+			Type:        sdkComputePool.Spec.Type,
+			ClusterSpec: sdkComputePool.Spec.ClusterSpec,
+		},
+	}
+
+	if sdkComputePool.Status != nil {
+		localPool.Status = &LocalComputePoolStatus{
+			Phase: sdkComputePool.Status.Phase,
+		}
+	}
+
+	return output.SerializedOutput(cmd, localPool)
 }
