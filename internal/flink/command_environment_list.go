@@ -28,7 +28,7 @@ func (c *command) environmentList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	environments, err := client.ListEnvironments(c.createContext())
+	sdkEnvironments, err := client.ListEnvironments(c.createContext())
 	if err != nil {
 		return err
 	}
@@ -36,7 +36,7 @@ func (c *command) environmentList(cmd *cobra.Command, _ []string) error {
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
 		list.Filter([]string{"Name", "CreatedTime", "UpdatedTime", "KubernetesNamespace"})
-		for _, env := range environments {
+		for _, env := range sdkEnvironments {
 			list.Add(&flinkEnvironmentOutput{
 				Name:                env.Name,
 				KubernetesNamespace: env.KubernetesNamespace,
@@ -46,5 +46,51 @@ func (c *command) environmentList(cmd *cobra.Command, _ []string) error {
 		}
 		return list.Print()
 	}
-	return output.SerializedOutput(cmd, environments)
+
+	// Create the slice to hold the clean objects
+printableEnvs := make([]LocalEnvironment, 0, len(sdkEnvironments))
+
+// Loop through the original SDK objects
+for _, sdkEnv := range sdkEnvironments {
+
+	// --- Start Deep Copy for each item ---
+
+	// Start with the top-level fields
+	localEnv := LocalEnvironment{
+		Secrets:                  sdkEnv.Secrets,
+		Name:                     sdkEnv.Name,
+		CreatedTime:              sdkEnv.CreatedTime,
+		UpdatedTime:              sdkEnv.UpdatedTime,
+		FlinkApplicationDefaults: sdkEnv.FlinkApplicationDefaults,
+		KubernetesNamespace:      sdkEnv.KubernetesNamespace,
+		ComputePoolDefaults:      sdkEnv.ComputePoolDefaults,
+	}
+
+	// Perform a deep copy for the nested StatementDefaults struct, handling nil pointers.
+	if sdkEnv.StatementDefaults != nil {
+		localDefaults1 := &LocalAllStatementDefaults1{}
+
+		if sdkEnv.StatementDefaults.Detached != nil {
+			localDefaults1.Detached = &LocalStatementDefaults{
+				FlinkConfiguration: sdkEnv.StatementDefaults.Detached.FlinkConfiguration,
+			}
+		}
+
+		if sdkEnv.StatementDefaults.Interactive != nil {
+			localDefaults1.Interactive = &LocalStatementDefaults{
+				FlinkConfiguration: sdkEnv.StatementDefaults.Interactive.FlinkConfiguration,
+			}
+		}
+
+		localEnv.StatementDefaults = localDefaults1
+	}
+
+	// Append the fully "clean" object to the final slice
+	printableEnvs = append(printableEnvs, localEnv)
+}
+
+// Now, printableEnvs is ready to be serialized
+return output.SerializedOutput(cmd, printableEnvs)
+
+	return output.SerializedOutput(cmd, printableEnvs)
 }

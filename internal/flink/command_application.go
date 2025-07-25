@@ -5,6 +5,12 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
+type flinkApplicationSummaryOut struct {
+	Name        string `human:"Name" serialized:"name"`
+	Environment string `human:"Environment" serialized:"environment"`
+	JobName     string `human:"Job Name" serialized:"job_name"`
+	JobStatus   string `human:"Job Status" serialized:"job_status"`
+}
 
 func (c *command) newApplicationCommand() *cobra.Command {
 	cmd := &cobra.Command{

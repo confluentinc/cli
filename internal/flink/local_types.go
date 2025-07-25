@@ -1,232 +1,173 @@
 package flink
 
-// Local struct for Statement
-// ... localStatement and related types ...
-type localStatement struct {
-	ApiVersion string                 `yaml:"apiVersion" json:"apiVersion"`
-	Kind       string                 `yaml:"kind" json:"kind"`
-	Metadata   localStatementMetadata `yaml:"metadata" json:"metadata"`
-	Spec       localStatementSpec     `yaml:"spec" json:"spec"`
-	Status     *localStatementStatus  `yaml:"status,omitempty" json:"status,omitempty"`
-	Result     *localStatementResult  `yaml:"result,omitempty" json:"result,omitempty"`
+import "time"
+
+type LocalAllStatementDefaults1 struct {
+	Detached    *LocalStatementDefaults `json:"detached,omitempty" yaml:"detached,omitempty"`
+	Interactive *LocalStatementDefaults `json:"interactive,omitempty" yaml:"interactive,omitempty"`
 }
 
-type localStatementMetadata struct {
-	Name              string             `yaml:"name" json:"name"`
-	CreationTimestamp *string            `yaml:"creationTimestamp,omitempty" json:"creationTimestamp,omitempty"`
-	UpdateTimestamp   *string            `yaml:"updateTimestamp,omitempty" json:"updateTimestamp,omitempty"`
-	Uid               *string            `yaml:"uid,omitempty" json:"uid,omitempty"`
-	Labels            *map[string]string `yaml:"labels,omitempty" json:"labels,omitempty"`
-	Annotations       *map[string]string `yaml:"annotations,omitempty" json:"annotations,omitempty"`
+type LocalCatalogMetadata struct {
+	Name              string             `json:"name" yaml:"name"`
+	CreationTimestamp *string            `json:"creationTimestamp,omitempty" yaml:"creationTimestamp,omitempty"`
+	Uid               *string            `json:"uid,omitempty" yaml:"uid,omitempty"`
+	Labels            *map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
+	Annotations       *map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
 }
 
-type localStatementSpec struct {
-	Statement          string                  `yaml:"statement" json:"statement"`
-	Properties         *map[string]interface{} `yaml:"properties,omitempty" json:"properties,omitempty"`
-	FlinkConfiguration *map[string]interface{} `yaml:"flinkConfiguration,omitempty" json:"flinkConfiguration,omitempty"`
-	ComputePoolName    string                  `yaml:"computePoolName" json:"computePoolName"`
-	Parallelism        interface{}             `yaml:"parallelism,omitempty" json:"parallelism,omitempty"`
-	Stopped            *bool                   `yaml:"stopped,omitempty" json:"stopped,omitempty"`
+type LocalComputePool struct {
+	ApiVersion string                   `json:"apiVersion" yaml:"apiVersion"`
+	Kind       string                   `json:"kind" yaml:"kind"`
+	Metadata   LocalComputePoolMetadata `json:"metadata" yaml:"metadata"`
+	Spec       LocalComputePoolSpec     `json:"spec" yaml:"spec"`
+	Status     *LocalComputePoolStatus  `json:"status,omitempty" yaml:"status,omitempty"`
 }
 
-type localStatementStatus struct {
-	Phase  string                `yaml:"phase" json:"phase"`
-	Detail *string               `yaml:"detail,omitempty" json:"detail,omitempty"`
-	Traits *localStatementTraits `yaml:"traits,omitempty" json:"traits,omitempty"`
+type LocalComputePoolMetadata struct {
+	Name              string             `json:"name" yaml:"name"`
+	CreationTimestamp *string            `json:"creationTimestamp,omitempty" yaml:"creationTimestamp,omitempty"`
+	Uid               *string            `json:"uid,omitempty" yaml:"uid,omitempty"`
+	Labels            *map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
+	Annotations       *map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
 }
 
-type localStatementTraits struct {
-	SqlKind       *string            `yaml:"sqlKind,omitempty" json:"sqlKind,omitempty"`
-	IsBounded     *bool              `yaml:"isBounded,omitempty" json:"isBounded,omitempty"`
-	IsAppendOnly  *bool              `yaml:"isAppendOnly,omitempty" json:"isAppendOnly,omitempty"`
-	UpsertColumns *[]int32           `yaml:"upsertColumns,omitempty" json:"upsertColumns,omitempty"`
-	Schema        *localResultSchema `yaml:"schema,omitempty" json:"schema,omitempty"`
+type LocalComputePoolSpec struct {
+	Type        string                 `json:"type" yaml:"type"`
+	ClusterSpec map[string]interface{} `json:"clusterSpec" yaml:"clusterSpec"`
 }
 
-type localResultSchema struct {
-	Columns []localResultSchemaColumn `yaml:"columns" json:"columns"`
+type LocalComputePoolStatus struct {
+	Phase string `json:"phase" yaml:"phase"`
 }
 
-type localResultSchemaColumn struct {
-	Name string        `yaml:"name" json:"name"`
-	Type localDataType `yaml:"type" json:"type"`
+type LocalDataType struct {
+	Type                string                `json:"type" yaml:"type"`
+	Nullable            bool                  `json:"nullable" yaml:"nullable"`
+	Length              *int32                `json:"length,omitempty" yaml:"length,omitempty"`
+	Precision           *int32                `json:"precision,omitempty" yaml:"precision,omitempty"`
+	Scale               *int32                `json:"scale,omitempty" yaml:"scale,omitempty"`
+	KeyType             *LocalDataType        `json:"keyType,omitempty" yaml:"keyType,omitempty"`
+	ValueType           *LocalDataType        `json:"valueType,omitempty" yaml:"valueType,omitempty"`
+	ElementType         *LocalDataType        `json:"elementType,omitempty" yaml:"elementType,omitempty"`
+	Fields              *[]LocalDataTypeField `json:"fields,omitempty" yaml:"fields,omitempty"`
+	Resolution          *string               `json:"resolution,omitempty" yaml:"resolution,omitempty"`
+	FractionalPrecision *int32                `json:"fractionalPrecision,omitempty" yaml:"fractionalPrecision,omitempty"`
 }
 
-type localDataType struct {
-	Type                string                `yaml:"type" json:"type"`
-	Nullable            bool                  `yaml:"nullable" json:"nullable"`
-	Length              *int32                `yaml:"length,omitempty" json:"length,omitempty"`
-	Precision           *int32                `yaml:"precision,omitempty" json:"precision,omitempty"`
-	Scale               *int32                `yaml:"scale,omitempty" json:"scale,omitempty"`
-	KeyType             *localDataType        `yaml:"keyType,omitempty" json:"keyType,omitempty"`
-	ValueType           *localDataType        `yaml:"valueType,omitempty" json:"valueType,omitempty"`
-	ElementType         *localDataType        `yaml:"elementType,omitempty" json:"elementType,omitempty"`
-	Fields              *[]localDataTypeField `yaml:"fields,omitempty" json:"fields,omitempty"`
-	Resolution          *string               `yaml:"resolution,omitempty" json:"resolution,omitempty"`
-	FractionalPrecision *int32                `yaml:"fractionalPrecision,omitempty" json:"fractionalPrecision,omitempty"`
+type LocalDataTypeField struct {
+	Name        string        `json:"name" yaml:"name"`
+	FieldType   LocalDataType `json:"fieldType" yaml:"fieldType"`
+	Description *string       `json:"description,omitempty" yaml:"description,omitempty"`
 }
 
-type localDataTypeField struct {
-	Name        string        `yaml:"name" json:"name"`
-	FieldType   localDataType `yaml:"fieldType" json:"fieldType"`
-	Description *string       `yaml:"description,omitempty" json:"description,omitempty"`
+type LocalEnvironment struct {
+	Secrets                  *map[string]string          `json:"secrets,omitempty" yaml:"secrets,omitempty"`
+	Name                     string                      `json:"name" yaml:"name"`
+	CreatedTime              *time.Time                  `json:"created_time,omitempty" yaml:"created_time,omitempty"`
+	UpdatedTime              *time.Time                  `json:"updated_time,omitempty" yaml:"updated_time,omitempty"`
+	FlinkApplicationDefaults *map[string]interface{}     `json:"flinkApplicationDefaults,omitempty" yaml:"flinkApplicationDefaults,omitempty"`
+	KubernetesNamespace      string                      `json:"kubernetesNamespace" yaml:"kubernetesNamespace"`
+	ComputePoolDefaults      *map[string]interface{}     `json:"computePoolDefaults,omitempty" yaml:"computePoolDefaults,omitempty"`
+	StatementDefaults        *LocalAllStatementDefaults1 `json:"statementDefaults,omitempty" yaml:"statementDefaults,omitempty"`
 }
 
-type localStatementResult struct {
-	ApiVersion string                       `yaml:"apiVersion" json:"apiVersion"`
-	Kind       string                       `yaml:"kind" json:"kind"`
-	Metadata   localStatementResultMetadata `yaml:"metadata" json:"metadata"`
-	Results    localStatementResults        `yaml:"results" json:"results"`
+type LocalFlinkApplication struct {
+	ApiVersion string                  `json:"apiVersion" yaml:"apiVersion"`
+	Kind       string                  `json:"kind" yaml:"kind"`
+	Metadata   map[string]interface{}  `json:"metadata" yaml:"metadata"`
+	Spec       map[string]interface{}  `json:"spec" yaml:"spec"`
+	Status     *map[string]interface{} `json:"status,omitempty" yaml:"status,omitempty"`
 }
 
-type localStatementResultMetadata struct {
-	CreationTimestamp *string            `yaml:"creationTimestamp,omitempty" json:"creationTimestamp,omitempty"`
-	Annotations       *map[string]string `yaml:"annotations,omitempty" json:"annotations,omitempty"`
+type LocalKafkaCatalog struct {
+	ApiVersion string                `json:"apiVersion" yaml:"apiVersion"`
+	Kind       string                `json:"kind" yaml:"kind"`
+	Metadata   LocalCatalogMetadata  `json:"metadata" yaml:"metadata"`
+	Spec       LocalKafkaCatalogSpec `json:"spec" yaml:"spec"`
 }
 
-type localStatementResults struct {
-	Data *[]map[string]interface{} `yaml:"data,omitempty" json:"data,omitempty"`
+type LocalKafkaCatalogSpec struct {
+	SrInstance    LocalKafkaCatalogSpecSrInstance      `json:"srInstance" yaml:"srInstance"`
+	KafkaClusters []LocalKafkaCatalogSpecKafkaClusters `json:"kafkaClusters" yaml:"kafkaClusters"`
 }
 
-// Local struct for Catalog
-// ... localCatalog and related types ...
-type localCatalog struct {
-	ApiVersion string                `yaml:"apiVersion" json:"apiVersion"`
-	Kind       string                `yaml:"kind" json:"kind"`
-	Metadata   localCatalogMetadata  `yaml:"metadata" json:"metadata"`
-	Spec       localKafkaCatalogSpec `yaml:"spec" json:"spec"`
+type LocalKafkaCatalogSpecKafkaClusters struct {
+	DatabaseName       string            `json:"databaseName" yaml:"databaseName"`
+	ConnectionConfig   map[string]string `json:"connectionConfig" yaml:"connectionConfig"`
+	ConnectionSecretId *string           `json:"connectionSecretId,omitempty" yaml:"connectionSecretId,omitempty"`
 }
 
-type localCatalogMetadata struct {
-	Name              string             `yaml:"name" json:"name"`
-	CreationTimestamp *string            `yaml:"creationTimestamp,omitempty" json:"creationTimestamp,omitempty"`
-	Uid               *string            `yaml:"uid,omitempty" json:"uid,omitempty"`
-	Labels            *map[string]string `yaml:"labels,omitempty" json:"labels,omitempty"`
-	Annotations       *map[string]string `yaml:"annotations,omitempty" json:"annotations,omitempty"`
+type LocalKafkaCatalogSpecSrInstance struct {
+	ConnectionConfig   map[string]string `json:"connectionConfig" yaml:"connectionConfig"`
+	ConnectionSecretId *string           `json:"connectionSecretId,omitempty" yaml:"connectionSecretId,omitempty"`
 }
 
-type localKafkaCatalogSpec struct {
-	SrInstance    localKafkaCatalogSpecSrInstance     `yaml:"srInstance" json:"srInstance"`
-	KafkaClusters []localKafkaCatalogSpecKafkaCluster `yaml:"kafkaClusters" json:"kafkaClusters"`
+type LocalResultSchema struct {
+	Columns []LocalResultSchemaColumn `json:"columns" yaml:"columns"`
 }
 
-type localKafkaCatalogSpecSrInstance struct {
-	ConnectionConfig   map[string]interface{} `yaml:"connectionConfig" json:"connectionConfig"`
-	ConnectionSecretId *string                `yaml:"connectionSecretId,omitempty" json:"connectionSecretId,omitempty"`
+type LocalResultSchemaColumn struct {
+	Name string        `json:"name" yaml:"name"`
+	Type LocalDataType `json:"type" yaml:"type"`
 }
 
-type localKafkaCatalogSpecKafkaCluster struct {
-	DatabaseName       string                 `yaml:"databaseName" json:"databaseName"`
-	ConnectionConfig   map[string]interface{} `yaml:"connectionConfig" json:"connectionConfig"`
-	ConnectionSecretId *string                `yaml:"connectionSecretId,omitempty" json:"connectionSecretId,omitempty"`
+type LocalStatement struct {
+	ApiVersion string                 `json:"apiVersion" yaml:"apiVersion"`
+	Kind       string                 `json:"kind" yaml:"kind"`
+	Metadata   LocalStatementMetadata `json:"metadata" yaml:"metadata"`
+	Spec       LocalStatementSpec     `json:"spec" yaml:"spec"`
+	Status     *LocalStatementStatus  `json:"status,omitempty" yaml:"status,omitempty"`
+	Result     *LocalStatementResult  `json:"result,omitempty" yaml:"result,omitempty"`
 }
 
-// Local struct for ComputePool
-// ... localComputePool and related types ...
-type localComputePool struct {
-	ApiVersion string                   `yaml:"apiVersion" json:"apiVersion"`
-	Kind       string                   `yaml:"kind" json:"kind"`
-	Metadata   localComputePoolMetadata `yaml:"metadata" json:"metadata"`
-	Spec       localComputePoolSpec     `yaml:"spec" json:"spec"`
-	Status     *map[string]interface{}  `yaml:"status,omitempty" json:"status,omitempty"`
+type LocalStatementDefaults struct {
+	FlinkConfiguration *map[string]string `json:"flinkConfiguration,omitempty" yaml:"flinkConfiguration,omitempty"`
 }
 
-type localComputePoolMetadata struct {
-	Name              string             `yaml:"name" json:"name"`
-	CreationTimestamp *string            `yaml:"creationTimestamp,omitempty" json:"creationTimestamp,omitempty"`
-	Uid               *string            `yaml:"uid,omitempty" json:"uid,omitempty"`
-	Labels            *map[string]string `yaml:"labels,omitempty" json:"labels,omitempty"`
-	Annotations       *map[string]string `yaml:"annotations,omitempty" json:"annotations,omitempty"`
+type LocalStatementMetadata struct {
+	Name              string             `json:"name" yaml:"name"`
+	CreationTimestamp *string            `json:"creationTimestamp,omitempty" yaml:"creationTimestamp,omitempty"`
+	UpdateTimestamp   *string            `json:"updateTimestamp,omitempty" yaml:"updateTimestamp,omitempty"`
+	Uid               *string            `json:"uid,omitempty" yaml:"uid,omitempty"`
+	Labels            *map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
+	Annotations       *map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
 }
 
-type localComputePoolSpec struct {
-	Type        string                       `yaml:"type" json:"type"`
-	ClusterSpec *localComputePoolClusterSpec `yaml:"clusterSpec,omitempty" json:"clusterSpec,omitempty"`
+type LocalStatementResult struct {
+	ApiVersion string                       `json:"apiVersion" yaml:"apiVersion"`
+	Kind       string                       `json:"kind" yaml:"kind"`
+	Metadata   LocalStatementResultMetadata `json:"metadata" yaml:"metadata"`
+	Results    LocalStatementResults        `json:"results" yaml:"results"`
 }
 
-type localComputePoolClusterSpec struct {
-	FlinkConfiguration *map[string]interface{}      `yaml:"flinkConfiguration,omitempty" json:"flinkConfiguration,omitempty"`
-	Job                *localComputePoolJob         `yaml:"job,omitempty" json:"job,omitempty"`
-	ServiceAccount     string                       `yaml:"serviceAccount" json:"serviceAccount"`
-	TaskManager        *localComputePoolTaskManager `yaml:"taskManager,omitempty" json:"taskManager,omitempty"`
+type LocalStatementResultMetadata struct {
+	CreationTimestamp *string            `json:"creationTimestamp,omitempty" yaml:"creationTimestamp,omitempty"`
+	Annotations       *map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
 }
 
-type localComputePoolJob struct {
-	Parallelism interface{} `yaml:"parallelism" json:"parallelism"`
+type LocalStatementResults struct {
+	Data *[]map[string]interface{} `json:"data,omitempty" yaml:"data,omitempty"`
 }
 
-type localComputePoolTaskManager struct {
-	Resource localComputePoolResource `yaml:"resource" json:"resource"`
+type LocalStatementSpec struct {
+	Statement          string             `json:"statement" yaml:"statement"`
+	Properties         *map[string]string `json:"properties,omitempty" yaml:"properties,omitempty"`
+	FlinkConfiguration *map[string]string `json:"flinkConfiguration,omitempty" yaml:"flinkConfiguration,omitempty"`
+	ComputePoolName    string             `json:"computePoolName" yaml:"computePoolName"`
+	Parallelism        *int32             `json:"parallelism,omitempty" yaml:"parallelism,omitempty"`
+	Stopped            *bool              `json:"stopped,omitempty" yaml:"stopped,omitempty"`
 }
 
-type localComputePoolResource struct {
-	CPU    interface{} `yaml:"cpu" json:"cpu"`
-	Memory string      `yaml:"memory" json:"memory"`
+type LocalStatementStatus struct {
+	Phase  string                `json:"phase" yaml:"phase"`
+	Detail *string               `json:"detail,omitempty" yaml:"detail,omitempty"`
+	Traits *LocalStatementTraits `json:"traits,omitempty" yaml:"traits,omitempty"`
 }
 
-// Local struct for FlinkApplication
-// ... localFlinkApplication and related types ...
-type localFlinkApplication struct {
-	ApiVersion string                        `yaml:"apiVersion" json:"apiVersion"`
-	Kind       string                        `yaml:"kind" json:"kind"`
-	Metadata   localFlinkApplicationMetadata `yaml:"metadata" json:"metadata"`
-	Spec       localFlinkApplicationSpec     `yaml:"spec" json:"spec"`
-	Status     *map[string]interface{}       `yaml:"status,omitempty" json:"status,omitempty"`
-}
-
-type localFlinkApplicationMetadata struct {
-	Name              string             `yaml:"name" json:"name"`
-	CreationTimestamp *string            `yaml:"creationTimestamp,omitempty" json:"creationTimestamp,omitempty"`
-	Uid               *string            `yaml:"uid,omitempty" json:"uid,omitempty"`
-	Labels            *map[string]string `yaml:"labels,omitempty" json:"labels,omitempty"`
-	Annotations       *map[string]string `yaml:"annotations,omitempty" json:"annotations,omitempty"`
-}
-
-type localFlinkApplicationSpec struct {
-	FlinkConfiguration *map[string]interface{}           `yaml:"flinkConfiguration,omitempty" json:"flinkConfiguration,omitempty"`
-	FlinkVersion       string                            `yaml:"flinkVersion" json:"flinkVersion"`
-	Image              string                            `yaml:"image" json:"image"`
-	Job                *localFlinkApplicationJob         `yaml:"job,omitempty" json:"job,omitempty"`
-	JobManager         *localFlinkApplicationJobManager  `yaml:"jobManager,omitempty" json:"jobManager,omitempty"`
-	ServiceAccount     string                            `yaml:"serviceAccount" json:"serviceAccount"`
-	TaskManager        *localFlinkApplicationTaskManager `yaml:"taskManager,omitempty" json:"taskManager,omitempty"`
-}
-
-type localFlinkApplicationJob struct {
-	JarURI      string      `yaml:"jarURI" json:"jarURI"`
-	Parallelism interface{} `yaml:"parallelism" json:"parallelism"`
-	State       string      `yaml:"state" json:"state"`
-	UpgradeMode string      `yaml:"upgradeMode" json:"upgradeMode"`
-}
-
-type localFlinkApplicationJobManager struct {
-	Resource localFlinkApplicationResource `yaml:"resource" json:"resource"`
-}
-
-type localFlinkApplicationTaskManager struct {
-	Resource localFlinkApplicationResource `yaml:"resource" json:"resource"`
-}
-
-type localFlinkApplicationResource struct {
-	CPU    interface{} `yaml:"cpu" json:"cpu"`
-	Memory string      `yaml:"memory" json:"memory"`
-}
-
-// Summary output struct for Flink Application list
-// Used in command_application_list.go
-type flinkApplicationSummaryOut struct {
-	Name        string `human:"Name" serialized:"name"`
-	Environment string `human:"Environment" serialized:"environment"`
-	JobName     string `human:"Job Name" serialized:"job_name"`
-	JobStatus   string `human:"Job Status" serialized:"job_status"`
-}
-
-// Local struct for ComputePool YAML output (on-prem)
-// Used in command_compute_pool_create_onprem.go and command_compute_pool_describe_onprem.go
-type localComputePoolOnPrem struct {
-	ApiVersion string                  `yaml:"apiVersion" json:"apiVersion"`
-	Kind       string                  `yaml:"kind" json:"kind"`
-	Metadata   map[string]interface{}  `yaml:"metadata" json:"metadata"`
-	Spec       map[string]interface{}  `yaml:"spec" json:"spec"`
-	Status     *map[string]interface{} `yaml:"status,omitempty" json:"status,omitempty"`
+type LocalStatementTraits struct {
+	SqlKind       *string            `json:"sqlKind,omitempty" yaml:"sqlKind,omitempty"`
+	IsBounded     *bool              `json:"isBounded,omitempty" yaml:"isBounded,omitempty"`
+	IsAppendOnly  *bool              `json:"isAppendOnly,omitempty" yaml:"isAppendOnly,omitempty"`
+	UpsertColumns *[]int32           `json:"upsertColumns,omitempty" yaml:"upsertColumns,omitempty"`
+	Schema        *LocalResultSchema `json:"schema,omitempty" yaml:"schema,omitempty"`
 }

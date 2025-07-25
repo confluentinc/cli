@@ -1,10 +1,8 @@
 package flink
 
 import (
-	"encoding/json"
 
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -32,54 +30,59 @@ func (c *command) catalogDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	outputCatalog, err := client.DescribeCatalog(c.createContext(), name)
+	sdkOutputCatalog, err := client.DescribeCatalog(c.createContext(), name)
 	if err != nil {
 		return err
 	}
 
 	if output.GetFormat(cmd) == output.Human {
 		table := output.NewTable(cmd)
-
-		// Populate the databases field with the names of the databases
-		databases := make([]string, 0, len(outputCatalog.GetSpec().KafkaClusters))
-		for _, kafkaCluster := range outputCatalog.GetSpec().KafkaClusters {
+		databases := make([]string, 0, len(sdkOutputCatalog.GetSpec().KafkaClusters))
+		for _, kafkaCluster := range sdkOutputCatalog.GetSpec().KafkaClusters {
 			databases = append(databases, kafkaCluster.DatabaseName)
 		}
-
-		// nil pointer handling for creation timestamp
 		var creationTime string
-		if outputCatalog.GetMetadata().CreationTimestamp != nil {
-			creationTime = *outputCatalog.GetMetadata().CreationTimestamp
+		if sdkOutputCatalog.GetMetadata().CreationTimestamp != nil {
+			creationTime = *sdkOutputCatalog.GetMetadata().CreationTimestamp
 		} else {
 			creationTime = ""
 		}
-
 		table.Add(&catalogOut{
 			CreationTime: creationTime,
-			Name:         outputCatalog.GetMetadata().Name,
+			Name:         sdkOutputCatalog.GetMetadata().Name,
 			Databases:    databases,
 		})
 		return table.Print()
 	}
 
-	if output.GetFormat(cmd) == output.YAML {
-		// Convert the outputCatalog to our local struct for correct YAML field names
-		jsonBytes, err := json.Marshal(outputCatalog)
-		if err != nil {
-			return err
-		}
-		var outputLocalCat localCatalog
-		if err = json.Unmarshal(jsonBytes, &outputLocalCat); err != nil {
-			return err
-		}
-		// Output the local struct for correct YAML field names
-		out, err := yaml.Marshal(outputLocalCat)
-		if err != nil {
-			return err
-		}
-		output.Print(false, string(out))
-		return nil
-	}
+	// Create a new slice for the nested KafkaClusters
+localClusters := make([]LocalKafkaCatalogSpecKafkaClusters, 0, len(sdkOutputCatalog.Spec.KafkaClusters))
+for _, sdkCluster := range sdkOutputCatalog.Spec.KafkaClusters {
+	localClusters = append(localClusters, LocalKafkaCatalogSpecKafkaClusters{
+		DatabaseName:       sdkCluster.DatabaseName,
+		ConnectionConfig:   sdkCluster.ConnectionConfig,
+		ConnectionSecretId: sdkCluster.ConnectionSecretId,
+	})
+}
 
-	return output.SerializedOutput(cmd, outputCatalog)
+// Now, perform the full deep copy to create the final object
+localCatalog := LocalKafkaCatalog{
+	ApiVersion: sdkOutputCatalog.ApiVersion,
+	Kind:       sdkOutputCatalog.Kind,
+	Metadata: LocalCatalogMetadata{
+		Name:              sdkOutputCatalog.Metadata.Name,
+		CreationTimestamp: sdkOutputCatalog.Metadata.CreationTimestamp,
+		Uid:               sdkOutputCatalog.Metadata.Uid,
+		Labels:            sdkOutputCatalog.Metadata.Labels,
+		Annotations:       sdkOutputCatalog.Metadata.Annotations,
+	},
+	Spec: LocalKafkaCatalogSpec{
+		SrInstance: LocalKafkaCatalogSpecSrInstance{
+			ConnectionConfig:   sdkOutputCatalog.Spec.SrInstance.ConnectionConfig,
+			ConnectionSecretId: sdkOutputCatalog.Spec.SrInstance.ConnectionSecretId,
+		},
+		KafkaClusters: localClusters,
+	},
+}
+	return output.SerializedOutput(cmd, localCatalog)
 }

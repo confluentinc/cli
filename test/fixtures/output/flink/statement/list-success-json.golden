@@ -3,22 +3,22 @@
     "apiVersion": "",
     "kind": "",
     "metadata": {
-      "creationTimestamp": "2025-08-05 12:00:00 +0000 UTC",
-      "name": "test-stmt1"
+      "name": "test-stmt1",
+      "creationTimestamp": "2025-08-05 12:00:00 +0000 UTC"
     },
     "spec": {
+      "statement": "SELECT * FROM test_table",
       "computePoolName": "test-pool",
       "parallelism": 1,
-      "statement": "SELECT * FROM test_table",
       "stopped": false
     },
     "status": {
-      "detail": "Statement is pending execution.",
       "phase": "PENDING",
+      "detail": "Statement is pending execution.",
       "traits": {
-        "isAppendOnly": false,
+        "sqlKind": "SELECT",
         "isBounded": false,
-        "sqlKind": "SELECT"
+        "isAppendOnly": false
       }
     }
   },
@@ -26,22 +26,22 @@
     "apiVersion": "",
     "kind": "",
     "metadata": {
-      "creationTimestamp": "2025-08-05 12:00:00 +0000 UTC",
-      "name": "test-stmt2"
+      "name": "test-stmt2",
+      "creationTimestamp": "2025-08-05 12:00:00 +0000 UTC"
     },
     "spec": {
+      "statement": "SELECT * FROM test_table",
       "computePoolName": "test-pool",
       "parallelism": 2,
-      "statement": "SELECT * FROM test_table",
       "stopped": false
     },
     "status": {
-      "detail": "Statement is pending execution.",
       "phase": "PENDING",
+      "detail": "Statement is pending execution.",
       "traits": {
-        "isAppendOnly": false,
+        "sqlKind": "SELECT",
         "isBounded": false,
-        "sqlKind": "SELECT"
+        "isAppendOnly": false
       }
     }
   },
@@ -49,22 +49,22 @@
     "apiVersion": "",
     "kind": "",
     "metadata": {
-      "creationTimestamp": "2025-08-05 12:00:00 +0000 UTC",
-      "name": "test-stmt3"
+      "name": "test-stmt3",
+      "creationTimestamp": "2025-08-05 12:00:00 +0000 UTC"
     },
     "spec": {
+      "statement": "SELECT * FROM test_table",
       "computePoolName": "test-pool",
       "parallelism": 4,
-      "statement": "SELECT * FROM test_table",
       "stopped": true
     },
     "status": {
-      "detail": "Statement is pending execution.",
       "phase": "PENDING",
+      "detail": "Statement is pending execution.",
       "traits": {
-        "isAppendOnly": false,
+        "sqlKind": "SELECT",
         "isBounded": false,
-        "sqlKind": "SELECT"
+        "isAppendOnly": false
       }
     }
   }

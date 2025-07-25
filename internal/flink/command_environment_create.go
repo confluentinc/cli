@@ -92,16 +92,45 @@ func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
 	postEnvironment.StatementDefaults = &defaultsStatementParsed
 	postEnvironment.ComputePoolDefaults = &defaultsComputePoolParsed
 
-	outputEnvironment, err := client.CreateEnvironment(c.createContext(), postEnvironment)
+	sdkOutputEnvironment, err := client.CreateEnvironment(c.createContext(), postEnvironment)
 	if err != nil {
 		return err
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		return printEnvironmentOutTable(cmd, outputEnvironment)
+		return printEnvironmentOutTable(cmd, sdkOutputEnvironment)
 	}
 
-	return output.SerializedOutput(cmd, outputEnvironment)
+	// Start with the top-level fields
+localEnv := LocalEnvironment{
+	Secrets:                  sdkOutputEnvironment.Secrets,
+	Name:                     sdkOutputEnvironment.Name,
+	CreatedTime:              sdkOutputEnvironment.CreatedTime,
+	UpdatedTime:              sdkOutputEnvironment.UpdatedTime,
+	FlinkApplicationDefaults: sdkOutputEnvironment.FlinkApplicationDefaults,
+	KubernetesNamespace:      sdkOutputEnvironment.KubernetesNamespace,
+	ComputePoolDefaults:      sdkOutputEnvironment.ComputePoolDefaults,
+}
+
+// Perform a deep copy for the nested StatementDefaults struct, handling nil pointers.
+if sdkOutputEnvironment.StatementDefaults != nil {
+	localDefaults1 := &LocalAllStatementDefaults1{}
+
+	if sdkOutputEnvironment.StatementDefaults.Detached != nil {
+		localDefaults1.Detached = &LocalStatementDefaults{
+			FlinkConfiguration: sdkOutputEnvironment.StatementDefaults.Detached.FlinkConfiguration,
+		}
+	}
+
+	if sdkOutputEnvironment.StatementDefaults.Interactive != nil {
+		localDefaults1.Interactive = &LocalStatementDefaults{
+			FlinkConfiguration: sdkOutputEnvironment.StatementDefaults.Interactive.FlinkConfiguration,
+		}
+	}
+
+	localEnv.StatementDefaults = localDefaults1
+}
+	return output.SerializedOutput(cmd, localEnv)
 }
 
 func parseDefaultsAsGenericType[T any](input, label string) (T, error) {

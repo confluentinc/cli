@@ -5,6 +5,7 @@
     creationTimestamp: 2025-03-12 23:42:00 +0000 UTC
   spec:
     type: DEDICATED
+    clusterSpec: {}
   status:
     phase: RUNNING
 - apiVersion: ""
@@ -14,6 +15,7 @@
     creationTimestamp: 2025-03-12 23:42:00 +0000 UTC
   spec:
     type: DEDICATED
+    clusterSpec: {}
   status:
     phase: PENDING
 - apiVersion: ""
@@ -23,5 +25,6 @@
     creationTimestamp: 2025-03-12 23:42:00 +0000 UTC
   spec:
     type: DEDICATED
+    clusterSpec: {}
   status:
     phase: COMPLETE

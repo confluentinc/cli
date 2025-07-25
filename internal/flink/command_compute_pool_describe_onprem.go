@@ -1,10 +1,8 @@
 package flink
 
 import (
-	"encoding/json"
 
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -40,48 +38,47 @@ func (c *command) computePoolDescribeOnPrem(cmd *cobra.Command, args []string) e
 		return err
 	}
 
-	computePool, err := client.DescribeComputePool(c.createContext(), environment, name)
+	sdkComputePool, err := client.DescribeComputePool(c.createContext(), environment, name)
 	if err != nil {
 		return err
 	}
 
 	if output.GetFormat(cmd) == output.Human {
 		table := output.NewTable(cmd)
-		// nil pointer handling for creation timestamp
 		var creationTime string
-		if computePool.GetMetadata().CreationTimestamp != nil {
-			creationTime = *computePool.GetMetadata().CreationTimestamp
-		} else {
-			creationTime = ""
+		if sdkComputePool.GetMetadata().CreationTimestamp != nil {
+			creationTime = *sdkComputePool.GetMetadata().CreationTimestamp
 		}
-
 		table.Add(&computePoolOutOnPrem{
 			CreationTime: creationTime,
-			Name:         computePool.GetMetadata().Name,
-			Type:         computePool.GetSpec().Type,
-			Phase:        computePool.GetStatus().Phase,
+			Name:         sdkComputePool.GetMetadata().Name,
+			Type:         sdkComputePool.GetSpec().Type,
+			Phase:        sdkComputePool.GetStatus().Phase,
 		})
 		return table.Print()
 	}
 
-	if output.GetFormat(cmd) == output.YAML {
-		// Convert the computePool to our local struct for correct YAML field names
-		jsonBytes, err := json.Marshal(computePool)
-		if err != nil {
-			return err
-		}
-		var outputLocalPool localComputePool
-		if err = json.Unmarshal(jsonBytes, &outputLocalPool); err != nil {
-			return err
-		}
-		// Output the local struct for correct YAML field names
-		out, err := yaml.Marshal(outputLocalPool)
-		if err != nil {
-			return err
-		}
-		output.Print(false, string(out))
-		return nil
+	localPool := LocalComputePool{
+		ApiVersion: sdkComputePool.ApiVersion,
+		Kind:       sdkComputePool.Kind,
+		Metadata: LocalComputePoolMetadata{
+			Name:              sdkComputePool.Metadata.Name,
+			CreationTimestamp: sdkComputePool.Metadata.CreationTimestamp,
+			Uid:               sdkComputePool.Metadata.Uid,
+			Labels:            sdkComputePool.Metadata.Labels,
+			Annotations:       sdkComputePool.Metadata.Annotations,
+		},
+		Spec: LocalComputePoolSpec{
+			Type:        sdkComputePool.Spec.Type,
+			ClusterSpec: sdkComputePool.Spec.ClusterSpec,
+		},
 	}
 
-	return output.SerializedOutput(cmd, computePool)
+	if sdkComputePool.Status != nil {
+		localPool.Status = &LocalComputePoolStatus{
+			Phase: sdkComputePool.Status.Phase,
+		}
+	}
+
+	return output.SerializedOutput(cmd, localPool)
 }

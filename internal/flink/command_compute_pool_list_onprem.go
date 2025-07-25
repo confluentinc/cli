@@ -1,10 +1,8 @@
 package flink
 
 import (
-	"encoding/json"
 
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -38,22 +36,20 @@ func (c *command) computePoolListOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	computePools, err := client.ListComputePools(c.createContext(), environment)
+	sdkComputePools, err := client.ListComputePools(c.createContext(), environment)
 	if err != nil {
 		return err
 	}
 
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
-		for _, pool := range computePools {
-			// nil pointer handling for creation timestamp
+		for _, pool := range sdkComputePools {
 			var creationTime string
 			if pool.GetMetadata().CreationTimestamp != nil {
 				creationTime = *pool.GetMetadata().CreationTimestamp
 			} else {
 				creationTime = ""
 			}
-
 			list.Add(&computePoolOutOnPrem{
 				CreationTime: creationTime,
 				Name:         pool.GetMetadata().Name,
@@ -64,24 +60,42 @@ func (c *command) computePoolListOnPrem(cmd *cobra.Command, _ []string) error {
 		return list.Print()
 	}
 
-	if output.GetFormat(cmd) == output.YAML {
-		// Convert the computePools to our local struct for correct YAML field names
-		jsonBytes, err := json.Marshal(computePools)
-		if err != nil {
-			return err
-		}
-		var outputLocalPools []localComputePool
-		if err = json.Unmarshal(jsonBytes, &outputLocalPools); err != nil {
-			return err
-		}
-		// Output the local struct for correct YAML field names
-		out, err := yaml.Marshal(outputLocalPools)
-		if err != nil {
-			return err
-		}
-		output.Print(false, string(out))
-		return nil
+	// Create the slice to hold the clean objects
+localPools := make([]LocalComputePool, 0, len(sdkComputePools))
+
+// Loop through the original SDK objects
+for _, sdkPool := range sdkComputePools {
+
+	// --- Start Deep Copy for each item ---
+
+	// Build the full LocalComputePool with all nested Local* types
+	localPool := LocalComputePool{
+		ApiVersion: sdkPool.ApiVersion,
+		Kind:       sdkPool.Kind,
+		Metadata: LocalComputePoolMetadata{
+			Name:              sdkPool.Metadata.Name,
+			CreationTimestamp: sdkPool.Metadata.CreationTimestamp,
+			Uid:               sdkPool.Metadata.Uid,
+			Labels:            sdkPool.Metadata.Labels,
+			Annotations:       sdkPool.Metadata.Annotations,
+		},
+		Spec: LocalComputePoolSpec{
+			Type:        sdkPool.Spec.Type,
+			ClusterSpec: sdkPool.Spec.ClusterSpec,
+		},
 	}
 
-	return output.SerializedOutput(cmd, computePools)
+	// Handle the status, which is a pointer and could be nil.
+	if sdkPool.Status != nil {
+		localPool.Status = &LocalComputePoolStatus{
+			Phase: sdkPool.Status.Phase,
+		}
+	}
+
+	// Append the fully "clean" object to the final slice
+	localPools = append(localPools, localPool)
+}
+
+// Now, localPools is ready to be serialized
+return output.SerializedOutput(cmd, localPools)
 }
