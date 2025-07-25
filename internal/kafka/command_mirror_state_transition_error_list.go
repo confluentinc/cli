@@ -40,6 +40,7 @@ func (c *mirrorCommand) newMirrorStateTransitionErrorListCommand() *cobra.Comman
 	}
 
 	pcmd.AddLinkFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -58,7 +59,7 @@ func (c *mirrorCommand) stateTransitionErrorList(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}
