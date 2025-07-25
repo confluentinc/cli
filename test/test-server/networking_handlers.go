@@ -840,12 +840,13 @@ func getAzureNetwork(id, name, phase string, connectionTypes []string) networkin
 	network := networkingv1.NetworkingV1Network{
 		Id: networkingv1.PtrString(id),
 		Spec: &networkingv1.NetworkingV1NetworkSpec{
-			Environment: &networkingv1.ObjectReference{Id: "env-00000"},
-			DisplayName: networkingv1.PtrString(name),
-			Cloud:       networkingv1.PtrString("AZURE"),
-			Region:      networkingv1.PtrString("eastus2"),
-			Cidr:        networkingv1.PtrString("10.0.0.0/16"),
-			Zones:       &[]string{"1", "2", "3"},
+			Environment:     &networkingv1.ObjectReference{Id: "env-00000"},
+			DisplayName:     networkingv1.PtrString(name),
+			Cloud:           networkingv1.PtrString("AZURE"),
+			Region:          networkingv1.PtrString("eastus2"),
+			ConnectionTypes: &connectionTypes,
+			Cidr:            networkingv1.PtrString("10.0.0.0/16"),
+			Zones:           &[]string{"1", "2", "3"},
 			ZonesInfo: &[]networkingv1.NetworkingV1ZoneInfo{
 				{
 					ZoneId: ptrString("1"),
