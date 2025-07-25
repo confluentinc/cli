@@ -804,3 +804,31 @@ func handleCustomPluginUploadFile(t *testing.T) http.HandlerFunc {
 		}
 	}
 }
+
+// Handler for: "/connect/v1/custom-connector-runtimes
+func handleListCustomConnectorRuntimes(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			runtimes := []connectcustompluginv1.ConnectV1CustomConnectorRuntime{
+				{
+					Id:                             connectcustompluginv1.PtrString("ccr-123456"),
+					CustomConnectPluginRuntimeName: connectcustompluginv1.PtrString("my-custom-runtime"),
+					RuntimeAkVersion:               connectcustompluginv1.PtrString("3.7.0"),
+					SupportedJavaVersions:          &[]string{"11", "17"},
+					ProductMaturity:                connectcustompluginv1.PtrString("GA"),
+					Description:                    connectcustompluginv1.PtrString("This is a custom connector runtime for testing purposes."),
+				},
+				{
+					Id:                             connectcustompluginv1.PtrString("ccr-abcdef"),
+					CustomConnectPluginRuntimeName: connectcustompluginv1.PtrString("my-custom-runtime"),
+					RuntimeAkVersion:               connectcustompluginv1.PtrString("3.8.0"),
+					SupportedJavaVersions:          &[]string{"11", "17"},
+					ProductMaturity:                connectcustompluginv1.PtrString("EA"),
+					Description:                    connectcustompluginv1.PtrString("This is a custom connector runtime for testing purposes."),
+				},
+			}
+			err := json.NewEncoder(w).Encode(connectcustompluginv1.ConnectV1CustomConnectorRuntimeList{Data: runtimes})
+			require.NoError(t, err)
+		}
+	}
+}
