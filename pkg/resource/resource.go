@@ -54,6 +54,7 @@ const (
 	IpGroup                          = "IP group"
 	IpFilter                         = "IP filter"
 	KafkaCluster                     = "Kafka cluster"
+	KafkaClusterEndpoint             = "Kafka cluster endpoint"
 	Kek                              = "KEK"
 	KsqlCluster                      = "KSQL cluster"
 	MirrorTopic                      = "mirror topic"
