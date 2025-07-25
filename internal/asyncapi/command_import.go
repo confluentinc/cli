@@ -2,6 +2,7 @@ package asyncapi
 
 import (
 	"fmt"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"os"
 	"slices"
 	"strconv"
@@ -131,6 +132,7 @@ func (c *command) newImportCommand() *cobra.Command {
 	cobra.CheckErr(cmd.Flags().MarkHidden("schema-registry-api-secret"))
 
 	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("file"))
 	cobra.CheckErr(cmd.MarkFlagFilename("file", "yaml", "yml"))
@@ -185,7 +187,7 @@ func (c *command) asyncapiImport(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	for topicName, topicDetails := range spec.Channels {
-		if err := c.addChannelToCluster(details, spec, topicName, topicDetails.Bindings.Kafka, flagsImp.overwrite); err != nil {
+		if err := c.addChannelToCluster(cmd, details, spec, topicName, topicDetails.Bindings.Kafka, flagsImp.overwrite); err != nil {
 			if err.Error() == parseErrorMessage {
 				output.ErrPrintf(c.Config.EnableColor, "[WARN] Topic \"%s\" is already present and `--overwrite` is not set.\n", topicName)
 			} else {
@@ -208,8 +210,8 @@ func fileToSpec(fileName string) (*Spec, error) {
 	return spec, nil
 }
 
-func (c *command) addChannelToCluster(details *accountDetails, spec *Spec, topicName string, kafkaBinding kafkaBinding, overwrite bool) error {
-	topicExistedAlready, newTopicCreated, err := c.addTopic(details, topicName, kafkaBinding, overwrite)
+func (c *command) addChannelToCluster(cmd *cobra.Command, details *accountDetails, spec *Spec, topicName string, kafkaBinding kafkaBinding, overwrite bool) error {
+	topicExistedAlready, newTopicCreated, err := c.addTopic(cmd, details, topicName, kafkaBinding, overwrite)
 	if err != nil {
 		log.CliLogger.Warn(err)
 	}
@@ -248,7 +250,7 @@ func (c *command) addChannelToCluster(details *accountDetails, spec *Spec, topic
 	return nil
 }
 
-func (c *command) addTopic(details *accountDetails, topicName string, kafkaBinding kafkaBinding, overwrite bool) (bool, bool, error) {
+func (c *command) addTopic(cmd *cobra.Command, details *accountDetails, topicName string, kafkaBinding kafkaBinding, overwrite bool) (bool, bool, error) {
 	// Check if topic already exists
 	for _, topics := range details.topics {
 		if topics.TopicName == topicName {
@@ -259,16 +261,16 @@ func (c *command) addTopic(details *accountDetails, topicName string, kafkaBindi
 				return true, false, nil
 			}
 			// Overwrite existing topic
-			err := c.updateTopic(topicName, kafkaBinding)
+			err := c.updateTopic(cmd, topicName, kafkaBinding)
 			return true, false, err
 		}
 	}
 	// Create a new topic
-	newTopicCreated, err := c.createTopic(topicName, kafkaBinding)
+	newTopicCreated, err := c.createTopic(cmd, topicName, kafkaBinding)
 	return false, newTopicCreated, err
 }
 
-func (c *command) createTopic(topicName string, kafkaBinding kafkaBinding) (bool, error) {
+func (c *command) createTopic(cmd *cobra.Command, topicName string, kafkaBinding kafkaBinding) (bool, error) {
 	log.CliLogger.Infof("Topic not found. Adding a new topic: %s", topicName)
 	topicConfigs := []kafkarestv3.CreateTopicRequestDataConfigs{}
 	for configName, configValue := range combineTopicConfigs(kafkaBinding) {
@@ -285,7 +287,7 @@ func (c *command) createTopic(topicName string, kafkaBinding kafkaBinding) (bool
 	if kafkaBinding.Partitions != 0 {
 		createTopicRequestData.PartitionsCount = &kafkaBinding.Partitions
 	}
-	kafkaRest, err := c.GetKafkaREST()
+	kafkaRest, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return false, err
 	}
@@ -303,11 +305,11 @@ func (c *command) createTopic(topicName string, kafkaBinding kafkaBinding) (bool
 	return true, nil
 }
 
-func (c *command) updateTopic(topicName string, kafkaBinding kafkaBinding) error {
+func (c *command) updateTopic(cmd *cobra.Command, topicName string, kafkaBinding kafkaBinding) error {
 	// Overwrite topic configs
 	updateConfigs := []kafkarestv3.AlterConfigBatchRequestDataData{}
 	modifiableConfigs := []string{}
-	kafkaRest, err := c.GetKafkaREST()
+	kafkaRest, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}

@@ -179,7 +179,7 @@ func (s *CLITestSuite) TestKafkaClusterCreate_Byok() {
 
 func (s *CLITestSuite) TestKafkaClusterConfiguration() {
 	tests := []CLITest{
-		{args: "kafka cluster use lkc-12345"},
+		{args: "kafka cluster use lkc-12345", fixture: "kafka/cluster/use.golden"},
 		{args: "kafka cluster configuration describe compression.type", fixture: "kafka/cluster/configuration/describe.golden"},
 		{args: "kafka cluster configuration update --config auto.create.topics.enable=true", fixture: "kafka/cluster/configuration/update.golden"},
 		{args: `kafka cluster configuration update --config ssl.cipher.suites="val1,val2,val3"`, fixture: "kafka/cluster/configuration/update-with-commas.golden"},
@@ -215,6 +215,42 @@ func (s *CLITestSuite) TestKafkaClusterConfiguration() {
 
 	for _, test := range tests {
 		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestKafkaClusterEndpoint() {
+	tests := []CLITest{
+		{args: "kafka cluster use lkc-describe", fixture: "kafka/endpoint/use.golden"},
+
+		{args: "kafka cluster endpoint list --cluster lkc-describe", fixture: "kafka/endpoint/list-cluster-endpoints.golden"},
+		{args: "kafka cluster endpoint list --cluster lkc-unknown", fixture: "kafka/endpoint/list-unknown-cluster-endpoints.golden", exitCode: 1},
+		{args: "kafka cluster endpoint list --cluster lkc-describe -o json", fixture: "kafka/endpoint/list-cluster-endpoints-json.golden"},
+		{args: "kafka cluster endpoint list --cluster lkc-describe -o yaml", fixture: "kafka/endpoint/list-cluster-endpoints-yaml.golden"},
+
+		{args: "kafka cluster endpoint use https://pni-abc123-basic.rest.us-west-2.aws.confluent.cloud", fixture: "kafka/endpoint/use-pni-cluster.golden"},
+		{args: "kafka cluster endpoint use https://pni-abc123-invalid.rest.us-west-2.aws.confluent.cloud", fixture: "kafka/endpoint/use-pni-invalid-cluster.golden", exitCode: 1},
+
+		{args: "kafka cluster endpoint list --cluster lkc-describe", fixture: "kafka/endpoint/list-cluster-endpoints-after-use.golden"},
+		{args: "kafka cluster endpoint list --cluster lkc-describe -o json", fixture: "kafka/endpoint/list-cluster-endpoints-after-use-json.golden"},
+		{args: "kafka cluster endpoint list --cluster lkc-describe -o yaml", fixture: "kafka/endpoint/list-cluster-endpoints-after-use-yaml.golden"},
+
+		{args: "kafka cluster use lkc-describe-dedicated", fixture: "kafka/cluster/use-new.golden"},
+
+		{args: "kafka cluster endpoint list --cluster lkc-describe-dedicated", fixture: "kafka/endpoint/list-new-cluster-endpoints.golden"},
+
+		{args: "kafka cluster endpoint use https://pl-uvw456-dedicated.rest.us-west-2.aws.confluent.cloud", fixture: "kafka/endpoint/use-pni-new-cluster.golden"},
+
+		{args: "kafka cluster endpoint list --cluster lkc-describe-dedicated", fixture: "kafka/endpoint/list-new-cluster-endpoints-after-use.golden"},
+
+		{args: "kafka cluster use lkc-describe", fixture: "kafka/cluster/use-another-cluster.golden"},
+	}
+
+	resetConfiguration(s.T(), false)
+
+	for _, test := range tests {
+		test.login = "cloud"
+		test.workflow = true
 		s.runIntegrationTest(test)
 	}
 }

@@ -1,0 +1,15 @@
+Manage Kafka cluster endpoint.
+
+Usage:
+  confluent kafka cluster endpoint [command]
+
+Available Commands:
+  list        List Kafka cluster endpoint.
+  use         Use a Kafka cluster endpoint.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent kafka cluster endpoint [command] --help" for more information about a command.

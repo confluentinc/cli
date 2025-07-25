@@ -8,6 +8,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
@@ -59,10 +60,28 @@ func FindCluster(client *ccloudv2.Client, ctx *config.Context, clusterId string)
 		return nil, errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
 	}
 
+	bootstrap := cluster.Spec.GetKafkaBootstrapEndpoint()
+	if active_endpoint := ctx.KafkaClusterContext.GetActiveKafkaClusterEndpoint(); active_endpoint != "" {
+		clusterConfigs, _, err := client.DescribeKafkaCluster(clusterId, ctx.GetCurrentEnvironment())
+		if err != nil {
+			log.CliLogger.Debugf("Error describing Kafka Cluster: %v", err)
+			return nil, fmt.Errorf("error retrieving configs for cluster %q", clusterId)
+		}
+
+		clusterEndpoints := clusterConfigs.Spec.GetEndpoints()
+
+		for _, attributes := range clusterEndpoints {
+			if attributes.GetHttpEndpoint() == active_endpoint {
+				bootstrap = attributes.GetKafkaBootstrapEndpoint()
+				break
+			}
+		}
+	}
+
 	config := &config.KafkaClusterConfig{
 		ID:           cluster.GetId(),
 		Name:         cluster.Spec.GetDisplayName(),
-		Bootstrap:    strings.TrimPrefix(cluster.Spec.GetKafkaBootstrapEndpoint(), "SASL_SSL://"),
+		Bootstrap:    strings.TrimPrefix(bootstrap, "SASL_SSL://"),
 		RestEndpoint: cluster.Spec.GetHttpEndpoint(),
 		APIKeys:      make(map[string]*config.APIKeyPair),
 		LastUpdate:   time.Now(),
