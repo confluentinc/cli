@@ -537,6 +537,8 @@ func getNetworkList(filterName, filterCloud, filterRegion, filterCidr, filterPha
 	gcpNetwork := getGcpNetwork("n-abcde1", "prod-gcp-us-central1", "READY", []string{"PEERING"})
 	azureNetwork := getAzureNetwork("n-abcde2", "prod-azure-eastus2", "READY", []string{"PRIVATELINK"})
 	azureNetwork.Status.SetEndpointSuffix("-n-abcde2.eastus.azure.confluent.cloud")
+	azureNetwork2 := getAzureNetwork("n-abcde7", "prod-azure-eastus2", "READY", []string{"PEERING"})
+	azureNetwork2.Status.SetEndpointSuffix("-n-abcde7.eastus.azure.confluent.cloud")
 
 	// Same cloud, sort by region
 	awsNetwork := getAwsNetwork("n-abcde3", "prod-aws-us-east1", "READY", []string{"TRANSITGATEWAY", "PEERING"})
@@ -556,7 +558,7 @@ func getNetworkList(filterName, filterCloud, filterRegion, filterCidr, filterPha
 
 	networkList := networkingv1.NetworkingV1NetworkList{
 		Data: []networkingv1.NetworkingV1Network{
-			gcpNetwork, azureNetwork, awsNetwork, awsNetwork2, awsNetwork3, awsNetwork4,
+			gcpNetwork, azureNetwork, azureNetwork2, awsNetwork, awsNetwork2, awsNetwork3, awsNetwork4,
 		},
 	}
 	networkList.Data = filterNetworkList(networkList.Data, filterName, filterCloud, filterRegion, filterCidr, filterPhase, filterConnection)

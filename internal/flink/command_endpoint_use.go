@@ -75,9 +75,6 @@ func (c *command) endpointUse(_ *cobra.Command, args []string) error {
 // 3. Private endpoints associated with Confluent Cloud Networks
 // Returns true if the endpoint is valid, false otherwise.
 func validateUserProvidedFlinkEndpoint(endpoint, cloud, region string, c *command) bool {
-	if c.Config.IsTest {
-		return true
-	}
 	if endpoint == "" {
 		log.CliLogger.Debug("Invalid input: given endpoint is empty")
 		return false
@@ -122,15 +119,14 @@ func validateUserProvidedFlinkEndpoint(endpoint, cloud, region string, c *comman
 	// These endpoints are only currently only available for AWS and Azure (PrivateLink), so we filter accordingly
 	var networks []networkingv1.NetworkingV1Network
 	if cloud != pcloud.Gcp {
-		var connectionTypes []string
-		if cloud == pcloud.Azure {
-			connectionTypes = []string{"PRIVATELINK"}
-		}
-
-		networks, err = c.V2Client.ListNetworks(c.Context.GetCurrentEnvironment(), nil, []string{cloud}, []string{region}, nil, []string{"READY"}, connectionTypes)
+		networks, err = c.V2Client.ListNetworks(c.Context.GetCurrentEnvironment(), nil, []string{cloud}, []string{region}, nil, []string{"READY"}, nil)
 		if err != nil {
 			log.CliLogger.Debugf("Error listing networks: %v", err)
 			return false
+		}
+
+		if cloud == pcloud.Azure {
+			networks = filterPrivateLinkNetworks(networks)
 		}
 	}
 
