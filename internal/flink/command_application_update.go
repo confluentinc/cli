@@ -44,37 +44,19 @@ func (c *command) applicationUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Check if the application already exists
 	resourceFilePath := args[0]
-	// Read file contents
 	data, err := os.ReadFile(resourceFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to read file: %v", err)
 	}
 
-	var application cmfsdk.FlinkApplication
-	var localApp localFlinkApplication
+	var genericData map[string]interface{}
 	ext := filepath.Ext(resourceFilePath)
 	switch ext {
 	case ".json":
-		err = json.Unmarshal(data, &application)
+		err = json.Unmarshal(data, &genericData)
 	case ".yaml", ".yml":
-		// Unmarshal into local struct with YAML tags
-		if err = yaml.Unmarshal(data, &localApp); err != nil {
-			return fmt.Errorf("failed to unmarshal YAML: %w", err)
-		}
-
-		// Convert to JSON bytes to use the SDK struct's JSON tags
-		jsonBytes, err := json.Marshal(localApp)
-		if err != nil {
-			return fmt.Errorf("failed to convert to JSON: %v", err)
-		}
-
-		// Now unmarshal into the SDK struct using JSON unmarshaler
-		if err = json.Unmarshal(jsonBytes, &application); err != nil {
-			return fmt.Errorf("failed to unmarshal JSON: %v", err)
-		}
-
+		err = yaml.Unmarshal(data, &genericData)
 	default:
 		return errors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
 	}
@@ -82,29 +64,28 @@ func (c *command) applicationUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	outputApplication, err := client.UpdateApplication(c.createContext(), environment, application)
+	jsonBytes, err := json.Marshal(genericData)
+	if err != nil {
+		return fmt.Errorf("failed to marshal intermediate data: %w", err)
+	}
+
+	var sdkApplication cmfsdk.FlinkApplication
+	if err = json.Unmarshal(jsonBytes, &sdkApplication); err != nil {
+		return fmt.Errorf("failed to bind data to FlinkApplication model: %w", err)
+	}
+
+	sdkOutputApplication, err := client.UpdateApplication(c.createContext(), environment, sdkApplication)
 	if err != nil {
 		return err
 	}
 
-	if output.GetFormat(cmd) == output.YAML {
-		// Convert the outputApplication to our local struct for correct YAML field names
-		jsonBytes, err := json.Marshal(outputApplication)
-		if err != nil {
-			return err
-		}
-		var outputLocalApp localFlinkApplication
-		if err = json.Unmarshal(jsonBytes, &outputLocalApp); err != nil {
-			return err
-		}
-		// Output the local struct for correct YAML field names
-		out, err := yaml.Marshal(outputLocalApp)
-		if err != nil {
-			return err
-		}
-		output.Print(false, string(out))
-		return nil
+	localOutputApp := LocalFlinkApplication{
+		ApiVersion: sdkOutputApplication.ApiVersion,
+		Kind:       sdkOutputApplication.Kind,
+		Metadata:   sdkOutputApplication.Metadata,
+		Spec:       sdkOutputApplication.Spec,
+		Status:     sdkOutputApplication.Status,
 	}
 
-	return output.SerializedOutput(cmd, outputApplication)
+	return output.SerializedOutput(cmd, localOutputApp)
 }

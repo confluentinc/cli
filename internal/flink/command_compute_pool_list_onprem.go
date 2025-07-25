@@ -1,10 +1,7 @@
 package flink
 
 import (
-	"encoding/json"
-
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -38,22 +35,20 @@ func (c *command) computePoolListOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	computePools, err := client.ListComputePools(c.createContext(), environment)
+	sdkComputePools, err := client.ListComputePools(c.createContext(), environment)
 	if err != nil {
 		return err
 	}
 
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
-		for _, pool := range computePools {
-			// nil pointer handling for creation timestamp
+		for _, pool := range sdkComputePools {
 			var creationTime string
 			if pool.GetMetadata().CreationTimestamp != nil {
 				creationTime = *pool.GetMetadata().CreationTimestamp
 			} else {
 				creationTime = ""
 			}
-
 			list.Add(&computePoolOutOnPrem{
 				CreationTime: creationTime,
 				Name:         pool.GetMetadata().Name,
@@ -64,24 +59,33 @@ func (c *command) computePoolListOnPrem(cmd *cobra.Command, _ []string) error {
 		return list.Print()
 	}
 
-	if output.GetFormat(cmd) == output.YAML {
-		// Convert the computePools to our local struct for correct YAML field names
-		jsonBytes, err := json.Marshal(computePools)
-		if err != nil {
-			return err
+	localPools := make([]LocalComputePool, 0, len(sdkComputePools))
+
+	for _, sdkPool := range sdkComputePools {
+		localPool := LocalComputePool{
+			ApiVersion: sdkPool.ApiVersion,
+			Kind:       sdkPool.Kind,
+			Metadata: LocalComputePoolMetadata{
+				Name:              sdkPool.Metadata.Name,
+				CreationTimestamp: sdkPool.Metadata.CreationTimestamp,
+				Uid:               sdkPool.Metadata.Uid,
+				Labels:            sdkPool.Metadata.Labels,
+				Annotations:       sdkPool.Metadata.Annotations,
+			},
+			Spec: LocalComputePoolSpec{
+				Type:        sdkPool.Spec.Type,
+				ClusterSpec: sdkPool.Spec.ClusterSpec,
+			},
 		}
-		var outputLocalPools []localComputePool
-		if err = json.Unmarshal(jsonBytes, &outputLocalPools); err != nil {
-			return err
+
+		if sdkPool.Status != nil {
+			localPool.Status = &LocalComputePoolStatus{
+				Phase: sdkPool.Status.Phase,
+			}
 		}
-		// Output the local struct for correct YAML field names
-		out, err := yaml.Marshal(outputLocalPools)
-		if err != nil {
-			return err
-		}
-		output.Print(false, string(out))
-		return nil
+
+		localPools = append(localPools, localPool)
 	}
 
-	return output.SerializedOutput(cmd, computePools)
+	return output.SerializedOutput(cmd, localPools)
 }

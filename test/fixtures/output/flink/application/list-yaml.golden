@@ -1,4 +1,4 @@
-- apiversion: cmf.confluent.io/v1
+- apiVersion: cmf.confluent.io/v1
   kind: FlinkApplication
   metadata:
     name: default-application-1
@@ -62,7 +62,7 @@
     taskManager:
         labelSelector: component=taskmanager,app=basic-example
         replicas: 1
-- apiversion: cmf.confluent.io/v1
+- apiVersion: cmf.confluent.io/v1
   kind: FlinkApplication
   metadata:
     name: default-application-2

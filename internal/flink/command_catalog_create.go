@@ -45,29 +45,13 @@ func (c *command) catalogCreate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to read file: %v", err)
 	}
 
-	var catalog cmfsdk.KafkaCatalog
-	var localCat localCatalog
+	var genericData map[string]interface{}
 	ext := filepath.Ext(resourceFilePath)
 	switch ext {
 	case ".json":
-		err = json.Unmarshal(data, &catalog)
+		err = json.Unmarshal(data, &genericData)
 	case ".yaml", ".yml":
-		// Unmarshal into local struct with YAML tags
-		if err = yaml.Unmarshal(data, &localCat); err != nil {
-			return fmt.Errorf("failed to unmarshal YAML: %w", err)
-		}
-
-		// Convert to JSON bytes to use the SDK struct's JSON tags
-		jsonBytes, err := json.Marshal(localCat)
-		if err != nil {
-			return fmt.Errorf("failed to convert to JSON: %v", err)
-		}
-
-		// Now unmarshal into the SDK struct using JSON unmarshaler
-		if err = json.Unmarshal(jsonBytes, &catalog); err != nil {
-			return fmt.Errorf("failed to unmarshal JSON: %v", err)
-		}
-
+		err = yaml.Unmarshal(data, &genericData)
 	default:
 		return errors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
 	}
@@ -75,54 +59,67 @@ func (c *command) catalogCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	outputCatalog, err := client.CreateCatalog(c.createContext(), catalog)
+	jsonBytes, err := json.Marshal(genericData)
+	if err != nil {
+		return fmt.Errorf("failed to marshal intermediate data: %w", err)
+	}
+
+	var sdkCatalog cmfsdk.KafkaCatalog
+	if err = json.Unmarshal(jsonBytes, &sdkCatalog); err != nil {
+		return fmt.Errorf("failed to bind data to KafkaCatalog model: %w", err)
+	}
+
+	sdkOutputCatalog, err := client.CreateCatalog(c.createContext(), sdkCatalog)
 	if err != nil {
 		return err
 	}
 
-	if output.GetFormat(cmd) == output.YAML {
-		// Convert the outputCatalog to our local struct for correct YAML field names
-		jsonBytes, err := json.Marshal(outputCatalog)
-		if err != nil {
-			return err
-		}
-		var outputLocalCat localCatalog
-		if err = json.Unmarshal(jsonBytes, &outputLocalCat); err != nil {
-			return err
-		}
-		// Output the local struct for correct YAML field names
-		out, err := yaml.Marshal(outputLocalCat)
-		if err != nil {
-			return err
-		}
-		output.Print(false, string(out))
-		return nil
-	}
-
 	if output.GetFormat(cmd) == output.Human {
 		table := output.NewTable(cmd)
-
-		// Populate the databases field with the names of the databases
-		databases := make([]string, 0, len(outputCatalog.GetSpec().KafkaClusters))
-		for _, kafkaCluster := range outputCatalog.GetSpec().KafkaClusters {
+		databases := make([]string, 0, len(sdkOutputCatalog.GetSpec().KafkaClusters))
+		for _, kafkaCluster := range sdkOutputCatalog.GetSpec().KafkaClusters {
 			databases = append(databases, kafkaCluster.DatabaseName)
 		}
-
-		// nil pointer handling for creation timestamp
 		var creationTime string
-		if outputCatalog.GetMetadata().CreationTimestamp != nil {
-			creationTime = *outputCatalog.GetMetadata().CreationTimestamp
+		if sdkOutputCatalog.GetMetadata().CreationTimestamp != nil {
+			creationTime = *sdkOutputCatalog.GetMetadata().CreationTimestamp
 		} else {
 			creationTime = ""
 		}
-
 		table.Add(&catalogOut{
 			CreationTime: creationTime,
-			Name:         outputCatalog.GetMetadata().Name,
+			Name:         sdkOutputCatalog.GetMetadata().Name,
 			Databases:    databases,
 		})
 		return table.Print()
 	}
+	localClusters := make([]LocalKafkaCatalogSpecKafkaClusters, 0, len(sdkOutputCatalog.Spec.KafkaClusters))
+	for _, sdkCluster := range sdkOutputCatalog.Spec.KafkaClusters {
+		localClusters = append(localClusters, LocalKafkaCatalogSpecKafkaClusters{
+			DatabaseName:       sdkCluster.DatabaseName,
+			ConnectionConfig:   sdkCluster.ConnectionConfig,
+			ConnectionSecretId: sdkCluster.ConnectionSecretId,
+		})
+	}
 
-	return output.SerializedOutput(cmd, outputCatalog)
+	localCatalog := LocalKafkaCatalog{
+		ApiVersion: sdkOutputCatalog.ApiVersion,
+		Kind:       sdkOutputCatalog.Kind,
+		Metadata: LocalCatalogMetadata{
+			Name:              sdkOutputCatalog.Metadata.Name,
+			CreationTimestamp: sdkOutputCatalog.Metadata.CreationTimestamp,
+			Uid:               sdkOutputCatalog.Metadata.Uid,
+			Labels:            sdkOutputCatalog.Metadata.Labels,
+			Annotations:       sdkOutputCatalog.Metadata.Annotations,
+		},
+		Spec: LocalKafkaCatalogSpec{
+			SrInstance: LocalKafkaCatalogSpecSrInstance{
+				ConnectionConfig:   sdkOutputCatalog.Spec.SrInstance.ConnectionConfig,
+				ConnectionSecretId: sdkOutputCatalog.Spec.SrInstance.ConnectionSecretId,
+			},
+			KafkaClusters: localClusters,
+		},
+	}
+
+	return output.SerializedOutput(cmd, localCatalog)
 }
