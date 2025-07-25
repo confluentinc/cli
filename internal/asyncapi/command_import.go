@@ -2,6 +2,7 @@ package asyncapi
 
 import (
 	"fmt"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"os"
 	"slices"
 	"strconv"
@@ -131,6 +132,7 @@ func (c *command) newImportCommand() *cobra.Command {
 	cobra.CheckErr(cmd.Flags().MarkHidden("schema-registry-api-secret"))
 
 	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("file"))
 	cobra.CheckErr(cmd.MarkFlagFilename("file", "yaml", "yml"))
