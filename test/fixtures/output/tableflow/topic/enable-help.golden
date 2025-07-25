@@ -1,16 +1,19 @@
-Create a topic.
+Enable a topic.
 
 Usage:
-  confluent tableflow topic create <name> [flags]
+  confluent tableflow topic enable <name> [flags]
+
+Aliases:
+  enable, create
 
 Examples:
-Create a BYOS Tableflow topic related to a Kafka cluster.
+Enable a BYOS Tableflow topic related to a Kafka cluster.
 
-  $ confluent tableflow topic create my-tableflow-topic --cluster lkc-123456 --retention-ms 604800000 --storage-type BYOS --provider-integration cspi-stgce89r7 --bucket-name bucket_1
+  $ confluent tableflow topic enable my-tableflow-topic --cluster lkc-123456 --retention-ms 604800000 --storage-type BYOS --provider-integration cspi-stgce89r7 --bucket-name bucket_1
 
-Create a confluent managed Tableflow topic related to a Kafka cluster.
+Enable a confluent managed Tableflow topic related to a Kafka cluster.
 
-  $ confluent tableflow topic create my-tableflow-topic --cluster lkc-123456 --retention-ms 604800000 --storage-type MANAGED
+  $ confluent tableflow topic enable my-tableflow-topic --cluster lkc-123456 --retention-ms 604800000 --storage-type MANAGED
 
 Flags:
       --cluster string                   Kafka cluster ID.

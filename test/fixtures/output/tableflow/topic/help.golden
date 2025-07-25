@@ -4,9 +4,9 @@ Usage:
   confluent tableflow topic [command]
 
 Available Commands:
-  create      Create a topic.
-  delete      Delete topics.
   describe    Describe a topic.
+  disable     Disable topics.
+  enable      Enable a topic.
   list        List Tableflow topics related to one Kafka cluster.
   update      Update a topic.
 

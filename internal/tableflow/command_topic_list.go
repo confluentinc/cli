@@ -69,6 +69,9 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			out.BucketName = topic.Spec.Storage.TableflowV1ByobAwsSpec.GetBucketName()
 			out.BucketRegion = topic.Spec.Storage.TableflowV1ByobAwsSpec.GetBucketRegion()
 			out.ProviderIntegrationId = topic.Spec.Storage.TableflowV1ByobAwsSpec.GetProviderIntegrationId()
+			out.TablePath = topic.Spec.Storage.TableflowV1ByobAwsSpec.GetTablePath()
+		} else if storageType == managed {
+			out.TablePath = topic.Spec.Storage.TableflowV1ManagedStorageSpec.GetTablePath()
 		}
 
 		list.Add(out)
