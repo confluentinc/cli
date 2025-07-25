@@ -16,10 +16,10 @@ func (c *clusterCommand) newEndpointListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		RunE:  c.endpointList,
-		Short: "List Kafka Cluster endpoint.",
+		Short: "List Kafka cluster endpoint.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List the available Kafka Cluster endpoints with current cloud provider and region.",
+				Text: "List the available Kafka cluster endpoints with current cloud provider and region.",
 				Code: "confluent kafka cluster endpoint list --cluster lkc-123456",
 			},
 		),

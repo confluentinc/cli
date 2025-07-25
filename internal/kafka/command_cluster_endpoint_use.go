@@ -15,13 +15,13 @@ import (
 func (c *clusterCommand) newEndpointUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "use",
-		Short: "Use a Kafka Cluster endpoint.",
-		Long:  "Use a Kafka Cluster endpoint as active endpoint for all subsequent Kafka Cluster commands in current environment.",
+		Short: "Use a Kafka cluster endpoint.",
+		Long:  "Use a Kafka cluster endpoint as active endpoint for all subsequent Kafka cluster commands in current environment.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.endpointUse,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Use "https://lkc-s1232.us-west-2.aws.private.confluent.cloud:443" for subsequent Kafka Cluster commands.`,
+				Text: `Use "https://lkc-s1232.us-west-2.aws.private.confluent.cloud:443" for subsequent Kafka cluster commands.`,
 				Code: `confluent kafka cluster endpoint use "https://lkc-s1232.us-west-2.aws.private.confluent.cloud:443"`,
 			},
 		),
