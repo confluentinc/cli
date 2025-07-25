@@ -88,7 +88,6 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-
 	properties := map[string]string{}
 	if database != "" {
 		properties["sql.current-database"] = database
@@ -96,12 +95,10 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 	if catalog != "" {
 		properties["sql.current-catalog"] = catalog
 	}
-
 	flinkConfiguration, err := c.readFlinkConfiguration(cmd)
 	if err != nil {
 		return err
 	}
-
 	statement := cmfsdk.Statement{
 		ApiVersion: "cmf.confluent.io/v1",
 		Kind:       "Statement",
@@ -117,29 +114,27 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 			Stopped:            cmfsdk.PtrBool(false),
 		},
 	}
-
 	wait, err := cmd.Flags().GetBool("wait")
 	if err != nil {
 		return err
 	}
 
-	outputStatement, err := client.CreateStatement(c.createContext(), environment, statement)
+	finalStatement, err := client.CreateStatement(c.createContext(), environment, statement)
 	if err != nil {
 		return err
 	}
 
-	// CreateStatement() is async API, add wait logic below when the statement is still PENDING
 	if wait {
 		err := retry.Retry(time.Second*2, time.Minute, func() error {
-			statement, err = client.GetStatement(c.createContext(), environment, name)
+			polledStatement, err := client.GetStatement(c.createContext(), environment, name)
 			if err != nil {
 				return err
 			}
-
-			if statement.GetStatus().Phase == "PENDING" {
-				return fmt.Errorf(`statement phase is "%s"`, statement.GetStatus().Phase)
+			if polledStatement.GetStatus().Phase == "PENDING" {
+				return fmt.Errorf(`statement phase is "%s"`, polledStatement.GetStatus().Phase)
 			}
-
+			// Update the finalStatement with the completed state
+			finalStatement = polledStatement
 			return nil
 		})
 		if err != nil {
@@ -150,22 +145,89 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 	if output.GetFormat(cmd) == output.Human {
 		table := output.NewTable(cmd)
 		table.Add(&statementOutOnPrem{
-			CreationDate: outputStatement.Metadata.GetCreationTimestamp(),
-			Name:         outputStatement.Metadata.GetName(),
-			Statement:    outputStatement.Spec.GetStatement(),
-			ComputePool:  outputStatement.Spec.GetComputePoolName(),
-			Status:       outputStatement.Status.GetPhase(),
-			StatusDetail: outputStatement.Status.GetDetail(),
-			Parallelism:  outputStatement.Spec.GetParallelism(),
-			Stopped:      outputStatement.Spec.GetStopped(),
-			SqlKind:      outputStatement.Status.Traits.GetSqlKind(),
-			AppendOnly:   outputStatement.Status.Traits.GetIsAppendOnly(),
-			Bounded:      outputStatement.Status.Traits.GetIsBounded(),
+			CreationDate: finalStatement.Metadata.GetCreationTimestamp(),
+			Name:         finalStatement.Metadata.GetName(),
+			Statement:    finalStatement.Spec.GetStatement(),
+			ComputePool:  finalStatement.Spec.GetComputePoolName(),
+			Status:       finalStatement.Status.GetPhase(),
+			StatusDetail: finalStatement.Status.GetDetail(),
+			Parallelism:  finalStatement.Spec.GetParallelism(),
+			Stopped:      finalStatement.Spec.GetStopped(),
+			SqlKind:      finalStatement.Status.Traits.GetSqlKind(),
+			AppendOnly:   finalStatement.Status.Traits.GetIsAppendOnly(),
+			Bounded:      finalStatement.Status.Traits.GetIsBounded(),
 		})
 		return table.Print()
 	}
 
-	return output.SerializedOutput(cmd, outputStatement)
+	localStmt := LocalStatement{
+		ApiVersion: finalStatement.ApiVersion,
+		Kind:       finalStatement.Kind,
+		Metadata: LocalStatementMetadata{
+			Name:              finalStatement.Metadata.Name,
+			CreationTimestamp: finalStatement.Metadata.CreationTimestamp,
+			UpdateTimestamp:   finalStatement.Metadata.UpdateTimestamp,
+			Uid:               finalStatement.Metadata.Uid,
+			Labels:            finalStatement.Metadata.Labels,
+			Annotations:       finalStatement.Metadata.Annotations,
+		},
+		Spec: LocalStatementSpec{
+			Statement:          finalStatement.Spec.Statement,
+			Properties:         finalStatement.Spec.Properties,
+			FlinkConfiguration: finalStatement.Spec.FlinkConfiguration,
+			ComputePoolName:    finalStatement.Spec.ComputePoolName,
+			Parallelism:        finalStatement.Spec.Parallelism,
+			Stopped:            finalStatement.Spec.Stopped,
+		},
+	}
+
+	if finalStatement.Status != nil {
+		localStatus := &LocalStatementStatus{
+			Phase:  finalStatement.Status.Phase,
+			Detail: finalStatement.Status.Detail,
+		}
+
+		if finalStatement.Status.Traits != nil {
+			localTraits := &LocalStatementTraits{
+				SqlKind:       finalStatement.Status.Traits.SqlKind,
+				IsBounded:     finalStatement.Status.Traits.IsBounded,
+				IsAppendOnly:  finalStatement.Status.Traits.IsAppendOnly,
+				UpsertColumns: finalStatement.Status.Traits.UpsertColumns,
+			}
+
+			if finalStatement.Status.Traits.Schema != nil {
+				localSchema := &LocalResultSchema{}
+				if finalStatement.Status.Traits.Schema.Columns != nil {
+					localSchema.Columns = make([]LocalResultSchemaColumn, 0, len(finalStatement.Status.Traits.Schema.Columns))
+					for _, sdkCol := range finalStatement.Status.Traits.Schema.Columns {
+						localSchema.Columns = append(localSchema.Columns, LocalResultSchemaColumn{
+							Name: sdkCol.Name,
+							Type: copyDataType(sdkCol.Type), // Use the helper function here
+						})
+					}
+				}
+				localTraits.Schema = localSchema
+			}
+			localStatus.Traits = localTraits
+		}
+		localStmt.Status = localStatus
+	}
+
+	if finalStatement.Result != nil {
+		localStmt.Result = &LocalStatementResult{
+			ApiVersion: finalStatement.Result.ApiVersion,
+			Kind:       finalStatement.Result.Kind,
+			Metadata: LocalStatementResultMetadata{
+				CreationTimestamp: finalStatement.Result.Metadata.CreationTimestamp,
+				Annotations:       finalStatement.Result.Metadata.Annotations,
+			},
+			Results: LocalStatementResults{
+				Data: finalStatement.Result.Results.Data,
+			},
+		}
+	}
+
+	return output.SerializedOutput(cmd, localStmt)
 }
 
 func (c *command) readFlinkConfiguration(cmd *cobra.Command) (map[string]string, error) {
@@ -177,7 +239,6 @@ func (c *command) readFlinkConfiguration(cmd *cobra.Command) (map[string]string,
 	flinkConfiguration := map[string]string{}
 	if configFilePath != "" {
 		var data []byte
-		// Read configuration file contents
 		data, err = os.ReadFile(configFilePath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read Flink configuration file: %v", err)

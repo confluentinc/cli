@@ -41,5 +41,13 @@ func (c *command) applicationDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return output.SerializedOutput(cmd, application)
+	localApp := LocalFlinkApplication{
+		ApiVersion: application.ApiVersion,
+		Kind:       application.Kind,
+		Metadata:   application.Metadata,
+		Spec:       application.Spec,
+		Status:     application.Status,
+	}
+
+	return output.SerializedOutput(cmd, localApp)
 }

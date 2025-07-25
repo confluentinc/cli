@@ -61,5 +61,73 @@ func (c *command) statementDescribeOnPrem(cmd *cobra.Command, args []string) err
 		})
 		return table.Print()
 	}
-	return output.SerializedOutput(cmd, outputStatement)
+
+	localStmt := LocalStatement{
+		ApiVersion: outputStatement.ApiVersion,
+		Kind:       outputStatement.Kind,
+		Metadata: LocalStatementMetadata{
+			Name:              outputStatement.Metadata.Name,
+			CreationTimestamp: outputStatement.Metadata.CreationTimestamp,
+			UpdateTimestamp:   outputStatement.Metadata.UpdateTimestamp,
+			Uid:               outputStatement.Metadata.Uid,
+			Labels:            outputStatement.Metadata.Labels,
+			Annotations:       outputStatement.Metadata.Annotations,
+		},
+		Spec: LocalStatementSpec{
+			Statement:          outputStatement.Spec.Statement,
+			Properties:         outputStatement.Spec.Properties,
+			FlinkConfiguration: outputStatement.Spec.FlinkConfiguration,
+			ComputePoolName:    outputStatement.Spec.ComputePoolName,
+			Parallelism:        outputStatement.Spec.Parallelism,
+			Stopped:            outputStatement.Spec.Stopped,
+		},
+	}
+
+	if outputStatement.Status != nil {
+		localStatus := &LocalStatementStatus{
+			Phase:  outputStatement.Status.Phase,
+			Detail: outputStatement.Status.Detail,
+		}
+
+		if outputStatement.Status.Traits != nil {
+			localTraits := &LocalStatementTraits{
+				SqlKind:       outputStatement.Status.Traits.SqlKind,
+				IsBounded:     outputStatement.Status.Traits.IsBounded,
+				IsAppendOnly:  outputStatement.Status.Traits.IsAppendOnly,
+				UpsertColumns: outputStatement.Status.Traits.UpsertColumns,
+			}
+
+			if outputStatement.Status.Traits.Schema != nil {
+				localSchema := &LocalResultSchema{}
+				if outputStatement.Status.Traits.Schema.Columns != nil {
+					localSchema.Columns = make([]LocalResultSchemaColumn, 0, len(outputStatement.Status.Traits.Schema.Columns))
+					for _, sdkCol := range outputStatement.Status.Traits.Schema.Columns {
+						localSchema.Columns = append(localSchema.Columns, LocalResultSchemaColumn{
+							Name: sdkCol.Name,
+							Type: copyDataType(sdkCol.Type),
+						})
+					}
+				}
+				localTraits.Schema = localSchema
+			}
+			localStatus.Traits = localTraits
+		}
+		localStmt.Status = localStatus
+	}
+
+	if outputStatement.Result != nil {
+		localStmt.Result = &LocalStatementResult{
+			ApiVersion: outputStatement.Result.ApiVersion,
+			Kind:       outputStatement.Result.Kind,
+			Metadata: LocalStatementResultMetadata{
+				CreationTimestamp: outputStatement.Result.Metadata.CreationTimestamp,
+				Annotations:       outputStatement.Result.Metadata.Annotations,
+			},
+			Results: LocalStatementResults{
+				Data: outputStatement.Result.Results.Data,
+			},
+		}
+	}
+
+	return output.SerializedOutput(cmd, localStmt)
 }
