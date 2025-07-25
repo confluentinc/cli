@@ -1,10 +1,10 @@
-List Kafka Cluster endpoint.
+List Kafka cluster endpoint.
 
 Usage:
   confluent kafka cluster endpoint list [flags]
 
 Examples:
-List the available Kafka Cluster endpoints with current cloud provider and region.
+List the available Kafka cluster endpoints with current cloud provider and region.
 
   $ confluent kafka cluster endpoint list --cluster lkc-123456
 

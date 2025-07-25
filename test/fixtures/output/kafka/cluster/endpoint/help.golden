@@ -4,8 +4,8 @@ Usage:
   confluent kafka cluster endpoint [command]
 
 Available Commands:
-  list        List Kafka Cluster endpoint.
-  use         Use a Kafka Cluster endpoint.
+  list        List Kafka cluster endpoint.
+  use         Use a Kafka cluster endpoint.
 
 Global Flags:
   -h, --help            Show help for this command.
