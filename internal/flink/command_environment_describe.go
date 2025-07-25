@@ -28,15 +28,43 @@ func (c *command) environmentDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Get the name of the environment to be retrieved
 	environmentName := args[0]
-	environment, err := client.DescribeEnvironment(c.createContext(), environmentName)
+	sdkOutputEnvironment, err := client.DescribeEnvironment(c.createContext(), environmentName)
 	if err != nil {
 		return err
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		return printEnvironmentOutTable(cmd, environment)
+		return printEnvironmentOutTable(cmd, sdkOutputEnvironment)
 	}
-	return output.SerializedOutput(cmd, environment)
+
+	localEnv := LocalEnvironment{
+		Secrets:                  sdkOutputEnvironment.Secrets,
+		Name:                     sdkOutputEnvironment.Name,
+		CreatedTime:              sdkOutputEnvironment.CreatedTime,
+		UpdatedTime:              sdkOutputEnvironment.UpdatedTime,
+		FlinkApplicationDefaults: sdkOutputEnvironment.FlinkApplicationDefaults,
+		KubernetesNamespace:      sdkOutputEnvironment.KubernetesNamespace,
+		ComputePoolDefaults:      sdkOutputEnvironment.ComputePoolDefaults,
+	}
+
+	if sdkOutputEnvironment.StatementDefaults != nil {
+		localDefaults1 := &LocalAllStatementDefaults1{}
+
+		if sdkOutputEnvironment.StatementDefaults.Detached != nil {
+			localDefaults1.Detached = &LocalStatementDefaults{
+				FlinkConfiguration: sdkOutputEnvironment.StatementDefaults.Detached.FlinkConfiguration,
+			}
+		}
+
+		if sdkOutputEnvironment.StatementDefaults.Interactive != nil {
+			localDefaults1.Interactive = &LocalStatementDefaults{
+				FlinkConfiguration: sdkOutputEnvironment.StatementDefaults.Interactive.FlinkConfiguration,
+			}
+		}
+
+		localEnv.StatementDefaults = localDefaults1
+	}
+
+	return output.SerializedOutput(cmd, localEnv)
 }

@@ -27,28 +27,24 @@ func (c *command) catalogList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	catalogs, err := client.ListCatalog(c.createContext())
+	sdkCatalogs, err := client.ListCatalog(c.createContext())
 	if err != nil {
 		return err
 	}
 
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
-		for _, catalog := range catalogs {
-			// Populate the databases field with the names of the databases
+		for _, catalog := range sdkCatalogs {
 			databases := make([]string, 0, len(catalog.GetSpec().KafkaClusters))
 			for _, kafkaCluster := range catalog.GetSpec().KafkaClusters {
 				databases = append(databases, kafkaCluster.DatabaseName)
 			}
-
-			// nil pointer handling for creation timestamp
 			var creationTime string
 			if catalog.GetMetadata().CreationTimestamp != nil {
 				creationTime = *catalog.GetMetadata().CreationTimestamp
 			} else {
 				creationTime = ""
 			}
-
 			list.Add(&catalogOut{
 				CreationTime: creationTime,
 				Name:         catalog.Metadata.Name,
@@ -58,5 +54,39 @@ func (c *command) catalogList(cmd *cobra.Command, _ []string) error {
 		return list.Print()
 	}
 
-	return output.SerializedOutput(cmd, catalogs)
+	localCatalogs := make([]LocalKafkaCatalog, 0, len(sdkCatalogs))
+
+	for _, sdkCatalog := range sdkCatalogs {
+		localClusters := make([]LocalKafkaCatalogSpecKafkaClusters, 0, len(sdkCatalog.Spec.KafkaClusters))
+		for _, sdkCluster := range sdkCatalog.Spec.KafkaClusters {
+			localClusters = append(localClusters, LocalKafkaCatalogSpecKafkaClusters{
+				DatabaseName:       sdkCluster.DatabaseName,
+				ConnectionConfig:   sdkCluster.ConnectionConfig,
+				ConnectionSecretId: sdkCluster.ConnectionSecretId,
+			})
+		}
+
+		localCat := LocalKafkaCatalog{
+			ApiVersion: sdkCatalog.ApiVersion,
+			Kind:       sdkCatalog.Kind,
+			Metadata: LocalCatalogMetadata{
+				Name:              sdkCatalog.Metadata.Name,
+				CreationTimestamp: sdkCatalog.Metadata.CreationTimestamp,
+				Uid:               sdkCatalog.Metadata.Uid,
+				Labels:            sdkCatalog.Metadata.Labels,
+				Annotations:       sdkCatalog.Metadata.Annotations,
+			},
+			Spec: LocalKafkaCatalogSpec{
+				SrInstance: LocalKafkaCatalogSpecSrInstance{
+					ConnectionConfig:   sdkCatalog.Spec.SrInstance.ConnectionConfig,
+					ConnectionSecretId: sdkCatalog.Spec.SrInstance.ConnectionSecretId,
+				},
+				KafkaClusters: localClusters,
+			},
+		}
+
+		localCatalogs = append(localCatalogs, localCat)
+	}
+
+	return output.SerializedOutput(cmd, localCatalogs)
 }

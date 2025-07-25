@@ -1,11 +1,10 @@
 {
-    "apiVersion": "cmf.confluent.io/v1alpha1",
+    "apiVersion": "cmf.confluent.io/v1",
     "kind": "FlinkApplication",
     "metadata": {
         "name": "default-application-1"
     },
     "spec": {
-        "flinkEnvironment": "non-existent",
         "image": "confluentinc/cp-flink:1.19.1-cp1",
         "flinkVersion": "v1_19",
         "flinkConfiguration": {
