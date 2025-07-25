@@ -6,6 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
+	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
+
+	pcloud "github.com/confluentinc/cli/v4/pkg/cloud"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/log"
@@ -116,10 +119,19 @@ func validateUserProvidedFlinkEndpoint(endpoint, cloud, region string, c *comman
 	}
 
 	// Check if the endpoint is PRIVATE associated with CCN
-	networks, err := c.V2Client.ListNetworks(c.Context.GetCurrentEnvironment(), nil, []string{cloud}, []string{region}, nil, []string{"READY"}, nil)
-	if err != nil {
-		log.CliLogger.Debugf("Error listing networks: %v", err)
-		return false
+	// These endpoints are only currently only available for AWS and Azure (PrivateLink), so we filter accordingly
+	var networks []networkingv1.NetworkingV1Network
+	if cloud != pcloud.Gcp {
+		var connectionTypes []string
+		if cloud == pcloud.Azure {
+			connectionTypes = []string{"PRIVATELINK"}
+		}
+
+		networks, err = c.V2Client.ListNetworks(c.Context.GetCurrentEnvironment(), nil, []string{cloud}, []string{region}, nil, []string{"READY"}, connectionTypes)
+		if err != nil {
+			log.CliLogger.Debugf("Error listing networks: %v", err)
+			return false
+		}
 	}
 
 	for _, network := range networks {

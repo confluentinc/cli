@@ -332,6 +332,8 @@ func (s *CLITestSuite) TestFlinkEndpointList() {
 		{args: "flink endpoint list", fixture: "flink/endpoint/list-gcp.golden"},
 		{args: "flink region use --cloud azure --region centralus", fixture: "flink/region/use-azure.golden"},
 		{args: "flink endpoint list", fixture: "flink/endpoint/list-azure.golden"},
+		{args: "flink region use --cloud azure --region eastus2", fixture: "flink/region/use-azure-ccn.golden"},
+		{args: "flink endpoint list", fixture: "flink/endpoint/list-azure-with-ccn.golden"},
 	}
 
 	for _, test := range tests {

@@ -536,6 +536,7 @@ func handleNetworkingNetworkList(t *testing.T) http.HandlerFunc {
 func getNetworkList(filterName, filterCloud, filterRegion, filterCidr, filterPhase, filterConnection []string) networkingv1.NetworkingV1NetworkList {
 	gcpNetwork := getGcpNetwork("n-abcde1", "prod-gcp-us-central1", "READY", []string{"PEERING"})
 	azureNetwork := getAzureNetwork("n-abcde2", "prod-azure-eastus2", "READY", []string{"PRIVATELINK"})
+	azureNetwork.Status.SetEndpointSuffix("-n-abcde2.eastus.azure.confluent.cloud")
 
 	// Same cloud, sort by region
 	awsNetwork := getAwsNetwork("n-abcde3", "prod-aws-us-east1", "READY", []string{"TRANSITGATEWAY", "PEERING"})
@@ -839,12 +840,13 @@ func getAzureNetwork(id, name, phase string, connectionTypes []string) networkin
 	network := networkingv1.NetworkingV1Network{
 		Id: networkingv1.PtrString(id),
 		Spec: &networkingv1.NetworkingV1NetworkSpec{
-			Environment: &networkingv1.ObjectReference{Id: "env-00000"},
-			DisplayName: networkingv1.PtrString(name),
-			Cloud:       networkingv1.PtrString("AZURE"),
-			Region:      networkingv1.PtrString("eastus2"),
-			Cidr:        networkingv1.PtrString("10.0.0.0/16"),
-			Zones:       &[]string{"1", "2", "3"},
+			Environment:     &networkingv1.ObjectReference{Id: "env-00000"},
+			DisplayName:     networkingv1.PtrString(name),
+			Cloud:           networkingv1.PtrString("AZURE"),
+			Region:          networkingv1.PtrString("eastus2"),
+			ConnectionTypes: &connectionTypes,
+			Cidr:            networkingv1.PtrString("10.0.0.0/16"),
+			Zones:           &[]string{"1", "2", "3"},
 			ZonesInfo: &[]networkingv1.NetworkingV1ZoneInfo{
 				{
 					ZoneId: ptrString("1"),
@@ -869,6 +871,7 @@ func getAzureNetwork(id, name, phase string, connectionTypes []string) networkin
 					Kind: "AzureNetwork",
 				},
 			},
+			EndpointSuffix: networkingv1.PtrString("-"),
 		},
 	}
 

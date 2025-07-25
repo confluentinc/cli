@@ -2,13 +2,16 @@ package flink
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	networkingprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink/v1"
+	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 
+	pcloud "github.com/confluentinc/cli/v4/pkg/cloud"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
@@ -102,9 +105,17 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 
 	// 3 - List all the CCN endpoint with the list of "READY" network domains
 	// Note the cloud and region have to be empty slice instead of `nil` in case of no filter
-	networks, err := c.V2Client.ListNetworks(environmentId, nil, []string{cloud}, []string{region}, nil, []string{"READY"}, nil)
-	if err != nil {
-		return fmt.Errorf("unable to list Flink endpoint, failed to list networks: %w", err)
+	// These endpoints are only currently only available for AWS and Azure (PrivateLink), so we filter accordingly
+	var networks []networkingv1.NetworkingV1Network
+	if cloud != pcloud.Gcp {
+		networks, err = c.V2Client.ListNetworks(environmentId, nil, []string{cloud}, []string{region}, nil, []string{"READY"}, nil)
+		if err != nil {
+			return fmt.Errorf("unable to list Flink endpoint, failed to list networks: %w", err)
+		}
+
+		if cloud == pcloud.Azure {
+			networks = filterPrivateLinkNetworks(networks)
+		}
 	}
 
 	for _, network := range networks {
@@ -170,4 +181,14 @@ func buildCloudRegionKeyFilterMapFromPrivateLinkAttachments(platts []networkingp
 		result[compositeKey] = true
 	}
 	return result
+}
+
+func filterPrivateLinkNetworks(networks []networkingv1.NetworkingV1Network) []networkingv1.NetworkingV1Network {
+	var filteredNetworks []networkingv1.NetworkingV1Network
+	for _, network := range networks {
+		if slices.Contains(network.Spec.GetConnectionTypes(), "PRIVATELINK") || slices.Contains(network.Spec.GetConnectionTypes(), "privatelink") {
+			filteredNetworks = append(filteredNetworks, network)
+		}
+	}
+	return filteredNetworks
 }
