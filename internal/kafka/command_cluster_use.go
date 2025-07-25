@@ -41,5 +41,12 @@ func (c *clusterCommand) use(_ *cobra.Command, args []string) error {
 	}
 
 	output.ErrPrintf(c.Config.EnableColor, "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n", id, c.Context.GetCurrentEnvironment())
+
+	if activeEndpoint := c.Context.KafkaClusterContext.GetActiveKafkaClusterEndpoint(); activeEndpoint != "" {
+		c.Context.KafkaClusterContext.UnsetActiveKafkaClusterEndpoint()
+		output.ErrPrintf(c.Config.EnableColor, "Unset current endpoint. "+
+			"Use `kafka cluster endpoint list` to view the available endpoints and use `cluster endpoint use` to set an active endpoint for the current Kafka cluster.\n")
+	}
+
 	return nil
 }
