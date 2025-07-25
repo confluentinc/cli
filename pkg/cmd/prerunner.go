@@ -368,15 +368,17 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 			restEndpoint = activeEndpoint
 		}
 
-		flagEndpoint, err := cmd.Flags().GetString("kafka-endpoint")
-		if err != nil {
-			return nil, err
-		}
+		if cmd.Flags().Changed("kafka-endpoint") {
+			flagEndpoint, err := cmd.Flags().GetString("kafka-endpoint")
+			if err != nil {
+				return nil, err
+			}
 
-		// input flag precedes stored config value
-		// if the endpoint flag is set, use its value; otherwise, use the value from config.RestEndpoint
-		if flagEndpoint != "" {
-			restEndpoint = flagEndpoint
+			// input flag precedes stored config value
+			// if the endpoint flag is set, use its value; otherwise, use the value from config.RestEndpoint
+			if flagEndpoint != "" {
+				restEndpoint = flagEndpoint
+			}
 		}
 
 		kafkaRest := &KafkaREST{
