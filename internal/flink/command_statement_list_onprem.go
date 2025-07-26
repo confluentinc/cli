@@ -56,14 +56,15 @@ func (c *command) statementListOnPrem(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	statements, err := client.ListStatements(c.createContext(), environment, computePool, status)
+
+	sdkStatements, err := client.ListStatements(c.createContext(), environment, computePool, status)
 	if err != nil {
 		return err
 	}
 
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
-		for _, statement := range statements {
+		for _, statement := range sdkStatements {
 			list.Add(&statementOutOnPrem{
 				CreationDate: statement.Metadata.GetCreationTimestamp(),
 				Name:         statement.Metadata.Name,
@@ -81,5 +82,77 @@ func (c *command) statementListOnPrem(cmd *cobra.Command, _ []string) error {
 		return list.Print()
 	}
 
-	return output.SerializedOutput(cmd, statements)
+	localStmts := make([]LocalStatement, 0, len(sdkStatements))
+
+	for _, sdkStmt := range sdkStatements {
+
+		localStmt := LocalStatement{
+			ApiVersion: sdkStmt.ApiVersion,
+			Kind:       sdkStmt.Kind,
+			Metadata: LocalStatementMetadata{
+				Name:              sdkStmt.Metadata.Name,
+				CreationTimestamp: sdkStmt.Metadata.CreationTimestamp,
+				UpdateTimestamp:   sdkStmt.Metadata.UpdateTimestamp,
+				Uid:               sdkStmt.Metadata.Uid,
+				Labels:            sdkStmt.Metadata.Labels,
+				Annotations:       sdkStmt.Metadata.Annotations,
+			},
+			Spec: LocalStatementSpec{
+				Statement:          sdkStmt.Spec.Statement,
+				Properties:         sdkStmt.Spec.Properties,
+				FlinkConfiguration: sdkStmt.Spec.FlinkConfiguration,
+				ComputePoolName:    sdkStmt.Spec.ComputePoolName,
+				Parallelism:        sdkStmt.Spec.Parallelism,
+				Stopped:            sdkStmt.Spec.Stopped,
+			},
+		}
+
+		if sdkStmt.Status != nil {
+			localStatus := &LocalStatementStatus{
+				Phase:  sdkStmt.Status.Phase,
+				Detail: sdkStmt.Status.Detail,
+			}
+			if sdkStmt.Status.Traits != nil {
+				localTraits := &LocalStatementTraits{
+					SqlKind:       sdkStmt.Status.Traits.SqlKind,
+					IsBounded:     sdkStmt.Status.Traits.IsBounded,
+					IsAppendOnly:  sdkStmt.Status.Traits.IsAppendOnly,
+					UpsertColumns: sdkStmt.Status.Traits.UpsertColumns,
+				}
+				if sdkStmt.Status.Traits.Schema != nil {
+					localSchema := &LocalResultSchema{}
+					if sdkStmt.Status.Traits.Schema.Columns != nil {
+						localSchema.Columns = make([]LocalResultSchemaColumn, 0, len(sdkStmt.Status.Traits.Schema.Columns))
+						for _, sdkCol := range sdkStmt.Status.Traits.Schema.Columns {
+							localSchema.Columns = append(localSchema.Columns, LocalResultSchemaColumn{
+								Name: sdkCol.Name,
+								Type: copyDataType(sdkCol.Type),
+							})
+						}
+					}
+					localTraits.Schema = localSchema
+				}
+				localStatus.Traits = localTraits
+			}
+			localStmt.Status = localStatus
+		}
+
+		if sdkStmt.Result != nil {
+			localStmt.Result = &LocalStatementResult{
+				ApiVersion: sdkStmt.Result.ApiVersion,
+				Kind:       sdkStmt.Result.Kind,
+				Metadata: LocalStatementResultMetadata{
+					CreationTimestamp: sdkStmt.Result.Metadata.CreationTimestamp,
+					Annotations:       sdkStmt.Result.Metadata.Annotations,
+				},
+				Results: LocalStatementResults{
+					Data: sdkStmt.Result.Results.Data,
+				},
+			}
+		}
+
+		localStmts = append(localStmts, localStmt)
+	}
+
+	return output.SerializedOutput(cmd, localStmts)
 }

@@ -1,10 +1,5 @@
-secrets: null
 name: default-2
-createdtime: 2024-09-10T23:00:00Z
-updatedtime: 2024-09-10T23:00:00Z
-flinkapplicationdefaults: null
-kubernetesnamespace: default-staging
-computepooldefaults: null
-statementdefaults:
-    detached: null
-    interactive: null
+created_time: 2024-09-10T23:00:00Z
+updated_time: 2024-09-10T23:00:00Z
+kubernetesNamespace: default-staging
+statementDefaults: {}
