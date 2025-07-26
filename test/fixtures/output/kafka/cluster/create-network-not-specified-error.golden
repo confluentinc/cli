@@ -1,0 +1,4 @@
+Error: the `--zone` flag can only be used when creating a single zone dedicated Kafka cluster on private network
+
+Suggestions:
+    Specify a dedicated cluster with `--zone` and `--network` flags.
