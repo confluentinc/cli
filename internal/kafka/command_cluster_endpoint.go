@@ -17,7 +17,7 @@ type endpointOut struct {
 func (c *clusterCommand) newEndpointCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "endpoint",
-		Short: "Manage Kafka cluster endpoint.",
+		Short: "Manage Kafka cluster endpoints.",
 	}
 
 	if cfg.IsCloudLogin() {

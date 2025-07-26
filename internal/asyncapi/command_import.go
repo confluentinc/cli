@@ -2,7 +2,6 @@ package asyncapi
 
 import (
 	"fmt"
-	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"os"
 	"slices"
 	"strconv"
@@ -19,6 +18,7 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/kafkarest"

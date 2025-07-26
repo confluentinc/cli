@@ -1,10 +1,10 @@
-Manage Kafka cluster endpoint.
+Manage Kafka cluster endpoints.
 
 Usage:
   confluent kafka cluster endpoint [command]
 
 Available Commands:
-  list        List Kafka cluster endpoint.
+  list        List Kafka cluster endpoints.
   use         Use a Kafka cluster endpoint.
 
 Global Flags:

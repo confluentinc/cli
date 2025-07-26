@@ -43,7 +43,7 @@ func (c *clusterCommand) endpointUse(cmd *cobra.Command, args []string) error {
 	activeCluster := c.Context.KafkaClusterContext.GetActiveKafkaClusterId()
 	if activeCluster == "" {
 		return errors.NewErrorWithSuggestions(
-			"Current active Kafka cluster is empty",
+			"no current active Kafka cluster",
 			"Please run `confluent kafka cluster use` to set the active cluster first.",
 		)
 	}
