@@ -54,6 +54,7 @@ func (c *clusterCommand) newDescribeCommand() *cobra.Command {
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -79,6 +80,13 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 	}
 
+	if activeEndpoint := c.Context.KafkaClusterContext.GetActiveKafkaClusterEndpoint(); activeEndpoint != "" {
+		if output.GetFormat(cmd) == output.Human {
+			output.Printf(c.Config.EnableColor, "The current endpoint is set to %q, "+
+				"use `kafka cluster endpoint list` to view the available endpoints\n", activeEndpoint)
+		}
+	}
+
 	return c.outputKafkaClusterDescription(cmd, &cluster, true)
 }
 
@@ -102,7 +110,7 @@ func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, clust
 	out := convertClusterToDescribeStruct(cluster, c.Context)
 
 	if getTopicCount {
-		topicCount, err := c.getTopicCountForKafkaCluster(cluster)
+		topicCount, err := c.getTopicCountForKafkaCluster(cmd, cluster)
 		// topicCount is 0 when err != nil, and will be omitted by `omitempty`
 		if err != nil {
 			log.CliLogger.Infof("The topic count will be omitted as Kafka topics for this cluster could not be retrieved: %v", err)
@@ -172,16 +180,15 @@ func getKafkaClusterDescribeFields(cluster *cmkv2.CmkV2Cluster, basicFields []st
 	return describeFields
 }
 
-func (c *clusterCommand) getTopicCountForKafkaCluster(cluster *cmkv2.CmkV2Cluster) (int, error) {
+func (c *clusterCommand) getTopicCountForKafkaCluster(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster) (int, error) {
 	if getCmkClusterStatus(cluster) == ccloudv2.StatusProvisioning {
 		return 0, nil
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return 0, err
 	}
-
 	topics, err := kafkaREST.CloudClient.ListKafkaTopics()
 	if err != nil {
 		return 0, err

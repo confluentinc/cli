@@ -15,6 +15,7 @@ Flags:
       --service-account string    Service account ID.
       --principal string          Principal for this operation, prefixed with "User:".
       --all                       Include ACLs for deleted principals with integer IDs.
+      --kafka-endpoint string     Endpoint to be used for this Kafka cluster.
   -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

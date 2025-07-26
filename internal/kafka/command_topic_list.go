@@ -25,6 +25,7 @@ func (c *command) newListCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -34,7 +35,7 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	topics, err := c.getTopics()
+	topics, err := c.getTopics(cmd)
 	if err != nil {
 		return err
 	}
@@ -51,8 +52,8 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	return list.Print()
 }
 
-func (c *command) getTopics() ([]kafkarestv3.TopicData, error) {
-	kafkaREST, err := c.GetKafkaREST()
+func (c *command) getTopics(cmd *cobra.Command) ([]kafkarestv3.TopicData, error) {
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return nil, err
 	}

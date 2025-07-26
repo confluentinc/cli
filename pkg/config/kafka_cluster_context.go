@@ -10,6 +10,8 @@ type KafkaClusterContext struct {
 	EnvContext bool `json:"environment_context"`
 	// ActiveKafkaCluster is your active Kafka cluster and references a key in the KafkaClusters map
 	ActiveKafkaCluster string `json:"active_kafka,omitempty"`
+	// ActiveKafkaClusterEndpoint is your active endpoint corresponding to your active Kafka cluster
+	ActiveKafkaClusterEndpoint string `json:"active_kafka_endpoint,omitempty"`
 	// KafkaClusterConfigs store connection info for interacting directly with Kafka (e.g., consume/produce, etc)
 	// N.B. These may later be exposed in the CLI to directly register kafkas (outside a Control Plane)
 	// Mapped by cluster id.
@@ -19,35 +21,38 @@ type KafkaClusterContext struct {
 }
 
 type KafkaEnvContext struct {
-	ActiveKafkaCluster  string                         `json:"active_kafka"`
-	KafkaClusterConfigs map[string]*KafkaClusterConfig `json:"kafka_cluster_infos"`
+	ActiveKafkaCluster         string                         `json:"active_kafka"`
+	ActiveKafkaClusterEndpoint string                         `json:"active_kafka_endpoint"`
+	KafkaClusterConfigs        map[string]*KafkaClusterConfig `json:"kafka_cluster_infos"`
 }
 
-func NewKafkaClusterContext(ctx *Context, activeKafka string, kafkaClusters map[string]*KafkaClusterConfig) *KafkaClusterContext {
+func NewKafkaClusterContext(ctx *Context, activeKafka string, activeKafkaEndpoint string, kafkaClusters map[string]*KafkaClusterConfig) *KafkaClusterContext {
 	if ctx.IsCloud(ctx.Config.IsTest) && ctx.GetCredentialType() == Username {
-		return newKafkaClusterEnvironmentContext(activeKafka, kafkaClusters, ctx)
+		return newKafkaClusterEnvironmentContext(activeKafka, activeKafkaEndpoint, kafkaClusters, ctx)
 	} else {
-		return newKafkaClusterNonEnvironmentContext(activeKafka, kafkaClusters, ctx)
+		return newKafkaClusterNonEnvironmentContext(activeKafka, activeKafkaEndpoint, kafkaClusters, ctx)
 	}
 }
 
-func newKafkaClusterEnvironmentContext(activeKafka string, kafkaClusters map[string]*KafkaClusterConfig, ctx *Context) *KafkaClusterContext {
+func newKafkaClusterEnvironmentContext(activeKafka string, activeKafkaEndpoint string, kafkaClusters map[string]*KafkaClusterConfig, ctx *Context) *KafkaClusterContext {
 	return &KafkaClusterContext{
 		EnvContext: true,
 		KafkaEnvContexts: map[string]*KafkaEnvContext{ctx.GetCurrentEnvironment(): {
-			ActiveKafkaCluster:  activeKafka,
-			KafkaClusterConfigs: kafkaClusters,
+			ActiveKafkaCluster:         activeKafka,
+			ActiveKafkaClusterEndpoint: activeKafkaEndpoint,
+			KafkaClusterConfigs:        kafkaClusters,
 		}},
 		Context: ctx,
 	}
 }
 
-func newKafkaClusterNonEnvironmentContext(activeKafka string, kafkaClusters map[string]*KafkaClusterConfig, ctx *Context) *KafkaClusterContext {
+func newKafkaClusterNonEnvironmentContext(activeKafka string, activeKafkaEndpoint string, kafkaClusters map[string]*KafkaClusterConfig, ctx *Context) *KafkaClusterContext {
 	return &KafkaClusterContext{
-		EnvContext:          false,
-		ActiveKafkaCluster:  activeKafka,
-		KafkaClusterConfigs: kafkaClusters,
-		Context:             ctx,
+		EnvContext:                 false,
+		ActiveKafkaCluster:         activeKafka,
+		ActiveKafkaClusterEndpoint: activeKafkaEndpoint,
+		KafkaClusterConfigs:        kafkaClusters,
+		Context:                    ctx,
 	}
 }
 
@@ -67,12 +72,38 @@ func (k *KafkaClusterContext) GetActiveKafkaClusterConfig() *KafkaClusterConfig 
 	return kafkaEnvContext.KafkaClusterConfigs[kafkaEnvContext.ActiveKafkaCluster]
 }
 
+func (k *KafkaClusterContext) GetActiveKafkaClusterEndpoint() string {
+	if !k.EnvContext {
+		return k.ActiveKafkaClusterEndpoint
+	}
+	kafkaEnvContext := k.GetCurrentKafkaEnvContext()
+	return kafkaEnvContext.ActiveKafkaClusterEndpoint
+}
+
 func (k *KafkaClusterContext) SetActiveKafkaCluster(clusterId string) {
 	if !k.EnvContext {
 		k.ActiveKafkaCluster = clusterId
 	} else {
 		kafkaEnvContext := k.GetCurrentKafkaEnvContext()
 		kafkaEnvContext.ActiveKafkaCluster = clusterId
+	}
+}
+
+func (k *KafkaClusterContext) SetActiveKafkaClusterEndpoint(endpoint string) {
+	if !k.EnvContext {
+		k.ActiveKafkaClusterEndpoint = endpoint
+	} else {
+		kafkaEnvContext := k.GetCurrentKafkaEnvContext()
+		kafkaEnvContext.ActiveKafkaClusterEndpoint = endpoint
+	}
+}
+
+func (k *KafkaClusterContext) UnsetActiveKafkaClusterEndpoint() {
+	if !k.EnvContext {
+		k.ActiveKafkaClusterEndpoint = ""
+	} else {
+		kafkaEnvContext := k.GetCurrentKafkaEnvContext()
+		kafkaEnvContext.ActiveKafkaClusterEndpoint = ""
 	}
 }
 
@@ -140,8 +171,9 @@ func (k *KafkaClusterContext) GetCurrentKafkaEnvContext() *KafkaEnvContext {
 	curEnv := k.Context.GetCurrentEnvironment()
 	if k.KafkaEnvContexts[curEnv] == nil {
 		k.KafkaEnvContexts[curEnv] = &KafkaEnvContext{
-			ActiveKafkaCluster:  "",
-			KafkaClusterConfigs: map[string]*KafkaClusterConfig{},
+			ActiveKafkaCluster:         "",
+			ActiveKafkaClusterEndpoint: "",
+			KafkaClusterConfigs:        map[string]*KafkaClusterConfig{},
 		}
 		if err := k.Context.Save(); err != nil {
 			panic(fmt.Sprintf("Unable to save new KafkaEnvContext to config for context '%s' environment '%s'.", k.Context.Name, curEnv))

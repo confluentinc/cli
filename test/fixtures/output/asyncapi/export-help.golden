@@ -18,6 +18,7 @@ Flags:
       --topics strings                    A comma-separated list of topics to export. Supports prefixes ending with a wildcard (*).
       --schema-registry-endpoint string   The URL of the Schema Registry cluster.
       --value-format string               Format message value as "string", "avro", "double", "integer", "jsonschema", or "protobuf". Note that schema references are not supported for Avro. (default "string")
+      --kafka-endpoint string             Endpoint to be used for this Kafka cluster.
       --cluster string                    Kafka cluster ID.
       --environment string                Environment ID.
 
