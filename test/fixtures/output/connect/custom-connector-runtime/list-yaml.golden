@@ -1,0 +1,18 @@
+- id: ccr-123456
+  custom_connect_plugin_runtime_name: my-custom-runtime
+  runtime_ak_version: 3.7.0
+  supported_java_versions:
+    - "11"
+    - "17"
+  product_maturity: GA
+  end_of_life_at: 0001-01-01T00:00:00Z
+  description: This is a custom connector runtime for testing purposes.
+- id: ccr-abcdef
+  custom_connect_plugin_runtime_name: my-custom-runtime
+  runtime_ak_version: 3.8.0
+  supported_java_versions:
+    - "11"
+    - "17"
+  product_maturity: EA
+  end_of_life_at: 0001-01-01T00:00:00Z
+  description: This is a custom connector runtime for testing purposes.
