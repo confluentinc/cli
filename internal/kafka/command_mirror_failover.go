@@ -26,6 +26,7 @@ func (c *mirrorCommand) newFailoverCommand() *cobra.Command {
 
 	pcmd.AddLinkFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually failover the mirror topic, but simply validates it.")
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -47,7 +48,7 @@ func (c *mirrorCommand) failover(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}
