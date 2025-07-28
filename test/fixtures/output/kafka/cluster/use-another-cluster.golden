@@ -1,0 +1,2 @@
+Set Kafka cluster "lkc-describe" as the active cluster for environment "env-596".
+Unset current endpoint. Use `kafka cluster endpoint list` to view the available endpoints and use `cluster endpoint use` to set an active endpoint for the current Kafka cluster.

@@ -44,6 +44,7 @@
         "kafka_environment_contexts": {
           "env-123456": {
             "active_kafka": "anonymous-id",
+            "active_kafka_endpoint": "",
             "kafka_cluster_infos": {
               "anonymous-id": {
                 "id": "anonymous-id",

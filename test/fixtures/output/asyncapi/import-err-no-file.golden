@@ -12,6 +12,7 @@ Flags:
       --overwrite                         Overwrite existing topics with the same name.
       --kafka-api-key string              Kafka cluster API key.
       --schema-registry-endpoint string   The URL of the Schema Registry cluster.
+      --kafka-endpoint string             Endpoint to be used for this Kafka cluster.
 
 Global Flags:
   -h, --help            Show help for this command.

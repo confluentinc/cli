@@ -8,6 +8,7 @@ Available Commands:
   create        Create a Kafka cluster.
   delete        Delete one or more Kafka clusters.
   describe      Describe a Kafka cluster.
+  endpoint      Manage Kafka cluster endpoints.
   list          List Kafka clusters.
   update        Update a Kafka cluster.
   use           Use a Kafka cluster in subsequent commands.
