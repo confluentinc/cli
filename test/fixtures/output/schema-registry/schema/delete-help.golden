@@ -8,10 +8,18 @@ Soft delete the latest version of subject "payments".
 
   $ confluent schema-registry schema delete --subject payments --version latest
 
+Soft delete version "2" of subject "payments".
+
+  $ confluent schema-registry schema delete --subject payments --version 2
+
+Permanently delete version "2" of subject "payments", which must be soft deleted first.
+
+  $ confluent schema-registry schema delete --subject payments --version 2 --permanent
+
 Flags:
       --subject string                    REQUIRED: Subject of the schema.
       --version string                    REQUIRED: Version of the schema. Can be a specific version, "all", or "latest".
-      --permanent                         Permanently delete the schema.
+      --permanent                         Permanently delete the schema. You must first soft delete the schema by deleting the schema without this flag.
       --context string                    CLI context name.
       --environment string                Environment ID.
       --schema-registry-endpoint string   The URL of the Schema Registry cluster.
