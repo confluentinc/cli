@@ -28,7 +28,7 @@ func (c *ipFilterCommand) newUpdateCommand(cfg *config.Config) *cobra.Command {
 	isKafkaEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.kafka.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
 	operationGroups := []string{"SCHEMA", "FLINK"}
 	if isKafkaEnabled {
-		operationGroups = append(operationGroups, "KAFKA_MANAGEMENT", "KAFKA_DATA")
+		operationGroups = append(operationGroups, "KAFKA_MANAGEMENT", "KAFKA_DATA", "KAFKA_DISCOVERY")
 	}
 	cmd.Example = examples.BuildExampleString(
 		examples.Example{

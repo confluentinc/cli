@@ -37,7 +37,7 @@ func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 	cmd.Flags().String("environment", "", "Identifier of the environment for which this filter applies. Without this flag, applies only to the organization.")
 	opGroups := []string{"MANAGEMENT", "SCHEMA", "FLINK"}
 	if isKafkaEnabled {
-		opGroups = append(opGroups, "KAFKA_MANAGEMENT", "KAFKA_DATA")
+		opGroups = append(opGroups, "KAFKA_MANAGEMENT", "KAFKA_DATA", "KAFKA_DISCOVERY")
 	}
 	cmd.Flags().StringSlice("operations", nil, fmt.Sprintf("A comma-separated list of operation groups: %s.", utils.ArrayToCommaDelimitedString(opGroups, "or")))
 	cmd.Flags().Bool("no-public-networks", false, "Use in place of ip-groups to reference the no public networks IP Group.")
