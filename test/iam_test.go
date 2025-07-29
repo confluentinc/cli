@@ -420,8 +420,8 @@ func (s *CLITestSuite) TestIamIpFilter() {
 		{args: "iam ip-filter update ipf-34dq4 --remove-operation-groups SCHEMA", fixture: "iam/ip-filter/update-remove-operation-group.golden"},
 		{args: "iam ip-filter update ipf-34dq4 --resource-group multiple --add-operation-groups FLINK", fixture: "iam/ip-filter/update-add-flink-operation-group.golden"},
 		{args: "iam ip-filter update ipf-34dq6 --remove-operation-groups SCHEMA,FLINK", fixture: "iam/ip-filter/update-remove-sr-and-flink-operation-group.golden"},
-		{args: "iam ip-filter update ipf-34dq4 --resource-group multiple --add-operation-groups KAFKA_MANAGEMENT,KAFKA_DATA", fixture: "iam/ip-filter/update-add-kafka-operation-group.golden"},
-		{args: "iam ip-filter update ipf-34dq7 --remove-operation-groups KAFKA_MANAGEMENT,KAFKA_DATA", fixture: "iam/ip-filter/update-remove-kafka-operation-group.golden"},
+		{args: "iam ip-filter update ipf-34dq4 --resource-group multiple --add-operation-groups KAFKA_MANAGEMENT,KAFKA_DATA,KAFKA_DISCOVERY", fixture: "iam/ip-filter/update-add-kafka-operation-group.golden"},
+		{args: "iam ip-filter update ipf-34dq7 --remove-operation-groups KAFKA_MANAGEMENT,KAFKA_DATA,KAFKA_DISCOVERY", fixture: "iam/ip-filter/update-remove-kafka-operation-group.golden"},
 	}
 
 	for _, test := range tests {

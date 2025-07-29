@@ -12,7 +12,7 @@ Flags:
       --resource-group string   Name of resource group: "management" or "multiple". (default "multiple")
       --ip-groups strings       A comma-separated list of IP group IDs.
       --environment string      Identifier of the environment for which this filter applies. Without this flag, applies only to the organization.
-      --operations strings      A comma-separated list of operation groups: "MANAGEMENT", "SCHEMA", "FLINK", "KAFKA_MANAGEMENT", or "KAFKA_DATA".
+      --operations strings      A comma-separated list of operation groups: "MANAGEMENT", "SCHEMA", "FLINK", "KAFKA_MANAGEMENT", "KAFKA_DATA", or "KAFKA_DISCOVERY".
       --no-public-networks      Use in place of ip-groups to reference the no public networks IP Group.
       --context string          CLI context name.
   -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
