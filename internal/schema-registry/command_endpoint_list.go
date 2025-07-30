@@ -88,6 +88,7 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	return table.Print()
 }
 
+// We filter locally to get around a query parameter bug: https://confluentinc.atlassian.net/browse/TRAFFIC-19819
 func filterPrivateLinkNetworks(networks []networkingv1.NetworkingV1Network) []networkingv1.NetworkingV1Network {
 	var filteredNetworks []networkingv1.NetworkingV1Network
 	for _, network := range networks {
