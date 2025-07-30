@@ -13,6 +13,9 @@
            |                      |               |       |             |               |                                |       |                         |                | use1-az2=10.200.0.32/27,        
            |                      |               |       |             |               |                                |       |                         |                | use1-az3=10.200.0.64/27         
   n-abcde2 | prod-azure-eastus2   |               | AZURE | eastus2     | 10.0.0.0/16   | 1, 2, 3                        | READY | PRIVATELINK             | PRIVATE        |                                 
+  n-abcde7 | prod-azure-eastus2   |               | AZURE | eastus2     | 10.0.0.0/16   | 1, 2, 3                        | READY | PEERING                 |                | 1=10.200.0.0/27,                
+           |                      |               |       |             |               |                                |       |                         |                | 2=10.200.0.32/27,               
+           |                      |               |       |             |               |                                |       |                         |                | 3=10.200.0.64/27                
   n-abcde1 | prod-gcp-us-central1 | gateway-12345 | GCP   | us-central1 | 10.1.0.0/16   | us-central1-a, us-central1-b,  | READY | PEERING                 |                | us-central1-a=10.200.0.0/27,    
            |                      |               |       |             |               | us-central1-c                  |       |                         |                | us-central1-b=10.200.0.32/27,   
            |                      |               |       |             |               |                                |       |                         |                | us-central1-c=10.200.0.64/27    

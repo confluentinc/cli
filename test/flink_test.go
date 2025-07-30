@@ -332,6 +332,8 @@ func (s *CLITestSuite) TestFlinkEndpointList() {
 		{args: "flink endpoint list", fixture: "flink/endpoint/list-gcp.golden"},
 		{args: "flink region use --cloud azure --region centralus", fixture: "flink/region/use-azure.golden"},
 		{args: "flink endpoint list", fixture: "flink/endpoint/list-azure.golden"},
+		{args: "flink region use --cloud azure --region eastus2", fixture: "flink/region/use-azure-ccn.golden"},
+		{args: "flink endpoint list", fixture: "flink/endpoint/list-azure-with-ccn.golden"},
 	}
 
 	for _, test := range tests {
@@ -355,6 +357,9 @@ func (s *CLITestSuite) TestFlinkEndpointUse() {
 		{args: "flink endpoint unset", fixture: "flink/endpoint/unset.golden"},
 		{args: "flink endpoint use http://127.0.0.1:1040", fixture: "flink/endpoint/use-private.golden"},
 		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: describeFailureFixture, exitCode: 1},
+		{args: "flink region use --cloud azure --region eastus2", fixture: "flink/region/use-azure-ccn.golden"},
+		{args: "flink endpoint use https://flink-n-abcde2.eastus.azure.confluent.cloud", fixture: "flink/endpoint/use-azure-ccn.golden"},
+		{args: "flink endpoint use https://flink-n-abcde7.eastus.azure.confluent.cloud", fixture: "flink/endpoint/use-azure-ccn-fail.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
