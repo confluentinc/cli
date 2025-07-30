@@ -680,6 +680,8 @@ func handleIamIpFilter(t *testing.T) http.HandlerFunc {
 				operationGroups = []string{"MANAGEMENT", "SCHEMA", "FLINK"}
 			} else if filterId == "ipf-34dq7" {
 				operationGroups = []string{"KAFKA_MANAGEMENT", "KAFKA_DATA", "KAFKA_DISCOVERY"}
+			} else if filterId == "ipf-34dq8" {
+				operationGroups = []string{"MANAGEMENT", "KSQL"}
 			} else {
 				operationGroups = []string{"MANAGEMENT"}
 			}
