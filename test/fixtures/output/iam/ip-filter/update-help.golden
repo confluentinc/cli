@@ -6,7 +6,7 @@ Usage:
 Examples:
 Update the name and add an IP group and operation group to IP filter "ipf-abcde":
 
-  $ confluent iam ip-filter update ipf-abcde --name "New Filter Name" --add-ip-groups ipg-12345 --add-operation-groups SCHEMA,FLINK,KAFKA_MANAGEMENT,KAFKA_DATA,KAFKA_DISCOVERY
+  $ confluent iam ip-filter update ipf-abcde --name "New Filter Name" --add-ip-groups ipg-12345 --add-operation-groups SCHEMA,FLINK,KAFKA_MANAGEMENT,KAFKA_DATA,KAFKA_DISCOVERY,KSQL
 
 Flags:
       --name string                       Updated name of the IP filter.
