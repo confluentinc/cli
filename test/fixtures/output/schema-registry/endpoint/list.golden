@@ -1,7 +1,8 @@
 +--------------------------------+-----------------------------------------------------------------------+
 | Public Endpoint URL            | http://127.0.0.1:1027                                                 |
 | Private Endpoint URL           | http://127.0.0.1:1029                                                 |
-| Private Regional Endpoint URLs | n-abcde6=https://lsrc-1234-n-abcde6.eu-west-1.aws.confluent.cloud     |
+| Private Regional Endpoint URLs | n-abcde2=https://lsrc-1234-n-abcde2.eastus.azure.confluent.cloud      |
+|                                | n-abcde6=https://lsrc-1234-n-abcde6.eu-west-1.aws.confluent.cloud     |
 |                                | us-east-1=https://lsrc-stk1d.us-east-1.aws.private.stag.cpdev.cloud   |
 |                                | us-west-2=https://lsrc-stgvk1d.us-west-2.aws.private.stag.cpdev.cloud |
 | Catalog Endpoint URL           | http://127.0.0.1:1030                                                 |

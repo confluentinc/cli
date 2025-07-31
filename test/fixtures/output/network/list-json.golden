@@ -71,6 +71,17 @@
     "dns_resolution": "PRIVATE"
   },
   {
+    "id": "n-abcde7",
+    "name": "prod-azure-eastus2",
+    "cloud": "AZURE",
+    "region": "eastus2",
+    "cidr": "10.0.0.0/16",
+    "zones": ["1", "2", "3"],
+    "phase": "READY",
+    "active_connection_types": ["PEERING"],
+    "zone_info": ["1=10.200.0.0/27", "2=10.200.0.32/27", "3=10.200.0.64/27"]
+  },
+  {
     "id": "n-abcde1",
     "name": "prod-gcp-us-central1",
     "gateway": "gateway-12345",
