@@ -118,11 +118,12 @@ func (c *command) validateTopic(client *ckgo.AdminClient, topic string, cluster 
 		}
 	}
 	if !foundTopic {
-		log.CliLogger.Trace("validateTopic failed due to topic not being found in the client's topic list")
-		return errors.NewErrorWithSuggestions(
-			fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsErrorMsg, topic),
-			fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsSuggestions, cluster.ID),
-		)
+		log.CliLogger.Tracef("validateTopic: Topic '%s' not visible in metadata, this could be due to ACL restrictions. Proceeding with operation to allow Kafka to handle authorization.", topic)
+		// Instead of failing here, we log the situation and proceed. This allows:
+		// 1. ALLOW topics to work properly and generate audit events
+		// 2. DENY topics to fail at the consumer level and generate denial audit events
+		// 3. Non-existent topics to fail with appropriate Kafka errors
+		return nil
 	}
 
 	log.CliLogger.Tracef("validateTopic succeeded")

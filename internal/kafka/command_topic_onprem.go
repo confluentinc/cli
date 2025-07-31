@@ -6,7 +6,6 @@ import (
 
 	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 
-	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
@@ -26,11 +25,12 @@ func ValidateTopic(adminClient *ckgo.AdminClient, topic string) error {
 		}
 	}
 	if !foundTopic {
-		log.CliLogger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
-		return errors.NewErrorWithSuggestions(
-			fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsErrorMsg, topic),
-			fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsSuggestions, "<cluster-id>"),
-		)
+		log.CliLogger.Tracef("validateTopic: Topic '%s' not visible in metadata, this could be due to ACL restrictions. Proceeding with operation to allow Kafka to handle authorization.", topic)
+		// Instead of failing here, we log the situation and proceed. This allows:
+		// 1. ALLOW topics to work properly and generate audit events
+		// 2. DENY topics to fail at the consumer level and generate denial audit events
+		// 3. Non-existent topics to fail with appropriate Kafka errors
+		return nil
 	}
 
 	log.CliLogger.Tracef("validateTopic succeeded")
