@@ -1,7 +1,0 @@
-              Name             | Value  
--------------------------------+--------
-  disable_feature_flags        | false  
-  disable_plugins              | true   
-  disable_plugins_once_windows | true   
-  disable_update_check         | false  
-  enable_color                 | false  
