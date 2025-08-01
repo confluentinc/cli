@@ -422,6 +422,8 @@ func (s *CLITestSuite) TestIamIpFilter() {
 		{args: "iam ip-filter update ipf-34dq6 --remove-operation-groups SCHEMA,FLINK", fixture: "iam/ip-filter/update-remove-sr-and-flink-operation-group.golden"},
 		{args: "iam ip-filter update ipf-34dq4 --resource-group multiple --add-operation-groups KAFKA_MANAGEMENT,KAFKA_DATA,KAFKA_DISCOVERY", fixture: "iam/ip-filter/update-add-kafka-operation-group.golden"},
 		{args: "iam ip-filter update ipf-34dq7 --remove-operation-groups KAFKA_MANAGEMENT,KAFKA_DATA,KAFKA_DISCOVERY", fixture: "iam/ip-filter/update-remove-kafka-operation-group.golden"},
+		{args: "iam ip-filter update ipf-34dq4 --resource-group multiple --add-operation-groups KSQL", fixture: "iam/ip-filter/update-add-ksql-operation-group.golden"},
+		{args: "iam ip-filter update ipf-34dq8 --remove-operation-groups KSQL", fixture: "iam/ip-filter/update-remove-ksql-operation-group.golden"},
 	}
 
 	for _, test := range tests {

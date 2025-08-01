@@ -1,0 +1,8 @@
++------------------+-------------------------------------------+
+| ID               | ipf-34dq3                                 |
+| Name             | demo-ip-filter                            |
+| Resource Group   | multiple                                  |
+| IP Groups        | ipg-12345, ipg-abcde                      |
+| Operation Groups | KSQL, MANAGEMENT, SCHEMA                  |
+| Resource Scope   | crn://confluent.cloud/organization=org123 |
++------------------+-------------------------------------------+
