@@ -44,21 +44,19 @@ func (c *command) applicationUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Check if the application already exists
 	resourceFilePath := args[0]
-	// Read file contents
 	data, err := os.ReadFile(resourceFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to read file: %v", err)
 	}
 
-	var application cmfsdk.FlinkApplication
+	var genericData map[string]interface{}
 	ext := filepath.Ext(resourceFilePath)
 	switch ext {
 	case ".json":
-		err = json.Unmarshal(data, &application)
+		err = json.Unmarshal(data, &genericData)
 	case ".yaml", ".yml":
-		err = yaml.Unmarshal(data, &application)
+		err = yaml.Unmarshal(data, &genericData)
 	default:
 		return errors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
 	}
@@ -66,10 +64,28 @@ func (c *command) applicationUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	outputApplication, err := client.UpdateApplication(c.createContext(), environment, application)
+	jsonBytes, err := json.Marshal(genericData)
+	if err != nil {
+		return fmt.Errorf("failed to marshal intermediate data: %w", err)
+	}
+
+	var sdkApplication cmfsdk.FlinkApplication
+	if err = json.Unmarshal(jsonBytes, &sdkApplication); err != nil {
+		return fmt.Errorf("failed to bind data to FlinkApplication model: %w", err)
+	}
+
+	sdkOutputApplication, err := client.UpdateApplication(c.createContext(), environment, sdkApplication)
 	if err != nil {
 		return err
 	}
 
-	return output.SerializedOutput(cmd, outputApplication)
+	localOutputApp := LocalFlinkApplication{
+		ApiVersion: sdkOutputApplication.ApiVersion,
+		Kind:       sdkOutputApplication.Kind,
+		Metadata:   sdkOutputApplication.Metadata,
+		Spec:       sdkOutputApplication.Spec,
+		Status:     sdkOutputApplication.Status,
+	}
+
+	return output.SerializedOutput(cmd, localOutputApp)
 }
