@@ -21,18 +21,30 @@ func (c *command) newSchemaDeleteCommand(cfg *config.Config) *cobra.Command {
 		RunE:  c.schemaDelete,
 	}
 
-	example := examples.Example{
-		Text: `Soft delete the latest version of subject "payments".`,
-		Code: "confluent schema-registry schema delete --subject payments --version latest",
+	exampleSlice := []examples.Example{
+		{
+			Text: `Soft delete the latest version of subject "payments".`,
+			Code: "confluent schema-registry schema delete --subject payments --version latest",
+		},
+		{
+			Text: `Soft delete version "2" of subject "payments".`,
+			Code: "confluent schema-registry schema delete --subject payments --version 2",
+		},
+		{
+			Text: `Permanently delete version "2" of subject "payments", which must be soft deleted first.`,
+			Code: "confluent schema-registry schema delete --subject payments --version 2 --permanent",
+		},
 	}
 	if cfg.IsOnPremLogin() {
-		example.Code += " " + onPremAuthenticationMsg
+		for i := range exampleSlice {
+			exampleSlice[i].Code += " " + onPremAuthenticationMsg
+		}
 	}
-	cmd.Example = examples.BuildExampleString(example)
+	cmd.Example = examples.BuildExampleString(exampleSlice...)
 
 	cmd.Flags().String("subject", "", subjectUsage)
 	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version, "all", or "latest".`)
-	cmd.Flags().Bool("permanent", false, "Permanently delete the schema.")
+	cmd.Flags().Bool("permanent", false, "Permanently delete the schema. You must first soft delete the schema by deleting the schema without this flag.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
