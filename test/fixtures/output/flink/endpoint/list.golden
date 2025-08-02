@@ -1,4 +1,0 @@
-  Current |       Endpoint        | Cloud |  Region   |  Type   
-----------+-----------------------+-------+-----------+---------
-          | http://127.0.0.1:1026 | AWS   | eu-west-1 | PUBLIC  
-          | http://127.0.0.1:1026 | AWS   | eu-west-2 | PUBLIC  

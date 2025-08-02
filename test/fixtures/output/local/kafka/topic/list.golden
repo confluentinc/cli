@@ -1,3 +1,0 @@
-  Name | Internal | Replication Factor | Partition Count  
--------+----------+--------------------+------------------
-  test | false    |                  1 |               1  
