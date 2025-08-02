@@ -733,6 +733,53 @@ func TestLoginWithExistingContext(t *testing.T) {
 	}
 }
 
+func TestSuspendedOrganizationError(t *testing.T) {
+	req := require.New(t)
+
+	mockLoginCredentialsManager := &climock.LoginCredentialsManager{
+		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return &pauth.Credentials{
+					Username: promptUser,
+					Password: promptPassword,
+				}, nil
+			}
+		},
+		GetCloudCredentialsFromPromptFunc: func(_ string) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, nil
+			}
+		},
+		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
+	}
+
+	mockAuthTokenHandler := &climock.AuthTokenHandler{
+		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, _ string) (string, string, error) {
+			return "", "", &ccloudv1.SuspendedOrganizationError{}
+		},
+	}
+
+	auth := &ccloudv1mock.Auth{
+		UserFunc: func() (*ccloudv1.GetMeReply, error) {
+			return &ccloudv1.GetMeReply{
+				User: &ccloudv1.User{
+					Id:    23,
+					Email: promptUser,
+				},
+				Organization: &ccloudv1.Organization{ResourceId: organizationId1},
+				Accounts:     []*ccloudv1.Account{{Id: "env-596", Name: "Default"}},
+			}, nil
+		},
+	}
+	userInterface := &ccloudv1mock.UserInterface{}
+
+	loginCmd, _ := newLoginCmd(auth, userInterface, true, req, mockAuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
+	_, err := pcmd.ExecuteCommand(loginCmd)
+	req.Error(err)
+	req.IsType(&errors.ErrorWithSuggestionsImpl{}, err)
+	req.Contains(err.Error(), "suspended")
+}
+
 func TestValidateUrl(t *testing.T) {
 	req := require.New(t)
 	suite := []struct {
