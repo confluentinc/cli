@@ -5,7 +5,7 @@
     - "11"
     - "17"
   product_maturity: GA
-  end_of_life_at: 0001-01-01T00:00:00Z
+  end_of_life_at: 2026-12-31 00:00:00 +0000 UTC
   description: This is a custom connector runtime for testing purposes.
 - id: ccr-abcdef
   custom_connect_plugin_runtime_name: my-custom-runtime
@@ -14,5 +14,5 @@
     - "11"
     - "17"
   product_maturity: EA
-  end_of_life_at: 0001-01-01T00:00:00Z
+  end_of_life_at: ""
   description: This is a custom connector runtime for testing purposes.
