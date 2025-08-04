@@ -4,8 +4,13 @@ repos:
     rev: v5.0.0
     hooks:
       - id: check-merge-conflict
+        args: [--assume-in-merge]
       - id: check-yaml
-        exclude: ^mk-include/|^charts/
+        args: [--unsafe]
+      - id: check-case-conflict
+      - id: check-json
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
 
   - repo: https://github.com/confluentinc/gitleaks
     rev: v7.6.1.1
@@ -13,6 +18,7 @@ repos:
       - id: gitleaks
         args:
           - --verbose
+
   - repo: https://github.com/syntaqx/git-hooks
     rev: v0.0.16
     hooks:
@@ -22,3 +28,9 @@ repos:
         always_run: false
       - id: go-mod-tidy
         always_run: false
+
+  - repo: https://github.com/confluentinc/devprod-pre-commit
+    rev: v0.4.0
+    hooks:
+      - id: trufflehog
+exclude: ^.devcontainer/|^charts/|^mk-include/|^node_modules/
