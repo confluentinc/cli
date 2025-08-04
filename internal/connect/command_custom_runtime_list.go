@@ -26,15 +26,19 @@ func (c *customRuntimeCommand) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, runtime := range runtimes {
-		list.Add(&customRuntimeOut{
+		out := &customRuntimeOut{
 			Id:                             runtime.GetId(),
 			CustomConnectPluginRuntimeName: runtime.GetCustomConnectPluginRuntimeName(),
 			RuntimeAkVersion:               runtime.GetRuntimeAkVersion(),
 			SupportedJavaVersions:          runtime.GetSupportedJavaVersions(),
 			ProductMaturity:                runtime.GetProductMaturity(),
-			EndOfLifeAt:                    runtime.GetEndOfLifeAt(),
 			Description:                    runtime.GetDescription(),
-		})
+		}
+		eol, ok := runtime.GetEndOfLifeAtOk()
+		if ok {
+			out.EndOfLifeAt = eol.String()
+		}
+		list.Add(out)
 	}
 	list.Sort(true)
 	return list.Print()
