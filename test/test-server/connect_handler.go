@@ -816,6 +816,7 @@ func handleListCustomConnectorRuntimes(t *testing.T) http.HandlerFunc {
 					RuntimeAkVersion:               connectcustompluginv1.PtrString("3.7.0"),
 					SupportedJavaVersions:          &[]string{"11", "17"},
 					ProductMaturity:                connectcustompluginv1.PtrString("GA"),
+					EndOfLifeAt:                    connectcustompluginv1.PtrTime(time.Date(2026, 12, 31, 0, 0, 0, 0, time.UTC)),
 					Description:                    connectcustompluginv1.PtrString("This is a custom connector runtime for testing purposes."),
 				},
 				{

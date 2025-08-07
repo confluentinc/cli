@@ -152,22 +152,33 @@ func handleFcpmRegions(t *testing.T) http.HandlerFunc {
 			HttpEndpoint:        flinkv2.PtrString(TestFlinkGatewayUrl.String()),
 			PrivateHttpEndpoint: flinkv2.PtrString(TestFlinkGatewayUrlPrivate.String()),
 		}
+		azureEastus2 := flinkv2.FcpmV2Region{
+			Id:                  flinkv2.PtrString("azure.eastus2"),
+			DisplayName:         flinkv2.PtrString("Virginia (eastus2)"),
+			Cloud:               flinkv2.PtrString("AZURE"),
+			RegionName:          flinkv2.PtrString("eastus2"),
+			HttpEndpoint:        flinkv2.PtrString(TestFlinkGatewayUrl.String()),
+			PrivateHttpEndpoint: flinkv2.PtrString(TestFlinkGatewayUrlPrivate.String()),
+		}
 
 		// Allowing flexible mock results based on query parameters
 		regions := []flinkv2.FcpmV2Region{awsEuWest1, awsEuWest2, gcp, azure}
-		if r.URL.Query().Get("cloud") == "AWS" {
+		if strings.ToUpper(r.URL.Query().Get("cloud")) == "AWS" {
 			regions = []flinkv2.FcpmV2Region{awsEuWest1, awsEuWest2}
 			if r.URL.Query().Get("region_name") == "eu-west-1" {
 				regions = []flinkv2.FcpmV2Region{awsEuWest1}
 			} else if r.URL.Query().Get("region_name") == "eu-west-2" {
 				regions = []flinkv2.FcpmV2Region{awsEuWest2}
 			}
-		} else if r.URL.Query().Get("cloud") == "GCP" {
+		} else if strings.ToUpper(r.URL.Query().Get("cloud")) == "GCP" {
 			regions = []flinkv2.FcpmV2Region{gcp}
-		} else if r.URL.Query().Get("cloud") == "AZURE" {
+		} else if strings.ToUpper(r.URL.Query().Get("cloud")) == "AZURE" {
 			regions = []flinkv2.FcpmV2Region{azure}
 			if r.URL.Query().Get("region_name") == "eastus" {
 				regions = []flinkv2.FcpmV2Region{}
+			}
+			if r.URL.Query().Get("region_name") == "eastus2" {
+				regions = []flinkv2.FcpmV2Region{azureEastus2}
 			}
 		}
 		regionsList := &flinkv2.FcpmV2RegionList{Data: regions}
