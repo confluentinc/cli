@@ -54,12 +54,9 @@ type launchDarklyManager struct {
 	isDisabled            bool
 	timeoutWarningPrinted bool
 	version               *version.Version
+	latestCliFlags        map[string]any
+	latestCCloudFlags     map[string]any
 }
-
-var ( // cache retrieved flags in memory before they're written to file as an optimization
-	retrievedCliFlags    = make(map[string]any)
-	retrievedCCloudFlags = make(map[string]any)
-)
 
 func Init(cfg *config.Config) {
 	cliBasePath := fmt.Sprintf(baseURL, auth.CCloudURL, cliTestEnvClientId)
@@ -154,8 +151,8 @@ func (ld *launchDarklyManager) generalVariation(key string, ctx *config.Context,
 	var err error
 	if areCachedFlagsAvailable(ctx, user, client, key) {
 		flagVals = ctx.GetLDFlags(client)
-	} else if areCurrentFlagsAvailable(client, key) { // if the flag is not cached but we've already retrieved the newest flag values for the current user, check those maps first
-		flagVals = getCurrentFlags(client, key)
+	} else if ld.areCurrentFlagsAvailable(client, key) { // if the flag is not cached but we've already retrieved the newest flag values for the current user, check those maps first
+		flagVals = ld.getCurrentFlags(client, key)
 		if shouldCache {
 			writeFlagsToConfig(ctx, key, flagVals, user, client)
 		}
@@ -191,11 +188,11 @@ func (ld *launchDarklyManager) fetchFlags(user lduser.User, client config.Launch
 	switch client {
 	case config.CcloudProdLaunchDarklyClient, config.CcloudStagLaunchDarklyClient, config.CcloudDevelLaunchDarklyClient:
 		resp, err = ld.ccloudClient.New().Get(fmt.Sprintf(userPath, userEnc)).Receive(&flagVals, err)
-		retrievedCCloudFlags = flagVals
+		ld.latestCCloudFlags = flagVals
 	// default is "cli" client
 	default:
 		resp, err = ld.cliClient.New().Get(fmt.Sprintf(userPath, userEnc)).Receive(&flagVals, err)
-		retrievedCliFlags = flagVals
+		ld.latestCliFlags = flagVals
 	}
 	if err != nil {
 		log.CliLogger.Debug(resp)
@@ -326,22 +323,22 @@ func writeFlagsToConfig(ctx *config.Context, key string, vals map[string]any, us
 	_ = ctx.Save()
 }
 
-func areCurrentFlagsAvailable(client config.LaunchDarklyClient, key string) bool {
+func (ld *launchDarklyManager) areCurrentFlagsAvailable(client config.LaunchDarklyClient, key string) bool {
 	switch client {
 	case config.CcloudDevelLaunchDarklyClient, config.CcloudStagLaunchDarklyClient, config.CcloudProdLaunchDarklyClient:
-		_, ok := retrievedCCloudFlags[key]
+		_, ok := ld.latestCCloudFlags[key]
 		return ok
 	default:
-		_, ok := retrievedCliFlags[key]
+		_, ok := ld.latestCliFlags[key]
 		return ok
 	}
 }
 
-func getCurrentFlags(client config.LaunchDarklyClient, key string) map[string]any {
+func (ld *launchDarklyManager) getCurrentFlags(client config.LaunchDarklyClient, key string) map[string]any {
 	switch client {
 	case config.CcloudDevelLaunchDarklyClient, config.CcloudStagLaunchDarklyClient, config.CcloudProdLaunchDarklyClient:
-		return retrievedCCloudFlags
+		return ld.latestCCloudFlags
 	default:
-		return retrievedCliFlags
+		return ld.latestCliFlags
 	}
 }
