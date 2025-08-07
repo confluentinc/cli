@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -312,8 +313,12 @@ func (c *command) configService(service, configFile string) error {
 	if err != nil {
 		return err
 	}
-
-	port, err := c.ch.ReadServicePort(service, zookeeperMode)
+	var port int
+	if c.isC3(service) {
+		port, err = c.c3h.ReadServicePortC3(service, zookeeperMode)
+	} else {
+		port, err = c.ch.ReadServicePort(service, zookeeperMode)
+	}
 	if err != nil {
 		if err.Error() != "no port specified" {
 			return err
@@ -323,10 +328,18 @@ func (c *command) configService(service, configFile string) error {
 	}
 
 	var data []byte
-	if configFile == "" {
-		data, err = c.ch.ReadServiceConfig(service, zookeeperMode)
+	if c.isC3(service) {
+		if configFile == "" {
+			data, err = c.c3h.ReadServiceConfigC3(service, zookeeperMode)
+		} else {
+			data, err = os.ReadFile(configFile)
+		}
 	} else {
-		data, err = os.ReadFile(configFile)
+		if configFile == "" {
+			data, err = c.ch.ReadServiceConfig(service, zookeeperMode)
+		} else {
+			data, err = os.ReadFile(configFile)
+		}
 	}
 	if err != nil {
 		return err
@@ -337,10 +350,18 @@ func (c *command) configService(service, configFile string) error {
 		return err
 	}
 
-	data = injectConfig(data, config)
+	if service != "alertmanager" && service != "prometheus" {
+		data = injectConfig(data, config)
+	}
 
-	if err := c.cc.WriteConfig(service, data); err != nil {
-		return err
+	if c.isC3(service) {
+		if err := c.cc.WriteConfigC3(service, data); err != nil {
+			return err
+		}
+	} else {
+		if err := c.cc.WriteConfig(service, data); err != nil {
+			return err
+		}
 	}
 
 	logs, err := c.cc.GetLogsDir(service)
@@ -356,6 +377,16 @@ func (c *command) configService(service, configFile string) error {
 	}
 
 	return nil
+}
+
+func (c *command) isC3(service string) bool {
+	version1, _ := c.ch.GetConfluentVersion()
+	verMajor := strings.Split(version1, ".")
+	versionInt, _ := strconv.Atoi(verMajor[0])
+	if service == "alertmanager" || service == "prometheus" || (service == "control-center" && versionInt >= 8) {
+		return true
+	}
+	return false
 }
 
 func injectConfig(data []byte, config map[string]string) []byte {
@@ -387,22 +418,40 @@ func injectConfig(data []byte, config map[string]string) []byte {
 }
 
 func (c *command) startProcess(service string) error {
-	scriptFile, err := c.ch.GetServiceScript("start", service)
+	var scriptFile string
+	var err error
+	if c.isC3(service) {
+		scriptFile, err = c.c3h.GetServiceScriptC3("start", service)
+	} else {
+		scriptFile, err = c.ch.GetServiceScript("start", service)
+	}
 	if err != nil {
 		return err
 	}
-
-	configFile, err := c.cc.GetConfigFile(service)
-	if err != nil {
-		return err
+	var configFile string
+	if c.isC3(service) {
+		configFile, err = c.cc.GetConfigFileC3(service)
+		if err != nil {
+			return err
+		}
+	} else {
+		configFile, err = c.cc.GetConfigFile(service)
+		if err != nil {
+			return err
+		}
 	}
-
+	//output.Printf(false, "CATCH IT!")
+	//output.Printf(false, scriptFile)
+	//output.Printf(false, configFile)
 	err = c.setupMetaProperties(service)
 	if err != nil {
 		return err
 	}
 
 	start := exec.Command(scriptFile, configFile)
+	if c.isC3(service) {
+		start.Env = append(os.Environ(), "LOCAL_MODE=true")
+	}
 
 	logFile, err := c.cc.GetLogFile(service)
 	if err != nil {
@@ -452,10 +501,13 @@ func (c *command) startProcess(service string) error {
 		for {
 			if isPortOpen(service) {
 				open <- true
+				//output.Printf(false, "yessssss")
 			}
+			//output.Printf(false, "no please!")
 			time.Sleep(time.Second)
 		}
 	}()
+	//output.Printf(false, "HEREEEEE????!")
 	select {
 	case <-open:
 		break
@@ -489,7 +541,14 @@ func (c *command) stopService(service string) error {
 }
 
 func (c *command) stopProcess(service string) error {
-	scriptFile, err := c.ch.GetServiceScript("stop", service)
+	var scriptFile string
+	var err error
+	if c.isC3(service) {
+		scriptFile, err = c.c3h.GetServiceScriptC3("stop", service)
+	} else {
+		scriptFile, err = c.ch.GetServiceScript("stop", service)
+	}
+
 	if err != nil {
 		return err
 	}
@@ -585,6 +644,9 @@ func (c *command) killProcess(service string) error {
 }
 
 func (c *command) printStatus(service string) error {
+	//if service == "alertmanager" || service =="prometheus"{
+	//	return nil
+	//}
 	isUp, err := c.isRunning(service)
 	if err != nil {
 		return err
@@ -632,8 +694,10 @@ func isPortOpen(service string) bool {
 		addr := fmt.Sprintf(":%d", services[service].port)
 		out, err := exec.Command("lsof", "-i", addr).Output()
 		if err != nil {
+			//output.Printf(false, "SECOND-ERRRR")
 			return false
 		}
+		//output.Printf(false, "SECOND")
 		return len(out) > 0
 	}
 }
