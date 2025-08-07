@@ -119,7 +119,7 @@ func (c *command) validateTopic(client *ckgo.AdminClient, topic string, cluster 
 	}
 	if !foundTopic {
 		log.CliLogger.Tracef("validateTopic: Topic '%s' not visible in metadata, this could be due to ACL restrictions. Proceeding with operation to allow Kafka to handle authorization.", topic)
-				return nil
+		return nil
 	}
 
 	log.CliLogger.Tracef("validateTopic succeeded")
