@@ -54,6 +54,8 @@ type launchDarklyManager struct {
 	isDisabled            bool
 	timeoutWarningPrinted bool
 	version               *version.Version
+	latestCliFlags        map[string]any
+	latestCCloudFlags     map[string]any
 }
 
 func Init(cfg *config.Config) {
@@ -138,6 +140,7 @@ func (ld *launchDarklyManager) JsonVariation(key string, ctx *config.Context, cl
 }
 
 func (ld *launchDarklyManager) generalVariation(key string, ctx *config.Context, client config.LaunchDarklyClient, shouldCache bool, defaultVal any) any {
+	log.CliLogger.Infof("evaluating feature flag %s", key)
 	if ld.isDisabled {
 		return defaultVal
 	}
@@ -147,7 +150,14 @@ func (ld *launchDarklyManager) generalVariation(key string, ctx *config.Context,
 	// Check if cached flags are for same auth status (anon or not anon) as current ctx so that we know the values are valid based on targeting
 	var flagVals map[string]any
 	var err error
-	if !areCachedFlagsAvailable(ctx, user, client, key) {
+	if areCachedFlagsAvailable(ctx, user, client, key) {
+		flagVals = ctx.GetLDFlags(client)
+	} else if ld.areCurrentFlagsAvailable(client, key) { // if the flag is not cached but we've already retrieved the newest flag values for the current user, check those maps first
+		flagVals = ld.getCurrentFlags(client)
+		if shouldCache {
+			writeFlagsToConfig(ctx, key, flagVals, user, client)
+		}
+	} else {
 		flagVals, err = ld.fetchFlags(user, client)
 		if err != nil {
 			log.CliLogger.Debug(err.Error())
@@ -156,8 +166,6 @@ func (ld *launchDarklyManager) generalVariation(key string, ctx *config.Context,
 		if shouldCache {
 			writeFlagsToConfig(ctx, key, flagVals, user, client)
 		}
-	} else {
-		flagVals = ctx.GetLDFlags(client)
 	}
 	if _, ok := flagVals[key]; ok {
 		return flagVals[key]
@@ -181,9 +189,11 @@ func (ld *launchDarklyManager) fetchFlags(user lduser.User, client config.Launch
 	switch client {
 	case config.CcloudProdLaunchDarklyClient, config.CcloudStagLaunchDarklyClient, config.CcloudDevelLaunchDarklyClient:
 		resp, err = ld.ccloudClient.New().Get(fmt.Sprintf(userPath, userEnc)).Receive(&flagVals, err)
+		ld.latestCCloudFlags = flagVals
 	// default is "cli" client
 	default:
 		resp, err = ld.cliClient.New().Get(fmt.Sprintf(userPath, userEnc)).Receive(&flagVals, err)
+		ld.latestCliFlags = flagVals
 	}
 	if err != nil {
 		log.CliLogger.Debug(resp)
@@ -200,6 +210,11 @@ func (ld *launchDarklyManager) fetchFlags(user lduser.User, client config.Launch
 
 func areCachedFlagsAvailable(ctx *config.Context, user lduser.User, client config.LaunchDarklyClient, key string) bool {
 	if ctx == nil || ctx.FeatureFlags == nil {
+		if ctx == nil {
+			log.CliLogger.Infof("No cached value for feature flag %s found: login context is empty.", key)
+		} else if ctx.FeatureFlags == nil {
+			log.CliLogger.Infof("No cached value for feature flag %s found: config does not contain feature flags.", key)
+		}
 		return false
 	}
 
@@ -207,6 +222,7 @@ func areCachedFlagsAvailable(ctx *config.Context, user lduser.User, client confi
 
 	// only use cached flags if they were fetched for the same LD User
 	if !flags.User.Equal(user) {
+		log.CliLogger.Infof("No cached value for feature flag %s found: current cached flags were retrieved for a different user.", key)
 		return false
 	}
 
@@ -214,10 +230,12 @@ func areCachedFlagsAvailable(ctx *config.Context, user lduser.User, client confi
 	case config.CcloudDevelLaunchDarklyClient, config.CcloudStagLaunchDarklyClient, config.CcloudProdLaunchDarklyClient:
 		// for ccloud only single keys are stored, so we need to check if the specific flag is present
 		if _, ok := flags.CcloudValues[key]; !ok {
+			log.CliLogger.Infof("No cached value for feature flag %s found: cached ccloud flags do not contain this flag.", key)
 			return false
 		}
 	default:
 		if _, ok := flags.CliValues[key]; !ok {
+			log.CliLogger.Infof("No cached value for feature flag %s found: cached cli flags do not contain this flag.", key)
 			return false
 		}
 	}
@@ -243,14 +261,6 @@ func (ld *launchDarklyManager) contextToLDUser(ctx *config.Context) lduser.User 
 
 	if ld.version != nil && ld.version.Version != "" {
 		custom.Set("cli.version", ldvalue.String(ld.version.Version))
-	}
-
-	if ld.Command != nil {
-		custom.Set("cli.command", ldvalue.String(ld.Command.CommandPath()))
-	}
-
-	if ld.flags != nil {
-		custom.Set("cli.flags", ldvalue.CopyArbitraryValue(ld.flags))
 	}
 
 	if ctx == nil {
@@ -312,4 +322,24 @@ func writeFlagsToConfig(ctx *config.Context, key string, vals map[string]any, us
 	ctx.FeatureFlags.User = user
 
 	_ = ctx.Save()
+}
+
+func (ld *launchDarklyManager) areCurrentFlagsAvailable(client config.LaunchDarklyClient, key string) bool {
+	switch client {
+	case config.CcloudDevelLaunchDarklyClient, config.CcloudStagLaunchDarklyClient, config.CcloudProdLaunchDarklyClient:
+		_, ok := ld.latestCCloudFlags[key]
+		return ok
+	default:
+		_, ok := ld.latestCliFlags[key]
+		return ok
+	}
+}
+
+func (ld *launchDarklyManager) getCurrentFlags(client config.LaunchDarklyClient) map[string]any {
+	switch client {
+	case config.CcloudDevelLaunchDarklyClient, config.CcloudStagLaunchDarklyClient, config.CcloudProdLaunchDarklyClient:
+		return ld.latestCCloudFlags
+	default:
+		return ld.latestCliFlags
+	}
 }

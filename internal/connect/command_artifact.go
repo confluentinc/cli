@@ -6,8 +6,6 @@ import (
 	camv1 "github.com/confluentinc/ccloud-sdk-go-v2/cam/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-	"github.com/confluentinc/cli/v4/pkg/config"
-	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -25,12 +23,11 @@ type artifactOut struct {
 	Status        string `human:"Status" serialized:"status"`
 }
 
-func newArtifactCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newArtifactCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "artifact",
 		Short:       "Manage Connect artifacts.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
-		Hidden:      !(cfg.IsTest || featureflags.Manager.BoolVariation("connect.artifact.enabled", cfg.Context(), config.CliLaunchDarklyClient, true, false)),
 	}
 
 	c := &artifactCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
