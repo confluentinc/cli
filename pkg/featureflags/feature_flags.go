@@ -153,7 +153,7 @@ func (ld *launchDarklyManager) generalVariation(key string, ctx *config.Context,
 	if areCachedFlagsAvailable(ctx, user, client, key) {
 		flagVals = ctx.GetLDFlags(client)
 	} else if ld.areCurrentFlagsAvailable(client, key) { // if the flag is not cached but we've already retrieved the newest flag values for the current user, check those maps first
-		flagVals = ld.getCurrentFlags(client, key)
+		flagVals = ld.getCurrentFlags(client)
 		if shouldCache {
 			writeFlagsToConfig(ctx, key, flagVals, user, client)
 		}
@@ -335,7 +335,7 @@ func (ld *launchDarklyManager) areCurrentFlagsAvailable(client config.LaunchDark
 	}
 }
 
-func (ld *launchDarklyManager) getCurrentFlags(client config.LaunchDarklyClient, key string) map[string]any {
+func (ld *launchDarklyManager) getCurrentFlags(client config.LaunchDarklyClient) map[string]any {
 	switch client {
 	case config.CcloudDevelLaunchDarklyClient, config.CcloudStagLaunchDarklyClient, config.CcloudProdLaunchDarklyClient:
 		return ld.latestCCloudFlags
