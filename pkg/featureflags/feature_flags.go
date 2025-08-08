@@ -140,6 +140,7 @@ func (ld *launchDarklyManager) JsonVariation(key string, ctx *config.Context, cl
 }
 
 func (ld *launchDarklyManager) generalVariation(key string, ctx *config.Context, client config.LaunchDarklyClient, shouldCache bool, defaultVal any) any {
+	log.CliLogger.Infof("evaluating feature flag %s", key)
 	if ld.isDisabled {
 		return defaultVal
 	}
