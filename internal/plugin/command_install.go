@@ -58,6 +58,10 @@ func (c *command) install(_ *cobra.Command, args []string) error {
 
 	output.Printf(c.Config.EnableColor, "Installed plugin `%s`.\n", plugin.ToCommandName(manifest.Id))
 
+	if c.cfg.DisablePlugins {
+		output.ErrPrintln(c.Config.EnableColor, disabledPluginsWarning)
+	}
+
 	return nil
 }
 

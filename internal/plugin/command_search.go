@@ -74,7 +74,15 @@ func (c *command) search(cmd *cobra.Command, _ []string) error {
 	for _, manifest := range manifests {
 		list.Add(manifest)
 	}
-	return list.Print()
+	if err := list.Print(); err != nil {
+		return err
+	}
+
+	if c.cfg.DisablePlugins && output.GetFormat(cmd) == output.Human {
+		output.ErrPrintln(c.Config.EnableColor, disabledPluginsWarning)
+	}
+
+	return nil
 }
 
 func clonePluginRepo(dir, url string) (*git.Repository, error) {

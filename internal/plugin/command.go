@@ -7,7 +7,10 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
-const cliPluginsUrl = "https://github.com/confluentinc/cli-plugins.git"
+const (
+	cliPluginsUrl          = "https://github.com/confluentinc/cli-plugins.git"
+	disabledPluginsWarning = "\nWarning: plugins are disabled. To enable plugins, use `confluent configuration update disable_plugins false`."
+)
 
 type command struct {
 	*pcmd.CLICommand

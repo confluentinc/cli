@@ -7,6 +7,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/deletion"
+	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/plugin"
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
@@ -36,6 +37,13 @@ func (c *command) uninstall(cmd *cobra.Command, args []string) error {
 		return os.Remove(pluginMap[name][0])
 	}
 
-	_, err := deletion.Delete(cmd, args, deleteFunc, resource.Plugin)
-	return err
+	if _, err := deletion.Delete(cmd, args, deleteFunc, resource.Plugin); err != nil {
+		return err
+	}
+
+	if c.cfg.DisablePlugins {
+		output.ErrPrintln(c.Config.EnableColor, disabledPluginsWarning)
+	}
+
+	return nil
 }
