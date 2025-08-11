@@ -77,6 +77,31 @@ var azurePythonArtifact = flinkartifactv1.ArtifactV1FlinkArtifact{
 	Versions:          artifactVersions,
 }
 
+var gcpJavaArtifact = flinkartifactv1.ArtifactV1FlinkArtifact{
+	Id:                flinkartifactv1.PtrString("cfa-123456"),
+	Cloud:             flinkartifactv1.PtrString("GCP"),
+	Region:            flinkartifactv1.PtrString("us-central1"),
+	Environment:       flinkartifactv1.PtrString("env-123456"),
+	DisplayName:       flinkartifactv1.PtrString("my-flink-artifact"),
+	ContentFormat:     flinkartifactv1.PtrString("JAR"),
+	Description:       flinkartifactv1.PtrString("CliArtifactTest"),
+	DocumentationLink: flinkartifactv1.PtrString("https://docs.confluent.io"),
+	Versions:          artifactVersions,
+}
+
+var gcpPythonArtifact = flinkartifactv1.ArtifactV1FlinkArtifact{
+	Id:            flinkartifactv1.PtrString("cfa-789012"),
+	Cloud:         flinkartifactv1.PtrString("GCP"),
+	Region:        flinkartifactv1.PtrString("us-central1"),
+	Environment:   flinkartifactv1.PtrString("env-789012"),
+	DisplayName:   flinkartifactv1.PtrString("my-flink-python-artifact"),
+	ContentFormat: flinkartifactv1.PtrString("ZIP"),
+	Description: flinkartifactv1.PtrString("This is a longer description example to verify the" +
+		" output of the CLI is not affected and remains readable"),
+	DocumentationLink: flinkartifactv1.PtrString("https://docs.confluent.io"),
+	Versions:          artifactVersions,
+}
+
 // Handler for: "/artifact/v1/flink-artifacts"
 func handleFlinkArtifacts(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -86,6 +111,13 @@ func handleFlinkArtifacts(t *testing.T) http.HandlerFunc {
 			require.NoError(t, json.NewDecoder(r.Body).Decode(&decodeRespone))
 			var artifact flinkartifactv1.ArtifactV1FlinkArtifact
 			switch strings.ToLower(decodeRespone.GetCloud()) {
+			case "gcp":
+				switch strings.ToLower(decodeRespone.GetRuntimeLanguage()) {
+				case "java", "":
+					artifact = gcpJavaArtifact
+				case "python":
+					artifact = gcpPythonArtifact
+				}
 			case "azure":
 				switch strings.ToLower(decodeRespone.GetRuntimeLanguage()) {
 				case "java", "":
@@ -107,6 +139,9 @@ func handleFlinkArtifacts(t *testing.T) http.HandlerFunc {
 			var artifact1 flinkartifactv1.ArtifactV1FlinkArtifact
 			var artifact2 flinkartifactv1.ArtifactV1FlinkArtifact
 			switch strings.ToLower(r.URL.Query().Get("cloud")) {
+			case "gcp":
+				artifact1 = gcpJavaArtifact
+				artifact2 = gcpPythonArtifact
 			case "azure":
 				artifact1 = azureJavaArtifact
 				artifact2 = azurePythonArtifact
