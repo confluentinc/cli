@@ -43,7 +43,7 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner, cfg *config.Config) 
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 		pcmd.AddContextFlag(cmd, c.CLICommand)
 
-		if featureflags.Manager.BoolVariation("cli.flink.internal", c.Context, config.CliLaunchDarklyClient, true, false) {
+		if featureflags.Manager.BoolVariation("cli.flink.internal", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
 			cmd.Flags().StringSlice("config-key", []string{}, "App option keys for local mode.")
 			cmd.Flags().StringSlice("config-value", []string{}, "App option values for local mode.")
 		}
