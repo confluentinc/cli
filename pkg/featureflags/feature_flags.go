@@ -140,7 +140,7 @@ func (ld *launchDarklyManager) JsonVariation(key string, ctx *config.Context, cl
 }
 
 func (ld *launchDarklyManager) generalVariation(key string, ctx *config.Context, client config.LaunchDarklyClient, shouldCache bool, defaultVal any) any {
-	log.CliLogger.Infof("evaluating feature flag %s", key)
+	log.CliLogger.Debugf("evaluating feature flag %s", key)
 	if ld.isDisabled {
 		return defaultVal
 	}
@@ -211,9 +211,9 @@ func (ld *launchDarklyManager) fetchFlags(user lduser.User, client config.Launch
 func areCachedFlagsAvailable(ctx *config.Context, user lduser.User, client config.LaunchDarklyClient, key string) bool {
 	if ctx == nil || ctx.FeatureFlags == nil {
 		if ctx == nil {
-			log.CliLogger.Infof("No cached value for feature flag %s found: login context is empty.", key)
+			log.CliLogger.Debugf("No cached value for feature flag %s found: login context is empty.", key)
 		} else if ctx.FeatureFlags == nil {
-			log.CliLogger.Infof("No cached value for feature flag %s found: config does not contain feature flags.", key)
+			log.CliLogger.Debugf("No cached value for feature flag %s found: config does not contain feature flags.", key)
 		}
 		return false
 	}
@@ -222,7 +222,7 @@ func areCachedFlagsAvailable(ctx *config.Context, user lduser.User, client confi
 
 	// only use cached flags if they were fetched for the same LD User
 	if !flags.User.Equal(user) {
-		log.CliLogger.Infof("No cached value for feature flag %s found: current cached flags were retrieved for a different user.", key)
+		log.CliLogger.Debugf("No cached value for feature flag %s found: current cached flags were retrieved for a different user.", key)
 		return false
 	}
 
@@ -230,12 +230,12 @@ func areCachedFlagsAvailable(ctx *config.Context, user lduser.User, client confi
 	case config.CcloudDevelLaunchDarklyClient, config.CcloudStagLaunchDarklyClient, config.CcloudProdLaunchDarklyClient:
 		// for ccloud only single keys are stored, so we need to check if the specific flag is present
 		if _, ok := flags.CcloudValues[key]; !ok {
-			log.CliLogger.Infof("No cached value for feature flag %s found: cached ccloud flags do not contain this flag.", key)
+			log.CliLogger.Debugf("No cached value for feature flag %s found: cached ccloud flags do not contain this flag.", key)
 			return false
 		}
 	default:
 		if _, ok := flags.CliValues[key]; !ok {
-			log.CliLogger.Infof("No cached value for feature flag %s found: cached cli flags do not contain this flag.", key)
+			log.CliLogger.Debugf("No cached value for feature flag %s found: cached cli flags do not contain this flag.", key)
 			return false
 		}
 	}
