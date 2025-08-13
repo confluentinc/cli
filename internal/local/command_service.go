@@ -294,8 +294,9 @@ func (c *command) startService(service, configFile string) error {
 	if err := c.configService(service, configFile); err != nil {
 		return err
 	}
-
-	output.Printf(c.Config.EnableColor, "Starting %s\n", writeServiceName(service))
+	if service != "alertmanager" && service != "prometheus" {
+		output.Printf(c.Config.EnableColor, "Starting %s\n", writeServiceName(service))
+	}
 
 	spin := spinner.New()
 	spin.Start()
@@ -519,8 +520,9 @@ func (c *command) stopService(service string) error {
 	if !isUp {
 		return c.printStatus(service)
 	}
-
-	output.Printf(c.Config.EnableColor, "Stopping %s\n", writeServiceName(service))
+	if service != "alertmanager" && service != "prometheus" {
+		output.Printf(c.Config.EnableColor, "Stopping %s\n", writeServiceName(service))
+	}
 
 	spin := spinner.New()
 	spin.Start()
@@ -637,9 +639,9 @@ func (c *command) killProcess(service string) error {
 }
 
 func (c *command) printStatus(service string) error {
-	//if service == "alertmanager" || service =="prometheus"{
-	//	return nil
-	//}
+	if service == "alertmanager" || service == "prometheus" {
+		return nil
+	}
 	isUp, err := c.isRunning(service)
 	if err != nil {
 		return err
