@@ -6,6 +6,7 @@ execution_time_limit:
 
 blocks:
   - name: darwin
+    dependencies: []
     task:
       agent:
         machine:
