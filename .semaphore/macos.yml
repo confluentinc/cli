@@ -1,0 +1,30 @@
+version: v1.0
+name: Confluent CLI – macOS builds (manual)
+
+execution_time_limit:
+  hours: 1
+
+blocks:
+  - name: darwin
+    dependencies: []
+    task:
+      agent:
+        machine:
+          type: s1-prod-macos-13-5-arm64
+      jobs:
+        - name: "Build & Test darwin/arm64"
+          commands:
+            - checkout
+            - sem-version go $(cat .go-version)
+            - export PATH=$(go env GOPATH)/bin:$PATH
+            - make test
+        - name: "Build darwin/amd64"
+          commands:
+            - checkout
+            - sem-version go $(cat .go-version)
+            - export PATH=$(go env GOPATH)/bin:$PATH
+            - GOARCH=amd64 CGO_ENABLED=1 go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" ./cmd/confluent
+      epilogue:
+        always:
+          commands:
+            - test-results publish . -N "darwin/arm64"
