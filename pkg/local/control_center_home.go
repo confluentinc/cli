@@ -28,8 +28,6 @@ var (
 
 type ConfluentControlCenter interface {
 	GetC3File(path ...string) (string, error)
-	HasC3File(path ...string) (bool, error)
-	FindC3File(pattern string) ([]string, error)
 	GetServiceScriptC3(action, service string) (string, error)
 	ReadServiceConfigC3(service string, zookeeperMode bool) ([]byte, error)
 	ReadServicePortC3(service string, zookeeperMode bool) (int, error)
@@ -56,37 +54,6 @@ func (c3h *ControlCenterHomeManager) GetC3File(path ...string) (string, error) {
 	}
 
 	return filepath.Join(dir, filepath.Join(path...)), nil
-}
-
-func (c3h *ControlCenterHomeManager) HasC3File(path ...string) (bool, error) {
-	file, err := c3h.GetC3File(path...)
-	if err != nil {
-		return false, err
-	}
-
-	return exists(file), nil
-}
-
-func (c3h *ControlCenterHomeManager) FindC3File(pattern string) ([]string, error) {
-	dir, err := c3h.getRootDir()
-	if err != nil {
-		return []string{}, err
-	}
-
-	path := filepath.Join(dir, pattern)
-
-	matches, err := filepath.Glob(path)
-	if err != nil {
-		return []string{}, err
-	}
-
-	for i := range matches {
-		matches[i], err = filepath.Rel(dir, matches[i])
-		if err != nil {
-			return []string{}, err
-		}
-	}
-	return matches, nil
 }
 
 func (c3h *ControlCenterHomeManager) GetServiceScriptC3(action, service string) (string, error) {

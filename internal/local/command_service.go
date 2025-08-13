@@ -440,9 +440,7 @@ func (c *command) startProcess(service string) error {
 			return err
 		}
 	}
-	//output.Printf(false, "CATCH IT!")
-	//output.Printf(false, scriptFile)
-	//output.Printf(false, configFile)
+
 	err = c.setupMetaProperties(service)
 	if err != nil {
 		return err
@@ -464,11 +462,9 @@ func (c *command) startProcess(service string) error {
 	}
 	start.Stdout = fd
 	start.Stderr = fd
-
 	if err := start.Start(); err != nil {
 		return err
 	}
-
 	if err := c.cc.WritePid(service, start.Process.Pid); err != nil {
 		return err
 	}
@@ -501,13 +497,10 @@ func (c *command) startProcess(service string) error {
 		for {
 			if isPortOpen(service) {
 				open <- true
-				//output.Printf(false, "yessssss")
 			}
-			//output.Printf(false, "no please!")
 			time.Sleep(time.Second)
 		}
 	}()
-	//output.Printf(false, "HEREEEEE????!")
 	select {
 	case <-open:
 		break
@@ -694,10 +687,8 @@ func isPortOpen(service string) bool {
 		addr := fmt.Sprintf(":%d", services[service].port)
 		out, err := exec.Command("lsof", "-i", addr).Output()
 		if err != nil {
-			//output.Printf(false, "SECOND-ERRRR")
 			return false
 		}
-		//output.Printf(false, "SECOND")
 		return len(out) > 0
 	}
 }

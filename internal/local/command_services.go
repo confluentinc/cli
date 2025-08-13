@@ -453,6 +453,15 @@ func (c *command) getConfig(service string) (map[string]string, error) {
 		}
 	case "control-center":
 		config["confluent.controlcenter.data.dir"] = data
+		if c.isC3(service) {
+			dir := os.Getenv("CONTROL_CENTER_HOME")
+			file, _ := os.ReadFile(dir + "/etc/confluent-control-center/control-center-local.properties")
+			configs := local.ExtractConfig(file)
+			alertmanager := configs["confluent.controlcenter.alertmanager.config.file"]
+			prometheus := configs["confluent.controlcenter.prometheus.rules.file"]
+			config["confluent.controlcenter.alertmanager.config.file"] = dir + "/" + alertmanager.(string)
+			config["confluent.controlcenter.prometheus.rules.file"] = dir + "/" + prometheus.(string)
+		}
 	case "kafka":
 		if zookeeperMode {
 			config["log.dirs"] = data
