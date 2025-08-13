@@ -87,6 +87,7 @@ func (c *command) newExportCommand() *cobra.Command {
 	cmd.Flags().StringSlice("topics", nil, "A comma-separated list of topics to export. Supports prefixes ending with a wildcard (*).")
 	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
 	pcmd.AddValueFormatFlag(cmd)
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
@@ -193,7 +194,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags, cmd *
 		}
 		details.channelDetails.examples[topic] = example
 	}
-	bindings, err := c.getBindings(topic)
+	bindings, err := c.getBindings(cmd, topic)
 	if err != nil {
 		log.CliLogger.Warnf("Bindings not found: %v", err)
 	}
@@ -397,8 +398,8 @@ func processUnionTypes(m map[string]any) {
 	}
 }
 
-func (c *command) getBindings(topicName string) (*bindings, error) {
-	kafkaREST, err := c.GetKafkaREST()
+func (c *command) getBindings(cmd *cobra.Command, topicName string) (*bindings, error) {
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return nil, err
 	}
@@ -505,7 +506,7 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags, cmd *
 		)
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}

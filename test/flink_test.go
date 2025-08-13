@@ -53,6 +53,15 @@ func (s *CLITestSuite) TestFlinkArtifact() {
 		{args: "flink artifact list --cloud azure --region centralus --environment env-123456", fixture: "flink/artifact/list-azure.golden"},
 		{args: "flink artifact delete --cloud azure --region centralus --environment env-123456 --force cfa-123456", fixture: "flink/artifact/delete-azure.golden"},
 		{args: "flink artifact delete --cloud azure --region centralus --environment env-123456 cfa-123456", input: "y\n", fixture: "flink/artifact/delete-prompt-azure.golden"},
+
+		{args: "flink artifact create my-flink-artifact --artifact-file test/fixtures/input/flink/java-udf-examples-3.0.jar --cloud gcp --region us-central1 --environment env-123456", fixture: "flink/artifact/create-gcp.golden"},
+		{args: "flink artifact create my-flink-artifact --artifact-file test/fixtures/input/flink/java-udf-examples-3.0.jar --cloud gcp --region us-central1 --environment env-123456 --description CliArtifactTest", fixture: "flink/artifact/create-gcp.golden"},
+		{args: "flink artifact create my-flink-artifact --artifact-file test/fixtures/input/flink/java-udf-examples-3.0.jar --cloud gcp --region us-central1 --environment env-123456 --description CliArtifactTest --documentation-link https://docs.confluent.io", fixture: "flink/artifact/create-gcp.golden"},
+		{args: "flink artifact create my-flink-artifact --artifact-file test/fixtures/input/flink/python-udf-examples.zip --cloud gcp --region us-central1 --environment env-789012 --description CliArtifactTest --runtime-language python", fixture: "flink/artifact/create-python-gcp.golden"},
+		{args: "flink artifact describe --cloud gcp --region us-central1 --environment env-123456 cfa-789013", fixture: "flink/artifact/describe-gcp.golden"},
+		{args: "flink artifact list --cloud gcp --region us-central1 --environment env-123456", fixture: "flink/artifact/list-gcp.golden"},
+		{args: "flink artifact delete --cloud gcp --region us-central1 --environment env-123456 --force cfa-123456", fixture: "flink/artifact/delete-gcp.golden"},
+		{args: "flink artifact delete --cloud gcp --region us-central1 --environment env-123456 cfa-123456", input: "y\n", fixture: "flink/artifact/delete-prompt-gcp.golden"},
 	}
 
 	for _, test := range tests {
@@ -332,6 +341,8 @@ func (s *CLITestSuite) TestFlinkEndpointList() {
 		{args: "flink endpoint list", fixture: "flink/endpoint/list-gcp.golden"},
 		{args: "flink region use --cloud azure --region centralus", fixture: "flink/region/use-azure.golden"},
 		{args: "flink endpoint list", fixture: "flink/endpoint/list-azure.golden"},
+		{args: "flink region use --cloud azure --region eastus2", fixture: "flink/region/use-azure-ccn.golden"},
+		{args: "flink endpoint list", fixture: "flink/endpoint/list-azure-with-ccn.golden"},
 	}
 
 	for _, test := range tests {
@@ -355,6 +366,9 @@ func (s *CLITestSuite) TestFlinkEndpointUse() {
 		{args: "flink endpoint unset", fixture: "flink/endpoint/unset.golden"},
 		{args: "flink endpoint use http://127.0.0.1:1040", fixture: "flink/endpoint/use-private.golden"},
 		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: describeFailureFixture, exitCode: 1},
+		{args: "flink region use --cloud azure --region eastus2", fixture: "flink/region/use-azure-ccn.golden"},
+		{args: "flink endpoint use https://flink-n-abcde2.eastus.azure.confluent.cloud", fixture: "flink/endpoint/use-azure-ccn.golden"},
+		{args: "flink endpoint use https://flink-n-abcde7.eastus.azure.confluent.cloud", fixture: "flink/endpoint/use-azure-ccn-fail.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {

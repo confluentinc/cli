@@ -2,8 +2,11 @@ package schemaregistry
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/spf13/cobra"
+
+	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/cloud"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -53,11 +56,18 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	}
 
 	// Note the region has to be empty slice instead of `nil` in case of no filter
-	// Filter out non-AWS networks for initial release
-	networks, err := c.V2Client.ListNetworks(environmentId, nil, []string{cloud.Aws}, []string{}, nil, []string{"READY"}, nil)
+	awsNetworks, err := c.V2Client.ListNetworks(environmentId, nil, []string{cloud.Aws}, []string{}, nil, []string{"READY"}, nil)
 	if err != nil {
-		return fmt.Errorf("unable to list Schema Registry endpoints: failed to list networks: %w", err)
+		return fmt.Errorf("unable to list Schema Registry endpoints: failed to list AWS networks: %w", err)
 	}
+	// Filter out non-PrivateLink networks for Azure
+	azureNetworks, err := c.V2Client.ListNetworks(environmentId, nil, []string{cloud.Azure}, []string{}, nil, []string{"READY"}, nil)
+	if err != nil {
+		return fmt.Errorf("unable to list Schema Registry endpoints: failed to list Azure PrivateLink networks: %w", err)
+	}
+	azureNetworks = filterPrivateLinkNetworks(azureNetworks)
+
+	networks := append(awsNetworks, azureNetworks...)
 	for _, network := range networks {
 		suffix := network.Status.GetEndpointSuffix()
 		if suffix == "-" {
@@ -76,4 +86,15 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 	})
 
 	return table.Print()
+}
+
+// We filter locally to get around a query parameter bug: https://confluentinc.atlassian.net/browse/TRAFFIC-19819
+func filterPrivateLinkNetworks(networks []networkingv1.NetworkingV1Network) []networkingv1.NetworkingV1Network {
+	var filteredNetworks []networkingv1.NetworkingV1Network
+	for _, network := range networks {
+		if slices.Contains(network.Spec.GetConnectionTypes(), "PRIVATELINK") || slices.Contains(network.Spec.GetConnectionTypes(), "privatelink") {
+			filteredNetworks = append(filteredNetworks, network)
+		}
+	}
+	return filteredNetworks
 }

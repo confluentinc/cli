@@ -85,7 +85,6 @@ func (c *command) statementListOnPrem(cmd *cobra.Command, _ []string) error {
 	localStmts := make([]LocalStatement, 0, len(sdkStatements))
 
 	for _, sdkStmt := range sdkStatements {
-
 		localStmt := LocalStatement{
 			ApiVersion: sdkStmt.ApiVersion,
 			Kind:       sdkStmt.Kind,

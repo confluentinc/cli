@@ -50,7 +50,6 @@ func (c *command) environmentList(cmd *cobra.Command, _ []string) error {
 	printableEnvs := make([]LocalEnvironment, 0, len(sdkEnvironments))
 
 	for _, sdkEnv := range sdkEnvironments {
-
 		localEnv := LocalEnvironment{
 			Secrets:                  sdkEnv.Secrets,
 			Name:                     sdkEnv.Name,

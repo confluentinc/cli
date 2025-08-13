@@ -26,6 +26,7 @@ func (c *mirrorCommand) newReverseAndPauseMirrorCommand() *cobra.Command {
 
 	pcmd.AddLinkFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually reverse the local mirror topic and pause the remote mirror topic, but simply validates it.")
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -47,7 +48,7 @@ func (c *mirrorCommand) reverseAndPauseMirror(cmd *cobra.Command, args []string)
 		return err
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}

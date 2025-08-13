@@ -24,6 +24,7 @@ func (c *partitionCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("topic", "", "Topic name to list partitions of.")
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -35,7 +36,7 @@ func (c *partitionCommand) newListCommand() *cobra.Command {
 }
 
 func (c *partitionCommand) list(cmd *cobra.Command, _ []string) error {
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}

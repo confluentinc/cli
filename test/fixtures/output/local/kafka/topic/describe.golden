@@ -1,6 +1,0 @@
-+--------------------+-------+
-| Name               | test  |
-| Internal           | false |
-| Replication Factor | 1     |
-| Partition Count    | 1     |
-+--------------------+-------+

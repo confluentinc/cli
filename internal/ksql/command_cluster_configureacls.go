@@ -34,6 +34,7 @@ func (c *ksqlCommand) newConfigureAclsCommand() *cobra.Command {
 	}
 
 	pcmd.AddDryRunFlag(cmd)
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -84,7 +85,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 		return acl.PrintACLs(cmd, bindings)
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
 	}
