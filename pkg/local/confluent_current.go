@@ -37,7 +37,9 @@ type ConfluentCurrent interface {
 	GetLogsDir(service string) (string, error)
 
 	GetConfigFile(service string) (string, error)
+	GetConfigFileC3(service string) (string, error)
 	WriteConfig(service string, config []byte) error
+	WriteConfigC3(service string, config []byte) error
 
 	GetLogFile(service string) (string, error)
 	HasLogFile(service string) (bool, error)
@@ -130,8 +132,25 @@ func (cc *ConfluentCurrentManager) GetConfigFile(service string) (string, error)
 	return cc.getServiceFile(service, fmt.Sprintf("%s.properties", service))
 }
 
+func (cc *ConfluentCurrentManager) GetConfigFileC3(service string) (string, error) {
+	if service == "alertmanager" || service == "prometheus" {
+		return cc.getServiceFile(service, fmt.Sprintf("%s-generated-local.yml", service))
+	} else {
+		return cc.getServiceFile(service, fmt.Sprintf("%s-local.properties", service))
+	}
+}
+
 func (cc *ConfluentCurrentManager) WriteConfig(service string, config []byte) error {
 	file, err := cc.GetConfigFile(service)
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(file, config, 0644)
+}
+
+func (cc *ConfluentCurrentManager) WriteConfigC3(service string, config []byte) error {
+	file, err := cc.GetConfigFileC3(service)
 	if err != nil {
 		return err
 	}
@@ -222,7 +241,9 @@ func (cc *ConfluentCurrentManager) getServiceDir(service string) (string, error)
 	if err != nil {
 		return "", err
 	}
-
+	if service == "prometheus" || service == "alertmanager" || service == "control-center" { //look here
+		service = "confluent-control-center"
+	}
 	dir = filepath.Join(dir, service)
 	if err := os.MkdirAll(dir, 0777); err != nil {
 		return "", err
