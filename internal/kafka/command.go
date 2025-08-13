@@ -24,6 +24,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(newPartitionCommand(cfg, prerunner))
 	cmd.AddCommand(newRegionCommand(prerunner))
 	cmd.AddCommand(newReplicaCommand(prerunner))
+	cmd.AddCommand(newShareCommand(cfg, prerunner))
 	cmd.AddCommand(newTopicCommand(cfg, prerunner))
 
 	_ = cfg.ParseFlagsIntoConfig(cmd)

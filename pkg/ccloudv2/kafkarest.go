@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+	kafkarestv3internal "github.com/confluentinc/ccloud-sdk-go-v2-internal/kafkarest/v3"
 
 	"github.com/confluentinc/cli/v4/pkg/ccstructs"
 	"github.com/confluentinc/cli/v4/pkg/errors"
@@ -305,6 +306,26 @@ func (c *KafkaRestClient) ListKafkaConsumers(consumerGroupId string) ([]kafkares
 func (c *KafkaRestClient) GetKafkaConsumerLag(consumerGroupId, topicName string, partitionId int32) (kafkarestv3.ConsumerLagData, error) {
 	res, httpResp, err := c.ConsumerGroupV3Api.GetKafkaConsumerLag(c.kafkaRestApiContext(), c.ClusterId, consumerGroupId, topicName, partitionId).Execute()
 	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+}
+
+func (c *KafkaRestClient) ListKafkaShareGroups() ([]kafkarestv3internal.ShareGroupData, error) {
+	// Create internal SDK client for share group operations
+	cfg := kafkarestv3internal.NewConfiguration()
+	cfg.Debug = false // Set to true if you want debug output
+	cfg.HTTPClient = NewRetryableHttpClient(nil, false)
+	cfg.Servers = kafkarestv3internal.ServerConfigurations{{URL: c.GetUrl()}}
+	cfg.UserAgent = "confluent-cli"
+	
+	internalClient := kafkarestv3internal.NewAPIClient(cfg)
+	
+	// Create context with auth token
+	ctx := context.WithValue(context.Background(), kafkarestv3internal.ContextAccessToken, c.AuthToken)
+	
+	res, httpResp, err := internalClient.ShareGroupV3Api.ListKafkaShareGroups(ctx, c.ClusterId).Execute()
+	if err != nil {
+		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	}
+	return res.GetData(), nil
 }
 
 func (c *KafkaRestClient) GetKafkaPartition(topicName string, partitionId int32) (kafkarestv3.PartitionData, error) {
