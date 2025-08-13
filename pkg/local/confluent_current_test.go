@@ -74,6 +74,10 @@ func TestGetServiceDir(t *testing.T) {
 	serviceDir, err := cc.getServiceDir(exampleService)
 	req.NoError(err)
 	req.DirExists(serviceDir)
+
+	serviceDirC3, err := cc.getServiceDir("prometheus")
+	req.NoError(err)
+	req.DirExists(serviceDirC3)
 }
 
 func TestGetDataDir(t *testing.T) {
@@ -122,6 +126,23 @@ func TestGetSavedPidFile(t *testing.T) {
 	file, err := cc.GetPidFile(exampleService)
 	req.NoError(err)
 	req.Equal(exampleFile, file)
+}
+
+func TestGetAndWriteConfigC3(t *testing.T) {
+	req := require.New(t)
+
+	cc := NewConfluentCurrentManager()
+
+	config, err := cc.GetConfigFileC3("prometheus")
+	req.NoError(err)
+	req.Equal(config, "/var/folders/_k/sf8r2w8x0fq1b0s9wv20_9k80000gp/T/confluent.957524/confluent-control-center/prometheus-generated-local.yml")
+
+	err = cc.WriteConfigC3("prometheus", []byte(config))
+	req.NoError(err)
+
+	config, err = cc.GetConfigFileC3("control-center")
+	req.NoError(err)
+	req.Equal(config, "/var/folders/_k/sf8r2w8x0fq1b0s9wv20_9k80000gp/T/confluent.957524/confluent-control-center/control-center-local.properties")
 }
 
 func TestSetAndGetPid(t *testing.T) {
