@@ -38,6 +38,7 @@ type describeStruct struct {
 	ByokKeyId          string `human:"BYOK Key ID" serialized:"byok_key_id"`
 	EncryptionKeyId    string `human:"Encryption Key ID" serialized:"encryption_key_id"`
 	RestEndpoint       string `human:"REST Endpoint" serialized:"rest_endpoint"`
+	MaxEcku            *int32 `human:"Max eCKU,omitempty" serialized:"max_ecku,omitempty"`
 	TopicCount         int    `human:"Topic Count,omitempty" serialized:"topic_count,omitempty"`
 }
 
@@ -147,6 +148,7 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Con
 		ByokKeyId:          getCmkByokId(cluster),
 		EncryptionKeyId:    getCmkEncryptionKey(cluster),
 		RestEndpoint:       cluster.Spec.GetHttpEndpoint(),
+		MaxEcku:            getCmkMaxEcku(cluster), // omited to output if cluster is of type  dedicated
 	}
 }
 
@@ -171,6 +173,8 @@ func getKafkaClusterDescribeFields(cluster *cmkv2.CmkV2Cluster, basicFields []st
 		if cluster.Spec.Byok != nil {
 			describeFields = append(describeFields, "ByokId")
 		}
+	} else {
+		describeFields = append(describeFields, "Max eCKU") // Max eCKU field is available only for Basic, Standard, Enterprise, and Freight clusters
 	}
 
 	if getTopicCount {
