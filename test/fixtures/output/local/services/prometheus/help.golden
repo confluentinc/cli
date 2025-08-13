@@ -1,0 +1,19 @@
+Manage Prometheus.
+
+Usage:
+  confluent local services prometheus [command]
+
+Available Commands:
+  log         Print logs showing Prometheus output.
+  start       Start Prometheus.
+  status      Check if Prometheus is running.
+  stop        Stop Prometheus.
+  top         View resource usage for Prometheus.
+  version     Print the current version of Prometheus.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent local services prometheus [command] --help" for more information about a command.
