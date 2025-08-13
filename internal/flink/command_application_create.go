@@ -1,18 +1,9 @@
 package flink
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
-	"path/filepath"
-
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
-
-	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -44,34 +35,9 @@ func (c *command) applicationCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	resourceFilePath := args[0]
-	data, err := os.ReadFile(resourceFilePath)
+	sdkApplication, err := readApplicationResourceFile(args[0])
 	if err != nil {
-		return fmt.Errorf("failed to read file: %v", err)
-	}
-
-	var genericData map[string]interface{}
-	ext := filepath.Ext(resourceFilePath)
-	switch ext {
-	case ".json":
-		err = json.Unmarshal(data, &genericData)
-	case ".yaml", ".yml":
-		err = yaml.Unmarshal(data, &genericData)
-	default:
-		return errors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
-	}
-	if err != nil {
-		return fmt.Errorf("failed to parse input file: %w", err)
-	}
-
-	jsonBytes, err := json.Marshal(genericData)
-	if err != nil {
-		return fmt.Errorf("failed to marshal intermediate data: %w", err)
-	}
-
-	var sdkApplication cmfsdk.FlinkApplication
-	if err = json.Unmarshal(jsonBytes, &sdkApplication); err != nil {
-		return fmt.Errorf("failed to bind data to FlinkApplication model: %w", err)
+		return err
 	}
 
 	sdkOutputApplication, err := client.CreateApplication(c.createContext(), environment, sdkApplication)
@@ -79,13 +45,7 @@ func (c *command) applicationCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	localOutputApp := LocalFlinkApplication{
-		ApiVersion: sdkOutputApplication.ApiVersion,
-		Kind:       sdkOutputApplication.Kind,
-		Metadata:   sdkOutputApplication.Metadata,
-		Spec:       sdkOutputApplication.Spec,
-		Status:     sdkOutputApplication.Status,
-	}
+	localOutputApp := convertSdkApplicationToLocalApplication(sdkOutputApplication)
 
 	return output.SerializedOutput(cmd, localOutputApp)
 }

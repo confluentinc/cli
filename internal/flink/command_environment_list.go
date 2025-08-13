@@ -48,36 +48,8 @@ func (c *command) environmentList(cmd *cobra.Command, _ []string) error {
 	}
 
 	printableEnvs := make([]LocalEnvironment, 0, len(sdkEnvironments))
-
 	for _, sdkEnv := range sdkEnvironments {
-		localEnv := LocalEnvironment{
-			Secrets:                  sdkEnv.Secrets,
-			Name:                     sdkEnv.Name,
-			CreatedTime:              sdkEnv.CreatedTime,
-			UpdatedTime:              sdkEnv.UpdatedTime,
-			FlinkApplicationDefaults: sdkEnv.FlinkApplicationDefaults,
-			KubernetesNamespace:      sdkEnv.KubernetesNamespace,
-			ComputePoolDefaults:      sdkEnv.ComputePoolDefaults,
-		}
-
-		if sdkEnv.StatementDefaults != nil {
-			localDefaults1 := &LocalAllStatementDefaults1{}
-
-			if sdkEnv.StatementDefaults.Detached != nil {
-				localDefaults1.Detached = &LocalStatementDefaults{
-					FlinkConfiguration: sdkEnv.StatementDefaults.Detached.FlinkConfiguration,
-				}
-			}
-
-			if sdkEnv.StatementDefaults.Interactive != nil {
-				localDefaults1.Interactive = &LocalStatementDefaults{
-					FlinkConfiguration: sdkEnv.StatementDefaults.Interactive.FlinkConfiguration,
-				}
-			}
-
-			localEnv.StatementDefaults = localDefaults1
-		}
-
+		localEnv := convertSdkEnvironmentToLocalEnvironment(sdkEnv)
 		printableEnvs = append(printableEnvs, localEnv)
 	}
 

@@ -41,13 +41,7 @@ func (c *command) applicationDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	localApp := LocalFlinkApplication{
-		ApiVersion: application.ApiVersion,
-		Kind:       application.Kind,
-		Metadata:   application.Metadata,
-		Spec:       application.Spec,
-		Status:     application.Status,
-	}
+	localApp := convertSdkApplicationToLocalApplication(application)
 
 	return output.SerializedOutput(cmd, localApp)
 }

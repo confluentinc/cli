@@ -97,27 +97,6 @@ func (c *command) computePoolCreateOnPrem(cmd *cobra.Command, args []string) err
 		return table.Print()
 	}
 
-	localPool := LocalComputePool{
-		ApiVersion: sdkComputePool.ApiVersion,
-		Kind:       sdkComputePool.Kind,
-		Metadata: LocalComputePoolMetadata{
-			Name:              sdkComputePool.Metadata.Name,
-			CreationTimestamp: sdkComputePool.Metadata.CreationTimestamp,
-			Uid:               sdkComputePool.Metadata.Uid,
-			Labels:            sdkComputePool.Metadata.Labels,
-			Annotations:       sdkComputePool.Metadata.Annotations,
-		},
-		Spec: LocalComputePoolSpec{
-			Type:        sdkComputePool.Spec.Type,
-			ClusterSpec: sdkComputePool.Spec.ClusterSpec,
-		},
-	}
-
-	if sdkComputePool.Status != nil {
-		localPool.Status = &LocalComputePoolStatus{
-			Phase: sdkComputePool.Status.Phase,
-		}
-	}
-
+	localPool := convertSdkComputePoolToLocalComputePool(sdkOutputComputePool)
 	return output.SerializedOutput(cmd, localPool)
 }

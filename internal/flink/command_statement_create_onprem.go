@@ -160,73 +160,7 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 		return table.Print()
 	}
 
-	localStmt := LocalStatement{
-		ApiVersion: finalStatement.ApiVersion,
-		Kind:       finalStatement.Kind,
-		Metadata: LocalStatementMetadata{
-			Name:              finalStatement.Metadata.Name,
-			CreationTimestamp: finalStatement.Metadata.CreationTimestamp,
-			UpdateTimestamp:   finalStatement.Metadata.UpdateTimestamp,
-			Uid:               finalStatement.Metadata.Uid,
-			Labels:            finalStatement.Metadata.Labels,
-			Annotations:       finalStatement.Metadata.Annotations,
-		},
-		Spec: LocalStatementSpec{
-			Statement:          finalStatement.Spec.Statement,
-			Properties:         finalStatement.Spec.Properties,
-			FlinkConfiguration: finalStatement.Spec.FlinkConfiguration,
-			ComputePoolName:    finalStatement.Spec.ComputePoolName,
-			Parallelism:        finalStatement.Spec.Parallelism,
-			Stopped:            finalStatement.Spec.Stopped,
-		},
-	}
-
-	if finalStatement.Status != nil {
-		localStatus := &LocalStatementStatus{
-			Phase:  finalStatement.Status.Phase,
-			Detail: finalStatement.Status.Detail,
-		}
-
-		if finalStatement.Status.Traits != nil {
-			localTraits := &LocalStatementTraits{
-				SqlKind:       finalStatement.Status.Traits.SqlKind,
-				IsBounded:     finalStatement.Status.Traits.IsBounded,
-				IsAppendOnly:  finalStatement.Status.Traits.IsAppendOnly,
-				UpsertColumns: finalStatement.Status.Traits.UpsertColumns,
-			}
-
-			if finalStatement.Status.Traits.Schema != nil {
-				localSchema := &LocalResultSchema{}
-				if finalStatement.Status.Traits.Schema.Columns != nil {
-					localSchema.Columns = make([]LocalResultSchemaColumn, 0, len(finalStatement.Status.Traits.Schema.Columns))
-					for _, sdkCol := range finalStatement.Status.Traits.Schema.Columns {
-						localSchema.Columns = append(localSchema.Columns, LocalResultSchemaColumn{
-							Name: sdkCol.Name,
-							Type: copyDataType(sdkCol.Type), // Use the helper function here
-						})
-					}
-				}
-				localTraits.Schema = localSchema
-			}
-			localStatus.Traits = localTraits
-		}
-		localStmt.Status = localStatus
-	}
-
-	if finalStatement.Result != nil {
-		localStmt.Result = &LocalStatementResult{
-			ApiVersion: finalStatement.Result.ApiVersion,
-			Kind:       finalStatement.Result.Kind,
-			Metadata: LocalStatementResultMetadata{
-				CreationTimestamp: finalStatement.Result.Metadata.CreationTimestamp,
-				Annotations:       finalStatement.Result.Metadata.Annotations,
-			},
-			Results: LocalStatementResults{
-				Data: finalStatement.Result.Results.Data,
-			},
-		}
-	}
-
+	localStmt := convertSdkStatementToLocalStatement(finalStatement)
 	return output.SerializedOutput(cmd, localStmt)
 }
 

@@ -38,33 +38,6 @@ func (c *command) environmentDescribe(cmd *cobra.Command, args []string) error {
 		return printEnvironmentOutTable(cmd, sdkOutputEnvironment)
 	}
 
-	localEnv := LocalEnvironment{
-		Secrets:                  sdkOutputEnvironment.Secrets,
-		Name:                     sdkOutputEnvironment.Name,
-		CreatedTime:              sdkOutputEnvironment.CreatedTime,
-		UpdatedTime:              sdkOutputEnvironment.UpdatedTime,
-		FlinkApplicationDefaults: sdkOutputEnvironment.FlinkApplicationDefaults,
-		KubernetesNamespace:      sdkOutputEnvironment.KubernetesNamespace,
-		ComputePoolDefaults:      sdkOutputEnvironment.ComputePoolDefaults,
-	}
-
-	if sdkOutputEnvironment.StatementDefaults != nil {
-		localDefaults1 := &LocalAllStatementDefaults1{}
-
-		if sdkOutputEnvironment.StatementDefaults.Detached != nil {
-			localDefaults1.Detached = &LocalStatementDefaults{
-				FlinkConfiguration: sdkOutputEnvironment.StatementDefaults.Detached.FlinkConfiguration,
-			}
-		}
-
-		if sdkOutputEnvironment.StatementDefaults.Interactive != nil {
-			localDefaults1.Interactive = &LocalStatementDefaults{
-				FlinkConfiguration: sdkOutputEnvironment.StatementDefaults.Interactive.FlinkConfiguration,
-			}
-		}
-
-		localEnv.StatementDefaults = localDefaults1
-	}
-
+	localEnv := convertSdkEnvironmentToLocalEnvironment(sdkOutputEnvironment)
 	return output.SerializedOutput(cmd, localEnv)
 }

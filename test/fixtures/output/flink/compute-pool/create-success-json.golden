@@ -2,7 +2,8 @@
   "apiVersion": "",
   "kind": "",
   "metadata": {
-    "name": "test-pool"
+    "name": "test-pool",
+    "creationTimestamp": "2025-03-12 23:42:00 +0000 UTC"
   },
   "spec": {
     "type": "DEDICATED",

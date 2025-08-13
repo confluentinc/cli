@@ -71,13 +71,7 @@ func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
 	localApps := make([]LocalFlinkApplication, 0, len(applications))
 
 	for _, sdkApp := range applications {
-		localApps = append(localApps, LocalFlinkApplication{
-			ApiVersion: sdkApp.ApiVersion,
-			Kind:       sdkApp.Kind,
-			Metadata:   sdkApp.Metadata,
-			Spec:       sdkApp.Spec,
-			Status:     sdkApp.Status,
-		})
+		localApps = append(localApps, convertSdkApplicationToLocalApplication(sdkApp))
 	}
 
 	return output.SerializedOutput(cmd, localApps)

@@ -55,37 +55,9 @@ func (c *command) catalogList(cmd *cobra.Command, _ []string) error {
 	}
 
 	localCatalogs := make([]LocalKafkaCatalog, 0, len(sdkCatalogs))
-
 	for _, sdkCatalog := range sdkCatalogs {
-		localClusters := make([]LocalKafkaCatalogSpecKafkaClusters, 0, len(sdkCatalog.Spec.KafkaClusters))
-		for _, sdkCluster := range sdkCatalog.Spec.KafkaClusters {
-			localClusters = append(localClusters, LocalKafkaCatalogSpecKafkaClusters{
-				DatabaseName:       sdkCluster.DatabaseName,
-				ConnectionConfig:   sdkCluster.ConnectionConfig,
-				ConnectionSecretId: sdkCluster.ConnectionSecretId,
-			})
-		}
-
-		localCat := LocalKafkaCatalog{
-			ApiVersion: sdkCatalog.ApiVersion,
-			Kind:       sdkCatalog.Kind,
-			Metadata: LocalCatalogMetadata{
-				Name:              sdkCatalog.Metadata.Name,
-				CreationTimestamp: sdkCatalog.Metadata.CreationTimestamp,
-				Uid:               sdkCatalog.Metadata.Uid,
-				Labels:            sdkCatalog.Metadata.Labels,
-				Annotations:       sdkCatalog.Metadata.Annotations,
-			},
-			Spec: LocalKafkaCatalogSpec{
-				SrInstance: LocalKafkaCatalogSpecSrInstance{
-					ConnectionConfig:   sdkCatalog.Spec.SrInstance.ConnectionConfig,
-					ConnectionSecretId: sdkCatalog.Spec.SrInstance.ConnectionSecretId,
-				},
-				KafkaClusters: localClusters,
-			},
-		}
-
-		localCatalogs = append(localCatalogs, localCat)
+		localCatalog := convertSdkCatalogToLocalCatalog(sdkCatalog)
+		localCatalogs = append(localCatalogs, localCatalog)
 	}
 
 	return output.SerializedOutput(cmd, localCatalogs)

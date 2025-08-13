@@ -60,30 +60,8 @@ func (c *command) computePoolListOnPrem(cmd *cobra.Command, _ []string) error {
 	}
 
 	localPools := make([]LocalComputePool, 0, len(sdkComputePools))
-
 	for _, sdkPool := range sdkComputePools {
-		localPool := LocalComputePool{
-			ApiVersion: sdkPool.ApiVersion,
-			Kind:       sdkPool.Kind,
-			Metadata: LocalComputePoolMetadata{
-				Name:              sdkPool.Metadata.Name,
-				CreationTimestamp: sdkPool.Metadata.CreationTimestamp,
-				Uid:               sdkPool.Metadata.Uid,
-				Labels:            sdkPool.Metadata.Labels,
-				Annotations:       sdkPool.Metadata.Annotations,
-			},
-			Spec: LocalComputePoolSpec{
-				Type:        sdkPool.Spec.Type,
-				ClusterSpec: sdkPool.Spec.ClusterSpec,
-			},
-		}
-
-		if sdkPool.Status != nil {
-			localPool.Status = &LocalComputePoolStatus{
-				Phase: sdkPool.Status.Phase,
-			}
-		}
-
+		localPool := convertSdkComputePoolToLocalComputePool(sdkPool)
 		localPools = append(localPools, localPool)
 	}
 
