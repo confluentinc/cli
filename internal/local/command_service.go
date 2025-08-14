@@ -461,8 +461,10 @@ func (c *command) startProcess(service string) error {
 	if err != nil {
 		return err
 	}
+
 	start.Stdout = fd
 	start.Stderr = fd
+
 	if err := start.Start(); err != nil {
 		return err
 	}
