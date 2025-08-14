@@ -52,12 +52,13 @@ var (
 				"schema-registry",
 				"connect",
 				"ksql-server",
+				"prometheus",
+				"alertmanager",
 			},
 			stopDependencies:        []string{},
 			port:                    9021,
 			isConfluentPlatformOnly: true,
 			envPrefix:               "CONTROL_CENTER",
-			versionConstraints:      "< 8.0",
 		},
 		"kafka": {
 			startDependencies: []string{
@@ -139,6 +140,26 @@ var (
 			envPrefix:               "ZOOKEEPER",
 			versionConstraints:      "< 8.0",
 		},
+		"prometheus": {
+			startDependencies: []string{},
+			stopDependencies: []string{
+				"control-center",
+			},
+			port:                    9090,
+			isConfluentPlatformOnly: false,
+			envPrefix:               "PROMETHEUS",
+			versionConstraints:      ">= 8.0",
+		},
+		"alertmanager": {
+			startDependencies: []string{},
+			stopDependencies: []string{
+				"control-center",
+			},
+			port:                    9098,
+			isConfluentPlatformOnly: false,
+			envPrefix:               "ALERTMANAGER",
+			versionConstraints:      ">= 8.0",
+		},
 	}
 
 	orderedServices = []string{
@@ -149,6 +170,8 @@ var (
 		"kafka-rest",
 		"connect",
 		"ksql-server",
+		"prometheus",
+		"alertmanager",
 		"control-center",
 	}
 )
@@ -430,6 +453,15 @@ func (c *command) getConfig(service string) (map[string]string, error) {
 		}
 	case "control-center":
 		config["confluent.controlcenter.data.dir"] = data
+		if c.isC3(service) {
+			dir := os.Getenv("CONTROL_CENTER_HOME")
+			file, _ := os.ReadFile(dir + "/etc/confluent-control-center/control-center-local.properties")
+			configs := local.ExtractConfig(file)
+			alertmanager := configs["confluent.controlcenter.alertmanager.config.file"]
+			prometheus := configs["confluent.controlcenter.prometheus.rules.file"]
+			config["confluent.controlcenter.alertmanager.config.file"] = dir + "/" + alertmanager.(string)
+			config["confluent.controlcenter.prometheus.rules.file"] = dir + "/" + prometheus.(string)
+		}
 	case "kafka":
 		if zookeeperMode {
 			config["log.dirs"] = data
