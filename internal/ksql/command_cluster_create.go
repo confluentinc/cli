@@ -8,6 +8,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/confluentinc/cli/v4/pkg/kafka"
 	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -103,6 +104,13 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
+	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
+	isCsuValidationEnabled := featureflags.Manager.BoolVariation("ksql.min_csu_validation.enable", c.Context, ldClient, false, false)
+	if isCsuValidationEnabled && (csu == 1 || csu == 2) {
+		output.ErrPrintln(c.Config.EnableColor, "Warning: As of January 15, 2026, all new ksqlDB clusters will require a minimum of 4 CSUs. Please update your automations to reflect this upcoming change.")
+	}
+
 	// endpoint value filled later, loop until endpoint information is not null (usually just one describe call is enough)
 	endpoint := cluster.Status.GetHttpEndpoint()
 
