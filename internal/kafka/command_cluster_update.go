@@ -32,6 +32,10 @@ func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 				Text: `Update the type of a Kafka cluster from "Basic" to "Standard":`,
 				Code: `confluent kafka cluster update lkc-123456 --type "standard"`,
 			},
+			examples.Example{
+				Text: `Update the Max eCKU count of a Kafka cluster:`,
+				Code: `confluent kafka cluster update lkc-123456 --max-ecku 5`,
+			},
 		),
 	}
 
