@@ -32,18 +32,24 @@ func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 				Text: `Update the type of a Kafka cluster from "Basic" to "Standard":`,
 				Code: `confluent kafka cluster update lkc-123456 --type "standard"`,
 			},
+			examples.Example{
+				Text: `Update the Max eCKU count of a Kafka cluster:`,
+				Code: `confluent kafka cluster update lkc-123456 --max-ecku 5`,
+			},
 		),
 	}
 
 	cmd.Flags().String("name", "", "Name of the Kafka cluster.")
 	cmd.Flags().Uint32("cku", 0, `Number of Confluent Kafka Units. For Kafka clusters of type "dedicated" only. When shrinking a cluster, you must reduce capacity one CKU at a time.`)
 	cmd.Flags().String("type", "", `Type of the Kafka cluster. Only supports upgrading from "Basic" to "Standard".`)
+	cmd.Flags().Int("max-ecku", 0, `Maximum number of Elastic Confluent Kafka Units (eCKUs) that Kafka clusters should auto-scale to. `+
+		`Kafka clusters with "HIGH" availability must have at least two eCKUs.`)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cmd.MarkFlagsOneRequired("name", "cku", "type")
+	cmd.MarkFlagsOneRequired("name", "cku", "type", "max-ecku")
 
 	return cmd
 }
@@ -89,6 +95,53 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		update.Spec.Config = &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: updatedCku}}
+	}
+
+	if cmd.Flags().Changed("max-ecku") {
+		maxEcku, err := cmd.Flags().GetInt("max-ecku")
+		if err != nil {
+			return err
+		}
+		currentConfig := currentCluster.GetSpec().Config
+		if currentConfig.CmkV2Dedicated != nil {
+			return errors.NewErrorWithSuggestions("the `--max-ecku` flag can only be used when creating a Basic, Standard, Enterprise, or Freight Kafka cluster", "Specify a different cluster with `--type` flag.")
+		}
+		if maxEcku < 1 {
+			return fmt.Errorf("`--max-ecku` value must be at least 1")
+		}
+		//if availability == "MULTI_ZONE" && maxEcku < 2 {
+		//	return fmt.Errorf("`--max-ecku` value must be at least 2 for high availability")
+		//}
+
+		if currentConfig.CmkV2Basic != nil {
+			update.Spec.Config = &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{
+				CmkV2Basic: &cmkv2.CmkV2Basic{
+					Kind:    "Basic",
+					MaxEcku: cmkv2.PtrInt32(int32(maxEcku)),
+				},
+			}
+		} else if currentConfig.CmkV2Standard != nil {
+			update.Spec.Config = &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{
+				CmkV2Standard: &cmkv2.CmkV2Standard{
+					Kind:    "Standard",
+					MaxEcku: cmkv2.PtrInt32(int32(maxEcku)),
+				},
+			}
+		} else if currentConfig.CmkV2Enterprise != nil {
+			update.Spec.Config = &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{
+				CmkV2Enterprise: &cmkv2.CmkV2Enterprise{
+					Kind:    "Enterprise",
+					MaxEcku: cmkv2.PtrInt32(int32(maxEcku)),
+				},
+			}
+		} else if currentConfig.CmkV2Freight != nil {
+			update.Spec.Config = &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{
+				CmkV2Freight: &cmkv2.CmkV2Freight{
+					Kind:    "Freight",
+					MaxEcku: cmkv2.PtrInt32(int32(maxEcku)),
+				},
+			}
+		}
 	}
 
 	if cmd.Flags().Changed("type") {
