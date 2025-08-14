@@ -285,50 +285,12 @@ func handleCmkKafkaClusterUpdateRequest(t *testing.T) http.HandlerFunc {
 				return
 			}
 
-
-			// Handle Max eCKU update across all eligible SKUs
 			if req.Spec.Config != nil && req.Spec.Config.CmkV2Basic != nil && req.Spec.Config.CmkV2Basic.MaxEcku != nil {
 				cluster := getCmkBasicDescribeCluster(req.GetId(), req.Spec.GetDisplayName())
 				cluster.Spec.Config = &cmkv2.CmkV2ClusterSpecConfigOneOf{
 					CmkV2Basic: &cmkv2.CmkV2Basic{
 						Kind:    "Basic",
 						MaxEcku: req.Spec.Config.CmkV2Basic.MaxEcku,
-					},
-				}
-				err := json.NewEncoder(w).Encode(cluster)
-				require.NoError(t, err)
-				return
-			}
-			if req.Spec.Config != nil && req.Spec.Config.CmkV2Standard != nil && req.Spec.Config.CmkV2Standard.MaxEcku != nil {
-				cluster := getCmkBasicDescribeCluster(req.GetId(), req.Spec.GetDisplayName())
-				cluster.Spec.Config = &cmkv2.CmkV2ClusterSpecConfigOneOf{
-					CmkV2Standard: &cmkv2.CmkV2Standard{
-						Kind:    "Standard",
-						MaxEcku: req.Spec.Config.CmkV2Standard.MaxEcku,
-					},
-				}
-				err := json.NewEncoder(w).Encode(cluster)
-				require.NoError(t, err)
-				return
-			}
-			if req.Spec.Config != nil && req.Spec.Config.CmkV2Enterprise != nil && req.Spec.Config.CmkV2Enterprise.MaxEcku != nil {
-				cluster := getCmkBasicDescribeCluster(req.GetId(), req.Spec.GetDisplayName())
-				cluster.Spec.Config = &cmkv2.CmkV2ClusterSpecConfigOneOf{
-					CmkV2Enterprise: &cmkv2.CmkV2Enterprise{
-						Kind:    "Enterprise",
-						MaxEcku: req.Spec.Config.CmkV2Enterprise.MaxEcku,
-					},
-				}
-				err := json.NewEncoder(w).Encode(cluster)
-				require.NoError(t, err)
-				return
-			}
-			if req.Spec.Config != nil && req.Spec.Config.CmkV2Freight != nil && req.Spec.Config.CmkV2Freight.MaxEcku != nil {
-				cluster := getCmkBasicDescribeCluster(req.GetId(), req.Spec.GetDisplayName())
-				cluster.Spec.Config = &cmkv2.CmkV2ClusterSpecConfigOneOf{
-					CmkV2Freight: &cmkv2.CmkV2Freight{
-						Kind:    "Freight",
-						MaxEcku: req.Spec.Config.CmkV2Freight.MaxEcku,
 					},
 				}
 				err := json.NewEncoder(w).Encode(cluster)

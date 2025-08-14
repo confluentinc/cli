@@ -37,8 +37,8 @@ type describeStruct struct {
 	Endpoint           string `human:"Endpoint" serialized:"endpoint"`
 	ByokKeyId          string `human:"BYOK Key ID" serialized:"byok_key_id"`
 	EncryptionKeyId    string `human:"Encryption Key ID" serialized:"encryption_key_id"`
-    RestEndpoint       string `human:"REST Endpoint" serialized:"rest_endpoint"`
-    MaxEcku            int32  `human:"Max eCKU,omitempty" serialized:"max_ecku,omitempty"`
+	RestEndpoint       string `human:"REST Endpoint" serialized:"rest_endpoint"`
+	MaxEcku            int32  `human:"Max eCKU,omitempty" serialized:"max_ecku,omitempty"`
 	TopicCount         int    `human:"Topic Count,omitempty" serialized:"topic_count,omitempty"`
 }
 
@@ -128,10 +128,10 @@ func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, clust
 func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Context) *describeStruct {
 	clusterStorage := getKafkaClusterStorage(cluster)
 	ingress, egress := getCmkClusterIngressAndEgressMbps(cluster)
-    var maxEckuVal int32
-    if maxEckuPtr := getCmkMaxEcku(cluster); maxEckuPtr != nil {
-        maxEckuVal = *maxEckuPtr
-    }
+	var maxEckuVal int32
+	if maxEckuPtr := getCmkMaxEcku(cluster); maxEckuPtr != nil {
+		maxEckuVal = *maxEckuPtr
+	}
 
 	return &describeStruct{
 		IsCurrent:          cluster.GetId() == ctx.KafkaClusterContext.GetActiveKafkaClusterId(),
@@ -178,7 +178,7 @@ func getKafkaClusterDescribeFields(cluster *cmkv2.CmkV2Cluster, basicFields []st
 			describeFields = append(describeFields, "ByokId")
 		}
 	} else {
-        describeFields = append(describeFields, "MaxEcku") // Max eCKU field is available only for Basic, Standard, Enterprise, and Freight clusters
+		describeFields = append(describeFields, "MaxEcku") // Max eCKU field is available only for Basic, Standard, Enterprise, and Freight clusters
 	}
 
 	if getTopicCount {
