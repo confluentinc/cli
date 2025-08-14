@@ -7,11 +7,12 @@ build:
 ifneq "" "$(findstring NT,$(shell uname))" # windows
 	CC=gcc CXX=g++ $(MAKE) cli-builder
 else ifneq (,$(findstring Linux,$(shell uname)))
-	ifneq (,$(findstring musl,$(shell ldd --version))) # linux (musl)
+    # Warning: make won't treat nested ifs as makefile directives if you use tabs instead of spaces
+    ifneq (,$(findstring musl,$(shell ldd --version))) # linux (musl)
 		CC=gcc CXX=g++ TAGS=musl $(MAKE) cli-builder
-	else # linux (glibc)
+    else # linux (glibc)
 		CC=gcc CXX=g++ $(MAKE) cli-builder
-	endif
+    endif
 else # darwin
 	$(MAKE) cli-builder
 endif

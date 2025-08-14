@@ -1,6 +1,6 @@
---- cli/Makefile	2025-05-16 17:41:03.292396500 -0700
-+++ debian/Makefile	2025-05-02 12:16:18.573532006 -0700
-@@ -1,142 +1,163 @@
+--- cli/Makefile	2025-08-14 15:47:56.963229451 -0700
++++ debian/Makefile	2025-07-11 14:06:22.180812125 -0700
+@@ -1,143 +1,163 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v1.21.2
 +SHELL=/bin/bash
@@ -11,11 +11,12 @@
 -ifneq "" "$(findstring NT,$(shell uname))" # windows
 -	CC=gcc CXX=g++ $(MAKE) cli-builder
 -else ifneq (,$(findstring Linux,$(shell uname)))
--	ifneq (,$(findstring musl,$(shell ldd --version))) # linux (musl)
+-    # Warning: make won't treat nested ifs as makefile directives if you use tabs instead of spaces
+-    ifneq (,$(findstring musl,$(shell ldd --version))) # linux (musl)
 -		CC=gcc CXX=g++ TAGS=musl $(MAKE) cli-builder
--	else # linux (glibc)
+-    else # linux (glibc)
 -		CC=gcc CXX=g++ $(MAKE) cli-builder
--	endif
+-    endif
 -else # darwin
 -	$(MAKE) cli-builder
 -endif
