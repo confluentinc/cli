@@ -76,7 +76,6 @@ func (c3h *ControlCenterHomeManager) ReadServicePortC3(service string, zookeeper
 	}
 
 	config := ExtractConfig(data)
-
 	key := servicePortKeysC3[service]
 	val, ok := config[key]
 	if !ok {
