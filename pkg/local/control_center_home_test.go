@@ -1,6 +1,7 @@
 package local
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -38,6 +39,8 @@ func (s *ControlCenterHomeTestSuite) TestGetC3File() {
 
 	file, err := s.c3h.GetC3File(exampleDir, exampleFile)
 	req.NoError(err)
+	fmt.Println(filepath.Join(dir, exampleDir, exampleFile))
+
 	req.Equal(filepath.Join(dir, exampleDir, exampleFile), file)
 }
 
@@ -50,4 +53,25 @@ func (s *ControlCenterHomeTestSuite) TestGetC3Script() {
 	file, err := s.c3h.GetServiceScriptC3("start", "prometheus")
 	req.NoError(err)
 	req.Equal(filepath.Join(dir, "bin/prometheus-start"), file)
+}
+
+func (s *ControlCenterHomeTestSuite) TestReadServiceConfigC3() {
+	req := require.New(s.T())
+	dir, err := s.c3h.getRootDir()
+	req.NoError(err)
+
+	path := filepath.Join(dir, "etc/confluent-control-center/prometheus-generated-local.yml")
+	err = os.MkdirAll(filepath.Dir(path), 0777)
+	if err != nil {
+		return
+	}
+	b := []byte{'h', 'e', 'l', 'l', 'o'}
+	err = os.WriteFile(path, b, 0644)
+	if err != nil {
+		return
+	}
+	req.NoError(err)
+	config, err := s.c3h.ReadServiceConfigC3("prometheus")
+	req.NoError(err)
+	req.Equal([]byte{'h', 'e', 'l', 'l', 'o'}, config)
 }
