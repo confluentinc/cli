@@ -331,7 +331,7 @@ func (c *command) configService(service, configFile string) error {
 	var data []byte
 	if c.isC3(service) {
 		if configFile == "" {
-			data, err = c.c3h.ReadServiceConfigC3(service, zookeeperMode)
+			data, err = c.c3h.ReadServiceConfigC3(service)
 		} else {
 			data, err = os.ReadFile(configFile)
 		}

@@ -135,14 +135,17 @@ func TestGetAndWriteConfigC3(t *testing.T) {
 
 	config, err := cc.GetConfigFileC3("prometheus")
 	req.NoError(err)
-	req.Equal(config, "/var/folders/_k/sf8r2w8x0fq1b0s9wv20_9k80000gp/T/confluent.957524/confluent-control-center/prometheus-generated-local.yml")
+	//req.Equal(config, "/tmp/confluent.146582/confluent-control-center/prometheus-generated-local.yml")
+	dir, _ := cc.getServiceDir("prometheus")
+	req.Equal(config, filepath.Join(dir, "prometheus-generated-local.yml"))
 
 	err = cc.WriteConfigC3("prometheus", []byte(config))
 	req.NoError(err)
 
 	config, err = cc.GetConfigFileC3("control-center")
 	req.NoError(err)
-	req.Equal(config, "/var/folders/_k/sf8r2w8x0fq1b0s9wv20_9k80000gp/T/confluent.957524/confluent-control-center/control-center-local.properties")
+	dir, _ = cc.getServiceDir("control-center")
+	req.Equal(config, filepath.Join(dir, "control-center-local.properties"))
 }
 
 func TestSetAndGetPid(t *testing.T) {

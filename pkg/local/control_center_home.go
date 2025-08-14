@@ -29,7 +29,7 @@ var (
 type ConfluentControlCenter interface {
 	GetC3File(path ...string) (string, error)
 	GetServiceScriptC3(action, service string) (string, error)
-	ReadServiceConfigC3(service string, zookeeperMode bool) ([]byte, error)
+	ReadServiceConfigC3(service string) ([]byte, error)
 	ReadServicePortC3(service string, zookeeperMode bool) (int, error)
 }
 
@@ -60,7 +60,7 @@ func (c3h *ControlCenterHomeManager) GetServiceScriptC3(action, service string) 
 	return c3h.GetC3File("bin", fmt.Sprintf(scriptsC3[service], action))
 }
 
-func (c3h *ControlCenterHomeManager) ReadServiceConfigC3(service string, zookeeperMode bool) ([]byte, error) {
+func (c3h *ControlCenterHomeManager) ReadServiceConfigC3(service string) ([]byte, error) {
 	file, err := c3h.GetC3File("etc", serviceConfigsC3[service])
 	if err != nil {
 		return []byte{}, err
@@ -70,7 +70,7 @@ func (c3h *ControlCenterHomeManager) ReadServiceConfigC3(service string, zookeep
 }
 
 func (c3h *ControlCenterHomeManager) ReadServicePortC3(service string, zookeeperMode bool) (int, error) {
-	data, err := c3h.ReadServiceConfigC3(service, zookeeperMode)
+	data, err := c3h.ReadServiceConfigC3(service)
 	if err != nil {
 		return 0, err
 	}
