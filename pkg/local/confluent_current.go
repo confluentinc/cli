@@ -241,7 +241,7 @@ func (cc *ConfluentCurrentManager) getServiceDir(service string) (string, error)
 	if err != nil {
 		return "", err
 	}
-	if service == "prometheus" || service == "alertmanager" || service == "control-center" { //look here
+	if service == "prometheus" || service == "alertmanager" {
 		service = "confluent-control-center"
 	}
 	dir = filepath.Join(dir, service)
