@@ -24,6 +24,7 @@ func (c *shareCommand) newGroupCommand(cfg *config.Config) *cobra.Command {
 
 	// Only cloud support for now
 	cmd.AddCommand(c.newGroupListCommand())
+	cmd.AddCommand(c.newGroupDescribeCommand())
 
 	return cmd
 }
