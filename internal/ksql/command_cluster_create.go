@@ -14,6 +14,10 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
+const (
+	ksqlMinCSUDeadline = "January 15, 2026"
+)
+
 func (c *ksqlCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
@@ -108,7 +112,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 	isCsuValidationEnabled := featureflags.Manager.BoolVariation("ksql.min_csu_validation.enable", c.Context, ldClient, false, false)
 	if isCsuValidationEnabled && (csu == 1 || csu == 2) {
-		output.ErrPrintln(c.Config.EnableColor, "Warning: As of January 15, 2026, all new ksqlDB clusters will require a minimum of 4 CSUs. Please update your automations to reflect this upcoming change.")
+		output.ErrPrintln(c.Config.EnableColor, fmt.Sprintf("Warning: As of %s, all new ksqlDB clusters will require a minimum of 4 CSUs. Please update your automations to reflect this upcoming change.", ksqlMinCSUDeadline))
 	}
 
 	// endpoint value filled later, loop until endpoint information is not null (usually just one describe call is enough)
