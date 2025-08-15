@@ -13,7 +13,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
-	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -49,15 +48,11 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newStatementCommand(cfg))
 
 	// Cloud Specific Commands
-	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
-		if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.connection", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
-			cmd.AddCommand(c.newConnectionCommand())
-		}
-		cmd.AddCommand(c.newArtifactCommand())
-		cmd.AddCommand(c.newConnectivityTypeCommand())
-		cmd.AddCommand(c.newEndpointCommand())
-		cmd.AddCommand(c.newRegionCommand())
-	}
+	cmd.AddCommand(c.newArtifactCommand())
+	cmd.AddCommand(c.newConnectionCommand())
+	cmd.AddCommand(c.newConnectivityTypeCommand())
+	cmd.AddCommand(c.newEndpointCommand())
+	cmd.AddCommand(c.newRegionCommand())
 
 	return cmd
 }

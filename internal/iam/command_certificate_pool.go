@@ -7,7 +7,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
-	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -28,7 +27,6 @@ func newCertificatePoolCommand(cfg *config.Config, prerunner pcmd.PreRunner) *co
 		Use:         "certificate-pool",
 		Short:       "Manage certificate pools.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
-		Hidden:      !(cfg.IsTest || featureflags.Manager.BoolVariation("cli.mtls", cfg.Context(), config.CliLaunchDarklyClient, true, false)),
 	}
 
 	c := &certificatePoolCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
