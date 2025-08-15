@@ -22,5 +22,5 @@ make:
   enable: false
 sonarqube:
   enable: true
-  languages: go
+  languages: ["go"]
   main_branch: main
