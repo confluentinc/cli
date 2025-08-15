@@ -1,0 +1,6 @@
+error: coverage meta-data emit failed: output directory "/test/coverage" inaccessible (err: stat /test/coverage: no such file or directory); no coverage data written
+Error: Current Flink cloud provider is empty
+
+Suggestions:
+    Please run confluent flink region use --cloud <cloud> --region <region> to set the Flink cloud provider first.
+error: coverage counter data emit failed: output directory "/test/coverage" inaccessible (err: stat /test/coverage: no such file or directory); no coverage data written 

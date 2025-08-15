@@ -88,12 +88,12 @@ cmd/lint/en_US.dic:
 
 .PHONY: unit-test
 unit-test:
-ifdef CI
-	go install gotest.tools/gotestsum@v1.12.1 && \
-	gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -race -coverprofile=coverage.unit.out -covermode=atomic $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test)
-else
-	go test -timeout 0 -v -coverprofile=coverage.unit.out -covermode=atomic $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test) $(UNIT_TEST_ARGS)
-endif
+	@if [ ! -f "$(shell go env GOPATH)/bin/gotestsum$(shell go env GOEXE)" ]; then \
+		go install gotest.tools/gotestsum@v1.12.1 ; \
+	fi
+	@"$(shell go env GOPATH)/bin/gotestsum$(shell go env GOEXE)" --junitfile unit-test-report.xml -- \
+		-timeout 0 -v -race -coverprofile=coverage.unit.out -covermode=atomic \
+		$$(go list ./... | grep -v github.com/confluentinc/cli/v4/test)
 
 .PHONY: build-for-integration-test
 build-for-integration-test:
@@ -113,18 +113,14 @@ endif
 
 .PHONY: integration-test
 integration-test:
-ifdef CI
-	go install gotest.tools/gotestsum@v1.12.1 && \
-	export GOCOVERDIR=test/coverage && \
-	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
-	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
-	go tool covdata textfmt -i $${GOCOVERDIR} -o coverage.integration.out
-else
-	export GOCOVERDIR=test/coverage && \
-	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
-	go test -timeout 0 -v $$(go list ./... | grep github.com/confluentinc/cli/v4/test) $(INTEGRATION_TEST_ARGS) && \
-	go tool covdata textfmt -i $${GOCOVERDIR} -o coverage.integration.out
-endif
+	@if [ ! -f "$(shell go env GOPATH)/bin/gotestsum$(shell go env GOEXE)" ]; then \
+		go install gotest.tools/gotestsum@v1.12.1 ; \
+	fi
+	@rm -rf test/coverage && mkdir -p test/coverage && \
+	GOCOVERDIR=test/coverage "$(shell go env GOPATH)/bin/gotestsum$(shell go env GOEXE)" --junitfile integration-test-report.xml -- \
+		-timeout 0 -v -race $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
+	go tool covdata textfmt -i test/coverage -o coverage.integration.out
+
 
 .PHONY: test
 test: unit-test integration-test
@@ -134,10 +130,17 @@ generate-packaging-patch:
 	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
 
 .PHONY: coverage
-coverage: ## Merge coverage data from unit and integration tests into coverage.txt
+coverage:
 	@echo "Merging coverage data..."
-	@echo "mode: atomic" > coverage.txt
-	@tail -n +2 coverage.unit.out >> coverage.txt
-	@tail -n +2 coverage.integration.out >> coverage.txt
+	@echo "mode: atomic" > coverage.out
+	@tail -n +2 coverage.unit.out >> coverage.out || echo "No unit coverage found"
+	@tail -n +2 coverage.integration.out >> coverage.out || echo "No integration coverage found"
+
+ifeq ($(CI),true)
+	@cp coverage.out coverage.txt
 	@echo "Coverage data saved to: coverage.txt"
 	@artifact push workflow coverage.txt
+else
+	@go tool cover -func=coverage.out
+	@go tool cover -html=coverage.out -o coverage.html
+endif
