@@ -28,15 +28,16 @@ func (c *command) environmentDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Get the name of the environment to be retrieved
 	environmentName := args[0]
-	environment, err := client.DescribeEnvironment(c.createContext(), environmentName)
+	sdkOutputEnvironment, err := client.DescribeEnvironment(c.createContext(), environmentName)
 	if err != nil {
 		return err
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		return printEnvironmentOutTable(cmd, environment)
+		return printEnvironmentOutTable(cmd, sdkOutputEnvironment)
 	}
-	return output.SerializedOutput(cmd, environment)
+
+	localEnv := convertSdkEnvironmentToLocalEnvironment(sdkOutputEnvironment)
+	return output.SerializedOutput(cmd, localEnv)
 }

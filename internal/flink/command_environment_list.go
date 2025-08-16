@@ -28,7 +28,7 @@ func (c *command) environmentList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	environments, err := client.ListEnvironments(c.createContext())
+	sdkEnvironments, err := client.ListEnvironments(c.createContext())
 	if err != nil {
 		return err
 	}
@@ -36,7 +36,7 @@ func (c *command) environmentList(cmd *cobra.Command, _ []string) error {
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
 		list.Filter([]string{"Name", "CreatedTime", "UpdatedTime", "KubernetesNamespace"})
-		for _, env := range environments {
+		for _, env := range sdkEnvironments {
 			list.Add(&flinkEnvironmentOutput{
 				Name:                env.Name,
 				KubernetesNamespace: env.KubernetesNamespace,
@@ -46,5 +46,12 @@ func (c *command) environmentList(cmd *cobra.Command, _ []string) error {
 		}
 		return list.Print()
 	}
-	return output.SerializedOutput(cmd, environments)
+
+	printableEnvs := make([]LocalEnvironment, 0, len(sdkEnvironments))
+	for _, sdkEnv := range sdkEnvironments {
+		localEnv := convertSdkEnvironmentToLocalEnvironment(sdkEnv)
+		printableEnvs = append(printableEnvs, localEnv)
+	}
+
+	return output.SerializedOutput(cmd, printableEnvs)
 }
