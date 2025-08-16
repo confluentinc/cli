@@ -2,6 +2,7 @@ package local
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -30,9 +31,23 @@ func TestGetConnectConfig(t *testing.T) {
 
 func TestGetControlCenterConfig(t *testing.T) {
 	want := map[string]string{
-		"confluent.controlcenter.data.dir": exampleDir,
+		"confluent.controlcenter.data.dir":                 exampleDir,
+		"confluent.controlcenter.alertmanager.config.file": "dir/abc",
+		"confluent.controlcenter.prometheus.rules.file":    "dir/def",
 	}
-	testGetConfig(t, "control-center", want)
+	os.Setenv("CONTROL_CENTER_HOME", "dir")
+	dir := os.Getenv("CONTROL_CENTER_HOME")
+
+	path := filepath.Join(dir, "/etc/confluent-control-center/control-center-local.properties")
+	err := os.MkdirAll(filepath.Dir(path), 0777)
+	if err != nil {
+		return
+	}
+	err = os.WriteFile(path, []byte("confluent.controlcenter.alertmanager.config.file=abc\n"+"confluent.controlcenter.prometheus.rules.file=def\n"), 0644)
+	if err != nil {
+		return
+	}
+	testGetConfigC3(t, "control-center", want)
 }
 
 func TestGetKafkaConfig(t *testing.T) {
@@ -92,6 +107,40 @@ func testGetConfig(t *testing.T, service string, want map[string]string) {
 			},
 			GetConfluentVersionFunc: func() (string, error) {
 				return "7.9.0", nil
+			},
+			GetFileFunc: func(path ...string) (string, error) {
+				return exampleFile, nil
+			},
+			FindFileFunc: func(pattern string) ([]string, error) {
+				return []string{exampleFile}, nil
+			},
+			ReadServiceConfigFunc: func(service string, _ bool) ([]byte, error) {
+				return []byte("plugin.path=share/java"), nil
+			},
+		},
+		cc: &climock.MockConfluentCurrent{
+			GetDataDirFunc: func(service string) (string, error) {
+				return exampleDir, nil
+			},
+		},
+	}
+
+	got, err := c.getConfig(service)
+
+	req.NoError(err)
+	req.Equal(want, got)
+}
+
+func testGetConfigC3(t *testing.T, service string, want map[string]string) {
+	req := require.New(t)
+
+	c := &command{
+		ch: &climock.MockConfluentHome{
+			IsConfluentPlatformFunc: func() (bool, error) {
+				return true, nil
+			},
+			GetConfluentVersionFunc: func() (string, error) {
+				return "8.0.0", nil
 			},
 			GetFileFunc: func(path ...string) (string, error) {
 				return exampleFile, nil
