@@ -56,6 +56,9 @@ func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 				return
 			}
 			cluster.Spec.Config.CmkV2Enterprise = &cmkv2.CmkV2Enterprise{Kind: "Enterprise"}
+			if req.Spec.Config.CmkV2Enterprise.MaxEcku != nil {
+				cluster.Spec.Config.CmkV2Enterprise.MaxEcku = req.Spec.Config.CmkV2Enterprise.MaxEcku
+			}
 		} else if req.Spec.Config.CmkV2Freight != nil {
 			if req.Spec.GetAvailability() == "SINGLE_ZONE" {
 				err := writeError(w, "Durability must be HIGH for an Freight cluster")
@@ -63,8 +66,18 @@ func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 				return
 			}
 			cluster.Spec.Config.CmkV2Freight = &cmkv2.CmkV2Freight{Kind: "Freight"}
-		} else {
+			if req.Spec.Config.CmkV2Freight.MaxEcku != nil {
+				cluster.Spec.Config.CmkV2Freight.MaxEcku = req.Spec.Config.CmkV2Freight.MaxEcku
+			}
+		} else if req.Spec.Config.CmkV2Basic != nil {
 			cluster.Spec.Config.CmkV2Basic = &cmkv2.CmkV2Basic{Kind: "Basic"}
+			if req.Spec.Config.CmkV2Basic.MaxEcku != nil {
+				cluster.Spec.Config.CmkV2Basic.MaxEcku = req.Spec.Config.CmkV2Basic.MaxEcku
+			}
+		} else {
+			if req.Spec.Config.CmkV2Standard.MaxEcku != nil {
+				cluster.Spec.Config.CmkV2Standard.MaxEcku = req.Spec.Config.CmkV2Standard.MaxEcku
+			}
 		}
 
 		if req.Spec.GetCloud() == "oops" {
@@ -265,6 +278,19 @@ func handleCmkKafkaClusterUpdateRequest(t *testing.T) http.HandlerFunc {
 				cluster.Spec.Config = &cmkv2.CmkV2ClusterSpecConfigOneOf{
 					CmkV2Standard: &cmkv2.CmkV2Standard{
 						Kind: "Standard",
+					},
+				}
+				err := json.NewEncoder(w).Encode(cluster)
+				require.NoError(t, err)
+				return
+			}
+
+			if req.Spec.Config != nil && req.Spec.Config.CmkV2Basic != nil && req.Spec.Config.CmkV2Basic.MaxEcku != nil {
+				cluster := getCmkBasicDescribeCluster(req.GetId(), req.Spec.GetDisplayName())
+				cluster.Spec.Config = &cmkv2.CmkV2ClusterSpecConfigOneOf{
+					CmkV2Basic: &cmkv2.CmkV2Basic{
+						Kind:    "Basic",
+						MaxEcku: req.Spec.Config.CmkV2Basic.MaxEcku,
 					},
 				}
 				err := json.NewEncoder(w).Encode(cluster)
