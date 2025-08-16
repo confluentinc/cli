@@ -178,7 +178,7 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 		connectorName,
 	)
 
-	logs, err := c.V2Client.SearchConnectorLogs(crn, startTime, endTime, levels, searchText, lastQueryPageToken)
+	logs, err := c.V2Client.SearchConnectorLogs(crn, connectorId, startTime, endTime, levels, searchText, lastQueryPageToken)
 	if err != nil {
 		return fmt.Errorf("failed to query connector logs: %w", err)
 	}
