@@ -14,6 +14,10 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
+const (
+	ksqlMinCSUWarningMessage = "Warning: New ksqlDB clusters created after January 15, 2026 require a minimum of 4 CSUs."
+)
+
 func (c *ksqlCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
@@ -108,8 +112,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 	isCsuValidationEnabled := featureflags.Manager.BoolVariation("ksql.min_csu_validation.enable", c.Context, ldClient, false, false)
 	if isCsuValidationEnabled && (csu == 1 || csu == 2) {
-		defaultMessage := "Warning: New ksqlDB clusters created after January 15, 2026 require a minimum of 4 CSUs."
-		warningMessage := featureflags.Manager.StringVariation("ksql.min_csu.deadline", c.Context, ldClient, false, defaultMessage)
+		warningMessage := featureflags.Manager.StringVariation("ksql.min_csu.deadline", c.Context, ldClient, false, ksqlMinCSUWarningMessage)
 		output.ErrPrintln(c.Config.EnableColor, warningMessage)
 	}
 
