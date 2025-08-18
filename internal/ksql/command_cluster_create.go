@@ -108,8 +108,9 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 	isCsuValidationEnabled := featureflags.Manager.BoolVariation("ksql.min_csu_validation.enable", c.Context, ldClient, false, false)
 	if isCsuValidationEnabled && (csu == 1 || csu == 2) {
-		deadline := featureflags.Manager.StringVariation("ksql.min_csu.deadline", c.Context, ldClient, false, "January 15, 2026")
-		output.ErrPrintln(c.Config.EnableColor, fmt.Sprintf("Warning: As of %s, all new ksqlDB clusters will require a minimum of 4 CSUs. Please update your automations to reflect this upcoming change.", deadline))
+		defaultMessage := "Warning: New ksqlDB clusters created after January 15, 2026 require a minimum of 4 CSUs."
+		warningMessage := featureflags.Manager.StringVariation("ksql.min_csu.deadline", c.Context, ldClient, false, defaultMessage)
+		output.ErrPrintln(c.Config.EnableColor, warningMessage)
 	}
 
 	// endpoint value filled later, loop until endpoint information is not null (usually just one describe call is enough)
