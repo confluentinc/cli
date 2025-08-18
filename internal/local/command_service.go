@@ -316,7 +316,7 @@ func (c *command) configService(service, configFile string) error {
 	}
 	var port int
 	if c.isC3(service) {
-		port, err = c.c3h.ReadServicePortC3(service, zookeeperMode)
+		port, err = c.c3h.ReadServicePortC3(service)
 	} else {
 		port, err = c.ch.ReadServicePort(service, zookeeperMode)
 	}
@@ -384,10 +384,7 @@ func (c *command) isC3(service string) bool {
 	version1, _ := c.ch.GetConfluentVersion()
 	verMajor := strings.Split(version1, ".")
 	versionInt, _ := strconv.Atoi(verMajor[0])
-	if service == "alertmanager" || service == "prometheus" || (service == "control-center" && versionInt >= 8) {
-		return true
-	}
-	return false
+	return service == "alertmanager" || service == "prometheus" || (service == "control-center" && versionInt >= 8)
 }
 
 func injectConfig(data []byte, config map[string]string) []byte {

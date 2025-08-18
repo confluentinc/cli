@@ -92,6 +92,6 @@ func (s *ControlCenterHomeTestSuite) TestReadPortC3() {
 		return
 	}
 	req.NoError(err)
-	_, err = s.c3h.ReadServicePortC3("prometheus", false)
+	_, err = s.c3h.ReadServicePortC3("prometheus")
 	req.Error(err, "no port specified")
 }
