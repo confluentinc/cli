@@ -52,7 +52,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.2.0
 	github.com/confluentinc/cmf-sdk-go v0.0.4
-	github.com/confluentinc/confluent-kafka-go/v2 v2.8.0
+	github.com/confluentinc/confluent-kafka-go/v2 v2.11.0
 	github.com/confluentinc/go-editor v0.11.0
 	github.com/confluentinc/go-prompt v0.2.40
 	github.com/confluentinc/go-ps1 v1.0.2
