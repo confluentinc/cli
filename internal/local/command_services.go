@@ -190,7 +190,9 @@ func NewServicesCommand(cfg *config.Config, prerunner cmd.PreRunner) *cobra.Comm
 	}
 
 	for _, service := range availableServices {
-		c.AddCommand(NewServiceCommand(service, prerunner))
+		if service != "prometheus" && service != "alertmanager" {
+			c.AddCommand(NewServiceCommand(service, prerunner))
+		}
 	}
 
 	c.AddCommand(NewServicesListCommand(prerunner))

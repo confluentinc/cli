@@ -4,7 +4,6 @@ Usage:
   confluent local services [command]
 
 Available Commands:
-  alertmanager     Manage Alertmanager.
   connect          Manage Connect.
   control-center   Manage Control Center.
   kafka            Manage Apache Kafka®.
@@ -12,7 +11,6 @@ Available Commands:
   kraft-controller Manage KRaft Controller.
   ksql-server      Manage ksqlDB Server.
   list             List all Confluent Platform services.
-  prometheus       Manage Prometheus.
   schema-registry  Manage Schema Registry.
   start            Start all Confluent Platform services.
   status           Check the status of all Confluent Platform services.

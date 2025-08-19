@@ -80,6 +80,9 @@ func NewServiceLogCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 
 func (c *command) runServiceLogCommand(cmd *cobra.Command, _ []string) error {
 	service := cmd.Parent().Name()
+	if service == "prometheus" || service == "alertmanager" {
+		return nil
+	}
 
 	exists, err := c.cc.HasLogFile(service)
 	if err != nil {
@@ -170,6 +173,9 @@ func NewServiceStatusCommand(service string, prerunner cmd.PreRunner) *cobra.Com
 
 func (c *command) runServiceStatusCommand(cmd *cobra.Command, _ []string) error {
 	service := cmd.Parent().Name()
+	if service == "prometheus" || service == "alertmanager" {
+		return nil
+	}
 
 	if err := c.notifyConfluentCurrent(); err != nil {
 		return err
@@ -192,6 +198,9 @@ func NewServiceStopCommand(service string, prerunner cmd.PreRunner) *cobra.Comma
 
 func (c *command) runServiceStopCommand(cmd *cobra.Command, _ []string) error {
 	service := cmd.Parent().Name()
+	if service == "prometheus" || service == "alertmanager" {
+		return nil
+	}
 
 	if err := c.notifyConfluentCurrent(); err != nil {
 		return err
@@ -227,6 +236,9 @@ func NewServiceTopCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 
 func (c *command) runServiceTopCommand(cmd *cobra.Command, _ []string) error {
 	service := cmd.Parent().Name()
+	if service == "prometheus" || service == "alertmanager" {
+		return nil
+	}
 
 	isUp, err := c.isRunning(service)
 	if err != nil {
@@ -259,6 +271,9 @@ func NewServiceVersionCommand(service string, prerunner cmd.PreRunner) *cobra.Co
 
 func (c *command) runServiceVersionCommand(cmd *cobra.Command, _ []string) error {
 	service := cmd.Parent().Name()
+	if service == "prometheus" || service == "alertmanager" {
+		return nil
+	}
 
 	zookeeperMode, err := c.isZookeeperMode()
 	if err != nil {
