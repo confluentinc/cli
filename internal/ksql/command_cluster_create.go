@@ -110,9 +110,9 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
-	isCsuValidationEnabled := featureflags.Manager.BoolVariation("ksql.min_csu_validation.enable", c.Context, ldClient, false, false)
+	isCsuValidationEnabled := featureflags.Manager.BoolVariation("ksql.min_csu_validation.enable", c.Context, ldClient, true, false)
 	if isCsuValidationEnabled && (csu == 1 || csu == 2) {
-		warningMessage := featureflags.Manager.StringVariation("ksql.min_csu.deadline", c.Context, ldClient, false, ksqlMinCSUWarningMessage)
+		warningMessage := featureflags.Manager.StringVariation("ksql.min_csu.deadline", c.Context, ldClient, true, ksqlMinCSUWarningMessage)
 		output.ErrPrintln(c.Config.EnableColor, warningMessage)
 	}
 
