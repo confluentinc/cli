@@ -135,7 +135,6 @@ func TestGetAndWriteConfigC3(t *testing.T) {
 
 	config, err := cc.GetConfigFileC3("prometheus")
 	req.NoError(err)
-	//req.Equal(config, "/tmp/confluent.146582/confluent-control-center/prometheus-generated-local.yml")
 	dir, _ := cc.getServiceDir("prometheus")
 	req.Equal(config, filepath.Join(dir, "prometheus-generated-local.yml"))
 
