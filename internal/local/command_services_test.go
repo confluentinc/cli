@@ -62,7 +62,7 @@ func TestGetKafkaConfig(t *testing.T) {
 
 func TestGetKafkaConfigC3(t *testing.T) {
 	want := map[string]string{
-		"log.dirs": "dir/kraft-broker-logs",
+		"log.dirs": filepath.Join("dir", "kraft-broker-logs"),
 		"confluent.metrics.reporter.bootstrap.servers":                     "localhost:9092",
 		"confluent.metrics.reporter.topic.replicas":                        "1",
 		"metric.reporters":                                                 "io.confluent.telemetry.reporter.TelemetryReporter",
@@ -95,7 +95,7 @@ func TestGetKafkaRestConfig(t *testing.T) {
 
 func TestGetKraftConfigC3(t *testing.T) {
 	want := map[string]string{
-		"log.dirs": "dir/kraft-controller-logs",
+		"log.dirs": filepath.Join("dir", "kraft-controller-logs"),
 		"confluent.metrics.reporter.bootstrap.servers":                     "localhost:9092",
 		"confluent.metrics.reporter.topic.replicas":                        "1",
 		"metric.reporters":                                                 "io.confluent.telemetry.reporter.TelemetryReporter",
