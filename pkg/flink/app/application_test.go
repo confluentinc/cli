@@ -141,6 +141,23 @@ func (s *ApplicationTestSuite) TestReplAppendsStatementToHistoryWithMaskedInput(
 	require.Equal(s.T(), []string{maskedInput}, s.history.Data)
 }
 
+func (s *ApplicationTestSuite) TestReplAppendsStatementToHistoryWithEmptyText() {
+	userInput := "test-input"
+	maskedInput := ""
+	statement := types.ProcessedStatement{PageToken: "not-empty", Statement: maskedInput}
+	s.inputController.EXPECT().GetUserInput().Return(userInput)
+	s.inputController.EXPECT().HasUserEnabledReverseSearch().Return(false)
+	s.inputController.EXPECT().HasUserInitiatedExit(userInput).Return(false)
+	s.statementController.EXPECT().ExecuteStatement(userInput).Return(&statement, nil)
+	s.resultFetcher.EXPECT().Init(statement)
+	s.interactiveOutputController.EXPECT().VisualizeResults()
+
+	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
+
+	require.Empty(s.T(), actual)
+	require.Equal(s.T(), []string{}, s.history.Data)
+}
+
 func (s *ApplicationTestSuite) TestReplDoesntAppendStatementToHistoryIfError() {
 	userInput := "test-input"
 
