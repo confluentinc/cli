@@ -475,6 +475,22 @@ func (c *command) getConfig(service string) (map[string]string, error) {
 			config["confluent.metrics.reporter.bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
 			config["confluent.metrics.reporter.topic.replicas"] = "1"
 		}
+		if c.isAtleast81() {
+			config["metric.reporters"] = "io.confluent.telemetry.reporter.TelemetryReporter"
+			config["confluent.telemetry.exporter._c3.type"] = "http"
+			config["confluent.telemetry.exporter._c3.enabled"] = "true"
+			config["confluent.telemetry.exporter._c3.metrics.include"] = ".*"
+			config["confluent.telemetry.exporter._c3.client.base.url"] = "http://localhost:9090/api/v1/otlp"
+			config["confluent.telemetry.exporter._c3.client.compression"] = "gzip"
+			config["confluent.telemetry.exporter._c3.api.key"] = "dummy"
+			config["confluent.telemetry.exporter._c3.api.secret"] = "dummy"
+			config["confluent.telemetry.exporter._c3.buffer.pending.batches.max"] = "80"
+			config["confluent.telemetry.exporter._c3.buffer.batch.items.max"] = "4000"
+			config["confluent.telemetry.exporter._c3.buffer.inflight.submissions.max"] = "10"
+			config["confluent.telemetry.metrics.collector.interval.ms"] = "60000"
+			config["confluent.telemetry.remoteconfig._confluent.enabled"] = "false"
+			config["confluent.consumer.lag.emitter.enabled"] = "true"
+		}
 	case "kafka-rest":
 		config["schema.registry.url"] = fmt.Sprintf("http://localhost:%d", services["schema-registry"].port)
 		if zookeeperMode {
@@ -486,6 +502,22 @@ func (c *command) getConfig(service string) (map[string]string, error) {
 			config["metric.reporters"] = "io.confluent.metrics.reporter.ConfluentMetricsReporter"
 			config["confluent.metrics.reporter.bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
 			config["confluent.metrics.reporter.topic.replicas"] = "1"
+		}
+		if c.isAtleast81() {
+			config["metric.reporters"] = "io.confluent.telemetry.reporter.TelemetryReporter"
+			config["confluent.telemetry.exporter._c3.type"] = "http"
+			config["confluent.telemetry.exporter._c3.enabled"] = "true"
+			config["confluent.telemetry.exporter._c3.metrics.include"] = ".*"
+			config["confluent.telemetry.exporter._c3.client.base.url"] = "http://localhost:9090/api/v1/otlp"
+			config["confluent.telemetry.exporter._c3.client.compression"] = "gzip"
+			config["confluent.telemetry.exporter._c3.api.key"] = "dummy"
+			config["confluent.telemetry.exporter._c3.api.secret"] = "dummy"
+			config["confluent.telemetry.exporter._c3.buffer.pending.batches.max"] = "80"
+			config["confluent.telemetry.exporter._c3.buffer.batch.items.max"] = "4000"
+			config["confluent.telemetry.exporter._c3.buffer.inflight.submissions.max"] = "10"
+			config["confluent.telemetry.metrics.collector.interval.ms"] = "60000"
+			config["confluent.telemetry.remoteconfig._confluent.enabled"] = "false"
+			config["confluent.consumer.lag.emitter.enabled"] = "true"
 		}
 	case "ksql-server":
 		if zookeeperMode {
@@ -507,6 +539,14 @@ func (c *command) getConfig(service string) (map[string]string, error) {
 	}
 
 	return config, nil
+}
+
+func (c *command) isAtleast81() bool {
+	version1, _ := c.ch.GetConfluentVersion()
+	verMajor := strings.Split(version1, ".")
+	versionInt, _ := strconv.Atoi(verMajor[0])
+	versionInt2, _ := strconv.Atoi(verMajor[1])
+	return versionInt >= 8 && versionInt2 >= 1
 }
 
 func top(pids []int) error {
