@@ -56,6 +56,9 @@ func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 				return
 			}
 			cluster.Spec.Config.CmkV2Enterprise = &cmkv2.CmkV2Enterprise{Kind: "Enterprise"}
+			if req.Spec.Config.CmkV2Enterprise.MaxEcku != nil {
+				cluster.Spec.Config.CmkV2Enterprise.MaxEcku = req.Spec.Config.CmkV2Enterprise.MaxEcku
+			}
 		} else if req.Spec.Config.CmkV2Freight != nil {
 			if req.Spec.GetAvailability() == "SINGLE_ZONE" {
 				err := writeError(w, "Durability must be HIGH for an Freight cluster")
@@ -63,8 +66,18 @@ func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 				return
 			}
 			cluster.Spec.Config.CmkV2Freight = &cmkv2.CmkV2Freight{Kind: "Freight"}
-		} else {
+			if req.Spec.Config.CmkV2Freight.MaxEcku != nil {
+				cluster.Spec.Config.CmkV2Freight.MaxEcku = req.Spec.Config.CmkV2Freight.MaxEcku
+			}
+		} else if req.Spec.Config.CmkV2Basic != nil {
 			cluster.Spec.Config.CmkV2Basic = &cmkv2.CmkV2Basic{Kind: "Basic"}
+			if req.Spec.Config.CmkV2Basic.MaxEcku != nil {
+				cluster.Spec.Config.CmkV2Basic.MaxEcku = req.Spec.Config.CmkV2Basic.MaxEcku
+			}
+		} else {
+			if req.Spec.Config.CmkV2Standard.MaxEcku != nil {
+				cluster.Spec.Config.CmkV2Standard.MaxEcku = req.Spec.Config.CmkV2Standard.MaxEcku
+			}
 		}
 
 		if req.Spec.GetCloud() == "oops" {
@@ -146,6 +159,8 @@ func handleCmkCluster(t *testing.T) http.HandlerFunc {
 			handleCmkKafkaClusterDescribeInfinite(t)(w, r)
 		case "lkc-update":
 			handleCmkKafkaClusterUpdateRequest(t)(w, r)
+		case "lkc-update-standard":
+			handleCmkKafkaStandardClusterUpdateRequest(t)(w, r)
 		case "lkc-update-dedicated-expand":
 			handleCmkKafkaDedicatedClusterExpansion(t)(w, r)
 		case "lkc-update-dedicated-shrink":
@@ -272,12 +287,57 @@ func handleCmkKafkaClusterUpdateRequest(t *testing.T) http.HandlerFunc {
 				return
 			}
 
+			if req.Spec.Config != nil && req.Spec.Config.CmkV2Basic != nil && req.Spec.Config.CmkV2Basic.MaxEcku != nil {
+				cluster := getCmkBasicDescribeCluster(req.GetId(), req.Spec.GetDisplayName())
+				cluster.Spec.Config = &cmkv2.CmkV2ClusterSpecConfigOneOf{
+					CmkV2Basic: &cmkv2.CmkV2Basic{
+						Kind:    "Basic",
+						MaxEcku: req.Spec.Config.CmkV2Basic.MaxEcku,
+					},
+				}
+				err := json.NewEncoder(w).Encode(cluster)
+				require.NoError(t, err)
+				return
+			}
+
 			// Handle other update cases
 			if req.Spec.Config == nil || req.Spec.Config.CmkV2Dedicated.Cku == 0 {
 				cluster := getCmkBasicDescribeCluster(req.GetId(), req.Spec.GetDisplayName())
 				err := json.NewEncoder(w).Encode(cluster)
 				require.NoError(t, err)
 			}
+		}
+	}
+}
+
+// Handler for GET/PUT "/cmk/v2/clusters/lkc-update-standard"
+func handleCmkKafkaStandardClusterUpdateRequest(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			cluster := getCmkStandardDescribeCluster("lkc-update-standard", "lkc-update-standard")
+			cluster.Status = &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONED"}
+			err := json.NewEncoder(w).Encode(cluster)
+			require.NoError(t, err)
+		case http.MethodPatch:
+			var req cmkv2.CmkV2Cluster
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			req.Id = cmkv2.PtrString("lkc-update-standard")
+
+			if req.Spec.Config != nil && req.Spec.Config.CmkV2Standard != nil && req.Spec.Config.CmkV2Standard.MaxEcku != nil {
+				cluster := getCmkStandardDescribeCluster(req.GetId(), req.Spec.GetDisplayName())
+				cluster.Spec.Config = &cmkv2.CmkV2ClusterSpecConfigOneOf{
+					CmkV2Standard: &cmkv2.CmkV2Standard{
+						Kind:    "Standard",
+						MaxEcku: req.Spec.Config.CmkV2Standard.MaxEcku,
+					},
+				}
+				err := json.NewEncoder(w).Encode(cluster)
+				require.NoError(t, err)
+				return
+			}
+
 		}
 	}
 }
