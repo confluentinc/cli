@@ -104,11 +104,12 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		}
 		currentConfig := currentCluster.GetSpec().Config
 		if currentConfig.CmkV2Dedicated != nil {
-			return errors.NewErrorWithSuggestions("the `--max-ecku` flag can only be used when creating a Basic, Standard, Enterprise, or Freight Kafka cluster", "Specify a different cluster with `--type` flag.")
+			return errors.NewErrorWithSuggestions("the `--max-ecku` flag can only be used when creating or updating a Basic, Standard, Enterprise, or Freight Kafka cluster", "Specify another cluster or use the `--cku` flag instead.")
 		}
 		if maxEcku < 1 {
 			return fmt.Errorf("`--max-ecku` value must be at least 1")
 		}
+		// should be taken cared at API backend
 		//if availability == "MULTI_ZONE" && maxEcku < 2 {
 		//	return fmt.Errorf("`--max-ecku` value must be at least 2 for high availability")
 		//}
