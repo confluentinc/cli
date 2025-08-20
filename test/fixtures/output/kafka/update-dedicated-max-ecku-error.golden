@@ -1,4 +1,4 @@
-Error: the `--max-ecku` flag can only be used when updating a Basic, Standard, Enterprise, or Freight Kafka cluster
+Error: the `--max-ecku` flag can only be used when creating or updating a Basic, Standard, Enterprise, or Freight Kafka cluster
 
 Suggestions:
-    Specify a different cluster with `--type` flag.
+    Specify another cluster or use the `--cku` flag instead.
