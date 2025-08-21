@@ -368,7 +368,7 @@ func (s *CLITestSuite) TestFlinkEndpointUse() {
 		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: describeFailureFixture, exitCode: 1},
 		{args: "flink region use --cloud azure --region eastus2", fixture: "flink/region/use-azure-ccn.golden"},
 		{args: "flink endpoint use https://flink-n-abcde2.eastus.azure.confluent.cloud", fixture: "flink/endpoint/use-azure-ccn.golden"},
-		{args: "flink endpoint use https://flink-n-abcde7.eastus.azure.confluent.cloud", fixture: "flink/endpoint/use-azure-ccn-fail.golden", exitCode: 1},
+		{args: "flink endpoint use https://flink-n-abcde7.eastus.azure.confluent.cloud", fixture: "flink/endpoint/use-azure-ccn-peering.golden"},
 	}
 
 	for _, test := range tests {
