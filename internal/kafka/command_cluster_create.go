@@ -35,7 +35,6 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create <name>",
 		Short:       "Create a Kafka cluster.",
-		Long:        "Create a Kafka cluster.",
 		Args:        cobra.ExactArgs(1),
 		RunE:        c.create,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
