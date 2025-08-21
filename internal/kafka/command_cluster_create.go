@@ -35,7 +35,7 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create <name>",
 		Short:       "Create a Kafka cluster.",
-		Long:        "Create a Kafka cluster.\n\nNote: You cannot use this command to create a cluster that is configured with AWS PrivateLink. You must use the UI to create a cluster of that configuration.",
+		Long:        "Create a Kafka cluster.",
 		Args:        cobra.ExactArgs(1),
 		RunE:        c.create,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
