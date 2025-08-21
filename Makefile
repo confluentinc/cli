@@ -21,19 +21,19 @@ endif
 .PHONY: cross-build
 cross-build:
 ifeq ($(GOARCH),arm64)
-	ifeq ($(GOOS),linux) # linux/arm64
+    ifeq ($(GOOS),linux) # linux/arm64
 		CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
-	else # darwin/arm64
+    else # darwin/arm64
 		$(MAKE) cli-builder
-	endif
+    endif
 else
-	ifeq ($(GOOS),windows) # windows/amd64
+    ifeq ($(GOOS),windows) # windows/amd64
 		CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-fstack-protector -static" $(MAKE) cli-builder
-	else ifeq ($(GOOS),linux) # linux/amd64
+    else ifeq ($(GOOS),linux) # linux/amd64
 		CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
-	else # darwin/amd64
+    else # darwin/amd64
 		$(MAKE) cli-builder
-	endif
+    endif
 endif
 
 .PHONY: cli-builder
