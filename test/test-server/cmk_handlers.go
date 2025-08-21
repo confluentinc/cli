@@ -337,7 +337,6 @@ func handleCmkKafkaStandardClusterUpdateRequest(t *testing.T) http.HandlerFunc {
 				require.NoError(t, err)
 				return
 			}
-
 		}
 	}
 }
