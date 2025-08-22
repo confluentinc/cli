@@ -224,9 +224,12 @@ func (c *command) runServicesListCommand(_ *cobra.Command, _ []string) error {
 
 	sort.Strings(services)
 
-	serviceNames := make([]string, len(services))
-	for i, service := range services {
-		serviceNames[i] = writeServiceName(service)
+	var serviceNames []string
+	for _, service := range services {
+		if service == "alertmanager" || service == "prometheus" {
+			continue
+		}
+		serviceNames = append(serviceNames, writeServiceName(service))
 	}
 
 	output.Println(c.Config.EnableColor, "Available Services:")

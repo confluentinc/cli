@@ -2,13 +2,11 @@ The local commands are intended for a single-node development environment only, 
 As of Confluent Platform 8.0, Java 8 will no longer be supported.
 
 Available Services:
-  Alertmanager
   Connect
   Control Center
   Kafka
   Kafka REST
   KRaft Controller
   ksqlDB Server
-  Prometheus
   Schema Registry
 
