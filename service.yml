@@ -19,8 +19,8 @@ semaphore:
   enable: true
   pipeline_enable: false
 make:
-  enable: true
+  enable: false
 sonarqube:
   enable: true
-  languages: go
+  languages: ["go"]
   main_branch: main
