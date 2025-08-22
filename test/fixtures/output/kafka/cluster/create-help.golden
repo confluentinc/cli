@@ -26,6 +26,7 @@ Flags:
       --availability string   Specify the availability of the cluster as "single-zone", "multi-zone", "low", or "high". (default "single-zone")
       --type string           Specify the type of the Kafka cluster as "basic", "standard", "enterprise", "freight", or "dedicated". (default "basic")
       --cku int               Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type "dedicated".
+      --max-ecku int          Maximum number of Elastic Confluent Kafka Units (eCKUs) that Kafka clusters should auto-scale to. Kafka clusters with "HIGH" availability must have at least two eCKUs.
       --byok string           Confluent Cloud Key ID of a registered encryption key (use "confluent byok create" to register a key).
       --network string        Network ID.
       --context string        CLI context name.
