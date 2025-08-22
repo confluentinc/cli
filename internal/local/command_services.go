@@ -224,6 +224,7 @@ func (c *command) runServicesListCommand(_ *cobra.Command, _ []string) error {
 
 	sort.Strings(services)
 
+	//nolint:prealloc
 	var serviceNames []string
 	for _, service := range services {
 		if service == "alertmanager" || service == "prometheus" {
