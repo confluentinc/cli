@@ -262,8 +262,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.2.0 h1:ALDmQhIbzKjOz8xVgOx
 github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.2.0/go.mod h1:9eUl1KxQurBT6HgO/Whd7v2mfCBeqkA7FV8IGAjCOPY=
 github.com/confluentinc/cmf-sdk-go v0.0.4 h1:IAzACCIgcp0OAah9pvr6xtqaLUoQNoorxynNzIH5dQQ=
 github.com/confluentinc/cmf-sdk-go v0.0.4/go.mod h1:xY6OWDUc4UtKMgmade99v1C8/YovgWTl8tzeZ23LrEg=
-github.com/confluentinc/confluent-kafka-go/v2 v2.8.0 h1:0HlcSNWg4LpLA9nIjzUMIqWHI+w0S68UN7alXAc3TeA=
-github.com/confluentinc/confluent-kafka-go/v2 v2.8.0/go.mod h1:hScqtFIGUI1wqHIgM3mjoqEou4VweGGGX7dMpcUKves=
+github.com/confluentinc/confluent-kafka-go/v2 v2.11.0 h1:rsqfCqZXAHjWQp4TuRgiNPuW1BlF3xO/5+TsE9iHApw=
+github.com/confluentinc/confluent-kafka-go/v2 v2.11.0/go.mod h1:hScqtFIGUI1wqHIgM3mjoqEou4VweGGGX7dMpcUKves=
 github.com/confluentinc/go-editor v0.11.0 h1:fcEALYHj7xV/fRSp54/IHi2DS4GlZMJWVgrYvi/llvU=
 github.com/confluentinc/go-editor v0.11.0/go.mod h1:nEjwqdqx8S7ZGjXsDvRgawsA04Fu2P/KAtA8fa5afMI=
 github.com/confluentinc/go-prompt v0.2.40 h1:tveghQJ+FVOVvF0dgQaZEm7YZSQ3r3tyuLMHy7w4PK0=
