@@ -56,14 +56,15 @@ func (c *command) statementListOnPrem(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	statements, err := client.ListStatements(c.createContext(), environment, computePool, status)
+
+	sdkStatements, err := client.ListStatements(c.createContext(), environment, computePool, status)
 	if err != nil {
 		return err
 	}
 
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
-		for _, statement := range statements {
+		for _, statement := range sdkStatements {
 			list.Add(&statementOutOnPrem{
 				CreationDate: statement.Metadata.GetCreationTimestamp(),
 				Name:         statement.Metadata.Name,
@@ -81,5 +82,11 @@ func (c *command) statementListOnPrem(cmd *cobra.Command, _ []string) error {
 		return list.Print()
 	}
 
-	return output.SerializedOutput(cmd, statements)
+	localStmts := make([]LocalStatement, 0, len(sdkStatements))
+	for _, sdkStmt := range sdkStatements {
+		localStmt := convertSdkStatementToLocalStatement(sdkStmt)
+		localStmts = append(localStmts, localStmt)
+	}
+
+	return output.SerializedOutput(cmd, localStmts)
 }
