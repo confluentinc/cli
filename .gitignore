@@ -58,6 +58,7 @@ go.work.sum
 
 # General
 .DS_Store
+__MACOSX/
 .AppleDouble
 .LSOverride
 Icon[]
