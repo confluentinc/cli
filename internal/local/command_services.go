@@ -479,7 +479,7 @@ func (c *command) getConfig(service string) (map[string]string, error) {
 			config["confluent.metrics.reporter.bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
 			config["confluent.metrics.reporter.topic.replicas"] = "1"
 		}
-		if c.isAtleast81() {
+		if c.isAtleast8() {
 			config["metric.reporters"] = "io.confluent.telemetry.reporter.TelemetryReporter"
 			config["confluent.telemetry.exporter._c3.type"] = "http"
 			config["confluent.telemetry.exporter._c3.enabled"] = "true"
@@ -507,7 +507,7 @@ func (c *command) getConfig(service string) (map[string]string, error) {
 			config["confluent.metrics.reporter.bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
 			config["confluent.metrics.reporter.topic.replicas"] = "1"
 		}
-		if c.isAtleast81() {
+		if c.isAtleast8() {
 			config["metric.reporters"] = "io.confluent.telemetry.reporter.TelemetryReporter"
 			config["confluent.telemetry.exporter._c3.type"] = "http"
 			config["confluent.telemetry.exporter._c3.enabled"] = "true"
@@ -545,12 +545,11 @@ func (c *command) getConfig(service string) (map[string]string, error) {
 	return config, nil
 }
 
-func (c *command) isAtleast81() bool {
+func (c *command) isAtleast8() bool {
 	version1, _ := c.ch.GetConfluentVersion()
 	verMajor := strings.Split(version1, ".")
 	versionInt, _ := strconv.Atoi(verMajor[0])
-	versionInt2, _ := strconv.Atoi(verMajor[1])
-	return versionInt >= 8 && versionInt2 >= 1
+	return versionInt >= 8
 }
 
 func top(pids []int) error {
