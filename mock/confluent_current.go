@@ -102,6 +102,16 @@ type MockConfluentCurrent struct {
 	}
 }
 
+func (m *MockConfluentCurrent) GetConfigFileC3(service string) (string, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *MockConfluentCurrent) WriteConfigC3(service string, config []byte) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 // HasTrackingFile mocks base method by wrapping the associated func.
 func (m *MockConfluentCurrent) HasTrackingFile() bool {
 	m.lockHasTrackingFile.Lock()
