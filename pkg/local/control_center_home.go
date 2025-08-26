@@ -17,7 +17,7 @@ var (
 	serviceConfigsC3 = map[string]string{
 		"control-center": "confluent-control-center/control-center-local.properties",
 		"prometheus":     "confluent-control-center/prometheus-generated-local.yml",
-		"alertmanager":   "confluent-control-center/alertmanager-generated-local.yml",
+		"alertmanager":   "confluent-control-center/alertmanager-generated.yml",
 	}
 	servicePortKeysC3 = map[string]string{
 		"control-center": "listeners",
