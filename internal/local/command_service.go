@@ -463,6 +463,9 @@ func (c *command) startProcess(service string) error {
 	if c.isC3(service) {
 		start.Env = append(os.Environ(), "LOCAL_MODE=true")
 	}
+	if service == "alertmanager" {
+		start.Env = append(os.Environ(), "ALERTMANAGER_PORT=9098")
+	}
 
 	logFile, err := c.cc.GetLogFile(service)
 	if err != nil {
