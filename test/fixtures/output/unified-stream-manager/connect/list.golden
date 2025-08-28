@@ -1,0 +1,5 @@
+       ID      |   Confluent Platform Connect   | USM Kafka Cluster ID |    Confluent Platform Kafka    | Cloud |  Region   | Environment  
+               |            Cluster             |                      |           Cluster ID           |       |           |              
+---------------+--------------------------------+----------------------+--------------------------------+-------+-----------+--------------
+  usmcc-abc123 | connect-group-xyz123           | usmkc-abc123         | 4k0R9d1GTS5tI9f4Y2xZ0Q         | AWS   | us-west-2 | env-596      
+  usmcc-def456 | connect-group-xyz456           | usmkc-def456         | 5k0R9d1GTS5tI9f4Y2xZ0Q         | Azure | eastus    | env-596      

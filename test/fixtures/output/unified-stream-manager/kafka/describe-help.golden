@@ -1,0 +1,19 @@
+Describe a Kafka cluster.
+
+Usage:
+  confluent unified-stream-manager kafka describe <usm-cluster-id> [flags]
+
+Examples:
+Describe a Confluent Platform Kafka cluster with the ID 4k0R9d1GTS5tI9f4Y2xZ0Q.
+
+  $ confluent unified-stream-manager kafka describe 4k0R9d1GTS5tI9f4Y2xZ0Q
+
+Flags:
+      --environment string   Environment ID.
+      --context string       CLI context name.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
