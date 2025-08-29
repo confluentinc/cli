@@ -21,7 +21,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Manage Kafka Connect.",
 	}
 
-	cmd.AddCommand(newArtifactCommand(prerunner))
+	cmd.AddCommand(newArtifactCommand(cfg, prerunner))
 	cmd.AddCommand(newClusterCommand(cfg, prerunner))
 	cmd.AddCommand(newCustomPluginCommand(prerunner))
 	cmd.AddCommand(newCustomRuntimeCommand(cfg, prerunner))
