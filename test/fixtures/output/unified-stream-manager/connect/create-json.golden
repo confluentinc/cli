@@ -1,9 +1,0 @@
-{
-  "id": "usmcc-abc123",
-  "confluent_platform_connect_cluster": "connect-group-xyz123",
-  "usm_kafka_cluster_id": "usmkc-abc123",
-  "confluent_platform_kafka_cluster_id": "4k0R9d1GTS5tI9f4Y2xZ0Q",
-  "cloud": "AWS",
-  "region": "us-east-1",
-  "environment": "env-596"
-}

@@ -135,7 +135,7 @@ func extractPageToken(nextPageUrlString string) (string, error) {
 }
 
 func extractNextPageToken(nextPageUrl NullableString) (string, bool, error) {
-	if !nextPageUrl.IsSet() || nextPageUrl.Get() == nil {
+	if !nextPageUrl.IsSet() {
 		return "", true, nil
 	}
 	nextPageUrlString := *nextPageUrl.Get()
