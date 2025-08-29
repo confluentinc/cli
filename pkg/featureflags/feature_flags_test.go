@@ -122,14 +122,17 @@ func (suite *LaunchDarklyTestSuite) TestCliFlagsCachedExpired() {
 	ctx := config.AuthenticatedCloudConfigMock().Context()
 	req := require.New(suite.T())
 
-	ctx.FeatureFlags = &config.FeatureFlags{
-		CliValues: map[string]any{"testBool": false},
-	}
+	boolFlag := ld.BoolVariation("testBool", ctx, config.CliLaunchDarklyClient, true, false)
+	req.Equal(true, boolFlag)
+
+	// updating the cached value
+	ctx.FeatureFlags.CliValues["testBool"] = false
+	boolFlag = ld.BoolVariation("testBool", ctx, config.CliLaunchDarklyClient, true, false)
+	req.Equal(false, boolFlag)
 
 	// expiring the cache: updated at 0
-	// we expect the expired cached value of "false" to be replaced by the new value of "true"
 	ctx.FeatureFlags.LastUpdateTime = 0
-	boolFlag := ld.BoolVariation("testBool", ctx, config.CliLaunchDarklyClient, true, false)
+	boolFlag = ld.BoolVariation("testBool", ctx, config.CliLaunchDarklyClient, true, false)
 	req.Equal(true, boolFlag)
 }
 

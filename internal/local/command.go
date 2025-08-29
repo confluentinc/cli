@@ -10,16 +10,14 @@ import (
 
 type command struct {
 	*pcmd.CLICommand
-	ch  local.ConfluentHome
-	c3h local.ConfluentControlCenter
-	cc  local.ConfluentCurrent
+	ch local.ConfluentHome
+	cc local.ConfluentCurrent
 }
 
 func NewLocalCommand(cmd *cobra.Command, prerunner pcmd.PreRunner) *command {
 	return &command{
 		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
 		ch:         local.NewConfluentHomeManager(),
-		c3h:        local.NewControlCenterHomeManager(),
 		cc:         local.NewConfluentCurrentManager(),
 	}
 }
