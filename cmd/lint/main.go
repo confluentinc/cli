@@ -185,8 +185,6 @@ var properNouns = []string{
 	"ZooKeeper™",
 	"ksqlDB Server",
 	"ksqlDB",
-	"Prometheus",
-	"Alertmanager",
 }
 
 // vocabWords are words that don't appear in the US dictionary, but are Confluent-related words.
@@ -196,7 +194,6 @@ var vocabWords = []string{
 	"acl",
 	"acls",
 	"ai",
-	"alertmanager",
 	"apac",
 	"api",
 	"apis",
@@ -291,7 +288,6 @@ var vocabWords = []string{
 	"prem",
 	"privatelink",
 	"producer.config",
-	"prometheus",
 	"protobuf",
 	"rbac",
 	"readonly",

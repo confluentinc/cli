@@ -3,7 +3,6 @@ As of Confluent Platform 8.0, Java 8 will no longer be supported.
 
 Available Services:
   Connect
-  Control Center
   Kafka
   Kafka REST
   KRaft Controller

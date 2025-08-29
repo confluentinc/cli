@@ -52,13 +52,12 @@ var (
 				"schema-registry",
 				"connect",
 				"ksql-server",
-				"prometheus",
-				"alertmanager",
 			},
 			stopDependencies:        []string{},
 			port:                    9021,
 			isConfluentPlatformOnly: true,
 			envPrefix:               "CONTROL_CENTER",
+			versionConstraints:      "< 8.0",
 		},
 		"kafka": {
 			startDependencies: []string{
@@ -140,26 +139,6 @@ var (
 			envPrefix:               "ZOOKEEPER",
 			versionConstraints:      "< 8.0",
 		},
-		"prometheus": {
-			startDependencies: []string{},
-			stopDependencies: []string{
-				"control-center",
-			},
-			port:                    9090,
-			isConfluentPlatformOnly: false,
-			envPrefix:               "PROMETHEUS",
-			versionConstraints:      ">= 8.0",
-		},
-		"alertmanager": {
-			startDependencies: []string{},
-			stopDependencies: []string{
-				"control-center",
-			},
-			port:                    9098,
-			isConfluentPlatformOnly: false,
-			envPrefix:               "ALERTMANAGER",
-			versionConstraints:      ">= 8.0",
-		},
 	}
 
 	orderedServices = []string{
@@ -170,8 +149,6 @@ var (
 		"kafka-rest",
 		"connect",
 		"ksql-server",
-		"prometheus",
-		"alertmanager",
 		"control-center",
 	}
 )
@@ -190,9 +167,7 @@ func NewServicesCommand(cfg *config.Config, prerunner cmd.PreRunner) *cobra.Comm
 	}
 
 	for _, service := range availableServices {
-		if service != "prometheus" && service != "alertmanager" {
-			c.AddCommand(NewServiceCommand(service, prerunner))
-		}
+		c.AddCommand(NewServiceCommand(service, prerunner))
 	}
 
 	c.AddCommand(NewServicesListCommand(prerunner))
@@ -224,13 +199,9 @@ func (c *command) runServicesListCommand(_ *cobra.Command, _ []string) error {
 
 	sort.Strings(services)
 
-	//nolint:prealloc
-	var serviceNames []string
-	for _, service := range services {
-		if service == "alertmanager" || service == "prometheus" {
-			continue
-		}
-		serviceNames = append(serviceNames, writeServiceName(service))
+	serviceNames := make([]string, len(services))
+	for i, service := range services {
+		serviceNames[i] = writeServiceName(service)
 	}
 
 	output.Println(c.Config.EnableColor, "Available Services:")
@@ -459,15 +430,6 @@ func (c *command) getConfig(service string) (map[string]string, error) {
 		}
 	case "control-center":
 		config["confluent.controlcenter.data.dir"] = data
-		if c.isC3(service) {
-			dir := os.Getenv("CONTROL_CENTER_HOME")
-			file, _ := os.ReadFile(dir + "/etc/confluent-control-center/control-center-local.properties")
-			configs := local.ExtractConfig(file)
-			alertmanager := configs["confluent.controlcenter.alertmanager.config.file"]
-			prometheus := configs["confluent.controlcenter.prometheus.rules.file"]
-			config["confluent.controlcenter.alertmanager.config.file"] = dir + "/" + alertmanager.(string)
-			config["confluent.controlcenter.prometheus.rules.file"] = dir + "/" + prometheus.(string)
-		}
 	case "kafka":
 		if zookeeperMode {
 			config["log.dirs"] = data
@@ -478,22 +440,6 @@ func (c *command) getConfig(service string) (map[string]string, error) {
 			config["metric.reporters"] = "io.confluent.metrics.reporter.ConfluentMetricsReporter"
 			config["confluent.metrics.reporter.bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
 			config["confluent.metrics.reporter.topic.replicas"] = "1"
-		}
-		if c.isAtleast8() {
-			config["metric.reporters"] = "io.confluent.telemetry.reporter.TelemetryReporter"
-			config["confluent.telemetry.exporter._c3.type"] = "http"
-			config["confluent.telemetry.exporter._c3.enabled"] = "true"
-			config["confluent.telemetry.exporter._c3.metrics.include"] = ".*"
-			config["confluent.telemetry.exporter._c3.client.base.url"] = "http://localhost:9090/api/v1/otlp"
-			config["confluent.telemetry.exporter._c3.client.compression"] = "gzip"
-			config["confluent.telemetry.exporter._c3.api.key"] = "dummy"
-			config["confluent.telemetry.exporter._c3.api.secret"] = "dummy"
-			config["confluent.telemetry.exporter._c3.buffer.pending.batches.max"] = "80"
-			config["confluent.telemetry.exporter._c3.buffer.batch.items.max"] = "4000"
-			config["confluent.telemetry.exporter._c3.buffer.inflight.submissions.max"] = "10"
-			config["confluent.telemetry.metrics.collector.interval.ms"] = "60000"
-			config["confluent.telemetry.remoteconfig._confluent.enabled"] = "false"
-			config["confluent.consumer.lag.emitter.enabled"] = "true"
 		}
 	case "kafka-rest":
 		config["schema.registry.url"] = fmt.Sprintf("http://localhost:%d", services["schema-registry"].port)
@@ -506,22 +452,6 @@ func (c *command) getConfig(service string) (map[string]string, error) {
 			config["metric.reporters"] = "io.confluent.metrics.reporter.ConfluentMetricsReporter"
 			config["confluent.metrics.reporter.bootstrap.servers"] = fmt.Sprintf("localhost:%d", services["kafka"].port)
 			config["confluent.metrics.reporter.topic.replicas"] = "1"
-		}
-		if c.isAtleast8() {
-			config["metric.reporters"] = "io.confluent.telemetry.reporter.TelemetryReporter"
-			config["confluent.telemetry.exporter._c3.type"] = "http"
-			config["confluent.telemetry.exporter._c3.enabled"] = "true"
-			config["confluent.telemetry.exporter._c3.metrics.include"] = ".*"
-			config["confluent.telemetry.exporter._c3.client.base.url"] = "http://localhost:9090/api/v1/otlp"
-			config["confluent.telemetry.exporter._c3.client.compression"] = "gzip"
-			config["confluent.telemetry.exporter._c3.api.key"] = "dummy"
-			config["confluent.telemetry.exporter._c3.api.secret"] = "dummy"
-			config["confluent.telemetry.exporter._c3.buffer.pending.batches.max"] = "80"
-			config["confluent.telemetry.exporter._c3.buffer.batch.items.max"] = "4000"
-			config["confluent.telemetry.exporter._c3.buffer.inflight.submissions.max"] = "10"
-			config["confluent.telemetry.metrics.collector.interval.ms"] = "60000"
-			config["confluent.telemetry.remoteconfig._confluent.enabled"] = "false"
-			config["confluent.consumer.lag.emitter.enabled"] = "true"
 		}
 	case "ksql-server":
 		if zookeeperMode {
@@ -543,13 +473,6 @@ func (c *command) getConfig(service string) (map[string]string, error) {
 	}
 
 	return config, nil
-}
-
-func (c *command) isAtleast8() bool {
-	version1, _ := c.ch.GetConfluentVersion()
-	verMajor := strings.Split(version1, ".")
-	versionInt, _ := strconv.Atoi(verMajor[0])
-	return versionInt >= 8
 }
 
 func top(pids []int) error {
