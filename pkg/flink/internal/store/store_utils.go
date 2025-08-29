@@ -54,7 +54,6 @@ func processSetStatement(properties types.UserPropertiesInterface, statement str
 		return &types.ProcessedStatement{
 			Kind:             config.OpSet,
 			Status:           types.COMPLETED,
-			Statement:        statement,
 			StatementResults: createStatementResults([]string{"Key", "Value"}, properties.ToSortedSlice(true)),
 			IsLocalStatement: true,
 		}, nil
@@ -87,7 +86,6 @@ func processSetStatement(properties types.UserPropertiesInterface, statement str
 		Kind:                 config.OpSet,
 		StatusDetail:         "configuration updated successfully",
 		Status:               types.COMPLETED,
-		Statement:            statement,
 		StatementResults:     createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}}),
 		IsLocalStatement:     true,
 		IsSensitiveStatement: hasSensitiveKey(configKey),
@@ -105,7 +103,6 @@ func processResetStatement(properties types.UserPropertiesInterface, statement s
 			Kind:             config.OpReset,
 			StatusDetail:     "configuration has been reset successfully",
 			Status:           types.COMPLETED,
-			Statement:        statement,
 			StatementResults: createStatementResults([]string{"Key", "Value"}, properties.ToSortedSlice(true)),
 			IsLocalStatement: true,
 		}, nil
@@ -123,7 +120,6 @@ func processResetStatement(properties types.UserPropertiesInterface, statement s
 		Kind:             config.OpReset,
 		StatusDetail:     fmt.Sprintf(`configuration key "%s" has been reset successfully`, configKey),
 		Status:           types.COMPLETED,
-		Statement:        statement,
 		StatementResults: createStatementResults([]string{"Key", "Value"}, properties.ToSortedSlice(true)),
 		IsLocalStatement: true,
 	}, nil
@@ -171,7 +167,6 @@ func processUseStatement(properties types.UserPropertiesInterface, statement str
 		Kind:             config.OpUse,
 		StatusDetail:     "configuration updated successfully",
 		Status:           types.COMPLETED,
-		Statement:        statement,
 		StatementResults: createStatementResults([]string{"Key", "Value"}, addedConfig),
 		IsLocalStatement: true,
 	}, nil

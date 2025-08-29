@@ -205,10 +205,7 @@ func (a *Application) readEvalPrint() {
 		return
 	}
 	if !executedStatement.IsSensitiveStatement {
-		// Append executedStatement text since sensitive information such as password can be masked in server side
-		if executedStatement.Statement != "" {
-			a.history.Append(executedStatement.Statement)
-		}
+		a.history.Append(userInput)
 	}
 
 	if !executedStatement.IsDryRunStatement() {

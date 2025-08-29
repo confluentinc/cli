@@ -18,11 +18,10 @@ import (
 )
 
 var pastTenseMap = map[string]string{
-	"delete":     "deleted",
-	"deregister": "deregistered",
-	"disable":    "disabled",
-	"undelete":   "undeleted",
-	"uninstall":  "uninstalled",
+	"delete":    "deleted",
+	"disable":   "disabled",
+	"undelete":  "undeleted",
+	"uninstall": "uninstalled",
 }
 
 func ValidateAndConfirm(cmd *cobra.Command, args []string, checkExistence func(string) bool, resourceType string) error {

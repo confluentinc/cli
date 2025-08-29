@@ -126,10 +126,6 @@ var ccloudV2Routes = []route{
 	{"/tableflow/v1/catalog-integrations", handleCatalogIntegrations},
 	{"/tableflow/v1/tableflow-topics/{display_name}", handleTableflowTopic},
 	{"/tableflow/v1/tableflow-topics", handleTableflowTopics},
-	{"/usm/v1/kafka-clusters", handleUsmKafkaClusters},
-	{"/usm/v1/kafka-clusters/{id}", handleUsmKafkaCluster},
-	{"/usm/v1/connect-clusters", handleUsmConnectClusters},
-	{"/usm/v1/connect-clusters/{id}", handleUsmConnectCluster},
 	{"/v2/metrics/cloud/query", handleMetricsQuery},
 }
 
