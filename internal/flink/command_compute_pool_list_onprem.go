@@ -35,22 +35,20 @@ func (c *command) computePoolListOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	computePools, err := client.ListComputePools(c.createContext(), environment)
+	sdkComputePools, err := client.ListComputePools(c.createContext(), environment)
 	if err != nil {
 		return err
 	}
 
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
-		for _, pool := range computePools {
-			// nil pointer handling for creation timestamp
+		for _, pool := range sdkComputePools {
 			var creationTime string
 			if pool.GetMetadata().CreationTimestamp != nil {
 				creationTime = *pool.GetMetadata().CreationTimestamp
 			} else {
 				creationTime = ""
 			}
-
 			list.Add(&computePoolOutOnPrem{
 				CreationTime: creationTime,
 				Name:         pool.GetMetadata().Name,
@@ -61,5 +59,11 @@ func (c *command) computePoolListOnPrem(cmd *cobra.Command, _ []string) error {
 		return list.Print()
 	}
 
-	return output.SerializedOutput(cmd, computePools)
+	localPools := make([]LocalComputePool, 0, len(sdkComputePools))
+	for _, sdkPool := range sdkComputePools {
+		localPool := convertSdkComputePoolToLocalComputePool(sdkPool)
+		localPools = append(localPools, localPool)
+	}
+
+	return output.SerializedOutput(cmd, localPools)
 }

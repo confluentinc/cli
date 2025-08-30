@@ -45,13 +45,13 @@ func (c *command) catalogCreate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to read file: %v", err)
 	}
 
-	var catalog cmfsdk.KafkaCatalog
+	var genericData map[string]interface{}
 	ext := filepath.Ext(resourceFilePath)
 	switch ext {
 	case ".json":
-		err = json.Unmarshal(data, &catalog)
+		err = json.Unmarshal(data, &genericData)
 	case ".yaml", ".yml":
-		err = yaml.Unmarshal(data, &catalog)
+		err = yaml.Unmarshal(data, &genericData)
 	default:
 		return errors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
 	}
@@ -59,35 +59,41 @@ func (c *command) catalogCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	outputCatalog, err := client.CreateCatalog(c.createContext(), catalog)
+	jsonBytes, err := json.Marshal(genericData)
+	if err != nil {
+		return fmt.Errorf("failed to marshal intermediate data: %w", err)
+	}
+
+	var sdkCatalog cmfsdk.KafkaCatalog
+	if err = json.Unmarshal(jsonBytes, &sdkCatalog); err != nil {
+		return fmt.Errorf("failed to bind data to KafkaCatalog model: %w", err)
+	}
+
+	sdkOutputCatalog, err := client.CreateCatalog(c.createContext(), sdkCatalog)
 	if err != nil {
 		return err
 	}
 
 	if output.GetFormat(cmd) == output.Human {
 		table := output.NewTable(cmd)
-
-		// Populate the databases field with the names of the databases
-		databases := make([]string, 0, len(outputCatalog.GetSpec().KafkaClusters))
-		for _, kafkaCluster := range outputCatalog.GetSpec().KafkaClusters {
+		databases := make([]string, 0, len(sdkOutputCatalog.GetSpec().KafkaClusters))
+		for _, kafkaCluster := range sdkOutputCatalog.GetSpec().KafkaClusters {
 			databases = append(databases, kafkaCluster.DatabaseName)
 		}
-
-		// nil pointer handling for creation timestamp
 		var creationTime string
-		if outputCatalog.GetMetadata().CreationTimestamp != nil {
-			creationTime = *outputCatalog.GetMetadata().CreationTimestamp
+		if sdkOutputCatalog.GetMetadata().CreationTimestamp != nil {
+			creationTime = *sdkOutputCatalog.GetMetadata().CreationTimestamp
 		} else {
 			creationTime = ""
 		}
-
 		table.Add(&catalogOut{
 			CreationTime: creationTime,
-			Name:         outputCatalog.GetMetadata().Name,
+			Name:         sdkOutputCatalog.GetMetadata().Name,
 			Databases:    databases,
 		})
 		return table.Print()
 	}
 
-	return output.SerializedOutput(cmd, outputCatalog)
+	localCatalog := convertSdkCatalogToLocalCatalog(sdkOutputCatalog)
+	return output.SerializedOutput(cmd, localCatalog)
 }
