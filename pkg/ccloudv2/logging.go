@@ -29,6 +29,7 @@ type LoggingSearchRequest struct {
 type LoggingSearchParams struct {
 	Level      []string `json:"level,omitempty"`
 	SearchText string   `json:"search_text,omitempty"`
+	Id         string   `json:"id,omitempty"`
 }
 
 type LoggingLogEntry struct {
@@ -54,7 +55,7 @@ type LoggingSearchResponse struct {
 	Kind       string            `json:"kind"`
 }
 
-func (c *Client) SearchConnectorLogs(crn, startTime, endTime string, levels []string, searchText string, pageToken string) (*LoggingSearchResponse, error) {
+func (c *Client) SearchConnectorLogs(crn, connectorId, startTime, endTime string, levels []string, searchText string, pageToken string) (*LoggingSearchResponse, error) {
 	baseURL := c.cfg.Context().GetPlatformServer()
 	loggingURL, err := getLoggingUrl(baseURL)
 	if err != nil {
@@ -66,6 +67,7 @@ func (c *Client) SearchConnectorLogs(crn, startTime, endTime string, levels []st
 		Search: LoggingSearchParams{
 			Level:      levels,
 			SearchText: searchText,
+			Id:         connectorId,
 		},
 		Sort:      "desc",
 		StartTime: startTime,
