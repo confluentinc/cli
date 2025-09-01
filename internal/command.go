@@ -102,7 +102,6 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 		Version:                 cfg.Version,
 	}
 
-	cmd.AddCommand(ai.New(prerunner))
 	cmd.AddCommand(apikey.New(prerunner))
 	cmd.AddCommand(asyncapi.New(prerunner))
 	cmd.AddCommand(auditlog.New(prerunner))
@@ -140,6 +139,9 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
 
 	_ = cfg.ParseFlagsIntoConfig(cmd)
+	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.ai.enable", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
+		cmd.AddCommand(ai.New(prerunner))
+	}
 
 	changeDefaults(cmd, cfg)
 	deprecateCommandsAndFlags(cmd, cfg)
