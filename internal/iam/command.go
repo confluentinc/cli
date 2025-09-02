@@ -8,7 +8,6 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
-	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
@@ -26,13 +25,10 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		cmd.Long = "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) permissions."
 	}
 
-	_ = cfg.ParseFlagsIntoConfig(cmd)
-	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.iam.group_mapping.enable", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
-		cmd.AddCommand(newGroupMappingCommand(prerunner))
-	}
 	cmd.AddCommand(newAclCommand(prerunner))
-	cmd.AddCommand(newCertificateAuthorityCommand(cfg, prerunner))
+	cmd.AddCommand(newCertificateAuthorityCommand(prerunner))
 	cmd.AddCommand(newCertificatePoolCommand(cfg, prerunner))
+	cmd.AddCommand(newGroupMappingCommand(prerunner))
 	cmd.AddCommand(newIpFilterCommand(cfg, prerunner))
 	cmd.AddCommand(newIpGroupCommand(prerunner))
 	cmd.AddCommand(newPoolCommand(cfg, prerunner))
