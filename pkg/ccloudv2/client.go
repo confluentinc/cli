@@ -34,6 +34,7 @@ import (
 	srcmv3 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v3"
 	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
 	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2/tableflow/v1"
+	usmv1 "github.com/confluentinc/ccloud-sdk-go-v2/usm/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/config"
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
@@ -75,6 +76,7 @@ type Client struct {
 	SrcmClient                   *srcmv3.APIClient
 	SsoClient                    *ssov2.APIClient
 	TableflowClient              *tableflowv1.APIClient
+	UsmClient                    *usmv1.APIClient
 	CCPMClient                   *ccpmv1.APIClient
 }
 
@@ -123,6 +125,7 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		SrcmClient:                   newSrcmClient(httpClient, url, userAgent, unsafeTrace),
 		SsoClient:                    newSsoClient(httpClient, url, userAgent, unsafeTrace),
 		TableflowClient:              newTableflowClient(httpClient, url, userAgent, unsafeTrace),
+		UsmClient:                    newUsmClient(httpClient, url, userAgent, unsafeTrace),
 		CCPMClient:                   newCCPMClient(httpClient, url, userAgent, unsafeTrace),
 	}
 }
