@@ -31,17 +31,21 @@ func (c *Client) GetByokKey(keyId string) (byokv1.ByokV1Key, *http.Response, err
 	return c.ByokClient.KeysByokV1Api.GetByokV1Key(c.byokApiContext(), keyId).Execute()
 }
 
+func (c *Client) UpdateByokKey(keyId string, keyUpdate byokv1.ByokV1KeyUpdate) (byokv1.ByokV1Key, *http.Response, error) {
+	return c.ByokClient.KeysByokV1Api.UpdateByokV1Key(c.byokApiContext(), keyId).ByokV1KeyUpdate(keyUpdate).Execute()
+}
+
 func (c *Client) DeleteByokKey(keyId string) (*http.Response, error) {
 	return c.ByokClient.KeysByokV1Api.DeleteByokV1Key(c.byokApiContext(), keyId).Execute()
 }
 
-func (c *Client) ListByokKeys(provider, state string) ([]byokv1.ByokV1Key, error) {
+func (c *Client) ListByokKeys(provider, state, region, phase, displayName, key string) ([]byokv1.ByokV1Key, error) {
 	var list []byokv1.ByokV1Key
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, httpResp, err := c.executeListByokKeys(pageToken, provider, state)
+		page, httpResp, err := c.executeListByokKeys(pageToken, provider, state, region, phase, displayName, key)
 		if err != nil {
 			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
@@ -55,13 +59,25 @@ func (c *Client) ListByokKeys(provider, state string) ([]byokv1.ByokV1Key, error
 	return list, nil
 }
 
-func (c *Client) executeListByokKeys(pageToken, provider, state string) (byokv1.ByokV1KeyList, *http.Response, error) {
+func (c *Client) executeListByokKeys(pageToken, provider, state, region, phase, displayName, key string) (byokv1.ByokV1KeyList, *http.Response, error) {
 	req := c.ByokClient.KeysByokV1Api.ListByokV1Keys(c.byokApiContext()).PageSize(ccloudV2ListPageSize)
 	if provider != "" {
 		req = req.Provider(provider)
 	}
 	if state != "" {
 		req = req.State(state)
+	}
+	if region != "" {
+		req = req.ValidationRegion(region)
+	}
+	if phase != "" {
+		req = req.ValidationPhase(phase)
+	}
+	if displayName != "" {
+		req = req.DisplayName(displayName)
+	}
+	if key != "" {
+		req = req.Key(key)
 	}
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
