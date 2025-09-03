@@ -39,7 +39,12 @@ func (c *command) newTopicEnableCommand() *cobra.Command {
 	cmd.Flags().String("provider-integration", "", "Specify the provider integration id.")
 	cmd.Flags().String("bucket-name", "", "Specify the name of the AWS S3 bucket.")
 	cmd.Flags().String("table-formats", "ICEBERG", "Specify the table formats, one of DELTA or ICEBERG.")
-	cmd.Flags().String("record-failure-strategy", "SUSPEND", "Specify the record failure strategy, one of SUSPEND or SKIP.")
+	cmd.Flags().String("error-handling", "", "Specify the error handling strategy, one of SUSPEND, SKIP, or LOG.")
+	cmd.Flags().String("log-target", "", "Specify the target topic for the LOG error handling strategy.")
+
+	// Deprecated
+	cmd.Flags().String("record-failure-strategy", "", "Specify the record failure strategy, one of SUSPEND or SKIP.")
+	cobra.CheckErr(cmd.Flags().MarkHidden("record-failure-strategy"))
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -67,6 +72,16 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 	}
 
 	recordFailureStrategy, err := cmd.Flags().GetString("record-failure-strategy")
+	if err != nil {
+		return err
+	}
+
+	errorHandling, err := cmd.Flags().GetString("error-handling")
+	if err != nil {
+		return err
+	}
+
+	logTarget, err := cmd.Flags().GetString("log-target")
 	if err != nil {
 		return err
 	}
@@ -103,8 +118,36 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 	}
 
 	createTopic.Spec.Config = &tableflowv1.TableflowV1TableFlowTopicConfigsSpec{
-		RetentionMs:           tableflowv1.PtrString(retentionMs),
-		RecordFailureStrategy: tableflowv1.PtrString(recordFailureStrategy),
+		RetentionMs: tableflowv1.PtrString(retentionMs),
+	}
+
+	if cmd.Flags().Changed("record-failure-strategy") {
+		createTopic.Spec.Config.SetRecordFailureStrategy(recordFailureStrategy)
+	}
+
+	if cmd.Flags().Changed("error-handling") {
+		if strings.ToUpper(errorHandling) == suspend {
+			createTopic.Spec.Config.ErrorHandling = &tableflowv1.TableflowV1TableFlowTopicConfigsSpecErrorHandlingOneOf{
+				TableflowV1ErrorHandlingSuspend: &tableflowv1.TableflowV1ErrorHandlingSuspend{
+					Mode: suspend,
+				},
+			}
+		} else if strings.ToUpper(errorHandling) == skip {
+			createTopic.Spec.Config.ErrorHandling = &tableflowv1.TableflowV1TableFlowTopicConfigsSpecErrorHandlingOneOf{
+				TableflowV1ErrorHandlingSkip: &tableflowv1.TableflowV1ErrorHandlingSkip{
+					Mode: skip,
+				},
+			}
+		} else if strings.ToUpper(errorHandling) == log {
+			createTopic.Spec.Config.ErrorHandling = &tableflowv1.TableflowV1TableFlowTopicConfigsSpecErrorHandlingOneOf{
+				TableflowV1ErrorHandlingLog: &tableflowv1.TableflowV1ErrorHandlingLog{
+					Mode: log,
+				},
+			}
+			if cmd.Flags().Changed("log-target") {
+				createTopic.Spec.Config.ErrorHandling.TableflowV1ErrorHandlingLog.SetTarget(logTarget)
+			}
+		}
 	}
 
 	if strings.ToUpper(storageType) == "BYOS" {
