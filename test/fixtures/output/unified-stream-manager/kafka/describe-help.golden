@@ -4,9 +4,9 @@ Usage:
   confluent unified-stream-manager kafka describe <usm-cluster-id> [flags]
 
 Examples:
-Describe a Confluent Platform Kafka cluster with the ID 4k0R9d1GTS5tI9f4Y2xZ0Q.
+Describe a Confluent Platform Kafka cluster with the ID usmkc-abc123.
 
-  $ confluent unified-stream-manager kafka describe 4k0R9d1GTS5tI9f4Y2xZ0Q
+  $ confluent unified-stream-manager kafka describe usmkc-abc123
 
 Flags:
       --environment string   Environment ID.
