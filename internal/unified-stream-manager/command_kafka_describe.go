@@ -16,8 +16,8 @@ func (c *command) newKafkaDescribeCommand() *cobra.Command {
 		RunE:              c.describeKafka,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe a Confluent Platform Kafka cluster with the ID 4k0R9d1GTS5tI9f4Y2xZ0Q.",
-				Code: "confluent unified-stream-manager kafka describe 4k0R9d1GTS5tI9f4Y2xZ0Q",
+				Text: "Describe a Confluent Platform Kafka cluster with the ID usmkc-abc123.",
+				Code: "confluent unified-stream-manager kafka describe usmkc-abc123",
 			},
 		),
 	}
