@@ -79,6 +79,8 @@ const (
 	Topic                            = "topic"
 	TransitGatewayAttachment         = "transit gateway attachment"
 	User                             = "user"
+	UsmKafkaCluster                  = "USM Kafka cluster"
+	UsmConnectCluster                = "USM Connect cluster"
 )
 
 const (
@@ -96,6 +98,8 @@ const (
 	ServiceAccountPrefix        = "sa"
 	SsoGroupMappingPrefix       = "group"
 	UserPrefix                  = "u"
+	UsmKafkaClusterPrefix       = "usmkc"
+	UsmConnectClusterPrefix     = "usmcc"
 	CustomCodeLoggingPrefix     = "ccl"
 )
 
@@ -114,6 +118,8 @@ var prefixToResource = map[string]string{
 	ServiceAccountPrefix:        ServiceAccount,
 	SsoGroupMappingPrefix:       SsoGroupMapping,
 	UserPrefix:                  User,
+	UsmKafkaClusterPrefix:       UsmKafkaCluster,
+	UsmConnectClusterPrefix:     UsmConnectCluster,
 	CustomCodeLoggingPrefix:     CustomCodeLogging,
 }
 
@@ -130,6 +136,8 @@ var resourceToPrefix = map[string]string{
 	ServiceAccount:        ServiceAccountPrefix,
 	SsoGroupMapping:       SsoGroupMappingPrefix,
 	User:                  UserPrefix,
+	UsmKafkaCluster:       UsmKafkaClusterPrefix,
+	UsmConnectCluster:     UsmConnectClusterPrefix,
 	CustomCodeLogging:     CustomCodeLoggingPrefix,
 }
 
