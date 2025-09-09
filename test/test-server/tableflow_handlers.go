@@ -80,7 +80,7 @@ func handleTableflowTopicsCreate(t *testing.T, environment string) http.HandlerF
 		require.NoError(t, err)
 
 		tableflowTopic.Spec.Config.SetEnableCompaction(true) //readonly attribute, always true
-		tableflowTopic.Status = tableflowv1.NewTableflowV1TableflowTopicStatus()
+		tableflowTopic.Status = tableflowv1.NewTableflowV1TableflowTopicStatus("abc")
 		tableflowTopic.Status.SetPhase("RUNNING")
 		tableflowTopic.Spec.SetEnvironment(tableflowv1.GlobalObjectReference{Id: environment})
 
@@ -190,6 +190,7 @@ func getTopicByob(display_name, environmentId, clusterId string) tableflowv1.Tab
 		Status: &tableflowv1.TableflowV1TableflowTopicStatus{
 			Phase: tableflowv1.PtrString("RUNNING"),
 			//ErrorMessage: tableflowv1.PtrString(""),
+			WriteMode: "XYZ",
 		},
 	}
 }
@@ -218,6 +219,7 @@ func getTopicManaged(display_name, environmentId, clusterId string) tableflowv1.
 		Status: &tableflowv1.TableflowV1TableflowTopicStatus{
 			Phase: tableflowv1.PtrString("RUNNING"),
 			//ErrorMessage: tableflowv1.PtrString(""),
+			WriteMode: "QWE",
 		},
 	}
 }
