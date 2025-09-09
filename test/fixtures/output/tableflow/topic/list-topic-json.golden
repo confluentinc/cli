@@ -15,7 +15,7 @@
     "table_formats": "ICEBERG",
     "table_path": "s3://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId",
     "phase": "RUNNING",
-    "write_mode": "XYZ"
+    "write_mode": "UPSERT"
   },
   {
     "kafka_cluster": "lkc-123456",
@@ -30,6 +30,6 @@
     "table_formats": "DELTA",
     "table_path": "s3://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId",
     "phase": "RUNNING",
-    "write_mode": "QWE"
+    "write_mode": "APPEND"
   }
 ]
