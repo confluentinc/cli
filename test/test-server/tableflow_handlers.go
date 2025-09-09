@@ -84,6 +84,10 @@ func handleTableflowTopicsCreate(t *testing.T, environment string) http.HandlerF
 		tableflowTopic.Status.SetPhase("RUNNING")
 		tableflowTopic.Spec.SetEnvironment(tableflowv1.GlobalObjectReference{Id: environment})
 
+		if tableflowTopic.Spec.Config.GetRecordFailureStrategy() == "" {
+			tableflowTopic.Spec.Config.SetRecordFailureStrategy("SUSPEND")
+		}
+
 		if tableflowTopic.Spec.Storage.TableflowV1ByobAwsSpec != nil {
 			tableflowTopic.Spec.Storage.TableflowV1ByobAwsSpec.SetBucketRegion("us-east-1")
 			tableflowTopic.Spec.Storage.TableflowV1ByobAwsSpec.SetTablePath("s3://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId")
