@@ -42,13 +42,12 @@ func (c *shareCommand) groupList(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, shareGroup := range shareGroups {
-		list.Add(&shareGroupOut{
-			Cluster:        shareGroup.GetClusterId(),
-			ShareGroup:     shareGroup.GetShareGroupId(),
-			Coordinator:    getStringBrokerFromShareGroup(shareGroup),
-			State:          shareGroup.GetState(),
-			ConsumerCount:  shareGroup.GetConsumerCount(),
-			PartitionCount: shareGroup.GetPartitionCount(),
+		list.Add(&shareGroupListOut{
+			Cluster:       shareGroup.GetClusterId(),
+			ShareGroup:    shareGroup.GetShareGroupId(),
+			Coordinator:   getStringBrokerFromShareGroup(shareGroup),
+			State:         shareGroup.GetState(),
+			ConsumerCount: shareGroup.GetConsumerCount(),
 		})
 	}
 	return list.Print()

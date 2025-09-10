@@ -348,6 +348,26 @@ func (c *KafkaRestClient) GetKafkaShareGroup(shareGroupId string) (kafkarestv3in
 	return res, nil
 }
 
+func (c *KafkaRestClient) ListKafkaShareGroupConsumers(shareGroupId string) ([]kafkarestv3internal.ShareGroupConsumerData, error) {
+	// Create internal SDK client for share group operations
+	cfg := kafkarestv3internal.NewConfiguration()
+	cfg.Debug = false
+	cfg.HTTPClient = NewRetryableHttpClient(nil, false)
+	cfg.Servers = kafkarestv3internal.ServerConfigurations{{URL: c.GetUrl()}}
+	cfg.UserAgent = "confluent-cli"
+	
+	internalClient := kafkarestv3internal.NewAPIClient(cfg)
+	
+	// Create context with auth token
+	ctx := context.WithValue(context.Background(), kafkarestv3internal.ContextAccessToken, c.AuthToken)
+	
+	res, httpResp, err := internalClient.ShareGroupV3Api.ListKafkaShareGroupConsumers(ctx, c.ClusterId, shareGroupId).Execute()
+	if err != nil {
+		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	}
+	return res.GetData(), nil
+}
+
 func (c *KafkaRestClient) GetKafkaPartition(topicName string, partitionId int32) (kafkarestv3.PartitionData, error) {
 	res, httpResp, err := c.PartitionV3Api.GetKafkaPartition(c.kafkaRestApiContext(), c.ClusterId, topicName, partitionId).Execute()
 	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)

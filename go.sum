@@ -188,8 +188,8 @@ github.com/compose-spec/compose-go/v2 v2.1.3 h1:bD67uqLuL/XgkAK6ir3xZvNLFPxPScEi
 github.com/compose-spec/compose-go/v2 v2.1.3/go.mod h1:lFN0DrMxIncJGYAXTfWuajfwj5haBJqrBkarHcnjJKc=
 github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20250521223017-0e8f6f971b52 h1:19qEGhkbZa5fopKCe0VPIV+Sasby4Pv10z9ZaktwWso=
 github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20250521223017-0e8f6f971b52/go.mod h1:62EMf+5uFEt1BJ2q8WMrUoI9VUSxAbDnmZCGRt/MbA0=
-github.com/confluentinc/ccloud-sdk-go-v2-internal/kafkarest v0.23.1-0.20250801172650-497b39db7b1c h1:LOnIyKNzqW8O/H7Bm+LNeRsSYrPSd5Nq9UaxdAVIfio=
-github.com/confluentinc/ccloud-sdk-go-v2-internal/kafkarest v0.23.1-0.20250801172650-497b39db7b1c/go.mod h1:yuBtGgK45Bmhw2EyIrnlefAKWlipEDNqXe0gO/g0qWo=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/kafkarest v0.23.1-0.20250820171126-1cd098bbf369 h1:KqhPaXUJ4zGT1hlYaNh/X2BnV1sfKyIhEylz02aLTl8=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/kafkarest v0.23.1-0.20250820171126-1cd098bbf369/go.mod h1:xIcaBc9xjAt2ggCyL829Ku8uyP4p7Jehxkum5a88m4E=
 github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0 h1:zSF4OQUJXWH2JeAo9rsq13ibk+JFdzITGR8S7cFMpzw=
 github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0/go.mod h1:DoxqzzF3JzvJr3fWkvCiOHFlE0GoYpozWxFZ1Ud9ntA=
 github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0 h1:8fWyLwMuy8ec0MVF5Avd54UvbIxhDFhZzanHBVwgxdw=
