@@ -8,8 +8,6 @@ import (
 	certificateauthorityv2 "github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority/v2"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-	"github.com/confluentinc/cli/v4/pkg/config"
-	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -30,12 +28,11 @@ type certificateAuthorityOut struct {
 	CrlUpdatedAt             *time.Time  `human:"CRL Updated At,omitempty" serialized:"crl_updated_at,omitempty"`
 }
 
-func newCertificateAuthorityCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newCertificateAuthorityCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "certificate-authority",
 		Short:       "Manage certificate authorities.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
-		Hidden:      !(cfg.IsTest || featureflags.Manager.BoolVariation("cli.mtls", cfg.Context(), config.CliLaunchDarklyClient, true, false)),
 	}
 
 	c := &certificateAuthorityCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}

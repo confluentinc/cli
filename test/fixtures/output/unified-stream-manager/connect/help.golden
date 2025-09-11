@@ -1,0 +1,17 @@
+Manage USM Connect clusters.
+
+Usage:
+  confluent unified-stream-manager connect [command]
+
+Available Commands:
+  deregister  Deregister Connect clusters.
+  describe    Describe a Connect cluster.
+  list        List Connect clusters.
+  register    Register a Connect cluster.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent unified-stream-manager connect [command] --help" for more information about a command.

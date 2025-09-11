@@ -96,6 +96,7 @@ var flagRules = []linter.FlagRule{
 			"certificate-authority-path",
 			"certificate-chain-filename",
 			"compute-pool-defaults",
+			"confluent-platform-kafka-cluster",
 			"destination-api-key",
 			"destination-api-secret",
 			"destination-bootstrap-server",
@@ -129,6 +130,7 @@ var flagRules = []linter.FlagRule{
 		linter.RequireFlagDelimiter('-', 2),
 		linter.ExcludeFlag(
 			"aws-ram-share-arn",
+			"confluent-platform-kafka-cluster",
 			"max-partition-memory-bytes",
 			"message-send-max-retries",
 			"private-link-access-point",
@@ -182,9 +184,13 @@ var properNouns = []string{
 	"Spring Boot",
 	"Stream Designer",
 	"Tableflow",
+	"Unified Stream Manager",
+	"USM",
 	"ZooKeeper™",
 	"ksqlDB Server",
 	"ksqlDB",
+	"Prometheus",
+	"Alertmanager",
 }
 
 // vocabWords are words that don't appear in the US dictionary, but are Confluent-related words.
@@ -194,6 +200,7 @@ var vocabWords = []string{
 	"acl",
 	"acls",
 	"ai",
+	"alertmanager",
 	"apac",
 	"api",
 	"apis",
@@ -231,6 +238,7 @@ var vocabWords = []string{
 	"datetime",
 	"decrypt",
 	"dek",
+	"deregister",
 	"deserializer",
 	"deserializers",
 	"dns",
@@ -288,6 +296,7 @@ var vocabWords = []string{
 	"prem",
 	"privatelink",
 	"producer.config",
+	"prometheus",
 	"protobuf",
 	"rbac",
 	"readonly",

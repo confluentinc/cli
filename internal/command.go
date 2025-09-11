@@ -45,6 +45,7 @@ import (
 	servicequota "github.com/confluentinc/cli/v4/internal/service-quota"
 	streamshare "github.com/confluentinc/cli/v4/internal/stream-share"
 	"github.com/confluentinc/cli/v4/internal/tableflow"
+	unifiedstreammanager "github.com/confluentinc/cli/v4/internal/unified-stream-manager"
 	"github.com/confluentinc/cli/v4/internal/update"
 	"github.com/confluentinc/cli/v4/internal/version"
 	pauth "github.com/confluentinc/cli/v4/pkg/auth"
@@ -102,6 +103,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 		Version:                 cfg.Version,
 	}
 
+	cmd.AddCommand(ai.New(prerunner))
 	cmd.AddCommand(apikey.New(prerunner))
 	cmd.AddCommand(asyncapi.New(prerunner))
 	cmd.AddCommand(auditlog.New(prerunner))
@@ -135,13 +137,11 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(shell.New(cmd, func() *cobra.Command { return NewConfluentCommand(cfg) }))
 	cmd.AddCommand(streamshare.New(prerunner))
 	cmd.AddCommand(tableflow.New(prerunner))
+	cmd.AddCommand(unifiedstreammanager.New(prerunner, cfg))
 	cmd.AddCommand(update.New(cfg, prerunner))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
 
 	_ = cfg.ParseFlagsIntoConfig(cmd)
-	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.ai.enable", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
-		cmd.AddCommand(ai.New(prerunner))
-	}
 
 	changeDefaults(cmd, cfg)
 	deprecateCommandsAndFlags(cmd, cfg)

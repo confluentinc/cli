@@ -1,0 +1,4 @@
+Error: USM Kafka cluster "usmkc-invalid" not found
+
+Suggestions:
+    List available USM Kafka clusters with `confluent unified-stream-manager kafka list`.

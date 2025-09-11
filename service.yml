@@ -6,7 +6,7 @@ contact:
   slack_team_channel: cli-eng
   slack_oncall_channel: cli-oncall
 lang: go
-lang_version: 1.24.4
+lang_version: 1.24.6
 git:
   enable: true
   hooks:
@@ -19,8 +19,8 @@ semaphore:
   enable: true
   pipeline_enable: false
 make:
-  enable: true
+  enable: false
 sonarqube:
   enable: true
-  languages: go
+  languages: ["go"]
   main_branch: main
