@@ -8,8 +8,8 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
 
-	// Import the internal SDK types
-	v3internal "github.com/confluentinc/ccloud-sdk-go-v2-internal/kafkarest/v3"
+	// Import the official SDK types
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 )
 
 type shareGroupOut struct {
@@ -58,7 +58,7 @@ func (c *shareCommand) validGroupArgs(cmd *cobra.Command, args []string) []strin
 }
 
 // Helper function to format unique topics from topic partitions
-func formatAssignedTopicPartitions(topicPartitions []v3internal.ShareGroupTopicPartitionData) string {
+func formatAssignedTopicPartitions(topicPartitions []kafkarestv3.ShareGroupTopicPartitionData) string {
 	if len(topicPartitions) == 0 {
 		return "None"
 	}

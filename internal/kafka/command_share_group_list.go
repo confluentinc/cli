@@ -8,8 +8,8 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
 
-	// Import the internal SDK types - use the same alias as in the kafkarest.go file
-	v3internal "github.com/confluentinc/ccloud-sdk-go-v2-internal/kafkarest/v3"
+	// Import the official SDK types
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 )
 
 func (c *shareCommand) newGroupListCommand() *cobra.Command {
@@ -56,7 +56,7 @@ func (c *shareCommand) groupList(cmd *cobra.Command, _ []string) error {
 // Helper function to extract broker information from share group
 func getStringBrokerFromShareGroup(shareGroup interface{}) string {
 	// Cast to the actual SDK type - it's v3.ShareGroupData, not a pointer
-	if sg, ok := shareGroup.(v3internal.ShareGroupData); ok {
+	if sg, ok := shareGroup.(kafkarestv3.ShareGroupData); ok {
 		coordinator := sg.GetCoordinator()
 
 		// GetCoordinator() returns a Relationship struct, not a pointer

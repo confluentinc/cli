@@ -3,6 +3,7 @@ package kafka
 import (
 	"testing"
 
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -25,9 +26,15 @@ func TestShareGroupListCommand(t *testing.T) {
 	require.Equal(t, "group", groupCmd.Use)
 	require.Equal(t, "Manage Kafka share groups.", groupCmd.Short)
 
-	// Test that the list subcommand exists
-	listCmd := groupCmd.Commands()[0]
-	require.NotNil(t, listCmd)
+	// Test that the list subcommand exists (find it by name, not by index)
+	var listCmd *cobra.Command
+	for _, subCmd := range groupCmd.Commands() {
+		if subCmd.Use == "list" {
+			listCmd = subCmd
+			break
+		}
+	}
+	require.NotNil(t, listCmd, "list command should exist")
 	require.Equal(t, "list", listCmd.Use)
 	require.Equal(t, "List Kafka share groups.", listCmd.Short)
 

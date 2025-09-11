@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
-	kafkarestv3internal "github.com/confluentinc/ccloud-sdk-go-v2-internal/kafkarest/v3"
 
 	"github.com/confluentinc/cli/v4/pkg/ccstructs"
 	"github.com/confluentinc/cli/v4/pkg/errors"
@@ -308,60 +307,24 @@ func (c *KafkaRestClient) GetKafkaConsumerLag(consumerGroupId, topicName string,
 	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
-func (c *KafkaRestClient) ListKafkaShareGroups() ([]kafkarestv3internal.ShareGroupData, error) {
-	// Create internal SDK client for share group operations
-	cfg := kafkarestv3internal.NewConfiguration()
-	cfg.Debug = false // Set to true if you want debug output
-	cfg.HTTPClient = NewRetryableHttpClient(nil, false)
-	cfg.Servers = kafkarestv3internal.ServerConfigurations{{URL: c.GetUrl()}}
-	cfg.UserAgent = "confluent-cli"
-	
-	internalClient := kafkarestv3internal.NewAPIClient(cfg)
-	
-	// Create context with auth token
-	ctx := context.WithValue(context.Background(), kafkarestv3internal.ContextAccessToken, c.AuthToken)
-	
-	res, httpResp, err := internalClient.ShareGroupV3Api.ListKafkaShareGroups(ctx, c.ClusterId).Execute()
+func (c *KafkaRestClient) ListKafkaShareGroups() ([]kafkarestv3.ShareGroupData, error) {
+	res, httpResp, err := c.ShareGroupV3Api.ListKafkaShareGroups(c.kafkaRestApiContext(), c.ClusterId).Execute()
 	if err != nil {
 		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
 	}
 	return res.GetData(), nil
 }
 
-func (c *KafkaRestClient) GetKafkaShareGroup(shareGroupId string) (kafkarestv3internal.ShareGroupData, error) {
-	// Create internal SDK client for share group operations
-	cfg := kafkarestv3internal.NewConfiguration()
-	cfg.Debug = false
-	cfg.HTTPClient = NewRetryableHttpClient(nil, false)
-	cfg.Servers = kafkarestv3internal.ServerConfigurations{{URL: c.GetUrl()}}
-	cfg.UserAgent = "confluent-cli"
-	
-	internalClient := kafkarestv3internal.NewAPIClient(cfg)
-	
-	// Create context with auth token
-	ctx := context.WithValue(context.Background(), kafkarestv3internal.ContextAccessToken, c.AuthToken)
-	
-	res, httpResp, err := internalClient.ShareGroupV3Api.GetKafkaShareGroup(ctx, c.ClusterId, shareGroupId).Execute()
+func (c *KafkaRestClient) GetKafkaShareGroup(shareGroupId string) (kafkarestv3.ShareGroupData, error) {
+	res, httpResp, err := c.ShareGroupV3Api.GetKafkaShareGroup(c.kafkaRestApiContext(), c.ClusterId, shareGroupId).Execute()
 	if err != nil {
-		return kafkarestv3internal.ShareGroupData{}, kafkarest.NewError(c.GetUrl(), err, httpResp)
+		return kafkarestv3.ShareGroupData{}, kafkarest.NewError(c.GetUrl(), err, httpResp)
 	}
 	return res, nil
 }
 
-func (c *KafkaRestClient) ListKafkaShareGroupConsumers(shareGroupId string) ([]kafkarestv3internal.ShareGroupConsumerData, error) {
-	// Create internal SDK client for share group operations
-	cfg := kafkarestv3internal.NewConfiguration()
-	cfg.Debug = false
-	cfg.HTTPClient = NewRetryableHttpClient(nil, false)
-	cfg.Servers = kafkarestv3internal.ServerConfigurations{{URL: c.GetUrl()}}
-	cfg.UserAgent = "confluent-cli"
-	
-	internalClient := kafkarestv3internal.NewAPIClient(cfg)
-	
-	// Create context with auth token
-	ctx := context.WithValue(context.Background(), kafkarestv3internal.ContextAccessToken, c.AuthToken)
-	
-	res, httpResp, err := internalClient.ShareGroupV3Api.ListKafkaShareGroupConsumers(ctx, c.ClusterId, shareGroupId).Execute()
+func (c *KafkaRestClient) ListKafkaShareGroupConsumers(shareGroupId string) ([]kafkarestv3.ShareGroupConsumerData, error) {
+	res, httpResp, err := c.ShareGroupV3Api.ListKafkaShareGroupConsumers(c.kafkaRestApiContext(), c.ClusterId, shareGroupId).Execute()
 	if err != nil {
 		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
 	}

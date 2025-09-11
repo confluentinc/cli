@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-	v3internal "github.com/confluentinc/ccloud-sdk-go-v2-internal/kafkarest/v3"
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 )
 
 func TestShareGroupConsumerOut(t *testing.T) {
@@ -46,8 +46,8 @@ func TestAddShareGroupFlag(t *testing.T) {
 }
 
 // Test helper function to create mock ShareGroupConsumerData
-func createMockShareGroupConsumerData(clusterId, consumerId, clientId string) v3internal.ShareGroupConsumerData {
-	consumer := v3internal.ShareGroupConsumerData{}
+func createMockShareGroupConsumerData(clusterId, consumerId, clientId string) kafkarestv3.ShareGroupConsumerData {
+	consumer := kafkarestv3.ShareGroupConsumerData{}
 	consumer.SetClusterId(clusterId)
 	consumer.SetConsumerId(consumerId)
 	consumer.SetClientId(clientId)
@@ -56,7 +56,7 @@ func createMockShareGroupConsumerData(clusterId, consumerId, clientId string) v3
 
 func TestShareGroupConsumerDataMapping(t *testing.T) {
 	// Test the mapping from SDK data to output struct
-	mockConsumers := []v3internal.ShareGroupConsumerData{
+	mockConsumers := []kafkarestv3.ShareGroupConsumerData{
 		createMockShareGroupConsumerData("cluster-1", "consumer-1", "client-1"),
 		createMockShareGroupConsumerData("cluster-1", "consumer-2", "client-2"),
 		createMockShareGroupConsumerData("cluster-1", "consumer-3", "client-3"),
