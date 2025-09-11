@@ -21,7 +21,7 @@ const (
 	FAILED    PHASE = "FAILED"
 )
 
-// Custom Internal type that shall be used internally by the client
+// ProcessedStatement Custom Internal type that shall be used internally by the client
 type ProcessedStatement struct {
 	Statement            string `json:"statement"`
 	StatementName        string `json:"statement_name"`
