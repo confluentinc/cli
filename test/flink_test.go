@@ -144,6 +144,7 @@ func (s *CLITestSuite) TestFlinkConnectionCreateFailure() {
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com --api-key 0000000000000000 --token token", fixture: "flink/connection/create/create-mcp_server-mutually-exclusive-secret.golden", exitCode: 1},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type rest --endpoint https://api.example.com", fixture: "flink/connection/create/create-rest-no-secret.golden", exitCode: 1},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com", fixture: "flink/connection/create/create-mcp_server-no-secret.golden", exitCode: 1},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com --token token --sse-endpoint /sse --transport-type HTTP", fixture: "flink/connection/create/create-wrong-mcp-transport-type.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -173,9 +174,10 @@ func (s *CLITestSuite) TestFlinkConnectionCreateSuccess() {
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type rest --endpoint https://api.example.com --username name --password pass", fixture: "flink/connection/create/create-rest.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type rest --endpoint https://api.example.com --token-endpoint https://api.example.com/auth --client-id clientId --client-secret secret --scope test_scope", fixture: "flink/connection/create/create-rest.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type rest --endpoint https://api.example.com --token token", fixture: "flink/connection/create/create-rest.golden"},
-		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com --api-key api_key --sse-endpoint sse", fixture: "flink/connection/create/create-mcp_server.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com --api-key api_key --sse-endpoint sse --transport-type SSE", fixture: "flink/connection/create/create-mcp_server.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com --api-key api_key --transport-type STREAMABLE_HTTP", fixture: "flink/connection/create/create-mcp_server.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com --token-endpoint https://api.example.com/auth --client-id clientId --client-secret secret --scope test_scope", fixture: "flink/connection/create/create-mcp_server.golden"},
-		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com --token token --sse-endpoint /sse", fixture: "flink/connection/create/create-mcp_server.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com --token token --sse-endpoint /sse --transport-type SSE", fixture: "flink/connection/create/create-mcp_server.golden"},
 	}
 
 	for _, test := range tests {
