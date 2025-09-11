@@ -1,0 +1,4 @@
+Error: HTTP is invalid value for flag transport-type.
+
+Suggestions:
+    Valid values for flag transport-type are "SSE" or "STREAMABLE_HTTP".
