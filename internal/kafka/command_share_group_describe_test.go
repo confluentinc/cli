@@ -47,9 +47,9 @@ func TestGetStringBrokerFromShareGroup(t *testing.T) {
 	broker = getStringBroker(shareGroup4.GetCoordinator().Related)
 	require.Equal(t, "", broker)
 
-	// Test with invalid type (should return "N/A")
+	// Test with invalid type (should return empty string)
 	broker = getStringBroker("invalid-type")
-	require.Equal(t, "N/A", broker)
+	require.Equal(t, "", broker)
 }
 
 func TestGetShareGroupTopicNames(t *testing.T) {
