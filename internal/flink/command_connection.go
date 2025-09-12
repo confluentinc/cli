@@ -96,7 +96,7 @@ func AddConnectionSecretFlags(cmd *cobra.Command) {
 	cmd.Flags().String("client-secret", "", fmt.Sprintf("Specify OAuth2 client secret for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["client-secret"], "or")))
 	cmd.Flags().String("scope", "", fmt.Sprintf("Specify OAuth2 scope for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["scope"], "or")))
 	cmd.Flags().String("sse-endpoint", "", fmt.Sprintf("Specify SSE endpoint for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["sse-endpoint"], "or")))
-	cmd.Flags().String("transport-type", "", fmt.Sprintf("Specify transport type for the type: %s.", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["transport-type"], "or")))
+	cmd.Flags().String("transport-type", "", fmt.Sprintf("Specify transport type for the type: %s. Default: SSE", utils.ArrayToCommaDelimitedString(flink.ConnectionSecretTypeMapping["transport-type"], "or")))
 	cmd.MarkFlagsRequiredTogether("username", "password")
 	cmd.MarkFlagsRequiredTogether("aws-access-key", "aws-secret-key")
 	cmd.MarkFlagsRequiredTogether("token-endpoint", "client-id", "client-secret", "scope")
