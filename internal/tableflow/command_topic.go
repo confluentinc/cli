@@ -37,6 +37,7 @@ type topicOut struct {
 	CatalogSyncStatus     string `human:"Catalog Sync Status,omitempty" serialized:"catalog_sync_status,omitempty"`
 	FailingTableFormat    string `human:"Failing Table Format,omitempty" serialized:"failing_table_format,omitempty"`
 	ErrorMessage          string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
+	WriteMode             string `human:"Write Mode,omitempty" serialized:"write_mode,omitempty"`
 }
 
 func (c *command) newTopicCommand() *cobra.Command {
@@ -151,6 +152,7 @@ func printTopicTable(cmd *cobra.Command, topic tableflowv1.TableflowV1TableflowT
 		CatalogSyncStatus:     strings.Join(strStatus, ","),
 		FailingTableFormat:    strings.Join(strFormats, ","),
 		ErrorMessage:          topic.Status.GetErrorMessage(),
+		WriteMode:             topic.Status.GetWriteMode(),
 	}
 
 	if storageType == byos {

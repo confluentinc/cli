@@ -81,6 +81,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			CatalogSyncStatus:     strings.Join(strStatus, ","),
 			FailingTableFormat:    strings.Join(strFormats, ","),
 			ErrorMessage:          topic.Status.GetErrorMessage(),
+			WriteMode:             topic.Status.GetWriteMode(),
 		}
 
 		if storageType == byos {
