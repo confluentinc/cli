@@ -1,6 +1,6 @@
 module github.com/confluentinc/cli/v4
 
-go 1.24.6
+go 1.24.7
 
 require (
 	github.com/antihax/optional v1.0.0
@@ -286,3 +286,5 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace github.com/confluentinc/ccloud-sdk-go-v2/tableflow => github.com/confluentinc/ccloud-sdk-go-v2-internal/tableflow v0.24.0

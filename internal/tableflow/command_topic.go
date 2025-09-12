@@ -34,6 +34,8 @@ type topicOut struct {
 	TableFormats          string `human:"Table Formats" serialized:"table_formats"`
 	TablePath             string `human:"Table Path" serialized:"table_path"`
 	Phase                 string `human:"Phase" serialized:"phase"`
+	CatalogSyncStatus     string `human:"Catalog Sync Status,omitempty" serialized:"catalog_sync_status,omitempty"`
+	FailingTableFormat    string `human:"Failing Table Format,omitempty" serialized:"failing_table_format,omitempty"`
 	ErrorMessage          string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
 }
 
@@ -118,6 +120,22 @@ func printTopicTable(cmd *cobra.Command, topic tableflowv1.TableflowV1TableflowT
 		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status not found")
 	}
 
+	status := topic.Status.GetCatalogSyncStatuses()
+	strStatus := make([]string, len(status))
+	for i, s := range status {
+		if s.SyncStatus != nil {
+			strStatus[i] = *s.SyncStatus
+		} else {
+			strStatus[i] = ""
+		}
+	}
+
+	formats := topic.Status.GetFailingTableFormats()
+	strFormats := make([]string, len(formats))
+	for i, f := range formats {
+		strFormats[i] = f.Format
+	}
+
 	out := &topicOut{
 		KafkaCluster:          topic.GetSpec().KafkaCluster.GetId(),
 		TopicName:             topic.Spec.GetDisplayName(),
@@ -130,6 +148,8 @@ func printTopicTable(cmd *cobra.Command, topic tableflowv1.TableflowV1TableflowT
 		StorageType:           storageType,
 		Suspended:             topic.Spec.GetSuspended(),
 		Phase:                 topic.Status.GetPhase(),
+		CatalogSyncStatus:     strings.Join(strStatus, ","),
+		FailingTableFormat:    strings.Join(strFormats, ","),
 		ErrorMessage:          topic.Status.GetErrorMessage(),
 	}
 
