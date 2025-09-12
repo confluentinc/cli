@@ -460,8 +460,10 @@ func (s *ResultFormatterTestSuite) TestTruncateMultibyteCharacters() {
 		maxCharCountToDisplay int
 	}{
 		{
-			input:                 "あああ", // The string width here is 6 since each character is 2 bytes wide.
-			expected:              "あ...",  // あ... is exactly 5 bytes wide.
+			// The string width here is 6 since each character is 2 bytes wide.
+			// あ... is exactly 5 bytes wide.
+			input:                 "あああ",
+			expected:              "あ...",
 			maxCharCountToDisplay: 5,
 		},
 		{
