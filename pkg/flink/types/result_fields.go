@@ -29,6 +29,7 @@ const (
 	Multiset                   StatementResultFieldType = "MULTISET"
 	Map                        StatementResultFieldType = "MAP"
 	Row                        StatementResultFieldType = "ROW"
+	StructuredType             StatementResultFieldType = "STRUCTURED_TYPE"
 	Null                       StatementResultFieldType = "NULL"
 )
 
@@ -82,6 +83,8 @@ func NewResultFieldType(objType string) StatementResultFieldType {
 		return Map
 	case "ROW":
 		return Row
+	case "STRUCTURED_TYPE":
+		return StructuredType
 	default:
 		return Null
 	}
@@ -210,4 +213,36 @@ func (f RowStatementResultField) ToSDKType() any {
 		rowItems[idx] = value.ToSDKType()
 	}
 	return rowItems
+}
+
+type StructuredTypeStatementResultField struct {
+	Type       StatementResultFieldType
+	FieldNames []string
+	FieldTypes []StatementResultFieldType
+	Values     []StatementResultField
+}
+
+func (f StructuredTypeStatementResultField) GetType() StatementResultFieldType {
+	return f.Type
+}
+
+func (f StructuredTypeStatementResultField) ToString() string {
+	sb := strings.Builder{}
+	sb.WriteString("(")
+	for idx, item := range f.Values {
+		sb.WriteString(f.FieldNames[idx] + "=" + item.ToString())
+		if idx != len(f.Values)-1 {
+			sb.WriteString(", ")
+		}
+	}
+	sb.WriteString(")")
+	return sb.String()
+}
+
+func (f StructuredTypeStatementResultField) ToSDKType() any {
+	items := make(map[string]any, len(f.FieldNames))
+	for idx, value := range f.Values {
+		items[f.FieldNames[idx]] = value.ToSDKType()
+	}
+	return items
 }
