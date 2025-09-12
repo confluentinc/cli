@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
@@ -364,4 +365,30 @@ func (c *KafkaRestClient) UpdateKafkaTopicPartitionCount(topicName string, updat
 
 func (c *KafkaRestClient) GetKafkaTopic(topicName string) (kafkarestv3.TopicData, *http.Response, error) {
 	return c.TopicV3Api.GetKafkaTopic(c.kafkaRestApiContext(), c.ClusterId, topicName).Execute()
+}
+
+// GetShareGroupTopicNames extracts unique topic names from assigned topic partitions
+func (c *KafkaRestClient) GetShareGroupTopicNames(shareGroup kafkarestv3.ShareGroupData) string {
+	topicPartitions := shareGroup.GetAssignedTopicPartitions()
+	if len(topicPartitions) == 0 {
+		return "None"
+	}
+
+	// Use a map to collect unique topic names
+	topicSet := make(map[string]bool)
+	for _, tp := range topicPartitions {
+		topicSet[tp.GetTopicName()] = true
+	}
+
+	if len(topicSet) == 0 {
+		return "None"
+	}
+
+	// Convert map keys to slice for consistent ordering
+	topics := make([]string, 0, len(topicSet))
+	for topic := range topicSet {
+		topics = append(topics, topic)
+	}
+
+	return strings.Join(topics, ", ")
 }

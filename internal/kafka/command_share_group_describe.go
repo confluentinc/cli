@@ -38,13 +38,13 @@ func (c *shareCommand) groupDescribe(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&shareGroupOut{
-		Cluster:                 shareGroup.GetClusterId(),
-		ShareGroup:              shareGroup.GetShareGroupId(),
-		Coordinator:             getStringBrokerFromShareGroup(shareGroup),
-		State:                   shareGroup.GetState(),
-		ConsumerCount:           shareGroup.GetConsumerCount(),
-		PartitionCount:          shareGroup.GetPartitionCount(),
-		TopicSubscriptions: formatAssignedTopicPartitions(shareGroup.GetAssignedTopicPartitions()),
+		Cluster:            shareGroup.GetClusterId(),
+		ShareGroup:         shareGroup.GetShareGroupId(),
+		Coordinator:        getStringBroker(shareGroup.GetCoordinator().Related),
+		State:              shareGroup.GetState(),
+		ConsumerCount:      shareGroup.GetConsumerCount(),
+		PartitionCount:     shareGroup.GetPartitionCount(),
+		TopicSubscriptions: kafkaREST.CloudClient.GetShareGroupTopicNames(shareGroup),
 	})
 	return table.Print()
 }

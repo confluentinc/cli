@@ -2,11 +2,9 @@ package kafka
 
 import (
 	"github.com/spf13/cobra"
-
-	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
-func (c *shareCommand) newGroupConsumerCommand(cfg *config.Config) *cobra.Command {
+func (c *shareCommand) newGroupConsumerCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "consumer",
 		Short: "Manage Kafka share group consumers.",

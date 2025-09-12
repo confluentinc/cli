@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 )
 
@@ -27,17 +28,17 @@ func TestAddShareGroupFlag(t *testing.T) {
 	// This test verifies that the addShareGroupFlag function sets up the flag correctly
 	// We can't easily test the completion function without mocking, but we can verify
 	// the basic structure
-	
+
 	// Create a mock command to test the flag addition
 	cmd := &cobra.Command{}
 	shareCmd := &shareCommand{}
-	
+
 	// This would normally be called in the command setup
 	// We're testing that the function exists and can be called
 	require.NotPanics(t, func() {
 		shareCmd.addShareGroupFlag(cmd)
 	})
-	
+
 	// Verify the flag was added
 	groupFlag := cmd.Flags().Lookup("group")
 	require.NotNil(t, groupFlag)
@@ -63,7 +64,7 @@ func TestShareGroupConsumerDataMapping(t *testing.T) {
 	}
 
 	groupName := "test-share-group"
-	
+
 	// Test mapping logic (simulating what happens in groupConsumerList)
 	for i, consumer := range mockConsumers {
 		output := &shareGroupConsumerOut{
@@ -83,7 +84,7 @@ func TestShareGroupConsumerDataMapping(t *testing.T) {
 func TestShareGroupConsumerDataWithEmptyValues(t *testing.T) {
 	// Test with empty/zero values
 	consumer := createMockShareGroupConsumerData("", "", "")
-	
+
 	output := &shareGroupConsumerOut{
 		Cluster:    consumer.GetClusterId(),
 		ShareGroup: "test-group",
@@ -100,7 +101,7 @@ func TestShareGroupConsumerDataWithEmptyValues(t *testing.T) {
 func TestShareGroupConsumerDataWithSpecialCharacters(t *testing.T) {
 	// Test with special characters in IDs
 	consumer := createMockShareGroupConsumerData("cluster-with-dashes", "consumer_with_underscores", "client.with.dots")
-	
+
 	output := &shareGroupConsumerOut{
 		Cluster:    consumer.GetClusterId(),
 		ShareGroup: "group-with-special-chars",

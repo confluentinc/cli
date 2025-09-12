@@ -1,15 +1,9 @@
 package kafka
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-	"github.com/confluentinc/cli/v4/pkg/config"
-
-	// Import the official SDK types
-	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 )
 
 type shareGroupOut struct {
@@ -31,7 +25,7 @@ type shareGroupListOut struct {
 	ConsumerCount int32  `human:"Consumer Count" serialized:"consumer_count"`
 }
 
-func (c *shareCommand) newGroupCommand(cfg *config.Config) *cobra.Command {
+func (c *shareCommand) newGroupCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "group",
 		Short: "Manage Kafka share groups.",
@@ -40,7 +34,7 @@ func (c *shareCommand) newGroupCommand(cfg *config.Config) *cobra.Command {
 	// Only cloud support for now
 	cmd.AddCommand(c.newGroupListCommand())
 	cmd.AddCommand(c.newGroupDescribeCommand())
-	cmd.AddCommand(c.newGroupConsumerCommand(cfg))
+	cmd.AddCommand(c.newGroupConsumerCommand())
 
 	return cmd
 }
@@ -55,29 +49,4 @@ func (c *shareCommand) validGroupArgs(cmd *cobra.Command, args []string) []strin
 	}
 
 	return pcmd.AutocompleteShareGroups(cmd, c.AuthenticatedCLICommand)
-}
-
-// Helper function to format unique topics from topic partitions
-func formatAssignedTopicPartitions(topicPartitions []kafkarestv3.ShareGroupTopicPartitionData) string {
-	if len(topicPartitions) == 0 {
-		return "None"
-	}
-
-	// Use a map to collect unique topic names
-	topicSet := make(map[string]bool)
-	for _, tp := range topicPartitions {
-		topicSet[tp.GetTopicName()] = true
-	}
-
-	if len(topicSet) == 0 {
-		return "None"
-	}
-
-	// Convert map keys to slice for consistent ordering
-	var topics []string
-	for topic := range topicSet {
-		topics = append(topics, topic)
-	}
-
-	return strings.Join(topics, ", ")
 }

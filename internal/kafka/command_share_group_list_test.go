@@ -15,7 +15,7 @@ func TestShareGroupListCommand(t *testing.T) {
 	prerunner := &pcmd.PreRun{Config: cfg}
 
 	// Test that the command can be created
-	cmd := newShareCommand(cfg, prerunner)
+	cmd := newShareCommand(prerunner)
 	require.NotNil(t, cmd)
 	require.Equal(t, "share", cmd.Use)
 	require.Equal(t, "Manage Kafka shares.", cmd.Short)
