@@ -83,7 +83,7 @@ install: apply-patches
 	curl -fs https://$${baseurl}/confluent-cli/binaries/$(CLI_VERSION)/confluent$${version}_windows_amd64.exe -o $${filepath}; \
 	chmod 755 $${filepath}
 
-	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
+	cp LICENSE $(DESTDIR)$(DOCPATH)/LICENSE
 	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
 
 	chown -R root:root $(DESTDIR)$(PREFIX)
