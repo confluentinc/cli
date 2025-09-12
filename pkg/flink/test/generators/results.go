@@ -37,6 +37,9 @@ func GetResultItemGeneratorForType(dataType flinkgatewayv1.DataType) *rapid.Gene
 	case types.Row:
 		elementTypes := dataType.GetFields()
 		return RowResultItem(elementTypes)
+	case types.StructuredType:
+		elementTypes := dataType.GetFields()
+		return StructuredTypeResultItem(elementTypes)
 	case types.Null:
 		return rapid.SampledFrom([]any{nil})
 	default:
@@ -125,6 +128,18 @@ func RowResultItem(fieldTypes []flinkgatewayv1.RowFieldType) *rapid.Generator[an
 	})
 }
 
+// StructuredTypeResultItem generates a random STRUCTURED_TYPE field
+func StructuredTypeResultItem(fieldTypes []flinkgatewayv1.RowFieldType) *rapid.Generator[any] {
+	return rapid.Custom(func(t *rapid.T) any {
+		mapItems := make(map[string]any, len(fieldTypes))
+		for _, fieldType := range fieldTypes {
+			resultItem := GetResultItemGeneratorForType(fieldType.GetFieldType())
+			mapItems[fieldType.GetName()] = resultItem.Draw(t, fieldType.GetName())
+		}
+		return mapItems
+	})
+}
+
 // MockResultRow creates a row with random fields adhering to the provided column schema
 func MockResultRow(columnDetails []flinkgatewayv1.ColumnDetails) *rapid.Generator[any] {
 	return rapid.Custom(func(t *rapid.T) any {
@@ -144,6 +159,7 @@ var NonAtomicResultFieldTypes = []types.StatementResultFieldType{
 	types.Multiset,
 	types.Map,
 	types.Row,
+	types.StructuredType,
 }
 
 var AtomicResultFieldTypes = []types.StatementResultFieldType{
@@ -182,6 +198,8 @@ func getDataTypeGeneratorForType(fieldType types.StatementResultFieldType, maxNe
 		return MapDataType(maxNestingDepth - 1)
 	case types.Row:
 		return RowDataType(maxNestingDepth - 1)
+	case types.StructuredType:
+		return StructuredDataType(maxNestingDepth - 1)
 	default:
 		return AtomicDataType()
 	}
@@ -258,6 +276,31 @@ func RowDataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1.DataType] 
 		return flinkgatewayv1.DataType{
 			Nullable: false,
 			Type:     "ROW",
+			Fields:   &fieldTypes,
+		}
+	})
+}
+
+// StructuredDataType generates a random structured data type
+func StructuredDataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1.DataType] {
+	return rapid.Custom(func(t *rapid.T) flinkgatewayv1.DataType {
+		var fieldTypes []flinkgatewayv1.RowFieldType
+		// some sample semantic field names
+		candidates := []string{"name", "age", "city", "numbers"}
+		rowSize := rapid.IntRange(1, 3).Draw(t, "structured size")
+
+		for i := 0; i < rowSize; i++ {
+			resultFieldType := GenResultFieldType().Draw(t, resultFieldLabel)
+			elementType := getDataTypeGeneratorForType(resultFieldType, maxNestingDepth).Draw(t, elementLabel)
+			fieldName := candidates[i%len(candidates)]
+			fieldTypes = append(fieldTypes, flinkgatewayv1.RowFieldType{
+				Name:      fieldName,
+				FieldType: elementType,
+			})
+		}
+		return flinkgatewayv1.DataType{
+			Nullable: false,
+			Type:     "STRUCTURED_TYPE",
 			Fields:   &fieldTypes,
 		}
 	})

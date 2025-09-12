@@ -10,9 +10,6 @@ import (
 )
 
 func convertToInternalField(field any, details flinkgatewayv1.ColumnDetails) types.StatementResultField {
-	// field is the result
-	// details is the schema information for this result
-	// TODO: add additional test cases in result_converter_test.go?
 	converter := GetConverterForType(details.GetType())
 	if converter != nil {
 		return converter(field)
