@@ -190,7 +190,6 @@ func getTopicByob(display_name, environmentId, clusterId string) tableflowv1.Tab
 		Status: &tableflowv1.TableflowV1TableflowTopicStatus{
 			Phase: tableflowv1.PtrString("RUNNING"),
 			//ErrorMessage: tableflowv1.PtrString(""),
-			WriteMode: "UPSERT",
 		},
 	}
 }
@@ -219,7 +218,6 @@ func getTopicManaged(display_name, environmentId, clusterId string) tableflowv1.
 		Status: &tableflowv1.TableflowV1TableflowTopicStatus{
 			Phase: tableflowv1.PtrString("RUNNING"),
 			//ErrorMessage: tableflowv1.PtrString(""),
-			WriteMode: "APPEND",
 		},
 	}
 }
