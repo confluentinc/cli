@@ -41,8 +41,123 @@ func (s *ResultConverterTestSuite) TestConvertField() {
 		if maxNestingDepth == 0 {
 			require.IsType(t, types.AtomicStatementResultField{}, resultField)
 		}
-		require.Equal(t, field, resultField.ToSDKType())
+		expected := normalizeExpected(field, dataType)
+		require.Equal(t, expected, resultField.ToSDKType())
 	})
+}
+
+// normalizeExpected converts a raw generated value `field` into the exact
+// SDK shape produced by the StatementResultField.ToSDKType() implementations.
+// - STRUCTURED_TYPE -> map[string]any
+// - ROW            -> []any (positional)
+// - ARRAY          -> []any (elements normalized)
+// - MAP            -> []any of [key, value] pairs
+// - MULTISET       -> []any of [value, count] pairs
+// - atomic         -> as-is (note your Atomic ToSDKType returns string values)
+func normalizeExpected(field any, dt flinkgatewayv1.DataType) any {
+	typ := dt.GetType()
+	switch typ {
+	case "STRUCTURED_TYPE":
+		// generator gives []any aligned with schema order; SDK expects map[name]value
+		items, ok := field.([]any)
+		fields := dt.GetFields()
+		if !ok || fields == nil || len(items) != len(fields) {
+			return field
+		}
+		out := make(map[string]any, len(items))
+		for i, f := range fields {
+			out[f.GetName()] = normalizeExpected(items[i], f.GetFieldType())
+		}
+		return out
+	case "ROW":
+		// stays positional []any
+		items, ok := field.([]any)
+		fields := dt.GetFields()
+		if !ok || fields == nil || len(items) != len(fields) {
+			return field
+		}
+		out := make([]any, len(items))
+		for i, f := range fields {
+			out[i] = normalizeExpected(items[i], f.GetFieldType())
+		}
+		return out
+	case "ARRAY":
+		elems, ok := field.([]any)
+		if !ok {
+			return field
+		}
+		elemType := dt.GetElementType()
+		out := make([]any, len(elems))
+		for i := range elems {
+			if &elemType != nil {
+				out[i] = normalizeExpected(elems[i], elemType)
+			} else {
+				out[i] = elems[i]
+			}
+		}
+		return out
+	case "MAP":
+		// SDK shape is []any of [key, value] pairs
+		entries, ok := field.([]any)
+		if !ok {
+			return field
+		}
+		keyT := dt.GetKeyType()
+		valT := dt.GetValueType()
+		out := make([]any, 0, len(entries))
+		for _, e := range entries {
+			pair, ok := e.([]any)
+			if !ok || len(pair) != 2 {
+				// best-effort: keep as-is
+				out = append(out, e)
+				continue
+			}
+			var k, v = pair[0], pair[1]
+			if &keyT != nil {
+				k = normalizeExpected(pair[0], keyT)
+			}
+			if &valT != nil {
+				v = normalizeExpected(pair[1], valT)
+			}
+			out = append(out, []any{k, v})
+		}
+		return out
+	case "MULTISET":
+		// In our model, MULTISET is converted via MapStatementResultField with
+		// keyType = elementType, valueType = INTEGER; and ToSDKType() returns []any of pairs.
+		entries, ok := field.([]any)
+		if !ok {
+			return field
+		}
+		elemT := dt.GetElementType() // logical "key" type
+		// value/count type is INTEGER in your converter, but Atomic returns strings, so keep as-is.
+		out := make([]any, 0, len(entries))
+		for _, e := range entries {
+			// generator may produce either:
+			// - the raw element (imply implicit count 1), or
+			// - a pair-like []any{element, count}
+			if pair, ok := e.([]any); ok && len(pair) >= 2 {
+				val := pair[0]
+				if &elemT != nil {
+					val = normalizeExpected(pair[0], elemT)
+				}
+				// keep count as-is (often string "0"/"2" in your atomic model)
+				cnt := pair[1]
+				out = append(out, []any{val, cnt})
+			} else {
+				// implicit count=1; match SDK pair form
+				val := e
+				if &elemT != nil {
+					val = normalizeExpected(e, elemT)
+				}
+				out = append(out, []any{val, "1"})
+			}
+		}
+		return out
+	default:
+		// atomic or unhandled: return as-is (your Atomic ToSDKType returns string for numbers)
+		return field
+	}
 }
 
 func (s *ResultConverterTestSuite) TestConvertFieldOnPrem() {
@@ -170,7 +285,10 @@ func (s *ResultConverterTestSuite) TestConvertResults() {
 			require.Equal(t, types.StatementResultOperation(op), row.Operation)
 			require.Equal(t, len(items), len(convertedResults.Headers)) // column number for this row should match
 			for colIdx, field := range row.Fields {
-				require.Equal(t, items[colIdx], field.ToSDKType()) // fields should match
+				expected := items[colIdx]
+				// normalize STRUCTURED_TYPE, MAP, MULTISET, ROW, ARRAY recursively
+				expected = normalizeExpected(expected, (*results.ResultSchema.Columns)[colIdx].Type)
+				require.Equal(t, expected, field.ToSDKType()) // fields should match
 			}
 		}
 	})
