@@ -131,12 +131,12 @@ func RowResultItem(fieldTypes []flinkgatewayv1.RowFieldType) *rapid.Generator[an
 // StructuredTypeResultItem generates a random STRUCTURED_TYPE field
 func StructuredTypeResultItem(fieldTypes []flinkgatewayv1.RowFieldType) *rapid.Generator[any] {
 	return rapid.Custom(func(t *rapid.T) any {
-		mapItems := make(map[string]any, len(fieldTypes))
+		var results []any
 		for _, fieldType := range fieldTypes {
-			resultItem := GetResultItemGeneratorForType(fieldType.GetFieldType())
-			mapItems[fieldType.GetName()] = resultItem.Draw(t, fieldType.GetName())
+			result := GetResultItemGeneratorForType(fieldType.GetFieldType())
+			results = append(results, result.Draw(t, fieldType.GetName()))
 		}
-		return mapItems
+		return results
 	})
 }
 
