@@ -1771,7 +1771,7 @@ func handleKafkaRestShareGroups(t *testing.T) http.HandlerFunc {
 			shareGroup1.SetCoordinator(cckafkarestv3.Relationship{Related: "/kafka/v3/clusters/cluster-1/brokers/broker-1"})
 			shareGroup1.SetConsumerCount(2)
 			shareGroup1.SetPartitionCount(3)
-			
+
 			// Set topic partitions for topic subscriptions
 			tp1 := cckafkarestv3.ShareGroupTopicPartitionData{}
 			tp1.SetTopicName("topic-1")
@@ -1814,7 +1814,7 @@ func handleKafkaRestShareGroup(t *testing.T) http.HandlerFunc {
 				shareGroup.SetCoordinator(cckafkarestv3.Relationship{Related: "/kafka/v3/clusters/cluster-1/brokers/broker-1"})
 				shareGroup.SetConsumerCount(2)
 				shareGroup.SetPartitionCount(3)
-				
+
 				// Set topic partitions for topic subscriptions
 				tp1 := cckafkarestv3.ShareGroupTopicPartitionData{}
 				tp1.SetTopicName("topic-1")
