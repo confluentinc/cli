@@ -46,7 +46,7 @@ func (s *ResultConverterTestSuite) TestConvertField() {
 	})
 }
 
-// normalizeExpected converts a raw generated value `field` into the exact
+// normalizeExpected converts a raw generated value `result` into the exact
 // SDK shape produced by the StatementResultField.ToSDKType() implementations.
 // - STRUCTURED_TYPE -> map[string]any
 // - ROW            -> []any (positional)
@@ -54,109 +54,100 @@ func (s *ResultConverterTestSuite) TestConvertField() {
 // - MAP            -> []any of [key, value] pairs
 // - MULTISET       -> []any of [value, count] pairs
 // - atomic         -> as-is (note your Atomic ToSDKType returns string values)
-func normalizeExpected(field any, dt flinkgatewayv1.DataType) any {
-	typ := dt.GetType()
-	switch typ {
+func normalizeExpected(result any, dataType flinkgatewayv1.DataType) any {
+	switch dataType.GetType() {
 	case "STRUCTURED_TYPE":
-		// generator gives []any aligned with schema order; SDK expects map[name]value
-		items, ok := field.([]any)
-		fields := dt.GetFields()
-		if !ok || fields == nil || len(items) != len(fields) {
-			return field
+		rawResults, ok := result.([]any)
+		fields := dataType.GetFields()
+		if !ok || fields == nil || len(rawResults) != len(fields) {
+			return result
 		}
-		out := make(map[string]any, len(items))
-		for i, f := range fields {
-			out[f.GetName()] = normalizeExpected(items[i], f.GetFieldType())
+		normalized := make(map[string]any, len(rawResults))
+		for i, field := range fields {
+			normalized[field.GetName()] = normalizeExpected(rawResults[i], field.GetFieldType())
 		}
-		return out
+		return normalized
 	case "ROW":
-		// stays positional []any
-		items, ok := field.([]any)
-		fields := dt.GetFields()
-		if !ok || fields == nil || len(items) != len(fields) {
-			return field
+		rawResults, ok := result.([]any)
+		fields := dataType.GetFields()
+		if !ok || fields == nil || len(rawResults) != len(fields) {
+			return result
 		}
-		out := make([]any, len(items))
-		for i, f := range fields {
-			out[i] = normalizeExpected(items[i], f.GetFieldType())
+		normalized := make([]any, len(rawResults))
+		for i, field := range fields {
+			normalized[i] = normalizeExpected(rawResults[i], field.GetFieldType())
 		}
-		return out
+		return normalized
 	case "ARRAY":
-		elems, ok := field.([]any)
+		elems, ok := result.([]any)
 		if !ok {
-			return field
+			return result
 		}
-		elemType := dt.GetElementType()
-		out := make([]any, len(elems))
+		elemType := dataType.GetElementType()
+		normalized := make([]any, len(elems))
 		for i := range elems {
-			if &elemType != nil {
-				out[i] = normalizeExpected(elems[i], elemType)
+			if elemType.GetType() != "" {
+				normalized[i] = normalizeExpected(elems[i], elemType)
 			} else {
-				out[i] = elems[i]
+				normalized[i] = elems[i]
 			}
 		}
-		return out
+		return normalized
 	case "MAP":
-		// SDK shape is []any of [key, value] pairs
-		entries, ok := field.([]any)
+		entries, ok := result.([]any)
 		if !ok {
-			return field
+			return result
 		}
-		keyT := dt.GetKeyType()
-		valT := dt.GetValueType()
-		out := make([]any, 0, len(entries))
-		for _, e := range entries {
-			pair, ok := e.([]any)
+		keyType := dataType.GetKeyType()
+		valType := dataType.GetValueType()
+		normalized := make([]any, 0, len(entries))
+		for _, entry := range entries {
+			pair, ok := entry.([]any)
+			// best-effort: keep as-is
 			if !ok || len(pair) != 2 {
-				// best-effort: keep as-is
-				out = append(out, e)
+				normalized = append(normalized, entry)
 				continue
 			}
-			var k, v = pair[0], pair[1]
-			if &keyT != nil {
-				k = normalizeExpected(pair[0], keyT)
+			var key, value = pair[0], pair[1]
+			if keyType.GetType() != "" {
+				key = normalizeExpected(pair[0], keyType)
 			}
-			if &valT != nil {
-				v = normalizeExpected(pair[1], valT)
+			if valType.GetType() != "" {
+				value = normalizeExpected(pair[1], valType)
 			}
-			out = append(out, []any{k, v})
+			normalized = append(normalized, []any{key, value})
 		}
-		return out
+		return normalized
 	case "MULTISET":
 		// In our model, MULTISET is converted via MapStatementResultField with
 		// keyType = elementType, valueType = INTEGER; and ToSDKType() returns []any of pairs.
-		entries, ok := field.([]any)
+		entries, ok := result.([]any)
 		if !ok {
-			return field
+			return result
 		}
-		elemT := dt.GetElementType() // logical "key" type
-		// value/count type is INTEGER in your converter, but Atomic returns strings, so keep as-is.
-		out := make([]any, 0, len(entries))
-		for _, e := range entries {
-			// generator may produce either:
-			// - the raw element (imply implicit count 1), or
-			// - a pair-like []any{element, count}
-			if pair, ok := e.([]any); ok && len(pair) >= 2 {
-				val := pair[0]
-				if &elemT != nil {
-					val = normalizeExpected(pair[0], elemT)
-				}
-				// keep count as-is (often string "0"/"2" in your atomic model)
-				cnt := pair[1]
-				out = append(out, []any{val, cnt})
-			} else {
-				// implicit count=1; match SDK pair form
-				val := e
-				if &elemT != nil {
-					val = normalizeExpected(e, elemT)
-				}
-				out = append(out, []any{val, "1"})
+		// logical "key" type
+		elemType := dataType.GetElementType()
+		// value/count type is INTEGER in our converter, but Atomic returns strings, so keep as-is.
+		normalized := make([]any, 0, len(entries))
+		for _, entry := range entries {
+			pair, ok := entry.([]any)
+			// best-effort: keep as-is
+			if !ok || len(pair) != 2 {
+				normalized = append(normalized, entry)
+				continue
 			}
+			value := pair[0]
+			if elemType.GetType() != "" {
+				value = normalizeExpected(pair[0], elemType)
+			}
+			// keep count as-is (often string "0"/"2" in your atomic model)
+			count := pair[1]
+			normalized = append(normalized, []any{value, count})
 		}
-		return out
+		return normalized
 	default:
-		// atomic or unhandled: return as-is (your Atomic ToSDKType returns string for numbers)
-		return field
+		// atomic or unhandled: return as-is (our Atomic ToSDKType returns string for numbers)
+		return result
 	}
 }
 
