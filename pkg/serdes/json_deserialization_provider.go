@@ -47,7 +47,6 @@ func (j *JsonDeserializationProvider) InitDeserializer(srClientUrl, srClusterId,
 	}
 
 	serdeConfig := jsonschema.NewDeserializerConfig()
-	serdeConfig.EnableValidation = true
 
 	// local KMS secret is only set and used during local testing with ruleSet
 	if localKmsSecretValue := os.Getenv(localKmsSecretMacro); srClientUrl == mockClientUrl && localKmsSecretValue != "" {
