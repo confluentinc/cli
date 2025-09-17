@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
@@ -307,6 +308,30 @@ func (c *KafkaRestClient) GetKafkaConsumerLag(consumerGroupId, topicName string,
 	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
+func (c *KafkaRestClient) ListKafkaShareGroups() ([]kafkarestv3.ShareGroupData, error) {
+	res, httpResp, err := c.ShareGroupV3Api.ListKafkaShareGroups(c.kafkaRestApiContext(), c.ClusterId).Execute()
+	if err != nil {
+		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	}
+	return res.GetData(), nil
+}
+
+func (c *KafkaRestClient) GetKafkaShareGroup(shareGroupId string) (kafkarestv3.ShareGroupData, error) {
+	res, httpResp, err := c.ShareGroupV3Api.GetKafkaShareGroup(c.kafkaRestApiContext(), c.ClusterId, shareGroupId).Execute()
+	if err != nil {
+		return kafkarestv3.ShareGroupData{}, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	}
+	return res, nil
+}
+
+func (c *KafkaRestClient) ListKafkaShareGroupConsumers(shareGroupId string) ([]kafkarestv3.ShareGroupConsumerData, error) {
+	res, httpResp, err := c.ShareGroupV3Api.ListKafkaShareGroupConsumers(c.kafkaRestApiContext(), c.ClusterId, shareGroupId).Execute()
+	if err != nil {
+		return nil, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	}
+	return res.GetData(), nil
+}
+
 func (c *KafkaRestClient) GetKafkaPartition(topicName string, partitionId int32) (kafkarestv3.PartitionData, error) {
 	res, httpResp, err := c.PartitionV3Api.GetKafkaPartition(c.kafkaRestApiContext(), c.ClusterId, topicName, partitionId).Execute()
 	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
@@ -340,4 +365,30 @@ func (c *KafkaRestClient) UpdateKafkaTopicPartitionCount(topicName string, updat
 
 func (c *KafkaRestClient) GetKafkaTopic(topicName string) (kafkarestv3.TopicData, *http.Response, error) {
 	return c.TopicV3Api.GetKafkaTopic(c.kafkaRestApiContext(), c.ClusterId, topicName).Execute()
+}
+
+// GetShareGroupTopicNames extracts unique topic names from assigned topic partitions
+func (c *KafkaRestClient) GetShareGroupTopicNames(shareGroup kafkarestv3.ShareGroupData) string {
+	topicPartitions := shareGroup.GetAssignedTopicPartitions()
+	if len(topicPartitions) == 0 {
+		return "None"
+	}
+
+	// Use a map to collect unique topic names
+	topicSet := make(map[string]bool)
+	for _, tp := range topicPartitions {
+		topicSet[tp.GetTopicName()] = true
+	}
+
+	if len(topicSet) == 0 {
+		return "None"
+	}
+
+	// Convert map keys to slice for consistent ordering
+	topics := make([]string, 0, len(topicSet))
+	for topic := range topicSet {
+		topics = append(topics, topic)
+	}
+
+	return strings.Join(topics, ", ")
 }
