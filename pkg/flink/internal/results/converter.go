@@ -34,6 +34,9 @@ func GetConverterForType(dataType flinkgatewayv1.DataType) SDKToStatementResultF
 	case types.Row:
 		elementTypes := dataType.GetFields()
 		return toRowStatementResultFieldConverter(elementTypes)
+	case types.StructuredType:
+		elementTypes := dataType.GetFields()
+		return toStructuredStatementResultFieldConverter(elementTypes)
 	default:
 		return toAtomicStatementResultFieldConverter(fieldType)
 	}
@@ -221,6 +224,39 @@ func toRowStatementResultFieldConverterOnPrem(elementTypes []cmfsdk.DataTypeFiel
 			Type:         types.Row,
 			ElementTypes: elementResultFieldTypes,
 			Values:       values,
+		}
+	}
+}
+
+func toStructuredStatementResultFieldConverter(fieldTypes []flinkgatewayv1.RowFieldType) SDKToStatementResultFieldConverter {
+	return func(field any) types.StatementResultField {
+		structuredField, ok := field.([]any)
+		if !ok || len(structuredField) != len(fieldTypes) {
+			return nullField
+		}
+
+		var elementNames []string
+		var elementTypes []types.StatementResultFieldType
+		var values []types.StatementResultField
+
+		for idx, item := range structuredField {
+			fieldSchema := fieldTypes[idx]
+			elementName := fieldSchema.GetName()
+			elementType := fieldSchema.GetFieldType()
+
+			converter := GetConverterForType(elementType)
+			converted := converter(item)
+
+			elementNames = append(elementNames, elementName)
+			elementTypes = append(elementTypes, converted.GetType())
+			values = append(values, converted)
+		}
+
+		return types.StructuredTypeStatementResultField{
+			Type:       types.StructuredType,
+			FieldNames: elementNames,
+			FieldTypes: elementTypes,
+			Values:     values,
 		}
 	}
 }
