@@ -12,8 +12,9 @@ type shareCommand struct {
 
 func newShareCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "share",
-		Short: "Manage Kafka shares.",
+		Use:         "share",
+		Short:       "Manage Kafka Share Groups.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
 	c := &shareCommand{}
