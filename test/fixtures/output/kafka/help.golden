@@ -13,7 +13,7 @@ Available Commands:
   partition     Manage Kafka partitions.
   quota         Manage Kafka client quotas.
   region        Manage Confluent Cloud regions.
-  share         Manage Kafka Share Groups.
+  share         Manage Kafka share groups.
   topic         Manage Kafka topics.
 
 Global Flags:

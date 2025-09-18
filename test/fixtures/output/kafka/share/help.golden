@@ -1,4 +1,4 @@
-Manage Kafka Share Groups.
+Manage Kafka share groups.
 
 Usage:
   confluent kafka share [command]

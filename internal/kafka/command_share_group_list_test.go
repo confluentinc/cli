@@ -18,7 +18,7 @@ func TestShareGroupListCommand(t *testing.T) {
 	cmd := newShareCommand(prerunner)
 	require.NotNil(t, cmd)
 	require.Equal(t, "share", cmd.Use)
-	require.Equal(t, "Manage Kafka Share Groups.", cmd.Short)
+	require.Equal(t, "Manage Kafka share groups.", cmd.Short)
 
 	// Test that the group subcommand exists
 	groupCmd := cmd.Commands()[0]
