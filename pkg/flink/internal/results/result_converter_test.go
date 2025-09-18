@@ -46,8 +46,13 @@ func (s *ResultConverterTestSuite) TestConvertField() {
 	})
 }
 
-// normalizeExpected converts a raw generated value `result` into the exact
-// SDK shape produced by the StatementResultField.ToSDKType() implementations.
+// normalizeExpected transforms a raw, generator-produced value into the same
+// shape returned by StatementResultField.ToSDKType(). This ensures property-
+// based tests can compare generator output against conversion results.
+//
+// It recursively normalizes composite data types (ARRAY, MAP, MULTISET, ROW,
+// STRUCTURED_TYPE) so that nested fields, key/value pairs, and element counts
+// match the SDK representation. Atomic values are returned as-is.
 func normalizeExpected(result any, dataType flinkgatewayv1.DataType) any {
 	switch dataType.GetType() {
 	case "STRUCTURED_TYPE":
@@ -66,7 +71,8 @@ func normalizeExpected(result any, dataType flinkgatewayv1.DataType) any {
 	}
 }
 
-// ROW -> []any (positional)
+// normalizeRow handles ROW types by normalizing each field
+// positionally according to its schema definition.
 func normalizeRow(result any, dataType flinkgatewayv1.DataType) any {
 	rawResults, ok := result.([]any)
 	fields := dataType.GetFields()
@@ -80,7 +86,8 @@ func normalizeRow(result any, dataType flinkgatewayv1.DataType) any {
 	return normalized
 }
 
-// STRUCTURED_TYPE -> map[string]any
+// normalizeStructuredType handles STRUCTURED_TYPE values by
+// converting them into a map keyed by field names.
 func normalizeStructuredType(result any, dataType flinkgatewayv1.DataType) any {
 	rawResults, ok := result.([]any)
 	fields := dataType.GetFields()
@@ -94,14 +101,15 @@ func normalizeStructuredType(result any, dataType flinkgatewayv1.DataType) any {
 	return normalized
 }
 
-// MAP -> []any of [key, value] pairs
-func normalizeMap(field any, dt flinkgatewayv1.DataType) any {
+// normalizeMap handles MAP values by normalizing them into
+// slices of [key, value] pairs with recursive normalization.
+func normalizeMap(field any, dataType flinkgatewayv1.DataType) any {
 	rawEntries, ok := field.([]any)
 	if !ok {
 		return field
 	}
-	keyT := dt.GetKeyType()
-	valT := dt.GetValueType()
+	keyT := dataType.GetKeyType()
+	valT := dataType.GetValueType()
 
 	normalized := make([]any, 0, len(rawEntries))
 	for _, rawEntry := range rawEntries {
@@ -122,7 +130,8 @@ func normalizeMap(field any, dt flinkgatewayv1.DataType) any {
 	return normalized
 }
 
-// ARRAY -> []any (elements normalized)
+// normalizeArray handles ARRAY values by normalizing each
+// element recursively if the element type is set.
 func normalizeArray(result any, dataType flinkgatewayv1.DataType) any {
 	elems, ok := result.([]any)
 	if !ok {
@@ -140,21 +149,18 @@ func normalizeArray(result any, dataType flinkgatewayv1.DataType) any {
 	return normalized
 }
 
-// MULTISET -> []any of [value, count] pairs
+// normalizeMultiSet handles MULTISET values by normalizing them
+// into slices of [element, count] pairs, where element is normalized
+// recursively and count is preserved as-is.
 func normalizeMultiSet(result any, dataType flinkgatewayv1.DataType) any {
-	// In our model, MULTISET is converted via MapStatementResultField with
-	// keyType = elementType, valueType = INTEGER; and ToSDKType() returns []any of pairs.
 	entries, ok := result.([]any)
 	if !ok {
 		return result
 	}
-	// logical "key" type
 	elemType := dataType.GetElementType()
-	// value/count type is INTEGER in our converter, but Atomic returns strings, so keep as-is.
 	normalized := make([]any, 0, len(entries))
 	for _, entry := range entries {
 		pair, ok := entry.([]any)
-		// best-effort: keep as-is
 		if !ok || len(pair) != 2 {
 			normalized = append(normalized, entry)
 			continue
@@ -163,7 +169,6 @@ func normalizeMultiSet(result any, dataType flinkgatewayv1.DataType) any {
 		if elemType.GetType() != "" {
 			value = normalizeExpected(pair[0], elemType)
 		}
-		// keep count as-is (often string "0"/"2" in your atomic model)
 		count := pair[1]
 		normalized = append(normalized, []any{value, count})
 	}
