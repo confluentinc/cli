@@ -174,6 +174,12 @@ func validateConnectionSecrets(cmd *cobra.Command, connectionType string) (map[s
 		}
 	}
 
+	if transportType, ok := secretMap["TRANSPORT_TYPE"]; ok && transportType == "STREAMABLE_HTTP" {
+		if _, ok := secretMap["SSE_ENDPOINT"]; ok {
+			return nil, fmt.Errorf("sse-endpoint flag is not allowed for STREAMABLE_HTTP transport-type.")
+		}
+	}
+
 	if _, ok := secretMap["API_KEY"]; ok {
 		secretMap[authType] = "API_KEY"
 	} else if _, ok := secretMap["USERNAME"]; ok {
