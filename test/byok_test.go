@@ -9,12 +9,17 @@ func (s *CLITestSuite) TestByok() {
 		{args: "byok list --state in-use", fixture: "byok/list_2.golden"},
 		{args: "byok list --cloud aws", fixture: "byok/list_3.golden"},
 		{args: "byok list --state in-use --cloud azure", fixture: "byok/list_4.golden"},
+		{args: "byok list --region us-east-1", fixture: "byok/list_5.golden"},
+		{args: "byok list --phase VALID", fixture: "byok/list_6.golden"},
+		{args: "byok list --display-name 'Development AWS Key'", fixture: "byok/list_7.golden"},
+		{args: "byok list --key 'a-vault'", fixture: "byok/list_8.golden"},
 		// create tests
 		{args: "byok create arn:aws:kms:us-west-2:037803949979:key/0e2609e3-a0bf-4f39-aedf-8b1f63b16d81", fixture: "byok/create_1.golden"},
 		{args: "byok create https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000 --tenant 00000000-0000-0000-0000-000000000000 --key-vault /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/a-resourcegroups/providers/Microsoft.KeyVault/vaults/a-vault", fixture: "byok/create_2.golden"},
 		{args: "byok create https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000 --tenant 00000000-0000-0000-0000-000000000000", fixture: "byok/create_3.golden", exitCode: 1},
 		{args: "byok create https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000", fixture: "byok/create_4.golden", exitCode: 1},
 		{args: "byok create projects/exampleproject/locations/us-central1/keyRings/testkeyring/cryptoKeys/testbyokkey/cryptoKeyVersions/3", fixture: "byok/create_5.golden"},
+		{args: "byok create projects/exampleproject/locations/us-central1/keyRings/testkeyring/cryptoKeys/testbyokkey/cryptoKeyVersions/4 --display-name 'Test GCP Key'", fixture: "byok/create_6.golden"},
 	}
 
 	resetConfiguration(s.T(), false)
@@ -50,6 +55,19 @@ func (s *CLITestSuite) TestByokDescribe() {
 		{args: "byok describe cck-003 -o json", fixture: "byok/describe-azure-json.golden"},
 		{args: "byok describe cck-004", fixture: "byok/describe-gcp.golden"},
 		{args: "byok describe cck-004 -o json", fixture: "byok/describe-gcp-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestByokUpdate() {
+	tests := []CLITest{
+		{args: `byok update cck-001 --display-name "Updated Production Key"`, fixture: "byok/update-success.golden"},
+		{args: `byok update cck-001 --display-name "Updated Production Key" -o json`, fixture: "byok/update-success-json.golden"},
+		{args: "byok update cck-404 --display-name \"Non-existent Key\"", fixture: "byok/update-fail.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
