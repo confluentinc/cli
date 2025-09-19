@@ -67,6 +67,12 @@ func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
 		}
 		return list.Print()
 	}
-	// if the output format is not human, we serialize the output as it is (JSON or YAML)
-	return output.SerializedOutput(cmd, applications)
+
+	localApps := make([]LocalFlinkApplication, 0, len(applications))
+
+	for _, sdkApp := range applications {
+		localApps = append(localApps, convertSdkApplicationToLocalApplication(sdkApp))
+	}
+
+	return output.SerializedOutput(cmd, localApps)
 }

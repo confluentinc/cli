@@ -37,29 +37,26 @@ func (c *command) computePoolDescribeOnPrem(cmd *cobra.Command, args []string) e
 		return err
 	}
 
-	computePool, err := client.DescribeComputePool(c.createContext(), environment, name)
+	sdkComputePool, err := client.DescribeComputePool(c.createContext(), environment, name)
 	if err != nil {
 		return err
 	}
 
 	if output.GetFormat(cmd) == output.Human {
 		table := output.NewTable(cmd)
-		// nil pointer handling for creation timestamp
 		var creationTime string
-		if computePool.GetMetadata().CreationTimestamp != nil {
-			creationTime = *computePool.GetMetadata().CreationTimestamp
-		} else {
-			creationTime = ""
+		if sdkComputePool.GetMetadata().CreationTimestamp != nil {
+			creationTime = *sdkComputePool.GetMetadata().CreationTimestamp
 		}
-
 		table.Add(&computePoolOutOnPrem{
 			CreationTime: creationTime,
-			Name:         computePool.GetMetadata().Name,
-			Type:         computePool.GetSpec().Type,
-			Phase:        computePool.GetStatus().Phase,
+			Name:         sdkComputePool.GetMetadata().Name,
+			Type:         sdkComputePool.GetSpec().Type,
+			Phase:        sdkComputePool.GetStatus().Phase,
 		})
 		return table.Print()
 	}
 
-	return output.SerializedOutput(cmd, computePool)
+	localPool := convertSdkComputePoolToLocalComputePool(sdkComputePool)
+	return output.SerializedOutput(cmd, localPool)
 }
