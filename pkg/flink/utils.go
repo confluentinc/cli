@@ -16,7 +16,7 @@ var (
 		"couchbase":      {"username", "password"},
 		"confluent_jdbc": {"username", "password"},
 		"rest":           {"username", "password", "token", "token-endpoint", "client-id", "client-secret", "scope"},
-		"mcp_server":     {"api-key", "token", "token-endpoint", "client-id", "client-secret", "scope", "sse-endpoint"},
+		"mcp_server":     {"api-key", "token", "token-endpoint", "client-id", "client-secret", "scope", "sse-endpoint", "transport-type"},
 	}
 
 	ConnectionSecretTypeMapping = map[string][]string{
@@ -33,6 +33,7 @@ var (
 		"client-secret":     {"rest", "mcp_server"},
 		"scope":             {"rest", "mcp_server"},
 		"sse-endpoint":      {"mcp_server"},
+		"transport-type":    {"mcp_server"},
 	}
 
 	ConnectionRequiredSecretMapping = map[string][]string{
@@ -57,6 +58,10 @@ var (
 		"mcp_server": {{"api-key"}, {"token"}, {"token-endpoint", "client-id", "client-secret", "scope"}},
 	}
 
+	ConnectionSecretAllowedValues = map[string][]string{
+		"transport-type": {"SSE", "STREAMABLE_HTTP"},
+	}
+
 	ConnectionSecretBackendKeyMapping = map[string]string{
 		"api-key":           "API_KEY",
 		"aws-access-key":    "AWS_ACCESS_KEY_ID",
@@ -71,5 +76,6 @@ var (
 		"client-secret":     "OAUTH2_CLIENT_SECRET",
 		"scope":             "OAUTH2_SCOPE",
 		"sse-endpoint":      "SSE_ENDPOINT",
+		"transport-type":    "TRANSPORT_TYPE",
 	}
 )
