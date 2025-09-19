@@ -50,21 +50,8 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		status := topic.Status.GetCatalogSyncStatuses()
-		strStatus := make([]string, len(status))
-		for i, s := range status {
-			if s.SyncStatus != nil {
-				strStatus[i] = *s.SyncStatus
-			} else {
-				strStatus[i] = ""
-			}
-		}
-
-		formats := topic.Status.GetFailingTableFormats()
-		strFormats := make([]string, len(formats))
-		for i, f := range formats {
-			strFormats[i] = f.Format
-		}
+		strStatus := getCatalogSyncStatusStrings(topic.Status.GetCatalogSyncStatuses())
+		strFormats := getFailingTableFormatMap(topic.Status.GetFailingTableFormats())
 
 		out := &topicOut{
 			KafkaCluster:          topic.GetSpec().KafkaCluster.GetId(),
@@ -78,8 +65,8 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			StorageType:           storageType,
 			Suspended:             topic.Spec.GetSuspended(),
 			Phase:                 topic.Status.GetPhase(),
-			CatalogSyncStatus:     strings.Join(strStatus, ","),
-			FailingTableFormat:    strings.Join(strFormats, ","),
+			CatalogSyncStatus:     strStatus,
+			FailingTableFormat:    strFormats,
 			ErrorMessage:          topic.Status.GetErrorMessage(),
 			WriteMode:             topic.Status.GetWriteMode(),
 		}

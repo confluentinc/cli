@@ -190,6 +190,31 @@ func getTopicByob(display_name, environmentId, clusterId string) tableflowv1.Tab
 		Status: &tableflowv1.TableflowV1TableflowTopicStatus{
 			Phase: tableflowv1.PtrString("RUNNING"),
 			//ErrorMessage: tableflowv1.PtrString(""),
+			WriteMode: "UPSERT",
+			CatalogSyncStatuses: &[]tableflowv1.TableflowV1CatalogSyncStatus{
+				{
+					CatalogIntegrationId: tableflowv1.PtrString("cat-int-123"),
+					CatalogType:          tableflowv1.PtrString("TYPE-1"),
+					SyncStatus:           tableflowv1.PtrString("SUCCESS"),
+					ErrorMessage:         tableflowv1.NullableString{},
+				},
+				{
+					CatalogIntegrationId: tableflowv1.PtrString("cat-int-456"),
+					CatalogType:          tableflowv1.PtrString("TYPE-2"),
+					SyncStatus:           tableflowv1.PtrString("FAILED"),
+					ErrorMessage:         *tableflowv1.NewNullableString(tableflowv1.PtrString("Connection timeout")),
+				},
+			},
+			FailingTableFormats: &[]tableflowv1.TableflowV1TableflowTopicStatusFailingTableFormats{
+				{
+					Format:       "ICEBERG",
+					ErrorMessage: "Schema validation failed",
+				},
+				{
+					Format:       "DELTA",
+					ErrorMessage: "Connection timeout timeout timeout",
+				},
+			},
 		},
 	}
 }
@@ -218,6 +243,31 @@ func getTopicManaged(display_name, environmentId, clusterId string) tableflowv1.
 		Status: &tableflowv1.TableflowV1TableflowTopicStatus{
 			Phase: tableflowv1.PtrString("RUNNING"),
 			//ErrorMessage: tableflowv1.PtrString(""),
+			WriteMode: "APPEND",
+			CatalogSyncStatuses: &[]tableflowv1.TableflowV1CatalogSyncStatus{
+				{
+					CatalogIntegrationId: tableflowv1.PtrString("cat-int-123"),
+					CatalogType:          tableflowv1.PtrString("TYPE-1"),
+					SyncStatus:           tableflowv1.PtrString("SUCCESS"),
+					ErrorMessage:         tableflowv1.NullableString{},
+				},
+				{
+					CatalogIntegrationId: tableflowv1.PtrString("cat-int-456"),
+					CatalogType:          tableflowv1.PtrString("TYPE-1"),
+					SyncStatus:           tableflowv1.PtrString("FAILED"),
+					ErrorMessage:         *tableflowv1.NewNullableString(tableflowv1.PtrString("Connection timeout")),
+				},
+			},
+			FailingTableFormats: &[]tableflowv1.TableflowV1TableflowTopicStatusFailingTableFormats{
+				{
+					Format:       "ICEBERG",
+					ErrorMessage: "Schema validation failed",
+				},
+				{
+					Format:       "DELTA",
+					ErrorMessage: "Connection timeout timeout timeout",
+				},
+			},
 		},
 	}
 }
