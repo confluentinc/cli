@@ -58,6 +58,7 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 		ksqlNamespace.Value(),
 		publicNamespace.Value(),
 		streamCatalogNamespace.Value(),
+		usmNamespace.Value(),
 	}
 
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
