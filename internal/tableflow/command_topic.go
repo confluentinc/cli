@@ -41,6 +41,28 @@ func (f FailingTableFormats) String() string {
 	return strings.Join(pairs, "\n")
 }
 
+// CatalogSyncStatuses represents a collection of catalog sync statuses
+type CatalogSyncStatuses map[string]string
+
+// String implements the Stringer interface to control how the map is displayed in tables
+func (c CatalogSyncStatuses) String() string {
+	if len(c) == 0 {
+		return ""
+	}
+	
+	// Create a slice of key-value pairs
+	pairs := make([]string, 0, len(c))
+	for catalogType, syncStatus := range c {
+		pairs = append(pairs, fmt.Sprintf("%s: %s", catalogType, syncStatus))
+	}
+	
+	// Sort for consistent output
+	sort.Strings(pairs)
+	
+	// Join with newlines - this should create proper line breaks in the table
+	return strings.Join(pairs, "\n")
+}
+
 type topicOut struct {
 	KafkaCluster          string   `human:"Kafka Cluster" serialized:"kafka_cluster"`
 	TopicName             string   `human:"Topic Name" serialized:"topic_name"`
@@ -57,7 +79,7 @@ type topicOut struct {
 	TableFormats          string   `human:"Table Formats" serialized:"table_formats"`
 	TablePath             string   `human:"Table Path" serialized:"table_path"`
 	Phase                 string   `human:"Phase" serialized:"phase"`
-	CatalogSyncStatus     []string `human:"Catalog Sync Status,omitempty" serialized:"catalog_sync_status,omitempty"`
+	CatalogSyncStatus     CatalogSyncStatuses `human:"Catalog Sync Status,omitempty" serialized:"catalog_sync_status,omitempty"`
 	FailingTableFormat    FailingTableFormats `human:"Failing Table Format,omitempty" serialized:"failing_table_format,omitempty"`
 	ErrorMessage          string   `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
 	WriteMode             string   `human:"Write Mode,omitempty" serialized:"write_mode,omitempty"`
@@ -131,9 +153,9 @@ func getStorageType(topic tableflowv1.TableflowV1TableflowTopic) (string, error)
 	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "config")
 }
 
-func getCatalogSyncStatusStrings(statuses []tableflowv1.TableflowV1CatalogSyncStatus) []string {
-	strStatus := make([]string, len(statuses))
-	for i, s := range statuses {
+func getCatalogSyncStatusStrings(statuses []tableflowv1.TableflowV1CatalogSyncStatus) CatalogSyncStatuses {
+	strStatus := make(CatalogSyncStatuses)
+	for _, s := range statuses {
 		catalogType := "unknown"
 		if s.CatalogType != nil {
 			catalogType = *s.CatalogType
@@ -142,7 +164,7 @@ func getCatalogSyncStatusStrings(statuses []tableflowv1.TableflowV1CatalogSyncSt
 		if s.SyncStatus != nil {
 			syncStatus = *s.SyncStatus
 		}
-		strStatus[i] = fmt.Sprintf("%s: %s", catalogType, syncStatus)
+		strStatus[catalogType] = syncStatus
 	}
 	return strStatus
 }
@@ -200,5 +222,5 @@ func printTopicTable(cmd *cobra.Command, topic tableflowv1.TableflowV1TableflowT
 
 	table := output.NewTable(cmd)
 	table.Add(out)
-	return table.Print()
+	return table.PrintWithAutoWrap(false)
 }
