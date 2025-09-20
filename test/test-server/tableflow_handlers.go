@@ -194,13 +194,13 @@ func getTopicByob(display_name, environmentId, clusterId string) tableflowv1.Tab
 			CatalogSyncStatuses: &[]tableflowv1.TableflowV1CatalogSyncStatus{
 				{
 					CatalogIntegrationId: tableflowv1.PtrString("cat-int-123"),
-					CatalogType:          tableflowv1.PtrString("TYPE-1 TYPE-1 TYPE-1 TYPE-1 TYPE-1"),
+					CatalogType:          tableflowv1.PtrString("TYPE-1"),
 					SyncStatus:           tableflowv1.PtrString("SUCCESS"),
 					ErrorMessage:         tableflowv1.NullableString{},
 				},
 				{
 					CatalogIntegrationId: tableflowv1.PtrString("cat-int-456"),
-					CatalogType:          tableflowv1.PtrString("TYPE-2 TYPE-2 TYPE-2 TYPE-2 TYPE-2"),
+					CatalogType:          tableflowv1.PtrString("TYPE-2"),
 					SyncStatus:           tableflowv1.PtrString("FAILED"),
 					ErrorMessage:         *tableflowv1.NewNullableString(tableflowv1.PtrString("Connection timeout")),
 				},
@@ -212,7 +212,7 @@ func getTopicByob(display_name, environmentId, clusterId string) tableflowv1.Tab
 				},
 				{
 					Format:       "DELTA",
-					ErrorMessage: "Connection timeout timeout timeout",
+					ErrorMessage: "Connection timeout ",
 				},
 			},
 		},
@@ -247,13 +247,13 @@ func getTopicManaged(display_name, environmentId, clusterId string) tableflowv1.
 			CatalogSyncStatuses: &[]tableflowv1.TableflowV1CatalogSyncStatus{
 				{
 					CatalogIntegrationId: tableflowv1.PtrString("cat-int-123"),
-					CatalogType:          tableflowv1.PtrString("TYPE-1 TYPE-1 TYPE-1 TYPE-1 TYPE-1"),
+					CatalogType:          tableflowv1.PtrString("TYPE-1"),
 					SyncStatus:           tableflowv1.PtrString("SUCCESS"),
 					ErrorMessage:         tableflowv1.NullableString{},
 				},
 				{
 					CatalogIntegrationId: tableflowv1.PtrString("cat-int-456"),
-					CatalogType:          tableflowv1.PtrString("TYPE-2 TYPE-2 TYPE-2 TYPE-2 TYPE-2"),
+					CatalogType:          tableflowv1.PtrString("TYPE-2"),
 					SyncStatus:           tableflowv1.PtrString("FAILED"),
 					ErrorMessage:         *tableflowv1.NewNullableString(tableflowv1.PtrString("Connection timeout")),
 				},
@@ -265,7 +265,7 @@ func getTopicManaged(display_name, environmentId, clusterId string) tableflowv1.
 				},
 				{
 					Format:       "DELTA",
-					ErrorMessage: "Connection timeout timeout timeout",
+					ErrorMessage: "Connection timeout ",
 				},
 			},
 		},

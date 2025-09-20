@@ -19,70 +19,44 @@ const (
 	managed = "MANAGED"
 )
 
-// FailingTableFormats represents a collection of failing table formats with their error messages
-type FailingTableFormats map[string]string
+type KeyValuePairs map[string]string
 
-// String implements the Stringer interface to control how the map is displayed in tables
-func (f FailingTableFormats) String() string {
-	if len(f) == 0 {
+func (k KeyValuePairs) String() string {
+	if len(k) == 0 {
 		return ""
 	}
-	
-	// Create a slice of key-value pairs
-	pairs := make([]string, 0, len(f))
-	for format, errorMsg := range f {
-		pairs = append(pairs, fmt.Sprintf("%s: %s", format, errorMsg))
+
+	pairs := make([]string, 0, len(k))
+	for key, value := range k {
+		pairs = append(pairs, fmt.Sprintf("%s: %s", key, value))
 	}
-	
-	// Sort for consistent output
 	sort.Strings(pairs)
-	
-	// Join with newlines - this should create proper line breaks in the table
 	return strings.Join(pairs, "\n")
 }
 
-// CatalogSyncStatuses represents a collection of catalog sync statuses
-type CatalogSyncStatuses map[string]string
-
-// String implements the Stringer interface to control how the map is displayed in tables
-func (c CatalogSyncStatuses) String() string {
-	if len(c) == 0 {
-		return ""
-	}
-	
-	// Create a slice of key-value pairs
-	pairs := make([]string, 0, len(c))
-	for catalogType, syncStatus := range c {
-		pairs = append(pairs, fmt.Sprintf("%s: %s", catalogType, syncStatus))
-	}
-	
-	// Sort for consistent output
-	sort.Strings(pairs)
-	
-	// Join with newlines - this should create proper line breaks in the table
-	return strings.Join(pairs, "\n")
-}
+type FailingTableFormats = KeyValuePairs
+type CatalogSyncStatuses = KeyValuePairs
 
 type topicOut struct {
-	KafkaCluster          string   `human:"Kafka Cluster" serialized:"kafka_cluster"`
-	TopicName             string   `human:"Topic Name" serialized:"topic_name"`
-	EnableCompaction      bool     `human:"Enable Compaction" serialized:"enable_compaction"`
-	EnablePartitioning    bool     `human:"Enable Partitioning" serialized:"enable_partitioning"`
-	Environment           string   `human:"Environment" serialized:"environment"`
-	RecordFailureStrategy string   `human:"Record Failure Strategy" serialized:"record_failure_strategy"`
-	RetentionMs           string   `human:"Retention Ms" serialized:"retention_ms"`
-	StorageType           string   `human:"Storage Type" serialized:"storage_type"`
-	ProviderIntegrationId string   `human:"Provider Integration ID,omitempty" serialized:"provider_integration_id,omitempty"`
-	BucketName            string   `human:"Bucket Name,omitempty" serialized:"bucket_name,omitempty"`
-	BucketRegion          string   `human:"Bucket Region,omitempty" serialized:"bucket_region,omitempty"`
-	Suspended             bool     `human:"Suspended" serialized:"suspended"`
-	TableFormats          string   `human:"Table Formats" serialized:"table_formats"`
-	TablePath             string   `human:"Table Path" serialized:"table_path"`
-	Phase                 string   `human:"Phase" serialized:"phase"`
+	KafkaCluster          string              `human:"Kafka Cluster" serialized:"kafka_cluster"`
+	TopicName             string              `human:"Topic Name" serialized:"topic_name"`
+	EnableCompaction      bool                `human:"Enable Compaction" serialized:"enable_compaction"`
+	EnablePartitioning    bool                `human:"Enable Partitioning" serialized:"enable_partitioning"`
+	Environment           string              `human:"Environment" serialized:"environment"`
+	RecordFailureStrategy string              `human:"Record Failure Strategy" serialized:"record_failure_strategy"`
+	RetentionMs           string              `human:"Retention Ms" serialized:"retention_ms"`
+	StorageType           string              `human:"Storage Type" serialized:"storage_type"`
+	ProviderIntegrationId string              `human:"Provider Integration ID,omitempty" serialized:"provider_integration_id,omitempty"`
+	BucketName            string              `human:"Bucket Name,omitempty" serialized:"bucket_name,omitempty"`
+	BucketRegion          string              `human:"Bucket Region,omitempty" serialized:"bucket_region,omitempty"`
+	Suspended             bool                `human:"Suspended" serialized:"suspended"`
+	TableFormats          string              `human:"Table Formats" serialized:"table_formats"`
+	TablePath             string              `human:"Table Path" serialized:"table_path"`
+	Phase                 string              `human:"Phase" serialized:"phase"`
 	CatalogSyncStatus     CatalogSyncStatuses `human:"Catalog Sync Status,omitempty" serialized:"catalog_sync_status,omitempty"`
 	FailingTableFormat    FailingTableFormats `human:"Failing Table Format,omitempty" serialized:"failing_table_format,omitempty"`
-	ErrorMessage          string   `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
-	WriteMode             string   `human:"Write Mode,omitempty" serialized:"write_mode,omitempty"`
+	ErrorMessage          string              `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
+	WriteMode             string              `human:"Write Mode,omitempty" serialized:"write_mode,omitempty"`
 }
 
 func (c *command) newTopicCommand() *cobra.Command {
@@ -153,8 +127,8 @@ func getStorageType(topic tableflowv1.TableflowV1TableflowTopic) (string, error)
 	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "config")
 }
 
-func getCatalogSyncStatusStrings(statuses []tableflowv1.TableflowV1CatalogSyncStatus) CatalogSyncStatuses {
-	strStatus := make(CatalogSyncStatuses)
+func getCatalogSyncStatuses(statuses []tableflowv1.TableflowV1CatalogSyncStatus) CatalogSyncStatuses {
+	result := make(CatalogSyncStatuses)
 	for _, s := range statuses {
 		catalogType := "unknown"
 		if s.CatalogType != nil {
@@ -164,17 +138,17 @@ func getCatalogSyncStatusStrings(statuses []tableflowv1.TableflowV1CatalogSyncSt
 		if s.SyncStatus != nil {
 			syncStatus = *s.SyncStatus
 		}
-		strStatus[catalogType] = syncStatus
+		result[catalogType] = syncStatus
 	}
-	return strStatus
+	return result
 }
 
-func getFailingTableFormatMap(formats []tableflowv1.TableflowV1TableflowTopicStatusFailingTableFormats) FailingTableFormats {
-	strFormats := make(FailingTableFormats)
+func getFailingTableFormats(formats []tableflowv1.TableflowV1TableflowTopicStatusFailingTableFormats) FailingTableFormats {
+	result := make(FailingTableFormats)
 	for _, f := range formats {
-		strFormats[f.Format] = f.ErrorMessage
+		result[f.Format] = f.ErrorMessage
 	}
-	return strFormats
+	return result
 }
 
 func printTopicTable(cmd *cobra.Command, topic tableflowv1.TableflowV1TableflowTopic) error {
@@ -190,8 +164,8 @@ func printTopicTable(cmd *cobra.Command, topic tableflowv1.TableflowV1TableflowT
 		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status not found")
 	}
 
-	strStatus := getCatalogSyncStatusStrings(topic.Status.GetCatalogSyncStatuses())
-	strFormats := getFailingTableFormatMap(topic.Status.GetFailingTableFormats())
+	strStatus := getCatalogSyncStatuses(topic.Status.GetCatalogSyncStatuses())
+	strFormats := getFailingTableFormats(topic.Status.GetFailingTableFormats())
 
 	out := &topicOut{
 		KafkaCluster:          topic.GetSpec().KafkaCluster.GetId(),

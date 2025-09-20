@@ -50,8 +50,8 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		strStatus := getCatalogSyncStatusStrings(topic.Status.GetCatalogSyncStatuses())
-		strFormats := getFailingTableFormatMap(topic.Status.GetFailingTableFormats())
+		strStatus := getCatalogSyncStatuses(topic.Status.GetCatalogSyncStatuses())
+		strFormats := getFailingTableFormats(topic.Status.GetFailingTableFormats())
 
 		out := &topicOut{
 			KafkaCluster:          topic.GetSpec().KafkaCluster.GetId(),
