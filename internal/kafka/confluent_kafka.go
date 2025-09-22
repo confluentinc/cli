@@ -10,7 +10,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"regexp"
-	"slices"
 	"strings"
 	"time"
 
@@ -251,7 +250,7 @@ func ConsumeMessage(message *ckgo.Message, h *GroupHandler) error {
 			return err
 		}
 
-		if slices.Contains(serdes.SchemaBasedFormats, h.KeyFormat) {
+		if serdes.IsProtobufSchema(h.KeyFormat) { // avro and json schema don't need to load schema
 			schemaPath, referencePathMap, err := h.RequestSchema(message.Key)
 			if err != nil {
 				return err
@@ -284,7 +283,7 @@ func ConsumeMessage(message *ckgo.Message, h *GroupHandler) error {
 		return err
 	}
 
-	if slices.Contains(serdes.SchemaBasedFormats, h.ValueFormat) {
+	if serdes.IsProtobufSchema(h.ValueFormat) { // avro and json schema don't need to load schema
 		schemaPath, referencePathMap, err := h.RequestSchema(message.Value)
 		if err != nil {
 			return err

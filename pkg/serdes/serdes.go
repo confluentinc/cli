@@ -130,3 +130,7 @@ func GetDeserializationProvider(valueFormat string) (DeserializationProvider, er
 		return nil, fmt.Errorf(errors.UnknownValueFormatErrorMsg)
 	}
 }
+
+func IsProtobufSchema(valueFormat string) bool {
+	return valueFormat == protobufSchemaName
+}
