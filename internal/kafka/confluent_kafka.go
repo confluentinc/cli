@@ -260,7 +260,7 @@ func ConsumeMessage(message *ckgo.Message, h *GroupHandler) error {
 			}
 		}
 
-		jsonMessage, err := keyDeserializer.Deserialize(h.Topic, message.Key)
+		jsonMessage, err := keyDeserializer.Deserialize(h.Topic, message.Headers, message.Key)
 		if err != nil {
 			return err
 		}
@@ -315,7 +315,7 @@ func ConsumeMessage(message *ckgo.Message, h *GroupHandler) error {
 }
 
 func getMessageString(message *ckgo.Message, valueDeserializer serdes.DeserializationProvider, properties ConsumerProperties, topic string) (string, error) {
-	messageString, err := valueDeserializer.Deserialize(topic, message.Value)
+	messageString, err := valueDeserializer.Deserialize(topic, message.Headers, message.Value)
 	if err != nil {
 		return "", err
 	}

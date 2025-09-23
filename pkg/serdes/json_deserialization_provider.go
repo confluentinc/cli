@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/jsonschema"
+
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 type JsonDeserializationProvider struct {
@@ -34,7 +37,8 @@ func (j *JsonDeserializationProvider) InitDeserializer(srClientUrl, srClusterId,
 		} else if srAuth.Token != "" {
 			serdeClientConfig = schemaregistry.NewConfigWithBearerAuthentication(srClientUrl, srAuth.Token, srClusterId, "")
 		} else {
-			return fmt.Errorf("schema registry client authentication should be provider to initialize deserializer")
+			serdeClientConfig = schemaregistry.NewConfig(srClientUrl)
+			log.CliLogger.Info("initializing deserializer with no schema registry client authentication")
 		}
 		serdeClientConfig.SslCaLocation = srAuth.CertificateAuthorityPath
 		serdeClientConfig.SslCertificateLocation = srAuth.ClientCertPath
@@ -79,7 +83,7 @@ func (j *JsonDeserializationProvider) LoadSchema(_ string, _ map[string]string) 
 	return nil
 }
 
-func (j *JsonDeserializationProvider) Deserialize(topic string, payload []byte) (string, error) {
+func (j *JsonDeserializationProvider) Deserialize(topic string, headers []kafka.Header, payload []byte) (string, error) {
 	message := make(map[string]interface{})
 	err := j.deser.DeserializeInto(topic, payload, &message)
 	if err != nil {

@@ -4,6 +4,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
 type DoubleDeserializationProvider struct{}
@@ -16,7 +18,7 @@ func (DoubleDeserializationProvider) LoadSchema(_ string, _ map[string]string) e
 	return nil
 }
 
-func (DoubleDeserializationProvider) Deserialize(_ string, data []byte) (string, error) {
+func (DoubleDeserializationProvider) Deserialize(_ string, _ []kafka.Header, data []byte) (string, error) {
 	if len(data) == 0 {
 		return "", nil
 	}

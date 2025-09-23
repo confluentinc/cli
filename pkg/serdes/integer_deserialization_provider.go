@@ -3,6 +3,8 @@ package serdes
 import (
 	"encoding/binary"
 	"fmt"
+
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
 type IntegerDeserializationProvider struct{}
@@ -15,7 +17,7 @@ func (IntegerDeserializationProvider) LoadSchema(_ string, _ map[string]string) 
 	return nil
 }
 
-func (IntegerDeserializationProvider) Deserialize(_ string, data []byte) (string, error) {
+func (IntegerDeserializationProvider) Deserialize(_ string, _ []kafka.Header, data []byte) (string, error) {
 	if len(data) == 0 {
 		return "", nil
 	}
