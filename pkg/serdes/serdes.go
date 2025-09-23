@@ -3,6 +3,7 @@ package serdes
 import (
 	"fmt"
 
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
@@ -75,7 +76,7 @@ type SerializationProvider interface {
 type DeserializationProvider interface {
 	InitDeserializer(srClientUrl, srClusterId, mode string, srAuth SchemaRegistryAuth, existingClient any) error
 	LoadSchema(string, map[string]string) error
-	Deserialize(string, []byte) (string, error)
+	Deserialize(string, []kafka.Header, []byte) (string, error)
 }
 
 func FormatTranslation(backendValueFormat string) (string, error) {
@@ -129,4 +130,8 @@ func GetDeserializationProvider(valueFormat string) (DeserializationProvider, er
 	default:
 		return nil, fmt.Errorf(errors.UnknownValueFormatErrorMsg)
 	}
+}
+
+func IsProtobufSchema(valueFormat string) bool {
+	return valueFormat == protobufSchemaName
 }
