@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	v2 "github.com/confluentinc/cli/v4/internal/provider-integration/v2"
 )
 
 type command struct {
@@ -35,6 +36,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(v2.New(prerunner))
 
 	return cmd
 }
