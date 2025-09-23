@@ -16,11 +16,11 @@
     "table_path": "s3://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId",
     "phase": "RUNNING",
     "catalog_sync_status": {
-      "TYPE-1 TYPE-1 TYPE-1 TYPE-1 TYPE-1": "SUCCESS",
-      "TYPE-2 TYPE-2 TYPE-2 TYPE-2 TYPE-2": "FAILED"
+      "cat-id-123": "SUCCESS",
+      "cat-id-456": "FAILED"
     },
     "failing_table_format": {
-      "DELTA": "Connection timeout timeout timeout",
+      "DELTA": "Connection timeout ",
       "ICEBERG": "Schema validation failed"
     },
     "write_mode": "UPSERT"
@@ -39,11 +39,11 @@
     "table_path": "s3://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId",
     "phase": "RUNNING",
     "catalog_sync_status": {
-      "TYPE-1 TYPE-1 TYPE-1 TYPE-1 TYPE-1": "SUCCESS",
-      "TYPE-2 TYPE-2 TYPE-2 TYPE-2 TYPE-2": "FAILED"
+      "cat-id-123": "SUCCESS",
+      "cat-id-456": "FAILED"
     },
     "failing_table_format": {
-      "DELTA": "Connection timeout timeout timeout",
+      "DELTA": "Connection timeout ",
       "ICEBERG": "Schema validation failed"
     },
     "write_mode": "APPEND"

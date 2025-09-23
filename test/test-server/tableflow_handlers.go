@@ -193,13 +193,13 @@ func getTopicByob(display_name, environmentId, clusterId string) tableflowv1.Tab
 			WriteMode: "UPSERT",
 			CatalogSyncStatuses: &[]tableflowv1.TableflowV1CatalogSyncStatus{
 				{
-					CatalogIntegrationId: tableflowv1.PtrString("cat-int-123"),
+					CatalogIntegrationId: tableflowv1.PtrString("cat-id-123"),
 					CatalogType:          tableflowv1.PtrString("TYPE-1"),
 					SyncStatus:           tableflowv1.PtrString("SUCCESS"),
 					ErrorMessage:         tableflowv1.NullableString{},
 				},
 				{
-					CatalogIntegrationId: tableflowv1.PtrString("cat-int-456"),
+					CatalogIntegrationId: tableflowv1.PtrString("cat-id-456"),
 					CatalogType:          tableflowv1.PtrString("TYPE-2"),
 					SyncStatus:           tableflowv1.PtrString("FAILED"),
 					ErrorMessage:         *tableflowv1.NewNullableString(tableflowv1.PtrString("Connection timeout")),
@@ -246,13 +246,13 @@ func getTopicManaged(display_name, environmentId, clusterId string) tableflowv1.
 			WriteMode: "APPEND",
 			CatalogSyncStatuses: &[]tableflowv1.TableflowV1CatalogSyncStatus{
 				{
-					CatalogIntegrationId: tableflowv1.PtrString("cat-int-123"),
+					CatalogIntegrationId: tableflowv1.PtrString("cat-id-123"),
 					CatalogType:          tableflowv1.PtrString("TYPE-1"),
 					SyncStatus:           tableflowv1.PtrString("SUCCESS"),
 					ErrorMessage:         tableflowv1.NullableString{},
 				},
 				{
-					CatalogIntegrationId: tableflowv1.PtrString("cat-int-456"),
+					CatalogIntegrationId: tableflowv1.PtrString("cat-id-456"),
 					CatalogType:          tableflowv1.PtrString("TYPE-2"),
 					SyncStatus:           tableflowv1.PtrString("FAILED"),
 					ErrorMessage:         *tableflowv1.NewNullableString(tableflowv1.PtrString("Connection timeout")),

@@ -21,6 +21,7 @@ const (
 
 type KeyValuePairs map[string]string
 
+// ensure each entry pair is printed on a new line
 func (k KeyValuePairs) String() string {
 	if len(k) == 0 {
 		return ""
@@ -127,18 +128,44 @@ func getStorageType(topic tableflowv1.TableflowV1TableflowTopic) (string, error)
 	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "config")
 }
 
-func getCatalogSyncStatuses(statuses []tableflowv1.TableflowV1CatalogSyncStatus) CatalogSyncStatuses {
+// include error message in output if Sync Status is FAILED
+func getDescribeCatalogSyncStatuses(statuses []tableflowv1.TableflowV1CatalogSyncStatus) CatalogSyncStatuses {
 	result := make(CatalogSyncStatuses)
 	for _, s := range statuses {
-		catalogType := "unknown"
-		if s.CatalogType != nil {
-			catalogType = *s.CatalogType
+		catalogIntegrationId := "id-unknown"
+		if s.CatalogIntegrationId != nil {
+			catalogIntegrationId = *s.CatalogIntegrationId
 		}
-		syncStatus := "unknown"
+		syncStatus := "status-unknown"
 		if s.SyncStatus != nil {
 			syncStatus = *s.SyncStatus
 		}
-		result[catalogType] = syncStatus
+
+		if syncStatus == "FAILED" && s.ErrorMessage.IsSet() {
+			if v := s.ErrorMessage.Get(); v != nil && *v != "" {
+				syncStatus = fmt.Sprintf("%s-%s", syncStatus, *v)
+			}
+		}
+
+		result[catalogIntegrationId] = syncStatus
+	}
+	return result
+}
+
+// does not include error message in output if Sync Status is FAILED, to maintain readability
+func getListCatalogSyncStatuses(statuses []tableflowv1.TableflowV1CatalogSyncStatus) CatalogSyncStatuses {
+	result := make(CatalogSyncStatuses)
+	for _, s := range statuses {
+		catalogIntegrationId := "id-unknown"
+		if s.CatalogIntegrationId != nil {
+			catalogIntegrationId = *s.CatalogIntegrationId
+		}
+		syncStatus := "status-unknown"
+		if s.SyncStatus != nil {
+			syncStatus = *s.SyncStatus
+		}
+
+		result[catalogIntegrationId] = syncStatus
 	}
 	return result
 }
@@ -164,7 +191,7 @@ func printTopicTable(cmd *cobra.Command, topic tableflowv1.TableflowV1TableflowT
 		return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "status not found")
 	}
 
-	strStatus := getCatalogSyncStatuses(topic.Status.GetCatalogSyncStatuses())
+	strStatus := getDescribeCatalogSyncStatuses(topic.Status.GetCatalogSyncStatuses())
 	strFormats := getFailingTableFormats(topic.Status.GetFailingTableFormats())
 
 	out := &topicOut{
