@@ -85,9 +85,16 @@ func (j *JsonDeserializationProvider) LoadSchema(_ string, _ map[string]string) 
 
 func (j *JsonDeserializationProvider) Deserialize(topic string, headers []kafka.Header, payload []byte) (string, error) {
 	message := make(map[string]interface{})
-	err := j.deser.DeserializeInto(topic, payload, &message)
-	if err != nil {
-		return "", fmt.Errorf("failed to deserialize payload: %w", err)
+	if len(headers) > 0 {
+		err := j.deser.DeserializeWithHeadersInto(topic, headers, payload, &message)
+		if err != nil {
+			return "", fmt.Errorf("failed to deserialize payload: %w", err)
+		}
+	} else {
+		err := j.deser.DeserializeInto(topic, payload, &message)
+		if err != nil {
+			return "", fmt.Errorf("failed to deserialize payload: %w", err)
+		}
 	}
 	jsonBytes, err := json.Marshal(message)
 	if err != nil {
