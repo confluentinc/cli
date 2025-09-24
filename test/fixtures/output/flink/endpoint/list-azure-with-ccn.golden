@@ -1,4 +1,5 @@
   Current |                      Endpoint                       | Cloud | Region  |  Type    
 ----------+-----------------------------------------------------+-------+---------+----------
           | https://flink-n-abcde2.eastus.azure.confluent.cloud | AZURE | eastus2 | PRIVATE  
+          | https://flink-n-abcde7.eastus.azure.confluent.cloud | AZURE | eastus2 | PRIVATE  
           | http://127.0.0.1:1026                               | AZURE | eastus2 | PUBLIC   
