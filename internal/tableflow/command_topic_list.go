@@ -73,6 +73,12 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			out.TablePath = topic.Spec.Storage.TableflowV1ByobAwsSpec.GetTablePath()
 		} else if storageType == managed {
 			out.TablePath = topic.Spec.Storage.TableflowV1ManagedStorageSpec.GetTablePath()
+		} else if storageType == azure {
+			out.ProviderIntegrationId = topic.Spec.Storage.TableflowV1AzureAdlsSpec.GetProviderIntegrationId()
+			out.ContainerName = topic.Spec.Storage.TableflowV1AzureAdlsSpec.GetContainerName()
+			out.StorageAccountName = topic.Spec.Storage.TableflowV1AzureAdlsSpec.GetStorageAccountName()
+			out.StorageRegion = topic.Spec.Storage.TableflowV1AzureAdlsSpec.GetStorageRegion()
+			out.TablePath = topic.Spec.Storage.TableflowV1AzureAdlsSpec.GetTablePath()
 		}
 
 		list.Add(out)

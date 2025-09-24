@@ -1,6 +1,25 @@
 [
   {
     "kafka_cluster": "lkc-123456",
+    "topic_name": "topic-azure",
+    "enable_compaction": true,
+    "enable_partitioning": true,
+    "environment": "env-596",
+    "record_failure_strategy": "SKIP",
+    "retention_ms": "604800000",
+    "storage_type": "AzureDataLakeStorageGen2",
+    "provider_integration_id": "cspi-stgce89r7",
+    "container_name": "Container1",
+    "storage_account_name": "Acc1",
+    "storage_region ": "US1",
+    "suspended": false,
+    "table_formats": "ICEBERG",
+    "table_path": "s3://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId2",
+    "phase": "RUNNING",
+    "write_mode": "UPSERT"
+  },
+  {
+    "kafka_cluster": "lkc-123456",
     "topic_name": "topic-byob",
     "enable_compaction": true,
     "enable_partitioning": true,
