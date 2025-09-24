@@ -1,0 +1,4 @@
+Error: USM Connect cluster "usmcc-invalid" not found
+
+Suggestions:
+    List available USM Connect clusters with `confluent unified-stream-manager connect list`.

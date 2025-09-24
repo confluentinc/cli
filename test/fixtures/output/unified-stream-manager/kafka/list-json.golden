@@ -1,0 +1,18 @@
+[
+  {
+    "id": "usmkc-abc123",
+    "name": "kafka-cluster-1",
+    "confluent_platform_kafka_cluster_id": "4k0R9d1GTS5tI9f4Y2xZ0Q",
+    "cloud": "AWS",
+    "region": "us-west-2",
+    "environment": "env-596"
+  },
+  {
+    "id": "usmkc-def456",
+    "name": "kafka-cluster-2",
+    "confluent_platform_kafka_cluster_id": "5k0R9d1GTS5tI9f4Y2xZ0Q",
+    "cloud": "Azure",
+    "region": "eastus",
+    "environment": "env-596"
+  }
+]
