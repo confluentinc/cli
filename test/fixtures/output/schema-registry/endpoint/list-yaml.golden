@@ -3,6 +3,7 @@ private_endpoint_url: http://127.0.0.1:1029
 private_regional_endpoint_urls:
     n-abcde2: https://lsrc-1234-n-abcde2.eastus.azure.confluent.cloud
     n-abcde6: https://lsrc-1234-n-abcde6.eu-west-1.aws.confluent.cloud
+    n-abcde7: https://lsrc-1234-n-abcde7.eastus.azure.confluent.cloud
     us-east-1: https://lsrc-stk1d.us-east-1.aws.private.stag.cpdev.cloud
     us-west-2: https://lsrc-stgvk1d.us-west-2.aws.private.stag.cpdev.cloud
 catalog_endpoint_url: http://127.0.0.1:1030

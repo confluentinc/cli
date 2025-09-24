@@ -41,6 +41,12 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 		return err
 	}
 
+	usmRoles, err := c.namespaceRoles(optional.NewString(usmNamespace.Value()))
+	if err != nil {
+		return err
+	}
+	roles = append(roles, usmRoles...)
+
 	if output.GetFormat(cmd).IsSerialized() {
 		return output.SerializedOutput(cmd, roles)
 	}
