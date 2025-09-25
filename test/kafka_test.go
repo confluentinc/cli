@@ -58,7 +58,8 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster update lkc-update-standard --max-ecku 2", fixture: "kafka/cluster/update-standard-max-ecku.golden"},
 		// Type upgrade tests
 		{args: "kafka cluster update lkc-update --type standard", fixture: "kafka/cluster/update-type-success.golden"},
-		{args: "kafka cluster update lkc-update --type Standard", fixture: "kafka/cluster/update-type-success.golden"},
+		{args: "kafka cluster update lkc-update --type standard --max-ecku 6", fixture: "kafka/cluster/update-type-max-ecku-success.golden"},
+		{args: "kafka cluster update lkc-update --type standard --max-ecku 35", fixture: "kafka/cluster/update-type-max-ecku-fail.golden", exitCode: 1},
 		{args: "kafka cluster update lkc-update --type", fixture: "kafka/cluster/update-type-empty-error.golden", exitCode: 1},
 		{args: "kafka cluster update lkc-update --type basic", fixture: "kafka/cluster/update-type-invalid-error.golden", exitCode: 1},
 

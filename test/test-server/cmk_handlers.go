@@ -282,7 +282,18 @@ func handleCmkKafkaClusterUpdateRequest(t *testing.T) http.HandlerFunc {
 						Kind: "Standard",
 					},
 				}
-				err := json.NewEncoder(w).Encode(cluster)
+
+				if req.Spec.Config.CmkV2Standard.MaxEcku == nil {
+					cluster.Spec.Config.CmkV2Standard.SetMaxEcku(10)
+				} else if *req.Spec.Config.CmkV2Standard.MaxEcku > 10 {
+					err = writeError(w, "failed to update Kafka cluster: The specified Max eCKU exceeds the maximum allowed limit of 10 eCKUs for STANDARD SKU")
+					require.NoError(t, err)
+					return
+				} else {
+					cluster.Spec.Config.CmkV2Standard.SetMaxEcku(*req.Spec.Config.CmkV2Standard.MaxEcku)
+				}
+
+				err = json.NewEncoder(w).Encode(cluster)
 				require.NoError(t, err)
 				return
 			}
@@ -334,6 +345,13 @@ func handleCmkKafkaStandardClusterUpdateRequest(t *testing.T) http.HandlerFunc {
 					},
 				}
 				err := json.NewEncoder(w).Encode(cluster)
+
+				if req.Spec.Config.CmkV2Standard.MaxEcku != nil && *req.Spec.Config.CmkV2Standard.MaxEcku > 10 {
+					err = writeError(w, "failed to update Kafka cluster: The specified Max eCKU exceeds the maximum allowed limit of 10 eCKUs for STANDARD SKU")
+					require.NoError(t, err)
+					return
+				}
+
 				require.NoError(t, err)
 				return
 			}
