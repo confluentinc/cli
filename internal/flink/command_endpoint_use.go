@@ -116,18 +116,13 @@ func validateUserProvidedFlinkEndpoint(endpoint, cloud, region string, c *comman
 	}
 
 	// Check if the endpoint is PRIVATE associated with CCN
-	// These endpoints are currently only available for AWS and Azure (with PrivateLink connection type), so we filter accordingly
-	// TODO: Remove these restrictions once we support more connection types
+	// These endpoints are currently only available for AWS and Azure, so we filter accordingly
 	var networks []networkingv1.NetworkingV1Network
 	if cloud != pcloud.Gcp {
 		networks, err = c.V2Client.ListNetworks(c.Context.GetCurrentEnvironment(), nil, []string{cloud}, []string{region}, nil, []string{"READY"}, nil)
 		if err != nil {
 			log.CliLogger.Debugf("Error listing networks: %v", err)
 			return false
-		}
-
-		if cloud == pcloud.Azure {
-			networks = filterPrivateLinkNetworks(networks)
 		}
 	}
 

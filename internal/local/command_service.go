@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -79,6 +80,9 @@ func NewServiceLogCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 
 func (c *command) runServiceLogCommand(cmd *cobra.Command, _ []string) error {
 	service := cmd.Parent().Name()
+	if service == "prometheus" || service == "alertmanager" {
+		return nil
+	}
 
 	exists, err := c.cc.HasLogFile(service)
 	if err != nil {
@@ -169,6 +173,9 @@ func NewServiceStatusCommand(service string, prerunner cmd.PreRunner) *cobra.Com
 
 func (c *command) runServiceStatusCommand(cmd *cobra.Command, _ []string) error {
 	service := cmd.Parent().Name()
+	if service == "prometheus" || service == "alertmanager" {
+		return nil
+	}
 
 	if err := c.notifyConfluentCurrent(); err != nil {
 		return err
@@ -191,6 +198,9 @@ func NewServiceStopCommand(service string, prerunner cmd.PreRunner) *cobra.Comma
 
 func (c *command) runServiceStopCommand(cmd *cobra.Command, _ []string) error {
 	service := cmd.Parent().Name()
+	if service == "prometheus" || service == "alertmanager" {
+		return nil
+	}
 
 	if err := c.notifyConfluentCurrent(); err != nil {
 		return err
@@ -226,6 +236,9 @@ func NewServiceTopCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 
 func (c *command) runServiceTopCommand(cmd *cobra.Command, _ []string) error {
 	service := cmd.Parent().Name()
+	if service == "prometheus" || service == "alertmanager" {
+		return nil
+	}
 
 	isUp, err := c.isRunning(service)
 	if err != nil {
@@ -258,6 +271,9 @@ func NewServiceVersionCommand(service string, prerunner cmd.PreRunner) *cobra.Co
 
 func (c *command) runServiceVersionCommand(cmd *cobra.Command, _ []string) error {
 	service := cmd.Parent().Name()
+	if service == "prometheus" || service == "alertmanager" {
+		return nil
+	}
 
 	zookeeperMode, err := c.isZookeeperMode()
 	if err != nil {
@@ -293,8 +309,9 @@ func (c *command) startService(service, configFile string) error {
 	if err := c.configService(service, configFile); err != nil {
 		return err
 	}
-
-	output.Printf(c.Config.EnableColor, "Starting %s\n", writeServiceName(service))
+	if service != "alertmanager" && service != "prometheus" {
+		output.Printf(c.Config.EnableColor, "Starting %s\n", writeServiceName(service))
+	}
 
 	spin := spinner.New()
 	spin.Start()
@@ -312,8 +329,12 @@ func (c *command) configService(service, configFile string) error {
 	if err != nil {
 		return err
 	}
-
-	port, err := c.ch.ReadServicePort(service, zookeeperMode)
+	var port int
+	if c.isC3(service) {
+		port, err = c.c3h.ReadServicePortC3(service)
+	} else {
+		port, err = c.ch.ReadServicePort(service, zookeeperMode)
+	}
 	if err != nil {
 		if err.Error() != "no port specified" {
 			return err
@@ -323,10 +344,18 @@ func (c *command) configService(service, configFile string) error {
 	}
 
 	var data []byte
-	if configFile == "" {
-		data, err = c.ch.ReadServiceConfig(service, zookeeperMode)
+	if c.isC3(service) {
+		if configFile == "" {
+			data, err = c.c3h.ReadServiceConfigC3(service)
+		} else {
+			data, err = os.ReadFile(configFile)
+		}
 	} else {
-		data, err = os.ReadFile(configFile)
+		if configFile == "" {
+			data, err = c.ch.ReadServiceConfig(service, zookeeperMode)
+		} else {
+			data, err = os.ReadFile(configFile)
+		}
 	}
 	if err != nil {
 		return err
@@ -337,10 +366,18 @@ func (c *command) configService(service, configFile string) error {
 		return err
 	}
 
-	data = injectConfig(data, config)
+	if service != "alertmanager" && service != "prometheus" {
+		data = injectConfig(data, config)
+	}
 
-	if err := c.cc.WriteConfig(service, data); err != nil {
-		return err
+	if c.isC3(service) {
+		if err := c.cc.WriteConfigC3(service, data); err != nil {
+			return err
+		}
+	} else {
+		if err := c.cc.WriteConfig(service, data); err != nil {
+			return err
+		}
 	}
 
 	logs, err := c.cc.GetLogsDir(service)
@@ -356,6 +393,13 @@ func (c *command) configService(service, configFile string) error {
 	}
 
 	return nil
+}
+
+func (c *command) isC3(service string) bool {
+	version1, _ := c.ch.GetConfluentVersion()
+	verMajor := strings.Split(version1, ".")
+	versionInt, _ := strconv.Atoi(verMajor[0])
+	return service == "alertmanager" || service == "prometheus" || (service == "control-center" && versionInt >= 8)
 }
 
 func injectConfig(data []byte, config map[string]string) []byte {
@@ -387,14 +431,27 @@ func injectConfig(data []byte, config map[string]string) []byte {
 }
 
 func (c *command) startProcess(service string) error {
-	scriptFile, err := c.ch.GetServiceScript("start", service)
+	var scriptFile string
+	var err error
+	if c.isC3(service) {
+		scriptFile, err = c.c3h.GetServiceScriptC3("start", service)
+	} else {
+		scriptFile, err = c.ch.GetServiceScript("start", service)
+	}
 	if err != nil {
 		return err
 	}
-
-	configFile, err := c.cc.GetConfigFile(service)
-	if err != nil {
-		return err
+	var configFile string
+	if c.isC3(service) {
+		configFile, err = c.cc.GetConfigFileC3(service)
+		if err != nil {
+			return err
+		}
+	} else {
+		configFile, err = c.cc.GetConfigFile(service)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = c.setupMetaProperties(service)
@@ -403,6 +460,12 @@ func (c *command) startProcess(service string) error {
 	}
 
 	start := exec.Command(scriptFile, configFile)
+	if c.isC3(service) {
+		start.Env = append(os.Environ(), "LOCAL_MODE=true")
+	}
+	if service == "alertmanager" {
+		start.Env = append(os.Environ(), "ALERTMANAGER_PORT=9098")
+	}
 
 	logFile, err := c.cc.GetLogFile(service)
 	if err != nil {
@@ -413,13 +476,13 @@ func (c *command) startProcess(service string) error {
 	if err != nil {
 		return err
 	}
+
 	start.Stdout = fd
 	start.Stderr = fd
 
 	if err := start.Start(); err != nil {
 		return err
 	}
-
 	if err := c.cc.WritePid(service, start.Process.Pid); err != nil {
 		return err
 	}
@@ -474,8 +537,9 @@ func (c *command) stopService(service string) error {
 	if !isUp {
 		return c.printStatus(service)
 	}
-
-	output.Printf(c.Config.EnableColor, "Stopping %s\n", writeServiceName(service))
+	if service != "alertmanager" && service != "prometheus" {
+		output.Printf(c.Config.EnableColor, "Stopping %s\n", writeServiceName(service))
+	}
 
 	spin := spinner.New()
 	spin.Start()
@@ -489,7 +553,14 @@ func (c *command) stopService(service string) error {
 }
 
 func (c *command) stopProcess(service string) error {
-	scriptFile, err := c.ch.GetServiceScript("stop", service)
+	var scriptFile string
+	var err error
+	if c.isC3(service) {
+		scriptFile, err = c.c3h.GetServiceScriptC3("stop", service)
+	} else {
+		scriptFile, err = c.ch.GetServiceScript("stop", service)
+	}
+
 	if err != nil {
 		return err
 	}
@@ -585,6 +656,9 @@ func (c *command) killProcess(service string) error {
 }
 
 func (c *command) printStatus(service string) error {
+	if service == "alertmanager" || service == "prometheus" {
+		return nil
+	}
 	isUp, err := c.isRunning(service)
 	if err != nil {
 		return err

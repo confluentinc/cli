@@ -136,10 +136,6 @@ func (c *command) createArtifact(cmd *cobra.Command, args []string) error {
 		if err := utils.UploadFileToAzureBlob(resp.GetUploadUrl(), artifactFile, strings.ToLower(resp.GetContentFormat())); err != nil {
 			return err
 		}
-	} else if strings.ToLower(cloud) == "gcp" {
-		if err := utils.UploadFileToGoogleCloudStorage(resp.GetUploadUrl(), artifactFile, strings.ToLower(resp.GetContentFormat())); err != nil {
-			return err
-		}
 	} else {
 		if err := utils.UploadFile(resp.GetUploadUrl(), artifactFile, resp.GetUploadFormData()); err != nil {
 			return err

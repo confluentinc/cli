@@ -2,7 +2,6 @@ package flink
 
 import (
 	"fmt"
-	"slices"
 	"sort"
 	"strings"
 
@@ -105,17 +104,12 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 
 	// 3 - List all the CCN endpoint with the list of "READY" network domains
 	// Note the cloud and region have to be empty slice instead of `nil` in case of no filter
-	// These endpoints are currently only available for AWS and Azure (with PrivateLink connection type), so we filter accordingly
-	// TODO: Remove these restrictions once we support more connection types
+	// These endpoints are currently only available for AWS and Azure, so we filter accordingly
 	var networks []networkingv1.NetworkingV1Network
 	if cloud != pcloud.Gcp {
 		networks, err = c.V2Client.ListNetworks(environmentId, nil, []string{cloud}, []string{region}, nil, []string{"READY"}, nil)
 		if err != nil {
 			return fmt.Errorf("unable to list Flink endpoint, failed to list networks: %w", err)
-		}
-
-		if cloud == pcloud.Azure {
-			networks = filterPrivateLinkNetworks(networks)
 		}
 	}
 
@@ -182,15 +176,4 @@ func buildCloudRegionKeyFilterMapFromPrivateLinkAttachments(platts []networkingp
 		result[compositeKey] = true
 	}
 	return result
-}
-
-// We filter locally to get around a query parameter bug: https://confluentinc.atlassian.net/browse/TRAFFIC-19819
-func filterPrivateLinkNetworks(networks []networkingv1.NetworkingV1Network) []networkingv1.NetworkingV1Network {
-	var filteredNetworks []networkingv1.NetworkingV1Network
-	for _, network := range networks {
-		if slices.Contains(network.Spec.GetConnectionTypes(), "PRIVATELINK") || slices.Contains(network.Spec.GetConnectionTypes(), "privatelink") {
-			filteredNetworks = append(filteredNetworks, network)
-		}
-	}
-	return filteredNetworks
 }
