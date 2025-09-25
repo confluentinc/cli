@@ -1,78 +1,51 @@
-- apiversion: ""
+- apiVersion: ""
   kind: ""
   metadata:
     name: test-stmt1
-    creationtimestamp: 2025-08-05 12:00:00 +0000 UTC
-    updatetimestamp: null
-    uid: null
-    labels: null
-    annotations: null
+    creationTimestamp: 2025-08-05 12:00:00 +0000 UTC
   spec:
     statement: SELECT * FROM test_table
-    properties: null
-    flinkconfiguration: null
-    computepoolname: test-pool
+    computePoolName: test-pool
     parallelism: 1
     stopped: false
   status:
     phase: PENDING
     detail: Statement is pending execution.
     traits:
-        sqlkind: SELECT
-        isbounded: false
-        isappendonly: false
-        upsertcolumns: null
-        schema: null
-  result: null
-- apiversion: ""
+        sqlKind: SELECT
+        isBounded: false
+        isAppendOnly: false
+- apiVersion: ""
   kind: ""
   metadata:
     name: test-stmt2
-    creationtimestamp: 2025-08-05 12:00:00 +0000 UTC
-    updatetimestamp: null
-    uid: null
-    labels: null
-    annotations: null
+    creationTimestamp: 2025-08-05 12:00:00 +0000 UTC
   spec:
     statement: SELECT * FROM test_table
-    properties: null
-    flinkconfiguration: null
-    computepoolname: test-pool
+    computePoolName: test-pool
     parallelism: 2
     stopped: false
   status:
     phase: PENDING
     detail: Statement is pending execution.
     traits:
-        sqlkind: SELECT
-        isbounded: false
-        isappendonly: false
-        upsertcolumns: null
-        schema: null
-  result: null
-- apiversion: ""
+        sqlKind: SELECT
+        isBounded: false
+        isAppendOnly: false
+- apiVersion: ""
   kind: ""
   metadata:
     name: test-stmt3
-    creationtimestamp: 2025-08-05 12:00:00 +0000 UTC
-    updatetimestamp: null
-    uid: null
-    labels: null
-    annotations: null
+    creationTimestamp: 2025-08-05 12:00:00 +0000 UTC
   spec:
     statement: SELECT * FROM test_table
-    properties: null
-    flinkconfiguration: null
-    computepoolname: test-pool
+    computePoolName: test-pool
     parallelism: 4
     stopped: true
   status:
     phase: PENDING
     detail: Statement is pending execution.
     traits:
-        sqlkind: SELECT
-        isbounded: false
-        isappendonly: false
-        upsertcolumns: null
-        schema: null
-  result: null
+        sqlKind: SELECT
+        isBounded: false
+        isAppendOnly: false

@@ -3,12 +3,12 @@
     "apiVersion": "",
     "kind": "",
     "metadata": {
-      "creationTimestamp": "2025-03-12 23:42:00 +0000 UTC",
-      "name": "test-pool1"
+      "name": "test-pool1",
+      "creationTimestamp": "2025-03-12 23:42:00 +0000 UTC"
     },
     "spec": {
-      "clusterSpec": null,
-      "type": "DEDICATED"
+      "type": "DEDICATED",
+      "clusterSpec": null
     },
     "status": {
       "phase": "RUNNING"
@@ -18,12 +18,12 @@
     "apiVersion": "",
     "kind": "",
     "metadata": {
-      "creationTimestamp": "2025-03-12 23:42:00 +0000 UTC",
-      "name": "test-pool2"
+      "name": "test-pool2",
+      "creationTimestamp": "2025-03-12 23:42:00 +0000 UTC"
     },
     "spec": {
-      "clusterSpec": null,
-      "type": "DEDICATED"
+      "type": "DEDICATED",
+      "clusterSpec": null
     },
     "status": {
       "phase": "PENDING"
@@ -33,12 +33,12 @@
     "apiVersion": "",
     "kind": "",
     "metadata": {
-      "creationTimestamp": "2025-03-12 23:42:00 +0000 UTC",
-      "name": "test-pool3"
+      "name": "test-pool3",
+      "creationTimestamp": "2025-03-12 23:42:00 +0000 UTC"
     },
     "spec": {
-      "clusterSpec": null,
-      "type": "DEDICATED"
+      "type": "DEDICATED",
+      "clusterSpec": null
     },
     "status": {
       "phase": "COMPLETE"
