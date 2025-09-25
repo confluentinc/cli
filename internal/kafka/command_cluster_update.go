@@ -140,13 +140,13 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf(`clusters can only be upgraded from "Basic" to "Standard"`)
 		}
 
-		// When upgrading type without specifying max-ecku, preserve current max-ecku or let API use default
-		var currentMaxEcku *int32
-		if currentConfig.CmkV2Basic != nil && currentConfig.CmkV2Basic.MaxEcku != nil {
-			currentMaxEcku = currentConfig.CmkV2Basic.MaxEcku
+		// When upgrading type without specifying max-ecku, use default max-ecku value for Standard cluster returned by API
+		// Set the new cluster type
+		update.Spec.Config = &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{
+			CmkV2Standard: &cmkv2.CmkV2Standard{
+				Kind: "Standard",
+			},
 		}
-
-		update.Spec.Config = c.createClusterConfigWithOptionalMaxEcku("Standard", currentMaxEcku)
 	}
 
 	updatedCluster, err := c.V2Client.UpdateKafkaCluster(id, update)
@@ -209,47 +209,6 @@ func (c *clusterCommand) createClusterConfig(clusterType string, maxEcku int32) 
 			CmkV2Basic: &cmkv2.CmkV2Basic{
 				Kind:    "Basic",
 				MaxEcku: cmkv2.PtrInt32(maxEcku),
-			},
-		}
-	}
-}
-
-// createClusterConfigWithOptionalMaxEcku creates cluster configuration with optional max-ecku (nil means API default)
-func (c *clusterCommand) createClusterConfigWithOptionalMaxEcku(clusterType string, maxEcku *int32) *cmkv2.CmkV2ClusterSpecUpdateConfigOneOf {
-	switch clusterType {
-	case "Basic":
-		return &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{
-			CmkV2Basic: &cmkv2.CmkV2Basic{
-				Kind:    "Basic",
-				MaxEcku: maxEcku,
-			},
-		}
-	case "Standard":
-		return &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{
-			CmkV2Standard: &cmkv2.CmkV2Standard{
-				Kind:    "Standard",
-				MaxEcku: maxEcku,
-			},
-		}
-	case "Enterprise":
-		return &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{
-			CmkV2Enterprise: &cmkv2.CmkV2Enterprise{
-				Kind:    "Enterprise",
-				MaxEcku: maxEcku,
-			},
-		}
-	case "Freight":
-		return &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{
-			CmkV2Freight: &cmkv2.CmkV2Freight{
-				Kind:    "Freight",
-				MaxEcku: maxEcku,
-			},
-		}
-	default:
-		return &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{
-			CmkV2Basic: &cmkv2.CmkV2Basic{
-				Kind:    "Basic",
-				MaxEcku: maxEcku,
 			},
 		}
 	}
