@@ -5,8 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v4/pkg/config"
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
+
+	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
 type statementOut struct {

@@ -3,8 +3,9 @@ package flink
 import (
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
+
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
 type flinkEnvironmentOutput struct {
