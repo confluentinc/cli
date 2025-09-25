@@ -228,8 +228,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.3.0 h1:COUuWIW9GLz
 github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.3.0/go.mod h1:VHpsi0yWBEhN6Hp2oOyGkRaNJjtnaVfYjpbtB8pnNnk=
 github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0 h1:T9e7lNj/VjxE89+tcpX2RS2NE4rWNWbJjxcO2yehEqM=
 github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0/go.mod h1:7gqwWFIyj2MAGpL/kf6SGXm/pi2Z6qpMJIjKlgEEhhg=
-github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.24.0 h1:PLmZLAMnY+zgxw687jemgMlqMPmu6OgJssxGlvsjp8M=
-github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.24.0/go.mod h1:Sb2O1jlHfLgMrZiqLAPqws0WjAVd4HgocZh3D7EZN5k=
+github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.0.0-20250909043602-f80bee0eb280 h1:GFVI3pGckhpP66Xb05usB8txzubnnoigZHp292ax5Rg=
+github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.0.0-20250909043602-f80bee0eb280/go.mod h1:b8v8EIBtpQDx0zAxCpGxhuSWBRAwh/+PRFNtaBR5P7c=
 github.com/confluentinc/ccloud-sdk-go-v2/ksql v0.2.0 h1:g6OHa1iW3HO3N/YiTAL9Q6Y7rdjMBAjOPYK37akTt0M=
 github.com/confluentinc/ccloud-sdk-go-v2/ksql v0.2.0/go.mod h1:0LAvd4VqlaRwKU4yvDEkVCtV43yNezt56+hBe9Lmg7Q=
 github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0 h1:jIXXhGi+Xn+XYFCErnMvd035QijbYXla1Bo8W7V7lFM=

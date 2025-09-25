@@ -1,0 +1,10 @@
+- cluster: lkc-1234
+  share_group: share-group-1
+  coordinator: broker-1
+  state: STABLE
+  consumer_count: 2
+- cluster: lkc-1234
+  share_group: share-group-2
+  coordinator: broker-2
+  state: EMPTY
+  consumer_count: 0
