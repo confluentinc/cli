@@ -347,6 +347,7 @@ func (s *CLITestSuite) TestFlinkStatementDescribeOnPrem() {
 		{args: "flink statement describe test-stmt --environment default", fixture: "flink/statement/describe-success.golden"},
 		{args: "flink statement describe test-stmt --environment default -o json", fixture: "flink/statement/describe-success-json.golden"},
 		{args: "flink statement describe test-stmt --environment default -o yaml", fixture: "flink/statement/describe-success-yaml.golden"},
+		{args: "flink statement describe shell-test-stmt --environment default -o json", fixture: "flink/statement/describe-success-completed-json.golden"},
 		// failure
 		{args: "flink statement describe test-stmt", fixture: "flink/statement/describe-env-missing-failure.golden", exitCode: 1},
 		{args: "flink statement describe test-stmt --environment non-exist", fixture: "flink/statement/describe-non-exist-env-failure.golden", exitCode: 1},
