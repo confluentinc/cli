@@ -79,7 +79,7 @@ func TestStringSerdes(t *testing.T) {
 
 	deserializationProvider, _ := GetDeserializationProvider(stringSchemaName)
 	data = []byte{115, 111, 109, 101, 83, 116, 114, 105, 110, 103}
-	str, err := deserializationProvider.Deserialize("", data)
+	str, err := deserializationProvider.Deserialize("", nil, data)
 	req.Nil(err)
 	req.Equal(str, "someString")
 }
@@ -122,7 +122,7 @@ func TestAvroSerdesValid(t *testing.T) {
 	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
-	actualString, err := deserializationProvider.Deserialize("topic1", data)
+	actualString, err := deserializationProvider.Deserialize("topic1", nil, data)
 	req.Nil(err)
 
 	req.Equal(expectedString, actualString)
@@ -164,7 +164,7 @@ func TestAvroSerdesInvalid(t *testing.T) {
 	_, err = serializationProvider.Serialize("topic1", brokenString)
 	req.Regexp(`cannot decode textual record "myRecord": short buffer`, err)
 
-	_, err = deserializationProvider.Deserialize("topic1", brokenBytes)
+	_, err = deserializationProvider.Deserialize("topic1", nil, brokenBytes)
 	req.Regexp("unexpected EOF$", err)
 
 	invalidString := `{"f2": "abc"}`
@@ -210,7 +210,7 @@ func TestAvroSerdesNestedValid(t *testing.T) {
 	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
-	actualString, err := deserializationProvider.Deserialize("topic1", expectedBytes)
+	actualString, err := deserializationProvider.Deserialize("topic1", nil, expectedBytes)
 	req.Nil(err)
 
 	req.Equal(expectedString, actualString)
@@ -270,7 +270,7 @@ func TestAvroSerdesValidWithRuleSet(t *testing.T) {
 	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
-	actualString, err := deserializationProvider.Deserialize("topic1", data)
+	actualString, err := deserializationProvider.Deserialize("topic1", nil, data)
 	req.Nil(err)
 
 	req.Equal(expectedString, actualString)
@@ -315,7 +315,7 @@ func TestJsonSerdesValid(t *testing.T) {
 
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
-	actualString, err := deserializationProvider.Deserialize("topic1", expectedBytes)
+	actualString, err := deserializationProvider.Deserialize("topic1", nil, expectedBytes)
 	req.Nil(err)
 	req.Equal(expectedString, actualString)
 }
@@ -379,7 +379,7 @@ func TestJsonSerdesReference(t *testing.T) {
 
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
-	actualString, err := deserializationProvider.Deserialize("topic1", expectedBytes)
+	actualString, err := deserializationProvider.Deserialize("topic1", nil, expectedBytes)
 	req.Nil(err)
 	req.Equal(expectedString, actualString)
 }
@@ -418,8 +418,8 @@ func TestJsonSerdesInvalid(t *testing.T) {
 	_, err = serializationProvider.Serialize("topic1", brokenString)
 	req.Regexp("unexpected end of JSON input$", err)
 
-	_, err = deserializationProvider.Deserialize("topic1", brokenBytes)
-	req.Regexp("unknown magic byte$", err)
+	_, err = deserializationProvider.Deserialize("topic1", nil, brokenBytes)
+	req.Regexp("unknown magic byte[\\s\\d]*$", err)
 
 	invalidString := `{"f2": "abc"}`
 	invalidBytes := []byte{123, 34, 102, 50, 34, 58, 34, 97, 115, 100, 34, 125}
@@ -427,8 +427,8 @@ func TestJsonSerdesInvalid(t *testing.T) {
 	_, err = serializationProvider.Serialize("topic1", invalidString)
 	req.Regexp("missing properties: 'f1'$", err)
 
-	_, err = deserializationProvider.Deserialize("topic1", invalidBytes)
-	req.Regexp("unknown magic byte$", err)
+	_, err = deserializationProvider.Deserialize("topic1", nil, invalidBytes)
+	req.Regexp("unknown magic byte[\\s\\d]*$", err)
 }
 
 func TestJsonSerdesNestedValid(t *testing.T) {
@@ -471,7 +471,7 @@ func TestJsonSerdesNestedValid(t *testing.T) {
 	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
-	actualString, err := deserializationProvider.Deserialize("topic1", expectedBytes)
+	actualString, err := deserializationProvider.Deserialize("topic1", nil, expectedBytes)
 	req.Nil(err)
 
 	req.Equal(expectedString, actualString)
@@ -530,7 +530,7 @@ func TestJsonSerdesValidWithRuleSet(t *testing.T) {
 	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
-	actualString, err := deserializationProvider.Deserialize("topic1", data)
+	actualString, err := deserializationProvider.Deserialize("topic1", nil, data)
 	req.Nil(err)
 
 	req.Equal(expectedString, actualString)
@@ -574,7 +574,7 @@ func TestProtobufSerdesValid(t *testing.T) {
 	req.Nil(err)
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
-	actualString, err := deserializationProvider.Deserialize("topic1", data)
+	actualString, err := deserializationProvider.Deserialize("topic1", nil, data)
 	req.Nil(err)
 	req.JSONEq(expectedString, actualString)
 }
@@ -650,7 +650,7 @@ message Person {
 	req.Nil(err)
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{"address.proto": referencePath})
 	req.Nil(err)
-	str, err := deserializationProvider.Deserialize("topic1", data)
+	str, err := deserializationProvider.Deserialize("topic1", nil, data)
 	req.Nil(err)
 	req.JSONEq(str, expectedString)
 }
@@ -695,8 +695,8 @@ func TestProtobufSerdesInvalid(t *testing.T) {
 	_, err = serializationProvider.Serialize("topic1", brokenString)
 	req.EqualError(err, "the protobuf document is invalid")
 
-	_, err = deserializationProvider.Deserialize("topic1", brokenBytes)
-	req.Regexp("^failed to deserialize payload:.*Subject Not Found$", err)
+	_, err = deserializationProvider.Deserialize("topic1", nil, brokenBytes)
+	req.Regexp("^failed to deserialize payload: parsed invalid message index count", err)
 
 	invalidString := `{"page":"abc"}`
 	invalidBytes := []byte{0, 12, 3, 97, 98, 99, 16, 1, 24, 2}
@@ -704,8 +704,8 @@ func TestProtobufSerdesInvalid(t *testing.T) {
 	_, err = serializationProvider.Serialize("topic1", invalidString)
 	req.EqualError(err, "the protobuf document is invalid")
 
-	_, err = deserializationProvider.Deserialize("topic1", invalidBytes)
-	req.Regexp("^failed to deserialize payload:.*Subject Not Found$", err)
+	_, err = deserializationProvider.Deserialize("topic1", nil, invalidBytes)
+	req.Regexp("^failed to deserialize payload: parsed invalid message index count", err)
 }
 
 func TestProtobufSerdesNestedValid(t *testing.T) {
@@ -754,7 +754,7 @@ func TestProtobufSerdesNestedValid(t *testing.T) {
 	req.Nil(err)
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
-	actualString, err := deserializationProvider.Deserialize("topic1", data)
+	actualString, err := deserializationProvider.Deserialize("topic1", nil, data)
 	req.Nil(err)
 	req.JSONEq(expectedString, actualString)
 }
@@ -823,7 +823,7 @@ func TestProtobufSerdesValidWithRuleSet(t *testing.T) {
 	req.Nil(err)
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
-	actualString, err := deserializationProvider.Deserialize("topic1", data)
+	actualString, err := deserializationProvider.Deserialize("topic1", nil, data)
 	req.Nil(err)
 	req.JSONEq(expectedString, actualString)
 }

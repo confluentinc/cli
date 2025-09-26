@@ -327,7 +327,7 @@ func (c *command) getMessageExamples(consumer *ckgo.Consumer, topicName, content
 		}
 	}
 
-	jsonMessage, err := deserializationProvider.Deserialize(topicName, value)
+	jsonMessage, err := deserializationProvider.Deserialize(topicName, message.Headers, value)
 	if err != nil {
 		return nil, fmt.Errorf("failed to deserialize example: %v", err)
 	}

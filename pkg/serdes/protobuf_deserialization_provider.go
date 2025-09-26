@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	gproto "google.golang.org/protobuf/proto"
 
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/protobuf"
@@ -89,7 +90,7 @@ func (p *ProtobufDeserializationProvider) LoadSchema(schemaPath string, referenc
 	return nil
 }
 
-func (p *ProtobufDeserializationProvider) Deserialize(topic string, payload []byte) (string, error) {
+func (p *ProtobufDeserializationProvider) Deserialize(topic string, headers []kafka.Header, payload []byte) (string, error) {
 	// Register the protobuf message
 	err := p.deser.ProtoRegistry.RegisterMessage(p.message.ProtoReflect().Type())
 	re := regexp.MustCompile(`message .* is already registered`)
