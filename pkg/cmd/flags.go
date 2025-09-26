@@ -67,7 +67,7 @@ func AddByokKeyFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 }
 
 func AutocompleteByokKeyIds(client *ccloudv2.Client) []string {
-	keys, err := client.ListByokKeys("", "")
+	keys, err := client.ListByokKeys("", "", "", "", "", "")
 	if err != nil {
 		return nil
 	}
