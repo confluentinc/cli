@@ -1,39 +1,30 @@
-- apiversion: ""
+- apiVersion: ""
   kind: ""
   metadata:
     name: test-pool1
-    creationtimestamp: 2025-03-12 23:42:00 +0000 UTC
-    uid: null
-    labels: null
-    annotations: null
+    creationTimestamp: 2025-03-12 23:42:00 +0000 UTC
   spec:
     type: DEDICATED
-    clusterspec: {}
+    clusterSpec: {}
   status:
     phase: RUNNING
-- apiversion: ""
+- apiVersion: ""
   kind: ""
   metadata:
     name: test-pool2
-    creationtimestamp: 2025-03-12 23:42:00 +0000 UTC
-    uid: null
-    labels: null
-    annotations: null
+    creationTimestamp: 2025-03-12 23:42:00 +0000 UTC
   spec:
     type: DEDICATED
-    clusterspec: {}
+    clusterSpec: {}
   status:
     phase: PENDING
-- apiversion: ""
+- apiVersion: ""
   kind: ""
   metadata:
     name: test-pool3
-    creationtimestamp: 2025-03-12 23:42:00 +0000 UTC
-    uid: null
-    labels: null
-    annotations: null
+    creationTimestamp: 2025-03-12 23:42:00 +0000 UTC
   spec:
     type: DEDICATED
-    clusterspec: {}
+    clusterSpec: {}
   status:
     phase: COMPLETE
