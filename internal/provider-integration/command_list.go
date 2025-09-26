@@ -12,7 +12,7 @@ func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List provider integrations.",
-		Long:  "List provider integrations, optionally filtered by cloud provider.",
+		Long:  "List provider integrations, optionally filtered by cloud provider.\n\n⚠️  DEPRECATION NOTICE: This command will be deprecated in Q4 2025. Use 'confluent provider-integration v2 list' for new integrations.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 		Example: examples.BuildExampleString(

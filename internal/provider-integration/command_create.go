@@ -20,7 +20,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a provider integration.",
-		Long:  "Create a provider integration that allows users to manage access to public cloud service provider resources through Confluent resources.",
+		Long:  "Create a provider integration that allows users to manage access to public cloud service provider resources through Confluent resources.\n\n⚠️  DEPRECATION NOTICE: This command will be deprecated in Q4 2025. Use 'confluent provider-integration v2 create' for new integrations.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
@@ -102,7 +102,17 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	// `PimV1Integration.Usages` field is empty after create() and this field should be hidden
 	table.Add(&resp)
 	table.Filter([]string{"Id", "Name", "Provider", "Environment", "IamRoleArn", "ExternalId", "CustomerRoleArn"})
-	return table.Print()
+	if err := table.Print(); err != nil {
+		return err
+	}
+
+	// Add deprecation warning
+	cmd.Println("\n⚠️  DEPRECATION NOTICE:")
+	cmd.Println("This provider integration resource will be deprecated in Q4 2025.")
+	cmd.Println("Please prepare to upgrade to the new provider integration v2 resource when available:")
+	cmd.Println("  confluent provider-integration v2 create --help")
+
+	return nil
 }
 
 func getProviderConfigKind(provider string) (string, error) {

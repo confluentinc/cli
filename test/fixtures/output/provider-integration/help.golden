@@ -1,5 +1,7 @@
 Manage Confluent Cloud provider integrations.
 
+⚠️  DEPRECATION NOTICE: v1 provider integrations will be deprecated in Q4 2025. Use 'confluent provider-integration v2' for new integrations.
+
 Usage:
   confluent provider-integration [command]
 
@@ -11,6 +13,7 @@ Available Commands:
   delete      Delete one or more provider integrations.
   describe    Describe a provider integration.
   list        List provider integrations.
+  v2          Manage provider integrations (v2).
 
 Global Flags:
   -h, --help            Show help for this command.

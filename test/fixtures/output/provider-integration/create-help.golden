@@ -1,5 +1,7 @@
 Create a provider integration that allows users to manage access to public cloud service provider resources through Confluent resources.
 
+⚠️  DEPRECATION NOTICE: This command will be deprecated in Q4 2025. Use 'confluent provider-integration v2 create' for new integrations.
+
 Usage:
   confluent provider-integration create <name> [flags]
 

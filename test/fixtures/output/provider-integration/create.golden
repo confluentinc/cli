@@ -7,3 +7,8 @@
 | External ID       | 999219d4-37f4-49ac-abfe-d2b6528fb21b               |
 | Customer Role ARN | arn:aws:iam::037803949979:role/tarun-iam-test-role |
 +-------------------+----------------------------------------------------+
+
+⚠️  DEPRECATION NOTICE:
+This provider integration resource will be deprecated in Q4 2025.
+Please prepare to upgrade to the new provider integration v2 resource when available:
+  confluent provider-integration v2 create --help
