@@ -84,8 +84,12 @@ func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		defaultsStatementParsed.Detached = &cmfsdk.StatementDefaults{FlinkConfiguration: defaultsStatementParsedLocal.Detached.FlinkConfiguration}
-		defaultsStatementParsed.Interactive = &cmfsdk.StatementDefaults{FlinkConfiguration: defaultsStatementParsedLocal.Interactive.FlinkConfiguration}
+		if defaultsStatementParsedLocal.Detached != nil {
+			defaultsStatementParsed.Detached = &cmfsdk.StatementDefaults{FlinkConfiguration: defaultsStatementParsedLocal.Detached.FlinkConfiguration}
+		}
+		if defaultsStatementParsedLocal.Interactive != nil {
+			defaultsStatementParsed.Interactive = &cmfsdk.StatementDefaults{FlinkConfiguration: defaultsStatementParsedLocal.Interactive.FlinkConfiguration}
+		}
 	}
 
 	var postEnvironment cmfsdk.PostEnvironment
