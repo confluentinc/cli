@@ -29,35 +29,31 @@ func (c *command) catalogDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	outputCatalog, err := client.DescribeCatalog(c.createContext(), name)
+	sdkOutputCatalog, err := client.DescribeCatalog(c.createContext(), name)
 	if err != nil {
 		return err
 	}
 
 	if output.GetFormat(cmd) == output.Human {
 		table := output.NewTable(cmd)
-
-		// Populate the databases field with the names of the databases
-		databases := make([]string, 0, len(outputCatalog.GetSpec().KafkaClusters))
-		for _, kafkaCluster := range outputCatalog.GetSpec().KafkaClusters {
+		databases := make([]string, 0, len(sdkOutputCatalog.GetSpec().KafkaClusters))
+		for _, kafkaCluster := range sdkOutputCatalog.GetSpec().KafkaClusters {
 			databases = append(databases, kafkaCluster.DatabaseName)
 		}
-
-		// nil pointer handling for creation timestamp
 		var creationTime string
-		if outputCatalog.GetMetadata().CreationTimestamp != nil {
-			creationTime = *outputCatalog.GetMetadata().CreationTimestamp
+		if sdkOutputCatalog.GetMetadata().CreationTimestamp != nil {
+			creationTime = *sdkOutputCatalog.GetMetadata().CreationTimestamp
 		} else {
 			creationTime = ""
 		}
-
 		table.Add(&catalogOut{
 			CreationTime: creationTime,
-			Name:         outputCatalog.GetMetadata().Name,
+			Name:         sdkOutputCatalog.GetMetadata().Name,
 			Databases:    databases,
 		})
 		return table.Print()
 	}
 
-	return output.SerializedOutput(cmd, outputCatalog)
+	localCatalog := convertSdkCatalogToLocalCatalog(sdkOutputCatalog)
+	return output.SerializedOutput(cmd, localCatalog)
 }

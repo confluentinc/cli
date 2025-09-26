@@ -61,5 +61,7 @@ func (c *command) statementDescribeOnPrem(cmd *cobra.Command, args []string) err
 		})
 		return table.Print()
 	}
-	return output.SerializedOutput(cmd, outputStatement)
+
+	localStmt := convertSdkStatementToLocalStatement(outputStatement)
+	return output.SerializedOutput(cmd, localStmt)
 }
