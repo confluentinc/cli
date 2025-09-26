@@ -80,9 +80,12 @@ func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
 		}
 	}
 	if defaultsStatement != "" {
-		if defaultsStatementParsed, err = parseDefaultsAsGenericType[cmfsdk.AllStatementDefaults1](defaultsStatement, "statement"); err != nil {
+		defaultsStatementParsedLocal, err := parseDefaultsAsGenericType[LocalAllStatementDefaults1](defaultsStatement, "statement")
+		if err != nil {
 			return err
 		}
+		defaultsStatementParsed.Detached = &cmfsdk.StatementDefaults{FlinkConfiguration: defaultsStatementParsedLocal.Detached.FlinkConfiguration}
+		defaultsStatementParsed.Interactive = &cmfsdk.StatementDefaults{FlinkConfiguration: defaultsStatementParsedLocal.Interactive.FlinkConfiguration}
 	}
 
 	var postEnvironment cmfsdk.PostEnvironment
@@ -92,16 +95,17 @@ func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
 	postEnvironment.StatementDefaults = &defaultsStatementParsed
 	postEnvironment.ComputePoolDefaults = &defaultsComputePoolParsed
 
-	outputEnvironment, err := client.CreateEnvironment(c.createContext(), postEnvironment)
+	sdkOutputEnvironment, err := client.CreateEnvironment(c.createContext(), postEnvironment)
 	if err != nil {
 		return err
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		return printEnvironmentOutTable(cmd, outputEnvironment)
+		return printEnvironmentOutTable(cmd, sdkOutputEnvironment)
 	}
 
-	return output.SerializedOutput(cmd, outputEnvironment)
+	localEnv := convertSdkEnvironmentToLocalEnvironment(sdkOutputEnvironment)
+	return output.SerializedOutput(cmd, localEnv)
 }
 
 func parseDefaultsAsGenericType[T any](input, label string) (T, error) {
