@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2/tableflow/v1"
+	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/tableflow/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
@@ -35,11 +35,13 @@ func (c *command) newTopicEnableCommand() *cobra.Command {
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 
 	cmd.Flags().String("retention-ms", "604800000", "Specify the max age of snapshots (Iceberg) or versions (Delta) (snapshot/version expiration) to keep on the table in milliseconds for the Tableflow enabled topic.")
-	cmd.Flags().String("storage-type", "MANAGED", "Specify the storage type of the Kafka cluster, one of MANAGED or BYOS.")
+	cmd.Flags().String("storage-type", "MANAGED", "Specify the storage type of the Kafka cluster, one of MANAGED, BYOS or AzureDataLakeStorageGen2.")
 	cmd.Flags().String("provider-integration", "", "Specify the provider integration id.")
 	cmd.Flags().String("bucket-name", "", "Specify the name of the AWS S3 bucket.")
 	cmd.Flags().String("table-formats", "ICEBERG", "Specify the table formats, one of DELTA or ICEBERG.")
 	cmd.Flags().String("record-failure-strategy", "SUSPEND", "Specify the record failure strategy, one of SUSPEND or SKIP.")
+	cmd.Flags().String("storage-account-name", "", "Specify the storage account name for Azure Data Lake.")
+	cmd.Flags().String("container-name", "", "Specify the container name for Azure Data Lake.")
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -92,6 +94,16 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 	}
 	tableFormatsSlice := []string{tableFormats}
 
+	storageAccountName, err := cmd.Flags().GetString("storage-account-name")
+	if err != nil {
+		return err
+	}
+
+	containerName, err := cmd.Flags().GetString("container-name")
+	if err != nil {
+		return err
+	}
+
 	createTopic := tableflowv1.TableflowV1TableflowTopic{
 
 		Spec: &tableflowv1.TableflowV1TableflowTopicSpec{
@@ -123,6 +135,18 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 		createTopic.Spec.Storage = &tableflowv1.TableflowV1TableflowTopicSpecStorageOneOf{
 			TableflowV1ManagedStorageSpec: &tableflowv1.TableflowV1ManagedStorageSpec{
 				Kind: "Managed",
+			},
+		}
+	} else if strings.ToUpper(storageType) == "AZUREDATALAKESTORAGEGEN2" {
+		if !cmd.Flags().Changed("provider-integration") || !cmd.Flags().Changed("storage-account-name") || !cmd.Flags().Changed("container-name") {
+			return fmt.Errorf("provider-integration, storage-account-name and container-name flags are required when storage-type is AzureDataLakeStorageGen2.")
+		}
+		createTopic.Spec.Storage = &tableflowv1.TableflowV1TableflowTopicSpecStorageOneOf{
+			TableflowV1AzureAdlsSpec: &tableflowv1.TableflowV1AzureAdlsSpec{
+				Kind:                  "AzureDataLakeStorageGen2",
+				StorageAccountName:    *tableflowv1.PtrString(storageAccountName),
+				ContainerName:         *tableflowv1.PtrString(containerName),
+				ProviderIntegrationId: *tableflowv1.PtrString(providerIntegration),
 			},
 		}
 	} else {
