@@ -56,10 +56,4 @@ const (
 	// Provider constants
 	providerAzure = "azure"
 	providerGcp   = "gcp"
-
-	// Status constants
-	statusDraft    = "DRAFT"
-	statusCreated  = "CREATED"
-	statusActive   = "ACTIVE"
-	statusInactive = "INACTIVE"
 )

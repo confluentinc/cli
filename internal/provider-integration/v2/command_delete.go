@@ -43,7 +43,7 @@ func (c *command) newDeleteCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt")
+	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 

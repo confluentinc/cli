@@ -13,7 +13,7 @@ Delete provider integration "pi-123456" in environment "env-789012".
   $ confluent provider-integration v2 delete pi-123456 --environment env-789012
 
 Flags:
-      --force                Skip the deletion confirmation prompt
+      --force                Skip the deletion confirmation prompt.
       --environment string   Environment ID.
       --context string       CLI context name.
 

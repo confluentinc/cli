@@ -14,8 +14,8 @@ Create and configure GCP provider integration "gcp-integration" in environment "
 
 Flags:
       --cloud string                 REQUIRED: Cloud provider (azure or gcp).
-      --azure-tenant-id string       Azure Tenant ID (required for Azure provider)
-      --gcp-service-account string   Customer Google Service Account (required for GCP provider)
+      --azure-tenant-id string       Azure Tenant ID (required for Azure provider).
+      --gcp-service-account string   Customer Google Service Account (required for GCP provider).
       --environment string           Environment ID.
       --context string               CLI context name.
   -o, --output string                Specify the output format as "human", "json", or "yaml". (default "human")

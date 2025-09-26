@@ -19,6 +19,8 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	piv2 "github.com/confluentinc/ccloud-sdk-go-v2/provider-integration/v2"
 
@@ -47,8 +49,8 @@ func (c *command) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("cloud", "", fmt.Sprintf("Cloud provider (%s or %s).", providerAzure, providerGcp))
-	cmd.Flags().String("azure-tenant-id", "", "Azure Tenant ID (required for Azure provider)")
-	cmd.Flags().String("gcp-service-account", "", "Customer Google Service Account (required for GCP provider)")
+	cmd.Flags().String("azure-tenant-id", "", "Azure Tenant ID (required for Azure provider).")
+	cmd.Flags().String("gcp-service-account", "", "Customer Google Service Account (required for GCP provider).")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -177,7 +179,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 			}
 		}
 	} else {
-		cmd.Printf("\n✓ %s setup validated successfully!\n", strings.Title(cloud))
+		cmd.Printf("\n✓ %s setup validated successfully!\n", cases.Title(language.English).String(cloud))
 	}
 
 	// Display the final configuration

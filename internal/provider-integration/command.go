@@ -3,8 +3,8 @@ package providerintegration
 import (
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	v2 "github.com/confluentinc/cli/v4/internal/provider-integration/v2"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
 type command struct {

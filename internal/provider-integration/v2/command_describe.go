@@ -116,12 +116,12 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 }
 
 type providerIntegrationDetailedOut struct {
-	Id          string         `human:"ID" serialized:"id"`
-	DisplayName string         `human:"Name" serialized:"display_name"`
-	Provider    string         `human:"Provider" serialized:"provider"`
-	Environment string         `human:"Environment" serialized:"environment"`
-	Status      string         `human:"Status" serialized:"status"`
-	Usages      []string      `human:"Usages" serialized:"usages"`
+	Id          string          `human:"ID" serialized:"id"`
+	DisplayName string          `human:"Name" serialized:"display_name"`
+	Provider    string          `human:"Provider" serialized:"provider"`
+	Environment string          `human:"Environment" serialized:"environment"`
+	Status      string          `human:"Status" serialized:"status"`
+	Usages      []string        `human:"Usages" serialized:"usages"`
 	AzureConfig *azureConfigOut `human:"Azure Configuration" serialized:"azure_config,omitempty"`
 	GcpConfig   *gcpConfigOut   `human:"GCP Configuration" serialized:"gcp_config,omitempty"`
 }

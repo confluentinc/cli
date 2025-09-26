@@ -111,7 +111,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	cmd.Println("This provider integration resource will be deprecated in Q4 2025.")
 	cmd.Println("Please prepare to upgrade to the new provider integration v2 resource when available:")
 	cmd.Println("  confluent provider-integration v2 create --help")
-	
+
 	return nil
 }
 

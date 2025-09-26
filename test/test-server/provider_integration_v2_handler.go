@@ -58,7 +58,7 @@ func handleProviderIntegrationV2Validate(t *testing.T) http.HandlerFunc {
 		default:
 			// Validation failure
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]interface{}{
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
 				"error_code": "400",
 				"message":    "Cloud provider setup incomplete",
 			})
@@ -154,7 +154,7 @@ func handleProviderIntegrationV2Create(t *testing.T) http.HandlerFunc {
 			id = "pi-789012"
 		default:
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]interface{}{
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
 				"error_code": "400",
 				"message":    "Invalid provider. Must be 'azure' or 'gcp'.",
 			})
