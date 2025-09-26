@@ -1,5 +1,7 @@
 Describe a provider integration, specified by the given provider integration ID.
 
+⚠️  DEPRECATION NOTICE: This command will be deprecated in Q4 2025. Use 'confluent provider-integration v2 describe' for new integrations.
+
 Usage:
   confluent provider-integration describe <id> [flags]
 

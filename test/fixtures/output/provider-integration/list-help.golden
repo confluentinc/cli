@@ -1,5 +1,7 @@
 List provider integrations, optionally filtered by cloud provider.
 
+⚠️  DEPRECATION NOTICE: This command will be deprecated in Q4 2025. Use 'confluent provider-integration v2 list' for new integrations.
+
 Usage:
   confluent provider-integration list [flags]
 

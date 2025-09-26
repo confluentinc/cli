@@ -1,5 +1,7 @@
 Manage Confluent Cloud provider integrations.
 
+⚠️  DEPRECATION NOTICE: v1 provider integrations will be deprecated in Q4 2025. Use 'confluent provider-integration v2' for new integrations.
+
 Usage:
   confluent provider-integration [command]
 
