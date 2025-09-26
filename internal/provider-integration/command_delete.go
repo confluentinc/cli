@@ -13,7 +13,7 @@ func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <id-1> [id-2] ... [id-n]",
 		Short: "Delete one or more provider integrations.",
-		Long:  "Delete one or more provider integrations, specified by the given provider integration ID.",
+		Long:  "Delete one or more provider integrations, specified by the given provider integration ID.\n\n⚠️  DEPRECATION NOTICE: This command will be deprecated in Q4 2025. Use 'confluent provider-integration v2 delete' for new integrations.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.delete,
 		Example: examples.BuildExampleString(

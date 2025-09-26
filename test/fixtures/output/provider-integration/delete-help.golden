@@ -1,5 +1,7 @@
 Delete one or more provider integrations, specified by the given provider integration ID.
 
+⚠️  DEPRECATION NOTICE: This command will be deprecated in Q4 2025. Use 'confluent provider-integration v2 delete' for new integrations.
+
 Usage:
   confluent provider-integration delete <id-1> [id-2] ... [id-n] [flags]
 
