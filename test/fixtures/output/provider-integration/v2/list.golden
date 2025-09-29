@@ -1,4 +1,4 @@
-     ID     |    Name    | Provider | Environment | Status | Configuration  
-------------+------------+----------+-------------+--------+----------------
-  pi-123456 | azure-test | azure    | env-596     | DRAFT  |                
-  pi-789012 | gcp-test   | gcp      | env-596     | DRAFT  |                
+     ID     |    Name    | Provider | Environment | Status |                        Configuration                         
+------------+------------+----------+-------------+--------+--------------------------------------------------------------
+  pi-123456 | azure-test | azure    | env-596     | DRAFT  | 00000000-0000-0000-0000-000000000000                         
+  pi-789012 | gcp-test   | gcp      | env-596     | DRAFT  | confluent-sa-123456789@gcp-sa-cloud.iam.gserviceaccount.com  

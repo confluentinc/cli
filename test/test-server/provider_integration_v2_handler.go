@@ -125,6 +125,13 @@ func handleProviderIntegrationV2List(t *testing.T) http.HandlerFunc {
 					Provider:    piv2.PtrString("azure"),
 					Environment: &piv2.ObjectReference{Id: "env-596"},
 					Status:      piv2.PtrString("DRAFT"),
+					Config: &piv2.PimV2IntegrationConfigOneOf{
+						PimV2AzureIntegrationConfig: &piv2.PimV2AzureIntegrationConfig{
+							Kind:                      AzureIntegrationConfig,
+							CustomerAzureTenantId:     piv2.PtrString("00000000-0000-0000-0000-000000000000"),
+							ConfluentMultiTenantAppId: piv2.PtrString("app-123456789"),
+						},
+					},
 				},
 				{
 					Id:          piv2.PtrString("pi-789012"),
@@ -132,6 +139,13 @@ func handleProviderIntegrationV2List(t *testing.T) http.HandlerFunc {
 					Provider:    piv2.PtrString("gcp"),
 					Environment: &piv2.ObjectReference{Id: "env-596"},
 					Status:      piv2.PtrString("DRAFT"),
+					Config: &piv2.PimV2IntegrationConfigOneOf{
+						PimV2GcpIntegrationConfig: &piv2.PimV2GcpIntegrationConfig{
+							Kind:                         GcpIntegrationConfig,
+							CustomerGoogleServiceAccount: piv2.PtrString("my-service-account@my-project.iam.gserviceaccount.com"),
+							GoogleServiceAccount:         piv2.PtrString("confluent-sa-123456789@gcp-sa-cloud.iam.gserviceaccount.com"),
+						},
+					},
 				},
 			},
 		}
