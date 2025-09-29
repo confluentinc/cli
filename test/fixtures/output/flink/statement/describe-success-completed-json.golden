@@ -1,0 +1,72 @@
+{
+  "apiVersion": "",
+  "kind": "",
+  "metadata": {
+    "name": "shell-test-stmt"
+  },
+  "spec": {
+    "statement": "",
+    "computePoolName": ""
+  },
+  "status": {
+    "phase": "COMPLETED",
+    "detail": "Statement execution completed.",
+    "traits": {
+      "sqlKind": "DESCRIBE",
+      "schema": {
+        "columns": [
+          {
+            "name": "name",
+            "type": {
+              "type": "VARCHAR",
+              "nullable": true
+            }
+          },
+          {
+            "name": "type",
+            "type": {
+              "type": "VARCHAR",
+              "nullable": true
+            }
+          },
+          {
+            "name": "null",
+            "type": {
+              "type": "BOOLEAN",
+              "nullable": true
+            }
+          }
+        ]
+      }
+    }
+  },
+  "result": {
+    "apiVersion": "",
+    "kind": "",
+    "metadata": {},
+    "results": {
+      "data": [
+        {
+          "op": 0,
+          "row": ["click_id", "STRING", "false"]
+        },
+        {
+          "op": 0,
+          "row": ["USER_id", "INT", "false"]
+        },
+        {
+          "op": 0,
+          "row": ["url", "STRING", "false"]
+        },
+        {
+          "op": 0,
+          "row": ["user_agent", "STRING", "false"]
+        },
+        {
+          "op": 0,
+          "row": ["view_time", "INT", "false"]
+        }
+      ]
+    }
+  }
+}
