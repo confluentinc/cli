@@ -16,15 +16,23 @@ package v2
 
 import "fmt"
 
-// providerIntegrationOut represents the output struct for provider integrations
-// Used for both list and detailed views with omitempty fields
+// providerIntegrationListOut represents the output struct for list view
+type providerIntegrationListOut struct {
+	Id            string `human:"ID" serialized:"id"`
+	DisplayName   string `human:"Name" serialized:"display_name"`
+	Provider      string `human:"Provider" serialized:"provider"`
+	Environment   string `human:"Environment" serialized:"environment"`
+	Status        string `human:"Status" serialized:"status"`
+	Configuration string `human:"Configuration" serialized:"configuration"`
+}
+
+// providerIntegrationOut represents the output struct for detailed views (describe)
 type providerIntegrationOut struct {
 	Id          string          `human:"ID" serialized:"id"`
 	DisplayName string          `human:"Name" serialized:"display_name"`
 	Provider    string          `human:"Provider" serialized:"provider"`
 	Environment string          `human:"Environment" serialized:"environment"`
 	Status      string          `human:"Status" serialized:"status"`
-	Usages      []string        `human:"Usages" serialized:"usages,omitempty"`
 	AzureConfig *azureConfigOut `human:"Azure Configuration" serialized:"azure_config,omitempty"`
 	GcpConfig   *gcpConfigOut   `human:"GCP Configuration" serialized:"gcp_config,omitempty"`
 }

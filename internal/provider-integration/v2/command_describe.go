@@ -69,7 +69,6 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		Provider:    integration.GetProvider(),
 		Environment: integration.Environment.GetId(),
 		Status:      integration.GetStatus(),
-		Usages:      integration.GetUsages(),
 	}
 
 	// Add provider-specific configuration details
@@ -94,9 +93,6 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	// Filter fields based on provider and configuration state
 	fields := []string{"Id", "DisplayName", "Provider", "Environment", "Status"}
-	if len(integration.GetUsages()) > 0 {
-		fields = append(fields, "Usages")
-	}
 
 	switch integration.GetProvider() {
 	case providerAzure:

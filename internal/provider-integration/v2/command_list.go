@@ -59,35 +59,26 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	list := make([]providerIntegrationOut, len(integrations.GetData()))
+	list := make([]providerIntegrationListOut, len(integrations.GetData()))
 	for i, integration := range integrations.GetData() {
-		out := providerIntegrationOut{
+		out := providerIntegrationListOut{
 			Id:          integration.GetId(),
 			DisplayName: integration.GetDisplayName(),
 			Provider:    integration.GetProvider(),
 			Environment: integration.Environment.GetId(),
 			Status:      integration.GetStatus(),
-			Usages:      integration.GetUsages(),
 		}
 
-		// Add provider-specific configuration if available
+		// Set configuration field to just the relevant UUID/ID
 		if integration.Config != nil {
 			switch integration.GetProvider() {
 			case providerAzure:
 				if integration.Config.PimV2AzureIntegrationConfig != nil {
-					azureConfig := integration.Config.PimV2AzureIntegrationConfig
-					out.AzureConfig = &azureConfigOut{
-						CustomerTenantId:          azureConfig.GetCustomerAzureTenantId(),
-						ConfluentMultiTenantAppId: azureConfig.GetConfluentMultiTenantAppId(),
-					}
+					out.Configuration = integration.Config.PimV2AzureIntegrationConfig.GetCustomerAzureTenantId()
 				}
 			case providerGcp:
 				if integration.Config.PimV2GcpIntegrationConfig != nil {
-					gcpConfig := integration.Config.PimV2GcpIntegrationConfig
-					out.GcpConfig = &gcpConfigOut{
-						CustomerServiceAccount: gcpConfig.GetCustomerGoogleServiceAccount(),
-						GoogleServiceAccount:   gcpConfig.GetGoogleServiceAccount(),
-					}
+					out.Configuration = integration.Config.PimV2GcpIntegrationConfig.GetGoogleServiceAccount()
 				}
 			}
 		}

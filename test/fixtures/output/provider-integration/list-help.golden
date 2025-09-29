@@ -1,7 +1,5 @@
 List provider integrations, optionally filtered by cloud provider.
 
-⚠️  DEPRECATION NOTICE: Provider Integration v1 supports AWS only and will be deprecated in CLI v5. Provider Integration v2 currently supports GCP and Azure, and in CLI v5 will support all clouds (AWS, GCP, Azure). Use 'confluent provider-integration v2 list' for new integrations.
-
 Usage:
   confluent provider-integration list [flags]
 

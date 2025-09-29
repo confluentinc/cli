@@ -1,7 +1,5 @@
 Describe a provider integration, specified by the given provider integration ID.
 
-⚠️  DEPRECATION NOTICE: Provider Integration v1 supports AWS only and will be deprecated in CLI v5. Provider Integration v2 currently supports GCP and Azure, and in CLI v5 will support all clouds (AWS, GCP, Azure). Use 'confluent provider-integration v2 describe' for new integrations.
-
 Usage:
   confluent provider-integration describe <id> [flags]
 

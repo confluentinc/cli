@@ -12,7 +12,7 @@ func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List provider integrations.",
-		Long:  "List provider integrations, optionally filtered by cloud provider.\n\n⚠️  DEPRECATION NOTICE: Provider Integration v1 supports AWS only and will be deprecated in CLI v5. Provider Integration v2 currently supports GCP and Azure, and in CLI v5 will support all clouds (AWS, GCP, Azure). Use 'confluent provider-integration v2 list' for new integrations.",
+		Long:  "List provider integrations, optionally filtered by cloud provider.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 		Example: examples.BuildExampleString(
