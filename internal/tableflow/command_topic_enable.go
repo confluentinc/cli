@@ -169,8 +169,8 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 		createTopic.Spec.Storage = &tableflowv1.TableflowV1TableflowTopicSpecStorageOneOf{
 			TableflowV1ByobAwsSpec: &tableflowv1.TableflowV1ByobAwsSpec{
 				Kind:                  "ByobAws",
-				BucketName:            *tableflowv1.PtrString(bucketName),
-				ProviderIntegrationId: *tableflowv1.PtrString(providerIntegration),
+				BucketName:            bucketName,
+				ProviderIntegrationId: providerIntegration,
 			},
 		}
 	} else if strings.ToUpper(storageType) == "MANAGED" {
@@ -186,9 +186,9 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 		createTopic.Spec.Storage = &tableflowv1.TableflowV1TableflowTopicSpecStorageOneOf{
 			TableflowV1AzureAdlsSpec: &tableflowv1.TableflowV1AzureAdlsSpec{
 				Kind:                  "AzureDataLakeStorageGen2",
-				StorageAccountName:    *tableflowv1.PtrString(storageAccountName),
-				ContainerName:         *tableflowv1.PtrString(containerName),
-				ProviderIntegrationId: *tableflowv1.PtrString(providerIntegration),
+				StorageAccountName:    storageAccountName,
+				ContainerName:         containerName,
+				ProviderIntegrationId: providerIntegration,
 			},
 		}
 	} else {
