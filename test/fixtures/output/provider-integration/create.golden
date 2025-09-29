@@ -7,3 +7,8 @@
 | External ID       | 999219d4-37f4-49ac-abfe-d2b6528fb21b               |
 | Customer Role ARN | arn:aws:iam::037803949979:role/tarun-iam-test-role |
 +-------------------+----------------------------------------------------+
+
+⚠️  DEPRECATION NOTICE:
+Provider Integration v1 supports AWS only and will be deprecated in CLI v5.
+Provider Integration v2 currently supports GCP and Azure, and in CLI v5 will support all clouds (AWS, GCP, Azure).
+For new integrations, use: confluent provider-integration v2 create --help
