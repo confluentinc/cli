@@ -1,0 +1,4 @@
+     ID     |    Name    | Provider | Environment | Status | Configuration  
+------------+------------+----------+-------------+--------+----------------
+  pi-123456 | azure-test | azure    | env-596     | DRAFT  |                
+  pi-789012 | gcp-test   | gcp      | env-596     | DRAFT  |                
