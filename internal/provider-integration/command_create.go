@@ -20,7 +20,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a provider integration.",
-		Long:  "Create a provider integration that allows users to manage access to public cloud service provider resources through Confluent resources.\n\n⚠️  DEPRECATION NOTICE: This command will be deprecated in Q4 2025. Use 'confluent provider-integration v2 create' for new integrations.",
+		Long:  "Create a provider integration that allows users to manage access to public cloud service provider resources through Confluent resources.\n\n⚠️  DEPRECATION NOTICE: Provider Integration v1 supports AWS only and will be deprecated in CLI v5. Provider Integration v2 currently supports GCP and Azure, and in CLI v5 will support all clouds (AWS, GCP, Azure). Use 'confluent provider-integration v2 create' for new integrations.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
@@ -108,9 +108,9 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	// Add deprecation warning
 	cmd.Println("\n⚠️  DEPRECATION NOTICE:")
-	cmd.Println("This provider integration resource will be deprecated in Q4 2025.")
-	cmd.Println("Please prepare to upgrade to the new provider integration v2 resource when available:")
-	cmd.Println("  confluent provider-integration v2 create --help")
+	cmd.Println("Provider Integration v1 supports AWS only and will be deprecated in CLI v5.")
+	cmd.Println("Provider Integration v2 currently supports GCP and Azure, and in CLI v5 will support all clouds (AWS, GCP, Azure).")
+	cmd.Println("For new integrations, use: confluent provider-integration v2 create --help")
 
 	return nil
 }

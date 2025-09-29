@@ -15,8 +15,6 @@
 package v2
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -58,14 +56,14 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	integration, _, err := c.V2Client.ProviderIntegrationV2Client.IntegrationsPimV2Api.GetPimV2Integration(c.V2ApiContext(cmd.Context()), integrationId).Environment(environmentId).Execute()
+	integration, err := c.V2Client.GetPimV2Integration(cmd.Context(), integrationId, environmentId)
 	if err != nil {
 		return err
 	}
 
 	table := output.NewTable(cmd)
 
-	out := &providerIntegrationDetailedOut{
+	out := &providerIntegrationOut{
 		Id:          integration.GetId(),
 		DisplayName: integration.GetDisplayName(),
 		Provider:    integration.GetProvider(),
@@ -113,33 +111,4 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	table.Filter(fields)
 	return table.Print()
-}
-
-type providerIntegrationDetailedOut struct {
-	Id          string          `human:"ID" serialized:"id"`
-	DisplayName string          `human:"Name" serialized:"display_name"`
-	Provider    string          `human:"Provider" serialized:"provider"`
-	Environment string          `human:"Environment" serialized:"environment"`
-	Status      string          `human:"Status" serialized:"status"`
-	Usages      []string        `human:"Usages" serialized:"usages"`
-	AzureConfig *azureConfigOut `human:"Azure Configuration" serialized:"azure_config,omitempty"`
-	GcpConfig   *gcpConfigOut   `human:"GCP Configuration" serialized:"gcp_config,omitempty"`
-}
-
-type azureConfigOut struct {
-	CustomerTenantId          string `human:"Customer Azure Tenant ID" serialized:"customer_azure_tenant_id"`
-	ConfluentMultiTenantAppId string `human:"Confluent Multi-Tenant App ID" serialized:"confluent_multi_tenant_app_id"`
-}
-
-func (a *azureConfigOut) String() string {
-	return fmt.Sprintf("Customer Azure Tenant ID: %s\nConfluent Multi-Tenant App ID: %s", a.CustomerTenantId, a.ConfluentMultiTenantAppId)
-}
-
-type gcpConfigOut struct {
-	CustomerServiceAccount string `human:"Customer Google Service Account" serialized:"customer_google_service_account"`
-	GoogleServiceAccount   string `human:"Google Service Account" serialized:"google_service_account"`
-}
-
-func (g *gcpConfigOut) String() string {
-	return fmt.Sprintf("Customer Google Service Account: %s\nGoogle Service Account: %s", g.CustomerServiceAccount, g.GoogleServiceAccount)
 }

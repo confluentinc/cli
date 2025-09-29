@@ -15,11 +15,7 @@
 package v2
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
-
-	piv2 "github.com/confluentinc/ccloud-sdk-go-v2/provider-integration/v2"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
@@ -28,15 +24,11 @@ type command struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-func (c *command) V2ApiContext(ctx context.Context) context.Context {
-	return context.WithValue(ctx, piv2.ContextAccessToken, c.Context.GetAuthToken())
-}
-
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "v2",
 		Short:       "Manage provider integrations (v2).",
-		Long:        "Manage provider integrations that allow users to configure access to cloud provider resources through Confluent resources.",
+		Long:        "Manage provider integrations that allow users to configure access to cloud provider resources through Confluent resources.\n\nCurrently supports: GCP and Azure\nIn CLI v5: Will support all clouds (AWS, GCP, Azure) and replace v1 commands entirely.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 

@@ -1,5 +1,8 @@
 Manage provider integrations that allow users to configure access to cloud provider resources through Confluent resources.
 
+Currently supports: GCP and Azure
+In CLI v5: Will support all clouds (AWS, GCP, Azure) and replace v1 commands entirely.
+
 Usage:
   confluent provider-integration v2 [command]
 

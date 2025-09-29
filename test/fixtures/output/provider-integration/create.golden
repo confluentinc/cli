@@ -9,6 +9,6 @@
 +-------------------+----------------------------------------------------+
 
 ⚠️  DEPRECATION NOTICE:
-This provider integration resource will be deprecated in Q4 2025.
-Please prepare to upgrade to the new provider integration v2 resource when available:
-  confluent provider-integration v2 create --help
+Provider Integration v1 supports AWS only and will be deprecated in CLI v5.
+Provider Integration v2 currently supports GCP and Azure, and in CLI v5 will support all clouds (AWS, GCP, Azure).
+For new integrations, use: confluent provider-integration v2 create --help

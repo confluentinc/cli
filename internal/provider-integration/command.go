@@ -27,7 +27,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		Use:         "provider-integration",
 		Aliases:     []string{"pi"},
 		Short:       "Manage Confluent Cloud provider integrations.",
-		Long:        "Manage Confluent Cloud provider integrations.\n\n⚠️  DEPRECATION NOTICE: v1 provider integrations will be deprecated in Q4 2025. Use 'confluent provider-integration v2' for new integrations.",
+		Long:        "Manage Confluent Cloud provider integrations.\n\n⚠️  DEPRECATION NOTICE: Provider Integration v1 commands support AWS only and will be deprecated in CLI v5. Provider Integration v2 currently supports GCP and Azure, and in CLI v5 will support all clouds (AWS, GCP, Azure). Use 'confluent provider-integration v2' for new integrations.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 

@@ -12,7 +12,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <id>",
 		Short: "Describe a provider integration.",
-		Long:  "Describe a provider integration, specified by the given provider integration ID.\n\n⚠️  DEPRECATION NOTICE: This command will be deprecated in Q4 2025. Use 'confluent provider-integration v2 describe' for new integrations.",
+		Long:  "Describe a provider integration, specified by the given provider integration ID.\n\n⚠️  DEPRECATION NOTICE: Provider Integration v1 supports AWS only and will be deprecated in CLI v5. Provider Integration v2 currently supports GCP and Azure, and in CLI v5 will support all clouds (AWS, GCP, Azure). Use 'confluent provider-integration v2 describe' for new integrations.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.describe,
 		Example: examples.BuildExampleString(

@@ -1,6 +1,6 @@
 Manage Confluent Cloud provider integrations.
 
-⚠️  DEPRECATION NOTICE: v1 provider integrations will be deprecated in Q4 2025. Use 'confluent provider-integration v2' for new integrations.
+⚠️  DEPRECATION NOTICE: Provider Integration v1 commands support AWS only and will be deprecated in CLI v5. Provider Integration v2 currently supports GCP and Azure, and in CLI v5 will support all clouds (AWS, GCP, Azure). Use 'confluent provider-integration v2' for new integrations.
 
 Usage:
   confluent provider-integration [command]

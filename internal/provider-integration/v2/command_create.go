@@ -106,7 +106,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		Environment: &piv2.ObjectReference{Id: environmentId},
 	}
 
-	providerIntegration, _, err := c.V2Client.ProviderIntegrationV2Client.IntegrationsPimV2Api.CreatePimV2Integration(c.V2ApiContext(cmd.Context())).PimV2Integration(request).Execute()
+	providerIntegration, err := c.V2Client.CreatePimV2Integration(cmd.Context(), request)
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		Environment: &piv2.ObjectReference{Id: environmentId},
 	}
 
-	updated, _, err := c.V2Client.ProviderIntegrationV2Client.IntegrationsPimV2Api.UpdatePimV2Integration(c.V2ApiContext(cmd.Context()), integrationId).PimV2IntegrationUpdate(updateReq).Execute()
+	updated, err := c.V2Client.UpdatePimV2Integration(cmd.Context(), integrationId, updateReq)
 	if err != nil {
 		return err
 	}
@@ -150,7 +150,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		Environment: &piv2.GlobalObjectReference{Id: environmentId},
 	}
 
-	if _, err := c.V2Client.ProviderIntegrationV2Client.IntegrationsPimV2Api.ValidatePimV2Integration(c.V2ApiContext(cmd.Context())).PimV2IntegrationValidateRequest(validateReq).Execute(); err != nil {
+	if err := c.V2Client.ValidatePimV2Integration(cmd.Context(), validateReq); err != nil {
 		// Show setup instructions if validation fails
 		if updated.Config != nil {
 			switch cloud {
@@ -195,12 +195,4 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	table.Add(out)
 	table.Filter([]string{"Id", "DisplayName", "Provider", "Environment", "Status"})
 	return table.Print()
-}
-
-type providerIntegrationOut struct {
-	Id          string `human:"ID" serialized:"id"`
-	DisplayName string `human:"Name" serialized:"display_name"`
-	Provider    string `human:"Provider" serialized:"provider"`
-	Environment string `human:"Environment" serialized:"environment"`
-	Status      string `human:"Status" serialized:"status"`
 }

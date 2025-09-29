@@ -54,20 +54,45 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	integrations, _, err := c.V2Client.ProviderIntegrationV2Client.IntegrationsPimV2Api.ListPimV2Integrations(c.V2ApiContext(cmd.Context())).Environment(environmentId).Execute()
+	integrations, err := c.V2Client.ListPimV2Integrations(cmd.Context(), environmentId)
 	if err != nil {
 		return err
 	}
 
 	list := make([]providerIntegrationOut, len(integrations.GetData()))
 	for i, integration := range integrations.GetData() {
-		list[i] = providerIntegrationOut{
+		out := providerIntegrationOut{
 			Id:          integration.GetId(),
 			DisplayName: integration.GetDisplayName(),
 			Provider:    integration.GetProvider(),
 			Environment: integration.Environment.GetId(),
 			Status:      integration.GetStatus(),
+			Usages:      integration.GetUsages(),
 		}
+
+		// Add provider-specific configuration if available
+		if integration.Config != nil {
+			switch integration.GetProvider() {
+			case providerAzure:
+				if integration.Config.PimV2AzureIntegrationConfig != nil {
+					azureConfig := integration.Config.PimV2AzureIntegrationConfig
+					out.AzureConfig = &azureConfigOut{
+						CustomerTenantId:          azureConfig.GetCustomerAzureTenantId(),
+						ConfluentMultiTenantAppId: azureConfig.GetConfluentMultiTenantAppId(),
+					}
+				}
+			case providerGcp:
+				if integration.Config.PimV2GcpIntegrationConfig != nil {
+					gcpConfig := integration.Config.PimV2GcpIntegrationConfig
+					out.GcpConfig = &gcpConfigOut{
+						CustomerServiceAccount: gcpConfig.GetCustomerGoogleServiceAccount(),
+						GoogleServiceAccount:   gcpConfig.GetGoogleServiceAccount(),
+					}
+				}
+			}
+		}
+
+		list[i] = out
 	}
 
 	outputList := output.NewList(cmd)

@@ -59,7 +59,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	// First, check if the integration exists and get its status
-	integration, _, err := c.V2Client.ProviderIntegrationV2Client.IntegrationsPimV2Api.GetPimV2Integration(c.V2ApiContext(cmd.Context()), integrationId).Environment(environmentId).Execute()
+	integration, err := c.V2Client.GetPimV2Integration(cmd.Context(), integrationId, environmentId)
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if _, err := c.V2Client.ProviderIntegrationV2Client.IntegrationsPimV2Api.DeletePimV2Integration(c.V2ApiContext(cmd.Context()), integrationId).Environment(environmentId).Execute(); err != nil {
+	if err := c.V2Client.DeletePimV2Integration(cmd.Context(), integrationId, environmentId); err != nil {
 		return err
 	}
 

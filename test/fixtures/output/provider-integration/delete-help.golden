@@ -1,6 +1,6 @@
 Delete one or more provider integrations, specified by the given provider integration ID.
 
-⚠️  DEPRECATION NOTICE: This command will be deprecated in Q4 2025. Use 'confluent provider-integration v2 delete' for new integrations.
+⚠️  DEPRECATION NOTICE: Provider Integration v1 supports AWS only and will be deprecated in CLI v5. Provider Integration v2 currently supports GCP and Azure, and in CLI v5 will support all clouds (AWS, GCP, Azure). Use 'confluent provider-integration v2 delete' for new integrations.
 
 Usage:
   confluent provider-integration delete <id-1> [id-2] ... [id-n] [flags]
