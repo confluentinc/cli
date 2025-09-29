@@ -1,0 +1,26 @@
+Create a provider integration that allows users to manage access to cloud provider resources through Confluent resources.
+
+Usage:
+  confluent provider-integration v2 create <display-name> [flags]
+
+Examples:
+Create and configure Azure provider integration "azure-integration" in the current environment.
+
+  $ confluent provider-integration v2 create azure-integration --cloud azure --azure-tenant-id 00000000-0000-0000-0000-000000000000
+
+Create and configure GCP provider integration "gcp-integration" in environment "env-123456".
+
+  $ confluent provider-integration v2 create gcp-integration --cloud gcp --gcp-service-account my-sa@my-project.iam.gserviceaccount.com --environment env-123456
+
+Flags:
+      --cloud string                 REQUIRED: Cloud provider (azure or gcp).
+      --azure-tenant-id string       Azure Tenant ID (required for Azure provider).
+      --gcp-service-account string   Customer Google Service Account (required for GCP provider).
+      --environment string           Environment ID.
+      --context string               CLI context name.
+  -o, --output string                Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

@@ -3,6 +3,7 @@ package providerintegration
 import (
 	"github.com/spf13/cobra"
 
+	v2 "github.com/confluentinc/cli/v4/internal/provider-integration/v2"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
@@ -26,6 +27,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		Use:         "provider-integration",
 		Aliases:     []string{"pi"},
 		Short:       "Manage Confluent Cloud provider integrations.",
+		Long:        "Manage Confluent Cloud provider integrations.\n\n⚠️  DEPRECATION NOTICE: Provider Integration v1 commands support AWS only and will be deprecated in CLI v5. Provider Integration v2 currently supports GCP and Azure, and in CLI v5 will support all clouds (AWS, GCP, Azure). Use 'confluent provider-integration v2' for new integrations.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
@@ -35,6 +37,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(v2.New(prerunner))
 
 	return cmd
 }
