@@ -3,6 +3,8 @@ package flink
 import (
 	"github.com/spf13/cobra"
 
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
+
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
@@ -32,4 +34,36 @@ func (c *command) newEnvironmentCommand() *cobra.Command {
 	cmd.AddCommand(c.newEnvironmentUpdateCommand())
 
 	return cmd
+}
+
+func convertSdkEnvironmentToLocalEnvironment(sdkOutputEnvironment cmfsdk.Environment) LocalEnvironment {
+	localEnv := LocalEnvironment{
+		Secrets:                  sdkOutputEnvironment.Secrets,
+		Name:                     sdkOutputEnvironment.Name,
+		CreatedTime:              sdkOutputEnvironment.CreatedTime,
+		UpdatedTime:              sdkOutputEnvironment.UpdatedTime,
+		FlinkApplicationDefaults: sdkOutputEnvironment.FlinkApplicationDefaults,
+		KubernetesNamespace:      sdkOutputEnvironment.KubernetesNamespace,
+		ComputePoolDefaults:      sdkOutputEnvironment.ComputePoolDefaults,
+	}
+
+	if sdkOutputEnvironment.StatementDefaults != nil {
+		localDefaults1 := &LocalAllStatementDefaults1{}
+
+		if sdkOutputEnvironment.StatementDefaults.Detached != nil {
+			localDefaults1.Detached = &LocalStatementDefaults{
+				FlinkConfiguration: sdkOutputEnvironment.StatementDefaults.Detached.FlinkConfiguration,
+			}
+		}
+
+		if sdkOutputEnvironment.StatementDefaults.Interactive != nil {
+			localDefaults1.Interactive = &LocalStatementDefaults{
+				FlinkConfiguration: sdkOutputEnvironment.StatementDefaults.Interactive.FlinkConfiguration,
+			}
+		}
+
+		localEnv.StatementDefaults = localDefaults1
+	}
+
+	return localEnv
 }
