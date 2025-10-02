@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2/tableflow/v1"
+	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/tableflow/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/kafka"
@@ -16,6 +16,7 @@ import (
 const (
 	byos    = "BYOS"
 	managed = "MANAGED"
+	azure   = "AzureDataLakeStorageGen2"
 )
 
 type topicOut struct {
@@ -30,6 +31,9 @@ type topicOut struct {
 	ProviderIntegrationId string `human:"Provider Integration ID,omitempty" serialized:"provider_integration_id,omitempty"`
 	BucketName            string `human:"Bucket Name,omitempty" serialized:"bucket_name,omitempty"`
 	BucketRegion          string `human:"Bucket Region,omitempty" serialized:"bucket_region,omitempty"`
+	ContainerName         string `human:"Container Name,omitempty" serialized:"container_name,omitempty"`
+	StorageAccountName    string `human:"Storage Account Name,omitempty" serialized:"storage_account_name,omitempty"`
+	StorageRegion         string `human:"Storage Region,omitempty" serialized:"storage_region ,omitempty"`
 	Suspended             bool   `human:"Suspended" serialized:"suspended"`
 	TableFormats          string `human:"Table Formats" serialized:"table_formats"`
 	TablePath             string `human:"Table Path" serialized:"table_path"`
@@ -103,6 +107,10 @@ func getStorageType(topic tableflowv1.TableflowV1TableflowTopic) (string, error)
 		return managed, nil
 	}
 
+	if config.TableflowV1AzureAdlsSpec != nil {
+		return azure, nil
+	}
+
 	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "config")
 }
 
@@ -142,6 +150,12 @@ func printTopicTable(cmd *cobra.Command, topic tableflowv1.TableflowV1TableflowT
 		out.TablePath = topic.Spec.Storage.TableflowV1ByobAwsSpec.GetTablePath()
 	} else if storageType == managed {
 		out.TablePath = topic.Spec.Storage.TableflowV1ManagedStorageSpec.GetTablePath()
+	} else if storageType == azure {
+		out.ProviderIntegrationId = topic.Spec.Storage.TableflowV1AzureAdlsSpec.GetProviderIntegrationId()
+		out.ContainerName = topic.Spec.Storage.TableflowV1AzureAdlsSpec.GetContainerName()
+		out.StorageAccountName = topic.Spec.Storage.TableflowV1AzureAdlsSpec.GetStorageAccountName()
+		out.StorageRegion = topic.Spec.Storage.TableflowV1AzureAdlsSpec.GetStorageRegion()
+		out.TablePath = topic.Spec.Storage.TableflowV1AzureAdlsSpec.GetTablePath()
 	}
 
 	table := output.NewTable(cmd)
