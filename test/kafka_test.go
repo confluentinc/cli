@@ -34,12 +34,10 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --availability oops-zone", fixture: "kafka/cluster/create-availability-zone-error.golden", exitCode: 1},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type enterprise --availability multi-zone", fixture: "kafka/cluster/create-enterprise.golden"},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type enterprise --availability multi-zone --max-ecku 4", fixture: "kafka/cluster/create-enterprise-max-ecku.golden"},
-		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type enterprise --availability multi-zone --max-ecku 0", fixture: "kafka/cluster/create-enterprise-max-ecku-error.golden", exitCode: 1},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type enterprise", fixture: "kafka/cluster/create-enterprise-availability-zone-error.golden", exitCode: 1},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type freight --availability multi-zone", fixture: "kafka/cluster/create-freight.golden"},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type freight", fixture: "kafka/cluster/create-freight-low.golden"},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type freight --max-ecku 3", fixture: "kafka/cluster/create-freight-max-ecku.golden"},
-		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type freight --max-ecku 0", fixture: "kafka/cluster/create-freight-max-ecku-error.golden", exitCode: 1},
 
 		{args: "kafka cluster update lkc-update", fixture: "kafka/cluster/create-flag-error.golden", exitCode: 1},
 		{args: "kafka cluster update lkc-update --name lkc-update-name", fixture: "kafka/26.golden"},
@@ -54,7 +52,6 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster update lkc-update-dedicated-shrink-multi --cku 1", fixture: "kafka/cluster/update-dedicated-shrink-error.golden", exitCode: 1},
 		{args: "kafka cluster update lkc-update --cku 1", fixture: "kafka/cluster/update-resize-error.golden", exitCode: 1},
 		{args: "kafka cluster update lkc-update --max-ecku 4", fixture: "kafka/cluster/update-max-ecku.golden"},
-		{args: "kafka cluster update lkc-update --max-ecku 0", fixture: "kafka/cluster/update-max-ecku-error.golden", exitCode: 1},
 		{args: "kafka cluster update lkc-update-standard --max-ecku 2", fixture: "kafka/cluster/update-standard-max-ecku.golden"},
 		// Type upgrade tests
 		{args: "kafka cluster update lkc-update --type standard", fixture: "kafka/cluster/update-type-success.golden"},

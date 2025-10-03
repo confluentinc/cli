@@ -145,12 +145,6 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		if clusterType == skuDedicated {
 			return errors.NewErrorWithSuggestions("the `--max-ecku` flag can only be used when creating a Basic, Standard, Enterprise, or Freight Kafka cluster", "Specify a different cluster with `--type` flag.")
 		}
-		if maxEcku < 1 {
-			return fmt.Errorf("`--max-ecku` value must be at least 1")
-		}
-		//if availability == "MULTI_ZONE" && maxEcku < 2 {
-		//	return fmt.Errorf("`--max-ecku` value must be at least 2 for high availability")
-		//}
 
 		if clusterType == skuBasic {
 			createCluster.Spec.Config.CmkV2Basic.MaxEcku = cmkv2.PtrInt32(int32(maxEcku))
