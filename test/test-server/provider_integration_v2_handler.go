@@ -161,11 +161,21 @@ func handleProviderIntegrationV2Create(t *testing.T) http.HandlerFunc {
 
 		provider := strings.ToLower(request.GetProvider())
 		var id string
+		displayName := request.GetDisplayName()
+		
 		switch provider {
 		case "azure":
-			id = "pi-123456"
+			if displayName == "azure-test" {
+				id = "pi-123456"
+			} else {
+				id = "pi-azure-new"
+			}
 		case "gcp":
-			id = "pi-789012"
+			if displayName == "gcp-test" {
+				id = "pi-789012"
+			} else {
+				id = "pi-gcp-new"
+			}
 		default:
 			w.WriteHeader(http.StatusBadRequest)
 			_ = json.NewEncoder(w).Encode(map[string]interface{}{

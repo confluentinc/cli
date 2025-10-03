@@ -14,9 +14,22 @@
 
 package v2
 
-import "fmt"
+// providerIntegrationOut represents the output structure for provider integrations
+type providerIntegrationOut struct {
+	Id          string `human:"ID" serialized:"id"`
+	DisplayName string `human:"Name" serialized:"display_name"`
+	Provider    string `human:"Provider" serialized:"provider"`
+	Environment string `human:"Environment" serialized:"environment"`
+	Status      string `human:"Status" serialized:"status"`
+	// Azure-specific fields (omitempty ensures they're only shown for Azure integrations)
+	CustomerAzureTenantId          string `human:"Customer Azure Tenant ID" serialized:"customer_azure_tenant_id,omitempty"`
+	ConfluentMultiTenantAppId      string `human:"Confluent Multi-Tenant App ID" serialized:"confluent_multi_tenant_app_id,omitempty"`
+	// GCP-specific fields (omitempty ensures they're only shown for GCP integrations)
+	CustomerGoogleServiceAccount string `human:"Customer Google Service Account" serialized:"customer_google_service_account,omitempty"`
+	GoogleServiceAccount         string `human:"Google Service Account" serialized:"google_service_account,omitempty"`
+}
 
-// providerIntegrationListOut represents the output struct for list view
+// providerIntegrationListOut represents the output structure for listing provider integrations
 type providerIntegrationListOut struct {
 	Id            string `human:"ID" serialized:"id"`
 	DisplayName   string `human:"Name" serialized:"display_name"`
@@ -24,33 +37,4 @@ type providerIntegrationListOut struct {
 	Environment   string `human:"Environment" serialized:"environment"`
 	Status        string `human:"Status" serialized:"status"`
 	Configuration string `human:"Configuration" serialized:"configuration"`
-}
-
-// providerIntegrationOut represents the output struct for detailed views (describe)
-type providerIntegrationOut struct {
-	Id          string          `human:"ID" serialized:"id"`
-	DisplayName string          `human:"Name" serialized:"display_name"`
-	Provider    string          `human:"Provider" serialized:"provider"`
-	Environment string          `human:"Environment" serialized:"environment"`
-	Status      string          `human:"Status" serialized:"status"`
-	AzureConfig *azureConfigOut `human:"Azure Configuration" serialized:"azure_config,omitempty"`
-	GcpConfig   *gcpConfigOut   `human:"GCP Configuration" serialized:"gcp_config,omitempty"`
-}
-
-type azureConfigOut struct {
-	CustomerTenantId          string `human:"Customer Azure Tenant ID" serialized:"customer_azure_tenant_id"`
-	ConfluentMultiTenantAppId string `human:"Confluent Multi-Tenant App ID" serialized:"confluent_multi_tenant_app_id"`
-}
-
-func (a *azureConfigOut) String() string {
-	return fmt.Sprintf("Customer Azure Tenant ID: %s\nConfluent Multi-Tenant App ID: %s", a.CustomerTenantId, a.ConfluentMultiTenantAppId)
-}
-
-type gcpConfigOut struct {
-	CustomerServiceAccount string `human:"Customer Google Service Account" serialized:"customer_google_service_account"`
-	GoogleServiceAccount   string `human:"Google Service Account" serialized:"google_service_account"`
-}
-
-func (g *gcpConfigOut) String() string {
-	return fmt.Sprintf("Customer Google Service Account: %s\nGoogle Service Account: %s", g.CustomerServiceAccount, g.GoogleServiceAccount)
 }

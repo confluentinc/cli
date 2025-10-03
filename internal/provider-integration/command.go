@@ -27,7 +27,6 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		Use:         "provider-integration",
 		Aliases:     []string{"pi"},
 		Short:       "Manage Confluent Cloud provider integrations.",
-		Long:        "Manage Confluent Cloud provider integrations.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 

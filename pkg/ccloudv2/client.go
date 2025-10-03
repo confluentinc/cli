@@ -1,8 +1,6 @@
 package ccloudv2
 
 import (
-	"context"
-
 	aiv1 "github.com/confluentinc/ccloud-sdk-go-v2/ai/v1"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	billingv1 "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
@@ -43,10 +41,6 @@ import (
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
-// contextKey is a custom type for context keys to avoid collisions
-type contextKey string
-
-const configContextKey contextKey = "config"
 
 // Client represents a Confluent Cloud Client as defined by ccloud-sdk-go-v2
 type Client struct {
@@ -89,9 +83,6 @@ type Client struct {
 	CCPMClient                   *ccpmv1.APIClient
 }
 
-func (c *Client) GetContext(ctx context.Context) context.Context {
-	return context.WithValue(ctx, configContextKey, c.cfg)
-}
 
 func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 	httpClient := NewRetryableHttpClient(cfg, unsafeTrace)

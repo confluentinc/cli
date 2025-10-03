@@ -63,11 +63,35 @@ func (c *Client) DeletePimV2Integration(ctx context.Context, id, environmentId s
 	return err
 }
 
-// ListPimV2Integrations lists provider integrations
-func (c *Client) ListPimV2Integrations(ctx context.Context, environmentId string) (piv2.PimV2IntegrationList, error) {
-	integrations, _, err := c.ProviderIntegrationV2Client.IntegrationsPimV2Api.ListPimV2Integrations(c.V2ApiContext(ctx)).Environment(environmentId).Execute()
-	if err != nil {
-		return piv2.PimV2IntegrationList{}, err
+// ListPimV2Integrations lists provider integrations with pagination support
+func (c *Client) ListPimV2Integrations(ctx context.Context, environmentId string) ([]piv2.PimV2Integration, error) {
+	var allIntegrations []piv2.PimV2Integration
+	pageToken := ""
+	
+	for {
+		req := c.ProviderIntegrationV2Client.IntegrationsPimV2Api.ListPimV2Integrations(c.V2ApiContext(ctx)).Environment(environmentId).PageSize(ccloudV2ListPageSize)
+		if pageToken != "" {
+			req = req.PageToken(pageToken)
+		}
+		
+		page, _, err := req.Execute()
+		if err != nil {
+			return nil, err
+		}
+		
+		allIntegrations = append(allIntegrations, page.GetData()...)
+		
+		// Check if there are more pages
+		if !page.Metadata.Next.IsSet() {
+			break
+		}
+		
+		nextPageToken, done, err := extractNextPageToken(page.Metadata.Next)
+		if err != nil || done {
+			break
+		}
+		pageToken = nextPageToken
 	}
-	return integrations, nil
+	
+	return allIntegrations, nil
 }

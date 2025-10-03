@@ -15,8 +15,6 @@
 package v2
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -26,10 +24,10 @@ import (
 
 func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <id>",
-		Short: "Delete a provider integration.",
-		Long:  "Delete a provider integration. This operation cannot be undone.",
-		Args:  cobra.ExactArgs(1),
+		Use:   "delete <id-1> [id-2] ... [id-n]",
+		Short: "Delete one or more provider integrations.",
+		Long:  "Delete one or more provider integrations. This operation cannot be undone.",
+		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -37,8 +35,8 @@ func (c *command) newDeleteCommand() *cobra.Command {
 				Code: "confluent provider-integration v2 delete pi-123456",
 			},
 			examples.Example{
-				Text: "Delete provider integration \"pi-123456\" in environment \"env-789012\".",
-				Code: "confluent provider-integration v2 delete pi-123456 --environment env-789012",
+				Text: "Delete provider integrations \"pi-123456\" and \"pi-789012\" in environment \"env-345678\".",
+				Code: "confluent provider-integration v2 delete pi-123456 pi-789012 --environment env-345678",
 			},
 		),
 	}
@@ -51,34 +49,32 @@ func (c *command) newDeleteCommand() *cobra.Command {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	integrationId := args[0]
-
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	// First, check if the integration exists and get its status
-	integration, err := c.V2Client.GetPimV2Integration(cmd.Context(), integrationId, environmentId)
-	if err != nil {
+	existenceFunc := func(id string) bool {
+		integration, err := c.V2Client.GetPimV2Integration(cmd.Context(), id, environmentId)
+		if err != nil {
+			return false
+		}
+		// Check if the integration has any usages
+		if len(integration.GetUsages()) > 0 {
+			cmd.Printf("Warning: provider integration %q is currently in use by %d resource(s). Remove all usages before deleting.\n", id, len(integration.GetUsages()))
+			return false
+		}
+		return true
+	}
+
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, "provider integration"); err != nil {
 		return err
 	}
 
-	// Check if the integration has any usages
-	if len(integration.GetUsages()) > 0 {
-		return fmt.Errorf("cannot delete provider integration %q: it is currently in use by %d resource(s). Remove all usages before deleting", integrationId, len(integration.GetUsages()))
+	deleteFunc := func(id string) error {
+		return c.V2Client.DeletePimV2Integration(cmd.Context(), id, environmentId)
 	}
 
-	// Confirm deletion unless --force is used
-	promptMsg := deletion.DefaultYesNoPromptString(cmd, "provider integration", []string{integrationId}, "")
-	if err := deletion.ConfirmPrompt(cmd, promptMsg); err != nil {
-		return err
-	}
-
-	if err := c.V2Client.DeletePimV2Integration(cmd.Context(), integrationId, environmentId); err != nil {
-		return err
-	}
-
-	cmd.Printf("Deleted provider integration \"%s\".\n", integrationId)
-	return nil
+	_, err = deletion.Delete(cmd, args, deleteFunc, "provider integration")
+	return err
 }

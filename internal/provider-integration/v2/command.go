@@ -28,7 +28,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "v2",
 		Short:       "Manage provider integrations (v2).",
-		Long:        "Manage provider integrations that allow users to configure access to cloud provider resources through Confluent resources.\n\nCurrently supports: GCP and Azure\nIn CLI v5: Will support all clouds (AWS, GCP, Azure) and replace v1 commands entirely.",
+		Long:        "Manage provider integrations that allow users to configure access to cloud provider resources through Confluent resources.\n\nCurrently supports: Azure and GCP.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 

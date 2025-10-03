@@ -75,36 +75,16 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	if integration.Config != nil {
 		if integration.Config.PimV2AzureIntegrationConfig != nil {
 			azureConfig := integration.Config.PimV2AzureIntegrationConfig
-			out.AzureConfig = &azureConfigOut{
-				CustomerTenantId:          azureConfig.GetCustomerAzureTenantId(),
-				ConfluentMultiTenantAppId: azureConfig.GetConfluentMultiTenantAppId(),
-			}
+			out.CustomerAzureTenantId = azureConfig.GetCustomerAzureTenantId()
+			out.ConfluentMultiTenantAppId = azureConfig.GetConfluentMultiTenantAppId()
 		}
 		if integration.Config.PimV2GcpIntegrationConfig != nil {
 			gcpConfig := integration.Config.PimV2GcpIntegrationConfig
-			out.GcpConfig = &gcpConfigOut{
-				CustomerServiceAccount: gcpConfig.GetCustomerGoogleServiceAccount(),
-				GoogleServiceAccount:   gcpConfig.GetGoogleServiceAccount(),
-			}
+			out.CustomerGoogleServiceAccount = gcpConfig.GetCustomerGoogleServiceAccount()
+			out.GoogleServiceAccount = gcpConfig.GetGoogleServiceAccount()
 		}
 	}
 
 	table.Add(out)
-
-	// Filter fields based on provider and configuration state
-	fields := []string{"Id", "DisplayName", "Provider", "Environment", "Status"}
-
-	switch integration.GetProvider() {
-	case providerAzure:
-		if out.AzureConfig != nil {
-			fields = append(fields, "AzureConfig")
-		}
-	case providerGcp:
-		if out.GcpConfig != nil {
-			fields = append(fields, "GcpConfig")
-		}
-	}
-
-	table.Filter(fields)
 	return table.Print()
 }
