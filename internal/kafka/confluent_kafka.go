@@ -26,8 +26,6 @@ import (
 )
 
 const (
-	messageOffset = 5 // Schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
-
 	// required fields of SASL/oauthbearer configuration
 	principalClaimNameKey = "principalClaimName"
 	principalKey          = "principal"

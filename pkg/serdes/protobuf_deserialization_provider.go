@@ -114,7 +114,7 @@ func (p *ProtobufDeserializationProvider) requestSchema(subject, schemaPath stri
 
 	var idString string
 	if schemaID.ID > 0 { // integer schema ID from the message prefix
-		idString = strconv.Itoa(int(schemaID.ID))
+		idString = strconv.Itoa(schemaID.ID)
 	} else if schemaID.GUID != uuid.Nil { // GUID schema ID from the header
 		idString = schemaID.GUID.String()
 	}
