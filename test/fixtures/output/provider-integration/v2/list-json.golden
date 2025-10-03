@@ -1,0 +1,18 @@
+[
+  {
+    "id": "pi-123456",
+    "display_name": "azure-test",
+    "provider": "azure",
+    "environment": "env-596",
+    "status": "DRAFT",
+    "configuration": "00000000-0000-0000-0000-000000000000"
+  },
+  {
+    "id": "pi-789012",
+    "display_name": "gcp-test",
+    "provider": "gcp",
+    "environment": "env-596",
+    "status": "DRAFT",
+    "configuration": "confluent-sa-123456789@gcp-sa-cloud.iam.gserviceaccount.com"
+  }
+]
