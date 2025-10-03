@@ -80,7 +80,7 @@ func (a *AvroDeserializationProvider) InitDeserializer(srClientUrl, srClusterId,
 	return nil
 }
 
-func (a *AvroDeserializationProvider) LoadSchema(_ string, _ map[string]string) error {
+func (a *AvroDeserializationProvider) LoadSchema(_ string, _ string, _ serde.Type, _ *kafka.Message) error {
 	return nil
 }
 

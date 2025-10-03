@@ -1,6 +1,9 @@
 package serdes
 
-import "github.com/confluentinc/confluent-kafka-go/v2/kafka"
+import (
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
+)
 
 type StringDeserializationProvider struct{}
 
@@ -8,7 +11,7 @@ func (s *StringDeserializationProvider) InitDeserializer(_, _, _ string, _ Schem
 	return nil
 }
 
-func (s *StringDeserializationProvider) LoadSchema(_ string, _ map[string]string) error {
+func (s *StringDeserializationProvider) LoadSchema(_ string, _ string, _ serde.Type, _ *kafka.Message) error {
 	return nil
 }
 

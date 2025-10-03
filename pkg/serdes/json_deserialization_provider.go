@@ -79,7 +79,7 @@ func (j *JsonDeserializationProvider) InitDeserializer(srClientUrl, srClusterId,
 	return nil
 }
 
-func (j *JsonDeserializationProvider) LoadSchema(_ string, _ map[string]string) error {
+func (j *JsonDeserializationProvider) LoadSchema(_ string, _ string, _ serde.Type, _ *kafka.Message) error {
 	return nil
 }
 

@@ -2,13 +2,10 @@ package kafka
 
 import (
 	"context"
-	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -16,8 +13,8 @@ import (
 	"github.com/spf13/cobra"
 
 	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
@@ -26,7 +23,6 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/schemaregistry"
 	"github.com/confluentinc/cli/v4/pkg/serdes"
-	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 const (
@@ -250,14 +246,8 @@ func ConsumeMessage(message *ckgo.Message, h *GroupHandler) error {
 			return err
 		}
 
-		if serdes.IsProtobufSchema(h.KeyFormat) { // avro and json schema don't need to load schema
-			schemaPath, referencePathMap, err := h.RequestSchema(message.Key)
-			if err != nil {
-				return err
-			}
-			if err := keyDeserializer.LoadSchema(schemaPath, referencePathMap); err != nil {
-				return err
-			}
+		if err := keyDeserializer.LoadSchema(h.Subject, h.Properties.SchemaPath, serde.KeySerde, message); err != nil {
+			return err
 		}
 
 		jsonMessage, err := keyDeserializer.Deserialize(h.Topic, message.Headers, message.Key)
@@ -283,14 +273,8 @@ func ConsumeMessage(message *ckgo.Message, h *GroupHandler) error {
 		return err
 	}
 
-	if serdes.IsProtobufSchema(h.ValueFormat) { // avro and json schema don't need to load schema
-		schemaPath, referencePathMap, err := h.RequestSchema(message.Value)
-		if err != nil {
-			return err
-		}
-		if err := valueDeserializer.LoadSchema(schemaPath, referencePathMap); err != nil {
-			return err
-		}
+	if err := valueDeserializer.LoadSchema(h.Subject, h.Properties.SchemaPath, serde.ValueSerde, message); err != nil {
+		return err
 	}
 
 	messageString, err := getMessageString(message, valueDeserializer, h.Properties, h.Topic)
@@ -387,58 +371,6 @@ func (c *command) runConsumer(consumer *ckgo.Consumer, groupHandler *GroupHandle
 		}
 	}
 	return nil
-}
-
-func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, error) {
-	if len(value) == 0 || value[0] != 0x0 {
-		return "", nil, errors.NewErrorWithSuggestions("unknown magic byte", fmt.Sprintf("Check that all messages from this topic are in the %s format.", h.ValueFormat))
-	}
-	if len(value) < messageOffset {
-		return "", nil, fmt.Errorf("failed to find schema ID in topic data")
-	}
-
-	// Retrieve schema from cluster only if schema is specified.
-	schemaID := int32(binary.BigEndian.Uint32(value[1:messageOffset])) // schema id is stored as a part of message meta info
-
-	// Create temporary file to store schema retrieved (also for cache). Retry if get error retrieving schema or writing temp schema file
-	tempStorePath := filepath.Join(h.Properties.SchemaPath, fmt.Sprintf("%s-%d.txt", h.Subject, schemaID))
-	tempRefStorePath := filepath.Join(h.Properties.SchemaPath, fmt.Sprintf("%s-%d.ref", h.Subject, schemaID))
-	var references []srsdk.SchemaReference
-	if !utils.FileExists(tempStorePath) || !utils.FileExists(tempRefStorePath) {
-		// TODO: add handler for writing schema failure
-		schemaString, err := h.SrClient.GetSchema(schemaID, h.Subject)
-		if err != nil {
-			return "", nil, err
-		}
-		if err := os.WriteFile(tempStorePath, []byte(schemaString.GetSchema()), 0644); err != nil {
-			return "", nil, err
-		}
-
-		refBytes, err := json.Marshal(schemaString.References)
-		if err != nil {
-			return "", nil, err
-		}
-		if err := os.WriteFile(tempRefStorePath, refBytes, 0644); err != nil {
-			return "", nil, err
-		}
-		references = schemaString.GetReferences()
-	} else {
-		refBlob, err := os.ReadFile(tempRefStorePath)
-		if err != nil {
-			return "", nil, err
-		}
-		if err := json.Unmarshal(refBlob, &references); err != nil {
-			return "", nil, err
-		}
-	}
-
-	// Store the references in temporary files
-	referencePathMap, err := schemaregistry.StoreSchemaReferences(h.Properties.SchemaPath, references, h.SrClient)
-	if err != nil {
-		return "", nil, err
-	}
-
-	return tempStorePath, referencePathMap, nil
 }
 
 func getFullHeaders(headers []ckgo.Header) []string {

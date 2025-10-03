@@ -5,6 +5,7 @@ import (
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
 )
@@ -75,7 +76,7 @@ type SerializationProvider interface {
 
 type DeserializationProvider interface {
 	InitDeserializer(srClientUrl, srClusterId, mode string, srAuth SchemaRegistryAuth, existingClient any) error
-	LoadSchema(string, map[string]string) error
+	LoadSchema(string, string, serde.Type, *kafka.Message) error
 	Deserialize(string, []kafka.Header, []byte) (string, error)
 }
 
