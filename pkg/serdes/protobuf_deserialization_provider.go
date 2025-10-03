@@ -204,9 +204,17 @@ func (p *ProtobufDeserializationProvider) Deserialize(topic string, headers []ka
 	}
 
 	// Deserialize the payload into the msgObj
-	msgObj, err := p.deser.Deserialize(topic, payload)
-	if err != nil {
-		return "", fmt.Errorf("failed to deserialize payload: %w", err)
+	var msgObj interface{}
+	if len(headers) > 0 {
+		msgObj, err = p.deser.DeserializeWithHeaders(topic, headers, payload)
+		if err != nil {
+			return "", fmt.Errorf("failed to deserialize payload: %w", err)
+		}
+	} else {
+		msgObj, err = p.deser.Deserialize(topic, payload)
+		if err != nil {
+			return "", fmt.Errorf("failed to deserialize payload: %w", err)
+		}
 	}
 
 	// Use protojson library to marshal the message to JSON in a compact format
