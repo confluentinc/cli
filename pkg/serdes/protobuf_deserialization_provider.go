@@ -17,6 +17,7 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/protobuf"
 
+	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
@@ -46,7 +47,8 @@ func (p *ProtobufDeserializationProvider) InitDeserializer(srClientUrl, srCluste
 		} else if srAuth.Token != "" {
 			serdeClientConfig = schemaregistry.NewConfigWithBearerAuthentication(srClientUrl, srAuth.Token, srClusterId, "")
 		} else {
-			return fmt.Errorf("schema registry client authentication should be provider to initialize deserializer")
+			serdeClientConfig = schemaregistry.NewConfig(srClientUrl)
+			log.CliLogger.Info("initializing deserializer with no schema registry client authentication")
 		}
 		serdeClientConfig.SslCaLocation = srAuth.CertificateAuthorityPath
 		serdeClientConfig.SslCertificateLocation = srAuth.ClientCertPath
