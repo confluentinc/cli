@@ -67,7 +67,7 @@ func (c *Client) DeletePimV2Integration(ctx context.Context, id, environmentId s
 func (c *Client) ListPimV2Integrations(ctx context.Context, environmentId string) ([]piv2.PimV2Integration, error) {
 	var allIntegrations []piv2.PimV2Integration
 	pageToken := ""
-	
+
 	for {
 		req := c.ProviderIntegrationV2Client.IntegrationsPimV2Api.ListPimV2Integrations(c.V2ApiContext(ctx)).Environment(environmentId).PageSize(ccloudV2ListPageSize)
 		if pageToken != "" {

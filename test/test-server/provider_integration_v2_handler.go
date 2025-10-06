@@ -162,7 +162,7 @@ func handleProviderIntegrationV2Create(t *testing.T) http.HandlerFunc {
 		provider := strings.ToLower(request.GetProvider())
 		var id string
 		displayName := request.GetDisplayName()
-		
+
 		switch provider {
 		case "azure":
 			if displayName == "azure-test" {
