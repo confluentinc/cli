@@ -53,6 +53,15 @@ func (s *CLITestSuite) TestFlinkArtifact() {
 		{args: "flink artifact list --cloud azure --region centralus --environment env-123456", fixture: "flink/artifact/list-azure.golden"},
 		{args: "flink artifact delete --cloud azure --region centralus --environment env-123456 --force cfa-123456", fixture: "flink/artifact/delete-azure.golden"},
 		{args: "flink artifact delete --cloud azure --region centralus --environment env-123456 cfa-123456", input: "y\n", fixture: "flink/artifact/delete-prompt-azure.golden"},
+
+		{args: "flink artifact create my-flink-artifact --artifact-file test/fixtures/input/flink/java-udf-examples-3.0.jar --cloud gcp --region us-central1 --environment env-123456", fixture: "flink/artifact/create-gcp.golden"},
+		{args: "flink artifact create my-flink-artifact --artifact-file test/fixtures/input/flink/java-udf-examples-3.0.jar --cloud gcp --region us-central1 --environment env-123456 --description CliArtifactTest", fixture: "flink/artifact/create-gcp.golden"},
+		{args: "flink artifact create my-flink-artifact --artifact-file test/fixtures/input/flink/java-udf-examples-3.0.jar --cloud gcp --region us-central1 --environment env-123456 --description CliArtifactTest --documentation-link https://docs.confluent.io", fixture: "flink/artifact/create-gcp.golden"},
+		{args: "flink artifact create my-flink-artifact --artifact-file test/fixtures/input/flink/python-udf-examples.zip --cloud gcp --region us-central1 --environment env-789012 --description CliArtifactTest --runtime-language python", fixture: "flink/artifact/create-python-gcp.golden"},
+		{args: "flink artifact describe --cloud gcp --region us-central1 --environment env-123456 cfa-789013", fixture: "flink/artifact/describe-gcp.golden"},
+		{args: "flink artifact list --cloud gcp --region us-central1 --environment env-123456", fixture: "flink/artifact/list-gcp.golden"},
+		{args: "flink artifact delete --cloud gcp --region us-central1 --environment env-123456 --force cfa-123456", fixture: "flink/artifact/delete-gcp.golden"},
+		{args: "flink artifact delete --cloud gcp --region us-central1 --environment env-123456 cfa-123456", input: "y\n", fixture: "flink/artifact/delete-prompt-gcp.golden"},
 	}
 
 	for _, test := range tests {
