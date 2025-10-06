@@ -82,7 +82,6 @@ type Client struct {
 	CCPMClient                   *ccpmv1.APIClient
 }
 
-
 func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 	httpClient := NewRetryableHttpClient(cfg, unsafeTrace)
 

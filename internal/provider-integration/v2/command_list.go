@@ -69,17 +69,17 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			Status:      integration.GetStatus(),
 		}
 
-		// Set configuration field to just the relevant UUID/ID
+		// Add provider-specific configuration details
 		if integration.Config != nil {
-			switch integration.GetProvider() {
-			case providerAzure:
-				if integration.Config.PimV2AzureIntegrationConfig != nil {
-					out.Configuration = integration.Config.PimV2AzureIntegrationConfig.GetCustomerAzureTenantId()
-				}
-			case providerGcp:
-				if integration.Config.PimV2GcpIntegrationConfig != nil {
-					out.Configuration = integration.Config.PimV2GcpIntegrationConfig.GetGoogleServiceAccount()
-				}
+			if integration.Config.PimV2AzureIntegrationConfig != nil {
+				azureConfig := integration.Config.PimV2AzureIntegrationConfig
+				out.CustomerAzureTenantId = azureConfig.GetCustomerAzureTenantId()
+				out.ConfluentMultiTenantAppId = azureConfig.GetConfluentMultiTenantAppId()
+			}
+			if integration.Config.PimV2GcpIntegrationConfig != nil {
+				gcpConfig := integration.Config.PimV2GcpIntegrationConfig
+				out.CustomerGoogleServiceAccount = gcpConfig.GetCustomerGoogleServiceAccount()
+				out.GoogleServiceAccount = gcpConfig.GetGoogleServiceAccount()
 			}
 		}
 

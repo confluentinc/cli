@@ -20,6 +20,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/deletion"
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
 func (c *command) newDeleteCommand() *cobra.Command {
@@ -67,7 +68,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return true
 	}
 
-	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, "provider integration"); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.ProviderIntegration); err != nil {
 		return err
 	}
 
@@ -75,6 +76,6 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeletePimV2Integration(cmd.Context(), id, environmentId)
 	}
 
-	_, err = deletion.Delete(cmd, args, deleteFunc, "provider integration")
+	_, err = deletion.Delete(cmd, args, deleteFunc, resource.ProviderIntegration)
 	return err
 }

@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	piv2 "github.com/confluentinc/ccloud-sdk-go-v2/provider-integration/v2"
+
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 func newProviderIntegrationV2Client(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *piv2.APIClient {
@@ -65,33 +67,30 @@ func (c *Client) DeletePimV2Integration(ctx context.Context, id, environmentId s
 
 // ListPimV2Integrations lists provider integrations with pagination support
 func (c *Client) ListPimV2Integrations(ctx context.Context, environmentId string) ([]piv2.PimV2Integration, error) {
-	var allIntegrations []piv2.PimV2Integration
+	var list []piv2.PimV2Integration
+	done := false
 	pageToken := ""
 
-	for {
-		req := c.ProviderIntegrationV2Client.IntegrationsPimV2Api.ListPimV2Integrations(c.V2ApiContext(ctx)).Environment(environmentId).PageSize(ccloudV2ListPageSize)
-		if pageToken != "" {
-			req = req.PageToken(pageToken)
+	for !done {
+		page, httpResp, err := c.executeListPimV2Integrations(ctx, environmentId, pageToken)
+		if err != nil {
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
-		
-		page, _, err := req.Execute()
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
-		
-		allIntegrations = append(allIntegrations, page.GetData()...)
-		
-		// Check if there are more pages
-		if !page.Metadata.Next.IsSet() {
-			break
-		}
-		
-		nextPageToken, done, err := extractNextPageToken(page.Metadata.Next)
-		if err != nil || done {
-			break
-		}
-		pageToken = nextPageToken
 	}
-	
-	return allIntegrations, nil
+
+	return list, nil
+}
+
+func (c *Client) executeListPimV2Integrations(ctx context.Context, environmentId, pageToken string) (piv2.PimV2IntegrationList, *http.Response, error) {
+	req := c.ProviderIntegrationV2Client.IntegrationsPimV2Api.ListPimV2Integrations(c.V2ApiContext(ctx)).Environment(environmentId).PageSize(ccloudV2ListPageSize)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+	return req.Execute()
 }
