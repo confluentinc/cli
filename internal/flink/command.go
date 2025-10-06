@@ -59,6 +59,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	return cmd
 }
 
+// here
 func (c *command) addComputePoolFlag(cmd *cobra.Command) {
 	cmd.Flags().String("compute-pool", "", "Flink compute pool ID.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "compute-pool", c.autocompleteComputePools)
