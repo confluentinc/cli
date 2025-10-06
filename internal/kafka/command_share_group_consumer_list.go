@@ -15,16 +15,16 @@ type shareGroupConsumerOut struct {
 	Client     string `human:"Client" serialized:"client"`
 }
 
-func (c *shareCommand) newGroupConsumerListCommand() *cobra.Command {
+func (c *shareGroupCommand) newConsumerListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka share group consumers.",
 		Args:  cobra.NoArgs,
-		RunE:  c.groupConsumerList,
+		RunE:  c.consumerList,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `List all consumers in share group "my-share-group".`,
-				Code: "confluent kafka share group consumer list --group my-share-group",
+				Code: "confluent kafka share-group consumer list --group my-share-group",
 			},
 		),
 	}
@@ -41,7 +41,7 @@ func (c *shareCommand) newGroupConsumerListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *shareCommand) groupConsumerList(cmd *cobra.Command, _ []string) error {
+func (c *shareGroupCommand) consumerList(cmd *cobra.Command, _ []string) error {
 	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
@@ -69,7 +69,7 @@ func (c *shareCommand) groupConsumerList(cmd *cobra.Command, _ []string) error {
 	return list.Print()
 }
 
-func (c *shareCommand) addShareGroupFlag(cmd *cobra.Command) {
+func (c *shareGroupCommand) addShareGroupFlag(cmd *cobra.Command) {
 	cmd.Flags().String("group", "", "Share group ID.")
 
 	pcmd.RegisterFlagCompletionFunc(cmd, "group", func(cmd *cobra.Command, args []string) []string {

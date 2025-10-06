@@ -7,13 +7,13 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *shareCommand) newGroupDescribeCommand() *cobra.Command {
+func (c *shareGroupCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <group>",
 		Short:             "Describe a Kafka share group.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validGroupArgs),
-		RunE:              c.groupDescribe,
+		RunE:              c.describe,
 	}
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -25,7 +25,7 @@ func (c *shareCommand) newGroupDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *shareCommand) groupDescribe(cmd *cobra.Command, args []string) error {
+func (c *shareGroupCommand) describe(cmd *cobra.Command, args []string) error {
 	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err

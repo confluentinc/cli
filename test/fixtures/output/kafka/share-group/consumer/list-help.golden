@@ -1,12 +1,12 @@
 List Kafka share group consumers.
 
 Usage:
-  confluent kafka share group consumer list [flags]
+  confluent kafka share-group consumer list [flags]
 
 Examples:
 List all consumers in share group "my-share-group".
 
-  $ confluent kafka share group consumer list --group my-share-group
+  $ confluent kafka share-group consumer list --group my-share-group
 
 Flags:
       --group string            REQUIRED: Share group ID.

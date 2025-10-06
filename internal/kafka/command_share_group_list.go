@@ -7,12 +7,12 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *shareCommand) newGroupListCommand() *cobra.Command {
+func (c *shareGroupCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka share groups.",
 		Args:  cobra.NoArgs,
-		RunE:  c.groupList,
+		RunE:  c.list,
 	}
 
 	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
@@ -24,7 +24,7 @@ func (c *shareCommand) newGroupListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *shareCommand) groupList(cmd *cobra.Command, _ []string) error {
+func (c *shareGroupCommand) list(cmd *cobra.Command, _ []string) error {
 	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return err
@@ -37,7 +37,7 @@ func (c *shareCommand) groupList(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, shareGroup := range shareGroups {
-		list.Add(&shareGroupListOut{
+		list.Add(&shareGroupOut{
 			Cluster:       shareGroup.GetClusterId(),
 			ShareGroup:    shareGroup.GetShareGroupId(),
 			Coordinator:   getStringBroker(shareGroup.GetCoordinator().Related),
@@ -45,5 +45,6 @@ func (c *shareCommand) groupList(cmd *cobra.Command, _ []string) error {
 			ConsumerCount: shareGroup.GetConsumerCount(),
 		})
 	}
+	list.Filter([]string{"Cluster", "ShareGroup", "Coordinator", "State", "ConsumerCount"})
 	return list.Print()
 }
