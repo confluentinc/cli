@@ -13,12 +13,17 @@ type command struct {
 }
 
 type out struct {
-	Id        string   `human:"ID" serialized:"id"`
-	Key       string   `human:"Key" serialized:"key"`
-	Roles     []string `human:"Roles" serialized:"roles"`
-	Cloud     string   `human:"Cloud" serialized:"cloud"`
-	State     string   `human:"State" serialized:"state"`
-	CreatedAt string   `human:"Created At" serialized:"created_at"`
+	Id                string   `human:"ID" serialized:"id"`
+	DisplayName       string   `human:"Display Name,omitempty" serialized:"display_name,omitempty"`
+	Key               string   `human:"Key" serialized:"key"`
+	Roles             []string `human:"Roles" serialized:"roles"`
+	Cloud             string   `human:"Cloud" serialized:"cloud"`
+	ValidationRegion  string   `human:"Region,omitempty" serialized:"validation_region,omitempty"`
+	State             string   `human:"State" serialized:"state"`
+	CreatedAt         string   `human:"Created At" serialized:"created_at"`
+	ValidationPhase   string   `human:"Validation Phase" serialized:"validation_phase"`
+	ValidationMessage string   `human:"Message,omitempty" serialized:"validation_message,omitempty"`
+	ValidationSince   string   `human:"Since" serialized:"validation_since"`
 }
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {
@@ -34,6 +39,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newUpdateCommand())
 
 	return cmd
 }

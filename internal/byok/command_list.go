@@ -19,6 +19,10 @@ func (c *command) newListCommand() *cobra.Command {
 
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddByokStateFlag(cmd)
+	cmd.Flags().String("region", "", "Filter by region.")
+	cmd.Flags().String("phase", "", "Filter by validation phase.")
+	cmd.Flags().String("display-name", "", "Filter by display name.")
+	cmd.Flags().String("key", "", "Filter by key identifier.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -49,7 +53,27 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		state = "AVAILABLE"
 	}
 
-	keys, err := c.V2Client.ListByokKeys(cloud, state)
+	region, err := cmd.Flags().GetString("region")
+	if err != nil {
+		return err
+	}
+
+	phase, err := cmd.Flags().GetString("phase")
+	if err != nil {
+		return err
+	}
+
+	displayName, err := cmd.Flags().GetString("display-name")
+	if err != nil {
+		return err
+	}
+
+	key, err := cmd.Flags().GetString("key")
+	if err != nil {
+		return err
+	}
+
+	keys, err := c.V2Client.ListByokKeys(cloud, state, region, phase, displayName, key)
 	if err != nil {
 		return err
 	}
@@ -69,17 +93,22 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		list.Add(&out{
-			Id:        key.GetId(),
-			Key:       keyString,
-			Cloud:     key.GetProvider(),
-			State:     key.GetState(),
-			CreatedAt: key.Metadata.CreatedAt.String(),
+			Id:                key.GetId(),
+			DisplayName:       key.GetDisplayName(),
+			Key:               keyString,
+			Cloud:             key.GetProvider(),
+			State:             key.GetState(),
+			CreatedAt:         key.Metadata.CreatedAt.String(),
+			ValidationPhase:   key.Validation.GetPhase(),
+			ValidationSince:   key.Validation.GetSince().String(),
+			ValidationRegion:  key.Validation.GetRegion(),
+			ValidationMessage: key.Validation.GetMessage(),
 		})
 	}
 
 	// The API returns a list sorted by creation date already
 	list.Sort(false)
-	list.Filter([]string{"Id", "Key", "Cloud", "State", "CreatedAt"})
+	list.Filter([]string{"Id", "DisplayName", "Key", "Cloud", "State", "ValidationPhase", "CreatedAt"})
 
 	return list.Print()
 }
