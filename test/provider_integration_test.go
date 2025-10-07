@@ -121,6 +121,18 @@ func (s *CLITestSuite) TestProviderIntegrationV2() {
 			fixture:  "provider-integration/v2/describe-not-exist.golden",
 			exitCode: 1,
 		},
+
+		// Atomic behavior tests (invalid configs that should trigger cleanup)
+		{
+			args:     "provider-integration v2 create atomic-test-invalid-gcp --cloud gcp --gcp-service-account invalid-format",
+			fixture:  "provider-integration/v2/create-invalid-gcp-atomic.golden",
+			exitCode: 1,
+		},
+		{
+			args:     "provider-integration v2 create atomic-test-invalid-azure --cloud azure --azure-tenant-id not-a-valid-uuid",
+			fixture:  "provider-integration/v2/create-invalid-azure-atomic.golden",
+			exitCode: 1,
+		},
 	}
 
 	for _, test := range tests {
