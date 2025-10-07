@@ -1,0 +1,12 @@
++--------------------------------+--------------------------------------+
+| ID                             | pi-123456                            |
+| Name                           | azure-test                           |
+| Provider                       | azure                                |
+| Environment                    | env-596                              |
+| Status                         | DRAFT                                |
+| Customer Azure Tenant ID       | 00000000-0000-0000-0000-000000000000 |
+| Confluent Multi-Tenant App ID  | app-123456789                        |
+| Customer Google Service        |                                      |
+| Account                        |                                      |
+| Google Service Account         |                                      |
++--------------------------------+--------------------------------------+
