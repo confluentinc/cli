@@ -139,6 +139,19 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	updated, err := c.V2Client.UpdatePimV2Integration(cmd.Context(), integrationId, updateReq)
 	if err != nil {
+		// Extract the specific error message from the backend response
+		errorMsg := err.Error()
+		if errorMsg == "" {
+			errorMsg = "configuration error"
+		}
+
+		// If update fails, clean up the draft integration to make the operation atomic
+		cmd.Printf("Cleaning up DRAFT provider integration %s due to failure: %v\n", integrationId, errorMsg)
+		if deleteErr := c.V2Client.DeletePimV2Integration(cmd.Context(), integrationId, environmentId); deleteErr != nil {
+			cmd.Printf("Warning: Failed to clean up DRAFT provider integration %s: %v\n", integrationId, deleteErr)
+		} else {
+			cmd.Printf("Cleaned up DRAFT provider integration %s", integrationId)
+		}
 		return err
 	}
 
