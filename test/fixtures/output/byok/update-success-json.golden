@@ -7,9 +7,9 @@
     "arn:aws:iam::123456789012:role/role2"
   ],
   "cloud": "AWS",
+  "validation_region": "us-east-1",
   "state": "IN_USE",
   "created_at": "2022-11-12 08:24:00 +0000 UTC",
   "validation_phase": "VALID",
-  "validation_since": "2022-11-12 08:30:00 +0000 UTC",
-  "validation_region": "us-east-1"
+  "validation_since": "2022-11-12 08:30:00 +0000 UTC"
 }

@@ -58,12 +58,12 @@ func (c *command) outputByokKeyDescription(cmd *cobra.Command, key byokv1.ByokV1
 		Key:               keyString,
 		Roles:             roles,
 		Cloud:             key.GetProvider(),
+		ValidationRegion:  key.Validation.GetRegion(),
 		State:             key.GetState(),
 		CreatedAt:         key.Metadata.CreatedAt.String(),
 		ValidationPhase:   key.Validation.GetPhase(),
-		ValidationSince:   key.Validation.GetSince().String(),
-		ValidationRegion:  key.Validation.GetRegion(),
 		ValidationMessage: key.Validation.GetMessage(),
+		ValidationSince:   key.Validation.GetSince().String(),
 	})
 	table.Print()
 

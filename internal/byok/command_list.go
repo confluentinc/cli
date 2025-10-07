@@ -108,7 +108,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	// The API returns a list sorted by creation date already
 	list.Sort(false)
-	list.Filter([]string{"Id", "DisplayName", "Key", "Cloud", "State", "CreatedAt"})
+	list.Filter([]string{"Id", "DisplayName", "Key", "Cloud", "State", "ValidationPhase", "CreatedAt"})
 
 	return list.Print()
 }

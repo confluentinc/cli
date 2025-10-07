@@ -6,7 +6,7 @@
 | State            | AVAILABLE                                  |
 | Created At       | 2022-12-24 00:00:00 +0000 UTC              |
 | Validation Phase | INITIALIZING                               |
-| Validation Since | 2022-12-24 00:00:00 +0000 UTC              |
+| Since            | 2022-12-24 00:00:00 +0000 UTC              |
 +------------------+--------------------------------------------+
 
 To ensure the key vault has the correct role assignments, please run the following Azure CLI command (certified for `az` v2.45):
