@@ -167,12 +167,16 @@ func handleProviderIntegrationV2Create(t *testing.T) http.HandlerFunc {
 		case "azure":
 			if displayName == "azure-test" {
 				id = "pi-123456"
+			} else if displayName == "atomic-test-invalid-azure" {
+				id = "pi-atomic-azure"
 			} else {
 				id = "pi-azure-new"
 			}
 		case "gcp":
 			if displayName == "gcp-test" {
 				id = "pi-789012"
+			} else if displayName == "atomic-test-invalid-gcp" {
+				id = "pi-atomic-gcp"
 			} else {
 				id = "pi-gcp-new"
 			}
@@ -203,6 +207,38 @@ func handleProviderIntegrationV2Update(t *testing.T) http.HandlerFunc {
 		id := mux.Vars(r)["id"]
 		var request piv2.PimV2IntegrationUpdate
 		require.NoError(t, json.NewDecoder(r.Body).Decode(&request))
+
+		// Handle atomic test cases that should fail
+		if id == "pi-atomic-gcp" {
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"errors": []map[string]interface{}{
+					{
+						"id":     "test-error-id",
+						"status": "400",
+						"code":   "bad_request",
+						"detail": "invalid Google Service Account",
+						"source": map[string]interface{}{},
+					},
+				},
+			})
+			return
+		}
+		if id == "pi-atomic-azure" {
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"errors": []map[string]interface{}{
+					{
+						"id":     "test-error-id",
+						"status": "400",
+						"code":   "bad_request",
+						"detail": "invalid customer AZURE tenant id",
+						"source": map[string]interface{}{},
+					},
+				},
+			})
+			return
+		}
 
 		var mockResponse piv2.PimV2Integration
 		switch id {
