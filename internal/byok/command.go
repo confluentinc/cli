@@ -18,12 +18,12 @@ type out struct {
 	Key               string   `human:"Key" serialized:"key"`
 	Roles             []string `human:"Roles" serialized:"roles"`
 	Cloud             string   `human:"Cloud" serialized:"cloud"`
-	ValidationRegion  string   `human:"Region,omitempty" serialized:"validation_region,omitempty"`
+	ValidationRegion  string   `human:"Region,omitempty" serialized:"region,omitempty"`
 	State             string   `human:"State" serialized:"state"`
 	CreatedAt         string   `human:"Created At" serialized:"created_at"`
 	ValidationPhase   string   `human:"Validation Phase" serialized:"validation_phase"`
-	ValidationMessage string   `human:"Message,omitempty" serialized:"validation_message,omitempty"`
-	ValidationSince   string   `human:"Since" serialized:"validation_since"`
+	ValidationMessage string   `human:"Message,omitempty" serialized:"message,omitempty"`
+	ValidationSince   string   `human:"Since" serialized:"since"`
 }
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {

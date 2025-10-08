@@ -93,16 +93,13 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		list.Add(&out{
-			Id:                key.GetId(),
-			DisplayName:       key.GetDisplayName(),
-			Key:               keyString,
-			Cloud:             key.GetProvider(),
-			State:             key.GetState(),
-			CreatedAt:         key.Metadata.CreatedAt.String(),
-			ValidationPhase:   key.Validation.GetPhase(),
-			ValidationSince:   key.Validation.GetSince().String(),
-			ValidationRegion:  key.Validation.GetRegion(),
-			ValidationMessage: key.Validation.GetMessage(),
+			Id:              key.GetId(),
+			DisplayName:     key.GetDisplayName(),
+			Key:             keyString,
+			Cloud:           key.GetProvider(),
+			State:           key.GetState(),
+			CreatedAt:       key.Metadata.CreatedAt.String(),
+			ValidationPhase: key.Validation.GetPhase(),
 		})
 	}
 
