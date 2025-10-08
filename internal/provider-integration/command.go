@@ -3,7 +3,6 @@ package providerintegration
 import (
 	"github.com/spf13/cobra"
 
-	v2 "github.com/confluentinc/cli/v4/internal/provider-integration/v2"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
@@ -36,7 +35,6 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
-	cmd.AddCommand(v2.New(prerunner))
 
 	return cmd
 }
