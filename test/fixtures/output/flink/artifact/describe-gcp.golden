@@ -1,0 +1,11 @@
++--------------------+---------------------------+
+| ID                 | cfa-123456                |
+| Name               | my-flink-artifact         |
+| Version            | 1.0.0                     |
+| Cloud              | GCP                       |
+| Region             | us-central1               |
+| Environment        | env-123456                |
+| Content Format     | JAR                       |
+| Description        | CliArtifactTest           |
+| Documentation Link | https://docs.confluent.io |
++--------------------+---------------------------+
