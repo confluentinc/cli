@@ -11,7 +11,6 @@ Available Commands:
   delete      Delete one or more provider integrations.
   describe    Describe a provider integration.
   list        List provider integrations.
-  v2          Manage provider integrations (v2).
 
 Global Flags:
   -h, --help            Show help for this command.

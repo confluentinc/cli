@@ -1,4 +1,0 @@
-Error: provider integration "pi-invalid" not found
-
-Suggestions:
-    List available provider integrations with `confluent provider-integration v2 list`.
