@@ -28,47 +28,41 @@ func (c *Client) V2ApiContext(ctx context.Context) context.Context {
 
 // CreatePimV2Integration creates a new provider integration
 func (c *Client) CreatePimV2Integration(ctx context.Context, request piv2.PimV2Integration) (piv2.PimV2Integration, error) {
-	integration, httpResp, err := c.ProviderIntegrationV2Client.IntegrationsPimV2Api.CreatePimV2Integration(c.V2ApiContext(ctx)).PimV2Integration(request).Execute()
+	integration, _, err := c.ProviderIntegrationV2Client.IntegrationsPimV2Api.CreatePimV2Integration(c.V2ApiContext(ctx)).PimV2Integration(request).Execute()
 	if err != nil {
-		return piv2.PimV2Integration{}, errors.CatchCCloudV2Error(err, httpResp)
+		return piv2.PimV2Integration{}, err
 	}
 	return integration, nil
 }
 
 // UpdatePimV2Integration updates a provider integration
 func (c *Client) UpdatePimV2Integration(ctx context.Context, id string, request piv2.PimV2IntegrationUpdate) (piv2.PimV2Integration, error) {
-	integration, httpResp, err := c.ProviderIntegrationV2Client.IntegrationsPimV2Api.UpdatePimV2Integration(c.V2ApiContext(ctx), id).PimV2IntegrationUpdate(request).Execute()
+	integration, _, err := c.ProviderIntegrationV2Client.IntegrationsPimV2Api.UpdatePimV2Integration(c.V2ApiContext(ctx), id).PimV2IntegrationUpdate(request).Execute()
 	if err != nil {
-		return piv2.PimV2Integration{}, errors.CatchCCloudV2Error(err, httpResp)
+		return piv2.PimV2Integration{}, err
 	}
 	return integration, nil
 }
 
 // ValidatePimV2Integration validates a provider integration
 func (c *Client) ValidatePimV2Integration(ctx context.Context, request piv2.PimV2IntegrationValidateRequest) error {
-	httpResp, err := c.ProviderIntegrationV2Client.IntegrationsPimV2Api.ValidatePimV2Integration(c.V2ApiContext(ctx)).PimV2IntegrationValidateRequest(request).Execute()
-	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
-	}
-	return nil
+	_, err := c.ProviderIntegrationV2Client.IntegrationsPimV2Api.ValidatePimV2Integration(c.V2ApiContext(ctx)).PimV2IntegrationValidateRequest(request).Execute()
+	return err
 }
 
 // GetPimV2Integration gets a provider integration
 func (c *Client) GetPimV2Integration(ctx context.Context, id, environmentId string) (piv2.PimV2Integration, error) {
-	integration, httpResp, err := c.ProviderIntegrationV2Client.IntegrationsPimV2Api.GetPimV2Integration(c.V2ApiContext(ctx), id).Environment(environmentId).Execute()
+	integration, _, err := c.ProviderIntegrationV2Client.IntegrationsPimV2Api.GetPimV2Integration(c.V2ApiContext(ctx), id).Environment(environmentId).Execute()
 	if err != nil {
-		return piv2.PimV2Integration{}, errors.CatchCCloudV2Error(err, httpResp)
+		return piv2.PimV2Integration{}, err
 	}
 	return integration, nil
 }
 
 // DeletePimV2Integration deletes a provider integration
 func (c *Client) DeletePimV2Integration(ctx context.Context, id, environmentId string) error {
-	httpResp, err := c.ProviderIntegrationV2Client.IntegrationsPimV2Api.DeletePimV2Integration(c.V2ApiContext(ctx), id).Environment(environmentId).Execute()
-	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
-	}
-	return nil
+	_, err := c.ProviderIntegrationV2Client.IntegrationsPimV2Api.DeletePimV2Integration(c.V2ApiContext(ctx), id).Environment(environmentId).Execute()
+	return err
 }
 
 // ListPimV2Integrations lists provider integrations with pagination support
