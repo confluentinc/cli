@@ -120,6 +120,19 @@ func getCmkClusterPendingSize(cluster *cmkv2.CmkV2Cluster) int32 {
 	return -1
 }
 
+func getCmkMaxEcku(cluster *cmkv2.CmkV2Cluster) *int32 {
+	if isBasic(cluster) {
+		return cluster.Spec.Config.CmkV2Basic.MaxEcku
+	} else if isStandard(cluster) {
+		return cluster.Spec.Config.CmkV2Standard.MaxEcku
+	} else if isEnterprise(cluster) {
+		return cluster.Spec.Config.CmkV2Enterprise.MaxEcku
+	} else if isFreight(cluster) {
+		return cluster.Spec.Config.CmkV2Freight.MaxEcku
+	}
+	return nil
+}
+
 func getCmkByokId(cluster *cmkv2.CmkV2Cluster) string {
 	if isDedicated(cluster) && cluster.Spec.Byok != nil {
 		return cluster.Spec.Byok.Id

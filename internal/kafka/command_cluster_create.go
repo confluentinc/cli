@@ -63,6 +63,8 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddAvailabilityFlag(cmd)
 	pcmd.AddTypeFlag(cmd)
 	cmd.Flags().Int("cku", 0, `Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type "dedicated".`)
+	cmd.Flags().Int("max-ecku", 0, `Maximum number of Elastic Confluent Kafka Units (eCKUs) that Kafka clusters should auto-scale to. `+
+		`Kafka clusters with "HIGH" availability must have at least two eCKUs.`)
 	pcmd.AddByokKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddNetworkFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -134,6 +136,26 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		Config:       setCmkClusterConfig(clusterType, 1),
 		Byok:         keyGlobalObjectReference,
 	}}
+
+	if cmd.Flags().Changed("max-ecku") {
+		maxEcku, err := cmd.Flags().GetInt("max-ecku")
+		if err != nil {
+			return err
+		}
+		if clusterType == skuDedicated {
+			return errors.NewErrorWithSuggestions("the `--max-ecku` flag can only be used when creating a Basic, Standard, Enterprise, or Freight Kafka cluster", "Specify a different cluster with `--type` flag.")
+		}
+
+		if clusterType == skuBasic {
+			createCluster.Spec.Config.CmkV2Basic.MaxEcku = cmkv2.PtrInt32(int32(maxEcku))
+		} else if clusterType == skuStandard {
+			createCluster.Spec.Config.CmkV2Standard.MaxEcku = cmkv2.PtrInt32(int32(maxEcku))
+		} else if clusterType == skuEnterprise {
+			createCluster.Spec.Config.CmkV2Enterprise.MaxEcku = cmkv2.PtrInt32(int32(maxEcku))
+		} else if clusterType == skuFreight {
+			createCluster.Spec.Config.CmkV2Freight.MaxEcku = cmkv2.PtrInt32(int32(maxEcku))
+		}
+	}
 
 	if cmd.Flags().Changed("cku") {
 		cku, err := cmd.Flags().GetInt("cku")
