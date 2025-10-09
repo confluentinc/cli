@@ -99,7 +99,8 @@ blocks:
           commands:
             - checkout
             - "export SHORT_SHA=$(echo $SEMAPHORE_GIT_SHA | cut -c1-8)"
-            - "export BUILD_ID=${SEMAPHORE_GIT_BRANCH}-${SHORT_SHA}-${SEMAPHORE_WORKFLOW_ID}"
+            - "export TIMESTAMP=$(date -u +%Y%m%d-%H%M%S)"
+            - "export BUILD_ID=${SEMAPHORE_GIT_BRANCH}/${TIMESTAMP}-${SHORT_SHA}"
             - "echo Build ID: $BUILD_ID"
             - "GOOS=linux GOARCH=amd64 make muckrake-build-docker"
             - "source assume-iam-role arn:aws:iam::050879227952:role/cli-release-semaphore"
@@ -117,7 +118,8 @@ blocks:
           commands:
             - checkout
             - "export SHORT_SHA=$(echo $SEMAPHORE_GIT_SHA | cut -c1-8)"
-            - "export BUILD_ID=${SEMAPHORE_GIT_BRANCH}-${SHORT_SHA}-${SEMAPHORE_WORKFLOW_ID}"
+            - "export TIMESTAMP=$(date -u +%Y%m%d-%H%M%S)"
+            - "export BUILD_ID=${SEMAPHORE_GIT_BRANCH}/${TIMESTAMP}-${SHORT_SHA}"
             - "echo Build ID: $BUILD_ID"
             - "GOOS=linux GOARCH=arm64 make muckrake-build-docker"
             - "source assume-iam-role arn:aws:iam::050879227952:role/cli-release-semaphore"
