@@ -20,7 +20,7 @@ func (c *command) newListCommand() *cobra.Command {
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddByokStateFlag(cmd)
 	cmd.Flags().String("region", "", "Filter by region.")
-	cmd.Flags().String("phase", "", "Filter by validation phase.")
+	pcmd.AddByokValidationPhaseFlag(cmd)
 	cmd.Flags().String("display-name", "", "Filter by display name.")
 	cmd.Flags().String("key", "", "Filter by key identifier.")
 	pcmd.AddOutputFlag(cmd)
@@ -58,7 +58,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	phase, err := cmd.Flags().GetString("phase")
+	phase, err := cmd.Flags().GetString("validation-phase")
 	if err != nil {
 		return err
 	}

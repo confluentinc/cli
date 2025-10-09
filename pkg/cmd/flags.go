@@ -84,6 +84,11 @@ func AddByokStateFlag(cmd *cobra.Command) {
 	RegisterFlagCompletionFunc(cmd, "state", func(_ *cobra.Command, _ []string) []string { return []string{"in-use", "available"} })
 }
 
+func AddByokValidationPhaseFlag(cmd *cobra.Command) {
+	cmd.Flags().String("validation-phase", "", fmt.Sprintf("Specify the validation phase as %s.", utils.ArrayToCommaDelimitedString([]string{"valid", "invalid", "initializing"}, "or")))
+	RegisterFlagCompletionFunc(cmd, "validation-phase", func(_ *cobra.Command, _ []string) []string { return []string{"valid", "invalid", "initializing"} })
+}
+
 func AddCloudFlag(cmd *cobra.Command) {
 	cmd.Flags().String("cloud", "", fmt.Sprintf("Specify the cloud provider as %s.", utils.ArrayToCommaDelimitedString(kafka.Clouds, "or")))
 	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return kafka.Clouds })

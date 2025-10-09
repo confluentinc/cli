@@ -10,7 +10,7 @@ func (s *CLITestSuite) TestByok() {
 		{args: "byok list --cloud aws", fixture: "byok/list_3.golden"},
 		{args: "byok list --state in-use --cloud azure", fixture: "byok/list_4.golden"},
 		{args: "byok list --region us-east-1", fixture: "byok/list_5.golden"},
-		{args: "byok list --phase VALID", fixture: "byok/list_6.golden"},
+		{args: "byok list --validation-phase VALID", fixture: "byok/list_6.golden"},
 		{args: "byok list --display-name 'Development AWS Key'", fixture: "byok/list_7.golden"},
 		{args: "byok list --key 'a-vault'", fixture: "byok/list_8.golden"},
 		// create tests
