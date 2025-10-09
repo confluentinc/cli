@@ -88,9 +88,12 @@ blocks:
           commands:
             - test-results publish . -N "windows/amd64"
 
-  - name: "Muckrake Check"
+  - name: "Muckrake Check linux/amd64"
     dependencies: []
     task:
+      agent:
+        machine:
+          type: s1-prod-ubuntu24-04-amd64-1
       jobs:
         - name: "Build & Upload linux/amd64"
           commands:
