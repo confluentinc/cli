@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/jsonschema"
+
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 type JsonDeserializationProvider struct {
@@ -34,7 +37,8 @@ func (j *JsonDeserializationProvider) InitDeserializer(srClientUrl, srClusterId,
 		} else if srAuth.Token != "" {
 			serdeClientConfig = schemaregistry.NewConfigWithBearerAuthentication(srClientUrl, srAuth.Token, srClusterId, "")
 		} else {
-			return fmt.Errorf("schema registry client authentication should be provider to initialize deserializer")
+			serdeClientConfig = schemaregistry.NewConfig(srClientUrl)
+			log.CliLogger.Info("initializing deserializer with no schema registry client authentication")
 		}
 		serdeClientConfig.SslCaLocation = srAuth.CertificateAuthorityPath
 		serdeClientConfig.SslCertificateLocation = srAuth.ClientCertPath
@@ -47,7 +51,6 @@ func (j *JsonDeserializationProvider) InitDeserializer(srClientUrl, srClusterId,
 	}
 
 	serdeConfig := jsonschema.NewDeserializerConfig()
-	serdeConfig.EnableValidation = true
 
 	// local KMS secret is only set and used during local testing with ruleSet
 	if localKmsSecretValue := os.Getenv(localKmsSecretMacro); srClientUrl == mockClientUrl && localKmsSecretValue != "" {
@@ -76,15 +79,22 @@ func (j *JsonDeserializationProvider) InitDeserializer(srClientUrl, srClusterId,
 	return nil
 }
 
-func (j *JsonDeserializationProvider) LoadSchema(_ string, _ map[string]string) error {
+func (j *JsonDeserializationProvider) LoadSchema(_ string, _ string, _ serde.Type, _ *kafka.Message) error {
 	return nil
 }
 
-func (j *JsonDeserializationProvider) Deserialize(topic string, payload []byte) (string, error) {
+func (j *JsonDeserializationProvider) Deserialize(topic string, headers []kafka.Header, payload []byte) (string, error) {
 	message := make(map[string]interface{})
-	err := j.deser.DeserializeInto(topic, payload, &message)
-	if err != nil {
-		return "", fmt.Errorf("failed to deserialize payload: %w", err)
+	if len(headers) > 0 {
+		err := j.deser.DeserializeWithHeadersInto(topic, headers, payload, &message)
+		if err != nil {
+			return "", fmt.Errorf("failed to deserialize payload: %w", err)
+		}
+	} else {
+		err := j.deser.DeserializeInto(topic, payload, &message)
+		if err != nil {
+			return "", fmt.Errorf("failed to deserialize payload: %w", err)
+		}
 	}
 	jsonBytes, err := json.Marshal(message)
 	if err != nil {

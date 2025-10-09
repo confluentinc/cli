@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -15,6 +14,7 @@ import (
 	"github.com/swaggest/go-asyncapi/spec-2.4.0"
 
 	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 
 	"github.com/confluentinc/cli/v4/internal/kafka"
 	"github.com/confluentinc/cli/v4/pkg/auth"
@@ -317,17 +317,11 @@ func (c *command) getMessageExamples(consumer *ckgo.Consumer, topicName, content
 		Subject:     topicName + "-value",
 		Properties:  kafka.ConsumerProperties{},
 	}
-	if slices.Contains(serdes.SchemaBasedFormats, valueFormat) {
-		schemaPath, referencePathMap, err := groupHandler.RequestSchema(value)
-		if err != nil {
-			return nil, err
-		}
-		if err := deserializationProvider.LoadSchema(schemaPath, referencePathMap); err != nil {
-			return nil, err
-		}
+	if err := deserializationProvider.LoadSchema(groupHandler.Subject, groupHandler.Properties.SchemaPath, serde.ValueSerde, message); err != nil {
+		return nil, err
 	}
 
-	jsonMessage, err := deserializationProvider.Deserialize(topicName, value)
+	jsonMessage, err := deserializationProvider.Deserialize(topicName, message.Headers, value)
 	if err != nil {
 		return nil, fmt.Errorf("failed to deserialize example: %v", err)
 	}
