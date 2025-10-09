@@ -8,15 +8,12 @@ ARG GOARCH
 
 SHELL ["/bin/bash", "-c"]
 
-# Install required packages
 RUN yum -y update && \
     yum -y install make git wget gcc-toolset-9 && \
     scl enable gcc-toolset-9 bash
 
-# Copy source code
 COPY . /workspace/
 
-# Install Go and build the binary
 RUN cd /workspace/ && \
     set -ex && \
     export GO_VERSION=$(cat .go-version) && \
