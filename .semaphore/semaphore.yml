@@ -88,6 +88,44 @@ blocks:
           commands:
             - test-results publish . -N "windows/amd64"
 
+  - name: "Muckrake Check linux/amd64"
+    dependencies: []
+    task:
+      agent:
+        machine:
+          type: s1-prod-ubuntu24-04-amd64-1
+      jobs:
+        - name: "Build & Upload linux/amd64"
+          commands:
+            - checkout
+            - "export SHORT_SHA=$(echo $SEMAPHORE_GIT_SHA | cut -c1-8)"
+            - "export TIMESTAMP=$(date -u +%Y%m%d-%H%M%S)"
+            - "export BUILD_ID=${SEMAPHORE_GIT_BRANCH}/${TIMESTAMP}-${SHORT_SHA}"
+            - "echo Build ID: $BUILD_ID"
+            - "GOOS=linux GOARCH=amd64 make muckrake-build-docker"
+            - "source assume-iam-role arn:aws:iam::050879227952:role/cli-release-semaphore"
+            - "BUILD_ID=$BUILD_ID BINARY_PATH=dist/confluent_linux_amd64/confluent S3_KEY=confluent_linux_amd64 make muckrake-upload-s3"
+            - "echo ✅ linux/amd64 binary uploaded to s3://confluent.cloud/confluent-cli/development-builds/$BUILD_ID/"
+
+  - name: "Muckrake Check linux/arm64"
+    dependencies: []
+    task:
+      agent:
+        machine:
+          type: s1-prod-ubuntu24-04-arm64-1
+      jobs:
+        - name: "Build & Upload linux/arm64"
+          commands:
+            - checkout
+            - "export SHORT_SHA=$(echo $SEMAPHORE_GIT_SHA | cut -c1-8)"
+            - "export TIMESTAMP=$(date -u +%Y%m%d-%H%M%S)"
+            - "export BUILD_ID=${SEMAPHORE_GIT_BRANCH}/${TIMESTAMP}-${SHORT_SHA}"
+            - "echo Build ID: $BUILD_ID"
+            - "GOOS=linux GOARCH=arm64 make muckrake-build-docker"
+            - "source assume-iam-role arn:aws:iam::050879227952:role/cli-release-semaphore"
+            - "BUILD_ID=$BUILD_ID BINARY_PATH=dist/confluent_linux_arm64/confluent S3_KEY=confluent_linux_arm64 make muckrake-upload-s3"
+            - "echo ✅ linux/arm64 binary uploaded to s3://confluent.cloud/confluent-cli/development-builds/$BUILD_ID/"
+
 after_pipeline:
   task:
     jobs:
