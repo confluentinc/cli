@@ -70,21 +70,6 @@ func (s *CLITestSuite) TestFlinkArtifact() {
 	}
 }
 
-func (s *CLITestSuite) TestFlinkComputePool() {
-	tests := []CLITest{
-		{args: "flink compute-pool create my-compute-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create.golden"},
-		{args: "flink compute-pool describe lfcp-123456", fixture: "flink/compute-pool/describe.golden"},
-		{args: "flink compute-pool list", fixture: "flink/compute-pool/list.golden"},
-		{args: "flink compute-pool list --region eu-west-2", fixture: "flink/compute-pool/list-region.golden"},
-		{args: "flink compute-pool update lfcp-123456 --max-cfu 5", fixture: "flink/compute-pool/update.golden"},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
-
 func (s *CLITestSuite) TestFlinkConnection() {
 	tests := []CLITest{
 		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
@@ -223,6 +208,23 @@ func (s *CLITestSuite) TestFlinkConnectivityType() {
 	for _, test := range tests {
 		test.login = "cloud"
 		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestFlinkComputePool() {
+	tests := []CLITest{
+		{args: "flink compute-pool create my-compute-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create.golden"},
+		{args: "flink compute-pool describe lfcp-123456", fixture: "flink/compute-pool/describe.golden"},
+		{args: "flink compute-pool list", fixture: "flink/compute-pool/list.golden"},
+		{args: "flink compute-pool list --region eu-west-2", fixture: "flink/compute-pool/list-region.golden"},
+		{args: "flink compute-pool update lfcp-123456 --max-cfu 5", fixture: "flink/compute-pool/update.golden"},
+		{args: "flink compute-pool create my-compute-pool-2 --default-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create-default.golden"},
+		{args: "flink compute-pool update lfcp-123456 --default-pool=false", fixture: "flink/compute-pool/update-default.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
 }
