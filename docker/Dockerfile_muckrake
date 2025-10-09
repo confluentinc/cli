@@ -1,0 +1,33 @@
+# Uses cc-cli Docker image to build CLI binaries
+
+ARG GOOS=linux
+ARG GOARCH=amd64
+
+FROM 519856050701.dkr.ecr.us-west-2.amazonaws.com/docker/dev/confluentinc/cc-cli:latest
+
+ARG GOOS
+ARG GOARCH
+
+SHELL ["/bin/bash", "-c"]
+
+COPY . /workspace/
+
+RUN cd /workspace/ && \
+    set -ex && \
+    go mod download && \
+    go mod verify && \
+    mkdir -p dist/confluent_${GOOS}_${GOARCH} && \
+    COMMIT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo "dev") && \
+    BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) && \
+    echo "Building Confluent Development CLI for ${GOOS}/${GOARCH}" && \
+    echo "  Commit: ${COMMIT_SHA}" && \
+    echo "  Date: ${BUILD_DATE}" && \
+    CGO_ENABLED=1 GOEXPERIMENT=boringcrypto GOOS=${GOOS} GOARCH=${GOARCH} go build \
+    -ldflags="-s -w -X main.commit=${COMMIT_SHA} -X main.date=${BUILD_DATE}" \
+    -o dist/confluent_${GOOS}_${GOARCH}/confluent \
+    ./cmd/confluent && \
+    ls -lh dist/confluent_${GOOS}_${GOARCH}/confluent && \
+    echo "✅ Build completed successfully"
+
+WORKDIR /workspace
+
