@@ -101,6 +101,7 @@ blocks:
             - "export SHORT_SHA=$(echo $SEMAPHORE_GIT_SHA | cut -c1-8)"
             - "export BUILD_ID=${SEMAPHORE_GIT_BRANCH}-${SHORT_SHA}-${SEMAPHORE_WORKFLOW_ID}"
             - "echo Build ID: $BUILD_ID"
+            - 'mkdir -p ~/.docker && echo "{}" > ~/.docker/config.json'
             - "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 519856050701.dkr.ecr.us-east-1.amazonaws.com"
             - "docker pull 519856050701.dkr.ecr.us-east-1.amazonaws.com/docker/dev/confluentinc/cc-cli:latest"
             - "GOOS=linux GOARCH=amd64 make muckrake-build-docker"
@@ -121,6 +122,7 @@ blocks:
             - "export SHORT_SHA=$(echo $SEMAPHORE_GIT_SHA | cut -c1-8)"
             - "export BUILD_ID=${SEMAPHORE_GIT_BRANCH}-${SHORT_SHA}-${SEMAPHORE_WORKFLOW_ID}"
             - "echo Build ID: $BUILD_ID"
+            - 'mkdir -p ~/.docker && echo "{}" > ~/.docker/config.json'
             - "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 519856050701.dkr.ecr.us-east-1.amazonaws.com"
             - "docker pull 519856050701.dkr.ecr.us-east-1.amazonaws.com/docker/dev/confluentinc/cc-cli:latest"
             - "GOOS=linux GOARCH=arm64 make muckrake-build-docker"
