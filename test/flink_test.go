@@ -70,21 +70,6 @@ func (s *CLITestSuite) TestFlinkArtifact() {
 	}
 }
 
-func (s *CLITestSuite) TestFlinkComputePool() {
-	tests := []CLITest{
-		{args: "flink compute-pool create my-compute-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create.golden"},
-		{args: "flink compute-pool describe lfcp-123456", fixture: "flink/compute-pool/describe.golden"},
-		{args: "flink compute-pool list", fixture: "flink/compute-pool/list.golden"},
-		{args: "flink compute-pool list --region eu-west-2", fixture: "flink/compute-pool/list-region.golden"},
-		{args: "flink compute-pool update lfcp-123456 --max-cfu 5", fixture: "flink/compute-pool/update.golden"},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
-
 func (s *CLITestSuite) TestFlinkConnection() {
 	tests := []CLITest{
 		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
@@ -218,6 +203,23 @@ func (s *CLITestSuite) TestFlinkConnectivityType() {
 	}
 }
 
+func (s *CLITestSuite) TestFlinkComputePool() {
+	tests := []CLITest{
+		{args: "flink compute-pool create my-compute-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create.golden"},
+		{args: "flink compute-pool describe lfcp-123456", fixture: "flink/compute-pool/describe.golden"},
+		{args: "flink compute-pool list", fixture: "flink/compute-pool/list.golden"},
+		{args: "flink compute-pool list --region eu-west-2", fixture: "flink/compute-pool/list-region.golden"},
+		{args: "flink compute-pool update lfcp-123456 --max-cfu 5", fixture: "flink/compute-pool/update.golden"},
+		{args: "flink compute-pool create my-compute-pool-2 --default-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create-default.golden"},
+		{args: "flink compute-pool update lfcp-123456 --default-pool=false", fixture: "flink/compute-pool/update-default.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestFlinkComputePoolDelete() {
 	tests := []CLITest{
 		{args: "flink compute-pool delete lfcp-123456 --force", fixture: "flink/compute-pool/delete.golden"},
@@ -319,6 +321,7 @@ func (s *CLITestSuite) TestFlinkStatement() {
 func (s *CLITestSuite) TestFlinkStatementCreate() {
 	tests := []CLITest{
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "flink/statement/create.golden"},
+		{args: `flink statement create my-statement-2 --sql "INSERT * INTO table;" --cloud aws --region eu-west-1 --service-account sa-123456`, fixture: "flink/statement/create-without-compute-pool.golden"},
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456`, fixture: "flink/statement/create-service-account-warning.golden"},
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 --wait`, fixture: "flink/statement/create-wait.golden"},
 		{args: `flink statement create --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 -o yaml`, fixture: "flink/statement/create-no-name-yaml.golden", regex: true},
