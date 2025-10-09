@@ -3,7 +3,7 @@
 ARG GOOS=linux
 ARG GOARCH=amd64
 
-FROM 519856050701.dkr.ecr.us-east-1.amazonaws.com/docker/dev/confluentinc/cc-cli:latest
+FROM 519856050701.dkr.ecr.us-west-2.amazonaws.com/docker/dev/confluentinc/cc-cli:latest
 
 ARG GOOS
 ARG GOARCH

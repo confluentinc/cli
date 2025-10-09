@@ -102,8 +102,8 @@ blocks:
             - "export BUILD_ID=${SEMAPHORE_GIT_BRANCH}-${SHORT_SHA}-${SEMAPHORE_WORKFLOW_ID}"
             - "echo Build ID: $BUILD_ID"
             - 'mkdir -p ~/.docker && echo "{}" > ~/.docker/config.json'
-            - "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 519856050701.dkr.ecr.us-east-1.amazonaws.com"
-            - "docker pull 519856050701.dkr.ecr.us-east-1.amazonaws.com/docker/dev/confluentinc/cc-cli:latest"
+            - "aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 519856050701.dkr.ecr.us-west-2.amazonaws.com"
+            - "docker pull 519856050701.dkr.ecr.us-west-2.amazonaws.com/docker/dev/confluentinc/cc-cli:latest"
             - "GOOS=linux GOARCH=amd64 make muckrake-build-docker"
             - "source assume-iam-role arn:aws:iam::050879227952:role/cli-release-semaphore"
             - "BUILD_ID=$BUILD_ID BINARY_PATH=dist/confluent_linux_amd64/confluent S3_KEY=confluent_linux_amd64 make muckrake-upload-s3"
@@ -123,8 +123,8 @@ blocks:
             - "export BUILD_ID=${SEMAPHORE_GIT_BRANCH}-${SHORT_SHA}-${SEMAPHORE_WORKFLOW_ID}"
             - "echo Build ID: $BUILD_ID"
             - 'mkdir -p ~/.docker && echo "{}" > ~/.docker/config.json'
-            - "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 519856050701.dkr.ecr.us-east-1.amazonaws.com"
-            - "docker pull 519856050701.dkr.ecr.us-east-1.amazonaws.com/docker/dev/confluentinc/cc-cli:latest"
+            - "aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 519856050701.dkr.ecr.us-west-2.amazonaws.com"
+            - "docker pull 519856050701.dkr.ecr.us-west-2.amazonaws.com/docker/dev/confluentinc/cc-cli:latest"
             - "GOOS=linux GOARCH=arm64 make muckrake-build-docker"
             - "source assume-iam-role arn:aws:iam::050879227952:role/cli-release-semaphore"
             - "BUILD_ID=$BUILD_ID BINARY_PATH=dist/confluent_linux_arm64/confluent S3_KEY=confluent_linux_arm64 make muckrake-upload-s3"
