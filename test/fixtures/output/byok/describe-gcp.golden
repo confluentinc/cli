@@ -1,11 +1,15 @@
-+------------+---------------------------------------------------------------------------------------------------------------+
-| ID         | cck-004                                                                                                       |
-| Key        | projects/exampleproject/locations/us-central1/keyRings/testkeyring/cryptoKeys/testbyokkey/cryptoKeyVersions/3 |
-| Roles      |                                                                                                               |
-| Cloud      | GCP                                                                                                           |
-| State      | AVAILABLE                                                                                                     |
-| Created At | 2023-01-01 13:00:30 +0000 UTC                                                                                 |
-+------------+---------------------------------------------------------------------------------------------------------------+
++------------------+---------------------------------------------------------------------------------------------------------------+
+| ID               | cck-004                                                                                                       |
+| Display Name     | GCP Test Key                                                                                                  |
+| Key              | projects/exampleproject/locations/us-central1/keyRings/testkeyring/cryptoKeys/testbyokkey/cryptoKeyVersions/3 |
+| Roles            |                                                                                                               |
+| Cloud            | GCP                                                                                                           |
+| Region           | us-central1                                                                                                   |
+| State            | AVAILABLE                                                                                                     |
+| Created At       | 2023-01-01 13:00:30 +0000 UTC                                                                                 |
+| Validation Phase | VALID                                                                                                         |
+| Since            | 2023-01-01 13:02:30 +0000 UTC                                                                                 |
++------------------+---------------------------------------------------------------------------------------------------------------+
 
 To ensure the key has the correct role assignments, please run the following Google Cloud CLI command:
 
