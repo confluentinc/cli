@@ -100,12 +100,17 @@ blocks:
             - checkout
             - "export SHORT_SHA=$(echo $SEMAPHORE_GIT_SHA | cut -c1-8)"
             - "export TIMESTAMP=$(date -u +%Y%m%d-%H%M%S)"
-            - "export BUILD_ID=${SEMAPHORE_GIT_BRANCH}/${TIMESTAMP}-${SHORT_SHA}"
+            - |
+              if [ "$SEMAPHORE_GIT_BRANCH" = "main" ]; then
+                export BUILD_ID="main/${TIMESTAMP}-${SHORT_SHA}"
+              else
+                export BUILD_ID="branches/${SEMAPHORE_GIT_BRANCH}/${TIMESTAMP}-${SHORT_SHA}"
+              fi
             - "echo Build ID: $BUILD_ID"
             - "GOOS=linux GOARCH=amd64 make muckrake-build-docker"
-            - "source assume-iam-role arn:aws:iam::050879227952:role/cli-release-semaphore"
+            - "source assume-iam-role arn:aws:iam::237597620434:role/cli-release-semaphore"
             - "BUILD_ID=$BUILD_ID BINARY_PATH=dist/confluent_linux_amd64/confluent S3_KEY=confluent_linux_amd64 make muckrake-upload-s3"
-            - "echo ✅ linux/amd64 binary uploaded to s3://confluent.cloud/confluent-cli/development-builds/$BUILD_ID/"
+            - "echo ✅ linux/amd64 binary uploaded to s3://confluent-cli-internal/confluent-cli-staging/$BUILD_ID/"
 
   - name: "Muckrake Check linux/arm64"
     dependencies: []
@@ -119,12 +124,17 @@ blocks:
             - checkout
             - "export SHORT_SHA=$(echo $SEMAPHORE_GIT_SHA | cut -c1-8)"
             - "export TIMESTAMP=$(date -u +%Y%m%d-%H%M%S)"
-            - "export BUILD_ID=${SEMAPHORE_GIT_BRANCH}/${TIMESTAMP}-${SHORT_SHA}"
+            - |
+              if [ "$SEMAPHORE_GIT_BRANCH" = "main" ]; then
+                export BUILD_ID="main/${TIMESTAMP}-${SHORT_SHA}"
+              else
+                export BUILD_ID="branches/${SEMAPHORE_GIT_BRANCH}/${TIMESTAMP}-${SHORT_SHA}"
+              fi
             - "echo Build ID: $BUILD_ID"
             - "GOOS=linux GOARCH=arm64 make muckrake-build-docker"
-            - "source assume-iam-role arn:aws:iam::050879227952:role/cli-release-semaphore"
+            - "source assume-iam-role arn:aws:iam::237597620434:role/cli-release-semaphore"
             - "BUILD_ID=$BUILD_ID BINARY_PATH=dist/confluent_linux_arm64/confluent S3_KEY=confluent_linux_arm64 make muckrake-upload-s3"
-            - "echo ✅ linux/arm64 binary uploaded to s3://confluent.cloud/confluent-cli/development-builds/$BUILD_ID/"
+            - "echo ✅ linux/arm64 binary uploaded to s3://confluent-cli-internal/confluent-cli-staging/$BUILD_ID/"
 
 after_pipeline:
   task:
