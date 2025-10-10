@@ -253,6 +253,18 @@ func (s *CLITestSuite) TestFlinkComputePoolUse() {
 	}
 }
 
+func (s *CLITestSuite) TestFlinkComputePoolConfig() {
+	tests := []CLITest{
+		{args: "flink compute-pool-config describe", fixture: "flink/compute-pool/describe-compute-pool-config.golden"},
+		{args: "flink compute-pool-config update --max-cfu 5 --default-pool", fixture: "flink/compute-pool/update-compute-pool-config.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestFlinkRegion() {
 	tests := []CLITest{
 		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
