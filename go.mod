@@ -1,6 +1,6 @@
 module github.com/confluentinc/cli/v4
 
-go 1.24.6
+go 1.24.7
 
 require (
 	github.com/antihax/optional v1.0.0
@@ -28,9 +28,9 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.25.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.7.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin v0.0.9
-	github.com/confluentinc/ccloud-sdk-go-v2/flink v0.9.0
+	github.com/confluentinc/ccloud-sdk-go-v2/flink v0.11.0
 	github.com/confluentinc/ccloud-sdk-go-v2/flink-artifact v0.3.0
-	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.17.0
+	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.18.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.15.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering v0.5.0
 	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.3.0
