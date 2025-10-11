@@ -274,6 +274,77 @@ func (s *ResultFormatterTestSuite) TestFormatRowField() {
 	}
 }
 
+func (s *ResultFormatterTestSuite) TestFormatStructuredTypeField() {
+	structuredField := types.StructuredTypeStatementResultField{
+		Type:       types.StructuredType,
+		FieldNames: []string{"name", "age", "numbers"},
+		FieldTypes: []types.StatementResultFieldType{types.Varchar, types.Integer, types.Array},
+		Values: []types.StatementResultField{
+			types.AtomicStatementResultField{
+				Type:  types.Varchar,
+				Value: "Bob",
+			},
+			types.AtomicStatementResultField{
+				Type:  types.Integer,
+				Value: "12",
+			},
+			types.ArrayStatementResultField{
+				Type:        types.Array,
+				ElementType: types.Integer,
+				Values: []types.StatementResultField{
+					types.AtomicStatementResultField{
+						Type:  types.Integer,
+						Value: "1",
+					},
+					types.AtomicStatementResultField{
+						Type:  types.Integer,
+						Value: "2",
+					},
+					types.AtomicStatementResultField{
+						Type:  types.Integer,
+						Value: "3",
+					},
+				},
+			},
+		},
+	}
+
+	testCases := []struct {
+		expected              string
+		maxCharCountToDisplay int
+	}{
+		{
+			expected:              "...",
+			maxCharCountToDisplay: 0,
+		},
+		{
+			expected:              "(...",
+			maxCharCountToDisplay: 4,
+		},
+		{
+			expected:              "(name=Bob, ...",
+			maxCharCountToDisplay: 14,
+		},
+		{
+			expected:              "(name=Bob, age=12, num...",
+			maxCharCountToDisplay: 25,
+		},
+		{
+			expected:              "(name=Bob, age=12, numbers=[1, 2, 3])",
+			maxCharCountToDisplay: 40,
+		},
+	}
+
+	for idx, testCase := range testCases {
+		fmt.Printf("Evaluating test case #%d\n", idx)
+		formattedField := TruncateString(structuredField.ToString(), testCase.maxCharCountToDisplay)
+		if testCase.maxCharCountToDisplay >= 3 {
+			require.True(s.T(), len(formattedField) <= testCase.maxCharCountToDisplay)
+		}
+		require.Equal(s.T(), testCase.expected, formattedField)
+	}
+}
+
 func (s *ResultFormatterTestSuite) TestFormatNestedField() {
 	mapField := types.MapStatementResultField{
 		Type:      types.Array,
@@ -389,8 +460,10 @@ func (s *ResultFormatterTestSuite) TestTruncateMultibyteCharacters() {
 		maxCharCountToDisplay int
 	}{
 		{
-			input:                 "あああ",  // The string width here is 6 since each character is 2 bytes wide.
-			expected:              "あ...", // あ... is exactly 5 bytes wide.
+			// The string width here is 6 since each character is 2 bytes wide.
+			// あ... is exactly 5 bytes wide.
+			input:                 "あああ",
+			expected:              "あ...",
 			maxCharCountToDisplay: 5,
 		},
 		{

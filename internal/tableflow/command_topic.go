@@ -41,6 +41,7 @@ type topicOut struct {
 	TablePath             string `human:"Table Path" serialized:"table_path"`
 	Phase                 string `human:"Phase" serialized:"phase"`
 	ErrorMessage          string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
+	WriteMode             string `human:"Write Mode,omitempty" serialized:"write_mode,omitempty"`
 }
 
 func (c *command) newTopicCommand() *cobra.Command {
@@ -153,6 +154,7 @@ func printTopicTable(cmd *cobra.Command, topic tableflowv1.TableflowV1TableflowT
 		Suspended:             topic.Spec.GetSuspended(),
 		Phase:                 topic.Status.GetPhase(),
 		ErrorMessage:          topic.Status.GetErrorMessage(),
+		WriteMode:             topic.Status.GetWriteMode(),
 	}
 
 	if storageType == byos {

@@ -32,6 +32,7 @@ func (s *CLITestSuite) TestFlinkApplicationList() {
 		// success scenarios
 		{args: "flink application list --environment test", fixture: "flink/application/list-empty-env.golden"},
 		{args: "flink application list --environment default  --output json", fixture: "flink/application/list-json.golden"},
+		{args: "flink application list --environment default  --output yaml", fixture: "flink/application/list-yaml.golden"},
 		{args: "flink application list --environment default  --output human", fixture: "flink/application/list-human.golden"},
 	}
 
@@ -346,6 +347,7 @@ func (s *CLITestSuite) TestFlinkStatementDescribeOnPrem() {
 		{args: "flink statement describe test-stmt --environment default", fixture: "flink/statement/describe-success.golden"},
 		{args: "flink statement describe test-stmt --environment default -o json", fixture: "flink/statement/describe-success-json.golden"},
 		{args: "flink statement describe test-stmt --environment default -o yaml", fixture: "flink/statement/describe-success-yaml.golden"},
+		{args: "flink statement describe shell-test-stmt --environment default -o json", fixture: "flink/statement/describe-success-completed-json.golden"},
 		// failure
 		{args: "flink statement describe test-stmt", fixture: "flink/statement/describe-env-missing-failure.golden", exitCode: 1},
 		{args: "flink statement describe test-stmt --environment non-exist", fixture: "flink/statement/describe-non-exist-env-failure.golden", exitCode: 1},
@@ -423,6 +425,97 @@ func (s *CLITestSuite) TestFlinkStatementExceptionListOnPrem() {
 func (s *CLITestSuite) TestFlinkOnPremWithCloudLogin() {
 	test := CLITest{args: "flink environment list --output json", fixture: "flink/environment/list-cloud.golden", login: "cloud", exitCode: 1}
 	s.runIntegrationTest(test)
+}
+
+func (s *CLITestSuite) TestFlinkApplicationCreateWithYAML() {
+	tests := []CLITest{
+		// failure scenarios with YAML files
+		{args: "flink application create --environment default test/fixtures/input/flink/application/create-unsuccessful-application.json", fixture: "flink/application/create-unsuccessful-application.golden", exitCode: 1},
+		{args: "flink application create --environment default test/fixtures/input/flink/application/create-duplicate-application.json", fixture: "flink/application/create-duplicate-application.golden", exitCode: 1},
+		{args: "flink application create --environment non-existent test/fixtures/input/flink/application/create-with-non-existent-environment.json", fixture: "flink/application/create-with-non-existent-environment.golden", exitCode: 1},
+		// success scenarios with YAML files
+		{args: "flink application create --environment default test/fixtures/input/flink/application/create-new.json", fixture: "flink/application/create-success.golden"},
+		{args: "flink application create --environment default test/fixtures/input/flink/application/create-new.json --output yaml", fixture: "flink/application/create-success-yaml.golden"},
+		// explicit test to see that even if the output is set to human, the output is still in json
+		{args: "flink application create --environment default test/fixtures/input/flink/application/create-new.json --output human", fixture: "flink/application/create-with-human.golden"},
+		// YAML file tests
+		{args: "flink application create --environment default test/fixtures/input/flink/application/create-new.yaml", fixture: "flink/application/create-success.golden"},
+		{args: "flink application create --environment default test/fixtures/input/flink/application/create-new.yaml --output yaml", fixture: "flink/application/create-success-yaml.golden"},
+		{args: "flink application create --environment default test/fixtures/input/flink/application/create-new.yaml --output human", fixture: "flink/application/create-with-human.golden"},
+		// YAML file failure scenarios
+		{args: "flink application create --environment default test/fixtures/input/flink/application/create-duplicate-application.yaml", fixture: "flink/application/create-duplicate-application.golden", exitCode: 1},
+		{args: "flink application create --environment non-existent test/fixtures/input/flink/application/create-with-non-existent-environment.yaml", fixture: "flink/application/create-with-non-existent-environment.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkApplicationUpdateWithYAML() {
+	tests := []CLITest{
+		// failure scenarios with JSON files
+		{args: "flink application update --environment default test/fixtures/input/flink/application/update-non-existent.json", fixture: "flink/application/update-non-existent.golden", exitCode: 1},
+		{args: "flink application update --environment update-failure test/fixtures/input/flink/application/update-failure.json", fixture: "flink/application/update-failure.golden", exitCode: 1},
+		{args: "flink application update --environment non-existent test/fixtures/input/flink/application/update-with-non-existent-environment.json", fixture: "flink/application/update-with-non-existent-environment.golden", exitCode: 1},
+		{args: "flink application update --environment default test/fixtures/input/flink/application/update-with-get-failure.json", fixture: "flink/application/update-with-get-failure.golden", exitCode: 1},
+		// success scenarios with JSON files
+		{args: "flink application update --environment default test/fixtures/input/flink/application/update-successful.json", fixture: "flink/application/update-successful.golden"},
+		{args: "flink application update --environment default test/fixtures/input/flink/application/update-successful.json --output yaml", fixture: "flink/application/update-successful-yaml.golden"},
+		// explicit test to see that even if the output is set to human, the output is still in json
+		{args: "flink application update --environment default test/fixtures/input/flink/application/update-successful.json --output human", fixture: "flink/application/update-with-human.golden"},
+		// YAML file tests
+		{args: "flink application update --environment default test/fixtures/input/flink/application/update-successful.yaml", fixture: "flink/application/update-successful.golden"},
+		{args: "flink application update --environment default test/fixtures/input/flink/application/update-successful.yaml --output yaml", fixture: "flink/application/update-successful-yaml.golden"},
+		{args: "flink application update --environment default test/fixtures/input/flink/application/update-successful.yaml --output human", fixture: "flink/application/update-with-human.golden"},
+		// YAML file failure scenarios
+		{args: "flink application update --environment default test/fixtures/input/flink/application/update-non-existent.yaml", fixture: "flink/application/update-non-existent.golden", exitCode: 1},
+		{args: "flink application update --environment update-failure test/fixtures/input/flink/application/update-failure.json", fixture: "flink/application/update-failure.golden", exitCode: 1},
+		{args: "flink application update --environment non-existent test/fixtures/input/flink/application/update-with-non-existent-environment.json", fixture: "flink/application/update-with-non-existent-environment.golden", exitCode: 1},
+		{args: "flink application update --environment default test/fixtures/input/flink/application/update-with-get-failure.json", fixture: "flink/application/update-with-get-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkComputePoolCreateWithYAML() {
+	tests := []CLITest{
+		// success scenarios with JSON files
+		{args: "flink compute-pool create test/fixtures/input/flink/compute-pool/create-successful.json --environment default", fixture: "flink/compute-pool/create-success.golden"},
+		{args: "flink compute-pool create test/fixtures/input/flink/compute-pool/create-successful.json --environment default --output yaml", fixture: "flink/compute-pool/create-success-yaml.golden"},
+		{args: "flink compute-pool create test/fixtures/input/flink/compute-pool/create-successful.json --environment default --output json", fixture: "flink/compute-pool/create-success-json.golden"},
+		// failure scenarios with JSON files
+		{args: "flink compute-pool create test/fixtures/input/flink/compute-pool/create-invalid-failure.json --environment default", fixture: "flink/compute-pool/create-invalid-failure.golden", exitCode: 1},
+		{args: "flink compute-pool create test/fixtures/input/flink/compute-pool/create-existing-failure.json --environment default", fixture: "flink/compute-pool/create-existing-failure.golden", exitCode: 1},
+		// YAML file tests
+		{args: "flink compute-pool create test/fixtures/input/flink/compute-pool/create-successful.yaml --environment default", fixture: "flink/compute-pool/create-success.golden"},
+		{args: "flink compute-pool create test/fixtures/input/flink/compute-pool/create-successful.yaml --environment default --output yaml", fixture: "flink/compute-pool/create-success-yaml.golden"},
+		{args: "flink compute-pool create test/fixtures/input/flink/compute-pool/create-successful.yaml --environment default --output json", fixture: "flink/compute-pool/create-success-json.golden"},
+		// YAML file failure scenarios
+		{args: "flink compute-pool create test/fixtures/input/flink/compute-pool/create-invalid-failure.yaml --environment default", fixture: "flink/compute-pool/create-invalid-failure.golden", exitCode: 1},
+		{args: "flink compute-pool create test/fixtures/input/flink/compute-pool/create-existing-failure.yaml --environment default", fixture: "flink/compute-pool/create-existing-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkCatalogCreateWithYAML() {
+	tests := []CLITest{
+		// success scenarios with JSON files
+		{args: "flink catalog create test/fixtures/input/flink/catalog/create-successful.json", fixture: "flink/catalog/create-success.golden"},
+		{args: "flink catalog create test/fixtures/input/flink/catalog/create-successful.json --output yaml", fixture: "flink/catalog/create-success-yaml.golden"},
+		{args: "flink catalog create test/fixtures/input/flink/catalog/create-successful.json --output json", fixture: "flink/catalog/create-success-json.golden"},
+		// failure scenarios with JSON files
+		{args: "flink catalog create test/fixtures/input/flink/catalog/create-invalid-failure.json", fixture: "flink/catalog/create-invalid-failure.golden", exitCode: 1},
+		{args: "flink catalog create test/fixtures/input/flink/catalog/create-existing-failure.json", fixture: "flink/catalog/create-existing-failure.golden", exitCode: 1},
+		// YAML file tests
+		{args: "flink catalog create test/fixtures/input/flink/catalog/create-successful.yaml", fixture: "flink/catalog/create-success.golden"},
+		{args: "flink catalog create test/fixtures/input/flink/catalog/create-successful.yaml --output yaml", fixture: "flink/catalog/create-success-yaml.golden"},
+		{args: "flink catalog create test/fixtures/input/flink/catalog/create-successful.yaml --output json", fixture: "flink/catalog/create-success-json.golden"},
+		// YAML file failure scenarios
+		{args: "flink catalog create test/fixtures/input/flink/catalog/create-invalid-failure.yaml", fixture: "flink/catalog/create-invalid-failure.golden", exitCode: 1},
+		{args: "flink catalog create test/fixtures/input/flink/catalog/create-existing-failure.yaml", fixture: "flink/catalog/create-existing-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
 func (s *CLITestSuite) TestFlinkShellOnPrem() {

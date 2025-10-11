@@ -1,5 +1,7 @@
 FROM --platform=linux/arm64/v8 ubuntu:20.04
 
+ARG IS_TEST="true"
+
 SHELL ["/bin/bash", "-c"]
 
 RUN apt -y update
@@ -19,4 +21,4 @@ RUN export GO_VERSION=$(cat /cli/.go-version) && \
 ENV PATH=${PATH}:/usr/local/go/bin:/root/go/bin
 
 RUN cd /cli/ && \
-    CC=musl-gcc CGO_LDFLAGS="-static" CGO_ENABLED=1 GOEXPERIMENT=boringcrypto go build -tags musl -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" ./cmd/confluent
+    CC=musl-gcc CGO_LDFLAGS="-static" CGO_ENABLED=1 GOEXPERIMENT=boringcrypto go build -tags musl -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=${IS_TEST}" ./cmd/confluent

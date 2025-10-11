@@ -50,7 +50,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.3
 	github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1
-	github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.2.0
+	github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/usm v0.1.0
 	github.com/confluentinc/cmf-sdk-go v0.0.4
 	github.com/confluentinc/confluent-kafka-go/v2 v2.8.0
@@ -286,5 +286,3 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-replace github.com/confluentinc/ccloud-sdk-go-v2/tableflow => github.com/confluentinc/ccloud-sdk-go-v2-internal/tableflow v0.23.0

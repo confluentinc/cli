@@ -65,6 +65,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			Suspended:             topic.Spec.GetSuspended(),
 			Phase:                 topic.Status.GetPhase(),
 			ErrorMessage:          topic.Status.GetErrorMessage(),
+			WriteMode:             topic.Status.GetWriteMode(),
 		}
 
 		if storageType == byos {

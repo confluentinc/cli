@@ -1,6 +1,8 @@
 # AlmaLinux 8.10 chosen for current GLIBC requirement of 2.28
 FROM --platform=linux/amd64 almalinux:8.10
 
+ARG IS_TEST="true"
+
 SHELL ["/bin/bash", "-c"]
 
 RUN yum -y update
@@ -18,4 +20,4 @@ RUN export GO_VERSION=$(cat /cli/.go-version) && \
 ENV PATH=${PATH}:/usr/local/go/bin:/root/go/bin
 
 RUN cd /cli/ && \
-    CGO_ENABLED=1 GOEXPERIMENT=boringcrypto go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" ./cmd/confluent
+    CGO_ENABLED=1 GOEXPERIMENT=boringcrypto go build -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=${IS_TEST}" ./cmd/confluent
