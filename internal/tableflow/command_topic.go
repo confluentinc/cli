@@ -16,6 +16,10 @@ import (
 const (
 	byos    = "BYOS"
 	managed = "MANAGED"
+
+	suspend = "SUSPEND"
+	skip    = "SKIP"
+	log     = "LOG"
 )
 
 type topicOut struct {
@@ -25,6 +29,8 @@ type topicOut struct {
 	EnablePartitioning    bool   `human:"Enable Partitioning" serialized:"enable_partitioning"`
 	Environment           string `human:"Environment" serialized:"environment"`
 	RecordFailureStrategy string `human:"Record Failure Strategy" serialized:"record_failure_strategy"`
+	ErrorHandling         string `human:"Error Handling,omitempty" serialized:"error_handling,omitempty"`
+	LogTarget             string `human:"Log Target,omitempty" serialized:"log_target,omitempty"`
 	RetentionMs           string `human:"Retention Ms" serialized:"retention_ms"`
 	StorageType           string `human:"Storage Type" serialized:"storage_type"`
 	ProviderIntegrationId string `human:"Provider Integration ID,omitempty" serialized:"provider_integration_id,omitempty"`
@@ -106,6 +112,20 @@ func getStorageType(topic tableflowv1.TableflowV1TableflowTopic) (string, error)
 	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "config")
 }
 
+func getErrorHandlingMode(topic tableflowv1.TableflowV1TableflowTopic) string {
+	if topic.Spec.GetConfig().ErrorHandling != nil {
+		if topic.GetSpec().Config.GetErrorHandling().TableflowV1ErrorHandlingSuspend != nil {
+			return suspend
+		} else if topic.GetSpec().Config.GetErrorHandling().TableflowV1ErrorHandlingSkip != nil {
+			return skip
+		} else if topic.GetSpec().Config.GetErrorHandling().TableflowV1ErrorHandlingLog != nil {
+			return log
+		}
+	}
+
+	return ""
+}
+
 func printTopicTable(cmd *cobra.Command, topic tableflowv1.TableflowV1TableflowTopic) error {
 	storageType, err := getStorageType(topic)
 	if err != nil {
@@ -128,6 +148,8 @@ func printTopicTable(cmd *cobra.Command, topic tableflowv1.TableflowV1TableflowT
 		Environment:           topic.GetSpec().Environment.GetId(),
 		RetentionMs:           topic.GetSpec().Config.GetRetentionMs(),
 		RecordFailureStrategy: topic.GetSpec().Config.GetRecordFailureStrategy(),
+		ErrorHandling:         getErrorHandlingMode(topic),
+		LogTarget:             topic.GetSpec().Config.GetErrorHandling().TableflowV1ErrorHandlingLog.GetTarget(), // this Get function will return empty string if the ErrorHandling is not LOG
 		StorageType:           storageType,
 		Suspended:             topic.Spec.GetSuspended(),
 		Phase:                 topic.Status.GetPhase(),

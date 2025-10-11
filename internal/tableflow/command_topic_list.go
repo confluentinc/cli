@@ -59,6 +59,8 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			Environment:           topic.GetSpec().Environment.GetId(),
 			RetentionMs:           topic.GetSpec().Config.GetRetentionMs(),
 			RecordFailureStrategy: topic.GetSpec().Config.GetRecordFailureStrategy(),
+			ErrorHandling:         getErrorHandlingMode(topic),
+			LogTarget:             topic.GetSpec().Config.GetErrorHandling().TableflowV1ErrorHandlingLog.GetTarget(), // this Get function will return empty string if the ErrorHandling is not LOG
 			StorageType:           storageType,
 			Suspended:             topic.Spec.GetSuspended(),
 			Phase:                 topic.Status.GetPhase(),
