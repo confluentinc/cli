@@ -1,0 +1,44 @@
+ARG GOOS=linux
+ARG GOARCH=amd64
+
+FROM almalinux:8.10
+
+ARG GOOS
+ARG GOARCH
+
+SHELL ["/bin/bash", "-c"]
+
+RUN yum -y update && \
+    yum -y install make git wget gcc-toolset-9 && \
+    scl enable gcc-toolset-9 bash
+
+COPY . /workspace/
+
+RUN cd /workspace/ && \
+    set -ex && \
+    export GO_VERSION=$(cat .go-version) && \
+    if [ "${GOARCH}" = "amd64" ]; then \
+        wget "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" && \
+        tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"; \
+    elif [ "${GOARCH}" = "arm64" ]; then \
+        wget "https://go.dev/dl/go${GO_VERSION}.linux-arm64.tar.gz" && \
+        tar -C /usr/local -xzf "go${GO_VERSION}.linux-arm64.tar.gz"; \
+    fi && \
+    export PATH=${PATH}:/usr/local/go/bin:/root/go/bin && \
+    go mod download && \
+    go mod verify && \
+    mkdir -p dist/confluent_${GOOS}_${GOARCH} && \
+    COMMIT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo "dev") && \
+    BUILD_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) && \
+    echo "Building Confluent Development CLI for ${GOOS}/${GOARCH}" && \
+    echo "  Commit: ${COMMIT_SHA}" && \
+    echo "  Date: ${BUILD_DATE}" && \
+    CGO_ENABLED=1 GOEXPERIMENT=boringcrypto go build \
+    -ldflags="-s -w -X main.commit=${COMMIT_SHA} -X main.date=${BUILD_DATE}" \
+    -o dist/confluent_${GOOS}_${GOARCH}/confluent \
+    ./cmd/confluent && \
+    ls -lh dist/confluent_${GOOS}_${GOARCH}/confluent && \
+    echo "✅ Build completed successfully"
+
+WORKDIR /workspace
+
