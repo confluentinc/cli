@@ -134,7 +134,7 @@ blocks:
             - "GOOS=linux GOARCH=arm64 make muckrake-build-docker"
             - "source assume-iam-role arn:aws:iam::050879227952:role/cli-release-semaphore"
             - "BUILD_ID=$BUILD_ID BINARY_PATH=dist/confluent_linux_arm64/confluent S3_KEY=confluent_linux_arm64 make muckrake-upload-s3"
-            - "echo ✅ linux/amd64 binary uploaded to s3://confluent.cloud/confluent-cli/development-builds/$BUILD_ID/"
+            - "echo ✅ linux/arm64 binary uploaded to s3://confluent.cloud/confluent-cli/development-builds/$BUILD_ID/"
 
 after_pipeline:
   task:
