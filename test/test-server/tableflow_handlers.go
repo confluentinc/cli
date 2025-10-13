@@ -84,7 +84,7 @@ func handleTableflowTopicsCreate(t *testing.T, environment string) http.HandlerF
 		tableflowTopic.Status.SetPhase("RUNNING")
 		tableflowTopic.Spec.SetEnvironment(tableflowv1.GlobalObjectReference{Id: environment})
 
-		if tableflowTopic.Spec.Config.GetRecordFailureStrategy() == "" {
+		if tableflowTopic.Spec.Config.GetRecordFailureStrategy() == "" && !tableflowTopic.Spec.Config.HasErrorHandling() {
 			tableflowTopic.Spec.Config.SetRecordFailureStrategy("SUSPEND")
 		}
 
