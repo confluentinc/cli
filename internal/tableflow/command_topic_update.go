@@ -2,6 +2,7 @@ package tableflow
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -31,11 +32,15 @@ func (c *command) newTopicUpdateCommand() *cobra.Command {
 
 	cmd.Flags().String("retention-ms", "", "Specify the Tableflow table retention time in milliseconds.")
 	cmd.Flags().String("table-formats", "", "Specify the table formats, one of DELTA or ICEBERG.")
-	cmd.Flags().String("record-failure-strategy", "SUSPEND", "Specify the record failure strategy, one of SUSPEND or SKIP.")
+	addErrorHandlingFlags(cmd)
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
+
+	// Deprecated
+	// Not hiding this flag because the values of record-failure-strategy and error-handling should match, so users may need to use both flags
+	cmd.Flags().String("record-failure-strategy", "", "DEPRECATED: Specify the record failure strategy, one of SUSPEND or SKIP.")
 
 	return cmd
 }
@@ -67,6 +72,16 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	errorHandling, err := cmd.Flags().GetString("error-handling")
+	if err != nil {
+		return err
+	}
+
+	logTarget, err := cmd.Flags().GetString("log-target")
+	if err != nil {
+		return err
+	}
+
 	topicUpdate := tableflowv1.TableflowV1TableflowTopicUpdate{
 		Spec: &tableflowv1.TableflowV1TableflowTopicSpecUpdate{
 			Environment:  &tableflowv1.GlobalObjectReference{Id: environmentId},
@@ -85,6 +100,31 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	if cmd.Flags().Changed("record-failure-strategy") {
 		topicUpdate.Spec.Config.SetRecordFailureStrategy(recordFailureStrategy)
+	}
+
+	if cmd.Flags().Changed("error-handling") {
+		if strings.ToUpper(errorHandling) == suspend {
+			topicUpdate.Spec.Config.ErrorHandling = &tableflowv1.TableflowV1TableFlowTopicConfigsSpecErrorHandlingOneOf{
+				TableflowV1ErrorHandlingSuspend: &tableflowv1.TableflowV1ErrorHandlingSuspend{
+					Mode: suspend,
+				},
+			}
+		} else if strings.ToUpper(errorHandling) == skip {
+			topicUpdate.Spec.Config.ErrorHandling = &tableflowv1.TableflowV1TableFlowTopicConfigsSpecErrorHandlingOneOf{
+				TableflowV1ErrorHandlingSkip: &tableflowv1.TableflowV1ErrorHandlingSkip{
+					Mode: skip,
+				},
+			}
+		} else if strings.ToUpper(errorHandling) == log {
+			topicUpdate.Spec.Config.ErrorHandling = &tableflowv1.TableflowV1TableFlowTopicConfigsSpecErrorHandlingOneOf{
+				TableflowV1ErrorHandlingLog: &tableflowv1.TableflowV1ErrorHandlingLog{
+					Mode: log,
+				},
+			}
+			if cmd.Flags().Changed("log-target") {
+				topicUpdate.Spec.Config.ErrorHandling.TableflowV1ErrorHandlingLog.SetTarget(logTarget)
+			}
+		}
 	}
 
 	topic, err := c.V2Client.UpdateTableflowTopic(args[0], topicUpdate)

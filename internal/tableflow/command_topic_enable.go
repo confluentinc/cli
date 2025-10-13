@@ -39,8 +39,7 @@ func (c *command) newTopicEnableCommand() *cobra.Command {
 	cmd.Flags().String("provider-integration", "", "Specify the provider integration id.")
 	cmd.Flags().String("bucket-name", "", "Specify the name of the AWS S3 bucket.")
 	cmd.Flags().String("table-formats", "ICEBERG", "Specify the table formats, one of DELTA or ICEBERG.")
-	cmd.Flags().String("error-handling", "", "Specify the error handling strategy, one of SUSPEND, SKIP, or LOG.")
-	cmd.Flags().String("log-target", "", "Specify the target topic for the LOG error handling strategy.")
+	addErrorHandlingFlags(cmd)
 
 	// Deprecated
 	cmd.Flags().String("record-failure-strategy", "", "Specify the record failure strategy, one of SUSPEND or SKIP.")

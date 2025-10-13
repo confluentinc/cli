@@ -170,3 +170,8 @@ func printTopicTable(cmd *cobra.Command, topic tableflowv1.TableflowV1TableflowT
 	table.Add(out)
 	return table.Print()
 }
+
+func addErrorHandlingFlags(cmd *cobra.Command) {
+	cmd.Flags().String("error-handling", "", "Specify the error handling strategy, one of SUSPEND, SKIP, or LOG.")
+	cmd.Flags().String("log-target", "", "Specify the target topic for the LOG error handling strategy.")
+}

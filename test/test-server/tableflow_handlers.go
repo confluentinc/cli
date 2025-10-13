@@ -149,6 +149,10 @@ func handleTableflowTopicUpdate(t *testing.T, display_name string) http.HandlerF
 			tableflowTopic.Spec.Config.SetRetentionMs(body.Spec.Config.GetRetentionMs())
 		}
 
+		if body.Spec.Config.HasErrorHandling() {
+			tableflowTopic.Spec.Config.SetErrorHandling(body.Spec.Config.GetErrorHandling())
+		}
+
 		err = json.NewEncoder(w).Encode(tableflowTopic)
 		require.NoError(t, err)
 	}
