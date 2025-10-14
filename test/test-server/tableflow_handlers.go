@@ -84,6 +84,10 @@ func handleTableflowTopicsCreate(t *testing.T, environment string) http.HandlerF
 		tableflowTopic.Status.SetPhase("RUNNING")
 		tableflowTopic.Spec.SetEnvironment(tableflowv1.GlobalObjectReference{Id: environment})
 
+		if tableflowTopic.Spec.Config.GetRecordFailureStrategy() == "" && !tableflowTopic.Spec.Config.HasErrorHandling() {
+			tableflowTopic.Spec.Config.SetRecordFailureStrategy("SUSPEND")
+		}
+
 		if tableflowTopic.Spec.Storage.TableflowV1ByobAwsSpec != nil {
 			tableflowTopic.Spec.Storage.TableflowV1ByobAwsSpec.SetBucketRegion("us-east-1")
 			tableflowTopic.Spec.Storage.TableflowV1ByobAwsSpec.SetTablePath("s3://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId")
@@ -139,10 +143,20 @@ func handleTableflowTopicUpdate(t *testing.T, display_name string) http.HandlerF
 			tableflowTopic = getTopicByob("topic-byob", "env-596", "lkc-123456")
 		case "topic-managed":
 			tableflowTopic = getTopicManaged("topic-managed", "env-596", "lkc-123456")
+		case "topic-error-log":
+			tableflowTopic = getTopicManaged("topic-error-log", "env-596", "lkc-123456")
+			tableflowTopic.Spec.Config.SetErrorHandling(tableflowv1.TableflowV1TableFlowTopicConfigsSpecErrorHandlingOneOf{
+				TableflowV1ErrorHandlingLog: &tableflowv1.TableflowV1ErrorHandlingLog{Mode: "LOG", Target: tableflowv1.PtrString("error_log")},
+			})
+			tableflowTopic.Spec.Config.SetRecordFailureStrategy("LOG")
 		}
 
 		if body.Spec.Config.GetRetentionMs() != "" {
 			tableflowTopic.Spec.Config.SetRetentionMs(body.Spec.Config.GetRetentionMs())
+		}
+
+		if body.Spec.Config.HasErrorHandling() {
+			tableflowTopic.Spec.Config.SetErrorHandling(body.Spec.Config.GetErrorHandling())
 		}
 
 		err = json.NewEncoder(w).Encode(tableflowTopic)
@@ -182,6 +196,9 @@ func getTopicByob(display_name, environmentId, clusterId string) tableflowv1.Tab
 				EnablePartitioning:    tableflowv1.PtrBool(true),          // ready-only property that needs confirmation, assuming constantly true for now
 				RetentionMs:           tableflowv1.PtrString("604800000"), // 7 days to miliseconds
 				RecordFailureStrategy: tableflowv1.PtrString("SKIP"),
+				ErrorHandling: &tableflowv1.TableflowV1TableFlowTopicConfigsSpecErrorHandlingOneOf{
+					TableflowV1ErrorHandlingSkip: &tableflowv1.TableflowV1ErrorHandlingSkip{Mode: "SKIP"},
+				},
 			},
 			TableFormats: &[]string{"ICEBERG"},
 			Environment:  &tableflowv1.GlobalObjectReference{Id: environmentId},
@@ -211,6 +228,9 @@ func getTopicManaged(display_name, environmentId, clusterId string) tableflowv1.
 				EnablePartitioning:    tableflowv1.PtrBool(true),          // ready-only property that needs confirmation, assuming constantly true for now
 				RetentionMs:           tableflowv1.PtrString("604800000"), // 7 days to miliseconds
 				RecordFailureStrategy: tableflowv1.PtrString("SUSPEND"),
+				ErrorHandling: &tableflowv1.TableflowV1TableFlowTopicConfigsSpecErrorHandlingOneOf{
+					TableflowV1ErrorHandlingSuspend: &tableflowv1.TableflowV1ErrorHandlingSuspend{Mode: "SUSPEND"},
+				},
 			},
 			TableFormats: &[]string{"DELTA"},
 			Environment:  &tableflowv1.GlobalObjectReference{Id: environmentId},
