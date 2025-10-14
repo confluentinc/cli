@@ -127,6 +127,23 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	if cmd.Flags().Changed("log-target") && !cmd.Flags().Changed("error-handling") {
+		// We must check for the edge case where the current error handling mode is *not* LOG, but the user is trying to update the log target anyway
+		// We should not assume that the user wants to change the mode to LOG, so we check the current mode and do nothing if it is not LOG
+		currentTopic, err := c.V2Client.GetTableflowTopic(environmentId, cluster.GetId(), args[0])
+		if err != nil {
+			return err
+		}
+		if strings.ToUpper(currentTopic.GetSpec().Config.GetErrorHandling().TableflowV1ErrorHandlingLog.GetMode()) == log {
+			topicUpdate.Spec.Config.ErrorHandling = &tableflowv1.TableflowV1TableFlowTopicConfigsSpecErrorHandlingOneOf{
+				TableflowV1ErrorHandlingLog: &tableflowv1.TableflowV1ErrorHandlingLog{
+					Mode:   log,
+					Target: tableflowv1.PtrString(logTarget),
+				},
+			}
+		}
+	}
+
 	topic, err := c.V2Client.UpdateTableflowTopic(args[0], topicUpdate)
 	if err != nil {
 		return fmt.Errorf("Error with updating Tableflow topic: %w", err)
