@@ -5,6 +5,7 @@
 | Enable Partitioning     | true                                                                     |
 | Environment             | env-596                                                                  |
 | Record Failure Strategy | SKIP                                                                     |
+| Error Handling          | SKIP                                                                     |
 | Retention Ms            | 432000000                                                                |
 | Storage Type            | BYOS                                                                     |
 | Provider Integration ID | cspi-stgce89r7                                                           |

@@ -39,7 +39,6 @@ func (c *command) newTopicUpdateCommand() *cobra.Command {
 	pcmd.AddOutputFlag(cmd)
 
 	// Deprecated
-	// Not hiding this flag because the values of record-failure-strategy and error-handling should match, so users may need to use both flags
 	cmd.Flags().String("record-failure-strategy", "", "DEPRECATED: Specify the record failure strategy, one of SUSPEND or SKIP.")
 
 	return cmd

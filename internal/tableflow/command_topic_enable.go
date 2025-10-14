@@ -41,13 +41,12 @@ func (c *command) newTopicEnableCommand() *cobra.Command {
 	cmd.Flags().String("table-formats", "ICEBERG", "Specify the table formats, one of DELTA or ICEBERG.")
 	addErrorHandlingFlags(cmd)
 
-	// Deprecated
-	cmd.Flags().String("record-failure-strategy", "", "Specify the record failure strategy, one of SUSPEND or SKIP.")
-	cobra.CheckErr(cmd.Flags().MarkHidden("record-failure-strategy"))
-
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
+
+	// Deprecated
+	cmd.Flags().String("record-failure-strategy", "", "DEPRECATED: Specify the record failure strategy, one of SUSPEND or SKIP.")
 
 	return cmd
 }

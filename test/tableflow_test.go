@@ -57,6 +57,8 @@ func (s *CLITestSuite) TestTableflowTopic() {
 		{args: "tableflow topic update topic-managed --cluster lkc-123456 --error-handling SUSPEND", fixture: "tableflow/topic/update-topic-managed-error-handling-suspend.golden"},
 		{args: "tableflow topic update topic-managed --cluster lkc-123456 --error-handling SKIP", fixture: "tableflow/topic/update-topic-managed-error-handling-skip.golden"},
 		{args: "tableflow topic update topic-managed --cluster lkc-123456 --error-handling LOG --log-target log_topic", fixture: "tableflow/topic/update-topic-managed-error-handling-log.golden"},
+		{args: "tableflow topic update topic-managed --cluster lkc-123456 --log-target log_topic", fixture: "tableflow/topic/update-topic-managed-no-change.golden"},
+		{args: "tableflow topic update topic-error-log --cluster lkc-123456 --log-target log_topic", fixture: "tableflow/topic/update-topic-error-log.golden"},
 		{args: "tableflow topic disable topic-managed --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/disable-topic.golden"},
 		{args: "tableflow topic disable topic-managed topic-byob --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/disable-multiple-topics.golden"},
 		{args: "tableflow topic delete topic-managed --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/delete-topic.golden"},
