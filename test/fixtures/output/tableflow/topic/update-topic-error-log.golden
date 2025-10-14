@@ -4,9 +4,9 @@
 | Enable Compaction       | true                                                                     |
 | Enable Partitioning     | true                                                                     |
 | Environment             | env-596                                                                  |
-| Record Failure Strategy | LOG                                                                      |
+| Record Failure Strategy | SUSPEND                                                                  |
 | Error Handling          | LOG                                                                      |
-| Log Target              | error_log                                                                |
+| Log Target              | log_topic                                                                |
 | Retention Ms            | 604800000                                                                |
 | Storage Type            | MANAGED                                                                  |
 | Suspended               | false                                                                    |

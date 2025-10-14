@@ -111,6 +111,12 @@ func handleTableflowTopicGet(t *testing.T, environmentId, clusterId, display_nam
 			tableflowTopic = getTopicByob("topic-byob", environmentId, clusterId)
 		case "topic-managed":
 			tableflowTopic = getTopicManaged("topic-managed", environmentId, clusterId)
+		case "topic-error-log":
+			tableflowTopic = getTopicManaged("topic-error-log", "env-596", "lkc-123456")
+			tableflowTopic.Spec.Config.SetErrorHandling(tableflowv1.TableflowV1TableFlowTopicConfigsSpecErrorHandlingOneOf{
+				TableflowV1ErrorHandlingLog: &tableflowv1.TableflowV1ErrorHandlingLog{Mode: "LOG", Target: tableflowv1.PtrString("error_log")},
+			})
+			tableflowTopic.Spec.Config.SetRecordFailureStrategy("LOG")
 		}
 		err := json.NewEncoder(w).Encode(tableflowTopic)
 		require.NoError(t, err)
@@ -145,10 +151,6 @@ func handleTableflowTopicUpdate(t *testing.T, display_name string) http.HandlerF
 			tableflowTopic = getTopicManaged("topic-managed", "env-596", "lkc-123456")
 		case "topic-error-log":
 			tableflowTopic = getTopicManaged("topic-error-log", "env-596", "lkc-123456")
-			tableflowTopic.Spec.Config.SetErrorHandling(tableflowv1.TableflowV1TableFlowTopicConfigsSpecErrorHandlingOneOf{
-				TableflowV1ErrorHandlingLog: &tableflowv1.TableflowV1ErrorHandlingLog{Mode: "LOG", Target: tableflowv1.PtrString("error_log")},
-			})
-			tableflowTopic.Spec.Config.SetRecordFailureStrategy("LOG")
 		}
 
 		if body.Spec.Config.GetRetentionMs() != "" {
