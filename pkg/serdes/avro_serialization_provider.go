@@ -6,6 +6,7 @@ import (
 
 	"github.com/linkedin/goavro/v2"
 
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/cel"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption"
@@ -106,25 +107,25 @@ func (a *AvroSerializationProvider) GetSchemaName() string {
 	return avroSchemaBackendName
 }
 
-func (a *AvroSerializationProvider) Serialize(topic, message string) ([]byte, error) {
+func (a *AvroSerializationProvider) Serialize(topic, message string) ([]kafka.Header, []byte, error) {
 	// Step#1: Fetch the schemaInfo based on subject and schema ID
 	schemaObj, err := a.GetSchemaRegistryClient().GetBySubjectAndID(topic+"-"+a.mode, a.schemaId)
 	if err != nil {
-		return nil, fmt.Errorf("failed to serialize message: %w", err)
+		return nil, nil, fmt.Errorf("failed to serialize message: %w", err)
 	}
 
 	// Step#2: Prepare the Codec based on schemaInfo
 	schemaString := schemaObj.Schema
 	codec, err := goavro.NewCodec(schemaString)
 	if err != nil {
-		return nil, fmt.Errorf("failed to serialize message: %w", err)
+		return nil, nil, fmt.Errorf("failed to serialize message: %w", err)
 	}
 
 	// Step#3: Convert the Avro message data in JSON text format into Go native
 	// data types in accordance with the Avro schema supplied when creating the Codec
 	object, _, err := codec.NativeFromTextual([]byte(message))
 	if err != nil {
-		return nil, fmt.Errorf("failed to serialize message: %w", err)
+		return nil, nil, fmt.Errorf("failed to serialize message: %w", err)
 	}
 
 	// Step#4: Fetch the Go native data object, cast it into generic map for Serialize()
@@ -134,17 +135,22 @@ func (a *AvroSerializationProvider) Serialize(topic, message string) ([]byte, er
 	// Passing the Go native object directly could cause issues during ruleSet execution
 	v, ok := object.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("failed to serialize message: unexpected message type assertion result")
+		return nil, nil, fmt.Errorf("failed to serialize message: unexpected message type assertion result")
 	}
-	payload, err := a.ser.Serialize(topic, &v)
+	headers, payload, err := a.ser.SerializeWithHeaders(topic, &v)
 	if err != nil {
-		return nil, fmt.Errorf("failed to serialize message: %w", err)
+		return nil, nil, fmt.Errorf("failed to serialize message: %w", err)
 	}
-	return payload, nil
+	return headers, payload, nil
 }
 
 // GetSchemaRegistryClient This getter function is used in mock testing
 // as serializer and deserializer have to share the same SR client instance
 func (a *AvroSerializationProvider) GetSchemaRegistryClient() schemaregistry.Client {
 	return a.ser.Client
+}
+
+// For unit testing purposes
+func (a *AvroSerializationProvider) SetSchemaIDSerializer(headerSerializer serde.SchemaIDSerializerFunc) {
+	a.ser.SchemaIDSerializer = headerSerializer
 }
