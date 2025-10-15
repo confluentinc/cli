@@ -3,7 +3,9 @@ package serdes
 import (
 	"fmt"
 
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
 )
@@ -67,15 +69,16 @@ type SchemaRegistryAuth struct {
 type SerializationProvider interface {
 	InitSerializer(srClientUrl, srClusterId, mode string, schemaId int, srAuth SchemaRegistryAuth) error
 	LoadSchema(string, map[string]string) error
-	Serialize(string, string) ([]byte, error)
+	Serialize(string, string) ([]kafka.Header, []byte, error)
 	GetSchemaName() string
 	GetSchemaRegistryClient() schemaregistry.Client
+	SetSchemaIDSerializer(headerSerializer serde.SchemaIDSerializerFunc) // For unit testing purposes
 }
 
 type DeserializationProvider interface {
 	InitDeserializer(srClientUrl, srClusterId, mode string, srAuth SchemaRegistryAuth, existingClient any) error
-	LoadSchema(string, map[string]string) error
-	Deserialize(string, []byte) (string, error)
+	LoadSchema(string, string, serde.Type, *kafka.Message) error
+	Deserialize(string, []kafka.Header, []byte) (string, error)
 }
 
 func FormatTranslation(backendValueFormat string) (string, error) {
@@ -129,4 +132,8 @@ func GetDeserializationProvider(valueFormat string) (DeserializationProvider, er
 	default:
 		return nil, fmt.Errorf(errors.UnknownValueFormatErrorMsg)
 	}
+}
+
+func IsProtobufSchema(valueFormat string) bool {
+	return valueFormat == protobufSchemaName
 }
