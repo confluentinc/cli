@@ -14,6 +14,7 @@ import (
 	gproto "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/dynamicpb"
 
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/cel"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption"
@@ -123,17 +124,17 @@ func (p *ProtobufSerializationProvider) GetSchemaName() string {
 	return protobufSchemaBackendName
 }
 
-func (p *ProtobufSerializationProvider) Serialize(topic, message string) ([]byte, error) {
+func (p *ProtobufSerializationProvider) Serialize(topic, message string) ([]kafka.Header, []byte, error) {
 	// Need to materialize the message into the schema of p.message
 	if err := protojson.Unmarshal([]byte(message), p.message); err != nil {
-		return nil, fmt.Errorf(errors.ProtoDocumentInvalidErrorMsg)
+		return nil, nil, fmt.Errorf(errors.ProtoDocumentInvalidErrorMsg)
 	}
 
-	payload, err := p.ser.Serialize(topic, p.message)
+	headers, payload, err := p.ser.SerializeWithHeaders(topic, p.message)
 	if err != nil {
-		return nil, fmt.Errorf("failed to serialize message: %w", err)
+		return nil, nil, fmt.Errorf("failed to serialize message: %w", err)
 	}
-	return payload, nil
+	return headers, payload, nil
 }
 
 func parseMessage(schemaPath string, referencePathMap map[string]string) (gproto.Message, error) {
@@ -223,4 +224,9 @@ func copyBuiltInProtoFiles(destinationDir string) error {
 
 		return nil
 	})
+}
+
+// For unit testing purposes
+func (p *ProtobufSerializationProvider) SetSchemaIDSerializer(headerSerializer serde.SchemaIDSerializerFunc) {
+	p.ser.SchemaIDSerializer = headerSerializer
 }
