@@ -1,0 +1,16 @@
+Created provider integration pi-123456 in DRAFT state.
+Configured azure provider settings.
+
+⏳ Azure setup required:
+1. Run: az ad sp create --id app-123456789
+2. Check Azure Portal → Enterprise Applications to ensure it appears
+3. Grant necessary permissions to the service principal
+
+Run 'confluent provider-integration v2 describe pi-123456' to check status.
++-------------+------------+
+| ID          | pi-123456  |
+| Name        | azure-test |
+| Provider    | azure      |
+| Environment | env-596    |
+| Status      | CREATED    |
++-------------+------------+
