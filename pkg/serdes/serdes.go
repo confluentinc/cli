@@ -69,9 +69,10 @@ type SchemaRegistryAuth struct {
 type SerializationProvider interface {
 	InitSerializer(srClientUrl, srClusterId, mode string, schemaId int, srAuth SchemaRegistryAuth) error
 	LoadSchema(string, map[string]string) error
-	Serialize(string, string) ([]byte, error)
+	Serialize(string, string) ([]kafka.Header, []byte, error)
 	GetSchemaName() string
 	GetSchemaRegistryClient() schemaregistry.Client
+	SetSchemaIDSerializer(headerSerializer serde.SchemaIDSerializerFunc) // For unit testing purposes
 }
 
 type DeserializationProvider interface {
