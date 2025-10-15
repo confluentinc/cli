@@ -797,6 +797,15 @@ message Person {
 	str, err := deserializationProvider.Deserialize("topic1", nil, data)
 	req.Nil(err)
 	req.JSONEq(str, expectedString)
+
+	// Deserialize again but without the reference file already stored locally
+	err = os.Remove(referencePath)
+	req.Nil(err)
+	err = deserializationProvider.LoadSchema("topic1-value", tempDir, serde.ValueSerde, &kafka.Message{Value: data})
+	req.Nil(err)
+	str, err = deserializationProvider.Deserialize("topic1", nil, data)
+	req.NotNil(err)
+	req.JSONEq(str, expectedString)
 }
 
 func TestProtobufSerdesInvalid(t *testing.T) {
