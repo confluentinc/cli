@@ -1,19 +1,16 @@
 +-------------------------+--------------------------------------------------------------------------+
 | Kafka Cluster           | lkc-123456                                                               |
-| Topic Name              | topic-byob                                                               |
+| Topic Name              | topic-managed                                                            |
 | Enable Compaction       | true                                                                     |
 | Enable Partitioning     | true                                                                     |
 | Environment             | env-596                                                                  |
-| Record Failure Strategy | SKIP                                                                     |
+| Record Failure Strategy | SUSPEND                                                                  |
 | Error Handling          | SKIP                                                                     |
-| Retention Ms            | 432000000                                                                |
-| Storage Type            | BYOS                                                                     |
-| Provider Integration ID | cspi-stgce89r7                                                           |
-| Bucket Name             | bucket_1                                                                 |
-| Bucket Region           | us-east-1                                                                |
+| Retention Ms            | 604800000                                                                |
+| Storage Type            | MANAGED                                                                  |
 | Suspended               | false                                                                    |
-| Table Formats           | ICEBERG                                                                  |
+| Table Formats           | DELTA                                                                    |
 | Table Path              | s3://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId |
 | Phase                   | RUNNING                                                                  |
-| Write Mode              | UPSERT                                                                   |
+| Write Mode              | APPEND                                                                   |
 +-------------------------+--------------------------------------------------------------------------+
