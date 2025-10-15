@@ -39,6 +39,4 @@ func (IntegerSerializationProvider) GetSchemaRegistryClient() schemaregistry.Cli
 	return nil
 }
 
-func (IntegerSerializationProvider) SetSchemaIDSerializer(_ serde.SchemaIDSerializerFunc) {
-	return
-}
+func (IntegerSerializationProvider) SetSchemaIDSerializer(_ serde.SchemaIDSerializerFunc) {}

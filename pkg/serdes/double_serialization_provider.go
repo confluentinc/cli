@@ -40,6 +40,4 @@ func (DoubleSerializationProvider) GetSchemaRegistryClient() schemaregistry.Clie
 	return nil
 }
 
-func (DoubleSerializationProvider) SetSchemaIDSerializer(_ serde.SchemaIDSerializerFunc) {
-	return
-}
+func (DoubleSerializationProvider) SetSchemaIDSerializer(_ serde.SchemaIDSerializerFunc) {}

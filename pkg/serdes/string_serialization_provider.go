@@ -28,6 +28,4 @@ func (s *StringSerializationProvider) GetSchemaRegistryClient() schemaregistry.C
 	return nil
 }
 
-func (s *StringSerializationProvider) SetSchemaIDSerializer(_ serde.SchemaIDSerializerFunc) {
-	return
-}
+func (s *StringSerializationProvider) SetSchemaIDSerializer(_ serde.SchemaIDSerializerFunc) {}
