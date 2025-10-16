@@ -45,7 +45,7 @@ func printTabbedSection(title string, printSectionFunc func(*cobra.Command) ([]s
 
 		for i, tab-item := range tab-set {
 			section := []string{
-				".. group-tab:: " + tab-item.Name,
+				".. tab-item:: " + tab-item.Name,
 				"   :sync:: " + tab-item.Name,
 				"",
 			}
