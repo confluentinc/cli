@@ -86,5 +86,26 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	table.Add(out)
+
+	// Filter fields based on provider to show only relevant configuration
+	fields := []string{"Id", "DisplayName", "Provider", "Environment", "Status"}
+	switch integration.GetProvider() {
+	case providerAzure:
+		if out.CustomerAzureTenantId != "" || out.ConfluentMultiTenantAppId != "" {
+			fields = append(fields, "ConfluentMultiTenantAppId")
+			if out.CustomerAzureTenantId != "" {
+				fields = append(fields, "CustomerAzureTenantId")
+			}
+		}
+	case providerGcp:
+		if out.CustomerGoogleServiceAccount != "" || out.GoogleServiceAccount != "" {
+			fields = append(fields, "GoogleServiceAccount")
+			if out.CustomerGoogleServiceAccount != "" {
+				fields = append(fields, "CustomerGoogleServiceAccount")
+			}
+		}
+	}
+
+	table.Filter(fields)
 	return table.Print()
 }

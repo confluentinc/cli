@@ -1,0 +1,25 @@
+Update an existing provider integration to map customer's identity.
+
+Usage:
+  confluent provider-integration v2 update <id> [flags]
+
+Examples:
+Update Azure provider integration "cspi-123456" with customer tenant ID.
+
+  $ confluent provider-integration v2 update cspi-123456 --customer-azure-tenant-id 00000000-0000-0000-0000-000000000000
+
+Update GCP provider integration "cspi-789012" with customer service account.
+
+  $ confluent provider-integration v2 update cspi-789012 --customer-google-service-account my-sa@my-project.iam.gserviceaccount.com
+
+Flags:
+      --customer-azure-tenant-id string          Customer Azure Tenant ID (required for Azure provider).
+      --customer-google-service-account string   Customer Google Service Account (required for GCP provider).
+      --environment string                       Environment ID.
+      --context string                           CLI context name.
+  -o, --output string                            Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

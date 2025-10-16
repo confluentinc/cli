@@ -61,14 +61,31 @@ func (s *CLITestSuite) TestProviderIntegrationV2() {
 			exitCode: 1,
 		},
 
-		// Create command tests (combined create+authorize flow)
+		// Create command tests (separate create/update/validate flow)
 		{
-			args:    "provider-integration v2 create azure-test --cloud azure --azure-tenant-id 00000000-0000-0000-0000-000000000000",
+			args:    "provider-integration v2 create azure-test --cloud azure",
 			fixture: "provider-integration/v2/create-azure.golden",
 		},
 		{
-			args:    "provider-integration v2 create gcp-test --cloud gcp --gcp-service-account test-sa@test-project.iam.gserviceaccount.com",
+			args:    "provider-integration v2 create gcp-test --cloud gcp",
 			fixture: "provider-integration/v2/create-gcp.golden",
+		},
+
+		// Update command tests
+		{
+			args:    "provider-integration v2 update pi-123456 --customer-azure-tenant-id 00000000-0000-0000-0000-000000000000",
+			fixture: "provider-integration/v2/update-azure.golden",
+		},
+		{
+			args:    "provider-integration v2 update pi-789012 --customer-google-service-account my-service-account@my-project.iam.gserviceaccount.com",
+			fixture: "provider-integration/v2/update-gcp.golden",
+		},
+
+		// Validate command tests
+		{
+			args:     "provider-integration v2 validate pi-not-configured",
+			fixture:  "provider-integration/v2/validate-failure.golden",
+			exitCode: 1,
 		},
 
 		// Output format tests
@@ -95,22 +112,31 @@ func (s *CLITestSuite) TestProviderIntegrationV2() {
 			fixture: "provider-integration/v2/describe-env-flag.golden",
 		},
 
-		// Error cases
+		// Error cases - Create
 		{
 			args:     "provider-integration v2 create invalid-test --cloud invalid",
 			fixture:  "provider-integration/v2/create-invalid-provider.golden",
 			exitCode: 1,
 		},
+
+		// Error cases - Update
 		{
-			args:     "provider-integration v2 create missing-azure-config --cloud azure",
-			fixture:  "provider-integration/v2/create-missing-config.golden",
+			args:     "provider-integration v2 update pi-123456 --customer-azure-tenant-id invalid-uuid",
+			fixture:  "provider-integration/v2/update-invalid-azure-config.golden",
 			exitCode: 1,
 		},
 		{
-			args:     "provider-integration v2 create missing-gcp-config --cloud gcp",
-			fixture:  "provider-integration/v2/create-missing-gcp-config.golden",
+			args:     "provider-integration v2 update pi-789012 --customer-google-service-account invalid-format",
+			fixture:  "provider-integration/v2/update-invalid-gcp-config.golden",
 			exitCode: 1,
 		},
+		{
+			args:     "provider-integration v2 update pi-invalid --customer-azure-tenant-id 00000000-0000-0000-0000-000000000000",
+			fixture:  "provider-integration/v2/update-not-exist.golden",
+			exitCode: 1,
+		},
+
+		// Error cases - Other commands
 		{
 			args:     "provider-integration v2 delete pi-invalid",
 			fixture:  "provider-integration/v2/delete-not-exist.golden",
@@ -122,16 +148,37 @@ func (s *CLITestSuite) TestProviderIntegrationV2() {
 			exitCode: 1,
 		},
 
-		// Atomic behavior tests (invalid configs that should trigger cleanup)
+		// Update tests - missing required flags
 		{
-			args:     "provider-integration v2 create atomic-test-invalid-gcp --cloud gcp --gcp-service-account invalid-format",
-			fixture:  "provider-integration/v2/create-invalid-gcp-atomic.golden",
+			args:     "provider-integration v2 update pi-123456",
+			fixture:  "provider-integration/v2/update-missing-flag.golden",
 			exitCode: 1,
 		},
+
+		// List tests - output formats
 		{
-			args:     "provider-integration v2 create atomic-test-invalid-azure --cloud azure --azure-tenant-id not-a-valid-uuid",
-			fixture:  "provider-integration/v2/create-invalid-azure-atomic.golden",
-			exitCode: 1,
+			args:    "provider-integration v2 list --output yaml",
+			fixture: "provider-integration/v2/list-yaml.golden",
+		},
+
+		// Create tests - output formats
+		{
+			args:    "provider-integration v2 create azure-json-test --cloud azure --output json",
+			fixture: "provider-integration/v2/create-azure-json.golden",
+		},
+		{
+			args:    "provider-integration v2 create gcp-yaml-test --cloud gcp --output yaml",
+			fixture: "provider-integration/v2/create-gcp-yaml.golden",
+		},
+
+		// Update tests - output formats
+		{
+			args:    "provider-integration v2 update pi-123456 --customer-azure-tenant-id 00000000-0000-0000-0000-000000000000 --output json",
+			fixture: "provider-integration/v2/update-azure-json.golden",
+		},
+		{
+			args:    "provider-integration v2 update pi-789012 --customer-google-service-account my-service-account@my-project.iam.gserviceaccount.com --output yaml",
+			fixture: "provider-integration/v2/update-gcp-yaml.golden",
 		},
 	}
 

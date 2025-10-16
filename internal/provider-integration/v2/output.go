@@ -23,7 +23,7 @@ type providerIntegrationOut struct {
 	Status      string `human:"Status" serialized:"status"`
 	// Azure-specific fields (omitempty ensures they're only shown for Azure integrations)
 	CustomerAzureTenantId     string `human:"Customer Azure Tenant ID" serialized:"customer_azure_tenant_id,omitempty"`
-	ConfluentMultiTenantAppId string `human:"Confluent Multi-Tenant App ID" serialized:"confluent_multi_tenant_app_id,omitempty"`
+	ConfluentMultiTenantAppId string `human:"Confluent Azure Multi-Tenant App ID" serialized:"confluent_multi_tenant_app_id,omitempty"`
 	// GCP-specific fields (omitempty ensures they're only shown for GCP integrations)
 	CustomerGoogleServiceAccount string `human:"Customer Google Service Account" serialized:"customer_google_service_account,omitempty"`
 	GoogleServiceAccount         string `human:"Google Service Account" serialized:"google_service_account,omitempty"`
@@ -38,7 +38,7 @@ type providerIntegrationListOut struct {
 	Status      string `human:"Status" serialized:"status"`
 	// Azure-specific fields (omitempty ensures they're only shown for Azure integrations)
 	CustomerAzureTenantId     string `human:"Customer Azure Tenant ID" serialized:"customer_azure_tenant_id,omitempty"`
-	ConfluentMultiTenantAppId string `human:"Confluent Multi-Tenant App ID" serialized:"confluent_multi_tenant_app_id,omitempty"`
+	ConfluentMultiTenantAppId string `human:"Confluent Azure Multi-Tenant App ID" serialized:"confluent_multi_tenant_app_id,omitempty"`
 	// GCP-specific fields (omitempty ensures they're only shown for GCP integrations)
 	CustomerGoogleServiceAccount string `human:"Customer Google Service Account" serialized:"customer_google_service_account,omitempty"`
 	GoogleServiceAccount         string `human:"Google Service Account" serialized:"google_service_account,omitempty"`

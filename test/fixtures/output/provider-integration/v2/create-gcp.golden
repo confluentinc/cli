@@ -1,22 +1,7 @@
-Created provider integration pi-789012 in DRAFT state.
-Configured gcp provider settings.
-
-⏳ GCP setup required:
-1. Grant Service Account Token Creator role:
-   gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-     --member="serviceAccount:confluent-sa-123456789@gcp-sa-cloud.iam.gserviceaccount.com" \
-     --role="roles/iam.serviceAccountTokenCreator" \
-     --condition="expression=request.auth.claims.sub=='confluent-sa-123456789@gcp-sa-cloud.iam.gserviceaccount.com'"
-
-2. Grant your service account (test-sa@test-project.iam.gserviceaccount.com) permissions based on your connector needs
-
-Run 'confluent provider-integration v2 describe pi-789012' to check status.
-
-Note: IAM changes may take 1-7 minutes to propagate.
-+-------------+-----------+
-| ID          | pi-789012 |
-| Name        | gcp-test  |
-| Provider    | gcp       |
-| Environment | env-596   |
-| Status      | CREATED   |
-+-------------+-----------+
++------------------------+-------------------------------------------------------------+
+| ID                     | pi-789012                                                   |
+| Name                   | gcp-test                                                    |
+| Provider               | gcp                                                         |
+| Environment            | env-596                                                     |
+| Google Service Account | confluent-sa-123456789@gcp-sa-cloud.iam.gserviceaccount.com |
++------------------------+-------------------------------------------------------------+

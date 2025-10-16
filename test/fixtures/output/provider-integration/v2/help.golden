@@ -10,6 +10,8 @@ Available Commands:
   delete      Delete one or more provider integrations.
   describe    Describe a provider integration.
   list        List provider integrations.
+  update      Update a provider integration.
+  validate    Validate a provider integration.
 
 Global Flags:
   -h, --help            Show help for this command.
