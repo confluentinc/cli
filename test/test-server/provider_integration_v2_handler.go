@@ -47,21 +47,28 @@ func handleProviderIntegrationsV2(t *testing.T) http.HandlerFunc {
 // Handler for "/pim/v2/integrations/{id}/validate"
 func handleProviderIntegrationV2Validate(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := mux.Vars(r)["id"]
+		var request piv2.PimV2IntegrationValidateRequest
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&request))
+
+		id := request.GetId()
 		switch id {
-		case "pi-123456":
-			// Azure validation success
-			w.WriteHeader(http.StatusOK)
-		case "pi-789012":
-			// GCP validation success
-			w.WriteHeader(http.StatusOK)
-		default:
-			// Validation failure
+		case "pi-not-configured":
+			// Validation failure - setup incomplete
 			w.WriteHeader(http.StatusBadRequest)
 			_ = json.NewEncoder(w).Encode(map[string]interface{}{
-				"error_code": "400",
-				"message":    "Cloud provider setup incomplete",
+				"errors": []map[string]interface{}{
+					{
+						"id":     "test-error-id",
+						"status": "400",
+						"code":   "bad_request",
+						"detail": "Cloud provider setup incomplete",
+						"source": map[string]interface{}{},
+					},
+				},
 			})
+		default:
+			// Unknown integration
+			w.WriteHeader(http.StatusNotFound)
 		}
 	}
 }
@@ -75,7 +82,7 @@ func handleProviderIntegrationV2Get(t *testing.T, id string) http.HandlerFunc {
 				DisplayName: piv2.PtrString("azure-test"),
 				Provider:    piv2.PtrString("azure"),
 				Environment: &piv2.ObjectReference{Id: "env-596"},
-				Status:      piv2.PtrString("DRAFT"),
+				Status:      piv2.PtrString("CREATED"),
 				Config: &piv2.PimV2IntegrationConfigOneOf{
 					PimV2AzureIntegrationConfig: &piv2.PimV2AzureIntegrationConfig{
 						Kind:                      AzureIntegrationConfig,
@@ -92,12 +99,28 @@ func handleProviderIntegrationV2Get(t *testing.T, id string) http.HandlerFunc {
 				DisplayName: piv2.PtrString("gcp-test"),
 				Provider:    piv2.PtrString("gcp"),
 				Environment: &piv2.ObjectReference{Id: "env-596"},
-				Status:      piv2.PtrString("DRAFT"),
+				Status:      piv2.PtrString("CREATED"),
 				Config: &piv2.PimV2IntegrationConfigOneOf{
 					PimV2GcpIntegrationConfig: &piv2.PimV2GcpIntegrationConfig{
 						Kind:                         GcpIntegrationConfig,
 						CustomerGoogleServiceAccount: piv2.PtrString("my-service-account@my-project.iam.gserviceaccount.com"),
 						GoogleServiceAccount:         piv2.PtrString("confluent-sa-123456789@gcp-sa-cloud.iam.gserviceaccount.com"),
+					},
+				},
+			}
+			err := json.NewEncoder(w).Encode(mockResponse)
+			require.NoError(t, err)
+		case "pi-not-configured":
+			mockResponse := piv2.PimV2Integration{
+				Id:          piv2.PtrString(id),
+				DisplayName: piv2.PtrString("not-configured-test"),
+				Provider:    piv2.PtrString("azure"),
+				Environment: &piv2.ObjectReference{Id: "env-596"},
+				Status:      piv2.PtrString("DRAFT"),
+				Config: &piv2.PimV2IntegrationConfigOneOf{
+					PimV2AzureIntegrationConfig: &piv2.PimV2AzureIntegrationConfig{
+						Kind:                      AzureIntegrationConfig,
+						ConfluentMultiTenantAppId: piv2.PtrString("app-not-configured"),
 					},
 				},
 			}
@@ -197,6 +220,24 @@ func handleProviderIntegrationV2Create(t *testing.T) http.HandlerFunc {
 			Status:      piv2.PtrString("DRAFT"),
 		}
 
+		// Add Confluent-managed identity based on provider
+		switch provider {
+		case "azure":
+			mockResponse.Config = &piv2.PimV2IntegrationConfigOneOf{
+				PimV2AzureIntegrationConfig: &piv2.PimV2AzureIntegrationConfig{
+					Kind:                      AzureIntegrationConfig,
+					ConfluentMultiTenantAppId: piv2.PtrString("app-123456789"),
+				},
+			}
+		case "gcp":
+			mockResponse.Config = &piv2.PimV2IntegrationConfigOneOf{
+				PimV2GcpIntegrationConfig: &piv2.PimV2GcpIntegrationConfig{
+					Kind:                 GcpIntegrationConfig,
+					GoogleServiceAccount: piv2.PtrString("confluent-sa-123456789@gcp-sa-cloud.iam.gserviceaccount.com"),
+				},
+			}
+		}
+
 		err := json.NewEncoder(w).Encode(mockResponse)
 		require.NoError(t, err)
 	}
@@ -208,35 +249,49 @@ func handleProviderIntegrationV2Update(t *testing.T) http.HandlerFunc {
 		var request piv2.PimV2IntegrationUpdate
 		require.NoError(t, json.NewDecoder(r.Body).Decode(&request))
 
-		// Handle atomic test cases that should fail
-		if id == "pi-atomic-gcp" {
-			w.WriteHeader(http.StatusBadRequest)
-			_ = json.NewEncoder(w).Encode(map[string]interface{}{
-				"errors": []map[string]interface{}{
-					{
-						"id":     "test-error-id",
-						"status": "400",
-						"code":   "bad_request",
-						"detail": "invalid Google Service Account",
-						"source": map[string]interface{}{},
-					},
-				},
-			})
-			return
+		// Handle invalid configuration test cases
+		if request.Config != nil {
+			if request.Config.PimV2AzureIntegrationConfig != nil {
+				azureTenantId := request.Config.PimV2AzureIntegrationConfig.GetCustomerAzureTenantId()
+				if azureTenantId == "invalid-uuid" || azureTenantId == "not-a-valid-uuid" {
+					w.WriteHeader(http.StatusBadRequest)
+					_ = json.NewEncoder(w).Encode(map[string]interface{}{
+						"errors": []map[string]interface{}{
+							{
+								"id":     "test-error-id",
+								"status": "400",
+								"code":   "bad_request",
+								"detail": "invalid customer AZURE tenant id",
+								"source": map[string]interface{}{},
+							},
+						},
+					})
+					return
+				}
+			}
+			if request.Config.PimV2GcpIntegrationConfig != nil {
+				gcpSA := request.Config.PimV2GcpIntegrationConfig.GetCustomerGoogleServiceAccount()
+				if gcpSA == "invalid-format" {
+					w.WriteHeader(http.StatusBadRequest)
+					_ = json.NewEncoder(w).Encode(map[string]interface{}{
+						"errors": []map[string]interface{}{
+							{
+								"id":     "test-error-id",
+								"status": "400",
+								"code":   "bad_request",
+								"detail": "invalid Google Service Account",
+								"source": map[string]interface{}{},
+							},
+						},
+					})
+					return
+				}
+			}
 		}
-		if id == "pi-atomic-azure" {
-			w.WriteHeader(http.StatusBadRequest)
-			_ = json.NewEncoder(w).Encode(map[string]interface{}{
-				"errors": []map[string]interface{}{
-					{
-						"id":     "test-error-id",
-						"status": "400",
-						"code":   "bad_request",
-						"detail": "invalid customer AZURE tenant id",
-						"source": map[string]interface{}{},
-					},
-				},
-			})
+
+		// Handle non-existent integration
+		if id == "pi-invalid" {
+			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 
