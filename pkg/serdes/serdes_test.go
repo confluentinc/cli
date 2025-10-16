@@ -58,6 +58,8 @@ func TestInitSchemaRegistryClient(t *testing.T) {
 
 	// Bearer Auth
 	serde.GlobalRuleRegistry().Clear()
+	provider, err = GetDeserializationProvider(jsonSchemaName)
+	req.Nil(err)
 	err = provider.InitDeserializer(mockClientUrl, "lsrc-abc123", "value", SchemaRegistryAuth{Token: "token"}, nil)
 	req.Nil(err)
 	config = provider.GetSchemaRegistryClient().Config()
@@ -68,6 +70,8 @@ func TestInitSchemaRegistryClient(t *testing.T) {
 
 	// No Auth (and also mTLS)
 	serde.GlobalRuleRegistry().Clear()
+	provider, err = GetDeserializationProvider(protobufSchemaName)
+	req.Nil(err)
 	err = provider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{
 		CertificateAuthorityPath: "ca.cert",
 		ClientCertPath:           "client.crt",
@@ -847,6 +851,96 @@ message Person {
 	err = deserializationProvider.LoadSchema("topic1-value", tempDir, serde.ValueSerde, &kafka.Message{Value: data})
 	req.Nil(err)
 	str, err = deserializationProvider.Deserialize("topic1", nil, data)
+	req.Nil(err)
+	req.JSONEq(str, expectedString)
+}
+
+func TestProtobufSerdesReferenceWithHeaders(t *testing.T) {
+	req := require.New(t)
+
+	tempDir, err := os.MkdirTemp(tempDir, "protobuf")
+	req.NoError(err)
+	defer os.RemoveAll(tempDir)
+
+	referenceString := `syntax = "proto3";
+
+package test;
+
+message Address {
+ string city = 1;
+}
+`
+
+	// Reference schema should be registered from user side prior to be used as reference
+	// So subject and schema version will be known value at this time
+	referencePath := filepath.Join(tempDir, "address.proto")
+	req.NoError(os.WriteFile(referencePath, []byte(referenceString), 0644))
+
+	schemaString := `syntax = "proto3";
+
+package test;
+
+import "address.proto";
+
+message Person {
+ string name = 1;
+ test.Address address = 2;
+ int32 result = 3;
+}
+`
+	schemaPath := filepath.Join(tempDir, "person.proto")
+	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
+
+	expectedString := `{"name":"abc","address":{"city":"LA"},"result":2}`
+
+	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
+	req.Nil(err)
+	serializationProvider.SetSchemaIDSerializer(serde.HeaderSchemaIDSerializer)
+	err = serializationProvider.LoadSchema(schemaPath, map[string]string{"address.proto": referencePath})
+	req.Nil(err)
+
+	// Explicitly register the reference schema and root schema to have a schemaId with mock SR client
+	client := serializationProvider.GetSchemaRegistryClient()
+	referenceInfo := schemaregistry.SchemaInfo{
+		Schema:     referenceString,
+		SchemaType: "PROTOBUF",
+	}
+	_, err = client.Register("address.proto", referenceInfo, false)
+	req.Nil(err)
+
+	info := schemaregistry.SchemaInfo{
+		Schema:     schemaString,
+		SchemaType: "PROTOBUF",
+		References: []schemaregistry.Reference{
+			{
+				Name:    "address.proto",
+				Subject: "address.proto",
+				Version: 1,
+			},
+		},
+	}
+	_, err = client.Register("topic1-value", info, false)
+	req.Nil(err)
+
+	headers, data, err := serializationProvider.Serialize("topic1", expectedString)
+	req.Nil(err)
+
+	deserializationProvider, _ := GetDeserializationProvider(protobufSchemaName)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
+	req.Nil(err)
+	err = deserializationProvider.LoadSchema("topic1-value", tempDir, serde.ValueSerde, &kafka.Message{Value: data, Headers: headers})
+	req.Nil(err)
+	str, err := deserializationProvider.Deserialize("topic1", headers, data)
+	req.Nil(err)
+	req.JSONEq(str, expectedString)
+
+	// Deserialize again but without the reference file already stored locally
+	err = os.Remove(referencePath)
+	req.Nil(err)
+	err = deserializationProvider.LoadSchema("topic1-value", tempDir, serde.ValueSerde, &kafka.Message{Value: data, Headers: headers})
+	req.Nil(err)
+	str, err = deserializationProvider.Deserialize("topic1", headers, data)
 	req.Nil(err)
 	req.JSONEq(str, expectedString)
 }
