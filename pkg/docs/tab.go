@@ -39,13 +39,14 @@ func printTabbedSection(title string, printSectionFunc func(*cobra.Command) ([]s
 
 	if !isUnified {
 		rows = []string{
-			".. tabs::",
+			".. tab-set::",
 			"",
 		}
 
 		for i, tab := range tabs {
 			section := []string{
-				".. group-tab:: " + tab.Name,
+				".. tab-item:: " + tab.Name,
+				"   :sync: " + tab.Name,
 				"",
 			}
 			section = append(section, indent("   ", sections[i])...)
