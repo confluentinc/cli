@@ -12,12 +12,12 @@ type Tab struct {
 	Command *cobra.Command
 }
 
-func printTabbedSection(title string, printSectionFunc func(*cobra.Command) ([]string, bool), tabs []Tab) []string {
-	sections := make([][]string, len(tabs))
+func printTabbedSection(title string, printSectionFunc func(*cobra.Command) ([]string, bool), tab-set []Tab) []string {
+	sections := make([][]string, len(tab-set))
 	isHidden := true
 
-	for i, tab := range tabs {
-		section, ok := printSectionFunc(tab.Command)
+	for i, tab-item := range tab-set {
+		section, ok := printSectionFunc(tab-item.Command)
 		sections[i] = section
 		if ok {
 			isHidden = false
@@ -39,13 +39,14 @@ func printTabbedSection(title string, printSectionFunc func(*cobra.Command) ([]s
 
 	if !isUnified {
 		rows = []string{
-			".. tabs::",
+			".. tab-set::",
 			"",
 		}
 
-		for i, tab := range tabs {
+		for i, tab-item := range tab-set {
 			section := []string{
-				".. group-tab:: " + tab.Name,
+				".. group-tab:: " + tab-item.Name,
+				"   :sync:: " + tab-item.Name,
 				"",
 			}
 			section = append(section, indent("   ", sections[i])...)
@@ -85,11 +86,11 @@ func areEqual(a, b []string) bool {
 	return true
 }
 
-func indent(tab string, rows []string) []string {
+func indent(tab-item string, rows []string) []string {
 	var indented []string
 	for _, row := range rows {
 		for _, line := range strings.Split(row, "\n") {
-			indented = append(indented, tab+line)
+			indented = append(indented, tab-item+line)
 		}
 	}
 	return indented
