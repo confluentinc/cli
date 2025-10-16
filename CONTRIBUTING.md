@@ -295,7 +295,7 @@ This is not an exhaustive list. Always consider the potential user impact of any
 Note: For the `confluent local services` command, which interacts with Confluent Platform, we should avoid breaking changes for all supported versions of Confluent Platform.
 
 The following may seem like breaking changes, but *aren't*:
-* Renaming a non-serialized, human readable field name
+* Renaming a non-serialized, human-readable field name
 * Hiding a deprecated flag (as long as users can still use the flag!)
 
 These criteria apply to commands, flags, or any functionality in the LA (Limited Availability) or GA (General Availability) lifecycle stages, which should have a stable interface.
