@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/cel"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption"
@@ -99,23 +100,28 @@ func (j *JsonSerializationProvider) GetSchemaName() string {
 	return jsonSchemaBackendName
 }
 
-func (j *JsonSerializationProvider) Serialize(topic, message string) ([]byte, error) {
+func (j *JsonSerializationProvider) Serialize(topic, message string) ([]kafka.Header, []byte, error) {
 	// Convert the plain string message from customer type-in in CLI terminal into generic map
 	var result map[string]any
 	err := json.Unmarshal([]byte(message), &result)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert message string into generic map for serialization: %w", err)
+		return nil, nil, fmt.Errorf("failed to convert message string into generic map for serialization: %w", err)
 	}
 
-	payload, err := j.ser.Serialize(topic, &result)
+	headers, payload, err := j.ser.SerializeWithHeaders(topic, &result)
 	if err != nil {
-		return nil, fmt.Errorf("failed to serialize message: %w", err)
+		return nil, nil, fmt.Errorf("failed to serialize message: %w", err)
 	}
-	return payload, nil
+	return headers, payload, nil
 }
 
 // GetSchemaRegistryClient This getter function is used in mock testing
 // as serializer and deserializer have to share the same SR client instance
 func (j *JsonSerializationProvider) GetSchemaRegistryClient() schemaregistry.Client {
 	return j.ser.Client
+}
+
+// For unit testing purposes
+func (j *JsonSerializationProvider) SetSchemaIDSerializer(headerSerializer serde.SchemaIDSerializerFunc) {
+	j.ser.SchemaIDSerializer = headerSerializer
 }

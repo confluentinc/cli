@@ -396,7 +396,7 @@ func serializeMessage(_, _ []byte, topic, data, delimiter string, parseKey bool,
 			return nil, nil, err
 		}
 
-		serializedKey, err = keySerializer.Serialize(topic, key)
+		_, serializedKey, err = keySerializer.Serialize(topic, key)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -404,7 +404,7 @@ func serializeMessage(_, _ []byte, topic, data, delimiter string, parseKey bool,
 		val = value
 	}
 
-	serializedValue, err := valueSerializer.Serialize(topic, val)
+	_, serializedValue, err := valueSerializer.Serialize(topic, val)
 	if err != nil {
 		return nil, nil, err
 	}
