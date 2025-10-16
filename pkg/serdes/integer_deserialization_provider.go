@@ -5,12 +5,13 @@ import (
 	"fmt"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 )
 
 type IntegerDeserializationProvider struct{}
 
-func (IntegerDeserializationProvider) InitDeserializer(_, _, _ string, _ SchemaRegistryAuth, _ any) error {
+func (IntegerDeserializationProvider) InitDeserializer(_, _, _ string, _ SchemaRegistryAuth, _ schemaregistry.Client) error {
 	return nil
 }
 
@@ -29,4 +30,8 @@ func (IntegerDeserializationProvider) Deserialize(_ string, _ []kafka.Header, da
 
 	message := fmt.Sprintf("%d", binary.LittleEndian.Uint32(data))
 	return message, nil
+}
+
+func (IntegerDeserializationProvider) GetSchemaRegistryClient() schemaregistry.Client {
+	return nil
 }

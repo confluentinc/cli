@@ -8,6 +8,7 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 var DekAlgorithms = []string{
@@ -76,9 +77,10 @@ type SerializationProvider interface {
 }
 
 type DeserializationProvider interface {
-	InitDeserializer(srClientUrl, srClusterId, mode string, srAuth SchemaRegistryAuth, existingClient any) error
+	InitDeserializer(srClientUrl, srClusterId, mode string, srAuth SchemaRegistryAuth, existingClient schemaregistry.Client) error
 	LoadSchema(string, string, serde.Type, *kafka.Message) error
 	Deserialize(string, []kafka.Header, []byte) (string, error)
+	GetSchemaRegistryClient() schemaregistry.Client
 }
 
 func FormatTranslation(backendValueFormat string) (string, error) {
@@ -136,4 +138,25 @@ func GetDeserializationProvider(valueFormat string) (DeserializationProvider, er
 
 func IsProtobufSchema(valueFormat string) bool {
 	return valueFormat == protobufSchemaName
+}
+
+func initSchemaRegistryClient(srClientUrl, srClusterId string, srAuth SchemaRegistryAuth, existingClient schemaregistry.Client) (schemaregistry.Client, error) {
+	if existingClient != nil {
+		return existingClient, nil
+	}
+
+	var serdeClientConfig *schemaregistry.Config
+	if srAuth.ApiKey != "" && srAuth.ApiSecret != "" {
+		serdeClientConfig = schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srAuth.ApiKey, srAuth.ApiSecret)
+	} else if srAuth.Token != "" {
+		serdeClientConfig = schemaregistry.NewConfigWithBearerAuthentication(srClientUrl, srAuth.Token, srClusterId, "")
+	} else {
+		serdeClientConfig = schemaregistry.NewConfig(srClientUrl)
+		log.CliLogger.Info("initializing deserializer with no schema registry client authentication")
+	}
+	serdeClientConfig.SslCaLocation = srAuth.CertificateAuthorityPath
+	serdeClientConfig.SslCertificateLocation = srAuth.ClientCertPath
+	serdeClientConfig.SslKeyLocation = srAuth.ClientKeyPath
+
+	return schemaregistry.NewClient(serdeClientConfig)
 }

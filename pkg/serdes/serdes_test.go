@@ -40,6 +40,49 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+func TestInitSchemaRegistryClient(t *testing.T) {
+	req := require.New(t)
+
+	// Basic Auth
+	provider, err := GetDeserializationProvider(avroSchemaName)
+	req.Nil(err)
+	err = provider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{
+		ApiKey:    "key",
+		ApiSecret: "secret",
+	}, nil)
+	req.Nil(err)
+	config := provider.GetSchemaRegistryClient().Config()
+	req.Equal(config.SchemaRegistryURL, mockClientUrl)
+	req.Equal(config.BasicAuthUserInfo, "key:secret")
+	req.Equal(config.BasicAuthCredentialsSource, "USER_INFO")
+
+	// Bearer Auth
+	serde.GlobalRuleRegistry().Clear()
+	err = provider.InitDeserializer(mockClientUrl, "lsrc-abc123", "value", SchemaRegistryAuth{Token: "token"}, nil)
+	req.Nil(err)
+	config = provider.GetSchemaRegistryClient().Config()
+	req.Equal(config.SchemaRegistryURL, mockClientUrl)
+	req.Equal(config.BearerAuthToken, "token")
+	req.Equal(config.BearerAuthLogicalCluster, "lsrc-abc123")
+	req.Equal(config.BearerAuthCredentialsSource, "STATIC_TOKEN")
+
+	// No Auth (and also mTLS)
+	serde.GlobalRuleRegistry().Clear()
+	err = provider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{
+		CertificateAuthorityPath: "ca.cert",
+		ClientCertPath:           "client.crt",
+		ClientKeyPath:            "client.key",
+	}, nil)
+	req.Nil(err)
+	config = provider.GetSchemaRegistryClient().Config()
+	req.Equal(config.SchemaRegistryURL, mockClientUrl)
+	req.Equal(config.BasicAuthCredentialsSource, "")
+	req.Equal(config.BearerAuthCredentialsSource, "")
+	req.Equal(config.SslCaLocation, "ca.cert")
+	req.Equal(config.SslCertificateLocation, "client.crt")
+	req.Equal(config.SslKeyLocation, "client.key")
+}
+
 func TestGetSerializationProvider(t *testing.T) {
 	req := require.New(t)
 	valueFormats := []string{avroSchemaName, jsonSchemaName, protobufSchemaName}

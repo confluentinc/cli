@@ -17,7 +17,6 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/protobuf"
 
-	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
@@ -26,36 +25,12 @@ type ProtobufDeserializationProvider struct {
 	message gproto.Message
 }
 
-func (p *ProtobufDeserializationProvider) InitDeserializer(srClientUrl, srClusterId, mode string, srAuth SchemaRegistryAuth, existingClient any) error {
+func (p *ProtobufDeserializationProvider) InitDeserializer(srClientUrl, srClusterId, mode string, srAuth SchemaRegistryAuth, existingClient schemaregistry.Client) error {
 	// Note: Now Serializer/Deserializer are tightly coupled with Schema Registry
 	// If existingClient is not nil, we should share this client between ser and deser.
 	// As the shared client is referred as mock client to store the same set of schemas in cache
 	// If existingClient is nil (which is normal case), ser and deser don't have to share the same client.
-	var serdeClient schemaregistry.Client
-	var err error
-	var ok bool
-
-	if existingClient != nil {
-		serdeClient, ok = existingClient.(schemaregistry.Client)
-		if !ok {
-			return fmt.Errorf("failed to cast existing schema registry client to expected type")
-		}
-	} else {
-		var serdeClientConfig *schemaregistry.Config
-		if srAuth.ApiKey != "" && srAuth.ApiSecret != "" {
-			serdeClientConfig = schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srAuth.ApiKey, srAuth.ApiSecret)
-		} else if srAuth.Token != "" {
-			serdeClientConfig = schemaregistry.NewConfigWithBearerAuthentication(srClientUrl, srAuth.Token, srClusterId, "")
-		} else {
-			serdeClientConfig = schemaregistry.NewConfig(srClientUrl)
-			log.CliLogger.Info("initializing deserializer with no schema registry client authentication")
-		}
-		serdeClientConfig.SslCaLocation = srAuth.CertificateAuthorityPath
-		serdeClientConfig.SslCertificateLocation = srAuth.ClientCertPath
-		serdeClientConfig.SslKeyLocation = srAuth.ClientKeyPath
-		serdeClient, err = schemaregistry.NewClient(serdeClientConfig)
-	}
-
+	serdeClient, err := initSchemaRegistryClient(srClientUrl, srClusterId, srAuth, existingClient)
 	if err != nil {
 		return fmt.Errorf("failed to create deserializer-specific Schema Registry client: %w", err)
 	}
@@ -232,4 +207,8 @@ func (p *ProtobufDeserializationProvider) Deserialize(topic string, headers []ka
 	}
 
 	return string(jsonBytes), nil
+}
+
+func (p *ProtobufDeserializationProvider) GetSchemaRegistryClient() schemaregistry.Client {
+	return p.deser.Client
 }
