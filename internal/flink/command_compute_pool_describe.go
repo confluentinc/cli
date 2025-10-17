@@ -54,6 +54,7 @@ func (c *command) computePoolDescribe(cmd *cobra.Command, args []string) error {
 		Environment: computePool.Spec.Environment.GetId(),
 		CurrentCfu:  computePool.Status.GetCurrentCfu(),
 		MaxCfu:      computePool.Spec.GetMaxCfu(),
+		DefaultPool: computePool.Spec.GetDefaultPool(),
 		Cloud:       computePool.Spec.GetCloud(),
 		Region:      computePool.Spec.GetRegion(),
 		Status:      computePool.Status.GetPhase(),

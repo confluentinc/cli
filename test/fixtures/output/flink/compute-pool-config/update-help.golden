@@ -1,17 +1,16 @@
-Update a Flink compute pool.
+Update a Flink compute pool config.
 
 Usage:
-  confluent flink compute-pool update [id] [flags]
+  confluent flink compute-pool-config update [flags]
 
 Examples:
-Update name and CFU count of a Flink compute pool.
+Update CFU count of a Flink compute pool config.
 
-  $ confluent flink compute-pool update lfcp-123456 --name "new name" --max-cfu 5
+  $ confluent flink compute-pool update --max-cfu 5
 
 Flags:
-      --name string          Name of the compute pool.
-      --max-cfu int32        Maximum number of Confluent Flink Units (CFU).
-      --default-pool         Indicate whether the Flink compute pool is a default compute pool or not.
+      --max-cfu int32        Maximum number of Confluent Flink Units (CFUs) that default compute pools in this organization should auto-scale to. (default -1)
+      --default-pool         Whether default compute pools are enabled for the organization
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
