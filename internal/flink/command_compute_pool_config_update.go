@@ -24,8 +24,8 @@ func (c *command) newComputePoolConfigUpdateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().Int32("max-cfu", -1, "Maximum number of Confluent Flink Units (CFU).")
-	cmd.Flags().Bool("default-pool", false, "Maximum number of Confluent Flink Units (CFUs) that default compute pools in this organization should auto-scale to.")
+	cmd.Flags().Int32("max-cfu", -1, "Maximum number of Confluent Flink Units (CFUs) that default compute pools in this organization should auto-scale to.")
+	cmd.Flags().Bool("default-pool", false, "Whether default compute pools are enabled for the organization")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
