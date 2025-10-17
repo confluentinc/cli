@@ -1,0 +1,7 @@
+{
+  "id": "pi-azure-new",
+  "display_name": "azure-json-test",
+  "provider": "azure",
+  "environment": "env-596",
+  "confluent_multi_tenant_app_id": "app-123456789"
+}
