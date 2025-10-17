@@ -44,20 +44,10 @@ type ProtobufSerializationProvider struct {
 }
 
 func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, srClusterId, mode string, schemaId int, srAuth SchemaRegistryAuth) error {
-	var serdeClientConfig *schemaregistry.Config
-	if srClientUrl == mockClientUrl {
-		serdeClientConfig = schemaregistry.NewConfig(srClientUrl)
-	} else if srAuth.ApiKey != "" && srAuth.ApiSecret != "" {
-		serdeClientConfig = schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srAuth.ApiKey, srAuth.ApiSecret)
-	} else if srAuth.Token != "" {
-		serdeClientConfig = schemaregistry.NewConfigWithBearerAuthentication(srClientUrl, srAuth.Token, srClusterId, "")
-	} else {
-		return fmt.Errorf("schema registry client authentication should be provider to initialize serializer")
+	serdeClient, err := initSchemaRegistryClient(srClientUrl, srClusterId, srAuth, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create serializer-specific Schema Registry client: %w", err)
 	}
-	serdeClientConfig.SslCaLocation = srAuth.CertificateAuthorityPath
-	serdeClientConfig.SslCertificateLocation = srAuth.ClientCertPath
-	serdeClientConfig.SslKeyLocation = srAuth.ClientKeyPath
-	serdeClient, err := schemaregistry.NewClient(serdeClientConfig)
 
 	// Register the KMS drivers and the field-level encryption executor
 	awskms.Register()

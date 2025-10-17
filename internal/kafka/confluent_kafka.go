@@ -284,6 +284,7 @@ func ConsumeMessage(message *ckgo.Message, h *GroupHandler) error {
 	}
 
 	if message.Headers != nil {
+		message.Headers = unmarshalSchemaIdHeader(message.Headers)
 		var headers any = message.Headers
 		if h.Properties.FullHeader {
 			headers = getFullHeaders(message.Headers)
@@ -387,4 +388,24 @@ func getHeaderString(header ckgo.Header) string {
 	} else {
 		return fmt.Sprintf(`%s="%s"`, header.Key, string(header.Value))
 	}
+}
+
+func unmarshalSchemaIdHeader(headers []ckgo.Header) []ckgo.Header {
+	for i, header := range headers {
+		if header.Key != "__key_schema_id" && header.Key != "__value_schema_id" {
+			continue
+		}
+
+		schemaID := serde.SchemaID{}
+		if _, err := schemaID.FromBytes(header.Value); err != nil {
+			continue
+		}
+
+		headers[i] = ckgo.Header{
+			Key:   header.Key,
+			Value: []byte(schemaID.GUID.String()),
+		}
+	}
+
+	return headers
 }

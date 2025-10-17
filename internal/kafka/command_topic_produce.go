@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/cobra"
 
 	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/v4/pkg/auth"
@@ -63,6 +64,7 @@ func (c *command) newProduceCommand() *cobra.Command {
 	pcmd.AddProducerConfigFileFlag(cmd)
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().StringSlice("headers", nil, `A comma-separated list of headers formatted as "key:value".`)
+	cmd.Flags().Bool("schema-id-header", false, "Serialize schema ID in the header instead of the message prefix.")
 
 	// cloud-only flags
 	cmd.Flags().String("key-references", "", "The path to the message key schema references file.")
@@ -155,6 +157,15 @@ func (c *command) produceCloud(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	schemaIdHeader, err := cmd.Flags().GetBool("schema-id-header")
+	if err != nil {
+		return err
+	}
+	if schemaIdHeader {
+		keySerializer.SetSchemaIDSerializer(serde.HeaderSchemaIDSerializer)
+		valueSerializer.SetSchemaIDSerializer(serde.HeaderSchemaIDSerializer)
+	}
+
 	parseKey, err := cmd.Flags().GetBool("parse-key")
 	if err != nil {
 		return err
@@ -204,6 +215,15 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	valueSerializer, valueMetaInfo, err := c.initSchemaAndGetInfoOnPrem(cmd, topic, "value")
 	if err != nil {
 		return err
+	}
+
+	schemaIdHeader, err := cmd.Flags().GetBool("schema-id-header")
+	if err != nil {
+		return err
+	}
+	if schemaIdHeader {
+		keySerializer.SetSchemaIDSerializer(serde.HeaderSchemaIDSerializer)
+		valueSerializer.SetSchemaIDSerializer(serde.HeaderSchemaIDSerializer)
 	}
 
 	parseKey, err := cmd.Flags().GetBool("parse-key")
@@ -359,7 +379,7 @@ func GetProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, to
 		return nil, err
 	}
 
-	key, value, err := serializeMessage(keyMetaInfo, valueMetaInfo, topic, data, delimiter, parseKey, keySerializer, valueSerializer)
+	serializerHeaders, key, value, err := serializeMessage(keyMetaInfo, valueMetaInfo, topic, data, delimiter, parseKey, keySerializer, valueSerializer)
 	if err != nil {
 		return nil, err
 	}
@@ -369,8 +389,9 @@ func GetProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, to
 			Topic:     &topic,
 			Partition: ckgo.PartitionAny,
 		},
-		Key:   key,
-		Value: value,
+		Key:     key,
+		Value:   value,
+		Headers: serializerHeaders,
 	}
 
 	// This error is intentionally ignored because `confluent local kafka topic produce` does not define this flag
@@ -380,36 +401,39 @@ func GetProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, to
 		if err != nil {
 			return nil, err
 		}
-		message.Headers = parsedHeaders
+		message.Headers = append(message.Headers, parsedHeaders...)
 	}
 
 	return message, nil
 }
 
-func serializeMessage(_, _ []byte, topic, data, delimiter string, parseKey bool, keySerializer, valueSerializer serdes.SerializationProvider) ([]byte, []byte, error) {
+func serializeMessage(_, _ []byte, topic, data, delimiter string, parseKey bool, keySerializer, valueSerializer serdes.SerializationProvider) ([]ckgo.Header, []byte, []byte, error) {
 	var serializedKey []byte
+	headers := []ckgo.Header{}
+	var keyHeader []ckgo.Header
 	val := data
 	if parseKey {
 		schemaBased := keySerializer.GetSchemaName() != ""
 		key, value, err := getKeyAndValue(schemaBased, data, delimiter)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 
-		_, serializedKey, err = keySerializer.Serialize(topic, key)
+		keyHeader, serializedKey, err = keySerializer.Serialize(topic, key)
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
-
+		headers = append(headers, keyHeader...)
 		val = value
 	}
 
-	_, serializedValue, err := valueSerializer.Serialize(topic, val)
+	valueHeader, serializedValue, err := valueSerializer.Serialize(topic, val)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
+	headers = append(headers, valueHeader...)
 
-	return serializedKey, serializedValue, nil
+	return headers, serializedKey, serializedValue, nil
 }
 
 func getKeyAndValue(schemaBased bool, data, delimiter string) (string, string, error) {

@@ -152,7 +152,7 @@ func initSchemaRegistryClient(srClientUrl, srClusterId string, srAuth SchemaRegi
 		serdeClientConfig = schemaregistry.NewConfigWithBearerAuthentication(srClientUrl, srAuth.Token, srClusterId, "")
 	} else {
 		serdeClientConfig = schemaregistry.NewConfig(srClientUrl)
-		log.CliLogger.Info("initializing deserializer with no schema registry client authentication")
+		log.CliLogger.Info("initializing schema registry client with no authentication")
 	}
 	serdeClientConfig.SslCaLocation = srAuth.CertificateAuthorityPath
 	serdeClientConfig.SslCertificateLocation = srAuth.ClientCertPath
