@@ -179,7 +179,7 @@ func printTopicTable(cmd *cobra.Command, topic tableflowv1.TableflowV1TableflowT
 		TopicName:             topic.Spec.GetDisplayName(),
 		EnableCompaction:      topic.GetSpec().Config.GetEnableCompaction(),   // should be read-only & true
 		EnablePartitioning:    topic.GetSpec().Config.GetEnablePartitioning(), // should be read-only & true
-		TableFormats:          strings.Join(topic.Spec.GetTableFormats(), ""),
+		TableFormats:          strings.Join(topic.Spec.GetTableFormats(), ", "),
 		Environment:           topic.GetSpec().Environment.GetId(),
 		RetentionMs:           topic.GetSpec().Config.GetRetentionMs(),
 		RecordFailureStrategy: topic.GetSpec().Config.GetRecordFailureStrategy(),
