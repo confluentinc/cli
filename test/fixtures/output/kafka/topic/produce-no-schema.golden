@@ -1,1 +1,5 @@
-Error: schema registry client authentication should be provider to initialize serializer
+Error: failed to load schema: error compiling .proto files: read .: is a directory
+
+
+Suggestions:
+    Specify a schema by passing a schema ID or the path to a schema file to the `--schema` flag.
