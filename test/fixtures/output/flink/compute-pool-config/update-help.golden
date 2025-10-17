@@ -10,7 +10,7 @@ Update CFU count of a Flink compute pool config.
 
 Flags:
       --max-cfu int32        Maximum number of Confluent Flink Units (CFUs) that default compute pools in this organization should auto-scale to. (default -1)
-      --default-pool         Whether default compute pools are enabled for the organization
+      --default-pool         Whether default compute pools are enabled for the organization.
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 

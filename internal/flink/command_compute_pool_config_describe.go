@@ -1,9 +1,10 @@
 package flink
 
 import (
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
-	"github.com/spf13/cobra"
 )
 
 func (c *command) newComputePoolConfigDescribeCommand() *cobra.Command {
@@ -19,7 +20,6 @@ func (c *command) newComputePoolConfigDescribeCommand() *cobra.Command {
 }
 
 func (c *command) computePoolConfigDescribe(cmd *cobra.Command, args []string) error {
-
 	computePoolConfig, err := c.V2Client.DescribeFlinkComputePoolConfig()
 	if err != nil {
 		return err

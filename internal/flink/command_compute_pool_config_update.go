@@ -1,11 +1,13 @@
 package flink
 
 import (
+	"github.com/spf13/cobra"
+
 	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2/flink/v2"
+
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
-	"github.com/spf13/cobra"
 )
 
 func (c *command) newComputePoolConfigUpdateCommand() *cobra.Command {
@@ -25,7 +27,7 @@ func (c *command) newComputePoolConfigUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().Int32("max-cfu", -1, "Maximum number of Confluent Flink Units (CFUs) that default compute pools in this organization should auto-scale to.")
-	cmd.Flags().Bool("default-pool", false, "Whether default compute pools are enabled for the organization")
+	cmd.Flags().Bool("default-pool", false, "Whether default compute pools are enabled for the organization.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -35,7 +37,6 @@ func (c *command) newComputePoolConfigUpdateCommand() *cobra.Command {
 }
 
 func (c *command) computePoolConfigUpdate(cmd *cobra.Command, args []string) error {
-
 	computePoolConfig, err := c.V2Client.DescribeFlinkComputePoolConfig()
 	if err != nil {
 		return err

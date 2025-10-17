@@ -37,10 +37,10 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner, cfg *config.Config) 
 		cmd.RunE = func(cmd *cobra.Command, args []string) error {
 			return c.startFlinkSqlClient(prerunner, cmd)
 		}
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 		c.addComputePoolFlag(cmd)
 		pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 		c.addDatabaseFlag(cmd)
-		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 		pcmd.AddContextFlag(cmd, c.CLICommand)
 		pcmd.AddCloudFlag(cmd)
 		pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
@@ -59,8 +59,8 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner, cfg *config.Config) 
 		cmd.RunE = func(cmd *cobra.Command, args []string) error {
 			return c.startFlinkSqlClientOnPrem(prerunner, cmd)
 		}
-		cmd.Flags().String("compute-pool", "", "The compute pool name to execute the Flink SQL statement.")
 		cmd.Flags().String("environment", "", "Name of the Flink environment.")
+		cmd.Flags().String("compute-pool", "", "The compute pool name to execute the Flink SQL statement.")
 		cmd.Flags().String("catalog", "", "The name of the default catalog.")
 		cmd.Flags().String("database", "", "The name of the default database.")
 		cmd.Flags().String("flink-configuration", "", "The file path to hold the Flink configuration.")
