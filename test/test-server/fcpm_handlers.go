@@ -56,6 +56,7 @@ func handleFcpmComputePools(t *testing.T) http.HandlerFunc {
 			err := json.NewDecoder(r.Body).Decode(create)
 			require.NoError(t, err)
 			create.Spec.Cloud = flinkv2.PtrString(strings.ToUpper(create.Spec.GetCloud()))
+			create.Spec.DefaultPool = flinkv2.PtrBool(create.Spec.GetDefaultPool())
 
 			v := flinkv2.FcpmV2ComputePool{
 				Id:     flinkv2.PtrString("lfcp-123456"),
@@ -63,6 +64,34 @@ func handleFcpmComputePools(t *testing.T) http.HandlerFunc {
 				Status: &flinkv2.FcpmV2ComputePoolStatus{Phase: "PROVISIONING"},
 			}
 			err = json.NewEncoder(w).Encode(v)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleFcpmComputePoolConfigs(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			config1 := flinkv2.FcpmV2OrgComputePoolConfig{
+				Spec: &flinkv2.FcpmV2OrgComputePoolConfigSpec{
+					DefaultPoolEnabled: flinkv2.PtrBool(false),
+					DefaultPoolMaxCfu:  flinkv2.PtrInt32(50),
+				},
+			}
+			err := json.NewEncoder(w).Encode(config1)
+			require.NoError(t, err)
+		case http.MethodPatch:
+			update := new(flinkv2.FcpmV2OrgComputePoolConfig)
+			err := json.NewDecoder(r.Body).Decode(update)
+			require.NoError(t, err)
+			config1 := flinkv2.FcpmV2OrgComputePoolConfig{
+				Spec: &flinkv2.FcpmV2OrgComputePoolConfigSpec{
+					DefaultPoolEnabled: flinkv2.PtrBool(update.Spec.GetDefaultPoolEnabled()),
+					DefaultPoolMaxCfu:  flinkv2.PtrInt32(update.Spec.GetDefaultPoolMaxCfu()),
+				},
+			}
+			err = json.NewEncoder(w).Encode(config1)
 			require.NoError(t, err)
 		}
 	}
@@ -105,6 +134,7 @@ func handleFcpmComputePoolsId(t *testing.T) http.HandlerFunc {
 				Spec: &flinkv2.FcpmV2ComputePoolSpec{
 					DisplayName: flinkv2.PtrString("my-compute-pool-1"),
 					MaxCfu:      flinkv2.PtrInt32(update.Spec.GetMaxCfu()),
+					DefaultPool: flinkv2.PtrBool(update.Spec.GetDefaultPool()),
 					Cloud:       flinkv2.PtrString("AWS"),
 					Region:      flinkv2.PtrString("eu-west-1"),
 					Environment: &flinkv2.GlobalObjectReference{Id: "env-123"},
