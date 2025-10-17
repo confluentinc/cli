@@ -68,4 +68,3 @@ func (c *command) validate(cmd *cobra.Command, args []string) error {
 	cmd.Printf("Successfully validated provider integration %q.\n", integrationId)
 	return nil
 }
-

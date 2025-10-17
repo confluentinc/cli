@@ -160,4 +160,3 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	table.Filter(fields)
 	return table.Print()
 }
-
