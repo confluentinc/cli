@@ -6,15 +6,15 @@ Usage:
 Examples:
 Update Azure provider integration "cspi-123456" with customer tenant ID.
 
-  $ confluent provider-integration v2 update cspi-123456 --customer-azure-tenant-id 00000000-0000-0000-0000-000000000000
+  $ confluent provider-integration v2 update cspi-123456 --azure-tenant-id 00000000-0000-0000-0000-000000000000
 
 Update GCP provider integration "cspi-789012" with customer service account.
 
-  $ confluent provider-integration v2 update cspi-789012 --customer-google-service-account my-sa@my-project.iam.gserviceaccount.com
+  $ confluent provider-integration v2 update cspi-789012 --gcp-service-account my-sa@my-project.iam.gserviceaccount.com
 
 Flags:
-      --customer-azure-tenant-id string          Customer Azure Tenant ID (required for Azure provider).
-      --customer-google-service-account string   Customer Google Service Account (required for GCP provider).
+      --azure-tenant-id string          Customer Azure Tenant ID (required for Azure provider).
+      --gcp-service-account string      Customer Google Service Account (required for GCP provider).
       --environment string                       Environment ID.
       --context string                           CLI context name.
   -o, --output string                            Specify the output format as "human", "json", or "yaml". (default "human")

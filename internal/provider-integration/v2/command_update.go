@@ -36,17 +36,17 @@ func (c *command) newUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update Azure provider integration "cspi-123456" with customer tenant ID.`,
-				Code: "confluent provider-integration v2 update cspi-123456 --customer-azure-tenant-id 00000000-0000-0000-0000-000000000000",
+				Code: "confluent provider-integration v2 update cspi-123456 --azure-tenant-id 00000000-0000-0000-0000-000000000000",
 			},
 			examples.Example{
 				Text: `Update GCP provider integration "cspi-789012" with customer service account.`,
-				Code: "confluent provider-integration v2 update cspi-789012 --customer-google-service-account my-sa@my-project.iam.gserviceaccount.com",
+				Code: "confluent provider-integration v2 update cspi-789012 --gcp-service-account my-sa@my-project.iam.gserviceaccount.com",
 			},
 		),
 	}
 
-	cmd.Flags().String("customer-azure-tenant-id", "", "Customer Azure Tenant ID (required for Azure provider).")
-	cmd.Flags().String("customer-google-service-account", "", "Customer Google Service Account (required for GCP provider).")
+	cmd.Flags().String("azure-tenant-id", "", "Customer Azure Tenant ID (required for Azure provider).")
+	cmd.Flags().String("gcp-service-account", "", "Customer Google Service Account (required for GCP provider).")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -75,12 +75,12 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	switch provider {
 	case providerAzure:
-		azureTenantId, err := cmd.Flags().GetString("customer-azure-tenant-id")
+		azureTenantId, err := cmd.Flags().GetString("azure-tenant-id")
 		if err != nil {
 			return err
 		}
 		if azureTenantId == "" {
-			return fmt.Errorf("--customer-azure-tenant-id is required for Azure provider integrations")
+			return fmt.Errorf("--azure-tenant-id is required for Azure provider integrations")
 		}
 
 		azureConfig := &piv2.PimV2AzureIntegrationConfig{
@@ -90,12 +90,12 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		updateConfig = piv2.PimV2AzureIntegrationConfigAsPimV2IntegrationUpdateConfigOneOf(azureConfig)
 
 	case providerGcp:
-		gcpServiceAccount, err := cmd.Flags().GetString("customer-google-service-account")
+		gcpServiceAccount, err := cmd.Flags().GetString("gcp-service-account")
 		if err != nil {
 			return err
 		}
 		if gcpServiceAccount == "" {
-			return fmt.Errorf("--customer-google-service-account is required for GCP provider integrations")
+			return fmt.Errorf("--gcp-service-account is required for GCP provider integrations")
 		}
 
 		gcpConfig := &piv2.PimV2GcpIntegrationConfig{
