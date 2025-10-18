@@ -1,5 +1,4 @@
-Error: failed to load schema: error compiling .proto files: read .: is a directory
-
+Error: failed to load schema: schema path is empty
 
 Suggestions:
     Specify a schema by passing a schema ID or the path to a schema file to the `--schema` flag.

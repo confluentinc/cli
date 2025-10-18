@@ -128,6 +128,10 @@ func (p *ProtobufSerializationProvider) Serialize(topic, message string) ([]kafk
 }
 
 func parseMessage(schemaPath string, referencePathMap map[string]string) (gproto.Message, error) {
+	if schemaPath == "" {
+		return nil, fmt.Errorf("schema path is empty")
+	}
+
 	// Collect import paths
 	importPath := filepath.Dir(schemaPath)
 	importPaths := []string{importPath}
