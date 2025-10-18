@@ -11,6 +11,7 @@ func (s *CLITestSuite) TestTableflowCatalogIntegration() {
 		{args: "tableflow catalog-integration describe tci-abc123 --cluster lkc-123456", fixture: "tableflow/catalog-integration/describe-aws-glue.golden"},
 		{args: "tableflow catalog-integration describe tci-abc123 --cluster lkc-123456 -o json", fixture: "tableflow/catalog-integration/describe-aws-glue-json.golden"},
 		{args: "tableflow catalog-integration describe tci-def456 --cluster lkc-123456", fixture: "tableflow/catalog-integration/describe-snowflake.golden"},
+		{args: "tableflow catalog-integration describe tci-ghi789 --cluster lkc-123456", fixture: "tableflow/catalog-integration/describe-unity.golden"},
 	}
 
 	for _, test := range tests {
