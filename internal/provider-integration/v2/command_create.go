@@ -24,7 +24,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
-	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c *command) newCreateCommand() *cobra.Command {
@@ -87,12 +86,12 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 	// Display the created integration with Confluent-managed identity
-	table := output.NewTable(cmd)
 	out := &providerIntegrationOut{
 		Id:          providerIntegration.GetId(),
 		DisplayName: providerIntegration.GetDisplayName(),
 		Provider:    providerIntegration.GetProvider(),
 		Environment: providerIntegration.Environment.GetId(),
+		Status:      providerIntegration.GetStatus(),
 	}
 
 	// Add the Confluent-managed service account/app ID
@@ -107,17 +106,5 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	table.Add(out)
-
-	// Filter fields based on provider to avoid showing empty/irrelevant fields
-	fields := []string{"Id", "DisplayName", "Provider", "Environment"}
-	switch cloud {
-	case providerAzure:
-		fields = append(fields, "ConfluentMultiTenantAppId")
-	case providerGcp:
-		fields = append(fields, "GoogleServiceAccount")
-	}
-
-	table.Filter(fields)
-	return table.Print()
+	return printProviderIntegrationTable(cmd, out)
 }

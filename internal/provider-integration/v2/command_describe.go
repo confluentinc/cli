@@ -19,7 +19,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
-	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c *command) newDescribeCommand() *cobra.Command {
@@ -31,11 +30,11 @@ func (c *command) newDescribeCommand() *cobra.Command {
 		RunE:  c.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe provider integration \"pi-123456\" in the current environment.",
+				Text: `Describe provider integration "pi-123456" in the current environment.`,
 				Code: "confluent provider-integration v2 describe pi-123456",
 			},
 			examples.Example{
-				Text: "Describe provider integration \"pi-123456\" in environment \"env-789012\".",
+				Text: `Describe provider integration "pi-123456" in environment "env-789012".`,
 				Code: "confluent provider-integration v2 describe pi-123456 --environment env-789012",
 			},
 		),
@@ -61,8 +60,6 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	table := output.NewTable(cmd)
-
 	out := &providerIntegrationOut{
 		Id:          integration.GetId(),
 		DisplayName: integration.GetDisplayName(),
@@ -85,27 +82,5 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	table.Add(out)
-
-	// Filter fields based on provider to show only relevant configuration
-	fields := []string{"Id", "DisplayName", "Provider", "Environment", "Status"}
-	switch integration.GetProvider() {
-	case providerAzure:
-		if out.CustomerAzureTenantId != "" || out.ConfluentMultiTenantAppId != "" {
-			fields = append(fields, "ConfluentMultiTenantAppId")
-			if out.CustomerAzureTenantId != "" {
-				fields = append(fields, "CustomerAzureTenantId")
-			}
-		}
-	case providerGcp:
-		if out.CustomerGoogleServiceAccount != "" || out.GoogleServiceAccount != "" {
-			fields = append(fields, "GoogleServiceAccount")
-			if out.CustomerGoogleServiceAccount != "" {
-				fields = append(fields, "CustomerGoogleServiceAccount")
-			}
-		}
-	}
-
-	table.Filter(fields)
-	return table.Print()
+	return printProviderIntegrationTable(cmd, out)
 }

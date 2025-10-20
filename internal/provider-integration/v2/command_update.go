@@ -23,7 +23,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
-	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c *command) newUpdateCommand() *cobra.Command {
@@ -119,7 +118,6 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	// Display the updated integration
-	table := output.NewTable(cmd)
 	out := &providerIntegrationOut{
 		Id:          updated.GetId(),
 		DisplayName: updated.GetDisplayName(),
@@ -142,21 +140,5 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	table.Add(out)
-
-	// Filter fields based on provider to show only relevant configuration
-	fields := []string{"Id", "DisplayName", "Provider", "Environment", "Status"}
-	switch updated.GetProvider() {
-	case providerAzure:
-		if out.CustomerAzureTenantId != "" {
-			fields = append(fields, "ConfluentMultiTenantAppId", "CustomerAzureTenantId")
-		}
-	case providerGcp:
-		if out.CustomerGoogleServiceAccount != "" {
-			fields = append(fields, "GoogleServiceAccount", "CustomerGoogleServiceAccount")
-		}
-	}
-
-	table.Filter(fields)
-	return table.Print()
+	return printProviderIntegrationTable(cmd, out)
 }

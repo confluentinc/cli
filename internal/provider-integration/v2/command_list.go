@@ -59,9 +59,9 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	list := make([]providerIntegrationListOut, len(integrations))
+	list := make([]providerIntegrationOut, len(integrations))
 	for i, integration := range integrations {
-		out := providerIntegrationListOut{
+		out := providerIntegrationOut{
 			Id:          integration.GetId(),
 			DisplayName: integration.GetDisplayName(),
 			Provider:    integration.GetProvider(),
