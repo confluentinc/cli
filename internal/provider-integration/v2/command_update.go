@@ -117,28 +117,5 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Display the updated integration
-	out := &providerIntegrationOut{
-		Id:          updated.GetId(),
-		DisplayName: updated.GetDisplayName(),
-		Provider:    updated.GetProvider(),
-		Environment: updated.Environment.GetId(),
-		Status:      updated.GetStatus(),
-	}
-
-	// Add provider-specific configuration details
-	if updated.Config != nil {
-		if updated.Config.PimV2AzureIntegrationConfig != nil {
-			azureConfig := updated.Config.PimV2AzureIntegrationConfig
-			out.CustomerAzureTenantId = azureConfig.GetCustomerAzureTenantId()
-			out.ConfluentMultiTenantAppId = azureConfig.GetConfluentMultiTenantAppId()
-		}
-		if updated.Config.PimV2GcpIntegrationConfig != nil {
-			gcpConfig := updated.Config.PimV2GcpIntegrationConfig
-			out.CustomerGoogleServiceAccount = gcpConfig.GetCustomerGoogleServiceAccount()
-			out.GoogleServiceAccount = gcpConfig.GetGoogleServiceAccount()
-		}
-	}
-
-	return printProviderIntegrationTable(cmd, out)
+	return printProviderIntegrationTable(cmd, updated)
 }

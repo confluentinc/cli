@@ -17,6 +17,8 @@ package v2
 import (
 	"github.com/spf13/cobra"
 
+	piv2 "github.com/confluentinc/ccloud-sdk-go-v2/provider-integration/v2"
+
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -35,8 +37,30 @@ type providerIntegrationOut struct {
 	GoogleServiceAccount         string `human:"Google Service Account" serialized:"google_service_account,omitempty"`
 }
 
-func printProviderIntegrationTable(cmd *cobra.Command, integration *providerIntegrationOut) error {
+func printProviderIntegrationTable(cmd *cobra.Command, integration piv2.PimV2Integration) error {
+	out := &providerIntegrationOut{
+		Id:          integration.GetId(),
+		DisplayName: integration.GetDisplayName(),
+		Provider:    integration.GetProvider(),
+		Environment: integration.Environment.GetId(),
+		Status:      integration.GetStatus(),
+	}
+
+	// Add provider-specific configuration details
+	if integration.Config != nil {
+		if integration.Config.PimV2AzureIntegrationConfig != nil {
+			azureConfig := integration.Config.PimV2AzureIntegrationConfig
+			out.CustomerAzureTenantId = azureConfig.GetCustomerAzureTenantId()
+			out.ConfluentMultiTenantAppId = azureConfig.GetConfluentMultiTenantAppId()
+		}
+		if integration.Config.PimV2GcpIntegrationConfig != nil {
+			gcpConfig := integration.Config.PimV2GcpIntegrationConfig
+			out.CustomerGoogleServiceAccount = gcpConfig.GetCustomerGoogleServiceAccount()
+			out.GoogleServiceAccount = gcpConfig.GetGoogleServiceAccount()
+		}
+	}
+
 	table := output.NewTable(cmd)
-	table.Add(integration)
+	table.Add(out)
 	return table.Print()
 }

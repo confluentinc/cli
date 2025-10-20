@@ -85,26 +85,5 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Display the created integration with Confluent-managed identity
-	out := &providerIntegrationOut{
-		Id:          providerIntegration.GetId(),
-		DisplayName: providerIntegration.GetDisplayName(),
-		Provider:    providerIntegration.GetProvider(),
-		Environment: providerIntegration.Environment.GetId(),
-		Status:      providerIntegration.GetStatus(),
-	}
-
-	// Add the Confluent-managed service account/app ID
-	if providerIntegration.Config != nil {
-		if providerIntegration.Config.PimV2AzureIntegrationConfig != nil {
-			azureConfig := providerIntegration.Config.PimV2AzureIntegrationConfig
-			out.ConfluentMultiTenantAppId = azureConfig.GetConfluentMultiTenantAppId()
-		}
-		if providerIntegration.Config.PimV2GcpIntegrationConfig != nil {
-			gcpConfig := providerIntegration.Config.PimV2GcpIntegrationConfig
-			out.GoogleServiceAccount = gcpConfig.GetGoogleServiceAccount()
-		}
-	}
-
-	return printProviderIntegrationTable(cmd, out)
+	return printProviderIntegrationTable(cmd, providerIntegration)
 }
