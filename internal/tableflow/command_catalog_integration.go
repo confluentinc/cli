@@ -24,7 +24,7 @@ const (
 	unity     = "unity"
 )
 
-var createCatalogIntegrationTypes = []string{aws, snowflake}
+var createCatalogIntegrationTypes = []string{aws, snowflake, unity}
 
 type catalogIntegrationOut struct {
 	Id                    string `human:"ID" serialized:"id"`

@@ -307,7 +307,18 @@ func handleCatalogIntegrationCreate(t *testing.T) http.HandlerFunc {
 		err := json.NewDecoder(r.Body).Decode(catalogIntegration)
 		require.NoError(t, err)
 
-		catalogIntegration.SetId("tci-abc123")
+		var id string
+		if catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationAwsGlueSpec != nil {
+			id = "tci-abc123"
+		} else if catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeSpec != nil {
+			id = "tci-def456"
+		} else if catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec != nil {
+			id = "tci-ghi789"
+		} else {
+			id = "tci-abc123" // default
+		}
+
+		catalogIntegration.SetId(id)
 		catalogIntegration.Status = &tableflowv1.TableflowV1CatalogIntegrationStatus{Phase: tableflowv1.PtrString("PENDING")}
 
 		err = json.NewEncoder(w).Encode(catalogIntegration)
