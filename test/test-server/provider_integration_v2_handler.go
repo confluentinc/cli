@@ -306,7 +306,7 @@ func handleProviderIntegrationV2Update(t *testing.T) http.HandlerFunc {
 			if request.Config != nil && request.Config.PimV2AzureIntegrationConfig != nil {
 				azureConfig.CustomerAzureTenantId = request.Config.PimV2AzureIntegrationConfig.CustomerAzureTenantId
 			}
-			
+
 			mockResponse = piv2.PimV2Integration{
 				Id:          piv2.PtrString(id),
 				DisplayName: piv2.PtrString("azure-test"),
@@ -326,7 +326,7 @@ func handleProviderIntegrationV2Update(t *testing.T) http.HandlerFunc {
 			if request.Config != nil && request.Config.PimV2GcpIntegrationConfig != nil {
 				gcpConfig.CustomerGoogleServiceAccount = request.Config.PimV2GcpIntegrationConfig.CustomerGoogleServiceAccount
 			}
-			
+
 			mockResponse = piv2.PimV2Integration{
 				Id:          piv2.PtrString(id),
 				DisplayName: piv2.PtrString("gcp-test"),
