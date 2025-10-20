@@ -1,7 +1,13 @@
-+------------------------+-------------------------------------------------------------+
-| ID                     | pi-789012                                                   |
-| Name                   | gcp-test                                                    |
-| Provider               | gcp                                                         |
-| Environment            | env-596                                                     |
-| Google Service Account | confluent-sa-123456789@gcp-sa-cloud.iam.gserviceaccount.com |
-+------------------------+-------------------------------------------------------------+
++--------------------------------+-------------------------------------------------------------+
+| ID                             | pi-789012                                                   |
+| Name                           | gcp-test                                                    |
+| Provider                       | gcp                                                         |
+| Environment                    | env-596                                                     |
+| Status                         | DRAFT                                                       |
+| Customer Azure Tenant ID       |                                                             |
+| Confluent Azure Multi-Tenant   |                                                             |
+| App ID                         |                                                             |
+| Customer Google Service        |                                                             |
+| Account                        |                                                             |
+| Google Service Account         | confluent-sa-123456789@gcp-sa-cloud.iam.gserviceaccount.com |
++--------------------------------+-------------------------------------------------------------+

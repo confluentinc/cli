@@ -298,6 +298,15 @@ func handleProviderIntegrationV2Update(t *testing.T) http.HandlerFunc {
 		var mockResponse piv2.PimV2Integration
 		switch id {
 		case "pi-123456":
+			azureConfig := &piv2.PimV2AzureIntegrationConfig{
+				Kind:                      AzureIntegrationConfig,
+				ConfluentMultiTenantAppId: piv2.PtrString("app-123456789"),
+			}
+			// Add customer tenant ID if provided in request
+			if request.Config != nil && request.Config.PimV2AzureIntegrationConfig != nil {
+				azureConfig.CustomerAzureTenantId = request.Config.PimV2AzureIntegrationConfig.CustomerAzureTenantId
+			}
+			
 			mockResponse = piv2.PimV2Integration{
 				Id:          piv2.PtrString(id),
 				DisplayName: piv2.PtrString("azure-test"),
@@ -305,14 +314,19 @@ func handleProviderIntegrationV2Update(t *testing.T) http.HandlerFunc {
 				Environment: request.Environment,
 				Status:      piv2.PtrString("CREATED"),
 				Config: &piv2.PimV2IntegrationConfigOneOf{
-					PimV2AzureIntegrationConfig: &piv2.PimV2AzureIntegrationConfig{
-						Kind:                      AzureIntegrationConfig,
-						CustomerAzureTenantId:     request.Config.PimV2AzureIntegrationConfig.CustomerAzureTenantId,
-						ConfluentMultiTenantAppId: piv2.PtrString("app-123456789"),
-					},
+					PimV2AzureIntegrationConfig: azureConfig,
 				},
 			}
 		case "pi-789012":
+			gcpConfig := &piv2.PimV2GcpIntegrationConfig{
+				Kind:                 GcpIntegrationConfig,
+				GoogleServiceAccount: piv2.PtrString("confluent-sa-123456789@gcp-sa-cloud.iam.gserviceaccount.com"),
+			}
+			// Add customer service account if provided in request
+			if request.Config != nil && request.Config.PimV2GcpIntegrationConfig != nil {
+				gcpConfig.CustomerGoogleServiceAccount = request.Config.PimV2GcpIntegrationConfig.CustomerGoogleServiceAccount
+			}
+			
 			mockResponse = piv2.PimV2Integration{
 				Id:          piv2.PtrString(id),
 				DisplayName: piv2.PtrString("gcp-test"),
@@ -320,11 +334,7 @@ func handleProviderIntegrationV2Update(t *testing.T) http.HandlerFunc {
 				Environment: request.Environment,
 				Status:      piv2.PtrString("CREATED"),
 				Config: &piv2.PimV2IntegrationConfigOneOf{
-					PimV2GcpIntegrationConfig: &piv2.PimV2GcpIntegrationConfig{
-						Kind:                         GcpIntegrationConfig,
-						CustomerGoogleServiceAccount: request.Config.PimV2GcpIntegrationConfig.CustomerGoogleServiceAccount,
-						GoogleServiceAccount:         piv2.PtrString("confluent-sa-123456789@gcp-sa-cloud.iam.gserviceaccount.com"),
-					},
+					PimV2GcpIntegrationConfig: gcpConfig,
 				},
 			}
 		default:

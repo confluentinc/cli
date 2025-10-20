@@ -3,5 +3,6 @@
   "display_name": "azure-json-test",
   "provider": "azure",
   "environment": "env-596",
+  "status": "DRAFT",
   "confluent_multi_tenant_app_id": "app-123456789"
 }

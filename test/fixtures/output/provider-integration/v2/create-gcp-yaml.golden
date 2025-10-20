@@ -2,4 +2,5 @@ id: pi-gcp-new
 display_name: gcp-yaml-test
 provider: gcp
 environment: env-596
+status: DRAFT
 google_service_account: confluent-sa-123456789@gcp-sa-cloud.iam.gserviceaccount.com

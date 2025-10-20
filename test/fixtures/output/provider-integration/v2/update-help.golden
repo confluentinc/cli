@@ -13,11 +13,11 @@ Update GCP provider integration "cspi-789012" with customer service account.
   $ confluent provider-integration v2 update cspi-789012 --gcp-service-account my-sa@my-project.iam.gserviceaccount.com
 
 Flags:
-      --azure-tenant-id string          Customer Azure Tenant ID (required for Azure provider).
-      --gcp-service-account string      Customer Google Service Account (required for GCP provider).
-      --environment string                       Environment ID.
-      --context string                           CLI context name.
-  -o, --output string                            Specify the output format as "human", "json", or "yaml". (default "human")
+      --azure-tenant-id string       Customer Azure Tenant ID (required for Azure provider).
+      --gcp-service-account string   Customer Google Service Account (required for GCP provider).
+      --environment string           Environment ID.
+      --context string               CLI context name.
+  -o, --output string                Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

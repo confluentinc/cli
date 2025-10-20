@@ -7,4 +7,7 @@
 | Customer Azure Tenant ID       | 00000000-0000-0000-0000-000000000000 |
 | Confluent Azure Multi-Tenant   | app-123456789                        |
 | App ID                         |                                      |
+| Customer Google Service        |                                      |
+| Account                        |                                      |
+| Google Service Account         |                                      |
 +--------------------------------+--------------------------------------+

@@ -3,6 +3,11 @@
 | Name                           | azure-test    |
 | Provider                       | azure         |
 | Environment                    | env-596       |
+| Status                         | DRAFT         |
+| Customer Azure Tenant ID       |               |
 | Confluent Azure Multi-Tenant   | app-123456789 |
 | App ID                         |               |
+| Customer Google Service        |               |
+| Account                        |               |
+| Google Service Account         |               |
 +--------------------------------+---------------+
