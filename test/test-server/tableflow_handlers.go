@@ -243,6 +243,10 @@ func handleCatalogIntegrationGet(t *testing.T, environmentId, clusterId, id stri
 			catalogIntegration := getCatalogIntegration(id, environmentId, clusterId, "my-aws-glue-ci", "AwsGlue")
 			err := json.NewEncoder(w).Encode(catalogIntegration)
 			require.NoError(t, err)
+		case "tci-ghi789":
+			catalogIntegration := getCatalogIntegration(id, environmentId, clusterId, "my-unity-ci", "Unity")
+			err := json.NewEncoder(w).Encode(catalogIntegration)
+			require.NoError(t, err)
 		}
 	}
 }
@@ -287,9 +291,10 @@ func handleCatalogIntegrationList(t *testing.T, environment, clusterId string) h
 	return func(w http.ResponseWriter, r *http.Request) {
 		catalogIntegrationOne := getCatalogIntegration("tci-abc123", environment, clusterId, "my-aws-glue-ci", "AwsGlue")
 		catalogIntegrationTwo := getCatalogIntegration("tci-def456", environment, clusterId, "my-snowflake-ci", "Snowflake")
+		catalogIntegrationThree := getCatalogIntegration("tci-ghi789", environment, clusterId, "my-unity-ci", "Unity")
 		catalogIntegrationTwo.Status.SetPhase("PENDING")
 
-		recordList := tableflowv1.TableflowV1CatalogIntegrationList{Data: []tableflowv1.TableflowV1CatalogIntegration{catalogIntegrationOne, catalogIntegrationTwo}}
+		recordList := tableflowv1.TableflowV1CatalogIntegrationList{Data: []tableflowv1.TableflowV1CatalogIntegration{catalogIntegrationOne, catalogIntegrationTwo, catalogIntegrationThree}}
 		setPageToken(&recordList, &recordList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
@@ -339,6 +344,14 @@ func getCatalogIntegration(id, environment, cluster, name, specConfigKind string
 			ClientSecret: "client-secret",
 			Warehouse:    "warehouse",
 			AllowedScope: "allowed-scope",
+		}))
+	case "Unity":
+		catalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationUnitySpecAsTableflowV1CatalogIntegrationSpecConfigOneOf(&tableflowv1.TableflowV1CatalogIntegrationUnitySpec{
+			Kind:              specConfigKind,
+			WorkspaceEndpoint: "https://dbc-0e76d5eb-ff10.cloud.databricks.com",
+			CatalogName:       "catalog-name",
+			ClientId:          "client-id",
+			ClientSecret:      "client-secret",
 		}))
 	}
 
