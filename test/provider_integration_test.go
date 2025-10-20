@@ -73,11 +73,11 @@ func (s *CLITestSuite) TestProviderIntegrationV2() {
 
 		// Update command tests
 		{
-			args:    "provider-integration v2 update pi-123456 --customer-azure-tenant-id 00000000-0000-0000-0000-000000000000",
+			args:    "provider-integration v2 update pi-123456 --azure-tenant-id 00000000-0000-0000-0000-000000000000",
 			fixture: "provider-integration/v2/update-azure.golden",
 		},
 		{
-			args:    "provider-integration v2 update pi-789012 --customer-google-service-account my-service-account@my-project.iam.gserviceaccount.com",
+			args:    "provider-integration v2 update pi-789012 --gcp-service-account my-service-account@my-project.iam.gserviceaccount.com",
 			fixture: "provider-integration/v2/update-gcp.golden",
 		},
 
@@ -121,17 +121,17 @@ func (s *CLITestSuite) TestProviderIntegrationV2() {
 
 		// Error cases - Update
 		{
-			args:     "provider-integration v2 update pi-123456 --customer-azure-tenant-id invalid-uuid",
+			args:     "provider-integration v2 update pi-123456 --azure-tenant-id invalid-uuid",
 			fixture:  "provider-integration/v2/update-invalid-azure-config.golden",
 			exitCode: 1,
 		},
 		{
-			args:     "provider-integration v2 update pi-789012 --customer-google-service-account invalid-format",
+			args:     "provider-integration v2 update pi-789012 --gcp-service-account invalid-format",
 			fixture:  "provider-integration/v2/update-invalid-gcp-config.golden",
 			exitCode: 1,
 		},
 		{
-			args:     "provider-integration v2 update pi-invalid --customer-azure-tenant-id 00000000-0000-0000-0000-000000000000",
+			args:     "provider-integration v2 update pi-invalid --azure-tenant-id 00000000-0000-0000-0000-000000000000",
 			fixture:  "provider-integration/v2/update-not-exist.golden",
 			exitCode: 1,
 		},
@@ -173,11 +173,11 @@ func (s *CLITestSuite) TestProviderIntegrationV2() {
 
 		// Update tests - output formats
 		{
-			args:    "provider-integration v2 update pi-123456 --customer-azure-tenant-id 00000000-0000-0000-0000-000000000000 --output json",
+			args:    "provider-integration v2 update pi-123456 --azure-tenant-id 00000000-0000-0000-0000-000000000000 --output json",
 			fixture: "provider-integration/v2/update-azure-json.golden",
 		},
 		{
-			args:    "provider-integration v2 update pi-789012 --customer-google-service-account my-service-account@my-project.iam.gserviceaccount.com --output yaml",
+			args:    "provider-integration v2 update pi-789012 --gcp-service-account my-service-account@my-project.iam.gserviceaccount.com --output yaml",
 			fixture: "provider-integration/v2/update-gcp-yaml.golden",
 		},
 	}
