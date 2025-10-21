@@ -84,7 +84,11 @@ func (p *ProtobufDeserializationProvider) requestSchema(subject, schemaPath stri
 	}
 
 	schemaID := serde.SchemaID{}
-	_, err := serde.DualSchemaIDDeserializer(subject, serdeType, message.Headers, message.Value, &schemaID)
+	payload := message.Value
+	if serdeType == serde.KeySerde {
+		payload = message.Key
+	}
+	_, err := serde.DualSchemaIDDeserializer(subject, serdeType, message.Headers, payload, &schemaID)
 	if err != nil {
 		return "", nil, err
 	}
