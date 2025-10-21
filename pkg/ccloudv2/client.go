@@ -1,6 +1,7 @@
 package ccloudv2
 
 import (
+	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/tableflow/v1"
 	aiv1 "github.com/confluentinc/ccloud-sdk-go-v2/ai/v1"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	billingv1 "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
@@ -33,7 +34,6 @@ import (
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 	srcmv3 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v3"
 	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
-	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2/tableflow/v1"
 	usmv1 "github.com/confluentinc/ccloud-sdk-go-v2/usm/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/config"
