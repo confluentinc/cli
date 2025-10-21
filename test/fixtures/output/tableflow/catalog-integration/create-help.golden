@@ -12,14 +12,22 @@ Create a Snowflake catalog integration.
 
   $ confluent tableflow catalog-integration create my-catalog-integration --type snowflake --endpoint https://vuser1_polaris.snowflakecomputing.com/ --warehouse catalog-name --allowed-scope session:role:R1 --client-id $CLIENT_ID --client-secret $CLIENT_SECRET
 
+Create a Unity catalog integration.
+
+  $ confluent tableflow catalog-integration create my-catalog-integration --type unity --workspace-endpoint https://dbc-1.cloud.databricks.com --catalog-name tableflow-quickstart-catalog --unity-client-id $CLIENT_ID --unity-client-secret $CLIENT_SECRET
+
 Flags:
-      --type string                   REQUIRED: Specify the catalog integration type as "aws" or "snowflake".
+      --type string                   REQUIRED: Specify the catalog integration type as "aws", "snowflake", or "unity".
       --provider-integration string   Specify the provider integration id.
       --endpoint string               Specify the The catalog integration connection endpoint for Snowflake Open Catalog.
       --warehouse string              Specify the warehouse name of the Snowflake Open Catalog.
       --allowed-scope string          Specify the allowed scope of the Snowflake Open Catalog.
       --client-id string              Specify the client id.
       --client-secret string          Specify the client secret.
+      --workspace-endpoint string     Specify the Databricks workspace URL associated with the Unity Catalog.
+      --catalog-name string           Specify the name of the catalog.
+      --unity-client-id string        Specify the Unity client id.
+      --unity-client-secret string    Specify the Unity client secret.
       --cluster string                Kafka cluster ID.
       --environment string            Environment ID.
       --context string                CLI context name.
