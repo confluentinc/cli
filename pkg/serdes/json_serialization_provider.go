@@ -111,7 +111,6 @@ func (j *JsonSerializationProvider) GetSchemaRegistryClient() schemaregistry.Cli
 	return j.ser.Client
 }
 
-// For unit testing purposes
 func (j *JsonSerializationProvider) SetSchemaIDSerializer(headerSerializer serde.SchemaIDSerializerFunc) {
 	j.ser.SchemaIDSerializer = headerSerializer
 }

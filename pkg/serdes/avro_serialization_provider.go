@@ -140,7 +140,6 @@ func (a *AvroSerializationProvider) GetSchemaRegistryClient() schemaregistry.Cli
 	return a.ser.Client
 }
 
-// For unit testing purposes
 func (a *AvroSerializationProvider) SetSchemaIDSerializer(headerSerializer serde.SchemaIDSerializerFunc) {
 	a.ser.SchemaIDSerializer = headerSerializer
 }

@@ -220,7 +220,6 @@ func copyBuiltInProtoFiles(destinationDir string) error {
 	})
 }
 
-// For unit testing purposes
 func (p *ProtobufSerializationProvider) SetSchemaIDSerializer(headerSerializer serde.SchemaIDSerializerFunc) {
 	p.ser.SchemaIDSerializer = headerSerializer
 }
