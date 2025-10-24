@@ -37,6 +37,10 @@ var (
 		ErrorMsg:       "you must unsuspend your organization to use this command",
 		SuggestionsMsg: errors.EndOfFreeTrialSuggestions,
 	}
+	RequireCloudLoginPauseTrialOrgUnsuspendedErr = &errors.RunRequirementError{
+		ErrorMsg:       "you must resume your organization to use this command",
+		SuggestionsMsg: errors.PauseTrialSuggestions,
+	}
 	RequireCloudLoginOrOnPremErr = &errors.RunRequirementError{
 		ErrorMsg:       "you must log in to use this command",
 		SuggestionsMsg: "Log in with `confluent login`.\n" + signupSuggestion,
@@ -669,6 +673,8 @@ func (c *Config) CheckIsCloudLogin() error {
 	if c.isContextStatePresent() && c.isOrgSuspended() {
 		if c.isLoginBlockedByOrgSuspension() {
 			return RequireCloudLoginOrgUnsuspendedErr
+		} else if c.isOrgPauseTrialSuspension() {
+			return RequireCloudLoginPauseTrialOrgUnsuspendedErr
 		} else {
 			return RequireCloudLoginFreeTrialEndedOrgUnsuspendedErr
 		}
@@ -792,6 +798,10 @@ func (c *Config) isOrgSuspended() bool {
 
 func (c *Config) isLoginBlockedByOrgSuspension() bool {
 	return utils.IsLoginBlockedByOrgSuspension(c.Context().GetSuspensionStatus())
+}
+
+func (c *Config) isOrgPauseTrialSuspension() bool {
+	return utils.IsOrgPauseTrialSuspended(c.Context().GetSuspensionStatus())
 }
 
 // Parse `--context` flag value into config struct
