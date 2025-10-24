@@ -1,5 +1,4 @@
-List all provider integrations in the specified environment.
-
+Error: required flag(s) "cloud" not set
 Usage:
   confluent provider-integration v2 list [flags]
 
@@ -22,3 +21,4 @@ Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

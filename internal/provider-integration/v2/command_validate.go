@@ -42,6 +42,8 @@ func (c *command) newValidateCommand() *cobra.Command {
 		),
 	}
 
+	cmd.Flags().String("azure-tenant-id", "", "Customer Azure Tenant ID (for validating Azure provider before update).")
+	cmd.Flags().String("gcp-service-account", "", "Customer Google Service Account (for validating GCP provider before update).")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
@@ -56,9 +58,34 @@ func (c *command) validate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// Get optional config for validation before update
+	azureTenantId, _ := cmd.Flags().GetString("azure-tenant-id")
+	gcpServiceAccount, _ := cmd.Flags().GetString("gcp-service-account")
+
 	validateReq := piv2.PimV2IntegrationValidateRequest{
 		Id:          &integrationId,
 		Environment: &piv2.GlobalObjectReference{Id: environmentId},
+	}
+
+	// Add config if provided (allows validation before update)
+	if azureTenantId != "" || gcpServiceAccount != "" {
+		var validateConfig piv2.PimV2IntegrationValidateRequestConfigOneOf
+
+		if azureTenantId != "" {
+			azureConfig := &piv2.PimV2AzureIntegrationConfig{
+				Kind:                  "AzureIntegrationConfig",
+				CustomerAzureTenantId: &azureTenantId,
+			}
+			validateConfig = piv2.PimV2AzureIntegrationConfigAsPimV2IntegrationValidateRequestConfigOneOf(azureConfig)
+		} else if gcpServiceAccount != "" {
+			gcpConfig := &piv2.PimV2GcpIntegrationConfig{
+				Kind:                         "GcpIntegrationConfig",
+				CustomerGoogleServiceAccount: &gcpServiceAccount,
+			}
+			validateConfig = piv2.PimV2GcpIntegrationConfigAsPimV2IntegrationValidateRequestConfigOneOf(gcpConfig)
+		}
+
+		validateReq.Config = &validateConfig
 	}
 
 	if err := c.V2Client.ValidatePimV2Integration(cmd.Context(), validateReq); err != nil {

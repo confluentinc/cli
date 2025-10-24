@@ -13,8 +13,10 @@ Validate GCP provider integration "cspi-789012".
   $ confluent provider-integration v2 validate cspi-789012
 
 Flags:
-      --environment string   Environment ID.
-      --context string       CLI context name.
+      --azure-tenant-id string       Customer Azure Tenant ID (for validating Azure provider before update).
+      --gcp-service-account string   Customer Google Service Account (for validating GCP provider before update).
+      --environment string           Environment ID.
+      --context string               CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

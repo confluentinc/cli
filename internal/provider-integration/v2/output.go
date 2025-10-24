@@ -62,5 +62,30 @@ func printProviderIntegrationTable(cmd *cobra.Command, integration piv2.PimV2Int
 
 	table := output.NewTable(cmd)
 	table.Add(out)
+
+	// Filter fields for human-readable output to avoid showing empty fields for wrong provider
+	// Note: omitempty only works for JSON/YAML, not for table output
+	outputFormat, _ := cmd.Flags().GetString("output")
+	if outputFormat == "" || outputFormat == "human" {
+		fields := []string{"Id", "DisplayName", "Provider", "Environment", "Status"}
+		switch integration.GetProvider() {
+		case "azure":
+			if out.ConfluentMultiTenantAppId != "" {
+				fields = append(fields, "ConfluentMultiTenantAppId")
+			}
+			if out.CustomerAzureTenantId != "" {
+				fields = append(fields, "CustomerAzureTenantId")
+			}
+		case "gcp":
+			if out.GoogleServiceAccount != "" {
+				fields = append(fields, "GoogleServiceAccount")
+			}
+			if out.CustomerGoogleServiceAccount != "" {
+				fields = append(fields, "CustomerGoogleServiceAccount")
+			}
+		}
+		table.Filter(fields)
+	}
+
 	return table.Print()
 }

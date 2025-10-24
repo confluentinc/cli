@@ -24,8 +24,12 @@ func (s *CLITestSuite) TestProviderIntegrationV2() {
 	tests := []CLITest{
 		// Basic command tests
 		{
-			args:    "provider-integration v2 list",
-			fixture: "provider-integration/v2/list.golden",
+			args:    "provider-integration v2 list --cloud azure",
+			fixture: "provider-integration/v2/list-azure.golden",
+		},
+		{
+			args:    "provider-integration v2 list --cloud gcp",
+			fixture: "provider-integration/v2/list-gcp.golden",
 		},
 		{
 			args:    "provider-integration v2 describe pi-123456",
@@ -98,14 +102,18 @@ func (s *CLITestSuite) TestProviderIntegrationV2() {
 			fixture: "provider-integration/v2/describe-gcp-yaml.golden",
 		},
 		{
-			args:    "provider-integration v2 list --output json",
-			fixture: "provider-integration/v2/list-json.golden",
+			args:    "provider-integration v2 list --cloud azure --output json",
+			fixture: "provider-integration/v2/list-azure-json.golden",
+		},
+		{
+			args:    "provider-integration v2 list --cloud gcp --output json",
+			fixture: "provider-integration/v2/list-gcp-json.golden",
 		},
 
 		// Environment flag tests
 		{
-			args:    "provider-integration v2 list --environment env-596",
-			fixture: "provider-integration/v2/list-env-flag.golden",
+			args:    "provider-integration v2 list --cloud azure --environment env-596",
+			fixture: "provider-integration/v2/list-azure-env-flag.golden",
 		},
 		{
 			args:    "provider-integration v2 describe pi-123456 --environment env-596",
@@ -157,8 +165,19 @@ func (s *CLITestSuite) TestProviderIntegrationV2() {
 
 		// List tests - output formats
 		{
-			args:    "provider-integration v2 list --output yaml",
-			fixture: "provider-integration/v2/list-yaml.golden",
+			args:    "provider-integration v2 list --cloud azure --output yaml",
+			fixture: "provider-integration/v2/list-azure-yaml.golden",
+		},
+		{
+			args:    "provider-integration v2 list --cloud gcp --output yaml",
+			fixture: "provider-integration/v2/list-gcp-yaml.golden",
+		},
+
+		// Error cases - List
+		{
+			args:     "provider-integration v2 list",
+			fixture:  "provider-integration/v2/list-missing-cloud.golden",
+			exitCode: 1,
 		},
 
 		// Create tests - output formats

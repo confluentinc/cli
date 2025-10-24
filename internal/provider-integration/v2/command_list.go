@@ -15,7 +15,11 @@
 package v2
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
+
+	piv2 "github.com/confluentinc/ccloud-sdk-go-v2/provider-integration/v2"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
@@ -31,19 +35,22 @@ func (c *command) newListCommand() *cobra.Command {
 		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List all provider integrations in the current environment.",
-				Code: "confluent provider-integration v2 list",
+				Text: "List all Azure provider integrations in the current environment.",
+				Code: "confluent provider-integration v2 list --cloud azure",
 			},
 			examples.Example{
-				Text: "List all provider integrations in environment \"env-123456\".",
-				Code: "confluent provider-integration v2 list --environment env-123456",
+				Text: "List all GCP provider integrations in environment \"env-123456\".",
+				Code: "confluent provider-integration v2 list --cloud gcp --environment env-123456",
 			},
 		),
 	}
 
+	cmd.Flags().String("cloud", "", "Cloud provider (azure or gcp).")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
+
+	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
 
 	return cmd
 }
@@ -59,8 +66,22 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	list := make([]providerIntegrationOut, len(integrations))
-	for i, integration := range integrations {
+	// Filter by cloud provider (required flag)
+	cloud, err := cmd.Flags().GetString("cloud")
+	if err != nil {
+		return err
+	}
+	cloud = strings.ToLower(cloud)
+
+	filtered := make([]piv2.PimV2Integration, 0)
+	for _, integration := range integrations {
+		if strings.ToLower(integration.GetProvider()) == cloud {
+			filtered = append(filtered, integration)
+		}
+	}
+
+	outputList := output.NewList(cmd)
+	for _, integration := range filtered {
 		out := providerIntegrationOut{
 			Id:          integration.GetId(),
 			DisplayName: integration.GetDisplayName(),
@@ -69,7 +90,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			Status:      integration.GetStatus(),
 		}
 
-		// Add provider-specific configuration details
+		// Add provider-specific configuration details (only for the requested cloud)
 		if integration.Config != nil {
 			if integration.Config.PimV2AzureIntegrationConfig != nil {
 				azureConfig := integration.Config.PimV2AzureIntegrationConfig
@@ -83,13 +104,18 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			}
 		}
 
-		list[i] = out
+		outputList.Add(&out)
 	}
 
-	outputList := output.NewList(cmd)
-	for _, item := range list {
-		outputList.Add(&item)
+	// Filter columns based on cloud provider to show only relevant fields
+	fields := []string{"Id", "DisplayName", "Provider", "Environment", "Status"}
+	switch cloud {
+	case "azure":
+		fields = append(fields, "CustomerAzureTenantId", "ConfluentMultiTenantAppId")
+	case "gcp":
+		fields = append(fields, "CustomerGoogleServiceAccount", "GoogleServiceAccount")
 	}
+	outputList.Filter(fields)
 
 	return outputList.Print()
 }
