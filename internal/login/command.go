@@ -180,7 +180,7 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 }
 
 func (c *command) printRemainingFreeCredit(client *ccloudv1.Client, currentOrg *ccloudv1.Organization) {
-	promoCodeClaims, err := client.Growth.GetFreeTrialInfo(currentOrg.Id)
+	promoCodeClaims, err := client.Growth.GetFreeTrialInfo(currentOrg.GetId())
 	if err != nil {
 		log.CliLogger.Warnf("Failed to get free trial info: %v", err)
 		return
