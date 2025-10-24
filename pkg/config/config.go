@@ -671,10 +671,10 @@ func (c *Config) CheckIsCloudLogin() error {
 	}
 
 	if c.isContextStatePresent() && c.isOrgSuspended() {
-		if c.isLoginBlockedByOrgSuspension() {
-			return RequireCloudLoginOrgUnsuspendedErr
-		} else if c.isOrgPauseTrialSuspension() {
+		if c.isOrgPauseTrialSuspension() {
 			return RequireCloudLoginPauseTrialOrgUnsuspendedErr
+		} else if c.isLoginBlockedByOrgSuspension() {
+			return RequireCloudLoginOrgUnsuspendedErr
 		} else {
 			return RequireCloudLoginFreeTrialEndedOrgUnsuspendedErr
 		}
