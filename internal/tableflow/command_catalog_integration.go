@@ -17,12 +17,14 @@ import (
 const (
 	awsGlueKind   = "AwsGlue"
 	snowflakeKind = "Snowflake"
+	unityKind     = "Unity"
 
 	aws       = "aws"
 	snowflake = "snowflake"
+	unity     = "unity"
 )
 
-var createCatalogIntegrationTypes = []string{aws, snowflake}
+var createCatalogIntegrationTypes = []string{aws, snowflake, unity}
 
 type catalogIntegrationOut struct {
 	Id                    string `human:"ID" serialized:"id"`
@@ -34,6 +36,9 @@ type catalogIntegrationOut struct {
 	Endpoint              string `human:"Endpoint,omitempty" serialized:"endpoint,omitempty"`
 	Warehouse             string `human:"Warehouse,omitempty" serialized:"warehouse,omitempty"`
 	AllowedScope          string `human:"Allowed Scope,omitempty" serialized:"allowed_scope,omitempty"`
+	WorkspaceEndpoint     string `human:"Workspace Endpoint,omitempty" serialized:"workspace_endpoint,omitempty"`
+	CatalogName           string `human:"Catalog Name,omitempty" serialized:"catalog_name,omitempty"`
+	ClientId              string `human:"Client ID,omitempty" serialized:"client_id,omitempty"`
 	Suspended             bool   `human:"Suspended" serialized:"suspended"`
 	Phase                 string `human:"Phase" serialized:"phase"`
 	ErrorMessage          string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
@@ -109,6 +114,10 @@ func getCatalogIntegrationType(catalogIntegration tableflowv1.TableflowV1Catalog
 		return snowflake, nil
 	}
 
+	if config.TableflowV1CatalogIntegrationUnitySpec != nil {
+		return unity, nil
+	}
+
 	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "config")
 }
 
@@ -136,6 +145,11 @@ func printCatalogIntegrationTable(cmd *cobra.Command, catalogIntegration tablefl
 		out.Endpoint = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeSpec.GetEndpoint()
 		out.Warehouse = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeSpec.GetWarehouse()
 		out.AllowedScope = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeSpec.GetAllowedScope()
+	}
+	if catalogIntegrationType == unity {
+		out.WorkspaceEndpoint = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec.GetWorkspaceEndpoint()
+		out.CatalogName = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec.GetCatalogName()
+		out.ClientId = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec.GetClientId()
 	}
 
 	table := output.NewTable(cmd)

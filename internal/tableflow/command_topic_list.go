@@ -50,12 +50,15 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
+		strStatus := getListCatalogSyncStatuses(topic.Status.GetCatalogSyncStatuses())
+		strFormats := getFailingTableFormats(topic.Status.GetFailingTableFormats())
+
 		out := &topicOut{
 			KafkaCluster:          topic.GetSpec().KafkaCluster.GetId(),
 			TopicName:             topic.Spec.GetDisplayName(),
 			EnableCompaction:      topic.GetSpec().Config.GetEnableCompaction(),   // should be read-only & true
 			EnablePartitioning:    topic.GetSpec().Config.GetEnablePartitioning(), // should be read-only & true
-			TableFormats:          strings.Join(topic.Spec.GetTableFormats(), ""),
+			TableFormats:          strings.Join(topic.Spec.GetTableFormats(), ", "),
 			Environment:           topic.GetSpec().Environment.GetId(),
 			RetentionMs:           topic.GetSpec().Config.GetRetentionMs(),
 			RecordFailureStrategy: topic.GetSpec().Config.GetRecordFailureStrategy(),
@@ -64,6 +67,8 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			StorageType:           storageType,
 			Suspended:             topic.Spec.GetSuspended(),
 			Phase:                 topic.Status.GetPhase(),
+			CatalogSyncStatus:     strStatus,
+			FailingTableFormat:    strFormats,
 			ErrorMessage:          topic.Status.GetErrorMessage(),
 			WriteMode:             topic.Status.GetWriteMode(),
 		}
@@ -80,5 +85,5 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		list.Add(out)
 	}
 
-	return list.Print()
+	return list.PrintWithAutoWrap(false)
 }
