@@ -1,0 +1,24 @@
+Validate that a provider integration is correctly configured with the cloud provider.
+
+Usage:
+  confluent provider-integration v2 validate <id> [flags]
+
+Examples:
+Validate Azure provider integration "cspi-123456".
+
+  $ confluent provider-integration v2 validate cspi-123456
+
+Validate GCP provider integration "cspi-789012".
+
+  $ confluent provider-integration v2 validate cspi-789012
+
+Flags:
+      --azure-tenant-id string       Customer Azure Tenant ID (for validating Azure provider before update).
+      --gcp-service-account string   Customer Google Service Account (for validating GCP provider before update).
+      --environment string           Environment ID.
+      --context string               CLI context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
