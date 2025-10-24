@@ -1,23 +1,21 @@
 +-------------------------+--------------------------------------------------------------------------+
 | Kafka Cluster           | lkc-123456                                                               |
-| Topic Name              | topic-byob                                                               |
+| Topic Name              | topic-error-log                                                          |
 | Enable Compaction       | true                                                                     |
 | Enable Partitioning     | true                                                                     |
 | Environment             | env-596                                                                  |
-| Record Failure Strategy | SKIP                                                                     |
-| Error Handling          | SKIP                                                                     |
-| Retention Ms            | 432000000                                                                |
-| Storage Type            | BYOS                                                                     |
-| Provider Integration ID | cspi-stgce89r7                                                           |
-| Bucket Name             | bucket_1                                                                 |
-| Bucket Region           | us-east-1                                                                |
+| Record Failure Strategy | SUSPEND                                                                  |
+| Error Handling          | LOG                                                                      |
+| Log Target              | log_topic                                                                |
+| Retention Ms            | 604800000                                                                |
+| Storage Type            | MANAGED                                                                  |
 | Suspended               | false                                                                    |
-| Table Formats           | ICEBERG                                                                  |
+| Table Formats           | DELTA                                                                    |
 | Table Path              | s3://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId |
 | Phase                   | RUNNING                                                                  |
 | Catalog Sync Status     | cat-id-123=SUCCESS                                                       |
 |                         | cat-id-456=FAILED-Connection timeout                                     |
 | Failing Table Format    | DELTA=Connection timeout                                                 |
 |                         | ICEBERG=Schema validation failed                                         |
-| Write Mode              | UPSERT                                                                   |
+| Write Mode              | APPEND                                                                   |
 +-------------------------+--------------------------------------------------------------------------+
