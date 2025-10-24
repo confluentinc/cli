@@ -5,6 +5,7 @@
   "enable_partitioning": true,
   "environment": "env-596",
   "record_failure_strategy": "SKIP",
+  "error_handling": "SKIP",
   "retention_ms": "604800000",
   "storage_type": "BYOS",
   "provider_integration_id": "cspi-stgce89r7",
