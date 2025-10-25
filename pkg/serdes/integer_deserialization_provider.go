@@ -3,19 +3,23 @@ package serdes
 import (
 	"encoding/binary"
 	"fmt"
+
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
 )
 
 type IntegerDeserializationProvider struct{}
 
-func (IntegerDeserializationProvider) InitDeserializer(_, _, _ string, _ SchemaRegistryAuth, _ any) error {
+func (IntegerDeserializationProvider) InitDeserializer(_, _, _ string, _ SchemaRegistryAuth, _ schemaregistry.Client) error {
 	return nil
 }
 
-func (IntegerDeserializationProvider) LoadSchema(_ string, _ map[string]string) error {
+func (IntegerDeserializationProvider) LoadSchema(_ string, _ string, _ serde.Type, _ *kafka.Message) error {
 	return nil
 }
 
-func (IntegerDeserializationProvider) Deserialize(_ string, data []byte) (string, error) {
+func (IntegerDeserializationProvider) Deserialize(_ string, _ []kafka.Header, data []byte) (string, error) {
 	if len(data) == 0 {
 		return "", nil
 	}
@@ -26,4 +30,8 @@ func (IntegerDeserializationProvider) Deserialize(_ string, data []byte) (string
 
 	message := fmt.Sprintf("%d", binary.LittleEndian.Uint32(data))
 	return message, nil
+}
+
+func (IntegerDeserializationProvider) GetSchemaRegistryClient() schemaregistry.Client {
+	return nil
 }
