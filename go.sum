@@ -250,8 +250,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.3.0 h1:mC0E1n
 github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.3.0/go.mod h1:GIHF2cYOUKx+6ycYokr4i8E4cuNBC22xqvO/IhqZ31U=
 github.com/confluentinc/ccloud-sdk-go-v2/org v0.9.0 h1:FtaqHX0kBTK7fCQK+9SJcOso+XpWCWzY2roT3gBQGfw=
 github.com/confluentinc/ccloud-sdk-go-v2/org v0.9.0/go.mod h1:X0uaTYPp+mr19W1R/Z1LuB1ePZJZrH7kxnQckDx6zoc=
-github.com/confluentinc/ccloud-sdk-go-v2/provider-integration v0.1.0 h1:a6GlDTUoeX5zRlIPVToH3Aa779QA2Ajj/LYyJC5UQN8=
-github.com/confluentinc/ccloud-sdk-go-v2/provider-integration v0.1.0/go.mod h1:aNAIuiIUbfvqtQrl4yp1f7dMdUInXs+PDrHLvKCr0PE=
+github.com/confluentinc/ccloud-sdk-go-v2/provider-integration v0.2.0 h1:UN2a+aqYhk95ro+wVLkeB/8W7n+UV2KsE3jNFbbDCSw=
+github.com/confluentinc/ccloud-sdk-go-v2/provider-integration v0.2.0/go.mod h1:TzompS9F0G6awN5xMC+nguNG8ULElN5UqX2XOBOIPuM=
 github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0 h1:xVSmwdycExze1E2Jta99CaFuMOlL6k6KExOOSY1hSFg=
 github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0/go.mod h1:zZWZoGWJuO0Qm4lO6H2KlXMx4OoB/yhD8y6J1ZB/97Q=
 github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.3 h1:ozdDSJHruQIgtxS5hwz8Rp8pUSX0i4h9besp2H9NYzU=
