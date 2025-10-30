@@ -11,13 +11,13 @@ type shareGroupCommand struct {
 }
 
 type shareGroupOut struct {
-	Cluster            string `human:"Cluster" serialized:"cluster"`
-	ShareGroup         string `human:"Share Group" serialized:"share_group"`
-	Coordinator        string `human:"Coordinator" serialized:"coordinator"`
-	State              string `human:"State" serialized:"state"`
-	ConsumerCount      int32  `human:"Consumer Count" serialized:"consumer_count"`
-	PartitionCount     int32  `human:"Partition Count" serialized:"partition_count"`
-	TopicSubscriptions string `human:"Topic Subscriptions" serialized:"topic_subscriptions"`
+	Cluster            string   `human:"Cluster" serialized:"cluster"`
+	ShareGroup         string   `human:"Share Group" serialized:"share_group"`
+	Coordinator        string   `human:"Coordinator" serialized:"coordinator"`
+	State              string   `human:"State" serialized:"state"`
+	ConsumerCount      int32    `human:"Consumer Count" serialized:"consumer_count"`
+	PartitionCount     int32    `human:"Partition Count" serialized:"partition_count"`
+	TopicSubscriptions []string `human:"Topic Subscriptions,omitempty" serialized:"topic_subscriptions,omitempty"`
 }
 
 func newShareGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {

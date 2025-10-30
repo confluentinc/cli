@@ -29,7 +29,7 @@ func (c *shareGroupCommand) newConsumerListCommand() *cobra.Command {
 		),
 	}
 
-	c.addShareGroupFlag(cmd)
+	c.addGroupFlag(cmd)
 	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -69,7 +69,7 @@ func (c *shareGroupCommand) consumerList(cmd *cobra.Command, _ []string) error {
 	return list.Print()
 }
 
-func (c *shareGroupCommand) addShareGroupFlag(cmd *cobra.Command) {
+func (c *shareGroupCommand) addGroupFlag(cmd *cobra.Command) {
 	cmd.Flags().String("group", "", "Share group ID.")
 
 	pcmd.RegisterFlagCompletionFunc(cmd, "group", func(cmd *cobra.Command, args []string) []string {

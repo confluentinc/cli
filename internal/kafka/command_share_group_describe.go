@@ -3,6 +3,8 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
@@ -44,7 +46,30 @@ func (c *shareGroupCommand) describe(cmd *cobra.Command, args []string) error {
 		State:              shareGroup.GetState(),
 		ConsumerCount:      shareGroup.GetConsumerCount(),
 		PartitionCount:     shareGroup.GetPartitionCount(),
-		TopicSubscriptions: kafkaREST.CloudClient.GetShareGroupTopicNames(shareGroup),
+		TopicSubscriptions: getShareGroupTopicNames(shareGroup),
 	})
 	return table.Print()
+}
+
+func getShareGroupTopicNames(shareGroup kafkarestv3.ShareGroupData) []string {
+	topicPartitions := shareGroup.GetAssignedTopicPartitions()
+	if len(topicPartitions) == 0 {
+		return []string{}
+	}
+
+	topicSet := make(map[string]bool)
+	for _, tp := range topicPartitions {
+		topicSet[tp.GetTopicName()] = true
+	}
+
+	if len(topicSet) == 0 {
+		return []string{}
+	}
+
+	topics := make([]string, 0, len(topicSet))
+	for topic := range topicSet {
+		topics = append(topics, topic)
+	}
+
+	return topics
 }

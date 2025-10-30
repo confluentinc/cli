@@ -5,5 +5,5 @@
   "state": "STABLE",
   "consumer_count": 2,
   "partition_count": 3,
-  "topic_subscriptions": "topic-1, topic-2"
+  "topic_subscriptions": ["topic-1", "topic-2"]
 }
