@@ -6,6 +6,11 @@ import (
 	"runtime"
 )
 
+const (
+	shareGroupTopic1 = "topic-1"
+	shareGroupTopic2 = "topic-2"
+)
+
 func (s *CLITestSuite) TestKafka() {
 	tests := []CLITest{
 		{args: "environment use env-596", fixture: "kafka/0.golden"},
@@ -747,12 +752,12 @@ func (s *CLITestSuite) TestKafkaShareGroup() {
 		{args: "kafka share-group list --cluster lkc-1234", fixture: "kafka/share-group/list.golden"},
 		{args: "kafka share-group list --cluster lkc-1234 -o json", fixture: "kafka/share-group/list-json.golden"},
 		{args: "kafka share-group list --cluster lkc-1234 -o yaml", fixture: "kafka/share-group/list-yaml.golden"},
-		{args: "kafka share-group describe share-group-1 --cluster lkc-1234", contains: "topic-1", notContains: ""},
-		{args: "kafka share-group describe share-group-1 --cluster lkc-1234", contains: "topic-2", notContains: ""},
-		{args: "kafka share-group describe share-group-1 --cluster lkc-1234 -o json", contains: "topic-1", notContains: ""},
-		{args: "kafka share-group describe share-group-1 --cluster lkc-1234 -o json", contains: "topic-2", notContains: ""},
-		{args: "kafka share-group describe share-group-1 --cluster lkc-1234 -o yaml", contains: "topic-1", notContains: ""},
-		{args: "kafka share-group describe share-group-1 --cluster lkc-1234 -o yaml", contains: "topic-2", notContains: ""},
+		{args: "kafka share-group describe share-group-1 --cluster lkc-1234", contains: shareGroupTopic1, notContains: ""},
+		{args: "kafka share-group describe share-group-1 --cluster lkc-1234", contains: shareGroupTopic2, notContains: ""},
+		{args: "kafka share-group describe share-group-1 --cluster lkc-1234 -o json", contains: shareGroupTopic1, notContains: ""},
+		{args: "kafka share-group describe share-group-1 --cluster lkc-1234 -o json", contains: shareGroupTopic2, notContains: ""},
+		{args: "kafka share-group describe share-group-1 --cluster lkc-1234 -o yaml", contains: shareGroupTopic1, notContains: ""},
+		{args: "kafka share-group describe share-group-1 --cluster lkc-1234 -o yaml", contains: shareGroupTopic2, notContains: ""},
 		{args: "kafka share-group describe share-group-1234 --cluster lkc-1234", fixture: "kafka/share-group/describe-dne.golden", exitCode: 1},
 	}
 

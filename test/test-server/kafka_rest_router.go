@@ -17,6 +17,16 @@ import (
 	cpkafkarestv3 "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 )
 
+const (
+	broker1Relationship = "/kafka/v3/clusters/cluster-1/brokers/broker-1"
+	consumerID1         = "consumer-1"
+	consumerID2         = "consumer-2"
+	clientID1           = "client-1"
+	clientID2           = "client-2"
+	topicName1          = "topic-1"
+	shareGroupID1       = "share-group-1"
+)
+
 type route struct {
 	path    string
 	handler func(t *testing.T) http.HandlerFunc
@@ -646,7 +656,7 @@ func handleKafkaRestConsumerGroups(t *testing.T) http.HandlerFunc {
 						IsSimple:          true,
 						PartitionAssignor: "org.apache.kafka.clients.consumer.RoundRobinAssignor",
 						State:             "STABLE",
-						Coordinator:       cpkafkarestv3.Relationship{Related: "/kafka/v3/clusters/cluster-1/brokers/broker-1"},
+						Coordinator:       cpkafkarestv3.Relationship{Related: broker1Relationship},
 					},
 					{
 						ClusterId:         clusterId,
@@ -804,7 +814,7 @@ func handleKafkaRestConsumerGroup(t *testing.T) http.HandlerFunc {
 					IsSimple:          true,
 					PartitionAssignor: "org.apache.kafka.clients.consumer.RoundRobinAssignor",
 					State:             "STABLE",
-					Coordinator:       cpkafkarestv3.Relationship{Related: "/kafka/v3/clusters/cluster-1/brokers/broker-1"},
+					Coordinator:       cpkafkarestv3.Relationship{Related: broker1Relationship},
 				})
 				require.NoError(t, err)
 			} else {
@@ -895,16 +905,16 @@ func handleKafkaRestConsumers(t *testing.T) http.HandlerFunc {
 					{
 						ClusterId:       "cluster-1",
 						ConsumerGroupId: "consumer-group-1",
-						ConsumerId:      "consumer-1",
+						ConsumerId:      consumerID1,
 						InstanceId:      &instance1,
-						ClientId:        "client-1",
+						ClientId:        clientID1,
 					},
 					{
 						ClusterId:       "cluster-1",
 						ConsumerGroupId: "consumer-group-1",
-						ConsumerId:      "consumer-2",
+						ConsumerId:      consumerID2,
 						InstanceId:      &instance2,
-						ClientId:        "client-2",
+						ClientId:        clientID2,
 					},
 				},
 			})
@@ -1056,10 +1066,10 @@ func handleKafkaRestLagSummary(t *testing.T) http.HandlerFunc {
 				err := json.NewEncoder(w).Encode(cpkafkarestv3.ConsumerGroupLagSummaryData{
 					ClusterId:         vars["cluster_id"],
 					ConsumerGroupId:   "consumer-group-1",
-					MaxLagConsumerId:  "consumer-1",
+					MaxLagConsumerId:  consumerID1,
 					MaxLagInstanceId:  &instance,
-					MaxLagClientId:    "client-1",
-					MaxLagTopicName:   "topic-1",
+					MaxLagClientId:    clientID1,
+					MaxLagTopicName:   topicName1,
 					MaxLagPartitionId: 1,
 					MaxLag:            100,
 					TotalLag:          110,
@@ -1081,7 +1091,7 @@ func handleKafkaRestMirrorsReverseAndStart(t *testing.T) http.HandlerFunc {
 		case http.MethodPost:
 			err := json.NewEncoder(w).Encode(cckafkarestv3.AlterMirrorStatusResponseDataList{Data: []cckafkarestv3.AlterMirrorStatusResponseData{
 				{
-					MirrorTopicName: "topic-1",
+					MirrorTopicName: topicName1,
 					MirrorLags: cckafkarestv3.MirrorLags{
 						Items: []cckafkarestv3.MirrorLag{
 							{
@@ -1148,7 +1158,7 @@ func handleKafkaRestMirrorsReverseAndPause(t *testing.T) http.HandlerFunc {
 		case http.MethodPost:
 			err := json.NewEncoder(w).Encode(cckafkarestv3.AlterMirrorStatusResponseDataList{Data: []cckafkarestv3.AlterMirrorStatusResponseData{
 				{
-					MirrorTopicName: "topic-1",
+					MirrorTopicName: topicName1,
 					MirrorLags: cckafkarestv3.MirrorLags{
 						Items: []cckafkarestv3.MirrorLag{
 							{
@@ -1237,7 +1247,7 @@ func handleKafkaRestTruncateAndRestore(t *testing.T) http.HandlerFunc {
 			}
 			err := json.NewEncoder(w).Encode(cckafkarestv3.AlterMirrorStatusResponseDataList{Data: []cckafkarestv3.AlterMirrorStatusResponseData{
 				{
-					MirrorTopicName: "topic-1",
+					MirrorTopicName: topicName1,
 					MirrorLags: cckafkarestv3.MirrorLags{
 						Items: []cckafkarestv3.MirrorLag{
 							{
@@ -1302,7 +1312,7 @@ func handleKafkaRestMirrorsFailover(t *testing.T) http.HandlerFunc {
 		case http.MethodPost:
 			err := json.NewEncoder(w).Encode(cckafkarestv3.AlterMirrorStatusResponseDataList{Data: []cckafkarestv3.AlterMirrorStatusResponseData{
 				{
-					MirrorTopicName: "topic-1",
+					MirrorTopicName: topicName1,
 					MirrorLags: cckafkarestv3.MirrorLags{
 						Items: []cckafkarestv3.MirrorLag{
 							{
@@ -1369,7 +1379,7 @@ func handleKafkaRestMirrorsPause(t *testing.T) http.HandlerFunc {
 		case http.MethodPost:
 			err := json.NewEncoder(w).Encode(cckafkarestv3.AlterMirrorStatusResponseDataList{Data: []cckafkarestv3.AlterMirrorStatusResponseData{
 				{
-					MirrorTopicName: "topic-1",
+					MirrorTopicName: topicName1,
 					MirrorLags: cckafkarestv3.MirrorLags{
 						Items: []cckafkarestv3.MirrorLag{
 							{
@@ -1498,7 +1508,7 @@ func handleKafkaRestMirrorsResume(t *testing.T) http.HandlerFunc {
 		case http.MethodPost:
 			err := json.NewEncoder(w).Encode(cckafkarestv3.AlterMirrorStatusResponseDataList{Data: []cckafkarestv3.AlterMirrorStatusResponseData{
 				{
-					MirrorTopicName: "topic-1",
+					MirrorTopicName: topicName1,
 					MirrorLags: cckafkarestv3.MirrorLags{
 						Items: []cckafkarestv3.MirrorLag{
 							{
@@ -1568,26 +1578,26 @@ func handleKafkaRestLags(t *testing.T) http.HandlerFunc {
 						{
 							ClusterId:       vars["cluster_id"],
 							ConsumerGroupId: "consumer-group-1",
-							TopicName:       "topic-1",
+							TopicName:       topicName1,
 							PartitionId:     1,
 							CurrentOffset:   1,
 							LogEndOffset:    101,
 							Lag:             100,
-							ConsumerId:      "consumer-1",
+							ConsumerId:      consumerID1,
 							InstanceId:      &instance1,
-							ClientId:        "client-1",
+							ClientId:        clientID1,
 						},
 						{
 							ClusterId:       vars["cluster_id"],
 							ConsumerGroupId: "consumer-group-1",
-							TopicName:       "topic-1",
+							TopicName:       topicName1,
 							PartitionId:     2,
 							CurrentOffset:   1,
 							LogEndOffset:    11,
 							Lag:             10,
-							ConsumerId:      "consumer-2",
+							ConsumerId:      consumerID2,
 							InstanceId:      &instance2,
-							ClientId:        "client-2",
+							ClientId:        clientID2,
 						},
 					},
 				})
@@ -1741,9 +1751,9 @@ func handleKafkaRestLag(t *testing.T) http.HandlerFunc {
 						CurrentOffset:   offsets.currentOffset,
 						LogEndOffset:    offsets.logEndOffset,
 						Lag:             offsets.logEndOffset - offsets.currentOffset,
-						ConsumerId:      "consumer-1",
+						ConsumerId:      consumerID1,
 						InstanceId:      &instance,
-						ClientId:        "client-1",
+						ClientId:        clientID1,
 					})
 					require.NoError(t, err)
 				} else {
@@ -1766,15 +1776,15 @@ func handleKafkaRestShareGroups(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			shareGroup1 := cckafkarestv3.ShareGroupData{}
 			shareGroup1.SetClusterId(clusterId)
-			shareGroup1.SetShareGroupId("share-group-1")
+			shareGroup1.SetShareGroupId(shareGroupID1)
 			shareGroup1.SetState("STABLE")
-			shareGroup1.SetCoordinator(cckafkarestv3.Relationship{Related: "/kafka/v3/clusters/cluster-1/brokers/broker-1"})
+			shareGroup1.SetCoordinator(cckafkarestv3.Relationship{Related: broker1Relationship})
 			shareGroup1.SetConsumerCount(2)
 			shareGroup1.SetPartitionCount(3)
 
 			// Set topic partitions for topic subscriptions
 			tp1 := cckafkarestv3.ShareGroupTopicPartitionData{}
-			tp1.SetTopicName("topic-1")
+			tp1.SetTopicName(topicName1)
 			tp1.SetPartitionId(0)
 			tp2 := cckafkarestv3.ShareGroupTopicPartitionData{}
 			tp2.SetTopicName("topic-2")
@@ -1806,18 +1816,18 @@ func handleKafkaRestShareGroup(t *testing.T) http.HandlerFunc {
 		shareGroupId := vars["share_group_id"]
 		switch r.Method {
 		case http.MethodGet:
-			if shareGroupId == "share-group-1" {
+			if shareGroupId == shareGroupID1 {
 				shareGroup := cckafkarestv3.ShareGroupData{}
 				shareGroup.SetClusterId(clusterId)
-				shareGroup.SetShareGroupId("share-group-1")
+				shareGroup.SetShareGroupId(shareGroupID1)
 				shareGroup.SetState("STABLE")
-				shareGroup.SetCoordinator(cckafkarestv3.Relationship{Related: "/kafka/v3/clusters/cluster-1/brokers/broker-1"})
+				shareGroup.SetCoordinator(cckafkarestv3.Relationship{Related: broker1Relationship})
 				shareGroup.SetConsumerCount(2)
 				shareGroup.SetPartitionCount(3)
 
 				// Set topic partitions for topic subscriptions
 				tp1 := cckafkarestv3.ShareGroupTopicPartitionData{}
-				tp1.SetTopicName("topic-1")
+				tp1.SetTopicName(topicName1)
 				tp1.SetPartitionId(0)
 				tp2 := cckafkarestv3.ShareGroupTopicPartitionData{}
 				tp2.SetTopicName("topic-2")
@@ -1842,16 +1852,16 @@ func handleKafkaRestShareGroupConsumers(t *testing.T) http.HandlerFunc {
 		shareGroupId := vars["share_group_id"]
 		switch r.Method {
 		case http.MethodGet:
-			if shareGroupId == "share-group-1" {
+			if shareGroupId == shareGroupID1 {
 				consumer1 := cckafkarestv3.ShareGroupConsumerData{}
 				consumer1.SetClusterId(clusterId)
-				consumer1.SetConsumerId("consumer-1")
-				consumer1.SetClientId("client-1")
+				consumer1.SetConsumerId(consumerID1)
+				consumer1.SetClientId(clientID1)
 
 				consumer2 := cckafkarestv3.ShareGroupConsumerData{}
 				consumer2.SetClusterId(clusterId)
-				consumer2.SetConsumerId("consumer-2")
-				consumer2.SetClientId("client-2")
+				consumer2.SetConsumerId(consumerID2)
+				consumer2.SetClientId(clientID2)
 
 				err := json.NewEncoder(w).Encode(cckafkarestv3.ShareGroupConsumerDataList{
 					Data: []cckafkarestv3.ShareGroupConsumerData{consumer1, consumer2},
