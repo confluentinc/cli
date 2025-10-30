@@ -43,6 +43,9 @@ var kafkaRestRoutes = []route{
 	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lag-summary", handleKafkaRestLagSummary},
 	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags", handleKafkaRestLags},
 	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags/{topic_name}/partitions/{partition_id}", handleKafkaRestLag},
+	{"/kafka/v3/clusters/{cluster_id}/share-groups", handleKafkaRestShareGroups},
+	{"/kafka/v3/clusters/{cluster_id}/share-groups/{share_group_id}", handleKafkaRestShareGroup},
+	{"/kafka/v3/clusters/{cluster_id}/share-groups/{share_group_id}/consumers", handleKafkaRestShareGroupConsumers},
 	{"/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions", handleKafkaTopicPartitions},
 	{"/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions/{partition_id}", handleKafkaTopicPartitionId},
 	{"/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions/{partition_id}/reassignment", handleKafkaTopicPartitionIdReassignment},
@@ -1750,6 +1753,113 @@ func handleKafkaRestLag(t *testing.T) http.HandlerFunc {
 			} else {
 				// group not found
 				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this consumer group."))
+			}
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/share-groups"
+func handleKafkaRestShareGroups(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		clusterId := mux.Vars(r)["cluster_id"]
+		switch r.Method {
+		case http.MethodGet:
+			shareGroup1 := cckafkarestv3.ShareGroupData{}
+			shareGroup1.SetClusterId(clusterId)
+			shareGroup1.SetShareGroupId("share-group-1")
+			shareGroup1.SetState("STABLE")
+			shareGroup1.SetCoordinator(cckafkarestv3.Relationship{Related: "/kafka/v3/clusters/cluster-1/brokers/broker-1"})
+			shareGroup1.SetConsumerCount(2)
+			shareGroup1.SetPartitionCount(3)
+
+			// Set topic partitions for topic subscriptions
+			tp1 := cckafkarestv3.ShareGroupTopicPartitionData{}
+			tp1.SetTopicName("topic-1")
+			tp1.SetPartitionId(0)
+			tp2 := cckafkarestv3.ShareGroupTopicPartitionData{}
+			tp2.SetTopicName("topic-2")
+			tp2.SetPartitionId(0)
+			shareGroup1.SetAssignedTopicPartitions([]cckafkarestv3.ShareGroupTopicPartitionData{tp1, tp2})
+
+			shareGroup2 := cckafkarestv3.ShareGroupData{}
+			shareGroup2.SetClusterId(clusterId)
+			shareGroup2.SetShareGroupId("share-group-2")
+			shareGroup2.SetState("EMPTY")
+			shareGroup2.SetCoordinator(cckafkarestv3.Relationship{Related: "/kafka/v3/clusters/cluster-1/brokers/broker-2"})
+			shareGroup2.SetConsumerCount(0)
+			shareGroup2.SetPartitionCount(0)
+			shareGroup2.SetAssignedTopicPartitions([]cckafkarestv3.ShareGroupTopicPartitionData{})
+
+			err := json.NewEncoder(w).Encode(cckafkarestv3.ShareGroupDataList{
+				Data: []cckafkarestv3.ShareGroupData{shareGroup1, shareGroup2},
+			})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/share-groups/{share_group_id}"
+func handleKafkaRestShareGroup(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		clusterId := vars["cluster_id"]
+		shareGroupId := vars["share_group_id"]
+		switch r.Method {
+		case http.MethodGet:
+			if shareGroupId == "share-group-1" {
+				shareGroup := cckafkarestv3.ShareGroupData{}
+				shareGroup.SetClusterId(clusterId)
+				shareGroup.SetShareGroupId("share-group-1")
+				shareGroup.SetState("STABLE")
+				shareGroup.SetCoordinator(cckafkarestv3.Relationship{Related: "/kafka/v3/clusters/cluster-1/brokers/broker-1"})
+				shareGroup.SetConsumerCount(2)
+				shareGroup.SetPartitionCount(3)
+
+				// Set topic partitions for topic subscriptions
+				tp1 := cckafkarestv3.ShareGroupTopicPartitionData{}
+				tp1.SetTopicName("topic-1")
+				tp1.SetPartitionId(0)
+				tp2 := cckafkarestv3.ShareGroupTopicPartitionData{}
+				tp2.SetTopicName("topic-2")
+				tp2.SetPartitionId(0)
+				shareGroup.SetAssignedTopicPartitions([]cckafkarestv3.ShareGroupTopicPartitionData{tp1, tp2})
+
+				err := json.NewEncoder(w).Encode(shareGroup)
+				require.NoError(t, err)
+			} else {
+				// share group not found
+				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this share group."))
+			}
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/share-groups/{share_group_id}/consumers"
+func handleKafkaRestShareGroupConsumers(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		clusterId := vars["cluster_id"]
+		shareGroupId := vars["share_group_id"]
+		switch r.Method {
+		case http.MethodGet:
+			if shareGroupId == "share-group-1" {
+				consumer1 := cckafkarestv3.ShareGroupConsumerData{}
+				consumer1.SetClusterId(clusterId)
+				consumer1.SetConsumerId("consumer-1")
+				consumer1.SetClientId("client-1")
+
+				consumer2 := cckafkarestv3.ShareGroupConsumerData{}
+				consumer2.SetClusterId(clusterId)
+				consumer2.SetConsumerId("consumer-2")
+				consumer2.SetClientId("client-2")
+
+				err := json.NewEncoder(w).Encode(cckafkarestv3.ShareGroupConsumerDataList{
+					Data: []cckafkarestv3.ShareGroupConsumerData{consumer1, consumer2},
+				})
+				require.NoError(t, err)
+			} else {
+				// share group not found
+				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this share group."))
 			}
 		}
 	}
