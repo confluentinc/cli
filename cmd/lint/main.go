@@ -212,6 +212,7 @@ var vocabWords = []string{
 	"aws",
 	"azureml",
 	"azureopenai",
+	"a2a",
 	"backoff",
 	"base64",
 	"bedrock",
