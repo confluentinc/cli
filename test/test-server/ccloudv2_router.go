@@ -56,6 +56,7 @@ var ccloudV2Routes = []route{
 	{"/connect/v1/custom-connector-runtimes", handleListCustomConnectorRuntimes},
 	{"/connect/v1/dummy-presigned-url", handleCustomPluginUploadFile},
 	{"/fcpm/v2/compute-pools", handleFcpmComputePools},
+	{"/fcpm/v2/compute-pool-config", handleFcpmComputePoolConfigs},
 	{"/fcpm/v2/compute-pools/{id}", handleFcpmComputePoolsId},
 	{"/fcpm/v2/regions", handleFcpmRegions},
 	{"/iam/v2/api-keys", handleIamApiKeys},
