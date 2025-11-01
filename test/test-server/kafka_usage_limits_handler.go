@@ -92,7 +92,6 @@ func handleGetUsageLimitsWithError(t *testing.T) http.HandlerFunc {
 }
 
 func getDefaultUsageLimits() *UsageLimits {
-
 	return &UsageLimits{
 		TierLimits: map[string]TierLimit{
 			"BASIC": {

@@ -131,7 +131,6 @@ func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, clust
 }
 
 func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, usageLimits *ccloudv2.UsageLimits, ctx *config.Context) *describeStruct {
-
 	out := &describeStruct{
 		IsCurrent:          cluster.GetId() == ctx.KafkaClusterContext.GetActiveKafkaClusterId(),
 		Id:                 cluster.GetId(),
