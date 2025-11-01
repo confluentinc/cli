@@ -13,6 +13,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/confluentinc/cli/v4/pkg/kafka"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/utils"
@@ -75,6 +76,14 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 	return cmd
 }
 
+func (c *clusterCommand) isBasicToStandardUpgradeSuggestionEnabled() bool {
+	if c.Config.IsTest {
+		return true
+	}
+	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
+	return featureflags.Manager.BoolVariation("cli.basic_to_standard_cluster_upgrade_suggestion.enable", c.Context, ldClient, true, false)
+}
+
 func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
@@ -89,6 +98,11 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	clusterType, err := cmd.Flags().GetString("type")
 	if err != nil {
 		return err
+	}
+
+	// If no type specified, default to basic
+	if clusterType == "" {
+		clusterType = skuBasic
 	}
 
 	sku, err := stringToSku(clusterType)
@@ -160,7 +174,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		createCluster.Spec.Network = &cmkv2.EnvScopedObjectReference{Id: network}
 	}
 
-	kafkaCluster, httpResp, err := c.V2Client.CreateKafkaCluster(createCluster)
+	cluster, httpResp, err := c.V2Client.CreateKafkaCluster(createCluster)
 	if err != nil {
 		return catchClusterConfigurationNotValidError(err, httpResp, cloud, region)
 	}
@@ -169,7 +183,35 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		output.ErrPrintln(c.Config.EnableColor, getKafkaProvisionEstimate(sku))
 	}
 
-	return c.outputKafkaClusterDescription(cmd, &kafkaCluster, false)
+	if err := c.outputKafkaClusterDescription(cmd, &cluster, false); err != nil {
+		return err
+	}
+
+	if strings.ToLower(clusterType) == strings.ToLower(skuBasic) {
+		orgId := c.Context.GetCurrentOrganization()
+		if orgId == "" {
+			return nil
+		}
+
+		if !c.isBasicToStandardUpgradeSuggestionEnabled() {
+			return nil
+		}
+
+		copyManager, err := NewCopyManager()
+		if err != nil {
+			return nil
+		}
+
+		content, cta, err := copyManager.GetCopy("cluster_upgrade_basic_to_standard")
+		if err != nil {
+			return nil
+		}
+
+		formattedCopy := copyManager.FormatCopy(content, cta, cluster.GetId())
+		output.Println(c.Config.EnableColor, "\n"+formattedCopy)
+	}
+
+	return nil
 }
 
 func stringToAvailability(s string, sku ccstructs.Sku) (string, error) {

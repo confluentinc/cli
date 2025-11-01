@@ -1,0 +1,20 @@
+{
+  "scenarios": {
+    "cluster_upgrade_basic_to_standard": {
+      "variations": [
+        {
+          "content": "NOTICE: Basic tier selected. Limitations include:\n- No high availability guarantees\n- Limited performance during peak loads\n- Basic support SLA (24hr response)\n\nFor production workloads, 'Standard' tier provides HA, performance scaling, and enterprise SLA.",
+          "cta": "To upgrade to the Standard Tier execute the following command:\nconfluent kafka cluster update {{id}} --type standard"
+        }
+      ]
+    },
+    "stream_governance_upgrade_essentials_to_advanced": {
+      "variations": [
+        {
+          "content": "NOTICE: Stream Governance Essentials selected. Limitations include:\n- Limited schema compatibility checks\n- Basic schema management\n- No schema validation\n\nFor production workloads, 'Advanced' tier provides full schema compatibility, advanced validation, and enterprise-grade governance.",
+          "cta": "To upgrade to Stream Governance Advanced execute the following command:\nconfluent environment update {{id}} --governance-package advanced"
+        }
+      ]
+    }
+  }
+} 
