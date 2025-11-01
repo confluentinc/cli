@@ -80,11 +80,23 @@ func isClusterResizeInProgress(currentCluster *cmkv2.CmkV2Cluster) error {
 	return nil
 }
 
-func getCmkClusterIngressAndEgressMbps(cluster *cmkv2.CmkV2Cluster) (int32, int32) {
+func getCmkClusterIngressAndEgressMbps(cluster *cmkv2.CmkV2Cluster, sku string, currentCku int32, currentMaxEcku int32,
+	limits *ccloudv2.UsageLimits) (int32, int32) {
 	if isDedicated(cluster) {
-		return 50 * cluster.Status.GetCku(), 150 * cluster.Status.GetCku()
+		ckuLimit := limits.GetCkuLimit(currentCku)
+		return ckuLimit.GetIngress(), ckuLimit.GetEgress()
 	}
-	return 250, 750
+
+	// Multitenant SKUs
+	clusterLimits := limits.GetTierLimit(sku).GetClusterLimits()
+	ingress, egress := clusterLimits.GetIngress(), clusterLimits.GetEgress()
+
+	// Scale limits by cluster's max eCKU when limits are set per eCKU
+	if clusterLimits.GetMaxEcku() != nil && currentMaxEcku > 0 {
+		return ingress * currentMaxEcku, egress * currentMaxEcku
+	}
+
+	return ingress, egress
 }
 
 func getCmkClusterType(cluster *cmkv2.CmkV2Cluster) string {
@@ -104,6 +116,23 @@ func getCmkClusterType(cluster *cmkv2.CmkV2Cluster) string {
 		return ccstructs.Sku_name[7]
 	}
 	return ccstructs.Sku_name[0] // UNKNOWN
+}
+
+func getCmkMaxEcku(cluster *cmkv2.CmkV2Cluster) int32 {
+	if isBasic(cluster) {
+		return cluster.Spec.Config.CmkV2Basic.GetMaxEcku()
+	}
+	if isStandard(cluster) {
+		return cluster.Spec.Config.CmkV2Standard.GetMaxEcku()
+	}
+	if isEnterprise(cluster) {
+		return cluster.Spec.Config.CmkV2Enterprise.GetMaxEcku()
+	}
+	if isFreight(cluster) {
+		return cluster.Spec.Config.CmkV2Freight.GetMaxEcku()
+	}
+
+	return -1
 }
 
 func getCmkClusterSize(cluster *cmkv2.CmkV2Cluster) int32 {
