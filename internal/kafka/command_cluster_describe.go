@@ -151,30 +151,22 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, usageLimits *cc
 	}
 
 	// Only set limits field if usage limits are available
-	// For the list command, no limits are displayed in the output so usageLimits is nil
-	if usageLimits != nil || out.Type == "UNKNOWN" {
-		ingress, egress := getCmkClusterIngressAndEgressMbps(cluster, usageLimits)
-		out.IngressLimit = ingress
-		out.EgressLimit = egress
-		out.Storage = getKafkaClusterStorage(cluster, usageLimits)
+	// For the list command, no limits are displayed in the command output so usageLimits is nil
+	if usageLimits != nil && out.Type != "UNKNOWN" {
+		maxEcku := getCmkMaxEcku(cluster)
+		out.Storage = getKafkaClusterStorage(cluster, out.Type, out.ClusterSize, usageLimits)
+		out.IngressLimit, out.EgressLimit = getCmkClusterIngressAndEgressMbps(cluster, out.Type, out.ClusterSize, maxEcku, usageLimits)
 	}
 
 	return out
 }
 
-func getKafkaClusterStorage(cluster *cmkv2.CmkV2Cluster, limits *ccloudv2.UsageLimits) string {
+func getKafkaClusterStorage(cluster *cmkv2.CmkV2Cluster, sku string, currentCku int32, limits *ccloudv2.UsageLimits) string {
 	var storage *ccloudv2.UsageLimitValue
-
 	if isDedicated(cluster) {
-		ckuStr := fmt.Sprintf("%d", cluster.Status.GetCku())
-		if ckuLimits, ok := limits.CkuLimits[ckuStr]; ok && ckuLimits.Storage != nil {
-			storage = ckuLimits.Storage
-		}
+		storage = limits.GetCkuLimit(currentCku).GetStorage()
 	} else {
-		sku := getCmkClusterType(cluster)
-		if tierLimits, ok := limits.TierLimits[sku]; ok && tierLimits.ClusterLimits.Storage != nil {
-			storage = tierLimits.ClusterLimits.Storage
-		}
+		storage = limits.GetTierLimit(sku).GetClusterLimits().GetStorage()
 	}
 
 	if storage == nil {

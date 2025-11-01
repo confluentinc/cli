@@ -14,7 +14,7 @@ type UsageLimitValue struct {
 	Unlimited bool   `json:"unlimited,omitempty"`
 }
 
-type ClusterLimits struct {
+type Limits struct {
 	Ingress *UsageLimitValue `json:"ingress,omitempty"`
 	Egress  *UsageLimitValue `json:"egress,omitempty"`
 	Storage *UsageLimitValue `json:"storage,omitempty"`
@@ -22,18 +22,12 @@ type ClusterLimits struct {
 }
 
 type TierLimit struct {
-	ClusterLimits ClusterLimits `json:"cluster_limits"`
-}
-
-type CkuLimit struct {
-	Ingress *UsageLimitValue `json:"ingress,omitempty"`
-	Egress  *UsageLimitValue `json:"egress,omitempty"`
-	Storage *UsageLimitValue `json:"storage,omitempty"`
+	ClusterLimits Limits `json:"cluster_limits"`
 }
 
 type UsageLimits struct {
 	TierLimits map[string]TierLimit `json:"tier_limits"`
-	CkuLimits  map[string]CkuLimit  `json:"cku_limits"`
+	CkuLimits  map[string]Limits    `json:"cku_limits"`
 }
 
 type UsageLimitsResponse struct {
@@ -102,21 +96,21 @@ func getDefaultUsageLimits() *UsageLimits {
 	return &UsageLimits{
 		TierLimits: map[string]TierLimit{
 			"BASIC": {
-				ClusterLimits: ClusterLimits{
+				ClusterLimits: Limits{
 					Ingress: &UsageLimitValue{Unit: "MBPS", Value: 250},
 					Egress:  &UsageLimitValue{Unit: "MBPS", Value: 750},
 					Storage: &UsageLimitValue{Unit: "GB", Value: 5000},
 				},
 			},
 			"STANDARD": {
-				ClusterLimits: ClusterLimits{
+				ClusterLimits: Limits{
 					Ingress: &UsageLimitValue{Unit: "MBPS", Value: 250},
 					Egress:  &UsageLimitValue{Unit: "MBPS", Value: 750},
 					Storage: &UsageLimitValue{Unlimited: true},
 				},
 			},
 			"ENTERPRISE": {
-				ClusterLimits: ClusterLimits{
+				ClusterLimits: Limits{
 					Ingress: &UsageLimitValue{Unit: "MBPS", Value: 60},
 					Egress:  &UsageLimitValue{Unit: "MBPS", Value: 180},
 					Storage: &UsageLimitValue{Unlimited: true},
@@ -124,7 +118,7 @@ func getDefaultUsageLimits() *UsageLimits {
 				},
 			},
 			"FREIGHT": {
-				ClusterLimits: ClusterLimits{
+				ClusterLimits: Limits{
 					Ingress: &UsageLimitValue{Unit: "MBPS", Value: 60},
 					Egress:  &UsageLimitValue{Unit: "MBPS", Value: 180},
 					Storage: &UsageLimitValue{Unlimited: true},
@@ -132,7 +126,7 @@ func getDefaultUsageLimits() *UsageLimits {
 				},
 			},
 		},
-		CkuLimits: map[string]CkuLimit{
+		CkuLimits: map[string]Limits{
 			"1": {
 				Ingress: &UsageLimitValue{Unit: "MBPS", Value: 60},
 				Egress:  &UsageLimitValue{Unit: "MBPS", Value: 180},
