@@ -1,0 +1,23 @@
+Describe a provider integration including its configuration and status.
+
+Usage:
+  confluent provider-integration v2 describe <id> [flags]
+
+Examples:
+Describe provider integration "pi-123456" in the current environment.
+
+  $ confluent provider-integration v2 describe pi-123456
+
+Describe provider integration "pi-123456" in environment "env-789012".
+
+  $ confluent provider-integration v2 describe pi-123456 --environment env-789012
+
+Flags:
+      --environment string   Environment ID.
+      --context string       CLI context name.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

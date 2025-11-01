@@ -1,0 +1,8 @@
++------------------------+-------------------------------------------------------------+
+| ID                     | pi-789012                                                   |
+| Name                   | gcp-test                                                    |
+| Provider               | gcp                                                         |
+| Environment            | env-596                                                     |
+| Status                 | DRAFT                                                       |
+| Google Service Account | confluent-sa-123456789@gcp-sa-cloud.iam.gserviceaccount.com |
++------------------------+-------------------------------------------------------------+

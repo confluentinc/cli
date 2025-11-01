@@ -1,0 +1,24 @@
+Error: required flag(s) "cloud" not set
+Usage:
+  confluent provider-integration v2 list [flags]
+
+Examples:
+List all Azure provider integrations in the current environment.
+
+  $ confluent provider-integration v2 list --cloud azure
+
+List all GCP provider integrations in environment "env-123456".
+
+  $ confluent provider-integration v2 list --cloud gcp --environment env-123456
+
+Flags:
+      --cloud string         REQUIRED: Cloud provider (azure or gcp).
+      --environment string   Environment ID.
+      --context string       CLI context name.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
