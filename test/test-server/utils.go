@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"slices"
 	"sort"
+	"strings"
 	"time"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -343,13 +344,18 @@ func writeUserConflictError(w http.ResponseWriter) error {
 }
 
 func getCmkBasicDescribeCluster(id, name string) *cmkv2.CmkV2Cluster {
+	maxEcku := -1
+	if strings.Contains(id, "with-ecku") {
+		maxEcku = 10
+	}
+
 	return &cmkv2.CmkV2Cluster{
 		Spec: &cmkv2.CmkV2ClusterSpec{
 			DisplayName: cmkv2.PtrString(name),
 			Cloud:       cmkv2.PtrString("aws"),
 			Region:      cmkv2.PtrString("us-west-2"),
 			Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
-				CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
+				CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic", MaxEcku: cmkv2.PtrInt32(int32(maxEcku))},
 			},
 			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
 			HttpEndpoint:           cmkv2.PtrString(TestKafkaRestProxyUrl.String()),
