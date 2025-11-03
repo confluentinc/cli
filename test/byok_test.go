@@ -67,7 +67,7 @@ func (s *CLITestSuite) TestByokUpdate() {
 	tests := []CLITest{
 		{args: `byok update cck-001 --display-name "Updated Production Key"`, fixture: "byok/update-success.golden"},
 		{args: `byok update cck-001 --display-name "Updated Production Key" -o json`, fixture: "byok/update-success-json.golden"},
-		{args: "byok update cck-404 --display-name \"Non-existent Key\"", fixture: "byok/update-fail.golden", exitCode: 1},
+		{args: `byok update cck-does-not-exist --display-name "Updated Production Key"`, fixture: "byok/update-fail.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
