@@ -1,6 +1,7 @@
 +------------------+---------------------------------------------------------------------------------------------------------------+
 | ID               | cck-004                                                                                                       |
-| Key              | projects/exampleproject/locations/us-central1/keyRings/testkeyring/cryptoKeys/testbyokkey/cryptoKeyVersions/3 |
+| Display Name     | Test GCP Key                                                                                                  |
+| Key              | projects/exampleproject/locations/us-central1/keyRings/testkeyring/cryptoKeys/testbyokkey/cryptoKeyVersions/4 |
 | Roles            |                                                                                                               |
 | Cloud            | GCP                                                                                                           |
 | State            | AVAILABLE                                                                                                     |
