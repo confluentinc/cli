@@ -47,7 +47,7 @@ func handleUsageLimits(t *testing.T) http.HandlerFunc {
 		// Check for lkc_id query parameter to determine which limits to return
 		lkcId := r.URL.Query().Get("lkc_id")
 		switch lkcId {
-		case "lkc-basic-with-ecku-limits", "lkc-standard-with-ecku-limits":
+		case "lkc-with-ecku-limits", "lkc-describe-with-ecku-limits":
 			handleGetUsageLimitsEckuLimits(t)(w, r)
 		case "lkc-usage-limits-with-error":
 			handleGetUsageLimitsWithError(t)(w, r)
