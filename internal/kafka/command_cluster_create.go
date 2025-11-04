@@ -169,7 +169,13 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		output.ErrPrintln(c.Config.EnableColor, getKafkaProvisionEstimate(sku))
 	}
 
-	return c.outputKafkaClusterDescription(cmd, &kafkaCluster, false)
+	usageLimits, err := c.V2Client.GetUsageLimits(cloud, kafkaCluster.GetId(), environmentId)
+	if err != nil {
+		output.ErrPrintln(c.Config.EnableColor, "Failed to get cluster limits. Please try again later or contact support for assistance.")
+		//return fmt.Errorf(errors.UsageLimitsAPIFailureErrorMsg, err.Error())
+	}
+
+	return c.outputKafkaClusterDescription(cmd, &kafkaCluster, false, usageLimits)
 }
 
 func stringToAvailability(s string, sku ccstructs.Sku) (string, error) {
