@@ -5,3 +5,24 @@
   status: DRAFT
   customer_google_service_account: my-service-account@my-project.iam.gserviceaccount.com
   google_service_account: confluent-sa-123456789@gcp-sa-cloud.iam.gserviceaccount.com
+- id: pi-789012
+  display_name: gcp-test
+  provider: gcp
+  environment: env-596
+  status: DRAFT
+  customer_google_service_account: my-service-account@my-project.iam.gserviceaccount.com
+  google_service_account: confluent-sa-123456789@gcp-sa-cloud.iam.gserviceaccount.com
+- id: pi-789012
+  display_name: gcp-test
+  provider: gcp
+  environment: env-596
+  status: DRAFT
+  customer_google_service_account: my-service-account@my-project.iam.gserviceaccount.com
+  google_service_account: confluent-sa-123456789@gcp-sa-cloud.iam.gserviceaccount.com
+- id: pi-789012
+  display_name: gcp-test
+  provider: gcp
+  environment: env-596
+  status: DRAFT
+  customer_google_service_account: my-service-account@my-project.iam.gserviceaccount.com
+  google_service_account: confluent-sa-123456789@gcp-sa-cloud.iam.gserviceaccount.com

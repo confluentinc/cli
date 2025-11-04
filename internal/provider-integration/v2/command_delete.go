@@ -50,9 +50,15 @@ func (c *command) newDeleteCommand() *cobra.Command {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	environmentId, err := c.Context.EnvironmentId()
+	environmentId, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err
+	}
+	if environmentId == "" {
+		environmentId, err = c.Context.EnvironmentId()
+		if err != nil {
+			return err
+		}
 	}
 
 	existenceFunc := func(id string) bool {

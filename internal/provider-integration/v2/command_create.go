@@ -68,9 +68,15 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("cloud provider must be either %s or %s", providerAzure, providerGcp)
 	}
 
-	environmentId, err := c.Context.EnvironmentId()
+	environmentId, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err
+	}
+	if environmentId == "" {
+		environmentId, err = c.Context.EnvironmentId()
+		if err != nil {
+			return err
+		}
 	}
 
 	// Create the integration in DRAFT state

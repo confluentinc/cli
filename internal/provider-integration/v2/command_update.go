@@ -56,9 +56,15 @@ func (c *command) newUpdateCommand() *cobra.Command {
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	integrationId := args[0]
 
-	environmentId, err := c.Context.EnvironmentId()
+	environmentId, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err
+	}
+	if environmentId == "" {
+		environmentId, err = c.Context.EnvironmentId()
+		if err != nil {
+			return err
+		}
 	}
 
 	// First, get the integration to determine its provider

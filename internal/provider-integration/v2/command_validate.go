@@ -53,9 +53,15 @@ func (c *command) newValidateCommand() *cobra.Command {
 func (c *command) validate(cmd *cobra.Command, args []string) error {
 	integrationId := args[0]
 
-	environmentId, err := c.Context.EnvironmentId()
+	environmentId, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err
+	}
+	if environmentId == "" {
+		environmentId, err = c.Context.EnvironmentId()
+		if err != nil {
+			return err
+		}
 	}
 
 	// Get optional config for validation before update
