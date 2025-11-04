@@ -171,8 +171,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 
 	usageLimits, err := c.V2Client.GetUsageLimits(cloud, kafkaCluster.GetId(), environmentId)
 	if err != nil {
-		output.ErrPrintln(c.Config.EnableColor, "Failed to get cluster limits. Please try again later or contact support for assistance.")
-		//return fmt.Errorf(errors.UsageLimitsAPIFailureErrorMsg, err.Error())
+		output.ErrPrintln(c.Config.EnableColor, errors.UsageLimitsAPIFailureErrorMsg)
 	}
 
 	return c.outputKafkaClusterDescription(cmd, &kafkaCluster, false, usageLimits)
