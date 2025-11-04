@@ -123,7 +123,14 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	c.Context.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
 	ctx.KafkaClusterContext.SetActiveKafkaCluster(id)
 
-	return c.outputKafkaClusterDescription(cmd, &updatedCluster, true)
+	cloud := strings.ToLower(updatedCluster.Spec.GetCloud())
+	usageLimits, err := c.V2Client.GetUsageLimits(cloud, id, environmentId)
+	if err != nil {
+		warning := errors.NewWarningWithSuggestions(errors.UsageLimitsAPIFailureWarning, errors.UsageLimitsAPIFailureSuggestionMsg)
+		output.ErrPrint(false, warning.DisplayWarningWithSuggestions())
+	}
+
+	return c.outputKafkaClusterDescription(cmd, &updatedCluster, true, usageLimits)
 }
 
 func (c *clusterCommand) validateResize(cku int32, currentCluster *cmkv2.CmkV2Cluster) (int32, error) {

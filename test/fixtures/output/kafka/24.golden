@@ -4,7 +4,7 @@ name: my-new-cluster
 type: BASIC
 ingress_limit: 250
 egress_limit: 750
-storage: 5 TB
+storage: 5000 GB
 cloud: aws
 region: us-east-1
 availability: single-zone
