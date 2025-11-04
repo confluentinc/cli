@@ -1,4 +1,4 @@
-  Plugin ID  |  Plugin Name  |     ID     | Version | Content Format |    Documentation Link     | Sensitive Config Properties |                     Connector Classes                      | Phase | Error Message | Environment  
--------------+---------------+------------+---------+----------------+---------------------------+-----------------------------+------------------------------------------------------------+-------+---------------+--------------
-  ccp-123456 | CliPluginTest | ver-123456 | 1.0.0   | ZIP            | https://docs.confluent.io | password, secret            | io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE | READY |               | env-596      
-  ccp-123456 | CliPluginTest | ver-789012 | 2.0.0   | JAR            |                           |                             | io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE | READY |               | env-596      
+  Plugin ID  |  Plugin Name  |     ID     | Version | Content Format |    Documentation Link     | Sensitive Config Properties |                     Connector Classes                      | Phase | Environment  
+-------------+---------------+------------+---------+----------------+---------------------------+-----------------------------+------------------------------------------------------------+-------+--------------
+  ccp-123456 | CliPluginTest | ver-123456 | 1.0.0   | ZIP            | https://docs.confluent.io | password, secret            | io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE | READY | env-596      
+  ccp-123456 | CliPluginTest | ver-789012 | 2.0.0   | JAR            |                           |                             | io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE | READY | env-596      

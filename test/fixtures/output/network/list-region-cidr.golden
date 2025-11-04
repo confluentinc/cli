@@ -1,6 +1,6 @@
-     ID    |        Name        | Gateway | Cloud | Region  |    CIDR     |  Zones  | Phase | Active Connection Types | DNS Resolution |           Zone Info             
------------+--------------------+---------+-------+---------+-------------+---------+-------+-------------------------+----------------+---------------------------------
-  n-abcde2 | prod-azure-eastus2 |         | AZURE | eastus2 | 10.0.0.0/16 | 1, 2, 3 | READY | PRIVATELINK             | PRIVATE        |                                 
-  n-abcde7 | prod-azure-eastus2 |         | AZURE | eastus2 | 10.0.0.0/16 | 1, 2, 3 | READY | PEERING                 |                | 1=10.200.0.0/27,                
-           |                    |         |       |         |             |         |       |                         |                | 2=10.200.0.32/27,               
-           |                    |         |       |         |             |         |       |                         |                | 3=10.200.0.64/27                
+     ID    |        Name        | Cloud | Region  |    CIDR     |  Zones  | Phase | Active Connection Types | DNS Resolution |           Zone Info             
+-----------+--------------------+-------+---------+-------------+---------+-------+-------------------------+----------------+---------------------------------
+  n-abcde2 | prod-azure-eastus2 | AZURE | eastus2 | 10.0.0.0/16 | 1, 2, 3 | READY | PRIVATELINK             | PRIVATE        |                                 
+  n-abcde7 | prod-azure-eastus2 | AZURE | eastus2 | 10.0.0.0/16 | 1, 2, 3 | READY | PEERING                 |                | 1=10.200.0.0/27,                
+           |                    |       |         |             |         |       |                         |                | 2=10.200.0.32/27,               
+           |                    |       |         |             |         |       |                         |                | 3=10.200.0.64/27                

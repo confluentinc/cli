@@ -165,12 +165,20 @@ func (t *Table) printCore(writer io.Writer, auto bool) error {
 
 		var header []string
 		var alignment []int
+		var omitEmptyFilter []string
 		for i := 0; i < n; i++ {
 			field := reflect.TypeOf(t.objects[0]).Elem().Field(i)
 			tag := strings.Split(field.Tag.Get(t.format.String()), ",")
 
 			if !slices.Contains(tag, "-") {
-				header = append(header, tag[0])
+				includeColumn := slices.ContainsFunc(t.objects, func(object any) bool {
+					val := reflect.ValueOf(object).Elem().Field(i)
+					return !(slices.Contains(tag, "omitempty") && isZero(val))
+				})
+				if includeColumn {
+					header = append(header, tag[0])
+					omitEmptyFilter = append(omitEmptyFilter, field.Name)
+				}
 
 				switch field.Type.Kind() {
 				case reflect.Int, reflect.Int32, reflect.Int64:
@@ -182,6 +190,13 @@ func (t *Table) printCore(writer io.Writer, auto bool) error {
 		}
 		w.SetHeader(header)
 		w.SetColumnAlignment(alignment)
+		for i := range t.objects {
+			hider := FieldHider{
+				format: t.format,
+				filter: &omitEmptyFilter,
+			}
+			t.objects[i] = retag.Convert(t.objects[i], hider)
+		}
 
 		for _, object := range t.objects {
 			var row []string
