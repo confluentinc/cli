@@ -49,7 +49,7 @@ func handleUsageLimits(t *testing.T) http.HandlerFunc {
 		switch lkcId {
 		case "lkc-with-ecku-limits", "lkc-describe-with-ecku-limits":
 			handleGetUsageLimitsEckuLimits(t)(w, r)
-		case "lkc-usage-limits-with-error":
+		case "lkc-with-usage-limits-error":
 			handleGetUsageLimitsWithError(t)(w, r)
 		default:
 			handleGetUsageLimitsDefaultLimits(t)(w, r)
@@ -85,8 +85,9 @@ func handleGetUsageLimitsEckuLimits(t *testing.T) http.HandlerFunc {
 
 func handleGetUsageLimitsWithError(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusInternalServerError)
-		err := writeErrorJson(w, "Internal Error retrieving cluster usage limits")
+		w.WriteHeader(http.StatusOK)
+		errorMsg := "API error message"
+		err := json.NewEncoder(w).Encode(UsageLimitsResponse{Error: &errorMsg})
 		require.NoError(t, err)
 	}
 }
