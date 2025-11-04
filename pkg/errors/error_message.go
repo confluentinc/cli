@@ -163,4 +163,7 @@ const (
 
 	// Network commands
 	CorruptedNetworkResponseErrorMsg = "corrupted %s in response"
+
+	// Kafka Usage Limits
+	UsageLimitsAPIFailureErrorMsg = "failed to get cluster limits: %v"
 )
