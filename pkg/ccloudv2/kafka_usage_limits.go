@@ -14,9 +14,9 @@ import (
 const (
 	UsageLimitsPath = "/usage_limits"
 
-	ErrMsgUsageLimitsAPI      = "usage limits API HTTP request failed"
-	ErrFailedToGetAuthToken   = "failed to get auth token"
-	ErrFailedToDecodeResponse = "failed to decode response"
+	UsageLimitsAPIErrorMsg         = "usage limits API HTTP request failed"
+	FailedToGetAuthTokenErrorMsg   = "failed to get auth token"
+	FailedToDecodeResponseErrorMsg = "failed to decode response"
 )
 
 type UsageLimitValue struct {
@@ -109,7 +109,7 @@ func (c *Client) GetUsageLimits(provider, lkcId, envId string) (*UsageLimits, er
 
 	authToken := c.cfg.Context().GetAuthToken()
 	if authToken == "" {
-		return nil, usageLimitsError(ErrFailedToGetAuthToken)
+		return nil, usageLimitsError(FailedToGetAuthTokenErrorMsg)
 	}
 
 	req, err := getUsageLimitsRequest(usageLimitsURL, authToken)
@@ -138,7 +138,7 @@ func (c *Client) GetUsageLimits(provider, lkcId, envId string) (*UsageLimits, er
 
 	var usageLimitsResponse UsageLimitsResponse
 	if err = json.Unmarshal(responseBody, &usageLimitsResponse); err != nil {
-		return nil, usageLimitsError(fmt.Errorf("%s: %w", ErrFailedToDecodeResponse, err))
+		return nil, usageLimitsError(fmt.Errorf("%s: %w", FailedToDecodeResponseErrorMsg, err))
 	}
 
 	if usageLimitsResponse.Error != nil {
@@ -150,9 +150,9 @@ func (c *Client) GetUsageLimits(provider, lkcId, envId string) (*UsageLimits, er
 
 func usageLimitsError(msg interface{}) error {
 	if err, ok := msg.(error); ok {
-		return fmt.Errorf("%s: %w", ErrMsgUsageLimitsAPI, err)
+		return fmt.Errorf("%s: %w", UsageLimitsAPIErrorMsg, err)
 	}
-	return fmt.Errorf("%s: %+v", ErrMsgUsageLimitsAPI, msg)
+	return fmt.Errorf("%s: %+v", UsageLimitsAPIErrorMsg, msg)
 }
 
 func getUsageLimitsRequest(usageLimitsURL, authToken string) (*http.Request, error) {

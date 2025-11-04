@@ -13,6 +13,15 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
+var (
+	testmMaxEcku      = &UsageLimitValue{Value: 10}
+	testStorage       = &UsageLimitValue{Value: 5000, Unit: "GB"}
+	testIngress       = &UsageLimitValue{Value: 100, Unit: "MBPS"}
+	testEgress        = &UsageLimitValue{Value: 150, Unit: "MBPS"}
+	testClusterLimits = Limits{Ingress: testIngress, Egress: testEgress, Storage: testStorage, MaxEcku: testmMaxEcku}
+	testTierLimits    = map[string]TierLimit{"BASIC": {ClusterLimits: testClusterLimits}}
+)
+
 func TestUsageLimitsError(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -45,140 +54,52 @@ func TestUsageLimitsError(t *testing.T) {
 	}
 }
 
-func TestLimits_GetIngress(t *testing.T) {
+func TestLimitsGetters(t *testing.T) {
 	tests := []struct {
-		name     string
-		limits   *Limits
-		expected int32
+		name            string
+		limits          *Limits
+		expectedIngress int32
+		expectedEgress  int32
+		expectedStorage *UsageLimitValue
+		expectedMaxEcku *UsageLimitValue
 	}{
 		{
-			name:     "nil limits",
-			limits:   nil,
-			expected: 0,
+			name:            "nil clusters limits",
+			limits:          nil,
+			expectedIngress: 0,
+			expectedEgress:  0,
+			expectedStorage: nil,
+			expectedMaxEcku: nil,
 		},
 		{
-			name:     "nil ingress",
-			limits:   &Limits{Ingress: nil},
-			expected: 0,
+			name:            "nil limits values",
+			limits:          &Limits{},
+			expectedIngress: 0,
+			expectedEgress:  0,
+			expectedStorage: nil,
+			expectedMaxEcku: nil,
 		},
 		{
-			name:     "valid ingress",
-			limits:   &Limits{Ingress: &UsageLimitValue{Value: 100}},
-			expected: 100,
+			name:            "valid limits values",
+			limits:          &testClusterLimits,
+			expectedIngress: 100,
+			expectedEgress:  150,
+			expectedStorage: testStorage,
+			expectedMaxEcku: testmMaxEcku,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := tt.limits.GetIngress()
-			assert.Equal(t, tt.expected, result)
+			assert.Equal(t, tt.expectedIngress, tt.limits.GetIngress())
+			assert.Equal(t, tt.expectedEgress, tt.limits.GetEgress())
+			assert.Equal(t, tt.expectedStorage, tt.limits.GetStorage())
+			assert.Equal(t, tt.expectedMaxEcku, tt.limits.GetMaxEcku())
 		})
 	}
 }
 
-func TestLimits_GetEgress(t *testing.T) {
-	tests := []struct {
-		name     string
-		limits   *Limits
-		expected int32
-	}{
-		{
-			name:     "nil limits",
-			limits:   nil,
-			expected: 0,
-		},
-		{
-			name:     "nil egress",
-			limits:   &Limits{Egress: nil},
-			expected: 0,
-		},
-		{
-			name:     "valid egress",
-			limits:   &Limits{Egress: &UsageLimitValue{Value: 200}},
-			expected: 200,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := tt.limits.GetEgress()
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
-func TestLimits_GetStorage(t *testing.T) {
-	storage := &UsageLimitValue{Value: 5000, Unit: "GB"}
-
-	tests := []struct {
-		name     string
-		limits   *Limits
-		expected *UsageLimitValue
-	}{
-		{
-			name:     "nil limits",
-			limits:   nil,
-			expected: nil,
-		},
-		{
-			name:     "nil storage",
-			limits:   &Limits{Storage: nil},
-			expected: nil,
-		},
-		{
-			name:     "valid storage",
-			limits:   &Limits{Storage: storage},
-			expected: storage,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := tt.limits.GetStorage()
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
-func TestLimits_GetMaxEcku(t *testing.T) {
-	maxEcku := &UsageLimitValue{Value: 10}
-
-	tests := []struct {
-		name     string
-		limits   *Limits
-		expected *UsageLimitValue
-	}{
-		{
-			name:     "nil limits",
-			limits:   nil,
-			expected: nil,
-		},
-		{
-			name:     "nil maxEcku",
-			limits:   &Limits{MaxEcku: nil},
-			expected: nil,
-		},
-		{
-			name:     "valid maxEcku",
-			limits:   &Limits{MaxEcku: maxEcku},
-			expected: maxEcku,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := tt.limits.GetMaxEcku()
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
-func TestTierLimit_GetClusterLimits(t *testing.T) {
-	clusterLimits := Limits{
-		Ingress: &UsageLimitValue{Value: 100},
-		Egress:  &UsageLimitValue{Value: 200},
-	}
-
+func TestTierLimitGetClusterLimits(t *testing.T) {
 	tests := []struct {
 		name      string
 		tierLimit *TierLimit
@@ -191,8 +112,8 @@ func TestTierLimit_GetClusterLimits(t *testing.T) {
 		},
 		{
 			name:      "valid clusterLimits",
-			tierLimit: &TierLimit{ClusterLimits: clusterLimits},
-			expected:  &clusterLimits,
+			tierLimit: &TierLimit{ClusterLimits: testClusterLimits},
+			expected:  &testClusterLimits,
 		},
 	}
 
@@ -203,14 +124,13 @@ func TestTierLimit_GetClusterLimits(t *testing.T) {
 				assert.Nil(t, result)
 			} else {
 				require.NotNil(t, result)
-				assert.Equal(t, tt.expected.Ingress.Value, result.GetIngress())
-				assert.Equal(t, tt.expected.Egress.Value, result.GetEgress())
+				assert.Equal(t, tt.expected, result)
 			}
 		})
 	}
 }
 
-func TestUsageLimits_GetCkuLimit(t *testing.T) {
+func TestUsageLimitsGetCkuLimit(t *testing.T) {
 	tests := []struct {
 		name     string
 		limits   *UsageLimits
@@ -222,17 +142,14 @@ func TestUsageLimits_GetCkuLimit(t *testing.T) {
 			expected: nil,
 		},
 		{
-			name: "cku not found",
-			limits: &UsageLimits{
-				CkuLimits: map[string]Limits{},
-			},
+			name:     "cku not found",
+			limits:   &UsageLimits{CkuLimits: map[string]Limits{}},
 			expected: nil,
 		},
 		{
-			name: "valid cku",
-			limits: &UsageLimits{
-				CkuLimits: map[string]Limits{"1": {Ingress: &UsageLimitValue{Value: 60}}}},
-			expected: &Limits{Ingress: &UsageLimitValue{Value: 60}},
+			name:     "valid cku",
+			limits:   &UsageLimits{CkuLimits: map[string]Limits{"1": {Ingress: testIngress}}},
+			expected: &Limits{Ingress: testIngress},
 		},
 	}
 
@@ -243,13 +160,13 @@ func TestUsageLimits_GetCkuLimit(t *testing.T) {
 				assert.Nil(t, result)
 			} else {
 				require.NotNil(t, result)
-				assert.Equal(t, tt.expected.GetIngress(), result.GetIngress())
+				assert.Equal(t, tt.expected, result)
 			}
 		})
 	}
 }
 
-func TestUsageLimits_GetTierLimit(t *testing.T) {
+func TestUsageLimitsGetTierLimit(t *testing.T) {
 	tests := []struct {
 		name     string
 		limits   *UsageLimits
@@ -257,31 +174,21 @@ func TestUsageLimits_GetTierLimit(t *testing.T) {
 		expected *TierLimit
 	}{
 		{
-			name: "nil usageLimits",
-			sku:  "BASIC",
+			name:     "nil usageLimits",
+			sku:      "BASIC",
+			expected: nil,
 		},
 		{
-			name:   "sku not found",
-			limits: &UsageLimits{TierLimits: map[string]TierLimit{}},
-			sku:    "BASIC",
+			name:     "sku not found",
+			limits:   &UsageLimits{TierLimits: map[string]TierLimit{}},
+			sku:      "BASIC",
+			expected: nil,
 		},
 		{
-			name: "valid tier",
-			limits: &UsageLimits{
-				TierLimits: map[string]TierLimit{
-					"BASIC": {
-						ClusterLimits: Limits{
-							Ingress: &UsageLimitValue{Value: 25},
-						},
-					},
-				},
-			},
-			sku: "BASIC",
-			expected: &TierLimit{
-				ClusterLimits: Limits{
-					Ingress: &UsageLimitValue{Value: 25},
-				},
-			},
+			name:     "valid tier limits",
+			limits:   &UsageLimits{TierLimits: testTierLimits},
+			sku:      "BASIC",
+			expected: &TierLimit{testClusterLimits},
 		},
 	}
 
@@ -294,20 +201,14 @@ func TestUsageLimits_GetTierLimit(t *testing.T) {
 				require.NotNil(t, result)
 				clusterLimits := result.GetClusterLimits()
 				require.NotNil(t, clusterLimits)
-				assert.Equal(t, tt.expected.ClusterLimits.GetIngress(), clusterLimits.GetIngress())
+				assert.Equal(t, tt.expected.ClusterLimits, *clusterLimits)
 			}
 		})
 	}
 }
 
-func TestUsageLimits_GetUsageLimits(t *testing.T) {
-	validResponse := UsageLimitsResponse{
-		UsageLimits: UsageLimits{
-			TierLimits: map[string]TierLimit{
-				"BASIC": {ClusterLimits: Limits{Ingress: &UsageLimitValue{Value: 25, Unit: "MBPS"}}},
-			},
-		},
-	}
+func TestUsageLimitsGetUsageLimits(t *testing.T) {
+	validResponse := UsageLimitsResponse{UsageLimits: UsageLimits{TierLimits: testTierLimits}}
 	testToken := "test-token"
 
 	tests := []struct {
@@ -330,7 +231,7 @@ func TestUsageLimits_GetUsageLimits(t *testing.T) {
 		{
 			name:          "GetUsageLimits request with missing auth token",
 			authToken:     "",
-			expectedError: ErrFailedToGetAuthToken,
+			expectedError: FailedToGetAuthTokenErrorMsg,
 		},
 		{
 			name: "GetUsageLimits request with invalid JSON response",
@@ -340,7 +241,7 @@ func TestUsageLimits_GetUsageLimits(t *testing.T) {
 				require.NoError(t, err)
 			},
 			authToken:     testToken,
-			expectedError: ErrFailedToDecodeResponse,
+			expectedError: FailedToDecodeResponseErrorMsg,
 		},
 		{
 			name: "GetUsageLimits request with API error response",
