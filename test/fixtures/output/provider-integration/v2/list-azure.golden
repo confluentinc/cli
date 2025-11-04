@@ -1,0 +1,7 @@
+     ID     |    Name    | Provider | Environment | Status |       Customer Azure Tenant ID       |  Confluent Azure Multi-Tenant   
+            |            |          |             |        |                                      |             App ID              
+------------+------------+----------+-------------+--------+--------------------------------------+---------------------------------
+  pi-123456 | azure-test | azure    | env-596     | DRAFT  | 00000000-0000-0000-0000-000000000000 | app-123456789                   
+  pi-123456 | azure-test | azure    | env-596     | DRAFT  | 00000000-0000-0000-0000-000000000000 | app-123456789                   
+  pi-123456 | azure-test | azure    | env-596     | DRAFT  | 00000000-0000-0000-0000-000000000000 | app-123456789                   
+  pi-123456 | azure-test | azure    | env-596     | DRAFT  | 00000000-0000-0000-0000-000000000000 | app-123456789                   

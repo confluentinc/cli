@@ -1,0 +1,140 @@
+// Copyright 2024 Confluent Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package v2
+
+import (
+	"strings"
+
+	"github.com/spf13/cobra"
+
+	piv2 "github.com/confluentinc/ccloud-sdk-go-v2/provider-integration/v2"
+
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/output"
+)
+
+func (c *command) newListCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list",
+		Short: "List provider integrations.",
+		Long:  "List all provider integrations across all environments in the organization. Use --environment to filter by a specific environment.",
+		Args:  cobra.NoArgs,
+		RunE:  c.list,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "List all Azure provider integrations across all environments.",
+				Code: "confluent provider-integration v2 list --cloud azure",
+			},
+			examples.Example{
+				Text: "List all GCP provider integrations in environment \"env-123456\".",
+				Code: "confluent provider-integration v2 list --cloud gcp --environment env-123456",
+			},
+		),
+	}
+
+	cmd.Flags().String("cloud", "", "Cloud provider (azure or gcp).")
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddOutputFlag(cmd)
+
+	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
+
+	return cmd
+}
+
+func (c *command) list(cmd *cobra.Command, _ []string) error {
+	environmentId, err := cmd.Flags().GetString("environment")
+	if err != nil {
+		return err
+	}
+
+	var allIntegrations []piv2.PimV2Integration
+	if environmentId == "" {
+		// List integrations across all environments
+		environments, err := c.V2Client.ListOrgEnvironments()
+		if err != nil {
+			return err
+		}
+
+		for _, env := range environments {
+			integrations, err := c.V2Client.ListPimV2Integrations(cmd.Context(), env.GetId())
+			if err != nil {
+				return err
+			}
+			allIntegrations = append(allIntegrations, integrations...)
+		}
+	} else {
+		// List integrations for a specific environment
+		integrations, err := c.V2Client.ListPimV2Integrations(cmd.Context(), environmentId)
+		if err != nil {
+			return err
+		}
+		allIntegrations = integrations
+	}
+
+	// Filter by cloud provider (required flag)
+	cloud, err := cmd.Flags().GetString("cloud")
+	if err != nil {
+		return err
+	}
+	cloud = strings.ToLower(cloud)
+
+	filtered := make([]piv2.PimV2Integration, 0)
+	for _, integration := range allIntegrations {
+		if strings.ToLower(integration.GetProvider()) == cloud {
+			filtered = append(filtered, integration)
+		}
+	}
+
+	outputList := output.NewList(cmd)
+	for _, integration := range filtered {
+		out := providerIntegrationOut{
+			Id:          integration.GetId(),
+			DisplayName: integration.GetDisplayName(),
+			Provider:    integration.GetProvider(),
+			Environment: integration.Environment.GetId(),
+			Status:      integration.GetStatus(),
+		}
+
+		// Add provider-specific configuration details (only for the requested cloud)
+		if integration.Config != nil {
+			if integration.Config.PimV2AzureIntegrationConfig != nil {
+				azureConfig := integration.Config.PimV2AzureIntegrationConfig
+				out.CustomerAzureTenantId = azureConfig.GetCustomerAzureTenantId()
+				out.ConfluentMultiTenantAppId = azureConfig.GetConfluentMultiTenantAppId()
+			}
+			if integration.Config.PimV2GcpIntegrationConfig != nil {
+				gcpConfig := integration.Config.PimV2GcpIntegrationConfig
+				out.CustomerGoogleServiceAccount = gcpConfig.GetCustomerGoogleServiceAccount()
+				out.GoogleServiceAccount = gcpConfig.GetGoogleServiceAccount()
+			}
+		}
+
+		outputList.Add(&out)
+	}
+
+	// Filter columns based on cloud provider to show only relevant fields
+	fields := []string{"Id", "DisplayName", "Provider", "Environment", "Status"}
+	switch cloud {
+	case "azure":
+		fields = append(fields, "CustomerAzureTenantId", "ConfluentMultiTenantAppId")
+	case "gcp":
+		fields = append(fields, "CustomerGoogleServiceAccount", "GoogleServiceAccount")
+	}
+	outputList.Filter(fields)
+
+	return outputList.Print()
+}
