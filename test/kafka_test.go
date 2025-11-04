@@ -97,7 +97,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster describe lkc-unknown-type", fixture: "kafka/describe-unknown-cluster-type.golden"},
 
 		{args: "kafka cluster describe lkc-describe-with-ecku-limits", fixture: "kafka/cluster/describe-basic-with-ecku-limits.golden"},
-		{args: "kafka cluster describe lkc-with-usage-limits-error", fixture: "kafka/cluster/describe-with-usage-limits-error.golden", exitCode: 1},
+		{args: "kafka cluster describe lkc-with-usage-limits-error", fixture: "kafka/cluster/describe-with-usage-limits-error.golden"},
 
 		{args: "kafka acl list --cluster lkc-acls", fixture: "kafka/acl/list-cloud.golden"},
 		{args: "kafka acl list --cluster lkc-acls --all", fixture: "kafka/acl/list-cloud-all.golden"},

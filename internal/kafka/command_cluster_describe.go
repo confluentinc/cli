@@ -90,7 +90,8 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	cloud := strings.ToLower(cluster.Spec.GetCloud())
 	usageLimits, err := c.V2Client.GetUsageLimits(cloud, lkc, environmentId)
 	if err != nil {
-		return fmt.Errorf(errors.UsageLimitsAPIFailureErrorMsg, err.Error())
+		output.ErrPrintln(c.Config.EnableColor, errors.UsageLimitsAPIFailureErrorMsg)
+		usageLimits = nil
 	}
 
 	return c.outputKafkaClusterDescription(cmd, &cluster, true, usageLimits)
