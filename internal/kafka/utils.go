@@ -80,19 +80,11 @@ func isClusterResizeInProgress(currentCluster *cmkv2.CmkV2Cluster) error {
 	return nil
 }
 
-func getCmkClusterIngressAndEgressMbps(cluster *cmkv2.CmkV2Cluster, sku string, currentCku int32, currentMaxEcku int32,
-	limits *ccloudv2.UsageLimits) (int32, int32) {
-	if isDedicated(cluster) {
-		ckuLimit := limits.GetCkuLimit(currentCku)
-		return ckuLimit.GetIngress(), ckuLimit.GetEgress()
-	}
-
-	// Multitenant SKUs
-	clusterLimits := limits.GetTierLimit(sku).GetClusterLimits()
-	ingress, egress := clusterLimits.GetIngress(), clusterLimits.GetEgress()
+func getCmkClusterIngressAndEgressMbps(currentMaxEcku int32, limits *ccloudv2.Limits) (int32, int32) {
+	ingress, egress := limits.GetIngress(), limits.GetEgress()
 
 	// Scale limits by cluster's max eCKU when limits are set per eCKU
-	if clusterLimits.GetMaxEcku() != nil && currentMaxEcku > 0 {
+	if limits.GetMaxEcku() != nil && currentMaxEcku > 0 {
 		return ingress * currentMaxEcku, egress * currentMaxEcku
 	}
 
@@ -206,4 +198,13 @@ func getCmkClusterStatus(cluster *cmkv2.CmkV2Cluster) string {
 
 func topicNameStrategy(topic, mode string) string {
 	return fmt.Sprintf("%s-%s", topic, mode)
+}
+
+func getLimitsForSku(cluster *cmkv2.CmkV2Cluster, usagelimits *ccloudv2.UsageLimits) *ccloudv2.Limits {
+	if isDedicated(cluster) {
+		return usagelimits.GetCkuLimit(*cluster.Status.Cku)
+	}
+
+	sku := getCmkClusterType(cluster)
+	return usagelimits.GetTierLimit(sku).GetClusterLimits()
 }

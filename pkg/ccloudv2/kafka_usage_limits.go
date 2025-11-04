@@ -13,6 +13,10 @@ import (
 
 const (
 	UsageLimitsPath = "/usage_limits"
+
+	ErrMsgUsageLimitsAPI      = "usage limits API HTTP request failed"
+	ErrFailedToGetAuthToken   = "failed to get auth token"
+	ErrFailedToDecodeResponse = "failed to decode response"
 )
 
 type UsageLimitValue struct {
@@ -101,69 +105,70 @@ func (u *UsageLimits) GetTierLimit(sku string) *TierLimit {
 }
 
 func (c *Client) GetUsageLimits(provider, lkcId, envId string) (*UsageLimits, error) {
-	baseURL := getServerUrl(c.cfg.Context().GetPlatformServer())
-	usageLimitsURL, err := getUsageLimitsUrl(baseURL, provider, lkcId, envId)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get usage limits API URL: %w", err)
-	}
+	usageLimitsURL := c.getUsageLimitsUrl(provider, lkcId, envId)
 
 	authToken := c.cfg.Context().GetAuthToken()
 	if authToken == "" {
-		return nil, fmt.Errorf("failed to get auth token")
+		return nil, usageLimitsError(ErrFailedToGetAuthToken)
 	}
 
 	req, err := getUsageLimitsRequest(usageLimitsURL, authToken)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create usage limits API request: %w", err)
+		return nil, usageLimitsError(err)
 	}
 
 	httpClient := NewRetryableHttpClient(c.cfg, false)
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to make HTTP request to usage limits API due to issue connecting to the server: %w", err)
+		return nil, usageLimitsError(err)
 	}
 	defer resp.Body.Close()
 
-	responseBody, readErr := io.ReadAll(resp.Body)
-	if readErr != nil {
-		return nil, fmt.Errorf("usage limits API request failed with status %d and failed to read response body: %w", resp.StatusCode, readErr)
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, usageLimitsError(err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		if len(responseBody) > 0 {
-			return nil, fmt.Errorf("usage limits API request failed with status %d\nResponse body: %s", resp.StatusCode, string(responseBody))
+			return nil, usageLimitsError(fmt.Sprintf("status %d\nResponse body: %s", resp.StatusCode, string(responseBody)))
 		}
-		return nil, fmt.Errorf("usage limits API request failed with status %d", resp.StatusCode)
+		return nil, usageLimitsError(fmt.Sprintf("status %d", resp.StatusCode))
 	}
 
 	var usageLimitsResponse UsageLimitsResponse
-	if err := json.Unmarshal(responseBody, &usageLimitsResponse); err != nil {
-		return nil, fmt.Errorf("failed to decode usage limits API response: %w\nResponse body: %s\nResponse status: %d", err, string(responseBody), resp.StatusCode)
+	if err = json.Unmarshal(responseBody, &usageLimitsResponse); err != nil {
+		return nil, usageLimitsError(fmt.Errorf("%s: %w", ErrFailedToDecodeResponse, err))
 	}
 
 	if usageLimitsResponse.Error != nil {
-		return nil, fmt.Errorf("usage limits API request failed: %s", *usageLimitsResponse.Error)
+		return nil, usageLimitsError(*usageLimitsResponse.Error)
 	}
 
 	return &usageLimitsResponse.UsageLimits, nil
 }
 
+func usageLimitsError(msg interface{}) error {
+	if err, ok := msg.(error); ok {
+		return fmt.Errorf("%s: %w", ErrMsgUsageLimitsAPI, err)
+	}
+	return fmt.Errorf("%s: %+v", ErrMsgUsageLimitsAPI, msg)
+}
+
 func getUsageLimitsRequest(usageLimitsURL, authToken string) (*http.Request, error) {
 	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, usageLimitsURL, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
+		return nil, usageLimitsError(err)
 	}
 	req.Header.Set("Authorization", "Bearer "+authToken)
 	return req, nil
 }
 
-func getUsageLimitsUrl(serverURL, provider, lkcId, envId string) (string, error) {
-	// Normalize to API server using shared util, which ensures:
-	// - confluent/cloud dev/stage -> api.<host> with empty path
-	// - local hosts -> path "/api"
+func (c *Client) getUsageLimitsUrl(provider, lkcId, envId string) string {
+	serverURL := getServerUrl(c.cfg.Context().GetPlatformServer())
 	u, err := url.Parse(serverURL)
 	if err != nil {
-		return "", fmt.Errorf("failed to parse server URL: %w", err)
+		return serverURL
 	}
 
 	// Append usage_limits to existing path
@@ -171,6 +176,7 @@ func getUsageLimitsUrl(serverURL, provider, lkcId, envId string) (string, error)
 	if basePath == "" {
 		u.Path = UsageLimitsPath
 	} else {
+		// local testing hosts
 		u.Path = "/" + strings.TrimLeft(basePath, "/") + UsageLimitsPath
 	}
 
@@ -187,5 +193,5 @@ func getUsageLimitsUrl(serverURL, provider, lkcId, envId string) (string, error)
 	}
 	u.RawQuery = query.Encode()
 
-	return u.String(), nil
+	return u.String()
 }

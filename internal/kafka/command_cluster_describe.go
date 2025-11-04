@@ -90,7 +90,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	cloud := strings.ToLower(cluster.Spec.GetCloud())
 	usageLimits, err := c.V2Client.GetUsageLimits(cloud, lkc, environmentId)
 	if err != nil {
-		output.ErrPrintln(c.Config.EnableColor, err.Error())
+		return fmt.Errorf(errors.UsageLimitsAPIFailureErrorMsg, err.Error())
 	}
 
 	return c.outputKafkaClusterDescription(cmd, &cluster, true, usageLimits)
@@ -153,20 +153,17 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, usageLimits *cc
 	// For the list command, no limits are displayed in the command output so usageLimits is nil
 	if usageLimits != nil && out.Type != "UNKNOWN" {
 		maxEcku := getCmkMaxEcku(cluster)
-		out.Storage = getKafkaClusterStorage(cluster, out.Type, out.ClusterSize, usageLimits)
-		out.IngressLimit, out.EgressLimit = getCmkClusterIngressAndEgressMbps(cluster, out.Type, out.ClusterSize, maxEcku, usageLimits)
+		limits := getLimitsForSku(cluster, usageLimits)
+
+		out.Storage = getKafkaClusterStorage(limits)
+		out.IngressLimit, out.EgressLimit = getCmkClusterIngressAndEgressMbps(maxEcku, limits)
 	}
 
 	return out
 }
 
-func getKafkaClusterStorage(cluster *cmkv2.CmkV2Cluster, sku string, currentCku int32, limits *ccloudv2.UsageLimits) string {
-	var storage *ccloudv2.UsageLimitValue
-	if isDedicated(cluster) {
-		storage = limits.GetCkuLimit(currentCku).GetStorage()
-	} else {
-		storage = limits.GetTierLimit(sku).GetClusterLimits().GetStorage()
-	}
+func getKafkaClusterStorage(limits *ccloudv2.Limits) string {
+	storage := limits.GetStorage()
 
 	if storage == nil {
 		return ""
