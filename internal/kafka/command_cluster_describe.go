@@ -90,7 +90,8 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	cloud := strings.ToLower(cluster.Spec.GetCloud())
 	usageLimits, err := c.V2Client.GetUsageLimits(cloud, lkc, environmentId)
 	if err != nil {
-		output.ErrPrintln(c.Config.EnableColor, errors.UsageLimitsAPIFailureErrorMsg)
+		warning := errors.NewWarningWithSuggestions(errors.UsageLimitsAPIFailureWarning, errors.UsageLimitsAPIFailureSuggestionMsg)
+		output.ErrPrint(false, warning.DisplayWarningWithSuggestions())
 		usageLimits = nil
 	}
 

@@ -1,4 +1,8 @@
-Failed to get cluster limits. Try to describe your cluster again later or contact support for assistance.
+[WARN] Failed to get cluster limits.
+
+Suggestions:
+    To view limits describe your cluster again with `confluent kafka cluster describe` or contact support for assistance.
+
 +----------------------+-----------------------------+
 | Current              | true                        |
 | ID                   | lkc-with-usage-limits-error |
