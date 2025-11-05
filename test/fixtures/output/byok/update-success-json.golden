@@ -1,6 +1,6 @@
 {
   "id": "cck-001",
-  "display_name": "Production AWS Key",
+  "display_name": "Updated Production Key",
   "key": "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
   "roles": [
     "arn:aws:iam::123456789012:role/role1",
@@ -11,5 +11,5 @@
   "state": "IN_USE",
   "created_at": "2022-11-12 08:24:00 +0000 UTC",
   "validation_phase": "VALID",
-  "validation_since": "2022-11-12 08:30:00 +0000 UTC"
+  "since": "2022-11-12 08:30:00 +0000 UTC"
 }
