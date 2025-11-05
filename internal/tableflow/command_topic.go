@@ -37,9 +37,9 @@ type topicOut struct {
 	ProviderIntegrationId string            `human:"Provider Integration ID,omitempty" serialized:"provider_integration_id,omitempty"`
 	BucketName            string            `human:"Bucket Name,omitempty" serialized:"bucket_name,omitempty"`
 	BucketRegion          string            `human:"Bucket Region,omitempty" serialized:"bucket_region,omitempty"`
-	ContainerName         string `human:"Container Name,omitempty" serialized:"container_name,omitempty"`
-	StorageAccountName    string `human:"Storage Account Name,omitempty" serialized:"storage_account_name,omitempty"`
-	StorageRegion         string `human:"Storage Region,omitempty" serialized:"storage_region ,omitempty"`
+	ContainerName         string            `human:"Container Name,omitempty" serialized:"container_name,omitempty"`
+	StorageAccountName    string            `human:"Storage Account Name,omitempty" serialized:"storage_account_name,omitempty"`
+	StorageRegion         string            `human:"Storage Region,omitempty" serialized:"storage_region ,omitempty"`
 	Suspended             bool              `human:"Suspended" serialized:"suspended"`
 	TableFormats          string            `human:"Table Formats" serialized:"table_formats"`
 	TablePath             string            `human:"Table Path" serialized:"table_path"`
