@@ -39,7 +39,6 @@ func (c *command) newTopicEnableCommand() *cobra.Command {
 	cmd.Flags().String("provider-integration", "", "Specify the provider integration id.")
 	cmd.Flags().String("bucket-name", "", "Specify the name of the AWS S3 bucket.")
 	cmd.Flags().String("table-formats", "ICEBERG", "Specify the table formats, one of DELTA or ICEBERG.")
-	cmd.Flags().String("record-failure-strategy", "SUSPEND", "Specify the record failure strategy, one of SUSPEND or SKIP.")
 	cmd.Flags().String("storage-account-name", "", "Specify the storage account name for Azure Data Lake.")
 	cmd.Flags().String("container-name", "", "Specify the container name for Azure Data Lake.")
 	addErrorHandlingFlags(cmd)
