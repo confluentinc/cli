@@ -22,8 +22,8 @@ type out struct {
 	State             string   `human:"State" serialized:"state"`
 	CreatedAt         string   `human:"Created At" serialized:"created_at"`
 	ValidationPhase   string   `human:"Validation Phase" serialized:"validation_phase"`
+	ValidationSince   string   `human:"Validation Since" serialized:"validation_since"`
 	ValidationMessage string   `human:"Message,omitempty" serialized:"message,omitempty"`
-	ValidationSince   string   `human:"Since" serialized:"since"`
 }
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {

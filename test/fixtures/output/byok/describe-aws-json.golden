@@ -11,5 +11,5 @@
   "state": "IN_USE",
   "created_at": "2022-11-12 08:24:00 +0000 UTC",
   "validation_phase": "VALID",
-  "since": "2022-11-12 08:30:00 +0000 UTC"
+  "validation_since": "2022-11-12 08:30:00 +0000 UTC"
 }

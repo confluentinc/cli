@@ -8,7 +8,7 @@
 | State            | AVAILABLE                                                                                                     |
 | Created At       | 2023-01-01 13:00:30 +0000 UTC                                                                                 |
 | Validation Phase | VALID                                                                                                         |
-| Since            | 2023-01-01 13:02:30 +0000 UTC                                                                                 |
+| Validation Since | 2023-01-01 13:02:30 +0000 UTC                                                                                 |
 +------------------+---------------------------------------------------------------------------------------------------------------+
 
 To ensure the key has the correct role assignments, please run the following Google Cloud CLI command:

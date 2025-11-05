@@ -8,6 +8,6 @@
   "state": "AVAILABLE",
   "created_at": "2023-01-01 12:00:30 +0000 UTC",
   "validation_phase": "INVALID",
-  "message": "key access denied",
-  "since": "2023-01-01 12:05:30 +0000 UTC"
+  "validation_since": "2023-01-01 12:05:30 +0000 UTC",
+  "message": "key access denied"
 }
