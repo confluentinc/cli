@@ -50,15 +50,9 @@ func (c *command) newDescribeCommand() *cobra.Command {
 func (c *command) describe(cmd *cobra.Command, args []string) error {
 	integrationId := args[0]
 
-	environmentId, err := cmd.Flags().GetString("environment")
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
-	}
-	if environmentId == "" {
-		environmentId, err = c.Context.EnvironmentId()
-		if err != nil {
-			return err
-		}
 	}
 
 	integration, err := c.V2Client.GetPimV2Integration(cmd.Context(), integrationId, environmentId)

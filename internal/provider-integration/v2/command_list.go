@@ -30,12 +30,12 @@ func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List provider integrations.",
-		Long:  "List all provider integrations across all environments in the organization. Use --environment to filter by a specific environment.",
+		Long:  "List all provider integrations in the specified environment.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List all Azure provider integrations across all environments.",
+				Text: "List all Azure provider integrations in the current environment.",
 				Code: "confluent provider-integration v2 list --cloud azure",
 			},
 			examples.Example{
@@ -56,33 +56,14 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	environmentId, err := cmd.Flags().GetString("environment")
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	var allIntegrations []piv2.PimV2Integration
-	if environmentId == "" {
-		// List integrations across all environments
-		environments, err := c.V2Client.ListOrgEnvironments()
-		if err != nil {
-			return err
-		}
-
-		for _, env := range environments {
-			integrations, err := c.V2Client.ListPimV2Integrations(cmd.Context(), env.GetId())
-			if err != nil {
-				return err
-			}
-			allIntegrations = append(allIntegrations, integrations...)
-		}
-	} else {
-		// List integrations for a specific environment
-		integrations, err := c.V2Client.ListPimV2Integrations(cmd.Context(), environmentId)
-		if err != nil {
-			return err
-		}
-		allIntegrations = integrations
+	integrations, err := c.V2Client.ListPimV2Integrations(cmd.Context(), environmentId)
+	if err != nil {
+		return err
 	}
 
 	// Filter by cloud provider (required flag)
@@ -93,7 +74,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	cloud = strings.ToLower(cloud)
 
 	filtered := make([]piv2.PimV2Integration, 0)
-	for _, integration := range allIntegrations {
+	for _, integration := range integrations {
 		if strings.ToLower(integration.GetProvider()) == cloud {
 			filtered = append(filtered, integration)
 		}

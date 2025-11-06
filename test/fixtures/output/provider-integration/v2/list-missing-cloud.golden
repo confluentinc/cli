@@ -3,7 +3,7 @@ Usage:
   confluent provider-integration v2 list [flags]
 
 Examples:
-List all Azure provider integrations across all environments.
+List all Azure provider integrations in the current environment.
 
   $ confluent provider-integration v2 list --cloud azure
 
