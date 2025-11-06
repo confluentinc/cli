@@ -6,7 +6,7 @@
 | Cluster Size         | 1                                   |
 | Ingress Limit (MB/s) | 60                                  |
 | Egress Limit (MB/s)  | 180                                 |
-| Storage              | Infinite                            |
+| Storage              | Unlimited                           |
 | Cloud                | aws                                 |
 | Region               | us-west-2                           |
 | Availability         | single-zone                         |

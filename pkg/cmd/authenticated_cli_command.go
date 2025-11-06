@@ -19,6 +19,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/kafkausagelimits"
 	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/schemaregistry"
@@ -38,6 +39,7 @@ type AuthenticatedCLICommand struct {
 	flinkGatewayClient   *ccloudv2.FlinkGatewayClient
 	metricsClient        *ccloudv2.MetricsClient
 	schemaRegistryClient *schemaregistry.Client
+	usageLimitsClient    *kafkausagelimits.UsageLimitsClient
 
 	Context *config.Context
 }
@@ -321,6 +323,15 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 	}
 
 	return c.schemaRegistryClient, nil
+}
+
+func (c *AuthenticatedCLICommand) GetUsageLimitsClient() *kafkausagelimits.UsageLimitsClient {
+	if c.usageLimitsClient == nil {
+		httpClient := ccloudv2.NewRetryableHttpClient(c.Config, false)
+		c.usageLimitsClient = kafkausagelimits.NewUsageLimitsClient(c.Config, httpClient)
+	}
+
+	return c.usageLimitsClient
 }
 
 func (c *AuthenticatedCLICommand) validateSchemaRegistryEndpointAndSetClient(cluster srcmv3.SrcmV3Cluster, schemaRegistryApiKey, schemaRegistryApiSecret, url string, configuration srsdk.Configuration) bool {

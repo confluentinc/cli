@@ -1,4 +1,4 @@
-package ccloudv2
+package kafkausagelimits
 
 import (
 	"encoding/json"
@@ -256,6 +256,8 @@ func TestUsageLimitsGetUsageLimits(t *testing.T) {
 		},
 	}
 
+	client := NewUsageLimitsClient(nil, &http.Client{})
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var server *httptest.Server
@@ -270,7 +272,7 @@ func TestUsageLimitsGetUsageLimits(t *testing.T) {
 				serverURL = server.URL
 			}
 
-			client := &Client{cfg: &config.Config{
+			testConfig := &config.Config{
 				CurrentContext: "context",
 				Contexts: map[string]*config.Context{"context": {
 					Name:           "context",
@@ -280,8 +282,9 @@ func TestUsageLimitsGetUsageLimits(t *testing.T) {
 					PlatformName:   "test-platform",
 					CredentialName: "test-credential",
 				}},
-			}}
+			}
 
+			client.cfg = testConfig
 			result, err := client.GetUsageLimits("aws", "lkc-123", "env-456")
 
 			if tt.expectedError != "" {

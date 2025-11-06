@@ -12,6 +12,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/kafkausagelimits"
 	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/resource"
@@ -88,11 +89,10 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	cloud := strings.ToLower(cluster.Spec.GetCloud())
-	usageLimits, err := c.V2Client.GetUsageLimits(cloud, lkc, environmentId)
-	if err != nil {
+	usageLimits, err := c.GetUsageLimitsClient().GetUsageLimits(cloud, lkc, environmentId)
+	if err != nil && output.GetFormat(cmd) == output.Human {
 		warning := errors.NewWarningWithSuggestions(errors.UsageLimitsAPIFailureWarning, errors.UsageLimitsAPIFailureSuggestionMsg)
 		output.ErrPrint(false, warning.DisplayWarningWithSuggestions())
-		usageLimits = nil
 	}
 
 	return c.outputKafkaClusterDescription(cmd, &cluster, true, usageLimits)
@@ -114,7 +114,7 @@ func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 	return clusterId, nil
 }
 
-func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster, getTopicCount bool, limits *ccloudv2.UsageLimits) error {
+func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster, getTopicCount bool, limits *kafkausagelimits.UsageLimits) error {
 	out := convertClusterToDescribeStruct(cluster, limits, c.Context)
 
 	if getTopicCount {
@@ -132,7 +132,7 @@ func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, clust
 	return table.Print()
 }
 
-func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, usageLimits *ccloudv2.UsageLimits, ctx *config.Context) *describeStruct {
+func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, usageLimits *kafkausagelimits.UsageLimits, ctx *config.Context) *describeStruct {
 	out := &describeStruct{
 		IsCurrent:          cluster.GetId() == ctx.KafkaClusterContext.GetActiveKafkaClusterId(),
 		Id:                 cluster.GetId(),
@@ -164,7 +164,7 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, usageLimits *cc
 	return out
 }
 
-func getKafkaClusterStorage(limits *ccloudv2.Limits) string {
+func getKafkaClusterStorage(limits *kafkausagelimits.Limits) string {
 	storage := limits.GetStorage()
 
 	if storage == nil {
@@ -172,7 +172,7 @@ func getKafkaClusterStorage(limits *ccloudv2.Limits) string {
 	}
 
 	if storage.Unlimited {
-		return "Infinite"
+		return "Unlimited"
 	}
 
 	return fmt.Sprintf("%d %s", storage.Value, storage.Unit)

@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v4/pkg/ccstructs"
 	"github.com/confluentinc/cli/v4/pkg/kafkarest"
+	"github.com/confluentinc/cli/v4/pkg/kafkausagelimits"
 )
 
 func toCreateTopicConfigs(topicConfigsMap map[string]string) []cckafkarestv3.ConfigData {
@@ -80,7 +81,7 @@ func isClusterResizeInProgress(currentCluster *cmkv2.CmkV2Cluster) error {
 	return nil
 }
 
-func getCmkClusterIngressAndEgressMbps(currentMaxEcku int32, limits *ccloudv2.Limits) (int32, int32) {
+func getCmkClusterIngressAndEgressMbps(currentMaxEcku int32, limits *kafkausagelimits.Limits) (int32, int32) {
 	ingress, egress := limits.GetIngress(), limits.GetEgress()
 
 	// Scale limits by cluster's max eCKU when limits are set per eCKU
@@ -200,11 +201,11 @@ func topicNameStrategy(topic, mode string) string {
 	return fmt.Sprintf("%s-%s", topic, mode)
 }
 
-func getLimitsForSku(cluster *cmkv2.CmkV2Cluster, usagelimits *ccloudv2.UsageLimits) *ccloudv2.Limits {
+func getLimitsForSku(cluster *cmkv2.CmkV2Cluster, usageLimits *kafkausagelimits.UsageLimits) *kafkausagelimits.Limits {
 	if isDedicated(cluster) {
-		return usagelimits.GetCkuLimit(*cluster.Status.Cku)
+		return usageLimits.GetCkuLimit(cluster.Status.GetCku())
 	}
 
 	sku := getCmkClusterType(cluster)
-	return usagelimits.GetTierLimit(sku).GetClusterLimits()
+	return usageLimits.GetTierLimit(sku).GetClusterLimits()
 }

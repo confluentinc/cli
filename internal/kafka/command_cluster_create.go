@@ -169,11 +169,10 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		output.ErrPrintln(c.Config.EnableColor, getKafkaProvisionEstimate(sku))
 	}
 
-	usageLimits, err := c.V2Client.GetUsageLimits(cloud, kafkaCluster.GetId(), environmentId)
-	if err != nil {
+	usageLimits, err := c.GetUsageLimitsClient().GetUsageLimits(cloud, kafkaCluster.GetId(), environmentId)
+	if err != nil && output.GetFormat(cmd) == output.Human {
 		warning := errors.NewWarningWithSuggestions(errors.UsageLimitsAPIFailureWarning, errors.UsageLimitsAPIFailureSuggestionMsg)
 		output.ErrPrint(false, warning.DisplayWarningWithSuggestions())
-		usageLimits = nil
 	}
 
 	return c.outputKafkaClusterDescription(cmd, &kafkaCluster, false, usageLimits)

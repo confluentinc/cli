@@ -124,8 +124,9 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	ctx.KafkaClusterContext.SetActiveKafkaCluster(id)
 
 	cloud := strings.ToLower(updatedCluster.Spec.GetCloud())
-	usageLimits, err := c.V2Client.GetUsageLimits(cloud, id, environmentId)
-	if err != nil {
+
+	usageLimits, err := c.GetUsageLimitsClient().GetUsageLimits(cloud, id, environmentId)
+	if err != nil && output.GetFormat(cmd) == output.Human {
 		warning := errors.NewWarningWithSuggestions(errors.UsageLimitsAPIFailureWarning, errors.UsageLimitsAPIFailureSuggestionMsg)
 		output.ErrPrint(false, warning.DisplayWarningWithSuggestions())
 	}

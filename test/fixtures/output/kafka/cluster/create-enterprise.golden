@@ -6,7 +6,7 @@ It may take up to 5 minutes for the Kafka cluster to be ready.
 | Type                 | ENTERPRISE                |
 | Ingress Limit (MB/s) | 600                       |
 | Egress Limit (MB/s)  | 1800                      |
-| Storage              | Infinite                  |
+| Storage              | Unlimited                 |
 | Cloud                | aws                       |
 | Region               | us-east-1                 |
 | Availability         | multi-zone                |

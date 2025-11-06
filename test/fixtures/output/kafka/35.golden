@@ -6,7 +6,7 @@ cluster_size: 1
 pending_cluster_size: 2
 ingress_limit: 60
 egress_limit: 180
-storage: Infinite
+storage: Unlimited
 cloud: aws
 region: us-west-2
 availability: single-zone

@@ -7,7 +7,7 @@
 | Pending Cluster Size | 1                           |
 | Ingress Limit (MB/s) | 120                         |
 | Egress Limit (MB/s)  | 360                         |
-| Storage              | Infinite                    |
+| Storage              | Unlimited                   |
 | Cloud                | aws                         |
 | Region               | us-west-2                   |
 | Availability         | single-zone                 |

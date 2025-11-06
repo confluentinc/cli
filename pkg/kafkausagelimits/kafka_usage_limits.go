@@ -1,4 +1,4 @@
-package ccloudv2
+package kafkausagelimits
 
 import (
 	"context"
@@ -7,104 +7,26 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
-	"strings"
+
+	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
 const (
-	UsageLimitsPath = "/usage_limits"
+	UsageLimitsPath = "/api/usage_limits"
 
 	UsageLimitsAPIErrorMsg         = "usage limits API HTTP request failed"
 	FailedToGetAuthTokenErrorMsg   = "failed to get auth token"
 	FailedToDecodeResponseErrorMsg = "failed to decode response"
 )
 
-type UsageLimitValue struct {
-	Unit      string `json:"unit"`
-	Value     int32  `json:"value"`
-	Unlimited bool   `json:"unlimited,omitempty"`
-}
-
-type Limits struct {
-	Ingress *UsageLimitValue `json:"ingress,omitempty"`
-	Egress  *UsageLimitValue `json:"egress,omitempty"`
-	Storage *UsageLimitValue `json:"storage,omitempty"`
-	MaxEcku *UsageLimitValue `json:"max_ecku,omitempty"`
-}
-
-type TierLimit struct {
-	ClusterLimits Limits `json:"cluster_limits"`
-}
-
-type UsageLimits struct {
-	TierLimits map[string]TierLimit `json:"tier_limits"`
-	CkuLimits  map[string]Limits    `json:"cku_limits"`
-}
-
-type UsageLimitsResponse struct {
-	UsageLimits UsageLimits `json:"usage_limits"`
-	Error       *string     `json:"error,omitempty"`
-}
-
-func (c *Limits) GetIngress() int32 {
-	if c == nil || c.Ingress == nil {
-		return 0
+func NewUsageLimitsClient(cfg *config.Config, httpClient *http.Client) *UsageLimitsClient {
+	return &UsageLimitsClient{
+		HttpClient: httpClient,
+		cfg:        cfg,
 	}
-	return c.Ingress.Value
 }
 
-func (c *Limits) GetEgress() int32 {
-	if c == nil || c.Egress == nil {
-		return 0
-	}
-	return c.Egress.Value
-}
-
-func (c *Limits) GetStorage() *UsageLimitValue {
-	if c == nil {
-		return nil
-	}
-	return c.Storage
-}
-
-func (c *Limits) GetMaxEcku() *UsageLimitValue {
-	if c == nil {
-		return nil
-	}
-	return c.MaxEcku
-}
-
-func (t *TierLimit) GetClusterLimits() *Limits {
-	if t == nil {
-		return nil
-	}
-	return &t.ClusterLimits
-}
-
-func (u *UsageLimits) GetCkuLimit(cku int32) *Limits {
-	if u == nil {
-		return nil
-	}
-	ckuStr := strconv.FormatInt(int64(cku), 10)
-	ckuLimit, ok := u.CkuLimits[ckuStr]
-	if !ok {
-		return nil
-	}
-	return &ckuLimit
-}
-
-func (u *UsageLimits) GetTierLimit(sku string) *TierLimit {
-	if u == nil {
-		return nil
-	}
-	tierLimit, ok := u.TierLimits[sku]
-	if !ok {
-		return nil
-	}
-	return &tierLimit
-}
-
-func (c *Client) GetUsageLimits(provider, lkcId, envId string) (*UsageLimits, error) {
+func (c *UsageLimitsClient) GetUsageLimits(provider, lkcId, envId string) (*UsageLimits, error) {
 	usageLimitsURL := c.getUsageLimitsUrl(provider, lkcId, envId)
 
 	authToken := c.cfg.Context().GetAuthToken()
@@ -117,8 +39,7 @@ func (c *Client) GetUsageLimits(provider, lkcId, envId string) (*UsageLimits, er
 		return nil, usageLimitsError(err)
 	}
 
-	httpClient := NewRetryableHttpClient(c.cfg, false)
-	resp, err := httpClient.Do(req)
+	resp, err := c.HttpClient.Do(req)
 	if err != nil {
 		return nil, usageLimitsError(err)
 	}
@@ -164,21 +85,14 @@ func getUsageLimitsRequest(usageLimitsURL, authToken string) (*http.Request, err
 	return req, nil
 }
 
-func (c *Client) getUsageLimitsUrl(provider, lkcId, envId string) string {
-	serverURL := getServerUrl(c.cfg.Context().GetPlatformServer())
+func (c *UsageLimitsClient) getUsageLimitsUrl(provider, lkcId, envId string) string {
+	serverURL := c.cfg.Context().GetPlatformServer()
 	u, err := url.Parse(serverURL)
 	if err != nil {
 		return serverURL
 	}
 
-	// Append usage_limits to existing path
-	basePath := strings.TrimRight(u.Path, "/")
-	if basePath == "" {
-		u.Path = UsageLimitsPath
-	} else {
-		// local testing hosts
-		u.Path = "/" + strings.TrimLeft(basePath, "/") + UsageLimitsPath
-	}
+	u.Path = UsageLimitsPath
 
 	// Build query parameters
 	query := u.Query()
