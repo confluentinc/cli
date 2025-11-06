@@ -67,7 +67,7 @@ func AddByokKeyFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 }
 
 func AutocompleteByokKeyIds(client *ccloudv2.Client) []string {
-	keys, err := client.ListByokKeys("", "")
+	keys, err := client.ListByokKeys("", "", "", "", "", "")
 	if err != nil {
 		return nil
 	}
@@ -82,6 +82,11 @@ func AutocompleteByokKeyIds(client *ccloudv2.Client) []string {
 func AddByokStateFlag(cmd *cobra.Command) {
 	cmd.Flags().String("state", "", fmt.Sprintf("Specify the state as %s.", utils.ArrayToCommaDelimitedString([]string{"in-use", "available"}, "or")))
 	RegisterFlagCompletionFunc(cmd, "state", func(_ *cobra.Command, _ []string) []string { return []string{"in-use", "available"} })
+}
+
+func AddByokValidationPhaseFlag(cmd *cobra.Command) {
+	cmd.Flags().String("validation-phase", "", fmt.Sprintf("Specify the validation phase as %s.", utils.ArrayToCommaDelimitedString([]string{"valid", "invalid", "initializing"}, "or")))
+	RegisterFlagCompletionFunc(cmd, "validation-phase", func(_ *cobra.Command, _ []string) []string { return []string{"valid", "invalid", "initializing"} })
 }
 
 func AddCloudFlag(cmd *cobra.Command) {
