@@ -1,6 +1,6 @@
 module github.com/confluentinc/cli/v4
 
-go 1.24.7
+go 1.24.9
 
 require (
 	github.com/antihax/optional v1.0.0
@@ -50,7 +50,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.3
 	github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1
-	github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.4.0
+	github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.5.0
 	github.com/confluentinc/ccloud-sdk-go-v2/usm v0.1.0
 	github.com/confluentinc/cmf-sdk-go v0.0.4
 	github.com/confluentinc/confluent-kafka-go/v2 v2.8.0
@@ -164,7 +164,6 @@ require (
 	github.com/charmbracelet/x/term v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.1.0 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
-	github.com/confluentinc/ccloud-sdk-go-v2-internal/tableflow v0.24.0 // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.5 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
