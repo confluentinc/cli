@@ -22,7 +22,6 @@ Flags:
       --provider-integration string      Specify the provider integration id.
       --bucket-name string               Specify the name of the AWS S3 bucket.
       --table-formats string             Specify the table formats, one of DELTA or ICEBERG. (default "ICEBERG")
-      --record-failure-strategy string   Specify the record failure strategy, one of SUSPEND or SKIP. (default "SUSPEND")
       --storage-account-name string      Specify the storage account name for Azure Data Lake.
       --container-name string            Specify the container name for Azure Data Lake.
       --error-handling string            Specify the error handling strategy, one of SUSPEND, SKIP, or LOG.
