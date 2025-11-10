@@ -181,7 +181,7 @@ func handleTableflowTopicDelete(t *testing.T, display_name string) http.HandlerF
 			w.WriteHeader(http.StatusNotFound)
 			err := writeErrorJson(w, "The Tableflow topic was not found.")
 			require.NoError(t, err)
-		case "topic-byob", "topic-managed", "topuc-azure":
+		case "topic-byob", "topic-managed", "topic-azure":
 			w.WriteHeader(http.StatusNoContent)
 		}
 	}
@@ -203,7 +203,7 @@ func getTopicByob(display_name, environmentId, clusterId string) tableflowv1.Tab
 			},
 			Config: &tableflowv1.TableflowV1TableFlowTopicConfigsSpec{
 				EnableCompaction:      tableflowv1.PtrBool(true),
-				EnablePartitioning:    tableflowv1.PtrBool(true),          // ready-only property that needs confirmation, assuming constantly true for now
+				EnablePartitioning:    tableflowv1.PtrBool(true),          // read-only property that needs confirmation, assuming constantly true for now
 				RetentionMs:           tableflowv1.PtrString("604800000"), // 7 days to miliseconds
 				RecordFailureStrategy: tableflowv1.PtrString("SKIP"),
 				ErrorHandling: &tableflowv1.TableflowV1TableFlowTopicConfigsSpecErrorHandlingOneOf{
@@ -259,7 +259,7 @@ func getTopicManaged(display_name, environmentId, clusterId string) tableflowv1.
 			},
 			Config: &tableflowv1.TableflowV1TableFlowTopicConfigsSpec{
 				EnableCompaction:      tableflowv1.PtrBool(true),
-				EnablePartitioning:    tableflowv1.PtrBool(true),          // ready-only property that needs confirmation, assuming constantly true for now
+				EnablePartitioning:    tableflowv1.PtrBool(true),          // read-only property that needs confirmation, assuming constantly true for now
 				RetentionMs:           tableflowv1.PtrString("604800000"), // 7 days to miliseconds
 				RecordFailureStrategy: tableflowv1.PtrString("SUSPEND"),
 				ErrorHandling: &tableflowv1.TableflowV1TableFlowTopicConfigsSpecErrorHandlingOneOf{
@@ -319,8 +319,8 @@ func getTopicAzure(display_name, environmentId, clusterId string) tableflowv1.Ta
 			},
 			Config: &tableflowv1.TableflowV1TableFlowTopicConfigsSpec{
 				EnableCompaction:      tableflowv1.PtrBool(true),
-				EnablePartitioning:    tableflowv1.PtrBool(true),          // ready-only property that needs confirmation, assuming constantly true for now
-				RetentionMs:           tableflowv1.PtrString("604800000"), // 7 days to miliseconds
+				EnablePartitioning:    tableflowv1.PtrBool(true),          // read-only property that needs confirmation, assuming constantly true for now
+				RetentionMs:           tableflowv1.PtrString("604800000"), // 7 days to milliseconds
 				RecordFailureStrategy: tableflowv1.PtrString("SKIP"),
 			},
 			TableFormats: &[]string{"ICEBERG"},
