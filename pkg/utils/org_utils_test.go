@@ -3,8 +3,9 @@ package utils
 import (
 	"testing"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/stretchr/testify/require"
+
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 )
 
 func TestIsOrgPauseTrialSuspended(t *testing.T) {
