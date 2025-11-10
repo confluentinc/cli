@@ -174,7 +174,11 @@ func handleSqlEnvironmentsEnvironmentStatements(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 
 			statement.Metadata = &flinkgatewayv1.StatementObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))}
-			statement.Spec.ComputePoolId = flinkgatewayv1.PtrString(validFlinkStatementComputePoolId)
+			switch strings.ToLower(statement.GetName()) {
+			case "my-statement":
+				statement.Spec.ComputePoolId = flinkgatewayv1.PtrString(validFlinkStatementComputePoolId)
+			}
+
 			statement.Status = &flinkgatewayv1.SqlV1StatementStatus{Phase: "PENDING"}
 
 			err = json.NewEncoder(w).Encode(statement)
