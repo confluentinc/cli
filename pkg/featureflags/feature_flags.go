@@ -27,6 +27,7 @@ import (
 const (
 	baseURL  = "%s/ldapi/sdk/eval/%s/"
 	userPath = "users/%s"
+	timeout  = 5 * time.Second
 )
 
 const (
@@ -76,10 +77,10 @@ func Init(cfg *config.Config) {
 	}
 
 	Manager = launchDarklyManager{
-		cliClient:             sling.New().Base(cliBasePath),
-		ccloudClient:          sling.New().Base(ccloudBasePath),
+		cliClient:             sling.New().Client(&http.Client{Timeout: timeout}).Base(cliBasePath),
+		ccloudClient:          sling.New().Client(&http.Client{Timeout: timeout}).Base(ccloudBasePath),
 		hideTimeoutWarning:    cfg.IsTest,
-		isDisabled:            cfg.DisableFeatureFlags,
+		isDisabled:            cfg.DisableFeatureFlags || !cfg.IsCloudLogin(),
 		timeoutWarningPrinted: false,
 		version:               cfg.Version,
 	}
@@ -201,6 +202,7 @@ func (ld *launchDarklyManager) fetchFlags(user lduser.User, client config.Launch
 			output.ErrPrintln(false, "[WARN] Failed to fetch feature flags.")
 			output.ErrPrintln(false, errors.ComposeSuggestionsMessage("Check connectivity to https://confluent.cloud or disable feature flags using `confluent configuration update disable_feature_flags true`."))
 			ld.timeoutWarningPrinted = true
+			ld.isDisabled = true // disable flags for the rest of the command if any request times out
 		}
 
 		return flagVals, fmt.Errorf("error fetching feature flags: %w", err)
