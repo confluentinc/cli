@@ -47,16 +47,15 @@ const (
 var Manager launchDarklyManager
 
 type launchDarklyManager struct {
-	cliClient             *sling.Sling
-	ccloudClient          *sling.Sling
-	Command               *cobra.Command
-	flags                 []string
-	hideTimeoutWarning    bool
-	isDisabled            bool
-	timeoutWarningPrinted bool
-	version               *version.Version
-	latestCliFlags        map[string]any
-	latestCCloudFlags     map[string]any
+	cliClient         *sling.Sling
+	ccloudClient      *sling.Sling
+	Command           *cobra.Command
+	flags             []string
+	isDisabled        bool
+	isTest            bool
+	version           *version.Version
+	latestCliFlags    map[string]any
+	latestCCloudFlags map[string]any
 }
 
 func Init(cfg *config.Config) {
@@ -77,12 +76,11 @@ func Init(cfg *config.Config) {
 	}
 
 	Manager = launchDarklyManager{
-		cliClient:             sling.New().Client(&http.Client{Timeout: timeout}).Base(cliBasePath),
-		ccloudClient:          sling.New().Client(&http.Client{Timeout: timeout}).Base(ccloudBasePath),
-		hideTimeoutWarning:    cfg.IsTest,
-		isDisabled:            cfg.DisableFeatureFlags || !cfg.IsCloudLogin(),
-		timeoutWarningPrinted: false,
-		version:               cfg.Version,
+		cliClient:    sling.New().Client(&http.Client{Timeout: timeout}).Base(cliBasePath),
+		ccloudClient: sling.New().Client(&http.Client{Timeout: timeout}).Base(ccloudBasePath),
+		isDisabled:   cfg.DisableFeatureFlags || !cfg.IsCloudLogin(),
+		isTest:       cfg.IsTest,
+		version:      cfg.Version,
 	}
 }
 
@@ -156,7 +154,7 @@ func (ld *launchDarklyManager) generalVariation(key string, ctx *config.Context,
 	} else if ld.areCurrentFlagsAvailable(client, key) { // if the flag is not cached but we've already retrieved the newest flag values for the current user, check those maps first
 		flagVals = ld.getCurrentFlags(client)
 		if shouldCache {
-			writeFlagsToConfig(ctx, key, flagVals, user, client)
+			ld.writeFlagsToConfig(ctx, key, flagVals, user, client)
 		}
 	} else {
 		flagVals, err = ld.fetchFlags(user, client)
@@ -165,7 +163,7 @@ func (ld *launchDarklyManager) generalVariation(key string, ctx *config.Context,
 			return defaultVal
 		}
 		if shouldCache {
-			writeFlagsToConfig(ctx, key, flagVals, user, client)
+			ld.writeFlagsToConfig(ctx, key, flagVals, user, client)
 		}
 	}
 	if _, ok := flagVals[key]; ok {
@@ -198,12 +196,9 @@ func (ld *launchDarklyManager) fetchFlags(user lduser.User, client config.Launch
 	}
 	if err != nil {
 		log.CliLogger.Debug(resp)
-		if !ld.hideTimeoutWarning && !ld.timeoutWarningPrinted {
-			output.ErrPrintln(false, "[WARN] Failed to fetch feature flags.")
-			output.ErrPrintln(false, errors.ComposeSuggestionsMessage("Check connectivity to https://confluent.cloud or disable feature flags using `confluent configuration update disable_feature_flags true`."))
-			ld.timeoutWarningPrinted = true
-			ld.isDisabled = true // disable flags for the rest of the command if any request times out
-		}
+		output.ErrPrintln(false, "[WARN] Failed to fetch feature flags.")
+		output.ErrPrintln(false, errors.ComposeSuggestionsMessage("Check connectivity to https://confluent.cloud or disable feature flags using `confluent configuration update disable_feature_flags true`."))
+		ld.isDisabled = true // disable flags for the rest of the command if any request times out
 
 		return flagVals, fmt.Errorf("error fetching feature flags: %w", err)
 	}
@@ -298,8 +293,8 @@ func (ld *launchDarklyManager) contextToLDUser(ctx *config.Context) lduser.User 
 	return userBuilder.Build()
 }
 
-func writeFlagsToConfig(ctx *config.Context, key string, vals map[string]any, user lduser.User, client config.LaunchDarklyClient) {
-	if ctx == nil {
+func (ld *launchDarklyManager) writeFlagsToConfig(ctx *config.Context, key string, vals map[string]any, user lduser.User, client config.LaunchDarklyClient) {
+	if ctx == nil || ld.isTest {
 		return
 	}
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"testing"
 
 	"github.com/client9/gospell"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/linter"
 	pversion "github.com/confluentinc/cli/v4/pkg/version"
+	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
 var commandRules = []linter.CommandRule{
@@ -368,6 +370,10 @@ func init() {
 }
 
 func main() {
+	// Set up test server for feature flags called by the code
+	testBackend := testserver.StartTestCloudServer(&testing.T{}, true)
+	defer testBackend.Close()
+
 	flag.Parse()
 
 	vocab, err := gospell.NewGoSpell(affFile, dicFile)
