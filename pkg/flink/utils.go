@@ -17,7 +17,7 @@ var (
 		"couchbase":      {"username", "password"},
 		"confluent_jdbc": {"username", "password"},
 		"rest":           {"username", "password", "token", "token-endpoint", "client-id", "client-secret", "scope"},
-		"mcp_server":     {"api-key", "token", "token-endpoint", "client-id", "client-secret", "scope", "sse-endpoint", "transport-type"},
+		"mcp_server":     {"username", "password", "api-key", "token", "token-endpoint", "client-id", "client-secret", "scope", "sse-endpoint", "transport-type"},
 	}
 
 	ConnectionSecretTypeMapping = map[string][]string{
@@ -26,8 +26,8 @@ var (
 		"aws-secret-key":    {"bedrock", "sagemaker"},
 		"aws-session-token": {"bedrock", "sagemaker"},
 		"service-key":       {"vertexai"},
-		"username":          {"mongodb", "couchbase", "confluent_jdbc", "a2a", "rest"},
-		"password":          {"mongodb", "couchbase", "confluent_jdbc", "a2a", "rest"},
+		"username":          {"mongodb", "couchbase", "confluent_jdbc", "a2a", "rest", "mcp_server"},
+		"password":          {"mongodb", "couchbase", "confluent_jdbc", "a2a", "rest", "mcp_server"},
 		"token":             {"a2a", "rest", "mcp_server"},
 		"token-endpoint":    {"a2a", "rest", "mcp_server"},
 		"client-id":         {"a2a", "rest", "mcp_server"},
@@ -58,7 +58,7 @@ var (
 	ConnectionOneOfRequiredSecretsMapping = map[string][][]string{
 		"a2a":        {{"api-key"}, {"username", "password"}, {"token"}, {"token-endpoint", "client-id", "client-secret", "scope"}},
 		"rest":       {{"username", "password"}, {"token"}, {"token-endpoint", "client-id", "client-secret", "scope"}},
-		"mcp_server": {{"api-key"}, {"token"}, {"token-endpoint", "client-id", "client-secret", "scope"}},
+		"mcp_server": {{"api-key"}, {"username", "password"}, {"token"}, {"token-endpoint", "client-id", "client-secret", "scope"}},
 	}
 
 	ConnectionSecretAllowedValues = map[string][]string{
