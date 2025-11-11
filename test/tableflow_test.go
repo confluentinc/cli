@@ -4,6 +4,7 @@ func (s *CLITestSuite) TestTableflowCatalogIntegration() {
 	tests := []CLITest{
 		{args: "tableflow catalog-integration create my-aws-glue-ci --cluster lkc-123456 --type aws --provider-integration cspi-stgce89r7", fixture: "tableflow/catalog-integration/create-aws-glue.golden"},
 		{args: "tableflow catalog-integration create my-snowflake-ci --cluster lkc-123456 --type snowflake --endpoint https://vuser1_polaris.snowflakecomputing.com/ --client-id client-id --client-secret client-secret --warehouse warehouse --allowed-scope allowed-scope", fixture: "tableflow/catalog-integration/create-snowflake.golden"},
+		{args: "tableflow catalog-integration create my-catalog-integration --cluster lkc-123456 --type unity --workspace-endpoint https://dbc-1.cloud.databricks.com --catalog-name tableflow-quickstart-catalog --unity-client-id $CLIENT_ID --unity-client-secret $CLIENT_SECRET", fixture: "tableflow/catalog-integration/create-unity.golden"},
 		{args: "tableflow catalog-integration delete tci-abc123 tci-def456 --cluster lkc-123456", input: "y\n", fixture: "tableflow/catalog-integration/delete-multiple.golden"},
 		{args: "tableflow catalog-integration delete tci-abc123 tci-def456 tci-invalid --cluster lkc-123456", fixture: "tableflow/catalog-integration/delete-invalid.golden", exitCode: 1},
 		{args: "tableflow catalog-integration list --cluster lkc-123456", fixture: "tableflow/catalog-integration/list.golden"},
@@ -11,6 +12,7 @@ func (s *CLITestSuite) TestTableflowCatalogIntegration() {
 		{args: "tableflow catalog-integration describe tci-abc123 --cluster lkc-123456", fixture: "tableflow/catalog-integration/describe-aws-glue.golden"},
 		{args: "tableflow catalog-integration describe tci-abc123 --cluster lkc-123456 -o json", fixture: "tableflow/catalog-integration/describe-aws-glue-json.golden"},
 		{args: "tableflow catalog-integration describe tci-def456 --cluster lkc-123456", fixture: "tableflow/catalog-integration/describe-snowflake.golden"},
+		{args: "tableflow catalog-integration describe tci-ghi789 --cluster lkc-123456", fixture: "tableflow/catalog-integration/describe-unity.golden"},
 	}
 
 	for _, test := range tests {
@@ -50,7 +52,15 @@ func (s *CLITestSuite) TestTableflowTopic() {
 		{args: "tableflow topic enable topic-managed --cluster lkc-123456 --retention-ms 604800000 --storage-type MANAGED --table-formats DELTA", fixture: "tableflow/topic/enable-topic-managed.golden"},
 		{args: "tableflow topic create topic-byob --cluster lkc-123456 --retention-ms 604800000 --storage-type BYOS --provider-integration cspi-stgce89r7 --bucket-name bucket_1 --record-failure-strategy SKIP", fixture: "tableflow/topic/enable-topic-byob.golden"},
 		{args: "tableflow topic create topic-managed --cluster lkc-123456 --retention-ms 604800000 --storage-type MANAGED --table-formats DELTA", fixture: "tableflow/topic/enable-topic-managed.golden"},
+		{args: "tableflow topic enable topic-managed --cluster lkc-123456 --storage-type MANAGED --error-handling SUSPEND", fixture: "tableflow/topic/enable-topic-managed-error-handling-suspend.golden"},
+		{args: "tableflow topic enable topic-managed --cluster lkc-123456 --storage-type MANAGED --error-handling SKIP", fixture: "tableflow/topic/enable-topic-managed-error-handling-skip.golden"},
+		{args: "tableflow topic enable topic-managed --cluster lkc-123456 --storage-type MANAGED --error-handling LOG --log-target log_topic", fixture: "tableflow/topic/enable-topic-managed-error-handling-log.golden"},
 		{args: "tableflow topic update topic-byob --cluster lkc-123456 --retention-ms 432000000", fixture: "tableflow/topic/update-topic.golden"},
+		{args: "tableflow topic update topic-managed --cluster lkc-123456 --error-handling SUSPEND", fixture: "tableflow/topic/update-topic-managed-error-handling-suspend.golden"},
+		{args: "tableflow topic update topic-managed --cluster lkc-123456 --error-handling SKIP", fixture: "tableflow/topic/update-topic-managed-error-handling-skip.golden"},
+		{args: "tableflow topic update topic-managed --cluster lkc-123456 --error-handling LOG --log-target log_topic", fixture: "tableflow/topic/update-topic-managed-error-handling-log.golden"},
+		{args: "tableflow topic update topic-managed --cluster lkc-123456 --log-target log_topic", fixture: "tableflow/topic/update-topic-managed-no-change.golden"},
+		{args: "tableflow topic update topic-error-log --cluster lkc-123456 --log-target log_topic", fixture: "tableflow/topic/update-topic-error-log.golden"},
 		{args: "tableflow topic disable topic-managed --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/disable-topic.golden"},
 		{args: "tableflow topic disable topic-managed topic-byob --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/disable-multiple-topics.golden"},
 		{args: "tableflow topic delete topic-managed --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/delete-topic.golden"},

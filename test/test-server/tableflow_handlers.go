@@ -84,6 +84,10 @@ func handleTableflowTopicsCreate(t *testing.T, environment string) http.HandlerF
 		tableflowTopic.Status.SetPhase("RUNNING")
 		tableflowTopic.Spec.SetEnvironment(tableflowv1.GlobalObjectReference{Id: environment})
 
+		if tableflowTopic.Spec.Config.GetRecordFailureStrategy() == "" && !tableflowTopic.Spec.Config.HasErrorHandling() {
+			tableflowTopic.Spec.Config.SetRecordFailureStrategy("SUSPEND")
+		}
+
 		if tableflowTopic.Spec.Storage.TableflowV1ByobAwsSpec != nil {
 			tableflowTopic.Spec.Storage.TableflowV1ByobAwsSpec.SetBucketRegion("us-east-1")
 			tableflowTopic.Spec.Storage.TableflowV1ByobAwsSpec.SetTablePath("s3://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId")
@@ -107,6 +111,12 @@ func handleTableflowTopicGet(t *testing.T, environmentId, clusterId, display_nam
 			tableflowTopic = getTopicByob("topic-byob", environmentId, clusterId)
 		case "topic-managed":
 			tableflowTopic = getTopicManaged("topic-managed", environmentId, clusterId)
+		case "topic-error-log":
+			tableflowTopic = getTopicManaged("topic-error-log", "env-596", "lkc-123456")
+			tableflowTopic.Spec.Config.SetErrorHandling(tableflowv1.TableflowV1TableFlowTopicConfigsSpecErrorHandlingOneOf{
+				TableflowV1ErrorHandlingLog: &tableflowv1.TableflowV1ErrorHandlingLog{Mode: "LOG", Target: tableflowv1.PtrString("error_log")},
+			})
+			tableflowTopic.Spec.Config.SetRecordFailureStrategy("LOG")
 		}
 		err := json.NewEncoder(w).Encode(tableflowTopic)
 		require.NoError(t, err)
@@ -139,10 +149,16 @@ func handleTableflowTopicUpdate(t *testing.T, display_name string) http.HandlerF
 			tableflowTopic = getTopicByob("topic-byob", "env-596", "lkc-123456")
 		case "topic-managed":
 			tableflowTopic = getTopicManaged("topic-managed", "env-596", "lkc-123456")
+		case "topic-error-log":
+			tableflowTopic = getTopicManaged("topic-error-log", "env-596", "lkc-123456")
 		}
 
 		if body.Spec.Config.GetRetentionMs() != "" {
 			tableflowTopic.Spec.Config.SetRetentionMs(body.Spec.Config.GetRetentionMs())
+		}
+
+		if body.Spec.Config.HasErrorHandling() {
+			tableflowTopic.Spec.Config.SetErrorHandling(body.Spec.Config.GetErrorHandling())
 		}
 
 		err = json.NewEncoder(w).Encode(tableflowTopic)
@@ -182,6 +198,9 @@ func getTopicByob(display_name, environmentId, clusterId string) tableflowv1.Tab
 				EnablePartitioning:    tableflowv1.PtrBool(true),          // ready-only property that needs confirmation, assuming constantly true for now
 				RetentionMs:           tableflowv1.PtrString("604800000"), // 7 days to miliseconds
 				RecordFailureStrategy: tableflowv1.PtrString("SKIP"),
+				ErrorHandling: &tableflowv1.TableflowV1TableFlowTopicConfigsSpecErrorHandlingOneOf{
+					TableflowV1ErrorHandlingSkip: &tableflowv1.TableflowV1ErrorHandlingSkip{Mode: "SKIP"},
+				},
 			},
 			TableFormats: &[]string{"ICEBERG"},
 			Environment:  &tableflowv1.GlobalObjectReference{Id: environmentId},
@@ -191,6 +210,30 @@ func getTopicByob(display_name, environmentId, clusterId string) tableflowv1.Tab
 			Phase: tableflowv1.PtrString("RUNNING"),
 			//ErrorMessage: tableflowv1.PtrString(""),
 			WriteMode: "UPSERT",
+			CatalogSyncStatuses: &[]tableflowv1.TableflowV1CatalogSyncStatus{
+				{
+					CatalogIntegrationId: tableflowv1.PtrString("cat-id-123"),
+					CatalogType:          tableflowv1.PtrString("TYPE-1"),
+					SyncStatus:           tableflowv1.PtrString("SUCCESS"),
+					ErrorMessage:         tableflowv1.NullableString{},
+				},
+				{
+					CatalogIntegrationId: tableflowv1.PtrString("cat-id-456"),
+					CatalogType:          tableflowv1.PtrString("TYPE-2"),
+					SyncStatus:           tableflowv1.PtrString("FAILED"),
+					ErrorMessage:         *tableflowv1.NewNullableString(tableflowv1.PtrString("Connection timeout")),
+				},
+			},
+			FailingTableFormats: &[]tableflowv1.TableflowV1TableflowTopicStatusFailingTableFormats{
+				{
+					Format:       "ICEBERG",
+					ErrorMessage: "Schema validation failed",
+				},
+				{
+					Format:       "DELTA",
+					ErrorMessage: "Connection timeout ",
+				},
+			},
 		},
 	}
 }
@@ -211,6 +254,9 @@ func getTopicManaged(display_name, environmentId, clusterId string) tableflowv1.
 				EnablePartitioning:    tableflowv1.PtrBool(true),          // ready-only property that needs confirmation, assuming constantly true for now
 				RetentionMs:           tableflowv1.PtrString("604800000"), // 7 days to miliseconds
 				RecordFailureStrategy: tableflowv1.PtrString("SUSPEND"),
+				ErrorHandling: &tableflowv1.TableflowV1TableFlowTopicConfigsSpecErrorHandlingOneOf{
+					TableflowV1ErrorHandlingSuspend: &tableflowv1.TableflowV1ErrorHandlingSuspend{Mode: "SUSPEND"},
+				},
 			},
 			TableFormats: &[]string{"DELTA"},
 			Environment:  &tableflowv1.GlobalObjectReference{Id: environmentId},
@@ -220,6 +266,30 @@ func getTopicManaged(display_name, environmentId, clusterId string) tableflowv1.
 			Phase: tableflowv1.PtrString("RUNNING"),
 			//ErrorMessage: tableflowv1.PtrString(""),
 			WriteMode: "APPEND",
+			CatalogSyncStatuses: &[]tableflowv1.TableflowV1CatalogSyncStatus{
+				{
+					CatalogIntegrationId: tableflowv1.PtrString("cat-id-123"),
+					CatalogType:          tableflowv1.PtrString("TYPE-1"),
+					SyncStatus:           tableflowv1.PtrString("SUCCESS"),
+					ErrorMessage:         tableflowv1.NullableString{},
+				},
+				{
+					CatalogIntegrationId: tableflowv1.PtrString("cat-id-456"),
+					CatalogType:          tableflowv1.PtrString("TYPE-2"),
+					SyncStatus:           tableflowv1.PtrString("FAILED"),
+					ErrorMessage:         *tableflowv1.NewNullableString(tableflowv1.PtrString("Connection timeout")),
+				},
+			},
+			FailingTableFormats: &[]tableflowv1.TableflowV1TableflowTopicStatusFailingTableFormats{
+				{
+					Format:       "ICEBERG",
+					ErrorMessage: "Schema validation failed",
+				},
+				{
+					Format:       "DELTA",
+					ErrorMessage: "Connection timeout ",
+				},
+			},
 		},
 	}
 }
@@ -241,6 +311,10 @@ func handleCatalogIntegrationGet(t *testing.T, environmentId, clusterId, id stri
 			require.NoError(t, err)
 		case "tci-abc456":
 			catalogIntegration := getCatalogIntegration(id, environmentId, clusterId, "my-aws-glue-ci", "AwsGlue")
+			err := json.NewEncoder(w).Encode(catalogIntegration)
+			require.NoError(t, err)
+		case "tci-ghi789":
+			catalogIntegration := getCatalogIntegration(id, environmentId, clusterId, "my-unity-ci", "Unity")
 			err := json.NewEncoder(w).Encode(catalogIntegration)
 			require.NoError(t, err)
 		}
@@ -287,9 +361,10 @@ func handleCatalogIntegrationList(t *testing.T, environment, clusterId string) h
 	return func(w http.ResponseWriter, r *http.Request) {
 		catalogIntegrationOne := getCatalogIntegration("tci-abc123", environment, clusterId, "my-aws-glue-ci", "AwsGlue")
 		catalogIntegrationTwo := getCatalogIntegration("tci-def456", environment, clusterId, "my-snowflake-ci", "Snowflake")
+		catalogIntegrationThree := getCatalogIntegration("tci-ghi789", environment, clusterId, "my-unity-ci", "Unity")
 		catalogIntegrationTwo.Status.SetPhase("PENDING")
 
-		recordList := tableflowv1.TableflowV1CatalogIntegrationList{Data: []tableflowv1.TableflowV1CatalogIntegration{catalogIntegrationOne, catalogIntegrationTwo}}
+		recordList := tableflowv1.TableflowV1CatalogIntegrationList{Data: []tableflowv1.TableflowV1CatalogIntegration{catalogIntegrationOne, catalogIntegrationTwo, catalogIntegrationThree}}
 		setPageToken(&recordList, &recordList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
@@ -302,7 +377,18 @@ func handleCatalogIntegrationCreate(t *testing.T) http.HandlerFunc {
 		err := json.NewDecoder(r.Body).Decode(catalogIntegration)
 		require.NoError(t, err)
 
-		catalogIntegration.SetId("tci-abc123")
+		var id string
+		if catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationAwsGlueSpec != nil {
+			id = "tci-abc123"
+		} else if catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeSpec != nil {
+			id = "tci-def456"
+		} else if catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec != nil {
+			id = "tci-ghi789"
+		} else {
+			id = "tci-abc123" // default
+		}
+
+		catalogIntegration.SetId(id)
 		catalogIntegration.Status = &tableflowv1.TableflowV1CatalogIntegrationStatus{Phase: tableflowv1.PtrString("PENDING")}
 
 		err = json.NewEncoder(w).Encode(catalogIntegration)
@@ -339,6 +425,14 @@ func getCatalogIntegration(id, environment, cluster, name, specConfigKind string
 			ClientSecret: "client-secret",
 			Warehouse:    "warehouse",
 			AllowedScope: "allowed-scope",
+		}))
+	case "Unity":
+		catalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationUnitySpecAsTableflowV1CatalogIntegrationSpecConfigOneOf(&tableflowv1.TableflowV1CatalogIntegrationUnitySpec{
+			Kind:              specConfigKind,
+			WorkspaceEndpoint: "https://dbc-0e76d5eb-ff10.cloud.databricks.com",
+			CatalogName:       "catalog-name",
+			ClientId:          "client-id",
+			ClientSecret:      "client-secret",
 		}))
 	}
 
