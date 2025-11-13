@@ -5,6 +5,7 @@
 | Enable Partitioning     | true                                                                     |
 | Environment             | env-596                                                                  |
 | Record Failure Strategy | SKIP                                                                     |
+| Error Handling          | SKIP                                                                     |
 | Retention Ms            | 604800000                                                                |
 | Storage Type            | BYOS                                                                     |
 | Provider Integration ID | cspi-stgce89r7                                                           |
@@ -14,4 +15,9 @@
 | Table Formats           | ICEBERG                                                                  |
 | Table Path              | s3://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId |
 | Phase                   | RUNNING                                                                  |
+| Catalog Sync Status     | cat-id-123=SUCCESS                                                       |
+|                         | cat-id-456=FAILED-Connection timeout                                     |
+| Failing Table Format    | DELTA=Connection timeout                                                 |
+|                         | ICEBERG=Schema validation failed                                         |
+| Write Mode              | UPSERT                                                                   |
 +-------------------------+--------------------------------------------------------------------------+

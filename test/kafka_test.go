@@ -38,11 +38,14 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type enterprise", fixture: "kafka/cluster/create-enterprise-availability-zone-error.golden", exitCode: 1},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type freight --availability multi-zone", fixture: "kafka/cluster/create-freight.golden"},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type freight", fixture: "kafka/cluster/create-freight-low.golden"},
+		{args: "kafka cluster create my-basic-cluster-with-ecku-limits --cloud aws --region us-west-2 --type basic", fixture: "kafka/cluster/create-basic-with-ecku-limits.golden"},
+		{args: "kafka cluster create my-standard-cluster-with-ecku-limits --cloud aws --region us-west-2 --type standard", fixture: "kafka/cluster/create-standard-with-ecku-limits.golden"},
 
 		{args: "kafka cluster update lkc-update", fixture: "kafka/cluster/create-flag-error.golden", exitCode: 1},
 		{args: "kafka cluster update lkc-update --name lkc-update-name", fixture: "kafka/26.golden"},
 		{args: "kafka cluster update lkc-update --name lkc-update-name -o json", fixture: "kafka/28.golden"},
 		{args: "kafka cluster update lkc-update --name lkc-update-name -o yaml", fixture: "kafka/29.golden"},
+		{args: "kafka cluster update lkc-with-ecku-limits --name lkc-update-name", fixture: "kafka/cluster/update-basic-with-ecku-limits.golden"},
 		{args: "kafka cluster update lkc-update-dedicated-expand --name lkc-update-dedicated-name --cku 2", fixture: "kafka/27.golden"},
 		{args: "kafka cluster update lkc-update-dedicated-expand --cku 2", fixture: "kafka/39.golden"},
 		{args: "kafka cluster update lkc-update --cku 2", fixture: "kafka/cluster/update-resize-error.golden", exitCode: 1},
@@ -97,6 +100,9 @@ func (s *CLITestSuite) TestKafka() {
 
 		{args: "kafka cluster describe lkc-unknown", fixture: "kafka/48.golden", exitCode: 1},
 		{args: "kafka cluster describe lkc-unknown-type", fixture: "kafka/describe-unknown-cluster-type.golden"},
+
+		{args: "kafka cluster describe lkc-describe-with-ecku-limits", fixture: "kafka/cluster/describe-basic-with-ecku-limits.golden"},
+		{args: "kafka cluster describe lkc-with-usage-limits-error", fixture: "kafka/cluster/describe-with-usage-limits-error.golden"},
 
 		{args: "kafka acl list --cluster lkc-acls", fixture: "kafka/acl/list-cloud.golden"},
 		{args: "kafka acl list --cluster lkc-acls --all", fixture: "kafka/acl/list-cloud-all.golden"},

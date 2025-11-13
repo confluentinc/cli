@@ -41,5 +41,7 @@ func (c *command) applicationDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return output.SerializedOutput(cmd, application)
+	localApp := convertSdkApplicationToLocalApplication(application)
+
+	return output.SerializedOutput(cmd, localApp)
 }
