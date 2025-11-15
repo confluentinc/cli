@@ -18,6 +18,7 @@ import (
 
 const (
 	awsEgressPrivateLink           = "AwsEgressPrivateLink"
+	awsIngressPrivateLink          = "AwsIngressPrivateLink"
 	awsPeering                     = "AwsPeering"
 	azureEgressPrivateLink         = "AzureEgressPrivateLink"
 	azurePeering                   = "AzurePeering"
@@ -27,10 +28,11 @@ const (
 )
 
 var (
-	createGatewayTypes = []string{"egress-privatelink", "private-network-interface"}
-	listGatewayTypes   = []string{"aws-egress-privatelink", "azure-egress-privatelink", "gcp-egress-private-service-connect"} // TODO: check if we accept private-network-interface here
+	createGatewayTypes = []string{"egress-privatelink", "ingress-privatelink", "private-network-interface"}
+	listGatewayTypes   = []string{"aws-egress-privatelink", "aws-ingress-privatelink", "azure-egress-privatelink", "gcp-egress-private-service-connect"} // TODO: check if we accept private-network-interface here
 	gatewayTypeMap     = map[string]string{
 		"aws-egress-privatelink":             awsEgressPrivateLink,
+		"aws-ingress-privatelink":            awsIngressPrivateLink,
 		"azure-egress-privatelink":           azureEgressPrivateLink,
 		"gcp-egress-private-service-connect": gcpEgressPrivateServiceConnect,
 	}
@@ -130,7 +132,7 @@ func autocompleteGateways(client *ccloudv2.Client, environmentId string) []strin
 func getGatewayCloud(gateway networkinggatewayv1.NetworkingV1Gateway) string {
 	cloud := gateway.Status.GetCloudGateway()
 
-	if cloud.NetworkingV1AwsEgressPrivateLinkGatewayStatus != nil || cloud.NetworkingV1AwsPrivateNetworkInterfaceGatewayStatus != nil {
+	if cloud.NetworkingV1AwsEgressPrivateLinkGatewayStatus != nil || cloud.NetworkingV1AwsIngressPrivateLinkGatewayStatus != nil || cloud.NetworkingV1AwsPrivateNetworkInterfaceGatewayStatus != nil {
 		return pcloud.Aws
 	}
 
@@ -158,6 +160,10 @@ func getGatewayType(gateway networkinggatewayv1.NetworkingV1Gateway) (string, er
 
 	if config.NetworkingV1AwsEgressPrivateLinkGatewaySpec != nil {
 		return awsEgressPrivateLink, nil
+	}
+
+	if config.NetworkingV1AwsIngressPrivateLinkGatewaySpec != nil {
+		return awsIngressPrivateLink, nil
 	}
 
 	if config.NetworkingV1AzureEgressPrivateLinkGatewaySpec != nil {
@@ -208,6 +214,9 @@ func printGatewayTable(cmd *cobra.Command, gateway networkinggatewayv1.Networkin
 	if gatewayType == awsEgressPrivateLink {
 		out.Region = gateway.Spec.Config.NetworkingV1AwsEgressPrivateLinkGatewaySpec.GetRegion()
 	}
+	if gatewayType == awsIngressPrivateLink {
+		out.Region = gateway.Spec.Config.NetworkingV1AwsIngressPrivateLinkGatewaySpec.GetRegion()
+	}
 	if gatewayType == awsPeering {
 		out.Region = gateway.Spec.Config.NetworkingV1AwsPeeringGatewaySpec.GetRegion()
 	}
@@ -232,6 +241,8 @@ func printGatewayTable(cmd *cobra.Command, gateway networkinggatewayv1.Networkin
 	case pcloud.Aws:
 		if gatewayType == awsEgressPrivateLink {
 			out.AwsPrincipalArn = gateway.Status.CloudGateway.NetworkingV1AwsEgressPrivateLinkGatewayStatus.GetPrincipalArn()
+		} else if gatewayType == awsIngressPrivateLink {
+			out.AwsPrincipalArn = gateway.Status.CloudGateway.NetworkingV1AwsIngressPrivateLinkGatewayStatus.GetPrincipalArn()
 		} else if gatewayType == awsPrivateNetworkInterface {
 			out.Account = gateway.Status.CloudGateway.NetworkingV1AwsPrivateNetworkInterfaceGatewayStatus.GetAccount()
 		}

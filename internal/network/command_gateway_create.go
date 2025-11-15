@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -22,6 +23,10 @@ func (c *command) newGatewayCreateCommand() *cobra.Command {
 			examples.Example{
 				Text: `Create network gateway "my-gateway".`,
 				Code: "confluent network gateway create my-gateway --cloud aws --region us-east-1 --type egress-privatelink",
+			},
+			examples.Example{
+				Text: "Create an AWS ingress private link gateway.",
+				Code: "confluent network gateway create --cloud aws --region us-east-1 --type ingress-privatelink",
 			},
 			examples.Example{
 				Text: "Create an AWS private network interface gateway.",
@@ -87,6 +92,13 @@ func (c *command) gatewayCreate(cmd *cobra.Command, args []string) error {
 					Region: region,
 				},
 			}
+		} else if gatewayType == "ingress-privatelink" {
+			createGateway.Spec.Config = &networkinggatewayv1.NetworkingV1GatewaySpecConfigOneOf{
+				NetworkingV1AwsIngressPrivateLinkGatewaySpec: &networkinggatewayv1.NetworkingV1AwsIngressPrivateLinkGatewaySpec{
+					Kind:   "AwsIngressPrivateLinkGatewaySpec",
+					Region: region,
+				},
+			}
 		} else if gatewayType == "private-network-interface" {
 			createGateway.Spec.Config = &networkinggatewayv1.NetworkingV1GatewaySpecConfigOneOf{
 				NetworkingV1AwsPrivateNetworkInterfaceGatewaySpec: &networkinggatewayv1.NetworkingV1AwsPrivateNetworkInterfaceGatewaySpec{
@@ -97,6 +109,9 @@ func (c *command) gatewayCreate(cmd *cobra.Command, args []string) error {
 			}
 		}
 	case pcloud.Azure:
+		if gatewayType == "ingress-privatelink" {
+			return fmt.Errorf("ingress-privatelink gateway type is only supported for AWS")
+		}
 		if gatewayType == "egress-privatelink" {
 			createGateway.Spec.Config = &networkinggatewayv1.NetworkingV1GatewaySpecConfigOneOf{
 				NetworkingV1AzureEgressPrivateLinkGatewaySpec: &networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewaySpec{
