@@ -50,8 +50,10 @@ func (s *CLITestSuite) TestTableflowTopic() {
 	tests := []CLITest{
 		{args: "tableflow topic enable topic-byob --cluster lkc-123456 --retention-ms 604800000 --storage-type BYOS --provider-integration cspi-stgce89r7 --bucket-name bucket_1 --record-failure-strategy SKIP", fixture: "tableflow/topic/enable-topic-byob.golden"},
 		{args: "tableflow topic enable topic-managed --cluster lkc-123456 --retention-ms 604800000 --storage-type MANAGED --table-formats DELTA", fixture: "tableflow/topic/enable-topic-managed.golden"},
+		{args: "tableflow topic enable topic-azure --cluster lkc-123456 --retention-ms 604800000 --storage-type AzureDataLakeStorageGen2 --provider-integration cspi-stgce89r7 --container-name container1 --storage-account-name acc1", fixture: "tableflow/topic/enable-topic-azure.golden"},
 		{args: "tableflow topic create topic-byob --cluster lkc-123456 --retention-ms 604800000 --storage-type BYOS --provider-integration cspi-stgce89r7 --bucket-name bucket_1 --record-failure-strategy SKIP", fixture: "tableflow/topic/enable-topic-byob.golden"},
 		{args: "tableflow topic create topic-managed --cluster lkc-123456 --retention-ms 604800000 --storage-type MANAGED --table-formats DELTA", fixture: "tableflow/topic/enable-topic-managed.golden"},
+		{args: "tableflow topic enable topic-azure --cluster lkc-123456 --retention-ms 604800000 --storage-type AzureDataLakeStorageGen2 --provider-integration cspi-stgce89r7 --container-name container1 --storage-account-name acc1", fixture: "tableflow/topic/enable-topic-azure.golden"},
 		{args: "tableflow topic enable topic-managed --cluster lkc-123456 --storage-type MANAGED --error-handling SUSPEND", fixture: "tableflow/topic/enable-topic-managed-error-handling-suspend.golden"},
 		{args: "tableflow topic enable topic-managed --cluster lkc-123456 --storage-type MANAGED --error-handling SKIP", fixture: "tableflow/topic/enable-topic-managed-error-handling-skip.golden"},
 		{args: "tableflow topic enable topic-managed --cluster lkc-123456 --storage-type MANAGED --error-handling LOG --log-target log_topic", fixture: "tableflow/topic/enable-topic-managed-error-handling-log.golden"},
@@ -63,8 +65,10 @@ func (s *CLITestSuite) TestTableflowTopic() {
 		{args: "tableflow topic update topic-error-log --cluster lkc-123456 --log-target log_topic", fixture: "tableflow/topic/update-topic-error-log.golden"},
 		{args: "tableflow topic disable topic-managed --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/disable-topic.golden"},
 		{args: "tableflow topic disable topic-managed topic-byob --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/disable-multiple-topics.golden"},
+		{args: "tableflow topic disable topic-azure --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/disable-topic-azure.golden"},
 		{args: "tableflow topic delete topic-managed --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/delete-topic.golden"},
 		{args: "tableflow topic delete topic-managed topic-byob --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/delete-multiple-topics.golden"},
+		{args: "tableflow topic delete topic-azure --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/delete-azure-topic.golden"},
 		{args: "tableflow topic delete invalid-topic --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/delete-topic-invalid-1.golden", exitCode: 1},
 		{args: "tableflow topic delete invalid-topic --cluster lkc-invalid", input: "y\n", fixture: "tableflow/topic/delete-topic-invalid-2.golden", exitCode: 1},
 	}
@@ -78,7 +82,9 @@ func (s *CLITestSuite) TestTableflowTopic() {
 func (s *CLITestSuite) TestTableflowTopicDescribe() {
 	tests := []CLITest{
 		{args: "tableflow topic describe topic-byob --cluster lkc-123456", fixture: "tableflow/topic/describe-topic.golden"},
+		{args: "tableflow topic describe topic-azure --cluster lkc-123456", fixture: "tableflow/topic/describe-topic-azure.golden"},
 		{args: "tableflow topic describe topic-byob --cluster lkc-123456 --output json", fixture: "tableflow/topic/describe-topic-json.golden"},
+		{args: "tableflow topic describe topic-azure --cluster lkc-123456 --output json", fixture: "tableflow/topic/describe-topic-azure-json.golden"},
 	}
 
 	for _, test := range tests {
