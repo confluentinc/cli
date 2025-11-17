@@ -193,7 +193,7 @@ func createKafkaCatalog(catName string) cmfsdk.KafkaCatalog {
 			CreationTimestamp: &timeStamp,
 		},
 		Spec: cmfsdk.KafkaCatalogSpec{
-			KafkaClusters: []cmfsdk.KafkaCatalogSpecKafkaClusters{
+			KafkaClusters: &[]cmfsdk.KafkaCatalogSpecKafkaClusters{
 				{
 					DatabaseName: "test-database",
 				},
