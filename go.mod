@@ -287,3 +287,5 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace github.com/confluentinc/cmf-sdk-go => github.com/rmetzger/cmf-sdk-go v0.0.0-20251117145224-f91646ac98de
