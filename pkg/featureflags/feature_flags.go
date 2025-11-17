@@ -27,7 +27,7 @@ import (
 const (
 	baseURL  = "%s/ldapi/sdk/eval/%s/"
 	userPath = "users/%s"
-	timeout  = 5 * time.Second
+	timeout  = 15 * time.Second
 )
 
 const (
