@@ -1,9 +1,0 @@
-\+---------------------+------------------+
-\| Cluster             \| lkc-1234         \|
-\| Share Group         \| share-group-1    \|
-\| Coordinator         \| broker-1         \|
-\| State               \| STABLE           \|
-\| Consumer Count      \| 2                \|
-\| Partition Count     \| 3                \|
-\| Topic Subscriptions \| (topic-1, topic-2|topic-2, topic-1) \|
-\+---------------------+------------------+

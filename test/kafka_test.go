@@ -6,11 +6,6 @@ import (
 	"runtime"
 )
 
-const (
-	shareGroupTopic1 = "topic-1"
-	shareGroupTopic2 = "topic-2"
-)
-
 func (s *CLITestSuite) TestKafka() {
 	tests := []CLITest{
 		{args: "environment use env-596", fixture: "kafka/0.golden"},
@@ -753,40 +748,6 @@ func (s *CLITestSuite) TestKafkaConsumerGroupLag_OnPrem() {
 	}
 }
 
-func (s *CLITestSuite) TestKafkaShareGroup() {
-	tests := []CLITest{
-		{args: "kafka share-group list --cluster lkc-1234", fixture: "kafka/share-group/list.golden"},
-		{args: "kafka share-group list --cluster lkc-1234 -o json", fixture: "kafka/share-group/list-json.golden"},
-		{args: "kafka share-group list --cluster lkc-1234 -o yaml", fixture: "kafka/share-group/list-yaml.golden"},
-		{args: "kafka share-group describe share-group-1 --cluster lkc-1234", contains: shareGroupTopic1, notContains: ""},
-		{args: "kafka share-group describe share-group-1 --cluster lkc-1234", contains: shareGroupTopic2, notContains: ""},
-		{args: "kafka share-group describe share-group-1 --cluster lkc-1234 -o json", contains: shareGroupTopic1, notContains: ""},
-		{args: "kafka share-group describe share-group-1 --cluster lkc-1234 -o json", contains: shareGroupTopic2, notContains: ""},
-		{args: "kafka share-group describe share-group-1 --cluster lkc-1234 -o yaml", contains: shareGroupTopic1, notContains: ""},
-		{args: "kafka share-group describe share-group-1 --cluster lkc-1234 -o yaml", contains: shareGroupTopic2, notContains: ""},
-		{args: "kafka share-group describe share-group-1234 --cluster lkc-1234", fixture: "kafka/share-group/describe-dne.golden", exitCode: 1},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
-
-func (s *CLITestSuite) TestKafkaShareGroupConsumer() {
-	tests := []CLITest{
-		{args: "kafka share-group consumer list --group share-group-1 --cluster lkc-1234", fixture: "kafka/share-group/consumer/list.golden"},
-		{args: "kafka share-group consumer list --group share-group-1 --cluster lkc-1234 -o json", fixture: "kafka/share-group/consumer/list-json.golden"},
-		{args: "kafka share-group consumer list --group share-group-1 --cluster lkc-1234 -o yaml", fixture: "kafka/share-group/consumer/list-yaml.golden"},
-		{args: "kafka share-group consumer list --group share-group-1234 --cluster lkc-1234", fixture: "kafka/share-group/consumer/list-dne.golden", exitCode: 1},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
-
 func (s *CLITestSuite) TestKafka_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete kafka consumer list --cluster lkc-1234 --group ""`, fixture: "kafka/consumer/list-consumer-group-autocomplete.golden"},
@@ -794,8 +755,6 @@ func (s *CLITestSuite) TestKafka_Autocomplete() {
 		{args: `__complete kafka consumer group lag describe --cluster lkc-1234 ""`, fixture: "kafka/consumer/group/lag/describe-autocomplete.golden"},
 		{args: `__complete kafka consumer group lag list --cluster lkc-1234 ""`, fixture: "kafka/consumer/group/lag/list-autocomplete.golden"},
 		{args: `__complete kafka consumer group lag summarize --cluster lkc-1234 ""`, fixture: "kafka/consumer/group/lag/summarize-autocomplete.golden"},
-		{args: `__complete kafka share-group describe --cluster lkc-1234 ""`, fixture: "kafka/share-group/autocomplete.golden"},
-		{args: `__complete kafka share-group consumer list --group ""`, fixture: "kafka/share-group/consumer/list-group-autocomplete.golden"},
 		{args: `__complete kafka cluster create my-cluster --availability ""`, fixture: "kafka/create-availability-autocomplete.golden"},
 		{args: `__complete kafka cluster create my-cluster --type ""`, fixture: "kafka/create-type-autocomplete.golden"},
 		{args: `__complete kafka cluster describe ""`, fixture: "kafka/describe-autocomplete.golden"},
