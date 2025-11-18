@@ -1,7 +1,0 @@
-cluster: lkc-1234
-share_group: share-group-1
-coordinator: broker-1
-state: STABLE
-consumer_count: 2
-partition_count: 3
-topic_subscriptions: (topic-1, topic-2|topic-2, topic-1)
