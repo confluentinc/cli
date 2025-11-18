@@ -1,4 +1,0 @@
-  Cluster  |  Share Group  | Coordinator | State  | Consumer Count  
------------+---------------+-------------+--------+-----------------
-  lkc-1234 | share-group-1 | broker-1    | STABLE |              2  
-  lkc-1234 | share-group-2 | broker-2    | EMPTY  |              0  
