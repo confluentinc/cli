@@ -17,3 +17,16 @@ func (s *CLITestSuite) TestServiceQuotaList() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestServiceQuotaList_Autocomplete() {
+	tests := []CLITest{
+		{args: `__complete service-quota list ""`, login: "cloud", fixture: "service-quota/list-autocomplete.golden"},
+	}
+
+	resetConfiguration(s.T(), false)
+
+	for _, test := range tests {
+		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
