@@ -120,7 +120,7 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(access, id string)
 		return privateURL, nil
 	}
 	if access == "" {
-		output.Printf(c.Config.EnableColor, "No Flink endpoint is specified, defaulting to public endpoint: `%s`\n", publicURL)
+		output.ErrPrintf(c.Config.EnableColor, "No Flink endpoint is specified, defaulting to public endpoint: `%s`\n", publicURL)
 	}
 	return publicURL, nil
 }
@@ -146,7 +146,7 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(accessType, provider, r
 		return "", errors.NewErrorWithSuggestions("invalid region", "Please select a valid region - use `confluent flink region list` to see available regions")
 	}
 	if accessType == "" {
-		output.Printf(c.Config.EnableColor, "No Flink endpoint is specified, defaulting to public endpoint: `%s`\n", hostUrl)
+		output.ErrPrintf(c.Config.EnableColor, "No Flink endpoint is specified, defaulting to public endpoint: `%s`\n", hostUrl)
 	}
 
 	u, err := purl.Parse(hostUrl)
