@@ -24,6 +24,10 @@ func (c *command) newGatewayCreateCommand() *cobra.Command {
 				Code: "confluent network gateway create my-gateway --cloud aws --region us-east-1 --type egress-privatelink",
 			},
 			examples.Example{
+				Text: "Create an AWS ingress private link gateway.",
+				Code: "confluent network gateway create --cloud aws --region us-east-1 --type ingress-privatelink",
+			},
+			examples.Example{
 				Text: "Create an AWS private network interface gateway.",
 				Code: "confluent network gateway create --cloud aws --region us-east-1 --type private-network-interface",
 			},
@@ -84,6 +88,13 @@ func (c *command) gatewayCreate(cmd *cobra.Command, args []string) error {
 			createGateway.Spec.Config = &networkinggatewayv1.NetworkingV1GatewaySpecConfigOneOf{
 				NetworkingV1AwsEgressPrivateLinkGatewaySpec: &networkinggatewayv1.NetworkingV1AwsEgressPrivateLinkGatewaySpec{
 					Kind:   "AwsEgressPrivateLinkGatewaySpec",
+					Region: region,
+				},
+			}
+		} else if gatewayType == "ingress-privatelink" {
+			createGateway.Spec.Config = &networkinggatewayv1.NetworkingV1GatewaySpecConfigOneOf{
+				NetworkingV1AwsIngressPrivateLinkGatewaySpec: &networkinggatewayv1.NetworkingV1AwsIngressPrivateLinkGatewaySpec{
+					Kind:   "AwsIngressPrivateLinkGatewaySpec",
 					Region: region,
 				},
 			}
