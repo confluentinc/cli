@@ -195,6 +195,7 @@ func (s *CLITestSuite) TestFlinkConnectionCreateSuccess() {
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com --api-key api_key --transport-type STREAMABLE_HTTP", fixture: "flink/connection/create/create-mcp_server.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com --token-endpoint https://api.example.com/auth --client-id clientId --client-secret secret --scope test_scope", fixture: "flink/connection/create/create-mcp_server.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com --token token --sse-endpoint /sse --transport-type SSE", fixture: "flink/connection/create/create-mcp_server.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com --username name --password pass --transport-type SSE", fixture: "flink/connection/create/create-mcp_server.golden"},
 	}
 
 	for _, test := range tests {
