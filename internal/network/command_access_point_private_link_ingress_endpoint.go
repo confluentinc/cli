@@ -13,14 +13,14 @@ import (
 )
 
 type ingressEndpointOut struct {
-	Id                    string `human:"ID" serialized:"id"`
-	Name                  string `human:"Name,omitempty" serialized:"name,omitempty"`
-	Environment           string `human:"Environment" serialized:"environment"`
-	Gateway               string `human:"Gateway" serialized:"gateway"`
-	Phase                 string `human:"Phase" serialized:"phase"`
-	AwsVpcEndpointService string `human:"AWS VPC Endpoint Service,omitempty" serialized:"aws_vpc_endpoint_service,omitempty"`
-	AwsVpcEndpoint        string `human:"AWS VPC Endpoint,omitempty" serialized:"aws_vpc_endpoint,omitempty"`
-	AwsVpcEndpointDnsName string `human:"AWS VPC Endpoint DNS Name,omitempty" serialized:"aws_vpc_endpoint_dns_name,omitempty"`
+	Id                        string `human:"ID" serialized:"id"`
+	Name                      string `human:"Name,omitempty" serialized:"name,omitempty"`
+	Environment               string `human:"Environment" serialized:"environment"`
+	Gateway                   string `human:"Gateway" serialized:"gateway"`
+	Phase                     string `human:"Phase" serialized:"phase"`
+	AwsVpcEndpointService     string `human:"AWS VPC Endpoint Service,omitempty" serialized:"aws_vpc_endpoint_service,omitempty"`
+	AwsVpcEndpoint            string `human:"AWS VPC Endpoint,omitempty" serialized:"aws_vpc_endpoint,omitempty"`
+	AwsVpcEndpointServiceName string `human:"AWS VPC Endpoint Service Name,omitempty" serialized:"aws_vpc_endpoint_service_name,omitempty"`
 }
 
 func (c *accessPointCommand) newIngressEndpointCommand() *cobra.Command {
@@ -92,12 +92,12 @@ func printPrivateLinkIngressEndpointTable(cmd *cobra.Command, ingressEndpoint ne
 	}
 
 	if ingressEndpoint.Spec.Config != nil && ingressEndpoint.Spec.Config.NetworkingV1AwsIngressPrivateLinkEndpoint != nil {
-		out.AwsVpcEndpointService = ingressEndpoint.Spec.Config.NetworkingV1AwsIngressPrivateLinkEndpoint.GetKind()
+		out.AwsVpcEndpointService = ingressEndpoint.Spec.Config.NetworkingV1AwsIngressPrivateLinkEndpoint.GetVpcEndpointId()
 	}
 
 	if ingressEndpoint.Status.Config != nil && ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus != nil {
 		out.AwsVpcEndpoint = ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.GetVpcEndpointId()
-		out.AwsVpcEndpointDnsName = ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.GetVpcEndpointServiceName()
+		out.AwsVpcEndpointServiceName = ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.GetVpcEndpointServiceName()
 	}
 
 	table := output.NewTable(cmd)

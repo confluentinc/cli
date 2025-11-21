@@ -1,7 +1,6 @@
 package network
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -109,9 +108,6 @@ func (c *command) gatewayCreate(cmd *cobra.Command, args []string) error {
 			}
 		}
 	case pcloud.Azure:
-		if gatewayType == "ingress-privatelink" {
-			return fmt.Errorf("ingress-privatelink gateway type is only supported for AWS")
-		}
 		if gatewayType == "egress-privatelink" {
 			createGateway.Spec.Config = &networkinggatewayv1.NetworkingV1GatewaySpecConfigOneOf{
 				NetworkingV1AzureEgressPrivateLinkGatewaySpec: &networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewaySpec{
