@@ -1,0 +1,10 @@
++-------------------------------+---------------------------------------------------------+
+| ID                            | ap-99999                                                |
+| Name                          | my-aws-ingress-access-point                             |
+| Environment                   | env-596                                                 |
+| Gateway                       | gw-88888                                                |
+| Phase                         | READY                                                   |
+| AWS VPC Endpoint Service      | vpce-1234567890abcdef0                                  |
+| AWS VPC Endpoint              | vpce-1234567890abcdef0                                  |
+| AWS VPC Endpoint Service Name | com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000 |
++-------------------------------+---------------------------------------------------------+
