@@ -22,13 +22,13 @@ func (c *accessPointCommand) newIngressEndpointCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create an AWS PrivateLink ingress endpoint.",
-				Code: "confluent network access-point private-link ingress-endpoint create --cloud aws --gateway gw-123456 --service com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000",
+				Code: "confluent network access-point private-link ingress-endpoint create --cloud aws --gateway gw-123456 --vpc-endpoint-id com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000",
 			},
 		),
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	cmd.Flags().String("service", "", "Name of an AWS VPC endpoint service.")
+	cmd.Flags().String("vpc-endpoint-id", "", "Name of an AWS VPC endpoint Id.")
 	addGatewayFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -36,7 +36,7 @@ func (c *accessPointCommand) newIngressEndpointCreateCommand() *cobra.Command {
 
 	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
 	cobra.CheckErr(cmd.MarkFlagRequired("gateway"))
-	cobra.CheckErr(cmd.MarkFlagRequired("service"))
+	cobra.CheckErr(cmd.MarkFlagRequired("vpc-endpoint-id"))
 
 	return cmd
 }
@@ -58,7 +58,7 @@ func (c *accessPointCommand) createIngressEndpoint(cmd *cobra.Command, args []st
 		return err
 	}
 
-	service, err := cmd.Flags().GetString("service")
+	vpcEndpointId, err := cmd.Flags().GetString("vpc-endpoint-id")
 	if err != nil {
 		return err
 	}
@@ -83,8 +83,8 @@ func (c *accessPointCommand) createIngressEndpoint(cmd *cobra.Command, args []st
 	case pcloud.Aws:
 		createIngressEndpoint.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
 			NetworkingV1AwsIngressPrivateLinkEndpoint: &networkingaccesspointv1.NetworkingV1AwsIngressPrivateLinkEndpoint{
-				Kind:                   "AwsIngressPrivateLinkEndpoint",
-				VpcEndpointServiceName: service,
+				Kind:          "AwsIngressPrivateLinkEndpoint",
+				VpcEndpointId: vpcEndpointId,
 			},
 		}
 	default:

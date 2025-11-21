@@ -103,7 +103,7 @@ func (c *command) gatewayList(cmd *cobra.Command, _ []string) error {
 			if gatewayType == "AwsEgressPrivateLink" {
 				out.AwsPrincipalArn = gateway.Status.CloudGateway.NetworkingV1AwsEgressPrivateLinkGatewayStatus.GetPrincipalArn()
 			} else if gatewayType == "AwsIngressPrivateLink" {
-				out.AwsPrincipalArn = gateway.Status.CloudGateway.NetworkingV1AwsIngressPrivateLinkGatewayStatus.GetPrincipalArn()
+				out.VpcEndpointServiceName = gateway.Status.CloudGateway.NetworkingV1AwsIngressPrivateLinkGatewayStatus.GetVpcEndpointServiceName()
 			} else if gatewayType == "AwsPrivateNetworkInterface" {
 				out.Account = gateway.Status.CloudGateway.NetworkingV1AwsPrivateNetworkInterfaceGatewayStatus.GetAccount()
 			}
