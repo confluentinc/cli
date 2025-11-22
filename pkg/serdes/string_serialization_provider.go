@@ -1,6 +1,10 @@
 package serdes
 
-import "github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
+import (
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
+)
 
 type StringSerializationProvider struct{}
 
@@ -12,8 +16,8 @@ func (s *StringSerializationProvider) LoadSchema(_ string, _ map[string]string) 
 	return nil
 }
 
-func (s *StringSerializationProvider) Serialize(_, message string) ([]byte, error) {
-	return []byte(message), nil
+func (s *StringSerializationProvider) Serialize(_, message string) ([]kafka.Header, []byte, error) {
+	return nil, []byte(message), nil
 }
 
 func (s *StringSerializationProvider) GetSchemaName() string {
@@ -23,3 +27,5 @@ func (s *StringSerializationProvider) GetSchemaName() string {
 func (s *StringSerializationProvider) GetSchemaRegistryClient() schemaregistry.Client {
 	return nil
 }
+
+func (s *StringSerializationProvider) SetSchemaIDSerializer(_ serde.SchemaIDSerializerFunc) {}
