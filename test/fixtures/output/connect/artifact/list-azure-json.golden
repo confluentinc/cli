@@ -1,0 +1,20 @@
+[
+  {
+    "id": "cfa-azure-jar123",
+    "name": "my-connect-artifact-azure-jar",
+    "description": "new-jar-artifact",
+    "cloud": "AZURE",
+    "environment": "env-123456",
+    "content_format": "JAR",
+    "status": "READY"
+  },
+  {
+    "id": "cfa-azure-zip123",
+    "name": "my-connect-artifact-azure-zip",
+    "description": "new-zip-artifact",
+    "cloud": "AZURE",
+    "environment": "env-123456",
+    "content_format": "ZIP",
+    "status": "PROCESSING"
+  }
+]
