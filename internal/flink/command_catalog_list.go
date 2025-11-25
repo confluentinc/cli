@@ -35,8 +35,8 @@ func (c *command) catalogList(cmd *cobra.Command, _ []string) error {
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
 		for _, catalog := range sdkCatalogs {
-			databases := make([]string, 0, len(*catalog.GetSpec().KafkaClusters))
-			for _, kafkaCluster := range *catalog.GetSpec().KafkaClusters {
+			databases := make([]string, 0, len(catalog.Spec.GetKafkaClusters()))
+			for _, kafkaCluster := range catalog.Spec.GetKafkaClusters() {
 				databases = append(databases, kafkaCluster.DatabaseName)
 			}
 			var creationTime string

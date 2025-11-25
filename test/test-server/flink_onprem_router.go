@@ -18,6 +18,10 @@ var flinkRoutes = []route{
 	{"/cmf/api/v1/environments/{environment}/statements/{stmtName}", handleCmfStatement},
 	{"/cmf/api/v1/environments/{environment}/statements/{stmtName}/exceptions", handleCmfStatementExceptions},
 	{"/cmf/api/v1/environments/{environment}/statements", handleCmfStatements},
+	{"/cmf/api/v1/environments/{envName}/applications/{appName}/savepoints", handleCmfSavepoints},
+	{"/cmf/api/v1/environments/{envName}/statements/{stmtName}/savepoints", handleCmfSavepoints},
+	{"/cmf/api/v1/environments/{envName}/applications/{appName}/savepoints/{savepointName}", handleCmfSavepoint},
+	{"/cmf/api/v1/environments/{envName}/statements/{stmtName}/savepoints/{savepointName}", handleCmfSavepoint},
 }
 
 func NewFlinkOnPremRouter(t *testing.T) *mux.Router {

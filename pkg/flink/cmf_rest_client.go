@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	_nethttp "net/http"
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
@@ -299,6 +300,106 @@ func (cmfClient *CmfRestClient) UpdateEnvironment(ctx context.Context, postEnvir
 		return cmfsdk.Environment{}, fmt.Errorf(`failed to update environment "%s": %s`, environmentName, parsedErr)
 	}
 	return outputEnvironment, nil
+}
+
+func (cmfClient *CmfRestClient) CreateSavepointApplication(ctx context.Context, savepoint cmfsdk.Savepoint, environment, application string) (cmfsdk.Savepoint, error) {
+	outputSavepoint, httpResponse, err := cmfClient.SavepointsApi.CreateSavepointForFlinkApplication(ctx, environment, application).Savepoint(savepoint).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.Savepoint{}, fmt.Errorf(`failed to create savepoint "%s" in the environment "%s": %s`, savepoint.Metadata.GetName(), environment, parsedErr)
+	}
+	return outputSavepoint, nil
+}
+
+func (cmfClient *CmfRestClient) CreateSavepointStatement(ctx context.Context, savepoint cmfsdk.Savepoint, environment, statement string) (cmfsdk.Savepoint, error) {
+	outputSavepoint, httpResponse, err := cmfClient.SavepointsApi.CreateSavepointForFlinkStatement(ctx, environment, statement).Savepoint(savepoint).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.Savepoint{}, fmt.Errorf(`failed to create savepoint "%s" in the environment "%s": %s`, savepoint.Metadata.GetName(), environment, parsedErr)
+	}
+	return outputSavepoint, nil
+}
+
+func (cmfClient *CmfRestClient) DescribeSavepoint(ctx context.Context, environment, name, application, statement string) (cmfsdk.Savepoint, error) {
+	var cmfSavepoint cmfsdk.Savepoint
+	var httpResponse *_nethttp.Response
+	var err error
+	if statement != "" {
+		cmfSavepoint, httpResponse, err = cmfClient.SavepointsApi.GetSavepointForFlinkStatement(ctx, environment, statement, name).Execute()
+	} else {
+		cmfSavepoint, httpResponse, err = cmfClient.SavepointsApi.GetSavepointForFlinkApplication(ctx, environment, application, name).Execute()
+	}
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.Savepoint{}, fmt.Errorf(`failed to describe savepoint "%s" in the environment "%s": %s`, name, environment, parsedErr)
+	}
+	return cmfSavepoint, nil
+}
+
+func (cmfClient *CmfRestClient) DeleteSavepoint(ctx context.Context, environment, savepoint, application, statement string, force bool) error {
+	if statement != "" {
+		httpResp, err := cmfClient.SavepointsApi.DeleteSavepointForFlinkStatement(ctx, environment, savepoint, statement).Force(force).Execute()
+		return parseSdkError(httpResp, err)
+	} else {
+		httpResp, err := cmfClient.SavepointsApi.DeleteSavepointForFlinkStatement(ctx, environment, savepoint, application).Force(force).Execute()
+		return parseSdkError(httpResp, err)
+	}
+}
+
+func (cmfClient *CmfRestClient) ListSavepoint(ctx context.Context, environment, statement, application string, isStatement bool) ([]cmfsdk.Savepoint, error) {
+	savepoints := make([]cmfsdk.Savepoint, 0)
+	done := false
+	// 100 is an arbitrary page size we've chosen.
+	const pageSize = 100
+	var currentPageNumber int32 = 0
+	for !done {
+		var savepointsPage cmfsdk.SavepointsPage
+		var httpResponse *_nethttp.Response
+		var err error
+		if isStatement {
+			savepointsPage, httpResponse, err = cmfClient.SavepointsApi.GetSavepointsForFlinkStatement(ctx, environment, statement).Page(currentPageNumber).Size(pageSize).Execute()
+		} else {
+			savepointsPage, httpResponse, err = cmfClient.SavepointsApi.GetSavepointsForFlinkApplication(ctx, environment, application).Page(currentPageNumber).Size(pageSize).Execute()
+
+		}
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list compute pools in the environment "%s": %s`, environment, parsedErr)
+		}
+		savepoints = append(savepoints, savepointsPage.GetItems()...)
+		currentPageNumber, done = extractPageOptions(len(savepointsPage.GetItems()), currentPageNumber)
+	}
+
+	return savepoints, nil
+}
+
+func (cmfClient *CmfRestClient) DescribeDetachedSavepoint(ctx context.Context, name string) (cmfsdk.Savepoint, error) {
+	detachedSavepoint, httpResponse, err := cmfClient.DetachedSavepointsApi.GetDetachedSavepoint(ctx, name).Execute()
+
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.Savepoint{}, fmt.Errorf(`failed to describe detached savepoint "%s": %s`, name, parsedErr)
+	}
+	return detachedSavepoint, nil
+}
+
+func (cmfClient *CmfRestClient) ListDetachedSavepoint(ctx context.Context, filter string) ([]cmfsdk.Savepoint, error) {
+	savepoints := make([]cmfsdk.Savepoint, 0)
+	done := false
+	// 100 is an arbitrary page size we've chosen.
+	const pageSize = 100
+	var currentPageNumber int32 = 0
+
+	for !done {
+		savepointsPage, httpResponse, err := cmfClient.DetachedSavepointsApi.ListDetachedSavepoints(ctx).Page(currentPageNumber).Size(pageSize).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list detached savepoints %s`, parsedErr)
+		}
+		savepoints = append(savepoints, savepointsPage.GetItems()...)
+		currentPageNumber, done = extractPageOptions(len(savepointsPage.GetItems()), currentPageNumber)
+	}
+
+	return savepoints, nil
+}
+
+func (cmfClient *CmfRestClient) DeleteDetachedSavepoint(ctx context.Context, name string) error {
+	httpResp, err := cmfClient.DetachedSavepointsApi.DeleteDetachedSavepoint(ctx, name).Execute()
+	return parseSdkError(httpResp, err)
 }
 
 func (cmfClient *CmfRestClient) CreateComputePool(ctx context.Context, environment string, computePool cmfsdk.ComputePool) (cmfsdk.ComputePool, error) {

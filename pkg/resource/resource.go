@@ -41,6 +41,8 @@ const (
 	FlinkArtifact                    = "Flink artifact"
 	FlinkConnectivityType            = "Flink connectivity type"
 	FlinkComputePool                 = "Flink compute pool"
+	FlinkSavepoint                   = "Flink Savepoint"
+	FlinkDetachedSavepoint           = "Flink Detached Savepoint"
 	FlinkApplication                 = "Flink application"
 	FlinkCatalog                     = "Flink catalog"
 	FlinkEnvironment                 = "Flink environment"
