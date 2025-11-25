@@ -36,7 +36,11 @@ func (c *command) newStatementCreateCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("catalog", "", "The name of the default catalog.")
 	cmd.Flags().String("database", "", "The name of the default database.")
 	cmd.Flags().String("flink-configuration", "", "The file path to hold the Flink configuration for the statement.")
+	cmd.Flags().String("from-savepoint-name", "", "The Name of the savepoint to start from.")
+	cmd.Flags().String("from-savepoint-uid", "", "The Uid of the savepoint to start from.")
+	cmd.Flags().String("from-savepoint-path", "", "The Path of the savepoint to start from.")
 	cmd.Flags().Bool("wait", false, "Boolean flag to block until the statement is running or has failed.")
+	cmd.Flags().Bool("allow-non-restored-state", false, "Boolean flag savepoint restore.")
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -84,6 +88,26 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 		return err
 	}
 
+	from_savepoint_name, err := cmd.Flags().GetString("from-savepoint-name")
+	if err != nil {
+		return err
+	}
+
+	from_savepoint_uid, err := cmd.Flags().GetString("from-savepoint-uid")
+	if err != nil {
+		return err
+	}
+
+	from_savepoint_path, err := cmd.Flags().GetString("from-savepoint-path")
+	if err != nil {
+		return err
+	}
+
+	allow_non_restored_state, err := cmd.Flags().GetBool("allow-non-restored-state")
+	if err != nil {
+		return err
+	}
+
 	database, err := cmd.Flags().GetString("database")
 	if err != nil {
 		return err
@@ -113,6 +137,17 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 			Parallelism:        cmfsdk.PtrInt32(int32(parallelism)),
 			Stopped:            cmfsdk.PtrBool(false),
 		},
+	}
+
+	if from_savepoint_name != "" || from_savepoint_uid != "" || from_savepoint_path != "" {
+		savepoint := cmfsdk.StatementStartFromSavepoint{
+			SavepointName:         &from_savepoint_name,
+			Uid:                   &from_savepoint_uid,
+			InitialSavepointPath:  &from_savepoint_path,
+			AllowNonRestoredState: &allow_non_restored_state,
+		}
+
+		statement.Spec.SetStartFromSavepoint(savepoint)
 	}
 	wait, err := cmd.Flags().GetBool("wait")
 	if err != nil {

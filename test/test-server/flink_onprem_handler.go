@@ -166,6 +166,29 @@ func createEnvironmentWithDefaults(name string, namespace string) cmfsdk.Environ
 	}
 }
 
+func createSavepoint(name string) cmfsdk.Savepoint {
+	timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
+
+	//status := cmfsdk.ComputePoolStatus{
+	//	Phase: phase,
+	//}
+	path := "abc/def"
+	backLimit := int32(10)
+	format := "CANONICAL"
+
+	return cmfsdk.Savepoint{
+		Metadata: cmfsdk.SavepointMetadata{
+			Name:              &name,
+			CreationTimestamp: &timeStamp,
+		},
+		Spec: cmfsdk.SavepointSpec{
+			Path:         &path,
+			BackoffLimit: &backLimit,
+			FormatType:   &format,
+		},
+	}
+}
+
 func createComputePool(poolName, phase string) cmfsdk.ComputePool {
 	timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
 
@@ -523,6 +546,106 @@ func handleCmfApplication(t *testing.T) http.HandlerFunc {
 			}
 
 			http.Error(w, "Application not found", http.StatusNotFound)
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+// Handler for "/cmf/api/v1/environments/{envName}/applications/{appName}/savepoints"
+// Used by list, create savepoints.
+func handleCmfSavepoints(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		environment := vars["environment"]
+
+		if environment == "non-exist" {
+			http.Error(w, "Environment not found", http.StatusNotFound)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			savepoint1 := createSavepoint("test-savepoint1")
+			savepoint2 := createSavepoint("test-savepoint2")
+			savepoint3 := createSavepoint("test-savepoint3")
+
+			savepoints := []cmfsdk.Savepoint{savepoint1, savepoint2, savepoint3}
+			savepointsPage := cmfsdk.SavepointsPage{}
+			page := r.URL.Query().Get("page")
+
+			if page == "0" {
+				savepointsPage.SetItems(savepoints)
+			}
+
+			err := json.NewEncoder(w).Encode(savepointsPage)
+			require.NoError(t, err)
+			return
+
+		case http.MethodPost:
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var savepoint cmfsdk.Savepoint
+			err = json.Unmarshal(reqBody, &savepoint)
+			require.NoError(t, err)
+
+			savepointName := savepoint.Metadata.GetName()
+
+			//panic(savepointName)
+
+			if savepointName == "invalid-pool" {
+				http.Error(w, "The savepoint object from resource file is invalid", http.StatusUnprocessableEntity)
+				return
+			}
+			if savepointName == "existing-pool" {
+				http.Error(w, "The savepoint name already exists, please try with another savepoint name", http.StatusConflict)
+				return
+			}
+
+			timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
+			savepoint.Metadata.CreationTimestamp = &timeStamp
+			err = json.NewEncoder(w).Encode(savepoint)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func handleCmfSavepoint(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		environment := vars["environment"]
+		savepointName := vars["savepointName"]
+
+		if environment == "non-exist" {
+			http.Error(w, "Environment not found", http.StatusNotFound)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			if savepointName == "invalid-savepoint" {
+				http.Error(w, "The savepoint is invalid", http.StatusNotFound)
+				return
+			}
+
+			savepoint := createSavepoint(savepointName)
+			err := json.NewEncoder(w).Encode(savepoint)
+			require.NoError(t, err)
+			return
+		case http.MethodDelete:
+			if savepointName == "non-exist-savepoint" {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			return
 		default:
 			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
 		}
@@ -956,6 +1079,19 @@ func handleCmfStatements(t *testing.T) http.HandlerFunc {
 						IsBounded:    cmfsdk.PtrBool(false),
 					},
 				}
+			}
+
+			if stmtName == "stmt-savepoint" {
+				savepointName := "savepoint1"
+				allowNonRestored := false
+				savepoint := cmfsdk.StatementStartFromSavepoint{
+					SavepointName:         &savepointName,
+					AllowNonRestoredState: &allowNonRestored,
+				}
+				spec := cmfsdk.StatementSpec{
+					StartFromSavepoint: &savepoint,
+				}
+				stmt.Spec = spec
 			}
 			stmt.Status = &status
 			err = json.NewEncoder(w).Encode(stmt)
