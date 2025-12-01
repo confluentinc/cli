@@ -52,7 +52,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.5.0
 	github.com/confluentinc/ccloud-sdk-go-v2/usm v0.1.0
-	github.com/confluentinc/cmf-sdk-go v0.0.4
+	github.com/confluentinc/cmf-sdk-go v0.0.5
 	github.com/confluentinc/confluent-kafka-go/v2 v2.12.0
 	github.com/confluentinc/go-editor v0.11.0
 	github.com/confluentinc/go-prompt v0.2.40
@@ -287,5 +287,3 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-replace github.com/confluentinc/cmf-sdk-go => github.com/rmetzger/cmf-sdk-go v0.0.0-20251117145224-f91646ac98de

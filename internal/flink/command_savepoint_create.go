@@ -1,11 +1,13 @@
 package flink
 
 import (
+	"github.com/spf13/cobra"
+
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
+
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
-	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
-	"github.com/spf13/cobra"
 )
 
 func (c *command) newSavepointCreateCommand() *cobra.Command {
@@ -103,7 +105,6 @@ func (c *command) savepointCreate(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-
 	} else if statement != "" {
 		savepointCreated, err = client.CreateSavepointStatement(c.createContext(), savepoint, environment, statement)
 		if err != nil {
