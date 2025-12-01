@@ -168,10 +168,6 @@ func createEnvironmentWithDefaults(name string, namespace string) cmfsdk.Environ
 
 func createSavepoint(name string) cmfsdk.Savepoint {
 	timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
-
-	//status := cmfsdk.ComputePoolStatus{
-	//	Phase: phase,
-	//}
 	path := "abc/def"
 	backLimit := int32(10)
 	format := "CANONICAL"
@@ -250,6 +246,41 @@ func createFlinkStatement(stmtName string, stopped bool, parallelism int32) cmfs
 			ComputePoolName: "test-pool",
 			Parallelism:     cmfsdk.PtrInt32(parallelism),
 			Stopped:         cmfsdk.PtrBool(stopped),
+		},
+		Status: &status,
+	}
+}
+
+func createFlinkStatementSavepoint(stmtName string, stopped bool, parallelism int32) cmfsdk.Statement {
+	timeStamp := time.Date(2025, time.August, 5, 12, 00, 0, 0, time.UTC).String()
+	status := cmfsdk.StatementStatus{
+		Phase:  "PENDING",
+		Detail: cmfsdk.PtrString("Statement is pending execution."),
+		Traits: &cmfsdk.StatementTraits{
+			SqlKind:      cmfsdk.PtrString("SELECT"),
+			IsAppendOnly: cmfsdk.PtrBool(false),
+			IsBounded:    cmfsdk.PtrBool(false),
+		},
+	}
+
+	savepointPath := "savepointPath"
+	allowNonRestored := true
+	savepoint := cmfsdk.StatementStartFromSavepoint{
+		InitialSavepointPath:  &savepointPath,
+		AllowNonRestoredState: &allowNonRestored,
+	}
+
+	return cmfsdk.Statement{
+		Metadata: cmfsdk.StatementMetadata{
+			Name:              stmtName,
+			CreationTimestamp: &timeStamp,
+		},
+		Spec: cmfsdk.StatementSpec{
+			Statement:          "SELECT * FROM test_table",
+			ComputePoolName:    "test-pool",
+			Parallelism:        cmfsdk.PtrInt32(parallelism),
+			Stopped:            cmfsdk.PtrBool(stopped),
+			StartFromSavepoint: &savepoint,
 		},
 		Status: &status,
 	}
@@ -439,7 +470,7 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 			page := r.URL.Query().Get("page")
 
 			if environment == "default" && page == "0" {
-				items := []cmfsdk.FlinkApplication{createApplication("default-application-1"), createApplication("default-application-2")}
+				items := []cmfsdk.FlinkApplication{createApplication("default-application-1"), createApplication("default-application-2"), createApplication("default-application-s")}
 				applicationsPage = map[string]interface{}{
 					"items": items,
 				}
@@ -485,6 +516,17 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 				return
 			}
 
+			if applicationName == "default-application-s" {
+				// The 'update' is going to be spec.serviceAccount. This is just a dummy update,
+				// and we don't do any actual merge logic.
+				outputApplication := createApplication(applicationName)
+				outputApplication.Spec["serviceAccount"] = application.Spec["serviceAccount"]
+				outputApplication.Spec["job"] = application.Spec["job"]
+				err = json.NewEncoder(w).Encode(outputApplication)
+				require.NoError(t, err)
+				return
+			}
+
 			// If application does not exist, return the application newly 'created'.
 			err = json.NewEncoder(w).Encode(application)
 			require.NoError(t, err)
@@ -514,7 +556,7 @@ func handleCmfApplication(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			// In case the application actually exists, let the handler return the application.
-			if (application == "default-application-1" || application == "default-application-2") && environment == "default" {
+			if (application == "default-application-1" || application == "default-application-2" || application == "default-application-s") && environment == "default" {
 				outputApplication := createApplication(application)
 				err := json.NewEncoder(w).Encode(outputApplication)
 				require.NoError(t, err)
@@ -644,6 +686,80 @@ func handleCmfSavepoint(t *testing.T) http.HandlerFunc {
 				http.Error(w, "", http.StatusNotFound)
 				return
 			}
+			w.WriteHeader(http.StatusOK)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func handleCmfDetachedSavepoints(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		switch r.Method {
+		case http.MethodGet:
+			savepoint1 := createSavepoint("test-savepoint1")
+			savepoint2 := createSavepoint("test-savepoint2")
+			savepoint3 := createSavepoint("test-savepoint3")
+
+			savepoints := []cmfsdk.Savepoint{savepoint1, savepoint2, savepoint3}
+			savepointsPage := cmfsdk.SavepointsPage{}
+			page := r.URL.Query().Get("page")
+
+			if page == "0" {
+				savepointsPage.SetItems(savepoints)
+			}
+
+			err := json.NewEncoder(w).Encode(savepointsPage)
+			require.NoError(t, err)
+			return
+
+		case http.MethodPost:
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var savepoint cmfsdk.Savepoint
+			err = json.Unmarshal(reqBody, &savepoint)
+			require.NoError(t, err)
+
+			savepointName := savepoint.Metadata.GetName()
+
+			if savepointName == "invalid-pool" {
+				http.Error(w, "The savepoint object from resource file is invalid", http.StatusUnprocessableEntity)
+				return
+			}
+
+			timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
+			savepoint.Metadata.CreationTimestamp = &timeStamp
+			savepoint.Metadata.SetUid("id1")
+			savepoint.Spec.SetFormatType("Canonical")
+			savepoint.Spec.SetBackoffLimit(10)
+			err = json.NewEncoder(w).Encode(savepoint)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func handleCmfDetachedSavepoint(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+		vars := mux.Vars(r)
+		savepointName := vars["detachedSavepointName"]
+		switch r.Method {
+		case http.MethodGet:
+			savepoint := createSavepoint("savepoint1")
+			if savepointName == "invalid-savepoint" {
+				http.Error(w, "The savepoint is invalid", http.StatusNotFound)
+				return
+			}
+			err := json.NewEncoder(w).Encode(savepoint)
+			require.NoError(t, err)
+			return
+		case http.MethodDelete:
 			w.WriteHeader(http.StatusOK)
 			return
 		default:
@@ -937,6 +1053,10 @@ func handleCmfStatement(t *testing.T) http.HandlerFunc {
 				}
 				err := json.NewEncoder(w).Encode(stmt)
 				require.NoError(t, err)
+			} else if stmtName == "test-stmt-savepoint" {
+				stmt := createFlinkStatementSavepoint(stmtName, false, 1)
+				err := json.NewEncoder(w).Encode(stmt)
+				require.NoError(t, err)
 			} else {
 				stmt := createFlinkStatement(stmtName, false, 1)
 				err := json.NewEncoder(w).Encode(stmt)
@@ -989,8 +1109,9 @@ func handleCmfStatements(t *testing.T) http.HandlerFunc {
 			stmt1 := createFlinkStatement("test-stmt1", false, 1)
 			stmt2 := createFlinkStatement("test-stmt2", false, 2)
 			stmt3 := createFlinkStatement("test-stmt3", true, 4)
+			stmt4 := createFlinkStatementSavepoint("test-stmt4", true, 4)
 
-			stmts := []cmfsdk.Statement{stmt1, stmt2, stmt3}
+			stmts := []cmfsdk.Statement{stmt1, stmt2, stmt3, stmt4}
 			stmtsPage := cmfsdk.StatementsPage{}
 			page := r.URL.Query().Get("page")
 
@@ -1088,10 +1209,16 @@ func handleCmfStatements(t *testing.T) http.HandlerFunc {
 					SavepointName:         &savepointName,
 					AllowNonRestoredState: &allowNonRestored,
 				}
-				spec := cmfsdk.StatementSpec{
-					StartFromSavepoint: &savepoint,
+				stmt.Spec.SetStartFromSavepoint(savepoint)
+			}
+			if stmtName == "stmt-savepoint2" {
+				savepointPath := "savepointPath"
+				allowNonRestored := true
+				savepoint := cmfsdk.StatementStartFromSavepoint{
+					InitialSavepointPath:  &savepointPath,
+					AllowNonRestoredState: &allowNonRestored,
 				}
-				stmt.Spec = spec
+				stmt.Spec.SetStartFromSavepoint(savepoint)
 			}
 			stmt.Status = &status
 			err = json.NewEncoder(w).Encode(stmt)

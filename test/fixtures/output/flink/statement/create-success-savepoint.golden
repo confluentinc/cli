@@ -1,0 +1,14 @@
++--------------------------+--------------------------------+
+| Creation Date            | 2025-03-12 23:42:00 +0000 UTC  |
+| Name                     | stmt-savepoint                 |
+| Statement                | SELECT * FROM test_table       |
+| Compute Pool             | test-pool                      |
+| Status                   | PENDING                        |
+| Status Detail            | Statement is pending           |
+|                          | execution.                     |
+| Parallelism              | 1                              |
+| Stopped                  | false                          |
+| SQL Kind                 | SELECT                         |
+| From Savepoint Name      | savepoint1                     |
+| Allow Non Restored State | false                          |
++--------------------------+--------------------------------+

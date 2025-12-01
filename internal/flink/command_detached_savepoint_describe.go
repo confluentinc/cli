@@ -12,7 +12,7 @@ func (c *command) newDetachedSavepointDescribeCommand() *cobra.Command {
 		Use:   "describe <name>",
 		Short: "Describe a Flink Detached Savepoint.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.detachedSavepointCreate,
+		RunE:  c.detachedSavepointDescribe,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe a Flink savepoint named "my-savepoint".`,
@@ -23,6 +23,7 @@ func (c *command) newDetachedSavepointDescribeCommand() *cobra.Command {
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
+	addCmfFlagSet(cmd)
 
 	return cmd
 }

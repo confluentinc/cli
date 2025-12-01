@@ -13,10 +13,10 @@ func (c *command) newDetachedSavepointDeleteCommand() *cobra.Command {
 		Use:   "delete <name>",
 		Short: "Delete Flink Detached Savepoint in Confluent Platform.",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  c.savepointDelete,
+		RunE:  c.detachedSavepointDelete,
 	}
-
 	addCmfFlagSet(cmd)
+	cmd.Flags().Bool("force", false, "Force delete the savepoint.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

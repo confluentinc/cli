@@ -1,7 +1,7 @@
 package flink
 
 import (
-	"github.com/confluentinc/cli/v4/pkg/config"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 	"github.com/spf13/cobra"
 )
@@ -15,18 +15,17 @@ type detachedSavepointOut struct {
 	Uid               string `human:"Uid,omitempty" serialized:"uid,omitempty"`
 }
 
-func (c *command) newDetachedSavepointCommand(cfg *config.Config) *cobra.Command {
+func (c *command) newDetachedSavepointCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "detached-savepoint",
-		Short: "Manage Flink detached savepoints.",
+		Use:         "detached-savepoint",
+		Short:       "Manage Flink detached savepoints.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 	}
 
-	if !cfg.IsCloudLogin() {
-		cmd.AddCommand(c.newDetachedSavepointCreateCommand())
-		cmd.AddCommand(c.newDetachedSavepointDescribeCommand())
-		cmd.AddCommand(c.newDetachedSavepointListCommand())
-		cmd.AddCommand(c.newDetachedSavepointDeleteCommand())
-	}
+	cmd.AddCommand(c.newDetachedSavepointCreateCommand())
+	cmd.AddCommand(c.newDetachedSavepointDescribeCommand())
+	cmd.AddCommand(c.newDetachedSavepointListCommand())
+	cmd.AddCommand(c.newDetachedSavepointDeleteCommand())
 
 	return cmd
 }

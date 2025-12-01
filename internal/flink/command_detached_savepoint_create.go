@@ -11,7 +11,7 @@ import (
 func (c *command) newDetachedSavepointCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create [name]",
-		Short: "Create a Flink detachedSavepoint.",
+		Short: "Create a Flink Detached Savepoint.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.detachedSavepointCreate,
 		Example: examples.BuildExampleString(
@@ -25,6 +25,7 @@ func (c *command) newDetachedSavepointCreateCommand() *cobra.Command {
 	cmd.Flags().String("path", "", " The path to the savepoint data.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
+	addCmfFlagSet(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("path"))
 
@@ -47,6 +48,9 @@ func (c *command) detachedSavepointCreate(cmd *cobra.Command, args []string) err
 	savepoint := cmfsdk.Savepoint{
 		ApiVersion: "cmf.confluent.io/v1",
 		Kind:       "Savepoint",
+		Metadata: cmfsdk.SavepointMetadata{
+			Name: &name,
+		},
 		Spec: cmfsdk.SavepointSpec{
 			Path: &path,
 		},
@@ -62,7 +66,7 @@ func (c *command) detachedSavepointCreate(cmd *cobra.Command, args []string) err
 
 	table := output.NewTable(cmd)
 	table.Add(&detachedSavepointOut{
-		Name:              name,
+		Name:              detachedSavepoint.Metadata.GetName(),
 		Path:              detachedSavepoint.Spec.GetPath(),
 		Format:            detachedSavepoint.Spec.GetFormatType(),
 		Limit:             detachedSavepoint.Spec.GetBackoffLimit(),
