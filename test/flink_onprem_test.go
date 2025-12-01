@@ -125,6 +125,41 @@ func (s *CLITestSuite) TestFlinkSavepointDeleteOnPrem() {
 	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
+func (s *CLITestSuite) TestFlinkDetachedSavepointCreate() {
+	tests := []CLITest{
+		{args: "flink detached-savepoint create savepoint1 --path abc/def", fixture: "flink/detached-savepoint/create-savepoint.golden"},
+		{args: "flink detached-savepoint create savepoint1", fixture: "flink/detached-savepoint/create-savepoint-nopath.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkDetachedSavepointListOnPrem() {
+	tests := []CLITest{
+		{args: "flink detached-savepoint list", fixture: "flink/detached-savepoint/list-successful.golden"},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkDetachedSavepointDescribe() {
+	tests := []CLITest{
+		{args: "flink detached-savepoint describe savepoint1", fixture: "flink/detached-savepoint/describe-success.golden"},
+		{args: "flink detached-savepoint describe invalid-savepoint", fixture: "flink/detached-savepoint/describe-fail.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkDetachedSavepointDeleteOnPrem() {
+	tests := []CLITest{
+		{args: "flink detached-savepoint delete savepoint1", input: "y\n", fixture: "flink/detached-savepoint/delete-success.golden"},
+		{args: "flink detached-savepoint delete savepoint1 --force", fixture: "flink/detached-savepoint/delete-success-force.golden"},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
 func (s *CLITestSuite) TestFlinkApplicationCreate() {
 	tests := []CLITest{
 		// failure
@@ -150,6 +185,8 @@ func (s *CLITestSuite) TestFlinkApplicationUpdate() {
 		{args: "flink application update --environment default test/fixtures/input/flink/application/update-with-get-failure.json", fixture: "flink/application/update-with-get-failure.golden", exitCode: 1},
 		// success
 		{args: "flink application update --environment default test/fixtures/input/flink/application/update-successful.json", fixture: "flink/application/update-successful.golden"},
+		{args: "flink application update --environment default test/fixtures/input/flink/application/update-successful-savepoint.json", fixture: "flink/application/update-successful-savepoint.golden"},
+		{args: "flink application update --environment default test/fixtures/input/flink/application/update-successful-savepoint.json --output yaml", fixture: "flink/application/update-successful-savepoint-yaml.golden"},
 		{args: "flink application update --environment default test/fixtures/input/flink/application/update-successful.json --output yaml", fixture: "flink/application/update-successful-yaml.golden"},
 		// explicit test to see that even if the output is set to human, the output is still in json
 		{args: "flink application update --environment default test/fixtures/input/flink/application/update-successful.json --output human", fixture: "flink/application/update-with-human.golden"},
@@ -370,19 +407,20 @@ func (s *CLITestSuite) TestFlinkCatalogListOnPrem() {
 func (s *CLITestSuite) TestFlinkStatementCreateOnPrem() {
 	tests := []CLITest{
 		// success
-		//{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool`, fixture: "flink/statement/create-success.golden"},
-		//{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool -o json`, fixture: "flink/statement/create-success-json.golden"},
-		//{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool -o yaml`, fixture: "flink/statement/create-success-yaml.golden"},
-		//{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.json`, fixture: "flink/statement/create-success.golden"},
-		//{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.yaml`, fixture: "flink/statement/create-success.golden"},
-		{args: `flink statement create stmt-savepoint --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.yaml --from-savepoint-name savepoint1`, fixture: "flink/statement/create-success-savepoint.golden"},
+		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool`, fixture: "flink/statement/create-success.golden"},
+		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool -o json`, fixture: "flink/statement/create-success-json.golden"},
+		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool -o yaml`, fixture: "flink/statement/create-success-yaml.golden"},
+		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.json`, fixture: "flink/statement/create-success.golden"},
+		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.yaml`, fixture: "flink/statement/create-success.golden"},
+		{args: `flink statement create stmt-savepoint --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --from-savepoint-name savepoint1 --allow-non-restored-state=false`, fixture: "flink/statement/create-success-savepoint.golden"},
+		{args: `flink statement create stmt-savepoint2 --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --from-savepoint-path savepointPath --allow-non-restored-state=true`, fixture: "flink/statement/create-success-savepoint-path.golden"},
 		// failure
-		//{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.properties`, fixture: "flink/statement/create-failure-invalid-configuration-file-format.golden", exitCode: 1},
-		//{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.csv`, fixture: "flink/statement/create-failure-configuration-file-dne.golden", regex: true, exitCode: 1},
-		//{args: "flink statement create test-stmt --environment default --compute-pool test-pool", fixture: "flink/statement/create-missing-sql-failure.golden", exitCode: 1},
-		//{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table"`, fixture: "flink/statement/create-missing-compute-pool-failure.golden", exitCode: 1},
-		//{args: `flink statement create invalid-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool`, fixture: "flink/statement/create-invalid-stmt-failure.golden", exitCode: 1},
-		//{args: `flink statement create existing-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool`, fixture: "flink/statement/create-existing-stmt-failure.golden", exitCode: 1},
+		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.properties`, fixture: "flink/statement/create-failure-invalid-configuration-file-format.golden", exitCode: 1},
+		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.csv`, fixture: "flink/statement/create-failure-configuration-file-dne.golden", regex: true, exitCode: 1},
+		{args: "flink statement create test-stmt --environment default --compute-pool test-pool", fixture: "flink/statement/create-missing-sql-failure.golden", exitCode: 1},
+		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table"`, fixture: "flink/statement/create-missing-compute-pool-failure.golden", exitCode: 1},
+		{args: `flink statement create invalid-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool`, fixture: "flink/statement/create-invalid-stmt-failure.golden", exitCode: 1},
+		{args: `flink statement create existing-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool`, fixture: "flink/statement/create-existing-stmt-failure.golden", exitCode: 1},
 	}
 
 	runIntegrationTestsWithMultipleAuth(s, tests)
@@ -394,6 +432,7 @@ func (s *CLITestSuite) TestFlinkStatementDescribeOnPrem() {
 		{args: "flink statement describe test-stmt --environment default", fixture: "flink/statement/describe-success.golden"},
 		{args: "flink statement describe test-stmt --environment default -o json", fixture: "flink/statement/describe-success-json.golden"},
 		{args: "flink statement describe test-stmt --environment default -o yaml", fixture: "flink/statement/describe-success-yaml.golden"},
+		{args: "flink statement describe test-stmt-savepoint --environment default", fixture: "flink/statement/describe-success-savepoint.golden"},
 		{args: "flink statement describe shell-test-stmt --environment default -o json", fixture: "flink/statement/describe-success-completed-json.golden"},
 		// failure
 		{args: "flink statement describe test-stmt", fixture: "flink/statement/describe-env-missing-failure.golden", exitCode: 1},

@@ -22,17 +22,21 @@ type statementOut struct {
 }
 
 type statementOutOnPrem struct {
-	CreationDate string `human:"Creation Date" serialized:"creation_date"`
-	Name         string `human:"Name" serialized:"name"`
-	Statement    string `human:"Statement" serialized:"statement"`
-	ComputePool  string `human:"Compute Pool" serialized:"compute_pool"`
-	Status       string `human:"Status" serialized:"status"`
-	StatusDetail string `human:"Status Detail,omitempty" serialized:"status_detail,omitempty"`
-	Parallelism  int32  `human:"Parallelism" serialized:"parallelism"`
-	Stopped      bool   `human:"Stopped" serialized:"stopped"`
-	SqlKind      string `human:"SQL Kind,omitempty" serialized:"sql_kind,omitempty"`
-	AppendOnly   bool   `human:"Append Only,omitempty" serialized:"append_only,omitempty"`
-	Bounded      bool   `human:"Bounded,omitempty" serialized:"bounded,omitempty"`
+	CreationDate          string `human:"Creation Date" serialized:"creation_date"`
+	Name                  string `human:"Name" serialized:"name"`
+	Statement             string `human:"Statement" serialized:"statement"`
+	ComputePool           string `human:"Compute Pool" serialized:"compute_pool"`
+	Status                string `human:"Status" serialized:"status"`
+	StatusDetail          string `human:"Status Detail,omitempty" serialized:"status_detail,omitempty"`
+	Parallelism           int32  `human:"Parallelism" serialized:"parallelism"`
+	Stopped               bool   `human:"Stopped" serialized:"stopped"`
+	SqlKind               string `human:"SQL Kind,omitempty" serialized:"sql_kind,omitempty"`
+	AppendOnly            bool   `human:"Append Only,omitempty" serialized:"append_only,omitempty"`
+	Bounded               bool   `human:"Bounded,omitempty" serialized:"bounded,omitempty"`
+	FromSavepointName     string `human:"From Savepoint Name,omitempty" serialized:"from_savepoint_name,omitempty"`
+	FromSavepointUID      string `human:"From Savepoint Uid,omitempty" serialized:"from_savepoint_uid,omitempty"`
+	FromSavepointPath     string `human:"From Savepoint Path,omitempty" serialized:"from_savepoint_path,omitempty"`
+	AllowNonRestoredState bool   `human:"Allow Non Restored State" serialized:"allow_non_restored_state"`
 }
 
 func (c *command) newStatementCommand(cfg *config.Config) *cobra.Command {
@@ -112,12 +116,16 @@ func convertSdkStatementToLocalStatement(outputStatement cmfsdk.Statement) Local
 			Annotations:       outputStatement.Metadata.Annotations,
 		},
 		Spec: LocalStatementSpec{
-			Statement:          outputStatement.Spec.Statement,
-			Properties:         outputStatement.Spec.Properties,
-			FlinkConfiguration: outputStatement.Spec.FlinkConfiguration,
-			ComputePoolName:    outputStatement.Spec.ComputePoolName,
-			Parallelism:        outputStatement.Spec.Parallelism,
-			Stopped:            outputStatement.Spec.Stopped,
+			Statement:             outputStatement.Spec.Statement,
+			Properties:            outputStatement.Spec.Properties,
+			FlinkConfiguration:    outputStatement.Spec.FlinkConfiguration,
+			ComputePoolName:       outputStatement.Spec.ComputePoolName,
+			Parallelism:           outputStatement.Spec.Parallelism,
+			Stopped:               outputStatement.Spec.Stopped,
+			FromSavepointName:     outputStatement.Spec.StartFromSavepoint.GetSavepointName(),
+			FromSavepointUID:      outputStatement.Spec.StartFromSavepoint.GetUid(),
+			FromSavepointPath:     outputStatement.Spec.StartFromSavepoint.GetInitialSavepointPath(),
+			AllowNonRestoredState: outputStatement.Spec.StartFromSavepoint.GetAllowNonRestoredState(),
 		},
 	}
 

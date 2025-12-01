@@ -9,10 +9,9 @@ import (
 
 func (c *command) newDetachedSavepointListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list [expression]",
+		Use:   "list",
 		Short: "List Flink Detached Savepoints.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.detachedSavepointCreate,
+		RunE:  c.detachedSavepointList,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `List Flink detached savepoints with filter filter1.`,
@@ -25,12 +24,12 @@ func (c *command) newDetachedSavepointListCommand() *cobra.Command {
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
+	addCmfFlagSet(cmd)
 
 	return cmd
 }
 
 func (c *command) detachedSavepointList(cmd *cobra.Command, args []string) error {
-
 	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err

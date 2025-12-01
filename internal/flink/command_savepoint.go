@@ -1,6 +1,7 @@
 package flink
 
 import (
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 	"github.com/spf13/cobra"
 )
@@ -16,8 +17,9 @@ type savepointOut struct {
 
 func (c *command) newSavepointCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "savepoint",
-		Short: "Manage Flink savepoint.",
+		Use:         "savepoint",
+		Short:       "Manage Flink savepoint.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 	}
 
 	cmd.AddCommand(c.newSavepointCreateCommand())

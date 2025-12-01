@@ -66,17 +66,21 @@ func (c *command) statementListOnPrem(cmd *cobra.Command, _ []string) error {
 		list := output.NewList(cmd)
 		for _, statement := range sdkStatements {
 			list.Add(&statementOutOnPrem{
-				CreationDate: statement.Metadata.GetCreationTimestamp(),
-				Name:         statement.Metadata.Name,
-				Statement:    statement.Spec.Statement,
-				ComputePool:  statement.Spec.ComputePoolName,
-				Status:       statement.Status.Phase,
-				StatusDetail: statement.Status.GetDetail(),
-				Parallelism:  statement.Spec.GetParallelism(),
-				Stopped:      statement.Spec.GetStopped(),
-				SqlKind:      statement.Status.Traits.GetSqlKind(),
-				AppendOnly:   statement.Status.Traits.GetIsAppendOnly(),
-				Bounded:      statement.Status.Traits.GetIsBounded(),
+				CreationDate:          statement.Metadata.GetCreationTimestamp(),
+				Name:                  statement.Metadata.Name,
+				Statement:             statement.Spec.Statement,
+				ComputePool:           statement.Spec.ComputePoolName,
+				Status:                statement.Status.Phase,
+				StatusDetail:          statement.Status.GetDetail(),
+				Parallelism:           statement.Spec.GetParallelism(),
+				Stopped:               statement.Spec.GetStopped(),
+				SqlKind:               statement.Status.Traits.GetSqlKind(),
+				AppendOnly:            statement.Status.Traits.GetIsAppendOnly(),
+				Bounded:               statement.Status.Traits.GetIsBounded(),
+				FromSavepointName:     statement.Spec.StartFromSavepoint.GetSavepointName(),
+				FromSavepointUID:      statement.Spec.StartFromSavepoint.GetUid(),
+				FromSavepointPath:     statement.Spec.StartFromSavepoint.GetInitialSavepointPath(),
+				AllowNonRestoredState: statement.Spec.StartFromSavepoint.GetAllowNonRestoredState(),
 			})
 		}
 		return list.Print()
