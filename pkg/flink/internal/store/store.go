@@ -146,6 +146,12 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 		return &statement, nil
 	}
 
+	statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statement.StatementName, s.appOptions.GetOrganizationId())
+	if err != nil {
+		return nil, &types.StatementError{Message: err.Error()}
+	}
+	statement.Status = types.PHASE(statementObj.Status.GetPhase())
+
 	// Process remote statements that are now running or completed
 	statementResultObj, err := s.authenticatedGatewayClient().GetStatementResults(s.appOptions.GetEnvironmentId(), statement.StatementName, s.appOptions.GetOrganizationId(), statement.PageToken)
 	if err != nil {
