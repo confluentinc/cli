@@ -2355,6 +2355,11 @@ func getGateway(id, environment, name, specConfigKind, statusCloudGatewayKind st
 			Kind:   specConfigKind,
 			Region: "us-east-1",
 		}))
+	case "AwsIngressPrivateLinkGatewaySpec":
+		gateway.Spec.SetConfig(networkinggatewayv1.NetworkingV1AwsIngressPrivateLinkGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkinggatewayv1.NetworkingV1AwsIngressPrivateLinkGatewaySpec{
+			Kind:   specConfigKind,
+			Region: "us-west-2",
+		}))
 	case "AwsPeeringGatewaySpec":
 		gateway.Spec.SetConfig(networkinggatewayv1.NetworkingV1AwsPeeringGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkinggatewayv1.NetworkingV1AwsPeeringGatewaySpec{
 			Kind:   specConfigKind,
@@ -2393,6 +2398,11 @@ func getGateway(id, environment, name, specConfigKind, statusCloudGatewayKind st
 		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1AwsEgressPrivateLinkGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1AwsEgressPrivateLinkGatewayStatus{
 			Kind:         statusCloudGatewayKind,
 			PrincipalArn: networkinggatewayv1.PtrString("arn:aws:iam::123456789012:role"),
+		}))
+	case "AwsIngressPrivateLinkGatewayStatus":
+		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1AwsIngressPrivateLinkGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1AwsIngressPrivateLinkGatewayStatus{
+			Kind:                   statusCloudGatewayKind,
+			VpcEndpointServiceName: networkinggatewayv1.PtrString("com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000"),
 		}))
 	case "AwsPrivateNetworkInterfaceGatewayStatus":
 		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1AwsPrivateNetworkInterfaceGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1AwsPrivateNetworkInterfaceGatewayStatus{
@@ -2446,6 +2456,10 @@ func handleNetworkingGatewayGet(t *testing.T, id, environment string) http.Handl
 			record := getGateway(id, environment, "my-gcp-gateway", "GcpEgressPrivateServiceConnectGatewaySpec", "GcpEgressPrivateServiceConnectGatewayStatus")
 			err := json.NewEncoder(w).Encode(record)
 			require.NoError(t, err)
+		case "gw-88888":
+			record := getGateway(id, environment, "my-aws-ingress-gateway", "AwsIngressPrivateLinkGatewaySpec", "AwsIngressPrivateLinkGatewayStatus")
+			err := json.NewEncoder(w).Encode(record)
+			require.NoError(t, err)
 		}
 	}
 }
@@ -2478,6 +2492,11 @@ func handleNetworkingGatewayPost(t *testing.T) http.HandlerFunc {
 			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1AwsEgressPrivateLinkGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1AwsEgressPrivateLinkGatewayStatus{
 				Kind:         "AwsEgressPrivateLinkGatewayStatus",
 				PrincipalArn: networkingv1.PtrString("arn:aws:iam::123456789012:role"),
+			}))
+		} else if body.Spec.Config.NetworkingV1AwsIngressPrivateLinkGatewaySpec != nil {
+			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1AwsIngressPrivateLinkGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1AwsIngressPrivateLinkGatewayStatus{
+				Kind:                   "AwsIngressPrivateLinkGatewayStatus",
+				VpcEndpointServiceName: networkingv1.PtrString("com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000"),
 			}))
 		} else if body.Spec.Config.NetworkingV1AwsPrivateNetworkInterfaceGatewaySpec != nil {
 			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1AwsPrivateNetworkInterfaceGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1AwsPrivateNetworkInterfaceGatewayStatus{
@@ -2515,8 +2534,9 @@ func handleNetworkingGatewayList(t *testing.T, environment string) http.HandlerF
 		gatewayFive := getGateway("gw-09876", environment, "my-azure-peering-gateway", "AzurePeeringGatewaySpec", "")
 		gatewaySix := getGateway("gw-13570", environment, "my-gcp-peering-gateway", "GcpPeeringGatewaySpec", "GcpPeeringGatewayStatus")
 		gatewaySeven := getGateway("gw-07531", environment, "my-gcp-gateway", "GcpEgressPrivateServiceConnectGatewaySpec", "GcpEgressPrivateServiceConnectGatewayStatus")
+		gatewayEight := getGateway("gw-88888", environment, "my-aws-ingress-gateway", "AwsIngressPrivateLinkGatewaySpec", "AwsIngressPrivateLinkGatewayStatus")
 
-		recordList := networkinggatewayv1.NetworkingV1GatewayList{Data: []networkinggatewayv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour, gatewayFive, gatewaySix, gatewaySeven}}
+		recordList := networkinggatewayv1.NetworkingV1GatewayList{Data: []networkinggatewayv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour, gatewayFive, gatewaySix, gatewaySeven, gatewayEight}}
 		setPageToken(&recordList, &recordList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
@@ -2932,6 +2952,33 @@ func getGcpEgressAccessPoint(id, environment, name string) networkingaccesspoint
 	}
 }
 
+func getAwsIngressAccessPoint(id, environment, name string) networkingaccesspointv1.NetworkingV1AccessPoint {
+	return networkingaccesspointv1.NetworkingV1AccessPoint{
+		Id: networkingaccesspointv1.PtrString(id),
+		Spec: &networkingaccesspointv1.NetworkingV1AccessPointSpec{
+			DisplayName: networkingaccesspointv1.PtrString(name),
+			Config: &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
+				NetworkingV1AwsIngressPrivateLinkEndpoint: &networkingaccesspointv1.NetworkingV1AwsIngressPrivateLinkEndpoint{
+					Kind:          "AwsIngressPrivateLinkEndpoint",
+					VpcEndpointId: "vpce-1234567890abcdef0",
+				},
+			},
+			Environment: &networkingaccesspointv1.ObjectReference{Id: environment},
+			Gateway:     &networkingaccesspointv1.ObjectReference{Id: "gw-88888"},
+		},
+		Status: &networkingaccesspointv1.NetworkingV1AccessPointStatus{
+			Phase: "READY",
+			Config: &networkingaccesspointv1.NetworkingV1AccessPointStatusConfigOneOf{
+				NetworkingV1AwsIngressPrivateLinkEndpointStatus: &networkingaccesspointv1.NetworkingV1AwsIngressPrivateLinkEndpointStatus{
+					Kind:                   "AwsIngressPrivateLinkEndpointStatus",
+					VpcEndpointId:          "vpce-1234567890abcdef0",
+					VpcEndpointServiceName: "com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000",
+				},
+			},
+		},
+	}
+}
+
 func handleNetworkingAccessPointGet(t *testing.T, id, environment string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var accessPoint networkingaccesspointv1.NetworkingV1AccessPoint
@@ -2946,6 +2993,8 @@ func handleNetworkingAccessPointGet(t *testing.T, id, environment string) http.H
 			accessPoint = getAzureEgressAccessPoint(id, environment, "my-azure-egress-access-point")
 		case "ap-88888":
 			accessPoint = getGcpEgressAccessPoint(id, environment, "my-gcp-egress-access-point")
+		case "ap-99999":
+			accessPoint = getAwsIngressAccessPoint(id, environment, "my-aws-ingress-access-point")
 		}
 		err := json.NewEncoder(w).Encode(accessPoint)
 		require.NoError(t, err)
@@ -2977,6 +3026,8 @@ func handleNetworkingAccessPointUpdate(t *testing.T, id string) http.HandlerFunc
 			accessPoint = getAzureEgressAccessPoint(id, body.Spec.Environment.GetId(), "my-azure-egress-access-point")
 		case "ap-88888":
 			accessPoint = getGcpEgressAccessPoint(id, body.Spec.Environment.GetId(), "my-gcp-egress-access-point")
+		case "ap-99999":
+			accessPoint = getAwsIngressAccessPoint(id, body.Spec.Environment.GetId(), "my-aws-ingress-access-point")
 		}
 
 		accessPoint.Spec.SetDisplayName(body.Spec.GetDisplayName())
@@ -2992,8 +3043,9 @@ func handleNetworkingAccessPointList(t *testing.T, environment string) http.Hand
 		accessPointTwo := getAzureEgressAccessPoint("ap-67890", environment, "my-azure-egress-access-point")
 		accessPointThree := getAwsPrivateNetworkInterfaceAccessPoint("ap-54321", environment, "my-aws-private-network-interface-access-point")
 		accessPointFour := getGcpEgressAccessPoint("ap-88888", environment, "my-gcp-egress-access-point")
+		accessPointFive := getAwsIngressAccessPoint("ap-99999", environment, "my-aws-ingress-access-point")
 
-		recordList := networkingaccesspointv1.NetworkingV1AccessPointList{Data: []networkingaccesspointv1.NetworkingV1AccessPoint{accessPointOne, accessPointTwo, accessPointThree, accessPointFour}}
+		recordList := networkingaccesspointv1.NetworkingV1AccessPointList{Data: []networkingaccesspointv1.NetworkingV1AccessPoint{accessPointOne, accessPointTwo, accessPointThree, accessPointFour, accessPointFive}}
 		setPageToken(&recordList, &recordList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
@@ -3015,6 +3067,18 @@ func handleNetworkingAccessPointCreate(t *testing.T) http.HandlerFunc {
 						Kind:               "AwsEgressPrivateLinkEndpointStatus",
 						VpcEndpointId:      "vpc-endpoint-id",
 						VpcEndpointDnsName: "vpc-endpoint-dns-name",
+					},
+				},
+			}
+		} else if accessPoint.Spec.Config.NetworkingV1AwsIngressPrivateLinkEndpoint != nil {
+			accessPoint.SetId("ap-99999")
+			accessPoint.Status = &networkingaccesspointv1.NetworkingV1AccessPointStatus{
+				Phase: "READY",
+				Config: &networkingaccesspointv1.NetworkingV1AccessPointStatusConfigOneOf{
+					NetworkingV1AwsIngressPrivateLinkEndpointStatus: &networkingaccesspointv1.NetworkingV1AwsIngressPrivateLinkEndpointStatus{
+						Kind:                   "AwsIngressPrivateLinkEndpointStatus",
+						VpcEndpointId:          "vpce-1234567890abcdef0",
+						VpcEndpointServiceName: "com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000",
 					},
 				},
 			}
