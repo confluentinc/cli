@@ -99,6 +99,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID, which specifies the Kafka cluster scope.")
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID, which specifies the Schema Registry cluster scope.")
 		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster name, which specifies the ksqlDB cluster scope.")
+		cmd.Flags().String("flink-region", "", `Flink region for the role binding, formatted as "cloud.region".`)
 	} else {
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID, which specifies the Kafka cluster scope.")
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID, which specifies the Schema Registry cluster scope.")
