@@ -75,6 +75,87 @@ func (s *CLITestSuite) TestFlinkEnvironmentDelete() {
 		// some failures and some successes
 		{args: "flink environment delete default non-existent --force", fixture: "flink/environment/delete-mixed.golden", exitCode: 1},
 	}
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkSavepointCreate() {
+	tests := []CLITest{
+		{args: "flink savepoint create savepoint1 --environment default --application application1", fixture: "flink/savepoint/create-savepoint.golden"},
+		{args: "flink savepoint create --environment default --application application2", fixture: "flink/savepoint/create-savepoint-no-name.golden"},
+		{args: "flink savepoint create savepointS --environment default --statement test-stmt", fixture: "flink/savepoint/create-savepoint-statement.golden"},
+		{args: "flink savepoint create savepointS --environment default --statement test-stmt --path abc/def --format NATIVE --backoff-limit 10", fixture: "flink/savepoint/create-savepoint-statement-values.golden"},
+		// fail
+		{args: "flink savepoint create savepoint1 --environment default --application application1 --statement statement1", fixture: "flink/savepoint/create-savepoint-fail-both.golden", exitCode: 1},
+		{args: "flink savepoint create savepoint1 --environment default", fixture: "flink/savepoint/create-savepoint-fail-none.golden", exitCode: 1},
+		{args: "flink savepoint create savepoint1 --application application1 --statement statement1", fixture: "flink/savepoint/create-savepoint-fail-no-env.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkSavepointListOnPrem() {
+	tests := []CLITest{
+		// success scenarios
+		{args: "flink savepoint list --environment default --application application1", fixture: "flink/savepoint/list-successful.golden"},
+		{args: "flink savepoint list --environment default --statement statement1", fixture: "flink/savepoint/list-successful-statement.golden"},
+		// failure scenarios
+		{args: "flink savepoint list --environment default --statement statement1 --application application1", fixture: "flink/savepoint/list-fail-both.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkSavepointDescribe() {
+	tests := []CLITest{
+		{args: "flink savepoint describe savepoint1 --environment default --application application1", fixture: "flink/savepoint/describe-success.golden"},
+		{args: "flink savepoint describe savepoint1 --environment default --statement statement1", fixture: "flink/savepoint/describe-success-statement.golden"},
+		{args: "flink savepoint describe invalid-savepoint --environment default --statement statement1", fixture: "flink/savepoint/describe-fail.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkSavepointDeleteOnPrem() {
+	tests := []CLITest{
+		{args: "flink savepoint delete savepoint1 --environment default --application application1", input: "y\n", fixture: "flink/savepoint/delete-success.golden"},
+		{args: "flink savepoint delete savepoint1 --environment default --statement statement1", input: "y\n", fixture: "flink/savepoint/delete-statement-success.golden"},
+		{args: "flink savepoint delete savepoint1 --environment default --statement statement1 --force", fixture: "flink/savepoint/delete-force-success.golden"},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkDetachedSavepointCreate() {
+	tests := []CLITest{
+		{args: "flink detached-savepoint create savepoint1 --path abc/def", fixture: "flink/detached-savepoint/create-savepoint.golden"},
+		{args: "flink detached-savepoint create savepoint1", fixture: "flink/detached-savepoint/create-savepoint-nopath.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkDetachedSavepointListOnPrem() {
+	tests := []CLITest{
+		{args: "flink detached-savepoint list", fixture: "flink/detached-savepoint/list-successful.golden"},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkDetachedSavepointDescribe() {
+	tests := []CLITest{
+		{args: "flink detached-savepoint describe savepoint1", fixture: "flink/detached-savepoint/describe-success.golden"},
+		{args: "flink detached-savepoint describe invalid-savepoint", fixture: "flink/detached-savepoint/describe-fail.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkDetachedSavepointDeleteOnPrem() {
+	tests := []CLITest{
+		{args: "flink detached-savepoint delete savepoint1", input: "y\n", fixture: "flink/detached-savepoint/delete-success.golden"},
+		{args: "flink detached-savepoint delete savepoint1 --force", fixture: "flink/detached-savepoint/delete-success-force.golden"},
+	}
 
 	runIntegrationTestsWithMultipleAuth(s, tests)
 }
@@ -104,6 +185,8 @@ func (s *CLITestSuite) TestFlinkApplicationUpdate() {
 		{args: "flink application update --environment default test/fixtures/input/flink/application/update-with-get-failure.json", fixture: "flink/application/update-with-get-failure.golden", exitCode: 1},
 		// success
 		{args: "flink application update --environment default test/fixtures/input/flink/application/update-successful.json", fixture: "flink/application/update-successful.golden"},
+		{args: "flink application update --environment default test/fixtures/input/flink/application/update-successful-savepoint.json", fixture: "flink/application/update-successful-savepoint.golden"},
+		{args: "flink application update --environment default test/fixtures/input/flink/application/update-successful-savepoint.json --output yaml", fixture: "flink/application/update-successful-savepoint-yaml.golden"},
 		{args: "flink application update --environment default test/fixtures/input/flink/application/update-successful.json --output yaml", fixture: "flink/application/update-successful-yaml.golden"},
 		// explicit test to see that even if the output is set to human, the output is still in json
 		{args: "flink application update --environment default test/fixtures/input/flink/application/update-successful.json --output human", fixture: "flink/application/update-with-human.golden"},
@@ -329,6 +412,8 @@ func (s *CLITestSuite) TestFlinkStatementCreateOnPrem() {
 		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool -o yaml`, fixture: "flink/statement/create-success-yaml.golden"},
 		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.json`, fixture: "flink/statement/create-success.golden"},
 		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.yaml`, fixture: "flink/statement/create-success.golden"},
+		{args: `flink statement create stmt-savepoint --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --from-savepoint-name savepoint1 --allow-non-restored-state=false`, fixture: "flink/statement/create-success-savepoint.golden"},
+		{args: `flink statement create stmt-savepoint2 --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --from-savepoint-path savepointPath --allow-non-restored-state=true`, fixture: "flink/statement/create-success-savepoint-path.golden"},
 		// failure
 		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.properties`, fixture: "flink/statement/create-failure-invalid-configuration-file-format.golden", exitCode: 1},
 		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.csv`, fixture: "flink/statement/create-failure-configuration-file-dne.golden", regex: true, exitCode: 1},
@@ -347,6 +432,7 @@ func (s *CLITestSuite) TestFlinkStatementDescribeOnPrem() {
 		{args: "flink statement describe test-stmt --environment default", fixture: "flink/statement/describe-success.golden"},
 		{args: "flink statement describe test-stmt --environment default -o json", fixture: "flink/statement/describe-success-json.golden"},
 		{args: "flink statement describe test-stmt --environment default -o yaml", fixture: "flink/statement/describe-success-yaml.golden"},
+		{args: "flink statement describe test-stmt-savepoint --environment default", fixture: "flink/statement/describe-success-savepoint.golden"},
 		{args: "flink statement describe shell-test-stmt --environment default -o json", fixture: "flink/statement/describe-success-completed-json.golden"},
 		// failure
 		{args: "flink statement describe test-stmt", fixture: "flink/statement/describe-env-missing-failure.golden", exitCode: 1},
