@@ -20,16 +20,12 @@ func (c *command) newGatewayCreateCommand() *cobra.Command {
 		RunE:  c.gatewayCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create network gateway "my-gateway".`,
-				Code: "confluent network gateway create my-gateway --cloud aws --region us-east-1 --type egress-privatelink",
+				Text: `Create AWS ingress private link gateway "my-ingress-gateway".`,
+				Code: "confluent network gateway create my-ingress-gateway --cloud aws --region us-east-1 --type ingress-privatelink",
 			},
 			examples.Example{
-				Text: "Create an AWS ingress private link gateway.",
-				Code: "confluent network gateway create --cloud aws --region us-east-1 --type ingress-privatelink",
-			},
-			examples.Example{
-				Text: "Create an AWS private network interface gateway.",
-				Code: "confluent network gateway create --cloud aws --region us-east-1 --type private-network-interface",
+				Text: `Create AWS private network interface gateway "my-pni-gateway".`,
+				Code: "confluent network gateway create my-pni-gateway --cloud aws --region us-east-1 --type private-network-interface",
 			},
 		),
 	}
