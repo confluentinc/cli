@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	_nethttp "net/http"
 	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
-	_nethttp "net/http"
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
@@ -357,7 +357,6 @@ func (cmfClient *CmfRestClient) ListSavepoint(ctx context.Context, environment, 
 			savepointsPage, httpResponse, err = cmfClient.SavepointsApi.GetSavepointsForFlinkStatement(ctx, environment, statement).Page(currentPageNumber).Size(pageSize).Execute()
 		} else {
 			savepointsPage, httpResponse, err = cmfClient.SavepointsApi.GetSavepointsForFlinkApplication(ctx, environment, application).Page(currentPageNumber).Size(pageSize).Execute()
-
 		}
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list compute pools in the environment "%s": %s`, environment, parsedErr)
@@ -365,7 +364,6 @@ func (cmfClient *CmfRestClient) ListSavepoint(ctx context.Context, environment, 
 		savepoints = append(savepoints, savepointsPage.GetItems()...)
 		currentPageNumber, done = extractPageOptions(len(savepointsPage.GetItems()), currentPageNumber)
 	}
-
 	return savepoints, nil
 }
 

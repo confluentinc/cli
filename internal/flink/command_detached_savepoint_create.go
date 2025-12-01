@@ -1,11 +1,13 @@
 package flink
 
 import (
+	"github.com/spf13/cobra"
+
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
+
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
-	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
-	"github.com/spf13/cobra"
 )
 
 func (c *command) newDetachedSavepointCreateCommand() *cobra.Command {
