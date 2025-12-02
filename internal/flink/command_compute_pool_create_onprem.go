@@ -46,50 +46,57 @@ func (c *command) computePoolCreateOnPrem(cmd *cobra.Command, args []string) err
 	}
 
 	resourceFilePath := args[0]
-	// Read file contents
 	data, err := os.ReadFile(resourceFilePath)
 	if err != nil {
 		return fmt.Errorf("failed to read file: %v", err)
 	}
 
-	var computePool cmfsdk.ComputePool
+	var genericData map[string]interface{}
 	ext := filepath.Ext(resourceFilePath)
 	switch ext {
 	case ".json":
-		err = json.Unmarshal(data, &computePool)
+		err = json.Unmarshal(data, &genericData)
 	case ".yaml", ".yml":
-		err = yaml.Unmarshal(data, &computePool)
+		err = yaml.Unmarshal(data, &genericData)
 	default:
 		return errors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
 	}
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse input file: %w", err)
 	}
 
-	outputComputePool, err := client.CreateComputePool(c.createContext(), environment, computePool)
+	jsonBytes, err := json.Marshal(genericData)
+	if err != nil {
+		return fmt.Errorf("failed to marshal intermediate data: %w", err)
+	}
+
+	var sdkComputePool cmfsdk.ComputePool
+	if err = json.Unmarshal(jsonBytes, &sdkComputePool); err != nil {
+		return fmt.Errorf("failed to bind data to ComputePool model: %w", err)
+	}
+
+	sdkOutputComputePool, err := client.CreateComputePool(c.createContext(), environment, sdkComputePool)
 	if err != nil {
 		return err
 	}
 
 	if output.GetFormat(cmd) == output.Human {
 		table := output.NewTable(cmd)
-
-		// nil pointer handling for creation timestamp
 		var creationTime string
-		if outputComputePool.GetMetadata().CreationTimestamp != nil {
-			creationTime = *outputComputePool.GetMetadata().CreationTimestamp
+		if sdkOutputComputePool.GetMetadata().CreationTimestamp != nil {
+			creationTime = *sdkOutputComputePool.GetMetadata().CreationTimestamp
 		} else {
 			creationTime = ""
 		}
-
 		table.Add(&computePoolOutOnPrem{
 			CreationTime: creationTime,
-			Name:         computePool.GetMetadata().Name,
-			Type:         computePool.GetSpec().Type,
-			Phase:        computePool.GetStatus().Phase,
+			Name:         sdkComputePool.GetMetadata().Name,
+			Type:         sdkComputePool.GetSpec().Type,
+			Phase:        sdkOutputComputePool.GetStatus().Phase,
 		})
 		return table.Print()
 	}
 
-	return output.SerializedOutput(cmd, outputComputePool)
+	localPool := convertSdkComputePoolToLocalComputePool(sdkOutputComputePool)
+	return output.SerializedOutput(cmd, localPool)
 }

@@ -40,7 +40,7 @@ type Coder interface {
 var _ Coder = (*Error)(nil)
 var _ errors.ErrorWithSuggestions = (*Error)(nil)
 
-// Extends error with status code, including suggestion if err type is ErrorWithSuggestion
+// CatchError Extends error with status code, including suggestion if err type is ErrorWithSuggestion
 func CatchError(err error, r *http.Response) error {
 	if err == nil {
 		return nil

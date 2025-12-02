@@ -1,0 +1,23 @@
+apiVersion: cmf.confluent.io/v1
+kind: ComputePool
+metadata:
+  name: invalid-pool
+spec:
+  type: DEDICATED
+  clusterSpec:
+    flinkVersion: v1_19
+    image: 519856050701.dkr.ecr.us-west-2.amazonaws.com/docker/dev/confluentinc/cp-flink:0.1-aaggarwal-sql
+    flinkConfiguration:
+      taskmanager.numberOfTaskSlots: "1"
+    job:
+      jarURI: local:///opt/flink-job-1.0.0-SNAPSHOT.jar
+      parallelism: 1
+    taskManager:
+      resource:
+        cpu: 0.5
+        memory: "1024m"
+    jobManager:
+      resource:
+        cpu: 0.5
+        memory: "1024m"
+    serviceAccount: flink 

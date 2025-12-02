@@ -41,8 +41,138 @@ func (s *ResultConverterTestSuite) TestConvertField() {
 		if maxNestingDepth == 0 {
 			require.IsType(t, types.AtomicStatementResultField{}, resultField)
 		}
-		require.Equal(t, field, resultField.ToSDKType())
+		expected := normalizeExpected(field, dataType)
+		require.Equal(t, expected, resultField.ToSDKType())
 	})
+}
+
+// normalizeExpected transforms a raw, generator-produced value into the same
+// shape returned by StatementResultField.ToSDKType(). This ensures property-
+// based tests can compare generator output against conversion results.
+//
+// It recursively normalizes composite data types (ARRAY, MAP, MULTISET, ROW,
+// STRUCTURED_TYPE) so that nested fields, key/value pairs, and element counts
+// match the SDK representation. Atomic values are returned as-is.
+func normalizeExpected(result any, dataType flinkgatewayv1.DataType) any {
+	switch dataType.GetType() {
+	case "STRUCTURED_TYPE":
+		return normalizeStructuredType(result, dataType)
+	case "ROW":
+		return normalizeRow(result, dataType)
+	case "ARRAY":
+		return normalizeArray(result, dataType)
+	case "MAP":
+		return normalizeMap(result, dataType)
+	case "MULTISET":
+		return normalizeMultiSet(result, dataType)
+	default:
+		// atomic or unhandled: return as-is (our Atomic ToSDKType returns string for numbers)
+		return result
+	}
+}
+
+// normalizeRow handles ROW types by normalizing each field
+// positionally according to its schema definition.
+func normalizeRow(result any, dataType flinkgatewayv1.DataType) any {
+	rawResults, ok := result.([]any)
+	fields := dataType.GetFields()
+	if !ok || fields == nil || len(rawResults) != len(fields) {
+		return result
+	}
+	normalized := make([]any, len(rawResults))
+	for i, field := range fields {
+		normalized[i] = normalizeExpected(rawResults[i], field.GetFieldType())
+	}
+	return normalized
+}
+
+// normalizeStructuredType handles STRUCTURED_TYPE values by
+// converting them into a map keyed by field names.
+func normalizeStructuredType(result any, dataType flinkgatewayv1.DataType) any {
+	rawResults, ok := result.([]any)
+	fields := dataType.GetFields()
+	if !ok || fields == nil || len(rawResults) != len(fields) {
+		return result
+	}
+	normalized := make(map[string]any, len(rawResults))
+	for i, field := range fields {
+		normalized[field.GetName()] = normalizeExpected(rawResults[i], field.GetFieldType())
+	}
+	return normalized
+}
+
+// normalizeMap handles MAP values by normalizing them into
+// slices of [key, value] pairs with recursive normalization.
+func normalizeMap(field any, dataType flinkgatewayv1.DataType) any {
+	rawEntries, ok := field.([]any)
+	if !ok {
+		return field
+	}
+	keyT := dataType.GetKeyType()
+	valT := dataType.GetValueType()
+
+	normalized := make([]any, 0, len(rawEntries))
+	for _, rawEntry := range rawEntries {
+		pair, ok := rawEntry.([]any)
+		if !ok || len(pair) != 2 {
+			normalized = append(normalized, rawEntry)
+			continue
+		}
+		key, value := pair[0], pair[1]
+		if keyT.GetType() != "" {
+			key = normalizeExpected(key, keyT)
+		}
+		if valT.GetType() != "" {
+			value = normalizeExpected(value, valT)
+		}
+		normalized = append(normalized, []any{key, value})
+	}
+	return normalized
+}
+
+// normalizeArray handles ARRAY values by normalizing each
+// element recursively if the element type is set.
+func normalizeArray(result any, dataType flinkgatewayv1.DataType) any {
+	elems, ok := result.([]any)
+	if !ok {
+		return result
+	}
+	elemType := dataType.GetElementType()
+	normalized := make([]any, len(elems))
+	for i := range elems {
+		if elemType.GetType() != "" {
+			normalized[i] = normalizeExpected(elems[i], elemType)
+		} else {
+			normalized[i] = elems[i]
+		}
+	}
+	return normalized
+}
+
+// normalizeMultiSet handles MULTISET values by normalizing them
+// into slices of [element, count] pairs, where element is normalized
+// recursively and count is preserved as-is.
+func normalizeMultiSet(result any, dataType flinkgatewayv1.DataType) any {
+	entries, ok := result.([]any)
+	if !ok {
+		return result
+	}
+	elemType := dataType.GetElementType()
+	normalized := make([]any, 0, len(entries))
+	for _, entry := range entries {
+		pair, ok := entry.([]any)
+		if !ok || len(pair) != 2 {
+			normalized = append(normalized, entry)
+			continue
+		}
+		value := pair[0]
+		if elemType.GetType() != "" {
+			value = normalizeExpected(pair[0], elemType)
+		}
+		count := pair[1]
+		normalized = append(normalized, []any{value, count})
+	}
+	return normalized
 }
 
 func (s *ResultConverterTestSuite) TestConvertFieldOnPrem() {
@@ -170,7 +300,10 @@ func (s *ResultConverterTestSuite) TestConvertResults() {
 			require.Equal(t, types.StatementResultOperation(op), row.Operation)
 			require.Equal(t, len(items), len(convertedResults.Headers)) // column number for this row should match
 			for colIdx, field := range row.Fields {
-				require.Equal(t, items[colIdx], field.ToSDKType()) // fields should match
+				expected := items[colIdx]
+				// normalize STRUCTURED_TYPE, MAP, MULTISET, ROW, ARRAY recursively
+				expected = normalizeExpected(expected, (*results.ResultSchema.Columns)[colIdx].Type)
+				require.Equal(t, expected, field.ToSDKType()) // fields should match
 			}
 		}
 	})
