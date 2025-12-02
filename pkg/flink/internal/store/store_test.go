@@ -1268,6 +1268,14 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 		userProperties := NewUserProperties(&appOptions)
 		store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
 
+		statementObj := flinkgatewayv1.SqlV1Statement{
+			Name: flinkgatewayv1.PtrString(testStatementName),
+			Status: &flinkgatewayv1.SqlV1StatementStatus{
+				Phase: "COMPLETED",
+			},
+		}
+		client.EXPECT().GetStatement("envId", statement.StatementName, "orgId").Return(statementObj, nil)
+
 		statementResultObj := flinkgatewayv1.SqlV1StatementResult{
 			Metadata: flinkgatewayv1.ResultListMeta{},
 			Results:  &flinkgatewayv1.SqlV1StatementResultResults{},
@@ -1318,6 +1326,14 @@ func (s *StoreTestSuite) TestFetchResultsWithRunningStatement() {
 		}
 		userProperties := NewUserProperties(&appOptions)
 		store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+
+		statementObj := flinkgatewayv1.SqlV1Statement{
+			Name: flinkgatewayv1.PtrString(testStatementName),
+			Status: &flinkgatewayv1.SqlV1StatementStatus{
+				Phase: "RUNNING",
+			},
+		}
+		client.EXPECT().GetStatement("envId", statement.StatementName, "orgId").Return(statementObj, nil)
 
 		statementResultObj := flinkgatewayv1.SqlV1StatementResult{
 			Metadata: flinkgatewayv1.ResultListMeta{},
@@ -1373,6 +1389,14 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
 		}
 		userProperties := NewUserProperties(&appOptions)
 		store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+
+		statementObj := flinkgatewayv1.SqlV1Statement{
+			Name: flinkgatewayv1.PtrString(testStatementName),
+			Status: &flinkgatewayv1.SqlV1StatementStatus{
+				Phase: "RUNNING",
+			},
+		}
+		client.EXPECT().GetStatement("envId", statement.StatementName, "orgId").Return(statementObj, nil)
 
 		nextPage := "https://devel.cpdev.cloud/some/results?page_token=eyJWZX"
 		statementResultObj := flinkgatewayv1.SqlV1StatementResult{
@@ -1440,6 +1464,14 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
 		}
 		userProperties := NewUserProperties(&appOptions)
 		store := NewStore(client, mockAppController.ExitApplication, userProperties, &appOptions, tokenRefreshFunc)
+
+		statementObj := flinkgatewayv1.SqlV1Statement{
+			Name: flinkgatewayv1.PtrString(testStatementName),
+			Status: &flinkgatewayv1.SqlV1StatementStatus{
+				Phase: "RUNNING",
+			},
+		}
+		client.EXPECT().GetStatement("envId", statement.StatementName, "orgId").Return(statementObj, nil)
 
 		statementResultObj := flinkgatewayv1.SqlV1StatementResult{
 			Metadata: flinkgatewayv1.ResultListMeta{},
