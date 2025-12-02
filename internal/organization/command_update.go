@@ -21,6 +21,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 
 	cmd.Flags().String("name", "", "Name of the Confluent Cloud organization.")
 	cmd.Flags().Bool("jit-enabled", false, "Toggle Just-In-Time (JIT) user provisioning for SSO-enabled organizations.")
+	cmd.Flags().Bool("scim-enabled", false, "Toggle SCIM user provisioning for SSO-enabled organizations.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -34,6 +35,14 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 		organization.JitEnabled = orgv2.PtrBool(jitEnabled)
+	}
+
+	if cmd.Flags().Changed("scim-enabled") {
+		scimEnabled, err := cmd.Flags().GetBool("scim-enabled")
+		if err != nil {
+			return err
+		}
+		organization.ScimEnabled = orgv2.PtrBool(scimEnabled)
 	}
 
 	if cmd.Flags().Changed("name") {
@@ -51,10 +60,11 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		IsCurrent:  organization.GetId() == c.Context.GetCurrentOrganization(),
-		Id:         organization.GetId(),
-		Name:       organization.GetDisplayName(),
-		JitEnabled: organization.GetJitEnabled(),
+		IsCurrent:   organization.GetId() == c.Context.GetCurrentOrganization(),
+		Id:          organization.GetId(),
+		Name:        organization.GetDisplayName(),
+		JitEnabled:  organization.GetJitEnabled(),
+		ScimEnabled: organization.GetScimEnabled(),
 	})
 	return table.Print()
 }

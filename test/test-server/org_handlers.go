@@ -146,9 +146,9 @@ func handleOrgOrganizations(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			organizationList := &orgv2.OrgV2OrganizationList{Data: []orgv2.OrgV2Organization{
-				{Id: orgv2.PtrString("abc-123"), DisplayName: orgv2.PtrString("org1"), JitEnabled: orgv2.PtrBool(true)},
-				{Id: orgv2.PtrString("abc-456"), DisplayName: orgv2.PtrString("org2"), JitEnabled: orgv2.PtrBool(true)},
-				{Id: orgv2.PtrString("abc-789"), DisplayName: orgv2.PtrString("org3"), JitEnabled: orgv2.PtrBool(true)},
+				{Id: orgv2.PtrString("abc-123"), DisplayName: orgv2.PtrString("org1"), JitEnabled: orgv2.PtrBool(true), ScimEnabled: orgv2.PtrBool(true)},
+				{Id: orgv2.PtrString("abc-456"), DisplayName: orgv2.PtrString("org2"), JitEnabled: orgv2.PtrBool(true), ScimEnabled: orgv2.PtrBool(true)},
+				{Id: orgv2.PtrString("abc-789"), DisplayName: orgv2.PtrString("org3"), JitEnabled: orgv2.PtrBool(true), ScimEnabled: orgv2.PtrBool(true)},
 			}}
 			setPageToken(organizationList, &organizationList.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(organizationList)
