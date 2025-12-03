@@ -3,5 +3,5 @@
 | ID           | abc-123 |
 | Name         | default |
 | JIT Enabled  | true    |
-| SCIM Enabled | true    |
+| SCIM Enabled | false   |
 +--------------+---------+
