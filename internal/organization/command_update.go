@@ -21,7 +21,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 
 	cmd.Flags().String("name", "", "Name of the Confluent Cloud organization.")
 	cmd.Flags().Bool("jit-enabled", false, "Toggle Just-In-Time (JIT) user provisioning for SSO-enabled organizations.")
-	cmd.Flags().Bool("scim-enabled", false, "Toggle SCIM user provisioning for SSO-enabled organizations.")
+	cmd.Flags().Bool("scim-enabled", false, "Toggle System for Cross-domain Identity Management (SCIM) user provisioning for SSO-enabled organizations.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
