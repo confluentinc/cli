@@ -2,5 +2,6 @@
   "is_current": true,
   "id": "abc-123",
   "name": "default",
-  "jit_enabled": true
+  "jit_enabled": true,
+  "scim_enabled": true
 }
