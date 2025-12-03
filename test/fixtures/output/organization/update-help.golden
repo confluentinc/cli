@@ -6,7 +6,7 @@ Usage:
 Flags:
       --name string     Name of the Confluent Cloud organization.
       --jit-enabled     Toggle Just-In-Time (JIT) user provisioning for SSO-enabled organizations.
-      --scim-enabled    Toggle System for Cross-Domain Identity Management (SCIM) user provisioning for SSO-enabled organizations.
+      --scim-enabled    Toggle System for Cross-domain Identity Management (SCIM) user provisioning for SSO-enabled organizations.
   -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

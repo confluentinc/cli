@@ -1,5 +1,5 @@
   Current |   ID    | Name | JIT Enabled | SCIM Enabled
 ----------+---------+------+-------------+---------------
   *       | abc-123 | org1 | true        | true
-          | abc-456 | org2 | true        | false         
+          | abc-456 | org2 | true        | false
           | abc-789 | org3 | true        | true
