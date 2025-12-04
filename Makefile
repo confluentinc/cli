@@ -141,3 +141,55 @@ coverage: ## Merge coverage data from unit and integration tests into coverage.t
 	@tail -n +2 coverage.integration.out >> coverage.txt
 	@echo "Coverage data saved to: coverage.txt"
 	@artifact push workflow coverage.txt
+
+.PHONY: muckrake-build-docker
+muckrake-build-docker:
+	@echo "Building CLI binary with Docker image for Muckrake Check..."
+	@echo "Target: $(GOOS)/$(GOARCH)"
+	@echo "Clean up any possible existing containers under same name..."
+	@docker rm -f confluent-muckrake-builder-container 2>/dev/null || true
+	@echo "Building Docker image..."
+	docker build -f docker/Dockerfile_muckrake \
+		--build-arg GOOS=$(GOOS) \
+		--build-arg GOARCH=$(GOARCH) \
+		-t confluent-muckrake-builder .
+	@echo "Creating a container from the image..."
+	docker create --name confluent-muckrake-builder-container confluent-muckrake-builder
+	@echo "Copy built binary from the container"
+	docker cp confluent-muckrake-builder-container:/workspace/dist/. dist/
+	@echo "Clean up container"
+	docker rm confluent-muckrake-builder-container
+	@echo "✅  Binary built successfully at dist/confluent_$(GOOS)_$(GOARCH)/confluent"
+
+.PHONY: muckrake-upload-s3
+muckrake-upload-s3:
+	@echo "Uploading CLI binary to S3..."
+	@if [ -z "$(BUILD_ID)" ]; then \
+		echo "❌  Error: BUILD_ID is not set"; \
+		exit 1; \
+	fi
+	@if [ -z "$(BINARY_PATH)" ]; then \
+		echo "❌  Error: BINARY_PATH is not set"; \
+		exit 1; \
+	fi
+	@if [ -z "$(S3_KEY)" ]; then \
+		echo "❌  Error: S3_KEY is not set"; \
+		exit 1; \
+	fi
+	@if [ ! -f "$(BINARY_PATH)" ]; then \
+		echo "❌  Error: Binary not found at $(BINARY_PATH)"; \
+		exit 1; \
+	fi
+	@echo "Build ID: $(BUILD_ID)"
+	@echo "Binary: $(BINARY_PATH)"
+	@echo "S3 Key: $(S3_KEY)"
+	@aws s3 cp $(BINARY_PATH) s3://confluent.cloud/confluent-cli/development-builds/$(BUILD_ID)/$(S3_KEY) \
+		--acl public-read --region us-west-2
+	@echo "✅  Binary uploaded to s3://confluent.cloud/confluent-cli/development-builds/$(BUILD_ID)/$(S3_KEY)"
+
+.PHONY: muckrake-clean
+muckrake-clean:
+	@echo "Cleaning up Muckrake Check artifacts..."
+	@docker rm -f confluent-muckrake-builder-container 2>/dev/null || true
+	@docker rmi -f confluent-muckrake-builder 2>/dev/null || true
+	@echo "✅  Cleanup complete"
