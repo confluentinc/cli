@@ -185,6 +185,12 @@ func handleConnectArtifacts(t *testing.T) http.HandlerFunc {
 			case "my-connect-artifact-zip":
 				artifact.SetId("cfa-zip123")
 				artifact.Spec.SetContentFormat("ZIP")
+			case "my-connect-artifact-azure-jar":
+				artifact.SetId("cfa-azure-jar123")
+				artifact.Spec.SetContentFormat("JAR")
+			case "my-connect-artifact-azure-zip":
+				artifact.SetId("cfa-azure-zip123")
+				artifact.Spec.SetContentFormat("ZIP")
 			}
 
 			artifact.Status = &camv1.CamV1ConnectArtifactStatus{
@@ -196,9 +202,32 @@ func handleConnectArtifacts(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(artifact)
 			require.NoError(t, err)
 		case http.MethodGet:
+			// Try multiple possible query parameter names - the SDK might use different formats
+			cloud := ""
+			queryParams := r.URL.Query()
+			// Check common variations
+			for _, param := range []string{"spec.cloud", "cloud", "spec_cloud"} {
+				if val := queryParams.Get(param); val != "" {
+					cloud = strings.ToUpper(val)
+					break
+				}
+			}
+			// Also check all query params in case the name is different
+			if cloud == "" {
+				for key, values := range queryParams {
+					if len(values) > 0 && (strings.Contains(strings.ToLower(key), "cloud") || strings.Contains(strings.ToLower(key), "spec")) {
+						cloud = strings.ToUpper(values[0])
+						break
+					}
+				}
+			}
 			var artifacts []camv1.CamV1ConnectArtifact
 			for _, artifact := range artifactStore {
-				if artifact.GetId() == "cfa-jar123" {
+				// Filter by cloud if specified
+				if cloud != "" && strings.ToUpper(artifact.Spec.GetCloud()) != cloud {
+					continue
+				}
+				if artifact.GetId() == "cfa-jar123" || artifact.GetId() == "cfa-azure-jar123" {
 					artifact.Status = &camv1.CamV1ConnectArtifactStatus{
 						Phase: "READY",
 					}
@@ -227,7 +256,7 @@ func handleConnectArtifactId(t *testing.T) http.HandlerFunc {
 				return
 			}
 
-			if id == "cfa-jar123" {
+			if id == "cfa-jar123" || id == "cfa-azure-jar123" {
 				artifact.Status = &camv1.CamV1ConnectArtifactStatus{
 					Phase: "READY",
 				}
@@ -244,7 +273,7 @@ func handleConnectArtifactId(t *testing.T) http.HandlerFunc {
 				return
 			}
 
-			if id == "cfa-zip123" {
+			if id == "cfa-zip123" || id == "cfa-azure-zip123" {
 				w.WriteHeader(http.StatusNoContent)
 			}
 		}
@@ -255,11 +284,21 @@ func handleConnectArtifactId(t *testing.T) http.HandlerFunc {
 func handleConnectArtifactUploadUrl(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
+			var request camv1.CamV1PresignedUrlRequest
+			require.NoError(t, json.NewDecoder(r.Body).Decode(&request))
+
+			cloud := strings.ToUpper(request.GetCloud())
+			contentFormat := request.GetContentFormat()
+			if contentFormat == "" {
+				contentFormat = "JAR"
+			}
+
 			uploadUrl := camv1.CamV1PresignedUrl{
-				Cloud:       camv1.PtrString("AWS"),
-				Environment: camv1.PtrString("env-123456"),
-				UploadId:    camv1.PtrString("e53bb2e8-8de3-49fa-9fb1-4e3fd9a16b66"),
-				UploadUrl:   camv1.PtrString(fmt.Sprintf("%s/cam/v1/dummy-presigned-url", TestV2CloudUrl.String())),
+				Cloud:         camv1.PtrString(cloud),
+				Environment:   camv1.PtrString(request.GetEnvironment()),
+				UploadId:      camv1.PtrString("e53bb2e8-8de3-49fa-9fb1-4e3fd9a16b66"),
+				UploadUrl:     camv1.PtrString(fmt.Sprintf("%s/cam/v1/dummy-presigned-url", TestV2CloudUrl.String())),
+				ContentFormat: camv1.PtrString(strings.ToUpper(contentFormat)),
 			}
 			err := json.NewEncoder(w).Encode(uploadUrl)
 			require.NoError(t, err)
@@ -270,7 +309,7 @@ func handleConnectArtifactUploadUrl(t *testing.T) http.HandlerFunc {
 // Handler for: "/cam/v1/dummy-presigned-url"
 func handleConnectArtifactUploadFile(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
+		if r.Method == http.MethodPost || r.Method == http.MethodPut {
 			err := json.NewEncoder(w).Encode(camv1.PtrString("Success"))
 			require.NoError(t, err)
 		}

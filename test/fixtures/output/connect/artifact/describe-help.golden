@@ -9,7 +9,7 @@ Describe a Connect artifact.
   $ confluent connect artifact describe cfa-abc123 --cloud aws --environment env-abc123
 
 Flags:
-      --cloud string         REQUIRED: Specify the cloud provider as "aws".
+      --cloud string         REQUIRED: Specify the cloud provider as "aws" or "azure".
       --environment string   Environment ID.
       --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
