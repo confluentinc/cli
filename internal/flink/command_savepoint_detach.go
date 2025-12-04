@@ -3,8 +3,6 @@ package flink
 import (
 	"github.com/spf13/cobra"
 
-	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
-
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
@@ -46,9 +44,7 @@ func (c *command) savepointDetach(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var cmfSavepoint cmfsdk.Savepoint
-
-	cmfSavepoint, _, err = client.SavepointsApi.DetachSavepointFromFlinkApplication(c.createContext(), environment, name, application).Execute()
+	cmfSavepoint, err := client.DetachSavepointApplication(c.createContext(), name, environment, application)
 	if err != nil {
 		return err
 	}
@@ -60,6 +56,8 @@ func (c *command) savepointDetach(cmd *cobra.Command, args []string) error {
 		Path:        cmfSavepoint.Spec.GetPath(),
 		Format:      cmfSavepoint.Spec.GetFormatType(),
 		Limit:       cmfSavepoint.Spec.GetBackoffLimit(),
+		Uid:         cmfSavepoint.Metadata.GetUid(),
+		State:       cmfSavepoint.Status.GetState(),
 	})
 	return table.Print()
 }
