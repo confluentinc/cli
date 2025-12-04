@@ -333,12 +333,20 @@ func (cmfClient *CmfRestClient) DescribeSavepoint(ctx context.Context, environme
 	return cmfSavepoint, nil
 }
 
+func (cmfClient *CmfRestClient) DetachSavepointApplication(ctx context.Context, savepoint, environment, application string) (cmfsdk.Savepoint, error) {
+	outputSavepoint, httpResponse, err := cmfClient.SavepointsApi.DetachSavepointFromFlinkApplication(ctx, environment, application, savepoint).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.Savepoint{}, fmt.Errorf(`failed to create savepoint in the environment "%s": %s`, environment, parsedErr)
+	}
+	return outputSavepoint, nil
+}
+
 func (cmfClient *CmfRestClient) DeleteSavepoint(ctx context.Context, environment, savepoint, application, statement string, force bool) error {
 	if statement != "" {
-		httpResp, err := cmfClient.SavepointsApi.DeleteSavepointForFlinkStatement(ctx, environment, savepoint, statement).Force(force).Execute()
+		httpResp, err := cmfClient.SavepointsApi.DeleteSavepointForFlinkStatement(ctx, environment, statement, savepoint).Force(force).Execute()
 		return parseSdkError(httpResp, err)
 	} else {
-		httpResp, err := cmfClient.SavepointsApi.DeleteSavepointForFlinkStatement(ctx, environment, savepoint, application).Force(force).Execute()
+		httpResp, err := cmfClient.SavepointsApi.DeleteSavepointForFlinkApplication(ctx, environment, application, savepoint).Force(force).Execute()
 		return parseSdkError(httpResp, err)
 	}
 }

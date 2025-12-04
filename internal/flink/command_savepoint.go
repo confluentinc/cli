@@ -15,6 +15,8 @@ type savepointOut struct {
 	Path        string `human:"Path,omitempty" serialized:"path,omitempty"`
 	Format      string `human:"Format,omitempty" serialized:"format,omitempty"`
 	Limit       int32  `human:"Backoff Limit,omitempty" serialized:"backoff_limit,omitempty"`
+	Uid         string `human:"Uid,omitempty" serialized:"uid,omitempty"`
+	State       string `human:"State,omitempty" serialized:"state,omitempty"`
 }
 
 func (c *command) newSavepointCommand() *cobra.Command {

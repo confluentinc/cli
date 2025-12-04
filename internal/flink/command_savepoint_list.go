@@ -64,6 +64,8 @@ func (c *command) savepointList(cmd *cobra.Command, _ []string) error {
 				Path:        savepoint.Spec.GetPath(),
 				Format:      savepoint.Spec.GetFormatType(),
 				Limit:       savepoint.Spec.GetBackoffLimit(),
+				Uid:         savepoint.Metadata.GetUid(),
+				State:       savepoint.Status.GetState(),
 			})
 		}
 		return list.Print()
