@@ -54,6 +54,8 @@ var (
 			"crn://confluent.cloud/organization=abc-123/environment=env-596/cloud-cluster=lkc-1111aaa/ksql=ksql-cluster-name-2222bbb"),
 		buildRoleBinding("rb-77ggg", "u-77ggg", "ResourceOwner",
 			"crn://confluent.cloud/organization=abc-123/environment=env-596/schema-registry=lsrc-3333ccc/subject=clicks"),
+		buildRoleBinding("rb-777gg", "u-777gg", "FlinkDeveloper",
+			"crn://confluent.cloud/organization=abc-123/environment=env-596/flink-region=aws.us-east-1/compute-pool=lfcp-1111aaa"),
 	}
 )
 
