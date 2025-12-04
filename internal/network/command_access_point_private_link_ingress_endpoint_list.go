@@ -62,12 +62,8 @@ func (c *accessPointCommand) listIngressEndpoint(cmd *cobra.Command, _ []string)
 			Phase:       ingressEndpoint.Status.GetPhase(),
 		}
 
-		if ingressEndpoint.Spec.Config != nil && ingressEndpoint.Spec.Config.NetworkingV1AwsIngressPrivateLinkEndpoint != nil {
-			out.AwsVpcEndpointService = ingressEndpoint.Spec.Config.NetworkingV1AwsIngressPrivateLinkEndpoint.GetVpcEndpointId()
-		}
-
 		if ingressEndpoint.Status.Config != nil && ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus != nil {
-			out.AwsVpcEndpoint = ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.GetVpcEndpointId()
+			out.AwsVpcEndpointId = ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.GetVpcEndpointId()
 			out.AwsVpcEndpointServiceName = ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.GetVpcEndpointServiceName()
 			if ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.HasDnsDomain() {
 				out.DnsDomain = ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.GetDnsDomain()

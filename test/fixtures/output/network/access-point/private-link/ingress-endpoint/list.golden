@@ -1,3 +1,3 @@
-     ID    |            Name             | Environment | Gateway  | Phase | AWS VPC Endpoint Service |    AWS VPC Endpoint    |              AWS VPC Endpoint Service Name               
------------+-----------------------------+-------------+----------+-------+--------------------------+------------------------+----------------------------------------------------------
-  ap-99999 | my-aws-ingress-access-point | env-596     | gw-88888 | READY | vpce-1234567890abcdef0   | vpce-1234567890abcdef0 | com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000  
+     ID    |            Name             | Environment | Gateway  | Phase |  AWS VPC Endpoint ID   |              AWS VPC Endpoint Service Name              |                     DNS Domain                      
+-----------+-----------------------------+-------------+----------+-------+------------------------+---------------------------------------------------------+-----------------------------------------------------
+  ap-99999 | my-aws-ingress-access-point | env-596     | gw-88888 | READY | vpce-1234567890abcdef0 | com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000 | ap123abc.us-west-2.aws.accesspoint.confluent.cloud  

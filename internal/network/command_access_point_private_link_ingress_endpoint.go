@@ -18,8 +18,7 @@ type ingressEndpointOut struct {
 	Environment               string `human:"Environment" serialized:"environment"`
 	Gateway                   string `human:"Gateway" serialized:"gateway"`
 	Phase                     string `human:"Phase" serialized:"phase"`
-	AwsVpcEndpointService     string `human:"AWS VPC Endpoint Service,omitempty" serialized:"aws_vpc_endpoint_service,omitempty"`
-	AwsVpcEndpoint            string `human:"AWS VPC Endpoint,omitempty" serialized:"aws_vpc_endpoint,omitempty"`
+	AwsVpcEndpointId          string `human:"AWS VPC Endpoint ID,omitempty" serialized:"aws_vpc_endpoint_id,omitempty"`
 	AwsVpcEndpointServiceName string `human:"AWS VPC Endpoint Service Name,omitempty" serialized:"aws_vpc_endpoint_service_name,omitempty"`
 	DnsDomain                 string `human:"DNS Domain,omitempty" serialized:"dns_domain,omitempty"`
 }
@@ -92,12 +91,8 @@ func printPrivateLinkIngressEndpointTable(cmd *cobra.Command, ingressEndpoint ne
 		Phase:       ingressEndpoint.Status.GetPhase(),
 	}
 
-	if ingressEndpoint.Spec.Config != nil && ingressEndpoint.Spec.Config.NetworkingV1AwsIngressPrivateLinkEndpoint != nil {
-		out.AwsVpcEndpointService = ingressEndpoint.Spec.Config.NetworkingV1AwsIngressPrivateLinkEndpoint.GetVpcEndpointId()
-	}
-
 	if ingressEndpoint.Status.Config != nil && ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus != nil {
-		out.AwsVpcEndpoint = ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.GetVpcEndpointId()
+		out.AwsVpcEndpointId = ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.GetVpcEndpointId()
 		out.AwsVpcEndpointServiceName = ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.GetVpcEndpointServiceName()
 		if ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.HasDnsDomain() {
 			out.DnsDomain = ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.GetDnsDomain()
