@@ -84,17 +84,16 @@ func isClusterResizeInProgress(currentCluster *cmkv2.CmkV2Cluster) error {
 func getCmkClusterIngressAndEgressMbps(currentMaxEcku int32, limits *kafkausagelimits.Limits) (int32, int32) {
 	ingress, egress := limits.GetIngress(), limits.GetEgress()
 
-	if limits.GetMaxEcku() == nil {
-		return ingress, egress
-	}
-
 	// Scale limits by cluster's max eCKU when limits are set per eCKU
-	// Use default max ecku when currentMaxEcku is not set
-	if currentMaxEcku == 0 && limits.GetMaxEcku() != nil {
-		currentMaxEcku = limits.GetMaxEcku().Value
+	if limits.GetMaxEcku() != nil && currentMaxEcku > 0 {
+		return ingress * currentMaxEcku, egress * currentMaxEcku
+	}
+	if limits.GetMaxEcku() != nil && limits.GetMaxEcku().Value > 0 {
+		// Use default max ecku when currentMaxEcku is not set
+		return ingress * limits.GetMaxEcku().Value, egress * limits.GetMaxEcku().Value
 	}
 
-	return ingress * currentMaxEcku, egress * currentMaxEcku
+	return ingress, egress
 }
 
 func getCmkClusterType(cluster *cmkv2.CmkV2Cluster) string {
