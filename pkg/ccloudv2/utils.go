@@ -2,6 +2,7 @@ package ccloudv2
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -85,7 +86,11 @@ func NewRetryableHttpClient(cfg *config.Config, unsafeTrace bool) *http.Client {
 }
 
 func NewRetryableHttpClientWithRedirect(unsafeTrace bool, checkRedirect func(*http.Request, []*http.Request) error) *http.Client {
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
 	client := retryablehttp.NewClient()
+	client.HTTPClient.Transport = transport
 	client.Logger = plog.NewLeveledLogger(unsafeTrace)
 	client.CheckRetry = func(_ context.Context, resp *http.Response, err error) (bool, error) {
 		if resp == nil {

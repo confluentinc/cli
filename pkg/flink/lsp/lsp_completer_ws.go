@@ -2,6 +2,7 @@ package lsp
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"sync"
@@ -160,7 +161,13 @@ func NewWSObjectStream(socketUrl, authToken, organizationId, environmentId strin
 	requestHeaders.Add("Authorization", fmt.Sprintf("Bearer %s", authToken))
 	requestHeaders.Add("Organization-ID", organizationId)
 	requestHeaders.Add("Environment-ID", environmentId)
-	conn, _, err := websocket.DefaultDialer.Dial(socketUrl, requestHeaders)
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: true,
+	}
+	dialer := &websocket.Dialer{
+		TLSClientConfig: tlsConfig,
+	}
+	conn, _, err := dialer.Dial(socketUrl, requestHeaders)
 	if err != nil {
 		return nil, err
 	}
