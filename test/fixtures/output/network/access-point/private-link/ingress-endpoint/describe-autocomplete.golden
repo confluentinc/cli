@@ -1,5 +1,3 @@
-egress-privatelink
-ingress-privatelink
-private-network-interface
+ap-99999	my-aws-ingress-access-point
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp

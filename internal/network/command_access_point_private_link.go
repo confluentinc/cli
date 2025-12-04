@@ -11,6 +11,7 @@ func (c *accessPointCommand) newPrivateLinkCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(c.newEgressEndpointCommand())
+	cmd.AddCommand(c.newIngressEndpointCommand())
 
 	return cmd
 }
