@@ -88,6 +88,10 @@ func getCmkClusterIngressAndEgressMbps(currentMaxEcku int32, limits *kafkausagel
 	if limits.GetMaxEcku() != nil && currentMaxEcku > 0 {
 		return ingress * currentMaxEcku, egress * currentMaxEcku
 	}
+	if limits.GetMaxEcku() != nil && limits.GetMaxEcku().Value > 0 {
+		// Use default max ecku when currentMaxEcku is not set
+		return ingress * limits.GetMaxEcku().Value, egress * limits.GetMaxEcku().Value
+	}
 
 	return ingress, egress
 }
