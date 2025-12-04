@@ -1,6 +1,8 @@
 module github.com/confluentinc/cli/v4
 
-go 1.24.9
+go 1.24.10
+
+toolchain go1.24.11
 
 require (
 	github.com/antihax/optional v1.0.0
@@ -40,7 +42,9 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking v0.14.0
+	github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.5.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder v0.4.0
+	github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.9.0
@@ -162,8 +166,6 @@ require (
 	github.com/charmbracelet/x/term v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.1.0 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
-	github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.5.0 // indirect
-	github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway v0.2.0 // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.5 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
@@ -288,4 +290,4 @@ require (
 )
 
 replace github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway v0.2.0 => github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-gateway v0.11.0
-replace github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.5.0 => github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-access-point v0.9.0
+replace github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.5.0 => github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-access-point v0.10.0

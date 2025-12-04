@@ -2973,6 +2973,7 @@ func getAwsIngressAccessPoint(id, environment, name string) networkingaccesspoin
 					Kind:                   "AwsIngressPrivateLinkEndpointStatus",
 					VpcEndpointId:          "vpce-1234567890abcdef0",
 					VpcEndpointServiceName: "com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000",
+					DnsDomain:              networkingaccesspointv1.PtrString("ap123abc.us-west-2.aws.accesspoint.confluent.cloud"),
 				},
 			},
 		},
@@ -3079,6 +3080,7 @@ func handleNetworkingAccessPointCreate(t *testing.T) http.HandlerFunc {
 						Kind:                   "AwsIngressPrivateLinkEndpointStatus",
 						VpcEndpointId:          "vpce-1234567890abcdef0",
 						VpcEndpointServiceName: "com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000",
+						DnsDomain:              networkingaccesspointv1.PtrString("ap123abc.us-west-2.aws.accesspoint.confluent.cloud"),
 					},
 				},
 			}
