@@ -123,6 +123,7 @@ func (s *CLITestSuite) TestNetwork_Autocomplete() {
 func (s *CLITestSuite) TestNetworkGateway() {
 	tests := []CLITest{
 		{args: "network gateway create my-gateway --cloud aws --type egress-privatelink --region us-west-2", fixture: "network/gateway/create-aws.golden"},
+		{args: "network gateway create my-gateway --cloud aws --type ingress-privatelink --region us-west-2", fixture: "network/gateway/create-aws-ingress.golden"},
 		{args: "network gateway create my-gateway --cloud aws --type private-network-interface --region us-west-2 --zones us-west-2a,us-west-2b", fixture: "network/gateway/create-aws-private-network-interface.golden"},
 		{args: "network gateway update gw-111111 --name new-name", fixture: "network/gateway/update.golden"},
 		{args: "network gateway delete gw-12345", input: "y\n", fixture: "network/gateway/delete.golden"},
@@ -140,10 +141,12 @@ func (s *CLITestSuite) TestNetworkGatewayDescribe() {
 	tests := []CLITest{
 		{args: "network gateway describe gw-12345", fixture: "network/gateway/describe-aws.golden"},
 		{args: "network gateway describe gw-54321", fixture: "network/gateway/describe-aws-private-network-interface.golden"},
+		{args: "network gateway describe gw-88888", fixture: "network/gateway/describe-aws-ingress.golden"},
 		{args: "network gateway describe gw-13570", fixture: "network/gateway/describe-gcp-dns-peering.golden"},
 		{args: "network gateway describe gw-07531", fixture: "network/gateway/describe-gcp.golden"},
 		{args: "network gateway describe gw-67890", fixture: "network/gateway/describe-azure.golden"},
 		{args: "network gateway describe gw-12345 --output json", fixture: "network/gateway/describe-aws-json.golden"},
+		{args: "network gateway describe gw-88888 --output json", fixture: "network/gateway/describe-aws-ingress-json.golden"},
 	}
 
 	for _, test := range tests {
@@ -1148,6 +1151,59 @@ func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkEgressEndpoint_Autocompl
 		{args: `__complete network access-point private-link egress-endpoint describe ""`, login: "cloud", fixture: "network/access-point/private-link/egress-endpoint/describe-autocomplete.golden"},
 		{args: `__complete network access-point private-link egress-endpoint delete ""`, login: "cloud", fixture: "network/access-point/private-link/egress-endpoint/delete-autocomplete.golden"},
 		{args: `__complete network access-point private-link egress-endpoint update ""`, login: "cloud", fixture: "network/access-point/private-link/egress-endpoint/update-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkIngressEndpoint() {
+	tests := []CLITest{
+		{args: "network access-point private-link ingress-endpoint create --cloud aws --gateway gw-88888 --vpc-endpoint-id vpce-1234567890abcdef0", fixture: "network/access-point/private-link/ingress-endpoint/create-aws.golden"},
+		{args: "network access-point private-link ingress-endpoint create my-ingress-endpoint --cloud aws --gateway gw-88888 --vpc-endpoint-id vpce-1234567890abcdef0", fixture: "network/access-point/private-link/ingress-endpoint/create-aws-name.golden"},
+		{args: "network access-point private-link ingress-endpoint update ap-88888 --name my-new-aws-ingress-access-point", fixture: "network/access-point/private-link/ingress-endpoint/update-aws.golden"},
+		{args: "network access-point private-link ingress-endpoint delete ap-88888", input: "y\n", fixture: "network/access-point/private-link/ingress-endpoint/delete.golden"},
+		{args: "network access-point private-link ingress-endpoint delete ap-99999 ap-88888", input: "y\n", fixture: "network/access-point/private-link/ingress-endpoint/delete-multiple.golden"},
+		{args: "network access-point private-link ingress-endpoint delete ap-invalid", fixture: "network/access-point/private-link/ingress-endpoint/delete-fail.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkIngressEndpointDescribe() {
+	tests := []CLITest{
+		{args: "network access-point private-link ingress-endpoint describe ap-99999", fixture: "network/access-point/private-link/ingress-endpoint/describe-aws.golden"},
+		{args: "network access-point private-link ingress-endpoint describe ap-99999 --output json", fixture: "network/access-point/private-link/ingress-endpoint/describe-aws-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkIngressEndpointList() {
+	tests := []CLITest{
+		{args: "network access-point private-link ingress-endpoint list", fixture: "network/access-point/private-link/ingress-endpoint/list.golden"},
+		{args: "network access-point private-link ingress-endpoint list --output json", fixture: "network/access-point/private-link/ingress-endpoint/list-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkIngressEndpoint_Autocomplete() {
+	tests := []CLITest{
+		{args: `__complete network access-point private-link ingress-endpoint describe ""`, login: "cloud", fixture: "network/access-point/private-link/ingress-endpoint/describe-autocomplete.golden"},
+		{args: `__complete network access-point private-link ingress-endpoint delete ""`, login: "cloud", fixture: "network/access-point/private-link/ingress-endpoint/delete-autocomplete.golden"},
+		{args: `__complete network access-point private-link ingress-endpoint update ""`, login: "cloud", fixture: "network/access-point/private-link/ingress-endpoint/update-autocomplete.golden"},
 	}
 
 	for _, test := range tests {
