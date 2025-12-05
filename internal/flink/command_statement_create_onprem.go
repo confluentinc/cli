@@ -114,6 +114,7 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 			Stopped:            cmfsdk.PtrBool(false),
 		},
 	}
+
 	wait, err := cmd.Flags().GetBool("wait")
 	if err != nil {
 		return err
