@@ -1,6 +1,7 @@
 package store
 
 import (
+	"crypto/tls"
 	"fmt"
 	"testing"
 
@@ -38,7 +39,8 @@ func TestRemoveStatementTerminator(t *testing.T) {
 
 func TestProcessSetStatement(t *testing.T) {
 	// Create a new store
-	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
+	tlsClientConfig := &tls.Config{}
+	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken", tlsClientConfig)
 	appOptions := &types.ApplicationOptions{
 		Cloud:           true,
 		EnvironmentName: "env-123",
@@ -133,7 +135,8 @@ func TestProcessSetStatement(t *testing.T) {
 
 func TestProcessResetStatement(t *testing.T) {
 	// Create a new store
-	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
+	tlsClientConfig := &tls.Config{}
+	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken", tlsClientConfig)
 	appOptions := types.ApplicationOptions{
 		Cloud:            true,
 		OrganizationId:   "orgId",
@@ -210,7 +213,8 @@ func TestProcessResetStatement(t *testing.T) {
 
 func TestProcessUseStatement(t *testing.T) {
 	// Create a new store
-	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
+	tlsClientConfig := &tls.Config{}
+	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken", tlsClientConfig)
 	appOptions := types.ApplicationOptions{
 		OrganizationId:  "orgId",
 		EnvironmentName: "envName",

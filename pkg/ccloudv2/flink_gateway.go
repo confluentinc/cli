@@ -2,6 +2,7 @@ package ccloudv2
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net/http"
 
@@ -33,10 +34,10 @@ type FlinkGatewayClient struct {
 	AuthToken string
 }
 
-func NewFlinkGatewayClient(url, userAgent string, unsafeTrace bool, authToken string) *FlinkGatewayClient {
+func NewFlinkGatewayClient(url, userAgent string, unsafeTrace bool, authToken string, tlsClientConfig *tls.Config) *FlinkGatewayClient {
 	cfg := flinkgatewayv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClientWithRedirect(unsafeTrace, checkRedirect)
+	cfg.HTTPClient = NewRetryableHttpClientWithRedirect(unsafeTrace, tlsClientConfig, checkRedirect)
 	cfg.Servers = flinkgatewayv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

@@ -28,6 +28,8 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
+	cmd.PersistentFlags().Bool("insecure-skip-verify", false, "Skip TLS certificate verification for Flink gateway connections.")
+
 	// On-prem commands are able to run with or without login. Accordingly, set the pre-runner.
 	if cfg.IsOnPremLogin() {
 		c = &command{pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}

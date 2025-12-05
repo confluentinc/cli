@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"crypto/tls"
 	"fmt"
 	purl "net/url"
 	"os"
@@ -86,13 +87,21 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 			return nil, err
 		}
 
+		insecureSkipVerify, err := c.Flags().GetBool("insecure-skip-verify")
+		if err != nil {
+			return nil, err
+		}
+
 		dataplaneToken, err := auth.GetDataplaneToken(c.Context)
 		if err != nil {
 			return nil, err
 		}
 
+		log.CliLogger.Debugf("Insecure skip verify: %t\n", insecureSkipVerify)
+		tlsClientConfig := &tls.Config{InsecureSkipVerify: insecureSkipVerify}
+
 		log.CliLogger.Debugf("The final url used for setting up Flink dataplane client is: %s\n", url)
-		c.flinkGatewayClient = ccloudv2.NewFlinkGatewayClient(url, c.Version.UserAgent, unsafeTrace, dataplaneToken)
+		c.flinkGatewayClient = ccloudv2.NewFlinkGatewayClient(url, c.Version.UserAgent, unsafeTrace, dataplaneToken, tlsClientConfig)
 	}
 
 	return c.flinkGatewayClient, nil

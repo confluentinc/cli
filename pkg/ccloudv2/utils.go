@@ -85,11 +85,11 @@ func NewRetryableHttpClient(cfg *config.Config, unsafeTrace bool) *http.Client {
 	return client.StandardClient()
 }
 
-func NewRetryableHttpClientWithRedirect(unsafeTrace bool, checkRedirect func(*http.Request, []*http.Request) error) *http.Client {
-	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
+func NewRetryableHttpClientWithRedirect(unsafeTrace bool, tlsClientConfig *tls.Config, checkRedirect func(*http.Request, []*http.Request) error) *http.Client {
 	client := retryablehttp.NewClient()
+	transport := &http.Transport{
+		TLSClientConfig: tlsClientConfig,
+	}
 	client.HTTPClient.Transport = transport
 	client.Logger = plog.NewLeveledLogger(unsafeTrace)
 	client.CheckRetry = func(_ context.Context, resp *http.Response, err error) (bool, error) {

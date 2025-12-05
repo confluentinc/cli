@@ -18,13 +18,14 @@ import (
 type WebsocketLSPClient struct {
 	sync.Mutex
 
-	baseUrl        string
-	getAuthToken   func() string
-	organizationId string
-	environmentId  string
-	handlerCh      chan *jsonrpc2.Request
-	conn           *jsonrpc2.Conn
-	lspClient      LspInterface
+	baseUrl         string
+	getAuthToken    func() string
+	organizationId  string
+	environmentId   string
+	handlerCh       chan *jsonrpc2.Request
+	conn            *jsonrpc2.Conn
+	lspClient       LspInterface
+	tlsClientConfig *tls.Config
 }
 
 func (w *WebsocketLSPClient) Initialize() (*lsp.InitializeResult, error) {
@@ -74,7 +75,7 @@ func (w *WebsocketLSPClient) refreshWebsocketConnection() {
 		}
 
 		// we only update client and conn if there was no error, otherwise we leave them as is
-		if lspClient, conn, err := NewLSPConnection(w.baseUrl, w.getAuthToken(), w.organizationId, w.environmentId, w.handlerCh); err == nil {
+		if lspClient, conn, err := NewLSPConnection(w.baseUrl, w.getAuthToken(), w.organizationId, w.environmentId, w.tlsClientConfig, w.handlerCh); err == nil {
 			w.lspClient = lspClient
 			w.conn = conn
 			_, err := InitLspClient(w.lspClient)
@@ -87,8 +88,8 @@ func (w *WebsocketLSPClient) refreshWebsocketConnection() {
 	}
 }
 
-func NewInitializedLspClient(getAuthToken func() string, baseUrl, organizationId, environmentId string, handlerCh chan *jsonrpc2.Request) (LspInterface, string, error) {
-	client, _, err := NewLSPClient(getAuthToken, baseUrl, organizationId, environmentId, handlerCh)
+func NewInitializedLspClient(getAuthToken func() string, baseUrl, organizationId, environmentId string, tlsClientConfig *tls.Config, handlerCh chan *jsonrpc2.Request) (LspInterface, string, error) {
+	client, _, err := NewLSPClient(getAuthToken, baseUrl, organizationId, environmentId, tlsClientConfig, handlerCh)
 	if err != nil {
 		return nil, "", err
 	}
@@ -117,27 +118,28 @@ func InitLspClient(client LspInterface) (string, error) {
 	return string(docUri), nil
 }
 
-func NewLSPClient(getAuthToken func() string, baseUrl, organizationId, environmentId string, handlerCh chan *jsonrpc2.Request) (*WebsocketLSPClient, *jsonrpc2.Conn, error) {
-	lspClient, conn, err := NewLSPConnection(baseUrl, getAuthToken(), organizationId, environmentId, handlerCh)
+func NewLSPClient(getAuthToken func() string, baseUrl, organizationId, environmentId string, tlsClientConfig *tls.Config, handlerCh chan *jsonrpc2.Request) (*WebsocketLSPClient, *jsonrpc2.Conn, error) {
+	lspClient, conn, err := NewLSPConnection(baseUrl, getAuthToken(), organizationId, environmentId, tlsClientConfig, handlerCh)
 	if err != nil {
 		return nil, conn, err
 	}
 
 	websocketClient := &WebsocketLSPClient{
-		baseUrl:        baseUrl,
-		getAuthToken:   getAuthToken,
-		organizationId: organizationId,
-		environmentId:  environmentId,
-		handlerCh:      handlerCh,
-		lspClient:      lspClient,
-		conn:           conn,
+		baseUrl:         baseUrl,
+		getAuthToken:    getAuthToken,
+		organizationId:  organizationId,
+		environmentId:   environmentId,
+		handlerCh:       handlerCh,
+		lspClient:       lspClient,
+		conn:            conn,
+		tlsClientConfig: tlsClientConfig,
 	}
 
 	return websocketClient, websocketClient.conn, nil
 }
 
-func NewLSPConnection(baseUrl, authToken, organizationId, environmentId string, handlerCh chan *jsonrpc2.Request) (*LSPClient, *jsonrpc2.Conn, error) {
-	stream, err := NewWSObjectStream(baseUrl, authToken, organizationId, environmentId)
+func NewLSPConnection(baseUrl, authToken, organizationId, environmentId string, tlsClientConfig *tls.Config, handlerCh chan *jsonrpc2.Request) (*LSPClient, *jsonrpc2.Conn, error) {
+	stream, err := NewWSObjectStream(baseUrl, authToken, organizationId, environmentId, tlsClientConfig)
 	if err != nil {
 		log.CliLogger.Debugf("Error dialing websocket: %v\n", err)
 		return nil, nil, err
@@ -156,16 +158,13 @@ func NewLSPConnection(baseUrl, authToken, organizationId, environmentId string, 
 	return lspClient, conn, nil
 }
 
-func NewWSObjectStream(socketUrl, authToken, organizationId, environmentId string) (jsonrpc2.ObjectStream, error) {
+func NewWSObjectStream(socketUrl, authToken, organizationId, environmentId string, tlsClientConfig *tls.Config) (jsonrpc2.ObjectStream, error) {
 	requestHeaders := http.Header{}
 	requestHeaders.Add("Authorization", fmt.Sprintf("Bearer %s", authToken))
 	requestHeaders.Add("Organization-ID", organizationId)
 	requestHeaders.Add("Environment-ID", environmentId)
-	tlsConfig := &tls.Config{
-		InsecureSkipVerify: true,
-	}
 	dialer := &websocket.Dialer{
-		TLSClientConfig: tlsConfig,
+		TLSClientConfig: tlsClientConfig,
 	}
 	conn, _, err := dialer.Dial(socketUrl, requestHeaders)
 	if err != nil {
