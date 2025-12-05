@@ -15,6 +15,46 @@ type LocalCatalogMetadata struct {
 	Annotations       *map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
 }
 
+type LocalSavepoint struct {
+	ApiVersion string                 `json:"apiVersion" yaml:"apiVersion"`
+	Kind       string                 `json:"kind" yaml:"kind"`
+	Metadata   LocalSavepointMetadata `json:"metadata" yaml:"metadata"`
+	Spec       LocalSavepointSpec     `json:"spec" yaml:"spec"`
+	Status     *LocalSavepointStatus  `json:"status,omitempty" yaml:"status,omitempty"`
+}
+
+type LocalSavepointMetadata struct {
+	Name              string             `json:"name" yaml:"name"`
+	CreationTimestamp *string            `json:"creationTimestamp,omitempty" yaml:"creationTimestamp,omitempty"`
+	Uid               *string            `json:"uid,omitempty" yaml:"uid,omitempty"`
+	Labels            *map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
+	Annotations       *map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
+}
+
+type LocalSavepointSpec struct {
+	Path *string `json:"path,omitempty" yaml:"path,omitempty"`
+
+	BackoffLimit *int32 `json:"backoffLimit,omitempty" yaml:"backoffLimit,omitempty"`
+
+	FormatType *string `json:"formatType,omitempty" yaml:"formatType,omitempty"`
+}
+
+type LocalSavepointStatus struct {
+	State *string `json:"state,omitempty" yaml:"state,omitempty"`
+
+	Path *string `json:"path,omitempty" yaml:"path,omitempty"`
+
+	TriggerTimestamp *string `json:"triggerTimestamp,omitempty" yaml:"triggerTimestamp,omitempty"`
+
+	ResultTimestamp *string `json:"resultTimestamp,omitempty" yaml:"resultTimestamp,omitempty"`
+
+	Failures *int32 `json:"failures,omitempty" yaml:"failures,omitempty"`
+
+	Error *string `json:"error,omitempty" yaml:"error,omitempty"`
+
+	PendingDeletion *bool `json:"pendingDeletion,omitempty" yaml:"pendingDeletion,omitempty"`
+}
+
 type LocalComputePool struct {
 	ApiVersion string                   `json:"apiVersion" yaml:"apiVersion"`
 	Kind       string                   `json:"kind" yaml:"kind"`
@@ -150,12 +190,16 @@ type LocalStatementResults struct {
 }
 
 type LocalStatementSpec struct {
-	Statement          string             `json:"statement" yaml:"statement"`
-	Properties         *map[string]string `json:"properties,omitempty" yaml:"properties,omitempty"`
-	FlinkConfiguration *map[string]string `json:"flinkConfiguration,omitempty" yaml:"flinkConfiguration,omitempty"`
-	ComputePoolName    string             `json:"computePoolName" yaml:"computePoolName"`
-	Parallelism        *int32             `json:"parallelism,omitempty" yaml:"parallelism,omitempty"`
-	Stopped            *bool              `json:"stopped,omitempty" yaml:"stopped,omitempty"`
+	Statement             string             `json:"statement" yaml:"statement"`
+	Properties            *map[string]string `json:"properties,omitempty" yaml:"properties,omitempty"`
+	FlinkConfiguration    *map[string]string `json:"flinkConfiguration,omitempty" yaml:"flinkConfiguration,omitempty"`
+	ComputePoolName       string             `json:"computePoolName" yaml:"computePoolName"`
+	Parallelism           *int32             `json:"parallelism,omitempty" yaml:"parallelism,omitempty"`
+	Stopped               *bool              `json:"stopped,omitempty" yaml:"stopped,omitempty"`
+	FromSavepointName     string             `json:"fromSavepointName,omitempty" yaml:"fromSavepointName,omitempty"`
+	FromSavepointUID      string             `json:"fromSavepointUid,omitempty" yaml:"fromSavepointUid,omitempty"`
+	FromSavepointPath     string             `json:"fromSavepointPath,omitempty" yaml:"fromSavepointPath,omitempty"`
+	AllowNonRestoredState bool               `json:"allowNonRestoredState,omitempty" yaml:"allowNonRestoredState,omitempty"`
 }
 
 type LocalStatementStatus struct {
