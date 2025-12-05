@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"reflect"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -37,11 +36,7 @@ func (c *command) newStatementCreateCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("catalog", "", "The name of the default catalog.")
 	cmd.Flags().String("database", "", "The name of the default database.")
 	cmd.Flags().String("flink-configuration", "", "The file path to hold the Flink configuration for the statement.")
-	cmd.Flags().String("from-savepoint-name", "", "The Name of the savepoint to start from.")
-	cmd.Flags().String("from-savepoint-uid", "", "The Uid of the savepoint to start from.")
-	cmd.Flags().String("from-savepoint-path", "", "The Path of the savepoint to start from.")
 	cmd.Flags().Bool("wait", false, "Boolean flag to block until the statement is running or has failed.")
-	cmd.Flags().Bool("allow-non-restored-state", false, "Boolean flag savepoint restore.")
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -89,26 +84,6 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	fromSavepointName, err := cmd.Flags().GetString("from-savepoint-name")
-	if err != nil {
-		return err
-	}
-
-	fromSavepointUid, err := cmd.Flags().GetString("from-savepoint-uid")
-	if err != nil {
-		return err
-	}
-
-	fromSavepointPath, err := cmd.Flags().GetString("from-savepoint-path")
-	if err != nil {
-		return err
-	}
-
-	allowNonRestoredState, err := cmd.Flags().GetBool("allow-non-restored-state")
-	if err != nil {
-		return err
-	}
-
 	database, err := cmd.Flags().GetString("database")
 	if err != nil {
 		return err
@@ -140,16 +115,6 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 		},
 	}
 
-	if fromSavepointName != "" || fromSavepointUid != "" || fromSavepointPath != "" {
-		savepoint := cmfsdk.StatementStartFromSavepoint{
-			SavepointName:         &fromSavepointName,
-			Uid:                   &fromSavepointUid,
-			InitialSavepointPath:  &fromSavepointPath,
-			AllowNonRestoredState: &allowNonRestoredState,
-		}
-
-		statement.Spec.SetStartFromSavepoint(savepoint)
-	}
 	wait, err := cmd.Flags().GetBool("wait")
 	if err != nil {
 		return err
@@ -181,58 +146,23 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 	if output.GetFormat(cmd) == output.Human {
 		table := output.NewTable(cmd)
 		table.Add(&statementOutOnPrem{
-			CreationDate:          finalStatement.Metadata.GetCreationTimestamp(),
-			Name:                  finalStatement.Metadata.GetName(),
-			Statement:             finalStatement.Spec.GetStatement(),
-			ComputePool:           finalStatement.Spec.GetComputePoolName(),
-			Status:                finalStatement.Status.GetPhase(),
-			StatusDetail:          finalStatement.Status.GetDetail(),
-			Parallelism:           finalStatement.Spec.GetParallelism(),
-			Stopped:               finalStatement.Spec.GetStopped(),
-			SqlKind:               finalStatement.Status.Traits.GetSqlKind(),
-			AppendOnly:            finalStatement.Status.Traits.GetIsAppendOnly(),
-			Bounded:               finalStatement.Status.Traits.GetIsBounded(),
-			FromSavepointName:     finalStatement.Spec.StartFromSavepoint.GetSavepointName(),
-			FromSavepointUID:      finalStatement.Spec.StartFromSavepoint.GetUid(),
-			FromSavepointPath:     finalStatement.Spec.StartFromSavepoint.GetInitialSavepointPath(),
-			AllowNonRestoredState: finalStatement.Spec.StartFromSavepoint.GetAllowNonRestoredState(),
+			CreationDate: finalStatement.Metadata.GetCreationTimestamp(),
+			Name:         finalStatement.Metadata.GetName(),
+			Statement:    finalStatement.Spec.GetStatement(),
+			ComputePool:  finalStatement.Spec.GetComputePoolName(),
+			Status:       finalStatement.Status.GetPhase(),
+			StatusDetail: finalStatement.Status.GetDetail(),
+			Parallelism:  finalStatement.Spec.GetParallelism(),
+			Stopped:      finalStatement.Spec.GetStopped(),
+			SqlKind:      finalStatement.Status.Traits.GetSqlKind(),
+			AppendOnly:   finalStatement.Status.Traits.GetIsAppendOnly(),
+			Bounded:      finalStatement.Status.Traits.GetIsBounded(),
 		})
-		if finalStatement.Spec.StartFromSavepoint.GetSavepointName() == "" && finalStatement.Spec.StartFromSavepoint.GetUid() == "" && finalStatement.Spec.StartFromSavepoint.GetInitialSavepointPath() == "" {
-			filterTable(table)
-		}
 		return table.Print()
 	}
 
 	localStmt := convertSdkStatementToLocalStatement(finalStatement)
 	return output.SerializedOutput(cmd, localStmt)
-}
-
-func filterTable(table *output.Table) {
-	all := structFields[statementOutOnPrem]()
-	exclude := map[string]bool{
-		"FromSavepointName":     true,
-		"FromSavepointUID":      true,
-		"FromSavepointPath":     true,
-		"AllowNonRestoredState": true,
-	}
-
-	var keep []string
-	for _, f := range all {
-		if !exclude[f] {
-			keep = append(keep, f)
-		}
-	}
-	table.Filter(keep)
-}
-
-func structFields[T any]() []string {
-	var t T
-	val := reflect.TypeOf(t)
-	fields := make([]string, val.NumField())
-	for i := 0; i < val.NumField(); i++ {
-		fields[i] = val.Field(i).Name
-	}
-	return fields
 }
 
 func (c *command) readFlinkConfiguration(cmd *cobra.Command) (map[string]string, error) {
