@@ -47,25 +47,18 @@ func (c *command) statementDescribeOnPrem(cmd *cobra.Command, args []string) err
 	if output.GetFormat(cmd) == output.Human {
 		table := output.NewTable(cmd)
 		table.Add(&statementOutOnPrem{
-			CreationDate:          outputStatement.Metadata.GetCreationTimestamp(),
-			Name:                  outputStatement.Metadata.GetName(),
-			Statement:             outputStatement.Spec.GetStatement(),
-			ComputePool:           outputStatement.Spec.GetComputePoolName(),
-			Status:                outputStatement.Status.GetPhase(),
-			StatusDetail:          outputStatement.Status.GetDetail(),
-			Parallelism:           outputStatement.Spec.GetParallelism(),
-			Stopped:               outputStatement.Spec.GetStopped(),
-			SqlKind:               outputStatement.Status.Traits.GetSqlKind(),
-			AppendOnly:            outputStatement.Status.Traits.GetIsAppendOnly(),
-			Bounded:               outputStatement.Status.Traits.GetIsBounded(),
-			FromSavepointName:     outputStatement.Spec.StartFromSavepoint.GetSavepointName(),
-			FromSavepointUID:      outputStatement.Spec.StartFromSavepoint.GetUid(),
-			FromSavepointPath:     outputStatement.Spec.StartFromSavepoint.GetInitialSavepointPath(),
-			AllowNonRestoredState: outputStatement.Spec.StartFromSavepoint.GetAllowNonRestoredState(),
+			CreationDate: outputStatement.Metadata.GetCreationTimestamp(),
+			Name:         outputStatement.Metadata.GetName(),
+			Statement:    outputStatement.Spec.GetStatement(),
+			ComputePool:  outputStatement.Spec.GetComputePoolName(),
+			Status:       outputStatement.Status.GetPhase(),
+			StatusDetail: outputStatement.Status.GetDetail(),
+			Parallelism:  outputStatement.Spec.GetParallelism(),
+			Stopped:      outputStatement.Spec.GetStopped(),
+			SqlKind:      outputStatement.Status.Traits.GetSqlKind(),
+			AppendOnly:   outputStatement.Status.Traits.GetIsAppendOnly(),
+			Bounded:      outputStatement.Status.Traits.GetIsBounded(),
 		})
-		if outputStatement.Spec.StartFromSavepoint.GetSavepointName() == "" && outputStatement.Spec.StartFromSavepoint.GetUid() == "" && outputStatement.Spec.StartFromSavepoint.GetInitialSavepointPath() == "" {
-			filterTable(table)
-		}
 		return table.Print()
 	}
 

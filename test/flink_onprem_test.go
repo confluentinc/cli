@@ -412,8 +412,6 @@ func (s *CLITestSuite) TestFlinkStatementCreateOnPrem() {
 		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool -o yaml`, fixture: "flink/statement/create-success-yaml.golden"},
 		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.json`, fixture: "flink/statement/create-success.golden"},
 		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.yaml`, fixture: "flink/statement/create-success.golden"},
-		{args: `flink statement create stmt-savepoint --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --from-savepoint-name savepoint1 --allow-non-restored-state=false`, fixture: "flink/statement/create-success-savepoint.golden"},
-		{args: `flink statement create stmt-savepoint2 --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --from-savepoint-path savepointPath --allow-non-restored-state=true`, fixture: "flink/statement/create-success-savepoint-path.golden"},
 		// failure
 		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.properties`, fixture: "flink/statement/create-failure-invalid-configuration-file-format.golden", exitCode: 1},
 		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.csv`, fixture: "flink/statement/create-failure-configuration-file-dne.golden", regex: true, exitCode: 1},
@@ -432,7 +430,6 @@ func (s *CLITestSuite) TestFlinkStatementDescribeOnPrem() {
 		{args: "flink statement describe test-stmt --environment default", fixture: "flink/statement/describe-success.golden"},
 		{args: "flink statement describe test-stmt --environment default -o json", fixture: "flink/statement/describe-success-json.golden"},
 		{args: "flink statement describe test-stmt --environment default -o yaml", fixture: "flink/statement/describe-success-yaml.golden"},
-		{args: "flink statement describe test-stmt-savepoint --environment default", fixture: "flink/statement/describe-success-savepoint.golden"},
 		{args: "flink statement describe shell-test-stmt --environment default -o json", fixture: "flink/statement/describe-success-completed-json.golden"},
 		// failure
 		{args: "flink statement describe test-stmt", fixture: "flink/statement/describe-env-missing-failure.golden", exitCode: 1},

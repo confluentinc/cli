@@ -59,8 +59,6 @@
     computePoolName: test-pool
     parallelism: 4
     stopped: true
-    fromSavepointPath: savepointPath
-    allowNonRestoredState: true
   status:
     phase: PENDING
     detail: Statement is pending execution.
