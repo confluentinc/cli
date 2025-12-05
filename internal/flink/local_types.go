@@ -190,16 +190,12 @@ type LocalStatementResults struct {
 }
 
 type LocalStatementSpec struct {
-	Statement             string             `json:"statement" yaml:"statement"`
-	Properties            *map[string]string `json:"properties,omitempty" yaml:"properties,omitempty"`
-	FlinkConfiguration    *map[string]string `json:"flinkConfiguration,omitempty" yaml:"flinkConfiguration,omitempty"`
-	ComputePoolName       string             `json:"computePoolName" yaml:"computePoolName"`
-	Parallelism           *int32             `json:"parallelism,omitempty" yaml:"parallelism,omitempty"`
-	Stopped               *bool              `json:"stopped,omitempty" yaml:"stopped,omitempty"`
-	FromSavepointName     string             `json:"fromSavepointName,omitempty" yaml:"fromSavepointName,omitempty"`
-	FromSavepointUID      string             `json:"fromSavepointUid,omitempty" yaml:"fromSavepointUid,omitempty"`
-	FromSavepointPath     string             `json:"fromSavepointPath,omitempty" yaml:"fromSavepointPath,omitempty"`
-	AllowNonRestoredState bool               `json:"allowNonRestoredState,omitempty" yaml:"allowNonRestoredState,omitempty"`
+	Statement          string             `json:"statement" yaml:"statement"`
+	Properties         *map[string]string `json:"properties,omitempty" yaml:"properties,omitempty"`
+	FlinkConfiguration *map[string]string `json:"flinkConfiguration,omitempty" yaml:"flinkConfiguration,omitempty"`
+	ComputePoolName    string             `json:"computePoolName" yaml:"computePoolName"`
+	Parallelism        *int32             `json:"parallelism,omitempty" yaml:"parallelism,omitempty"`
+	Stopped            *bool              `json:"stopped,omitempty" yaml:"stopped,omitempty"`
 }
 
 type LocalStatementStatus struct {
