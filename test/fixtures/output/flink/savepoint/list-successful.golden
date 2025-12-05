@@ -1,0 +1,5 @@
+       Name       | Application  | Statement |  Path   |  Format   | Backoff Limit | Uid | State  
+------------------+--------------+-----------+---------+-----------+---------------+-----+--------
+  test-savepoint1 | application1 |           | abc/def | CANONICAL |            10 |     |        
+  test-savepoint2 | application1 |           | abc/def | CANONICAL |            10 |     |        
+  test-savepoint3 | application1 |           | abc/def | CANONICAL |            10 |     |        
