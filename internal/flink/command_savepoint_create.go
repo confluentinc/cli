@@ -19,7 +19,7 @@ func (c *command) newSavepointCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create a Flink savepoint named "my-savepoint".`,
-				Code: `confluent flink savepoint create statement "SELECT 1;" --path path-to-savepoint`,
+				Code: `confluent flink savepoint create statement "SELECT 1;" --path path-to-savepoint --environment env1`,
 			},
 		),
 	}
