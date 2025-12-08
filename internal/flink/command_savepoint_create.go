@@ -13,7 +13,7 @@ import (
 func (c *command) newSavepointCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create [name]",
-		Short: "Create a Flink Savepoint.",
+		Short: "Create a Flink savepoint.",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.savepointCreate,
 		Example: examples.BuildExampleString(
@@ -24,12 +24,12 @@ func (c *command) newSavepointCreateCommand() *cobra.Command {
 		),
 	}
 
+	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	cmd.Flags().String("application", "", "The name of the Flink application to create the savepoint for.")
 	cmd.Flags().String("statement", "", "The name of the Flink statement to create the savepoint for.")
 	cmd.Flags().String("path", "", "The directory where the savepoint should be stored.")
 	cmd.Flags().String("format", "CANONICAL", "The format of the savepoint. Defaults to CANONICAL.")
 	cmd.Flags().Int("backoff-limit", 0, "Maximum number of retries before the snapshot is considered failed. Set to -1 for unlimited or 0 for no retries.")
-	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 	addCmfFlagSet(cmd)

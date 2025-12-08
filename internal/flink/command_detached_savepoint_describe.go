@@ -11,7 +11,7 @@ import (
 func (c *command) newDetachedSavepointDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <name>",
-		Short: "Describe a Flink Detached Savepoint.",
+		Short: "Describe a Flink detached savepoint.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.detachedSavepointDescribe,
 		Example: examples.BuildExampleString(

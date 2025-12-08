@@ -10,7 +10,7 @@ import (
 func (c *command) newSavepointDetachCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "detach <name>",
-		Short:       "Detach Flink Savepoint in Confluent Platform.",
+		Short:       "Detach Flink savepoint in Confluent Platform.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 		RunE:        c.savepointDetach,
 	}

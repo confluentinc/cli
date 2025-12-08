@@ -4,11 +4,11 @@ Usage:
   confluent flink savepoint [command]
 
 Available Commands:
-  create      Create a Flink Savepoint.
-  delete      Delete Flink Savepoint in Confluent Platform.
-  describe    Describe flink savepoint in Confluent Platform.
-  detach      Detach Flink Savepoint in Confluent Platform.
-  list        List Flink SQL statements in Confluent Platform.
+  create      Create a Flink savepoint.
+  delete      Delete Flink savepoint in Confluent Platform.
+  describe    Describe Flink savepoint in Confluent Platform.
+  detach      Detach Flink savepoint in Confluent Platform.
+  list        List Flink savepoint in Confluent Platform.
 
 Global Flags:
   -h, --help            Show help for this command.

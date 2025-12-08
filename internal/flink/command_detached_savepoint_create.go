@@ -13,7 +13,7 @@ import (
 func (c *command) newDetachedSavepointCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create [name]",
-		Short: "Create a Flink Detached Savepoint.",
+		Short: "Create a Flink detached savepoint.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.detachedSavepointCreate,
 		Example: examples.BuildExampleString(
@@ -24,7 +24,7 @@ func (c *command) newDetachedSavepointCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("path", "", " The path to the savepoint data.")
+	cmd.Flags().String("path", "", "The path to the savepoint data.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 	addCmfFlagSet(cmd)
