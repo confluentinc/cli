@@ -6,7 +6,7 @@ Usage:
 Examples:
 Create a Flink savepoint named "my-savepoint".
 
-  $ confluent flink savepoint create statement "SELECT 1;" --path path-to-savepoint
+  $ confluent flink savepoint create statement "SELECT 1;" --path path-to-savepoint --environment env1
 
 Flags:
       --environment string                  REQUIRED: Name of the Flink environment.
