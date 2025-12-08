@@ -6,3 +6,5 @@
                                 |            |                          |              |         | execution.                     |             |         |          |             |          
   2025-08-05 12:00:00 +0000 UTC | test-stmt3 | SELECT * FROM test_table | test-pool    | PENDING | Statement is pending           |           4 | true    | SELECT   | false       | false    
                                 |            |                          |              |         | execution.                     |             |         |          |             |          
+  2025-08-05 12:00:00 +0000 UTC | test-stmt4 | SELECT * FROM test_table | test-pool    | PENDING | Statement is pending           |           4 | true    | SELECT   | false       | false    
+                                |            |                          |              |         | execution.                     |             |         |          |             |          
