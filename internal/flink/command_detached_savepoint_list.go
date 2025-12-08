@@ -11,7 +11,7 @@ import (
 func (c *command) newDetachedSavepointListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List Flink Detached Savepoints.",
+		Short: "List Flink detached savepoint.",
 		RunE:  c.detachedSavepointList,
 		Example: examples.BuildExampleString(
 			examples.Example{

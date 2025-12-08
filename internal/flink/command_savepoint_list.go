@@ -10,7 +10,7 @@ import (
 func (c *command) newSavepointListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
-		Short:       "List Flink SQL statements in Confluent Platform.",
+		Short:       "List Flink savepoint in Confluent Platform.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 		RunE:        c.savepointList,
 	}

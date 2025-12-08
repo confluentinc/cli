@@ -10,7 +10,7 @@ import (
 func (c *command) newSavepointDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "describe <name>",
-		Short:       "Describe flink savepoint in Confluent Platform.",
+		Short:       "Describe Flink savepoint in Confluent Platform.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 		RunE:        c.savepointDescribe,
 	}

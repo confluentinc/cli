@@ -4,10 +4,10 @@ Usage:
   confluent flink detached-savepoint [command]
 
 Available Commands:
-  create      Create a Flink Detached Savepoint.
-  delete      Delete Flink Detached Savepoint in Confluent Platform.
-  describe    Describe a Flink Detached Savepoint.
-  list        List Flink Detached Savepoints.
+  create      Create a Flink detached savepoint.
+  delete      Delete Flink detached savepoint in Confluent Platform.
+  describe    Describe a Flink detached savepoint.
+  list        List Flink detached savepoint.
 
 Global Flags:
   -h, --help            Show help for this command.

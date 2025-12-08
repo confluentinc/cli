@@ -1,4 +1,4 @@
-Describe flink savepoint in Confluent Platform.
+Describe Flink savepoint in Confluent Platform.
 
 Usage:
   confluent flink savepoint describe <name> [flags]

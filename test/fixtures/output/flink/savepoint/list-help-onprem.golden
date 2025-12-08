@@ -1,4 +1,4 @@
-List Flink SQL statements in Confluent Platform.
+List Flink savepoint in Confluent Platform.
 
 Usage:
   confluent flink savepoint list [flags]
