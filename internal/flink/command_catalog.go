@@ -30,8 +30,8 @@ func (c *command) newCatalogCommand() *cobra.Command {
 }
 
 func convertSdkCatalogToLocalCatalog(sdkOutputCatalog cmfsdk.KafkaCatalog) LocalKafkaCatalog {
-	localClusters := make([]LocalKafkaCatalogSpecKafkaClusters, 0, len(sdkOutputCatalog.Spec.KafkaClusters))
-	for _, sdkCluster := range sdkOutputCatalog.Spec.KafkaClusters {
+	localClusters := make([]LocalKafkaCatalogSpecKafkaClusters, 0, len(sdkOutputCatalog.Spec.GetKafkaClusters()))
+	for _, sdkCluster := range sdkOutputCatalog.Spec.GetKafkaClusters() {
 		localClusters = append(localClusters, LocalKafkaCatalogSpecKafkaClusters{
 			DatabaseName:       sdkCluster.DatabaseName,
 			ConnectionConfig:   sdkCluster.ConnectionConfig,
