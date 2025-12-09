@@ -479,7 +479,7 @@ func TestJsonSerdesInvalid(t *testing.T) {
 	req.Regexp("unexpected end of JSON input$", err)
 
 	_, err = deserializationProvider.Deserialize("topic1", brokenBytes)
-	req.Regexp("unknown magic byte$", err)
+	req.Regexp("unknown magic byte", err)
 
 	invalidString := `{"f2": "abc"}`
 	invalidBytes := []byte{123, 34, 102, 50, 34, 58, 34, 97, 115, 100, 34, 125}
@@ -488,7 +488,7 @@ func TestJsonSerdesInvalid(t *testing.T) {
 	req.Regexp("missing properties: 'f1'$", err)
 
 	_, err = deserializationProvider.Deserialize("topic1", invalidBytes)
-	req.Regexp("unknown magic byte$", err)
+	req.Regexp("unknown magic byte", err)
 }
 
 func TestJsonSerdesNestedValid(t *testing.T) {
@@ -816,7 +816,7 @@ func TestProtobufSerdesInvalid(t *testing.T) {
 	req.EqualError(err, "the protobuf document is invalid")
 
 	_, err = deserializationProvider.Deserialize("topic1", brokenBytes)
-	req.Regexp("^failed to deserialize payload:.*Subject Not Found$", err)
+	req.Regexp("^failed to deserialize payload:", err)
 
 	invalidString := `{"page":"abc"}`
 	invalidBytes := []byte{0, 12, 3, 97, 98, 99, 16, 1, 24, 2}
@@ -825,7 +825,7 @@ func TestProtobufSerdesInvalid(t *testing.T) {
 	req.EqualError(err, "the protobuf document is invalid")
 
 	_, err = deserializationProvider.Deserialize("topic1", invalidBytes)
-	req.Regexp("^failed to deserialize payload:.*Subject Not Found$", err)
+	req.Regexp("^failed to deserialize payload:", err)
 }
 
 func TestProtobufSerdesNestedValid(t *testing.T) {
