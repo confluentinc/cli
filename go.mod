@@ -1,6 +1,6 @@
 module github.com/confluentinc/cli/v4
 
-go 1.24.6
+go 1.24.9
 
 require (
 	github.com/antihax/optional v1.0.0
@@ -35,7 +35,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering v0.5.0
 	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0
-	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.24.0
+	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.0.0-20250909043602-f80bee0eb280
 	github.com/confluentinc/ccloud-sdk-go-v2/ksql v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
@@ -46,11 +46,11 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.9.0
-	github.com/confluentinc/ccloud-sdk-go-v2/provider-integration v0.1.0
+	github.com/confluentinc/ccloud-sdk-go-v2/provider-integration v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.3
 	github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1
-	github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.4.0
+	github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.5.0
 	github.com/confluentinc/ccloud-sdk-go-v2/usm v0.1.0
 	github.com/confluentinc/cmf-sdk-go v0.0.4
 	github.com/confluentinc/confluent-kafka-go/v2 v2.8.0
@@ -109,11 +109,11 @@ require (
 	github.com/tidwall/pretty v1.2.1
 	github.com/tidwall/sjson v1.2.5
 	go.uber.org/mock v0.4.0
-	golang.org/x/crypto v0.36.0
+	golang.org/x/crypto v0.45.0
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	golang.org/x/oauth2 v0.27.0
-	golang.org/x/term v0.30.0
-	golang.org/x/text v0.23.0
+	golang.org/x/term v0.37.0
+	golang.org/x/text v0.31.0
 	google.golang.org/protobuf v1.34.2
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
 	gopkg.in/yaml.v3 v3.0.1
@@ -262,12 +262,12 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.24.0 // indirect
 	go.opentelemetry.io/otel/metric v1.37.0 // indirect
 	go.opentelemetry.io/otel/trace v1.37.0 // indirect
-	golang.org/x/mod v0.19.0 // indirect
-	golang.org/x/net v0.38.0 // indirect
-	golang.org/x/sync v0.12.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/mod v0.29.0 // indirect
+	golang.org/x/net v0.47.0 // indirect
+	golang.org/x/sync v0.18.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
-	golang.org/x/tools v0.23.0 // indirect
+	golang.org/x/tools v0.38.0 // indirect
 	google.golang.org/api v0.191.0 // indirect
 	google.golang.org/genproto v0.0.0-20240730163845-b1a4ccb954bf // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240725223205-93522f1f2a9f // indirect

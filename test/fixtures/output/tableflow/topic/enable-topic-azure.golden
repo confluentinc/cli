@@ -1,0 +1,19 @@
++-------------------------+---------------------------------------------------------------------------+
+| Kafka Cluster           | lkc-123456                                                                |
+| Topic Name              | topic-azure                                                               |
+| Enable Compaction       | true                                                                      |
+| Enable Partitioning     | false                                                                     |
+| Environment             |                                                                           |
+| Record Failure Strategy | SUSPEND                                                                   |
+| Retention Ms            | 604800000                                                                 |
+| Storage Type            | AzureDataLakeStorageGen2                                                  |
+| Provider Integration ID | cspi-stgce89r7                                                            |
+| Container Name          | container1                                                                |
+| Storage Account Name    | acc1                                                                      |
+| Storage Region          | US1                                                                       |
+| Suspended               | false                                                                     |
+| Table Formats           | ICEBERG                                                                   |
+| Table Path              | s3://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId2 |
+| Phase                   | RUNNING                                                                   |
+| Write Mode              | APPEND                                                                    |
++-------------------------+---------------------------------------------------------------------------+

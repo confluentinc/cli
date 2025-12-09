@@ -708,7 +708,7 @@ func addComponents(reflector asyncapi.Reflector, messages map[string]spec.Messag
 }
 
 func createConsumer(broker string, clusterCreds *config.APIKeyPair, group string) (*ckgo.Consumer, error) {
-	consumer, err := ckgo.NewConsumer(&ckgo.ConfigMap{
+	configMap := &ckgo.ConfigMap{
 		"bootstrap.servers":  broker,
 		"sasl.mechanisms":    "PLAIN",
 		"security.protocol":  "SASL_SSL",
@@ -717,7 +717,11 @@ func createConsumer(broker string, clusterCreds *config.APIKeyPair, group string
 		"group.id":           group,
 		"auto.offset.reset":  "earliest",
 		"enable.auto.commit": "false",
-	})
+	}
+	if err := kafka.SetConsumerDebugOption(configMap); err != nil {
+		return nil, fmt.Errorf("failed to create Kafka consumer: %w", err)
+	}
+	consumer, err := ckgo.NewConsumer(configMap)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Kafka consumer: %w", err)
 	}

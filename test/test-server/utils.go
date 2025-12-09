@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"slices"
 	"sort"
+	"strings"
 	"time"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -349,7 +350,7 @@ func getCmkBasicDescribeCluster(id, name string) *cmkv2.CmkV2Cluster {
 			Cloud:       cmkv2.PtrString("aws"),
 			Region:      cmkv2.PtrString("us-west-2"),
 			Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
-				CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
+				CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic", MaxEcku: getMaxEcku(id, "Basic")},
 			},
 			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
 			HttpEndpoint:           cmkv2.PtrString(TestKafkaRestProxyUrl.String()),
@@ -525,4 +526,18 @@ func setPageToken[T any](resourceList ResourceList[T], meta ListMeta, url *url.U
 		var zero T
 		resourceList.SetData(zero)
 	}
+}
+
+func getMaxEcku(id, sku string) *int32 {
+	switch sku {
+	case "Enterprise":
+		return cmkv2.PtrInt32(10)
+	case "Freight":
+		return cmkv2.PtrInt32(152)
+	case "Standard", "Basic":
+		if strings.Contains(id, "ecku") {
+			return cmkv2.PtrInt32(5)
+		}
+	}
+	return nil
 }
