@@ -55,7 +55,7 @@ func convertSdkSavepointToLocalSavepoint(sdkSavepoint cmfsdk.Savepoint) LocalSav
 
 	if sdkSavepoint.Status != nil {
 		localSavepoint.Status = &LocalSavepointStatus{
-			State:            sdkSavepoint.Status.Path,
+			State:            sdkSavepoint.Status.State,
 			Path:             sdkSavepoint.Status.Path,
 			TriggerTimestamp: sdkSavepoint.Status.TriggerTimestamp,
 			ResultTimestamp:  sdkSavepoint.Status.ResultTimestamp,

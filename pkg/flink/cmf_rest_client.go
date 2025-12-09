@@ -367,7 +367,7 @@ func (cmfClient *CmfRestClient) ListSavepoint(ctx context.Context, environment, 
 			savepointsPage, httpResponse, err = cmfClient.SavepointsApi.GetSavepointsForFlinkApplication(ctx, environment, application).Page(currentPageNumber).Size(pageSize).Execute()
 		}
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
-			return nil, fmt.Errorf(`failed to list compute pools in the environment "%s": %s`, environment, parsedErr)
+			return nil, fmt.Errorf(`failed to list savepoints in the environment "%s": %s`, environment, parsedErr)
 		}
 		savepoints = append(savepoints, savepointsPage.GetItems()...)
 		currentPageNumber, done = extractPageOptions(len(savepointsPage.GetItems()), currentPageNumber)
