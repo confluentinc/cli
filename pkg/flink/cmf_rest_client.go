@@ -384,7 +384,7 @@ func (cmfClient *CmfRestClient) DescribeDetachedSavepoint(ctx context.Context, n
 	return detachedSavepoint, nil
 }
 
-func (cmfClient *CmfRestClient) ListDetachedSavepoint(ctx context.Context, filter string) ([]cmfsdk.Savepoint, error) {
+func (cmfClient *CmfRestClient) ListDetachedSavepoint(ctx context.Context) ([]cmfsdk.Savepoint, error) {
 	savepoints := make([]cmfsdk.Savepoint, 0)
 	done := false
 	// 100 is an arbitrary page size we've chosen.
