@@ -601,7 +601,7 @@ func handleCmfSavepoints(t *testing.T) http.HandlerFunc {
 		handleLoginType(t, r)
 
 		vars := mux.Vars(r)
-		environment := vars["environment"]
+		environment := vars["envName"]
 
 		if environment == "non-exist" {
 			http.Error(w, "Environment not found", http.StatusNotFound)
@@ -635,8 +635,6 @@ func handleCmfSavepoints(t *testing.T) http.HandlerFunc {
 
 			savepointName := savepoint.Metadata.GetName()
 
-			//panic(savepointName)
-
 			if savepointName == "invalid-pool" {
 				http.Error(w, "The savepoint object from resource file is invalid", http.StatusUnprocessableEntity)
 				return
@@ -662,7 +660,7 @@ func handleCmfSavepoint(t *testing.T) http.HandlerFunc {
 		handleLoginType(t, r)
 
 		vars := mux.Vars(r)
-		environment := vars["environment"]
+		environment := vars["envName"]
 		savepointName := vars["savepointName"]
 
 		if environment == "non-exist" {
