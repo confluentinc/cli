@@ -8,7 +8,7 @@ Create a Flink savepoint named "my-savepoint".
   $ confluent flink detached-savepoint create ds1 --path path1
 
 Flags:
-      --path string                         REQUIRED:  The path to the savepoint data.
+      --path string                         REQUIRED: The path to the savepoint data.
       --context string                      CLI context name.
   -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
       --url string                          Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.
