@@ -61,7 +61,7 @@ require (
 	github.com/confluentinc/mds-sdk-go-public/mdsv1 v0.0.0-20240923163156-b922b35891f9
 	github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1 v0.0.0-20240923163156-b922b35891f9
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
-	github.com/confluentinc/schema-registry-sdk-go v0.1.0
+	github.com/confluentinc/schema-registry-sdk-go v0.1.1-0.20251021214222-018e0cd35bf9
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dghubble/sling v1.4.2
 	github.com/docker/docker v28.0.0+incompatible
@@ -287,5 +287,3 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-replace github.com/confluentinc/schema-registry-sdk-go => github.com/confluentinc/schema-registry-sdk-go v0.1.1-0.20251021214222-018e0cd35bf9
