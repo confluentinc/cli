@@ -289,6 +289,8 @@ var vocabWords = []string{
 	"md",
 	"mds",
 	"mongodb",
+	"name1",
+	"name2",
 	"namespace",
 	"nodejs",
 	"oauth",
