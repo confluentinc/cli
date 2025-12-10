@@ -65,7 +65,6 @@ func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 				// cluster.Spec.Config.CmkV2Enterprise.MaxEcku = getMaxEcku("", "Enterprise")
 				cluster.Spec.Config.CmkV2Enterprise.MaxEcku = req.Spec.Config.CmkV2Enterprise.MaxEcku
 			}
-
 		} else if req.Spec.Config.CmkV2Freight != nil {
 			if req.Spec.GetAvailability() == "SINGLE_ZONE" {
 				err := writeError(w, "Durability must be HIGH for an Freight cluster")
