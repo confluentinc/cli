@@ -132,19 +132,19 @@ func getCmkClusterPendingSize(cluster *cmkv2.CmkV2Cluster) int32 {
 
 func getCmkMaxEcku(cluster *cmkv2.CmkV2Cluster) int32 {
 	if isBasic(cluster) {
-		if cluster.Spec.Config.CmkV2Basic.MaxEcku != nil {
+		if cluster.GetSpec().Config.CmkV2Basic.MaxEcku != nil {
 			return cluster.GetSpec().Config.CmkV2Basic.GetMaxEcku()
 		}
 	} else if isStandard(cluster) {
-		if cluster.Spec.Config.CmkV2Standard.MaxEcku != nil {
+		if cluster.GetSpec().Config.CmkV2Standard.MaxEcku != nil {
 			return cluster.GetSpec().Config.CmkV2Standard.GetMaxEcku()
 		}
 	} else if isEnterprise(cluster) {
-		if cluster.Spec.Config.CmkV2Enterprise.MaxEcku != nil {
+		if cluster.GetSpec().Config.CmkV2Enterprise.MaxEcku != nil {
 			return cluster.GetSpec().Config.CmkV2Enterprise.GetMaxEcku()
 		}
 	} else if isFreight(cluster) {
-		if cluster.Spec.Config.CmkV2Freight.MaxEcku != nil {
+		if cluster.GetSpec().Config.CmkV2Freight.MaxEcku != nil {
 			return cluster.GetSpec().Config.CmkV2Freight.GetMaxEcku()
 		}
 	}
