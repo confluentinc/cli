@@ -134,11 +134,6 @@ func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, clust
 }
 
 func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, usageLimits *kafkausagelimits.UsageLimits, ctx *config.Context) *describeStruct {
-	//var maxEckuVal int32
-	//if maxEckuPtr := getCmkMaxEcku(cluster); maxEckuPtr != nil {
-	//	maxEckuVal = *maxEckuPtr
-	//}
-
 	out := &describeStruct{
 		IsCurrent:          cluster.GetId() == ctx.KafkaClusterContext.GetActiveKafkaClusterId(),
 		Id:                 cluster.GetId(),
