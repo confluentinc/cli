@@ -1,6 +1,7 @@
 package sso
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
@@ -200,6 +201,8 @@ func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]a
 		log.CliLogger.Debugf("Failed oauth token response body: %s", errorResponseBody)
 		return nil, fmt.Errorf("failed to unmarshal response body in oauth token request: %w", err)
 	}
+	bufferReader := bytes.NewBuffer(errorResponseBody)
+	log.CliLogger.UnsafeTracef("OAuth token response: %s, Body: %s", res.Status, bufferReader)
 	return data, nil
 }
 
