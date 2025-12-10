@@ -1,6 +1,6 @@
 +----------------------+---------------------------+
 | Current              | true                      |
-| ID                   | lkc-update                |
+| ID                   | lkc-update-standard       |
 | Name                 |                           |
 | Type                 | STANDARD                  |
 | Ingress Limit (MB/s) | 250                       |
@@ -12,6 +12,6 @@
 | Status               | UP                        |
 | Endpoint             | SASL_SSL://kafka-endpoint |
 | REST Endpoint        | http://127.0.0.1:1025     |
-| Max eCKU             | 10                        |
+| Max eCKU             | 2                         |
 | Topic Count          | 2                         |
 +----------------------+---------------------------+
