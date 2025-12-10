@@ -1,4 +1,4 @@
-Manage Flink savepoint.
+Manage Flink savepoints.
 
 Usage:
   confluent flink savepoint [command]
@@ -6,9 +6,9 @@ Usage:
 Available Commands:
   create      Create a Flink savepoint.
   delete      Delete Flink savepoint in Confluent Platform.
-  describe    Describe Flink savepoint in Confluent Platform.
-  detach      Detach Flink savepoint in Confluent Platform.
-  list        List Flink savepoint in Confluent Platform.
+  describe    Describe a Flink savepoint in Confluent Platform.
+  detach      Detach a Flink savepoint in Confluent Platform.
+  list        List Flink savepoints in Confluent Platform.
 
 Global Flags:
   -h, --help            Show help for this command.

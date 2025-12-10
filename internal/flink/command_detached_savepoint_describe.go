@@ -11,7 +11,7 @@ import (
 func (c *command) newDetachedSavepointDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <name>",
-		Short: "Describe a Flink detached savepoint.",
+		Short: "Describe a Flink detached savepoint in Confluent Platform.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.detachedSavepointDescribe,
 		Example: examples.BuildExampleString(
@@ -48,7 +48,7 @@ func (c *command) detachedSavepointDescribe(cmd *cobra.Command, args []string) e
 			Name:              name,
 			Path:              detachedSavepoint.Spec.GetPath(),
 			Format:            detachedSavepoint.Spec.GetFormatType(),
-			Limit:             detachedSavepoint.Spec.GetBackoffLimit(),
+			BackoffLimit:      detachedSavepoint.Spec.GetBackoffLimit(),
 			CreationTimestamp: detachedSavepoint.Metadata.GetCreationTimestamp(),
 			Uid:               detachedSavepoint.Metadata.GetUid(),
 		})

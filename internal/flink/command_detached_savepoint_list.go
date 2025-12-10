@@ -1,6 +1,7 @@
 package flink
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -13,7 +14,8 @@ import (
 func (c *command) newDetachedSavepointListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List Flink detached savepoint.",
+		Short: "List Flink detached savepoints in Confluent Platform.",
+		Args:  cobra.NoArgs,
 		RunE:  c.detachedSavepointList,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -56,12 +58,12 @@ func (c *command) detachedSavepointList(cmd *cobra.Command, args []string) error
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
 		for _, detachedSavepoint := range detachedSavepoints {
-			if filter == "" || contains(names, detachedSavepoint.Metadata.GetName()) {
+			if filter == "" || slices.Contains(names, detachedSavepoint.Metadata.GetName()) {
 				list.Add(&detachedSavepointOut{
 					Name:              detachedSavepoint.Metadata.GetName(),
 					Path:              detachedSavepoint.Spec.GetPath(),
 					Format:            detachedSavepoint.Spec.GetFormatType(),
-					Limit:             detachedSavepoint.Spec.GetBackoffLimit(),
+					BackoffLimit:      detachedSavepoint.Spec.GetBackoffLimit(),
 					CreationTimestamp: detachedSavepoint.Metadata.GetCreationTimestamp(),
 					Uid:               detachedSavepoint.Metadata.GetUid(),
 				})
@@ -72,20 +74,11 @@ func (c *command) detachedSavepointList(cmd *cobra.Command, args []string) error
 
 	detachedSavepointsSdk := make([]LocalSavepoint, 0, len(detachedSavepoints))
 	for _, sdksavepoint := range detachedSavepoints {
-		if filter == "" || contains(names, sdksavepoint.Metadata.GetName()) {
+		if filter == "" || slices.Contains(names, sdksavepoint.Metadata.GetName()) {
 			savepoint := convertSdkDetachedSavepointToLocalSavepoint(sdksavepoint)
 			detachedSavepointsSdk = append(detachedSavepointsSdk, savepoint)
 		}
 	}
 
 	return output.SerializedOutput(cmd, detachedSavepointsSdk)
-}
-
-func contains(list []string, item string) bool {
-	for _, v := range list {
-		if v == item {
-			return true
-		}
-	}
-	return false
 }

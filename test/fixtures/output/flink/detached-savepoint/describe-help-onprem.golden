@@ -1,4 +1,4 @@
-Describe a Flink detached savepoint.
+Describe a Flink detached savepoint in Confluent Platform.
 
 Usage:
   confluent flink detached-savepoint describe <name> [flags]

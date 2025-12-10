@@ -1,7 +1,7 @@
-Create a Flink detached savepoint.
+Create a Flink detached savepoint in Confluent Platform.
 
 Usage:
-  confluent flink detached-savepoint create [name] [flags]
+  confluent flink detached-savepoint create <name> [flags]
 
 Examples:
 Create a Flink savepoint named "my-savepoint".

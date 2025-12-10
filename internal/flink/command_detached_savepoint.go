@@ -12,9 +12,9 @@ type detachedSavepointOut struct {
 	Name              string `human:"Name" serialized:"name"`
 	Path              string `human:"Path,omitempty" serialized:"path,omitempty"`
 	Format            string `human:"Format,omitempty" serialized:"format,omitempty"`
-	Limit             int32  `human:"Backoff Limit,omitempty" serialized:"backoff_limit,omitempty"`
+	BackoffLimit      int32  `human:"Backoff Limit,omitempty" serialized:"backoff_limit,omitempty"`
 	CreationTimestamp string `human:"Creation Timestamp,omitempty" serialized:"creation_timestamp,omitempty"`
-	Uid               string `human:"Uid,omitempty" serialized:"uid,omitempty"`
+	Uid               string `human:"UID,omitempty" serialized:"uid,omitempty"`
 }
 
 func (c *command) newDetachedSavepointCommand() *cobra.Command {
@@ -26,8 +26,8 @@ func (c *command) newDetachedSavepointCommand() *cobra.Command {
 
 	cmd.AddCommand(c.newDetachedSavepointCreateCommand())
 	cmd.AddCommand(c.newDetachedSavepointDescribeCommand())
-	cmd.AddCommand(c.newDetachedSavepointListCommand())
 	cmd.AddCommand(c.newDetachedSavepointDeleteCommand())
+	cmd.AddCommand(c.newDetachedSavepointListCommand())
 
 	return cmd
 }

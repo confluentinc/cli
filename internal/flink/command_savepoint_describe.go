@@ -10,14 +10,15 @@ import (
 func (c *command) newSavepointDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "describe <name>",
-		Short:       "Describe Flink savepoint in Confluent Platform.",
+		Short:       "Describe a Flink savepoint in Confluent Platform.",
+		Args:        cobra.ExactArgs(1),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 		RunE:        c.savepointDescribe,
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
-	cmd.Flags().String("application", "", "The name of the Flink application to create the savepoint for.")
-	cmd.Flags().String("statement", "", "The name of the Flink statement to create the savepoint for.")
+	cmd.Flags().String("application", "", "The name of the Flink application to describe the savepoint.")
+	cmd.Flags().String("statement", "", "The name of the Flink statement to describe the savepoint.")
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -59,14 +60,14 @@ func (c *command) savepointDescribe(cmd *cobra.Command, args []string) error {
 	if output.GetFormat(cmd) == output.Human {
 		table := output.NewTable(cmd)
 		table.Add(&savepointOut{
-			Name:        outputSavepoint.Metadata.GetName(),
-			Statement:   statement,
-			Application: application,
-			Path:        outputSavepoint.Spec.GetPath(),
-			Format:      outputSavepoint.Spec.GetFormatType(),
-			Limit:       outputSavepoint.Spec.GetBackoffLimit(),
-			Uid:         outputSavepoint.Metadata.GetUid(),
-			State:       outputSavepoint.Status.GetState(),
+			Name:         outputSavepoint.Metadata.GetName(),
+			Statement:    statement,
+			Application:  application,
+			Path:         outputSavepoint.Spec.GetPath(),
+			Format:       outputSavepoint.Spec.GetFormatType(),
+			BackoffLimit: outputSavepoint.Spec.GetBackoffLimit(),
+			Uid:          outputSavepoint.Metadata.GetUid(),
+			State:        outputSavepoint.Status.GetState(),
 		})
 		return table.Print()
 	}

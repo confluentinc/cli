@@ -114,14 +114,14 @@ func (c *command) savepointCreate(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&savepointOut{
-		Name:        savepointCreated.Metadata.GetName(),
-		Statement:   statement,
-		Application: application,
-		Path:        savepointCreated.Spec.GetPath(),
-		Format:      savepointCreated.Spec.GetFormatType(),
-		Limit:       savepointCreated.Spec.GetBackoffLimit(),
-		Uid:         savepointCreated.Metadata.GetUid(),
-		State:       savepointCreated.Status.GetState(),
+		Name:         savepointCreated.Metadata.GetName(),
+		Statement:    statement,
+		Application:  application,
+		Path:         savepointCreated.Spec.GetPath(),
+		Format:       savepointCreated.Spec.GetFormatType(),
+		BackoffLimit: savepointCreated.Spec.GetBackoffLimit(),
+		Uid:          savepointCreated.Metadata.GetUid(),
+		State:        savepointCreated.Status.GetState(),
 	})
 	return table.Print()
 }

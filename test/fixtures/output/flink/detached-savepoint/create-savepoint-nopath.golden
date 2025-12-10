@@ -1,6 +1,6 @@
 Error: required flag(s) "path" not set
 Usage:
-  confluent flink detached-savepoint create [name] [flags]
+  confluent flink detached-savepoint create <name> [flags]
 
 Examples:
 Create a Flink savepoint named "my-savepoint".

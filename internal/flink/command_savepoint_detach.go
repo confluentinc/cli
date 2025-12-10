@@ -10,7 +10,8 @@ import (
 func (c *command) newSavepointDetachCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "detach <name>",
-		Short:       "Detach Flink savepoint in Confluent Platform.",
+		Short:       "Detach a Flink savepoint in Confluent Platform.",
+		Args:        cobra.ExactArgs(1),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 		RunE:        c.savepointDetach,
 	}
@@ -51,13 +52,13 @@ func (c *command) savepointDetach(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&savepointOut{
-		Name:        cmfSavepoint.Metadata.GetName(),
-		Application: application,
-		Path:        cmfSavepoint.Spec.GetPath(),
-		Format:      cmfSavepoint.Spec.GetFormatType(),
-		Limit:       cmfSavepoint.Spec.GetBackoffLimit(),
-		Uid:         cmfSavepoint.Metadata.GetUid(),
-		State:       cmfSavepoint.Status.GetState(),
+		Name:         cmfSavepoint.Metadata.GetName(),
+		Application:  application,
+		Path:         cmfSavepoint.Spec.GetPath(),
+		Format:       cmfSavepoint.Spec.GetFormatType(),
+		BackoffLimit: cmfSavepoint.Spec.GetBackoffLimit(),
+		Uid:          cmfSavepoint.Metadata.GetUid(),
+		State:        cmfSavepoint.Status.GetState(),
 	})
 	return table.Print()
 }

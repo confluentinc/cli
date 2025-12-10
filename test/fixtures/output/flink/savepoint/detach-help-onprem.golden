@@ -1,4 +1,4 @@
-Detach Flink savepoint in Confluent Platform.
+Detach a Flink savepoint in Confluent Platform.
 
 Usage:
   confluent flink savepoint detach <name> [flags]

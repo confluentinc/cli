@@ -12,8 +12,8 @@ import (
 
 func (c *command) newDetachedSavepointCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create [name]",
-		Short: "Create a Flink detached savepoint.",
+		Use:   "create <name>",
+		Short: "Create a Flink detached savepoint in Confluent Platform.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.detachedSavepointCreate,
 		Example: examples.BuildExampleString(
@@ -71,7 +71,7 @@ func (c *command) detachedSavepointCreate(cmd *cobra.Command, args []string) err
 		Name:              detachedSavepoint.Metadata.GetName(),
 		Path:              detachedSavepoint.Spec.GetPath(),
 		Format:            detachedSavepoint.Spec.GetFormatType(),
-		Limit:             detachedSavepoint.Spec.GetBackoffLimit(),
+		BackoffLimit:      detachedSavepoint.Spec.GetBackoffLimit(),
 		CreationTimestamp: detachedSavepoint.Metadata.GetCreationTimestamp(),
 		Uid:               detachedSavepoint.Metadata.GetUid(),
 	})

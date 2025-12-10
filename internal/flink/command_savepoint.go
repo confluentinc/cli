@@ -9,28 +9,28 @@ import (
 )
 
 type savepointOut struct {
-	Name        string `human:"Name" serialized:"name"`
-	Application string `human:"Application,omitempty" serialized:"application,omitempty"`
-	Statement   string `human:"Statement,omitempty" serialized:"statement,omitempty"`
-	Path        string `human:"Path,omitempty" serialized:"path,omitempty"`
-	Format      string `human:"Format,omitempty" serialized:"format,omitempty"`
-	Limit       int32  `human:"Backoff Limit,omitempty" serialized:"backoff_limit,omitempty"`
-	Uid         string `human:"Uid,omitempty" serialized:"uid,omitempty"`
-	State       string `human:"State,omitempty" serialized:"state,omitempty"`
+	Name         string `human:"Name" serialized:"name"`
+	Application  string `human:"Application,omitempty" serialized:"application,omitempty"`
+	Statement    string `human:"Statement,omitempty" serialized:"statement,omitempty"`
+	Path         string `human:"Path,omitempty" serialized:"path,omitempty"`
+	Format       string `human:"Format,omitempty" serialized:"format,omitempty"`
+	BackoffLimit int32  `human:"Backoff Limit,omitempty" serialized:"backoff_limit,omitempty"`
+	Uid          string `human:"UID,omitempty" serialized:"uid,omitempty"`
+	State        string `human:"State,omitempty" serialized:"state,omitempty"`
 }
 
 func (c *command) newSavepointCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "savepoint",
-		Short:       "Manage Flink savepoint.",
+		Short:       "Manage Flink savepoints.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 	}
 
 	cmd.AddCommand(c.newSavepointCreateCommand())
 	cmd.AddCommand(c.newSavepointDescribeCommand())
-	cmd.AddCommand(c.newSavepointListCommand())
 	cmd.AddCommand(c.newSavepointDetachCommand())
 	cmd.AddCommand(c.newSavepointDeleteCommand())
+	cmd.AddCommand(c.newSavepointListCommand())
 
 	return cmd
 }

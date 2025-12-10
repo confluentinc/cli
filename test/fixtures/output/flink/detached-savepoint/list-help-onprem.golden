@@ -1,4 +1,4 @@
-List Flink detached savepoint.
+List Flink detached savepoints in Confluent Platform.
 
 Usage:
   confluent flink detached-savepoint list [flags]

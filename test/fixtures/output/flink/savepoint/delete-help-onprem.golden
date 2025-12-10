@@ -1,7 +1,7 @@
 Delete Flink savepoint in Confluent Platform.
 
 Usage:
-  confluent flink savepoint delete <name> [flags]
+  confluent flink savepoint delete <name-1> [name-2] ... [name-n] [flags]
 
 Flags:
       --environment string                  REQUIRED: Name of the Flink environment.

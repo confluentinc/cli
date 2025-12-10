@@ -10,14 +10,15 @@ import (
 func (c *command) newSavepointListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
-		Short:       "List Flink savepoint in Confluent Platform.",
+		Short:       "List Flink savepoints in Confluent Platform.",
+		Args:        cobra.NoArgs,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 		RunE:        c.savepointList,
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
-	cmd.Flags().String("application", "", "The name of the Flink application to create the savepoint for.")
-	cmd.Flags().String("statement", "", "The name of the Flink statement to create the savepoint for.")
+	cmd.Flags().String("application", "", "The name of the Flink application to list the savepoints.")
+	cmd.Flags().String("statement", "", "The name of the Flink statement to list the savepoints.")
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -58,14 +59,14 @@ func (c *command) savepointList(cmd *cobra.Command, _ []string) error {
 		list := output.NewList(cmd)
 		for _, savepoint := range sdkSavepoints {
 			list.Add(&savepointOut{
-				Name:        savepoint.Metadata.GetName(),
-				Statement:   statement,
-				Application: application,
-				Path:        savepoint.Spec.GetPath(),
-				Format:      savepoint.Spec.GetFormatType(),
-				Limit:       savepoint.Spec.GetBackoffLimit(),
-				Uid:         savepoint.Metadata.GetUid(),
-				State:       savepoint.Status.GetState(),
+				Name:         savepoint.Metadata.GetName(),
+				Statement:    statement,
+				Application:  application,
+				Path:         savepoint.Spec.GetPath(),
+				Format:       savepoint.Spec.GetFormatType(),
+				BackoffLimit: savepoint.Spec.GetBackoffLimit(),
+				Uid:          savepoint.Metadata.GetUid(),
+				State:        savepoint.Status.GetState(),
 			})
 		}
 		return list.Print()

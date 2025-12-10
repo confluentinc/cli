@@ -9,7 +9,7 @@ Available Commands:
   compute-pool       Manage Flink compute pools.
   detached-savepoint Manage Flink detached savepoints.
   environment        Manage Flink environments.
-  savepoint          Manage Flink savepoint.
+  savepoint          Manage Flink savepoints.
   statement          Manage Flink SQL statements.
 
 Global Flags:

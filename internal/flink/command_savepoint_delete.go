@@ -11,9 +11,9 @@ import (
 
 func (c *command) newSavepointDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <name>",
+		Use:   "delete <name-1> [name-2] ... [name-n]",
 		Short: "Delete Flink savepoint in Confluent Platform.",
-		Args:  cobra.MaximumNArgs(1),
+		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.savepointDelete,
 	}
 
