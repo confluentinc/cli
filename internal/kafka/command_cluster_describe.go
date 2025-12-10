@@ -134,10 +134,10 @@ func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, clust
 }
 
 func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, usageLimits *kafkausagelimits.UsageLimits, ctx *config.Context) *describeStruct {
-	var maxEckuVal int32
-	if maxEckuPtr := getCmkMaxEcku(cluster); maxEckuPtr != nil {
-		maxEckuVal = *maxEckuPtr
-	}
+	//var maxEckuVal int32
+	//if maxEckuPtr := getCmkMaxEcku(cluster); maxEckuPtr != nil {
+	//	maxEckuVal = *maxEckuPtr
+	//}
 
 	out := &describeStruct{
 		IsCurrent:          cluster.GetId() == ctx.KafkaClusterContext.GetActiveKafkaClusterId(),
@@ -155,7 +155,7 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, usageLimits *ka
 		ByokKeyId:          getCmkByokId(cluster),
 		EncryptionKeyId:    getCmkEncryptionKey(cluster),
 		RestEndpoint:       cluster.Spec.GetHttpEndpoint(),
-		MaxEcku:            maxEckuVal, // omitted by omitempty when zero or when field is filtered out
+		MaxEcku:            getCmkMaxEcku(cluster),
 	}
 
 	// Only set limits field if usage limits are available
@@ -199,7 +199,12 @@ func getKafkaClusterDescribeFields(cluster *cmkv2.CmkV2Cluster, basicFields []st
 			describeFields = append(describeFields, "ByokId")
 		}
 	} else {
-		describeFields = append(describeFields, "MaxEcku") // Max eCKU field is available only for Basic, Standard, Enterprise, and Freight clusters
+		// Max eCKU field is available only for Basic, Standard, Enterprise, and Freight clusters
+		// Only show it if the value is positive (non-positive values like -1 indicate it's not set)
+		maxEcku := getCmkMaxEcku(cluster)
+		if maxEcku > 0 {
+			describeFields = append(describeFields, "MaxEcku")
+		}
 	}
 
 	if getTopicCount {

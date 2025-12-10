@@ -116,23 +116,6 @@ func getCmkClusterType(cluster *cmkv2.CmkV2Cluster) string {
 	return ccstructs.Sku_name[0] // UNKNOWN
 }
 
-func getCmkMaxEcku(cluster *cmkv2.CmkV2Cluster) int32 {
-	if isBasic(cluster) {
-		return cluster.Spec.Config.CmkV2Basic.GetMaxEcku()
-	}
-	if isStandard(cluster) {
-		return cluster.Spec.Config.CmkV2Standard.GetMaxEcku()
-	}
-	if isEnterprise(cluster) {
-		return cluster.Spec.Config.CmkV2Enterprise.GetMaxEcku()
-	}
-	if isFreight(cluster) {
-		return cluster.Spec.Config.CmkV2Freight.GetMaxEcku()
-	}
-
-	return -1
-}
-
 func getCmkClusterSize(cluster *cmkv2.CmkV2Cluster) int32 {
 	if isDedicated(cluster) {
 		return *cluster.Status.Cku
@@ -147,17 +130,17 @@ func getCmkClusterPendingSize(cluster *cmkv2.CmkV2Cluster) int32 {
 	return -1
 }
 
-func getCmkMaxEcku(cluster *cmkv2.CmkV2Cluster) *int32 {
+func getCmkMaxEcku(cluster *cmkv2.CmkV2Cluster) int32 {
 	if isBasic(cluster) {
-		return cluster.Spec.Config.CmkV2Basic.MaxEcku
+		return cluster.GetSpec().Config.CmkV2Basic.GetMaxEcku()
 	} else if isStandard(cluster) {
-		return cluster.Spec.Config.CmkV2Standard.MaxEcku
+		return cluster.GetSpec().Config.CmkV2Standard.GetMaxEcku()
 	} else if isEnterprise(cluster) {
-		return cluster.Spec.Config.CmkV2Enterprise.MaxEcku
+		return cluster.GetSpec().Config.CmkV2Enterprise.GetMaxEcku()
 	} else if isFreight(cluster) {
-		return cluster.Spec.Config.CmkV2Freight.MaxEcku
+		return cluster.GetSpec().Config.CmkV2Freight.GetMaxEcku()
 	}
-	return nil
+	return -1
 }
 
 func getCmkByokId(cluster *cmkv2.CmkV2Cluster) string {
