@@ -428,6 +428,48 @@ func getCmkDedicatedDescribeCluster(id, name string, cku int32) *cmkv2.CmkV2Clus
 	}
 }
 
+func getCmkStandardDescribeCluster(id, name string) *cmkv2.CmkV2Cluster {
+	return &cmkv2.CmkV2Cluster{
+		Spec: &cmkv2.CmkV2ClusterSpec{
+			DisplayName: cmkv2.PtrString(name),
+			Cloud:       cmkv2.PtrString("aws"),
+			Region:      cmkv2.PtrString("us-west-2"),
+			Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
+				CmkV2Standard: &cmkv2.CmkV2Standard{Kind: "Standard"},
+			},
+			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
+			HttpEndpoint:           cmkv2.PtrString(TestKafkaRestProxyUrl.String()),
+			Availability:           cmkv2.PtrString("SINGLE_ZONE"),
+			Endpoints: &cmkv2.ModelMap{
+				"pni-abc123-standard": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pni-abc123-standard.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pni-abc123-standard.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PNI",
+				},
+				"privatelink-uvw456-standard": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pl-uvw456-standard.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pl-uvw456-standard.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PRIVATELINK",
+				},
+				"privatelink-xyz789-standard": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pl-xyz789-standard.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pl-xyz789-standard.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PRIVATELINK",
+				},
+				"public-0001-standard": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://public-0001-standard.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://public-0001-standard.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PUBLIC",
+				},
+			},
+		},
+		Id: cmkv2.PtrString(id),
+		Status: &cmkv2.CmkV2ClusterStatus{
+			Phase: "PROVISIONED",
+		},
+	}
+}
+
 func getCmkUnknownDescribeCluster(id, name string) *cmkv2.CmkV2Cluster {
 	return &cmkv2.CmkV2Cluster{
 		Spec: &cmkv2.CmkV2ClusterSpec{
