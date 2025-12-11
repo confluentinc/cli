@@ -20,12 +20,12 @@ func (c *command) newDetachedSavepointListCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `List Flink detached savepoints with filter filter1.`,
-				Code: `confluent flink detached-savepoint list --filter filter1`,
+				Code: `confluent flink detached-savepoint list --filter name1,name2`,
 			},
 		),
 	}
 
-	cmd.Flags().String("filter", "", "A filter expression to filter the list of detached savepoints in the format name=name1,name2.")
+	cmd.Flags().String("filter", "", "A filter expression to filter the list of detached savepoints in the format name1,name2.")
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -51,8 +51,7 @@ func (c *command) detachedSavepointList(cmd *cobra.Command, args []string) error
 	}
 	var names []string
 	if filter != "" {
-		filterNames := strings.SplitN(filter, "=", 2)
-		names = strings.Split(filterNames[1], ",")
+		names = strings.Split(filter, ",")
 	}
 
 	if output.GetFormat(cmd) == output.Human {
