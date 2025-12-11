@@ -1,1 +1,1 @@
-Error: only cloud supported is `AWS`
+Error: only clouds supported are `AWS` and `AZURE`

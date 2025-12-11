@@ -1,0 +1,9 @@
++----------------+-------------------------------+
+| ID             | cfa-azure-zip123              |
+| Name           | my-connect-artifact-azure-zip |
+| Description    | new-zip-artifact              |
+| Cloud          | AZURE                         |
+| Environment    | env-123456                    |
+| Content Format | ZIP                           |
+| Status         | PROCESSING                    |
++----------------+-------------------------------+
