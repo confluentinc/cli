@@ -185,6 +185,7 @@ func addClusterFlags(cmd *cobra.Command, cfg *config.Config, cliCommand *pcmd.CL
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID for the role binding.")
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for the role binding.")
 		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster name for the role binding.")
+		cmd.Flags().String("flink-region", "", `Flink region for the role binding, formatted as "cloud.region".`)
 	} else {
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID for the role binding.")
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for the role binding.")
@@ -615,6 +616,14 @@ func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, 
 			return "", err
 		}
 		crnPattern += "/kafka=" + kafkaCluster
+	}
+
+	if cmd.Flags().Changed("flink-region") {
+		flinkRegion, err := cmd.Flags().GetString("flink-region")
+		if err != nil {
+			return "", err
+		}
+		crnPattern += "/flink-region=" + flinkRegion
 	}
 
 	if cmd.Flags().Changed("role") {
