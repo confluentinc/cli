@@ -12,6 +12,6 @@
 | Status               | UP                        |
 | Endpoint             | SASL_SSL://kafka-endpoint |
 | REST Endpoint        | http://127.0.0.1:1025     |
-| Max eCKU             | 10                        |
+| Max eCKU             | 6                         |
 | Topic Count          | 2                         |
 +----------------------+---------------------------+

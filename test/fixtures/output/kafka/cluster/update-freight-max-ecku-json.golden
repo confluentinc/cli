@@ -1,0 +1,17 @@
+{
+  "is_current": true,
+  "id": "lkc-update-freight",
+  "name": "",
+  "type": "FREIGHT",
+  "ingress_limit": 3000,
+  "egress_limit": 9000,
+  "storage": "Unlimited",
+  "cloud": "aws",
+  "region": "us-west-2",
+  "availability": "multi-zone",
+  "status": "UP",
+  "endpoint": "SASL_SSL://kafka-endpoint",
+  "rest_endpoint": "http://127.0.0.1:1025",
+  "max_ecku": 50,
+  "topic_count": 2
+}

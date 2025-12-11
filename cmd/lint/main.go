@@ -246,6 +246,7 @@ var vocabWords = []string{
 	"deserializer",
 	"deserializers",
 	"dns",
+	"ecku",
 	"elastic",
 	"env",
 	"eu",

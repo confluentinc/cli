@@ -1,0 +1,4 @@
+Error: failed to update Kafka cluster: failed to update Kafka cluster: The specified Max eCKU exceeds the maximum allowed limit of 10 eCKUs for ENTERPRISE SKU
+
+Suggestions:
+    A cluster can't be updated while still provisioning. If you just created this cluster, retry in a few minutes.

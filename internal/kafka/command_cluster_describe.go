@@ -39,6 +39,7 @@ type describeStruct struct {
 	ByokKeyId          string `human:"BYOK Key ID" serialized:"byok_key_id"`
 	EncryptionKeyId    string `human:"Encryption Key ID" serialized:"encryption_key_id"`
 	RestEndpoint       string `human:"REST Endpoint" serialized:"rest_endpoint"`
+	MaxEcku            int32  `human:"Max eCKU,omitempty" serialized:"max_ecku,omitempty"`
 	TopicCount         int    `human:"Topic Count,omitempty" serialized:"topic_count,omitempty"`
 }
 
@@ -149,6 +150,7 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, usageLimits *ka
 		ByokKeyId:          getCmkByokId(cluster),
 		EncryptionKeyId:    getCmkEncryptionKey(cluster),
 		RestEndpoint:       cluster.Spec.GetHttpEndpoint(),
+		MaxEcku:            getCmkMaxEcku(cluster),
 	}
 
 	// Only set limits field if usage limits are available
@@ -190,6 +192,13 @@ func getKafkaClusterDescribeFields(cluster *cmkv2.CmkV2Cluster, basicFields []st
 		}
 		if cluster.Spec.Byok != nil {
 			describeFields = append(describeFields, "ByokId")
+		}
+	} else {
+		// Max eCKU field is available only for Basic, Standard, Enterprise, and Freight clusters
+		// Only show it if the value is positive (non-positive values like -1 indicate it's not set)
+		maxEcku := getCmkMaxEcku(cluster)
+		if maxEcku > 0 {
+			describeFields = append(describeFields, "MaxEcku")
 		}
 	}
 
