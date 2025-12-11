@@ -61,6 +61,10 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster update lkc-update --cku 1", fixture: "kafka/cluster/update-resize-error.golden", exitCode: 1},
 		{args: "kafka cluster update lkc-update --max-ecku 4", fixture: "kafka/cluster/update-max-ecku.golden"},
 		{args: "kafka cluster update lkc-update-standard --max-ecku 2", fixture: "kafka/cluster/update-standard-max-ecku.golden"},
+		{args: "kafka cluster update lkc-update-enterprise --max-ecku 5", fixture: "kafka/cluster/update-enterprise-max-ecku.golden"},
+		{args: "kafka cluster update lkc-update-enterprise --max-ecku 15", fixture: "kafka/cluster/update-enterprise-max-ecku-fail.golden", exitCode: 1},
+		{args: "kafka cluster update lkc-update-freight --max-ecku 50", fixture: "kafka/cluster/update-freight-max-ecku.golden"},
+		{args: "kafka cluster update lkc-update-freight --max-ecku 200", fixture: "kafka/cluster/update-freight-max-ecku-fail.golden", exitCode: 1},
 		// Type upgrade tests
 		{args: "kafka cluster update lkc-update --type standard", fixture: "kafka/cluster/update-type-success.golden"},
 		{args: "kafka cluster update lkc-update --type standard --max-ecku 6", fixture: "kafka/cluster/update-type-max-ecku-success.golden"},
