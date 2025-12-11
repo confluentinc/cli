@@ -75,6 +75,9 @@ func (c *command) gatewayList(cmd *cobra.Command, _ []string) error {
 		if gatewayType == awsEgressPrivateLink {
 			out.Region = gateway.Spec.Config.NetworkingV1AwsEgressPrivateLinkGatewaySpec.GetRegion()
 		}
+		if gatewayType == awsIngressPrivateLink {
+			out.Region = gateway.Spec.Config.NetworkingV1AwsIngressPrivateLinkGatewaySpec.GetRegion()
+		}
 		if gatewayType == awsPeering {
 			out.Region = gateway.Spec.Config.NetworkingV1AwsPeeringGatewaySpec.GetRegion()
 		}
@@ -99,6 +102,8 @@ func (c *command) gatewayList(cmd *cobra.Command, _ []string) error {
 		case pcloud.Aws:
 			if gatewayType == "AwsEgressPrivateLink" {
 				out.AwsPrincipalArn = gateway.Status.CloudGateway.NetworkingV1AwsEgressPrivateLinkGatewayStatus.GetPrincipalArn()
+			} else if gatewayType == "AwsIngressPrivateLink" {
+				out.VpcEndpointServiceName = gateway.Status.CloudGateway.NetworkingV1AwsIngressPrivateLinkGatewayStatus.GetVpcEndpointServiceName()
 			} else if gatewayType == "AwsPrivateNetworkInterface" {
 				out.Account = gateway.Status.CloudGateway.NetworkingV1AwsPrivateNetworkInterfaceGatewayStatus.GetAccount()
 			}
