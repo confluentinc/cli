@@ -32,18 +32,24 @@ func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 				Text: `Update the type of a Kafka cluster from "Basic" to "Standard":`,
 				Code: `confluent kafka cluster update lkc-123456 --type "standard"`,
 			},
+			examples.Example{
+				Text: `Update the Max eCKU count of a Kafka cluster:`,
+				Code: `confluent kafka cluster update lkc-123456 --max-ecku 5`,
+			},
 		),
 	}
 
 	cmd.Flags().String("name", "", "Name of the Kafka cluster.")
 	cmd.Flags().Uint32("cku", 0, `Number of Confluent Kafka Units. For Kafka clusters of type "dedicated" only. When shrinking a cluster, you must reduce capacity one CKU at a time.`)
 	cmd.Flags().String("type", "", `Type of the Kafka cluster. Only supports upgrading from "Basic" to "Standard".`)
+	cmd.Flags().Int("max-ecku", 0, `Maximum number of Elastic Confluent Kafka Units (eCKUs) that Kafka clusters should auto-scale to. `+
+		`Kafka clusters with "HIGH" availability must have at least two eCKUs.`)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cmd.MarkFlagsOneRequired("name", "cku", "type")
+	cmd.MarkFlagsOneRequired("name", "cku", "type", "max-ecku")
 
 	return cmd
 }
@@ -91,7 +97,36 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		update.Spec.Config = &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: updatedCku}}
 	}
 
-	if cmd.Flags().Changed("type") {
+	if cmd.Flags().Changed("max-ecku") {
+		maxEcku, err := cmd.Flags().GetInt("max-ecku")
+		if err != nil {
+			return err
+		}
+		currentConfig := currentCluster.GetSpec().Config
+		if currentConfig.CmkV2Dedicated != nil {
+			return errors.NewErrorWithSuggestions("the `--max-ecku` flag can only be used when creating or updating a Basic, Standard, Enterprise, or Freight Kafka cluster", "Specify another cluster or use the `--cku` flag instead.")
+		}
+		if maxEcku < 1 {
+			return fmt.Errorf("`--max-ecku` value must be at least 1")
+		}
+
+		targetType := c.getCurrentClusterType(currentConfig)
+		if cmd.Flags().Changed("type") {
+			newType, err := cmd.Flags().GetString("type")
+			if err != nil {
+				return err
+			}
+			if newType == "" {
+				return fmt.Errorf("`--type` flag value must not be empty")
+			}
+			if currentConfig.CmkV2Basic == nil || strings.ToLower(newType) != "standard" {
+				return fmt.Errorf(`clusters can only be upgraded from "Basic" to "Standard"`)
+			}
+			targetType = "Standard"
+		}
+
+		update.Spec.Config = c.createClusterConfig(targetType, int32(maxEcku))
+	} else if cmd.Flags().Changed("type") {
 		newType, err := cmd.Flags().GetString("type")
 		if err != nil {
 			return err
@@ -100,12 +135,12 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("`--type` flag value must not be empty")
 		}
 
-		// Validate cluster type upgrade
 		currentConfig := currentCluster.GetSpec().Config
 		if currentConfig.CmkV2Basic == nil || strings.ToLower(newType) != "standard" {
 			return fmt.Errorf(`clusters can only be upgraded from "Basic" to "Standard"`)
 		}
 
+		// When upgrading type without specifying max-ecku, use default max-ecku value for Standard cluster returned by API
 		// Set the new cluster type
 		update.Spec.Config = &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{
 			CmkV2Standard: &cmkv2.CmkV2Standard{
@@ -132,6 +167,59 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	return c.outputKafkaClusterDescription(cmd, &updatedCluster, true, usageLimits)
+}
+
+func (c *clusterCommand) getCurrentClusterType(config *cmkv2.CmkV2ClusterSpecConfigOneOf) string {
+	if config.CmkV2Basic != nil {
+		return "Basic"
+	} else if config.CmkV2Standard != nil {
+		return "Standard"
+	} else if config.CmkV2Enterprise != nil {
+		return "Enterprise"
+	} else if config.CmkV2Freight != nil {
+		return "Freight"
+	}
+	return "Basic"
+}
+
+func (c *clusterCommand) createClusterConfig(clusterType string, maxEcku int32) *cmkv2.CmkV2ClusterSpecUpdateConfigOneOf {
+	switch clusterType {
+	case "Basic":
+		return &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{
+			CmkV2Basic: &cmkv2.CmkV2Basic{
+				Kind:    "Basic",
+				MaxEcku: cmkv2.PtrInt32(maxEcku),
+			},
+		}
+	case "Standard":
+		return &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{
+			CmkV2Standard: &cmkv2.CmkV2Standard{
+				Kind:    "Standard",
+				MaxEcku: cmkv2.PtrInt32(maxEcku),
+			},
+		}
+	case "Enterprise":
+		return &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{
+			CmkV2Enterprise: &cmkv2.CmkV2Enterprise{
+				Kind:    "Enterprise",
+				MaxEcku: cmkv2.PtrInt32(maxEcku),
+			},
+		}
+	case "Freight":
+		return &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{
+			CmkV2Freight: &cmkv2.CmkV2Freight{
+				Kind:    "Freight",
+				MaxEcku: cmkv2.PtrInt32(maxEcku),
+			},
+		}
+	default:
+		return &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{
+			CmkV2Basic: &cmkv2.CmkV2Basic{
+				Kind:    "Basic",
+				MaxEcku: cmkv2.PtrInt32(maxEcku),
+			},
+		}
+	}
 }
 
 func (c *clusterCommand) validateResize(cku int32, currentCluster *cmkv2.CmkV2Cluster) (int32, error) {
