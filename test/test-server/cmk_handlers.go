@@ -389,6 +389,12 @@ func handleCmkKafkaEnterpriseClusterUpdateRequest(t *testing.T) http.HandlerFunc
 			req.Id = cmkv2.PtrString("lkc-update-enterprise")
 
 			if req.Spec.Config != nil && req.Spec.Config.CmkV2Enterprise != nil && req.Spec.Config.CmkV2Enterprise.MaxEcku != nil {
+				if req.Spec.Config.CmkV2Enterprise.MaxEcku != nil && *req.Spec.Config.CmkV2Enterprise.MaxEcku > 10 {
+					err = writeError(w, "failed to update Kafka cluster: The specified Max eCKU exceeds the maximum allowed limit of 10 eCKUs for ENTERPRISE SKU")
+					require.NoError(t, err)
+					return
+				}
+
 				cluster := getCmkEnterpriseDescribeCluster(req.GetId(), req.Spec.GetDisplayName())
 				cluster.Spec.Config = &cmkv2.CmkV2ClusterSpecConfigOneOf{
 					CmkV2Enterprise: &cmkv2.CmkV2Enterprise{
@@ -396,14 +402,7 @@ func handleCmkKafkaEnterpriseClusterUpdateRequest(t *testing.T) http.HandlerFunc
 						MaxEcku: req.Spec.Config.CmkV2Enterprise.MaxEcku,
 					},
 				}
-				err := json.NewEncoder(w).Encode(cluster)
-
-				if req.Spec.Config.CmkV2Enterprise.MaxEcku != nil && *req.Spec.Config.CmkV2Enterprise.MaxEcku > 10 {
-					err = writeError(w, "failed to update Kafka cluster: The specified Max eCKU exceeds the maximum allowed limit of 10 eCKUs for ENTERPRISE SKU")
-					require.NoError(t, err)
-					return
-				}
-
+				err = json.NewEncoder(w).Encode(cluster)
 				require.NoError(t, err)
 				return
 			}
@@ -427,6 +426,12 @@ func handleCmkKafkaFreightClusterUpdateRequest(t *testing.T) http.HandlerFunc {
 			req.Id = cmkv2.PtrString("lkc-update-freight")
 
 			if req.Spec.Config != nil && req.Spec.Config.CmkV2Freight != nil && req.Spec.Config.CmkV2Freight.MaxEcku != nil {
+				if req.Spec.Config.CmkV2Freight.MaxEcku != nil && *req.Spec.Config.CmkV2Freight.MaxEcku > 150 {
+					err = writeError(w, "failed to update Kafka cluster: The specified Max eCKU exceeds the maximum allowed limit of 152 eCKUs for FREIGHT SKU")
+					require.NoError(t, err)
+					return
+				}
+
 				cluster := getCmkFreightDescribeCluster(req.GetId(), req.Spec.GetDisplayName())
 				cluster.Spec.Config = &cmkv2.CmkV2ClusterSpecConfigOneOf{
 					CmkV2Freight: &cmkv2.CmkV2Freight{
@@ -434,14 +439,7 @@ func handleCmkKafkaFreightClusterUpdateRequest(t *testing.T) http.HandlerFunc {
 						MaxEcku: req.Spec.Config.CmkV2Freight.MaxEcku,
 					},
 				}
-				err := json.NewEncoder(w).Encode(cluster)
-
-				if req.Spec.Config.CmkV2Freight.MaxEcku != nil && *req.Spec.Config.CmkV2Freight.MaxEcku > 152 {
-					err = writeError(w, "failed to update Kafka cluster: The specified Max eCKU exceeds the maximum allowed limit of 152 eCKUs for FREIGHT SKU")
-					require.NoError(t, err)
-					return
-				}
-
+				err = json.NewEncoder(w).Encode(cluster)
 				require.NoError(t, err)
 				return
 			}

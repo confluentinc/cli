@@ -63,8 +63,13 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster update lkc-update-standard --max-ecku 2", fixture: "kafka/cluster/update-standard-max-ecku.golden"},
 		{args: "kafka cluster update lkc-update-enterprise --max-ecku 5", fixture: "kafka/cluster/update-enterprise-max-ecku.golden"},
 		{args: "kafka cluster update lkc-update-enterprise --max-ecku 15", fixture: "kafka/cluster/update-enterprise-max-ecku-fail.golden", exitCode: 1},
+		{args: "kafka cluster update lkc-update-enterprise --max-ecku 5 -o json", fixture: "kafka/cluster/update-enterprise-max-ecku-json.golden"},
+		{args: "kafka cluster update lkc-update-enterprise --max-ecku 5 -o yaml", fixture: "kafka/cluster/update-enterprise-max-ecku-yaml.golden"},
+		{args: "kafka cluster update lkc-update-enterprise --name enterprise-cluster --max-ecku 7", fixture: "kafka/cluster/update-enterprise-max-ecku-with-name.golden"},
 		{args: "kafka cluster update lkc-update-freight --max-ecku 50", fixture: "kafka/cluster/update-freight-max-ecku.golden"},
 		{args: "kafka cluster update lkc-update-freight --max-ecku 200", fixture: "kafka/cluster/update-freight-max-ecku-fail.golden", exitCode: 1},
+		{args: "kafka cluster update lkc-update-freight --max-ecku 50 -o json", fixture: "kafka/cluster/update-freight-max-ecku-json.golden"},
+		{args: "kafka cluster update lkc-update-freight --name freight-cluster --max-ecku 75", fixture: "kafka/cluster/update-freight-max-ecku-with-name.golden"},
 		// Type upgrade tests
 		{args: "kafka cluster update lkc-update --type standard", fixture: "kafka/cluster/update-type-success.golden"},
 		{args: "kafka cluster update lkc-update --type standard --max-ecku 6", fixture: "kafka/cluster/update-type-max-ecku-success.golden"},
