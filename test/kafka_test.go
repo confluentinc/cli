@@ -103,6 +103,7 @@ func (s *CLITestSuite) TestKafka() {
 
 		{args: "kafka cluster describe lkc-describe-with-ecku-limits", fixture: "kafka/cluster/describe-basic-with-ecku-limits.golden"},
 		{args: "kafka cluster describe lkc-with-usage-limits-error", fixture: "kafka/cluster/describe-with-usage-limits-error.golden"},
+		{args: "kafka cluster describe lkc-with-default-v2-limits", fixture: "kafka/cluster/describe-basic-with-default-v2-limits.golden"},
 
 		{args: "kafka acl list --cluster lkc-acls", fixture: "kafka/acl/list-cloud.golden"},
 		{args: "kafka acl list --cluster lkc-acls --all", fixture: "kafka/acl/list-cloud-all.golden"},
