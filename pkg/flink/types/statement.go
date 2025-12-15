@@ -1,6 +1,8 @@
 package types
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -13,4 +15,18 @@ func GenerateStatementName() string {
 	localTime := time.Now().Format("150405")
 	id := uuid.New().String()
 	return fmt.Sprintf("%s-%s-%s-%s", clientName, date, localTime, id)
+}
+
+func GenerateStatementNameForOnPrem() string {
+	clientName := "cli"
+	timeNow := time.Now()
+	date := timeNow.Format("20060102")    // 8 chars
+	localTime := timeNow.Format("150405") // 6 chars
+	// 12 random bytes => 24 hex chars
+	b := make([]byte, 12)
+	if _, err := rand.Read(b); err != nil {
+		panic(fmt.Sprintf("unable to generate random bytes for statment name: %v", err))
+	}
+	randomHex := hex.EncodeToString(b)
+	return fmt.Sprintf("%s-%s-%s-%s", clientName, date, localTime, randomHex)
 }
