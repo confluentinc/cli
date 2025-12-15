@@ -25,7 +25,7 @@ func GenerateStatementNameForOnPrem() string {
 	// 12 random bytes => 24 hex chars
 	b := make([]byte, 12)
 	if _, err := rand.Read(b); err != nil {
-		panic(fmt.Sprintf("unable to generate random bytes for statment name: %v", err))
+		panic(fmt.Sprintf("unable to generate random bytes for statement name: %v", err))
 	}
 	randomHex := hex.EncodeToString(b)
 	return fmt.Sprintf("%s-%s-%s-%s", clientName, date, localTime, randomHex)
