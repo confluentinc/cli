@@ -46,7 +46,7 @@ func (c *command) statementListOnPrem(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	status = strings.ToLower(status)
+	status = strings.ToUpper(status)
 
 	if status != "" && !slices.Contains(allowedStatuses, status) {
 		log.CliLogger.Warnf(`Invalid status "%s". Valid statuses are %s.`, status, utils.ArrayToCommaDelimitedString(allowedStatuses, "and"))
