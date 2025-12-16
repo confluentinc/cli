@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   create      Create a Flink detached savepoint in Confluent Platform.
-  delete      Delete Flink detached savepoints in Confluent Platform. Deleting a detached savepoint does not delete the actual physical data.
+  delete      Delete Flink detached savepoints in Confluent Platform.
   describe    Describe a Flink detached savepoint in Confluent Platform.
   list        List Flink detached savepoints in Confluent Platform.
 

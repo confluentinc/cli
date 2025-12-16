@@ -1,4 +1,4 @@
-Delete Flink detached savepoints in Confluent Platform. Deleting a detached savepoint does not delete the actual physical data.
+Deleting a detached savepoint does not delete the actual physical data.
 
 Usage:
   confluent flink detached-savepoint delete <name-1> [name-2] ... [name-n] [flags]
