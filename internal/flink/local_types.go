@@ -15,6 +15,46 @@ type LocalCatalogMetadata struct {
 	Annotations       *map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
 }
 
+type LocalSavepoint struct {
+	ApiVersion string                 `json:"apiVersion" yaml:"apiVersion"`
+	Kind       string                 `json:"kind" yaml:"kind"`
+	Metadata   LocalSavepointMetadata `json:"metadata" yaml:"metadata"`
+	Spec       LocalSavepointSpec     `json:"spec" yaml:"spec"`
+	Status     *LocalSavepointStatus  `json:"status,omitempty" yaml:"status,omitempty"`
+}
+
+type LocalSavepointMetadata struct {
+	Name              string             `json:"name" yaml:"name"`
+	CreationTimestamp *string            `json:"creationTimestamp,omitempty" yaml:"creationTimestamp,omitempty"`
+	Uid               *string            `json:"uid,omitempty" yaml:"uid,omitempty"`
+	Labels            *map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
+	Annotations       *map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
+}
+
+type LocalSavepointSpec struct {
+	Path *string `json:"path,omitempty" yaml:"path,omitempty"`
+
+	BackoffLimit *int32 `json:"backoffLimit,omitempty" yaml:"backoffLimit,omitempty"`
+
+	FormatType *string `json:"formatType,omitempty" yaml:"formatType,omitempty"`
+}
+
+type LocalSavepointStatus struct {
+	State *string `json:"state,omitempty" yaml:"state,omitempty"`
+
+	Path *string `json:"path,omitempty" yaml:"path,omitempty"`
+
+	TriggerTimestamp *string `json:"triggerTimestamp,omitempty" yaml:"triggerTimestamp,omitempty"`
+
+	ResultTimestamp *string `json:"resultTimestamp,omitempty" yaml:"resultTimestamp,omitempty"`
+
+	Failures *int32 `json:"failures,omitempty" yaml:"failures,omitempty"`
+
+	Error *string `json:"error,omitempty" yaml:"error,omitempty"`
+
+	PendingDeletion *bool `json:"pendingDeletion,omitempty" yaml:"pendingDeletion,omitempty"`
+}
+
 type LocalComputePool struct {
 	ApiVersion string                   `json:"apiVersion" yaml:"apiVersion"`
 	Kind       string                   `json:"kind" yaml:"kind"`
