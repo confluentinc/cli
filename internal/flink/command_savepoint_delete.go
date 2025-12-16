@@ -19,8 +19,8 @@ func (c *command) newSavepointDeleteCommand() *cobra.Command {
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	cmd.Flags().Bool("force", false, "Force delete the savepoint.")
-	cmd.Flags().String("application", "", "Name of the application from which to delete the savepoint")
-	cmd.Flags().String("statement", "", "Name of the statement from which to delete the savepoint")
+	cmd.Flags().String("application", "", "The Name of the application from which to delete the savepoint.")
+	cmd.Flags().String("statement", "", "The Name of the statement from which to delete the savepoint.")
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
