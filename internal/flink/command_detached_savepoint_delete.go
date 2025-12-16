@@ -12,7 +12,7 @@ import (
 func (c *command) newDetachedSavepointDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <name-1> [name-2] ... [name-n]",
-		Short: "Delete Flink detached savepoints in Confluent Platform.",
+		Short: "Delete Flink detached savepoints in Confluent Platform. Deleting a detached savepoint does not delete the actual physical data.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.detachedSavepointDelete,
 	}

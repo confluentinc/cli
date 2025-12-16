@@ -17,8 +17,8 @@ func (c *command) newSavepointDescribeCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
-	cmd.Flags().String("application", "", "The name of the Flink application to describe the savepoint.")
-	cmd.Flags().String("statement", "", "The name of the Flink statement to describe the savepoint.")
+	cmd.Flags().String("application", "", "Name of the application to which the savepoint is attached to.")
+	cmd.Flags().String("statement", "", "Name of the statement to which the savepoint is attached to.")
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 

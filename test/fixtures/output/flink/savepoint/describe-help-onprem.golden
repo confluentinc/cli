@@ -5,8 +5,8 @@ Usage:
 
 Flags:
       --environment string                  REQUIRED: Name of the Flink environment.
-      --application string                  The name of the Flink application to describe the savepoint.
-      --statement string                    The name of the Flink statement to describe the savepoint.
+      --application string                  Name of the application to which the savepoint is attached to.
+      --statement string                    Name of the statement to which the savepoint is attached to.
       --url string                          Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.
       --client-key-path string              Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.
       --client-cert-path string             Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_CERT_PATH" may be set in place of this flag.

@@ -87,13 +87,15 @@ func (c *command) savepointCreate(cmd *cobra.Command, args []string) error {
 		ApiVersion: "cmf.confluent.io/v1",
 		Kind:       "Savepoint",
 		Spec: cmfsdk.SavepointSpec{
-			Path:         &path,
 			BackoffLimit: &limit32,
 			FormatType:   &format,
 		},
 		Status: &cmfsdk.SavepointStatus{
 			Path: &path,
 		},
+	}
+	if path != "" {
+		savepoint.Spec.SetPath(path)
 	}
 	if name != "" {
 		savepoint.Metadata.SetName(name)

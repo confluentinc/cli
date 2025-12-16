@@ -17,7 +17,7 @@ func (c *command) newSavepointDetachCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
-	cmd.Flags().String("application", "", "The name of the Flink application to create the savepoint for.")
+	cmd.Flags().String("application", "", "Name of the application from which to detach the savepoint.")
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
