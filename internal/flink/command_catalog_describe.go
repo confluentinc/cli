@@ -37,8 +37,8 @@ func (c *command) catalogDescribe(cmd *cobra.Command, args []string) error {
 	if output.GetFormat(cmd) == output.Human {
 		table := output.NewTable(cmd)
 		// Populate the databases field with the names of the databases
-		databases := make([]string, 0, len(sdkOutputCatalog.GetSpec().KafkaClusters))
-		for _, kafkaCluster := range sdkOutputCatalog.GetSpec().KafkaClusters {
+		databases := make([]string, 0, len(sdkOutputCatalog.Spec.GetKafkaClusters()))
+		for _, kafkaCluster := range sdkOutputCatalog.Spec.GetKafkaClusters() {
 			databases = append(databases, kafkaCluster.DatabaseName)
 		}
 		var creationTime string
