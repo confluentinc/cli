@@ -9,7 +9,6 @@ Create a Flink savepoint named "my-savepoint".
 
 Flags:
       --path string                         REQUIRED: The path to the savepoint data.
-      --context string                      CLI context name.
   -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
       --url string                          Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.
       --client-key-path string              Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.

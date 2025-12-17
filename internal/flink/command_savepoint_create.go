@@ -30,7 +30,6 @@ func (c *command) newSavepointCreateCommand() *cobra.Command {
 	cmd.Flags().String("path", "", "The directory where the savepoint should be stored.")
 	cmd.Flags().String("format", "CANONICAL", "The format of the savepoint. Defaults to CANONICAL.")
 	cmd.Flags().Int("backoff-limit", 0, "Maximum number of retries before the snapshot is considered failed. Set to -1 for unlimited or 0 for no retries.")
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 	addCmfFlagSet(cmd)
 

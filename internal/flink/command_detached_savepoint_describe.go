@@ -22,7 +22,6 @@ func (c *command) newDetachedSavepointDescribeCommand() *cobra.Command {
 		),
 	}
 
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 	addCmfFlagSet(cmd)
 

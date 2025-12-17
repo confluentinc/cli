@@ -25,7 +25,6 @@ func (c *command) newDetachedSavepointCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("path", "", "The path to the savepoint data.")
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 	addCmfFlagSet(cmd)
 

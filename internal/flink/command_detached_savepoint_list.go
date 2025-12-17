@@ -24,7 +24,6 @@ func (c *command) newDetachedSavepointListCommand() *cobra.Command {
 
 	cmd.Flags().String("filter", "", "A filter expression to filter by detached savepoint name prefix.")
 
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 	addCmfFlagSet(cmd)
 
