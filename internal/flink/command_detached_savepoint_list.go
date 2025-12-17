@@ -1,9 +1,6 @@
 package flink
 
 import (
-	"slices"
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -20,12 +17,12 @@ func (c *command) newDetachedSavepointListCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `List Flink detached savepoints with filter filter1.`,
-				Code: `confluent flink detached-savepoint list --filter name1,name2`,
+				Code: `confluent flink detached-savepoint list --filter name1`,
 			},
 		),
 	}
 
-	cmd.Flags().String("filter", "", "A filter expression to filter the list of detached savepoints by name in the format name1,name2.")
+	cmd.Flags().String("filter", "", "A filter expression to filter by detached savepoint name prefix.")
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -45,38 +42,30 @@ func (c *command) detachedSavepointList(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	detachedSavepoints, err := client.ListDetachedSavepoint(c.createContext())
+	detachedSavepoints, err := client.ListDetachedSavepoint(c.createContext(), filter)
 	if err != nil {
 		return err
-	}
-	var names []string
-	if filter != "" {
-		names = strings.Split(filter, ",")
 	}
 
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
 		for _, detachedSavepoint := range detachedSavepoints {
-			if filter == "" || slices.Contains(names, detachedSavepoint.Metadata.GetName()) {
-				list.Add(&detachedSavepointOut{
-					Name:              detachedSavepoint.Metadata.GetName(),
-					Path:              detachedSavepoint.Spec.GetPath(),
-					Format:            detachedSavepoint.Spec.GetFormatType(),
-					BackoffLimit:      detachedSavepoint.Spec.GetBackoffLimit(),
-					CreationTimestamp: detachedSavepoint.Metadata.GetCreationTimestamp(),
-					Uid:               detachedSavepoint.Metadata.GetUid(),
-				})
-			}
+			list.Add(&detachedSavepointOut{
+				Name:              detachedSavepoint.Metadata.GetName(),
+				Path:              detachedSavepoint.Spec.GetPath(),
+				Format:            detachedSavepoint.Spec.GetFormatType(),
+				BackoffLimit:      detachedSavepoint.Spec.GetBackoffLimit(),
+				CreationTimestamp: detachedSavepoint.Metadata.GetCreationTimestamp(),
+				Uid:               detachedSavepoint.Metadata.GetUid(),
+			})
 		}
 		return list.Print()
 	}
 
 	detachedSavepointsSdk := make([]LocalSavepoint, 0, len(detachedSavepoints))
 	for _, sdksavepoint := range detachedSavepoints {
-		if filter == "" || slices.Contains(names, sdksavepoint.Metadata.GetName()) {
-			savepoint := convertSdkDetachedSavepointToLocalSavepoint(sdksavepoint)
-			detachedSavepointsSdk = append(detachedSavepointsSdk, savepoint)
-		}
+		savepoint := convertSdkDetachedSavepointToLocalSavepoint(sdksavepoint)
+		detachedSavepointsSdk = append(detachedSavepointsSdk, savepoint)
 	}
 
 	return output.SerializedOutput(cmd, detachedSavepointsSdk)

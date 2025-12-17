@@ -6,10 +6,10 @@ Usage:
 Examples:
 List Flink detached savepoints with filter filter1.
 
-  $ confluent flink detached-savepoint list --filter name1,name2
+  $ confluent flink detached-savepoint list --filter name1
 
 Flags:
-      --filter string                       A filter expression to filter the list of detached savepoints by name in the format name1,name2.
+      --filter string                       A filter expression to filter by detached savepoint name prefix.
       --context string                      CLI context name.
   -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
       --url string                          Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.
