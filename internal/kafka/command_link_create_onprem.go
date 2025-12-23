@@ -174,5 +174,5 @@ func getListFieldsOnPrem(includeTopics bool) []string {
 		x = append(x, "TopicName")
 	}
 
-	return append(x, "DestinationCluster", "RemoteCluster")
+	return append(x, "DestinationCluster", "RemoteCluster", "State", "Error", "ErrorMessage")
 }
