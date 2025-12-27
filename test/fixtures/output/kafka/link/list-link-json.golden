@@ -1,18 +1,26 @@
 [
   {
+    "link_name": "",
+    "link_id": "LINKID6",
+    "state": "UNMANAGED_SOURCE"
+  },
+  {
     "link_name": "link-1",
+    "link_id": "LINKID1",
     "source_cluster": "cluster-1",
     "destination_cluster": "cluster-2",
     "state": ""
   },
   {
     "link_name": "link-2",
+    "link_id": "LINKID2",
     "source_cluster": "cluster-1",
     "destination_cluster": "cluster-2",
     "state": "AVAILABLE"
   },
   {
     "link_name": "link-3",
+    "link_id": "LINKID3",
     "source_cluster": "cluster-1",
     "destination_cluster": "cluster-2",
     "state": "UNAVAILABLE",
@@ -21,11 +29,13 @@
   },
   {
     "link_name": "link-4",
+    "link_id": "LINKID4",
     "remote_cluster": "cluster-2",
     "state": ""
   },
   {
     "link_name": "link-5",
+    "link_id": "LINKID5",
     "remote_cluster": "cluster-2",
     "state": ""
   }

@@ -14,6 +14,7 @@ import (
 
 type linkOut struct {
 	Name                       string `human:"Name" serialized:"link_name"`
+	Id                         string `human:"ID,omitempty" serialized:"link_id,omitempty"`
 	TopicName                  string `human:"Topic Name" serialized:"topic_name"`
 	SourceCluster              string `human:"Source Cluster" serialized:"source_cluster,omitempty"`
 	DestinationCluster         string `human:"Destination Cluster" serialized:"destination_cluster,omitempty"`

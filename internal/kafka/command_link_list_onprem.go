@@ -12,6 +12,7 @@ import (
 func newLinkOnPrem(data kafkarestv3.ListLinksResponseData, topic string) *linkOut {
 	listEntry := &linkOut{
 		Name:      data.LinkName,
+		Id:        data.ClusterLinkId,
 		TopicName: topic,
 		State:     data.LinkState,
 	}
