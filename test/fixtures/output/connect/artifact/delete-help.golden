@@ -9,7 +9,7 @@ Delete Connect artifact.
   $ confluent connect artifact delete cfa-abc123 --cloud aws --environment env-abc123
 
 Flags:
-      --cloud string         REQUIRED: Specify the cloud provider as "aws".
+      --cloud string         REQUIRED: Specify the cloud provider as "aws" or "azure".
       --environment string   Environment ID.
       --context string       CLI context name.
       --force                Skip the deletion confirmation prompt.
