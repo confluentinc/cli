@@ -1,10 +1,14 @@
-List gateways.
+Describe an ingress endpoint.
 
 Usage:
-  confluent network gateway list [flags]
+  confluent network access-point private-link ingress-endpoint describe <id> [flags]
+
+Examples:
+Describe ingress endpoint "ap-123456".
+
+  $ confluent network access-point private-link ingress-endpoint describe ap-123456
 
 Flags:
-      --types strings        A comma-separated list of gateway types: "aws-egress-privatelink", "aws-ingress-privatelink", "azure-egress-privatelink", or "gcp-egress-private-service-connect".
       --context string       CLI context name.
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
