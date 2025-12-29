@@ -567,9 +567,12 @@ func AutocompleteLinks(cmd *cobra.Command, c *AuthenticatedCLICommand) []string 
 		return nil
 	}
 
-	suggestions := make([]string, len(links))
-	for i, link := range links {
-		suggestions[i] = link.GetLinkName()
+	var suggestions []string
+	for _, link := range links {
+		// Unmanaged links don't actually exist in the cluster, so filter them out here.
+		if link.GetLinkState() != "UNMANAGED_SOURCE" {
+			suggestions = append(suggestions, link.GetLinkName())
+		}
 	}
 	return suggestions
 }

@@ -589,6 +589,7 @@ func handleKafkaRestLinks(t *testing.T) http.HandlerFunc {
 			cluster2 := cckafkarestv3.PtrString("cluster-2")
 			linkStateAvailable := cckafkarestv3.PtrString("AVAILABLE")
 			linkStateUnavailable := cckafkarestv3.PtrString("UNAVAILABLE")
+			linkStateUnmanagedSource := cckafkarestv3.PtrString("UNMANAGED_SOURCE")
 			linkAuthErr := cckafkarestv3.PtrString("AUTHENTICATION_ERROR")
 			noErrorErr := cckafkarestv3.PtrString("NO_ERROR")
 			linkAuthErrMsg := cckafkarestv3.PtrString("Please check your API key and secret.")
@@ -633,6 +634,12 @@ func handleKafkaRestLinks(t *testing.T) http.HandlerFunc {
 					ClusterLinkId:   "LINKID5",
 					TopicNames:      topics,
 					LinkError:       noErrorErr,
+				},
+				{
+					LinkName:      "",
+					ClusterLinkId: "LINKID6",
+					LinkError:     noErrorErr,
+					LinkState:     linkStateUnmanagedSource,
 				},
 			}})
 			require.NoError(t, err)
