@@ -8,6 +8,7 @@ import (
 
 	"github.com/confluentinc/cli/v4/internal"
 	"github.com/confluentinc/cli/v4/pkg/config"
+	_ "github.com/confluentinc/cli/v4/pkg/fips"
 	pversion "github.com/confluentinc/cli/v4/pkg/version"
 )
 
