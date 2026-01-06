@@ -1,0 +1,21 @@
+[WARN] Failed to get cluster limits.
+
+Suggestions:
+    To view limits describe your cluster again with `confluent kafka cluster describe` or contact support for assistance.
+
++----------------------+-----------------------------+
+| Current              | true                        |
+| ID                   | lkc-with-usage-limits-error |
+| Name                 | kafka-cluster               |
+| Type                 | BASIC                       |
+| Ingress Limit (MB/s) | 0                           |
+| Egress Limit (MB/s)  | 0                           |
+| Storage              |                             |
+| Cloud                | aws                         |
+| Region               | us-west-2                   |
+| Availability         | single-zone                 |
+| Status               | UP                          |
+| Endpoint             | SASL_SSL://kafka-endpoint   |
+| REST Endpoint        | http://127.0.0.1:1025       |
+| Topic Count          | 2                           |
++----------------------+-----------------------------+

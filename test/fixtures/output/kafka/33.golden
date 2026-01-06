@@ -5,9 +5,9 @@
 | Type                 | DEDICATED                      |
 | Cluster Size         | 1                              |
 | Pending Cluster Size | 2                              |
-| Ingress Limit (MB/s) | 50                             |
-| Egress Limit (MB/s)  | 150                            |
-| Storage              | Infinite                       |
+| Ingress Limit (MB/s) | 60                             |
+| Egress Limit (MB/s)  | 180                            |
+| Storage              | Unlimited                      |
 | Cloud                | aws                            |
 | Region               | us-west-2                      |
 | Availability         | single-zone                    |

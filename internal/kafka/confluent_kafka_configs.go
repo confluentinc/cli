@@ -334,23 +334,33 @@ func getPartitionsByIndex(partitions []ckgo.TopicPartition, partitionFilter Part
 }
 
 func SetProducerDebugOption(configMap *ckgo.ConfigMap) error {
+	// Note: log_levels are based on syslog levels
 	switch log.CliLogger.Level {
+	case log.WARN:
+		return configMap.Set("log_level=4") // Warn level and above
+	case log.INFO:
+		return configMap.Set("log_level=6") // Info level and above
 	case log.DEBUG:
 		return configMap.Set("debug=broker, topic, msg, protocol")
 	case log.TRACE, log.UNSAFE_TRACE:
 		return configMap.Set("debug=all")
 	}
-	return nil
+	return configMap.Set("log_level=3") // error level and above
 }
 
 func SetConsumerDebugOption(configMap *ckgo.ConfigMap) error {
+	// Note: log_levels are based on syslog levels
 	switch log.CliLogger.Level {
+	case log.WARN:
+		return configMap.Set("log_level=4") // Warn level and above
+	case log.INFO:
+		return configMap.Set("log_level=6") // Info level and above
 	case log.DEBUG:
 		return configMap.Set("debug=broker, topic, msg, protocol, consumer, cgrp, fetch")
 	case log.TRACE, log.UNSAFE_TRACE:
 		return configMap.Set("debug=all")
 	}
-	return nil
+	return configMap.Set("log_level=3") // error level and above
 }
 
 func newProducerWithOverwrittenConfigs(configMap *ckgo.ConfigMap, configPath string, configStrings []string) (*ckgo.Producer, error) {

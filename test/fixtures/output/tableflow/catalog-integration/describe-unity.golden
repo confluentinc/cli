@@ -1,0 +1,12 @@
++--------------------+------------------------------------------------+
+| ID                 | tci-ghi789                                     |
+| Name               | my-unity-ci                                    |
+| Environment        | env-596                                        |
+| Kafka Cluster      | lkc-123456                                     |
+| Type               | unity                                          |
+| Workspace Endpoint | https://dbc-0e76d5eb-ff10.cloud.databricks.com |
+| Catalog Name       | catalog-name                                   |
+| Client ID          | client-id                                      |
+| Suspended          | false                                          |
+| Phase              | CONNECTED                                      |
++--------------------+------------------------------------------------+

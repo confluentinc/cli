@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"testing"
 
 	"github.com/client9/gospell"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/linter"
 	pversion "github.com/confluentinc/cli/v4/pkg/version"
+	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
 var commandRules = []linter.CommandRule{
@@ -164,6 +166,7 @@ var properNouns = []string{
 	"CRL",
 	"Data Encryption Key",
 	"DEK",
+	"Databricks",
 	"Flink",
 	"Go",
 	"Groovy",
@@ -211,6 +214,7 @@ var vocabWords = []string{
 	"aws",
 	"azureml",
 	"azureopenai",
+	"a2a",
 	"backoff",
 	"base64",
 	"bedrock",
@@ -241,7 +245,9 @@ var vocabWords = []string{
 	"deregister",
 	"deserializer",
 	"deserializers",
+	"detached-savepoint",
 	"dns",
+	"ecku",
 	"elastic",
 	"env",
 	"eu",
@@ -287,6 +293,8 @@ var vocabWords = []string{
 	"md",
 	"mds",
 	"mongodb",
+	"name1",
+	"name2",
 	"namespace",
 	"nodejs",
 	"oauth",
@@ -310,6 +318,8 @@ var vocabWords = []string{
 	"s3",
 	"sagemaker",
 	"sasl",
+	"savepoint",
+	"savepoints",
 	"scala",
 	"schemas",
 	"server",
@@ -347,6 +357,7 @@ var vocabWords = []string{
 	"vpc",
 	"whitelist",
 	"wikipedia",
+	"workspace",
 	"yaml",
 	"yml",
 	"zstd",
@@ -365,6 +376,10 @@ func init() {
 }
 
 func main() {
+	// Set up test server for feature flags called by the code
+	testBackend := testserver.StartTestCloudServer(&testing.T{}, true)
+	defer testBackend.Close()
+
 	flag.Parse()
 
 	vocab, err := gospell.NewGoSpell(affFile, dicFile)

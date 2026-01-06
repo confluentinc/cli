@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"slices"
 	"sort"
+	"strings"
 	"time"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -373,7 +374,7 @@ func getCmkBasicDescribeCluster(id, name string) *cmkv2.CmkV2Cluster {
 			Cloud:       cmkv2.PtrString("aws"),
 			Region:      cmkv2.PtrString("us-west-2"),
 			Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
-				CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
+				CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic", MaxEcku: getMaxEcku(id, "Basic")},
 			},
 			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
 			HttpEndpoint:           cmkv2.PtrString(TestKafkaRestProxyUrl.String()),
@@ -451,6 +452,132 @@ func getCmkDedicatedDescribeCluster(id, name string, cku int32) *cmkv2.CmkV2Clus
 	}
 }
 
+func getCmkStandardDescribeCluster(id, name string) *cmkv2.CmkV2Cluster {
+	return &cmkv2.CmkV2Cluster{
+		Spec: &cmkv2.CmkV2ClusterSpec{
+			DisplayName: cmkv2.PtrString(name),
+			Cloud:       cmkv2.PtrString("aws"),
+			Region:      cmkv2.PtrString("us-west-2"),
+			Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
+				CmkV2Standard: &cmkv2.CmkV2Standard{Kind: "Standard"},
+			},
+			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
+			HttpEndpoint:           cmkv2.PtrString(TestKafkaRestProxyUrl.String()),
+			Availability:           cmkv2.PtrString("SINGLE_ZONE"),
+			Endpoints: &cmkv2.ModelMap{
+				"pni-abc123-standard": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pni-abc123-standard.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pni-abc123-standard.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PNI",
+				},
+				"privatelink-uvw456-standard": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pl-uvw456-standard.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pl-uvw456-standard.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PRIVATELINK",
+				},
+				"privatelink-xyz789-standard": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pl-xyz789-standard.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pl-xyz789-standard.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PRIVATELINK",
+				},
+				"public-0001-standard": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://public-0001-standard.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://public-0001-standard.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PUBLIC",
+				},
+			},
+		},
+		Id: cmkv2.PtrString(id),
+		Status: &cmkv2.CmkV2ClusterStatus{
+			Phase: "PROVISIONED",
+		},
+	}
+}
+
+func getCmkEnterpriseDescribeCluster(id, name string) *cmkv2.CmkV2Cluster {
+	return &cmkv2.CmkV2Cluster{
+		Spec: &cmkv2.CmkV2ClusterSpec{
+			DisplayName: cmkv2.PtrString(name),
+			Cloud:       cmkv2.PtrString("aws"),
+			Region:      cmkv2.PtrString("us-west-2"),
+			Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
+				CmkV2Enterprise: &cmkv2.CmkV2Enterprise{Kind: "Enterprise"},
+			},
+			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
+			HttpEndpoint:           cmkv2.PtrString(TestKafkaRestProxyUrl.String()),
+			Availability:           cmkv2.PtrString("MULTI_ZONE"),
+			Endpoints: &cmkv2.ModelMap{
+				"pni-abc123-enterprise": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pni-abc123-enterprise.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pni-abc123-enterprise.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PNI",
+				},
+				"privatelink-uvw456-enterprise": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pl-uvw456-enterprise.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pl-uvw456-enterprise.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PRIVATELINK",
+				},
+				"privatelink-xyz789-enterprise": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pl-xyz789-enterprise.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pl-xyz789-enterprise.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PRIVATELINK",
+				},
+				"public-0001-enterprise": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://public-0001-enterprise.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://public-0001-enterprise.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PUBLIC",
+				},
+			},
+		},
+		Id: cmkv2.PtrString(id),
+		Status: &cmkv2.CmkV2ClusterStatus{
+			Phase: "PROVISIONED",
+		},
+	}
+}
+
+func getCmkFreightDescribeCluster(id, name string) *cmkv2.CmkV2Cluster {
+	return &cmkv2.CmkV2Cluster{
+		Spec: &cmkv2.CmkV2ClusterSpec{
+			DisplayName: cmkv2.PtrString(name),
+			Cloud:       cmkv2.PtrString("aws"),
+			Region:      cmkv2.PtrString("us-west-2"),
+			Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
+				CmkV2Freight: &cmkv2.CmkV2Freight{Kind: "Freight"},
+			},
+			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
+			HttpEndpoint:           cmkv2.PtrString(TestKafkaRestProxyUrl.String()),
+			Availability:           cmkv2.PtrString("MULTI_ZONE"),
+			Endpoints: &cmkv2.ModelMap{
+				"pni-abc123-freight": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pni-abc123-freight.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pni-abc123-freight.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PNI",
+				},
+				"privatelink-uvw456-freight": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pl-uvw456-freight.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pl-uvw456-freight.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PRIVATELINK",
+				},
+				"privatelink-xyz789-freight": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pl-xyz789-freight.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pl-xyz789-freight.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PRIVATELINK",
+				},
+				"public-0001-freight": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://public-0001-freight.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://public-0001-freight.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PUBLIC",
+				},
+			},
+		},
+		Id: cmkv2.PtrString(id),
+		Status: &cmkv2.CmkV2ClusterStatus{
+			Phase: "PROVISIONED",
+		},
+	}
+}
+
 func getCmkUnknownDescribeCluster(id, name string) *cmkv2.CmkV2Cluster {
 	return &cmkv2.CmkV2Cluster{
 		Spec: &cmkv2.CmkV2ClusterSpec{
@@ -507,4 +634,18 @@ func setPageToken[T any](resourceList ResourceList[T], meta ListMeta, url *url.U
 		var zero T
 		resourceList.SetData(zero)
 	}
+}
+
+func getMaxEcku(id, sku string) *int32 {
+	switch sku {
+	case "Enterprise":
+		return cmkv2.PtrInt32(10)
+	case "Freight":
+		return cmkv2.PtrInt32(152)
+	case "Standard", "Basic":
+		if strings.Contains(id, "ecku") {
+			return cmkv2.PtrInt32(5)
+		}
+	}
+	return nil
 }

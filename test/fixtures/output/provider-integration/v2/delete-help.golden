@@ -1,0 +1,23 @@
+Delete one or more provider integrations. This operation cannot be undone.
+
+Usage:
+  confluent provider-integration v2 delete <id-1> [id-2] ... [id-n] [flags]
+
+Examples:
+Delete provider integration "pi-123456" in the current environment.
+
+  $ confluent provider-integration v2 delete pi-123456
+
+Delete provider integrations "pi-123456" and "pi-789012" in environment "env-345678".
+
+  $ confluent provider-integration v2 delete pi-123456 pi-789012 --environment env-345678
+
+Flags:
+      --force                Skip the deletion confirmation prompt.
+      --environment string   Environment ID.
+      --context string       CLI context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

@@ -5,9 +5,9 @@ It may take up to 1 hour for the Kafka cluster to be ready. The organization adm
 | Name                 | cck-network-test          |
 | Type                 | DEDICATED                 |
 | Cluster Size         | 1                         |
-| Ingress Limit (MB/s) | 50                        |
-| Egress Limit (MB/s)  | 150                       |
-| Storage              | Infinite                  |
+| Ingress Limit (MB/s) | 60                        |
+| Egress Limit (MB/s)  | 180                       |
+| Storage              | Unlimited                 |
 | Cloud                | aws                       |
 | Region               | us-east-1                 |
 | Availability         | single-zone               |

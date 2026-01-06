@@ -11,20 +11,20 @@ Create Flink connection "my-connection" in AWS us-west-2 for OpenAPI with endpoi
 Flags:
       --cloud string               REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
       --region string              REQUIRED: Cloud region for Flink (use "confluent flink region list" to see all).
-      --type string                REQUIRED: Specify the connection type as "openai", "azureml", "azureopenai", "bedrock", "sagemaker", "googleai", "vertexai", "mongodb", "elastic", "pinecone", "couchbase", "confluent_jdbc", "rest", or "mcp_server".
+      --type string                REQUIRED: Specify the connection type as "openai", "azureml", "azureopenai", "a2a", "bedrock", "sagemaker", "googleai", "vertexai", "mongodb", "elastic", "pinecone", "couchbase", "confluent_jdbc", "rest", or "mcp_server".
       --endpoint string            REQUIRED: Specify endpoint for the connection.
-      --api-key string             Specify API key for the type: "openai", "azureml", "azureopenai", "googleai", "elastic", "pinecone", or "mcp_server".
+      --api-key string             Specify API key for the type: "openai", "azureml", "azureopenai", "googleai", "elastic", "pinecone", "a2a", or "mcp_server".
       --aws-access-key string      Specify access key for the type: "bedrock" or "sagemaker".
       --aws-secret-key string      Specify secret key for the type: "bedrock" or "sagemaker".
       --aws-session-token string   Specify session token for the type: "bedrock" or "sagemaker".
       --service-key string         Specify service key for the type: "vertexai".
-      --username string            Specify username for the type: "mongodb", "couchbase", "confluent_jdbc", or "rest".
-      --password string            Specify password for the type: "mongodb", "couchbase", "confluent_jdbc", or "rest".
-      --token string               Specify bearer token for the type: "rest" or "mcp_server".
-      --token-endpoint string      Specify OAuth2 token endpoint for the type: "rest" or "mcp_server".
-      --client-id string           Specify OAuth2 client ID for the type: "rest" or "mcp_server".
-      --client-secret string       Specify OAuth2 client secret for the type: "rest" or "mcp_server".
-      --scope string               Specify OAuth2 scope for the type: "rest" or "mcp_server".
+      --username string            Specify username for the type: "mongodb", "couchbase", "confluent_jdbc", "a2a", "rest", or "mcp_server".
+      --password string            Specify password for the type: "mongodb", "couchbase", "confluent_jdbc", "a2a", "rest", or "mcp_server".
+      --token string               Specify bearer token for the type: "a2a", "rest", or "mcp_server".
+      --token-endpoint string      Specify OAuth2 token endpoint for the type: "a2a", "rest", or "mcp_server".
+      --client-id string           Specify OAuth2 client ID for the type: "a2a", "rest", or "mcp_server".
+      --client-secret string       Specify OAuth2 client secret for the type: "a2a", "rest", or "mcp_server".
+      --scope string               Specify OAuth2 scope for the type: "a2a", "rest", or "mcp_server".
       --sse-endpoint string        Specify SSE endpoint for the type: "mcp_server".
       --transport-type string      Specify transport type for the type: "mcp_server". Default: SSE.
       --environment string         Environment ID.
