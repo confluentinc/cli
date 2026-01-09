@@ -1,6 +1,8 @@
 module github.com/confluentinc/cli/v4
 
-go 1.24.9
+go 1.24.10
+
+toolchain go1.24.11
 
 require (
 	github.com/antihax/optional v1.0.0
@@ -287,3 +289,6 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway v0.2.0 => github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-gateway v0.11.0
+replace github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.5.0 => github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-access-point v0.10.0
