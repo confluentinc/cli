@@ -1,0 +1,22 @@
+Error: required flag(s) "path" not set
+Usage:
+  confluent flink detached-savepoint create <name> [flags]
+
+Examples:
+Create a Flink savepoint named "my-savepoint".
+
+  $ confluent flink detached-savepoint create ds1 --path path1
+
+Flags:
+      --path string                         REQUIRED: The path to the savepoint data.
+  -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
+      --url string                          Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.
+      --client-key-path string              Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.
+      --client-cert-path string             Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_CERT_PATH" may be set in place of this flag.
+      --certificate-authority-path string   Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CMF_CERTIFICATE_AUTHORITY_PATH" may be set in place of this flag.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

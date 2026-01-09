@@ -1,8 +1,12 @@
 {
   "id": "cck-004",
+  "display_name": "GCP Test Key",
   "key": "projects/exampleproject/locations/us-central1/keyRings/testkeyring/cryptoKeys/testbyokkey/cryptoKeyVersions/3",
   "roles": [""],
   "cloud": "GCP",
+  "region": "us-central1",
   "state": "AVAILABLE",
-  "created_at": "2023-01-01 13:00:30 +0000 UTC"
+  "created_at": "2023-01-01 13:00:30 +0000 UTC",
+  "validation_phase": "VALID",
+  "validation_since": "2023-01-01 13:02:30 +0000 UTC"
 }
