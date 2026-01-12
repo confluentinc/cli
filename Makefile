@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-GORELEASER_VERSION := v1.21.2
+GORELEASER_VERSION := v2.13.3
 
 # Compile natively based on the current system
 .PHONY: build
@@ -38,7 +38,7 @@ endif
 
 .PHONY: cli-builder
 cli-builder:
-	GOOS="" GOARCH="" CC="" CXX="" CGO_LDFLAGS="" go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION)
+	GOOS="" GOARCH="" CC="" CXX="" CGO_LDFLAGS="" go install github.com/goreleaser/goreleaser/v2@$(GORELEASER_VERSION)
 
 ifeq ($(GOLANG_FIPS),1)
 	wget "https://go.dev/dl/go$$(cat .go-version).src.tar.gz" && \
@@ -89,7 +89,7 @@ cmd/lint/en_US.dic:
 .PHONY: unit-test
 unit-test:
 ifdef CI
-	go install gotest.tools/gotestsum@v1.12.1 && \
+	go install gotest.tools/gotestsum@v1.13.0 && \
 	gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -race -coverprofile=coverage.unit.out -covermode=atomic $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test)
 else
 	go test -timeout 0 -v -coverprofile=coverage.unit.out -covermode=atomic $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test) $(UNIT_TEST_ARGS)
@@ -114,7 +114,7 @@ endif
 .PHONY: integration-test
 integration-test:
 ifdef CI
-	go install gotest.tools/gotestsum@v1.12.1 && \
+	go install gotest.tools/gotestsum@v1.13.0 && \
 	export GOCOVERDIR=test/coverage && \
 	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
 	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
