@@ -200,6 +200,7 @@ func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]a
 		log.CliLogger.Debugf("Failed oauth token response body: %s", errorResponseBody)
 		return nil, fmt.Errorf("failed to unmarshal response body in oauth token request: %w", err)
 	}
+	log.CliLogger.UnsafeTracef("OAuth token response: %s, Body: %s", res.Status, string(errorResponseBody))
 	return data, nil
 }
 

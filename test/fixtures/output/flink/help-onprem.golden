@@ -4,11 +4,13 @@ Usage:
   confluent flink [command]
 
 Available Commands:
-  application       Manage Flink applications.
-  catalog           Manage Flink catalogs in Confluent Platform.
-  compute-pool      Manage Flink compute pools.
-  environment       Manage Flink environments.
-  statement         Manage Flink SQL statements.
+  application        Manage Flink applications.
+  catalog            Manage Flink catalogs in Confluent Platform.
+  compute-pool       Manage Flink compute pools.
+  detached-savepoint Manage Flink detached savepoints.
+  environment        Manage Flink environments.
+  savepoint          Manage Flink savepoints.
+  statement          Manage Flink SQL statements.
 
 Global Flags:
   -h, --help            Show help for this command.

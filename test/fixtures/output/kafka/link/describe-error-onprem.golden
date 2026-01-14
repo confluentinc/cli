@@ -1,5 +1,10 @@
-+---------------------+-----------+
-| Name                | link-3    |
-| Destination Cluster | cluster-2 |
-| Remote Cluster      | cluster-2 |
-+---------------------+-----------+
++---------------------+--------------------------------+
+| Name                | link-3                         |
+| ID                  | LINKID1                        |
+| Destination Cluster | cluster-2                      |
+| Remote Cluster      | cluster-2                      |
+| State               | UNAVAILABLE                    |
+| Error               | AUTHENTICATION_ERROR           |
+| Error Message       | Please check your API key and  |
+|                     | secret                         |
++---------------------+--------------------------------+

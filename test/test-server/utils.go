@@ -249,8 +249,9 @@ func fillByokStoreV1() map[string]*byokv1.ByokV1Key {
 	byokStoreV1 := map[string]*byokv1.ByokV1Key{}
 
 	byokStoreV1["cck-001"] = &byokv1.ByokV1Key{
-		Id:       byokv1.PtrString("cck-001"),
-		Metadata: &byokv1.ObjectMeta{CreatedAt: byokv1.PtrTime(time.Date(2022, time.November, 12, 8, 24, 0, 0, time.UTC))},
+		Id:          byokv1.PtrString("cck-001"),
+		DisplayName: byokv1.PtrString("Production AWS Key"),
+		Metadata:    &byokv1.ObjectMeta{CreatedAt: byokv1.PtrTime(time.Date(2022, time.November, 12, 8, 24, 0, 0, time.UTC))},
 		Key: &byokv1.ByokV1KeyKeyOneOf{
 			ByokV1AwsKey: &byokv1.ByokV1AwsKey{
 				KeyArn: "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
@@ -263,11 +264,17 @@ func fillByokStoreV1() map[string]*byokv1.ByokV1Key {
 		},
 		Provider: byokv1.PtrString("AWS"),
 		State:    byokv1.PtrString("IN_USE"),
+		Validation: &byokv1.ByokV1KeyValidation{
+			Phase:  "VALID",
+			Since:  time.Date(2022, time.November, 12, 8, 30, 0, 0, time.UTC),
+			Region: byokv1.PtrString("us-east-1"),
+		},
 	}
 
 	byokStoreV1["cck-002"] = &byokv1.ByokV1Key{
-		Id:       byokv1.PtrString("cck-002"),
-		Metadata: &byokv1.ObjectMeta{CreatedAt: byokv1.PtrTime(time.Date(2022, time.November, 7, 5, 30, 0, 0, time.UTC))},
+		Id:          byokv1.PtrString("cck-002"),
+		DisplayName: byokv1.PtrString("Development AWS Key"),
+		Metadata:    &byokv1.ObjectMeta{CreatedAt: byokv1.PtrTime(time.Date(2022, time.November, 7, 5, 30, 0, 0, time.UTC))},
 		Key: &byokv1.ByokV1KeyKeyOneOf{
 			ByokV1AwsKey: &byokv1.ByokV1AwsKey{
 				KeyArn: "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
@@ -280,11 +287,16 @@ func fillByokStoreV1() map[string]*byokv1.ByokV1Key {
 		},
 		Provider: byokv1.PtrString("AWS"),
 		State:    byokv1.PtrString("AVAILABLE"),
+		Validation: &byokv1.ByokV1KeyValidation{
+			Phase: "INITIALIZING",
+			Since: time.Date(2022, time.November, 7, 5, 35, 0, 0, time.UTC),
+		},
 	}
 
 	byokStoreV1["cck-003"] = &byokv1.ByokV1Key{
-		Id:       byokv1.PtrString("cck-003"),
-		Metadata: &byokv1.ObjectMeta{CreatedAt: byokv1.PtrTime(time.Date(2023, time.January, 1, 12, 0, 30, 0, time.UTC))},
+		Id:          byokv1.PtrString("cck-003"),
+		DisplayName: byokv1.PtrString("Azure Production Key"),
+		Metadata:    &byokv1.ObjectMeta{CreatedAt: byokv1.PtrTime(time.Date(2023, time.January, 1, 12, 0, 30, 0, time.UTC))},
 		Key: &byokv1.ByokV1KeyKeyOneOf{
 			ByokV1AzureKey: &byokv1.ByokV1AzureKey{
 				ApplicationId: byokv1.PtrString("00000000-0000-0000-0000-000000000000"),
@@ -296,11 +308,18 @@ func fillByokStoreV1() map[string]*byokv1.ByokV1Key {
 		},
 		Provider: byokv1.PtrString("Azure"),
 		State:    byokv1.PtrString("AVAILABLE"),
+		Validation: &byokv1.ByokV1KeyValidation{
+			Phase:   "INVALID",
+			Since:   time.Date(2023, time.January, 1, 12, 5, 30, 0, time.UTC),
+			Region:  byokv1.PtrString("eastus"),
+			Message: byokv1.PtrString("key access denied"),
+		},
 	}
 
 	byokStoreV1["cck-004"] = &byokv1.ByokV1Key{
-		Id:       byokv1.PtrString("cck-004"),
-		Metadata: &byokv1.ObjectMeta{CreatedAt: byokv1.PtrTime(time.Date(2023, time.January, 1, 13, 0, 30, 0, time.UTC))},
+		Id:          byokv1.PtrString("cck-004"),
+		DisplayName: byokv1.PtrString("GCP Test Key"),
+		Metadata:    &byokv1.ObjectMeta{CreatedAt: byokv1.PtrTime(time.Date(2023, time.January, 1, 13, 0, 30, 0, time.UTC))},
 		Key: &byokv1.ByokV1KeyKeyOneOf{
 			ByokV1GcpKey: &byokv1.ByokV1GcpKey{
 				KeyId: "projects/exampleproject/locations/us-central1/keyRings/testkeyring/cryptoKeys/testbyokkey/cryptoKeyVersions/3",
@@ -309,6 +328,11 @@ func fillByokStoreV1() map[string]*byokv1.ByokV1Key {
 		},
 		Provider: byokv1.PtrString("GCP"),
 		State:    byokv1.PtrString("AVAILABLE"),
+		Validation: &byokv1.ByokV1KeyValidation{
+			Phase:  "VALID",
+			Since:  time.Date(2023, time.January, 1, 13, 2, 30, 0, time.UTC),
+			Region: byokv1.PtrString("us-central1"),
+		},
 	}
 
 	return byokStoreV1
@@ -424,6 +448,132 @@ func getCmkDedicatedDescribeCluster(id, name string, cku int32) *cmkv2.CmkV2Clus
 		Status: &cmkv2.CmkV2ClusterStatus{
 			Phase: "PROVISIONED",
 			Cku:   cmkv2.PtrInt32(cku),
+		},
+	}
+}
+
+func getCmkStandardDescribeCluster(id, name string) *cmkv2.CmkV2Cluster {
+	return &cmkv2.CmkV2Cluster{
+		Spec: &cmkv2.CmkV2ClusterSpec{
+			DisplayName: cmkv2.PtrString(name),
+			Cloud:       cmkv2.PtrString("aws"),
+			Region:      cmkv2.PtrString("us-west-2"),
+			Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
+				CmkV2Standard: &cmkv2.CmkV2Standard{Kind: "Standard"},
+			},
+			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
+			HttpEndpoint:           cmkv2.PtrString(TestKafkaRestProxyUrl.String()),
+			Availability:           cmkv2.PtrString("SINGLE_ZONE"),
+			Endpoints: &cmkv2.ModelMap{
+				"pni-abc123-standard": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pni-abc123-standard.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pni-abc123-standard.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PNI",
+				},
+				"privatelink-uvw456-standard": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pl-uvw456-standard.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pl-uvw456-standard.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PRIVATELINK",
+				},
+				"privatelink-xyz789-standard": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pl-xyz789-standard.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pl-xyz789-standard.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PRIVATELINK",
+				},
+				"public-0001-standard": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://public-0001-standard.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://public-0001-standard.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PUBLIC",
+				},
+			},
+		},
+		Id: cmkv2.PtrString(id),
+		Status: &cmkv2.CmkV2ClusterStatus{
+			Phase: "PROVISIONED",
+		},
+	}
+}
+
+func getCmkEnterpriseDescribeCluster(id, name string) *cmkv2.CmkV2Cluster {
+	return &cmkv2.CmkV2Cluster{
+		Spec: &cmkv2.CmkV2ClusterSpec{
+			DisplayName: cmkv2.PtrString(name),
+			Cloud:       cmkv2.PtrString("aws"),
+			Region:      cmkv2.PtrString("us-west-2"),
+			Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
+				CmkV2Enterprise: &cmkv2.CmkV2Enterprise{Kind: "Enterprise"},
+			},
+			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
+			HttpEndpoint:           cmkv2.PtrString(TestKafkaRestProxyUrl.String()),
+			Availability:           cmkv2.PtrString("MULTI_ZONE"),
+			Endpoints: &cmkv2.ModelMap{
+				"pni-abc123-enterprise": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pni-abc123-enterprise.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pni-abc123-enterprise.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PNI",
+				},
+				"privatelink-uvw456-enterprise": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pl-uvw456-enterprise.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pl-uvw456-enterprise.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PRIVATELINK",
+				},
+				"privatelink-xyz789-enterprise": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pl-xyz789-enterprise.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pl-xyz789-enterprise.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PRIVATELINK",
+				},
+				"public-0001-enterprise": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://public-0001-enterprise.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://public-0001-enterprise.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PUBLIC",
+				},
+			},
+		},
+		Id: cmkv2.PtrString(id),
+		Status: &cmkv2.CmkV2ClusterStatus{
+			Phase: "PROVISIONED",
+		},
+	}
+}
+
+func getCmkFreightDescribeCluster(id, name string) *cmkv2.CmkV2Cluster {
+	return &cmkv2.CmkV2Cluster{
+		Spec: &cmkv2.CmkV2ClusterSpec{
+			DisplayName: cmkv2.PtrString(name),
+			Cloud:       cmkv2.PtrString("aws"),
+			Region:      cmkv2.PtrString("us-west-2"),
+			Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
+				CmkV2Freight: &cmkv2.CmkV2Freight{Kind: "Freight"},
+			},
+			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
+			HttpEndpoint:           cmkv2.PtrString(TestKafkaRestProxyUrl.String()),
+			Availability:           cmkv2.PtrString("MULTI_ZONE"),
+			Endpoints: &cmkv2.ModelMap{
+				"pni-abc123-freight": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pni-abc123-freight.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pni-abc123-freight.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PNI",
+				},
+				"privatelink-uvw456-freight": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pl-uvw456-freight.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pl-uvw456-freight.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PRIVATELINK",
+				},
+				"privatelink-xyz789-freight": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://pl-xyz789-freight.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://pl-xyz789-freight.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PRIVATELINK",
+				},
+				"public-0001-freight": cmkv2.CmkV2Endpoints{
+					KafkaBootstrapEndpoint: "SASL_SSL://public-0001-freight.kafka.us-west-2.aws.confluent.cloud:9092",
+					HttpEndpoint:           "https://public-0001-freight.rest.us-west-2.aws.confluent.cloud",
+					ConnectionType:         "PUBLIC",
+				},
+			},
+		},
+		Id: cmkv2.PtrString(id),
+		Status: &cmkv2.CmkV2ClusterStatus{
+			Phase: "PROVISIONED",
 		},
 	}
 }

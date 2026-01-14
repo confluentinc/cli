@@ -1,0 +1,17 @@
++----------------------+---------------------------+
+| Current              | true                      |
+| ID                   | lkc-update-enterprise     |
+| Name                 |                           |
+| Type                 | ENTERPRISE                |
+| Ingress Limit (MB/s) | 300                       |
+| Egress Limit (MB/s)  | 900                       |
+| Storage              | Unlimited                 |
+| Cloud                | aws                       |
+| Region               | us-west-2                 |
+| Availability         | multi-zone                |
+| Status               | UP                        |
+| Endpoint             | SASL_SSL://kafka-endpoint |
+| REST Endpoint        | http://127.0.0.1:1025     |
+| Max eCKU             | 5                         |
+| Topic Count          | 2                         |
++----------------------+---------------------------+

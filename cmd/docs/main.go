@@ -6,11 +6,13 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"testing"
 
 	"github.com/confluentinc/cli/v4/internal"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/docs"
 	pversion "github.com/confluentinc/cli/v4/pkg/version"
+	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
 // Auto-generate documentation files for all CLI commands. Documentation uses reStructured Text (ReST) format, and is
@@ -19,6 +21,10 @@ import (
 // This code is adapted from https://github.com/spf13/cobra/blob/master/doc/rest_docs.md
 
 func main() {
+	// Set up test server for feature flags called by the code
+	testBackend := testserver.StartTestCloudServer(&testing.T{}, true)
+	defer testBackend.Close()
+
 	// Prevent printing the user's $HOME in docs when generating confluent local services kafka
 	home, err := os.UserHomeDir()
 	if err != nil {

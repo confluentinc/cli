@@ -6,6 +6,11 @@ import (
 	"runtime"
 )
 
+const (
+	shareGroupTopic1 = "topic-1"
+	shareGroupTopic2 = "topic-2"
+)
+
 func (s *CLITestSuite) TestKafka() {
 	tests := []CLITest{
 		{args: "environment use env-596", fixture: "kafka/0.golden"},
@@ -26,13 +31,18 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster create my-failed-cluster --cloud aws --region us-east-1 --availability single-zone --type oops", fixture: "kafka/cluster/create-type-error.golden", exitCode: 1},
 		{args: "kafka cluster create my-failed-cluster --cloud aws --region us-east-1 --availability single-zone --type dedicated --cku 0", fixture: "kafka/cluster/create-cku-error.golden", exitCode: 1},
 		{args: "kafka cluster create my-dedicated-cluster --cloud aws --region us-east-1 --type dedicated --cku 1", fixture: "kafka/22.golden"},
+		{args: "kafka cluster create my-dedicated-cluster --cloud aws --region us-east-1 --type dedicated --max-ecku 5", fixture: "kafka/cluster/create-dedicated-max-ecku-error.golden", exitCode: 1},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --availability single-zone -o json", fixture: "kafka/23.golden"},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --availability single-zone -o yaml", fixture: "kafka/24.golden"},
+		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --availability single-zone --max-ecku 2", fixture: "kafka/create-basic-max-ecku.golden"},
+		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --availability single-zone --max-ecku abc", fixture: "kafka/create-basic-max-ecku-error.golden", exitCode: 1},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --availability oops-zone", fixture: "kafka/cluster/create-availability-zone-error.golden", exitCode: 1},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type enterprise --availability multi-zone", fixture: "kafka/cluster/create-enterprise.golden"},
+		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type enterprise --availability multi-zone --max-ecku 4", fixture: "kafka/cluster/create-enterprise-max-ecku.golden"},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type enterprise", fixture: "kafka/cluster/create-enterprise-availability-zone-error.golden", exitCode: 1},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type freight --availability multi-zone", fixture: "kafka/cluster/create-freight.golden"},
 		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type freight", fixture: "kafka/cluster/create-freight-low.golden"},
+		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type freight --max-ecku 3", fixture: "kafka/cluster/create-freight-max-ecku.golden"},
 		{args: "kafka cluster create my-basic-cluster-with-ecku-limits --cloud aws --region us-west-2 --type basic", fixture: "kafka/cluster/create-basic-with-ecku-limits.golden"},
 		{args: "kafka cluster create my-standard-cluster-with-ecku-limits --cloud aws --region us-west-2 --type standard", fixture: "kafka/cluster/create-standard-with-ecku-limits.golden"},
 
@@ -43,14 +53,27 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster update lkc-with-ecku-limits --name lkc-update-name", fixture: "kafka/cluster/update-basic-with-ecku-limits.golden"},
 		{args: "kafka cluster update lkc-update-dedicated-expand --name lkc-update-dedicated-name --cku 2", fixture: "kafka/27.golden"},
 		{args: "kafka cluster update lkc-update-dedicated-expand --cku 2", fixture: "kafka/39.golden"},
+		{args: "kafka cluster update lkc-update-dedicated-expand --cku 2 --max-ecku 3", fixture: "kafka/update-dedicated-max-ecku-error.golden", exitCode: 1},
 		{args: "kafka cluster update lkc-update --cku 2", fixture: "kafka/cluster/update-resize-error.golden", exitCode: 1},
 		{args: "kafka cluster update lkc-update-dedicated-shrink --name lkc-update-dedicated-name --cku 1", fixture: "kafka/44.golden"},
 		{args: "kafka cluster update lkc-update-dedicated-shrink --cku 1", fixture: "kafka/45.golden"},
 		{args: "kafka cluster update lkc-update-dedicated-shrink-multi --cku 1", fixture: "kafka/cluster/update-dedicated-shrink-error.golden", exitCode: 1},
 		{args: "kafka cluster update lkc-update --cku 1", fixture: "kafka/cluster/update-resize-error.golden", exitCode: 1},
+		{args: "kafka cluster update lkc-update --max-ecku 4", fixture: "kafka/cluster/update-max-ecku.golden"},
+		{args: "kafka cluster update lkc-update-standard --max-ecku 2", fixture: "kafka/cluster/update-standard-max-ecku.golden"},
+		{args: "kafka cluster update lkc-update-enterprise --max-ecku 5", fixture: "kafka/cluster/update-enterprise-max-ecku.golden"},
+		{args: "kafka cluster update lkc-update-enterprise --max-ecku 15", fixture: "kafka/cluster/update-enterprise-max-ecku-fail.golden", exitCode: 1},
+		{args: "kafka cluster update lkc-update-enterprise --max-ecku 5 -o json", fixture: "kafka/cluster/update-enterprise-max-ecku-json.golden"},
+		{args: "kafka cluster update lkc-update-enterprise --max-ecku 5 -o yaml", fixture: "kafka/cluster/update-enterprise-max-ecku-yaml.golden"},
+		{args: "kafka cluster update lkc-update-enterprise --name enterprise-cluster --max-ecku 7", fixture: "kafka/cluster/update-enterprise-max-ecku-with-name.golden"},
+		{args: "kafka cluster update lkc-update-freight --max-ecku 50", fixture: "kafka/cluster/update-freight-max-ecku.golden"},
+		{args: "kafka cluster update lkc-update-freight --max-ecku 200", fixture: "kafka/cluster/update-freight-max-ecku-fail.golden", exitCode: 1},
+		{args: "kafka cluster update lkc-update-freight --max-ecku 50 -o json", fixture: "kafka/cluster/update-freight-max-ecku-json.golden"},
+		{args: "kafka cluster update lkc-update-freight --name freight-cluster --max-ecku 75", fixture: "kafka/cluster/update-freight-max-ecku-with-name.golden"},
 		// Type upgrade tests
 		{args: "kafka cluster update lkc-update --type standard", fixture: "kafka/cluster/update-type-success.golden"},
-		{args: "kafka cluster update lkc-update --type Standard", fixture: "kafka/cluster/update-type-success.golden"},
+		{args: "kafka cluster update lkc-update --type standard --max-ecku 6", fixture: "kafka/cluster/update-type-max-ecku-success.golden"},
+		{args: "kafka cluster update lkc-update --type standard --max-ecku 35", fixture: "kafka/cluster/update-type-max-ecku-fail.golden", exitCode: 1},
 		{args: "kafka cluster update lkc-update --type", fixture: "kafka/cluster/update-type-empty-error.golden", exitCode: 1},
 		{args: "kafka cluster update lkc-update --type basic", fixture: "kafka/cluster/update-type-invalid-error.golden", exitCode: 1},
 
@@ -98,6 +121,7 @@ func (s *CLITestSuite) TestKafka() {
 
 		{args: "kafka cluster describe lkc-describe-with-ecku-limits", fixture: "kafka/cluster/describe-basic-with-ecku-limits.golden"},
 		{args: "kafka cluster describe lkc-with-usage-limits-error", fixture: "kafka/cluster/describe-with-usage-limits-error.golden"},
+		{args: "kafka cluster describe lkc-with-default-v2-limits", fixture: "kafka/cluster/describe-basic-with-default-v2-limits.golden"},
 
 		{args: "kafka acl list --cluster lkc-acls", fixture: "kafka/acl/list-cloud.golden"},
 		{args: "kafka acl list --cluster lkc-acls --all", fixture: "kafka/acl/list-cloud-all.golden"},
@@ -748,6 +772,40 @@ func (s *CLITestSuite) TestKafkaConsumerGroupLag_OnPrem() {
 	}
 }
 
+func (s *CLITestSuite) TestKafkaShareGroup() {
+	tests := []CLITest{
+		{args: "kafka share-group list --cluster lkc-1234", fixture: "kafka/share-group/list.golden"},
+		{args: "kafka share-group list --cluster lkc-1234 -o json", fixture: "kafka/share-group/list-json.golden"},
+		{args: "kafka share-group list --cluster lkc-1234 -o yaml", fixture: "kafka/share-group/list-yaml.golden"},
+		{args: "kafka share-group describe share-group-1 --cluster lkc-1234", contains: shareGroupTopic1, notContains: ""},
+		{args: "kafka share-group describe share-group-1 --cluster lkc-1234", contains: shareGroupTopic2, notContains: ""},
+		{args: "kafka share-group describe share-group-1 --cluster lkc-1234 -o json", contains: shareGroupTopic1, notContains: ""},
+		{args: "kafka share-group describe share-group-1 --cluster lkc-1234 -o json", contains: shareGroupTopic2, notContains: ""},
+		{args: "kafka share-group describe share-group-1 --cluster lkc-1234 -o yaml", contains: shareGroupTopic1, notContains: ""},
+		{args: "kafka share-group describe share-group-1 --cluster lkc-1234 -o yaml", contains: shareGroupTopic2, notContains: ""},
+		{args: "kafka share-group describe share-group-1234 --cluster lkc-1234", fixture: "kafka/share-group/describe-dne.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestKafkaShareGroupConsumer() {
+	tests := []CLITest{
+		{args: "kafka share-group consumer list --group share-group-1 --cluster lkc-1234", fixture: "kafka/share-group/consumer/list.golden"},
+		{args: "kafka share-group consumer list --group share-group-1 --cluster lkc-1234 -o json", fixture: "kafka/share-group/consumer/list-json.golden"},
+		{args: "kafka share-group consumer list --group share-group-1 --cluster lkc-1234 -o yaml", fixture: "kafka/share-group/consumer/list-yaml.golden"},
+		{args: "kafka share-group consumer list --group share-group-1234 --cluster lkc-1234", fixture: "kafka/share-group/consumer/list-dne.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestKafka_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete kafka consumer list --cluster lkc-1234 --group ""`, fixture: "kafka/consumer/list-consumer-group-autocomplete.golden"},
@@ -755,6 +813,8 @@ func (s *CLITestSuite) TestKafka_Autocomplete() {
 		{args: `__complete kafka consumer group lag describe --cluster lkc-1234 ""`, fixture: "kafka/consumer/group/lag/describe-autocomplete.golden"},
 		{args: `__complete kafka consumer group lag list --cluster lkc-1234 ""`, fixture: "kafka/consumer/group/lag/list-autocomplete.golden"},
 		{args: `__complete kafka consumer group lag summarize --cluster lkc-1234 ""`, fixture: "kafka/consumer/group/lag/summarize-autocomplete.golden"},
+		{args: `__complete kafka share-group describe --cluster lkc-1234 ""`, fixture: "kafka/share-group/autocomplete.golden"},
+		{args: `__complete kafka share-group consumer list --group ""`, fixture: "kafka/share-group/consumer/list-group-autocomplete.golden"},
 		{args: `__complete kafka cluster create my-cluster --availability ""`, fixture: "kafka/create-availability-autocomplete.golden"},
 		{args: `__complete kafka cluster create my-cluster --type ""`, fixture: "kafka/create-type-autocomplete.golden"},
 		{args: `__complete kafka cluster describe ""`, fixture: "kafka/describe-autocomplete.golden"},
