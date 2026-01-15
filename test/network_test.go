@@ -159,6 +159,12 @@ func (s *CLITestSuite) TestNetworkGatewayList() {
 	tests := []CLITest{
 		{args: "network gateway list", fixture: "network/gateway/list.golden"},
 		{args: "network gateway list --output json", fixture: "network/gateway/list-json.golden"},
+		{args: "network gateway list --types aws-egress-privatelink", fixture: "network/gateway/list-filter-type.golden"},
+		{args: "network gateway list --id gw-12345", fixture: "network/gateway/list-filter-id.golden"},
+		{args: "network gateway list --region us-east-1", fixture: "network/gateway/list-filter-region.golden"},
+		{args: "network gateway list --display-name my-aws-gateway", fixture: "network/gateway/list-filter-name.golden"},
+		{args: "network gateway list --phase READY", fixture: "network/gateway/list-filter-phase.golden"},
+		{args: "network gateway list --types aws-egress-privatelink --id gw-12345 --region us-east-1 --phase READY", fixture: "network/gateway/list-filter-multiple.golden"},
 	}
 
 	for _, test := range tests {

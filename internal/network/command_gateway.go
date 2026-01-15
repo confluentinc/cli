@@ -118,7 +118,7 @@ func (c *command) validGatewayArgsMultiple(cmd *cobra.Command, args []string) []
 }
 
 func autocompleteGateways(client *ccloudv2.Client, environmentId string) []string {
-	gateways, err := client.ListGateways(environmentId, nil)
+	gateways, err := client.ListGateways(environmentId, nil, nil, nil, nil, nil)
 	if err != nil {
 		return nil
 	}

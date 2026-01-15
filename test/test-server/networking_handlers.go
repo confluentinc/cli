@@ -2527,6 +2527,13 @@ func handleNetworkingGatewayPost(t *testing.T) http.HandlerFunc {
 
 func handleNetworkingGatewayList(t *testing.T, environment string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+		gatewayTypes := q["gateway_type"]
+		ids := q["id"]
+		regions := q["spec.config.region"]
+		displayNames := q["spec.display_name"]
+		phases := q["status.phase"]
+
 		gatewayOne := getGateway("gw-12345", environment, "my-aws-gateway", "AwsEgressPrivateLinkGatewaySpec", "AwsEgressPrivateLinkGatewayStatus")
 		gatewayTwo := getGateway("gw-54321", environment, "my-aws-peering-gateway", "AwsPeeringGatewaySpec", "")
 		gatewayThree := getGateway("gw-23456", environment, "my-aws-gateway", "AwsPrivateNetworkInterfaceGatewaySpec", "AwsPrivateNetworkInterfaceGatewayStatus")
@@ -2536,11 +2543,122 @@ func handleNetworkingGatewayList(t *testing.T, environment string) http.HandlerF
 		gatewaySeven := getGateway("gw-07531", environment, "my-gcp-gateway", "GcpEgressPrivateServiceConnectGatewaySpec", "GcpEgressPrivateServiceConnectGatewayStatus")
 		gatewayEight := getGateway("gw-88888", environment, "my-aws-ingress-gateway", "AwsIngressPrivateLinkGatewaySpec", "AwsIngressPrivateLinkGatewayStatus")
 
-		recordList := networkinggatewayv1.NetworkingV1GatewayList{Data: []networkinggatewayv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour, gatewayFive, gatewaySix, gatewaySeven, gatewayEight}}
-		setPageToken(&recordList, &recordList.Metadata, r.URL)
-		err := json.NewEncoder(w).Encode(recordList)
+		gatewayList := networkinggatewayv1.NetworkingV1GatewayList{Data: []networkinggatewayv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour, gatewayFive, gatewaySix, gatewaySeven, gatewayEight}}
+		gatewayList.Data = filterGatewayList(gatewayList.Data, gatewayTypes, ids, regions, displayNames, phases)
+		setPageToken(&gatewayList, &gatewayList.Metadata, r.URL)
+		err := json.NewEncoder(w).Encode(gatewayList)
 		require.NoError(t, err)
 	}
+}
+
+func filterGatewayList(gatewayList []networkinggatewayv1.NetworkingV1Gateway, gatewayTypes, ids, regions, displayNames, phases []string) []networkinggatewayv1.NetworkingV1Gateway {
+	var filteredGatewayList []networkinggatewayv1.NetworkingV1Gateway
+	for _, gateway := range gatewayList {
+		// Get gateway type from spec config
+		gatewayType := getGatewayTypeFromSpec(gateway)
+		region := getRegionFromSpec(gateway)
+
+		// Filter by params
+		if len(gatewayTypes) > 0 && !slices.Contains(gatewayTypes, gatewayType) {
+			continue
+		}
+
+		if len(ids) > 0 && !slices.Contains(ids, gateway.GetId()) {
+			continue
+		}
+
+		if len(regions) > 0 && !slices.Contains(regions, region) {
+			continue
+		}
+
+		if len(displayNames) > 0 && !slices.Contains(displayNames, gateway.Spec.GetDisplayName()) {
+			continue
+		}
+
+		if len(phases) > 0 {
+			// API expects uppercase phase values filter (e.g "READY", "PROVISIONING")
+			gatewayPhase := gateway.Status.GetPhase()
+			phaseMatch := false
+			for _, phase := range phases {
+				if strings.ToUpper(phase) == gatewayPhase {
+					phaseMatch = true
+					break
+				}
+			}
+			if !phaseMatch {
+				continue
+			}
+		}
+
+		filteredGatewayList = append(filteredGatewayList, gateway)
+	}
+	return filteredGatewayList
+}
+
+func getGatewayTypeFromSpec(gateway networkinggatewayv1.NetworkingV1Gateway) string {
+	if gateway.Spec == nil || gateway.Spec.Config == nil {
+		return ""
+	}
+
+	config := gateway.Spec.Config
+	if config.NetworkingV1AwsEgressPrivateLinkGatewaySpec != nil {
+		return "AwsEgressPrivateLink"
+	}
+	if config.NetworkingV1AwsIngressPrivateLinkGatewaySpec != nil {
+		return "AwsIngressPrivateLink"
+	}
+	if config.NetworkingV1AwsPeeringGatewaySpec != nil {
+		return "AwsPeering"
+	}
+	if config.NetworkingV1AwsPrivateNetworkInterfaceGatewaySpec != nil {
+		return "AwsPrivateNetworkInterface"
+	}
+	if config.NetworkingV1AzureEgressPrivateLinkGatewaySpec != nil {
+		return "AzureEgressPrivateLink"
+	}
+	if config.NetworkingV1AzurePeeringGatewaySpec != nil {
+		return "AzurePeering"
+	}
+	if config.NetworkingV1GcpPeeringGatewaySpec != nil {
+		return "GcpPeering"
+	}
+	if config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec != nil {
+		return "GcpEgressPrivateServiceConnect"
+	}
+	return ""
+}
+
+func getRegionFromSpec(gateway networkinggatewayv1.NetworkingV1Gateway) string {
+	if gateway.Spec == nil || gateway.Spec.Config == nil {
+		return ""
+	}
+
+	config := gateway.Spec.Config
+	if config.NetworkingV1AwsEgressPrivateLinkGatewaySpec != nil {
+		return config.NetworkingV1AwsEgressPrivateLinkGatewaySpec.GetRegion()
+	}
+	if config.NetworkingV1AwsIngressPrivateLinkGatewaySpec != nil {
+		return config.NetworkingV1AwsIngressPrivateLinkGatewaySpec.GetRegion()
+	}
+	if config.NetworkingV1AwsPeeringGatewaySpec != nil {
+		return config.NetworkingV1AwsPeeringGatewaySpec.GetRegion()
+	}
+	if config.NetworkingV1AwsPrivateNetworkInterfaceGatewaySpec != nil {
+		return config.NetworkingV1AwsPrivateNetworkInterfaceGatewaySpec.GetRegion()
+	}
+	if config.NetworkingV1AzureEgressPrivateLinkGatewaySpec != nil {
+		return config.NetworkingV1AzureEgressPrivateLinkGatewaySpec.GetRegion()
+	}
+	if config.NetworkingV1AzurePeeringGatewaySpec != nil {
+		return config.NetworkingV1AzurePeeringGatewaySpec.GetRegion()
+	}
+	if config.NetworkingV1GcpPeeringGatewaySpec != nil {
+		return config.NetworkingV1GcpPeeringGatewaySpec.GetRegion()
+	}
+	if config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec != nil {
+		return config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec.GetRegion()
+	}
+	return ""
 }
 
 func handleNetworkingGatewayPatch(t *testing.T, id string) http.HandlerFunc {
