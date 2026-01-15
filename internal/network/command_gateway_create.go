@@ -24,6 +24,10 @@ func (c *command) newGatewayCreateCommand() *cobra.Command {
 				Code: "confluent network gateway create my-ingress-gateway --cloud aws --region us-east-1 --type ingress-privatelink",
 			},
 			examples.Example{
+				Text: `Create AWS egress private link gateway "my-egress-gateway".`,
+				Code: "confluent network gateway create my-egress-gateway --cloud aws --region us-east-1 --type egress-privatelink",
+			},
+			examples.Example{
 				Text: `Create AWS private network interface gateway "my-pni-gateway".`,
 				Code: "confluent network gateway create my-pni-gateway --cloud aws --region us-east-1 --type private-network-interface",
 			},
