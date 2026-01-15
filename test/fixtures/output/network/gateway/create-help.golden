@@ -8,6 +8,10 @@ Create AWS ingress private link gateway "my-ingress-gateway".
 
   $ confluent network gateway create my-ingress-gateway --cloud aws --region us-east-1 --type ingress-privatelink
 
+Create AWS egress private link gateway "my-egress-gateway".
+
+  $ confluent network gateway create my-egress-gateway --cloud aws --region us-east-1 --type egress-privatelink
+
 Create AWS private network interface gateway "my-pni-gateway".
 
   $ confluent network gateway create my-pni-gateway --cloud aws --region us-east-1 --type private-network-interface
