@@ -22,7 +22,7 @@ func (c *accessPointCommand) newIngressEndpointCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create an AWS PrivateLink ingress endpoint.",
-				Code: "confluent network access-point private-link ingress-endpoint create --cloud aws --gateway gw-123456 --vpc-endpoint-id com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000",
+				Code: "confluent network access-point private-link ingress-endpoint create --cloud aws --gateway gw-123456 --vpc-endpoint-id vpce-00000000000000000",
 			},
 		),
 	}

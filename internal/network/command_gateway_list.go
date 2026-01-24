@@ -77,7 +77,7 @@ func (c *command) gatewayList(cmd *cobra.Command, _ []string) error {
 	}
 
 	for i, phase := range phases {
-		phases[i] = strings.ToUpper(phase)
+		phases[i] = strings.ToLower(phase)
 	}
 
 	gateways, err := c.V2Client.ListGateways(environmentId, types, ids, regions, displayNames, phases)
@@ -212,5 +212,5 @@ func (c *command) autocompleteGatewayDisplayNames(cmd *cobra.Command, args []str
 }
 
 func (c *command) autocompleteGatewayPhases(_ *cobra.Command, _ []string) []string {
-	return []string{"PROVISIONING", "CREATED", "READY", "FAILED", "DEPROVISIONING"}
+	return []string{"provisioning", "created", "active", "failed", "deprovisioning"}
 }

@@ -2576,11 +2576,11 @@ func filterGatewayList(gatewayList []networkinggatewayv1.NetworkingV1Gateway, ga
 		}
 
 		if len(phases) > 0 {
-			// API expects uppercase phase values filter (e.g "READY", "PROVISIONING")
-			gatewayPhase := gateway.Status.GetPhase()
+			// API expects lowercase phase values for filtering (e.g., "ready", "provisioning")
+			gatewayPhase := strings.ToLower(gateway.Status.GetPhase())
 			phaseMatch := false
 			for _, phase := range phases {
-				if strings.ToUpper(phase) == gatewayPhase {
+				if strings.ToLower(phase) == gatewayPhase {
 					phaseMatch = true
 					break
 				}
