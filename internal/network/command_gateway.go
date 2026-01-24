@@ -18,6 +18,7 @@ import (
 
 const (
 	awsEgressPrivateLink           = "AwsEgressPrivateLink"
+	awsIngressPrivateLink          = "AwsIngressPrivateLink"
 	awsPeering                     = "AwsPeering"
 	azureEgressPrivateLink         = "AzureEgressPrivateLink"
 	azurePeering                   = "AzurePeering"
@@ -27,29 +28,31 @@ const (
 )
 
 var (
-	createGatewayTypes = []string{"egress-privatelink", "private-network-interface"}
-	listGatewayTypes   = []string{"aws-egress-privatelink", "azure-egress-privatelink", "gcp-egress-private-service-connect"} // TODO: check if we accept private-network-interface here
+	createGatewayTypes = []string{"egress-privatelink", "ingress-privatelink", "private-network-interface"}
+	listGatewayTypes   = []string{"aws-egress-privatelink", "aws-ingress-privatelink", "azure-egress-privatelink", "gcp-egress-private-service-connect"} // TODO: check if we accept private-network-interface here
 	gatewayTypeMap     = map[string]string{
 		"aws-egress-privatelink":             awsEgressPrivateLink,
+		"aws-ingress-privatelink":            awsIngressPrivateLink,
 		"azure-egress-privatelink":           azureEgressPrivateLink,
 		"gcp-egress-private-service-connect": gcpEgressPrivateServiceConnect,
 	}
 )
 
 type gatewayOut struct {
-	Id                string   `human:"ID" serialized:"id"`
-	Name              string   `human:"Name,omitempty" serialized:"name,omitempty"`
-	Environment       string   `human:"Environment" serialized:"environment"`
-	Region            string   `human:"Region,omitempty" serialized:"region,omitempty"`
-	Type              string   `human:"Type,omitempty" serialized:"type,omitempty"`
-	AwsPrincipalArn   string   `human:"AWS Principal ARN,omitempty" serialized:"aws_principal_arn,omitempty"`
-	AzureSubscription string   `human:"Azure Subscription,omitempty" serialized:"azure_subscription,omitempty"`
-	GcpIamPrincipal   string   `human:"GCP IAM Principal,omitempty" serialized:"gcp_iam_principal,omitempty"`
-	GcpProject        string   `human:"GCP Project,omitempty" serialized:"gcp_project,omitempty"`
-	Phase             string   `human:"Phase" serialized:"phase"`
-	Zones             []string `human:"Zones,omitempty" serialized:"zones,omitempty"`
-	Account           string   `human:"Account,omitempty" serialized:"account,omitempty"`
-	ErrorMessage      string   `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
+	Id                     string   `human:"ID" serialized:"id"`
+	Name                   string   `human:"Name,omitempty" serialized:"name,omitempty"`
+	Environment            string   `human:"Environment" serialized:"environment"`
+	Region                 string   `human:"Region,omitempty" serialized:"region,omitempty"`
+	Type                   string   `human:"Type,omitempty" serialized:"type,omitempty"`
+	AwsPrincipalArn        string   `human:"AWS Principal ARN,omitempty" serialized:"aws_principal_arn,omitempty"`
+	VpcEndpointServiceName string   `human:"VPC Endpoint Service Name,omitempty" serialized:"vpc_endpoint_service_name,omitempty"`
+	AzureSubscription      string   `human:"Azure Subscription,omitempty" serialized:"azure_subscription,omitempty"`
+	GcpIamPrincipal        string   `human:"GCP IAM Principal,omitempty" serialized:"gcp_iam_principal,omitempty"`
+	GcpProject             string   `human:"GCP Project,omitempty" serialized:"gcp_project,omitempty"`
+	Phase                  string   `human:"Phase" serialized:"phase"`
+	Zones                  []string `human:"Zones,omitempty" serialized:"zones,omitempty"`
+	Account                string   `human:"Account,omitempty" serialized:"account,omitempty"`
+	ErrorMessage           string   `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
 }
 
 func (c *command) newGatewayCommand() *cobra.Command {
@@ -115,7 +118,7 @@ func (c *command) validGatewayArgsMultiple(cmd *cobra.Command, args []string) []
 }
 
 func autocompleteGateways(client *ccloudv2.Client, environmentId string) []string {
-	gateways, err := client.ListGateways(environmentId, nil)
+	gateways, err := client.ListGateways(environmentId, nil, nil, nil, nil, nil)
 	if err != nil {
 		return nil
 	}
@@ -130,7 +133,7 @@ func autocompleteGateways(client *ccloudv2.Client, environmentId string) []strin
 func getGatewayCloud(gateway networkinggatewayv1.NetworkingV1Gateway) string {
 	cloud := gateway.Status.GetCloudGateway()
 
-	if cloud.NetworkingV1AwsEgressPrivateLinkGatewayStatus != nil || cloud.NetworkingV1AwsPrivateNetworkInterfaceGatewayStatus != nil {
+	if cloud.NetworkingV1AwsEgressPrivateLinkGatewayStatus != nil || cloud.NetworkingV1AwsIngressPrivateLinkGatewayStatus != nil || cloud.NetworkingV1AwsPrivateNetworkInterfaceGatewayStatus != nil {
 		return pcloud.Aws
 	}
 
@@ -158,6 +161,10 @@ func getGatewayType(gateway networkinggatewayv1.NetworkingV1Gateway) (string, er
 
 	if config.NetworkingV1AwsEgressPrivateLinkGatewaySpec != nil {
 		return awsEgressPrivateLink, nil
+	}
+
+	if config.NetworkingV1AwsIngressPrivateLinkGatewaySpec != nil {
+		return awsIngressPrivateLink, nil
 	}
 
 	if config.NetworkingV1AzureEgressPrivateLinkGatewaySpec != nil {
@@ -208,6 +215,9 @@ func printGatewayTable(cmd *cobra.Command, gateway networkinggatewayv1.Networkin
 	if gatewayType == awsEgressPrivateLink {
 		out.Region = gateway.Spec.Config.NetworkingV1AwsEgressPrivateLinkGatewaySpec.GetRegion()
 	}
+	if gatewayType == awsIngressPrivateLink {
+		out.Region = gateway.Spec.Config.NetworkingV1AwsIngressPrivateLinkGatewaySpec.GetRegion()
+	}
 	if gatewayType == awsPeering {
 		out.Region = gateway.Spec.Config.NetworkingV1AwsPeeringGatewaySpec.GetRegion()
 	}
@@ -232,6 +242,8 @@ func printGatewayTable(cmd *cobra.Command, gateway networkinggatewayv1.Networkin
 	case pcloud.Aws:
 		if gatewayType == awsEgressPrivateLink {
 			out.AwsPrincipalArn = gateway.Status.CloudGateway.NetworkingV1AwsEgressPrivateLinkGatewayStatus.GetPrincipalArn()
+		} else if gatewayType == awsIngressPrivateLink {
+			out.VpcEndpointServiceName = gateway.Status.CloudGateway.NetworkingV1AwsIngressPrivateLinkGatewayStatus.GetVpcEndpointServiceName()
 		} else if gatewayType == awsPrivateNetworkInterface {
 			out.Account = gateway.Status.CloudGateway.NetworkingV1AwsPrivateNetworkInterfaceGatewayStatus.GetAccount()
 		}
