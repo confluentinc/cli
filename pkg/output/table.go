@@ -171,11 +171,12 @@ func (t *Table) printCore(writer io.Writer, auto bool) error {
 			tag := strings.Split(field.Tag.Get(t.format.String()), ",")
 
 			if !slices.Contains(tag, "-") {
+				isBoolType := field.Type.Kind() == reflect.Bool
 				includeColumn := slices.ContainsFunc(t.objects, func(object any) bool {
 					val := reflect.ValueOf(object).Elem().Field(i)
 					return !(slices.Contains(tag, "omitempty") && isZero(val))
 				})
-				if includeColumn {
+				if isBoolType || includeColumn {
 					header = append(header, tag[0])
 					omitEmptyFilter = append(omitEmptyFilter, field.Name)
 				}
