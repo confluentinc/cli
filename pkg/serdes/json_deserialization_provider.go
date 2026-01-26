@@ -25,6 +25,8 @@ func (j *JsonDeserializationProvider) InitDeserializer(srClientUrl, srClusterId,
 		return fmt.Errorf("failed to create deserializer-specific Schema Registry client: %w", err)
 	}
 
+	// Note: the EnableValidation = true option has been removed as it is bugged in the JSON deserializer,
+	// and also because we don't actually need to validate in the deserializer (only in the serializer)
 	serdeConfig := jsonschema.NewDeserializerConfig()
 
 	// local KMS secret is only set and used during local testing with ruleSet

@@ -30,6 +30,8 @@ const (
 	principalClaimNameKey = "principalClaimName"
 	principalKey          = "principal"
 	oauthConfig           = "principalClaimName=confluent principal=admin"
+	keySchemaHeaderKey    = "__key_schema_id"
+	valueSchemaHeaderKey  = "__value_schema_id"
 )
 
 var (
@@ -392,7 +394,7 @@ func getHeaderString(header ckgo.Header) string {
 
 func unmarshalSchemaIdHeader(headers []ckgo.Header) []ckgo.Header {
 	for i, header := range headers {
-		if header.Key != "__key_schema_id" && header.Key != "__value_schema_id" {
+		if header.Key != keySchemaHeaderKey && header.Key != valueSchemaHeaderKey {
 			continue
 		}
 
