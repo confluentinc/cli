@@ -12,6 +12,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/kafkausagelimits"
 	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/resource"
@@ -38,6 +39,7 @@ type describeStruct struct {
 	ByokKeyId          string `human:"BYOK Key ID" serialized:"byok_key_id"`
 	EncryptionKeyId    string `human:"Encryption Key ID" serialized:"encryption_key_id"`
 	RestEndpoint       string `human:"REST Endpoint" serialized:"rest_endpoint"`
+	MaxEcku            int32  `human:"Max eCKU,omitempty" serialized:"max_ecku,omitempty"`
 	TopicCount         int    `human:"Topic Count,omitempty" serialized:"topic_count,omitempty"`
 }
 
@@ -87,7 +89,14 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	return c.outputKafkaClusterDescription(cmd, &cluster, true)
+	cloud := strings.ToLower(cluster.Spec.GetCloud())
+	usageLimits, err := c.GetUsageLimitsClient().GetUsageLimits(cloud, lkc, environmentId)
+	if err != nil && output.GetFormat(cmd) == output.Human {
+		warning := errors.NewWarningWithSuggestions(errors.UsageLimitsAPIFailureWarning, errors.UsageLimitsAPIFailureSuggestionMsg)
+		output.ErrPrint(false, warning.DisplayWarningWithSuggestions())
+	}
+
+	return c.outputKafkaClusterDescription(cmd, &cluster, true, usageLimits)
 }
 
 func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
@@ -106,8 +115,8 @@ func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 	return clusterId, nil
 }
 
-func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster, getTopicCount bool) error {
-	out := convertClusterToDescribeStruct(cluster, c.Context)
+func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster, getTopicCount bool, limits *kafkausagelimits.UsageLimits) error {
+	out := convertClusterToDescribeStruct(cluster, limits, c.Context)
 
 	if getTopicCount {
 		topicCount, err := c.getTopicCountForKafkaCluster(cmd, cluster)
@@ -124,20 +133,14 @@ func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, clust
 	return table.Print()
 }
 
-func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Context) *describeStruct {
-	clusterStorage := getKafkaClusterStorage(cluster)
-	ingress, egress := getCmkClusterIngressAndEgressMbps(cluster)
-
-	return &describeStruct{
+func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, usageLimits *kafkausagelimits.UsageLimits, ctx *config.Context) *describeStruct {
+	out := &describeStruct{
 		IsCurrent:          cluster.GetId() == ctx.KafkaClusterContext.GetActiveKafkaClusterId(),
 		Id:                 cluster.GetId(),
 		Name:               cluster.Spec.GetDisplayName(),
 		Type:               getCmkClusterType(cluster),
 		ClusterSize:        getCmkClusterSize(cluster),
 		PendingClusterSize: getCmkClusterPendingSize(cluster),
-		IngressLimit:       ingress,
-		EgressLimit:        egress,
-		Storage:            clusterStorage,
 		Cloud:              strings.ToLower(cluster.Spec.GetCloud()),
 		Region:             cluster.Spec.GetRegion(),
 		Availability:       ccloudv2.ToLower(cluster.Spec.GetAvailability()),
@@ -147,15 +150,34 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Con
 		ByokKeyId:          getCmkByokId(cluster),
 		EncryptionKeyId:    getCmkEncryptionKey(cluster),
 		RestEndpoint:       cluster.Spec.GetHttpEndpoint(),
+		MaxEcku:            getCmkMaxEcku(cluster),
 	}
+
+	// Only set limits field if usage limits are available
+	// For the list command, no limits are displayed in the command output so usageLimits is nil
+	if usageLimits != nil && out.Type != "UNKNOWN" {
+		maxEcku := getCmkMaxEcku(cluster)
+		limits := getLimitsForSku(cluster, usageLimits)
+
+		out.Storage = getKafkaClusterStorage(limits)
+		out.IngressLimit, out.EgressLimit = getCmkClusterIngressAndEgressMbps(maxEcku, limits)
+	}
+
+	return out
 }
 
-func getKafkaClusterStorage(cluster *cmkv2.CmkV2Cluster) string {
-	if !isBasic(cluster) {
-		return "Infinite"
-	} else {
-		return "5 TB"
+func getKafkaClusterStorage(limits *kafkausagelimits.Limits) string {
+	storage := limits.GetStorage()
+
+	if storage == nil {
+		return ""
 	}
+
+	if storage.Unlimited {
+		return "Unlimited"
+	}
+
+	return fmt.Sprintf("%d %s", storage.Value, storage.Unit)
 }
 
 func getKafkaClusterDescribeFields(cluster *cmkv2.CmkV2Cluster, basicFields []string, getTopicCount bool) []string {
@@ -170,6 +192,13 @@ func getKafkaClusterDescribeFields(cluster *cmkv2.CmkV2Cluster, basicFields []st
 		}
 		if cluster.Spec.Byok != nil {
 			describeFields = append(describeFields, "ByokId")
+		}
+	} else {
+		// Max eCKU field is available only for Basic, Standard, Enterprise, and Freight clusters
+		// Only show it if the value is positive (non-positive values like -1 indicate it's not set)
+		maxEcku := getCmkMaxEcku(cluster)
+		if maxEcku > 0 {
+			describeFields = append(describeFields, "MaxEcku")
 		}
 	}
 

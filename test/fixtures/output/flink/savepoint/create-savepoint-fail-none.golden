@@ -1,0 +1,27 @@
+Error: at least one of the flags in the group [application statement] is required
+Usage:
+  confluent flink savepoint create [name] [flags]
+
+Examples:
+Create a Flink savepoint named "my-savepoint".
+
+  $ confluent flink savepoint create statement "SELECT 1;" --path path-to-savepoint --environment env1
+
+Flags:
+      --environment string                  REQUIRED: Name of the Flink environment.
+      --application string                  The name of the Flink application to create the savepoint for.
+      --statement string                    The name of the Flink statement to create the savepoint for.
+      --path string                         The directory where the savepoint should be stored.
+      --format string                       The format of the savepoint. Defaults to CANONICAL. (default "CANONICAL")
+      --backoff-limit int                   Maximum number of retries before the snapshot is considered failed. Set to -1 for unlimited or 0 for no retries.
+  -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
+      --url string                          Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.
+      --client-key-path string              Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.
+      --client-cert-path string             Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_CERT_PATH" may be set in place of this flag.
+      --certificate-authority-path string   Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CMF_CERTIFICATE_AUTHORITY_PATH" may be set in place of this flag.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
