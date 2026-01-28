@@ -1,8 +1,8 @@
-     ID    |       Name        |  Gateway  | Cloud |  Region   |     CIDR      |            Zones             | Phase | Active Connection Types | DNS Resolution |           Zone Info             
------------+-------------------+-----------+-------+-----------+---------------+------------------------------+-------+-------------------------+----------------+---------------------------------
-  n-abcde3 | prod-aws-us-east1 |           | AWS   | us-east-1 | 10.200.0.0/16 | use1-az1, use1-az2, use1-az3 | READY | TRANSITGATEWAY, PEERING |                | use1-az1=10.200.0.0/27,         
-           |                   |           |       |           |               |                              |       |                         |                | use1-az2=10.200.0.32/27,        
-           |                   |           |       |           |               |                              |       |                         |                | use1-az3=10.200.0.64/27         
-  n-abcde4 | prod-aws-us-east1 | gw-abcde1 | AWS   | us-west-2 | 10.200.0.0/16 | use1-az1, use1-az2, use1-az3 | READY | TRANSITGATEWAY, PEERING |                | use1-az1=10.200.0.0/27,         
-           |                   |           |       |           |               |                              |       |                         |                | use1-az2=10.200.0.32/27,        
-           |                   |           |       |           |               |                              |       |                         |                | use1-az3=10.200.0.64/27         
+     ID    |       Name        |  Gateway  | Cloud |  Region   |     CIDR      |            Zones             | Phase | Active Connection Types |           Zone Info             
+-----------+-------------------+-----------+-------+-----------+---------------+------------------------------+-------+-------------------------+---------------------------------
+  n-abcde3 | prod-aws-us-east1 |           | AWS   | us-east-1 | 10.200.0.0/16 | use1-az1, use1-az2, use1-az3 | READY | TRANSITGATEWAY, PEERING | use1-az1=10.200.0.0/27,         
+           |                   |           |       |           |               |                              |       |                         | use1-az2=10.200.0.32/27,        
+           |                   |           |       |           |               |                              |       |                         | use1-az3=10.200.0.64/27         
+  n-abcde4 | prod-aws-us-east1 | gw-abcde1 | AWS   | us-west-2 | 10.200.0.0/16 | use1-az1, use1-az2, use1-az3 | READY | TRANSITGATEWAY, PEERING | use1-az1=10.200.0.0/27,         
+           |                   |           |       |           |               |                              |       |                         | use1-az2=10.200.0.32/27,        
+           |                   |           |       |           |               |                              |       |                         | use1-az3=10.200.0.64/27         
