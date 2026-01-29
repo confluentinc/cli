@@ -8,6 +8,10 @@ Create a Cloud API key:
 
   $ confluent api-key create --resource cloud
 
+Create a Global API key:
+
+  $ confluent api-key create --resource global
+
 Create a Flink API key for region "N. Virginia (us-east-1)":
 
   $ confluent api-key create --resource flink --cloud aws --region us-east-1
@@ -33,7 +37,7 @@ Create a Tableflow API key:
   $ confluent api-key create --resource tableflow
 
 Flags:
-      --resource string          REQUIRED: The ID of the resource the API key is for. Use "cloud" for a Cloud API key, "flink" for a Flink API key, or "tableflow" for a Tableflow API key.
+      --resource string          REQUIRED: The ID of the resource the API key is for. Use "cloud" for a Cloud API key, "global" for a Global API key, "flink" for a Flink API key, or "tableflow" for a Tableflow API key.
       --description string       Description of API key.
       --cloud string             Specify the cloud provider as "aws", "azure", or "gcp".
       --region string            Cloud region for Flink (use "confluent flink region list" to see all).
