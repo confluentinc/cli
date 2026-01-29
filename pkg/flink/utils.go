@@ -1,11 +1,12 @@
 package flink
 
 var (
-	ConnectionTypes             = []string{"openai", "azureml", "azureopenai", "a2a", "bedrock", "sagemaker", "googleai", "vertexai", "mongodb", "elastic", "pinecone", "couchbase", "confluent_jdbc", "rest", "mcp_server", "cosmosdb", "s3vectors"}
+	ConnectionTypes             = []string{"openai", "azureml", "azureopenai", "anthropic", "a2a", "bedrock", "sagemaker", "googleai", "vertexai", "mongodb", "elastic", "pinecone", "couchbase", "confluent_jdbc", "rest", "mcp_server", "cosmosdb", "s3vectors"}
 	ConnectionTypeSecretMapping = map[string][]string{
 		"openai":         {"api-key"},
 		"azureml":        {"api-key"},
 		"azureopenai":    {"api-key"},
+		"anthropic":      {"api-key"},
 		"a2a":            {"username", "password", "api-key", "token", "token-endpoint", "client-id", "client-secret", "scope"},
 		"bedrock":        {"aws-access-key", "aws-secret-key", "aws-session-token"},
 		"sagemaker":      {"aws-access-key", "aws-secret-key", "aws-session-token"},
@@ -23,7 +24,7 @@ var (
 	}
 
 	ConnectionSecretTypeMapping = map[string][]string{
-		"api-key":           {"openai", "azureml", "azureopenai", "googleai", "elastic", "pinecone", "a2a", "mcp_server", "cosmosdb"},
+		"api-key":           {"openai", "azureml", "azureopenai", "anthropic", "googleai", "elastic", "pinecone", "a2a", "mcp_server", "cosmosdb"},
 		"aws-access-key":    {"bedrock", "sagemaker", "s3vectors"},
 		"aws-secret-key":    {"bedrock", "sagemaker", "s3vectors"},
 		"aws-session-token": {"bedrock", "sagemaker", "s3vectors"},
@@ -43,6 +44,7 @@ var (
 		"openai":         {"api-key"},
 		"azureml":        {"api-key"},
 		"azureopenai":    {"api-key"},
+		"anthropic":      {"api-key"},
 		"bedrock":        {"aws-access-key", "aws-secret-key"},
 		"sagemaker":      {"aws-access-key", "aws-secret-key"},
 		"googleai":       {"api-key"},
