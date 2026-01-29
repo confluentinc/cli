@@ -199,6 +199,7 @@ func (s *CLITestSuite) TestFlinkConnectionCreateSuccess() {
 		{args: "flink connection create my-connection --cloud azure --region eu-west-1 --type cosmosdb --endpoint https://myaccount.documents.azure.com --api-key 0000000000000000", fixture: "flink/connection/create/create-cosmosdb.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type s3vectors --endpoint https://s3vectors.example.com --aws-access-key 0000000000000000 --aws-secret-key 0000000000000000", fixture: "flink/connection/create/create-s3vectors.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type s3vectors --endpoint https://s3vectors.example.com --aws-access-key 0000000000000000 --aws-secret-key 0000000000000000 --aws-session-token 0000000000000000", fixture: "flink/connection/create/create-s3vectors.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type anthropic --endpoint https://api.anthropic.com/v1/messages --api-key 0000000000000000", fixture: "flink/connection/create/create-anthropic.golden"},
 	}
 
 	for _, test := range tests {
