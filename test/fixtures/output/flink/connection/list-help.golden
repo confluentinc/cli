@@ -7,7 +7,7 @@ Flags:
       --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
       --region string        REQUIRED: Cloud region for Flink (use "confluent flink region list" to see all).
       --environment string   Environment ID.
-      --type string          Specify the connection type as "openai", "azureml", "azureopenai", "a2a", "bedrock", "sagemaker", "googleai", "vertexai", "mongodb", "elastic", "pinecone", "couchbase", "confluent_jdbc", "rest", "mcp_server", or "cosmosdb".
+      --type string          Specify the connection type as "openai", "azureml", "azureopenai", "a2a", "bedrock", "sagemaker", "googleai", "vertexai", "mongodb", "elastic", "pinecone", "couchbase", "confluent_jdbc", "rest", "mcp_server", "cosmosdb", or "s3vectors".
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
