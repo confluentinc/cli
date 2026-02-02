@@ -43,13 +43,13 @@ func (c *Client) UpdateGateway(id string, gatewayUpdate networkinggatewayv1.Netw
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListGateways(environment string, types []string) ([]networkinggatewayv1.NetworkingV1Gateway, error) {
+func (c *Client) ListGateways(environment string, types, ids, regions, displayNames, phases []string) ([]networkinggatewayv1.NetworkingV1Gateway, error) {
 	var list []networkinggatewayv1.NetworkingV1Gateway
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, err := c.executeListGateways(environment, pageToken, types)
+		page, err := c.executeListGateways(environment, pageToken, types, ids, regions, displayNames, phases)
 		if err != nil {
 			return nil, err
 		}
@@ -63,8 +63,24 @@ func (c *Client) ListGateways(environment string, types []string) ([]networkingg
 	return list, nil
 }
 
-func (c *Client) executeListGateways(environment, pageToken string, types []string) (networkinggatewayv1.NetworkingV1GatewayList, error) {
-	req := c.NetworkingGatewayClient.GatewaysNetworkingV1Api.ListNetworkingV1Gateways(c.networkingGatewayApiContext()).GatewayType(types).Environment(environment).PageSize(ccloudV2ListPageSize)
+func (c *Client) executeListGateways(environment, pageToken string, types, ids, regions, displayNames, phases []string) (networkinggatewayv1.NetworkingV1GatewayList, error) {
+	req := c.NetworkingGatewayClient.GatewaysNetworkingV1Api.ListNetworkingV1Gateways(c.networkingGatewayApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
+
+	if len(types) > 0 {
+		req = req.GatewayType(types)
+	}
+	if len(ids) > 0 {
+		req = req.Id(ids)
+	}
+	if len(regions) > 0 {
+		req = req.SpecConfigRegion(regions)
+	}
+	if len(displayNames) > 0 {
+		req = req.SpecDisplayName(displayNames)
+	}
+	if len(phases) > 0 {
+		req = req.StatusPhase(phases)
+	}
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
