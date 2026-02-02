@@ -2,6 +2,8 @@ package network
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"slices"
 
 	"github.com/spf13/cobra"
@@ -23,10 +25,11 @@ type ingressEndpointOut struct {
 	DnsDomain                 string `human:"DNS Domain,omitempty" serialized:"dns_domain,omitempty"`
 }
 
-func (c *accessPointCommand) newIngressEndpointCommand() *cobra.Command {
+func (c *accessPointCommand) newIngressEndpointCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "ingress-endpoint",
-		Short: "Manage private link ingress endpoints.",
+		Use:    "ingress-endpoint",
+		Short:  "Manage private link ingress endpoints.",
+		Hidden: !(cfg.IsTest || featureflags.Manager.BoolVariation("networking.gateway.ingress_private_link.api.enable", cfg.Context(), config.CcloudProdLaunchDarklyClient, true, false)),
 	}
 
 	cmd.AddCommand(c.newIngressEndpointCreateCommand())

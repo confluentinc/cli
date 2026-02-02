@@ -40,9 +40,9 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking v0.14.0
-	github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.5.0
+	github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder v0.4.0
-	github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway v0.2.0
+	github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.9.0
@@ -287,7 +287,3 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-replace github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway v0.2.0 => github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-gateway v0.11.0
-
-replace github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.5.0 => github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-access-point v0.10.0
