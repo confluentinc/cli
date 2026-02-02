@@ -55,6 +55,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newConnectivityTypeCommand())
 	cmd.AddCommand(c.newEndpointCommand())
 	cmd.AddCommand(c.newRegionCommand())
+	cmd.AddCommand(c.newMaterializedTableCommand())
 
 	return cmd
 }
