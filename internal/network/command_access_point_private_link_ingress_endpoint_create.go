@@ -27,7 +27,7 @@ func (c *accessPointCommand) newIngressEndpointCreateCommand() *cobra.Command {
 		),
 	}
 
-	pcmd.AddCloudFlag(cmd)
+	pcmd.AddCloudAwsFlag(cmd)
 	cmd.Flags().String("vpc-endpoint-id", "", "ID of an AWS VPC endpoint.")
 	addGatewayFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)

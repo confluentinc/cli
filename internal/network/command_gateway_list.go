@@ -29,9 +29,7 @@ func (c *command) newGatewayListCommand() *cobra.Command {
 	cmd.Flags().StringSlice("phase", nil, "A comma-separated list of phases.")
 
 	pcmd.RegisterFlagCompletionFunc(cmd, "types", c.autocompleteGatewayTypes)
-	pcmd.RegisterFlagCompletionFunc(cmd, "id", c.autocompleteGatewayIds)
 	pcmd.RegisterFlagCompletionFunc(cmd, "region", c.autocompleteGatewayRegions)
-	pcmd.RegisterFlagCompletionFunc(cmd, "display-name", c.autocompleteGatewayDisplayNames)
 	pcmd.RegisterFlagCompletionFunc(cmd, "phase", c.autocompleteGatewayPhases)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -212,5 +210,5 @@ func (c *command) autocompleteGatewayDisplayNames(cmd *cobra.Command, args []str
 }
 
 func (c *command) autocompleteGatewayPhases(_ *cobra.Command, _ []string) []string {
-	return []string{"provisioning", "created", "active", "failed", "deprovisioning"}
+	return []string{"PROVISIONING", "CREATED", "ACTIVE", "FAILED", "DEPROVISIONING", "EXPIRED"}
 }

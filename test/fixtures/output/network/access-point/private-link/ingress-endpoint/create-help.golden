@@ -9,7 +9,7 @@ Create an AWS PrivateLink ingress endpoint.
   $ confluent network access-point private-link ingress-endpoint create --cloud aws --gateway gw-123456 --vpc-endpoint-id vpce-00000000000000000
 
 Flags:
-      --cloud string             REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --cloud string             REQUIRED: Specify the cloud provider as "aws".
       --vpc-endpoint-id string   REQUIRED: ID of an AWS VPC endpoint.
       --gateway string           REQUIRED: Gateway ID.
       --context string           CLI context name.
