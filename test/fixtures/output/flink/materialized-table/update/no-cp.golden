@@ -1,0 +1,16 @@
++-----------------------------+--------------------------------+
+| Name                        | table-1                        |
+| Kafka Cluster ID            | lkc01                          |
+| Environment                 | env-1                          |
+| Compute Pool                | pool1                          |
+| Service Account             | principal1                     |
+| Query                       | query1                         |
+| Columns                     | {Name1, Type1, Comment1,       |
+|                             | Computed, Expression1, true}   |
+| Watermark Column Name       | Col1                           |
+| Watermark Expression        | Expr1                          |
+| Constraints                 | {constr1, PRIMARY_KEY,         |
+|                             | [user_id region], true}        |
+| Distributed By Column Names | user_id, region                |
+| Distributed By Buckets      | 8                              |
++-----------------------------+--------------------------------+

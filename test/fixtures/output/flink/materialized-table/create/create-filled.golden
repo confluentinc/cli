@@ -1,0 +1,14 @@
++-----------------------------+--------------------------------+
+| Name                        | my-table                       |
+| Kafka Cluster ID            | lkc01                          |
+| Environment                 | env-596                        |
+| Compute Pool                | pool1                          |
+| Service Account             | principal1                     |
+| Query                       | query1                         |
+| Watermark Column Name       | wname1                         |
+| Watermark Expression        | wexp1                          |
+| Constraints                 | {name, type, [colName1         |
+|                             | colName2], true}               |
+| Distributed By Column Names | col1, col2                     |
+| Distributed By Buckets      | 32                             |
++-----------------------------+--------------------------------+
