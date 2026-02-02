@@ -40,9 +40,9 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking v0.14.0
-	github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.5.0
+	github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder v0.4.0
-	github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway v0.2.0
+	github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.9.0
@@ -192,7 +192,7 @@ require (
 	github.com/google/s2a-go v0.1.8 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.13.0 // indirect
-	github.com/gorilla/css v1.0.0 // indirect
+	github.com/gorilla/css v1.0.1 // indirect
 	github.com/hamba/avro/v2 v2.24.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
@@ -217,7 +217,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-tty v0.0.4 // indirect
-	github.com/microcosm-cc/bluemonday v1.0.25 // indirect
+	github.com/microcosm-cc/bluemonday v1.0.27 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect

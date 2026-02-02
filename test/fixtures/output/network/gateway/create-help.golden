@@ -4,17 +4,21 @@ Usage:
   confluent network gateway create [name] [flags]
 
 Examples:
-Create network gateway "my-gateway".
+Create AWS ingress private link gateway "my-ingress-gateway".
 
-  $ confluent network gateway create my-gateway --cloud aws --region us-east-1 --type egress-privatelink
+  $ confluent network gateway create my-ingress-gateway --cloud aws --region us-east-1 --type ingress-privatelink
 
-Create an AWS private network interface gateway.
+Create AWS egress private link gateway "my-egress-gateway".
 
-  $ confluent network gateway create --cloud aws --region us-east-1 --type private-network-interface
+  $ confluent network gateway create my-egress-gateway --cloud aws --region us-east-1 --type egress-privatelink
+
+Create AWS private network interface gateway "my-pni-gateway".
+
+  $ confluent network gateway create my-pni-gateway --cloud aws --region us-east-1 --type private-network-interface
 
 Flags:
       --cloud string         REQUIRED: Specify the cloud provider as "aws" or "azure".
-      --type string          REQUIRED: Specify the gateway type as "egress-privatelink" or "private-network-interface".
+      --type string          REQUIRED: Specify the gateway type as "egress-privatelink", "ingress-privatelink", or "private-network-interface".
       --region string        REQUIRED: AWS or Azure region of the gateway.
       --zones strings        A comma-separated list of availability zones for this gateway.
       --context string       CLI context name.
