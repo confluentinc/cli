@@ -2552,7 +2552,7 @@ func handleNetworkingGatewayList(t *testing.T, environment string) http.HandlerF
 }
 
 func filterGatewayList(gatewayList []networkinggatewayv1.NetworkingV1Gateway, gatewayTypes, ids, regions, displayNames, phases []string) []networkinggatewayv1.NetworkingV1Gateway {
-	var filteredGatewayList []networkinggatewayv1.NetworkingV1Gateway
+	filteredGatewayList := make([]networkinggatewayv1.NetworkingV1Gateway, 0, len(gatewayList))
 	for _, gateway := range gatewayList {
 		// Get gateway type from spec config
 		gatewayType := getGatewayTypeFromSpec(gateway)

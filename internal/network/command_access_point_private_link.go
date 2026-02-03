@@ -1,8 +1,9 @@
 package network
 
 import (
-	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
 func (c *accessPointCommand) newPrivateLinkCommand(cfg *config.Config) *cobra.Command {

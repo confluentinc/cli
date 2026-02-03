@@ -157,17 +157,6 @@ func (c *command) autocompleteGatewayTypes(_ *cobra.Command, _ []string) []strin
 	return listGatewayTypes
 }
 
-func (c *command) autocompleteGatewayIds(cmd *cobra.Command, args []string) []string {
-	if err := c.PersistentPreRunE(cmd, args); err != nil {
-		return nil
-	}
-	environmentId, err := c.Context.EnvironmentId()
-	if err != nil {
-		return nil
-	}
-	return autocompleteGateways(c.V2Client, environmentId)
-}
-
 func (c *command) autocompleteGatewayRegions(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
@@ -180,31 +169,6 @@ func (c *command) autocompleteGatewayRegions(cmd *cobra.Command, args []string) 
 	suggestions := make([]string, len(regions))
 	for i, region := range regions {
 		suggestions[i] = region.RegionId
-	}
-	return suggestions
-}
-
-func (c *command) autocompleteGatewayDisplayNames(cmd *cobra.Command, args []string) []string {
-	if err := c.PersistentPreRunE(cmd, args); err != nil {
-		return nil
-	}
-	environmentId, err := c.Context.EnvironmentId()
-	if err != nil {
-		return nil
-	}
-	gateways, err := c.V2Client.ListGateways(environmentId, nil, nil, nil, nil, nil)
-	if err != nil {
-		return nil
-	}
-	names := make(map[string]bool)
-	for _, gateway := range gateways {
-		if name := gateway.Spec.GetDisplayName(); name != "" {
-			names[name] = true
-		}
-	}
-	suggestions := make([]string, 0, len(names))
-	for name := range names {
-		suggestions = append(suggestions, name)
 	}
 	return suggestions
 }
