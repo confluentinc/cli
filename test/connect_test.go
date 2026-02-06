@@ -51,7 +51,7 @@ func (s *CLITestSuite) TestConnectArtifact() {
 	tests := []CLITest{
 		{args: `connect artifact create my-connect-artifact-jar --artifact-file "test/fixtures/input/connect/artifact-example.jar" --cloud aws --environment env-123456 --description new-jar-artifact`, fixture: "connect/artifact/create-jar.golden"},
 		{args: `connect artifact create my-connect-artifact-zip --artifact-file "test/fixtures/input/connect/artifact-example.zip" --cloud aws --environment env-123456 --description new-zip-artifact`, fixture: "connect/artifact/create-zip.golden"},
-		{args: `connect artifact create my-connect-artifact --artifact-file "test/fixtures/input/connect/artifact-example.zip" --cloud gcp --environment env-123456 --description new-invalid-artifact`, fixture: "connect/artifact/create-invalid-cloud-type.golden", exitCode: 1},
+		{args: `connect artifact create my-connect-artifact --artifact-file "test/fixtures/input/connect/artifact-example.zip" --cloud invalid --environment env-123456 --description new-invalid-artifact`, fixture: "connect/artifact/create-invalid-cloud-type.golden", exitCode: 1},
 		{args: `connect artifact create my-connect-artifact --artifact-file "test/fixtures/input/connect/artifact-example.jpg" --cloud aws --environment env-123456 --description new-invalid-artifact`, fixture: "connect/artifact/create-invalid-file-type.golden", exitCode: 1},
 		{args: "connect artifact list --cloud aws --environment env-123456", fixture: "connect/artifact/list.golden"},
 		{args: "connect artifact list --cloud aws --environment env-123456 -o json", fixture: "connect/artifact/list-json.golden"},
@@ -76,6 +76,19 @@ func (s *CLITestSuite) TestConnectArtifact() {
 		{args: "connect artifact describe cfa-azure-jar123 --cloud azure --environment env-123456 -o yaml", fixture: "connect/artifact/describe-azure-yaml.golden"},
 		{args: "connect artifact delete cfa-azure-zip123 --cloud azure --environment env-123456 --force", fixture: "connect/artifact/delete-azure-force.golden"},
 		{args: "connect artifact delete cfa-azure-zip123 --cloud azure --environment env-123456", input: "y\n", fixture: "connect/artifact/delete-azure-prompt.golden"},
+
+		// GCP tests
+		{args: `connect artifact create my-connect-artifact-gcp-jar --artifact-file "test/fixtures/input/connect/artifact-example.jar" --cloud gcp --environment env-123456 --description new-jar-artifact`, fixture: "connect/artifact/create-gcp-jar.golden"},
+		{args: `connect artifact create my-connect-artifact-gcp-zip --artifact-file "test/fixtures/input/connect/artifact-example.zip" --cloud gcp --environment env-123456 --description new-zip-artifact`, fixture: "connect/artifact/create-gcp-zip.golden"},
+		{args: "connect artifact list --cloud gcp --environment env-123456", fixture: "connect/artifact/list-gcp.golden"},
+		{args: "connect artifact list --cloud gcp --environment env-123456 -o json", fixture: "connect/artifact/list-gcp-json.golden"},
+		{args: "connect artifact list --cloud gcp --environment env-123456 -o yaml", fixture: "connect/artifact/list-gcp-yaml.golden"},
+		{args: "connect artifact describe cfa-gcp-zip123 --cloud gcp --environment env-123456", fixture: "connect/artifact/describe-gcp-zip.golden"},
+		{args: "connect artifact describe cfa-gcp-jar123 --cloud gcp --environment env-123456", fixture: "connect/artifact/describe-gcp-jar.golden"},
+		{args: "connect artifact describe cfa-gcp-jar123 --cloud gcp --environment env-123456 -o json", fixture: "connect/artifact/describe-gcp-json.golden"},
+		{args: "connect artifact describe cfa-gcp-jar123 --cloud gcp --environment env-123456 -o yaml", fixture: "connect/artifact/describe-gcp-yaml.golden"},
+		{args: "connect artifact delete cfa-gcp-zip123 --cloud gcp --environment env-123456 --force", fixture: "connect/artifact/delete-gcp-force.golden"},
+		{args: "connect artifact delete cfa-gcp-zip123 --cloud gcp --environment env-123456", input: "y\n", fixture: "connect/artifact/delete-gcp-prompt.golden"},
 	}
 
 	for _, test := range tests {

@@ -1,0 +1,9 @@
+{
+  "id": "cfa-gcp-jar123",
+  "name": "my-connect-artifact-gcp-jar",
+  "description": "new-jar-artifact",
+  "cloud": "GCP",
+  "environment": "env-123456",
+  "content_format": "JAR",
+  "status": "READY"
+}
