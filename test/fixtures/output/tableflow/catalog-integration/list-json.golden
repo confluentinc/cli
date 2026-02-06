@@ -20,5 +20,17 @@
     "allowed_scope": "allowed-scope",
     "suspended": false,
     "phase": "PENDING"
+  },
+  {
+    "id": "tci-ghi789",
+    "name": "my-unity-ci",
+    "environment": "env-596",
+    "kafka_cluster": "lkc-123456",
+    "type": "unity",
+    "workspace_endpoint": "https://dbc-0e76d5eb-ff10.cloud.databricks.com",
+    "catalog_name": "catalog-name",
+    "client_id": "client-id",
+    "suspended": false,
+    "phase": "CONNECTED"
   }
 ]

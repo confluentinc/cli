@@ -145,8 +145,8 @@ after_pipeline:
       - name: Report SonarQube Results
         commands:
           - checkout
-          - sem-version java 11
-          - emit-sonarqube-data -a coverage.txt
+          - sem-version java 17
+          - emit-sonarqube-data -a coverage.txt --enable_sonarqube_enterprise
 
 promotions:
   - name: "Run macOS builds (manual)"

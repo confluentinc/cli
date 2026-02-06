@@ -67,7 +67,7 @@ func AddByokKeyFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 }
 
 func AutocompleteByokKeyIds(client *ccloudv2.Client) []string {
-	keys, err := client.ListByokKeys("", "")
+	keys, err := client.ListByokKeys("", "", "", "", "", "")
 	if err != nil {
 		return nil
 	}
@@ -82,6 +82,11 @@ func AutocompleteByokKeyIds(client *ccloudv2.Client) []string {
 func AddByokStateFlag(cmd *cobra.Command) {
 	cmd.Flags().String("state", "", fmt.Sprintf("Specify the state as %s.", utils.ArrayToCommaDelimitedString([]string{"in-use", "available"}, "or")))
 	RegisterFlagCompletionFunc(cmd, "state", func(_ *cobra.Command, _ []string) []string { return []string{"in-use", "available"} })
+}
+
+func AddByokValidationPhaseFlag(cmd *cobra.Command) {
+	cmd.Flags().String("validation-phase", "", fmt.Sprintf("Specify the validation phase as %s.", utils.ArrayToCommaDelimitedString([]string{"valid", "invalid", "initializing"}, "or")))
+	RegisterFlagCompletionFunc(cmd, "validation-phase", func(_ *cobra.Command, _ []string) []string { return []string{"valid", "invalid", "initializing"} })
 }
 
 func AddCloudFlag(cmd *cobra.Command) {
@@ -567,9 +572,12 @@ func AutocompleteLinks(cmd *cobra.Command, c *AuthenticatedCLICommand) []string 
 		return nil
 	}
 
-	suggestions := make([]string, len(links))
-	for i, link := range links {
-		suggestions[i] = link.GetLinkName()
+	var suggestions []string
+	for _, link := range links {
+		// Unmanaged links don't actually exist in the cluster, so filter them out here.
+		if link.GetLinkState() != "UNMANAGED_SOURCE" {
+			suggestions = append(suggestions, link.GetLinkName())
+		}
 	}
 	return suggestions
 }
@@ -588,6 +596,24 @@ func AutocompleteConsumerGroups(cmd *cobra.Command, c *AuthenticatedCLICommand) 
 	suggestions := make([]string, len(consumerGroups))
 	for i, consumerGroup := range consumerGroups {
 		suggestions[i] = consumerGroup.GetConsumerGroupId()
+	}
+	return suggestions
+}
+
+func AutocompleteShareGroups(cmd *cobra.Command, c *AuthenticatedCLICommand) []string {
+	kafkaREST, err := c.GetKafkaREST(cmd)
+	if err != nil {
+		return nil
+	}
+
+	shareGroups, err := kafkaREST.CloudClient.ListKafkaShareGroups()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(shareGroups))
+	for i, shareGroup := range shareGroups {
+		suggestions[i] = shareGroup.GetShareGroupId()
 	}
 	return suggestions
 }

@@ -1,0 +1,17 @@
++----------------------+-------------------------------+
+| Current              | true                          |
+| ID                   | lkc-describe-with-ecku-limits |
+| Name                 | kafka-cluster                 |
+| Type                 | BASIC                         |
+| Ingress Limit (MB/s) | 25                            |
+| Egress Limit (MB/s)  | 75                            |
+| Storage              | 5000 GB                       |
+| Cloud                | aws                           |
+| Region               | us-west-2                     |
+| Availability         | single-zone                   |
+| Status               | UP                            |
+| Endpoint             | SASL_SSL://kafka-endpoint     |
+| REST Endpoint        | http://127.0.0.1:1025         |
+| Max eCKU             | 5                             |
+| Topic Count          | 2                             |
++----------------------+-------------------------------+

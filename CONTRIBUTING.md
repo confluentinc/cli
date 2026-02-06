@@ -271,6 +271,13 @@ See the [Autocompletion](pkg/cmd/AUTOCOMPLETION.md) resource for implementation 
 For most resource types, a `delete` command should support multiple arguments. The exceptions are resources which do not have an ID (e.g. ACLs, role bindings) or unique resources (e.g. the Schema Registry cluster).
 See [Supporting Multiple Deletion](pkg/deletion/README.md) for instructions on how to write such commands.
 
+### Building the documentation
+You can build the CLI documentation locally by running this command from the root directory. This will generate documentation in [RST](https://www.sphinx-doc.org/en/master/index.html) format in the `cli/docs` directory. 
+
+```
+go run cmd/docs/main.go
+```
+
 ### Opening a PR
 
 That's it! As you can see, the process of adding a new CLI command is pretty straightforward. You can open a PR if:
@@ -295,7 +302,7 @@ This is not an exhaustive list. Always consider the potential user impact of any
 Note: For the `confluent local services` command, which interacts with Confluent Platform, we should avoid breaking changes for all supported versions of Confluent Platform.
 
 The following may seem like breaking changes, but *aren't*:
-* Renaming a non-serialized, human readable field name
+* Renaming a non-serialized, human-readable field name
 * Hiding a deprecated flag (as long as users can still use the flag!)
 
 These criteria apply to commands, flags, or any functionality in the LA (Limited Availability) or GA (General Availability) lifecycle stages, which should have a stable interface.
