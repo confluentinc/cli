@@ -58,6 +58,7 @@ const (
 	KafkaCluster                     = "Kafka cluster"
 	Kek                              = "KEK"
 	KsqlCluster                      = "KSQL cluster"
+	MaterializedTable                = "Materialized Table"
 	MirrorTopic                      = "mirror topic"
 	Network                          = "network"
 	NetworkLinkEndpoint              = "network link endpoint"
