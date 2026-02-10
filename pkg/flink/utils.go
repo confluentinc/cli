@@ -12,7 +12,7 @@ var (
 		"googleai":       {"api-key"},
 		"vertexai":       {"service-key"},
 		"mongodb":        {"username", "password"},
-		"elastic":        {"api-key"},
+		"elastic":        {"api-key", "username", "password"},
 		"pinecone":       {"api-key"},
 		"couchbase":      {"username", "password"},
 		"confluent_jdbc": {"username", "password"},
@@ -27,8 +27,8 @@ var (
 		"aws-secret-key":    {"bedrock", "sagemaker"},
 		"aws-session-token": {"bedrock", "sagemaker"},
 		"service-key":       {"vertexai"},
-		"username":          {"mongodb", "couchbase", "confluent_jdbc", "a2a", "rest", "mcp_server"},
-		"password":          {"mongodb", "couchbase", "confluent_jdbc", "a2a", "rest", "mcp_server"},
+		"username":          {"mongodb", "elastic", "couchbase", "confluent_jdbc", "a2a", "rest", "mcp_server"},
+		"password":          {"mongodb", "elastic", "couchbase", "confluent_jdbc", "a2a", "rest", "mcp_server"},
 		"token":             {"a2a", "rest", "mcp_server"},
 		"token-endpoint":    {"a2a", "rest", "mcp_server"},
 		"client-id":         {"a2a", "rest", "mcp_server"},
@@ -47,7 +47,7 @@ var (
 		"googleai":       {"api-key"},
 		"vertexai":       {"service-key"},
 		"mongodb":        {"username", "password"},
-		"elastic":        {"api-key"},
+		"elastic":        {},
 		"pinecone":       {"api-key"},
 		"couchbase":      {"username", "password"},
 		"confluent_jdbc": {"username", "password"},
@@ -59,6 +59,7 @@ var (
 
 	ConnectionOneOfRequiredSecretsMapping = map[string][][]string{
 		"a2a":        {{"api-key"}, {"username", "password"}, {"token"}, {"token-endpoint", "client-id", "client-secret", "scope"}},
+		"elastic":    {{"api-key"}, {"username", "password"}},
 		"rest":       {{"username", "password"}, {"token"}, {"token-endpoint", "client-id", "client-secret", "scope"}},
 		"mcp_server": {{"api-key"}, {"username", "password"}, {"token"}, {"token-endpoint", "client-id", "client-secret", "scope"}},
 	}
