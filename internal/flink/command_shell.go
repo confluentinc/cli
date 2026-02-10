@@ -1,6 +1,7 @@
 package flink
 
 import (
+	"crypto/tls"
 	"net/url"
 	"strings"
 
@@ -18,6 +19,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/jwt"
 	"github.com/confluentinc/cli/v4/pkg/log"
 	ppanic "github.com/confluentinc/cli/v4/pkg/panic-recovery"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 func (c *command) newShellCommand(prerunner pcmd.PreRunner, cfg *config.Config) *cobra.Command {
@@ -231,7 +233,23 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		LSPBaseUrl:       lspBaseUrl,
 	}
 
-	return client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), opts, reportUsage(cmd, c.Config, unsafeTrace))
+	insecureSkipVerify, err := c.Flags().GetBool("insecure-skip-verify")
+	if err != nil {
+		return err
+	}
+	caCertPath, err := c.Flags().GetString("certificate-authority-path")
+	if err != nil {
+		return err
+	}
+	caCertPool, err := utils.GetEnrichedCACertPool(caCertPath)
+	if err != nil {
+		return err
+	}
+
+	log.CliLogger.Debugf("Insecure skip verify: %t\n", insecureSkipVerify)
+	tlsClientConfig := &tls.Config{InsecureSkipVerify: insecureSkipVerify, RootCAs: caCertPool}
+
+	return client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), opts, reportUsage(cmd, c.Config, unsafeTrace), tlsClientConfig)
 }
 
 func (c *command) startFlinkSqlClientOnPrem(prerunner pcmd.PreRunner, cmd *cobra.Command) error {
@@ -302,10 +320,26 @@ func (c *command) startWithLocalMode(configKeys, configValues []string) error {
 		return err
 	}
 
-	gatewayClient := ccloudv2.NewFlinkGatewayClient(appOptions.GetGatewayUrl(), c.Version.UserAgent, appOptions.GetUnsafeTrace(), "authToken")
+	insecureSkipVerify, err := c.Flags().GetBool("insecure-skip-verify")
+	if err != nil {
+		return err
+	}
+	caCertPath, err := c.Flags().GetString("certificate-authority-path")
+	if err != nil {
+		return err
+	}
+	caCertPool, err := utils.GetEnrichedCACertPool(caCertPath)
+	if err != nil {
+		return err
+	}
+
+	log.CliLogger.Debugf("Insecure skip verify: %t\n", insecureSkipVerify)
+	tlsClientConfig := &tls.Config{InsecureSkipVerify: insecureSkipVerify, RootCAs: caCertPool}
+
+	gatewayClient := ccloudv2.NewFlinkGatewayClient(appOptions.GetGatewayUrl(), c.Version.UserAgent, appOptions.GetUnsafeTrace(), "authToken", tlsClientConfig)
 
 	appOptions.Context = c.Context
-	return client.StartApp(gatewayClient, func() error { return nil }, *appOptions, func() {})
+	return client.StartApp(gatewayClient, func() error { return nil }, *appOptions, func() {}, tlsClientConfig)
 }
 
 func (c *command) getFlinkLanguageServiceUrl(gatewayClient *ccloudv2.FlinkGatewayClient) (string, error) {
