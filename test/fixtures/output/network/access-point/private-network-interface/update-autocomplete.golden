@@ -1,5 +1,6 @@
 --name	Name of the private network interface.
 --network-interfaces	A comma-separated list of the IDs of the Elastic Network Interfaces.
+--routes	A comma-separated list of egress CIDR routes (max 10), e.g., "172.31.0.0/16,10.108.16.0/21".
 ap-54321	my-aws-private-network-interface-access-point
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp

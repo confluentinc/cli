@@ -26,11 +26,12 @@ func (c *accessPointCommand) newPrivateNetworkInterfaceUpdateCommand() *cobra.Co
 
 	cmd.Flags().String("name", "", "Name of the private network interface.")
 	cmd.Flags().StringSlice("network-interfaces", nil, "A comma-separated list of the IDs of the Elastic Network Interfaces.")
+	cmd.Flags().StringSlice("routes", nil, `A comma-separated list of egress CIDR routes (max 10), e.g., "172.31.0.0/16,10.108.16.0/21".`)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cmd.MarkFlagsOneRequired("name", "network-interfaces")
+	cmd.MarkFlagsOneRequired("name", "network-interfaces", "routes")
 
 	return cmd
 }
@@ -57,12 +58,24 @@ func (c *accessPointCommand) privateNetworkInterfaceUpdate(cmd *cobra.Command, a
 	if err != nil {
 		return err
 	}
-	if len(networkInterfaces) > 0 {
+
+	routes, err := cmd.Flags().GetStringSlice("routes")
+	if err != nil {
+		return err
+	}
+
+	if len(networkInterfaces) > 0 || len(routes) > 0 {
+		awsConfig := &networkingaccesspointv1.NetworkingV1AwsPrivateNetworkInterface{
+			Kind: "AwsPrivateNetworkInterface",
+		}
+		if len(networkInterfaces) > 0 {
+			awsConfig.NetworkInterfaces = &networkInterfaces
+		}
+		if len(routes) > 0 {
+			awsConfig.EgressRoutes = &routes
+		}
 		updatePrivateNetworkInterface.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecUpdateConfigOneOf{
-			NetworkingV1AwsPrivateNetworkInterface: &networkingaccesspointv1.NetworkingV1AwsPrivateNetworkInterface{
-				Kind:              "AwsPrivateNetworkInterface",
-				NetworkInterfaces: &networkInterfaces,
-			},
+			NetworkingV1AwsPrivateNetworkInterface: awsConfig,
 		}
 	}
 
