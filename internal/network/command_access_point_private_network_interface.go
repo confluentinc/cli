@@ -20,6 +20,7 @@ type privateNetworkInterfaceAccessPointOut struct {
 	Phase             string   `human:"Phase" serialized:"phase"`
 	NetworkInterfaces []string `human:"Network Interfaces,omitempty" serialized:"network_interfaces,omitempty"`
 	Account           string   `human:"Aws Account,omitempty" serialized:"aws_account,omitempty"`
+	EgressRoutes      []string `human:"Egress Routes,omitempty" serialized:"egress_routes,omitempty"`
 }
 
 func (c *accessPointCommand) newPrivateNetworkInterfaceCommand() *cobra.Command {
@@ -90,6 +91,7 @@ func printPrivateNetworkInterfaceTable(cmd *cobra.Command, privateNetworkInterfa
 	if privateNetworkInterface.Spec.Config != nil && privateNetworkInterface.Spec.Config.NetworkingV1AwsPrivateNetworkInterface != nil {
 		out.NetworkInterfaces = privateNetworkInterface.Spec.Config.NetworkingV1AwsPrivateNetworkInterface.GetNetworkInterfaces()
 		out.Account = privateNetworkInterface.Spec.Config.NetworkingV1AwsPrivateNetworkInterface.GetAccount()
+		out.EgressRoutes = privateNetworkInterface.Spec.Config.NetworkingV1AwsPrivateNetworkInterface.GetEgressRoutes()
 	}
 
 	table := output.NewTable(cmd)

@@ -2863,6 +2863,7 @@ func getAwsPrivateNetworkInterfaceAccessPoint(id, environment, name string) netw
 					Kind:              "AwsPrivateNetworkInterface",
 					NetworkInterfaces: &[]string{"eni-00000000000000000", "eni-00000000000000001"},
 					Account:           networkingaccesspointv1.PtrString("000000000000"),
+					EgressRoutes:      &[]string{"172.31.0.0/16", "192.168.1.0/24"},
 				},
 			},
 			Environment: &networkingaccesspointv1.ObjectReference{Id: environment},
@@ -2972,6 +2973,9 @@ func handleNetworkingAccessPointUpdate(t *testing.T, id string) http.HandlerFunc
 			accessPoint = getAwsPrivateNetworkInterfaceAccessPoint(id, body.Spec.Environment.GetId(), "my-aws-private-network-interface-access-point")
 			if networkInterfaces := body.Spec.GetConfig().NetworkingV1AwsPrivateNetworkInterface.GetNetworkInterfaces(); len(networkInterfaces) > 0 {
 				accessPoint.Spec.Config.NetworkingV1AwsPrivateNetworkInterface.SetNetworkInterfaces(body.Spec.GetConfig().NetworkingV1AwsPrivateNetworkInterface.GetNetworkInterfaces())
+			}
+			if routes := body.Spec.GetConfig().NetworkingV1AwsPrivateNetworkInterface.GetEgressRoutes(); len(routes) > 0 {
+				accessPoint.Spec.Config.NetworkingV1AwsPrivateNetworkInterface.SetEgressRoutes(body.Spec.GetConfig().NetworkingV1AwsPrivateNetworkInterface.GetEgressRoutes())
 			}
 		case "ap-67890":
 			accessPoint = getAzureEgressAccessPoint(id, body.Spec.Environment.GetId(), "my-azure-egress-access-point")
