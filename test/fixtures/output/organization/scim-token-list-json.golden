@@ -1,0 +1,27 @@
+[
+  {
+    "id": "scim_token-12345",
+    "created_at": "2025-01-01T01:00:00Z",
+    "expires_at": "2026-01-01T01:00:00Z"
+  },
+  {
+    "id": "scim_token-3",
+    "created_at": "2026-02-12T10:57:58Z",
+    "expires_at": "2026-08-12T10:57:58Z"
+  },
+  {
+    "id": "scim_token-4",
+    "created_at": "2026-02-12T10:57:59Z",
+    "expires_at": "2026-08-12T10:57:59Z"
+  },
+  {
+    "id": "scim_token-5",
+    "created_at": "2026-02-12T10:58:00Z",
+    "expires_at": "2026-08-12T10:58:00Z"
+  },
+  {
+    "id": "scim_token-67890",
+    "created_at": "2025-02-01T01:00:00Z",
+    "expires_at": "2026-02-01T01:00:00Z"
+  }
+]

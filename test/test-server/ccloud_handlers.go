@@ -74,6 +74,9 @@ func handleMe(t *testing.T, isAuditLogEnabled bool) http.HandlerFunc {
 			Id:         42,
 			ResourceId: organizationId,
 			Name:       "Confluent",
+			Sso: &ccloudv1.Sso{
+				Auth0ConnectionName: "op-12345",
+			},
 		}
 		if isAuditLogEnabled {
 			org.AuditLog = &ccloudv1.AuditLog{

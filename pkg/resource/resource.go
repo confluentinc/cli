@@ -75,6 +75,7 @@ const (
 	SchemaExporter                   = "schema exporter"
 	SchemaRegistryCluster            = "Schema Registry cluster"
 	SchemaRegistryConfiguration      = "Schema Registry configuration"
+	ScimToken                        = "SCIM token"
 	ServiceAccount                   = "service account"
 	SsoGroupMapping                  = "SSO group mapping"
 	Tableflow                        = "tableflow"
