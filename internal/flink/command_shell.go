@@ -37,11 +37,13 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner, cfg *config.Config) 
 		cmd.RunE = func(cmd *cobra.Command, args []string) error {
 			return c.startFlinkSqlClient(prerunner, cmd)
 		}
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 		c.addComputePoolFlag(cmd)
 		pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 		c.addDatabaseFlag(cmd)
-		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 		pcmd.AddContextFlag(cmd, c.CLICommand)
+		pcmd.AddCloudFlag(cmd)
+		pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 
 		if featureflags.Manager.BoolVariation("cli.flink.internal", cfg.Context(), config.CliLaunchDarklyClient, true, false) {
 			cmd.Flags().StringSlice("config-key", []string{}, "App option keys for local mode.")
@@ -57,15 +59,14 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner, cfg *config.Config) 
 		cmd.RunE = func(cmd *cobra.Command, args []string) error {
 			return c.startFlinkSqlClientOnPrem(prerunner, cmd)
 		}
-		cmd.Flags().String("compute-pool", "", "The compute pool name to execute the Flink SQL statement.")
 		cmd.Flags().String("environment", "", "Name of the Flink environment.")
+		cmd.Flags().String("compute-pool", "", "The compute pool name to execute the Flink SQL statement.")
 		cmd.Flags().String("catalog", "", "The name of the default catalog.")
 		cmd.Flags().String("database", "", "The name of the default database.")
 		cmd.Flags().String("flink-configuration", "", "The file path to hold the Flink configuration.")
 		addCmfFlagSet(cmd)
 
 		cobra.CheckErr(cmd.MarkFlagRequired("environment"))
-		cobra.CheckErr(cmd.MarkFlagRequired("compute-pool"))
 	}
 
 	return cmd
@@ -83,9 +84,20 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 			return err
 		}
 
-		flinkGatewayClient, err := c.GetFlinkGatewayClient(true)
-		if err != nil {
-			return err
+		var flinkGatewayClient *ccloudv2.FlinkGatewayClient
+		var errClient error
+		computePool := c.Context.GetCurrentFlinkComputePool()
+
+		if computePool == "" {
+			flinkGatewayClient, errClient = c.GetFlinkGatewayClient(false)
+			if errClient != nil {
+				return errClient
+			}
+		} else {
+			flinkGatewayClient, errClient = c.GetFlinkGatewayClient(true)
+			if errClient != nil {
+				return errClient
+			}
 		}
 
 		jwtCtx := &config.Context{State: &config.ContextState{AuthToken: flinkGatewayClient.AuthToken}}
@@ -168,12 +180,20 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		catalog = environment.GetDisplayName()
 	}
 
+	cloud, err := cmd.Flags().GetString("cloud")
+	if err != nil {
+		return err
+	}
+	region, err := cmd.Flags().GetString("region")
+	if err != nil {
+		return err
+	}
+
 	computePool := c.Context.GetCurrentFlinkComputePool()
 	if computePool == "" {
-		return errors.NewErrorWithSuggestions(
-			"no compute pool selected",
-			"Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.",
-		)
+		if cloud == "" || region == "" {
+			return errors.New("Flink cloud and region flags are required when compute pool is not specified.")
+		}
 	}
 
 	serviceAccount, err := cmd.Flags().GetString("service-account")
@@ -201,9 +221,17 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 
-	flinkGatewayClient, err := c.GetFlinkGatewayClient(true)
-	if err != nil {
-		return err
+	var flinkGatewayClient *ccloudv2.FlinkGatewayClient
+	if computePool == "" {
+		flinkGatewayClient, err = c.GetFlinkGatewayClient(false)
+		if err != nil {
+			return err
+		}
+	} else {
+		flinkGatewayClient, err = c.GetFlinkGatewayClient(true)
+		if err != nil {
+			return err
+		}
 	}
 
 	lspBaseUrl, err := c.getFlinkLanguageServiceUrl(flinkGatewayClient)
