@@ -4,14 +4,15 @@ Usage:
   confluent flink [command]
 
 Available Commands:
-  artifact           Manage Flink UDF artifacts.
-  compute-pool       Manage Flink compute pools.
-  connection         Manage Flink connections.
-  connectivity-type  Manage Flink connectivity type.
-  endpoint           Manage Flink endpoint.
-  region             Manage Flink regions.
-  shell              Start Flink interactive SQL client.
-  statement          Manage Flink SQL statements.
+  artifact            Manage Flink UDF artifacts.
+  compute-pool        Manage Flink compute pools.
+  compute-pool-config Manage Flink compute pools configs.
+  connection          Manage Flink connections.
+  connectivity-type   Manage Flink connectivity type.
+  endpoint            Manage Flink endpoint.
+  region              Manage Flink regions.
+  shell               Start Flink interactive SQL client.
+  statement           Manage Flink SQL statements.
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -38,6 +38,11 @@ func (c *Client) DescribeFlinkComputePool(id, environment string) (flinkv2.FcpmV
 	return res, errors.CatchComputePoolNotFoundError(err, id, httpResp)
 }
 
+func (c *Client) DescribeFlinkComputePoolConfig() (flinkv2.FcpmV2OrgComputePoolConfig, error) {
+	res, httpResp, err := c.FlinkClient.OrgComputePoolConfigsFcpmV2Api.GetFcpmV2OrgComputePoolConfig(c.flinkApiContext()).Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
+}
+
 func (c *Client) ListFlinkComputePools(environment, specRegion string) ([]flinkv2.FcpmV2ComputePool, error) {
 	var list []flinkv2.FcpmV2ComputePool
 
@@ -107,5 +112,10 @@ func (c *Client) executeListFlinkRegions(cloud, region, pageToken string) (flink
 
 func (c *Client) UpdateFlinkComputePool(id string, update flinkv2.FcpmV2ComputePoolUpdate) (flinkv2.FcpmV2ComputePool, error) {
 	res, httpResp, err := c.FlinkClient.ComputePoolsFcpmV2Api.UpdateFcpmV2ComputePool(c.flinkApiContext(), id).FcpmV2ComputePoolUpdate(update).Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) UpdateFlinkComputePoolConfig(fcpmV2OrgComputePoolConfigUpdate flinkv2.FcpmV2OrgComputePoolConfigUpdate) (flinkv2.FcpmV2OrgComputePoolConfig, error) {
+	res, httpResp, err := c.FlinkClient.OrgComputePoolConfigsFcpmV2Api.UpdateFcpmV2OrgComputePoolConfig(c.flinkApiContext()).FcpmV2OrgComputePoolConfigUpdate(fcpmV2OrgComputePoolConfigUpdate).Execute()
 	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
