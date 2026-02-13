@@ -1,0 +1,19 @@
+Error: required flag(s) "service" not set
+Usage:
+  confluent endpoint list [flags]
+
+Flags:
+      --service string       REQUIRED: REQUIRED: Filter by service type (KAFKA, KSQL, SCHEMA_REGISTRY, etc.).
+      --environment string   Environment ID.
+      --cloud string         Filter by cloud provider (AWS, GCP, AZURE).
+      --region string        Filter by region.
+      --is-private           Filter by privacy (true for private, false for public).
+      --resource string      Filter by resource ID.
+      --context string       CLI context name.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

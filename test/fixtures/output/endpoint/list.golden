@@ -1,0 +1,4 @@
+    ID    | Cloud |  Region   | Service | Is Private | Connection Type |                           Endpoint URL                           | Endpoint Type | Environment |  Resource  | Gateway  | Access Point  
+----------+-------+-----------+---------+------------+-----------------+------------------------------------------------------------------+---------------+-------------+------------+----------+---------------
+  e-67890 | AWS   | us-east-1 | KAFKA   | false      | PUBLIC          | https://pkc-xyz789.us-east-1.aws.confluent.cloud:443             | REST          | env-00000   | lkc-xyz789 |          |               
+  e-12345 | AWS   | us-west-2 | KAFKA   | true       | PRIVATE_LINK    | https://lkc-abc123-ap12345.us-west-2.aws.glb.confluent.cloud:443 | REST          | env-00000   | lkc-abc123 | gw-12345 | ap-12345      
