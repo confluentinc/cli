@@ -164,6 +164,7 @@ require (
 	github.com/charmbracelet/x/term v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.1.0 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
+	github.com/confluentinc/ccloud-sdk-go-v2-internal/kafkarest v0.23.1-0.20260206203324-971ae1cf8ca8 // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.5 // indirect
 	github.com/distribution/reference v0.6.0 // indirect

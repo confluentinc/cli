@@ -9,9 +9,10 @@ import (
 )
 
 type KafkaREST struct {
-	Context     context.Context
-	CloudClient *ccloudv2.KafkaRestClient
-	Client      *kafkarestv3.APIClient
+	Context             context.Context
+	CloudClient         *ccloudv2.KafkaRestClient
+	CloudClientInternal *ccloudv2.KafkaRestClientInternal
+	Client              *kafkarestv3.APIClient
 }
 
 func (k *KafkaREST) GetClusterId() string {
