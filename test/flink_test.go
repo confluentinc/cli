@@ -623,3 +623,20 @@ func (s *CLITestSuite) TestFlinkStatmentExceptionList() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestFlinkStatementResultList() {
+	tests := []CLITest{
+		{args: "flink statement result list my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/result/list.golden"},
+		{args: "flink statement result list my-statement --cloud aws --region eu-west-1 -o json", fixture: "flink/statement/result/list-json.golden"},
+		{args: "flink statement result list my-statement --cloud aws --region eu-west-1 -o yaml", fixture: "flink/statement/result/list-yaml.golden"},
+		{args: "flink statement result list failed-statement --cloud aws --region eu-west-1", fixture: "flink/statement/result/list-failed.golden", exitCode: 1},
+		{args: "flink statement result list pending-statement --cloud aws --region eu-west-1", fixture: "flink/statement/result/list-pending.golden", exitCode: 1},
+		{args: "flink statement result list no-results-statement --cloud aws --region eu-west-1", fixture: "flink/statement/result/list-no-results.golden"},
+		{args: "flink statement result list unbounded-statement --cloud aws --region eu-west-1", fixture: "flink/statement/result/list-unbounded.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}

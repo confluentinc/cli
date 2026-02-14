@@ -1,0 +1,2 @@
+No Flink endpoint is specified, defaulting to public endpoint: `http://127.0.0.1:1026`
+Error: statement "pending-statement" is still pending, use --wait to wait for it to complete
