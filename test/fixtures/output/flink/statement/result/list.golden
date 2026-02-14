@@ -1,0 +1,5 @@
+No Flink endpoint is specified, defaulting to public endpoint: `http://127.0.0.1:1026`
+  database_name  
+-----------------
+  my-cluster     
+  other-cluster  

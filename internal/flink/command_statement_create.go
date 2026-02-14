@@ -155,6 +155,17 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+
+		// If the statement produces results, fetch and display them
+		traits := statement.Status.GetTraits()
+		schema := traits.GetSchema()
+		if columns := schema.GetColumns(); len(columns) > 0 {
+			statementResults, err := fetchAllResults(client, environmentId, name, c.Context.LastOrgId, schema, 0)
+			if err != nil {
+				return err
+			}
+			return printStatementResults(cmd, statementResults)
+		}
 	}
 
 	table := output.NewTable(cmd)

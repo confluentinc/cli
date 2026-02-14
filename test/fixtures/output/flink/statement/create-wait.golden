@@ -1,8 +1,4 @@
-+---------------+-------------------------------+
-| Creation Date | 2022-01-01 00:00:00 +0000 UTC |
-| Name          | my-statement                  |
-| Statement     | CREATE TABLE test;            |
-| Compute Pool  | lfcp-123456                   |
-| Status        | COMPLETED                     |
-| Status Detail | SQL statement is completed    |
-+---------------+-------------------------------+
+  database_name  
+-----------------
+  my-cluster     
+  other-cluster  

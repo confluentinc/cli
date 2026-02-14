@@ -1,0 +1,18 @@
+List results for a Flink SQL statement.
+
+Usage:
+  confluent flink statement result list <statement-name> [flags]
+
+Flags:
+      --cloud string         Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string        Cloud region for Flink (use "confluent flink region list" to see all).
+      --environment string   Environment ID.
+      --context string       CLI context name.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+      --wait                 Block until the statement is no longer pending before fetching results.
+      --max-rows int         Maximum number of result rows to fetch. (default 100)
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

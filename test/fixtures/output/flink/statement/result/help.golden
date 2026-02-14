@@ -1,0 +1,18 @@
+Manage Flink SQL statement results.
+
+Usage:
+  confluent flink statement result [command]
+
+Available Commands:
+  list        List results for a Flink SQL statement.
+
+Flags:
+      --cloud string    Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string   Cloud region for Flink (use "confluent flink region list" to see all).
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent flink statement result [command] --help" for more information about a command.

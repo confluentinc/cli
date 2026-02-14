@@ -60,6 +60,7 @@ func (c *command) newStatementCommand(cfg *config.Config) *cobra.Command {
 		cmd.AddCommand(c.newStatementWebUiForwardCommand())
 	}
 	cmd.AddCommand(c.newStatementExceptionCommand(cfg))
+	cmd.AddCommand(c.newStatementResultCommand(cfg))
 
 	return cmd
 }
