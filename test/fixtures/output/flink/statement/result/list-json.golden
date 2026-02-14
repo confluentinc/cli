@@ -1,0 +1,12 @@
+No Flink endpoint is specified, defaulting to public endpoint: `http://127.0.0.1:1026`
+{
+  "columns": ["database_name"],
+  "rows": [
+    {
+      "database_name": "my-cluster"
+    },
+    {
+      "database_name": "other-cluster"
+    }
+  ]
+}
