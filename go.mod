@@ -14,6 +14,8 @@ require (
 	github.com/charmbracelet/glamour v0.7.0
 	github.com/charmbracelet/lipgloss v0.11.0
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
+	github.com/confluentinc/cc-structs/kafka/flow v0.2725.0
+	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.293
 	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20250521223017-0e8f6f971b52
 	github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
@@ -164,6 +166,25 @@ require (
 	github.com/charmbracelet/x/term v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.1.0 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
+	github.com/confluentinc/cc-structs/common v0.1989.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/auth v0.2336.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/authz v0.1989.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/billing v0.1989.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/clusterlink v0.1989.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/connect v0.1989.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/controlplanekafka v0.2507.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/core v0.1989.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/marketplace v0.1989.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/metrics v0.1989.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/org v0.2725.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/product/core v0.1989.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/scheduler v0.1989.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/streamgovernance v0.1989.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/support v0.1989.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/util v0.1989.0 // indirect
+	github.com/confluentinc/cc-structs/operator v0.2413.0 // indirect
+	github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0 // indirect
+	github.com/confluentinc/cire-obelisk/pkg/apis/network v0.507.0 // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.5 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
@@ -172,6 +193,7 @@ require (
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.0.4 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
+	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
@@ -193,6 +215,7 @@ require (
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.13.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
+	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/hamba/avro/v2 v2.24.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
@@ -238,6 +261,7 @@ require (
 	github.com/santhosh-tekuri/jsonschema/v5 v5.3.0 // indirect
 	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
+	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/skeema/knownhosts v1.3.0 // indirect
 	github.com/spf13/afero v1.10.0 // indirect
 	github.com/stoewer/go-strcase v1.2.0 // indirect
@@ -281,6 +305,7 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gotest.tools/v3 v3.4.0 // indirect
 	k8s.io/api v0.29.2 // indirect
+	k8s.io/apiextensions-apiserver v0.17.12 // indirect
 	k8s.io/klog/v2 v2.120.1 // indirect
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect

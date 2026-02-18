@@ -43,6 +43,9 @@ func NewCloudRouter(t *testing.T, isAuditLogEnabled bool) *CloudRouter {
 	router.HandleFunc("/api/me", handleMe(t, isAuditLogEnabled))
 	router.addRoutesAndReplies(t, "/api/metadata/security/v2alpha1/roles", v2RoutesAndReplies)
 
+	// Register SCIM routes
+	RegisterSCIMRoutes(router.Router, t)
+
 	return router
 }
 
