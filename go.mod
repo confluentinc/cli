@@ -1,6 +1,6 @@
 module github.com/confluentinc/cli/v3
 
-go 1.22.2
+go 1.22.12
 
 require (
 	github.com/antihax/optional v1.0.0
@@ -54,12 +54,12 @@ require (
 	github.com/confluentinc/schema-registry-sdk-go v0.1.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dghubble/sling v1.4.2
-	github.com/docker/docker v27.0.3+incompatible
+	github.com/docker/docker v28.0.0
 	github.com/docker/go-connections v0.5.0
 	github.com/fatih/color v1.17.0
 	github.com/gdamore/tcell/v2 v2.7.4
-	github.com/go-git/go-git/v5 v5.12.0
-	github.com/go-jose/go-jose/v3 v3.0.3
+	github.com/go-git/go-git/v5 v5.16.5
+	github.com/go-jose/go-jose/v3 v3.0.4
 	github.com/gobuffalo/flect v1.0.2
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/mock v1.6.0
@@ -101,9 +101,9 @@ require (
 	github.com/tidwall/sjson v1.2.5
 	github.com/xeipuuv/gojsonschema v1.2.0
 	go.uber.org/mock v0.4.0
-	golang.org/x/crypto v0.25.0
+	golang.org/x/crypto v0.45.0
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
-	golang.org/x/oauth2 v0.21.0
+	golang.org/x/oauth2 v0.27.0
 	golang.org/x/term v0.22.0
 	golang.org/x/text v0.16.0
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
@@ -128,7 +128,7 @@ require (
 	github.com/charmbracelet/x/input v0.1.0 // indirect
 	github.com/charmbracelet/x/term v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.1.0 // indirect
-	github.com/cloudflare/circl v1.3.7 // indirect
+	github.com/cloudflare/circl v1.6.1// indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
