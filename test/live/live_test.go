@@ -15,6 +15,7 @@ import (
 	"sync"
 	"testing"
 	"text/template"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -50,6 +51,11 @@ type CLILiveTest struct {
 	CaptureID string
 	// UseStateVars enables {{.key}} template substitution in Args from state.
 	UseStateVars bool
+	// Retries is the number of times to retry on failure (0 means no retry).
+	// Useful for steps that may hit eventual consistency delays.
+	Retries int
+	// RetryInterval is the time to wait between retries. Defaults to 5s if Retries > 0.
+	RetryInterval time.Duration
 }
 
 // LiveTestState is a thread-safe map for passing dynamic values between test steps.
@@ -175,7 +181,8 @@ func buildCommandEnv(extraEnv []string) []string {
 }
 
 // runLiveCommand executes a CLILiveTest step, performs template substitution, runs the command,
-// validates output, and captures IDs.
+// validates output, and captures IDs. If the step has Retries > 0, the command is retried
+// on failure with the specified interval between attempts.
 func (s *CLILiveTestSuite) runLiveCommand(t *testing.T, step CLILiveTest, state *LiveTestState) string {
 	t.Helper()
 
@@ -185,7 +192,28 @@ func (s *CLILiveTestSuite) runLiveCommand(t *testing.T, step CLILiveTest, state 
 	}
 
 	env := []string{homeEnvVar(state.homeDir)}
-	output := s.runRawCommand(t, args, env, step.Input, step.ExitCode)
+
+	var output string
+	if step.Retries > 0 {
+		interval := step.RetryInterval
+		if interval == 0 {
+			interval = 5 * time.Second
+		}
+		var lastErr error
+		for attempt := 0; attempt <= step.Retries; attempt++ {
+			if attempt > 0 {
+				t.Logf("Retry %d/%d after %s", attempt, step.Retries, interval)
+				time.Sleep(interval)
+			}
+			output, lastErr = s.tryRunRawCommand(args, env, step.Input, step.ExitCode)
+			if lastErr == nil {
+				break
+			}
+		}
+		require.NoError(t, lastErr, "command 'confluent %s' failed after %d retries:\n%s", args, step.Retries, output)
+	} else {
+		output = s.runRawCommand(t, args, env, step.Input, step.ExitCode)
+	}
 
 	if step.CaptureID != "" {
 		id := extractID(t, output)
@@ -218,6 +246,30 @@ func (s *CLILiveTestSuite) runRawCommand(t *testing.T, argString string, env []s
 		"unexpected exit code for 'confluent %s':\n%s", argString, string(out))
 
 	return string(out)
+}
+
+// tryRunRawCommand is like runRawCommand but returns an error instead of failing the test.
+// Used by runLiveCommand to support retries on transient failures.
+func (s *CLILiveTestSuite) tryRunRawCommand(argString string, env []string, input string, expectedExitCode int) (string, error) {
+	args := shellSplit(argString)
+	cmd := exec.Command(s.binPath, args...)
+	cmd.Env = buildCommandEnv(env)
+	if input != "" {
+		cmd.Stdin = strings.NewReader(input)
+	}
+
+	out, err := cmd.CombinedOutput()
+	output := string(out)
+
+	if expectedExitCode == 0 && err != nil {
+		return output, fmt.Errorf("command 'confluent %s' failed:\n%s", argString, output)
+	}
+	if cmd.ProcessState.ExitCode() != expectedExitCode {
+		return output, fmt.Errorf("unexpected exit code %d (expected %d) for 'confluent %s':\n%s",
+			cmd.ProcessState.ExitCode(), expectedExitCode, argString, output)
+	}
+
+	return output, nil
 }
 
 // validateLiveOutput runs all assertion strategies on the command output.

@@ -60,8 +60,9 @@ func (s *CLILiveTestSuite) TestKafkaTopicCRUDLive() {
 			},
 		},
 		{
-			Name: "Update topic config",
-			Args: "kafka topic update " + topicName + " --config retention.ms=86400000",
+			Name:    "Update topic config",
+			Args:    "kafka topic update " + topicName + " --config retention.ms=86400000",
+			Retries: 5,
 		},
 		{
 			Name: "Describe updated topic config",
