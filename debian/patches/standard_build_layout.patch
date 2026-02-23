@@ -1,6 +1,6 @@
---- cli/Makefile	2026-01-12 14:36:34.668189995 -0500
-+++ debian/Makefile	2025-09-19 13:34:24.112882728 -0400
-@@ -1,143 +1,163 @@
+--- cli/Makefile	2026-02-23 10:14:55.636503846 -0500
++++ debian/Makefile	2025-09-22 14:01:33.829653470 -0400
+@@ -1,169 +1,163 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v2.13.3
 +SHELL=/bin/bash
@@ -283,6 +283,32 @@
 -
 -.PHONY: test
 -test: unit-test integration-test
+-
+-.PHONY: build-for-live-test
+-build-for-live-test:
+-	go build -ldflags="-s -w -X main.disableUpdates=true" -o test/live/bin/confluent ./cmd/confluent
+-
+-.PHONY: live-test
+-live-test: build-for-live-test
+-	@if [ -z "$(CLI_LIVE_TEST_GROUPS)" ]; then \
+-		CLI_LIVE_TEST=1 go test ./test/live/ -v -run=".*Live$$" \
+-			-tags="live_test,all" -timeout 1440m -parallel 10; \
+-	else \
+-		TAGS="live_test"; \
+-		for group in $$(echo "$(CLI_LIVE_TEST_GROUPS)" | tr ',' ' '); do \
+-			TAGS="$$TAGS,$$group"; \
+-		done; \
+-		CLI_LIVE_TEST=1 go test ./test/live/ -v -run=".*Live$$" \
+-			-tags="$$TAGS" -timeout 1440m -parallel 10; \
+-	fi
+-
+-.PHONY: live-test-core
+-live-test-core:
+-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="core"
+-
+-.PHONY: live-test-essential
+-live-test-essential:
+-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="core,kafka"
 -
 -.PHONY: generate-packaging-patch
 -generate-packaging-patch:
