@@ -1,6 +1,6 @@
---- cli/Makefile	2026-02-23 10:14:55.636503846 -0500
+--- cli/Makefile	2026-02-23 12:50:33.525992931 -0500
 +++ debian/Makefile	2025-09-22 14:01:33.829653470 -0400
-@@ -1,169 +1,163 @@
+@@ -1,189 +1,163 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v2.13.3
 +SHELL=/bin/bash
@@ -306,9 +306,29 @@
 -live-test-core:
 -	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="core"
 -
+-.PHONY: live-test-kafka
+-live-test-kafka:
+-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="kafka"
+-
+-.PHONY: live-test-schema-registry
+-live-test-schema-registry:
+-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="schema_registry"
+-
+-.PHONY: live-test-iam
+-live-test-iam:
+-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="iam"
+-
+-.PHONY: live-test-auth
+-live-test-auth:
+-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="auth"
+-
+-.PHONY: live-test-connect
+-live-test-connect:
+-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="connect"
+-
 -.PHONY: live-test-essential
 -live-test-essential:
--	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="core,kafka"
+-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="core,kafka,schema_registry,auth"
 -
 -.PHONY: generate-packaging-patch
 -generate-packaging-patch:
