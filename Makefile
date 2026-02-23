@@ -131,8 +131,7 @@ test: unit-test integration-test
 
 .PHONY: build-for-live-test
 build-for-live-test:
-	go build -ldflags="-s -w -X main.commit=00000000 -X main.date=1970-01-01T00:00:00Z -X main.disableUpdates=true" \
-		-o test/live/bin/confluent ./cmd/confluent
+	go build -ldflags="-s -w -X main.disableUpdates=true" -o test/live/bin/confluent ./cmd/confluent
 
 .PHONY: live-test
 live-test: build-for-live-test
