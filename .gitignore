@@ -3,6 +3,7 @@
 /legal/
 /prebuilt/
 /test/bin/
+/test/live/bin/
 /vendor/
 
 # RPM/DEB
