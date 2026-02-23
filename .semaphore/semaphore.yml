@@ -105,22 +105,3 @@ promotions:
     pipeline_file: ".semaphore/macos.yml"
   - name: "Run live integration tests"
     pipeline_file: ".semaphore/live-tests.yml"
-    parameters:
-      env_vars:
-        - required: false
-          options:
-            - essential
-            - core
-            - kafka
-            - all
-          default_value: essential
-          description: "Test group to run (essential=core+kafka, all=everything)"
-          name: CLI_LIVE_TEST_GROUPS
-        - required: false
-          default_value: aws
-          description: "Cloud provider (aws, gcp, azure)"
-          name: CLI_LIVE_TEST_CLOUD
-        - required: false
-          default_value: us-east-1
-          description: "Cloud region for cluster creation"
-          name: CLI_LIVE_TEST_REGION

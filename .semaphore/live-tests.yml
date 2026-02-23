@@ -39,11 +39,5 @@ blocks:
                 exit $RC
               ' EXIT
 
-              case "$CLI_LIVE_TEST_GROUPS" in
-                "essential") CLI_LIVE_TEST_GROUPS="core,kafka" ;;
-                "all"|"") CLI_LIVE_TEST_GROUPS="" ;;
-                *) CLI_LIVE_TEST_GROUPS="$CLI_LIVE_TEST_GROUPS" ;;
-              esac
-
-              echo "Running live tests for: ${CLI_LIVE_TEST_GROUPS:-all groups}"
-              make live-test ${CLI_LIVE_TEST_GROUPS:+CLI_LIVE_TEST_GROUPS="$CLI_LIVE_TEST_GROUPS"}
+              echo "Running all live tests..."
+              make live-test
