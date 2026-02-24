@@ -40,6 +40,7 @@ var ccloudV2Routes = []route{
 	{"/ccl/v1/custom-code-loggings/{id}", handleCustomCodeLoggingsId},
 	{"/cmk/v2/clusters", handleCmkClusters},
 	{"/cmk/v2/clusters/{id}", handleCmkCluster},
+	{"/endpoint/v1/endpoints", handleEndpoints},
 	{"/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins", handlePlugins},
 	{"/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins/{plugin}/config/validate", handlePluginValidate},
 	{"/connect/v1/environments/{env}/clusters/{clusters}/connectors", handleConnectors},
