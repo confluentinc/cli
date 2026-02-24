@@ -19,7 +19,7 @@ func (c *command) newListCommand() *cobra.Command {
 	}
 
 	// Required flags
-	cmd.Flags().String("service", "", "REQUIRED: Filter by service type (KAFKA, KSQL, SCHEMA_REGISTRY, etc.).")
+	cmd.Flags().String("service", "", "Filter by service type (KAFKA, KSQL, SCHEMA_REGISTRY, etc.).")
 	cobra.CheckErr(cmd.MarkFlagRequired("service"))
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
