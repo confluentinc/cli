@@ -10,7 +10,7 @@ Create Connect artifact "my-connect-artifact".
 
 Flags:
       --artifact-file string   REQUIRED: Connect artifact JAR file or ZIP file.
-      --cloud string           REQUIRED: Specify the cloud provider as "aws" or "azure".
+      --cloud string           REQUIRED: Specify the cloud provider as "aws", "azure" or "gcp".
       --environment string     Environment ID.
       --description string     Specify the Connect artifact description.
       --context string         CLI context name.

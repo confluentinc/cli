@@ -25,7 +25,7 @@ func (c *artifactCommand) newDeleteCommand() *cobra.Command {
 		),
 	}
 
-	pcmd.AddCloudAwsAzureFlag(cmd)
+	pcmd.AddCloudFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddForceFlag(cmd)
