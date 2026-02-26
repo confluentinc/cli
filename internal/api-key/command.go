@@ -108,7 +108,6 @@ func (c *command) addResourceFlag(cmd *cobra.Command, isStore bool) {
 			i++
 		}
 
-		// TODO: update the suggestions when the suggestions[i] related with Tableflow is ready
 		if !isStore {
 			suggestions = append(suggestions, "cloud")
 			suggestions = append(suggestions, "global")
