@@ -23,12 +23,12 @@ func (c *serviceAccountCommand) newListCommand() *cobra.Command {
 }
 
 func (c *serviceAccountCommand) list(cmd *cobra.Command, _ []string) error {
-	name, err := cmd.Flags().GetStringSlice("display-name")
+	displayNames, err := cmd.Flags().GetStringSlice("display-name")
 	if err != nil {
 		return err
 	}
 
-	serviceAccounts, err := c.V2Client.ListIamServiceAccounts(name)
+	serviceAccounts, err := c.V2Client.ListIamServiceAccounts(displayNames)
 	if err != nil {
 		return err
 	}
