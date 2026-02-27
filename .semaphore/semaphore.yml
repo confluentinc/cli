@@ -103,3 +103,5 @@ after_pipeline:
 promotions:
   - name: "Run macOS builds (manual)"
     pipeline_file: ".semaphore/macos.yml"
+  - name: "Run live integration tests"
+    pipeline_file: ".semaphore/live-tests.yml"

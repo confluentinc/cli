@@ -12,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	pcloud "github.com/confluentinc/cli/v4/pkg/cloud"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/network"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -57,7 +58,7 @@ var (
 	DnsResolutions  = []string{"private", "chased-private"}
 )
 
-func New(prerunner pcmd.PreRunner) *cobra.Command {
+func New(prerunner pcmd.PreRunner, cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "network",
 		Short:       "Manage Confluent Cloud networks.",
@@ -66,7 +67,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	cmd.AddCommand(newAccessPointCommand(prerunner))
+	cmd.AddCommand(newAccessPointCommand(prerunner, cfg))
 	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())

@@ -2,12 +2,14 @@ package network
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	pcloud "github.com/confluentinc/cli/v4/pkg/cloud"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/network"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
@@ -21,6 +23,14 @@ func (c *command) newGatewayListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringSlice("types", nil, fmt.Sprintf("A comma-separated list of gateway types: %s.", utils.ArrayToCommaDelimitedString(listGatewayTypes, "or")))
+	cmd.Flags().StringSlice("id", nil, "A comma-separated list of gateway IDs.")
+	cmd.Flags().StringSlice("region", nil, "A comma-separated list of regions.")
+	cmd.Flags().StringSlice("display-name", nil, "A comma-separated list of display names.")
+	cmd.Flags().StringSlice("phase", nil, "A comma-separated list of phases.")
+
+	pcmd.RegisterFlagCompletionFunc(cmd, "types", c.autocompleteGatewayTypes)
+	pcmd.RegisterFlagCompletionFunc(cmd, "region", c.autocompleteGatewayRegions)
+	pcmd.RegisterFlagCompletionFunc(cmd, "phase", c.autocompleteGatewayPhases)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -44,7 +54,31 @@ func (c *command) gatewayList(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	gateways, err := c.V2Client.ListGateways(environmentId, types)
+	ids, err := cmd.Flags().GetStringSlice("id")
+	if err != nil {
+		return err
+	}
+
+	regions, err := cmd.Flags().GetStringSlice("region")
+	if err != nil {
+		return err
+	}
+
+	displayNames, err := cmd.Flags().GetStringSlice("display-name")
+	if err != nil {
+		return err
+	}
+
+	phases, err := cmd.Flags().GetStringSlice("phase")
+	if err != nil {
+		return err
+	}
+
+	for i, phase := range phases {
+		phases[i] = strings.ToLower(phase)
+	}
+
+	gateways, err := c.V2Client.ListGateways(environmentId, types, ids, regions, displayNames, phases)
 	if err != nil {
 		return err
 	}
@@ -75,6 +109,9 @@ func (c *command) gatewayList(cmd *cobra.Command, _ []string) error {
 		if gatewayType == awsEgressPrivateLink {
 			out.Region = gateway.Spec.Config.NetworkingV1AwsEgressPrivateLinkGatewaySpec.GetRegion()
 		}
+		if gatewayType == awsIngressPrivateLink {
+			out.Region = gateway.Spec.Config.NetworkingV1AwsIngressPrivateLinkGatewaySpec.GetRegion()
+		}
 		if gatewayType == awsPeering {
 			out.Region = gateway.Spec.Config.NetworkingV1AwsPeeringGatewaySpec.GetRegion()
 		}
@@ -99,6 +136,8 @@ func (c *command) gatewayList(cmd *cobra.Command, _ []string) error {
 		case pcloud.Aws:
 			if gatewayType == "AwsEgressPrivateLink" {
 				out.AwsPrincipalArn = gateway.Status.CloudGateway.NetworkingV1AwsEgressPrivateLinkGatewayStatus.GetPrincipalArn()
+			} else if gatewayType == "AwsIngressPrivateLink" {
+				out.VpcEndpointServiceName = gateway.Status.CloudGateway.NetworkingV1AwsIngressPrivateLinkGatewayStatus.GetVpcEndpointServiceName()
 			} else if gatewayType == "AwsPrivateNetworkInterface" {
 				out.Account = gateway.Status.CloudGateway.NetworkingV1AwsPrivateNetworkInterfaceGatewayStatus.GetAccount()
 			}
@@ -112,4 +151,28 @@ func (c *command) gatewayList(cmd *cobra.Command, _ []string) error {
 		list.Add(out)
 	}
 	return list.Print()
+}
+
+func (c *command) autocompleteGatewayTypes(_ *cobra.Command, _ []string) []string {
+	return listGatewayTypes
+}
+
+func (c *command) autocompleteGatewayRegions(cmd *cobra.Command, args []string) []string {
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+	cloud, _ := cmd.Flags().GetString("cloud")
+	regions, err := network.ListRegions(c.AuthenticatedCLICommand.Client, cloud)
+	if err != nil {
+		return nil
+	}
+	suggestions := make([]string, len(regions))
+	for i, region := range regions {
+		suggestions[i] = region.RegionId
+	}
+	return suggestions
+}
+
+func (c *command) autocompleteGatewayPhases(_ *cobra.Command, _ []string) []string {
+	return []string{"PROVISIONING", "CREATED", "ACTIVE", "FAILED", "DEPROVISIONING", "EXPIRED"}
 }

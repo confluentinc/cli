@@ -1,0 +1,9 @@
++---------------------------+---------------------------------------------------------+
+| ID                        | gw-88888                                                |
+| Name                      | my-aws-ingress-gateway                                  |
+| Environment               | env-596                                                 |
+| Region                    | us-west-2                                               |
+| Type                      | AwsIngressPrivateLink                                   |
+| VPC Endpoint Service Name | com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000 |
+| Phase                     | READY                                                   |
++---------------------------+---------------------------------------------------------+
