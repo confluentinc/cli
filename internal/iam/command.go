@@ -62,7 +62,7 @@ func autocompleteResourceOwners(client *ccloudv2.Client) []string {
 	if err != nil {
 		return nil
 	}
-	serviceAccounts, err := client.ListIamServiceAccounts()
+	serviceAccounts, err := client.ListIamServiceAccounts(nil)
 	if err != nil {
 		return nil
 	}

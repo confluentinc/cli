@@ -15,6 +15,7 @@ func (c *serviceAccountCommand) newListCommand() *cobra.Command {
 		RunE:  c.list,
 	}
 
+	cmd.Flags().StringSlice("display-name", nil, "A comma-separated list of service account display names.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -22,7 +23,12 @@ func (c *serviceAccountCommand) newListCommand() *cobra.Command {
 }
 
 func (c *serviceAccountCommand) list(cmd *cobra.Command, _ []string) error {
-	serviceAccounts, err := c.V2Client.ListIamServiceAccounts()
+	name, err := cmd.Flags().GetStringSlice("display-name")
+	if err != nil {
+		return err
+	}
+
+	serviceAccounts, err := c.V2Client.ListIamServiceAccounts(name)
 	if err != nil {
 		return err
 	}
