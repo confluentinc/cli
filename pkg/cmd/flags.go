@@ -498,7 +498,7 @@ func AddServiceAccountFlag(cmd *cobra.Command, command *AuthenticatedCLICommand)
 }
 
 func AutocompleteServiceAccounts(client *ccloudv2.Client) []string {
-	serviceAccounts, err := client.ListIamServiceAccounts()
+	serviceAccounts, err := client.ListIamServiceAccounts(nil)
 	if err != nil {
 		return nil
 	}

@@ -179,7 +179,7 @@ func (c *roleBindingCommand) getPrincipalToUserMap() (map[string]*iamv2.IamV2Use
 }
 
 func (c *roleBindingCommand) getServiceAccountIdToNameMap() (map[string]string, error) {
-	serviceAccounts, err := c.V2Client.ListIamServiceAccounts()
+	serviceAccounts, err := c.V2Client.ListIamServiceAccounts(nil)
 	if err != nil {
 		return nil, err
 	}

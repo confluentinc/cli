@@ -36,6 +36,7 @@
 # Code coverage profiles and other test artifacts
 *.out
 coverage.*
+test/coverage/
 *.coverprofile
 profile.cov
 
