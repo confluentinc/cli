@@ -164,7 +164,13 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
-			return printStatementResults(cmd, statementResults)
+			if err := printStatementResults(cmd, statementResults); err != nil {
+				return err
+			}
+			if len(statementResults.Rows) >= defaultMaxResultRows {
+				fmt.Fprintf(cmd.ErrOrStderr(), "Warning: results truncated at %d rows. Use `confluent flink statement result list` with --max-rows to adjust the limit.\n", defaultMaxResultRows)
+			}
+			return nil
 		}
 	}
 

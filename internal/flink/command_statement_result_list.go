@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/retry"
 )
 
@@ -61,7 +62,7 @@ func (c *command) statementResultList(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("statement %q is still pending, use --wait to wait for it to complete", args[0])
 		}
 
-		err = retry.Retry(time.Second, 2*time.Minute, func() error {
+		err = retry.Retry(time.Second, time.Minute, func() error {
 			statement, err = client.GetStatement(environmentId, args[0], c.Context.GetCurrentOrganization())
 			if err != nil {
 				return err
@@ -84,6 +85,12 @@ func (c *command) statementResultList(cmd *cobra.Command, args []string) error {
 	schema := traits.GetSchema()
 	columns := schema.GetColumns()
 	if len(columns) == 0 {
+		if output.GetFormat(cmd).IsSerialized() {
+			return output.SerializedOutput(cmd, &serializedResultOutput{
+				Columns: []string{},
+				Rows:    []map[string]any{},
+			})
+		}
 		fmt.Fprintln(cmd.OutOrStdout(), "Statement has no results to display.")
 		return nil
 	}
@@ -95,6 +102,9 @@ func (c *command) statementResultList(cmd *cobra.Command, args []string) error {
 	maxRows, err := cmd.Flags().GetInt("max-rows")
 	if err != nil {
 		return err
+	}
+	if maxRows < 0 {
+		return fmt.Errorf("--max-rows must be a positive integer")
 	}
 
 	statementResults, err := fetchAllResults(client, environmentId, args[0], c.Context.GetCurrentOrganization(), schema, maxRows)
