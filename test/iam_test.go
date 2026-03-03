@@ -317,8 +317,8 @@ func (s *CLITestSuite) TestIamPool() {
 
 func (s *CLITestSuite) TestIamCertificateAuthority() {
 	tests := []CLITest{
-		{args: `iam certificate-authority create my-ca --description "my certificate authority" --certificate-chain ABC123 --certificate-chain-filename certificate.pem`, fixture: "iam/certificate-authority/create.golden"},
-		{args: `iam certificate-authority create my-ca --description "my certificate authority" --certificate-chain ABC123 --certificate-chain-filename certificate.pem --crl-chain DEF456`, fixture: "iam/certificate-authority/create-url-chain.golden"},
+		{args: `iam certificate-authority create my-ca --description "my certificate authority" --certificate-chain ABC123 --certificate-chain-filename certificate.pem --require-crl-on-client-certificate`, fixture: "iam/certificate-authority/create.golden"},
+		{args: `iam certificate-authority create my-ca --description "my certificate authority" --certificate-chain ABC123 --certificate-chain-filename certificate.pem --crl-chain DEF456 --require-crl-on-client-certificate`, fixture: "iam/certificate-authority/create-url-chain.golden"},
 		{args: "iam certificate-authority delete op-12345 --force", fixture: "iam/certificate-authority/delete.golden"},
 		{args: "iam certificate-authority delete op-12345 op-67890", fixture: "iam/certificate-authority/delete-multiple-fail.golden", exitCode: 1},
 		{args: "iam certificate-authority delete op-12345 op-54321", input: "y\n", fixture: "iam/certificate-authority/delete-multiple-success.golden"},
