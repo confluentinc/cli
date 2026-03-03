@@ -129,52 +129,6 @@ endif
 .PHONY: test
 test: unit-test integration-test
 
-.PHONY: build-for-live-test
-build-for-live-test:
-	go build -ldflags="-s -w -X main.disableUpdates=true" -o test/live/bin/confluent ./cmd/confluent
-
-.PHONY: live-test
-live-test: build-for-live-test
-	@if [ -z "$(CLI_LIVE_TEST_GROUPS)" ]; then \
-		CLI_LIVE_TEST=1 go test ./test/live/ -v -run=".*Live$$" \
-			-tags="live_test,all" -timeout 1440m -parallel 10; \
-	else \
-		TAGS="live_test"; \
-		for group in $$(echo "$(CLI_LIVE_TEST_GROUPS)" | tr ',' ' '); do \
-			TAGS="$$TAGS,$$group"; \
-		done; \
-		CLI_LIVE_TEST=1 go test ./test/live/ -v -run=".*Live$$" \
-			-tags="$$TAGS" -timeout 1440m -parallel 10; \
-	fi
-
-.PHONY: live-test-core
-live-test-core:
-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="core"
-
-.PHONY: live-test-kafka
-live-test-kafka:
-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="kafka"
-
-.PHONY: live-test-schema-registry
-live-test-schema-registry:
-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="schema_registry"
-
-.PHONY: live-test-iam
-live-test-iam:
-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="iam"
-
-.PHONY: live-test-auth
-live-test-auth:
-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="auth"
-
-.PHONY: live-test-connect
-live-test-connect:
-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="connect"
-
-.PHONY: live-test-essential
-live-test-essential:
-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="core,kafka,schema_registry,auth"
-
 .PHONY: generate-packaging-patch
 generate-packaging-patch:
 	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
