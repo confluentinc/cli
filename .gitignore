@@ -3,6 +3,7 @@
 /legal/
 /prebuilt/
 /test/bin/
+/test/coverage/
 /test/live/bin/
 /vendor/
 
@@ -36,7 +37,6 @@
 # Code coverage profiles and other test artifacts
 *.out
 coverage.*
-test/coverage/
 *.coverprofile
 profile.cov
 
@@ -63,7 +63,8 @@ go.work.sum
 __MACOSX/
 .AppleDouble
 .LSOverride
-Icon[]
+Icon[
+]
 
 # Thumbnails
 ._*
