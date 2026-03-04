@@ -56,7 +56,6 @@ X4XSQRjbgbMEHMUfpIBvFSDJ3gyICh3WZlXi/EjJKSZp4A==
 	cobra.CheckErr(cmd.MarkFlagRequired("description"))
 	cobra.CheckErr(cmd.MarkFlagRequired("certificate-chain"))
 	cobra.CheckErr(cmd.MarkFlagRequired("certificate-chain-filename"))
-	cobra.CheckErr(cmd.MarkFlagRequired("require-crl-on-client-certificate"))
 
 	return cmd
 }
