@@ -326,6 +326,7 @@ func (s *CLITestSuite) TestIamCertificateAuthority() {
 		{args: "iam certificate-authority describe op-12345 -o json", fixture: "iam/certificate-authority/describe-json.golden"},
 		{args: `iam certificate-authority update op-12345 --name "new name" --description "new description" --certificate-chain ABC123 --certificate-chain-filename certificate-2.pem`, fixture: "iam/certificate-authority/update.golden"},
 		{args: `iam certificate-authority update op-12345 --name "new name" --description "new description" --certificate-chain ABC123 --certificate-chain-filename certificate-2.pem --crl-url example.url`, fixture: "iam/certificate-authority/update-crl-url.golden"},
+		{args: "iam certificate-authority update op-12345 --require-crl-on-client-certificate=false", fixture: "iam/certificate-authority/update-require-crl.golden"},
 		{args: `iam certificate-authority update op-12345 --name "new name" --description "new description" --certificate-chain-filename certificate-2.pem`, fixture: "iam/certificate-authority/update-fail.golden", exitCode: 1},
 		{args: "iam certificate-authority list", fixture: "iam/certificate-authority/list.golden"},
 		{args: "iam certificate-authority list -o json", fixture: "iam/certificate-authority/list-json.golden"},
