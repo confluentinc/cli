@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -295,15 +296,29 @@ func handleIamServiceAccounts(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			serviceAccounts := &iamv2.IamV2ServiceAccountList{
-				Data: []iamv2.IamV2ServiceAccount{
-					{
-						Id:          iamv2.PtrString(serviceAccountResourceId),
-						DisplayName: iamv2.PtrString("service-account"),
-						Description: iamv2.PtrString("at your service."),
-					},
+			displayName := r.URL.Query()["display_name"]
+
+			allServiceAccounts := []iamv2.IamV2ServiceAccount{
+				{
+					Id:          iamv2.PtrString(serviceAccountResourceId),
+					DisplayName: iamv2.PtrString("service-account"),
+					Description: iamv2.PtrString("at your service."),
+				},
+				{
+					Id:          iamv2.PtrString("sa-67890"),
+					DisplayName: iamv2.PtrString("other-service-account"),
+					Description: iamv2.PtrString("another one."),
 				},
 			}
+
+			var filtered []iamv2.IamV2ServiceAccount
+			for _, sa := range allServiceAccounts {
+				if len(displayName) == 0 || slices.Contains(displayName, sa.GetDisplayName()) {
+					filtered = append(filtered, sa)
+				}
+			}
+
+			serviceAccounts := &iamv2.IamV2ServiceAccountList{Data: filtered}
 			setPageToken(serviceAccounts, &serviceAccounts.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(serviceAccounts)
 			require.NoError(t, err)
