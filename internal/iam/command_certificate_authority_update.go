@@ -30,6 +30,7 @@ func (c *certificateAuthorityCommand) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String("certificate-chain-filename", "", "The name of the certificate file.")
 	cmd.Flags().String("crl-url", "", "The URL from which to fetch the CRL (Certificate Revocation List) for the certificate authority.")
 	cmd.Flags().String("crl-chain", "", "A base64 encoded string containing the CRL for this certificate authority.")
+	cmd.Flags().Bool("require-crl-on-client-cert", false, "Whether to require CRL validation on client certificates.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -46,11 +47,12 @@ func (c *certificateAuthorityCommand) update(cmd *cobra.Command, args []string) 
 	}
 
 	update := certificateauthorityv2.IamV2UpdateCertRequest{
-		Id:                       certificateauthorityv2.PtrString(args[0]),
-		DisplayName:              currentCertificateAuthority.DisplayName,
-		Description:              currentCertificateAuthority.Description,
-		CertificateChainFilename: currentCertificateAuthority.CertificateChainFilename,
-		CrlUrl:                   currentCertificateAuthority.CrlUrl,
+		Id:                            certificateauthorityv2.PtrString(args[0]),
+		DisplayName:                   currentCertificateAuthority.DisplayName,
+		Description:                   currentCertificateAuthority.Description,
+		CertificateChainFilename:      currentCertificateAuthority.CertificateChainFilename,
+		CrlUrl:                        currentCertificateAuthority.CrlUrl,
+		RequireCrlOnClientCertificate: currentCertificateAuthority.RequireCrlOnClientCertificate,
 	}
 	if cmd.Flags().Changed("name") {
 		name, err := cmd.Flags().GetString("name")
@@ -92,6 +94,13 @@ func (c *certificateAuthorityCommand) update(cmd *cobra.Command, args []string) 
 			return err
 		}
 		update.CrlChain = certificateauthorityv2.PtrString(crlChain)
+	}
+	if cmd.Flags().Changed("require-crl-on-client-cert") {
+		requireCrlOnClientCertificate, err := cmd.Flags().GetBool("require-crl-on-client-cert")
+		if err != nil {
+			return err
+		}
+		update.RequireCrlOnClientCertificate = certificateauthorityv2.PtrBool(requireCrlOnClientCertificate)
 	}
 
 	certificateAuthority, err := c.V2Client.UpdateCertificateAuthority(update)
