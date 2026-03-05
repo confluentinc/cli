@@ -49,6 +49,7 @@ X4XSQRjbgbMEHMUfpIBvFSDJ3gyICh3WZlXi/EjJKSZp4A==
 	cmd.Flags().String("certificate-chain-filename", "", "The name of the certificate file.")
 	cmd.Flags().String("crl-url", "", "The URL from which to fetch the CRL (Certificate Revocation List) for the certificate authority.")
 	cmd.Flags().String("crl-chain", "", "A base64 encoded string containing the CRL for this certificate authority.")
+	cmd.Flags().Bool("require-crl-on-client-cert", false, "Whether to require CRL validation on client certificates.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -85,13 +86,19 @@ func (c *certificateAuthorityCommand) create(cmd *cobra.Command, args []string) 
 		return err
 	}
 
+	requireCrlOnClientCertificate, err := cmd.Flags().GetBool("require-crl-on-client-cert")
+	if err != nil {
+		return err
+	}
+
 	certRequest := certificateauthorityv2.IamV2CreateCertRequest{
-		DisplayName:              certificateauthorityv2.PtrString(args[0]),
-		Description:              certificateauthorityv2.PtrString(description),
-		CertificateChain:         certificateauthorityv2.PtrString(certificateChain),
-		CertificateChainFilename: certificateauthorityv2.PtrString(certificateChainFilename),
-		CrlUrl:                   certificateauthorityv2.PtrString(crlUrl),
-		CrlChain:                 certificateauthorityv2.PtrString(crlChain),
+		DisplayName:                   certificateauthorityv2.PtrString(args[0]),
+		Description:                   certificateauthorityv2.PtrString(description),
+		CertificateChain:              certificateauthorityv2.PtrString(certificateChain),
+		CertificateChainFilename:      certificateauthorityv2.PtrString(certificateChainFilename),
+		CrlUrl:                        certificateauthorityv2.PtrString(crlUrl),
+		CrlChain:                      certificateauthorityv2.PtrString(crlChain),
+		RequireCrlOnClientCertificate: certificateauthorityv2.PtrBool(requireCrlOnClientCertificate),
 	}
 
 	certificateAuthority, err := c.V2Client.CreateCertificateAuthority(certRequest)
