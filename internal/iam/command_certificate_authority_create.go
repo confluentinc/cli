@@ -92,12 +92,12 @@ func (c *certificateAuthorityCommand) create(cmd *cobra.Command, args []string) 
 	}
 
 	certRequest := certificateauthorityv2.IamV2CreateCertRequest{
-		DisplayName:                  certificateauthorityv2.PtrString(args[0]),
-		Description:                  certificateauthorityv2.PtrString(description),
-		CertificateChain:             certificateauthorityv2.PtrString(certificateChain),
-		CertificateChainFilename:     certificateauthorityv2.PtrString(certificateChainFilename),
-		CrlUrl:                       certificateauthorityv2.PtrString(crlUrl),
-		CrlChain:                     certificateauthorityv2.PtrString(crlChain),
+		DisplayName:                   certificateauthorityv2.PtrString(args[0]),
+		Description:                   certificateauthorityv2.PtrString(description),
+		CertificateChain:              certificateauthorityv2.PtrString(certificateChain),
+		CertificateChainFilename:      certificateauthorityv2.PtrString(certificateChainFilename),
+		CrlUrl:                        certificateauthorityv2.PtrString(crlUrl),
+		CrlChain:                      certificateauthorityv2.PtrString(crlChain),
 		RequireCrlOnClientCertificate: certificateauthorityv2.PtrBool(requireCrlOnClientCertificate),
 	}
 
