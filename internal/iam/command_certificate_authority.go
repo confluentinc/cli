@@ -26,7 +26,7 @@ type certificateAuthorityOut struct {
 	CrlSource                     string      `human:"CRL Source,omitempty" serialized:"crl_source,omitempty"`
 	CrlUrl                        string      `human:"CRL URL,omitempty" serialized:"crl_url,omitempty"`
 	CrlUpdatedAt                  *time.Time  `human:"CRL Updated At,omitempty" serialized:"crl_updated_at,omitempty"`
-	RequireCrlOnClientCertificate bool        `human:"Require CRL On Client Certificate" serialized:"require_crl_on_client_certificate"`
+	RequireCrlOnClientCertificate bool        `human:"Require Client CRL" serialized:"require_client_crl"`
 }
 
 func newCertificateAuthorityCommand(prerunner pcmd.PreRunner) *cobra.Command {

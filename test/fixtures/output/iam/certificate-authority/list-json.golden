@@ -7,7 +7,7 @@
     "expiration_dates": ["2017-07-21T17:32:28Z"],
     "serial_numbers": ["219C542DE8f6EC7177FA4EE8C3705797"],
     "certificate_chain_filename": "certificate.pem",
-    "require_crl_on_client_certificate": true
+    "require_client_crl": true
   },
   {
     "id": "op-54321",
@@ -19,7 +19,7 @@
     "certificate_chain_filename": "certificate-2.pem",
     "crl_source": "LOCAL",
     "crl_updated_at": "2024-07-21T17:32:28Z",
-    "require_crl_on_client_certificate": false
+    "require_client_crl": false
   },
   {
     "id": "op-67890",
@@ -32,6 +32,6 @@
     "crl_source": "URL",
     "crl_url": "example.url",
     "crl_updated_at": "2024-07-21T17:32:28Z",
-    "require_crl_on_client_certificate": true
+    "require_client_crl": true
   }
 ]
