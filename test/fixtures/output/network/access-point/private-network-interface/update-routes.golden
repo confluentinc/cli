@@ -3,7 +3,7 @@
 | Environment        | env-596                                      |
 | Gateway            | gw-12345                                     |
 | Phase              | READY                                        |
-| Network Interfaces | eni-00000000000000002, eni-00000000000000003 |
+| Network Interfaces | eni-00000000000000000, eni-00000000000000001 |
 | Aws Account        | 000000000000                                 |
-| Egress Routes      | 172.31.0.0/16, 192.168.1.0/24                |
+| Egress Routes      | 10.0.0.0/8, 192.168.0.0/16                   |
 +--------------------+----------------------------------------------+
