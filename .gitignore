@@ -3,6 +3,7 @@
 /legal/
 /prebuilt/
 /test/bin/
+/test/coverage/
 /test/live/bin/
 /vendor/
 
@@ -62,7 +63,8 @@ go.work.sum
 __MACOSX/
 .AppleDouble
 .LSOverride
-Icon[]
+Icon[
+]
 
 # Thumbnails
 ._*
