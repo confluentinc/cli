@@ -10,6 +10,7 @@ Available Commands:
   describe    Describe the current Confluent Cloud organization.
   list        List Confluent Cloud organizations.
   update      Update the current Confluent Cloud organization.
+  use         Use a Confluent Cloud organization in subsequent commands.
 
 Global Flags:
   -h, --help            Show help for this command.

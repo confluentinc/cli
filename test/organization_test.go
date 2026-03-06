@@ -14,6 +14,7 @@ func (s *CLITestSuite) TestOrganization() {
 		{args: "organization list -o json", fixture: "organization/list-json.golden"},
 		{args: "organization update --name default-updated", fixture: "organization/update.golden"},
 		{args: "organization update --name default-updated -o json", fixture: "organization/update-json.golden"},
+		{args: "organization use abc-456", fixture: "organization/use.golden"},
 	}
 
 	for _, test := range tests {
@@ -42,6 +43,19 @@ func (s *CLITestSuite) TestOrganization() {
 		test := CLITest{
 			args:     "organization describe -o json",
 			fixture:  "organization/describe-not-found-json.golden",
+			exitCode: 1,
+			login:    "cloud",
+		}
+		s.runIntegrationTest(test)
+	})
+
+	s.T().Run("organization use not found", func(t *testing.T) {
+		testserver.TestOrgNotFound = true
+		defer func() { testserver.TestOrgNotFound = false }()
+
+		test := CLITest{
+			args:     "organization use org-dne",
+			fixture:  "organization/use-not-found.golden",
 			exitCode: 1,
 			login:    "cloud",
 		}
