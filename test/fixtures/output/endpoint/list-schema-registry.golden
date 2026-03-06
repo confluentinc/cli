@@ -1,0 +1,3 @@
+     ID    | Cloud |   Region    |     Service     | Is Private |     Connection Type     |                    Endpoint URL                     | Endpoint Type | Environment |  Resource   | Gateway  | Access Point  
+-----------+-------+-------------+-----------------+------------+-------------------------+-----------------------------------------------------+---------------+-------------+-------------+----------+---------------
+  e-abc456 | GCP   | us-central1 | SCHEMA_REGISTRY | true       | PRIVATE_SERVICE_CONNECT | https://psrc-abc456.us-central1.gcp.confluent.cloud | REST          | env-00000   | lsrc-def789 | gw-67890 | ap-34567      
