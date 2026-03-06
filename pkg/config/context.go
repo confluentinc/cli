@@ -112,6 +112,42 @@ func (c *Context) UpdateAuthTokens(token, refreshToken string) error {
 	return c.Save()
 }
 
+// SwitchOrganization switches the context to a different Confluent Cloud
+// organization by minting a new org-scoped JWT using the existing user-scoped
+// refresh token. It clears all environment-scoped state (environments, Kafka
+// clusters) since those are org-scoped. The caller must call Config.Save()
+// after this method returns successfully.
+func (c *Context) SwitchOrganization(client *ccloudv1.Client, orgId string) error {
+	previousOrgId := c.LastOrgId
+	previousAuthToken := c.State.AuthToken
+	previousRefreshToken := c.State.AuthRefreshToken
+
+	// Set the target org before refreshing so RefreshSession picks it up
+	// via GetCurrentOrganization().
+	c.LastOrgId = orgId
+
+	if err := c.RefreshSession(client); err != nil {
+		c.LastOrgId = previousOrgId
+		c.State.AuthToken = previousAuthToken
+		c.State.AuthRefreshToken = previousRefreshToken
+		return err
+	}
+
+	// Clear all environment-scoped state: environments and Kafka clusters
+	// belong to a specific org, so stale IDs from the previous org must not
+	// leak into the new context.
+	c.CurrentEnvironment = ""
+	c.Environments = map[string]*EnvironmentContext{}
+	if c.KafkaClusterContext != nil {
+		c.KafkaClusterContext.ActiveKafkaCluster = ""
+		c.KafkaClusterContext.ActiveKafkaClusterEndpoint = ""
+		c.KafkaClusterContext.KafkaClusterConfigs = map[string]*KafkaClusterConfig{}
+		c.KafkaClusterContext.KafkaEnvContexts = map[string]*KafkaEnvContext{}
+	}
+
+	return nil
+}
+
 func (c *Context) IsCloud(isTest bool) bool {
 	if isTest && c.PlatformName == testserver.TestCloudUrl.String() {
 		return true
