@@ -1,5 +1,7 @@
+warning: GOCOVERDIR not set, no coverage data emitted
 egress-privatelink
 ingress-privatelink
 private-network-interface
+ingress-private-service-connect
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp

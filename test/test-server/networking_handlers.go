@@ -14,7 +14,7 @@ import (
 
 	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point/v1"
 	networkingdnsforwarderv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder/v1"
-	networkinggatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway/v1"
+	networkinggatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-gateway/v1"
 	networkingipv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-ip/v1"
 	networkingprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink/v1"
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
@@ -2386,6 +2386,11 @@ func getGateway(id, environment, name, specConfigKind, statusCloudGatewayKind st
 			Kind:   specConfigKind,
 			Region: "eastus",
 		}))
+	case "GcpIngressPrivateServiceConnectGatewaySpec":
+		gateway.Spec.SetConfig(networkinggatewayv1.NetworkingV1GcpIngressPrivateServiceConnectGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkinggatewayv1.NetworkingV1GcpIngressPrivateServiceConnectGatewaySpec{
+			Kind:   specConfigKind,
+			Region: "us-central1",
+		}))
 	case "GcpPeeringGatewaySpec":
 		gateway.Spec.SetConfig(networkinggatewayv1.NetworkingV1GcpPeeringGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkinggatewayv1.NetworkingV1GcpPeeringGatewaySpec{
 			Kind:   specConfigKind,
@@ -2418,6 +2423,11 @@ func getGateway(id, environment, name, specConfigKind, statusCloudGatewayKind st
 		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatus{
 			Kind:    statusCloudGatewayKind,
 			Project: networkinggatewayv1.PtrString("project-12345"),
+		}))
+	case "GcpIngressPrivateServiceConnectGatewayStatus":
+		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpIngressPrivateServiceConnectGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpIngressPrivateServiceConnectGatewayStatus{
+			Kind: statusCloudGatewayKind,
+			PrivateServiceConnectServiceAttachment: networkinggatewayv1.PtrString("projects/traffic-prod/regions/us-central1/serviceAttachments/plattg-abc123-service-attachment"),
 		}))
 	case "GcpPeeringGatewayStatus":
 		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatus{
@@ -2458,6 +2468,10 @@ func handleNetworkingGatewayGet(t *testing.T, id, environment string) http.Handl
 			require.NoError(t, err)
 		case "gw-88888":
 			record := getGateway(id, environment, "my-aws-ingress-gateway", "AwsIngressPrivateLinkGatewaySpec", "AwsIngressPrivateLinkGatewayStatus")
+			err := json.NewEncoder(w).Encode(record)
+			require.NoError(t, err)
+		case "gw-99999":
+			record := getGateway(id, environment, "my-gcp-ingress-gateway", "GcpIngressPrivateServiceConnectGatewaySpec", "GcpIngressPrivateServiceConnectGatewayStatus")
 			err := json.NewEncoder(w).Encode(record)
 			require.NoError(t, err)
 		}
@@ -2513,6 +2527,11 @@ func handleNetworkingGatewayPost(t *testing.T) http.HandlerFunc {
 				Kind:    "GcpEgressPrivateServiceConnectGatewayStatus",
 				Project: networkingv1.PtrString("project-12345"),
 			}))
+		} else if body.Spec.Config.NetworkingV1GcpIngressPrivateServiceConnectGatewaySpec != nil {
+			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpIngressPrivateServiceConnectGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpIngressPrivateServiceConnectGatewayStatus{
+				Kind: "GcpIngressPrivateServiceConnectGatewayStatus",
+				PrivateServiceConnectServiceAttachment: networkingv1.PtrString("projects/traffic-prod/regions/us-central1/serviceAttachments/plattg-abc123-service-attachment"),
+			}))
 		} else if body.Spec.Config.NetworkingV1GcpPeeringGatewaySpec != nil {
 			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatus{
 				Kind:         "GcpPeeringGatewayStatus",
@@ -2542,8 +2561,9 @@ func handleNetworkingGatewayList(t *testing.T, environment string) http.HandlerF
 		gatewaySix := getGateway("gw-13570", environment, "my-gcp-peering-gateway", "GcpPeeringGatewaySpec", "GcpPeeringGatewayStatus")
 		gatewaySeven := getGateway("gw-07531", environment, "my-gcp-gateway", "GcpEgressPrivateServiceConnectGatewaySpec", "GcpEgressPrivateServiceConnectGatewayStatus")
 		gatewayEight := getGateway("gw-88888", environment, "my-aws-ingress-gateway", "AwsIngressPrivateLinkGatewaySpec", "AwsIngressPrivateLinkGatewayStatus")
+		gatewayNine := getGateway("gw-99999", environment, "my-gcp-ingress-gateway", "GcpIngressPrivateServiceConnectGatewaySpec", "GcpIngressPrivateServiceConnectGatewayStatus")
 
-		gatewayList := networkinggatewayv1.NetworkingV1GatewayList{Data: []networkinggatewayv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour, gatewayFive, gatewaySix, gatewaySeven, gatewayEight}}
+		gatewayList := networkinggatewayv1.NetworkingV1GatewayList{Data: []networkinggatewayv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour, gatewayFive, gatewaySix, gatewaySeven, gatewayEight, gatewayNine}}
 		gatewayList.Data = filterGatewayList(gatewayList.Data, gatewayTypes, ids, regions, displayNames, phases)
 		setPageToken(&gatewayList, &gatewayList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(gatewayList)
@@ -2625,6 +2645,9 @@ func getGatewayTypeFromSpec(gateway networkinggatewayv1.NetworkingV1Gateway) str
 	if config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec != nil {
 		return "GcpEgressPrivateServiceConnect"
 	}
+	if config.NetworkingV1GcpIngressPrivateServiceConnectGatewaySpec != nil {
+		return "GcpIngressPrivateServiceConnect"
+	}
 	return ""
 }
 
@@ -2657,6 +2680,9 @@ func getRegionFromSpec(gateway networkinggatewayv1.NetworkingV1Gateway) string {
 	}
 	if config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec != nil {
 		return config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec.GetRegion()
+	}
+	if config.NetworkingV1GcpIngressPrivateServiceConnectGatewaySpec != nil {
+		return config.NetworkingV1GcpIngressPrivateServiceConnectGatewaySpec.GetRegion()
 	}
 	return ""
 }

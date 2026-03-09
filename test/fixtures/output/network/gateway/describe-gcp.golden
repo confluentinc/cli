@@ -1,3 +1,4 @@
+warning: GOCOVERDIR not set, no coverage data emitted
 +-------------+--------------------------------+
 | ID          | gw-07531                       |
 | Name        | my-gcp-gateway                 |

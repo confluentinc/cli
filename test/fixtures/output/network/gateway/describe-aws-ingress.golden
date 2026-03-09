@@ -1,3 +1,4 @@
+warning: GOCOVERDIR not set, no coverage data emitted
 +---------------------------+---------------------------------------------------------+
 | ID                        | gw-88888                                                |
 | Name                      | my-aws-ingress-gateway                                  |

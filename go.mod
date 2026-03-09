@@ -42,7 +42,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/networking v0.14.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.8.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder v0.4.0
-	github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway v0.5.0
+	github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-gateway v0.12.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.9.0

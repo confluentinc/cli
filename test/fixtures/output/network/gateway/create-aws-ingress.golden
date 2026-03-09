@@ -1,3 +1,4 @@
+warning: GOCOVERDIR not set, no coverage data emitted
 +---------------------------+---------------------------------------------------------+
 | ID                        | gw-abc123                                               |
 | Name                      | my-gateway                                              |

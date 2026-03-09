@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	networkinggatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway/v1"
+	networkinggatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-gateway/v1"
 
 	pcloud "github.com/confluentinc/cli/v4/pkg/cloud"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -31,10 +31,14 @@ func (c *command) newGatewayCreateCommand() *cobra.Command {
 				Text: `Create AWS private network interface gateway "my-pni-gateway".`,
 				Code: "confluent network gateway create my-pni-gateway --cloud aws --region us-east-1 --type private-network-interface",
 			},
+			examples.Example{
+				Text: `Create GCP ingress private service connect gateway "my-gcp-ingress-gateway".`,
+				Code: "confluent network gateway create my-gcp-ingress-gateway --cloud gcp --region us-central1 --type ingress-private-service-connect",
+			},
 		),
 	}
 
-	pcmd.AddCloudAwsAzureFlag(cmd)
+	pcmd.AddCloudFlag(cmd)
 	addGatewayTypeFlag(cmd)
 	c.addRegionFlagGateway(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().StringSlice("zones", nil, "A comma-separated list of availability zones for this gateway.")
@@ -112,6 +116,15 @@ func (c *command) gatewayCreate(cmd *cobra.Command, args []string) error {
 			createGateway.Spec.Config = &networkinggatewayv1.NetworkingV1GatewaySpecConfigOneOf{
 				NetworkingV1AzureEgressPrivateLinkGatewaySpec: &networkinggatewayv1.NetworkingV1AzureEgressPrivateLinkGatewaySpec{
 					Kind:   "AzureEgressPrivateLinkGatewaySpec",
+					Region: region,
+				},
+			}
+		}
+	case pcloud.Gcp:
+		if gatewayType == "ingress-private-service-connect" {
+			createGateway.Spec.Config = &networkinggatewayv1.NetworkingV1GatewaySpecConfigOneOf{
+				NetworkingV1GcpIngressPrivateServiceConnectGatewaySpec: &networkinggatewayv1.NetworkingV1GcpIngressPrivateServiceConnectGatewaySpec{
+					Kind:   "GcpIngressPrivateServiceConnectGatewaySpec",
 					Region: region,
 				},
 			}
