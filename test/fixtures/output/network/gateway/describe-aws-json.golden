@@ -1,3 +1,4 @@
+warning: GOCOVERDIR not set, no coverage data emitted
 {
   "id": "gw-12345",
   "name": "my-aws-gateway",

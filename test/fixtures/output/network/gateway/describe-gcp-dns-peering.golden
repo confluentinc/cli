@@ -1,3 +1,4 @@
+warning: GOCOVERDIR not set, no coverage data emitted
 +-------------------+-------------------------------------+
 | ID                | gw-13570                            |
 | Name              | my-gcp-gateway                      |

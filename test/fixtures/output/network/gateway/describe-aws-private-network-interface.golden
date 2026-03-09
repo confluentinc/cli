@@ -1,3 +1,4 @@
+warning: GOCOVERDIR not set, no coverage data emitted
 +-------------+----------------------------+
 | ID          | gw-54321                   |
 | Name        | my-aws-gateway             |

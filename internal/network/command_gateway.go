@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	networkinggatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway/v1"
+	networkinggatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-gateway/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	pcloud "github.com/confluentinc/cli/v4/pkg/cloud"
@@ -23,18 +23,20 @@ const (
 	azureEgressPrivateLink         = "AzureEgressPrivateLink"
 	azurePeering                   = "AzurePeering"
 	awsPrivateNetworkInterface     = "AwsPrivateNetworkInterface"
-	gcpPeering                     = "GcpPeering"
-	gcpEgressPrivateServiceConnect = "GcpEgressPrivateServiceConnect"
+	gcpPeering                      = "GcpPeering"
+	gcpEgressPrivateServiceConnect  = "GcpEgressPrivateServiceConnect"
+	gcpIngressPrivateServiceConnect = "GcpIngressPrivateServiceConnect"
 )
 
 var (
-	createGatewayTypes = []string{"egress-privatelink", "ingress-privatelink", "private-network-interface"}
-	listGatewayTypes   = []string{"aws-egress-privatelink", "aws-ingress-privatelink", "azure-egress-privatelink", "gcp-egress-private-service-connect"} // TODO: check if we accept private-network-interface here
+	createGatewayTypes = []string{"egress-privatelink", "ingress-privatelink", "private-network-interface", "ingress-private-service-connect"}
+	listGatewayTypes   = []string{"aws-egress-privatelink", "aws-ingress-privatelink", "azure-egress-privatelink", "gcp-egress-private-service-connect", "gcp-ingress-private-service-connect"} // TODO: check if we accept private-network-interface here
 	gatewayTypeMap     = map[string]string{
-		"aws-egress-privatelink":             awsEgressPrivateLink,
-		"aws-ingress-privatelink":            awsIngressPrivateLink,
-		"azure-egress-privatelink":           azureEgressPrivateLink,
-		"gcp-egress-private-service-connect": gcpEgressPrivateServiceConnect,
+		"aws-egress-privatelink":              awsEgressPrivateLink,
+		"aws-ingress-privatelink":             awsIngressPrivateLink,
+		"azure-egress-privatelink":            azureEgressPrivateLink,
+		"gcp-egress-private-service-connect":  gcpEgressPrivateServiceConnect,
+		"gcp-ingress-private-service-connect": gcpIngressPrivateServiceConnect,
 	}
 )
 
@@ -47,8 +49,9 @@ type gatewayOut struct {
 	AwsPrincipalArn        string   `human:"AWS Principal ARN,omitempty" serialized:"aws_principal_arn,omitempty"`
 	VpcEndpointServiceName string   `human:"VPC Endpoint Service Name,omitempty" serialized:"vpc_endpoint_service_name,omitempty"`
 	AzureSubscription      string   `human:"Azure Subscription,omitempty" serialized:"azure_subscription,omitempty"`
-	GcpIamPrincipal        string   `human:"GCP IAM Principal,omitempty" serialized:"gcp_iam_principal,omitempty"`
-	GcpProject             string   `human:"GCP Project,omitempty" serialized:"gcp_project,omitempty"`
+	GcpIamPrincipal                          string   `human:"GCP IAM Principal,omitempty" serialized:"gcp_iam_principal,omitempty"`
+	GcpProject                               string   `human:"GCP Project,omitempty" serialized:"gcp_project,omitempty"`
+	GcpPrivateServiceConnectServiceAttachment string `human:"GCP PSC Service Attachment,omitempty" serialized:"gcp_private_service_connect_service_attachment,omitempty"`
 	Phase                  string   `human:"Phase" serialized:"phase"`
 	Zones                  []string `human:"Zones,omitempty" serialized:"zones,omitempty"`
 	Account                string   `human:"Account,omitempty" serialized:"account,omitempty"`
@@ -145,6 +148,10 @@ func getGatewayCloud(gateway networkinggatewayv1.NetworkingV1Gateway) string {
 		return pcloud.Gcp
 	}
 
+	if cloud.NetworkingV1GcpIngressPrivateServiceConnectGatewayStatus != nil {
+		return pcloud.Gcp
+	}
+
 	if cloud.NetworkingV1GcpPeeringGatewayStatus != nil {
 		return pcloud.Gcp
 	}
@@ -185,6 +192,10 @@ func getGatewayType(gateway networkinggatewayv1.NetworkingV1Gateway) (string, er
 
 	if config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec != nil {
 		return gcpEgressPrivateServiceConnect, nil
+	}
+
+	if config.NetworkingV1GcpIngressPrivateServiceConnectGatewaySpec != nil {
+		return gcpIngressPrivateServiceConnect, nil
 	}
 
 	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "config")
@@ -234,6 +245,9 @@ func printGatewayTable(cmd *cobra.Command, gateway networkinggatewayv1.Networkin
 	if gatewayType == gcpEgressPrivateServiceConnect {
 		out.Region = gateway.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec.GetRegion()
 	}
+	if gatewayType == gcpIngressPrivateServiceConnect {
+		out.Region = gateway.Spec.Config.NetworkingV1GcpIngressPrivateServiceConnectGatewaySpec.GetRegion()
+	}
 	if gatewayType == gcpPeering {
 		out.Region = gateway.Spec.Config.NetworkingV1GcpPeeringGatewaySpec.GetRegion()
 	}
@@ -250,8 +264,13 @@ func printGatewayTable(cmd *cobra.Command, gateway networkinggatewayv1.Networkin
 	case pcloud.Azure:
 		out.AzureSubscription = gateway.Status.CloudGateway.NetworkingV1AzureEgressPrivateLinkGatewayStatus.GetSubscription()
 	case pcloud.Gcp:
-		out.GcpProject = gateway.Status.CloudGateway.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatus.GetProject()
-		out.GcpIamPrincipal = gateway.Status.CloudGateway.NetworkingV1GcpPeeringGatewayStatus.GetIamPrincipal()
+		if gatewayType == gcpEgressPrivateServiceConnect {
+			out.GcpProject = gateway.Status.CloudGateway.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatus.GetProject()
+		} else if gatewayType == gcpIngressPrivateServiceConnect {
+			out.GcpPrivateServiceConnectServiceAttachment = gateway.Status.CloudGateway.NetworkingV1GcpIngressPrivateServiceConnectGatewayStatus.GetPrivateServiceConnectServiceAttachment()
+		} else if gatewayType == gcpPeering {
+			out.GcpIamPrincipal = gateway.Status.CloudGateway.NetworkingV1GcpPeeringGatewayStatus.GetIamPrincipal()
+		}
 	}
 
 	table := output.NewTable(cmd)
