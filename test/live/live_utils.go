@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -32,6 +33,63 @@ func liveTestRegion() string {
 		return v
 	}
 	return "us-east-1"
+}
+
+// liveTestClusterType returns the cluster type from env or defaults to "basic".
+func liveTestClusterType() string {
+	if v := os.Getenv("CLI_LIVE_TEST_CLUSTER_TYPE"); v != "" {
+		return v
+	}
+	return "basic"
+}
+
+// CloudVariant represents a cloud provider, region, and cluster type combination for parameterized tests.
+type CloudVariant struct {
+	Cloud       string
+	Region      string
+	ClusterType string
+}
+
+// String returns a human-readable label for the variant (used as t.Run subtest name).
+func (v CloudVariant) String() string {
+	return fmt.Sprintf("%s/%s/%s", v.Cloud, v.Region, v.ClusterType)
+}
+
+// defaultRegions maps cloud providers to their default regions.
+var defaultRegions = map[string]string{
+	"aws":   "us-east-1",
+	"gcp":   "us-east1",
+	"azure": "eastus",
+}
+
+// liveTestVariants parses CLI_LIVE_TEST_VARIANTS into a list of CloudVariant.
+// Format: "cloud:region:type,cloud:region:type,..."
+// Falls back to a single variant from CLI_LIVE_TEST_CLOUD/CLI_LIVE_TEST_REGION/CLI_LIVE_TEST_CLUSTER_TYPE.
+func liveTestVariants() []CloudVariant {
+	if v := os.Getenv("CLI_LIVE_TEST_VARIANTS"); v != "" {
+		var variants []CloudVariant
+		for _, entry := range strings.Split(v, ",") {
+			parts := strings.SplitN(strings.TrimSpace(entry), ":", 3)
+			variant := CloudVariant{Cloud: parts[0]}
+			if len(parts) > 1 && parts[1] != "" {
+				variant.Region = parts[1]
+			} else {
+				variant.Region = defaultRegions[variant.Cloud]
+			}
+			if len(parts) > 2 && parts[2] != "" {
+				variant.ClusterType = parts[2]
+			} else {
+				variant.ClusterType = "basic"
+			}
+			variants = append(variants, variant)
+		}
+		return variants
+	}
+	return []CloudVariant{{
+		Cloud:       liveTestCloud(),
+		Region:      liveTestRegion(),
+		ClusterType: liveTestClusterType(),
+	}}
 }
 
 // requiredEnv gets an environment variable or fails the test.
@@ -119,4 +177,26 @@ func (s *CLILiveTestSuite) waitForCondition(t *testing.T, argsTemplate string, s
 		t.Logf("Condition not met, retrying in %s...", interval)
 		time.Sleep(interval)
 	}
+}
+
+// copyDir recursively copies a directory tree from src to dst.
+func copyDir(src, dst string) error {
+	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		relPath, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+		dstPath := filepath.Join(dst, relPath)
+		if info.IsDir() {
+			return os.MkdirAll(dstPath, info.Mode())
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		return os.WriteFile(dstPath, data, info.Mode())
+	})
 }
