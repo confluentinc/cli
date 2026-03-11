@@ -175,6 +175,51 @@ live-test-connect:
 live-test-essential:
 	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="core,kafka,schema_registry,auth"
 
+.PHONY: live-test-multicloud
+live-test-multicloud:
+	@CLI_LIVE_TEST_VARIANTS="aws:us-east-1:basic,gcp:us-east1:basic,azure:eastus:basic" \
+		$(MAKE) live-test CLI_LIVE_TEST_GROUPS="kafka"
+
+.PHONY: live-test-resource
+live-test-resource: build-for-live-test
+	@if [ -z "$(RESOURCE)" ]; then \
+		echo "Available resources:"; \
+		echo ""; \
+		printf "  %-25s %-20s %s\n" "RESOURCE" "GROUP" "TEST FUNCTION"; \
+		printf "  %-25s %-20s %s\n" "--------" "-----" "-------------"; \
+		printf "  %-25s %-20s %s\n" "environment" "core" "TestEnvironmentCRUDLive"; \
+		printf "  %-25s %-20s %s\n" "service_account" "core" "TestServiceAccountCRUDLive"; \
+		printf "  %-25s %-20s %s\n" "api_key" "core" "TestApiKeyCRUDLive"; \
+		printf "  %-25s %-20s %s\n" "kafka_cluster" "kafka" "TestKafkaClusterCRUDLive"; \
+		printf "  %-25s %-20s %s\n" "kafka_topic" "kafka" "TestKafkaTopicCRUDLive"; \
+		printf "  %-25s %-20s %s\n" "kafka_acl" "kafka" "TestKafkaACLCRUDLive"; \
+		printf "  %-25s %-20s %s\n" "kafka_consumer_group" "kafka" "TestKafkaConsumerGroupListLive"; \
+		printf "  %-25s %-20s %s\n" "schema_registry" "schema_registry" "TestSchemaRegistrySchemaCRUDLive"; \
+		printf "  %-25s %-20s %s\n" "iam_rbac" "iam" "TestRBACRoleBindingCRUDLive"; \
+		printf "  %-25s %-20s %s\n" "login" "auth" "TestLoginLogoutLive"; \
+		printf "  %-25s %-20s %s\n" "connect" "connect" "TestConnectClusterCRUDLive"; \
+		echo ""; \
+		echo "Usage: make live-test-resource RESOURCE=<resource>"; \
+	else \
+		case "$(RESOURCE)" in \
+			environment) GROUP=core; FUNC=TestEnvironmentCRUDLive;; \
+			service_account) GROUP=core; FUNC=TestServiceAccountCRUDLive;; \
+			api_key) GROUP=core; FUNC=TestApiKeyCRUDLive;; \
+			kafka_cluster) GROUP=kafka; FUNC=TestKafkaClusterCRUDLive;; \
+			kafka_topic) GROUP=kafka; FUNC=TestKafkaTopicCRUDLive;; \
+			kafka_acl) GROUP=kafka; FUNC=TestKafkaACLCRUDLive;; \
+			kafka_consumer_group) GROUP=kafka; FUNC=TestKafkaConsumerGroupListLive;; \
+			schema_registry) GROUP=schema_registry; FUNC=TestSchemaRegistrySchemaCRUDLive;; \
+			iam_rbac) GROUP=iam; FUNC=TestRBACRoleBindingCRUDLive;; \
+			login) GROUP=auth; FUNC=TestLoginLogoutLive;; \
+			connect) GROUP=connect; FUNC=TestConnectClusterCRUDLive;; \
+			*) echo "Unknown resource: $(RESOURCE)"; echo "Run 'make live-test-resource' to see available resources."; exit 1;; \
+		esac; \
+		echo "Running $$FUNC (group: $$GROUP)..."; \
+		CLI_LIVE_TEST=1 go test ./test/live/ -v -run="TestLive/$$FUNC" \
+			-tags="live_test,$$GROUP" -timeout 1440m -parallel 10; \
+	fi
+
 .PHONY: generate-packaging-patch
 generate-packaging-patch:
 	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
