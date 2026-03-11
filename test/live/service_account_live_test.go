@@ -36,7 +36,8 @@ func (s *CLILiveTestSuite) TestServiceAccountCRUDLive() {
 			UseStateVars: true,
 			ExitCode:     0,
 			JSONFields: map[string]string{
-				"name": saName,
+				"name":        saName,
+				"description": saDescription,
 			},
 		},
 		{
