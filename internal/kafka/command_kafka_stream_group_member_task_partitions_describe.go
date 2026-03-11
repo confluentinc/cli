@@ -18,7 +18,7 @@ func (c *consumerCommand) newStreamGroupMemberTaskPartitionsDescribeCommand() *c
 	cmd.Flags().String("group", "", "Group Id.")
 	cmd.Flags().String("member", "", "Member Id.")
 	cmd.Flags().String("subtopology", "", "Subtopology Id.")
-	cmd.Flags().String("assignment", "", "Assignments type (active, standby, warmup).")
+	cmd.Flags().String("assignment-type", "", "Assignments type (active, standby, warmup).")
 
 	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -29,7 +29,7 @@ func (c *consumerCommand) newStreamGroupMemberTaskPartitionsDescribeCommand() *c
 	cobra.CheckErr(cmd.MarkFlagRequired("group"))
 	cobra.CheckErr(cmd.MarkFlagRequired("member"))
 	cobra.CheckErr(cmd.MarkFlagRequired("subtopology"))
-	cobra.CheckErr(cmd.MarkFlagRequired("assignment"))
+	cobra.CheckErr(cmd.MarkFlagRequired("assignment-type"))
 
 	return cmd
 }
@@ -50,7 +50,7 @@ func (c *consumerCommand) streamGroupMemberTaskPartitionsDescribe(cmd *cobra.Com
 		return err
 	}
 
-	assignmentsType, err := cmd.Flags().GetString("assignment")
+	assignmentsType, err := cmd.Flags().GetString("assignment-type")
 	if err != nil {
 		return err
 	}

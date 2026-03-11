@@ -37,6 +37,7 @@ func newConsumerCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Com
 		cmd.AddCommand(c.newListCommandOnPrem())
 	}
 	cmd.AddCommand(c.newGroupCommand(cfg))
+	cmd.AddCommand(c.newStreamGroupCommand(cfg))
 
 	return cmd
 }
