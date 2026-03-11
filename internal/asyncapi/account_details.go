@@ -10,7 +10,6 @@ import (
 	"github.com/swaggest/go-asyncapi/spec-2.4.0"
 
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
-	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/v4/pkg/config"
@@ -37,7 +36,6 @@ type accountDetails struct {
 	schemaRegistryClusterId string
 	topics                  []kafkarestv3.TopicData
 	clusterCreds            *config.APIKeyPair
-	consumer                *ckgo.Consumer
 	kafkaUrl                string
 	kafkaBootstrapUrl       string
 	schemaRegistryUrl       string

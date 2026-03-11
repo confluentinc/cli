@@ -6,13 +6,11 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
-	"time"
 	"unicode"
 
 	"github.com/spf13/cobra"
 
 	srcmv3 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v3"
-	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
@@ -183,21 +181,8 @@ func (c *clientConfigCommand) setKafkaCluster(cmd *cobra.Command, configFile str
 		return "", err
 	}
 
-	// Only validate that the key pair matches with the cluster if it's passed via the flag.
-	// This is because currently "api-key store" does not check if the secret is valid. Therefore, if users
-	// choose to use the key pair stored in the context, we should use it without doing a validation.
-	flagKey, err := getApiKey(cmd)
-	if err != nil {
+	if err := kafkaCluster.DecryptAPIKeys(); err != nil {
 		return "", err
-	}
-	if flagKey != "" {
-		if err := c.validateKafkaCredentials(kafkaCluster); err != nil {
-			return "", err
-		}
-	} else {
-		if err := kafkaCluster.DecryptAPIKeys(); err != nil {
-			return "", err
-		}
 	}
 
 	// replace BROKER_ENDPOINT, CLUSTER_API_KEY, and CLUSTER_API_SECRET templates
@@ -282,29 +267,6 @@ func (c *clientConfigCommand) getSchemaRegistryCluster() (*srcmv3.SrcmV3Cluster,
 	return &clusters[0], nil
 }
 
-func (c *clientConfigCommand) validateKafkaCredentials(kafkaCluster *config.KafkaClusterConfig) error {
-	configMap, err := getCommonConfig(kafkaCluster, c.clientId)
-	if err != nil {
-		return err
-	}
-	adminClient, err := ckgo.NewAdminClient(configMap)
-	if err != nil {
-		return err
-	}
-	defer adminClient.Close()
-	timeout := 5 * time.Second
-	if _, err := adminClient.GetMetadata(nil, true, int(timeout.Milliseconds())); err != nil {
-		if err.Error() == ckgo.ErrTransport.String() {
-			err = errors.NewErrorWithSuggestions("failed to validate Kafka API credential", "Verify that the correct Kafka API credential is used.\n"+
-				"If you are using the stored Kafka API credential, verify that the secret is correct. If incorrect, override with `confluent api-key store --force`.\n"+
-				"If you are using the flags, verify that the correct Kafka API credential is passed to `--api-key` and `--api-secret`.")
-		}
-		return err
-	}
-
-	return nil
-}
-
 func (c *clientConfigCommand) validateSchemaRegistryCredentials(cmd *cobra.Command) error {
 	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
@@ -354,37 +316,6 @@ func commentAndWarnAboutSchemaRegistry(suggestions, configFile string) string {
 }
 
 func commentSchemaRegistryLines(configFile string) string {
-	/* Examples:
-	1. Case where SR properties start at the beginning of the line
-	# Required connection configs for Confluent Cloud Schema Registry
-	schema.registry.url=https://{{ SR_ENDPOINT }}
-	basic.auth.credentials.source=USER_INFO
-	basic.auth.user.info={{ SR_API_KEY }}:{{ SR_API_SECRET }}
-
-	---BECOMES--->
-
-	# Required connection configs for Confluent Cloud Schema Registry
-	#schema.registry.url=https://{{ SR_ENDPOINT }}
-	#basic.auth.credentials.source=USER_INFO
-	#basic.auth.user.info={{ SR_API_KEY }}:{{ SR_API_SECRET }}
-
-	2. Case where SR properties don't start at the beginning of the line
-	properties {
-		# Required connection configs for Confluent Cloud Schema Registry
-		schema.registry.url = "https://{{ SR_ENDPOINT }}"
-		basic.auth.credentials.source = USER_INFO
-		basic.auth.user.info = "{{ SR_API_KEY }}:{{ SR_API_SECRET }}"
-	}
-
-	---BECOMES--->
-
-	properties {
-		# Required connection configs for Confluent Cloud Schema Registry
-		#schema.registry.url = "https://{{ SR_ENDPOINT }}"
-		#basic.auth.credentials.source = USER_INFO
-		#basic.auth.user.info = "{{ SR_API_KEY }}:{{ SR_API_SECRET }}"
-	}
-	*/
 	lines := strings.Split(configFile, "\n")
 
 	for idx, line := range lines {
@@ -402,26 +333,3 @@ func commentSchemaRegistryLines(configFile string) string {
 	return strings.Join(lines, "\n")
 }
 
-func getApiKey(cmd *cobra.Command) (string, error) {
-	if cmd.Flag("api-key") == nil || cmd.Flag("api-secret") == nil {
-		return "", nil
-	}
-	apiKey, err := cmd.Flags().GetString("api-key")
-	if err != nil {
-		return "", err
-	}
-
-	apiSecret, err := cmd.Flags().GetString("api-secret")
-	if err != nil {
-		return "", err
-	}
-
-	if apiKey == "" && apiSecret != "" {
-		return "", errors.NewErrorWithSuggestions(
-			"no API key specified",
-			"Use the `--api-key` flag to specify an API key.",
-		)
-	}
-
-	return apiKey, nil
-}

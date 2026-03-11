@@ -127,13 +127,6 @@ func (s *CLITestSuite) TestLogin_UseKafkaAuthKafkaErrors() {
 			authKafka: true,
 		},
 		{
-			name:     "error if no API key used",
-			args:     "kafka topic produce integ",
-			fixture:  "login/err-no-api-key.golden",
-			exitCode: 1,
-			useKafka: "lkc-abc123",
-		},
-		{
 			name:      "error if deleting non-existent api-key",
 			args:      "api-key delete UNKNOWN",
 			input:     "y\n",

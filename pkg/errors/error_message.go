@@ -36,19 +36,7 @@ const (
 	KafkaClusterMissingPrefixErrorMsg = `Kafka cluster "%s" is missing required prefix "lkc-"`
 
 	// kafka topic commands
-	FailedToCreateProducerErrorMsg    = "failed to create producer: %v"
-	FailedToCreateConsumerErrorMsg    = "failed to create consumer: %v"
-	FailedToGetConfigurationErrorMsg  = "failed to get configuration map: %w"
-	FailedToCreateAdminClientErrorMsg = "failed to create confluent-kafka-go admin client: %w"
-	FailedToProduceErrorMsg           = "failed to produce offset %d: %s\n"
-	UnknownValueFormatErrorMsg        = "unknown value schema format"
-	ExceedPartitionLimitSuggestions   = "The total partition limit for a dedicated cluster may be increased by expanding its CKU count using `confluent kafka cluster update <id> --cku <count>`."
-
-	// serialization/deserialization commands
-	JsonDocumentInvalidErrorMsg       = "the JSON document is invalid"
-	AvroReferenceNotSupportedErrorMsg = "avro reference not supported in cloud CLI"
-	ProtoSchemaInvalidErrorMsg        = "the protobuf schema is invalid"
-	ProtoDocumentInvalidErrorMsg      = "the protobuf document is invalid"
+	ExceedPartitionLimitSuggestions = "The total partition limit for a dedicated cluster may be increased by expanding its CKU count using `confluent kafka cluster update <id> --cku <count>`."
 
 	// ksql commands
 	KsqldbNoServiceAccountErrorMsg = `ACLs do not need to be configured for the ksqlDB cluster, "%s", because it was created with user-level access to the Kafka cluster`

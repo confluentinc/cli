@@ -529,16 +529,6 @@ func AddTypeFlag(cmd *cobra.Command) {
 	RegisterFlagCompletionFunc(cmd, "type", func(_ *cobra.Command, _ []string) []string { return kafka.Types })
 }
 
-func AddKeyFormatFlag(cmd *cobra.Command) {
-	cmd.Flags().String("key-format", "string", fmt.Sprintf("Format of message key as %s. Note that schema references are not supported for Avro.", utils.ArrayToCommaDelimitedString(serdes.Formats, "or")))
-	RegisterFlagCompletionFunc(cmd, "key-format", func(_ *cobra.Command, _ []string) []string { return serdes.Formats })
-}
-
-func AddValueFormatFlag(cmd *cobra.Command) {
-	cmd.Flags().String("value-format", "string", fmt.Sprintf("Format message value as %s. Note that schema references are not supported for Avro.", utils.ArrayToCommaDelimitedString(serdes.Formats, "or")))
-	RegisterFlagCompletionFunc(cmd, "value-format", func(_ *cobra.Command, _ []string) []string { return serdes.Formats })
-}
-
 func AddLinkFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 	cmd.Flags().String("link", "", "Name of cluster link.")
 

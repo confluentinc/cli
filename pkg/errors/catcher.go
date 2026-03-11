@@ -326,20 +326,3 @@ func isResourceNotFoundError(err error) bool {
 	return strings.Contains(err.Error(), "resource not found")
 }
 
-/*
-failed to produce offset -1: Unknown error, how did this happen? Error code = 87
-*/
-func CatchProduceToCompactedTopicError(err error, topicName string) (bool, error) {
-	if err == nil {
-		return false, nil
-	}
-	compiledRegex := regexp.MustCompile(`Unknown error, how did this happen\? Error code = 87`)
-	if compiledRegex.MatchString(err.Error()) {
-		return true, NewErrorWithSuggestions(
-			fmt.Sprintf("producer has detected an INVALID_RECORD error for topic %s", topicName),
-			"If the topic has schema validation enabled, ensure you are producing with a schema-enabled producer.\n"+
-				"If your topic is compacted, ensure you are producing a record with a key.",
-		)
-	}
-	return false, err
-}

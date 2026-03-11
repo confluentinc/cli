@@ -3,7 +3,6 @@ package local
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -18,17 +17,15 @@ func (c *command) newKafkaTopicCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "topic",
 		Short: "Run Kafka topic related commands.",
-		Long:  `Run Kafka commands including produce/consume and list topics.`,
+		Long:  `Run Kafka commands including list topics.`,
 		Args:  cobra.NoArgs,
 	}
 
 	cmd.AddCommand(c.newKafkaTopicConfigurationCommand())
-	cmd.AddCommand(c.newKafkaTopicConsumeCommand())
 	cmd.AddCommand(c.newKafkaTopicCreateCommand())
 	cmd.AddCommand(c.newKafkaTopicDeleteCommand())
 	cmd.AddCommand(c.newKafkaTopicDescribeCommand())
 	cmd.AddCommand(c.newKafkaTopicListCommand())
-	cmd.AddCommand(c.newKafkaTopicProduceCommand())
 	cmd.AddCommand(c.newKafkaTopicUpdateCommand())
 
 	return cmd
@@ -62,12 +59,4 @@ func initKafkaRest(c *pcmd.CLICommand, cmd *cobra.Command) (*kafkarestv3.APIClie
 	}
 
 	return kafkaRestClient, clusterListData.Data[0].ClusterId, nil
-}
-
-func (c *command) getPlaintextBootstrapServers() string {
-	portStrings := make([]string, 0, len(c.Config.LocalPorts.PlaintextPorts))
-	for _, port := range c.Config.LocalPorts.PlaintextPorts {
-		portStrings = append(portStrings, ":"+port)
-	}
-	return strings.Join(portStrings, ",")
 }
