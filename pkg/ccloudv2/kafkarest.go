@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	kafkarestv3Internal "github.com/confluentinc/ccloud-sdk-go-v2-internal/kafkarest/v3"
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	"github.com/confluentinc/cli/v4/pkg/ccstructs"
@@ -35,6 +36,34 @@ func NewKafkaRestClient(url, clusterId, userAgent, authToken string, unsafeTrace
 		AuthToken: authToken,
 		ClusterId: clusterId,
 	}
+}
+
+type KafkaRestClientInternal struct {
+	*kafkarestv3Internal.APIClient
+	AuthToken string
+	ClusterId string
+}
+
+func NewKafkaRestClientInternal(url, clusterId, userAgent, authToken string, unsafeTrace bool) *KafkaRestClientInternal {
+	cfg := kafkarestv3Internal.NewConfiguration()
+	cfg.Debug = unsafeTrace
+	cfg.HTTPClient = NewRetryableHttpClient(nil, unsafeTrace)
+	cfg.Servers = kafkarestv3Internal.ServerConfigurations{{URL: url}}
+	cfg.UserAgent = userAgent
+
+	return &KafkaRestClientInternal{
+		APIClient: kafkarestv3Internal.NewAPIClient(cfg),
+		AuthToken: authToken,
+		ClusterId: clusterId,
+	}
+}
+
+func (c *KafkaRestClientInternal) kafkaRestApiContextInternal() context.Context {
+	return context.WithValue(context.Background(), kafkarestv3Internal.ContextAccessToken, c.AuthToken)
+}
+
+func (c *KafkaRestClientInternal) GetUrlInternal() string {
+	return c.GetConfig().Servers[0].URL
 }
 
 func (c *KafkaRestClient) GetUrl() string {
@@ -364,4 +393,64 @@ func (c *KafkaRestClient) UpdateKafkaTopicPartitionCount(topicName string, updat
 
 func (c *KafkaRestClient) GetKafkaTopic(topicName string) (kafkarestv3.TopicData, *http.Response, error) {
 	return c.TopicV3Api.GetKafkaTopic(c.kafkaRestApiContext(), c.ClusterId, topicName).Execute()
+}
+
+func (c *KafkaRestClientInternal) GetKafkaStreamGroup(groupId string) (kafkarestv3Internal.StreamsGroupData, error) {
+	res, httpResp, err := c.StreamsGroupV3Api.GetKafkaStreamsGroup(c.kafkaRestApiContextInternal(), c.ClusterId, groupId).Execute()
+	return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+}
+
+func (c *KafkaRestClientInternal) GetKafkaStreamGroupMember(groupId, memberId string) (kafkarestv3Internal.StreamsGroupMemberData, error) {
+	res, httpResp, err := c.StreamsGroupV3Api.GetKafkaStreamsGroupMember(c.kafkaRestApiContextInternal(), c.ClusterId, groupId, memberId).Execute()
+	return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+}
+
+func (c *KafkaRestClientInternal) GetKafkaStreamGroupMemberAssignment(groupId, memberId string) (kafkarestv3Internal.StreamsGroupMemberAssignmentData, error) {
+	res, httpResp, err := c.StreamsGroupV3Api.GetKafkaStreamsGroupMemberAssignments(c.kafkaRestApiContextInternal(), c.ClusterId, groupId, memberId).Execute()
+	return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+}
+
+func (c *KafkaRestClientInternal) GetKafkaStreamGroupMemberTargetAssignment(groupId, memberId string) (kafkarestv3Internal.StreamsGroupMemberAssignmentData, error) {
+	res, httpResp, err := c.StreamsGroupV3Api.GetKafkaStreamsGroupMemberTargetAssignments(c.kafkaRestApiContextInternal(), c.ClusterId, groupId, memberId).Execute()
+	return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+}
+
+func (c *KafkaRestClientInternal) GetKafkaStreamGroupMemberAssignmentTaskPartitions(groupId, memberId, assignmentsType, subtopologyId string) (kafkarestv3Internal.StreamsTaskData, error) {
+	res, httpResp, err := c.StreamsGroupV3Api.GetKafkaStreamsGroupMemberAssignmentTaskPartitions(c.kafkaRestApiContextInternal(), c.ClusterId, groupId, memberId, assignmentsType, subtopologyId).Execute()
+	return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+}
+
+func (c *KafkaRestClientInternal) GetKafkaStreamGroupSubtopology(groupId, topology string) (kafkarestv3Internal.StreamsGroupSubtopologyData, error) {
+	res, httpResp, err := c.StreamsGroupV3Api.GetKafkaStreamsGroupSubtopology(c.kafkaRestApiContextInternal(), c.ClusterId, groupId, topology).Execute()
+	return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+}
+
+func (c *KafkaRestClientInternal) GetKafkaStreamsGroupMemberTargetAssignmentTaskPartitions(groupId, memberId, assignmentsType, subtopologyId string) (kafkarestv3Internal.StreamsTaskData, error) {
+	res, httpResp, err := c.StreamsGroupV3Api.GetKafkaStreamsGroupMemberTargetAssignmentTaskPartitions(c.kafkaRestApiContextInternal(), c.ClusterId, groupId, memberId, assignmentsType, subtopologyId).Execute()
+	return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+}
+
+func (c *KafkaRestClientInternal) ListKafkaStreamsGroup() (kafkarestv3Internal.StreamsGroupDataList, error) {
+	res, httpResp, err := c.StreamsGroupV3Api.ListKafkaStreamsGroups(c.kafkaRestApiContextInternal(), c.ClusterId).Execute()
+	return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+}
+
+func (c *KafkaRestClientInternal) ListKafkaStreamsGroupMembers(groupId string) (kafkarestv3Internal.StreamsGroupMemberDataList, error) {
+	res, httpResp, err := c.StreamsGroupV3Api.ListKafkaStreamsGroupMembers(c.kafkaRestApiContextInternal(), c.ClusterId, groupId).Execute()
+	return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+}
+
+func (c *KafkaRestClientInternal) ListKafkaStreamsGroupMemberAssignmentTasks(groupId, memberId, assignmentType string) (kafkarestv3Internal.StreamsTaskDataList, error) {
+	res, httpResp, err := c.StreamsGroupV3Api.ListKafkaStreamsGroupMemberAssignmentTasks(c.kafkaRestApiContextInternal(), c.ClusterId, groupId, memberId, assignmentType).Execute()
+	return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+}
+
+func (c *KafkaRestClientInternal) ListKafkaStreamsGroupMemberTargetAssignmentTasks(groupId, memberId, assignmentType string) (kafkarestv3Internal.StreamsTaskDataList, error) {
+	res, httpResp, err := c.StreamsGroupV3Api.ListKafkaStreamsGroupMemberTargetAssignmentTasks(c.kafkaRestApiContextInternal(), c.ClusterId, groupId, memberId, assignmentType).Execute()
+	return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+}
+
+func (c *KafkaRestClientInternal) ListKafkaStreamsGroupMemberSubtopologies(groupId string) (kafkarestv3Internal.StreamsGroupSubtopologyDataList, error) {
+	res, httpResp, err := c.StreamsGroupV3Api.ListKafkaStreamsGroupSubtopologies(c.kafkaRestApiContextInternal(), c.ClusterId, groupId).Execute()
+	return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
 }
