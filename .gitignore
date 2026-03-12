@@ -63,8 +63,7 @@ go.work.sum
 __MACOSX/
 .AppleDouble
 .LSOverride
-Icon[
-]
+Icon[]
 
 # Thumbnails
 ._*
