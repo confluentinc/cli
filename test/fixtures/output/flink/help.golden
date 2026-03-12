@@ -9,6 +9,7 @@ Available Commands:
   connection         Manage Flink connections.
   connectivity-type  Manage Flink connectivity type.
   endpoint           Manage Flink endpoint.
+  materialized-table Manage Flink materialized tables.
   region             Manage Flink regions.
   shell              Start Flink interactive SQL client.
   statement          Manage Flink SQL statements.

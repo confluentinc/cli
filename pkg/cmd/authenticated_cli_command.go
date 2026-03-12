@@ -36,10 +36,11 @@ type AuthenticatedCLICommand struct {
 	MDSv2Client       *mdsv2alpha1.APIClient
 	V2Client          *ccloudv2.Client
 
-	flinkGatewayClient   *ccloudv2.FlinkGatewayClient
-	metricsClient        *ccloudv2.MetricsClient
-	schemaRegistryClient *schemaregistry.Client
-	usageLimitsClient    *kafkausagelimits.UsageLimitsClient
+	flinkGatewayClient         *ccloudv2.FlinkGatewayClient
+	flinkGatewayClientInternal *ccloudv2.FlinkGatewayClientInternal
+	metricsClient              *ccloudv2.MetricsClient
+	schemaRegistryClient       *schemaregistry.Client
+	usageLimitsClient          *kafkausagelimits.UsageLimitsClient
 
 	Context *config.Context
 }
@@ -96,6 +97,48 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 	}
 
 	return c.flinkGatewayClient, nil
+}
+
+func (c *AuthenticatedCLICommand) GetFlinkGatewayClientInternal(computePoolOnly bool) (*ccloudv2.FlinkGatewayClientInternal, error) {
+	if c.flinkGatewayClientInternal == nil {
+		var url string
+		var err error
+
+		if c.Context.GetCurrentFlinkEndpoint() != "" {
+			url = c.Context.GetCurrentFlinkEndpoint()
+		} else if computePoolOnly {
+			if computePoolId := c.Context.GetCurrentFlinkComputePool(); computePoolId != "" {
+				url, err = c.getGatewayUrlForComputePool(c.Context.GetCurrentFlinkAccessType(), computePoolId)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				return nil, errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
+			}
+		} else if c.Context.GetCurrentFlinkRegion() != "" && c.Context.GetCurrentFlinkCloudProvider() != "" {
+			url, err = c.getGatewayUrlForRegion(c.Context.GetCurrentFlinkAccessType(), c.Context.GetCurrentFlinkCloudProvider(), c.Context.GetCurrentFlinkRegion())
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, errors.NewErrorWithSuggestions("no cloud provider and region selected", "Select a cloud provider and region with `confluent flink region use` or `--cloud` and `--region`.")
+		}
+
+		unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
+		if err != nil {
+			return nil, err
+		}
+
+		dataplaneToken, err := auth.GetDataplaneToken(c.Context)
+		if err != nil {
+			return nil, err
+		}
+
+		log.CliLogger.Debugf("The final url used for setting up Flink dataplane client is: %s\n", url)
+		c.flinkGatewayClientInternal = ccloudv2.NewFlinkGatewayClientInternal(url, c.Version.UserAgent, unsafeTrace, dataplaneToken)
+	}
+
+	return c.flinkGatewayClientInternal, nil
 }
 
 func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(access, id string) (string, error) {
