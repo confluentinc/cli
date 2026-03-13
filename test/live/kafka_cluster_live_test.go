@@ -48,9 +48,9 @@ func (s *CLILiveTestSuite) TestKafkaClusterCRUDLive() {
 					UseStateVars: true,
 					CaptureID:    "cluster_id",
 					JSONFields: map[string]string{
-						"name":     clusterName,
-						"cloud": cloud,
-						"region":   region,
+						"name":   clusterName,
+						"cloud":  cloud,
+						"region": region,
 					},
 					JSONFieldsExist: []string{"id", "status"},
 				},
@@ -94,9 +94,9 @@ func (s *CLILiveTestSuite) TestKafkaClusterCRUDLive() {
 					Args:         "kafka cluster describe {{.cluster_id}} --environment {{.env_id}} -o json",
 					UseStateVars: true,
 					JSONFields: map[string]string{
-						"name":     updatedName,
-						"cloud": cloud,
-						"region":   region,
+						"name":   updatedName,
+						"cloud":  cloud,
+						"region": region,
 					},
 				},
 				{
