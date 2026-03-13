@@ -1,0 +1,9 @@
+[
+  {
+    "kind": "KafkaStreamsGroupSubtopology",
+    "cluster_id": "lkc-1234",
+    "group_id": "streams-group-1",
+    "subtopology_id": "subtopology-1",
+    "source_topics": ["input-topic-1", "input-topic-2"]
+  }
+]
