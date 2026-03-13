@@ -6,7 +6,7 @@ import (
 
 func (c *consumerCommand) newStreamGroupMemberTargetAssignmentCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "stream-group-member-target-assignment",
+		Use:   "member-target-assignment",
 		Short: "Manage Kafka stream group member target assignments.",
 	}
 

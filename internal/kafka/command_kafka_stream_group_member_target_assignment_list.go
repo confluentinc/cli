@@ -9,7 +9,7 @@ import (
 
 func (c *consumerCommand) newStreamGroupMemberTargetAssignmentTaskListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "target-task-list",
+		Use:         "list",
 		Short:       "List kafka stream group member target assignment tasks.",
 		Args:        cobra.NoArgs,
 		RunE:        c.listStreamGroupMemberTargetAssignmentTasks,

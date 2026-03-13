@@ -8,7 +8,7 @@ import (
 
 func (c *consumerCommand) newStreamGroupMemberTargetAssignmentTaskPartitionsDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "task-partitions-describe <member>",
+		Use:               "describe <member>",
 		Short:             "Describe stream group member target assignment task partitions",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStreamGroupArgs),

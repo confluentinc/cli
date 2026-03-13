@@ -21,7 +21,7 @@ type streamGroupMemberOut struct {
 
 func (c *consumerCommand) newStreamGroupMemberCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "stream-group-member",
+		Use:   "member",
 		Short: "Manage Kafka stream groups members.",
 	}
 
