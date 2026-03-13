@@ -36,14 +36,17 @@ func (s *CLILiveTestSuite) TestServiceAccountCRUDLive() {
 			UseStateVars: true,
 			ExitCode:     0,
 			JSONFields: map[string]string{
-				"name": saName,
+				"name":        saName,
+				"description": saDescription,
 			},
 		},
 		{
-			Name:     "List service accounts",
-			Args:     "iam service-account list",
+			Name:     "List service accounts with display-name filter",
+			Args:     `iam service-account list --display-name "` + saName + `" -o json`,
 			ExitCode: 0,
-			Contains: []string{saName},
+			JSONFields: map[string]string{
+				"name": saName,
+			},
 		},
 		{
 			Name:         "Update service account description",
