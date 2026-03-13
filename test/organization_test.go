@@ -15,6 +15,7 @@ func (s *CLITestSuite) TestOrganization() {
 		{args: "organization update --name default-updated", fixture: "organization/update.golden"},
 		{args: "organization update --name default-updated -o json", fixture: "organization/update-json.golden"},
 		{args: "organization use abc-456", fixture: "organization/use.golden"},
+		{args: "organization use abc-123", fixture: "organization/use-already-active.golden"},
 	}
 
 	for _, test := range tests {
@@ -49,10 +50,9 @@ func (s *CLITestSuite) TestOrganization() {
 		s.runIntegrationTest(test)
 	})
 
+	// The use command validates via the list endpoint, so org-dne simply
+	// won't appear in the returned list — no need for TestOrgNotFound.
 	s.T().Run("organization use not found", func(t *testing.T) {
-		testserver.TestOrgNotFound = true
-		defer func() { testserver.TestOrgNotFound = false }()
-
 		test := CLITest{
 			args:     "organization use org-dne",
 			fixture:  "organization/use-not-found.golden",

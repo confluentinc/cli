@@ -48,8 +48,26 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 func (c *command) use(_ *cobra.Command, args []string) error {
 	id := args[0]
 
-	if _, httpResp, err := c.V2Client.GetOrgOrganization(id); err != nil {
-		return errors.CatchCCloudV2ResourceNotFoundError(err, resource.Organization, httpResp)
+	// Use the list endpoint instead of get-by-ID because the org-scoped JWT
+	// only authorizes reading the *current* organization. The list endpoint
+	// returns every organization the user belongs to regardless of JWT scope.
+	organizations, err := c.V2Client.ListOrgOrganizations()
+	if err != nil {
+		return fmt.Errorf("failed to list organizations: %w", err)
+	}
+
+	found := false
+	for _, org := range organizations {
+		if org.GetId() == id {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(`organization "%s" not found or access forbidden`, id),
+			"List available organizations with `organization list`.",
+		)
 	}
 
 	if id == c.Context.GetCurrentOrganization() {
