@@ -1,0 +1,9 @@
+Choose a Confluent Cloud organization to be used in subsequent commands. Switching organizations clears your active environment and Kafka cluster selections.
+
+Usage:
+  confluent organization use <id> [flags]
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
