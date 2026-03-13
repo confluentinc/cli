@@ -2,7 +2,9 @@ package ccloudv2
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	kafkarestv3Internal "github.com/confluentinc/ccloud-sdk-go-v2-internal/kafkarest/v3"
@@ -64,6 +66,27 @@ func (c *KafkaRestClientInternal) kafkaRestApiContextInternal() context.Context 
 
 func (c *KafkaRestClientInternal) GetUrlInternal() string {
 	return c.GetConfig().Servers[0].URL
+}
+
+// handles API responses that wrap single-resource data in a {"data": ...} envelope.
+func unwrapDataEnvelope(httpResp *http.Response, target interface{}) error {
+	if httpResp == nil || httpResp.Body == nil {
+		return nil
+	}
+	body, err := io.ReadAll(httpResp.Body)
+	if err != nil {
+		return err
+	}
+	var envelope struct {
+		Data json.RawMessage `json:"data"`
+	}
+	if err := json.Unmarshal(body, &envelope); err != nil {
+		return err
+	}
+	if envelope.Data != nil {
+		return json.Unmarshal(envelope.Data, target)
+	}
+	return json.Unmarshal(body, target)
 }
 
 func (c *KafkaRestClient) GetUrl() string {
@@ -402,32 +425,80 @@ func (c *KafkaRestClientInternal) GetKafkaStreamGroup(groupId string) (kafkarest
 
 func (c *KafkaRestClientInternal) GetKafkaStreamGroupMember(groupId, memberId string) (kafkarestv3Internal.StreamsGroupMemberData, error) {
 	res, httpResp, err := c.StreamsGroupV3Api.GetKafkaStreamsGroupMember(c.kafkaRestApiContextInternal(), c.ClusterId, groupId, memberId).Execute()
-	return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+	if err != nil {
+		return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+	}
+	if res.GetKind() == "" {
+		if unwrapErr := unwrapDataEnvelope(httpResp, &res); unwrapErr != nil {
+			return res, unwrapErr
+		}
+	}
+	return res, nil
 }
 
 func (c *KafkaRestClientInternal) GetKafkaStreamGroupMemberAssignment(groupId, memberId string) (kafkarestv3Internal.StreamsGroupMemberAssignmentData, error) {
 	res, httpResp, err := c.StreamsGroupV3Api.GetKafkaStreamsGroupMemberAssignments(c.kafkaRestApiContextInternal(), c.ClusterId, groupId, memberId).Execute()
-	return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+	if err != nil {
+		return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+	}
+	if res.GetKind() == "" {
+		if unwrapErr := unwrapDataEnvelope(httpResp, &res); unwrapErr != nil {
+			return res, unwrapErr
+		}
+	}
+	return res, nil
 }
 
 func (c *KafkaRestClientInternal) GetKafkaStreamGroupMemberTargetAssignment(groupId, memberId string) (kafkarestv3Internal.StreamsGroupMemberAssignmentData, error) {
 	res, httpResp, err := c.StreamsGroupV3Api.GetKafkaStreamsGroupMemberTargetAssignments(c.kafkaRestApiContextInternal(), c.ClusterId, groupId, memberId).Execute()
-	return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+	if err != nil {
+		return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+	}
+	if res.GetKind() == "" {
+		if unwrapErr := unwrapDataEnvelope(httpResp, &res); unwrapErr != nil {
+			return res, unwrapErr
+		}
+	}
+	return res, nil
 }
 
 func (c *KafkaRestClientInternal) GetKafkaStreamGroupMemberAssignmentTaskPartitions(groupId, memberId, assignmentsType, subtopologyId string) (kafkarestv3Internal.StreamsTaskData, error) {
 	res, httpResp, err := c.StreamsGroupV3Api.GetKafkaStreamsGroupMemberAssignmentTaskPartitions(c.kafkaRestApiContextInternal(), c.ClusterId, groupId, memberId, assignmentsType, subtopologyId).Execute()
-	return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+	if err != nil {
+		return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+	}
+	if res.GetSubtopologyId() == "" {
+		if unwrapErr := unwrapDataEnvelope(httpResp, &res); unwrapErr != nil {
+			return res, unwrapErr
+		}
+	}
+	return res, nil
 }
 
 func (c *KafkaRestClientInternal) GetKafkaStreamGroupSubtopology(groupId, topology string) (kafkarestv3Internal.StreamsGroupSubtopologyData, error) {
 	res, httpResp, err := c.StreamsGroupV3Api.GetKafkaStreamsGroupSubtopology(c.kafkaRestApiContextInternal(), c.ClusterId, groupId, topology).Execute()
-	return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+	if err != nil {
+		return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+	}
+	if res.GetKind() == "" {
+		if unwrapErr := unwrapDataEnvelope(httpResp, &res); unwrapErr != nil {
+			return res, unwrapErr
+		}
+	}
+	return res, nil
 }
 
 func (c *KafkaRestClientInternal) GetKafkaStreamsGroupMemberTargetAssignmentTaskPartitions(groupId, memberId, assignmentsType, subtopologyId string) (kafkarestv3Internal.StreamsTaskData, error) {
 	res, httpResp, err := c.StreamsGroupV3Api.GetKafkaStreamsGroupMemberTargetAssignmentTaskPartitions(c.kafkaRestApiContextInternal(), c.ClusterId, groupId, memberId, assignmentsType, subtopologyId).Execute()
-	return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+	if err != nil {
+		return res, kafkarest.NewError(c.GetUrlInternal(), err, httpResp)
+	}
+	if res.GetSubtopologyId() == "" {
+		if unwrapErr := unwrapDataEnvelope(httpResp, &res); unwrapErr != nil {
+			return res, unwrapErr
+		}
+	}
+	return res, nil
 }
 
 func (c *KafkaRestClientInternal) ListKafkaStreamsGroup() (kafkarestv3Internal.StreamsGroupDataList, error) {
