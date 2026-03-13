@@ -70,6 +70,7 @@ func (s *CLILiveTestSuite) TestApiKeyCRUDLive() {
 			JSONFields: map[string]string{
 				"description": updatedDescription,
 			},
+			JSONFieldsExist: []string{"key", "owner"},
 		},
 		{
 			Name:         "Delete API key",
