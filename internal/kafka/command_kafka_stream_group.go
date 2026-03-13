@@ -1,9 +1,9 @@
 package kafka
 
 import (
-	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
 type streamGroupOut struct {
@@ -20,7 +20,7 @@ type streamGroupOut struct {
 	Subtopologies         string `human:"Subtopologies" serialized:"subtopologies"`
 }
 
-func (c *consumerCommand) newStreamGroupCommand(cfg *config.Config) *cobra.Command {
+func (c *consumerCommand) newStreamGroupCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "stream-group",
 		Short:       "Manage Kafka stream groups.",

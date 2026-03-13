@@ -2,9 +2,10 @@ package kafka
 
 import (
 	kafkarestv3Internal "github.com/confluentinc/ccloud-sdk-go-v2-internal/kafkarest/v3"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
-	"github.com/spf13/cobra"
 )
 
 func (c *consumerCommand) newStreamGroupListCommand() *cobra.Command {
