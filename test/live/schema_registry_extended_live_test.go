@@ -69,6 +69,10 @@ func (s *CLILiveTestSuite) TestSchemaRegistryExtendedLive() {
 			JSONFieldsExist: []string{"compatibility_level"},
 		},
 		{
+			Name: "List schema-registry endpoints",
+			Args: "schema-registry endpoint list --environment " + envID,
+		},
+		{
 			Name: "Delete schema versions",
 			Args: "schema-registry schema delete --subject " + subjectName + " --version all --force --environment " + envID,
 		},

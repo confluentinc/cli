@@ -30,6 +30,10 @@ func (s *CLILiveTestSuite) TestConnectCustomPluginCRUDLive() {
 			Name: "List custom plugins",
 			Args: "connect custom-plugin list",
 		},
+		{
+			Name: "List custom runtimes",
+			Args: "connect custom-runtime list --environment " + envID,
+		},
 	}
 
 	for _, step := range steps {

@@ -24,6 +24,10 @@ func (s *CLILiveTestSuite) TestBillingLive() {
 			Name: "List billing promos",
 			Args: "billing promo list",
 		},
+		{
+			Name: "Describe billing payment",
+			Args: "billing payment describe -o json",
+		},
 	}
 
 	for _, step := range steps {

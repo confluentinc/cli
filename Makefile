@@ -175,6 +175,10 @@ live-test-connect:
 live-test-billing:
 	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="billing"
 
+.PHONY: live-test-flink
+live-test-flink:
+	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="flink"
+
 .PHONY: live-test-essential
 live-test-essential:
 	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="core,kafka,schema_registry,auth,billing"
@@ -216,6 +220,9 @@ live-test-resource: build-for-live-test
 		printf "  %-25s %-20s %s\n" "iam_certificate" "iam" "TestIAMCertificateAuthorityCRUDLive"; \
 		printf "  %-25s %-20s %s\n" "connect_custom_plugin" "connect" "TestConnectCustomPluginCRUDLive"; \
 		printf "  %-25s %-20s %s\n" "schema_registry_ext" "schema_registry" "TestSchemaRegistryExtendedLive"; \
+		printf "  %-25s %-20s %s\n" "flink_region" "flink" "TestFlinkRegionListLive"; \
+		printf "  %-25s %-20s %s\n" "plugin" "core" "TestPluginListLive"; \
+		printf "  %-25s %-20s %s\n" "kafka_share_group" "kafka" "TestKafkaShareGroupListLive"; \
 		echo ""; \
 		echo "Usage: make live-test-resource RESOURCE=<resource>"; \
 	else \
@@ -245,6 +252,9 @@ live-test-resource: build-for-live-test
 			iam_certificate) GROUP=iam; FUNC=TestIAMCertificateAuthorityCRUDLive;; \
 			connect_custom_plugin) GROUP=connect; FUNC=TestConnectCustomPluginCRUDLive;; \
 			schema_registry_ext) GROUP=schema_registry; FUNC=TestSchemaRegistryExtendedLive;; \
+			flink_region) GROUP=flink; FUNC=TestFlinkRegionListLive;; \
+			plugin) GROUP=core; FUNC=TestPluginListLive;; \
+			kafka_share_group) GROUP=kafka; FUNC=TestKafkaShareGroupListLive;; \
 			*) echo "Unknown resource: $(RESOURCE)"; echo "Run 'make live-test-resource' to see available resources."; exit 1;; \
 		esac; \
 		echo "Running $$FUNC (group: $$GROUP)..."; \
