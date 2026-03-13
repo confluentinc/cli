@@ -125,8 +125,12 @@ func (s *CLILiveTestSuite) SetupSuite() {
 	req.NoError(err, "CLI binary not found at %s — run 'make build-for-live-test' first", s.binPath)
 }
 
-// setupTestContext creates an isolated CLI config directory and logs in.
+// setupTestContext creates an isolated CLI config directory and authenticates.
 // Each test gets its own HOME so tests can run concurrently without clobbering shared state.
+//
+// Authentication modes:
+//   - CLI_LIVE_TEST_CONFIG_DIR set: copies existing CLI config (pre-authenticated session)
+//   - Otherwise: logs in with CONFLUENT_CLOUD_EMAIL/CONFLUENT_CLOUD_PASSWORD
 func (s *CLILiveTestSuite) setupTestContext(t *testing.T) *LiveTestState {
 	t.Helper()
 
@@ -136,6 +140,23 @@ func (s *CLILiveTestSuite) setupTestContext(t *testing.T) *LiveTestState {
 
 	state := NewLiveTestState()
 	state.homeDir = homeDir
+
+	if configDir := os.Getenv("CLI_LIVE_TEST_CONFIG_DIR"); configDir != "" {
+		// Pre-authenticated mode: copy existing CLI config into isolated HOME
+		srcDir := configDir
+		if filepath.Base(srcDir) != ".confluent" {
+			srcDir = filepath.Join(srcDir, ".confluent")
+		}
+		dstDir := filepath.Join(homeDir, ".confluent")
+		require.NoError(t, copyDir(srcDir, dstDir), "failed to copy config from %s", srcDir)
+
+		// Validate the copied config is authenticated
+		output := s.runRawCommand(t, "environment list", []string{homeEnvVar(homeDir)}, "", 0)
+		require.NotContains(t, output, "not logged in",
+			"copied CLI config is not authenticated — check CLI_LIVE_TEST_CONFIG_DIR")
+
+		return state
+	}
 
 	email := requiredEnv(t, "CONFLUENT_CLOUD_EMAIL")
 	password := requiredEnv(t, "CONFLUENT_CLOUD_PASSWORD")
