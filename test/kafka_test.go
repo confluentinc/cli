@@ -739,6 +739,39 @@ func (s *CLITestSuite) TestKafkaConsumerGroup() {
 	}
 }
 
+func (s *CLITestSuite) TestKafkaConsumerStreamGroup() {
+	tests := []CLITest{
+		{args: "kafka consumer stream-group list --cluster lkc-1234", fixture: "kafka/consumer/stream-group/list.golden"},
+		{args: "kafka consumer stream-group list --cluster lkc-1234 -o json", fixture: "kafka/consumer/stream-group/list-json.golden"},
+		{args: "kafka consumer stream-group describe streams-group-1 --cluster lkc-1234", fixture: "kafka/consumer/stream-group/describe.golden"},
+		{args: "kafka consumer stream-group describe streams-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer/stream-group/describe-json.golden"},
+		{args: "kafka consumer stream-group describe streams-group-999 --cluster lkc-1234", fixture: "kafka/consumer/stream-group/describe-dne.golden", exitCode: 1},
+
+		{args: "kafka consumer stream-group stream-group-member list --group streams-group-1 --cluster lkc-1234", fixture: "kafka/consumer/stream-group/member-list.golden"},
+		{args: "kafka consumer stream-group stream-group-member list --group streams-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer/stream-group/member-list-json.golden"},
+		{args: "kafka consumer stream-group stream-group-member describe member-1 --group streams-group-1 --cluster lkc-1234", fixture: "kafka/consumer/stream-group/member-describe.golden"},
+
+		{args: "kafka consumer stream-group stream-group-member-assignment describe member-1 --group streams-group-1 --cluster lkc-1234", fixture: "kafka/consumer/stream-group/assignment-describe.golden"},
+		{args: "kafka consumer stream-group stream-group-member-assignment list --group streams-group-1 --member member-1 --assignment active --cluster lkc-1234", fixture: "kafka/consumer/stream-group/assignment-task-list.golden"},
+
+		{args: "kafka consumer stream-group stream-group-member-target-assignment describe member-1 --group streams-group-1 --cluster lkc-1234", fixture: "kafka/consumer/stream-group/target-assignment-describe.golden"},
+		{args: "kafka consumer stream-group stream-group-member-target-assignment target-task-list --group streams-group-1 --member member-1 --assignment active --cluster lkc-1234", fixture: "kafka/consumer/stream-group/target-assignment-task-list.golden"},
+
+		{args: "kafka consumer stream-group stream-group-member-task-partitions describe member-1 --group streams-group-1 --subtopology subtopology-1 --assignment-type active --cluster lkc-1234", fixture: "kafka/consumer/stream-group/task-partitions-describe.golden"},
+
+		{args: "kafka consumer stream-group stream-group-member-target-assignment-task-partitions task-partitions-describe member-1 --group streams-group-1 --subtopology subtopology-1 --assignment-type active --cluster lkc-1234", fixture: "kafka/consumer/stream-group/target-task-partitions-describe.golden"},
+
+		{args: "kafka consumer stream-group stream-group-subtopology list --group streams-group-1 --cluster lkc-1234", fixture: "kafka/consumer/stream-group/subtopology-list.golden"},
+		{args: "kafka consumer stream-group stream-group-subtopology list --group streams-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer/stream-group/subtopology-list-json.golden"},
+		{args: "kafka consumer stream-group stream-group-subtopology describe subtopology-1 --group streams-group-1 --cluster lkc-1234", fixture: "kafka/consumer/stream-group/subtopology-describe.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestKafkaConsumerGroupLag() {
 	tests := []CLITest{
 		{args: "kafka consumer group lag describe consumer-group-1 --cluster lkc-describe-dedicated --topic topic-1 --partition 1", fixture: "kafka/consumer/group/lag/describe.golden"},

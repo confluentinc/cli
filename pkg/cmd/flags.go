@@ -618,6 +618,24 @@ func AutocompleteShareGroups(cmd *cobra.Command, c *AuthenticatedCLICommand) []s
 	return suggestions
 }
 
+func AutocompleteStreamGroups(cmd *cobra.Command, c *AuthenticatedCLICommand) []string {
+	kafkaREST, err := c.GetKafkaREST(cmd)
+	if err != nil {
+		return nil
+	}
+
+	streamGroups, err := kafkaREST.CloudClientInternal.ListKafkaStreamsGroup()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(streamGroups.Data))
+	for i, streamGroup := range streamGroups.Data {
+		suggestions[i] = streamGroup.GetGroupId()
+	}
+	return suggestions
+}
+
 func AddNetworkFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 	cmd.Flags().String("network", "", "Network ID.")
 	RegisterFlagCompletionFunc(cmd, "network", func(cmd *cobra.Command, args []string) []string {
