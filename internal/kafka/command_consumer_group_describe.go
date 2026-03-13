@@ -46,6 +46,7 @@ func (c *consumerCommand) groupDescribe(cmd *cobra.Command, args []string) error
 		IsSimple:          group.GetIsSimple(),
 		PartitionAssignor: group.GetPartitionAssignor(),
 		State:             group.GetState(),
+		ProtocolType:      group.GetType(),
 	})
 	return table.Print()
 }
