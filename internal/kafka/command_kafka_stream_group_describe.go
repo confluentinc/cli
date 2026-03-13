@@ -15,23 +15,17 @@ func (c *consumerCommand) newStreamGroupDescribeCommand() *cobra.Command {
 		RunE:              c.streamGroupDescribe,
 	}
 
-	cmd.Flags().String("group", "", "Group Id.")
 	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("group"))
-
 	return cmd
 }
 
 func (c *consumerCommand) streamGroupDescribe(cmd *cobra.Command, args []string) error {
-	groupId, err := cmd.Flags().GetString("group")
-	if err != nil {
-		return err
-	}
+	groupId := args[0]
 
 	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {

@@ -16,7 +16,6 @@ func (c *consumerCommand) newStreamGroupSubtopologyDescribeCommand() *cobra.Comm
 	}
 
 	cmd.Flags().String("group", "", "Group Id.")
-	cmd.Flags().String("subtopology", "", "Subtopology Id.")
 
 	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -25,7 +24,6 @@ func (c *consumerCommand) newStreamGroupSubtopologyDescribeCommand() *cobra.Comm
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("group"))
-	cobra.CheckErr(cmd.MarkFlagRequired("subtopology"))
 
 	return cmd
 }
@@ -36,10 +34,7 @@ func (c *consumerCommand) streamGroupSubtopologyDescribe(cmd *cobra.Command, arg
 		return err
 	}
 
-	subtopologyId, err := cmd.Flags().GetString("subtopology")
-	if err != nil {
-		return err
-	}
+	subtopologyId := args[0]
 
 	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {

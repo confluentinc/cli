@@ -16,7 +16,6 @@ func (c *consumerCommand) newStreamGroupMemberTargetAssignmentDescribeCommand() 
 	}
 
 	cmd.Flags().String("group", "", "Group Id.")
-	cmd.Flags().String("member", "", "Member Id.")
 
 	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -25,7 +24,6 @@ func (c *consumerCommand) newStreamGroupMemberTargetAssignmentDescribeCommand() 
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("group"))
-	cobra.CheckErr(cmd.MarkFlagRequired("member"))
 
 	return cmd
 }
@@ -36,10 +34,7 @@ func (c *consumerCommand) streamGroupMemberTargetAssignmentDescribe(cmd *cobra.C
 		return err
 	}
 
-	memberId, err := cmd.Flags().GetString("member")
-	if err != nil {
-		return err
-	}
+	memberId := args[0]
 
 	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
