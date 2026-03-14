@@ -1,0 +1,119 @@
+name: Skills Validation
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate-skills:
+    name: Validate Skills Manifest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: .go-version
+
+      - name: Generate skills manifest
+        run: make generate-skills
+
+      - name: Validate manifest
+        run: make validate-skills
+
+      - name: Check tool count and report
+        run: |
+          TOOL_COUNT=$(jq '.metadata.skill_count' pkg/mcp/skills.json)
+          echo "Generated $TOOL_COUNT tools"
+          if [ $TOOL_COUNT -ge 200 ]; then
+            echo "::warning::Tool count ($TOOL_COUNT) exceeds recommended limit (200)"
+          fi
+
+      - name: Upload skills manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: skills-manifest
+          path: pkg/mcp/skills.json
+          retention-days: 30
+
+  build-with-skills:
+    name: Build with Skills (${{ matrix.os }})
+    needs: validate-skills
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        go: ['1.25.7']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Build with skills
+        run: make build
+
+      - name: Verify MCP server exists (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          if (Test-Path "dist/confluent_windows_amd64/confluent.exe") {
+            Write-Host "✓ Windows binary created successfully"
+          } else {
+            Write-Error "Binary not found"
+            exit 1
+          }
+        shell: pwsh
+
+      - name: Verify MCP server exists (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          if ls dist/confluent_*/confluent 1> /dev/null 2>&1; then
+            echo "✓ Binary created successfully"
+            ls -lh dist/confluent_*/confluent
+          else
+            echo "ERROR: Binary not found"
+            exit 1
+          fi
+
+      - name: Test embedded skills are loaded
+        run: |
+          echo "TODO: Implement 'confluent mcp --version' to verify embedded skills"
+          echo "For now, verifying build completed successfully"
+
+  compare-manifests:
+    name: Check Manifest Freshness
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version-file: .go-version
+
+      - name: Generate fresh manifest
+        run: make generate-skills
+
+      - name: Check for uncommitted changes
+        run: |
+          if git diff --exit-code pkg/mcp/skills.json; then
+            echo "✓ Skills manifest is up to date"
+          else
+            echo "::error::Skills manifest out of date. Run 'make generate-skills' and commit."
+            echo ""
+            echo "Differences found:"
+            git diff pkg/mcp/skills.json
+            exit 1
+          fi

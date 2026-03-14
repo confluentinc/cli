@@ -61,7 +61,7 @@ endif
 
 
 .PHONY: clean
-clean:
+clean: clean-skills
 	for dir in bin dist docs legal prebuilt release-notes; do \
 		[ -d $$dir ] && rm -r $$dir || true; \
 	done
@@ -85,6 +85,39 @@ cmd/lint/en_US.aff:
 
 cmd/lint/en_US.dic:
 	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
+
+# === Skill Generation ===
+
+# Generate skills manifest from CLI command tree
+.PHONY: generate-skills
+generate-skills:
+	@echo "Generating skills manifest..."
+	@go run cmd/generate-skills/main.go > /dev/null
+	@echo "✓ Generated skills manifest: pkg/mcp/skills.json"
+	@echo "  Tool count: $$(jq '.metadata.skill_count' pkg/mcp/skills.json)"
+	@echo "  CLI version: $$(jq -r '.metadata.cli_version' pkg/mcp/skills.json)"
+
+# Validate skills manifest
+.PHONY: validate-skills
+validate-skills:
+	@echo "Validating skills manifest..."
+	@go run cmd/generate-skills/main.go --validate || \
+	  (echo "ERROR: Skills manifest validation failed. See above for details." && exit 1)
+
+# Generate skills reference documentation
+.PHONY: generate-reference
+generate-reference: generate-skills
+	@echo "Generating skills reference documentation..."
+	@mkdir -p docs/skills
+	@go run cmd/generate-reference/main.go --input pkg/mcp/skills.json --output docs/skills/REFERENCE.md
+	@echo "✓ Reference documentation generated at docs/skills/REFERENCE.md"
+
+# Clean generated skills
+.PHONY: clean-skills
+clean-skills:
+	@rm -f cmd/generate-skills/ir.json
+	@rm -f docs/skills/REFERENCE.md
+	@echo "✓ Cleaned generated skills artifacts"
 
 .PHONY: unit-test
 unit-test:
@@ -187,3 +220,32 @@ coverage: ## Merge coverage data from unit and integration tests into coverage.t
 	@tail -n +2 coverage.integration.out >> coverage.txt
 	@echo "Coverage data saved to: coverage.txt"
 	@artifact push workflow coverage.txt
+
+# Additional test convenience targets
+.PHONY: test-all test-coverage test-validate-coverage
+
+# Run all tests with coverage and race detection (comprehensive)
+test-all:
+	@echo "Running comprehensive test suite..."
+	@$(MAKE) unit-test
+	@$(MAKE) build-for-integration-test
+	@$(MAKE) integration-test
+	@$(MAKE) coverage
+
+# Generate coverage report with HTML output
+# Integration tests validate TEST-03 (E2E execution with formatted output)
+# and TEST-08 (browser login detection)
+test-coverage: coverage
+	@echo "Generating HTML coverage report..."
+	@go tool cover -html=coverage.txt -o coverage.html
+	@echo "Coverage report: coverage.html"
+	@go tool cover -func=coverage.txt | grep total
+
+# Validate coverage meets 90% threshold
+test-validate-coverage: test-coverage
+	@COVERAGE=$$(go tool cover -func=coverage.txt | grep total | awk '{print $$3}' | sed 's/%//' | cut -d. -f1); \
+	if [ "$$COVERAGE" -lt 90 ]; then \
+		echo "❌ Coverage $${COVERAGE}% is below 90% threshold"; \
+		exit 1; \
+	fi; \
+	echo "✓ Coverage $${COVERAGE}% meets threshold"

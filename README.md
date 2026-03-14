@@ -12,6 +12,12 @@ The [Confluent CLI Overview](https://docs.confluent.io/confluent-cli/current/ove
 The [Confluent CLI Command Reference](https://docs.confluent.io/confluent-cli/current/command-reference/index.html)
 contains information on command arguments and flags, and is programmatically generated from this repository.
 
+## Claude Code Skills
+
+The Confluent CLI includes Claude Code skills that enable natural language interaction with Confluent Cloud and Platform deployments. Skills translate conversational requests into CLI invocations without requiring syntax memorization.
+
+For installation, usage examples, and complete skill catalog, see [docs/skills/README.md](docs/skills/README.md).
+
 ## Contributing
 
 All contributions are appreciated, no matter how small!

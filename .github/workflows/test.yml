@@ -1,0 +1,81 @@
+name: Test Suite
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        go-version: ['1.25.7']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache: true
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Run unit tests
+        run: make unit-test
+
+      - name: Build for integration tests (Unix)
+        if: runner.os != 'Windows'
+        run: make build-for-integration-test
+
+      - name: Build for integration tests (Windows)
+        if: runner.os == 'Windows'
+        run: make build-for-integration-test-windows
+
+      - name: Run integration tests
+        run: make integration-test
+
+      - name: Generate coverage report
+        run: make coverage
+
+      - name: Check coverage threshold
+        if: runner.os != 'Windows'
+        run: |
+          COVERAGE=$(go tool cover -func=coverage.txt | grep total | awk '{print $3}' | sed 's/%//')
+          echo "Coverage: $COVERAGE%"
+          if [ $(echo "$COVERAGE < 90.0" | bc -l) -eq 1 ]; then
+            echo "::warning::Coverage $COVERAGE% is below 90% threshold"
+          else
+            echo "✓ Coverage $COVERAGE% meets threshold"
+          fi
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.txt
+          flags: ${{ matrix.os }}
+          name: ${{ matrix.os }}-coverage
+
+      - name: Archive test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.os }}
+          path: |
+            coverage.txt
+            coverage.unit.out
+            coverage.integration.out
+            unit-test-report.xml
+            integration-test-report.xml
+          retention-days: 30

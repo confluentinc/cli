@@ -1,5 +1,6 @@
 /dist/
 /docs/
+!/docs/skills/
 /legal/
 /prebuilt/
 /test/bin/
@@ -12,6 +13,9 @@
 /deb/
 *.gpg
 *passphrase
+
+# Skills generation intermediate artifacts
+cmd/generate-skills/ir.json
 
 #
 # BEGIN managed content - any manual changes below this block will be discarded
@@ -287,3 +291,6 @@ flycheck_*.el
 # Chart dependencies
 **/charts/*.tgz
 charts/package/
+
+# GSD planning directory (local-only)
+.planning/
