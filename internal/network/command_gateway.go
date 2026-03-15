@@ -26,15 +26,17 @@ const (
 	gcpPeering                      = "GcpPeering"
 	gcpEgressPrivateServiceConnect  = "GcpEgressPrivateServiceConnect"
 	gcpIngressPrivateServiceConnect = "GcpIngressPrivateServiceConnect"
+	azureIngressPrivateLink         = "AzureIngressPrivateLink"
 )
 
 var (
 	createGatewayTypes = []string{"egress-privatelink", "ingress-privatelink", "private-network-interface", "ingress-private-service-connect"}
-	listGatewayTypes   = []string{"aws-egress-privatelink", "aws-ingress-privatelink", "azure-egress-privatelink", "gcp-egress-private-service-connect", "gcp-ingress-private-service-connect"} // TODO: check if we accept private-network-interface here
+	listGatewayTypes   = []string{"aws-egress-privatelink", "aws-ingress-privatelink", "azure-egress-privatelink", "azure-ingress-privatelink", "gcp-egress-private-service-connect", "gcp-ingress-private-service-connect"} // TODO: check if we accept private-network-interface here
 	gatewayTypeMap     = map[string]string{
 		"aws-egress-privatelink":              awsEgressPrivateLink,
 		"aws-ingress-privatelink":             awsIngressPrivateLink,
 		"azure-egress-privatelink":            azureEgressPrivateLink,
+		"azure-ingress-privatelink":           azureIngressPrivateLink,
 		"gcp-egress-private-service-connect":  gcpEgressPrivateServiceConnect,
 		"gcp-ingress-private-service-connect": gcpIngressPrivateServiceConnect,
 	}
@@ -48,7 +50,9 @@ type gatewayOut struct {
 	Type                   string   `human:"Type,omitempty" serialized:"type,omitempty"`
 	AwsPrincipalArn        string   `human:"AWS Principal ARN,omitempty" serialized:"aws_principal_arn,omitempty"`
 	VpcEndpointServiceName string   `human:"VPC Endpoint Service Name,omitempty" serialized:"vpc_endpoint_service_name,omitempty"`
-	AzureSubscription      string   `human:"Azure Subscription,omitempty" serialized:"azure_subscription,omitempty"`
+	AzureSubscription                 string   `human:"Azure Subscription,omitempty" serialized:"azure_subscription,omitempty"`
+	AzurePrivateLinkServiceAlias      string   `human:"Azure Private Link Service Alias,omitempty" serialized:"azure_private_link_service_alias,omitempty"`
+	AzurePrivateLinkServiceResourceId string   `human:"Azure Private Link Resource ID,omitempty" serialized:"azure_private_link_service_resource_id,omitempty"`
 	GcpIamPrincipal                          string   `human:"GCP IAM Principal,omitempty" serialized:"gcp_iam_principal,omitempty"`
 	GcpProject                               string   `human:"GCP Project,omitempty" serialized:"gcp_project,omitempty"`
 	GcpPrivateServiceConnectServiceAttachment string `human:"GCP PSC Service Attachment,omitempty" serialized:"gcp_private_service_connect_service_attachment,omitempty"`
@@ -140,7 +144,7 @@ func getGatewayCloud(gateway networkinggatewayv1.NetworkingV1Gateway) string {
 		return pcloud.Aws
 	}
 
-	if cloud.NetworkingV1AzureEgressPrivateLinkGatewayStatus != nil {
+	if cloud.NetworkingV1AzureEgressPrivateLinkGatewayStatus != nil || cloud.NetworkingV1AzureIngressPrivateLinkGatewayStatus != nil {
 		return pcloud.Azure
 	}
 
@@ -176,6 +180,10 @@ func getGatewayType(gateway networkinggatewayv1.NetworkingV1Gateway) (string, er
 
 	if config.NetworkingV1AzureEgressPrivateLinkGatewaySpec != nil {
 		return azureEgressPrivateLink, nil
+	}
+
+	if config.NetworkingV1AzureIngressPrivateLinkGatewaySpec != nil {
+		return azureIngressPrivateLink, nil
 	}
 
 	if config.NetworkingV1AwsPeeringGatewaySpec != nil {
@@ -235,6 +243,9 @@ func printGatewayTable(cmd *cobra.Command, gateway networkinggatewayv1.Networkin
 	if gatewayType == azureEgressPrivateLink {
 		out.Region = gateway.Spec.Config.NetworkingV1AzureEgressPrivateLinkGatewaySpec.GetRegion()
 	}
+	if gatewayType == azureIngressPrivateLink {
+		out.Region = gateway.Spec.Config.NetworkingV1AzureIngressPrivateLinkGatewaySpec.GetRegion()
+	}
 	if gatewayType == azurePeering {
 		out.Region = gateway.Spec.Config.NetworkingV1AzurePeeringGatewaySpec.GetRegion()
 	}
@@ -262,7 +273,12 @@ func printGatewayTable(cmd *cobra.Command, gateway networkinggatewayv1.Networkin
 			out.Account = gateway.Status.CloudGateway.NetworkingV1AwsPrivateNetworkInterfaceGatewayStatus.GetAccount()
 		}
 	case pcloud.Azure:
-		out.AzureSubscription = gateway.Status.CloudGateway.NetworkingV1AzureEgressPrivateLinkGatewayStatus.GetSubscription()
+		if gatewayType == azureEgressPrivateLink {
+			out.AzureSubscription = gateway.Status.CloudGateway.NetworkingV1AzureEgressPrivateLinkGatewayStatus.GetSubscription()
+		} else if gatewayType == azureIngressPrivateLink {
+			out.AzurePrivateLinkServiceAlias = gateway.Status.CloudGateway.NetworkingV1AzureIngressPrivateLinkGatewayStatus.GetPrivateLinkServiceAlias()
+			out.AzurePrivateLinkServiceResourceId = gateway.Status.CloudGateway.NetworkingV1AzureIngressPrivateLinkGatewayStatus.GetPrivateLinkServiceResourceId()
+		}
 	case pcloud.Gcp:
 		if gatewayType == gcpEgressPrivateServiceConnect {
 			out.GcpProject = gateway.Status.CloudGateway.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatus.GetProject()

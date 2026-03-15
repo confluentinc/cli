@@ -1,0 +1,12 @@
+warning: GOCOVERDIR not set, no coverage data emitted
++--------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+
+| ID                             | gw-abc123                                                                                                                                |
+| Name                           | my-azure-ingress-gateway                                                                                                                 |
+| Environment                    | env-596                                                                                                                                  |
+| Region                         | eastus2                                                                                                                                  |
+| Type                           | AzureIngressPrivateLink                                                                                                                  |
+| Azure Private Link Service     | azure-ingress-pl.eastus2.azure.privatelinkservice                                                                                        |
+| Alias                          |                                                                                                                                          |
+| Azure Private Link Resource ID | /subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/rg-1/providers/Microsoft.Network/privateLinkServices/azure-ingress-pl |
+| Phase                          | READY                                                                                                                                    |
++--------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+

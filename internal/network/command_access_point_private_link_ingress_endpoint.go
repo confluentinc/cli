@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point/v1"
+	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-access-point/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
@@ -15,14 +15,19 @@ import (
 )
 
 type ingressEndpointOut struct {
-	Id                        string `human:"ID" serialized:"id"`
-	Name                      string `human:"Name,omitempty" serialized:"name,omitempty"`
-	Environment               string `human:"Environment" serialized:"environment"`
-	Gateway                   string `human:"Gateway" serialized:"gateway"`
-	Phase                     string `human:"Phase" serialized:"phase"`
-	AwsVpcEndpointId          string `human:"AWS VPC Endpoint ID,omitempty" serialized:"aws_vpc_endpoint_id,omitempty"`
-	AwsVpcEndpointServiceName string `human:"AWS VPC Endpoint Service Name,omitempty" serialized:"aws_vpc_endpoint_service_name,omitempty"`
-	DnsDomain                 string `human:"DNS Domain,omitempty" serialized:"dns_domain,omitempty"`
+	Id                                string `human:"ID" serialized:"id"`
+	Name                              string `human:"Name,omitempty" serialized:"name,omitempty"`
+	Environment                       string `human:"Environment" serialized:"environment"`
+	Gateway                           string `human:"Gateway" serialized:"gateway"`
+	Phase                             string `human:"Phase" serialized:"phase"`
+	AwsVpcEndpointId                  string `human:"AWS VPC Endpoint ID,omitempty" serialized:"aws_vpc_endpoint_id,omitempty"`
+	AwsVpcEndpointServiceName         string `human:"AWS VPC Endpoint Service Name,omitempty" serialized:"aws_vpc_endpoint_service_name,omitempty"`
+	AzurePrivateLinkServiceAlias      string `human:"Azure Private Link Service Alias,omitempty" serialized:"azure_private_link_service_alias,omitempty"`
+	AzurePrivateLinkServiceResourceId string `human:"Azure Private Link Service Resource ID,omitempty" serialized:"azure_private_link_service_resource_id,omitempty"`
+	AzurePrivateEndpointResourceId    string `human:"Azure Private Endpoint Resource ID,omitempty" serialized:"azure_private_endpoint_resource_id,omitempty"`
+	GcpPrivateServiceConnectServiceAttachment string `human:"GCP PSC Service Attachment,omitempty" serialized:"gcp_private_service_connect_service_attachment,omitempty"`
+	GcpPrivateServiceConnectConnectionId      string `human:"GCP PSC Connection ID,omitempty" serialized:"gcp_private_service_connect_connection_id,omitempty"`
+	DnsDomain                         string `human:"DNS Domain,omitempty" serialized:"dns_domain,omitempty"`
 }
 
 func (c *accessPointCommand) newIngressEndpointCommand(cfg *config.Config) *cobra.Command {
@@ -68,7 +73,9 @@ func (c *accessPointCommand) autocompleteIngressEndpoints() []string {
 		return nil
 	}
 	ingressEndpoints := slices.DeleteFunc(accessPoints, func(accessPoint networkingaccesspointv1.NetworkingV1AccessPoint) bool {
-		return accessPoint.Spec.GetConfig().NetworkingV1AwsIngressPrivateLinkEndpoint == nil
+		return accessPoint.Spec.GetConfig().NetworkingV1AwsIngressPrivateLinkEndpoint == nil &&
+			accessPoint.Spec.GetConfig().NetworkingV1AzureIngressPrivateLinkEndpoint == nil &&
+			accessPoint.Spec.GetConfig().NetworkingV1GcpIngressPrivateServiceConnectEndpoint == nil
 	})
 
 	suggestions := make([]string, len(ingressEndpoints))
@@ -99,6 +106,23 @@ func printPrivateLinkIngressEndpointTable(cmd *cobra.Command, ingressEndpoint ne
 		out.AwsVpcEndpointServiceName = ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.GetVpcEndpointServiceName()
 		if ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.HasDnsDomain() {
 			out.DnsDomain = ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.GetDnsDomain()
+		}
+	}
+
+	if ingressEndpoint.Status.Config != nil && ingressEndpoint.Status.Config.NetworkingV1AzureIngressPrivateLinkEndpointStatus != nil {
+		out.AzurePrivateLinkServiceAlias = ingressEndpoint.Status.Config.NetworkingV1AzureIngressPrivateLinkEndpointStatus.GetPrivateLinkServiceAlias()
+		out.AzurePrivateLinkServiceResourceId = ingressEndpoint.Status.Config.NetworkingV1AzureIngressPrivateLinkEndpointStatus.GetPrivateLinkServiceResourceId()
+		out.AzurePrivateEndpointResourceId = ingressEndpoint.Status.Config.NetworkingV1AzureIngressPrivateLinkEndpointStatus.GetPrivateEndpointResourceId()
+		if ingressEndpoint.Status.Config.NetworkingV1AzureIngressPrivateLinkEndpointStatus.HasDnsDomain() {
+			out.DnsDomain = ingressEndpoint.Status.Config.NetworkingV1AzureIngressPrivateLinkEndpointStatus.GetDnsDomain()
+		}
+	}
+
+	if ingressEndpoint.Status.Config != nil && ingressEndpoint.Status.Config.NetworkingV1GcpIngressPrivateServiceConnectEndpointStatus != nil {
+		out.GcpPrivateServiceConnectServiceAttachment = ingressEndpoint.Status.Config.NetworkingV1GcpIngressPrivateServiceConnectEndpointStatus.GetPrivateServiceConnectServiceAttachment()
+		out.GcpPrivateServiceConnectConnectionId = ingressEndpoint.Status.Config.NetworkingV1GcpIngressPrivateServiceConnectEndpointStatus.GetPrivateServiceConnectConnectionId()
+		if ingressEndpoint.Status.Config.NetworkingV1GcpIngressPrivateServiceConnectEndpointStatus.HasDnsDomain() {
+			out.DnsDomain = ingressEndpoint.Status.Config.NetworkingV1GcpIngressPrivateServiceConnectEndpointStatus.GetDnsDomain()
 		}
 	}
 

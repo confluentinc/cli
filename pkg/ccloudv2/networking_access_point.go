@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point/v1"
+	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-access-point/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
 )
@@ -57,7 +57,7 @@ func (c *Client) executeListAccessPoints(environment, pageToken string, names []
 	}
 
 	if names != nil {
-		req = req.SpecDisplayName(names)
+		req = req.SpecDisplayName(networkingaccesspointv1.MultipleSearchFilter{Items: names})
 	}
 
 	resp, httpResp, err := req.Execute()
@@ -111,19 +111,19 @@ func (c *Client) executeListDnsRecords(environment, pageToken string, listParame
 	}
 
 	if listParameters.Gateways != nil {
-		req = req.SpecGateway(listParameters.Gateways)
+		req = req.SpecGateway(networkingaccesspointv1.MultipleSearchFilter{Items: listParameters.Gateways})
 	}
 
 	if listParameters.Domains != nil {
-		req = req.SpecDomain(listParameters.Domains)
+		req = req.SpecDomain(networkingaccesspointv1.MultipleSearchFilter{Items: listParameters.Domains})
 	}
 
 	if listParameters.Names != nil {
-		req = req.SpecDisplayName(listParameters.Names)
+		req = req.SpecDisplayName(networkingaccesspointv1.MultipleSearchFilter{Items: listParameters.Names})
 	}
 
 	if listParameters.ResourceIds != nil {
-		req = req.Resource(listParameters.ResourceIds)
+		req = req.Resource(networkingaccesspointv1.MultipleSearchFilter{Items: listParameters.ResourceIds})
 	}
 
 	resp, httpResp, err := req.Execute()

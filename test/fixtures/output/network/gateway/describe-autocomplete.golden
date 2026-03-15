@@ -8,5 +8,6 @@ gw-13570	my-gcp-peering-gateway
 gw-07531	my-gcp-gateway
 gw-88888	my-aws-ingress-gateway
 gw-99999	my-gcp-ingress-gateway
+gw-11111	my-azure-ingress-gateway
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp

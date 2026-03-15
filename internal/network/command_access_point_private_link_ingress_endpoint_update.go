@@ -3,7 +3,7 @@ package network
 import (
 	"github.com/spf13/cobra"
 
-	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point/v1"
+	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-access-point/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
