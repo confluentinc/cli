@@ -1,10 +1,14 @@
 package config
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 )
 
 var (
@@ -75,6 +79,123 @@ func TestParseFlagsIntoContext(t *testing.T) {
 			require.Equal(t, initialActiveKafkaId, finalCluster)
 		}
 	}
+}
+
+func TestSwitchOrganization(t *testing.T) {
+	cfg := AuthenticatedCloudConfigMock()
+	ctx := cfg.Context()
+
+	oldRefreshToken := "old-refresh-token"
+	ctx.State.AuthRefreshToken = oldRefreshToken
+
+	newOrgId := "org-new-id"
+	newToken := "new-auth-token"
+	newRefreshToken := "new-refresh-token"
+
+	auth := &ccloudv1mock.Auth{
+		LoginFunc: func(req *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
+			require.Equal(t, newOrgId, req.OrgResourceId)
+			require.Equal(t, oldRefreshToken, req.RefreshToken)
+			return &ccloudv1.AuthenticateReply{
+				Token:        newToken,
+				RefreshToken: newRefreshToken,
+			}, nil
+		},
+	}
+	client := &ccloudv1.Client{Auth: auth}
+
+	err := ctx.SwitchOrganization(client, newOrgId)
+	require.NoError(t, err)
+
+	require.Equal(t, newOrgId, ctx.LastOrgId)
+	require.Equal(t, newToken, ctx.State.AuthToken)
+	require.Equal(t, newRefreshToken, ctx.State.AuthRefreshToken)
+}
+
+func TestSwitchOrganization_ClearsEnvironmentState(t *testing.T) {
+	cfg := AuthenticatedCloudConfigMock()
+	ctx := cfg.Context()
+	ctx.State.AuthRefreshToken = "refresh-token"
+
+	// Pre-populate environment and Kafka state
+	ctx.CurrentEnvironment = "env-123"
+	ctx.Environments["env-123"] = &EnvironmentContext{CurrentFlinkComputePool: "pool-1"}
+	ctx.KafkaClusterContext.KafkaEnvContexts["env-123"] = &KafkaEnvContext{
+		ActiveKafkaCluster:  "lkc-999",
+		KafkaClusterConfigs: map[string]*KafkaClusterConfig{"lkc-999": {ID: "lkc-999"}},
+	}
+
+	auth := &ccloudv1mock.Auth{
+		LoginFunc: func(_ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
+			return &ccloudv1.AuthenticateReply{Token: "t", RefreshToken: "r"}, nil
+		},
+	}
+	client := &ccloudv1.Client{Auth: auth}
+
+	err := ctx.SwitchOrganization(client, "org-other")
+	require.NoError(t, err)
+
+	require.Empty(t, ctx.CurrentEnvironment)
+	require.Empty(t, ctx.Environments)
+	require.Empty(t, ctx.KafkaClusterContext.ActiveKafkaCluster)
+	require.Empty(t, ctx.KafkaClusterContext.ActiveKafkaClusterEndpoint)
+	require.Empty(t, ctx.KafkaClusterContext.KafkaClusterConfigs)
+	require.Empty(t, ctx.KafkaClusterContext.KafkaEnvContexts)
+}
+
+func TestSwitchOrganization_RollbackOnFailure(t *testing.T) {
+	cfg := AuthenticatedCloudConfigMock()
+	ctx := cfg.Context()
+
+	oldOrgId := ctx.LastOrgId
+	oldToken := ctx.State.AuthToken
+	oldRefreshToken := "old-refresh-token"
+	ctx.State.AuthRefreshToken = oldRefreshToken
+
+	// Pre-populate environment state to verify it is NOT cleared on failure
+	ctx.CurrentEnvironment = "env-123"
+	ctx.Environments["env-123"] = &EnvironmentContext{}
+
+	auth := &ccloudv1mock.Auth{
+		LoginFunc: func(_ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
+			return nil, fmt.Errorf("auth failed")
+		},
+	}
+	client := &ccloudv1.Client{Auth: auth}
+
+	err := ctx.SwitchOrganization(client, "org-other")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "auth failed")
+
+	// Verify full rollback
+	require.Equal(t, oldOrgId, ctx.LastOrgId)
+	require.Equal(t, oldToken, ctx.State.AuthToken)
+	require.Equal(t, oldRefreshToken, ctx.State.AuthRefreshToken)
+
+	// Verify environment state was NOT touched
+	require.Equal(t, "env-123", ctx.CurrentEnvironment)
+	require.Contains(t, ctx.Environments, "env-123")
+}
+
+func TestSwitchOrganization_NilKafkaClusterContext(t *testing.T) {
+	cfg := AuthenticatedCloudConfigMock()
+	ctx := cfg.Context()
+	ctx.State.AuthRefreshToken = "refresh-token"
+	ctx.KafkaClusterContext = nil
+
+	auth := &ccloudv1mock.Auth{
+		LoginFunc: func(_ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
+			return &ccloudv1.AuthenticateReply{Token: "t", RefreshToken: "r"}, nil
+		},
+	}
+	client := &ccloudv1.Client{Auth: auth}
+
+	err := ctx.SwitchOrganization(client, "org-other")
+	require.NoError(t, err)
+
+	require.Equal(t, "org-other", ctx.LastOrgId)
+	require.Empty(t, ctx.CurrentEnvironment)
+	require.Nil(t, ctx.KafkaClusterContext)
 }
 
 func getBaseContext() *Context {

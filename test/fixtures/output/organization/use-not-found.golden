@@ -1,0 +1,4 @@
+Error: organization "org-dne" not found or access forbidden
+
+Suggestions:
+    List available organizations with `organization list`.

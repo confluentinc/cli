@@ -27,6 +27,8 @@ var (
 	}
 	// Test flag to control organization not found error
 	TestOrgNotFound = false
+	// Test flag to control organization list error
+	TestOrgListError = false
 )
 
 // Handler for: "/org/v2/environments/{id}"
@@ -145,6 +147,15 @@ func handleOrgOrganizations(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
+			if TestOrgListError {
+				w.WriteHeader(http.StatusForbidden)
+				resp := errors.ErrorResponseBody{Errors: []errors.ErrorDetail{
+					{Detail: "Forbidden"},
+				}}
+				err := json.NewEncoder(w).Encode(resp)
+				require.NoError(t, err)
+				return
+			}
 			organizationList := &orgv2.OrgV2OrganizationList{Data: []orgv2.OrgV2Organization{
 				{Id: orgv2.PtrString("abc-123"), DisplayName: orgv2.PtrString("org1"), JitEnabled: orgv2.PtrBool(true)},
 				{Id: orgv2.PtrString("abc-456"), DisplayName: orgv2.PtrString("org2"), JitEnabled: orgv2.PtrBool(true)},
