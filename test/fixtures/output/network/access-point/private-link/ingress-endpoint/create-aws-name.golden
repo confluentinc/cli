@@ -1,3 +1,4 @@
+warning: GOCOVERDIR not set, no coverage data emitted
 +-------------------------------+---------------------------------------------------------+
 | ID                            | ap-99999                                                |
 | Name                          | my-ingress-endpoint                                     |

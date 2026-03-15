@@ -118,6 +118,9 @@ func (c *command) gatewayList(cmd *cobra.Command, _ []string) error {
 		if gatewayType == azureEgressPrivateLink {
 			out.Region = gateway.Spec.Config.NetworkingV1AzureEgressPrivateLinkGatewaySpec.GetRegion()
 		}
+		if gatewayType == azureIngressPrivateLink {
+			out.Region = gateway.Spec.Config.NetworkingV1AzureIngressPrivateLinkGatewaySpec.GetRegion()
+		}
 		if gatewayType == azurePeering {
 			out.Region = gateway.Spec.Config.NetworkingV1AzurePeeringGatewaySpec.GetRegion()
 		}
@@ -145,7 +148,12 @@ func (c *command) gatewayList(cmd *cobra.Command, _ []string) error {
 				out.Account = gateway.Status.CloudGateway.NetworkingV1AwsPrivateNetworkInterfaceGatewayStatus.GetAccount()
 			}
 		case pcloud.Azure:
-			out.AzureSubscription = gateway.Status.CloudGateway.NetworkingV1AzureEgressPrivateLinkGatewayStatus.GetSubscription()
+			if gatewayType == azureEgressPrivateLink {
+				out.AzureSubscription = gateway.Status.CloudGateway.NetworkingV1AzureEgressPrivateLinkGatewayStatus.GetSubscription()
+			} else if gatewayType == azureIngressPrivateLink {
+				out.AzurePrivateLinkServiceAlias = gateway.Status.CloudGateway.NetworkingV1AzureIngressPrivateLinkGatewayStatus.GetPrivateLinkServiceAlias()
+				out.AzurePrivateLinkServiceResourceId = gateway.Status.CloudGateway.NetworkingV1AzureIngressPrivateLinkGatewayStatus.GetPrivateLinkServiceResourceId()
+			}
 		case pcloud.Gcp:
 			if gatewayType == gcpEgressPrivateServiceConnect {
 				out.GcpProject = gateway.Status.CloudGateway.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatus.GetProject()

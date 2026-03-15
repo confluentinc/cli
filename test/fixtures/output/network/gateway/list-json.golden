@@ -18,6 +18,16 @@ warning: GOCOVERDIR not set, no coverage data emitted
     "phase": "READY"
   },
   {
+    "id": "gw-11111",
+    "name": "my-azure-ingress-gateway",
+    "environment": "env-596",
+    "region": "eastus2",
+    "type": "AzureIngressPrivateLink",
+    "azure_private_link_service_alias": "azure-ingress-pl.eastus2.azure.privatelinkservice",
+    "azure_private_link_service_resource_id": "/subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/rg-1/providers/Microsoft.Network/privateLinkServices/azure-ingress-pl",
+    "phase": "READY"
+  },
+  {
     "id": "gw-12345",
     "name": "my-aws-gateway",
     "environment": "env-596",
