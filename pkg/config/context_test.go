@@ -177,6 +177,27 @@ func TestSwitchOrganization_RollbackOnFailure(t *testing.T) {
 	require.Contains(t, ctx.Environments, "env-123")
 }
 
+func TestSwitchOrganization_NilKafkaClusterContext(t *testing.T) {
+	cfg := AuthenticatedCloudConfigMock()
+	ctx := cfg.Context()
+	ctx.State.AuthRefreshToken = "refresh-token"
+	ctx.KafkaClusterContext = nil
+
+	auth := &ccloudv1mock.Auth{
+		LoginFunc: func(_ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
+			return &ccloudv1.AuthenticateReply{Token: "t", RefreshToken: "r"}, nil
+		},
+	}
+	client := &ccloudv1.Client{Auth: auth}
+
+	err := ctx.SwitchOrganization(client, "org-other")
+	require.NoError(t, err)
+
+	require.Equal(t, "org-other", ctx.LastOrgId)
+	require.Empty(t, ctx.CurrentEnvironment)
+	require.Nil(t, ctx.KafkaClusterContext)
+}
+
 func getBaseContext() *Context {
 	return AuthenticatedCloudConfigMock().Context()
 }

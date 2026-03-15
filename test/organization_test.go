@@ -50,6 +50,19 @@ func (s *CLITestSuite) TestOrganization() {
 		s.runIntegrationTest(test)
 	})
 
+	s.T().Run("organization use list error", func(t *testing.T) {
+		testserver.TestOrgListError = true
+		defer func() { testserver.TestOrgListError = false }()
+
+		test := CLITest{
+			args:     "organization use abc-456",
+			fixture:  "organization/use-list-error.golden",
+			exitCode: 1,
+			login:    "cloud",
+		}
+		s.runIntegrationTest(test)
+	})
+
 	// The use command validates via the list endpoint, so org-dne simply
 	// won't appear in the returned list — no need for TestOrgNotFound.
 	s.T().Run("organization use not found", func(t *testing.T) {
