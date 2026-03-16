@@ -170,17 +170,29 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 			ComputePoolId:  &computePool,
 			Principal:      &serviceAccount,
 			Query:          &query,
-			Columns:        &colDetails,
-			Watermark: &flinkgatewayv1.SqlV1MaterializedTableWatermark{
-				ColumnName: &watermarkColumnName,
-				Expression: &watermarkExpression,
-			},
-			DistributedBy: &flinkgatewayv1.SqlV1MaterializedTableDistribution{
-				ColumnNames: distributedByColumnNamesArray,
-				Buckets:     &distributedByBucketsInt32,
-			},
-			Constraints: &constr,
 		},
+	}
+
+	if len(colDetails) > 0 {
+		table.Spec.Columns = &colDetails
+	}
+
+	if watermarkColumnName != "" || watermarkExpression != "" {
+		table.Spec.Watermark = &flinkgatewayv1.SqlV1MaterializedTableWatermark{
+			ColumnName: &watermarkColumnName,
+			Expression: &watermarkExpression,
+		}
+	}
+
+	if distributedByColumnNames != "" || distributedByBuckets > 0 {
+		table.Spec.DistributedBy = &flinkgatewayv1.SqlV1MaterializedTableDistribution{
+			ColumnNames: distributedByColumnNamesArray,
+			Buckets:     &distributedByBucketsInt32,
+		}
+	}
+
+	if len(constr) > 0 {
+		table.Spec.Constraints = &constr
 	}
 
 	materializedTable, err := client.CreateMaterializedTable(table, environmentId, orgId, kafkaId)
