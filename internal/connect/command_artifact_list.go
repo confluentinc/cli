@@ -24,7 +24,7 @@ func (c *artifactCommand) newListCommand() *cobra.Command {
 		),
 	}
 
-	pcmd.AddCloudFlag(cmd)
+	pcmd.AddCloudAwsAzureFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
