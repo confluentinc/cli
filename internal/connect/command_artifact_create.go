@@ -34,7 +34,7 @@ func (c *artifactCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("artifact-file", "", "Connect artifact JAR file or ZIP file.")
-	pcmd.AddCloudFlag(cmd)
+	pcmd.AddCloudAwsAzureFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("description", "", "Specify the Connect artifact description.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -80,9 +80,9 @@ func (c *artifactCommand) createArtifact(cmd *cobra.Command, args []string) erro
 		Environment:   camv1.PtrString(environment),
 	}
 
-	supportedClouds := []string{"aws", "azure", "gcp"}
+	supportedClouds := []string{"aws", "azure"}
 	if !slices.Contains(supportedClouds, strings.ToLower(cloud)) {
-		return fmt.Errorf("only clouds supported are `AWS`, `AZURE` and `GCP`")
+		return fmt.Errorf("only clouds supported are `AWS` and `AZURE`")
 	}
 
 	resp, err := c.V2Client.GetArtifactPresignedUrl(request)
@@ -92,10 +92,6 @@ func (c *artifactCommand) createArtifact(cmd *cobra.Command, args []string) erro
 
 	if strings.ToLower(cloud) == "azure" {
 		if err := utils.UploadFileToAzureBlob(resp.GetUploadUrl(), artifactFile, strings.ToLower(resp.GetContentFormat())); err != nil {
-			return err
-		}
-	} else if strings.ToLower(cloud) == "gcp" {
-		if err := utils.UploadFileToGoogleCloudStorage(resp.GetUploadUrl(), artifactFile, strings.ToLower(resp.GetContentFormat())); err != nil {
 			return err
 		}
 	} else {
