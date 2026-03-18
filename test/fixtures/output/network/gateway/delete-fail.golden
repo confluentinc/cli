@@ -1,3 +1,4 @@
+warning: GOCOVERDIR not set, no coverage data emitted
 Error: gateway "gw-invalid" not found
 
 Suggestions:

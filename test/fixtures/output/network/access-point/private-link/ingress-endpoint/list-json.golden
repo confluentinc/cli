@@ -1,4 +1,26 @@
+warning: GOCOVERDIR not set, no coverage data emitted
 [
+  {
+    "id": "ap-11111",
+    "name": "my-azure-ingress-access-point",
+    "environment": "env-596",
+    "gateway": "gw-11111",
+    "phase": "READY",
+    "azure_private_link_service_alias": "azure-pls-alias.eastus.azure.privatelinkservice",
+    "azure_private_link_service_resource_id": "/subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName",
+    "azure_private_endpoint_resource_id": "/subscriptions/0000000/resourceGroups/resourceGroupName/providers/Microsoft.Network/privateEndpoints/privateEndpointName",
+    "dns_domain": "ap11111.eastus.azure.accesspoint.confluent.cloud"
+  },
+  {
+    "id": "ap-22222",
+    "name": "my-gcp-ingress-access-point",
+    "environment": "env-596",
+    "gateway": "gw-99999",
+    "phase": "READY",
+    "gcp_private_service_connect_service_attachment": "projects/projectName/regions/us-central1/serviceAttachments/serviceAttachmentName",
+    "gcp_private_service_connect_connection_id": "111111111111111111",
+    "dns_domain": "ap22222.us-central1.gcp.accesspoint.confluent.cloud"
+  },
   {
     "id": "ap-99999",
     "name": "my-aws-ingress-access-point",

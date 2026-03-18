@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point/v1"
+	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-access-point/v1"
 
 	pcloud "github.com/confluentinc/cli/v4/pkg/cloud"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -24,11 +24,21 @@ func (c *accessPointCommand) newIngressEndpointCreateCommand() *cobra.Command {
 				Text: "Create an AWS PrivateLink ingress endpoint.",
 				Code: "confluent network access-point private-link ingress-endpoint create --cloud aws --gateway gw-123456 --vpc-endpoint-id vpce-00000000000000000",
 			},
+			examples.Example{
+				Text: "Create an Azure Private Link ingress endpoint.",
+				Code: "confluent network access-point private-link ingress-endpoint create --cloud azure --gateway gw-123456 --private-endpoint-resource-id /subscriptions/0000000/resourceGroups/resourceGroupName/providers/Microsoft.Network/privateEndpoints/privateEndpointName",
+			},
+			examples.Example{
+				Text: "Create a GCP Private Service Connect ingress endpoint.",
+				Code: "confluent network access-point private-link ingress-endpoint create --cloud gcp --gateway gw-123456 --private-service-connect-connection-id 111111111111111111",
+			},
 		),
 	}
 
-	pcmd.AddCloudAwsFlag(cmd)
+	pcmd.AddCloudFlag(cmd)
 	cmd.Flags().String("vpc-endpoint-id", "", "ID of an AWS VPC endpoint.")
+	cmd.Flags().String("private-endpoint-resource-id", "", "Resource ID of an Azure Private Endpoint.")
+	cmd.Flags().String("private-service-connect-connection-id", "", "ID of a GCP Private Service Connect connection.")
 	addGatewayFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -36,7 +46,6 @@ func (c *accessPointCommand) newIngressEndpointCreateCommand() *cobra.Command {
 
 	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
 	cobra.CheckErr(cmd.MarkFlagRequired("gateway"))
-	cobra.CheckErr(cmd.MarkFlagRequired("vpc-endpoint-id"))
 
 	return cmd
 }
@@ -63,6 +72,16 @@ func (c *accessPointCommand) createIngressEndpoint(cmd *cobra.Command, args []st
 		return err
 	}
 
+	privateEndpointResourceId, err := cmd.Flags().GetString("private-endpoint-resource-id")
+	if err != nil {
+		return err
+	}
+
+	privateServiceConnectConnectionId, err := cmd.Flags().GetString("private-service-connect-connection-id")
+	if err != nil {
+		return err
+	}
+
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
@@ -81,14 +100,37 @@ func (c *accessPointCommand) createIngressEndpoint(cmd *cobra.Command, args []st
 
 	switch cloud {
 	case pcloud.Aws:
+		if vpcEndpointId == "" {
+			return fmt.Errorf("flag \"vpc-endpoint-id\" is required for AWS ingress endpoints")
+		}
 		createIngressEndpoint.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
 			NetworkingV1AwsIngressPrivateLinkEndpoint: &networkingaccesspointv1.NetworkingV1AwsIngressPrivateLinkEndpoint{
 				Kind:          "AwsIngressPrivateLinkEndpoint",
 				VpcEndpointId: vpcEndpointId,
 			},
 		}
+	case pcloud.Azure:
+		if privateEndpointResourceId == "" {
+			return fmt.Errorf("flag \"private-endpoint-resource-id\" is required for Azure ingress endpoints")
+		}
+		createIngressEndpoint.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
+			NetworkingV1AzureIngressPrivateLinkEndpoint: &networkingaccesspointv1.NetworkingV1AzureIngressPrivateLinkEndpoint{
+				Kind:                      "AzureIngressPrivateLinkEndpoint",
+				PrivateEndpointResourceId: privateEndpointResourceId,
+			},
+		}
+	case pcloud.Gcp:
+		if privateServiceConnectConnectionId == "" {
+			return fmt.Errorf("flag \"private-service-connect-connection-id\" is required for GCP ingress endpoints")
+		}
+		createIngressEndpoint.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
+			NetworkingV1GcpIngressPrivateServiceConnectEndpoint: &networkingaccesspointv1.NetworkingV1GcpIngressPrivateServiceConnectEndpoint{
+				Kind:                              "GcpIngressPrivateServiceConnectEndpoint",
+				PrivateServiceConnectConnectionId: privateServiceConnectConnectionId,
+			},
+		}
 	default:
-		return fmt.Errorf("ingress endpoints are only supported for AWS")
+		return fmt.Errorf("ingress endpoints are only supported for AWS, Azure, and GCP")
 	}
 
 	ingressEndpoint, err := c.V2Client.CreateAccessPoint(createIngressEndpoint)

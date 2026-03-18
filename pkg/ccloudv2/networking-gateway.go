@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	networkinggatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway/v1"
+	networkinggatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-gateway/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
 )
@@ -67,19 +67,19 @@ func (c *Client) executeListGateways(environment, pageToken string, types, ids, 
 	req := c.NetworkingGatewayClient.GatewaysNetworkingV1Api.ListNetworkingV1Gateways(c.networkingGatewayApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
 
 	if len(types) > 0 {
-		req = req.GatewayType(types)
+		req = req.GatewayType(networkinggatewayv1.MultipleSearchFilter{Items: types})
 	}
 	if len(ids) > 0 {
-		req = req.Id(ids)
+		req = req.Id(networkinggatewayv1.MultipleSearchFilter{Items: ids})
 	}
 	if len(regions) > 0 {
-		req = req.SpecConfigRegion(regions)
+		req = req.SpecConfigRegion(networkinggatewayv1.MultipleSearchFilter{Items: regions})
 	}
 	if len(displayNames) > 0 {
-		req = req.SpecDisplayName(displayNames)
+		req = req.SpecDisplayName(networkinggatewayv1.MultipleSearchFilter{Items: displayNames})
 	}
 	if len(phases) > 0 {
-		req = req.StatusPhase(phases)
+		req = req.StatusPhase(networkinggatewayv1.MultipleSearchFilter{Items: phases})
 	}
 	if pageToken != "" {
 		req = req.PageToken(pageToken)

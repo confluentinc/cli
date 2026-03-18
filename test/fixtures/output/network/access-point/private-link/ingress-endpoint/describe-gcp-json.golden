@@ -1,0 +1,11 @@
+warning: GOCOVERDIR not set, no coverage data emitted
+{
+  "id": "ap-22222",
+  "name": "my-gcp-ingress-access-point",
+  "environment": "env-596",
+  "gateway": "gw-99999",
+  "phase": "READY",
+  "gcp_private_service_connect_service_attachment": "projects/projectName/regions/us-central1/serviceAttachments/serviceAttachmentName",
+  "gcp_private_service_connect_connection_id": "111111111111111111",
+  "dns_domain": "ap22222.us-central1.gcp.accesspoint.confluent.cloud"
+}

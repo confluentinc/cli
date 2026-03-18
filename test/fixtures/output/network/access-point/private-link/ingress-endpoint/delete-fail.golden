@@ -1,3 +1,4 @@
+warning: GOCOVERDIR not set, no coverage data emitted
 Error: access point "ap-invalid" not found
 
 Suggestions:
