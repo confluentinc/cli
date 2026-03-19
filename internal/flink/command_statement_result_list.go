@@ -103,7 +103,7 @@ func (c *command) statementResultList(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if maxRows < 0 {
+	if maxRows <= 0 {
 		return fmt.Errorf("--max-rows must be a positive integer")
 	}
 
