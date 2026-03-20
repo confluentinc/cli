@@ -96,7 +96,7 @@ func validateUserProvidedFlinkEndpoint(endpoint, cloud, region string, c *comman
 	}
 
 	// Check if the endpoint is PRIVATE associated with PLATT
-	platts, err := c.V2Client.ListPrivateLinkAttachments(c.Context.GetCurrentEnvironment(), nil, nil, nil, []string{"READY"})
+	platts, err := c.V2Client.ListNetworkPrivateLinkAttachments(c.Context.GetCurrentEnvironment(), nil, nil, nil, []string{"READY"})
 	if err != nil {
 		log.CliLogger.Debugf("Error listing PrivateLink attachments: %v", err)
 		return false

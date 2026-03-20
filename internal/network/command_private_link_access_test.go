@@ -10,7 +10,7 @@ import (
 	pcloud "github.com/confluentinc/cli/v4/pkg/cloud"
 )
 
-func TestGetPrivateLinkAccessCloudWithAws(t *testing.T) {
+func TestGetNetworkPrivateLinkAccessCloudWithAws(t *testing.T) {
 	cloud, err := getPrivateLinkAccessCloud(networkingv1.NetworkingV1PrivateLinkAccess{
 		Id: networkingv1.PtrString("pla-123456"),
 		Spec: &networkingv1.NetworkingV1PrivateLinkAccessSpec{
@@ -32,7 +32,7 @@ func TestGetPrivateLinkAccessCloudWithAws(t *testing.T) {
 	assert.Equal(t, pcloud.Aws, cloud)
 }
 
-func TestGetPrivateLinkAccessCloudWithAzure(t *testing.T) {
+func TestGetNetworkPrivateLinkAccessCloudWithAzure(t *testing.T) {
 	cloud, err := getPrivateLinkAccessCloud(networkingv1.NetworkingV1PrivateLinkAccess{
 		Id: networkingv1.PtrString("pla-123456"),
 		Spec: &networkingv1.NetworkingV1PrivateLinkAccessSpec{
@@ -54,7 +54,7 @@ func TestGetPrivateLinkAccessCloudWithAzure(t *testing.T) {
 	assert.Equal(t, pcloud.Azure, cloud)
 }
 
-func TestGetPrivateLinkAccessCloudWithGcp(t *testing.T) {
+func TestGetNetworkPrivateLinkAccessCloudWithGcp(t *testing.T) {
 	cloud, err := getPrivateLinkAccessCloud(networkingv1.NetworkingV1PrivateLinkAccess{
 		Id: networkingv1.PtrString("pla-123456"),
 		Spec: &networkingv1.NetworkingV1PrivateLinkAccessSpec{
@@ -76,7 +76,7 @@ func TestGetPrivateLinkAccessCloudWithGcp(t *testing.T) {
 	assert.Equal(t, pcloud.Gcp, cloud)
 }
 
-func TestGetPrivateLinkAccessCloudWithEmptyValue(t *testing.T) {
+func TestGetNetworkPrivateLinkAccessCloudWithEmptyValue(t *testing.T) {
 	_, err := getPrivateLinkAccessCloud(networkingv1.NetworkingV1PrivateLinkAccess{})
 	assert.Error(t, err)
 }

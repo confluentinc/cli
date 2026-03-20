@@ -66,7 +66,7 @@ func (c *accessPointCommand) privateNetworkInterfaceUpdate(cmd *cobra.Command, a
 		}
 	}
 
-	accessPoint, err := c.V2Client.UpdateAccessPoint(args[0], updatePrivateNetworkInterface)
+	accessPoint, err := c.V2Client.UpdateNetworkAccessPoint(args[0], updatePrivateNetworkInterface)
 	if err != nil {
 		return err
 	}

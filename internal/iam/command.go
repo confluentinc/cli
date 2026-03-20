@@ -58,7 +58,7 @@ func autocompleteResourceOwners(client *ccloudv2.Client) []string {
 	if err != nil {
 		return nil
 	}
-	groupMappings, err := client.ListGroupMappings()
+	groupMappings, err := client.ListIamGroupMappings()
 	if err != nil {
 		return nil
 	}

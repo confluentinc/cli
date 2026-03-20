@@ -22,7 +22,7 @@ func (c *identityProviderCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *identityProviderCommand) describe(cmd *cobra.Command, args []string) error {
-	provider, err := c.V2Client.GetIdentityProvider(args[0])
+	provider, err := c.V2Client.GetIamIdentityProvider(args[0])
 	if err != nil {
 		return err
 	}

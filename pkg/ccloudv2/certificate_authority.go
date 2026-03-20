@@ -27,33 +27,33 @@ func (c *Client) certificatePoolApiContext() context.Context {
 	return context.WithValue(context.Background(), certificateauthorityv2.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
-func (c *Client) CreateCertificateAuthority(certRequest certificateauthorityv2.IamV2CreateCertRequest) (certificateauthorityv2.IamV2CertificateAuthority, error) {
+func (c *Client) CreateIamCertificateAuthority(certRequest certificateauthorityv2.IamV2CreateCertRequest) (certificateauthorityv2.IamV2CertificateAuthority, error) {
 	resp, httpResp, err := c.CertificateAuthorityClient.CertificateAuthoritiesIamV2Api.CreateIamV2CertificateAuthority(c.certificateAuthorityApiContext()).IamV2CreateCertRequest(certRequest).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) GetCertificateAuthority(id string) (certificateauthorityv2.IamV2CertificateAuthority, error) {
+func (c *Client) GetIamCertificateAuthority(id string) (certificateauthorityv2.IamV2CertificateAuthority, error) {
 	resp, httpResp, err := c.CertificateAuthorityClient.CertificateAuthoritiesIamV2Api.GetIamV2CertificateAuthority(c.certificateAuthorityApiContext(), id).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateCertificateAuthority(certRequest certificateauthorityv2.IamV2UpdateCertRequest) (certificateauthorityv2.IamV2CertificateAuthority, error) {
+func (c *Client) UpdateIamCertificateAuthority(certRequest certificateauthorityv2.IamV2UpdateCertRequest) (certificateauthorityv2.IamV2CertificateAuthority, error) {
 	resp, httpResp, err := c.CertificateAuthorityClient.CertificateAuthoritiesIamV2Api.UpdateIamV2CertificateAuthority(c.certificateAuthorityApiContext(), certRequest.GetId()).IamV2UpdateCertRequest(certRequest).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DeleteCertificateAuthority(id string) error {
+func (c *Client) DeleteIamCertificateAuthority(id string) error {
 	_, httpResp, err := c.CertificateAuthorityClient.CertificateAuthoritiesIamV2Api.DeleteIamV2CertificateAuthority(c.certificateAuthorityApiContext(), id).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListCertificateAuthorities() ([]certificateauthorityv2.IamV2CertificateAuthority, error) {
+func (c *Client) ListIamCertificateAuthorities() ([]certificateauthorityv2.IamV2CertificateAuthority, error) {
 	var list []certificateauthorityv2.IamV2CertificateAuthority
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, httpResp, err := c.executeListCertificateAuthorities(pageToken)
+		page, httpResp, err := c.executeListIamCertificateAuthorities(pageToken)
 		if err != nil {
 			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
@@ -67,7 +67,7 @@ func (c *Client) ListCertificateAuthorities() ([]certificateauthorityv2.IamV2Cer
 	return list, nil
 }
 
-func (c *Client) executeListCertificateAuthorities(pageToken string) (certificateauthorityv2.IamV2CertificateAuthorityList, *http.Response, error) {
+func (c *Client) executeListIamCertificateAuthorities(pageToken string) (certificateauthorityv2.IamV2CertificateAuthorityList, *http.Response, error) {
 	req := c.CertificateAuthorityClient.CertificateAuthoritiesIamV2Api.ListIamV2CertificateAuthorities(c.certificateAuthorityApiContext()).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
@@ -75,7 +75,7 @@ func (c *Client) executeListCertificateAuthorities(pageToken string) (certificat
 	return req.Execute()
 }
 
-func (c *Client) CreateCertificatePool(certificatePool certificateauthorityv2.IamV2CertificateIdentityPool, provider string, resourceOwner string) (certificateauthorityv2.IamV2CertificateIdentityPool, error) {
+func (c *Client) CreateIamCertificatePool(certificatePool certificateauthorityv2.IamV2CertificateIdentityPool, provider string, resourceOwner string) (certificateauthorityv2.IamV2CertificateIdentityPool, error) {
 	resp, httpResp, err := c.CertificateAuthorityClient.CertificateIdentityPoolsIamV2Api.
 		CreateIamV2CertificateIdentityPool(c.certificatePoolApiContext(), provider).
 		AssignedResourceOwner(resourceOwner).
@@ -83,28 +83,28 @@ func (c *Client) CreateCertificatePool(certificatePool certificateauthorityv2.Ia
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) GetCertificatePool(id string, provider string) (certificateauthorityv2.IamV2CertificateIdentityPool, error) {
+func (c *Client) GetIamCertificatePool(id string, provider string) (certificateauthorityv2.IamV2CertificateIdentityPool, error) {
 	resp, httpResp, err := c.CertificateAuthorityClient.CertificateIdentityPoolsIamV2Api.GetIamV2CertificateIdentityPool(c.certificatePoolApiContext(), provider, id).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateCertificatePool(certificatePool certificateauthorityv2.IamV2CertificateIdentityPool, provider string) (certificateauthorityv2.IamV2CertificateIdentityPool, error) {
+func (c *Client) UpdateIamCertificatePool(certificatePool certificateauthorityv2.IamV2CertificateIdentityPool, provider string) (certificateauthorityv2.IamV2CertificateIdentityPool, error) {
 	resp, httpResp, err := c.CertificateAuthorityClient.CertificateIdentityPoolsIamV2Api.UpdateIamV2CertificateIdentityPool(c.certificatePoolApiContext(), provider, *certificatePool.Id).IamV2CertificateIdentityPool(certificatePool).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DeleteCertificatePool(id string, provider string) error {
+func (c *Client) DeleteIamCertificatePool(id string, provider string) error {
 	_, httpResp, err := c.CertificateAuthorityClient.CertificateIdentityPoolsIamV2Api.DeleteIamV2CertificateIdentityPool(c.certificatePoolApiContext(), provider, id).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListCertificatePool(providerID string) ([]certificateauthorityv2.IamV2CertificateIdentityPool, error) {
+func (c *Client) ListIamCertificatePools(providerID string) ([]certificateauthorityv2.IamV2CertificateIdentityPool, error) {
 	var list []certificateauthorityv2.IamV2CertificateIdentityPool
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, httpResp, err := c.executeListCertificatePool(providerID, pageToken)
+		page, httpResp, err := c.executeListIamCertificatePools(providerID, pageToken)
 		if err != nil {
 			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
@@ -119,7 +119,7 @@ func (c *Client) ListCertificatePool(providerID string) ([]certificateauthorityv
 	return list, nil
 }
 
-func (c *Client) executeListCertificatePool(providerID, pageToken string) (certificateauthorityv2.IamV2CertificateIdentityPoolList, *http.Response, error) {
+func (c *Client) executeListIamCertificatePools(providerID, pageToken string) (certificateauthorityv2.IamV2CertificateIdentityPoolList, *http.Response, error) {
 	req := c.CertificateAuthorityClient.CertificateIdentityPoolsIamV2Api.ListIamV2CertificateIdentityPools(c.certificatePoolApiContext(), providerID).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)

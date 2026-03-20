@@ -123,7 +123,7 @@ func (c *command) peeringCreate(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	peering, err := c.V2Client.CreatePeering(createPeering)
+	peering, err := c.V2Client.CreateNetworkPeering(createPeering)
 	if err != nil {
 		return err
 	}

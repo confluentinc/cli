@@ -236,7 +236,7 @@ func AddExternalIdentifierFlag(cmd *cobra.Command) {
 }
 
 func AutocompleteGroupMappings(client *ccloudv2.Client) []string {
-	groupMappings, err := client.ListGroupMappings()
+	groupMappings, err := client.ListIamGroupMappings()
 	if err != nil {
 		return nil
 	}
@@ -250,7 +250,7 @@ func AutocompleteGroupMappings(client *ccloudv2.Client) []string {
 }
 
 func AutocompleteCertificatePool(client *ccloudv2.Client, provider string) []string {
-	certificatePools, err := client.ListCertificatePool(provider)
+	certificatePools, err := client.ListIamCertificatePools(provider)
 	if err != nil {
 		return nil
 	}
@@ -349,7 +349,7 @@ func AddProviderFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 }
 
 func AutocompleteIdentityProviders(client *ccloudv2.Client) []string {
-	identityProviders, err := client.ListIdentityProviders()
+	identityProviders, err := client.ListIamIdentityProviders()
 	if err != nil {
 		return nil
 	}
@@ -363,7 +363,7 @@ func AutocompleteIdentityProviders(client *ccloudv2.Client) []string {
 }
 
 func AutocompleteCertificateAuthorities(client *ccloudv2.Client) []string {
-	certificateAuthorities, err := client.ListCertificateAuthorities()
+	certificateAuthorities, err := client.ListIamCertificateAuthorities()
 	if err != nil {
 		return nil
 	}
@@ -376,7 +376,7 @@ func AutocompleteCertificateAuthorities(client *ccloudv2.Client) []string {
 }
 
 func AutocompleteIdentityPools(client *ccloudv2.Client, providerId string) []string {
-	identityPools, err := client.ListIdentityPools(providerId)
+	identityPools, err := client.ListIamIdentityPools(providerId)
 	if err != nil {
 		return nil
 	}
