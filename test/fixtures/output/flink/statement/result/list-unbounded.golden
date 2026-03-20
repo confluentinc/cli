@@ -1,0 +1,2 @@
+No Flink endpoint is specified, defaulting to public endpoint: `http://127.0.0.1:1026`
+Error: statement "unbounded-statement" is unbounded and may produce results indefinitely; use the Flink shell to view results from streaming queries
