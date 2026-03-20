@@ -45,7 +45,7 @@ func (c *command) getPrivateLinkAccesses(name, network, phase []string) ([]netwo
 		return nil, err
 	}
 
-	return c.V2Client.ListPrivateLinkAccesses(environmentId, name, network, phase)
+	return c.V2Client.ListNetworkPrivateLinkAccesses(environmentId, name, network, phase)
 }
 
 func (c *command) validPrivateLinkAccessArgs(cmd *cobra.Command, args []string) []string {

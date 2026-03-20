@@ -51,7 +51,7 @@ func (c *command) privateLinkAttachmentConnectionUpdate(cmd *cobra.Command, args
 		},
 	}
 
-	connection, err := c.V2Client.UpdatePrivateLinkAttachmentConnection(environmentId, args[0], updatePrivateLinkAttachmentConnection)
+	connection, err := c.V2Client.UpdateNetworkPrivateLinkAttachmentConnection(environmentId, args[0], updatePrivateLinkAttachmentConnection)
 	if err != nil {
 		return err
 	}

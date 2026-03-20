@@ -52,7 +52,7 @@ func (c *command) gatewayUpdate(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	gateway, err := c.V2Client.UpdateGateway(args[0], updateGateway)
+	gateway, err := c.V2Client.UpdateNetworkGateway(args[0], updateGateway)
 	if err != nil {
 		return err
 	}
