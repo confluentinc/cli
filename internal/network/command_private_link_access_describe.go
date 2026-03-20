@@ -35,7 +35,7 @@ func (c *command) privateLinkAccessDescribe(cmd *cobra.Command, args []string) e
 		return err
 	}
 
-	access, err := c.V2Client.GetPrivateLinkAccess(environmentId, args[0])
+	access, err := c.V2Client.GetNetworkPrivateLinkAccess(environmentId, args[0])
 	if err != nil {
 		return err
 	}

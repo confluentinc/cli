@@ -36,7 +36,7 @@ func (c *command) peeringDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	existenceFunc := func(id string) bool {
-		_, err := c.V2Client.GetPeering(environmentId, id)
+		_, err := c.V2Client.GetNetworkPeering(environmentId, id)
 		return err == nil
 	}
 
@@ -45,7 +45,7 @@ func (c *command) peeringDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		return c.V2Client.DeletePeering(environmentId, id)
+		return c.V2Client.DeleteNetworkPeering(environmentId, id)
 	}
 
 	deletedIds, err := deletion.DeleteWithoutMessage(cmd, args, deleteFunc)

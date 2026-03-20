@@ -35,7 +35,7 @@ func (c *command) privateLinkAttachmentDescribe(cmd *cobra.Command, args []strin
 		return err
 	}
 
-	attachment, err := c.V2Client.GetPrivateLinkAttachment(environmentId, args[0])
+	attachment, err := c.V2Client.GetNetworkPrivateLinkAttachment(environmentId, args[0])
 	if err != nil {
 		return err
 	}

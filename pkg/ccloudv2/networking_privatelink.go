@@ -23,13 +23,13 @@ func (c *Client) networkingPrivateLinkApiContext() context.Context {
 	return context.WithValue(context.Background(), networkingprivatelinkv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
-func (c *Client) ListPrivateLinkAttachments(environment string, name, cloud, region, phase []string) ([]networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment, error) {
+func (c *Client) ListNetworkPrivateLinkAttachments(environment string, name, cloud, region, phase []string) ([]networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment, error) {
 	var list []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, err := c.executeListPrivateLinkAttachments(environment, pageToken, name, cloud, region, phase)
+		page, err := c.executeListNetworkPrivateLinkAttachments(environment, pageToken, name, cloud, region, phase)
 		if err != nil {
 			return nil, err
 		}
@@ -43,7 +43,7 @@ func (c *Client) ListPrivateLinkAttachments(environment string, name, cloud, reg
 	return list, nil
 }
 
-func (c *Client) executeListPrivateLinkAttachments(environment, pageToken string, name, cloud, region, phase []string) (networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentList, error) {
+func (c *Client) executeListNetworkPrivateLinkAttachments(environment, pageToken string, name, cloud, region, phase []string) (networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentList, error) {
 	req := c.NetworkingPrivateLinkClient.PrivateLinkAttachmentsNetworkingV1Api.ListNetworkingV1PrivateLinkAttachments(c.networkingPrivateLinkApiContext()).Environment(environment).SpecDisplayName(name).SpecCloud(cloud).SpecRegion(region).StatusPhase(phase).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
@@ -53,33 +53,33 @@ func (c *Client) executeListPrivateLinkAttachments(environment, pageToken string
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) GetPrivateLinkAttachment(environment, id string) (networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment, error) {
+func (c *Client) GetNetworkPrivateLinkAttachment(environment, id string) (networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment, error) {
 	resp, httpResp, err := c.NetworkingPrivateLinkClient.PrivateLinkAttachmentsNetworkingV1Api.GetNetworkingV1PrivateLinkAttachment(c.networkingPrivateLinkApiContext(), id).Environment(environment).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdatePrivateLinkAttachment(environment, id string, privateLinkAttachmentUpdate networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentUpdate) (networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment, error) {
+func (c *Client) UpdateNetworkPrivateLinkAttachment(environment, id string, privateLinkAttachmentUpdate networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentUpdate) (networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment, error) {
 	resp, httpResp, err := c.NetworkingPrivateLinkClient.PrivateLinkAttachmentsNetworkingV1Api.UpdateNetworkingV1PrivateLinkAttachment(c.networkingPrivateLinkApiContext(), id).NetworkingV1PrivateLinkAttachmentUpdate(privateLinkAttachmentUpdate).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DeletePrivateLinkAttachment(environment, id string) error {
+func (c *Client) DeleteNetworkPrivateLinkAttachment(environment, id string) error {
 	httpResp, err := c.NetworkingPrivateLinkClient.PrivateLinkAttachmentsNetworkingV1Api.DeleteNetworkingV1PrivateLinkAttachment(c.networkingPrivateLinkApiContext(), id).Environment(environment).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) CreatePrivateLinkAttachment(attachment networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment) (networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment, error) {
+func (c *Client) CreateNetworkPrivateLinkAttachment(attachment networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment) (networkingprivatelinkv1.NetworkingV1PrivateLinkAttachment, error) {
 	resp, httpResp, err := c.NetworkingPrivateLinkClient.PrivateLinkAttachmentsNetworkingV1Api.CreateNetworkingV1PrivateLinkAttachment(c.networkingPrivateLinkApiContext()).NetworkingV1PrivateLinkAttachment(attachment).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListPrivateLinkAttachmentConnections(environment, attachmentId string) ([]networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection, error) {
+func (c *Client) ListNetworkPrivateLinkAttachmentConnections(environment, attachmentId string) ([]networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection, error) {
 	var list []networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, err := c.executeListPrivateLinkAttachmentConnections(environment, attachmentId, pageToken)
+		page, err := c.executeListNetworkPrivateLinkAttachmentConnections(environment, attachmentId, pageToken)
 		if err != nil {
 			return nil, err
 		}
@@ -93,7 +93,7 @@ func (c *Client) ListPrivateLinkAttachmentConnections(environment, attachmentId 
 	return list, nil
 }
 
-func (c *Client) executeListPrivateLinkAttachmentConnections(environment, attachmentId, pageToken string) (networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList, error) {
+func (c *Client) executeListNetworkPrivateLinkAttachmentConnections(environment, attachmentId, pageToken string) (networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionList, error) {
 	req := c.NetworkingPrivateLinkClient.PrivateLinkAttachmentConnectionsNetworkingV1Api.ListNetworkingV1PrivateLinkAttachmentConnections(c.networkingPrivateLinkApiContext()).Environment(environment).SpecPrivateLinkAttachment(attachmentId).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
@@ -103,22 +103,22 @@ func (c *Client) executeListPrivateLinkAttachmentConnections(environment, attach
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) GetPrivateLinkAttachmentConnection(environment, id string) (networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection, error) {
+func (c *Client) GetNetworkPrivateLinkAttachmentConnection(environment, id string) (networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection, error) {
 	resp, httpResp, err := c.NetworkingPrivateLinkClient.PrivateLinkAttachmentConnectionsNetworkingV1Api.GetNetworkingV1PrivateLinkAttachmentConnection(c.networkingPrivateLinkApiContext(), id).Environment(environment).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdatePrivateLinkAttachmentConnection(environment, id string, privateLinkAttachmentConnectionUpdate networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionUpdate) (networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection, error) {
+func (c *Client) UpdateNetworkPrivateLinkAttachmentConnection(environment, id string, privateLinkAttachmentConnectionUpdate networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnectionUpdate) (networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection, error) {
 	resp, httpResp, err := c.NetworkingPrivateLinkClient.PrivateLinkAttachmentConnectionsNetworkingV1Api.UpdateNetworkingV1PrivateLinkAttachmentConnection(c.networkingPrivateLinkApiContext(), id).NetworkingV1PrivateLinkAttachmentConnectionUpdate(privateLinkAttachmentConnectionUpdate).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DeletePrivateLinkAttachmentConnection(environment, id string) error {
+func (c *Client) DeleteNetworkPrivateLinkAttachmentConnection(environment, id string) error {
 	httpResp, err := c.NetworkingPrivateLinkClient.PrivateLinkAttachmentConnectionsNetworkingV1Api.DeleteNetworkingV1PrivateLinkAttachmentConnection(c.networkingPrivateLinkApiContext(), id).Environment(environment).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) CreatePrivateLinkAttachmentConnection(connection networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection) (networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection, error) {
+func (c *Client) CreateNetworkPrivateLinkAttachmentConnection(connection networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection) (networkingprivatelinkv1.NetworkingV1PrivateLinkAttachmentConnection, error) {
 	resp, httpResp, err := c.NetworkingPrivateLinkClient.PrivateLinkAttachmentConnectionsNetworkingV1Api.CreateNetworkingV1PrivateLinkAttachmentConnection(c.networkingPrivateLinkApiContext()).NetworkingV1PrivateLinkAttachmentConnection(connection).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }

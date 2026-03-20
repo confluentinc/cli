@@ -52,7 +52,7 @@ func (c *command) privateLinkAccessUpdate(cmd *cobra.Command, args []string) err
 		},
 	}
 
-	access, err := c.V2Client.UpdatePrivateLinkAccess(environmentId, args[0], updatePrivateLinkAccess)
+	access, err := c.V2Client.UpdateNetworkPrivateLinkAccess(environmentId, args[0], updatePrivateLinkAccess)
 	if err != nil {
 		return err
 	}
