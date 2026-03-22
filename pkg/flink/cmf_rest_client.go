@@ -570,6 +570,15 @@ func (cmfClient *CmfRestClient) DeleteCatalog(ctx context.Context, catalogName s
 	return parseSdkError(httpResp, err)
 }
 
+func (cmfClient *CmfRestClient) CreateDatabase(ctx context.Context, catalogName string, kafkaDatabase cmfsdk.KafkaDatabase) (cmfsdk.KafkaDatabase, error) {
+	databaseName := kafkaDatabase.Metadata.Name
+	outputDatabase, httpResponse, err := cmfClient.SQLApi.CreateKafkaDatabase(ctx, catalogName).KafkaDatabase(kafkaDatabase).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.KafkaDatabase{}, fmt.Errorf(`failed to create database "%s" in catalog "%s": %s`, databaseName, catalogName, parsedErr)
+	}
+	return outputDatabase, nil
+}
+
 // Returns the next page number and whether we need to fetch more pages or not.
 func extractPageOptions(receivedItemsLength int, currentPageNumber int32) (int32, bool) {
 	if receivedItemsLength == 0 {
