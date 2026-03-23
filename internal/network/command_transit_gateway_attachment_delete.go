@@ -36,7 +36,7 @@ func (c *command) transitGatewayAttachmentDelete(cmd *cobra.Command, args []stri
 	}
 
 	existenceFunc := func(id string) bool {
-		_, err := c.V2Client.GetTransitGatewayAttachment(environmentId, id)
+		_, err := c.V2Client.GetNetworkTransitGatewayAttachment(environmentId, id)
 		return err == nil
 	}
 
@@ -45,7 +45,7 @@ func (c *command) transitGatewayAttachmentDelete(cmd *cobra.Command, args []stri
 	}
 
 	deleteFunc := func(id string) error {
-		return c.V2Client.DeleteTransitGatewayAttachment(environmentId, id)
+		return c.V2Client.DeleteNetworkTransitGatewayAttachment(environmentId, id)
 	}
 
 	deletedIds, err := deletion.DeleteWithoutMessage(cmd, args, deleteFunc)

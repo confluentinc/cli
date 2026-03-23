@@ -78,7 +78,7 @@ func (c *command) gatewayList(cmd *cobra.Command, _ []string) error {
 		phases[i] = strings.ToLower(phase)
 	}
 
-	gateways, err := c.V2Client.ListGateways(environmentId, types, ids, regions, displayNames, phases)
+	gateways, err := c.V2Client.ListNetworkGateways(environmentId, types, ids, regions, displayNames, phases)
 	if err != nil {
 		return err
 	}

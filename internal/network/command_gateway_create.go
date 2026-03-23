@@ -122,7 +122,7 @@ func (c *command) gatewayCreate(cmd *cobra.Command, args []string) error {
 		createGateway.Spec.SetDisplayName(args[0])
 	}
 
-	gateway, err := c.V2Client.CreateGateway(createGateway)
+	gateway, err := c.V2Client.CreateNetworkGateway(createGateway)
 	if err != nil {
 		return err
 	}

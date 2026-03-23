@@ -55,7 +55,7 @@ func (c *command) addPrivateLinkAccessPointFlag(cmd *cobra.Command) {
 }
 
 func autocompleteAccessPoints(client *ccloudv2.Client, environmentId string) []string {
-	accessPoints, err := client.ListAccessPoints(environmentId, nil)
+	accessPoints, err := client.ListNetworkAccessPoints(environmentId, nil)
 	if err != nil {
 		return nil
 	}
@@ -88,7 +88,7 @@ func (c *command) autocompleteDnsRecords() []string {
 		return nil
 	}
 
-	records, err := c.V2Client.ListDnsRecords(environmentId, ccloudv2.DnsRecordListParameters{})
+	records, err := c.V2Client.ListNetworkDnsRecords(environmentId, ccloudv2.DnsRecordListParameters{})
 	if err != nil {
 		return nil
 	}
