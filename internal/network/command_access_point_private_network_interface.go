@@ -29,9 +29,9 @@ func (c *accessPointCommand) newPrivateNetworkInterfaceCommand() *cobra.Command 
 	}
 
 	cmd.AddCommand(c.newPrivateNetworkInterfaceCreateCommand())
+	cmd.AddCommand(c.newPrivateNetworkInterfaceDeleteCommand())
 	cmd.AddCommand(c.newPrivateNetworkInterfaceDescribeCommand())
 	cmd.AddCommand(c.newPrivateNetworkInterfaceListCommand())
-	cmd.AddCommand(c.newPrivateNetworkInterfaceDeleteCommand())
 	cmd.AddCommand(c.newPrivateNetworkInterfaceUpdateCommand())
 
 	return cmd
