@@ -49,14 +49,15 @@ type Client struct {
 	ApiKeysClient                *apikeysv2.APIClient
 	BillingClient                *billingv1.APIClient
 	ByokClient                   *byokv1.APIClient
+	Cclv1Client                  *cclv1.APIClient
+	CcpmClient                   *ccpmv1.APIClient
 	CdxClient                    *cdxv1.APIClient
 	CertificateAuthorityClient   *certificateauthorityv2.APIClient
 	CliClient                    *cliv1.APIClient
 	CmkClient                    *cmkv2.APIClient
-	ConnectClient                *connectv1.APIClient
 	ConnectArtifactClient        *camv1.APIClient
+	ConnectClient                *connectv1.APIClient
 	ConnectCustomPluginClient    *connectcustompluginv1.APIClient
-	Cclv1Client                  *cclv1.APIClient
 	FlinkArtifactClient          *flinkartifactv1.APIClient
 	FlinkClient                  *flinkv2.APIClient
 	IamClient                    *iamv2.APIClient
@@ -65,8 +66,8 @@ type Client struct {
 	KafkaQuotasClient            *kafkaquotasv1.APIClient
 	KsqlClient                   *ksqlv2.APIClient
 	MdsClient                    *mdsv2.APIClient
-	NetworkingClient             *networkingv1.APIClient
 	NetworkingAccessPointClient  *networkingaccesspointv1.APIClient
+	NetworkingClient             *networkingv1.APIClient
 	NetworkingDnsForwarderClient *networkingdnsforwarderv1.APIClient
 	NetworkingGatewayClient      *networkinggatewayv1.APIClient
 	NetworkingIpClient           *networkingipv1.APIClient
@@ -79,7 +80,6 @@ type Client struct {
 	SsoClient                    *ssov2.APIClient
 	TableflowClient              *tableflowv1.APIClient
 	UsmClient                    *usmv1.APIClient
-	CCPMClient                   *ccpmv1.APIClient
 }
 
 func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
@@ -99,14 +99,15 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		ApiKeysClient:                newApiKeysClient(httpClient, url, userAgent, unsafeTrace),
 		BillingClient:                newBillingClient(httpClient, url, userAgent, unsafeTrace),
 		ByokClient:                   newByokV1Client(httpClient, url, userAgent, unsafeTrace),
+		Cclv1Client:                  newCclClient(httpClient, url, userAgent, unsafeTrace),
+		CcpmClient:                   newCCPMClient(httpClient, url, userAgent, unsafeTrace),
 		CdxClient:                    newCdxClient(httpClient, url, userAgent, unsafeTrace),
 		CertificateAuthorityClient:   newCertificateAuthorityClient(httpClient, url, userAgent, unsafeTrace),
 		CliClient:                    newCliClient(url, userAgent, unsafeTrace),
 		CmkClient:                    newCmkClient(httpClient, url, userAgent, unsafeTrace),
+		ConnectArtifactClient:        newConnectArtifactClient(httpClient, url, userAgent, unsafeTrace),
 		ConnectClient:                newConnectClient(httpClient, url, userAgent, unsafeTrace),
 		ConnectCustomPluginClient:    newConnectCustomPluginClient(httpClient, url, userAgent, unsafeTrace),
-		ConnectArtifactClient:        newConnectArtifactClient(httpClient, url, userAgent, unsafeTrace),
-		Cclv1Client:                  newCclClient(httpClient, url, userAgent, unsafeTrace),
 		FlinkArtifactClient:          newFlinkArtifactClient(httpClient, url, userAgent, unsafeTrace),
 		FlinkClient:                  newFlinkClient(httpClient, url, userAgent, unsafeTrace),
 		IamClient:                    newIamClient(httpClient, url, userAgent, unsafeTrace),
@@ -115,8 +116,8 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		KafkaQuotasClient:            newKafkaQuotasClient(httpClient, url, userAgent, unsafeTrace),
 		KsqlClient:                   newKsqlClient(httpClient, url, userAgent, unsafeTrace),
 		MdsClient:                    newMdsClient(httpClient, url, userAgent, unsafeTrace),
-		NetworkingClient:             newNetworkingClient(httpClient, url, userAgent, unsafeTrace),
 		NetworkingAccessPointClient:  newNetworkingAccessPointClient(httpClient, url, userAgent, unsafeTrace),
+		NetworkingClient:             newNetworkingClient(httpClient, url, userAgent, unsafeTrace),
 		NetworkingDnsForwarderClient: newNetworkingDnsForwarderClient(httpClient, url, userAgent, unsafeTrace),
 		NetworkingGatewayClient:      newNetworkingGatewayClient(httpClient, url, userAgent, unsafeTrace),
 		NetworkingIpClient:           newNetworkingIpClient(httpClient, url, userAgent, unsafeTrace),
@@ -129,6 +130,5 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		SsoClient:                    newSsoClient(httpClient, url, userAgent, unsafeTrace),
 		TableflowClient:              newTableflowClient(httpClient, url, userAgent, unsafeTrace),
 		UsmClient:                    newUsmClient(httpClient, url, userAgent, unsafeTrace),
-		CCPMClient:                   newCCPMClient(httpClient, url, userAgent, unsafeTrace),
 	}
 }
