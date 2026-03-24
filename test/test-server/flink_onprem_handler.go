@@ -224,6 +224,35 @@ func createKafkaCatalog(catName string) cmfsdk.KafkaCatalog {
 	}
 }
 
+func handleCmfCatalogDatabases(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+		switch r.Method {
+		case http.MethodPost:
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var database cmfsdk.KafkaDatabase
+			err = json.Unmarshal(reqBody, &database)
+			require.NoError(t, err)
+
+			dbName := database.GetMetadata().Name
+
+			if dbName == "invalid-database" {
+				http.Error(w, "The Kafka database object from resource file is invalid", http.StatusUnprocessableEntity)
+				return
+			}
+
+			timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
+			database.Metadata.CreationTimestamp = &timeStamp
+			err = json.NewEncoder(w).Encode(database)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
 func createFlinkStatement(stmtName string, stopped bool, parallelism int32) cmfsdk.Statement {
 	timeStamp := time.Date(2025, time.August, 5, 12, 00, 0, 0, time.UTC).String()
 	status := cmfsdk.StatementStatus{

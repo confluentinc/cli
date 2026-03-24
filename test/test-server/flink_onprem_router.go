@@ -9,6 +9,7 @@ import (
 var flinkRoutes = []route{
 	{"/cmf/api/v1/catalogs/kafka", handleCmfCatalogs},
 	{"/cmf/api/v1/catalogs/kafka/{catName}", handleCmfCatalog},
+	{"/cmf/api/v1/catalogs/kafka/{catName}/databases", handleCmfCatalogDatabases},
 	{"/cmf/api/v1/environments/{environment}/applications", handleCmfApplications},
 	{"/cmf/api/v1/environments/{environment}/applications/{application}", handleCmfApplication},
 	{"/cmf/api/v1/environments", handleCmfEnvironments},
