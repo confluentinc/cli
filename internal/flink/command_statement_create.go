@@ -155,23 +155,6 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-
-		// If the statement produces bounded results, fetch and display them
-		traits := statement.Status.GetTraits()
-		schema := traits.GetSchema()
-		if columns := schema.GetColumns(); len(columns) > 0 && traits.GetIsBounded() {
-			statementResults, err := fetchAllResults(client, environmentId, name, c.Context.LastOrgId, schema, defaultMaxResultRows)
-			if err != nil {
-				return err
-			}
-			if err := printStatementResults(cmd, statementResults); err != nil {
-				return err
-			}
-			if len(statementResults.Rows) >= defaultMaxResultRows {
-				fmt.Fprintf(cmd.ErrOrStderr(), "Warning: results truncated at %d rows. Use `confluent flink statement result list` with --max-rows to adjust the limit.\n", defaultMaxResultRows)
-			}
-			return nil
-		}
 	}
 
 	table := output.NewTable(cmd)

@@ -60,9 +60,6 @@ func (c *command) newStatementCommand(cfg *config.Config) *cobra.Command {
 		cmd.AddCommand(c.newStatementWebUiForwardCommand())
 	}
 	cmd.AddCommand(c.newStatementExceptionCommand(cfg))
-	if cfg.IsCloudLogin() {
-		cmd.AddCommand(c.newStatementResultCommand(cfg))
-	}
 
 	return cmd
 }
