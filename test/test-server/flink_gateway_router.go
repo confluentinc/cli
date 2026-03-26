@@ -24,7 +24,6 @@ var flinkGatewayRoutes = []route{
 	{"/sql/v1/organizations/{organization_id}/environments/{environment}/statements", handleSqlEnvironmentsEnvironmentStatements},
 	{"/sql/v1/organizations/{organization_id}/environments/{environment}/statements/{statement}", handleSqlEnvironmentsEnvironmentStatementsStatement},
 	{"/sql/v1/organizations/{organization_id}/environments/{environment}/statements/{statement}/exceptions", handleSqlEnvironmentsEnvironmentStatementExceptions},
-	{"/sql/v1/organizations/{organization_id}/environments/{environment}/statements/{statement}/results", handleSqlEnvironmentsEnvironmentStatementResults},
 	{"/sql/v1/organizations/{organization_id}/environments/{environment_id}/connections", handleSqlEnvironmentsEnvironmentConnections},
 	{"/sql/v1/organizations/{organization_id}/environments/{environment_id}/connections/{connection}", handleSqlEnvironmentsEnvironmentConnectionsConnection},
 }
@@ -220,10 +219,8 @@ func handleSqlEnvironmentsEnvironmentStatementsStatement(t *testing.T) http.Hand
 
 func handleStatementGet(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		statementName := mux.Vars(r)["statement"]
-
 		statement := flinkgatewayv1.SqlV1Statement{
-			Name: flinkgatewayv1.PtrString(statementName),
+			Name: flinkgatewayv1.PtrString(mux.Vars(r)["statement"]),
 			Spec: &flinkgatewayv1.SqlV1StatementSpec{
 				Statement: flinkgatewayv1.PtrString("CREATE TABLE test;"),
 				Properties: &map[string]string{
@@ -236,14 +233,6 @@ func handleStatementGet(t *testing.T) http.HandlerFunc {
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
 				Phase:  "COMPLETED",
 				Detail: flinkgatewayv1.PtrString("SQL statement is completed"),
-				Traits: &flinkgatewayv1.SqlV1StatementTraits{
-					IsBounded: flinkgatewayv1.PtrBool(true),
-					Schema: &flinkgatewayv1.SqlV1ResultSchema{
-						Columns: &[]flinkgatewayv1.ColumnDetails{
-							{Name: "database_name", Type: flinkgatewayv1.DataType{Type: "VARCHAR"}},
-						},
-					},
-				},
 				LatestOffsets: &map[string]string{
 					"customers_source": "partition:0,offset:9223372036854775808",
 				},
@@ -252,40 +241,7 @@ func handleStatementGet(t *testing.T) http.HandlerFunc {
 			Metadata: &flinkgatewayv1.StatementObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC))},
 		}
 
-		switch {
-		case strings.Contains(statementName, "failed"):
-			statement.Status.Phase = "FAILED"
-			statement.Status.Detail = flinkgatewayv1.PtrString("Syntax error in SQL statement")
-			statement.Status.Traits = nil
-		case strings.Contains(statementName, "pending"):
-			statement.Status.Phase = "PENDING"
-			statement.Status.Detail = flinkgatewayv1.PtrString("")
-			statement.Status.Traits = nil
-		case strings.Contains(statementName, "unbounded"):
-			statement.Status.Phase = "RUNNING"
-			statement.Status.Traits.IsBounded = flinkgatewayv1.PtrBool(false)
-		case strings.Contains(statementName, "no-results"):
-			statement.Status.Traits = nil
-		}
-
 		err := json.NewEncoder(w).Encode(statement)
-		require.NoError(t, err)
-	}
-}
-
-func handleSqlEnvironmentsEnvironmentStatementResults(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		result := flinkgatewayv1.SqlV1StatementResult{
-			Metadata: flinkgatewayv1.ResultListMeta{},
-			Results: &flinkgatewayv1.SqlV1StatementResultResults{
-				Data: &[]any{
-					map[string]any{"op": float64(0), "row": []any{"my-cluster"}},
-					map[string]any{"op": float64(0), "row": []any{"other-cluster"}},
-				},
-			},
-		}
-
-		err := json.NewEncoder(w).Encode(result)
 		require.NoError(t, err)
 	}
 }
