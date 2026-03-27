@@ -1,6 +1,8 @@
 package kafka
 
 import (
+	"sort"
+
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
@@ -68,5 +70,6 @@ func getShareGroupTopicNamesOnPrem(shareGroup kafkarestv3.ShareGroupData) []stri
 		topics = append(topics, topic)
 	}
 
+	sort.Strings(topics)
 	return topics
 }
