@@ -11,6 +11,7 @@ Available Commands:
   link          Manage inter-cluster links.
   partition     Manage Kafka partitions.
   replica       Manage Kafka replicas.
+  share-group   Manage Kafka share groups.
   topic         Manage Kafka topics.
 
 Global Flags:

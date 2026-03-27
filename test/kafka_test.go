@@ -790,6 +790,20 @@ func (s *CLITestSuite) TestKafkaShareGroup() {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
+
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests = []CLITest{
+		{args: "kafka share-group list", fixture: "kafka/share-group/list-onprem.golden"},
+		{args: "kafka share-group describe share-group-1", contains: shareGroupTopic1, notContains: ""},
+		{args: "kafka share-group describe share-group-1", contains: shareGroupTopic2, notContains: ""},
+		{args: "kafka share-group describe share-group-1234", fixture: "kafka/share-group/describe-dne-onprem.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		s.runIntegrationTest(test)
+	}
 }
 
 func (s *CLITestSuite) TestKafkaShareGroupConsumer() {
@@ -802,6 +816,18 @@ func (s *CLITestSuite) TestKafkaShareGroupConsumer() {
 
 	for _, test := range tests {
 		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests = []CLITest{
+		{args: "kafka share-group consumer list --group share-group-1", fixture: "kafka/share-group/consumer/list-onprem.golden"},
+		{args: "kafka share-group consumer list --group share-group-1234", fixture: "kafka/share-group/consumer/list-dne-onprem.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
 		s.runIntegrationTest(test)
 	}
 }
