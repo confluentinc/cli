@@ -36,7 +36,7 @@ func (c *accessPointCommand) privateNetworkInterfaceDelete(cmd *cobra.Command, a
 	}
 
 	existenceFunc := func(id string) bool {
-		_, err := c.V2Client.GetAccessPoint(environmentId, id)
+		_, err := c.V2Client.GetNetworkAccessPoint(environmentId, id)
 		return err == nil
 	}
 
@@ -45,7 +45,7 @@ func (c *accessPointCommand) privateNetworkInterfaceDelete(cmd *cobra.Command, a
 	}
 
 	deleteFunc := func(id string) error {
-		return c.V2Client.DeleteAccessPoint(environmentId, id)
+		return c.V2Client.DeleteNetworkAccessPoint(environmentId, id)
 	}
 
 	deletedIds, err := deletion.DeleteWithoutMessage(cmd, args, deleteFunc)
