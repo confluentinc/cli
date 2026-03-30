@@ -20,8 +20,6 @@ semaphore:
   pipeline_enable: false
 make:
   enable: false
-code_review:
-  enable: true
 sonarqube:
   enable: true
   languages: ["go"]
