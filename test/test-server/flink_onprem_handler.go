@@ -224,6 +224,25 @@ func createKafkaCatalog(catName string) cmfsdk.KafkaCatalog {
 	}
 }
 
+func createKafkaDatabase(dbName string) cmfsdk.KafkaDatabase {
+	timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).String()
+	return cmfsdk.KafkaDatabase{
+		ApiVersion: "cmf/api/v1/database",
+		Kind:       "KafkaDatabase",
+		Metadata: cmfsdk.DatabaseMetadata{
+			Name:              dbName,
+			CreationTimestamp: &timeStamp,
+		},
+		Spec: cmfsdk.KafkaDatabaseSpec{
+			KafkaCluster: cmfsdk.KafkaDatabaseSpecKafkaCluster{
+				ConnectionConfig: map[string]string{
+					"bootstrap.servers": "localhost:9092",
+				},
+			},
+		},
+	}
+}
+
 func handleCmfCatalogDatabases(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleLoginType(t, r)
