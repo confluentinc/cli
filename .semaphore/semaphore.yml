@@ -88,6 +88,19 @@ blocks:
           commands:
             - test-results publish . -N "windows/amd64"
 
+  - name: "R2 Code Review"
+    dependencies: [ ]
+    run:
+      # run on all pull requests
+      when: "pull_request =~ '.+'"
+    task:
+      jobs:
+        - name: "R2 Code Review"
+          commands:
+            # || true: code review failures are unrelated to the codebase and should not block CI.
+            # Please report issues to Slack channel #r2.
+            - r2 code-review --verbose --timeout=15m || true
+
 after_pipeline:
   task:
     jobs:
