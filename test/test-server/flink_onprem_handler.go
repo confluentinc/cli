@@ -228,6 +228,16 @@ func handleCmfCatalogDatabases(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleLoginType(t, r)
 		switch r.Method {
+		case http.MethodGet:
+			databases := []cmfsdk.KafkaDatabase{
+				createKafkaDatabase("test-database-1"),
+				createKafkaDatabase("test-database-2"),
+			}
+			page := cmfsdk.KafkaDatabasesPage{
+				Items: &databases,
+			}
+			err := json.NewEncoder(w).Encode(page)
+			require.NoError(t, err)
 		case http.MethodPost:
 			reqBody, err := io.ReadAll(r.Body)
 			require.NoError(t, err)

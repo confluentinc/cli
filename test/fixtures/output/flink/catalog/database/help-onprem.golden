@@ -5,6 +5,7 @@ Usage:
 
 Available Commands:
   create      Create a Flink database.
+  list        List Flink databases in a catalog in Confluent Platform.
 
 Global Flags:
   -h, --help            Show help for this command.

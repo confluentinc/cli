@@ -22,6 +22,7 @@ func (c *command) newCatalogDatabaseCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(c.newCatalogDatabaseCreateCommand())
+	cmd.AddCommand(c.newCatalogDatabaseListCommand())
 
 	return cmd
 }
