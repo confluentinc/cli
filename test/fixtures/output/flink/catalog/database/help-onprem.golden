@@ -7,6 +7,7 @@ Available Commands:
   create      Create a Flink database.
   describe    Describe a Flink database in Confluent Platform.
   list        List Flink databases in a catalog in Confluent Platform.
+  update      Update a Flink database.
 
 Global Flags:
   -h, --help            Show help for this command.

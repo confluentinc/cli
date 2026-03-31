@@ -304,6 +304,14 @@ func handleCmfCatalogDatabase(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(database)
 			require.NoError(t, err)
 			return
+		case http.MethodPut:
+			if dbName == "invalid-database" {
+				http.Error(w, "The database name is invalid", http.StatusNotFound)
+				return
+			}
+
+			w.WriteHeader(http.StatusOK)
+			return
 		default:
 			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
 		}
