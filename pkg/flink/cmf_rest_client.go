@@ -570,6 +570,41 @@ func (cmfClient *CmfRestClient) DeleteCatalog(ctx context.Context, catalogName s
 	return parseSdkError(httpResp, err)
 }
 
+func (cmfClient *CmfRestClient) CreateDatabase(ctx context.Context, catalogName string, kafkaDatabase cmfsdk.KafkaDatabase) (cmfsdk.KafkaDatabase, error) {
+	databaseName := kafkaDatabase.Metadata.Name
+	outputDatabase, httpResponse, err := cmfClient.SQLApi.CreateKafkaDatabase(ctx, catalogName).KafkaDatabase(kafkaDatabase).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.KafkaDatabase{}, fmt.Errorf(`failed to create database "%s" in catalog "%s": %s`, databaseName, catalogName, parsedErr)
+	}
+	return outputDatabase, nil
+}
+
+func (cmfClient *CmfRestClient) DescribeDatabase(ctx context.Context, catalogName, databaseName string) (cmfsdk.KafkaDatabase, error) {
+	outputDatabase, httpResponse, err := cmfClient.SQLApi.GetKafkaDatabase(ctx, catalogName, databaseName).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.KafkaDatabase{}, fmt.Errorf(`failed to get database "%s" in catalog "%s": %s`, databaseName, catalogName, parsedErr)
+	}
+	return outputDatabase, nil
+}
+
+func (cmfClient *CmfRestClient) ListDatabases(ctx context.Context, catalogName string) ([]cmfsdk.KafkaDatabase, error) {
+	databases := make([]cmfsdk.KafkaDatabase, 0)
+	done := false
+	const pageSize = 100
+	var currentPageNumber int32 = 0
+
+	for !done {
+		databasePage, httpResponse, err := cmfClient.SQLApi.GetKafkaDatabases(ctx, catalogName).Page(currentPageNumber).Size(pageSize).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list databases in catalog "%s": %s`, catalogName, parsedErr)
+		}
+		databases = append(databases, databasePage.GetItems()...)
+		currentPageNumber, done = extractPageOptions(len(databasePage.GetItems()), currentPageNumber)
+	}
+
+	return databases, nil
+}
+
 // Returns the next page number and whether we need to fetch more pages or not.
 func extractPageOptions(receivedItemsLength int, currentPageNumber int32) (int32, bool) {
 	if receivedItemsLength == 0 {
