@@ -1,4 +1,4 @@
-          Creation Time         |       Name       |   Catalog
---------------------------------+------------------+--------------
-  2025-08-05 12:00:00 +0000 UTC | test-database-1  | test-catalog
-  2025-08-05 12:00:00 +0000 UTC | test-database-2  | test-catalog
+          Creation Time         |      Name       |   Catalog     
+--------------------------------+-----------------+---------------
+  2025-08-05 12:00:00 +0000 UTC | test-database-1 | test-catalog  
+  2025-08-05 12:00:00 +0000 UTC | test-database-2 | test-catalog  
