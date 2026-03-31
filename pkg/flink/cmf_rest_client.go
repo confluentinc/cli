@@ -579,6 +579,14 @@ func (cmfClient *CmfRestClient) CreateDatabase(ctx context.Context, catalogName 
 	return outputDatabase, nil
 }
 
+func (cmfClient *CmfRestClient) DescribeDatabase(ctx context.Context, catalogName, databaseName string) (cmfsdk.KafkaDatabase, error) {
+	outputDatabase, httpResponse, err := cmfClient.SQLApi.GetKafkaDatabase(ctx, catalogName, databaseName).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.KafkaDatabase{}, fmt.Errorf(`failed to get database "%s" in catalog "%s": %s`, databaseName, catalogName, parsedErr)
+	}
+	return outputDatabase, nil
+}
+
 func (cmfClient *CmfRestClient) ListDatabases(ctx context.Context, catalogName string) ([]cmfsdk.KafkaDatabase, error) {
 	databases := make([]cmfsdk.KafkaDatabase, 0)
 	done := false

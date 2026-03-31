@@ -423,6 +423,19 @@ func (s *CLITestSuite) TestFlinkCatalogDatabaseCreateOnPrem() {
 	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
+func (s *CLITestSuite) TestFlinkCatalogDatabaseDescribeOnPrem() {
+	tests := []CLITest{
+		// success
+		{args: "flink catalog database describe test-database --catalog test-catalog", fixture: "flink/catalog/database/describe-success.golden"},
+		{args: "flink catalog database describe test-database --catalog test-catalog --output json", fixture: "flink/catalog/database/describe-success-json.golden"},
+		{args: "flink catalog database describe test-database --catalog test-catalog --output yaml", fixture: "flink/catalog/database/describe-success-yaml.golden"},
+		// failure
+		{args: "flink catalog database describe invalid-database --catalog test-catalog", fixture: "flink/catalog/database/describe-not-found.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
 func (s *CLITestSuite) TestFlinkCatalogDatabaseListOnPrem() {
 	tests := []CLITest{
 		// success
