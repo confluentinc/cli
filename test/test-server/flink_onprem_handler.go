@@ -224,6 +224,100 @@ func createKafkaCatalog(catName string) cmfsdk.KafkaCatalog {
 	}
 }
 
+func createKafkaDatabase(dbName string) cmfsdk.KafkaDatabase {
+	timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).String()
+	return cmfsdk.KafkaDatabase{
+		ApiVersion: "cmf/api/v1/database",
+		Kind:       "KafkaDatabase",
+		Metadata: cmfsdk.DatabaseMetadata{
+			Name:              dbName,
+			CreationTimestamp: &timeStamp,
+		},
+		Spec: cmfsdk.KafkaDatabaseSpec{
+			KafkaCluster: cmfsdk.KafkaDatabaseSpecKafkaCluster{
+				ConnectionConfig: map[string]string{
+					"bootstrap.servers": "localhost:9092",
+				},
+			},
+		},
+	}
+}
+
+func handleCmfCatalogDatabases(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+		switch r.Method {
+		case http.MethodGet:
+			databases := []cmfsdk.KafkaDatabase{
+				createKafkaDatabase("test-database-1"),
+				createKafkaDatabase("test-database-2"),
+			}
+			databasesPage := cmfsdk.KafkaDatabasesPage{}
+			page := r.URL.Query().Get("page")
+
+			if page == "0" {
+				databasesPage.SetItems(databases)
+			}
+
+			err := json.NewEncoder(w).Encode(databasesPage)
+			require.NoError(t, err)
+		case http.MethodPost:
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var database cmfsdk.KafkaDatabase
+			err = json.Unmarshal(reqBody, &database)
+			require.NoError(t, err)
+
+			dbName := database.GetMetadata().Name
+
+			if dbName == "invalid-database" {
+				http.Error(w, "The Kafka database object from resource file is invalid", http.StatusUnprocessableEntity)
+				return
+			}
+
+			timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
+			database.Metadata.CreationTimestamp = &timeStamp
+			err = json.NewEncoder(w).Encode(database)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func handleCmfCatalogDatabase(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		dbName := vars["dbName"]
+
+		switch r.Method {
+		case http.MethodGet:
+			if dbName == "invalid-database" {
+				http.Error(w, "The database name is invalid", http.StatusNotFound)
+				return
+			}
+
+			database := createKafkaDatabase(dbName)
+			err := json.NewEncoder(w).Encode(database)
+			require.NoError(t, err)
+			return
+		case http.MethodPut:
+			if dbName == "invalid-database" {
+				http.Error(w, "The database name is invalid", http.StatusNotFound)
+				return
+			}
+
+			w.WriteHeader(http.StatusOK)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
 func createFlinkStatement(stmtName string, stopped bool, parallelism int32) cmfsdk.Statement {
 	timeStamp := time.Date(2025, time.August, 5, 12, 00, 0, 0, time.UTC).String()
 	status := cmfsdk.StatementStatus{
