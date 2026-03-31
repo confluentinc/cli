@@ -252,10 +252,14 @@ func handleCmfCatalogDatabases(t *testing.T) http.HandlerFunc {
 				createKafkaDatabase("test-database-1"),
 				createKafkaDatabase("test-database-2"),
 			}
-			page := cmfsdk.KafkaDatabasesPage{
-				Items: &databases,
+			databasesPage := cmfsdk.KafkaDatabasesPage{}
+			page := r.URL.Query().Get("page")
+
+			if page == "0" {
+				databasesPage.SetItems(databases)
 			}
-			err := json.NewEncoder(w).Encode(page)
+
+			err := json.NewEncoder(w).Encode(databasesPage)
 			require.NoError(t, err)
 		case http.MethodPost:
 			reqBody, err := io.ReadAll(r.Body)
@@ -274,6 +278,30 @@ func handleCmfCatalogDatabases(t *testing.T) http.HandlerFunc {
 			timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
 			database.Metadata.CreationTimestamp = &timeStamp
 			err = json.NewEncoder(w).Encode(database)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func handleCmfCatalogDatabase(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		dbName := vars["dbName"]
+
+		switch r.Method {
+		case http.MethodGet:
+			if dbName == "invalid-database" {
+				http.Error(w, "The database name is invalid", http.StatusNotFound)
+				return
+			}
+
+			database := createKafkaDatabase(dbName)
+			err := json.NewEncoder(w).Encode(database)
 			require.NoError(t, err)
 			return
 		default:
