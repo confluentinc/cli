@@ -57,7 +57,7 @@ func (c *Client) executeListNetworkAccessPoints(environment, pageToken string, n
 	}
 
 	if names != nil {
-		req = req.SpecDisplayName(networkingaccesspointv1.MultipleSearchFilter{Items: names})
+		req = req.SpecDisplayName(names)
 	}
 
 	resp, httpResp, err := req.Execute()
@@ -111,19 +111,19 @@ func (c *Client) executeListNetworkDnsRecords(environment, pageToken string, lis
 	}
 
 	if listParameters.Gateways != nil {
-		req = req.SpecGateway(networkingaccesspointv1.MultipleSearchFilter{Items: listParameters.Gateways})
+		req = req.SpecGateway(listParameters.Gateways)
 	}
 
 	if listParameters.Domains != nil {
-		req = req.SpecDomain(networkingaccesspointv1.MultipleSearchFilter{Items: listParameters.Domains})
+		req = req.SpecDomain(listParameters.Domains)
 	}
 
 	if listParameters.Names != nil {
-		req = req.SpecDisplayName(networkingaccesspointv1.MultipleSearchFilter{Items: listParameters.Names})
+		req = req.SpecDisplayName(listParameters.Names)
 	}
 
 	if listParameters.ResourceIds != nil {
-		req = req.Resource(networkingaccesspointv1.MultipleSearchFilter{Items: listParameters.ResourceIds})
+		req = req.Resource(listParameters.ResourceIds)
 	}
 
 	resp, httpResp, err := req.Execute()

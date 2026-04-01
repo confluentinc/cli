@@ -67,19 +67,19 @@ func (c *Client) executeListNetworkGateways(environment, pageToken string, types
 	req := c.NetworkingGatewayClient.GatewaysNetworkingV1Api.ListNetworkingV1Gateways(c.networkingGatewayApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
 
 	if len(types) > 0 {
-		req = req.GatewayType(networkinggatewayv1.MultipleSearchFilter{Items: types})
+		req = req.GatewayType(types)
 	}
 	if len(ids) > 0 {
-		req = req.Id(networkinggatewayv1.MultipleSearchFilter{Items: ids})
+		req = req.Id(ids)
 	}
 	if len(regions) > 0 {
-		req = req.SpecConfigRegion(networkinggatewayv1.MultipleSearchFilter{Items: regions})
+		req = req.SpecConfigRegion(regions)
 	}
 	if len(displayNames) > 0 {
-		req = req.SpecDisplayName(networkinggatewayv1.MultipleSearchFilter{Items: displayNames})
+		req = req.SpecDisplayName(displayNames)
 	}
 	if len(phases) > 0 {
-		req = req.StatusPhase(networkinggatewayv1.MultipleSearchFilter{Items: phases})
+		req = req.StatusPhase(phases)
 	}
 	if pageToken != "" {
 		req = req.PageToken(pageToken)

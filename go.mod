@@ -15,8 +15,8 @@ require (
 	github.com/charmbracelet/lipgloss v0.11.0
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20250521223017-0e8f6f971b52
-	github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-access-point v0.12.0
-	github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-gateway v0.12.0
+	github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-access-point v0.13.0
+	github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-gateway v0.13.0
 	github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0
