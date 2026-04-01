@@ -1,6 +1,5 @@
 [
   {
-    "kind": "KafkaStreamsGroup",
     "cluster_id": "lkc-1234",
     "group_id": "streams-group-1",
     "state": "STABLE",
@@ -13,7 +12,6 @@
     "subtopologies": "/kafka/v3/clusters/lkc-1234/streams-groups/streams-group-1/subtopologies"
   },
   {
-    "kind": "KafkaStreamsGroup",
     "cluster_id": "lkc-1234",
     "group_id": "streams-group-2",
     "state": "RECONCILING",

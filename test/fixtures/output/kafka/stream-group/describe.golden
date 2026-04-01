@@ -1,5 +1,4 @@
 +-------------------------+--------------------------------------------------------------------------+
-| Kind                    | KafkaStreamsGroup                                                        |
 | Cluster Id              | lkc-1234                                                                 |
 | Group Id                | streams-group-1                                                          |
 | State                   | STABLE                                                                   |

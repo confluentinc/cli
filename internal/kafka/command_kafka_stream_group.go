@@ -11,7 +11,6 @@ type streamGroupCommand struct {
 }
 
 type streamGroupOut struct {
-	Kind                  string `human:"Kind" serialized:"kind"`
 	ClusterId             string `human:"Cluster Id" serialized:"cluster_id"`
 	GroupId               string `human:"Group Id" serialized:"group_id"`
 	State                 string `human:"State" serialized:"state"`

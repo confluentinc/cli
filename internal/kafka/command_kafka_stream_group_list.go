@@ -35,7 +35,6 @@ func (c *streamGroupCommand) listStreamGroup(cmd *cobra.Command, _ []string) err
 	list := output.NewList(cmd)
 	for _, streamGroup := range groups {
 		list.Add(&streamGroupOut{
-			Kind:                  streamGroup.GetKind(),
 			ClusterId:             streamGroup.GetClusterId(),
 			GroupId:               streamGroup.GetGroupId(),
 			State:                 streamGroup.GetState(),

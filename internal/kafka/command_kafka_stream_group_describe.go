@@ -40,7 +40,6 @@ func (c *streamGroupCommand) streamGroupDescribe(cmd *cobra.Command, args []stri
 
 	table := output.NewTable(cmd)
 	table.Add(&streamGroupOut{
-		Kind:                  streamGroup.GetKind(),
 		ClusterId:             streamGroup.GetClusterId(),
 		GroupId:               streamGroup.GetGroupId(),
 		State:                 streamGroup.GetState(),

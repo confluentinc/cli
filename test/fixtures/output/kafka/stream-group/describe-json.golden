@@ -1,5 +1,4 @@
 {
-  "kind": "KafkaStreamsGroup",
   "cluster_id": "lkc-1234",
   "group_id": "streams-group-1",
   "state": "STABLE",
