@@ -1,7 +1,7 @@
 Describe stream group member assignment
 
 Usage:
-  confluent kafka stream-group member-assignment describe <member> [flags]
+  confluent kafka streams-group member-assignment describe <member> [flags]
 
 Flags:
       --group string            REQUIRED: Group Id.

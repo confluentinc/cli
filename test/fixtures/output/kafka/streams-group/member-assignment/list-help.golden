@@ -1,10 +1,12 @@
-Describe stream group subtopology
+List kafka stream group member assignment tasks.
 
 Usage:
-  confluent kafka stream-group subtopology describe <subtopology> [flags]
+  confluent kafka streams-group member-assignment list [flags]
 
 Flags:
       --group string            REQUIRED: Group Id.
+      --member string           REQUIRED: Member Id.
+      --assignment string       REQUIRED: Assignment type (active, standby, warmup).
       --kafka-endpoint string   Endpoint to be used for this Kafka cluster.
       --cluster string          Kafka cluster ID.
       --context string          CLI context name.

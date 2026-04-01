@@ -1,7 +1,7 @@
 Manage Kafka stream groups.
 
 Usage:
-  confluent kafka stream-group [command]
+  confluent kafka streams-group [command]
 
 Available Commands:
   describe                                 Describe stream group
@@ -18,4 +18,4 @@ Global Flags:
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
-Use "confluent kafka stream-group [command] --help" for more information about a command.
+Use "confluent kafka streams-group [command] --help" for more information about a command.

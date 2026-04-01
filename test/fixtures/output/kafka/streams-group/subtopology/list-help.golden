@@ -1,7 +1,7 @@
-Describe stream group member target assignment
+List kafka stream group subtopologies.
 
 Usage:
-  confluent kafka stream-group member-target-assignment describe <member> [flags]
+  confluent kafka streams-group subtopology list [flags]
 
 Flags:
       --group string            REQUIRED: Group Id.

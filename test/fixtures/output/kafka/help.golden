@@ -14,7 +14,7 @@ Available Commands:
   quota         Manage Kafka client quotas.
   region        Manage Confluent Cloud regions.
   share-group   Manage Kafka share groups.
-  stream-group  Manage Kafka stream groups.
+  streams-group Manage Kafka stream groups.
   topic         Manage Kafka topics.
 
 Global Flags:

@@ -1,14 +1,15 @@
-Manage Kafka stream group member task partitions.
+Manage Kafka stream groups members.
 
 Usage:
-  confluent kafka stream-group member-task-partitions [command]
+  confluent kafka streams-group member [command]
 
 Available Commands:
-  describe    Describe stream group member task partitions
+  describe    Describe stream group member
+  list        List kafka stream group members.
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
-Use "confluent kafka stream-group member-task-partitions [command] --help" for more information about a command.
+Use "confluent kafka streams-group member [command] --help" for more information about a command.

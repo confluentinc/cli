@@ -25,7 +25,7 @@ type streamGroupOut struct {
 
 func newStreamGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "stream-group",
+		Use:         "streams-group",
 		Short:       "Manage Kafka stream groups.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}

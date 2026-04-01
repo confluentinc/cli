@@ -1,7 +1,7 @@
 Describe stream group member task partitions
 
 Usage:
-  confluent kafka stream-group member-task-partitions describe <member> [flags]
+  confluent kafka streams-group member-task-partitions describe <member> [flags]
 
 Flags:
       --group string             REQUIRED: Group Id.

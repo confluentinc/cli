@@ -1,9 +1,10 @@
-Describe stream group
+List kafka stream group members.
 
 Usage:
-  confluent kafka stream-group describe <group> [flags]
+  confluent kafka streams-group member list [flags]
 
 Flags:
+      --group string            REQUIRED: Group Id.
       --kafka-endpoint string   Endpoint to be used for this Kafka cluster.
       --cluster string          Kafka cluster ID.
       --context string          CLI context name.
