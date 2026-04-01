@@ -16,6 +16,8 @@ import (
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
+const invalidDatabaseName = "invalid-database"
+
 // Helper function to create a Flink application.
 func createApplication(name string) cmfsdk.FlinkApplication {
 	status := map[string]interface{}{
@@ -270,7 +272,7 @@ func handleCmfCatalogDatabases(t *testing.T) http.HandlerFunc {
 
 			dbName := database.GetMetadata().Name
 
-			if dbName == "invalid-database" {
+			if dbName == invalidDatabaseName {
 				http.Error(w, "The Kafka database object from resource file is invalid", http.StatusUnprocessableEntity)
 				return
 			}
@@ -295,7 +297,7 @@ func handleCmfCatalogDatabase(t *testing.T) http.HandlerFunc {
 
 		switch r.Method {
 		case http.MethodGet:
-			if dbName == "invalid-database" {
+			if dbName == invalidDatabaseName {
 				http.Error(w, "The database name is invalid", http.StatusNotFound)
 				return
 			}
@@ -305,11 +307,18 @@ func handleCmfCatalogDatabase(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 			return
 		case http.MethodPut:
-			if dbName == "invalid-database" {
+			if dbName == invalidDatabaseName {
 				http.Error(w, "The database name is invalid", http.StatusNotFound)
 				return
 			}
 
+			w.WriteHeader(http.StatusOK)
+			return
+		case http.MethodDelete:
+			if dbName == "non-exist-database" {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
 			w.WriteHeader(http.StatusOK)
 			return
 		default:

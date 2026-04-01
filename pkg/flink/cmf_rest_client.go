@@ -570,6 +570,14 @@ func (cmfClient *CmfRestClient) DeleteCatalog(ctx context.Context, catalogName s
 	return parseSdkError(httpResp, err)
 }
 
+func (cmfClient *CmfRestClient) DeleteDatabase(ctx context.Context, catalogName, databaseName string) error {
+	httpResp, err := cmfClient.SQLApi.DeleteKafkaDatabase(ctx, catalogName, databaseName).Execute()
+	if parsedErr := parseSdkError(httpResp, err); parsedErr != nil {
+		return fmt.Errorf(`failed to delete database "%s" in catalog "%s": %s`, databaseName, catalogName, parsedErr)
+	}
+	return nil
+}
+
 func (cmfClient *CmfRestClient) CreateDatabase(ctx context.Context, catalogName string, kafkaDatabase cmfsdk.KafkaDatabase) (cmfsdk.KafkaDatabase, error) {
 	databaseName := kafkaDatabase.Metadata.Name
 	outputDatabase, httpResponse, err := cmfClient.SQLApi.CreateKafkaDatabase(ctx, catalogName).KafkaDatabase(kafkaDatabase).Execute()

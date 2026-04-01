@@ -22,6 +22,7 @@ func (c *command) newCatalogDatabaseCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(c.newCatalogDatabaseCreateCommand())
+	cmd.AddCommand(c.newCatalogDatabaseDeleteCommand())
 	cmd.AddCommand(c.newCatalogDatabaseDescribeCommand())
 	cmd.AddCommand(c.newCatalogDatabaseListCommand())
 	cmd.AddCommand(c.newCatalogDatabaseUpdateCommand())

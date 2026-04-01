@@ -423,6 +423,18 @@ func (s *CLITestSuite) TestFlinkCatalogDatabaseCreateOnPrem() {
 	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
+func (s *CLITestSuite) TestFlinkCatalogDatabaseDeleteOnPrem() {
+	tests := []CLITest{
+		// success scenarios
+		{args: "flink catalog database delete test-database-1 --catalog test-catalog", input: "y\n", fixture: "flink/catalog/database/delete-single-successful.golden"},
+		{args: "flink catalog database delete test-database-1 --catalog test-catalog --force", fixture: "flink/catalog/database/delete-single-force.golden"},
+		// failure scenarios
+		{args: "flink catalog database delete non-exist-database --catalog test-catalog", input: "y\n", fixture: "flink/catalog/database/delete-non-exist-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
 func (s *CLITestSuite) TestFlinkCatalogDatabaseDescribeOnPrem() {
 	tests := []CLITest{
 		// success
