@@ -44,6 +44,7 @@ func (c *consumerCommand) groupList(cmd *cobra.Command, _ []string) error {
 			IsSimple:          group.GetIsSimple(),
 			PartitionAssignor: group.GetPartitionAssignor(),
 			State:             group.GetState(),
+			ProtocolType:      group.GetType(),
 		})
 	}
 	return list.Print()
