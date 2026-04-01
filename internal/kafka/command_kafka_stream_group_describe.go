@@ -7,7 +7,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *consumerCommand) newStreamGroupDescribeCommand() *cobra.Command {
+func (c *streamGroupCommand) newStreamGroupDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <group>",
 		Short:             "Describe stream group",
@@ -25,7 +25,7 @@ func (c *consumerCommand) newStreamGroupDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *consumerCommand) streamGroupDescribe(cmd *cobra.Command, args []string) error {
+func (c *streamGroupCommand) streamGroupDescribe(cmd *cobra.Command, args []string) error {
 	groupId := args[0]
 
 	kafkaREST, err := c.GetKafkaREST(cmd)

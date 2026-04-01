@@ -6,6 +6,10 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
+type streamGroupCommand struct {
+	*pcmd.AuthenticatedCLICommand
+}
+
 type streamGroupOut struct {
 	Kind                  string `human:"Kind" serialized:"kind"`
 	ClusterId             string `human:"Cluster Id" serialized:"cluster_id"`
@@ -20,12 +24,14 @@ type streamGroupOut struct {
 	Subtopologies         string `human:"Subtopologies" serialized:"subtopologies"`
 }
 
-func (c *consumerCommand) newStreamGroupCommand() *cobra.Command {
+func newStreamGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "stream-group",
 		Short:       "Manage Kafka stream groups.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
+
+	c := &streamGroupCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
 	cmd.AddCommand(c.newStreamGroupDescribeCommand())
 	cmd.AddCommand(c.newStreamGroupListCommand())
@@ -39,7 +45,7 @@ func (c *consumerCommand) newStreamGroupCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *consumerCommand) validStreamGroupArgs(cmd *cobra.Command, args []string) []string {
+func (c *streamGroupCommand) validStreamGroupArgs(cmd *cobra.Command, args []string) []string {
 	if len(args) > 0 {
 		return nil
 	}

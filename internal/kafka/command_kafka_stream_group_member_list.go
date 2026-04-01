@@ -8,7 +8,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *consumerCommand) newStreamGroupMemberListCommand() *cobra.Command {
+func (c *streamGroupCommand) newStreamGroupMemberListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
 		Short:       "List kafka stream group members.",
@@ -30,7 +30,7 @@ func (c *consumerCommand) newStreamGroupMemberListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *consumerCommand) listStreamGroupMembers(cmd *cobra.Command, _ []string) error {
+func (c *streamGroupCommand) listStreamGroupMembers(cmd *cobra.Command, _ []string) error {
 	members, err := c.getStreamGroupMembers(cmd)
 	if err != nil {
 		return err
@@ -56,7 +56,7 @@ func (c *consumerCommand) listStreamGroupMembers(cmd *cobra.Command, _ []string)
 	return list.Print()
 }
 
-func (c *consumerCommand) getStreamGroupMembers(cmd *cobra.Command) ([]kafkarestv3Internal.StreamsGroupMemberData, error) {
+func (c *streamGroupCommand) getStreamGroupMembers(cmd *cobra.Command) ([]kafkarestv3Internal.StreamsGroupMemberData, error) {
 	groupId, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return nil, err

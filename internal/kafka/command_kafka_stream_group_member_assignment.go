@@ -14,7 +14,7 @@ type streamGroupMemberAssignmentOut struct {
 	WarmupTasks  string `human:"Warmup Tasks" serialized:"warmup_tasks"`
 }
 
-func (c *consumerCommand) newStreamGroupMemberAssignmentCommand() *cobra.Command {
+func (c *streamGroupCommand) newStreamGroupMemberAssignmentCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "member-assignment",
 		Short: "Manage Kafka stream group member assignments.",

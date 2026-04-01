@@ -7,7 +7,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *consumerCommand) newStreamGroupMemberTaskPartitionsDescribeCommand() *cobra.Command {
+func (c *streamGroupCommand) newStreamGroupMemberTaskPartitionsDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <member>",
 		Short:             "Describe stream group member task partitions",
@@ -33,7 +33,7 @@ func (c *consumerCommand) newStreamGroupMemberTaskPartitionsDescribeCommand() *c
 	return cmd
 }
 
-func (c *consumerCommand) streamGroupMemberTaskPartitionsDescribe(cmd *cobra.Command, args []string) error {
+func (c *streamGroupCommand) streamGroupMemberTaskPartitionsDescribe(cmd *cobra.Command, args []string) error {
 	groupId, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return err

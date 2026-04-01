@@ -8,7 +8,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *consumerCommand) newStreamGroupSubtopologyListCommand() *cobra.Command {
+func (c *streamGroupCommand) newStreamGroupSubtopologyListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
 		Short:       "List kafka stream group subtopologies.",
@@ -30,7 +30,7 @@ func (c *consumerCommand) newStreamGroupSubtopologyListCommand() *cobra.Command 
 	return cmd
 }
 
-func (c *consumerCommand) listStreamGroupSubtopologies(cmd *cobra.Command, _ []string) error {
+func (c *streamGroupCommand) listStreamGroupSubtopologies(cmd *cobra.Command, _ []string) error {
 	subtopologies, err := c.getStreamGroupSubtopologies(cmd)
 	if err != nil {
 		return err
@@ -50,7 +50,7 @@ func (c *consumerCommand) listStreamGroupSubtopologies(cmd *cobra.Command, _ []s
 	return list.Print()
 }
 
-func (c *consumerCommand) getStreamGroupSubtopologies(cmd *cobra.Command) ([]kafkarestv3Internal.StreamsGroupSubtopologyData, error) {
+func (c *streamGroupCommand) getStreamGroupSubtopologies(cmd *cobra.Command) ([]kafkarestv3Internal.StreamsGroupSubtopologyData, error) {
 	groupId, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return nil, err

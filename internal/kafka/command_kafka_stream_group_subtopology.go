@@ -12,7 +12,7 @@ type streamGroupSubtopologyOut struct {
 	SourceTopics  []string `human:"Source Topics" serialized:"source_topics"`
 }
 
-func (c *consumerCommand) newStreamGroupSubtopologyCommand() *cobra.Command {
+func (c *streamGroupCommand) newStreamGroupSubtopologyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "subtopology",
 		Short: "Manage Kafka stream group subtopologies.",

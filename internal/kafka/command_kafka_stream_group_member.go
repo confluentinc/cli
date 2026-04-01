@@ -19,7 +19,7 @@ type streamGroupMemberOut struct {
 	TargetAssign  string `human:"Target Assignment" serialized:"target_assignment"`
 }
 
-func (c *consumerCommand) newStreamGroupMemberCommand() *cobra.Command {
+func (c *streamGroupCommand) newStreamGroupMemberCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "member",
 		Short: "Manage Kafka stream groups members.",

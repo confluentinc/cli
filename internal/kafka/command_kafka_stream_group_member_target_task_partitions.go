@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *consumerCommand) newStreamGroupMemberTargetAssignmentTaskPartitionsCommand() *cobra.Command {
+func (c *streamGroupCommand) newStreamGroupMemberTargetAssignmentTaskPartitionsCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "member-target-assignment-task-partitions",
 		Short: "Manage Kafka stream group member target assignment task partitions.",

@@ -7,7 +7,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *consumerCommand) newStreamGroupMemberTargetAssignmentDescribeCommand() *cobra.Command {
+func (c *streamGroupCommand) newStreamGroupMemberTargetAssignmentDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <member>",
 		Short:             "Describe stream group member target assignment",
@@ -29,7 +29,7 @@ func (c *consumerCommand) newStreamGroupMemberTargetAssignmentDescribeCommand() 
 	return cmd
 }
 
-func (c *consumerCommand) streamGroupMemberTargetAssignmentDescribe(cmd *cobra.Command, args []string) error {
+func (c *streamGroupCommand) streamGroupMemberTargetAssignmentDescribe(cmd *cobra.Command, args []string) error {
 	groupId, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return err

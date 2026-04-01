@@ -4,9 +4,8 @@ Usage:
   confluent kafka consumer [command]
 
 Available Commands:
-  group        Manage Kafka consumer groups.
-  list         List Kafka consumers.
-  stream-group Manage Kafka stream groups.
+  group       Manage Kafka consumer groups.
+  list        List Kafka consumers.
 
 Global Flags:
   -h, --help            Show help for this command.

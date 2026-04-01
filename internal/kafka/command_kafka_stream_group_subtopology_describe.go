@@ -7,7 +7,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *consumerCommand) newStreamGroupSubtopologyDescribeCommand() *cobra.Command {
+func (c *streamGroupCommand) newStreamGroupSubtopologyDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <subtopology>",
 		Short:             "Describe stream group subtopology",
@@ -29,7 +29,7 @@ func (c *consumerCommand) newStreamGroupSubtopologyDescribeCommand() *cobra.Comm
 	return cmd
 }
 
-func (c *consumerCommand) streamGroupSubtopologyDescribe(cmd *cobra.Command, args []string) error {
+func (c *streamGroupCommand) streamGroupSubtopologyDescribe(cmd *cobra.Command, args []string) error {
 	groupId, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return err

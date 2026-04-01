@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *consumerCommand) newStreamGroupMemberTargetAssignmentCommand() *cobra.Command {
+func (c *streamGroupCommand) newStreamGroupMemberTargetAssignmentCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "member-target-assignment",
 		Short: "Manage Kafka stream group member target assignments.",
