@@ -1,0 +1,9 @@
++---------------+--------------------------------------------------------------------------------------------------------+
+| Kind          | KafkaStreamsGroupMemberAssignment                                                                      |
+| Cluster Id    | lkc-1234                                                                                               |
+| Group Id      | streams-group-1                                                                                        |
+| Member Id     | member-1                                                                                               |
+| Active Tasks  | /kafka/v3/clusters/lkc-1234/streams-groups/streams-group-1/members/member-1/target-assignments/active  |
+| Standby Tasks | /kafka/v3/clusters/lkc-1234/streams-groups/streams-group-1/members/member-1/target-assignments/standby |
+| Warmup Tasks  | /kafka/v3/clusters/lkc-1234/streams-groups/streams-group-1/members/member-1/target-assignments/warmup  |
++---------------+--------------------------------------------------------------------------------------------------------+

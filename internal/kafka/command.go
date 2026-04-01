@@ -25,6 +25,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(newRegionCommand(prerunner))
 	cmd.AddCommand(newReplicaCommand(prerunner))
 	cmd.AddCommand(newShareGroupCommand(prerunner))
+	cmd.AddCommand(newStreamGroupCommand(prerunner))
 	cmd.AddCommand(newTopicCommand(cfg, prerunner))
 
 	return cmd
