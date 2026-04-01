@@ -1,0 +1,21 @@
+Manage Kafka stream groups.
+
+Usage:
+  confluent kafka stream-group [command]
+
+Available Commands:
+  describe                                 Describe stream group
+  list                                     List kafka stream groups.
+  member                                   Manage Kafka stream groups members.
+  member-assignment                        Manage Kafka stream group member assignments.
+  member-target-assignment                 Manage Kafka stream group member target assignments.
+  member-target-assignment-task-partitions Manage Kafka stream group member target assignment task partitions.
+  member-task-partitions                   Manage Kafka stream group member task partitions.
+  subtopology                              Manage Kafka stream group subtopologies.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent kafka stream-group [command] --help" for more information about a command.
