@@ -94,7 +94,7 @@ func (s *CLILiveTestSuite) TestIAMIdentityProviderCRUDLive() {
 		// Group Mapping CRUD
 		{
 			Name:      "Create group mapping",
-			Args:      `iam group-mapping create ` + groupMappingName + ` --description "Live test group mapping" --filter '"engineering" in groups' -o json`,
+			Args:      `iam group-mapping create ` + groupMappingName + ` --description "Live test group mapping" --filter "\"engineering\" in groups" -o json`,
 			CaptureID: "group_mapping_id",
 			JSONFields: map[string]string{
 				"display_name": groupMappingName,

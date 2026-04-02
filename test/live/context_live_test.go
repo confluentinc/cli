@@ -27,8 +27,8 @@ func (s *CLILiveTestSuite) TestContextAndConfigurationLive() {
 			Args: "configuration list",
 		},
 		{
-			Name: "Describe disable_update_check config",
-			Args: "configuration describe disable_update_check -o json",
+			Name: "Describe disable_updates config",
+			Args: "configuration describe disable_updates -o json",
 			JSONFieldsExist: []string{"name", "value"},
 		},
 		{

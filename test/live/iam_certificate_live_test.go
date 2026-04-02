@@ -85,7 +85,7 @@ func (s *CLILiveTestSuite) TestIAMCertificateAuthorityCRUDLive() {
 		// Certificate Pool CRUD (depends on authority)
 		{
 			Name:         "Create certificate pool",
-			Args:         `iam certificate-pool create --provider {{.cert_authority_id}} --display-name "live-test-pool" --description "Live test certificate pool" --external-identifier "OU=Engineering" --filter 'certificate.subject == "OU=Engineering"' -o json`,
+			Args:         `iam certificate-pool create --provider {{.cert_authority_id}} --display-name "live-test-pool" --description "Live test certificate pool" --external-identifier "OU=Engineering" --filter "certificate.subject == \"OU=Engineering\"" -o json`,
 			UseStateVars: true,
 			CaptureID:    "cert_pool_id",
 			JSONFieldsExist: []string{"id"},
