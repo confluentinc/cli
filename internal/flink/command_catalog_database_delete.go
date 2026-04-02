@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/deletion"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
@@ -41,7 +42,11 @@ func (c *command) catalogDatabaseDelete(cmd *cobra.Command, args []string) error
 	}
 
 	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.FlinkDatabase); err != nil {
-		return err
+		// We are validating only the existence of the resources (there is no prefix validation).
+		// Thus, we can add some extra context for the error.
+		suggestions := "List available Flink databases with `confluent flink catalog database list`."
+		suggestions += "\nCheck that CMF is running and accessible."
+		return errors.NewErrorWithSuggestions(err.Error(), suggestions)
 	}
 
 	deleteFunc := func(name string) error {
