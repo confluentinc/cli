@@ -218,7 +218,7 @@ live-test-resource: build-for-live-test
 		printf "  %-25s %-20s %s\n" "iam_ip_group_filter" "iam" "TestIAMIpGroupFilterCRUDLive"; \
 		printf "  %-25s %-20s %s\n" "iam_identity_provider" "iam" "TestIAMIdentityProviderCRUDLive"; \
 		printf "  %-25s %-20s %s\n" "iam_certificate" "iam" "TestIAMCertificateAuthorityCRUDLive"; \
-		printf "  %-25s %-20s %s\n" "connect_custom_plugin" "connect" "TestConnectCustomPluginCRUDLive"; \
+		printf "  %-25s %-20s %s\n" "connect_custom_plugin" "connect" "TestConnectCustomPluginListLive"; \
 		printf "  %-25s %-20s %s\n" "schema_registry_ext" "schema_registry" "TestSchemaRegistryExtendedLive"; \
 		printf "  %-25s %-20s %s\n" "flink_region" "flink" "TestFlinkRegionListLive"; \
 		printf "  %-25s %-20s %s\n" "plugin" "core" "TestPluginListLive"; \
@@ -250,7 +250,7 @@ live-test-resource: build-for-live-test
 			iam_ip_group_filter) GROUP=iam; FUNC=TestIAMIpGroupFilterCRUDLive;; \
 			iam_identity_provider) GROUP=iam; FUNC=TestIAMIdentityProviderCRUDLive;; \
 			iam_certificate) GROUP=iam; FUNC=TestIAMCertificateAuthorityCRUDLive;; \
-			connect_custom_plugin) GROUP=connect; FUNC=TestConnectCustomPluginCRUDLive;; \
+			connect_custom_plugin) GROUP=connect; FUNC=TestConnectCustomPluginListLive;; \
 			schema_registry_ext) GROUP=schema_registry; FUNC=TestSchemaRegistryExtendedLive;; \
 			flink_region) GROUP=flink; FUNC=TestFlinkRegionListLive;; \
 			plugin) GROUP=core; FUNC=TestPluginListLive;; \

@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func (s *CLILiveTestSuite) TestConnectCustomPluginCRUDLive() {
+func (s *CLILiveTestSuite) TestConnectCustomPluginListLive() {
 	t := s.T()
 	t.Parallel()
 
@@ -17,9 +17,6 @@ func (s *CLILiveTestSuite) TestConnectCustomPluginCRUDLive() {
 	}
 
 	state := s.setupTestContext(t)
-
-	// Register cleanup
-	s.registerCleanup(t, "connect custom-plugin delete {{.plugin_id}} --force", state)
 
 	steps := []CLILiveTest{
 		{
