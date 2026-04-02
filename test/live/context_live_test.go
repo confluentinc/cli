@@ -27,17 +27,17 @@ func (s *CLILiveTestSuite) TestContextAndConfigurationLive() {
 			Args: "configuration list",
 		},
 		{
-			Name:            "Describe enable_color config",
-			Args:            "configuration describe enable_color -o json",
+			Name: "Describe disable_update_check config",
+			Args: "configuration describe disable_update_check -o json",
 			JSONFieldsExist: []string{"name", "value"},
 		},
 		{
-			Name: "Update enable_color config",
-			Args: "configuration update enable_color true",
+			Name: "Update disable_update_check config",
+			Args: "configuration update disable_update_check true",
 		},
 		{
 			Name: "Verify config updated",
-			Args: "configuration describe enable_color -o json",
+			Args: "configuration describe disable_update_check -o json",
 			JSONFields: map[string]string{
 				"value": "true",
 			},
