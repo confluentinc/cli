@@ -171,9 +171,17 @@ live-test-auth:
 live-test-connect:
 	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="connect"
 
+.PHONY: live-test-billing
+live-test-billing:
+	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="billing"
+
+.PHONY: live-test-flink
+live-test-flink:
+	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="flink"
+
 .PHONY: live-test-essential
 live-test-essential:
-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="core,kafka,schema_registry,auth"
+	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="core,kafka,schema_registry,auth,billing"
 
 .PHONY: live-test-multicloud
 live-test-multicloud:
@@ -198,6 +206,23 @@ live-test-resource: build-for-live-test
 		printf "  %-25s %-20s %s\n" "iam_rbac" "iam" "TestRBACRoleBindingCRUDLive"; \
 		printf "  %-25s %-20s %s\n" "login" "auth" "TestLoginLogoutLive"; \
 		printf "  %-25s %-20s %s\n" "connect" "connect" "TestConnectClusterCRUDLive"; \
+		printf "  %-25s %-20s %s\n" "organization" "core" "TestOrganizationLive"; \
+		printf "  %-25s %-20s %s\n" "audit_log" "core" "TestAuditLogLive"; \
+		printf "  %-25s %-20s %s\n" "service_quota" "core" "TestServiceQuotaLive"; \
+		printf "  %-25s %-20s %s\n" "context" "core" "TestContextAndConfigurationLive"; \
+		printf "  %-25s %-20s %s\n" "billing" "billing" "TestBillingLive"; \
+		printf "  %-25s %-20s %s\n" "kafka_region" "kafka" "TestKafkaRegionListLive"; \
+		printf "  %-25s %-20s %s\n" "kafka_quota" "kafka" "TestKafkaQuotaCRUDLive"; \
+		printf "  %-25s %-20s %s\n" "kafka_produce_consume" "kafka" "TestKafkaProduceConsumeLive"; \
+		printf "  %-25s %-20s %s\n" "iam_user" "iam" "TestIAMUserLive"; \
+		printf "  %-25s %-20s %s\n" "iam_ip_group_filter" "iam" "TestIAMIpGroupFilterCRUDLive"; \
+		printf "  %-25s %-20s %s\n" "iam_identity_provider" "iam" "TestIAMIdentityProviderCRUDLive"; \
+		printf "  %-25s %-20s %s\n" "iam_certificate" "iam" "TestIAMCertificateAuthorityCRUDLive"; \
+		printf "  %-25s %-20s %s\n" "connect_custom_plugin" "connect" "TestConnectCustomPluginListLive"; \
+		printf "  %-25s %-20s %s\n" "schema_registry_ext" "schema_registry" "TestSchemaRegistryExtendedLive"; \
+		printf "  %-25s %-20s %s\n" "flink_region" "flink" "TestFlinkRegionListLive"; \
+		printf "  %-25s %-20s %s\n" "plugin" "core" "TestPluginListLive"; \
+		printf "  %-25s %-20s %s\n" "kafka_share_group" "kafka" "TestKafkaShareGroupListLive"; \
 		echo ""; \
 		echo "Usage: make live-test-resource RESOURCE=<resource>"; \
 	else \
@@ -213,6 +238,23 @@ live-test-resource: build-for-live-test
 			iam_rbac) GROUP=iam; FUNC=TestRBACRoleBindingCRUDLive;; \
 			login) GROUP=auth; FUNC=TestLoginLogoutLive;; \
 			connect) GROUP=connect; FUNC=TestConnectClusterCRUDLive;; \
+			organization) GROUP=core; FUNC=TestOrganizationLive;; \
+			audit_log) GROUP=core; FUNC=TestAuditLogLive;; \
+			service_quota) GROUP=core; FUNC=TestServiceQuotaLive;; \
+			context) GROUP=core; FUNC=TestContextAndConfigurationLive;; \
+			billing) GROUP=billing; FUNC=TestBillingLive;; \
+			kafka_region) GROUP=kafka; FUNC=TestKafkaRegionListLive;; \
+			kafka_quota) GROUP=kafka; FUNC=TestKafkaQuotaCRUDLive;; \
+			kafka_produce_consume) GROUP=kafka; FUNC=TestKafkaProduceConsumeLive;; \
+			iam_user) GROUP=iam; FUNC=TestIAMUserLive;; \
+			iam_ip_group_filter) GROUP=iam; FUNC=TestIAMIpGroupFilterCRUDLive;; \
+			iam_identity_provider) GROUP=iam; FUNC=TestIAMIdentityProviderCRUDLive;; \
+			iam_certificate) GROUP=iam; FUNC=TestIAMCertificateAuthorityCRUDLive;; \
+			connect_custom_plugin) GROUP=connect; FUNC=TestConnectCustomPluginListLive;; \
+			schema_registry_ext) GROUP=schema_registry; FUNC=TestSchemaRegistryExtendedLive;; \
+			flink_region) GROUP=flink; FUNC=TestFlinkRegionListLive;; \
+			plugin) GROUP=core; FUNC=TestPluginListLive;; \
+			kafka_share_group) GROUP=kafka; FUNC=TestKafkaShareGroupListLive;; \
 			*) echo "Unknown resource: $(RESOURCE)"; echo "Run 'make live-test-resource' to see available resources."; exit 1;; \
 		esac; \
 		echo "Running $$FUNC (group: $$GROUP)..."; \
