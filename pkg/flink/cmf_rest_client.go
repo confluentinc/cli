@@ -565,6 +565,14 @@ func (cmfClient *CmfRestClient) ListCatalog(ctx context.Context) ([]cmfsdk.Kafka
 	return catalogs, nil
 }
 
+func (cmfClient *CmfRestClient) UpdateCatalog(ctx context.Context, catalogName string, kafkaCatalog cmfsdk.KafkaCatalog) error {
+	httpResponse, err := cmfClient.SQLApi.UpdateKafkaCatalog(ctx, catalogName).KafkaCatalog(kafkaCatalog).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return fmt.Errorf(`failed to update Kafka Catalog "%s": %s`, catalogName, parsedErr)
+	}
+	return nil
+}
+
 func (cmfClient *CmfRestClient) DeleteCatalog(ctx context.Context, catalogName string) error {
 	httpResp, err := cmfClient.SQLApi.DeleteKafkaCatalog(ctx, catalogName).Execute()
 	return parseSdkError(httpResp, err)
