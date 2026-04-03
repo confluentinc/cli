@@ -1,0 +1,9 @@
+apiVersion: cmf/api/v1/database
+kind: KafkaDatabase
+metadata:
+    name: test-database
+    creationTimestamp: 2025-08-05 12:00:00 +0000 UTC
+spec:
+    kafkaCluster:
+        connectionConfig:
+            bootstrap.servers: localhost:9092
