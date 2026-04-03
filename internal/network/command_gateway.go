@@ -24,21 +24,23 @@ const (
 	azurePeering                   = "AzurePeering"
 	awsPrivateNetworkInterface     = "AwsPrivateNetworkInterface"
 	gcpPeering                      = "GcpPeering"
-	gcpEgressPrivateServiceConnect  = "GcpEgressPrivateServiceConnect"
-	gcpIngressPrivateServiceConnect = "GcpIngressPrivateServiceConnect"
+	gcpEgressPrivateLink  = "GcpEgressPrivateLink"
+	gcpIngressPrivateLink = "GcpIngressPrivateLink"
 	azureIngressPrivateLink         = "AzureIngressPrivateLink"
 )
 
 var (
 	createGatewayTypes = []string{"egress-privatelink", "ingress-privatelink", "private-network-interface", "ingress-private-service-connect"}
-	listGatewayTypes   = []string{"aws-egress-privatelink", "aws-ingress-privatelink", "azure-egress-privatelink", "azure-ingress-privatelink", "gcp-egress-private-service-connect", "gcp-ingress-private-service-connect"} // TODO: check if we accept private-network-interface here
+	listGatewayTypes   = []string{"aws-egress-privatelink", "aws-ingress-privatelink", "azure-egress-privatelink", "azure-ingress-privatelink", "gcp-egress-privatelink", "gcp-ingress-privatelink", "gcp-egress-private-service-connect", "gcp-ingress-private-service-connect"}
 	gatewayTypeMap     = map[string]string{
 		"aws-egress-privatelink":              awsEgressPrivateLink,
 		"aws-ingress-privatelink":             awsIngressPrivateLink,
 		"azure-egress-privatelink":            azureEgressPrivateLink,
 		"azure-ingress-privatelink":           azureIngressPrivateLink,
-		"gcp-egress-private-service-connect":  gcpEgressPrivateServiceConnect,
-		"gcp-ingress-private-service-connect": gcpIngressPrivateServiceConnect,
+		"gcp-egress-privatelink":              gcpEgressPrivateLink,
+		"gcp-ingress-privatelink":             gcpIngressPrivateLink,
+		"gcp-egress-private-service-connect":  gcpEgressPrivateLink,
+		"gcp-ingress-private-service-connect": gcpIngressPrivateLink,
 	}
 )
 
@@ -199,11 +201,11 @@ func getGatewayType(gateway networkinggatewayv1.NetworkingV1Gateway) (string, er
 	}
 
 	if config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec != nil {
-		return gcpEgressPrivateServiceConnect, nil
+		return gcpEgressPrivateLink, nil
 	}
 
 	if config.NetworkingV1GcpIngressPrivateServiceConnectGatewaySpec != nil {
-		return gcpIngressPrivateServiceConnect, nil
+		return gcpIngressPrivateLink, nil
 	}
 
 	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "config")
@@ -253,10 +255,10 @@ func printGatewayTable(cmd *cobra.Command, gateway networkinggatewayv1.Networkin
 		out.Region = gateway.Spec.Config.NetworkingV1AwsPrivateNetworkInterfaceGatewaySpec.GetRegion()
 		out.Zones = gateway.Spec.Config.NetworkingV1AwsPrivateNetworkInterfaceGatewaySpec.GetZones()
 	}
-	if gatewayType == gcpEgressPrivateServiceConnect {
+	if gatewayType == gcpEgressPrivateLink {
 		out.Region = gateway.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec.GetRegion()
 	}
-	if gatewayType == gcpIngressPrivateServiceConnect {
+	if gatewayType == gcpIngressPrivateLink {
 		out.Region = gateway.Spec.Config.NetworkingV1GcpIngressPrivateServiceConnectGatewaySpec.GetRegion()
 	}
 	if gatewayType == gcpPeering {
@@ -280,9 +282,9 @@ func printGatewayTable(cmd *cobra.Command, gateway networkinggatewayv1.Networkin
 			out.AzurePrivateLinkServiceResourceId = gateway.Status.CloudGateway.NetworkingV1AzureIngressPrivateLinkGatewayStatus.GetPrivateLinkServiceResourceId()
 		}
 	case pcloud.Gcp:
-		if gatewayType == gcpEgressPrivateServiceConnect {
+		if gatewayType == gcpEgressPrivateLink {
 			out.GcpProject = gateway.Status.CloudGateway.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatus.GetProject()
-		} else if gatewayType == gcpIngressPrivateServiceConnect {
+		} else if gatewayType == gcpIngressPrivateLink {
 			out.GcpPrivateServiceConnectServiceAttachment = gateway.Status.CloudGateway.NetworkingV1GcpIngressPrivateServiceConnectGatewayStatus.GetPrivateServiceConnectServiceAttachment()
 		} else if gatewayType == gcpPeering {
 			out.GcpIamPrincipal = gateway.Status.CloudGateway.NetworkingV1GcpPeeringGatewayStatus.GetIamPrincipal()

@@ -5,7 +5,7 @@ warning: GOCOVERDIR not set, no coverage data emitted
     "name": "my-gcp-gateway",
     "environment": "env-596",
     "region": "eastus",
-    "type": "GcpEgressPrivateServiceConnect",
+    "type": "GcpEgressPrivateLink",
     "gcp_project": "project-12345",
     "phase": "READY"
   },
@@ -86,7 +86,7 @@ warning: GOCOVERDIR not set, no coverage data emitted
     "name": "my-gcp-ingress-gateway",
     "environment": "env-596",
     "region": "us-central1",
-    "type": "GcpIngressPrivateServiceConnect",
+    "type": "GcpIngressPrivateLink",
     "gcp_private_service_connect_service_attachment": "projects/traffic-prod/regions/us-central1/serviceAttachments/plattg-abc123-service-attachment",
     "phase": "READY"
   }

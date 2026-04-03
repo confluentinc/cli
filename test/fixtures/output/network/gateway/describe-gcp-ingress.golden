@@ -4,7 +4,7 @@ warning: GOCOVERDIR not set, no coverage data emitted
 | Name                       | my-gcp-ingress-gateway                                                                        |
 | Environment                | env-596                                                                                       |
 | Region                     | us-central1                                                                                   |
-| Type                       | GcpIngressPrivateServiceConnect                                                               |
+| Type                       | GcpIngressPrivateLink                                                                         |
 | GCP PSC Service Attachment | projects/traffic-prod/regions/us-central1/serviceAttachments/plattg-abc123-service-attachment |
 | Phase                      | READY                                                                                         |
 +----------------------------+-----------------------------------------------------------------------------------------------+
