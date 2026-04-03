@@ -118,11 +118,11 @@ endif
 
 rpm: rpm-amd64-build rpm-arm64-build rpm-s390x-build
 	find RPM_BUILDING/{,S}RPMS/ -type f | xargs -n1 -iXXX mv XXX .
-	echo
-	echo "================================================="
-	echo "The RPMs have been created and can be found here:"
+	@echo
+	@echo "================================================="
+	@echo "The RPMs have been created and can be found here:"
 	@ls -laF $(FULL_PACKAGE_TITLE)*rpm
-	echo "================================================="
+	@echo "================================================="
 
 rpm-amd64-build: rpm-amd64-spec
 	echo "Building the amd64 RPM"
