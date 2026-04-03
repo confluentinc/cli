@@ -50,23 +50,9 @@ func (c *command) catalogDatabaseUpdate(cmd *cobra.Command, args []string) error
 
 	sdkOutputDatabase, err := client.DescribeDatabase(c.createContext(), catalogName, databaseName)
 	if err != nil {
+		output.ErrPrintf(c.Config.EnableColor, "Update request for database \"%s\" in catalog \"%s\" succeeded, but failed to retrieve updated details: %v\n", databaseName, catalogName, err)
 		return err
 	}
 
-	if output.GetFormat(cmd) == output.Human {
-		table := output.NewTable(cmd)
-		var creationTime string
-		if sdkOutputDatabase.GetMetadata().CreationTimestamp != nil {
-			creationTime = *sdkOutputDatabase.GetMetadata().CreationTimestamp
-		}
-		table.Add(&databaseOut{
-			CreationTime: creationTime,
-			Name:         sdkOutputDatabase.GetMetadata().Name,
-			Catalog:      catalogName,
-		})
-		return table.Print()
-	}
-
-	localDatabase := convertSdkDatabaseToLocalDatabase(sdkOutputDatabase)
-	return output.SerializedOutput(cmd, localDatabase)
+	return printDatabaseOutput(cmd, sdkOutputDatabase, catalogName)
 }

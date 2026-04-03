@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c *command) newCatalogDatabaseCreateCommand() *cobra.Command {
@@ -47,20 +46,5 @@ func (c *command) catalogDatabaseCreate(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	if output.GetFormat(cmd) == output.Human {
-		table := output.NewTable(cmd)
-		var creationTime string
-		if sdkOutputDatabase.GetMetadata().CreationTimestamp != nil {
-			creationTime = *sdkOutputDatabase.GetMetadata().CreationTimestamp
-		}
-		table.Add(&databaseOut{
-			CreationTime: creationTime,
-			Name:         sdkOutputDatabase.GetMetadata().Name,
-			Catalog:      catalogName,
-		})
-		return table.Print()
-	}
-
-	localDatabase := convertSdkDatabaseToLocalDatabase(sdkOutputDatabase)
-	return output.SerializedOutput(cmd, localDatabase)
+	return printDatabaseOutput(cmd, sdkOutputDatabase, catalogName)
 }

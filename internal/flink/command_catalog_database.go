@@ -13,6 +13,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 type databaseOut struct {
@@ -37,10 +38,29 @@ func (c *command) newCatalogDatabaseCommand() *cobra.Command {
 	return cmd
 }
 
+func printDatabaseOutput(cmd *cobra.Command, sdkDatabase cmfsdk.KafkaDatabase, catalogName string) error {
+	if output.GetFormat(cmd) == output.Human {
+		table := output.NewTable(cmd)
+		var creationTime string
+		if sdkDatabase.GetMetadata().CreationTimestamp != nil {
+			creationTime = *sdkDatabase.GetMetadata().CreationTimestamp
+		}
+		table.Add(&databaseOut{
+			CreationTime: creationTime,
+			Name:         sdkDatabase.GetMetadata().Name,
+			Catalog:      catalogName,
+		})
+		return table.Print()
+	}
+
+	localDatabase := convertSdkDatabaseToLocalDatabase(sdkDatabase)
+	return output.SerializedOutput(cmd, localDatabase)
+}
+
 func readDatabaseResourceFile(resourceFilePath string) (cmfsdk.KafkaDatabase, error) {
 	data, err := os.ReadFile(resourceFilePath)
 	if err != nil {
-		return cmfsdk.KafkaDatabase{}, fmt.Errorf("failed to read file: %v", err)
+		return cmfsdk.KafkaDatabase{}, fmt.Errorf("failed to read file: %w", err)
 	}
 
 	var genericData map[string]interface{}

@@ -312,6 +312,11 @@ func handleCmfCatalogDatabase(t *testing.T) http.HandlerFunc {
 				return
 			}
 
+			// Read and validate the request body.
+			req := new(cmfsdk.KafkaDatabase)
+			err := json.NewDecoder(r.Body).Decode(req)
+			require.NoError(t, err)
+
 			w.WriteHeader(http.StatusOK)
 			return
 		case http.MethodDelete:

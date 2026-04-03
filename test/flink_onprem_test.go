@@ -472,6 +472,44 @@ func (s *CLITestSuite) TestFlinkCatalogDatabaseUpdateOnPrem() {
 	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
+func (s *CLITestSuite) TestFlinkCatalogDatabaseCreateWithYAML() {
+	tests := []CLITest{
+		// success scenarios with JSON files
+		{args: "flink catalog database create test/fixtures/input/flink/catalog/database/create-successful.json --catalog test-catalog", fixture: "flink/catalog/database/create-success.golden"},
+		{args: "flink catalog database create test/fixtures/input/flink/catalog/database/create-successful.json --catalog test-catalog --output json", fixture: "flink/catalog/database/create-success-json.golden"},
+		{args: "flink catalog database create test/fixtures/input/flink/catalog/database/create-successful.json --catalog test-catalog --output yaml", fixture: "flink/catalog/database/create-success-yaml.golden"},
+		// failure scenarios with JSON files
+		{args: "flink catalog database create test/fixtures/input/flink/catalog/database/create-invalid-failure.json --catalog test-catalog", fixture: "flink/catalog/database/create-invalid-failure.golden", exitCode: 1},
+		// YAML file tests
+		{args: "flink catalog database create test/fixtures/input/flink/catalog/database/create-successful.yaml --catalog test-catalog", fixture: "flink/catalog/database/create-success.golden"},
+		{args: "flink catalog database create test/fixtures/input/flink/catalog/database/create-successful.yaml --catalog test-catalog --output json", fixture: "flink/catalog/database/create-success-json.golden"},
+		{args: "flink catalog database create test/fixtures/input/flink/catalog/database/create-successful.yaml --catalog test-catalog --output yaml", fixture: "flink/catalog/database/create-success-yaml.golden"},
+		// YAML file failure scenarios
+		{args: "flink catalog database create test/fixtures/input/flink/catalog/database/create-invalid-failure.yaml --catalog test-catalog", fixture: "flink/catalog/database/create-invalid-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkCatalogDatabaseUpdateWithYAML() {
+	tests := []CLITest{
+		// success scenarios with JSON files
+		{args: "flink catalog database update test/fixtures/input/flink/catalog/database/update-successful.json --catalog test-catalog", fixture: "flink/catalog/database/update-success.golden"},
+		{args: "flink catalog database update test/fixtures/input/flink/catalog/database/update-successful.json --catalog test-catalog --output json", fixture: "flink/catalog/database/update-success-json.golden"},
+		{args: "flink catalog database update test/fixtures/input/flink/catalog/database/update-successful.json --catalog test-catalog --output yaml", fixture: "flink/catalog/database/update-success-yaml.golden"},
+		// failure scenarios with JSON files
+		{args: "flink catalog database update test/fixtures/input/flink/catalog/database/update-invalid-failure.json --catalog test-catalog", fixture: "flink/catalog/database/update-invalid-failure.golden", exitCode: 1},
+		// YAML file tests
+		{args: "flink catalog database update test/fixtures/input/flink/catalog/database/update-successful.yaml --catalog test-catalog", fixture: "flink/catalog/database/update-success.golden"},
+		{args: "flink catalog database update test/fixtures/input/flink/catalog/database/update-successful.yaml --catalog test-catalog --output json", fixture: "flink/catalog/database/update-success-json.golden"},
+		{args: "flink catalog database update test/fixtures/input/flink/catalog/database/update-successful.yaml --catalog test-catalog --output yaml", fixture: "flink/catalog/database/update-success-yaml.golden"},
+		// YAML file failure scenarios
+		{args: "flink catalog database update test/fixtures/input/flink/catalog/database/update-invalid-failure.yaml --catalog test-catalog", fixture: "flink/catalog/database/update-invalid-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
 func (s *CLITestSuite) TestFlinkStatementCreateOnPrem() {
 	tests := []CLITest{
 		// success
