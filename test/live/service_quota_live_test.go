@@ -14,7 +14,7 @@ func (s *CLILiveTestSuite) TestServiceQuotaLive() {
 	steps := []CLILiveTest{
 		{
 			Name: "List service quotas",
-			Args: "service-quota list",
+			Args: "service-quota list organization",
 		},
 	}
 

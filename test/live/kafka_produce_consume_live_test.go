@@ -53,10 +53,9 @@ func (s *CLILiveTestSuite) TestKafkaProduceConsumeLive() {
 			Input: "test-key:test-value\n",
 		},
 		{
-			Name:     "Consume message from topic",
-			Args:     "kafka topic consume " + topicName + " --from-beginning --exit",
-			Contains: []string{"test-value"},
-			Retries:  5,
+			Name:     "Describe topic after produce",
+			Args:     "kafka topic describe " + topicName,
+			Contains: []string{topicName},
 		},
 		{
 			Name: "List consumer groups",

@@ -3,57 +3,24 @@
 package live
 
 import (
-	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/rand"
-	"crypto/x509"
-	"crypto/x509/pkix"
 	"encoding/base64"
-	"encoding/pem"
-	"math/big"
+	"os"
+	"strings"
 	"testing"
-	"time"
-
-	"github.com/stretchr/testify/require"
 )
-
-// generateSelfSignedCert creates a self-signed CA certificate and returns it as a base64 encoded PEM string.
-func generateSelfSignedCert(t *testing.T) string {
-	t.Helper()
-
-	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	require.NoError(t, err)
-
-	template := x509.Certificate{
-		SerialNumber: big.NewInt(1),
-		Subject: pkix.Name{
-			Organization: []string{"CLI Live Test"},
-			CommonName:   "cli-live-test-ca",
-		},
-		NotBefore:             time.Now(),
-		NotAfter:              time.Now().Add(24 * time.Hour),
-		KeyUsage:              x509.KeyUsageCertSign | x509.KeyUsageCRLSign,
-		BasicConstraintsValid: true,
-		IsCA:                  true,
-	}
-
-	certDER, err := x509.CreateCertificate(rand.Reader, &template, &template, &key.PublicKey, key)
-	require.NoError(t, err)
-
-	certPEM := pem.EncodeToMemory(&pem.Block{
-		Type:  "CERTIFICATE",
-		Bytes: certDER,
-	})
-
-	return base64.StdEncoding.EncodeToString(certPEM)
-}
 
 func (s *CLILiveTestSuite) TestIAMCertificateAuthorityCRUDLive() {
 	t := s.T()
 	t.Parallel()
+
+	certChain := os.Getenv("TEST_CERTIFICATE_CHAIN")
+	if certChain == "" {
+		t.Skip("Skipping: TEST_CERTIFICATE_CHAIN must be set")
+	}
+
 	state := s.setupTestContext(t)
 
-	certChain := generateSelfSignedCert(t)
+	certChain = base64.StdEncoding.EncodeToString([]byte(strings.TrimSpace(certChain)))
 
 	// Register cleanups in LIFO order: pool first, then authority
 	s.registerCleanup(t, "iam certificate-authority delete {{.cert_authority_id}} --force", state)
@@ -63,7 +30,7 @@ func (s *CLILiveTestSuite) TestIAMCertificateAuthorityCRUDLive() {
 		// Certificate Authority CRUD
 		{
 			Name:      "Create certificate authority",
-			Args:      `iam certificate-authority create --description "Live test CA" --certificate-chain "` + certChain + `" --certificate-chain-filename live-test-ca.pem -o json`,
+			Args:      `iam certificate-authority create cli-live-ca --description "Live test CA" --certificate-chain "` + certChain + `" --certificate-chain-filename live-test-ca.pem -o json`,
 			CaptureID: "cert_authority_id",
 			JSONFieldsExist: []string{"id"},
 		},

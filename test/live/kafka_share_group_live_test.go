@@ -12,9 +12,9 @@ func (s *CLILiveTestSuite) TestKafkaShareGroupListLive() {
 	t.Parallel()
 
 	envID := os.Getenv("LIVE_TEST_ENVIRONMENT_ID")
-	clusterID := os.Getenv("KAFKA_STANDARD_AWS_CLUSTER_ID")
+	clusterID := os.Getenv("KAFKA_DEDICATED_AWS_CLUSTER_ID")
 	if envID == "" || clusterID == "" {
-		t.Skip("Skipping: LIVE_TEST_ENVIRONMENT_ID and KAFKA_STANDARD_AWS_CLUSTER_ID must be set")
+		t.Skip("Skipping: LIVE_TEST_ENVIRONMENT_ID and KAFKA_DEDICATED_AWS_CLUSTER_ID must be set")
 	}
 
 	state := s.setupTestContext(t)

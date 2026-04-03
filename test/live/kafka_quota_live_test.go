@@ -12,9 +12,9 @@ func (s *CLILiveTestSuite) TestKafkaQuotaCRUDLive() {
 	t.Parallel()
 
 	envID := os.Getenv("LIVE_TEST_ENVIRONMENT_ID")
-	clusterID := os.Getenv("KAFKA_STANDARD_AWS_CLUSTER_ID")
+	clusterID := os.Getenv("KAFKA_DEDICATED_AWS_CLUSTER_ID")
 	if envID == "" || clusterID == "" {
-		t.Skip("Skipping: LIVE_TEST_ENVIRONMENT_ID and KAFKA_STANDARD_AWS_CLUSTER_ID must be set")
+		t.Skip("Skipping: LIVE_TEST_ENVIRONMENT_ID and KAFKA_DEDICATED_AWS_CLUSTER_ID must be set")
 	}
 
 	state := s.setupTestContext(t)
@@ -42,7 +42,7 @@ func (s *CLILiveTestSuite) TestKafkaQuotaCRUDLive() {
 		},
 		{
 			Name:         "Create client quota",
-			Args:         "kafka quota create --ingress 1048576 --egress 1048576 --principals sa:{{.quota_sa_id}} --cluster " + clusterID + " --environment " + envID + ` --description "Live test quota" -o json`,
+			Args:         "kafka quota create cli-live-quota --ingress 1048576 --egress 1048576 --principals {{.quota_sa_id}} --cluster " + clusterID + " --environment " + envID + ` --description "Live test quota" -o json`,
 			UseStateVars: true,
 			CaptureID:    "quota_id",
 			JSONFieldsExist: []string{"id"},

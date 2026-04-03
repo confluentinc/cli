@@ -18,9 +18,6 @@ func (s *CLILiveTestSuite) TestConnectCustomPluginCRUDLive() {
 
 	state := s.setupTestContext(t)
 
-	// Register cleanup
-	s.registerCleanup(t, "connect custom-plugin delete {{.plugin_id}} --force", state)
-
 	steps := []CLILiveTest{
 		{
 			Name: "Use environment",
@@ -32,7 +29,7 @@ func (s *CLILiveTestSuite) TestConnectCustomPluginCRUDLive() {
 		},
 		{
 			Name: "List custom runtimes",
-			Args: "connect custom-runtime list --environment " + envID,
+			Args: "connect custom-connector-runtime list",
 		},
 	}
 

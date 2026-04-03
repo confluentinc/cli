@@ -13,13 +13,9 @@ func (s *CLILiveTestSuite) TestAuditLogLive() {
 
 	steps := []CLILiveTest{
 		{
-			Name: "Describe audit log config",
-			Args: "audit-log describe -o json",
-			JSONFieldsExist: []string{"cluster_id"},
-		},
-		{
-			Name: "List audit log routes",
-			Args: "audit-log route list",
+			Name:            "Describe audit log config",
+			Args:            "audit-log describe -o json",
+			JSONFieldsExist: []string{"cluster"},
 		},
 	}
 

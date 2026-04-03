@@ -47,7 +47,7 @@ func (s *CLILiveTestSuite) TestSchemaRegistryExtendedLive() {
 		{
 			Name:            "Describe SR cluster",
 			Args:            "schema-registry cluster describe --environment " + envID + " -o json",
-			JSONFieldsExist: []string{"cluster_id"},
+			JSONFieldsExist: []string{"cluster"},
 		},
 		{
 			Name:            "Register schema for subject",
@@ -56,8 +56,8 @@ func (s *CLILiveTestSuite) TestSchemaRegistryExtendedLive() {
 		},
 		{
 			Name:     "Validate schema compatibility",
-			Args:     "schema-registry schema compatibility validate --subject " + subjectName + " --schema " + schemaFileV2 + " --type avro --environment " + envID,
-			Contains: []string{"compatible"},
+			Args:     "schema-registry schema compatibility validate " + schemaFileV2 + " --subject " + subjectName + " --type avro --version latest --environment " + envID,
+			Contains: []string{"Compatible"},
 		},
 		{
 			Name: "Update subject compatibility",

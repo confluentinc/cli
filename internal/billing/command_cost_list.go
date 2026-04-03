@@ -77,7 +77,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("invalid start date: %w", err)
 	}
 
-	if err := c.checkDateFormat(startDate); err != nil {
+	if err := c.checkDateFormat(endDate); err != nil {
 		return fmt.Errorf("invalid end date: %w", err)
 	}
 

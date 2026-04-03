@@ -14,11 +14,11 @@ func (s *CLILiveTestSuite) TestBillingLive() {
 	steps := []CLILiveTest{
 		{
 			Name: "List billing prices",
-			Args: "billing price list",
+			Args: "billing price list --cloud aws --region us-east-1",
 		},
 		{
 			Name: "List billing costs",
-			Args: "billing cost list",
+			Args: "billing cost list --start-date 2026-03-01 --end-date 2026-03-31",
 		},
 		{
 			Name: "List billing promos",
@@ -26,7 +26,7 @@ func (s *CLILiveTestSuite) TestBillingLive() {
 		},
 		{
 			Name: "Describe billing payment",
-			Args: "billing payment describe -o json",
+			Args: "billing payment describe",
 		},
 	}
 
