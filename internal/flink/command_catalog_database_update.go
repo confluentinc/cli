@@ -1,10 +1,11 @@
 package flink
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c *command) newCatalogDatabaseUpdateCommand() *cobra.Command {
@@ -50,8 +51,7 @@ func (c *command) catalogDatabaseUpdate(cmd *cobra.Command, args []string) error
 
 	sdkOutputDatabase, err := client.DescribeDatabase(c.createContext(), catalogName, databaseName)
 	if err != nil {
-		output.ErrPrintf(c.Config.EnableColor, "Update request for database \"%s\" in catalog \"%s\" succeeded, but failed to retrieve updated details: %v\n", databaseName, catalogName, err)
-		return err
+		return fmt.Errorf("database %q was updated successfully, but failed to retrieve updated details: %w", databaseName, err)
 	}
 
 	return printDatabaseOutput(cmd, sdkOutputDatabase, catalogName)
