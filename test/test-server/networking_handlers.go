@@ -2668,10 +2668,10 @@ func getGatewayTypeFromSpec(gateway networkinggatewayv1.NetworkingV1Gateway) str
 		return "GcpPeering"
 	}
 	if config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec != nil {
-		return "GcpEgressPrivateLink"
+		return "GcpEgressPrivateServiceConnect"
 	}
 	if config.NetworkingV1GcpIngressPrivateServiceConnectGatewaySpec != nil {
-		return "GcpIngressPrivateLink"
+		return "GcpIngressPrivateServiceConnect"
 	}
 	return ""
 }

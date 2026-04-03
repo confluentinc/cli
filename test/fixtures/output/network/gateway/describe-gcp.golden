@@ -1,10 +1,10 @@
 warning: GOCOVERDIR not set, no coverage data emitted
-+-------------+----------------------+
-| ID          | gw-07531             |
-| Name        | my-gcp-gateway       |
-| Environment | env-596              |
-| Region      | eastus               |
-| Type        | GcpEgressPrivateLink |
-| GCP Project | project-12345        |
-| Phase       | READY                |
-+-------------+----------------------+
++-------------+--------------------------------+
+| ID          | gw-07531                       |
+| Name        | my-gcp-gateway                 |
+| Environment | env-596                        |
+| Region      | eastus                         |
+| Type        | GcpEgressPrivateServiceConnect |
+| GCP Project | project-12345                  |
+| Phase       | READY                          |
++-------------+--------------------------------+

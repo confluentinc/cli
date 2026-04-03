@@ -24,8 +24,8 @@ const (
 	azurePeering                   = "AzurePeering"
 	awsPrivateNetworkInterface     = "AwsPrivateNetworkInterface"
 	gcpPeering                      = "GcpPeering"
-	gcpEgressPrivateLink  = "GcpEgressPrivateLink"
-	gcpIngressPrivateLink = "GcpIngressPrivateLink"
+	gcpEgressPrivateServiceConnect  = "GcpEgressPrivateServiceConnect"
+	gcpIngressPrivateServiceConnect = "GcpIngressPrivateServiceConnect"
 	azureIngressPrivateLink         = "AzureIngressPrivateLink"
 )
 
@@ -37,10 +37,10 @@ var (
 		"aws-ingress-privatelink":             awsIngressPrivateLink,
 		"azure-egress-privatelink":            azureEgressPrivateLink,
 		"azure-ingress-privatelink":           azureIngressPrivateLink,
-		"gcp-egress-privatelink":              gcpEgressPrivateLink,
-		"gcp-ingress-privatelink":             gcpIngressPrivateLink,
-		"gcp-egress-private-service-connect":  gcpEgressPrivateLink,
-		"gcp-ingress-private-service-connect": gcpIngressPrivateLink,
+		"gcp-egress-privatelink":              "GcpEgressPrivateLink",
+		"gcp-ingress-privatelink":             "GcpIngressPrivateLink",
+		"gcp-egress-private-service-connect":  "GcpEgressPrivateLink",
+		"gcp-ingress-private-service-connect": "GcpIngressPrivateLink",
 	}
 )
 
@@ -201,11 +201,11 @@ func getGatewayType(gateway networkinggatewayv1.NetworkingV1Gateway) (string, er
 	}
 
 	if config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec != nil {
-		return gcpEgressPrivateLink, nil
+		return gcpEgressPrivateServiceConnect, nil
 	}
 
 	if config.NetworkingV1GcpIngressPrivateServiceConnectGatewaySpec != nil {
-		return gcpIngressPrivateLink, nil
+		return gcpIngressPrivateServiceConnect, nil
 	}
 
 	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "config")
@@ -255,10 +255,10 @@ func printGatewayTable(cmd *cobra.Command, gateway networkinggatewayv1.Networkin
 		out.Region = gateway.Spec.Config.NetworkingV1AwsPrivateNetworkInterfaceGatewaySpec.GetRegion()
 		out.Zones = gateway.Spec.Config.NetworkingV1AwsPrivateNetworkInterfaceGatewaySpec.GetZones()
 	}
-	if gatewayType == gcpEgressPrivateLink {
+	if gatewayType == gcpEgressPrivateServiceConnect {
 		out.Region = gateway.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec.GetRegion()
 	}
-	if gatewayType == gcpIngressPrivateLink {
+	if gatewayType == gcpIngressPrivateServiceConnect {
 		out.Region = gateway.Spec.Config.NetworkingV1GcpIngressPrivateServiceConnectGatewaySpec.GetRegion()
 	}
 	if gatewayType == gcpPeering {
@@ -282,9 +282,9 @@ func printGatewayTable(cmd *cobra.Command, gateway networkinggatewayv1.Networkin
 			out.AzurePrivateLinkServiceResourceId = gateway.Status.CloudGateway.NetworkingV1AzureIngressPrivateLinkGatewayStatus.GetPrivateLinkServiceResourceId()
 		}
 	case pcloud.Gcp:
-		if gatewayType == gcpEgressPrivateLink {
+		if gatewayType == gcpEgressPrivateServiceConnect {
 			out.GcpProject = gateway.Status.CloudGateway.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatus.GetProject()
-		} else if gatewayType == gcpIngressPrivateLink {
+		} else if gatewayType == gcpIngressPrivateServiceConnect {
 			out.GcpPrivateServiceConnectServiceAttachment = gateway.Status.CloudGateway.NetworkingV1GcpIngressPrivateServiceConnectGatewayStatus.GetPrivateServiceConnectServiceAttachment()
 		} else if gatewayType == gcpPeering {
 			out.GcpIamPrincipal = gateway.Status.CloudGateway.NetworkingV1GcpPeeringGatewayStatus.GetIamPrincipal()
