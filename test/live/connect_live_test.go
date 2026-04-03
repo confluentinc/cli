@@ -118,6 +118,18 @@ func (s *CLILiveTestSuite) TestConnectClusterCRUDLive() {
 			Contains:     []string{connectorName},
 		},
 		{
+			Name:          "Describe connector offsets",
+			Args:          "connect offset describe {{.connector_id}} --cluster " + clusterID + " --environment " + envID,
+			UseStateVars:  true,
+			Retries:       5,
+			RetryInterval: 30 * time.Second,
+		},
+		{
+			Name:    "View connector logs",
+			Args:    "connect event describe --cluster " + clusterID + " --environment " + envID,
+			Retries: 3,
+		},
+		{
 			Name:          "Pause connector",
 			Args:          "connect cluster pause {{.connector_id}}",
 			UseStateVars:  true,
