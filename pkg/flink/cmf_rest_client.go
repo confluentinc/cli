@@ -578,6 +578,57 @@ func (cmfClient *CmfRestClient) DeleteCatalog(ctx context.Context, catalogName s
 	return parseSdkError(httpResp, err)
 }
 
+func (cmfClient *CmfRestClient) CreateSecretMapping(ctx context.Context, envName string, secretMapping cmfsdk.EnvironmentSecretMapping) (cmfsdk.EnvironmentSecretMapping, error) {
+	var mappingName string
+	if secretMapping.Metadata != nil && secretMapping.Metadata.Name != nil {
+		mappingName = *secretMapping.Metadata.Name
+	}
+	outputMapping, httpResponse, err := cmfClient.EnvironmentsApi.CreateEnvironmentSecretMapping(ctx, envName).EnvironmentSecretMapping(secretMapping).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.EnvironmentSecretMapping{}, fmt.Errorf(`failed to create secret mapping "%s" in the environment "%s": %s`, mappingName, envName, parsedErr)
+	}
+	return outputMapping, nil
+}
+
+func (cmfClient *CmfRestClient) DescribeSecretMapping(ctx context.Context, envName, name string) (cmfsdk.EnvironmentSecretMapping, error) {
+	outputMapping, httpResponse, err := cmfClient.EnvironmentsApi.GetEnvironmentSecretMapping(ctx, envName, name).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.EnvironmentSecretMapping{}, fmt.Errorf(`failed to get secret mapping "%s" in the environment "%s": %s`, name, envName, parsedErr)
+	}
+	return outputMapping, nil
+}
+
+func (cmfClient *CmfRestClient) ListSecretMappings(ctx context.Context, envName string) ([]cmfsdk.EnvironmentSecretMapping, error) {
+	mappings := make([]cmfsdk.EnvironmentSecretMapping, 0)
+	done := false
+	const pageSize = 100
+	var currentPageNumber int32 = 0
+
+	for !done {
+		mappingsPage, httpResponse, err := cmfClient.EnvironmentsApi.GetEnvironmentSecretMappings(ctx, envName).Page(currentPageNumber).Size(pageSize).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list secret mappings in the environment "%s": %s`, envName, parsedErr)
+		}
+		mappings = append(mappings, mappingsPage.GetItems()...)
+		currentPageNumber, done = extractPageOptions(len(mappingsPage.GetItems()), currentPageNumber)
+	}
+
+	return mappings, nil
+}
+
+func (cmfClient *CmfRestClient) UpdateSecretMapping(ctx context.Context, envName, name string, secretMapping cmfsdk.EnvironmentSecretMapping) (cmfsdk.EnvironmentSecretMapping, error) {
+	outputMapping, httpResponse, err := cmfClient.EnvironmentsApi.UpdateEnvironmentSecretMapping(ctx, envName, name).EnvironmentSecretMapping(secretMapping).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.EnvironmentSecretMapping{}, fmt.Errorf(`failed to update secret mapping "%s" in the environment "%s": %s`, name, envName, parsedErr)
+	}
+	return outputMapping, nil
+}
+
+func (cmfClient *CmfRestClient) DeleteSecretMapping(ctx context.Context, envName, name string) error {
+	httpResp, err := cmfClient.EnvironmentsApi.DeleteEnvironmentSecretMapping(ctx, envName, name).Execute()
+	return parseSdkError(httpResp, err)
+}
+
 // Returns the next page number and whether we need to fetch more pages or not.
 func extractPageOptions(receivedItemsLength int, currentPageNumber int32) (int32, bool) {
 	if receivedItemsLength == 0 {
