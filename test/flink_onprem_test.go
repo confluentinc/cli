@@ -607,7 +607,6 @@ func (s *CLITestSuite) TestFlinkCatalogCreateWithYAML() {
 	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
-
 func (s *CLITestSuite) TestFlinkSecretMappingCreateOnPrem() {
 	tests := []CLITest{
 		// success
