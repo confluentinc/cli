@@ -10,6 +10,7 @@ Available Commands:
   detached-savepoint  Manage Flink detached savepoints.
   environment         Manage Flink environments.
   savepoint           Manage Flink savepoints.
+  secret-mapping      Manage Flink secret mappings.
   statement           Manage Flink SQL statements.
 
 Global Flags:

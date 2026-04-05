@@ -410,6 +410,19 @@ func (s *CLITestSuite) TestFlinkCatalogListOnPrem() {
 	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
+func (s *CLITestSuite) TestFlinkCatalogUpdateOnPrem() {
+	tests := []CLITest{
+		// success
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.json", fixture: "flink/catalog/update-success.golden"},
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.json --output json", fixture: "flink/catalog/update-success-json.golden"},
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.json --output yaml", fixture: "flink/catalog/update-success-yaml.golden"},
+		// failure
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-invalid-failure.json", fixture: "flink/catalog/update-invalid-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
 func (s *CLITestSuite) TestFlinkStatementCreateOnPrem() {
 	tests := []CLITest{
 		// success
@@ -602,6 +615,125 @@ func (s *CLITestSuite) TestFlinkCatalogCreateWithYAML() {
 		// YAML file failure scenarios
 		{args: "flink catalog create test/fixtures/input/flink/catalog/create-invalid-failure.yaml", fixture: "flink/catalog/create-invalid-failure.golden", exitCode: 1},
 		{args: "flink catalog create test/fixtures/input/flink/catalog/create-existing-failure.yaml", fixture: "flink/catalog/create-existing-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkCatalogUpdateWithYAML() {
+	tests := []CLITest{
+		// success scenarios with JSON files
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.json", fixture: "flink/catalog/update-success.golden"},
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.json --output json", fixture: "flink/catalog/update-success-json.golden"},
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.json --output yaml", fixture: "flink/catalog/update-success-yaml.golden"},
+		// failure scenarios with JSON files
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-invalid-failure.json", fixture: "flink/catalog/update-invalid-failure.golden", exitCode: 1},
+		// YAML file tests
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.yaml", fixture: "flink/catalog/update-success.golden"},
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.yaml --output json", fixture: "flink/catalog/update-success-json.golden"},
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.yaml --output yaml", fixture: "flink/catalog/update-success-yaml.golden"},
+		// YAML file failure scenarios
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-invalid-failure.yaml", fixture: "flink/catalog/update-invalid-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkSecretMappingCreateOnPrem() {
+	tests := []CLITest{
+		// success
+		{args: "flink secret-mapping create test/fixtures/input/flink/secret-mapping/create-successful.json --environment test-env", fixture: "flink/secret-mapping/create-success.golden"},
+		{args: "flink secret-mapping create test/fixtures/input/flink/secret-mapping/create-successful.json --environment test-env --output json", fixture: "flink/secret-mapping/create-success-json.golden"},
+		{args: "flink secret-mapping create test/fixtures/input/flink/secret-mapping/create-successful.json --environment test-env --output yaml", fixture: "flink/secret-mapping/create-success-yaml.golden"},
+		// failure
+		{args: "flink secret-mapping create test/fixtures/input/flink/secret-mapping/create-invalid-failure.json --environment test-env", fixture: "flink/secret-mapping/create-invalid-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkSecretMappingDeleteOnPrem() {
+	tests := []CLITest{
+		// success scenarios
+		{args: "flink secret-mapping delete test-mapping-1 --environment test-env", input: "y\n", fixture: "flink/secret-mapping/delete-single-successful.golden"},
+		{args: "flink secret-mapping delete test-mapping-1 --environment test-env --force", fixture: "flink/secret-mapping/delete-single-force.golden"},
+		// failure scenarios
+		{args: "flink secret-mapping delete non-exist-secret-mapping --environment test-env", input: "y\n", fixture: "flink/secret-mapping/delete-non-exist-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkSecretMappingDescribeOnPrem() {
+	tests := []CLITest{
+		// success
+		{args: "flink secret-mapping describe test-mapping --environment test-env", fixture: "flink/secret-mapping/describe-success.golden"},
+		{args: "flink secret-mapping describe test-mapping --environment test-env --output json", fixture: "flink/secret-mapping/describe-success-json.golden"},
+		{args: "flink secret-mapping describe test-mapping --environment test-env --output yaml", fixture: "flink/secret-mapping/describe-success-yaml.golden"},
+		// failure
+		{args: "flink secret-mapping describe invalid-secret-mapping --environment test-env", fixture: "flink/secret-mapping/describe-not-found.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkSecretMappingListOnPrem() {
+	tests := []CLITest{
+		// success
+		{args: "flink secret-mapping list --environment test-env", fixture: "flink/secret-mapping/list-success.golden"},
+		{args: "flink secret-mapping list --environment test-env --output json", fixture: "flink/secret-mapping/list-success-json.golden"},
+		{args: "flink secret-mapping list --environment test-env --output yaml", fixture: "flink/secret-mapping/list-success-yaml.golden"},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkSecretMappingUpdateOnPrem() {
+	tests := []CLITest{
+		// success
+		{args: "flink secret-mapping update test/fixtures/input/flink/secret-mapping/update-successful.json --environment test-env", fixture: "flink/secret-mapping/update-success.golden"},
+		{args: "flink secret-mapping update test/fixtures/input/flink/secret-mapping/update-successful.json --environment test-env --output json", fixture: "flink/secret-mapping/update-success-json.golden"},
+		{args: "flink secret-mapping update test/fixtures/input/flink/secret-mapping/update-successful.json --environment test-env --output yaml", fixture: "flink/secret-mapping/update-success-yaml.golden"},
+		// failure
+		{args: "flink secret-mapping update test/fixtures/input/flink/secret-mapping/update-invalid-failure.json --environment test-env", fixture: "flink/secret-mapping/update-invalid-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkSecretMappingCreateWithYAML() {
+	tests := []CLITest{
+		// success scenarios with JSON files
+		{args: "flink secret-mapping create test/fixtures/input/flink/secret-mapping/create-successful.json --environment test-env", fixture: "flink/secret-mapping/create-success.golden"},
+		{args: "flink secret-mapping create test/fixtures/input/flink/secret-mapping/create-successful.json --environment test-env --output json", fixture: "flink/secret-mapping/create-success-json.golden"},
+		{args: "flink secret-mapping create test/fixtures/input/flink/secret-mapping/create-successful.json --environment test-env --output yaml", fixture: "flink/secret-mapping/create-success-yaml.golden"},
+		// failure scenarios with JSON files
+		{args: "flink secret-mapping create test/fixtures/input/flink/secret-mapping/create-invalid-failure.json --environment test-env", fixture: "flink/secret-mapping/create-invalid-failure.golden", exitCode: 1},
+		// YAML file tests
+		{args: "flink secret-mapping create test/fixtures/input/flink/secret-mapping/create-successful.yaml --environment test-env", fixture: "flink/secret-mapping/create-success.golden"},
+		{args: "flink secret-mapping create test/fixtures/input/flink/secret-mapping/create-successful.yaml --environment test-env --output json", fixture: "flink/secret-mapping/create-success-json.golden"},
+		{args: "flink secret-mapping create test/fixtures/input/flink/secret-mapping/create-successful.yaml --environment test-env --output yaml", fixture: "flink/secret-mapping/create-success-yaml.golden"},
+		// failure scenarios with YAML files
+		{args: "flink secret-mapping create test/fixtures/input/flink/secret-mapping/create-invalid-failure.yaml --environment test-env", fixture: "flink/secret-mapping/create-invalid-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkSecretMappingUpdateWithYAML() {
+	tests := []CLITest{
+		// success scenarios with JSON files
+		{args: "flink secret-mapping update test/fixtures/input/flink/secret-mapping/update-successful.json --environment test-env", fixture: "flink/secret-mapping/update-success.golden"},
+		{args: "flink secret-mapping update test/fixtures/input/flink/secret-mapping/update-successful.json --environment test-env --output json", fixture: "flink/secret-mapping/update-success-json.golden"},
+		{args: "flink secret-mapping update test/fixtures/input/flink/secret-mapping/update-successful.json --environment test-env --output yaml", fixture: "flink/secret-mapping/update-success-yaml.golden"},
+		// failure scenarios with JSON files
+		{args: "flink secret-mapping update test/fixtures/input/flink/secret-mapping/update-invalid-failure.json --environment test-env", fixture: "flink/secret-mapping/update-invalid-failure.golden", exitCode: 1},
+		// YAML file tests
+		{args: "flink secret-mapping update test/fixtures/input/flink/secret-mapping/update-successful.yaml --environment test-env", fixture: "flink/secret-mapping/update-success.golden"},
+		{args: "flink secret-mapping update test/fixtures/input/flink/secret-mapping/update-successful.yaml --environment test-env --output json", fixture: "flink/secret-mapping/update-success-json.golden"},
+		{args: "flink secret-mapping update test/fixtures/input/flink/secret-mapping/update-successful.yaml --environment test-env --output yaml", fixture: "flink/secret-mapping/update-success-yaml.golden"},
+		// failure scenarios with YAML files
+		{args: "flink secret-mapping update test/fixtures/input/flink/secret-mapping/update-invalid-failure.yaml --environment test-env", fixture: "flink/secret-mapping/update-invalid-failure.golden", exitCode: 1},
 	}
 
 	runIntegrationTestsWithMultipleAuth(s, tests)

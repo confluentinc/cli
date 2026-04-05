@@ -1,0 +1,6 @@
+apiVersion: cmf/v1
+kind: EnvironmentSecretMapping
+metadata:
+  name: test-mapping
+spec:
+  secretName: my-actual-secret

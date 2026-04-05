@@ -1,0 +1,14 @@
+- apiVersion: cmf/v1
+  kind: EnvironmentSecretMapping
+  metadata:
+    name: test-mapping-1
+    creationTimestamp: "2025-08-05 12:00:00 +0000 UTC"
+  spec:
+    secretName: my-actual-secret
+- apiVersion: cmf/v1
+  kind: EnvironmentSecretMapping
+  metadata:
+    name: test-mapping-2
+    creationTimestamp: "2025-08-05 12:00:00 +0000 UTC"
+  spec:
+    secretName: my-actual-secret

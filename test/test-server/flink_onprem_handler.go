@@ -16,6 +16,25 @@ import (
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
+const invalidSecretMappingName = "invalid-secret-mapping"
+
+func createSecretMapping(name string) cmfsdk.EnvironmentSecretMapping {
+	timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).String()
+	mappingName := name
+	secretName := "my-actual-secret"
+	return cmfsdk.EnvironmentSecretMapping{
+		ApiVersion: "cmf/v1",
+		Kind:       "EnvironmentSecretMapping",
+		Metadata: &cmfsdk.EnvironmentSecretMappingMetadata{
+			Name:              &mappingName,
+			CreationTimestamp: &timeStamp,
+		},
+		Spec: &cmfsdk.EnvironmentSecretMappingSpec{
+			SecretName: secretName,
+		},
+	}
+}
+
 // Helper function to create a Flink application.
 func createApplication(name string) cmfsdk.FlinkApplication {
 	status := map[string]interface{}{
@@ -918,7 +937,7 @@ func handleCmfCatalogs(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for "cmf/api/v1/catalogs/kafka/{catName}"
-// Used by describe, delete catalog, no update catalog.
+// Used by describe, update, delete catalog.
 func handleCmfCatalog(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleLoginType(t, r)
@@ -936,6 +955,18 @@ func handleCmfCatalog(t *testing.T) http.HandlerFunc {
 			catalog := createKafkaCatalog(catalogName)
 			err := json.NewEncoder(w).Encode(catalog)
 			require.NoError(t, err)
+			return
+		case http.MethodPut:
+			if catalogName == "invalid-catalog" {
+				http.Error(w, "The catalog name is invalid", http.StatusNotFound)
+				return
+			}
+
+			req := new(cmfsdk.KafkaCatalog)
+			err := json.NewDecoder(r.Body).Decode(req)
+			require.NoError(t, err)
+
+			w.WriteHeader(http.StatusOK)
 			return
 		case http.MethodDelete:
 			if catalogName == "non-exist-catalog" {
@@ -1253,6 +1284,106 @@ func handleCmfStatementExceptions(t *testing.T) http.HandlerFunc {
 			}
 			err := json.NewEncoder(w).Encode(exceptions)
 			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func handleCmfSecretMappings(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+		switch r.Method {
+		case http.MethodGet:
+			mappings := []cmfsdk.EnvironmentSecretMapping{
+				createSecretMapping("test-mapping-1"),
+				createSecretMapping("test-mapping-2"),
+			}
+			mappingsPage := cmfsdk.EnvironmentSecretMappingsPage{}
+			page := r.URL.Query().Get("page")
+
+			if page == "0" {
+				mappingsPage.SetItems(mappings)
+			}
+
+			err := json.NewEncoder(w).Encode(mappingsPage)
+			require.NoError(t, err)
+		case http.MethodPost:
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var mapping cmfsdk.EnvironmentSecretMapping
+			err = json.Unmarshal(reqBody, &mapping)
+			require.NoError(t, err)
+
+			var mappingName string
+			if mapping.Metadata != nil && mapping.Metadata.Name != nil {
+				mappingName = *mapping.Metadata.Name
+			}
+
+			if mappingName == invalidSecretMappingName {
+				http.Error(w, "The EnvironmentSecretMapping object from resource file is invalid", http.StatusUnprocessableEntity)
+				return
+			}
+
+			timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
+			if mapping.Metadata == nil {
+				mapping.Metadata = &cmfsdk.EnvironmentSecretMappingMetadata{}
+			}
+			mapping.Metadata.CreationTimestamp = &timeStamp
+			err = json.NewEncoder(w).Encode(mapping)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func handleCmfSecretMapping(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		name := vars["name"]
+
+		switch r.Method {
+		case http.MethodGet:
+			if name == invalidSecretMappingName {
+				http.Error(w, "The secret mapping name is invalid", http.StatusNotFound)
+				return
+			}
+
+			mapping := createSecretMapping(name)
+			err := json.NewEncoder(w).Encode(mapping)
+			require.NoError(t, err)
+			return
+		case http.MethodPut:
+			if name == invalidSecretMappingName {
+				http.Error(w, "The secret mapping name is invalid", http.StatusNotFound)
+				return
+			}
+
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var mapping cmfsdk.EnvironmentSecretMapping
+			err = json.Unmarshal(reqBody, &mapping)
+			require.NoError(t, err)
+
+			timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).String()
+			if mapping.Metadata == nil {
+				mapping.Metadata = &cmfsdk.EnvironmentSecretMappingMetadata{}
+			}
+			mapping.Metadata.CreationTimestamp = &timeStamp
+			err = json.NewEncoder(w).Encode(mapping)
+			require.NoError(t, err)
+			return
+		case http.MethodDelete:
+			if name == "non-exist-secret-mapping" {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
 			return
 		default:
 			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
