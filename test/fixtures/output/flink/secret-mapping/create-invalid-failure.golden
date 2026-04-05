@@ -1,0 +1,1 @@
+Error: failed to create secret mapping "invalid-secret-mapping" in the environment "test-env": The EnvironmentSecretMapping object from resource file is invalid
