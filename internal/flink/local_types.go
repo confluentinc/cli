@@ -111,6 +111,32 @@ type LocalEnvironment struct {
 	StatementDefaults        *LocalAllStatementDefaults1 `json:"statementDefaults,omitempty" yaml:"statementDefaults,omitempty"`
 }
 
+type LocalFlinkApplicationInstance struct {
+	ApiVersion string                            `json:"apiVersion" yaml:"apiVersion"`
+	Kind       string                            `json:"kind" yaml:"kind"`
+	Metadata   *LocalApplicationInstanceMetadata `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Status     *LocalApplicationInstanceStatus   `json:"status,omitempty" yaml:"status,omitempty"`
+}
+
+type LocalApplicationInstanceMetadata struct {
+	Name              *string            `json:"name,omitempty" yaml:"name,omitempty"`
+	Uid               *string            `json:"uid,omitempty" yaml:"uid,omitempty"`
+	CreationTimestamp *string            `json:"creationTimestamp,omitempty" yaml:"creationTimestamp,omitempty"`
+	UpdateTimestamp   *string            `json:"updateTimestamp,omitempty" yaml:"updateTimestamp,omitempty"`
+	Labels            *map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
+	Annotations       *map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
+}
+
+type LocalApplicationInstanceStatus struct {
+	Spec      *map[string]interface{}            `json:"spec,omitempty" yaml:"spec,omitempty"`
+	JobStatus *LocalApplicationInstanceJobStatus `json:"jobStatus,omitempty" yaml:"jobStatus,omitempty"`
+}
+
+type LocalApplicationInstanceJobStatus struct {
+	JobId *string `json:"jobId,omitempty" yaml:"jobId,omitempty"`
+	State *string `json:"state,omitempty" yaml:"state,omitempty"`
+}
+
 type LocalFlinkApplication struct {
 	ApiVersion string                  `json:"apiVersion" yaml:"apiVersion"`
 	Kind       string                  `json:"kind" yaml:"kind"`

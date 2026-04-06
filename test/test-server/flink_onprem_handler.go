@@ -594,6 +594,117 @@ func handleCmfApplication(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Helper function to create a Flink application instance.
+func createApplicationInstance(name, jobId, state, creationTimestamp string) cmfsdk.FlinkApplicationInstance {
+	instance := cmfsdk.FlinkApplicationInstance{
+		ApiVersion: "cmf.confluent.io/v1",
+		Kind:       "FlinkApplicationInstance",
+	}
+
+	metadata := cmfsdk.ApplicationInstanceMetadata{
+		Name:              &name,
+		Uid:               &name,
+		CreationTimestamp: &creationTimestamp,
+	}
+	instance.Metadata = &metadata
+
+	jobStatus := cmfsdk.ApplicationInstanceStatusJobStatus{
+		JobId: &jobId,
+		State: &state,
+	}
+	status := cmfsdk.ApplicationInstanceStatus{
+		JobStatus: &jobStatus,
+	}
+	instance.Status = &status
+
+	return instance
+}
+
+// Handler for "cmf/api/v1/environments/{environment}/applications/{application}/instances"
+// Used to list application instances.
+func handleCmfApplicationInstances(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		environment := vars["environment"]
+		application := vars["application"]
+
+		switch r.Method {
+		case http.MethodGet:
+			if environment != "default" && environment != "test" {
+				http.Error(w, "Environment not found", http.StatusNotFound)
+				return
+			}
+
+			if application != "default-application-1" && application != "default-application-2" {
+				http.Error(w, "Application not found", http.StatusNotFound)
+				return
+			}
+
+			instancesPage := map[string]interface{}{
+				"items": []cmfsdk.FlinkApplicationInstance{},
+			}
+
+			page := r.URL.Query().Get("page")
+
+			if application == "default-application-1" && page == "0" {
+				items := []cmfsdk.FlinkApplicationInstance{
+					createApplicationInstance("inst-001", "job-abc123", "RUNNING", "2025-09-18T10:00:00Z"),
+					createApplicationInstance("inst-002", "job-def456", "FINISHED", "2025-09-17T08:30:00Z"),
+				}
+				instancesPage = map[string]interface{}{
+					"items": items,
+				}
+			}
+
+			err := json.NewEncoder(w).Encode(instancesPage)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+// Handler for "cmf/api/v1/environments/{environment}/applications/{application}/instances/{instName}"
+// Used to describe a specific application instance.
+func handleCmfApplicationInstance(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		environment := vars["environment"]
+		application := vars["application"]
+		instName := vars["instName"]
+
+		switch r.Method {
+		case http.MethodGet:
+			if environment != "default" && environment != "test" {
+				http.Error(w, "Environment not found", http.StatusNotFound)
+				return
+			}
+
+			if application != "default-application-1" && application != "default-application-2" {
+				http.Error(w, "Application not found", http.StatusNotFound)
+				return
+			}
+
+			if application == "default-application-1" && instName == "inst-001" {
+				instance := createApplicationInstance("inst-001", "job-abc123", "RUNNING", "2025-09-18T10:00:00Z")
+				err := json.NewEncoder(w).Encode(instance)
+				require.NoError(t, err)
+				return
+			}
+
+			http.Error(w, "Instance not found", http.StatusNotFound)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
 // Handler for "/cmf/api/v1/environments/{envName}/applications/{appName}/savepoints"
 // Used by list, create savepoints.
 func handleCmfSavepoints(t *testing.T) http.HandlerFunc {
@@ -918,7 +1029,7 @@ func handleCmfCatalogs(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for "cmf/api/v1/catalogs/kafka/{catName}"
-// Used by describe, delete catalog, no update catalog.
+// Used by describe, update, delete catalog.
 func handleCmfCatalog(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleLoginType(t, r)
@@ -936,6 +1047,18 @@ func handleCmfCatalog(t *testing.T) http.HandlerFunc {
 			catalog := createKafkaCatalog(catalogName)
 			err := json.NewEncoder(w).Encode(catalog)
 			require.NoError(t, err)
+			return
+		case http.MethodPut:
+			if catalogName == "invalid-catalog" {
+				http.Error(w, "The catalog name is invalid", http.StatusNotFound)
+				return
+			}
+
+			req := new(cmfsdk.KafkaCatalog)
+			err := json.NewDecoder(r.Body).Decode(req)
+			require.NoError(t, err)
+
+			w.WriteHeader(http.StatusOK)
 			return
 		case http.MethodDelete:
 			if catalogName == "non-exist-catalog" {

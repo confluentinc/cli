@@ -565,9 +565,44 @@ func (cmfClient *CmfRestClient) ListCatalog(ctx context.Context) ([]cmfsdk.Kafka
 	return catalogs, nil
 }
 
+func (cmfClient *CmfRestClient) UpdateCatalog(ctx context.Context, catalogName string, kafkaCatalog cmfsdk.KafkaCatalog) error {
+	httpResponse, err := cmfClient.SQLApi.UpdateKafkaCatalog(ctx, catalogName).KafkaCatalog(kafkaCatalog).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return fmt.Errorf(`failed to update Kafka Catalog "%s": %s`, catalogName, parsedErr)
+	}
+	return nil
+}
+
 func (cmfClient *CmfRestClient) DeleteCatalog(ctx context.Context, catalogName string) error {
 	httpResp, err := cmfClient.SQLApi.DeleteKafkaCatalog(ctx, catalogName).Execute()
 	return parseSdkError(httpResp, err)
+}
+
+func (cmfClient *CmfRestClient) DescribeApplicationInstance(ctx context.Context, environment, application, instance string) (cmfsdk.FlinkApplicationInstance, error) {
+	cmfInstance, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplicationInstance(ctx, environment, application, instance).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.FlinkApplicationInstance{}, fmt.Errorf(`failed to describe instance "%s" of application "%s" in the environment "%s": %s`, instance, application, environment, parsedErr)
+	}
+	return cmfInstance, nil
+}
+
+func (cmfClient *CmfRestClient) ListApplicationInstances(ctx context.Context, environment, application string) ([]cmfsdk.FlinkApplicationInstance, error) {
+	instances := make([]cmfsdk.FlinkApplicationInstance, 0)
+	var currentPageNumber int32 = 0
+	// 100 is an arbitrary page size we've chosen.
+	const pageSize = 100
+	done := false
+
+	for !done {
+		instancesPage, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplicationInstances(ctx, environment, application).Page(currentPageNumber).Size(pageSize).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list instances of application "%s" in the environment "%s": %s`, application, environment, parsedErr)
+		}
+		instances = append(instances, instancesPage.GetItems()...)
+		currentPageNumber, done = extractPageOptions(len(instancesPage.GetItems()), currentPageNumber)
+	}
+
+	return instances, nil
 }
 
 // Returns the next page number and whether we need to fetch more pages or not.
