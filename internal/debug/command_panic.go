@@ -15,5 +15,5 @@ func (c *command) newPanicCommand() *cobra.Command {
 }
 
 func (c *command) panic(_ *cobra.Command, _ []string) error {
-	panic("test panic: validating crash reporting pipeline")
+	panic("test panic")
 }
