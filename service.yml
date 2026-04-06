@@ -18,6 +18,11 @@ gitignore:
 semaphore:
   enable: true
   pipeline_enable: false
+  tasks:
+    - name: CLI Live Tests (Daily)
+      branch: main
+      pipeline_file: .semaphore/live-tests.yml
+      at: "0 8 * * *"
 make:
   enable: false
 sonarqube:
