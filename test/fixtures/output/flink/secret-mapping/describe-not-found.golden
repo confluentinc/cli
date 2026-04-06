@@ -1,0 +1,1 @@
+Error: failed to get secret mapping "invalid-secret-mapping" in the environment "test-env": The secret mapping name is invalid
