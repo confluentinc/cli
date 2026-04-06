@@ -22,6 +22,7 @@ func (c *command) newApplicationInstanceCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 	}
 
+	cmd.AddCommand(c.newApplicationInstanceDescribeCommand())
 	cmd.AddCommand(c.newApplicationInstanceListCommand())
 
 	return cmd

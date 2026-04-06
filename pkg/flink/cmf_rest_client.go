@@ -570,6 +570,14 @@ func (cmfClient *CmfRestClient) DeleteCatalog(ctx context.Context, catalogName s
 	return parseSdkError(httpResp, err)
 }
 
+func (cmfClient *CmfRestClient) DescribeApplicationInstance(ctx context.Context, environment, application, instance string) (cmfsdk.FlinkApplicationInstance, error) {
+	cmfInstance, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplicationInstance(ctx, environment, application, instance).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.FlinkApplicationInstance{}, fmt.Errorf(`failed to describe instance "%s" of application "%s" in the environment "%s": %s`, instance, application, environment, parsedErr)
+	}
+	return cmfInstance, nil
+}
+
 func (cmfClient *CmfRestClient) ListApplicationInstances(ctx context.Context, environment, application string) ([]cmfsdk.FlinkApplicationInstance, error) {
 	instances := make([]cmfsdk.FlinkApplicationInstance, 0)
 	var currentPageNumber int32 = 0
