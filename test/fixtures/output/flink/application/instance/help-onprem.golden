@@ -4,6 +4,7 @@ Usage:
   confluent flink application instance [command]
 
 Available Commands:
+  describe    Describe a Flink application instance.
   list        List Flink application instances.
 
 Global Flags:

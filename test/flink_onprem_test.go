@@ -56,6 +56,24 @@ func (s *CLITestSuite) TestFlinkApplicationInstanceList() {
 	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
+func (s *CLITestSuite) TestFlinkApplicationInstanceDescribe() {
+	tests := []CLITest{
+		// failure scenarios
+		{args: "flink application instance describe inst-001 --application default-application-1", fixture: "flink/application/instance-describe-env-missing.golden", exitCode: 1},
+		{args: "flink application instance describe inst-001 --environment default", fixture: "flink/application/instance-describe-app-missing.golden", exitCode: 1},
+		{args: "flink application instance describe --environment default --application default-application-1", fixture: "flink/application/instance-describe-name-missing.golden", exitCode: 1},
+		{args: "flink application instance describe inst-001 --environment non-existent --application default-application-1", fixture: "flink/application/instance-describe-non-existent-env.golden", exitCode: 1},
+		{args: "flink application instance describe inst-001 --environment default --application non-existent", fixture: "flink/application/instance-describe-non-existent-app.golden", exitCode: 1},
+		{args: "flink application instance describe non-existent --environment default --application default-application-1", fixture: "flink/application/instance-describe-non-existent-instance.golden", exitCode: 1},
+		// success scenarios
+		{args: "flink application instance describe inst-001 --environment default --application default-application-1", fixture: "flink/application/instance-describe-success.golden"},
+		{args: "flink application instance describe inst-001 --environment default --application default-application-1 --output yaml", fixture: "flink/application/instance-describe-success-yaml.golden"},
+		{args: "flink application instance describe inst-001 --environment default --application default-application-1 --output human", fixture: "flink/application/instance-describe-with-human.golden"},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
 func (s *CLITestSuite) TestFlinkApplicationDelete() {
 	tests := []CLITest{
 		// failure scenarios

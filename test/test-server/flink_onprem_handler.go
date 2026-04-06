@@ -667,6 +667,44 @@ func handleCmfApplicationInstances(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for "cmf/api/v1/environments/{environment}/applications/{application}/instances/{instName}"
+// Used to describe a specific application instance.
+func handleCmfApplicationInstance(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		environment := vars["environment"]
+		application := vars["application"]
+		instName := vars["instName"]
+
+		switch r.Method {
+		case http.MethodGet:
+			if environment != "default" && environment != "test" {
+				http.Error(w, "Environment not found", http.StatusNotFound)
+				return
+			}
+
+			if application != "default-application-1" && application != "default-application-2" {
+				http.Error(w, "Application not found", http.StatusNotFound)
+				return
+			}
+
+			if application == "default-application-1" && instName == "inst-001" {
+				instance := createApplicationInstance("inst-001", "job-abc123", "RUNNING", "2025-09-18T10:00:00Z")
+				err := json.NewEncoder(w).Encode(instance)
+				require.NoError(t, err)
+				return
+			}
+
+			http.Error(w, "Instance not found", http.StatusNotFound)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
 // Handler for "/cmf/api/v1/environments/{envName}/applications/{appName}/savepoints"
 // Used by list, create savepoints.
 func handleCmfSavepoints(t *testing.T) http.HandlerFunc {

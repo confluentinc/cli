@@ -12,6 +12,7 @@ var flinkRoutes = []route{
 	{"/cmf/api/v1/environments/{environment}/applications", handleCmfApplications},
 	{"/cmf/api/v1/environments/{environment}/applications/{application}", handleCmfApplication},
 	{"/cmf/api/v1/environments/{environment}/applications/{application}/instances", handleCmfApplicationInstances},
+	{"/cmf/api/v1/environments/{environment}/applications/{application}/instances/{instName}", handleCmfApplicationInstance},
 	{"/cmf/api/v1/environments", handleCmfEnvironments},
 	{"/cmf/api/v1/environments/{environment}", handleCmfEnvironment},
 	{"/cmf/api/v1/environments/{environment}/compute-pools", handleCmfComputePools},
