@@ -9,10 +9,10 @@ import (
 )
 
 type flinkApplicationInstanceSummaryOut struct {
-	Name          string `human:"Name" serialized:"name"`
-	CreationTime  string `human:"Creation Time" serialized:"creation_time"`
-	JobId         string `human:"Job ID" serialized:"job_id"`
-	JobState      string `human:"Job State" serialized:"job_state"`
+	Name         string `human:"Name" serialized:"name"`
+	CreationTime string `human:"Creation Time" serialized:"creation_time"`
+	JobId        string `human:"Job ID" serialized:"job_id"`
+	JobState     string `human:"Job State" serialized:"job_state"`
 }
 
 func (c *command) newApplicationInstanceCommand() *cobra.Command {
