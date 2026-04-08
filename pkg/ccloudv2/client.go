@@ -36,6 +36,7 @@ import (
 	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
 	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2/tableflow/v1"
 	usmv1 "github.com/confluentinc/ccloud-sdk-go-v2/usm/v1"
+	// cli-tfgen:cli-sdk-imports
 
 	"github.com/confluentinc/cli/v4/pkg/config"
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
@@ -80,6 +81,7 @@ type Client struct {
 	SsoClient                    *ssov2.APIClient
 	TableflowClient              *tableflowv1.APIClient
 	UsmClient                    *usmv1.APIClient
+	// cli-tfgen:cli-client-fields
 }
 
 func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
@@ -130,5 +132,6 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		SsoClient:                    newSsoClient(httpClient, url, userAgent, unsafeTrace),
 		TableflowClient:              newTableflowClient(httpClient, url, userAgent, unsafeTrace),
 		UsmClient:                    newUsmClient(httpClient, url, userAgent, unsafeTrace),
+		// cli-tfgen:cli-client-init
 	}
 }

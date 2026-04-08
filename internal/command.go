@@ -48,6 +48,7 @@ import (
 	unifiedstreammanager "github.com/confluentinc/cli/v4/internal/unified-stream-manager"
 	"github.com/confluentinc/cli/v4/internal/update"
 	"github.com/confluentinc/cli/v4/internal/version"
+	// cli-tfgen:cli-imports
 	pauth "github.com/confluentinc/cli/v4/pkg/auth"
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -140,6 +141,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(unifiedstreammanager.New(cfg, prerunner))
 	cmd.AddCommand(update.New(cfg, prerunner))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
+	// cli-tfgen:cli-commands
 
 	_ = cfg.ParseFlagsIntoConfig(cmd)
 
