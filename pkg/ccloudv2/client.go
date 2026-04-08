@@ -36,7 +36,6 @@ import (
 	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
 	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2/tableflow/v1"
 	usmv1 "github.com/confluentinc/ccloud-sdk-go-v2/usm/v1"
-	// cli-tfgen:cli-sdk-imports
 
 	"github.com/confluentinc/cli/v4/pkg/config"
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
