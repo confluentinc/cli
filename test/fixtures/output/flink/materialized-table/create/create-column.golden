@@ -1,0 +1,15 @@
++------------------------+--------------------------------+
+| Name                   | my-table                       |
+| Kafka Cluster ID       | lkc01                          |
+| Environment            | env-596                        |
+| Compute Pool           | pool1                          |
+| Service Account        | principal1                     |
+| Query                  | query1                         |
+| Columns                | {name, type, comment,          |
+|                        | Computed, exp1, true}, {name,  |
+|                        | type, comment, Physical},      |
+|                        | {name2, type2, comment2,       |
+|                        | Physical}, {name, type,        |
+|                        | comment, Metadata, key, true}  |
+| Distributed By Buckets | 32                             |
++------------------------+--------------------------------+
