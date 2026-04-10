@@ -72,7 +72,7 @@ func (c *command) addPrincipalFlag(cmd *cobra.Command) {
 			return nil
 		}
 
-		serviceAccounts, err := c.V2Client.ListIamServiceAccounts()
+		serviceAccounts, err := c.V2Client.ListIamServiceAccounts(nil)
 		if err != nil {
 			return nil
 		}

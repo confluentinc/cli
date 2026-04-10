@@ -1,0 +1,12 @@
+[
+  {
+    "id": "ap-99999",
+    "name": "my-aws-ingress-access-point",
+    "environment": "env-596",
+    "gateway": "gw-88888",
+    "phase": "READY",
+    "aws_vpc_endpoint_id": "vpce-1234567890abcdef0",
+    "aws_vpc_endpoint_service_name": "com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000",
+    "dns_domain": "ap123abc.us-west-2.aws.accesspoint.confluent.cloud"
+  }
+]

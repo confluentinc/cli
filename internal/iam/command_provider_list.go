@@ -22,7 +22,7 @@ func (c *identityProviderCommand) newListCommand() *cobra.Command {
 }
 
 func (c *identityProviderCommand) list(cmd *cobra.Command, _ []string) error {
-	identityProviders, err := c.V2Client.ListIdentityProviders()
+	identityProviders, err := c.V2Client.ListIamIdentityProviders()
 	if err != nil {
 		return err
 	}

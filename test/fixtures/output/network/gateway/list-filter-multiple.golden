@@ -1,0 +1,3 @@
+     ID    |      Name      | Environment |  Region   |         Type         |       AWS Principal ARN        | VPC Endpoint Service Name | Azure Subscription | GCP IAM Principal | GCP Project | Phase | Zones | Account | Error Message  
+-----------+----------------+-------------+-----------+----------------------+--------------------------------+---------------------------+--------------------+-------------------+-------------+-------+-------+---------+----------------
+  gw-12345 | my-aws-gateway | env-596     | us-east-1 | AwsEgressPrivateLink | arn:aws:iam::123456789012:role |                           |                    |                   |             | READY |       |         |                

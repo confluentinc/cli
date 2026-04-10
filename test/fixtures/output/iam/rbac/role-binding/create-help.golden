@@ -36,6 +36,10 @@ Grant the "FlinkDeveloper" role to principal "User:u-123456" in environment "env
 
   $ confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-123456
 
+Grant the "FlinkDeveloper" scoped to Flink compute pool "lfcp-123456" in AWS us-east-1 to principal "User:u-123456":
+
+  $ confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-123456 --flink-region aws.us-east-1 --resource ComputePool:lfcp-123456
+
 Flags:
       --role string                      REQUIRED: Role name of the new role binding.
       --principal string                 REQUIRED: Principal type and identifier using "Prefix:ID" format.
@@ -45,6 +49,7 @@ Flags:
       --kafka-cluster string             Kafka cluster ID for the role binding.
       --schema-registry-cluster string   Schema Registry cluster ID for the role binding.
       --ksql-cluster string              ksqlDB cluster name for the role binding.
+      --flink-region string              Flink region for the role binding, formatted as "cloud.region".
       --resource string                  Resource type and identifier using "Prefix:ID" format.
       --prefix                           Whether the provided resource name is treated as a prefix pattern.
   -o, --output string                    Specify the output format as "human", "json", or "yaml". (default "human")

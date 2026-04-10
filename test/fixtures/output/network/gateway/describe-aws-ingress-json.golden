@@ -1,0 +1,9 @@
+{
+  "id": "gw-88888",
+  "name": "my-aws-ingress-gateway",
+  "environment": "env-596",
+  "region": "us-west-2",
+  "type": "AwsIngressPrivateLink",
+  "vpc_endpoint_service_name": "com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000",
+  "phase": "READY"
+}

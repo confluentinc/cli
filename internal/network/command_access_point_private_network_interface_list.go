@@ -37,7 +37,7 @@ func (c *accessPointCommand) privateNetworkInterfaceList(cmd *cobra.Command, _ [
 		return err
 	}
 
-	accessPoints, err := c.V2Client.ListAccessPoints(environmentId, names)
+	accessPoints, err := c.V2Client.ListNetworkAccessPoints(environmentId, names)
 	if err != nil {
 		return err
 	}

@@ -35,7 +35,7 @@ func (c *certificatePoolCommand) describe(cmd *cobra.Command, args []string) err
 	if err != nil {
 		return nil
 	}
-	certificatePool, err := c.V2Client.GetCertificatePool(args[0], provider)
+	certificatePool, err := c.V2Client.GetIamCertificatePool(args[0], provider)
 	if err != nil {
 		return err
 	}

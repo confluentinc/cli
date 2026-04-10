@@ -446,6 +446,7 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 		KeyFormat:                keyFormat,
 		ValueFormat:              valueFormat,
 		Out:                      cmd.OutOrStdout(),
+		Subject:                  topicName,
 		Topic:                    topicName,
 		Properties: ConsumerProperties{
 			Delimiter:   delimiter,

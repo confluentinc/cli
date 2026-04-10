@@ -50,6 +50,7 @@ func (s *CLITestSuite) TestIamRbacRoleBinding_Cloud() {
 		{args: "iam rbac role-binding delete --principal User:u-11aaa --role EnvironmentAdmin --force", fixture: "iam/rbac/role-binding/missing-environment-cloud.golden", exitCode: 1},
 		{args: "iam rbac role-binding delete --principal User:u-11aaa --current-environment --cloud-cluster lkc-1111aaa", fixture: "iam/rbac/role-binding/delete-missing-role-cloud.golden", exitCode: 1},
 		{args: "iam rbac role-binding create --principal User:u-11aaa@confluent.io --role CloudClusterAdmin --current-environment --cloud-cluster lkc-1111aaa", fixture: "iam/rbac/role-binding/create-with-email-cloud.golden"},
+		{args: "iam rbac role-binding create --principal User:u-77ggg --role FlinkDeveloper --environment env-596 --flink-region aws.us-east-1 --resource ComputePool:lfcp-1111aaa", fixture: "iam/rbac/role-binding/create-flink-developer-cloud.golden"},
 	}
 
 	for _, test := range tests {
@@ -78,6 +79,7 @@ func (s *CLITestSuite) TestIamRbacRoleBindingList_Cloud() {
 		{args: "iam rbac role-binding list --principal User:u-41dxz3 --cluster pantsCluster", fixture: "iam/rbac/role-binding/list-failure-help-cloud.golden", exitCode: 1},
 		{args: "iam rbac role-binding list --environment env-596 --cloud-cluster lkc-1111aaa --role InvalidOrgAdmin", fixture: "iam/rbac/role-binding/list-invalid-role-error-type-1-cloud.golden", exitCode: 1},
 		{args: "iam rbac role-binding list --environment env-596 --cloud-cluster lkc-1111aaa --role InvalidMetricsViewer", fixture: "iam/rbac/role-binding/list-invalid-role-error-type-2-cloud.golden", exitCode: 1},
+		{args: "iam rbac role-binding list --role FlinkDeveloper --environment env-596 --flink-region aws.us-east-1 --resource ComputePool:lfcp-1111aaa", fixture: "iam/rbac/role-binding/list-flink-developer-cloud.golden"},
 	}
 
 	for _, test := range tests {
@@ -166,6 +168,9 @@ func (s *CLITestSuite) TestIamServiceAccount() {
 		{args: "iam service-account list -o json", fixture: "iam/service-account/list-json.golden"},
 		{args: "iam service-account list -o yaml", fixture: "iam/service-account/list-yaml.golden"},
 		{args: "iam service-account list", fixture: "iam/service-account/list.golden"},
+		{args: "iam service-account list --display-name service-account", fixture: "iam/service-account/list-display-name.golden"},
+		{args: "iam service-account list --display-name service-account,other-service-account", fixture: "iam/service-account/list-display-name-multiple.golden"},
+		{args: "iam service-account list --display-name nonexistent", fixture: "iam/service-account/list-display-name-no-match.golden"},
 		{args: "iam service-account describe sa-12345 -o json", fixture: "iam/service-account/describe-json.golden"},
 		{args: "iam service-account describe sa-12345 -o yaml", fixture: "iam/service-account/describe-yaml.golden"},
 		{args: "iam service-account describe sa-12345", fixture: "iam/service-account/describe.golden"},

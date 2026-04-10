@@ -20,12 +20,16 @@ func (c *command) newGatewayCreateCommand() *cobra.Command {
 		RunE:  c.gatewayCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create network gateway "my-gateway".`,
-				Code: "confluent network gateway create my-gateway --cloud aws --region us-east-1 --type egress-privatelink",
+				Text: `Create AWS ingress private link gateway "my-ingress-gateway".`,
+				Code: "confluent network gateway create my-ingress-gateway --cloud aws --region us-east-1 --type ingress-privatelink",
 			},
 			examples.Example{
-				Text: "Create an AWS private network interface gateway.",
-				Code: "confluent network gateway create --cloud aws --region us-east-1 --type private-network-interface",
+				Text: `Create AWS egress private link gateway "my-egress-gateway".`,
+				Code: "confluent network gateway create my-egress-gateway --cloud aws --region us-east-1 --type egress-privatelink",
+			},
+			examples.Example{
+				Text: `Create AWS private network interface gateway "my-pni-gateway".`,
+				Code: "confluent network gateway create my-pni-gateway --cloud aws --region us-east-1 --type private-network-interface",
 			},
 		),
 	}
@@ -87,6 +91,13 @@ func (c *command) gatewayCreate(cmd *cobra.Command, args []string) error {
 					Region: region,
 				},
 			}
+		} else if gatewayType == "ingress-privatelink" {
+			createGateway.Spec.Config = &networkinggatewayv1.NetworkingV1GatewaySpecConfigOneOf{
+				NetworkingV1AwsIngressPrivateLinkGatewaySpec: &networkinggatewayv1.NetworkingV1AwsIngressPrivateLinkGatewaySpec{
+					Kind:   "AwsIngressPrivateLinkGatewaySpec",
+					Region: region,
+				},
+			}
 		} else if gatewayType == "private-network-interface" {
 			createGateway.Spec.Config = &networkinggatewayv1.NetworkingV1GatewaySpecConfigOneOf{
 				NetworkingV1AwsPrivateNetworkInterfaceGatewaySpec: &networkinggatewayv1.NetworkingV1AwsPrivateNetworkInterfaceGatewaySpec{
@@ -111,7 +122,7 @@ func (c *command) gatewayCreate(cmd *cobra.Command, args []string) error {
 		createGateway.Spec.SetDisplayName(args[0])
 	}
 
-	gateway, err := c.V2Client.CreateGateway(createGateway)
+	gateway, err := c.V2Client.CreateNetworkGateway(createGateway)
 	if err != nil {
 		return err
 	}

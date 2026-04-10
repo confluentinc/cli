@@ -20,7 +20,7 @@ blocks:
         - name: "Test linux/amd64"
           commands:
             - checkout
-            - . vault-sem-get-secret v1/ci/kv/apif/cli/sonar_token
+            - . vault-get-secret cli/sonar-token
             - sem-version go $(cat .go-version)
             - export PATH=$(go env GOPATH)/bin:$PATH
             - make generate-packaging-patch
@@ -103,3 +103,5 @@ after_pipeline:
 promotions:
   - name: "Run macOS builds (manual)"
     pipeline_file: ".semaphore/macos.yml"
+  - name: "Run live integration tests"
+    pipeline_file: ".semaphore/live-tests.yml"

@@ -40,7 +40,7 @@ func (c *certificateAuthorityCommand) newUpdateCommand() *cobra.Command {
 
 func (c *certificateAuthorityCommand) update(cmd *cobra.Command, args []string) error {
 	// The update sends a PUT request, so we also need to send unchanged fields
-	currentCertificateAuthority, err := c.V2Client.GetCertificateAuthority(args[0])
+	currentCertificateAuthority, err := c.V2Client.GetIamCertificateAuthority(args[0])
 	if err != nil {
 		return err
 	}
@@ -94,7 +94,7 @@ func (c *certificateAuthorityCommand) update(cmd *cobra.Command, args []string) 
 		update.CrlChain = certificateauthorityv2.PtrString(crlChain)
 	}
 
-	certificateAuthority, err := c.V2Client.UpdateCertificateAuthority(update)
+	certificateAuthority, err := c.V2Client.UpdateIamCertificateAuthority(update)
 	if err != nil {
 		return err
 	}

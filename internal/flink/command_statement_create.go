@@ -8,6 +8,7 @@ import (
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
@@ -45,6 +46,8 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
+	pcmd.AddCloudFlag(cmd)
+	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("sql"))
 
@@ -63,18 +66,26 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	computePool := c.Context.GetCurrentFlinkComputePool()
+	cloud, err := cmd.Flags().GetString("cloud")
+	if err != nil {
+		return err
+	}
+
+	region, err := cmd.Flags().GetString("region")
+	if err != nil {
+		return err
+	}
+
 	if computePool == "" {
-		return errors.NewErrorWithSuggestions(
-			"no compute pool selected",
-			"Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.",
-		)
+		if cloud == "" || region == "" {
+			return errors.New("Flink cloud and region flags are required when compute pool is not specified.")
+		}
 	}
 
 	name := types.GenerateStatementName()
 	if len(args) == 1 {
 		name = args[0]
 	}
-
 	sql, err := cmd.Flags().GetString("sql")
 	if err != nil {
 		return err
@@ -109,15 +120,22 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 	statement := flinkgatewayv1.SqlV1Statement{
 		Name: flinkgatewayv1.PtrString(name),
 		Spec: &flinkgatewayv1.SqlV1StatementSpec{
-			Statement:     flinkgatewayv1.PtrString(sql),
-			Properties:    &statementProperties,
-			ComputePoolId: flinkgatewayv1.PtrString(computePool),
+			Statement:  flinkgatewayv1.PtrString(sql),
+			Properties: &statementProperties,
 		},
 	}
-
-	client, err := c.GetFlinkGatewayClient(true)
-	if err != nil {
-		return err
+	var client *ccloudv2.FlinkGatewayClient
+	if computePool != "" {
+		statement.Spec.ComputePoolId = flinkgatewayv1.PtrString(computePool)
+		client, err = c.GetFlinkGatewayClient(true)
+		if err != nil {
+			return err
+		}
+	} else {
+		client, err = c.GetFlinkGatewayClient(false)
+		if err != nil {
+			return err
+		}
 	}
 
 	serviceAccount, err := cmd.Flags().GetString("service-account")
@@ -129,12 +147,10 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 	if serviceAccount == "" {
 		principal = c.Context.GetUser().GetResourceId()
 	}
-
 	statement, err = client.CreateStatement(statement, principal, environmentId, c.Context.LastOrgId)
 	if err != nil {
 		return err
 	}
-
 	wait, err := cmd.Flags().GetBool("wait")
 	if err != nil {
 		return err

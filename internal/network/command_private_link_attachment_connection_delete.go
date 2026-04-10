@@ -35,7 +35,7 @@ func (c *command) privateLinkAttachmentConnectionDelete(cmd *cobra.Command, args
 	}
 
 	existenceFunc := func(id string) bool {
-		_, err := c.V2Client.GetPrivateLinkAttachmentConnection(environmentId, id)
+		_, err := c.V2Client.GetNetworkPrivateLinkAttachmentConnection(environmentId, id)
 		return err == nil
 	}
 
@@ -44,7 +44,7 @@ func (c *command) privateLinkAttachmentConnectionDelete(cmd *cobra.Command, args
 	}
 
 	deleteFunc := func(id string) error {
-		return c.V2Client.DeletePrivateLinkAttachmentConnection(environmentId, id)
+		return c.V2Client.DeleteNetworkPrivateLinkAttachmentConnection(environmentId, id)
 	}
 
 	deletedIds, err := deletion.DeleteWithoutMessage(cmd, args, deleteFunc)

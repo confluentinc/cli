@@ -98,7 +98,7 @@ func (c *accessPointCommand) privateNetworkInterfaceCreate(cmd *cobra.Command, a
 		}
 	}
 
-	privateNetworkInterface, err := c.V2Client.CreateAccessPoint(createPrivateNetworkInterface)
+	privateNetworkInterface, err := c.V2Client.CreateNetworkAccessPoint(createPrivateNetworkInterface)
 	if err != nil {
 		return err
 	}

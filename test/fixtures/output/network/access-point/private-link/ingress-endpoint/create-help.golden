@@ -1,0 +1,22 @@
+Create an ingress endpoint.
+
+Usage:
+  confluent network access-point private-link ingress-endpoint create [name] [flags]
+
+Examples:
+Create an AWS PrivateLink ingress endpoint.
+
+  $ confluent network access-point private-link ingress-endpoint create --cloud aws --gateway gw-123456 --vpc-endpoint-id vpce-00000000000000000
+
+Flags:
+      --cloud string             REQUIRED: Specify the cloud provider as "aws".
+      --vpc-endpoint-id string   REQUIRED: ID of an AWS VPC endpoint.
+      --gateway string           REQUIRED: Gateway ID.
+      --context string           CLI context name.
+      --environment string       Environment ID.
+  -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
