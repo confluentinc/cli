@@ -53,6 +53,10 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 				Code: "confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --type freight --cku 1 --byok cck-a123z --availability high",
 			},
 			examples.Example{
+				Text: "Create a new cluster with deletion protection enabled:",
+				Code: "confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --deletion-protection",
+			},
+			examples.Example{
 				Text: "For more information, see https://docs.confluent.io/current/cloud/clusters/byok-encrypted-clusters.html.",
 			},
 		),
@@ -65,6 +69,7 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().Int("cku", 0, `Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type "dedicated".`)
 	cmd.Flags().Int("max-ecku", 0, `Maximum number of Elastic Confluent Kafka Units (eCKUs) that Kafka clusters should auto-scale to. `+
 		`Kafka clusters with "HIGH" availability must have at least two eCKUs.`)
+	cmd.Flags().Bool("deletion-protection", false, "Enable deletion protection for the Kafka cluster.")
 	pcmd.AddByokKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddNetworkFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -169,6 +174,14 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf(errors.CkuMoreThanZeroErrorMsg)
 		}
 		setClusterConfigCku(&createCluster, int32(cku))
+	}
+
+	if cmd.Flags().Changed("deletion-protection") {
+		deletionProtection, err := cmd.Flags().GetBool("deletion-protection")
+		if err != nil {
+			return err
+		}
+		createCluster.Spec.SetDeletionProtection(deletionProtection)
 	}
 
 	if cmd.Flags().Changed("network") {

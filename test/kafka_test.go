@@ -77,6 +77,19 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster update lkc-update --type", fixture: "kafka/cluster/update-type-empty-error.golden", exitCode: 1},
 		{args: "kafka cluster update lkc-update --type basic", fixture: "kafka/cluster/update-type-invalid-error.golden", exitCode: 1},
 
+		// Deletion protection tests
+		{args: "kafka cluster describe lkc-describe-deletion-protected", fixture: "kafka/cluster/describe-deletion-protected.golden"},
+		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type enterprise --availability multi-zone --deletion-protection", fixture: "kafka/cluster/create-deletion-protection.golden"},
+		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type enterprise --availability multi-zone --deletion-protection=true", fixture: "kafka/cluster/create-deletion-protection.golden"},
+		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type enterprise --availability multi-zone --deletion-protection=false", fixture: "kafka/cluster/create-deletion-protection-false.golden"},
+		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type basic --deletion-protection", fixture: "kafka/cluster/create-deletion-protection-unsupported-basic.golden", exitCode: 1},
+		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type standard --deletion-protection", fixture: "kafka/cluster/create-deletion-protection-unsupported-standard.golden", exitCode: 1},
+		{args: "kafka cluster update lkc-update --deletion-protection", fixture: "kafka/cluster/update-deletion-protection-unsupported-basic.golden", exitCode: 1},
+		{args: "kafka cluster update lkc-update --deletion-protection=true", fixture: "kafka/cluster/update-deletion-protection-unsupported-basic.golden", exitCode: 1},
+		{args: "kafka cluster update lkc-update --deletion-protection=false", fixture: "kafka/cluster/update-deletion-protection-disable.golden"},
+		{args: "kafka cluster update lkc-update-enterprise --deletion-protection", fixture: "kafka/cluster/update-deletion-protection-enable.golden"},
+		{args: "kafka cluster delete lkc-deletion-protected --force", fixture: "kafka/cluster/delete-deletion-protected.golden", exitCode: 1},
+
 		{args: "kafka cluster delete --force", fixture: "kafka/3.golden", exitCode: 1},
 		{args: "kafka cluster delete lkc-unknown --force", fixture: "kafka/cluster/delete-unknown-error.golden", exitCode: 1},
 		{args: "kafka cluster delete lkc-def973 --force", fixture: "kafka/5.golden"},
@@ -97,7 +110,6 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster describe lkc-describe", fixture: "kafka/17.golden"},
 		{args: "kafka cluster describe lkc-describe -o json", fixture: "kafka/18.golden"},
 		{args: "kafka cluster describe lkc-describe -o yaml", fixture: "kafka/19.golden"},
-
 		{args: "kafka cluster describe lkc-describe-dedicated", fixture: "kafka/30.golden"},
 		{args: "kafka cluster describe lkc-describe-dedicated -o json", fixture: "kafka/31.golden"},
 		{args: "kafka cluster describe lkc-describe-dedicated -o yaml", fixture: "kafka/32.golden"},
