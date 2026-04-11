@@ -44,12 +44,16 @@ func (c *Client) DeleteKafkaCluster(clusterId, environment string) (*http.Respon
 }
 
 func (c *Client) ListKafkaClusters(environment string) ([]cmkv2.CmkV2Cluster, error) {
+	return c.ListKafkaClustersWithDeletionProtection(environment, nil)
+}
+
+func (c *Client) ListKafkaClustersWithDeletionProtection(environment string, deletionProtection *bool) ([]cmkv2.CmkV2Cluster, error) {
 	var list []cmkv2.CmkV2Cluster
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, httpResp, err := c.executeListClusters(pageToken, environment)
+		page, httpResp, err := c.executeListClusters(pageToken, environment, deletionProtection)
 		if err != nil {
 			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
@@ -63,10 +67,13 @@ func (c *Client) ListKafkaClusters(environment string) ([]cmkv2.CmkV2Cluster, er
 	return list, nil
 }
 
-func (c *Client) executeListClusters(pageToken, environment string) (cmkv2.CmkV2ClusterList, *http.Response, error) {
+func (c *Client) executeListClusters(pageToken, environment string, deletionProtection *bool) (cmkv2.CmkV2ClusterList, *http.Response, error) {
 	req := c.CmkClient.ClustersCmkV2Api.ListCmkV2Clusters(c.cmkApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
+	}
+	if deletionProtection != nil {
+		req = req.SpecDeletionProtection(*deletionProtection)
 	}
 	return req.Execute()
 }

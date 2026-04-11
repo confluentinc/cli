@@ -3,15 +3,15 @@ It may take up to 5 minutes for the Kafka cluster to be ready.
 | Current              | false                     |
 | ID                   | lkc-def963                |
 | Name                 | my-new-cluster            |
-| Type                 | BASIC                     |
-| Ingress Limit (MB/s) | 250                       |
-| Egress Limit (MB/s)  | 750                       |
-| Storage              | 5000 GB                   |
+| Type                 | ENTERPRISE                |
+| Ingress Limit (MB/s) | 600                       |
+| Egress Limit (MB/s)  | 1800                      |
+| Storage              | Unlimited                 |
 | Cloud                | aws                       |
 | Region               | us-east-1                 |
-| Availability         | single-zone               |
+| Availability         | multi-zone                |
 | Status               | PROVISIONING              |
-| Deletion Protection  | false                     |
+| Deletion Protection  | true                      |
 | Endpoint             | SASL_SSL://kafka-endpoint |
 | REST Endpoint        | https://pkc-endpoint      |
 +----------------------+---------------------------+
