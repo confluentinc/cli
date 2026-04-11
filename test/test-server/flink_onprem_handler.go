@@ -1259,3 +1259,23 @@ func handleCmfStatementExceptions(t *testing.T) http.HandlerFunc {
 		}
 	}
 }
+
+func handleCmfSystemInformation(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		switch r.Method {
+		case http.MethodGet:
+			sysInfo := map[string]interface{}{
+				"status": map[string]interface{}{
+					"version":  "1.0.0",
+					"revision": "abc1234def5678",
+				},
+			}
+			err := json.NewEncoder(w).Encode(sysInfo)
+			require.NoError(t, err)
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
