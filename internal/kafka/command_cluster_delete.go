@@ -1,6 +1,12 @@
 package kafka
 
 import (
+	"bytes"
+	"encoding/json"
+	"io"
+	"net/http"
+	"strings"
+
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
@@ -8,6 +14,11 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/deletion"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/resource"
+)
+
+const (
+	errorCodeDeletionProtectionEnabled = "deletion_protection_enabled"
+	clusterDeletionProtectionDetail    = "Cluster deletion is blocked by deletion protection."
 )
 
 func (c *clusterCommand) newDeleteCommand() *cobra.Command {
@@ -43,8 +54,12 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.NewErrorWithSuggestions(err.Error(), PluralClusterEnvironmentSuggestions)
 	}
 
+	deletionProtectionDetail := ""
 	deleteFunc := func(id string) error {
 		if httpResp, err := c.V2Client.DeleteKafkaCluster(id, environmentId); err != nil {
+			if detail, ok := parseDeletionProtectionErrDetail(httpResp); ok {
+				deletionProtectionDetail = detail
+			}
 			return errors.CatchKafkaNotFoundError(err, id, httpResp)
 		}
 		return nil
@@ -54,14 +69,66 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 
 	errs := multierror.Append(err, c.removeKafkaClusterConfigs(deletedIds))
 	if errs.ErrorOrNil() != nil {
+		if suggestion := deletionProtectionErrorToSuggestion(deletionProtectionDetail); suggestion != "" {
+			return errors.NewErrorWithSuggestions(errs.Error(), suggestion)
+		}
 		if len(args)-len(deletedIds) > 1 {
-			return errors.NewErrorWithSuggestions(err.Error(), "Ensure the clusters are not associated with any active Connect clusters.")
+			return errors.NewErrorWithSuggestions(errs.Error(),
+				"Ensure the clusters are not associated with any active Connect clusters.")
 		} else {
-			return errors.NewErrorWithSuggestions(err.Error(), "Ensure the cluster is not associated with any active Connect clusters.")
+			return errors.NewErrorWithSuggestions(errs.Error(),
+				"Ensure the cluster is not associated with any active Connect clusters.")
 		}
 	}
 
 	return nil
+}
+
+type apiError struct {
+	Code   string `json:"code"`
+	Detail string `json:"detail"`
+}
+
+type apiErrorResponse struct {
+	Errors []apiError `json:"errors"`
+}
+
+// parseDeletionProtectionErrDetail checks if the HTTP response indicates a deletion protection error
+// Returns the error detail and true if the error is a deletion protection error, or empty string and false otherwise.
+func parseDeletionProtectionErrDetail(r *http.Response) (string, bool) {
+	if r == nil || r.StatusCode != http.StatusConflict || r.Body == nil {
+		return "", false
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return "", false
+	}
+	// Restore the body so downstream handlers can read it
+	r.Body = io.NopCloser(bytes.NewBuffer(body))
+
+	var res apiErrorResponse
+	if err := json.Unmarshal(body, &res); err != nil {
+		return "", false
+	}
+
+	for _, apiErr := range res.Errors {
+		if apiErr.Code == errorCodeDeletionProtectionEnabled {
+			return apiErr.Detail, true
+		}
+	}
+
+	return "", false
+}
+
+// deletionProtectionErrorToSuggestion maps a deletion protection error detail to a user-facing suggestion.
+func deletionProtectionErrorToSuggestion(errorMsg string) string {
+	switch {
+	case strings.EqualFold(errorMsg, clusterDeletionProtectionDetail):
+		return `Disable deletion_protection before deleting the cluster.`
+	default:
+		return ""
+	}
 }
 
 func (c *clusterCommand) removeKafkaClusterConfigs(deletedIds []string) error {
