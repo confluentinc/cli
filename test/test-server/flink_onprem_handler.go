@@ -464,6 +464,17 @@ func handleCmfApplicationEvents(t *testing.T) http.HandlerFunc {
 			return
 		}
 
+		// Validate application exists, matching handleCmfApplication behavior.
+		validApps := map[string]bool{
+			"default-application-1": true,
+			"default-application-2": true,
+			"default-application-s": true,
+		}
+		if envName == "default" && !validApps[appName] {
+			http.Error(w, "Application not found", http.StatusNotFound)
+			return
+		}
+
 		eventsPage := map[string]interface{}{
 			"items": []cmfsdk.FlinkApplicationEvent{},
 		}

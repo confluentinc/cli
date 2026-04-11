@@ -44,6 +44,8 @@ func (s *CLITestSuite) TestFlinkApplicationEventList() {
 		// failure scenarios
 		{args: "flink application event list", fixture: "flink/application/event-list-missing-flags.golden", exitCode: 1},
 		{args: "flink application event list --environment default", fixture: "flink/application/event-list-app-missing.golden", exitCode: 1},
+		{args: "flink application event list --environment non-existent --application some-app", fixture: "flink/application/event-list-non-existent-env.golden", exitCode: 1},
+		{args: "flink application event list --environment default --application non-existent", fixture: "flink/application/event-list-non-existent-app.golden", exitCode: 1},
 		// success scenarios
 		{args: "flink application event list --environment test --application non-existent", fixture: "flink/application/event-list-empty.golden"},
 		{args: "flink application event list --environment default --application default-application-1 --output human", fixture: "flink/application/event-list-human.golden"},
