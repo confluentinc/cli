@@ -2,6 +2,7 @@ package testserver
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -88,6 +89,22 @@ func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 			}
 		}
 
+		if req.Spec.GetDeletionProtection() {
+			skuName := "BASIC"
+			if req.Spec.Config.CmkV2Standard != nil {
+				skuName = "STANDARD"
+			}
+			if req.Spec.Config.CmkV2Basic != nil || req.Spec.Config.CmkV2Standard != nil {
+				err := writeError(w, fmt.Sprintf("Deletion protection is not supported for %s clusters.", skuName))
+				require.NoError(t, err)
+				return
+			}
+		}
+
+		if req.Spec.HasDeletionProtection() {
+			cluster.Spec.SetDeletionProtection(req.Spec.GetDeletionProtection())
+		}
+
 		if req.Spec.GetCloud() == "oops" {
 			err := writeError(w, "Service provider must be set to AWS, GCP or AZURE.")
 			require.NoError(t, err)
@@ -120,28 +137,47 @@ func handleCmkClusters(t *testing.T) http.HandlerFunc {
 			cluster := cmkv2.CmkV2Cluster{
 				Id: cmkv2.PtrString("lkc-123"),
 				Spec: &cmkv2.CmkV2ClusterSpec{
-					DisplayName:  cmkv2.PtrString("abc"),
-					Cloud:        cmkv2.PtrString("gcp"),
-					Region:       cmkv2.PtrString("us-central1"),
-					Config:       &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"}},
-					Availability: cmkv2.PtrString("SINGLE_ZONE"),
+					DisplayName:        cmkv2.PtrString("abc"),
+					Cloud:              cmkv2.PtrString("gcp"),
+					Region:             cmkv2.PtrString("us-central1"),
+					Config:             &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"}},
+					Availability:       cmkv2.PtrString("SINGLE_ZONE"),
+					DeletionProtection: cmkv2.PtrBool(false),
 				},
 				Status: &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONING"},
 			}
 			clusterMultizone := cmkv2.CmkV2Cluster{
 				Id: cmkv2.PtrString("lkc-456"),
 				Spec: &cmkv2.CmkV2ClusterSpec{
-					DisplayName:  cmkv2.PtrString("def"),
-					Cloud:        cmkv2.PtrString("gcp"),
-					Region:       cmkv2.PtrString("us-central1"),
-					Config:       &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"}},
-					Availability: cmkv2.PtrString("MULTI_ZONE"),
+					DisplayName:        cmkv2.PtrString("def"),
+					Cloud:              cmkv2.PtrString("gcp"),
+					Region:             cmkv2.PtrString("us-central1"),
+					Config:             &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"}},
+					Availability:       cmkv2.PtrString("MULTI_ZONE"),
+					DeletionProtection: cmkv2.PtrBool(true),
 				},
 				Status: &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONING"},
 			}
 			clusterDedicated := getCmkDedicatedDescribeCluster("lkc-789", "ghi", 1)
 			clusterDedicated.Spec.Network = &cmkv2.EnvScopedObjectReference{Id: "n-abcde1"}
-			clusterList := &cmkv2.CmkV2ClusterList{Data: []cmkv2.CmkV2Cluster{cluster, clusterMultizone, *clusterDedicated}}
+			clusterDedicated.Spec.DeletionProtection = cmkv2.PtrBool(false)
+
+			allClusters := []cmkv2.CmkV2Cluster{cluster, clusterMultizone, *clusterDedicated}
+
+			// Filter by spec.deletion_protection if specified
+			if dpFilter := r.URL.Query().Get("spec.deletion_protection"); dpFilter != "" {
+				var filtered []cmkv2.CmkV2Cluster
+				for _, c := range allClusters {
+					if dpFilter == "true" && c.Spec.GetDeletionProtection() {
+						filtered = append(filtered, c)
+					} else if dpFilter == "false" && !c.Spec.GetDeletionProtection() {
+						filtered = append(filtered, c)
+					}
+				}
+				allClusters = filtered
+			}
+
+			clusterList := &cmkv2.CmkV2ClusterList{Data: allClusters}
 			setPageToken(clusterList, &clusterList.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(clusterList)
 			require.NoError(t, err)
@@ -163,6 +199,8 @@ func handleCmkCluster(t *testing.T) http.HandlerFunc {
 			handleCmkKafkaClusterDescribeDedicatedProvisioning(t)(w, r)
 		case "lkc-describe-dedicated-with-encryption":
 			handleCmkKafkaClusterDescribeDedicatedWithEncryption(t)(w, r)
+		case "lkc-describe-deletion-protected":
+			handleCmkKafkaClusterDescribeDeletionProtected(t)(w, r)
 		case "lkc-describe-infinite":
 			handleCmkKafkaClusterDescribeInfinite(t)(w, r)
 		case "lkc-update", "lkc-with-ecku-limits":
@@ -179,6 +217,8 @@ func handleCmkCluster(t *testing.T) http.HandlerFunc {
 			handleCmkKafkaDedicatedClusterShrink(t)(w, r)
 		case "lkc-update-dedicated-shrink-multi":
 			handleCmkKafkaDedicatedClusterShrinkMulti(t)(w, r)
+		case "lkc-deletion-protected":
+			handleCmkKafkaDeletionProtectedCluster(t)(w, r)
 		case "lkc-unknown":
 			handleCmkKafkaUnknown(t)(w, r)
 		case "lkc-unknown-type":
@@ -246,6 +286,39 @@ func handleCmkKafkaClusterDescribeDedicatedWithEncryption(t *testing.T) http.Han
 		cluster.Spec.Config.CmkV2Dedicated.EncryptionKey = cmkv2.PtrString("abc123")
 		err := json.NewEncoder(w).Encode(cluster)
 		require.NoError(t, err)
+	}
+}
+
+// Handler for GET "/cmk/v2/clusters/lkc-describe-deletion-protected"
+func handleCmkKafkaClusterDescribeDeletionProtected(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"]
+		cluster := getCmkBasicDescribeCluster(id, "kafka-cluster")
+		cluster.Spec.SetDeletionProtection(true)
+		err := json.NewEncoder(w).Encode(cluster)
+		require.NoError(t, err)
+	}
+}
+
+// Handler for GET/DELETE "/cmk/v2/clusters/lkc-deletion-protected"
+func handleCmkKafkaDeletionProtectedCluster(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodDelete {
+			w.WriteHeader(http.StatusConflict)
+			body := map[string]any{
+				"errors": []map[string]string{
+					{
+						"code":   "deletion_protection_enabled",
+						"detail": "Cluster deletion is blocked by deletion protection.",
+					},
+				},
+			}
+			err := json.NewEncoder(w).Encode(body)
+			require.NoError(t, err)
+			return
+		}
+		handleCmkKafkaClusterDescribeDeletionProtected(t)(w, r)
 	}
 }
 
@@ -325,9 +398,19 @@ func handleCmkKafkaClusterUpdateRequest(t *testing.T) http.HandlerFunc {
 				return
 			}
 
+			// Reject deletion protection on Basic clusters
+			if req.Spec.GetDeletionProtection() {
+				err = writeError(w, "Deletion protection is not supported for BASIC clusters.")
+				require.NoError(t, err)
+				return
+			}
+
 			// Handle other update cases
 			if req.Spec.Config == nil || req.Spec.Config.CmkV2Dedicated.Cku == 0 {
 				cluster := getCmkBasicDescribeCluster(req.GetId(), req.Spec.GetDisplayName())
+				if req.Spec.DeletionProtection != nil {
+					cluster.Spec.SetDeletionProtection(req.Spec.GetDeletionProtection())
+				}
 				err := json.NewEncoder(w).Encode(cluster)
 				require.NoError(t, err)
 			}
@@ -402,6 +485,15 @@ func handleCmkKafkaEnterpriseClusterUpdateRequest(t *testing.T) http.HandlerFunc
 						MaxEcku: req.Spec.Config.CmkV2Enterprise.MaxEcku,
 					},
 				}
+				err = json.NewEncoder(w).Encode(cluster)
+				require.NoError(t, err)
+				return
+			}
+
+			// Handle deletion protection update
+			if req.Spec.DeletionProtection != nil {
+				cluster := getCmkEnterpriseDescribeCluster(req.GetId(), req.Spec.GetDisplayName())
+				cluster.Spec.SetDeletionProtection(req.Spec.GetDeletionProtection())
 				err = json.NewEncoder(w).Encode(cluster)
 				require.NoError(t, err)
 				return
