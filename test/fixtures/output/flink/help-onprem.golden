@@ -10,8 +10,8 @@ Available Commands:
   detached-savepoint  Manage Flink detached savepoints.
   environment         Manage Flink environments.
   savepoint           Manage Flink savepoints.
-  system-info         Display CMF system information.
   statement           Manage Flink SQL statements.
+  system-info         Display CMF system information.
 
 Global Flags:
   -h, --help            Show help for this command.
