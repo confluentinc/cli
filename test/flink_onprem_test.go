@@ -39,6 +39,21 @@ func (s *CLITestSuite) TestFlinkApplicationList() {
 	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
+func (s *CLITestSuite) TestFlinkApplicationEventList() {
+	tests := []CLITest{
+		// failure scenarios
+		{args: "flink application event list", fixture: "flink/application/event-list-missing-flags.golden", exitCode: 1},
+		{args: "flink application event list --environment default", fixture: "flink/application/event-list-app-missing.golden", exitCode: 1},
+		// success scenarios
+		{args: "flink application event list --environment test --application non-existent", fixture: "flink/application/event-list-empty.golden"},
+		{args: "flink application event list --environment default --application default-application-1 --output human", fixture: "flink/application/event-list-human.golden"},
+		{args: "flink application event list --environment default --application default-application-1 --output json", fixture: "flink/application/event-list-json.golden"},
+		{args: "flink application event list --environment default --application default-application-1 --output yaml", fixture: "flink/application/event-list-yaml.golden"},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
 func (s *CLITestSuite) TestFlinkApplicationDelete() {
 	tests := []CLITest{
 		// failure scenarios

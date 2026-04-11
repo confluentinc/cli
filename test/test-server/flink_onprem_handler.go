@@ -445,6 +445,80 @@ func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for "cmf/api/v1alpha1/environments/{envName}/applications/{appName}/events"
+func handleCmfApplicationEvents(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		envName := vars["envName"]
+		appName := vars["appName"]
+
+		if r.Method != http.MethodGet {
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+			return
+		}
+
+		if envName != "default" && envName != "test" {
+			http.Error(w, "Environment not found", http.StatusNotFound)
+			return
+		}
+
+		eventsPage := map[string]interface{}{
+			"items": []cmfsdk.FlinkApplicationEvent{},
+		}
+
+		page := r.URL.Query().Get("page")
+
+		if envName == "default" && appName == "default-application-1" && page == "0" {
+			timestamp1 := "2024-01-15T10:30:00Z"
+			timestamp2 := "2024-01-15T10:31:00Z"
+			instance := "default-application-1-instance-1"
+			eventType1 := "Normal"
+			eventType2 := "Warning"
+			message1 := "Application started successfully"
+			message2 := "Application restarting due to failure"
+			name1 := "event-001"
+			name2 := "event-002"
+
+			events := []cmfsdk.FlinkApplicationEvent{
+				{
+					ApiVersion: "cmf.confluent.io/v1alpha1",
+					Kind:       "FlinkApplicationEvent",
+					Metadata: cmfsdk.EventMetadata{
+						Name:                     &name1,
+						CreationTimestamp:        &timestamp1,
+						FlinkApplicationInstance: &instance,
+					},
+					Status: cmfsdk.EventStatus{
+						Type:    &eventType1,
+						Message: &message1,
+					},
+				},
+				{
+					ApiVersion: "cmf.confluent.io/v1alpha1",
+					Kind:       "FlinkApplicationEvent",
+					Metadata: cmfsdk.EventMetadata{
+						Name:                     &name2,
+						CreationTimestamp:        &timestamp2,
+						FlinkApplicationInstance: &instance,
+					},
+					Status: cmfsdk.EventStatus{
+						Type:    &eventType2,
+						Message: &message2,
+					},
+				},
+			}
+			eventsPage = map[string]interface{}{
+				"items": events,
+			}
+		}
+
+		err := json.NewEncoder(w).Encode(eventsPage)
+		require.NoError(t, err)
+	}
+}
+
 // Handler for "cmf/api/v1/environments/{environment}/applications"
 // Used by list, create and update applications.
 func handleCmfApplications(t *testing.T) http.HandlerFunc {

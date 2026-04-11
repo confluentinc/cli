@@ -10,6 +10,7 @@ Available Commands:
   create         Create a Flink application.
   delete         Delete one or more Flink applications.
   describe       Describe a Flink application.
+  event          Manage Flink application events.
   list           List Flink applications.
   update         Update a Flink application.
   web-ui-forward Forward the web UI of a Flink application.
