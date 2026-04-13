@@ -1,0 +1,67 @@
+package kafka
+
+import (
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/output"
+)
+
+func (c *streamsGroupCommand) newStreamsGroupMemberDescribeCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:               "describe <member>",
+		Short:             "Describe a Kafka stream group member.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStreamsGroupArgs),
+		RunE:              c.streamsGroupMemberDescribe,
+	}
+
+	cmd.Flags().String("group", "", "Group Id.")
+
+	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddOutputFlag(cmd)
+
+	cobra.CheckErr(cmd.MarkFlagRequired("group"))
+
+	return cmd
+}
+
+func (c *streamsGroupCommand) streamsGroupMemberDescribe(cmd *cobra.Command, args []string) error {
+	groupId, err := cmd.Flags().GetString("group")
+	if err != nil {
+		return err
+	}
+
+	memberId := args[0]
+
+	kafkaREST, err := c.GetKafkaREST(cmd)
+	if err != nil {
+		return err
+	}
+
+	member, err := kafkaREST.CloudClient.GetKafkaStreamsGroupMember(groupId, memberId)
+	if err != nil {
+		return err
+	}
+
+	table := output.NewTable(cmd)
+	table.Add(&streamsGroupMemberOut{
+		Kind:          member.GetKind(),
+		ClusterId:     member.GetClusterId(),
+		GroupId:       member.GetGroupId(),
+		MemberId:      member.GetMemberId(),
+		ProcessId:     member.GetProcessId(),
+		ClientId:      member.GetClientId(),
+		InstanceId:    member.GetInstanceId(),
+		MemberEpoch:   member.GetMemberEpoch(),
+		TopologyEpoch: member.GetTopologyEpoch(),
+		IsClassic:     member.GetIsClassic(),
+		Assignments:   member.Assignments.GetRelated(),
+		TargetAssign:  member.TargetAssignment.GetRelated(),
+	})
+
+	return table.Print()
+}
