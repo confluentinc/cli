@@ -4,10 +4,11 @@ Usage:
   confluent kafka cluster list [flags]
 
 Flags:
-      --all                  List clusters across all environments.
-      --context string       CLI context name.
-      --environment string   Environment ID.
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+      --all                   List clusters across all environments.
+      --deletion-protection   Filter by deletion protection status. Use "--deletion-protection=false" to list unprotected clusters.
+      --context string        CLI context name.
+      --environment string    Environment ID.
+  -o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
