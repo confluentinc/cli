@@ -19,7 +19,7 @@ func (c *streamsGroupCommand) newStreamsGroupMemberTargetAssignmentTaskListComma
 
 	cmd.Flags().String("group", "", "Group Id.")
 	cmd.Flags().String("member", "", "Member Id.")
-	cmd.Flags().String("assignment", "", "Assignment type (active, standby, warmup).")
+	cmd.Flags().String("assignment-type", "", "Assignment type (active, standby, warmup).")
 
 	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -29,7 +29,11 @@ func (c *streamsGroupCommand) newStreamsGroupMemberTargetAssignmentTaskListComma
 
 	cobra.CheckErr(cmd.MarkFlagRequired("group"))
 	cobra.CheckErr(cmd.MarkFlagRequired("member"))
-	cobra.CheckErr(cmd.MarkFlagRequired("assignment"))
+	cobra.CheckErr(cmd.MarkFlagRequired("assignment-type"))
+
+	pcmd.RegisterFlagCompletionFunc(cmd, "assignment-type", func(_ *cobra.Command, _ []string) []string {
+		return []string{"active", "standby", "warmup"}
+	})
 
 	return cmd
 }
@@ -63,7 +67,7 @@ func (c *streamsGroupCommand) getStreamsGroupMemberTargetAssignmentTasks(cmd *co
 		return nil, err
 	}
 
-	assignmentType, err := cmd.Flags().GetString("assignment")
+	assignmentType, err := cmd.Flags().GetString("assignment-type")
 	if err != nil {
 		return nil, err
 	}

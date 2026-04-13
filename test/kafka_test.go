@@ -752,10 +752,10 @@ func (s *CLITestSuite) TestKafkaConsumerStreamGroup() {
 		{args: "kafka streams-group member describe member-1 --group streams-group-1 --cluster lkc-1234", fixture: "kafka/streams-group/member-describe.golden"},
 
 		{args: "kafka streams-group member-assignment describe member-1 --group streams-group-1 --cluster lkc-1234", fixture: "kafka/streams-group/assignment-describe.golden"},
-		{args: "kafka streams-group member-assignment list --group streams-group-1 --member member-1 --assignment active --cluster lkc-1234", fixture: "kafka/streams-group/assignment-task-list.golden"},
+		{args: "kafka streams-group member-assignment list --group streams-group-1 --member member-1 --assignment-type active --cluster lkc-1234", fixture: "kafka/streams-group/assignment-task-list.golden"},
 
 		{args: "kafka streams-group member-target-assignment describe member-1 --group streams-group-1 --cluster lkc-1234", fixture: "kafka/streams-group/target-assignment-describe.golden"},
-		{args: "kafka streams-group member-target-assignment list --group streams-group-1 --member member-1 --assignment active --cluster lkc-1234", fixture: "kafka/streams-group/target-assignment-task-list.golden"},
+		{args: "kafka streams-group member-target-assignment list --group streams-group-1 --member member-1 --assignment-type active --cluster lkc-1234", fixture: "kafka/streams-group/target-assignment-task-list.golden"},
 
 		{args: "kafka streams-group member-task-partitions describe member-1 --group streams-group-1 --subtopology subtopology-1 --assignment-type active --cluster lkc-1234", fixture: "kafka/streams-group/task-partitions-describe.golden"},
 
