@@ -1,0 +1,14 @@
++-------------------+------------------------------------------------------------------------------------------------+
+| Kind              | KafkaStreamsGroupMember                                                                        |
+| Cluster Id        | lkc-1234                                                                                       |
+| Group Id          | streams-group-1                                                                                |
+| Member Id         | member-1                                                                                       |
+| Process Id        | process-1                                                                                      |
+| Client Id         | client-1                                                                                       |
+| Instance Id       | instance-1                                                                                     |
+| Member Epoch      | 2                                                                                              |
+| Topology Epoch    | 2                                                                                              |
+| Is Classic        | false                                                                                          |
+| Assignments       | /kafka/v3/clusters/lkc-1234/streams-groups/streams-group-1/members/member-1/assignments        |
+| Target Assignment | /kafka/v3/clusters/lkc-1234/streams-groups/streams-group-1/members/member-1/target-assignments |
++-------------------+------------------------------------------------------------------------------------------------+
