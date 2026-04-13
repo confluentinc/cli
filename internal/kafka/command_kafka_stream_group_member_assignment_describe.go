@@ -10,7 +10,7 @@ import (
 func (c *streamGroupCommand) newStreamGroupMemberAssignmentDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <member>",
-		Short:             "Describe stream group member assignment",
+		Short:             "Describe a stream group member assignment.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStreamGroupArgs),
 		RunE:              c.streamGroupMemberAssignmentDescribe,

@@ -10,7 +10,7 @@ import (
 func (c *streamGroupCommand) newStreamGroupSubtopologyDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <subtopology>",
-		Short:             "Describe stream group subtopology",
+		Short:             "Describe a stream group subtopology.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStreamGroupArgs),
 		RunE:              c.streamGroupSubtopologyDescribe,

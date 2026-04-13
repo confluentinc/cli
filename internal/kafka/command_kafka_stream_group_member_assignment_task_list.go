@@ -12,7 +12,7 @@ import (
 func (c *streamGroupCommand) newStreamGroupMemberAssignmentListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
-		Short:       "List kafka stream group member assignment tasks.",
+		Short:       "List Kafka stream group member assignment tasks.",
 		Args:        cobra.NoArgs,
 		RunE:        c.listStreamGroupMemberAssignmentTasks,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
