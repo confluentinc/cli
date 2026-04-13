@@ -42,7 +42,7 @@ func (c *streamGroupCommand) streamGroupSubtopologyDescribe(cmd *cobra.Command, 
 		return err
 	}
 
-	subtopology, err := kafkaREST.CloudClientInternal.GetKafkaStreamGroupSubtopology(groupId, subtopologyId)
+	subtopology, err := kafkaREST.CloudClient.GetKafkaStreamGroupSubtopology(groupId, subtopologyId)
 	if err != nil {
 		return err
 	}

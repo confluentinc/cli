@@ -624,7 +624,7 @@ func AutocompleteStreamGroups(cmd *cobra.Command, c *AuthenticatedCLICommand) []
 		return nil
 	}
 
-	streamGroups, err := kafkaREST.CloudClientInternal.ListKafkaStreamsGroup()
+	streamGroups, err := kafkaREST.CloudClient.ListKafkaStreamsGroup()
 	if err != nil {
 		return nil
 	}

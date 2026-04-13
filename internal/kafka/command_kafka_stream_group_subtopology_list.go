@@ -1,8 +1,9 @@
 package kafka
 
 import (
-	kafkarestv3Internal "github.com/confluentinc/ccloud-sdk-go-v2-internal/kafkarest/v3"
 	"github.com/spf13/cobra"
+
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -50,7 +51,7 @@ func (c *streamGroupCommand) listStreamGroupSubtopologies(cmd *cobra.Command, _ 
 	return list.Print()
 }
 
-func (c *streamGroupCommand) getStreamGroupSubtopologies(cmd *cobra.Command) ([]kafkarestv3Internal.StreamsGroupSubtopologyData, error) {
+func (c *streamGroupCommand) getStreamGroupSubtopologies(cmd *cobra.Command) ([]kafkarestv3.StreamsGroupSubtopologyData, error) {
 	groupId, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return nil, err
@@ -61,7 +62,7 @@ func (c *streamGroupCommand) getStreamGroupSubtopologies(cmd *cobra.Command) ([]
 		return nil, err
 	}
 
-	resp, err := kafkaREST.CloudClientInternal.ListKafkaStreamsGroupMemberSubtopologies(groupId)
+	resp, err := kafkaREST.CloudClient.ListKafkaStreamsGroupMemberSubtopologies(groupId)
 	if err != nil {
 		return nil, err
 	}

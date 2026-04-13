@@ -42,7 +42,7 @@ func (c *streamGroupCommand) streamGroupMemberDescribe(cmd *cobra.Command, args 
 		return err
 	}
 
-	member, err := kafkaREST.CloudClientInternal.GetKafkaStreamGroupMember(groupId, memberId)
+	member, err := kafkaREST.CloudClient.GetKafkaStreamGroupMember(groupId, memberId)
 	if err != nil {
 		return err
 	}

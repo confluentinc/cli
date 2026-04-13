@@ -1,8 +1,9 @@
 package kafka
 
 import (
-	kafkarestv3Internal "github.com/confluentinc/ccloud-sdk-go-v2-internal/kafkarest/v3"
 	"github.com/spf13/cobra"
+
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -50,13 +51,13 @@ func (c *streamGroupCommand) listStreamGroup(cmd *cobra.Command, _ []string) err
 	return list.Print()
 }
 
-func (c *streamGroupCommand) getStreamGroups(cmd *cobra.Command) ([]kafkarestv3Internal.StreamsGroupData, error) {
+func (c *streamGroupCommand) getStreamGroups(cmd *cobra.Command) ([]kafkarestv3.StreamsGroupData, error) {
 	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	topics, err := kafkaREST.CloudClientInternal.ListKafkaStreamsGroup()
+	topics, err := kafkaREST.CloudClient.ListKafkaStreamsGroup()
 	if err != nil {
 		return nil, err
 	}

@@ -1,8 +1,9 @@
 package kafka
 
 import (
-	kafkarestv3Internal "github.com/confluentinc/ccloud-sdk-go-v2-internal/kafkarest/v3"
 	"github.com/spf13/cobra"
+
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -52,7 +53,7 @@ func (c *streamGroupCommand) listStreamGroupMemberTargetAssignmentTasks(cmd *cob
 	return list.Print()
 }
 
-func (c *streamGroupCommand) getStreamGroupMemberTargetAssignmentTasks(cmd *cobra.Command) ([]kafkarestv3Internal.StreamsTaskData, error) {
+func (c *streamGroupCommand) getStreamGroupMemberTargetAssignmentTasks(cmd *cobra.Command) ([]kafkarestv3.StreamsTaskData, error) {
 	groupId, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return nil, err
@@ -73,7 +74,7 @@ func (c *streamGroupCommand) getStreamGroupMemberTargetAssignmentTasks(cmd *cobr
 		return nil, err
 	}
 
-	resp, err := kafkaREST.CloudClientInternal.ListKafkaStreamsGroupMemberTargetAssignmentTasks(groupId, memberId, assignmentType)
+	resp, err := kafkaREST.CloudClient.ListKafkaStreamsGroupMemberTargetAssignmentTasks(groupId, memberId, assignmentType)
 	if err != nil {
 		return nil, err
 	}

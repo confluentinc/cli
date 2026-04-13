@@ -380,10 +380,9 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 		}
 
 		kafkaRest := &KafkaREST{
-			Context:             context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, dataplaneToken),
-			CloudClient:         ccloudv2.NewKafkaRestClient(restEndpoint, lkc, r.Version.UserAgent, dataplaneToken, unsafeTrace),
-			CloudClientInternal: ccloudv2.NewKafkaRestClientInternal(restEndpoint, lkc, r.Version.UserAgent, dataplaneToken, unsafeTrace),
-			Client:              CreateKafkaRESTClient(restEndpoint, unsafeTrace),
+			Context:     context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, dataplaneToken),
+			CloudClient: ccloudv2.NewKafkaRestClient(restEndpoint, lkc, r.Version.UserAgent, dataplaneToken, unsafeTrace),
+			Client:      CreateKafkaRESTClient(restEndpoint, unsafeTrace),
 		}
 		return kafkaRest, nil
 	})

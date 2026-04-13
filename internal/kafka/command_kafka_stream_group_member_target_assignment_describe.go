@@ -42,7 +42,7 @@ func (c *streamGroupCommand) streamGroupMemberTargetAssignmentDescribe(cmd *cobr
 		return err
 	}
 
-	assignment, err := kafkaREST.CloudClientInternal.GetKafkaStreamGroupMemberTargetAssignment(groupId, memberId)
+	assignment, err := kafkaREST.CloudClient.GetKafkaStreamGroupMemberTargetAssignment(groupId, memberId)
 	if err != nil {
 		return err
 	}

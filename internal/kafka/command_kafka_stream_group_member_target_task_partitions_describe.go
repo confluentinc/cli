@@ -56,7 +56,7 @@ func (c *streamGroupCommand) streamGroupMemberTargetAssignmentTaskPartitionsDesc
 		return err
 	}
 
-	taskPartitions, err := kafkaREST.CloudClientInternal.
+	taskPartitions, err := kafkaREST.CloudClient.
 		GetKafkaStreamsGroupMemberTargetAssignmentTaskPartitions(groupId, memberId, assignmentsType, subtopologyId)
 	if err != nil {
 		return err

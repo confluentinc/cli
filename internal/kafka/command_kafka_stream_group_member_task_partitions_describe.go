@@ -56,7 +56,7 @@ func (c *streamGroupCommand) streamGroupMemberTaskPartitionsDescribe(cmd *cobra.
 		return err
 	}
 
-	taskPartitions, err := kafkaREST.CloudClientInternal.GetKafkaStreamGroupMemberAssignmentTaskPartitions(groupId, memberId, assignmentsType, subtopologyId)
+	taskPartitions, err := kafkaREST.CloudClient.GetKafkaStreamGroupMemberAssignmentTaskPartitions(groupId, memberId, assignmentsType, subtopologyId)
 	if err != nil {
 		return err
 	}

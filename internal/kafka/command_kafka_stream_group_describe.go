@@ -33,7 +33,7 @@ func (c *streamGroupCommand) streamGroupDescribe(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	streamGroup, err := kafkaREST.CloudClientInternal.GetKafkaStreamGroup(groupId)
+	streamGroup, err := kafkaREST.CloudClient.GetKafkaStreamGroup(groupId)
 	if err != nil {
 		return err
 	}
