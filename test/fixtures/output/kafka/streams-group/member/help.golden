@@ -4,8 +4,8 @@ Usage:
   confluent kafka streams-group member [command]
 
 Available Commands:
-  describe    Describe stream group member
-  list        List kafka stream group members.
+  describe    Describe a Kafka stream group member.
+  list        List Kafka stream group members.
 
 Global Flags:
   -h, --help            Show help for this command.

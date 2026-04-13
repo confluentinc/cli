@@ -4,8 +4,8 @@ Usage:
   confluent kafka streams-group subtopology [command]
 
 Available Commands:
-  describe    Describe stream group subtopology
-  list        List kafka stream group subtopologies.
+  describe    Describe a stream group subtopology.
+  list        List Kafka stream group subtopologies.
 
 Global Flags:
   -h, --help            Show help for this command.

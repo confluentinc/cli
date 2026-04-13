@@ -4,8 +4,8 @@ Usage:
   confluent kafka streams-group member-assignment [command]
 
 Available Commands:
-  describe    Describe stream group member assignment
-  list        List kafka stream group member assignment tasks.
+  describe    Describe a stream group member assignment.
+  list        List Kafka stream group member assignment tasks.
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -1,4 +1,4 @@
-List kafka stream group members.
+List Kafka stream group members.
 
 Usage:
   confluent kafka streams-group member list [flags]

@@ -4,7 +4,7 @@ Usage:
   confluent kafka streams-group member-task-partitions [command]
 
 Available Commands:
-  describe    Describe stream group member task partitions
+  describe    Describe stream group member task partitions.
 
 Global Flags:
   -h, --help            Show help for this command.

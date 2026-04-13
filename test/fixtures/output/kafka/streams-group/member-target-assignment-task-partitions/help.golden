@@ -1,10 +1,10 @@
-Manage Kafka stream group member target assignment task partitions.
+Manage stream group target task partitions.
 
 Usage:
   confluent kafka streams-group member-target-assignment-task-partitions [command]
 
 Available Commands:
-  describe    Describe stream group member target assignment task partitions
+  describe    Describe stream group target task partitions.
 
 Global Flags:
   -h, --help            Show help for this command.

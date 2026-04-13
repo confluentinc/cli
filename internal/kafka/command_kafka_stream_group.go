@@ -34,11 +34,11 @@ func newStreamsGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	cmd.AddCommand(c.newStreamsGroupDescribeCommand())
 	cmd.AddCommand(c.newStreamsGroupListCommand())
-	cmd.AddCommand(c.newStreamsGroupMemberCommand())
 	cmd.AddCommand(c.newStreamsGroupMemberAssignmentCommand())
-	cmd.AddCommand(c.newStreamsGroupMemberTaskPartitionsCommand())
+	cmd.AddCommand(c.newStreamsGroupMemberCommand())
 	cmd.AddCommand(c.newStreamsGroupMemberTargetAssignmentCommand())
 	cmd.AddCommand(c.newStreamsGroupMemberTargetAssignmentTaskPartitionsCommand())
+	cmd.AddCommand(c.newStreamsGroupMemberTaskPartitionsCommand())
 	cmd.AddCommand(c.newStreamsGroupSubtopologyCommand())
 
 	return cmd

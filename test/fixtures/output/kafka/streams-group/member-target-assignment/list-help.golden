@@ -1,4 +1,4 @@
-List kafka stream group member target assignment tasks.
+List Kafka stream group target assignment tasks.
 
 Usage:
   confluent kafka streams-group member-target-assignment list [flags]

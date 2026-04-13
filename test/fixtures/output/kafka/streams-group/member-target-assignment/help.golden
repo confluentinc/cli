@@ -4,8 +4,8 @@ Usage:
   confluent kafka streams-group member-target-assignment [command]
 
 Available Commands:
-  describe    Describe stream group member target assignment
-  list        List kafka stream group member target assignment tasks.
+  describe    Describe a stream group target assignment.
+  list        List Kafka stream group target assignment tasks.
 
 Global Flags:
   -h, --help            Show help for this command.

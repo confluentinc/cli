@@ -1,4 +1,4 @@
-List kafka stream group subtopologies.
+List Kafka stream group subtopologies.
 
 Usage:
   confluent kafka streams-group subtopology list [flags]

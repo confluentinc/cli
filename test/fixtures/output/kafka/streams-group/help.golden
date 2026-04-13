@@ -4,12 +4,12 @@ Usage:
   confluent kafka streams-group [command]
 
 Available Commands:
-  describe                                 Describe stream group
-  list                                     List kafka stream groups.
+  describe                                 Describe a Kafka stream group.
+  list                                     List Kafka stream groups.
   member                                   Manage Kafka stream groups members.
   member-assignment                        Manage Kafka stream group member assignments.
   member-target-assignment                 Manage Kafka stream group member target assignments.
-  member-target-assignment-task-partitions Manage Kafka stream group member target assignment task partitions.
+  member-target-assignment-task-partitions Manage stream group target task partitions.
   member-task-partitions                   Manage Kafka stream group member task partitions.
   subtopology                              Manage Kafka stream group subtopologies.
 
