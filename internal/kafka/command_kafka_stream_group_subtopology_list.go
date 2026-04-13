@@ -11,11 +11,10 @@ import (
 
 func (c *streamsGroupCommand) newStreamsGroupSubtopologyListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "list",
-		Short:       "List Kafka stream group subtopologies.",
-		Args:        cobra.NoArgs,
-		RunE:        c.listStreamsGroupSubtopologies,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:   "list",
+		Short: "List Kafka stream group subtopologies.",
+		Args:  cobra.NoArgs,
+		RunE:  c.listStreamsGroupSubtopologies,
 	}
 
 	cmd.Flags().String("group", "", "Group Id.")

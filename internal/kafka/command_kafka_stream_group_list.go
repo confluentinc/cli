@@ -11,11 +11,10 @@ import (
 
 func (c *streamsGroupCommand) newStreamsGroupListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "list",
-		Short:       "List Kafka stream groups.",
-		Args:        cobra.NoArgs,
-		RunE:        c.listStreamsGroup,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:   "list",
+		Short: "List Kafka stream groups.",
+		Args:  cobra.NoArgs,
+		RunE:  c.listStreamsGroup,
 	}
 
 	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
@@ -57,10 +56,10 @@ func (c *streamsGroupCommand) getStreamsGroups(cmd *cobra.Command) ([]kafkarestv
 		return nil, err
 	}
 
-	topics, err := kafkaREST.CloudClient.ListKafkaStreamsGroup()
+	groups, err := kafkaREST.CloudClient.ListKafkaStreamsGroup()
 	if err != nil {
 		return nil, err
 	}
 
-	return topics.Data, nil
+	return groups.Data, nil
 }
