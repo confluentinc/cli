@@ -9,11 +9,10 @@ import (
 
 func (c *streamsGroupCommand) newStreamsGroupMemberDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "describe <member>",
-		Short:             "Describe a Kafka stream group member.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStreamsGroupArgs),
-		RunE:              c.streamsGroupMemberDescribe,
+		Use:   "describe <member>",
+		Short: "Describe a Kafka stream group member.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.streamsGroupMemberDescribe,
 	}
 
 	cmd.Flags().String("group", "", "Group Id.")

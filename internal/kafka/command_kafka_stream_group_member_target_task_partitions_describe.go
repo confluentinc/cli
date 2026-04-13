@@ -9,11 +9,10 @@ import (
 
 func (c *streamsGroupCommand) newStreamsGroupMemberTargetAssignmentTaskPartitionsDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "describe <member>",
-		Short:             "Describe stream group target task partitions.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStreamsGroupArgs),
-		RunE:              c.streamsGroupMemberTargetAssignmentTaskPartitionsDescribe,
+		Use:   "describe <member>",
+		Short: "Describe stream group target task partitions.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.streamsGroupMemberTargetAssignmentTaskPartitionsDescribe,
 	}
 
 	cmd.Flags().String("group", "", "Group Id.")
