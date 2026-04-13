@@ -7,13 +7,13 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *streamGroupCommand) newStreamGroupMemberTaskPartitionsDescribeCommand() *cobra.Command {
+func (c *streamsGroupCommand) newStreamsGroupMemberTaskPartitionsDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <member>",
 		Short:             "Describe stream group member task partitions.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStreamGroupArgs),
-		RunE:              c.streamGroupMemberTaskPartitionsDescribe,
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStreamsGroupArgs),
+		RunE:              c.streamsGroupMemberTaskPartitionsDescribe,
 	}
 
 	cmd.Flags().String("group", "", "Group Id.")
@@ -33,7 +33,7 @@ func (c *streamGroupCommand) newStreamGroupMemberTaskPartitionsDescribeCommand()
 	return cmd
 }
 
-func (c *streamGroupCommand) streamGroupMemberTaskPartitionsDescribe(cmd *cobra.Command, args []string) error {
+func (c *streamsGroupCommand) streamsGroupMemberTaskPartitionsDescribe(cmd *cobra.Command, args []string) error {
 	groupId, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return err
@@ -56,7 +56,7 @@ func (c *streamGroupCommand) streamGroupMemberTaskPartitionsDescribe(cmd *cobra.
 		return err
 	}
 
-	taskPartitions, err := kafkaREST.CloudClient.GetKafkaStreamGroupMemberAssignmentTaskPartitions(groupId, memberId, assignmentsType, subtopologyId)
+	taskPartitions, err := kafkaREST.CloudClient.GetKafkaStreamsGroupMemberAssignmentTaskPartitions(groupId, memberId, assignmentsType, subtopologyId)
 	if err != nil {
 		return err
 	}

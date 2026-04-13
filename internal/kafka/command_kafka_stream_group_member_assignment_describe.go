@@ -7,13 +7,13 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *streamGroupCommand) newStreamGroupMemberAssignmentDescribeCommand() *cobra.Command {
+func (c *streamsGroupCommand) newStreamsGroupMemberAssignmentDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <member>",
 		Short:             "Describe a stream group member assignment.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStreamGroupArgs),
-		RunE:              c.streamGroupMemberAssignmentDescribe,
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStreamsGroupArgs),
+		RunE:              c.streamsGroupMemberAssignmentDescribe,
 	}
 
 	cmd.Flags().String("group", "", "Group Id.")
@@ -29,7 +29,7 @@ func (c *streamGroupCommand) newStreamGroupMemberAssignmentDescribeCommand() *co
 	return cmd
 }
 
-func (c *streamGroupCommand) streamGroupMemberAssignmentDescribe(cmd *cobra.Command, args []string) error {
+func (c *streamsGroupCommand) streamsGroupMemberAssignmentDescribe(cmd *cobra.Command, args []string) error {
 	groupId, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return err
@@ -42,13 +42,13 @@ func (c *streamGroupCommand) streamGroupMemberAssignmentDescribe(cmd *cobra.Comm
 		return err
 	}
 
-	assignment, err := kafkaREST.CloudClient.GetKafkaStreamGroupMemberAssignment(groupId, memberId)
+	assignment, err := kafkaREST.CloudClient.GetKafkaStreamsGroupMemberAssignment(groupId, memberId)
 	if err != nil {
 		return err
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(&streamGroupMemberAssignmentOut{
+	table.Add(&streamsGroupMemberAssignmentOut{
 		Kind:         assignment.GetKind(),
 		ClusterId:    assignment.GetClusterId(),
 		GroupId:      assignment.GetGroupId(),

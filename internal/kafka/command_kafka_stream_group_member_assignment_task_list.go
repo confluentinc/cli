@@ -9,12 +9,12 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *streamGroupCommand) newStreamGroupMemberAssignmentListCommand() *cobra.Command {
+func (c *streamsGroupCommand) newStreamsGroupMemberAssignmentListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
 		Short:       "List Kafka stream group member assignment tasks.",
 		Args:        cobra.NoArgs,
-		RunE:        c.listStreamGroupMemberAssignmentTasks,
+		RunE:        c.listStreamsGroupMemberAssignmentTasks,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
@@ -35,8 +35,8 @@ func (c *streamGroupCommand) newStreamGroupMemberAssignmentListCommand() *cobra.
 	return cmd
 }
 
-func (c *streamGroupCommand) listStreamGroupMemberAssignmentTasks(cmd *cobra.Command, _ []string) error {
-	tasks, err := c.getStreamGroupMemberAssignmentTasks(cmd)
+func (c *streamsGroupCommand) listStreamsGroupMemberAssignmentTasks(cmd *cobra.Command, _ []string) error {
+	tasks, err := c.getStreamsGroupMemberAssignmentTasks(cmd)
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,7 @@ func (c *streamGroupCommand) listStreamGroupMemberAssignmentTasks(cmd *cobra.Com
 	return list.Print()
 }
 
-func (c *streamGroupCommand) getStreamGroupMemberAssignmentTasks(cmd *cobra.Command) ([]kafkarestv3.StreamsTaskData, error) {
+func (c *streamsGroupCommand) getStreamsGroupMemberAssignmentTasks(cmd *cobra.Command) ([]kafkarestv3.StreamsTaskData, error) {
 	groupId, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return nil, err

@@ -9,12 +9,12 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *streamGroupCommand) newStreamGroupListCommand() *cobra.Command {
+func (c *streamsGroupCommand) newStreamsGroupListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
 		Short:       "List Kafka stream groups.",
 		Args:        cobra.NoArgs,
-		RunE:        c.listStreamGroup,
+		RunE:        c.listStreamsGroup,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
@@ -27,31 +27,31 @@ func (c *streamGroupCommand) newStreamGroupListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *streamGroupCommand) listStreamGroup(cmd *cobra.Command, _ []string) error {
-	groups, err := c.getStreamGroups(cmd)
+func (c *streamsGroupCommand) listStreamsGroup(cmd *cobra.Command, _ []string) error {
+	groups, err := c.getStreamsGroups(cmd)
 	if err != nil {
 		return err
 	}
 
 	list := output.NewList(cmd)
-	for _, streamGroup := range groups {
-		list.Add(&streamGroupOut{
-			ClusterId:             streamGroup.GetClusterId(),
-			GroupId:               streamGroup.GetGroupId(),
-			State:                 streamGroup.GetState(),
-			MemberCount:           streamGroup.GetMemberCount(),
-			SubtopologyCount:      streamGroup.GetSubtopologyCount(),
-			GroupEpoch:            streamGroup.GetGroupEpoch(),
-			TopologyEpoch:         streamGroup.GetTopologyEpoch(),
-			TargetAssignmentEpoch: streamGroup.GetTargetAssignmentEpoch(),
-			Members:               streamGroup.Members.GetRelated(),
-			Subtopologies:         streamGroup.Subtopologies.GetRelated(),
+	for _, streamsGroup := range groups {
+		list.Add(&streamsGroupOut{
+			ClusterId:             streamsGroup.GetClusterId(),
+			GroupId:               streamsGroup.GetGroupId(),
+			State:                 streamsGroup.GetState(),
+			MemberCount:           streamsGroup.GetMemberCount(),
+			SubtopologyCount:      streamsGroup.GetSubtopologyCount(),
+			GroupEpoch:            streamsGroup.GetGroupEpoch(),
+			TopologyEpoch:         streamsGroup.GetTopologyEpoch(),
+			TargetAssignmentEpoch: streamsGroup.GetTargetAssignmentEpoch(),
+			Members:               streamsGroup.Members.GetRelated(),
+			Subtopologies:         streamsGroup.Subtopologies.GetRelated(),
 		})
 	}
 	return list.Print()
 }
 
-func (c *streamGroupCommand) getStreamGroups(cmd *cobra.Command) ([]kafkarestv3.StreamsGroupData, error) {
+func (c *streamsGroupCommand) getStreamsGroups(cmd *cobra.Command) ([]kafkarestv3.StreamsGroupData, error) {
 	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return nil, err

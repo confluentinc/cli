@@ -6,11 +6,11 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
-type streamGroupCommand struct {
+type streamsGroupCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-type streamGroupOut struct {
+type streamsGroupOut struct {
 	ClusterId             string `human:"Cluster Id" serialized:"cluster_id"`
 	GroupId               string `human:"Group Id" serialized:"group_id"`
 	State                 string `human:"State" serialized:"state"`
@@ -23,28 +23,28 @@ type streamGroupOut struct {
 	Subtopologies         string `human:"Subtopologies" serialized:"subtopologies"`
 }
 
-func newStreamGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newStreamsGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "streams-group",
 		Short:       "Manage Kafka stream groups.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
-	c := &streamGroupCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	c := &streamsGroupCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	cmd.AddCommand(c.newStreamGroupDescribeCommand())
-	cmd.AddCommand(c.newStreamGroupListCommand())
-	cmd.AddCommand(c.newStreamGroupMemberCommand())
-	cmd.AddCommand(c.newStreamGroupMemberAssignmentCommand())
-	cmd.AddCommand(c.newStreamGroupMemberTaskPartitionsCommand())
-	cmd.AddCommand(c.newStreamGroupMemberTargetAssignmentCommand())
-	cmd.AddCommand(c.newStreamGroupMemberTargetAssignmentTaskPartitionsCommand())
-	cmd.AddCommand(c.newStreamGroupSubtopologyCommand())
+	cmd.AddCommand(c.newStreamsGroupDescribeCommand())
+	cmd.AddCommand(c.newStreamsGroupListCommand())
+	cmd.AddCommand(c.newStreamsGroupMemberCommand())
+	cmd.AddCommand(c.newStreamsGroupMemberAssignmentCommand())
+	cmd.AddCommand(c.newStreamsGroupMemberTaskPartitionsCommand())
+	cmd.AddCommand(c.newStreamsGroupMemberTargetAssignmentCommand())
+	cmd.AddCommand(c.newStreamsGroupMemberTargetAssignmentTaskPartitionsCommand())
+	cmd.AddCommand(c.newStreamsGroupSubtopologyCommand())
 
 	return cmd
 }
 
-func (c *streamGroupCommand) validStreamGroupArgs(cmd *cobra.Command, args []string) []string {
+func (c *streamsGroupCommand) validStreamsGroupArgs(cmd *cobra.Command, args []string) []string {
 	if len(args) > 0 {
 		return nil
 	}
@@ -53,5 +53,5 @@ func (c *streamGroupCommand) validStreamGroupArgs(cmd *cobra.Command, args []str
 		return nil
 	}
 
-	return pcmd.AutocompleteStreamGroups(cmd, c.AuthenticatedCLICommand)
+	return pcmd.AutocompleteStreamsGroups(cmd, c.AuthenticatedCLICommand)
 }

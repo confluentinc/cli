@@ -10,13 +10,13 @@ type streamTaskOut struct {
 	PartitionIds  []int32 `human:"Partition Ids" serialized:"partition_ids"`
 }
 
-func (c *streamGroupCommand) newStreamGroupMemberTaskPartitionsCommand() *cobra.Command {
+func (c *streamsGroupCommand) newStreamsGroupMemberTaskPartitionsCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "member-task-partitions",
 		Short: "Manage Kafka stream group member task partitions.",
 	}
 
-	cmd.AddCommand(c.newStreamGroupMemberTaskPartitionsDescribeCommand())
+	cmd.AddCommand(c.newStreamsGroupMemberTaskPartitionsDescribeCommand())
 
 	return cmd
 }

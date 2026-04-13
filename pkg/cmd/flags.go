@@ -618,20 +618,20 @@ func AutocompleteShareGroups(cmd *cobra.Command, c *AuthenticatedCLICommand) []s
 	return suggestions
 }
 
-func AutocompleteStreamGroups(cmd *cobra.Command, c *AuthenticatedCLICommand) []string {
+func AutocompleteStreamsGroups(cmd *cobra.Command, c *AuthenticatedCLICommand) []string {
 	kafkaREST, err := c.GetKafkaREST(cmd)
 	if err != nil {
 		return nil
 	}
 
-	streamGroups, err := kafkaREST.CloudClient.ListKafkaStreamsGroup()
+	streamsGroups, err := kafkaREST.CloudClient.ListKafkaStreamsGroup()
 	if err != nil {
 		return nil
 	}
 
-	suggestions := make([]string, len(streamGroups.Data))
-	for i, streamGroup := range streamGroups.Data {
-		suggestions[i] = streamGroup.GetGroupId()
+	suggestions := make([]string, len(streamsGroups.Data))
+	for i, streamsGroup := range streamsGroups.Data {
+		suggestions[i] = streamsGroup.GetGroupId()
 	}
 	return suggestions
 }

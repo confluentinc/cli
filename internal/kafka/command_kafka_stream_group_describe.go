@@ -7,13 +7,13 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *streamGroupCommand) newStreamGroupDescribeCommand() *cobra.Command {
+func (c *streamsGroupCommand) newStreamsGroupDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <group>",
 		Short:             "Describe a Kafka stream group.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStreamGroupArgs),
-		RunE:              c.streamGroupDescribe,
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStreamsGroupArgs),
+		RunE:              c.streamsGroupDescribe,
 	}
 
 	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
@@ -25,7 +25,7 @@ func (c *streamGroupCommand) newStreamGroupDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *streamGroupCommand) streamGroupDescribe(cmd *cobra.Command, args []string) error {
+func (c *streamsGroupCommand) streamsGroupDescribe(cmd *cobra.Command, args []string) error {
 	groupId := args[0]
 
 	kafkaREST, err := c.GetKafkaREST(cmd)
@@ -33,23 +33,23 @@ func (c *streamGroupCommand) streamGroupDescribe(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	streamGroup, err := kafkaREST.CloudClient.GetKafkaStreamGroup(groupId)
+	streamsGroup, err := kafkaREST.CloudClient.GetKafkaStreamsGroup(groupId)
 	if err != nil {
 		return err
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(&streamGroupOut{
-		ClusterId:             streamGroup.GetClusterId(),
-		GroupId:               streamGroup.GetGroupId(),
-		State:                 streamGroup.GetState(),
-		MemberCount:           streamGroup.GetMemberCount(),
-		SubtopologyCount:      streamGroup.GetSubtopologyCount(),
-		GroupEpoch:            streamGroup.GetGroupEpoch(),
-		TopologyEpoch:         streamGroup.GetTopologyEpoch(),
-		TargetAssignmentEpoch: streamGroup.GetTargetAssignmentEpoch(),
-		Members:               streamGroup.Members.GetRelated(),
-		Subtopologies:         streamGroup.Subtopologies.GetRelated(),
+	table.Add(&streamsGroupOut{
+		ClusterId:             streamsGroup.GetClusterId(),
+		GroupId:               streamsGroup.GetGroupId(),
+		State:                 streamsGroup.GetState(),
+		MemberCount:           streamsGroup.GetMemberCount(),
+		SubtopologyCount:      streamsGroup.GetSubtopologyCount(),
+		GroupEpoch:            streamsGroup.GetGroupEpoch(),
+		TopologyEpoch:         streamsGroup.GetTopologyEpoch(),
+		TargetAssignmentEpoch: streamsGroup.GetTargetAssignmentEpoch(),
+		Members:               streamsGroup.Members.GetRelated(),
+		Subtopologies:         streamsGroup.Subtopologies.GetRelated(),
 	})
 
 	return table.Print()

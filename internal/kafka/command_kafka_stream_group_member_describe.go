@@ -7,13 +7,13 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *streamGroupCommand) newStreamGroupMemberDescribeCommand() *cobra.Command {
+func (c *streamsGroupCommand) newStreamsGroupMemberDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <member>",
 		Short:             "Describe a Kafka stream group member.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStreamGroupArgs),
-		RunE:              c.streamGroupMemberDescribe,
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStreamsGroupArgs),
+		RunE:              c.streamsGroupMemberDescribe,
 	}
 
 	cmd.Flags().String("group", "", "Group Id.")
@@ -29,7 +29,7 @@ func (c *streamGroupCommand) newStreamGroupMemberDescribeCommand() *cobra.Comman
 	return cmd
 }
 
-func (c *streamGroupCommand) streamGroupMemberDescribe(cmd *cobra.Command, args []string) error {
+func (c *streamsGroupCommand) streamsGroupMemberDescribe(cmd *cobra.Command, args []string) error {
 	groupId, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return err
@@ -42,13 +42,13 @@ func (c *streamGroupCommand) streamGroupMemberDescribe(cmd *cobra.Command, args 
 		return err
 	}
 
-	member, err := kafkaREST.CloudClient.GetKafkaStreamGroupMember(groupId, memberId)
+	member, err := kafkaREST.CloudClient.GetKafkaStreamsGroupMember(groupId, memberId)
 	if err != nil {
 		return err
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(&streamGroupMemberOut{
+	table.Add(&streamsGroupMemberOut{
 		Kind:          member.GetKind(),
 		ClusterId:     member.GetClusterId(),
 		GroupId:       member.GetGroupId(),

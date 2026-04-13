@@ -9,12 +9,12 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *streamGroupCommand) newStreamGroupMemberListCommand() *cobra.Command {
+func (c *streamsGroupCommand) newStreamsGroupMemberListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
 		Short:       "List Kafka stream group members.",
 		Args:        cobra.NoArgs,
-		RunE:        c.listStreamGroupMembers,
+		RunE:        c.listStreamsGroupMembers,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
@@ -31,15 +31,15 @@ func (c *streamGroupCommand) newStreamGroupMemberListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *streamGroupCommand) listStreamGroupMembers(cmd *cobra.Command, _ []string) error {
-	members, err := c.getStreamGroupMembers(cmd)
+func (c *streamsGroupCommand) listStreamsGroupMembers(cmd *cobra.Command, _ []string) error {
+	members, err := c.getStreamsGroupMembers(cmd)
 	if err != nil {
 		return err
 	}
 
 	list := output.NewList(cmd)
 	for _, member := range members {
-		list.Add(&streamGroupMemberOut{
+		list.Add(&streamsGroupMemberOut{
 			Kind:          member.GetKind(),
 			ClusterId:     member.GetClusterId(),
 			GroupId:       member.GetGroupId(),
@@ -57,7 +57,7 @@ func (c *streamGroupCommand) listStreamGroupMembers(cmd *cobra.Command, _ []stri
 	return list.Print()
 }
 
-func (c *streamGroupCommand) getStreamGroupMembers(cmd *cobra.Command) ([]kafkarestv3.StreamsGroupMemberData, error) {
+func (c *streamsGroupCommand) getStreamsGroupMembers(cmd *cobra.Command) ([]kafkarestv3.StreamsGroupMemberData, error) {
 	groupId, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return nil, err

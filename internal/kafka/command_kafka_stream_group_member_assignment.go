@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type streamGroupMemberAssignmentOut struct {
+type streamsGroupMemberAssignmentOut struct {
 	Kind         string `human:"Kind" serialized:"kind"`
 	ClusterId    string `human:"Cluster Id" serialized:"cluster_id"`
 	GroupId      string `human:"Group Id" serialized:"group_id"`
@@ -14,14 +14,14 @@ type streamGroupMemberAssignmentOut struct {
 	WarmupTasks  string `human:"Warmup Tasks" serialized:"warmup_tasks"`
 }
 
-func (c *streamGroupCommand) newStreamGroupMemberAssignmentCommand() *cobra.Command {
+func (c *streamsGroupCommand) newStreamsGroupMemberAssignmentCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "member-assignment",
 		Short: "Manage Kafka stream group member assignments.",
 	}
 
-	cmd.AddCommand(c.newStreamGroupMemberAssignmentDescribeCommand())
-	cmd.AddCommand(c.newStreamGroupMemberAssignmentListCommand())
+	cmd.AddCommand(c.newStreamsGroupMemberAssignmentDescribeCommand())
+	cmd.AddCommand(c.newStreamsGroupMemberAssignmentListCommand())
 
 	return cmd
 }

@@ -9,12 +9,12 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *streamGroupCommand) newStreamGroupSubtopologyListCommand() *cobra.Command {
+func (c *streamsGroupCommand) newStreamsGroupSubtopologyListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
 		Short:       "List Kafka stream group subtopologies.",
 		Args:        cobra.NoArgs,
-		RunE:        c.listStreamGroupSubtopologies,
+		RunE:        c.listStreamsGroupSubtopologies,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
@@ -31,15 +31,15 @@ func (c *streamGroupCommand) newStreamGroupSubtopologyListCommand() *cobra.Comma
 	return cmd
 }
 
-func (c *streamGroupCommand) listStreamGroupSubtopologies(cmd *cobra.Command, _ []string) error {
-	subtopologies, err := c.getStreamGroupSubtopologies(cmd)
+func (c *streamsGroupCommand) listStreamsGroupSubtopologies(cmd *cobra.Command, _ []string) error {
+	subtopologies, err := c.getStreamsGroupSubtopologies(cmd)
 	if err != nil {
 		return err
 	}
 
 	list := output.NewList(cmd)
 	for _, subtopology := range subtopologies {
-		list.Add(&streamGroupSubtopologyOut{
+		list.Add(&streamsGroupSubtopologyOut{
 			Kind:          subtopology.GetKind(),
 			ClusterId:     subtopology.GetClusterId(),
 			GroupId:       subtopology.GetGroupId(),
@@ -51,7 +51,7 @@ func (c *streamGroupCommand) listStreamGroupSubtopologies(cmd *cobra.Command, _ 
 	return list.Print()
 }
 
-func (c *streamGroupCommand) getStreamGroupSubtopologies(cmd *cobra.Command) ([]kafkarestv3.StreamsGroupSubtopologyData, error) {
+func (c *streamsGroupCommand) getStreamsGroupSubtopologies(cmd *cobra.Command) ([]kafkarestv3.StreamsGroupSubtopologyData, error) {
 	groupId, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return nil, err

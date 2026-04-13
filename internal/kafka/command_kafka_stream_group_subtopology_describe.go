@@ -7,13 +7,13 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *streamGroupCommand) newStreamGroupSubtopologyDescribeCommand() *cobra.Command {
+func (c *streamsGroupCommand) newStreamsGroupSubtopologyDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <subtopology>",
 		Short:             "Describe a stream group subtopology.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStreamGroupArgs),
-		RunE:              c.streamGroupSubtopologyDescribe,
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStreamsGroupArgs),
+		RunE:              c.streamsGroupSubtopologyDescribe,
 	}
 
 	cmd.Flags().String("group", "", "Group Id.")
@@ -29,7 +29,7 @@ func (c *streamGroupCommand) newStreamGroupSubtopologyDescribeCommand() *cobra.C
 	return cmd
 }
 
-func (c *streamGroupCommand) streamGroupSubtopologyDescribe(cmd *cobra.Command, args []string) error {
+func (c *streamsGroupCommand) streamsGroupSubtopologyDescribe(cmd *cobra.Command, args []string) error {
 	groupId, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return err
@@ -42,13 +42,13 @@ func (c *streamGroupCommand) streamGroupSubtopologyDescribe(cmd *cobra.Command, 
 		return err
 	}
 
-	subtopology, err := kafkaREST.CloudClient.GetKafkaStreamGroupSubtopology(groupId, subtopologyId)
+	subtopology, err := kafkaREST.CloudClient.GetKafkaStreamsGroupSubtopology(groupId, subtopologyId)
 	if err != nil {
 		return err
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(&streamGroupSubtopologyOut{
+	table.Add(&streamsGroupSubtopologyOut{
 		Kind:          subtopology.GetKind(),
 		ClusterId:     subtopology.GetClusterId(),
 		GroupId:       subtopology.GetGroupId(),

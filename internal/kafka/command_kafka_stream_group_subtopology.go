@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type streamGroupSubtopologyOut struct {
+type streamsGroupSubtopologyOut struct {
 	Kind          string   `human:"Kind" serialized:"kind"`
 	ClusterId     string   `human:"Cluster Id" serialized:"cluster_id"`
 	GroupId       string   `human:"Group Id" serialized:"group_id"`
@@ -12,14 +12,14 @@ type streamGroupSubtopologyOut struct {
 	SourceTopics  []string `human:"Source Topics" serialized:"source_topics"`
 }
 
-func (c *streamGroupCommand) newStreamGroupSubtopologyCommand() *cobra.Command {
+func (c *streamsGroupCommand) newStreamsGroupSubtopologyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "subtopology",
 		Short: "Manage Kafka stream group subtopologies.",
 	}
 
-	cmd.AddCommand(c.newStreamGroupSubtopologyDescribeCommand())
-	cmd.AddCommand(c.newStreamGroupSubtopologyListCommand())
+	cmd.AddCommand(c.newStreamsGroupSubtopologyDescribeCommand())
+	cmd.AddCommand(c.newStreamsGroupSubtopologyListCommand())
 
 	return cmd
 }

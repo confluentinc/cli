@@ -7,13 +7,13 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *streamGroupCommand) newStreamGroupMemberTargetAssignmentTaskPartitionsDescribeCommand() *cobra.Command {
+func (c *streamsGroupCommand) newStreamsGroupMemberTargetAssignmentTaskPartitionsDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <member>",
 		Short:             "Describe stream group target task partitions.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStreamGroupArgs),
-		RunE:              c.streamGroupMemberTargetAssignmentTaskPartitionsDescribe,
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStreamsGroupArgs),
+		RunE:              c.streamsGroupMemberTargetAssignmentTaskPartitionsDescribe,
 	}
 
 	cmd.Flags().String("group", "", "Group Id.")
@@ -33,7 +33,7 @@ func (c *streamGroupCommand) newStreamGroupMemberTargetAssignmentTaskPartitionsD
 	return cmd
 }
 
-func (c *streamGroupCommand) streamGroupMemberTargetAssignmentTaskPartitionsDescribe(cmd *cobra.Command, args []string) error {
+func (c *streamsGroupCommand) streamsGroupMemberTargetAssignmentTaskPartitionsDescribe(cmd *cobra.Command, args []string) error {
 	groupId, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return err
