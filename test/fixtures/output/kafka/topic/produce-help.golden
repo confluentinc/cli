@@ -23,6 +23,7 @@ Flags:
       --config-file string                  The path to the configuration file for the producer client, in JSON or Avro format.
       --schema-registry-endpoint string     Endpoint for Schema Registry cluster.
       --headers strings                     A comma-separated list of headers formatted as "key:value".
+      --schema-id-header                    Serialize schema ID in the header instead of the message prefix.
       --key-references string               The path to the message key schema references file.
       --api-key string                      API key.
       --api-secret string                   API secret.

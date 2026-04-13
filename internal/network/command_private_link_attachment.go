@@ -45,7 +45,7 @@ func (c *command) getPrivateLinkAttachments(name, cloud, region, phase []string)
 		return nil, err
 	}
 
-	return c.V2Client.ListPrivateLinkAttachments(environmentId, name, cloud, region, phase)
+	return c.V2Client.ListNetworkPrivateLinkAttachments(environmentId, name, cloud, region, phase)
 }
 
 func (c *command) validPrivateLinkAttachmentArgs(cmd *cobra.Command, args []string) []string {

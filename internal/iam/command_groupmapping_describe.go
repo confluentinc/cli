@@ -22,7 +22,7 @@ func (c *groupMappingCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *groupMappingCommand) describe(cmd *cobra.Command, args []string) error {
-	groupMapping, err := c.V2Client.GetGroupMapping(args[0])
+	groupMapping, err := c.V2Client.GetIamGroupMapping(args[0])
 	if err != nil {
 		return err
 	}

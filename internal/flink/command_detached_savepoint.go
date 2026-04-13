@@ -25,8 +25,8 @@ func (c *command) newDetachedSavepointCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(c.newDetachedSavepointCreateCommand())
-	cmd.AddCommand(c.newDetachedSavepointDescribeCommand())
 	cmd.AddCommand(c.newDetachedSavepointDeleteCommand())
+	cmd.AddCommand(c.newDetachedSavepointDescribeCommand())
 	cmd.AddCommand(c.newDetachedSavepointListCommand())
 
 	return cmd

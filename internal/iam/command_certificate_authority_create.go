@@ -94,7 +94,7 @@ func (c *certificateAuthorityCommand) create(cmd *cobra.Command, args []string) 
 		CrlChain:                 certificateauthorityv2.PtrString(crlChain),
 	}
 
-	certificateAuthority, err := c.V2Client.CreateCertificateAuthority(certRequest)
+	certificateAuthority, err := c.V2Client.CreateIamCertificateAuthority(certRequest)
 	if err != nil {
 		return err
 	}
