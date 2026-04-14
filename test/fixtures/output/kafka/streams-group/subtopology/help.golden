@@ -1,0 +1,15 @@
+Manage Kafka stream group subtopologies.
+
+Usage:
+  confluent kafka streams-group subtopology [command]
+
+Available Commands:
+  describe    Describe a stream group subtopology.
+  list        List Kafka stream group subtopologies.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent kafka streams-group subtopology [command] --help" for more information about a command.
