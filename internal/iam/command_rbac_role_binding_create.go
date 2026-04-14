@@ -25,19 +25,19 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 		exs = append(exs,
 			examples.Example{
 				Text: `Grant the role "CloudClusterAdmin" to the principal "User:u-123456" in the environment "env-123456" for the cloud cluster "lkc-123456":`,
-				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role CloudClusterAdmin --environment env-123456 --cloud-cluster lkc-123456`,
+				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role CloudClusterAdmin --environment env-123456 --cloud-cluster lkc-123456",
 			},
 			examples.Example{
 				Text: `Grant the role "ResourceOwner" to the principal "User:u-123456", in the environment "env-123456" for the Kafka cluster "lkc-123456" on the resource "Topic:my-topic":`,
-				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --resource Topic:my-topic --environment env-123456 --cloud-cluster lkc-123456 --kafka-cluster lkc-123456`,
+				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --resource Topic:my-topic --environment env-123456 --cloud-cluster lkc-123456 --kafka-cluster lkc-123456"
 			},
 			examples.Example{
 				Text: `Grant the role "Assigner" to identity pool "User:pool-123456" for a service account resource "ServiceAccount:sa-123456":`,
-				Code: `confluent iam rbac role-binding create --principal User:pool-123456 --role Assigner --resource "ServiceAccount:sa-123456`,
+				Code: `confluent iam rbac role-binding create --principal User:pool-123456 --role Assigner --resource "ServiceAccount:sa-123456"`,
 			},
 			examples.Example{
 				Text: `Grant the role "MetricsViewer" to service account "sa-123456":`,
-				Code: `confluent iam rbac role-binding create --principal User:sa-123456 --role MetricsViewer`,
+				Code: "confluent iam rbac role-binding create --principal User:sa-123456 --role MetricsViewer",
 			},
 			examples.Example{
 				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and all subjects for Schema Registry cluster "lsrc-123456" in environment "env-123456":`,
