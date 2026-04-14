@@ -12,7 +12,7 @@ import (
 func (c *streamsGroupCommand) newStreamsGroupMemberListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List Kafka stream group members.",
+		Short: "List Kafka streams group members.",
 		Args:  cobra.NoArgs,
 		RunE:  c.listStreamsGroupMembers,
 	}

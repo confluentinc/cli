@@ -1,4 +1,4 @@
-Describe stream group target task partitions.
+Describe Kafka streams group member target task partitions.
 
 Usage:
   confluent kafka streams-group member-target-assignment-task-partitions describe <member> [flags]

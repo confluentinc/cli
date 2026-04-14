@@ -1,4 +1,4 @@
-Manage Kafka stream group member target assignments.
+Manage Kafka streams group member target assignments.
 
 Usage:
   confluent kafka streams-group member-target-assignment [command]
@@ -7,8 +7,8 @@ Aliases:
   member-target-assignment, mta
 
 Available Commands:
-  describe    Describe a stream group target assignment.
-  list        List Kafka stream group target assignment tasks.
+  describe    Describe a Kafka streams group member target assignment.
+  list        List Kafka streams group member target assignment tasks.
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -8,7 +8,7 @@ func (c *streamsGroupCommand) newStreamsGroupMemberTargetAssignmentCommand() *co
 	cmd := &cobra.Command{
 		Use:     "member-target-assignment",
 		Aliases: []string{"mta"},
-		Short:   "Manage Kafka stream group member target assignments.",
+		Short:   "Manage Kafka streams group member target assignments.",
 	}
 
 	cmd.AddCommand(c.newStreamsGroupMemberTargetAssignmentDescribeCommand())

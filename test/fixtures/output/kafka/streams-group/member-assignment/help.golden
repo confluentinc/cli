@@ -1,4 +1,4 @@
-Manage Kafka stream group member assignments.
+Manage Kafka streams group member assignments.
 
 Usage:
   confluent kafka streams-group member-assignment [command]
@@ -7,8 +7,8 @@ Aliases:
   member-assignment, ma
 
 Available Commands:
-  describe    Describe a stream group member assignment.
-  list        List Kafka stream group member assignment tasks.
+  describe    Describe a Kafka streams group member assignment.
+  list        List Kafka streams group member assignment tasks.
 
 Global Flags:
   -h, --help            Show help for this command.

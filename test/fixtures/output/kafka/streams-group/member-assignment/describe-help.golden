@@ -1,4 +1,4 @@
-Describe a stream group member assignment.
+Describe a Kafka streams group member assignment.
 
 Usage:
   confluent kafka streams-group member-assignment describe <member> [flags]

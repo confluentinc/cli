@@ -1,4 +1,4 @@
-Describe stream group member task partitions.
+Describe a Kafka streams group member task partitions.
 
 Usage:
   confluent kafka streams-group member-task-partitions describe <member> [flags]

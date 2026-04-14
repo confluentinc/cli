@@ -12,7 +12,7 @@ import (
 func (c *streamsGroupCommand) newStreamsGroupSubtopologyListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List Kafka stream group subtopologies.",
+		Short: "List Kafka streams group subtopologies.",
 		Args:  cobra.NoArgs,
 		RunE:  c.listStreamsGroupSubtopologies,
 	}

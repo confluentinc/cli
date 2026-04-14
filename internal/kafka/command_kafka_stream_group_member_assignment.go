@@ -18,7 +18,7 @@ func (c *streamsGroupCommand) newStreamsGroupMemberAssignmentCommand() *cobra.Co
 	cmd := &cobra.Command{
 		Use:     "member-assignment",
 		Aliases: []string{"ma"},
-		Short:   "Manage Kafka stream group member assignments.",
+		Short:   "Manage Kafka streams group member assignments.",
 	}
 
 	cmd.AddCommand(c.newStreamsGroupMemberAssignmentDescribeCommand())

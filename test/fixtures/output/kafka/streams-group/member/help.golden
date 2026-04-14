@@ -1,11 +1,11 @@
-Manage Kafka stream groups members.
+Manage Kafka streams group members.
 
 Usage:
   confluent kafka streams-group member [command]
 
 Available Commands:
-  describe    Describe a Kafka stream group member.
-  list        List Kafka stream group members.
+  describe    Describe a Kafka streams group member.
+  list        List Kafka streams group members.
 
 Global Flags:
   -h, --help            Show help for this command.

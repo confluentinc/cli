@@ -10,7 +10,7 @@ import (
 func (c *streamsGroupCommand) newStreamsGroupSubtopologyDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <subtopology>",
-		Short: "Describe a stream group subtopology.",
+		Short: "Describe a Kafka streams group subtopology.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.streamsGroupSubtopologyDescribe,
 	}

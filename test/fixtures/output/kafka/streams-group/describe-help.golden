@@ -1,4 +1,4 @@
-Describe a Kafka stream group.
+Describe a Kafka streams group.
 
 Usage:
   confluent kafka streams-group describe <group> [flags]

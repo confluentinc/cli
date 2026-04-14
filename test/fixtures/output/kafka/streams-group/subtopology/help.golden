@@ -1,11 +1,11 @@
-Manage Kafka stream group subtopologies.
+Manage Kafka streams group subtopologies.
 
 Usage:
   confluent kafka streams-group subtopology [command]
 
 Available Commands:
-  describe    Describe a stream group subtopology.
-  list        List Kafka stream group subtopologies.
+  describe    Describe a Kafka streams group subtopology.
+  list        List Kafka streams group subtopologies.
 
 Global Flags:
   -h, --help            Show help for this command.

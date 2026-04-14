@@ -10,7 +10,7 @@ import (
 func (c *streamsGroupCommand) newStreamsGroupMemberDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <member>",
-		Short: "Describe a Kafka stream group member.",
+		Short: "Describe a Kafka streams group member.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.streamsGroupMemberDescribe,
 	}

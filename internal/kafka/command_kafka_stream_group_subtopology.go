@@ -15,7 +15,7 @@ type streamsGroupSubtopologyOut struct {
 func (c *streamsGroupCommand) newStreamsGroupSubtopologyCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "subtopology",
-		Short: "Manage Kafka stream group subtopologies.",
+		Short: "Manage Kafka streams group subtopologies.",
 	}
 
 	cmd.AddCommand(c.newStreamsGroupSubtopologyDescribeCommand())

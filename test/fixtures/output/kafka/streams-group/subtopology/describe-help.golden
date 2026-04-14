@@ -1,4 +1,4 @@
-Describe a stream group subtopology.
+Describe a Kafka streams group subtopology.
 
 Usage:
   confluent kafka streams-group subtopology describe <subtopology> [flags]
