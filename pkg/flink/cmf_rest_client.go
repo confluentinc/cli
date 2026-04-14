@@ -231,7 +231,10 @@ func (cmfClient *CmfRestClient) UpdateApplication(ctx context.Context, environme
 // CreateEnvironment Create an environment.
 // Internally, since the call for Create and Update is the same, we check if the environment exists before creation.
 func (cmfClient *CmfRestClient) CreateEnvironment(ctx context.Context, postEnvironment cmfsdk.PostEnvironment) (cmfsdk.Environment, error) {
-	environmentName := postEnvironment.Name
+	environmentName := postEnvironment.GetName()
+	if environmentName == "" {
+		return cmfsdk.Environment{}, fmt.Errorf("environment name is required")
+	}
 	_, httpResponse, _ := cmfClient.EnvironmentsApi.GetEnvironment(ctx, environmentName).Execute()
 	// check if the environment exists by checking the status code
 	if httpResponse != nil && httpResponse.StatusCode == http.StatusOK {
@@ -281,10 +284,13 @@ func (cmfClient *CmfRestClient) ListEnvironments(ctx context.Context) ([]cmfsdk.
 	return environments, nil
 }
 
-// UpdateEnvironment Create an environment.
-// Internally, since the call for Create and Update is the same, we check if the environment exists before updation.
+// UpdateEnvironment updates an environment.
+// Internally, since the call for Create and Update is the same, we check if the environment exists before updating.
 func (cmfClient *CmfRestClient) UpdateEnvironment(ctx context.Context, postEnvironment cmfsdk.PostEnvironment) (cmfsdk.Environment, error) {
-	environmentName := postEnvironment.Name
+	environmentName := postEnvironment.GetName()
+	if environmentName == "" {
+		return cmfsdk.Environment{}, fmt.Errorf("environment name is required")
+	}
 	_, httpResponse, err := cmfClient.EnvironmentsApi.GetEnvironment(ctx, environmentName).Execute()
 	// check if the environment exists by checking the status code
 	if httpResponse != nil && httpResponse.StatusCode == http.StatusNotFound {
