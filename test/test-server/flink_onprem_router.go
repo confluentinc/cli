@@ -24,6 +24,8 @@ var flinkRoutes = []route{
 	{"/cmf/api/v1/environments/{envName}/statements/{stmtName}/savepoints/{savepointName}", handleCmfSavepoint},
 	{"/cmf/api/v1/detached-savepoints", handleCmfDetachedSavepoints},
 	{"/cmf/api/v1/detached-savepoints/{detachedSavepointName}", handleCmfDetachedSavepoint},
+	{"/cmf/api/v1/kubernetes-clusters", handleCmfKubernetesClusters},
+	{"/cmf/api/v1/kubernetes-clusters/{kubernetesClusterName}", handleCmfKubernetesCluster},
 }
 
 func NewFlinkOnPremRouter(t *testing.T) *mux.Router {

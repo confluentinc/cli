@@ -1259,3 +1259,98 @@ func handleCmfStatementExceptions(t *testing.T) http.HandlerFunc {
 		}
 	}
 }
+
+func createKubernetesCluster(name, lifecycleState, connectionState, k8sVersion string) cmfsdk.KubernetesCluster {
+	createdTime := "2025-04-01T10:00:00Z"
+	updatedTime := "2025-04-10T15:30:00Z"
+	heartbeat := time.Date(2025, time.April, 10, 15, 30, 0, 0, time.UTC)
+
+	return cmfsdk.KubernetesCluster{
+		ApiVersion: "cmf/v1",
+		Kind:       "KubernetesCluster",
+		Metadata: cmfsdk.KubernetesClusterMetadata{
+			Name:              name,
+			CreationTimestamp: &createdTime,
+			UpdateTimestamp:   &updatedTime,
+		},
+		Spec: cmfsdk.KubernetesClusterSpec{
+			LifecycleState: &lifecycleState,
+		},
+		Status: &cmfsdk.KubernetesClusterStatus{
+			State:                  &connectionState,
+			KubernetesVersion:      &k8sVersion,
+			LastHeartbeatTimestamp: &heartbeat,
+		},
+	}
+}
+
+// Handler for "cmf/api/v1/kubernetes-clusters"
+func handleCmfKubernetesClusters(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		switch r.Method {
+		case http.MethodGet:
+			page := r.URL.Query().Get("page")
+			clusters := []cmfsdk.KubernetesCluster{
+				createKubernetesCluster("cluster-1", "ACTIVE", "CONNECTED", "1.28.5"),
+				createKubernetesCluster("cluster-2", "ACTIVE", "DISCONNECTED", "1.27.3"),
+				createKubernetesCluster("cluster-3", "DECOMMISSIONED", "DECOMMISSIONED", "1.26.0"),
+			}
+
+			var size int64
+			clustersPage := map[string]interface{}{
+				"metadata": cmfsdk.KubernetesClustersPageMetadata{Size: &size},
+			}
+			if page == "0" || page == "" {
+				size = int64(len(clusters))
+				clustersPage["metadata"] = cmfsdk.KubernetesClustersPageMetadata{Size: &size}
+				clustersPage["items"] = clusters
+			} else {
+				clustersPage["items"] = []cmfsdk.KubernetesCluster{}
+			}
+			err := json.NewEncoder(w).Encode(clustersPage)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+// Handler for "cmf/api/v1/kubernetes-clusters/{kubernetesClusterName}"
+func handleCmfKubernetesCluster(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		clusterName := mux.Vars(r)["kubernetesClusterName"]
+
+		switch r.Method {
+		case http.MethodGet:
+			switch clusterName {
+			case "cluster-1":
+				err := json.NewEncoder(w).Encode(createKubernetesCluster("cluster-1", "ACTIVE", "CONNECTED", "1.28.5"))
+				require.NoError(t, err)
+			case "non-existent":
+				http.Error(w, `{"message":"Kubernetes cluster 'non-existent' not found"}`, http.StatusNotFound)
+			default:
+				err := json.NewEncoder(w).Encode(createKubernetesCluster(clusterName, "ACTIVE", "CONNECTED", "1.28.5"))
+				require.NoError(t, err)
+			}
+			return
+		case http.MethodPut:
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var cluster cmfsdk.KubernetesCluster
+			err = json.Unmarshal(reqBody, &cluster)
+			require.NoError(t, err)
+
+			updatedCluster := createKubernetesCluster(clusterName, cluster.Spec.GetLifecycleState(), "CONNECTED", "1.28.5")
+			err = json.NewEncoder(w).Encode(updatedCluster)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}

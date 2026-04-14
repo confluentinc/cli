@@ -135,6 +135,7 @@ type LocalEnvironment struct {
 	UpdatedTime              *time.Time                  `json:"updated_time,omitempty" yaml:"updated_time,omitempty"`
 	FlinkApplicationDefaults *map[string]interface{}     `json:"flinkApplicationDefaults,omitempty" yaml:"flinkApplicationDefaults,omitempty"`
 	KubernetesNamespace      string                      `json:"kubernetesNamespace" yaml:"kubernetesNamespace"`
+	KubernetesClusterName    string                      `json:"kubernetesClusterName,omitempty" yaml:"kubernetesClusterName,omitempty"`
 	ComputePoolDefaults      *map[string]interface{}     `json:"computePoolDefaults,omitempty" yaml:"computePoolDefaults,omitempty"`
 	StatementDefaults        *LocalAllStatementDefaults1 `json:"statementDefaults,omitempty" yaml:"statementDefaults,omitempty"`
 }

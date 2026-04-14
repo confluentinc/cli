@@ -25,6 +25,7 @@ func (c *command) newEnvironmentCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("kubernetes-namespace", "", "Kubernetes namespace to deploy Flink applications to.")
+	cmd.Flags().String("kubernetes-cluster-name", "", "Name of the Kubernetes cluster to bind this environment to.")
 	cmd.Flags().String("defaults", "", "JSON string defining the environment's Flink application defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).")
 	cmd.Flags().String("statement-defaults", "", "JSON string defining the environment's Flink statement defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).")
 	cmd.Flags().String("compute-pool-defaults", "", "JSON string defining the environment's Flink compute pool defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).")
@@ -92,12 +93,20 @@ func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	kubernetesClusterName, err := cmd.Flags().GetString("kubernetes-cluster-name")
+	if err != nil {
+		return err
+	}
+
 	var postEnvironment cmfsdk.PostEnvironment
 	postEnvironment.SetName(environmentName)
 	postEnvironment.FlinkApplicationDefaults = &defaultsApplicationParsed
 	postEnvironment.KubernetesNamespace = &kubernetesNamespace
 	postEnvironment.StatementDefaults = &defaultsStatementParsed
 	postEnvironment.ComputePoolDefaults = &defaultsComputePoolParsed
+	if kubernetesClusterName != "" {
+		postEnvironment.SetKubernetesClusterName(kubernetesClusterName)
+	}
 
 	sdkOutputEnvironment, err := client.CreateEnvironment(c.createContext(), postEnvironment)
 	if err != nil {
@@ -174,6 +183,7 @@ func printEnvironmentOutTable(cmd *cobra.Command, outputEnvironment cmfsdk.Envir
 	table.Add(&flinkEnvironmentOutput{
 		Name:                         outputEnvironment.Name,
 		KubernetesNamespace:          outputEnvironment.KubernetesNamespace,
+		KubernetesClusterName:        outputEnvironment.GetKubernetesClusterName(),
 		FlinkApplicationDefaults:     defaultsApplicationOutput,
 		ComputePoolDefaults:          defaultComputePoolOutput,
 		DetachedStatementDefaults:    defaultsDetachedStatementOutput,
