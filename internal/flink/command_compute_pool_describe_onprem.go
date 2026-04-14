@@ -52,7 +52,7 @@ func (c *command) computePoolDescribeOnPrem(cmd *cobra.Command, args []string) e
 			CreationTime: creationTime,
 			Name:         sdkComputePool.GetMetadata().Name,
 			Type:         sdkComputePool.GetSpec().Type,
-			Phase:        sdkComputePool.GetStatus().Phase,
+			Phase:        computePoolPhase(sdkComputePool.Status),
 		})
 		return table.Print()
 	}

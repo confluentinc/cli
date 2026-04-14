@@ -92,7 +92,7 @@ func (c *command) computePoolCreateOnPrem(cmd *cobra.Command, args []string) err
 			CreationTime: creationTime,
 			Name:         sdkComputePool.GetMetadata().Name,
 			Type:         sdkComputePool.GetSpec().Type,
-			Phase:        sdkOutputComputePool.GetStatus().Phase,
+			Phase:        computePoolPhase(sdkOutputComputePool.Status),
 		})
 		return table.Print()
 	}
