@@ -14,6 +14,7 @@ type consumerGroupOut struct {
 	IsSimple          bool   `human:"Simple" serialized:"is_simple"`
 	PartitionAssignor string `human:"Partition Assignor" serialized:"partition_assignor"`
 	State             string `human:"State" serialized:"state"`
+	ProtocolType      string `human:"Type,omitempty" serialized:"type,omitempty"`
 }
 
 func (c *consumerCommand) newGroupCommand(cfg *config.Config) *cobra.Command {

@@ -1,0 +1,5 @@
++----------------+------------------+
+| Kind           | KafkaStreamsTask |
+| Subtopology Id | subtopology-1    |
+| Partition Ids  | 0, 1, 2          |
++----------------+------------------+
