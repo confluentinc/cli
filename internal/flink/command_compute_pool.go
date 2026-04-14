@@ -1,11 +1,14 @@
 package flink
 
 import (
+	"encoding/json"
+
 	"github.com/spf13/cobra"
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 type computePoolOut struct {
@@ -60,6 +63,35 @@ func (c *command) validComputePoolArgs(cmd *cobra.Command, args []string) []stri
 	return c.autocompleteComputePools(cmd, args)
 }
 
+// extractComputePoolPhase extracts the phase string from the generic status map.
+// ComputePool.Status changed from *ComputePoolStatus to *map[string]map[string]interface{} in SDK v0.0.6.
+// The status is a nested map where phase is at status["phase"]["value"].
+func extractComputePoolPhase(pool cmfsdk.ComputePool) string {
+	if pool.Status == nil {
+		return ""
+	}
+	status := pool.GetStatus()
+	if phaseMap, ok := status["phase"]; ok {
+		if value, ok := phaseMap["value"].(string); ok {
+			return value
+		}
+	}
+	// Fallback: try re-parsing as a simpler type in case the API shape varies.
+	raw, err := json.Marshal(pool.Status)
+	if err != nil {
+		output.ErrPrintf(false, "Warning: failed to marshal compute pool status: %v\n", err)
+		return ""
+	}
+	var flat map[string]string
+	if err := json.Unmarshal(raw, &flat); err == nil {
+		if phase, ok := flat["phase"]; ok {
+			return phase
+		}
+	}
+	output.ErrPrintf(false, "Warning: compute pool has status but phase could not be extracted\n")
+	return ""
+}
+
 func convertSdkComputePoolToLocalComputePool(sdkComputePool cmfsdk.ComputePool) LocalComputePool {
 	localPool := LocalComputePool{
 		ApiVersion: sdkComputePool.ApiVersion,
@@ -77,9 +109,9 @@ func convertSdkComputePoolToLocalComputePool(sdkComputePool cmfsdk.ComputePool) 
 		},
 	}
 
-	if sdkComputePool.Status != nil {
+	if phase := extractComputePoolPhase(sdkComputePool); phase != "" {
 		localPool.Status = &LocalComputePoolStatus{
-			Phase: sdkComputePool.Status.Phase,
+			Phase: phase,
 		}
 	}
 
