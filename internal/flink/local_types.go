@@ -2,6 +2,34 @@ package flink
 
 import "time"
 
+type LocalKubernetesCluster struct {
+	ApiVersion string                         `json:"apiVersion" yaml:"apiVersion"`
+	Kind       string                         `json:"kind" yaml:"kind"`
+	Metadata   LocalKubernetesClusterMetadata `json:"metadata" yaml:"metadata"`
+	Spec       LocalKubernetesClusterSpec     `json:"spec" yaml:"spec"`
+	Status     *LocalKubernetesClusterStatus  `json:"status,omitempty" yaml:"status,omitempty"`
+}
+
+type LocalKubernetesClusterMetadata struct {
+	Name              string             `json:"name" yaml:"name"`
+	CreationTimestamp *string            `json:"creationTimestamp,omitempty" yaml:"creationTimestamp,omitempty"`
+	UpdateTimestamp   *string            `json:"updateTimestamp,omitempty" yaml:"updateTimestamp,omitempty"`
+	Uid               *string            `json:"uid,omitempty" yaml:"uid,omitempty"`
+	Labels            *map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
+	Annotations       *map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
+}
+
+type LocalKubernetesClusterSpec struct {
+	LifecycleState *string `json:"lifecycleState,omitempty" yaml:"lifecycleState,omitempty"`
+}
+
+type LocalKubernetesClusterStatus struct {
+	State                  *string    `json:"state,omitempty" yaml:"state,omitempty"`
+	Message                *string    `json:"message,omitempty" yaml:"message,omitempty"`
+	LastHeartbeatTimestamp *time.Time `json:"lastHeartbeatTimestamp,omitempty" yaml:"lastHeartbeatTimestamp,omitempty"`
+	KubernetesVersion      *string    `json:"kubernetesVersion,omitempty" yaml:"kubernetesVersion,omitempty"`
+}
+
 type LocalAllStatementDefaults1 struct {
 	Detached    *LocalStatementDefaults `json:"detached,omitempty" yaml:"detached,omitempty"`
 	Interactive *LocalStatementDefaults `json:"interactive,omitempty" yaml:"interactive,omitempty"`
@@ -107,6 +135,7 @@ type LocalEnvironment struct {
 	UpdatedTime              *time.Time                  `json:"updated_time,omitempty" yaml:"updated_time,omitempty"`
 	FlinkApplicationDefaults *map[string]interface{}     `json:"flinkApplicationDefaults,omitempty" yaml:"flinkApplicationDefaults,omitempty"`
 	KubernetesNamespace      string                      `json:"kubernetesNamespace" yaml:"kubernetesNamespace"`
+	KubernetesClusterName    string                      `json:"kubernetesClusterName,omitempty" yaml:"kubernetesClusterName,omitempty"`
 	ComputePoolDefaults      *map[string]interface{}     `json:"computePoolDefaults,omitempty" yaml:"computePoolDefaults,omitempty"`
 	StatementDefaults        *LocalAllStatementDefaults1 `json:"statementDefaults,omitempty" yaml:"statementDefaults,omitempty"`
 }
