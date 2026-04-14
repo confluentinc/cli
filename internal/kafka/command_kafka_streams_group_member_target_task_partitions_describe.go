@@ -49,7 +49,7 @@ func (c *streamsGroupCommand) streamsGroupMemberTargetAssignmentTaskPartitionsDe
 		return err
 	}
 
-	assignmentsType, err := cmd.Flags().GetString("assignment-type")
+	assignmentType, err := cmd.Flags().GetString("assignment-type")
 	if err != nil {
 		return err
 	}
@@ -60,13 +60,13 @@ func (c *streamsGroupCommand) streamsGroupMemberTargetAssignmentTaskPartitionsDe
 	}
 
 	taskPartitions, err := kafkaREST.CloudClient.
-		GetKafkaStreamsGroupMemberTargetAssignmentTaskPartitions(groupId, memberId, assignmentsType, subtopologyId)
+		GetKafkaStreamsGroupMemberTargetAssignmentTaskPartitions(groupId, memberId, assignmentType, subtopologyId)
 	if err != nil {
 		return err
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(&streamTaskOut{
+	table.Add(&streamsTaskOut{
 		Kind:          taskPartitions.GetKind(),
 		SubtopologyId: taskPartitions.GetSubtopologyId(),
 		PartitionIds:  taskPartitions.GetPartitionIds(),

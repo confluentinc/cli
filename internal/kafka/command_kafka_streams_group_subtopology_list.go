@@ -61,7 +61,7 @@ func (c *streamsGroupCommand) getStreamsGroupSubtopologies(cmd *cobra.Command) (
 		return nil, err
 	}
 
-	resp, err := kafkaREST.CloudClient.ListKafkaStreamsGroupMemberSubtopologies(groupId)
+	resp, err := kafkaREST.CloudClient.ListKafkaStreamsGroupSubtopologies(groupId)
 	if err != nil {
 		return nil, err
 	}

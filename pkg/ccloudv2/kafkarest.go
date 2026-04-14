@@ -433,8 +433,8 @@ func (c *KafkaRestClient) GetKafkaStreamsGroupMemberTargetAssignment(groupId, me
 	return res, nil
 }
 
-func (c *KafkaRestClient) GetKafkaStreamsGroupMemberAssignmentTaskPartitions(groupId, memberId, assignmentsType, subtopologyId string) (kafkarestv3.StreamsTaskData, error) {
-	res, httpResp, err := c.StreamsGroupV3Api.GetKafkaStreamsGroupMemberAssignmentTaskPartitions(c.kafkaRestApiContext(), c.ClusterId, groupId, memberId, assignmentsType, subtopologyId).Execute()
+func (c *KafkaRestClient) GetKafkaStreamsGroupMemberAssignmentTaskPartitions(groupId, memberId, assignmentType, subtopologyId string) (kafkarestv3.StreamsTaskData, error) {
+	res, httpResp, err := c.StreamsGroupV3Api.GetKafkaStreamsGroupMemberAssignmentTaskPartitions(c.kafkaRestApiContext(), c.ClusterId, groupId, memberId, assignmentType, subtopologyId).Execute()
 	if err != nil {
 		return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 	}
@@ -459,8 +459,8 @@ func (c *KafkaRestClient) GetKafkaStreamsGroupSubtopology(groupId, topology stri
 	return res, nil
 }
 
-func (c *KafkaRestClient) GetKafkaStreamsGroupMemberTargetAssignmentTaskPartitions(groupId, memberId, assignmentsType, subtopologyId string) (kafkarestv3.StreamsTaskData, error) {
-	res, httpResp, err := c.StreamsGroupV3Api.GetKafkaStreamsGroupMemberTargetAssignmentTaskPartitions(c.kafkaRestApiContext(), c.ClusterId, groupId, memberId, assignmentsType, subtopologyId).Execute()
+func (c *KafkaRestClient) GetKafkaStreamsGroupMemberTargetAssignmentTaskPartitions(groupId, memberId, assignmentType, subtopologyId string) (kafkarestv3.StreamsTaskData, error) {
+	res, httpResp, err := c.StreamsGroupV3Api.GetKafkaStreamsGroupMemberTargetAssignmentTaskPartitions(c.kafkaRestApiContext(), c.ClusterId, groupId, memberId, assignmentType, subtopologyId).Execute()
 	if err != nil {
 		return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 	}
@@ -472,7 +472,7 @@ func (c *KafkaRestClient) GetKafkaStreamsGroupMemberTargetAssignmentTaskPartitio
 	return res, nil
 }
 
-func (c *KafkaRestClient) ListKafkaStreamsGroup() (kafkarestv3.StreamsGroupDataList, error) {
+func (c *KafkaRestClient) ListKafkaStreamsGroups() (kafkarestv3.StreamsGroupDataList, error) {
 	res, httpResp, err := c.StreamsGroupV3Api.ListKafkaStreamsGroups(c.kafkaRestApiContext(), c.ClusterId).Execute()
 	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
@@ -492,7 +492,7 @@ func (c *KafkaRestClient) ListKafkaStreamsGroupMemberTargetAssignmentTasks(group
 	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
-func (c *KafkaRestClient) ListKafkaStreamsGroupMemberSubtopologies(groupId string) (kafkarestv3.StreamsGroupSubtopologyDataList, error) {
+func (c *KafkaRestClient) ListKafkaStreamsGroupSubtopologies(groupId string) (kafkarestv3.StreamsGroupSubtopologyDataList, error) {
 	res, httpResp, err := c.StreamsGroupV3Api.ListKafkaStreamsGroupSubtopologies(c.kafkaRestApiContext(), c.ClusterId, groupId).Execute()
 	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }

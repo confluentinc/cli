@@ -14,7 +14,7 @@ func (c *streamsGroupCommand) newStreamsGroupListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List Kafka streams groups.",
 		Args:  cobra.NoArgs,
-		RunE:  c.listStreamsGroup,
+		RunE:  c.listStreamsGroups,
 	}
 
 	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
@@ -26,7 +26,7 @@ func (c *streamsGroupCommand) newStreamsGroupListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *streamsGroupCommand) listStreamsGroup(cmd *cobra.Command, _ []string) error {
+func (c *streamsGroupCommand) listStreamsGroups(cmd *cobra.Command, _ []string) error {
 	groups, err := c.getStreamsGroups(cmd)
 	if err != nil {
 		return err
@@ -56,7 +56,7 @@ func (c *streamsGroupCommand) getStreamsGroups(cmd *cobra.Command) ([]kafkarestv
 		return nil, err
 	}
 
-	groups, err := kafkaREST.CloudClient.ListKafkaStreamsGroup()
+	groups, err := kafkaREST.CloudClient.ListKafkaStreamsGroups()
 	if err != nil {
 		return nil, err
 	}

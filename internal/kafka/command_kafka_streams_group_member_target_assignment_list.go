@@ -9,12 +9,12 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *streamsGroupCommand) newStreamsGroupMemberAssignmentListCommand() *cobra.Command {
+func (c *streamsGroupCommand) newStreamsGroupMemberTargetAssignmentTaskListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List Kafka streams group member assignment tasks.",
+		Short: "List Kafka streams group member target assignment tasks.",
 		Args:  cobra.NoArgs,
-		RunE:  c.listStreamsGroupMemberAssignmentTasks,
+		RunE:  c.listStreamsGroupMemberTargetAssignmentTasks,
 	}
 
 	cmd.Flags().String("group", "", "Group Id.")
@@ -38,15 +38,15 @@ func (c *streamsGroupCommand) newStreamsGroupMemberAssignmentListCommand() *cobr
 	return cmd
 }
 
-func (c *streamsGroupCommand) listStreamsGroupMemberAssignmentTasks(cmd *cobra.Command, _ []string) error {
-	tasks, err := c.getStreamsGroupMemberAssignmentTasks(cmd)
+func (c *streamsGroupCommand) listStreamsGroupMemberTargetAssignmentTasks(cmd *cobra.Command, _ []string) error {
+	tasks, err := c.getStreamsGroupMemberTargetAssignmentTasks(cmd)
 	if err != nil {
 		return err
 	}
 
 	list := output.NewList(cmd)
 	for _, task := range tasks {
-		list.Add(&streamTaskOut{
+		list.Add(&streamsTaskOut{
 			Kind:          task.GetKind(),
 			SubtopologyId: task.GetSubtopologyId(),
 			PartitionIds:  task.GetPartitionIds(),
@@ -56,7 +56,7 @@ func (c *streamsGroupCommand) listStreamsGroupMemberAssignmentTasks(cmd *cobra.C
 	return list.Print()
 }
 
-func (c *streamsGroupCommand) getStreamsGroupMemberAssignmentTasks(cmd *cobra.Command) ([]kafkarestv3.StreamsTaskData, error) {
+func (c *streamsGroupCommand) getStreamsGroupMemberTargetAssignmentTasks(cmd *cobra.Command) ([]kafkarestv3.StreamsTaskData, error) {
 	groupId, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return nil, err
@@ -77,7 +77,7 @@ func (c *streamsGroupCommand) getStreamsGroupMemberAssignmentTasks(cmd *cobra.Co
 		return nil, err
 	}
 
-	resp, err := kafkaREST.CloudClient.ListKafkaStreamsGroupMemberAssignmentTasks(groupId, memberId, assignmentType)
+	resp, err := kafkaREST.CloudClient.ListKafkaStreamsGroupMemberTargetAssignmentTasks(groupId, memberId, assignmentType)
 	if err != nil {
 		return nil, err
 	}
