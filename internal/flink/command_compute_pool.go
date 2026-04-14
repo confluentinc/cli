@@ -60,6 +60,22 @@ func (c *command) validComputePoolArgs(cmd *cobra.Command, args []string) []stri
 	return c.autocompleteComputePools(cmd, args)
 }
 
+// extractComputePoolPhase extracts the phase string from the generic status map.
+// ComputePool.Status changed from *ComputePoolStatus to *map[string]map[string]interface{} in SDK v0.0.6.
+// The status is a nested map where phase is at status["phase"]["value"].
+func extractComputePoolPhase(pool cmfsdk.ComputePool) string {
+	if pool.Status == nil {
+		return ""
+	}
+	status := pool.GetStatus()
+	if phaseMap, ok := status["phase"]; ok {
+		if value, ok := phaseMap["value"].(string); ok {
+			return value
+		}
+	}
+	return ""
+}
+
 func convertSdkComputePoolToLocalComputePool(sdkComputePool cmfsdk.ComputePool) LocalComputePool {
 	localPool := LocalComputePool{
 		ApiVersion: sdkComputePool.ApiVersion,
@@ -77,9 +93,9 @@ func convertSdkComputePoolToLocalComputePool(sdkComputePool cmfsdk.ComputePool) 
 		},
 	}
 
-	if sdkComputePool.Status != nil {
+	if phase := extractComputePoolPhase(sdkComputePool); phase != "" {
 		localPool.Status = &LocalComputePoolStatus{
-			Phase: sdkComputePool.Status.Phase,
+			Phase: phase,
 		}
 	}
 
