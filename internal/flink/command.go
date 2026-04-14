@@ -40,6 +40,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newCatalogCommand())
 	cmd.AddCommand(c.newDetachedSavepointCommand())
 	cmd.AddCommand(c.newEnvironmentCommand())
+	cmd.AddCommand(c.newKubernetesClusterCommand())
 	cmd.AddCommand(c.newSavepointCommand())
 
 	// On-Prem and Cloud Commands

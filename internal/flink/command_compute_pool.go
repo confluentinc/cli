@@ -79,9 +79,26 @@ func convertSdkComputePoolToLocalComputePool(sdkComputePool cmfsdk.ComputePool) 
 
 	if sdkComputePool.Status != nil {
 		localPool.Status = &LocalComputePoolStatus{
-			Phase: sdkComputePool.Status.Phase,
+			Phase: computePoolPhase(sdkComputePool.Status),
 		}
 	}
 
 	return localPool
+}
+
+// computePoolPhase extracts the phase string from ComputePool.Status.
+// SDK v0.0.6 incorrectly generates Status as *map[string]map[string]interface{}
+// due to additionalProperties: true in the spec; the real API returns a flat
+// {"phase": "RUNNING"} object which cannot be decoded into that type.
+// Until the SDK is fixed upstream, phase will be empty when calling the real API.
+func computePoolPhase(status *map[string]map[string]interface{}) string {
+	if status == nil {
+		return ""
+	}
+	if phaseMap, ok := (*status)["phase"]; ok {
+		if val, ok := phaseMap["value"].(string); ok {
+			return val
+		}
+	}
+	return ""
 }

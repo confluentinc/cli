@@ -188,8 +188,8 @@ func createSavepoint(name string) cmfsdk.Savepoint {
 func createComputePool(poolName, phase string) cmfsdk.ComputePool {
 	timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
 
-	status := cmfsdk.ComputePoolStatus{
-		Phase: phase,
+	status := map[string]map[string]interface{}{
+		"phase": {"value": phase},
 	}
 
 	return cmfsdk.ComputePool{
@@ -364,14 +364,14 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 			err = json.Unmarshal(reqBody, &environment)
 			require.NoError(t, err)
 
-			if strings.Contains(environment.Name, "failure") {
+			if strings.Contains(environment.GetName(), "failure") {
 				http.Error(w, "", http.StatusUnprocessableEntity)
 				return
 			}
 
 			// Already existing environment: update
-			if environment.Name == "default" || environment.Name == "test" {
-				outputEnvironment := createEnvironment(environment.Name, environment.Name+"-namespace")
+			if environment.GetName() == "default" || environment.GetName() == "test" {
+				outputEnvironment := createEnvironment(environment.GetName(), environment.GetName()+"-namespace")
 				// This is a dummy update - only the defaults can be updated anyway.
 				outputEnvironment.FlinkApplicationDefaults = environment.FlinkApplicationDefaults
 				outputEnvironment.ComputePoolDefaults = environment.ComputePoolDefaults
@@ -382,7 +382,7 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 			}
 
 			// New environment: create
-			outputEnvironment := createEnvironment(environment.Name, environment.GetKubernetesNamespace())
+			outputEnvironment := createEnvironment(environment.GetName(), environment.GetKubernetesNamespace())
 			outputEnvironment.FlinkApplicationDefaults = environment.FlinkApplicationDefaults
 			outputEnvironment.ComputePoolDefaults = environment.ComputePoolDefaults
 			outputEnvironment.StatementDefaults = environment.StatementDefaults
