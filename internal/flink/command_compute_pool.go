@@ -1,14 +1,11 @@
 package flink
 
 import (
-	"encoding/json"
-
 	"github.com/spf13/cobra"
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/config"
-	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 type computePoolOut struct {
@@ -76,19 +73,6 @@ func extractComputePoolPhase(pool cmfsdk.ComputePool) string {
 			return value
 		}
 	}
-	// Fallback: try re-parsing as a simpler type in case the API shape varies.
-	raw, err := json.Marshal(pool.Status)
-	if err != nil {
-		output.ErrPrintf(false, "Warning: failed to marshal compute pool status: %v\n", err)
-		return ""
-	}
-	var flat map[string]string
-	if err := json.Unmarshal(raw, &flat); err == nil {
-		if phase, ok := flat["phase"]; ok {
-			return phase
-		}
-	}
-	output.ErrPrintf(false, "Warning: compute pool has status but phase could not be extracted\n")
 	return ""
 }
 
