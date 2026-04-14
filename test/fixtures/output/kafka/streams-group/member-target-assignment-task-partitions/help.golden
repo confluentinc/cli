@@ -3,6 +3,9 @@ Manage stream group target task partitions.
 Usage:
   confluent kafka streams-group member-target-assignment-task-partitions [command]
 
+Aliases:
+  member-target-assignment-task-partitions, mtatp
+
 Available Commands:
   describe    Describe stream group target task partitions.
 

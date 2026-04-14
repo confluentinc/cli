@@ -6,8 +6,9 @@ import (
 
 func (c *streamsGroupCommand) newStreamsGroupMemberTargetAssignmentTaskPartitionsCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "member-target-assignment-task-partitions",
-		Short: "Manage stream group target task partitions.",
+		Use:     "member-target-assignment-task-partitions",
+		Aliases: []string{"mtatp"},
+		Short:   "Manage stream group target task partitions.",
 	}
 
 	cmd.AddCommand(c.newStreamsGroupMemberTargetAssignmentTaskPartitionsDescribeCommand())

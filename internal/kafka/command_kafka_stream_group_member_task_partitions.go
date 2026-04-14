@@ -12,8 +12,9 @@ type streamTaskOut struct {
 
 func (c *streamsGroupCommand) newStreamsGroupMemberTaskPartitionsCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "member-task-partitions",
-		Short: "Manage Kafka stream group member task partitions.",
+		Use:     "member-task-partitions",
+		Aliases: []string{"mtp"},
+		Short:   "Manage Kafka stream group member task partitions.",
 	}
 
 	cmd.AddCommand(c.newStreamsGroupMemberTaskPartitionsDescribeCommand())

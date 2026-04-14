@@ -3,6 +3,9 @@ Manage Kafka stream group member task partitions.
 Usage:
   confluent kafka streams-group member-task-partitions [command]
 
+Aliases:
+  member-task-partitions, mtp
+
 Available Commands:
   describe    Describe stream group member task partitions.
 
