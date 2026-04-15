@@ -135,6 +135,7 @@ var ccloudV2Routes = []route{
 	{"/usm/v1/connect-clusters", handleUsmConnectClusters},
 	{"/usm/v1/connect-clusters/{id}", handleUsmConnectCluster},
 	{"/v2/metrics/cloud/query", handleMetricsQuery},
+	// cli-tfgen:cli-api-routes
 }
 
 func NewV2Router(t *testing.T) *mux.Router {
