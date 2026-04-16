@@ -1,5 +1,6 @@
 egress-privatelink
 ingress-privatelink
 private-network-interface
+ingress-private-service-connect
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp

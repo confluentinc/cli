@@ -2386,6 +2386,16 @@ func getGateway(id, environment, name, specConfigKind, statusCloudGatewayKind st
 			Kind:   specConfigKind,
 			Region: "eastus",
 		}))
+	case "AzureIngressPrivateLinkGatewaySpec":
+		gateway.Spec.SetConfig(networkinggatewayv1.NetworkingV1AzureIngressPrivateLinkGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkinggatewayv1.NetworkingV1AzureIngressPrivateLinkGatewaySpec{
+			Kind:   specConfigKind,
+			Region: "eastus2",
+		}))
+	case "GcpIngressPrivateServiceConnectGatewaySpec":
+		gateway.Spec.SetConfig(networkinggatewayv1.NetworkingV1GcpIngressPrivateServiceConnectGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkinggatewayv1.NetworkingV1GcpIngressPrivateServiceConnectGatewaySpec{
+			Kind:   specConfigKind,
+			Region: "us-central1",
+		}))
 	case "GcpPeeringGatewaySpec":
 		gateway.Spec.SetConfig(networkinggatewayv1.NetworkingV1GcpPeeringGatewaySpecAsNetworkingV1GatewaySpecConfigOneOf(&networkinggatewayv1.NetworkingV1GcpPeeringGatewaySpec{
 			Kind:   specConfigKind,
@@ -2418,6 +2428,17 @@ func getGateway(id, environment, name, specConfigKind, statusCloudGatewayKind st
 		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatus{
 			Kind:    statusCloudGatewayKind,
 			Project: networkinggatewayv1.PtrString("project-12345"),
+		}))
+	case "AzureIngressPrivateLinkGatewayStatus":
+		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1AzureIngressPrivateLinkGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1AzureIngressPrivateLinkGatewayStatus{
+			Kind:                         statusCloudGatewayKind,
+			PrivateLinkServiceAlias:      networkinggatewayv1.PtrString("azure-ingress-pl.eastus2.azure.privatelinkservice"),
+			PrivateLinkServiceResourceId: networkinggatewayv1.PtrString("/subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/rg-1/providers/Microsoft.Network/privateLinkServices/azure-ingress-pl"),
+		}))
+	case "GcpIngressPrivateServiceConnectGatewayStatus":
+		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpIngressPrivateServiceConnectGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpIngressPrivateServiceConnectGatewayStatus{
+			Kind: statusCloudGatewayKind,
+			PrivateServiceConnectServiceAttachment: networkinggatewayv1.PtrString("projects/traffic-prod/regions/us-central1/serviceAttachments/plattg-abc123-service-attachment"),
 		}))
 	case "GcpPeeringGatewayStatus":
 		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatus{
@@ -2458,6 +2479,14 @@ func handleNetworkingGatewayGet(t *testing.T, id, environment string) http.Handl
 			require.NoError(t, err)
 		case "gw-88888":
 			record := getGateway(id, environment, "my-aws-ingress-gateway", "AwsIngressPrivateLinkGatewaySpec", "AwsIngressPrivateLinkGatewayStatus")
+			err := json.NewEncoder(w).Encode(record)
+			require.NoError(t, err)
+		case "gw-99999":
+			record := getGateway(id, environment, "my-gcp-ingress-gateway", "GcpIngressPrivateServiceConnectGatewaySpec", "GcpIngressPrivateServiceConnectGatewayStatus")
+			err := json.NewEncoder(w).Encode(record)
+			require.NoError(t, err)
+		case "gw-11111":
+			record := getGateway(id, environment, "my-azure-ingress-gateway", "AzureIngressPrivateLinkGatewaySpec", "AzureIngressPrivateLinkGatewayStatus")
 			err := json.NewEncoder(w).Encode(record)
 			require.NoError(t, err)
 		}
@@ -2508,10 +2537,21 @@ func handleNetworkingGatewayPost(t *testing.T) http.HandlerFunc {
 				Kind:         "AzureEgressPrivateLinkGatewayStatus",
 				Subscription: networkingv1.PtrString("aa000000-a000-0a00-00aa-0000aaa0a0a0"),
 			}))
+		} else if body.Spec.Config.NetworkingV1AzureIngressPrivateLinkGatewaySpec != nil {
+			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1AzureIngressPrivateLinkGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1AzureIngressPrivateLinkGatewayStatus{
+				Kind:                         "AzureIngressPrivateLinkGatewayStatus",
+				PrivateLinkServiceAlias:      networkingv1.PtrString("azure-ingress-pl.eastus2.azure.privatelinkservice"),
+				PrivateLinkServiceResourceId: networkingv1.PtrString("/subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/rg-1/providers/Microsoft.Network/privateLinkServices/azure-ingress-pl"),
+			}))
 		} else if body.Spec.Config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec != nil {
 			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpEgressPrivateServiceConnectGatewayStatus{
 				Kind:    "GcpEgressPrivateServiceConnectGatewayStatus",
 				Project: networkingv1.PtrString("project-12345"),
+			}))
+		} else if body.Spec.Config.NetworkingV1GcpIngressPrivateServiceConnectGatewaySpec != nil {
+			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpIngressPrivateServiceConnectGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpIngressPrivateServiceConnectGatewayStatus{
+				Kind: "GcpIngressPrivateServiceConnectGatewayStatus",
+				PrivateServiceConnectServiceAttachment: networkingv1.PtrString("projects/traffic-prod/regions/us-central1/serviceAttachments/plattg-abc123-service-attachment"),
 			}))
 		} else if body.Spec.Config.NetworkingV1GcpPeeringGatewaySpec != nil {
 			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpPeeringGatewayStatus{
@@ -2542,8 +2582,10 @@ func handleNetworkingGatewayList(t *testing.T, environment string) http.HandlerF
 		gatewaySix := getGateway("gw-13570", environment, "my-gcp-peering-gateway", "GcpPeeringGatewaySpec", "GcpPeeringGatewayStatus")
 		gatewaySeven := getGateway("gw-07531", environment, "my-gcp-gateway", "GcpEgressPrivateServiceConnectGatewaySpec", "GcpEgressPrivateServiceConnectGatewayStatus")
 		gatewayEight := getGateway("gw-88888", environment, "my-aws-ingress-gateway", "AwsIngressPrivateLinkGatewaySpec", "AwsIngressPrivateLinkGatewayStatus")
+		gatewayNine := getGateway("gw-99999", environment, "my-gcp-ingress-gateway", "GcpIngressPrivateServiceConnectGatewaySpec", "GcpIngressPrivateServiceConnectGatewayStatus")
+		gatewayTen := getGateway("gw-11111", environment, "my-azure-ingress-gateway", "AzureIngressPrivateLinkGatewaySpec", "AzureIngressPrivateLinkGatewayStatus")
 
-		gatewayList := networkinggatewayv1.NetworkingV1GatewayList{Data: []networkinggatewayv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour, gatewayFive, gatewaySix, gatewaySeven, gatewayEight}}
+		gatewayList := networkinggatewayv1.NetworkingV1GatewayList{Data: []networkinggatewayv1.NetworkingV1Gateway{gatewayOne, gatewayTwo, gatewayThree, gatewayFour, gatewayFive, gatewaySix, gatewaySeven, gatewayEight, gatewayNine, gatewayTen}}
 		gatewayList.Data = filterGatewayList(gatewayList.Data, gatewayTypes, ids, regions, displayNames, phases)
 		setPageToken(&gatewayList, &gatewayList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(gatewayList)
@@ -2616,6 +2658,9 @@ func getGatewayTypeFromSpec(gateway networkinggatewayv1.NetworkingV1Gateway) str
 	if config.NetworkingV1AzureEgressPrivateLinkGatewaySpec != nil {
 		return "AzureEgressPrivateLink"
 	}
+	if config.NetworkingV1AzureIngressPrivateLinkGatewaySpec != nil {
+		return "AzureIngressPrivateLink"
+	}
 	if config.NetworkingV1AzurePeeringGatewaySpec != nil {
 		return "AzurePeering"
 	}
@@ -2624,6 +2669,9 @@ func getGatewayTypeFromSpec(gateway networkinggatewayv1.NetworkingV1Gateway) str
 	}
 	if config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec != nil {
 		return "GcpEgressPrivateServiceConnect"
+	}
+	if config.NetworkingV1GcpIngressPrivateServiceConnectGatewaySpec != nil {
+		return "GcpIngressPrivateServiceConnect"
 	}
 	return ""
 }
@@ -2649,6 +2697,9 @@ func getRegionFromSpec(gateway networkinggatewayv1.NetworkingV1Gateway) string {
 	if config.NetworkingV1AzureEgressPrivateLinkGatewaySpec != nil {
 		return config.NetworkingV1AzureEgressPrivateLinkGatewaySpec.GetRegion()
 	}
+	if config.NetworkingV1AzureIngressPrivateLinkGatewaySpec != nil {
+		return config.NetworkingV1AzureIngressPrivateLinkGatewaySpec.GetRegion()
+	}
 	if config.NetworkingV1AzurePeeringGatewaySpec != nil {
 		return config.NetworkingV1AzurePeeringGatewaySpec.GetRegion()
 	}
@@ -2657,6 +2708,9 @@ func getRegionFromSpec(gateway networkinggatewayv1.NetworkingV1Gateway) string {
 	}
 	if config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec != nil {
 		return config.NetworkingV1GcpEgressPrivateServiceConnectGatewaySpec.GetRegion()
+	}
+	if config.NetworkingV1GcpIngressPrivateServiceConnectGatewaySpec != nil {
+		return config.NetworkingV1GcpIngressPrivateServiceConnectGatewaySpec.GetRegion()
 	}
 	return ""
 }
@@ -3099,6 +3153,63 @@ func getAwsIngressAccessPoint(id, environment, name string) networkingaccesspoin
 	}
 }
 
+func getAzureIngressAccessPoint(id, environment, name string) networkingaccesspointv1.NetworkingV1AccessPoint {
+	return networkingaccesspointv1.NetworkingV1AccessPoint{
+		Id: networkingaccesspointv1.PtrString(id),
+		Spec: &networkingaccesspointv1.NetworkingV1AccessPointSpec{
+			DisplayName: networkingaccesspointv1.PtrString(name),
+			Config: &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
+				NetworkingV1AzureIngressPrivateLinkEndpoint: &networkingaccesspointv1.NetworkingV1AzureIngressPrivateLinkEndpoint{
+					Kind:                      "AzureIngressPrivateLinkEndpoint",
+					PrivateEndpointResourceId: "/subscriptions/0000000/resourceGroups/resourceGroupName/providers/Microsoft.Network/privateEndpoints/privateEndpointName",
+				},
+			},
+			Environment: &networkingaccesspointv1.ObjectReference{Id: environment},
+			Gateway:     &networkingaccesspointv1.ObjectReference{Id: "gw-11111"},
+		},
+		Status: &networkingaccesspointv1.NetworkingV1AccessPointStatus{
+			Phase: "READY",
+			Config: &networkingaccesspointv1.NetworkingV1AccessPointStatusConfigOneOf{
+				NetworkingV1AzureIngressPrivateLinkEndpointStatus: &networkingaccesspointv1.NetworkingV1AzureIngressPrivateLinkEndpointStatus{
+					Kind:                         "AzureIngressPrivateLinkEndpointStatus",
+					PrivateLinkServiceAlias:      "azure-pls-alias.eastus.azure.privatelinkservice",
+					PrivateLinkServiceResourceId: "/subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName",
+					PrivateEndpointResourceId:    "/subscriptions/0000000/resourceGroups/resourceGroupName/providers/Microsoft.Network/privateEndpoints/privateEndpointName",
+					DnsDomain:                   networkingaccesspointv1.PtrString("ap11111.eastus.azure.accesspoint.confluent.cloud"),
+				},
+			},
+		},
+	}
+}
+
+func getGcpIngressAccessPoint(id, environment, name string) networkingaccesspointv1.NetworkingV1AccessPoint {
+	return networkingaccesspointv1.NetworkingV1AccessPoint{
+		Id: networkingaccesspointv1.PtrString(id),
+		Spec: &networkingaccesspointv1.NetworkingV1AccessPointSpec{
+			DisplayName: networkingaccesspointv1.PtrString(name),
+			Config: &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
+				NetworkingV1GcpIngressPrivateServiceConnectEndpoint: &networkingaccesspointv1.NetworkingV1GcpIngressPrivateServiceConnectEndpoint{
+					Kind:                              "GcpIngressPrivateServiceConnectEndpoint",
+					PrivateServiceConnectConnectionId: "111111111111111111",
+				},
+			},
+			Environment: &networkingaccesspointv1.ObjectReference{Id: environment},
+			Gateway:     &networkingaccesspointv1.ObjectReference{Id: "gw-99999"},
+		},
+		Status: &networkingaccesspointv1.NetworkingV1AccessPointStatus{
+			Phase: "READY",
+			Config: &networkingaccesspointv1.NetworkingV1AccessPointStatusConfigOneOf{
+				NetworkingV1GcpIngressPrivateServiceConnectEndpointStatus: &networkingaccesspointv1.NetworkingV1GcpIngressPrivateServiceConnectEndpointStatus{
+					Kind:                                   "GcpIngressPrivateServiceConnectEndpointStatus",
+					PrivateServiceConnectServiceAttachment: "projects/projectName/regions/us-central1/serviceAttachments/serviceAttachmentName",
+					PrivateServiceConnectConnectionId:      "111111111111111111",
+					DnsDomain:                              networkingaccesspointv1.PtrString("ap22222.us-central1.gcp.accesspoint.confluent.cloud"),
+				},
+			},
+		},
+	}
+}
+
 func handleNetworkingAccessPointGet(t *testing.T, id, environment string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var accessPoint networkingaccesspointv1.NetworkingV1AccessPoint
@@ -3115,6 +3226,10 @@ func handleNetworkingAccessPointGet(t *testing.T, id, environment string) http.H
 			accessPoint = getGcpEgressAccessPoint(id, environment, "my-gcp-egress-access-point")
 		case "ap-99999":
 			accessPoint = getAwsIngressAccessPoint(id, environment, "my-aws-ingress-access-point")
+		case "ap-11111":
+			accessPoint = getAzureIngressAccessPoint(id, environment, "my-azure-ingress-access-point")
+		case "ap-22222":
+			accessPoint = getGcpIngressAccessPoint(id, environment, "my-gcp-ingress-access-point")
 		}
 		err := json.NewEncoder(w).Encode(accessPoint)
 		require.NoError(t, err)
@@ -3151,6 +3266,10 @@ func handleNetworkingAccessPointUpdate(t *testing.T, id string) http.HandlerFunc
 			accessPoint = getGcpEgressAccessPoint(id, body.Spec.Environment.GetId(), "my-gcp-egress-access-point")
 		case "ap-99999":
 			accessPoint = getAwsIngressAccessPoint(id, body.Spec.Environment.GetId(), "my-aws-ingress-access-point")
+		case "ap-11111":
+			accessPoint = getAzureIngressAccessPoint(id, body.Spec.Environment.GetId(), "my-azure-ingress-access-point")
+		case "ap-22222":
+			accessPoint = getGcpIngressAccessPoint(id, body.Spec.Environment.GetId(), "my-gcp-ingress-access-point")
 		}
 
 		accessPoint.Spec.SetDisplayName(body.Spec.GetDisplayName())
@@ -3167,8 +3286,10 @@ func handleNetworkingAccessPointList(t *testing.T, environment string) http.Hand
 		accessPointThree := getAwsPrivateNetworkInterfaceAccessPoint("ap-54321", environment, "my-aws-private-network-interface-access-point")
 		accessPointFour := getGcpEgressAccessPoint("ap-88888", environment, "my-gcp-egress-access-point")
 		accessPointFive := getAwsIngressAccessPoint("ap-99999", environment, "my-aws-ingress-access-point")
+		accessPointSix := getAzureIngressAccessPoint("ap-11111", environment, "my-azure-ingress-access-point")
+		accessPointSeven := getGcpIngressAccessPoint("ap-22222", environment, "my-gcp-ingress-access-point")
 
-		recordList := networkingaccesspointv1.NetworkingV1AccessPointList{Data: []networkingaccesspointv1.NetworkingV1AccessPoint{accessPointOne, accessPointTwo, accessPointThree, accessPointFour, accessPointFive}}
+		recordList := networkingaccesspointv1.NetworkingV1AccessPointList{Data: []networkingaccesspointv1.NetworkingV1AccessPoint{accessPointOne, accessPointTwo, accessPointThree, accessPointFour, accessPointFive, accessPointSix, accessPointSeven}}
 		setPageToken(&recordList, &recordList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
@@ -3235,6 +3356,33 @@ func handleNetworkingAccessPointCreate(t *testing.T) http.HandlerFunc {
 						PrivateServiceConnectEndpointConnectionId: "111111111111111111",
 						PrivateServiceConnectEndpointName:         "private-service-connect-endpoint-name",
 						PrivateServiceConnectEndpointIpAddress:    "10.2.0.68",
+					},
+				},
+			}
+		} else if accessPoint.Spec.Config.NetworkingV1AzureIngressPrivateLinkEndpoint != nil {
+			accessPoint.SetId("ap-11111")
+			accessPoint.Status = &networkingaccesspointv1.NetworkingV1AccessPointStatus{
+				Phase: "READY",
+				Config: &networkingaccesspointv1.NetworkingV1AccessPointStatusConfigOneOf{
+					NetworkingV1AzureIngressPrivateLinkEndpointStatus: &networkingaccesspointv1.NetworkingV1AzureIngressPrivateLinkEndpointStatus{
+						Kind:                         "AzureIngressPrivateLinkEndpointStatus",
+						PrivateLinkServiceAlias:      "azure-pls-alias.eastus.azure.privatelinkservice",
+						PrivateLinkServiceResourceId: "/subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName",
+						PrivateEndpointResourceId:    "/subscriptions/0000000/resourceGroups/resourceGroupName/providers/Microsoft.Network/privateEndpoints/privateEndpointName",
+						DnsDomain:                   networkingaccesspointv1.PtrString("ap11111.eastus.azure.accesspoint.confluent.cloud"),
+					},
+				},
+			}
+		} else if accessPoint.Spec.Config.NetworkingV1GcpIngressPrivateServiceConnectEndpoint != nil {
+			accessPoint.SetId("ap-22222")
+			accessPoint.Status = &networkingaccesspointv1.NetworkingV1AccessPointStatus{
+				Phase: "READY",
+				Config: &networkingaccesspointv1.NetworkingV1AccessPointStatusConfigOneOf{
+					NetworkingV1GcpIngressPrivateServiceConnectEndpointStatus: &networkingaccesspointv1.NetworkingV1GcpIngressPrivateServiceConnectEndpointStatus{
+						Kind:                                   "GcpIngressPrivateServiceConnectEndpointStatus",
+						PrivateServiceConnectServiceAttachment: "projects/projectName/regions/us-central1/serviceAttachments/serviceAttachmentName",
+						PrivateServiceConnectConnectionId:      "111111111111111111",
+						DnsDomain:                              networkingaccesspointv1.PtrString("ap22222.us-central1.gcp.accesspoint.confluent.cloud"),
 					},
 				},
 			}
