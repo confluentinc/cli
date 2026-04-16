@@ -7,7 +7,7 @@
   },
   "spec": {
     "type": "DEDICATED",
-    "clusterSpec": null
+    "clusterSpec": {}
   },
   "status": {
     "phase": "RUNNING"
