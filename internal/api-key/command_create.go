@@ -34,6 +34,10 @@ func (c *command) newCreateCommand() *cobra.Command {
 				Code: "confluent api-key create --resource cloud",
 			},
 			examples.Example{
+				Text: "Create a Global API key:",
+				Code: "confluent api-key create --resource global",
+			},
+			examples.Example{
 				Text: `Create a Flink API key for region "N. Virginia (us-east-1)":`,
 				Code: "confluent api-key create --resource flink --cloud aws --region us-east-1",
 			},
@@ -115,6 +119,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	switch resourceType {
 	case resource.Cloud:
 		key.Spec.Resource.Id = resource.Cloud
+	case resource.Global:
+		key.Spec.Resource.Id = resource.Global
 	case resource.Flink:
 		environmentId, err := c.Context.EnvironmentId()
 		if err != nil {
