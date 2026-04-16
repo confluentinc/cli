@@ -185,9 +185,9 @@ func createSavepoint(name string) cmfsdk.Savepoint {
 	}
 }
 
-// createComputePool returns a raw map instead of cmfsdk.ComputePool because
-// in SDK v0.0.6, ComputePool.Status is typed as *map[string]map[string]interface{}.
-// The status must use nested maps so the SDK client can deserialize the response.
+// createComputePool returns a raw map with a flat status matching the real CMF API response.
+// The SDK v0.0.6 cannot deserialize this directly; the CLI's unmarshalComputePool fallback
+// in cmf_rest_client.go handles it.
 func createComputePool(poolName, phase string) map[string]interface{} {
 	timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
 
@@ -201,9 +201,7 @@ func createComputePool(poolName, phase string) map[string]interface{} {
 			"clusterSpec": map[string]interface{}{},
 		},
 		"status": map[string]interface{}{
-			"phase": map[string]interface{}{
-				"value": phase,
-			},
+			"phase": phase,
 		},
 	}
 }

@@ -61,8 +61,9 @@ func (c *command) validComputePoolArgs(cmd *cobra.Command, args []string) []stri
 }
 
 // extractComputePoolPhase extracts the phase string from the generic status map.
-// ComputePool.Status changed from *ComputePoolStatus to *map[string]map[string]interface{} in SDK v0.0.6.
-// The status is a nested map where phase is at status["phase"]["value"].
+// ComputePool.Status is typed as *map[string]map[string]interface{} in SDK v0.0.6.
+// The unmarshalComputePool workaround in cmf_rest_client.go encodes the flat API
+// status into this nested format, placing the phase at status["phase"]["value"].
 func extractComputePoolPhase(pool cmfsdk.ComputePool) string {
 	if pool.Status == nil {
 		return ""
