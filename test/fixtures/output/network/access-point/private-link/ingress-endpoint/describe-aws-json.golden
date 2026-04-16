@@ -1,4 +1,3 @@
-warning: GOCOVERDIR not set, no coverage data emitted
 {
   "id": "ap-99999",
   "name": "my-aws-ingress-access-point",

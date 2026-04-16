@@ -1,4 +1,3 @@
-warning: GOCOVERDIR not set, no coverage data emitted
 +--------------------+--------------------------------------+
 | ID                 | gw-67890                             |
 | Name               | my-azure-gateway                     |

@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-access-point/v1"
+	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
 )

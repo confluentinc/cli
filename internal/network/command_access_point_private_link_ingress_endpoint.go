@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-access-point/v1"
+	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
@@ -104,26 +104,20 @@ func printPrivateLinkIngressEndpointTable(cmd *cobra.Command, ingressEndpoint ne
 	if ingressEndpoint.Status.Config != nil && ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus != nil {
 		out.AwsVpcEndpointId = ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.GetVpcEndpointId()
 		out.AwsVpcEndpointServiceName = ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.GetVpcEndpointServiceName()
-		if ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.HasDnsDomain() {
-			out.DnsDomain = ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.GetDnsDomain()
-		}
+		out.DnsDomain = ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.GetDnsDomain()
 	}
 
 	if ingressEndpoint.Status.Config != nil && ingressEndpoint.Status.Config.NetworkingV1AzureIngressPrivateLinkEndpointStatus != nil {
 		out.AzurePrivateLinkServiceAlias = ingressEndpoint.Status.Config.NetworkingV1AzureIngressPrivateLinkEndpointStatus.GetPrivateLinkServiceAlias()
 		out.AzurePrivateLinkServiceResourceId = ingressEndpoint.Status.Config.NetworkingV1AzureIngressPrivateLinkEndpointStatus.GetPrivateLinkServiceResourceId()
 		out.AzurePrivateEndpointResourceId = ingressEndpoint.Status.Config.NetworkingV1AzureIngressPrivateLinkEndpointStatus.GetPrivateEndpointResourceId()
-		if ingressEndpoint.Status.Config.NetworkingV1AzureIngressPrivateLinkEndpointStatus.HasDnsDomain() {
-			out.DnsDomain = ingressEndpoint.Status.Config.NetworkingV1AzureIngressPrivateLinkEndpointStatus.GetDnsDomain()
-		}
+		out.DnsDomain = ingressEndpoint.Status.Config.NetworkingV1AzureIngressPrivateLinkEndpointStatus.GetDnsDomain()
 	}
 
 	if ingressEndpoint.Status.Config != nil && ingressEndpoint.Status.Config.NetworkingV1GcpIngressPrivateServiceConnectEndpointStatus != nil {
 		out.GcpPrivateServiceConnectServiceAttachment = ingressEndpoint.Status.Config.NetworkingV1GcpIngressPrivateServiceConnectEndpointStatus.GetPrivateServiceConnectServiceAttachment()
 		out.GcpPrivateServiceConnectConnectionId = ingressEndpoint.Status.Config.NetworkingV1GcpIngressPrivateServiceConnectEndpointStatus.GetPrivateServiceConnectConnectionId()
-		if ingressEndpoint.Status.Config.NetworkingV1GcpIngressPrivateServiceConnectEndpointStatus.HasDnsDomain() {
-			out.DnsDomain = ingressEndpoint.Status.Config.NetworkingV1GcpIngressPrivateServiceConnectEndpointStatus.GetDnsDomain()
-		}
+		out.DnsDomain = ingressEndpoint.Status.Config.NetworkingV1GcpIngressPrivateServiceConnectEndpointStatus.GetDnsDomain()
 	}
 
 	table := output.NewTable(cmd)

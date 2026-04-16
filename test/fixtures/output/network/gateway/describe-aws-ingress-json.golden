@@ -1,4 +1,3 @@
-warning: GOCOVERDIR not set, no coverage data emitted
 {
   "id": "gw-88888",
   "name": "my-aws-ingress-gateway",

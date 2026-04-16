@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	networkinggatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-gateway/v1"
+	networkinggatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	pcloud "github.com/confluentinc/cli/v4/pkg/cloud"

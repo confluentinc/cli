@@ -1,4 +1,3 @@
-warning: GOCOVERDIR not set, no coverage data emitted
 +-------------+---------------------------------+
 | ID          | ap-88888                        |
 | Name        | my-new-aws-ingress-access-point |

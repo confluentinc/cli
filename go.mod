@@ -15,8 +15,6 @@ require (
 	github.com/charmbracelet/lipgloss v0.11.0
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20250521223017-0e8f6f971b52
-	github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-access-point v0.13.0
-	github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-gateway v0.13.0
 	github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0
@@ -42,7 +40,9 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking v0.14.0
+	github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.8.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder v0.4.0
+	github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway v0.5.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.9.0
@@ -287,4 +287,9 @@ require (
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
+)
+
+replace (
+	github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point => github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-access-point v0.13.0
+	github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway => github.com/confluentinc/ccloud-sdk-go-v2-internal/networking-gateway v0.13.0
 )
