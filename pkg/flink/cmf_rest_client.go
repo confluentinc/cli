@@ -1,7 +1,9 @@
 package flink
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -231,7 +233,10 @@ func (cmfClient *CmfRestClient) UpdateApplication(ctx context.Context, environme
 // CreateEnvironment Create an environment.
 // Internally, since the call for Create and Update is the same, we check if the environment exists before creation.
 func (cmfClient *CmfRestClient) CreateEnvironment(ctx context.Context, postEnvironment cmfsdk.PostEnvironment) (cmfsdk.Environment, error) {
-	environmentName := postEnvironment.Name
+	environmentName := postEnvironment.GetName()
+	if environmentName == "" {
+		return cmfsdk.Environment{}, fmt.Errorf("environment name is required")
+	}
 	_, httpResponse, _ := cmfClient.EnvironmentsApi.GetEnvironment(ctx, environmentName).Execute()
 	// check if the environment exists by checking the status code
 	if httpResponse != nil && httpResponse.StatusCode == http.StatusOK {
@@ -281,10 +286,13 @@ func (cmfClient *CmfRestClient) ListEnvironments(ctx context.Context) ([]cmfsdk.
 	return environments, nil
 }
 
-// UpdateEnvironment Create an environment.
-// Internally, since the call for Create and Update is the same, we check if the environment exists before updation.
+// UpdateEnvironment updates an environment.
+// Internally, since the call for Create and Update is the same, we check if the environment exists before updating.
 func (cmfClient *CmfRestClient) UpdateEnvironment(ctx context.Context, postEnvironment cmfsdk.PostEnvironment) (cmfsdk.Environment, error) {
-	environmentName := postEnvironment.Name
+	environmentName := postEnvironment.GetName()
+	if environmentName == "" {
+		return cmfsdk.Environment{}, fmt.Errorf("environment name is required")
+	}
 	_, httpResponse, err := cmfClient.EnvironmentsApi.GetEnvironment(ctx, environmentName).Execute()
 	// check if the environment exists by checking the status code
 	if httpResponse != nil && httpResponse.StatusCode == http.StatusNotFound {
@@ -414,6 +422,15 @@ func (cmfClient *CmfRestClient) CreateComputePool(ctx context.Context, environme
 		return cmfsdk.ComputePool{}, fmt.Errorf("compute pool name is required")
 	}
 	outputComputePool, httpResponse, err := cmfClient.SQLApi.CreateComputePool(ctx, environment).ComputePool(computePool).Execute()
+	// Fallback: SDK v0.0.6 cannot deserialize ComputePool.Status (see unmarshalComputePool).
+	if err != nil && httpResponse != nil && httpResponse.StatusCode >= 200 && httpResponse.StatusCode < 300 {
+		if body, readErr := io.ReadAll(httpResponse.Body); readErr == nil {
+			if pool, parseErr := unmarshalComputePool(body); parseErr == nil {
+				return pool, nil
+			}
+			httpResponse.Body = io.NopCloser(bytes.NewBuffer(body))
+		}
+	}
 	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 		return cmfsdk.ComputePool{}, fmt.Errorf(`failed to create compute pool "%s" in the environment "%s": %s`, computePoolName, environment, parsedErr)
 	}
@@ -427,6 +444,15 @@ func (cmfClient *CmfRestClient) DeleteComputePool(ctx context.Context, environme
 
 func (cmfClient *CmfRestClient) DescribeComputePool(ctx context.Context, environment, computePool string) (cmfsdk.ComputePool, error) {
 	cmfComputePool, httpResponse, err := cmfClient.SQLApi.GetComputePool(ctx, environment, computePool).Execute()
+	// Fallback: SDK v0.0.6 cannot deserialize ComputePool.Status (see unmarshalComputePool).
+	if err != nil && httpResponse != nil && httpResponse.StatusCode >= 200 && httpResponse.StatusCode < 300 {
+		if body, readErr := io.ReadAll(httpResponse.Body); readErr == nil {
+			if pool, parseErr := unmarshalComputePool(body); parseErr == nil {
+				return pool, nil
+			}
+			httpResponse.Body = io.NopCloser(bytes.NewBuffer(body))
+		}
+	}
 	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 		return cmfsdk.ComputePool{}, fmt.Errorf(`failed to describe compute pool "%s" in the environment "%s": %s`, computePool, environment, parsedErr)
 	}
@@ -442,6 +468,17 @@ func (cmfClient *CmfRestClient) ListComputePools(ctx context.Context, environmen
 
 	for !done {
 		computePoolsPage, httpResponse, err := cmfClient.SQLApi.GetComputePools(ctx, environment).Page(currentPageNumber).Size(pageSize).Execute()
+		// Fallback: SDK v0.0.6 cannot deserialize ComputePool.Status (see unmarshalComputePool).
+		if err != nil && httpResponse != nil && httpResponse.StatusCode >= 200 && httpResponse.StatusCode < 300 {
+			if body, readErr := io.ReadAll(httpResponse.Body); readErr == nil {
+				if parsed, parseErr := unmarshalComputePoolsPage(body); parseErr == nil {
+					computePools = append(computePools, parsed...)
+					currentPageNumber, done = extractPageOptions(len(parsed), currentPageNumber)
+					continue
+				}
+				httpResponse.Body = io.NopCloser(bytes.NewBuffer(body))
+			}
+		}
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list compute pools in the environment "%s": %s`, environment, parsedErr)
 		}
@@ -568,6 +605,50 @@ func (cmfClient *CmfRestClient) ListCatalog(ctx context.Context) ([]cmfsdk.Kafka
 func (cmfClient *CmfRestClient) DeleteCatalog(ctx context.Context, catalogName string) error {
 	httpResp, err := cmfClient.SQLApi.DeleteKafkaCatalog(ctx, catalogName).Execute()
 	return parseSdkError(httpResp, err)
+}
+
+// --- ComputePool deserialization workaround (SDK v0.0.6) ---
+//
+// The SDK types ComputePool.Status as *map[string]map[string]interface{} but the
+// API returns a flat object like {"phase":"RUNNING","message":null}.These helpers
+// re-parse the buffered response body with correct handling.
+func unmarshalComputePool(data []byte) (cmfsdk.ComputePool, error) {
+	var wrapper struct {
+		cmfsdk.ComputePool
+		Status json.RawMessage `json:"status"`
+	}
+	if err := json.Unmarshal(data, &wrapper); err != nil {
+		return cmfsdk.ComputePool{}, err
+	}
+	pool := wrapper.ComputePool
+	var status struct {
+		Phase string `json:"phase"`
+	}
+	if json.Unmarshal(wrapper.Status, &status) == nil && status.Phase != "" {
+		s := map[string]map[string]interface{}{
+			"phase": {"value": status.Phase},
+		}
+		pool.Status = &s
+	}
+	return pool, nil
+}
+
+func unmarshalComputePoolsPage(data []byte) ([]cmfsdk.ComputePool, error) {
+	var page struct {
+		Items []json.RawMessage `json:"items"`
+	}
+	if err := json.Unmarshal(data, &page); err != nil {
+		return nil, err
+	}
+	pools := make([]cmfsdk.ComputePool, 0, len(page.Items))
+	for _, raw := range page.Items {
+		pool, err := unmarshalComputePool(raw)
+		if err != nil {
+			return nil, err
+		}
+		pools = append(pools, pool)
+	}
+	return pools, nil
 }
 
 // Returns the next page number and whether we need to fetch more pages or not.

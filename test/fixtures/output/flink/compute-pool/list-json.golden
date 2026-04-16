@@ -8,7 +8,7 @@
     },
     "spec": {
       "type": "DEDICATED",
-      "clusterSpec": null
+      "clusterSpec": {}
     },
     "status": {
       "phase": "RUNNING"
@@ -23,7 +23,7 @@
     },
     "spec": {
       "type": "DEDICATED",
-      "clusterSpec": null
+      "clusterSpec": {}
     },
     "status": {
       "phase": "PENDING"
@@ -38,7 +38,7 @@
     },
     "spec": {
       "type": "DEDICATED",
-      "clusterSpec": null
+      "clusterSpec": {}
     },
     "status": {
       "phase": "COMPLETE"
