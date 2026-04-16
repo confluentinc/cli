@@ -610,12 +610,8 @@ func (cmfClient *CmfRestClient) DeleteCatalog(ctx context.Context, catalogName s
 // --- ComputePool deserialization workaround (SDK v0.0.6) ---
 //
 // The SDK types ComputePool.Status as *map[string]map[string]interface{} but the
-// API returns a flat object like {"phase":"RUNNING","message":null}. Go's JSON
-// unmarshaler cannot decode a string ("RUNNING") into the expected inner type
-// map[string]interface{}, so Execute() fails on valid 200 responses. These helpers
+// API returns a flat object like {"phase":"RUNNING","message":null}.These helpers
 // re-parse the buffered response body with correct handling.
-// Remove when the SDK ships a properly typed ComputePoolStatus struct.
-
 func unmarshalComputePool(data []byte) (cmfsdk.ComputePool, error) {
 	var wrapper struct {
 		cmfsdk.ComputePool
