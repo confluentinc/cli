@@ -136,9 +136,9 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 	var constr []flinkgatewayv1.SqlV1MaterializedTableConstraint
 	if constraints != "" {
 		constr, err = addConstraints(constraints, constr)
-	}
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
 	}
 
 	distributedByColumnNames, err := cmd.Flags().GetString("distributed-by-column-names")
@@ -282,8 +282,8 @@ func addMetadataColumns(path string, colDetails []flinkgatewayv1.SqlV1Materializ
 
 	tablesContent := properties.ParseLines(string(buf))
 	for index := range len(tablesContent) {
-		columnComputed := tablesContent[index]
-		values := strings.Split(columnComputed, ",")
+		columnMetadata := tablesContent[index]
+		values := strings.Split(columnMetadata, ",")
 		if len(values) != 6 {
 			return nil, fmt.Errorf("the metadata column must be in the format [name,type,comment,kind,key,virtual]")
 		}
@@ -324,8 +324,8 @@ func addPhysicalColumns(path string, colDetails []flinkgatewayv1.SqlV1Materializ
 
 	tablesContent := properties.ParseLines(string(buf))
 	for index := range len(tablesContent) {
-		columnComputed := tablesContent[index]
-		values := strings.Split(columnComputed, ",")
+		columnPhysical := tablesContent[index]
+		values := strings.Split(columnPhysical, ",")
 		if len(values) != 4 {
 			return nil, fmt.Errorf("the physical column must be in the format [name,type,comment,kind]")
 		}

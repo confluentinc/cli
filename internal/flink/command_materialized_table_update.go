@@ -28,9 +28,9 @@ func (c *command) newMaterializedTableUpdateCommand() *cobra.Command {
 	cmd.Flags().Bool("stopped", false, "Determine whether stopped or not.")
 
 	c.addOptionalMaterializedTableFlags(cmd)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
