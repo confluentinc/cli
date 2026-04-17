@@ -15,19 +15,19 @@ import (
 )
 
 type ingressEndpointOut struct {
-	Id                                string `human:"ID" serialized:"id"`
-	Name                              string `human:"Name,omitempty" serialized:"name,omitempty"`
-	Environment                       string `human:"Environment" serialized:"environment"`
-	Gateway                           string `human:"Gateway" serialized:"gateway"`
-	Phase                             string `human:"Phase" serialized:"phase"`
-	AwsVpcEndpointId                  string `human:"AWS VPC Endpoint ID,omitempty" serialized:"aws_vpc_endpoint_id,omitempty"`
-	AwsVpcEndpointServiceName         string `human:"AWS VPC Endpoint Service Name,omitempty" serialized:"aws_vpc_endpoint_service_name,omitempty"`
-	AzurePrivateLinkServiceAlias      string `human:"Azure Private Link Service Alias,omitempty" serialized:"azure_private_link_service_alias,omitempty"`
-	AzurePrivateLinkServiceResourceId string `human:"Azure Private Link Service Resource ID,omitempty" serialized:"azure_private_link_service_resource_id,omitempty"`
-	AzurePrivateEndpointResourceId    string `human:"Azure Private Endpoint Resource ID,omitempty" serialized:"azure_private_endpoint_resource_id,omitempty"`
+	Id                                        string `human:"ID" serialized:"id"`
+	Name                                      string `human:"Name,omitempty" serialized:"name,omitempty"`
+	Environment                               string `human:"Environment" serialized:"environment"`
+	Gateway                                   string `human:"Gateway" serialized:"gateway"`
+	Phase                                     string `human:"Phase" serialized:"phase"`
+	AwsVpcEndpointId                          string `human:"AWS VPC Endpoint ID,omitempty" serialized:"aws_vpc_endpoint_id,omitempty"`
+	AwsVpcEndpointServiceName                 string `human:"AWS VPC Endpoint Service Name,omitempty" serialized:"aws_vpc_endpoint_service_name,omitempty"`
+	AzurePrivateLinkServiceAlias              string `human:"Azure Private Link Service Alias,omitempty" serialized:"azure_private_link_service_alias,omitempty"`
+	AzurePrivateLinkServiceResourceId         string `human:"Azure Private Link Service Resource ID,omitempty" serialized:"azure_private_link_service_resource_id,omitempty"`
+	AzurePrivateEndpointResourceId            string `human:"Azure Private Endpoint Resource ID,omitempty" serialized:"azure_private_endpoint_resource_id,omitempty"`
 	GcpPrivateServiceConnectServiceAttachment string `human:"GCP PSC Service Attachment,omitempty" serialized:"gcp_private_service_connect_service_attachment,omitempty"`
 	GcpPrivateServiceConnectConnectionId      string `human:"GCP PSC Connection ID,omitempty" serialized:"gcp_private_service_connect_connection_id,omitempty"`
-	DnsDomain                         string `human:"DNS Domain,omitempty" serialized:"dns_domain,omitempty"`
+	DnsDomain                                 string `human:"DNS Domain,omitempty" serialized:"dns_domain,omitempty"`
 }
 
 func (c *accessPointCommand) newIngressEndpointCommand(cfg *config.Config) *cobra.Command {

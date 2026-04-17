@@ -2437,7 +2437,7 @@ func getGateway(id, environment, name, specConfigKind, statusCloudGatewayKind st
 		}))
 	case "GcpIngressPrivateServiceConnectGatewayStatus":
 		gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpIngressPrivateServiceConnectGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpIngressPrivateServiceConnectGatewayStatus{
-			Kind: statusCloudGatewayKind,
+			Kind:                                   statusCloudGatewayKind,
 			PrivateServiceConnectServiceAttachment: networkinggatewayv1.PtrString("projects/traffic-prod/regions/us-central1/serviceAttachments/plattg-abc123-service-attachment"),
 		}))
 	case "GcpPeeringGatewayStatus":
@@ -2550,7 +2550,7 @@ func handleNetworkingGatewayPost(t *testing.T) http.HandlerFunc {
 			}))
 		} else if body.Spec.Config.NetworkingV1GcpIngressPrivateServiceConnectGatewaySpec != nil {
 			gateway.Status.SetCloudGateway(networkinggatewayv1.NetworkingV1GcpIngressPrivateServiceConnectGatewayStatusAsNetworkingV1GatewayStatusCloudGatewayOneOf(&networkinggatewayv1.NetworkingV1GcpIngressPrivateServiceConnectGatewayStatus{
-				Kind: "GcpIngressPrivateServiceConnectGatewayStatus",
+				Kind:                                   "GcpIngressPrivateServiceConnectGatewayStatus",
 				PrivateServiceConnectServiceAttachment: networkingv1.PtrString("projects/traffic-prod/regions/us-central1/serviceAttachments/plattg-abc123-service-attachment"),
 			}))
 		} else if body.Spec.Config.NetworkingV1GcpPeeringGatewaySpec != nil {
@@ -3175,7 +3175,7 @@ func getAzureIngressAccessPoint(id, environment, name string) networkingaccesspo
 					PrivateLinkServiceAlias:      "azure-pls-alias.eastus.azure.privatelinkservice",
 					PrivateLinkServiceResourceId: "/subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName",
 					PrivateEndpointResourceId:    "/subscriptions/0000000/resourceGroups/resourceGroupName/providers/Microsoft.Network/privateEndpoints/privateEndpointName",
-					DnsDomain:                   networkingaccesspointv1.PtrString("ap11111.eastus.azure.accesspoint.confluent.cloud"),
+					DnsDomain:                    networkingaccesspointv1.PtrString("ap11111.eastus.azure.accesspoint.confluent.cloud"),
 				},
 			},
 		},
@@ -3369,7 +3369,7 @@ func handleNetworkingAccessPointCreate(t *testing.T) http.HandlerFunc {
 						PrivateLinkServiceAlias:      "azure-pls-alias.eastus.azure.privatelinkservice",
 						PrivateLinkServiceResourceId: "/subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName",
 						PrivateEndpointResourceId:    "/subscriptions/0000000/resourceGroups/resourceGroupName/providers/Microsoft.Network/privateEndpoints/privateEndpointName",
-						DnsDomain:                   networkingaccesspointv1.PtrString("ap11111.eastus.azure.accesspoint.confluent.cloud"),
+						DnsDomain:                    networkingaccesspointv1.PtrString("ap11111.eastus.azure.accesspoint.confluent.cloud"),
 					},
 				},
 			}

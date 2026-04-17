@@ -17,12 +17,12 @@ import (
 )
 
 const (
-	awsEgressPrivateLink           = "AwsEgressPrivateLink"
-	awsIngressPrivateLink          = "AwsIngressPrivateLink"
-	awsPeering                     = "AwsPeering"
-	azureEgressPrivateLink         = "AzureEgressPrivateLink"
-	azurePeering                   = "AzurePeering"
-	awsPrivateNetworkInterface     = "AwsPrivateNetworkInterface"
+	awsEgressPrivateLink            = "AwsEgressPrivateLink"
+	awsIngressPrivateLink           = "AwsIngressPrivateLink"
+	awsPeering                      = "AwsPeering"
+	azureEgressPrivateLink          = "AzureEgressPrivateLink"
+	azurePeering                    = "AzurePeering"
+	awsPrivateNetworkInterface      = "AwsPrivateNetworkInterface"
 	gcpPeering                      = "GcpPeering"
 	gcpEgressPrivateServiceConnect  = "GcpEgressPrivateServiceConnect"
 	gcpIngressPrivateServiceConnect = "GcpIngressPrivateServiceConnect"
@@ -45,23 +45,23 @@ var (
 )
 
 type gatewayOut struct {
-	Id                     string   `human:"ID" serialized:"id"`
-	Name                   string   `human:"Name,omitempty" serialized:"name,omitempty"`
-	Environment            string   `human:"Environment" serialized:"environment"`
-	Region                 string   `human:"Region,omitempty" serialized:"region,omitempty"`
-	Type                   string   `human:"Type,omitempty" serialized:"type,omitempty"`
-	AwsPrincipalArn        string   `human:"AWS Principal ARN,omitempty" serialized:"aws_principal_arn,omitempty"`
-	VpcEndpointServiceName string   `human:"VPC Endpoint Service Name,omitempty" serialized:"vpc_endpoint_service_name,omitempty"`
-	AzureSubscription                 string   `human:"Azure Subscription,omitempty" serialized:"azure_subscription,omitempty"`
-	AzurePrivateLinkServiceAlias      string   `human:"Azure Private Link Service Alias,omitempty" serialized:"azure_private_link_service_alias,omitempty"`
-	AzurePrivateLinkServiceResourceId string   `human:"Azure Private Link Resource ID,omitempty" serialized:"azure_private_link_service_resource_id,omitempty"`
-	GcpIamPrincipal                          string   `human:"GCP IAM Principal,omitempty" serialized:"gcp_iam_principal,omitempty"`
-	GcpProject                               string   `human:"GCP Project,omitempty" serialized:"gcp_project,omitempty"`
-	GcpPrivateServiceConnectServiceAttachment string `human:"GCP PSC Service Attachment,omitempty" serialized:"gcp_private_service_connect_service_attachment,omitempty"`
-	Phase                  string   `human:"Phase" serialized:"phase"`
-	Zones                  []string `human:"Zones,omitempty" serialized:"zones,omitempty"`
-	Account                string   `human:"Account,omitempty" serialized:"account,omitempty"`
-	ErrorMessage           string   `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
+	Id                                        string   `human:"ID" serialized:"id"`
+	Name                                      string   `human:"Name,omitempty" serialized:"name,omitempty"`
+	Environment                               string   `human:"Environment" serialized:"environment"`
+	Region                                    string   `human:"Region,omitempty" serialized:"region,omitempty"`
+	Type                                      string   `human:"Type,omitempty" serialized:"type,omitempty"`
+	AwsPrincipalArn                           string   `human:"AWS Principal ARN,omitempty" serialized:"aws_principal_arn,omitempty"`
+	VpcEndpointServiceName                    string   `human:"VPC Endpoint Service Name,omitempty" serialized:"vpc_endpoint_service_name,omitempty"`
+	AzureSubscription                         string   `human:"Azure Subscription,omitempty" serialized:"azure_subscription,omitempty"`
+	AzurePrivateLinkServiceAlias              string   `human:"Azure Private Link Service Alias,omitempty" serialized:"azure_private_link_service_alias,omitempty"`
+	AzurePrivateLinkServiceResourceId         string   `human:"Azure Private Link Resource ID,omitempty" serialized:"azure_private_link_service_resource_id,omitempty"`
+	GcpIamPrincipal                           string   `human:"GCP IAM Principal,omitempty" serialized:"gcp_iam_principal,omitempty"`
+	GcpProject                                string   `human:"GCP Project,omitempty" serialized:"gcp_project,omitempty"`
+	GcpPrivateServiceConnectServiceAttachment string   `human:"GCP PSC Service Attachment,omitempty" serialized:"gcp_private_service_connect_service_attachment,omitempty"`
+	Phase                                     string   `human:"Phase" serialized:"phase"`
+	Zones                                     []string `human:"Zones,omitempty" serialized:"zones,omitempty"`
+	Account                                   string   `human:"Account,omitempty" serialized:"account,omitempty"`
+	ErrorMessage                              string   `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
 }
 
 func (c *command) newGatewayCommand() *cobra.Command {
