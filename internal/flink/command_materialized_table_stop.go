@@ -54,7 +54,7 @@ func (c *command) materializedTableStop(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	table, err := client.DescribeMaterializedTable(environmentId, c.Context.GetCurrentOrganization(), kafkaID, args[0])
+	table, err := client.GetMaterializedTable(environmentId, c.Context.GetCurrentOrganization(), kafkaID, args[0])
 	if err != nil {
 		return err
 	}
@@ -64,6 +64,6 @@ func (c *command) materializedTableStop(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	output.Printf(c.Config.EnableColor, "Requested to stop %s \"%s\".\n", resource.MaterializedTable, args[0])
+	output.Printf(c.Config.EnableColor, "Requested to stop %s \"%s\".\n", resource.FlinkMaterializedTable, args[0])
 	return nil
 }

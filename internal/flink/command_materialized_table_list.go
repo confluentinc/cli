@@ -45,7 +45,7 @@ func (c *command) tableList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	tables, err := client.ListMaterializedTable(environmentId, c.Context.GetCurrentOrganization())
+	tables, err := client.ListMaterializedTables(environmentId, c.Context.GetCurrentOrganization())
 	if err != nil {
 		return err
 	}

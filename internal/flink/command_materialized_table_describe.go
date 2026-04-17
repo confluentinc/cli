@@ -15,7 +15,7 @@ func (c *command) newMaterializedTableDescribeCommand() *cobra.Command {
 		Use:               "describe <name>",
 		Short:             "Describe a materialized table.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgs),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validMaterializedTableArgs),
 		RunE:              c.tableDescribe,
 	}
 
@@ -47,9 +47,6 @@ func (c *command) tableDescribe(cmd *cobra.Command, args []string) error {
 	}
 
 	orgId := c.Context.GetCurrentOrganization()
-	if err != nil {
-		return err
-	}
 
 	kafkaId, err := cmd.Flags().GetString("database")
 	if err != nil {
@@ -58,7 +55,7 @@ func (c *command) tableDescribe(cmd *cobra.Command, args []string) error {
 
 	name := args[0]
 
-	materializedTable, err := client.DescribeMaterializedTable(environmentId, orgId, kafkaId, name)
+	materializedTable, err := client.GetMaterializedTable(environmentId, orgId, kafkaId, name)
 	if err != nil {
 		return err
 	}

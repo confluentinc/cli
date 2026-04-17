@@ -62,7 +62,7 @@ func (c *command) validMaterializedTablesArgsMultiple(cmd *cobra.Command, args [
 		return nil
 	}
 
-	tables, err := client.ListMaterializedTable(environmentId, c.Context.GetCurrentOrganization())
+	tables, err := client.ListMaterializedTables(environmentId, c.Context.GetCurrentOrganization())
 	if err != nil {
 		return nil
 	}

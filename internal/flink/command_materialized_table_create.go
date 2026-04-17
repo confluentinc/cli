@@ -25,8 +25,8 @@ func (c *command) newMaterializedTableCreateCommand() *cobra.Command {
 		RunE:  c.materializedTableCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create Flink materialized table "my-connection" in AWS us-west-2.`,
-				Code: "flink materialized-table create my-table --cloud aws --region  us-west-2 --database lkc01 --compute-pool pool1 --service-account principal1 --query query1",
+				Text: `Create Flink materialized table "my-table" in AWS us-west-2.`,
+				Code: "confluent flink materialized-table create my-table --cloud aws --region us-west-2 --database lkc01 --compute-pool pool1 --service-account principal1 --query query1",
 			},
 		),
 	}
@@ -99,16 +99,22 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 	var colDetails []flinkgatewayv1.SqlV1MaterializedTableColumnDetails
 	if columnComputed != "" {
 		colDetails, err = addComputedColumns(columnComputed, colDetails)
+		if err != nil {
+			return err
+		}
 	}
 
 	if columnPhysical != "" {
 		colDetails, err = addPhysicalColumns(columnPhysical, colDetails)
+		if err != nil {
+			return err
+		}
 	}
 	if columnMetadata != "" {
 		colDetails, err = addMetadataColumns(columnMetadata, colDetails)
-	}
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
 	}
 
 	watermarkColumnName, err := cmd.Flags().GetString("watermark-column-name")
@@ -151,9 +157,6 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 	name := args[0]
 
 	orgId := c.Context.GetCurrentOrganization()
-	if err != nil {
-		return err
-	}
 
 	client, err := c.GetFlinkGatewayClientInternal(false)
 	if err != nil {
@@ -197,7 +200,6 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 
 	materializedTable, err := client.CreateMaterializedTable(table, environmentId, orgId, kafkaId)
 	if err != nil {
-		//panic("HERE")
 		return err
 	}
 
@@ -355,7 +357,7 @@ func addConstraints(path string, constr []flinkgatewayv1.SqlV1MaterializedTableC
 		content := tablesContent[index]
 		values := strings.Split(content, ",")
 		if len(values) != 4 {
-			return nil, fmt.Errorf("the constraints must be in the format [name,type,colNmae1|colName2,enforced]")
+			return nil, fmt.Errorf("the constraints must be in the format [name,type,colName1|colName2,enforced]")
 		}
 		constraintsName := values[0]
 		constraintsType := values[1]

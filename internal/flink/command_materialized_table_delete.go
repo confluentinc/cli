@@ -16,7 +16,7 @@ func (c *command) newMaterializedTableDeleteCommand() *cobra.Command {
 		Use:               "delete <name-1> [name-2] ... [name-n]",
 		Short:             "Delete one or more materialized tables.",
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validConnectionArgsMultiple),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validMaterializedTablesArgsMultiple),
 		RunE:              c.materializedTableDelete,
 	}
 
@@ -53,11 +53,11 @@ func (c *command) materializedTableDelete(cmd *cobra.Command, args []string) err
 	}
 
 	existenceFunc := func(id string) bool {
-		_, err := client.DescribeMaterializedTable(environmentId, id, c.Context.GetCurrentOrganization(), kafkaId)
+		_, err := client.GetMaterializedTable(environmentId, c.Context.GetCurrentOrganization(), kafkaId, id)
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.MaterializedTable); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.FlinkMaterializedTable); err != nil {
 		return err
 	}
 
@@ -65,6 +65,6 @@ func (c *command) materializedTableDelete(cmd *cobra.Command, args []string) err
 		return client.DeleteMaterializedTable(environmentId, c.Context.GetCurrentOrganization(), kafkaId, id)
 	}
 
-	_, err = deletion.Delete(cmd, args, deleteFunc, resource.MaterializedTable)
+	_, err = deletion.Delete(cmd, args, deleteFunc, resource.FlinkMaterializedTable)
 	return err
 }

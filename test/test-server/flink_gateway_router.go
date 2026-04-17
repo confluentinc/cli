@@ -434,8 +434,8 @@ func handleSqlMaterializedTablesTable(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			connectionName := mux.Vars(r)["materialized-table"]
-			if strings.Contains(connectionName, "nonexist") {
+			tableName := mux.Vars(r)["table_name"]
+			if strings.Contains(tableName, "nonexist") {
 				err := writeResourceNotFoundError(w)
 				require.NoError(t, err)
 				return

@@ -3,16 +3,19 @@ package flink
 import (
 	"github.com/spf13/cobra"
 
+	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1"
+
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c *command) newMaterializedTableUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <name>",
-		Short: "Update a Flink materialized table.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.materializedTableUpdate,
+		Use:               "update <name>",
+		Short:             "Update a Flink materialized table.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validMaterializedTableArgs),
+		RunE:              c.materializedTableUpdate,
 	}
 
 	cmd.Flags().String("database", "", "The ID of Kafka cluster hosting the Materialized Table's topic.")
@@ -48,7 +51,7 @@ func (c *command) materializedTableUpdate(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	table, err := client.DescribeMaterializedTable(environmentId, c.Context.GetCurrentOrganization(), kafkaId, args[0])
+	table, err := client.GetMaterializedTable(environmentId, c.Context.GetCurrentOrganization(), kafkaId, args[0])
 	if err != nil {
 		return err
 	}
@@ -102,15 +105,24 @@ func (c *command) materializedTableUpdate(cmd *cobra.Command, args []string) err
 
 	colDetails := table.Spec.GetColumns()
 	if columnComputed != "" {
-		colDetails, _ = addComputedColumns(columnComputed, colDetails)
+		colDetails, err = addComputedColumns(columnComputed, colDetails)
+		if err != nil {
+			return err
+		}
 	}
 
 	if columnPhysical != "" {
-		colDetails, _ = addPhysicalColumns(columnPhysical, colDetails)
+		colDetails, err = addPhysicalColumns(columnPhysical, colDetails)
+		if err != nil {
+			return err
+		}
 	}
 
 	if columnMetadata != "" {
-		colDetails, _ = addMetadataColumns(columnMetadata, colDetails)
+		colDetails, err = addMetadataColumns(columnMetadata, colDetails)
+		if err != nil {
+			return err
+		}
 	}
 
 	table.Spec.SetColumns(colDetails)
@@ -119,6 +131,9 @@ func (c *command) materializedTableUpdate(cmd *cobra.Command, args []string) err
 		return err
 	}
 	if watermarkColumnName != "" {
+		if table.Spec.Watermark == nil {
+			table.Spec.Watermark = &flinkgatewayv1.SqlV1MaterializedTableWatermark{}
+		}
 		table.Spec.Watermark.SetColumnName(watermarkColumnName)
 	}
 
@@ -127,6 +142,9 @@ func (c *command) materializedTableUpdate(cmd *cobra.Command, args []string) err
 		return err
 	}
 	if watermarkExpression != "" {
+		if table.Spec.Watermark == nil {
+			table.Spec.Watermark = &flinkgatewayv1.SqlV1MaterializedTableWatermark{}
+		}
 		table.Spec.Watermark.SetExpression(watermarkExpression)
 	}
 
@@ -145,27 +163,27 @@ func (c *command) materializedTableUpdate(cmd *cobra.Command, args []string) err
 
 	table.Spec.SetConstraints(constr)
 	distributedByColumnNames, err := cmd.Flags().GetString("distributed-by-column-names")
-	distributedByColumnNamesArray := csvToStringSlicePtr(distributedByColumnNames)
-
 	if err != nil {
 		return err
 	}
+	distributedByColumnNamesArray := csvToStringSlicePtr(distributedByColumnNames)
+
 	if distributedByColumnNames != "" {
+		if table.Spec.DistributedBy == nil {
+			table.Spec.DistributedBy = &flinkgatewayv1.SqlV1MaterializedTableDistribution{}
+		}
 		table.Spec.DistributedBy.SetColumnNames(*distributedByColumnNamesArray)
 	}
 
 	distributedByBuckets, err := cmd.Flags().GetInt("distributed-by-buckets")
-	distributedByBucketsInt32 := int32(distributedByBuckets)
-
 	if err != nil {
 		return err
 	}
 	if distributedByBuckets > 0 {
-		table.Spec.DistributedBy.SetBuckets(distributedByBucketsInt32)
-	}
-
-	if err != nil {
-		return err
+		if table.Spec.DistributedBy == nil {
+			table.Spec.DistributedBy = &flinkgatewayv1.SqlV1MaterializedTableDistribution{}
+		}
+		table.Spec.DistributedBy.SetBuckets(int32(distributedByBuckets))
 	}
 
 	materializedTable, err := client.UpdateMaterializedTable(table, environmentId, c.Context.GetCurrentOrganization(), kafkaId, args[0])
