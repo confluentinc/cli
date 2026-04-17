@@ -1,0 +1,11 @@
+{
+  "id": "ap-11111",
+  "name": "my-azure-ingress-access-point",
+  "environment": "env-596",
+  "gateway": "gw-11111",
+  "phase": "READY",
+  "azure_private_link_service_alias": "azure-pls-alias.eastus.azure.privatelinkservice",
+  "azure_private_link_service_resource_id": "/subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName",
+  "azure_private_endpoint_resource_id": "/subscriptions/0000000/resourceGroups/resourceGroupName/providers/Microsoft.Network/privateEndpoints/privateEndpointName",
+  "dns_domain": "ap11111.eastus.azure.accesspoint.confluent.cloud"
+}
