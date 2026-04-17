@@ -1,0 +1,8 @@
++------------------+------------+
+| Name             | my-table   |
+| Kafka Cluster ID | lkc01      |
+| Environment      | env-596    |
+| Compute Pool     | pool1      |
+| Service Account  | principal1 |
+| Query            | query1     |
++------------------+------------+
