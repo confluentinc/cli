@@ -1,0 +1,89 @@
+package flink
+
+import (
+	"fmt"
+
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/output"
+)
+
+func (c *command) newMaterializedTableDescribeCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:               "describe <name>",
+		Short:             "Describe a Flink materialized table.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validMaterializedTableArgs),
+		RunE:              c.materializedTableDescribe,
+	}
+
+	cmd.Flags().String("database", "", "The ID of Kafka cluster hosting the Materialized Table's topic.")
+	pcmd.AddCloudFlag(cmd)
+	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddOutputFlag(cmd)
+
+	cobra.CheckErr(cmd.MarkFlagRequired("database"))
+
+	return cmd
+}
+
+func (c *command) materializedTableDescribe(cmd *cobra.Command, args []string) error {
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	if _, err := c.V2Client.GetOrgEnvironment(environmentId); err != nil {
+		return errors.NewErrorWithSuggestions(err.Error(), fmt.Sprintf(envNotFoundErrorMsg, environmentId))
+	}
+
+	client, err := c.GetFlinkGatewayClientInternal(false)
+	if err != nil {
+		return err
+	}
+
+	orgId := c.Context.GetCurrentOrganization()
+
+	kafkaId, err := cmd.Flags().GetString("database")
+	if err != nil {
+		return err
+	}
+
+	name := args[0]
+
+	materializedTable, err := client.GetMaterializedTable(environmentId, orgId, kafkaId, name)
+	if err != nil {
+		return err
+	}
+
+	outputTable := output.NewTable(cmd)
+	mtableOut := materializedTableOut{
+		Name:           materializedTable.GetName(),
+		ClusterID:      materializedTable.Spec.GetKafkaClusterId(),
+		Environment:    materializedTable.GetEnvironmentId(),
+		ComputePool:    materializedTable.Spec.GetComputePoolId(),
+		ServiceAccount: materializedTable.Spec.GetPrincipal(),
+		Query:          materializedTable.Spec.GetQuery(),
+		Columns:        convertToArrayColumns(materializedTable.Spec.GetColumns()),
+		Constraints:    convertToArrayConstraints(materializedTable.Spec.GetConstraints()),
+	}
+
+	if materializedTable.Spec.Watermark != nil {
+		wm := materializedTable.Spec.GetWatermark()
+		mtableOut.WaterMarkColumnName = wm.GetColumnName()
+		mtableOut.WaterMarkExpression = wm.GetExpression()
+	}
+
+	if materializedTable.Spec.DistributedBy != nil {
+		db := materializedTable.Spec.GetDistributedBy()
+		mtableOut.DistributedByColumnNames = db.GetColumnNames()
+		mtableOut.DistributedByBuckets = int(db.GetBuckets())
+	}
+
+	outputTable.Add(&mtableOut)
+	return outputTable.Print()
+}
