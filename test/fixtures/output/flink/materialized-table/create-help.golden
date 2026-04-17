@@ -10,8 +10,8 @@ Create Flink materialized table "my-table" in AWS us-west-2.
 
 Flags:
       --database string                      REQUIRED: The ID of Kafka cluster hosting the Materialized Table's topic.
-      --compute-pool string                  REQUIRED: The id associated with the compute pool in context.
-      --service-account string               REQUIRED: The id of a principal this Materialized Table query runs as.
+      --compute-pool string                  REQUIRED: The ID associated with the compute pool in context.
+      --service-account string               REQUIRED: The ID of a principal this Materialized Table query runs as.
       --query string                         REQUIRED: The query section of the latest Materialized Table.
       --cloud string                         Specify the cloud provider as "aws", "azure", or "gcp".
       --region string                        Cloud region for Flink (use "confluent flink region list" to see all).
@@ -24,6 +24,7 @@ Flags:
       --distributed-by-column-names string   The names of the columns the table is distributed by.
       --distributed-by-buckets int           The number of buckets.
       --environment string                   Environment ID.
+      --context string                       CLI context name.
   -o, --output string                        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

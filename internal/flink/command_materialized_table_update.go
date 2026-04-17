@@ -1,11 +1,14 @@
 package flink
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -19,8 +22,8 @@ func (c *command) newMaterializedTableUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("database", "", "The ID of Kafka cluster hosting the Materialized Table's topic.")
-	cmd.Flags().String("compute-pool", "", "The id associated with the compute pool in context.")
-	cmd.Flags().String("service-account", "", "The id of a principal this Materialized Table query runs as.")
+	cmd.Flags().String("compute-pool", "", "The ID associated with the compute pool in context.")
+	cmd.Flags().String("service-account", "", "The ID of a principal this Materialized Table query runs as.")
 	cmd.Flags().String("query", "", "The query section of the latest Materialized Table.")
 	cmd.Flags().Bool("stopped", false, "Determine whether stopped or not.")
 
@@ -28,6 +31,7 @@ func (c *command) newMaterializedTableUpdateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("database"))
@@ -39,6 +43,10 @@ func (c *command) materializedTableUpdate(cmd *cobra.Command, args []string) err
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
+	}
+
+	if _, err := c.V2Client.GetOrgEnvironment(environmentId); err != nil {
+		return errors.NewErrorWithSuggestions(err.Error(), fmt.Sprintf(envNotFoundErrorMsg, environmentId))
 	}
 
 	client, err := c.GetFlinkGatewayClientInternal(false)

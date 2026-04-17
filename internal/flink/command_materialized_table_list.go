@@ -13,9 +13,9 @@ import (
 func (c *command) newMaterializedTableListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List materialized tables.",
+		Short: "List Flink materialized tables.",
 		Args:  cobra.NoArgs,
-		RunE:  c.tableList,
+		RunE:  c.materializedTableList,
 	}
 
 	cmd.Flags().String("database", "", "The ID of Kafka cluster hosting the Materialized Table's topic.")
@@ -30,7 +30,7 @@ func (c *command) newMaterializedTableListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) tableList(cmd *cobra.Command, _ []string) error {
+func (c *command) materializedTableList(cmd *cobra.Command, _ []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err

@@ -5,8 +5,8 @@ Usage:
 
 Flags:
       --database string                      REQUIRED: The ID of Kafka cluster hosting the Materialized Table's topic.
-      --compute-pool string                  The id associated with the compute pool in context.
-      --service-account string               The id of a principal this Materialized Table query runs as.
+      --compute-pool string                  The ID associated with the compute pool in context.
+      --service-account string               The ID of a principal this Materialized Table query runs as.
       --query string                         The query section of the latest Materialized Table.
       --stopped                              Determine whether stopped or not.
       --column-physical string               Path to the columns data for type physical.
@@ -20,6 +20,7 @@ Flags:
       --environment string                   Environment ID.
       --cloud string                         Specify the cloud provider as "aws", "azure", or "gcp".
       --region string                        Cloud region for Flink (use "confluent flink region list" to see all).
+      --context string                       CLI context name.
   -o, --output string                        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

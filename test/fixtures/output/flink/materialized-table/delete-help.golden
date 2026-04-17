@@ -1,4 +1,4 @@
-Delete one or more materialized tables.
+Delete one or more Flink materialized tables.
 
 Usage:
   confluent flink materialized-table delete <name-1> [name-2] ... [name-n] [flags]

@@ -5,9 +5,9 @@ Usage:
 
 Available Commands:
   create      Create a Flink materialized table.
-  delete      Delete one or more materialized tables.
-  describe    Describe a materialized table.
-  list        List materialized tables.
+  delete      Delete one or more Flink materialized tables.
+  describe    Describe a Flink materialized table.
+  list        List Flink materialized tables.
   resume      Resume a Flink materialized table.
   stop        Stop a Flink materialized table.
   update      Update a Flink materialized table.

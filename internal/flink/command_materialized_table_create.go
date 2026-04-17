@@ -32,8 +32,8 @@ func (c *command) newMaterializedTableCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("database", "", "The ID of Kafka cluster hosting the Materialized Table's topic.")
-	cmd.Flags().String("compute-pool", "", "The id associated with the compute pool in context.")
-	cmd.Flags().String("service-account", "", "The id of a principal this Materialized Table query runs as.")
+	cmd.Flags().String("compute-pool", "", "The ID associated with the compute pool in context.")
+	cmd.Flags().String("service-account", "", "The ID of a principal this Materialized Table query runs as.")
 	cmd.Flags().String("query", "", "The query section of the latest Materialized Table.")
 
 	pcmd.AddCloudFlag(cmd)
@@ -41,6 +41,7 @@ func (c *command) newMaterializedTableCreateCommand() *cobra.Command {
 
 	c.addOptionalMaterializedTableFlags(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("database"))

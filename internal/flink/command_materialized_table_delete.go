@@ -14,7 +14,7 @@ import (
 func (c *command) newMaterializedTableDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "delete <name-1> [name-2] ... [name-n]",
-		Short:             "Delete one or more materialized tables.",
+		Short:             "Delete one or more Flink materialized tables.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validMaterializedTablesArgsMultiple),
 		RunE:              c.materializedTableDelete,

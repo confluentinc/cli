@@ -1,7 +1,12 @@
-List Flink materialized tables.
+Resume a Flink materialized table.
 
 Usage:
-  confluent flink materialized-table list [flags]
+  confluent flink materialized-table resume <name> [flags]
+
+Examples:
+Request to resume the materialized table "materialized-table-1".
+
+  $ confluent flink materialized-table resume materialized-table-1 --database lk01
 
 Flags:
       --database string      REQUIRED: The ID of Kafka cluster hosting the Materialized Table's topic.
@@ -9,7 +14,6 @@ Flags:
       --region string        Cloud region for Flink (use "confluent flink region list" to see all).
       --environment string   Environment ID.
       --context string       CLI context name.
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

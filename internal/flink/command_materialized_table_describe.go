@@ -13,10 +13,10 @@ import (
 func (c *command) newMaterializedTableDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <name>",
-		Short:             "Describe a materialized table.",
+		Short:             "Describe a Flink materialized table.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validMaterializedTableArgs),
-		RunE:              c.tableDescribe,
+		RunE:              c.materializedTableDescribe,
 	}
 
 	cmd.Flags().String("database", "", "The ID of Kafka cluster hosting the Materialized Table's topic.")
@@ -31,7 +31,7 @@ func (c *command) newMaterializedTableDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) tableDescribe(cmd *cobra.Command, args []string) error {
+func (c *command) materializedTableDescribe(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err

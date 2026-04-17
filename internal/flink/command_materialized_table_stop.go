@@ -1,11 +1,12 @@
 package flink
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
-	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1"
-
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/resource"
@@ -44,23 +45,27 @@ func (c *command) materializedTableStop(cmd *cobra.Command, args []string) error
 		return err
 	}
 
+	if _, err := c.V2Client.GetOrgEnvironment(environmentId); err != nil {
+		return errors.NewErrorWithSuggestions(err.Error(), fmt.Sprintf(envNotFoundErrorMsg, environmentId))
+	}
+
 	client, err := c.GetFlinkGatewayClientInternal(false)
 	if err != nil {
 		return err
 	}
 
-	kafkaID, err := cmd.Flags().GetString("database")
+	kafkaId, err := cmd.Flags().GetString("database")
 	if err != nil {
 		return err
 	}
 
-	table, err := client.GetMaterializedTable(environmentId, c.Context.GetCurrentOrganization(), kafkaID, args[0])
+	table, err := client.GetMaterializedTable(environmentId, c.Context.GetCurrentOrganization(), kafkaId, args[0])
 	if err != nil {
 		return err
 	}
-	table.Spec.Stopped = flinkgatewayv1.PtrBool(true)
+	table.Spec.SetStopped(true)
 
-	if _, err := client.UpdateMaterializedTable(table, environmentId, c.Context.GetCurrentOrganization(), kafkaID, args[0]); err != nil {
+	if _, err := client.UpdateMaterializedTable(table, environmentId, c.Context.GetCurrentOrganization(), kafkaId, args[0]); err != nil {
 		return err
 	}
 

@@ -1,4 +1,4 @@
-Describe a materialized table.
+Describe a Flink materialized table.
 
 Usage:
   confluent flink materialized-table describe <name> [flags]
