@@ -98,13 +98,6 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 	}
 
 	var colDetails []flinkgatewayv1.SqlV1MaterializedTableColumnDetails
-	if columnComputed != "" {
-		colDetails, err = addComputedColumns(columnComputed, colDetails)
-		if err != nil {
-			return err
-		}
-	}
-
 	if columnPhysical != "" {
 		colDetails, err = addPhysicalColumns(columnPhysical, colDetails)
 		if err != nil {
@@ -113,6 +106,12 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 	}
 	if columnMetadata != "" {
 		colDetails, err = addMetadataColumns(columnMetadata, colDetails)
+		if err != nil {
+			return err
+		}
+	}
+	if columnComputed != "" {
+		colDetails, err = addComputedColumns(columnComputed, colDetails)
 		if err != nil {
 			return err
 		}

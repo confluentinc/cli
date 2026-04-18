@@ -112,15 +112,15 @@ func (c *command) materializedTableUpdate(cmd *cobra.Command, args []string) err
 	}
 
 	colDetails := table.Spec.GetColumns()
-	if columnComputed != "" {
-		colDetails, err = addComputedColumns(columnComputed, colDetails)
+	if columnPhysical != "" {
+		colDetails, err = addPhysicalColumns(columnPhysical, colDetails)
 		if err != nil {
 			return err
 		}
 	}
 
-	if columnPhysical != "" {
-		colDetails, err = addPhysicalColumns(columnPhysical, colDetails)
+	if columnComputed != "" {
+		colDetails, err = addComputedColumns(columnComputed, colDetails)
 		if err != nil {
 			return err
 		}
