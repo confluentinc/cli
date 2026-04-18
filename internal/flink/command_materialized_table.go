@@ -12,6 +12,7 @@ type materializedTableOut struct {
 	Environment              string   `human:"Environment" serialized:"environment"`
 	ComputePool              string   `human:"Compute Pool" serialized:"compute_pool"`
 	ServiceAccount           string   `human:"Service Account" serialized:"service_account"`
+	Stopped                  bool     `human:"Stopped" serialized:"stopped"`
 	Query                    string   `human:"Query,omitempty" serialized:"query,omitempty"`
 	Columns                  []string `human:"Columns,omitempty" serialized:"columns,omitempty"`
 	WaterMarkColumnName      string   `human:"Watermark Column Name,omitempty" serialized:"watermark_column_name,omitempty"`

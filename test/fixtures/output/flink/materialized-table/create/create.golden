@@ -4,5 +4,6 @@
 | Environment      | env-596    |
 | Compute Pool     | pool1      |
 | Service Account  | principal1 |
+| Stopped          | false      |
 | Query            | query1     |
 +------------------+------------+

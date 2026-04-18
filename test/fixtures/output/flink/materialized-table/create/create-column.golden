@@ -4,6 +4,7 @@
 | Environment            | env-596                        |
 | Compute Pool           | pool1                          |
 | Service Account        | principal1                     |
+| Stopped                | false                          |
 | Query                  | query1                         |
 | Columns                | {name, type, comment,          |
 |                        | Computed, exp1, true}, {name,  |

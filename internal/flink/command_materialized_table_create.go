@@ -211,6 +211,7 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 		Environment:    materializedTable.GetEnvironmentId(),
 		ComputePool:    materializedTable.Spec.GetComputePoolId(),
 		ServiceAccount: materializedTable.Spec.GetPrincipal(),
+		Stopped:        materializedTable.Spec.GetStopped(),
 		Query:          materializedTable.Spec.GetQuery(),
 		Columns:        convertToArrayColumns(materializedTable.Spec.GetColumns()),
 		Constraints:    convertToArrayConstraints(materializedTable.Spec.GetConstraints()),
