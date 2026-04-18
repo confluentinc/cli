@@ -48,6 +48,7 @@ const (
 	FlinkEnvironment                 = "Flink environment"
 	FlinkRegion                      = "Flink region"
 	FlinkEndpoint                    = "Flink endpoint"
+	FlinkMaterializedTable           = "Flink materialized table"
 	FlinkStatement                   = "Flink SQL statement"
 	FlinkConnection                  = "Flink connection"
 	Gateway                          = "gateway"
