@@ -44,6 +44,8 @@ blocks:
             - test-results publish . -N "linux/amd64"
 
   - name: linux/arm64
+    run:
+      when: "branch = 'main'"
     dependencies: []
     task:
       agent:
@@ -61,6 +63,8 @@ blocks:
             - docker build . --file docker/Dockerfile_alpine_arm64 --tag test-build
 
   - name: windows/amd64
+    run:
+      when: "branch = 'main'"
     dependencies: []
     task:
       agent:
