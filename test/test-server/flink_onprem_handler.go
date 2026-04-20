@@ -197,8 +197,7 @@ func createComputePool(poolName, phase string) map[string]interface{} {
 			"creationTimestamp": timeStamp,
 		},
 		"spec": map[string]interface{}{
-			"type":        "DEDICATED",
-			"clusterSpec": map[string]interface{}{},
+			"type": "DEDICATED",
 		},
 		"status": map[string]interface{}{
 			"phase": phase,
