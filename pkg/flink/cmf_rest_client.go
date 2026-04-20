@@ -422,14 +422,8 @@ func (cmfClient *CmfRestClient) CreateComputePool(ctx context.Context, environme
 		return cmfsdk.ComputePool{}, fmt.Errorf("compute pool name is required")
 	}
 	outputComputePool, httpResponse, err := cmfClient.SQLApi.CreateComputePool(ctx, environment).ComputePool(computePool).Execute()
-	// Fallback: SDK v0.0.6 cannot deserialize ComputePool.Status (see unmarshalComputePool).
-	if err != nil && httpResponse != nil && httpResponse.StatusCode >= 200 && httpResponse.StatusCode < 300 {
-		if body, readErr := io.ReadAll(httpResponse.Body); readErr == nil {
-			if pool, parseErr := unmarshalComputePool(body); parseErr == nil {
-				return pool, nil
-			}
-			httpResponse.Body = io.NopCloser(bytes.NewBuffer(body))
-		}
+	if pool, ok := tryComputePoolFallback(httpResponse, err, unmarshalComputePool); ok {
+		return pool, nil
 	}
 	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 		return cmfsdk.ComputePool{}, fmt.Errorf(`failed to create compute pool "%s" in the environment "%s": %s`, computePoolName, environment, parsedErr)
@@ -444,14 +438,8 @@ func (cmfClient *CmfRestClient) DeleteComputePool(ctx context.Context, environme
 
 func (cmfClient *CmfRestClient) DescribeComputePool(ctx context.Context, environment, computePool string) (cmfsdk.ComputePool, error) {
 	cmfComputePool, httpResponse, err := cmfClient.SQLApi.GetComputePool(ctx, environment, computePool).Execute()
-	// Fallback: SDK v0.0.6 cannot deserialize ComputePool.Status (see unmarshalComputePool).
-	if err != nil && httpResponse != nil && httpResponse.StatusCode >= 200 && httpResponse.StatusCode < 300 {
-		if body, readErr := io.ReadAll(httpResponse.Body); readErr == nil {
-			if pool, parseErr := unmarshalComputePool(body); parseErr == nil {
-				return pool, nil
-			}
-			httpResponse.Body = io.NopCloser(bytes.NewBuffer(body))
-		}
+	if pool, ok := tryComputePoolFallback(httpResponse, err, unmarshalComputePool); ok {
+		return pool, nil
 	}
 	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 		return cmfsdk.ComputePool{}, fmt.Errorf(`failed to describe compute pool "%s" in the environment "%s": %s`, computePool, environment, parsedErr)
@@ -468,16 +456,10 @@ func (cmfClient *CmfRestClient) ListComputePools(ctx context.Context, environmen
 
 	for !done {
 		computePoolsPage, httpResponse, err := cmfClient.SQLApi.GetComputePools(ctx, environment).Page(currentPageNumber).Size(pageSize).Execute()
-		// Fallback: SDK v0.0.6 cannot deserialize ComputePool.Status (see unmarshalComputePool).
-		if err != nil && httpResponse != nil && httpResponse.StatusCode >= 200 && httpResponse.StatusCode < 300 {
-			if body, readErr := io.ReadAll(httpResponse.Body); readErr == nil {
-				if parsed, parseErr := unmarshalComputePoolsPage(body); parseErr == nil {
-					computePools = append(computePools, parsed...)
-					currentPageNumber, done = extractPageOptions(len(parsed), currentPageNumber)
-					continue
-				}
-				httpResponse.Body = io.NopCloser(bytes.NewBuffer(body))
-			}
+		if parsed, ok := tryComputePoolFallback(httpResponse, err, unmarshalComputePoolsPage); ok {
+			computePools = append(computePools, parsed...)
+			currentPageNumber, done = extractPageOptions(len(parsed), currentPageNumber)
+			continue
 		}
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list compute pools in the environment "%s": %s`, environment, parsedErr)
@@ -649,6 +631,37 @@ func unmarshalComputePoolsPage(data []byte) ([]cmfsdk.ComputePool, error) {
 		pools = append(pools, pool)
 	}
 	return pools, nil
+}
+
+// readFallbackBody returns the HTTP response body when the SDK's Execute() returned
+// an error despite a successful 2xx status — the ComputePool deserialization bug.
+// Returns nil if the condition doesn't apply or the body can't be read.
+func readFallbackBody(httpResponse *http.Response, err error) []byte {
+	if err == nil || httpResponse == nil || httpResponse.StatusCode < 200 || httpResponse.StatusCode >= 300 {
+		return nil
+	}
+	body, readErr := io.ReadAll(httpResponse.Body)
+	if readErr != nil {
+		return nil
+	}
+	return body
+}
+
+// tryComputePoolFallback runs the fallback parse for a ComputePool-bearing response.
+// Returns (result, true) on success. On failure, re-buffers the response body so
+// parseSdkError can still read it, and returns (zero, false).
+func tryComputePoolFallback[T any](httpResponse *http.Response, err error, unmarshal func([]byte) (T, error)) (T, bool) {
+	var zero T
+	body := readFallbackBody(httpResponse, err)
+	if body == nil {
+		return zero, false
+	}
+	result, parseErr := unmarshal(body)
+	if parseErr != nil {
+		httpResponse.Body = io.NopCloser(bytes.NewBuffer(body))
+		return zero, false
+	}
+	return result, true
 }
 
 // Returns the next page number and whether we need to fetch more pages or not.
