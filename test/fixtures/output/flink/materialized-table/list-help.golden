@@ -4,7 +4,6 @@ Usage:
   confluent flink materialized-table list [flags]
 
 Flags:
-      --database string      REQUIRED: The ID of Kafka cluster hosting the Materialized Table's topic.
       --cloud string         Specify the cloud provider as "aws", "azure", or "gcp".
       --region string        Cloud region for Flink (use "confluent flink region list" to see all).
       --environment string   Environment ID.

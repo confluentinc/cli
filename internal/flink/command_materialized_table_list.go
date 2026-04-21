@@ -18,14 +18,11 @@ func (c *command) newMaterializedTableListCommand() *cobra.Command {
 		RunE:  c.materializedTableList,
 	}
 
-	cmd.Flags().String("database", "", "The ID of Kafka cluster hosting the Materialized Table's topic.")
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
-
-	cobra.CheckErr(cmd.MarkFlagRequired("database"))
 
 	return cmd
 }

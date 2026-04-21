@@ -162,7 +162,7 @@ func (s *CLITestSuite) TestFlinkMaterializedTableList() {
 	tests := []CLITest{
 		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
 		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
-		{args: "flink materialized-table list --cloud aws --region eu-west-1 --database lkc01", fixture: "flink/materialized-table/list/list.golden"},
+		{args: "flink materialized-table list --cloud aws --region eu-west-1", fixture: "flink/materialized-table/list/list.golden"},
 	}
 
 	for _, test := range tests {

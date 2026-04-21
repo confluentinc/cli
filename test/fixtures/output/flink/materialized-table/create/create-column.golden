@@ -7,10 +7,10 @@
 | Stopped                | false                          |
 | Query                  | query1                         |
 | Columns                | {name, type, comment,          |
-|                        | Computed, exp1, true}, {name,  |
-|                        | type, comment, Physical},      |
-|                        | {name2, type2, comment2,       |
-|                        | Physical}, {name, type,        |
-|                        | comment, Metadata, key, true}  |
+|                        | Physical}, {name2, type2,      |
+|                        | comment2, Physical}, {name,    |
+|                        | type, comment, Metadata, key,  |
+|                        | true}, {name, type, comment,   |
+|                        | Computed, exp1, true}          |
 | Distributed By Buckets | 32                             |
 +------------------------+--------------------------------+
