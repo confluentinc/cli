@@ -231,7 +231,7 @@ func (cmfClient *CmfRestClient) UpdateApplication(ctx context.Context, environme
 // CreateEnvironment Create an environment.
 // Internally, since the call for Create and Update is the same, we check if the environment exists before creation.
 func (cmfClient *CmfRestClient) CreateEnvironment(ctx context.Context, postEnvironment cmfsdk.PostEnvironment) (cmfsdk.Environment, error) {
-	environmentName := postEnvironment.Name
+	environmentName := postEnvironment.GetName()
 	_, httpResponse, _ := cmfClient.EnvironmentsApi.GetEnvironment(ctx, environmentName).Execute()
 	// check if the environment exists by checking the status code
 	if httpResponse != nil && httpResponse.StatusCode == http.StatusOK {
@@ -284,7 +284,7 @@ func (cmfClient *CmfRestClient) ListEnvironments(ctx context.Context) ([]cmfsdk.
 // UpdateEnvironment Create an environment.
 // Internally, since the call for Create and Update is the same, we check if the environment exists before updation.
 func (cmfClient *CmfRestClient) UpdateEnvironment(ctx context.Context, postEnvironment cmfsdk.PostEnvironment) (cmfsdk.Environment, error) {
-	environmentName := postEnvironment.Name
+	environmentName := postEnvironment.GetName()
 	_, httpResponse, err := cmfClient.EnvironmentsApi.GetEnvironment(ctx, environmentName).Execute()
 	// check if the environment exists by checking the status code
 	if httpResponse != nil && httpResponse.StatusCode == http.StatusNotFound {
@@ -568,6 +568,41 @@ func (cmfClient *CmfRestClient) ListCatalog(ctx context.Context) ([]cmfsdk.Kafka
 func (cmfClient *CmfRestClient) DeleteCatalog(ctx context.Context, catalogName string) error {
 	httpResp, err := cmfClient.SQLApi.DeleteKafkaCatalog(ctx, catalogName).Execute()
 	return parseSdkError(httpResp, err)
+}
+
+func (cmfClient *CmfRestClient) ListKubernetesClusters(ctx context.Context) ([]cmfsdk.KubernetesCluster, error) {
+	clusters := make([]cmfsdk.KubernetesCluster, 0)
+	done := false
+	// 100 is an arbitrary page size we've chosen.
+	const pageSize = 100
+	var currentPageNumber int32 = 0
+
+	for !done {
+		page, httpResponse, err := cmfClient.KubernetesClustersApi.GetKubernetesClusters(ctx).Page(currentPageNumber).Size(pageSize).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf("failed to list Kubernetes clusters: %s", parsedErr)
+		}
+		clusters = append(clusters, page.GetItems()...)
+		currentPageNumber, done = extractPageOptions(len(page.GetItems()), currentPageNumber)
+	}
+
+	return clusters, nil
+}
+
+func (cmfClient *CmfRestClient) DescribeKubernetesCluster(ctx context.Context, name string) (cmfsdk.KubernetesCluster, error) {
+	cluster, httpResponse, err := cmfClient.KubernetesClustersApi.GetKubernetesCluster(ctx, name).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.KubernetesCluster{}, fmt.Errorf("failed to describe Kubernetes cluster %q: %s", name, parsedErr)
+	}
+	return cluster, nil
+}
+
+func (cmfClient *CmfRestClient) UpdateKubernetesCluster(ctx context.Context, name string, cluster cmfsdk.KubernetesCluster) (cmfsdk.KubernetesCluster, error) {
+	updatedCluster, httpResponse, err := cmfClient.KubernetesClustersApi.UpdateKubernetesCluster(ctx, name).KubernetesCluster(cluster).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.KubernetesCluster{}, fmt.Errorf("failed to update Kubernetes cluster %q: %s", name, parsedErr)
+	}
+	return updatedCluster, nil
 }
 
 // Returns the next page number and whether we need to fetch more pages or not.

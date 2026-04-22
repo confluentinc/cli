@@ -1,3 +1,4 @@
+warning: GOCOVERDIR not set, no coverage data emitted
 +--------------------------------+-------------------------------+
 | Name                           | default-2                     |
 | Kubernetes Namespace           | default-staging               |
