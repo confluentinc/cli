@@ -5,6 +5,7 @@
 | Kafka Cluster           | lkc-123456     |
 | Type                    | aws            |
 | Provider Integration ID | cspi-stgce89r7 |
+| Custom Database         | my-custom-db   |
 | Suspended               | false          |
 | Phase                   | CONNECTED      |
 +-------------------------+----------------+
