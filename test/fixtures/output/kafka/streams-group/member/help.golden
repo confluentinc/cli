@@ -4,8 +4,10 @@ Usage:
   confluent kafka streams-group member [command]
 
 Available Commands:
-  describe    Describe a Kafka streams group member.
-  list        List Kafka streams group members.
+  assignment        Manage Kafka streams group member assignments.
+  describe          Describe a Kafka streams group member.
+  list              List Kafka streams group members.
+  target-assignment Manage Kafka streams group member target assignments.
 
 Global Flags:
   -h, --help            Show help for this command.

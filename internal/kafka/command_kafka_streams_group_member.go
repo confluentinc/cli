@@ -25,8 +25,10 @@ func (c *streamsGroupCommand) newStreamsGroupMemberCommand() *cobra.Command {
 		Short: "Manage Kafka streams group members.",
 	}
 
+	cmd.AddCommand(c.newStreamsGroupMemberAssignmentCommand())
 	cmd.AddCommand(c.newStreamsGroupMemberDescribeCommand())
 	cmd.AddCommand(c.newStreamsGroupMemberListCommand())
+	cmd.AddCommand(c.newStreamsGroupMemberTargetAssignmentCommand())
 
 	return cmd
 }

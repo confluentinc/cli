@@ -16,13 +16,13 @@ type streamsGroupMemberAssignmentOut struct {
 
 func (c *streamsGroupCommand) newStreamsGroupMemberAssignmentCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "member-assignment",
-		Aliases: []string{"ma"},
-		Short:   "Manage Kafka streams group member assignments.",
+		Use:   "assignment",
+		Short: "Manage Kafka streams group member assignments.",
 	}
 
 	cmd.AddCommand(c.newStreamsGroupMemberAssignmentDescribeCommand())
 	cmd.AddCommand(c.newStreamsGroupMemberAssignmentListCommand())
+	cmd.AddCommand(c.newStreamsGroupMemberTaskPartitionsCommand())
 
 	return cmd
 }
