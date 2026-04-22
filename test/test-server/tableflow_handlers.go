@@ -378,13 +378,26 @@ func handleCatalogIntegrationUpdate(t *testing.T, id string) http.HandlerFunc {
 		switch id {
 		case "tci-abc123":
 			catalogIntegration = getCatalogIntegration(id, body.GetSpec().Environment.Id, body.GetSpec().KafkaCluster.Id, "my-aws-glue-ci", "AwsGlue")
+			if body.Spec.GetConfig().TableflowV1CatalogIntegrationAwsGlueUpdateSpec != nil && body.Spec.GetConfig().TableflowV1CatalogIntegrationAwsGlueUpdateSpec.GetCustomDatabase() != "" {
+				catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationAwsGlueSpec.SetCustomDatabase(body.Spec.GetConfig().TableflowV1CatalogIntegrationAwsGlueUpdateSpec.GetCustomDatabase())
+			}
 		case "tci-def456":
 			catalogIntegration = getCatalogIntegration(id, body.GetSpec().Environment.Id, body.GetSpec().KafkaCluster.Id, "my-snowflake-ci", "Snowflake")
-			catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeSpec.SetEndpoint(body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetEndpoint())
-			catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeSpec.SetClientId(body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetClientId())
-			catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeSpec.SetClientSecret(body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetClientSecret())
-			catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeSpec.SetWarehouse(body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetWarehouse())
-			catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeSpec.SetAllowedScope(body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetAllowedScope())
+			if body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec != nil {
+				catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeSpec.SetEndpoint(body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetEndpoint())
+				catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeSpec.SetClientId(body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetClientId())
+				catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeSpec.SetClientSecret(body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetClientSecret())
+				catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeSpec.SetWarehouse(body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetWarehouse())
+				catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeSpec.SetAllowedScope(body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetAllowedScope())
+				if body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetCustomNamespace() != "" {
+					catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeSpec.SetCustomNamespace(body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetCustomNamespace())
+				}
+			}
+		case "tci-ghi789":
+			catalogIntegration = getCatalogIntegration(id, body.GetSpec().Environment.Id, body.GetSpec().KafkaCluster.Id, "my-unity-ci", "Unity")
+			if body.Spec.GetConfig().TableflowV1CatalogIntegrationUnityUpdateSpec != nil && body.Spec.GetConfig().TableflowV1CatalogIntegrationUnityUpdateSpec.GetCustomSchema() != "" {
+				catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationUnitySpec.SetCustomSchema(body.Spec.GetConfig().TableflowV1CatalogIntegrationUnityUpdateSpec.GetCustomSchema())
+			}
 		default:
 			catalogIntegration = getCatalogIntegration(id, body.GetSpec().Environment.Id, body.GetSpec().KafkaCluster.Id, "my-aws-glue-ci", "AwsGlue")
 		}
@@ -454,27 +467,33 @@ func getCatalogIntegration(id, environment, cluster, name, specConfigKind string
 
 	switch specConfigKind {
 	case "AwsGlue":
-		catalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationAwsGlueSpecAsTableflowV1CatalogIntegrationSpecConfigOneOf(&tableflowv1.TableflowV1CatalogIntegrationAwsGlueSpec{
+		awsGlueSpec := &tableflowv1.TableflowV1CatalogIntegrationAwsGlueSpec{
 			Kind:                  specConfigKind,
 			ProviderIntegrationId: "cspi-stgce89r7",
-		}))
+		}
+		awsGlueSpec.SetCustomDatabase("my-custom-db")
+		catalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationAwsGlueSpecAsTableflowV1CatalogIntegrationSpecConfigOneOf(awsGlueSpec))
 	case "Snowflake":
-		catalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationSnowflakeSpecAsTableflowV1CatalogIntegrationSpecConfigOneOf(&tableflowv1.TableflowV1CatalogIntegrationSnowflakeSpec{
+		snowflakeSpec := &tableflowv1.TableflowV1CatalogIntegrationSnowflakeSpec{
 			Kind:         specConfigKind,
 			Endpoint:     "https://vuser1_polaris.snowflakecomputing.com/",
 			ClientId:     "client-id",
 			ClientSecret: "client-secret",
 			Warehouse:    "warehouse",
 			AllowedScope: "allowed-scope",
-		}))
+		}
+		snowflakeSpec.SetCustomNamespace("my-custom-ns")
+		catalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationSnowflakeSpecAsTableflowV1CatalogIntegrationSpecConfigOneOf(snowflakeSpec))
 	case "Unity":
-		catalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationUnitySpecAsTableflowV1CatalogIntegrationSpecConfigOneOf(&tableflowv1.TableflowV1CatalogIntegrationUnitySpec{
+		unitySpec := &tableflowv1.TableflowV1CatalogIntegrationUnitySpec{
 			Kind:              specConfigKind,
 			WorkspaceEndpoint: "https://dbc-0e76d5eb-ff10.cloud.databricks.com",
 			CatalogName:       "catalog-name",
 			ClientId:          "client-id",
 			ClientSecret:      "client-secret",
-		}))
+		}
+		unitySpec.SetCustomSchema("my-custom-schema")
+		catalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationUnitySpecAsTableflowV1CatalogIntegrationSpecConfigOneOf(unitySpec))
 	}
 
 	return catalogIntegration
