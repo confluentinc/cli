@@ -74,13 +74,18 @@ blocks:
             # Do not install Go with Chocolatey since it is community maintained and may not have the latest version
             - $ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -OutFile Go.zip -Uri https://go.dev/dl/go$(Get-Content .go-version).windows-amd64.zip -UseBasicParsing
             - 7z x Go.zip -oC:\
-            - $Env:PATH = "C:\Go\bin;C:\Users\semaphore\go\bin;$Env:PATH"
+            # Install MSYS2 and mingw-w64 GCC to match the release pipeline
+            - if (!(Test-Path "C:\msys64\usr\bin\bash.exe")) { curl.exe -L --retry 5 --retry-delay 5 -o msys2.tar.xz https://repo.msys2.org/distrib/x86_64/msys2-base-x86_64-20260322.tar.xz }
+            - if (!(Test-Path "C:\msys64\usr\bin\bash.exe")) { 7z x msys2.tar.xz }
+            - if (!(Test-Path "C:\msys64\usr\bin\bash.exe")) { 7z x msys2.tar -oC:\ }
+            - C:\msys64\usr\bin\bash -lc "pacman -Sy --noconfirm mingw-w64-x86_64-gcc"
+            - $Env:PATH = "C:\msys64\mingw64\bin;C:\Go\bin;C:\Users\semaphore\go\bin;$Env:PATH"
+            - $Env:CC = "x86_64-w64-mingw32-gcc"
             - $Env:EXISTING_FLAGS = $(go env CGO_LDFLAGS)
             - go env -w CGO_LDFLAGS="-fstack-protector $Env:EXISTING_FLAGS"
             - $Env:GOCOVERDIR = "test/coverage"
             - New-Item $Env:GOCOVERDIR -ItemType Directory
             - go install gotest.tools/gotestsum@v1.8.2
-            - go build -v ./...
             - gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
             - gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v $(go list ./... | Select-String test)
             - go tool covdata textfmt -i $Env:GOCOVERDIR -o test/coverage.out
