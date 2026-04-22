@@ -18,7 +18,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
-var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "IngressLimit", "EgressLimit", "Storage", "Cloud", "Availability", "Region", "Network", "Status", "Endpoint", "RestEndpoint"}
+var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "IngressLimit", "EgressLimit", "Storage", "Cloud", "Availability", "Region", "Network", "Status", "DeletionProtection", "Endpoint", "RestEndpoint"}
 
 type describeStruct struct {
 	IsCurrent          bool   `human:"Current" serialized:"is_current"`
@@ -35,6 +35,7 @@ type describeStruct struct {
 	Availability       string `human:"Availability" serialized:"availability"`
 	Network            string `human:"Network,omitempty" serialized:"network,omitempty"`
 	Status             string `human:"Status" serialized:"status"`
+	DeletionProtection bool   `human:"Deletion Protection" serialized:"deletion_protection"`
 	Endpoint           string `human:"Endpoint" serialized:"endpoint"`
 	ByokKeyId          string `human:"BYOK Key ID" serialized:"byok_key_id"`
 	EncryptionKeyId    string `human:"Encryption Key ID" serialized:"encryption_key_id"`
@@ -146,6 +147,7 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, usageLimits *ka
 		Availability:       ccloudv2.ToLower(cluster.Spec.GetAvailability()),
 		Network:            cluster.Spec.Network.GetId(),
 		Status:             getCmkClusterStatus(cluster),
+		DeletionProtection: cluster.Spec.GetDeletionProtection(),
 		Endpoint:           cluster.Spec.GetKafkaBootstrapEndpoint(),
 		ByokKeyId:          getCmkByokId(cluster),
 		EncryptionKeyId:    getCmkEncryptionKey(cluster),

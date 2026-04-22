@@ -1,0 +1,4 @@
+Error: failed to delete lkc-deletion-protected: Cluster deletion is blocked by deletion protection.
+
+Suggestions:
+    Disable deletion_protection before deleting the cluster.
