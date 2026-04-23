@@ -537,6 +537,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 			Subject:    subject,
 			Format:     format,
 			SchemaType: serializationProvider.GetSchemaName(),
+			Normalize:  false,
 		}
 
 		flag := "references"
@@ -681,6 +682,7 @@ func (c *command) initSchemaAndGetInfoOnPrem(cmd *cobra.Command, topic, mode str
 			Subject:    subject,
 			Format:     format,
 			SchemaType: serializationProvider.GetSchemaName(),
+			Normalize:  false,
 		}
 
 		flag := "references"
