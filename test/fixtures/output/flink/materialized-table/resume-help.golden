@@ -1,0 +1,21 @@
+Resume a Flink materialized table.
+
+Usage:
+  confluent flink materialized-table resume <name> [flags]
+
+Examples:
+Request to resume the materialized table "materialized-table-1".
+
+  $ confluent flink materialized-table resume materialized-table-1 --database lk01
+
+Flags:
+      --database string      REQUIRED: The ID of Kafka cluster hosting the Materialized Table's topic.
+      --cloud string         Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string        Cloud region for Flink (use "confluent flink region list" to see all).
+      --environment string   Environment ID.
+      --context string       CLI context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
