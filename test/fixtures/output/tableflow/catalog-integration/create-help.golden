@@ -19,15 +19,18 @@ Create a Unity catalog integration.
 Flags:
       --type string                   REQUIRED: Specify the catalog integration type as "aws", "snowflake", or "unity".
       --provider-integration string   Specify the provider integration id.
+      --custom-database string        Specify the custom database name for AWS Glue.
       --endpoint string               Specify the The catalog integration connection endpoint for Snowflake Open Catalog.
       --warehouse string              Specify the warehouse name of the Snowflake Open Catalog.
       --allowed-scope string          Specify the allowed scope of the Snowflake Open Catalog.
       --client-id string              Specify the client id.
       --client-secret string          Specify the client secret.
+      --custom-namespace string       Specify the custom namespace for Snowflake Open Catalog.
       --workspace-endpoint string     Specify the Databricks workspace URL associated with the Unity Catalog.
       --catalog-name string           Specify the name of the catalog.
       --unity-client-id string        Specify the Unity client id.
       --unity-client-secret string    Specify the Unity client secret.
+      --custom-schema string          Specify the custom schema name for Unity Catalog.
       --cluster string                Kafka cluster ID.
       --environment string            Environment ID.
       --context string                CLI context name.
