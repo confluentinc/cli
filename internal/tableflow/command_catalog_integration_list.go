@@ -67,16 +67,19 @@ func (c *command) listCatalogIntegration(cmd *cobra.Command, args []string) erro
 
 		if catalogIntegrationType == aws {
 			out.ProviderIntegrationId = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationAwsGlueSpec.GetProviderIntegrationId()
+			out.CustomDatabase = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationAwsGlueSpec.GetCustomDatabase()
 		}
 		if catalogIntegrationType == snowflake {
 			out.Endpoint = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeSpec.GetEndpoint()
 			out.Warehouse = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeSpec.GetWarehouse()
 			out.AllowedScope = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeSpec.GetAllowedScope()
+			out.CustomNamespace = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeSpec.GetCustomNamespace()
 		}
 		if catalogIntegrationType == unity {
 			out.WorkspaceEndpoint = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec.GetWorkspaceEndpoint()
 			out.CatalogName = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec.GetCatalogName()
 			out.ClientId = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec.GetClientId()
+			out.CustomSchema = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec.GetCustomSchema()
 		}
 
 		list.Add(out)
