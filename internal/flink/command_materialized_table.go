@@ -58,7 +58,7 @@ func (c *command) validMaterializedTablesArgsMultiple(cmd *cobra.Command, args [
 		return nil
 	}
 
-	client, err := c.GetFlinkGatewayClientInternal(false)
+	client, err := c.GetFlinkGatewayClient(false)
 	if err != nil {
 		return nil
 	}

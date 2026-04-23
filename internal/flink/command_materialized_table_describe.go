@@ -41,7 +41,7 @@ func (c *command) materializedTableDescribe(cmd *cobra.Command, args []string) e
 		return errors.NewErrorWithSuggestions(err.Error(), fmt.Sprintf(envNotFoundErrorMsg, environmentId))
 	}
 
-	client, err := c.GetFlinkGatewayClientInternal(false)
+	client, err := c.GetFlinkGatewayClient(false)
 	if err != nil {
 		return err
 	}
@@ -75,14 +75,14 @@ func (c *command) materializedTableDescribe(cmd *cobra.Command, args []string) e
 
 	if materializedTable.Spec.Watermark != nil {
 		wm := materializedTable.Spec.GetWatermark()
-		mtableOut.WaterMarkColumnName = wm.GetColumnName()
+		mtableOut.WaterMarkColumnName = wm.GetColumn()
 		mtableOut.WaterMarkExpression = wm.GetExpression()
 	}
 
-	if materializedTable.Spec.DistributedBy != nil {
-		db := materializedTable.Spec.GetDistributedBy()
-		mtableOut.DistributedByColumnNames = db.GetColumnNames()
-		mtableOut.DistributedByBuckets = int(db.GetBuckets())
+	if materializedTable.Spec.Distribution != nil {
+		db := materializedTable.Spec.GetDistribution()
+		mtableOut.DistributedByColumnNames = db.GetKeys()
+		mtableOut.DistributedByBuckets = int(db.GetBucketCount())
 	}
 
 	outputTable.Add(&mtableOut)

@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1"
+	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
@@ -49,7 +49,7 @@ func (c *command) materializedTableUpdate(cmd *cobra.Command, args []string) err
 		return errors.NewErrorWithSuggestions(err.Error(), fmt.Sprintf(envNotFoundErrorMsg, environmentId))
 	}
 
-	client, err := c.GetFlinkGatewayClientInternal(false)
+	client, err := c.GetFlinkGatewayClient(false)
 	if err != nil {
 		return err
 	}
@@ -140,9 +140,9 @@ func (c *command) materializedTableUpdate(cmd *cobra.Command, args []string) err
 	}
 	if watermarkColumnName != "" {
 		if table.Spec.Watermark == nil {
-			table.Spec.Watermark = &flinkgatewayv1.SqlV1MaterializedTableWatermark{}
+			table.Spec.Watermark = &flinkgatewayv1.SqlV1Watermark{}
 		}
-		table.Spec.Watermark.SetColumnName(watermarkColumnName)
+		table.Spec.Watermark.SetColumn(watermarkColumnName)
 	}
 
 	watermarkExpression, err := cmd.Flags().GetString("watermark-expression")
@@ -151,7 +151,7 @@ func (c *command) materializedTableUpdate(cmd *cobra.Command, args []string) err
 	}
 	if watermarkExpression != "" {
 		if table.Spec.Watermark == nil {
-			table.Spec.Watermark = &flinkgatewayv1.SqlV1MaterializedTableWatermark{}
+			table.Spec.Watermark = &flinkgatewayv1.SqlV1Watermark{}
 		}
 		table.Spec.Watermark.SetExpression(watermarkExpression)
 	}
@@ -177,10 +177,10 @@ func (c *command) materializedTableUpdate(cmd *cobra.Command, args []string) err
 	distributedByColumnNamesArray := csvToStringSlicePtr(distributedByColumnNames)
 
 	if distributedByColumnNames != "" {
-		if table.Spec.DistributedBy == nil {
-			table.Spec.DistributedBy = &flinkgatewayv1.SqlV1MaterializedTableDistribution{}
+		if table.Spec.Distribution == nil {
+			table.Spec.Distribution = &flinkgatewayv1.SqlV1Distribution{}
 		}
-		table.Spec.DistributedBy.SetColumnNames(*distributedByColumnNamesArray)
+		table.Spec.Distribution.SetKeys(*distributedByColumnNamesArray)
 	}
 
 	distributedByBuckets, err := cmd.Flags().GetInt("distributed-by-buckets")
@@ -188,10 +188,10 @@ func (c *command) materializedTableUpdate(cmd *cobra.Command, args []string) err
 		return err
 	}
 	if distributedByBuckets > 0 {
-		if table.Spec.DistributedBy == nil {
-			table.Spec.DistributedBy = &flinkgatewayv1.SqlV1MaterializedTableDistribution{}
+		if table.Spec.Distribution == nil {
+			table.Spec.Distribution = &flinkgatewayv1.SqlV1Distribution{}
 		}
-		table.Spec.DistributedBy.SetBuckets(int32(distributedByBuckets))
+		table.Spec.Distribution.SetBucketCount(int32(distributedByBuckets))
 	}
 
 	materializedTable, err := client.UpdateMaterializedTable(table, environmentId, c.Context.GetCurrentOrganization(), kafkaId, args[0])
@@ -214,14 +214,14 @@ func (c *command) materializedTableUpdate(cmd *cobra.Command, args []string) err
 
 	if materializedTable.Spec.Watermark != nil {
 		wm := materializedTable.Spec.GetWatermark()
-		mtableOut.WaterMarkColumnName = wm.GetColumnName()
+		mtableOut.WaterMarkColumnName = wm.GetColumn()
 		mtableOut.WaterMarkExpression = wm.GetExpression()
 	}
 
-	if materializedTable.Spec.DistributedBy != nil {
-		db := materializedTable.Spec.GetDistributedBy()
-		mtableOut.DistributedByColumnNames = db.GetColumnNames()
-		mtableOut.DistributedByBuckets = int(db.GetBuckets())
+	if materializedTable.Spec.Distribution != nil {
+		db := materializedTable.Spec.GetDistribution()
+		mtableOut.DistributedByColumnNames = db.GetKeys()
+		mtableOut.DistributedByBuckets = int(db.GetBucketCount())
 	}
 
 	outputTable.Add(&mtableOut)

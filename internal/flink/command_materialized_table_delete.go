@@ -42,7 +42,7 @@ func (c *command) materializedTableDelete(cmd *cobra.Command, args []string) err
 		return errors.NewErrorWithSuggestions(err.Error(), fmt.Sprintf(envNotFoundErrorMsg, environmentId))
 	}
 
-	client, err := c.GetFlinkGatewayClientInternal(false)
+	client, err := c.GetFlinkGatewayClient(false)
 	if err != nil {
 		return err
 	}

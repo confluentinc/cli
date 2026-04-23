@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1"
+	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
@@ -97,7 +97,7 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	var colDetails []flinkgatewayv1.SqlV1MaterializedTableColumnDetails
+	var colDetails []flinkgatewayv1.SqlV1ColumnDetails
 	if columnPhysical != "" {
 		colDetails, err = addPhysicalColumns(columnPhysical, colDetails)
 		if err != nil {
@@ -132,7 +132,7 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	var constr []flinkgatewayv1.SqlV1MaterializedTableConstraint
+	var constr []flinkgatewayv1.SqlV1Constraint
 	if constraints != "" {
 		constr, err = addConstraints(constraints, constr)
 		if err != nil {
@@ -158,7 +158,7 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 
 	orgId := c.Context.GetCurrentOrganization()
 
-	client, err := c.GetFlinkGatewayClientInternal(false)
+	client, err := c.GetFlinkGatewayClient(false)
 	if err != nil {
 		return err
 	}
@@ -181,16 +181,16 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 	}
 
 	if watermarkColumnName != "" || watermarkExpression != "" {
-		table.Spec.Watermark = &flinkgatewayv1.SqlV1MaterializedTableWatermark{
-			ColumnName: &watermarkColumnName,
+		table.Spec.Watermark = &flinkgatewayv1.SqlV1Watermark{
+			Column:     &watermarkColumnName,
 			Expression: &watermarkExpression,
 		}
 	}
 
 	if distributedByColumnNames != "" || distributedByBuckets > 0 {
-		table.Spec.DistributedBy = &flinkgatewayv1.SqlV1MaterializedTableDistribution{
-			ColumnNames: distributedByColumnNamesArray,
-			Buckets:     &distributedByBucketsInt32,
+		table.Spec.Distribution = &flinkgatewayv1.SqlV1Distribution{
+			Keys:        distributedByColumnNamesArray,
+			BucketCount: &distributedByBucketsInt32,
 		}
 	}
 
@@ -218,21 +218,21 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 
 	if materializedTable.Spec.Watermark != nil {
 		wm := materializedTable.Spec.GetWatermark()
-		mtableOut.WaterMarkColumnName = wm.GetColumnName()
+		mtableOut.WaterMarkColumnName = wm.GetColumn()
 		mtableOut.WaterMarkExpression = wm.GetExpression()
 	}
 
-	if materializedTable.Spec.DistributedBy != nil {
-		db := materializedTable.Spec.GetDistributedBy()
-		mtableOut.DistributedByColumnNames = db.GetColumnNames()
-		mtableOut.DistributedByBuckets = int(db.GetBuckets())
+	if materializedTable.Spec.Distribution != nil {
+		db := materializedTable.Spec.GetDistribution()
+		mtableOut.DistributedByColumnNames = db.GetKeys()
+		mtableOut.DistributedByBuckets = int(db.GetBucketCount())
 	}
 
 	outputTable.Add(&mtableOut)
 	return outputTable.Print()
 }
 
-func addComputedColumns(path string, colDetails []flinkgatewayv1.SqlV1MaterializedTableColumnDetails) ([]flinkgatewayv1.SqlV1MaterializedTableColumnDetails, error) {
+func addComputedColumns(path string, colDetails []flinkgatewayv1.SqlV1ColumnDetails) ([]flinkgatewayv1.SqlV1ColumnDetails, error) {
 	buf, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -266,7 +266,7 @@ func addComputedColumns(path string, colDetails []flinkgatewayv1.SqlV1Materializ
 			Expression: columnExpression,
 			Virtual:    &columnVirtual,
 		}
-		column := flinkgatewayv1.SqlV1MaterializedTableColumnDetails{
+		column := flinkgatewayv1.SqlV1ColumnDetails{
 			SqlV1ComputedColumn: &computedColumn,
 		}
 		colDetails = append(colDetails, column)
@@ -274,7 +274,7 @@ func addComputedColumns(path string, colDetails []flinkgatewayv1.SqlV1Materializ
 	return colDetails, nil
 }
 
-func addMetadataColumns(path string, colDetails []flinkgatewayv1.SqlV1MaterializedTableColumnDetails) ([]flinkgatewayv1.SqlV1MaterializedTableColumnDetails, error) {
+func addMetadataColumns(path string, colDetails []flinkgatewayv1.SqlV1ColumnDetails) ([]flinkgatewayv1.SqlV1ColumnDetails, error) {
 	buf, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -308,7 +308,7 @@ func addMetadataColumns(path string, colDetails []flinkgatewayv1.SqlV1Materializ
 			MetadataKey: columnKey,
 			Virtual:     &columnVirtual,
 		}
-		column := flinkgatewayv1.SqlV1MaterializedTableColumnDetails{
+		column := flinkgatewayv1.SqlV1ColumnDetails{
 			SqlV1MetadataColumn: &metadataColumn,
 		}
 		colDetails = append(colDetails, column)
@@ -316,7 +316,7 @@ func addMetadataColumns(path string, colDetails []flinkgatewayv1.SqlV1Materializ
 	return colDetails, nil
 }
 
-func addPhysicalColumns(path string, colDetails []flinkgatewayv1.SqlV1MaterializedTableColumnDetails) ([]flinkgatewayv1.SqlV1MaterializedTableColumnDetails, error) {
+func addPhysicalColumns(path string, colDetails []flinkgatewayv1.SqlV1ColumnDetails) ([]flinkgatewayv1.SqlV1ColumnDetails, error) {
 	buf, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -339,7 +339,7 @@ func addPhysicalColumns(path string, colDetails []flinkgatewayv1.SqlV1Materializ
 			Comment: &columnComment,
 			Kind:    columnKind,
 		}
-		column := flinkgatewayv1.SqlV1MaterializedTableColumnDetails{
+		column := flinkgatewayv1.SqlV1ColumnDetails{
 			SqlV1PhysicalColumn: &physicalColumn,
 		}
 		colDetails = append(colDetails, column)
@@ -347,7 +347,7 @@ func addPhysicalColumns(path string, colDetails []flinkgatewayv1.SqlV1Materializ
 	return colDetails, nil
 }
 
-func addConstraints(path string, constr []flinkgatewayv1.SqlV1MaterializedTableConstraint) ([]flinkgatewayv1.SqlV1MaterializedTableConstraint, error) {
+func addConstraints(path string, constr []flinkgatewayv1.SqlV1Constraint) ([]flinkgatewayv1.SqlV1Constraint, error) {
 	buf, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -369,11 +369,11 @@ func addConstraints(path string, constr []flinkgatewayv1.SqlV1MaterializedTableC
 		if err != nil {
 			return nil, err
 		}
-		constraint := flinkgatewayv1.SqlV1MaterializedTableConstraint{
-			Name:        &constraintsName,
-			Kind:        &constraintsType,
-			ColumnNames: constraintsColumnNameArray,
-			Enforced:    &constraintsEnforcedBool,
+		constraint := flinkgatewayv1.SqlV1Constraint{
+			Name:     &constraintsName,
+			Type:     &constraintsType,
+			Columns:  constraintsColumnNameArray,
+			Enforced: &constraintsEnforcedBool,
 		}
 		constr = append(constr, constraint)
 	}
@@ -396,7 +396,7 @@ func csvToStringSlicePtrConstraint(csv string) *[]string {
 	return &values
 }
 
-func convertToArrayColumns(columns []flinkgatewayv1.SqlV1MaterializedTableColumnDetails) []string {
+func convertToArrayColumns(columns []flinkgatewayv1.SqlV1ColumnDetails) []string {
 	var cols []string
 	for _, value := range columns {
 		if value.SqlV1PhysicalColumn != nil {
@@ -412,10 +412,10 @@ func convertToArrayColumns(columns []flinkgatewayv1.SqlV1MaterializedTableColumn
 	return cols
 }
 
-func convertToArrayConstraints(constraints []flinkgatewayv1.SqlV1MaterializedTableConstraint) []string {
+func convertToArrayConstraints(constraints []flinkgatewayv1.SqlV1Constraint) []string {
 	constr := make([]string, 0, len(constraints))
 	for _, value := range constraints {
-		constr = append(constr, fmt.Sprintf("{%s, %s, %s, %t}", value.GetName(), value.GetKind(), value.GetColumnNames(), value.GetEnforced()))
+		constr = append(constr, fmt.Sprintf("{%s, %s, %s, %t}", value.GetName(), value.GetType(), value.GetColumns(), value.GetEnforced()))
 	}
 	return constr
 }
