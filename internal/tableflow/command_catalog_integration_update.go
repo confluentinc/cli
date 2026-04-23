@@ -35,13 +35,16 @@ func (c *command) newCatalogIntegrationUpdateCommand() *cobra.Command {
 	cmd.Flags().String("allowed-scope", "", "Specify the allowed scope of the Snowflake Open Catalog.")
 	cmd.Flags().String("client-id", "", "Specify the client id.")
 	cmd.Flags().String("client-secret", "", "Specify the client secret.")
+	cmd.Flags().String("custom-database", "", "Specify the custom database name for AWS Glue.")
+	cmd.Flags().String("custom-namespace", "", "Specify the custom namespace for Snowflake Open Catalog.")
+	cmd.Flags().String("custom-schema", "", "Specify the custom schema name for Unity Catalog.")
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cmd.MarkFlagsOneRequired("name", "endpoint", "warehouse", "allowed-scope", "client-id", "client-secret")
+	cmd.MarkFlagsOneRequired("name", "endpoint", "warehouse", "allowed-scope", "client-id", "client-secret", "custom-database", "custom-namespace", "custom-schema")
 
 	return cmd
 }
@@ -95,9 +98,29 @@ func (c *command) updateCatalogIntegration(cmd *cobra.Command, args []string) er
 				},
 			})
 		}
+		if catalogIntegrationType == unity {
+			updateCatalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationUpdateSpecConfigOneOf{
+				TableflowV1CatalogIntegrationUnityUpdateSpec: &tableflowv1.TableflowV1CatalogIntegrationUnityUpdateSpec{
+					Kind: unityKind,
+				},
+			})
+		}
 	}
 
-	if cmd.Flags().Changed("endpoint") || cmd.Flags().Changed("warehouse") || cmd.Flags().Changed("allowed-scope") || cmd.Flags().Changed("client-id") || cmd.Flags().Changed("client-secret") {
+	if cmd.Flags().Changed("custom-database") {
+		customDatabase, err := cmd.Flags().GetString("custom-database")
+		if err != nil {
+			return err
+		}
+		updateCatalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationUpdateSpecConfigOneOf{
+			TableflowV1CatalogIntegrationAwsGlueUpdateSpec: &tableflowv1.TableflowV1CatalogIntegrationAwsGlueUpdateSpec{
+				Kind: awsGlueKind,
+			},
+		})
+		updateCatalogIntegration.Spec.Config.TableflowV1CatalogIntegrationAwsGlueUpdateSpec.SetCustomDatabase(customDatabase)
+	}
+
+	if cmd.Flags().Changed("endpoint") || cmd.Flags().Changed("warehouse") || cmd.Flags().Changed("allowed-scope") || cmd.Flags().Changed("client-id") || cmd.Flags().Changed("client-secret") || cmd.Flags().Changed("custom-namespace") {
 		updateCatalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationUpdateSpecConfigOneOf{
 			TableflowV1CatalogIntegrationSnowflakeUpdateSpec: &tableflowv1.TableflowV1CatalogIntegrationSnowflakeUpdateSpec{
 				Kind: snowflakeKind,
@@ -138,6 +161,26 @@ func (c *command) updateCatalogIntegration(cmd *cobra.Command, args []string) er
 			}
 			updateCatalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeUpdateSpec.SetClientSecret(clientSecret)
 		}
+		if cmd.Flags().Changed("custom-namespace") {
+			customNamespace, err := cmd.Flags().GetString("custom-namespace")
+			if err != nil {
+				return err
+			}
+			updateCatalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeUpdateSpec.SetCustomNamespace(customNamespace)
+		}
+	}
+
+	if cmd.Flags().Changed("custom-schema") {
+		customSchema, err := cmd.Flags().GetString("custom-schema")
+		if err != nil {
+			return err
+		}
+		updateCatalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationUpdateSpecConfigOneOf{
+			TableflowV1CatalogIntegrationUnityUpdateSpec: &tableflowv1.TableflowV1CatalogIntegrationUnityUpdateSpec{
+				Kind: unityKind,
+			},
+		})
+		updateCatalogIntegration.Spec.Config.TableflowV1CatalogIntegrationUnityUpdateSpec.SetCustomSchema(customSchema)
 	}
 
 	catalogIntegration, err := c.V2Client.UpdateCatalogIntegration(args[0], updateCatalogIntegration)
