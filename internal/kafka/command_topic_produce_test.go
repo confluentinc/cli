@@ -4,10 +4,14 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	ckgo "github.com/confluentinc/confluent-kafka-go/v2/kafka"
+
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
 type splitTest struct {
@@ -102,6 +106,31 @@ func TestGetKeyAndValue_Fail(t *testing.T) {
 func TestGetMetaInfoFromSchemaId(t *testing.T) {
 	metaInfo := getMetaInfoFromSchemaId(100004)
 	require.Equal(t, []byte{0x0, 0x0, 0x1, 0x86, 0xa4}, metaInfo)
+}
+
+func TestProduceCommand_NormalizeFlag(t *testing.T) {
+	cfg := config.AuthenticatedCloudConfigMock()
+	prerunner := &pcmd.PreRun{Config: cfg}
+	c := &command{
+		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(new(cobra.Command), prerunner),
+		clientID:                "test-client-id",
+	}
+
+	cmd := c.newProduceCommand()
+
+	flag := cmd.Flags().Lookup("normalize")
+	require.NotNil(t, flag, "--normalize flag should be registered on `kafka topic produce`")
+	assert.Equal(t, "false", flag.DefValue, "--normalize flag should default to false")
+	assert.Equal(t, "Alphabetize the list of schema fields when registering a new schema.", flag.Usage)
+
+	normalize, err := cmd.Flags().GetBool("normalize")
+	require.NoError(t, err)
+	assert.False(t, normalize, "reading --normalize without setting it should return false")
+
+	require.NoError(t, cmd.Flags().Set("normalize", "true"))
+	normalize, err = cmd.Flags().GetBool("normalize")
+	require.NoError(t, err)
+	assert.True(t, normalize, "reading --normalize after setting it to true should return true")
 }
 
 func TestHeaders(t *testing.T) {
