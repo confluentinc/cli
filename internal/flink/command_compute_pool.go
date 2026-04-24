@@ -6,6 +6,7 @@ import (
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 type computePoolOut struct {
@@ -77,11 +78,29 @@ func convertSdkComputePoolToLocalComputePool(sdkComputePool cmfsdk.ComputePool) 
 		},
 	}
 
-	if sdkComputePool.Status != nil {
+	if phase := extractComputePoolPhase(sdkComputePool); phase != "" {
 		localPool.Status = &LocalComputePoolStatus{
-			Phase: sdkComputePool.Status.Phase,
+			Phase: phase,
 		}
 	}
 
 	return localPool
+}
+
+// extractComputePoolPhase reads "phase" from the untyped status map. ComputePool.Status
+// is *map[string]interface{} in the SDK, so callers can't use a typed accessor.
+// A missing or nil value is treated as "phase not yet populated" and returns "". A
+// present value that isn't a string indicates a server/schema contract violation and
+// is logged at debug level.
+func extractComputePoolPhase(pool cmfsdk.ComputePool) string {
+	raw, ok := pool.GetStatus()["phase"]
+	if !ok || raw == nil {
+		return ""
+	}
+	phase, ok := raw.(string)
+	if !ok {
+		log.CliLogger.Debugf("compute pool %q: status.phase has unexpected type %T, expected string", pool.GetMetadata().Name, raw)
+		return ""
+	}
+	return phase
 }
