@@ -8,9 +8,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 )
 
 func TestRegisterSchemaWithAuth_ForwardsNormalizeFlag(t *testing.T) {
