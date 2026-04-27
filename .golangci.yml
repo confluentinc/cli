@@ -32,6 +32,3 @@ linters-settings:
     custom-order: true
   nakedret:
     max-func-lines: 0
-  gomoddirectives:
-    replace-allow-list:
-      - "github.com/confluentinc/ccloud-sdk-go-v2/tableflow"
