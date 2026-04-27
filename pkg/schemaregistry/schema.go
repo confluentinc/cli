@@ -80,7 +80,7 @@ func RegisterSchemaWithAuth(schemaCfg *RegisterSchemaConfigs, client *Client) (i
 		RuleSet:    schemaCfg.Ruleset,
 	}
 
-	response, err := client.Register(schemaCfg.Subject, request, schemaCfg.Normalize)
+	response, err := client.Register(schemaCfg.Subject, request, true)
 	if err != nil {
 		return 0, err
 	}
