@@ -65,7 +65,6 @@ func (c *command) newProduceCommand() *cobra.Command {
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().StringSlice("headers", nil, `A comma-separated list of headers formatted as "key:value".`)
 	cmd.Flags().Bool("schema-id-header", false, "Serialize schema ID in the header instead of the message prefix.")
-	cmd.Flags().Bool("normalize", false, "Alphabetize the list of schema fields when registering a new schema.")
 
 	// cloud-only flags
 	cmd.Flags().String("key-references", "", "The path to the message key schema references file.")
@@ -531,11 +530,6 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 	}
 
 	if schema != "" && !schemaId.IsSet() {
-		normalize, err := cmd.Flags().GetBool("normalize")
-		if err != nil {
-			return nil, nil, err
-		}
-
 		// read schema info from local file and register schema
 		schemaCfg := &schemaregistry.RegisterSchemaConfigs{
 			SchemaDir:  schemaDir,
@@ -543,7 +537,6 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 			Subject:    subject,
 			Format:     format,
 			SchemaType: serializationProvider.GetSchemaName(),
-			Normalize:  normalize,
 		}
 
 		flag := "references"
@@ -681,11 +674,6 @@ func (c *command) initSchemaAndGetInfoOnPrem(cmd *cobra.Command, topic, mode str
 	}
 
 	if schema != "" && !schemaId.IsSet() {
-		normalize, err := cmd.Flags().GetBool("normalize")
-		if err != nil {
-			return nil, nil, err
-		}
-
 		// read schema info from local file and register schema
 		schemaCfg := &schemaregistry.RegisterSchemaConfigs{
 			SchemaDir:  schemaDir,
@@ -693,7 +681,6 @@ func (c *command) initSchemaAndGetInfoOnPrem(cmd *cobra.Command, topic, mode str
 			Subject:    subject,
 			Format:     format,
 			SchemaType: serializationProvider.GetSchemaName(),
-			Normalize:  normalize,
 		}
 
 		flag := "references"
