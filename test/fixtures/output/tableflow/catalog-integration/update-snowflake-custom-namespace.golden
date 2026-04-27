@@ -1,0 +1,10 @@
++------------------+-----------------+
+| ID               | tci-def456      |
+| Name             | my-snowflake-ci |
+| Environment      | env-596         |
+| Kafka Cluster    | lkc-123456      |
+| Type             | snowflake       |
+| Custom Namespace | new-custom-ns   |
+| Suspended        | false           |
+| Phase            | CONNECTED       |
++------------------+-----------------+
