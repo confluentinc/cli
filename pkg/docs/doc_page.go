@@ -165,7 +165,7 @@ func printNotes(cmd *cobra.Command, depth int) []string {
 	}
 
 	if cmd.CommandPath() == "confluent kafka topic consume" {
-		note := "Consuming Avro messages is not currently supported on s390x architectures."
+		note := "Consuming Avro messages is not currently supported on s390x architecture."
 		rows = append(rows, printSphinxBlock("note", note, nil)...)
 	}
 
