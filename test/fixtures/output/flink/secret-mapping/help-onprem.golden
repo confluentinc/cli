@@ -1,0 +1,18 @@
+Manage Flink environment secret mappings in Confluent Platform.
+
+Usage:
+  confluent flink secret-mapping [command]
+
+Available Commands:
+  create      Create a Flink secret mapping.
+  delete      Delete one or more Flink secret mappings.
+  describe    Describe a Flink secret mapping.
+  list        List Flink secret mappings.
+  update      Update a Flink secret mapping.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent flink secret-mapping [command] --help" for more information about a command.
