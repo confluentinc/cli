@@ -1,0 +1,23 @@
+{
+  "apiVersion": "",
+  "kind": "",
+  "metadata": {
+    "name": "test-catalog",
+    "creationTimestamp": "2025-08-05 12:00:00 +0000 UTC"
+  },
+  "spec": {
+    "srInstance": {
+      "connectionConfig": null
+    },
+    "kafkaClusters": [
+      {
+        "databaseName": "test-database",
+        "connectionConfig": null
+      },
+      {
+        "databaseName": "test-database-2",
+        "connectionConfig": null
+      }
+    ]
+  }
+}

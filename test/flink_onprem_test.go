@@ -410,6 +410,19 @@ func (s *CLITestSuite) TestFlinkCatalogListOnPrem() {
 	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
+func (s *CLITestSuite) TestFlinkCatalogUpdateOnPrem() {
+	tests := []CLITest{
+		// success
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.json", fixture: "flink/catalog/update-success.golden"},
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.json --output json", fixture: "flink/catalog/update-success-json.golden"},
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.json --output yaml", fixture: "flink/catalog/update-success-yaml.golden"},
+		// failure
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-invalid-failure.json", fixture: "flink/catalog/update-invalid-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
 func (s *CLITestSuite) TestFlinkStatementCreateOnPrem() {
 	tests := []CLITest{
 		// success
@@ -602,6 +615,25 @@ func (s *CLITestSuite) TestFlinkCatalogCreateWithYAML() {
 		// YAML file failure scenarios
 		{args: "flink catalog create test/fixtures/input/flink/catalog/create-invalid-failure.yaml", fixture: "flink/catalog/create-invalid-failure.golden", exitCode: 1},
 		{args: "flink catalog create test/fixtures/input/flink/catalog/create-existing-failure.yaml", fixture: "flink/catalog/create-existing-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkCatalogUpdateWithYAML() {
+	tests := []CLITest{
+		// success scenarios with JSON files
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.json", fixture: "flink/catalog/update-success.golden"},
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.json --output json", fixture: "flink/catalog/update-success-json.golden"},
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.json --output yaml", fixture: "flink/catalog/update-success-yaml.golden"},
+		// failure scenarios with JSON files
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-invalid-failure.json", fixture: "flink/catalog/update-invalid-failure.golden", exitCode: 1},
+		// YAML file tests
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.yaml", fixture: "flink/catalog/update-success.golden"},
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.yaml --output json", fixture: "flink/catalog/update-success-json.golden"},
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.yaml --output yaml", fixture: "flink/catalog/update-success-yaml.golden"},
+		// YAML file failure scenarios
+		{args: "flink catalog update test/fixtures/input/flink/catalog/update-invalid-failure.yaml", fixture: "flink/catalog/update-invalid-failure.golden", exitCode: 1},
 	}
 
 	runIntegrationTestsWithMultipleAuth(s, tests)
