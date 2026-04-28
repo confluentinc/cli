@@ -26,6 +26,7 @@ import (
 	"github.com/confluentinc/cli/v4/internal/connect"
 	"github.com/confluentinc/cli/v4/internal/context"
 	ccl "github.com/confluentinc/cli/v4/internal/custom-code-logging"
+	idebug "github.com/confluentinc/cli/v4/internal/debug"
 	"github.com/confluentinc/cli/v4/internal/environment"
 	"github.com/confluentinc/cli/v4/internal/feedback"
 	"github.com/confluentinc/cli/v4/internal/flink"
@@ -117,6 +118,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(configuration.New(cfg, prerunner))
 	cmd.AddCommand(connect.New(cfg, prerunner))
 	cmd.AddCommand(context.New(prerunner))
+	cmd.AddCommand(idebug.New(prerunner))
 	cmd.AddCommand(environment.New(prerunner))
 	cmd.AddCommand(feedback.New(prerunner))
 	cmd.AddCommand(flink.New(cfg, prerunner))
