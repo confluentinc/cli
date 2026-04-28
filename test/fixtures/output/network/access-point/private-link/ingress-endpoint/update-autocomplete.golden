@@ -1,4 +1,6 @@
 --name	Name of the ingress endpoint.
 ap-99999	my-aws-ingress-access-point
+ap-11111	my-azure-ingress-access-point
+ap-22222	my-gcp-ingress-access-point
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp
