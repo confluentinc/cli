@@ -511,6 +511,16 @@ func (s *CLITestSuite) TestFlinkStatementExceptionListOnPrem() {
 	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
+func (s *CLITestSuite) TestFlinkSystemInfo() {
+	tests := []CLITest{
+		{args: "flink system-info", fixture: "flink/system-info.golden"},
+		{args: "flink system-info --output json", fixture: "flink/system-info-json.golden"},
+		{args: "flink system-info --output yaml", fixture: "flink/system-info-yaml.golden"},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
 func (s *CLITestSuite) TestFlinkOnPremWithCloudLogin() {
 	test := CLITest{args: "flink environment list --output json", fixture: "flink/environment/list-cloud.golden", login: "cloud", exitCode: 1}
 	s.runIntegrationTest(test)
