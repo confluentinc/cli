@@ -1,0 +1,5 @@
+op-12345	my-ca
+op-54321	my-ca-2
+op-67890	my-ca-3
+:4
+Completion ended with directive: ShellCompDirectiveNoFileComp
