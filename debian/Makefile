@@ -68,7 +68,7 @@ install: apply-patches
 	disableupdates=""; if [[ $(word 1,$(split_version)) -ge 3 && $(word 2,$(split_version)) -ge 43 ]]; then disableupdates="_disableupdates"; fi; \
 	baseurl="s3-us-west-2.amazonaws.com/confluent.cloud"; if [[ $(word 1,$(split_version)) -ge 4 && $(word 2,$(split_version)) -ge 1 ]]; then baseurl="packages.confluent.io"; fi; \
 	version="_$${v}$(CLI_VERSION)"; if [[ $(word 1,$(split_version)) -ge 4 && $(word 2,$(split_version)) -ge 1 ]]; then version=""; fi; \
-	for dir in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64; do \
+	for dir in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 linux_s390x; do \
 		archive=confluent$${version}_$${dir}$${disableupdates}.tar.gz; \
 		curl -fs https://$${baseurl}/confluent-cli/archives/$(CLI_VERSION)/$${archive} -o $${archive}; \
 		mkdir -p $${dir} $${dir}-temp; \
@@ -116,21 +116,25 @@ else
 	RPM_RELEASE_ID=$(REVISION)
 endif
 
-rpm: rpm-amd64-build rpm-arm64-build
+rpm: rpm-amd64-build rpm-arm64-build rpm-s390x-build
+	find RPM_BUILDING/{,S}RPMS/ -type f | xargs -n1 -iXXX mv XXX .
+	@echo
+	@echo "================================================="
+	@echo "The RPMs have been created and can be found here:"
+	@ls -laF $(FULL_PACKAGE_TITLE)*rpm
+	@echo "================================================="
 
 rpm-amd64-build: rpm-amd64-spec
 	echo "Building the amd64 RPM"
-	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
+	rpmbuild --target=x86_64 --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --target=x86_64 --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 
 rpm-arm64-build: rpm-arm64-spec
 	echo "Building the arm64 RPM"
 	rpmbuild --target=aarch64 --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --target=aarch64 --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
-	find RPM_BUILDING/{,S}RPMS/ -type f | xargs -n1 -iXXX mv XXX .
-	echo
-	echo "================================================="
-	echo "The RPMs have been created and can be found here:"
-	@ls -laF $(FULL_PACKAGE_TITLE)*rpm
-	echo "================================================="
+
+rpm-s390x-build: rpm-s390x-spec
+	echo "Building the s390x RPM"
+	rpmbuild --target=s390x --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --target=s390x --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 
 # Unfortunately, because of version naming issues and the way rpmbuild expects
 # the paths in the tar file to be named, we need to rearchive the package. So
@@ -142,15 +146,23 @@ rpm-amd64-spec: rpm-build-area install debian/$(FULL_PACKAGE_TITLE).spec.in RELE
 	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 	mkdir $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 	cp -R $(DESTDIR)/* $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
-	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g; s/##EXCLUDEARCH##/arm64/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
+	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g; s/##EXCLUDEARCH1##/arm64/g; s/##EXCLUDEARCH2##/s390x/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
 	rm -f $@ && tar -czf RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 
-rpm-arm64-spec:
+rpm-arm64-spec: rpm-build-area install debian/$(FULL_PACKAGE_TITLE).spec.in RELEASE_$(RPM_VERSION)$(RPM_RELEASE_POSTFIX_UNDERSCORE)
 	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 	mkdir $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 	cp -R $(DESTDIR)/* $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
-	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g; s/##EXCLUDEARCH##/amd64/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
+	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g; s/##EXCLUDEARCH1##/amd64/g; s/##EXCLUDEARCH2##/s390x/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
+	rm -f $@ && tar -czf RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+
+rpm-s390x-spec: rpm-build-area install debian/$(FULL_PACKAGE_TITLE).spec.in RELEASE_$(RPM_VERSION)$(RPM_RELEASE_POSTFIX_UNDERSCORE)
+	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	mkdir $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	cp -R $(DESTDIR)/* $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g; s/##EXCLUDEARCH1##/amd64/g; s/##EXCLUDEARCH2##/arm64/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
 	rm -f $@ && tar -czf RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 
