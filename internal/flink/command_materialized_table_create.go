@@ -224,8 +224,8 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 
 	if materializedTable.Spec.Distribution != nil {
 		db := materializedTable.Spec.GetDistribution()
-		mtableOut.DistributedByColumnNames = db.GetKeys()
-		mtableOut.DistributedByBuckets = int(db.GetBucketCount())
+		mtableOut.DistributionKeys = db.GetKeys()
+		mtableOut.DistributionBucketCount = int(db.GetBucketCount())
 	}
 
 	outputTable.Add(&mtableOut)

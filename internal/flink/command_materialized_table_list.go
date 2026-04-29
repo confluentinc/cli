@@ -69,8 +69,8 @@ func (c *command) materializedTableList(cmd *cobra.Command, _ []string) error {
 
 		if materializedTable.Spec.Distribution != nil {
 			db := materializedTable.Spec.GetDistribution()
-			mtableOut.DistributedByColumnNames = db.GetKeys()
-			mtableOut.DistributedByBuckets = int(db.GetBucketCount())
+			mtableOut.DistributionKeys = db.GetKeys()
+			mtableOut.DistributionBucketCount = int(db.GetBucketCount())
 		}
 		list.Add(&mtableOut)
 	}

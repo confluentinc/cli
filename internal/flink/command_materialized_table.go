@@ -7,19 +7,19 @@ import (
 )
 
 type materializedTableOut struct {
-	Name                     string   `human:"Name" serialized:"name"`
-	ClusterID                string   `human:"Kafka Cluster ID" serialized:"kafka_cluster_id"`
-	Environment              string   `human:"Environment" serialized:"environment"`
-	ComputePool              string   `human:"Compute Pool" serialized:"compute_pool"`
-	ServiceAccount           string   `human:"Service Account" serialized:"service_account"`
-	Stopped                  bool     `human:"Stopped" serialized:"stopped"`
-	Query                    string   `human:"Query,omitempty" serialized:"query,omitempty"`
-	Columns                  []string `human:"Columns,omitempty" serialized:"columns,omitempty"`
-	WaterMarkColumnName      string   `human:"Watermark Column Name,omitempty" serialized:"watermark_column_name,omitempty"`
-	WaterMarkExpression      string   `human:"Watermark Expression,omitempty" serialized:"watermark_expression,omitempty"`
-	Constraints              []string `human:"Constraints,omitempty" serialized:"constraints,omitempty"`
-	DistributedByColumnNames []string `human:"Distributed By Column Names,omitempty" serialized:"distributed_by_column_names,omitempty"`
-	DistributedByBuckets     int      `human:"Distributed By Buckets,omitempty" serialized:"distributed_by_buckets,omitempty"`
+	Name                    string   `human:"Name" serialized:"name"`
+	ClusterID               string   `human:"Kafka Cluster ID" serialized:"kafka_cluster_id"`
+	Environment             string   `human:"Environment" serialized:"environment"`
+	ComputePool             string   `human:"Compute Pool" serialized:"compute_pool"`
+	ServiceAccount          string   `human:"Principal" serialized:"principal"`
+	Stopped                 bool     `human:"Stopped" serialized:"stopped"`
+	Query                   string   `human:"Query,omitempty" serialized:"query,omitempty"`
+	Columns                 []string `human:"Columns,omitempty" serialized:"columns,omitempty"`
+	WaterMarkColumnName     string   `human:"Watermark Column,omitempty" serialized:"watermark_column,omitempty"`
+	WaterMarkExpression     string   `human:"Watermark Expression,omitempty" serialized:"watermark_expression,omitempty"`
+	Constraints             []string `human:"Constraints,omitempty" serialized:"constraints,omitempty"`
+	DistributionKeys        []string `human:"Distribution Keys,omitempty" serialized:"distribution_keys,omitempty"`
+	DistributionBucketCount int      `human:"Distribution Bucket Count,omitempty" serialized:"distribution_bucket_count,omitempty"`
 }
 
 func (c *command) newMaterializedTableCommand() *cobra.Command {
