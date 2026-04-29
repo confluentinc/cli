@@ -6,7 +6,7 @@ contact:
   slack_team_channel: cli-eng
   slack_oncall_channel: cli-oncall
 lang: go
-lang_version: 1.25.7
+lang_version: 1.26.1
 git:
   enable: true
   hooks:
@@ -18,6 +18,11 @@ gitignore:
 semaphore:
   enable: true
   pipeline_enable: false
+  tasks:
+    - name: CLI Live Tests (Daily)
+      branch: main
+      pipeline_file: .semaphore/live-tests.yml
+      at: "0 8 * * *"
 make:
   enable: false
 sonarqube:

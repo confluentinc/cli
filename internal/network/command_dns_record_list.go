@@ -70,7 +70,7 @@ func (c *command) dnsRecordList(cmd *cobra.Command, _ []string) error {
 		ResourceIds: resourceIds,
 	}
 
-	records, err := c.V2Client.ListDnsRecords(environmentId, listParameters)
+	records, err := c.V2Client.ListNetworkDnsRecords(environmentId, listParameters)
 	if err != nil {
 		return err
 	}

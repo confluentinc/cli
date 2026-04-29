@@ -35,7 +35,7 @@ func (c *accessPointCommand) describeIngressEndpoint(cmd *cobra.Command, args []
 		return err
 	}
 
-	ingressEndpoint, err := c.V2Client.GetAccessPoint(environmentId, args[0])
+	ingressEndpoint, err := c.V2Client.GetNetworkAccessPoint(environmentId, args[0])
 	if err != nil {
 		return err
 	}

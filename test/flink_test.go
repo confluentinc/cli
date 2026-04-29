@@ -70,21 +70,6 @@ func (s *CLITestSuite) TestFlinkArtifact() {
 	}
 }
 
-func (s *CLITestSuite) TestFlinkComputePool() {
-	tests := []CLITest{
-		{args: "flink compute-pool create my-compute-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create.golden"},
-		{args: "flink compute-pool describe lfcp-123456", fixture: "flink/compute-pool/describe.golden"},
-		{args: "flink compute-pool list", fixture: "flink/compute-pool/list.golden"},
-		{args: "flink compute-pool list --region eu-west-2", fixture: "flink/compute-pool/list-region.golden"},
-		{args: "flink compute-pool update lfcp-123456 --max-cfu 5", fixture: "flink/compute-pool/update.golden"},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
-
 func (s *CLITestSuite) TestFlinkConnection() {
 	tests := []CLITest{
 		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
@@ -156,6 +141,9 @@ func (s *CLITestSuite) TestFlinkConnectionCreateFailure() {
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type a2a --endpoint https://api.example.com", fixture: "flink/connection/create/create-a2a-no-secret.golden", exitCode: 1},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type a2a --endpoint https://api.example.com --api-key 0000000000000000 --token token", fixture: "flink/connection/create/create-a2a-mutually-exclusive-secret.golden", exitCode: 1},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type a2a --endpoint https://api.example.com --token-endpoint https://api.example.com/oauth2", fixture: "flink/connection/create/create-a2a-missing-required-secret.golden", exitCode: 1},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type elastic --endpoint https://api.example.com", fixture: "flink/connection/create/create-elastic-no-secret.golden", exitCode: 1},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type elastic --endpoint https://api.example.com --api-key 0000000000000000 --username user", fixture: "flink/connection/create/create-elastic-mutually-exclusive-secret.golden", exitCode: 1},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type elastic --endpoint https://api.example.com --username user", fixture: "flink/connection/create/create-elastic-missing-required-secret.golden", exitCode: 1},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com --token token --sse-endpoint /sse --transport-type HTTP", fixture: "flink/connection/create/create-wrong-mcp-transport-type.golden", exitCode: 1},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com --api-key api_key --sse-endpoint sse --transport-type STREAMABLE_HTTP", fixture: "flink/connection/create/create-streamable-http-mcp-connection-with-sse-endpoint.golden", exitCode: 1},
 	}
@@ -181,6 +169,7 @@ func (s *CLITestSuite) TestFlinkConnectionCreateSuccess() {
 		{args: "flink connection create my-connection --cloud gcp --region eu-west-1 --type vertexai --endpoint https://api.openai.com/v1/chat/completions --service-key 0000000000000000", fixture: "flink/connection/create/create-vertexai.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mongodb --endpoint https://api.openai.com/v1/chat/completions --username name --password pass", fixture: "flink/connection/create/create-mongodb.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type elastic --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000", fixture: "flink/connection/create/create-elastic.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type elastic --endpoint https://api.openai.com/v1/chat/completions --username name --password pass", fixture: "flink/connection/create/create-elastic.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type pinecone --endpoint https://api.openai.com/v1/chat/completions --api-key 0000000000000000", fixture: "flink/connection/create/create-pinecone.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type couchbase --endpoint https://api.openai.com/v1/chat/completions --username name --password pass", fixture: "flink/connection/create/create-couchbase.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type confluent_jdbc --endpoint jdbc:mysql://custom.com:3306/customerdb --username name --password pass", fixture: "flink/connection/create/create-confluent_jdbc.golden"},
@@ -196,6 +185,11 @@ func (s *CLITestSuite) TestFlinkConnectionCreateSuccess() {
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com --token-endpoint https://api.example.com/auth --client-id clientId --client-secret secret --scope test_scope", fixture: "flink/connection/create/create-mcp_server.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com --token token --sse-endpoint /sse --transport-type SSE", fixture: "flink/connection/create/create-mcp_server.golden"},
 		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type mcp_server --endpoint https://api.example.com --username name --password pass --transport-type SSE", fixture: "flink/connection/create/create-mcp_server.golden"},
+		{args: "flink connection create my-connection --cloud azure --region eu-west-1 --type cosmosdb --endpoint https://myaccount.documents.azure.com --api-key 0000000000000000", fixture: "flink/connection/create/create-cosmosdb.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type s3vectors --endpoint https://s3vectors.example.com --aws-access-key 0000000000000000 --aws-secret-key 0000000000000000", fixture: "flink/connection/create/create-s3vectors.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type s3vectors --endpoint https://s3vectors.example.com --aws-access-key 0000000000000000 --aws-secret-key 0000000000000000 --aws-session-token 0000000000000000", fixture: "flink/connection/create/create-s3vectors.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type anthropic --endpoint https://api.anthropic.com/v1/messages --api-key 0000000000000000", fixture: "flink/connection/create/create-anthropic.golden"},
+		{args: "flink connection create my-connection --cloud aws --region eu-west-1 --type fireworksai --endpoint https://api.fireworks.ai/inference/v1/chat/completions --api-key 0000000000000000", fixture: "flink/connection/create/create-fireworksai.golden"},
 	}
 
 	for _, test := range tests {
@@ -222,6 +216,23 @@ func (s *CLITestSuite) TestFlinkConnectivityType() {
 	for _, test := range tests {
 		test.login = "cloud"
 		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestFlinkComputePool() {
+	tests := []CLITest{
+		{args: "flink compute-pool create my-compute-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create.golden"},
+		{args: "flink compute-pool describe lfcp-123456", fixture: "flink/compute-pool/describe.golden"},
+		{args: "flink compute-pool list", fixture: "flink/compute-pool/list.golden"},
+		{args: "flink compute-pool list --region eu-west-2", fixture: "flink/compute-pool/list-region.golden"},
+		{args: "flink compute-pool update lfcp-123456 --max-cfu 5", fixture: "flink/compute-pool/update.golden"},
+		{args: "flink compute-pool create my-compute-pool-2 --default-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create-default.golden"},
+		{args: "flink compute-pool update lfcp-123456 --default-pool=false", fixture: "flink/compute-pool/update-default.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
 }
@@ -264,6 +275,18 @@ func (s *CLITestSuite) TestFlinkComputePoolUse() {
 
 	for _, test := range tests {
 		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestFlinkComputePoolConfig() {
+	tests := []CLITest{
+		{args: "flink compute-pool-config describe", fixture: "flink/compute-pool/describe-compute-pool-config.golden"},
+		{args: "flink compute-pool-config update --max-cfu 5 --default-pool", fixture: "flink/compute-pool/update-compute-pool-config.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
 }
@@ -327,6 +350,7 @@ func (s *CLITestSuite) TestFlinkStatement() {
 func (s *CLITestSuite) TestFlinkStatementCreate() {
 	tests := []CLITest{
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "flink/statement/create.golden"},
+		{args: `flink statement create my-statement-2 --sql "INSERT * INTO table;" --cloud aws --region eu-west-1 --service-account sa-123456`, fixture: "flink/statement/create-without-compute-pool.golden"},
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456`, fixture: "flink/statement/create-service-account-warning.golden"},
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 --wait`, fixture: "flink/statement/create-wait.golden"},
 		{args: `flink statement create --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 -o yaml`, fixture: "flink/statement/create-no-name-yaml.golden", regex: true},

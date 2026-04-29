@@ -52,7 +52,7 @@ func (c *accessPointCommand) updateIngressEndpoint(cmd *cobra.Command, args []st
 		},
 	}
 
-	ingressEndpoint, err := c.V2Client.UpdateAccessPoint(args[0], updateIngressEndpoint)
+	ingressEndpoint, err := c.V2Client.UpdateNetworkAccessPoint(args[0], updateIngressEndpoint)
 	if err != nil {
 		return err
 	}

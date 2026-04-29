@@ -20,6 +20,7 @@ type privateNetworkInterfaceAccessPointOut struct {
 	Phase             string   `human:"Phase" serialized:"phase"`
 	NetworkInterfaces []string `human:"Network Interfaces,omitempty" serialized:"network_interfaces,omitempty"`
 	Account           string   `human:"Aws Account,omitempty" serialized:"aws_account,omitempty"`
+	EgressRoutes      []string `human:"Egress Routes,omitempty" serialized:"egress_routes,omitempty"`
 }
 
 func (c *accessPointCommand) newPrivateNetworkInterfaceCommand() *cobra.Command {
@@ -29,9 +30,9 @@ func (c *accessPointCommand) newPrivateNetworkInterfaceCommand() *cobra.Command 
 	}
 
 	cmd.AddCommand(c.newPrivateNetworkInterfaceCreateCommand())
+	cmd.AddCommand(c.newPrivateNetworkInterfaceDeleteCommand())
 	cmd.AddCommand(c.newPrivateNetworkInterfaceDescribeCommand())
 	cmd.AddCommand(c.newPrivateNetworkInterfaceListCommand())
-	cmd.AddCommand(c.newPrivateNetworkInterfaceDeleteCommand())
 	cmd.AddCommand(c.newPrivateNetworkInterfaceUpdateCommand())
 
 	return cmd
@@ -59,7 +60,7 @@ func (c *accessPointCommand) autocompletePrivateNetworkInterfaces() []string {
 		return nil
 	}
 
-	accessPoints, err := c.V2Client.ListAccessPoints(environmentId, nil)
+	accessPoints, err := c.V2Client.ListNetworkAccessPoints(environmentId, nil)
 	if err != nil {
 		return nil
 	}
@@ -90,6 +91,7 @@ func printPrivateNetworkInterfaceTable(cmd *cobra.Command, privateNetworkInterfa
 	if privateNetworkInterface.Spec.Config != nil && privateNetworkInterface.Spec.Config.NetworkingV1AwsPrivateNetworkInterface != nil {
 		out.NetworkInterfaces = privateNetworkInterface.Spec.Config.NetworkingV1AwsPrivateNetworkInterface.GetNetworkInterfaces()
 		out.Account = privateNetworkInterface.Spec.Config.NetworkingV1AwsPrivateNetworkInterface.GetAccount()
+		out.EgressRoutes = privateNetworkInterface.Spec.Config.NetworkingV1AwsPrivateNetworkInterface.GetEgressRoutes()
 	}
 
 	table := output.NewTable(cmd)

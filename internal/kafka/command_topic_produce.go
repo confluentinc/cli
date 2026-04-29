@@ -97,8 +97,6 @@ func (c *command) newProduceCommand() *cobra.Command {
 	cmd.MarkFlagsMutuallyExclusive("schema", "schema-id")
 	cmd.MarkFlagsMutuallyExclusive("config", "config-file")
 
-	cobra.CheckErr(cmd.Flags().MarkHidden("schema-id-header"))
-
 	return cmd
 }
 

@@ -137,13 +137,13 @@ func (c *roleBindingCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *roleBindingCommand) getPoolToNameMap() (map[string]string, error) {
-	providers, err := c.V2Client.ListIdentityProviders()
+	providers, err := c.V2Client.ListIamIdentityProviders()
 	if err != nil {
 		return map[string]string{}, err
 	}
 	poolToName := make(map[string]string)
 	for _, provider := range providers {
-		pools, err := c.V2Client.ListIdentityPools(provider.GetId())
+		pools, err := c.V2Client.ListIamIdentityPools(provider.GetId())
 		if err != nil {
 			return map[string]string{}, err
 		}
@@ -155,7 +155,7 @@ func (c *roleBindingCommand) getPoolToNameMap() (map[string]string, error) {
 }
 
 func (c *roleBindingCommand) getGroupMappingToNameMap() (map[string]string, error) {
-	groupMappings, err := c.V2Client.ListGroupMappings()
+	groupMappings, err := c.V2Client.ListIamGroupMappings()
 	if err != nil {
 		return map[string]string{}, err
 	}
@@ -179,7 +179,7 @@ func (c *roleBindingCommand) getPrincipalToUserMap() (map[string]*iamv2.IamV2Use
 }
 
 func (c *roleBindingCommand) getServiceAccountIdToNameMap() (map[string]string, error) {
-	serviceAccounts, err := c.V2Client.ListIamServiceAccounts()
+	serviceAccounts, err := c.V2Client.ListIamServiceAccounts(nil)
 	if err != nil {
 		return nil, err
 	}

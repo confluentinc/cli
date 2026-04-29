@@ -47,7 +47,7 @@ func (c *groupMappingCommand) create(cmd *cobra.Command, args []string) error {
 		Description: ssov2.PtrString(description),
 		Filter:      ssov2.PtrString(filter),
 	}
-	groupMapping, err := c.V2Client.CreateGroupMapping(createGroupMapping)
+	groupMapping, err := c.V2Client.CreateIamGroupMapping(createGroupMapping)
 	if err != nil {
 		return err
 	}

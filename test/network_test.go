@@ -1233,6 +1233,7 @@ func (s *CLITestSuite) TestNetworkAccessPointPrivateNetworkInterfaceDelete() {
 func (s *CLITestSuite) TestNetworkAccessPointPrivateNetworkInterfaceCreate() {
 	tests := []CLITest{
 		{args: "network access-point private-network-interface create --cloud aws --gateway gw-123456 --network-interfaces eni-00000000000000000,eni-00000000000000001 --account 000000000000", fixture: "network/access-point/private-network-interface/create.golden"},
+		{args: "network access-point private-network-interface create --cloud aws --gateway gw-123456 --network-interfaces eni-00000000000000000,eni-00000000000000001 --account 000000000000 --routes 172.31.0.0/16,192.168.1.0/24", fixture: "network/access-point/private-network-interface/create-with-routes.golden"},
 	}
 
 	for _, test := range tests {
@@ -1269,6 +1270,7 @@ func (s *CLITestSuite) TestNetworkAccessPointPrivateNetworkInterfaceUpdate() {
 	tests := []CLITest{
 		{args: "network access-point private-network-interface update ap-54321 --name my-new-aws-private-network-interface", input: "y\n", fixture: "network/access-point/private-network-interface/update.golden"},
 		{args: "network access-point private-network-interface update ap-54321 --network-interfaces eni-00000000000000002,eni-00000000000000003", input: "y\n", fixture: "network/access-point/private-network-interface/update-network-interfaces.golden"},
+		{args: "network access-point private-network-interface update ap-54321 --routes 10.0.0.0/8,192.168.0.0/16", input: "y\n", fixture: "network/access-point/private-network-interface/update-routes.golden"},
 	}
 
 	for _, test := range tests {
