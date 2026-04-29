@@ -43,7 +43,8 @@ var commandRules = []linter.CommandRule{
 		linter.ExcludeCommand("connect custom-plugin version create"),
 		linter.ExcludeCommand("connect custom-plugin version update"),
 		linter.ExcludeCommand("pipeline update"),
-		linter.ExcludeCommand("flink statement update")),
+		linter.ExcludeCommand("flink statement update"),
+		linter.ExcludeCommand("flink materialized-table update")),
 
 	// Soft Requirements
 	linter.Filter(linter.RequireLengthBetween("Short", 10, 60),
@@ -126,6 +127,9 @@ var flagRules = []linter.FlagRule{
 			"source-bootstrap-server",
 			"update-schema-registry",
 			"worker-configurations",
+			"watermark-column-name",
+			"distributed-by-column-names",
+			"distributed-by-buckets",
 		),
 	),
 	linter.FlagFilter(
@@ -139,6 +143,7 @@ var flagRules = []linter.FlagRule{
 			"schema-registry-api-key",
 			"schema-registry-api-secret",
 			"skip-message-on-error",
+			"distributed-by-column-names",
 		),
 	),
 }
