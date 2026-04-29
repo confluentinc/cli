@@ -33,8 +33,6 @@ func (c *command) newMaterializedTableCommand() *cobra.Command {
 	cmd.AddCommand(c.newMaterializedTableDeleteCommand())
 	cmd.AddCommand(c.newMaterializedTableDescribeCommand())
 	cmd.AddCommand(c.newMaterializedTableListCommand())
-	cmd.AddCommand(c.newMaterializedTableResumeCommand())
-	cmd.AddCommand(c.newMaterializedTableStopCommand())
 	cmd.AddCommand(c.newMaterializedTableUpdateCommand())
 
 	return cmd

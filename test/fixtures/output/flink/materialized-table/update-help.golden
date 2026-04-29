@@ -3,6 +3,15 @@ Update a Flink materialized table.
 Usage:
   confluent flink materialized-table update <name> [flags]
 
+Examples:
+Stop the Flink materialized table "my-table".
+
+  $ confluent flink materialized-table update my-table --database lkc01 --stopped=true
+
+Resume the Flink materialized table "my-table".
+
+  $ confluent flink materialized-table update my-table --database lkc01 --stopped=false
+
 Flags:
       --database string                      REQUIRED: The ID of Kafka cluster hosting the Materialized Table's topic.
       --compute-pool string                  The ID associated with the compute pool in context.

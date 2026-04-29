@@ -9,6 +9,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -19,6 +20,16 @@ func (c *command) newMaterializedTableUpdateCommand() *cobra.Command {
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validMaterializedTableArgs),
 		RunE:              c.materializedTableUpdate,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Stop the Flink materialized table "my-table".`,
+				Code: "confluent flink materialized-table update my-table --database lkc01 --stopped=true",
+			},
+			examples.Example{
+				Text: `Resume the Flink materialized table "my-table".`,
+				Code: "confluent flink materialized-table update my-table --database lkc01 --stopped=false",
+			},
+		),
 	}
 
 	cmd.Flags().String("database", "", "The ID of Kafka cluster hosting the Materialized Table's topic.")
