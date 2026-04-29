@@ -177,6 +177,9 @@ func getKind(id string) string {
 	if id == "cloud" {
 		return "Cloud"
 	}
+	if id == "global" {
+		return "Global"
+	}
 	if id == "tableflow" {
 		return "Tableflow"
 	}
