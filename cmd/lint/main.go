@@ -126,6 +126,9 @@ var flagRules = []linter.FlagRule{
 			"source-bootstrap-server",
 			"update-schema-registry",
 			"worker-configurations",
+			"watermark-column-name",
+			"distributed-by-column-names",
+			"distributed-by-buckets",
 		),
 	),
 	linter.FlagFilter(
@@ -139,6 +142,7 @@ var flagRules = []linter.FlagRule{
 			"schema-registry-api-key",
 			"schema-registry-api-secret",
 			"skip-message-on-error",
+			"distributed-by-column-names",
 		),
 	),
 }
