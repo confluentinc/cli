@@ -26,12 +26,12 @@ func (c *command) newMaterializedTableCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create Flink materialized table "my-table" in AWS us-west-2.`,
-				Code: "confluent flink materialized-table create my-table --cloud aws --region us-west-2 --kafka-cluster-id lkc01 --compute-pool pool1 --principal principal1 --query query1",
+				Code: "confluent flink materialized-table create my-table --cloud aws --region us-west-2 --database lkc01 --compute-pool pool1 --principal principal1 --query query1",
 			},
 		),
 	}
 
-	cmd.Flags().String("kafka-cluster-id", "", "The ID of Kafka cluster hosting the Materialized Table's topic.")
+	cmd.Flags().String("database", "", "The ID of Kafka cluster hosting the Materialized Table's topic.")
 	cmd.Flags().String("compute-pool", "", "The ID associated with the compute pool in context.")
 	cmd.Flags().String("principal", "", "The ID of a principal this Materialized Table query runs as.")
 	cmd.Flags().String("query", "", "The query section of the latest Materialized Table.")
@@ -44,7 +44,7 @@ func (c *command) newMaterializedTableCreateCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("kafka-cluster-id"))
+	cobra.CheckErr(cmd.MarkFlagRequired("database"))
 	cobra.CheckErr(cmd.MarkFlagRequired("compute-pool"))
 	cobra.CheckErr(cmd.MarkFlagRequired("principal"))
 	cobra.CheckErr(cmd.MarkFlagRequired("query"))
@@ -53,7 +53,7 @@ func (c *command) newMaterializedTableCreateCommand() *cobra.Command {
 }
 
 func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) error {
-	kafkaId, err := cmd.Flags().GetString("kafka-cluster-id")
+	kafkaId, err := cmd.Flags().GetString("database")
 	if err != nil {
 		return err
 	}

@@ -6,10 +6,10 @@ Usage:
 Examples:
 Create Flink materialized table "my-table" in AWS us-west-2.
 
-  $ confluent flink materialized-table create my-table --cloud aws --region us-west-2 --kafka-cluster-id lkc01 --compute-pool pool1 --principal principal1 --query query1
+  $ confluent flink materialized-table create my-table --cloud aws --region us-west-2 --database lkc01 --compute-pool pool1 --principal principal1 --query query1
 
 Flags:
-      --kafka-cluster-id string         REQUIRED: The ID of Kafka cluster hosting the Materialized Table's topic.
+      --database string                 REQUIRED: The ID of Kafka cluster hosting the Materialized Table's topic.
       --compute-pool string             REQUIRED: The ID associated with the compute pool in context.
       --principal string                REQUIRED: The ID of a principal this Materialized Table query runs as.
       --query string                    REQUIRED: The query section of the latest Materialized Table.

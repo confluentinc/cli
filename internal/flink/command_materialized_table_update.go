@@ -23,16 +23,16 @@ func (c *command) newMaterializedTableUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Stop the Flink materialized table "my-table".`,
-				Code: "confluent flink materialized-table update my-table --kafka-cluster-id lkc01 --stopped=true",
+				Code: "confluent flink materialized-table update my-table --database lkc01 --stopped=true",
 			},
 			examples.Example{
 				Text: `Resume the Flink materialized table "my-table".`,
-				Code: "confluent flink materialized-table update my-table --kafka-cluster-id lkc01 --stopped=false",
+				Code: "confluent flink materialized-table update my-table --database lkc01 --stopped=false",
 			},
 		),
 	}
 
-	cmd.Flags().String("kafka-cluster-id", "", "The ID of Kafka cluster hosting the Materialized Table's topic.")
+	cmd.Flags().String("database", "", "The ID of Kafka cluster hosting the Materialized Table's topic.")
 	cmd.Flags().String("compute-pool", "", "The ID associated with the compute pool in context.")
 	cmd.Flags().String("principal", "", "The ID of a principal this Materialized Table query runs as.")
 	cmd.Flags().String("query", "", "The query section of the latest Materialized Table.")
@@ -45,7 +45,7 @@ func (c *command) newMaterializedTableUpdateCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("kafka-cluster-id"))
+	cobra.CheckErr(cmd.MarkFlagRequired("database"))
 
 	return cmd
 }
@@ -65,7 +65,7 @@ func (c *command) materializedTableUpdate(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	kafkaId, err := cmd.Flags().GetString("kafka-cluster-id")
+	kafkaId, err := cmd.Flags().GetString("database")
 	if err != nil {
 		return err
 	}

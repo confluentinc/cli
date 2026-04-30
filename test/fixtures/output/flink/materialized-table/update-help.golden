@@ -6,14 +6,14 @@ Usage:
 Examples:
 Stop the Flink materialized table "my-table".
 
-  $ confluent flink materialized-table update my-table --kafka-cluster-id lkc01 --stopped=true
+  $ confluent flink materialized-table update my-table --database lkc01 --stopped=true
 
 Resume the Flink materialized table "my-table".
 
-  $ confluent flink materialized-table update my-table --kafka-cluster-id lkc01 --stopped=false
+  $ confluent flink materialized-table update my-table --database lkc01 --stopped=false
 
 Flags:
-      --kafka-cluster-id string         REQUIRED: The ID of Kafka cluster hosting the Materialized Table's topic.
+      --database string                 REQUIRED: The ID of Kafka cluster hosting the Materialized Table's topic.
       --compute-pool string             The ID associated with the compute pool in context.
       --principal string                The ID of a principal this Materialized Table query runs as.
       --query string                    The query section of the latest Materialized Table.

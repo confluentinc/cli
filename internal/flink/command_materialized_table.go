@@ -8,7 +8,7 @@ import (
 
 type materializedTableOut struct {
 	Name                    string   `human:"Name" serialized:"name"`
-	ClusterID               string   `human:"Kafka Cluster ID" serialized:"kafka_cluster_id"`
+	ClusterID               string   `human:"Database" serialized:"database"`
 	Environment             string   `human:"Environment" serialized:"environment"`
 	ComputePool             string   `human:"Compute Pool" serialized:"compute_pool"`
 	ServiceAccount          string   `human:"Principal" serialized:"principal"`

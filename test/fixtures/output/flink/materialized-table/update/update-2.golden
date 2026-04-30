@@ -1,6 +1,6 @@
 +---------------------------+--------------------------------+
 | Name                      | table-1                        |
-| Kafka Cluster ID          | lkc01                          |
+| Database                  | lkc01                          |
 | Environment               | env-1                          |
 | Compute Pool              | pool2                          |
 | Principal                 | principal1                     |
