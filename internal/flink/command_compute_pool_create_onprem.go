@@ -90,9 +90,9 @@ func (c *command) computePoolCreateOnPrem(cmd *cobra.Command, args []string) err
 		}
 		table.Add(&computePoolOutOnPrem{
 			CreationTime: creationTime,
-			Name:         sdkComputePool.GetMetadata().Name,
-			Type:         sdkComputePool.GetSpec().Type,
-			Phase:        sdkOutputComputePool.GetStatus().Phase,
+			Name:         sdkOutputComputePool.GetMetadata().Name,
+			Type:         sdkOutputComputePool.GetSpec().Type,
+			Phase:        extractComputePoolPhase(sdkOutputComputePool),
 		})
 		return table.Print()
 	}
