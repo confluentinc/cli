@@ -8,8 +8,8 @@ This file documents only the non-inferable details. Architecture, file layout, a
 
 ## Stack
 
-- **Language:** Go, version pinned in `.go-version` (currently `1.25.7`). Use `goenv` or any tool that respects `.go-version`.
-- **Framework:** Cobra (CLI) + Viper (config).
+- **Language:** Go, version pinned in `.go-version`. Use `goenv` or any tool that respects `.go-version`.
+- **Framework:** Cobra (CLI)
 - **Build/test driver:** `make` — wraps `go build`/`go test` with version stamping and the integration-test harness.
 - **Distribution:** Homebrew, APT, YUM, Docker, Windows ZIP. Customer-installed binary; backward compatibility is enforced (see "Compatibility rules" below).
 
@@ -89,8 +89,7 @@ When implementations diverge meaningfully, write a sibling `command_<sub>_onprem
 - **Unit tests** are co-located with source files in `internal/...` and `pkg/...`.
 - **Integration tests** live in `test/`. They build the CLI with coverage instrumentation, run it against the mock server in `mock/`, and diff stdout/stderr against golden files in `test/fixtures/output/<command>/<test>.golden`.
 - Update goldens with `-update` **only** when the diff is the intended user-visible change. If goldens become stale from an unrelated merge, that's a separate fix.
-- For multi-step state-bearing tests, set `workflow: true` on the `CLITest`.
-- Add an integration test for every new command and flag — review will require it.
+- Add an integration test for every new command and flag — review will require it. Certain global flags like `-v` or `--unsafe-trace` can be skipped.
 
 ## Compatibility rules
 
@@ -101,6 +100,7 @@ This binary ships to enterprise customers. Avoid breaking changes outside major 
 - Changing serialized field names (`-o json` / `-o yaml`).
 - Removing serialized fields.
 - Changing serialized output format.
+- Adding `omitempty` tag to a field that does not already have it.
 
 **Non-breaking** (safe in minor/patch):
 - Renaming human-readable column headers in default tabular output.
@@ -120,9 +120,9 @@ Features marked **EA** (Early Access) or **OP** (Open Preview) may break across 
 
 | | What | Why |
 |---|---|---|
-| ✅ **Edit freely** | `internal/`, `pkg/`, `cmd/confluent/main.go`, tests, `test/fixtures/output/` (with `-update` only when intended) | Standard development surface |
+| ✅ **Edit freely** | `internal/`, `pkg/ccloudv2`, `pkg/schemaregistry`, `pkg/cmd/flags.go`,  `cmd/confluent/main.go`, tests, `test/fixtures/output/` (with `-update` only when intended) | Standard development surface |
 | ⚠️ **Ask first** | `Makefile`, `.golangci.yml`, `.pre-commit-config.yaml`, `pkg/errors/error_message.go`, `internal/command.go` (root command registration) | Cross-cutting; affects every contributor |
-| 🚫 **Don't touch without explicit instructions** | `service.yml`, `.semaphore/`, `.goreleaser.yml`, `debian/`, `packaging/`, `docker/Dockerfile*`, `mock/` (regenerated, not hand-edited), `pkg/version/` (stamped at build time), `LICENSE`, `SECURITY.md` | Release/CI infrastructure managed by platform tooling; manual edits get overwritten or break the release pipeline |
+| 🚫 **Don't touch without explicit instructions** | `pkg/admin`, `pkg/auth`, `pkg/cmd`, `pkg/secret`, `pkg/config`, `service.yml`, `.semaphore/`, `.goreleaser.yml`, `debian/`, `packaging/`, `docker/Dockerfile*`, `mock/` (regenerated, not hand-edited), `pkg/version/` (stamped at build time), `LICENSE`, `SECURITY.md` | Release/CI infrastructure managed by platform tooling; manual edits get overwritten or break the release pipeline |
 
 ## Deeper references
 
