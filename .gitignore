@@ -7,6 +7,9 @@
 /test/live/bin/
 /vendor/
 
+# Local agent/tooling artifacts
+/.planning/
+
 # RPM/DEB
 /rpm/
 /deb/
