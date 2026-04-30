@@ -63,7 +63,7 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	serviceAccount, err := cmd.Flags().GetString("principal")
+	principal, err := cmd.Flags().GetString("principal")
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 		}
 	}
 
-	watermarkColumnName, err := cmd.Flags().GetString("watermark-column")
+	watermarkColumn, err := cmd.Flags().GetString("watermark-column")
 	if err != nil {
 		return err
 	}
@@ -140,19 +140,19 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 		}
 	}
 
-	distributedByColumnNames, err := cmd.Flags().GetString("distribution-keys")
+	distributionKeys, err := cmd.Flags().GetString("distribution-keys")
 	if err != nil {
 		return err
 	}
 
-	distributedByColumnNamesArray := csvToStringSlicePtr(distributedByColumnNames)
+	distributionKeysArray := csvToStringSlicePtr(distributionKeys)
 
-	distributedByBuckets, err := cmd.Flags().GetInt("distribution-bucket-count")
+	distributionBucketCount, err := cmd.Flags().GetInt("distribution-bucket-count")
 	if err != nil {
 		return err
 	}
 
-	distributedByBucketsInt32 := int32(distributedByBuckets)
+	distributionBucketCountInt32 := int32(distributionBucketCount)
 
 	name := args[0]
 
@@ -171,7 +171,7 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 		Spec: flinkgatewayv1.SqlV1MaterializedTableSpec{
 			KafkaClusterId: &kafkaId,
 			ComputePoolId:  &computePool,
-			Principal:      &serviceAccount,
+			Principal:      &principal,
 			Query:          &query,
 		},
 	}
@@ -180,17 +180,17 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 		table.Spec.Columns = &colDetails
 	}
 
-	if watermarkColumnName != "" || watermarkExpression != "" {
+	if watermarkColumn != "" || watermarkExpression != "" {
 		table.Spec.Watermark = &flinkgatewayv1.SqlV1Watermark{
-			Column:     &watermarkColumnName,
+			Column:     &watermarkColumn,
 			Expression: &watermarkExpression,
 		}
 	}
 
-	if distributedByColumnNames != "" || distributedByBuckets > 0 {
+	if distributionKeys != "" || distributionBucketCount > 0 {
 		table.Spec.Distribution = &flinkgatewayv1.SqlV1Distribution{
-			Keys:        distributedByColumnNamesArray,
-			BucketCount: &distributedByBucketsInt32,
+			Keys:        distributionKeysArray,
+			BucketCount: &distributionBucketCountInt32,
 		}
 	}
 

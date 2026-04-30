@@ -145,15 +145,15 @@ func (c *command) materializedTableUpdate(cmd *cobra.Command, args []string) err
 	}
 
 	table.Spec.SetColumns(colDetails)
-	watermarkColumnName, err := cmd.Flags().GetString("watermark-column")
+	watermarkColumn, err := cmd.Flags().GetString("watermark-column")
 	if err != nil {
 		return err
 	}
-	if watermarkColumnName != "" {
+	if watermarkColumn != "" {
 		if table.Spec.Watermark == nil {
 			table.Spec.Watermark = &flinkgatewayv1.SqlV1Watermark{}
 		}
-		table.Spec.Watermark.SetColumn(watermarkColumnName)
+		table.Spec.Watermark.SetColumn(watermarkColumn)
 	}
 
 	watermarkExpression, err := cmd.Flags().GetString("watermark-expression")
@@ -181,28 +181,28 @@ func (c *command) materializedTableUpdate(cmd *cobra.Command, args []string) err
 	}
 
 	table.Spec.SetConstraints(constr)
-	distributedByColumnNames, err := cmd.Flags().GetString("distribution-keys")
+	distributionKeys, err := cmd.Flags().GetString("distribution-keys")
 	if err != nil {
 		return err
 	}
-	distributedByColumnNamesArray := csvToStringSlicePtr(distributedByColumnNames)
+	distributionKeysArray := csvToStringSlicePtr(distributionKeys)
 
-	if distributedByColumnNames != "" {
+	if distributionKeys != "" {
 		if table.Spec.Distribution == nil {
 			table.Spec.Distribution = &flinkgatewayv1.SqlV1Distribution{}
 		}
-		table.Spec.Distribution.SetKeys(*distributedByColumnNamesArray)
+		table.Spec.Distribution.SetKeys(*distributionKeysArray)
 	}
 
-	distributedByBuckets, err := cmd.Flags().GetInt("distribution-bucket-count")
+	distributionBucketCount, err := cmd.Flags().GetInt("distribution-bucket-count")
 	if err != nil {
 		return err
 	}
-	if distributedByBuckets > 0 {
+	if distributionBucketCount > 0 {
 		if table.Spec.Distribution == nil {
 			table.Spec.Distribution = &flinkgatewayv1.SqlV1Distribution{}
 		}
-		table.Spec.Distribution.SetBucketCount(int32(distributedByBuckets))
+		table.Spec.Distribution.SetBucketCount(int32(distributionBucketCount))
 	}
 
 	materializedTable, err := client.UpdateMaterializedTable(table, environmentId, c.Context.GetCurrentOrganization(), kafkaId, args[0])
