@@ -19,14 +19,14 @@ func (c *command) newMaterializedTableDescribeCommand() *cobra.Command {
 		RunE:              c.materializedTableDescribe,
 	}
 
-	cmd.Flags().String("database", "", "The ID of Kafka cluster hosting the Materialized Table's topic.")
+	cmd.Flags().String("kafka-cluster-id", "", "The ID of Kafka cluster hosting the Materialized Table's topic.")
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("database"))
+	cobra.CheckErr(cmd.MarkFlagRequired("kafka-cluster-id"))
 
 	return cmd
 }
@@ -48,7 +48,7 @@ func (c *command) materializedTableDescribe(cmd *cobra.Command, args []string) e
 
 	orgId := c.Context.GetCurrentOrganization()
 
-	kafkaId, err := cmd.Flags().GetString("database")
+	kafkaId, err := cmd.Flags().GetString("kafka-cluster-id")
 	if err != nil {
 		return err
 	}

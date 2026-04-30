@@ -23,18 +23,18 @@ func (c *command) newMaterializedTableUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Stop the Flink materialized table "my-table".`,
-				Code: "confluent flink materialized-table update my-table --database lkc01 --stopped=true",
+				Code: "confluent flink materialized-table update my-table --kafka-cluster-id lkc01 --stopped=true",
 			},
 			examples.Example{
 				Text: `Resume the Flink materialized table "my-table".`,
-				Code: "confluent flink materialized-table update my-table --database lkc01 --stopped=false",
+				Code: "confluent flink materialized-table update my-table --kafka-cluster-id lkc01 --stopped=false",
 			},
 		),
 	}
 
-	cmd.Flags().String("database", "", "The ID of Kafka cluster hosting the Materialized Table's topic.")
+	cmd.Flags().String("kafka-cluster-id", "", "The ID of Kafka cluster hosting the Materialized Table's topic.")
 	cmd.Flags().String("compute-pool", "", "The ID associated with the compute pool in context.")
-	cmd.Flags().String("service-account", "", "The ID of a principal this Materialized Table query runs as.")
+	cmd.Flags().String("principal", "", "The ID of a principal this Materialized Table query runs as.")
 	cmd.Flags().String("query", "", "The query section of the latest Materialized Table.")
 	cmd.Flags().Bool("stopped", false, "Determine whether stopped or not.")
 
@@ -45,7 +45,7 @@ func (c *command) newMaterializedTableUpdateCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("database"))
+	cobra.CheckErr(cmd.MarkFlagRequired("kafka-cluster-id"))
 
 	return cmd
 }
@@ -65,7 +65,7 @@ func (c *command) materializedTableUpdate(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	kafkaId, err := cmd.Flags().GetString("database")
+	kafkaId, err := cmd.Flags().GetString("kafka-cluster-id")
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func (c *command) materializedTableUpdate(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	principal, err := cmd.Flags().GetString("service-account")
+	principal, err := cmd.Flags().GetString("principal")
 	if err != nil {
 		return err
 	}
@@ -107,17 +107,17 @@ func (c *command) materializedTableUpdate(cmd *cobra.Command, args []string) err
 		table.Spec.SetStopped(stopped)
 	}
 
-	columnComputed, err := cmd.Flags().GetString("column-computed")
+	columnComputed, err := cmd.Flags().GetString("columns-computed")
 	if err != nil {
 		return err
 	}
 
-	columnPhysical, err := cmd.Flags().GetString("column-physical")
+	columnPhysical, err := cmd.Flags().GetString("columns-physical")
 	if err != nil {
 		return err
 	}
 
-	columnMetadata, err := cmd.Flags().GetString("column-metadata")
+	columnMetadata, err := cmd.Flags().GetString("columns-metadata")
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func (c *command) materializedTableUpdate(cmd *cobra.Command, args []string) err
 	}
 
 	table.Spec.SetColumns(colDetails)
-	watermarkColumnName, err := cmd.Flags().GetString("watermark-column-name")
+	watermarkColumnName, err := cmd.Flags().GetString("watermark-column")
 	if err != nil {
 		return err
 	}
@@ -181,7 +181,7 @@ func (c *command) materializedTableUpdate(cmd *cobra.Command, args []string) err
 	}
 
 	table.Spec.SetConstraints(constr)
-	distributedByColumnNames, err := cmd.Flags().GetString("distributed-by-column-names")
+	distributedByColumnNames, err := cmd.Flags().GetString("distribution-keys")
 	if err != nil {
 		return err
 	}
@@ -194,7 +194,7 @@ func (c *command) materializedTableUpdate(cmd *cobra.Command, args []string) err
 		table.Spec.Distribution.SetKeys(*distributedByColumnNamesArray)
 	}
 
-	distributedByBuckets, err := cmd.Flags().GetInt("distributed-by-buckets")
+	distributedByBuckets, err := cmd.Flags().GetInt("distribution-bucket-count")
 	if err != nil {
 		return err
 	}

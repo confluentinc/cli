@@ -127,9 +127,7 @@ var flagRules = []linter.FlagRule{
 			"source-bootstrap-server",
 			"update-schema-registry",
 			"worker-configurations",
-			"watermark-column-name",
-			"distributed-by-column-names",
-			"distributed-by-buckets",
+			"distribution-bucket-count",
 		),
 	),
 	linter.FlagFilter(

@@ -6,26 +6,26 @@ Usage:
 Examples:
 Create Flink materialized table "my-table" in AWS us-west-2.
 
-  $ confluent flink materialized-table create my-table --cloud aws --region us-west-2 --database lkc01 --compute-pool pool1 --service-account principal1 --query query1
+  $ confluent flink materialized-table create my-table --cloud aws --region us-west-2 --kafka-cluster-id lkc01 --compute-pool pool1 --principal principal1 --query query1
 
 Flags:
-      --database string                      REQUIRED: The ID of Kafka cluster hosting the Materialized Table's topic.
-      --compute-pool string                  REQUIRED: The ID associated with the compute pool in context.
-      --service-account string               REQUIRED: The ID of a principal this Materialized Table query runs as.
-      --query string                         REQUIRED: The query section of the latest Materialized Table.
-      --cloud string                         Specify the cloud provider as "aws", "azure", or "gcp".
-      --region string                        Cloud region for Flink (use "confluent flink region list" to see all).
-      --column-physical string               Path to the columns data for type physical.
-      --column-metadata string               Path to the columns data for type metadata.
-      --column-computed string               Path to the columns data for type computed.
-      --watermark-column-name string         The name of the watermark columns.
-      --watermark-expression string          The watermark expression.
-      --constraints string                   Path to the constraints.
-      --distributed-by-column-names string   The names of the columns the table is distributed by.
-      --distributed-by-buckets int           The number of buckets.
-      --environment string                   Environment ID.
-      --context string                       CLI context name.
-  -o, --output string                        Specify the output format as "human", "json", or "yaml". (default "human")
+      --kafka-cluster-id string         REQUIRED: The ID of Kafka cluster hosting the Materialized Table's topic.
+      --compute-pool string             REQUIRED: The ID associated with the compute pool in context.
+      --principal string                REQUIRED: The ID of a principal this Materialized Table query runs as.
+      --query string                    REQUIRED: The query section of the latest Materialized Table.
+      --cloud string                    Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string                   Cloud region for Flink (use "confluent flink region list" to see all).
+      --columns-physical string         Path to the columns data for type physical.
+      --columns-metadata string         Path to the columns data for type metadata.
+      --columns-computed string         Path to the columns data for type computed.
+      --watermark-column string         The name of the watermark columns.
+      --watermark-expression string     The watermark expression.
+      --constraints string              Path to the constraints.
+      --distribution-keys string        The names of the columns the table is distributed by.
+      --distribution-bucket-count int   The number of buckets.
+      --environment string              Environment ID.
+      --context string                  CLI context name.
+  -o, --output string                   Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

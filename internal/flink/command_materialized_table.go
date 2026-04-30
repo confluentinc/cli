@@ -74,12 +74,12 @@ func (c *command) validMaterializedTablesArgsMultiple(cmd *cobra.Command, args [
 }
 
 func (c *command) addOptionalMaterializedTableFlags(cmd *cobra.Command) {
-	cmd.Flags().String("column-physical", "", "Path to the columns data for type physical.")
-	cmd.Flags().String("column-metadata", "", "Path to the columns data for type metadata.")
-	cmd.Flags().String("column-computed", "", "Path to the columns data for type computed.")
-	cmd.Flags().String("watermark-column-name", "", "The name of the watermark columns.")
+	cmd.Flags().String("columns-physical", "", "Path to the columns data for type physical.")
+	cmd.Flags().String("columns-metadata", "", "Path to the columns data for type metadata.")
+	cmd.Flags().String("columns-computed", "", "Path to the columns data for type computed.")
+	cmd.Flags().String("watermark-column", "", "The name of the watermark columns.")
 	cmd.Flags().String("watermark-expression", "", "The watermark expression.")
 	cmd.Flags().String("constraints", "", "Path to the constraints.")
-	cmd.Flags().String("distributed-by-column-names", "", "The names of the columns the table is distributed by.")
-	cmd.Flags().Int("distributed-by-buckets", 0, "The number of buckets.")
+	cmd.Flags().String("distribution-keys", "", "The names of the columns the table is distributed by.")
+	cmd.Flags().Int("distribution-bucket-count", 0, "The number of buckets.")
 }

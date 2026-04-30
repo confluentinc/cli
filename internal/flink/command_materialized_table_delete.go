@@ -20,14 +20,14 @@ func (c *command) newMaterializedTableDeleteCommand() *cobra.Command {
 		RunE:              c.materializedTableDelete,
 	}
 
-	cmd.Flags().String("database", "", "The ID of Kafka cluster hosting the Materialized Table's topic.")
+	cmd.Flags().String("kafka-cluster-id", "", "The ID of Kafka cluster hosting the Materialized Table's topic.")
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddForceFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("database"))
+	cobra.CheckErr(cmd.MarkFlagRequired("kafka-cluster-id"))
 
 	return cmd
 }
@@ -47,7 +47,7 @@ func (c *command) materializedTableDelete(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	kafkaId, err := cmd.Flags().GetString("database")
+	kafkaId, err := cmd.Flags().GetString("kafka-cluster-id")
 	if err != nil {
 		return err
 	}

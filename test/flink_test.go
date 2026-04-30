@@ -122,15 +122,15 @@ func (s *CLITestSuite) TestFlinkMaterializedTableCreate() {
 	tests := []CLITest{
 		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
 		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
-		{args: "flink materialized-table create my-table --cloud aws --region eu-west-1 --database lkc01 --compute-pool pool1 --service-account principal1 --query query1 ", fixture: "flink/materialized-table/create/create.golden"},
+		{args: "flink materialized-table create my-table --cloud aws --region eu-west-1 --kafka-cluster-id lkc01 --compute-pool pool1 --principal principal1 --query query1 ", fixture: "flink/materialized-table/create/create.golden"},
 		{args: fmt.Sprintf("flink materialized-table create my-table --cloud aws --region eu-west-1 "+
-			"--database lkc01 --compute-pool pool1 --service-account principal1 "+
-			"--query query1  --column-physical %s --column-metadata %s --column-computed %s --distributed-by-buckets 32", file.Name(),
+			"--kafka-cluster-id lkc01 --compute-pool pool1 --principal principal1 "+
+			"--query query1  --columns-physical %s --columns-metadata %s --columns-computed %s --distribution-bucket-count 32", file.Name(),
 			fileMetadata.Name(), fileComputed.Name(),
 		), fixture: "flink/materialized-table/create/create-column.golden"},
 		{args: fmt.Sprintf("flink materialized-table create my-table --cloud aws --region eu-west-1 "+
-			"--database lkc01 --compute-pool pool1 --service-account principal1 "+
-			"--query query1 --constraints %s --distributed-by-buckets 32 --distributed-by-column-names col1,col2 --watermark-column-name wname1 "+
+			"--kafka-cluster-id lkc01 --compute-pool pool1 --principal principal1 "+
+			"--query query1 --constraints %s --distribution-bucket-count 32 --distribution-keys col1,col2 --watermark-column wname1 "+
 			"--watermark-expression wexp1",
 			fileConstraints.Name(),
 		), fixture: "flink/materialized-table/create/create-filled.golden"},
@@ -147,7 +147,7 @@ func (s *CLITestSuite) TestFlinkMaterializedTableDescribe() {
 	tests := []CLITest{
 		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
 		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
-		{args: "flink materialized-table describe my-table --cloud aws --region eu-west-1 --database lkc01", fixture: "flink/materialized-table/describe/describe.golden"},
+		{args: "flink materialized-table describe my-table --cloud aws --region eu-west-1 --kafka-cluster-id lkc01", fixture: "flink/materialized-table/describe/describe.golden"},
 		{args: "flink materialized-table describe my-table --cloud aws --region eu-west-1", exitCode: 1, fixture: "flink/materialized-table/describe/describe-noKafka.golden"},
 	}
 
@@ -176,7 +176,7 @@ func (s *CLITestSuite) TestFlinkMaterializedTableDelete() {
 	tests := []CLITest{
 		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
 		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
-		{args: "flink materialized-table delete my-table --cloud aws --region eu-west-1 --database lkc01", input: "y\n", fixture: "flink/materialized-table/delete/delete.golden"},
+		{args: "flink materialized-table delete my-table --cloud aws --region eu-west-1 --kafka-cluster-id lkc01", input: "y\n", fixture: "flink/materialized-table/delete/delete.golden"},
 	}
 
 	for _, test := range tests {
@@ -202,12 +202,12 @@ func (s *CLITestSuite) TestFlinkMaterializedTableUpdate() {
 	tests := []CLITest{
 		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
 		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
-		{args: "flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --database lkc01 --compute-pool pool1 --service-account principal1 --query query2", fixture: "flink/materialized-table/update/update.golden"},
-		{args: "flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --database lkc01 --compute-pool pool2 --service-account principal1 --query query1", fixture: "flink/materialized-table/update/update-2.golden"},
-		{args: "flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --database lkc01 --service-account principal1 --query query1", fixture: "flink/materialized-table/update/no-cp.golden"},
-		{args: fmt.Sprintf("flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --database lkc01 --compute-pool pool2 --service-account principal1 --query query1 --watermark-expression expNew --constraints %s --column-physical %s", fileConstraints.Name(), file.Name()), fixture: "flink/materialized-table/update/update-3.golden"},
-		{args: "flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --database lkc01 --stopped=true", fixture: "flink/materialized-table/update/stop.golden"},
-		{args: "flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --database lkc01 --stopped=false", fixture: "flink/materialized-table/update/resume.golden"},
+		{args: "flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --kafka-cluster-id lkc01 --compute-pool pool1 --principal principal1 --query query2", fixture: "flink/materialized-table/update/update.golden"},
+		{args: "flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --kafka-cluster-id lkc01 --compute-pool pool2 --principal principal1 --query query1", fixture: "flink/materialized-table/update/update-2.golden"},
+		{args: "flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --kafka-cluster-id lkc01 --principal principal1 --query query1", fixture: "flink/materialized-table/update/no-cp.golden"},
+		{args: fmt.Sprintf("flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --kafka-cluster-id lkc01 --compute-pool pool2 --principal principal1 --query query1 --watermark-expression expNew --constraints %s --columns-physical %s", fileConstraints.Name(), file.Name()), fixture: "flink/materialized-table/update/update-3.golden"},
+		{args: "flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --kafka-cluster-id lkc01 --stopped=true", fixture: "flink/materialized-table/update/stop.golden"},
+		{args: "flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --kafka-cluster-id lkc01 --stopped=false", fixture: "flink/materialized-table/update/resume.golden"},
 	}
 
 	for _, test := range tests {

@@ -26,14 +26,14 @@ func (c *command) newMaterializedTableCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create Flink materialized table "my-table" in AWS us-west-2.`,
-				Code: "confluent flink materialized-table create my-table --cloud aws --region us-west-2 --database lkc01 --compute-pool pool1 --service-account principal1 --query query1",
+				Code: "confluent flink materialized-table create my-table --cloud aws --region us-west-2 --kafka-cluster-id lkc01 --compute-pool pool1 --principal principal1 --query query1",
 			},
 		),
 	}
 
-	cmd.Flags().String("database", "", "The ID of Kafka cluster hosting the Materialized Table's topic.")
+	cmd.Flags().String("kafka-cluster-id", "", "The ID of Kafka cluster hosting the Materialized Table's topic.")
 	cmd.Flags().String("compute-pool", "", "The ID associated with the compute pool in context.")
-	cmd.Flags().String("service-account", "", "The ID of a principal this Materialized Table query runs as.")
+	cmd.Flags().String("principal", "", "The ID of a principal this Materialized Table query runs as.")
 	cmd.Flags().String("query", "", "The query section of the latest Materialized Table.")
 
 	pcmd.AddCloudFlag(cmd)
@@ -44,16 +44,16 @@ func (c *command) newMaterializedTableCreateCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("database"))
+	cobra.CheckErr(cmd.MarkFlagRequired("kafka-cluster-id"))
 	cobra.CheckErr(cmd.MarkFlagRequired("compute-pool"))
-	cobra.CheckErr(cmd.MarkFlagRequired("service-account"))
+	cobra.CheckErr(cmd.MarkFlagRequired("principal"))
 	cobra.CheckErr(cmd.MarkFlagRequired("query"))
 
 	return cmd
 }
 
 func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) error {
-	kafkaId, err := cmd.Flags().GetString("database")
+	kafkaId, err := cmd.Flags().GetString("kafka-cluster-id")
 	if err != nil {
 		return err
 	}
@@ -63,7 +63,7 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	serviceAccount, err := cmd.Flags().GetString("service-account")
+	serviceAccount, err := cmd.Flags().GetString("principal")
 	if err != nil {
 		return err
 	}
@@ -82,17 +82,17 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 		return errors.NewErrorWithSuggestions(err.Error(), fmt.Sprintf(envNotFoundErrorMsg, environmentId))
 	}
 
-	columnComputed, err := cmd.Flags().GetString("column-computed")
+	columnComputed, err := cmd.Flags().GetString("columns-computed")
 	if err != nil {
 		return err
 	}
 
-	columnPhysical, err := cmd.Flags().GetString("column-physical")
+	columnPhysical, err := cmd.Flags().GetString("columns-physical")
 	if err != nil {
 		return err
 	}
 
-	columnMetadata, err := cmd.Flags().GetString("column-metadata")
+	columnMetadata, err := cmd.Flags().GetString("columns-metadata")
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 		}
 	}
 
-	watermarkColumnName, err := cmd.Flags().GetString("watermark-column-name")
+	watermarkColumnName, err := cmd.Flags().GetString("watermark-column")
 	if err != nil {
 		return err
 	}
@@ -140,14 +140,14 @@ func (c *command) materializedTableCreate(cmd *cobra.Command, args []string) err
 		}
 	}
 
-	distributedByColumnNames, err := cmd.Flags().GetString("distributed-by-column-names")
+	distributedByColumnNames, err := cmd.Flags().GetString("distribution-keys")
 	if err != nil {
 		return err
 	}
 
 	distributedByColumnNamesArray := csvToStringSlicePtr(distributedByColumnNames)
 
-	distributedByBuckets, err := cmd.Flags().GetInt("distributed-by-buckets")
+	distributedByBuckets, err := cmd.Flags().GetInt("distribution-bucket-count")
 	if err != nil {
 		return err
 	}
