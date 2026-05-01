@@ -17,6 +17,16 @@
     "phase": "READY"
   },
   {
+    "id": "gw-11111",
+    "name": "my-azure-ingress-gateway",
+    "environment": "env-596",
+    "region": "eastus2",
+    "type": "AzureIngressPrivateLink",
+    "azure_private_link_service_alias": "azure-ingress-pl.eastus2.azure.privatelinkservice",
+    "azure_private_link_service_resource_id": "/subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/rg-1/providers/Microsoft.Network/privateLinkServices/azure-ingress-pl",
+    "phase": "READY"
+  },
+  {
     "id": "gw-12345",
     "name": "my-aws-gateway",
     "environment": "env-596",
@@ -68,6 +78,15 @@
     "region": "us-west-2",
     "type": "AwsIngressPrivateLink",
     "vpc_endpoint_service_name": "com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000",
+    "phase": "READY"
+  },
+  {
+    "id": "gw-99999",
+    "name": "my-gcp-ingress-gateway",
+    "environment": "env-596",
+    "region": "us-central1",
+    "type": "GcpIngressPrivateServiceConnect",
+    "gcp_private_service_connect_service_attachment": "projects/traffic-prod/regions/us-central1/serviceAttachments/plattg-abc123-service-attachment",
     "phase": "READY"
   }
 ]
