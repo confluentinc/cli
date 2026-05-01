@@ -25,7 +25,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create API keys for a given resource.",
-		Long:  `Create API keys for a given resource. A resource is some Confluent product or service for which an API key can be created, for example ksqlDB application ID, or "cloud" to create a Cloud API key.`,
+		Long:  `Create API keys for a given resource. A resource is a Confluent product or service for which an API key can be created. Specify a Kafka cluster ID (for example, lkc-abc123) for the --resource parameter to create a Kafka cluster API key, a Schema Registry cluster ID (for example, lsrc-abc123) to create a Schema Registry API key, or a ksqlDB cluster ID (for example, lksqlc-abc123) to create a ksqlDB API key. To create a Flink region API key, specify flink along with the --environment and --region flags. To create a Tableflow API key, specify tableflow, or specify cloud to create a Cloud resource management API key. To create a Global API key that can be used across all supported Confluent Cloud resources, specify global.`,
 		Args:  cobra.NoArgs,
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
