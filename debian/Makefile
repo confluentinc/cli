@@ -31,6 +31,8 @@ _empty :=
 _space := $(_empty) $(empty)
 split_version := $(subst .,$(_space),$(CLI_VERSION))
 
+S390X_AVAILABLE := $(shell [ $(word 1,$(split_version)) -ge 4 ] && [ $(word 2,$(split_version)) -ge 59 ] && echo yes)
+
 all: install
 
 archive: install
@@ -68,7 +70,9 @@ install: apply-patches
 	disableupdates=""; if [[ $(word 1,$(split_version)) -ge 3 && $(word 2,$(split_version)) -ge 43 ]]; then disableupdates="_disableupdates"; fi; \
 	baseurl="s3-us-west-2.amazonaws.com/confluent.cloud"; if [[ $(word 1,$(split_version)) -ge 4 && $(word 2,$(split_version)) -ge 1 ]]; then baseurl="packages.confluent.io"; fi; \
 	version="_$${v}$(CLI_VERSION)"; if [[ $(word 1,$(split_version)) -ge 4 && $(word 2,$(split_version)) -ge 1 ]]; then version=""; fi; \
-	for dir in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 linux_s390x; do \
+	dirs="darwin_amd64 darwin_arm64 linux_amd64 linux_arm64"; \
+	if [[ -n "$(S390X_AVAILABLE)" ]]; then dirs="$${dirs} linux_s390x"; fi; \
+	for dir in $${dirs}; do \
 		archive=confluent$${version}_$${dir}$${disableupdates}.tar.gz; \
 		curl -fs https://$${baseurl}/confluent-cli/archives/$(CLI_VERSION)/$${archive} -o $${archive}; \
 		mkdir -p $${dir} $${dir}-temp; \
@@ -116,7 +120,7 @@ else
 	RPM_RELEASE_ID=$(REVISION)
 endif
 
-rpm: rpm-amd64-build rpm-arm64-build rpm-s390x-build
+rpm: rpm-amd64-build rpm-arm64-build $(if $(S390X_AVAILABLE),rpm-s390x-build)
 	find RPM_BUILDING/{,S}RPMS/ -type f | xargs -n1 -iXXX mv XXX .
 	@echo
 	@echo "================================================="
