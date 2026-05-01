@@ -5,8 +5,8 @@ lsrc-1234	account schema-registry
 lksqlc-ksql5	account ksql
 lksqlc-woooo	kay cee queue elle
 cloud
-global
 flink
+global
 tableflow
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp
