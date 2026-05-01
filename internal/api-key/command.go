@@ -110,8 +110,8 @@ func (c *command) addResourceFlag(cmd *cobra.Command, isStore bool) {
 
 		if !isStore {
 			suggestions = append(suggestions, "cloud")
-			suggestions = append(suggestions, "global")
 			suggestions = append(suggestions, "flink")
+			suggestions = append(suggestions, "global")
 			suggestions = append(suggestions, "tableflow")
 		}
 
