@@ -88,7 +88,7 @@ func run() error {
 
 	command := os.Getenv("SMOKE_COMMAND")
 	if command == "" {
-		command = "environment_describe"
+		command = "environment_list"
 	}
 
 	attrs := []attribute.KeyValue{

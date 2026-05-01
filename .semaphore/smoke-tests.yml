@@ -29,7 +29,7 @@ blocks:
             - . vault-sem-get-secret v1/ci/kv/apif/cli/live-testing-data
             - . vault-sem-get-secret v1/ci/kv/apif/cli/slack-notifications-live-testing
 
-            - export SMOKE_OS=linux SMOKE_ARCH=arm64
+            - export SMOKE_OS=linux SMOKE_ARCH=arm64 SMOKE_COMMAND=environment_list
 
             - make build-otel-smoke-metric
 
@@ -84,19 +84,32 @@ blocks:
 
             - $Env:SMOKE_OS = "windows"
             - $Env:SMOKE_ARCH = "amd64"
+            - $Env:SMOKE_COMMAND = "environment_list"
 
             # Build emitter + CLI directly (no `make` available without bash; mirrors Makefile targets)
             - go build -o bin\otel-smoke-metric.exe .\cmd\otel-smoke-metric
             - go build -ldflags="-s -w -X main.disableUpdates=true" -o test\live\bin\confluent.exe .\cmd\confluent
 
-            # Run smoke and capture pass/fail without aborting the pipeline
             - $Env:CLI_LIVE_TEST = "1"
-            - go test ./test/live/ -v -run='.*Live$' -tags='live_test,smoke' -timeout 30m -parallel 4
-            - $RESULT = if ($LASTEXITCODE -eq 0) { "1" } else { "0" }
-            - if ($RESULT -eq "0") { Write-Host "Smoke tests failed on windows/amd64, sending Slack notification..."; Invoke-RestMethod -Method Post -Uri $Env:SLACK_WEBHOOK_URL -ContentType "application/json" -Body "{}" }
 
-            # Report pass/fail metric (never fails the pipeline)
-            - .\bin\otel-smoke-metric.exe $RESULT
+            # Run smoke + emit metric + Slack on failure as a single block so a non-zero
+            # `go test` exit code does NOT abort the job before metric emission.
+            - |
+              go test ./test/live/ -v -run='.*Live$' -tags='live_test,smoke' -timeout 30m -parallel 4
+              if ($LASTEXITCODE -eq 0) {
+                $RESULT = "1"
+              } else {
+                $RESULT = "0"
+                Write-Host "Smoke tests failed on windows/amd64, sending Slack notification..."
+                try {
+                  Invoke-RestMethod -Method Post -Uri $Env:SLACK_WEBHOOK_URL -ContentType "application/json" -Body "{}"
+                } catch {
+                  Write-Host "Slack notification failed: $_"
+                }
+              }
 
-            # Surface failure to Semaphore
-            - if ($RESULT -ne "1") { exit 1 }
+              # Report pass/fail metric (never fails the pipeline; emitter always exits 0)
+              & .\bin\otel-smoke-metric.exe $RESULT
+
+              # Surface failure to Semaphore at the very end
+              if ($RESULT -ne "1") { exit 1 }
