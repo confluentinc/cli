@@ -52,6 +52,7 @@ const (
 	FlinkStatement                   = "Flink SQL statement"
 	FlinkConnection                  = "Flink connection"
 	Gateway                          = "gateway"
+	Global                           = "global"
 	IdentityPool                     = "identity pool"
 	IdentityProvider                 = "identity provider"
 	IpGroup                          = "IP group"
@@ -145,7 +146,7 @@ var resourceToPrefix = map[string]string{
 }
 
 func LookupType(id string) string {
-	if id == Cloud || id == Flink || id == Tableflow {
+	if id == Cloud || id == Flink || id == Tableflow || id == Global {
 		return id
 	}
 
