@@ -23,6 +23,13 @@ semaphore:
       branch: main
       pipeline_file: .semaphore/live-tests.yml
       at: "0 8 * * *"
+    - name: "CLI Smoke Tests - PROD"
+      description: "Lightweight per-platform smoke tests against Confluent Cloud"
+      scheduled: true
+      at: "0 */3 * * *"
+      branch: main
+      pipeline_file: .semaphore/smoke-tests.yml
+      status: ACTIVE
 make:
   enable: false
 sonarqube:
