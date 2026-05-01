@@ -39,8 +39,8 @@ var (
 		"azure-ingress-privatelink":           azureIngressPrivateLink,
 		"gcp-egress-privatelink":              "GcpEgressPrivateLink",
 		"gcp-ingress-privatelink":             "GcpIngressPrivateLink",
-		"gcp-egress-private-service-connect":  "GcpEgressPrivateLink",
-		"gcp-ingress-private-service-connect": "GcpIngressPrivateLink",
+		"gcp-egress-private-service-connect":  gcpEgressPrivateServiceConnect,
+		"gcp-ingress-private-service-connect": gcpIngressPrivateServiceConnect,
 	}
 )
 
@@ -86,7 +86,7 @@ func addGatewayTypeFlag(cmd *cobra.Command) {
 }
 
 func (c *command) addRegionFlagGateway(cmd *cobra.Command, command *pcmd.AuthenticatedCLICommand) {
-	cmd.Flags().String("region", "", "AWS or Azure region of the gateway.")
+	cmd.Flags().String("region", "", "AWS, Azure, or GCP region of the gateway.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "region", func(cmd *cobra.Command, args []string) []string {
 		if err := c.PersistentPreRunE(cmd, args); err != nil {
 			return nil

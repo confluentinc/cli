@@ -166,6 +166,8 @@ func (s *CLITestSuite) TestNetworkGatewayList() {
 		{args: "network gateway list", fixture: "network/gateway/list.golden"},
 		{args: "network gateway list --output json", fixture: "network/gateway/list-json.golden"},
 		{args: "network gateway list --types aws-egress-privatelink", fixture: "network/gateway/list-filter-type.golden"},
+		{args: "network gateway list --types azure-ingress-privatelink", fixture: "network/gateway/list-filter-azure-ingress-type.golden"},
+		{args: "network gateway list --types gcp-ingress-private-service-connect", fixture: "network/gateway/list-filter-gcp-ingress-type.golden"},
 		{args: "network gateway list --id gw-12345", fixture: "network/gateway/list-filter-id.golden"},
 		{args: "network gateway list --region us-east-1", fixture: "network/gateway/list-filter-region.golden"},
 		{args: "network gateway list --display-name my-aws-gateway", fixture: "network/gateway/list-filter-name.golden"},
