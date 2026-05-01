@@ -175,6 +175,14 @@ live-test-connect:
 live-test-essential:
 	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="core,kafka,schema_registry,auth"
 
+.PHONY: live-test-smoke
+live-test-smoke:
+	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="smoke"
+
+.PHONY: build-otel-smoke-metric
+build-otel-smoke-metric:
+	go build -o ./bin/otel-smoke-metric ./cmd/otel-smoke-metric
+
 .PHONY: live-test-multicloud
 live-test-multicloud:
 	@CLI_LIVE_TEST_VARIANTS="aws:us-east-1:basic,gcp:us-east1:basic,azure:eastus:basic" \
