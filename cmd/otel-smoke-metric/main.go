@@ -1,7 +1,5 @@
 // otel-smoke-metric sends a single pass/fail gauge metric via OTLP gRPC.
-// Usage: otel-smoke-metric <0|1>
-//   0 = test failed, 1 = test passed
-//
+// Usage: otel-smoke-metric <0|1> where 0 = test failed, 1 = test passed.
 // It always exits 0 so it never breaks the CI pipeline.
 package main
 
