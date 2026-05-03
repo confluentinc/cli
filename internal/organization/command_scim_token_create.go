@@ -32,10 +32,6 @@ func (c *scimTokenCommand) newCreateCommand() *cobra.Command {
 }
 
 func (c *scimTokenCommand) create(cmd *cobra.Command, _ []string) error {
-	if err := c.validateSSOConfigured(); err != nil {
-		return err
-	}
-
 	token := orgv2.InlineObject{}
 
 	// Only set expiration duration if explicitly provided

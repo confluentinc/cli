@@ -23,10 +23,6 @@ func (c *scimTokenCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *scimTokenCommand) delete(cmd *cobra.Command, args []string) error {
-	if err := c.validateSSOConfigured(); err != nil {
-		return err
-	}
-
 	if err := deletion.ValidateAndConfirm(cmd, args, func(id string) bool { return true }, resource.ScimToken); err != nil {
 		return err
 	}

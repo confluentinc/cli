@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 type scimTokenCommand struct {
@@ -27,26 +26,6 @@ func (c *command) newScimTokenCommand() *cobra.Command {
 	cmd.AddCommand(scimCmd.newDeleteCommand())
 
 	return cmd
-}
-
-func (c *scimTokenCommand) validateSSOConfigured() error {
-	// Get organization from current user
-	user, err := c.Client.Auth.User()
-	if err != nil {
-		return err
-	}
-	org := user.GetOrganization()
-
-	// Get connection name from organization's SSO configuration
-	sso := org.GetSso()
-	if sso == nil || sso.GetAuth0ConnectionName() == "" {
-		return errors.NewErrorWithSuggestions(
-			"No SSO connection found for organization.",
-			"SCIM tokens require SSO to be configured for the organization.",
-		)
-	}
-
-	return nil
 }
 
 func formatTimestamp(ts *time.Time) string {

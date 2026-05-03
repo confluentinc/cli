@@ -28,10 +28,6 @@ func (c *scimTokenCommand) newListCommand() *cobra.Command {
 }
 
 func (c *scimTokenCommand) list(cmd *cobra.Command, _ []string) error {
-	if err := c.validateSSOConfigured(); err != nil {
-		return err
-	}
-
 	tokens, err := c.V2Client.ListScimTokens()
 	if err != nil {
 		return err
