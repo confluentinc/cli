@@ -1,11 +1,7 @@
 package organization
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
-
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/deletion"
@@ -27,8 +23,7 @@ func (c *scimTokenCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *scimTokenCommand) delete(cmd *cobra.Command, args []string) error {
-	scimClient, orgId, connectionName, err := c.getSCIMClient()
-	if err != nil {
+	if err := c.validateSSOConfigured(); err != nil {
 		return err
 	}
 
@@ -36,13 +31,8 @@ func (c *scimTokenCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	_, err = deletion.Delete(cmd, args, func(tokenId string) error {
-		req := &flowv1.DeleteSCIMTokenRequest{
-			OrgResourceId:  orgId,
-			ConnectionName: connectionName,
-			TokenId:        tokenId,
-		}
-		return scimClient.DeleteToken(context.Background(), req)
+	_, err := deletion.Delete(cmd, args, func(tokenId string) error {
+		return c.V2Client.DeleteScimToken(tokenId)
 	}, resource.ScimToken)
 
 	return err

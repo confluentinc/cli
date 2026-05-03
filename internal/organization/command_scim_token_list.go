@@ -1,11 +1,7 @@
 package organization
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
-
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -32,17 +28,11 @@ func (c *scimTokenCommand) newListCommand() *cobra.Command {
 }
 
 func (c *scimTokenCommand) list(cmd *cobra.Command, _ []string) error {
-	scimClient, orgId, connectionName, err := c.getSCIMClient()
-	if err != nil {
+	if err := c.validateSSOConfigured(); err != nil {
 		return err
 	}
 
-	req := &flowv1.ListSCIMTokensRequest{
-		OrgResourceId:  orgId,
-		ConnectionName: connectionName,
-	}
-
-	tokens, err := scimClient.ListTokens(context.Background(), req)
+	tokens, err := c.V2Client.ListScimTokens()
 	if err != nil {
 		return err
 	}
@@ -50,7 +40,7 @@ func (c *scimTokenCommand) list(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, token := range tokens {
 		list.Add(&scimTokenListOut{
-			Id:        token.Id,
+			Id:        token.GetId(),
 			CreatedAt: formatTimestamp(token.CreatedAt),
 			ExpiresAt: formatTimestamp(token.ExpiresAt),
 		})

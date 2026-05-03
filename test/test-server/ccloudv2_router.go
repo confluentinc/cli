@@ -146,5 +146,8 @@ func NewV2Router(t *testing.T) *mux.Router {
 		router.HandleFunc(route.path, route.handler(t))
 	}
 
+	// Register SCIM token v2 routes
+	RegisterSCIMRoutes(router, t)
+
 	return router
 }

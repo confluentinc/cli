@@ -6,47 +6,45 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
-	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-	"github.com/confluentinc/cli/v4/pkg/ccstructs"
+	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 )
 
 // Mock SCIM tokens storage - initialized fresh for each handler call
 var scimTokenCounter = 3
 
-func getInitialSCIMTokens() map[string]*flowv1.SCIMToken {
-	return map[string]*flowv1.SCIMToken{
+func getInitialSCIMTokensV2() map[string]*orgv2.OrgV2ScimToken {
+	return map[string]*orgv2.OrgV2ScimToken{
 		"scim_token-12345": {
-			Id:             "scim_token-12345",
-			ConnectionName: "op-12345",
-			Token:          "scim_secret_token_value_12345",
-			CreatedAt:      &types.Timestamp{Seconds: time.Date(2025, 1, 1, 1, 0, 0, 0, time.UTC).Unix()},
-			ExpiresAt:      &types.Timestamp{Seconds: time.Date(2026, 1, 1, 1, 0, 0, 0, time.UTC).Unix()},
+			ApiVersion:     orgv2.PtrString("org/v2"),
+			Kind:           orgv2.PtrString("ScimToken"),
+			Id:             orgv2.PtrString("scim_token-12345"),
+			ConnectionName: orgv2.PtrString("op-12345"),
+			Token:          orgv2.PtrString("scim_secret_token_value_12345"),
+			CreatedAt:      orgv2.PtrTime(time.Date(2025, 1, 1, 1, 0, 0, 0, time.UTC)),
+			ExpiresAt:      orgv2.PtrTime(time.Date(2026, 1, 1, 1, 0, 0, 0, time.UTC)),
 		},
 		"scim_token-67890": {
-			Id:             "scim_token-67890",
-			ConnectionName: "op-12345",
-			Token:          "scim_secret_token_value_67890",
-			CreatedAt:      &types.Timestamp{Seconds: time.Date(2025, 2, 1, 1, 0, 0, 0, time.UTC).Unix()},
-			ExpiresAt:      &types.Timestamp{Seconds: time.Date(2026, 2, 1, 1, 0, 0, 0, time.UTC).Unix()},
+			ApiVersion:     orgv2.PtrString("org/v2"),
+			Kind:           orgv2.PtrString("ScimToken"),
+			Id:             orgv2.PtrString("scim_token-67890"),
+			ConnectionName: orgv2.PtrString("op-12345"),
+			Token:          orgv2.PtrString("scim_secret_token_value_67890"),
+			CreatedAt:      orgv2.PtrTime(time.Date(2025, 2, 1, 1, 0, 0, 0, time.UTC)),
+			ExpiresAt:      orgv2.PtrTime(time.Date(2026, 2, 1, 1, 0, 0, 0, time.UTC)),
 		},
 	}
 }
 
-var scimTokens = getInitialSCIMTokens()
+var scimTokensV2 = getInitialSCIMTokensV2()
 
-// Handler for: POST "/api/organizations/{orgId}/sso/{connectionName}/scim/tokens"
-func handleCreateSCIMToken(t *testing.T) http.HandlerFunc {
+// Handler for: POST "/org/v2/scim-tokens"
+func handleCreateSCIMTokenV2(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		connectionName := vars["connectionName"]
-
 		// Decode request body
-		var request flowv1.CreateSCIMTokenRequest
+		var request orgv2.InlineObject
 		require.NoError(t, json.NewDecoder(r.Body).Decode(&request))
 
 		// Create new token
@@ -59,95 +57,89 @@ func handleCreateSCIMToken(t *testing.T) http.HandlerFunc {
 		var expiresAt time.Time
 
 		// Use ExpireDurationMins from request if provided, otherwise default to 6 months
-		if request.ExpireDurationMins > 0 {
-			expiresAt = now.Add(time.Duration(request.ExpireDurationMins) * time.Minute)
+		if request.ExpireDurationMins != nil && *request.ExpireDurationMins > 0 {
+			expiresAt = now.Add(time.Duration(*request.ExpireDurationMins) * time.Minute)
 		} else {
 			expiresAt = now.AddDate(0, 6, 0) // Default 6 months
 		}
 
-		token := &flowv1.SCIMToken{
-			Id:             newTokenId,
-			ConnectionName: connectionName,
-			Token:          "scim_secret_token_value_" + newTokenId,
-			CreatedAt:      &types.Timestamp{Seconds: now.Unix()},
-			ExpiresAt:      &types.Timestamp{Seconds: expiresAt.Unix()},
+		token := &orgv2.OrgV2ScimToken{
+			ApiVersion:     orgv2.PtrString("org/v2"),
+			Kind:           orgv2.PtrString("ScimToken"),
+			Id:             orgv2.PtrString(newTokenId),
+			ConnectionName: orgv2.PtrString("op-12345"),
+			Token:          orgv2.PtrString("scim_secret_token_value_" + newTokenId),
+			CreatedAt:      orgv2.PtrTime(now),
+			ExpiresAt:      orgv2.PtrTime(expiresAt),
 		}
 
-		scimTokens[newTokenId] = token
+		scimTokensV2[newTokenId] = token
 
-		reply := &flowv1.CreateSCIMTokenReply{
-			ScimToken: token,
-		}
-
-		b, err := ccstructs.MarshalJSONToBytes(reply)
-		require.NoError(t, err)
-		_, err = w.Write(b)
-		require.NoError(t, err)
+		w.Header().Set("Content-Type", "application/json")
+		require.NoError(t, json.NewEncoder(w).Encode(token))
 	}
 }
 
-// Handler for: GET "/api/organizations/{orgId}/sso/{connectionName}/scim/tokens"
-func handleListSCIMTokens(t *testing.T) http.HandlerFunc {
+// Handler for: GET "/org/v2/scim-tokens"
+func handleListSCIMTokensV2(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		connectionName := vars["connectionName"]
-
-		var tokens []*flowv1.SCIMToken
-		for _, token := range scimTokens {
-			if token.ConnectionName == connectionName {
-				// Don't include the token value in list response
-				tokenCopy := *token
-				tokenCopy.Token = ""
-				tokens = append(tokens, &tokenCopy)
-			}
+		var tokens []orgv2.OrgV2ScimToken
+		for _, token := range scimTokensV2 {
+			// Don't include the token value in list response
+			tokenCopy := *token
+			tokenCopy.Token = nil
+			tokens = append(tokens, tokenCopy)
 		}
 
-		reply := &flowv1.ListSCIMTokensReply{
-			ScimTokens: tokens,
+		firstLink := *orgv2.NewNullableString(orgv2.PtrString("https://api.confluent.cloud/org/v2/scim-tokens"))
+		lastLink := *orgv2.NewNullableString(orgv2.PtrString("https://api.confluent.cloud/org/v2/scim-tokens"))
+
+		reply := orgv2.OrgV2ScimTokenList{
+			ApiVersion: "org/v2",
+			Kind:       "ScimTokenList",
+			Metadata: orgv2.ListMeta{
+				First: firstLink,
+				Last:  lastLink,
+			},
+			Data: tokens,
 		}
 
-		b, err := ccstructs.MarshalJSONToBytes(reply)
-		require.NoError(t, err)
-		_, err = w.Write(b)
-		require.NoError(t, err)
+		w.Header().Set("Content-Type", "application/json")
+		require.NoError(t, json.NewEncoder(w).Encode(reply))
 	}
 }
 
-// Handler for: DELETE "/api/organizations/{orgId}/sso/{connectionName}/scim/tokens/{tokenId}"
-func handleDeleteSCIMToken(t *testing.T) http.HandlerFunc {
+// Handler for: DELETE "/org/v2/scim-tokens/{id}"
+func handleDeleteSCIMTokenV2(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		tokenId := vars["tokenId"]
+		tokenId := vars["id"]
 
-		if _, exists := scimTokens[tokenId]; !exists {
+		if _, exists := scimTokensV2[tokenId]; !exists {
+			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusNotFound)
-			reply := &flowv1.DeleteSCIMTokenReply{
-				Error: &corev1.Error{
-					Code:    http.StatusNotFound,
-					Message: "SCIM token not found",
+			errorResponse := map[string]interface{}{
+				"errors": []map[string]interface{}{
+					{
+						"status": "404",
+						"detail": "SCIM token not found",
+					},
 				},
 			}
-			b, err := ccstructs.MarshalJSONToBytes(reply)
-			require.NoError(t, err)
-			_, err = w.Write(b)
-			require.NoError(t, err)
+			require.NoError(t, json.NewEncoder(w).Encode(errorResponse))
 			return
 		}
 
-		delete(scimTokens, tokenId)
+		delete(scimTokensV2, tokenId)
 
-		reply := &flowv1.DeleteSCIMTokenReply{}
-		b, err := ccstructs.MarshalJSONToBytes(reply)
-		require.NoError(t, err)
-		_, err = w.Write(b)
-		require.NoError(t, err)
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
 // Register SCIM routes
 func RegisterSCIMRoutes(router *mux.Router, t *testing.T) {
-	// SCIM token routes
-	router.HandleFunc("/api/organizations/{orgId}/sso/{connectionName}/scim/tokens", handleCreateSCIMToken(t)).Methods("POST")
-	router.HandleFunc("/api/organizations/{orgId}/sso/{connectionName}/scim/tokens", handleListSCIMTokens(t)).Methods("GET")
-	router.HandleFunc("/api/organizations/{orgId}/sso/{connectionName}/scim/tokens/{tokenId}", handleDeleteSCIMToken(t)).Methods("DELETE")
+	// SCIM token v2 routes
+	router.HandleFunc("/org/v2/scim-tokens", handleCreateSCIMTokenV2(t)).Methods("POST")
+	router.HandleFunc("/org/v2/scim-tokens", handleListSCIMTokensV2(t)).Methods("GET")
+	router.HandleFunc("/org/v2/scim-tokens/{id}", handleDeleteSCIMTokenV2(t)).Methods("DELETE")
 }

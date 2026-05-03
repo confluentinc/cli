@@ -1,11 +1,9 @@
 package organization
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
 
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
+	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -34,15 +32,11 @@ func (c *scimTokenCommand) newCreateCommand() *cobra.Command {
 }
 
 func (c *scimTokenCommand) create(cmd *cobra.Command, _ []string) error {
-	scimClient, orgId, connectionName, err := c.getSCIMClient()
-	if err != nil {
+	if err := c.validateSSOConfigured(); err != nil {
 		return err
 	}
 
-	req := &flowv1.CreateSCIMTokenRequest{
-		OrgResourceId:  orgId,
-		ConnectionName: connectionName,
-	}
+	token := orgv2.InlineObject{}
 
 	// Only set expiration duration if explicitly provided
 	if cmd.Flags().Changed("expire-duration-mins") {
@@ -50,10 +44,10 @@ func (c *scimTokenCommand) create(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		req.ExpireDurationMins = expireDurationMins
+		token.ExpireDurationMins = orgv2.PtrInt32(expireDurationMins)
 	}
 
-	token, err := scimClient.CreateToken(context.Background(), req)
+	createdToken, err := c.V2Client.CreateScimToken(token)
 	if err != nil {
 		return err
 	}
@@ -62,10 +56,10 @@ func (c *scimTokenCommand) create(cmd *cobra.Command, _ []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&scimTokenCreateOut{
-		Id:        token.Id,
-		Token:     token.Token,
-		CreatedAt: formatTimestamp(token.CreatedAt),
-		ExpiresAt: formatTimestamp(token.ExpiresAt),
+		Id:        createdToken.GetId(),
+		Token:     createdToken.GetToken(),
+		CreatedAt: formatTimestamp(createdToken.CreatedAt),
+		ExpiresAt: formatTimestamp(createdToken.ExpiresAt),
 	})
 	return table.Print()
 }
