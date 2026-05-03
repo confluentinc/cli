@@ -67,7 +67,7 @@ require (
 	github.com/docker/docker v28.0.0+incompatible
 	github.com/docker/go-connections v0.5.0
 	github.com/fatih/color v1.17.0
-	github.com/gdamore/tcell/v2 v2.7.4
+	github.com/gdamore/tcell/v3 v3.3.0
 	github.com/go-git/go-git/v5 v5.18.0
 	github.com/go-jose/go-jose/v3 v3.0.5
 	github.com/gobuffalo/flect v1.0.2
@@ -114,11 +114,11 @@ require (
 	go.opentelemetry.io/otel/sdk v1.39.0
 	go.opentelemetry.io/otel/sdk/metric v1.39.0
 	go.uber.org/mock v0.4.0
-	golang.org/x/crypto v0.46.0
+	golang.org/x/crypto v0.49.0
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
 	golang.org/x/oauth2 v0.34.0
-	golang.org/x/term v0.38.0
-	golang.org/x/text v0.32.0
+	golang.org/x/term v0.42.0
+	golang.org/x/text v0.36.0
 	google.golang.org/grpc v1.79.3
 	google.golang.org/protobuf v1.36.10
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
@@ -171,6 +171,8 @@ require (
 	github.com/charmbracelet/x/input v0.1.0 // indirect
 	github.com/charmbracelet/x/term v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.1.0 // indirect
+	github.com/clipperhouse/displaywidth v0.11.0 // indirect
+	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.4.1 // indirect
@@ -181,7 +183,8 @@ require (
 	github.com/envoyproxy/protoc-gen-validate v1.3.0 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/gdamore/encoding v1.0.0 // indirect
+	github.com/gdamore/encoding v1.0.1 // indirect
+	github.com/gdamore/tcell/v2 v2.7.1 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.8.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
@@ -220,7 +223,7 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
-	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
+	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
 	github.com/lyft/protoc-gen-star/v2 v2.0.4-0.20230330145011-496ad1ac90a4 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -271,12 +274,12 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.24.0 // indirect
 	go.opentelemetry.io/otel/trace v1.39.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.9.0 // indirect
-	golang.org/x/mod v0.31.0 // indirect
-	golang.org/x/net v0.48.0 // indirect
-	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/sys v0.39.0 // indirect
+	golang.org/x/mod v0.34.0 // indirect
+	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
+	golang.org/x/sys v0.43.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
-	golang.org/x/tools v0.40.0 // indirect
+	golang.org/x/tools v0.43.0 // indirect
 	google.golang.org/api v0.191.0 // indirect
 	google.golang.org/genproto v0.0.0-20240730163845-b1a4ccb954bf // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20251202230838-ff82c1b0f217 // indirect
