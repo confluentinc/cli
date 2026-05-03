@@ -7,6 +7,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/kafka"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -80,7 +81,16 @@ func (c *rtceTopicCommand) validArgsMultiple(cmd *cobra.Command, args []string) 
 }
 
 func (c *rtceTopicCommand) autocompleteRtceTopics() []string {
-	rtceTopics, err := c.V2Client.ListRtceTopics("", "", "", "")
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil
+	}
+	kafkaClusterConfig, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
+	if err != nil {
+		return nil
+	}
+	kafkaClusterId := kafkaClusterConfig.GetId()
+	rtceTopics, err := c.V2Client.ListRtceTopics("", "", environmentId, kafkaClusterId)
 	if err != nil {
 		return nil
 	}
