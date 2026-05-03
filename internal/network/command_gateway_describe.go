@@ -35,7 +35,7 @@ func (c *command) gatewayDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	gateway, err := c.V2Client.GetGateway(environmentId, args[0])
+	gateway, err := c.V2Client.GetNetworkGateway(environmentId, args[0])
 	if err != nil {
 		return err
 	}

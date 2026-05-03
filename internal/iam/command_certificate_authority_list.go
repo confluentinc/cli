@@ -22,7 +22,7 @@ func (c *certificateAuthorityCommand) newListCommand() *cobra.Command {
 }
 
 func (c *certificateAuthorityCommand) list(cmd *cobra.Command, _ []string) error {
-	certificateAuthorities, err := c.V2Client.ListCertificateAuthorities()
+	certificateAuthorities, err := c.V2Client.ListIamCertificateAuthorities()
 	if err != nil {
 		return err
 	}

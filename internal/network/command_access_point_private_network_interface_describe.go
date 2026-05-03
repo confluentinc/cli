@@ -35,7 +35,7 @@ func (c *accessPointCommand) privateNetworkInterfaceDescribe(cmd *cobra.Command,
 		return err
 	}
 
-	privateNetworkInterface, err := c.V2Client.GetAccessPoint(environmentId, args[0])
+	privateNetworkInterface, err := c.V2Client.GetNetworkAccessPoint(environmentId, args[0])
 	if err != nil {
 		return err
 	}

@@ -43,7 +43,8 @@ var commandRules = []linter.CommandRule{
 		linter.ExcludeCommand("connect custom-plugin version create"),
 		linter.ExcludeCommand("connect custom-plugin version update"),
 		linter.ExcludeCommand("pipeline update"),
-		linter.ExcludeCommand("flink statement update")),
+		linter.ExcludeCommand("flink statement update"),
+		linter.ExcludeCommand("flink materialized-table update")),
 
 	// Soft Requirements
 	linter.Filter(linter.RequireLengthBetween("Short", 10, 60),
@@ -126,6 +127,7 @@ var flagRules = []linter.FlagRule{
 			"source-bootstrap-server",
 			"update-schema-registry",
 			"worker-configurations",
+			"distribution-bucket-count",
 		),
 	),
 	linter.FlagFilter(
@@ -139,6 +141,7 @@ var flagRules = []linter.FlagRule{
 			"schema-registry-api-key",
 			"schema-registry-api-secret",
 			"skip-message-on-error",
+			"distributed-by-column-names",
 		),
 	),
 }
@@ -204,6 +207,7 @@ var vocabWords = []string{
 	"acls",
 	"ai",
 	"alertmanager",
+	"anthropic",
 	"apac",
 	"api",
 	"apis",
@@ -233,6 +237,7 @@ var vocabWords = []string{
 	"configs",
 	"consumer.config",
 	"confluent_jdbc",
+	"cosmosdb",
 	"couchbase",
 	"cpp",
 	"crl",
@@ -253,6 +258,7 @@ var vocabWords = []string{
 	"eu",
 	"failover",
 	"filepath",
+	"fireworksai",
 	"flink",
 	"formatter",
 	"gcm",
@@ -316,6 +322,7 @@ var vocabWords = []string{
 	"restapi",
 	"ruleset",
 	"s3",
+	"s3vectors",
 	"sagemaker",
 	"sasl",
 	"savepoint",

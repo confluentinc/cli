@@ -1,9 +1,15 @@
+/bin/
 /dist/
 /docs/
 /legal/
 /prebuilt/
 /test/bin/
+/test/coverage/
+/test/live/bin/
 /vendor/
+
+# Local agent/tooling artifacts
+/.planning/
 
 # RPM/DEB
 /rpm/
@@ -58,15 +64,16 @@ go.work.sum
 
 # General
 .DS_Store
+.localized
 __MACOSX/
 .AppleDouble
 .LSOverride
 Icon[]
 
-# Thumbnails
+# Resource forks
 ._*
 
-# Files that might appear in the root of a volume
+# Files and directories that might appear in the root of a volume
 .DocumentRevisions-V100
 .fseventsd
 .Spotlight-V100
@@ -74,6 +81,15 @@ Icon[]
 .Trashes
 .VolumeIcon.icns
 .com.apple.timemachine.donotpresent
+.com.apple.timemachine.supported
+.PKInstallSandboxManager
+.PKInstallSandboxManager-SystemSoftware
+.hotfiles.btree
+.vol
+.file
+.disk_label*
+lost+found
+.HFS+ Private Directory Data[]
 
 # Directories potentially created on remote AFP share
 .AppleDB
@@ -81,6 +97,28 @@ Icon[]
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Mac OS 6 to 9
+Desktop DB
+Desktop DF
+TheFindByContentFolder
+TheVolumeSettingsFolder
+.FBCIndex
+.FBCSemaphoreFile
+.FBCLockFolder
+
+# Quota system
+.quota.group
+.quota.user
+.quota.ops.group
+.quota.ops.user
+
+# TimeMachine
+Backups.backupdb
+.MobileBackups
+.MobileBackups.trash
+MobileBackups.trash
+tmbootpicker.efi
 
 #
 # Global/JetBrains Gitignore
@@ -151,7 +189,8 @@ atlassian-ide-plugin.xml
 
 # SonarLint plugin
 .idea/sonarlint/
-.idea/sonarlint.xml # see https://community.sonarsource.com/t/is-the-file-idea-idea-idea-sonarlint-xml-intended-to-be-under-source-control/121119
+# see https://community.sonarsource.com/t/is-the-file-idea-idea-idea-sonarlint-xml-intended-to-be-under-source-control/121119
+.idea/sonarlint.xml
 
 # Crashlytics plugin (for Android Studio and IntelliJ)
 com_crashlytics_export_strings.xml
@@ -258,6 +297,7 @@ flycheck_*.el
 # Global/VisualStudioCode Gitignore
 #
 
+# Visual Studio Code
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json

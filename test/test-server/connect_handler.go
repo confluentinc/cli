@@ -191,6 +191,12 @@ func handleConnectArtifacts(t *testing.T) http.HandlerFunc {
 			case "my-connect-artifact-azure-zip":
 				artifact.SetId("cfa-azure-zip123")
 				artifact.Spec.SetContentFormat("ZIP")
+			case "my-connect-artifact-gcp-jar":
+				artifact.SetId("cfa-gcp-jar123")
+				artifact.Spec.SetContentFormat("JAR")
+			case "my-connect-artifact-gcp-zip":
+				artifact.SetId("cfa-gcp-zip123")
+				artifact.Spec.SetContentFormat("ZIP")
 			}
 
 			artifact.Status = &camv1.CamV1ConnectArtifactStatus{
@@ -227,7 +233,7 @@ func handleConnectArtifacts(t *testing.T) http.HandlerFunc {
 				if cloud != "" && strings.ToUpper(artifact.Spec.GetCloud()) != cloud {
 					continue
 				}
-				if artifact.GetId() == "cfa-jar123" || artifact.GetId() == "cfa-azure-jar123" {
+				if artifact.GetId() == "cfa-jar123" || artifact.GetId() == "cfa-azure-jar123" || artifact.GetId() == "cfa-gcp-jar123" {
 					artifact.Status = &camv1.CamV1ConnectArtifactStatus{
 						Phase: "READY",
 					}
@@ -256,7 +262,7 @@ func handleConnectArtifactId(t *testing.T) http.HandlerFunc {
 				return
 			}
 
-			if id == "cfa-jar123" || id == "cfa-azure-jar123" {
+			if id == "cfa-jar123" || id == "cfa-azure-jar123" || id == "cfa-gcp-jar123" {
 				artifact.Status = &camv1.CamV1ConnectArtifactStatus{
 					Phase: "READY",
 				}
@@ -273,7 +279,7 @@ func handleConnectArtifactId(t *testing.T) http.HandlerFunc {
 				return
 			}
 
-			if id == "cfa-zip123" || id == "cfa-azure-zip123" {
+			if id == "cfa-zip123" || id == "cfa-azure-zip123" || id == "cfa-gcp-zip123" {
 				w.WriteHeader(http.StatusNoContent)
 			}
 		}

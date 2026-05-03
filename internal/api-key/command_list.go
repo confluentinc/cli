@@ -63,7 +63,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		serviceAccount = c.Context.GetCurrentServiceAccount()
 	}
 
-	serviceAccounts, err := c.V2Client.ListIamServiceAccounts()
+	serviceAccounts, err := c.V2Client.ListIamServiceAccounts(nil)
 	if err != nil {
 		return err
 	}

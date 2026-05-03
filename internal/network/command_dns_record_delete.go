@@ -36,7 +36,7 @@ func (c *command) dnsRecordDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	existenceFunc := func(id string) bool {
-		_, err := c.V2Client.GetDnsRecord(environmentId, id)
+		_, err := c.V2Client.GetNetworkDnsRecord(environmentId, id)
 		return err == nil
 	}
 
@@ -45,7 +45,7 @@ func (c *command) dnsRecordDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		return c.V2Client.DeleteDnsRecord(environmentId, id)
+		return c.V2Client.DeleteNetworkDnsRecord(environmentId, id)
 	}
 
 	deletedIds, err := deletion.DeleteWithoutMessage(cmd, args, deleteFunc)

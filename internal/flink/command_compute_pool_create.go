@@ -28,6 +28,7 @@ func (c *command) newComputePoolCreateCommand() *cobra.Command {
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Int32("max-cfu", 5, "Maximum number of Confluent Flink Units (CFU).")
+	cmd.Flags().Bool("default-pool", false, "Indicate whether the Flink compute pool is a default compute pool or not.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -53,6 +54,11 @@ func (c *command) computePoolCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	isDefault, err := cmd.Flags().GetBool("default-pool")
+	if err != nil {
+		return err
+	}
+
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
@@ -68,6 +74,7 @@ func (c *command) computePoolCreate(cmd *cobra.Command, args []string) error {
 		Cloud:       flinkv2.PtrString(cloud),
 		Region:      flinkv2.PtrString(region),
 		MaxCfu:      flinkv2.PtrInt32(maxCfu),
+		DefaultPool: flinkv2.PtrBool(isDefault),
 		Environment: &flinkv2.GlobalObjectReference{
 			Id:           environmentId,
 			Related:      environment.Metadata.GetSelf(),
@@ -88,6 +95,7 @@ func (c *command) computePoolCreate(cmd *cobra.Command, args []string) error {
 		Environment: computePool.Spec.Environment.GetId(),
 		CurrentCfu:  computePool.Status.GetCurrentCfu(),
 		MaxCfu:      computePool.Spec.GetMaxCfu(),
+		DefaultPool: computePool.Spec.GetDefaultPool(),
 		Cloud:       computePool.Spec.GetCloud(),
 		Region:      computePool.Spec.GetRegion(),
 		Status:      computePool.Status.GetPhase(),

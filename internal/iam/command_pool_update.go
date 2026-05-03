@@ -78,7 +78,7 @@ func (c *poolCommand) update(cmd *cobra.Command, args []string) error {
 		updateIdentityPool.Filter = identityproviderv2.PtrString(filter)
 	}
 
-	pool, err := c.V2Client.UpdateIdentityPool(updateIdentityPool, provider)
+	pool, err := c.V2Client.UpdateIamIdentityPool(updateIdentityPool, provider)
 	if err != nil {
 		return err
 	}

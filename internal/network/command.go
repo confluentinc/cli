@@ -58,7 +58,7 @@ var (
 	DnsResolutions  = []string{"private", "chased-private"}
 )
 
-func New(prerunner pcmd.PreRunner, cfg *config.Config) *cobra.Command {
+func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "network",
 		Short:       "Manage Confluent Cloud networks.",

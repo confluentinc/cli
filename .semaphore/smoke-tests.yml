@@ -1,0 +1,115 @@
+version: v1.0
+name: Smoke Tests for Confluent CLI
+
+agent:
+  machine:
+    type: s1-prod-ubuntu24-04-amd64-2
+
+auto_cancel:
+  running:
+    when: "false"
+
+execution_time_limit:
+  minutes: 30
+
+blocks:
+  - name: linux/arm64
+    dependencies: []
+    task:
+      agent:
+        machine:
+          type: s1-prod-ubuntu24-04-arm64-1
+      jobs:
+        - name: "Smoke linux/arm64"
+          commands:
+            - checkout
+            - sem-version go $(cat .go-version)
+            - export PATH=$(go env GOPATH)/bin:$PATH
+
+            - . vault-sem-get-secret v1/ci/kv/apif/cli/live-testing-data
+            - . vault-sem-get-secret v1/ci/kv/apif/cli/slack-notifications-live-testing
+
+            - export SMOKE_OS=linux SMOKE_ARCH=arm64 SMOKE_COMMAND=environment_list
+
+            - make build-otel-smoke-metric
+
+            - |
+              if make live-test-smoke; then
+                RESULT=1
+              else
+                RESULT=0
+                echo "Smoke tests failed on linux/arm64, sending Slack notification..."
+                curl -X POST -H "Content-type: application/json" --data '{}' "$SLACK_WEBHOOK_URL"
+              fi
+
+              # Report pass/fail metric (never fails the pipeline)
+              ./bin/otel-smoke-metric "$RESULT" || true
+
+              # Surface failure to Semaphore
+              [ "$RESULT" = "1" ]
+
+  - name: windows/amd64
+    dependencies: []
+    task:
+      agent:
+        machine:
+          type: s1-prod-windows
+      jobs:
+        - name: "Smoke windows/amd64"
+          commands:
+            - $Env:PATH += ";C:\Program Files\Git\bin"
+            - checkout
+
+            # Vault auth (vault-sem-get-secret is Linux-only; use native vault CLI on Windows,
+            # following the pattern from cli-release/.semaphore/4-release-cli.yml).
+            - $Env:VAULT_ADDR = "https://vault.cireops.gcp.internal.confluent.cloud"
+            - vault login -no-print token=$(vault write -field=token "auth/semaphore_self_hosted/login" role="default" jwt="$Env:SEMAPHORE_OIDC_TOKEN")
+            - $Env:CONFLUENT_CLOUD_EMAIL = (vault kv get -field=CONFLUENT_CLOUD_EMAIL v1/ci/kv/apif/cli/live-testing-data)
+            - $Env:CONFLUENT_CLOUD_PASSWORD = (vault kv get -field=CONFLUENT_CLOUD_PASSWORD v1/ci/kv/apif/cli/live-testing-data)
+            - $Env:SLACK_WEBHOOK_URL = (vault kv get -field=SLACK_WEBHOOK_URL v1/ci/kv/apif/cli/slack-notifications-live-testing)
+
+            # Install Go (matches the pattern in semaphore.yml; chocolatey is community-maintained)
+            - $ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -OutFile Go.zip -Uri https://go.dev/dl/go$(Get-Content .go-version).windows-amd64.zip -UseBasicParsing
+            - 7z x Go.zip -oC:\
+
+            # MSYS2 + mingw GCC (CGO is enabled for confluent CLI builds)
+            - if (!(Test-Path "C:\msys64\usr\bin\bash.exe")) { curl.exe -L --retry 5 --retry-delay 5 -o msys2.tar.xz https://repo.msys2.org/distrib/x86_64/msys2-base-x86_64-20260322.tar.xz }
+            - if (!(Test-Path "C:\msys64\usr\bin\bash.exe")) { 7z x msys2.tar.xz }
+            - if (!(Test-Path "C:\msys64\usr\bin\bash.exe")) { 7z x msys2.tar -oC:\ }
+            - C:\msys64\usr\bin\bash -lc "pacman -Sy --noconfirm mingw-w64-x86_64-gcc"
+            - $Env:PATH = "C:\msys64\mingw64\bin;C:\Go\bin;C:\Users\semaphore\go\bin;$Env:PATH"
+            - $Env:CC = "x86_64-w64-mingw32-gcc"
+            - $Env:EXISTING_FLAGS = $(go env CGO_LDFLAGS)
+            - go env -w CGO_LDFLAGS="-fstack-protector $Env:EXISTING_FLAGS"
+
+            - $Env:SMOKE_OS = "windows"
+            - $Env:SMOKE_ARCH = "amd64"
+            - $Env:SMOKE_COMMAND = "environment_list"
+
+            # Build emitter + CLI directly (no `make` available without bash; mirrors Makefile targets)
+            - go build -o bin\otel-smoke-metric.exe .\cmd\otel-smoke-metric
+            - go build -ldflags="-s -w -X main.disableUpdates=true" -o test\live\bin\confluent.exe .\cmd\confluent
+
+            - $Env:CLI_LIVE_TEST = "1"
+
+            # Run smoke + emit metric + Slack on failure as a single block so a non-zero
+            # `go test` exit code does NOT abort the job before metric emission.
+            - |
+              go test ./test/live/ -v -run='.*Live$' -tags='live_test,smoke' -timeout 30m -parallel 4
+              if ($LASTEXITCODE -eq 0) {
+                $RESULT = "1"
+              } else {
+                $RESULT = "0"
+                Write-Host "Smoke tests failed on windows/amd64, sending Slack notification..."
+                try {
+                  Invoke-RestMethod -Method Post -Uri $Env:SLACK_WEBHOOK_URL -ContentType "application/json" -Body "{}"
+                } catch {
+                  Write-Host "Slack notification failed: $_"
+                }
+              }
+
+              # Report pass/fail metric (never fails the pipeline; emitter always exits 0)
+              & .\bin\otel-smoke-metric.exe $RESULT
+
+              # Surface failure to Semaphore at the very end
+              if ($RESULT -ne "1") { exit 1 }

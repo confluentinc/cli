@@ -78,7 +78,7 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 
 	// 2 - List all the private endpoints based on the presence of "READY" PrivateLinkAttachments as filter
 	// Note the `cloud` and `region` parameters have to be `nil` instead of empty slice in case of no filter
-	platts, err := c.V2Client.ListPrivateLinkAttachments(environmentId, nil, nil, nil, []string{"READY"})
+	platts, err := c.V2Client.ListNetworkPrivateLinkAttachments(environmentId, nil, nil, nil, []string{"READY"})
 	if err != nil {
 		return fmt.Errorf("unable to list Flink endpoint, failed to list private link attachments: %w", err)
 	}

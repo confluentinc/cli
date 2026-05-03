@@ -1,0 +1,15 @@
+Manage Flink compute pools configs.
+
+Usage:
+  confluent flink compute-pool-config [command]
+
+Available Commands:
+  describe    Describe a Flink compute pool config.
+  update      Update a Flink compute pool config.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent flink compute-pool-config [command] --help" for more information about a command.

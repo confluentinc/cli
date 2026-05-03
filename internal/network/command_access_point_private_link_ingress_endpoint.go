@@ -63,7 +63,7 @@ func (c *accessPointCommand) autocompleteIngressEndpoints() []string {
 		return nil
 	}
 
-	accessPoints, err := c.V2Client.ListAccessPoints(environmentId, nil)
+	accessPoints, err := c.V2Client.ListNetworkAccessPoints(environmentId, nil)
 	if err != nil {
 		return nil
 	}

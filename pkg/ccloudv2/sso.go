@@ -23,33 +23,33 @@ func (c *Client) ssoApiContext() context.Context {
 	return context.WithValue(context.Background(), ssov2.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
-func (c *Client) CreateGroupMapping(groupMapping ssov2.IamV2SsoGroupMapping) (ssov2.IamV2SsoGroupMapping, error) {
+func (c *Client) CreateIamGroupMapping(groupMapping ssov2.IamV2SsoGroupMapping) (ssov2.IamV2SsoGroupMapping, error) {
 	resp, httpResp, err := c.SsoClient.GroupMappingsIamV2SsoApi.CreateIamV2SsoGroupMapping(c.ssoApiContext()).IamV2SsoGroupMapping(groupMapping).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DeleteGroupMapping(id string) error {
+func (c *Client) DeleteIamGroupMapping(id string) error {
 	httpResp, err := c.SsoClient.GroupMappingsIamV2SsoApi.DeleteIamV2SsoGroupMapping(c.ssoApiContext(), id).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) GetGroupMapping(id string) (ssov2.IamV2SsoGroupMapping, error) {
+func (c *Client) GetIamGroupMapping(id string) (ssov2.IamV2SsoGroupMapping, error) {
 	resp, httpResp, err := c.SsoClient.GroupMappingsIamV2SsoApi.GetIamV2SsoGroupMapping(c.ssoApiContext(), id).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateGroupMapping(update ssov2.IamV2SsoGroupMapping) (ssov2.IamV2SsoGroupMapping, error) {
+func (c *Client) UpdateIamGroupMapping(update ssov2.IamV2SsoGroupMapping) (ssov2.IamV2SsoGroupMapping, error) {
 	resp, httpResp, err := c.SsoClient.GroupMappingsIamV2SsoApi.UpdateIamV2SsoGroupMapping(c.ssoApiContext(), *update.Id).IamV2SsoGroupMapping(update).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListGroupMappings() ([]ssov2.IamV2SsoGroupMapping, error) {
+func (c *Client) ListIamGroupMappings() ([]ssov2.IamV2SsoGroupMapping, error) {
 	var list []ssov2.IamV2SsoGroupMapping
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, httpResp, err := c.executeListGroupMappings(pageToken)
+		page, httpResp, err := c.executeListIamGroupMappings(pageToken)
 		if err != nil {
 			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
@@ -63,7 +63,7 @@ func (c *Client) ListGroupMappings() ([]ssov2.IamV2SsoGroupMapping, error) {
 	return list, nil
 }
 
-func (c *Client) executeListGroupMappings(pageToken string) (ssov2.IamV2SsoGroupMappingList, *http.Response, error) {
+func (c *Client) executeListIamGroupMappings(pageToken string) (ssov2.IamV2SsoGroupMappingList, *http.Response, error) {
 	req := c.SsoClient.GroupMappingsIamV2SsoApi.ListIamV2SsoGroupMappings(c.ssoApiContext()).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)

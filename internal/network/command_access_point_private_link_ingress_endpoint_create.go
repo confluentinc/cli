@@ -91,7 +91,7 @@ func (c *accessPointCommand) createIngressEndpoint(cmd *cobra.Command, args []st
 		return fmt.Errorf("ingress endpoints are only supported for AWS")
 	}
 
-	ingressEndpoint, err := c.V2Client.CreateAccessPoint(createIngressEndpoint)
+	ingressEndpoint, err := c.V2Client.CreateNetworkAccessPoint(createIngressEndpoint)
 	if err != nil {
 		return err
 	}

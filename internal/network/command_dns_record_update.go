@@ -45,7 +45,7 @@ func (c *command) dnsRecordUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	dnsRecord, err := c.V2Client.GetDnsRecord(environmentId, args[0])
+	dnsRecord, err := c.V2Client.GetNetworkDnsRecord(environmentId, args[0])
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (c *command) dnsRecordUpdate(cmd *cobra.Command, args []string) error {
 		updateDnsRecord.Spec.Config.NetworkingV1PrivateLinkAccessPoint.SetResourceId(privateLinkAccessPoint)
 	}
 
-	record, err := c.V2Client.UpdateDnsRecord(args[0], updateDnsRecord)
+	record, err := c.V2Client.UpdateNetworkDnsRecord(args[0], updateDnsRecord)
 	if err != nil {
 		return err
 	}

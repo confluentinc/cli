@@ -40,7 +40,7 @@ func (c *poolCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	existenceFunc := func(id string) bool {
-		_, err := c.V2Client.GetIdentityPool(id, provider)
+		_, err := c.V2Client.GetIamIdentityPool(id, provider)
 		return err == nil
 	}
 
@@ -49,7 +49,7 @@ func (c *poolCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		return c.V2Client.DeleteIdentityPool(id, provider)
+		return c.V2Client.DeleteIamIdentityPool(id, provider)
 	}
 
 	_, err = deletion.Delete(cmd, args, deleteFunc, resource.IdentityPool)

@@ -12,7 +12,7 @@ type command struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-func New(prerunner pcmd.PreRunner, cfg *config.Config) *cobra.Command {
+func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "unified-stream-manager",
 		Aliases:     []string{"usm"},

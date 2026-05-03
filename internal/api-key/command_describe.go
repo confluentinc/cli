@@ -58,7 +58,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		resourceIdToUserIdMap := mapResourceIdToUserId(allUsers)
 		usersMap := getUsersMap(allUsers)
 
-		serviceAccounts, err := c.V2Client.ListIamServiceAccounts()
+		serviceAccounts, err := c.V2Client.ListIamServiceAccounts(nil)
 		if err != nil {
 			return err
 		}
