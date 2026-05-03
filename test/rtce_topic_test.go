@@ -2,7 +2,7 @@ package test
 
 func (s *CLITestSuite) TestRtceRtceTopicCreate() {
 	tests := []CLITest{
-		{args: "rtce rtce-topic create test-name --cloud aws --description \"Customer orders table for real-time analytics\" --region us-west-2 --topic-name orders_topic", fixture: "rtce/rtce-topic/create.golden"},
+		{args: "rtce rtce-topic create --cloud aws --description \"Customer orders table for real-time analytics\" --region us-west-2 --topic-name orders_topic", fixture: "rtce/rtce-topic/create.golden"},
 	}
 
 	for _, test := range tests {
