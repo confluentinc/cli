@@ -39,8 +39,8 @@ var (
 		"azure-ingress-privatelink":           azureIngressPrivateLink,
 		"gcp-egress-privatelink":              "GcpEgressPrivateLink",
 		"gcp-ingress-privatelink":             "GcpIngressPrivateLink",
-		"gcp-egress-private-service-connect":  gcpEgressPrivateServiceConnect,
-		"gcp-ingress-private-service-connect": gcpIngressPrivateServiceConnect,
+		"gcp-egress-private-service-connect":  "GcpEgressPrivateLink",
+		"gcp-ingress-private-service-connect": "GcpIngressPrivateLink",
 	}
 )
 
