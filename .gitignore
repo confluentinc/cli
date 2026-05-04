@@ -1,3 +1,4 @@
+/bin/
 /dist/
 /docs/
 /legal/
@@ -6,6 +7,9 @@
 /test/coverage/
 /test/live/bin/
 /vendor/
+
+# Local agent/tooling artifacts
+/.planning/
 
 # RPM/DEB
 /rpm/
@@ -185,7 +189,8 @@ atlassian-ide-plugin.xml
 
 # SonarLint plugin
 .idea/sonarlint/
-.idea/sonarlint.xml # see https://community.sonarsource.com/t/is-the-file-idea-idea-idea-sonarlint-xml-intended-to-be-under-source-control/121119
+# see https://community.sonarsource.com/t/is-the-file-idea-idea-idea-sonarlint-xml-intended-to-be-under-source-control/121119
+.idea/sonarlint.xml
 
 # Crashlytics plugin (for Android Studio and IntelliJ)
 com_crashlytics_export_strings.xml
@@ -292,6 +297,7 @@ flycheck_*.el
 # Global/VisualStudioCode Gitignore
 #
 
+# Visual Studio Code
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
