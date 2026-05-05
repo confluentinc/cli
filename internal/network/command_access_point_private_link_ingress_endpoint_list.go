@@ -47,7 +47,9 @@ func (c *accessPointCommand) listIngressEndpoint(cmd *cobra.Command, _ []string)
 		if ingressEndpoint.Spec == nil {
 			return fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "spec")
 		}
-		if ingressEndpoint.Spec.GetConfig().NetworkingV1AwsIngressPrivateLinkEndpoint == nil {
+		if ingressEndpoint.Spec.GetConfig().NetworkingV1AwsIngressPrivateLinkEndpoint == nil &&
+			ingressEndpoint.Spec.GetConfig().NetworkingV1AzureIngressPrivateLinkEndpoint == nil &&
+			ingressEndpoint.Spec.GetConfig().NetworkingV1GcpIngressPrivateServiceConnectEndpoint == nil {
 			continue
 		}
 		if ingressEndpoint.Status == nil {
@@ -67,6 +69,23 @@ func (c *accessPointCommand) listIngressEndpoint(cmd *cobra.Command, _ []string)
 			out.AwsVpcEndpointServiceName = ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.GetVpcEndpointServiceName()
 			if ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.HasDnsDomain() {
 				out.DnsDomain = ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus.GetDnsDomain()
+			}
+		}
+
+		if ingressEndpoint.Status.Config != nil && ingressEndpoint.Status.Config.NetworkingV1AzureIngressPrivateLinkEndpointStatus != nil {
+			out.AzurePrivateLinkServiceAlias = ingressEndpoint.Status.Config.NetworkingV1AzureIngressPrivateLinkEndpointStatus.GetPrivateLinkServiceAlias()
+			out.AzurePrivateLinkServiceResourceId = ingressEndpoint.Status.Config.NetworkingV1AzureIngressPrivateLinkEndpointStatus.GetPrivateLinkServiceResourceId()
+			out.AzurePrivateEndpointResourceId = ingressEndpoint.Status.Config.NetworkingV1AzureIngressPrivateLinkEndpointStatus.GetPrivateEndpointResourceId()
+			if ingressEndpoint.Status.Config.NetworkingV1AzureIngressPrivateLinkEndpointStatus.HasDnsDomain() {
+				out.DnsDomain = ingressEndpoint.Status.Config.NetworkingV1AzureIngressPrivateLinkEndpointStatus.GetDnsDomain()
+			}
+		}
+
+		if ingressEndpoint.Status.Config != nil && ingressEndpoint.Status.Config.NetworkingV1GcpIngressPrivateServiceConnectEndpointStatus != nil {
+			out.GcpPrivateServiceConnectServiceAttachment = ingressEndpoint.Status.Config.NetworkingV1GcpIngressPrivateServiceConnectEndpointStatus.GetPrivateServiceConnectServiceAttachment()
+			out.GcpPrivateServiceConnectConnectionId = ingressEndpoint.Status.Config.NetworkingV1GcpIngressPrivateServiceConnectEndpointStatus.GetPrivateServiceConnectConnectionId()
+			if ingressEndpoint.Status.Config.NetworkingV1GcpIngressPrivateServiceConnectEndpointStatus.HasDnsDomain() {
+				out.DnsDomain = ingressEndpoint.Status.Config.NetworkingV1GcpIngressPrivateServiceConnectEndpointStatus.GetDnsDomain()
 			}
 		}
 

@@ -1,5 +1,4 @@
-Create an ingress endpoint.
-
+Error: if any flags in the group [vpc-endpoint-id private-endpoint-resource-id private-service-connect-connection-id] are set none of the others can be; [private-endpoint-resource-id vpc-endpoint-id] were all set
 Usage:
   confluent network access-point private-link ingress-endpoint create [name] [flags]
 
@@ -30,3 +29,4 @@ Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
