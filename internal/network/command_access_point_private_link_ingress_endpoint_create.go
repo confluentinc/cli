@@ -101,9 +101,6 @@ func (c *accessPointCommand) createIngressEndpoint(cmd *cobra.Command, args []st
 
 	switch cloud {
 	case pcloud.Aws:
-		if privateEndpointResourceId != "" || privateServiceConnectConnectionId != "" {
-			return fmt.Errorf("\"--private-endpoint-resource-id\" and \"--private-service-connect-connection-id\" are not valid for --cloud aws; use \"--vpc-endpoint-id\"")
-		}
 		if vpcEndpointId == "" {
 			return fmt.Errorf("flag \"vpc-endpoint-id\" is required for --cloud aws")
 		}
@@ -114,9 +111,6 @@ func (c *accessPointCommand) createIngressEndpoint(cmd *cobra.Command, args []st
 			},
 		}
 	case pcloud.Azure:
-		if vpcEndpointId != "" || privateServiceConnectConnectionId != "" {
-			return fmt.Errorf("\"--vpc-endpoint-id\" and \"--private-service-connect-connection-id\" are not valid for --cloud azure; use \"--private-endpoint-resource-id\"")
-		}
 		if privateEndpointResourceId == "" {
 			return fmt.Errorf("flag \"private-endpoint-resource-id\" is required for --cloud azure")
 		}
@@ -127,9 +121,6 @@ func (c *accessPointCommand) createIngressEndpoint(cmd *cobra.Command, args []st
 			},
 		}
 	case pcloud.Gcp:
-		if vpcEndpointId != "" || privateEndpointResourceId != "" {
-			return fmt.Errorf("\"--vpc-endpoint-id\" and \"--private-endpoint-resource-id\" are not valid for --cloud gcp; use \"--private-service-connect-connection-id\"")
-		}
 		if privateServiceConnectConnectionId == "" {
 			return fmt.Errorf("flag \"private-service-connect-connection-id\" is required for --cloud gcp")
 		}

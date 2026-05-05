@@ -27,6 +27,8 @@ const (
 	gcpEgressPrivateServiceConnect  = "GcpEgressPrivateServiceConnect"
 	gcpIngressPrivateServiceConnect = "GcpIngressPrivateServiceConnect"
 	azureIngressPrivateLink         = "AzureIngressPrivateLink"
+	gcpEgressPrivateLink            = "GcpEgressPrivateLink"
+	gcpIngressPrivateLink           = "GcpIngressPrivateLink"
 )
 
 var (
@@ -37,10 +39,10 @@ var (
 		"aws-ingress-privatelink":             awsIngressPrivateLink,
 		"azure-egress-privatelink":            azureEgressPrivateLink,
 		"azure-ingress-privatelink":           azureIngressPrivateLink,
-		"gcp-egress-privatelink":              "GcpEgressPrivateLink",
-		"gcp-ingress-privatelink":             "GcpIngressPrivateLink",
-		"gcp-egress-private-service-connect":  "GcpEgressPrivateLink",
-		"gcp-ingress-private-service-connect": "GcpIngressPrivateLink",
+		"gcp-egress-privatelink":              gcpEgressPrivateLink,
+		"gcp-ingress-privatelink":             gcpIngressPrivateLink,
+		"gcp-egress-private-service-connect":  gcpEgressPrivateLink,
+		"gcp-ingress-private-service-connect": gcpIngressPrivateLink,
 	}
 )
 
