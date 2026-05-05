@@ -36,9 +36,9 @@ func (c *accessPointCommand) newIngressEndpointCreateCommand() *cobra.Command {
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	cmd.Flags().String("vpc-endpoint-id", "", "ID of an AWS VPC endpoint.")
-	cmd.Flags().String("private-endpoint-resource-id", "", "Resource ID of an Azure Private Endpoint.")
-	cmd.Flags().String("private-service-connect-connection-id", "", "ID of a GCP Private Service Connect connection.")
+	cmd.Flags().String("vpc-endpoint-id", "", "ID of an AWS VPC endpoint; only valid with --cloud aws.")
+	cmd.Flags().String("private-endpoint-resource-id", "", "Resource ID of an Azure Private Endpoint; only valid with --cloud azure.")
+	cmd.Flags().String("private-service-connect-connection-id", "", "ID of a GCP Private Service Connect connection; only valid with --cloud gcp.")
 	addGatewayFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

@@ -28,6 +28,7 @@ type ingressEndpointOut struct {
 	GcpPrivateServiceConnectServiceAttachment string `human:"GCP PSC Service Attachment,omitempty" serialized:"gcp_private_service_connect_service_attachment,omitempty"`
 	GcpPrivateServiceConnectConnectionId      string `human:"GCP PSC Connection ID,omitempty" serialized:"gcp_private_service_connect_connection_id,omitempty"`
 	DnsDomain                                 string `human:"DNS Domain,omitempty" serialized:"dns_domain,omitempty"`
+	ErrorMessage                              string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
 }
 
 func (c *accessPointCommand) newIngressEndpointCommand(cfg *config.Config) *cobra.Command {
@@ -94,11 +95,12 @@ func printPrivateLinkIngressEndpointTable(cmd *cobra.Command, ingressEndpoint ne
 	}
 
 	out := &ingressEndpointOut{
-		Id:          ingressEndpoint.GetId(),
-		Name:        ingressEndpoint.Spec.GetDisplayName(),
-		Gateway:     ingressEndpoint.Spec.Gateway.GetId(),
-		Environment: ingressEndpoint.Spec.Environment.GetId(),
-		Phase:       ingressEndpoint.Status.GetPhase(),
+		Id:           ingressEndpoint.GetId(),
+		Name:         ingressEndpoint.Spec.GetDisplayName(),
+		Gateway:      ingressEndpoint.Spec.Gateway.GetId(),
+		Environment:  ingressEndpoint.Spec.Environment.GetId(),
+		Phase:        ingressEndpoint.Status.GetPhase(),
+		ErrorMessage: ingressEndpoint.Status.GetErrorMessage(),
 	}
 
 	if ingressEndpoint.Status.Config != nil && ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus != nil {

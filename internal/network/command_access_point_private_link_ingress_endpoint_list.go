@@ -57,11 +57,12 @@ func (c *accessPointCommand) listIngressEndpoint(cmd *cobra.Command, _ []string)
 		}
 
 		out := &ingressEndpointOut{
-			Id:          ingressEndpoint.GetId(),
-			Name:        ingressEndpoint.Spec.GetDisplayName(),
-			Gateway:     ingressEndpoint.Spec.Gateway.GetId(),
-			Environment: ingressEndpoint.Spec.Environment.GetId(),
-			Phase:       ingressEndpoint.Status.GetPhase(),
+			Id:           ingressEndpoint.GetId(),
+			Name:         ingressEndpoint.Spec.GetDisplayName(),
+			Gateway:      ingressEndpoint.Spec.Gateway.GetId(),
+			Environment:  ingressEndpoint.Spec.Environment.GetId(),
+			Phase:        ingressEndpoint.Status.GetPhase(),
+			ErrorMessage: ingressEndpoint.Status.GetErrorMessage(),
 		}
 
 		if ingressEndpoint.Status.Config != nil && ingressEndpoint.Status.Config.NetworkingV1AwsIngressPrivateLinkEndpointStatus != nil {

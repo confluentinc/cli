@@ -17,9 +17,9 @@ Create a GCP Private Service Connect ingress endpoint.
 
 Flags:
       --cloud string                                   REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
-      --vpc-endpoint-id string                         ID of an AWS VPC endpoint.
-      --private-endpoint-resource-id string            Resource ID of an Azure Private Endpoint.
-      --private-service-connect-connection-id string   ID of a GCP Private Service Connect connection.
+      --vpc-endpoint-id string                         ID of an AWS VPC endpoint; only valid with --cloud aws.
+      --private-endpoint-resource-id string            Resource ID of an Azure Private Endpoint; only valid with --cloud azure.
+      --private-service-connect-connection-id string   ID of a GCP Private Service Connect connection; only valid with --cloud gcp.
       --gateway string                                 REQUIRED: Gateway ID.
       --context string                                 CLI context name.
       --environment string                             Environment ID.

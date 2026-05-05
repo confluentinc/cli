@@ -33,14 +33,12 @@ const (
 
 var (
 	createGatewayTypes = []string{"egress-privatelink", "ingress-privatelink", "private-network-interface", "ingress-private-service-connect"}
-	listGatewayTypes   = []string{"aws-egress-privatelink", "aws-ingress-privatelink", "azure-egress-privatelink", "azure-ingress-privatelink", "gcp-egress-privatelink", "gcp-ingress-privatelink", "gcp-egress-private-service-connect", "gcp-ingress-private-service-connect"}
+	listGatewayTypes   = []string{"aws-egress-privatelink", "aws-ingress-privatelink", "azure-egress-privatelink", "azure-ingress-privatelink", "gcp-egress-private-service-connect", "gcp-ingress-private-service-connect"}
 	gatewayTypeMap     = map[string]string{
 		"aws-egress-privatelink":              awsEgressPrivateLink,
 		"aws-ingress-privatelink":             awsIngressPrivateLink,
 		"azure-egress-privatelink":            azureEgressPrivateLink,
 		"azure-ingress-privatelink":           azureIngressPrivateLink,
-		"gcp-egress-privatelink":              gcpEgressPrivateLink,
-		"gcp-ingress-privatelink":             gcpIngressPrivateLink,
 		"gcp-egress-private-service-connect":  gcpEgressPrivateLink,
 		"gcp-ingress-private-service-connect": gcpIngressPrivateLink,
 	}
@@ -53,7 +51,7 @@ type gatewayOut struct {
 	Region                                    string   `human:"Region,omitempty" serialized:"region,omitempty"`
 	Type                                      string   `human:"Type,omitempty" serialized:"type,omitempty"`
 	AwsPrincipalArn                           string   `human:"AWS Principal ARN,omitempty" serialized:"aws_principal_arn,omitempty"`
-	VpcEndpointServiceName                    string   `human:"VPC Endpoint Service Name,omitempty" serialized:"vpc_endpoint_service_name,omitempty"`
+	VpcEndpointServiceName                    string   `human:"AWS VPC Endpoint Service Name,omitempty" serialized:"aws_vpc_endpoint_service_name,omitempty"`
 	AzureSubscription                         string   `human:"Azure Subscription,omitempty" serialized:"azure_subscription,omitempty"`
 	AzurePrivateLinkServiceAlias              string   `human:"Azure Private Link Service Alias,omitempty" serialized:"azure_private_link_service_alias,omitempty"`
 	AzurePrivateLinkServiceResourceId         string   `human:"Azure Private Link Resource ID,omitempty" serialized:"azure_private_link_service_resource_id,omitempty"`

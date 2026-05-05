@@ -80,6 +80,10 @@ func (c *command) gatewayCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if len(zones) > 0 && gatewayType != "private-network-interface" {
+		return fmt.Errorf("flag \"--zones\" is only valid for --type private-network-interface")
+	}
+
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
