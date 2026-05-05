@@ -1,0 +1,9 @@
++----------------------------+-----------------------------------------------------------------------------------------------+
+| ID                         | gw-abc123                                                                                     |
+| Name                       | my-gcp-ingress-gateway                                                                        |
+| Environment                | env-596                                                                                       |
+| Region                     | us-central1                                                                                   |
+| Type                       | GcpIngressPrivateServiceConnect                                                               |
+| GCP PSC Service Attachment | projects/traffic-prod/regions/us-central1/serviceAttachments/plattg-abc123-service-attachment |
+| Phase                      | READY                                                                                         |
++----------------------------+-----------------------------------------------------------------------------------------------+
