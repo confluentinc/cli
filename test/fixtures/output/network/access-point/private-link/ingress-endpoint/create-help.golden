@@ -10,21 +10,21 @@ Create an AWS PrivateLink ingress endpoint.
 
 Create an Azure Private Link ingress endpoint.
 
-  $ confluent network access-point private-link ingress-endpoint create --cloud azure --gateway gw-123456 --private-endpoint-resource-id /subscriptions/0000000/resourceGroups/resourceGroupName/providers/Microsoft.Network/privateEndpoints/privateEndpointName
+  $ confluent network access-point private-link ingress-endpoint create --cloud azure --gateway gw-123456 --endpoint-resource-id /subscriptions/0000000/resourceGroups/resourceGroupName/providers/Microsoft.Network/privateEndpoints/privateEndpointName
 
 Create a GCP Private Service Connect ingress endpoint.
 
-  $ confluent network access-point private-link ingress-endpoint create --cloud gcp --gateway gw-123456 --private-service-connect-connection-id 111111111111111111
+  $ confluent network access-point private-link ingress-endpoint create --cloud gcp --gateway gw-123456 --psc-connection-id 111111111111111111
 
 Flags:
-      --cloud string                                   REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
-      --vpc-endpoint-id string                         ID of an AWS VPC endpoint; only valid with --cloud aws.
-      --private-endpoint-resource-id string            Resource ID of an Azure Private Endpoint; only valid with --cloud azure.
-      --private-service-connect-connection-id string   ID of a GCP Private Service Connect connection; only valid with --cloud gcp.
-      --gateway string                                 REQUIRED: Gateway ID.
-      --context string                                 CLI context name.
-      --environment string                             Environment ID.
-  -o, --output string                                  Specify the output format as "human", "json", or "yaml". (default "human")
+      --cloud string                  REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --gateway string                REQUIRED: Gateway ID.
+      --vpc-endpoint-id string        ID of an AWS VPC endpoint; only valid with --cloud aws.
+      --endpoint-resource-id string   Resource ID of an Azure Private Endpoint; only valid with --cloud azure.
+      --psc-connection-id string      ID of a GCP Private Service Connect connection; only valid with --cloud gcp.
+      --context string                CLI context name.
+      --environment string            Environment ID.
+  -o, --output string                 Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

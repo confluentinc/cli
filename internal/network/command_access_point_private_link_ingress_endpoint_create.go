@@ -26,27 +26,27 @@ func (c *accessPointCommand) newIngressEndpointCreateCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: "Create an Azure Private Link ingress endpoint.",
-				Code: "confluent network access-point private-link ingress-endpoint create --cloud azure --gateway gw-123456 --private-endpoint-resource-id /subscriptions/0000000/resourceGroups/resourceGroupName/providers/Microsoft.Network/privateEndpoints/privateEndpointName",
+				Code: "confluent network access-point private-link ingress-endpoint create --cloud azure --gateway gw-123456 --endpoint-resource-id /subscriptions/0000000/resourceGroups/resourceGroupName/providers/Microsoft.Network/privateEndpoints/privateEndpointName",
 			},
 			examples.Example{
 				Text: "Create a GCP Private Service Connect ingress endpoint.",
-				Code: "confluent network access-point private-link ingress-endpoint create --cloud gcp --gateway gw-123456 --private-service-connect-connection-id 111111111111111111",
+				Code: "confluent network access-point private-link ingress-endpoint create --cloud gcp --gateway gw-123456 --psc-connection-id 111111111111111111",
 			},
 		),
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	cmd.Flags().String("vpc-endpoint-id", "", "ID of an AWS VPC endpoint; only valid with --cloud aws.")
-	cmd.Flags().String("private-endpoint-resource-id", "", "Resource ID of an Azure Private Endpoint; only valid with --cloud azure.")
-	cmd.Flags().String("private-service-connect-connection-id", "", "ID of a GCP Private Service Connect connection; only valid with --cloud gcp.")
 	addGatewayFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().String("vpc-endpoint-id", "", "ID of an AWS VPC endpoint; only valid with --cloud aws.")
+	cmd.Flags().String("endpoint-resource-id", "", "Resource ID of an Azure Private Endpoint; only valid with --cloud azure.")
+	cmd.Flags().String("psc-connection-id", "", "ID of a GCP Private Service Connect connection; only valid with --cloud gcp.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
 	cobra.CheckErr(cmd.MarkFlagRequired("gateway"))
-	cmd.MarkFlagsMutuallyExclusive("vpc-endpoint-id", "private-endpoint-resource-id", "private-service-connect-connection-id")
+	cmd.MarkFlagsMutuallyExclusive("vpc-endpoint-id", "endpoint-resource-id", "psc-connection-id")
 
 	return cmd
 }
@@ -73,12 +73,12 @@ func (c *accessPointCommand) createIngressEndpoint(cmd *cobra.Command, args []st
 		return err
 	}
 
-	privateEndpointResourceId, err := cmd.Flags().GetString("private-endpoint-resource-id")
+	endpointResourceId, err := cmd.Flags().GetString("endpoint-resource-id")
 	if err != nil {
 		return err
 	}
 
-	privateServiceConnectConnectionId, err := cmd.Flags().GetString("private-service-connect-connection-id")
+	pscConnectionId, err := cmd.Flags().GetString("psc-connection-id")
 	if err != nil {
 		return err
 	}
@@ -111,23 +111,23 @@ func (c *accessPointCommand) createIngressEndpoint(cmd *cobra.Command, args []st
 			},
 		}
 	case pcloud.Azure:
-		if privateEndpointResourceId == "" {
-			return fmt.Errorf("flag \"private-endpoint-resource-id\" is required for --cloud azure")
+		if endpointResourceId == "" {
+			return fmt.Errorf("flag \"endpoint-resource-id\" is required for --cloud azure")
 		}
 		createIngressEndpoint.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
 			NetworkingV1AzureIngressPrivateLinkEndpoint: &networkingaccesspointv1.NetworkingV1AzureIngressPrivateLinkEndpoint{
 				Kind:                      "AzureIngressPrivateLinkEndpoint",
-				PrivateEndpointResourceId: privateEndpointResourceId,
+				PrivateEndpointResourceId: endpointResourceId,
 			},
 		}
 	case pcloud.Gcp:
-		if privateServiceConnectConnectionId == "" {
-			return fmt.Errorf("flag \"private-service-connect-connection-id\" is required for --cloud gcp")
+		if pscConnectionId == "" {
+			return fmt.Errorf("flag \"psc-connection-id\" is required for --cloud gcp")
 		}
 		createIngressEndpoint.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
 			NetworkingV1GcpIngressPrivateServiceConnectEndpoint: &networkingaccesspointv1.NetworkingV1GcpIngressPrivateServiceConnectEndpoint{
 				Kind:                              "GcpIngressPrivateServiceConnectEndpoint",
-				PrivateServiceConnectConnectionId: privateServiceConnectConnectionId,
+				PrivateServiceConnectConnectionId: pscConnectionId,
 			},
 		}
 	default:
