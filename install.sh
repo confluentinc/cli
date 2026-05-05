@@ -85,6 +85,7 @@ is_supported_platform() {
     alpine/arm64) found=0 ;;
     linux/amd64) found=0 ;;
     linux/arm64) found=0 ;;
+    linux/s390x) found=0 ;;
     darwin/amd64) found=0 ;;
     darwin/arm64) found=0 ;;
     windows/amd64) found=0 ;;

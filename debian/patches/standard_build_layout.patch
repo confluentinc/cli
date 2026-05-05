@@ -1,6 +1,6 @@
---- cli/Makefile	2026-03-10 12:57:52.531367502 -0500
+--- cli/Makefile	2026-05-01 12:57:33.586341260 -0500
 +++ debian/Makefile	2025-09-22 13:01:33.829653470 -0500
-@@ -1,234 +1,163 @@
+@@ -1,242 +1,163 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v2.13.3
 +SHELL=/bin/bash
@@ -329,6 +329,14 @@
 -.PHONY: live-test-essential
 -live-test-essential:
 -	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="core,kafka,schema_registry,auth"
+-
+-.PHONY: live-test-smoke
+-live-test-smoke:
+-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="smoke"
+-
+-.PHONY: build-otel-smoke-metric
+-build-otel-smoke-metric:
+-	go build -o ./bin/otel-smoke-metric ./cmd/otel-smoke-metric
 -
 -.PHONY: live-test-multicloud
 -live-test-multicloud:
