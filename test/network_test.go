@@ -132,6 +132,7 @@ func (s *CLITestSuite) TestNetworkGateway() {
 		{args: "network gateway delete gw-12345 gw-54321", input: "y\n", fixture: "network/gateway/delete-multiple.golden"},
 		{args: "network gateway delete gw-11111", input: "y\n", fixture: "network/gateway/delete-azure-ingress.golden"},
 		{args: "network gateway delete gw-11111 gw-67890", input: "y\n", fixture: "network/gateway/delete-azure-ingress-multiple.golden"},
+		{args: "network gateway create my-gateway --cloud aws --type ingress-private-service-connect --region us-west-2", fixture: "network/gateway/create-invalid-cloud-type.golden", exitCode: 1},
 		{args: "network gateway delete gw-invalid", input: "y\n", fixture: "network/gateway/delete-fail.golden", exitCode: 1},
 	}
 
@@ -1184,6 +1185,8 @@ func (s *CLITestSuite) TestNetworkAccessPointPrivateLinkIngressEndpoint() {
 		{args: "network access-point private-link ingress-endpoint update ap-22222 --name my-new-gcp-ingress-access-point", fixture: "network/access-point/private-link/ingress-endpoint/update-gcp.golden"},
 		{args: "network access-point private-link ingress-endpoint delete ap-88888", input: "y\n", fixture: "network/access-point/private-link/ingress-endpoint/delete.golden"},
 		{args: "network access-point private-link ingress-endpoint delete ap-99999 ap-88888", input: "y\n", fixture: "network/access-point/private-link/ingress-endpoint/delete-multiple.golden"},
+		{args: "network access-point private-link ingress-endpoint create --cloud azure --gateway gw-11111 --vpc-endpoint-id vpce-1234567890abcdef0", fixture: "network/access-point/private-link/ingress-endpoint/create-wrong-cloud-flag.golden", exitCode: 1},
+		{args: "network access-point private-link ingress-endpoint create --cloud aws --gateway gw-88888 --vpc-endpoint-id vpce-1234567890abcdef0 --private-endpoint-resource-id /subscriptions/0000000/resourceGroups/rg/providers/Microsoft.Network/privateEndpoints/pe", fixture: "network/access-point/private-link/ingress-endpoint/create-two-cloud-flags.golden", exitCode: 1},
 		{args: "network access-point private-link ingress-endpoint delete ap-invalid", fixture: "network/access-point/private-link/ingress-endpoint/delete-fail.golden", exitCode: 1},
 	}
 

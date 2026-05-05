@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -140,6 +141,10 @@ func (c *command) gatewayCreate(cmd *cobra.Command, args []string) error {
 				},
 			}
 		}
+	}
+
+	if createGateway.Spec.Config == nil {
+		return fmt.Errorf("type %q is not supported for --cloud %s", gatewayType, strings.ToLower(cloud))
 	}
 
 	if len(args) == 1 {
