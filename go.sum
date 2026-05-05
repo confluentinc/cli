@@ -242,8 +242,12 @@ github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0 h1:TWwZHdfo2XNKrnGOuxXx4
 github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0/go.mod h1:odGsHChrn2l+jaOvx4Gib5//U4a3Id79wstQVkNh8v0=
 github.com/confluentinc/ccloud-sdk-go-v2/networking v0.14.0 h1:btDFGijvzpWaKLKztc7S9YenbtGTsHgjs4+fNuyYceI=
 github.com/confluentinc/ccloud-sdk-go-v2/networking v0.14.0/go.mod h1:6BDrwG6OfSnT++Yr3mXStvmy4Jb8uMtdfKK7sZO/X+M=
+github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.10.0 h1:tVwzT8htKDlXzNOCWNMZ1TU/80LhZ1sH6Xm6YzC4whg=
+github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.10.0/go.mod h1:ipbT20AMDVklb9WaQpKNafozAqktfD47WzYI3GpJKEI=
 github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder v0.4.0 h1:LT8trYIkMZ7EFM7nZZOkmH12B7AgOEvZYZjw86nazD0=
 github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder v0.4.0/go.mod h1:HPu3Cd7HQ2NdTeL6f3nvrsFB69N9yugB/W4qV8wqE/c=
+github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway v0.7.0 h1:beFrkKcUWf2Frbziwsdxjpcg1JdJBGHp1cc6SRS+t80=
+github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway v0.7.0/go.mod h1:2NZfTmNYHQea+1h6W99nNq0r23/mSQu3Liz8B78z7Dg=
 github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.2.0 h1:ZHNF2DeqVlNPuKGZ41SBMLGj8GBlvvcwOPnfZLZXA/4=
 github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.2.0/go.mod h1:KTShFBZA7WG8LcxlWjJpoZFdWkJ+uOw3dDuwAHs5eKU=
 github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.3.0 h1:mC0E1nKUt57AxMM4Lpdfd+KA/YZwJVwro9ER+dCUFi8=
