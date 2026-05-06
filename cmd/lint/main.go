@@ -313,6 +313,7 @@ var vocabWords = []string{
 	"producer.config",
 	"prometheus",
 	"protobuf",
+	"psc",
 	"rbac",
 	"readonly",
 	"readwrite",
