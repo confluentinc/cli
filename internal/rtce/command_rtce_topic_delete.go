@@ -16,7 +16,7 @@ import (
 func (c *rtceTopicCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "delete <topic-name-1> [topic-name-2] ... [topic-name-n]",
-		Short:             "Delete one or more rtce topics.",
+		Short:             "Delete one or more RTCE topics.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
@@ -35,30 +35,32 @@ func (c *rtceTopicCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
 	kafkaClusterConfig, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return err
 	}
 	kafkaClusterId := kafkaClusterConfig.GetId()
-	existenceFunc := func(id string) bool {
-		_, _, err := c.V2Client.GetRtceTopic(id, environmentId, kafkaClusterId)
+
+	existenceFunc := func(primaryId string) bool {
+		_, _, err := c.V2Client.GetRtceTopic(primaryId, environmentId, kafkaClusterId)
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, "rtce topic"); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, "RTCE topic"); err != nil {
 		return err
 	}
 
-	deleteFunc := func(id string) error {
-		return c.V2Client.DeleteRtceTopic(id, environmentId, kafkaClusterId)
+	deleteFunc := func(primaryId string) error {
+		return c.V2Client.DeleteRtceTopic(primaryId, environmentId, kafkaClusterId)
 	}
 
 	deletedIds, err := deletion.DeleteWithoutMessage(cmd, args, deleteFunc)
 	deleteMsg := "Requested to delete %s %s.\n"
 	if len(deletedIds) == 1 {
-		output.Printf(c.Config.EnableColor, deleteMsg, "rtce topic", fmt.Sprintf(`"%s"`, deletedIds[0]))
+		output.Printf(c.Config.EnableColor, deleteMsg, "RTCE topic", fmt.Sprintf(`"%s"`, deletedIds[0]))
 	} else if len(deletedIds) > 1 {
-		output.Printf(c.Config.EnableColor, deleteMsg, plural.Plural("rtce topic"), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
+		output.Printf(c.Config.EnableColor, deleteMsg, plural.Plural("RTCE topic"), utils.ArrayToCommaDelimitedString(deletedIds, "and"))
 	}
 
 	return err

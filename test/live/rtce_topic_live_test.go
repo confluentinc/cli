@@ -36,7 +36,7 @@ func (s *CLILiveTestSuite) TestRtceTopicCRUDLive() {
 			UseStateVars: true,
 		},
 		{
-			Name:            "Create rtce topic",
+			Name:            "Create RTCE topic",
 			Args:            "rtce rtce-topic create " + rtceTopicName + " --description \"" + description + "\" --region \"" + region + "\" --topic-name \"" + topicName + "\" --environment {{.env_id}} -o json",
 			UseStateVars:    true,
 			CaptureID:       "rtce_topic_id",
@@ -52,7 +52,7 @@ func (s *CLILiveTestSuite) TestRtceTopicCRUDLive() {
 	}
 
 	// Phase 2: Wait for provisioning
-	t.Run("Wait for rtce topic provisioned", func(t *testing.T) {
+	t.Run("Wait for RTCE topic provisioned", func(t *testing.T) {
 		s.waitForCondition(t,
 			"rtce rtce-topic describe {{.rtce_topic_id}} --environment {{.env_id}} -o json",
 			state,
@@ -68,24 +68,24 @@ func (s *CLILiveTestSuite) TestRtceTopicCRUDLive() {
 	// Phase 3: CRUD operations
 	crudSteps := []CLILiveTest{
 		{
-			Name:         "Describe rtce topic",
+			Name:         "Describe RTCE topic",
 			Args:         "rtce rtce-topic describe {{.rtce_topic_id}} --environment {{.env_id}} -o json",
 			UseStateVars: true,
 			JSONFields:   map[string]string{},
 		},
 		{
-			Name:         "List rtce topics",
+			Name:         "List RTCE topics",
 			Args:         "rtce rtce-topic list --environment {{.env_id}}",
 			UseStateVars: true,
 			Contains:     []string{rtceTopicName},
 		},
 		{
-			Name:         "Update rtce topic description",
+			Name:         "Update RTCE topic description",
 			Args:         "rtce rtce-topic update {{.rtce_topic_id}} --description \"" + updatedDescription + "\" --environment {{.env_id}}",
 			UseStateVars: true,
 		},
 		{
-			Name:         "Describe updated rtce topic",
+			Name:         "Describe updated RTCE topic",
 			Args:         "rtce rtce-topic describe {{.rtce_topic_id}} --environment {{.env_id}} -o json",
 			UseStateVars: true,
 			JSONFields: map[string]string{
@@ -93,7 +93,7 @@ func (s *CLILiveTestSuite) TestRtceTopicCRUDLive() {
 			},
 		},
 		{
-			Name:         "Delete rtce topic",
+			Name:         "Delete RTCE topic",
 			Args:         "rtce rtce-topic delete {{.rtce_topic_id}} --environment {{.env_id}} --force",
 			UseStateVars: true,
 		},

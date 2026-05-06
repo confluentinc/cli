@@ -13,7 +13,7 @@ import (
 func (c *rtceTopicCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List rtce topics.",
+		Short: "List RTCE topics.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}
@@ -34,14 +34,17 @@ func (c *rtceTopicCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	cloud = strings.ToUpper(cloud)
+
 	region, err := cmd.Flags().GetString("region")
 	if err != nil {
 		return err
 	}
+
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
+
 	kafkaClusterConfig, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return err

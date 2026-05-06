@@ -18,7 +18,7 @@ func (s *CLILiveTestSuite) TestRegionCRUDLive() {
 
 	steps := []CLILiveTest{
 		{
-			Name:         "List rtce regions",
+			Name:         "List RTCE regions",
 			Args:         "rtce region list",
 			UseStateVars: true,
 			ExitCode:     0,
