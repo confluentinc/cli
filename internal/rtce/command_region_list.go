@@ -12,7 +12,7 @@ import (
 func (c *regionCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List rtce regions.",
+		Short: "List RTCE regions.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}
@@ -31,6 +31,7 @@ func (c *regionCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	cloud = strings.ToUpper(cloud)
+
 	region, err := cmd.Flags().GetString("region")
 	if err != nil {
 		return err

@@ -14,7 +14,7 @@ import (
 func (c *rtceTopicCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <topic-name>",
-		Short:             "Update a rtce topic.",
+		Short:             "Update a RTCE topic.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.update,
@@ -34,8 +34,9 @@ func (c *rtceTopicCommand) newUpdateCommand() *cobra.Command {
 func (c *rtceTopicCommand) update(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
-	update := rtcev1.RtceV1RtceTopicUpdate{}
+	updateReq := rtcev1.RtceV1RtceTopicUpdate{}
 	specUpdate := rtcev1.RtceV1RtceTopicSpecUpdate{}
+
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return err
@@ -43,6 +44,7 @@ func (c *rtceTopicCommand) update(cmd *cobra.Command, args []string) error {
 	if description != "" {
 		specUpdate.Description = rtcev1.PtrString(description)
 	}
+
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
@@ -50,6 +52,7 @@ func (c *rtceTopicCommand) update(cmd *cobra.Command, args []string) error {
 	if environmentId != "" {
 		specUpdate.Environment = &rtcev1.EnvScopedObjectReference{Id: environmentId}
 	}
+
 	kafkaClusterConfig, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return err
@@ -58,12 +61,13 @@ func (c *rtceTopicCommand) update(cmd *cobra.Command, args []string) error {
 	if kafkaClusterId != "" {
 		specUpdate.KafkaCluster = &rtcev1.EnvScopedObjectReference{Id: kafkaClusterId}
 	}
-	update.Spec = &specUpdate
-	rtceTopic, httpResp, err := c.V2Client.UpdateRtceTopic(topicName, update)
+
+	updateReq.Spec = &specUpdate
+	rtceTopic, httpResp, err := c.V2Client.UpdateRtceTopic(topicName, updateReq)
 	if err != nil {
 		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
-	output.Printf(c.Config.EnableColor, "Updated rtce topic \"%s\".\n", topicName)
+	output.Printf(c.Config.EnableColor, "Updated RTCE topic \"%s\".\n", topicName)
 	return printRtceTopic(cmd, rtceTopic)
 }

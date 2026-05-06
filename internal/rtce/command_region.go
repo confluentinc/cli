@@ -21,7 +21,7 @@ type regionOut struct {
 func newRegionCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command { //nolint:unparam
 	cmd := &cobra.Command{
 		Use:         "region",
-		Short:       "Manage rtce regions.",
+		Short:       "Manage RTCE regions.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
