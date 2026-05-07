@@ -31,6 +31,7 @@ import (
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	pi "github.com/confluentinc/ccloud-sdk-go-v2/provider-integration/v1"
 	piv2 "github.com/confluentinc/ccloud-sdk-go-v2/provider-integration/v2"
+	rtcev1 "github.com/confluentinc/ccloud-sdk-go-v2/rtce/v1"
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 	srcmv3 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v3"
 	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
@@ -75,6 +76,7 @@ type Client struct {
 	OrgClient                    *orgv2.APIClient
 	ProviderIntegrationClient    *pi.APIClient
 	ProviderIntegrationV2Client  *piv2.APIClient
+	RtceClient                   *rtcev1.APIClient
 	ServiceQuotaClient           *servicequotav1.APIClient
 	SrcmClient                   *srcmv3.APIClient
 	SsoClient                    *ssov2.APIClient
@@ -126,6 +128,7 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		OrgClient:                    newOrgClient(httpClient, url, userAgent, unsafeTrace),
 		ProviderIntegrationClient:    newProviderIntegrationClient(httpClient, url, userAgent, unsafeTrace),
 		ProviderIntegrationV2Client:  newProviderIntegrationV2Client(httpClient, url, userAgent, unsafeTrace),
+		RtceClient:                   newRtceClient(httpClient, url, userAgent, unsafeTrace),
 		ServiceQuotaClient:           newServiceQuotaClient(httpClient, url, userAgent, unsafeTrace),
 		SrcmClient:                   newSrcmClient(httpClient, url, userAgent, unsafeTrace),
 		SsoClient:                    newSsoClient(httpClient, url, userAgent, unsafeTrace),
