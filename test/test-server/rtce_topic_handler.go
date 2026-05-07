@@ -80,7 +80,7 @@ func handleRtceV1RtceTopicsTopicName(t *testing.T) http.HandlerFunc {
 }
 
 func readRtceV1RtceTopicFile(t *testing.T, filename string) rtcev1.RtceV1RtceTopic {
-	jsonPath := filepath.Join("..", "fixtures", "input", "rtce", "rtce_topic", filename)
+	jsonPath := filepath.Join("test", "fixtures", "input", "rtce", "rtce_topic", filename)
 	jsonData, err := os.ReadFile(jsonPath)
 	require.NoError(t, err)
 

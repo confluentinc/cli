@@ -30,7 +30,7 @@ func handleRtceV1Regions(t *testing.T) http.HandlerFunc {
 }
 
 func readRtceV1RegionFile(t *testing.T, filename string) rtcev1.RtceV1Region {
-	jsonPath := filepath.Join("..", "fixtures", "input", "rtce", "region", filename)
+	jsonPath := filepath.Join("test", "fixtures", "input", "rtce", "region", filename)
 	jsonData, err := os.ReadFile(jsonPath)
 	require.NoError(t, err)
 
