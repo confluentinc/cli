@@ -295,3 +295,4 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
+replace github.com/confluentinc/ccloud-sdk-go-v2/org => github.com/confluentinc/ccloud-sdk-go-v2-internal/org v0.2.0

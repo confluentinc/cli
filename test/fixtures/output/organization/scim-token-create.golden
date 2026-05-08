@@ -1,0 +1,7 @@
+Save the token as it is not retrievable later.
++------------+--------------------------------------+
+| ID         | scim_token-3                         |
+| Token      | scim_secret_token_value_scim_token-3 |
+| Created At | 2026-02-12T10:57:58Z                 |
+| Expires At | 2026-08-12T10:57:58Z                 |
++------------+--------------------------------------+
