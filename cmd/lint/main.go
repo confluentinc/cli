@@ -197,6 +197,7 @@ var properNouns = []string{
 	"ksqlDB",
 	"Prometheus",
 	"Alertmanager",
+	// cli-tfgen:lint-properNouns
 }
 
 // vocabWords are words that don't appear in the US dictionary, but are Confluent-related words.
@@ -369,6 +370,7 @@ var vocabWords = []string{
 	"yaml",
 	"yml",
 	"zstd",
+	// cli-tfgen:lint-vocabWords
 }
 
 var (
