@@ -14,6 +14,7 @@ func (s *CLITestSuite) TestOrganizationSCIM() {
 
 	for _, test := range tests {
 		test.login = "cloud"
+		test.workflow = true
 		s.runIntegrationTest(test)
 	}
 }

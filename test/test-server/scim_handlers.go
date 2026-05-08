@@ -12,7 +12,7 @@ import (
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 )
 
-// Mock SCIM tokens storage - initialized fresh for each handler call
+// Mock SCIM tokens storage - shared mutable state across all tests
 var scimTokenCounter = 3
 
 func getInitialSCIMTokensV2() map[string]*orgv2.OrgV2ScimToken {
