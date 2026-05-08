@@ -146,14 +146,16 @@ var flagRules = []linter.FlagRule{
 	),
 }
 
-// properNouns are words that don't obey normal capitalization rules
+// properNouns are words that don't obey normal capitalization rules.
+// Sorted alphabetically, but longer phrases must come before their substrings
+// (e.g., "Confluent Cloud" before "Confluent") because the linter matches in order.
 var properNouns = []string{
 	"ACLs",
 	"AI",
 	"Alertmanager",
 	"Apache",
-	"Async",
 	"AsyncAPI",
+	"Async",
 	"Avro",
 	"C#",
 	"C/C++",
@@ -161,10 +163,10 @@ var properNouns = []string{
 	"CIDR",
 	"Clients",
 	"Clojure",
-	"Confluent",
 	"Confluent Cloud",
 	"Confluent Local",
 	"Confluent Platform",
+	"Confluent",
 	"Connect",
 	"Control Center",
 	"CRL",
@@ -182,8 +184,8 @@ var properNouns = []string{
 	"KRaft Controller",
 	"Ktor",
 	"Kubernetes",
-	"ksqlDB",
 	"ksqlDB Server",
+	"ksqlDB",
 	"Node.js",
 	"Prometheus",
 	"Python",
