@@ -147,7 +147,7 @@ var flagRules = []linter.FlagRule{
 }
 
 // properNouns are words that don't obey normal capitalization rules.
-// Sorted alphabetically, but longer phrases must come before their substrings
+// Alphabetical except where longer strings must precede substrings
 // (e.g., "Confluent Cloud" before "Confluent") because the linter matches in order.
 var properNouns = []string{
 	"ACLs",

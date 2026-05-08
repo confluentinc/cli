@@ -236,6 +236,20 @@ func TestCliTfgenMarkers(t *testing.T) {
 		require.True(t, strings.Contains(clientText, marker),
 			"client.go is missing required marker %q (needed by cli-terraform-generator --cli-dir)", marker)
 	}
+
+	// cmd/lint/main.go markers
+	lintGoPath := filepath.Join(filepath.Dir(thisFile), "..", "cmd", "lint", "main.go")
+	lintContent, err := os.ReadFile(lintGoPath)
+	require.NoError(t, err)
+	lintText := string(lintContent)
+
+	for _, marker := range []string{
+		"// cli-tfgen:lint-properNouns",
+		"// cli-tfgen:lint-vocabWords",
+	} {
+		require.True(t, strings.Contains(lintText, marker),
+			"cmd/lint/main.go is missing required marker %q (needed by cli-terraform-generator --cli-dir)", marker)
+	}
 }
 
 func runWithConfig(cfg *config.Config) (string, error) {
