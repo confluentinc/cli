@@ -82,7 +82,7 @@ type Client struct {
 	SsoClient                    *ssov2.APIClient
 	TableflowClient              *tableflowv1.APIClient
 	UsmClient                    *usmv1.APIClient
-	// cli-tfgen:cli-client-fields
+	// cli-tfgen:cli-client-fields — DO NOT REMOVE (verified by TestCliTfgenMarkers)
 }
 
 func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
@@ -134,6 +134,6 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		SsoClient:                    newSsoClient(httpClient, url, userAgent, unsafeTrace),
 		TableflowClient:              newTableflowClient(httpClient, url, userAgent, unsafeTrace),
 		UsmClient:                    newUsmClient(httpClient, url, userAgent, unsafeTrace),
-		// cli-tfgen:cli-client-init
+		// cli-tfgen:cli-client-init — DO NOT REMOVE (verified by TestCliTfgenMarkers)
 	}
 }

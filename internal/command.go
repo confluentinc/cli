@@ -142,7 +142,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(unifiedstreammanager.New(cfg, prerunner))
 	cmd.AddCommand(update.New(cfg, prerunner))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
-	// cli-tfgen:cli-commands
+	// cli-tfgen:cli-commands — DO NOT REMOVE (verified by TestCliTfgenMarkers)
 
 	_ = cfg.ParseFlagsIntoConfig(cmd)
 
