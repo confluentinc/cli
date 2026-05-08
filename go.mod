@@ -40,9 +40,9 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking v0.14.0
-	github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.9.0
+	github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point v0.10.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder v0.4.0
-	github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway v0.5.0
+	github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway v0.7.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.9.0
@@ -57,7 +57,7 @@ require (
 	github.com/confluentinc/go-editor v0.11.0
 	github.com/confluentinc/go-prompt v0.2.40
 	github.com/confluentinc/go-ps1 v1.0.2
-	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.18
+	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.20-0.20260316174929-09a1f69c2b9e
 	github.com/confluentinc/mds-sdk-go-public/mdsv1 v0.0.0-20240923163156-b922b35891f9
 	github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1 v0.0.0-20240923163156-b922b35891f9
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
@@ -108,11 +108,11 @@ require (
 	github.com/tidwall/gjson v1.17.1
 	github.com/tidwall/pretty v1.2.1
 	github.com/tidwall/sjson v1.2.5
-	go.opentelemetry.io/otel v1.39.0
+	go.opentelemetry.io/otel v1.43.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.39.0
-	go.opentelemetry.io/otel/metric v1.39.0
-	go.opentelemetry.io/otel/sdk v1.39.0
-	go.opentelemetry.io/otel/sdk/metric v1.39.0
+	go.opentelemetry.io/otel/metric v1.43.0
+	go.opentelemetry.io/otel/sdk v1.43.0
+	go.opentelemetry.io/otel/sdk/metric v1.43.0
 	go.uber.org/mock v0.4.0
 	golang.org/x/crypto v0.46.0
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
@@ -172,19 +172,6 @@ require (
 	github.com/charmbracelet/x/term v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.1.0 // indirect
 	github.com/cloudflare/circl v1.6.3 // indirect
-	github.com/confluentinc/cc-structs/common v0.1989.0 // indirect
-	github.com/confluentinc/cc-structs/kafka/auth v0.2336.0 // indirect
-	github.com/confluentinc/cc-structs/kafka/authz v0.1989.0 // indirect
-	github.com/confluentinc/cc-structs/kafka/billing v0.1989.0 // indirect
-	github.com/confluentinc/cc-structs/kafka/controlplanekafka v0.2507.0 // indirect
-	github.com/confluentinc/cc-structs/kafka/marketplace v0.1989.0 // indirect
-	github.com/confluentinc/cc-structs/kafka/org v0.2725.0 // indirect
-	github.com/confluentinc/cc-structs/kafka/product/core v0.1989.0 // indirect
-	github.com/confluentinc/cc-structs/kafka/scheduler v0.1989.0 // indirect
-	github.com/confluentinc/cc-structs/kafka/streamgovernance v0.1989.0 // indirect
-	github.com/confluentinc/cc-structs/kafka/util v0.1989.0 // indirect
-	github.com/confluentinc/cc-structs/operator v0.2413.0 // indirect
-	github.com/confluentinc/cire-obelisk/pkg/apis/network v0.507.0 // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.4.1 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
@@ -193,7 +180,6 @@ require (
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.3.0 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
-	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
@@ -215,7 +201,6 @@ require (
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.13.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
-	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.3 // indirect
 	github.com/hamba/avro/v2 v2.24.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
@@ -284,12 +269,12 @@ require (
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.24.0 // indirect
-	go.opentelemetry.io/otel/trace v1.39.0 // indirect
+	go.opentelemetry.io/otel/trace v1.43.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.9.0 // indirect
 	golang.org/x/mod v0.31.0 // indirect
 	golang.org/x/net v0.48.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/sys v0.39.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
 	golang.org/x/tools v0.40.0 // indirect
 	google.golang.org/api v0.191.0 // indirect
@@ -303,7 +288,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gotest.tools/v3 v3.4.0 // indirect
 	k8s.io/api v0.29.2 // indirect
-	k8s.io/apiextensions-apiserver v0.17.12 // indirect
 	k8s.io/klog/v2 v2.120.1 // indirect
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
