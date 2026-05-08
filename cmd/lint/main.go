@@ -201,7 +201,7 @@ var properNouns = []string{
 	"Unified Stream Manager",
 	"USM",
 	"ZooKeeper™",
-	// cli-tfgen:lint-properNouns
+	// cli-tfgen:lint-properNouns — DO NOT REMOVE (verified by TestCliTfgenMarkers)
 }
 
 // vocabWords are words that don't appear in the US dictionary, but are Confluent-related words.
@@ -374,7 +374,7 @@ var vocabWords = []string{
 	"yaml",
 	"yml",
 	"zstd",
-	// cli-tfgen:lint-vocabWords
+	// cli-tfgen:lint-vocabWords — DO NOT REMOVE (verified by TestCliTfgenMarkers)
 }
 
 var (

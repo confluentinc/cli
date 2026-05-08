@@ -206,10 +206,10 @@ func TestHelp_OnPrem(t *testing.T) {
 }
 
 // TestCliTfgenMarkers verifies that the cli-tfgen marker comments are present in
-// command.go and client.go. These markers are used by cli-terraform-generator's
-// merge mode (--cli-dir) to insert generated code at the correct locations.
-// Import markers are not needed — imports are inserted via Go AST-aware addImport()
-// to avoid breaking gci/goimports linters.
+// command.go, client.go, and cmd/lint/main.go. These markers are used by
+// cli-terraform-generator's merge mode (--cli-dir) to insert generated code at
+// the correct locations. Import markers are not needed — imports are inserted
+// via Go AST-aware addImport() to avoid breaking gci/goimports linters.
 func TestCliTfgenMarkers(t *testing.T) {
 	_, thisFile, _, ok := runtime.Caller(0)
 	require.True(t, ok)
@@ -250,6 +250,15 @@ func TestCliTfgenMarkers(t *testing.T) {
 		require.True(t, strings.Contains(lintText, marker),
 			"cmd/lint/main.go is missing required marker %q (needed by cli-terraform-generator --cli-dir)", marker)
 	}
+
+	// test/test-server/ccloudv2_router.go marker
+	routerGoPath := filepath.Join(filepath.Dir(thisFile), "..", "test", "test-server", "ccloudv2_router.go")
+	routerContent, err := os.ReadFile(routerGoPath)
+	require.NoError(t, err)
+	routerText := string(routerContent)
+
+	require.True(t, strings.Contains(routerText, "// cli-tfgen:cli-api-routes"),
+		"test/test-server/ccloudv2_router.go is missing required marker %q (needed by cli-terraform-generator --cli-dir)", "// cli-tfgen:cli-api-routes")
 }
 
 func runWithConfig(cfg *config.Config) (string, error) {
