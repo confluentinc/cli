@@ -16,6 +16,10 @@ func (c *rtceTopicCommand) newDescribeCommand() *cobra.Command {
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.describe,
 	}
+
+	// Required flags
+
+	// Optional flags
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 

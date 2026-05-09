@@ -21,6 +21,10 @@ func (c *rtceTopicCommand) newDeleteCommand() *cobra.Command {
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 	}
+
+	// Required flags
+
+	// Optional flags
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 

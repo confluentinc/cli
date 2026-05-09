@@ -19,19 +19,23 @@ func (c *rtceTopicCommand) newCreateCommand() *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE:  c.create,
 	}
+
+	// Required flags
 	pcmd.AddCloudAwsFlag(cmd)
 	cmd.Flags().String("description", "", "A model-readable description of the RTCE topic.")
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("region", "", "The cloud region where the RTCE topic is deployed.")
 	cmd.Flags().String("topic-name", "", "The Kafka topic name containing the data for the RTCE topic.")
-
-	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddOutputFlag(cmd)
 	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
 	cobra.CheckErr(cmd.MarkFlagRequired("description"))
 	cobra.CheckErr(cmd.MarkFlagRequired("region"))
 	cobra.CheckErr(cmd.MarkFlagRequired("topic-name"))
+
+	// Optional flags
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
