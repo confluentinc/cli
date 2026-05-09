@@ -20,7 +20,9 @@ func (c *rtceTopicCommand) newUpdateCommand() *cobra.Command {
 		RunE:              c.update,
 	}
 
-	// Optional: flags for updatable attributes only
+	// Required flags
+
+	// Optional flags
 	cmd.Flags().String("description", "", "A model-readable description of the RTCE topic.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)

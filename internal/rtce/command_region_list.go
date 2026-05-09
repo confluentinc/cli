@@ -16,6 +16,10 @@ func (c *regionCommand) newListCommand() *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}
+
+	// Required flags
+
+	// Optional flags
 	pcmd.AddCloudAwsFlag(cmd)
 	cmd.Flags().String("region", "", "Filter the results by exact match for region.")
 

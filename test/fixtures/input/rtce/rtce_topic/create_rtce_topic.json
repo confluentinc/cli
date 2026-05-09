@@ -13,15 +13,15 @@
     "description": "Customer orders table for real-time analytics",
     "environment": {
       "environment": "",
-      "id": "",
-      "related": "https://example.com",
-      "resource_name": "https://example.com"
+      "id": "env-00000",
+      "related": "https://api.confluent.cloud/org/v2/environments/env-00000",
+      "resource_name": "https://api.confluent.cloud/organization=9bb441c4-edef-46ac-8a41-c49e44a3fd9a/environment=env-00000"
     },
     "kafka_cluster": {
       "environment": "",
-      "id": "",
-      "related": "https://example.com",
-      "resource_name": "https://example.com"
+      "id": "lkc-00000",
+      "related": "https://api.confluent.cloud/cmk/v2/clusters/lkc-00000",
+      "resource_name": "https://api.confluent.cloud/organization=9bb441c4-edef-46ac-8a41-c49e44a3fd9a/environment=env-abc123/cloud-cluster=lkc-00000"
     },
     "region": "us-west-2",
     "topic_name": "orders_topic"
