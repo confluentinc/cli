@@ -1,0 +1,13 @@
+Updated RTCE topic "id-1".
++---------------+--------------------------------+
+| Topic Name    | orders_topic                   |
+| Cloud         | AWS                            |
+| Description   | Customer orders table for      |
+|               | real-time analytics            |
+| Environment   | env-596                        |
+| Kafka Cluster | lkc-abc123                     |
+| Region        | us-west-2                      |
+| Error Message | Failed to provision table:     |
+|               | insufficient resources         |
+| Phase         | ACTIVE                         |
++---------------+--------------------------------+
