@@ -1,8 +1,15 @@
 Manage Real Time Context Engine.
 
 Usage:
+  confluent rtce [command]
+
+Available Commands:
+  region      Manage RTCE regions.
+  rtce-topic  Manage RTCE topics.
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent rtce [command] --help" for more information about a command.
