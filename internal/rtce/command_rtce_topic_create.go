@@ -15,7 +15,7 @@ import (
 func (c *rtceTopicCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a RTCE topic.",
+		Short: "Create an RTCE topic.",
 		Args:  cobra.NoArgs,
 		RunE:  c.create,
 	}

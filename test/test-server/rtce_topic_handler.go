@@ -42,10 +42,10 @@ func handleRtceV1RtceTopics(t *testing.T) http.HandlerFunc {
 // Handler for "/rtce/v1/rtce-topics/{topic_name}"
 func handleRtceV1RtceTopicsTopicName(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		topic_name := mux.Vars(r)["topic_name"]
+		topicName := mux.Vars(r)["topic_name"]
 		switch r.Method {
 		case http.MethodGet:
-			switch topic_name {
+			switch topicName {
 			case "invalid":
 				w.WriteHeader(http.StatusNotFound)
 			default:
@@ -55,7 +55,7 @@ func handleRtceV1RtceTopicsTopicName(t *testing.T) http.HandlerFunc {
 				require.NoError(t, err)
 			}
 		case http.MethodPatch:
-			switch topic_name {
+			switch topicName {
 			case "invalid":
 				w.WriteHeader(http.StatusNotFound)
 			default:
@@ -69,7 +69,7 @@ func handleRtceV1RtceTopicsTopicName(t *testing.T) http.HandlerFunc {
 				require.NoError(t, err)
 			}
 		case http.MethodDelete:
-			switch topic_name {
+			switch topicName {
 			case "invalid":
 				w.WriteHeader(http.StatusNotFound)
 			default:

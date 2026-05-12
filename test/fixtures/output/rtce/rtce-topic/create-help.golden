@@ -1,4 +1,4 @@
-Create a RTCE topic.
+Create an RTCE topic.
 
 Usage:
   confluent rtce rtce-topic create [flags]

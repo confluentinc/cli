@@ -1,4 +1,4 @@
-Describe a RTCE topic.
+Describe an RTCE topic.
 
 Usage:
   confluent rtce rtce-topic describe <topic-name> [flags]

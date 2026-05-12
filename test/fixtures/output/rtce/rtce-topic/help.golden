@@ -4,11 +4,11 @@ Usage:
   confluent rtce rtce-topic [command]
 
 Available Commands:
-  create      Create a RTCE topic.
+  create      Create an RTCE topic.
   delete      Delete one or more RTCE topics.
-  describe    Describe a RTCE topic.
+  describe    Describe an RTCE topic.
   list        List RTCE topics.
-  update      Update a RTCE topic.
+  update      Update an RTCE topic.
 
 Global Flags:
   -h, --help            Show help for this command.
