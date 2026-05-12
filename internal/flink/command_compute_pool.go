@@ -1,11 +1,14 @@
 package flink
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/flink"
 )
 
 type computePoolOut struct {
@@ -77,11 +80,16 @@ func convertSdkComputePoolToLocalComputePool(sdkComputePool cmfsdk.ComputePool) 
 		},
 	}
 
-	if sdkComputePool.Status != nil {
+	if phase := extractComputePoolPhase(sdkComputePool); phase != "" {
 		localPool.Status = &LocalComputePoolStatus{
-			Phase: sdkComputePool.Status.Phase,
+			Phase: phase,
 		}
 	}
 
 	return localPool
+}
+
+func extractComputePoolPhase(pool cmfsdk.ComputePool) string {
+	phase, _ := flink.GetMapField[string](pool.GetStatus(), "phase", fmt.Sprintf("compute pool %q", pool.GetMetadata().Name))
+	return phase
 }
