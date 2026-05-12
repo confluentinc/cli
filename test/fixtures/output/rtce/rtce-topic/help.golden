@@ -1,0 +1,18 @@
+Manage RTCE topics.
+
+Usage:
+  confluent rtce rtce-topic [command]
+
+Available Commands:
+  create      Create an RTCE topic.
+  delete      Delete one or more RTCE topics.
+  describe    Describe an RTCE topic.
+  list        List RTCE topics.
+  update      Update an RTCE topic.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent rtce rtce-topic [command] --help" for more information about a command.
