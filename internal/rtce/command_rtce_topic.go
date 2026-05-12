@@ -22,7 +22,7 @@ type rtceTopicOut struct {
 	Environment  string `human:"Environment" serialized:"environment"`
 	KafkaCluster string `human:"Kafka Cluster" serialized:"kafka_cluster"`
 	Region       string `human:"Region" serialized:"region"`
-	ErrorMessage string `human:"Error Message" serialized:"error_message"`
+	ErrorMessage string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
 	Phase        string `human:"Phase" serialized:"phase"`
 }
 
