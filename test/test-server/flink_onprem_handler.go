@@ -227,7 +227,7 @@ func createKafkaCatalog(catName string) cmfsdk.KafkaCatalog {
 }
 
 func createKafkaDatabase(dbName string) cmfsdk.KafkaDatabase {
-	timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).String()
+	timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).Format(time.RFC3339)
 	return cmfsdk.KafkaDatabase{
 		ApiVersion: "cmf/api/v1/database",
 		Kind:       "KafkaDatabase",

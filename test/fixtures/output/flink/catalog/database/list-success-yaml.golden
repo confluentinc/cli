@@ -2,7 +2,7 @@
   kind: KafkaDatabase
   metadata:
     name: test-database-1
-    creationTimestamp: 2025-08-05 12:00:00 +0000 UTC
+    creationTimestamp: "2025-08-05T12:00:00Z"
   spec:
     kafkaCluster:
         connectionConfig:
@@ -11,7 +11,7 @@
   kind: KafkaDatabase
   metadata:
     name: test-database-2
-    creationTimestamp: 2025-08-05 12:00:00 +0000 UTC
+    creationTimestamp: "2025-08-05T12:00:00Z"
   spec:
     kafkaCluster:
         connectionConfig:
