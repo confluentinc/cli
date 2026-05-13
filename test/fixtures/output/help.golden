@@ -28,6 +28,7 @@ Available Commands:
   login                  Log in to Confluent Cloud or Confluent Platform.
   logout                 Log out of Confluent Cloud.
   network                Manage Confluent Cloud networks.
+  org                    Manage Organization.
   organization           Manage your Confluent Cloud organizations.
   plugin                 Manage Confluent plugins.
   prompt                 Add Confluent CLI context to your terminal prompt.

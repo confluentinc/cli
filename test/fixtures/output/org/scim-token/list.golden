@@ -1,0 +1,3 @@
+      ID      | Connection Name |                       Token                       |          Created At           |          Expires At            
+--------------+-----------------+---------------------------------------------------+-------------------------------+--------------------------------
+  dlz-f3a90de | test-connection | cflt-scim_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... | 2026-04-16 10:00:00 +0000 UTC | 2026-10-16 10:00:00 +0000 UTC  

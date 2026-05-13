@@ -1,0 +1,38 @@
+package org
+
+import (
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/deletion"
+)
+
+func (c *scimTokenCommand) newDeleteCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:               "delete <id-1> [id-2] ... [id-n]",
+		Short:             "Delete one or more org scim tokens.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
+		RunE:              c.delete,
+	}
+
+	// Required flags
+
+	// Optional flags
+
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddForceFlag(cmd)
+
+	return cmd
+}
+
+func (c *scimTokenCommand) delete(cmd *cobra.Command, args []string) error {
+	// Note: existence check skipped because Get operation is not available for this resource
+
+	deleteFunc := func(primaryId string) error {
+		return c.V2Client.DeleteOrgScimToken(primaryId)
+	}
+
+	_, err := deletion.Delete(cmd, args, deleteFunc, "org scim token")
+	return err
+}
