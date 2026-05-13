@@ -1,0 +1,7 @@
++----------------+------------------------------+
+| Kind           | KafkaStreamsGroupSubtopology |
+| Cluster Id     | lkc-1234                     |
+| Group Id       | streams-group-1              |
+| Subtopology Id | subtopology-1                |
+| Source Topics  | input-topic-1, input-topic-2 |
++----------------+------------------------------+
