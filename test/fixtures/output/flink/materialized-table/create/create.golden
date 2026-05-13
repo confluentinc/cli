@@ -1,0 +1,9 @@
++--------------+------------+
+| Name         | my-table   |
+| Database     | lkc01      |
+| Environment  | env-596    |
+| Compute Pool | pool1      |
+| Principal    | principal1 |
+| Stopped      | false      |
+| Query        | query1     |
++--------------+------------+

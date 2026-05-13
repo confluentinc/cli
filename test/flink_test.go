@@ -70,21 +70,6 @@ func (s *CLITestSuite) TestFlinkArtifact() {
 	}
 }
 
-func (s *CLITestSuite) TestFlinkComputePool() {
-	tests := []CLITest{
-		{args: "flink compute-pool create my-compute-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create.golden"},
-		{args: "flink compute-pool describe lfcp-123456", fixture: "flink/compute-pool/describe.golden"},
-		{args: "flink compute-pool list", fixture: "flink/compute-pool/list.golden"},
-		{args: "flink compute-pool list --region eu-west-2", fixture: "flink/compute-pool/list-region.golden"},
-		{args: "flink compute-pool update lfcp-123456 --max-cfu 5", fixture: "flink/compute-pool/update.golden"},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
-
 func (s *CLITestSuite) TestFlinkConnection() {
 	tests := []CLITest{
 		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
@@ -98,6 +83,131 @@ func (s *CLITestSuite) TestFlinkConnection() {
 		{args: "flink connection update my-connection --cloud aws --region eu-west-1 --api-key 0000000000000000", fixture: "flink/connection/update/update.golden"},
 		{args: "flink connection update nonexist-connection --cloud aws --region eu-west-1 --api-key 0000000000000000", fixture: "flink/connection/update/update-nonexist.golden", exitCode: 1},
 		{args: "flink connection update my-connection --cloud aws --region eu-west-1 --service-key 0000000000000000", fixture: "flink/connection/update/update-wrong-secret.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.workflow = true
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestFlinkMaterializedTableCreate() {
+	file, _ := os.CreateTemp(os.TempDir(), "test")
+	_, _ = file.Write([]byte("name,type,comment,Physical\n"))
+	_, _ = file.Write([]byte("name2,type2,comment2,Physical\n"))
+	defer func() {
+		_ = os.Remove(file.Name())
+	}()
+
+	fileMetadata, _ := os.CreateTemp(os.TempDir(), "test")
+	line := fmt.Sprintf("name,type,comment,Metadata,key,%t", true)
+	_, _ = fileMetadata.Write([]byte(line))
+	defer func() {
+		_ = os.Remove(fileMetadata.Name())
+	}()
+
+	fileComputed, _ := os.CreateTemp(os.TempDir(), "test")
+	lineComputed := fmt.Sprintf("name,type,comment,Computed,exp1,%t", true)
+	_, _ = fileComputed.Write([]byte(lineComputed))
+	defer func() {
+		_ = os.Remove(fileComputed.Name())
+	}()
+
+	fileConstraints, _ := os.CreateTemp(os.TempDir(), "test")
+	_, _ = fileConstraints.Write([]byte("name,type,colName1|colName2,true"))
+	defer func() {
+		_ = os.Remove(fileConstraints.Name())
+	}()
+	tests := []CLITest{
+		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
+		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
+		{args: "flink materialized-table create my-table --cloud aws --region eu-west-1 --database lkc01 --compute-pool pool1 --principal principal1 --query query1 ", fixture: "flink/materialized-table/create/create.golden"},
+		{args: fmt.Sprintf("flink materialized-table create my-table --cloud aws --region eu-west-1 "+
+			"--database lkc01 --compute-pool pool1 --principal principal1 "+
+			"--query query1  --columns-physical %s --columns-metadata %s --columns-computed %s --distribution-bucket-count 32", file.Name(),
+			fileMetadata.Name(), fileComputed.Name(),
+		), fixture: "flink/materialized-table/create/create-column.golden"},
+		{args: fmt.Sprintf("flink materialized-table create my-table --cloud aws --region eu-west-1 "+
+			"--database lkc01 --compute-pool pool1 --principal principal1 "+
+			"--query query1 --constraints %s --distribution-bucket-count 32 --distribution-keys col1,col2 --watermark-column wname1 "+
+			"--watermark-expression wexp1",
+			fileConstraints.Name(),
+		), fixture: "flink/materialized-table/create/create-filled.golden"},
+	}
+
+	for _, test := range tests {
+		test.workflow = true
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestFlinkMaterializedTableDescribe() {
+	tests := []CLITest{
+		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
+		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
+		{args: "flink materialized-table describe my-table --cloud aws --region eu-west-1 --database lkc01", fixture: "flink/materialized-table/describe/describe.golden"},
+		{args: "flink materialized-table describe my-table --cloud aws --region eu-west-1", exitCode: 1, fixture: "flink/materialized-table/describe/describe-noKafka.golden"},
+	}
+
+	for _, test := range tests {
+		test.workflow = true
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestFlinkMaterializedTableList() {
+	tests := []CLITest{
+		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
+		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
+		{args: "flink materialized-table list --cloud aws --region eu-west-1", fixture: "flink/materialized-table/list/list.golden"},
+	}
+
+	for _, test := range tests {
+		test.workflow = true
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestFlinkMaterializedTableDelete() {
+	tests := []CLITest{
+		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
+		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
+		{args: "flink materialized-table delete my-table --cloud aws --region eu-west-1 --database lkc01", input: "y\n", fixture: "flink/materialized-table/delete/delete.golden"},
+	}
+
+	for _, test := range tests {
+		test.workflow = true
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestFlinkMaterializedTableUpdate() {
+	file, _ := os.CreateTemp(os.TempDir(), "test")
+	_, _ = file.Write([]byte("name,type,comment2,Physical"))
+	defer func() {
+		_ = os.Remove(file.Name())
+	}()
+
+	fileConstraints, _ := os.CreateTemp(os.TempDir(), "test")
+	_, _ = fileConstraints.Write([]byte("name,type,colName1|colName2,true"))
+	defer func() {
+		_ = os.Remove(fileConstraints.Name())
+	}()
+
+	tests := []CLITest{
+		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
+		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
+		{args: "flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --database lkc01 --compute-pool pool1 --principal principal1 --query query2", fixture: "flink/materialized-table/update/update.golden"},
+		{args: "flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --database lkc01 --compute-pool pool2 --principal principal1 --query query1", fixture: "flink/materialized-table/update/update-2.golden"},
+		{args: "flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --database lkc01 --principal principal1 --query query1", fixture: "flink/materialized-table/update/no-cp.golden"},
+		{args: fmt.Sprintf("flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --database lkc01 --compute-pool pool2 --principal principal1 --query query1 --watermark-expression expNew --constraints %s --columns-physical %s", fileConstraints.Name(), file.Name()), fixture: "flink/materialized-table/update/update-3.golden"},
+		{args: "flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --database lkc01 --stopped=true", fixture: "flink/materialized-table/update/stop.golden"},
+		{args: "flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --database lkc01 --stopped=false", fixture: "flink/materialized-table/update/resume.golden"},
 	}
 
 	for _, test := range tests {
@@ -235,6 +345,23 @@ func (s *CLITestSuite) TestFlinkConnectivityType() {
 	}
 }
 
+func (s *CLITestSuite) TestFlinkComputePool() {
+	tests := []CLITest{
+		{args: "flink compute-pool create my-compute-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create.golden"},
+		{args: "flink compute-pool describe lfcp-123456", fixture: "flink/compute-pool/describe.golden"},
+		{args: "flink compute-pool list", fixture: "flink/compute-pool/list.golden"},
+		{args: "flink compute-pool list --region eu-west-2", fixture: "flink/compute-pool/list-region.golden"},
+		{args: "flink compute-pool update lfcp-123456 --max-cfu 5", fixture: "flink/compute-pool/update.golden"},
+		{args: "flink compute-pool create my-compute-pool-2 --default-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create-default.golden"},
+		{args: "flink compute-pool update lfcp-123456 --default-pool=false", fixture: "flink/compute-pool/update-default.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestFlinkComputePoolDelete() {
 	tests := []CLITest{
 		{args: "flink compute-pool delete lfcp-123456 --force", fixture: "flink/compute-pool/delete.golden"},
@@ -273,6 +400,18 @@ func (s *CLITestSuite) TestFlinkComputePoolUse() {
 
 	for _, test := range tests {
 		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestFlinkComputePoolConfig() {
+	tests := []CLITest{
+		{args: "flink compute-pool-config describe", fixture: "flink/compute-pool/describe-compute-pool-config.golden"},
+		{args: "flink compute-pool-config update --max-cfu 5 --default-pool", fixture: "flink/compute-pool/update-compute-pool-config.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
 }
@@ -336,6 +475,7 @@ func (s *CLITestSuite) TestFlinkStatement() {
 func (s *CLITestSuite) TestFlinkStatementCreate() {
 	tests := []CLITest{
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "flink/statement/create.golden"},
+		{args: `flink statement create my-statement-2 --sql "INSERT * INTO table;" --cloud aws --region eu-west-1 --service-account sa-123456`, fixture: "flink/statement/create-without-compute-pool.golden"},
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456`, fixture: "flink/statement/create-service-account-warning.golden"},
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 --wait`, fixture: "flink/statement/create-wait.golden"},
 		{args: `flink statement create --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 -o yaml`, fixture: "flink/statement/create-no-name-yaml.golden", regex: true},

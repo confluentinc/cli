@@ -51,9 +51,11 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	// Cloud Specific Commands
 	cmd.AddCommand(c.newArtifactCommand())
+	cmd.AddCommand(c.newComputePoolConfigCommand())
 	cmd.AddCommand(c.newConnectionCommand())
 	cmd.AddCommand(c.newConnectivityTypeCommand())
 	cmd.AddCommand(c.newEndpointCommand())
+	cmd.AddCommand(c.newMaterializedTableCommand())
 	cmd.AddCommand(c.newRegionCommand())
 
 	return cmd
