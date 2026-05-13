@@ -7,7 +7,7 @@ import (
 func (c *streamsGroupCommand) newStreamsGroupMemberTargetAssignmentTaskPartitionsCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "subtopology",
-		Short: "Manage Kafka streams group member target assignment subtopologies.",
+		Short: "Manage Kafka streams group member target subtopologies.",
 	}
 
 	cmd.AddCommand(c.newStreamsGroupMemberTargetAssignmentTaskPartitionsDescribeCommand())
