@@ -142,6 +142,32 @@ type LocalKafkaCatalogSpecSrInstance struct {
 	ConnectionSecretId *string           `json:"connectionSecretId,omitempty" yaml:"connectionSecretId,omitempty"`
 }
 
+type LocalKafkaDatabase struct {
+	ApiVersion string                 `json:"apiVersion" yaml:"apiVersion"`
+	Kind       string                 `json:"kind" yaml:"kind"`
+	Metadata   LocalDatabaseMetadata  `json:"metadata" yaml:"metadata"`
+	Spec       LocalKafkaDatabaseSpec `json:"spec" yaml:"spec"`
+}
+
+type LocalDatabaseMetadata struct {
+	Name              string             `json:"name" yaml:"name"`
+	CreationTimestamp *string            `json:"creationTimestamp,omitempty" yaml:"creationTimestamp,omitempty"`
+	UpdateTimestamp   *string            `json:"updateTimestamp,omitempty" yaml:"updateTimestamp,omitempty"`
+	Uid               *string            `json:"uid,omitempty" yaml:"uid,omitempty"`
+	Labels            *map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
+	Annotations       *map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
+}
+
+type LocalKafkaDatabaseSpec struct {
+	KafkaCluster      LocalKafkaDatabaseSpecKafkaCluster `json:"kafkaCluster" yaml:"kafkaCluster"`
+	AlterEnvironments *[]string                          `json:"alterEnvironments,omitempty" yaml:"alterEnvironments,omitempty"`
+}
+
+type LocalKafkaDatabaseSpecKafkaCluster struct {
+	ConnectionConfig   map[string]string `json:"connectionConfig" yaml:"connectionConfig"`
+	ConnectionSecretId *string           `json:"connectionSecretId,omitempty" yaml:"connectionSecretId,omitempty"`
+}
+
 type LocalResultSchema struct {
 	Columns []LocalResultSchemaColumn `json:"columns" yaml:"columns"`
 }
