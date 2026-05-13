@@ -1,0 +1,50 @@
+package test
+
+func (s *CLITestSuite) TestOrgScimTokenCreate() {
+	tests := []CLITest{
+		{args: "org scim-token create", fixture: "org/scim-token/create.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestOrgScimTokenDelete() {
+	tests := []CLITest{
+		{args: "org scim-token delete id-1 --force", fixture: "org/scim-token/delete.golden"},
+		{args: "org scim-token delete id-1", input: "y\n", fixture: "org/scim-token/delete-no-force.golden"},
+		{args: "org scim-token delete id-1 id-2", input: "y\n", fixture: "org/scim-token/delete-multiple.golden"},
+		{args: "org scim-token delete invalid", fixture: "org/scim-token/delete-invalid.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestOrgScimTokenList() {
+	tests := []CLITest{
+		{args: "org scim-token list", fixture: "org/scim-token/list.golden"},
+		{args: "org scim-token list -o json", fixture: "org/scim-token/list-json.golden"},
+		{args: "org scim-token list -o yaml", fixture: "org/scim-token/list-yaml.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestOrgScimToken_Autocomplete() {
+	tests := []CLITest{
+		{args: "__complete org scim-token delete \"\"", fixture: "org/scim-token/delete-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}

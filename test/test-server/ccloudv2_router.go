@@ -117,6 +117,8 @@ var ccloudV2Routes = []route{
 	{"/org/v2/environments/{id}", handleOrgEnvironment},
 	{"/org/v2/organizations", handleOrgOrganizations},
 	{"/org/v2/organizations/{id}", handleOrgOrganization},
+	{"/org/v2/scim-tokens", handleOrgV2ScimTokens},
+	{"/org/v2/scim-tokens/{id}", handleOrgV2ScimTokensId},
 	{"/pim/v1/integrations", handleProviderIntegrations},
 	{"/pim/v1/integrations/{id}", handleProviderIntegration},
 	{"/pim/v2/integrations", handleProviderIntegrationsV2},
