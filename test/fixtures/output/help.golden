@@ -32,6 +32,7 @@ Available Commands:
   plugin                 Manage Confluent plugins.
   prompt                 Add Confluent CLI context to your terminal prompt.
   provider-integration   Manage Confluent Cloud provider integrations.
+  rtce                   Manage Real Time Context Engine.
   schema-registry        Manage Schema Registry.
   service-quota          Look up Confluent Cloud service quota limits.
   shell                  Start an interactive shell.

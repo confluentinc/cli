@@ -122,6 +122,9 @@ var ccloudV2Routes = []route{
 	{"/pim/v2/integrations", handleProviderIntegrationsV2},
 	{"/pim/v2/integrations/{id}", handleProviderIntegrationV2},
 	{"/pim/v2/integrations/validate", handleProviderIntegrationV2Validate},
+	{"/rtce/v1/regions", handleRtceV1Regions},
+	{"/rtce/v1/rtce-topics", handleRtceV1RtceTopics},
+	{"/rtce/v1/rtce-topics/{topic_name}", handleRtceV1RtceTopicsTopicName},
 	{"/service-quota/v1/applied-quotas", handleAppliedQuotas},
 	{"/service-quota/v2/applied-quotas", handleAppliedQuotas},
 	{"/srcm/v3/clusters", handleSchemaRegistryClustersV3},
@@ -135,6 +138,7 @@ var ccloudV2Routes = []route{
 	{"/usm/v1/connect-clusters", handleUsmConnectClusters},
 	{"/usm/v1/connect-clusters/{id}", handleUsmConnectCluster},
 	{"/v2/metrics/cloud/query", handleMetricsQuery},
+	// cli-tfgen:cli-api-routes — DO NOT REMOVE (verified by TestCliTfgenMarkers)
 }
 
 func NewV2Router(t *testing.T) *mux.Router {
