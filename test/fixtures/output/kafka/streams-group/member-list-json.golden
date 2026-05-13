@@ -1,0 +1,16 @@
+[
+  {
+    "kind": "KafkaStreamsGroupMember",
+    "cluster_id": "lkc-1234",
+    "group_id": "streams-group-1",
+    "member_id": "member-1",
+    "process_id": "process-1",
+    "client_id": "client-1",
+    "instance_id": "instance-1",
+    "member_epoch": 2,
+    "topology_epoch": 2,
+    "is_classic": false,
+    "assignments": "/kafka/v3/clusters/lkc-1234/streams-groups/streams-group-1/members/member-1/assignments",
+    "target_assignment": "/kafka/v3/clusters/lkc-1234/streams-groups/streams-group-1/members/member-1/target-assignments"
+  }
+]
