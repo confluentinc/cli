@@ -159,8 +159,8 @@ type LocalDatabaseMetadata struct {
 }
 
 type LocalKafkaDatabaseSpec struct {
-	KafkaCluster      LocalKafkaDatabaseSpecKafkaCluster `json:"kafkaCluster" yaml:"kafkaCluster"`
-	AlterEnvironments *[]string                          `json:"alterEnvironments,omitempty" yaml:"alterEnvironments,omitempty"`
+	KafkaCluster    LocalKafkaDatabaseSpecKafkaCluster `json:"kafkaCluster" yaml:"kafkaCluster"`
+	DdlEnvironments *[]string                          `json:"ddlEnvironments,omitempty" yaml:"ddlEnvironments,omitempty"`
 }
 
 type LocalKafkaDatabaseSpecKafkaCluster struct {

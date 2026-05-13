@@ -107,7 +107,7 @@ func convertSdkDatabaseToLocalDatabase(sdkDatabase cmfsdk.KafkaDatabase) LocalKa
 				ConnectionConfig:   sdkDatabase.Spec.KafkaCluster.ConnectionConfig,
 				ConnectionSecretId: sdkDatabase.Spec.KafkaCluster.ConnectionSecretId,
 			},
-			AlterEnvironments: sdkDatabase.Spec.AlterEnvironments,
+			DdlEnvironments: sdkDatabase.Spec.DdlEnvironments,
 		},
 	}
 }
