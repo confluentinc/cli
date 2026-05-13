@@ -47,7 +47,6 @@ func (c *streamsGroupCommand) listStreamsGroupMemberTargetAssignmentTasks(cmd *c
 	list := output.NewList(cmd)
 	for _, task := range tasks {
 		list.Add(&streamsTaskOut{
-			Kind:          task.GetKind(),
 			SubtopologyId: task.GetSubtopologyId(),
 			PartitionIds:  task.GetPartitionIds(),
 		})

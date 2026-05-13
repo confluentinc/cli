@@ -48,7 +48,6 @@ func (c *streamsGroupCommand) streamsGroupMemberAssignmentDescribe(cmd *cobra.Co
 
 	table := output.NewTable(cmd)
 	table.Add(&streamsGroupMemberAssignmentOut{
-		Kind:         assignment.GetKind(),
 		ClusterId:    assignment.GetClusterId(),
 		GroupId:      assignment.GetGroupId(),
 		MemberId:     assignment.GetMemberId(),

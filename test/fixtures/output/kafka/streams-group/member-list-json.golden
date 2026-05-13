@@ -1,6 +1,5 @@
 [
   {
-    "kind": "KafkaStreamsGroupMember",
     "cluster_id": "lkc-1234",
     "group_id": "streams-group-1",
     "member_id": "member-1",

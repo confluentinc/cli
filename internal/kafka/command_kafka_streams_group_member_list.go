@@ -39,7 +39,6 @@ func (c *streamsGroupCommand) listStreamsGroupMembers(cmd *cobra.Command, _ []st
 	list := output.NewList(cmd)
 	for _, member := range members {
 		list.Add(&streamsGroupMemberOut{
-			Kind:          member.GetKind(),
 			ClusterId:     member.GetClusterId(),
 			GroupId:       member.GetGroupId(),
 			MemberId:      member.GetMemberId(),

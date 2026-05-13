@@ -48,7 +48,6 @@ func (c *streamsGroupCommand) streamsGroupSubtopologyDescribe(cmd *cobra.Command
 
 	table := output.NewTable(cmd)
 	table.Add(&streamsGroupSubtopologyOut{
-		Kind:          subtopology.GetKind(),
 		ClusterId:     subtopology.GetClusterId(),
 		GroupId:       subtopology.GetGroupId(),
 		SubtopologyId: subtopology.GetSubtopologyId(),

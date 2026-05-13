@@ -1,6 +1,5 @@
 [
   {
-    "kind": "KafkaStreamsGroupSubtopology",
     "cluster_id": "lkc-1234",
     "group_id": "streams-group-1",
     "subtopology_id": "subtopology-1",

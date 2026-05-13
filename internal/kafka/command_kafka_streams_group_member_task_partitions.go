@@ -5,7 +5,6 @@ import (
 )
 
 type streamsTaskOut struct {
-	Kind          string  `human:"Kind" serialized:"kind"`
 	SubtopologyId string  `human:"Subtopology Id" serialized:"subtopology_id"`
 	PartitionIds  []int32 `human:"Partition Ids" serialized:"partition_ids"`
 }

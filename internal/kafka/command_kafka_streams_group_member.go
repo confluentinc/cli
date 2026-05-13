@@ -5,7 +5,6 @@ import (
 )
 
 type streamsGroupMemberOut struct {
-	Kind          string `human:"Kind" serialized:"kind"`
 	ClusterId     string `human:"Cluster Id" serialized:"cluster_id"`
 	GroupId       string `human:"Group Id" serialized:"group_id"`
 	MemberId      string `human:"Member Id" serialized:"member_id"`

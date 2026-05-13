@@ -67,7 +67,6 @@ func (c *streamsGroupCommand) streamsGroupMemberTargetAssignmentTaskPartitionsDe
 
 	table := output.NewTable(cmd)
 	table.Add(&streamsTaskOut{
-		Kind:          taskPartitions.GetKind(),
 		SubtopologyId: taskPartitions.GetSubtopologyId(),
 		PartitionIds:  taskPartitions.GetPartitionIds(),
 	})

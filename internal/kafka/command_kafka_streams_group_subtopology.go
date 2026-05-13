@@ -5,7 +5,6 @@ import (
 )
 
 type streamsGroupSubtopologyOut struct {
-	Kind          string   `human:"Kind" serialized:"kind"`
 	ClusterId     string   `human:"Cluster Id" serialized:"cluster_id"`
 	GroupId       string   `human:"Group Id" serialized:"group_id"`
 	SubtopologyId string   `human:"Subtopology Id" serialized:"subtopology_id"`

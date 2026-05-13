@@ -39,7 +39,6 @@ func (c *streamsGroupCommand) listStreamsGroupSubtopologies(cmd *cobra.Command, 
 	list := output.NewList(cmd)
 	for _, subtopology := range subtopologies {
 		list.Add(&streamsGroupSubtopologyOut{
-			Kind:          subtopology.GetKind(),
 			ClusterId:     subtopology.GetClusterId(),
 			GroupId:       subtopology.GetGroupId(),
 			SubtopologyId: subtopology.GetSubtopologyId(),
