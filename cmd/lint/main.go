@@ -44,7 +44,8 @@ var commandRules = []linter.CommandRule{
 		linter.ExcludeCommand("connect custom-plugin version update"),
 		linter.ExcludeCommand("pipeline update"),
 		linter.ExcludeCommand("flink statement update"),
-		linter.ExcludeCommand("flink materialized-table update")),
+		linter.ExcludeCommand("flink materialized-table update"),
+		linter.ExcludeCommand("kafka cluster update")),
 
 	// Soft Requirements
 	linter.Filter(linter.RequireLengthBetween("Short", 10, 60),
