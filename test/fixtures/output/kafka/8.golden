@@ -6,6 +6,7 @@
   region: us-central1
   availability: single-zone
   status: PROVISIONING
+  deletion_protection: false
   endpoint: ""
 - is_current: false
   id: lkc-456
@@ -15,6 +16,7 @@
   region: us-central1
   availability: multi-zone
   status: PROVISIONING
+  deletion_protection: true
   endpoint: ""
 - is_current: false
   id: lkc-789
@@ -25,4 +27,5 @@
   availability: single-zone
   network: n-abcde1
   status: UP
+  deletion_protection: false
   endpoint: SASL_SSL://kafka-endpoint
