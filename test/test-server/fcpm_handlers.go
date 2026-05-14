@@ -190,6 +190,14 @@ func handleFcpmRegions(t *testing.T) http.HandlerFunc {
 			HttpEndpoint:        flinkv2.PtrString(TestFlinkGatewayUrl.String()),
 			PrivateHttpEndpoint: flinkv2.PtrString(TestFlinkGatewayUrlPrivate.String()),
 		}
+		azureItalynorth := flinkv2.FcpmV2Region{
+			Id:                  flinkv2.PtrString("azure.italynorth"),
+			DisplayName:         flinkv2.PtrString("Milan (italynorth)"),
+			Cloud:               flinkv2.PtrString("AZURE"),
+			RegionName:          flinkv2.PtrString("italynorth"),
+			HttpEndpoint:        flinkv2.PtrString(TestFlinkGatewayUrl.String()),
+			PrivateHttpEndpoint: flinkv2.PtrString(TestFlinkGatewayUrlPrivate.String()),
+		}
 
 		// Allowing flexible mock results based on query parameters
 		regions := []flinkv2.FcpmV2Region{awsEuWest1, awsEuWest2, gcp, azure}
@@ -209,6 +217,9 @@ func handleFcpmRegions(t *testing.T) http.HandlerFunc {
 			}
 			if r.URL.Query().Get("region_name") == "eastus2" {
 				regions = []flinkv2.FcpmV2Region{azureEastus2}
+			}
+			if r.URL.Query().Get("region_name") == "italynorth" {
+				regions = []flinkv2.FcpmV2Region{azureItalynorth}
 			}
 		}
 		regionsList := &flinkv2.FcpmV2RegionList{Data: regions}
