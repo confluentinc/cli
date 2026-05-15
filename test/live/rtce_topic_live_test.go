@@ -15,6 +15,9 @@ func (s *CLILiveTestSuite) TestRtceTopicCRUDLive() {
 
 	// Variables
 	rtceTopicName := uniqueName("rtceto")
+	topicName := uniqueName("topic")
+	cloud := liveTestCloud()
+	region := liveTestRegion()
 	description := "Live test description"
 	updatedDescription := "Updated live test description"
 
@@ -37,7 +40,7 @@ func (s *CLILiveTestSuite) TestRtceTopicCRUDLive() {
 		},
 		{
 			Name:            "Create RTCE topic",
-			Args:            "rtce rtce-topic create " + rtceTopicName + " --description \"" + description + "\" --region \"" + region + "\" --topic-name \"" + topicName + "\" --environment {{.env_id}} -o json",
+			Args:            "rtce rtce-topic create " + rtceTopicName + " --cloud " + cloud + " --description \"" + description + "\" --region \"" + region + "\" --topic-name \"" + topicName + "\" --environment {{.env_id}} -o json",
 			UseStateVars:    true,
 			CaptureID:       "rtce_topic_id",
 			JSONFields:      map[string]string{},
