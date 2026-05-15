@@ -45,6 +45,7 @@ const (
 	FlinkDetachedSavepoint           = "Flink detached savepoint"
 	FlinkApplication                 = "Flink application"
 	FlinkCatalog                     = "Flink catalog"
+	FlinkDatabase                    = "Flink database"
 	FlinkEnvironment                 = "Flink environment"
 	FlinkRegion                      = "Flink region"
 	FlinkEndpoint                    = "Flink endpoint"
