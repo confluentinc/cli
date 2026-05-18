@@ -7,7 +7,7 @@
 | Workspace Endpoint | https://dbc-0e76d5eb-ff10.cloud.databricks.com |
 | Catalog Name       | catalog-name                                   |
 | Client ID          | client-id                                      |
-| Custom Schema      | my-custom-schema                               |
+| Custom Schema      | new-custom-schema                              |
 | Suspended          | false                                          |
 | Phase              | CONNECTED                                      |
 +--------------------+------------------------------------------------+
