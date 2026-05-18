@@ -205,19 +205,32 @@ func createComputePool(poolName, phase string) cmfsdk.ComputePool {
 }
 
 func createKafkaCatalog(catName string) cmfsdk.KafkaCatalog {
-	timeStamp := time.Date(2025, time.August, 5, 12, 00, 0, 0, time.UTC).String()
+	timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).Format(time.RFC3339)
 	return cmfsdk.KafkaCatalog{
+		ApiVersion: "cmf/api/v1/catalog",
+		Kind:       "KafkaCatalog",
 		Metadata: cmfsdk.CatalogMetadata{
 			Name:              catName,
 			CreationTimestamp: &timeStamp,
 		},
 		Spec: cmfsdk.KafkaCatalogSpec{
+			SrInstance: cmfsdk.KafkaCatalogSpecSrInstance{
+				ConnectionConfig: map[string]string{
+					"schema.registry.url": "http://localhost:8081",
+				},
+			},
 			KafkaClusters: &[]cmfsdk.KafkaCatalogSpecKafkaClusters{
 				{
 					DatabaseName: "test-database",
+					ConnectionConfig: map[string]string{
+						"bootstrap.servers": "localhost:9092",
+					},
 				},
 				{
 					DatabaseName: "test-database-2",
+					ConnectionConfig: map[string]string{
+						"bootstrap.servers": "localhost:9092",
+					},
 				},
 			},
 		},

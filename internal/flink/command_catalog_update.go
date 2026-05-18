@@ -11,8 +11,8 @@ import (
 func (c *command) newCatalogUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <resourceFilePath>",
-		Short: "Update a Flink catalog.",
-		Long:  "Update an existing Kafka Catalog in Confluent Platform from a resource file.",
+		Short: "Update a Flink catalog in Confluent Platform.",
+		Long:  "Update an existing Flink catalog in Confluent Platform from a resource file.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.catalogUpdate,
 	}

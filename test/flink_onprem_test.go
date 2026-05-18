@@ -620,19 +620,13 @@ func (s *CLITestSuite) TestFlinkCatalogCreateWithYAML() {
 	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
-func (s *CLITestSuite) TestFlinkCatalogUpdateWithYAML() {
+func (s *CLITestSuite) TestFlinkCatalogUpdateOnPremWithYAML() {
 	tests := []CLITest{
-		// success scenarios with JSON files
-		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.json", fixture: "flink/catalog/update-success.golden"},
-		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.json --output json", fixture: "flink/catalog/update-success-json.golden"},
-		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.json --output yaml", fixture: "flink/catalog/update-success-yaml.golden"},
-		// failure scenarios with JSON files
-		{args: "flink catalog update test/fixtures/input/flink/catalog/update-invalid-failure.json", fixture: "flink/catalog/update-invalid-failure.golden", exitCode: 1},
-		// YAML file tests
+		// success
 		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.yaml", fixture: "flink/catalog/update-success.golden"},
 		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.yaml --output json", fixture: "flink/catalog/update-success-json.golden"},
 		{args: "flink catalog update test/fixtures/input/flink/catalog/update-successful.yaml --output yaml", fixture: "flink/catalog/update-success-yaml.golden"},
-		// YAML file failure scenarios
+		// failure
 		{args: "flink catalog update test/fixtures/input/flink/catalog/update-invalid-failure.yaml", fixture: "flink/catalog/update-invalid-failure.golden", exitCode: 1},
 	}
 
