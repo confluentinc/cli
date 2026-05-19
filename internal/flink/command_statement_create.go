@@ -1,7 +1,6 @@
 package flink
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -16,7 +15,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/properties"
-	"github.com/confluentinc/cli/v4/pkg/retry"
+	"github.com/confluentinc/cli/v4/pkg/wait"
 )
 
 func (c *command) newStatementCreateCommand() *cobra.Command {
@@ -41,7 +40,8 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 	c.addComputePoolFlag(cmd)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	c.addDatabaseFlag(cmd)
-	cmd.Flags().Bool("wait", false, "Block until the statement is running or has failed.")
+	pcmd.AddWaitFlag(cmd)
+	pcmd.AddWaitTimeoutFlag(cmd, time.Minute)
 	cmd.Flags().StringSlice("property", []string{}, "A mechanism to pass properties in the form key=value when creating a Flink statement.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -151,25 +151,27 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	wait, err := cmd.Flags().GetBool("wait")
+	shouldWait, err := cmd.Flags().GetBool("wait")
 	if err != nil {
 		return err
 	}
-	if wait {
-		err := retry.Retry(time.Second, time.Minute, func() error {
-			statement, err = client.GetStatement(environmentId, name, c.Context.LastOrgId)
-			if err != nil {
-				return err
-			}
-
-			if statement.Status.GetPhase() == "PENDING" {
-				return fmt.Errorf(`statement phase is "%s"`, statement.Status.GetPhase())
-			}
-
-			return nil
-		})
+	if shouldWait {
+		timeout, err := cmd.Flags().GetDuration("wait-timeout")
 		if err != nil {
 			return err
+		}
+		statement, err = wait.Poll(cmd.Context(), wait.Options[flinkgatewayv1.SqlV1Statement]{
+			Fetch: func() (flinkgatewayv1.SqlV1Statement, error) {
+				return client.GetStatement(environmentId, name, c.Context.LastOrgId)
+			},
+			IsTerminal: func(s flinkgatewayv1.SqlV1Statement) bool {
+				return s.Status.GetPhase() != "PENDING"
+			},
+			Tick:    time.Second,
+			Timeout: timeout,
+		})
+		if err != nil {
+			return errors.NewErrorWithSuggestions(err.Error(), "Increase `--wait-timeout` or omit `--wait`.")
 		}
 	}
 

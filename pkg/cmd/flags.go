@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -210,6 +211,14 @@ func AddForceFlag(cmd *cobra.Command) {
 
 func AddDryRunFlag(cmd *cobra.Command) {
 	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes.")
+}
+
+func AddWaitFlag(cmd *cobra.Command) {
+	cmd.Flags().Bool("wait", false, "Block until the resource reaches a terminal state.")
+}
+
+func AddWaitTimeoutFlag(cmd *cobra.Command, defaultTimeout time.Duration) {
+	cmd.Flags().Duration("wait-timeout", defaultTimeout, "Maximum time to wait when --wait is set.")
 }
 
 func AddKsqlClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
