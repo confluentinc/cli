@@ -1,0 +1,4 @@
+Error: wait timed out
+
+Suggestions:
+    Increase `--wait-timeout` or omit `--wait`.

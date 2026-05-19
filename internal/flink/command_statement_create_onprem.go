@@ -16,7 +16,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 	"github.com/confluentinc/cli/v4/pkg/output"
-	"github.com/confluentinc/cli/v4/pkg/retry"
+	"github.com/confluentinc/cli/v4/pkg/wait"
 )
 
 func (c *command) newStatementCreateCommandOnPrem() *cobra.Command {
@@ -36,7 +36,8 @@ func (c *command) newStatementCreateCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("catalog", "", "The name of the default catalog.")
 	cmd.Flags().String("database", "", "The name of the default database.")
 	cmd.Flags().String("flink-configuration", "", "The file path to hold the Flink configuration for the statement.")
-	cmd.Flags().Bool("wait", false, "Boolean flag to block until the statement is running or has failed.")
+	pcmd.AddWaitFlag(cmd)
+	pcmd.AddWaitTimeoutFlag(cmd, time.Minute)
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -114,7 +115,7 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 			Stopped:            cmfsdk.PtrBool(false),
 		},
 	}
-	wait, err := cmd.Flags().GetBool("wait")
+	shouldWait, err := cmd.Flags().GetBool("wait")
 	if err != nil {
 		return err
 	}
@@ -124,21 +125,23 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	if wait {
-		err := retry.Retry(time.Second*2, time.Minute, func() error {
-			polledStatement, err := client.GetStatement(c.createContext(), environment, name)
-			if err != nil {
-				return err
-			}
-			if polledStatement.GetStatus().Phase == "PENDING" {
-				return fmt.Errorf(`statement phase is "%s"`, polledStatement.GetStatus().Phase)
-			}
-			// Update the finalStatement with the completed state
-			finalStatement = polledStatement
-			return nil
-		})
+	if shouldWait {
+		timeout, err := cmd.Flags().GetDuration("wait-timeout")
 		if err != nil {
 			return err
+		}
+		finalStatement, err = wait.Poll(cmd.Context(), wait.Options[cmfsdk.Statement]{
+			Fetch: func() (cmfsdk.Statement, error) {
+				return client.GetStatement(c.createContext(), environment, name)
+			},
+			IsTerminal: func(s cmfsdk.Statement) bool {
+				return s.GetStatus().Phase != "PENDING"
+			},
+			Tick:    2 * time.Second,
+			Timeout: timeout,
+		})
+		if err != nil {
+			return errors.NewErrorWithSuggestions(err.Error(), "Increase `--wait-timeout` or omit `--wait`.")
 		}
 	}
 
