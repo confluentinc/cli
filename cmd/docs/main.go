@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-	"regexp"
 	"testing"
 
 	"github.com/confluentinc/cli/v4/internal"
@@ -60,16 +59,4 @@ func main() {
 	if err := os.Setenv("HOME", home); err != nil {
 		panic(err)
 	}
-}
-
-func removeLineFromFile(line, file string) error {
-	out, err := os.ReadFile(file)
-	if err != nil {
-		return err
-	}
-
-	re := regexp.MustCompile(line)
-	out = re.ReplaceAll(out, []byte(""))
-
-	return os.WriteFile(file, out, 0644)
 }
