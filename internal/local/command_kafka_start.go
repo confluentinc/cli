@@ -14,7 +14,6 @@ import (
 
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/api/types/network"
-	"github.com/moby/moby/api/types/strslice"
 	"github.com/moby/moby/client"
 	specsv1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/phayes/freeport"
@@ -67,7 +66,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	dockerClient, err := client.New(client.FromEnv)
 	if err != nil {
 		return err
 	}
@@ -155,7 +154,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, _ []string) error {
 	}
 	natKafkaRestPort := network.MustParsePort(ports.KafkaRestPort + "/tcp")
 	natPlaintextPorts := getNatPlaintextPorts(ports)
-	containerStartCmd := strslice.StrSlice{"bash", "-c", "'/etc/confluent/docker/run'"}
+	containerStartCmd := []string{"bash", "-c", "'/etc/confluent/docker/run'"}
 
 	options := client.NetworkCreateOptions{Driver: "bridge"}
 	if _, err := dockerClient.NetworkCreate(context.Background(), confluentLocalNetworkName, options); err != nil && !strings.Contains(err.Error(), "already exists") {
