@@ -5,7 +5,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/go-jose/go-jose/v3/jwt"
+	jose "github.com/go-jose/go-jose/v4"
+	"github.com/go-jose/go-jose/v4/jwt"
 
 	"github.com/confluentinc/cli/v4/pkg/secret"
 )
@@ -14,6 +15,17 @@ const (
 	authTokenRegex        = `^[\w-]*\.[\w-]*\.[\w-]*$`
 	authRefreshTokenRegex = `^(v1\..*)$`
 )
+
+// signatureAlgorithms is intentionally broad: IsExpired reads claims via
+// UnsafeClaimsWithoutVerification (no signature check), so the v4 allowlist
+// is required to parse but does not gate any security decision here.
+var signatureAlgorithms = []jose.SignatureAlgorithm{
+	jose.RS256, jose.RS384, jose.RS512,
+	jose.ES256, jose.ES384, jose.ES512,
+	jose.PS256, jose.PS384, jose.PS512,
+	jose.HS256, jose.HS384, jose.HS512,
+	jose.EdDSA,
+}
 
 type ContextState struct {
 	// Deprecated
@@ -56,7 +68,7 @@ func (c *ContextState) IsExpired() bool {
 		return false
 	}
 
-	token, err := jwt.ParseSigned(c.AuthToken)
+	token, err := jwt.ParseSigned(c.AuthToken, signatureAlgorithms)
 	if err != nil {
 		return false
 	}

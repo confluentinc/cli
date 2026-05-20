@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-jose/go-jose/v3/jwt"
+	jose "github.com/go-jose/go-jose/v4"
+	"github.com/go-jose/go-jose/v4/jwt"
 	"github.com/jonboulle/clockwork"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -50,8 +51,19 @@ func (v *ValidatorImpl) Validate(context *config.Context) error {
 	return nil
 }
 
+// signatureAlgorithms is intentionally broad: callers read claims via
+// UnsafeClaimsWithoutVerification (no signature check), so the v4 allowlist
+// is required to parse but does not gate any security decision here.
+var signatureAlgorithms = []jose.SignatureAlgorithm{
+	jose.RS256, jose.RS384, jose.RS512,
+	jose.ES256, jose.ES384, jose.ES512,
+	jose.PS256, jose.PS384, jose.PS512,
+	jose.HS256, jose.HS384, jose.HS512,
+	jose.EdDSA,
+}
+
 func GetClaim(jwtToken, claim string) (any, error) {
-	token, err := jwt.ParseSigned(jwtToken)
+	token, err := jwt.ParseSigned(jwtToken, signatureAlgorithms)
 	if err != nil {
 		return nil, new(ccloudv1.InvalidTokenError)
 	}
