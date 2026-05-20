@@ -4,8 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
+	"github.com/moby/moby/client"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v4/pkg/log"
@@ -36,20 +35,20 @@ func (c *command) kafkaStop(_ *cobra.Command, _ []string) error {
 }
 
 func (c *command) stopAndRemoveConfluentLocal(dockerClient *client.Client) error {
-	dockerContainers, err := dockerClient.ContainerList(context.Background(), container.ListOptions{All: true})
+	dockerContainers, err := dockerClient.ContainerList(context.Background(), client.ContainerListOptions{All: true})
 	if err != nil {
 		return err
 	}
 
-	for _, dockerContainer := range dockerContainers {
+	for _, dockerContainer := range dockerContainers.Items {
 		if dockerContainer.Image == dockerImageName {
 			log.CliLogger.Tracef("Stopping Confluent Local container %s", getShortenedContainerId(dockerContainer.ID))
 			noWaitTimeout := 0 // to not wait for the container to exit gracefully
-			if err := dockerClient.ContainerStop(context.Background(), dockerContainer.ID, container.StopOptions{Timeout: &noWaitTimeout}); err != nil {
+			if _, err := dockerClient.ContainerStop(context.Background(), dockerContainer.ID, client.ContainerStopOptions{Timeout: &noWaitTimeout}); err != nil {
 				return err
 			}
 			log.CliLogger.Tracef("Confluent Local container stopped")
-			if err := dockerClient.ContainerRemove(context.Background(), dockerContainer.ID, container.RemoveOptions{Force: true}); err != nil {
+			if _, err := dockerClient.ContainerRemove(context.Background(), dockerContainer.ID, client.ContainerRemoveOptions{Force: true}); err != nil {
 				return err
 			}
 			log.CliLogger.Tracef("Confluent Local container removed")
