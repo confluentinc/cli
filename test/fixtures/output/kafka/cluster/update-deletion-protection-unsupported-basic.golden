@@ -1,0 +1,4 @@
+Error: failed to update Kafka cluster: Deletion protection is not supported for BASIC clusters.
+
+Suggestions:
+    A cluster can't be updated while still provisioning. If you just created this cluster, retry in a few minutes.
