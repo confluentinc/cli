@@ -503,6 +503,8 @@ func (s *CLITestSuite) TestFlinkEndpointList() {
 		{args: "flink endpoint list", fixture: "flink/endpoint/list-azure.golden"},
 		{args: "flink region use --cloud azure --region eastus2", fixture: "flink/region/use-azure-ccn.golden"},
 		{args: "flink endpoint list", fixture: "flink/endpoint/list-azure-with-ccn.golden"},
+		{args: "flink region use --cloud azure --region italynorth", fixture: "flink/region/use-azure-italynorth.golden"},
+		{args: "flink endpoint list", fixture: "flink/endpoint/list-azure-access-point.golden"},
 	}
 
 	for _, test := range tests {
@@ -529,6 +531,8 @@ func (s *CLITestSuite) TestFlinkEndpointUse() {
 		{args: "flink region use --cloud azure --region eastus2", fixture: "flink/region/use-azure-ccn.golden"},
 		{args: "flink endpoint use https://flink-n-abcde2.eastus.azure.confluent.cloud", fixture: "flink/endpoint/use-azure-ccn.golden"},
 		{args: "flink endpoint use https://flink-n-abcde7.eastus.azure.confluent.cloud", fixture: "flink/endpoint/use-azure-ccn-peering.golden"},
+		{args: "flink region use --cloud azure --region italynorth", fixture: "flink/region/use-azure-italynorth.golden"},
+		{args: "flink endpoint use https://flink-ap4jnpj9.italynorth.azure.accesspoint.glb.confluent.cloud", fixture: "flink/endpoint/use-azure-access-point.golden"},
 	}
 
 	for _, test := range tests {
