@@ -32,6 +32,7 @@ func (c *accessPointCommand) newPrivateNetworkInterfaceCreateCommand() *cobra.Co
 	addGatewayFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().StringSlice("network-interfaces", nil, "A comma-separated list of the IDs of the Elastic Network Interfaces.")
 	cmd.Flags().String("account", "", "The AWS account ID associated with the Elastic Network Interfaces.")
+	cmd.Flags().StringSlice("routes", nil, `A comma-separated list of egress CIDR routes (max 10), e.g., "172.31.0.0/16,10.108.16.0/21".`)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -71,6 +72,11 @@ func (c *accessPointCommand) privateNetworkInterfaceCreate(cmd *cobra.Command, a
 		return err
 	}
 
+	routes, err := cmd.Flags().GetStringSlice("routes")
+	if err != nil {
+		return err
+	}
+
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
@@ -89,12 +95,16 @@ func (c *accessPointCommand) privateNetworkInterfaceCreate(cmd *cobra.Command, a
 
 	switch cloud {
 	case pcloud.Aws:
+		awsConfig := &networkingaccesspointv1.NetworkingV1AwsPrivateNetworkInterface{
+			Kind:              "AwsPrivateNetworkInterface",
+			NetworkInterfaces: &networkInterfaces,
+			Account:           &account,
+		}
+		if len(routes) > 0 {
+			awsConfig.EgressRoutes = &routes
+		}
 		createPrivateNetworkInterface.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
-			NetworkingV1AwsPrivateNetworkInterface: &networkingaccesspointv1.NetworkingV1AwsPrivateNetworkInterface{
-				Kind:              "AwsPrivateNetworkInterface",
-				NetworkInterfaces: &networkInterfaces,
-				Account:           &account,
-			},
+			NetworkingV1AwsPrivateNetworkInterface: awsConfig,
 		}
 	}
 

@@ -34,6 +34,7 @@ func (c *command) newCatalogCommand() *cobra.Command {
 	cmd.AddCommand(c.newCatalogDescribeCommand())
 	cmd.AddCommand(c.newCatalogListCommand())
 	cmd.AddCommand(c.newCatalogUpdateCommand())
+	cmd.AddCommand(c.newCatalogDatabaseCommand())
 
 	return cmd
 }

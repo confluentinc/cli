@@ -1,11 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"path/filepath"
-	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/confluentinc/cli/v4/internal"
@@ -60,48 +56,7 @@ func main() {
 		panic(err)
 	}
 
-	removeUnreleasedCommands("custom-code-logging")
-
 	if err := os.Setenv("HOME", home); err != nil {
 		panic(err)
 	}
-}
-
-func removeUnreleasedCommands(command string) {
-	subcommands := strings.Split(command, " ")
-
-	line := fmt.Sprintf(`\s{3}%s/index\n`, subcommands[len(subcommands)-1])
-	file := filepath.Join(append(append([]string{"docs"}, subcommands[:len(subcommands)-1]...), "index.rst")...)
-	if err := removeLineFromFile(line, file); err != nil {
-		panic(err)
-	}
-
-	line = fmt.Sprintf("\\s{7}:ref:`confluent_%s`\\s+.+\\s+\n", strings.Join(subcommands, "_"))
-	if len(subcommands) == 1 {
-		file = filepath.Join("docs", "overview.rst")
-		if err := removeLineFromFile(line, file); err != nil {
-			panic(err)
-		}
-	} else {
-		if err := removeLineFromFile(line, file); err != nil {
-			panic(err)
-		}
-	}
-
-	path := filepath.Join(append([]string{"docs"}, subcommands...)...)
-	if err := os.RemoveAll(path); err != nil {
-		panic(err)
-	}
-}
-
-func removeLineFromFile(line, file string) error {
-	out, err := os.ReadFile(file)
-	if err != nil {
-		return err
-	}
-
-	re := regexp.MustCompile(line)
-	out = re.ReplaceAll(out, []byte(""))
-
-	return os.WriteFile(file, out, 0644)
 }

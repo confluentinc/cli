@@ -160,6 +160,7 @@ func (s *CLITestSuite) TestApiKeyCreate() {
 	tests := []CLITest{
 		{args: "api-key create --resource flink --cloud aws --region us-east-1", fixture: "api-key/create-flink.golden"},
 		{args: "api-key create --resource lkc-ab123 --service-account sa-123456", fixture: "api-key/55.golden", exitCode: 1},
+		{args: "api-key create --description human-output --resource global", fixture: "api-key/create-global.golden"},
 	}
 
 	for _, test := range tests {
@@ -186,8 +187,8 @@ func (s *CLITestSuite) TestApiKeyDescribe() {
 func (s *CLITestSuite) TestApiKeyDelete() {
 	tests := []CLITest{
 		// delete multiple API keys
-		{args: "api-key delete MYKEY7 MYKEY8 MYKEY19", fixture: "api-key/delete/multiple-fail.golden", exitCode: 1},
-		{args: "api-key delete MYKEY6 MYKEY18 MYKEY19", fixture: "api-key/delete/multiple-fail-plural.golden", exitCode: 1},
+		{args: "api-key delete MYKEY7 MYKEY8 MYKEY20", fixture: "api-key/delete/multiple-fail.golden", exitCode: 1},
+		{args: "api-key delete MYKEY6 MYKEY18 MYKEY20", fixture: "api-key/delete/multiple-fail-plural.golden", exitCode: 1},
 		{args: "api-key delete MYKEY7 MYKEY8", input: "n\n", fixture: "api-key/delete/multiple-refuse.golden"},
 		{args: "api-key delete MYKEY7 MYKEY8", input: "y\n", fixture: "api-key/delete/multiple-success.golden"},
 	}

@@ -1,8 +1,11 @@
 package internal
 
 import (
+	"os"
+	"path/filepath"
 	"runtime"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -200,6 +203,63 @@ func TestHelp_OnPrem(t *testing.T) {
 	for _, command := range commands {
 		require.Contains(t, out, command)
 	}
+}
+
+// TestCliTfgenMarkers verifies that the cli-tfgen marker comments are present
+// in command.go, client.go, test/test-server/ccloudv2_router.go, and
+// cmd/lint/main.go. These markers are used by cli-terraform-generator's merge
+// mode (--cli-dir) to insert generated code at the correct locations. Import
+// markers are not needed — imports are inserted via Go AST-aware addImport()
+// to avoid breaking gci/goimports linters.
+func TestCliTfgenMarkers(t *testing.T) {
+	_, thisFile, _, ok := runtime.Caller(0)
+	require.True(t, ok)
+
+	// command.go marker
+	commandGoPath := filepath.Join(filepath.Dir(thisFile), "command.go")
+	commandContent, err := os.ReadFile(commandGoPath)
+	require.NoError(t, err)
+	commandText := string(commandContent)
+
+	require.True(t, strings.Contains(commandText, "// cli-tfgen:cli-commands"),
+		"command.go is missing required marker %q (needed by cli-terraform-generator --cli-dir)", "// cli-tfgen:cli-commands")
+
+	// client.go markers
+	clientGoPath := filepath.Join(filepath.Dir(thisFile), "..", "pkg", "ccloudv2", "client.go")
+	clientContent, err := os.ReadFile(clientGoPath)
+	require.NoError(t, err)
+	clientText := string(clientContent)
+
+	for _, marker := range []string{
+		"// cli-tfgen:cli-client-fields",
+		"// cli-tfgen:cli-client-init",
+	} {
+		require.True(t, strings.Contains(clientText, marker),
+			"client.go is missing required marker %q (needed by cli-terraform-generator --cli-dir)", marker)
+	}
+
+	// cmd/lint/main.go markers
+	lintGoPath := filepath.Join(filepath.Dir(thisFile), "..", "cmd", "lint", "main.go")
+	lintContent, err := os.ReadFile(lintGoPath)
+	require.NoError(t, err)
+	lintText := string(lintContent)
+
+	for _, marker := range []string{
+		"// cli-tfgen:lint-properNouns",
+		"// cli-tfgen:lint-vocabWords",
+	} {
+		require.True(t, strings.Contains(lintText, marker),
+			"cmd/lint/main.go is missing required marker %q (needed by cli-terraform-generator --cli-dir)", marker)
+	}
+
+	// test/test-server/ccloudv2_router.go marker
+	routerGoPath := filepath.Join(filepath.Dir(thisFile), "..", "test", "test-server", "ccloudv2_router.go")
+	routerContent, err := os.ReadFile(routerGoPath)
+	require.NoError(t, err)
+	routerText := string(routerContent)
+
+	require.True(t, strings.Contains(routerText, "// cli-tfgen:cli-api-routes"),
+		"test/test-server/ccloudv2_router.go is missing required marker %q (needed by cli-terraform-generator --cli-dir)", "// cli-tfgen:cli-api-routes")
 }
 
 func runWithConfig(cfg *config.Config) (string, error) {
