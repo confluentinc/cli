@@ -1,0 +1,1 @@
+Error: failed to create database "invalid-database" in catalog "test-catalog": The Kafka database object from resource file is invalid
