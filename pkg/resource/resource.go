@@ -50,6 +50,7 @@ const (
 	FlinkMaterializedTable           = "Flink materialized table"
 	FlinkStatement                   = "Flink SQL statement"
 	FlinkConnection                  = "Flink connection"
+	FlinkSecret                      = "Flink secret"
 	Gateway                          = "gateway"
 	Global                           = "global"
 	IdentityPool                     = "identity pool"

@@ -570,6 +570,54 @@ func (cmfClient *CmfRestClient) DeleteCatalog(ctx context.Context, catalogName s
 	return parseSdkError(httpResp, err)
 }
 
+func (cmfClient *CmfRestClient) CreateSecret(ctx context.Context, secret cmfsdk.Secret) (cmfsdk.Secret, error) {
+	secretName := secret.Metadata.Name
+	outputSecret, httpResponse, err := cmfClient.SecretsApi.CreateSecret(ctx).Secret(secret).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.Secret{}, fmt.Errorf(`failed to create secret "%s": %s`, secretName, parsedErr)
+	}
+	return outputSecret, nil
+}
+
+func (cmfClient *CmfRestClient) DescribeSecret(ctx context.Context, secretName string) (cmfsdk.Secret, error) {
+	outputSecret, httpResponse, err := cmfClient.SecretsApi.GetSecret(ctx, secretName).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.Secret{}, fmt.Errorf(`failed to get secret "%s": %s`, secretName, parsedErr)
+	}
+	return outputSecret, nil
+}
+
+func (cmfClient *CmfRestClient) ListSecrets(ctx context.Context) ([]cmfsdk.Secret, error) {
+	secrets := make([]cmfsdk.Secret, 0)
+	done := false
+	const pageSize = 100
+	var currentPageNumber int32 = 0
+
+	for !done {
+		secretsPage, httpResponse, err := cmfClient.SecretsApi.GetSecrets(ctx).Page(currentPageNumber).Size(pageSize).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list secrets: %s`, parsedErr)
+		}
+		secrets = append(secrets, secretsPage.GetItems()...)
+		currentPageNumber, done = extractPageOptions(len(secretsPage.GetItems()), currentPageNumber)
+	}
+
+	return secrets, nil
+}
+
+func (cmfClient *CmfRestClient) UpdateSecret(ctx context.Context, secretName string, secret cmfsdk.Secret) (cmfsdk.Secret, error) {
+	outputSecret, httpResponse, err := cmfClient.SecretsApi.UpdateSecret(ctx, secretName).Secret(secret).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.Secret{}, fmt.Errorf(`failed to update secret "%s": %s`, secretName, parsedErr)
+	}
+	return outputSecret, nil
+}
+
+func (cmfClient *CmfRestClient) DeleteSecret(ctx context.Context, secretName string) error {
+	httpResp, err := cmfClient.SecretsApi.DeleteSecret(ctx, secretName).Execute()
+	return parseSdkError(httpResp, err)
+}
+
 // Returns the next page number and whether we need to fetch more pages or not.
 func extractPageOptions(receivedItemsLength int, currentPageNumber int32) (int32, bool) {
 	if receivedItemsLength == 0 {

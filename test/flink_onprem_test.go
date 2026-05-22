@@ -682,6 +682,106 @@ func (s *CLITestSuite) TestFlinkShellOnPrem() {
 	}
 }*/
 
+func (s *CLITestSuite) TestFlinkSecretCreateOnPrem() {
+	tests := []CLITest{
+		// success
+		{args: "flink secret create test/fixtures/input/flink/secret/create-successful.json", fixture: "flink/secret/create-success.golden"},
+		{args: "flink secret create test/fixtures/input/flink/secret/create-successful.json --output json", fixture: "flink/secret/create-success-json.golden"},
+		{args: "flink secret create test/fixtures/input/flink/secret/create-successful.json --output yaml", fixture: "flink/secret/create-success-yaml.golden"},
+		// failure
+		{args: "flink secret create test/fixtures/input/flink/secret/create-invalid-failure.json", fixture: "flink/secret/create-invalid-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkSecretDeleteOnPrem() {
+	tests := []CLITest{
+		// success scenarios
+		{args: "flink secret delete test-secret-1", input: "y\n", fixture: "flink/secret/delete-single-successful.golden"},
+		{args: "flink secret delete test-secret-1 --force", fixture: "flink/secret/delete-single-force.golden"},
+		// failure scenarios
+		{args: "flink secret delete non-exist-secret", input: "y\n", fixture: "flink/secret/delete-non-exist-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkSecretDescribeOnPrem() {
+	tests := []CLITest{
+		// success
+		{args: "flink secret describe test-secret", fixture: "flink/secret/describe-success.golden"},
+		{args: "flink secret describe test-secret --output json", fixture: "flink/secret/describe-success-json.golden"},
+		{args: "flink secret describe test-secret --output yaml", fixture: "flink/secret/describe-success-yaml.golden"},
+		// failure
+		{args: "flink secret describe invalid-secret", fixture: "flink/secret/describe-not-found.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkSecretListOnPrem() {
+	tests := []CLITest{
+		// success
+		{args: "flink secret list", fixture: "flink/secret/list-success.golden"},
+		{args: "flink secret list --output json", fixture: "flink/secret/list-success-json.golden"},
+		{args: "flink secret list --output yaml", fixture: "flink/secret/list-success-yaml.golden"},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkSecretUpdateOnPrem() {
+	tests := []CLITest{
+		// success
+		{args: "flink secret update test/fixtures/input/flink/secret/update-successful.json", fixture: "flink/secret/update-success.golden"},
+		{args: "flink secret update test/fixtures/input/flink/secret/update-successful.json --output json", fixture: "flink/secret/update-success-json.golden"},
+		{args: "flink secret update test/fixtures/input/flink/secret/update-successful.json --output yaml", fixture: "flink/secret/update-success-yaml.golden"},
+		// failure
+		{args: "flink secret update test/fixtures/input/flink/secret/update-invalid-failure.json", fixture: "flink/secret/update-invalid-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkSecretCreateWithYAML() {
+	tests := []CLITest{
+		// success scenarios with JSON files
+		{args: "flink secret create test/fixtures/input/flink/secret/create-successful.json", fixture: "flink/secret/create-success.golden"},
+		{args: "flink secret create test/fixtures/input/flink/secret/create-successful.json --output json", fixture: "flink/secret/create-success-json.golden"},
+		{args: "flink secret create test/fixtures/input/flink/secret/create-successful.json --output yaml", fixture: "flink/secret/create-success-yaml.golden"},
+		// failure scenarios with JSON files
+		{args: "flink secret create test/fixtures/input/flink/secret/create-invalid-failure.json", fixture: "flink/secret/create-invalid-failure.golden", exitCode: 1},
+		// YAML file tests
+		{args: "flink secret create test/fixtures/input/flink/secret/create-successful.yaml", fixture: "flink/secret/create-success.golden"},
+		{args: "flink secret create test/fixtures/input/flink/secret/create-successful.yaml --output json", fixture: "flink/secret/create-success-json.golden"},
+		{args: "flink secret create test/fixtures/input/flink/secret/create-successful.yaml --output yaml", fixture: "flink/secret/create-success-yaml.golden"},
+		// failure scenarios with YAML files
+		{args: "flink secret create test/fixtures/input/flink/secret/create-invalid-failure.yaml", fixture: "flink/secret/create-invalid-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkSecretUpdateWithYAML() {
+	tests := []CLITest{
+		// success scenarios with JSON files
+		{args: "flink secret update test/fixtures/input/flink/secret/update-successful.json", fixture: "flink/secret/update-success.golden"},
+		{args: "flink secret update test/fixtures/input/flink/secret/update-successful.json --output json", fixture: "flink/secret/update-success-json.golden"},
+		{args: "flink secret update test/fixtures/input/flink/secret/update-successful.json --output yaml", fixture: "flink/secret/update-success-yaml.golden"},
+		// failure scenarios with JSON files
+		{args: "flink secret update test/fixtures/input/flink/secret/update-invalid-failure.json", fixture: "flink/secret/update-invalid-failure.golden", exitCode: 1},
+		// YAML file tests
+		{args: "flink secret update test/fixtures/input/flink/secret/update-successful.yaml", fixture: "flink/secret/update-success.golden"},
+		{args: "flink secret update test/fixtures/input/flink/secret/update-successful.yaml --output json", fixture: "flink/secret/update-success-json.golden"},
+		{args: "flink secret update test/fixtures/input/flink/secret/update-successful.yaml --output yaml", fixture: "flink/secret/update-success-yaml.golden"},
+		// failure scenarios with YAML files
+		{args: "flink secret update test/fixtures/input/flink/secret/update-invalid-failure.yaml", fixture: "flink/secret/update-invalid-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
 func (s *CLITestSuite) setupFlinkShellTestsOnPrem() {
 	// Set the go-prompt file input env var, so go-prompt uses this file as the input stream
 	err := os.Setenv(prompt.EnvVarInputFile, flinkShellInputStreamFile)
