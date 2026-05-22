@@ -2,7 +2,7 @@
   "apiVersion": "cmf/api/v1/catalog",
   "kind": "KafkaCatalog",
   "metadata": {
-    "name": "test-catalog1",
+    "name": "test-catalog",
     "creationTimestamp": "2025-08-05T12:00:00Z"
   },
   "spec": {

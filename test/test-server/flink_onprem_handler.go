@@ -207,19 +207,32 @@ func createComputePool(poolName, phase string) cmfsdk.ComputePool {
 }
 
 func createKafkaCatalog(catName string) cmfsdk.KafkaCatalog {
-	timeStamp := time.Date(2025, time.August, 5, 12, 00, 0, 0, time.UTC).String()
+	timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).Format(time.RFC3339)
 	return cmfsdk.KafkaCatalog{
+		ApiVersion: "cmf/api/v1/catalog",
+		Kind:       "KafkaCatalog",
 		Metadata: cmfsdk.CatalogMetadata{
 			Name:              catName,
 			CreationTimestamp: &timeStamp,
 		},
 		Spec: cmfsdk.KafkaCatalogSpec{
+			SrInstance: cmfsdk.KafkaCatalogSpecSrInstance{
+				ConnectionConfig: map[string]string{
+					"schema.registry.url": "http://localhost:8081",
+				},
+			},
 			KafkaClusters: &[]cmfsdk.KafkaCatalogSpecKafkaClusters{
 				{
 					DatabaseName: "test-database",
+					ConnectionConfig: map[string]string{
+						"bootstrap.servers": "localhost:9092",
+					},
 				},
 				{
 					DatabaseName: "test-database-2",
+					ConnectionConfig: map[string]string{
+						"bootstrap.servers": "localhost:9092",
+					},
 				},
 			},
 		},
@@ -1027,7 +1040,7 @@ func handleCmfCatalogs(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for "cmf/api/v1/catalogs/kafka/{catName}"
-// Used by describe, delete catalog, no update catalog.
+// Used by describe, update, delete catalog.
 func handleCmfCatalog(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleLoginType(t, r)
@@ -1045,6 +1058,18 @@ func handleCmfCatalog(t *testing.T) http.HandlerFunc {
 			catalog := createKafkaCatalog(catalogName)
 			err := json.NewEncoder(w).Encode(catalog)
 			require.NoError(t, err)
+			return
+		case http.MethodPut:
+			if catalogName == "invalid-catalog" {
+				http.Error(w, "The catalog name is invalid", http.StatusNotFound)
+				return
+			}
+
+			req := new(cmfsdk.KafkaCatalog)
+			err := json.NewDecoder(r.Body).Decode(req)
+			require.NoError(t, err)
+
+			w.WriteHeader(http.StatusOK)
 			return
 		case http.MethodDelete:
 			if catalogName == "non-exist-catalog" {

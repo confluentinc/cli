@@ -44,7 +44,7 @@ func (c *command) catalogDatabaseDelete(cmd *cobra.Command, args []string) error
 	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.FlinkDatabase); err != nil {
 		// We are validating only the existence of the resources (there is no prefix validation).
 		// Thus, we can add some extra context for the error.
-		suggestions := "List available Flink databases with `confluent flink catalog database list`."
+		suggestions := "List available Flink databases with `confluent flink catalog database list --catalog <name>`."
 		suggestions += "\nCheck that CMF is running and accessible."
 		return errors.NewErrorWithSuggestions(err.Error(), suggestions)
 	}
