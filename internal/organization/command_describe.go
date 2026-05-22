@@ -10,10 +10,11 @@ import (
 )
 
 type out struct {
-	IsCurrent  bool   `human:"Current" serialized:"is_current"`
-	Id         string `human:"ID" serialized:"id"`
-	Name       string `human:"Name" serialized:"name"`
-	JitEnabled bool   `human:"JIT Enabled" serialized:"jit_enabled"`
+	IsCurrent   bool   `human:"Current" serialized:"is_current"`
+	Id          string `human:"ID" serialized:"id"`
+	Name        string `human:"Name" serialized:"name"`
+	JitEnabled  bool   `human:"JIT Enabled" serialized:"jit_enabled"`
+	ScimEnabled bool   `human:"SCIM Enabled" serialized:"scim_enabled"`
 }
 
 func (c *command) newDescribeCommand() *cobra.Command {
