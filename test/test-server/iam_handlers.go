@@ -516,7 +516,7 @@ func handleIamCertificateAuthority(t *testing.T) http.HandlerFunc {
 		}
 		switch r.Method {
 		case http.MethodGet:
-			certificateAuthority := buildIamCertificateAuthority(id, "my-ca", "my certificate authority", "certificate.pem", "", "", true)
+			certificateAuthority := buildIamCertificateAuthority(id, "my-ca", "my certificate authority", "certificate.pem", "", "", id == "op-12345")
 			err := json.NewEncoder(w).Encode(certificateAuthority)
 			require.NoError(t, err)
 		case http.MethodDelete:
