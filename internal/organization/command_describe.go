@@ -38,10 +38,11 @@ func (c *command) describe(cmd *cobra.Command, _ []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		IsCurrent:  organization.GetId() == c.Context.GetCurrentOrganization(),
-		Id:         organization.GetId(),
-		Name:       organization.GetDisplayName(),
-		JitEnabled: organization.GetJitEnabled(),
+		IsCurrent:   organization.GetId() == c.Context.GetCurrentOrganization(),
+		Id:          organization.GetId(),
+		Name:        organization.GetDisplayName(),
+		JitEnabled:  organization.GetJitEnabled(),
+		ScimEnabled: organization.GetScimEnabled(),
 	})
 	return table.Print()
 }
