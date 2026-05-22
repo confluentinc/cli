@@ -1,4 +1,4 @@
-Update an existing Kafka Catalog in Confluent Platform from a resource file.
+Update an existing Flink catalog in Confluent Platform from a resource file.
 
 Usage:
   confluent flink catalog update <resourceFilePath> [flags]
