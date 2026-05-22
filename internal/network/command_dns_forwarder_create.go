@@ -122,7 +122,7 @@ func (c *command) dnsForwarderCreate(cmd *cobra.Command, args []string) error {
 	if name != "" {
 		createDnsForwarder.Spec.SetDisplayName(name)
 	}
-	forwarder, err := c.V2Client.CreateDnsForwarder(createDnsForwarder)
+	forwarder, err := c.V2Client.CreateNetworkDnsForwarder(createDnsForwarder)
 	if err != nil {
 		return err
 	}

@@ -18,9 +18,9 @@ func (c *command) newExporterCommand(cfg *config.Config) *cobra.Command {
 		Short: "Manage Schema Registry exporters.",
 	}
 
+	cmd.AddCommand(c.newExporterConfigurationCommand(cfg))
 	cmd.AddCommand(c.newExporterCreateCommand(cfg))
 	cmd.AddCommand(c.newExporterDeleteCommand(cfg))
-	cmd.AddCommand(c.newExporterConfigurationCommand(cfg))
 	cmd.AddCommand(c.newExporterDescribeCommand(cfg))
 	cmd.AddCommand(c.newExporterListCommand(cfg))
 	cmd.AddCommand(c.newExporterPauseCommand(cfg))

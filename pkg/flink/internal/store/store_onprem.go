@@ -60,7 +60,7 @@ func (s *StoreOnPrem) ProcessStatement(statement string) (*types.ProcessedStatem
 		return result, sErr
 	}
 
-	statementName := s.Properties.GetOrDefault(config.KeyStatementName, types.GenerateStatementName())
+	statementName := s.Properties.GetOrDefault(config.KeyStatementName, types.GenerateStatementNameForOnPrem())
 	if len(statementName) > 45 { // on-prem name length limit
 		statementName = statementName[0:45]
 	}

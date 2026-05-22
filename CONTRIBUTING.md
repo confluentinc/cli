@@ -271,6 +271,13 @@ See the [Autocompletion](pkg/cmd/AUTOCOMPLETION.md) resource for implementation 
 For most resource types, a `delete` command should support multiple arguments. The exceptions are resources which do not have an ID (e.g. ACLs, role bindings) or unique resources (e.g. the Schema Registry cluster).
 See [Supporting Multiple Deletion](pkg/deletion/README.md) for instructions on how to write such commands.
 
+### Building the documentation
+You can build the CLI documentation locally by running this command from the root directory. This will generate documentation in [RST](https://www.sphinx-doc.org/en/master/index.html) format in the `cli/docs` directory. 
+
+```
+go run cmd/docs/main.go
+```
+
 ### Opening a PR
 
 That's it! As you can see, the process of adding a new CLI command is pretty straightforward. You can open a PR if:

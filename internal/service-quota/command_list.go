@@ -35,6 +35,8 @@ var quotaScopes = []string{
 	"kafka-cluster",
 	"service-account",
 	"user-account",
+	"identity-provider",
+	"certificate-authority",
 }
 
 func (c *command) newListCommand() *cobra.Command {

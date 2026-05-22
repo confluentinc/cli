@@ -19,6 +19,9 @@ spec:
       memory: "1048m"
       cpu: 1
   job:
+    startFromSavepoint:
+      savepointName: "my-app-savepoint"
+      allowNonRestoredState: true
     jarURI: local:///opt/flink/examples/streaming/StateMachineExample.jar
     state: running
     parallelism: 3

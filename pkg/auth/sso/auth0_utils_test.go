@@ -24,6 +24,7 @@ func TestGetCCloudEnvFromBaseUrl(t *testing.T) {
 		"https://east-1.devel.confluentgov-internal.com": "devel-us-gov",
 		"https://infra.confluentgov-internal.com":        "infra-us-gov",
 		"https://stag.cpdev.cloud":                       "stag",
+		"https://dr-test.cpdev.cloud":                    "dr-test",
 		testserver.TestCloudUrl.String():                 "test",
 	} {
 		actual := GetCCloudEnvFromBaseUrl(url)

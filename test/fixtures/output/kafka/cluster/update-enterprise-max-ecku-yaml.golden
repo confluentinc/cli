@@ -1,0 +1,15 @@
+is_current: true
+id: lkc-update-enterprise
+name: ""
+type: ENTERPRISE
+ingress_limit: 300
+egress_limit: 900
+storage: Unlimited
+cloud: aws
+region: us-west-2
+availability: multi-zone
+status: UP
+endpoint: SASL_SSL://kafka-endpoint
+rest_endpoint: http://127.0.0.1:1025
+max_ecku: 5
+topic_count: 2

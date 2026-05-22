@@ -40,7 +40,7 @@ func (c *certificatePoolCommand) delete(cmd *cobra.Command, args []string) error
 	}
 
 	existenceFunc := func(id string) bool {
-		_, err := c.V2Client.GetCertificatePool(id, provider)
+		_, err := c.V2Client.GetIamCertificatePool(id, provider)
 		return err == nil
 	}
 
@@ -49,7 +49,7 @@ func (c *certificatePoolCommand) delete(cmd *cobra.Command, args []string) error
 	}
 
 	deleteFunc := func(id string) error {
-		return c.V2Client.DeleteCertificatePool(id, provider)
+		return c.V2Client.DeleteIamCertificatePool(id, provider)
 	}
 
 	_, err = deletion.Delete(cmd, args, deleteFunc, resource.CertificatePool)

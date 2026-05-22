@@ -74,6 +74,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 
 	cmd.Flags().String("key-vault", "", "The ID of the Azure Key Vault where the key is stored.")
 	cmd.Flags().String("tenant", "", "The ID of the Azure Active Directory tenant that the key vault belongs to.")
+	cmd.Flags().String("display-name", "", "A human-readable name for the self-managed key.")
 	pcmd.AddOutputFlag(cmd)
 
 	cmd.MarkFlagsRequiredTogether("key-vault", "tenant")
@@ -81,14 +82,18 @@ func (c *command) newCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) createAwsKeyRequest(keyArn string) byokv1.ByokV1Key {
-	return byokv1.ByokV1Key{Key: &byokv1.ByokV1KeyKeyOneOf{ByokV1AwsKey: &byokv1.ByokV1AwsKey{
+func (c *command) createAwsKeyRequest(keyArn, displayName string) byokv1.ByokV1Key {
+	key := byokv1.ByokV1Key{Key: &byokv1.ByokV1KeyKeyOneOf{ByokV1AwsKey: &byokv1.ByokV1AwsKey{
 		KeyArn: keyArn,
 		Kind:   "AwsKey",
 	}}}
+	if displayName != "" {
+		key.SetDisplayName(displayName)
+	}
+	return key
 }
 
-func (c *command) createAzureKeyRequest(cmd *cobra.Command, keyString string) (byokv1.ByokV1Key, error) {
+func (c *command) createAzureKeyRequest(cmd *cobra.Command, keyString, displayName string) (byokv1.ByokV1Key, error) {
 	keyVault, err := cmd.Flags().GetString("key-vault")
 	if err != nil {
 		return byokv1.ByokV1Key{}, err
@@ -106,33 +111,46 @@ func (c *command) createAzureKeyRequest(cmd *cobra.Command, keyString string) (b
 		Kind:       "AzureKey",
 	}}}
 
+	if displayName != "" {
+		keyReq.SetDisplayName(displayName)
+	}
+
 	return keyReq, nil
 }
 
-func (c *command) createGcpKeyRequest(keyString string) byokv1.ByokV1Key {
-	return byokv1.ByokV1Key{Key: &byokv1.ByokV1KeyKeyOneOf{ByokV1GcpKey: &byokv1.ByokV1GcpKey{
+func (c *command) createGcpKeyRequest(keyString, displayName string) byokv1.ByokV1Key {
+	key := byokv1.ByokV1Key{Key: &byokv1.ByokV1KeyKeyOneOf{ByokV1GcpKey: &byokv1.ByokV1GcpKey{
 		KeyId: keyString,
 		Kind:  "GcpKey",
 	}}}
+	if displayName != "" {
+		key.SetDisplayName(displayName)
+	}
+	return key
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
 	keyString := args[0]
 	var keyReq byokv1.ByokV1Key
 
+	displayName, err := cmd.Flags().GetString("display-name")
+	if err != nil {
+		return err
+	}
+
 	switch {
 	case cmd.Flags().Changed("key-vault") && cmd.Flags().Changed("tenant"):
 		keyString = removeKeyVersionFromAzureKeyId(keyString)
 
-		request, err := c.createAzureKeyRequest(cmd, keyString)
+		request, err := c.createAzureKeyRequest(cmd, keyString, displayName)
 		if err != nil {
 			return err
 		}
 		keyReq = request
 	case isAWSKey(keyString):
-		keyReq = c.createAwsKeyRequest(keyString)
+		keyReq = c.createAwsKeyRequest(keyString, displayName)
 	case isGcpKey(keyString):
-		keyReq = c.createGcpKeyRequest(keyString)
+		keyReq = c.createGcpKeyRequest(keyString, displayName)
 	default:
 		return fmt.Errorf("invalid key format: %s", keyString)
 	}

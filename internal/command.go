@@ -25,7 +25,6 @@ import (
 	"github.com/confluentinc/cli/v4/internal/configuration"
 	"github.com/confluentinc/cli/v4/internal/connect"
 	"github.com/confluentinc/cli/v4/internal/context"
-	ccl "github.com/confluentinc/cli/v4/internal/custom-code-logging"
 	"github.com/confluentinc/cli/v4/internal/environment"
 	"github.com/confluentinc/cli/v4/internal/feedback"
 	"github.com/confluentinc/cli/v4/internal/flink"
@@ -40,6 +39,7 @@ import (
 	"github.com/confluentinc/cli/v4/internal/plugin"
 	"github.com/confluentinc/cli/v4/internal/prompt"
 	providerintegration "github.com/confluentinc/cli/v4/internal/provider-integration"
+	"github.com/confluentinc/cli/v4/internal/rtce"
 	schemaregistry "github.com/confluentinc/cli/v4/internal/schema-registry"
 	"github.com/confluentinc/cli/v4/internal/secret"
 	servicequota "github.com/confluentinc/cli/v4/internal/service-quota"
@@ -110,13 +110,12 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(billing.New(prerunner))
 	cmd.AddCommand(byok.New(prerunner))
 	cmd.AddCommand(ccpm.New(cfg, prerunner))
-	cmd.AddCommand(cluster.New(prerunner, cfg.Version.UserAgent))
 	cmd.AddCommand(cloudsignup.New(prerunner))
+	cmd.AddCommand(cluster.New(prerunner, cfg.Version.UserAgent))
 	cmd.AddCommand(completion.New())
 	cmd.AddCommand(configuration.New(cfg, prerunner))
-	cmd.AddCommand(context.New(prerunner))
 	cmd.AddCommand(connect.New(cfg, prerunner))
-	cmd.AddCommand(ccl.New(cfg, prerunner))
+	cmd.AddCommand(context.New(prerunner))
 	cmd.AddCommand(environment.New(prerunner))
 	cmd.AddCommand(feedback.New(prerunner))
 	cmd.AddCommand(flink.New(cfg, prerunner))
@@ -126,20 +125,22 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(local.New(cfg, prerunner))
 	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, loginCredentialsManager, loginOrganizationManager, authTokenHandler))
 	cmd.AddCommand(logout.New(cfg, prerunner, authTokenHandler))
-	cmd.AddCommand(network.New(prerunner))
+	cmd.AddCommand(network.New(cfg, prerunner))
 	cmd.AddCommand(organization.New(prerunner))
 	cmd.AddCommand(plugin.New(cfg, prerunner))
 	cmd.AddCommand(prompt.New(cfg))
 	cmd.AddCommand(providerintegration.New(prerunner))
-	cmd.AddCommand(servicequota.New(prerunner))
+	cmd.AddCommand(rtce.New(cfg, prerunner))
 	cmd.AddCommand(schemaregistry.New(cfg, prerunner))
 	cmd.AddCommand(secret.New(prerunner, secrets.NewPasswordProtectionPlugin()))
+	cmd.AddCommand(servicequota.New(prerunner))
 	cmd.AddCommand(shell.New(cmd, func() *cobra.Command { return NewConfluentCommand(cfg) }))
 	cmd.AddCommand(streamshare.New(prerunner))
 	cmd.AddCommand(tableflow.New(prerunner))
-	cmd.AddCommand(unifiedstreammanager.New(prerunner, cfg))
+	cmd.AddCommand(unifiedstreammanager.New(cfg, prerunner))
 	cmd.AddCommand(update.New(cfg, prerunner))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
+	// cli-tfgen:cli-commands — DO NOT REMOVE (verified by TestCliTfgenMarkers)
 
 	_ = cfg.ParseFlagsIntoConfig(cmd)
 

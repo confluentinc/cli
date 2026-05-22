@@ -23,13 +23,13 @@ func (c *Client) networkingIpApiContext() context.Context {
 	return context.WithValue(context.Background(), networkingipv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
-func (c *Client) ListIpAddresses(cloud, region, services, addressType []string) ([]networkingipv1.NetworkingV1IpAddress, error) {
+func (c *Client) ListNetworkIpAddresses(cloud, region, services, addressType []string) ([]networkingipv1.NetworkingV1IpAddress, error) {
 	var list []networkingipv1.NetworkingV1IpAddress
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, err := c.executeListIpAddresses(pageToken, cloud, region, services, addressType)
+		page, err := c.executeListNetworkIpAddresses(pageToken, cloud, region, services, addressType)
 		if err != nil {
 			return nil, err
 		}
@@ -43,7 +43,7 @@ func (c *Client) ListIpAddresses(cloud, region, services, addressType []string) 
 	return list, nil
 }
 
-func (c *Client) executeListIpAddresses(pageToken string, cloud, region, services, addressType []string) (networkingipv1.NetworkingV1IpAddressList, error) {
+func (c *Client) executeListNetworkIpAddresses(pageToken string, cloud, region, services, addressType []string) (networkingipv1.NetworkingV1IpAddressList, error) {
 	req := c.NetworkingIpClient.IPAddressesNetworkingV1Api.ListNetworkingV1IpAddresses(c.networkingIpApiContext()).Cloud(cloud).Region(region).Services(services).AddressType(addressType).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)

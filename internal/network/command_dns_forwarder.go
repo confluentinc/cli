@@ -44,7 +44,7 @@ func (c *command) getDnsForwarders() ([]networkingdnsforwarderv1.NetworkingV1Dns
 		return nil, err
 	}
 
-	return c.V2Client.ListDnsForwarders(environmentId)
+	return c.V2Client.ListNetworkDnsForwarders(environmentId)
 }
 
 func (c *command) validDnsForwarderArgs(cmd *cobra.Command, args []string) []string {

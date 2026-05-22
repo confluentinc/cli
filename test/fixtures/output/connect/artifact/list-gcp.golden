@@ -1,0 +1,4 @@
+        ID       |            Name             |   Description    | Cloud | Environment | Content Format |   Status    
+-----------------+-----------------------------+------------------+-------+-------------+----------------+-------------
+  cfa-gcp-jar123 | my-connect-artifact-gcp-jar | new-jar-artifact | GCP   | env-123456  | JAR            | READY       
+  cfa-gcp-zip123 | my-connect-artifact-gcp-zip | new-zip-artifact | GCP   | env-123456  | ZIP            | PROCESSING  

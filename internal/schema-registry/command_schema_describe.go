@@ -146,7 +146,7 @@ func describeBySubject(cmd *cobra.Command, client *schemaregistry.Client) error 
 		return catchSchemaNotFoundError(err, subject, version)
 	}
 
-	return printSchema(int64(schema.GetId()), schema.GetSchema(), schema.GetSchemaType(), schema.GetReferences(), schema.GetMetadata(), schema.GetRuleset())
+	return printSchema(int64(schema.GetId()), schema.GetSchema(), schema.GetSchemaType(), schema.GetReferences(), schema.GetMetadata(), schema.GetRuleSet())
 }
 
 func describeGraph(cmd *cobra.Command, id string, client *schemaregistry.Client) error {
@@ -225,7 +225,7 @@ func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int3
 			References: srsdkSchema.GetReferences(),
 			Schema:     srsdkSchema.Schema,
 			Metadata:   srsdkSchema.Metadata.Get(),
-			Ruleset:    srsdkSchema.Ruleset.Get(),
+			Ruleset:    srsdkSchema.RuleSet.Get(),
 		}
 
 		schemaGraph = append(schemaGraph, schema)
@@ -281,7 +281,7 @@ func printSchema(schemaId int64, schema, schemaType string, refs []srsdk.SchemaR
 		output.Println(false, prettyJson(metadataJson))
 	}
 
-	if ruleset.DomainRules != nil || ruleset.MigrationRules != nil {
+	if ruleset.DomainRules != nil || ruleset.MigrationRules != nil || ruleset.EncodingRules != nil {
 		rulesetJson, err := json.Marshal(ruleset)
 		if err != nil {
 			return err

@@ -35,7 +35,7 @@ func (c *command) dnsForwarderDescribe(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	forwarder, err := c.V2Client.GetDnsForwarder(environmentId, args[0])
+	forwarder, err := c.V2Client.GetNetworkDnsForwarder(environmentId, args[0])
 	if err != nil {
 		return err
 	}

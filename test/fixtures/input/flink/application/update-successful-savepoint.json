@@ -1,0 +1,16 @@
+{
+  "apiVersion": "cmf.confluent.io/v1",
+  "kind": "FlinkApplication",
+  "metadata": {
+    "name": "default-application-s"
+  },
+  "spec": {
+    "serviceAccount": "flink-new-service-account",
+    "job": {
+      "startFromSavepoint": {
+        "savepointName": "my-app-savepoint",
+        "allowNonRestoredState": true
+      }
+    }
+  }
+}

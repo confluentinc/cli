@@ -85,7 +85,7 @@ func (c *command) dnsRecordCreate(cmd *cobra.Command, args []string) error {
 		createDnsRecord.Spec.SetDisplayName(name)
 	}
 
-	record, err := c.V2Client.CreateDnsRecord(createDnsRecord)
+	record, err := c.V2Client.CreateNetworkDnsRecord(createDnsRecord)
 	if err != nil {
 		return err
 	}

@@ -52,7 +52,7 @@ func (c *accessPointCommand) update(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	egressEndpoint, err := c.V2Client.UpdateAccessPoint(args[0], updateEgressEndpoint)
+	egressEndpoint, err := c.V2Client.UpdateNetworkAccessPoint(args[0], updateEgressEndpoint)
 	if err != nil {
 		return err
 	}

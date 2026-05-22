@@ -32,7 +32,7 @@ func (c *certificateAuthorityCommand) newDeleteCommand() *cobra.Command {
 
 func (c *certificateAuthorityCommand) delete(cmd *cobra.Command, args []string) error {
 	existenceFunc := func(id string) bool {
-		_, err := c.V2Client.GetCertificateAuthority(id)
+		_, err := c.V2Client.GetIamCertificateAuthority(id)
 		return err == nil
 	}
 
@@ -41,7 +41,7 @@ func (c *certificateAuthorityCommand) delete(cmd *cobra.Command, args []string) 
 	}
 
 	deleteFunc := func(id string) error {
-		return c.V2Client.DeleteCertificateAuthority(id)
+		return c.V2Client.DeleteIamCertificateAuthority(id)
 	}
 
 	_, err := deletion.Delete(cmd, args, deleteFunc, resource.CertificateAuthority)

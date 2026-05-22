@@ -114,7 +114,7 @@ func (c *command) privateLinkAccessCreate(cmd *cobra.Command, args []string) err
 		}
 	}
 
-	access, err := c.V2Client.CreatePrivateLinkAccess(createPrivateLinkAccess)
+	access, err := c.V2Client.CreateNetworkPrivateLinkAccess(createPrivateLinkAccess)
 	if err != nil {
 		return err
 	}

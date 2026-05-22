@@ -9,6 +9,8 @@ import (
 var flinkRoutes = []route{
 	{"/cmf/api/v1/catalogs/kafka", handleCmfCatalogs},
 	{"/cmf/api/v1/catalogs/kafka/{catName}", handleCmfCatalog},
+	{"/cmf/api/v1/catalogs/kafka/{catName}/databases", handleCmfCatalogDatabases},
+	{"/cmf/api/v1/catalogs/kafka/{catName}/databases/{dbName}", handleCmfCatalogDatabase},
 	{"/cmf/api/v1/environments/{environment}/applications", handleCmfApplications},
 	{"/cmf/api/v1/environments/{environment}/applications/{application}", handleCmfApplication},
 	{"/cmf/api/v1/environments", handleCmfEnvironments},
@@ -18,6 +20,12 @@ var flinkRoutes = []route{
 	{"/cmf/api/v1/environments/{environment}/statements/{stmtName}", handleCmfStatement},
 	{"/cmf/api/v1/environments/{environment}/statements/{stmtName}/exceptions", handleCmfStatementExceptions},
 	{"/cmf/api/v1/environments/{environment}/statements", handleCmfStatements},
+	{"/cmf/api/v1/environments/{envName}/applications/{appName}/savepoints", handleCmfSavepoints},
+	{"/cmf/api/v1/environments/{envName}/statements/{stmtName}/savepoints", handleCmfSavepoints},
+	{"/cmf/api/v1/environments/{envName}/applications/{appName}/savepoints/{savepointName}", handleCmfSavepoint},
+	{"/cmf/api/v1/environments/{envName}/statements/{stmtName}/savepoints/{savepointName}", handleCmfSavepoint},
+	{"/cmf/api/v1/detached-savepoints", handleCmfDetachedSavepoints},
+	{"/cmf/api/v1/detached-savepoints/{detachedSavepointName}", handleCmfDetachedSavepoint},
 }
 
 func NewFlinkOnPremRouter(t *testing.T) *mux.Router {

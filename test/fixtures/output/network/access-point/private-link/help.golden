@@ -4,7 +4,8 @@ Usage:
   confluent network access-point private-link [command]
 
 Available Commands:
-  egress-endpoint Manage private link egress endpoints.
+  egress-endpoint  Manage private link egress endpoints.
+  ingress-endpoint Manage private link ingress endpoints.
 
 Global Flags:
   -h, --help            Show help for this command.

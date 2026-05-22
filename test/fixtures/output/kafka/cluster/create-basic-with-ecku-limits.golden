@@ -4,8 +4,8 @@ It may take up to 5 minutes for the Kafka cluster to be ready.
 | ID                   | lkc-with-ecku-limits              |
 | Name                 | my-basic-cluster-with-ecku-limits |
 | Type                 | BASIC                             |
-| Ingress Limit (MB/s) | 25                                |
-| Egress Limit (MB/s)  | 75                                |
+| Ingress Limit (MB/s) | 250                               |
+| Egress Limit (MB/s)  | 750                               |
 | Storage              | 5000 GB                           |
 | Cloud                | aws                               |
 | Region               | us-west-2                         |

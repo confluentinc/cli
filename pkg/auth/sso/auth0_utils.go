@@ -16,6 +16,7 @@ var auth0ClientIds = map[string]string{
 	"prod":         "oX2nvSKl5jvBKVgwehZfvR4K8RhsZIEs",
 	"stag":         "8RxQmZEYtEDah4MTIIzl4hGGeFwdJS6w",
 	"test":         "00000000000000000000000000000000",
+	"dr-test":      "5nyOPfaw4CDyMZFCu2AgtPVNKoO8kpKB",
 }
 
 func GetAuth0CCloudClientIdFromBaseUrl(baseUrl string) string {
@@ -34,6 +35,8 @@ func GetCCloudEnvFromBaseUrl(baseUrl string) string {
 			return "devel"
 		} else if strings.Contains(u.Host, "stag") {
 			return "stag"
+		} else if strings.Contains(u.Host, "dr-test") {
+			return "dr-test"
 		}
 	} else if strings.HasSuffix(u.Host, "confluentgov.com") {
 		return "prod-us-gov"

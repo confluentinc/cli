@@ -1,0 +1,13 @@
+{
+  "apiVersion": "",
+  "kind": "",
+  "metadata": {
+    "name": "savepoint1",
+    "creationTimestamp": "2025-03-12 23:42:00 +0000 UTC"
+  },
+  "spec": {
+    "path": "abc/def",
+    "backoffLimit": 10,
+    "formatType": "CANONICAL"
+  }
+}

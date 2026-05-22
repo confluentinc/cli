@@ -73,13 +73,13 @@ func (c *Client) executeListNetworks(environment, pageToken string, name, cloud,
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListPeerings(environment string, name, network, phase []string) ([]networkingv1.NetworkingV1Peering, error) {
+func (c *Client) ListNetworkPeerings(environment string, name, network, phase []string) ([]networkingv1.NetworkingV1Peering, error) {
 	var list []networkingv1.NetworkingV1Peering
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, err := c.executeListPeerings(environment, pageToken, name, network, phase)
+		page, err := c.executeListNetworkPeerings(environment, pageToken, name, network, phase)
 		if err != nil {
 			return nil, err
 		}
@@ -93,7 +93,7 @@ func (c *Client) ListPeerings(environment string, name, network, phase []string)
 	return list, nil
 }
 
-func (c *Client) executeListPeerings(environment, pageToken string, name, network, phase []string) (networkingv1.NetworkingV1PeeringList, error) {
+func (c *Client) executeListNetworkPeerings(environment, pageToken string, name, network, phase []string) (networkingv1.NetworkingV1PeeringList, error) {
 	req := c.NetworkingClient.PeeringsNetworkingV1Api.ListNetworkingV1Peerings(c.networkingApiContext()).Environment(environment).SpecDisplayName(name).SpecNetwork(network).StatusPhase(phase).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
@@ -103,33 +103,33 @@ func (c *Client) executeListPeerings(environment, pageToken string, name, networ
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) GetPeering(environment, id string) (networkingv1.NetworkingV1Peering, error) {
+func (c *Client) GetNetworkPeering(environment, id string) (networkingv1.NetworkingV1Peering, error) {
 	resp, httpResp, err := c.NetworkingClient.PeeringsNetworkingV1Api.GetNetworkingV1Peering(c.networkingApiContext(), id).Environment(environment).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdatePeering(environment, id string, peeringUpdate networkingv1.NetworkingV1PeeringUpdate) (networkingv1.NetworkingV1Peering, error) {
+func (c *Client) UpdateNetworkPeering(environment, id string, peeringUpdate networkingv1.NetworkingV1PeeringUpdate) (networkingv1.NetworkingV1Peering, error) {
 	resp, httpResp, err := c.NetworkingClient.PeeringsNetworkingV1Api.UpdateNetworkingV1Peering(c.networkingApiContext(), id).NetworkingV1PeeringUpdate(peeringUpdate).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DeletePeering(environment, id string) error {
+func (c *Client) DeleteNetworkPeering(environment, id string) error {
 	httpResp, err := c.NetworkingClient.PeeringsNetworkingV1Api.DeleteNetworkingV1Peering(c.networkingApiContext(), id).Environment(environment).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) CreatePeering(peering networkingv1.NetworkingV1Peering) (networkingv1.NetworkingV1Peering, error) {
+func (c *Client) CreateNetworkPeering(peering networkingv1.NetworkingV1Peering) (networkingv1.NetworkingV1Peering, error) {
 	resp, httpResp, err := c.NetworkingClient.PeeringsNetworkingV1Api.CreateNetworkingV1Peering(c.networkingApiContext()).NetworkingV1Peering(peering).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListTransitGatewayAttachments(environment string, name, network, phase []string) ([]networkingv1.NetworkingV1TransitGatewayAttachment, error) {
+func (c *Client) ListNetworkTransitGatewayAttachments(environment string, name, network, phase []string) ([]networkingv1.NetworkingV1TransitGatewayAttachment, error) {
 	var list []networkingv1.NetworkingV1TransitGatewayAttachment
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, err := c.executeListTransitGatewayAttachments(environment, pageToken, name, network, phase)
+		page, err := c.executeListNetworkTransitGatewayAttachments(environment, pageToken, name, network, phase)
 		if err != nil {
 			return nil, err
 		}
@@ -143,7 +143,7 @@ func (c *Client) ListTransitGatewayAttachments(environment string, name, network
 	return list, nil
 }
 
-func (c *Client) executeListTransitGatewayAttachments(environment, pageToken string, name, network, phase []string) (networkingv1.NetworkingV1TransitGatewayAttachmentList, error) {
+func (c *Client) executeListNetworkTransitGatewayAttachments(environment, pageToken string, name, network, phase []string) (networkingv1.NetworkingV1TransitGatewayAttachmentList, error) {
 	req := c.NetworkingClient.TransitGatewayAttachmentsNetworkingV1Api.ListNetworkingV1TransitGatewayAttachments(c.networkingApiContext()).Environment(environment).SpecDisplayName(name).SpecNetwork(network).StatusPhase(phase).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
@@ -153,33 +153,33 @@ func (c *Client) executeListTransitGatewayAttachments(environment, pageToken str
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) GetTransitGatewayAttachment(environment, id string) (networkingv1.NetworkingV1TransitGatewayAttachment, error) {
+func (c *Client) GetNetworkTransitGatewayAttachment(environment, id string) (networkingv1.NetworkingV1TransitGatewayAttachment, error) {
 	resp, httpResp, err := c.NetworkingClient.TransitGatewayAttachmentsNetworkingV1Api.GetNetworkingV1TransitGatewayAttachment(c.networkingApiContext(), id).Environment(environment).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateTransitGatewayAttachment(environment, id string, transitGatewayAttachmentUpdate networkingv1.NetworkingV1TransitGatewayAttachmentUpdate) (networkingv1.NetworkingV1TransitGatewayAttachment, error) {
+func (c *Client) UpdateNetworkTransitGatewayAttachment(environment, id string, transitGatewayAttachmentUpdate networkingv1.NetworkingV1TransitGatewayAttachmentUpdate) (networkingv1.NetworkingV1TransitGatewayAttachment, error) {
 	resp, httpResp, err := c.NetworkingClient.TransitGatewayAttachmentsNetworkingV1Api.UpdateNetworkingV1TransitGatewayAttachment(c.networkingApiContext(), id).NetworkingV1TransitGatewayAttachmentUpdate(transitGatewayAttachmentUpdate).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DeleteTransitGatewayAttachment(environment, id string) error {
+func (c *Client) DeleteNetworkTransitGatewayAttachment(environment, id string) error {
 	httpResp, err := c.NetworkingClient.TransitGatewayAttachmentsNetworkingV1Api.DeleteNetworkingV1TransitGatewayAttachment(c.networkingApiContext(), id).Environment(environment).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) CreateTransitGatewayAttachment(attachment networkingv1.NetworkingV1TransitGatewayAttachment) (networkingv1.NetworkingV1TransitGatewayAttachment, error) {
+func (c *Client) CreateNetworkTransitGatewayAttachment(attachment networkingv1.NetworkingV1TransitGatewayAttachment) (networkingv1.NetworkingV1TransitGatewayAttachment, error) {
 	resp, httpResp, err := c.NetworkingClient.TransitGatewayAttachmentsNetworkingV1Api.CreateNetworkingV1TransitGatewayAttachment(c.networkingApiContext()).NetworkingV1TransitGatewayAttachment(attachment).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListPrivateLinkAccesses(environment string, name, network, phase []string) ([]networkingv1.NetworkingV1PrivateLinkAccess, error) {
+func (c *Client) ListNetworkPrivateLinkAccesses(environment string, name, network, phase []string) ([]networkingv1.NetworkingV1PrivateLinkAccess, error) {
 	var list []networkingv1.NetworkingV1PrivateLinkAccess
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, err := c.executeListPrivateLinkAccesses(environment, pageToken, name, network, phase)
+		page, err := c.executeListNetworkPrivateLinkAccesses(environment, pageToken, name, network, phase)
 		if err != nil {
 			return nil, err
 		}
@@ -193,7 +193,7 @@ func (c *Client) ListPrivateLinkAccesses(environment string, name, network, phas
 	return list, nil
 }
 
-func (c *Client) executeListPrivateLinkAccesses(environment, pageToken string, name, network, phase []string) (networkingv1.NetworkingV1PrivateLinkAccessList, error) {
+func (c *Client) executeListNetworkPrivateLinkAccesses(environment, pageToken string, name, network, phase []string) (networkingv1.NetworkingV1PrivateLinkAccessList, error) {
 	req := c.NetworkingClient.PrivateLinkAccessesNetworkingV1Api.ListNetworkingV1PrivateLinkAccesses(c.networkingApiContext()).Environment(environment).SpecDisplayName(name).SpecNetwork(network).StatusPhase(phase).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
@@ -203,22 +203,22 @@ func (c *Client) executeListPrivateLinkAccesses(environment, pageToken string, n
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) GetPrivateLinkAccess(environment, id string) (networkingv1.NetworkingV1PrivateLinkAccess, error) {
+func (c *Client) GetNetworkPrivateLinkAccess(environment, id string) (networkingv1.NetworkingV1PrivateLinkAccess, error) {
 	resp, httpResp, err := c.NetworkingClient.PrivateLinkAccessesNetworkingV1Api.GetNetworkingV1PrivateLinkAccess(c.networkingApiContext(), id).Environment(environment).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdatePrivateLinkAccess(environment, id string, privateLinkAccessUpdate networkingv1.NetworkingV1PrivateLinkAccessUpdate) (networkingv1.NetworkingV1PrivateLinkAccess, error) {
+func (c *Client) UpdateNetworkPrivateLinkAccess(environment, id string, privateLinkAccessUpdate networkingv1.NetworkingV1PrivateLinkAccessUpdate) (networkingv1.NetworkingV1PrivateLinkAccess, error) {
 	resp, httpResp, err := c.NetworkingClient.PrivateLinkAccessesNetworkingV1Api.UpdateNetworkingV1PrivateLinkAccess(c.networkingApiContext(), id).NetworkingV1PrivateLinkAccessUpdate(privateLinkAccessUpdate).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DeletePrivateLinkAccess(environment, id string) error {
+func (c *Client) DeleteNetworkPrivateLinkAccess(environment, id string) error {
 	httpResp, err := c.NetworkingClient.PrivateLinkAccessesNetworkingV1Api.DeleteNetworkingV1PrivateLinkAccess(c.networkingApiContext(), id).Environment(environment).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) CreatePrivateLinkAccess(access networkingv1.NetworkingV1PrivateLinkAccess) (networkingv1.NetworkingV1PrivateLinkAccess, error) {
+func (c *Client) CreateNetworkPrivateLinkAccess(access networkingv1.NetworkingV1PrivateLinkAccess) (networkingv1.NetworkingV1PrivateLinkAccess, error) {
 	resp, httpResp, err := c.NetworkingClient.PrivateLinkAccessesNetworkingV1Api.CreateNetworkingV1PrivateLinkAccess(c.networkingApiContext()).NetworkingV1PrivateLinkAccess(access).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }

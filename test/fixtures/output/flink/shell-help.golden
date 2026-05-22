@@ -7,11 +7,13 @@ Examples:
 For a Quick Start with examples in context, see https://docs.confluent.io/cloud/current/flink/get-started/quick-start-shell.html.
 
 Flags:
+      --environment string       Environment ID.
       --compute-pool string      Flink compute pool ID.
       --service-account string   Service account ID.
       --database string          The database which will be used as the default database. When using Kafka, this is the cluster ID.
-      --environment string       Environment ID.
       --context string           CLI context name.
+      --cloud string             Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string            Cloud region for Flink (use "confluent flink region list" to see all).
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -93,7 +93,7 @@ func (c *command) transitGatewayAttachmentCreate(cmd *cobra.Command, args []stri
 		createAttachment.Spec.SetDisplayName(name)
 	}
 
-	attachment, err := c.V2Client.CreateTransitGatewayAttachment(createAttachment)
+	attachment, err := c.V2Client.CreateNetworkTransitGatewayAttachment(createAttachment)
 	if err != nil {
 		return err
 	}

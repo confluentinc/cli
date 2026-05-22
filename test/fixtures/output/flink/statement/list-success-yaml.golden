@@ -49,3 +49,20 @@
         sqlKind: SELECT
         isBounded: false
         isAppendOnly: false
+- apiVersion: ""
+  kind: ""
+  metadata:
+    name: test-stmt4
+    creationTimestamp: 2025-08-05 12:00:00 +0000 UTC
+  spec:
+    statement: SELECT * FROM test_table
+    computePoolName: test-pool
+    parallelism: 4
+    stopped: true
+  status:
+    phase: PENDING
+    detail: Statement is pending execution.
+    traits:
+        sqlKind: SELECT
+        isBounded: false
+        isAppendOnly: false

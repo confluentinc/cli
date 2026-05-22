@@ -1,0 +1,20 @@
+[
+  {
+    "id": "cfa-gcp-jar123",
+    "name": "my-connect-artifact-gcp-jar",
+    "description": "new-jar-artifact",
+    "cloud": "GCP",
+    "environment": "env-123456",
+    "content_format": "JAR",
+    "status": "READY"
+  },
+  {
+    "id": "cfa-gcp-zip123",
+    "name": "my-connect-artifact-gcp-zip",
+    "description": "new-zip-artifact",
+    "cloud": "GCP",
+    "environment": "env-123456",
+    "content_format": "ZIP",
+    "status": "PROCESSING"
+  }
+]

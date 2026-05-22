@@ -55,6 +55,13 @@ func (s *StoreTestSuite) TestGenerateStatementName() {
 	}
 }
 
+func (s *StoreTestSuite) TestGenerateStatementNameForOnPrem() {
+	statementRegex := `^cli-\d{8}-\d{6}-[a-f0-9]{24}$`
+	for i := 0; i < 10; i++ {
+		s.Require().Regexp(statementRegex, types.GenerateStatementNameForOnPrem())
+	}
+}
+
 func TestStoreProcessLocalStatement(t *testing.T) {
 	// Create new stores
 	stores := make([]types.StoreInterface, 2)

@@ -16,6 +16,8 @@ import (
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
+const invalidDatabaseName = "invalid-database"
+
 // Helper function to create a Flink application.
 func createApplication(name string) cmfsdk.FlinkApplication {
 	status := map[string]interface{}{
@@ -166,11 +168,30 @@ func createEnvironmentWithDefaults(name string, namespace string) cmfsdk.Environ
 	}
 }
 
+func createSavepoint(name string) cmfsdk.Savepoint {
+	timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
+	path := "abc/def"
+	backLimit := int32(10)
+	format := "CANONICAL"
+
+	return cmfsdk.Savepoint{
+		Metadata: cmfsdk.SavepointMetadata{
+			Name:              &name,
+			CreationTimestamp: &timeStamp,
+		},
+		Spec: cmfsdk.SavepointSpec{
+			Path:         &path,
+			BackoffLimit: &backLimit,
+			FormatType:   &format,
+		},
+	}
+}
+
 func createComputePool(poolName, phase string) cmfsdk.ComputePool {
 	timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
 
-	status := cmfsdk.ComputePoolStatus{
-		Phase: phase,
+	status := map[string]interface{}{
+		"phase": phase,
 	}
 
 	return cmfsdk.ComputePool{
@@ -186,22 +207,141 @@ func createComputePool(poolName, phase string) cmfsdk.ComputePool {
 }
 
 func createKafkaCatalog(catName string) cmfsdk.KafkaCatalog {
-	timeStamp := time.Date(2025, time.August, 5, 12, 00, 0, 0, time.UTC).String()
+	timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).Format(time.RFC3339)
 	return cmfsdk.KafkaCatalog{
+		ApiVersion: "cmf/api/v1/catalog",
+		Kind:       "KafkaCatalog",
 		Metadata: cmfsdk.CatalogMetadata{
 			Name:              catName,
 			CreationTimestamp: &timeStamp,
 		},
 		Spec: cmfsdk.KafkaCatalogSpec{
-			KafkaClusters: []cmfsdk.KafkaCatalogSpecKafkaClusters{
+			SrInstance: cmfsdk.KafkaCatalogSpecSrInstance{
+				ConnectionConfig: map[string]string{
+					"schema.registry.url": "http://localhost:8081",
+				},
+			},
+			KafkaClusters: &[]cmfsdk.KafkaCatalogSpecKafkaClusters{
 				{
 					DatabaseName: "test-database",
+					ConnectionConfig: map[string]string{
+						"bootstrap.servers": "localhost:9092",
+					},
 				},
 				{
 					DatabaseName: "test-database-2",
+					ConnectionConfig: map[string]string{
+						"bootstrap.servers": "localhost:9092",
+					},
 				},
 			},
 		},
+	}
+}
+
+func createKafkaDatabase(dbName string) cmfsdk.KafkaDatabase {
+	timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).Format(time.RFC3339)
+	return cmfsdk.KafkaDatabase{
+		ApiVersion: "cmf/api/v1/database",
+		Kind:       "KafkaDatabase",
+		Metadata: cmfsdk.DatabaseMetadata{
+			Name:              dbName,
+			CreationTimestamp: &timeStamp,
+		},
+		Spec: cmfsdk.KafkaDatabaseSpec{
+			KafkaCluster: cmfsdk.KafkaDatabaseSpecKafkaCluster{
+				ConnectionConfig: map[string]string{
+					"bootstrap.servers": "localhost:9092",
+				},
+			},
+		},
+	}
+}
+
+func handleCmfCatalogDatabases(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+		switch r.Method {
+		case http.MethodGet:
+			databases := []cmfsdk.KafkaDatabase{
+				createKafkaDatabase("test-database-1"),
+				createKafkaDatabase("test-database-2"),
+			}
+			databasesPage := cmfsdk.KafkaDatabasesPage{}
+			page := r.URL.Query().Get("page")
+
+			if page == "0" {
+				databasesPage.SetItems(databases)
+			}
+
+			err := json.NewEncoder(w).Encode(databasesPage)
+			require.NoError(t, err)
+		case http.MethodPost:
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var database cmfsdk.KafkaDatabase
+			err = json.Unmarshal(reqBody, &database)
+			require.NoError(t, err)
+
+			dbName := database.GetMetadata().Name
+
+			if dbName == invalidDatabaseName {
+				http.Error(w, "The Kafka database object from resource file is invalid", http.StatusUnprocessableEntity)
+				return
+			}
+
+			timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
+			database.Metadata.CreationTimestamp = &timeStamp
+			err = json.NewEncoder(w).Encode(database)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func handleCmfCatalogDatabase(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		dbName := vars["dbName"]
+
+		switch r.Method {
+		case http.MethodGet:
+			if dbName == invalidDatabaseName {
+				http.Error(w, "The database name is invalid", http.StatusNotFound)
+				return
+			}
+
+			database := createKafkaDatabase(dbName)
+			err := json.NewEncoder(w).Encode(database)
+			require.NoError(t, err)
+			return
+		case http.MethodPut:
+			if dbName == invalidDatabaseName {
+				http.Error(w, "The database name is invalid", http.StatusNotFound)
+				return
+			}
+
+			// Read and validate the request body.
+			req := new(cmfsdk.KafkaDatabase)
+			err := json.NewDecoder(r.Body).Decode(req)
+			require.NoError(t, err)
+
+			w.WriteHeader(http.StatusOK)
+			return
+		case http.MethodDelete:
+			if dbName == "non-exist-database" {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
 	}
 }
 
@@ -227,6 +367,41 @@ func createFlinkStatement(stmtName string, stopped bool, parallelism int32) cmfs
 			ComputePoolName: "test-pool",
 			Parallelism:     cmfsdk.PtrInt32(parallelism),
 			Stopped:         cmfsdk.PtrBool(stopped),
+		},
+		Status: &status,
+	}
+}
+
+func createFlinkStatementSavepoint(stmtName string, stopped bool, parallelism int32) cmfsdk.Statement {
+	timeStamp := time.Date(2025, time.August, 5, 12, 00, 0, 0, time.UTC).String()
+	status := cmfsdk.StatementStatus{
+		Phase:  "PENDING",
+		Detail: cmfsdk.PtrString("Statement is pending execution."),
+		Traits: &cmfsdk.StatementTraits{
+			SqlKind:      cmfsdk.PtrString("SELECT"),
+			IsAppendOnly: cmfsdk.PtrBool(false),
+			IsBounded:    cmfsdk.PtrBool(false),
+		},
+	}
+
+	savepointPath := "savepointPath"
+	allowNonRestored := true
+	savepoint := cmfsdk.StatementStartFromSavepoint{
+		InitialSavepointPath:  &savepointPath,
+		AllowNonRestoredState: &allowNonRestored,
+	}
+
+	return cmfsdk.Statement{
+		Metadata: cmfsdk.StatementMetadata{
+			Name:              stmtName,
+			CreationTimestamp: &timeStamp,
+		},
+		Spec: cmfsdk.StatementSpec{
+			Statement:          "SELECT * FROM test_table",
+			ComputePoolName:    "test-pool",
+			Parallelism:        cmfsdk.PtrInt32(parallelism),
+			Stopped:            cmfsdk.PtrBool(stopped),
+			StartFromSavepoint: &savepoint,
 		},
 		Status: &status,
 	}
@@ -310,14 +485,15 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 			err = json.Unmarshal(reqBody, &environment)
 			require.NoError(t, err)
 
-			if strings.Contains(environment.Name, "failure") {
+			envName := environment.GetName()
+			if strings.Contains(envName, "failure") {
 				http.Error(w, "", http.StatusUnprocessableEntity)
 				return
 			}
 
 			// Already existing environment: update
-			if environment.Name == "default" || environment.Name == "test" {
-				outputEnvironment := createEnvironment(environment.Name, environment.Name+"-namespace")
+			if envName == "default" || envName == "test" {
+				outputEnvironment := createEnvironment(envName, envName+"-namespace")
 				// This is a dummy update - only the defaults can be updated anyway.
 				outputEnvironment.FlinkApplicationDefaults = environment.FlinkApplicationDefaults
 				outputEnvironment.ComputePoolDefaults = environment.ComputePoolDefaults
@@ -328,7 +504,7 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 			}
 
 			// New environment: create
-			outputEnvironment := createEnvironment(environment.Name, environment.GetKubernetesNamespace())
+			outputEnvironment := createEnvironment(envName, environment.GetKubernetesNamespace())
 			outputEnvironment.FlinkApplicationDefaults = environment.FlinkApplicationDefaults
 			outputEnvironment.ComputePoolDefaults = environment.ComputePoolDefaults
 			outputEnvironment.StatementDefaults = environment.StatementDefaults
@@ -416,7 +592,7 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 			page := r.URL.Query().Get("page")
 
 			if environment == "default" && page == "0" {
-				items := []cmfsdk.FlinkApplication{createApplication("default-application-1"), createApplication("default-application-2")}
+				items := []cmfsdk.FlinkApplication{createApplication("default-application-1"), createApplication("default-application-2"), createApplication("default-application-s")}
 				applicationsPage = map[string]interface{}{
 					"items": items,
 				}
@@ -462,6 +638,17 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 				return
 			}
 
+			if applicationName == "default-application-s" {
+				// The 'update' is going to be spec.serviceAccount. This is just a dummy update,
+				// and we don't do any actual merge logic.
+				outputApplication := createApplication(applicationName)
+				outputApplication.Spec["serviceAccount"] = application.Spec["serviceAccount"]
+				outputApplication.Spec["job"] = application.Spec["job"]
+				err = json.NewEncoder(w).Encode(outputApplication)
+				require.NoError(t, err)
+				return
+			}
+
 			// If application does not exist, return the application newly 'created'.
 			err = json.NewEncoder(w).Encode(application)
 			require.NoError(t, err)
@@ -491,7 +678,7 @@ func handleCmfApplication(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			// In case the application actually exists, let the handler return the application.
-			if (application == "default-application-1" || application == "default-application-2") && environment == "default" {
+			if (application == "default-application-1" || application == "default-application-2" || application == "default-application-s") && environment == "default" {
 				outputApplication := createApplication(application)
 				err := json.NewEncoder(w).Encode(outputApplication)
 				require.NoError(t, err)
@@ -523,6 +710,178 @@ func handleCmfApplication(t *testing.T) http.HandlerFunc {
 			}
 
 			http.Error(w, "Application not found", http.StatusNotFound)
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+// Handler for "/cmf/api/v1/environments/{envName}/applications/{appName}/savepoints"
+// Used by list, create savepoints.
+func handleCmfSavepoints(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		environment := vars["envName"]
+
+		if environment == "non-exist" {
+			http.Error(w, "Environment not found", http.StatusNotFound)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			savepoint1 := createSavepoint("test-savepoint1")
+			savepoint2 := createSavepoint("test-savepoint2")
+			savepoint3 := createSavepoint("test-savepoint3")
+
+			savepoints := []cmfsdk.Savepoint{savepoint1, savepoint2, savepoint3}
+			savepointsPage := cmfsdk.SavepointsPage{}
+			page := r.URL.Query().Get("page")
+
+			if page == "0" {
+				savepointsPage.SetItems(savepoints)
+			}
+
+			err := json.NewEncoder(w).Encode(savepointsPage)
+			require.NoError(t, err)
+			return
+
+		case http.MethodPost:
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var savepoint cmfsdk.Savepoint
+			err = json.Unmarshal(reqBody, &savepoint)
+			require.NoError(t, err)
+
+			savepointName := savepoint.Metadata.GetName()
+
+			if savepointName == "invalid-pool" {
+				http.Error(w, "The savepoint object from resource file is invalid", http.StatusUnprocessableEntity)
+				return
+			}
+			if savepointName == "existing-pool" {
+				http.Error(w, "The savepoint name already exists, please try with another savepoint name", http.StatusConflict)
+				return
+			}
+
+			timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
+			savepoint.Metadata.CreationTimestamp = &timeStamp
+			err = json.NewEncoder(w).Encode(savepoint)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func handleCmfSavepoint(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		environment := vars["envName"]
+		savepointName := vars["savepointName"]
+
+		if environment == "non-exist" {
+			http.Error(w, "Environment not found", http.StatusNotFound)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			if savepointName == "invalid-savepoint" {
+				http.Error(w, "The savepoint is invalid", http.StatusNotFound)
+				return
+			}
+
+			savepoint := createSavepoint(savepointName)
+			err := json.NewEncoder(w).Encode(savepoint)
+			require.NoError(t, err)
+			return
+		case http.MethodDelete:
+			if savepointName == "non-exist-savepoint" {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func handleCmfDetachedSavepoints(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		switch r.Method {
+		case http.MethodGet:
+			savepoint1 := createSavepoint("test-savepoint1")
+			savepoint2 := createSavepoint("test-savepoint2")
+			savepoint3 := createSavepoint("test-savepoint3")
+
+			savepoints := []cmfsdk.Savepoint{savepoint1, savepoint2, savepoint3}
+			savepointsPage := cmfsdk.SavepointsPage{}
+			page := r.URL.Query().Get("page")
+
+			if page == "0" {
+				savepointsPage.SetItems(savepoints)
+			}
+
+			err := json.NewEncoder(w).Encode(savepointsPage)
+			require.NoError(t, err)
+			return
+
+		case http.MethodPost:
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var savepoint cmfsdk.Savepoint
+			err = json.Unmarshal(reqBody, &savepoint)
+			require.NoError(t, err)
+
+			savepointName := savepoint.Metadata.GetName()
+
+			if savepointName == "invalid-pool" {
+				http.Error(w, "The savepoint object from resource file is invalid", http.StatusUnprocessableEntity)
+				return
+			}
+
+			timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
+			savepoint.Metadata.CreationTimestamp = &timeStamp
+			savepoint.Metadata.SetUid("id1")
+			savepoint.Spec.SetFormatType("Canonical")
+			savepoint.Spec.SetBackoffLimit(10)
+			err = json.NewEncoder(w).Encode(savepoint)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func handleCmfDetachedSavepoint(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+		vars := mux.Vars(r)
+		savepointName := vars["detachedSavepointName"]
+		switch r.Method {
+		case http.MethodGet:
+			savepoint := createSavepoint("savepoint1")
+			if savepointName == "invalid-savepoint" {
+				http.Error(w, "The savepoint is invalid", http.StatusNotFound)
+				return
+			}
+			err := json.NewEncoder(w).Encode(savepoint)
+			require.NoError(t, err)
+			return
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusOK)
+			return
 		default:
 			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
 		}
@@ -681,7 +1040,7 @@ func handleCmfCatalogs(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for "cmf/api/v1/catalogs/kafka/{catName}"
-// Used by describe, delete catalog, no update catalog.
+// Used by describe, update, delete catalog.
 func handleCmfCatalog(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleLoginType(t, r)
@@ -699,6 +1058,18 @@ func handleCmfCatalog(t *testing.T) http.HandlerFunc {
 			catalog := createKafkaCatalog(catalogName)
 			err := json.NewEncoder(w).Encode(catalog)
 			require.NoError(t, err)
+			return
+		case http.MethodPut:
+			if catalogName == "invalid-catalog" {
+				http.Error(w, "The catalog name is invalid", http.StatusNotFound)
+				return
+			}
+
+			req := new(cmfsdk.KafkaCatalog)
+			err := json.NewDecoder(r.Body).Decode(req)
+			require.NoError(t, err)
+
+			w.WriteHeader(http.StatusOK)
 			return
 		case http.MethodDelete:
 			if catalogName == "non-exist-catalog" {
@@ -814,6 +1185,10 @@ func handleCmfStatement(t *testing.T) http.HandlerFunc {
 				}
 				err := json.NewEncoder(w).Encode(stmt)
 				require.NoError(t, err)
+			} else if stmtName == "test-stmt-savepoint" {
+				stmt := createFlinkStatementSavepoint(stmtName, false, 1)
+				err := json.NewEncoder(w).Encode(stmt)
+				require.NoError(t, err)
 			} else {
 				stmt := createFlinkStatement(stmtName, false, 1)
 				err := json.NewEncoder(w).Encode(stmt)
@@ -866,8 +1241,9 @@ func handleCmfStatements(t *testing.T) http.HandlerFunc {
 			stmt1 := createFlinkStatement("test-stmt1", false, 1)
 			stmt2 := createFlinkStatement("test-stmt2", false, 2)
 			stmt3 := createFlinkStatement("test-stmt3", true, 4)
+			stmt4 := createFlinkStatementSavepoint("test-stmt4", true, 4)
 
-			stmts := []cmfsdk.Statement{stmt1, stmt2, stmt3}
+			stmts := []cmfsdk.Statement{stmt1, stmt2, stmt3, stmt4}
 			stmtsPage := cmfsdk.StatementsPage{}
 			page := r.URL.Query().Get("page")
 
@@ -956,6 +1332,25 @@ func handleCmfStatements(t *testing.T) http.HandlerFunc {
 						IsBounded:    cmfsdk.PtrBool(false),
 					},
 				}
+			}
+
+			if stmtName == "stmt-savepoint" {
+				savepointName := "savepoint1"
+				allowNonRestored := false
+				savepoint := cmfsdk.StatementStartFromSavepoint{
+					SavepointName:         &savepointName,
+					AllowNonRestoredState: &allowNonRestored,
+				}
+				stmt.Spec.SetStartFromSavepoint(savepoint)
+			}
+			if stmtName == "stmt-savepoint2" {
+				savepointPath := "savepointPath"
+				allowNonRestored := true
+				savepoint := cmfsdk.StatementStartFromSavepoint{
+					InitialSavepointPath:  &savepointPath,
+					AllowNonRestoredState: &allowNonRestored,
+				}
+				stmt.Spec.SetStartFromSavepoint(savepoint)
 			}
 			stmt.Status = &status
 			err = json.NewEncoder(w).Encode(stmt)

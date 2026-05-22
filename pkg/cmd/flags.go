@@ -67,7 +67,7 @@ func AddByokKeyFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 }
 
 func AutocompleteByokKeyIds(client *ccloudv2.Client) []string {
-	keys, err := client.ListByokKeys("", "")
+	keys, err := client.ListByokKeys("", "", "", "", "", "")
 	if err != nil {
 		return nil
 	}
@@ -82,6 +82,11 @@ func AutocompleteByokKeyIds(client *ccloudv2.Client) []string {
 func AddByokStateFlag(cmd *cobra.Command) {
 	cmd.Flags().String("state", "", fmt.Sprintf("Specify the state as %s.", utils.ArrayToCommaDelimitedString([]string{"in-use", "available"}, "or")))
 	RegisterFlagCompletionFunc(cmd, "state", func(_ *cobra.Command, _ []string) []string { return []string{"in-use", "available"} })
+}
+
+func AddByokValidationPhaseFlag(cmd *cobra.Command) {
+	cmd.Flags().String("validation-phase", "", fmt.Sprintf("Specify the validation phase as %s.", utils.ArrayToCommaDelimitedString([]string{"valid", "invalid", "initializing"}, "or")))
+	RegisterFlagCompletionFunc(cmd, "validation-phase", func(_ *cobra.Command, _ []string) []string { return []string{"valid", "invalid", "initializing"} })
 }
 
 func AddCloudFlag(cmd *cobra.Command) {
@@ -231,7 +236,7 @@ func AddExternalIdentifierFlag(cmd *cobra.Command) {
 }
 
 func AutocompleteGroupMappings(client *ccloudv2.Client) []string {
-	groupMappings, err := client.ListGroupMappings()
+	groupMappings, err := client.ListIamGroupMappings()
 	if err != nil {
 		return nil
 	}
@@ -245,7 +250,7 @@ func AutocompleteGroupMappings(client *ccloudv2.Client) []string {
 }
 
 func AutocompleteCertificatePool(client *ccloudv2.Client, provider string) []string {
-	certificatePools, err := client.ListCertificatePool(provider)
+	certificatePools, err := client.ListIamCertificatePools(provider)
 	if err != nil {
 		return nil
 	}
@@ -344,7 +349,7 @@ func AddProviderFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 }
 
 func AutocompleteIdentityProviders(client *ccloudv2.Client) []string {
-	identityProviders, err := client.ListIdentityProviders()
+	identityProviders, err := client.ListIamIdentityProviders()
 	if err != nil {
 		return nil
 	}
@@ -358,7 +363,7 @@ func AutocompleteIdentityProviders(client *ccloudv2.Client) []string {
 }
 
 func AutocompleteCertificateAuthorities(client *ccloudv2.Client) []string {
-	certificateAuthorities, err := client.ListCertificateAuthorities()
+	certificateAuthorities, err := client.ListIamCertificateAuthorities()
 	if err != nil {
 		return nil
 	}
@@ -371,7 +376,7 @@ func AutocompleteCertificateAuthorities(client *ccloudv2.Client) []string {
 }
 
 func AutocompleteIdentityPools(client *ccloudv2.Client, providerId string) []string {
-	identityPools, err := client.ListIdentityPools(providerId)
+	identityPools, err := client.ListIamIdentityPools(providerId)
 	if err != nil {
 		return nil
 	}
@@ -493,7 +498,7 @@ func AddServiceAccountFlag(cmd *cobra.Command, command *AuthenticatedCLICommand)
 }
 
 func AutocompleteServiceAccounts(client *ccloudv2.Client) []string {
-	serviceAccounts, err := client.ListIamServiceAccounts()
+	serviceAccounts, err := client.ListIamServiceAccounts(nil)
 	if err != nil {
 		return nil
 	}
@@ -567,9 +572,12 @@ func AutocompleteLinks(cmd *cobra.Command, c *AuthenticatedCLICommand) []string 
 		return nil
 	}
 
-	suggestions := make([]string, len(links))
-	for i, link := range links {
-		suggestions[i] = link.GetLinkName()
+	var suggestions []string
+	for _, link := range links {
+		// Unmanaged links don't actually exist in the cluster, so filter them out here.
+		if link.GetLinkState() != "UNMANAGED_SOURCE" {
+			suggestions = append(suggestions, link.GetLinkName())
+		}
 	}
 	return suggestions
 }

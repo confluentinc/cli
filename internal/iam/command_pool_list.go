@@ -30,7 +30,7 @@ func (c *poolCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	identityPools, err := c.V2Client.ListIdentityPools(provider)
+	identityPools, err := c.V2Client.ListIamIdentityPools(provider)
 	if err != nil {
 		return err
 	}

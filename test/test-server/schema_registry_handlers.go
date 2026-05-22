@@ -268,7 +268,7 @@ func handleSRById(t *testing.T) http.HandlerFunc {
 		case 1005:
 			schema.Schema = srsdk.PtrString(`{"schema":1}`)
 			schema.References = &[]srsdk.SchemaReference{}
-			schema.Ruleset = *srsdk.NewNullableRuleSet(
+			schema.RuleSet = *srsdk.NewNullableRuleSet(
 				&srsdk.RuleSet{
 					DomainRules: &[]srsdk.Rule{
 						{
@@ -281,6 +281,27 @@ func handleSRById(t *testing.T) http.HandlerFunc {
 					},
 				},
 			)
+		case 1006:
+			schema.Schema = srsdk.PtrString(`{"schema":1}`)
+			schema.References = &[]srsdk.SchemaReference{}
+			schema.RuleSet = *srsdk.NewNullableRuleSet(
+				&srsdk.RuleSet{
+					EncodingRules: &[]srsdk.Rule{
+						{
+							Name:      srsdk.PtrString("encryptPayload"),
+							Kind:      srsdk.PtrString("TRANSFORM"),
+							Type:      srsdk.PtrString("ENCRYPT_PAYLOAD"),
+							Mode:      srsdk.PtrString("WRITEREAD"),
+							OnFailure: srsdk.PtrString("ERROR,NONE"),
+							Params: &map[string]string{
+								"encrypt.kek.name":   "local-kek1",
+								"encrypt.kms.type":   "local-kms",
+								"encrypt.kms.key.id": "mykey",
+							},
+						},
+					},
+				},
+			)
 		default:
 			schema.Schema = srsdk.PtrString(`{"schema":1}`)
 			schema.References = &[]srsdk.SchemaReference{{
@@ -288,7 +309,7 @@ func handleSRById(t *testing.T) http.HandlerFunc {
 				Subject: srsdk.PtrString("payment"),
 				Version: srsdk.PtrInt32(1),
 			}}
-			schema.Ruleset = srsdk.NullableRuleSet{}
+			schema.RuleSet = srsdk.NullableRuleSet{}
 		}
 		err = json.NewEncoder(w).Encode(schema)
 		require.NoError(t, err)

@@ -35,7 +35,7 @@ func (c *command) transitGatewayAttachmentDescribe(cmd *cobra.Command, args []st
 		return err
 	}
 
-	attachment, err := c.V2Client.GetTransitGatewayAttachment(environmentId, args[0])
+	attachment, err := c.V2Client.GetNetworkTransitGatewayAttachment(environmentId, args[0])
 	if err != nil {
 		return err
 	}

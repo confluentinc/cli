@@ -53,7 +53,7 @@ func buildWhitelist() []string {
 		whitelist.Add(os)
 	}
 
-	for _, arch := range []string{"amd64", "arm64"} {
+	for _, arch := range []string{"amd64", "arm64", "s390x"} {
 		whitelist.Add(arch)
 	}
 

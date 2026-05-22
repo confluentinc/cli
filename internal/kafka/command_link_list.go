@@ -18,6 +18,7 @@ func newLink(link kafkarestv3.ListLinksResponseData, topic string) *linkOut {
 	}
 	return &linkOut{
 		Name:               link.GetLinkName(),
+		Id:                 link.GetClusterLinkId(),
 		TopicName:          topic,
 		SourceCluster:      link.GetSourceClusterId(),
 		DestinationCluster: link.GetDestinationClusterId(),
@@ -78,7 +79,7 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func getListFields(includeTopics bool) []string {
-	x := []string{"Name"}
+	x := []string{"Name", "Id"}
 
 	if includeTopics {
 		x = append(x, "TopicName")
