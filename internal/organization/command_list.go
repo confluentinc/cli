@@ -29,10 +29,11 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, organization := range organizations {
 		list.Add(&out{
-			IsCurrent:  organization.GetId() == c.Context.GetCurrentOrganization(),
-			Id:         organization.GetId(),
-			Name:       organization.GetDisplayName(),
-			JitEnabled: organization.GetJitEnabled(),
+			IsCurrent:   organization.GetId() == c.Context.GetCurrentOrganization(),
+			Id:          organization.GetId(),
+			Name:        organization.GetDisplayName(),
+			JitEnabled:  organization.GetJitEnabled(),
+			ScimEnabled: organization.GetScimEnabled(),
 		})
 	}
 	return list.Print()
