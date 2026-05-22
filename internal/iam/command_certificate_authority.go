@@ -16,16 +16,17 @@ type certificateAuthorityCommand struct {
 }
 
 type certificateAuthorityOut struct {
-	Id                       string      `human:"ID" serialized:"id"`
-	Name                     string      `human:"Name" serialized:"name"`
-	Description              string      `human:"Description" serialized:"description"`
-	Fingerprints             []string    `human:"Fingerprints" serialized:"fingerprints"`
-	ExpirationDates          []time.Time `human:"Expiration Dates" serialized:"expiration_dates"`
-	SerialNumbers            []string    `human:"Serial Numbers" serialized:"serial_numbers"`
-	CertificateChainFilename string      `human:"Certificate Chain Filename" serialized:"certificate_chain_filename"`
-	CrlSource                string      `human:"CRL Source,omitempty" serialized:"crl_source,omitempty"`
-	CrlUrl                   string      `human:"CRL URL,omitempty" serialized:"crl_url,omitempty"`
-	CrlUpdatedAt             *time.Time  `human:"CRL Updated At,omitempty" serialized:"crl_updated_at,omitempty"`
+	Id                            string      `human:"ID" serialized:"id"`
+	Name                          string      `human:"Name" serialized:"name"`
+	Description                   string      `human:"Description" serialized:"description"`
+	Fingerprints                  []string    `human:"Fingerprints" serialized:"fingerprints"`
+	ExpirationDates               []time.Time `human:"Expiration Dates" serialized:"expiration_dates"`
+	SerialNumbers                 []string    `human:"Serial Numbers" serialized:"serial_numbers"`
+	CertificateChainFilename      string      `human:"Certificate Chain Filename" serialized:"certificate_chain_filename"`
+	CrlSource                     string      `human:"CRL Source,omitempty" serialized:"crl_source,omitempty"`
+	CrlUrl                        string      `human:"CRL URL,omitempty" serialized:"crl_url,omitempty"`
+	CrlUpdatedAt                  *time.Time  `human:"CRL Updated At,omitempty" serialized:"crl_updated_at,omitempty"`
+	RequireCrlOnClientCertificate bool        `human:"Require Client CRL" serialized:"require_client_crl"`
 }
 
 func newCertificateAuthorityCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -49,16 +50,17 @@ func newCertificateAuthorityCommand(prerunner pcmd.PreRunner) *cobra.Command {
 func printCertificateAuthority(cmd *cobra.Command, certificateAuthority certificateauthorityv2.IamV2CertificateAuthority) error {
 	table := output.NewTable(cmd)
 	table.Add(&certificateAuthorityOut{
-		Id:                       certificateAuthority.GetId(),
-		Name:                     certificateAuthority.GetDisplayName(),
-		Description:              certificateAuthority.GetDescription(),
-		Fingerprints:             certificateAuthority.GetFingerprints(),
-		ExpirationDates:          certificateAuthority.GetExpirationDates(),
-		SerialNumbers:            certificateAuthority.GetSerialNumbers(),
-		CertificateChainFilename: certificateAuthority.GetCertificateChainFilename(),
-		CrlSource:                certificateAuthority.GetCrlSource(),
-		CrlUrl:                   certificateAuthority.GetCrlUrl(),
-		CrlUpdatedAt:             certificateAuthority.CrlUpdatedAt,
+		Id:                            certificateAuthority.GetId(),
+		Name:                          certificateAuthority.GetDisplayName(),
+		Description:                   certificateAuthority.GetDescription(),
+		Fingerprints:                  certificateAuthority.GetFingerprints(),
+		ExpirationDates:               certificateAuthority.GetExpirationDates(),
+		SerialNumbers:                 certificateAuthority.GetSerialNumbers(),
+		CertificateChainFilename:      certificateAuthority.GetCertificateChainFilename(),
+		CrlSource:                     certificateAuthority.GetCrlSource(),
+		CrlUrl:                        certificateAuthority.GetCrlUrl(),
+		CrlUpdatedAt:                  certificateAuthority.CrlUpdatedAt,
+		RequireCrlOnClientCertificate: certificateAuthority.GetRequireCrlOnClientCertificate(),
 	})
 	return table.Print()
 }

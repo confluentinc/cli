@@ -8,4 +8,5 @@
 | Certificate Chain Filename | certificate.pem                          |
 | CRL Source                 | LOCAL                                    |
 | CRL Updated At             | 2024-07-21 17:32:28 +0000 UTC            |
+| Require Client CRL         | true                                     |
 +----------------------------+------------------------------------------+
