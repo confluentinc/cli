@@ -43,5 +43,5 @@ func (c *certificateAuthorityCommand) list(cmd *cobra.Command, _ []string) error
 			RequireCrlOnClientCertificate: certificateAuthority.GetRequireCrlOnClientCertificate(),
 		})
 	}
-	return list.Print()
+	return list.PrintWithAutoWrap(false)
 }
