@@ -101,6 +101,11 @@ func (c *certificateAuthorityCommand) update(cmd *cobra.Command, args []string) 
 			return err
 		}
 		update.RequireCrlOnClientCertificate = certificateauthorityv2.PtrBool(requireCrlOnClientCertificate)
+
+		if !requireCrlOnClientCertificate && !cmd.Flags().Changed("crl-url") && !cmd.Flags().Changed("crl-chain") {
+			update.CrlUrl = certificateauthorityv2.PtrString("")
+			update.CrlChain = nil
+		}
 	}
 
 	certificateAuthority, err := c.V2Client.UpdateCertificateAuthority(update)
