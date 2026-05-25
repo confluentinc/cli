@@ -1,3 +1,4 @@
+warning: GOCOVERDIR not set, no coverage data emitted
 Update the current Confluent Cloud organization.
 
 Usage:

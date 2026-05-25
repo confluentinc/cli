@@ -45,7 +45,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-gateway v0.7.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.3.0
-	github.com/confluentinc/ccloud-sdk-go-v2/org v0.10.0
+	github.com/confluentinc/ccloud-sdk-go-v2/org v0.12.0
 	github.com/confluentinc/ccloud-sdk-go-v2/provider-integration v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/rtce v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
@@ -296,3 +296,5 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace github.com/confluentinc/ccloud-sdk-go-v2/org => /Users/ameliadong/git/go/src/github.com/confluentinc/cli-terraform-generator/test-suites/specs/org

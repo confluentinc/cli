@@ -1,0 +1,4 @@
+warning: GOCOVERDIR not set, no coverage data emitted
+      ID      | Connection Name |                       Token                       |      Created At      |      Expires At       
+--------------+-----------------+---------------------------------------------------+----------------------+-----------------------
+  dlz-f3a90de | test-connection | cflt-scim_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9... | 2026-04-16T10:00:00Z | 2026-10-16T10:00:00Z  

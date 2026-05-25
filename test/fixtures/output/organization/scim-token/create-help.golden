@@ -1,0 +1,15 @@
+warning: GOCOVERDIR not set, no coverage data emitted
+Create an organization scim token.
+
+Usage:
+  confluent organization scim-token create [flags]
+
+Flags:
+      --expire-duration-mins int32   The duration in minutes after which the token expires. Defaults to 6 months (259200 minutes) if not specified. Minimum: 1 month (43200 minutes). Maximum: 2 years (1051200 minutes).
+      --context string               CLI context name.
+  -o, --output string                Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
