@@ -1,11 +1,12 @@
 warning: GOCOVERDIR not set, no coverage data emitted
-List Confluent Cloud organizations.
+Delete one or more organization scim tokens.
 
 Usage:
-  confluent organization list [flags]
+  confluent organization scim-token delete <id-1> [id-2] ... [id-n] [flags]
 
 Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+      --context string   CLI context name.
+      --force            Skip the deletion confirmation prompt.
 
 Global Flags:
   -h, --help            Show help for this command.
