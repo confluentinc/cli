@@ -68,7 +68,7 @@ require (
 	github.com/docker/docker v28.0.0+incompatible
 	github.com/docker/go-connections v0.5.0
 	github.com/fatih/color v1.17.0
-	github.com/gdamore/tcell/v2 v2.7.4
+	github.com/gdamore/tcell/v3 v3.4.0
 	github.com/go-git/go-git/v5 v5.19.0
 	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/gobuffalo/flect v1.0.2
@@ -118,8 +118,8 @@ require (
 	golang.org/x/crypto v0.50.0
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f
 	golang.org/x/oauth2 v0.35.0
-	golang.org/x/term v0.42.0
-	golang.org/x/text v0.36.0
+	golang.org/x/term v0.43.0
+	golang.org/x/text v0.37.0
 	google.golang.org/grpc v1.80.0
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
@@ -172,6 +172,8 @@ require (
 	github.com/charmbracelet/x/input v0.1.0 // indirect
 	github.com/charmbracelet/x/term v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.1.0 // indirect
+	github.com/clipperhouse/displaywidth v0.11.0 // indirect
+	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.6.1 // indirect
@@ -182,7 +184,8 @@ require (
 	github.com/envoyproxy/protoc-gen-validate v1.3.0 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/gdamore/encoding v1.0.0 // indirect
+	github.com/gdamore/encoding v1.0.1 // indirect
+	github.com/gdamore/tcell/v2 v2.7.1 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.9.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
@@ -221,7 +224,7 @@ require (
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
-	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
+	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
 	github.com/lyft/protoc-gen-star/v2 v2.0.4-0.20230330145011-496ad1ac90a4 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -276,7 +279,7 @@ require (
 	golang.org/x/mod v0.35.0 // indirect
 	golang.org/x/net v0.53.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.43.0 // indirect
+	golang.org/x/sys v0.44.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
 	golang.org/x/tools v0.44.0 // indirect
 	google.golang.org/api v0.191.0 // indirect
