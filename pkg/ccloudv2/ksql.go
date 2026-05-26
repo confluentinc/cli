@@ -2,6 +2,7 @@ package ccloudv2
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
@@ -72,4 +73,30 @@ func (c *Client) CreateKsqlCluster(displayName, environmentId, kafkaClusterId, c
 	}}
 	res, httpResp, err := c.KsqlClient.ClustersKsqldbcmV2Api.CreateKsqldbcmV2Cluster(c.ksqlApiContext()).KsqldbcmV2Cluster(cluster).Execute()
 	return res, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+// UpdateKsqlCluster issues PATCH /ksqldbcm/v2/clusters/{id} with {"spec":{"csu": N}}
+// to trigger a self-serve cluster resize.
+//
+// The PATCH operation is not yet available in ccloud-sdk-go-v2/ksql/v2 — it is
+// being added in cc-api PR #2507 (KSQL-14844), after which the SDK needs to be
+// regenerated and the ksql module dependency in go.mod bumped. Until that
+// lands, calling this method returns a clear, customer-safe error rather than
+// an HTTP failure. See KSQL-14849 for the work item.
+//
+// Wiring instructions once the SDK is regenerated:
+//
+//	cluster := ksqlv2.KsqldbcmV2Cluster{Spec: &ksqlv2.KsqldbcmV2ClusterSpec{Csu: &csu}}
+//	res, httpResp, err := c.KsqlClient.ClustersKsqldbcmV2Api.
+//	    UpdateKsqldbcmV2Cluster(c.ksqlApiContext(), id).
+//	    KsqldbcmV2ClusterUpdate(cluster).Environment(environmentId).Execute()
+//	return res, errors.CatchCCloudV2Error(err, httpResp)
+func (c *Client) UpdateKsqlCluster(id, environmentId string, csu int32) (ksqlv2.KsqldbcmV2Cluster, error) {
+	_ = id
+	_ = environmentId
+	_ = csu
+	return ksqlv2.KsqldbcmV2Cluster{}, fmt.Errorf(
+		"ksqlDB cluster update is not yet available in this CLI build; " +
+			"this command is pending a ccloud-sdk-go-v2/ksql regeneration " +
+			"after cc-api PR #2507 (KSQL-14844) merges. Track KSQL-14849 for status.")
 }
