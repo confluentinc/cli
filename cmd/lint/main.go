@@ -189,6 +189,7 @@ var properNouns = []string{
 	"ksqlDB Server",
 	"ksqlDB",
 	"Node.js",
+	"Organization",
 	"Prometheus",
 	"Python",
 	"Real Time Context Engine",

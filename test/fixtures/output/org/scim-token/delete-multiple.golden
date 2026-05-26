@@ -1,0 +1,2 @@
+warning: GOCOVERDIR not set, no coverage data emitted
+Are you sure you want to delete organization scim tokens "id-1" and "id-2"? (y/n): Deleted organization scim tokens "id-1" and "id-2".

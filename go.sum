@@ -190,6 +190,8 @@ github.com/compose-spec/compose-go/v2 v2.1.3 h1:bD67uqLuL/XgkAK6ir3xZvNLFPxPScEi
 github.com/compose-spec/compose-go/v2 v2.1.3/go.mod h1:lFN0DrMxIncJGYAXTfWuajfwj5haBJqrBkarHcnjJKc=
 github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20250521223017-0e8f6f971b52 h1:19qEGhkbZa5fopKCe0VPIV+Sasby4Pv10z9ZaktwWso=
 github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20250521223017-0e8f6f971b52/go.mod h1:62EMf+5uFEt1BJ2q8WMrUoI9VUSxAbDnmZCGRt/MbA0=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/org v0.2.0 h1:M2CN2vnXsgsi+mxS9Mbq8NQdi/dfRE0ooYVFrZ81R3s=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/org v0.2.0/go.mod h1:G9+rxKPBSPWLEbeYBGLlvt4DzPjifsYBRkDog8sCcRk=
 github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0 h1:zSF4OQUJXWH2JeAo9rsq13ibk+JFdzITGR8S7cFMpzw=
 github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0/go.mod h1:DoxqzzF3JzvJr3fWkvCiOHFlE0GoYpozWxFZ1Ud9ntA=
 github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0 h1:8fWyLwMuy8ec0MVF5Avd54UvbIxhDFhZzanHBVwgxdw=
@@ -250,8 +252,6 @@ github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.2.0 h1:ZHNF2DeqVlNPuKG
 github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.2.0/go.mod h1:KTShFBZA7WG8LcxlWjJpoZFdWkJ+uOw3dDuwAHs5eKU=
 github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.3.0 h1:mC0E1nKUt57AxMM4Lpdfd+KA/YZwJVwro9ER+dCUFi8=
 github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.3.0/go.mod h1:GIHF2cYOUKx+6ycYokr4i8E4cuNBC22xqvO/IhqZ31U=
-github.com/confluentinc/ccloud-sdk-go-v2/org v0.10.0 h1:UN/SU52OApJxMt/zkuxmTGjhAzy1nALcsZbnBP+jfaE=
-github.com/confluentinc/ccloud-sdk-go-v2/org v0.10.0/go.mod h1:K5kVqnlOPD35riIm1VR89uulVwsKlmCbKDWxXSKTFVI=
 github.com/confluentinc/ccloud-sdk-go-v2/provider-integration v0.2.0 h1:UN2a+aqYhk95ro+wVLkeB/8W7n+UV2KsE3jNFbbDCSw=
 github.com/confluentinc/ccloud-sdk-go-v2/provider-integration v0.2.0/go.mod h1:TzompS9F0G6awN5xMC+nguNG8ULElN5UqX2XOBOIPuM=
 github.com/confluentinc/ccloud-sdk-go-v2/rtce v0.1.0 h1:OBa2vm09bOG1oojOP1vNj8V7+M2AfUkYP1sRQ+xlRm4=
