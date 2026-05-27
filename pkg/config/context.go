@@ -26,6 +26,11 @@ type Context struct {
 	LastOrgId           string                         `json:"last_org_id,omitempty"`
 	FeatureFlags        *FeatureFlags                  `json:"feature_flags,omitempty"`
 	IsMFA               bool                           `json:"is_mfa,omitempty"`
+	// GlobalAPIKeys stores org-scoped (Global) API key pairs that are not tied to a single resource.
+	GlobalAPIKeys map[string]*APIKeyPair `json:"global_api_keys,omitempty"`
+	// ActiveGlobalAPIKey is the Global API key chosen via `confluent api-key use`; used as a fallback when no
+	// resource-scoped API key is set on the active cluster.
+	ActiveGlobalAPIKey string `json:"active_global_api_key,omitempty"`
 
 	// Deprecated
 	NetrcMachineName       string                            `json:"netrc_machine_name,omitempty"`
@@ -78,8 +83,53 @@ func (c *Context) validate() error {
 	if c.State == nil {
 		c.State = new(ContextState)
 	}
+	if c.GlobalAPIKeys == nil {
+		c.GlobalAPIKeys = map[string]*APIKeyPair{}
+	}
+	c.validateGlobalAPIKeys()
 	c.KafkaClusterContext.Validate()
 	return nil
+}
+
+func (c *Context) validateGlobalAPIKeys() {
+	missingKey := false
+	mismatchKey := false
+	missingSecret := false
+	for key, pair := range c.GlobalAPIKeys {
+		if pair == nil || pair.Key == "" {
+			delete(c.GlobalAPIKeys, key)
+			missingKey = true
+			continue
+		}
+		if key != pair.Key {
+			delete(c.GlobalAPIKeys, key)
+			mismatchKey = true
+			continue
+		}
+		if pair.Secret == "" {
+			delete(c.GlobalAPIKeys, key)
+			missingSecret = true
+		}
+	}
+	if missingKey || mismatchKey || missingSecret {
+		var problems []string
+		if missingKey {
+			problems = append(problems, "API key missing")
+		}
+		if mismatchKey {
+			problems = append(problems, "key of the dictionary does not match API key of the pair")
+		}
+		if missingSecret {
+			problems = append(problems, "API secret missing")
+		}
+		output.ErrPrintf(false, "There are malformed Global API key pair entries under context \"%s\". Issues: %s. Deleting the malformed entries.\n", c.Name, strings.Join(problems, ", "))
+	}
+	if c.ActiveGlobalAPIKey != "" {
+		if _, ok := c.GlobalAPIKeys[c.ActiveGlobalAPIKey]; !ok {
+			output.ErrPrintf(false, "Active Global API key \"%s\" has no info stored for context \"%s\". Removing active setting.\n", c.ActiveGlobalAPIKey, c.Name)
+			c.ActiveGlobalAPIKey = ""
+		}
+	}
 }
 
 func (c *Context) Save() error {
@@ -507,6 +557,101 @@ func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, c
 	output.ErrPrintf(false, "The issues are the following: %s.\n", strings.Join(problems, ", "))
 	output.ErrPrintln(false, "Deleting the malformed entries.")
 	output.ErrPrintf(false, "You can re-add the API key pair with `confluent api-key store --resource %s`\n", cluster.ID)
+}
+
+// EncryptGlobalAPIKeys encrypts every stored Global API key secret in place. Idempotent: pairs that are
+// already encrypted are skipped (matching APIKeyPair.EncryptSecret semantics).
+func (c *Context) EncryptGlobalAPIKeys() error {
+	for _, pair := range c.GlobalAPIKeys {
+		if err := pair.EncryptSecret(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// DecryptGlobalAPIKeys decrypts every stored Global API key secret in place.
+func (c *Context) DecryptGlobalAPIKeys() error {
+	for _, pair := range c.GlobalAPIKeys {
+		if err := pair.DecryptSecret(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *Context) HasGlobalAPIKey(key string) bool {
+	if c == nil || c.GlobalAPIKeys == nil {
+		return false
+	}
+	_, ok := c.GlobalAPIKeys[key]
+	return ok
+}
+
+// StoreGlobalAPIKey inserts a Global API key pair into the org-level keystore and encrypts it.
+// Callers must persist the Context (Config.Save) after this returns.
+func (c *Context) StoreGlobalAPIKey(pair *APIKeyPair) error {
+	if c.GlobalAPIKeys == nil {
+		c.GlobalAPIKeys = map[string]*APIKeyPair{}
+	}
+	c.GlobalAPIKeys[pair.Key] = pair
+	return c.EncryptGlobalAPIKeys()
+}
+
+func (c *Context) DeleteGlobalAPIKey(key string) {
+	if c == nil || c.GlobalAPIKeys == nil {
+		return
+	}
+	delete(c.GlobalAPIKeys, key)
+	if c.ActiveGlobalAPIKey == key {
+		c.ActiveGlobalAPIKey = ""
+	}
+}
+
+func (c *Context) GetActiveGlobalAPIKey() string {
+	if c == nil {
+		return ""
+	}
+	return c.ActiveGlobalAPIKey
+}
+
+// SetActiveGlobalAPIKey selects the given key as the active Global key. Returns an error if the key
+// is not stored locally.
+func (c *Context) SetActiveGlobalAPIKey(key string) error {
+	if !c.HasGlobalAPIKey(key) {
+		return fmt.Errorf("Global API key %q is not stored in local CLI state", key)
+	}
+	c.ActiveGlobalAPIKey = key
+	return nil
+}
+
+// GetActiveGlobalAPIKeyPair returns the active Global API key pair, or nil if none is set.
+func (c *Context) GetActiveGlobalAPIKeyPair() *APIKeyPair {
+	if c == nil || c.ActiveGlobalAPIKey == "" {
+		return nil
+	}
+	return c.GlobalAPIKeys[c.ActiveGlobalAPIKey]
+}
+
+// ResolveKafkaAPIKey returns the API key/secret to use against the given Kafka cluster: prefer the
+// cluster-scoped active key, falling back to the active Global key. Returned secret is decrypted.
+// Returns ("", "", nil) if neither is set.
+func (c *Context) ResolveKafkaAPIKey(kcc *KafkaClusterConfig) (string, string, error) {
+	if kcc != nil && kcc.APIKey != "" {
+		if pair, ok := kcc.APIKeys[kcc.APIKey]; ok {
+			if err := pair.DecryptSecret(); err != nil {
+				return "", "", err
+			}
+			return pair.Key, pair.Secret, nil
+		}
+	}
+	if pair := c.GetActiveGlobalAPIKeyPair(); pair != nil {
+		if err := pair.DecryptSecret(); err != nil {
+			return "", "", err
+		}
+		return pair.Key, pair.Secret, nil
+	}
+	return "", "", nil
 }
 
 func (c *Context) ParseFlagsIntoContext(cmd *cobra.Command) error {
