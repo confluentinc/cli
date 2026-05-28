@@ -104,6 +104,8 @@ func (s *CLILiveTestSuite) TestRtceTopicCRUDLive() {
 			Args:            "schema-registry schema create --subject " + topicName + "-value --schema " + schemaFile + " --type avro --environment {{.env_id}} -o json",
 			UseStateVars:    true,
 			JSONFieldsExist: []string{"id"},
+			Retries:         5,
+			RetryInterval:   15 * time.Second,
 		},
 	}
 	for _, step := range prereqSteps2 {
