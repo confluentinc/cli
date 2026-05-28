@@ -15,10 +15,53 @@ type Options[T any] struct {
 	Timeout    time.Duration
 }
 
+// PhaseOptions is a declarative form of Options for the common case where
+// readiness is determined by a single status-phase string. The pending and
+// failed phase sets are typically sourced from the resource's OpenAPI status
+// enum (see cli-terraform-generator AsyncConfig).
+type PhaseOptions[T any] struct {
+	Fetch         func() (T, error)
+	Phase         func(T) string
+	PendingPhases []string
+	FailedPhases  []string
+	Tick          time.Duration
+	Timeout       time.Duration
+}
+
 var (
 	ErrTimeout = errors.New("wait timed out")
 	ErrFailed  = errors.New("resource entered failed state")
 )
+
+// PhaseSet returns a predicate reporting whether its argument is in phases.
+// Used to build IsTerminal / IsFailed checks from OpenAPI status enums.
+func PhaseSet(phases ...string) func(string) bool {
+	set := make(map[string]struct{}, len(phases))
+	for _, p := range phases {
+		set[p] = struct{}{}
+	}
+	return func(s string) bool {
+		_, ok := set[s]
+		return ok
+	}
+}
+
+// PollPhases polls opts.Fetch until opts.Phase returns a value not in
+// opts.PendingPhases. If the resulting phase is in opts.FailedPhases the
+// return error is ErrFailed; otherwise it is treated as a successful
+// terminal state. Timeout / context-cancellation / fetch-errors behave as in
+// Poll.
+func PollPhases[T any](ctx context.Context, opts PhaseOptions[T]) (T, error) {
+	pending := PhaseSet(opts.PendingPhases...)
+	failed := PhaseSet(opts.FailedPhases...)
+	return Poll(ctx, Options[T]{
+		Fetch:      opts.Fetch,
+		IsTerminal: func(v T) bool { return !pending(opts.Phase(v)) },
+		IsFailed:   func(v T) bool { return failed(opts.Phase(v)) },
+		Tick:       opts.Tick,
+		Timeout:    opts.Timeout,
+	})
+}
 
 // Poll calls opts.Fetch immediately, then every opts.Tick until IsFailed
 // returns true (ErrFailed), IsTerminal returns true (success), opts.Timeout

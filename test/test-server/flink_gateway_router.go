@@ -228,9 +228,13 @@ func handleStatementGet(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		phase := "COMPLETED"
 		detail := "SQL statement is completed"
-		if mux.Vars(r)["statement"] == "pending-statement" {
+		switch mux.Vars(r)["statement"] {
+		case "pending-statement":
 			phase = "PENDING"
 			detail = "SQL statement is pending"
+		case "failed-statement":
+			phase = "FAILED"
+			detail = "SQL statement execution has failed"
 		}
 		statement := flinkgatewayv1.SqlV1Statement{
 			Name: flinkgatewayv1.PtrString(mux.Vars(r)["statement"]),

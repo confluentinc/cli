@@ -479,6 +479,7 @@ func (s *CLITestSuite) TestFlinkStatementCreate() {
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456`, fixture: "flink/statement/create-service-account-warning.golden"},
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 --wait`, fixture: "flink/statement/create-wait.golden"},
 		{args: `flink statement create pending-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 --wait --wait-timeout 100ms`, fixture: "flink/statement/create-wait-timeout.golden", exitCode: 1},
+		{args: `flink statement create failed-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 --wait`, fixture: "flink/statement/create-wait-failed.golden", exitCode: 1},
 		{args: `flink statement create --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 -o yaml`, fixture: "flink/statement/create-no-name-yaml.golden", regex: true},
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 --property property1=value1,property2=value2`, fixture: "flink/statement/create-with-properties.golden"},
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 --property invalid-format,property1=value1`, fixture: "flink/statement/create-invalid-property.golden", exitCode: 1},
