@@ -187,13 +187,19 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 			Timeout:       timeout,
 		})
 		if err != nil {
-			if errors.Is(err, wait.ErrFailed) {
+			switch {
+			case errors.Is(err, wait.ErrFailed):
 				return clierrors.NewErrorWithSuggestions(
 					fmt.Sprintf(`statement "%s" entered failed phase %q: %s`, name, statement.Status.GetPhase(), statement.Status.GetDetail()),
 					fmt.Sprintf("Inspect the statement with `confluent flink statement describe %s`.", name),
 				)
+			case errors.Is(err, wait.ErrTimeout):
+				return clierrors.NewErrorWithSuggestions(err.Error(), "Increase `--wait-timeout` or omit `--wait`.")
+			default:
+				// Fetch error or context cancellation — surface the underlying
+				// cause unmodified; suggesting a longer timeout would mislead.
+				return err
 			}
-			return clierrors.NewErrorWithSuggestions(err.Error(), "Increase `--wait-timeout` or omit `--wait`.")
 		}
 	}
 

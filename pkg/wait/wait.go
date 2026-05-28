@@ -65,28 +65,39 @@ func PollPhases[T any](ctx context.Context, opts PhaseOptions[T]) (T, error) {
 
 // Poll calls opts.Fetch immediately, then every opts.Tick until IsFailed
 // returns true (ErrFailed), IsTerminal returns true (success), opts.Timeout
-// elapses (ErrTimeout), ctx is cancelled (ctx.Err()), or Fetch returns a
-// non-nil error. Always returns the most recent successfully-fetched T.
+// elapses, or ctx is cancelled (ctx.Err()).
+//
+// Fetch errors are treated as transient and do not abort polling: the loop
+// continues, preserving the most recent successfully-fetched value as `last`.
+// This matches the historical retry.Retry-based behavior callers relied on,
+// where 429/5xx/network blips during polling were retried until timeout. If
+// the timeout elapses while the most recent Fetch errored, that error is
+// returned in place of ErrTimeout so the user sees the underlying cause.
 func Poll[T any](ctx context.Context, opts Options[T]) (T, error) {
-	var last T
+	var (
+		last    T
+		lastErr error
+	)
 
-	check := func() (T, bool, error) {
-		v, err := opts.Fetch()
-		if err != nil {
-			return last, true, err
+	check := func() (bool, error) {
+		v, ferr := opts.Fetch()
+		if ferr != nil {
+			lastErr = ferr
+			return false, nil
 		}
+		lastErr = nil
 		last = v
 		if opts.IsFailed != nil && opts.IsFailed(v) {
-			return last, true, ErrFailed
+			return true, ErrFailed
 		}
 		if opts.IsTerminal(v) {
-			return last, true, nil
+			return true, nil
 		}
-		return last, false, nil
+		return false, nil
 	}
 
-	if v, done, err := check(); done {
-		return v, err
+	if done, err := check(); done {
+		return last, err
 	}
 
 	ticker := time.NewTicker(opts.Tick)
@@ -96,10 +107,13 @@ func Poll[T any](ctx context.Context, opts Options[T]) (T, error) {
 	for {
 		select {
 		case <-ticker.C:
-			if v, done, err := check(); done {
-				return v, err
+			if done, err := check(); done {
+				return last, err
 			}
 		case <-deadline:
+			if lastErr != nil {
+				return last, lastErr
+			}
 			return last, ErrTimeout
 		case <-ctx.Done():
 			return last, ctx.Err()

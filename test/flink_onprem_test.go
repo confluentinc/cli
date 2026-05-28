@@ -418,6 +418,10 @@ func (s *CLITestSuite) TestFlinkStatementCreateOnPrem() {
 		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool -o yaml`, fixture: "flink/statement/create-success-yaml.golden"},
 		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.json`, fixture: "flink/statement/create-success.golden"},
 		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.yaml`, fixture: "flink/statement/create-success.golden"},
+		// --wait: POST returns PENDING; first poll observes RUNNING; framework
+		// returns the post-transition object so the output shows the terminal
+		// phase. Mirrors the cloud --wait coverage in flink_test.go.
+		{args: `flink statement create running-wait-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --wait`, fixture: "flink/statement/create-wait-onprem.golden"},
 		// failure
 		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.properties`, fixture: "flink/statement/create-failure-invalid-configuration-file-format.golden", exitCode: 1},
 		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.csv`, fixture: "flink/statement/create-failure-configuration-file-dne.golden", regex: true, exitCode: 1},

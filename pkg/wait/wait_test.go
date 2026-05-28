@@ -81,7 +81,11 @@ func TestPoll_Timeout(t *testing.T) {
 	require.Equal(t, "PENDING", v.phase)
 }
 
-func TestPoll_FetchError(t *testing.T) {
+// TestPoll_PersistentFetchErrorReturnsLastErrAtTimeout: fetch errors do not
+// abort polling (preserves the historical retry.Retry behavior); when the
+// timeout fires while the most recent fetch errored, the underlying error is
+// surfaced in place of ErrTimeout so users see the real cause.
+func TestPoll_PersistentFetchErrorReturnsLastErrAtTimeout(t *testing.T) {
 	calls := 0
 	fetchErr := fmt.Errorf("transient fetch failure")
 	v, err := Poll(context.Background(), Options[fakeResource]{
@@ -93,25 +97,54 @@ func TestPoll_FetchError(t *testing.T) {
 			return fakeResource{}, fetchErr
 		},
 		IsTerminal: func(r fakeResource) bool { return r.phase != "PENDING" },
-		Tick:       time.Nanosecond,
-		Timeout:    time.Second,
+		Tick:       time.Millisecond,
+		Timeout:    20 * time.Millisecond,
 	})
 	require.ErrorIs(t, err, fetchErr)
-	require.Equal(t, "PENDING", v.phase)
+	require.NotErrorIs(t, err, ErrTimeout)
+	require.Equal(t, "PENDING", v.phase) // last good value preserved
+	require.GreaterOrEqual(t, calls, 2)
 }
 
-func TestPoll_FetchErrorOnFirstCall(t *testing.T) {
+func TestPoll_FetchErrorOnlyOnFirstCallReturnsAtTimeout(t *testing.T) {
 	fetchErr := fmt.Errorf("initial fetch failure")
 	v, err := Poll(context.Background(), Options[fakeResource]{
 		Fetch: func() (fakeResource, error) {
 			return fakeResource{}, fetchErr
 		},
 		IsTerminal: func(r fakeResource) bool { return true },
-		Tick:       time.Nanosecond,
-		Timeout:    time.Second,
+		Tick:       time.Millisecond,
+		Timeout:    20 * time.Millisecond,
 	})
 	require.ErrorIs(t, err, fetchErr)
 	require.Equal(t, fakeResource{}, v)
+}
+
+// TestPoll_FetchErrorThenSuccess: a transient fetch error mid-polling should
+// not abort. Once a subsequent fetch returns successfully and reaches a
+// terminal state, the poll returns success.
+func TestPoll_FetchErrorThenSuccess(t *testing.T) {
+	calls := 0
+	fetchErr := fmt.Errorf("transient 502")
+	v, err := Poll(context.Background(), Options[fakeResource]{
+		Fetch: func() (fakeResource, error) {
+			calls++
+			switch calls {
+			case 1:
+				return fakeResource{phase: "PENDING"}, nil
+			case 2, 3:
+				return fakeResource{}, fetchErr
+			default:
+				return fakeResource{phase: "READY"}, nil
+			}
+		},
+		IsTerminal: func(r fakeResource) bool { return r.phase == "READY" },
+		Tick:       time.Millisecond,
+		Timeout:    time.Second,
+	})
+	require.NoError(t, err)
+	require.Equal(t, "READY", v.phase)
+	require.GreaterOrEqual(t, calls, 4)
 }
 
 func TestPoll_ContextCancelled(t *testing.T) {
