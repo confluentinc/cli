@@ -337,7 +337,6 @@ var vocabWords = []string{
 	"savepoints",
 	"scala",
 	"schemas",
-	"scim",
 	"server",
 	"signup",
 	"siv",
