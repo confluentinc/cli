@@ -38,6 +38,7 @@ func (c *command) newStatementCreateCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("database", "", "The name of the default database.")
 	cmd.Flags().String("flink-configuration", "", "The file path to hold the Flink configuration for the statement.")
 	pcmd.AddWaitFlag(cmd)
+	pcmd.AddNoWaitFlag(cmd)
 	pcmd.AddWaitTimeoutFlag(cmd, flinkStatementCreateWaitTimeout)
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
@@ -116,7 +117,7 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 			Stopped:            cmfsdk.PtrBool(false),
 		},
 	}
-	shouldWait, err := cmd.Flags().GetBool("wait")
+	shouldWait, err := pcmd.ShouldWait(cmd)
 	if err != nil {
 		return err
 	}
