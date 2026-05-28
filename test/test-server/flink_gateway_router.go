@@ -226,6 +226,16 @@ func handleSqlEnvironmentsEnvironmentStatementsStatement(t *testing.T) http.Hand
 
 func handleStatementGet(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		phase := "COMPLETED"
+		detail := "SQL statement is completed"
+		switch mux.Vars(r)["statement"] {
+		case "pending-statement":
+			phase = "PENDING"
+			detail = "SQL statement is pending"
+		case "failed-statement":
+			phase = "FAILED"
+			detail = "SQL statement execution has failed"
+		}
 		statement := flinkgatewayv1.SqlV1Statement{
 			Name: flinkgatewayv1.PtrString(mux.Vars(r)["statement"]),
 			Spec: &flinkgatewayv1.SqlV1StatementSpec{
@@ -238,8 +248,8 @@ func handleStatementGet(t *testing.T) http.HandlerFunc {
 				Principal:     flinkgatewayv1.PtrString(validFlinkStatementPrincipalId),
 			},
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
-				Phase:  "COMPLETED",
-				Detail: flinkgatewayv1.PtrString("SQL statement is completed"),
+				Phase:  phase,
+				Detail: flinkgatewayv1.PtrString(detail),
 				LatestOffsets: &map[string]string{
 					"customers_source": "partition:0,offset:9223372036854775808",
 				},

@@ -1,0 +1,11 @@
++---------------+-------------------------------+
+| Creation Date | 2025-08-05 12:00:00 +0000 UTC |
+| Name          | running-wait-stmt             |
+| Statement     | SELECT * FROM test_table      |
+| Compute Pool  | test-pool                     |
+| Status        | RUNNING                       |
+| Status Detail | Statement is running.         |
+| Parallelism   | 1                             |
+| Stopped       | false                         |
+| SQL Kind      | SELECT                        |
++---------------+-------------------------------+

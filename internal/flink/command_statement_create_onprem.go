@@ -2,6 +2,7 @@ package flink
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -13,10 +14,10 @@ import (
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-	"github.com/confluentinc/cli/v4/pkg/errors"
+	clierrors "github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 	"github.com/confluentinc/cli/v4/pkg/output"
-	"github.com/confluentinc/cli/v4/pkg/retry"
+	"github.com/confluentinc/cli/v4/pkg/wait"
 )
 
 func (c *command) newStatementCreateCommandOnPrem() *cobra.Command {
@@ -36,7 +37,8 @@ func (c *command) newStatementCreateCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("catalog", "", "The name of the default catalog.")
 	cmd.Flags().String("database", "", "The name of the default database.")
 	cmd.Flags().String("flink-configuration", "", "The file path to hold the Flink configuration for the statement.")
-	cmd.Flags().Bool("wait", false, "Boolean flag to block until the statement is running or has failed.")
+	pcmd.AddWaitFlag(cmd)
+	pcmd.AddWaitTimeoutFlag(cmd, flinkStatementCreateWaitTimeout)
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -114,7 +116,7 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 			Stopped:            cmfsdk.PtrBool(false),
 		},
 	}
-	wait, err := cmd.Flags().GetBool("wait")
+	shouldWait, err := cmd.Flags().GetBool("wait")
 	if err != nil {
 		return err
 	}
@@ -124,21 +126,36 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	if wait {
-		err := retry.Retry(time.Second*2, time.Minute, func() error {
-			polledStatement, err := client.GetStatement(c.createContext(), environment, name)
-			if err != nil {
-				return err
-			}
-			if polledStatement.GetStatus().Phase == "PENDING" {
-				return fmt.Errorf(`statement phase is "%s"`, polledStatement.GetStatus().Phase)
-			}
-			// Update the finalStatement with the completed state
-			finalStatement = polledStatement
-			return nil
-		})
+	if shouldWait {
+		timeout, err := cmd.Flags().GetDuration("wait-timeout")
 		if err != nil {
 			return err
+		}
+		finalStatement, err = wait.PollPhases(cmd.Context(), wait.PhaseOptions[cmfsdk.Statement]{
+			Fetch: func() (cmfsdk.Statement, error) {
+				return client.GetStatement(c.createContext(), environment, name)
+			},
+			Phase:         func(s cmfsdk.Statement) string { return s.GetStatus().Phase },
+			PendingPhases: flinkStatementPendingPhases,
+			FailedPhases:  flinkStatementFailedPhases,
+			Tick:          2 * time.Second,
+			Timeout:       timeout,
+		})
+		if err != nil {
+			switch {
+			case errors.Is(err, wait.ErrFailed):
+				status := finalStatement.GetStatus()
+				return clierrors.NewErrorWithSuggestions(
+					fmt.Sprintf(`statement "%s" entered failed phase %q: %s`, name, status.Phase, status.GetDetail()),
+					fmt.Sprintf("Inspect the statement with `confluent flink statement describe %s`.", name),
+				)
+			case errors.Is(err, wait.ErrTimeout):
+				return clierrors.NewErrorWithSuggestions(err.Error(), "Increase `--wait-timeout` or omit `--wait`.")
+			default:
+				// Fetch error or context cancellation — surface the underlying
+				// cause unmodified; suggesting a longer timeout would mislead.
+				return err
+			}
 		}
 	}
 
@@ -184,7 +201,7 @@ func (c *command) readFlinkConfiguration(cmd *cobra.Command) (map[string]string,
 		case ".yaml", ".yml":
 			err = yaml.Unmarshal(data, &flinkConfiguration)
 		default:
-			return nil, errors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
+			return nil, clierrors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
 		}
 		if err != nil {
 			return nil, err
