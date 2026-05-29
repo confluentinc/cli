@@ -15,7 +15,7 @@ type AvroDeserializationProvider struct {
 	deser *avrov2.Deserializer
 }
 
-func (a *AvroDeserializationProvider) InitDeserializer(srClientUrl, srClusterId, mode string, srAuth SchemaRegistryAuth, existingClient schemaregistry.Client) error {
+func (a *AvroDeserializationProvider) InitDeserializer(srClientUrl, srClusterId, kafkaClusterId, mode string, srAuth SchemaRegistryAuth, existingClient schemaregistry.Client) error {
 	// Note: Now Serializer/Deserializer are tightly coupled with Schema Registry
 	// If existingClient is not nil, we should share this client between ser and deser.
 	// As the shared client is referred as mock client to store the same set of schemas in cache
@@ -33,6 +33,8 @@ func (a *AvroDeserializationProvider) InitDeserializer(srClientUrl, srClusterId,
 			localKmsSecretKey: localKmsSecretValue,
 		}
 	}
+
+	serdeConfig.SubjectNameStrategyType, serdeConfig.SubjectNameStrategyConfig = subjectStrategy(kafkaClusterId)
 
 	var serdeType serde.Type
 	switch mode {
