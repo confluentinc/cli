@@ -34,12 +34,7 @@ func (a *AvroDeserializationProvider) InitDeserializer(srClientUrl, srClusterId,
 		}
 	}
 
-	if kafkaClusterId != "" {
-		serdeConfig.SubjectNameStrategyType = serde.AssociatedNameStrategyType
-		serdeConfig.SubjectNameStrategyConfig = map[string]string{serde.KafkaClusterIDConfig: kafkaClusterId}
-	} else {
-		serdeConfig.SubjectNameStrategyType = serde.TopicNameStrategyType
-	}
+	serdeConfig.SubjectNameStrategyType, serdeConfig.SubjectNameStrategyConfig = subjectStrategy(kafkaClusterId)
 
 	var serdeType serde.Type
 	switch mode {

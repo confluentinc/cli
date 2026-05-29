@@ -165,6 +165,15 @@ func NewSchemaRegistryClient(srClientUrl, srClusterId string, srAuth SchemaRegis
 	return initSchemaRegistryClient(srClientUrl, srClusterId, srAuth, nil)
 }
 
+// returns the SerDes subject name strategy + its config for a given Kafka cluster id.
+// on-prem callers which pass "" as default will stay on TopicNameStrategy.
+func subjectStrategy(kafkaClusterId string) (serde.SubjectNameStrategyType, map[string]string) {
+	if kafkaClusterId != "" {
+		return serde.AssociatedNameStrategyType, map[string]string{serde.KafkaClusterIDConfig: kafkaClusterId}
+	}
+	return serde.TopicNameStrategyType, nil
+}
+
 // returns the SR subject for (topic, mode) by querying the associations API with the Kafka cluster id
 // as resource namespace. Falls backt o default TopicNameStrategy (<topic>-<mode>) if unmatched.
 func ResolveSubject(client schemaregistry.Client, kafkaClusterId, topic, mode string) string {
