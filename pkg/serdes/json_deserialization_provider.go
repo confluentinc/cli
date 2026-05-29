@@ -15,7 +15,7 @@ type JsonDeserializationProvider struct {
 	deser *jsonschema.Deserializer
 }
 
-func (j *JsonDeserializationProvider) InitDeserializer(srClientUrl, srClusterId, mode string, srAuth SchemaRegistryAuth, existingClient schemaregistry.Client) error {
+func (j *JsonDeserializationProvider) InitDeserializer(srClientUrl, srClusterId, kafkaClusterId, mode string, srAuth SchemaRegistryAuth, existingClient schemaregistry.Client) error {
 	// Note: Now Serializer/Deserializer are tightly coupled with Schema Registry
 	// If existingClient is not nil, we should share this client between ser and deser.
 	// As the shared client is referred as mock client to store the same set of schemas in cache
@@ -34,6 +34,13 @@ func (j *JsonDeserializationProvider) InitDeserializer(srClientUrl, srClusterId,
 		serdeConfig.RuleConfig = map[string]string{
 			localKmsSecretKey: localKmsSecretValue,
 		}
+	}
+
+	if kafkaClusterId != "" {
+		serdeConfig.SubjectNameStrategyType = serde.AssociatedNameStrategyType
+		serdeConfig.SubjectNameStrategyConfig = map[string]string{serde.KafkaClusterIDConfig: kafkaClusterId}
+	} else {
+		serdeConfig.SubjectNameStrategyType = serde.TopicNameStrategyType
 	}
 
 	var serdeType serde.Type

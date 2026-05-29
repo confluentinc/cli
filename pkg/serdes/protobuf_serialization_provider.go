@@ -43,7 +43,7 @@ type ProtobufSerializationProvider struct {
 	message gproto.Message
 }
 
-func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, srClusterId, mode string, schemaId int, srAuth SchemaRegistryAuth) error {
+func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, srClusterId, kafkaClusterId, mode string, schemaId int, srAuth SchemaRegistryAuth) error {
 	serdeClient, err := initSchemaRegistryClient(srClientUrl, srClusterId, srAuth, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create serializer-specific Schema Registry client: %w", err)
@@ -80,6 +80,13 @@ func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, srClusterId,
 	if schemaId > 0 {
 		serdeConfig.UseSchemaID = schemaId
 		serdeConfig.UseLatestVersion = false
+	}
+
+	if kafkaClusterId != "" {
+		serdeConfig.SubjectNameStrategyType = serde.AssociatedNameStrategyType
+		serdeConfig.SubjectNameStrategyConfig = map[string]string{serde.KafkaClusterIDConfig: kafkaClusterId}
+	} else {
+		serdeConfig.SubjectNameStrategyType = serde.TopicNameStrategyType
 	}
 
 	var serdeType serde.Type

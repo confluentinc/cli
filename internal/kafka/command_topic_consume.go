@@ -292,6 +292,7 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 		SrApiSecret:       srApiSecret,
 		SrClusterId:       srClusterId,
 		SrClusterEndpoint: srEndpoint,
+		KafkaClusterId:    cluster.ID,
 		Token:             token,
 		KeyFormat:         keyFormat,
 		ValueFormat:       valueFormat,
