@@ -21,12 +21,14 @@ import (
 )
 
 type AvroSerializationProvider struct {
-	ser      *avrov2.Serializer
-	schemaId int
-	mode     string
+	ser            *avrov2.Serializer
+	schemaId       int
+	mode           string
+	kafkaClusterId string
+	subjectCache   map[string]string
 }
 
-func (a *AvroSerializationProvider) InitSerializer(srClientUrl, srClusterId, mode string, schemaId int, srAuth SchemaRegistryAuth) error {
+func (a *AvroSerializationProvider) InitSerializer(srClientUrl, srClusterId, kafkaClusterId, mode string, schemaId int, srAuth SchemaRegistryAuth) error {
 	serdeClient, err := initSchemaRegistryClient(srClientUrl, srClusterId, srAuth, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create serializer-specific Schema Registry client: %w", err)
@@ -65,6 +67,13 @@ func (a *AvroSerializationProvider) InitSerializer(srClientUrl, srClusterId, mod
 		serdeConfig.UseLatestVersion = false
 	}
 
+	if kafkaClusterId != "" {
+		serdeConfig.SubjectNameStrategyType = serde.AssociatedNameStrategyType
+		serdeConfig.SubjectNameStrategyConfig = map[string]string{serde.KafkaClusterIDConfig: kafkaClusterId}
+	} else {
+		serdeConfig.SubjectNameStrategyType = serde.TopicNameStrategyType
+	}
+
 	var serdeType serde.Type
 	if mode == "key" {
 		serdeType = serde.KeySerde
@@ -86,6 +95,8 @@ func (a *AvroSerializationProvider) InitSerializer(srClientUrl, srClusterId, mod
 		a.schemaId = 1
 	}
 	a.mode = mode
+	a.kafkaClusterId = kafkaClusterId
+	a.subjectCache = map[string]string{}
 	return nil
 }
 
@@ -98,8 +109,14 @@ func (a *AvroSerializationProvider) GetSchemaName() string {
 }
 
 func (a *AvroSerializationProvider) Serialize(topic, message string) ([]kafka.Header, []byte, error) {
-	// Step#1: Fetch the schemaInfo based on subject and schema ID
-	schemaObj, err := a.GetSchemaRegistryClient().GetBySubjectAndID(topic+"-"+a.mode, a.schemaId)
+	// Step#1: Fetch the schemaInfo based on subject and schema ID.
+	// Cache the per-topic subject so we don't re-hit the associations API on every message.
+	subject, ok := a.subjectCache[topic]
+	if !ok {
+		subject = ResolveSubject(a.GetSchemaRegistryClient(), a.kafkaClusterId, topic, a.mode)
+		a.subjectCache[topic] = subject
+	}
+	schemaObj, err := a.GetSchemaRegistryClient().GetBySubjectAndID(subject, a.schemaId)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to serialize message: %w", err)
 	}
