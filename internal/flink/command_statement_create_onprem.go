@@ -16,7 +16,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 	"github.com/confluentinc/cli/v4/pkg/output"
-	"github.com/confluentinc/cli/v4/pkg/retry"
+	"github.com/confluentinc/cli/v4/pkg/wait"
 )
 
 func (c *command) newStatementCreateCommandOnPrem() *cobra.Command {
@@ -36,7 +36,9 @@ func (c *command) newStatementCreateCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("catalog", "", "The name of the default catalog.")
 	cmd.Flags().String("database", "", "The name of the default database.")
 	cmd.Flags().String("flink-configuration", "", "The file path to hold the Flink configuration for the statement.")
-	cmd.Flags().Bool("wait", false, "Boolean flag to block until the statement is running or has failed.")
+	pcmd.AddWaitFlag(cmd)
+	pcmd.AddNoWaitFlag(cmd)
+	pcmd.AddWaitTimeoutFlag(cmd, flinkStatementCreateWaitTimeout)
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -114,7 +116,7 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 			Stopped:            cmfsdk.PtrBool(false),
 		},
 	}
-	wait, err := cmd.Flags().GetBool("wait")
+	shouldWait, err := pcmd.ShouldWait(cmd)
 	if err != nil {
 		return err
 	}
@@ -124,21 +126,37 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	if wait {
-		err := retry.Retry(time.Second*2, time.Minute, func() error {
-			polledStatement, err := client.GetStatement(c.createContext(), environment, name)
-			if err != nil {
-				return err
-			}
-			if polledStatement.GetStatus().Phase == "PENDING" {
-				return fmt.Errorf(`statement phase is "%s"`, polledStatement.GetStatus().Phase)
-			}
-			// Update the finalStatement with the completed state
-			finalStatement = polledStatement
-			return nil
-		})
+	if shouldWait {
+		timeout, err := cmd.Flags().GetDuration("wait-timeout")
 		if err != nil {
 			return err
+		}
+		finalStatement, err = wait.PollPhases(cmd.Context(), wait.PhaseOptions[cmfsdk.Statement]{
+			Fetch: func() (cmfsdk.Statement, error) {
+				return client.GetStatement(c.createContext(), environment, name)
+			},
+			Phase:         func(s cmfsdk.Statement) string { return s.GetStatus().Phase },
+			PendingPhases: flinkStatementPendingPhases,
+			FailedPhases:  flinkStatementFailedPhases,
+			PollInterval:  2 * time.Second,
+			Timeout:       timeout,
+		})
+		if err != nil {
+			status := finalStatement.GetStatus()
+			switch err {
+			case wait.ErrFailed:
+				return errors.NewErrorWithSuggestions(
+					fmt.Sprintf(`statement "%s" entered failed phase %q: %s`, name, status.Phase, status.GetDetail()),
+					fmt.Sprintf("Inspect the statement with `confluent flink statement describe %s`.", name),
+				)
+			case wait.ErrTimeout:
+				return errors.NewErrorWithSuggestions(
+					fmt.Sprintf(`wait timed out: statement "%s" is still in phase %q`, name, status.Phase),
+					"Increase `--wait-timeout` or omit `--wait`.",
+				)
+			default:
+				return err
+			}
 		}
 	}
 

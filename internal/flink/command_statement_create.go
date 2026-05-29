@@ -16,8 +16,22 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/properties"
-	"github.com/confluentinc/cli/v4/pkg/retry"
+	"github.com/confluentinc/cli/v4/pkg/wait"
 )
+
+// Phase enum from flink-gateway/v1 SqlV1StatementStatus.Phase. PENDING /
+// FAILING / STOPPING / DELETING are transitioning states; FAILED is the only
+// terminal failure; RUNNING / COMPLETED / STOPPED / DEGRADED are terminal
+// success. The generator will source the same sets from AsyncConfig.
+var (
+	flinkStatementPendingPhases = []string{"PENDING", "FAILING", "STOPPING", "DELETING"}
+	flinkStatementFailedPhases  = []string{"FAILED"}
+)
+
+// statementsAPICreateTimeout aligns with terraform-provider-confluent's
+// statementsAPICreateTimeout in internal/provider/constants.go. CLI users can
+// shorten it with --wait-timeout; TF has no equivalent override.
+const flinkStatementCreateWaitTimeout = 6 * time.Hour
 
 func (c *command) newStatementCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -41,7 +55,9 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 	c.addComputePoolFlag(cmd)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	c.addDatabaseFlag(cmd)
-	cmd.Flags().Bool("wait", false, "Block until the statement is running or has failed.")
+	pcmd.AddWaitFlag(cmd)
+	pcmd.AddNoWaitFlag(cmd)
+	pcmd.AddWaitTimeoutFlag(cmd, flinkStatementCreateWaitTimeout)
 	cmd.Flags().StringSlice("property", []string{}, "A mechanism to pass properties in the form key=value when creating a Flink statement.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -151,25 +167,46 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	wait, err := cmd.Flags().GetBool("wait")
+	shouldWait, err := pcmd.ShouldWait(cmd)
 	if err != nil {
 		return err
 	}
-	if wait {
-		err := retry.Retry(time.Second, time.Minute, func() error {
-			statement, err = client.GetStatement(environmentId, name, c.Context.LastOrgId)
-			if err != nil {
-				return err
-			}
-
-			if statement.Status.GetPhase() == "PENDING" {
-				return fmt.Errorf(`statement phase is "%s"`, statement.Status.GetPhase())
-			}
-
-			return nil
-		})
+	if shouldWait {
+		timeout, err := cmd.Flags().GetDuration("wait-timeout")
 		if err != nil {
 			return err
+		}
+		statement, err = wait.PollPhases(cmd.Context(), wait.PhaseOptions[flinkgatewayv1.SqlV1Statement]{
+			Fetch: func() (flinkgatewayv1.SqlV1Statement, error) {
+				return client.GetStatement(environmentId, name, c.Context.LastOrgId)
+			},
+			Phase:         func(s flinkgatewayv1.SqlV1Statement) string { return s.Status.GetPhase() },
+			PendingPhases: flinkStatementPendingPhases,
+			FailedPhases:  flinkStatementFailedPhases,
+			PollInterval:  time.Second,
+			Timeout:       timeout,
+		})
+		if err != nil {
+			// wait.ErrFailed and wait.ErrTimeout are package-level sentinels
+			// returned directly from Poll (never wrapped); a direct == compare
+			// is correct and avoids importing stdlib errors alongside the CLI
+			// errors package.
+			switch err {
+			case wait.ErrFailed:
+				return errors.NewErrorWithSuggestions(
+					fmt.Sprintf(`statement "%s" entered failed phase %q: %s`, name, statement.Status.GetPhase(), statement.Status.GetDetail()),
+					fmt.Sprintf("Inspect the statement with `confluent flink statement describe %s`.", name),
+				)
+			case wait.ErrTimeout:
+				return errors.NewErrorWithSuggestions(
+					fmt.Sprintf(`wait timed out: statement "%s" is still in phase %q`, name, statement.Status.GetPhase()),
+					"Increase `--wait-timeout` or omit `--wait`.",
+				)
+			default:
+				// Fetch error or context cancellation — surface the underlying
+				// cause unmodified; suggesting a longer timeout would mislead.
+				return err
+			}
 		}
 	}
 
