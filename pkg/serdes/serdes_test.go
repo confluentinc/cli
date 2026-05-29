@@ -46,7 +46,7 @@ func TestInitSchemaRegistryClient(t *testing.T) {
 	// Basic Auth
 	provider, err := GetDeserializationProvider(avroSchemaName)
 	req.Nil(err)
-	err = provider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{
+	err = provider.InitDeserializer(mockClientUrl, "", "", "value", SchemaRegistryAuth{
 		ApiKey:    "key",
 		ApiSecret: "secret",
 	}, nil)
@@ -60,7 +60,7 @@ func TestInitSchemaRegistryClient(t *testing.T) {
 	serde.GlobalRuleRegistry().Clear()
 	provider, err = GetDeserializationProvider(jsonSchemaName)
 	req.Nil(err)
-	err = provider.InitDeserializer(mockClientUrl, "lsrc-abc123", "value", SchemaRegistryAuth{Token: "token"}, nil)
+	err = provider.InitDeserializer(mockClientUrl, "lsrc-abc123", "", "value", SchemaRegistryAuth{Token: "token"}, nil)
 	req.Nil(err)
 	config = provider.GetSchemaRegistryClient().Config()
 	req.Equal(config.SchemaRegistryURL, mockClientUrl)
@@ -72,7 +72,7 @@ func TestInitSchemaRegistryClient(t *testing.T) {
 	serde.GlobalRuleRegistry().Clear()
 	provider, err = GetDeserializationProvider(protobufSchemaName)
 	req.Nil(err)
-	err = provider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{
+	err = provider.InitDeserializer(mockClientUrl, "", "", "value", SchemaRegistryAuth{
 		CertificateAuthorityPath: "ca.cert",
 		ClientCertPath:           "client.crt",
 		ClientKeyPath:            "client.key",
@@ -146,7 +146,7 @@ func TestAvroSerdesValid(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -168,7 +168,7 @@ func TestAvroSerdesValid(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(avroSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
 	actualString, err := deserializationProvider.Deserialize("topic1", nil, data)
@@ -189,7 +189,7 @@ func TestAvroSerdesValidWithHeaders(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	serializationProvider.SetSchemaIDSerializer(serde.HeaderSchemaIDSerializer)
 
@@ -210,7 +210,7 @@ func TestAvroSerdesValidWithHeaders(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(avroSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
 	actualString, err := deserializationProvider.Deserialize("topic1", headers, data)
@@ -228,7 +228,7 @@ func TestAvroSerdesInvalid(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -246,7 +246,7 @@ func TestAvroSerdesInvalid(t *testing.T) {
 	deserializationProvider, _ := GetDeserializationProvider(avroSchemaName)
 	req.Nil(err)
 
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
 	brokenString := `{"f1"`
@@ -276,7 +276,7 @@ func TestAvroSerdesNestedValid(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -298,7 +298,7 @@ func TestAvroSerdesNestedValid(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(avroSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
 	actualString, err := deserializationProvider.Deserialize("topic1", nil, expectedBytes)
@@ -320,7 +320,7 @@ func TestAvroSerdesValidWithRuleSet(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -358,7 +358,7 @@ func TestAvroSerdesValidWithRuleSet(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(avroSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
 	actualString, err := deserializationProvider.Deserialize("topic1", nil, data)
@@ -380,7 +380,7 @@ func TestAvroSerdesValidWithCSPERuleSet(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -418,7 +418,7 @@ func TestAvroSerdesValidWithCSPERuleSet(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(avroSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
 	actualString, err := deserializationProvider.Deserialize("topic1", nil, data)
@@ -439,7 +439,7 @@ func TestJsonSerdesValid(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -461,7 +461,7 @@ func TestJsonSerdesValid(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(jsonSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
 	err = deserializationProvider.LoadSchema("topic1-value", schemaPath, serde.ValueSerde, nil)
@@ -483,7 +483,7 @@ func TestJsonSerdesValidWithHeaders(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	serializationProvider.SetSchemaIDSerializer(serde.HeaderSchemaIDSerializer)
 
@@ -504,7 +504,7 @@ func TestJsonSerdesValidWithHeaders(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(jsonSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
 	actualString, err := deserializationProvider.Deserialize("topic1", headers, expectedBytes)
@@ -536,7 +536,7 @@ func TestJsonSerdesReference(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
-	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -566,7 +566,7 @@ func TestJsonSerdesReference(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(jsonSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
 	err = deserializationProvider.LoadSchema("topic1-value", schemaPath, serde.ValueSerde, nil)
@@ -585,7 +585,7 @@ func TestJsonSerdesInvalid(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -601,7 +601,7 @@ func TestJsonSerdesInvalid(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(jsonSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
 	brokenString := `{"f1":`
@@ -638,7 +638,7 @@ func TestJsonSerdesNestedValid(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -660,7 +660,7 @@ func TestJsonSerdesNestedValid(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(jsonSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
 	actualString, err := deserializationProvider.Deserialize("topic1", nil, expectedBytes)
@@ -681,7 +681,7 @@ func TestJsonSerdesValidWithRuleSet(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -719,7 +719,7 @@ func TestJsonSerdesValidWithRuleSet(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(jsonSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
 	actualString, err := deserializationProvider.Deserialize("topic1", nil, data)
@@ -741,7 +741,7 @@ func TestJsonSerdesValidWithCSPERuleSet(t *testing.T) {
 
 	// Initialize the mock serializer and use latest schemaId
 	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
+	err := serializationProvider.InitSerializer(mockClientUrl, "", "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -779,7 +779,7 @@ func TestJsonSerdesValidWithCSPERuleSet(t *testing.T) {
 
 	// Initialize the mock deserializer
 	deserializationProvider, _ := GetDeserializationProvider(jsonSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 
 	actualString, err := deserializationProvider.Deserialize("topic1", nil, data)
@@ -808,7 +808,7 @@ func TestProtobufSerdesValid(t *testing.T) {
 	expectedString := `{"name":"abc","page":1,"result":2.5}`
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
-	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -826,7 +826,7 @@ func TestProtobufSerdesValid(t *testing.T) {
 	req.Nil(err)
 
 	deserializationProvider, _ := GetDeserializationProvider(protobufSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 	err = deserializationProvider.LoadSchema("topic1-value", tempDir, serde.ValueSerde, &kafka.Message{Value: data})
 	req.Nil(err)
@@ -855,7 +855,7 @@ func TestProtobufSerdesValidWithHeaders(t *testing.T) {
 	expectedString := `{"name":"abc","page":1,"result":2.5}`
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
-	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	serializationProvider.SetSchemaIDSerializer(serde.HeaderSchemaIDSerializer)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
@@ -874,7 +874,7 @@ func TestProtobufSerdesValidWithHeaders(t *testing.T) {
 	req.Nil(err)
 
 	deserializationProvider, _ := GetDeserializationProvider(protobufSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 	err = deserializationProvider.LoadSchema("topic1-value", tempDir, serde.ValueSerde, &kafka.Message{
 		Value:   data,
@@ -925,7 +925,7 @@ message Person {
 	expectedString := `{"name":"abc","address":{"city":"LA"},"result":2}`
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
-	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{"address.proto": referencePath})
 	req.Nil(err)
@@ -957,7 +957,7 @@ message Person {
 	req.Nil(err)
 
 	deserializationProvider, _ := GetDeserializationProvider(protobufSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 	err = deserializationProvider.LoadSchema("topic1-value", tempDir, serde.ValueSerde, &kafka.Message{Value: data})
 	req.Nil(err)
@@ -993,7 +993,7 @@ func TestProtobufSerdesInvalid(t *testing.T) {
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
-	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -1012,7 +1012,7 @@ func TestProtobufSerdesInvalid(t *testing.T) {
 	req.Nil(err)
 
 	deserializationProvider, _ := GetDeserializationProvider(protobufSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 	err = deserializationProvider.LoadSchema("topic1-value", tempDir, serde.ValueSerde, &kafka.Message{Value: data})
 	req.Nil(err)
@@ -1064,7 +1064,7 @@ func TestProtobufSerdesNestedValid(t *testing.T) {
 	expectedString := `{"name":"abc","id":2,"add":{"zip":"123","street":"def"},"phones":{"number":"234"}}`
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
-	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -1082,7 +1082,7 @@ func TestProtobufSerdesNestedValid(t *testing.T) {
 	req.Nil(err)
 
 	deserializationProvider, _ := GetDeserializationProvider(protobufSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 	err = deserializationProvider.LoadSchema("topic1-value", tempDir, serde.ValueSerde, &kafka.Message{Value: data})
 	req.Nil(err)
@@ -1119,7 +1119,7 @@ func TestProtobufSerdesValidWithRuleSet(t *testing.T) {
 	expectedString := `{"name":"abc","page":1,"result":2.5}`
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
-	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -1156,7 +1156,7 @@ func TestProtobufSerdesValidWithRuleSet(t *testing.T) {
 	req.Nil(err)
 
 	deserializationProvider, _ := GetDeserializationProvider(protobufSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 	err = deserializationProvider.LoadSchema("topic1-value", tempDir, serde.ValueSerde, &kafka.Message{Value: data})
 	req.Nil(err)
@@ -1190,7 +1190,7 @@ func TestProtobufSerdesValidWithCSPERuleSet(t *testing.T) {
 	expectedString := `{"name":"abc","page":1,"result":2.5}`
 
 	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
-	err = serializationProvider.InitSerializer(mockClientUrl, "", "value", -1, SchemaRegistryAuth{})
+	err = serializationProvider.InitSerializer(mockClientUrl, "", "", "value", -1, SchemaRegistryAuth{})
 	req.Nil(err)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
@@ -1227,7 +1227,7 @@ func TestProtobufSerdesValidWithCSPERuleSet(t *testing.T) {
 	req.Nil(err)
 
 	deserializationProvider, _ := GetDeserializationProvider(protobufSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "value", SchemaRegistryAuth{}, client)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", "", "value", SchemaRegistryAuth{}, client)
 	req.Nil(err)
 	err = deserializationProvider.LoadSchema("topic1-value", tempDir, serde.ValueSerde, &kafka.Message{Value: data})
 	req.Nil(err)
@@ -1258,4 +1258,168 @@ func readSchemaReferences(references string) ([]schemaregistry.Reference, error)
 	}
 
 	return refs, nil
+}
+
+func newMockClient(t *testing.T) schemaregistry.Client {
+	t.Helper()
+	client, err := schemaregistry.NewClient(schemaregistry.NewConfig(mockClientUrl))
+	require.NoError(t, err)
+	return client
+}
+
+func seedAssociation(t *testing.T, client schemaregistry.Client, topic, kafkaClusterId, mode, subject string) {
+	t.Helper()
+	// The mock requires the subject to have a registered schema before it
+	// will accept an association referencing it.
+	_, err := client.Register(subject, schemaregistry.SchemaInfo{
+		Schema:     `{"type":"record","name":"R","fields":[{"name":"f","type":"int"}]}`,
+		SchemaType: "AVRO",
+	}, false)
+	require.NoError(t, err)
+	_, err = client.CreateOrUpdateAssociation(schemaregistry.AssociationCreateOrUpdateRequest{
+		ResourceName:      topic,
+		ResourceNamespace: kafkaClusterId,
+		ResourceID:        topic + ":" + kafkaClusterId,
+		ResourceType:      "topic",
+		Associations: []schemaregistry.AssociationCreateOrUpdateInfo{{
+			Subject:         subject,
+			AssociationType: mode,
+		}},
+	})
+	require.NoError(t, err)
+}
+
+func TestResolveSubject(t *testing.T) {
+	t.Run("nil client falls back to TopicNameStrategy", func(t *testing.T) {
+		require.Equal(t, "topic1-value", ResolveSubject(nil, "lkc-123", "topic1", "value"))
+	})
+
+	t.Run("empty kafkaClusterId falls back to TopicNameStrategy", func(t *testing.T) {
+		client := newMockClient(t)
+		require.Equal(t, "topic1-value", ResolveSubject(client, "", "topic1", "value"))
+	})
+
+	t.Run("no association falls back to TopicNameStrategy", func(t *testing.T) {
+		client := newMockClient(t)
+		require.Equal(t, "topic1-value", ResolveSubject(client, "lkc-123", "topic1", "value"))
+	})
+
+	t.Run("matching association returns its subject", func(t *testing.T) {
+		client := newMockClient(t)
+		seedAssociation(t, client, "topic1", "lkc-123", "value", "custom-value-subject")
+		require.Equal(t, "custom-value-subject", ResolveSubject(client, "lkc-123", "topic1", "value"))
+	})
+
+	t.Run("association for other mode falls back", func(t *testing.T) {
+		client := newMockClient(t)
+		seedAssociation(t, client, "topic1", "lkc-123", "key", "custom-key-subject")
+		require.Equal(t, "topic1-value", ResolveSubject(client, "lkc-123", "topic1", "value"))
+	})
+
+	t.Run("association under different cluster id falls back", func(t *testing.T) {
+		client := newMockClient(t)
+		seedAssociation(t, client, "topic1", "lkc-other", "value", "should-not-be-used")
+		require.Equal(t, "topic1-value", ResolveSubject(client, "lkc-123", "topic1", "value"))
+	})
+}
+
+// TestAvroSerdesUsesAssociatedSubject confirms that, end-to-end, configuring an
+// Avro serializer with a non-empty kafkaClusterId routes serialization to the
+// associated subject. The on-prem variant (empty kafkaClusterId) is exercised
+// by the existing TestAvroSerdesValid which seeds under "topic1-value".
+func TestAvroSerdesUsesAssociatedSubject(t *testing.T) {
+	req := require.New(t)
+
+	schemaString := `{"type":"record","name":"myRecord","fields":[{"name":"f1","type":"int"}]}`
+	schemaPath := filepath.Join(tempDir, "avro-schema-associated.txt")
+	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
+
+	const (
+		kafkaClusterId = "lkc-assoc-test"
+		topic          = "associated-topic"
+		associated     = "custom-associated-value"
+	)
+
+	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", kafkaClusterId, "value", -1, SchemaRegistryAuth{})
+	req.Nil(err)
+	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
+	req.Nil(err)
+
+	// Register the real schema under the associated subject first, then
+	// attach an association without re-registering (so the associated
+	// subject's only version is the test's schema at id=1).
+	client := serializationProvider.GetSchemaRegistryClient()
+	info := schemaregistry.SchemaInfo{Schema: schemaString, SchemaType: "AVRO"}
+	_, err = client.Register(associated, info, false)
+	req.Nil(err)
+	_, err = client.CreateOrUpdateAssociation(schemaregistry.AssociationCreateOrUpdateRequest{
+		ResourceName:      topic,
+		ResourceNamespace: kafkaClusterId,
+		ResourceID:        topic + ":" + kafkaClusterId,
+		ResourceType:      "topic",
+		Associations: []schemaregistry.AssociationCreateOrUpdateInfo{{
+			Subject:         associated,
+			AssociationType: "value",
+		}},
+	})
+	req.Nil(err)
+
+	_, _, err = serializationProvider.Serialize(topic, `{"f1":123}`)
+	req.Nil(err, "serialize should succeed using the associated subject")
+
+	// Verify the serializer did not fall back to TopicNameStrategy by
+	// confirming no schema is registered under "<topic>-value".
+	_, err = client.GetLatestSchemaMetadata(topic + "-value")
+	req.Error(err, "schema should not be resolvable under TopicNameStrategy when an association exists")
+}
+
+// TestAvroSerdesAssociatedRoundTrip verifies the consume side: when an
+// association exists, the deserializer (configured with AssociatedNameStrategy)
+// looks up the schema under the associated subject and decodes correctly.
+func TestAvroSerdesAssociatedRoundTrip(t *testing.T) {
+	req := require.New(t)
+
+	schemaString := `{"type":"record","name":"myRecord","fields":[{"name":"f1","type":"int"}]}`
+	schemaPath := filepath.Join(tempDir, "avro-schema-rt.txt")
+	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
+
+	const (
+		kafkaClusterId = "lkc-rt-test"
+		topic          = "rt-topic"
+		associated     = "rt-associated-value"
+		message        = `{"f1":7}`
+	)
+
+	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", kafkaClusterId, "value", -1, SchemaRegistryAuth{})
+	req.Nil(err)
+	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
+	req.Nil(err)
+
+	client := serializationProvider.GetSchemaRegistryClient()
+	_, err = client.Register(associated, schemaregistry.SchemaInfo{Schema: schemaString, SchemaType: "AVRO"}, false)
+	req.Nil(err)
+	_, err = client.CreateOrUpdateAssociation(schemaregistry.AssociationCreateOrUpdateRequest{
+		ResourceName:      topic,
+		ResourceNamespace: kafkaClusterId,
+		ResourceID:        topic + ":" + kafkaClusterId,
+		ResourceType:      "topic",
+		Associations: []schemaregistry.AssociationCreateOrUpdateInfo{{
+			Subject:         associated,
+			AssociationType: "value",
+		}},
+	})
+	req.Nil(err)
+
+	_, data, err := serializationProvider.Serialize(topic, message)
+	req.Nil(err)
+
+	deserializationProvider, _ := GetDeserializationProvider(avroSchemaName)
+	err = deserializationProvider.InitDeserializer(mockClientUrl, "", kafkaClusterId, "value", SchemaRegistryAuth{}, client)
+	req.Nil(err)
+
+	decoded, err := deserializationProvider.Deserialize(topic, nil, data)
+	req.Nil(err, "deserialize should succeed using the associated subject")
+	req.JSONEq(message, decoded)
 }
