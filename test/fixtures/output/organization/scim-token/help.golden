@@ -1,0 +1,19 @@
+Manage organization scim tokens.
+
+Usage:
+  confluent organization scim-token [command]
+
+Aliases:
+  scim-token, st
+
+Available Commands:
+  create      Create an organization scim token.
+  delete      Delete one or more organization scim tokens.
+  list        List organization scim tokens.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent organization scim-token [command] --help" for more information about a command.
