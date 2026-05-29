@@ -68,7 +68,7 @@ type SchemaRegistryAuth struct {
 }
 
 type SerializationProvider interface {
-	InitSerializer(srClientUrl, srClusterId, mode string, schemaId int, srAuth SchemaRegistryAuth) error
+	InitSerializer(srClientUrl, srClusterId, kafkaClusterId, mode string, schemaId int, srAuth SchemaRegistryAuth) error
 	LoadSchema(string, map[string]string) error
 	Serialize(string, string) ([]kafka.Header, []byte, error)
 	GetSchemaName() string
@@ -77,7 +77,7 @@ type SerializationProvider interface {
 }
 
 type DeserializationProvider interface {
-	InitDeserializer(srClientUrl, srClusterId, mode string, srAuth SchemaRegistryAuth, existingClient schemaregistry.Client) error
+	InitDeserializer(srClientUrl, srClusterId, kafkaClusterId, mode string, srAuth SchemaRegistryAuth, existingClient schemaregistry.Client) error
 	LoadSchema(string, string, serde.Type, *kafka.Message) error
 	Deserialize(string, []kafka.Header, []byte) (string, error)
 	GetSchemaRegistryClient() schemaregistry.Client
@@ -138,6 +138,15 @@ func GetDeserializationProvider(valueFormat string) (DeserializationProvider, er
 
 func IsProtobufSchema(valueFormat string) bool {
 	return valueFormat == protobufSchemaName
+}
+
+// returns the SerDes subject name strategy + its config for a given Kafka cluster id.
+// on-prem callers which pass "" stay on TopicNameStrategy.
+func subjectStrategy(kafkaClusterId string) (serde.SubjectNameStrategyType, map[string]string) {
+	if kafkaClusterId != "" {
+		return serde.AssociatedNameStrategyType, map[string]string{serde.KafkaClusterIDConfig: kafkaClusterId}
+	}
+	return serde.TopicNameStrategyType, nil
 }
 
 func initSchemaRegistryClient(srClientUrl, srClusterId string, srAuth SchemaRegistryAuth, existingClient schemaregistry.Client) (schemaregistry.Client, error) {

@@ -147,12 +147,12 @@ func (c *command) produceCloud(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	keySerializer, keyMetaInfo, err := c.initSchemaAndGetInfo(cmd, topic, "key")
+	keySerializer, keyMetaInfo, err := c.initSchemaAndGetInfo(cmd, topic, "key", cluster.ID)
 	if err != nil {
 		return err
 	}
 
-	valueSerializer, valueMetaInfo, err := c.initSchemaAndGetInfo(cmd, topic, "value")
+	valueSerializer, valueMetaInfo, err := c.initSchemaAndGetInfo(cmd, topic, "value", cluster.ID)
 	if err != nil {
 		return err
 	}
@@ -207,12 +207,12 @@ func (c *command) produceCloud(cmd *cobra.Command, args []string) error {
 func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	topic := args[0]
 
-	keySerializer, keyMetaInfo, err := c.initSchemaAndGetInfoOnPrem(cmd, topic, "key")
+	keySerializer, keyMetaInfo, err := c.initSchemaAndGetInfoOnPrem(cmd, topic, "key", "")
 	if err != nil {
 		return err
 	}
 
-	valueSerializer, valueMetaInfo, err := c.initSchemaAndGetInfoOnPrem(cmd, topic, "value")
+	valueSerializer, valueMetaInfo, err := c.initSchemaAndGetInfoOnPrem(cmd, topic, "value", "")
 	if err != nil {
 		return err
 	}
@@ -461,13 +461,11 @@ func getKeyAndValue(schemaBased bool, data, delimiter string) (string, string, e
 	return "", "", errors.New(missingOrMalformedKeyErrorMsg)
 }
 
-func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (serdes.SerializationProvider, []byte, error) {
+func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode, kafkaClusterId string) (serdes.SerializationProvider, []byte, error) {
 	schemaDir, err := createTempDir()
 	if err != nil {
 		return nil, nil, err
 	}
-
-	subject := topicNameStrategy(topic, mode)
 
 	// Deprecated
 	var schemaId optional.Int32
@@ -489,6 +487,46 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 	}
 	if id, err := strconv.ParseInt(schema, 10, 32); err == nil {
 		schemaId = optional.NewInt32(int32(id))
+	}
+
+	srEndpoint, err := cmd.Flags().GetString("schema-registry-endpoint")
+	if err != nil {
+		return nil, nil, err
+	}
+	srApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
+	if err != nil {
+		return nil, nil, err
+	}
+	srApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
+	if err != nil {
+		return nil, nil, err
+	}
+	var token string
+	if c.Config.IsCloudLogin() { // Do not get token if users are consuming from Cloud while logged out
+		token, err = auth.GetDataplaneToken(c.Context)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	var srClusterId string
+	if (schemaId.IsSet() || schema != "") && srEndpoint == "" {
+		srClusterId, srEndpoint, err = c.GetCurrentSchemaRegistryClusterIdAndEndpoint(cmd)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	srAuth := serdes.SchemaRegistryAuth{
+		ApiKey:    srApiKey,
+		ApiSecret: srApiSecret,
+		Token:     token,
+	}
+
+	// Resolve subject via SR associations, fall back to TopicNameStrategy on miss.
+	subject := topicNameStrategy(topic, mode)
+	if kafkaClusterId != "" && srEndpoint != "" {
+		if client, err := newSchemaRegistryClient(srEndpoint, srClusterId, srAuth); err == nil {
+			subject = resolveSubject(client, kafkaClusterId, topic, mode)
+		}
 	}
 
 	var format string
@@ -559,49 +597,12 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 		}
 	}
 
-	// Fetch the SR client endpoint during schema registration
-	srEndpoint, err := cmd.Flags().GetString("schema-registry-endpoint")
-	if err != nil {
-		return nil, nil, err
-	}
-
-	var srClusterId string
-	if (schemaId.IsSet() || schema != "") && srEndpoint == "" {
-		srClusterId, srEndpoint, err = c.GetCurrentSchemaRegistryClusterIdAndEndpoint(cmd)
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-
-	// Initialize the serializer with the same SR endpoint during registration
-	// The associated schema ID is also required to initialize the serializer
-	srApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
-	if err != nil {
-		return nil, nil, err
-	}
-	srApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
-	if err != nil {
-		return nil, nil, err
-	}
 	var parsedSchemaId = -1
 	if len(metaInfo) >= 5 {
 		parsedSchemaId = int(binary.BigEndian.Uint32(metaInfo[1:5]))
 	}
 
-	var token string
-	if c.Config.IsCloudLogin() { // Do not get token if users are consuming from Cloud while logged out
-		token, err = auth.GetDataplaneToken(c.Context)
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-	srAuth := serdes.SchemaRegistryAuth{
-		ApiKey:    srApiKey,
-		ApiSecret: srApiSecret,
-		Token:     token,
-	}
-	err = serializationProvider.InitSerializer(srEndpoint, srClusterId, mode, parsedSchemaId, srAuth)
-	if err != nil {
+	if err := serializationProvider.InitSerializer(srEndpoint, srClusterId, kafkaClusterId, mode, parsedSchemaId, srAuth); err != nil {
 		return nil, nil, err
 	}
 
@@ -613,7 +614,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 	return serializationProvider, metaInfo, nil
 }
 
-func (c *command) initSchemaAndGetInfoOnPrem(cmd *cobra.Command, topic, mode string) (serdes.SerializationProvider, []byte, error) {
+func (c *command) initSchemaAndGetInfoOnPrem(cmd *cobra.Command, topic, mode, kafkaClusterId string) (serdes.SerializationProvider, []byte, error) {
 	schemaDir, err := createTempDir()
 	if err != nil {
 		return nil, nil, err
@@ -732,7 +733,7 @@ func (c *command) initSchemaAndGetInfoOnPrem(cmd *cobra.Command, topic, mode str
 		ClientKeyPath:            clientKeyPath,
 		Token:                    token,
 	}
-	err = serializationProvider.InitSerializer(srEndpoint, "", mode, parsedSchemaId, srAuth)
+	err = serializationProvider.InitSerializer(srEndpoint, "", kafkaClusterId, mode, parsedSchemaId, srAuth)
 	if err != nil {
 		return nil, nil, err
 	}
