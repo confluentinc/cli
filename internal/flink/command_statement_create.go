@@ -1,7 +1,6 @@
 package flink
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -11,7 +10,7 @@ import (
 
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-	clierrors "github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/flink/config"
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
@@ -79,7 +78,7 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 
 	environment, err := c.V2Client.GetOrgEnvironment(environmentId)
 	if err != nil {
-		return clierrors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
+		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
 	}
 
 	computePool := c.Context.GetCurrentFlinkComputePool()
@@ -95,7 +94,7 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 
 	if computePool == "" {
 		if cloud == "" || region == "" {
-			return clierrors.New("Flink cloud and region flags are required when compute pool is not specified.")
+			return errors.New("Flink cloud and region flags are required when compute pool is not specified.")
 		}
 	}
 
@@ -184,18 +183,25 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 			Phase:         func(s flinkgatewayv1.SqlV1Statement) string { return s.Status.GetPhase() },
 			PendingPhases: flinkStatementPendingPhases,
 			FailedPhases:  flinkStatementFailedPhases,
-			Tick:          time.Second,
+			PollInterval:  time.Second,
 			Timeout:       timeout,
 		})
 		if err != nil {
-			switch {
-			case errors.Is(err, wait.ErrFailed):
-				return clierrors.NewErrorWithSuggestions(
+			// wait.ErrFailed and wait.ErrTimeout are package-level sentinels
+			// returned directly from Poll (never wrapped); a direct == compare
+			// is correct and avoids importing stdlib errors alongside the CLI
+			// errors package.
+			switch err {
+			case wait.ErrFailed:
+				return errors.NewErrorWithSuggestions(
 					fmt.Sprintf(`statement "%s" entered failed phase %q: %s`, name, statement.Status.GetPhase(), statement.Status.GetDetail()),
 					fmt.Sprintf("Inspect the statement with `confluent flink statement describe %s`.", name),
 				)
-			case errors.Is(err, wait.ErrTimeout):
-				return clierrors.NewErrorWithSuggestions(err.Error(), "Increase `--wait-timeout` or omit `--wait`.")
+			case wait.ErrTimeout:
+				return errors.NewErrorWithSuggestions(
+					fmt.Sprintf(`wait timed out: statement "%s" is still in phase %q`, name, statement.Status.GetPhase()),
+					"Increase `--wait-timeout` or omit `--wait`.",
+				)
 			default:
 				// Fetch error or context cancellation — surface the underlying
 				// cause unmodified; suggesting a longer timeout would mislead.

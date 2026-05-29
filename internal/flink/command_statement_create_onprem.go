@@ -2,7 +2,6 @@ package flink
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,7 +13,7 @@ import (
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-	clierrors "github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/wait"
@@ -139,22 +138,23 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 			Phase:         func(s cmfsdk.Statement) string { return s.GetStatus().Phase },
 			PendingPhases: flinkStatementPendingPhases,
 			FailedPhases:  flinkStatementFailedPhases,
-			Tick:          2 * time.Second,
+			PollInterval:  2 * time.Second,
 			Timeout:       timeout,
 		})
 		if err != nil {
-			switch {
-			case errors.Is(err, wait.ErrFailed):
-				status := finalStatement.GetStatus()
-				return clierrors.NewErrorWithSuggestions(
+			status := finalStatement.GetStatus()
+			switch err {
+			case wait.ErrFailed:
+				return errors.NewErrorWithSuggestions(
 					fmt.Sprintf(`statement "%s" entered failed phase %q: %s`, name, status.Phase, status.GetDetail()),
 					fmt.Sprintf("Inspect the statement with `confluent flink statement describe %s`.", name),
 				)
-			case errors.Is(err, wait.ErrTimeout):
-				return clierrors.NewErrorWithSuggestions(err.Error(), "Increase `--wait-timeout` or omit `--wait`.")
+			case wait.ErrTimeout:
+				return errors.NewErrorWithSuggestions(
+					fmt.Sprintf(`wait timed out: statement "%s" is still in phase %q`, name, status.Phase),
+					"Increase `--wait-timeout` or omit `--wait`.",
+				)
 			default:
-				// Fetch error or context cancellation — surface the underlying
-				// cause unmodified; suggesting a longer timeout would mislead.
 				return err
 			}
 		}
@@ -202,7 +202,7 @@ func (c *command) readFlinkConfiguration(cmd *cobra.Command) (map[string]string,
 		case ".yaml", ".yml":
 			err = yaml.Unmarshal(data, &flinkConfiguration)
 		default:
-			return nil, clierrors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
+			return nil, errors.NewErrorWithSuggestions(fmt.Sprintf("unsupported file format: %s", ext), "Supported file formats are .json, .yaml, and .yml.")
 		}
 		if err != nil {
 			return nil, err

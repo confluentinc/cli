@@ -7,12 +7,19 @@ import (
 )
 
 // Options describes a single Poll invocation. T is the polled resource type.
+//
+// Delay (if non-zero) sleeps before the first Fetch. Use it to give the
+// resource a moment to materialize on the server after a POST; mirrors
+// retry.StateChangeConf.Delay in terraform-provider-confluent.
+//
+// PollInterval is the gap between successive Fetch calls after the first.
 type Options[T any] struct {
-	Fetch      func() (T, error)
-	IsTerminal func(T) bool
-	IsFailed   func(T) bool
-	Tick       time.Duration
-	Timeout    time.Duration
+	Fetch        func() (T, error)
+	IsTerminal   func(T) bool
+	IsFailed     func(T) bool
+	Delay        time.Duration
+	PollInterval time.Duration
+	Timeout      time.Duration
 }
 
 // PhaseOptions is a declarative form of Options for the common case where
@@ -24,7 +31,8 @@ type PhaseOptions[T any] struct {
 	Phase         func(T) string
 	PendingPhases []string
 	FailedPhases  []string
-	Tick          time.Duration
+	Delay         time.Duration
+	PollInterval  time.Duration
 	Timeout       time.Duration
 }
 
@@ -55,17 +63,18 @@ func PollPhases[T any](ctx context.Context, opts PhaseOptions[T]) (T, error) {
 	pending := PhaseSet(opts.PendingPhases...)
 	failed := PhaseSet(opts.FailedPhases...)
 	return Poll(ctx, Options[T]{
-		Fetch:      opts.Fetch,
-		IsTerminal: func(v T) bool { return !pending(opts.Phase(v)) },
-		IsFailed:   func(v T) bool { return failed(opts.Phase(v)) },
-		Tick:       opts.Tick,
-		Timeout:    opts.Timeout,
+		Fetch:        opts.Fetch,
+		IsTerminal:   func(v T) bool { return !pending(opts.Phase(v)) },
+		IsFailed:     func(v T) bool { return failed(opts.Phase(v)) },
+		Delay:        opts.Delay,
+		PollInterval: opts.PollInterval,
+		Timeout:      opts.Timeout,
 	})
 }
 
-// Poll calls opts.Fetch immediately, then every opts.Tick until IsFailed
-// returns true (ErrFailed), IsTerminal returns true (success), opts.Timeout
-// elapses, or ctx is cancelled (ctx.Err()).
+// Poll sleeps opts.Delay (if non-zero), then calls opts.Fetch, then every
+// opts.PollInterval until IsFailed returns true (ErrFailed), IsTerminal
+// returns true (success), opts.Timeout elapses, or ctx is cancelled.
 //
 // Fetch errors are treated as transient and do not abort polling: the loop
 // continues, preserving the most recent successfully-fetched value as `last`.
@@ -96,13 +105,24 @@ func Poll[T any](ctx context.Context, opts Options[T]) (T, error) {
 		return false, nil
 	}
 
+	deadline := time.After(opts.Timeout)
+
+	if opts.Delay > 0 {
+		select {
+		case <-time.After(opts.Delay):
+		case <-deadline:
+			return last, ErrTimeout
+		case <-ctx.Done():
+			return last, ctx.Err()
+		}
+	}
+
 	if done, err := check(); done {
 		return last, err
 	}
 
-	ticker := time.NewTicker(opts.Tick)
+	ticker := time.NewTicker(opts.PollInterval)
 	defer ticker.Stop()
-	deadline := time.After(opts.Timeout)
 
 	for {
 		select {

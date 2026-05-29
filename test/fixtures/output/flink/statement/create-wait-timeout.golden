@@ -1,4 +1,4 @@
-Error: wait timed out
+Error: wait timed out: statement "pending-statement" is still in phase "PENDING"
 
 Suggestions:
     Increase `--wait-timeout` or omit `--wait`.
