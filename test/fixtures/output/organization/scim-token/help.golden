@@ -1,4 +1,4 @@
-Manage organization scim tokens.
+Manage Organization scim tokens.
 
 Usage:
   confluent organization scim-token [command]
@@ -7,9 +7,9 @@ Aliases:
   scim-token, st
 
 Available Commands:
-  create      Create an organization scim token.
-  delete      Delete one or more organization scim tokens.
-  list        List organization scim tokens.
+  create      Create an Organization scim token.
+  delete      Delete one or more Organization scim tokens.
+  list        List Organization scim tokens.
 
 Global Flags:
   -h, --help            Show help for this command.

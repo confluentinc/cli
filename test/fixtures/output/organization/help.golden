@@ -9,7 +9,7 @@ Aliases:
 Available Commands:
   describe    Describe the current Confluent Cloud organization.
   list        List Confluent Cloud organizations.
-  scim-token  Manage organization scim tokens.
+  scim-token  Manage Organization scim tokens.
   update      Update the current Confluent Cloud organization.
 
 Global Flags:

@@ -305,6 +305,7 @@ var vocabWords = []string{
 	"mcp_server",
 	"md",
 	"mds",
+	"mins",
 	"mongodb",
 	"name1",
 	"name2",

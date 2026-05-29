@@ -14,7 +14,7 @@ import (
 func (c *scimTokenCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List organization scim tokens.",
+		Short: "List Organization scim tokens.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}

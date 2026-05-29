@@ -14,7 +14,7 @@ import (
 func (c *scimTokenCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create an organization scim token.",
+		Short: "Create an Organization scim token.",
 		Args:  cobra.NoArgs,
 		RunE:  c.create,
 	}

@@ -1,4 +1,4 @@
-Delete one or more organization scim tokens.
+Delete one or more Organization scim tokens.
 
 Usage:
   confluent organization scim-token delete <id-1> [id-2] ... [id-n] [flags]

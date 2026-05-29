@@ -30,7 +30,7 @@ func newScimTokenCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Co
 	cmd := &cobra.Command{
 		Use:         "scim-token",
 		Aliases:     []string{"st"},
-		Short:       "Manage organization scim tokens.",
+		Short:       "Manage Organization scim tokens.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 

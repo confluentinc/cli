@@ -1,4 +1,4 @@
-List organization scim tokens.
+List Organization scim tokens.
 
 Usage:
   confluent organization scim-token list [flags]

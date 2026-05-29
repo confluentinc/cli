@@ -1,4 +1,4 @@
-Create an organization scim token.
+Create an Organization scim token.
 
 Usage:
   confluent organization scim-token create [flags]
