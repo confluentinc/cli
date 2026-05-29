@@ -58,6 +58,7 @@ type GroupHandler struct {
 	SrApiSecret              string
 	SrClusterId              string
 	SrClusterEndpoint        string
+	KafkaClusterId           string
 	Token                    string
 	CertificateAuthorityPath string
 	ClientCertPath           string
@@ -241,7 +242,7 @@ func ConsumeMessage(message *ckgo.Message, h *GroupHandler) error {
 			return err
 		}
 
-		err = keyDeserializer.InitDeserializer(h.SrClusterEndpoint, h.SrClusterId, "key", srAuth, nil)
+		err = keyDeserializer.InitDeserializer(h.SrClusterEndpoint, h.SrClusterId, h.KafkaClusterId, "key", srAuth, nil)
 		if err != nil {
 			return err
 		}
@@ -268,7 +269,7 @@ func ConsumeMessage(message *ckgo.Message, h *GroupHandler) error {
 		return err
 	}
 
-	err = valueDeserializer.InitDeserializer(h.SrClusterEndpoint, h.SrClusterId, "value", srAuth, nil)
+	err = valueDeserializer.InitDeserializer(h.SrClusterEndpoint, h.SrClusterId, h.KafkaClusterId, "value", srAuth, nil)
 	if err != nil {
 		return err
 	}
