@@ -68,7 +68,7 @@ type SchemaRegistryAuth struct {
 }
 
 type SerializationProvider interface {
-	InitSerializer(srClientUrl, srClusterId, mode string, schemaId int, srAuth SchemaRegistryAuth) error
+	InitSerializer(srClientUrl, srClusterId, kafkaClusterId, mode string, schemaId int, srAuth SchemaRegistryAuth) error
 	LoadSchema(string, map[string]string) error
 	Serialize(string, string) ([]kafka.Header, []byte, error)
 	GetSchemaName() string
@@ -77,7 +77,7 @@ type SerializationProvider interface {
 }
 
 type DeserializationProvider interface {
-	InitDeserializer(srClientUrl, srClusterId, mode string, srAuth SchemaRegistryAuth, existingClient schemaregistry.Client) error
+	InitDeserializer(srClientUrl, srClusterId, kafkaClusterId, mode string, srAuth SchemaRegistryAuth, existingClient schemaregistry.Client) error
 	LoadSchema(string, string, serde.Type, *kafka.Message) error
 	Deserialize(string, []kafka.Header, []byte) (string, error)
 	GetSchemaRegistryClient() schemaregistry.Client
@@ -159,4 +159,22 @@ func initSchemaRegistryClient(srClientUrl, srClusterId string, srAuth SchemaRegi
 	serdeClientConfig.SslKeyLocation = srAuth.ClientKeyPath
 
 	return schemaregistry.NewClient(serdeClientConfig)
+}
+
+func NewSchemaRegistryClient(srClientUrl, srClusterId string, srAuth SchemaRegistryAuth) (schemaregistry.Client, error) {
+	return initSchemaRegistryClient(srClientUrl, srClusterId, srAuth, nil)
+}
+
+// returns the SR subject for (topic, mode) by querying the associations API with the Kafka cluster id
+// as resource namespace. Falls backt o default TopicNameStrategy (<topic>-<mode>) if unmatched.
+func ResolveSubject(client schemaregistry.Client, kafkaClusterId, topic, mode string) string {
+	fallback := topic + "-" + mode
+	if kafkaClusterId == "" || client == nil {
+		return fallback
+	}
+	associations, err := client.GetAssociationsByResourceName(topic, kafkaClusterId, "topic", []string{mode}, "", 0, -1)
+	if err != nil || len(associations) == 0 {
+		return fallback
+	}
+	return associations[0].Subject
 }
