@@ -21,11 +21,9 @@ import (
 )
 
 type AvroSerializationProvider struct {
-	ser            *avrov2.Serializer
-	schemaId       int
-	mode           string
-	kafkaClusterId string
-	subjectCache   map[string]string
+	ser      *avrov2.Serializer
+	schemaId int
+	mode     string
 }
 
 func (a *AvroSerializationProvider) InitSerializer(srClientUrl, srClusterId, kafkaClusterId, mode string, schemaId int, srAuth SchemaRegistryAuth) error {
@@ -90,8 +88,6 @@ func (a *AvroSerializationProvider) InitSerializer(srClientUrl, srClusterId, kaf
 		a.schemaId = 1
 	}
 	a.mode = mode
-	a.kafkaClusterId = kafkaClusterId
-	a.subjectCache = map[string]string{}
 	return nil
 }
 
@@ -104,12 +100,11 @@ func (a *AvroSerializationProvider) GetSchemaName() string {
 }
 
 func (a *AvroSerializationProvider) Serialize(topic, message string) ([]kafka.Header, []byte, error) {
-	// Step#1: Fetch the schemaInfo based on subject and schema ID.
-	// Cache the per-topic subject so we don't re-hit the associations API on every message.
-	subject, ok := a.subjectCache[topic]
-	if !ok {
-		subject = ResolveSubject(a.GetSchemaRegistryClient(), a.kafkaClusterId, topic, a.mode)
-		a.subjectCache[topic] = subject
+	// Step#1: Ask the configured ckgo strategy for the subject (AssociatedNameStrategy
+	// on cloud, TopicNameStrategy on on-prem), then fetch the schema by subject + id.
+	subject, err := a.ser.SubjectNameStrategy(topic, a.ser.SerdeType, schemaregistry.SchemaInfo{})
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to resolve subject: %w", err)
 	}
 	schemaObj, err := a.GetSchemaRegistryClient().GetBySubjectAndID(subject, a.schemaId)
 	if err != nil {

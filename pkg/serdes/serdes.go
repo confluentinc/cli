@@ -140,6 +140,15 @@ func IsProtobufSchema(valueFormat string) bool {
 	return valueFormat == protobufSchemaName
 }
 
+// returns the SerDes subject name strategy + its config for a given Kafka cluster id.
+// on-prem callers which pass "" stay on TopicNameStrategy.
+func subjectStrategy(kafkaClusterId string) (serde.SubjectNameStrategyType, map[string]string) {
+	if kafkaClusterId != "" {
+		return serde.AssociatedNameStrategyType, map[string]string{serde.KafkaClusterIDConfig: kafkaClusterId}
+	}
+	return serde.TopicNameStrategyType, nil
+}
+
 func initSchemaRegistryClient(srClientUrl, srClusterId string, srAuth SchemaRegistryAuth, existingClient schemaregistry.Client) (schemaregistry.Client, error) {
 	if existingClient != nil {
 		return existingClient, nil
@@ -159,31 +168,4 @@ func initSchemaRegistryClient(srClientUrl, srClusterId string, srAuth SchemaRegi
 	serdeClientConfig.SslKeyLocation = srAuth.ClientKeyPath
 
 	return schemaregistry.NewClient(serdeClientConfig)
-}
-
-func NewSchemaRegistryClient(srClientUrl, srClusterId string, srAuth SchemaRegistryAuth) (schemaregistry.Client, error) {
-	return initSchemaRegistryClient(srClientUrl, srClusterId, srAuth, nil)
-}
-
-// returns the SerDes subject name strategy + its config for a given Kafka cluster id.
-// on-prem callers which pass "" as default will stay on TopicNameStrategy.
-func subjectStrategy(kafkaClusterId string) (serde.SubjectNameStrategyType, map[string]string) {
-	if kafkaClusterId != "" {
-		return serde.AssociatedNameStrategyType, map[string]string{serde.KafkaClusterIDConfig: kafkaClusterId}
-	}
-	return serde.TopicNameStrategyType, nil
-}
-
-// returns the SR subject for (topic, mode) by querying the associations API with the Kafka cluster id
-// as resource namespace. Falls backt o default TopicNameStrategy (<topic>-<mode>) if unmatched.
-func ResolveSubject(client schemaregistry.Client, kafkaClusterId, topic, mode string) string {
-	fallback := topic + "-" + mode
-	if kafkaClusterId == "" || client == nil {
-		return fallback
-	}
-	associations, err := client.GetAssociationsByResourceName(topic, kafkaClusterId, "topic", []string{mode}, "", 0, -1)
-	if err != nil || len(associations) == 0 {
-		return fallback
-	}
-	return associations[0].Subject
 }

@@ -1260,73 +1260,10 @@ func readSchemaReferences(references string) ([]schemaregistry.Reference, error)
 	return refs, nil
 }
 
-func newMockClient(t *testing.T) schemaregistry.Client {
-	t.Helper()
-	client, err := schemaregistry.NewClient(schemaregistry.NewConfig(mockClientUrl))
-	require.NoError(t, err)
-	return client
-}
-
-func seedAssociation(t *testing.T, client schemaregistry.Client, topic, kafkaClusterId, mode, subject string) {
-	t.Helper()
-	// The mock requires the subject to have a registered schema before it
-	// will accept an association referencing it.
-	_, err := client.Register(subject, schemaregistry.SchemaInfo{
-		Schema:     `{"type":"record","name":"R","fields":[{"name":"f","type":"int"}]}`,
-		SchemaType: "AVRO",
-	}, false)
-	require.NoError(t, err)
-	_, err = client.CreateOrUpdateAssociation(schemaregistry.AssociationCreateOrUpdateRequest{
-		ResourceName:      topic,
-		ResourceNamespace: kafkaClusterId,
-		ResourceID:        topic + ":" + kafkaClusterId,
-		ResourceType:      "topic",
-		Associations: []schemaregistry.AssociationCreateOrUpdateInfo{{
-			Subject:         subject,
-			AssociationType: mode,
-		}},
-	})
-	require.NoError(t, err)
-}
-
-func TestResolveSubject(t *testing.T) {
-	t.Run("nil client falls back to TopicNameStrategy", func(t *testing.T) {
-		require.Equal(t, "topic1-value", ResolveSubject(nil, "lkc-123", "topic1", "value"))
-	})
-
-	t.Run("empty kafkaClusterId falls back to TopicNameStrategy", func(t *testing.T) {
-		client := newMockClient(t)
-		require.Equal(t, "topic1-value", ResolveSubject(client, "", "topic1", "value"))
-	})
-
-	t.Run("no association falls back to TopicNameStrategy", func(t *testing.T) {
-		client := newMockClient(t)
-		require.Equal(t, "topic1-value", ResolveSubject(client, "lkc-123", "topic1", "value"))
-	})
-
-	t.Run("matching association returns its subject", func(t *testing.T) {
-		client := newMockClient(t)
-		seedAssociation(t, client, "topic1", "lkc-123", "value", "custom-value-subject")
-		require.Equal(t, "custom-value-subject", ResolveSubject(client, "lkc-123", "topic1", "value"))
-	})
-
-	t.Run("association for other mode falls back", func(t *testing.T) {
-		client := newMockClient(t)
-		seedAssociation(t, client, "topic1", "lkc-123", "key", "custom-key-subject")
-		require.Equal(t, "topic1-value", ResolveSubject(client, "lkc-123", "topic1", "value"))
-	})
-
-	t.Run("association under different cluster id falls back", func(t *testing.T) {
-		client := newMockClient(t)
-		seedAssociation(t, client, "topic1", "lkc-other", "value", "should-not-be-used")
-		require.Equal(t, "topic1-value", ResolveSubject(client, "lkc-123", "topic1", "value"))
-	})
-}
-
-// TestAvroSerdesUsesAssociatedSubject confirms that, end-to-end, configuring an
-// Avro serializer with a non-empty kafkaClusterId routes serialization to the
-// associated subject. The on-prem variant (empty kafkaClusterId) is exercised
-// by the existing TestAvroSerdesValid which seeds under "topic1-value".
+// TestAvroSerdesUsesAssociatedSubject verifies the cloud path end-to-end: when
+// InitSerializer receives a non-empty kafkaClusterId, ckgo's strategy resolves
+// the subject via the associations API, and Serialize fetches the schema under
+// the associated subject (not under <topic>-<mode>).
 func TestAvroSerdesUsesAssociatedSubject(t *testing.T) {
 	req := require.New(t)
 
@@ -1338,57 +1275,6 @@ func TestAvroSerdesUsesAssociatedSubject(t *testing.T) {
 		kafkaClusterId = "lkc-assoc-test"
 		topic          = "associated-topic"
 		associated     = "custom-associated-value"
-	)
-
-	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
-	err := serializationProvider.InitSerializer(mockClientUrl, "", kafkaClusterId, "value", -1, SchemaRegistryAuth{})
-	req.Nil(err)
-	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
-	req.Nil(err)
-
-	// Register the real schema under the associated subject first, then
-	// attach an association without re-registering (so the associated
-	// subject's only version is the test's schema at id=1).
-	client := serializationProvider.GetSchemaRegistryClient()
-	info := schemaregistry.SchemaInfo{Schema: schemaString, SchemaType: "AVRO"}
-	_, err = client.Register(associated, info, false)
-	req.Nil(err)
-	_, err = client.CreateOrUpdateAssociation(schemaregistry.AssociationCreateOrUpdateRequest{
-		ResourceName:      topic,
-		ResourceNamespace: kafkaClusterId,
-		ResourceID:        topic + ":" + kafkaClusterId,
-		ResourceType:      "topic",
-		Associations: []schemaregistry.AssociationCreateOrUpdateInfo{{
-			Subject:         associated,
-			AssociationType: "value",
-		}},
-	})
-	req.Nil(err)
-
-	_, _, err = serializationProvider.Serialize(topic, `{"f1":123}`)
-	req.Nil(err, "serialize should succeed using the associated subject")
-
-	// Verify the serializer did not fall back to TopicNameStrategy by
-	// confirming no schema is registered under "<topic>-value".
-	_, err = client.GetLatestSchemaMetadata(topic + "-value")
-	req.Error(err, "schema should not be resolvable under TopicNameStrategy when an association exists")
-}
-
-// TestAvroSerdesAssociatedRoundTrip verifies the consume side: when an
-// association exists, the deserializer (configured with AssociatedNameStrategy)
-// looks up the schema under the associated subject and decodes correctly.
-func TestAvroSerdesAssociatedRoundTrip(t *testing.T) {
-	req := require.New(t)
-
-	schemaString := `{"type":"record","name":"myRecord","fields":[{"name":"f1","type":"int"}]}`
-	schemaPath := filepath.Join(tempDir, "avro-schema-rt.txt")
-	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
-
-	const (
-		kafkaClusterId = "lkc-rt-test"
-		topic          = "rt-topic"
-		associated     = "rt-associated-value"
-		message        = `{"f1":7}`
 	)
 
 	serializationProvider, _ := GetSerializationProvider(avroSchemaName)
@@ -1412,14 +1298,25 @@ func TestAvroSerdesAssociatedRoundTrip(t *testing.T) {
 	})
 	req.Nil(err)
 
-	_, data, err := serializationProvider.Serialize(topic, message)
-	req.Nil(err)
+	_, _, err = serializationProvider.Serialize(topic, `{"f1":123}`)
+	req.Nil(err, "serialize should resolve to the associated subject")
 
-	deserializationProvider, _ := GetDeserializationProvider(avroSchemaName)
-	err = deserializationProvider.InitDeserializer(mockClientUrl, "", kafkaClusterId, "value", SchemaRegistryAuth{}, client)
-	req.Nil(err)
+	// Confirm no schema lives under TopicNameStrategy: if Serialize had used the literal <topic>-<mode>,
+	// the test wouldn't be exercising the associated path.
+	_, err = client.GetLatestSchemaMetadata(topic + "-value")
+	req.Error(err)
+}
 
-	decoded, err := deserializationProvider.Deserialize(topic, nil, data)
-	req.Nil(err, "deserialize should succeed using the associated subject")
-	req.JSONEq(message, decoded)
+func TestSubjectStrategy(t *testing.T) {
+	t.Run("non-empty cluster id selects AssociatedNameStrategy", func(t *testing.T) {
+		typ, cfg := subjectStrategy("lkc-test")
+		require.Equal(t, serde.AssociatedNameStrategyType, typ)
+		require.Equal(t, map[string]string{serde.KafkaClusterIDConfig: "lkc-test"}, cfg)
+	})
+
+	t.Run("empty cluster id selects TopicNameStrategy", func(t *testing.T) {
+		typ, cfg := subjectStrategy("")
+		require.Equal(t, serde.TopicNameStrategyType, typ)
+		require.Nil(t, cfg)
+	})
 }

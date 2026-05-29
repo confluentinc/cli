@@ -6,12 +6,15 @@ import (
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	cckafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	cpkafkarestv3 "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v4/pkg/ccstructs"
 	"github.com/confluentinc/cli/v4/pkg/kafkarest"
 	"github.com/confluentinc/cli/v4/pkg/kafkausagelimits"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/serdes"
 )
 
 func toCreateTopicConfigs(topicConfigsMap map[string]string) []cckafkarestv3.ConfigData {
@@ -208,6 +211,37 @@ func getCmkClusterStatus(cluster *cmkv2.CmkV2Cluster) string {
 
 func topicNameStrategy(topic, mode string) string {
 	return fmt.Sprintf("%s-%s", topic, mode)
+}
+
+func newSchemaRegistryClient(srClientUrl, srClusterId string, srAuth serdes.SchemaRegistryAuth) (schemaregistry.Client, error) {
+	var cfg *schemaregistry.Config
+	switch {
+	case srAuth.ApiKey != "" && srAuth.ApiSecret != "":
+		cfg = schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srAuth.ApiKey, srAuth.ApiSecret)
+	case srAuth.Token != "":
+		cfg = schemaregistry.NewConfigWithBearerAuthentication(srClientUrl, srAuth.Token, srClusterId, "")
+	default:
+		cfg = schemaregistry.NewConfig(srClientUrl)
+		log.CliLogger.Info("initializing schema registry client with no authentication")
+	}
+	cfg.SslCaLocation = srAuth.CertificateAuthorityPath
+	cfg.SslCertificateLocation = srAuth.ClientCertPath
+	cfg.SslKeyLocation = srAuth.ClientKeyPath
+	return schemaregistry.NewClient(cfg)
+}
+
+// returns the SR subject for (topic, mode) by querying the associations API with the Kafka cluster id
+// as resource namespace. Falls backt o default TopicNameStrategy (<topic>-<mode>) if unmatched.
+func resolveSubject(client schemaregistry.Client, kafkaClusterId, topic, mode string) string {
+	fallback := topic + "-" + mode
+	if kafkaClusterId == "" || client == nil {
+		return fallback
+	}
+	associations, err := client.GetAssociationsByResourceName(topic, kafkaClusterId, "topic", []string{mode}, "", 0, -1)
+	if err != nil || len(associations) == 0 {
+		return fallback
+	}
+	return associations[0].Subject
 }
 
 func getLimitsForSku(cluster *cmkv2.CmkV2Cluster, usageLimits *kafkausagelimits.UsageLimits) *kafkausagelimits.Limits {
