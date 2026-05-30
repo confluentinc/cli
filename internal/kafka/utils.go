@@ -238,9 +238,15 @@ func resolveSubject(client schemaregistry.Client, kafkaClusterId, topic, mode st
 		return fallback
 	}
 	associations, err := client.GetAssociationsByResourceName(topic, kafkaClusterId, "topic", []string{mode}, "", 0, -1)
-	if err != nil || len(associations) == 0 {
+	if err != nil {
+		log.CliLogger.Tracef("subject resolution: associations lookup failed (topic=%q mode=%q clusterId=%q): %v; using %q", topic, mode, kafkaClusterId, err, fallback)
 		return fallback
 	}
+	if len(associations) == 0 {
+		log.CliLogger.Tracef("subject resolution: no association for topic=%q mode=%q clusterId=%q; using %q", topic, mode, kafkaClusterId, fallback)
+		return fallback
+	}
+	log.CliLogger.Tracef("subject resolution: resolved associated subject %q (topic=%q mode=%q clusterId=%q)", associations[0].Subject, topic, mode, kafkaClusterId)
 	return associations[0].Subject
 }
 

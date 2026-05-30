@@ -144,8 +144,10 @@ func IsProtobufSchema(valueFormat string) bool {
 // on-prem callers which pass "" stay on TopicNameStrategy.
 func subjectStrategy(kafkaClusterId string) (serde.SubjectNameStrategyType, map[string]string) {
 	if kafkaClusterId != "" {
+		log.CliLogger.Tracef("subjectStrategy: AssociatedNameStrategy (kafkaClusterId=%q)", kafkaClusterId)
 		return serde.AssociatedNameStrategyType, map[string]string{serde.KafkaClusterIDConfig: kafkaClusterId}
 	}
+	log.CliLogger.Tracef("subjectStrategy: TopicNameStrategy (no kafkaClusterId)")
 	return serde.TopicNameStrategyType, nil
 }
 

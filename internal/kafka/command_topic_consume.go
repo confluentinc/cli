@@ -286,6 +286,8 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 		subject = schemaRegistryContext
 	}
 
+	log.CliLogger.Tracef("consumeCloud: kafkaClusterId=%q topic=%q", cluster.ID, topic)
+
 	groupHandler := &GroupHandler{
 		SrClient:          srClient,
 		SrApiKey:          srApiKey,
