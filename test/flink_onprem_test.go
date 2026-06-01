@@ -412,13 +412,12 @@ func (s *CLITestSuite) TestFlinkCatalogListOnPrem() {
 
 func (s *CLITestSuite) TestFlinkStatementCreateOnPrem() {
 	tests := []CLITest{
-		// success — --no-wait preserves the immediate-return semantic that
-		// pre-existed the default-block change.
-		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --no-wait`, fixture: "flink/statement/create-success.golden"},
-		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --no-wait -o json`, fixture: "flink/statement/create-success-json.golden"},
-		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --no-wait -o yaml`, fixture: "flink/statement/create-success-yaml.golden"},
-		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --no-wait --flink-configuration test/fixtures/input/flink/statement/flink-configuration.json`, fixture: "flink/statement/create-success.golden"},
-		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --no-wait --flink-configuration test/fixtures/input/flink/statement/flink-configuration.yaml`, fixture: "flink/statement/create-success.golden"},
+		// success
+		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool`, fixture: "flink/statement/create-success.golden"},
+		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool -o json`, fixture: "flink/statement/create-success-json.golden"},
+		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool -o yaml`, fixture: "flink/statement/create-success-yaml.golden"},
+		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.json`, fixture: "flink/statement/create-success.golden"},
+		{args: `flink statement create test-stmt --environment default --sql "SELECT * FROM test_table" --compute-pool test-pool --flink-configuration test/fixtures/input/flink/statement/flink-configuration.yaml`, fixture: "flink/statement/create-success.golden"},
 		// --wait: POST returns PENDING; first poll observes RUNNING; framework
 		// returns the post-transition object so the output shows the terminal
 		// phase. Mirrors the cloud --wait coverage in flink_test.go.

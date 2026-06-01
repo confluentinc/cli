@@ -55,9 +55,8 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 	c.addComputePoolFlag(cmd)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	c.addDatabaseFlag(cmd)
-	pcmd.AddWaitFlag(cmd)
-	pcmd.AddNoWaitFlag(cmd)
-	pcmd.AddWaitTimeoutFlag(cmd, flinkStatementCreateWaitTimeout)
+	cmd.Flags().Bool("wait", false, "Block until the statement reaches a terminal state.")
+	cmd.Flags().Duration("wait-timeout", flinkStatementCreateWaitTimeout, "Maximum time to wait when --wait is set.")
 	cmd.Flags().StringSlice("property", []string{}, "A mechanism to pass properties in the form key=value when creating a Flink statement.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -167,7 +166,7 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	shouldWait, err := pcmd.ShouldWait(cmd)
+	shouldWait, err := cmd.Flags().GetBool("wait")
 	if err != nil {
 		return err
 	}

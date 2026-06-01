@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 
@@ -211,33 +210,6 @@ func AddForceFlag(cmd *cobra.Command) {
 
 func AddDryRunFlag(cmd *cobra.Command) {
 	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes.")
-}
-
-func AddWaitFlag(cmd *cobra.Command) {
-	cmd.Flags().Bool("wait", true, "Block until the resource reaches a terminal state. Pass --no-wait to opt out.")
-}
-
-func AddNoWaitFlag(cmd *cobra.Command) {
-	cmd.Flags().Bool("no-wait", false, "Return immediately without polling for the resource to reach a terminal state.")
-}
-
-func AddWaitTimeoutFlag(cmd *cobra.Command, defaultTimeout time.Duration) {
-	cmd.Flags().Duration("wait-timeout", defaultTimeout, "Maximum time to wait when blocking is in effect.")
-}
-
-// ShouldWait returns whether a command should block until the polled resource
-// reaches a terminal state. --no-wait wins over --wait so users can opt out of
-// the default blocking behavior without surprises.
-func ShouldWait(cmd *cobra.Command) (bool, error) {
-	wait, err := cmd.Flags().GetBool("wait")
-	if err != nil {
-		return false, err
-	}
-	noWait, err := cmd.Flags().GetBool("no-wait")
-	if err != nil {
-		return false, err
-	}
-	return wait && !noWait, nil
 }
 
 func AddKsqlClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
