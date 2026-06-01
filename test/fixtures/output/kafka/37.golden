@@ -11,6 +11,7 @@
   "region": "us-west-2",
   "availability": "single-zone",
   "status": "UP",
+  "deletion_protection": false,
   "endpoint": "SASL_SSL://kafka-endpoint",
   "encryption_key_id": "abc123",
   "rest_endpoint": "http://127.0.0.1:1025",
