@@ -1106,6 +1106,29 @@ func handleCmfStatement(t *testing.T) http.HandlerFunc {
 				return
 			}
 
+			// running-wait-stmt drives the on-prem --wait success path: POST
+			// returns PENDING (default), and the first poll observes RUNNING.
+			if stmtName == "running-wait-stmt" {
+				timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).String()
+				stmt := cmfsdk.Statement{
+					Metadata: cmfsdk.StatementMetadata{Name: stmtName, CreationTimestamp: &timeStamp},
+					Spec: cmfsdk.StatementSpec{
+						Statement:       "SELECT * FROM test_table",
+						ComputePoolName: "test-pool",
+						Parallelism:     cmfsdk.PtrInt32(1),
+						Stopped:         cmfsdk.PtrBool(false),
+					},
+					Status: &cmfsdk.StatementStatus{
+						Phase:  "RUNNING",
+						Detail: cmfsdk.PtrString("Statement is running."),
+						Traits: &cmfsdk.StatementTraits{SqlKind: cmfsdk.PtrString("SELECT"), IsAppendOnly: cmfsdk.PtrBool(false), IsBounded: cmfsdk.PtrBool(false)},
+					},
+				}
+				err := json.NewEncoder(w).Encode(stmt)
+				require.NoError(t, err)
+				return
+			}
+
 			if stmtName == "shell-test-stmt" {
 				stmt := cmfsdk.Statement{
 					Metadata: cmfsdk.StatementMetadata{
