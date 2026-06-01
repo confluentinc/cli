@@ -26,11 +26,9 @@ const (
 	RequiredFlagNotSetErrorMsg        = "required flag `--%s` not set"
 
 	// kafka cluster commands
-	CkuMoreThanZeroErrorMsg                          = "`--cku` value must be greater than 0"
-	TopicDoesNotExistOrMissingPermissionsErrorMsg    = `topic "%s" does not exist or user does not have the ACLs or role bindings required to describe it`
-	TopicDoesNotExistOrMissingPermissionsSuggestions = "To list topics for Kafka cluster \"%[1]s\", use `confluent kafka topic list --cluster %[1]s`.\nTo list ACLs use `confluent kafka acl list --cluster %[1]s`.\nTo list role bindings use `confluent iam rbac role-binding list`."
-	KafkaClusterNotFoundErrorMsg                     = `Kafka cluster "%s" not found`
-	ChooseRightEnvironmentSuggestions                = "Ensure the cluster ID you entered is valid.\n" +
+	CkuMoreThanZeroErrorMsg           = "`--cku` value must be greater than 0"
+	KafkaClusterNotFoundErrorMsg      = `Kafka cluster "%s" not found`
+	ChooseRightEnvironmentSuggestions = "Ensure the cluster ID you entered is valid.\n" +
 		"Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
 	UnknownTopicErrorMsg              = `unknown topic "%s"`
 	KafkaClusterMissingPrefixErrorMsg = `Kafka cluster "%s" is missing required prefix "lkc-"`
