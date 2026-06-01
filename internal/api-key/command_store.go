@@ -50,12 +50,48 @@ func (c *command) newStoreCommand() *cobra.Command {
 func (c *command) store(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 
+	key := args[0]
+	secret := args[1]
+
+	force, err := cmd.Flags().GetBool("force")
+	if err != nil {
+		return err
+	}
+
+	// Check if API key exists server-side
+	apiKey, httpResp, err := c.V2Client.GetApiKey(key)
+	if err != nil {
+		return errors.CatchApiKeyForbiddenAccessError(err, getOperation, httpResp)
+	}
+
+	resourceType, clusterId, _, resolveErr := c.resolveResourceId(cmd, c.V2Client)
+	isGlobalKey := apiKey.GetSpec().Resource.GetKind() == "Global"
+
+	// Detect Global API keys by either the explicit --resource global flag or the server-side resource Kind.
+	// Global keys are org-scoped and stored separately from cluster-scoped keys.
+	if resourceType == resource.Global || isGlobalKey {
+		if resourceType == resource.Global && !isGlobalKey {
+			return errors.NewErrorWithSuggestions(
+				fmt.Sprintf("API key %q is not a Global API key", key),
+				"Omit `--resource global`, or pass the correct resource ID.",
+			)
+		}
+		if isGlobalKey && resourceType != "" && resourceType != resource.Global {
+			return errors.NewErrorWithSuggestions(
+				fmt.Sprintf("API key %q is a Global API key, but --resource was set to %q", key, resourceType),
+				"Re-run with `--resource global`, or omit `--resource` to auto-detect.",
+			)
+		}
+		return c.storeGlobal(key, secret, force)
+	}
+
 	var cluster *config.KafkaClusterConfig
 
 	// Attempt to get cluster from --resource flag if set; if that doesn't work,
-	// attempt to fall back to the currently active Kafka cluster
-	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.V2Client)
-	if err == nil && clusterId != "" {
+	// attempt to fall back to the currently active Kafka cluster.
+	// Preserve historical behavior: if --resource resolution failed, silently fall through to the
+	// active cluster (the cluster/key-mismatch check below will surface real problems).
+	if resolveErr == nil && clusterId != "" {
 		if resourceType != resource.KafkaCluster {
 			return errors.New(nonKafkaNotImplementedErrorMsg)
 		}
@@ -72,20 +108,6 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 				apiKeyNotValidForClusterSuggestions,
 			)
 		}
-	}
-
-	key := args[0]
-	secret := args[1]
-
-	force, err := cmd.Flags().GetBool("force")
-	if err != nil {
-		return err
-	}
-
-	// Check if API key exists server-side
-	apiKey, httpResp, err := c.V2Client.GetApiKey(key)
-	if err != nil {
-		return errors.CatchApiKeyForbiddenAccessError(err, getOperation, httpResp)
 	}
 
 	apiKeyIsValidForTargetCluster := cluster.GetId() != "" && cluster.GetId() == apiKey.GetSpec().Resource.GetId()
@@ -112,5 +134,19 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	}
 
 	output.ErrPrintf(c.Config.EnableColor, "Stored secret for API key \"%s\".\n", key)
+	return nil
+}
+
+func (c *command) storeGlobal(key, secret string, force bool) error {
+	if c.keystore.HasGlobalAPIKey(key) && !force {
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(`refusing to overwrite existing secret for API Key "%s"`, key),
+			fmt.Sprintf(refuseToOverrideSecretSuggestions, key),
+		)
+	}
+	if err := c.keystore.StoreGlobalAPIKey(&config.APIKeyPair{Key: key, Secret: secret}); err != nil {
+		return fmt.Errorf(unableToStoreApiKeyErrorMsg, err)
+	}
+	output.ErrPrintf(c.Config.EnableColor, "Stored secret for Global API key \"%s\".\n", key)
 	return nil
 }

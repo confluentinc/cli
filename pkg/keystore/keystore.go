@@ -36,6 +36,22 @@ func (c *ConfigKeyStore) StoreAPIKey(client *ccloudv2.Client, key *config.APIKey
 }
 
 func (c *ConfigKeyStore) DeleteAPIKey(key string) error {
-	c.Config.Context().KafkaClusterContext.DeleteApiKey(key)
+	ctx := c.Config.Context()
+	ctx.KafkaClusterContext.DeleteApiKey(key)
+	ctx.DeleteGlobalAPIKey(key)
+	return c.Config.Save()
+}
+
+// HasGlobalAPIKey reports whether a Global API key with the given id is stored locally.
+func (c *ConfigKeyStore) HasGlobalAPIKey(key string) bool {
+	return c.Config.Context().HasGlobalAPIKey(key)
+}
+
+// StoreGlobalAPIKey persists a Global API key pair on the active context. The secret is encrypted
+// at rest, matching the behavior of StoreAPIKey for cluster-scoped keys.
+func (c *ConfigKeyStore) StoreGlobalAPIKey(pair *config.APIKeyPair) error {
+	if err := c.Config.Context().StoreGlobalAPIKey(pair); err != nil {
+		return err
+	}
 	return c.Config.Save()
 }
