@@ -215,6 +215,58 @@ func TestContext_StoreGlobalAPIKey_RejectsIncompletePair(t *testing.T) {
 	require.Empty(t, ctx.GlobalAPIKeys)
 }
 
+func TestContext_ValidateGlobalAPIKeys_DeletesMalformedEntries(t *testing.T) {
+	ctx := getBaseContext()
+	ctx.GlobalAPIKeys = map[string]*APIKeyPair{
+		"nil-pair":  nil,                            // missing key (nil pair)
+		"empty-key": {Key: "", Secret: "s"},         // missing key (empty Key)
+		"MISMATCH":  {Key: "OTHER", Secret: "s"},    // key/pair mismatch
+		"NO-SECRET": {Key: "NO-SECRET", Secret: ""}, // missing secret
+		"GOOD":      {Key: "GOOD", Secret: "s"},     // valid, must survive
+	}
+
+	ctx.validateGlobalAPIKeys()
+
+	require.Len(t, ctx.GlobalAPIKeys, 1)
+	require.True(t, ctx.HasGlobalAPIKey("GOOD"))
+	require.False(t, ctx.HasGlobalAPIKey("nil-pair"))
+	require.False(t, ctx.HasGlobalAPIKey("empty-key"))
+	require.False(t, ctx.HasGlobalAPIKey("MISMATCH"))
+	require.False(t, ctx.HasGlobalAPIKey("NO-SECRET"))
+}
+
+func TestContext_EncryptDecryptGlobalAPIKeys(t *testing.T) {
+	ctx := getBaseContext()
+	ctx.GlobalAPIKeys = map[string]*APIKeyPair{"K": {Key: "K", Secret: "plain-secret"}}
+
+	require.NoError(t, ctx.EncryptGlobalAPIKeys())
+	require.NotEqual(t, "plain-secret", ctx.GlobalAPIKeys["K"].Secret, "secret should be encrypted in place")
+
+	require.NoError(t, ctx.DecryptGlobalAPIKeys())
+	require.Equal(t, "plain-secret", ctx.GlobalAPIKeys["K"].Secret, "secret should round-trip back to plaintext")
+}
+
+func TestContext_GlobalAPIKey_NilAndEmptyReceiverSafety(t *testing.T) {
+	var nilCtx *Context
+	require.False(t, nilCtx.HasGlobalAPIKey("x"))
+	require.Empty(t, nilCtx.GetActiveGlobalAPIKey())
+	require.Nil(t, nilCtx.GetActiveGlobalAPIKeyPair())
+	require.NotPanics(t, func() { nilCtx.DeleteGlobalAPIKey("x") })
+
+	// Non-nil context with no active key set: GetActiveGlobalAPIKeyPair returns nil.
+	ctx := getBaseContext()
+	require.Empty(t, ctx.GetActiveGlobalAPIKey())
+	require.Nil(t, ctx.GetActiveGlobalAPIKeyPair())
+
+	// Deleting a key that isn't present is a no-op and does not panic.
+	require.NotPanics(t, func() { ctx.DeleteGlobalAPIKey("not-stored") })
+
+	// StoreGlobalAPIKey lazily initializes a nil map.
+	ctx.GlobalAPIKeys = nil
+	require.NoError(t, ctx.StoreGlobalAPIKey(&APIKeyPair{Key: "K", Secret: "s"}))
+	require.True(t, ctx.HasGlobalAPIKey("K"))
+}
+
 func TestContext_ResolveKafkaAPIKey_ErrorsWhenClusterSecretMissing(t *testing.T) {
 	ctx := getBaseContext()
 

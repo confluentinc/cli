@@ -196,6 +196,18 @@ func (s *CLITestSuite) TestApiKeyGlobal() {
 
 		// guard: a cluster --resource on a Global key is rejected
 		{args: "api-key store UIGLOBALKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/global/store-resource-mismatch-error.golden", exitCode: 1},
+
+		// create a Global key with --use: stores it locally and sets it as the active Global key
+		{
+			args: "api-key create --description created-and-used --resource global --use", fixture: "api-key/global/create-use.golden",
+			wantFunc: func(t *testing.T) {
+				cfg := config.New()
+				require.NoError(t, cfg.Load())
+				ctx := cfg.Context()
+				require.NotNil(t, ctx)
+				require.NotEmpty(t, ctx.GetActiveGlobalAPIKey(), "create --use should set an active Global key")
+			},
+		},
 	}
 
 	resetConfiguration(s.T(), false)
