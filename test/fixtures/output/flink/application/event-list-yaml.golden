@@ -1,0 +1,18 @@
+- apiVersion: cmf.confluent.io/v1alpha1
+  kind: FlinkApplicationEvent
+  metadata:
+    name: event-001
+    creationTimestamp: "2024-01-15T10:30:00Z"
+    flinkApplicationInstance: default-application-1-instance-1
+  status:
+    message: Application started successfully
+    type: Normal
+- apiVersion: cmf.confluent.io/v1alpha1
+  kind: FlinkApplicationEvent
+  metadata:
+    name: event-002
+    creationTimestamp: "2024-01-15T10:31:00Z"
+    flinkApplicationInstance: default-application-1-instance-1
+  status:
+    message: Application restarting due to failure
+    type: Warning

@@ -228,6 +228,24 @@ func (cmfClient *CmfRestClient) UpdateApplication(ctx context.Context, environme
 	return outputApplication, nil
 }
 
+func (cmfClient *CmfRestClient) ListApplicationEvents(ctx context.Context, environment, application string) ([]cmfsdk.FlinkApplicationEvent, error) {
+	events := make([]cmfsdk.FlinkApplicationEvent, 0)
+	var currentPageNumber int32 = 0
+	const pageSize = 100
+	done := false
+
+	for !done {
+		eventsPage, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplicationEvents(ctx, environment, application).Page(currentPageNumber).Size(pageSize).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list events for application "%s" in the environment "%s": %s`, application, environment, parsedErr)
+		}
+		events = append(events, eventsPage.GetItems()...)
+		currentPageNumber, done = extractPageOptions(len(eventsPage.GetItems()), currentPageNumber)
+	}
+
+	return events, nil
+}
+
 // CreateEnvironment Create an environment.
 // Internally, since the call for Create and Update is the same, we check if the environment exists before creation.
 func (cmfClient *CmfRestClient) CreateEnvironment(ctx context.Context, postEnvironment cmfsdk.PostEnvironment) (cmfsdk.Environment, error) {
