@@ -173,7 +173,7 @@ func (c *command) prepareAnonymousContext(cmd *cobra.Command) error {
 	return nil
 }
 
-func addApiKeyToCluster(cmd *cobra.Command, cluster *config.KafkaClusterConfig) error {
+func addApiKeyToCluster(cmd *cobra.Command, ctx *config.Context, cluster *config.KafkaClusterConfig) error {
 	apiKey, err := cmd.Flags().GetString("api-key")
 	if err != nil {
 		return err
@@ -190,6 +190,12 @@ func addApiKeyToCluster(cmd *cobra.Command, cluster *config.KafkaClusterConfig) 
 			Key:    apiKey,
 			Secret: apiSecret,
 		}
+	}
+
+	// If the cluster has no scoped API key, accept an active Global API key as a fallback. The Kafka
+	// REST/admin path will resolve credentials via Context.ResolveKafkaAPIKey() downstream.
+	if cluster.APIKey == "" && ctx.GetActiveGlobalAPIKey() != "" {
+		return nil
 	}
 
 	if cluster.APIKey == "" {

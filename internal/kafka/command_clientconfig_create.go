@@ -179,7 +179,7 @@ func (c *clientConfigCommand) setKafkaCluster(cmd *cobra.Command, configFile str
 		return "", err
 	}
 
-	if err := addApiKeyToCluster(cmd, kafkaCluster); err != nil {
+	if err := addApiKeyToCluster(cmd, c.Context, kafkaCluster); err != nil {
 		return "", err
 	}
 
@@ -200,11 +200,16 @@ func (c *clientConfigCommand) setKafkaCluster(cmd *cobra.Command, configFile str
 		}
 	}
 
+	apiKey, apiSecret, err := c.Context.ResolveKafkaAPIKey(kafkaCluster)
+	if err != nil {
+		return "", err
+	}
+
 	// replace BROKER_ENDPOINT, CLUSTER_API_KEY, and CLUSTER_API_SECRET templates
 	configFile = replaceTemplates(configFile, map[string]string{
 		brokerEndpointTemplate:   kafkaCluster.Bootstrap,
-		clusterApiKeyTemplate:    kafkaCluster.APIKey,
-		clusterApiSecretTemplate: kafkaCluster.GetApiSecret(),
+		clusterApiKeyTemplate:    apiKey,
+		clusterApiSecretTemplate: apiSecret,
 	})
 	return configFile, nil
 }
@@ -283,7 +288,7 @@ func (c *clientConfigCommand) getSchemaRegistryCluster() (*srcmv3.SrcmV3Cluster,
 }
 
 func (c *clientConfigCommand) validateKafkaCredentials(kafkaCluster *config.KafkaClusterConfig) error {
-	configMap, err := getCommonConfig(kafkaCluster, c.clientId)
+	configMap, err := getCommonConfig(c.Context, kafkaCluster, c.clientId)
 	if err != nil {
 		return err
 	}
