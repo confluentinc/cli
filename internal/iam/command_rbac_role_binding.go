@@ -24,17 +24,19 @@ import (
 )
 
 const (
-	httpStatusCodeErrorMsg         = "no error but received HTTP status code %d"
-	httpStatusCodeSuggestions      = "Please file a support ticket with details."
-	invalidResourceTypeErrorMsg    = `invalid resource type "%s"`
-	invalidResourceTypeSuggestions = "The available resource types are %s."
-	lookUpRoleSuggestions          = "To check for valid roles, use `confluent iam rbac role list`."
-	principalFormatErrorMsg        = "incorrect principal format specified"
-	principalFormatSuggestions     = "Principal must be specified in this format: \"<Principal Type>:<Principal Name>\".\nFor example, \"User:u-xxxxxx\" or \"User:sa-xxxxxx\"."
-	resourceFormatErrorMsg         = "incorrect resource format specified"
-	resourceFormatSuggestions      = "Resource must be specified in this format: `<Resource Type>:<Resource Name>`."
-	specifyCloudClusterErrorMsg    = "must specify `--cloud-cluster` to indicate role binding scope"
-	specifyEnvironmentErrorMsg     = "must specify `--environment` to indicate role binding scope"
+	httpStatusCodeErrorMsg           = "no error but received HTTP status code %d"
+	httpStatusCodeSuggestions        = "Please file a support ticket with details."
+	invalidResourceTypeErrorMsg      = `invalid resource type "%s"`
+	invalidResourceTypeSuggestions   = "The available resource types are %s."
+	lookUpRoleSuggestions            = "To check for valid roles, use `confluent iam rbac role list`."
+	principalFormatErrorMsg          = "incorrect principal format specified"
+	principalFormatSuggestions       = "Principal must be specified in this format: \"<Principal Type>:<Principal Name>\".\nFor example, \"User:u-xxxxxx\" or \"User:sa-xxxxxx\"."
+	resourceFormatErrorMsg           = "incorrect resource format specified"
+	resourceFormatSuggestions        = "Resource must be specified in this format: `<Resource Type>:<Resource Name>`."
+	specifyCloudClusterErrorMsg      = "must specify `--cloud-cluster` to indicate role binding scope"
+	specifyEnvironmentErrorMsg       = "must specify `--environment` to indicate role binding scope"
+	specifyUsmKafkaClusterErrorMsg   = "must specify `--usm-kafka-cluster` to indicate role binding scope"
+	specifyUsmConnectClusterErrorMsg = "must specify `--usm-connect-cluster` to indicate role binding scope"
 )
 
 var (
@@ -52,6 +54,11 @@ var (
 	)
 	clusterScopedRolesV2   = types.NewSet("CloudClusterAdmin")
 	environmentScopedRoles = types.NewSet("EnvironmentAdmin")
+
+	// USM cluster-scoped roles bind at the "usm-kafka-cluster" or "usm-connect-cluster" scope,
+	// as siblings to "cloud-cluster" under "environment". The role name (not display name) is used.
+	usmKafkaClusterScopedRoles   = types.NewSet("UsmKafkaClusterAdmin", "UsmKafkaOperator", "UsmKafkaMetricsViewer")
+	usmConnectClusterScopedRoles = types.NewSet("UsmConnectClusterAdmin", "UsmConnectOperator", "UsmConnectMetricsViewer")
 
 	literalPatternType  = "LITERAL"
 	prefixedPatternType = "PREFIXED"
@@ -186,6 +193,8 @@ func addClusterFlags(cmd *cobra.Command, cfg *config.Config, cliCommand *pcmd.CL
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for the role binding.")
 		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster name for the role binding.")
 		cmd.Flags().String("flink-region", "", `Flink region for the role binding, formatted as "cloud.region".`)
+		cmd.Flags().String("usm-kafka-cluster", "", "USM Kafka cluster ID for the role binding.")
+		cmd.Flags().String("usm-connect-cluster", "", "USM Connect cluster ID for the role binding.")
 	} else {
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID for the role binding.")
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for the role binding.")
@@ -626,6 +635,22 @@ func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, 
 		crnPattern += "/flink-region=" + flinkRegion
 	}
 
+	if cmd.Flags().Changed("usm-kafka-cluster") {
+		usmKafkaCluster, err := cmd.Flags().GetString("usm-kafka-cluster")
+		if err != nil {
+			return "", err
+		}
+		crnPattern += "/usm-kafka-cluster=" + usmKafkaCluster
+	}
+
+	if cmd.Flags().Changed("usm-connect-cluster") {
+		usmConnectCluster, err := cmd.Flags().GetString("usm-connect-cluster")
+		if err != nil {
+			return "", err
+		}
+		crnPattern += "/usm-connect-cluster=" + usmConnectCluster
+	}
+
 	if cmd.Flags().Changed("role") {
 		role, err := cmd.Flags().GetString("role")
 		if err != nil {
@@ -634,12 +659,18 @@ func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, 
 		if clusterScopedRolesV2.Contains(role) && !cmd.Flags().Changed("cloud-cluster") {
 			return "", errors.New(specifyCloudClusterErrorMsg)
 		}
-		if (environmentScopedRoles[role] || clusterScopedRolesV2.Contains(role)) && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
+		if usmKafkaClusterScopedRoles.Contains(role) && !cmd.Flags().Changed("usm-kafka-cluster") {
+			return "", errors.New(specifyUsmKafkaClusterErrorMsg)
+		}
+		if usmConnectClusterScopedRoles.Contains(role) && !cmd.Flags().Changed("usm-connect-cluster") {
+			return "", errors.New(specifyUsmConnectClusterErrorMsg)
+		}
+		if (environmentScopedRoles[role] || clusterScopedRolesV2.Contains(role) || usmKafkaClusterScopedRoles.Contains(role) || usmConnectClusterScopedRoles.Contains(role)) && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
 			return "", errors.New(specifyEnvironmentErrorMsg)
 		}
 	}
 
-	if cmd.Flags().Changed("cloud-cluster") && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
+	if (cmd.Flags().Changed("cloud-cluster") || cmd.Flags().Changed("usm-kafka-cluster") || cmd.Flags().Changed("usm-connect-cluster")) && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
 		return "", errors.New(specifyEnvironmentErrorMsg)
 	}
 	return crnPattern, nil

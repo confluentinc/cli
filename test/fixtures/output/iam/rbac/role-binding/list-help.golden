@@ -20,6 +20,10 @@ List the role bindings for user "u-123456" with role "CloudClusterAdmin":
 
   $ confluent iam rbac role-binding list --principal User:u-123456 --role CloudClusterAdmin --environment env-123456 --cloud-cluster lkc-123456
 
+List the role bindings for user "u-123456" with role "UsmKafkaClusterAdmin" for the USM Kafka cluster "usmkc-123456":
+
+  $ confluent iam rbac role-binding list --principal User:u-123456 --role UsmKafkaClusterAdmin --environment env-123456 --usm-kafka-cluster usmkc-123456
+
 List the role bindings for user "u-123456" for all scopes:
 
   $ confluent iam rbac role-binding list --principal User:u-123456 --inclusive
@@ -39,6 +43,8 @@ Flags:
       --schema-registry-cluster string   Schema Registry cluster ID, which specifies the Schema Registry cluster scope.
       --ksql-cluster string              ksqlDB cluster name, which specifies the ksqlDB cluster scope.
       --flink-region string              Flink region for the role binding, formatted as "cloud.region".
+      --usm-kafka-cluster string         USM Kafka cluster ID, which specifies the USM Kafka cluster scope.
+      --usm-connect-cluster string       USM Connect cluster ID, which specifies the USM Connect cluster scope.
       --resource string                  Resource type and identifier using "Prefix:ID" format. If specified with "--role" and no principals, list all principals and role bindings.
       --inclusive                        List role bindings for specified scopes and nested scopes. Otherwise, list role bindings for the specified scopes. If scopes are unspecified, list only organization-scoped role bindings.
   -o, --output string                    Specify the output format as "human", "json", or "yaml". (default "human")
