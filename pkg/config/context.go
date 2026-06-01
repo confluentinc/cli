@@ -591,6 +591,9 @@ func (c *Context) HasGlobalAPIKey(key string) bool {
 // StoreGlobalAPIKey inserts a Global API key pair into the org-level keystore and encrypts it.
 // Callers must persist the Context (Config.Save) after this returns.
 func (c *Context) StoreGlobalAPIKey(pair *APIKeyPair) error {
+	if pair == nil || pair.Key == "" || pair.Secret == "" {
+		return fmt.Errorf("Global API key pair must include both key and secret")
+	}
 	if c.GlobalAPIKeys == nil {
 		c.GlobalAPIKeys = map[string]*APIKeyPair{}
 	}
@@ -634,16 +637,20 @@ func (c *Context) GetActiveGlobalAPIKeyPair() *APIKeyPair {
 }
 
 // ResolveKafkaAPIKey returns the API key/secret to use against the given Kafka cluster: prefer the
-// cluster-scoped active key, falling back to the active Global key. Returned secret is decrypted.
-// Returns ("", "", nil) if neither is set.
+// cluster-scoped active key, falling back to the active Global key only when no cluster-scoped key is
+// set. Returned secret is decrypted. Returns ("", "", nil) if neither is set, and an error if the
+// cluster's active key is set but its secret is missing locally (a broken cluster-scoped config that
+// must not be silently masked by the Global fallback).
 func (c *Context) ResolveKafkaAPIKey(kcc *KafkaClusterConfig) (string, string, error) {
 	if kcc != nil && kcc.APIKey != "" {
-		if pair, ok := kcc.APIKeys[kcc.APIKey]; ok {
-			if err := pair.DecryptSecret(); err != nil {
-				return "", "", err
-			}
-			return pair.Key, pair.Secret, nil
+		pair, ok := kcc.APIKeys[kcc.APIKey]
+		if !ok {
+			return "", "", fmt.Errorf("current Kafka API key %q is set for cluster %q but no secret is stored locally", kcc.APIKey, kcc.ID)
 		}
+		if err := pair.DecryptSecret(); err != nil {
+			return "", "", err
+		}
+		return pair.Key, pair.Secret, nil
 	}
 	if pair := c.GetActiveGlobalAPIKeyPair(); pair != nil {
 		if err := pair.DecryptSecret(); err != nil {
