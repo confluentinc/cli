@@ -111,3 +111,123 @@ func getEnvAndClusterFlagContext() *Context {
 
 	return ctx
 }
+
+func TestContext_GlobalAPIKeyStorage(t *testing.T) {
+	ctx := getBaseContext()
+	require.NotNil(t, ctx.GlobalAPIKeys, "validate() should initialize GlobalAPIKeys")
+
+	pair := &APIKeyPair{Key: "GLOBAL-KEY-1", Secret: "plain-secret"}
+	require.NoError(t, ctx.StoreGlobalAPIKey(pair))
+
+	require.True(t, ctx.HasGlobalAPIKey("GLOBAL-KEY-1"))
+	require.False(t, ctx.HasGlobalAPIKey("missing"))
+
+	// After Store, the secret is encrypted in place. Resolve must decrypt it.
+	stored := ctx.GlobalAPIKeys["GLOBAL-KEY-1"]
+	require.NotEqual(t, "plain-secret", stored.Secret, "secret should be encrypted at rest")
+
+	require.NoError(t, ctx.SetActiveGlobalAPIKey("GLOBAL-KEY-1"))
+	require.Equal(t, "GLOBAL-KEY-1", ctx.GetActiveGlobalAPIKey())
+
+	// SetActiveGlobalAPIKey must reject keys that aren't stored.
+	require.Error(t, ctx.SetActiveGlobalAPIKey("unknown-key"))
+}
+
+func TestContext_ResolveKafkaAPIKey_PrefersClusterScoped(t *testing.T) {
+	ctx := getBaseContext()
+
+	// Pre-populate a cluster-scoped key on the active cluster.
+	kcc := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
+	require.NotNil(t, kcc)
+	clusterKey := &APIKeyPair{Key: "CLUSTER-KEY", Secret: "cluster-secret"}
+	require.NoError(t, clusterKey.EncryptSecret())
+	kcc.APIKeys = map[string]*APIKeyPair{"CLUSTER-KEY": clusterKey}
+	kcc.APIKey = "CLUSTER-KEY"
+
+	// Also set up a global key + active marker.
+	require.NoError(t, ctx.StoreGlobalAPIKey(&APIKeyPair{Key: "GLOBAL-KEY", Secret: "global-secret"}))
+	require.NoError(t, ctx.SetActiveGlobalAPIKey("GLOBAL-KEY"))
+
+	key, secret, err := ctx.ResolveKafkaAPIKey(kcc)
+	require.NoError(t, err)
+	require.Equal(t, "CLUSTER-KEY", key)
+	require.Equal(t, "cluster-secret", secret)
+}
+
+func TestContext_ResolveKafkaAPIKey_FallsBackToGlobal(t *testing.T) {
+	ctx := getBaseContext()
+
+	kcc := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
+	require.NotNil(t, kcc)
+	kcc.APIKey = ""
+	kcc.APIKeys = map[string]*APIKeyPair{}
+
+	require.NoError(t, ctx.StoreGlobalAPIKey(&APIKeyPair{Key: "GLOBAL-KEY", Secret: "global-secret"}))
+	require.NoError(t, ctx.SetActiveGlobalAPIKey("GLOBAL-KEY"))
+
+	key, secret, err := ctx.ResolveKafkaAPIKey(kcc)
+	require.NoError(t, err)
+	require.Equal(t, "GLOBAL-KEY", key)
+	require.Equal(t, "global-secret", secret)
+}
+
+func TestContext_ResolveKafkaAPIKey_NoCredentialsConfigured(t *testing.T) {
+	ctx := getBaseContext()
+	kcc := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
+	require.NotNil(t, kcc)
+	kcc.APIKey = ""
+	kcc.APIKeys = map[string]*APIKeyPair{}
+
+	key, secret, err := ctx.ResolveKafkaAPIKey(kcc)
+	require.NoError(t, err)
+	require.Empty(t, key)
+	require.Empty(t, secret)
+}
+
+func TestContext_DeleteGlobalAPIKey_ClearsActive(t *testing.T) {
+	ctx := getBaseContext()
+	require.NoError(t, ctx.StoreGlobalAPIKey(&APIKeyPair{Key: "GLOBAL-KEY", Secret: "global-secret"}))
+	require.NoError(t, ctx.SetActiveGlobalAPIKey("GLOBAL-KEY"))
+
+	ctx.DeleteGlobalAPIKey("GLOBAL-KEY")
+
+	require.False(t, ctx.HasGlobalAPIKey("GLOBAL-KEY"))
+	require.Empty(t, ctx.GetActiveGlobalAPIKey(), "deleting active key should clear ActiveGlobalAPIKey")
+}
+
+func TestContext_ValidateGlobalAPIKeys_RemovesOrphanedActive(t *testing.T) {
+	ctx := getBaseContext()
+	// Active key references a pair that doesn't exist in the map.
+	ctx.ActiveGlobalAPIKey = "ghost-key"
+	ctx.validateGlobalAPIKeys()
+	require.Empty(t, ctx.ActiveGlobalAPIKey, "validate should clear active key when not present in map")
+}
+
+func TestContext_StoreGlobalAPIKey_RejectsIncompletePair(t *testing.T) {
+	ctx := getBaseContext()
+
+	require.Error(t, ctx.StoreGlobalAPIKey(nil), "nil pair should be rejected")
+	require.Error(t, ctx.StoreGlobalAPIKey(&APIKeyPair{Secret: "secret-only"}), "missing key should be rejected")
+	require.Error(t, ctx.StoreGlobalAPIKey(&APIKeyPair{Key: "key-only"}), "missing secret should be rejected")
+
+	// A malformed pair must not be persisted.
+	require.False(t, ctx.HasGlobalAPIKey("key-only"))
+	require.Empty(t, ctx.GlobalAPIKeys)
+}
+
+func TestContext_ResolveKafkaAPIKey_ErrorsWhenClusterSecretMissing(t *testing.T) {
+	ctx := getBaseContext()
+
+	// Cluster has an active key set, but its secret is not stored locally.
+	kcc := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
+	require.NotNil(t, kcc)
+	kcc.APIKey = "CLUSTER-KEY"
+	kcc.APIKeys = map[string]*APIKeyPair{}
+
+	// A usable Global key exists, but it must NOT be silently used to mask the broken cluster config.
+	require.NoError(t, ctx.StoreGlobalAPIKey(&APIKeyPair{Key: "GLOBAL-KEY", Secret: "global-secret"}))
+	require.NoError(t, ctx.SetActiveGlobalAPIKey("GLOBAL-KEY"))
+
+	_, _, err := ctx.ResolveKafkaAPIKey(kcc)
+	require.Error(t, err, "should surface the broken cluster-scoped config rather than fall back to Global")
+}

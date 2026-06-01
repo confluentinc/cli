@@ -156,6 +156,56 @@ func (s *CLITestSuite) TestApiKey() {
 	}
 }
 
+func (s *CLITestSuite) TestApiKeyGlobal() {
+	tests := []CLITest{
+		// store a Global API key: auto-detected from the server-side resource Kind (no --resource needed)
+		{args: "api-key store UIGLOBALKEY100 UIGLOBALSECRET100", login: "cloud", fixture: "api-key/global/store.golden"},
+
+		// storing again without --force is refused
+		{args: "api-key store UIGLOBALKEY100 NEWSECRET", fixture: "api-key/global/store-override-error.golden", exitCode: 1},
+
+		// --force overwrites the stored secret
+		{
+			args: "api-key store UIGLOBALKEY100 NEWSECRET --force", fixture: "api-key/global/store-force.golden",
+			wantFunc: func(t *testing.T) {
+				cfg := config.New()
+				require.NoError(t, cfg.Load())
+				ctx := cfg.Context()
+				require.NotNil(t, ctx)
+				require.NoError(t, ctx.DecryptGlobalAPIKeys())
+				pair := ctx.GlobalAPIKeys["UIGLOBALKEY100"]
+				require.NotNil(t, pair)
+				require.Equal(t, "NEWSECRET", pair.Secret)
+			},
+		},
+
+		// use the stored Global key as the active Global key
+		{
+			args: "api-key use UIGLOBALKEY100", fixture: "api-key/global/use.golden",
+			wantFunc: func(t *testing.T) {
+				cfg := config.New()
+				require.NoError(t, cfg.Load())
+				ctx := cfg.Context()
+				require.NotNil(t, ctx)
+				require.Equal(t, "UIGLOBALKEY100", ctx.GetActiveGlobalAPIKey())
+			},
+		},
+
+		// guard: --resource global on a non-Global (cluster) key is rejected
+		{args: "api-key store UIAPIKEY100 UIAPISECRET100 --resource global", fixture: "api-key/global/store-not-global-error.golden", exitCode: 1},
+
+		// guard: a cluster --resource on a Global key is rejected
+		{args: "api-key store UIGLOBALKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/global/store-resource-mismatch-error.golden", exitCode: 1},
+	}
+
+	resetConfiguration(s.T(), false)
+
+	for _, test := range tests {
+		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestApiKeyCreate() {
 	tests := []CLITest{
 		{args: "api-key create --resource flink --cloud aws --region us-east-1", fixture: "api-key/create-flink.golden"},
