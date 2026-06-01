@@ -2,6 +2,7 @@ package flink
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -35,6 +36,7 @@ type CmfClientInterface interface {
 	DeleteStatement(ctx context.Context, environment, statement string) error
 	UpdateStatement(ctx context.Context, environment, statementName string, statement cmfsdk.Statement) error
 	GetStatementResults(ctx context.Context, environment, statementName, pageToken string) (cmfsdk.StatementResult, error)
+	GetSystemInformation(ctx context.Context) (map[string]interface{}, error)
 	CmfApiContext() context.Context
 }
 
@@ -527,6 +529,46 @@ func (cmfClient *CmfRestClient) GetStatementResults(ctx context.Context, environ
 		return cmfsdk.StatementResult{}, fmt.Errorf(`failed to get result for statement "%s" in the environment "%s": %s`, statementName, environment, parsedErr)
 	}
 	return resp, nil
+}
+
+func (cmfClient *CmfRestClient) GetSystemInformation(ctx context.Context) (map[string]interface{}, error) {
+	baseURL := cmfClient.GetConfig().Servers[0].URL
+	url := baseURL + "/cmf/api/v1/system-information"
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create system information request: %s", err)
+	}
+
+	if token, ok := ctx.Value(cmfsdk.ContextAccessToken).(string); ok && token != "" {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	}
+
+	resp, err := cmfClient.GetConfig().HTTPClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get system information: %s", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read system information response: %s", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		trimmed := strings.TrimSpace(string(body))
+		if trimmed != "" {
+			return nil, errors.New(trimmed)
+		}
+		return nil, errors.New(resp.Status)
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("failed to parse system information response: %s", err)
+	}
+
+	return result, nil
 }
 
 func (cmfClient *CmfRestClient) CreateCatalog(ctx context.Context, kafkaCatalog cmfsdk.KafkaCatalog) (cmfsdk.KafkaCatalog, error) {

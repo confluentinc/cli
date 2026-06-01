@@ -11,6 +11,7 @@ Available Commands:
   environment         Manage Flink environments.
   savepoint           Manage Flink savepoints.
   statement           Manage Flink SQL statements.
+  system-info         Display CMF system information.
 
 Global Flags:
   -h, --help            Show help for this command.
