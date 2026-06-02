@@ -9,6 +9,7 @@ Available Commands:
   delete         Delete one or more ksqlDB clusters.
   describe       Describe a ksqlDB cluster.
   list           List ksqlDB clusters.
+  update         Update a ksqlDB cluster.
 
 Global Flags:
   -h, --help            Show help for this command.
