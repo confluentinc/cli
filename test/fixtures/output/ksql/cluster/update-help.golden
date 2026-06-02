@@ -1,0 +1,25 @@
+Update an existing ksqlDB cluster. Currently only the CSU count may be
+modified, and only to larger sizes (shrink is not supported).
+
+Valid CSU values are 4, 8, 12, 16, 20, 24, 28. Larger sizes require a support ticket.
+The cluster will undergo a rolling restart to apply the new size; the
+command returns once the resize has been accepted by the control plane.
+
+Usage:
+  confluent ksql cluster update <id> [flags]
+
+Examples:
+Resize ksqlDB cluster "lksqlc-12345" to 8 CSUs.
+
+  $ confluent ksql cluster update lksqlc-12345 --csu 8
+
+Flags:
+      --csu int32            REQUIRED: Target number of CSUs for the cluster. Valid values: 4, 8, 12, 16, 20, 24, 28.
+      --context string       CLI context name.
+      --environment string   Environment ID.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
