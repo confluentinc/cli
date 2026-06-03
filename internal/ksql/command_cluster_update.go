@@ -15,14 +15,33 @@ import (
 // Valid CSU sizes that customers may target via self-serve cluster update.
 // Mirrors the server-side authoritative list in cc-control-plane-ksql:
 // internal/service/update_ksql_cluster_resize.go::validCSUSizes.
-// Values 1, 2 are legacy and not user-selectable. Values above 28 still
-// require a support ticket.
+// Values 1, 2 are legacy and not user-selectable. Values above maxSelfServeCSU
+// (the largest entry in this slice) still require a support ticket.
 //
 //nolint:gochecknoglobals
 var validCsuSizes = []int32{4, 8, 12, 16, 20, 24, 28}
 
-const csuSupportTicketMessage = "CSU values above 28 require a support ticket. " +
-	"Please contact Confluent Support to request a larger cluster size."
+// maxSelfServeCSU is derived from validCsuSizes so the support-ticket
+// threshold and the "Valid values" listing stay in lockstep — if the
+// validCsuSizes slice is extended, the threshold moves with it.
+//
+//nolint:gochecknoglobals
+var maxSelfServeCSU = func() int32 {
+	max := int32(0)
+	for _, v := range validCsuSizes {
+		if v > max {
+			max = v
+		}
+	}
+	return max
+}()
+
+func csuSupportTicketMessage() string {
+	return fmt.Sprintf(
+		"CSU values above %d require a support ticket. "+
+			"Please contact Confluent Support to request a larger cluster size.",
+		maxSelfServeCSU)
+}
 
 func (c *ksqlCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -32,6 +51,10 @@ func (c *ksqlCommand) newUpdateCommand() *cobra.Command {
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.update,
+		// Hidden while the SDK call is shimmed (see Client.UpdateKsqlCluster
+		// in pkg/ccloudv2/ksql.go). Once the SDK is regenerated from cc-api
+		// PR #2507 and the shim is replaced with the real call, drop Hidden.
+		Hidden: true,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Resize ksqlDB cluster "lksqlc-12345" to 8 CSUs.`,
@@ -54,12 +77,11 @@ func (c *ksqlCommand) newUpdateCommand() *cobra.Command {
 
 func buildUpdateLongDescription() string {
 	return fmt.Sprintf(
-		`Update an existing ksqlDB cluster. Currently only the CSU count may be
-modified, and only to larger sizes (shrink is not supported).
-
-Valid CSU values are %s. Larger sizes require a support ticket.
-The cluster will undergo a rolling restart to apply the new size; the
-command returns once the resize has been accepted by the control plane.`,
+		"Update an existing ksqlDB cluster. Currently only the CSU count may be modified, "+
+			"and only to larger sizes (shrink is not supported).\n\n"+
+			"Valid CSU values are %s. Larger sizes require a support ticket. "+
+			"The cluster will undergo a rolling restart to apply the new size; "+
+			"the command returns once the resize has been accepted by the control plane.",
 		formatCsuList(validCsuSizes))
 }
 
@@ -98,15 +120,19 @@ func (c *ksqlCommand) update(cmd *cobra.Command, args []string) error {
 			"(target %d < current %d)", clusterId, currentCsu, csu, currentCsu)
 	}
 
-	output.ErrPrintf(c.Config.EnableColor,
-		"Resizing ksqlDB cluster %q from %d to %d CSUs. A rolling restart will be "+
-			"performed asynchronously; the cluster will continue serving queries during the resize.\n",
-		clusterId, currentCsu, csu)
-
 	cluster, err := c.V2Client.UpdateKsqlCluster(clusterId, environmentId, csu)
 	if err != nil {
 		return err
 	}
+
+	// Print the rolling-restart notice only AFTER the PATCH was accepted —
+	// otherwise a failed call (e.g., a 4xx from the server) would leave the
+	// customer with a misleading "Resizing…" message even though no resize
+	// is happening.
+	output.ErrPrintf(c.Config.EnableColor,
+		"Resizing ksqlDB cluster %q from %d to %d CSUs. A rolling restart will be "+
+			"performed asynchronously; the cluster will continue serving queries during the resize.\n",
+		clusterId, currentCsu, csu)
 
 	table := output.NewTable(cmd)
 	table.Add(c.formatClusterForDisplayAndList(&cluster))
@@ -118,8 +144,8 @@ func (c *ksqlCommand) update(cmd *cobra.Command, args []string) error {
 // cc-control-plane-ksql is authoritative; this client-side validation exists
 // to fail fast with a clearer message before issuing the API call.
 func validateCsuForUpdate(csu int32) error {
-	if csu > 28 {
-		return fmt.Errorf("%d CSUs: %s", csu, csuSupportTicketMessage)
+	if csu > maxSelfServeCSU {
+		return fmt.Errorf("%d CSUs: %s", csu, csuSupportTicketMessage())
 	}
 	for _, valid := range validCsuSizes {
 		if csu == valid {
