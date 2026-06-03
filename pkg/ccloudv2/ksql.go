@@ -96,7 +96,6 @@ func (c *Client) UpdateKsqlCluster(id, environmentId string, csu int32) (ksqlv2.
 	_ = environmentId
 	_ = csu
 	return ksqlv2.KsqldbcmV2Cluster{}, fmt.Errorf(
-		"ksqlDB cluster update is not yet available in this CLI build; " +
-			"this command is pending a ccloud-sdk-go-v2/ksql regeneration " +
-			"after cc-api PR #2507 (KSQL-14844) merges. Track KSQL-14849 for status.")
+		"ksqlDB cluster update is not yet available in this CLI build. " +
+			"Please upgrade to a newer version of the Confluent CLI and retry.")
 }
