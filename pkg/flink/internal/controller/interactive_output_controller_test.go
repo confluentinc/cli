@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/bradleyjkemp/cupaloy/v2"
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 	"github.com/rivo/tview"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
