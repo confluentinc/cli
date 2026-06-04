@@ -19,3 +19,4 @@
           | UIAPIKEY101        |                                | u-22bbb  | u-22bbb@confluent.io  | kafka           | lkc-other1   | 1999-02-24T00:00:00Z  
           | UIAPIKEY102        |                                | u-22bbb  | u-22bbb@confluent.io  | ksql            | lksqlc-ksql1 | 1999-02-24T00:00:00Z  
           | UIAPIKEY103        |                                | u-22bbb  | u-22bbb@confluent.io  | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
+          | UIGLOBALKEY100     |                                | u-22bbb  | u-22bbb@confluent.io  | global          |              | 1999-02-24T00:00:00Z  

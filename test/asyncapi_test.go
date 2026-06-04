@@ -13,6 +13,10 @@ func (s *CLITestSuite) TestAsyncapiExport() {
 	tests := []CLITest{
 		{args: "asyncapi export", exitCode: 1, fixture: "asyncapi/no-kafka.golden"},
 		{args: "environment use " + testserver.SRApiEnvId},
+		// Global API key fallback: with only an active Global key and no cluster-scoped key, export succeeds.
+		{args: "api-key store UIGLOBALKEY100 UIGLOBALSECRET100"},
+		{args: "api-key use UIGLOBALKEY100"},
+		{args: "asyncapi export", fixture: "asyncapi/export-success.golden", useKafka: "lkc-asyncapi"},
 		// Spec Generated
 		{args: "asyncapi export", fixture: "asyncapi/export-success.golden", useKafka: "lkc-asyncapi", authKafka: true},
 		{args: "asyncapi export --schema-context dev --file asyncapi-with-context.yaml", useKafka: "lkc-asyncapi", authKafka: true},

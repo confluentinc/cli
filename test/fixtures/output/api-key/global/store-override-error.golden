@@ -1,0 +1,4 @@
+Error: refusing to overwrite existing secret for API Key "UIGLOBALKEY100"
+
+Suggestions:
+    If you would like to override the existing secret stored for API key "UIGLOBALKEY100", use the `--force` flag.
