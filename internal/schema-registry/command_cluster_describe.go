@@ -1,13 +1,14 @@
 package schemaregistry
 
 import (
-	"encoding/json"
 	"fmt"
 	"math"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
+
+	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -95,11 +96,7 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	queryBody, err := schemaCountQueryBodyFor(cluster.GetId())
-	if err != nil {
-		return err
-	}
-	metricsResponse, httpResp, err := metricsClient.MetricsDatasetQueryRaw("cloud", queryBody)
+	metricsResponse, httpResp, err := metricsClient.MetricsDatasetQuery("cloud", schemaCountQueryFor(cluster.GetId()))
 	if err := ccloudv2.UnmarshalFlatQueryResponseIfDataSchemaMatchError(err, metricsResponse, httpResp); err != nil {
 		return err
 	}
@@ -161,30 +158,18 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 	return table.Print()
 }
 
-// schemaCountQueryBodyFor builds the Metrics-API request body for schema_count.
-// schema_count is a GAUGE. For legacy LSRCs whose schemas span two PSRCs, each
-// PSRC emits its own data point against the same LSRC ID, and the API's default
-// MEAN time aggregation under-counts. We mirror cc-billing-worker's query
-// (metrics/configurable/cloud_metrics_plugin.go) which uses the undocumented
-// "time_agg" field to force MAX per series before "agg":"SUM" combines them.
-// The v2 SDK doesn't expose "time_agg", so the body is built and sent raw.
-func schemaCountQueryBodyFor(schemaRegistryId string) ([]byte, error) {
-	return json.Marshal(map[string]any{
-		"aggregations": []map[string]any{{
-			"time_agg": "MAX",
-			"agg":      "SUM",
-			"metric":   "io.confluent.kafka.schema_registry/schema_count",
-		}},
-		"filter": map[string]any{
-			"field": "resource.schema_registry.id",
-			"op":    "EQ",
-			"value": schemaRegistryId,
+func schemaCountQueryFor(schemaRegistryId string) metricsv2.QueryRequest {
+	aggregations := []metricsv2.Aggregation{{Metric: "io.confluent.kafka.schema_registry/schema_count"}}
+	filter := metricsv2.Filter{
+		FieldFilter: &metricsv2.FieldFilter{
+			Field: metricsv2.PtrString("resource.schema_registry.id"),
+			Op:    "EQ",
+			Value: metricsv2.StringAsFieldFilterValue(metricsv2.PtrString(schemaRegistryId)),
 		},
-		"format":      "FLAT",
-		"granularity": "PT1H",
-		"intervals":   []string{"PT1H/now-2m|m"},
-		"limit":       1000,
-	})
+	}
+	req := metricsv2.NewQueryRequest(aggregations, "ALL", []string{"PT1M/now-2m|m"})
+	req.SetFilter(filter)
+	return *req
 }
 
 func getMaxSchemaLimitPriceKey(serviceProvider, serviceProviderRegion, streamGovernancePackage string) string {
