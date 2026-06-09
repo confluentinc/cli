@@ -54,7 +54,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/usm v0.1.0
 	github.com/confluentinc/cmf-sdk-go v0.0.7
-	github.com/confluentinc/confluent-kafka-go/v2 v2.14.1
+	github.com/confluentinc/confluent-kafka-go/v2 v2.14.2
 	github.com/confluentinc/go-editor v0.11.0
 	github.com/confluentinc/go-prompt v0.2.40
 	github.com/confluentinc/go-ps1 v1.0.2
@@ -270,8 +270,6 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.60.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.43.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.43.0 // indirect
 	go.opentelemetry.io/otel/trace v1.43.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.10.0 // indirect
 	golang.org/x/mod v0.36.0 // indirect
