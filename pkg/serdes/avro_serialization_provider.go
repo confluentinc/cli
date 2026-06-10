@@ -17,11 +17,11 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption/localkms"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/jsonata"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
-	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/avrov2"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/avrov3"
 )
 
 type AvroSerializationProvider struct {
-	ser      *avrov2.Serializer
+	ser      *avrov3.Serializer
 	schemaId int
 	mode     string
 }
@@ -49,7 +49,7 @@ func (a *AvroSerializationProvider) InitSerializer(srClientUrl, srClusterId, mod
 	// Configure the serde settings
 	// If schemaId > 0 then use the intended schema ID
 	// otherwise use the latest schema ID
-	serdeConfig := avrov2.NewSerializerConfig()
+	serdeConfig := avrov3.NewSerializerConfig()
 	serdeConfig.AutoRegisterSchemas = false
 	serdeConfig.UseLatestVersion = true
 
@@ -74,7 +74,7 @@ func (a *AvroSerializationProvider) InitSerializer(srClientUrl, srClusterId, mod
 		return fmt.Errorf("unknown serialization mode: %s", mode)
 	}
 
-	ser, err := avrov2.NewSerializer(serdeClient, serdeType, serdeConfig)
+	ser, err := avrov3.NewSerializer(serdeClient, serdeType, serdeConfig)
 
 	if err != nil {
 		return fmt.Errorf("failed to initialize AVRO serializer: %w", err)
