@@ -313,6 +313,25 @@ func (s *CLITestSuite) TestKafkaClientConfig() {
 	}
 }
 
+func (s *CLITestSuite) TestKafkaClientConfigGlobalKey() {
+	tests := []CLITest{
+		// Store and activate a Global key, with no cluster-scoped key set.
+		{args: "api-key store UIGLOBALKEY100 UIGLOBALSECRET100"},
+		{args: "api-key use UIGLOBALKEY100"},
+		// client-config create falls back to the active Global key: the rendered config embeds it as
+		// sasl.username/sasl.password (csharp template needs no Schema Registry key-secret pair).
+		{args: "kafka client-config create csharp", useKafka: "lkc-cool1", fixture: "kafka/client-config/csharp-global-key.golden"},
+	}
+
+	resetConfiguration(s.T(), false)
+
+	for _, test := range tests {
+		test.login = "cloud"
+		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
+
 func getCreateLinkConfigFile() string {
 	file, _ := os.CreateTemp(os.TempDir(), "test")
 	_, _ = file.Write([]byte("key=val\n key2=val2 \n key3=val password=pass"))
