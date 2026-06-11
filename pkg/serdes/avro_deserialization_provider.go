@@ -8,11 +8,11 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde"
-	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/avrov2"
+	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/serde/avrov3"
 )
 
 type AvroDeserializationProvider struct {
-	deser *avrov2.Deserializer
+	deser *avrov3.Deserializer
 }
 
 func (a *AvroDeserializationProvider) InitDeserializer(srClientUrl, srClusterId, kafkaClusterId, mode string, srAuth SchemaRegistryAuth, existingClient schemaregistry.Client) error {
@@ -25,7 +25,7 @@ func (a *AvroDeserializationProvider) InitDeserializer(srClientUrl, srClusterId,
 		return fmt.Errorf("failed to create deserializer-specific Schema Registry client: %w", err)
 	}
 
-	serdeConfig := avrov2.NewDeserializerConfig()
+	serdeConfig := avrov3.NewDeserializerConfig()
 
 	// local KMS secret is only set and used during local testing with ruleSet
 	if localKmsSecretValue := os.Getenv(localKmsSecretMacro); srClientUrl == mockClientUrl && localKmsSecretValue != "" {
@@ -46,7 +46,7 @@ func (a *AvroDeserializationProvider) InitDeserializer(srClientUrl, srClusterId,
 		return fmt.Errorf("unknown deserialization mode: %s", mode)
 	}
 
-	deser, err := avrov2.NewDeserializer(serdeClient, serdeType, serdeConfig)
+	deser, err := avrov3.NewDeserializer(serdeClient, serdeType, serdeConfig)
 	if err != nil {
 		return fmt.Errorf("failed to initialize AVRO deserializer: %w", err)
 	}
