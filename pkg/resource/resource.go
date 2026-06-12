@@ -79,6 +79,8 @@ const (
 	SchemaRegistryConfiguration      = "Schema Registry configuration"
 	ServiceAccount                   = "service account"
 	SsoGroupMapping                  = "SSO group mapping"
+	SwitchoverEndpoint               = "switchover endpoint"
+	SwitchoverPair                   = "switchover pair"
 	Tableflow                        = "tableflow"
 	Topic                            = "topic"
 	TransitGatewayAttachment         = "transit gateway attachment"
