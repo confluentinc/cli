@@ -172,6 +172,7 @@ require (
 	github.com/charmbracelet/x/term v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.1.0 // indirect
 	github.com/cloudflare/circl v1.6.3 // indirect
+	github.com/confluentinc/ccloud-sdk-go-v2/switchover v0.1.0
 	github.com/confluentinc/confluent-avro-go/v2 v2.32.0 // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
