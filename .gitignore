@@ -12,6 +12,9 @@
 # Local agent/tooling artifacts
 /.planning/
 
+# Editor/IDE
+/.idea/
+
 # RPM/DEB
 /rpm/
 /deb/
