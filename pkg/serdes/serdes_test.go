@@ -1307,6 +1307,97 @@ func TestAvroSerdesUsesAssociatedSubject(t *testing.T) {
 	req.Error(err)
 }
 
+func TestJsonSerdesUsesAssociatedSubject(t *testing.T) {
+	req := require.New(t)
+
+	schemaString := `{"type":"object","properties":{"f1":{"type":"string"}},"required":["f1"]}`
+	schemaPath := filepath.Join(tempDir, "json-schema-associated.json")
+	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
+
+	const (
+		kafkaClusterId = "lkc-assoc-json"
+		topic          = "associated-topic-json"
+		associated     = "custom-associated-json-value"
+	)
+
+	serializationProvider, _ := GetSerializationProvider(jsonSchemaName)
+	err := serializationProvider.InitSerializer(mockClientUrl, "", kafkaClusterId, "value", -1, SchemaRegistryAuth{})
+	req.Nil(err)
+	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
+	req.Nil(err)
+
+	client := serializationProvider.GetSchemaRegistryClient()
+	_, err = client.Register(associated, schemaregistry.SchemaInfo{Schema: schemaString, SchemaType: "JSON"}, false)
+	req.Nil(err)
+	_, err = client.CreateOrUpdateAssociation(schemaregistry.AssociationCreateOrUpdateRequest{
+		ResourceName:      topic,
+		ResourceNamespace: kafkaClusterId,
+		ResourceID:        topic + ":" + kafkaClusterId,
+		ResourceType:      "topic",
+		Associations: []schemaregistry.AssociationCreateOrUpdateInfo{{
+			Subject:         associated,
+			AssociationType: "value",
+		}},
+	})
+	req.Nil(err)
+
+	_, _, err = serializationProvider.Serialize(topic, `{"f1":"asd"}`)
+	req.Nil(err, "serialize should resolve to the associated subject")
+
+	_, err = client.GetLatestSchemaMetadata(topic + "-value")
+	req.Error(err)
+}
+
+func TestProtobufSerdesUsesAssociatedSubject(t *testing.T) {
+	req := require.New(t)
+
+	tempDir, err := os.MkdirTemp(tempDir, "protobuf-associated")
+	req.NoError(err)
+	defer os.RemoveAll(tempDir)
+
+	schemaString := `
+	syntax = "proto3";
+	message Person {
+	  string name = 1;
+	  int32 page = 2;
+	}`
+	schemaPath := filepath.Join(tempDir, "person-schema.proto")
+	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
+
+	const (
+		kafkaClusterId = "lkc-assoc-proto"
+		topic          = "associated-topic-proto"
+		associated     = "custom-associated-proto-value"
+	)
+
+	serializationProvider, _ := GetSerializationProvider(protobufSchemaName)
+	err = serializationProvider.InitSerializer(mockClientUrl, "", kafkaClusterId, "value", -1, SchemaRegistryAuth{})
+	req.Nil(err)
+	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
+	req.Nil(err)
+
+	client := serializationProvider.GetSchemaRegistryClient()
+	_, err = client.Register(associated, schemaregistry.SchemaInfo{Schema: schemaString, SchemaType: "PROTOBUF"}, false)
+	req.Nil(err)
+	_, err = client.CreateOrUpdateAssociation(schemaregistry.AssociationCreateOrUpdateRequest{
+		ResourceName:      topic,
+		ResourceNamespace: kafkaClusterId,
+		ResourceID:        topic + ":" + kafkaClusterId,
+		ResourceType:      "topic",
+		Associations: []schemaregistry.AssociationCreateOrUpdateInfo{{
+			Subject:         associated,
+			AssociationType: "value",
+		}},
+	})
+	req.Nil(err)
+
+	_, _, err = serializationProvider.Serialize(topic, `{"name":"abc","page":1}`)
+	req.Nil(err, "serialize should resolve to the associated subject")
+
+	_, err = client.GetLatestSchemaMetadata(topic + "-value")
+	req.Error(err)
+}
+
 func TestSubjectStrategy(t *testing.T) {
 	t.Run("non-empty cluster id selects AssociatedNameStrategy", func(t *testing.T) {
 		typ, cfg := subjectStrategy("lkc-test")
