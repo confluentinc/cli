@@ -59,7 +59,6 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 		publicNamespace.Value(),
 		streamCatalogNamespace.Value(),
 		usmNamespace.Value(),
-		clusterLinkNamespace.Value(),
 	}
 
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
@@ -69,6 +68,10 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 
 	if featureflags.Manager.BoolVariation("flink.model.rbac.namespace.cli.enable", c.Context, ldClient, true, false) {
 		namespacesList = append(namespacesList, flinkModelNamespace.Value())
+	}
+
+	if featureflags.Manager.BoolVariation("cluster.link.rbac.namespace.cli.enable", c.Context, ldClient, true, false) {
+		namespacesList = append(namespacesList, clusterLinkNamespace.Value())
 	}
 
 	namespaces := optional.NewString(strings.Join(namespacesList, ","))
