@@ -197,6 +197,16 @@ func (s *CLITestSuite) TestKafka() {
 	}
 }
 
+func (s *CLITestSuite) TestKafkaClusterListWithoutLogin() {
+	test := CLITest{
+		args:     "kafka cluster list",
+		fixture:  "kafka/list-without-login.golden",
+		exitCode: 1,
+	}
+
+	s.runIntegrationTest(test)
+}
+
 func (s *CLITestSuite) TestKafkaClusterCreate_Byok() {
 	test := CLITest{
 		login:   "cloud",
