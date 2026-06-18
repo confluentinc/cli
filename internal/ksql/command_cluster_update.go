@@ -57,8 +57,12 @@ func (c *ksqlCommand) newUpdateCommand() *cobra.Command {
 		Hidden: true,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Resize ksqlDB cluster "lksqlc-12345" to 8 CSUs.`,
+				Text: `Expand ksqlDB cluster "lksqlc-12345" to 8 CSUs.`,
 				Code: "confluent ksql cluster update lksqlc-12345 --csu 8",
+			},
+			examples.Example{
+				Text: `Shrink ksqlDB cluster "lksqlc-12345" to 4 CSUs.`,
+				Code: "confluent ksql cluster update lksqlc-12345 --csu 4",
 			},
 		),
 	}
@@ -77,11 +81,14 @@ func (c *ksqlCommand) newUpdateCommand() *cobra.Command {
 
 func buildUpdateLongDescription() string {
 	return fmt.Sprintf(
-		"Update an existing ksqlDB cluster. Currently only the CSU count may be modified, "+
-			"and only to larger sizes (shrink is not supported).\n\n"+
+		"Update an existing ksqlDB cluster. Currently only the CSU count may be modified. "+
+			"Both expansion (increase) and shrink (decrease) are supported.\n\n"+
 			"Valid CSU values are %s. Larger sizes require a support ticket. "+
 			"The cluster will undergo a rolling restart to apply the new size; "+
-			"the command returns once the resize has been accepted by the control plane.",
+			"the command returns once the resize has been accepted by the control plane. "+
+			"Shrink requests are precondition-checked against the cluster's running "+
+			"persistent-query count and refused if the new size cannot host them; "+
+			"drop excess queries with `TERMINATE <query_id>` and retry.",
 		formatCsuList(validCsuSizes))
 }
 
@@ -105,7 +112,9 @@ func (c *ksqlCommand) update(cmd *cobra.Command, args []string) error {
 	// issuing the PATCH. The server-side validator also rejects no-op resizes
 	// with 400 ("new CSU size is the same as old CSU size, no-op"), but a
 	// client-side check produces a clearer message and avoids a wasted API
-	// round trip. Note: shrink is not supported server-side either.
+	// round trip. Direction itself (expand vs shrink) is not pre-checked —
+	// the server's preflight is authoritative (shrink runs a PQ-count check
+	// against the new limit; expand has no preflight beyond capacity).
 	current, err := c.V2Client.DescribeKsqlCluster(clusterId, environmentId)
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, clusterId)
@@ -114,10 +123,6 @@ func (c *ksqlCommand) update(cmd *cobra.Command, args []string) error {
 	if currentCsu == csu {
 		return fmt.Errorf("ksqlDB cluster %q is already at %d CSUs; no change requested",
 			clusterId, csu)
-	}
-	if csu < currentCsu {
-		return fmt.Errorf("ksqlDB cluster %q is currently %d CSUs; shrinking is not supported "+
-			"(target %d < current %d)", clusterId, currentCsu, csu, currentCsu)
 	}
 
 	cluster, err := c.V2Client.UpdateKsqlCluster(clusterId, environmentId, csu)
