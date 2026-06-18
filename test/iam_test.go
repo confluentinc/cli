@@ -320,8 +320,8 @@ func (s *CLITestSuite) TestIamPool() {
 
 func (s *CLITestSuite) TestIamCertificateAuthority() {
 	tests := []CLITest{
-		{args: `iam certificate-authority create my-ca --description "my certificate authority" --certificate-chain ABC123 --certificate-chain-filename certificate.pem`, fixture: "iam/certificate-authority/create.golden"},
-		{args: `iam certificate-authority create my-ca --description "my certificate authority" --certificate-chain ABC123 --certificate-chain-filename certificate.pem --crl-chain DEF456`, fixture: "iam/certificate-authority/create-url-chain.golden"},
+		{args: `iam certificate-authority create my-ca --description "my certificate authority" --certificate-chain ABC123 --certificate-chain-filename certificate.pem --require-crl-on-client-certificate`, fixture: "iam/certificate-authority/create.golden"},
+		{args: `iam certificate-authority create my-ca --description "my certificate authority" --certificate-chain ABC123 --certificate-chain-filename certificate.pem --crl-chain DEF456 --require-crl-on-client-certificate`, fixture: "iam/certificate-authority/create-url-chain.golden"},
 		{args: "iam certificate-authority delete op-12345 --force", fixture: "iam/certificate-authority/delete.golden"},
 		{args: "iam certificate-authority delete op-12345 op-67890", fixture: "iam/certificate-authority/delete-multiple-fail.golden", exitCode: 1},
 		{args: "iam certificate-authority delete op-12345 op-54321", input: "y\n", fixture: "iam/certificate-authority/delete-multiple-success.golden"},
@@ -329,6 +329,8 @@ func (s *CLITestSuite) TestIamCertificateAuthority() {
 		{args: "iam certificate-authority describe op-12345 -o json", fixture: "iam/certificate-authority/describe-json.golden"},
 		{args: `iam certificate-authority update op-12345 --name "new name" --description "new description" --certificate-chain ABC123 --certificate-chain-filename certificate-2.pem`, fixture: "iam/certificate-authority/update.golden"},
 		{args: `iam certificate-authority update op-12345 --name "new name" --description "new description" --certificate-chain ABC123 --certificate-chain-filename certificate-2.pem --crl-url example.url`, fixture: "iam/certificate-authority/update-crl-url.golden"},
+		{args: "iam certificate-authority update op-12345 --require-crl-on-client-certificate=false", fixture: "iam/certificate-authority/update-require-crl.golden"},
+		{args: "iam certificate-authority update op-54321 --require-crl-on-client-certificate=true", fixture: "iam/certificate-authority/update-require-crl-true.golden"},
 		{args: `iam certificate-authority update op-12345 --name "new name" --description "new description" --certificate-chain-filename certificate-2.pem`, fixture: "iam/certificate-authority/update-fail.golden", exitCode: 1},
 		{args: "iam certificate-authority list", fixture: "iam/certificate-authority/list.golden"},
 		{args: "iam certificate-authority list -o json", fixture: "iam/certificate-authority/list-json.golden"},
@@ -379,6 +381,7 @@ func (s *CLITestSuite) TestIamGroupMapping() {
 
 func (s *CLITestSuite) TestIam_Autocomplete() {
 	tests := []CLITest{
+		{args: `__complete iam certificate-authority describe ""`, fixture: "iam/certificate-authority/describe-autocomplete.golden"},
 		{args: `__complete iam pool describe --provider op-12345 ""`, fixture: "iam/pool/describe-autocomplete.golden"},
 		{args: `__complete iam provider describe ""`, fixture: "iam/identity-provider/describe-autocomplete.golden"},
 		{args: `__complete iam service-account describe ""`, fixture: "iam/service-account/describe-autocomplete.golden"},

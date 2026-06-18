@@ -197,6 +197,16 @@ func (s *CLITestSuite) TestKafka() {
 	}
 }
 
+func (s *CLITestSuite) TestKafkaClusterListWithoutLogin() {
+	test := CLITest{
+		args:     "kafka cluster list",
+		fixture:  "kafka/list-without-login.golden",
+		exitCode: 1,
+	}
+
+	s.runIntegrationTest(test)
+}
+
 func (s *CLITestSuite) TestKafkaClusterCreate_Byok() {
 	test := CLITest{
 		login:   "cloud",
@@ -302,6 +312,25 @@ func (s *CLITestSuite) TestKafkaClientConfig() {
 
 		// pass - does not need sr key-secret pair
 		{args: "kafka client-config create csharp", useKafka: "lkc-cool1", fixture: "kafka/client-config/csharp.golden"},
+	}
+
+	resetConfiguration(s.T(), false)
+
+	for _, test := range tests {
+		test.login = "cloud"
+		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestKafkaClientConfigGlobalKey() {
+	tests := []CLITest{
+		// Store and activate a Global key, with no cluster-scoped key set.
+		{args: "api-key store UIGLOBALKEY100 UIGLOBALSECRET100"},
+		{args: "api-key use UIGLOBALKEY100"},
+		// client-config create falls back to the active Global key: the rendered config embeds it as
+		// sasl.username/sasl.password (csharp template needs no Schema Registry key-secret pair).
+		{args: "kafka client-config create csharp", useKafka: "lkc-cool1", fixture: "kafka/client-config/csharp-global-key.golden"},
 	}
 
 	resetConfiguration(s.T(), false)

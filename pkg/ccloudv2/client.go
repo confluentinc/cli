@@ -6,7 +6,6 @@ import (
 	billingv1 "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
 	camv1 "github.com/confluentinc/ccloud-sdk-go-v2/cam/v1"
-	cclv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccl/v1"
 	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	certificateauthorityv2 "github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority/v2"
@@ -14,6 +13,7 @@ import (
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
+	endpointv1 "github.com/confluentinc/ccloud-sdk-go-v2/endpoint/v1"
 	flinkartifactv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-artifact/v1"
 	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2/flink/v2"
 	iamIpFilter "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
@@ -50,7 +50,6 @@ type Client struct {
 	ApiKeysClient                *apikeysv2.APIClient
 	BillingClient                *billingv1.APIClient
 	ByokClient                   *byokv1.APIClient
-	Cclv1Client                  *cclv1.APIClient
 	CcpmClient                   *ccpmv1.APIClient
 	CdxClient                    *cdxv1.APIClient
 	CertificateAuthorityClient   *certificateauthorityv2.APIClient
@@ -59,6 +58,7 @@ type Client struct {
 	ConnectArtifactClient        *camv1.APIClient
 	ConnectClient                *connectv1.APIClient
 	ConnectCustomPluginClient    *connectcustompluginv1.APIClient
+	EndpointClient               *endpointv1.APIClient
 	FlinkArtifactClient          *flinkartifactv1.APIClient
 	FlinkClient                  *flinkv2.APIClient
 	IamClient                    *iamv2.APIClient
@@ -102,7 +102,6 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		ApiKeysClient:                newApiKeysClient(httpClient, url, userAgent, unsafeTrace),
 		BillingClient:                newBillingClient(httpClient, url, userAgent, unsafeTrace),
 		ByokClient:                   newByokV1Client(httpClient, url, userAgent, unsafeTrace),
-		Cclv1Client:                  newCclClient(httpClient, url, userAgent, unsafeTrace),
 		CcpmClient:                   newCCPMClient(httpClient, url, userAgent, unsafeTrace),
 		CdxClient:                    newCdxClient(httpClient, url, userAgent, unsafeTrace),
 		CertificateAuthorityClient:   newCertificateAuthorityClient(httpClient, url, userAgent, unsafeTrace),
@@ -111,6 +110,7 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		ConnectArtifactClient:        newConnectArtifactClient(httpClient, url, userAgent, unsafeTrace),
 		ConnectClient:                newConnectClient(httpClient, url, userAgent, unsafeTrace),
 		ConnectCustomPluginClient:    newConnectCustomPluginClient(httpClient, url, userAgent, unsafeTrace),
+		EndpointClient:               newEndpointClient(httpClient, url, userAgent, unsafeTrace),
 		FlinkArtifactClient:          newFlinkArtifactClient(httpClient, url, userAgent, unsafeTrace),
 		FlinkClient:                  newFlinkClient(httpClient, url, userAgent, unsafeTrace),
 		IamClient:                    newIamClient(httpClient, url, userAgent, unsafeTrace),

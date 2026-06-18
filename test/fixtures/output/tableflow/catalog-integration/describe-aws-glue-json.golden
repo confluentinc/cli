@@ -5,6 +5,7 @@
   "kafka_cluster": "lkc-123456",
   "type": "aws",
   "provider_integration_id": "cspi-stgce89r7",
+  "custom_database": "my-custom-db",
   "suspended": false,
   "phase": "CONNECTED"
 }
