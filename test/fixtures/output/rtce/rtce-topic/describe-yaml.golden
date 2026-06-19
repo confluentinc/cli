@@ -1,0 +1,8 @@
+topic_name: orders_topic
+cloud: AWS
+description: Customer orders table for real-time analytics
+environment: env-00000
+kafka_cluster: lkc-00000
+region: us-west-2
+error_message: 'Failed to provision table: insufficient resources'
+phase: ACTIVE

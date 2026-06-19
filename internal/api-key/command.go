@@ -32,7 +32,7 @@ const (
 	apiKeyNotValidForClusterSuggestions = "Specify the cluster this API key belongs to using the `--resource` flag. Alternatively, first execute the `confluent kafka cluster use` command to set the context to the proper cluster for this key and retry the `confluent api-key store` command."
 	apiKeyUseFailedErrorMsg             = "unable to set active API key"
 	apiKeyUseFailedSuggestions          = "If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `confluent api-key store %s <secret>`."
-	nonKafkaNotImplementedErrorMsg      = "functionality not yet available for non-Kafka cluster resources"
+	nonKafkaNotImplementedErrorMsg      = "functionality not yet available for resources other than Kafka clusters and Global API keys"
 	refuseToOverrideSecretSuggestions   = "If you would like to override the existing secret stored for API key \"%s\", use the `--force` flag."
 	unableToStoreApiKeyErrorMsg         = "unable to store API key locally: %w"
 )
@@ -60,7 +60,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 func (c *command) addResourceFlag(cmd *cobra.Command, isStore bool) {
 	description := "The ID of the resource the API key is for."
 	if !isStore {
-		description += ` Use "cloud" for a Cloud API key, "flink" for a Flink API key, or "tableflow" for a Tableflow API key.`
+		description += ` Use "cloud" for a Cloud API key, "global" for a Global API key, "flink" for a Flink API key, or "tableflow" for a Tableflow API key.`
 	}
 
 	cmd.Flags().String("resource", "", description)
@@ -108,10 +108,10 @@ func (c *command) addResourceFlag(cmd *cobra.Command, isStore bool) {
 			i++
 		}
 
-		// TODO: update the suggestions when the suggestions[i] related with Tableflow is ready
 		if !isStore {
 			suggestions = append(suggestions, "cloud")
 			suggestions = append(suggestions, "flink")
+			suggestions = append(suggestions, "global")
 			suggestions = append(suggestions, "tableflow")
 		}
 
@@ -192,7 +192,7 @@ func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Clien
 	var apiKey string
 
 	switch resourceType {
-	case presource.Cloud, presource.Flink, presource.Tableflow:
+	case presource.Cloud, presource.Flink, presource.Tableflow, presource.Global:
 		break
 	case presource.KafkaCluster:
 		cluster, err := kafka.FindCluster(c.V2Client, c.Context, resource)
@@ -232,6 +232,8 @@ func getResourceType(resource apikeysv2.ObjectReference) string {
 	switch resource.GetKind() {
 	case "Cloud":
 		return "cloud"
+	case "Global":
+		return "global"
 	case "Cluster":
 		if getResourceApi(resource) == "cmk" {
 			return "kafka"
