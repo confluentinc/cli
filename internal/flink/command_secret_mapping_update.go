@@ -1,8 +1,6 @@
 package flink
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -46,9 +44,6 @@ func (c *command) secretMappingUpdate(cmd *cobra.Command, args []string) error {
 	var mappingName string
 	if sdkMapping.Metadata != nil && sdkMapping.Metadata.Name != nil {
 		mappingName = *sdkMapping.Metadata.Name
-	}
-	if mappingName == "" {
-		return fmt.Errorf(`secret mapping name is required: ensure the resource file contains a non-empty "metadata.name" field`)
 	}
 
 	sdkOutputMapping, err := client.UpdateSecretMapping(c.createContext(), environment, mappingName, sdkMapping)
