@@ -1,0 +1,19 @@
+Create an RTCE topic.
+
+Usage:
+  confluent rtce rtce-topic create [flags]
+
+Flags:
+      --cloud string         REQUIRED: Specify the cloud provider as "aws".
+      --description string   REQUIRED: A model-readable description of the RTCE topic.
+      --region string        REQUIRED: The cloud region where the RTCE topic is deployed.
+      --topic-name string    REQUIRED: The Kafka topic name containing the data for the RTCE topic.
+      --environment string   Environment ID.
+      --cluster string       Kafka cluster ID.
+      --context string       CLI context name.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

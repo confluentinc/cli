@@ -27,8 +27,13 @@ type PartitionFilter struct {
 	Index   int32
 }
 
-func getCommonConfig(kafka *config.KafkaClusterConfig, clientId string) (*ckgo.ConfigMap, error) {
+func getCommonConfig(ctx *config.Context, kafka *config.KafkaClusterConfig, clientId string) (*ckgo.ConfigMap, error) {
 	if err := kafka.DecryptAPIKeys(); err != nil {
+		return nil, err
+	}
+
+	apiKey, apiSecret, err := ctx.ResolveKafkaAPIKey(kafka)
+	if err != nil {
 		return nil, err
 	}
 
@@ -38,15 +43,15 @@ func getCommonConfig(kafka *config.KafkaClusterConfig, clientId string) (*ckgo.C
 		"ssl.endpoint.identification.algorithm": "https",
 		"client.id":                             clientId,
 		"bootstrap.servers":                     kafka.Bootstrap,
-		"sasl.username":                         kafka.APIKey,
-		"sasl.password":                         kafka.GetApiSecret(),
+		"sasl.username":                         apiKey,
+		"sasl.password":                         apiSecret,
 	}
 
 	return configMap, nil
 }
 
-func getProducerConfigMap(kafka *config.KafkaClusterConfig, clientID string) (*ckgo.ConfigMap, error) {
-	configMap, err := getCommonConfig(kafka, clientID)
+func getProducerConfigMap(ctx *config.Context, kafka *config.KafkaClusterConfig, clientID string) (*ckgo.ConfigMap, error) {
+	configMap, err := getCommonConfig(ctx, kafka, clientID)
 	if err != nil {
 		return nil, err
 	}
@@ -62,8 +67,8 @@ func getProducerConfigMap(kafka *config.KafkaClusterConfig, clientID string) (*c
 	return configMap, nil
 }
 
-func getConsumerConfigMap(group string, kafka *config.KafkaClusterConfig, clientID string) (*ckgo.ConfigMap, error) {
-	configMap, err := getCommonConfig(kafka, clientID)
+func getConsumerConfigMap(group string, ctx *config.Context, kafka *config.KafkaClusterConfig, clientID string) (*ckgo.ConfigMap, error) {
+	configMap, err := getCommonConfig(ctx, kafka, clientID)
 	if err != nil {
 		return nil, err
 	}

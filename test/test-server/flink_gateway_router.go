@@ -26,6 +26,9 @@ var flinkGatewayRoutes = []route{
 	{"/sql/v1/organizations/{organization_id}/environments/{environment}/statements/{statement}/exceptions", handleSqlEnvironmentsEnvironmentStatementExceptions},
 	{"/sql/v1/organizations/{organization_id}/environments/{environment_id}/connections", handleSqlEnvironmentsEnvironmentConnections},
 	{"/sql/v1/organizations/{organization_id}/environments/{environment_id}/connections/{connection}", handleSqlEnvironmentsEnvironmentConnectionsConnection},
+	{"/sql/v1/organizations/{organization_id}/environments/{environment_id}/databases/{kafka_cluster_id}/materialized-tables", handleSqlMaterializedTables},
+	{"/sql/v1/organizations/{organization_id}/environments/{environment_id}/materialized-tables", handleSqlMaterializedTablesList},
+	{"/sql/v1/organizations/{organization_id}/environments/{environment_id}/databases/{kafka_cluster_id}/materialized-tables/{table_name}", handleSqlMaterializedTablesTable},
 }
 
 func NewFlinkGatewayRouter(t *testing.T) *mux.Router {
@@ -285,5 +288,214 @@ func handleStatementUpdate(t *testing.T) http.HandlerFunc {
 		}
 
 		w.WriteHeader(http.StatusAccepted)
+	}
+}
+
+func handleSqlMaterializedTables(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			tables := flinkgatewayv1.SqlV1MaterializedTableList{Data: []flinkgatewayv1.SqlV1MaterializedTable{{
+				Name:           "table-1",
+				OrganizationId: "org-1",
+				EnvironmentId:  "env-1",
+				Spec: flinkgatewayv1.SqlV1MaterializedTableSpec{
+					KafkaClusterId: flinkgatewayv1.PtrString("lkc01"),
+					ComputePoolId:  flinkgatewayv1.PtrString("pool1"),
+					Principal:      flinkgatewayv1.PtrString("principal1"),
+					Query:          flinkgatewayv1.PtrString("query"),
+					Columns: &[]flinkgatewayv1.SqlV1ColumnDetails{
+						{
+							SqlV1ComputedColumn: &flinkgatewayv1.SqlV1ComputedColumn{
+								Name:       "Name1",
+								Type:       "Type1",
+								Comment:    flinkgatewayv1.PtrString("Comment1"),
+								Kind:       "Computed",
+								Expression: "Expression1",
+								Virtual:    flinkgatewayv1.PtrBool(true),
+							},
+						},
+					},
+					Watermark: &flinkgatewayv1.SqlV1Watermark{
+						Column:     flinkgatewayv1.PtrString("Col1"),
+						Expression: flinkgatewayv1.PtrString("Expr1"),
+					},
+					Distribution: &flinkgatewayv1.SqlV1Distribution{
+						Keys:        &[]string{"user_id", "region"},
+						BucketCount: flinkgatewayv1.PtrInt32(int32(8)),
+					},
+					Constraints: &[]flinkgatewayv1.SqlV1Constraint{
+						{
+							Name:     flinkgatewayv1.PtrString("constr1"),
+							Type:     flinkgatewayv1.PtrString("PRIMARY_KEY"),
+							Columns:  &[]string{"user_id", "region"},
+							Enforced: flinkgatewayv1.PtrBool(true),
+						},
+					},
+				},
+				Status: &flinkgatewayv1.SqlV1MaterializedTableStatus{
+					Phase:  flinkgatewayv1.PtrString("COMPLETED"),
+					Detail: flinkgatewayv1.PtrString("Table1 is completed"),
+				},
+				Metadata: flinkgatewayv1.ObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))},
+			},
+			}}
+			setPageToken(&tables, &tables.Metadata, r.URL)
+			err := json.NewEncoder(w).Encode(tables)
+			require.NoError(t, err)
+		case http.MethodPost:
+			table := &flinkgatewayv1.SqlV1MaterializedTable{}
+			err := json.NewDecoder(r.Body).Decode(table)
+			require.NoError(t, err)
+
+			table.Metadata = flinkgatewayv1.ObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))}
+			table.Status = &flinkgatewayv1.SqlV1MaterializedTableStatus{Phase: flinkgatewayv1.PtrString("COMPLETED")}
+			table.Spec.KafkaClusterId = flinkgatewayv1.PtrString("lkc01")
+			table.Spec.ComputePoolId = flinkgatewayv1.PtrString("pool1")
+			table.Spec.Principal = flinkgatewayv1.PtrString("principal1")
+			table.Spec.Query = flinkgatewayv1.PtrString("query1")
+			err = json.NewEncoder(w).Encode(table)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleSqlMaterializedTablesList(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			tables := flinkgatewayv1.SqlV1MaterializedTableList{Data: []flinkgatewayv1.SqlV1MaterializedTable{{
+				Name:           "table-1",
+				OrganizationId: "org-1",
+				EnvironmentId:  "env-1",
+				Spec: flinkgatewayv1.SqlV1MaterializedTableSpec{
+					KafkaClusterId: flinkgatewayv1.PtrString("lkc01"),
+					ComputePoolId:  flinkgatewayv1.PtrString("pool1"),
+					Principal:      flinkgatewayv1.PtrString("principal1"),
+					Query:          flinkgatewayv1.PtrString("query"),
+					Columns: &[]flinkgatewayv1.SqlV1ColumnDetails{
+						{
+							SqlV1ComputedColumn: &flinkgatewayv1.SqlV1ComputedColumn{
+								Name:       "Name1",
+								Type:       "Type1",
+								Comment:    flinkgatewayv1.PtrString("Comment1"),
+								Kind:       "Computed",
+								Expression: "Expression1",
+								Virtual:    flinkgatewayv1.PtrBool(true),
+							},
+						},
+						{
+							SqlV1PhysicalColumn: &flinkgatewayv1.SqlV1PhysicalColumn{
+								Name:    "Name2",
+								Type:    "Type2",
+								Comment: flinkgatewayv1.PtrString("Comment2"),
+								Kind:    "Physical",
+							},
+						},
+					},
+					Watermark: &flinkgatewayv1.SqlV1Watermark{
+						Column:     flinkgatewayv1.PtrString("Col1"),
+						Expression: flinkgatewayv1.PtrString("Expr1"),
+					},
+					Distribution: &flinkgatewayv1.SqlV1Distribution{
+						Keys:        &[]string{"user_id", "region"},
+						BucketCount: flinkgatewayv1.PtrInt32(int32(8)),
+					},
+					Constraints: &[]flinkgatewayv1.SqlV1Constraint{
+						{
+							Name:     flinkgatewayv1.PtrString("constr1"),
+							Type:     flinkgatewayv1.PtrString("PRIMARY_KEY"),
+							Columns:  &[]string{"user_id", "region"},
+							Enforced: flinkgatewayv1.PtrBool(true),
+						},
+						{
+							Name:     flinkgatewayv1.PtrString("constr2"),
+							Type:     flinkgatewayv1.PtrString("PRIMARY_KEY"),
+							Columns:  &[]string{"user_id1", "region1"},
+							Enforced: flinkgatewayv1.PtrBool(false),
+						}},
+				},
+				Status: &flinkgatewayv1.SqlV1MaterializedTableStatus{
+					Phase:  flinkgatewayv1.PtrString("COMPLETED"),
+					Detail: flinkgatewayv1.PtrString("Table1 is completed"),
+				},
+				Metadata: flinkgatewayv1.ObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))},
+			},
+			}}
+			setPageToken(&tables, &tables.Metadata, r.URL)
+			err := json.NewEncoder(w).Encode(tables)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleSqlMaterializedTablesTable(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			tableName := mux.Vars(r)["table_name"]
+			if strings.Contains(tableName, "nonexist") {
+				err := writeResourceNotFoundError(w)
+				require.NoError(t, err)
+				return
+			}
+			table := flinkgatewayv1.SqlV1MaterializedTable{
+				Name:           "table-1",
+				OrganizationId: "org-1",
+				EnvironmentId:  "env-1",
+				Spec: flinkgatewayv1.SqlV1MaterializedTableSpec{
+					KafkaClusterId: flinkgatewayv1.PtrString("lkc01"),
+					ComputePoolId:  flinkgatewayv1.PtrString("pool1"),
+					Principal:      flinkgatewayv1.PtrString("principal1"),
+					Query:          flinkgatewayv1.PtrString("query"),
+					Columns: &[]flinkgatewayv1.SqlV1ColumnDetails{
+						{
+							SqlV1ComputedColumn: &flinkgatewayv1.SqlV1ComputedColumn{
+								Name:       "Name1",
+								Type:       "Type1",
+								Comment:    flinkgatewayv1.PtrString("Comment1"),
+								Kind:       "Computed",
+								Expression: "Expression1",
+								Virtual:    flinkgatewayv1.PtrBool(true),
+							},
+						},
+					},
+					Watermark: &flinkgatewayv1.SqlV1Watermark{
+						Column:     flinkgatewayv1.PtrString("Col1"),
+						Expression: flinkgatewayv1.PtrString("Expr1"),
+					},
+					Distribution: &flinkgatewayv1.SqlV1Distribution{
+						Keys:        &[]string{"user_id", "region"},
+						BucketCount: flinkgatewayv1.PtrInt32(int32(8)),
+					},
+					Constraints: &[]flinkgatewayv1.SqlV1Constraint{
+						{
+							Name:     flinkgatewayv1.PtrString("constr1"),
+							Type:     flinkgatewayv1.PtrString("PRIMARY_KEY"),
+							Columns:  &[]string{"user_id", "region"},
+							Enforced: flinkgatewayv1.PtrBool(true),
+						}},
+				},
+			}
+			err := json.NewEncoder(w).Encode(table)
+			require.NoError(t, err)
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
+		case http.MethodPut:
+			handleTableUpdate(t)(w, r)
+		}
+	}
+}
+
+func handleTableUpdate(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		table := &flinkgatewayv1.SqlV1MaterializedTable{}
+		err := json.NewDecoder(r.Body).Decode(table)
+		require.NoError(t, err)
+
+		table.Metadata = flinkgatewayv1.ObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))}
+		table.Status = &flinkgatewayv1.SqlV1MaterializedTableStatus{Phase: flinkgatewayv1.PtrString("COMPLETED")}
+		err = json.NewEncoder(w).Encode(table)
+		require.NoError(t, err)
 	}
 }

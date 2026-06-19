@@ -81,7 +81,7 @@ func (l *Logger) UnsafeTracef(format string, args ...any) {
 
 func (l *Logger) Trace(args ...any) {
 	message := fmt.Sprint(args...)
-	if l.logger.IsTrace() {
+	if l.Level >= TRACE { // Avoid l.logger.IsTrace() since it only checks "== TRACE" so it will miss UNSAFE_TRACE
 		l.logger.Trace(message)
 	} else {
 		l.append(TRACE, message)
