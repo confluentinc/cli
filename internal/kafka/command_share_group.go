@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
 type shareGroupCommand struct {
@@ -20,18 +21,28 @@ type shareGroupOut struct {
 	TopicSubscriptions []string `human:"Topic Subscriptions,omitempty" serialized:"topic_subscriptions,omitempty"`
 }
 
-func newShareGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newShareGroupCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "share-group",
-		Short:       "Manage Kafka share groups.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Use:   "share-group",
+		Short: "Manage Kafka share groups.",
 	}
 
-	c := &shareGroupCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	c := &shareGroupCommand{}
 
-	cmd.AddCommand(c.newConsumerCommand())
-	cmd.AddCommand(c.newDescribeCommand())
-	cmd.AddCommand(c.newListCommand())
+	if cfg.IsCloudLogin() {
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
+
+		cmd.AddCommand(c.newConsumerCommand())
+		cmd.AddCommand(c.newDescribeCommand())
+		cmd.AddCommand(c.newListCommand())
+	} else {
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
+		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
+
+		cmd.AddCommand(c.newConsumerCommandOnPrem())
+		cmd.AddCommand(c.newDescribeCommandOnPrem())
+		cmd.AddCommand(c.newListCommandOnPrem())
+	}
 
 	return cmd
 }

@@ -1,0 +1,4 @@
+   Cluster  |  Share Group  | Coordinator | State  | Consumer Count  
+------------+---------------+-------------+--------+-----------------
+  cluster-1 | share-group-1 | broker-1    | STABLE |              2  
+  cluster-1 | share-group-2 | broker-2    | EMPTY  |              0  

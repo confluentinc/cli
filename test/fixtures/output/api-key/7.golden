@@ -106,5 +106,14 @@
     "resource_type": "kafka",
     "resource": "lkc-cool1",
     "created": "1999-02-24T00:00:00Z"
+  },
+  {
+    "key": "UIGLOBALKEY100",
+    "description": "",
+    "owner": "u-22bbb",
+    "owner_email": "u-22bbb@confluent.io",
+    "resource_type": "global",
+    "resource": "",
+    "created": "1999-02-24T00:00:00Z"
   }
 ]
