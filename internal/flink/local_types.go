@@ -119,6 +119,31 @@ type LocalFlinkApplication struct {
 	Status     *map[string]interface{} `json:"status,omitempty" yaml:"status,omitempty"`
 }
 
+type LocalFlinkApplicationEvent struct {
+	ApiVersion string             `json:"apiVersion" yaml:"apiVersion"`
+	Kind       string             `json:"kind" yaml:"kind"`
+	Metadata   LocalEventMetadata `json:"metadata" yaml:"metadata"`
+	Status     LocalEventStatus   `json:"status" yaml:"status"`
+}
+
+type LocalEventMetadata struct {
+	Name                     *string            `json:"name,omitempty" yaml:"name,omitempty"`
+	Uid                      *string            `json:"uid,omitempty" yaml:"uid,omitempty"`
+	CreationTimestamp        *string            `json:"creationTimestamp,omitempty" yaml:"creationTimestamp,omitempty"`
+	FlinkApplicationInstance *string            `json:"flinkApplicationInstance,omitempty" yaml:"flinkApplicationInstance,omitempty"`
+	Labels                   *map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
+	Annotations              *map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
+}
+
+// LocalEventStatus maps the SDK EventStatus. The Data field is a oneOf union
+// (EventDataJobException | EventDataNewStatus); we carry it as a generic map so
+// either variant serializes cleanly to JSON and YAML.
+type LocalEventStatus struct {
+	Message *string                 `json:"message,omitempty" yaml:"message,omitempty"`
+	Type    *string                 `json:"type,omitempty" yaml:"type,omitempty"`
+	Data    *map[string]interface{} `json:"data,omitempty" yaml:"data,omitempty"`
+}
+
 type LocalKafkaCatalog struct {
 	ApiVersion string                `json:"apiVersion" yaml:"apiVersion"`
 	Kind       string                `json:"kind" yaml:"kind"`
