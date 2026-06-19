@@ -135,12 +135,13 @@ type LocalEventMetadata struct {
 	Annotations              *map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
 }
 
-// LocalEventStatus maps the SDK EventStatus but intentionally omits the Data field.
-// Data is a oneOf union type (EventDataJobException | EventDataNewStatus) that does not
-// map cleanly to a simple local struct and is not needed for the CLI list output.
+// LocalEventStatus maps the SDK EventStatus. The Data field is a oneOf union
+// (EventDataJobException | EventDataNewStatus); we carry it as a generic map so
+// either variant serializes cleanly to JSON and YAML.
 type LocalEventStatus struct {
-	Message *string `json:"message,omitempty" yaml:"message,omitempty"`
-	Type    *string `json:"type,omitempty" yaml:"type,omitempty"`
+	Message *string                 `json:"message,omitempty" yaml:"message,omitempty"`
+	Type    *string                 `json:"type,omitempty" yaml:"type,omitempty"`
+	Data    *map[string]interface{} `json:"data,omitempty" yaml:"data,omitempty"`
 }
 
 type LocalKafkaCatalog struct {

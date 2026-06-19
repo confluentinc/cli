@@ -1,6 +1,8 @@
 package flink
 
 import (
+	"encoding/json"
+
 	"github.com/spf13/cobra"
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
@@ -43,6 +45,25 @@ func convertSdkEventToLocalEvent(sdkEvent cmfsdk.FlinkApplicationEvent) LocalFli
 		Status: LocalEventStatus{
 			Message: sdkEvent.Status.Message,
 			Type:    sdkEvent.Status.Type,
+			Data:    convertSdkEventData(sdkEvent.Status.Data),
 		},
 	}
+}
+
+// convertSdkEventData flattens the SDK's oneOf EventData (EventDataJobException |
+// EventDataNewStatus) into a generic map so either variant serializes cleanly to
+// JSON and YAML.
+func convertSdkEventData(data *cmfsdk.EventData) *map[string]interface{} {
+	if data == nil {
+		return nil
+	}
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return nil
+	}
+	var generic map[string]interface{}
+	if err := json.Unmarshal(bytes, &generic); err != nil || len(generic) == 0 {
+		return nil
+	}
+	return &generic
 }

@@ -9,7 +9,10 @@
     },
     "status": {
       "message": "Application started successfully",
-      "type": "Normal"
+      "type": "Normal",
+      "data": {
+        "newStatus": "DEPLOYED"
+      }
     }
   },
   {
@@ -22,7 +25,10 @@
     },
     "status": {
       "message": "Application restarting due to failure",
-      "type": "Warning"
+      "type": "Warning",
+      "data": {
+        "exceptionString": "java.lang.RuntimeException: Job execution failed"
+      }
     }
   }
 ]

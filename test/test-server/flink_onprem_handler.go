@@ -613,6 +613,10 @@ func handleCmfApplicationEvents(t *testing.T) http.HandlerFunc {
 			message2 := "Application restarting due to failure"
 			name1 := "event-001"
 			name2 := "event-002"
+			newStatus := "DEPLOYED"
+			exceptionString := "java.lang.RuntimeException: Job execution failed"
+			newStatusData := cmfsdk.EventDataNewStatusAsEventData(&cmfsdk.EventDataNewStatus{NewStatus: &newStatus})
+			jobExceptionData := cmfsdk.EventDataJobExceptionAsEventData(&cmfsdk.EventDataJobException{ExceptionString: &exceptionString})
 
 			events := []cmfsdk.FlinkApplicationEvent{
 				{
@@ -626,6 +630,7 @@ func handleCmfApplicationEvents(t *testing.T) http.HandlerFunc {
 					Status: cmfsdk.EventStatus{
 						Type:    &eventType1,
 						Message: &message1,
+						Data:    &newStatusData,
 					},
 				},
 				{
@@ -639,6 +644,7 @@ func handleCmfApplicationEvents(t *testing.T) http.HandlerFunc {
 					Status: cmfsdk.EventStatus{
 						Type:    &eventType2,
 						Message: &message2,
+						Data:    &jobExceptionData,
 					},
 				},
 			}
