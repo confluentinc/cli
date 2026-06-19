@@ -1,0 +1,15 @@
+{
+  "apiVersion": "cmf/api/v1/database",
+  "kind": "KafkaDatabase",
+  "metadata": {
+    "name": "test-database",
+    "creationTimestamp": "2025-03-12 23:42:00 +0000 UTC"
+  },
+  "spec": {
+    "kafkaCluster": {
+      "connectionConfig": {
+        "bootstrap.servers": "localhost:9092"
+      }
+    }
+  }
+}

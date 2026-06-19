@@ -36,8 +36,6 @@ var ccloudV2Routes = []route{
 	{"/cdx/v1/provider-shares/{id}", handleStreamSharingProviderShare},
 	{"/cdx/v1/provider-shares/{id}:resend", handleStreamSharingResendInvite},
 	{"/cdx/v1/shared-tokens:redeem", handleStreamSharingRedeemToken},
-	{"/ccl/v1/custom-code-loggings", handleCustomCodeLoggings},
-	{"/ccl/v1/custom-code-loggings/{id}", handleCustomCodeLoggingsId},
 	{"/cmk/v2/clusters", handleCmkClusters},
 	{"/cmk/v2/clusters/{id}", handleCmkCluster},
 	{"/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins", handlePlugins},
@@ -55,6 +53,7 @@ var ccloudV2Routes = []route{
 	{"/connect/v1/presigned-upload-url", handleCustomPluginUploadUrl},
 	{"/connect/v1/custom-connector-runtimes", handleListCustomConnectorRuntimes},
 	{"/connect/v1/dummy-presigned-url", handleCustomPluginUploadFile},
+	{"/endpoint/v1/endpoints", handleEndpointV1Endpoints},
 	{"/fcpm/v2/compute-pools", handleFcpmComputePools},
 	{"/fcpm/v2/compute-pool-config", handleFcpmComputePoolConfigs},
 	{"/fcpm/v2/compute-pools/{id}", handleFcpmComputePoolsId},
@@ -122,6 +121,9 @@ var ccloudV2Routes = []route{
 	{"/pim/v2/integrations", handleProviderIntegrationsV2},
 	{"/pim/v2/integrations/{id}", handleProviderIntegrationV2},
 	{"/pim/v2/integrations/validate", handleProviderIntegrationV2Validate},
+	{"/rtce/v1/regions", handleRtceV1Regions},
+	{"/rtce/v1/rtce-topics", handleRtceV1RtceTopics},
+	{"/rtce/v1/rtce-topics/{topic_name}", handleRtceV1RtceTopicsTopicName},
 	{"/service-quota/v1/applied-quotas", handleAppliedQuotas},
 	{"/service-quota/v2/applied-quotas", handleAppliedQuotas},
 	{"/srcm/v3/clusters", handleSchemaRegistryClustersV3},
@@ -135,6 +137,7 @@ var ccloudV2Routes = []route{
 	{"/usm/v1/connect-clusters", handleUsmConnectClusters},
 	{"/usm/v1/connect-clusters/{id}", handleUsmConnectCluster},
 	{"/v2/metrics/cloud/query", handleMetricsQuery},
+	// cli-tfgen:cli-api-routes — DO NOT REMOVE (verified by TestCliTfgenMarkers)
 }
 
 func NewV2Router(t *testing.T) *mux.Router {
