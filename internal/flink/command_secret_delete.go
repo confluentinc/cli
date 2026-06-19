@@ -12,7 +12,7 @@ import (
 func (c *command) newSecretDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <name-1> [name-2] ... [name-n]",
-		Short: "Delete a Flink secret in Confluent Platform.",
+		Short: "Delete one or more Flink secrets in Confluent Platform.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.secretDelete,
 	}

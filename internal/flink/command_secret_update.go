@@ -1,8 +1,6 @@
 package flink
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -37,10 +35,6 @@ func (c *command) secretUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	secretName := sdkSecret.Metadata.Name
-	if secretName == "" {
-		return fmt.Errorf(`secret name is required: ensure the resource file contains a non-empty "metadata.name" field`)
-	}
-
 	sdkOutputSecret, err := client.UpdateSecret(c.createContext(), secretName, sdkSecret)
 	if err != nil {
 		return err
