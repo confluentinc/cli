@@ -68,7 +68,7 @@ func TestGetKafkaConfigC3(t *testing.T) {
 		"metric.reporters":                                                 "io.confluent.telemetry.reporter.TelemetryReporter",
 		"confluent.telemetry.exporter._c3.type":                            "http",
 		"confluent.telemetry.exporter._c3.enabled":                         "true",
-		"confluent.telemetry.exporter._c3.metrics.include":                 ".*",
+		"confluent.telemetry.exporter._c3.metrics.include":                 c3TelemetryMetricsInclude,
 		"confluent.telemetry.exporter._c3.client.base.url":                 "http://localhost:9090/api/v1/otlp",
 		"confluent.telemetry.exporter._c3.client.compression":              "gzip",
 		"confluent.telemetry.exporter._c3.api.key":                         "dummy",
@@ -101,7 +101,7 @@ func TestGetKraftConfigC3(t *testing.T) {
 		"metric.reporters":                                                 "io.confluent.telemetry.reporter.TelemetryReporter",
 		"confluent.telemetry.exporter._c3.type":                            "http",
 		"confluent.telemetry.exporter._c3.enabled":                         "true",
-		"confluent.telemetry.exporter._c3.metrics.include":                 ".*",
+		"confluent.telemetry.exporter._c3.metrics.include":                 c3TelemetryMetricsInclude,
 		"confluent.telemetry.exporter._c3.client.base.url":                 "http://localhost:9090/api/v1/otlp",
 		"confluent.telemetry.exporter._c3.client.compression":              "gzip",
 		"confluent.telemetry.exporter._c3.api.key":                         "dummy",
@@ -114,6 +114,16 @@ func TestGetKraftConfigC3(t *testing.T) {
 		"confluent.consumer.lag.emitter.enabled":                           "true",
 	}
 	testGetConfigC3(t, "kraft-controller", want)
+}
+
+// TestC3MetricsIncludeExcludesDelta guards against regressing to ".*", which exported
+// delta-temporality metrics that the Control Center next-gen Prometheus OTLP receiver rejects
+// (500 "invalid temporality and type combination"), dropping all broker metrics. See FF-27328.
+func TestC3MetricsIncludeExcludesDelta(t *testing.T) {
+	req := require.New(t)
+
+	req.NotEqual(".*", c3TelemetryMetricsInclude, "_c3.metrics.include must not be .* (sends delta metrics Prometheus rejects)")
+	req.Contains(c3TelemetryMetricsInclude, "(?!.*delta)", "_c3.metrics.include must exclude delta-temporality metrics")
 }
 
 func TestGetKsqlServerConfig(t *testing.T) {
