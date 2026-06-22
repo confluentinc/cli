@@ -118,12 +118,72 @@ func TestGetKraftConfigC3(t *testing.T) {
 
 // TestC3MetricsIncludeExcludesDelta guards against regressing to ".*", which exported
 // delta-temporality metrics that the Control Center next-gen Prometheus OTLP receiver rejects
-// (500 "invalid temporality and type combination"), dropping all broker metrics. See FF-27328.
+// (500 "invalid temporality and type combination"), dropping all broker metrics.
 func TestC3MetricsIncludeExcludesDelta(t *testing.T) {
 	req := require.New(t)
 
 	req.NotEqual(".*", c3TelemetryMetricsInclude, "_c3.metrics.include must not be .* (sends delta metrics Prometheus rejects)")
 	req.Contains(c3TelemetryMetricsInclude, "(?!.*delta)", "_c3.metrics.include must exclude delta-temporality metrics")
+
+	// A few metrics Control Center relies on must stay in the allow-list (guards against truncation).
+	for _, metric := range []string{
+		"io.confluent.kafka.server.partition.under.replicated",
+		"io.confluent.kafka.server.partition.under.min.isr",
+		"io.confluent.kafka.server.controller.active.controller.count",
+	} {
+		req.Contains(c3TelemetryMetricsInclude, metric)
+	}
+}
+
+// TestPre8NoTelemetryExporter protects the version gating: on Confluent Platform < 8.0 the broker
+// and KRaft controller must NOT be configured with the Control Center next-gen telemetry exporter
+// (they use the classic Kafka-topic metrics reporter instead), so the metrics.include allow-list is
+// never emitted and those versions are unaffected by this change.
+func TestPre8NoTelemetryExporter(t *testing.T) {
+	req := require.New(t)
+
+	for _, service := range []string{"kafka", "kraft-controller"} {
+		config := getConfigForVersion(t, service, "7.9.0")
+
+		for key := range config {
+			req.NotContains(key, "confluent.telemetry.exporter._c3", "service %q on CP < 8.0 must not set any C3 telemetry exporter config", service)
+		}
+		req.Equal("io.confluent.metrics.reporter.ConfluentMetricsReporter", config["metric.reporters"], "service %q on CP < 8.0 should use the classic metrics reporter", service)
+	}
+}
+
+func getConfigForVersion(t *testing.T, service, version string) map[string]string {
+	t.Helper()
+	req := require.New(t)
+
+	c := &command{
+		ch: &climock.MockConfluentHome{
+			IsConfluentPlatformFunc: func() (bool, error) {
+				return true, nil
+			},
+			GetConfluentVersionFunc: func() (string, error) {
+				return version, nil
+			},
+			GetFileFunc: func(path ...string) (string, error) {
+				return exampleFile, nil
+			},
+			FindFileFunc: func(pattern string) ([]string, error) {
+				return []string{exampleFile}, nil
+			},
+			ReadServiceConfigFunc: func(service string, _ bool) ([]byte, error) {
+				return []byte("plugin.path=share/java"), nil
+			},
+		},
+		cc: &climock.MockConfluentCurrent{
+			GetDataDirFunc: func(service string) (string, error) {
+				return exampleDir, nil
+			},
+		},
+	}
+
+	got, err := c.getConfig(service)
+	req.NoError(err)
+	return got
 }
 
 func TestGetKsqlServerConfig(t *testing.T) {
