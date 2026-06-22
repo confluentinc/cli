@@ -176,16 +176,20 @@ var (
 	}
 )
 
-// c3TelemetryMetricsInclude is the allow-list for `confluent.telemetry.exporter._c3.metrics.include`
-// on the broker and KRaft controller when exporting to the Control Center next-gen Prometheus (CP >= 8).
+// c3TelemetryMetricsInclude is the value for `confluent.telemetry.exporter._c3.metrics.include` on the
+// broker and KRaft controller when exporting to the Control Center next-gen Prometheus (CP >= 8).
 //
-// It must NOT be ".*": the Confluent Telemetry Reporter emits delta-temporality variants of its
-// counters (metric names containing "delta"), and the Prometheus OTLP receiver rejects delta
-// temporality with "500 invalid temporality and type combination". Because a single rejected metric
-// fails the entire OTLP batch, ".*" drops all broker metrics and leaves Control Center degraded with
-// "Metrics data not available". This list excludes delta variants (via the "(?!.*delta)" lookahead)
-// and selects only the metrics Control Center needs.
-const c3TelemetryMetricsInclude = `io.confluent.kafka.server.request.(?!.*delta).*|io.confluent.kafka.server.server.broker.state|io.confluent.kafka.server.replica.manager.leader.count|io.confluent.kafka.server.request.queue.size|io.confluent.kafka.server.broker.topic.failed.produce.requests.rate.1.min|io.confluent.kafka.server.tier.archiver.total.lag|io.confluent.kafka.server.request.total.time.ms.p99|io.confluent.kafka.server.broker.topic.failed.fetch.requests.rate.1.min|io.confluent.kafka.server.broker.topic.total.fetch.requests.rate.1.min|io.confluent.kafka.server.partition.caught.up.replicas.count|io.confluent.kafka.server.partition.observer.replicas.count|io.confluent.kafka.server.tier.tasks.num.partitions.in.error|io.confluent.kafka.server.broker.topic.bytes.out.rate.1.min|io.confluent.kafka.server.request.total.time.ms.p95|io.confluent.kafka.server.controller.active.controller.count|io.confluent.kafka.server.session.expire.listener.zookeeper.disconnects.total|io.confluent.kafka.server.request.total.time.ms.p999|io.confluent.kafka.server.controller.active.broker.count|io.confluent.kafka.server.request.handler.pool.request.handler.avg.idle.percent.rate.1.min|io.confluent.kafka.server.session.expire.listener.zookeeper.disconnects.rate.1.min|io.confluent.kafka.server.controller.unclean.leader.elections.rate.1.min|io.confluent.kafka.server.replica.manager.partition.count|io.confluent.kafka.server.controller.unclean.leader.elections.total|io.confluent.kafka.server.partition.replicas.count|io.confluent.kafka.server.broker.topic.total.produce.requests.rate.1.min|io.confluent.kafka.server.controller.offline.partitions.count|io.confluent.kafka.server.socket.server.network.processor.avg.idle.percent|io.confluent.kafka.server.partition.under.replicated|io.confluent.kafka.server.log.log.start.offset|io.confluent.kafka.server.log.tier.size|io.confluent.kafka.server.log.size|io.confluent.kafka.server.tier.fetcher.bytes.fetched.total|io.confluent.kafka.server.request.total.time.ms.p50|io.confluent.kafka.server.tenant.consumer.lag.offsets|io.confluent.kafka.server.session.expire.listener.zookeeper.expires.rate.1.min|io.confluent.kafka.server.log.log.end.offset|io.confluent.kafka.server.broker.topic.bytes.in.rate.1.min|io.confluent.kafka.server.partition.under.min.isr|io.confluent.kafka.server.partition.in.sync.replicas.count|io.confluent.telemetry.http.exporter.batches.dropped|io.confluent.telemetry.http.exporter.items.total|io.confluent.telemetry.http.exporter.items.succeeded|io.confluent.telemetry.http.exporter.send.time.total.millis|io.confluent.kafka.server.controller.leader.election.rate.(?!.*delta).*|io.confluent.telemetry.http.exporter.batches.failed`
+// It must NOT be ".*": the Confluent Telemetry Reporter emits both cumulative and delta-temporality
+// variants of its counters (the delta variants carry "delta" in the metric name). The Prometheus OTLP
+// receiver only accepts cumulative temporality and rejects delta with "500 invalid temporality and
+// type combination". Because a single rejected metric fails the entire OTLP batch, ".*" drops all
+// broker metrics and leaves Control Center degraded with "Metrics data not available".
+//
+// Rather than enumerate an allow-list (which would drift as Control Center adds or removes metrics),
+// this targets the actual incompatibility: include every metric EXCEPT delta-temporality ones, via a
+// negative lookahead on "delta". Cumulative metrics — including any new ones — are admitted
+// automatically. The leading "^" anchors the lookahead so it applies to the whole metric name.
+const c3TelemetryMetricsInclude = `^(?!.*delta).*$`
 
 func NewServicesCommand(cfg *config.Config, prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(

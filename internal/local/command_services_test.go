@@ -125,15 +125,6 @@ func TestC3MetricsIncludeExcludesDelta(t *testing.T) {
 
 	req.NotEqual(".*", c3TelemetryMetricsInclude, "_c3.metrics.include must not be .* (sends delta metrics Prometheus rejects)")
 	req.Contains(c3TelemetryMetricsInclude, "(?!.*delta)", "_c3.metrics.include must exclude delta-temporality metrics")
-
-	// A few metrics Control Center relies on must stay in the allow-list (guards against truncation).
-	for _, metric := range []string{
-		"io.confluent.kafka.server.partition.under.replicated",
-		"io.confluent.kafka.server.partition.under.min.isr",
-		"io.confluent.kafka.server.controller.active.controller.count",
-	} {
-		req.Contains(c3TelemetryMetricsInclude, metric)
-	}
 }
 
 // TestPre8NoTelemetryExporter protects the version gating: on Confluent Platform < 8.0 the broker
