@@ -189,6 +189,10 @@ var (
 // this targets the actual incompatibility: include every metric EXCEPT delta-temporality ones, via a
 // negative lookahead on "delta". Cumulative metrics — including any new ones — are admitted
 // automatically. The leading "^" anchors the lookahead so it applies to the whole metric name.
+//
+// TODO: make the _c3.* telemetry settings (including this filter) overridable via flag/env, so users
+// on a newer Control Center can tune what's exported without waiting for a CLI release. That removes
+// the need to touch this default for future Control Center metric or temporality changes.
 const c3TelemetryMetricsInclude = `^(?!.*delta).*$`
 
 func NewServicesCommand(cfg *config.Config, prerunner cmd.PreRunner) *cobra.Command {
