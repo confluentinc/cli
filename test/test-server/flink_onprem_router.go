@@ -13,6 +13,7 @@ var flinkRoutes = []route{
 	{"/cmf/api/v1/catalogs/kafka/{catName}/databases/{dbName}", handleCmfCatalogDatabase},
 	{"/cmf/api/v1/environments/{environment}/applications", handleCmfApplications},
 	{"/cmf/api/v1/environments/{environment}/applications/{application}", handleCmfApplication},
+	{"/cmf/api/v1alpha1/environments/{envName}/applications/{appName}/events", handleCmfApplicationEvents},
 	{"/cmf/api/v1/environments", handleCmfEnvironments},
 	{"/cmf/api/v1/environments/{environment}", handleCmfEnvironment},
 	{"/cmf/api/v1/environments/{environment}/compute-pools", handleCmfComputePools},
