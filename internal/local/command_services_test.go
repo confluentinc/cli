@@ -3,6 +3,7 @@ package local
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -150,6 +151,64 @@ func TestPre8NoTelemetryExporter(t *testing.T) {
 		}
 		req.Equal("io.confluent.metrics.reporter.ConfluentMetricsReporter", config["metric.reporters"], "service %q on CP < 8.0 should use the classic metrics reporter", service)
 	}
+}
+
+// TestC3TelemetryExporterVersionGate documents the exact version boundary so the change is safe to
+// roll out: the Control Center next-gen telemetry exporter (with the metrics.include allow-list) is
+// emitted only on Confluent Platform 8.0 and later. On 7.x and earlier the broker and KRaft controller
+// keep the classic Kafka-topic metrics reporter and never see this config, so upgrading the CLI cannot
+// change metrics behavior for an existing pre-8.0 deployment.
+func TestC3TelemetryExporterVersionGate(t *testing.T) {
+	req := require.New(t)
+	const includeKey = "confluent.telemetry.exporter._c3.metrics.include"
+
+	cases := []struct {
+		version  string
+		expectC3 bool
+	}{
+		{"6.2.0", false},
+		{"7.0.0", false},
+		{"7.9.0", false},
+		{"8.0.0", true},
+		{"8.2.1", true},
+		{"9.0.0", true},
+	}
+
+	for _, service := range []string{"kafka", "kraft-controller"} {
+		for _, c := range cases {
+			config := getConfigForVersion(t, service, c.version)
+			if c.expectC3 {
+				req.Equal(c3TelemetryMetricsInclude, config[includeKey], "service %q on %s should export the C3 allow-list", service, c.version)
+				req.Equal("io.confluent.telemetry.reporter.TelemetryReporter", config["metric.reporters"], "service %q on %s should use the telemetry reporter", service, c.version)
+			} else {
+				req.NotContains(config, includeKey, "service %q on %s must not set the C3 metrics include", service, c.version)
+				req.Equal("io.confluent.metrics.reporter.ConfluentMetricsReporter", config["metric.reporters"], "service %q on %s should keep the classic metrics reporter", service, c.version)
+			}
+		}
+	}
+}
+
+// TestC3TelemetryConfigIdenticalForKafkaAndKraft confirms the broker and the KRaft controller receive
+// the exact same telemetry configuration (including the metrics.include fix). Both export to the same
+// Control Center Prometheus, so a divergence between the two would silently break one of them.
+func TestC3TelemetryConfigIdenticalForKafkaAndKraft(t *testing.T) {
+	req := require.New(t)
+
+	kafka := getConfigForVersion(t, "kafka", "8.1.0")
+	kraft := getConfigForVersion(t, "kraft-controller", "8.1.0")
+
+	telemetry := func(config map[string]string) map[string]string {
+		out := make(map[string]string)
+		for key, val := range config {
+			if strings.HasPrefix(key, "confluent.telemetry.") || key == "metric.reporters" {
+				out[key] = val
+			}
+		}
+		return out
+	}
+
+	req.Equal(telemetry(kafka), telemetry(kraft), "kafka and kraft-controller must get identical telemetry config")
+	req.Equal(c3TelemetryMetricsInclude, kafka["confluent.telemetry.exporter._c3.metrics.include"])
 }
 
 func getConfigForVersion(t *testing.T, service, version string) map[string]string {
