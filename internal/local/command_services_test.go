@@ -3,6 +3,7 @@ package local
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -123,8 +124,46 @@ func TestGetKraftConfigC3(t *testing.T) {
 func TestC3MetricsIncludeExcludesDelta(t *testing.T) {
 	req := require.New(t)
 
+	// Exact value is locked so any change is intentional and visible in review.
+	req.Equal(`^(?!.*delta).*$`, c3TelemetryMetricsInclude)
 	req.NotEqual(".*", c3TelemetryMetricsInclude, "_c3.metrics.include must not be .* (sends delta metrics Prometheus rejects)")
 	req.Contains(c3TelemetryMetricsInclude, "(?!.*delta)", "_c3.metrics.include must exclude delta-temporality metrics")
+}
+
+// TestC3MetricsIncludeContract validates which metrics the filter admits vs. drops, using real metric
+// names from the incident. The broker applies metrics.include as a Java regex; Go's RE2 cannot compile
+// the negative lookahead, so this parses the excluded token out of the pattern and applies the
+// equivalent predicate ("admit a metric iff its name does not contain the token"). End-to-end behavior
+// is verified by the manual matrix in the PR description.
+func TestC3MetricsIncludeContract(t *testing.T) {
+	req := require.New(t)
+
+	// Expect an exclude pattern of the form ^(?!.*<token>).*$ and pull out <token>.
+	m := regexp.MustCompile(`^\^\(\?!\.\*(.+)\)\.\*\$$`).FindStringSubmatch(c3TelemetryMetricsInclude)
+	req.Len(m, 2, "metrics.include should be an exclude pattern: ^(?!.*<token>).*$")
+	token := m[1]
+	req.Equal("delta", token, "the excluded token should be the delta-temporality marker")
+
+	admits := func(name string) bool { return !strings.Contains(name, token) }
+
+	// Cumulative metrics Control Center uses — must be admitted.
+	for _, name := range []string{
+		"io.confluent.kafka.server.partition.under.replicated",
+		"io.confluent.kafka.server.partition.in.sync.replicas.count",
+		"io.confluent.kafka.server.request.total.time.ms.p99",
+		"io.confluent.kafka.rest.jersey.request_total",
+	} {
+		req.True(admits(name), "cumulative metric %q must be admitted", name)
+	}
+
+	// Delta-temporality variants Prometheus rejects — must be dropped.
+	for _, name := range []string{
+		"io.confluent.kafka.rest.jersey.request_total.delta",
+		"io.confluent.telemetry.exporter.sent_records_total.delta",
+		"io.confluent.kafka.server.request.queue.size.delta",
+	} {
+		req.False(admits(name), "delta-temporality metric %q must be dropped", name)
+	}
 }
 
 // TestPre8NoTelemetryExporter protects the version gating: on Confluent Platform < 8.0 the broker
