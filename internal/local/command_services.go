@@ -176,6 +176,21 @@ var (
 	}
 )
 
+// c3TelemetryMetricsInclude is the value for `confluent.telemetry.exporter._c3.metrics.include` on the
+// broker and KRaft controller when exporting to the Control Center next-gen Prometheus (CP >= 8).
+//
+// It must NOT be ".*": the Confluent Telemetry Reporter emits both cumulative and delta-temporality
+// variants of its counters (the delta variants carry "delta" in the metric name). The Prometheus OTLP
+// receiver only accepts cumulative temporality and rejects delta with "500 invalid temporality and
+// type combination". Because a single rejected metric fails the entire OTLP batch, ".*" drops all
+// broker metrics and leaves Control Center degraded with "Metrics data not available".
+//
+// Rather than enumerate an allow-list (which would drift as Control Center adds or removes metrics),
+// this targets the actual incompatibility: include every metric EXCEPT delta-temporality ones, via a
+// negative lookahead on "delta". Cumulative metrics — including any new ones — are admitted
+// automatically. The leading "^" anchors the lookahead so it applies to the whole metric name.
+const c3TelemetryMetricsInclude = `^(?!.*delta).*$`
+
 func NewServicesCommand(cfg *config.Config, prerunner cmd.PreRunner) *cobra.Command {
 	c := NewLocalCommand(
 		&cobra.Command{
@@ -483,7 +498,7 @@ func (c *command) getConfig(service string) (map[string]string, error) {
 			config["metric.reporters"] = "io.confluent.telemetry.reporter.TelemetryReporter"
 			config["confluent.telemetry.exporter._c3.type"] = "http"
 			config["confluent.telemetry.exporter._c3.enabled"] = "true"
-			config["confluent.telemetry.exporter._c3.metrics.include"] = ".*"
+			config["confluent.telemetry.exporter._c3.metrics.include"] = c3TelemetryMetricsInclude
 			config["confluent.telemetry.exporter._c3.client.base.url"] = "http://localhost:9090/api/v1/otlp"
 			config["confluent.telemetry.exporter._c3.client.compression"] = "gzip"
 			config["confluent.telemetry.exporter._c3.api.key"] = "dummy"
@@ -511,7 +526,7 @@ func (c *command) getConfig(service string) (map[string]string, error) {
 			config["metric.reporters"] = "io.confluent.telemetry.reporter.TelemetryReporter"
 			config["confluent.telemetry.exporter._c3.type"] = "http"
 			config["confluent.telemetry.exporter._c3.enabled"] = "true"
-			config["confluent.telemetry.exporter._c3.metrics.include"] = ".*"
+			config["confluent.telemetry.exporter._c3.metrics.include"] = c3TelemetryMetricsInclude
 			config["confluent.telemetry.exporter._c3.client.base.url"] = "http://localhost:9090/api/v1/otlp"
 			config["confluent.telemetry.exporter._c3.client.compression"] = "gzip"
 			config["confluent.telemetry.exporter._c3.api.key"] = "dummy"
