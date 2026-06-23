@@ -76,3 +76,30 @@ func TestFormatCsuList(t *testing.T) {
 	// Input order should not matter; output is sorted ascending.
 	require.Equal(t, "4, 8, 16", formatCsuList([]int32{16, 4, 8}))
 }
+
+// TestBuildUpdateLongDescription pins the customer-facing help text. KSQL-15168
+// rewrote this to advertise both expansion and shrink (and the TERMINATE
+// remediation when the server refuses a shrink). A future change that
+// reverts to expand-only wording, drops the TERMINATE guidance, or drops
+// the valid CSU listing would break this test.
+func TestBuildUpdateLongDescription(t *testing.T) {
+	long := buildUpdateLongDescription()
+
+	require.Contains(t, long, "Both expansion (increase) and shrink (decrease) are supported",
+		"long description must advertise both directions")
+	require.Contains(t, long, "TERMINATE <query_id>",
+		"long description must surface the customer-side remediation for a refused shrink")
+	require.Contains(t, long, "4, 8, 12, 16, 20, 24, 28",
+		"long description must enumerate valid CSU sizes (kept in sync with validCsuSizes)")
+	require.Contains(t, long, "rolling restart",
+		"long description must call out the rolling-restart behavior")
+}
+
+// TestCsuSupportTicketMessage pins the support-ticket fallback message.
+// Customer-visible string; a regression in wording would silently change
+// the experience for anyone passing a CSU above maxSelfServeCSU.
+func TestCsuSupportTicketMessage(t *testing.T) {
+	msg := csuSupportTicketMessage()
+	require.Contains(t, msg, "support ticket")
+	require.Contains(t, msg, "28", "message must name the self-serve ceiling")
+}
