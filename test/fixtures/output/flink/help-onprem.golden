@@ -11,6 +11,7 @@ Available Commands:
   environment         Manage Flink environments.
   savepoint           Manage Flink savepoints.
   secret              Manage Flink secrets in Confluent Platform.
+  secret-mapping      Manage Flink secret mappings.
   statement           Manage Flink SQL statements.
 
 Global Flags:
