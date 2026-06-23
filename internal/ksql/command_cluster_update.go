@@ -12,19 +12,11 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-// Valid CSU sizes that customers may target via self-serve cluster update.
-// Mirrors the server-side authoritative list in cc-control-plane-ksql:
-// internal/service/update_ksql_cluster_resize.go::validCSUSizes.
-// Values 1, 2 are legacy and not user-selectable. Values above maxSelfServeCSU
-// (the largest entry in this slice) still require a support ticket.
+// validCsuSizes mirrors cc-control-plane-ksql's authoritative list.
 //
 //nolint:gochecknoglobals
 var validCsuSizes = []int32{4, 8, 12, 16, 20, 24, 28}
 
-// maxSelfServeCSU is derived from validCsuSizes so the support-ticket
-// threshold and the "Valid values" listing stay in lockstep — if the
-// validCsuSizes slice is extended, the threshold moves with it.
-//
 //nolint:gochecknoglobals
 var maxSelfServeCSU = func() int32 {
 	maxCsu := int32(0)
@@ -43,6 +35,28 @@ func csuSupportTicketMessage() string {
 		maxSelfServeCSU)
 }
 
+// buildUpdateExamples returns the customer-facing help examples for the
+// update command — extracted so it's directly unit-testable.
+func buildUpdateExamples() string {
+	return examples.BuildExampleString(
+		examples.Example{
+			Text: `Expand ksqlDB cluster "lksqlc-12345" to 8 CSUs.`,
+			Code: "confluent ksql cluster update lksqlc-12345 --csu 8",
+		},
+		examples.Example{
+			Text: `Shrink ksqlDB cluster "lksqlc-12345" to 4 CSUs.`,
+			Code: "confluent ksql cluster update lksqlc-12345 --csu 4",
+		},
+	)
+}
+
+// buildCsuFlagUsage returns the help text for the --csu flag — extracted
+// so it's directly unit-testable.
+func buildCsuFlagUsage() string {
+	return fmt.Sprintf("Target number of CSUs for the cluster. Valid values: %s.",
+		formatCsuList(validCsuSizes))
+}
+
 func (c *ksqlCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <id>",
@@ -51,25 +65,11 @@ func (c *ksqlCommand) newUpdateCommand() *cobra.Command {
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.update,
-		// Hidden while the SDK call is shimmed (see Client.UpdateKsqlCluster
-		// in pkg/ccloudv2/ksql.go). Once the SDK is regenerated from cc-api
-		// PR #2507 and the shim is replaced with the real call, drop Hidden.
-		Hidden: true,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: `Expand ksqlDB cluster "lksqlc-12345" to 8 CSUs.`,
-				Code: "confluent ksql cluster update lksqlc-12345 --csu 8",
-			},
-			examples.Example{
-				Text: `Shrink ksqlDB cluster "lksqlc-12345" to 4 CSUs.`,
-				Code: "confluent ksql cluster update lksqlc-12345 --csu 4",
-			},
-		),
+		Hidden:            true, // until cc-api #2507 merges + public SDK regenerates
+		Example:           buildUpdateExamples(),
 	}
 
-	cmd.Flags().Int32("csu", 0, fmt.Sprintf(
-		"Target number of CSUs for the cluster. Valid values: %s.",
-		formatCsuList(validCsuSizes)))
+	cmd.Flags().Int32("csu", 0, buildCsuFlagUsage())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -108,13 +108,7 @@ func (c *ksqlCommand) update(cmd *cobra.Command, args []string) error {
 
 	clusterId := args[0]
 
-	// Pre-check current CSU so we can short-circuit a no-op locally before
-	// issuing the PATCH. The server-side validator also rejects no-op resizes
-	// with 400 ("new CSU size is the same as old CSU size, no-op"), but a
-	// client-side check produces a clearer message and avoids a wasted API
-	// round trip. Direction itself (expand vs shrink) is not pre-checked —
-	// the server's preflight is authoritative (shrink runs a PQ-count check
-	// against the new limit; expand has no preflight beyond capacity).
+	// Client-side no-op short-circuit; direction is server-arbitrated.
 	current, err := c.V2Client.DescribeKsqlCluster(clusterId, environmentId)
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, clusterId)
@@ -130,10 +124,7 @@ func (c *ksqlCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Print the rolling-restart notice only AFTER the PATCH was accepted —
-	// otherwise a failed call (e.g., a 4xx from the server) would leave the
-	// customer with a misleading "Resizing…" message even though no resize
-	// is happening.
+	// Rolling-restart notice prints only AFTER the PATCH was accepted.
 	output.ErrPrintf(c.Config.EnableColor,
 		"Resizing ksqlDB cluster %q from %d to %d CSUs. A rolling restart will be "+
 			"performed asynchronously; the cluster will continue serving queries during the resize.\n",
@@ -144,10 +135,7 @@ func (c *ksqlCommand) update(cmd *cobra.Command, args []string) error {
 	return table.Print()
 }
 
-// validateCsuForUpdate returns nil if csu is in validCsuSizes, and a
-// customer-safe error otherwise. The server-side check in
-// cc-control-plane-ksql is authoritative; this client-side validation exists
-// to fail fast with a clearer message before issuing the API call.
+// validateCsuForUpdate fail-fast checks before issuing the API call.
 func validateCsuForUpdate(csu int32) error {
 	if csu > maxSelfServeCSU {
 		return fmt.Errorf("%d CSUs: %s", csu, csuSupportTicketMessage())

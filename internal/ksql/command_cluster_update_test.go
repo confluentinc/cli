@@ -96,10 +96,32 @@ func TestBuildUpdateLongDescription(t *testing.T) {
 }
 
 // TestCsuSupportTicketMessage pins the support-ticket fallback message.
-// Customer-visible string; a regression in wording would silently change
-// the experience for anyone passing a CSU above maxSelfServeCSU.
 func TestCsuSupportTicketMessage(t *testing.T) {
 	msg := csuSupportTicketMessage()
 	require.Contains(t, msg, "support ticket")
 	require.Contains(t, msg, "28", "message must name the self-serve ceiling")
+}
+
+// TestBuildUpdateExamples pins the customer-facing help examples — covers
+// both expand and shrink lines.
+func TestBuildUpdateExamples(t *testing.T) {
+	out := buildUpdateExamples()
+	require.Contains(t, out, "Expand ksqlDB cluster")
+	require.Contains(t, out, "Shrink ksqlDB cluster")
+	require.Contains(t, out, "--csu 8")
+	require.Contains(t, out, "--csu 4")
+	require.Contains(t, out, "lksqlc-12345")
+}
+
+// TestBuildCsuFlagUsage pins the --csu flag's help text.
+func TestBuildCsuFlagUsage(t *testing.T) {
+	out := buildCsuFlagUsage()
+	require.Contains(t, out, "Target number of CSUs")
+	require.Contains(t, out, "4, 8, 12, 16, 20, 24, 28",
+		"flag usage must list all valid CSU sizes")
+}
+
+// TestMaxSelfServeCSU verifies the cap is derived from validCsuSizes.
+func TestMaxSelfServeCSU(t *testing.T) {
+	require.Equal(t, int32(28), maxSelfServeCSU)
 }
