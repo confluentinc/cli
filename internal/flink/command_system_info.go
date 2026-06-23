@@ -50,10 +50,14 @@ func (c *command) systemInfo(cmd *cobra.Command, _ []string) error {
 	sysInfo := parseSystemInformation(result)
 
 	if output.GetFormat(cmd) == output.Human {
+		status := sysInfo.Status
+		if status == nil {
+			status = &localSystemInformationStatus{}
+		}
 		table := output.NewTable(cmd)
 		table.Add(&systemInfoOut{
-			Version:  derefString(sysInfo.Status.Version),
-			Revision: derefString(sysInfo.Status.Revision),
+			Version:  derefString(status.Version),
+			Revision: derefString(status.Revision),
 		})
 		return table.Print()
 	}

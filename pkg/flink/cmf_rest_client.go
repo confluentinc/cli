@@ -550,7 +550,7 @@ func (cmfClient *CmfRestClient) GetStatementResults(ctx context.Context, environ
 }
 
 func (cmfClient *CmfRestClient) GetSystemInformation(ctx context.Context) (map[string]interface{}, error) {
-	baseURL := cmfClient.GetConfig().Servers[0].URL
+	baseURL := strings.TrimRight(cmfClient.GetConfig().Servers[0].URL, "/")
 	url := baseURL + "/cmf/api/v1/system-information"
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
