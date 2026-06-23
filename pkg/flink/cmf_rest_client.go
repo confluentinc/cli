@@ -596,6 +596,33 @@ func (cmfClient *CmfRestClient) DeleteCatalog(ctx context.Context, catalogName s
 	return parseSdkError(httpResp, err)
 }
 
+func (cmfClient *CmfRestClient) DescribeApplicationInstance(ctx context.Context, environment, application, instance string) (cmfsdk.FlinkApplicationInstance, error) {
+	cmfInstance, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplicationInstance(ctx, environment, application, instance).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.FlinkApplicationInstance{}, fmt.Errorf(`failed to describe instance "%s" of application "%s" in the environment "%s": %s`, instance, application, environment, parsedErr)
+	}
+	return cmfInstance, nil
+}
+
+func (cmfClient *CmfRestClient) ListApplicationInstances(ctx context.Context, environment, application string) ([]cmfsdk.FlinkApplicationInstance, error) {
+	instances := make([]cmfsdk.FlinkApplicationInstance, 0)
+	var currentPageNumber int32 = 0
+	// 100 is an arbitrary page size we've chosen.
+	const pageSize = 100
+	done := false
+
+	for !done {
+		instancesPage, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplicationInstances(ctx, environment, application).Page(currentPageNumber).Size(pageSize).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list instances of application "%s" in the environment "%s": %s`, application, environment, parsedErr)
+		}
+		instances = append(instances, instancesPage.GetItems()...)
+		currentPageNumber, done = extractPageOptions(len(instancesPage.GetItems()), currentPageNumber)
+	}
+
+	return instances, nil
+}
+
 func (cmfClient *CmfRestClient) CreateSecretMapping(ctx context.Context, envName string, secretMapping cmfsdk.EnvironmentSecretMapping) (cmfsdk.EnvironmentSecretMapping, error) {
 	var mappingName string
 	if secretMapping.Metadata != nil && secretMapping.Metadata.Name != nil {
