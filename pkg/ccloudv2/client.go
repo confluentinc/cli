@@ -1,6 +1,7 @@
 package ccloudv2
 
 import (
+	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
 	aiv1 "github.com/confluentinc/ccloud-sdk-go-v2/ai/v1"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	billingv1 "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
@@ -20,7 +21,6 @@ import (
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
-	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	networkingaccesspointv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-access-point/v1"
 	networkingdnsforwarderv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-dnsforwarder/v1"

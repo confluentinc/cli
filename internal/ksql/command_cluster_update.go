@@ -27,13 +27,13 @@ var validCsuSizes = []int32{4, 8, 12, 16, 20, 24, 28}
 //
 //nolint:gochecknoglobals
 var maxSelfServeCSU = func() int32 {
-	max := int32(0)
+	maxCsu := int32(0)
 	for _, v := range validCsuSizes {
-		if v > max {
-			max = v
+		if v > maxCsu {
+			maxCsu = v
 		}
 	}
-	return max
+	return maxCsu
 }()
 
 func csuSupportTicketMessage() string {
