@@ -33,6 +33,7 @@ func (c *command) newApplicationCommand() *cobra.Command {
 	cmd.AddCommand(c.newApplicationCreateCommand())
 	cmd.AddCommand(c.newApplicationDeleteCommand())
 	cmd.AddCommand(c.newApplicationDescribeCommand())
+	cmd.AddCommand(c.newApplicationEventCommand())
 	cmd.AddCommand(c.newApplicationListCommand())
 	cmd.AddCommand(c.newApplicationUpdateCommand())
 	cmd.AddCommand(c.newApplicationWebUiForwardCommand())

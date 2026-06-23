@@ -35,6 +35,7 @@ func createSecretMapping(name string) cmfsdk.EnvironmentSecretMapping {
 	}
 }
 
+const invalidSecretName = "invalid-secret"
 const invalidDatabaseName = "invalid-database"
 
 // Helper function to create a Flink application.
@@ -583,6 +584,97 @@ func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 		default:
 			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
 		}
+	}
+}
+
+// Handler for "cmf/api/v1alpha1/environments/{envName}/applications/{appName}/events"
+func handleCmfApplicationEvents(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		envName := vars["envName"]
+		appName := vars["appName"]
+
+		if r.Method != http.MethodGet {
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+			return
+		}
+
+		if envName != "default" && envName != "test" {
+			http.Error(w, "Environment not found", http.StatusNotFound)
+			return
+		}
+
+		// Validate application exists, matching handleCmfApplication behavior.
+		validApps := map[string]bool{
+			"default-application-1": true,
+			"default-application-2": true,
+			"default-application-s": true,
+		}
+		if envName == "default" && !validApps[appName] {
+			http.Error(w, "Application not found", http.StatusNotFound)
+			return
+		}
+
+		eventsPage := map[string]interface{}{
+			"items": []cmfsdk.FlinkApplicationEvent{},
+		}
+
+		page := r.URL.Query().Get("page")
+
+		if envName == "default" && appName == "default-application-1" && page == "0" {
+			timestamp1 := "2024-01-15T10:30:00Z"
+			timestamp2 := "2024-01-15T10:31:00Z"
+			instance := "default-application-1-instance-1"
+			eventType1 := "Normal"
+			eventType2 := "Warning"
+			message1 := "Application started successfully"
+			message2 := "Application restarting due to failure"
+			name1 := "event-001"
+			name2 := "event-002"
+			newStatus := "DEPLOYED"
+			exceptionString := "java.lang.RuntimeException: Job execution failed"
+			newStatusData := cmfsdk.EventDataNewStatusAsEventData(&cmfsdk.EventDataNewStatus{NewStatus: &newStatus})
+			jobExceptionData := cmfsdk.EventDataJobExceptionAsEventData(&cmfsdk.EventDataJobException{ExceptionString: &exceptionString})
+
+			events := []cmfsdk.FlinkApplicationEvent{
+				{
+					ApiVersion: "cmf.confluent.io/v1alpha1",
+					Kind:       "FlinkApplicationEvent",
+					Metadata: cmfsdk.EventMetadata{
+						Name:                     &name1,
+						CreationTimestamp:        &timestamp1,
+						FlinkApplicationInstance: &instance,
+					},
+					Status: cmfsdk.EventStatus{
+						Type:    &eventType1,
+						Message: &message1,
+						Data:    &newStatusData,
+					},
+				},
+				{
+					ApiVersion: "cmf.confluent.io/v1alpha1",
+					Kind:       "FlinkApplicationEvent",
+					Metadata: cmfsdk.EventMetadata{
+						Name:                     &name2,
+						CreationTimestamp:        &timestamp2,
+						FlinkApplicationInstance: &instance,
+					},
+					Status: cmfsdk.EventStatus{
+						Type:    &eventType2,
+						Message: &message2,
+						Data:    &jobExceptionData,
+					},
+				},
+			}
+			eventsPage = map[string]interface{}{
+				"items": events,
+			}
+		}
+
+		err := json.NewEncoder(w).Encode(eventsPage)
+		require.NoError(t, err)
 	}
 }
 
@@ -1502,6 +1594,132 @@ func handleCmfSecretMapping(t *testing.T) http.HandlerFunc {
 			return
 		case http.MethodDelete:
 			if name == "non-exist-secret-mapping" {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func createSecret(secretName string) cmfsdk.Secret {
+	timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).String()
+	maskedData := map[string]string{
+		"bootstrap.servers": "****",
+		"sasl.jaas.config":  "****",
+	}
+	return cmfsdk.Secret{
+		ApiVersion: "cmf/v1",
+		Kind:       "Secret",
+		Metadata: cmfsdk.SecretMetadata{
+			Name:              secretName,
+			CreationTimestamp: &timeStamp,
+		},
+		Spec: cmfsdk.SecretSpec{
+			Data: &maskedData,
+		},
+	}
+}
+
+func handleCmfSecrets(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+		switch r.Method {
+		case http.MethodGet:
+			secrets := []cmfsdk.Secret{
+				createSecret("test-secret-1"),
+				createSecret("test-secret-2"),
+			}
+			secretsPage := cmfsdk.SecretsPage{}
+			page := r.URL.Query().Get("page")
+
+			if page == "0" {
+				secretsPage.SetItems(secrets)
+			}
+
+			err := json.NewEncoder(w).Encode(secretsPage)
+			require.NoError(t, err)
+		case http.MethodPost:
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var secret cmfsdk.Secret
+			err = json.Unmarshal(reqBody, &secret)
+			require.NoError(t, err)
+
+			secretName := secret.Metadata.Name
+
+			if secretName == invalidSecretName {
+				http.Error(w, "The Secret object from resource file is invalid", http.StatusUnprocessableEntity)
+				return
+			}
+
+			timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
+			secret.Metadata.CreationTimestamp = &timeStamp
+			// Mask the secret data in response
+			maskedData := make(map[string]string)
+			if secret.Spec.Data != nil {
+				for k := range *secret.Spec.Data {
+					maskedData[k] = "****"
+				}
+			}
+			secret.Spec.Data = &maskedData
+			err = json.NewEncoder(w).Encode(secret)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func handleCmfSecret(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		secretName := vars["secretName"]
+
+		switch r.Method {
+		case http.MethodGet:
+			if secretName == invalidSecretName {
+				http.Error(w, "The secret name is invalid", http.StatusNotFound)
+				return
+			}
+
+			secret := createSecret(secretName)
+			err := json.NewEncoder(w).Encode(secret)
+			require.NoError(t, err)
+			return
+		case http.MethodPut:
+			if secretName == invalidSecretName {
+				http.Error(w, "The secret name is invalid", http.StatusNotFound)
+				return
+			}
+
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var secret cmfsdk.Secret
+			err = json.Unmarshal(reqBody, &secret)
+			require.NoError(t, err)
+
+			timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).String()
+			secret.Metadata.CreationTimestamp = &timeStamp
+			// Mask the secret data in response
+			maskedData := make(map[string]string)
+			if secret.Spec.Data != nil {
+				for k := range *secret.Spec.Data {
+					maskedData[k] = "****"
+				}
+			}
+			secret.Spec.Data = &maskedData
+			err = json.NewEncoder(w).Encode(secret)
+			require.NoError(t, err)
+			return
+		case http.MethodDelete:
+			if secretName == "non-exist-secret" {
 				http.Error(w, "", http.StatusNotFound)
 				return
 			}

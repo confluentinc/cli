@@ -41,6 +41,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newDetachedSavepointCommand())
 	cmd.AddCommand(c.newEnvironmentCommand())
 	cmd.AddCommand(c.newSavepointCommand())
+	cmd.AddCommand(c.newSecretCommand())
 	cmd.AddCommand(c.newSecretMappingCommand())
 
 	// On-Prem and Cloud Commands
