@@ -52,6 +52,7 @@ const (
 	FlinkStatement                   = "Flink SQL statement"
 	FlinkConnection                  = "Flink connection"
 	FlinkSecret                      = "Flink secret"
+	FlinkSecretMapping               = "Flink secret mapping"
 	Gateway                          = "gateway"
 	Global                           = "global"
 	IdentityPool                     = "identity pool"
