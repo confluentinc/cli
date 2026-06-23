@@ -3,6 +3,7 @@ package testserver
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -28,7 +29,7 @@ func handleEndpointV1Endpoints(t *testing.T) http.HandlerFunc {
 
 		var endpoints []endpointv1.EndpointV1Endpoint
 		switch {
-		case cloud == "AWS" && region == "eu-west-1":
+		case strings.ToUpper(cloud) == "AWS" && region == "eu-west-1":
 			endpoints = []endpointv1.EndpointV1Endpoint{
 				newFlinkRestEndpoint("aws", region, TestFlinkGatewayUrl.String(), false),
 				newFlinkRestEndpoint("aws", region, TestFlinkGatewayUrlPrivate.String(), true),
@@ -36,22 +37,22 @@ func handleEndpointV1Endpoints(t *testing.T) http.HandlerFunc {
 				// LANGUAGE_SERVICE endpoint must be filtered out by the CLI.
 				newFlinkLanguageServiceEndpoint("aws", region, "https://flinkpls.eu-west-1.aws.confluent.cloud", false),
 			}
-		case cloud == "AZURE" && region == "centralus":
+		case strings.ToUpper(cloud) == "AZURE" && region == "centralus":
 			endpoints = []endpointv1.EndpointV1Endpoint{
 				newFlinkRestEndpoint("azure", region, TestFlinkGatewayUrl.String(), false),
 			}
-		case cloud == "AZURE" && region == "eastus2":
+		case strings.ToUpper(cloud) == "AZURE" && region == "eastus2":
 			endpoints = []endpointv1.EndpointV1Endpoint{
 				newFlinkRestEndpoint("azure", region, TestFlinkGatewayUrl.String(), false),
 				newFlinkRestEndpoint("azure", region, "https://flink-n-abcde2.eastus.azure.confluent.cloud", true),
 				newFlinkRestEndpoint("azure", region, "https://flink-n-abcde7.eastus.azure.confluent.cloud", true),
 			}
-		case cloud == "GCP" && region == "europe-west3-a":
+		case strings.ToUpper(cloud) == "GCP" && region == "europe-west3-a":
 			endpoints = []endpointv1.EndpointV1Endpoint{
 				newFlinkRestEndpoint("gcp", region, TestFlinkGatewayUrl.String(), false),
 				newFlinkRestEndpoint("gcp", region, TestFlinkGatewayUrlPrivate.String(), true),
 			}
-		case cloud == "AZURE" && region == "italynorth":
+		case strings.ToUpper(cloud) == "AZURE" && region == "italynorth":
 			// Multi-PLATT (PrivateLink Gateway) shape: an access-point URL on the GLB
 			// domain that the legacy URL-template aggregation could not have constructed.
 			// Mirrors a real production env captured during FCP-4223 verification.
