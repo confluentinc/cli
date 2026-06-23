@@ -43,6 +43,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newSavepointCommand())
 	cmd.AddCommand(c.newSecretCommand())
 	cmd.AddCommand(c.newSecretMappingCommand())
+	cmd.AddCommand(c.newSystemInfoCommand())
 
 	// On-Prem and Cloud Commands
 	cmd.AddCommand(c.newComputePoolCommand(cfg))

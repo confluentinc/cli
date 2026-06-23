@@ -114,6 +114,21 @@ func (mr *MockCmfClientInterfaceMockRecorder) GetStatementResults(ctx, environme
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatementResults", reflect.TypeOf((*MockCmfClientInterface)(nil).GetStatementResults), ctx, environment, statementName, pageToken)
 }
 
+// GetSystemInformation mocks base method.
+func (m *MockCmfClientInterface) GetSystemInformation(ctx context.Context) (map[string]interface{}, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSystemInformation", ctx)
+	ret0, _ := ret[0].(map[string]interface{})
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSystemInformation indicates an expected call of GetSystemInformation.
+func (mr *MockCmfClientInterfaceMockRecorder) GetSystemInformation(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSystemInformation", reflect.TypeOf((*MockCmfClientInterface)(nil).GetSystemInformation), ctx)
+}
+
 // ListStatementExceptions mocks base method.
 func (m *MockCmfClientInterface) ListStatementExceptions(ctx context.Context, environment, statementName string) (v1.StatementExceptionList, error) {
 	m.ctrl.T.Helper()

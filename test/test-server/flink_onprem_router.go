@@ -33,6 +33,7 @@ var flinkRoutes = []route{
 	{"/cmf/api/v1/secrets/{secretName}", handleCmfSecret},
 	{"/cmf/api/v1/detached-savepoints", handleCmfDetachedSavepoints},
 	{"/cmf/api/v1/detached-savepoints/{detachedSavepointName}", handleCmfDetachedSavepoint},
+	{"/cmf/api/v1/system-information", handleCmfSystemInformation},
 }
 
 func NewFlinkOnPremRouter(t *testing.T) *mux.Router {
