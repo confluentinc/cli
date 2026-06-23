@@ -15,6 +15,7 @@ var flinkRoutes = []route{
 	{"/cmf/api/v1/environments/{environment}/applications/{application}", handleCmfApplication},
 	{"/cmf/api/v1/environments/{environment}/applications/{application}/instances", handleCmfApplicationInstances},
 	{"/cmf/api/v1/environments/{environment}/applications/{application}/instances/{instName}", handleCmfApplicationInstance},
+	{"/cmf/api/v1alpha1/environments/{envName}/applications/{appName}/events", handleCmfApplicationEvents},
 	{"/cmf/api/v1/environments", handleCmfEnvironments},
 	{"/cmf/api/v1/environments/{environment}", handleCmfEnvironment},
 	{"/cmf/api/v1/environments/{environment}/compute-pools", handleCmfComputePools},
@@ -26,6 +27,8 @@ var flinkRoutes = []route{
 	{"/cmf/api/v1/environments/{envName}/statements/{stmtName}/savepoints", handleCmfSavepoints},
 	{"/cmf/api/v1/environments/{envName}/applications/{appName}/savepoints/{savepointName}", handleCmfSavepoint},
 	{"/cmf/api/v1/environments/{envName}/statements/{stmtName}/savepoints/{savepointName}", handleCmfSavepoint},
+	{"/cmf/api/v1/secrets", handleCmfSecrets},
+	{"/cmf/api/v1/secrets/{secretName}", handleCmfSecret},
 	{"/cmf/api/v1/detached-savepoints", handleCmfDetachedSavepoints},
 	{"/cmf/api/v1/detached-savepoints/{detachedSavepointName}", handleCmfDetachedSavepoint},
 }
