@@ -3,8 +3,11 @@ package test
 func (s *CLITestSuite) TestTableflowCatalogIntegration() {
 	tests := []CLITest{
 		{args: "tableflow catalog-integration create my-aws-glue-ci --cluster lkc-123456 --type aws --provider-integration cspi-stgce89r7", fixture: "tableflow/catalog-integration/create-aws-glue.golden"},
+		{args: "tableflow catalog-integration create my-aws-glue-ci --cluster lkc-123456 --type aws --provider-integration cspi-stgce89r7 --custom-database my-custom-db", fixture: "tableflow/catalog-integration/create-aws-glue-custom-database.golden"},
 		{args: "tableflow catalog-integration create my-snowflake-ci --cluster lkc-123456 --type snowflake --endpoint https://vuser1_polaris.snowflakecomputing.com/ --client-id client-id --client-secret client-secret --warehouse warehouse --allowed-scope allowed-scope", fixture: "tableflow/catalog-integration/create-snowflake.golden"},
+		{args: "tableflow catalog-integration create my-snowflake-ci --cluster lkc-123456 --type snowflake --endpoint https://vuser1_polaris.snowflakecomputing.com/ --client-id client-id --client-secret client-secret --warehouse warehouse --allowed-scope allowed-scope --custom-namespace my-custom-ns", fixture: "tableflow/catalog-integration/create-snowflake-custom-namespace.golden"},
 		{args: "tableflow catalog-integration create my-catalog-integration --cluster lkc-123456 --type unity --workspace-endpoint https://dbc-1.cloud.databricks.com --catalog-name tableflow-quickstart-catalog --unity-client-id $CLIENT_ID --unity-client-secret $CLIENT_SECRET", fixture: "tableflow/catalog-integration/create-unity.golden"},
+		{args: "tableflow catalog-integration create my-catalog-integration --cluster lkc-123456 --type unity --workspace-endpoint https://dbc-1.cloud.databricks.com --catalog-name tableflow-quickstart-catalog --unity-client-id $CLIENT_ID --unity-client-secret $CLIENT_SECRET --custom-schema my-custom-schema", fixture: "tableflow/catalog-integration/create-unity-custom-schema.golden"},
 		{args: "tableflow catalog-integration delete tci-abc123 tci-def456 --cluster lkc-123456", input: "y\n", fixture: "tableflow/catalog-integration/delete-multiple.golden"},
 		{args: "tableflow catalog-integration delete tci-abc123 tci-def456 tci-invalid --cluster lkc-123456", fixture: "tableflow/catalog-integration/delete-invalid.golden", exitCode: 1},
 		{args: "tableflow catalog-integration list --cluster lkc-123456", fixture: "tableflow/catalog-integration/list.golden"},
@@ -26,6 +29,9 @@ func (s *CLITestSuite) TestTableflowCatalogIntegrationUpdate() {
 		{args: "tableflow catalog-integration update tci-def456 --cluster lkc-123456 --endpoint https://vuser2_polaris.snowflakecomputing.com/ --client-id client-id-2 --client-secret client-secret-2 --warehouse warehouse-2 --allowed-scope allowed-scope-2", fixture: "tableflow/catalog-integration/update-snowflake.golden"},
 		{args: "tableflow catalog-integration update tci-abc456 --cluster lkc-123456 --name new-name", fixture: "tableflow/catalog-integration/update-name.golden"},
 		{args: "tableflow catalog-integration update tci-def456 --cluster lkc-123456 --name new-name --endpoint https://vuser2_polaris.snowflakecomputing.com/ --client-id client-id-2 --client-secret client-secret-2 --warehouse warehouse-2 --allowed-scope allowed-scope-2", fixture: "tableflow/catalog-integration/update-snowflake-with-name.golden"},
+		{args: "tableflow catalog-integration update tci-abc123 --cluster lkc-123456 --custom-database new-custom-db", fixture: "tableflow/catalog-integration/update-aws-glue-custom-database.golden"},
+		{args: "tableflow catalog-integration update tci-def456 --cluster lkc-123456 --custom-namespace new-custom-ns", fixture: "tableflow/catalog-integration/update-snowflake-custom-namespace.golden"},
+		{args: "tableflow catalog-integration update tci-ghi789 --cluster lkc-123456 --custom-schema new-custom-schema", fixture: "tableflow/catalog-integration/update-unity-custom-schema.golden"},
 		{args: "tableflow catalog-integration update tci-abc123 --cluster lkc-123456", fixture: "tableflow/catalog-integration/update-fail-no-flags.golden", exitCode: 1},
 	}
 

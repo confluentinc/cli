@@ -230,10 +230,28 @@ func (cmfClient *CmfRestClient) UpdateApplication(ctx context.Context, environme
 	return outputApplication, nil
 }
 
+func (cmfClient *CmfRestClient) ListApplicationEvents(ctx context.Context, environment, application string) ([]cmfsdk.FlinkApplicationEvent, error) {
+	events := make([]cmfsdk.FlinkApplicationEvent, 0)
+	var currentPageNumber int32 = 0
+	const pageSize = 100
+	done := false
+
+	for !done {
+		eventsPage, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplicationEvents(ctx, environment, application).Page(currentPageNumber).Size(pageSize).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list events for application "%s" in the environment "%s": %s`, application, environment, parsedErr)
+		}
+		events = append(events, eventsPage.GetItems()...)
+		currentPageNumber, done = extractPageOptions(len(eventsPage.GetItems()), currentPageNumber)
+	}
+
+	return events, nil
+}
+
 // CreateEnvironment Create an environment.
 // Internally, since the call for Create and Update is the same, we check if the environment exists before creation.
 func (cmfClient *CmfRestClient) CreateEnvironment(ctx context.Context, postEnvironment cmfsdk.PostEnvironment) (cmfsdk.Environment, error) {
-	environmentName := postEnvironment.Name
+	environmentName := postEnvironment.GetName()
 	_, httpResponse, _ := cmfClient.EnvironmentsApi.GetEnvironment(ctx, environmentName).Execute()
 	// check if the environment exists by checking the status code
 	if httpResponse != nil && httpResponse.StatusCode == http.StatusOK {
@@ -283,10 +301,10 @@ func (cmfClient *CmfRestClient) ListEnvironments(ctx context.Context) ([]cmfsdk.
 	return environments, nil
 }
 
-// UpdateEnvironment Create an environment.
+// UpdateEnvironment updates an existing environment.
 // Internally, since the call for Create and Update is the same, we check if the environment exists before updation.
 func (cmfClient *CmfRestClient) UpdateEnvironment(ctx context.Context, postEnvironment cmfsdk.PostEnvironment) (cmfsdk.Environment, error) {
-	environmentName := postEnvironment.Name
+	environmentName := postEnvironment.GetName()
 	_, httpResponse, err := cmfClient.EnvironmentsApi.GetEnvironment(ctx, environmentName).Execute()
 	// check if the environment exists by checking the status code
 	if httpResponse != nil && httpResponse.StatusCode == http.StatusNotFound {
@@ -607,9 +625,194 @@ func (cmfClient *CmfRestClient) ListCatalog(ctx context.Context) ([]cmfsdk.Kafka
 	return catalogs, nil
 }
 
+func (cmfClient *CmfRestClient) UpdateCatalog(ctx context.Context, catalogName string, kafkaCatalog cmfsdk.KafkaCatalog) error {
+	httpResponse, err := cmfClient.SQLApi.UpdateKafkaCatalog(ctx, catalogName).KafkaCatalog(kafkaCatalog).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return fmt.Errorf(`failed to update Kafka Catalog "%s": %s`, catalogName, parsedErr)
+	}
+	return nil
+}
+
 func (cmfClient *CmfRestClient) DeleteCatalog(ctx context.Context, catalogName string) error {
 	httpResp, err := cmfClient.SQLApi.DeleteKafkaCatalog(ctx, catalogName).Execute()
 	return parseSdkError(httpResp, err)
+}
+
+func (cmfClient *CmfRestClient) DescribeApplicationInstance(ctx context.Context, environment, application, instance string) (cmfsdk.FlinkApplicationInstance, error) {
+	cmfInstance, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplicationInstance(ctx, environment, application, instance).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.FlinkApplicationInstance{}, fmt.Errorf(`failed to describe instance "%s" of application "%s" in the environment "%s": %s`, instance, application, environment, parsedErr)
+	}
+	return cmfInstance, nil
+}
+
+func (cmfClient *CmfRestClient) ListApplicationInstances(ctx context.Context, environment, application string) ([]cmfsdk.FlinkApplicationInstance, error) {
+	instances := make([]cmfsdk.FlinkApplicationInstance, 0)
+	var currentPageNumber int32 = 0
+	// 100 is an arbitrary page size we've chosen.
+	const pageSize = 100
+	done := false
+
+	for !done {
+		instancesPage, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplicationInstances(ctx, environment, application).Page(currentPageNumber).Size(pageSize).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list instances of application "%s" in the environment "%s": %s`, application, environment, parsedErr)
+		}
+		instances = append(instances, instancesPage.GetItems()...)
+		currentPageNumber, done = extractPageOptions(len(instancesPage.GetItems()), currentPageNumber)
+	}
+
+	return instances, nil
+}
+
+func (cmfClient *CmfRestClient) CreateSecretMapping(ctx context.Context, envName string, secretMapping cmfsdk.EnvironmentSecretMapping) (cmfsdk.EnvironmentSecretMapping, error) {
+	var mappingName string
+	if secretMapping.Metadata != nil && secretMapping.Metadata.Name != nil {
+		mappingName = *secretMapping.Metadata.Name
+	}
+	outputMapping, httpResponse, err := cmfClient.EnvironmentsApi.CreateEnvironmentSecretMapping(ctx, envName).EnvironmentSecretMapping(secretMapping).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.EnvironmentSecretMapping{}, fmt.Errorf(`failed to create secret mapping "%s" in the environment "%s": %s`, mappingName, envName, parsedErr)
+	}
+	return outputMapping, nil
+}
+
+func (cmfClient *CmfRestClient) DescribeSecretMapping(ctx context.Context, envName, name string) (cmfsdk.EnvironmentSecretMapping, error) {
+	outputMapping, httpResponse, err := cmfClient.EnvironmentsApi.GetEnvironmentSecretMapping(ctx, envName, name).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.EnvironmentSecretMapping{}, fmt.Errorf(`failed to get secret mapping "%s" in the environment "%s": %s`, name, envName, parsedErr)
+	}
+	return outputMapping, nil
+}
+
+func (cmfClient *CmfRestClient) ListSecretMappings(ctx context.Context, envName string) ([]cmfsdk.EnvironmentSecretMapping, error) {
+	mappings := make([]cmfsdk.EnvironmentSecretMapping, 0)
+	done := false
+	const pageSize = 100
+	var currentPageNumber int32 = 0
+
+	for !done {
+		mappingsPage, httpResponse, err := cmfClient.EnvironmentsApi.GetEnvironmentSecretMappings(ctx, envName).Page(currentPageNumber).Size(pageSize).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list secret mappings in the environment "%s": %s`, envName, parsedErr)
+		}
+		mappings = append(mappings, mappingsPage.GetItems()...)
+		currentPageNumber, done = extractPageOptions(len(mappingsPage.GetItems()), currentPageNumber)
+	}
+
+	return mappings, nil
+}
+
+func (cmfClient *CmfRestClient) UpdateSecretMapping(ctx context.Context, envName, name string, secretMapping cmfsdk.EnvironmentSecretMapping) (cmfsdk.EnvironmentSecretMapping, error) {
+	outputMapping, httpResponse, err := cmfClient.EnvironmentsApi.UpdateEnvironmentSecretMapping(ctx, envName, name).EnvironmentSecretMapping(secretMapping).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.EnvironmentSecretMapping{}, fmt.Errorf(`failed to update secret mapping "%s" in the environment "%s": %s`, name, envName, parsedErr)
+	}
+	return outputMapping, nil
+}
+
+func (cmfClient *CmfRestClient) DeleteSecretMapping(ctx context.Context, envName, name string) error {
+	httpResp, err := cmfClient.EnvironmentsApi.DeleteEnvironmentSecretMapping(ctx, envName, name).Execute()
+	return parseSdkError(httpResp, err)
+}
+
+func (cmfClient *CmfRestClient) CreateSecret(ctx context.Context, secret cmfsdk.Secret) (cmfsdk.Secret, error) {
+	secretName := secret.Metadata.Name
+	outputSecret, httpResponse, err := cmfClient.SecretsApi.CreateSecret(ctx).Secret(secret).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.Secret{}, fmt.Errorf(`failed to create secret "%s": %s`, secretName, parsedErr)
+	}
+	return outputSecret, nil
+}
+
+func (cmfClient *CmfRestClient) DescribeSecret(ctx context.Context, secretName string) (cmfsdk.Secret, error) {
+	outputSecret, httpResponse, err := cmfClient.SecretsApi.GetSecret(ctx, secretName).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.Secret{}, fmt.Errorf(`failed to get secret "%s": %s`, secretName, parsedErr)
+	}
+	return outputSecret, nil
+}
+
+func (cmfClient *CmfRestClient) ListSecrets(ctx context.Context) ([]cmfsdk.Secret, error) {
+	secrets := make([]cmfsdk.Secret, 0)
+	done := false
+	const pageSize = 100
+	var currentPageNumber int32 = 0
+
+	for !done {
+		secretsPage, httpResponse, err := cmfClient.SecretsApi.GetSecrets(ctx).Page(currentPageNumber).Size(pageSize).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list secrets: %s`, parsedErr)
+		}
+		secrets = append(secrets, secretsPage.GetItems()...)
+		currentPageNumber, done = extractPageOptions(len(secretsPage.GetItems()), currentPageNumber)
+	}
+
+	return secrets, nil
+}
+
+func (cmfClient *CmfRestClient) UpdateSecret(ctx context.Context, secretName string, secret cmfsdk.Secret) (cmfsdk.Secret, error) {
+	outputSecret, httpResponse, err := cmfClient.SecretsApi.UpdateSecret(ctx, secretName).Secret(secret).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.Secret{}, fmt.Errorf(`failed to update secret "%s": %s`, secretName, parsedErr)
+	}
+	return outputSecret, nil
+}
+
+func (cmfClient *CmfRestClient) DeleteSecret(ctx context.Context, secretName string) error {
+	httpResp, err := cmfClient.SecretsApi.DeleteSecret(ctx, secretName).Execute()
+	return parseSdkError(httpResp, err)
+}
+
+func (cmfClient *CmfRestClient) DeleteDatabase(ctx context.Context, catalogName, databaseName string) error {
+	httpResp, err := cmfClient.SQLApi.DeleteKafkaDatabase(ctx, catalogName, databaseName).Execute()
+	if parsedErr := parseSdkError(httpResp, err); parsedErr != nil {
+		return fmt.Errorf(`failed to delete database "%s" in catalog "%s": %s`, databaseName, catalogName, parsedErr)
+	}
+	return nil
+}
+
+func (cmfClient *CmfRestClient) CreateDatabase(ctx context.Context, catalogName string, kafkaDatabase cmfsdk.KafkaDatabase) (cmfsdk.KafkaDatabase, error) {
+	databaseName := kafkaDatabase.Metadata.Name
+	outputDatabase, httpResponse, err := cmfClient.SQLApi.CreateKafkaDatabase(ctx, catalogName).KafkaDatabase(kafkaDatabase).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.KafkaDatabase{}, fmt.Errorf(`failed to create database "%s" in catalog "%s": %s`, databaseName, catalogName, parsedErr)
+	}
+	return outputDatabase, nil
+}
+
+func (cmfClient *CmfRestClient) UpdateDatabase(ctx context.Context, catalogName, databaseName string, kafkaDatabase cmfsdk.KafkaDatabase) error {
+	httpResponse, err := cmfClient.SQLApi.UpdateKafkaDatabase(ctx, catalogName, databaseName).KafkaDatabase(kafkaDatabase).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return fmt.Errorf(`failed to update database "%s" in catalog "%s": %s`, databaseName, catalogName, parsedErr)
+	}
+	return nil
+}
+
+func (cmfClient *CmfRestClient) DescribeDatabase(ctx context.Context, catalogName, databaseName string) (cmfsdk.KafkaDatabase, error) {
+	outputDatabase, httpResponse, err := cmfClient.SQLApi.GetKafkaDatabase(ctx, catalogName, databaseName).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.KafkaDatabase{}, fmt.Errorf(`failed to get database "%s" in catalog "%s": %s`, databaseName, catalogName, parsedErr)
+	}
+	return outputDatabase, nil
+}
+
+func (cmfClient *CmfRestClient) ListDatabases(ctx context.Context, catalogName string) ([]cmfsdk.KafkaDatabase, error) {
+	databases := make([]cmfsdk.KafkaDatabase, 0)
+	done := false
+	const pageSize = 100
+	var currentPageNumber int32 = 0
+
+	for !done {
+		databasePage, httpResponse, err := cmfClient.SQLApi.GetKafkaDatabases(ctx, catalogName).Page(currentPageNumber).Size(pageSize).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list databases in catalog "%s": %s`, catalogName, parsedErr)
+		}
+		databases = append(databases, databasePage.GetItems()...)
+		currentPageNumber, done = extractPageOptions(len(databasePage.GetItems()), currentPageNumber)
+	}
+
+	return databases, nil
 }
 
 // Returns the next page number and whether we need to fetch more pages or not.

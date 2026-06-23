@@ -41,6 +41,8 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newDetachedSavepointCommand())
 	cmd.AddCommand(c.newEnvironmentCommand())
 	cmd.AddCommand(c.newSavepointCommand())
+	cmd.AddCommand(c.newSecretCommand())
+	cmd.AddCommand(c.newSecretMappingCommand())
 	cmd.AddCommand(c.newSystemInfoCommand())
 
 	// On-Prem and Cloud Commands
@@ -56,6 +58,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newConnectionCommand())
 	cmd.AddCommand(c.newConnectivityTypeCommand())
 	cmd.AddCommand(c.newEndpointCommand())
+	cmd.AddCommand(c.newMaterializedTableCommand())
 	cmd.AddCommand(c.newRegionCommand())
 
 	return cmd
