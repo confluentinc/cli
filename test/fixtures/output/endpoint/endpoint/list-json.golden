@@ -1,0 +1,15 @@
+[
+  {
+    "cloud": "AWS",
+    "region": "us-west-2",
+    "service": "KAFKA",
+    "is_private": true,
+    "connection_type": "PRIVATE_LINK",
+    "endpoint": "https://lkc-abc123-ap12345.us-west-2.aws.accesspoint.glb.confluent.cloud:443",
+    "endpoint_type": "REST",
+    "environment": "",
+    "resource": "",
+    "gateway": "",
+    "access_point": ""
+  }
+]

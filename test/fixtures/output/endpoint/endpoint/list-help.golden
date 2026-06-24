@@ -1,0 +1,19 @@
+List endpoints.
+
+Usage:
+  confluent endpoint endpoint list [flags]
+
+Flags:
+      --service string       REQUIRED: Filter the results by exact match for service.
+      --cloud string         Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string        Filter the results by exact match for region.
+      --is-private           Filter the results by whether the endpoint is private (true) or public (false). If not specified, returns both private and public endpoints.
+      --environment string   Environment ID.
+      --resource string      Filter the results by exact match for resource.
+      --context string       CLI context name.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
