@@ -35,7 +35,9 @@ var commandRules = []linter.CommandRule{
 		linter.ExcludeCommand("completion"),
 		linter.ExcludeCommandContains("kafka client-config create"),
 		linter.ExcludeCommandContains("local services kafka start"),
-		linter.ExcludeCommand("local current")),
+		linter.ExcludeCommand("local current"),
+		linter.ExcludeCommandContains("flink endpoint"),
+		linter.ExcludeCommandContains("kafka cluster")),
 	linter.RequireStartWithCapital("Long"),
 
 	linter.RequireListRequiredFlagsFirst(),
@@ -44,7 +46,8 @@ var commandRules = []linter.CommandRule{
 		linter.ExcludeCommand("connect custom-plugin version update"),
 		linter.ExcludeCommand("pipeline update"),
 		linter.ExcludeCommand("flink statement update"),
-		linter.ExcludeCommand("flink materialized-table update")),
+		linter.ExcludeCommand("flink materialized-table update"),
+		linter.ExcludeCommand("endpoint endpoint list")), //nolint:dupword
 
 	// Soft Requirements
 	linter.Filter(linter.RequireLengthBetween("Short", 10, 60),
@@ -177,6 +180,7 @@ var properNouns = []string{
 	"Data Encryption Key",
 	"Databricks",
 	"DEK",
+	"Endpoint",
 	"Flink",
 	"Go",
 	"Groovy",
@@ -288,6 +292,7 @@ var vocabWords = []string{
 	"jsonschema",
 	"jwks",
 	"JWT",
+	"enum",
 	"kafka",
 	"kek",
 	"keychain",
@@ -301,6 +306,7 @@ var vocabWords = []string{
 	"librdkafka",
 	"lifecycle",
 	"lkc",
+	"lsrc",
 	"lz4",
 	"mcp",
 	"mcp_server",
