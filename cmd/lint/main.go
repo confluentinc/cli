@@ -47,7 +47,7 @@ var commandRules = []linter.CommandRule{
 		linter.ExcludeCommand("pipeline update"),
 		linter.ExcludeCommand("flink statement update"),
 		linter.ExcludeCommand("flink materialized-table update"),
-		linter.ExcludeCommand("endpoint endpoint list")),
+		linter.ExcludeCommand("endpoint endpoint list")), //nolint:dupword
 
 	// Soft Requirements
 	linter.Filter(linter.RequireLengthBetween("Short", 10, 60),
