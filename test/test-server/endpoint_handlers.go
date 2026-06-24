@@ -3,6 +3,8 @@ package testserver
 import (
 	"encoding/json"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -62,6 +64,16 @@ func handleEndpointV1Endpoints(t *testing.T) http.HandlerFunc {
 				// LANGUAGE_SERVICE row that the CLI must filter out.
 				newFlinkLanguageServiceEndpoint("azure", region, "https://flinkpls.italynorth.azure.confluent.cloud", false),
 			}
+		default:
+			endpoint := readEndpointV1EndpointFile(t, "read_created_endpoint.json")
+
+			endpointList := &endpointv1.EndpointV1EndpointList{
+				Data: []endpointv1.EndpointV1Endpoint{endpoint},
+			}
+
+			err := json.NewEncoder(w).Encode(endpointList)
+			require.NoError(t, err)
+			return
 		}
 
 		list := &endpointv1.EndpointV1EndpointList{Data: endpoints}
@@ -87,4 +99,16 @@ func newFlinkEndpoint(cloud, region, url string, isPrivate bool, endpointType st
 		IsPrivate:    endpointv1.PtrBool(isPrivate),
 		EndpointType: endpointv1.PtrString(endpointType),
 	}
+}
+
+func readEndpointV1EndpointFile(t *testing.T, filename string) endpointv1.EndpointV1Endpoint {
+	jsonPath := filepath.Join("test", "fixtures", "input", "endpoint", "endpoint", filename)
+	jsonData, err := os.ReadFile(jsonPath)
+	require.NoError(t, err)
+
+	endpoint := endpointv1.EndpointV1Endpoint{}
+	err = json.Unmarshal(jsonData, &endpoint)
+	require.NoError(t, err)
+
+	return endpoint
 }
