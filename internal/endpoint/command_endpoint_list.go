@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -17,6 +18,28 @@ func (c *endpointCommand) newListCommand() *cobra.Command {
 		Short: "List endpoints.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "List Schema Registry endpoints:",
+				Code: "confluent endpoint endpoint list --service schema_registry",
+			},
+			examples.Example{
+				Text: "List Flink endpoints:",
+				Code: "confluent endpoint endpoint list --service flink --cloud aws --region us-west-2",
+			},
+			examples.Example{
+				Text: "List Kafka endpoints:",
+				Code: "confluent endpoint endpoint list --service kafka",
+			},
+			examples.Example{
+				Text: "List Kafka endpoints for a specific cluster:",
+				Code: "confluent endpoint endpoint list --service kafka --resource lkc-abc123",
+			},
+			examples.Example{
+				Text: "List only public Schema Registry endpoints:",
+				Code: "confluent endpoint endpoint list --service schema_registry --is-private=false",
+			},
+		),
 	}
 
 	// Required flags

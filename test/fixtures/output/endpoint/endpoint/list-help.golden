@@ -3,6 +3,27 @@ List endpoints.
 Usage:
   confluent endpoint endpoint list [flags]
 
+Examples:
+List Schema Registry endpoints:
+
+  $ confluent endpoint endpoint list --service schema_registry
+
+List Flink endpoints:
+
+  $ confluent endpoint endpoint list --service flink --cloud aws --region us-west-2
+
+List Kafka endpoints:
+
+  $ confluent endpoint endpoint list --service kafka
+
+List Kafka endpoints for a specific cluster:
+
+  $ confluent endpoint endpoint list --service kafka --resource lkc-abc123
+
+List only public Schema Registry endpoints:
+
+  $ confluent endpoint endpoint list --service schema_registry --is-private=false
+
 Flags:
       --service string       REQUIRED: Filter the results by exact match for service.
       --cloud string         Specify the cloud provider as "aws", "azure", or "gcp".
