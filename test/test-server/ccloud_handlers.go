@@ -420,6 +420,7 @@ func handleLaunchDarkly(t *testing.T) http.HandlerFunc {
 			"cli.client_quotas.enable":                  true,
 			"cli.stream_designer.source_code.enable":    true,
 			"flink.rbac.namespace.cli.enable":           true,
+			"cluster.link.rbac.namespace.cli.enable":    true,
 			"auth.rbac.identity_admin.enable":           true,
 			"flink.language_service.enable_diagnostics": true,
 			"cloud_growth.marketplace_linking_advertisement_experiment.enable": true,
