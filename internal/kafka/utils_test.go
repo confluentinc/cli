@@ -17,8 +17,9 @@ func newMockSRClient(t *testing.T) schemaregistry.Client {
 	return client
 }
 
-func seedAssociation(t *testing.T, client schemaregistry.Client, topic, kafkaClusterId, mode, subject string) {
+func seedAssociation(t *testing.T, client schemaregistry.Client, kafkaClusterId, mode, subject string) {
 	t.Helper()
+	const topic = "topic1"
 	// The mock requires the subject to have a registered schema before it
 	// will accept an association referencing it.
 	_, err := client.Register(subject, schemaregistry.SchemaInfo{
@@ -56,19 +57,19 @@ func TestResolveSubject(t *testing.T) {
 
 	t.Run("matching association returns its subject", func(t *testing.T) {
 		client := newMockSRClient(t)
-		seedAssociation(t, client, "topic1", "lkc-123", "value", "custom-value-subject")
+		seedAssociation(t, client, "lkc-123", "value", "custom-value-subject")
 		require.Equal(t, "custom-value-subject", resolveSubject(client, "lkc-123", "topic1", "value"))
 	})
 
 	t.Run("association for other mode falls back", func(t *testing.T) {
 		client := newMockSRClient(t)
-		seedAssociation(t, client, "topic1", "lkc-123", "key", "custom-key-subject")
+		seedAssociation(t, client, "lkc-123", "key", "custom-key-subject")
 		require.Equal(t, "topic1-value", resolveSubject(client, "lkc-123", "topic1", "value"))
 	})
 
 	t.Run("association under different cluster id falls back", func(t *testing.T) {
 		client := newMockSRClient(t)
-		seedAssociation(t, client, "topic1", "lkc-other", "value", "should-not-be-used")
+		seedAssociation(t, client, "lkc-other", "value", "should-not-be-used")
 		require.Equal(t, "topic1-value", resolveSubject(client, "lkc-123", "topic1", "value"))
 	})
 }

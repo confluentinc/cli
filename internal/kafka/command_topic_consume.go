@@ -288,6 +288,20 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 
 	log.CliLogger.Tracef("consumeCloud: kafkaClusterId=%q topic=%q", cluster.ID, topic)
 
+	// The Protobuf deserializer fetches its schema by subject, so on an associated topic it needs the
+	// associated (context-qualified) value subject. To preserve default behaviour, valueSubject stays empty otherwise
+	// and the deserializer falls back to the topic-derived subject
+	var valueSubject string
+	if serdes.IsProtobufSchema(valueFormat) && cluster.ID != "" && srEndpoint != "" {
+		srAuth := serdes.SchemaRegistryAuth{ApiKey: srApiKey, ApiSecret: srApiSecret, Token: token}
+		if serdeClient, clientErr := newSchemaRegistryClient(srEndpoint, srClusterId, srAuth); clientErr == nil {
+			if assoc, lookupErr := serdeClient.GetAssociationsByResourceName(topic, cluster.ID, "topic", []string{"value"}, "", 0, -1); lookupErr == nil && len(assoc) > 0 {
+				valueSubject = assoc[0].Subject
+				log.CliLogger.Tracef("consumeCloud: resolved associated value subject %q", valueSubject)
+			}
+		}
+	}
+
 	groupHandler := &GroupHandler{
 		SrClient:          srClient,
 		SrApiKey:          srApiKey,
@@ -300,6 +314,7 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 		ValueFormat:       valueFormat,
 		Out:               cmd.OutOrStdout(),
 		Subject:           subject,
+		ValueSubject:      valueSubject,
 		Topic:             topic,
 		Properties: ConsumerProperties{
 			Delimiter:   delimiter,

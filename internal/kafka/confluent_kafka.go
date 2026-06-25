@@ -67,6 +67,7 @@ type GroupHandler struct {
 	ValueFormat              string
 	Out                      io.Writer
 	Subject                  string
+	ValueSubject             string // Protobuf value subject resolved from a topic association; empty => fall back to Subject
 	Topic                    string
 	Properties               ConsumerProperties
 }
@@ -274,7 +275,11 @@ func ConsumeMessage(message *ckgo.Message, h *GroupHandler) error {
 		return err
 	}
 
-	if err := valueDeserializer.LoadSchema(h.Subject, h.Properties.SchemaPath, serde.ValueSerde, message); err != nil {
+	valueSubject := h.ValueSubject
+	if valueSubject == "" {
+		valueSubject = h.Subject
+	}
+	if err := valueDeserializer.LoadSchema(valueSubject, h.Properties.SchemaPath, serde.ValueSerde, message); err != nil {
 		return err
 	}
 
