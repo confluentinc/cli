@@ -49,7 +49,7 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 	roles = append(roles, usmRoles...)
 
 	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
-	if featureflags.Manager.BoolVariation("cluster.link.rbac.namespace.cli.enable", c.Context, ldClient, true, false) {
+	if featureflags.Manager.BoolVariation("kafka.config.cluster.link.rbac.namespace.cli.enable", c.Context, ldClient, true, false) {
 		clusterLinkRoles, err := c.namespaceRoles(optional.NewString(clusterLinkNamespace.Value()))
 		if err != nil {
 			return err
