@@ -116,6 +116,18 @@ func TestGetDeserializationProvider(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestPrimitiveSerdesInit(t *testing.T) {
+	for _, format := range []string{stringSchemaName, integerSchemaName, doubleSchemaName} {
+		serializationProvider, err := GetSerializationProvider(format)
+		require.NoError(t, err)
+		require.NoError(t, serializationProvider.InitSerializer("", "", "", "value", -1, SchemaRegistryAuth{}))
+
+		deserializationProvider, err := GetDeserializationProvider(format)
+		require.NoError(t, err)
+		require.NoError(t, deserializationProvider.InitDeserializer("", "", "", "value", SchemaRegistryAuth{}, nil))
+	}
+}
+
 func TestStringSerdes(t *testing.T) {
 	req := require.New(t)
 

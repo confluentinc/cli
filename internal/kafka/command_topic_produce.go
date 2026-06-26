@@ -524,12 +524,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode, kafkaClu
 	}
 
 	// Resolve subject via SR associations, fall back to TopicNameStrategy on miss.
-	subject := topicNameStrategy(topic, mode)
-	if kafkaClusterId != "" && srEndpoint != "" {
-		if client, err := newSchemaRegistryClient(srEndpoint, srClusterId, srAuth); err == nil {
-			subject = resolveSubject(client, kafkaClusterId, topic, mode)
-		}
-	}
+	subject := resolveProduceSubject(srEndpoint, srClusterId, kafkaClusterId, topic, mode, srAuth)
 
 	var format string
 	referencePathMap := map[string]string{}
