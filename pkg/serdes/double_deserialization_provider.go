@@ -12,7 +12,7 @@ import (
 
 type DoubleDeserializationProvider struct{}
 
-func (DoubleDeserializationProvider) InitDeserializer(_, _, _ string, _ SchemaRegistryAuth, _ schemaregistry.Client) error {
+func (DoubleDeserializationProvider) InitDeserializer(_, _, _, _ string, _ SchemaRegistryAuth, _ schemaregistry.Client) error {
 	return nil
 }
 
