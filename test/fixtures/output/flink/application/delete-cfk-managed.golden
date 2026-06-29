@@ -1,0 +1,4 @@
+Error: Flink application "cfk-managed-app" is managed by Confluent for Kubernetes (CFK) and cannot be modified through the CLI
+
+Suggestions:
+    This resource was created by CFK. Edit or delete it through the owning Kubernetes custom resource "flink-system/cfk-managed-app-cr", for example with `kubectl edit` or `kubectl delete`.

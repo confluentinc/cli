@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
 func (c *command) newSecretUpdateCommand() *cobra.Command {
@@ -35,6 +36,14 @@ func (c *command) secretUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	secretName := sdkSecret.Metadata.Name
+
+	// Block the update if the resource is CFK-owned; if unreadable, let the update report it.
+	if existingSecret, describeErr := client.DescribeSecret(c.createContext(), secretName); describeErr == nil {
+		if err := errIfCfkManaged(resource.FlinkSecret, secretName, existingSecret.Metadata.GetAnnotations()); err != nil {
+			return err
+		}
+	}
+
 	sdkOutputSecret, err := client.UpdateSecret(c.createContext(), secretName, sdkSecret)
 	if err != nil {
 		return err
