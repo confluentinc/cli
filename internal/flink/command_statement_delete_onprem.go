@@ -44,6 +44,19 @@ func (c *command) statementDeleteOnPrem(cmd *cobra.Command, args []string) error
 		return err == nil
 	}
 
+	// Block deletion of CFK-owned resources before prompting for confirmation. The
+	// whole batch fails if any resource is CFK-owned. Resources that cannot be
+	// fetched are skipped here and reported by ValidateAndConfirm below.
+	for _, name := range args {
+		statement, describeErr := client.GetStatement(c.createContext(), environment, name)
+		if describeErr != nil {
+			continue
+		}
+		if err := errIfCfkManaged(resource.FlinkStatement, name, statement.Metadata.GetAnnotations()); err != nil {
+			return err
+		}
+	}
+
 	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.FlinkStatement); err != nil {
 		suggestions := "List available Flink SQL statements with `confluent flink statement list`."
 		suggestions += "\nCheck that CMF is running and accessible."

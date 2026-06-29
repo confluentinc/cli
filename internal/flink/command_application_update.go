@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
 func (c *command) newApplicationUpdateCommand() *cobra.Command {
@@ -38,6 +39,16 @@ func (c *command) applicationUpdate(cmd *cobra.Command, args []string) error {
 	sdkApplication, err := readApplicationResourceFile(args[0])
 	if err != nil {
 		return err
+	}
+
+	// Block mutations on CFK-owned resources. Best-effort: if the current resource
+	// cannot be fetched, fall through and let the update surface the real error.
+	if applicationName, ok := sdkApplication.GetMetadata()["name"].(string); ok && applicationName != "" {
+		if existingApplication, describeErr := client.DescribeApplication(c.createContext(), environment, applicationName); describeErr == nil {
+			if err := errIfCfkManaged(resource.FlinkApplication, applicationName, flinkApplicationAnnotations(existingApplication)); err != nil {
+				return err
+			}
+		}
 	}
 
 	sdkOutputApplication, err := client.UpdateApplication(c.createContext(), environment, sdkApplication)

@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
 func (c *command) newCatalogDatabaseUpdateCommand() *cobra.Command {
@@ -44,6 +45,14 @@ func (c *command) catalogDatabaseUpdate(cmd *cobra.Command, args []string) error
 	}
 
 	databaseName := sdkDatabase.Metadata.Name
+
+	// Block mutations on CFK-owned resources. Best-effort: if the current resource
+	// cannot be fetched, fall through and let the update surface the real error.
+	if existingDatabase, describeErr := client.DescribeDatabase(c.createContext(), catalogName, databaseName); describeErr == nil {
+		if err := errIfCfkManaged(resource.FlinkDatabase, databaseName, existingDatabase.Metadata.GetAnnotations()); err != nil {
+			return err
+		}
+	}
 
 	if err := client.UpdateDatabase(c.createContext(), catalogName, databaseName, sdkDatabase); err != nil {
 		return err
