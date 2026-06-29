@@ -652,6 +652,26 @@ func (s *CLITestSuite) TestFlinkStatementUpdateOnPrem() {
 	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
+// Mutations on resources created by CFK are blocked; the user is pointed at the
+// owning Kubernetes custom resource. Reads stay unrestricted (covered elsewhere).
+func (s *CLITestSuite) TestFlinkOnPremCfkManagedResourcesAreBlocked() {
+	tests := []CLITest{
+		// Statement (typed metadata): state changes and delete are blocked.
+		{args: "flink statement stop cfk-managed-stmt --environment default", fixture: "flink/statement/stop-cfk-managed.golden", exitCode: 1},
+		{args: "flink statement resume cfk-managed-stmt --environment default", fixture: "flink/statement/resume-cfk-managed.golden", exitCode: 1},
+		{args: "flink statement rescale cfk-managed-stmt --parallelism 2 --environment default", fixture: "flink/statement/rescale-cfk-managed.golden", exitCode: 1},
+		{args: "flink statement delete cfk-managed-stmt --environment default --force", fixture: "flink/statement/delete-cfk-managed.golden", exitCode: 1},
+		// The whole batch is refused (nothing deleted) when any name is CFK-owned,
+		// regardless of its position in the argument list.
+		{args: "flink statement delete test-stmt1 cfk-managed-stmt --environment default --force", fixture: "flink/statement/delete-batch-cfk-managed.golden", exitCode: 1},
+		// Application (untyped metadata): update and delete are blocked.
+		{args: "flink application delete cfk-managed-app --environment default --force", fixture: "flink/application/delete-cfk-managed.golden", exitCode: 1},
+		{args: "flink application update --environment default test/fixtures/input/flink/application/update-cfk-managed.json", fixture: "flink/application/update-cfk-managed.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
 func (s *CLITestSuite) TestFlinkStatementExceptionListOnPrem() {
 	tests := []CLITest{
 		// success scenarios

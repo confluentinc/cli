@@ -18,6 +18,24 @@ import (
 
 const invalidSecretMappingName = "invalid-secret-mapping"
 
+// Sentinel resource names the on-prem mock stamps with CFK ownership annotations,
+// so the CLI's blocking of mutations on CFK-created resources can be exercised
+// end-to-end.
+const (
+	cfkManagedStatement   = "cfk-managed-stmt"
+	cfkManagedApplication = "cfk-managed-app"
+)
+
+// cfkOwnershipAnnotations returns the ownership annotations CFK stamps on every CMF
+// resource it creates (RFC 68), naming the owning custom resource crName.
+func cfkOwnershipAnnotations(crName string) map[string]string {
+	return map[string]string{
+		"cmf.platform.confluent.io/managed-by":           "confluent-operator",
+		"cmf.platform.confluent.io/managed-by-namespace": "flink-system",
+		"cmf.platform.confluent.io/managed-by-name":      crName,
+	}
+}
+
 func createSecretMapping(name string) cmfsdk.EnvironmentSecretMapping {
 	timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).String()
 	mappingName := name
@@ -803,6 +821,14 @@ func handleCmfApplication(t *testing.T) http.HandlerFunc {
 				return
 			}
 
+			if application == cfkManagedApplication && environment == "default" {
+				outputApplication := createApplication(application)
+				outputApplication.Metadata["annotations"] = cfkOwnershipAnnotations(cfkManagedApplication + "-cr")
+				err := json.NewEncoder(w).Encode(outputApplication)
+				require.NoError(t, err)
+				return
+			}
+
 			if strings.Contains(application, "failure") {
 				http.Error(w, "", http.StatusUnprocessableEntity)
 				return
@@ -1409,6 +1435,12 @@ func handleCmfStatement(t *testing.T) http.HandlerFunc {
 				require.NoError(t, err)
 			} else if stmtName == "test-stmt-savepoint" {
 				stmt := createFlinkStatementSavepoint(stmtName, false, 1)
+				err := json.NewEncoder(w).Encode(stmt)
+				require.NoError(t, err)
+			} else if stmtName == cfkManagedStatement {
+				stmt := createFlinkStatement(stmtName, false, 1)
+				annotations := cfkOwnershipAnnotations(cfkManagedStatement + "-cr")
+				stmt.Metadata.Annotations = &annotations
 				err := json.NewEncoder(w).Encode(stmt)
 				require.NoError(t, err)
 			} else {

@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
 func (c *command) newSecretMappingUpdateCommand() *cobra.Command {
@@ -44,6 +45,14 @@ func (c *command) secretMappingUpdate(cmd *cobra.Command, args []string) error {
 	var mappingName string
 	if sdkMapping.Metadata != nil && sdkMapping.Metadata.Name != nil {
 		mappingName = *sdkMapping.Metadata.Name
+	}
+
+	// Block mutations on CFK-owned resources. Best-effort: if the current resource
+	// cannot be fetched, fall through and let the update surface the real error.
+	if existingMapping, describeErr := client.DescribeSecretMapping(c.createContext(), environment, mappingName); describeErr == nil {
+		if err := errIfCfkManaged(resource.FlinkSecretMapping, mappingName, existingMapping.Metadata.GetAnnotations()); err != nil {
+			return err
+		}
 	}
 
 	sdkOutputMapping, err := client.UpdateSecretMapping(c.createContext(), environment, mappingName, sdkMapping)

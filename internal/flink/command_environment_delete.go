@@ -35,6 +35,19 @@ func (c *command) environmentDelete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
+	// Block deletion of CFK-owned resources before prompting for confirmation. The
+	// whole batch fails if any resource is CFK-owned. Resources that cannot be
+	// fetched are skipped here and reported by ValidateAndConfirm below.
+	for _, name := range args {
+		environment, describeErr := client.DescribeEnvironment(c.createContext(), name)
+		if describeErr != nil {
+			continue
+		}
+		if err := errIfCfkManaged(resource.FlinkEnvironment, name, environment.Metadata.GetAnnotations()); err != nil {
+			return err
+		}
+	}
+
 	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.FlinkEnvironment); err != nil {
 		// We are validating only the existence of the resources (there is no prefix validation). Thus we can
 		// add some extra context for the error.
