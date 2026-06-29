@@ -50,7 +50,7 @@ func (c *command) statementResumeOnPrem(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	// Construct the statement to be stopped
+	// Construct the statement to be resumed
 	statement = cmfsdk.Statement{
 		ApiVersion: statement.GetApiVersion(),
 		Kind:       statement.GetKind(),

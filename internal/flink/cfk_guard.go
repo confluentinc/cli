@@ -47,7 +47,8 @@ func cfkOwnerReference(annotations map[string]string) string {
 	}
 }
 
-// flinkApplicationAnnotations reads metadata.annotations from a FlinkApplication, whose metadata is untyped.
+// flinkApplicationAnnotations reads string-valued metadata.annotations from a FlinkApplication
+// (whose metadata is untyped), returning nil when none are present.
 func flinkApplicationAnnotations(application cmfsdk.FlinkApplication) map[string]string {
 	rawAnnotations, ok := application.GetMetadata()["annotations"].(map[string]interface{})
 	if !ok {
@@ -59,6 +60,9 @@ func flinkApplicationAnnotations(application cmfsdk.FlinkApplication) map[string
 		if stringValue, ok := value.(string); ok {
 			annotations[key] = stringValue
 		}
+	}
+	if len(annotations) == 0 {
+		return nil
 	}
 	return annotations
 }

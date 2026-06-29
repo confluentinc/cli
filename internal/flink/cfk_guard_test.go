@@ -114,6 +114,13 @@ func TestFlinkApplicationAnnotations(t *testing.T) {
 			},
 			expected: map[string]string{cfkManagedByAnnotation: cfkManagedByValue},
 		},
+		{
+			name: "annotations object with only non-string values returns nil",
+			metadata: map[string]interface{}{
+				"annotations": map[string]interface{}{"replicas": int64(3)},
+			},
+			expected: nil,
+		},
 	}
 
 	for _, tt := range tests {
