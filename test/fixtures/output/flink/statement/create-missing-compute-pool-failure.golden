@@ -11,7 +11,7 @@ Flags:
       --database string                     The name of the default database.
       --flink-configuration string          The file path to hold the Flink configuration for the statement.
       --wait                                Block until the statement reaches a terminal state.
-      --wait-timeout duration               Maximum time to wait when --wait is set. (default 6h0m0s)
+      --wait-timeout duration               Maximum time to wait when --wait is set. (default 1m0s)
       --url string                          Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.
       --client-key-path string              Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.
       --client-cert-path string             Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_CERT_PATH" may be set in place of this flag.
