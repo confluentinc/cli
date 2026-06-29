@@ -46,8 +46,7 @@ func (c *command) catalogDatabaseUpdate(cmd *cobra.Command, args []string) error
 
 	databaseName := sdkDatabase.Metadata.Name
 
-	// Block mutations on CFK-owned resources. Best-effort: if the current resource
-	// cannot be fetched, fall through and let the update surface the real error.
+	// Block the update if the resource is CFK-owned; if unreadable, let the update report it.
 	if existingDatabase, describeErr := client.DescribeDatabase(c.createContext(), catalogName, databaseName); describeErr == nil {
 		if err := errIfCfkManaged(resource.FlinkDatabase, databaseName, existingDatabase.Metadata.GetAnnotations()); err != nil {
 			return err

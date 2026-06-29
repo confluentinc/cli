@@ -652,8 +652,7 @@ func (s *CLITestSuite) TestFlinkStatementUpdateOnPrem() {
 	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
-// Mutations on resources created by CFK are blocked; the user is pointed at the
-// owning Kubernetes custom resource. Reads stay unrestricted (covered elsewhere).
+// Mutations on CFK-created resources are blocked; reads stay unrestricted.
 func (s *CLITestSuite) TestFlinkOnPremCfkManagedResourcesAreBlocked() {
 	tests := []CLITest{
 		// Statement (typed metadata): state changes and delete are blocked.

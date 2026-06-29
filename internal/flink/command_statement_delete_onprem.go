@@ -44,9 +44,7 @@ func (c *command) statementDeleteOnPrem(cmd *cobra.Command, args []string) error
 		return err == nil
 	}
 
-	// Block deletion of CFK-owned resources before prompting for confirmation. The
-	// whole batch fails if any resource is CFK-owned. Resources that cannot be
-	// fetched are skipped here and reported by ValidateAndConfirm below.
+	// Refuse the whole batch if any resource is CFK-owned; unreadable names fall to the check below.
 	for _, name := range args {
 		statement, describeErr := client.GetStatement(c.createContext(), environment, name)
 		if describeErr != nil {

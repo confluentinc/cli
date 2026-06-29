@@ -8,11 +8,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
-// CFK (Confluent for Kubernetes) stamps every CMF resource it creates with these
-// ownership annotations (RFC 68). Their presence is the read-side signal that a
-// resource must be managed through its Kubernetes custom resource rather than the
-// CLI. The CLI blocks mutations on these resources until out-of-band edit
-// detection ships; reads remain unrestricted.
+// CFK stamps these ownership annotations on every CMF resource it creates (RFC 68).
 const (
 	cfkManagedByAnnotation          = "cmf.platform.confluent.io/managed-by"
 	cfkManagedByValue               = "confluent-operator"
@@ -20,10 +16,7 @@ const (
 	cfkManagedByNameAnnotation      = "cmf.platform.confluent.io/managed-by-name"
 )
 
-// errIfCfkManaged returns a user-facing error when the given annotations mark the
-// resource as owned by CFK, and nil otherwise. resourceType is a display label
-// (e.g. resource.FlinkStatement) and name is the resource name; both appear in the
-// message so the user can act without guessing.
+// errIfCfkManaged returns an error naming the owning custom resource if the annotations mark it CFK-owned, else nil.
 func errIfCfkManaged(resourceType, name string, annotations map[string]string) error {
 	if annotations[cfkManagedByAnnotation] != cfkManagedByValue {
 		return nil
@@ -40,9 +33,7 @@ func errIfCfkManaged(resourceType, name string, annotations map[string]string) e
 	return errors.NewErrorWithSuggestions(errorMsg, suggestions)
 }
 
-// cfkOwnerReference renders the owning custom resource as `"namespace/name"` from
-// the CFK ownership annotations, falling back to `"name"` or "" as the annotations
-// allow.
+// cfkOwnerReference renders the owning custom resource as `"namespace/name"` (or `"name"`, or "").
 func cfkOwnerReference(annotations map[string]string) string {
 	namespace := annotations[cfkManagedByNamespaceAnnotation]
 	name := annotations[cfkManagedByNameAnnotation]
@@ -56,10 +47,7 @@ func cfkOwnerReference(annotations map[string]string) string {
 	}
 }
 
-// flinkApplicationAnnotations extracts metadata.annotations from a FlinkApplication.
-// Unlike the other CMF resources, FlinkApplication exposes its metadata as an
-// untyped map, so annotations are read with type assertions. Returns nil when no
-// string-valued annotations are present.
+// flinkApplicationAnnotations reads metadata.annotations from a FlinkApplication, whose metadata is untyped.
 func flinkApplicationAnnotations(application cmfsdk.FlinkApplication) map[string]string {
 	rawAnnotations, ok := application.GetMetadata()["annotations"].(map[string]interface{})
 	if !ok {

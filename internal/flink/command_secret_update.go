@@ -37,8 +37,7 @@ func (c *command) secretUpdate(cmd *cobra.Command, args []string) error {
 
 	secretName := sdkSecret.Metadata.Name
 
-	// Block mutations on CFK-owned resources. Best-effort: if the current resource
-	// cannot be fetched, fall through and let the update surface the real error.
+	// Block the update if the resource is CFK-owned; if unreadable, let the update report it.
 	if existingSecret, describeErr := client.DescribeSecret(c.createContext(), secretName); describeErr == nil {
 		if err := errIfCfkManaged(resource.FlinkSecret, secretName, existingSecret.Metadata.GetAnnotations()); err != nil {
 			return err

@@ -42,8 +42,7 @@ func (c *command) catalogUpdate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("catalog name is required: ensure the resource file contains a non-empty \"metadata.name\" field")
 	}
 
-	// Block mutations on CFK-owned resources. Best-effort: if the current resource
-	// cannot be fetched, fall through and let the update surface the real error.
+	// Block the update if the resource is CFK-owned; if unreadable, let the update report it.
 	if existingCatalog, describeErr := client.DescribeCatalog(c.createContext(), catalogName); describeErr == nil {
 		if err := errIfCfkManaged(resource.FlinkCatalog, catalogName, existingCatalog.Metadata.GetAnnotations()); err != nil {
 			return err

@@ -40,8 +40,7 @@ func (c *command) environmentUpdate(cmd *cobra.Command, args []string) error {
 
 	environmentName := args[0]
 
-	// Block mutations on CFK-owned resources. Best-effort: if the current resource
-	// cannot be fetched, fall through and let the update surface the real error.
+	// Block the update if the resource is CFK-owned; if unreadable, let the update report it.
 	if existingEnvironment, describeErr := client.DescribeEnvironment(c.createContext(), environmentName); describeErr == nil {
 		if err := errIfCfkManaged(resource.FlinkEnvironment, environmentName, existingEnvironment.Metadata.GetAnnotations()); err != nil {
 			return err

@@ -47,8 +47,7 @@ func (c *command) secretMappingUpdate(cmd *cobra.Command, args []string) error {
 		mappingName = *sdkMapping.Metadata.Name
 	}
 
-	// Block mutations on CFK-owned resources. Best-effort: if the current resource
-	// cannot be fetched, fall through and let the update surface the real error.
+	// Block the update if the resource is CFK-owned; if unreadable, let the update report it.
 	if existingMapping, describeErr := client.DescribeSecretMapping(c.createContext(), environment, mappingName); describeErr == nil {
 		if err := errIfCfkManaged(resource.FlinkSecretMapping, mappingName, existingMapping.Metadata.GetAnnotations()); err != nil {
 			return err

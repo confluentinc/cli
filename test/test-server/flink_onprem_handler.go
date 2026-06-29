@@ -18,16 +18,13 @@ import (
 
 const invalidSecretMappingName = "invalid-secret-mapping"
 
-// Sentinel resource names the on-prem mock stamps with CFK ownership annotations,
-// so the CLI's blocking of mutations on CFK-created resources can be exercised
-// end-to-end.
+// Sentinel names the mock stamps as CFK-owned, to exercise CLI mutation blocking.
 const (
 	cfkManagedStatement   = "cfk-managed-stmt"
 	cfkManagedApplication = "cfk-managed-app"
 )
 
-// cfkOwnershipAnnotations returns the ownership annotations CFK stamps on every CMF
-// resource it creates (RFC 68), naming the owning custom resource crName.
+// cfkOwnershipAnnotations returns the CFK ownership annotations naming custom resource crName.
 func cfkOwnershipAnnotations(crName string) map[string]string {
 	return map[string]string{
 		"cmf.platform.confluent.io/managed-by":           "confluent-operator",

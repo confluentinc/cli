@@ -41,8 +41,7 @@ func (c *command) applicationUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Block mutations on CFK-owned resources. Best-effort: if the current resource
-	// cannot be fetched, fall through and let the update surface the real error.
+	// Block the update if the resource is CFK-owned; if unreadable, let the update report it.
 	if applicationName, ok := sdkApplication.GetMetadata()["name"].(string); ok && applicationName != "" {
 		if existingApplication, describeErr := client.DescribeApplication(c.createContext(), environment, applicationName); describeErr == nil {
 			if err := errIfCfkManaged(resource.FlinkApplication, applicationName, flinkApplicationAnnotations(existingApplication)); err != nil {
