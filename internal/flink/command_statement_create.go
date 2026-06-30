@@ -28,10 +28,14 @@ var (
 	flinkStatementFailedPhases  = []string{"FAILED"}
 )
 
-// statementsAPICreateTimeout aligns with terraform-provider-confluent's
-// statementsAPICreateTimeout in internal/provider/constants.go. CLI users can
-// shorten it with --wait-timeout; TF has no equivalent override.
-const flinkStatementCreateWaitTimeout = 6 * time.Hour
+// flinkStatementCreateWaitTimeout is the default for --wait-timeout. It is kept
+// at 1 minute to match the pre-framework `--wait` behavior (a hardcoded
+// retry.Retry(time.Second, time.Minute, ...) poll), so customers who scripted
+// around that 1-minute timer are not affected by the --wait refactor. Bump to
+// 6h in the next major version (aligning with terraform-provider-confluent's
+// statementsAPICreateTimeout in internal/provider/constants.go); CLI users can
+// already lengthen it with --wait-timeout in the meantime. (APIE-1040)
+const flinkStatementCreateWaitTimeout = time.Minute
 
 func (c *command) newStatementCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
