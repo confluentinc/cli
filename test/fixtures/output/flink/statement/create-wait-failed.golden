@@ -1,0 +1,4 @@
+Error: statement "failed-statement" entered failed phase "FAILED": SQL statement execution has failed
+
+Suggestions:
+    Inspect the statement with `confluent flink statement describe failed-statement`.
