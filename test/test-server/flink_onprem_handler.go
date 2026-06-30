@@ -24,12 +24,11 @@ const (
 	cfkManagedApplication = "cfk-managed-app"
 )
 
-// cfkOwnershipAnnotations returns the CFK ownership annotations naming custom resource crName.
+// cfkOwnershipAnnotations returns the CFK ownership annotation, whose value is the
+// owning custom resource identity "<namespace>/<name>" (RFC 68 / CF-3914).
 func cfkOwnershipAnnotations(crName string) map[string]string {
 	return map[string]string{
-		"cmf.platform.confluent.io/managed-by":           "confluent-operator",
-		"cmf.platform.confluent.io/managed-by-namespace": "flink-system",
-		"cmf.platform.confluent.io/managed-by-name":      crName,
+		"cmf.platform.confluent.io/managed-by": "flink-system/" + crName,
 	}
 }
 

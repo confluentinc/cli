@@ -30,33 +30,20 @@ func TestErrIfCfkManaged(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name:        "wrong ownership value is not CFK-managed",
-			annotations: map[string]string{cfkManagedByAnnotation: "someone-else"},
+			name:        "empty ownership annotation value is not CFK-managed",
+			annotations: map[string]string{cfkManagedByAnnotation: ""},
 			expectError: false,
 		},
 		{
-			name: "CFK-managed with namespace and name names the owning custom resource",
-			annotations: map[string]string{
-				cfkManagedByAnnotation:          cfkManagedByValue,
-				cfkManagedByNamespaceAnnotation: "flink-system",
-				cfkManagedByNameAnnotation:      "my-statement-cr",
-			},
+			name:                "CFK-managed: the annotation value names the owning custom resource",
+			annotations:         map[string]string{cfkManagedByAnnotation: "flink-system/my-statement-cr"},
 			expectError:         true,
 			errorContains:       `Flink SQL statement "my-statement" is managed by Confluent for Kubernetes (CFK)`,
 			suggestionsContains: `"flink-system/my-statement-cr"`,
 		},
 		{
-			name: "CFK-managed with only name falls back to the bare custom resource name",
-			annotations: map[string]string{
-				cfkManagedByAnnotation:     cfkManagedByValue,
-				cfkManagedByNameAnnotation: "my-statement-cr",
-			},
-			expectError:         true,
-			suggestionsContains: `"my-statement-cr"`,
-		},
-		{
-			name:                "CFK-managed without owner annotations still blocks and points to kubectl",
-			annotations:         map[string]string{cfkManagedByAnnotation: cfkManagedByValue},
+			name:                "CFK-managed: suggestion points to kubectl",
+			annotations:         map[string]string{cfkManagedByAnnotation: "flink-system/my-statement-cr"},
 			expectError:         true,
 			suggestionsContains: "`kubectl edit`",
 		},
@@ -99,20 +86,20 @@ func TestFlinkApplicationAnnotations(t *testing.T) {
 			metadata: map[string]interface{}{
 				"name": "my-app",
 				"annotations": map[string]interface{}{
-					cfkManagedByAnnotation: cfkManagedByValue,
+					cfkManagedByAnnotation: "flink-system/my-app-cr",
 				},
 			},
-			expected: map[string]string{cfkManagedByAnnotation: cfkManagedByValue},
+			expected: map[string]string{cfkManagedByAnnotation: "flink-system/my-app-cr"},
 		},
 		{
 			name: "non-string annotation values are skipped",
 			metadata: map[string]interface{}{
 				"annotations": map[string]interface{}{
-					cfkManagedByAnnotation: cfkManagedByValue,
+					cfkManagedByAnnotation: "flink-system/my-app-cr",
 					"replicas":             int64(3),
 				},
 			},
-			expected: map[string]string{cfkManagedByAnnotation: cfkManagedByValue},
+			expected: map[string]string{cfkManagedByAnnotation: "flink-system/my-app-cr"},
 		},
 		{
 			name: "annotations object with only non-string values returns nil",
