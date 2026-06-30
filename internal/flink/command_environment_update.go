@@ -9,6 +9,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
 func (c *command) newEnvironmentUpdateCommand() *cobra.Command {
@@ -38,6 +39,13 @@ func (c *command) environmentUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	environmentName := args[0]
+
+	// Block the update if the resource is CFK-owned; if unreadable, let the update report it.
+	if existingEnvironment, describeErr := client.DescribeEnvironment(c.createContext(), environmentName); describeErr == nil {
+		if err := errIfCfkManaged(resource.FlinkEnvironment, environmentName, existingEnvironment.Metadata.GetAnnotations()); err != nil {
+			return err
+		}
+	}
 
 	// Read file contents or parse defaults if applicable
 	var defaultsApplicationParsed, defaultsComputePoolParsed map[string]interface{}
