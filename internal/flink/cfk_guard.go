@@ -9,7 +9,7 @@ import (
 )
 
 // cfkManagedByAnnotation marks a CMF resource as CFK-managed. CFK stamps it on every
-// resource it creates (RFC 68); its value is the owning CR identity "<namespace>/<name>".
+// resource it creates; its value is the owning CR identity "<namespace>/<name>".
 // Read-side clients block mutations based on the annotation's presence.
 const cfkManagedByAnnotation = "cmf.platform.confluent.io/managed-by"
 
