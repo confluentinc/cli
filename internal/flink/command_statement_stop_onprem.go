@@ -46,10 +46,6 @@ func (c *command) statementStopOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := errIfCfkManaged(resource.FlinkStatement, name, statement.Metadata.GetAnnotations()); err != nil {
-		return err
-	}
-
 	// Construct the statement to be stopped
 	statement = cmfsdk.Statement{
 		ApiVersion: statement.GetApiVersion(),
