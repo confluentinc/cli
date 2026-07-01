@@ -41,6 +41,17 @@ func (c *command) applicationDelete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
+	// Refuse the whole batch if any resource is CFK-owned; unreadable names fall to the check below.
+	for _, name := range args {
+		application, describeErr := client.DescribeApplication(c.createContext(), environment, name)
+		if describeErr != nil {
+			continue
+		}
+		if err := errIfCfkManaged(resource.FlinkApplication, name, flinkApplicationAnnotations(application)); err != nil {
+			return err
+		}
+	}
+
 	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.FlinkApplication); err != nil {
 		// We are validating only the existence of the resources (there is no prefix validation).
 		// Thus we can add some extra context for the error.
