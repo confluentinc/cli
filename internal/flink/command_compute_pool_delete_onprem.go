@@ -44,17 +44,6 @@ func (c *command) computePoolDeleteOnPrem(cmd *cobra.Command, args []string) err
 		return err == nil
 	}
 
-	// Refuse the whole batch if any resource is CFK-owned; unreadable names fall to the check below.
-	for _, name := range args {
-		computePool, describeErr := client.DescribeComputePool(c.createContext(), environment, name)
-		if describeErr != nil {
-			continue
-		}
-		if err := errIfCfkManaged(resource.FlinkComputePool, name, computePool.Metadata.GetAnnotations()); err != nil {
-			return err
-		}
-	}
-
 	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.FlinkComputePool); err != nil {
 		// We are validating only the existence of the resources (there is no prefix validation).
 		// Thus, we can add some extra context for the error.
