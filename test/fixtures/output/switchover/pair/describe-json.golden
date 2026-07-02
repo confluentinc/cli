@@ -1,0 +1,8 @@
+{
+  "id": "sw-123456",
+  "name": "prod-kafka-dr",
+  "environment": "env-123456",
+  "members": ["west=lkc-111111", "east=lkc-222222"],
+  "active_member": "west",
+  "phase": "READY"
+}
