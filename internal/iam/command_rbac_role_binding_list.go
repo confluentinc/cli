@@ -55,6 +55,10 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 				Code: "confluent iam rbac role-binding list --principal User:u-123456 --role CloudClusterAdmin --environment env-123456 --cloud-cluster lkc-123456",
 			},
 			examples.Example{
+				Text: `List the role bindings for user "u-123456" with role "UsmKafkaClusterAdmin" for the USM Kafka cluster "usmkc-123456":`,
+				Code: "confluent iam rbac role-binding list --principal User:u-123456 --role UsmKafkaClusterAdmin --environment env-123456 --usm-kafka-cluster usmkc-123456",
+			},
+			examples.Example{
 				Text: `List the role bindings for user "u-123456" for all scopes:`,
 				Code: "confluent iam rbac role-binding list --principal User:u-123456 --inclusive",
 			},
@@ -100,6 +104,8 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID, which specifies the Schema Registry cluster scope.")
 		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster name, which specifies the ksqlDB cluster scope.")
 		cmd.Flags().String("flink-region", "", `Flink region for the role binding, formatted as "cloud.region".`)
+		cmd.Flags().String("usm-kafka-cluster", "", "USM Kafka cluster ID, which specifies the USM Kafka cluster scope.")
+		cmd.Flags().String("usm-connect-cluster", "", "USM Connect cluster ID, which specifies the USM Connect cluster scope.")
 	} else {
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID, which specifies the Kafka cluster scope.")
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID, which specifies the Schema Registry cluster scope.")
@@ -424,6 +430,12 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, listRoleBind
 				envName = content
 			case "cloud-cluster":
 				cloudClusterName = content
+			case "usm-kafka-cluster":
+				clusterType = "USM Kafka"
+				logicalCluster = content
+			case "usm-connect-cluster":
+				clusterType = "USM Connect"
+				logicalCluster = content
 			case "ksql":
 				clusterType = "ksqlDB"
 				logicalCluster = content

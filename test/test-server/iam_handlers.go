@@ -57,6 +57,10 @@ var (
 			"crn://confluent.cloud/organization=abc-123/environment=env-596/schema-registry=lsrc-3333ccc/subject=clicks"),
 		buildRoleBinding("rb-777gg", "u-777gg", "FlinkDeveloper",
 			"crn://confluent.cloud/organization=abc-123/environment=env-596/flink-region=aws.us-east-1/compute-pool=lfcp-1111aaa"),
+		buildRoleBinding("rb-88hhh", "u-11aaa", "UsmKafkaClusterAdmin",
+			"crn://confluent.cloud/organization=abc-123/environment=env-596/usm-kafka-cluster=usmkc-123456"),
+		buildRoleBinding("rb-99iii", "u-11aaa", "UsmConnectClusterAdmin",
+			"crn://confluent.cloud/organization=abc-123/environment=env-596/usm-connect-cluster=usmcc-123456"),
 	}
 )
 

@@ -44,6 +44,14 @@ Grant the "FlinkDeveloper" scoped to Flink compute pool "lfcp-123456" in AWS us-
 
   $ confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-123456 --flink-region aws.us-east-1 --resource ComputePool:lfcp-123456
 
+Grant the role "UsmKafkaClusterAdmin" to the principal "User:u-123456" for the USM Kafka cluster "usmkc-123456" in the environment "env-123456":
+
+  $ confluent iam rbac role-binding create --principal User:u-123456 --role UsmKafkaClusterAdmin --environment env-123456 --usm-kafka-cluster usmkc-123456
+
+Grant the role "UsmConnectClusterAdmin" to the principal "User:u-123456" for the USM Connect cluster "usmcc-123456" in the environment "env-123456":
+
+  $ confluent iam rbac role-binding create --principal User:u-123456 --role UsmConnectClusterAdmin --environment env-123456 --usm-connect-cluster usmcc-123456
+
 Flags:
       --role string                      REQUIRED: Role name of the new role binding.
       --principal string                 REQUIRED: Principal type and identifier using "Prefix:ID" format.
@@ -54,6 +62,8 @@ Flags:
       --schema-registry-cluster string   Schema Registry cluster ID for the role binding.
       --ksql-cluster string              ksqlDB cluster name for the role binding.
       --flink-region string              Flink region for the role binding, formatted as "cloud.region".
+      --usm-kafka-cluster string         USM Kafka cluster ID for the role binding.
+      --usm-connect-cluster string       USM Connect cluster ID for the role binding.
       --resource string                  Resource type and identifier using "Prefix:ID" format.
       --prefix                           Whether the provided resource name is treated as a prefix pattern.
   -o, --output string                    Specify the output format as "human", "json", or "yaml". (default "human")
