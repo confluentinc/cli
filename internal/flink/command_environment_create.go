@@ -1,6 +1,7 @@
 package flink
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -26,7 +27,7 @@ func (c *command) newEnvironmentCreateCommand() *cobra.Command {
 
 	cmd.Flags().String("kubernetes-namespace", "", "Kubernetes namespace to deploy Flink applications to.")
 	cmd.Flags().String("defaults", "", "JSON string defining the environment's Flink application defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).")
-	cmd.Flags().String("statement-defaults", "", "JSON string defining the environment's Flink statement defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).")
+	cmd.Flags().String("statement-defaults", "", `JSON string defining the environment's Flink statement defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension). Expected shape: {"detached":{"flinkConfiguration":{...}},"interactive":{"flinkConfiguration":{...}}}.`)
 	cmd.Flags().String("compute-pool-defaults", "", "JSON string defining the environment's Flink compute pool defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).")
 
 	addCmfFlagSet(cmd)
@@ -124,24 +125,41 @@ func parseDefaultsAsGenericType[T any](input, label string) (T, error) {
 		if err != nil {
 			return out, fmt.Errorf("failed to read %s defaults JSON file: %w", label, err)
 		}
-		err = json.Unmarshal(data, &out)
+		err = decodeStrictJson(data, &out)
 
 	case ".yaml", ".yml":
 		data, err = os.ReadFile(input)
 		if err != nil {
 			return out, fmt.Errorf("failed to read %s defaults YAML file: %w", label, err)
 		}
-		err = yaml.Unmarshal(data, &out)
+		err = decodeStrictYaml(data, &out)
 
 	default:
 		// inline JSON string
-		err = json.Unmarshal([]byte(input), &out)
+		err = decodeStrictJson([]byte(input), &out)
 	}
 
 	if err != nil {
 		return out, fmt.Errorf("failed to parse %s defaults: %w", label, err)
 	}
 	return out, nil
+}
+
+// decodeStrictJson decodes JSON into out, rejecting keys that do not map to a
+// known field. This surfaces mis-shaped input (for example the wrong nesting for
+// --statement-defaults) instead of silently dropping it. Decoding into a map is
+// unaffected, since a map has no unknown fields.
+func decodeStrictJson(data []byte, out any) error {
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	return decoder.Decode(out)
+}
+
+// decodeStrictYaml is the YAML counterpart of decodeStrictJson.
+func decodeStrictYaml(data []byte, out any) error {
+	decoder := yaml.NewDecoder(bytes.NewReader(data))
+	decoder.KnownFields(true)
+	return decoder.Decode(out)
 }
 
 func jsonMarshalHelper(v interface{}, label string) (string, error) {
