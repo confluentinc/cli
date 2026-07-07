@@ -136,7 +136,9 @@ func (s *CLITestSuite) TestFlinkSavepointCreate() {
 		{args: "flink savepoint create savepoint1 --environment default --application application1 --output json", fixture: "flink/savepoint/create-savepoint-json.golden"},
 		{args: "flink savepoint create savepoint1 --environment default --application application1 --output yaml", fixture: "flink/savepoint/create-savepoint-yaml.golden"},
 		{args: "flink savepoint create --environment default --application application2", fixture: "flink/savepoint/create-savepoint-no-name.golden"},
+		{args: "flink savepoint create --environment default --application application2 --output json", fixture: "flink/savepoint/create-savepoint-no-name-json.golden"},
 		{args: "flink savepoint create savepointS --environment default --statement test-stmt", fixture: "flink/savepoint/create-savepoint-statement.golden"},
+		{args: "flink savepoint create savepointS --environment default --statement test-stmt --output json", fixture: "flink/savepoint/create-savepoint-statement-json.golden"},
 		{args: "flink savepoint create savepointS --environment default --statement test-stmt --path abc/def --format NATIVE --backoff-limit 10", fixture: "flink/savepoint/create-savepoint-statement-values.golden"},
 		// fail
 		{args: "flink savepoint create savepoint1 --environment default --application application1 --statement statement1", fixture: "flink/savepoint/create-savepoint-fail-both.golden", exitCode: 1},
