@@ -265,6 +265,7 @@ func (s *CLITestSuite) TestFlinkEnvironmentCreate() {
 		{args: "flink environment create default --kubernetes-namespace default-staging", fixture: "flink/environment/create-existing.golden", exitCode: 1},
 		{args: "flink environment create default", fixture: "flink/environment/create-no-namespace.golden", exitCode: 1},
 		{args: "flink environment create default-2 --kubernetes-namespace default-staging --statement-defaults '{\"config-overrides\":{\"key\":\"value\"}}'", fixture: "flink/environment/create-statement-defaults-invalid.golden", exitCode: 1},
+		{args: "flink environment create default-2 --kubernetes-namespace default-staging --statement-defaults '{\"interactive\":{}}{\"detached\":{}}'", fixture: "flink/environment/create-statement-defaults-trailing.golden", exitCode: 1},
 		// success with application, statement and compute pool defaults
 		{args: "flink environment create default-2" +
 			" --defaults test/fixtures/input/flink/environment/application-defaults.json" +

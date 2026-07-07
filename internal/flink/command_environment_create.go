@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -145,21 +146,37 @@ func parseDefaultsAsGenericType[T any](input, label string) (T, error) {
 	return out, nil
 }
 
-// decodeStrictJson decodes JSON into out, rejecting keys that do not map to a
-// known field. This surfaces mis-shaped input (for example the wrong nesting for
-// --statement-defaults) instead of silently dropping it. Decoding into a map is
-// unaffected, since a map has no unknown fields.
+// decodeStrictJson decodes a single JSON value into out, rejecting unknown
+// fields and trailing data so mis-shaped input surfaces instead of being
+// silently dropped. Decoding into a map is unaffected (a map has no unknown
+// fields).
 func decodeStrictJson(data []byte, out any) error {
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.DisallowUnknownFields()
-	return decoder.Decode(out)
+	if err := decoder.Decode(out); err != nil {
+		return err
+	}
+	if decoder.More() {
+		return fmt.Errorf("unexpected trailing data after JSON value")
+	}
+	return nil
 }
 
-// decodeStrictYaml is the YAML counterpart of decodeStrictJson.
+// decodeStrictYaml is the YAML counterpart of decodeStrictJson; it also rejects
+// unknown fields and any additional documents.
 func decodeStrictYaml(data []byte, out any) error {
 	decoder := yaml.NewDecoder(bytes.NewReader(data))
 	decoder.KnownFields(true)
-	return decoder.Decode(out)
+	if err := decoder.Decode(out); err != nil {
+		return err
+	}
+	if err := decoder.Decode(&struct{}{}); err != io.EOF {
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("unexpected additional YAML document")
+	}
+	return nil
 }
 
 func jsonMarshalHelper(v interface{}, label string) (string, error) {
