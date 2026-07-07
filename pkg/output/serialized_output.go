@@ -37,6 +37,6 @@ func marshalJSON(v any) ([]byte, error) {
 	if err := encoder.Encode(v); err != nil {
 		return nil, err
 	}
-	// Encode appends a trailing newline; trim it to match json.Marshal.
-	return bytes.TrimRight(buffer.Bytes(), "\n"), nil
+	// Encode appends a single trailing newline; drop just it to match json.Marshal.
+	return bytes.TrimSuffix(buffer.Bytes(), []byte("\n")), nil
 }
