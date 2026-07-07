@@ -32,8 +32,8 @@ func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 				Code: "confluent iam rbac role-binding delete --principal User:u-123456 --role ResourceOwner --environment env-123456 --kafka-cluster lkc-123456 --resource Topic:my-topic",
 			},
 			examples.Example{
-				Text: `Delete the role "UsmKafkaClusterAdmin" for the principal "User:u-123456" on the USM Kafka cluster "usmkc-123456" in the environment "env-123456":`,
-				Code: "confluent iam rbac role-binding delete --principal User:u-123456 --role UsmKafkaClusterAdmin --environment env-123456 --usm-kafka-cluster usmkc-123456",
+				Text: `Delete the role "UsmClusterAdmin" for the principal "User:u-123456" on the USM Kafka cluster "usmkc-123456" in the environment "env-123456":`,
+				Code: "confluent iam rbac role-binding delete --principal User:u-123456 --role UsmClusterAdmin --environment env-123456 --usm-kafka-cluster usmkc-123456",
 			},
 		)
 	} else {

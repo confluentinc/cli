@@ -51,12 +51,10 @@ func (s *CLITestSuite) TestIamRbacRoleBinding_Cloud() {
 		{args: "iam rbac role-binding delete --principal User:u-11aaa --current-environment --cloud-cluster lkc-1111aaa", fixture: "iam/rbac/role-binding/delete-missing-role-cloud.golden", exitCode: 1},
 		{args: "iam rbac role-binding create --principal User:u-11aaa@confluent.io --role CloudClusterAdmin --current-environment --cloud-cluster lkc-1111aaa", fixture: "iam/rbac/role-binding/create-with-email-cloud.golden"},
 		{args: "iam rbac role-binding create --principal User:u-77ggg --role FlinkDeveloper --environment env-596 --flink-region aws.us-east-1 --resource ComputePool:lfcp-1111aaa", fixture: "iam/rbac/role-binding/create-flink-developer-cloud.golden"},
-		{args: "iam rbac role-binding create --principal User:u-11aaa --role UsmKafkaClusterAdmin --environment env-596 --usm-kafka-cluster usmkc-123456", fixture: "iam/rbac/role-binding/create-usm-kafka-cluster-admin-cloud.golden"},
-		{args: "iam rbac role-binding create --principal User:u-11aaa --role UsmConnectClusterAdmin --environment env-596 --usm-connect-cluster usmcc-123456", fixture: "iam/rbac/role-binding/create-usm-connect-cluster-admin-cloud.golden"},
-		{args: "iam rbac role-binding create --principal User:u-11aaa --role UsmKafkaClusterAdmin --environment env-596", fixture: "iam/rbac/role-binding/missing-usm-kafka-cluster-cloud.golden", exitCode: 1},
-		{args: "iam rbac role-binding create --principal User:u-11aaa --role UsmConnectClusterAdmin --environment env-596", fixture: "iam/rbac/role-binding/missing-usm-connect-cluster-cloud.golden", exitCode: 1},
-		{args: "iam rbac role-binding create --principal User:u-11aaa --role UsmKafkaClusterAdmin --usm-kafka-cluster usmkc-123456", fixture: "iam/rbac/role-binding/missing-environment-cloud.golden", exitCode: 1},
-		{args: "iam rbac role-binding delete --principal User:u-11aaa --role UsmKafkaClusterAdmin --environment env-596 --usm-kafka-cluster usmkc-123456 --force", fixture: "iam/rbac/role-binding/delete-usm-kafka-cluster-admin-cloud.golden"},
+		{args: "iam rbac role-binding create --principal User:u-11aaa --role UsmClusterAdmin --environment env-596 --usm-kafka-cluster usmkc-123456", fixture: "iam/rbac/role-binding/create-usm-kafka-cluster-admin-cloud.golden"},
+		{args: "iam rbac role-binding create --principal User:u-11aaa --role UsmClusterAdmin --environment env-596 --usm-connect-cluster usmcc-123456", fixture: "iam/rbac/role-binding/create-usm-connect-cluster-admin-cloud.golden"},
+		{args: "iam rbac role-binding create --principal User:u-11aaa --role UsmClusterAdmin --usm-kafka-cluster usmkc-123456", fixture: "iam/rbac/role-binding/missing-environment-cloud.golden", exitCode: 1},
+		{args: "iam rbac role-binding delete --principal User:u-11aaa --role UsmClusterAdmin --environment env-596 --usm-kafka-cluster usmkc-123456 --force", fixture: "iam/rbac/role-binding/delete-usm-kafka-cluster-admin-cloud.golden"},
 	}
 
 	for _, test := range tests {
@@ -86,7 +84,7 @@ func (s *CLITestSuite) TestIamRbacRoleBindingList_Cloud() {
 		{args: "iam rbac role-binding list --environment env-596 --cloud-cluster lkc-1111aaa --role InvalidOrgAdmin", fixture: "iam/rbac/role-binding/list-invalid-role-error-type-1-cloud.golden", exitCode: 1},
 		{args: "iam rbac role-binding list --environment env-596 --cloud-cluster lkc-1111aaa --role InvalidMetricsViewer", fixture: "iam/rbac/role-binding/list-invalid-role-error-type-2-cloud.golden", exitCode: 1},
 		{args: "iam rbac role-binding list --role FlinkDeveloper --environment env-596 --flink-region aws.us-east-1 --resource ComputePool:lfcp-1111aaa", fixture: "iam/rbac/role-binding/list-flink-developer-cloud.golden"},
-		{args: "iam rbac role-binding list --environment env-596 --usm-kafka-cluster usmkc-123456 --role UsmKafkaClusterAdmin", fixture: "iam/rbac/role-binding/list-usm-kafka-cluster-admin-cloud.golden"},
+		{args: "iam rbac role-binding list --environment env-596 --usm-kafka-cluster usmkc-123456 --role UsmClusterAdmin", fixture: "iam/rbac/role-binding/list-usm-kafka-cluster-admin-cloud.golden"},
 		{args: "iam rbac role-binding list --environment env-596 --usm-kafka-cluster usmkc-123456 --principal User:u-11aaa", fixture: "iam/rbac/role-binding/list-user-usm-kafka-cloud.golden"},
 		{args: "iam rbac role-binding list --environment env-596 --usm-connect-cluster usmcc-123456 --principal User:u-11aaa", fixture: "iam/rbac/role-binding/list-user-usm-connect-cloud.golden"},
 	}

@@ -55,8 +55,8 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 				Code: "confluent iam rbac role-binding list --principal User:u-123456 --role CloudClusterAdmin --environment env-123456 --cloud-cluster lkc-123456",
 			},
 			examples.Example{
-				Text: `List the role bindings for user "u-123456" with role "UsmKafkaClusterAdmin" for the USM Kafka cluster "usmkc-123456":`,
-				Code: "confluent iam rbac role-binding list --principal User:u-123456 --role UsmKafkaClusterAdmin --environment env-123456 --usm-kafka-cluster usmkc-123456",
+				Text: `List the role bindings for user "u-123456" with role "UsmClusterAdmin" for the USM Kafka cluster "usmkc-123456":`,
+				Code: "confluent iam rbac role-binding list --principal User:u-123456 --role UsmClusterAdmin --environment env-123456 --usm-kafka-cluster usmkc-123456",
 			},
 			examples.Example{
 				Text: `List the role bindings for user "u-123456" for all scopes:`,

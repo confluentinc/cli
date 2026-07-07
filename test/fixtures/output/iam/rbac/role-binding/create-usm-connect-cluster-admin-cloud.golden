@@ -1,5 +1,5 @@
-+-----------+------------------------+
-| Principal | User:u-11aaa           |
-| Email     | u-11aaa@confluent.io   |
-| Role      | UsmConnectClusterAdmin |
-+-----------+------------------------+
++-----------+----------------------+
+| Principal | User:u-11aaa         |
+| Email     | u-11aaa@confluent.io |
+| Role      | UsmClusterAdmin      |
++-----------+----------------------+

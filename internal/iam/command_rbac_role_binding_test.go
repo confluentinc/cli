@@ -68,7 +68,7 @@ func newCloudRoleBindingFlagSet() *cobra.Command {
 
 func TestParseV2BaseCrnPattern_UsmKafkaCluster(t *testing.T) {
 	cmd := newCloudRoleBindingFlagSet()
-	require.NoError(t, cmd.Flags().Set("role", "UsmKafkaClusterAdmin"))
+	require.NoError(t, cmd.Flags().Set("role", "UsmClusterAdmin"))
 	require.NoError(t, cmd.Flags().Set("environment", "env-596"))
 	require.NoError(t, cmd.Flags().Set("usm-kafka-cluster", "usmkc-123456"))
 
@@ -79,7 +79,7 @@ func TestParseV2BaseCrnPattern_UsmKafkaCluster(t *testing.T) {
 
 func TestParseV2BaseCrnPattern_UsmConnectCluster(t *testing.T) {
 	cmd := newCloudRoleBindingFlagSet()
-	require.NoError(t, cmd.Flags().Set("role", "UsmConnectClusterAdmin"))
+	require.NoError(t, cmd.Flags().Set("role", "UsmClusterAdmin"))
 	require.NoError(t, cmd.Flags().Set("environment", "env-596"))
 	require.NoError(t, cmd.Flags().Set("usm-connect-cluster", "usmcc-123456"))
 
@@ -88,31 +88,9 @@ func TestParseV2BaseCrnPattern_UsmConnectCluster(t *testing.T) {
 	require.Equal(t, "crn://confluent.cloud/organization=abc-123/environment=env-596/usm-connect-cluster=usmcc-123456", crnPattern)
 }
 
-func TestParseV2BaseCrnPattern_UsmKafkaRolesRequireClusterFlag(t *testing.T) {
-	for _, role := range []string{"UsmKafkaClusterAdmin", "UsmKafkaOperator", "UsmKafkaMetricsViewer"} {
-		cmd := newCloudRoleBindingFlagSet()
-		require.NoError(t, cmd.Flags().Set("role", role))
-		require.NoError(t, cmd.Flags().Set("environment", "env-596"))
-
-		_, err := newRoleBindingTestCommand().parseV2BaseCrnPattern(cmd)
-		require.EqualError(t, err, specifyUsmKafkaClusterErrorMsg, "role %q must require --usm-kafka-cluster", role)
-	}
-}
-
-func TestParseV2BaseCrnPattern_UsmConnectRolesRequireClusterFlag(t *testing.T) {
-	for _, role := range []string{"UsmConnectClusterAdmin", "UsmConnectOperator", "UsmConnectMetricsViewer"} {
-		cmd := newCloudRoleBindingFlagSet()
-		require.NoError(t, cmd.Flags().Set("role", role))
-		require.NoError(t, cmd.Flags().Set("environment", "env-596"))
-
-		_, err := newRoleBindingTestCommand().parseV2BaseCrnPattern(cmd)
-		require.EqualError(t, err, specifyUsmConnectClusterErrorMsg, "role %q must require --usm-connect-cluster", role)
-	}
-}
-
 func TestParseV2BaseCrnPattern_UsmRoleRequiresEnvironment(t *testing.T) {
 	cmd := newCloudRoleBindingFlagSet()
-	require.NoError(t, cmd.Flags().Set("role", "UsmKafkaClusterAdmin"))
+	require.NoError(t, cmd.Flags().Set("role", "UsmClusterAdmin"))
 	require.NoError(t, cmd.Flags().Set("usm-kafka-cluster", "usmkc-123456"))
 
 	_, err := newRoleBindingTestCommand().parseV2BaseCrnPattern(cmd)

@@ -64,12 +64,12 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-123456 --flink-region aws.us-east-1 --resource ComputePool:lfcp-123456",
 			},
 			examples.Example{
-				Text: `Grant the role "UsmKafkaClusterAdmin" to the principal "User:u-123456" for the USM Kafka cluster "usmkc-123456" in the environment "env-123456":`,
-				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role UsmKafkaClusterAdmin --environment env-123456 --usm-kafka-cluster usmkc-123456",
+				Text: `Grant the role "UsmClusterAdmin" to the principal "User:u-123456" for the USM Kafka cluster "usmkc-123456" in the environment "env-123456":`,
+				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role UsmClusterAdmin --environment env-123456 --usm-kafka-cluster usmkc-123456",
 			},
 			examples.Example{
-				Text: `Grant the role "UsmConnectClusterAdmin" to the principal "User:u-123456" for the USM Connect cluster "usmcc-123456" in the environment "env-123456":`,
-				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role UsmConnectClusterAdmin --environment env-123456 --usm-connect-cluster usmcc-123456",
+				Text: `Grant the role "UsmClusterAdmin" to the principal "User:u-123456" for the USM Connect cluster "usmcc-123456" in the environment "env-123456":`,
+				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role UsmClusterAdmin --environment env-123456 --usm-connect-cluster usmcc-123456",
 			},
 		)
 	} else {
