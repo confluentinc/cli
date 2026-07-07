@@ -264,6 +264,8 @@ func (s *CLITestSuite) TestFlinkEnvironmentCreate() {
 		{args: "flink environment create default-failure --kubernetes-namespace default-staging", fixture: "flink/environment/create-failure.golden", exitCode: 1},
 		{args: "flink environment create default --kubernetes-namespace default-staging", fixture: "flink/environment/create-existing.golden", exitCode: 1},
 		{args: "flink environment create default", fixture: "flink/environment/create-no-namespace.golden", exitCode: 1},
+		{args: "flink environment create default-2 --kubernetes-namespace default-staging --statement-defaults '{\"config-overrides\":{\"key\":\"value\"}}'", fixture: "flink/environment/create-statement-defaults-invalid.golden", exitCode: 1},
+		{args: "flink environment create default-2 --kubernetes-namespace default-staging --statement-defaults '{\"interactive\":{}}{\"detached\":{}}'", fixture: "flink/environment/create-statement-defaults-trailing.golden", exitCode: 1},
 		// success with application, statement and compute pool defaults
 		{args: "flink environment create default-2" +
 			" --defaults test/fixtures/input/flink/environment/application-defaults.json" +
@@ -288,6 +290,7 @@ func (s *CLITestSuite) TestFlinkEnvironmentUpdate() {
 		{args: "flink environment update non-existent --defaults '{\"property\": \"value\"}'", fixture: "flink/environment/update-non-existent.golden", exitCode: 1},
 		{args: "flink environment update get-failure --defaults '{\"property\": \"value\"}'", fixture: "flink/environment/update-get-failure.golden", exitCode: 1},
 		{args: "flink environment update missing-flag-failure", fixture: "flink/environment/missing-flag-failure.golden", exitCode: 1},
+		{args: "flink environment update default --statement-defaults '{\"config-overrides\":{\"key\":\"value\"}}'", fixture: "flink/environment/update-statement-defaults-invalid.golden", exitCode: 1},
 		// success with application, statement and compute pool defaults
 		{args: "flink environment update default" +
 			" --defaults test/fixtures/input/flink/environment/application-defaults.json" +
