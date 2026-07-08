@@ -152,6 +152,8 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic create", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/create.golden", exitCode: 1},
 		{args: "kafka topic create topic1", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-success.golden"},
 		{args: "kafka topic create topic1 --dry-run", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-success.golden"},
+		{args: "kafka topic create topic1 --config test/fixtures/input/kafka/topic/topic-config.properties", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-success.golden"},
+		{args: "kafka topic create topic1 --config test/fixtures/input/kafka/topic/topic-config-json.properties", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-success.golden"},
 		{args: "kafka topic create topic-exist", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-dup-topic.golden", exitCode: 1},
 		{args: "kafka topic create topic-exceed-limit --partitions 9001", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-limit-topic.golden", exitCode: 1},
 

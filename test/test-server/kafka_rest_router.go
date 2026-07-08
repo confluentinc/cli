@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -216,8 +217,9 @@ func handleKafkaRestTopics(t *testing.T) http.HandlerFunc {
 				return
 			}
 			// check configs
+			allowedConfigNames := []string{"retention.ms", "compression.type", "confluent.key.association", "confluent.value.association"}
 			for _, config := range requestData.Configs {
-				if config.Name != "retention.ms" && config.Name != "compression.type" {
+				if !slices.Contains(allowedConfigNames, config.Name) {
 					require.NoError(t, writeErrorResponse(w, http.StatusBadRequest, 40002, fmt.Sprintf("Unknown topic config name: %s", config.Name)))
 					return
 				} else if config.Name == "retention.ms" {
