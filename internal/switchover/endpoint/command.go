@@ -15,7 +15,6 @@ type out struct {
 	DisplayName    string `human:"Display Name" serialized:"display_name"`
 	SwitchoverPair string `human:"Switchover Pair" serialized:"switchover_pair"`
 	Environment    string `human:"Environment" serialized:"environment"`
-	DrEndpoint     string `human:"DR Endpoint" serialized:"dr_endpoint"`
 	Phase          string `human:"Phase" serialized:"phase"`
 }
 

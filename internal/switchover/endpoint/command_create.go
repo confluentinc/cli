@@ -23,13 +23,13 @@ func (c *command) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create switchover endpoint "prod-kafka-dr-endpoint" for switchover pair "sw-123456".`,
-				Code: `confluent switchover endpoint create prod-kafka-dr-endpoint --switchover-pair sw-123456 --endpoint name=west-platt,resource-id=lkc-west,type=PRIVATE --endpoint name=east-platt,resource-id=lkc-east,type=PRIVATE`,
+				Code: `confluent switchover endpoint create prod-kafka-dr-endpoint --switchover-pair sw-123456 --endpoint name=west-platt,type=private --endpoint name=east-platt,type=private`,
 			},
 		),
 	}
 
 	cmd.Flags().String("switchover-pair", "", "The ID of the switchover pair this endpoint is bound to.")
-	cmd.Flags().StringArray("endpoint", nil, `An endpoint side, in the form "name=<name>,resource-id=<id>,type=<PRIVATE|PUBLIC>[,cloud=<cloud>][,region=<region>][,gateway=<gateway-id>][,access-point=<access-point-id>]". Must be specified exactly twice.`)
+	cmd.Flags().StringArray("endpoint", nil, `An endpoint side, in the form "name=<name>,type=<private|public>[,gateway=<gateway-id>][,access-point=<access-point-id>]". Must be specified exactly twice.`)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -51,14 +51,8 @@ func parseEndpointFlag(raw string) (switchoverv1.SwitchoverV1EndpointConfig, err
 		switch key {
 		case "name":
 			config.Name = value
-		case "resource-id":
-			filter.ResourceId = value
 		case "type":
 			filter.Type = value
-		case "cloud":
-			filter.Cloud = switchoverv1.PtrString(value)
-		case "region":
-			filter.Region = switchoverv1.PtrString(value)
 		case "gateway":
 			filter.Gateway = switchoverv1.PtrString(value)
 		case "access-point":
@@ -67,8 +61,8 @@ func parseEndpointFlag(raw string) (switchoverv1.SwitchoverV1EndpointConfig, err
 			return config, fmt.Errorf(`invalid --endpoint key %q`, key)
 		}
 	}
-	if config.Name == "" || filter.ResourceId == "" || filter.Type == "" {
-		return config, fmt.Errorf(`invalid --endpoint value %q: "name", "resource-id", and "type" are required`, raw)
+	if config.Name == "" || filter.Type == "" {
+		return config, fmt.Errorf(`invalid --endpoint value %q: "name" and "type" are required`, raw)
 	}
 	config.EndpointFilter = filter
 	return config, nil
@@ -106,10 +100,10 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	endpoint := switchoverv1.SwitchoverV1SwitchoverEndpoint{
 		Spec: &switchoverv1.SwitchoverV1SwitchoverEndpointSpec{
-			DisplayName:    switchoverv1.PtrString(displayName),
-			Endpoints:      &endpoints,
-			Environment:    &switchoverv1.EnvScopedObjectReference{Id: environmentId},
-			SwitchoverPair: &switchoverv1.EnvScopedObjectReference{Id: switchoverPairId},
+			DisplayName:      switchoverv1.PtrString(displayName),
+			Endpoints:        &endpoints,
+			Environment:      &switchoverv1.EnvScopedObjectReference{Id: environmentId},
+			SwitchoverPairId: switchoverv1.PtrString(switchoverPairId),
 		},
 	}
 
@@ -126,9 +120,8 @@ func printSwitchoverEndpoint(cmd *cobra.Command, endpoint switchoverv1.Switchove
 	table.Add(&out{
 		Id:             endpoint.GetId(),
 		DisplayName:    endpoint.Spec.GetDisplayName(),
-		SwitchoverPair: endpoint.Spec.SwitchoverPair.GetId(),
+		SwitchoverPair: endpoint.Spec.GetSwitchoverPairId(),
 		Environment:    endpoint.Spec.Environment.GetId(),
-		DrEndpoint:     endpoint.Spec.GetDrEndpoint(),
 		Phase:          endpoint.Status.GetPhase(),
 	})
 	return table.Print()
