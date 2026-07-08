@@ -12,14 +12,28 @@ top of the upstream CLI.
 
 ```
 ~/sdk_cli_tf_switchover/
-├── cli/                          confluentinc/cli — branch `switchover-cli-local-demo` (PR #3399)
-├── ccloud-sdk-go-v2-internal/    confluentinc/ccloud-sdk-go-v2-internal — branch `ORC-10130-sync-switchover-sdk` (PR #832)
-├── api/                          confluentinc/api — branch `ORC-10130-switchover-api-spec` (PR #2545)
-├── cc-switchover/                confluentinc/cc-switchover — branch `master` (reference/source-of-truth)
-└── terraform-provider-confluent/ confluentinc/terraform-provider-confluent — branch `master` (not used here)
+├── cli/
+├── ccloud-sdk-go-v2-internal/
+├── api/
+├── cc-switchover/
+└── terraform-provider-confluent/
 ```
 
-`cli`'s `go.mod` pins the switchover SDK to PR #832's commit:
+- `cli/` — confluentinc/cli, branch `switchover-cli-local-demo`,
+  [PR #3399](https://github.com/confluentinc/cli/pull/3399)
+- `ccloud-sdk-go-v2-internal/` — confluentinc/ccloud-sdk-go-v2-internal,
+  branch `ORC-10130-sync-switchover-sdk`,
+  [PR #832](https://github.com/confluentinc/ccloud-sdk-go-v2-internal/pull/832)
+- `api/` — confluentinc/api, branch `ORC-10130-switchover-api-spec`,
+  [PR #2545](https://github.com/confluentinc/api/pull/2545)
+- `cc-switchover/` — confluentinc/cc-switchover, branch `master`
+  (reference/source-of-truth)
+- `terraform-provider-confluent/` — confluentinc/terraform-provider-confluent,
+  branch `master` (not used here)
+
+`cli`'s `go.mod` pins the switchover SDK to
+[PR #832](https://github.com/confluentinc/ccloud-sdk-go-v2-internal/pull/832)'s
+commit:
 
 ```
 github.com/confluentinc/ccloud-sdk-go-v2-internal/switchover v0.0.0-20260708221705-f2f8dbb55045
