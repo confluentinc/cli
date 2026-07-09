@@ -129,6 +129,25 @@ same way for the `devel` environment. If you know your staging org ID, add
 Everything below (`switchover pair`/`switchover endpoint` commands) works
 identically once logged in, regardless of which environment you logged into.
 
+### Bypassing the stag EA gate with a Cloud API key
+
+The Switchover Early Access gate on `stag`/`devel` is only enforced on the
+bearer-token (`login`) path — a Cloud API key (Basic auth) sails through it.
+If your staging org doesn't have EA granted yet, set both of these and the
+`switchover` commands will use Basic auth instead of your login session's
+bearer token:
+
+```bash
+export CONFLUENT_CLOUD_API_KEY=<key>
+export CONFLUENT_CLOUD_API_SECRET=<secret>
+```
+
+Create a Cloud API key first (still requires being logged in once, to create
+it): `confluent-dev api-key create --resource cloud`. You still need
+`confluent-dev login` for non-switchover commands / context; this env var
+pair only affects the switchover API calls (see
+`pkg/ccloudv2/switchover.go`'s `switchoverApiContext`).
+
 ### Switchover pairs
 
 ```bash

@@ -3,6 +3,7 @@ package ccloudv2
 import (
 	"context"
 	"net/http"
+	"os"
 
 	switchoverv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/switchover/v1"
 
@@ -19,7 +20,15 @@ func newSwitchoverClient(httpClient *http.Client, url, userAgent string, unsafeT
 	return switchoverv1.NewAPIClient(cfg)
 }
 
+// switchoverApiContext normally authenticates with the logged-in session's
+// bearer token. Local-test-only escape hatch: if CONFLUENT_CLOUD_API_KEY and
+// CONFLUENT_CLOUD_API_SECRET (a Cloud API key, `api-key create --resource
+// cloud`) are set, use Basic auth instead — the stag Switchover Early Access
+// gate only applies to the bearer/login path, not Cloud API keys.
 func (c *Client) switchoverApiContext() context.Context {
+	if key, secret := os.Getenv("CONFLUENT_CLOUD_API_KEY"), os.Getenv("CONFLUENT_CLOUD_API_SECRET"); key != "" && secret != "" {
+		return context.WithValue(context.Background(), switchoverv1.ContextBasicAuth, switchoverv1.BasicAuth{UserName: key, Password: secret})
+	}
 	return context.WithValue(context.Background(), switchoverv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
