@@ -180,6 +180,8 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o json", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-json.golden"},
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o yaml", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-yaml.golden"},
 		{args: "kafka topic update topic-exist-rest --config num.partitions=6", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-partitions-count.golden"},
+		{args: "kafka topic update topic-exist-rest --config test/fixtures/input/kafka/topic/topic-config.properties", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest.golden"},
+		{args: "kafka topic update topic-exist-rest --config test/fixtures/input/kafka/topic/topic-config-json.properties", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-json-config.golden"},
 	}
 
 	if runtime.GOOS != "windows" {
