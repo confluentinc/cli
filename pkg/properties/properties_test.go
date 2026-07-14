@@ -1,6 +1,8 @@
 package properties
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -123,4 +125,16 @@ func TestCreateKeyValuePairsKeysWithDotsAndSorts(t *testing.T) {
 	m["link.mode"] = "BIDIRECTIONAL"
 	m["connection.mode"] = "OUTBOUND"
 	require.Equal(t, "\"connection.mode\"=\"OUTBOUND\"\n\"link.mode\"=\"BIDIRECTIONAL\"\n", CreateKeyValuePairs(m))
+}
+
+func TestGetMap_FileWithRawValueKeyPreservesJSON(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "topic.properties")
+	// confluent.value.association is stored verbatim, so its JSON value must be preserved.
+	json := `{"schema":"{\"type\":\"record\",\"name\":\"TestRecord\",\"doc\":\"Basic test.\\na=b.\",\"fields\":[{\"name\":\"field1\",\"type\":[\"null\",\"string\"]}]}"}`
+	require.NoError(t, os.WriteFile(path, []byte("confluent.value.association="+json+"\n"), 0o600))
+
+	m, err := GetMap([]string{path}, "confluent.value.association")
+	require.NoError(t, err)
+	require.Equal(t, json, m["confluent.value.association"])
 }

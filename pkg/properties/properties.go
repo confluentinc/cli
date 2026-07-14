@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"slices"
 	"sort"
 	"strings"
 
@@ -11,26 +12,27 @@ import (
 )
 
 // GetMap reads newline-separated configuration files or comma-separated lists of key=value pairs, and supports configuration values containing commas.
-func GetMap(config []string) (map[string]string, error) {
+// Values whose keys are listed in rawValueKeys are stored verbatim, skipping special characters un-escaping, to preserve values such as JSON strings unchanged.
+func GetMap(config []string, rawValueKeys ...string) (map[string]string, error) {
 	if len(config) == 1 && utils.FileExists(config[0]) {
-		return fileToMap(config[0])
+		return fileToMap(config[0], rawValueKeys...)
 	}
 
-	return ConfigFlagToMap(config)
+	return ConfigFlagToMap(config, rawValueKeys...)
 }
 
 // fileToMap reads key=value pairs from a properties file, ignoring comments and empty lines.
-func fileToMap(filename string) (map[string]string, error) {
+func fileToMap(filename string, rawValueKeys ...string) (map[string]string, error) {
 	buf, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	return ConfigSliceToMap(ParseLines(string(buf)))
+	return ConfigSliceToMap(ParseLines(string(buf)), rawValueKeys...)
 }
 
 // ConfigSliceToMap converts a list of key=value strings into a map.
-func ConfigSliceToMap(configs []string) (map[string]string, error) {
+func ConfigSliceToMap(configs []string, rawValueKeys ...string) (map[string]string, error) {
 	m := make(map[string]string)
 
 	for _, config := range configs {
@@ -39,7 +41,12 @@ func ConfigSliceToMap(configs []string) (map[string]string, error) {
 			return nil, fmt.Errorf(`failed to parse "key=value" pattern from configuration: %s`, config)
 		}
 
-		m[x[0]] = replaceSpecialCharacters(x[1])
+		// rawValueKeys are stored as-is, all other values get un-escaped.
+		if slices.Contains(rawValueKeys, x[0]) {
+			m[x[0]] = x[1]
+		} else {
+			m[x[0]] = replaceSpecialCharacters(x[1])
+		}
 	}
 
 	return m, nil
@@ -62,14 +69,18 @@ func ParseLines(content string) []string {
 }
 
 // ConfigFlagToMap reads key=values pairs from the --config flag and supports configuration values containing commas.
-func ConfigFlagToMap(configs []string) (map[string]string, error) {
+func ConfigFlagToMap(configs []string, rawValueKeys ...string) (map[string]string, error) {
 	m := make(map[string]string)
 
 	for i := len(configs) - 1; i >= 0; i-- {
 		if strings.Contains(configs[i], "=") {
 			x := strings.SplitN(configs[i], "=", 2)
 			if _, ok := m[x[0]]; !ok {
-				m[x[0]] = replaceSpecialCharacters(x[1])
+				if slices.Contains(rawValueKeys, x[0]) {
+					m[x[0]] = x[1]
+				} else {
+					m[x[0]] = replaceSpecialCharacters(x[1])
+				}
 			}
 		} else {
 			if i-1 >= 0 {
