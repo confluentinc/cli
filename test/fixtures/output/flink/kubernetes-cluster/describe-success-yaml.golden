@@ -1,0 +1,13 @@
+warning: GOCOVERDIR not set, no coverage data emitted
+apiVersion: cmf/v1
+kind: KubernetesCluster
+metadata:
+    name: cluster-1
+    creationTimestamp: "2025-04-01T10:00:00Z"
+    updateTimestamp: "2025-04-10T15:30:00Z"
+spec:
+    lifecycleState: ACTIVE
+status:
+    state: CONNECTED
+    lastHeartbeatTimestamp: 2025-04-10T15:30:00Z
+    kubernetesVersion: 1.28.5

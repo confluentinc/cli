@@ -1,3 +1,4 @@
+warning: GOCOVERDIR not set, no coverage data emitted
 Error: at least one of the flags in the group [defaults statement-defaults compute-pool-defaults] is required
 Usage:
   confluent flink environment update <name> [flags]
@@ -16,4 +17,3 @@ Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-

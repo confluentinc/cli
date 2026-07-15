@@ -1,9 +1,11 @@
+warning: GOCOVERDIR not set, no coverage data emitted
 Error: required flag(s) "kubernetes-namespace" not set
 Usage:
   confluent flink environment create <name> [flags]
 
 Flags:
       --kubernetes-namespace string         REQUIRED: Kubernetes namespace to deploy Flink applications to.
+      --kubernetes-cluster-name string      Name of the Kubernetes cluster to bind this environment to.
       --defaults string                     JSON string defining the environment's Flink application defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).
       --statement-defaults string           JSON string defining the environment's Flink statement defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).
       --compute-pool-defaults string        JSON string defining the environment's Flink compute pool defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).
@@ -17,4 +19,3 @@ Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-

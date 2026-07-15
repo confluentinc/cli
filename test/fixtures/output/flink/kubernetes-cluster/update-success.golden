@@ -1,0 +1,9 @@
+warning: GOCOVERDIR not set, no coverage data emitted
++--------------------+----------------------+
+| Name               | cluster-1            |
+| Created Time       | 2025-04-01T10:00:00Z |
+| Updated Time       | 2025-04-10T15:30:00Z |
+| Lifecycle State    | DECOMMISSIONED       |
+| Connection State   | CONNECTED            |
+| Kubernetes Version | 1.28.5               |
++--------------------+----------------------+
