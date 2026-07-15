@@ -72,7 +72,6 @@ require (
 	github.com/go-jose/go-jose/v3 v3.0.5
 	github.com/gobuffalo/flect v1.0.2
 	github.com/gogo/protobuf v1.3.2
-	github.com/golang/mock v1.6.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
@@ -185,6 +184,7 @@ require (
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
+	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/cel-go v0.20.1 // indirect
