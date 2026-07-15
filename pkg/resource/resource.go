@@ -30,7 +30,6 @@ const (
 	ConnectArtifact                  = "Connect Artifact"
 	CustomConnectorPlugin            = "custom connector plugin"
 	CustomConnectorPluginVersion     = "custom connector plugin version"
-	CustomCodeLogging                = "custom code logging"
 	ConsumerShare                    = "consumer share"
 	Context                          = "context"
 	Dek                              = "DEK"
@@ -45,12 +44,17 @@ const (
 	FlinkDetachedSavepoint           = "Flink detached savepoint"
 	FlinkApplication                 = "Flink application"
 	FlinkCatalog                     = "Flink catalog"
+	FlinkDatabase                    = "Flink database"
 	FlinkEnvironment                 = "Flink environment"
 	FlinkRegion                      = "Flink region"
 	FlinkEndpoint                    = "Flink endpoint"
+	FlinkMaterializedTable           = "Flink materialized table"
 	FlinkStatement                   = "Flink SQL statement"
 	FlinkConnection                  = "Flink connection"
+	FlinkSecret                      = "Flink secret"
+	FlinkSecretMapping               = "Flink secret mapping"
 	Gateway                          = "gateway"
+	Global                           = "global"
 	IdentityPool                     = "identity pool"
 	IdentityProvider                 = "identity provider"
 	IpGroup                          = "IP group"
@@ -102,7 +106,6 @@ const (
 	UserPrefix                  = "u"
 	UsmKafkaClusterPrefix       = "usmkc"
 	UsmConnectClusterPrefix     = "usmcc"
-	CustomCodeLoggingPrefix     = "ccl"
 )
 
 var prefixToResource = map[string]string{
@@ -122,7 +125,6 @@ var prefixToResource = map[string]string{
 	UserPrefix:                  User,
 	UsmKafkaClusterPrefix:       UsmKafkaCluster,
 	UsmConnectClusterPrefix:     UsmConnectCluster,
-	CustomCodeLoggingPrefix:     CustomCodeLogging,
 }
 
 var resourceToPrefix = map[string]string{
@@ -140,11 +142,10 @@ var resourceToPrefix = map[string]string{
 	User:                  UserPrefix,
 	UsmKafkaCluster:       UsmKafkaClusterPrefix,
 	UsmConnectCluster:     UsmConnectClusterPrefix,
-	CustomCodeLogging:     CustomCodeLoggingPrefix,
 }
 
 func LookupType(id string) string {
-	if id == Cloud || id == Flink || id == Tableflow {
+	if id == Cloud || id == Flink || id == Tableflow || id == Global {
 		return id
 	}
 

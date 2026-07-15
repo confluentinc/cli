@@ -1,0 +1,10 @@
++----------------------------------------+--------------------------------------------------------------------------------------------------------------------------+
+| ID                                     | ap-11111                                                                                                                 |
+| Environment                            | env-596                                                                                                                  |
+| Gateway                                | gw-11111                                                                                                                 |
+| Phase                                  | READY                                                                                                                    |
+| Azure Private Link Service Alias       | azure-pls-alias.eastus.azure.privatelinkservice                                                                          |
+| Azure Private Link Service Resource ID | /subscriptions/0000000/resourceGroups/plsRgName/providers/Microsoft.Network/privateLinkServices/privateLinkServiceName   |
+| Azure Private Endpoint Resource ID     | /subscriptions/0000000/resourceGroups/resourceGroupName/providers/Microsoft.Network/privateEndpoints/privateEndpointName |
+| DNS Domain                             | ap11111.eastus.azure.accesspoint.confluent.cloud                                                                         |
++----------------------------------------+--------------------------------------------------------------------------------------------------------------------------+

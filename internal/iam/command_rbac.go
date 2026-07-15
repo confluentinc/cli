@@ -21,6 +21,7 @@ var (
 	workloadNamespace       = optional.NewString("workload")
 	flinkModelNamespace     = optional.NewString("flinkmodel")
 	usmNamespace            = optional.NewString("usm")
+	clusterLinkNamespace    = optional.NewString("cluster-link")
 )
 
 func newRbacCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {

@@ -51,7 +51,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	if resourceType == presource.Cloud || resourceType == presource.Tableflow {
+	if resourceType == presource.Cloud || resourceType == presource.Tableflow || resourceType == presource.Global {
 		clusterId = resourceType
 	}
 
@@ -185,7 +185,7 @@ func (c *command) getEmail(resourceId string, auditLogServiceAccountId int32, re
 }
 
 func getResourceId(id string) string {
-	if id == presource.Cloud || id == presource.Tableflow {
+	if id == presource.Cloud || id == presource.Tableflow || id == presource.Global {
 		return ""
 	}
 	return id

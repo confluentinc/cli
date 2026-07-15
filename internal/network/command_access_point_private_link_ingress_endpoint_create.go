@@ -24,19 +24,29 @@ func (c *accessPointCommand) newIngressEndpointCreateCommand() *cobra.Command {
 				Text: "Create an AWS PrivateLink ingress endpoint.",
 				Code: "confluent network access-point private-link ingress-endpoint create --cloud aws --gateway gw-123456 --vpc-endpoint-id vpce-00000000000000000",
 			},
+			examples.Example{
+				Text: "Create an Azure Private Link ingress endpoint.",
+				Code: "confluent network access-point private-link ingress-endpoint create --cloud azure --gateway gw-123456 --endpoint-resource-id /subscriptions/0000000/resourceGroups/resourceGroupName/providers/Microsoft.Network/privateEndpoints/privateEndpointName",
+			},
+			examples.Example{
+				Text: "Create a GCP Private Service Connect ingress endpoint.",
+				Code: "confluent network access-point private-link ingress-endpoint create --cloud gcp --gateway gw-123456 --psc-connection-id 111111111111111111",
+			},
 		),
 	}
 
-	pcmd.AddCloudAwsFlag(cmd)
-	cmd.Flags().String("vpc-endpoint-id", "", "ID of an AWS VPC endpoint.")
+	pcmd.AddCloudFlag(cmd)
 	addGatewayFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().String("vpc-endpoint-id", "", "ID of an AWS VPC endpoint; only valid with --cloud aws.")
+	cmd.Flags().String("endpoint-resource-id", "", "Resource ID of an Azure Private Endpoint; only valid with --cloud azure.")
+	cmd.Flags().String("psc-connection-id", "", "ID of a GCP Private Service Connect connection; only valid with --cloud gcp.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
 	cobra.CheckErr(cmd.MarkFlagRequired("gateway"))
-	cobra.CheckErr(cmd.MarkFlagRequired("vpc-endpoint-id"))
+	cmd.MarkFlagsMutuallyExclusive("vpc-endpoint-id", "endpoint-resource-id", "psc-connection-id")
 
 	return cmd
 }
@@ -63,6 +73,16 @@ func (c *accessPointCommand) createIngressEndpoint(cmd *cobra.Command, args []st
 		return err
 	}
 
+	endpointResourceId, err := cmd.Flags().GetString("endpoint-resource-id")
+	if err != nil {
+		return err
+	}
+
+	pscConnectionId, err := cmd.Flags().GetString("psc-connection-id")
+	if err != nil {
+		return err
+	}
+
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
@@ -81,14 +101,37 @@ func (c *accessPointCommand) createIngressEndpoint(cmd *cobra.Command, args []st
 
 	switch cloud {
 	case pcloud.Aws:
+		if vpcEndpointId == "" {
+			return fmt.Errorf("flag \"vpc-endpoint-id\" is required for --cloud aws")
+		}
 		createIngressEndpoint.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
 			NetworkingV1AwsIngressPrivateLinkEndpoint: &networkingaccesspointv1.NetworkingV1AwsIngressPrivateLinkEndpoint{
 				Kind:          "AwsIngressPrivateLinkEndpoint",
 				VpcEndpointId: vpcEndpointId,
 			},
 		}
+	case pcloud.Azure:
+		if endpointResourceId == "" {
+			return fmt.Errorf("flag \"endpoint-resource-id\" is required for --cloud azure")
+		}
+		createIngressEndpoint.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
+			NetworkingV1AzureIngressPrivateLinkEndpoint: &networkingaccesspointv1.NetworkingV1AzureIngressPrivateLinkEndpoint{
+				Kind:                      "AzureIngressPrivateLinkEndpoint",
+				PrivateEndpointResourceId: endpointResourceId,
+			},
+		}
+	case pcloud.Gcp:
+		if pscConnectionId == "" {
+			return fmt.Errorf("flag \"psc-connection-id\" is required for --cloud gcp")
+		}
+		createIngressEndpoint.Spec.Config = &networkingaccesspointv1.NetworkingV1AccessPointSpecConfigOneOf{
+			NetworkingV1GcpIngressPrivateServiceConnectEndpoint: &networkingaccesspointv1.NetworkingV1GcpIngressPrivateServiceConnectEndpoint{
+				Kind:                              "GcpIngressPrivateServiceConnectEndpoint",
+				PrivateServiceConnectConnectionId: pscConnectionId,
+			},
+		}
 	default:
-		return fmt.Errorf("ingress endpoints are only supported for AWS")
+		return fmt.Errorf("ingress endpoints are only supported for AWS, Azure, and GCP")
 	}
 
 	ingressEndpoint, err := c.V2Client.CreateNetworkAccessPoint(createIngressEndpoint)

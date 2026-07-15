@@ -99,7 +99,7 @@ func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	var postEnvironment cmfsdk.PostEnvironment
-	postEnvironment.SetName(environmentName)
+	postEnvironment.Name = &environmentName
 	postEnvironment.FlinkApplicationDefaults = &defaultsApplicationParsed
 	postEnvironment.KubernetesNamespace = &kubernetesNamespace
 	postEnvironment.StatementDefaults = &defaultsStatementParsed

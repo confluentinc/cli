@@ -42,6 +42,9 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newEnvironmentCommand())
 	cmd.AddCommand(c.newKubernetesClusterCommand())
 	cmd.AddCommand(c.newSavepointCommand())
+	cmd.AddCommand(c.newSecretCommand())
+	cmd.AddCommand(c.newSecretMappingCommand())
+	cmd.AddCommand(c.newSystemInfoCommand())
 
 	// On-Prem and Cloud Commands
 	cmd.AddCommand(c.newComputePoolCommand(cfg))
@@ -56,6 +59,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newConnectionCommand())
 	cmd.AddCommand(c.newConnectivityTypeCommand())
 	cmd.AddCommand(c.newEndpointCommand())
+	cmd.AddCommand(c.newMaterializedTableCommand())
 	cmd.AddCommand(c.newRegionCommand())
 
 	return cmd

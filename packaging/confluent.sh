@@ -11,6 +11,7 @@ is_supported_platform() {
   case "$platform" in
     linux/amd64) found=0 ;;
     linux/arm64) found=0 ;;
+    linux/s390x) found=0 ;;
     darwin/amd64) found=0 ;;
     darwin/arm64) found=0 ;;
     windows/amd64) found=0 ;;

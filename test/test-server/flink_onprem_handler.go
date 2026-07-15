@@ -16,6 +16,28 @@ import (
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
+const invalidSecretMappingName = "invalid-secret-mapping"
+
+func createSecretMapping(name string) cmfsdk.EnvironmentSecretMapping {
+	timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).String()
+	mappingName := name
+	secretName := "my-actual-secret"
+	return cmfsdk.EnvironmentSecretMapping{
+		ApiVersion: "cmf/v1",
+		Kind:       "EnvironmentSecretMapping",
+		Metadata: &cmfsdk.EnvironmentSecretMappingMetadata{
+			Name:              &mappingName,
+			CreationTimestamp: &timeStamp,
+		},
+		Spec: &cmfsdk.EnvironmentSecretMappingSpec{
+			SecretName: secretName,
+		},
+	}
+}
+
+const invalidSecretName = "invalid-secret"
+const invalidDatabaseName = "invalid-database"
+
 // Helper function to create a Flink application.
 func createApplication(name string) cmfsdk.FlinkApplication {
 	status := map[string]interface{}{
@@ -188,8 +210,8 @@ func createSavepoint(name string) cmfsdk.Savepoint {
 func createComputePool(poolName, phase string) cmfsdk.ComputePool {
 	timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
 
-	status := map[string]map[string]interface{}{
-		"phase": {"value": phase},
+	status := map[string]interface{}{
+		"phase": phase,
 	}
 
 	return cmfsdk.ComputePool{
@@ -205,22 +227,141 @@ func createComputePool(poolName, phase string) cmfsdk.ComputePool {
 }
 
 func createKafkaCatalog(catName string) cmfsdk.KafkaCatalog {
-	timeStamp := time.Date(2025, time.August, 5, 12, 00, 0, 0, time.UTC).String()
+	timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).Format(time.RFC3339)
 	return cmfsdk.KafkaCatalog{
+		ApiVersion: "cmf/api/v1/catalog",
+		Kind:       "KafkaCatalog",
 		Metadata: cmfsdk.CatalogMetadata{
 			Name:              catName,
 			CreationTimestamp: &timeStamp,
 		},
 		Spec: cmfsdk.KafkaCatalogSpec{
+			SrInstance: cmfsdk.KafkaCatalogSpecSrInstance{
+				ConnectionConfig: map[string]string{
+					"schema.registry.url": "http://localhost:8081",
+				},
+			},
 			KafkaClusters: &[]cmfsdk.KafkaCatalogSpecKafkaClusters{
 				{
 					DatabaseName: "test-database",
+					ConnectionConfig: map[string]string{
+						"bootstrap.servers": "localhost:9092",
+					},
 				},
 				{
 					DatabaseName: "test-database-2",
+					ConnectionConfig: map[string]string{
+						"bootstrap.servers": "localhost:9092",
+					},
 				},
 			},
 		},
+	}
+}
+
+func createKafkaDatabase(dbName string) cmfsdk.KafkaDatabase {
+	timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).Format(time.RFC3339)
+	return cmfsdk.KafkaDatabase{
+		ApiVersion: "cmf/api/v1/database",
+		Kind:       "KafkaDatabase",
+		Metadata: cmfsdk.DatabaseMetadata{
+			Name:              dbName,
+			CreationTimestamp: &timeStamp,
+		},
+		Spec: cmfsdk.KafkaDatabaseSpec{
+			KafkaCluster: cmfsdk.KafkaDatabaseSpecKafkaCluster{
+				ConnectionConfig: map[string]string{
+					"bootstrap.servers": "localhost:9092",
+				},
+			},
+		},
+	}
+}
+
+func handleCmfCatalogDatabases(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+		switch r.Method {
+		case http.MethodGet:
+			databases := []cmfsdk.KafkaDatabase{
+				createKafkaDatabase("test-database-1"),
+				createKafkaDatabase("test-database-2"),
+			}
+			databasesPage := cmfsdk.KafkaDatabasesPage{}
+			page := r.URL.Query().Get("page")
+
+			if page == "0" {
+				databasesPage.SetItems(databases)
+			}
+
+			err := json.NewEncoder(w).Encode(databasesPage)
+			require.NoError(t, err)
+		case http.MethodPost:
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var database cmfsdk.KafkaDatabase
+			err = json.Unmarshal(reqBody, &database)
+			require.NoError(t, err)
+
+			dbName := database.GetMetadata().Name
+
+			if dbName == invalidDatabaseName {
+				http.Error(w, "The Kafka database object from resource file is invalid", http.StatusUnprocessableEntity)
+				return
+			}
+
+			timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
+			database.Metadata.CreationTimestamp = &timeStamp
+			err = json.NewEncoder(w).Encode(database)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func handleCmfCatalogDatabase(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		dbName := vars["dbName"]
+
+		switch r.Method {
+		case http.MethodGet:
+			if dbName == invalidDatabaseName {
+				http.Error(w, "The database name is invalid", http.StatusNotFound)
+				return
+			}
+
+			database := createKafkaDatabase(dbName)
+			err := json.NewEncoder(w).Encode(database)
+			require.NoError(t, err)
+			return
+		case http.MethodPut:
+			if dbName == invalidDatabaseName {
+				http.Error(w, "The database name is invalid", http.StatusNotFound)
+				return
+			}
+
+			// Read and validate the request body.
+			req := new(cmfsdk.KafkaDatabase)
+			err := json.NewDecoder(r.Body).Decode(req)
+			require.NoError(t, err)
+
+			w.WriteHeader(http.StatusOK)
+			return
+		case http.MethodDelete:
+			if dbName == "non-exist-database" {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
 	}
 }
 
@@ -364,14 +505,15 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 			err = json.Unmarshal(reqBody, &environment)
 			require.NoError(t, err)
 
-			if strings.Contains(environment.GetName(), "failure") {
+			envName := environment.GetName()
+			if strings.Contains(envName, "failure") {
 				http.Error(w, "", http.StatusUnprocessableEntity)
 				return
 			}
 
 			// Already existing environment: update
-			if environment.GetName() == "default" || environment.GetName() == "test" {
-				outputEnvironment := createEnvironment(environment.GetName(), environment.GetName()+"-namespace")
+			if envName == "default" || envName == "test" {
+				outputEnvironment := createEnvironment(envName, envName+"-namespace")
 				// This is a dummy update - only the defaults can be updated anyway.
 				outputEnvironment.FlinkApplicationDefaults = environment.FlinkApplicationDefaults
 				outputEnvironment.ComputePoolDefaults = environment.ComputePoolDefaults
@@ -382,7 +524,7 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 			}
 
 			// New environment: create
-			outputEnvironment := createEnvironment(environment.GetName(), environment.GetKubernetesNamespace())
+			outputEnvironment := createEnvironment(envName, environment.GetKubernetesNamespace())
 			outputEnvironment.FlinkApplicationDefaults = environment.FlinkApplicationDefaults
 			outputEnvironment.ComputePoolDefaults = environment.ComputePoolDefaults
 			outputEnvironment.StatementDefaults = environment.StatementDefaults
@@ -442,6 +584,97 @@ func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 		default:
 			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
 		}
+	}
+}
+
+// Handler for "cmf/api/v1alpha1/environments/{envName}/applications/{appName}/events"
+func handleCmfApplicationEvents(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		envName := vars["envName"]
+		appName := vars["appName"]
+
+		if r.Method != http.MethodGet {
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+			return
+		}
+
+		if envName != "default" && envName != "test" {
+			http.Error(w, "Environment not found", http.StatusNotFound)
+			return
+		}
+
+		// Validate application exists, matching handleCmfApplication behavior.
+		validApps := map[string]bool{
+			"default-application-1": true,
+			"default-application-2": true,
+			"default-application-s": true,
+		}
+		if envName == "default" && !validApps[appName] {
+			http.Error(w, "Application not found", http.StatusNotFound)
+			return
+		}
+
+		eventsPage := map[string]interface{}{
+			"items": []cmfsdk.FlinkApplicationEvent{},
+		}
+
+		page := r.URL.Query().Get("page")
+
+		if envName == "default" && appName == "default-application-1" && page == "0" {
+			timestamp1 := "2024-01-15T10:30:00Z"
+			timestamp2 := "2024-01-15T10:31:00Z"
+			instance := "default-application-1-instance-1"
+			eventType1 := "Normal"
+			eventType2 := "Warning"
+			message1 := "Application started successfully"
+			message2 := "Application restarting due to failure"
+			name1 := "event-001"
+			name2 := "event-002"
+			newStatus := "DEPLOYED"
+			exceptionString := "java.lang.RuntimeException: Job execution failed"
+			newStatusData := cmfsdk.EventDataNewStatusAsEventData(&cmfsdk.EventDataNewStatus{NewStatus: &newStatus})
+			jobExceptionData := cmfsdk.EventDataJobExceptionAsEventData(&cmfsdk.EventDataJobException{ExceptionString: &exceptionString})
+
+			events := []cmfsdk.FlinkApplicationEvent{
+				{
+					ApiVersion: "cmf.confluent.io/v1alpha1",
+					Kind:       "FlinkApplicationEvent",
+					Metadata: cmfsdk.EventMetadata{
+						Name:                     &name1,
+						CreationTimestamp:        &timestamp1,
+						FlinkApplicationInstance: &instance,
+					},
+					Status: cmfsdk.EventStatus{
+						Type:    &eventType1,
+						Message: &message1,
+						Data:    &newStatusData,
+					},
+				},
+				{
+					ApiVersion: "cmf.confluent.io/v1alpha1",
+					Kind:       "FlinkApplicationEvent",
+					Metadata: cmfsdk.EventMetadata{
+						Name:                     &name2,
+						CreationTimestamp:        &timestamp2,
+						FlinkApplicationInstance: &instance,
+					},
+					Status: cmfsdk.EventStatus{
+						Type:    &eventType2,
+						Message: &message2,
+						Data:    &jobExceptionData,
+					},
+				},
+			}
+			eventsPage = map[string]interface{}{
+				"items": events,
+			}
+		}
+
+		err := json.NewEncoder(w).Encode(eventsPage)
+		require.NoError(t, err)
 	}
 }
 
@@ -588,6 +821,117 @@ func handleCmfApplication(t *testing.T) http.HandlerFunc {
 			}
 
 			http.Error(w, "Application not found", http.StatusNotFound)
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+// Helper function to create a Flink application instance.
+func createApplicationInstance(name, jobId, state, creationTimestamp string) cmfsdk.FlinkApplicationInstance {
+	instance := cmfsdk.FlinkApplicationInstance{
+		ApiVersion: "cmf.confluent.io/v1",
+		Kind:       "FlinkApplicationInstance",
+	}
+
+	metadata := cmfsdk.ApplicationInstanceMetadata{
+		Name:              &name,
+		Uid:               &name,
+		CreationTimestamp: &creationTimestamp,
+	}
+	instance.Metadata = &metadata
+
+	jobStatus := cmfsdk.ApplicationInstanceStatusJobStatus{
+		JobId: &jobId,
+		State: &state,
+	}
+	status := cmfsdk.ApplicationInstanceStatus{
+		JobStatus: &jobStatus,
+	}
+	instance.Status = &status
+
+	return instance
+}
+
+// Handler for "cmf/api/v1/environments/{environment}/applications/{application}/instances"
+// Used to list application instances.
+func handleCmfApplicationInstances(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		environment := vars["environment"]
+		application := vars["application"]
+
+		switch r.Method {
+		case http.MethodGet:
+			if environment != "default" && environment != "test" {
+				http.Error(w, "Environment not found", http.StatusNotFound)
+				return
+			}
+
+			if application != "default-application-1" && application != "default-application-2" {
+				http.Error(w, "Application not found", http.StatusNotFound)
+				return
+			}
+
+			instancesPage := map[string]interface{}{
+				"items": []cmfsdk.FlinkApplicationInstance{},
+			}
+
+			page := r.URL.Query().Get("page")
+
+			if application == "default-application-1" && page == "0" {
+				items := []cmfsdk.FlinkApplicationInstance{
+					createApplicationInstance("inst-001", "job-abc123", "RUNNING", "2025-09-18T10:00:00Z"),
+					createApplicationInstance("inst-002", "job-def456", "FINISHED", "2025-09-17T08:30:00Z"),
+				}
+				instancesPage = map[string]interface{}{
+					"items": items,
+				}
+			}
+
+			err := json.NewEncoder(w).Encode(instancesPage)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+// Handler for "cmf/api/v1/environments/{environment}/applications/{application}/instances/{instName}"
+// Used to describe a specific application instance.
+func handleCmfApplicationInstance(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		environment := vars["environment"]
+		application := vars["application"]
+		instName := vars["instName"]
+
+		switch r.Method {
+		case http.MethodGet:
+			if environment != "default" && environment != "test" {
+				http.Error(w, "Environment not found", http.StatusNotFound)
+				return
+			}
+
+			if application != "default-application-1" && application != "default-application-2" {
+				http.Error(w, "Application not found", http.StatusNotFound)
+				return
+			}
+
+			if application == "default-application-1" && instName == "inst-001" {
+				instance := createApplicationInstance("inst-001", "job-abc123", "RUNNING", "2025-09-18T10:00:00Z")
+				err := json.NewEncoder(w).Encode(instance)
+				require.NoError(t, err)
+				return
+			}
+
+			http.Error(w, "Instance not found", http.StatusNotFound)
+			return
 		default:
 			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
 		}
@@ -918,7 +1262,7 @@ func handleCmfCatalogs(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for "cmf/api/v1/catalogs/kafka/{catName}"
-// Used by describe, delete catalog, no update catalog.
+// Used by describe, update, delete catalog.
 func handleCmfCatalog(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleLoginType(t, r)
@@ -936,6 +1280,18 @@ func handleCmfCatalog(t *testing.T) http.HandlerFunc {
 			catalog := createKafkaCatalog(catalogName)
 			err := json.NewEncoder(w).Encode(catalog)
 			require.NoError(t, err)
+			return
+		case http.MethodPut:
+			if catalogName == "invalid-catalog" {
+				http.Error(w, "The catalog name is invalid", http.StatusNotFound)
+				return
+			}
+
+			req := new(cmfsdk.KafkaCatalog)
+			err := json.NewDecoder(r.Body).Decode(req)
+			require.NoError(t, err)
+
+			w.WriteHeader(http.StatusOK)
 			return
 		case http.MethodDelete:
 			if catalogName == "non-exist-catalog" {
@@ -1348,6 +1704,252 @@ func handleCmfKubernetesCluster(t *testing.T) http.HandlerFunc {
 			updatedCluster := createKubernetesCluster(clusterName, cluster.Spec.GetLifecycleState(), "CONNECTED", "1.28.5")
 			err = json.NewEncoder(w).Encode(updatedCluster)
 			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func handleCmfSystemInformation(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		switch r.Method {
+		case http.MethodGet:
+			sysInfo := map[string]interface{}{
+				"status": map[string]interface{}{
+					"version":  "1.0.0",
+					"revision": "abc1234def5678",
+				},
+			}
+			err := json.NewEncoder(w).Encode(sysInfo)
+			require.NoError(t, err)
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func handleCmfSecretMappings(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+		switch r.Method {
+		case http.MethodGet:
+			mappings := []cmfsdk.EnvironmentSecretMapping{
+				createSecretMapping("test-mapping-1"),
+				createSecretMapping("test-mapping-2"),
+			}
+			mappingsPage := cmfsdk.EnvironmentSecretMappingsPage{}
+			page := r.URL.Query().Get("page")
+
+			if page == "0" {
+				mappingsPage.SetItems(mappings)
+			}
+
+			err := json.NewEncoder(w).Encode(mappingsPage)
+			require.NoError(t, err)
+		case http.MethodPost:
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var mapping cmfsdk.EnvironmentSecretMapping
+			err = json.Unmarshal(reqBody, &mapping)
+			require.NoError(t, err)
+
+			var mappingName string
+			if mapping.Metadata != nil && mapping.Metadata.Name != nil {
+				mappingName = *mapping.Metadata.Name
+			}
+
+			if mappingName == invalidSecretMappingName {
+				http.Error(w, "The EnvironmentSecretMapping object from resource file is invalid", http.StatusUnprocessableEntity)
+				return
+			}
+
+			timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
+			if mapping.Metadata == nil {
+				mapping.Metadata = &cmfsdk.EnvironmentSecretMappingMetadata{}
+			}
+			mapping.Metadata.CreationTimestamp = &timeStamp
+			err = json.NewEncoder(w).Encode(mapping)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func handleCmfSecretMapping(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		name := vars["name"]
+
+		switch r.Method {
+		case http.MethodGet:
+			if name == invalidSecretMappingName {
+				http.Error(w, "The secret mapping name is invalid", http.StatusNotFound)
+				return
+			}
+
+			mapping := createSecretMapping(name)
+			err := json.NewEncoder(w).Encode(mapping)
+			require.NoError(t, err)
+			return
+		case http.MethodPut:
+			if name == invalidSecretMappingName {
+				http.Error(w, "The secret mapping name is invalid", http.StatusNotFound)
+				return
+			}
+
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var mapping cmfsdk.EnvironmentSecretMapping
+			err = json.Unmarshal(reqBody, &mapping)
+			require.NoError(t, err)
+
+			timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).String()
+			if mapping.Metadata == nil {
+				mapping.Metadata = &cmfsdk.EnvironmentSecretMappingMetadata{}
+			}
+			mapping.Metadata.CreationTimestamp = &timeStamp
+			err = json.NewEncoder(w).Encode(mapping)
+			require.NoError(t, err)
+			return
+		case http.MethodDelete:
+			if name == "non-exist-secret-mapping" {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func createSecret(secretName string) cmfsdk.Secret {
+	timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).String()
+	maskedData := map[string]string{
+		"bootstrap.servers": "****",
+		"sasl.jaas.config":  "****",
+	}
+	return cmfsdk.Secret{
+		ApiVersion: "cmf/v1",
+		Kind:       "Secret",
+		Metadata: cmfsdk.SecretMetadata{
+			Name:              secretName,
+			CreationTimestamp: &timeStamp,
+		},
+		Spec: cmfsdk.SecretSpec{
+			Data: &maskedData,
+		},
+	}
+}
+
+func handleCmfSecrets(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+		switch r.Method {
+		case http.MethodGet:
+			secrets := []cmfsdk.Secret{
+				createSecret("test-secret-1"),
+				createSecret("test-secret-2"),
+			}
+			secretsPage := cmfsdk.SecretsPage{}
+			page := r.URL.Query().Get("page")
+
+			if page == "0" {
+				secretsPage.SetItems(secrets)
+			}
+
+			err := json.NewEncoder(w).Encode(secretsPage)
+			require.NoError(t, err)
+		case http.MethodPost:
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var secret cmfsdk.Secret
+			err = json.Unmarshal(reqBody, &secret)
+			require.NoError(t, err)
+
+			secretName := secret.Metadata.Name
+
+			if secretName == invalidSecretName {
+				http.Error(w, "The Secret object from resource file is invalid", http.StatusUnprocessableEntity)
+				return
+			}
+
+			timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
+			secret.Metadata.CreationTimestamp = &timeStamp
+			// Mask the secret data in response
+			maskedData := make(map[string]string)
+			if secret.Spec.Data != nil {
+				for k := range *secret.Spec.Data {
+					maskedData[k] = "****"
+				}
+			}
+			secret.Spec.Data = &maskedData
+			err = json.NewEncoder(w).Encode(secret)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func handleCmfSecret(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		secretName := vars["secretName"]
+
+		switch r.Method {
+		case http.MethodGet:
+			if secretName == invalidSecretName {
+				http.Error(w, "The secret name is invalid", http.StatusNotFound)
+				return
+			}
+
+			secret := createSecret(secretName)
+			err := json.NewEncoder(w).Encode(secret)
+			require.NoError(t, err)
+			return
+		case http.MethodPut:
+			if secretName == invalidSecretName {
+				http.Error(w, "The secret name is invalid", http.StatusNotFound)
+				return
+			}
+
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var secret cmfsdk.Secret
+			err = json.Unmarshal(reqBody, &secret)
+			require.NoError(t, err)
+
+			timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).String()
+			secret.Metadata.CreationTimestamp = &timeStamp
+			// Mask the secret data in response
+			maskedData := make(map[string]string)
+			if secret.Spec.Data != nil {
+				for k := range *secret.Spec.Data {
+					maskedData[k] = "****"
+				}
+			}
+			secret.Spec.Data = &maskedData
+			err = json.NewEncoder(w).Encode(secret)
+			require.NoError(t, err)
+			return
+		case http.MethodDelete:
+			if secretName == "non-exist-secret" {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
 			return
 		default:
 			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))

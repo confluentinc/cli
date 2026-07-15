@@ -1,11 +1,14 @@
 package flink
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/flink"
 )
 
 type computePoolOut struct {
@@ -77,28 +80,16 @@ func convertSdkComputePoolToLocalComputePool(sdkComputePool cmfsdk.ComputePool) 
 		},
 	}
 
-	if sdkComputePool.Status != nil {
+	if phase := extractComputePoolPhase(sdkComputePool); phase != "" {
 		localPool.Status = &LocalComputePoolStatus{
-			Phase: computePoolPhase(sdkComputePool.Status),
+			Phase: phase,
 		}
 	}
 
 	return localPool
 }
 
-// computePoolPhase extracts the phase string from ComputePool.Status.
-// SDK v0.0.6 incorrectly generates Status as *map[string]map[string]interface{}
-// due to additionalProperties: true in the spec; the real API returns a flat
-// {"phase": "RUNNING"} object which cannot be decoded into that type.
-// Until the SDK is fixed upstream, phase will be empty when calling the real API.
-func computePoolPhase(status *map[string]map[string]interface{}) string {
-	if status == nil {
-		return ""
-	}
-	if phaseMap, ok := (*status)["phase"]; ok {
-		if val, ok := phaseMap["value"].(string); ok {
-			return val
-		}
-	}
-	return ""
+func extractComputePoolPhase(pool cmfsdk.ComputePool) string {
+	phase, _ := flink.GetMapField[string](pool.GetStatus(), "phase", fmt.Sprintf("compute pool %q", pool.GetMetadata().Name))
+	return phase
 }

@@ -77,6 +77,19 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster update lkc-update --type", fixture: "kafka/cluster/update-type-empty-error.golden", exitCode: 1},
 		{args: "kafka cluster update lkc-update --type basic", fixture: "kafka/cluster/update-type-invalid-error.golden", exitCode: 1},
 
+		// Deletion protection tests
+		{args: "kafka cluster describe lkc-describe-deletion-protected", fixture: "kafka/cluster/describe-deletion-protected.golden"},
+		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type enterprise --availability multi-zone --deletion-protection", fixture: "kafka/cluster/create-deletion-protection.golden"},
+		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type enterprise --availability multi-zone --deletion-protection=true", fixture: "kafka/cluster/create-deletion-protection.golden"},
+		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type enterprise --availability multi-zone --deletion-protection=false", fixture: "kafka/cluster/create-deletion-protection-false.golden"},
+		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type basic --deletion-protection", fixture: "kafka/cluster/create-deletion-protection-unsupported-basic.golden", exitCode: 1},
+		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --type standard --deletion-protection", fixture: "kafka/cluster/create-deletion-protection-unsupported-standard.golden", exitCode: 1},
+		{args: "kafka cluster update lkc-update --deletion-protection", fixture: "kafka/cluster/update-deletion-protection-unsupported-basic.golden", exitCode: 1},
+		{args: "kafka cluster update lkc-update --deletion-protection=true", fixture: "kafka/cluster/update-deletion-protection-unsupported-basic.golden", exitCode: 1},
+		{args: "kafka cluster update lkc-update --deletion-protection=false", fixture: "kafka/cluster/update-deletion-protection-disable.golden"},
+		{args: "kafka cluster update lkc-update-enterprise --deletion-protection", fixture: "kafka/cluster/update-deletion-protection-enable.golden"},
+		{args: "kafka cluster delete lkc-deletion-protected --force", fixture: "kafka/cluster/delete-deletion-protected.golden", exitCode: 1},
+
 		{args: "kafka cluster delete --force", fixture: "kafka/3.golden", exitCode: 1},
 		{args: "kafka cluster delete lkc-unknown --force", fixture: "kafka/cluster/delete-unknown-error.golden", exitCode: 1},
 		{args: "kafka cluster delete lkc-def973 --force", fixture: "kafka/5.golden"},
@@ -97,7 +110,6 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster describe lkc-describe", fixture: "kafka/17.golden"},
 		{args: "kafka cluster describe lkc-describe -o json", fixture: "kafka/18.golden"},
 		{args: "kafka cluster describe lkc-describe -o yaml", fixture: "kafka/19.golden"},
-
 		{args: "kafka cluster describe lkc-describe-dedicated", fixture: "kafka/30.golden"},
 		{args: "kafka cluster describe lkc-describe-dedicated -o json", fixture: "kafka/31.golden"},
 		{args: "kafka cluster describe lkc-describe-dedicated -o yaml", fixture: "kafka/32.golden"},
@@ -195,6 +207,16 @@ func (s *CLITestSuite) TestKafka() {
 		test.login = "onprem"
 		s.runIntegrationTest(test)
 	}
+}
+
+func (s *CLITestSuite) TestKafkaClusterListWithoutLogin() {
+	test := CLITest{
+		args:     "kafka cluster list",
+		fixture:  "kafka/list-without-login.golden",
+		exitCode: 1,
+	}
+
+	s.runIntegrationTest(test)
 }
 
 func (s *CLITestSuite) TestKafkaClusterCreate_Byok() {
@@ -302,6 +324,25 @@ func (s *CLITestSuite) TestKafkaClientConfig() {
 
 		// pass - does not need sr key-secret pair
 		{args: "kafka client-config create csharp", useKafka: "lkc-cool1", fixture: "kafka/client-config/csharp.golden"},
+	}
+
+	resetConfiguration(s.T(), false)
+
+	for _, test := range tests {
+		test.login = "cloud"
+		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestKafkaClientConfigGlobalKey() {
+	tests := []CLITest{
+		// Store and activate a Global key, with no cluster-scoped key set.
+		{args: "api-key store UIGLOBALKEY100 UIGLOBALSECRET100"},
+		{args: "api-key use UIGLOBALKEY100"},
+		// client-config create falls back to the active Global key: the rendered config embeds it as
+		// sasl.username/sasl.password (csharp template needs no Schema Registry key-secret pair).
+		{args: "kafka client-config create csharp", useKafka: "lkc-cool1", fixture: "kafka/client-config/csharp-global-key.golden"},
 	}
 
 	resetConfiguration(s.T(), false)
@@ -790,6 +831,20 @@ func (s *CLITestSuite) TestKafkaShareGroup() {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
+
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests = []CLITest{
+		{args: "kafka share-group list", fixture: "kafka/share-group/list-onprem.golden"},
+		{args: "kafka share-group describe share-group-1", contains: shareGroupTopic1, notContains: ""},
+		{args: "kafka share-group describe share-group-1", contains: shareGroupTopic2, notContains: ""},
+		{args: "kafka share-group describe share-group-1234", fixture: "kafka/share-group/describe-dne-onprem.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		s.runIntegrationTest(test)
+	}
 }
 
 func (s *CLITestSuite) TestKafkaShareGroupConsumer() {
@@ -802,6 +857,18 @@ func (s *CLITestSuite) TestKafkaShareGroupConsumer() {
 
 	for _, test := range tests {
 		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests = []CLITest{
+		{args: "kafka share-group consumer list --group share-group-1", fixture: "kafka/share-group/consumer/list-onprem.golden"},
+		{args: "kafka share-group consumer list --group share-group-1234", fixture: "kafka/share-group/consumer/list-dne-onprem.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
 		s.runIntegrationTest(test)
 	}
 }
