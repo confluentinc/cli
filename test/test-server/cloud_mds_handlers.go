@@ -12,7 +12,13 @@ import (
 
 func (c *CloudRouter) HandleAllRolesRoute(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		roles := rbacPublicRoles()
+		var roles []mdsv2alpha1.Role
+		switch r.URL.Query().Get("namespace") {
+		case "cluster-link":
+			roles = rbacClusterLinkRoles()
+		default:
+			roles = rbacPublicRoles()
+		}
 		rolesResponse, _ := json.Marshal(roles)
 		_, err := w.Write(rolesResponse)
 		require.NoError(t, err)
@@ -134,6 +140,23 @@ func rbacPublicRoles() []mdsv2alpha1.Role {
 	}
 
 	return []mdsv2alpha1.Role{cloudClusterAdminRole, environmentAdminRole, organizationAdminRole, resourceOwnerRole}
+}
+
+func rbacClusterLinkRoles() []mdsv2alpha1.Role {
+	clusterLinkConnectionRole := mdsv2alpha1.Role{
+		Name: "ClusterLinkConnection",
+		Policies: []mdsv2alpha1.AccessPolicy{
+			{
+				BindingScope:     "cluster-link",
+				BindWithResource: true,
+				AllowedOperations: []mdsv2alpha1.Operation{
+					{ResourceType: "ClusterLink", Operations: []string{"Describe", "AcceptInboundConnection", "StartOutboundConnection"}},
+				},
+			},
+		},
+	}
+
+	return []mdsv2alpha1.Role{clusterLinkConnectionRole}
 }
 
 func rolesListToJsonMap(roles []mdsv2alpha1.Role) map[string]string {

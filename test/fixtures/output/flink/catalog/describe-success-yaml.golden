@@ -1,13 +1,16 @@
-apiVersion: ""
-kind: ""
+apiVersion: cmf/api/v1/catalog
+kind: KafkaCatalog
 metadata:
     name: test-catalog1
-    creationTimestamp: 2025-08-05 12:00:00 +0000 UTC
+    creationTimestamp: "2025-08-05T12:00:00Z"
 spec:
     srInstance:
-        connectionConfig: {}
+        connectionConfig:
+            schema.registry.url: http://localhost:8081
     kafkaClusters:
         - databaseName: test-database
-          connectionConfig: {}
+          connectionConfig:
+            bootstrap.servers: localhost:9092
         - databaseName: test-database-2
-          connectionConfig: {}
+          connectionConfig:
+            bootstrap.servers: localhost:9092

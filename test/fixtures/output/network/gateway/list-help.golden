@@ -4,7 +4,7 @@ Usage:
   confluent network gateway list [flags]
 
 Flags:
-      --types strings          A comma-separated list of gateway types: "aws-egress-privatelink", "aws-ingress-privatelink", "azure-egress-privatelink", or "gcp-egress-private-service-connect".
+      --types strings          A comma-separated list of gateway types: "aws-egress-privatelink", "aws-ingress-privatelink", "azure-egress-privatelink", "azure-ingress-privatelink", "gcp-egress-private-service-connect", or "gcp-ingress-private-service-connect".
       --id strings             A comma-separated list of gateway IDs.
       --region strings         A comma-separated list of regions.
       --display-name strings   A comma-separated list of display names.

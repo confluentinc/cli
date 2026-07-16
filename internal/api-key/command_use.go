@@ -12,7 +12,10 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
-const useAPIKeyMsg = "Using API Key \"%s\".\n"
+const (
+	useAPIKeyMsg       = "Using API Key \"%s\".\n"
+	useGlobalAPIKeyMsg = "Using Global API Key \"%s\".\n"
+)
 
 func (c *command) newUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -34,6 +37,21 @@ func (c *command) newUseCommand() *cobra.Command {
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 
+	apiKey := args[0]
+
+	// Global keys are stored on the Context, not on a specific Kafka cluster. Check there first so
+	// `confluent api-key use <global-key>` without --resource works seamlessly.
+	if !cmd.Flags().Changed("resource") && c.Context.HasGlobalAPIKey(apiKey) {
+		if err := c.Context.SetActiveGlobalAPIKey(apiKey); err != nil {
+			return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, apiKey))
+		}
+		if err := c.Config.Save(); err != nil {
+			return err
+		}
+		output.Printf(c.Config.EnableColor, useGlobalAPIKeyMsg, apiKey)
+		return nil
+	}
+
 	var clusterId string
 
 	if cmd.Flags().Changed("resource") {
@@ -46,20 +64,20 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 		}
 		clusterId = resourceId
 	} else {
-		clusterId = c.Context.KafkaClusterContext.FindApiKeyClusterId(args[0])
+		clusterId = c.Context.KafkaClusterContext.FindApiKeyClusterId(apiKey)
 		if clusterId == "" {
 			return errors.NewErrorWithSuggestions(
-				fmt.Sprintf(`API key "%s" and associated Kafka cluster are not stored in local CLI state`, args[0]),
-				fmt.Sprintf(apiKeyUseFailedSuggestions, args[0]),
+				fmt.Sprintf(`API key "%s" and associated Kafka cluster are not stored in local CLI state`, apiKey),
+				fmt.Sprintf(apiKeyUseFailedSuggestions, apiKey),
 			)
 		}
 	}
 
-	if err := c.useAPIKey(args[0], clusterId); err != nil {
-		return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, args[0]))
+	if err := c.useAPIKey(apiKey, clusterId); err != nil {
+		return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, apiKey))
 	}
 
-	output.Printf(c.Config.EnableColor, useAPIKeyMsg, args[0])
+	output.Printf(c.Config.EnableColor, useAPIKeyMsg, apiKey)
 	return nil
 }
 

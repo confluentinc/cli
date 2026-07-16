@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -29,12 +30,20 @@ func (c *command) newGatewayCreateCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: `Create AWS private network interface gateway "my-pni-gateway".`,
-				Code: "confluent network gateway create my-pni-gateway --cloud aws --region us-east-1 --type private-network-interface",
+				Code: "confluent network gateway create my-pni-gateway --cloud aws --region us-east-1 --zones use1-az1,use1-az2,use1-az4 --type private-network-interface",
+			},
+			examples.Example{
+				Text: `Create Azure ingress private link gateway "my-azure-ingress-gateway".`,
+				Code: "confluent network gateway create my-azure-ingress-gateway --cloud azure --region eastus2 --type ingress-privatelink",
+			},
+			examples.Example{
+				Text: `Create GCP ingress private service connect gateway "my-gcp-ingress-gateway".`,
+				Code: "confluent network gateway create my-gcp-ingress-gateway --cloud gcp --region us-central1 --type ingress-private-service-connect",
 			},
 		),
 	}
 
-	pcmd.AddCloudAwsAzureFlag(cmd)
+	pcmd.AddCloudFlag(cmd)
 	addGatewayTypeFlag(cmd)
 	c.addRegionFlagGateway(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().StringSlice("zones", nil, "A comma-separated list of availability zones for this gateway.")
@@ -69,6 +78,10 @@ func (c *command) gatewayCreate(cmd *cobra.Command, args []string) error {
 	zones, err := cmd.Flags().GetStringSlice("zones")
 	if err != nil {
 		return err
+	}
+
+	if len(zones) > 0 && gatewayType != "private-network-interface" {
+		return fmt.Errorf("flag \"--zones\" is only valid for --type private-network-interface")
 	}
 
 	environmentId, err := c.Context.EnvironmentId()
@@ -115,7 +128,27 @@ func (c *command) gatewayCreate(cmd *cobra.Command, args []string) error {
 					Region: region,
 				},
 			}
+		} else if gatewayType == "ingress-privatelink" {
+			createGateway.Spec.Config = &networkinggatewayv1.NetworkingV1GatewaySpecConfigOneOf{
+				NetworkingV1AzureIngressPrivateLinkGatewaySpec: &networkinggatewayv1.NetworkingV1AzureIngressPrivateLinkGatewaySpec{
+					Kind:   "AzureIngressPrivateLinkGatewaySpec",
+					Region: region,
+				},
+			}
 		}
+	case pcloud.Gcp:
+		if gatewayType == "ingress-private-service-connect" {
+			createGateway.Spec.Config = &networkinggatewayv1.NetworkingV1GatewaySpecConfigOneOf{
+				NetworkingV1GcpIngressPrivateServiceConnectGatewaySpec: &networkinggatewayv1.NetworkingV1GcpIngressPrivateServiceConnectGatewaySpec{
+					Kind:   "GcpIngressPrivateServiceConnectGatewaySpec",
+					Region: region,
+				},
+			}
+		}
+	}
+
+	if createGateway.Spec.Config == nil {
+		return fmt.Errorf("type %q is not supported for --cloud %s", gatewayType, strings.ToLower(cloud))
 	}
 
 	if len(args) == 1 {

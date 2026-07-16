@@ -6,17 +6,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"net/netip"
 	"os/exec"
 	"runtime"
 	"strconv"
 	"strings"
 
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/image"
-	"github.com/docker/docker/api/types/network"
-	"github.com/docker/docker/api/types/strslice"
-	"github.com/docker/docker/client"
-	"github.com/docker/go-connections/nat"
+	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/network"
+	"github.com/moby/moby/client"
 	specsv1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/phayes/freeport"
 	"github.com/spf13/cobra"
@@ -68,7 +66,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	dockerClient, err := client.New(client.FromEnv)
 	if err != nil {
 		return err
 	}
@@ -78,12 +76,12 @@ func (c *command) kafkaStart(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	containers, err := dockerClient.ContainerList(context.Background(), container.ListOptions{All: true})
+	containers, err := dockerClient.ContainerList(context.Background(), client.ContainerListOptions{All: true})
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), dockerWorkingVersionMsg)
 	}
 
-	for _, container := range containers {
+	for _, container := range containers.Items {
 		if container.Image == dockerImageName {
 			output.Println(c.Config.EnableColor, "Confluent Local is already running.")
 			prompt := form.NewPrompt()
@@ -105,7 +103,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	out, err := dockerClient.ImagePull(context.Background(), dockerImageName, image.PullOptions{})
+	out, err := dockerClient.ImagePull(context.Background(), dockerImageName, client.ImagePullOptions{})
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), dockerWorkingVersionMsg)
 	}
@@ -154,11 +152,11 @@ func (c *command) kafkaStart(cmd *cobra.Command, _ []string) error {
 		OS:           "linux",
 		Architecture: runtime.GOARCH,
 	}
-	natKafkaRestPort := nat.Port(ports.KafkaRestPort + "/tcp")
+	natKafkaRestPort := network.MustParsePort(ports.KafkaRestPort + "/tcp")
 	natPlaintextPorts := getNatPlaintextPorts(ports)
-	containerStartCmd := strslice.StrSlice{"bash", "-c", "'/etc/confluent/docker/run'"}
+	containerStartCmd := []string{"bash", "-c", "'/etc/confluent/docker/run'"}
 
-	options := network.CreateOptions{Driver: "bridge"}
+	options := client.NetworkCreateOptions{Driver: "bridge"}
 	if _, err := dockerClient.NetworkCreate(context.Background(), confluentLocalNetworkName, options); err != nil && !strings.Contains(err.Error(), "already exists") {
 		return errors.NewErrorWithSuggestions(err.Error(), dockerWorkingVersionMsg)
 	}
@@ -170,14 +168,14 @@ func (c *command) kafkaStart(cmd *cobra.Command, _ []string) error {
 			Image:        dockerImageName,
 			Hostname:     fmt.Sprintf(confluentBrokerPrefix, brokerId),
 			Cmd:          containerStartCmd,
-			ExposedPorts: nat.PortSet{natPlaintextPorts[idx]: struct{}{}},
+			ExposedPorts: network.PortSet{natPlaintextPorts[idx]: struct{}{}},
 			Env:          getContainerEnvironmentWithPorts(ports, idx, brokers),
 		}
 
 		hostConfig := &container.HostConfig{
 			NetworkMode: container.NetworkMode("confluent-local-network"),
-			PortBindings: nat.PortMap{natPlaintextPorts[idx]: []nat.PortBinding{{
-				HostIP:   localhost,
+			PortBindings: network.PortMap{natPlaintextPorts[idx]: []network.PortBinding{{
+				HostIP:   netip.MustParseAddr(localhost),
 				HostPort: ports.PlaintextPorts[idx],
 			}}},
 		}
@@ -185,18 +183,23 @@ func (c *command) kafkaStart(cmd *cobra.Command, _ []string) error {
 		// expose Kafka REST port for broker 1
 		if idx == 0 {
 			config.ExposedPorts[natKafkaRestPort] = struct{}{}
-			hostConfig.PortBindings[natKafkaRestPort] = []nat.PortBinding{{
-				HostIP:   localhost,
+			hostConfig.PortBindings[natKafkaRestPort] = []network.PortBinding{{
+				HostIP:   netip.MustParseAddr(localhost),
 				HostPort: ports.KafkaRestPort,
 			}}
 		}
 
-		createResp, err := dockerClient.ContainerCreate(context.Background(), config, hostConfig, nil, platform, fmt.Sprintf(confluentBrokerPrefix, brokerId))
+		createResp, err := dockerClient.ContainerCreate(context.Background(), client.ContainerCreateOptions{
+			Config:     config,
+			HostConfig: hostConfig,
+			Platform:   platform,
+			Name:       fmt.Sprintf(confluentBrokerPrefix, brokerId),
+		})
 		if err != nil {
 			return errors.NewErrorWithSuggestions(err.Error(), dockerWorkingVersionMsg)
 		}
 		log.CliLogger.Trace(fmt.Sprintf("Successfully created a Confluent Local container for broker %d", brokerId))
-		if err := dockerClient.ContainerStart(context.Background(), createResp.ID, container.StartOptions{}); err != nil {
+		if _, err := dockerClient.ContainerStart(context.Background(), createResp.ID, client.ContainerStartOptions{}); err != nil {
 			return errors.NewErrorWithSuggestions(err.Error(), dockerWorkingVersionMsg)
 		}
 		containerIds = append(containerIds, getShortenedContainerId(createResp.ID))
@@ -332,10 +335,10 @@ func getContainerEnvironmentWithPorts(ports *config.LocalPorts, idx int32, broke
 	return envs
 }
 
-func getNatPlaintextPorts(ports *config.LocalPorts) []nat.Port {
-	res := []nat.Port{}
+func getNatPlaintextPorts(ports *config.LocalPorts) []network.Port {
+	res := []network.Port{}
 	for _, port := range ports.PlaintextPorts {
-		res = append(res, nat.Port(port+"/tcp"))
+		res = append(res, network.MustParsePort(port+"/tcp"))
 	}
 	return res
 }

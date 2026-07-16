@@ -111,12 +111,63 @@ type LocalEnvironment struct {
 	StatementDefaults        *LocalAllStatementDefaults1 `json:"statementDefaults,omitempty" yaml:"statementDefaults,omitempty"`
 }
 
+type LocalFlinkApplicationInstance struct {
+	ApiVersion string                            `json:"apiVersion" yaml:"apiVersion"`
+	Kind       string                            `json:"kind" yaml:"kind"`
+	Metadata   *LocalApplicationInstanceMetadata `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+	Status     *LocalApplicationInstanceStatus   `json:"status,omitempty" yaml:"status,omitempty"`
+}
+
+type LocalApplicationInstanceMetadata struct {
+	Name              *string            `json:"name,omitempty" yaml:"name,omitempty"`
+	Uid               *string            `json:"uid,omitempty" yaml:"uid,omitempty"`
+	CreationTimestamp *string            `json:"creationTimestamp,omitempty" yaml:"creationTimestamp,omitempty"`
+	UpdateTimestamp   *string            `json:"updateTimestamp,omitempty" yaml:"updateTimestamp,omitempty"`
+	Labels            *map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
+	Annotations       *map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
+}
+
+type LocalApplicationInstanceStatus struct {
+	Spec      *map[string]interface{}            `json:"spec,omitempty" yaml:"spec,omitempty"`
+	JobStatus *LocalApplicationInstanceJobStatus `json:"jobStatus,omitempty" yaml:"jobStatus,omitempty"`
+}
+
+type LocalApplicationInstanceJobStatus struct {
+	JobId *string `json:"jobId,omitempty" yaml:"jobId,omitempty"`
+	State *string `json:"state,omitempty" yaml:"state,omitempty"`
+}
+
 type LocalFlinkApplication struct {
 	ApiVersion string                  `json:"apiVersion" yaml:"apiVersion"`
 	Kind       string                  `json:"kind" yaml:"kind"`
 	Metadata   map[string]interface{}  `json:"metadata" yaml:"metadata"`
 	Spec       map[string]interface{}  `json:"spec" yaml:"spec"`
 	Status     *map[string]interface{} `json:"status,omitempty" yaml:"status,omitempty"`
+}
+
+type LocalFlinkApplicationEvent struct {
+	ApiVersion string             `json:"apiVersion" yaml:"apiVersion"`
+	Kind       string             `json:"kind" yaml:"kind"`
+	Metadata   LocalEventMetadata `json:"metadata" yaml:"metadata"`
+	Status     LocalEventStatus   `json:"status" yaml:"status"`
+}
+
+type LocalEventMetadata struct {
+	Name                     *string            `json:"name,omitempty" yaml:"name,omitempty"`
+	Uid                      *string            `json:"uid,omitempty" yaml:"uid,omitempty"`
+	CreationTimestamp        *string            `json:"creationTimestamp,omitempty" yaml:"creationTimestamp,omitempty"`
+	FlinkApplicationInstance *string            `json:"flinkApplicationInstance,omitempty" yaml:"flinkApplicationInstance,omitempty"`
+	Labels                   *map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
+	Annotations              *map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
+}
+
+// LocalEventStatus maps the SDK EventStatus. The Data field is a oneOf union
+// (EventDataJobException | EventDataNewStatus); we carry it as a generic map so
+// either variant serializes cleanly to JSON and YAML.
+type LocalEventStatus struct {
+	Message *string                 `json:"message,omitempty" yaml:"message,omitempty"`
+	Type    *string                 `json:"type,omitempty" yaml:"type,omitempty"`
+	Data    *map[string]interface{} `json:"data,omitempty" yaml:"data,omitempty"`
 }
 
 type LocalKafkaCatalog struct {
@@ -138,6 +189,78 @@ type LocalKafkaCatalogSpecKafkaClusters struct {
 }
 
 type LocalKafkaCatalogSpecSrInstance struct {
+	ConnectionConfig   map[string]string `json:"connectionConfig" yaml:"connectionConfig"`
+	ConnectionSecretId *string           `json:"connectionSecretId,omitempty" yaml:"connectionSecretId,omitempty"`
+}
+
+type LocalSecretMapping struct {
+	ApiVersion string                     `json:"apiVersion" yaml:"apiVersion"`
+	Kind       string                     `json:"kind" yaml:"kind"`
+	Metadata   LocalSecretMappingMetadata `json:"metadata" yaml:"metadata"`
+	Spec       LocalSecretMappingSpec     `json:"spec" yaml:"spec"`
+}
+
+type LocalSecretMappingMetadata struct {
+	Name              string             `json:"name" yaml:"name"`
+	CreationTimestamp *string            `json:"creationTimestamp,omitempty" yaml:"creationTimestamp,omitempty"`
+	UpdateTimestamp   *string            `json:"updateTimestamp,omitempty" yaml:"updateTimestamp,omitempty"`
+	Uid               *string            `json:"uid,omitempty" yaml:"uid,omitempty"`
+	Labels            *map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
+	Annotations       *map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
+}
+
+type LocalSecret struct {
+	ApiVersion string              `json:"apiVersion" yaml:"apiVersion"`
+	Kind       string              `json:"kind" yaml:"kind"`
+	Metadata   LocalSecretMetadata `json:"metadata" yaml:"metadata"`
+	Spec       LocalSecretSpec     `json:"spec" yaml:"spec"`
+	Status     *LocalSecretStatus  `json:"status,omitempty" yaml:"status,omitempty"`
+}
+
+type LocalSecretMetadata struct {
+	Name              string             `json:"name" yaml:"name"`
+	CreationTimestamp *string            `json:"creationTimestamp,omitempty" yaml:"creationTimestamp,omitempty"`
+	UpdateTimestamp   *string            `json:"updateTimestamp,omitempty" yaml:"updateTimestamp,omitempty"`
+	Uid               *string            `json:"uid,omitempty" yaml:"uid,omitempty"`
+	Labels            *map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
+	Annotations       *map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
+}
+
+type LocalKafkaDatabase struct {
+	ApiVersion string                 `json:"apiVersion" yaml:"apiVersion"`
+	Kind       string                 `json:"kind" yaml:"kind"`
+	Metadata   LocalDatabaseMetadata  `json:"metadata" yaml:"metadata"`
+	Spec       LocalKafkaDatabaseSpec `json:"spec" yaml:"spec"`
+}
+
+type LocalDatabaseMetadata struct {
+	Name              string             `json:"name" yaml:"name"`
+	CreationTimestamp *string            `json:"creationTimestamp,omitempty" yaml:"creationTimestamp,omitempty"`
+	UpdateTimestamp   *string            `json:"updateTimestamp,omitempty" yaml:"updateTimestamp,omitempty"`
+	Uid               *string            `json:"uid,omitempty" yaml:"uid,omitempty"`
+	Labels            *map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
+	Annotations       *map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
+}
+
+type LocalSecretMappingSpec struct {
+	SecretName string `json:"secretName" yaml:"secretName"`
+}
+
+type LocalSecretSpec struct {
+	Data *map[string]string `json:"data,omitempty" yaml:"data,omitempty"`
+}
+
+type LocalSecretStatus struct {
+	Version      *string   `json:"version,omitempty" yaml:"version,omitempty"`
+	Environments *[]string `json:"environments,omitempty" yaml:"environments,omitempty"`
+}
+
+type LocalKafkaDatabaseSpec struct {
+	KafkaCluster    LocalKafkaDatabaseSpecKafkaCluster `json:"kafkaCluster" yaml:"kafkaCluster"`
+	DdlEnvironments *[]string                          `json:"ddlEnvironments,omitempty" yaml:"ddlEnvironments,omitempty"`
+}
+
+type LocalKafkaDatabaseSpecKafkaCluster struct {
 	ConnectionConfig   map[string]string `json:"connectionConfig" yaml:"connectionConfig"`
 	ConnectionSecretId *string           `json:"connectionSecretId,omitempty" yaml:"connectionSecretId,omitempty"`
 }
