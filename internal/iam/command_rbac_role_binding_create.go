@@ -70,6 +70,10 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 				Text: `Create a role binding for the principal permitting it produce to topic "my-topic":`,
 				Code: "confluent iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:my-topic --kafka-cluster 0000000000000000000000",
 			},
+			examples.Example{
+				Text: `Create a role binding for the principal permitting it to manage all Schema Registry subjects:`,
+				Code: `confluent iam rbac role-binding create --principal User:appSA --role ResourceOwner --resource "Subject:*" --environment environment-12345 --schema-registry-cluster sr-123456`,
+			},
 		)
 	}
 
