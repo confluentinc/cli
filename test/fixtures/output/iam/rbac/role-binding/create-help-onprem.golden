@@ -10,7 +10,7 @@ Create a role binding for the principal permitting it produce to topic "my-topic
 
 Create a role binding for the principal permitting it to manage all Schema Registry subjects:
 
-  $ confluent iam rbac role-binding create --principal User:appSA --role ResourceOwner --resource "Subject:*" --environment environment-12345 --schema-registry-cluster sr-123456
+  $ confluent iam rbac role-binding create --principal User:appSA --role ResourceOwner --resource "Subject:*" --kafka-cluster 0000000000000000000000 --schema-registry-cluster sr-123456
 
 Flags:
       --role string                      REQUIRED: Role name of the new role binding.
