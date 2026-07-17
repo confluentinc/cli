@@ -82,6 +82,11 @@ func (c *command) artifactVersionDownloadOnPrem(cmd *cobra.Command, args []strin
 	if err != nil {
 		return err
 	}
+	// A 2xx response with an empty body yields a nil file (the SDK does not allocate one); guard against it so the
+	// deferred cleanup below doesn't dereference a nil *os.File.
+	if downloadedFile == nil {
+		return fmt.Errorf(`no content was returned for Flink artifact "%s"`, name)
+	}
 	defer os.Remove(downloadedFile.Name())
 	defer downloadedFile.Close()
 
@@ -89,12 +94,18 @@ func (c *command) artifactVersionDownloadOnPrem(cmd *cobra.Command, args []strin
 	if err != nil {
 		return fmt.Errorf("failed to create output file: %w", err)
 	}
-	defer destination.Close()
 
 	if _, err := io.Copy(destination, downloadedFile); err != nil {
+		destination.Close()
+		// Remove the partial output file so a failed download doesn't leave a truncated or corrupt artifact behind.
+		os.Remove(outputFile)
 		return fmt.Errorf("failed to write output file: %w", err)
 	}
 
-	output.Printf(false, "Downloaded Flink artifact %q to \"%s\".\n", name, outputFile)
+	if err := destination.Close(); err != nil {
+		return fmt.Errorf("failed to write output file: %w", err)
+	}
+
+	output.Printf(false, "Downloaded Flink artifact %q to %q.\n", name, outputFile)
 	return nil
 }

@@ -43,6 +43,8 @@ type artifactVersionOutOnPrem struct {
 
 func newArtifactOutOnPrem(artifact cmfsdk.Artifact) *artifactOutOnPrem {
 	out := &artifactOutOnPrem{Name: artifact.Metadata.Name}
+	// Artifact-level view: Creation Time is when the artifact was first created (Metadata), not the current version.
+	// The version-level view below deliberately uses Status.CreationTimestamp instead; keep the two sources distinct.
 	if artifact.Metadata.CreationTimestamp != nil {
 		out.CreationTime = *artifact.Metadata.CreationTimestamp
 	}
@@ -75,6 +77,8 @@ func newArtifactVersionOutOnPrem(artifact cmfsdk.Artifact) *artifactVersionOutOn
 		if artifact.Status.Checksum != nil {
 			out.Checksum = *artifact.Status.Checksum
 		}
+		// Version-level view: Creation Time is when this specific version was uploaded (Status), not the artifact.
+		// This intentionally differs from newArtifactOutOnPrem, which reads Metadata.CreationTimestamp.
 		if artifact.Status.CreationTimestamp != nil {
 			out.CreationTime = *artifact.Status.CreationTimestamp
 		}

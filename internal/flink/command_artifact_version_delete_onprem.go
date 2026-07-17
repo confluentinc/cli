@@ -7,6 +7,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/deletion"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
@@ -57,7 +58,9 @@ func (c *command) artifactVersionDeleteOnPrem(cmd *cobra.Command, args []string)
 	}
 
 	if _, err := client.DescribeArtifact(c.createContext(), environment, name, ""); err != nil {
-		return err
+		suggestions := "List available Flink artifacts with `confluent flink artifact list`."
+		suggestions += "\nCheck that CMF is running and accessible."
+		return errors.NewErrorWithSuggestions(err.Error(), suggestions)
 	}
 
 	var promptMsg string

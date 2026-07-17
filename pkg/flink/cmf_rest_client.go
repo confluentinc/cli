@@ -11,6 +11,7 @@ import (
 	"net/http"
 	_nethttp "net/http"
 	"net/textproto"
+	neturl "net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -822,7 +823,7 @@ func (cmfClient *CmfRestClient) ListDatabases(ctx context.Context, catalogName s
 // CreateArtifact uploads a new artifact (version 1) to the specified environment.
 // Both the artifact metadata and the binary file are required by the CMF API.
 func (cmfClient *CmfRestClient) CreateArtifact(ctx context.Context, environment string, artifact cmfsdk.Artifact, file *os.File) (cmfsdk.Artifact, error) {
-	url := fmt.Sprintf("%s/cmf/api/v1/environments/%s/artifacts", cmfClient.artifactsBaseURL(), environment)
+	url := fmt.Sprintf("%s/cmf/api/v1/environments/%s/artifacts", cmfClient.artifactsBaseURL(), neturl.PathEscape(environment))
 	outputArtifact, err := cmfClient.uploadArtifact(ctx, http.MethodPost, url, artifact, file)
 	if err != nil {
 		return cmfsdk.Artifact{}, fmt.Errorf(`failed to create artifact "%s" in the environment "%s": %s`, artifact.Metadata.Name, environment, err)
@@ -833,7 +834,7 @@ func (cmfClient *CmfRestClient) CreateArtifact(ctx context.Context, environment 
 // UpdateArtifact updates an artifact in the specified environment.
 // When file is nil, only the metadata is updated; when a file is provided, a new version is created (or deduplicated if identical to the latest).
 func (cmfClient *CmfRestClient) UpdateArtifact(ctx context.Context, environment, name string, artifact cmfsdk.Artifact, file *os.File) (cmfsdk.Artifact, error) {
-	url := fmt.Sprintf("%s/cmf/api/v1/environments/%s/artifacts/%s", cmfClient.artifactsBaseURL(), environment, name)
+	url := fmt.Sprintf("%s/cmf/api/v1/environments/%s/artifacts/%s", cmfClient.artifactsBaseURL(), neturl.PathEscape(environment), neturl.PathEscape(name))
 	outputArtifact, err := cmfClient.uploadArtifact(ctx, http.MethodPut, url, artifact, file)
 	if err != nil {
 		return cmfsdk.Artifact{}, fmt.Errorf(`failed to update artifact "%s" in the environment "%s": %s`, name, environment, err)
@@ -848,6 +849,8 @@ func (cmfClient *CmfRestClient) artifactsBaseURL() string {
 // uploadArtifact sends a multipart/form-data request for the artifact create and update endpoints.
 // The generated SDK serializes the "artifact" object part with fmt "%v" (Go struct representation) rather than JSON,
 // so the request is built here (mirroring GetSystemInformation's manual CMF request handling) to send a proper JSON part.
+// Like GetSystemInformation, this bypasses the SDK's request pipeline, so `--unsafe-trace` request logging and the
+// configured User-Agent do not apply to these two calls.
 func (cmfClient *CmfRestClient) uploadArtifact(ctx context.Context, method, url string, artifact cmfsdk.Artifact, file *os.File) (cmfsdk.Artifact, error) {
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
