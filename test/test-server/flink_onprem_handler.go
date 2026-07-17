@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -1855,6 +1856,200 @@ func handleCmfSecret(t *testing.T) http.HandlerFunc {
 				return
 			}
 			w.WriteHeader(http.StatusOK)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+// createArtifactObject builds a fully-populated Artifact for the given name and version with deterministic field values.
+func createArtifactObject(name string, version int32) cmfsdk.Artifact {
+	timestamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
+	return cmfsdk.Artifact{
+		ApiVersion: "cmf.confluent.io/v1",
+		Kind:       "Artifact",
+		Metadata: cmfsdk.ArtifactMetadata{
+			Name:              name,
+			Uid:               cmfsdk.PtrString("11111111-1111-1111-1111-111111111111"),
+			CreationTimestamp: &timestamp,
+			UpdateTimestamp:   &timestamp,
+		},
+		Spec: map[string]interface{}{},
+		Status: &cmfsdk.ArtifactStatus{
+			Version:           cmfsdk.PtrInt32(version),
+			CreationTimestamp: &timestamp,
+			Path:              cmfsdk.PtrString(fmt.Sprintf("artifacts/%s/%d", name, version)),
+			Size:              cmfsdk.PtrInt64(1024),
+			Checksum:          cmfsdk.PtrString("d41d8cd98f00b204e9800998ecf8427e"),
+			Phase:             cmfsdk.PtrString("READY"),
+		},
+	}
+}
+
+// buildArtifactResponse echoes the submitted name, labels, and annotations while attaching a deterministic server-side status.
+func buildArtifactResponse(submitted cmfsdk.Artifact, version int32) cmfsdk.Artifact {
+	artifact := createArtifactObject(submitted.Metadata.Name, version)
+	if submitted.Metadata.Labels != nil {
+		artifact.Metadata.Labels = submitted.Metadata.Labels
+	}
+	if submitted.Metadata.Annotations != nil {
+		artifact.Metadata.Annotations = submitted.Metadata.Annotations
+	}
+	return artifact
+}
+
+// Handler for "/cmf/api/v1/environments/{environment}/artifacts"
+// Used by list and create Flink artifacts.
+func handleCmfArtifacts(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		if mux.Vars(r)["environment"] == "non-exist" {
+			http.Error(w, "Environment not found", http.StatusNotFound)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			artifactsPage := cmfsdk.ArtifactsPage{}
+			if r.URL.Query().Get("page") == "0" {
+				artifactsPage.SetItems([]cmfsdk.Artifact{
+					createArtifactObject("test-artifact-1", 1),
+					createArtifactObject("test-artifact-2", 3),
+				})
+			}
+			err := json.NewEncoder(w).Encode(artifactsPage)
+			require.NoError(t, err)
+			return
+		case http.MethodPost:
+			require.NoError(t, r.ParseMultipartForm(32<<20))
+			var artifact cmfsdk.Artifact
+			require.NoError(t, json.Unmarshal([]byte(r.FormValue("artifact")), &artifact))
+
+			if artifact.Metadata.Name == "existing-artifact" {
+				http.Error(w, "The artifact name already exists, please try with another artifact name", http.StatusConflict)
+				return
+			}
+
+			w.WriteHeader(http.StatusCreated)
+			err := json.NewEncoder(w).Encode(buildArtifactResponse(artifact, 1))
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+// Handler for "/cmf/api/v1/environments/{environment}/artifacts/{artifactName}"
+// Used by describe, update (metadata-only), version create (with file), and delete a Flink artifact.
+func handleCmfArtifact(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		artifactName := vars["artifactName"]
+
+		if vars["environment"] == "non-exist" {
+			http.Error(w, "Environment not found", http.StatusNotFound)
+			return
+		}
+		if artifactName == "invalid-artifact" || artifactName == "non-exist-artifact" {
+			http.Error(w, "The artifact name is invalid", http.StatusNotFound)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			version := int32(3)
+			if requested := r.URL.Query().Get("version"); requested != "" {
+				parsed, err := strconv.Atoi(requested)
+				if err != nil {
+					http.Error(w, "invalid version", http.StatusBadRequest)
+					return
+				}
+				version = int32(parsed)
+			}
+			err := json.NewEncoder(w).Encode(createArtifactObject(artifactName, version))
+			require.NoError(t, err)
+			return
+		case http.MethodPut:
+			require.NoError(t, r.ParseMultipartForm(32<<20))
+			var artifact cmfsdk.Artifact
+			require.NoError(t, json.Unmarshal([]byte(r.FormValue("artifact")), &artifact))
+
+			// A "file" part indicates a new version upload; its absence is a metadata-only update.
+			version := int32(1)
+			if r.MultipartForm != nil && len(r.MultipartForm.File["file"]) > 0 {
+				version = 2
+			}
+
+			err := json.NewEncoder(w).Encode(buildArtifactResponse(artifact, version))
+			require.NoError(t, err)
+			return
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+// Handler for "/cmf/api/v1/environments/{environment}/artifacts/{artifactName}/versions"
+// Used by list the versions of a Flink artifact.
+func handleCmfArtifactVersions(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		artifactName := vars["artifactName"]
+
+		if artifactName == "invalid-artifact" || artifactName == "non-exist-artifact" {
+			http.Error(w, "The artifact name is invalid", http.StatusNotFound)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			versionsPage := cmfsdk.ArtifactsPage{}
+			if r.URL.Query().Get("page") == "0" {
+				versionsPage.SetItems([]cmfsdk.Artifact{
+					createArtifactObject(artifactName, 3),
+					createArtifactObject(artifactName, 2),
+					createArtifactObject(artifactName, 1),
+				})
+			}
+			err := json.NewEncoder(w).Encode(versionsPage)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+// Handler for "/cmf/api/v1/environments/{environment}/artifacts/{artifactName}/content"
+// Used by download the content of a Flink artifact.
+func handleCmfArtifactContent(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		artifactName := vars["artifactName"]
+
+		if artifactName == "invalid-artifact" || artifactName == "non-exist-artifact" {
+			http.Error(w, "The artifact name is invalid", http.StatusNotFound)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			w.Header().Set("Content-Type", "application/octet-stream")
+			w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.jar"`, artifactName))
+			_, err := w.Write([]byte("dummy artifact content"))
+			require.NoError(t, err)
 			return
 		default:
 			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
