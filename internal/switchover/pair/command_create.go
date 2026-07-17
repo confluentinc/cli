@@ -97,7 +97,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 			DisplayName:  switchoverv1.PtrString(displayName),
 			Members:      &members,
 			ActiveMember: switchoverv1.PtrString(activeMember),
-			Environment:  &switchoverv1.EnvScopedObjectReference{Id: environmentId},
+			Environment:  switchoverv1.PtrString(environmentId),
 		},
 	}
 
@@ -115,7 +115,7 @@ func printSwitchoverPair(cmd *cobra.Command, pair switchoverv1.SwitchoverV1Switc
 		Id:           pair.GetId(),
 		DisplayName:  pair.Spec.GetDisplayName(),
 		ActiveMember: pair.Spec.GetActiveMember(),
-		Environment:  pair.Spec.Environment.GetId(),
+		Environment:  pair.Spec.GetEnvironment(),
 		Phase:        pair.Status.GetPhase(),
 	})
 	return table.Print()

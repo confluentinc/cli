@@ -30,6 +30,8 @@ func (c *command) newTriggerSwitchCommand() *cobra.Command {
 	cmd.Flags().String("active-member", "", "The name of the member to promote to active. If omitted, the other member is promoted.")
 	cmd.Flags().String("failover-type", "CLEAN", "The failover semantics to apply: CLEAN, UNCLEAN, or RESTORE.")
 	cmd.Flags().Bool("force", false, "Skip the confirmation prompt.")
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -48,16 +50,24 @@ func (c *command) triggerSwitch(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
 	promptMsg := fmt.Sprintf(`This triggers a %s failover on switchover pair "%s", redirecting live traffic between regions. Do you want to proceed?`, failoverType, id)
 	if err := deletion.ConfirmPrompt(cmd, promptMsg); err != nil {
 		return err
 	}
 
 	req := switchoverv1.SwitchoverV1SwitchoverPairFailoverRequest{
-		FailoverType: switchoverv1.PtrString(failoverType),
+		Spec: switchoverv1.SwitchoverV1SwitchoverPairFailoverRequestSpec{
+			Environment:  environmentId,
+			FailoverType: switchoverv1.PtrString(failoverType),
+		},
 	}
 	if activeMember != "" {
-		req.ActiveMember = switchoverv1.PtrString(activeMember)
+		req.Spec.ActiveMember = switchoverv1.PtrString(activeMember)
 	}
 
 	result, err := c.V2Client.TriggerSwitchoverPairFailover(id, req)

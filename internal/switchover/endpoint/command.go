@@ -30,7 +30,6 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newUpdateCommand())
-	cmd.AddCommand(c.newActivateCommand())
 
 	return cmd
 }

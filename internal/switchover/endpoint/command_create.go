@@ -29,7 +29,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("switchover-pair", "", "The ID of the switchover pair this endpoint is bound to.")
-	cmd.Flags().StringArray("endpoint", nil, `An endpoint side, in the form "name=<name>,type=<private|public>[,gateway=<gateway-id>][,access-point=<access-point-id>]". Must be specified exactly twice.`)
+	cmd.Flags().StringArray("endpoint", nil, `An endpoint side, in the form "name=<name>,type=<private|public>[,network=<network-id>][,access-point=<access-point-id>]". Must be specified exactly twice.`)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -53,8 +53,8 @@ func parseEndpointFlag(raw string) (switchoverv1.SwitchoverV1EndpointConfig, err
 			config.Name = value
 		case "type":
 			filter.Type = value
-		case "gateway":
-			filter.Gateway = switchoverv1.PtrString(value)
+		case "network":
+			filter.NetworkId = switchoverv1.PtrString(value)
 		case "access-point":
 			filter.AccessPoint = switchoverv1.PtrString(value)
 		default:
@@ -102,7 +102,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		Spec: &switchoverv1.SwitchoverV1SwitchoverEndpointSpec{
 			DisplayName:      switchoverv1.PtrString(displayName),
 			Endpoints:        &endpoints,
-			Environment:      &switchoverv1.EnvScopedObjectReference{Id: environmentId},
+			Environment:      switchoverv1.PtrString(environmentId),
 			SwitchoverPairId: switchoverv1.PtrString(switchoverPairId),
 		},
 	}
@@ -121,7 +121,7 @@ func printSwitchoverEndpoint(cmd *cobra.Command, endpoint switchoverv1.Switchove
 		Id:             endpoint.GetId(),
 		DisplayName:    endpoint.Spec.GetDisplayName(),
 		SwitchoverPair: endpoint.Spec.GetSwitchoverPairId(),
-		Environment:    endpoint.Spec.Environment.GetId(),
+		Environment:    endpoint.Spec.GetEnvironment(),
 		Phase:          endpoint.Status.GetPhase(),
 	})
 	return table.Print()

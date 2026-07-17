@@ -38,8 +38,8 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	endpoint := switchoverv1.SwitchoverV1SwitchoverEndpoint{
-		Spec: &switchoverv1.SwitchoverV1SwitchoverEndpointSpec{
+	endpoint := switchoverv1.SwitchoverV1SwitchoverEndpointUpdateRequest{
+		Spec: switchoverv1.SwitchoverV1SwitchoverEndpointUpdateRequestSpec{
 			DisplayName: switchoverv1.PtrString(displayName),
 		},
 	}

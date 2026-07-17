@@ -38,8 +38,8 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pair := switchoverv1.SwitchoverV1SwitchoverPair{
-		Spec: &switchoverv1.SwitchoverV1SwitchoverPairSpec{
+	pair := switchoverv1.SwitchoverV1SwitchoverPairUpdateRequest{
+		Spec: switchoverv1.SwitchoverV1SwitchoverPairUpdateRequestSpec{
 			DisplayName: switchoverv1.PtrString(displayName),
 		},
 	}
