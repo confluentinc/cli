@@ -25,6 +25,8 @@ func (c *command) newUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("display-name", "", "A human-readable name for the switchover endpoint.")
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("display-name"))
@@ -38,13 +40,18 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
 	endpoint := switchoverv1.SwitchoverV1SwitchoverEndpointUpdateRequest{
 		Spec: switchoverv1.SwitchoverV1SwitchoverEndpointUpdateRequestSpec{
 			DisplayName: switchoverv1.PtrString(displayName),
 		},
 	}
 
-	result, err := c.V2Client.UpdateSwitchoverEndpoint(args[0], endpoint)
+	result, err := c.V2Client.UpdateSwitchoverEndpoint(args[0], environmentId, endpoint)
 	if err != nil {
 		return err
 	}

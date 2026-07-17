@@ -42,8 +42,8 @@ func (c *Client) GetSwitchoverPair(id, environment string) (switchoverv1.Switcho
 	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateSwitchoverPair(id string, update switchoverv1.SwitchoverV1SwitchoverPairUpdateRequest) (switchoverv1.SwitchoverV1SwitchoverPair, error) {
-	res, httpResp, err := c.SwitchoverClient.SwitchoverPairsSwitchoverV1Api.UpdateSwitchoverV1SwitchoverPair(c.switchoverApiContext(), id).SwitchoverV1SwitchoverPairUpdateRequest(update).Execute()
+func (c *Client) UpdateSwitchoverPair(id, environment string, update switchoverv1.SwitchoverV1SwitchoverPairUpdateRequest) (switchoverv1.SwitchoverV1SwitchoverPair, error) {
+	res, httpResp, err := c.SwitchoverClient.SwitchoverPairsSwitchoverV1Api.UpdateSwitchoverV1SwitchoverPair(c.switchoverApiContext(), id).Environment(environment).SwitchoverV1SwitchoverPairUpdateRequest(update).Execute()
 	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
 
@@ -62,7 +62,7 @@ func (c *Client) GetSwitchoverEndpoint(id, environment string) (switchoverv1.Swi
 	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateSwitchoverEndpoint(id string, update switchoverv1.SwitchoverV1SwitchoverEndpointUpdateRequest) (switchoverv1.SwitchoverV1SwitchoverEndpoint, error) {
-	res, httpResp, err := c.SwitchoverClient.SwitchoverEndpointsSwitchoverV1Api.UpdateSwitchoverV1SwitchoverEndpoint(c.switchoverApiContext(), id).SwitchoverV1SwitchoverEndpointUpdateRequest(update).Execute()
+func (c *Client) UpdateSwitchoverEndpoint(id, environment string, update switchoverv1.SwitchoverV1SwitchoverEndpointUpdateRequest) (switchoverv1.SwitchoverV1SwitchoverEndpoint, error) {
+	res, httpResp, err := c.SwitchoverClient.SwitchoverEndpointsSwitchoverV1Api.UpdateSwitchoverV1SwitchoverEndpoint(c.switchoverApiContext(), id).Environment(environment).SwitchoverV1SwitchoverEndpointUpdateRequest(update).Execute()
 	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
