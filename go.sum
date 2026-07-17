@@ -248,8 +248,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.6.0 h1:wrmpI4UJgWZ4rX1EYqU
 github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.6.0/go.mod h1:myRmhUEWzpwGqWvdsNk79QH41pkre1G21vmySyGQiWA=
 github.com/confluentinc/ccloud-sdk-go-v2/usm v0.1.0 h1:rF9cKecDCowq+oDWjf8rSpXXZHAnVXowIsT/OXF4MOI=
 github.com/confluentinc/ccloud-sdk-go-v2/usm v0.1.0/go.mod h1:umhEDvQp/5h0ALKBpYTQOmFwaWrvilnbE8Rkzh6oJ4Q=
-github.com/confluentinc/cmf-sdk-go v0.0.7 h1:+BS3A0v3K4VvzDjo1WwJMKWvlkmK7KK6hZSEzGaYRF4=
-github.com/confluentinc/cmf-sdk-go v0.0.7/go.mod h1:xY6OWDUc4UtKMgmade99v1C8/YovgWTl8tzeZ23LrEg=
+github.com/confluentinc/cmf-sdk-go v0.0.8 h1:ziiV4/lNKh49m7RxwPCDL04OFV54lA3SkeynsQ2SDC8=
+github.com/confluentinc/cmf-sdk-go v0.0.8/go.mod h1:xY6OWDUc4UtKMgmade99v1C8/YovgWTl8tzeZ23LrEg=
 github.com/confluentinc/confluent-avro-go/v2 v2.32.0 h1:PQjdGEaxCGrvdNtXsoMJsfY39WQyfrekEdOsh0e6bT0=
 github.com/confluentinc/confluent-avro-go/v2 v2.32.0/go.mod h1:WfNwYNykGDKOM3WrEqhHDNokB+PBRno5DJqS/cTtAko=
 github.com/confluentinc/confluent-kafka-go/v2 v2.14.2 h1:EYOGezeuuHtzXElXsAjalIyL9Qm5wBVNdy1m8fJElyM=
