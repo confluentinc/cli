@@ -1,0 +1,4 @@
+Error: file "existing-artifact.jar" already exists
+
+Suggestions:
+    Use the `--force` flag to overwrite the existing file.
