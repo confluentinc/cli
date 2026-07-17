@@ -58,9 +58,7 @@ func (c *command) artifactVersionDeleteOnPrem(cmd *cobra.Command, args []string)
 	}
 
 	if _, err := client.DescribeArtifact(c.createContext(), environment, name, ""); err != nil {
-		suggestions := "List available Flink artifacts with `confluent flink artifact list`."
-		suggestions += "\nCheck that CMF is running and accessible."
-		return errors.NewErrorWithSuggestions(err.Error(), suggestions)
+		return errors.NewErrorWithSuggestions(err.Error(), artifactLookupSuggestions)
 	}
 
 	var promptMsg string

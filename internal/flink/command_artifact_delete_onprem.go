@@ -45,9 +45,7 @@ func (c *command) artifactDeleteOnPrem(cmd *cobra.Command, args []string) error 
 	}
 
 	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.FlinkArtifact); err != nil {
-		suggestions := "List available Flink artifacts with `confluent flink artifact list`."
-		suggestions += "\nCheck that CMF is running and accessible."
-		return errors.NewErrorWithSuggestions(err.Error(), suggestions)
+		return errors.NewErrorWithSuggestions(err.Error(), artifactLookupSuggestions)
 	}
 
 	// An empty version deletes the artifact and all of its versions.

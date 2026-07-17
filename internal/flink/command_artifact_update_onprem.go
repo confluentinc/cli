@@ -41,13 +41,10 @@ func (c *command) artifactUpdateOnPrem(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	// Only set labels when --label is provided. Leaving them nil omits the field so existing labels are preserved server-side.
-	var labels map[string]string
-	if cmd.Flags().Changed("label") {
-		labels, err = getLabelsFlag(cmd)
-		if err != nil {
-			return err
-		}
+	// getLabelsFlag returns a nil map when --label is omitted, which omits the field so existing labels are preserved server-side.
+	labels, err := getLabelsFlag(cmd)
+	if err != nil {
+		return err
 	}
 
 	client, err := c.GetCmfClient(cmd)

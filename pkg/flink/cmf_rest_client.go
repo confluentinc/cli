@@ -555,17 +555,14 @@ func (cmfClient *CmfRestClient) GetStatementResults(ctx context.Context, environ
 }
 
 func (cmfClient *CmfRestClient) GetSystemInformation(ctx context.Context) (map[string]interface{}, error) {
-	baseURL := strings.TrimRight(cmfClient.GetConfig().Servers[0].URL, "/")
-	url := baseURL + "/cmf/api/v1/system-information"
+	url := cmfClient.cmfBaseURL() + "/cmf/api/v1/system-information"
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create system information request: %s", err)
 	}
 
-	if token, ok := ctx.Value(cmfsdk.ContextAccessToken).(string); ok && token != "" {
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
-	}
+	setCmfAuthHeader(ctx, req)
 
 	resp, err := cmfClient.GetConfig().HTTPClient.Do(req)
 	if err != nil {
@@ -579,11 +576,7 @@ func (cmfClient *CmfRestClient) GetSystemInformation(ctx context.Context) (map[s
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		trimmed := strings.TrimSpace(string(body))
-		if trimmed != "" {
-			return nil, errors.New(trimmed)
-		}
-		return nil, errors.New(resp.Status)
+		return nil, cmfErrorFromBody(resp.Status, body)
 	}
 
 	var result map[string]interface{}
@@ -823,7 +816,7 @@ func (cmfClient *CmfRestClient) ListDatabases(ctx context.Context, catalogName s
 // CreateArtifact uploads a new artifact (version 1) to the specified environment.
 // Both the artifact metadata and the binary file are required by the CMF API.
 func (cmfClient *CmfRestClient) CreateArtifact(ctx context.Context, environment string, artifact cmfsdk.Artifact, file *os.File) (cmfsdk.Artifact, error) {
-	url := fmt.Sprintf("%s/cmf/api/v1/environments/%s/artifacts", cmfClient.artifactsBaseURL(), neturl.PathEscape(environment))
+	url := fmt.Sprintf("%s/cmf/api/v1/environments/%s/artifacts", cmfClient.cmfBaseURL(), neturl.PathEscape(environment))
 	outputArtifact, err := cmfClient.uploadArtifact(ctx, http.MethodPost, url, artifact, file)
 	if err != nil {
 		return cmfsdk.Artifact{}, fmt.Errorf(`failed to create artifact "%s" in the environment "%s": %s`, artifact.Metadata.Name, environment, err)
@@ -834,7 +827,7 @@ func (cmfClient *CmfRestClient) CreateArtifact(ctx context.Context, environment 
 // UpdateArtifact updates an artifact in the specified environment.
 // When file is nil, only the metadata is updated; when a file is provided, a new version is created (or deduplicated if identical to the latest).
 func (cmfClient *CmfRestClient) UpdateArtifact(ctx context.Context, environment, name string, artifact cmfsdk.Artifact, file *os.File) (cmfsdk.Artifact, error) {
-	url := fmt.Sprintf("%s/cmf/api/v1/environments/%s/artifacts/%s", cmfClient.artifactsBaseURL(), neturl.PathEscape(environment), neturl.PathEscape(name))
+	url := fmt.Sprintf("%s/cmf/api/v1/environments/%s/artifacts/%s", cmfClient.cmfBaseURL(), neturl.PathEscape(environment), neturl.PathEscape(name))
 	outputArtifact, err := cmfClient.uploadArtifact(ctx, http.MethodPut, url, artifact, file)
 	if err != nil {
 		return cmfsdk.Artifact{}, fmt.Errorf(`failed to update artifact "%s" in the environment "%s": %s`, name, environment, err)
@@ -842,8 +835,25 @@ func (cmfClient *CmfRestClient) UpdateArtifact(ctx context.Context, environment,
 	return outputArtifact, nil
 }
 
-func (cmfClient *CmfRestClient) artifactsBaseURL() string {
+// cmfBaseURL returns the CMF server base URL with any trailing slash trimmed. Used by the handful of methods that
+// build CMF requests manually rather than through the generated SDK.
+func (cmfClient *CmfRestClient) cmfBaseURL() string {
 	return strings.TrimRight(cmfClient.GetConfig().Servers[0].URL, "/")
+}
+
+// setCmfAuthHeader copies the bearer token from the context onto a manually built CMF request, if one is present.
+func setCmfAuthHeader(ctx context.Context, request *http.Request) {
+	if token, ok := ctx.Value(cmfsdk.ContextAccessToken).(string); ok && token != "" {
+		request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	}
+}
+
+// cmfErrorFromBody builds an error from a failed CMF response, preferring the response body over the status line.
+func cmfErrorFromBody(status string, body []byte) error {
+	if trimmed := strings.TrimSpace(string(body)); trimmed != "" {
+		return errors.New(trimmed)
+	}
+	return errors.New(status)
 }
 
 // uploadArtifact sends a multipart/form-data request for the artifact create and update endpoints.
@@ -890,9 +900,7 @@ func (cmfClient *CmfRestClient) uploadArtifact(ctx context.Context, method, url 
 		return cmfsdk.Artifact{}, err
 	}
 	request.Header.Set("Content-Type", writer.FormDataContentType())
-	if token, ok := ctx.Value(cmfsdk.ContextAccessToken).(string); ok && token != "" {
-		request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
-	}
+	setCmfAuthHeader(ctx, request)
 
 	response, err := cmfClient.GetConfig().HTTPClient.Do(request)
 	if err != nil {
@@ -906,10 +914,7 @@ func (cmfClient *CmfRestClient) uploadArtifact(ctx context.Context, method, url 
 	}
 
 	if response.StatusCode >= http.StatusBadRequest {
-		if trimmed := strings.TrimSpace(string(responseBody)); trimmed != "" {
-			return cmfsdk.Artifact{}, errors.New(trimmed)
-		}
-		return cmfsdk.Artifact{}, errors.New(response.Status)
+		return cmfsdk.Artifact{}, cmfErrorFromBody(response.Status, responseBody)
 	}
 
 	var outputArtifact cmfsdk.Artifact

@@ -23,6 +23,10 @@ const (
 	artifactKind       = "Artifact"
 )
 
+// artifactLookupSuggestions is shared by the delete handlers when an artifact can't be found (or CMF is unreachable).
+const artifactLookupSuggestions = "List available Flink artifacts with `confluent flink artifact list`." +
+	"\nCheck that CMF is running and accessible."
+
 // artifactOutOnPrem is the human-readable view of an artifact (artifact-level: create, update, describe, list).
 type artifactOutOnPrem struct {
 	Name         string `human:"Name" serialized:"name"`
