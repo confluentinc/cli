@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
@@ -32,7 +31,6 @@ func (c *command) newArtifactVersionDownloadCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	cmd.Flags().String("output-file", "", "Path to write the downloaded artifact file.")
 	cmd.Flags().String("version", "", "Version of the artifact to download. Defaults to the latest version.")
-	cmd.Flags().Bool("force", false, "Overwrite the output file if it already exists.")
 	addCmfFlagSet(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
@@ -59,20 +57,7 @@ func (c *command) artifactVersionDownloadOnPrem(cmd *cobra.Command, args []strin
 		return err
 	}
 
-	force, err := cmd.Flags().GetBool("force")
-	if err != nil {
-		return err
-	}
-
-	if !force {
-		if _, statErr := os.Stat(outputFile); statErr == nil {
-			return errors.NewErrorWithSuggestions(
-				fmt.Sprintf(`file "%s" already exists`, outputFile),
-				"Use the `--force` flag to overwrite the existing file.",
-			)
-		}
-	}
-
+	// Like `asyncapi export`, download overwrites the output file if it already exists.
 	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
