@@ -1,0 +1,1 @@
+Error: failed to create artifact "existing-artifact" in the environment "test-env": The artifact name already exists, please try with another artifact name
