@@ -446,6 +446,9 @@ func (s *CLITestSuite) TestFlinkArtifactDescribeOnPrem() {
 		{args: "flink artifact describe test-artifact --environment test-env", fixture: "flink/artifact/describe-success.golden"},
 		{args: "flink artifact describe test-artifact --environment test-env --output json", fixture: "flink/artifact/describe-success-json.golden"},
 		{args: "flink artifact describe test-artifact --environment test-env --output yaml", fixture: "flink/artifact/describe-success-yaml.golden"},
+		// labels + annotations are surfaced in the human describe table (Labels/Annotations rows)
+		{args: "flink artifact describe labeled-artifact --environment test-env", fixture: "flink/artifact/describe-labeled.golden"},
+		{args: "flink artifact describe labeled-artifact --environment test-env --output json", fixture: "flink/artifact/describe-labeled-json.golden"},
 		// failure
 		{args: "flink artifact describe invalid-artifact --environment test-env", fixture: "flink/artifact/describe-non-exist-failure.golden", exitCode: 1},
 	}
@@ -460,6 +463,8 @@ func (s *CLITestSuite) TestFlinkArtifactUpdateOnPrem() {
 		{args: "flink artifact update test-artifact --label owner=team-a,tier=gold --environment test-env --output yaml", fixture: "flink/artifact/update-success-yaml.golden"},
 		// metadata-only update: no --label, so existing labels are preserved (the label-preserving branch) and output is human-readable
 		{args: "flink artifact update test-artifact --environment test-env", fixture: "flink/artifact/update-metadata-only-success.golden"},
+		// metadata-only update in JSON: the response carries no "labels" field, confirming the CLI omitted labels (preserve) rather than sending an empty object (clear)
+		{args: "flink artifact update test-artifact --environment test-env --output json", fixture: "flink/artifact/update-metadata-only-json.golden"},
 		// failure
 		{args: "flink artifact update invalid-artifact --label owner=team-a --environment test-env", fixture: "flink/artifact/update-non-exist-failure.golden", exitCode: 1},
 	}

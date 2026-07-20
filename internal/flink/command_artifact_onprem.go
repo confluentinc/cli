@@ -27,13 +27,25 @@ const (
 const artifactLookupSuggestions = "List available Flink artifacts with `confluent flink artifact list`." +
 	"\nCheck that CMF is running and accessible."
 
-// artifactOutOnPrem is the human-readable view of an artifact (artifact-level: create, update, describe, list).
+// artifactOutOnPrem is the human-readable row used by the artifact list command (kept lean; no labels/annotations).
 type artifactOutOnPrem struct {
 	Name         string `human:"Name" serialized:"name"`
 	Version      string `human:"Version" serialized:"version"`
 	Phase        string `human:"Phase" serialized:"phase"`
 	Size         string `human:"Size" serialized:"size"`
 	CreationTime string `human:"Creation Time" serialized:"creation_time"`
+}
+
+// artifactDescribeOutOnPrem is the human-readable view for the single-artifact commands (describe, create, update). It
+// adds Labels and Annotations (omitted when empty) so users can see managed metadata without switching to -o json/yaml.
+type artifactDescribeOutOnPrem struct {
+	Name         string            `human:"Name"`
+	Version      string            `human:"Version"`
+	Phase        string            `human:"Phase"`
+	Size         string            `human:"Size"`
+	CreationTime string            `human:"Creation Time"`
+	Labels       map[string]string `human:"Labels,omitempty"`
+	Annotations  map[string]string `human:"Annotations,omitempty"`
 }
 
 // artifactVersionOutOnPrem is the human-readable view of a single artifact version (version list, version describe).
@@ -90,11 +102,31 @@ func newArtifactVersionOutOnPrem(artifact cmfsdk.Artifact) *artifactVersionOutOn
 	return out
 }
 
+// newArtifactDescribeOutOnPrem builds the single-artifact human view, reusing the list row for the shared columns and
+// adding Labels/Annotations. They are left nil (and thus omitted from the table) when the artifact has none.
+func newArtifactDescribeOutOnPrem(artifact cmfsdk.Artifact) *artifactDescribeOutOnPrem {
+	base := newArtifactOutOnPrem(artifact)
+	out := &artifactDescribeOutOnPrem{
+		Name:         base.Name,
+		Version:      base.Version,
+		Phase:        base.Phase,
+		Size:         base.Size,
+		CreationTime: base.CreationTime,
+	}
+	if artifact.Metadata.Labels != nil {
+		out.Labels = artifact.Metadata.Labels
+	}
+	if artifact.Metadata.Annotations != nil {
+		out.Annotations = artifact.Metadata.Annotations
+	}
+	return out
+}
+
 // printArtifactOnPrem prints a single artifact (artifact-level view).
 func printArtifactOnPrem(cmd *cobra.Command, artifact cmfsdk.Artifact) error {
 	if output.GetFormat(cmd) == output.Human {
 		table := output.NewTable(cmd)
-		table.Add(newArtifactOutOnPrem(artifact))
+		table.Add(newArtifactDescribeOutOnPrem(artifact))
 		return table.Print()
 	}
 	return output.SerializedOutput(cmd, convertSdkArtifactToLocalArtifact(artifact))

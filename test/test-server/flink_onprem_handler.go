@@ -1864,6 +1864,21 @@ func handleCmfSecret(t *testing.T) http.HandlerFunc {
 }
 
 // createArtifactObject builds a fully-populated Artifact for the given name and version with deterministic field values.
+// assertArtifactLabelContract enforces the CLI's label contract on the submitted artifact JSON: the "labels" field must
+// be omitted entirely to preserve existing labels (nil map / --label not passed), and the CLI must never send an empty
+// object, which CMF interprets as "clear all labels". When present, labels must carry the caller's entries.
+func assertArtifactLabelContract(t *testing.T, rawArtifact string) {
+	var probe struct {
+		Metadata struct {
+			Labels *map[string]string `json:"labels"`
+		} `json:"metadata"`
+	}
+	require.NoError(t, json.Unmarshal([]byte(rawArtifact), &probe))
+	if probe.Metadata.Labels != nil {
+		require.NotEmpty(t, *probe.Metadata.Labels, "CLI must omit the labels field to preserve labels, never send an empty object")
+	}
+}
+
 func createArtifactObject(name string, version int32) cmfsdk.Artifact {
 	timestamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
 	return cmfsdk.Artifact{
@@ -1924,8 +1939,10 @@ func handleCmfArtifacts(t *testing.T) http.HandlerFunc {
 			return
 		case http.MethodPost:
 			require.NoError(t, r.ParseMultipartForm(32<<20))
+			rawArtifact := r.FormValue("artifact")
+			assertArtifactLabelContract(t, rawArtifact)
 			var artifact cmfsdk.Artifact
-			require.NoError(t, json.Unmarshal([]byte(r.FormValue("artifact")), &artifact))
+			require.NoError(t, json.Unmarshal([]byte(rawArtifact), &artifact))
 
 			if artifact.Metadata.Name == "existing-artifact" {
 				http.Error(w, "The artifact name already exists, please try with another artifact name", http.StatusConflict)
@@ -1971,13 +1988,21 @@ func handleCmfArtifact(t *testing.T) http.HandlerFunc {
 				}
 				version = int32(parsed)
 			}
-			err := json.NewEncoder(w).Encode(createArtifactObject(artifactName, version))
+			artifact := createArtifactObject(artifactName, version)
+			// Exercise the human describe view's Labels/Annotations rows for this fixture name.
+			if artifactName == "labeled-artifact" {
+				artifact.Metadata.Labels = map[string]string{"owner": "team-a", "tier": "gold"}
+				artifact.Metadata.Annotations = map[string]string{"note": "managed-externally"}
+			}
+			err := json.NewEncoder(w).Encode(artifact)
 			require.NoError(t, err)
 			return
 		case http.MethodPut:
 			require.NoError(t, r.ParseMultipartForm(32<<20))
+			rawArtifact := r.FormValue("artifact")
+			assertArtifactLabelContract(t, rawArtifact)
 			var artifact cmfsdk.Artifact
-			require.NoError(t, json.Unmarshal([]byte(r.FormValue("artifact")), &artifact))
+			require.NoError(t, json.Unmarshal([]byte(rawArtifact), &artifact))
 
 			// A "file" part indicates a new version upload; its absence is a metadata-only update.
 			version := int32(1)
