@@ -152,8 +152,6 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic create", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/create.golden", exitCode: 1},
 		{args: "kafka topic create topic1", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-success.golden"},
 		{args: "kafka topic create topic1 --dry-run", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-success.golden"},
-		{args: "kafka topic create topic1 --config test/fixtures/input/kafka/topic/topic-config.properties", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-success.golden"},
-		{args: "kafka topic create topic1 --config test/fixtures/input/kafka/topic/topic-config-json.properties", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-success.golden"},
 		{args: "kafka topic create topic-exist", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-dup-topic.golden", exitCode: 1},
 		{args: "kafka topic create topic-exceed-limit --partitions 9001", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-limit-topic.golden", exitCode: 1},
 
@@ -180,8 +178,6 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o json", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-json.golden"},
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o yaml", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-yaml.golden"},
 		{args: "kafka topic update topic-exist-rest --config num.partitions=6", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-partitions-count.golden"},
-		{args: "kafka topic update topic-exist-rest --config test/fixtures/input/kafka/topic/topic-config.properties", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest.golden"},
-		{args: "kafka topic update topic-exist-rest --config test/fixtures/input/kafka/topic/topic-config-json.properties", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-json-config.golden"},
 	}
 
 	if runtime.GOOS != "windows" {

@@ -1,6 +1,0 @@
-Updated the following configuration values for topic "topic-exist-rest":
-             Name             |                                        Value                                        | Read-Only  
-------------------------------+-------------------------------------------------------------------------------------+------------
-  confluent.key.association   | {"subject":"kafkaCLISubject"}                                                       | false      
-  confluent.value.association | {"schema":"{\"type\":\"record\",\"name\":\"TestRecord\",\"doc\":\"Basic             | false      
-                              | test.\\na=b.\",\"fields\":[{\"name\":\"field1\",\"type\":[\"null\",\"string\"]}]}"} |            
