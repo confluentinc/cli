@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -27,24 +26,6 @@ const (
 	topicName1          = "topic-1"
 	shareGroupID1       = "share-group-1"
 )
-
-// allowedTopicConfigNames are the topic configs the mock Kafka REST server accepts on
-// topic create and update. confluent.key/value.association hold JSON string values (APIE-1106).
-var allowedTopicConfigNames = []string{
-	"retention.ms",
-	"compression.type",
-	"confluent.key.association",
-	"confluent.value.association",
-}
-
-// expectedAssociationConfigValues are the exact JSON values in
-// test/fixtures/input/kafka/topic/topic-config-json.properties, keyed by config name. The mock
-// asserts the CLI forwards each byte-for-byte, proving GetMap read the file without un-escaping
-// the value (APIE-1106).
-var expectedAssociationConfigValues = map[string]string{
-	"confluent.key.association":   `{"subject":"kafkaCLISubject"}`,
-	"confluent.value.association": `{"schema":"{\"type\":\"record\",\"name\":\"TestRecord\",\"doc\":\"Basic test.\\na=b.\",\"fields\":[{\"name\":\"field1\",\"type\":[\"null\",\"string\"]}]}"}`,
-}
 
 type route struct {
 	path    string
@@ -236,7 +217,7 @@ func handleKafkaRestTopics(t *testing.T) http.HandlerFunc {
 			}
 			// check configs
 			for _, config := range requestData.Configs {
-				if !slices.Contains(allowedTopicConfigNames, config.Name) {
+				if config.Name != "retention.ms" && config.Name != "compression.type" {
 					require.NoError(t, writeErrorResponse(w, http.StatusBadRequest, 40002, fmt.Sprintf("Unknown topic config name: %s", config.Name)))
 					return
 				} else if config.Name == "retention.ms" {
@@ -247,10 +228,6 @@ func handleKafkaRestTopics(t *testing.T) http.HandlerFunc {
 						require.NoError(t, writeErrorResponse(w, http.StatusBadRequest, 40002, fmt.Sprintf("Invalid value %s for configuration retention.ms: Not a number of type LONG", *config.Value)))
 						return
 					}
-				} else if expected, ok := expectedAssociationConfigValues[config.Name]; ok {
-					// APIE-1106: the JSON value must arrive byte-for-byte as written in the fixture file.
-					require.NotNil(t, config.Value)
-					require.Equal(t, expected, *config.Value)
 				}
 				// TODO: check for compression.type
 			}
@@ -325,16 +302,6 @@ func handleKafkaRestTopicConfigs(t *testing.T) http.HandlerFunc {
 						{
 							Name:  "retention.ms",
 							Value: ptrString("1"),
-						},
-						// APIE-1106: echo the association configs so a successful update lists their
-						// stored JSON values (same source of truth as the alter-handler assertion).
-						{
-							Name:  "confluent.key.association",
-							Value: ptrString(expectedAssociationConfigValues["confluent.key.association"]),
-						},
-						{
-							Name:  "confluent.value.association",
-							Value: ptrString(expectedAssociationConfigValues["confluent.value.association"]),
 						},
 					},
 				}
@@ -547,7 +514,7 @@ func handleKafkaRestConfigsAlter(t *testing.T) http.HandlerFunc {
 
 				// Check Alter Args if valid
 				for _, config := range requestData.Data {
-					if !slices.Contains(allowedTopicConfigNames, config.Name) {
+					if config.Name != "retention.ms" && config.Name != "compression.type" { // should be either retention.ms or compression.type
 						require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 404, fmt.Sprintf("Config %s cannot be found for TOPIC topic-exist in cluster cluster-1.", config.Name)))
 						return
 					} else if config.Name == "retention.ms" {
@@ -558,10 +525,6 @@ func handleKafkaRestConfigsAlter(t *testing.T) http.HandlerFunc {
 							require.NoError(t, writeErrorResponse(w, http.StatusBadRequest, 40002, fmt.Sprintf("Invalid config value for resource ConfigResource(type=TOPIC, name='topic-exist'): Invalid value %s for configuration retention.ms: Not a number of type LONG", *config.Value)))
 							return
 						}
-					} else if expected, ok := expectedAssociationConfigValues[config.Name]; ok {
-						// APIE-1106: the JSON value must arrive byte-for-byte as written in the fixture file.
-						require.NotNil(t, config.Value)
-						require.Equal(t, expected, *config.Value)
 					}
 					// TODO check for compression.type values
 				}
