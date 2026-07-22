@@ -51,7 +51,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.3
 	github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1
-	github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.6.0
+	github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.7.0
 	github.com/confluentinc/ccloud-sdk-go-v2/usm v0.1.0
 	github.com/confluentinc/cmf-sdk-go v0.0.8
 	github.com/confluentinc/confluent-kafka-go/v2 v2.14.2
@@ -117,7 +117,7 @@ require (
 	go.uber.org/mock v0.4.0
 	golang.org/x/crypto v0.54.0
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f
-	golang.org/x/oauth2 v0.35.0
+	golang.org/x/oauth2 v0.36.0
 	golang.org/x/term v0.45.0
 	golang.org/x/text v0.40.0
 	google.golang.org/grpc v1.80.0

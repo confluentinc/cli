@@ -24,30 +24,31 @@ const (
 )
 
 type topicOut struct {
-	KafkaCluster          string            `human:"Kafka Cluster" serialized:"kafka_cluster"`
-	TopicName             string            `human:"Topic Name" serialized:"topic_name"`
-	EnableCompaction      bool              `human:"Enable Compaction" serialized:"enable_compaction"`
-	EnablePartitioning    bool              `human:"Enable Partitioning" serialized:"enable_partitioning"`
-	Environment           string            `human:"Environment" serialized:"environment"`
-	RecordFailureStrategy string            `human:"Record Failure Strategy" serialized:"record_failure_strategy"`
-	ErrorHandling         string            `human:"Error Handling,omitempty" serialized:"error_handling,omitempty"`
-	LogTarget             string            `human:"Log Target,omitempty" serialized:"log_target,omitempty"`
-	RetentionMs           string            `human:"Retention Ms" serialized:"retention_ms"`
-	StorageType           string            `human:"Storage Type" serialized:"storage_type"`
-	ProviderIntegrationId string            `human:"Provider Integration ID,omitempty" serialized:"provider_integration_id,omitempty"`
-	BucketName            string            `human:"Bucket Name,omitempty" serialized:"bucket_name,omitempty"`
-	BucketRegion          string            `human:"Bucket Region,omitempty" serialized:"bucket_region,omitempty"`
-	ContainerName         string            `human:"Container Name,omitempty" serialized:"container_name,omitempty"`
-	StorageAccountName    string            `human:"Storage Account Name,omitempty" serialized:"storage_account_name,omitempty"`
-	StorageRegion         string            `human:"Storage Region,omitempty" serialized:"storage_region ,omitempty"`
-	Suspended             bool              `human:"Suspended" serialized:"suspended"`
-	TableFormats          string            `human:"Table Formats" serialized:"table_formats"`
-	TablePath             string            `human:"Table Path" serialized:"table_path"`
-	Phase                 string            `human:"Phase" serialized:"phase"`
-	CatalogSyncStatus     map[string]string `human:"Catalog Sync Status,omitempty" serialized:"catalog_sync_status,omitempty"`
-	FailingTableFormat    map[string]string `human:"Failing Table Format,omitempty" serialized:"failing_table_format,omitempty"`
-	ErrorMessage          string            `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
-	WriteMode             string            `human:"Write Mode,omitempty" serialized:"write_mode,omitempty"`
+	KafkaCluster               string            `human:"Kafka Cluster" serialized:"kafka_cluster"`
+	TopicName                  string            `human:"Topic Name" serialized:"topic_name"`
+	EnableCompaction           bool              `human:"Enable Compaction" serialized:"enable_compaction"`
+	EnablePartitioning         bool              `human:"Enable Partitioning" serialized:"enable_partitioning"`
+	Environment                string            `human:"Environment" serialized:"environment"`
+	RecordFailureStrategy      string            `human:"Record Failure Strategy" serialized:"record_failure_strategy"`
+	MetadataColumnNamingScheme string            `human:"Metadata Column Naming Scheme,omitempty" serialized:"metadata_column_naming_scheme,omitempty"`
+	ErrorHandling              string            `human:"Error Handling,omitempty" serialized:"error_handling,omitempty"`
+	LogTarget                  string            `human:"Log Target,omitempty" serialized:"log_target,omitempty"`
+	RetentionMs                string            `human:"Retention Ms" serialized:"retention_ms"`
+	StorageType                string            `human:"Storage Type" serialized:"storage_type"`
+	ProviderIntegrationId      string            `human:"Provider Integration ID,omitempty" serialized:"provider_integration_id,omitempty"`
+	BucketName                 string            `human:"Bucket Name,omitempty" serialized:"bucket_name,omitempty"`
+	BucketRegion               string            `human:"Bucket Region,omitempty" serialized:"bucket_region,omitempty"`
+	ContainerName              string            `human:"Container Name,omitempty" serialized:"container_name,omitempty"`
+	StorageAccountName         string            `human:"Storage Account Name,omitempty" serialized:"storage_account_name,omitempty"`
+	StorageRegion              string            `human:"Storage Region,omitempty" serialized:"storage_region,omitempty"`
+	Suspended                  bool              `human:"Suspended" serialized:"suspended"`
+	TableFormats               string            `human:"Table Formats" serialized:"table_formats"`
+	TablePath                  string            `human:"Table Path" serialized:"table_path"`
+	Phase                      string            `human:"Phase" serialized:"phase"`
+	CatalogSyncStatus          map[string]string `human:"Catalog Sync Status,omitempty" serialized:"catalog_sync_status,omitempty"`
+	FailingTableFormat         map[string]string `human:"Failing Table Format,omitempty" serialized:"failing_table_format,omitempty"`
+	ErrorMessage               string            `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
+	WriteMode                  string            `human:"Write Mode,omitempty" serialized:"write_mode,omitempty"`
 }
 
 func (c *command) newTopicCommand() *cobra.Command {
@@ -203,23 +204,24 @@ func printTopicTable(cmd *cobra.Command, topic tableflowv1.TableflowV1TableflowT
 	strFormats := getFailingTableFormats(topic.Status.GetFailingTableFormats())
 
 	out := &topicOut{
-		KafkaCluster:          topic.GetSpec().KafkaCluster.GetId(),
-		TopicName:             topic.Spec.GetDisplayName(),
-		EnableCompaction:      topic.GetSpec().Config.GetEnableCompaction(),   // should be read-only & true
-		EnablePartitioning:    topic.GetSpec().Config.GetEnablePartitioning(), // should be read-only & true
-		TableFormats:          strings.Join(topic.Spec.GetTableFormats(), ", "),
-		Environment:           topic.GetSpec().Environment.GetId(),
-		RetentionMs:           topic.GetSpec().Config.GetRetentionMs(),
-		RecordFailureStrategy: topic.GetSpec().Config.GetRecordFailureStrategy(),
-		ErrorHandling:         getErrorHandlingMode(topic),
-		LogTarget:             topic.GetSpec().Config.GetErrorHandling().TableflowV1ErrorHandlingLog.GetTarget(), // this Get function will return empty string if the ErrorHandling is not LOG
-		StorageType:           storageType,
-		Suspended:             topic.Spec.GetSuspended(),
-		Phase:                 topic.Status.GetPhase(),
-		CatalogSyncStatus:     strStatus,
-		FailingTableFormat:    strFormats,
-		ErrorMessage:          topic.Status.GetErrorMessage(),
-		WriteMode:             topic.Status.GetWriteMode(),
+		KafkaCluster:               topic.GetSpec().KafkaCluster.GetId(),
+		TopicName:                  topic.Spec.GetDisplayName(),
+		EnableCompaction:           topic.GetSpec().Config.GetEnableCompaction(),   // should be read-only & true
+		EnablePartitioning:         topic.GetSpec().Config.GetEnablePartitioning(), // should be read-only & true
+		TableFormats:               strings.Join(topic.Spec.GetTableFormats(), ", "),
+		Environment:                topic.GetSpec().Environment.GetId(),
+		RetentionMs:                topic.GetSpec().Config.GetRetentionMs(),
+		RecordFailureStrategy:      topic.GetSpec().Config.GetRecordFailureStrategy(),
+		MetadataColumnNamingScheme: topic.GetSpec().Config.GetMetadataColumnNamingScheme(),
+		ErrorHandling:              getErrorHandlingMode(topic),
+		LogTarget:                  topic.GetSpec().Config.GetErrorHandling().TableflowV1ErrorHandlingLog.GetTarget(), // this Get function will return empty string if the ErrorHandling is not LOG
+		StorageType:                storageType,
+		Suspended:                  topic.Spec.GetSuspended(),
+		Phase:                      topic.Status.GetPhase(),
+		CatalogSyncStatus:          strStatus,
+		FailingTableFormat:         strFormats,
+		ErrorMessage:               topic.Status.GetErrorMessage(),
+		WriteMode:                  topic.Status.GetWriteMode(),
 	}
 
 	if storageType == byos {
