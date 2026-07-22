@@ -40,7 +40,7 @@ type topicOut struct {
 	BucketRegion               string            `human:"Bucket Region,omitempty" serialized:"bucket_region,omitempty"`
 	ContainerName              string            `human:"Container Name,omitempty" serialized:"container_name,omitempty"`
 	StorageAccountName         string            `human:"Storage Account Name,omitempty" serialized:"storage_account_name,omitempty"`
-	StorageRegion              string            `human:"Storage Region,omitempty" serialized:"storage_region ,omitempty"`
+	StorageRegion              string            `human:"Storage Region,omitempty" serialized:"storage_region,omitempty"`
 	Suspended                  bool              `human:"Suspended" serialized:"suspended"`
 	TableFormats               string            `human:"Table Formats" serialized:"table_formats"`
 	TablePath                  string            `human:"Table Path" serialized:"table_path"`

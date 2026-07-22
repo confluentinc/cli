@@ -63,7 +63,7 @@ func (s *CLITestSuite) TestTableflowTopic() {
 		{args: "tableflow topic enable topic-managed --cluster lkc-123456 --storage-type MANAGED --error-handling SUSPEND", fixture: "tableflow/topic/enable-topic-managed-error-handling-suspend.golden"},
 		{args: "tableflow topic enable topic-managed --cluster lkc-123456 --storage-type MANAGED --error-handling SKIP", fixture: "tableflow/topic/enable-topic-managed-error-handling-skip.golden"},
 		{args: "tableflow topic enable topic-managed --cluster lkc-123456 --storage-type MANAGED --error-handling LOG --log-target log_topic", fixture: "tableflow/topic/enable-topic-managed-error-handling-log.golden"},
-		{args: "tableflow topic enable topic-managed --cluster lkc-123456 --storage-type MANAGED --metadata-column-naming-scheme PORTABLE", fixture: "tableflow/topic/enable-topic-managed-metadata-column-naming-scheme.golden"},
+		{args: "tableflow topic enable topic-managed --cluster lkc-123456 --storage-type MANAGED --metadata-column-naming-scheme portable", fixture: "tableflow/topic/enable-topic-managed-metadata-column-naming-scheme.golden"},
 		{args: "tableflow topic update topic-byob --cluster lkc-123456 --retention-ms 432000000", fixture: "tableflow/topic/update-topic.golden"},
 		{args: "tableflow topic update topic-managed --cluster lkc-123456 --error-handling SUSPEND", fixture: "tableflow/topic/update-topic-managed-error-handling-suspend.golden"},
 		{args: "tableflow topic update topic-managed --cluster lkc-123456 --error-handling SKIP", fixture: "tableflow/topic/update-topic-managed-error-handling-skip.golden"},
