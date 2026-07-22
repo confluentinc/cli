@@ -322,10 +322,11 @@ func getTopicAzure(display_name, environmentId, clusterId string) tableflowv1.Ta
 				},
 			},
 			Config: &tableflowv1.TableflowV1TableFlowTopicConfigsSpec{
-				EnableCompaction:      tableflowv1.PtrBool(true),
-				EnablePartitioning:    tableflowv1.PtrBool(true),          // read-only property that needs confirmation, assuming constantly true for now
-				RetentionMs:           tableflowv1.PtrString("604800000"), // 7 days to milliseconds
-				RecordFailureStrategy: tableflowv1.PtrString("SKIP"),
+				EnableCompaction:           tableflowv1.PtrBool(true),
+				EnablePartitioning:         tableflowv1.PtrBool(true),          // read-only property that needs confirmation, assuming constantly true for now
+				RetentionMs:                tableflowv1.PtrString("604800000"), // 7 days to milliseconds
+				RecordFailureStrategy:      tableflowv1.PtrString("SKIP"),
+				MetadataColumnNamingScheme: tableflowv1.PtrString("PORTABLE"),
 			},
 			TableFormats: &[]string{"ICEBERG"},
 			Environment:  &tableflowv1.GlobalObjectReference{Id: environmentId},
