@@ -67,7 +67,7 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 	} else {
 		exs = append(exs,
 			examples.Example{
-				Text: `Create a role binding for the principal user that allows it produce to topic "my-topic":`,
+				Text: `Create a role binding for the principal user that allows it to produce to topic "my-topic":`,
 				Code: "confluent iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:my-topic --kafka-cluster 0000000000000000000000",
 			},
 			examples.Example{
