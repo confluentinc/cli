@@ -1,14 +1,19 @@
 package flink
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	_nethttp "net/http"
+	"net/textproto"
+	neturl "net/url"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -550,17 +555,14 @@ func (cmfClient *CmfRestClient) GetStatementResults(ctx context.Context, environ
 }
 
 func (cmfClient *CmfRestClient) GetSystemInformation(ctx context.Context) (map[string]interface{}, error) {
-	baseURL := strings.TrimRight(cmfClient.GetConfig().Servers[0].URL, "/")
-	url := baseURL + "/cmf/api/v1/system-information"
+	url := cmfClient.cmfBaseURL() + "/cmf/api/v1/system-information"
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create system information request: %s", err)
 	}
 
-	if token, ok := ctx.Value(cmfsdk.ContextAccessToken).(string); ok && token != "" {
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
-	}
+	setCmfAuthHeader(ctx, req)
 
 	resp, err := cmfClient.GetConfig().HTTPClient.Do(req)
 	if err != nil {
@@ -574,11 +576,7 @@ func (cmfClient *CmfRestClient) GetSystemInformation(ctx context.Context) (map[s
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		trimmed := strings.TrimSpace(string(body))
-		if trimmed != "" {
-			return nil, errors.New(trimmed)
-		}
-		return nil, errors.New(resp.Status)
+		return nil, cmfErrorFromBody(resp.Status, body)
 	}
 
 	var result map[string]interface{}
@@ -813,6 +811,195 @@ func (cmfClient *CmfRestClient) ListDatabases(ctx context.Context, catalogName s
 	}
 
 	return databases, nil
+}
+
+// CreateArtifact uploads a new artifact (version 1) to the specified environment.
+// Both the artifact metadata and the binary file are required by the CMF API.
+func (cmfClient *CmfRestClient) CreateArtifact(ctx context.Context, environment string, artifact cmfsdk.Artifact, file *os.File) (cmfsdk.Artifact, error) {
+	url := fmt.Sprintf("%s/cmf/api/v1/environments/%s/artifacts", cmfClient.cmfBaseURL(), neturl.PathEscape(environment))
+	outputArtifact, err := cmfClient.uploadArtifact(ctx, http.MethodPost, url, artifact, file)
+	if err != nil {
+		return cmfsdk.Artifact{}, fmt.Errorf(`failed to create artifact "%s" in the environment "%s": %s`, artifact.Metadata.Name, environment, err)
+	}
+	return outputArtifact, nil
+}
+
+// UpdateArtifact updates an artifact in the specified environment.
+// When file is nil, only the metadata is updated; when a file is provided, a new version is created (or deduplicated if identical to the latest).
+func (cmfClient *CmfRestClient) UpdateArtifact(ctx context.Context, environment, name string, artifact cmfsdk.Artifact, file *os.File) (cmfsdk.Artifact, error) {
+	url := fmt.Sprintf("%s/cmf/api/v1/environments/%s/artifacts/%s", cmfClient.cmfBaseURL(), neturl.PathEscape(environment), neturl.PathEscape(name))
+	outputArtifact, err := cmfClient.uploadArtifact(ctx, http.MethodPut, url, artifact, file)
+	if err != nil {
+		return cmfsdk.Artifact{}, fmt.Errorf(`failed to update artifact "%s" in the environment "%s": %s`, name, environment, err)
+	}
+	return outputArtifact, nil
+}
+
+// cmfBaseURL returns the CMF server base URL with any trailing slash trimmed. Used by the handful of methods that
+// build CMF requests manually rather than through the generated SDK.
+func (cmfClient *CmfRestClient) cmfBaseURL() string {
+	return strings.TrimRight(cmfClient.GetConfig().Servers[0].URL, "/")
+}
+
+// setCmfAuthHeader copies the bearer token from the context onto a manually built CMF request, if one is present.
+func setCmfAuthHeader(ctx context.Context, request *http.Request) {
+	if token, ok := ctx.Value(cmfsdk.ContextAccessToken).(string); ok && token != "" {
+		request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	}
+}
+
+// cmfErrorFromBody builds an error from a failed CMF response, preferring the response body over the status line.
+func cmfErrorFromBody(status string, body []byte) error {
+	if trimmed := strings.TrimSpace(string(body)); trimmed != "" {
+		return errors.New(trimmed)
+	}
+	return errors.New(status)
+}
+
+// uploadArtifact sends a multipart/form-data request for the artifact create and update endpoints.
+// The generated SDK serializes the "artifact" object part with fmt "%v" (Go struct representation) rather than JSON,
+// so the request is built here (mirroring GetSystemInformation's manual CMF request handling) to send a proper JSON part.
+// Like GetSystemInformation, this bypasses the SDK's request pipeline, so `--unsafe-trace` request logging and the
+// configured User-Agent do not apply to the manually built artifact-upload and system-information requests.
+func (cmfClient *CmfRestClient) uploadArtifact(ctx context.Context, method, url string, artifact cmfsdk.Artifact, file *os.File) (cmfsdk.Artifact, error) {
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+
+	artifactJson, err := json.Marshal(artifact)
+	if err != nil {
+		return cmfsdk.Artifact{}, fmt.Errorf("failed to serialize artifact: %s", err)
+	}
+
+	partHeader := textproto.MIMEHeader{}
+	partHeader.Set("Content-Disposition", `form-data; name="artifact"`)
+	partHeader.Set("Content-Type", "application/json")
+	artifactPart, err := writer.CreatePart(partHeader)
+	if err != nil {
+		return cmfsdk.Artifact{}, err
+	}
+	if _, err := artifactPart.Write(artifactJson); err != nil {
+		return cmfsdk.Artifact{}, err
+	}
+
+	if file != nil {
+		filePart, err := writer.CreateFormFile("file", filepath.Base(file.Name()))
+		if err != nil {
+			return cmfsdk.Artifact{}, err
+		}
+		if _, err := io.Copy(filePart, file); err != nil {
+			return cmfsdk.Artifact{}, err
+		}
+	}
+
+	if err := writer.Close(); err != nil {
+		return cmfsdk.Artifact{}, err
+	}
+
+	request, err := http.NewRequestWithContext(ctx, method, url, body)
+	if err != nil {
+		return cmfsdk.Artifact{}, err
+	}
+	request.Header.Set("Content-Type", writer.FormDataContentType())
+	setCmfAuthHeader(ctx, request)
+
+	response, err := cmfClient.GetConfig().HTTPClient.Do(request)
+	if err != nil {
+		return cmfsdk.Artifact{}, err
+	}
+	defer response.Body.Close()
+
+	responseBody, err := io.ReadAll(response.Body)
+	if err != nil {
+		return cmfsdk.Artifact{}, err
+	}
+
+	// Create returns 201 and update 200, so treat any non-2xx status as a failure.
+	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
+		return cmfsdk.Artifact{}, cmfErrorFromBody(response.Status, responseBody)
+	}
+
+	var outputArtifact cmfsdk.Artifact
+	if err := json.Unmarshal(responseBody, &outputArtifact); err != nil {
+		return cmfsdk.Artifact{}, fmt.Errorf("failed to parse artifact response: %s", err)
+	}
+	return outputArtifact, nil
+}
+
+// DescribeArtifact fetches an artifact from the specified environment. When version is empty, the latest version is returned.
+func (cmfClient *CmfRestClient) DescribeArtifact(ctx context.Context, environment, name, version string) (cmfsdk.Artifact, error) {
+	request := cmfClient.ArtifactsApi.GetArtifact(ctx, environment, name)
+	if version != "" {
+		request = request.Version(version)
+	}
+	outputArtifact, httpResponse, err := request.Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.Artifact{}, fmt.Errorf(`failed to describe artifact "%s" in the environment "%s": %s`, name, environment, parsedErr)
+	}
+	return outputArtifact, nil
+}
+
+func (cmfClient *CmfRestClient) ListArtifacts(ctx context.Context, environment string) ([]cmfsdk.Artifact, error) {
+	artifacts := make([]cmfsdk.Artifact, 0)
+	done := false
+	// 100 is an arbitrary page size we've chosen.
+	const pageSize = 100
+	var currentPageNumber int32 = 0
+
+	for !done {
+		artifactsPage, httpResponse, err := cmfClient.ArtifactsApi.ListArtifacts(ctx, environment).Page(currentPageNumber).Size(pageSize).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list artifacts in the environment "%s": %s`, environment, parsedErr)
+		}
+		artifacts = append(artifacts, artifactsPage.GetItems()...)
+		currentPageNumber, done = extractPageOptions(len(artifactsPage.GetItems()), currentPageNumber)
+	}
+
+	return artifacts, nil
+}
+
+// ListArtifactVersions lists all versions of an artifact, newest-first.
+func (cmfClient *CmfRestClient) ListArtifactVersions(ctx context.Context, environment, name string) ([]cmfsdk.Artifact, error) {
+	versions := make([]cmfsdk.Artifact, 0)
+	done := false
+	// 100 is an arbitrary page size we've chosen.
+	const pageSize = 100
+	var currentPageNumber int32 = 0
+
+	for !done {
+		versionsPage, httpResponse, err := cmfClient.ArtifactsApi.ListArtifactVersions(ctx, environment, name).Page(currentPageNumber).Size(pageSize).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list versions of artifact "%s" in the environment "%s": %s`, name, environment, parsedErr)
+		}
+		versions = append(versions, versionsPage.GetItems()...)
+		currentPageNumber, done = extractPageOptions(len(versionsPage.GetItems()), currentPageNumber)
+	}
+
+	return versions, nil
+}
+
+// DeleteArtifact deletes an artifact from the specified environment. When version is empty the entire artifact is removed;
+// otherwise the given version ("N" or "all") is removed.
+func (cmfClient *CmfRestClient) DeleteArtifact(ctx context.Context, environment, name, version string) error {
+	request := cmfClient.ArtifactsApi.DeleteArtifact(ctx, environment, name)
+	if version != "" {
+		request = request.Version(version)
+	}
+	httpResp, err := request.Execute()
+	return parseSdkError(httpResp, err)
+}
+
+// DownloadArtifactContent downloads the binary content of an artifact. When version is empty, the latest version is downloaded.
+// The returned *os.File is a temporary file the SDK created; the caller owns it and must Close and os.Remove it.
+func (cmfClient *CmfRestClient) DownloadArtifactContent(ctx context.Context, environment, name, version string) (*os.File, error) {
+	request := cmfClient.ArtifactsApi.DownloadArtifactContent(ctx, environment, name)
+	if version != "" {
+		request = request.Version(version)
+	}
+	file, httpResponse, err := request.Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return nil, fmt.Errorf(`failed to download content of artifact "%s" in the environment "%s": %s`, name, environment, parsedErr)
+	}
+	return file, nil
 }
 
 // Returns the next page number and whether we need to fetch more pages or not.
