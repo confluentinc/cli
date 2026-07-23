@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
-	"strings"
 	"testing"
 	"time"
 
@@ -244,7 +243,7 @@ func TestWaitForPendingHitsErrorRetryLimit(t *testing.T) {
 	}
 	expectedError := &types.StatementError{
 		Message:        "the server can't process this statement right now, exiting after 6 retries",
-		FailureMessage: fmt.Sprintf("captured retryable errors: %s", strings.Repeat(testStatusDetailMessage+"; ", 5)+testStatusDetailMessage),
+		FailureMessage: fmt.Sprintf("captured retryable errors: %s (repeated 6 times)", testStatusDetailMessage),
 	}
 	client.EXPECT().GetStatement("envId", testStatementName, "orgId").Return(statementObj, nil).AnyTimes()
 	processedStatement, err := s.waitForPendingStatement(context.Background(), testStatementName, timeout)
@@ -2077,6 +2076,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnNonCompletedOrRunningSta
 	expectedError := &types.StatementError{
 		Message:        "can't fetch results. Statement phase is: FAILED",
 		FailureMessage: testStatusDetailMessage,
+		Suggestion:     "This statement reached a terminal state without producing results. Check the statement definition and run `confluent flink statement describe` for the full status.",
 	}
 
 	{ // Cloud store
@@ -2144,6 +2144,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStateme
 	expectedError := &types.StatementError{
 		Message:        "can't fetch results. Statement phase is: FAILED",
 		FailureMessage: exception1,
+		Suggestion:     "This statement reached a terminal state without producing results. Check the statement definition and run `confluent flink statement describe` for the full status.",
 	}
 
 	{ // Cloud store
@@ -2210,6 +2211,75 @@ func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStateme
 		client.EXPECT().CmfApiContext().Return(context.Background()).Times(2)
 		client.EXPECT().GetStatement(context.Background(), "envId", testStatementName).Return(statementObj, nil)
 		client.EXPECT().ListStatementExceptions(context.Background(), "envId", testStatementName).Return(exceptionsResponse, nil)
+
+		processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
+			StatementName: testStatementName,
+			Status:        types.PENDING,
+		})
+		require.Nil(s.T(), processedStatement)
+		require.Equal(s.T(), expectedError, err)
+	}
+}
+
+func (s *StoreTestSuite) TestWaitPendingStatementSetsPlaceholderWhenFailedWithNoReason() {
+	expectedError := &types.StatementError{
+		Message:        "can't fetch results. Statement phase is: FAILED",
+		FailureMessage: fmt.Sprintf("the server did not report a failure reason; run `confluent flink statement describe %s` for the full status", testStatementName),
+		Suggestion:     "This statement reached a terminal state without producing results. Check the statement definition and run `confluent flink statement describe` for the full status.",
+	}
+
+	{ // Cloud store
+		client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+		store := Store{
+			Properties: NewUserPropertiesWithDefaults(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
+			client:     client,
+			appOptions: &types.ApplicationOptions{
+				OrganizationId: "orgId",
+				EnvironmentId:  "envId",
+			},
+			tokenRefreshFunc: tokenRefreshFunc,
+		}
+
+		statementObj := flinkgatewayv1.SqlV1Statement{
+			Name: flinkgatewayv1.PtrString(testStatementName),
+			Status: &flinkgatewayv1.SqlV1StatementStatus{
+				Phase: "FAILED",
+			},
+		}
+
+		client.EXPECT().GetStatement("envId", testStatementName, "orgId").Return(statementObj, nil)
+		client.EXPECT().GetExceptions("envId", testStatementName, "orgId").Return([]flinkgatewayv1.SqlV1StatementException{}, nil)
+
+		processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
+			StatementName: testStatementName,
+			Status:        types.PENDING,
+		})
+		require.Nil(s.T(), processedStatement)
+		require.Equal(s.T(), expectedError, err)
+	}
+	{ // On-prem store
+		client := mock.NewMockCmfClientInterface(gomock.NewController(s.T()))
+		store := StoreOnPrem{
+			Properties: NewUserPropertiesWithDefaults(map[string]string{"TestProp": "TestVal"}, map[string]string{}),
+			client:     client,
+			appOptions: &types.ApplicationOptions{
+				EnvironmentId: "envId",
+			},
+			tokenRefreshFunc: tokenRefreshFunc,
+		}
+
+		statementObj := cmfsdk.Statement{
+			Metadata: cmfsdk.StatementMetadata{
+				Name: testStatementName,
+			},
+			Status: &cmfsdk.StatementStatus{
+				Phase: "FAILED",
+			},
+		}
+
+		client.EXPECT().CmfApiContext().Return(context.Background()).Times(2)
+		client.EXPECT().GetStatement(context.Background(), "envId", testStatementName).Return(statementObj, nil)
+		client.EXPECT().ListStatementExceptions(context.Background(), "envId", testStatementName).Return(cmfsdk.StatementExceptionList{}, nil)
 
 		processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
 			StatementName: testStatementName,
