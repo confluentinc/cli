@@ -39,6 +39,7 @@ func (c *command) newTopicEnableCommand() *cobra.Command {
 	cmd.Flags().String("provider-integration", "", "Specify the provider integration id.")
 	cmd.Flags().String("bucket-name", "", "Specify the name of the AWS S3 bucket.")
 	cmd.Flags().String("table-formats", "ICEBERG", "Specify the table formats, one of DELTA or ICEBERG.")
+	cmd.Flags().String("metadata-column-naming-scheme", "", "Specify the naming scheme for Tableflow's internal metadata columns in the materialized table, one of DEFAULT or PORTABLE.")
 	cmd.Flags().String("storage-account-name", "", "Specify the storage account name for Azure Data Lake.")
 	cmd.Flags().String("container-name", "", "Specify the container name for Azure Data Lake.")
 	addErrorHandlingFlags(cmd)
@@ -72,6 +73,11 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 	}
 
 	recordFailureStrategy, err := cmd.Flags().GetString("record-failure-strategy")
+	if err != nil {
+		return err
+	}
+
+	metadataColumnNamingScheme, err := cmd.Flags().GetString("metadata-column-naming-scheme")
 	if err != nil {
 		return err
 	}
@@ -133,6 +139,10 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 
 	if cmd.Flags().Changed("record-failure-strategy") {
 		createTopic.Spec.Config.SetRecordFailureStrategy(recordFailureStrategy)
+	}
+
+	if cmd.Flags().Changed("metadata-column-naming-scheme") {
+		createTopic.Spec.Config.SetMetadataColumnNamingScheme(strings.ToUpper(metadataColumnNamingScheme))
 	}
 
 	if cmd.Flags().Changed("error-handling") {
