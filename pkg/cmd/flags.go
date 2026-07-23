@@ -150,6 +150,13 @@ func AddConfigFlag(cmd *cobra.Command) {
 	cmd.Flags().StringSlice("config", []string{}, `A comma-separated list of "key=value" pairs, or path to a configuration file containing a newline-separated list of "key=value" pairs.`)
 }
 
+// AddTopicConfigFlag registers the topic `--config` flag as a StringArray so that
+// pflag does not CSV-split the value; this lets a "key=value" pair carry a JSON value (APIE-1106)
+// Callers must read it with GetStringArray and parse it with properties.GetMapFromArray.
+func AddTopicConfigFlag(cmd *cobra.Command) {
+	cmd.Flags().StringArray("config", nil, `A comma-separated list of "key=value" pairs, or path to a configuration file containing a newline-separated list of "key=value" pairs.`)
+}
+
 func AddContextFlag(cmd *cobra.Command, command *CLICommand) {
 	cmd.Flags().String("context", "", "CLI context name.")
 
