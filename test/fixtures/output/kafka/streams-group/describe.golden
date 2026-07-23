@@ -1,0 +1,12 @@
++-------------------------+--------------------------------------------------------------------------+
+| Cluster Id              | lkc-1234                                                                 |
+| Group Id                | streams-group-1                                                          |
+| State                   | STABLE                                                                   |
+| Member Count            | 2                                                                        |
+| Subtopology Count       | 1                                                                        |
+| Group Epoch             | 3                                                                        |
+| Topology Epoch          | 2                                                                        |
+| Target Assignment Epoch | 2                                                                        |
+| Members                 | /kafka/v3/clusters/lkc-1234/streams-groups/streams-group-1/members       |
+| Subtopologies           | /kafka/v3/clusters/lkc-1234/streams-groups/streams-group-1/subtopologies |
++-------------------------+--------------------------------------------------------------------------+
