@@ -1863,7 +1863,6 @@ func handleCmfSecret(t *testing.T) http.HandlerFunc {
 	}
 }
 
-// createArtifactObject builds a fully-populated Artifact for the given name and version with deterministic field values.
 // assertArtifactLabelContract enforces the CLI's label contract on the submitted artifact JSON: the "labels" field must
 // be omitted entirely to preserve existing labels (nil map / --label not passed), and the CLI must never send an empty
 // object, which CMF interprets as "clear all labels". When present, labels must carry the caller's entries.
@@ -1879,6 +1878,7 @@ func assertArtifactLabelContract(t *testing.T, rawArtifact string) {
 	}
 }
 
+// createArtifactObject builds a fully-populated Artifact for the given name and version with deterministic field values.
 func createArtifactObject(name string, version int32) cmfsdk.Artifact {
 	timestamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
 	return cmfsdk.Artifact{
@@ -2014,6 +2014,17 @@ func handleCmfArtifact(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 			return
 		case http.MethodDelete:
+			// Assert the CLI forwarded the --version flag verbatim: a version-scoped delete sends ?version=<value>,
+			// a whole-artifact delete sends none. (These fixture names are used only by the version-delete tests.)
+			version := r.URL.Query().Get("version")
+			switch artifactName {
+			case "delete-version-2":
+				require.Equal(t, "2", version)
+			case "delete-version-all":
+				require.Equal(t, "all", version)
+			default:
+				require.Empty(t, version, "whole-artifact delete must not send a version query param")
+			}
 			w.WriteHeader(http.StatusNoContent)
 			return
 		default:

@@ -860,7 +860,7 @@ func cmfErrorFromBody(status string, body []byte) error {
 // The generated SDK serializes the "artifact" object part with fmt "%v" (Go struct representation) rather than JSON,
 // so the request is built here (mirroring GetSystemInformation's manual CMF request handling) to send a proper JSON part.
 // Like GetSystemInformation, this bypasses the SDK's request pipeline, so `--unsafe-trace` request logging and the
-// configured User-Agent do not apply to these two calls.
+// configured User-Agent do not apply to the manually built artifact-upload and system-information requests.
 func (cmfClient *CmfRestClient) uploadArtifact(ctx context.Context, method, url string, artifact cmfsdk.Artifact, file *os.File) (cmfsdk.Artifact, error) {
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
@@ -913,7 +913,8 @@ func (cmfClient *CmfRestClient) uploadArtifact(ctx context.Context, method, url 
 		return cmfsdk.Artifact{}, err
 	}
 
-	if response.StatusCode >= http.StatusBadRequest {
+	// Create returns 201 and update 200, so treat any non-2xx status as a failure.
+	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
 		return cmfsdk.Artifact{}, cmfErrorFromBody(response.Status, responseBody)
 	}
 
@@ -988,6 +989,7 @@ func (cmfClient *CmfRestClient) DeleteArtifact(ctx context.Context, environment,
 }
 
 // DownloadArtifactContent downloads the binary content of an artifact. When version is empty, the latest version is downloaded.
+// The returned *os.File is a temporary file the SDK created; the caller owns it and must Close and os.Remove it.
 func (cmfClient *CmfRestClient) DownloadArtifactContent(ctx context.Context, environment, name, version string) (*os.File, error) {
 	request := cmfClient.ArtifactsApi.DownloadArtifactContent(ctx, environment, name)
 	if version != "" {

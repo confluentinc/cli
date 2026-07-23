@@ -48,7 +48,7 @@ type artifactDescribeOutOnPrem struct {
 	Annotations  map[string]string `human:"Annotations,omitempty"`
 }
 
-// artifactVersionOutOnPrem is the human-readable view of a single artifact version (version list, version describe).
+// artifactVersionOutOnPrem is the human-readable view of a single artifact version (version create, version list, version describe).
 type artifactVersionOutOnPrem struct {
 	Version      string `human:"Version" serialized:"version"`
 	Phase        string `human:"Phase" serialized:"phase"`
@@ -113,12 +113,10 @@ func newArtifactDescribeOutOnPrem(artifact cmfsdk.Artifact) *artifactDescribeOut
 		Size:         base.Size,
 		CreationTime: base.CreationTime,
 	}
-	if artifact.Metadata.Labels != nil {
-		out.Labels = artifact.Metadata.Labels
-	}
-	if artifact.Metadata.Annotations != nil {
-		out.Annotations = artifact.Metadata.Annotations
-	}
+	// These are value-type maps with `human:"...,omitempty"`, so assigning a nil map is a no-op (the row is omitted).
+	// Unlike convertSdkArtifactToLocalArtifact, no nil guard is needed here.
+	out.Labels = artifact.Metadata.Labels
+	out.Annotations = artifact.Metadata.Annotations
 	return out
 }
 

@@ -505,6 +505,9 @@ func (s *CLITestSuite) TestFlinkArtifactVersionListOnPrem() {
 		{args: "flink artifact version list test-artifact --environment test-env", fixture: "flink/artifact/version/list-success.golden"},
 		{args: "flink artifact version list test-artifact --environment test-env --output json", fixture: "flink/artifact/version/list-success-json.golden"},
 		{args: "flink artifact version list test-artifact --environment test-env --output yaml", fixture: "flink/artifact/version/list-success-yaml.golden"},
+		// failure
+		{args: "flink artifact version list non-exist-artifact --environment test-env", fixture: "flink/artifact/version/list-non-exist-failure.golden", exitCode: 1},
+		{args: "flink artifact version list test-artifact", fixture: "flink/artifact/version/list-missing-env-flag-failure.golden", exitCode: 1},
 	}
 
 	runIntegrationTestsWithMultipleAuth(s, tests)
@@ -526,9 +529,9 @@ func (s *CLITestSuite) TestFlinkArtifactVersionDescribeOnPrem() {
 func (s *CLITestSuite) TestFlinkArtifactVersionDeleteOnPrem() {
 	tests := []CLITest{
 		// success
-		{args: "flink artifact version delete test-artifact --version 2 --environment test-env", input: "y\n", fixture: "flink/artifact/version/delete-successful.golden"},
-		{args: "flink artifact version delete test-artifact --version 2 --force --environment test-env", fixture: "flink/artifact/version/delete-force.golden"},
-		{args: "flink artifact version delete test-artifact --version all --force --environment test-env", fixture: "flink/artifact/version/delete-all-force.golden"},
+		{args: "flink artifact version delete delete-version-2 --version 2 --environment test-env", input: "y\n", fixture: "flink/artifact/version/delete-successful.golden"},
+		{args: "flink artifact version delete delete-version-2 --version 2 --force --environment test-env", fixture: "flink/artifact/version/delete-force.golden"},
+		{args: "flink artifact version delete delete-version-all --version all --force --environment test-env", fixture: "flink/artifact/version/delete-all-force.golden"},
 		// failure
 		{args: "flink artifact version delete non-exist-artifact --version 2 --environment test-env", input: "y\n", fixture: "flink/artifact/version/delete-non-exist-failure.golden", exitCode: 1},
 	}
