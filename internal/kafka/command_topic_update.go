@@ -44,7 +44,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	pcmd.AddConfigFlag(cmd)
+	pcmd.AddTopicConfigFlag(cmd)
 	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddDryRunFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -60,11 +60,11 @@ func (c *command) newUpdateCommand() *cobra.Command {
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
-	configs, err := cmd.Flags().GetStringSlice("config")
+	configs, err := cmd.Flags().GetStringArray("config")
 	if err != nil {
 		return err
 	}
-	configMap, err := properties.GetMap(configs, rawValueTopicConfigs...)
+	configMap, err := properties.GetMapFromArray(configs, associationConfigs...)
 	if err != nil {
 		return err
 	}
