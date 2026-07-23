@@ -21,7 +21,7 @@ func (c *command) newEnvironmentUpdateCommand() *cobra.Command {
 
 	addCmfFlagSet(cmd)
 	cmd.Flags().String("defaults", "", "JSON string defining the environment's Flink application defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).")
-	cmd.Flags().String("statement-defaults", "", "JSON string defining the environment's Flink statement defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).")
+	cmd.Flags().String("statement-defaults", "", `JSON string defining the environment's Flink statement defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension). Expected shape: {"detached":{"flinkConfiguration":{...}},"interactive":{"flinkConfiguration":{...}}}.`)
 	cmd.Flags().String("compute-pool-defaults", "", "JSON string defining the environment's Flink compute pool defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).")
 	pcmd.AddOutputFlag(cmd)
 
