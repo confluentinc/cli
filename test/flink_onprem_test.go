@@ -664,6 +664,38 @@ func (s *CLITestSuite) TestFlinkStatementExceptionListOnPrem() {
 	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
+func (s *CLITestSuite) TestFlinkKubernetesClusterList() {
+	tests := []CLITest{
+		{args: "flink kubernetes-cluster list", fixture: "flink/kubernetes-cluster/list-success.golden"},
+		{args: "flink kubernetes-cluster list --output json", fixture: "flink/kubernetes-cluster/list-success-json.golden"},
+		{args: "flink kubernetes-cluster list --output yaml", fixture: "flink/kubernetes-cluster/list-success-yaml.golden"},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkKubernetesClusterDescribe() {
+	tests := []CLITest{
+		{args: "flink kubernetes-cluster describe cluster-1", fixture: "flink/kubernetes-cluster/describe-success.golden"},
+		{args: "flink kubernetes-cluster describe cluster-1 --output json", fixture: "flink/kubernetes-cluster/describe-success-json.golden"},
+		{args: "flink kubernetes-cluster describe cluster-1 --output yaml", fixture: "flink/kubernetes-cluster/describe-success-yaml.golden"},
+		// failure
+		{args: "flink kubernetes-cluster describe non-existent", fixture: "flink/kubernetes-cluster/describe-not-found.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkKubernetesClusterUpdate() {
+	tests := []CLITest{
+		{args: "flink kubernetes-cluster update cluster-1 --lifecycle-state DECOMMISSIONED", fixture: "flink/kubernetes-cluster/update-success.golden"},
+		{args: "flink kubernetes-cluster update cluster-1 --lifecycle-state DECOMMISSIONED --output json", fixture: "flink/kubernetes-cluster/update-success-json.golden"},
+		{args: "flink kubernetes-cluster update cluster-1 --lifecycle-state DECOMMISSIONED --output yaml", fixture: "flink/kubernetes-cluster/update-success-yaml.golden"},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
 func (s *CLITestSuite) TestFlinkSystemInfo() {
 	tests := []CLITest{
 		{args: "flink system-info", fixture: "flink/system-info.golden"},

@@ -638,6 +638,41 @@ func (cmfClient *CmfRestClient) DeleteCatalog(ctx context.Context, catalogName s
 	return parseSdkError(httpResp, err)
 }
 
+func (cmfClient *CmfRestClient) ListKubernetesClusters(ctx context.Context) ([]cmfsdk.KubernetesCluster, error) {
+	clusters := make([]cmfsdk.KubernetesCluster, 0)
+	done := false
+	// 100 is an arbitrary page size we've chosen.
+	const pageSize = 100
+	var currentPageNumber int32 = 0
+
+	for !done {
+		page, httpResponse, err := cmfClient.KubernetesClustersApi.GetKubernetesClusters(ctx).Page(currentPageNumber).Size(pageSize).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf("failed to list Kubernetes clusters: %s", parsedErr)
+		}
+		clusters = append(clusters, page.GetItems()...)
+		currentPageNumber, done = extractPageOptions(len(page.GetItems()), currentPageNumber)
+	}
+
+	return clusters, nil
+}
+
+func (cmfClient *CmfRestClient) DescribeKubernetesCluster(ctx context.Context, name string) (cmfsdk.KubernetesCluster, error) {
+	cluster, httpResponse, err := cmfClient.KubernetesClustersApi.GetKubernetesCluster(ctx, name).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.KubernetesCluster{}, fmt.Errorf("failed to describe Kubernetes cluster %q: %s", name, parsedErr)
+	}
+	return cluster, nil
+}
+
+func (cmfClient *CmfRestClient) UpdateKubernetesCluster(ctx context.Context, name string, cluster cmfsdk.KubernetesCluster) (cmfsdk.KubernetesCluster, error) {
+	updatedCluster, httpResponse, err := cmfClient.KubernetesClustersApi.UpdateKubernetesCluster(ctx, name).KubernetesCluster(cluster).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.KubernetesCluster{}, fmt.Errorf("failed to update Kubernetes cluster %q: %s", name, parsedErr)
+	}
+	return updatedCluster, nil
+}
+
 func (cmfClient *CmfRestClient) DescribeApplicationInstance(ctx context.Context, environment, application, instance string) (cmfsdk.FlinkApplicationInstance, error) {
 	cmfInstance, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplicationInstance(ctx, environment, application, instance).Execute()
 	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
