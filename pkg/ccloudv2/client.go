@@ -1,6 +1,7 @@
 package ccloudv2
 
 import (
+	switchoverv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/switchover/v1"
 	aiv1 "github.com/confluentinc/ccloud-sdk-go-v2/ai/v1"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	billingv1 "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
@@ -82,6 +83,7 @@ type Client struct {
 	SsoClient                    *ssov2.APIClient
 	TableflowClient              *tableflowv1.APIClient
 	UsmClient                    *usmv1.APIClient
+	SwitchoverClient             *switchoverv1.APIClient
 	// cli-tfgen:cli-client-fields — DO NOT REMOVE (verified by TestCliTfgenMarkers)
 }
 
@@ -134,6 +136,7 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		SsoClient:                    newSsoClient(httpClient, url, userAgent, unsafeTrace),
 		TableflowClient:              newTableflowClient(httpClient, url, userAgent, unsafeTrace),
 		UsmClient:                    newUsmClient(httpClient, url, userAgent, unsafeTrace),
+		SwitchoverClient:             newSwitchoverClient(httpClient, url, userAgent, unsafeTrace),
 		// cli-tfgen:cli-client-init — DO NOT REMOVE (verified by TestCliTfgenMarkers)
 	}
 }

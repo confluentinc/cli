@@ -382,6 +382,7 @@ var vocabWords = []string{
 	"whitelist",
 	"wikipedia",
 	"workspace",
+	"switchover",
 	"yaml",
 	"yml",
 	"zstd",

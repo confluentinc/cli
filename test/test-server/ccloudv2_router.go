@@ -137,6 +137,12 @@ var ccloudV2Routes = []route{
 	{"/usm/v1/connect-clusters", handleUsmConnectClusters},
 	{"/usm/v1/connect-clusters/{id}", handleUsmConnectCluster},
 	{"/v2/metrics/cloud/query", handleMetricsQuery},
+	{"/switchover/v1/switchover-pairs", handleSwitchoverPairs},
+	{"/switchover/v1/switchover-pairs/{id}:failover", handleSwitchoverPairFailover},
+	{"/switchover/v1/switchover-pairs/{id}", handleSwitchoverPair},
+	{"/switchover/v1/switchover-endpoints", handleSwitchoverEndpoints},
+	{"/switchover/v1/switchover-endpoints/{id}:activate", handleSwitchoverEndpointActivate},
+	{"/switchover/v1/switchover-endpoints/{id}", handleSwitchoverEndpoint},
 	// cli-tfgen:cli-api-routes — DO NOT REMOVE (verified by TestCliTfgenMarkers)
 }
 
