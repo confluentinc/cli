@@ -45,6 +45,11 @@ type CmfRestClient struct {
 	AuthToken string
 }
 
+// sortByName pins a unique, stable sort on paginated list calls. Without a
+// deterministic order, offset paging can skip or duplicate rows across page
+// requests (CF-4076); "name" maps server-side to each resource's unique id.
+var sortByName = []string{"name"}
+
 func NewCmfRestHttpClient(restFlags *OnPremCMFRestFlagValues) (*http.Client, error) {
 	var err error
 	httpClient := utils.DefaultClient()
@@ -197,7 +202,7 @@ func (cmfClient *CmfRestClient) ListApplications(ctx context.Context, environmen
 	done := false
 
 	for !done {
-		applicationsPage, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplications(ctx, environment).Page(currentPageNumber).Size(pageSize).Execute()
+		applicationsPage, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplications(ctx, environment).Sort(sortByName).Page(currentPageNumber).Size(pageSize).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list applications in the environment "%s": %s`, environment, parsedErr)
 		}
@@ -237,7 +242,8 @@ func (cmfClient *CmfRestClient) ListApplicationEvents(ctx context.Context, envir
 	done := false
 
 	for !done {
-		eventsPage, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplicationEvents(ctx, environment, application).Page(currentPageNumber).Size(pageSize).Execute()
+		// createdTime DESC keeps events newest-first; "name" (unique id) breaks ties for stable paging (CF-4076).
+		eventsPage, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplicationEvents(ctx, environment, application).Sort([]string{"creationTimestamp,desc", "name"}).Page(currentPageNumber).Size(pageSize).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list events for application "%s" in the environment "%s": %s`, application, environment, parsedErr)
 		}
@@ -289,7 +295,7 @@ func (cmfClient *CmfRestClient) ListEnvironments(ctx context.Context) ([]cmfsdk.
 	var currentPageNumber int32 = 0
 
 	for !done {
-		environmentsPage, httpResponse, err := cmfClient.EnvironmentsApi.GetEnvironments(ctx).Page(currentPageNumber).Size(pageSize).Execute()
+		environmentsPage, httpResponse, err := cmfClient.EnvironmentsApi.GetEnvironments(ctx).Sort(sortByName).Page(currentPageNumber).Size(pageSize).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf("failed to list environments: %s", parsedErr)
 		}
@@ -382,9 +388,9 @@ func (cmfClient *CmfRestClient) ListSavepoint(ctx context.Context, environment, 
 		var httpResponse *_nethttp.Response
 		var err error
 		if isStatement {
-			savepointsPage, httpResponse, err = cmfClient.SavepointsApi.GetSavepointsForFlinkStatement(ctx, environment, statement).Page(currentPageNumber).Size(pageSize).Execute()
+			savepointsPage, httpResponse, err = cmfClient.SavepointsApi.GetSavepointsForFlinkStatement(ctx, environment, statement).Sort(sortByName).Page(currentPageNumber).Size(pageSize).Execute()
 		} else {
-			savepointsPage, httpResponse, err = cmfClient.SavepointsApi.GetSavepointsForFlinkApplication(ctx, environment, application).Page(currentPageNumber).Size(pageSize).Execute()
+			savepointsPage, httpResponse, err = cmfClient.SavepointsApi.GetSavepointsForFlinkApplication(ctx, environment, application).Sort(sortByName).Page(currentPageNumber).Size(pageSize).Execute()
 		}
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list savepoints in the environment "%s": %s`, environment, parsedErr)
@@ -412,7 +418,7 @@ func (cmfClient *CmfRestClient) ListDetachedSavepoint(ctx context.Context, filte
 	var currentPageNumber int32 = 0
 
 	for !done {
-		savepointsPage, httpResponse, err := cmfClient.DetachedSavepointsApi.ListDetachedSavepoints(ctx).Page(currentPageNumber).Size(pageSize).Name(filter).Execute()
+		savepointsPage, httpResponse, err := cmfClient.DetachedSavepointsApi.ListDetachedSavepoints(ctx).Sort(sortByName).Page(currentPageNumber).Size(pageSize).Name(filter).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list detached savepoints %s`, parsedErr)
 		}
@@ -461,7 +467,7 @@ func (cmfClient *CmfRestClient) ListComputePools(ctx context.Context, environmen
 	var currentPageNumber int32 = 0
 
 	for !done {
-		computePoolsPage, httpResponse, err := cmfClient.SQLApi.GetComputePools(ctx, environment).Page(currentPageNumber).Size(pageSize).Execute()
+		computePoolsPage, httpResponse, err := cmfClient.SQLApi.GetComputePools(ctx, environment).Sort(sortByName).Page(currentPageNumber).Size(pageSize).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list compute pools in the environment "%s": %s`, environment, parsedErr)
 		}
@@ -509,7 +515,7 @@ func (cmfClient *CmfRestClient) ListStatements(ctx context.Context, environment,
 	const pageSize = 100
 	var currentPageNumber int32 = 0
 
-	request := cmfClient.SQLApi.GetStatements(ctx, environment)
+	request := cmfClient.SQLApi.GetStatements(ctx, environment).Sort(sortByName)
 	if computePool != "" {
 		request = request.ComputePool(computePool)
 	}
@@ -614,7 +620,7 @@ func (cmfClient *CmfRestClient) ListCatalog(ctx context.Context) ([]cmfsdk.Kafka
 	var currentPageNumber int32 = 0
 
 	for !done {
-		catalogPage, httpResponse, err := cmfClient.SQLApi.GetKafkaCatalogs(ctx).Page(currentPageNumber).Size(pageSize).Execute()
+		catalogPage, httpResponse, err := cmfClient.SQLApi.GetKafkaCatalogs(ctx).Sort(sortByName).Page(currentPageNumber).Size(pageSize).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list Kafka Catalog: %s`, parsedErr)
 		}
@@ -654,7 +660,7 @@ func (cmfClient *CmfRestClient) ListApplicationInstances(ctx context.Context, en
 	done := false
 
 	for !done {
-		instancesPage, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplicationInstances(ctx, environment, application).Page(currentPageNumber).Size(pageSize).Execute()
+		instancesPage, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplicationInstances(ctx, environment, application).Sort(sortByName).Page(currentPageNumber).Size(pageSize).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list instances of application "%s" in the environment "%s": %s`, application, environment, parsedErr)
 		}
@@ -692,7 +698,8 @@ func (cmfClient *CmfRestClient) ListSecretMappings(ctx context.Context, envName 
 	var currentPageNumber int32 = 0
 
 	for !done {
-		mappingsPage, httpResponse, err := cmfClient.EnvironmentsApi.GetEnvironmentSecretMappings(ctx, envName).Page(currentPageNumber).Size(pageSize).Execute()
+		// Mapping "name" has no unique constraint; add "uid" (the PK) as tiebreaker for stable paging (CF-4076).
+		mappingsPage, httpResponse, err := cmfClient.EnvironmentsApi.GetEnvironmentSecretMappings(ctx, envName).Sort([]string{"name", "uid"}).Page(currentPageNumber).Size(pageSize).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list secret mappings in the environment "%s": %s`, envName, parsedErr)
 		}
@@ -740,7 +747,7 @@ func (cmfClient *CmfRestClient) ListSecrets(ctx context.Context) ([]cmfsdk.Secre
 	var currentPageNumber int32 = 0
 
 	for !done {
-		secretsPage, httpResponse, err := cmfClient.SecretsApi.GetSecrets(ctx).Page(currentPageNumber).Size(pageSize).Execute()
+		secretsPage, httpResponse, err := cmfClient.SecretsApi.GetSecrets(ctx).Sort(sortByName).Page(currentPageNumber).Size(pageSize).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list secrets: %s`, parsedErr)
 		}
@@ -804,7 +811,7 @@ func (cmfClient *CmfRestClient) ListDatabases(ctx context.Context, catalogName s
 	var currentPageNumber int32 = 0
 
 	for !done {
-		databasePage, httpResponse, err := cmfClient.SQLApi.GetKafkaDatabases(ctx, catalogName).Page(currentPageNumber).Size(pageSize).Execute()
+		databasePage, httpResponse, err := cmfClient.SQLApi.GetKafkaDatabases(ctx, catalogName).Sort(sortByName).Page(currentPageNumber).Size(pageSize).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list databases in catalog "%s": %s`, catalogName, parsedErr)
 		}
