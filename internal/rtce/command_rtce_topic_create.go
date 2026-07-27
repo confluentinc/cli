@@ -39,7 +39,7 @@ func (c *rtceTopicCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Bool("wait", false, "Wait for the RTCE topic to reach a ready or failed state before returning.")
-	cmd.Flags().Duration("timeout", time.Hour, "Maximum time to wait for the RTCE topic to reach a ready or failed state when --wait is set.")
+	cmd.Flags().Duration("timeout", time.Hour, "Maximum time to wait for the RTCE topic to reach a ready or failed state when --wait is set (e.g., '30s', '5m', '2h').")
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)

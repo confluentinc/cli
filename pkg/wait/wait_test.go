@@ -49,6 +49,23 @@ func TestPoll_EventuallyReady(t *testing.T) {
 	require.Equal(t, 3, calls)
 }
 
+func TestPoll_InvalidPollInterval(t *testing.T) {
+	for _, interval := range []time.Duration{0, -time.Second} {
+		calls := 0
+		_, err := Poll(context.Background(), Options[fakeResource]{
+			Fetch: func() (fakeResource, error) {
+				calls++
+				return fakeResource{phase: "READY"}, nil
+			},
+			IsTerminal:   func(r fakeResource) bool { return r.phase == "READY" },
+			PollInterval: interval,
+			Timeout:      time.Second,
+		})
+		require.ErrorIs(t, err, ErrInvalidPollInterval)
+		require.Equal(t, 0, calls, "Fetch should not be called when PollInterval is invalid")
+	}
+}
+
 func TestPoll_Failed(t *testing.T) {
 	calls := 0
 	v, err := Poll(context.Background(), Options[fakeResource]{

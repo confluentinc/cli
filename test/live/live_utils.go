@@ -197,10 +197,14 @@ func (s *CLILiveTestSuite) waitForDeletion(t *testing.T, argsTemplate string, st
 	for {
 		cmd := exec.Command(s.binPath, shellSplit(args)...)
 		cmd.Env = env
-		out, _ := cmd.CombinedOutput()
+		out, err := cmd.CombinedOutput()
 
-		if cmd.ProcessState.ExitCode() != 0 {
-			return // non-zero exit — the resource no longer exists
+		if err != nil {
+			if _, ok := err.(*exec.ExitError); ok {
+				return // non-zero exit — the resource no longer exists
+			}
+			// Any other error means the command could not run — surface it.
+			t.Fatalf("waitForDeletion failed to run %q: %v\n%s", args, err, string(out))
 		}
 		if time.Now().After(deadline) {
 			t.Fatalf("waitForDeletion timed out after %s — resource still exists:\n%s", timeout, string(out))

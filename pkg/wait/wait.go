@@ -37,8 +37,9 @@ type PhaseOptions[T any] struct {
 }
 
 var (
-	ErrTimeout = errors.New("wait timed out")
-	ErrFailed  = errors.New("resource entered failed state")
+	ErrTimeout             = errors.New("wait timed out")
+	ErrFailed              = errors.New("resource entered failed state")
+	ErrInvalidPollInterval = errors.New("poll interval must be greater than zero")
 )
 
 // PhaseSet returns a predicate reporting whether its argument is in phases.
@@ -87,6 +88,10 @@ func Poll[T any](ctx context.Context, opts Options[T]) (T, error) {
 		last    T
 		lastErr error
 	)
+
+	if opts.PollInterval <= 0 {
+		return last, ErrInvalidPollInterval
+	}
 
 	check := func() (bool, error) {
 		v, ferr := opts.Fetch()
