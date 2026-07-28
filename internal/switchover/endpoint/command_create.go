@@ -116,13 +116,12 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 }
 
 func printSwitchoverEndpoint(cmd *cobra.Command, endpoint switchoverv1.SwitchoverV1SwitchoverEndpoint) error {
+	// Serialized output mirrors the API response verbatim (full spec/status).
+	if output.GetFormat(cmd).IsSerialized() {
+		return printSerialized(cmd, endpoint)
+	}
+
 	table := output.NewTable(cmd)
-	table.Add(&out{
-		Id:             endpoint.GetId(),
-		DisplayName:    endpoint.Spec.GetDisplayName(),
-		SwitchoverPair: endpoint.Spec.GetSwitchoverPairId(),
-		Environment:    endpoint.Spec.GetEnvironment(),
-		Phase:          endpoint.Status.GetPhase(),
-	})
+	table.Add(newEndpointOut(endpoint))
 	return table.Print()
 }
