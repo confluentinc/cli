@@ -91,7 +91,7 @@ func newEndpointOut(endpoint switchoverv1.SwitchoverV1SwitchoverEndpoint) *out {
 	return &out{
 		Id:             endpoint.GetId(),
 		DisplayName:    endpoint.Spec.GetDisplayName(),
-		SwitchoverPair: endpoint.Spec.GetSwitchoverPairId(),
+		SwitchoverPair: endpoint.Spec.GetParentResourceId(),
 		Environment:    endpoint.Spec.GetEnvironment(),
 		Target:         endpoint.Spec.GetTarget(),
 		Phase:          endpoint.Status.GetPhase(),

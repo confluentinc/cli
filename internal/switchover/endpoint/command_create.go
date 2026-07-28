@@ -103,7 +103,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 			DisplayName:      switchoverv1.PtrString(displayName),
 			Endpoints:        &endpoints,
 			Environment:      switchoverv1.PtrString(environmentId),
-			SwitchoverPairId: switchoverv1.PtrString(switchoverPairId),
+			ParentResourceId: switchoverv1.PtrString(switchoverPairId),
 		},
 	}
 
