@@ -9,7 +9,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
-	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 func (c *command) newConnectRegisterCommand() *cobra.Command {
@@ -45,19 +44,9 @@ func (c *command) registerConnect(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	onPremToCloudKafkaIdMap, err := c.getOnPremToCloudKafkaIdMap(environmentId)
-	if err != nil {
-		return err
-	}
-
 	kafkaClusterId, err := cmd.Flags().GetString("confluent-platform-kafka-cluster")
 	if err != nil {
 		return err
-	}
-
-	usmKafkaClusterId, ok := onPremToCloudKafkaIdMap[kafkaClusterId]
-	if !ok {
-		log.CliLogger.Errorf(kafkaClusterNotFoundErrorMsg, kafkaClusterId)
 	}
 
 	connectClusterRequest := usmv1.UsmV1ConnectCluster{
@@ -87,5 +76,5 @@ func (c *command) registerConnect(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return printConnectTable(cmd, cluster, usmKafkaClusterId)
+	return printConnectTable(cmd, cluster)
 }

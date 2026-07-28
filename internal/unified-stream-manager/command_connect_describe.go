@@ -5,7 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
-	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 func (c *command) newConnectDescribeCommand() *cobra.Command {
@@ -41,15 +40,5 @@ func (c *command) describeConnect(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	onPremToCloudKafkaIdMap, err := c.getOnPremToCloudKafkaIdMap(environmentId)
-	if err != nil {
-		return err
-	}
-
-	usmKafkaClusterId, ok := onPremToCloudKafkaIdMap[cluster.GetKafkaClusterId()]
-	if !ok {
-		log.CliLogger.Errorf(kafkaClusterNotFoundErrorMsg, cluster.GetKafkaClusterId())
-	}
-
-	return printConnectTable(cmd, cluster, usmKafkaClusterId)
+	return printConnectTable(cmd, cluster)
 }

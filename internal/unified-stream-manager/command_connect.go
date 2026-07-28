@@ -10,8 +10,6 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-const kafkaClusterNotFoundErrorMsg = "USM Kafka cluster corresponding to Confluent Platform Kafka cluster %s not found"
-
 type connectOut struct {
 	Id                              string `human:"ID" serialized:"id"`
 	ConfluentPlatformConnectCluster string `human:"Confluent Platform Connect Cluster" serialized:"confluent_platform_connect_cluster"`
@@ -70,11 +68,11 @@ func (c *command) autocompleteConnectClusters() []string {
 	return suggestions
 }
 
-func printConnectTable(cmd *cobra.Command, connect usmv1.UsmV1ConnectCluster, usmKafkaClusterId string) error {
+func printConnectTable(cmd *cobra.Command, connect usmv1.UsmV1ConnectCluster) error {
 	out := &connectOut{
 		Id:                              connect.GetId(),
 		ConfluentPlatformConnectCluster: connect.GetConfluentPlatformConnectClusterId(),
-		USMKafkaClusterId:               usmKafkaClusterId,
+		USMKafkaClusterId:               connect.GetUsmKafkaClusterId(),
 		ConfluentPlatformKafkaClusterId: connect.GetKafkaClusterId(),
 		Cloud:                           connect.GetCloud(),
 		Region:                          connect.GetRegion(),
@@ -84,18 +82,4 @@ func printConnectTable(cmd *cobra.Command, connect usmv1.UsmV1ConnectCluster, us
 	table := output.NewTable(cmd)
 	table.Add(out)
 	return table.Print()
-}
-
-func (c *command) getOnPremToCloudKafkaIdMap(environment string) (map[string]string, error) {
-	clusters, err := c.V2Client.ListUsmKafkaClusters(environment)
-	if err != nil {
-		return nil, err
-	}
-
-	idMap := make(map[string]string, len(clusters))
-	for _, cluster := range clusters {
-		idMap[cluster.GetConfluentPlatformKafkaClusterId()] = cluster.GetId()
-	}
-
-	return idMap, nil
 }
