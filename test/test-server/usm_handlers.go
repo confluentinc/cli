@@ -145,6 +145,7 @@ func handleUsmConnectClustersCreate(t *testing.T) http.HandlerFunc {
 		require.NoError(t, err)
 
 		usmConnectCluster.SetId("usmcc-abc123")
+		usmConnectCluster.SetUsmKafkaClusterId("usmkc-abc123")
 		if usmConnectCluster.GetCloud() == "" {
 			usmConnectCluster.SetCloud("AWS")
 			usmConnectCluster.SetRegion("us-west-2")
@@ -163,6 +164,7 @@ func handleUsmConnectClustersList(t *testing.T, environmentId string) http.Handl
 					Id:                                usmv1.PtrString("usmcc-abc123"),
 					ConfluentPlatformConnectClusterId: usmv1.PtrString("connect-group-xyz123"),
 					KafkaClusterId:                    usmv1.PtrString("4k0R9d1GTS5tI9f4Y2xZ0Q"),
+					UsmKafkaClusterId:                 usmv1.PtrString("usmkc-abc123"),
 					Cloud:                             usmv1.PtrString("AWS"),
 					Region:                            usmv1.PtrString("us-west-2"),
 					Environment:                       &usmv1.EnvScopedObjectReference{Id: environmentId},
@@ -171,6 +173,7 @@ func handleUsmConnectClustersList(t *testing.T, environmentId string) http.Handl
 					Id:                                usmv1.PtrString("usmcc-def456"),
 					ConfluentPlatformConnectClusterId: usmv1.PtrString("connect-group-xyz456"),
 					KafkaClusterId:                    usmv1.PtrString("5k0R9d1GTS5tI9f4Y2xZ0Q"),
+					UsmKafkaClusterId:                 usmv1.PtrString("usmkc-def456"),
 					Cloud:                             usmv1.PtrString("Azure"),
 					Region:                            usmv1.PtrString("eastus"),
 					Environment:                       &usmv1.EnvScopedObjectReference{Id: environmentId},
@@ -205,6 +208,7 @@ func handleUsmConnectClusterDescribe(t *testing.T, id, environmentId string) htt
 				Id:                                usmv1.PtrString(id),
 				ConfluentPlatformConnectClusterId: usmv1.PtrString("connect-group-xyz123"),
 				KafkaClusterId:                    usmv1.PtrString("4k0R9d1GTS5tI9f4Y2xZ0Q"),
+				UsmKafkaClusterId:                 usmv1.PtrString("usmkc-abc123"),
 				Cloud:                             usmv1.PtrString("AWS"),
 				Region:                            usmv1.PtrString("us-west-2"),
 				Environment:                       &usmv1.EnvScopedObjectReference{Id: environmentId},
