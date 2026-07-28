@@ -45,6 +45,7 @@ import (
 	"github.com/confluentinc/cli/v4/internal/secret"
 	servicequota "github.com/confluentinc/cli/v4/internal/service-quota"
 	streamshare "github.com/confluentinc/cli/v4/internal/stream-share"
+	"github.com/confluentinc/cli/v4/internal/switchover"
 	"github.com/confluentinc/cli/v4/internal/tableflow"
 	unifiedstreammanager "github.com/confluentinc/cli/v4/internal/unified-stream-manager"
 	"github.com/confluentinc/cli/v4/internal/update"
@@ -138,6 +139,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(servicequota.New(prerunner))
 	cmd.AddCommand(shell.New(cmd, func() *cobra.Command { return NewConfluentCommand(cfg) }))
 	cmd.AddCommand(streamshare.New(prerunner))
+	cmd.AddCommand(switchover.New(prerunner))
 	cmd.AddCommand(tableflow.New(prerunner))
 	cmd.AddCommand(unifiedstreammanager.New(cfg, prerunner))
 	cmd.AddCommand(update.New(cfg, prerunner))
