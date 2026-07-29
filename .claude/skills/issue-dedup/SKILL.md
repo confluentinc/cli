@@ -9,11 +9,17 @@ Two phases in one skill: **Scan** (read-only, always safe to run) and **Resolve*
 
 ## Phase 1 — Scan (read-only)
 
-1. **Scope**: default to all open issues in `confluentinc/cli`. If the user narrows it (a label, a time window, a keyword), use that instead. If there are more than ~500 open issues, report the count and ask whether to filter before pulling everything.
+1. **Scope**: default to all open issues in `confluentinc/cli`. If the user narrows it (a label, a time window, a keyword), use that instead. First obtain the total matching count without truncation:
+
+   ```
+   gh api --method GET search/issues -f q='repo:confluentinc/cli is:issue is:open' --jq '.total_count'
+   ```
+
+   Include any user-supplied label, time-window, or keyword filters in the search query. If the count is more than ~500, report it and ask whether to narrow the scope or explicitly approve fetching the larger result set. Only then fetch the issues, setting `--limit` to at least the reported count so the scan is not silently capped:
 
    ```
    gh issue list --repo confluentinc/cli --state open \
-     --json number,title,body,labels,createdAt,updatedAt,comments,url --limit 500
+     --json number,title,body,labels,createdAt,updatedAt,comments,url --limit <reported-count>
    ```
 
 2. **Normalize**: strip issue-template boilerplate (fixed headers, checkbox scaffolding) before comparing bodies — it inflates similarity between unrelated issues that just used the same template. Focus on what varies: error messages, exact commands, stack traces, version strings, repro steps.

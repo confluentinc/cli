@@ -17,12 +17,12 @@ This runs `pkg/linter.RequireValidExamples()` (`pkg/linter/command_rules.go:220`
 
 ## 2. Find deprecated/hidden surface still referenced in prose
 
-There's no `Deprecated:` cobra convention here — commands/flags are retired via:
+Commands and flags are hidden or disabled via:
 - `cmd.Flags().MarkHidden("flag-name")` (scattered across command files, e.g. `internal/kafka/command_topic_produce.go`)
 - `command.Hidden = true` (see `internal/command.go:229`)
 - `pkg/featureflags.DisableHelpText(cmd, flags)` — LaunchDarkly-driven hiding (`pkg/featureflags/disable.go`)
 
-Grep for all three patterns repo-wide to build a list of hidden/disabled commands and flags, then cross-reference each name against every `Example:`/`Long:` string that still mentions it by exact name. A flag or subcommand that's hidden/disabled elsewhere but still shown in another command's example or help text is stale — report the file:line of both the hide-call and the stale reference.
+LaunchDarkly can also deprecate visible surface area via `featureflags.DeprecateCommandTree` and `featureflags.DeprecateFlags`, which prefix command `Short`/`Long` text or flag `Usage` with `DEPRECATED:`. Grep for all hiding, disabling, and deprecation patterns repo-wide to build a list of affected commands and flags, then cross-reference each name against every `Example:`/`Long:` string that still mentions it by exact name. A hidden/disabled command or flag shown in another example is stale; a deprecated one shown without an appropriate warning is a drift candidate. Report the file:line of both the mechanism and the stale reference.
 
 ## 3. Cross-check subcommands mentioned in prose
 
@@ -31,7 +31,7 @@ Some `Long:` fields reference other subcommands by name (e.g. "run `confluent ka
 ## 4. Root markdown: typos and broken links
 
 For `README.md`, `CONTRIBUTING.md`, and any other repo-root markdown:
-- Extract `[text](url)` links. For relative links, verify the target file exists. For `http(s)://` links, do a quick reachability check (`curl -sI -o /dev/null -w '%{http_code}' <url>`), treating 4xx/5xx as broken; skip anything pointing at internal/non-public infrastructure.
+- Extract `[text](url)` links. For relative links, verify the target file exists. For `http(s)://` links, follow redirects during a quick HEAD check (`curl -sSIL -o /dev/null -w '%{http_code}' <url>`). If the server rejects HEAD with `405` or `501`, retry with a lightweight GET that discards the body (`curl -sSL -o /dev/null -w '%{http_code}' <url>`). Treat other final 4xx/5xx responses as broken, and skip anything pointing at internal/non-public infrastructure.
 - Cross-reference command/flag names mentioned in prose against the real command surface built in step 3 — a misspelled command (`confluent kafak topic`) won't resolve and is a giveaway.
 
 ## 5. Optional: regenerate the full reference tree for a manual pass
