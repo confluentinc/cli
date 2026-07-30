@@ -38,7 +38,7 @@ Flags:
       --context string                   CLI context name.
       --cluster-name string              Cluster name, which specifies the cluster scope.
       --resource string                  Resource type and identifier using "Prefix:ID" format. If specified with "--role" and no principals, list all principals and role bindings.
-      --inclusive                        List role bindings for specified scopes and nested scopes. Otherwise, list role bindings for the specified scopes. If scopes are unspecified, list role bindings across all scopes.
+      --inclusive                        List role bindings for specified scopes and nested scopes. Otherwise, list role bindings for the specified scopes. If scopes are unspecified, list role bindings across all scopes. Only applies to Confluent Cloud.
   -o, --output string                    Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
