@@ -78,10 +78,14 @@ func (c *command) revokeCCloudRefreshToken(ctx *config.Context) (*ccloudv1.Authe
 		return nil, err
 	}
 
+	var userAgent string
+	if c.Version != nil {
+		userAgent = c.Version.UserAgent
+	}
 	client := ccloudv1.NewClientWithJWT(context.Background(), contextState.AuthToken, &ccloudv1.Params{
 		BaseURL:   ctx.GetPlatformServer(),
 		Logger:    log.CliLogger,
-		UserAgent: c.Version.UserAgent,
+		UserAgent: userAgent,
 	})
 
 	req := &ccloudv1.AuthenticateRequest{IdToken: contextState.AuthToken}
