@@ -221,6 +221,7 @@ func RequireValidExamples() CommandRule {
 	return func(cmd *cobra.Command) error {
 		requiredFlags := getRequiredFlags(cmd.Flags())
 		allFlags := getAllFlags(cmd.Flags())
+		boolFlags := getBoolFlags(cmd.Flags())
 
 		errs := new(multierror.Error)
 
@@ -238,7 +239,12 @@ func RequireValidExamples() CommandRule {
 			}
 
 			for _, match := range regexp.MustCompile(`--[a-z\-]+=`).FindAllString(example, -1) {
-				errs = multierror.Append(errs, fmt.Errorf("%s: flag `%s` must not use \"=\" in example %d", cmd.CommandPath(), strings.TrimSuffix(match, "="), i+1))
+				flag := strings.TrimSuffix(match, "=")
+				// Boolean flags legitimately need "=" to set the non-default value, e.g. --flag=false.
+				if slices.Contains(boolFlags, flag) {
+					continue
+				}
+				errs = multierror.Append(errs, fmt.Errorf("%s: flag `%s` must not use \"=\" in example %d", cmd.CommandPath(), flag, i+1))
 			}
 		}
 
@@ -272,6 +278,16 @@ func getAllFlags(flags *pflag.FlagSet) []string {
 		all = append(all, "--"+flag.Name)
 	})
 	return all
+}
+
+func getBoolFlags(flags *pflag.FlagSet) []string {
+	var boolFlags []string
+	flags.VisitAll(func(flag *pflag.Flag) {
+		if flag.Value.Type() == "bool" {
+			boolFlags = append(boolFlags, "--"+flag.Name)
+		}
+	})
+	return boolFlags
 }
 
 func getValueByName(obj any, name string) string {
