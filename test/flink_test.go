@@ -442,6 +442,8 @@ func (s *CLITestSuite) TestFlinkStatement() {
 		{args: "flink statement delete my-statement --force --cloud aws --region eu-west-1", fixture: "flink/statement/delete.golden"},
 		{args: "flink statement describe my-statement --cloud aws --region eu-west-1 -o yaml", fixture: "flink/statement/describe-yaml.golden"},
 		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/describe.golden"},
+		{args: "flink statement describe my-statement-with-warnings --cloud aws --region eu-west-1", fixture: "flink/statement/describe-warnings.golden"},
+		{args: "flink statement describe my-statement-with-warnings --cloud aws --region eu-west-1 -o yaml", fixture: "flink/statement/describe-warnings-yaml.golden"},
 		{args: "flink statement list --cloud aws --region eu-west-1", fixture: "flink/statement/list.golden"},
 		{args: "flink statement list --cloud aws --region eu-west-1 -o yaml", fixture: "flink/statement/list-yaml.golden"},
 		{args: "flink statement list --cloud aws --region eu-west-1 --status completed", fixture: "flink/statement/list-completed.golden"},
