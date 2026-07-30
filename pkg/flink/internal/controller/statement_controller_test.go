@@ -333,6 +333,41 @@ func (s *StatementControllerTestSuite) TestExecuteStatementWithWarning() {
 	cupaloy.SnapshotT(s.T(), stdout)
 }
 
+func (s *StatementControllerTestSuite) TestExecuteStatementWithStructuredWarnings() {
+	statementToExecute := "insert into users values ('test');"
+	legacyDetail := "[Warning] The primary key does not match the upsert key derived from the query."
+	warnings := []types.StatementWarning{
+		{
+			Severity:  "MODERATE",
+			Reason:    "MISSING_WINDOW_START_END",
+			Message:   "The GROUP BY clause contains only `window_start` with no corresponding `window_end`.",
+			CreatedAt: time.Date(2026, 7, 30, 8, 0, 0, 0, time.UTC),
+		},
+		{
+			Severity:  "CRITICAL",
+			Reason:    "UPSERT_PRIMARY_KEY_MISMATCH",
+			Message:   "The primary key does not match the upsert key derived from the query.",
+			CreatedAt: time.Date(2026, 7, 30, 9, 15, 0, 0, time.UTC),
+		},
+	}
+	processedStatement := types.ProcessedStatement{Status: types.PENDING, Principal: "sa-123", StatusDetail: legacyDetail, Warnings: warnings}
+	runningStatement := types.ProcessedStatement{Status: types.RUNNING, StatusDetail: legacyDetail, Warnings: warnings}
+	completedStatement := types.ProcessedStatement{Status: types.COMPLETED}
+	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
+	s.consoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
+	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&runningStatement, nil)
+	s.store.EXPECT().FetchStatementResults(runningStatement).Return(&runningStatement, nil)
+	s.store.EXPECT().WaitForTerminalStatementState(gomock.Any(), runningStatement).Return(&completedStatement, nil)
+
+	stdout := testUtils.RunAndCaptureSTDOUT(s.T(), func() {
+		returnedStatement, err := s.statementController.ExecuteStatement(statementToExecute)
+		require.Nil(s.T(), err)
+		require.Equal(s.T(), &completedStatement, returnedStatement)
+	})
+
+	cupaloy.SnapshotT(s.T(), stdout)
+}
+
 func (s *StatementControllerTestSuite) TestRenderMsgAndStatusLocalStatements() {
 	tests := []struct {
 		name      string
