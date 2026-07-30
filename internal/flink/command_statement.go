@@ -4,17 +4,36 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
+// printStatementWarnings renders warnings below the table, on stderr so that stdout stays the
+// command's data. Serialized output already carries them in the warnings field.
+func printStatementWarnings(cmd *cobra.Command, warnings []types.StatementWarning) {
+	if output.GetFormat(cmd) != output.Human {
+		return
+	}
+
+	if block := types.FormatStatementWarnings(warnings); block != "" {
+		output.ErrPrintln(false, "")
+		output.ErrPrintln(false, block)
+		output.ErrPrintln(false, "")
+	}
+}
+
 type statementOut struct {
-	CreationDate           time.Time         `human:"Creation Date" serialized:"creation_date"`
-	Name                   string            `human:"Name" serialized:"name"`
-	Statement              string            `human:"Statement" serialized:"statement"`
-	ComputePool            string            `human:"Compute Pool,omitempty" serialized:"compute_pool,omitempty"`
-	Status                 string            `human:"Status" serialized:"status"`
-	StatusDetail           string            `human:"Status Detail,omitempty" serialized:"status_detail,omitempty"`
-	LatestOffsets          map[string]string `human:"Latest Offsets" serialized:"latest_offsets"`
-	LatestOffsetsTimestamp *time.Time        `human:"Latest Offsets Timestamp" serialized:"latest_offsets_timestamp"`
+	CreationDate time.Time `human:"Creation Date" serialized:"creation_date"`
+	Name         string    `human:"Name" serialized:"name"`
+	Statement    string    `human:"Statement" serialized:"statement"`
+	ComputePool  string    `human:"Compute Pool,omitempty" serialized:"compute_pool,omitempty"`
+	Status       string    `human:"Status" serialized:"status"`
+	StatusDetail string    `human:"Status Detail,omitempty" serialized:"status_detail,omitempty"`
+	// Rendered below the table, since a warning message is too long for a cell.
+	Warnings               []types.StatementWarning `human:"-" serialized:"warnings,omitempty"`
+	LatestOffsets          map[string]string        `human:"Latest Offsets" serialized:"latest_offsets"`
+	LatestOffsetsTimestamp *time.Time               `human:"Latest Offsets Timestamp" serialized:"latest_offsets_timestamp"`
 }
 
 func (c *command) newStatementCommand() *cobra.Command {

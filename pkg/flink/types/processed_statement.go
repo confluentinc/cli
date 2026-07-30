@@ -23,13 +23,14 @@ const (
 
 // ProcessedStatement Custom Internal type that shall be used internally by the client
 type ProcessedStatement struct {
-	Statement            string `json:"statement"`
-	StatementName        string `json:"statement_name"`
-	Kind                 string `json:"kind"`
-	ComputePool          string `json:"compute_pool"`
-	Principal            string `json:"principal"` // Cloud only
-	Status               PHASE  `json:"status"`
-	StatusDetail         string `json:"status_detail,omitempty"` // Shown at the top before the table
+	Statement            string             `json:"statement"`
+	StatementName        string             `json:"statement_name"`
+	Kind                 string             `json:"kind"`
+	ComputePool          string             `json:"compute_pool"`
+	Principal            string             `json:"principal"` // Cloud only
+	Status               PHASE              `json:"status"`
+	StatusDetail         string             `json:"status_detail,omitempty"` // Shown at the top before the table
+	Warnings             []StatementWarning `json:"warnings,omitempty"`
 	IsLocalStatement     bool
 	IsSensitiveStatement bool
 	PageToken            string
@@ -46,6 +47,7 @@ func NewProcessedStatement(statementObj flinkgatewayv1.SqlV1Statement) *Processe
 		ComputePool:   statementObj.Spec.GetComputePoolId(),
 		Principal:     statementObj.Spec.GetPrincipal(),
 		StatusDetail:  statementObj.Status.GetDetail(),
+		Warnings:      NewStatementWarnings(statementObj.Status.GetWarnings()),
 		Status:        PHASE(statementObj.Status.GetPhase()),
 		Properties:    statementObj.Spec.GetProperties(),
 		Traits:        StatementTraits{FlinkGatewayV1StatementTraits: &traits},
@@ -92,9 +94,20 @@ func (s ProcessedStatement) printStatusMessageOfNonLocalStatement() {
 		}
 	}
 
-	if s.StatusDetail != "" {
+	// The status detail can repeat the warnings, so only print it when there are none. A failed
+	// statement is the exception: its detail holds the failure reason.
+	if s.StatusDetail != "" && (s.Status == FAILED || len(s.Warnings) == 0) {
 		utils.OutputInfof("Details: ")
 		utils.OutputWarn(s.StatusDetail)
+	}
+
+	s.printWarnings()
+}
+
+func (s ProcessedStatement) printWarnings() {
+	if warnings := FormatStatementWarnings(s.Warnings); warnings != "" {
+		utils.OutputWarn(warnings)
+		utils.OutputInfo("")
 	}
 }
 
@@ -110,6 +123,8 @@ func (s ProcessedStatement) PrintOutputDryRunStatement() {
 		utils.OutputInfof("Details: ")
 		utils.OutputErr(s.StatusDetail)
 	}
+
+	s.printWarnings()
 }
 
 func (s ProcessedStatement) GetPageSize() int {
