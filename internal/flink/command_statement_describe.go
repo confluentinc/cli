@@ -8,20 +8,23 @@ import (
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 type describeStatementOut struct {
-	CreationDate           time.Time         `human:"Creation Date" serialized:"creation_date"`
-	Name                   string            `human:"Name" serialized:"name"`
-	Statement              string            `human:"Statement" serialized:"statement"`
-	ComputePool            string            `human:"Compute Pool" serialized:"compute_pool"`
-	Status                 string            `human:"Status" serialized:"status"`
-	StatusDetail           string            `human:"Status Detail,omitempty" serialized:"status_detail,omitempty"`
-	LatestOffsets          map[string]string `human:"Latest Offsets" serialized:"latest_offsets"`
-	LatestOffsetsTimestamp *time.Time        `human:"Latest Offsets Timestamp" serialized:"latest_offsets_timestamp"`
-	Properties             map[string]string `human:"Properties" serialized:"properties"`
-	Principal              string            `human:"Principal" serialized:"principal"`
+	CreationDate time.Time `human:"Creation Date" serialized:"creation_date"`
+	Name         string    `human:"Name" serialized:"name"`
+	Statement    string    `human:"Statement" serialized:"statement"`
+	ComputePool  string    `human:"Compute Pool" serialized:"compute_pool"`
+	Status       string    `human:"Status" serialized:"status"`
+	StatusDetail string    `human:"Status Detail,omitempty" serialized:"status_detail,omitempty"`
+	// Rendered below the table, since a warning message is too long for a cell.
+	Warnings               []types.StatementWarning `human:"-" serialized:"warnings,omitempty"`
+	LatestOffsets          map[string]string        `human:"Latest Offsets" serialized:"latest_offsets"`
+	LatestOffsetsTimestamp *time.Time               `human:"Latest Offsets Timestamp" serialized:"latest_offsets_timestamp"`
+	Properties             map[string]string        `human:"Properties" serialized:"properties"`
+	Principal              string                   `human:"Principal" serialized:"principal"`
 }
 
 func (c *command) newStatementDescribeCommand() *cobra.Command {
@@ -58,6 +61,8 @@ func (c *command) statementDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	warnings := types.NewStatementWarnings(statement.Status.GetWarnings())
+
 	table := output.NewTable(cmd)
 	table.Add(&describeStatementOut{
 		CreationDate:           statement.Metadata.GetCreatedAt(),
@@ -66,10 +71,16 @@ func (c *command) statementDescribe(cmd *cobra.Command, args []string) error {
 		ComputePool:            statement.Spec.GetComputePoolId(),
 		Status:                 statement.Status.GetPhase(),
 		StatusDetail:           statement.Status.GetDetail(),
+		Warnings:               warnings,
 		LatestOffsets:          statement.Status.GetLatestOffsets(),
 		LatestOffsetsTimestamp: flinkgatewayv1.PtrTime(statement.Status.GetLatestOffsetsTimestamp()),
 		Properties:             statement.Spec.GetProperties(),
 		Principal:              statement.Spec.GetPrincipal(),
 	})
-	return table.Print()
+	if err := table.Print(); err != nil {
+		return err
+	}
+
+	printStatementWarnings(cmd, warnings)
+	return nil
 }
