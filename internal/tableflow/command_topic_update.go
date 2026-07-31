@@ -108,7 +108,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if cmd.Flags().Changed("metadata-column-naming-scheme") {
-		topicUpdate.Spec.Config.SetMetadataColumnNamingScheme(strings.ToUpper(metadataColumnNamingScheme))
+		topicUpdate.Spec.Config.SetMetadataColumnNamingScheme(metadataColumnNamingScheme)
 	}
 
 	if cmd.Flags().Changed("error-handling") {
