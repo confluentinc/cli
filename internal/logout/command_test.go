@@ -53,6 +53,16 @@ func TestLogout(t *testing.T) {
 	verifyLoggedOutState(t, cfg, contextName)
 }
 
+func TestLogoutNoopWhenAlreadyLoggedOut(t *testing.T) {
+	req := require.New(t)
+	cfg := config.New()
+	prerunner := climock.NewPreRunnerMock(nil, nil, nil, nil, cfg)
+	logoutCmd := New(cfg, prerunner, AuthTokenHandler)
+
+	_, err := pcmd.ExecuteCommand(logoutCmd)
+	req.NoError(err)
+}
+
 func newLogoutCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, authTokenHandler pauth.AuthTokenHandler, contextName string) (*cobra.Command, *config.Config) {
 	config.SetTempHomeDir()
 	cfg := config.AuthenticatedConfigMockWithContextName(contextName)
