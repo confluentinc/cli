@@ -15,6 +15,7 @@ func (c *command) newEnvironmentListCommand() *cobra.Command {
 		RunE:  c.environmentList,
 	}
 
+	addLimitFlag(cmd)
 	addCmfFlagSet(cmd)
 
 	pcmd.AddOutputFlag(cmd)
@@ -23,12 +24,17 @@ func (c *command) newEnvironmentListCommand() *cobra.Command {
 }
 
 func (c *command) environmentList(cmd *cobra.Command, _ []string) error {
+	limit, err := getLimit(cmd)
+	if err != nil {
+		return err
+	}
+
 	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	sdkEnvironments, err := client.ListEnvironments(c.createContext())
+	sdkEnvironments, err := client.ListEnvironments(c.createContext(), limit)
 	if err != nil {
 		return err
 	}
