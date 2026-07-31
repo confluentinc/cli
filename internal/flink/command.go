@@ -7,6 +7,7 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"slices"
 
 	"github.com/spf13/cobra"
 
@@ -15,6 +16,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 type command struct {
@@ -139,6 +141,16 @@ func getLimit(cmd *cobra.Command) (int32, error) {
 		return 0, fmt.Errorf("`--limit` must be between 0 and %d", math.MaxInt32)
 	}
 	return int32(limit), nil
+}
+
+// warnIfInvalidStatus prints a warning to stderr when status is set but not one of the
+// allowed values. The value is still forwarded to the server, which treats an unrecognized
+// status as a no-match rather than an error, so this is advisory only. Callers normalize the
+// case of status and pass the matching allowed-value list.
+func (c *command) warnIfInvalidStatus(status string, allowed []string) {
+	if status != "" && !slices.Contains(allowed, status) {
+		output.ErrPrintf(c.Config.EnableColor, "[WARN] Invalid status %q. Valid statuses are %s.\n", status, utils.ArrayToCommaDelimitedString(allowed, "and"))
+	}
 }
 
 func (c *command) createContext() context.Context {

@@ -49,6 +49,15 @@ func TestListAllPages(t *testing.T) {
 		require.Equal(t, []int32{3}, sizes)
 	})
 
+	t.Run("limit equal to page size requests a single page", func(t *testing.T) {
+		var sizes []int32
+		items, err := listAllPages(100, pagedFetcher(250, &sizes))
+		require.NoError(t, err)
+		require.Len(t, items, 100)
+		// Reaching the limit on the first full page must not request a superfluous empty page.
+		require.Equal(t, []int32{100}, sizes)
+	})
+
 	t.Run("limit spanning multiple pages truncates to exactly limit", func(t *testing.T) {
 		var sizes []int32
 		items, err := listAllPages(150, pagedFetcher(250, &sizes))

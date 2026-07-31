@@ -1,0 +1,13 @@
+{
+  "apiVersion": "",
+  "data": [
+    {
+      "apiVersion": "",
+      "kind": "",
+      "message": "This is a test exception message.",
+      "name": "statement-exception-1",
+      "timestamp": "2025-08-05T12:00:00Z"
+    }
+  ],
+  "kind": ""
+}

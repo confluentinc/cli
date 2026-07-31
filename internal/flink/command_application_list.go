@@ -2,17 +2,18 @@ package flink
 
 import (
 	"fmt"
-	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
-	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
+// allowedApplicationStatuses lists the Flink job states recognized by the CMF applications
+// "state=" filter, per the cmf-sdk-go GetApplications filter documentation. Unknown values are
+// still forwarded (the server returns no matches rather than erroring); this list only drives
+// the advisory --status warning.
 var allowedApplicationStatuses = []string{"RUNNING", "FINISHED", "FAILED", "CANCELED", "RECONCILING", "COMPLETED", "UNKNOWN"}
 
 func (c *command) newApplicationListCommand() *cobra.Command {
@@ -49,6 +50,10 @@ func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
 	status, err := cmd.Flags().GetString("status")
 	if err != nil {
 		return err
+	}
+	if status != "" {
+		status = strings.ToUpper(status)
+		c.warnIfInvalidStatus(status, allowedApplicationStatuses)
 	}
 
 	limit, err := getLimit(cmd)
@@ -101,18 +106,18 @@ func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
 	return output.SerializedOutput(cmd, localApps)
 }
 
-// buildApplicationFilter composes the CMF applications filter query from the user-facing
-// --name and --status flags. Applications filter status via the "state=" expression.
+// buildApplicationFilter composes the CMF applications "filter" query from the user-facing
+// --name and --status flags. The grammar (comma-separated "key=value" expressions, "name="
+// with an optional "*" suffix wildcard, and "state=" for status) follows the CMF applications
+// list API. Values are not escaped: Kubernetes application names and Flink states cannot
+// contain "," or "=", so no ambiguity arises. The caller is responsible for normalizing and
+// warning about the status value.
 func buildApplicationFilter(name, status string) string {
 	filters := make([]string, 0, 2)
 	if name != "" {
 		filters = append(filters, fmt.Sprintf("name=%s", name))
 	}
 	if status != "" {
-		status = strings.ToUpper(status)
-		if !slices.Contains(allowedApplicationStatuses, status) {
-			log.CliLogger.Warnf(`Invalid status "%s". Valid statuses are %s.`, status, utils.ArrayToCommaDelimitedString(allowedApplicationStatuses, "and"))
-		}
 		filters = append(filters, fmt.Sprintf("state=%s", status))
 	}
 	return strings.Join(filters, ",")

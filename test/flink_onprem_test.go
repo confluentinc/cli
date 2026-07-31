@@ -37,8 +37,11 @@ func (s *CLITestSuite) TestFlinkApplicationList() {
 		{args: "flink application list --environment default  --output human", fixture: "flink/application/list-human.golden"},
 		// filtering and pagination
 		{args: "flink application list --environment default --name default-application-s --output json", fixture: "flink/application/list-name-filter-json.golden"},
+		{args: "flink application list --environment default --name default-application-1* --output json", fixture: "flink/application/list-name-wildcard-json.golden"},
 		{args: "flink application list --environment default --status reconciling --output json", fixture: "flink/application/list-status-filter-json.golden"},
 		{args: "flink application list --environment default --status failed --output json", fixture: "flink/application/list-status-no-match-json.golden"},
+		{args: "flink application list --environment default --status bogus --output json", fixture: "flink/application/list-status-invalid-json.golden"},
+		{args: "flink application list --environment default --name default-application-1* --status reconciling --output json", fixture: "flink/application/list-name-status-json.golden"},
 		{args: "flink application list --environment default --limit 2 --output json", fixture: "flink/application/list-limit-json.golden"},
 	}
 
@@ -664,6 +667,7 @@ func (s *CLITestSuite) TestFlinkStatementExceptionListOnPrem() {
 	tests := []CLITest{
 		// success scenarios
 		{args: "flink statement exception list test-stmt1 --environment default", fixture: "flink/statement/list-exceptions-successful.golden"},
+		{args: "flink statement exception list test-stmt1 --environment default --limit 1 -o json", fixture: "flink/statement/list-exceptions-limit-json.golden"},
 		// failure scenarios
 		{args: "flink statement exception list test-stmt1 --environment non-exist", fixture: "flink/statement/list-exceptions-non-exist-env-failure.golden", exitCode: 1},
 		{args: "flink statement exception list invalid-stmt --environment default", fixture: "flink/statement/list-exceptions-invalid-stmt-failure.golden", exitCode: 1},
