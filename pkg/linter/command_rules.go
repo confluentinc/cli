@@ -226,30 +226,47 @@ func RequireValidExamples() CommandRule {
 		errs := new(multierror.Error)
 
 		for i, example := range getExampleCodeSnippets(cmd.Example) {
-			for _, flag := range requiredFlags {
-				if !strings.Contains(example, flag) {
-					errs = multierror.Append(errs, fmt.Errorf("%s: required flag `%s` not found in example %d", cmd.CommandPath(), flag, i+1))
-				}
-			}
-
-			for _, match := range regexp.MustCompile(`--[a-z\-]+`).FindAllString(example, -1) {
-				if !slices.Contains(allFlags, match) {
-					errs = multierror.Append(errs, fmt.Errorf("%s: unknown flag `%s` found in example %d", cmd.CommandPath(), match, i+1))
-				}
-			}
-
-			for _, match := range regexp.MustCompile(`--[a-z\-]+=`).FindAllString(example, -1) {
-				flag := strings.TrimSuffix(match, "=")
-				// Boolean flags legitimately need "=" to set the non-default value, e.g. --flag=false.
-				if slices.Contains(boolFlags, flag) {
-					continue
-				}
-				errs = multierror.Append(errs, fmt.Errorf("%s: flag `%s` must not use \"=\" in example %d", cmd.CommandPath(), flag, i+1))
-			}
+			errs = multierror.Append(errs, requireExampleHasRequiredFlags(cmd, requiredFlags, example, i)...)
+			errs = multierror.Append(errs, requireExampleFlagsAreKnown(cmd, allFlags, example, i)...)
+			errs = multierror.Append(errs, requireExampleNoEqualsForNonBoolFlags(cmd, boolFlags, example, i)...)
 		}
 
 		return errs
 	}
+}
+
+func requireExampleHasRequiredFlags(cmd *cobra.Command, requiredFlags []string, example string, i int) []error {
+	var errs []error
+	for _, flag := range requiredFlags {
+		if !strings.Contains(example, flag) {
+			errs = append(errs, fmt.Errorf("%s: required flag `%s` not found in example %d", cmd.CommandPath(), flag, i+1))
+		}
+	}
+	return errs
+}
+
+func requireExampleFlagsAreKnown(cmd *cobra.Command, allFlags []string, example string, i int) []error {
+	var errs []error
+	for _, match := range regexp.MustCompile(`--[a-z\-]+`).FindAllString(example, -1) {
+		if !slices.Contains(allFlags, match) {
+			errs = append(errs, fmt.Errorf("%s: unknown flag `%s` found in example %d", cmd.CommandPath(), match, i+1))
+		}
+	}
+	return errs
+}
+
+func requireExampleNoEqualsForNonBoolFlags(cmd *cobra.Command, boolFlags []string, example string, i int) []error {
+	matches := regexp.MustCompile(`--[a-z\-]+=`).FindAllString(example, -1)
+	errs := make([]error, 0, len(matches))
+	for _, match := range matches {
+		flag := strings.TrimSuffix(match, "=")
+		// Boolean flags legitimately need "=" to set the non-default value, e.g. --flag=false.
+		if slices.Contains(boolFlags, flag) {
+			continue
+		}
+		errs = append(errs, fmt.Errorf("%s: flag `%s` must not use \"=\" in example %d", cmd.CommandPath(), flag, i+1))
+	}
+	return errs
 }
 
 func getExampleCodeSnippets(example string) []string {
