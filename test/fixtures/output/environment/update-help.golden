@@ -1,11 +1,11 @@
-Update an existing Confluent Cloud environment.
+Update an existing environment.
 
 Usage:
   confluent environment update <id> [flags]
 
 Flags:
-      --name string                 New name for Confluent Cloud environment.
-      --governance-package string   Specify the Stream Governance package as "essentials" or "advanced". Downgrading the package from "advanced" to "essentials" is not allowed once the Schema Registry cluster is provisioned.
+      --governance-package string   Specify the Stream Governance package as "essentials" or "advanced". On create, if not specified, the "essentials" package is used. Downgrading the package from "advanced" to "essentials" is not allowed once the Schema Registry cluster is provisioned.
+      --name string                 A human-readable name for the Environment.
       --context string              CLI context name.
   -o, --output string               Specify the output format as "human", "json", or "yaml". (default "human")
 

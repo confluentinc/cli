@@ -16,7 +16,7 @@ import (
 func (c *rtceTopicCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <topic-name>",
-		Short:             "Update an RTCE topic.",
+		Short:             "Update an existing RTCE topic.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.update,
