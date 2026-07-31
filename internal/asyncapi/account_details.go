@@ -141,9 +141,29 @@ func (d *accountDetails) buildMessageEntity() *spec.MessageEntity {
 		entityProducer.WithBindings(d.channelDetails.bindings.messageBinding)
 	}
 	if d.channelDetails.unmarshalledSchema != nil {
+		rewriteSchemaRefs(d.channelDetails.unmarshalledSchema, msgName(d.channelDetails.currentTopic.GetTopicName()))
 		entityProducer.WithPayload(d.channelDetails.unmarshalledSchema)
 	}
 	return entityProducer
+}
+
+// rewriteSchemaRefs rewrites document-root-relative "$ref" values (e.g. "#/definitions/Foo") emitted by
+// Schema Registry so they resolve against the schema's actual location in the AsyncAPI document
+// (#/components/messages/<messageName>/payload/...) instead of the document root, where they'd be invalid.
+func rewriteSchemaRefs(node any, messageName string) {
+	switch v := node.(type) {
+	case map[string]any:
+		if ref, ok := v["$ref"].(string); ok && strings.HasPrefix(ref, "#/") {
+			v["$ref"] = fmt.Sprintf("#/components/messages/%s/payload/%s", messageName, strings.TrimPrefix(ref, "#/"))
+		}
+		for _, value := range v {
+			rewriteSchemaRefs(value, messageName)
+		}
+	case []any:
+		for _, item := range v {
+			rewriteSchemaRefs(item, messageName)
+		}
+	}
 }
 
 func catchOpenAPIError(err error) error {
