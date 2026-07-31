@@ -24,9 +24,13 @@ import (
 
 func (c *command) newConsumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "consume <topic>",
-		Short:             "Consume messages from a Kafka topic.",
-		Long:              "Consume messages from a Kafka topic.\n\nTruncated message headers will be printed if they exist.",
+		Use:   "consume <topic>",
+		Short: "Consume messages from a Kafka topic.",
+		Long: "Consume messages from a Kafka topic.\n\nTruncated message headers will be printed if they exist.\n\n" +
+			"This command works against both Confluent Cloud and Confluent Platform, and some flags only apply to one or the other:\n" +
+			"  - Confluent Cloud only: `--api-key`, `--api-secret`, `--cluster`, `--context`, `--environment`, `--schema-registry-context`, `--schema-registry-api-key`, `--schema-registry-api-secret`.\n" +
+			"  - Confluent Platform (on-prem) only: `--protocol`, `--sasl-mechanism`, `--client-cert-path`, `--client-key-path`, `--certificate-authority-path`, `--username`, `--password`, `--cert-location`, `--key-location`, `--key-password`.\n" +
+			"If you are logged in to Confluent Cloud, on-prem flags are ignored; otherwise, `--bootstrap` is required and determines which mode is used.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.consume,
