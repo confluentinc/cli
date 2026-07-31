@@ -34,7 +34,9 @@ func TestListAllPages(t *testing.T) {
 		items, err := listAllPages(0, pagedFetcher(250, &sizes))
 		require.NoError(t, err)
 		require.Len(t, items, 250)
-		// Pages requested until an empty page: 100, 100, 50, then a 4th (empty) page.
+		// limit == 0 keeps the requested page size constant at 100. Four pages are
+		// requested: three carrying items (100 + 100 + 50) and a final empty page
+		// that terminates the loop.
 		require.Equal(t, []int32{100, 100, 100, 100}, sizes)
 	})
 

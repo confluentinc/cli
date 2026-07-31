@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 
 	"github.com/spf13/cobra"
@@ -134,8 +135,8 @@ func getLimit(cmd *cobra.Command) (int32, error) {
 	if err != nil {
 		return 0, err
 	}
-	if limit < 0 {
-		return 0, fmt.Errorf("`--limit` must be a non-negative integer")
+	if limit < 0 || limit > math.MaxInt32 {
+		return 0, fmt.Errorf("`--limit` must be between 0 and %d", math.MaxInt32)
 	}
 	return int32(limit), nil
 }

@@ -1,1 +1,1 @@
-Error: `--limit` must be a non-negative integer
+Error: `--limit` must be between 0 and 2147483647
