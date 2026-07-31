@@ -30,7 +30,7 @@ type OnPremCMFRestFlagValues struct {
 
 type CmfClientInterface interface {
 	GetStatement(ctx context.Context, environment, name string) (cmfsdk.Statement, error)
-	ListStatements(ctx context.Context, environment, computePool, status string) ([]cmfsdk.Statement, error)
+	ListStatements(ctx context.Context, environment, computePool, status string, limit int32) ([]cmfsdk.Statement, error)
 	CreateStatement(ctx context.Context, environment string, statement cmfsdk.Statement) (cmfsdk.Statement, error)
 	ListStatementExceptions(ctx context.Context, environment, statementName string) (cmfsdk.StatementExceptionList, error)
 	DeleteStatement(ctx context.Context, environment, statement string) error
@@ -189,23 +189,19 @@ func (cmfClient *CmfRestClient) DescribeApplication(ctx context.Context, environ
 	return cmfApplication, nil
 }
 
-func (cmfClient *CmfRestClient) ListApplications(ctx context.Context, environment string) ([]cmfsdk.FlinkApplication, error) {
-	applications := make([]cmfsdk.FlinkApplication, 0)
-	// 100 is an arbitrary page size we've chosen.
-	var currentPageNumber int32 = 0
-	const pageSize = 100
-	done := false
+func (cmfClient *CmfRestClient) ListApplications(ctx context.Context, environment, filter string, limit int32) ([]cmfsdk.FlinkApplication, error) {
+	request := cmfClient.FlinkApplicationsApi.GetApplications(ctx, environment)
+	if filter != "" {
+		request = request.Filter(filter)
+	}
 
-	for !done {
-		applicationsPage, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplications(ctx, environment).Page(currentPageNumber).Size(pageSize).Execute()
+	return listAllPages(limit, func(page, size int32) ([]cmfsdk.FlinkApplication, error) {
+		applicationsPage, httpResponse, err := request.Page(page).Size(size).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list applications in the environment "%s": %s`, environment, parsedErr)
 		}
-		applications = append(applications, applicationsPage.GetItems()...)
-		currentPageNumber, done = extractPageOptions(len(applicationsPage.GetItems()), currentPageNumber)
-	}
-
-	return applications, nil
+		return applicationsPage.GetItems(), nil
+	})
 }
 
 // UpdateApplication Update an application in the specified environment.
@@ -230,22 +226,14 @@ func (cmfClient *CmfRestClient) UpdateApplication(ctx context.Context, environme
 	return outputApplication, nil
 }
 
-func (cmfClient *CmfRestClient) ListApplicationEvents(ctx context.Context, environment, application string) ([]cmfsdk.FlinkApplicationEvent, error) {
-	events := make([]cmfsdk.FlinkApplicationEvent, 0)
-	var currentPageNumber int32 = 0
-	const pageSize = 100
-	done := false
-
-	for !done {
-		eventsPage, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplicationEvents(ctx, environment, application).Page(currentPageNumber).Size(pageSize).Execute()
+func (cmfClient *CmfRestClient) ListApplicationEvents(ctx context.Context, environment, application string, limit int32) ([]cmfsdk.FlinkApplicationEvent, error) {
+	return listAllPages(limit, func(page, size int32) ([]cmfsdk.FlinkApplicationEvent, error) {
+		eventsPage, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplicationEvents(ctx, environment, application).Page(page).Size(size).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list events for application "%s" in the environment "%s": %s`, application, environment, parsedErr)
 		}
-		events = append(events, eventsPage.GetItems()...)
-		currentPageNumber, done = extractPageOptions(len(eventsPage.GetItems()), currentPageNumber)
-	}
-
-	return events, nil
+		return eventsPage.GetItems(), nil
+	})
 }
 
 // CreateEnvironment Create an environment.
@@ -280,25 +268,14 @@ func (cmfClient *CmfRestClient) DescribeEnvironment(ctx context.Context, environ
 	return cmfEnvironment, nil
 }
 
-// ListEnvironments Run through all the pages until we get an empty page, in that case, return.
-func (cmfClient *CmfRestClient) ListEnvironments(ctx context.Context) ([]cmfsdk.Environment, error) {
-	environments := make([]cmfsdk.Environment, 0)
-	done := false
-	// 100 is an arbitrary page size we've chosen.
-	const pageSize = 100
-	var currentPageNumber int32 = 0
-
-	for !done {
-		environmentsPage, httpResponse, err := cmfClient.EnvironmentsApi.GetEnvironments(ctx).Page(currentPageNumber).Size(pageSize).Execute()
+func (cmfClient *CmfRestClient) ListEnvironments(ctx context.Context, limit int32) ([]cmfsdk.Environment, error) {
+	return listAllPages(limit, func(page, size int32) ([]cmfsdk.Environment, error) {
+		environmentsPage, httpResponse, err := cmfClient.EnvironmentsApi.GetEnvironments(ctx).Page(page).Size(size).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf("failed to list environments: %s", parsedErr)
 		}
-
-		environments = append(environments, environmentsPage.GetItems()...)
-		currentPageNumber, done = extractPageOptions(len(environmentsPage.GetItems()), currentPageNumber)
-	}
-
-	return environments, nil
+		return environmentsPage.GetItems(), nil
+	})
 }
 
 // UpdateEnvironment updates an existing environment.
@@ -371,28 +348,21 @@ func (cmfClient *CmfRestClient) DeleteSavepoint(ctx context.Context, environment
 	}
 }
 
-func (cmfClient *CmfRestClient) ListSavepoint(ctx context.Context, environment, statement, application string, isStatement bool) ([]cmfsdk.Savepoint, error) {
-	savepoints := make([]cmfsdk.Savepoint, 0)
-	done := false
-	// 100 is an arbitrary page size we've chosen.
-	const pageSize = 100
-	var currentPageNumber int32 = 0
-	for !done {
+func (cmfClient *CmfRestClient) ListSavepoint(ctx context.Context, environment, statement, application string, isStatement bool, limit int32) ([]cmfsdk.Savepoint, error) {
+	return listAllPages(limit, func(page, size int32) ([]cmfsdk.Savepoint, error) {
 		var savepointsPage cmfsdk.SavepointsPage
 		var httpResponse *_nethttp.Response
 		var err error
 		if isStatement {
-			savepointsPage, httpResponse, err = cmfClient.SavepointsApi.GetSavepointsForFlinkStatement(ctx, environment, statement).Page(currentPageNumber).Size(pageSize).Execute()
+			savepointsPage, httpResponse, err = cmfClient.SavepointsApi.GetSavepointsForFlinkStatement(ctx, environment, statement).Page(page).Size(size).Execute()
 		} else {
-			savepointsPage, httpResponse, err = cmfClient.SavepointsApi.GetSavepointsForFlinkApplication(ctx, environment, application).Page(currentPageNumber).Size(pageSize).Execute()
+			savepointsPage, httpResponse, err = cmfClient.SavepointsApi.GetSavepointsForFlinkApplication(ctx, environment, application).Page(page).Size(size).Execute()
 		}
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list savepoints in the environment "%s": %s`, environment, parsedErr)
 		}
-		savepoints = append(savepoints, savepointsPage.GetItems()...)
-		currentPageNumber, done = extractPageOptions(len(savepointsPage.GetItems()), currentPageNumber)
-	}
-	return savepoints, nil
+		return savepointsPage.GetItems(), nil
+	})
 }
 
 func (cmfClient *CmfRestClient) DescribeDetachedSavepoint(ctx context.Context, name string) (cmfsdk.Savepoint, error) {
@@ -404,23 +374,14 @@ func (cmfClient *CmfRestClient) DescribeDetachedSavepoint(ctx context.Context, n
 	return detachedSavepoint, nil
 }
 
-func (cmfClient *CmfRestClient) ListDetachedSavepoint(ctx context.Context, filter string) ([]cmfsdk.Savepoint, error) {
-	savepoints := make([]cmfsdk.Savepoint, 0)
-	done := false
-	// 100 is an arbitrary page size we've chosen.
-	const pageSize = 100
-	var currentPageNumber int32 = 0
-
-	for !done {
-		savepointsPage, httpResponse, err := cmfClient.DetachedSavepointsApi.ListDetachedSavepoints(ctx).Page(currentPageNumber).Size(pageSize).Name(filter).Execute()
+func (cmfClient *CmfRestClient) ListDetachedSavepoint(ctx context.Context, filter string, limit int32) ([]cmfsdk.Savepoint, error) {
+	return listAllPages(limit, func(page, size int32) ([]cmfsdk.Savepoint, error) {
+		savepointsPage, httpResponse, err := cmfClient.DetachedSavepointsApi.ListDetachedSavepoints(ctx).Page(page).Size(size).Name(filter).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list detached savepoints %s`, parsedErr)
 		}
-		savepoints = append(savepoints, savepointsPage.GetItems()...)
-		currentPageNumber, done = extractPageOptions(len(savepointsPage.GetItems()), currentPageNumber)
-	}
-
-	return savepoints, nil
+		return savepointsPage.GetItems(), nil
+	})
 }
 
 func (cmfClient *CmfRestClient) DeleteDetachedSavepoint(ctx context.Context, name string) error {
@@ -453,23 +414,14 @@ func (cmfClient *CmfRestClient) DescribeComputePool(ctx context.Context, environ
 	return cmfComputePool, nil
 }
 
-func (cmfClient *CmfRestClient) ListComputePools(ctx context.Context, environment string) ([]cmfsdk.ComputePool, error) {
-	computePools := make([]cmfsdk.ComputePool, 0)
-	done := false
-	// 100 is an arbitrary page size we've chosen.
-	const pageSize = 100
-	var currentPageNumber int32 = 0
-
-	for !done {
-		computePoolsPage, httpResponse, err := cmfClient.SQLApi.GetComputePools(ctx, environment).Page(currentPageNumber).Size(pageSize).Execute()
+func (cmfClient *CmfRestClient) ListComputePools(ctx context.Context, environment string, limit int32) ([]cmfsdk.ComputePool, error) {
+	return listAllPages(limit, func(page, size int32) ([]cmfsdk.ComputePool, error) {
+		computePoolsPage, httpResponse, err := cmfClient.SQLApi.GetComputePools(ctx, environment).Page(page).Size(size).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list compute pools in the environment "%s": %s`, environment, parsedErr)
 		}
-		computePools = append(computePools, computePoolsPage.GetItems()...)
-		currentPageNumber, done = extractPageOptions(len(computePoolsPage.GetItems()), currentPageNumber)
-	}
-
-	return computePools, nil
+		return computePoolsPage.GetItems(), nil
+	})
 }
 
 func (cmfClient *CmfRestClient) CreateStatement(ctx context.Context, environment string, statement cmfsdk.Statement) (cmfsdk.Statement, error) {
@@ -502,13 +454,7 @@ func (cmfClient *CmfRestClient) DeleteStatement(ctx context.Context, environment
 	return parseSdkError(httpResp, err)
 }
 
-func (cmfClient *CmfRestClient) ListStatements(ctx context.Context, environment, computePool, status string) ([]cmfsdk.Statement, error) {
-	statements := make([]cmfsdk.Statement, 0)
-	done := false
-	// 100 is an arbitrary page size we've chosen.
-	const pageSize = 100
-	var currentPageNumber int32 = 0
-
+func (cmfClient *CmfRestClient) ListStatements(ctx context.Context, environment, computePool, status string, limit int32) ([]cmfsdk.Statement, error) {
 	request := cmfClient.SQLApi.GetStatements(ctx, environment)
 	if computePool != "" {
 		request = request.ComputePool(computePool)
@@ -517,16 +463,13 @@ func (cmfClient *CmfRestClient) ListStatements(ctx context.Context, environment,
 		request = request.Phase(status)
 	}
 
-	for !done {
-		statementsPage, httpResponse, err := request.Page(currentPageNumber).Size(pageSize).Execute()
+	return listAllPages(limit, func(page, size int32) ([]cmfsdk.Statement, error) {
+		statementsPage, httpResponse, err := request.Page(page).Size(size).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list statements in the environment "%s": %s`, environment, parsedErr)
 		}
-		statements = append(statements, statementsPage.GetItems()...)
-		currentPageNumber, done = extractPageOptions(len(statementsPage.GetItems()), currentPageNumber)
-	}
-
-	return statements, nil
+		return statementsPage.GetItems(), nil
+	})
 }
 
 func (cmfClient *CmfRestClient) ListStatementExceptions(ctx context.Context, environment, statementName string) (cmfsdk.StatementExceptionList, error) {
@@ -606,23 +549,14 @@ func (cmfClient *CmfRestClient) DescribeCatalog(ctx context.Context, catalogName
 	return outputCatalog, nil
 }
 
-func (cmfClient *CmfRestClient) ListCatalog(ctx context.Context) ([]cmfsdk.KafkaCatalog, error) {
-	catalogs := make([]cmfsdk.KafkaCatalog, 0)
-	done := false
-	// 100 is an arbitrary page size we've chosen.
-	const pageSize = 100
-	var currentPageNumber int32 = 0
-
-	for !done {
-		catalogPage, httpResponse, err := cmfClient.SQLApi.GetKafkaCatalogs(ctx).Page(currentPageNumber).Size(pageSize).Execute()
+func (cmfClient *CmfRestClient) ListCatalog(ctx context.Context, limit int32) ([]cmfsdk.KafkaCatalog, error) {
+	return listAllPages(limit, func(page, size int32) ([]cmfsdk.KafkaCatalog, error) {
+		catalogPage, httpResponse, err := cmfClient.SQLApi.GetKafkaCatalogs(ctx).Page(page).Size(size).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list Kafka Catalog: %s`, parsedErr)
 		}
-		catalogs = append(catalogs, catalogPage.GetItems()...)
-		currentPageNumber, done = extractPageOptions(len(catalogPage.GetItems()), currentPageNumber)
-	}
-
-	return catalogs, nil
+		return catalogPage.GetItems(), nil
+	})
 }
 
 func (cmfClient *CmfRestClient) UpdateCatalog(ctx context.Context, catalogName string, kafkaCatalog cmfsdk.KafkaCatalog) error {
@@ -646,23 +580,14 @@ func (cmfClient *CmfRestClient) DescribeApplicationInstance(ctx context.Context,
 	return cmfInstance, nil
 }
 
-func (cmfClient *CmfRestClient) ListApplicationInstances(ctx context.Context, environment, application string) ([]cmfsdk.FlinkApplicationInstance, error) {
-	instances := make([]cmfsdk.FlinkApplicationInstance, 0)
-	var currentPageNumber int32 = 0
-	// 100 is an arbitrary page size we've chosen.
-	const pageSize = 100
-	done := false
-
-	for !done {
-		instancesPage, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplicationInstances(ctx, environment, application).Page(currentPageNumber).Size(pageSize).Execute()
+func (cmfClient *CmfRestClient) ListApplicationInstances(ctx context.Context, environment, application string, limit int32) ([]cmfsdk.FlinkApplicationInstance, error) {
+	return listAllPages(limit, func(page, size int32) ([]cmfsdk.FlinkApplicationInstance, error) {
+		instancesPage, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplicationInstances(ctx, environment, application).Page(page).Size(size).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list instances of application "%s" in the environment "%s": %s`, application, environment, parsedErr)
 		}
-		instances = append(instances, instancesPage.GetItems()...)
-		currentPageNumber, done = extractPageOptions(len(instancesPage.GetItems()), currentPageNumber)
-	}
-
-	return instances, nil
+		return instancesPage.GetItems(), nil
+	})
 }
 
 func (cmfClient *CmfRestClient) CreateSecretMapping(ctx context.Context, envName string, secretMapping cmfsdk.EnvironmentSecretMapping) (cmfsdk.EnvironmentSecretMapping, error) {
@@ -685,22 +610,14 @@ func (cmfClient *CmfRestClient) DescribeSecretMapping(ctx context.Context, envNa
 	return outputMapping, nil
 }
 
-func (cmfClient *CmfRestClient) ListSecretMappings(ctx context.Context, envName string) ([]cmfsdk.EnvironmentSecretMapping, error) {
-	mappings := make([]cmfsdk.EnvironmentSecretMapping, 0)
-	done := false
-	const pageSize = 100
-	var currentPageNumber int32 = 0
-
-	for !done {
-		mappingsPage, httpResponse, err := cmfClient.EnvironmentsApi.GetEnvironmentSecretMappings(ctx, envName).Page(currentPageNumber).Size(pageSize).Execute()
+func (cmfClient *CmfRestClient) ListSecretMappings(ctx context.Context, envName string, limit int32) ([]cmfsdk.EnvironmentSecretMapping, error) {
+	return listAllPages(limit, func(page, size int32) ([]cmfsdk.EnvironmentSecretMapping, error) {
+		mappingsPage, httpResponse, err := cmfClient.EnvironmentsApi.GetEnvironmentSecretMappings(ctx, envName).Page(page).Size(size).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list secret mappings in the environment "%s": %s`, envName, parsedErr)
 		}
-		mappings = append(mappings, mappingsPage.GetItems()...)
-		currentPageNumber, done = extractPageOptions(len(mappingsPage.GetItems()), currentPageNumber)
-	}
-
-	return mappings, nil
+		return mappingsPage.GetItems(), nil
+	})
 }
 
 func (cmfClient *CmfRestClient) UpdateSecretMapping(ctx context.Context, envName, name string, secretMapping cmfsdk.EnvironmentSecretMapping) (cmfsdk.EnvironmentSecretMapping, error) {
@@ -733,22 +650,14 @@ func (cmfClient *CmfRestClient) DescribeSecret(ctx context.Context, secretName s
 	return outputSecret, nil
 }
 
-func (cmfClient *CmfRestClient) ListSecrets(ctx context.Context) ([]cmfsdk.Secret, error) {
-	secrets := make([]cmfsdk.Secret, 0)
-	done := false
-	const pageSize = 100
-	var currentPageNumber int32 = 0
-
-	for !done {
-		secretsPage, httpResponse, err := cmfClient.SecretsApi.GetSecrets(ctx).Page(currentPageNumber).Size(pageSize).Execute()
+func (cmfClient *CmfRestClient) ListSecrets(ctx context.Context, limit int32) ([]cmfsdk.Secret, error) {
+	return listAllPages(limit, func(page, size int32) ([]cmfsdk.Secret, error) {
+		secretsPage, httpResponse, err := cmfClient.SecretsApi.GetSecrets(ctx).Page(page).Size(size).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list secrets: %s`, parsedErr)
 		}
-		secrets = append(secrets, secretsPage.GetItems()...)
-		currentPageNumber, done = extractPageOptions(len(secretsPage.GetItems()), currentPageNumber)
-	}
-
-	return secrets, nil
+		return secretsPage.GetItems(), nil
+	})
 }
 
 func (cmfClient *CmfRestClient) UpdateSecret(ctx context.Context, secretName string, secret cmfsdk.Secret) (cmfsdk.Secret, error) {
@@ -797,30 +706,52 @@ func (cmfClient *CmfRestClient) DescribeDatabase(ctx context.Context, catalogNam
 	return outputDatabase, nil
 }
 
-func (cmfClient *CmfRestClient) ListDatabases(ctx context.Context, catalogName string) ([]cmfsdk.KafkaDatabase, error) {
-	databases := make([]cmfsdk.KafkaDatabase, 0)
-	done := false
-	const pageSize = 100
-	var currentPageNumber int32 = 0
-
-	for !done {
-		databasePage, httpResponse, err := cmfClient.SQLApi.GetKafkaDatabases(ctx, catalogName).Page(currentPageNumber).Size(pageSize).Execute()
+func (cmfClient *CmfRestClient) ListDatabases(ctx context.Context, catalogName string, limit int32) ([]cmfsdk.KafkaDatabase, error) {
+	return listAllPages(limit, func(page, size int32) ([]cmfsdk.KafkaDatabase, error) {
+		databasePage, httpResponse, err := cmfClient.SQLApi.GetKafkaDatabases(ctx, catalogName).Page(page).Size(size).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list databases in catalog "%s": %s`, catalogName, parsedErr)
 		}
-		databases = append(databases, databasePage.GetItems()...)
-		currentPageNumber, done = extractPageOptions(len(databasePage.GetItems()), currentPageNumber)
-	}
-
-	return databases, nil
+		return databasePage.GetItems(), nil
+	})
 }
 
-// Returns the next page number and whether we need to fetch more pages or not.
-func extractPageOptions(receivedItemsLength int, currentPageNumber int32) (int32, bool) {
-	if receivedItemsLength == 0 {
-		return currentPageNumber, true
+// listAllPages collects items across all pages by repeatedly calling fetchPage until
+// an empty page is returned. If limit > 0, it stops once limit items have been collected
+// and truncates the result to exactly limit. limit == 0 means "return all results".
+// fetchPage receives the zero-based page number and the page size to request.
+//
+// The requested page size is kept constant across the whole call: the CMF endpoints page
+// by zero-based index (offset = page * size), so shrinking the size mid-loop would re-fetch
+// overlapping rows. When the limit is smaller than the default page size we simply request a
+// single smaller page instead.
+func listAllPages[T any](limit int32, fetchPage func(page, size int32) ([]T, error)) ([]T, error) {
+	items := make([]T, 0)
+	// 100 is an arbitrary page size we've chosen.
+	const defaultPageSize int32 = 100
+
+	size := defaultPageSize
+	if limit > 0 && limit < size {
+		size = limit
 	}
-	return currentPageNumber + 1, false
+
+	for page := int32(0); ; page++ {
+		pageItems, err := fetchPage(page, size)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, pageItems...)
+
+		if len(pageItems) == 0 {
+			break
+		}
+		if limit > 0 && int32(len(items)) >= limit {
+			items = items[:limit]
+			break
+		}
+	}
+
+	return items, nil
 }
 
 // Creates a rich error message from the HTTP response and the SDK error if possible.

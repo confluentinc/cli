@@ -17,6 +17,7 @@ func (c *command) newApplicationEventListCommand() *cobra.Command {
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	cmd.Flags().String("application", "", "Name of the Flink application.")
+	addLimitFlag(cmd)
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -37,12 +38,17 @@ func (c *command) applicationEventList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	limit, err := getLimit(cmd)
+	if err != nil {
+		return err
+	}
+
 	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	events, err := client.ListApplicationEvents(c.createContext(), environment, application)
+	events, err := client.ListApplicationEvents(c.createContext(), environment, application, limit)
 	if err != nil {
 		return err
 	}

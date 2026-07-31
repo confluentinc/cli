@@ -125,6 +125,21 @@ func addCmfFlagSet(cmd *cobra.Command) {
 	cmd.Flags().String("certificate-authority-path", "", `Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CMF_CERTIFICATE_AUTHORITY_PATH" may be set in place of this flag.`)
 }
 
+func addLimitFlag(cmd *cobra.Command) {
+	cmd.Flags().Int("limit", 0, "Maximum number of results to return. Returns all results by default.")
+}
+
+func getLimit(cmd *cobra.Command) (int32, error) {
+	limit, err := cmd.Flags().GetInt("limit")
+	if err != nil {
+		return 0, err
+	}
+	if limit < 0 {
+		return 0, fmt.Errorf("`--limit` must be a non-negative integer")
+	}
+	return int32(limit), nil
+}
+
 func (c *command) createContext() context.Context {
 	if !c.Config.IsOnPremLogin() {
 		return context.Background()
