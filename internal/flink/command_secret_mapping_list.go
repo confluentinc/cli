@@ -18,6 +18,7 @@ func (c *command) newSecretMappingListCommand() *cobra.Command {
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
+	addLimitFlag(cmd)
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -30,12 +31,17 @@ func (c *command) secretMappingList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	limit, err := getLimit(cmd)
+	if err != nil {
+		return err
+	}
+
 	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	sdkMappings, err := client.ListSecretMappings(c.createContext(), environment)
+	sdkMappings, err := client.ListSecretMappings(c.createContext(), environment, limit)
 	if err != nil {
 		return err
 	}

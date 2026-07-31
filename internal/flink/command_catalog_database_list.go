@@ -17,6 +17,7 @@ func (c *command) newCatalogDatabaseListCommand() *cobra.Command {
 
 	cmd.Flags().String("catalog", "", "Name of the catalog.")
 	cobra.CheckErr(cmd.MarkFlagRequired("catalog"))
+	addLimitFlag(cmd)
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -29,12 +30,17 @@ func (c *command) catalogDatabaseList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	limit, err := getLimit(cmd)
+	if err != nil {
+		return err
+	}
+
 	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	sdkDatabases, err := client.ListDatabases(c.createContext(), catalogName)
+	sdkDatabases, err := client.ListDatabases(c.createContext(), catalogName, limit)
 	if err != nil {
 		return err
 	}

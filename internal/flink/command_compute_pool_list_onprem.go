@@ -17,6 +17,7 @@ func (c *command) newComputePoolListCommandOnPrem() *cobra.Command {
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
+	addLimitFlag(cmd)
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
@@ -30,12 +31,17 @@ func (c *command) computePoolListOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	limit, err := getLimit(cmd)
+	if err != nil {
+		return err
+	}
+
 	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	sdkComputePools, err := client.ListComputePools(c.createContext(), environment)
+	sdkComputePools, err := client.ListComputePools(c.createContext(), environment, limit)
 	if err != nil {
 		return err
 	}

@@ -18,6 +18,7 @@ func (c *command) newStatementExceptionListCommandOnPrem() *cobra.Command {
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
+	addLimitFlag(cmd)
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -39,9 +40,19 @@ func (c *command) statementExceptionListOnPrem(cmd *cobra.Command, args []string
 		return err
 	}
 
+	limit, err := getLimit(cmd)
+	if err != nil {
+		return err
+	}
+
 	exceptionList, err := client.ListStatementExceptions(c.createContext(), environment, name)
 	if err != nil {
 		return err
+	}
+
+	// ListStatementExceptions is a single, non-paginated call, so cap the result client-side.
+	if data := exceptionList.GetData(); limit > 0 && int32(len(data)) > limit {
+		exceptionList.SetData(data[:limit])
 	}
 
 	if output.GetFormat(cmd) == output.Human {

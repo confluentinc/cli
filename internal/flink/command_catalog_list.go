@@ -15,6 +15,7 @@ func (c *command) newCatalogListCommand() *cobra.Command {
 		RunE:  c.catalogList,
 	}
 
+	addLimitFlag(cmd)
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -22,12 +23,17 @@ func (c *command) newCatalogListCommand() *cobra.Command {
 }
 
 func (c *command) catalogList(cmd *cobra.Command, _ []string) error {
+	limit, err := getLimit(cmd)
+	if err != nil {
+		return err
+	}
+
 	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	sdkCatalogs, err := client.ListCatalog(c.createContext())
+	sdkCatalogs, err := client.ListCatalog(c.createContext(), limit)
 	if err != nil {
 		return err
 	}
