@@ -53,6 +53,20 @@ func TestLogout(t *testing.T) {
 	verifyLoggedOutState(t, cfg, contextName)
 }
 
+func TestRevokeCCloudRefreshTokenNoopWhenContextStateMissing(t *testing.T) {
+	req := require.New(t)
+	cfg := config.AuthenticatedConfigMockWithContextName(config.MockContextName)
+	ctx := cfg.Context()
+	// Simulate a missing/corrupt context_state entry for an otherwise-valid context.
+	delete(cfg.ContextStates, ctx.Name)
+
+	c := &command{CLICommand: &pcmd.CLICommand{Config: cfg}, cfg: cfg}
+
+	reply, err := c.revokeCCloudRefreshToken(ctx)
+	req.NoError(err)
+	req.Nil(reply)
+}
+
 func TestLogoutNoopWhenAlreadyLoggedOut(t *testing.T) {
 	req := require.New(t)
 	cfg := config.New()

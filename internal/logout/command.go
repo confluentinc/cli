@@ -74,6 +74,10 @@ func (c *command) logout(_ *cobra.Command, _ []string) error {
 
 func (c *command) revokeCCloudRefreshToken(ctx *config.Context) (*ccloudv1.AuthenticateReply, error) {
 	contextState := c.Config.ContextStates[ctx.Name]
+	if contextState == nil {
+		// Missing or corrupt context state: nothing to revoke, but logout should still succeed.
+		return nil, nil
+	}
 	if err := contextState.DecryptAuthToken(ctx.Name); err != nil {
 		return nil, err
 	}
