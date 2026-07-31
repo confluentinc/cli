@@ -38,9 +38,13 @@ const (
 
 func (c *command) newProduceCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "produce <topic>",
-		Short:             "Produce messages to a Kafka topic.",
-		Long:              "Produce messages to a Kafka topic.\n\nWhen using this command, you can specify the message header using the `--headers` flag.",
+		Use:   "produce <topic>",
+		Short: "Produce messages to a Kafka topic.",
+		Long: "Produce messages to a Kafka topic.\n\nWhen using this command, you can specify the message header using the `--headers` flag.\n\n" +
+			"This command works against both Confluent Cloud and Confluent Platform, and some flags only apply to one or the other:\n" +
+			"  - Confluent Cloud only: `--api-key`, `--api-secret`, `--cluster`, `--context`, `--environment`, `--key-references`, `--schema-registry-api-key`, `--schema-registry-api-secret`.\n" +
+			"  - Confluent Platform (on-prem) only: `--protocol`, `--sasl-mechanism`, `--client-cert-path`, `--client-key-path`, `--certificate-authority-path`, `--username`, `--password`, `--cert-location`, `--key-location`, `--key-password`.\n" +
+			"If you are logged in to Confluent Cloud, on-prem flags are ignored; otherwise, `--bootstrap` is required and determines which mode is used.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.produce,
