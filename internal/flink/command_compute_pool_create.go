@@ -64,7 +64,7 @@ func (c *command) computePoolCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	environment, err := c.V2Client.GetOrgEnvironment(environmentId)
+	environment, _, err := c.V2Client.GetOrgEnvironment(environmentId)
 	if err != nil {
 		return err
 	}

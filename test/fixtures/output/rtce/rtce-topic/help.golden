@@ -1,4 +1,4 @@
-Manage RTCE topics.
+Manage Confluent Cloud RTCE topics.
 
 Usage:
   confluent rtce rtce-topic [command]
@@ -8,7 +8,7 @@ Available Commands:
   delete      Delete one or more RTCE topics.
   describe    Describe an RTCE topic.
   list        List RTCE topics.
-  update      Update an RTCE topic.
+  update      Update an existing RTCE topic.
 
 Global Flags:
   -h, --help            Show help for this command.
