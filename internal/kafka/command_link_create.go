@@ -1,7 +1,9 @@
 package kafka
 
 import (
+	"context"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -10,6 +12,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/kafkarest"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/properties"
 	"github.com/confluentinc/cli/v4/pkg/resource"
@@ -205,7 +208,41 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	output.Println(c.Config.EnableColor, msg)
 	output.Println(c.Config.EnableColor, linkConfigsCommandOutput(configMap))
 
+	if !dryRun {
+		c.warnIfLinkTasksInError(kafkaREST, linkName)
+	}
+
 	return nil
+}
+
+// warnIfLinkTasksInError surfaces misconfigured link tasks (e.g. ACL/consumer-offset/mirror-topic sync
+// enabled without required filters) right after creation, since the create call itself succeeds even
+// when the resulting tasks land in IN_ERROR and otherwise go unnoticed until `link task list` is run.
+func (c *linkCommand) warnIfLinkTasksInError(kafkaREST *pcmd.KafkaREST, linkName string) {
+	apiContext := context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, kafkaREST.CloudClient.AuthToken)
+	req := kafkaREST.CloudClient.ClusterLinkingV3Api.GetKafkaLink(apiContext, kafkaREST.CloudClient.ClusterId, linkName)
+	req = req.IncludeTasks(true)
+	res, httpResp, err := req.Execute()
+	if err := kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp); err != nil {
+		return
+	}
+
+	problems := make([]string, 0, len(res.GetTasks()))
+	for _, t := range res.GetTasks() {
+		if t.State != "IN_ERROR" {
+			continue
+		}
+		errs := make([]string, len(t.Errors))
+		for i, e := range t.Errors {
+			errs[i] = fmt.Sprintf(`%s: "%s"`, e.ErrorCode, e.ErrorMessage)
+		}
+		problems = append(problems, fmt.Sprintf("  %s: %s", t.TaskName, strings.Join(errs, ", ")))
+	}
+	if len(problems) == 0 {
+		return
+	}
+
+	output.ErrPrintf(c.Config.EnableColor, "Warning: cluster link \"%s\" was created, but the following tasks are in an error state:\n%s\nRun `confluent kafka link task list %s` for details.\n", linkName, strings.Join(problems, "\n"), linkName)
 }
 
 // An allow-list of configs we can print. We don't want to print/log sensitive configs.
