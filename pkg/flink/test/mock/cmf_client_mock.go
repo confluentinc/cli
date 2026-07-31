@@ -145,18 +145,18 @@ func (mr *MockCmfClientInterfaceMockRecorder) ListStatementExceptions(ctx, envir
 }
 
 // ListStatements mocks base method.
-func (m *MockCmfClientInterface) ListStatements(ctx context.Context, environment, computePool, status string) ([]v1.Statement, error) {
+func (m *MockCmfClientInterface) ListStatements(ctx context.Context, environment, computePool, status string, limit int32) ([]v1.Statement, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListStatements", ctx, environment, computePool, status)
+	ret := m.ctrl.Call(m, "ListStatements", ctx, environment, computePool, status, limit)
 	ret0, _ := ret[0].([]v1.Statement)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListStatements indicates an expected call of ListStatements.
-func (mr *MockCmfClientInterfaceMockRecorder) ListStatements(ctx, environment, computePool, status any) *gomock.Call {
+func (mr *MockCmfClientInterfaceMockRecorder) ListStatements(ctx, environment, computePool, status, limit any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListStatements", reflect.TypeOf((*MockCmfClientInterface)(nil).ListStatements), ctx, environment, computePool, status)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListStatements", reflect.TypeOf((*MockCmfClientInterface)(nil).ListStatements), ctx, environment, computePool, status, limit)
 }
 
 // UpdateStatement mocks base method.

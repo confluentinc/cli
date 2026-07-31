@@ -23,6 +23,7 @@ func (c *command) newDetachedSavepointListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("filter", "", "A filter expression to filter by detached savepoint name prefix.")
+	addLimitFlag(cmd)
 
 	pcmd.AddOutputFlag(cmd)
 	addCmfFlagSet(cmd)
@@ -41,7 +42,12 @@ func (c *command) detachedSavepointList(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	detachedSavepoints, err := client.ListDetachedSavepoint(c.createContext(), filter)
+	limit, err := getLimit(cmd)
+	if err != nil {
+		return err
+	}
+
+	detachedSavepoints, err := client.ListDetachedSavepoint(c.createContext(), filter, limit)
 	if err != nil {
 		return err
 	}

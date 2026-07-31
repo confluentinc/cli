@@ -15,6 +15,7 @@ func (c *command) newSecretListCommand() *cobra.Command {
 		RunE:  c.secretList,
 	}
 
+	addLimitFlag(cmd)
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -22,12 +23,17 @@ func (c *command) newSecretListCommand() *cobra.Command {
 }
 
 func (c *command) secretList(cmd *cobra.Command, _ []string) error {
+	limit, err := getLimit(cmd)
+	if err != nil {
+		return err
+	}
+
 	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	sdkSecrets, err := client.ListSecrets(c.createContext())
+	sdkSecrets, err := client.ListSecrets(c.createContext(), limit)
 	if err != nil {
 		return err
 	}

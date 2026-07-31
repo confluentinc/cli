@@ -5,7 +5,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
+	"slices"
 
 	"github.com/spf13/cobra"
 
@@ -14,6 +16,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 type command struct {
@@ -123,6 +126,31 @@ func addCmfFlagSet(cmd *cobra.Command) {
 	cmd.Flags().String("client-key-path", "", `Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.`)
 	cmd.Flags().String("client-cert-path", "", `Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_CERT_PATH" may be set in place of this flag.`)
 	cmd.Flags().String("certificate-authority-path", "", `Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CMF_CERTIFICATE_AUTHORITY_PATH" may be set in place of this flag.`)
+}
+
+func addLimitFlag(cmd *cobra.Command) {
+	cmd.Flags().Int("limit", 0, "Maximum number of results to return. Returns all results by default.")
+}
+
+func getLimit(cmd *cobra.Command) (int32, error) {
+	limit, err := cmd.Flags().GetInt("limit")
+	if err != nil {
+		return 0, err
+	}
+	if limit < 0 || limit > math.MaxInt32 {
+		return 0, fmt.Errorf("`--limit` must be between 0 and %d", math.MaxInt32)
+	}
+	return int32(limit), nil
+}
+
+// warnIfInvalidStatus prints a warning to stderr when status is set but not one of the
+// allowed values. The value is still forwarded to the server, which treats an unrecognized
+// status as a no-match rather than an error, so this is advisory only. Callers normalize the
+// case of status and pass the matching allowed-value list.
+func (c *command) warnIfInvalidStatus(status string, allowed []string) {
+	if status != "" && !slices.Contains(allowed, status) {
+		output.ErrPrintf(c.Config.EnableColor, "[WARN] Invalid status %q. Valid statuses are %s.\n", status, utils.ArrayToCommaDelimitedString(allowed, "and"))
+	}
 }
 
 func (c *command) createContext() context.Context {

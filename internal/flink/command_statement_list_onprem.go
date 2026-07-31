@@ -1,15 +1,12 @@
 package flink
 
 import (
-	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
-	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 func (c *command) newStatementListCommandOnPrem() *cobra.Command {
@@ -23,6 +20,7 @@ func (c *command) newStatementListCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	cmd.Flags().String("compute-pool", "", "Optional flag to filter the Flink statements by compute pool ID.")
 	cmd.Flags().String("status", "", "Optional flag to filter the Flink statements by statement status.")
+	addLimitFlag(cmd)
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -47,17 +45,19 @@ func (c *command) statementListOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	status = strings.ToLower(status)
-
-	if status != "" && !slices.Contains(allowedStatuses, status) {
-		log.CliLogger.Warnf(`Invalid status "%s". Valid statuses are %s.`, status, utils.ArrayToCommaDelimitedString(allowedStatuses, "and"))
-	}
+	c.warnIfInvalidStatus(status, allowedStatuses)
 
 	computePool, err := cmd.Flags().GetString("compute-pool")
 	if err != nil {
 		return err
 	}
 
-	sdkStatements, err := client.ListStatements(c.createContext(), environment, computePool, status)
+	limit, err := getLimit(cmd)
+	if err != nil {
+		return err
+	}
+
+	sdkStatements, err := client.ListStatements(c.createContext(), environment, computePool, status, limit)
 	if err != nil {
 		return err
 	}

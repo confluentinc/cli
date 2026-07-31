@@ -2,7 +2,6 @@ package flink
 
 import (
 	"fmt"
-	"slices"
 	"strings"
 
 	"github.com/samber/lo"
@@ -13,9 +12,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
-	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
-	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 var allowedStatuses = []string{
@@ -70,10 +67,7 @@ func (c *command) statementList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	status = strings.ToLower(status)
-
-	if status != "" && !slices.Contains(allowedStatuses, status) {
-		log.CliLogger.Warnf(`Invalid status "%s". Valid statuses are %s.`, status, utils.ArrayToCommaDelimitedString(allowedStatuses, "and"))
-	}
+	c.warnIfInvalidStatus(status, allowedStatuses)
 
 	computePoolId := c.Context.GetCurrentFlinkComputePool()
 	if err := c.validateProvidedComputePool(environmentId, computePoolId); err != nil {

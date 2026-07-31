@@ -2,12 +2,19 @@ package flink
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
+
+// allowedApplicationStatuses lists the Flink job states recognized by the CMF applications
+// "state=" filter, per the cmf-sdk-go GetApplications filter documentation. Unknown values are
+// still forwarded (the server returns no matches rather than erroring); this list only drives
+// the advisory --status warning.
+var allowedApplicationStatuses = []string{"RUNNING", "FINISHED", "FAILED", "CANCELED", "RECONCILING", "COMPLETED", "UNKNOWN"}
 
 func (c *command) newApplicationListCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -18,6 +25,9 @@ func (c *command) newApplicationListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
+	cmd.Flags().String("name", "", `Filter the Flink applications by name. Supports wildcards, for example "my-app*".`)
+	cmd.Flags().String("status", "", "Filter the Flink applications by status.")
+	addLimitFlag(cmd)
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -32,12 +42,31 @@ func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	name, err := cmd.Flags().GetString("name")
+	if err != nil {
+		return err
+	}
+
+	status, err := cmd.Flags().GetString("status")
+	if err != nil {
+		return err
+	}
+	if status != "" {
+		status = strings.ToUpper(status)
+		c.warnIfInvalidStatus(status, allowedApplicationStatuses)
+	}
+
+	limit, err := getLimit(cmd)
+	if err != nil {
+		return err
+	}
+
 	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	applications, err := client.ListApplications(c.createContext(), environment)
+	applications, err := client.ListApplications(c.createContext(), environment, buildApplicationFilter(name, status), limit)
 	if err != nil {
 		return err
 	}
@@ -75,4 +104,21 @@ func (c *command) applicationList(cmd *cobra.Command, _ []string) error {
 	}
 
 	return output.SerializedOutput(cmd, localApps)
+}
+
+// buildApplicationFilter composes the CMF applications "filter" query from the user-facing
+// --name and --status flags. The grammar (comma-separated "key=value" expressions, "name="
+// with an optional "*" suffix wildcard, and "state=" for status) follows the CMF applications
+// list API. Values are not escaped: Kubernetes application names and Flink states cannot
+// contain "," or "=", so no ambiguity arises. The caller is responsible for normalizing and
+// warning about the status value.
+func buildApplicationFilter(name, status string) string {
+	filters := make([]string, 0, 2)
+	if name != "" {
+		filters = append(filters, fmt.Sprintf("name=%s", name))
+	}
+	if status != "" {
+		filters = append(filters, fmt.Sprintf("state=%s", status))
+	}
+	return strings.Join(filters, ",")
 }

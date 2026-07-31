@@ -29,11 +29,20 @@ func (s *CLITestSuite) TestFlinkApplicationList() {
 		// failure scenarios
 		{args: "flink application list", fixture: "flink/application/list-env-missing.golden", exitCode: 1},
 		{args: "flink application list --environment non-existent", fixture: "flink/application/list-non-existent-env.golden", exitCode: 1},
+		{args: "flink application list --environment default --limit -1", fixture: "flink/application/list-limit-invalid.golden", exitCode: 1},
 		// success scenarios
 		{args: "flink application list --environment test", fixture: "flink/application/list-empty-env.golden"},
 		{args: "flink application list --environment default  --output json", fixture: "flink/application/list-json.golden"},
 		{args: "flink application list --environment default  --output yaml", fixture: "flink/application/list-yaml.golden"},
 		{args: "flink application list --environment default  --output human", fixture: "flink/application/list-human.golden"},
+		// filtering and pagination
+		{args: "flink application list --environment default --name default-application-s --output json", fixture: "flink/application/list-name-filter-json.golden"},
+		{args: "flink application list --environment default --name default-application-1* --output json", fixture: "flink/application/list-name-wildcard-json.golden"},
+		{args: "flink application list --environment default --status reconciling --output json", fixture: "flink/application/list-status-filter-json.golden"},
+		{args: "flink application list --environment default --status failed --output json", fixture: "flink/application/list-status-no-match-json.golden"},
+		{args: "flink application list --environment default --status bogus --output json", fixture: "flink/application/list-status-invalid-json.golden"},
+		{args: "flink application list --environment default --name default-application-1* --status reconciling --output json", fixture: "flink/application/list-name-status-json.golden"},
+		{args: "flink application list --environment default --limit 2 --output json", fixture: "flink/application/list-limit-json.golden"},
 	}
 
 	runIntegrationTestsWithMultipleAuth(s, tests)
@@ -195,6 +204,7 @@ func (s *CLITestSuite) TestFlinkDetachedSavepointList() {
 		{args: "flink detached-savepoint list", fixture: "flink/detached-savepoint/list-successful.golden"},
 		{args: "flink detached-savepoint list --output json", fixture: "flink/detached-savepoint/list-successful-json.golden"},
 		{args: "flink detached-savepoint list --output yaml", fixture: "flink/detached-savepoint/list-successful-yaml.golden"},
+		{args: "flink detached-savepoint list --limit 1 --output json", fixture: "flink/detached-savepoint/list-limit-json.golden"},
 	}
 
 	runIntegrationTestsWithMultipleAuth(s, tests)
@@ -622,6 +632,7 @@ func (s *CLITestSuite) TestFlinkStatementListOnPrem() {
 		{args: "flink statement list --environment default", fixture: "flink/statement/list-success.golden"},
 		{args: "flink statement list --environment default -o json", fixture: "flink/statement/list-success-json.golden"},
 		{args: "flink statement list --environment default -o yaml", fixture: "flink/statement/list-success-yaml.golden"},
+		{args: "flink statement list --environment default --limit 2 -o json", fixture: "flink/statement/list-limit-json.golden"},
 		// failure
 		{args: "flink statement list", fixture: "flink/statement/list-env-missing-failure.golden", exitCode: 1},
 		{args: "flink statement list --environment non-exist", fixture: "flink/statement/list-non-exist-env-failure.golden", exitCode: 1},
@@ -656,6 +667,7 @@ func (s *CLITestSuite) TestFlinkStatementExceptionListOnPrem() {
 	tests := []CLITest{
 		// success scenarios
 		{args: "flink statement exception list test-stmt1 --environment default", fixture: "flink/statement/list-exceptions-successful.golden"},
+		{args: "flink statement exception list test-stmt1 --environment default --limit 1 -o json", fixture: "flink/statement/list-exceptions-limit-json.golden"},
 		// failure scenarios
 		{args: "flink statement exception list test-stmt1 --environment non-exist", fixture: "flink/statement/list-exceptions-non-exist-env-failure.golden", exitCode: 1},
 		{args: "flink statement exception list invalid-stmt --environment default", fixture: "flink/statement/list-exceptions-invalid-stmt-failure.golden", exitCode: 1},
