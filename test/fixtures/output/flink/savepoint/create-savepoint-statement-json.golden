@@ -2,7 +2,7 @@
   "apiVersion": "cmf.confluent.io/v1",
   "kind": "Savepoint",
   "metadata": {
-    "name": "savepointS",
+    "name": "savepoint-stmt",
     "creationTimestamp": "2025-03-12 23:42:00 +0000 UTC"
   },
   "spec": {
