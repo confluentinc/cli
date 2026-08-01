@@ -133,13 +133,31 @@ func (s *CLITestSuite) TestFlinkEnvironmentDelete() {
 func (s *CLITestSuite) TestFlinkSavepointCreate() {
 	tests := []CLITest{
 		{args: "flink savepoint create savepoint1 --environment default --application application1", fixture: "flink/savepoint/create-savepoint.golden"},
+		{args: "flink savepoint create savepoint1 --environment default --application application1 --output json", fixture: "flink/savepoint/create-savepoint-json.golden"},
+		{args: "flink savepoint create savepoint1 --environment default --application application1 --output yaml", fixture: "flink/savepoint/create-savepoint-yaml.golden"},
 		{args: "flink savepoint create --environment default --application application2", fixture: "flink/savepoint/create-savepoint-no-name.golden"},
-		{args: "flink savepoint create savepointS --environment default --statement test-stmt", fixture: "flink/savepoint/create-savepoint-statement.golden"},
-		{args: "flink savepoint create savepointS --environment default --statement test-stmt --path abc/def --format NATIVE --backoff-limit 10", fixture: "flink/savepoint/create-savepoint-statement-values.golden"},
+		{args: "flink savepoint create --environment default --application application2 --output json", fixture: "flink/savepoint/create-savepoint-no-name-json.golden"},
+		{args: "flink savepoint create --environment default --application application2 --output yaml", fixture: "flink/savepoint/create-savepoint-no-name-yaml.golden"},
+		{args: "flink savepoint create savepoint-stmt --environment default --statement test-stmt", fixture: "flink/savepoint/create-savepoint-statement.golden"},
+		{args: "flink savepoint create savepoint-stmt --environment default --statement test-stmt --output json", fixture: "flink/savepoint/create-savepoint-statement-json.golden"},
+		{args: "flink savepoint create savepoint-stmt --environment default --statement test-stmt --output yaml", fixture: "flink/savepoint/create-savepoint-statement-yaml.golden"},
+		{args: "flink savepoint create savepoint-stmt --environment default --statement test-stmt --path abc/def --format NATIVE --backoff-limit 10", fixture: "flink/savepoint/create-savepoint-statement-values.golden"},
 		// fail
 		{args: "flink savepoint create savepoint1 --environment default --application application1 --statement statement1", fixture: "flink/savepoint/create-savepoint-fail-both.golden", exitCode: 1},
 		{args: "flink savepoint create savepoint1 --environment default", fixture: "flink/savepoint/create-savepoint-fail-none.golden", exitCode: 1},
 		{args: "flink savepoint create savepoint1 --application application1 --statement statement1", fixture: "flink/savepoint/create-savepoint-fail-no-env.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkSavepointDetach() {
+	tests := []CLITest{
+		{args: "flink savepoint detach savepoint1 --environment default --application application1", fixture: "flink/savepoint/detach-savepoint.golden"},
+		{args: "flink savepoint detach savepoint1 --environment default --application application1 --output json", fixture: "flink/savepoint/detach-savepoint-json.golden"},
+		{args: "flink savepoint detach savepoint1 --environment default --application application1 --output yaml", fixture: "flink/savepoint/detach-savepoint-yaml.golden"},
+		// fail
+		{args: "flink savepoint detach invalid-savepoint --environment default --application application1", fixture: "flink/savepoint/detach-savepoint-fail.golden", exitCode: 1},
 	}
 
 	runIntegrationTestsWithMultipleAuth(s, tests)
@@ -184,6 +202,8 @@ func (s *CLITestSuite) TestFlinkSavepointDelete() {
 func (s *CLITestSuite) TestFlinkDetachedSavepointCreate() {
 	tests := []CLITest{
 		{args: "flink detached-savepoint create savepoint1 --path abc/def", fixture: "flink/detached-savepoint/create-savepoint.golden"},
+		{args: "flink detached-savepoint create savepoint1 --path abc/def --output json", fixture: "flink/detached-savepoint/create-savepoint-json.golden"},
+		{args: "flink detached-savepoint create savepoint1 --path abc/def --output yaml", fixture: "flink/detached-savepoint/create-savepoint-yaml.golden"},
 		{args: "flink detached-savepoint create savepoint1", fixture: "flink/detached-savepoint/create-savepoint-nopath.golden", exitCode: 1},
 	}
 

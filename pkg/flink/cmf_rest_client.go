@@ -356,7 +356,7 @@ func (cmfClient *CmfRestClient) DescribeSavepoint(ctx context.Context, environme
 func (cmfClient *CmfRestClient) DetachSavepointApplication(ctx context.Context, savepoint, environment, application string) (cmfsdk.Savepoint, error) {
 	outputSavepoint, httpResponse, err := cmfClient.SavepointsApi.DetachSavepointFromFlinkApplication(ctx, environment, application, savepoint).Execute()
 	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
-		return cmfsdk.Savepoint{}, fmt.Errorf(`failed to create savepoint in the environment "%s": %s`, environment, parsedErr)
+		return cmfsdk.Savepoint{}, fmt.Errorf(`failed to detach savepoint in the environment "%s": %s`, environment, parsedErr)
 	}
 	return outputSavepoint, nil
 }
