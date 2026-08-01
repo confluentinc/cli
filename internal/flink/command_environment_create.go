@@ -15,8 +15,14 @@ import (
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
+
+// statementDefaultsShapeSuggestion documents the expected `--statement-defaults`
+// shape. It is surfaced as a suggestion when parsing fails rather than in the
+// flag help so it stays next to the error the user actually hit.
+const statementDefaultsShapeSuggestion = `Provide statement defaults matching the expected shape, for example: {"detached":{"flinkConfiguration":{...}},"interactive":{"flinkConfiguration":{...}}}.`
 
 func (c *command) newEnvironmentCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -28,7 +34,7 @@ func (c *command) newEnvironmentCreateCommand() *cobra.Command {
 
 	cmd.Flags().String("kubernetes-namespace", "", "Kubernetes namespace to deploy Flink applications to.")
 	cmd.Flags().String("defaults", "", "JSON string defining the environment's Flink application defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).")
-	cmd.Flags().String("statement-defaults", "", `JSON string defining the environment's Flink statement defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension). Expected shape: {"detached":{"flinkConfiguration":{...}},"interactive":{"flinkConfiguration":{...}}}.`)
+	cmd.Flags().String("statement-defaults", "", "JSON string defining the environment's Flink statement defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).")
 	cmd.Flags().String("compute-pool-defaults", "", "JSON string defining the environment's Flink compute pool defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).")
 
 	addCmfFlagSet(cmd)
@@ -82,15 +88,8 @@ func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
 		}
 	}
 	if defaultsStatement != "" {
-		defaultsStatementParsedLocal, err := parseDefaultsAsGenericType[LocalAllStatementDefaults1](defaultsStatement, "statement")
-		if err != nil {
+		if defaultsStatementParsed, err = parseStatementDefaults(defaultsStatement); err != nil {
 			return err
-		}
-		if defaultsStatementParsedLocal.Detached != nil {
-			defaultsStatementParsed.SetDetached(cmfsdk.StatementDefaults{FlinkConfiguration: defaultsStatementParsedLocal.Detached.FlinkConfiguration})
-		}
-		if defaultsStatementParsedLocal.Interactive != nil {
-			defaultsStatementParsed.SetInteractive(cmfsdk.StatementDefaults{FlinkConfiguration: defaultsStatementParsedLocal.Interactive.FlinkConfiguration})
 		}
 	}
 
@@ -112,6 +111,26 @@ func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
 
 	localEnv := convertSdkEnvironmentToLocalEnvironment(sdkOutputEnvironment)
 	return output.SerializedOutput(cmd, localEnv)
+}
+
+// parseStatementDefaults strictly parses the `--statement-defaults` value into
+// the SDK type, rejecting unknown/mis-nested fields. On failure it surfaces the
+// expected shape as a suggestion instead of silently dropping the input.
+func parseStatementDefaults(input string) (cmfsdk.AllStatementDefaults1, error) {
+	var statementDefaults cmfsdk.AllStatementDefaults1
+
+	parsed, err := parseDefaultsAsGenericType[LocalAllStatementDefaults1](input, "statement")
+	if err != nil {
+		return statementDefaults, errors.NewErrorWithSuggestions(err.Error(), statementDefaultsShapeSuggestion)
+	}
+
+	if parsed.Detached != nil {
+		statementDefaults.SetDetached(cmfsdk.StatementDefaults{FlinkConfiguration: parsed.Detached.FlinkConfiguration})
+	}
+	if parsed.Interactive != nil {
+		statementDefaults.SetInteractive(cmfsdk.StatementDefaults{FlinkConfiguration: parsed.Interactive.FlinkConfiguration})
+	}
+	return statementDefaults, nil
 }
 
 func parseDefaultsAsGenericType[T any](input, label string) (T, error) {

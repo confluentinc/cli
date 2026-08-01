@@ -21,7 +21,7 @@ func (c *command) newEnvironmentUpdateCommand() *cobra.Command {
 
 	addCmfFlagSet(cmd)
 	cmd.Flags().String("defaults", "", "JSON string defining the environment's Flink application defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).")
-	cmd.Flags().String("statement-defaults", "", `JSON string defining the environment's Flink statement defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension). Expected shape: {"detached":{"flinkConfiguration":{...}},"interactive":{"flinkConfiguration":{...}}}.`)
+	cmd.Flags().String("statement-defaults", "", "JSON string defining the environment's Flink statement defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).")
 	cmd.Flags().String("compute-pool-defaults", "", "JSON string defining the environment's Flink compute pool defaults, or path to a file to read defaults from (with .yml, .yaml or .json extension).")
 	pcmd.AddOutputFlag(cmd)
 
@@ -69,15 +69,8 @@ func (c *command) environmentUpdate(cmd *cobra.Command, args []string) error {
 		}
 	}
 	if defaultsStatement != "" {
-		defaultsStatementParsedLocal, err := parseDefaultsAsGenericType[LocalAllStatementDefaults1](defaultsStatement, "statement")
-		if err != nil {
+		if defaultsStatementParsed, err = parseStatementDefaults(defaultsStatement); err != nil {
 			return err
-		}
-		if defaultsStatementParsedLocal.Detached != nil {
-			defaultsStatementParsed.Detached = &cmfsdk.StatementDefaults{FlinkConfiguration: defaultsStatementParsedLocal.Detached.FlinkConfiguration}
-		}
-		if defaultsStatementParsedLocal.Interactive != nil {
-			defaultsStatementParsed.Interactive = &cmfsdk.StatementDefaults{FlinkConfiguration: defaultsStatementParsedLocal.Interactive.FlinkConfiguration}
 		}
 	}
 
