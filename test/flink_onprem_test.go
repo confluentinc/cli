@@ -29,11 +29,14 @@ func (s *CLITestSuite) TestFlinkApplicationList() {
 		// failure scenarios
 		{args: "flink application list", fixture: "flink/application/list-env-missing.golden", exitCode: 1},
 		{args: "flink application list --environment non-existent", fixture: "flink/application/list-non-existent-env.golden", exitCode: 1},
+		{args: "flink application list --environment default --page-size -1", fixture: "flink/application/list-page-size-invalid.golden", exitCode: 1},
 		// success scenarios
 		{args: "flink application list --environment test", fixture: "flink/application/list-empty-env.golden"},
 		{args: "flink application list --environment default  --output json", fixture: "flink/application/list-json.golden"},
 		{args: "flink application list --environment default  --output yaml", fixture: "flink/application/list-yaml.golden"},
 		{args: "flink application list --environment default  --output human", fixture: "flink/application/list-human.golden"},
+		// pagination: a small page size still returns the full list, fetched across multiple round trips
+		{args: "flink application list --environment default --page-size 2 --output json", fixture: "flink/application/list-json.golden"},
 	}
 
 	runIntegrationTestsWithMultipleAuth(s, tests)
@@ -195,6 +198,7 @@ func (s *CLITestSuite) TestFlinkDetachedSavepointList() {
 		{args: "flink detached-savepoint list", fixture: "flink/detached-savepoint/list-successful.golden"},
 		{args: "flink detached-savepoint list --output json", fixture: "flink/detached-savepoint/list-successful-json.golden"},
 		{args: "flink detached-savepoint list --output yaml", fixture: "flink/detached-savepoint/list-successful-yaml.golden"},
+		{args: "flink detached-savepoint list --page-size 1 --output json", fixture: "flink/detached-savepoint/list-successful-json.golden"},
 	}
 
 	runIntegrationTestsWithMultipleAuth(s, tests)
@@ -622,6 +626,7 @@ func (s *CLITestSuite) TestFlinkStatementListOnPrem() {
 		{args: "flink statement list --environment default", fixture: "flink/statement/list-success.golden"},
 		{args: "flink statement list --environment default -o json", fixture: "flink/statement/list-success-json.golden"},
 		{args: "flink statement list --environment default -o yaml", fixture: "flink/statement/list-success-yaml.golden"},
+		{args: "flink statement list --environment default --page-size 2 -o json", fixture: "flink/statement/list-success-json.golden"},
 		// failure
 		{args: "flink statement list", fixture: "flink/statement/list-env-missing-failure.golden", exitCode: 1},
 		{args: "flink statement list --environment non-exist", fixture: "flink/statement/list-non-exist-env-failure.golden", exitCode: 1},
