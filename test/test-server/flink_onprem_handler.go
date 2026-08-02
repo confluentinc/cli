@@ -146,6 +146,53 @@ func paginateApplications(all []cmfsdk.FlinkApplication, pageParam, sizeParam st
 	return all[start:end]
 }
 
+// filterApplications emulates the CMF server-side "filter" query param for the applications
+// endpoint. It understands comma-separated "name=<value>" (with optional "*" suffix wildcard)
+// and "state=<value>" expressions, as built by the CLI's --name/--status flags.
+func filterApplications(items []cmfsdk.FlinkApplication, filter string) []cmfsdk.FlinkApplication {
+	if filter == "" {
+		return items
+	}
+
+	for _, expr := range strings.Split(filter, ",") {
+		key, value, found := strings.Cut(expr, "=")
+		if !found {
+			continue
+		}
+		matched := make([]cmfsdk.FlinkApplication, 0, len(items))
+		for _, item := range items {
+			if applicationMatchesFilter(item, key, value) {
+				matched = append(matched, item)
+			}
+		}
+		items = matched
+	}
+	return items
+}
+
+func applicationMatchesFilter(app cmfsdk.FlinkApplication, key, value string) bool {
+	switch key {
+	case "name":
+		name, _ := app.Metadata["name"].(string)
+		if prefix, isWildcard := strings.CutSuffix(value, "*"); isWildcard {
+			return strings.HasPrefix(name, prefix)
+		}
+		return name == value
+	case "state":
+		if app.Status == nil {
+			return false
+		}
+		jobStatus, ok := (*app.Status)["jobStatus"].(map[string]interface{})
+		if !ok {
+			return false
+		}
+		state, _ := jobStatus["state"].(string)
+		return strings.EqualFold(state, value)
+	default:
+		return true
+	}
+}
+
 // Helper function to create a Flink environment.
 func createEnvironment(name string, namespace string) cmfsdk.Environment {
 	createdTime := time.Date(2024, time.September, 10, 23, 0, 0, 0, time.UTC)
@@ -725,6 +772,7 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 				allItems = []cmfsdk.FlinkApplication{createApplication("update-failure-application")}
 			}
 
+			allItems = filterApplications(allItems, r.URL.Query().Get("filter"))
 			applicationsPage := map[string]interface{}{
 				"items": paginateApplications(allItems, r.URL.Query().Get("page"), r.URL.Query().Get("size")),
 			}

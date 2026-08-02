@@ -38,6 +38,13 @@ func (s *CLITestSuite) TestFlinkApplicationList() {
 		{args: "flink application list --environment default  --output human", fixture: "flink/application/list-human.golden"},
 		// pagination: a small page size still returns the full list, fetched across multiple round trips
 		{args: "flink application list --environment default --page-size 2 --output json", fixture: "flink/application/list-json.golden"},
+		// filtering
+		{args: "flink application list --environment default --name default-application-s --output json", fixture: "flink/application/list-name-filter-json.golden"},
+		{args: "flink application list --environment default --name default-application-1* --output json", fixture: "flink/application/list-name-wildcard-json.golden"},
+		{args: "flink application list --environment default --status reconciling --output json", fixture: "flink/application/list-status-filter-json.golden"},
+		{args: "flink application list --environment default --status failed --output json", fixture: "flink/application/list-status-no-match-json.golden"},
+		{args: "flink application list --environment default --status bogus --output json", fixture: "flink/application/list-status-invalid-json.golden"},
+		{args: "flink application list --environment default --name default-application-1* --status reconciling --output json", fixture: "flink/application/list-name-status-json.golden"},
 	}
 
 	runIntegrationTestsWithMultipleAuth(s, tests)
