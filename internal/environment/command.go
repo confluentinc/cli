@@ -3,8 +3,6 @@
 package environment
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
@@ -75,18 +73,5 @@ func (c *environmentCommand) validArgsMultiple(cmd *cobra.Command, args []string
 		return nil
 	}
 
-	return c.autocompleteEnvironments()
-}
-
-func (c *environmentCommand) autocompleteEnvironments() []string {
-	environments, err := c.V2Client.ListOrgEnvironments()
-	if err != nil {
-		return nil
-	}
-
-	suggestions := make([]string, len(environments))
-	for i, environment := range environments {
-		suggestions[i] = fmt.Sprintf("%s\t%s", environment.GetId(), environment.GetDisplayName())
-	}
-	return suggestions
+	return pcmd.AutocompleteEnvironments(c.Client, c.V2Client)
 }
