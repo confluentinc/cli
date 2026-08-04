@@ -16,7 +16,7 @@ import (
 func (c *rtceTopicCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <topic-name>",
-		Short:             "Update an RTCE topic.",
+		Short:             "Update an existing RTCE topic.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.update,
@@ -72,6 +72,8 @@ func (c *rtceTopicCommand) update(cmd *cobra.Command, args []string) error {
 		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
-	output.Printf(c.Config.EnableColor, "Updated RTCE topic \"%s\".\n", topicName)
+	if output.GetFormat(cmd) == output.Human {
+		output.Printf(c.Config.EnableColor, "Updated RTCE topic \"%s\".\n", topicName)
+	}
 	return printRtceTopic(cmd, rtceTopic)
 }
