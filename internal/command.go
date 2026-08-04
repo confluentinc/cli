@@ -118,7 +118,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(connect.New(cfg, prerunner))
 	cmd.AddCommand(context.New(prerunner))
 	cmd.AddCommand(endpoint.New(cfg, prerunner))
-	cmd.AddCommand(environment.New(prerunner))
+	cmd.AddCommand(environment.New(cfg, prerunner))
 	cmd.AddCommand(feedback.New(prerunner))
 	cmd.AddCommand(flink.New(cfg, prerunner))
 	cmd.AddCommand(iam.New(cfg, prerunner))

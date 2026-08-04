@@ -194,7 +194,7 @@ func AutocompleteEnvironments(v1Client *ccloudv1.Client, v2Client *ccloudv2.Clie
 	}
 
 	if auditLog := user.GetOrganization().GetAuditLog(); auditLog.GetServiceAccountId() != 0 {
-		environment, err := v2Client.GetOrgEnvironment(auditLog.GetAccountId())
+		environment, _, err := v2Client.GetOrgEnvironment(auditLog.GetAccountId())
 		if err != nil {
 			return nil
 		}
