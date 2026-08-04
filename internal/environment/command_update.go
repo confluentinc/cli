@@ -63,6 +63,8 @@ func (c *environmentCommand) update(cmd *cobra.Command, args []string) error {
 		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
-	output.Printf(c.Config.EnableColor, "Updated environment \"%s\".\n", id)
+	if output.GetFormat(cmd) == output.Human {
+		output.Printf(c.Config.EnableColor, "Updated environment \"%s\".\n", id)
+	}
 	return c.printEnvironment(cmd, environment)
 }
