@@ -5,7 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
-	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -36,11 +35,6 @@ func (c *command) listConnect(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	onPremToCloudKafkaIdMap, err := c.getOnPremToCloudKafkaIdMap(environmentId)
-	if err != nil {
-		return err
-	}
-
 	clusters, err := c.V2Client.ListUsmConnectClusters(environmentId)
 	if err != nil {
 		return err
@@ -48,15 +42,10 @@ func (c *command) listConnect(cmd *cobra.Command, args []string) error {
 
 	list := output.NewList(cmd)
 	for _, cluster := range clusters {
-		usmKafkaClusterId, ok := onPremToCloudKafkaIdMap[cluster.GetKafkaClusterId()]
-		if !ok {
-			log.CliLogger.Errorf(kafkaClusterNotFoundErrorMsg, cluster.GetKafkaClusterId())
-		}
-
 		out := &connectOut{
 			Id:                              cluster.GetId(),
 			ConfluentPlatformConnectCluster: cluster.GetConfluentPlatformConnectClusterId(),
-			USMKafkaClusterId:               usmKafkaClusterId,
+			USMKafkaClusterId:               cluster.GetUsmKafkaClusterId(),
 			ConfluentPlatformKafkaClusterId: cluster.GetKafkaClusterId(),
 			Cloud:                           cluster.GetCloud(),
 			Region:                          cluster.GetRegion(),
