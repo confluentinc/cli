@@ -127,7 +127,7 @@ func addCmfFlagSet(cmd *cobra.Command) {
 }
 
 func addPageSizeFlag(cmd *cobra.Command) {
-	cmd.Flags().Int("page-size", 0, "Number of results to fetch per API request. Defaults to 100.")
+	cmd.Flags().Int("page-size", 0, "Number of results to fetch per API request while paginating; does not cap the total results returned. Defaults to 100.")
 }
 
 func getPageSize(cmd *cobra.Command) (int32, error) {
