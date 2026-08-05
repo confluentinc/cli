@@ -47,7 +47,7 @@ func (c *command) privateLinkAttachmentConnectionList(cmd *cobra.Command, _ []st
 		return err
 	}
 
-	connections, err := c.V2Client.ListPrivateLinkAttachmentConnections(environmentId, attachment)
+	connections, err := c.V2Client.ListNetworkPrivateLinkAttachmentConnections(environmentId, attachment)
 	if err != nil {
 		return err
 	}

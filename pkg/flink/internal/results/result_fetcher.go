@@ -120,7 +120,7 @@ func (t *ResultFetcher) updateState(newResults *types.ProcessedStatement, err *t
 		return
 	}
 
-	if err != nil {
+	if err != nil || (newResults != nil && newResults.Status == types.FAILED) {
 		t.refreshState.setState(types.Failed)
 		return
 	}

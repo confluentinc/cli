@@ -35,7 +35,7 @@ func (c *command) peeringDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	peering, err := c.V2Client.GetPeering(environmentId, args[0])
+	peering, err := c.V2Client.GetNetworkPeering(environmentId, args[0])
 	if err != nil {
 		return err
 	}

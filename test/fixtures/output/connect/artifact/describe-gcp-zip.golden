@@ -1,0 +1,9 @@
++----------------+-----------------------------+
+| ID             | cfa-gcp-zip123              |
+| Name           | my-connect-artifact-gcp-zip |
+| Description    | new-zip-artifact            |
+| Cloud          | GCP                         |
+| Environment    | env-123456                  |
+| Content Format | ZIP                         |
+| Status         | PROCESSING                  |
++----------------+-----------------------------+

@@ -71,7 +71,7 @@ func (c *command) privateLinkAttachmentCreate(cmd *cobra.Command, args []string)
 		createPrivateLinkAttachment.Spec.SetDisplayName(name)
 	}
 
-	attachment, err := c.V2Client.CreatePrivateLinkAttachment(createPrivateLinkAttachment)
+	attachment, err := c.V2Client.CreateNetworkPrivateLinkAttachment(createPrivateLinkAttachment)
 	if err != nil {
 		return err
 	}

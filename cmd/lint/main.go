@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"testing"
 
 	"github.com/client9/gospell"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/linter"
 	pversion "github.com/confluentinc/cli/v4/pkg/version"
+	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
 var commandRules = []linter.CommandRule{
@@ -33,7 +35,9 @@ var commandRules = []linter.CommandRule{
 		linter.ExcludeCommand("completion"),
 		linter.ExcludeCommandContains("kafka client-config create"),
 		linter.ExcludeCommandContains("local services kafka start"),
-		linter.ExcludeCommand("local current")),
+		linter.ExcludeCommand("local current"),
+		linter.ExcludeCommandContains("flink endpoint"),
+		linter.ExcludeCommandContains("kafka cluster")),
 	linter.RequireStartWithCapital("Long"),
 
 	linter.RequireListRequiredFlagsFirst(),
@@ -41,7 +45,10 @@ var commandRules = []linter.CommandRule{
 		linter.ExcludeCommand("connect custom-plugin version create"),
 		linter.ExcludeCommand("connect custom-plugin version update"),
 		linter.ExcludeCommand("pipeline update"),
-		linter.ExcludeCommand("flink statement update")),
+		linter.ExcludeCommand("flink statement update"),
+		linter.ExcludeCommand("flink materialized-table update"),
+		linter.ExcludeCommand("kafka cluster update"),
+		linter.ExcludeCommand("endpoint endpoint list")), //nolint:dupword
 
 	// Soft Requirements
 	linter.Filter(linter.RequireLengthBetween("Short", 10, 60),
@@ -114,6 +121,7 @@ var flagRules = []linter.FlagRule{
 			"remote-cluster",
 			"remove-operation-groups",
 			"request-required-acks",
+			"require-crl-on-client-certificate",
 			"schema-registry-api-key",
 			"schema-registry-api-secret",
 			"schema-registry-cluster",
@@ -124,6 +132,7 @@ var flagRules = []linter.FlagRule{
 			"source-bootstrap-server",
 			"update-schema-registry",
 			"worker-configurations",
+			"distribution-bucket-count",
 		),
 	),
 	linter.FlagFilter(
@@ -134,25 +143,32 @@ var flagRules = []linter.FlagRule{
 			"max-partition-memory-bytes",
 			"message-send-max-retries",
 			"private-link-access-point",
+			"require-crl-on-client-certificate",
 			"schema-registry-api-key",
 			"schema-registry-api-secret",
 			"skip-message-on-error",
+			"distributed-by-column-names",
 		),
 	),
 }
 
-// properNouns are words that don't obey normal capitalization rules
+// properNouns are words that don't obey normal capitalization rules.
+// Alphabetical except where longer strings must precede their substrings
+// (e.g., "Confluent Cloud" before "Confluent") because requireNotTitleCaseHelper
+// strips these sequentially via strings.ReplaceAll — shorter matches first would
+// leave orphaned words (e.g., "Cloud") that get flagged as title case violations.
 var properNouns = []string{
 	"ACLs",
 	"AI",
+	"Alertmanager",
 	"Apache",
-	"Async",
 	"AsyncAPI",
+	"Async",
 	"Avro",
 	"C#",
 	"C/C++",
-	"CIDR",
 	"CFU",
+	"CIDR",
 	"Clients",
 	"Clojure",
 	"Confluent Cloud",
@@ -163,21 +179,26 @@ var properNouns = []string{
 	"Control Center",
 	"CRL",
 	"Data Encryption Key",
-	"DEK",
 	"Databricks",
+	"DEK",
+	"Endpoint",
 	"Flink",
 	"Go",
 	"Groovy",
 	"Java",
 	"Kafka",
-	"Key Encryption Key",
 	"KEK",
+	"Key Encryption Key",
 	"Kotlin",
 	"KRaft Controller",
 	"Ktor",
 	"Kubernetes",
+	"ksqlDB Server",
+	"ksqlDB",
 	"Node.js",
+	"Prometheus",
 	"Python",
+	"Real Time Context Engine",
 	"Ruby",
 	"Rust",
 	"Scala",
@@ -188,20 +209,19 @@ var properNouns = []string{
 	"Unified Stream Manager",
 	"USM",
 	"ZooKeeper™",
-	"ksqlDB Server",
-	"ksqlDB",
-	"Prometheus",
-	"Alertmanager",
+	// cli-tfgen:lint-properNouns — DO NOT REMOVE (verified by TestCliTfgenMarkers)
 }
 
 // vocabWords are words that don't appear in the US dictionary, but are Confluent-related words.
 var vocabWords = []string{
+	"a2a",
 	"ack",
 	"acks",
 	"acl",
 	"acls",
 	"ai",
 	"alertmanager",
+	"anthropic",
 	"apac",
 	"api",
 	"apis",
@@ -228,8 +248,9 @@ var vocabWords = []string{
 	"codec",
 	"config",
 	"configs",
-	"consumer.config",
 	"confluent_jdbc",
+	"consumer.config",
+	"cosmosdb",
 	"couchbase",
 	"cpp",
 	"crl",
@@ -242,12 +263,15 @@ var vocabWords = []string{
 	"deregister",
 	"deserializer",
 	"deserializers",
+	"detached-savepoint",
 	"dns",
+	"ecku",
 	"elastic",
 	"env",
 	"eu",
 	"failover",
 	"filepath",
+	"fireworksai",
 	"flink",
 	"formatter",
 	"gcm",
@@ -256,19 +280,20 @@ var vocabWords = []string{
 	"googleai",
 	"gzip",
 	"hostname",
+	"html",
 	"http",
 	"https",
-	"html",
 	"iam",
 	"io",
 	"ip",
 	"ips",
 	"jdbc",
-	"json",
 	"jit",
+	"json",
 	"jsonschema",
 	"jwks",
 	"JWT",
+	"enum",
 	"kafka",
 	"kek",
 	"keychain",
@@ -282,12 +307,15 @@ var vocabWords = []string{
 	"librdkafka",
 	"lifecycle",
 	"lkc",
+	"lsrc",
 	"lz4",
 	"mcp",
 	"mcp_server",
 	"md",
 	"mds",
 	"mongodb",
+	"name1",
+	"name2",
 	"namespace",
 	"nodejs",
 	"oauth",
@@ -300,6 +328,7 @@ var vocabWords = []string{
 	"producer.config",
 	"prometheus",
 	"protobuf",
+	"psc",
 	"rbac",
 	"readonly",
 	"readwrite",
@@ -307,10 +336,15 @@ var vocabWords = []string{
 	"rescale",
 	"rest",
 	"restapi",
+	"rtce",
+	"rtcetopic",
 	"ruleset",
 	"s3",
+	"s3vectors",
 	"sagemaker",
 	"sasl",
+	"savepoint",
+	"savepoints",
 	"scala",
 	"schemas",
 	"server",
@@ -321,10 +355,10 @@ var vocabWords = []string{
 	"sse",
 	"ssl",
 	"sso",
-	"subresource",
 	"stdin",
 	"streamable",
 	"streamable_http",
+	"subresource",
 	"systest",
 	"tableflow",
 	"tcp",
@@ -341,17 +375,18 @@ var vocabWords = []string{
 	"us",
 	"v2",
 	"vertexai",
+	"vnet",
+	"vpc",
 	"vv",
 	"vvv",
 	"vvvv",
-	"vnet",
-	"vpc",
 	"whitelist",
 	"wikipedia",
 	"workspace",
 	"yaml",
 	"yml",
 	"zstd",
+	// cli-tfgen:lint-vocabWords — DO NOT REMOVE (verified by TestCliTfgenMarkers)
 }
 
 var (
@@ -367,6 +402,10 @@ func init() {
 }
 
 func main() {
+	// Set up test server for feature flags called by the code
+	testBackend := testserver.StartTestCloudServer(&testing.T{}, true)
+	defer testBackend.Close()
+
 	flag.Parse()
 
 	vocab, err := gospell.NewGoSpell(affFile, dicFile)

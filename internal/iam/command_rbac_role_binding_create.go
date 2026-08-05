@@ -32,6 +32,10 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --resource Topic:my-topic --environment env-123456 --cloud-cluster lkc-123456 --kafka-cluster lkc-123456",
 			},
 			examples.Example{
+				Text: `Grant the role "Assigner" to identity pool "User:pool-123456" for a service account resource "ServiceAccount:sa-123456":`,
+				Code: `confluent iam rbac role-binding create --principal User:pool-123456 --role Assigner --resource "ServiceAccount:sa-123456"`,
+			},
+			examples.Example{
 				Text: `Grant the role "MetricsViewer" to service account "sa-123456":`,
 				Code: "confluent iam rbac role-binding create --principal User:sa-123456 --role MetricsViewer",
 			},
@@ -55,12 +59,20 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 				Text: `Grant the "FlinkDeveloper" role to principal "User:u-123456" in environment "env-123456":`,
 				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-123456",
 			},
+			examples.Example{
+				Text: `Grant the "FlinkDeveloper" scoped to Flink compute pool "lfcp-123456" in AWS us-east-1 to principal "User:u-123456":`,
+				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role FlinkDeveloper --environment env-123456 --flink-region aws.us-east-1 --resource ComputePool:lfcp-123456",
+			},
 		)
 	} else {
 		exs = append(exs,
 			examples.Example{
-				Text: `Create a role binding for the principal permitting it produce to topic "my-topic":`,
+				Text: `Create a role binding for the principal user that allows it to produce to topic "my-topic":`,
 				Code: "confluent iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:my-topic --kafka-cluster 0000000000000000000000",
+			},
+			examples.Example{
+				Text: `Create a role binding for the principal user that allows it to manage all Schema Registry subjects:`,
+				Code: `confluent iam rbac role-binding create --principal User:appSA --role ResourceOwner --resource "Subject:*" --kafka-cluster 0000000000000000000000 --schema-registry-cluster sr-123456`,
 			},
 		)
 	}

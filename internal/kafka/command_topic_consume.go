@@ -127,7 +127,7 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 		cluster.Bootstrap = bootstrap
 	}
 
-	if err := addApiKeyToCluster(cmd, cluster); err != nil {
+	if err := addApiKeyToCluster(cmd, c.Context, cluster); err != nil {
 		return err
 	}
 
@@ -193,7 +193,7 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	consumer, err := newConsumer(group, cluster, c.clientID, configFile, config)
+	consumer, err := newConsumer(group, c.Context, cluster, c.clientID, configFile, config)
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateConsumerErrorMsg, err)
 	}
@@ -446,6 +446,7 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 		KeyFormat:                keyFormat,
 		ValueFormat:              valueFormat,
 		Out:                      cmd.OutOrStdout(),
+		Subject:                  topicName,
 		Topic:                    topicName,
 		Properties: ConsumerProperties{
 			Delimiter:   delimiter,

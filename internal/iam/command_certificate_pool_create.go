@@ -80,7 +80,7 @@ func (c *certificatePoolCommand) create(cmd *cobra.Command, args []string) error
 		Filter:             certificateauthorityv2.PtrString(filter),
 		ExternalIdentifier: certificateauthorityv2.PtrString(externalIdentifier),
 	}
-	certificatePool, err := c.V2Client.CreateCertificatePool(createCertificatePool, provider, resourceOwner)
+	certificatePool, err := c.V2Client.CreateIamCertificatePool(createCertificatePool, provider, resourceOwner)
 	if err != nil {
 		return err
 	}

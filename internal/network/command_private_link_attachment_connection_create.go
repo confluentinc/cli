@@ -106,7 +106,7 @@ func (c *command) privateLinkAttachmentConnectionCreate(cmd *cobra.Command, args
 		}
 	}
 
-	connection, err := c.V2Client.CreatePrivateLinkAttachmentConnection(createPrivateLinkAttachmentConnection)
+	connection, err := c.V2Client.CreateNetworkPrivateLinkAttachmentConnection(createPrivateLinkAttachmentConnection)
 	if err != nil {
 		return err
 	}

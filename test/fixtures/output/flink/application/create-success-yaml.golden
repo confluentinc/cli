@@ -12,6 +12,9 @@ spec:
     job:
         jarURI: local:///opt/flink/examples/streaming/StateMachineExample.jar
         parallelism: 3
+        startFromSavepoint:
+            allowNonRestoredState: true
+            savepointName: my-app-savepoint
         state: running
         upgradeMode: stateless
     jobManager:

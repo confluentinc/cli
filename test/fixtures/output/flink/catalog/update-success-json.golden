@@ -1,0 +1,29 @@
+{
+  "apiVersion": "cmf/api/v1/catalog",
+  "kind": "KafkaCatalog",
+  "metadata": {
+    "name": "test-catalog",
+    "creationTimestamp": "2025-08-05T12:00:00Z"
+  },
+  "spec": {
+    "srInstance": {
+      "connectionConfig": {
+        "schema.registry.url": "http://localhost:8081"
+      }
+    },
+    "kafkaClusters": [
+      {
+        "databaseName": "test-database",
+        "connectionConfig": {
+          "bootstrap.servers": "localhost:9092"
+        }
+      },
+      {
+        "databaseName": "test-database-2",
+        "connectionConfig": {
+          "bootstrap.servers": "localhost:9092"
+        }
+      }
+    ]
+  }
+}

@@ -50,7 +50,7 @@ func (c *command) getPeerings(name, network, phase []string) ([]networkingv1.Net
 		return nil, err
 	}
 
-	return c.V2Client.ListPeerings(environmentId, name, network, phase)
+	return c.V2Client.ListNetworkPeerings(environmentId, name, network, phase)
 }
 
 func (c *command) validPeeringArgs(cmd *cobra.Command, args []string) []string {

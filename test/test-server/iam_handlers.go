@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -54,6 +55,8 @@ var (
 			"crn://confluent.cloud/organization=abc-123/environment=env-596/cloud-cluster=lkc-1111aaa/ksql=ksql-cluster-name-2222bbb"),
 		buildRoleBinding("rb-77ggg", "u-77ggg", "ResourceOwner",
 			"crn://confluent.cloud/organization=abc-123/environment=env-596/schema-registry=lsrc-3333ccc/subject=clicks"),
+		buildRoleBinding("rb-777gg", "u-777gg", "FlinkDeveloper",
+			"crn://confluent.cloud/organization=abc-123/environment=env-596/flink-region=aws.us-east-1/compute-pool=lfcp-1111aaa"),
 	}
 )
 
@@ -174,6 +177,9 @@ func getKind(id string) string {
 	if id == "cloud" {
 		return "Cloud"
 	}
+	if id == "global" {
+		return "Global"
+	}
 	if id == "tableflow" {
 		return "Tableflow"
 	}
@@ -293,15 +299,29 @@ func handleIamServiceAccounts(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			serviceAccounts := &iamv2.IamV2ServiceAccountList{
-				Data: []iamv2.IamV2ServiceAccount{
-					{
-						Id:          iamv2.PtrString(serviceAccountResourceId),
-						DisplayName: iamv2.PtrString("service-account"),
-						Description: iamv2.PtrString("at your service."),
-					},
+			displayName := r.URL.Query()["display_name"]
+
+			allServiceAccounts := []iamv2.IamV2ServiceAccount{
+				{
+					Id:          iamv2.PtrString(serviceAccountResourceId),
+					DisplayName: iamv2.PtrString("service-account"),
+					Description: iamv2.PtrString("at your service."),
+				},
+				{
+					Id:          iamv2.PtrString("sa-67890"),
+					DisplayName: iamv2.PtrString("other-service-account"),
+					Description: iamv2.PtrString("another one."),
 				},
 			}
+
+			var filtered []iamv2.IamV2ServiceAccount
+			for _, sa := range allServiceAccounts {
+				if len(displayName) == 0 || slices.Contains(displayName, sa.GetDisplayName()) {
+					filtered = append(filtered, sa)
+				}
+			}
+
+			serviceAccounts := &iamv2.IamV2ServiceAccountList{Data: filtered}
 			setPageToken(serviceAccounts, &serviceAccounts.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(serviceAccounts)
 			require.NoError(t, err)
@@ -514,7 +534,7 @@ func handleIamCertificateAuthority(t *testing.T) http.HandlerFunc {
 		}
 		switch r.Method {
 		case http.MethodGet:
-			certificateAuthority := buildIamCertificateAuthority(id, "my-ca", "my certificate authority", "certificate.pem", "", "")
+			certificateAuthority := buildIamCertificateAuthority(id, "my-ca", "my certificate authority", "certificate.pem", "", "", id == "op-12345")
 			err := json.NewEncoder(w).Encode(certificateAuthority)
 			require.NoError(t, err)
 		case http.MethodDelete:
@@ -523,7 +543,7 @@ func handleIamCertificateAuthority(t *testing.T) http.HandlerFunc {
 			var req certificateauthorityv2.IamV2UpdateCertRequest
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			certificateAuthority := buildIamCertificateAuthority(id, req.GetDisplayName(), req.GetDescription(), req.GetCertificateChainFilename(), req.GetCrlUrl(), req.GetCrlChain())
+			certificateAuthority := buildIamCertificateAuthority(id, req.GetDisplayName(), req.GetDescription(), req.GetCertificateChainFilename(), req.GetCrlUrl(), req.GetCrlChain(), req.GetRequireCrlOnClientCertificate())
 			err = json.NewEncoder(w).Encode(certificateAuthority)
 			require.NoError(t, err)
 		}
@@ -536,9 +556,9 @@ func handleIamCertificateAuthorities(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			certificateAuthorityList := &certificateauthorityv2.IamV2CertificateAuthorityList{Data: []certificateauthorityv2.IamV2CertificateAuthority{
-				buildIamCertificateAuthority("op-12345", "my-ca", "my certificate authority", "certificate.pem", "", ""),
-				buildIamCertificateAuthority("op-54321", "my-ca-2", "my other certificate authority", "certificate-2.pem", "", "DEF456"),
-				buildIamCertificateAuthority("op-67890", "my-ca-3", "my other certificate authority", "certificate-3.pem", "example.url", ""),
+				buildIamCertificateAuthority("op-12345", "my-ca", "my certificate authority", "certificate.pem", "", "", true),
+				buildIamCertificateAuthority("op-54321", "my-ca-2", "my other certificate authority", "certificate-2.pem", "", "DEF456", false),
+				buildIamCertificateAuthority("op-67890", "my-ca-3", "my other certificate authority", "certificate-3.pem", "example.url", "", true),
 			}}
 			setPageToken(certificateAuthorityList, &certificateAuthorityList.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(certificateAuthorityList)
@@ -547,7 +567,7 @@ func handleIamCertificateAuthorities(t *testing.T) http.HandlerFunc {
 			var req certificateauthorityv2.IamV2CreateCertRequest
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			certificateAuthority := buildIamCertificateAuthority("op-12345", req.GetDisplayName(), req.GetDescription(), req.GetCertificateChainFilename(), req.GetCrlUrl(), req.GetCrlChain())
+			certificateAuthority := buildIamCertificateAuthority("op-12345", req.GetDisplayName(), req.GetDescription(), req.GetCertificateChainFilename(), req.GetCrlUrl(), req.GetCrlChain(), req.GetRequireCrlOnClientCertificate())
 			err = json.NewEncoder(w).Encode(certificateAuthority)
 			require.NoError(t, err)
 		}
@@ -865,7 +885,7 @@ func buildIamPool(id, name, description, identityClaim, filter string) identityp
 	}
 }
 
-func buildIamCertificateAuthority(id, name, description, certificateChainFilename, crlUrl, crlChain string) certificateauthorityv2.IamV2CertificateAuthority {
+func buildIamCertificateAuthority(id, name, description, certificateChainFilename, crlUrl, crlChain string, requireCrlOnClientCertificate bool) certificateauthorityv2.IamV2CertificateAuthority {
 	expDate, _ := time.Parse(time.RFC3339, "2017-07-21T17:32:28Z")
 
 	crlSource := ""
@@ -884,16 +904,17 @@ func buildIamCertificateAuthority(id, name, description, certificateChainFilenam
 	}
 
 	return certificateauthorityv2.IamV2CertificateAuthority{
-		Id:                       certificateauthorityv2.PtrString(id),
-		DisplayName:              certificateauthorityv2.PtrString(name),
-		Description:              certificateauthorityv2.PtrString(description),
-		Fingerprints:             &[]string{"B1BC968BD4f49D622AA89A81F2150152A41D829C"},
-		ExpirationDates:          &[]time.Time{expDate},
-		SerialNumbers:            &[]string{"219C542DE8f6EC7177FA4EE8C3705797"},
-		CertificateChainFilename: certificateauthorityv2.PtrString(certificateChainFilename),
-		CrlSource:                certificateauthorityv2.PtrString(crlSource),
-		CrlUrl:                   certificateauthorityv2.PtrString(crlUrl),
-		CrlUpdatedAt:             crlUpdatedAt,
+		Id:                            certificateauthorityv2.PtrString(id),
+		DisplayName:                   certificateauthorityv2.PtrString(name),
+		Description:                   certificateauthorityv2.PtrString(description),
+		Fingerprints:                  &[]string{"B1BC968BD4f49D622AA89A81F2150152A41D829C"},
+		ExpirationDates:               &[]time.Time{expDate},
+		SerialNumbers:                 &[]string{"219C542DE8f6EC7177FA4EE8C3705797"},
+		CertificateChainFilename:      certificateauthorityv2.PtrString(certificateChainFilename),
+		CrlSource:                     certificateauthorityv2.PtrString(crlSource),
+		CrlUrl:                        certificateauthorityv2.PtrString(crlUrl),
+		CrlUpdatedAt:                  crlUpdatedAt,
+		RequireCrlOnClientCertificate: certificateauthorityv2.PtrBool(requireCrlOnClientCertificate),
 	}
 }
 

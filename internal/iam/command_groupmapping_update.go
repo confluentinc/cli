@@ -62,7 +62,7 @@ func (c *groupMappingCommand) update(cmd *cobra.Command, args []string) error {
 		update.Filter = ssov2.PtrString(filter)
 	}
 
-	groupMapping, err := c.V2Client.UpdateGroupMapping(update)
+	groupMapping, err := c.V2Client.UpdateIamGroupMapping(update)
 	if err != nil {
 		return err
 	}

@@ -1,0 +1,33 @@
+{
+  "api_version": "rtce/v1",
+  "kind": "RtceTopic",
+  "metadata": {
+    "created_at": "2006-01-02T15:04:05-07:00",
+    "deleted_at": "2006-01-02T15:04:05-07:00",
+    "resource_name": "crn://confluent.cloud/organization=9bb441c4-edef-46ac-8a41-c49e44a3fd9a/environment=env-abc123/cloud-cluster=lkc-12345/topic=tt-12345",
+    "self": "https://api.confluent.cloud/rtce/v1/rtce-topics/rt-12345",
+    "updated_at": "2006-01-02T15:04:05-07:00"
+  },
+  "spec": {
+    "cloud": "AWS",
+    "description": "Customer orders table for real-time analytics",
+    "environment": {
+      "environment": "",
+      "id": "env-00000",
+      "related": "https://api.confluent.cloud/org/v2/environments/env-00000",
+      "resource_name": "https://api.confluent.cloud/organization=9bb441c4-edef-46ac-8a41-c49e44a3fd9a/environment=env-00000"
+    },
+    "kafka_cluster": {
+      "environment": "",
+      "id": "lkc-00000",
+      "related": "https://api.confluent.cloud/cmk/v2/clusters/lkc-00000",
+      "resource_name": "https://api.confluent.cloud/organization=9bb441c4-edef-46ac-8a41-c49e44a3fd9a/environment=env-abc123/cloud-cluster=lkc-00000"
+    },
+    "region": "us-west-2",
+    "topic_name": "orders_topic"
+  },
+  "status": {
+    "error_message": "Failed to provision table: insufficient resources",
+    "phase": "ACTIVE"
+  }
+}

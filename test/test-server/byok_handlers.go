@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -24,6 +25,8 @@ func handleByokKey(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			handleByokKeyGet(t, keyStr, byokStoreV1)(w, r)
+		case http.MethodPatch:
+			handleByokKeyUpdate(t, keyStr, byokStoreV1)(w, r)
 		case http.MethodDelete:
 			handleByokKeyDelete(t, keyStr, byokStoreV1)(w, r)
 		}
@@ -47,6 +50,30 @@ func handleByokKeyGet(t *testing.T, keyStr string, byokStoreV1 map[string]*byokv
 	}
 }
 
+func handleByokKeyUpdate(t *testing.T, keyStr string, byokStoreV1 map[string]*byokv1.ByokV1Key) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// check if keystr exists in store
+		if existingKey, ok := byokStoreV1[keyStr]; !ok {
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+			return
+		} else {
+			req := new(byokv1.ByokV1KeyUpdate)
+			err := json.NewDecoder(r.Body).Decode(req)
+			require.NoError(t, err)
+
+			// Update the display name if provided
+			if req.DisplayName != nil {
+				existingKey.DisplayName = req.DisplayName
+			}
+
+			// Return the updated key
+			err = json.NewEncoder(w).Encode(existingKey)
+			require.NoError(t, err)
+		}
+	}
+}
+
 func handleByokKeyDelete(t *testing.T, keyStr string, byokStoreV1 map[string]*byokv1.ByokV1Key) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// check if keystr exists in store
@@ -64,9 +91,10 @@ func handleByokKeyDelete(t *testing.T, keyStr string, byokStoreV1 map[string]*by
 func handleByokKeys(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		byokStoreV1 := fillByokStoreV1()
-		if r.Method == http.MethodPost {
+		switch r.Method {
+		case http.MethodPost:
 			handleByokKeysCreate(t, byokStoreV1)(w, r)
-		} else if r.Method == http.MethodGet {
+		case http.MethodGet:
 			handleByokKeysList(t, byokStoreV1)(w, r)
 		}
 	}
@@ -79,9 +107,14 @@ func handleByokKeysCreate(t *testing.T, byokStoreV1 map[string]*byokv1.ByokV1Key
 		require.NoError(t, err)
 
 		byokKey := &byokv1.ByokV1Key{
-			Id:       byokv1.PtrString(fmt.Sprintf("cck-%03d", 4)),
-			Metadata: &byokv1.ObjectMeta{CreatedAt: byokv1.PtrTime(time.Date(2022, time.December, 24, 0, 0, 0, 0, time.UTC))},
-			State:    byokv1.PtrString("AVAILABLE"),
+			Id:          byokv1.PtrString(fmt.Sprintf("cck-%03d", 4)),
+			DisplayName: req.DisplayName,
+			Metadata:    &byokv1.ObjectMeta{CreatedAt: byokv1.PtrTime(time.Date(2022, time.December, 24, 0, 0, 0, 0, time.UTC))},
+			State:       byokv1.PtrString("AVAILABLE"),
+			Validation: &byokv1.ByokV1KeyValidation{
+				Phase: "INITIALIZING",
+				Since: time.Date(2022, time.December, 24, 0, 0, 0, 0, time.UTC),
+			},
 		}
 
 		switch {
@@ -138,11 +171,42 @@ func byokKeysFilterV1(url *url.URL, byokStoreV1 map[string]*byokv1.ByokV1Key) *b
 	q := url.Query()
 	provider := q.Get("provider")
 	state := q.Get("state")
+	validationRegion := q.Get("validation_region")
+	validationPhase := q.Get("validation_phase")
+	displayName := q.Get("display_name")
+	keyIdentifier := q.Get("key")
 
 	for _, key := range byokStoreV1 {
 		providerFilter := provider == "" || provider == key.GetProvider()
 		stateFilter := (state == "") || state == *key.State
-		if providerFilter && stateFilter {
+		displayNameFilter := displayName == "" || (key.DisplayName != nil && displayName == key.GetDisplayName())
+
+		// For keyIdentifier filter, check the appropriate field based on provider (partial matching)
+		keyIdentifierFilter := keyIdentifier == ""
+		if keyIdentifier != "" && key.Key != nil {
+			switch {
+			case key.Key.ByokV1AwsKey != nil:
+				keyIdentifierFilter = strings.Contains(key.Key.ByokV1AwsKey.GetKeyArn(), keyIdentifier)
+			case key.Key.ByokV1AzureKey != nil:
+				keyIdentifierFilter = strings.Contains(key.Key.ByokV1AzureKey.GetKeyId(), keyIdentifier)
+			case key.Key.ByokV1GcpKey != nil:
+				keyIdentifierFilter = strings.Contains(key.Key.ByokV1GcpKey.GetKeyId(), keyIdentifier)
+			}
+		}
+
+		// For validation filters, check if validation exists and matches
+		validationRegionFilter := validationRegion == ""
+		validationPhaseFilter := validationPhase == ""
+		if key.Validation != nil {
+			if validationRegion != "" {
+				validationRegionFilter = validationRegion == key.Validation.GetRegion()
+			}
+			if validationPhase != "" {
+				validationPhaseFilter = validationPhase == key.Validation.GetPhase()
+			}
+		}
+
+		if providerFilter && stateFilter && displayNameFilter && keyIdentifierFilter && validationRegionFilter && validationPhaseFilter {
 			byokKeyList.Data = append(byokKeyList.Data, *key)
 		}
 	}

@@ -30,6 +30,7 @@ func (c *certificateAuthorityCommand) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String("certificate-chain-filename", "", "The name of the certificate file.")
 	cmd.Flags().String("crl-url", "", "The URL from which to fetch the CRL (Certificate Revocation List) for the certificate authority.")
 	cmd.Flags().String("crl-chain", "", "A base64 encoded string containing the CRL for this certificate authority.")
+	cmd.Flags().Bool("require-crl-on-client-certificate", false, "Require CRL validation on client certificates.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -40,17 +41,18 @@ func (c *certificateAuthorityCommand) newUpdateCommand() *cobra.Command {
 
 func (c *certificateAuthorityCommand) update(cmd *cobra.Command, args []string) error {
 	// The update sends a PUT request, so we also need to send unchanged fields
-	currentCertificateAuthority, err := c.V2Client.GetCertificateAuthority(args[0])
+	currentCertificateAuthority, err := c.V2Client.GetIamCertificateAuthority(args[0])
 	if err != nil {
 		return err
 	}
 
 	update := certificateauthorityv2.IamV2UpdateCertRequest{
-		Id:                       certificateauthorityv2.PtrString(args[0]),
-		DisplayName:              currentCertificateAuthority.DisplayName,
-		Description:              currentCertificateAuthority.Description,
-		CertificateChainFilename: currentCertificateAuthority.CertificateChainFilename,
-		CrlUrl:                   currentCertificateAuthority.CrlUrl,
+		Id:                            certificateauthorityv2.PtrString(args[0]),
+		DisplayName:                   currentCertificateAuthority.DisplayName,
+		Description:                   currentCertificateAuthority.Description,
+		CertificateChainFilename:      currentCertificateAuthority.CertificateChainFilename,
+		CrlUrl:                        currentCertificateAuthority.CrlUrl,
+		RequireCrlOnClientCertificate: currentCertificateAuthority.RequireCrlOnClientCertificate,
 	}
 	if cmd.Flags().Changed("name") {
 		name, err := cmd.Flags().GetString("name")
@@ -93,8 +95,20 @@ func (c *certificateAuthorityCommand) update(cmd *cobra.Command, args []string) 
 		}
 		update.CrlChain = certificateauthorityv2.PtrString(crlChain)
 	}
+	if cmd.Flags().Changed("require-crl-on-client-certificate") {
+		requireCrlOnClientCertificate, err := cmd.Flags().GetBool("require-crl-on-client-certificate")
+		if err != nil {
+			return err
+		}
+		update.RequireCrlOnClientCertificate = certificateauthorityv2.PtrBool(requireCrlOnClientCertificate)
 
-	certificateAuthority, err := c.V2Client.UpdateCertificateAuthority(update)
+		if !requireCrlOnClientCertificate && !cmd.Flags().Changed("crl-url") && !cmd.Flags().Changed("crl-chain") {
+			update.CrlUrl = certificateauthorityv2.PtrString("")
+			update.CrlChain = nil
+		}
+	}
+
+	certificateAuthority, err := c.V2Client.UpdateIamCertificateAuthority(update)
 	if err != nil {
 		return err
 	}

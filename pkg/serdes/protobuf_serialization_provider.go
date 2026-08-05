@@ -14,6 +14,7 @@ import (
 	gproto "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/dynamicpb"
 
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/cel"
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry/rules/encryption"
@@ -43,20 +44,10 @@ type ProtobufSerializationProvider struct {
 }
 
 func (p *ProtobufSerializationProvider) InitSerializer(srClientUrl, srClusterId, mode string, schemaId int, srAuth SchemaRegistryAuth) error {
-	var serdeClientConfig *schemaregistry.Config
-	if srClientUrl == mockClientUrl {
-		serdeClientConfig = schemaregistry.NewConfig(srClientUrl)
-	} else if srAuth.ApiKey != "" && srAuth.ApiSecret != "" {
-		serdeClientConfig = schemaregistry.NewConfigWithBasicAuthentication(srClientUrl, srAuth.ApiKey, srAuth.ApiSecret)
-	} else if srAuth.Token != "" {
-		serdeClientConfig = schemaregistry.NewConfigWithBearerAuthentication(srClientUrl, srAuth.Token, srClusterId, "")
-	} else {
-		return fmt.Errorf("schema registry client authentication should be provider to initialize serializer")
+	serdeClient, err := initSchemaRegistryClient(srClientUrl, srClusterId, srAuth, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create serializer-specific Schema Registry client: %w", err)
 	}
-	serdeClientConfig.SslCaLocation = srAuth.CertificateAuthorityPath
-	serdeClientConfig.SslCertificateLocation = srAuth.ClientCertPath
-	serdeClientConfig.SslKeyLocation = srAuth.ClientKeyPath
-	serdeClient, err := schemaregistry.NewClient(serdeClientConfig)
 
 	// Register the KMS drivers and the field-level encryption executor
 	awskms.Register()
@@ -123,20 +114,24 @@ func (p *ProtobufSerializationProvider) GetSchemaName() string {
 	return protobufSchemaBackendName
 }
 
-func (p *ProtobufSerializationProvider) Serialize(topic, message string) ([]byte, error) {
+func (p *ProtobufSerializationProvider) Serialize(topic, message string) ([]kafka.Header, []byte, error) {
 	// Need to materialize the message into the schema of p.message
 	if err := protojson.Unmarshal([]byte(message), p.message); err != nil {
-		return nil, fmt.Errorf(errors.ProtoDocumentInvalidErrorMsg)
+		return nil, nil, fmt.Errorf(errors.ProtoDocumentInvalidErrorMsg)
 	}
 
-	payload, err := p.ser.Serialize(topic, p.message)
+	headers, payload, err := p.ser.SerializeWithHeaders(topic, p.message)
 	if err != nil {
-		return nil, fmt.Errorf("failed to serialize message: %w", err)
+		return nil, nil, fmt.Errorf("failed to serialize message: %w", err)
 	}
-	return payload, nil
+	return headers, payload, nil
 }
 
 func parseMessage(schemaPath string, referencePathMap map[string]string) (gproto.Message, error) {
+	if schemaPath == "" {
+		return nil, fmt.Errorf("schema path is empty")
+	}
+
 	// Collect import paths
 	importPath := filepath.Dir(schemaPath)
 	importPaths := []string{importPath}
@@ -223,4 +218,8 @@ func copyBuiltInProtoFiles(destinationDir string) error {
 
 		return nil
 	})
+}
+
+func (p *ProtobufSerializationProvider) SetSchemaIDSerializer(headerSerializer serde.SchemaIDSerializerFunc) {
+	p.ser.SchemaIDSerializer = headerSerializer
 }

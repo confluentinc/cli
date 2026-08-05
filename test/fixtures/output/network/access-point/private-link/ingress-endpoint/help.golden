@@ -1,0 +1,18 @@
+Manage private link ingress endpoints.
+
+Usage:
+  confluent network access-point private-link ingress-endpoint [command]
+
+Available Commands:
+  create      Create an ingress endpoint.
+  delete      Delete one or more ingress endpoints.
+  describe    Describe an ingress endpoint.
+  list        List ingress endpoints.
+  update      Update an existing ingress endpoint.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent network access-point private-link ingress-endpoint [command] --help" for more information about a command.

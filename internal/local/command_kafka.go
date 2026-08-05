@@ -3,7 +3,7 @@ package local
 import (
 	"context"
 
-	"github.com/docker/docker/client"
+	"github.com/moby/moby/client"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
@@ -37,7 +37,7 @@ func getShortenedContainerId(id string) string {
 }
 
 func checkIsDockerRunning(dockerClient *client.Client) error {
-	if _, err := dockerClient.Info(context.Background()); err != nil {
+	if _, err := dockerClient.Info(context.Background(), client.InfoOptions{}); err != nil {
 		return errors.NewErrorWithSuggestions(
 			err.Error(),
 			"Make sure Docker has been installed following the guide at https://docs.docker.com/engine/install/ and is running.",

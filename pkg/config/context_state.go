@@ -5,8 +5,9 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/go-jose/go-jose/v3/jwt"
+	"github.com/go-jose/go-jose/v4/jwt"
 
+	"github.com/confluentinc/cli/v4/pkg/jose"
 	"github.com/confluentinc/cli/v4/pkg/secret"
 )
 
@@ -56,7 +57,7 @@ func (c *ContextState) IsExpired() bool {
 		return false
 	}
 
-	token, err := jwt.ParseSigned(c.AuthToken)
+	token, err := jwt.ParseSigned(c.AuthToken, jose.SignatureAlgorithms)
 	if err != nil {
 		return false
 	}

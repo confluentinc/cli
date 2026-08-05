@@ -1,0 +1,18 @@
+{
+  "encodingRules": [
+    {
+      "name": "encryptPayload",
+      "kind": "TRANSFORM",
+      "type": "ENCRYPT_PAYLOAD",
+      "mode": "WRITEREAD",
+      "params": {
+        "encrypt.kek.name": "local-kek1",
+        "encrypt.kms.type": "local-kms",
+        "encrypt.kms.key.id": "mykey"
+      },
+      "onFailure": "ERROR,NONE"
+    }
+  ]
+}
+
+

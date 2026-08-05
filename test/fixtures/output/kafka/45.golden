@@ -5,13 +5,14 @@
 | Type                 | DEDICATED                   |
 | Cluster Size         | 2                           |
 | Pending Cluster Size | 1                           |
-| Ingress Limit (MB/s) | 100                         |
-| Egress Limit (MB/s)  | 300                         |
-| Storage              | Infinite                    |
+| Ingress Limit (MB/s) | 120                         |
+| Egress Limit (MB/s)  | 360                         |
+| Storage              | Unlimited                   |
 | Cloud                | aws                         |
 | Region               | us-west-2                   |
 | Availability         | single-zone                 |
 | Status               | SHRINKING                   |
+| Deletion Protection  | false                       |
 | Endpoint             | SASL_SSL://kafka-endpoint   |
 | REST Endpoint        | http://127.0.0.1:1025       |
 | Topic Count          | 2                           |

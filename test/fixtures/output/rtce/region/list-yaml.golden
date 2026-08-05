@@ -1,0 +1,4 @@
+- id: dlz-f3a90de
+  cloud: AWS
+  region: us-east-2
+  display_name: US East (Ohio)

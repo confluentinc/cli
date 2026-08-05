@@ -93,6 +93,9 @@ func handleTableflowTopicsCreate(t *testing.T, environment string) http.HandlerF
 			tableflowTopic.Spec.Storage.TableflowV1ByobAwsSpec.SetTablePath("s3://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId")
 		} else if tableflowTopic.Spec.Storage.TableflowV1ManagedStorageSpec != nil {
 			tableflowTopic.Spec.Storage.TableflowV1ManagedStorageSpec.SetTablePath("s3://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId")
+		} else if tableflowTopic.Spec.Storage.TableflowV1AzureAdlsSpec != nil {
+			tableflowTopic.Spec.Storage.TableflowV1AzureAdlsSpec.SetStorageRegion("US1")
+			tableflowTopic.Spec.Storage.TableflowV1AzureAdlsSpec.SetTablePath("s3://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId2")
 		}
 
 		err = json.NewEncoder(w).Encode(tableflowTopic)
@@ -111,6 +114,8 @@ func handleTableflowTopicGet(t *testing.T, environmentId, clusterId, display_nam
 			tableflowTopic = getTopicByob("topic-byob", environmentId, clusterId)
 		case "topic-managed":
 			tableflowTopic = getTopicManaged("topic-managed", environmentId, clusterId)
+		case "topic-azure":
+			tableflowTopic = getTopicAzure("topic-azure", environmentId, clusterId)
 		case "topic-error-log":
 			tableflowTopic = getTopicManaged("topic-error-log", "env-596", "lkc-123456")
 			tableflowTopic.Spec.Config.SetErrorHandling(tableflowv1.TableflowV1TableFlowTopicConfigsSpecErrorHandlingOneOf{
@@ -127,8 +132,9 @@ func handleTableflowTopicsList(t *testing.T, environmentId, clusterId string) ht
 	return func(w http.ResponseWriter, r *http.Request) {
 		topicOne := getTopicByob("topic-byob", environmentId, clusterId)
 		topicTwo := getTopicManaged("topic-managed", environmentId, clusterId)
+		topicThree := getTopicAzure("topic-azure", environmentId, clusterId)
 
-		recordList := tableflowv1.TableflowV1TableflowTopicList{Data: []tableflowv1.TableflowV1TableflowTopic{topicOne, topicTwo}}
+		recordList := tableflowv1.TableflowV1TableflowTopicList{Data: []tableflowv1.TableflowV1TableflowTopic{topicOne, topicTwo, topicThree}}
 		setPageToken(&recordList, &recordList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
@@ -149,6 +155,8 @@ func handleTableflowTopicUpdate(t *testing.T, display_name string) http.HandlerF
 			tableflowTopic = getTopicByob("topic-byob", "env-596", "lkc-123456")
 		case "topic-managed":
 			tableflowTopic = getTopicManaged("topic-managed", "env-596", "lkc-123456")
+		case "topic-azure":
+			tableflowTopic = getTopicAzure("topic-azure", "env-596", "lkc-123456")
 		case "topic-error-log":
 			tableflowTopic = getTopicManaged("topic-error-log", "env-596", "lkc-123456")
 		}
@@ -173,7 +181,7 @@ func handleTableflowTopicDelete(t *testing.T, display_name string) http.HandlerF
 			w.WriteHeader(http.StatusNotFound)
 			err := writeErrorJson(w, "The Tableflow topic was not found.")
 			require.NoError(t, err)
-		case "topic-byob", "topic-managed":
+		case "topic-byob", "topic-managed", "topic-azure":
 			w.WriteHeader(http.StatusNoContent)
 		}
 	}
@@ -195,7 +203,7 @@ func getTopicByob(display_name, environmentId, clusterId string) tableflowv1.Tab
 			},
 			Config: &tableflowv1.TableflowV1TableFlowTopicConfigsSpec{
 				EnableCompaction:      tableflowv1.PtrBool(true),
-				EnablePartitioning:    tableflowv1.PtrBool(true),          // ready-only property that needs confirmation, assuming constantly true for now
+				EnablePartitioning:    tableflowv1.PtrBool(true),          // read-only property that needs confirmation, assuming constantly true for now
 				RetentionMs:           tableflowv1.PtrString("604800000"), // 7 days to miliseconds
 				RecordFailureStrategy: tableflowv1.PtrString("SKIP"),
 				ErrorHandling: &tableflowv1.TableflowV1TableFlowTopicConfigsSpecErrorHandlingOneOf{
@@ -251,7 +259,7 @@ func getTopicManaged(display_name, environmentId, clusterId string) tableflowv1.
 			},
 			Config: &tableflowv1.TableflowV1TableFlowTopicConfigsSpec{
 				EnableCompaction:      tableflowv1.PtrBool(true),
-				EnablePartitioning:    tableflowv1.PtrBool(true),          // ready-only property that needs confirmation, assuming constantly true for now
+				EnablePartitioning:    tableflowv1.PtrBool(true),          // read-only property that needs confirmation, assuming constantly true for now
 				RetentionMs:           tableflowv1.PtrString("604800000"), // 7 days to miliseconds
 				RecordFailureStrategy: tableflowv1.PtrString("SUSPEND"),
 				ErrorHandling: &tableflowv1.TableflowV1TableFlowTopicConfigsSpecErrorHandlingOneOf{
@@ -290,6 +298,39 @@ func getTopicManaged(display_name, environmentId, clusterId string) tableflowv1.
 					ErrorMessage: "Connection timeout ",
 				},
 			},
+		},
+	}
+}
+
+func getTopicAzure(display_name, environmentId, clusterId string) tableflowv1.TableflowV1TableflowTopic {
+	return tableflowv1.TableflowV1TableflowTopic{
+		Spec: &tableflowv1.TableflowV1TableflowTopicSpec{
+			DisplayName: tableflowv1.PtrString(display_name),
+			Suspended:   tableflowv1.PtrBool(false),
+			Storage: &tableflowv1.TableflowV1TableflowTopicSpecStorageOneOf{
+				TableflowV1AzureAdlsSpec: &tableflowv1.TableflowV1AzureAdlsSpec{
+					Kind:                  "AzureDataLakeStorageGen2",
+					StorageAccountName:    "Acc1",
+					ContainerName:         "Container1",
+					StorageRegion:         tableflowv1.PtrString("US1"),
+					ProviderIntegrationId: "cspi-stgce89r7",
+					TablePath:             tableflowv1.PtrString("s3://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId2"),
+				},
+			},
+			Config: &tableflowv1.TableflowV1TableFlowTopicConfigsSpec{
+				EnableCompaction:      tableflowv1.PtrBool(true),
+				EnablePartitioning:    tableflowv1.PtrBool(true),          // read-only property that needs confirmation, assuming constantly true for now
+				RetentionMs:           tableflowv1.PtrString("604800000"), // 7 days to milliseconds
+				RecordFailureStrategy: tableflowv1.PtrString("SKIP"),
+			},
+			TableFormats: &[]string{"ICEBERG"},
+			Environment:  &tableflowv1.GlobalObjectReference{Id: environmentId},
+			KafkaCluster: &tableflowv1.EnvScopedObjectReference{Id: clusterId, Environment: tableflowv1.PtrString(environmentId)},
+		},
+		Status: &tableflowv1.TableflowV1TableflowTopicStatus{
+			Phase: tableflowv1.PtrString("RUNNING"),
+			//ErrorMessage: tableflowv1.PtrString(""),
+			WriteMode: "UPSERT",
 		},
 	}
 }
@@ -337,13 +378,26 @@ func handleCatalogIntegrationUpdate(t *testing.T, id string) http.HandlerFunc {
 		switch id {
 		case "tci-abc123":
 			catalogIntegration = getCatalogIntegration(id, body.GetSpec().Environment.Id, body.GetSpec().KafkaCluster.Id, "my-aws-glue-ci", "AwsGlue")
+			if body.Spec.GetConfig().TableflowV1CatalogIntegrationAwsGlueUpdateSpec != nil && body.Spec.GetConfig().TableflowV1CatalogIntegrationAwsGlueUpdateSpec.GetCustomDatabase() != "" {
+				catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationAwsGlueSpec.SetCustomDatabase(body.Spec.GetConfig().TableflowV1CatalogIntegrationAwsGlueUpdateSpec.GetCustomDatabase())
+			}
 		case "tci-def456":
 			catalogIntegration = getCatalogIntegration(id, body.GetSpec().Environment.Id, body.GetSpec().KafkaCluster.Id, "my-snowflake-ci", "Snowflake")
-			catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeSpec.SetEndpoint(body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetEndpoint())
-			catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeSpec.SetClientId(body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetClientId())
-			catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeSpec.SetClientSecret(body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetClientSecret())
-			catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeSpec.SetWarehouse(body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetWarehouse())
-			catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeSpec.SetAllowedScope(body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetAllowedScope())
+			if body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec != nil {
+				catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeSpec.SetEndpoint(body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetEndpoint())
+				catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeSpec.SetClientId(body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetClientId())
+				catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeSpec.SetClientSecret(body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetClientSecret())
+				catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeSpec.SetWarehouse(body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetWarehouse())
+				catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeSpec.SetAllowedScope(body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetAllowedScope())
+				if body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetCustomNamespace() != "" {
+					catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeSpec.SetCustomNamespace(body.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeUpdateSpec.GetCustomNamespace())
+				}
+			}
+		case "tci-ghi789":
+			catalogIntegration = getCatalogIntegration(id, body.GetSpec().Environment.Id, body.GetSpec().KafkaCluster.Id, "my-unity-ci", "Unity")
+			if body.Spec.GetConfig().TableflowV1CatalogIntegrationUnityUpdateSpec != nil && body.Spec.GetConfig().TableflowV1CatalogIntegrationUnityUpdateSpec.GetCustomSchema() != "" {
+				catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationUnitySpec.SetCustomSchema(body.Spec.GetConfig().TableflowV1CatalogIntegrationUnityUpdateSpec.GetCustomSchema())
+			}
 		default:
 			catalogIntegration = getCatalogIntegration(id, body.GetSpec().Environment.Id, body.GetSpec().KafkaCluster.Id, "my-aws-glue-ci", "AwsGlue")
 		}
@@ -413,27 +467,33 @@ func getCatalogIntegration(id, environment, cluster, name, specConfigKind string
 
 	switch specConfigKind {
 	case "AwsGlue":
-		catalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationAwsGlueSpecAsTableflowV1CatalogIntegrationSpecConfigOneOf(&tableflowv1.TableflowV1CatalogIntegrationAwsGlueSpec{
+		awsGlueSpec := &tableflowv1.TableflowV1CatalogIntegrationAwsGlueSpec{
 			Kind:                  specConfigKind,
 			ProviderIntegrationId: "cspi-stgce89r7",
-		}))
+		}
+		awsGlueSpec.SetCustomDatabase("my-custom-db")
+		catalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationAwsGlueSpecAsTableflowV1CatalogIntegrationSpecConfigOneOf(awsGlueSpec))
 	case "Snowflake":
-		catalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationSnowflakeSpecAsTableflowV1CatalogIntegrationSpecConfigOneOf(&tableflowv1.TableflowV1CatalogIntegrationSnowflakeSpec{
+		snowflakeSpec := &tableflowv1.TableflowV1CatalogIntegrationSnowflakeSpec{
 			Kind:         specConfigKind,
 			Endpoint:     "https://vuser1_polaris.snowflakecomputing.com/",
 			ClientId:     "client-id",
 			ClientSecret: "client-secret",
 			Warehouse:    "warehouse",
 			AllowedScope: "allowed-scope",
-		}))
+		}
+		snowflakeSpec.SetCustomNamespace("my-custom-ns")
+		catalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationSnowflakeSpecAsTableflowV1CatalogIntegrationSpecConfigOneOf(snowflakeSpec))
 	case "Unity":
-		catalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationUnitySpecAsTableflowV1CatalogIntegrationSpecConfigOneOf(&tableflowv1.TableflowV1CatalogIntegrationUnitySpec{
+		unitySpec := &tableflowv1.TableflowV1CatalogIntegrationUnitySpec{
 			Kind:              specConfigKind,
 			WorkspaceEndpoint: "https://dbc-0e76d5eb-ff10.cloud.databricks.com",
 			CatalogName:       "catalog-name",
 			ClientId:          "client-id",
 			ClientSecret:      "client-secret",
-		}))
+		}
+		unitySpec.SetCustomSchema("my-custom-schema")
+		catalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationUnitySpecAsTableflowV1CatalogIntegrationSpecConfigOneOf(unitySpec))
 	}
 
 	return catalogIntegration

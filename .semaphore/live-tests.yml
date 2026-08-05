@@ -1,0 +1,43 @@
+version: v1.0
+name: Live Integration Tests for Confluent CLI
+agent:
+  machine:
+    type: s1-prod-ubuntu24-04-amd64-2
+
+auto_cancel:
+  running:
+    when: "false"
+
+global_job_config:
+  prologue:
+    commands:
+      - checkout
+      - sem-version go $(cat .go-version)
+      - export PATH=$(go env GOPATH)/bin:$PATH
+
+execution_time_limit:
+  hours: 24
+
+blocks:
+  - name: "Live Integration Tests"
+    task:
+      jobs:
+        - name: "Run Live Tests"
+          commands:
+            - . vault-sem-get-secret v1/ci/kv/apif/cli/live-testing-data
+            - . vault-sem-get-secret v1/ci/kv/apif/cli/slack-notifications-live-testing
+
+            - |
+              set -e
+
+              trap '
+                RC=$?
+                if [ $RC -ne 0 ]; then
+                  echo "Live tests failed, sending Slack notification..."
+                  curl -X POST -H "Content-type: application/json" --data "{}" "$SLACK_WEBHOOK_URL"
+                fi
+                exit $RC
+              ' EXIT
+
+              echo "Running all live tests..."
+              make live-test

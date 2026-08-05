@@ -56,6 +56,7 @@ func handleFcpmComputePools(t *testing.T) http.HandlerFunc {
 			err := json.NewDecoder(r.Body).Decode(create)
 			require.NoError(t, err)
 			create.Spec.Cloud = flinkv2.PtrString(strings.ToUpper(create.Spec.GetCloud()))
+			create.Spec.DefaultPool = flinkv2.PtrBool(create.Spec.GetDefaultPool())
 
 			v := flinkv2.FcpmV2ComputePool{
 				Id:     flinkv2.PtrString("lfcp-123456"),
@@ -63,6 +64,34 @@ func handleFcpmComputePools(t *testing.T) http.HandlerFunc {
 				Status: &flinkv2.FcpmV2ComputePoolStatus{Phase: "PROVISIONING"},
 			}
 			err = json.NewEncoder(w).Encode(v)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleFcpmComputePoolConfigs(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			config1 := flinkv2.FcpmV2OrgComputePoolConfig{
+				Spec: &flinkv2.FcpmV2OrgComputePoolConfigSpec{
+					DefaultPoolEnabled: flinkv2.PtrBool(false),
+					DefaultPoolMaxCfu:  flinkv2.PtrInt32(50),
+				},
+			}
+			err := json.NewEncoder(w).Encode(config1)
+			require.NoError(t, err)
+		case http.MethodPatch:
+			update := new(flinkv2.FcpmV2OrgComputePoolConfig)
+			err := json.NewDecoder(r.Body).Decode(update)
+			require.NoError(t, err)
+			config1 := flinkv2.FcpmV2OrgComputePoolConfig{
+				Spec: &flinkv2.FcpmV2OrgComputePoolConfigSpec{
+					DefaultPoolEnabled: flinkv2.PtrBool(update.Spec.GetDefaultPoolEnabled()),
+					DefaultPoolMaxCfu:  flinkv2.PtrInt32(update.Spec.GetDefaultPoolMaxCfu()),
+				},
+			}
+			err = json.NewEncoder(w).Encode(config1)
 			require.NoError(t, err)
 		}
 	}
@@ -105,6 +134,7 @@ func handleFcpmComputePoolsId(t *testing.T) http.HandlerFunc {
 				Spec: &flinkv2.FcpmV2ComputePoolSpec{
 					DisplayName: flinkv2.PtrString("my-compute-pool-1"),
 					MaxCfu:      flinkv2.PtrInt32(update.Spec.GetMaxCfu()),
+					DefaultPool: flinkv2.PtrBool(update.Spec.GetDefaultPool()),
 					Cloud:       flinkv2.PtrString("AWS"),
 					Region:      flinkv2.PtrString("eu-west-1"),
 					Environment: &flinkv2.GlobalObjectReference{Id: "env-123"},
@@ -160,6 +190,14 @@ func handleFcpmRegions(t *testing.T) http.HandlerFunc {
 			HttpEndpoint:        flinkv2.PtrString(TestFlinkGatewayUrl.String()),
 			PrivateHttpEndpoint: flinkv2.PtrString(TestFlinkGatewayUrlPrivate.String()),
 		}
+		azureItalynorth := flinkv2.FcpmV2Region{
+			Id:                  flinkv2.PtrString("azure.italynorth"),
+			DisplayName:         flinkv2.PtrString("Milan (italynorth)"),
+			Cloud:               flinkv2.PtrString("AZURE"),
+			RegionName:          flinkv2.PtrString("italynorth"),
+			HttpEndpoint:        flinkv2.PtrString(TestFlinkGatewayUrl.String()),
+			PrivateHttpEndpoint: flinkv2.PtrString(TestFlinkGatewayUrlPrivate.String()),
+		}
 
 		// Allowing flexible mock results based on query parameters
 		regions := []flinkv2.FcpmV2Region{awsEuWest1, awsEuWest2, gcp, azure}
@@ -179,6 +217,9 @@ func handleFcpmRegions(t *testing.T) http.HandlerFunc {
 			}
 			if r.URL.Query().Get("region_name") == "eastus2" {
 				regions = []flinkv2.FcpmV2Region{azureEastus2}
+			}
+			if r.URL.Query().Get("region_name") == "italynorth" {
+				regions = []flinkv2.FcpmV2Region{azureItalynorth}
 			}
 		}
 		regionsList := &flinkv2.FcpmV2RegionList{Data: regions}

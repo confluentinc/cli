@@ -35,7 +35,7 @@ func (c *command) dnsRecordDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	record, err := c.V2Client.GetDnsRecord(environmentId, args[0])
+	record, err := c.V2Client.GetNetworkDnsRecord(environmentId, args[0])
 	if err != nil {
 		return err
 	}

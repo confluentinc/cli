@@ -25,7 +25,7 @@ func (c *artifactCommand) newDeleteCommand() *cobra.Command {
 		),
 	}
 
-	pcmd.AddCloudAwsFlag(cmd)
+	pcmd.AddCloudFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddForceFlag(cmd)
@@ -45,7 +45,7 @@ func (c *artifactCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if _, err = c.V2Client.GetOrgEnvironment(environment); err != nil {
+	if _, _, err = c.V2Client.GetOrgEnvironment(environment); err != nil {
 		return fmt.Errorf("environment '%s' not found", environment)
 	}
 

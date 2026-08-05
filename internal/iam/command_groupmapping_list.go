@@ -22,7 +22,7 @@ func (c *groupMappingCommand) newListCommand() *cobra.Command {
 }
 
 func (c *groupMappingCommand) list(cmd *cobra.Command, _ []string) error {
-	groupMappings, err := c.V2Client.ListGroupMappings()
+	groupMappings, err := c.V2Client.ListIamGroupMappings()
 	if err != nil {
 		return err
 	}

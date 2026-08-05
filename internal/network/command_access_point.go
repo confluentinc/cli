@@ -4,13 +4,14 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
 type accessPointCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-func newAccessPointCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newAccessPointCommand(prerunner pcmd.PreRunner, cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "access-point",
 		Short:       "Manage access points.",
@@ -19,7 +20,7 @@ func newAccessPointCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &accessPointCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	cmd.AddCommand(c.newPrivateLinkCommand())
+	cmd.AddCommand(c.newPrivateLinkCommand(cfg))
 	cmd.AddCommand(c.newPrivateNetworkInterfaceCommand())
 
 	return cmd

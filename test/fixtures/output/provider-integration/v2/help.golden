@@ -1,0 +1,21 @@
+Manage provider integrations that allow users to configure access to cloud provider resources through Confluent resources.
+
+Currently supports: Azure and GCP.
+
+Usage:
+  confluent provider-integration v2 [command]
+
+Available Commands:
+  create      Create a provider integration.
+  delete      Delete one or more provider integrations.
+  describe    Describe a provider integration.
+  list        List provider integrations.
+  update      Update a provider integration.
+  validate    Validate a provider integration.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent provider-integration v2 [command] --help" for more information about a command.

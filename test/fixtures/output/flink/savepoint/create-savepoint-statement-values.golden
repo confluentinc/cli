@@ -1,0 +1,7 @@
++---------------+------------+
+| Name          | savepointS |
+| Statement     | test-stmt  |
+| Path          | abc/def    |
+| Format        | NATIVE     |
+| Backoff Limit | 10         |
++---------------+------------+

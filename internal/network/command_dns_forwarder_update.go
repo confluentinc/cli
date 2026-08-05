@@ -45,7 +45,7 @@ func (c *command) dnsForwarderUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	dnsForwarder, err := c.V2Client.GetDnsForwarder(environmentId, args[0])
+	dnsForwarder, err := c.V2Client.GetNetworkDnsForwarder(environmentId, args[0])
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func (c *command) dnsForwarderUpdate(cmd *cobra.Command, args []string) error {
 		updateDnsForwarder.Spec.Config.NetworkingV1ForwardViaGcpDnsZones.SetDomainMappings(domainMap)
 	}
 
-	forwarder, err := c.V2Client.UpdateDnsForwarder(environmentId, args[0], updateDnsForwarder)
+	forwarder, err := c.V2Client.UpdateNetworkDnsForwarder(environmentId, args[0], updateDnsForwarder)
 	if err != nil {
 		return err
 	}

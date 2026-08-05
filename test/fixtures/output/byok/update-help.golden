@@ -1,0 +1,18 @@
+Update a self-managed key in Confluent Cloud.
+
+Usage:
+  confluent byok update <id> [flags]
+
+Examples:
+Update the display name of self-managed key "cck-12345".
+
+  $ confluent byok update cck-12345 --display-name "My production key"
+
+Flags:
+      --display-name string   REQUIRED: A human-readable name for the self-managed key.
+  -o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

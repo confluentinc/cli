@@ -1,0 +1,81 @@
+{
+  "apiVersion": "cmf.confluent.io/v1",
+  "kind": "FlinkApplication",
+  "metadata": {
+    "name": "default-application-s"
+  },
+  "spec": {
+    "flinkConfiguration": {
+      "metrics.reporter.prom.factory.class": "org.apache.flink.metrics.prometheus.PrometheusReporterFactory",
+      "metrics.reporter.prom.port": "9249-9250",
+      "taskmanager.numberOfTaskSlots": "8"
+    },
+    "flinkVersion": "v1_19",
+    "image": "confluentinc/cp-flink:1.19.1-cp1",
+    "job": {
+      "startFromSavepoint": {
+        "allowNonRestoredState": true,
+        "savepointName": "my-app-savepoint"
+      }
+    },
+    "jobManager": {
+      "resource": {
+        "cpu": 1,
+        "memory": "1048m"
+      }
+    },
+    "serviceAccount": "flink-new-service-account",
+    "taskManager": {
+      "resource": {
+        "cpu": 1,
+        "memory": "1048m"
+      }
+    }
+  },
+  "status": {
+    "clusterInfo": {
+      "flink-revision": "89d0b8f @ 2024-06-22T13:19:31+02:00",
+      "flink-version": "1.19.1-cp1",
+      "total-cpu": "3.0",
+      "total-memory": "3296722944"
+    },
+    "error": null,
+    "jobManagerDeploymentStatus": "DEPLOYING",
+    "jobStatus": {
+      "checkpointInfo": {
+        "formatType": null,
+        "lastCheckpoint": null,
+        "lastPeriodicCheckpointTimestamp": 0,
+        "triggerId": null,
+        "triggerTimestamp": null,
+        "triggerType": null
+      },
+      "jobId": "dcabb1ad6c40495bc2d7fa7a0097c5aa",
+      "jobName": "State machine job",
+      "savepointInfo": {
+        "formatType": null,
+        "lastPeriodicSavepointTimestamp": 0,
+        "lastSavepoint": null,
+        "savepointHistory": [],
+        "triggerId": null,
+        "triggerTimestamp": null,
+        "triggerType": null
+      },
+      "startTime": "1726640263746",
+      "state": "RECONCILING",
+      "updateTime": "1726640280561"
+    },
+    "lifecycleState": "DEPLOYED",
+    "observedGeneration": 4,
+    "reconciliationStatus": {
+      "lastReconciledSpec": "",
+      "lastStableSpec": "",
+      "reconciliationTimestamp": 1726640346899,
+      "state": "DEPLOYED"
+    },
+    "taskManager": {
+      "labelSelector": "component=taskmanager,app=basic-example",
+      "replicas": 1
+    }
+  }
+}

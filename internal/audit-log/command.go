@@ -22,8 +22,8 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
-	cmd.AddCommand(newDescribeCommand(prerunner))
 	cmd.AddCommand(newConfigCommand(prerunner))
+	cmd.AddCommand(newDescribeCommand(prerunner))
 	cmd.AddCommand(newRouteCommand(prerunner))
 
 	return cmd

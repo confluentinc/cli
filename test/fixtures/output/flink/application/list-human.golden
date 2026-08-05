@@ -2,3 +2,4 @@
 ------------------------+-------------+-------------------+--------------
   default-application-1 | default     | State machine job | RECONCILING  
   default-application-2 | default     | State machine job | RECONCILING  
+  default-application-s | default     | State machine job | RECONCILING  

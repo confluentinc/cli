@@ -8,6 +8,7 @@ Available Commands:
   delete      Delete one or more self-managed keys.
   describe    Describe a self-managed key.
   list        List self-managed keys.
+  update      Update a self-managed key.
 
 Global Flags:
   -h, --help            Show help for this command.

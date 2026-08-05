@@ -16,7 +16,7 @@ Available Commands:
   configuration          Configure the Confluent CLI.
   connect                Manage Kafka Connect.
   context                Manage CLI configuration contexts.
-  custom-code-logging    Manage custom code logging.
+  endpoint               Manage Endpoint.
   environment            Manage and select Confluent Cloud environments.
   feedback               Submit feedback for the Confluent CLI.
   flink                  Manage Apache Flink.
@@ -32,6 +32,7 @@ Available Commands:
   plugin                 Manage Confluent plugins.
   prompt                 Add Confluent CLI context to your terminal prompt.
   provider-integration   Manage Confluent Cloud provider integrations.
+  rtce                   Manage Real Time Context Engine.
   schema-registry        Manage Schema Registry.
   service-quota          Look up Confluent Cloud service quota limits.
   shell                  Start an interactive shell.

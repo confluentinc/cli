@@ -1,0 +1,12 @@
++--------------+-------------------+
+| Current      | false             |
+| ID           | lfcp-123456       |
+| Name         | my-compute-pool-2 |
+| Environment  | env-596           |
+| Current CFU  | 0                 |
+| Max CFU      | 5                 |
+| Default Pool | true              |
+| Cloud        | AWS               |
+| Region       | us-west-2         |
+| Status       | PROVISIONING      |
++--------------+-------------------+

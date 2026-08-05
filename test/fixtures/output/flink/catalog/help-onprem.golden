@@ -4,10 +4,12 @@ Usage:
   confluent flink catalog [command]
 
 Available Commands:
-  create      Create a Flink catalog.
+  create      Create a Flink catalog in Confluent Platform.
+  database    Manage Flink databases in Confluent Platform.
   delete      Delete one or more Flink catalogs in Confluent Platform.
   describe    Describe a Flink catalog in Confluent Platform.
   list        List Flink catalogs in Confluent Platform.
+  update      Update a Flink catalog in Confluent Platform.
 
 Global Flags:
   -h, --help            Show help for this command.

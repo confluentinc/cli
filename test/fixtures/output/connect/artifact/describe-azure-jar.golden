@@ -1,0 +1,9 @@
++----------------+-------------------------------+
+| ID             | cfa-azure-jar123              |
+| Name           | my-connect-artifact-azure-jar |
+| Description    | new-jar-artifact              |
+| Cloud          | AZURE                         |
+| Environment    | env-123456                    |
+| Content Format | JAR                           |
+| Status         | READY                         |
++----------------+-------------------------------+

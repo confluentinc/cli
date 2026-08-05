@@ -16,9 +16,10 @@ Register a new self-managed encryption key for GCP:
   $ confluent byok create "projects/exampleproject/locations/us-central1/keyRings/testkeyring/cryptoKeys/testbyokkey/cryptoKeyVersions/3"
 
 Flags:
-      --key-vault string   The ID of the Azure Key Vault where the key is stored.
-      --tenant string      The ID of the Azure Active Directory tenant that the key vault belongs to.
-  -o, --output string      Specify the output format as "human", "json", or "yaml". (default "human")
+      --key-vault string      The ID of the Azure Key Vault where the key is stored.
+      --tenant string         The ID of the Azure Active Directory tenant that the key vault belongs to.
+      --display-name string   A human-readable name for the self-managed key.
+  -o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

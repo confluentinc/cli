@@ -1,0 +1,11 @@
++---------------+-------------------------------+
+| Creation Date | 2023-01-01 00:00:00 +0000 UTC |
+| Name          | my-connection                 |
+| Environment   | env-596                       |
+| Cloud         | aws                           |
+| Region        | eu-west-1                     |
+| Type          | A2A                           |
+| Endpoint      | https://api.example.com       |
+| Data          | <REDACTED>                    |
+| Status        | PENDING                       |
++---------------+-------------------------------+

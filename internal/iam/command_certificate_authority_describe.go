@@ -22,7 +22,7 @@ func (c *certificateAuthorityCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *certificateAuthorityCommand) describe(cmd *cobra.Command, args []string) error {
-	certificateAuthority, err := c.V2Client.GetCertificateAuthority(args[0])
+	certificateAuthority, err := c.V2Client.GetIamCertificateAuthority(args[0])
 	if err != nil {
 		return err
 	}

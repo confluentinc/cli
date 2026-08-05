@@ -37,7 +37,7 @@ func (c *accessPointCommand) privateNetworkInterfaceList(cmd *cobra.Command, _ [
 		return err
 	}
 
-	accessPoints, err := c.V2Client.ListAccessPoints(environmentId, names)
+	accessPoints, err := c.V2Client.ListNetworkAccessPoints(environmentId, names)
 	if err != nil {
 		return err
 	}
@@ -58,6 +58,7 @@ func (c *accessPointCommand) privateNetworkInterfaceList(cmd *cobra.Command, _ [
 			Environment:       accesspoint.Spec.Environment.GetId(),
 			NetworkInterfaces: accesspoint.Spec.GetConfig().NetworkingV1AwsPrivateNetworkInterface.GetNetworkInterfaces(),
 			Account:           accesspoint.Spec.GetConfig().NetworkingV1AwsPrivateNetworkInterface.GetAccount(),
+			EgressRoutes:      accesspoint.Spec.GetConfig().NetworkingV1AwsPrivateNetworkInterface.GetEgressRoutes(),
 			Phase:             accesspoint.Status.GetPhase(),
 		}
 

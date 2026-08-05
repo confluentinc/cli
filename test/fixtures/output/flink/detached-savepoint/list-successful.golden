@@ -1,0 +1,5 @@
+       Name       |  Path   |  Format   | Backoff Limit |      Creation Timestamp       | UID  
+------------------+---------+-----------+---------------+-------------------------------+------
+  test-savepoint1 | abc/def | CANONICAL |            10 | 2025-03-12 23:42:00 +0000 UTC |      
+  test-savepoint2 | abc/def | CANONICAL |            10 | 2025-03-12 23:42:00 +0000 UTC |      
+  test-savepoint3 | abc/def | CANONICAL |            10 | 2025-03-12 23:42:00 +0000 UTC |      

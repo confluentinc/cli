@@ -1,0 +1,12 @@
+{
+  "apiVersion": "cmf/api/v1/database",
+  "kind": "KafkaDatabase",
+  "metadata": {
+    "name": "invalid-database"
+  },
+  "spec": {
+    "kafkaCluster": {
+      "connectionConfig": {}
+    }
+  }
+}

@@ -39,6 +39,9 @@ type catalogIntegrationOut struct {
 	WorkspaceEndpoint     string `human:"Workspace Endpoint,omitempty" serialized:"workspace_endpoint,omitempty"`
 	CatalogName           string `human:"Catalog Name,omitempty" serialized:"catalog_name,omitempty"`
 	ClientId              string `human:"Client ID,omitempty" serialized:"client_id,omitempty"`
+	CustomDatabase        string `human:"Custom Database,omitempty" serialized:"custom_database,omitempty"`
+	CustomNamespace       string `human:"Custom Namespace,omitempty" serialized:"custom_namespace,omitempty"`
+	CustomSchema          string `human:"Custom Schema,omitempty" serialized:"custom_schema,omitempty"`
 	Suspended             bool   `human:"Suspended" serialized:"suspended"`
 	Phase                 string `human:"Phase" serialized:"phase"`
 	ErrorMessage          string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
@@ -140,16 +143,19 @@ func printCatalogIntegrationTable(cmd *cobra.Command, catalogIntegration tablefl
 
 	if catalogIntegrationType == aws {
 		out.ProviderIntegrationId = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationAwsGlueSpec.GetProviderIntegrationId()
+		out.CustomDatabase = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationAwsGlueSpec.GetCustomDatabase()
 	}
 	if catalogIntegrationType == snowflake {
 		out.Endpoint = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeSpec.GetEndpoint()
 		out.Warehouse = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeSpec.GetWarehouse()
 		out.AllowedScope = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeSpec.GetAllowedScope()
+		out.CustomNamespace = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeSpec.GetCustomNamespace()
 	}
 	if catalogIntegrationType == unity {
 		out.WorkspaceEndpoint = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec.GetWorkspaceEndpoint()
 		out.CatalogName = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec.GetCatalogName()
 		out.ClientId = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec.GetClientId()
+		out.CustomSchema = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec.GetCustomSchema()
 	}
 
 	table := output.NewTable(cmd)

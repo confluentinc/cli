@@ -49,7 +49,7 @@ func (c *command) newStatementCreateCommandOnPrem() *cobra.Command {
 
 func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error {
 	// Flink statement name can be automatically generated or provided by the user
-	name := types.GenerateStatementName()
+	name := types.GenerateStatementNameForOnPrem()
 	if len(args) == 1 {
 		name = args[0]
 	}

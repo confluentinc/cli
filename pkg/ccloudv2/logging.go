@@ -151,6 +151,8 @@ func getLoggingUrl(baseURL string) (string, error) {
 		u.Host = "api.logging.stag.cpdev.cloud"
 	} else if strings.Contains(u.Host, "confluent.cloud") {
 		u.Host = "api.logging.confluent.cloud"
+	} else if strings.Contains(u.Host, "dr-test.cpdev.cloud") {
+		u.Host = "api.logging.dr-test.cpdev.cloud"
 	} else {
 		u.Host = "api.logging." + strings.TrimPrefix(u.Host, "api.")
 	}

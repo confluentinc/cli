@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v4/pkg/ccstructs"
 	"github.com/confluentinc/cli/v4/pkg/kafkarest"
+	"github.com/confluentinc/cli/v4/pkg/kafkausagelimits"
 )
 
 func toCreateTopicConfigs(topicConfigsMap map[string]string) []cckafkarestv3.ConfigData {
@@ -80,11 +81,20 @@ func isClusterResizeInProgress(currentCluster *cmkv2.CmkV2Cluster) error {
 	return nil
 }
 
-func getCmkClusterIngressAndEgressMbps(cluster *cmkv2.CmkV2Cluster) (int32, int32) {
-	if isDedicated(cluster) {
-		return 50 * cluster.Status.GetCku(), 150 * cluster.Status.GetCku()
+func getCmkClusterIngressAndEgressMbps(currentMaxEcku int32, limits *kafkausagelimits.Limits) (int32, int32) {
+	ingress, egress := limits.GetIngress(), limits.GetEgress()
+
+	// Scale limits by cluster's max eCKU when limits are set per eCKU
+	if limits.GetMaxEcku() != nil {
+		if currentMaxEcku > 0 {
+			return ingress * currentMaxEcku, egress * currentMaxEcku
+		} else if limits.GetMaxEcku().Value > 0 {
+			// Use default max ecku when currentMaxEcku is not set
+			return ingress * limits.GetMaxEcku().Value, egress * limits.GetMaxEcku().Value
+		}
 	}
-	return 250, 750
+
+	return ingress, egress
 }
 
 func getCmkClusterType(cluster *cmkv2.CmkV2Cluster) string {
@@ -116,6 +126,27 @@ func getCmkClusterSize(cluster *cmkv2.CmkV2Cluster) int32 {
 func getCmkClusterPendingSize(cluster *cmkv2.CmkV2Cluster) int32 {
 	if isDedicated(cluster) {
 		return cluster.Spec.Config.CmkV2Dedicated.Cku
+	}
+	return -1
+}
+
+func getCmkMaxEcku(cluster *cmkv2.CmkV2Cluster) int32 {
+	if isBasic(cluster) {
+		if cluster.GetSpec().Config.CmkV2Basic.MaxEcku != nil {
+			return cluster.GetSpec().Config.CmkV2Basic.GetMaxEcku()
+		}
+	} else if isStandard(cluster) {
+		if cluster.GetSpec().Config.CmkV2Standard.MaxEcku != nil {
+			return cluster.GetSpec().Config.CmkV2Standard.GetMaxEcku()
+		}
+	} else if isEnterprise(cluster) {
+		if cluster.GetSpec().Config.CmkV2Enterprise.MaxEcku != nil {
+			return cluster.GetSpec().Config.CmkV2Enterprise.GetMaxEcku()
+		}
+	} else if isFreight(cluster) {
+		if cluster.GetSpec().Config.CmkV2Freight.MaxEcku != nil {
+			return cluster.GetSpec().Config.CmkV2Freight.GetMaxEcku()
+		}
 	}
 	return -1
 }
@@ -177,4 +208,13 @@ func getCmkClusterStatus(cluster *cmkv2.CmkV2Cluster) string {
 
 func topicNameStrategy(topic, mode string) string {
 	return fmt.Sprintf("%s-%s", topic, mode)
+}
+
+func getLimitsForSku(cluster *cmkv2.CmkV2Cluster, usageLimits *kafkausagelimits.UsageLimits) *kafkausagelimits.Limits {
+	if isDedicated(cluster) {
+		return usageLimits.GetCkuLimit(cluster.Status.GetCku())
+	}
+
+	sku := getCmkClusterType(cluster)
+	return usageLimits.GetTierLimit(sku).GetClusterLimits()
 }

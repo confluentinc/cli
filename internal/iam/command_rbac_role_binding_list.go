@@ -99,6 +99,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID, which specifies the Kafka cluster scope.")
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID, which specifies the Schema Registry cluster scope.")
 		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster name, which specifies the ksqlDB cluster scope.")
+		cmd.Flags().String("flink-region", "", `Flink region for the role binding, formatted as "cloud.region".`)
 	} else {
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID, which specifies the Kafka cluster scope.")
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID, which specifies the Schema Registry cluster scope.")
@@ -136,13 +137,13 @@ func (c *roleBindingCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *roleBindingCommand) getPoolToNameMap() (map[string]string, error) {
-	providers, err := c.V2Client.ListIdentityProviders()
+	providers, err := c.V2Client.ListIamIdentityProviders()
 	if err != nil {
 		return map[string]string{}, err
 	}
 	poolToName := make(map[string]string)
 	for _, provider := range providers {
-		pools, err := c.V2Client.ListIdentityPools(provider.GetId())
+		pools, err := c.V2Client.ListIamIdentityPools(provider.GetId())
 		if err != nil {
 			return map[string]string{}, err
 		}
@@ -154,7 +155,7 @@ func (c *roleBindingCommand) getPoolToNameMap() (map[string]string, error) {
 }
 
 func (c *roleBindingCommand) getGroupMappingToNameMap() (map[string]string, error) {
-	groupMappings, err := c.V2Client.ListGroupMappings()
+	groupMappings, err := c.V2Client.ListIamGroupMappings()
 	if err != nil {
 		return map[string]string{}, err
 	}
@@ -178,7 +179,7 @@ func (c *roleBindingCommand) getPrincipalToUserMap() (map[string]*iamv2.IamV2Use
 }
 
 func (c *roleBindingCommand) getServiceAccountIdToNameMap() (map[string]string, error) {
-	serviceAccounts, err := c.V2Client.ListIamServiceAccounts()
+	serviceAccounts, err := c.V2Client.ListIamServiceAccounts(nil)
 	if err != nil {
 		return nil, err
 	}

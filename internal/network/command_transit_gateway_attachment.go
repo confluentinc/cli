@@ -45,7 +45,7 @@ func (c *command) getTransitGatewayAttachments(name, network, phase []string) ([
 		return nil, err
 	}
 
-	return c.V2Client.ListTransitGatewayAttachments(environmentId, name, network, phase)
+	return c.V2Client.ListNetworkTransitGatewayAttachments(environmentId, name, network, phase)
 }
 
 func (c *command) validTransitGatewayAttachmentArgs(cmd *cobra.Command, args []string) []string {

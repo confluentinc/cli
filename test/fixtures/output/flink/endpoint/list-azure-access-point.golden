@@ -1,0 +1,4 @@
+  Current |                                Endpoint                                 | Cloud |   Region   |  Type    
+----------+-------------------------------------------------------------------------+-------+------------+----------
+          | https://flink-ap4jnpj9.italynorth.azure.accesspoint.glb.confluent.cloud | AZURE | italynorth | PRIVATE  
+          | https://flink.italynorth.azure.confluent.cloud                          | AZURE | italynorth | PUBLIC   

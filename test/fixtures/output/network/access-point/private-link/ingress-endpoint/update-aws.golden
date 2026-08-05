@@ -1,0 +1,7 @@
++-------------+---------------------------------+
+| ID          | ap-88888                        |
+| Name        | my-new-aws-ingress-access-point |
+| Environment | env-596                         |
+| Gateway     | gw-12345                        |
+| Phase       | READY                           |
++-------------+---------------------------------+

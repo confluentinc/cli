@@ -1,5 +1,7 @@
 +---------------------+-----------+
 | Name                | link-1    |
+| ID                  | LINKID1   |
 | Destination Cluster | cluster-2 |
 | Remote Cluster      | cluster-2 |
+| State               | ACTIVE    |
 +---------------------+-----------+

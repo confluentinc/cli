@@ -1,0 +1,17 @@
+Manage Flink detached savepoints.
+
+Usage:
+  confluent flink detached-savepoint [command]
+
+Available Commands:
+  create      Create a Flink detached savepoint in Confluent Platform.
+  delete      Delete Flink detached savepoints in Confluent Platform.
+  describe    Describe a Flink detached savepoint in Confluent Platform.
+  list        List Flink detached savepoints in Confluent Platform.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent flink detached-savepoint [command] --help" for more information about a command.

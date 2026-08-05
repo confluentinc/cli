@@ -44,7 +44,7 @@ func (c *certificatePoolCommand) update(cmd *cobra.Command, args []string) error
 	}
 
 	// The update sends a PUT request, so we also need to send unchanged fields
-	currentCertificatePool, err := c.V2Client.GetCertificatePool(args[0], provider)
+	currentCertificatePool, err := c.V2Client.GetIamCertificatePool(args[0], provider)
 	if err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func (c *certificatePoolCommand) update(cmd *cobra.Command, args []string) error
 		update.ExternalIdentifier = certificateauthorityv2.PtrString(externalIdentifier)
 	}
 
-	certificatePool, err := c.V2Client.UpdateCertificatePool(update, provider)
+	certificatePool, err := c.V2Client.UpdateIamCertificatePool(update, provider)
 	if err != nil {
 		return err
 	}

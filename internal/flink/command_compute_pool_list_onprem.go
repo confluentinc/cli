@@ -53,7 +53,7 @@ func (c *command) computePoolListOnPrem(cmd *cobra.Command, _ []string) error {
 				CreationTime: creationTime,
 				Name:         pool.GetMetadata().Name,
 				Type:         pool.GetSpec().Type,
-				Phase:        pool.GetStatus().Phase,
+				Phase:        extractComputePoolPhase(pool),
 			})
 		}
 		return list.Print()

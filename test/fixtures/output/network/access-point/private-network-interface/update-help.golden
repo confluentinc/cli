@@ -11,6 +11,7 @@ Update the name of private network interface "ap-123456".
 Flags:
       --name string                  Name of the private network interface.
       --network-interfaces strings   A comma-separated list of the IDs of the Elastic Network Interfaces.
+      --routes strings               A comma-separated list of egress CIDR routes (max 10), e.g., "172.31.0.0/16,10.108.16.0/21".
       --environment string           Environment ID.
       --context string               CLI context name.
   -o, --output string                Specify the output format as "human", "json", or "yaml". (default "human")

@@ -44,13 +44,13 @@ func (c *Client) UpdateIamServiceAccount(id string, update iamv2.IamV2ServiceAcc
 	return c.IamClient.ServiceAccountsIamV2Api.UpdateIamV2ServiceAccount(c.iamApiContext(), id).IamV2ServiceAccount(update).Execute()
 }
 
-func (c *Client) ListIamServiceAccounts() ([]iamv2.IamV2ServiceAccount, error) {
+func (c *Client) ListIamServiceAccounts(displayName []string) ([]iamv2.IamV2ServiceAccount, error) {
 	var list []iamv2.IamV2ServiceAccount
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, httpResp, err := c.executeListServiceAccounts(pageToken)
+		page, httpResp, err := c.executeListServiceAccounts(pageToken, displayName)
 		if err != nil {
 			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
@@ -64,8 +64,11 @@ func (c *Client) ListIamServiceAccounts() ([]iamv2.IamV2ServiceAccount, error) {
 	return list, nil
 }
 
-func (c *Client) executeListServiceAccounts(pageToken string) (iamv2.IamV2ServiceAccountList, *http.Response, error) {
+func (c *Client) executeListServiceAccounts(pageToken string, displayName []string) (iamv2.IamV2ServiceAccountList, *http.Response, error) {
 	req := c.IamClient.ServiceAccountsIamV2Api.ListIamV2ServiceAccounts(c.iamApiContext()).PageSize(ccloudV2ListPageSize)
+	if len(displayName) > 0 {
+		req = req.DisplayName(displayName)
+	}
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}

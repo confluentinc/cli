@@ -37,15 +37,18 @@ func (c *command) newCatalogIntegrationCreateCommand() *cobra.Command {
 
 	addCatalogIntegrationTypeFlag(cmd)
 	cmd.Flags().String("provider-integration", "", "Specify the provider integration id.")
+	cmd.Flags().String("custom-database", "", "Specify the custom database name for AWS Glue.")
 	cmd.Flags().String("endpoint", "", "Specify the The catalog integration connection endpoint for Snowflake Open Catalog.")
 	cmd.Flags().String("warehouse", "", "Specify the warehouse name of the Snowflake Open Catalog.")
 	cmd.Flags().String("allowed-scope", "", "Specify the allowed scope of the Snowflake Open Catalog.")
 	cmd.Flags().String("client-id", "", "Specify the client id.")
 	cmd.Flags().String("client-secret", "", "Specify the client secret.")
+	cmd.Flags().String("custom-namespace", "", "Specify the custom namespace for Snowflake Open Catalog.")
 	cmd.Flags().String("workspace-endpoint", "", "Specify the Databricks workspace URL associated with the Unity Catalog.")
 	cmd.Flags().String("catalog-name", "", "Specify the name of the catalog.")
 	cmd.Flags().String("unity-client-id", "", "Specify the Unity client id.")
 	cmd.Flags().String("unity-client-secret", "", "Specify the Unity client secret.")
+	cmd.Flags().String("custom-schema", "", "Specify the custom schema name for Unity Catalog.")
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -94,11 +97,19 @@ func (c *command) createCatalogIntegration(cmd *cobra.Command, args []string) er
 			return err
 		}
 
+		awsGlueSpec := &tableflowv1.TableflowV1CatalogIntegrationAwsGlueSpec{
+			Kind:                  awsGlueKind,
+			ProviderIntegrationId: providerIntegration,
+		}
+		if cmd.Flags().Changed("custom-database") {
+			customDatabase, err := cmd.Flags().GetString("custom-database")
+			if err != nil {
+				return err
+			}
+			awsGlueSpec.SetCustomDatabase(customDatabase)
+		}
 		createCatalogIntegration.Spec.Config = &tableflowv1.TableflowV1CatalogIntegrationSpecConfigOneOf{
-			TableflowV1CatalogIntegrationAwsGlueSpec: &tableflowv1.TableflowV1CatalogIntegrationAwsGlueSpec{
-				Kind:                  awsGlueKind,
-				ProviderIntegrationId: providerIntegration,
-			},
+			TableflowV1CatalogIntegrationAwsGlueSpec: awsGlueSpec,
 		}
 	} else if strings.ToLower(catalogIntegrationType) == snowflake {
 		if !cmd.Flags().Changed("endpoint") { // we only need to check for one since this flag set is marked as required together
@@ -125,15 +136,23 @@ func (c *command) createCatalogIntegration(cmd *cobra.Command, args []string) er
 			return err
 		}
 
+		snowflakeSpec := &tableflowv1.TableflowV1CatalogIntegrationSnowflakeSpec{
+			Kind:         snowflakeKind,
+			Endpoint:     endpoint,
+			Warehouse:    warehouse,
+			AllowedScope: allowedScope,
+			ClientId:     clientId,
+			ClientSecret: clientSecret,
+		}
+		if cmd.Flags().Changed("custom-namespace") {
+			customNamespace, err := cmd.Flags().GetString("custom-namespace")
+			if err != nil {
+				return err
+			}
+			snowflakeSpec.SetCustomNamespace(customNamespace)
+		}
 		createCatalogIntegration.Spec.Config = &tableflowv1.TableflowV1CatalogIntegrationSpecConfigOneOf{
-			TableflowV1CatalogIntegrationSnowflakeSpec: &tableflowv1.TableflowV1CatalogIntegrationSnowflakeSpec{
-				Kind:         snowflakeKind,
-				Endpoint:     endpoint,
-				Warehouse:    warehouse,
-				AllowedScope: allowedScope,
-				ClientId:     clientId,
-				ClientSecret: clientSecret,
-			},
+			TableflowV1CatalogIntegrationSnowflakeSpec: snowflakeSpec,
 		}
 	} else if strings.ToLower(catalogIntegrationType) == unity {
 		if !cmd.Flags().Changed("workspace-endpoint") { // we only need to check for one since this flag set is marked as required together
@@ -156,14 +175,22 @@ func (c *command) createCatalogIntegration(cmd *cobra.Command, args []string) er
 			return err
 		}
 
+		unitySpec := &tableflowv1.TableflowV1CatalogIntegrationUnitySpec{
+			Kind:              unityKind,
+			WorkspaceEndpoint: workspaceEndpoint,
+			CatalogName:       catalogName,
+			ClientId:          clientId,
+			ClientSecret:      clientSecret,
+		}
+		if cmd.Flags().Changed("custom-schema") {
+			customSchema, err := cmd.Flags().GetString("custom-schema")
+			if err != nil {
+				return err
+			}
+			unitySpec.SetCustomSchema(customSchema)
+		}
 		createCatalogIntegration.Spec.Config = &tableflowv1.TableflowV1CatalogIntegrationSpecConfigOneOf{
-			TableflowV1CatalogIntegrationUnitySpec: &tableflowv1.TableflowV1CatalogIntegrationUnitySpec{
-				Kind:              unityKind,
-				WorkspaceEndpoint: workspaceEndpoint,
-				CatalogName:       catalogName,
-				ClientId:          clientId,
-				ClientSecret:      clientSecret,
-			},
+			TableflowV1CatalogIntegrationUnitySpec: unitySpec,
 		}
 	}
 

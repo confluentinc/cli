@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-jose/go-jose/v3/jwt"
+	"github.com/go-jose/go-jose/v4/jwt"
 	"github.com/jonboulle/clockwork"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/jose"
 	"github.com/confluentinc/cli/v4/pkg/version"
 )
 
@@ -51,7 +52,7 @@ func (v *ValidatorImpl) Validate(context *config.Context) error {
 }
 
 func GetClaim(jwtToken, claim string) (any, error) {
-	token, err := jwt.ParseSigned(jwtToken)
+	token, err := jwt.ParseSigned(jwtToken, jose.SignatureAlgorithms)
 	if err != nil {
 		return nil, new(ccloudv1.InvalidTokenError)
 	}

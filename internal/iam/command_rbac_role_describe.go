@@ -70,6 +70,10 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 		namespacesList = append(namespacesList, flinkModelNamespace.Value())
 	}
 
+	if featureflags.Manager.BoolVariation("kafka.config.cluster.link.rbac.namespace.cli.enable", c.Context, ldClient, true, false) {
+		namespacesList = append(namespacesList, clusterLinkNamespace.Value())
+	}
+
 	namespaces := optional.NewString(strings.Join(namespacesList, ","))
 
 	opts := &mdsv2alpha1.RoleDetailOpts{Namespace: namespaces}

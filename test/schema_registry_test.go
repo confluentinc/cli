@@ -7,9 +7,10 @@ import (
 )
 
 var (
-	schemaPath   = getInputFixturePath("schema-registry", "schema-example.json")
-	metadataPath = getInputFixturePath("schema-registry", "schema-metadata.json")
-	rulesetPath  = getInputFixturePath("schema-registry", "schema-ruleset.json")
+	schemaPath      = getInputFixturePath("schema-registry", "schema-example.json")
+	metadataPath    = getInputFixturePath("schema-registry", "schema-metadata.json")
+	rulesetPath     = getInputFixturePath("schema-registry", "schema-ruleset.json")
+	cspeRulesetPath = getInputFixturePath("schema-registry", "schema-cspe-ruleset.json")
 )
 
 func (s *CLITestSuite) TestSchemaRegistryCluster() {
@@ -107,6 +108,7 @@ func (s *CLITestSuite) TestSchemaRegistrySchema() {
 	tests := []CLITest{
 		{args: fmt.Sprintf("schema-registry schema create --subject payments --schema %s --environment %s", schemaPath, testserver.SRApiEnvId), fixture: "schema-registry/schema/create.golden"},
 		{args: fmt.Sprintf("schema-registry schema create --subject payments --schema %s --metadata %s --ruleset %s --environment %s", schemaPath, metadataPath, rulesetPath, testserver.SRApiEnvId), fixture: "schema-registry/schema/create.golden"},
+		{args: fmt.Sprintf("schema-registry schema create --subject cspe-test --schema %s --ruleset %s --environment %s", schemaPath, cspeRulesetPath, testserver.SRApiEnvId), fixture: "schema-registry/schema/create.golden"},
 		{args: fmt.Sprintf("schema-registry schema delete --subject payments --version latest --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/schema/delete.golden"},
 		{args: fmt.Sprintf("schema-registry schema delete --subject payments --version all --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/schema/delete-all.golden"},
 		{args: "schema-registry schema describe --subject payments", exitCode: 1, fixture: "schema-registry/schema/describe-either-id-or-subject.golden"},
@@ -121,6 +123,7 @@ func (s *CLITestSuite) TestSchemaRegistrySchema() {
 		{args: fmt.Sprintf("schema-registry schema describe 10 --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/describe.golden"},
 		{args: fmt.Sprintf("schema-registry schema describe 1001 --show-references --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/describe-refs-id.golden"},
 		{args: fmt.Sprintf("schema-registry schema describe 1005 --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/describe-with-ruleset.golden"},
+		{args: fmt.Sprintf("schema-registry schema describe 1006 --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/describe-with-cspe-ruleset.golden"},
 		{args: fmt.Sprintf("schema-registry schema describe --subject lvl0 --version 1 --show-references --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/describe-refs-subject.golden"},
 		{args: fmt.Sprintf("schema-registry schema list --subject-prefix mysubject-1 --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/list-schemas-subject.golden"},
 		{args: fmt.Sprintf("schema-registry schema list --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/list-schemas-default.golden"},

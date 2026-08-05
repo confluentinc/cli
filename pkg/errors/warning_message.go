@@ -26,4 +26,8 @@ const (
 	RetentionTimeDiscrepancyWarning = "Retention Time Discrepancy Warning: Topic %q had discrepancies in retention time." +
 		" Using max: %v. Discrepancies in retention time occur when two cluster configurations have the same topic in a" +
 		" router configuration, but different retention times. The maximum specified retention time will be used."
+
+	// Kafka Usage Limits
+	UsageLimitsAPIFailureWarning       = "Failed to get cluster limits."
+	UsageLimitsAPIFailureSuggestionMsg = "To view limits describe your cluster again with `confluent kafka cluster describe` or contact support for assistance."
 )

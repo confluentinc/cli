@@ -29,7 +29,7 @@ func (c *certificatePoolCommand) list(cmd *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	certificatePools, err := c.V2Client.ListCertificatePool(provider)
+	certificatePools, err := c.V2Client.ListIamCertificatePools(provider)
 	if err != nil {
 		return err
 	}

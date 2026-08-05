@@ -25,13 +25,17 @@ func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create API keys for a given resource.",
-		Long:  `Create API keys for a given resource. A resource is some Confluent product or service for which an API key can be created, for example ksqlDB application ID, or "cloud" to create a Cloud API key.`,
+		Long:  `Create API keys for a given resource. A resource is a Confluent product or service for which an API key can be created. Specify a Kafka cluster ID (for example, lkc-abc123) for the --resource parameter to create a Kafka cluster API key, a Schema Registry cluster ID (for example, lsrc-abc123) to create a Schema Registry API key, or a ksqlDB cluster ID (for example, lksqlc-abc123) to create a ksqlDB API key. To create a Flink region API key, specify "flink" along with the --environment and --region flags. To create a Tableflow API key, specify "tableflow", or specify "cloud" to create a Cloud resource management API key. To create a Global API key that can be used across all supported Confluent Cloud resources, specify "global".`,
 		Args:  cobra.NoArgs,
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a Cloud API key:",
 				Code: "confluent api-key create --resource cloud",
+			},
+			examples.Example{
+				Text: "Create a Global API key:",
+				Code: "confluent api-key create --resource global",
 			},
 			examples.Example{
 				Text: `Create a Flink API key for region "N. Virginia (us-east-1)":`,
@@ -115,6 +119,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	switch resourceType {
 	case resource.Cloud:
 		key.Spec.Resource.Id = resource.Cloud
+	case resource.Global:
+		key.Spec.Resource.Id = resource.Global
 	case resource.Flink:
 		environmentId, err := c.Context.EnvironmentId()
 		if err != nil {
@@ -165,8 +171,15 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if resourceType == resource.KafkaCluster {
+	switch resourceType {
+	case resource.KafkaCluster:
 		if err := c.keystore.StoreAPIKey(c.V2Client, userKey, resourceId); err != nil {
+			return fmt.Errorf(unableToStoreApiKeyErrorMsg, err)
+		}
+	case resource.Global:
+		// Global keys' secrets are irretrievable after creation, so always store them locally — same
+		// rationale as Kafka cluster keys. The user can still copy the printed secret if they want.
+		if err := c.keystore.StoreGlobalAPIKey(userKey); err != nil {
 			return fmt.Errorf(unableToStoreApiKeyErrorMsg, err)
 		}
 	}
@@ -176,13 +189,23 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if use {
-		if resourceType != resource.KafkaCluster {
+		switch resourceType {
+		case resource.KafkaCluster:
+			if err := c.useAPIKey(userKey.Key, resourceId); err != nil {
+				return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, userKey.Key))
+			}
+			output.Printf(c.Config.EnableColor, useAPIKeyMsg, userKey.Key)
+		case resource.Global:
+			if err := c.Context.SetActiveGlobalAPIKey(userKey.Key); err != nil {
+				return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, userKey.Key))
+			}
+			if err := c.Config.Save(); err != nil {
+				return err
+			}
+			output.Printf(c.Config.EnableColor, useGlobalAPIKeyMsg, userKey.Key)
+		default:
 			return fmt.Errorf("`--use` set but ineffective: %s", nonKafkaNotImplementedErrorMsg)
 		}
-		if err := c.useAPIKey(userKey.Key, resourceId); err != nil {
-			return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, userKey.Key))
-		}
-		output.Printf(c.Config.EnableColor, useAPIKeyMsg, userKey.Key)
 	}
 
 	return nil

@@ -1,0 +1,10 @@
+organization
+environment
+network
+kafka-cluster
+service-account
+user-account
+identity-provider
+certificate-authority
+:4
+Completion ended with directive: ShellCompDirectiveNoFileComp

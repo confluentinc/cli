@@ -156,10 +156,73 @@ func (s *CLITestSuite) TestApiKey() {
 	}
 }
 
+func (s *CLITestSuite) TestApiKeyGlobal() {
+	tests := []CLITest{
+		// store a Global API key: auto-detected from the server-side resource Kind (no --resource needed)
+		{args: "api-key store UIGLOBALKEY100 UIGLOBALSECRET100", login: "cloud", fixture: "api-key/global/store.golden"},
+
+		// storing again without --force is refused
+		{args: "api-key store UIGLOBALKEY100 NEWSECRET", fixture: "api-key/global/store-override-error.golden", exitCode: 1},
+
+		// --force overwrites the stored secret
+		{
+			args: "api-key store UIGLOBALKEY100 NEWSECRET --force", fixture: "api-key/global/store-force.golden",
+			wantFunc: func(t *testing.T) {
+				cfg := config.New()
+				require.NoError(t, cfg.Load())
+				ctx := cfg.Context()
+				require.NotNil(t, ctx)
+				require.NoError(t, ctx.DecryptGlobalAPIKeys())
+				pair := ctx.GlobalAPIKeys["UIGLOBALKEY100"]
+				require.NotNil(t, pair)
+				require.Equal(t, "NEWSECRET", pair.Secret)
+			},
+		},
+
+		// use the stored Global key as the active Global key
+		{
+			args: "api-key use UIGLOBALKEY100", fixture: "api-key/global/use.golden",
+			wantFunc: func(t *testing.T) {
+				cfg := config.New()
+				require.NoError(t, cfg.Load())
+				ctx := cfg.Context()
+				require.NotNil(t, ctx)
+				require.Equal(t, "UIGLOBALKEY100", ctx.GetActiveGlobalAPIKey())
+			},
+		},
+
+		// guard: --resource global on a non-Global (cluster) key is rejected
+		{args: "api-key store UIAPIKEY100 UIAPISECRET100 --resource global", fixture: "api-key/global/store-not-global-error.golden", exitCode: 1},
+
+		// guard: a cluster --resource on a Global key is rejected
+		{args: "api-key store UIGLOBALKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/global/store-resource-mismatch-error.golden", exitCode: 1},
+
+		// create a Global key with --use: stores it locally and sets it as the active Global key
+		{
+			args: "api-key create --description created-and-used --resource global --use", fixture: "api-key/global/create-use.golden",
+			wantFunc: func(t *testing.T) {
+				cfg := config.New()
+				require.NoError(t, cfg.Load())
+				ctx := cfg.Context()
+				require.NotNil(t, ctx)
+				require.NotEmpty(t, ctx.GetActiveGlobalAPIKey(), "create --use should set an active Global key")
+			},
+		},
+	}
+
+	resetConfiguration(s.T(), false)
+
+	for _, test := range tests {
+		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestApiKeyCreate() {
 	tests := []CLITest{
 		{args: "api-key create --resource flink --cloud aws --region us-east-1", fixture: "api-key/create-flink.golden"},
 		{args: "api-key create --resource lkc-ab123 --service-account sa-123456", fixture: "api-key/55.golden", exitCode: 1},
+		{args: "api-key create --description human-output --resource global", fixture: "api-key/create-global.golden"},
 	}
 
 	for _, test := range tests {
@@ -186,8 +249,8 @@ func (s *CLITestSuite) TestApiKeyDescribe() {
 func (s *CLITestSuite) TestApiKeyDelete() {
 	tests := []CLITest{
 		// delete multiple API keys
-		{args: "api-key delete MYKEY7 MYKEY8 MYKEY19", fixture: "api-key/delete/multiple-fail.golden", exitCode: 1},
-		{args: "api-key delete MYKEY6 MYKEY18 MYKEY19", fixture: "api-key/delete/multiple-fail-plural.golden", exitCode: 1},
+		{args: "api-key delete MYKEY7 MYKEY8 MYKEY20", fixture: "api-key/delete/multiple-fail.golden", exitCode: 1},
+		{args: "api-key delete MYKEY6 MYKEY18 MYKEY20", fixture: "api-key/delete/multiple-fail-plural.golden", exitCode: 1},
 		{args: "api-key delete MYKEY7 MYKEY8", input: "n\n", fixture: "api-key/delete/multiple-refuse.golden"},
 		{args: "api-key delete MYKEY7 MYKEY8", input: "y\n", fixture: "api-key/delete/multiple-success.golden"},
 	}

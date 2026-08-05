@@ -52,7 +52,7 @@ func (c *command) peeringUpdate(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	peering, err := c.V2Client.UpdatePeering(environmentId, args[0], updatePeering)
+	peering, err := c.V2Client.UpdateNetworkPeering(environmentId, args[0], updatePeering)
 	if err != nil {
 		return err
 	}

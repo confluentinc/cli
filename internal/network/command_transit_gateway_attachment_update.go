@@ -52,7 +52,7 @@ func (c *command) transitGatewayAttachmentUpdate(cmd *cobra.Command, args []stri
 		},
 	}
 
-	attachment, err := c.V2Client.UpdateTransitGatewayAttachment(environmentId, args[0], updateTransitGatewayAttachment)
+	attachment, err := c.V2Client.UpdateNetworkTransitGatewayAttachment(environmentId, args[0], updateTransitGatewayAttachment)
 	if err != nil {
 		return err
 	}

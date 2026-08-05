@@ -7,7 +7,6 @@ import (
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
-	"github.com/confluentinc/cli/v4/pkg/errors/flink"
 	flinkerror "github.com/confluentinc/cli/v4/pkg/errors/flink"
 	"github.com/confluentinc/cli/v4/pkg/log"
 )
@@ -129,7 +128,7 @@ func (c *FlinkGatewayClient) CreateStatement(statement flinkgatewayv1.SqlV1State
 
 func (c *FlinkGatewayClient) UpdateStatement(environmentId, statementName, organizationId string, statement flinkgatewayv1.SqlV1Statement) error {
 	httpResp, err := c.StatementsSqlV1Api.UpdateSqlv1Statement(c.flinkGatewayApiContext(), organizationId, environmentId, statementName).SqlV1Statement(statement).Execute()
-	return flink.CatchError(err, httpResp)
+	return flinkerror.CatchError(err, httpResp)
 }
 
 func (c *FlinkGatewayClient) GetStatementResults(environmentId, statementName, orgId, pageToken string) (flinkgatewayv1.SqlV1StatementResult, error) {
@@ -149,8 +148,58 @@ func (c *FlinkGatewayClient) GetExceptions(environmentId, statementName, orgId s
 	return resp.GetData(), nil
 }
 
+func (c *FlinkGatewayClient) GetMaterializedTable(environmentId, orgId, kafkaId, tableName string) (flinkgatewayv1.SqlV1MaterializedTable, error) {
+	resp, httpResp, err := c.MaterializedTablesSqlV1Api.GetSqlv1MaterializedTable(c.flinkGatewayApiContext(), orgId, environmentId, kafkaId, tableName).Execute()
+	return resp, flinkerror.CatchError(err, httpResp)
+}
+
+func (c *FlinkGatewayClient) ListMaterializedTables(environmentId, orgId string) ([]flinkgatewayv1.SqlV1MaterializedTable, error) {
+	var allTables []flinkgatewayv1.SqlV1MaterializedTable
+	pageToken := ""
+	done := false
+
+	for !done {
+		tableListResponse, err := c.executeListMaterializedTables(environmentId, orgId, pageToken)
+		if err != nil {
+			return nil, err
+		}
+		allTables = append(allTables, tableListResponse.GetData()...)
+		nextUrl := tableListResponse.Metadata.GetNext()
+		pageToken, done, err = extractNextPageToken(flinkgatewayv1.NewNullableString(&nextUrl))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return allTables, nil
+}
+
+func (c *FlinkGatewayClient) executeListMaterializedTables(environmentId, orgId, pageToken string) (flinkgatewayv1.SqlV1MaterializedTableList, error) {
+	req := c.MaterializedTablesSqlV1Api.ListSqlv1MaterializedTables(c.flinkGatewayApiContext(), orgId, environmentId).PageSize(ccloudV2ListPageSize)
+
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+	resp, httpResp, err := req.Execute()
+	return resp, flinkerror.CatchError(err, httpResp)
+}
+
+func (c *FlinkGatewayClient) UpdateMaterializedTable(table flinkgatewayv1.SqlV1MaterializedTable, environmentId, orgId, kafkaId, tableName string) (flinkgatewayv1.SqlV1MaterializedTable, error) {
+	resp, httpResp, err := c.MaterializedTablesSqlV1Api.UpdateSqlv1MaterializedTable(c.flinkGatewayApiContext(), orgId, environmentId, kafkaId, tableName).SqlV1MaterializedTable(table).Execute()
+	return resp, flinkerror.CatchError(err, httpResp)
+}
+
+func (c *FlinkGatewayClient) DeleteMaterializedTable(environmentId, orgId, kafkaId, tableName string) error {
+	httpResp, err := c.MaterializedTablesSqlV1Api.DeleteSqlv1MaterializedTable(c.flinkGatewayApiContext(), orgId, environmentId, kafkaId, tableName).Execute()
+	return flinkerror.CatchError(err, httpResp)
+}
+
 func (c *FlinkGatewayClient) CreateConnection(connection flinkgatewayv1.SqlV1Connection, environmentId, orgId string) (flinkgatewayv1.SqlV1Connection, error) {
 	resp, httpResp, err := c.ConnectionsSqlV1Api.CreateSqlv1Connection(c.flinkGatewayApiContext(), orgId, environmentId).SqlV1Connection(connection).Execute()
+	return resp, flinkerror.CatchError(err, httpResp)
+}
+
+func (c *FlinkGatewayClient) CreateMaterializedTable(table flinkgatewayv1.SqlV1MaterializedTable, environmentId, orgId, kafkaId string) (flinkgatewayv1.SqlV1MaterializedTable, error) {
+	resp, httpResp, err := c.MaterializedTablesSqlV1Api.CreateSqlv1MaterializedTable(c.flinkGatewayApiContext(), orgId, environmentId, kafkaId).SqlV1MaterializedTable(table).Execute()
 	return resp, flinkerror.CatchError(err, httpResp)
 }
 
@@ -199,5 +248,5 @@ func (c *FlinkGatewayClient) DeleteConnection(environmentId, connectionName, org
 
 func (c *FlinkGatewayClient) UpdateConnection(environmentId, connectionName, organizationId string, connection flinkgatewayv1.SqlV1Connection) error {
 	httpResp, err := c.ConnectionsSqlV1Api.UpdateSqlv1Connection(c.flinkGatewayApiContext(), organizationId, environmentId, connectionName).SqlV1Connection(connection).Execute()
-	return flink.CatchError(err, httpResp)
+	return flinkerror.CatchError(err, httpResp)
 }

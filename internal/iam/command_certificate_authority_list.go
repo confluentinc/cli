@@ -22,7 +22,7 @@ func (c *certificateAuthorityCommand) newListCommand() *cobra.Command {
 }
 
 func (c *certificateAuthorityCommand) list(cmd *cobra.Command, _ []string) error {
-	certificateAuthorities, err := c.V2Client.ListCertificateAuthorities()
+	certificateAuthorities, err := c.V2Client.ListIamCertificateAuthorities()
 	if err != nil {
 		return err
 	}
@@ -30,17 +30,18 @@ func (c *certificateAuthorityCommand) list(cmd *cobra.Command, _ []string) error
 	list := output.NewList(cmd)
 	for _, certificateAuthority := range certificateAuthorities {
 		list.Add(&certificateAuthorityOut{
-			Id:                       certificateAuthority.GetId(),
-			Name:                     certificateAuthority.GetDisplayName(),
-			Description:              certificateAuthority.GetDescription(),
-			Fingerprints:             certificateAuthority.GetFingerprints(),
-			ExpirationDates:          certificateAuthority.GetExpirationDates(),
-			SerialNumbers:            certificateAuthority.GetSerialNumbers(),
-			CertificateChainFilename: certificateAuthority.GetCertificateChainFilename(),
-			CrlSource:                certificateAuthority.GetCrlSource(),
-			CrlUrl:                   certificateAuthority.GetCrlUrl(),
-			CrlUpdatedAt:             certificateAuthority.CrlUpdatedAt,
+			Id:                            certificateAuthority.GetId(),
+			Name:                          certificateAuthority.GetDisplayName(),
+			Description:                   certificateAuthority.GetDescription(),
+			Fingerprints:                  certificateAuthority.GetFingerprints(),
+			ExpirationDates:               certificateAuthority.GetExpirationDates(),
+			SerialNumbers:                 certificateAuthority.GetSerialNumbers(),
+			CertificateChainFilename:      certificateAuthority.GetCertificateChainFilename(),
+			CrlSource:                     certificateAuthority.GetCrlSource(),
+			CrlUrl:                        certificateAuthority.GetCrlUrl(),
+			CrlUpdatedAt:                  certificateAuthority.CrlUpdatedAt,
+			RequireCrlOnClientCertificate: certificateAuthority.GetRequireCrlOnClientCertificate(),
 		})
 	}
-	return list.Print()
+	return list.PrintWithAutoWrap(false)
 }

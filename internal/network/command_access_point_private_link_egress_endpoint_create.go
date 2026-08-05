@@ -131,7 +131,7 @@ func (c *accessPointCommand) create(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	egressEndpoint, err := c.V2Client.CreateAccessPoint(createEgressEndpoint)
+	egressEndpoint, err := c.V2Client.CreateNetworkAccessPoint(createEgressEndpoint)
 	if err != nil {
 		return err
 	}

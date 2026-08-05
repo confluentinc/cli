@@ -1,11 +1,13 @@
-+------------+--------------------------------------------+
-| ID         | cck-004                                    |
-| Key        | https://a-vault.vault.azure.net/keys/a-key |
-| Roles      | 12345678-1234-1234-1234-123456789012       |
-| Cloud      | AZURE                                      |
-| State      | AVAILABLE                                  |
-| Created At | 2022-12-24 00:00:00 +0000 UTC              |
-+------------+--------------------------------------------+
++------------------+--------------------------------------------+
+| ID               | cck-004                                    |
+| Key              | https://a-vault.vault.azure.net/keys/a-key |
+| Roles            | 12345678-1234-1234-1234-123456789012       |
+| Cloud            | AZURE                                      |
+| State            | AVAILABLE                                  |
+| Created At       | 2022-12-24 00:00:00 +0000 UTC              |
+| Validation Phase | INITIALIZING                               |
+| Validation Since | 2022-12-24 00:00:00 +0000 UTC              |
++------------------+--------------------------------------------+
 
 To ensure the key vault has the correct role assignments, please run the following Azure CLI command (certified for `az` v2.45):
 

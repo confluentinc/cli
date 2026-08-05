@@ -1,8 +1,8 @@
---- cli/Makefile	2025-08-27 10:15:22.860561026 -0700
-+++ debian/Makefile	2025-09-12 11:15:01.286651273 -0700
-@@ -1,143 +1,163 @@
+--- cli/Makefile	2026-05-04 11:53:58.813568102 -0700
++++ debian/Makefile	2026-05-04 11:53:51.900990793 -0700
+@@ -1,242 +1,179 @@
 -SHELL := /bin/bash
--GORELEASER_VERSION := v1.21.2
+-GORELEASER_VERSION := v2.13.3
 +SHELL=/bin/bash
  
 -# Compile natively based on the current system
@@ -42,7 +42,7 @@
 -
 -.PHONY: cli-builder
 -cli-builder:
--	GOOS="" GOARCH="" CC="" CXX="" CGO_LDFLAGS="" go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION)
+-	GOOS="" GOARCH="" CC="" CXX="" CGO_LDFLAGS="" go install github.com/goreleaser/goreleaser/v2@$(GORELEASER_VERSION)
 -
 -ifeq ($(GOLANG_FIPS),1)
 -	wget "https://go.dev/dl/go$$(cat .go-version).src.tar.gz" && \
@@ -91,6 +91,8 @@
 +_space := $(_empty) $(empty)
 +split_version := $(subst .,$(_space),$(CLI_VERSION))
 +
++S390X_AVAILABLE := $(shell [ $(word 1,$(split_version)) -ge 4 ] && [ $(word 2,$(split_version)) -ge 59 ] && echo yes)
++
 +all: install
 +
 +archive: install
@@ -128,7 +130,9 @@
 +	disableupdates=""; if [[ $(word 1,$(split_version)) -ge 3 && $(word 2,$(split_version)) -ge 43 ]]; then disableupdates="_disableupdates"; fi; \
 +	baseurl="s3-us-west-2.amazonaws.com/confluent.cloud"; if [[ $(word 1,$(split_version)) -ge 4 && $(word 2,$(split_version)) -ge 1 ]]; then baseurl="packages.confluent.io"; fi; \
 +	version="_$${v}$(CLI_VERSION)"; if [[ $(word 1,$(split_version)) -ge 4 && $(word 2,$(split_version)) -ge 1 ]]; then version=""; fi; \
-+	for dir in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64; do \
++	dirs="darwin_amd64 darwin_arm64 linux_amd64 linux_arm64"; \
++	if [[ -n "$(S390X_AVAILABLE)" ]]; then dirs="$${dirs} linux_s390x"; fi; \
++	for dir in $${dirs}; do \
 +		archive=confluent$${version}_$${dir}$${disableupdates}.tar.gz; \
 +		curl -fs https://$${baseurl}/confluent-cli/archives/$(CLI_VERSION)/$${archive} -o $${archive}; \
 +		mkdir -p $${dir} $${dir}-temp; \
@@ -177,7 +181,7 @@
 -.PHONY: unit-test
 -unit-test:
 -ifdef CI
--	go install gotest.tools/gotestsum@v1.12.1 && \
+-	go install gotest.tools/gotestsum@v1.13.0 && \
 -	gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v -race -coverprofile=coverage.unit.out -covermode=atomic $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test)
 -else
 -	go test -timeout 0 -v -coverprofile=coverage.unit.out -covermode=atomic $$(go list ./... | grep -v github.com/confluentinc/cli/v4/test) $(UNIT_TEST_ARGS)
@@ -209,21 +213,25 @@
 +	RPM_RELEASE_ID=$(REVISION)
 +endif
 +
-+rpm: rpm-amd64-build rpm-arm64-build
++rpm: rpm-amd64-build rpm-arm64-build $(if $(S390X_AVAILABLE),rpm-s390x-build)
++	find RPM_BUILDING/{,S}RPMS/ -type f | xargs -n1 -iXXX mv XXX .
++	@echo
++	@echo "================================================="
++	@echo "The RPMs have been created and can be found here:"
++	@ls -laF $(FULL_PACKAGE_TITLE)*rpm
++	@echo "================================================="
 +
 +rpm-amd64-build: rpm-amd64-spec
 +	echo "Building the amd64 RPM"
-+	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
++	rpmbuild --target=x86_64 --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --target=x86_64 --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 +
 +rpm-arm64-build: rpm-arm64-spec
 +	echo "Building the arm64 RPM"
 +	rpmbuild --target=aarch64 --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --target=aarch64 --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
-+	find RPM_BUILDING/{,S}RPMS/ -type f | xargs -n1 -iXXX mv XXX .
-+	echo
-+	echo "================================================="
-+	echo "The RPMs have been created and can be found here:"
-+	@ls -laF $(FULL_PACKAGE_TITLE)*rpm
-+	echo "================================================="
++
++rpm-s390x-build: rpm-s390x-spec
++	echo "Building the s390x RPM"
++	rpmbuild --target=s390x --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --target=s390x --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 +
 +# Unfortunately, because of version naming issues and the way rpmbuild expects
 +# the paths in the tar file to be named, we need to rearchive the package. So
@@ -235,15 +243,23 @@
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 +	mkdir $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 +	cp -R $(DESTDIR)/* $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
-+	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g; s/##EXCLUDEARCH##/arm64/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
++	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g; s/##EXCLUDEARCH1##/arm64/g; s/##EXCLUDEARCH2##/s390x/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
 +	rm -f $@ && tar -czf RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 +
-+rpm-arm64-spec:
++rpm-arm64-spec: rpm-build-area install debian/$(FULL_PACKAGE_TITLE).spec.in RELEASE_$(RPM_VERSION)$(RPM_RELEASE_POSTFIX_UNDERSCORE)
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 +	mkdir $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 +	cp -R $(DESTDIR)/* $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
-+	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g; s/##EXCLUDEARCH##/amd64/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
++	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g; s/##EXCLUDEARCH1##/amd64/g; s/##EXCLUDEARCH2##/s390x/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
++	rm -f $@ && tar -czf RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
++	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
++
++rpm-s390x-spec: rpm-build-area install debian/$(FULL_PACKAGE_TITLE).spec.in RELEASE_$(RPM_VERSION)$(RPM_RELEASE_POSTFIX_UNDERSCORE)
++	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
++	mkdir $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
++	cp -R $(DESTDIR)/* $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
++	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g; s/##EXCLUDEARCH1##/amd64/g; s/##EXCLUDEARCH2##/arm64/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
 +	rm -f $@ && tar -czf RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
  
@@ -269,7 +285,7 @@
 -.PHONY: integration-test
 -integration-test:
 -ifdef CI
--	go install gotest.tools/gotestsum@v1.12.1 && \
+-	go install gotest.tools/gotestsum@v1.13.0 && \
 -	export GOCOVERDIR=test/coverage && \
 -	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
 -	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
@@ -283,6 +299,105 @@
 -
 -.PHONY: test
 -test: unit-test integration-test
+-
+-.PHONY: build-for-live-test
+-build-for-live-test:
+-	go build -ldflags="-s -w -X main.disableUpdates=true" -o test/live/bin/confluent ./cmd/confluent
+-
+-.PHONY: live-test
+-live-test: build-for-live-test
+-	@if [ -z "$(CLI_LIVE_TEST_GROUPS)" ]; then \
+-		CLI_LIVE_TEST=1 go test ./test/live/ -v -run=".*Live$$" \
+-			-tags="live_test,all" -timeout 1440m -parallel 10; \
+-	else \
+-		TAGS="live_test"; \
+-		for group in $$(echo "$(CLI_LIVE_TEST_GROUPS)" | tr ',' ' '); do \
+-			TAGS="$$TAGS,$$group"; \
+-		done; \
+-		CLI_LIVE_TEST=1 go test ./test/live/ -v -run=".*Live$$" \
+-			-tags="$$TAGS" -timeout 1440m -parallel 10; \
+-	fi
+-
+-.PHONY: live-test-core
+-live-test-core:
+-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="core"
+-
+-.PHONY: live-test-kafka
+-live-test-kafka:
+-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="kafka"
+-
+-.PHONY: live-test-schema-registry
+-live-test-schema-registry:
+-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="schema_registry"
+-
+-.PHONY: live-test-iam
+-live-test-iam:
+-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="iam"
+-
+-.PHONY: live-test-auth
+-live-test-auth:
+-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="auth"
+-
+-.PHONY: live-test-connect
+-live-test-connect:
+-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="connect"
+-
+-.PHONY: live-test-essential
+-live-test-essential:
+-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="core,kafka,schema_registry,auth"
+-
+-.PHONY: live-test-smoke
+-live-test-smoke:
+-	@$(MAKE) live-test CLI_LIVE_TEST_GROUPS="smoke"
+-
+-.PHONY: build-otel-smoke-metric
+-build-otel-smoke-metric:
+-	go build -o ./bin/otel-smoke-metric ./cmd/otel-smoke-metric
+-
+-.PHONY: live-test-multicloud
+-live-test-multicloud:
+-	@CLI_LIVE_TEST_VARIANTS="aws:us-east-1:basic,gcp:us-east1:basic,azure:eastus:basic" \
+-		$(MAKE) live-test CLI_LIVE_TEST_GROUPS="kafka"
+-
+-.PHONY: live-test-resource
+-live-test-resource: build-for-live-test
+-	@if [ -z "$(RESOURCE)" ]; then \
+-		echo "Available resources:"; \
+-		echo ""; \
+-		printf "  %-25s %-20s %s\n" "RESOURCE" "GROUP" "TEST FUNCTION"; \
+-		printf "  %-25s %-20s %s\n" "--------" "-----" "-------------"; \
+-		printf "  %-25s %-20s %s\n" "environment" "core" "TestEnvironmentCRUDLive"; \
+-		printf "  %-25s %-20s %s\n" "service_account" "core" "TestServiceAccountCRUDLive"; \
+-		printf "  %-25s %-20s %s\n" "api_key" "core" "TestApiKeyCRUDLive"; \
+-		printf "  %-25s %-20s %s\n" "kafka_cluster" "kafka" "TestKafkaClusterCRUDLive"; \
+-		printf "  %-25s %-20s %s\n" "kafka_topic" "kafka" "TestKafkaTopicCRUDLive"; \
+-		printf "  %-25s %-20s %s\n" "kafka_acl" "kafka" "TestKafkaACLCRUDLive"; \
+-		printf "  %-25s %-20s %s\n" "kafka_consumer_group" "kafka" "TestKafkaConsumerGroupListLive"; \
+-		printf "  %-25s %-20s %s\n" "schema_registry" "schema_registry" "TestSchemaRegistrySchemaCRUDLive"; \
+-		printf "  %-25s %-20s %s\n" "iam_rbac" "iam" "TestRBACRoleBindingCRUDLive"; \
+-		printf "  %-25s %-20s %s\n" "login" "auth" "TestLoginLogoutLive"; \
+-		printf "  %-25s %-20s %s\n" "connect" "connect" "TestConnectClusterCRUDLive"; \
+-		echo ""; \
+-		echo "Usage: make live-test-resource RESOURCE=<resource>"; \
+-	else \
+-		case "$(RESOURCE)" in \
+-			environment) GROUP=core; FUNC=TestEnvironmentCRUDLive;; \
+-			service_account) GROUP=core; FUNC=TestServiceAccountCRUDLive;; \
+-			api_key) GROUP=core; FUNC=TestApiKeyCRUDLive;; \
+-			kafka_cluster) GROUP=kafka; FUNC=TestKafkaClusterCRUDLive;; \
+-			kafka_topic) GROUP=kafka; FUNC=TestKafkaTopicCRUDLive;; \
+-			kafka_acl) GROUP=kafka; FUNC=TestKafkaACLCRUDLive;; \
+-			kafka_consumer_group) GROUP=kafka; FUNC=TestKafkaConsumerGroupListLive;; \
+-			schema_registry) GROUP=schema_registry; FUNC=TestSchemaRegistrySchemaCRUDLive;; \
+-			iam_rbac) GROUP=iam; FUNC=TestRBACRoleBindingCRUDLive;; \
+-			login) GROUP=auth; FUNC=TestLoginLogoutLive;; \
+-			connect) GROUP=connect; FUNC=TestConnectClusterCRUDLive;; \
+-			*) echo "Unknown resource: $(RESOURCE)"; echo "Run 'make live-test-resource' to see available resources."; exit 1;; \
+-		esac; \
+-		echo "Running $$FUNC (group: $$GROUP)..."; \
+-		CLI_LIVE_TEST=1 go test ./test/live/ -v -run="TestLive/$$FUNC" \
+-			-tags="live_test,$$GROUP" -timeout 1440m -parallel 10; \
+-	fi
 -
 -.PHONY: generate-packaging-patch
 -generate-packaging-patch:

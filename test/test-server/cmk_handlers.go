@@ -2,7 +2,9 @@ package testserver
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -34,6 +36,10 @@ func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 			Status: &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONING"},
 		}
 
+		if strings.Contains(req.Spec.GetDisplayName(), "ecku") {
+			cluster.Id = cmkv2.PtrString("lkc-with-ecku-limits")
+		}
+
 		if req.Spec.Config.CmkV2Dedicated != nil {
 			cluster.Spec.Config.CmkV2Dedicated = &cmkv2.CmkV2Dedicated{
 				Kind: "Dedicated",
@@ -56,6 +62,10 @@ func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 				return
 			}
 			cluster.Spec.Config.CmkV2Enterprise = &cmkv2.CmkV2Enterprise{Kind: "Enterprise"}
+			if req.Spec.Config.CmkV2Enterprise.MaxEcku != nil {
+				// cluster.Spec.Config.CmkV2Enterprise.MaxEcku = getMaxEcku("", "Enterprise")
+				cluster.Spec.Config.CmkV2Enterprise.MaxEcku = req.Spec.Config.CmkV2Enterprise.MaxEcku
+			}
 		} else if req.Spec.Config.CmkV2Freight != nil {
 			if req.Spec.GetAvailability() == "SINGLE_ZONE" {
 				err := writeError(w, "Durability must be HIGH for an Freight cluster")
@@ -63,8 +73,36 @@ func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 				return
 			}
 			cluster.Spec.Config.CmkV2Freight = &cmkv2.CmkV2Freight{Kind: "Freight"}
-		} else {
+			if req.Spec.Config.CmkV2Freight.MaxEcku != nil {
+				// cluster.Spec.Config.CmkV2Freight.MaxEcku = getMaxEcku("", "Freight")
+				cluster.Spec.Config.CmkV2Freight.MaxEcku = req.Spec.Config.CmkV2Freight.MaxEcku
+			}
+		} else if req.Spec.Config.CmkV2Basic != nil {
 			cluster.Spec.Config.CmkV2Basic = &cmkv2.CmkV2Basic{Kind: "Basic"}
+			if req.Spec.Config.CmkV2Basic.MaxEcku != nil {
+				cluster.Spec.Config.CmkV2Basic.MaxEcku = req.Spec.Config.CmkV2Basic.MaxEcku
+			}
+		} else if req.Spec.Config.CmkV2Standard != nil {
+			cluster.Spec.Config.CmkV2Standard = &cmkv2.CmkV2Standard{Kind: "Standard"}
+			if req.Spec.Config.CmkV2Standard.MaxEcku != nil {
+				cluster.Spec.Config.CmkV2Standard.MaxEcku = req.Spec.Config.CmkV2Standard.MaxEcku
+			}
+		}
+
+		if req.Spec.GetDeletionProtection() {
+			skuName := "BASIC"
+			if req.Spec.Config.CmkV2Standard != nil {
+				skuName = "STANDARD"
+			}
+			if req.Spec.Config.CmkV2Basic != nil || req.Spec.Config.CmkV2Standard != nil {
+				err := writeError(w, fmt.Sprintf("Deletion protection is not supported for %s clusters.", skuName))
+				require.NoError(t, err)
+				return
+			}
+		}
+
+		if req.Spec.HasDeletionProtection() {
+			cluster.Spec.SetDeletionProtection(req.Spec.GetDeletionProtection())
 		}
 
 		if req.Spec.GetCloud() == "oops" {
@@ -99,28 +137,47 @@ func handleCmkClusters(t *testing.T) http.HandlerFunc {
 			cluster := cmkv2.CmkV2Cluster{
 				Id: cmkv2.PtrString("lkc-123"),
 				Spec: &cmkv2.CmkV2ClusterSpec{
-					DisplayName:  cmkv2.PtrString("abc"),
-					Cloud:        cmkv2.PtrString("gcp"),
-					Region:       cmkv2.PtrString("us-central1"),
-					Config:       &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"}},
-					Availability: cmkv2.PtrString("SINGLE_ZONE"),
+					DisplayName:        cmkv2.PtrString("abc"),
+					Cloud:              cmkv2.PtrString("gcp"),
+					Region:             cmkv2.PtrString("us-central1"),
+					Config:             &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"}},
+					Availability:       cmkv2.PtrString("SINGLE_ZONE"),
+					DeletionProtection: cmkv2.PtrBool(false),
 				},
 				Status: &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONING"},
 			}
 			clusterMultizone := cmkv2.CmkV2Cluster{
 				Id: cmkv2.PtrString("lkc-456"),
 				Spec: &cmkv2.CmkV2ClusterSpec{
-					DisplayName:  cmkv2.PtrString("def"),
-					Cloud:        cmkv2.PtrString("gcp"),
-					Region:       cmkv2.PtrString("us-central1"),
-					Config:       &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"}},
-					Availability: cmkv2.PtrString("MULTI_ZONE"),
+					DisplayName:        cmkv2.PtrString("def"),
+					Cloud:              cmkv2.PtrString("gcp"),
+					Region:             cmkv2.PtrString("us-central1"),
+					Config:             &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"}},
+					Availability:       cmkv2.PtrString("MULTI_ZONE"),
+					DeletionProtection: cmkv2.PtrBool(true),
 				},
 				Status: &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONING"},
 			}
 			clusterDedicated := getCmkDedicatedDescribeCluster("lkc-789", "ghi", 1)
 			clusterDedicated.Spec.Network = &cmkv2.EnvScopedObjectReference{Id: "n-abcde1"}
-			clusterList := &cmkv2.CmkV2ClusterList{Data: []cmkv2.CmkV2Cluster{cluster, clusterMultizone, *clusterDedicated}}
+			clusterDedicated.Spec.DeletionProtection = cmkv2.PtrBool(false)
+
+			allClusters := []cmkv2.CmkV2Cluster{cluster, clusterMultizone, *clusterDedicated}
+
+			// Filter by spec.deletion_protection if specified
+			if dpFilter := r.URL.Query().Get("spec.deletion_protection"); dpFilter != "" {
+				var filtered []cmkv2.CmkV2Cluster
+				for _, c := range allClusters {
+					if dpFilter == "true" && c.Spec.GetDeletionProtection() {
+						filtered = append(filtered, c)
+					} else if dpFilter == "false" && !c.Spec.GetDeletionProtection() {
+						filtered = append(filtered, c)
+					}
+				}
+				allClusters = filtered
+			}
+
+			clusterList := &cmkv2.CmkV2ClusterList{Data: allClusters}
 			setPageToken(clusterList, &clusterList.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(clusterList)
 			require.NoError(t, err)
@@ -132,7 +189,7 @@ func handleCmkClusters(t *testing.T) http.HandlerFunc {
 func handleCmkCluster(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch mux.Vars(r)["id"] {
-		case "lkc-create-topic", "lkc-describe", "lkc-describe-topic":
+		case "lkc-create-topic", "lkc-describe", "lkc-describe-topic", "lkc-describe-with-ecku-limits":
 			handleCmkKafkaClusterDescribe(t)(w, r)
 		case "lkc-describe-dedicated":
 			handleCmkKafkaClusterDescribeDedicated(t)(w, r)
@@ -142,16 +199,26 @@ func handleCmkCluster(t *testing.T) http.HandlerFunc {
 			handleCmkKafkaClusterDescribeDedicatedProvisioning(t)(w, r)
 		case "lkc-describe-dedicated-with-encryption":
 			handleCmkKafkaClusterDescribeDedicatedWithEncryption(t)(w, r)
+		case "lkc-describe-deletion-protected":
+			handleCmkKafkaClusterDescribeDeletionProtected(t)(w, r)
 		case "lkc-describe-infinite":
 			handleCmkKafkaClusterDescribeInfinite(t)(w, r)
-		case "lkc-update":
+		case "lkc-update", "lkc-with-ecku-limits":
 			handleCmkKafkaClusterUpdateRequest(t)(w, r)
+		case "lkc-update-standard":
+			handleCmkKafkaStandardClusterUpdateRequest(t)(w, r)
+		case "lkc-update-enterprise":
+			handleCmkKafkaEnterpriseClusterUpdateRequest(t)(w, r)
+		case "lkc-update-freight":
+			handleCmkKafkaFreightClusterUpdateRequest(t)(w, r)
 		case "lkc-update-dedicated-expand":
 			handleCmkKafkaDedicatedClusterExpansion(t)(w, r)
 		case "lkc-update-dedicated-shrink":
 			handleCmkKafkaDedicatedClusterShrink(t)(w, r)
 		case "lkc-update-dedicated-shrink-multi":
 			handleCmkKafkaDedicatedClusterShrinkMulti(t)(w, r)
+		case "lkc-deletion-protected":
+			handleCmkKafkaDeletionProtectedCluster(t)(w, r)
 		case "lkc-unknown":
 			handleCmkKafkaUnknown(t)(w, r)
 		case "lkc-unknown-type":
@@ -222,6 +289,39 @@ func handleCmkKafkaClusterDescribeDedicatedWithEncryption(t *testing.T) http.Han
 	}
 }
 
+// Handler for GET "/cmk/v2/clusters/lkc-describe-deletion-protected"
+func handleCmkKafkaClusterDescribeDeletionProtected(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"]
+		cluster := getCmkBasicDescribeCluster(id, "kafka-cluster")
+		cluster.Spec.SetDeletionProtection(true)
+		err := json.NewEncoder(w).Encode(cluster)
+		require.NoError(t, err)
+	}
+}
+
+// Handler for GET/DELETE "/cmk/v2/clusters/lkc-deletion-protected"
+func handleCmkKafkaDeletionProtectedCluster(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodDelete {
+			w.WriteHeader(http.StatusConflict)
+			body := map[string]any{
+				"errors": []map[string]string{
+					{
+						"code":   "deletion_protection_enabled",
+						"detail": "Cluster deletion is blocked by deletion protection.",
+					},
+				},
+			}
+			err := json.NewEncoder(w).Encode(body)
+			require.NoError(t, err)
+			return
+		}
+		handleCmkKafkaClusterDescribeDeletionProtected(t)(w, r)
+	}
+}
+
 // Handler for GET "/cmk/v2/clusters/lkc-describe-infinite
 func handleCmkKafkaClusterDescribeInfinite(t *testing.T) http.HandlerFunc {
 	return handleCmkKafkaClusterDescribeDedicated(t) // dedicated cluster has infinite storage
@@ -257,7 +357,9 @@ func handleCmkKafkaClusterUpdateRequest(t *testing.T) http.HandlerFunc {
 			var req cmkv2.CmkV2Cluster
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			req.Id = cmkv2.PtrString("lkc-update")
+			if !strings.Contains(req.GetId(), "ecku") {
+				req.Id = cmkv2.PtrString("lkc-update")
+			}
 
 			// Handle type upgrade case
 			if req.Spec.Config != nil && req.Spec.Config.CmkV2Standard != nil {
@@ -267,7 +369,38 @@ func handleCmkKafkaClusterUpdateRequest(t *testing.T) http.HandlerFunc {
 						Kind: "Standard",
 					},
 				}
+
+				if req.Spec.Config.CmkV2Standard.MaxEcku == nil {
+					cluster.Spec.Config.CmkV2Standard.SetMaxEcku(10)
+				} else if *req.Spec.Config.CmkV2Standard.MaxEcku > 10 {
+					err = writeError(w, "failed to update Kafka cluster: The specified Max eCKU exceeds the maximum allowed limit of 10 eCKUs for STANDARD SKU")
+					require.NoError(t, err)
+					return
+				} else {
+					cluster.Spec.Config.CmkV2Standard.SetMaxEcku(*req.Spec.Config.CmkV2Standard.MaxEcku)
+				}
+
+				err = json.NewEncoder(w).Encode(cluster)
+				require.NoError(t, err)
+				return
+			}
+
+			if req.Spec.Config != nil && req.Spec.Config.CmkV2Basic != nil && req.Spec.Config.CmkV2Basic.MaxEcku != nil {
+				cluster := getCmkBasicDescribeCluster(req.GetId(), req.Spec.GetDisplayName())
+				cluster.Spec.Config = &cmkv2.CmkV2ClusterSpecConfigOneOf{
+					CmkV2Basic: &cmkv2.CmkV2Basic{
+						Kind:    "Basic",
+						MaxEcku: req.Spec.Config.CmkV2Basic.MaxEcku,
+					},
+				}
 				err := json.NewEncoder(w).Encode(cluster)
+				require.NoError(t, err)
+				return
+			}
+
+			// Reject deletion protection on Basic clusters
+			if req.Spec.GetDeletionProtection() {
+				err = writeError(w, "Deletion protection is not supported for BASIC clusters.")
 				require.NoError(t, err)
 				return
 			}
@@ -275,8 +408,132 @@ func handleCmkKafkaClusterUpdateRequest(t *testing.T) http.HandlerFunc {
 			// Handle other update cases
 			if req.Spec.Config == nil || req.Spec.Config.CmkV2Dedicated.Cku == 0 {
 				cluster := getCmkBasicDescribeCluster(req.GetId(), req.Spec.GetDisplayName())
+				if req.Spec.DeletionProtection != nil {
+					cluster.Spec.SetDeletionProtection(req.Spec.GetDeletionProtection())
+				}
 				err := json.NewEncoder(w).Encode(cluster)
 				require.NoError(t, err)
+			}
+		}
+	}
+}
+
+// Handler for GET/PUT "/cmk/v2/clusters/lkc-update-standard"
+func handleCmkKafkaStandardClusterUpdateRequest(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			cluster := getCmkStandardDescribeCluster("lkc-update-standard", "lkc-update-standard")
+			cluster.Status = &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONED"}
+			err := json.NewEncoder(w).Encode(cluster)
+			require.NoError(t, err)
+		case http.MethodPatch:
+			var req cmkv2.CmkV2Cluster
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			req.Id = cmkv2.PtrString("lkc-update-standard")
+
+			if req.Spec.Config != nil && req.Spec.Config.CmkV2Standard != nil && req.Spec.Config.CmkV2Standard.MaxEcku != nil {
+				cluster := getCmkStandardDescribeCluster(req.GetId(), req.Spec.GetDisplayName())
+				cluster.Spec.Config = &cmkv2.CmkV2ClusterSpecConfigOneOf{
+					CmkV2Standard: &cmkv2.CmkV2Standard{
+						Kind:    "Standard",
+						MaxEcku: req.Spec.Config.CmkV2Standard.MaxEcku,
+					},
+				}
+				err := json.NewEncoder(w).Encode(cluster)
+
+				if req.Spec.Config.CmkV2Standard.MaxEcku != nil && *req.Spec.Config.CmkV2Standard.MaxEcku > 10 {
+					err = writeError(w, "failed to update Kafka cluster: The specified Max eCKU exceeds the maximum allowed limit of 10 eCKUs for STANDARD SKU")
+					require.NoError(t, err)
+					return
+				}
+
+				require.NoError(t, err)
+				return
+			}
+		}
+	}
+}
+
+// Handler for GET/PATCH "/cmk/v2/clusters/lkc-update-enterprise"
+func handleCmkKafkaEnterpriseClusterUpdateRequest(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			cluster := getCmkEnterpriseDescribeCluster("lkc-update-enterprise", "lkc-update-enterprise")
+			cluster.Status = &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONED"}
+			err := json.NewEncoder(w).Encode(cluster)
+			require.NoError(t, err)
+		case http.MethodPatch:
+			var req cmkv2.CmkV2Cluster
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			req.Id = cmkv2.PtrString("lkc-update-enterprise")
+
+			if req.Spec.Config != nil && req.Spec.Config.CmkV2Enterprise != nil && req.Spec.Config.CmkV2Enterprise.MaxEcku != nil {
+				if req.Spec.Config.CmkV2Enterprise.MaxEcku != nil && *req.Spec.Config.CmkV2Enterprise.MaxEcku > 10 {
+					err = writeError(w, "failed to update Kafka cluster: The specified Max eCKU exceeds the maximum allowed limit of 10 eCKUs for ENTERPRISE SKU")
+					require.NoError(t, err)
+					return
+				}
+
+				cluster := getCmkEnterpriseDescribeCluster(req.GetId(), req.Spec.GetDisplayName())
+				cluster.Spec.Config = &cmkv2.CmkV2ClusterSpecConfigOneOf{
+					CmkV2Enterprise: &cmkv2.CmkV2Enterprise{
+						Kind:    "Enterprise",
+						MaxEcku: req.Spec.Config.CmkV2Enterprise.MaxEcku,
+					},
+				}
+				err = json.NewEncoder(w).Encode(cluster)
+				require.NoError(t, err)
+				return
+			}
+
+			// Handle deletion protection update
+			if req.Spec.DeletionProtection != nil {
+				cluster := getCmkEnterpriseDescribeCluster(req.GetId(), req.Spec.GetDisplayName())
+				cluster.Spec.SetDeletionProtection(req.Spec.GetDeletionProtection())
+				err = json.NewEncoder(w).Encode(cluster)
+				require.NoError(t, err)
+				return
+			}
+		}
+	}
+}
+
+// Handler for GET/PATCH "/cmk/v2/clusters/lkc-update-freight"
+func handleCmkKafkaFreightClusterUpdateRequest(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			cluster := getCmkFreightDescribeCluster("lkc-update-freight", "lkc-update-freight")
+			cluster.Status = &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONED"}
+			err := json.NewEncoder(w).Encode(cluster)
+			require.NoError(t, err)
+		case http.MethodPatch:
+			var req cmkv2.CmkV2Cluster
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			req.Id = cmkv2.PtrString("lkc-update-freight")
+
+			if req.Spec.Config != nil && req.Spec.Config.CmkV2Freight != nil && req.Spec.Config.CmkV2Freight.MaxEcku != nil {
+				if req.Spec.Config.CmkV2Freight.MaxEcku != nil && *req.Spec.Config.CmkV2Freight.MaxEcku > 150 {
+					err = writeError(w, "failed to update Kafka cluster: The specified Max eCKU exceeds the maximum allowed limit of 152 eCKUs for FREIGHT SKU")
+					require.NoError(t, err)
+					return
+				}
+
+				cluster := getCmkFreightDescribeCluster(req.GetId(), req.Spec.GetDisplayName())
+				cluster.Spec.Config = &cmkv2.CmkV2ClusterSpecConfigOneOf{
+					CmkV2Freight: &cmkv2.CmkV2Freight{
+						Kind:    "Freight",
+						MaxEcku: req.Spec.Config.CmkV2Freight.MaxEcku,
+					},
+				}
+				err = json.NewEncoder(w).Encode(cluster)
+				require.NoError(t, err)
+				return
 			}
 		}
 	}

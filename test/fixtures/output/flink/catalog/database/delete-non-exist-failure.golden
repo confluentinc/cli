@@ -1,0 +1,1 @@
+Are you sure you want to delete Flink database "non-exist-database"? (y/n): Error: failed to delete non-exist-database: failed to delete database "non-exist-database" in catalog "test-catalog": 404 Not Found
