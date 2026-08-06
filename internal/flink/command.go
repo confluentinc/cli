@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 
 	"github.com/spf13/cobra"
@@ -123,6 +124,21 @@ func addCmfFlagSet(cmd *cobra.Command) {
 	cmd.Flags().String("client-key-path", "", `Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.`)
 	cmd.Flags().String("client-cert-path", "", `Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_CERT_PATH" may be set in place of this flag.`)
 	cmd.Flags().String("certificate-authority-path", "", `Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CMF_CERTIFICATE_AUTHORITY_PATH" may be set in place of this flag.`)
+}
+
+func addPageSizeFlag(cmd *cobra.Command) {
+	cmd.Flags().Int("page-size", 0, "Number of results to fetch per API request while paginating; does not cap the total results returned. Defaults to 100.")
+}
+
+func getPageSize(cmd *cobra.Command) (int32, error) {
+	pageSize, err := cmd.Flags().GetInt("page-size")
+	if err != nil {
+		return 0, err
+	}
+	if pageSize < 0 || pageSize > math.MaxInt32 {
+		return 0, fmt.Errorf("`--page-size` must be between 0 and %d", math.MaxInt32)
+	}
+	return int32(pageSize), nil
 }
 
 func (c *command) createContext() context.Context {

@@ -15,6 +15,7 @@ func (c *command) newCatalogListCommand() *cobra.Command {
 		RunE:  c.catalogList,
 	}
 
+	addPageSizeFlag(cmd)
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -22,12 +23,17 @@ func (c *command) newCatalogListCommand() *cobra.Command {
 }
 
 func (c *command) catalogList(cmd *cobra.Command, _ []string) error {
+	pageSize, err := getPageSize(cmd)
+	if err != nil {
+		return err
+	}
+
 	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	sdkCatalogs, err := client.ListCatalog(c.createContext())
+	sdkCatalogs, err := client.ListCatalog(c.createContext(), pageSize)
 	if err != nil {
 		return err
 	}
