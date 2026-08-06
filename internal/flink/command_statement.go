@@ -24,13 +24,12 @@ func printStatementWarnings(cmd *cobra.Command, warnings []types.StatementWarnin
 }
 
 type statementOut struct {
-	CreationDate time.Time `human:"Creation Date" serialized:"creation_date"`
-	Name         string    `human:"Name" serialized:"name"`
-	Statement    string    `human:"Statement" serialized:"statement"`
-	ComputePool  string    `human:"Compute Pool,omitempty" serialized:"compute_pool,omitempty"`
-	Status       string    `human:"Status" serialized:"status"`
-	StatusDetail string    `human:"Status Detail,omitempty" serialized:"status_detail,omitempty"`
-	// Rendered below the table, since a warning message is too long for a cell.
+	CreationDate           time.Time                `human:"Creation Date" serialized:"creation_date"`
+	Name                   string                   `human:"Name" serialized:"name"`
+	Statement              string                   `human:"Statement" serialized:"statement"`
+	ComputePool            string                   `human:"Compute Pool,omitempty" serialized:"compute_pool,omitempty"`
+	Status                 string                   `human:"Status" serialized:"status"`
+	StatusDetail           string                   `human:"Status Detail,omitempty" serialized:"status_detail,omitempty"`
 	Warnings               []types.StatementWarning `human:"-" serialized:"warnings,omitempty"`
 	LatestOffsets          map[string]string        `human:"Latest Offsets" serialized:"latest_offsets"`
 	LatestOffsetsTimestamp *time.Time               `human:"Latest Offsets Timestamp" serialized:"latest_offsets_timestamp"`
