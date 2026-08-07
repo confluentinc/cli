@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"math"
 	"net/http"
 
 	"github.com/spf13/cobra"
@@ -127,18 +126,11 @@ func addCmfFlagSet(cmd *cobra.Command) {
 }
 
 func addPageSizeFlag(cmd *cobra.Command) {
-	cmd.Flags().Int("page-size", 0, "Number of results to fetch per API request while paginating; does not cap the total results returned. Defaults to 100.")
+	cmd.Flags().Int32("page-size", 100, "Number of results to fetch per API request while paginating; does not cap the total results returned.")
 }
 
 func getPageSize(cmd *cobra.Command) (int32, error) {
-	pageSize, err := cmd.Flags().GetInt("page-size")
-	if err != nil {
-		return 0, err
-	}
-	if pageSize < 0 || pageSize > math.MaxInt32 {
-		return 0, fmt.Errorf("`--page-size` must be between 0 and %d", math.MaxInt32)
-	}
-	return int32(pageSize), nil
+	return cmd.Flags().GetInt32("page-size")
 }
 
 func (c *command) createContext() context.Context {
