@@ -1,0 +1,10 @@
++---------------+-------------------------------+
+| Name          | labeled-artifact              |
+| Version       | 3                             |
+| Phase         | READY                         |
+| Size          | 1024                          |
+| Creation Time | 2025-03-12 23:42:00 +0000 UTC |
+| Labels        | owner=team-a                  |
+|               | tier=gold                     |
+| Annotations   | note=managed-externally       |
++---------------+-------------------------------+

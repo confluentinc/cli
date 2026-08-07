@@ -5,6 +5,7 @@ Usage:
 
 Available Commands:
   application         Manage Flink applications.
+  artifact            Manage Flink UDF artifacts.
   catalog             Manage Flink catalogs in Confluent Platform.
   compute-pool        Manage Flink compute pools.
   detached-savepoint  Manage Flink detached savepoints.

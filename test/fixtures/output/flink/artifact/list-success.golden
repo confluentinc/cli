@@ -1,0 +1,4 @@
+       Name       | Version | Phase | Size |         Creation Time          
+------------------+---------+-------+------+--------------------------------
+  test-artifact-1 | 1       | READY | 1024 | 2025-03-12 23:42:00 +0000 UTC  
+  test-artifact-2 | 3       | READY | 1024 | 2025-03-12 23:42:00 +0000 UTC  
