@@ -32,7 +32,10 @@ func (c *organizationCommand) describe(cmd *cobra.Command, _ []string) error {
 
 	organization, httpResp, err := c.V2Client.GetOrgOrganization(id)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+		return errors.NewErrorWithSuggestions(
+			errors.CatchCCloudV2Error(err, httpResp).Error(),
+			"List available organizations with `confluent organization list`.",
+		)
 	}
 
 	return c.printOrganization(cmd, organization)

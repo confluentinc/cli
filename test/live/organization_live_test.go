@@ -10,7 +10,6 @@ import (
 
 func (s *CLILiveTestSuite) TestOrganizationCRUDLive() {
 	t := s.T()
-	t.Parallel()
 	state := s.setupTestContext(t)
 
 	// Variables

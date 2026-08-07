@@ -37,25 +37,28 @@ func (c *organizationCommand) update(cmd *cobra.Command, _ []string) error {
 
 	updateReq := orgv2.OrgV2Organization{}
 
-	displayName, err := cmd.Flags().GetString("name")
-	if err != nil {
-		return err
-	}
-	if displayName != "" {
+	if cmd.Flags().Changed("name") {
+		displayName, err := cmd.Flags().GetString("name")
+		if err != nil {
+			return err
+		}
 		updateReq.DisplayName = orgv2.PtrString(displayName)
 	}
 
-	jitEnabled, err := cmd.Flags().GetBool("jit-enabled")
-	if err != nil {
-		return err
-	}
 	if cmd.Flags().Changed("jit-enabled") {
+		jitEnabled, err := cmd.Flags().GetBool("jit-enabled")
+		if err != nil {
+			return err
+		}
 		updateReq.JitEnabled = orgv2.PtrBool(jitEnabled)
 	}
 
 	organization, httpResp, err := c.V2Client.UpdateOrgOrganization(id, updateReq)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+		return errors.NewErrorWithSuggestions(
+			errors.CatchCCloudV2Error(err, httpResp).Error(),
+			"List available organizations with `confluent organization list`.",
+		)
 	}
 
 	if output.GetFormat(cmd) == output.Human {
