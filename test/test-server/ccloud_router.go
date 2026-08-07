@@ -13,6 +13,7 @@ var ccloudHandlers = []route{
 	{"/api/env_metadata", handleEnvMetadata},
 	{"/api/external_identities", handleExternalIdentities},
 	{"/api/growth/v1/free-trial-info", handleFreeTrialInfo},
+	{"/api/iam/v2/sessions", handleDeleteSession},
 	{"/api/login/realm", handleLoginRealm},
 	{"/api/metadata/security/v2alpha1/authenticate", handleV2Authenticate},
 	{"/api/organizations/{id}/payment_info", handlePaymentInfo},
