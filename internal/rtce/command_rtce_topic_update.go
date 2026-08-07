@@ -41,11 +41,11 @@ func (c *rtceTopicCommand) update(cmd *cobra.Command, args []string) error {
 	updateReq := rtcev1.RtceV1RtceTopicUpdate{}
 	specUpdate := rtcev1.RtceV1RtceTopicSpecUpdate{}
 
-	description, err := cmd.Flags().GetString("description")
-	if err != nil {
-		return err
-	}
-	if description != "" {
+	if cmd.Flags().Changed("description") {
+		description, err := cmd.Flags().GetString("description")
+		if err != nil {
+			return err
+		}
 		specUpdate.Description = rtcev1.PtrString(description)
 	}
 

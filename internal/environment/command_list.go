@@ -28,7 +28,6 @@ func (c *environmentCommand) newListCommand() *cobra.Command {
 }
 
 func (c *environmentCommand) list(cmd *cobra.Command, _ []string) error {
-
 	environments, err := c.V2Client.ListOrgEnvironments()
 	if err != nil {
 		return err
