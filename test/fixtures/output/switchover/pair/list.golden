@@ -1,0 +1,6 @@
+     ID     |       Name       | Environment |            Members             | Active Member | Phase  
+------------+------------------+-------------+--------------------------------+---------------+--------
+  sw-123456 | prod-kafka-dr    | env-123456  | west=lkc-111111,               | west          | READY  
+            |                  |             | east=lkc-222222                |               |        
+  sw-234567 | staging-kafka-dr | env-123456  | west=lkc-111111,               | west          | READY  
+            |                  |             | east=lkc-222222                |               |        
