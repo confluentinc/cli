@@ -375,6 +375,7 @@ var vocabWords = []string{
 	"uri",
 	"url",
 	"us",
+	"usm",
 	"v2",
 	"vertexai",
 	"vnet",
