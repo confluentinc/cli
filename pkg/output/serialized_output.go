@@ -1,6 +1,7 @@
 package output
 
 import (
+	"bytes"
 	"encoding/json"
 
 	"github.com/spf13/cobra"
@@ -12,7 +13,7 @@ import (
 func SerializedOutput(cmd *cobra.Command, v any) error {
 	switch GetFormat(cmd) {
 	default:
-		out, err := json.Marshal(v)
+		out, err := marshalJSON(v)
 		if err != nil {
 			return err
 		}
@@ -25,4 +26,17 @@ func SerializedOutput(cmd *cobra.Command, v any) error {
 		Print(false, string(out))
 	}
 	return nil
+}
+
+// marshalJSON marshals v to JSON without HTML-escaping <, >, and & (which
+// encoding/json does by default), keeping text like SQL statements readable.
+func marshalJSON(v any) ([]byte, error) {
+	buffer := new(bytes.Buffer)
+	encoder := json.NewEncoder(buffer)
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(v); err != nil {
+		return nil, err
+	}
+	// Encode appends a single trailing newline; drop just it to match json.Marshal.
+	return bytes.TrimSuffix(buffer.Bytes(), []byte("\n")), nil
 }
