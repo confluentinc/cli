@@ -27,6 +27,62 @@ func (c *Client) usmApiContext() context.Context {
 	return context.WithValue(context.Background(), usmv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
+// ===== usm connect clusters API calls =====
+
+func (c *Client) CreateUsmConnectCluster(req usmv1.UsmV1ConnectCluster) (usmv1.UsmV1ConnectCluster, *http.Response, error) {
+	createReq := c.UsmClient.ConnectClustersUsmV1Api.
+		CreateUsmV1ConnectCluster(c.usmApiContext()).
+		UsmV1ConnectCluster(req)
+	return createReq.Execute()
+}
+
+func (c *Client) GetUsmConnectCluster(id string, environment string) (usmv1.UsmV1ConnectCluster, *http.Response, error) {
+	getReq := c.UsmClient.ConnectClustersUsmV1Api.
+		GetUsmV1ConnectCluster(c.usmApiContext(), id)
+	getReq = getReq.Environment(environment)
+	return getReq.Execute()
+}
+
+func (c *Client) DeleteUsmConnectCluster(id string, environment string) error {
+	deleteReq := c.UsmClient.ConnectClustersUsmV1Api.
+		DeleteUsmV1ConnectCluster(c.usmApiContext(), id)
+	deleteReq = deleteReq.Environment(environment)
+	httpResp, err := deleteReq.Execute()
+	return errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) ListUsmConnectClusters(environment string) ([]usmv1.UsmV1ConnectCluster, error) {
+	var list []usmv1.UsmV1ConnectCluster
+
+	done := false
+	pageToken := ""
+	for !done {
+		page, httpResp, err := c.executeListConnectClusters(environment, pageToken)
+		if err != nil {
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
+		}
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return list, nil
+}
+
+func (c *Client) executeListConnectClusters(environment string, pageToken string) (usmv1.UsmV1ConnectClusterList, *http.Response, error) {
+	req := c.UsmClient.ConnectClustersUsmV1Api.
+		ListUsmV1ConnectClusters(c.usmApiContext()).
+		Environment(environment).
+		PageSize(ccloudV2ListPageSize)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+	return req.Execute()
+}
+
 // ===== usm kafka clusters API calls =====
 
 func (c *Client) CreateUsmKafkaCluster(req usmv1.UsmV1KafkaCluster) (usmv1.UsmV1KafkaCluster, *http.Response, error) {

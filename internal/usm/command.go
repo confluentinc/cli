@@ -17,6 +17,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	cmd.AddCommand(
+		newConnectClusterCommand(cfg, prerunner),
 		newKafkaClusterCommand(cfg, prerunner),
 		// cli-tfgen:cli-subcommands
 	)
