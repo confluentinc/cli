@@ -16,7 +16,7 @@ import (
 func (c *connectClusterCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "register <confluent-platform-connect-cluster-id>",
-		Short: "Create a usm connect cluster.",
+		Short: "Create a USM connect cluster.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
 	}

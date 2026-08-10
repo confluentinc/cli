@@ -12,7 +12,7 @@ import (
 func (c *connectClusterCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List usm connect clusters.",
+		Short: "List USM connect clusters.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}

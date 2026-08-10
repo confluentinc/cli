@@ -27,7 +27,7 @@ func (c *Client) usmApiContext() context.Context {
 	return context.WithValue(context.Background(), usmv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
-// ===== usm connect clusters API calls =====
+// ===== USM connect clusters API calls =====
 
 func (c *Client) CreateUsmConnectCluster(req usmv1.UsmV1ConnectCluster) (usmv1.UsmV1ConnectCluster, *http.Response, error) {
 	createReq := c.UsmClient.ConnectClustersUsmV1Api.
@@ -83,7 +83,7 @@ func (c *Client) executeListConnectClusters(environment string, pageToken string
 	return req.Execute()
 }
 
-// ===== usm kafka clusters API calls =====
+// ===== USM kafka clusters API calls =====
 
 func (c *Client) CreateUsmKafkaCluster(req usmv1.UsmV1KafkaCluster) (usmv1.UsmV1KafkaCluster, *http.Response, error) {
 	createReq := c.UsmClient.KafkaClustersUsmV1Api.
@@ -138,3 +138,7 @@ func (c *Client) executeListKafkaClusters(environment string, pageToken string) 
 	}
 	return req.Execute()
 }
+
+// ===== usm connect clusters API calls =====
+
+// ===== usm kafka clusters API calls =====

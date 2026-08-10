@@ -1,4 +1,4 @@
-Manage Confluent Cloud usm connect clusters.
+Manage Confluent Cloud USM connect clusters.
 
 Usage:
   confluent usm connect-cluster [command]
@@ -7,10 +7,10 @@ Aliases:
   connect-cluster, connect
 
 Available Commands:
-  deregister  Delete one or more usm connect clusters.
-  describe    Describe a usm connect cluster.
-  list        List usm connect clusters.
-  register    Create a usm connect cluster.
+  deregister  Delete one or more USM connect clusters.
+  describe    Describe a USM connect cluster.
+  list        List USM connect clusters.
+  register    Create a USM connect cluster.
 
 Global Flags:
   -h, --help            Show help for this command.

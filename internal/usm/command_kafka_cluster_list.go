@@ -12,7 +12,7 @@ import (
 func (c *kafkaClusterCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List usm kafka clusters.",
+		Short: "List USM kafka clusters.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}

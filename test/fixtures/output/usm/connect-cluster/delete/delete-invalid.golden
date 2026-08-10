@@ -1,4 +1,4 @@
-Error: usm connect cluster "invalid" not found
+Error: USM connect cluster "invalid" not found
 
 Suggestions:
-    List available usm connect clusters with `confluent usm connect-cluster list`.
+    List available USM connect clusters with `confluent usm connect-cluster list`.

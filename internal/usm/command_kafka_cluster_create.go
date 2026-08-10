@@ -16,7 +16,7 @@ import (
 func (c *kafkaClusterCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "register <confluent-platform-kafka-cluster-id>",
-		Short: "Create a usm kafka cluster.",
+		Short: "Create a USM kafka cluster.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
 	}

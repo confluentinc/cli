@@ -1,4 +1,4 @@
-Error: usm kafka cluster "invalid" not found
+Error: USM kafka cluster "invalid" not found
 
 Suggestions:
-    List available usm kafka clusters with `confluent usm kafka-cluster list`.
+    List available USM kafka clusters with `confluent usm kafka-cluster list`.

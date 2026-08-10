@@ -1,4 +1,4 @@
-Describe a usm kafka cluster.
+Describe a USM kafka cluster.
 
 Usage:
   confluent usm kafka-cluster describe <id> [flags]
