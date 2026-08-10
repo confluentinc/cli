@@ -27,4 +27,5 @@ blocks:
       epilogue:
         always:
           commands:
-            - test-results publish . -N "darwin/arm64"
+            # --ignore-missing: build-only jobs run no tests; an early failure can leave one unwritten
+            - test-results publish unit-test-report.xml integration-test-report.xml -N "darwin/arm64" --ignore-missing

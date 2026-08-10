@@ -35,10 +35,9 @@ import (
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 	srcmv3 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v3"
 	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
+	switchoverv1 "github.com/confluentinc/ccloud-sdk-go-v2/switchover/v1"
 	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2/tableflow/v1"
 	usmv1 "github.com/confluentinc/ccloud-sdk-go-v2/usm/v1"
-
-	switchoverv1 "github.com/confluentinc/ccloud-sdk-go-v2/switchover/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/config"
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
