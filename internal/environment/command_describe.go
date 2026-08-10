@@ -42,7 +42,10 @@ func (c *environmentCommand) describe(cmd *cobra.Command, args []string) error {
 
 	environment, httpResp, err := c.V2Client.GetOrgEnvironment(id)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+		return errors.NewErrorWithSuggestions(
+			errors.CatchCCloudV2Error(err, httpResp).Error(),
+			"List available environments with `confluent environment list`.",
+		)
 	}
 
 	return c.printEnvironment(cmd, environment)

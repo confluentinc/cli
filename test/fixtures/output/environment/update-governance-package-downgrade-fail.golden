@@ -1,1 +1,4 @@
 Error: Schema Registry package downgrade is not a supported operation
+
+Suggestions:
+    List available environments with `confluent environment list`.

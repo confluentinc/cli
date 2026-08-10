@@ -40,27 +40,30 @@ func (c *environmentCommand) update(cmd *cobra.Command, args []string) error {
 
 	updateReq := orgv2.OrgV2Environment{}
 
-	displayName, err := cmd.Flags().GetString("name")
-	if err != nil {
-		return err
-	}
-	if displayName != "" {
+	if cmd.Flags().Changed("name") {
+		displayName, err := cmd.Flags().GetString("name")
+		if err != nil {
+			return err
+		}
 		updateReq.DisplayName = orgv2.PtrString(displayName)
 	}
 
 	// allOf: stream_governance_config
-	governancePackage, err := cmd.Flags().GetString("governance-package")
-	if err != nil {
-		return err
-	}
-	if governancePackage != "" {
+	if cmd.Flags().Changed("governance-package") {
+		governancePackage, err := cmd.Flags().GetString("governance-package")
+		if err != nil {
+			return err
+		}
 		updateReq.SetStreamGovernanceConfig(orgv2.OrgV2StreamGovernanceConfig{
 			Package: strings.ToUpper(governancePackage),
 		})
 	}
 	environment, httpResp, err := c.V2Client.UpdateOrgEnvironment(id, updateReq)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+		return errors.NewErrorWithSuggestions(
+			errors.CatchCCloudV2Error(err, httpResp).Error(),
+			"List available environments with `confluent environment list`.",
+		)
 	}
 
 	if output.GetFormat(cmd) == output.Human {
