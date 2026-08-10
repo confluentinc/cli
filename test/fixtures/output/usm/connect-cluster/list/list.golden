@@ -1,0 +1,4 @@
+       ID       |   Confluent Platform Connect   |    Confluent Platform Kafka    | Environment | Usm Kafka Cluster Id | Cloud |  Region    
+                |            Cluster             |           Cluster Id           |             |                      |       |            
+----------------+--------------------------------+--------------------------------+-------------+----------------------+-------+------------
+  usmcc-f3a90de | connect-group-xyz123           | 4k0R9d1GTS5tI9f4Y2xZ0Q         | env-00000   | usmkc-00000          | AWS   | us-east-1  

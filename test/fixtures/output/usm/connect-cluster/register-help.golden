@@ -1,0 +1,17 @@
+Create a usm connect cluster.
+
+Usage:
+  confluent usm connect-cluster register <confluent-platform-connect-cluster-id> [flags]
+
+Flags:
+      --confluent-platform-kafka-cluster string   REQUIRED: The unique identifier of the metadata Kafka cluster for the Connect Cluster.
+      --cloud string                              Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string                             The home region of the Confluent Platform Connect cluster where the metadata should be stored. This field is optional. If provided, 'cloud' must also be provided. If neither 'cloud' nor 'region' are provided, the home region of the associated metadata Kafka cluster (identified by 'kafka_cluster_id') will be used as a fallback.
+      --environment string                        Environment ID.
+      --context string                            CLI context name.
+  -o, --output string                             Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

@@ -1,0 +1,20 @@
+Manage Confluent Cloud usm connect clusters.
+
+Usage:
+  confluent usm connect-cluster [command]
+
+Aliases:
+  connect-cluster, connect
+
+Available Commands:
+  deregister  Delete one or more usm connect clusters.
+  describe    Describe a usm connect cluster.
+  list        List usm connect clusters.
+  register    Create a usm connect cluster.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent usm connect-cluster [command] --help" for more information about a command.
