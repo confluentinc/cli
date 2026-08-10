@@ -1,0 +1,18 @@
+Manage Unified Stream Manager(USM).
+
+Usage:
+  confluent usm [command]
+
+Aliases:
+  usm, unified-stream-manager
+
+Available Commands:
+  connect-cluster Manage Confluent Cloud USM connect clusters.
+  kafka-cluster   Manage Confluent Cloud USM kafka clusters.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent usm [command] --help" for more information about a command.
