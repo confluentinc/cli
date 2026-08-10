@@ -1,4 +1,4 @@
-Create a USM kafka cluster.
+Create a usm Kafka cluster.
 
 Usage:
   confluent usm kafka-cluster register <confluent-platform-kafka-cluster-id> [flags]

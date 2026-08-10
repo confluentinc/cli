@@ -8,7 +8,7 @@ Aliases:
 
 Available Commands:
   connect-cluster Manage Confluent Cloud USM connect clusters.
-  kafka-cluster   Manage Confluent Cloud USM kafka clusters.
+  kafka-cluster   Manage Confluent Cloud usm Kafka clusters.
 
 Global Flags:
   -h, --help            Show help for this command.

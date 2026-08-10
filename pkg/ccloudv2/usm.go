@@ -83,7 +83,7 @@ func (c *Client) executeListConnectClusters(environment string, pageToken string
 	return req.Execute()
 }
 
-// ===== USM kafka clusters API calls =====
+// ===== usm Kafka clusters API calls =====
 
 func (c *Client) CreateUsmKafkaCluster(req usmv1.UsmV1KafkaCluster) (usmv1.UsmV1KafkaCluster, *http.Response, error) {
 	createReq := c.UsmClient.KafkaClustersUsmV1Api.

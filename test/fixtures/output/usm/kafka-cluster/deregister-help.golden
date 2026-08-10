@@ -1,4 +1,4 @@
-Delete one or more USM kafka clusters.
+Delete one or more usm Kafka clusters.
 
 Usage:
   confluent usm kafka-cluster deregister <id-1> [id-2] ... [id-n] [flags]

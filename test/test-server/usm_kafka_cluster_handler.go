@@ -68,7 +68,7 @@ func handleUsmV1KafkaClustersId(t *testing.T) http.HandlerFunc {
 }
 
 func readUsmV1KafkaClusterFile(t *testing.T, filename string) usmv1.UsmV1KafkaCluster {
-	jsonPath := filepath.Join("test", "fixtures", "input", "usm", "kafka_cluster", filename)
+	jsonPath := filepath.Join("test", "fixtures", "input", "usm", "kafka-cluster", filename)
 	jsonData, err := os.ReadFile(jsonPath)
 	require.NoError(t, err)
 
