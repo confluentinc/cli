@@ -8,8 +8,13 @@ Register a Confluent Platform Connect cluster with the ID connect-group-xyz123.
 
   $ confluent unified-stream-manager connect register connect-group-xyz123 --confluent-platform-kafka-cluster 4k0R9d1GTS5tI9f4Y2xZ0Q --cloud aws --region us-east-1
 
+Register a Connect cluster with the ID connect-group-xyz123.
+
+  $ confluent unified-stream-manager connect register connect-group-xyz123 --kafka-cluster lkc-abc123 --cloud aws --region us-east-1
+
 Flags:
-      --confluent-platform-kafka-cluster string   REQUIRED: The ID of the metadata Kafka cluster for the Connect Cluster.
+      --confluent-platform-kafka-cluster string   The ID of the metadata Kafka cluster for the Connect Cluster.
+      --kafka-cluster string                      The ID of the metadata Kafka cluster for the Connect Cluster.
       --cloud string                              Specify the cloud provider as "aws", "azure", or "gcp".
       --region string                             Specify the cloud region.
       --environment string                        Environment ID.
