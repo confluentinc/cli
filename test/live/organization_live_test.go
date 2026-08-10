@@ -39,7 +39,7 @@ func (s *CLILiveTestSuite) TestOrganizationCRUDLive() {
 		},
 		{
 			Name:         "Update organization jit-enabled",
-			Args:         "organization update --jit-enabled " + updatedJitEnabled,
+			Args:         "organization update --jit-enabled=" + updatedJitEnabled,
 			UseStateVars: true,
 			ExitCode:     0,
 		},
