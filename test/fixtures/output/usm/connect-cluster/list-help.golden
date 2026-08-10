@@ -1,4 +1,4 @@
-List USM connect clusters.
+List usm connect clusters.
 
 Usage:
   confluent usm connect-cluster list [flags]

@@ -1,4 +1,4 @@
-Create a USM connect cluster.
+Create a usm connect cluster.
 
 Usage:
   confluent usm connect-cluster register <confluent-platform-connect-cluster-id> [flags]

@@ -12,7 +12,7 @@ import (
 func (c *connectClusterCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
-		Short:             "Describe a USM connect cluster.",
+		Short:             "Describe a usm connect cluster.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.describe,

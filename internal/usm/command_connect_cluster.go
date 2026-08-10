@@ -21,7 +21,7 @@ type connectClusterOut struct {
 	ConfluentPlatformConnectCluster string `human:"Confluent Platform Connect Cluster" serialized:"confluent_platform_connect_cluster"`
 	ConfluentPlatformKafkaClusterId string `human:"Confluent Platform Kafka Cluster Id" serialized:"confluent_platform_kafka_cluster_id"`
 	Environment                     string `human:"Environment" serialized:"environment"`
-	UsmKafkaClusterId               string `human:"USM Kafka Cluster Id" serialized:"usm_kafka_cluster_id"`
+	UsmKafkaClusterId               string `human:"Usm Kafka Cluster Id" serialized:"usm_kafka_cluster_id"`
 	Cloud                           string `human:"Cloud" serialized:"cloud"`
 	Region                          string `human:"Region" serialized:"region"`
 }
@@ -30,7 +30,7 @@ func newConnectClusterCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cob
 	cmd := &cobra.Command{
 		Use:         "connect-cluster",
 		Aliases:     []string{"connect"},
-		Short:       "Manage Confluent Cloud USM connect clusters.",
+		Short:       "Manage Confluent Cloud usm connect clusters.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 

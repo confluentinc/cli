@@ -68,7 +68,7 @@ func handleUsmV1ConnectClustersId(t *testing.T) http.HandlerFunc {
 }
 
 func readUsmV1ConnectClusterFile(t *testing.T, filename string) usmv1.UsmV1ConnectCluster {
-	jsonPath := filepath.Join("test", "fixtures", "input", "usm", "connect_cluster", filename)
+	jsonPath := filepath.Join("test", "fixtures", "input", "usm", "connect-cluster", filename)
 	jsonData, err := os.ReadFile(jsonPath)
 	require.NoError(t, err)
 
