@@ -1,4 +1,4 @@
-Error: if any flags in the group [cloud region] are set they must all be set; missing [region]
+Error: at least one of the flags in the group [confluent-platform-kafka-cluster kafka-cluster] is required
 Usage:
   confluent unified-stream-manager connect register <confluent-platform-connect-cluster-id> [flags]
 
