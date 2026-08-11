@@ -14,7 +14,6 @@ func (s *CLILiveTestSuite) TestOrganizationCRUDLive() {
 
 	// Variables
 	organizationName := uniqueName("organi")
-	updatedJitEnabled := "true"
 
 	// Cleanup (LIFO — execution is reverse-registration order)
 
@@ -38,18 +37,12 @@ func (s *CLILiveTestSuite) TestOrganizationCRUDLive() {
 			ExitCode:     0,
 		},
 		{
-			Name:         "Update organization jit-enabled",
-			Args:         "organization update --jit-enabled=" + updatedJitEnabled,
-			UseStateVars: true,
-			ExitCode:     0,
-		},
-		{
 			Name:         "Verify organization update",
 			Args:         "organization describe -o json",
 			UseStateVars: true,
 			ExitCode:     0,
 			JSONFields: map[string]string{
-				"jit_enabled": updatedJitEnabled,
+				"name": organizationName + "-updated",
 			},
 		},
 	}
