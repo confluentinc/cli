@@ -1,0 +1,20 @@
+Manage Confluent Cloud USM Kafka clusters.
+
+Usage:
+  confluent usm kafka-cluster [command]
+
+Aliases:
+  kafka-cluster, kafka
+
+Available Commands:
+  deregister  Delete one or more USM Kafka clusters.
+  describe    Describe a USM Kafka cluster.
+  list        List USM Kafka clusters.
+  register    Create a USM Kafka cluster.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent usm kafka-cluster [command] --help" for more information about a command.
