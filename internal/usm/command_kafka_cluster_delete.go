@@ -11,8 +11,9 @@ import (
 
 func (c *kafkaClusterCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "deregister <id-1> [id-2] ... [id-n]",
+		Use:               "delete <id-1> [id-2] ... [id-n]",
 		Short:             "Delete one or more USM Kafka clusters.",
+		Aliases:           []string{"deregister"},
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,

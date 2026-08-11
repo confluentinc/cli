@@ -1,7 +1,10 @@
-Delete one or more USM Kafka clusters.
+Delete one or more USM Connect clusters.
 
 Usage:
-  confluent usm kafka-cluster deregister <id-1> [id-2] ... [id-n] [flags]
+  confluent usm connect-cluster delete <id-1> [id-2] ... [id-n] [flags]
+
+Aliases:
+  delete, deregister
 
 Flags:
       --environment string   Environment ID.

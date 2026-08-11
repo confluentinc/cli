@@ -1,7 +1,10 @@
 Create a USM Connect cluster.
 
 Usage:
-  confluent usm connect-cluster register <confluent-platform-connect-cluster-id> [flags]
+  confluent usm connect-cluster create <confluent-platform-connect-cluster-id> [flags]
+
+Aliases:
+  create, register
 
 Flags:
       --confluent-platform-kafka-cluster string   REQUIRED: The unique identifier of the metadata Kafka cluster for the Connect Cluster.
