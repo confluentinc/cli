@@ -12,7 +12,7 @@ import (
 func (c *kafkaClusterCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
-		Short:             "Describe a usm Kafka cluster.",
+		Short:             "Describe a USM Kafka cluster.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.describe,

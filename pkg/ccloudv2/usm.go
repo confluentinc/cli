@@ -27,63 +27,7 @@ func (c *Client) usmApiContext() context.Context {
 	return context.WithValue(context.Background(), usmv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
-// ===== usm Kafka clusters API calls =====
-
-func (c *Client) CreateUsmKafkaCluster(req usmv1.UsmV1KafkaCluster) (usmv1.UsmV1KafkaCluster, *http.Response, error) {
-	createReq := c.UsmClient.KafkaClustersUsmV1Api.
-		CreateUsmV1KafkaCluster(c.usmApiContext()).
-		UsmV1KafkaCluster(req)
-	return createReq.Execute()
-}
-
-func (c *Client) GetUsmKafkaCluster(id string, environment string) (usmv1.UsmV1KafkaCluster, *http.Response, error) {
-	getReq := c.UsmClient.KafkaClustersUsmV1Api.
-		GetUsmV1KafkaCluster(c.usmApiContext(), id)
-	getReq = getReq.Environment(environment)
-	return getReq.Execute()
-}
-
-func (c *Client) DeleteUsmKafkaCluster(id string, environment string) error {
-	deleteReq := c.UsmClient.KafkaClustersUsmV1Api.
-		DeleteUsmV1KafkaCluster(c.usmApiContext(), id)
-	deleteReq = deleteReq.Environment(environment)
-	httpResp, err := deleteReq.Execute()
-	return errors.CatchCCloudV2Error(err, httpResp)
-}
-
-func (c *Client) ListUsmKafkaClusters(environment string) ([]usmv1.UsmV1KafkaCluster, error) {
-	var list []usmv1.UsmV1KafkaCluster
-
-	done := false
-	pageToken := ""
-	for !done {
-		page, httpResp, err := c.executeListKafkaClusters(environment, pageToken)
-		if err != nil {
-			return nil, errors.CatchCCloudV2Error(err, httpResp)
-		}
-		list = append(list, page.GetData()...)
-
-		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return list, nil
-}
-
-func (c *Client) executeListKafkaClusters(environment string, pageToken string) (usmv1.UsmV1KafkaClusterList, *http.Response, error) {
-	req := c.UsmClient.KafkaClustersUsmV1Api.
-		ListUsmV1KafkaClusters(c.usmApiContext()).
-		Environment(environment).
-		PageSize(ccloudV2ListPageSize)
-	if pageToken != "" {
-		req = req.PageToken(pageToken)
-	}
-	return req.Execute()
-}
-
-// ===== usm connect clusters API calls =====
+// ===== USM Connect clusters API calls =====
 
 func (c *Client) CreateUsmConnectCluster(req usmv1.UsmV1ConnectCluster) (usmv1.UsmV1ConnectCluster, *http.Response, error) {
 	createReq := c.UsmClient.ConnectClustersUsmV1Api.
@@ -139,4 +83,58 @@ func (c *Client) executeListConnectClusters(environment string, pageToken string
 	return req.Execute()
 }
 
-// ===== usm kafka clusters API calls =====
+// ===== USM Kafka clusters API calls =====
+
+func (c *Client) CreateUsmKafkaCluster(req usmv1.UsmV1KafkaCluster) (usmv1.UsmV1KafkaCluster, *http.Response, error) {
+	createReq := c.UsmClient.KafkaClustersUsmV1Api.
+		CreateUsmV1KafkaCluster(c.usmApiContext()).
+		UsmV1KafkaCluster(req)
+	return createReq.Execute()
+}
+
+func (c *Client) GetUsmKafkaCluster(id string, environment string) (usmv1.UsmV1KafkaCluster, *http.Response, error) {
+	getReq := c.UsmClient.KafkaClustersUsmV1Api.
+		GetUsmV1KafkaCluster(c.usmApiContext(), id)
+	getReq = getReq.Environment(environment)
+	return getReq.Execute()
+}
+
+func (c *Client) DeleteUsmKafkaCluster(id string, environment string) error {
+	deleteReq := c.UsmClient.KafkaClustersUsmV1Api.
+		DeleteUsmV1KafkaCluster(c.usmApiContext(), id)
+	deleteReq = deleteReq.Environment(environment)
+	httpResp, err := deleteReq.Execute()
+	return errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) ListUsmKafkaClusters(environment string) ([]usmv1.UsmV1KafkaCluster, error) {
+	var list []usmv1.UsmV1KafkaCluster
+
+	done := false
+	pageToken := ""
+	for !done {
+		page, httpResp, err := c.executeListKafkaClusters(environment, pageToken)
+		if err != nil {
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
+		}
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return list, nil
+}
+
+func (c *Client) executeListKafkaClusters(environment string, pageToken string) (usmv1.UsmV1KafkaClusterList, *http.Response, error) {
+	req := c.UsmClient.KafkaClustersUsmV1Api.
+		ListUsmV1KafkaClusters(c.usmApiContext()).
+		Environment(environment).
+		PageSize(ccloudV2ListPageSize)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+	return req.Execute()
+}

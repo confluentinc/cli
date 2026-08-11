@@ -1,4 +1,1 @@
-Error: usm Kafka cluster "invalid" not found
-
-Suggestions:
-    List available usm Kafka clusters with `confluent usm kafka-cluster list`.
+Error: failed parsing resource ID invalid: missing prefix "usmkc-"

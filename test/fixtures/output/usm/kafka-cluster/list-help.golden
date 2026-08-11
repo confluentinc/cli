@@ -1,4 +1,4 @@
-List usm Kafka clusters.
+List USM Kafka clusters.
 
 Usage:
   confluent usm kafka-cluster list [flags]

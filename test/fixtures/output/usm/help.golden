@@ -7,8 +7,8 @@ Aliases:
   usm, unified-stream-manager
 
 Available Commands:
-  connect-cluster Manage Confluent Cloud usm connect clusters.
-  kafka-cluster   Manage Confluent Cloud usm Kafka clusters.
+  connect-cluster Manage Confluent Cloud USM Connect clusters.
+  kafka-cluster   Manage Confluent Cloud USM Kafka clusters.
 
 Global Flags:
   -h, --help            Show help for this command.

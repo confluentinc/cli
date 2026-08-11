@@ -1,4 +1,4 @@
-Describe a usm connect cluster.
+Describe a USM Connect cluster.
 
 Usage:
   confluent usm connect-cluster describe <id> [flags]

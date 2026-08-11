@@ -16,9 +16,9 @@ func (s *CLITestSuite) TestUsmConnectClusterCreate() {
 
 func (s *CLITestSuite) TestUsmConnectClusterDelete() {
 	tests := []CLITest{
-		{args: "usm connect-cluster deregister connect-cluster-1 --force", fixture: "usm/connect-cluster/delete/delete.golden"},
-		{args: "usm connect-cluster deregister connect-cluster-1", input: "y\n", fixture: "usm/connect-cluster/delete/delete-no-force.golden"},
-		{args: "usm connect-cluster deregister connect-cluster-1 connect-cluster-2", input: "y\n", fixture: "usm/connect-cluster/delete/delete-multiple.golden"},
+		{args: "usm connect-cluster deregister usmcc-1 --force", fixture: "usm/connect-cluster/delete/delete.golden"},
+		{args: "usm connect-cluster deregister usmcc-1", input: "y\n", fixture: "usm/connect-cluster/delete/delete-no-force.golden"},
+		{args: "usm connect-cluster deregister usmcc-1 usmcc-2", input: "y\n", fixture: "usm/connect-cluster/delete/delete-multiple.golden"},
 		{args: "usm connect-cluster deregister invalid", fixture: "usm/connect-cluster/delete/delete-invalid.golden", exitCode: 1},
 	}
 
@@ -30,9 +30,9 @@ func (s *CLITestSuite) TestUsmConnectClusterDelete() {
 
 func (s *CLITestSuite) TestUsmConnectClusterDescribe() {
 	tests := []CLITest{
-		{args: "usm connect-cluster describe connect-cluster-1", fixture: "usm/connect-cluster/describe/describe.golden"},
-		{args: "usm connect-cluster describe connect-cluster-1 -o json", fixture: "usm/connect-cluster/describe/describe-json.golden"},
-		{args: "usm connect-cluster describe connect-cluster-1 -o yaml", fixture: "usm/connect-cluster/describe/describe-yaml.golden"},
+		{args: "usm connect-cluster describe usmcc-1", fixture: "usm/connect-cluster/describe/describe.golden"},
+		{args: "usm connect-cluster describe usmcc-1 -o json", fixture: "usm/connect-cluster/describe/describe-json.golden"},
+		{args: "usm connect-cluster describe usmcc-1 -o yaml", fixture: "usm/connect-cluster/describe/describe-yaml.golden"},
 		{args: "usm connect-cluster describe invalid", fixture: "usm/connect-cluster/describe/describe-invalid.golden", exitCode: 1},
 	}
 

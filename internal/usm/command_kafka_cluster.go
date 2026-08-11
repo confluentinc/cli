@@ -31,7 +31,7 @@ func newKafkaClusterCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra
 	cmd := &cobra.Command{
 		Use:         "kafka-cluster",
 		Aliases:     []string{"kafka"},
-		Short:       "Manage Confluent Cloud usm Kafka clusters.",
+		Short:       "Manage Confluent Cloud USM Kafka clusters.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 

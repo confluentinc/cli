@@ -12,7 +12,7 @@ import (
 func (c *kafkaClusterCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "deregister <id-1> [id-2] ... [id-n]",
-		Short:             "Delete one or more usm Kafka clusters.",
+		Short:             "Delete one or more USM Kafka clusters.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
@@ -40,7 +40,7 @@ func (c *kafkaClusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, "usm Kafka cluster"); err != nil {
+	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, "USM Kafka cluster"); err != nil {
 		return err
 	}
 
@@ -48,6 +48,6 @@ func (c *kafkaClusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteUsmKafkaCluster(primaryId, environmentId)
 	}
 
-	_, err = deletion.Delete(cmd, args, deleteFunc, "usm Kafka cluster")
+	_, err = deletion.Delete(cmd, args, deleteFunc, "USM Kafka cluster")
 	return err
 }

@@ -15,9 +15,9 @@ func (s *CLITestSuite) TestUsmKafkaClusterCreate() {
 
 func (s *CLITestSuite) TestUsmKafkaClusterDelete() {
 	tests := []CLITest{
-		{args: "usm kafka-cluster deregister lkc-1 --force", fixture: "usm/kafka-cluster/delete/delete.golden"},
-		{args: "usm kafka-cluster deregister lkc-1", input: "y\n", fixture: "usm/kafka-cluster/delete/delete-no-force.golden"},
-		{args: "usm kafka-cluster deregister lkc-1 lkc-2", input: "y\n", fixture: "usm/kafka-cluster/delete/delete-multiple.golden"},
+		{args: "usm kafka-cluster deregister usmkc-1 --force", fixture: "usm/kafka-cluster/delete/delete.golden"},
+		{args: "usm kafka-cluster deregister usmkc-1", input: "y\n", fixture: "usm/kafka-cluster/delete/delete-no-force.golden"},
+		{args: "usm kafka-cluster deregister usmkc-1 usmkc-2", input: "y\n", fixture: "usm/kafka-cluster/delete/delete-multiple.golden"},
 		{args: "usm kafka-cluster deregister invalid", fixture: "usm/kafka-cluster/delete/delete-invalid.golden", exitCode: 1},
 	}
 
@@ -29,9 +29,9 @@ func (s *CLITestSuite) TestUsmKafkaClusterDelete() {
 
 func (s *CLITestSuite) TestUsmKafkaClusterDescribe() {
 	tests := []CLITest{
-		{args: "usm kafka-cluster describe lkc-1", fixture: "usm/kafka-cluster/describe/describe.golden"},
-		{args: "usm kafka-cluster describe lkc-1 -o json", fixture: "usm/kafka-cluster/describe/describe-json.golden"},
-		{args: "usm kafka-cluster describe lkc-1 -o yaml", fixture: "usm/kafka-cluster/describe/describe-yaml.golden"},
+		{args: "usm kafka-cluster describe usmkc-1", fixture: "usm/kafka-cluster/describe/describe.golden"},
+		{args: "usm kafka-cluster describe usmkc-1 -o json", fixture: "usm/kafka-cluster/describe/describe-json.golden"},
+		{args: "usm kafka-cluster describe usmkc-1 -o yaml", fixture: "usm/kafka-cluster/describe/describe-yaml.golden"},
 		{args: "usm kafka-cluster describe invalid", fixture: "usm/kafka-cluster/describe/describe-invalid.golden", exitCode: 1},
 	}
 
