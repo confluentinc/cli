@@ -59,7 +59,12 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newConnectivityTypeCommand())
 	cmd.AddCommand(c.newEndpointCommand())
 	cmd.AddCommand(c.newMaterializedTableCommand())
-	cmd.AddCommand(c.newRegionCommand())
+
+	// Generated commands.
+	cmd.AddCommand(
+		newRegionCommand(cfg, prerunner),
+		// cli-tfgen:cli-subcommands
+	)
 
 	return cmd
 }
