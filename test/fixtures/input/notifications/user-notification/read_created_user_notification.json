@@ -1,0 +1,70 @@
+{
+  "actions": [
+    {
+      "identifier": "manage_cluster_settings",
+      "role": "PRIMARY",
+      "url": "https://confluent.cloud/environments/env-xyz/clusters/lkc-ds23ad/settings"
+    }
+  ],
+  "api_version": "notifications/v1",
+  "id": "dlz-f3a90de",
+  "integrations": [
+    {
+      "api_version": "notifications/v1",
+      "description": "A Slack channel integration",
+      "display_name": "Slack integration",
+      "id": "dlz-f3a90de",
+      "kind": "Integration",
+      "metadata": {
+        "created_at": "2006-01-02T15:04:05-07:00",
+        "deleted_at": "2006-01-02T15:04:05-07:00",
+        "resource_name": "crn://confluent.cloud/organization=9bb441c4-edef-46ac-8a41-c49e44a3fd9a/integration=i-12345",
+        "self": "https://api.confluent.cloud/notifications/v1/integrations/i-12345",
+        "updated_at": "2006-01-02T15:04:05-07:00"
+      },
+      "target": {
+        "kind": "Slack",
+        "webhook_url": "https://hooks.slack.com/services/{id}/{id}/{id}"
+      }
+    }
+  ],
+  "kind": "UserNotification",
+  "metadata": {
+    "created_at": "2006-01-02T15:04:05-07:00",
+    "deleted_at": "2006-01-02T15:04:05-07:00",
+    "resource_name": "crn://confluent.cloud/organization=9bb441c4-edef-46ac-8a41-c49e44a3fd9a/user-notification=un-12345",
+    "self": "https://api.confluent.cloud/notifications/v1/user-notifications/un-12345",
+    "updated_at": "2006-01-02T15:04:05-07:00"
+  },
+  "notification_type": {
+    "api_version": "notifications/v1",
+    "category": "BILLING_LICENSING",
+    "description": "Cluster shrink operation is completed",
+    "display_name": "Cluster Shrink",
+    "id": "dlz-f3a90de",
+    "is_included_in_plan": false,
+    "kind": "NotificationType",
+    "metadata": {
+      "created_at": "2006-01-02T15:04:05-07:00",
+      "deleted_at": "2006-01-02T15:04:05-07:00",
+      "resource_name": "crn://confluent.cloud/organization=9bb441c4-edef-46ac-8a41-c49e44a3fd9a/notification-type=nt-12345",
+      "self": "https://api.confluent.cloud/notifications/v1/notification-types/nt-12345",
+      "updated_at": "2006-01-02T15:04:05-07:00"
+    },
+    "severity": "INFO",
+    "subscription_priority": "REQUIRED"
+  },
+  "read": false,
+  "read_at": "2026-01-31T11:00:00Z",
+  "received_at": "2026-01-31T10:35:00Z",
+  "recommended_actions": {
+    "content": "Restart the cluster from the Confluent Cloud console.",
+    "version": 1
+  },
+  "resource": {
+    "crn": "crn://confluent.cloud/organization=org-abc/environment=env-xyz/kafka-cluster=lkc-ds23ad",
+    "display_name": "prod-kafka-cluster",
+    "type": "CLUSTER"
+  },
+  "severity": "CRITICAL"
+}

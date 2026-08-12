@@ -1,0 +1,4 @@
+      ID      |  Display Name  |     Category      |          Description           | Subscription Priority | Is Included In Plan | Severity  
+--------------+----------------+-------------------+--------------------------------+-----------------------+---------------------+-----------
+  dlz-f3a90de | Cluster Shrink | BILLING_LICENSING | Cluster shrink operation is    | REQUIRED              | false               | INFO      
+              |                |                   | completed                      |                       |                     |           

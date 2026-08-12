@@ -1,0 +1,17 @@
+Create a notifications integration.
+
+Usage:
+  confluent notifications integration create <name> [flags]
+
+Flags:
+      --kind string          REQUIRED: 
+      --webhook-url string   
+      --url string           
+      --description string   A human readable description for the particular integration.
+      --context string       CLI context name.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

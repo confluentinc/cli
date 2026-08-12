@@ -216,6 +216,9 @@ var properNouns = []string{
 
 // vocabWords are words that don't appear in the US dictionary, but are Confluent-related words.
 var vocabWords = []string{
+	"24h",
+	"30d",
+	"7d",
 	"a2a",
 	"ack",
 	"acks",
@@ -295,7 +298,10 @@ var vocabWords = []string{
 	"jsonschema",
 	"jwks",
 	"JWT",
+	"crns",
+	"eg",
 	"enum",
+	"integrations",
 	"kafka",
 	"kek",
 	"keychain",
@@ -334,6 +340,7 @@ var vocabWords = []string{
 	"rbac",
 	"readonly",
 	"readwrite",
+	"recieve",
 	"recv",
 	"rescale",
 	"rest",

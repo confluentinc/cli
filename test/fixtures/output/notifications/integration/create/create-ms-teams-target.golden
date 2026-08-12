@@ -1,0 +1,6 @@
++-----------------------------+----------------------------------------------------------------------+
+| ID                          | dlz-f3a90de                                                          |
+| Display Name                | test-name                                                            |
+| Description                 | A Slack channel integration                                          |
+| Ms Teams Target Webhook Url | https://admin.webhook.office.com/webhookb2/{id}/IncomingWebhook/{id} |
++-----------------------------+----------------------------------------------------------------------+

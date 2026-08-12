@@ -36,6 +36,7 @@ import (
 	"github.com/confluentinc/cli/v4/internal/login"
 	"github.com/confluentinc/cli/v4/internal/logout"
 	"github.com/confluentinc/cli/v4/internal/network"
+	"github.com/confluentinc/cli/v4/internal/notifications"
 	"github.com/confluentinc/cli/v4/internal/organization"
 	"github.com/confluentinc/cli/v4/internal/plugin"
 	"github.com/confluentinc/cli/v4/internal/prompt"
@@ -128,6 +129,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, loginCredentialsManager, loginOrganizationManager, authTokenHandler))
 	cmd.AddCommand(logout.New(cfg, prerunner, authTokenHandler))
 	cmd.AddCommand(network.New(cfg, prerunner))
+	cmd.AddCommand(notifications.New(cfg, prerunner))
 	cmd.AddCommand(organization.New(cfg, prerunner))
 	cmd.AddCommand(plugin.New(cfg, prerunner))
 	cmd.AddCommand(prompt.New(cfg))

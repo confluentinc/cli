@@ -1,0 +1,16 @@
+Create a notifications subscription.
+
+Usage:
+  confluent notifications subscription create [flags]
+
+Flags:
+      --notification-type string   REQUIRED: The type of notification to subscribe to.
+      --integrations strings       REQUIRED: Integrations to which notifications are to be sent.
+      --current-state REQUIRED     Denotes the state of the subscription. When the subscription is ENABLED, the user will receive notification on the configured Integrations. If the subscription is DISABLED, the user will not recieve any notification for the configured notification type. Note that, you cannot disable a subscription for REQUIRED notification type.
+      --context string             CLI context name.
+  -o, --output string              Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
