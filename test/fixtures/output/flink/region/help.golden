@@ -6,7 +6,7 @@ Usage:
 Available Commands:
   list        List Flink regions.
   unset       Unset the current Flink cloud provider and region.
-  use         Use a Flink cloud provider and region combination in subsequent commands.
+  use         Use a Flink cloud provider and region combination.
 
 Global Flags:
   -h, --help            Show help for this command.

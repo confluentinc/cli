@@ -19,7 +19,7 @@ import (
 func (c *regionCommand) newUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "use",
-		Short: "Use a Flink cloud provider and region combination in subsequent commands.",
+		Short: "Use a Flink cloud provider and region combination.",
 		Long:  "Choose the Flink cloud provider and region combination to be used in subsequent Flink commands which support passing them with the `--cloud` and `--region` flags.",
 		Args:  cobra.NoArgs,
 		RunE:  c.use,
