@@ -23,12 +23,13 @@ type connectOut struct {
 }
 
 type connectHybridOut struct {
-	Id             string `human:"ID" serialized:"id"`
-	ConnectCluster string `human:"Connect Cluster" serialized:"connect_cluster"`
-	KafkaCluster   string `human:"Kafka Cluster" serialized:"kafka_cluster"`
-	Cloud          string `human:"Cloud" serialized:"cloud"`
-	Region         string `human:"Region" serialized:"region"`
-	Environment    string `human:"Environment" serialized:"environment"`
+	Id                string `human:"ID" serialized:"id"`
+	ConnectCluster    string `human:"Connect Cluster" serialized:"connect_cluster"`
+	USMKafkaClusterId string `human:"USM Kafka Cluster ID" serialized:"usm_kafka_cluster_id"`
+	KafkaCluster      string `human:"Kafka Cluster" serialized:"kafka_cluster"`
+	Cloud             string `human:"Cloud" serialized:"cloud"`
+	Region            string `human:"Region" serialized:"region"`
+	Environment       string `human:"Environment" serialized:"environment"`
 }
 
 func (c *command) newConnectCommand() *cobra.Command {
@@ -95,14 +96,15 @@ func printConnectTable(cmd *cobra.Command, connect usmv1.UsmV1ConnectCluster, us
 	return table.Print()
 }
 
-func printHybridConnectTable(cmd *cobra.Command, connect usmv1.UsmV1ConnectCluster, kafkaClusterId string) error {
+func printHybridConnectTable(cmd *cobra.Command, connect usmv1.UsmV1ConnectCluster, usmKafkaClusterId string) error {
 	out := &connectHybridOut{
-		Id:             connect.GetId(),
-		ConnectCluster: connect.GetConfluentPlatformConnectClusterId(),
-		KafkaCluster:   kafkaClusterId,
-		Cloud:          connect.GetCloud(),
-		Region:         connect.GetRegion(),
-		Environment:    connect.Environment.GetId(),
+		Id:                connect.GetId(),
+		ConnectCluster:    connect.GetConfluentPlatformConnectClusterId(),
+		USMKafkaClusterId: usmKafkaClusterId,
+		KafkaCluster:      connect.GetKafkaClusterId(),
+		Cloud:             connect.GetCloud(),
+		Region:            connect.GetRegion(),
+		Environment:       connect.Environment.GetId(),
 	}
 	table := output.NewTable(cmd)
 	table.Add(out)

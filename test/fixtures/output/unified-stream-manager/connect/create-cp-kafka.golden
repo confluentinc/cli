@@ -1,8 +1,9 @@
-+-----------------+------------------------+
-| ID              | usmcc-abc123           |
-| Connect Cluster | connect-group-xyz123   |
-| Kafka Cluster   | 4k0R9d1GTS5tI9f4Y2xZ0Q |
-| Cloud           | AWS                    |
-| Region          | us-east-1              |
-| Environment     | env-596                |
-+-----------------+------------------------+
++----------------------+------------------------+
+| ID                   | usmcc-abc123           |
+| Connect Cluster      | connect-group-xyz123   |
+| USM Kafka Cluster ID | usmkc-abc123           |
+| Kafka Cluster        | 4k0R9d1GTS5tI9f4Y2xZ0Q |
+| Cloud                | AWS                    |
+| Region               | us-east-1              |
+| Environment          | env-596                |
++----------------------+------------------------+

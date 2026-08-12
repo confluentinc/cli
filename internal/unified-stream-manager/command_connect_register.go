@@ -101,7 +101,7 @@ func (c *command) registerConnect(cmd *cobra.Command, args []string) error {
 	}
 
 	if cmd.Flags().Changed("kafka-cluster") {
-		return printHybridConnectTable(cmd, cluster, kafkaClusterId)
+		return printHybridConnectTable(cmd, cluster, usmKafkaClusterId)
 	}
 
 	return printConnectTable(cmd, cluster, usmKafkaClusterId)
