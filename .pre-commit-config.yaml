@@ -1,4 +1,4 @@
-exclude: ^.devcontainer/|^charts/|^mk-include/|^node_modules/
+exclude: ^.devcontainer/|^charts/|^mk-include/|^node_modules/|^test/fixtures/output/
 fail_fast: false
 repos:
 # ### SERVICEBOT BEGIN - DO NOT EDIT THIS SECTION
