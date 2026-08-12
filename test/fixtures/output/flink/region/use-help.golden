@@ -1,10 +1,10 @@
-Choose a Flink region to be used in subsequent commands which support passing a region with the `--region` flag.
+Choose the Flink cloud provider and region combination to be used in subsequent Flink commands which support passing them with the `--cloud` and `--region` flags.
 
 Usage:
   confluent flink region use [flags]
 
 Examples:
-Select region "N. Virginia (us-east-1)" for use in subsequent Flink commands.
+Select AWS region "N. Virginia (us-east-1)" for use in subsequent Flink commands.
 
   $ confluent flink region use --cloud aws --region us-east-1
 
