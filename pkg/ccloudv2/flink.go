@@ -75,13 +75,25 @@ func (c *Client) executeListFlinkComputePools(environment, specRegion, pageToken
 	return req.Execute()
 }
 
-func (c *Client) ListFlinkRegions(cloud, region string) ([]flinkv2.FcpmV2Region, error) {
+func (c *Client) UpdateFlinkComputePool(id string, update flinkv2.FcpmV2ComputePoolUpdate) (flinkv2.FcpmV2ComputePool, error) {
+	res, httpResp, err := c.FlinkClient.ComputePoolsFcpmV2Api.UpdateFcpmV2ComputePool(c.flinkApiContext(), id).FcpmV2ComputePoolUpdate(update).Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) UpdateFlinkComputePoolConfig(fcpmV2OrgComputePoolConfigUpdate flinkv2.FcpmV2OrgComputePoolConfigUpdate) (flinkv2.FcpmV2OrgComputePoolConfig, error) {
+	res, httpResp, err := c.FlinkClient.OrgComputePoolConfigsFcpmV2Api.UpdateFcpmV2OrgComputePoolConfig(c.flinkApiContext()).FcpmV2OrgComputePoolConfigUpdate(fcpmV2OrgComputePoolConfigUpdate).Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+// ===== Flink regions API calls =====
+
+func (c *Client) ListFlinkRegions(cloud string, regionName string) ([]flinkv2.FcpmV2Region, error) {
 	var list []flinkv2.FcpmV2Region
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, httpResp, err := c.executeListFlinkRegions(cloud, region, pageToken)
+		page, httpResp, err := c.executeListFlinkRegions(cloud, regionName, pageToken)
 		if err != nil {
 			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
@@ -96,26 +108,18 @@ func (c *Client) ListFlinkRegions(cloud, region string) ([]flinkv2.FcpmV2Region,
 	return list, nil
 }
 
-func (c *Client) executeListFlinkRegions(cloud, region, pageToken string) (flinkv2.FcpmV2RegionList, *http.Response, error) {
-	req := c.FlinkClient.RegionsFcpmV2Api.ListFcpmV2Regions(c.flinkApiContext()).PageSize(ccloudV2ListPageSize)
+func (c *Client) executeListFlinkRegions(cloud string, regionName string, pageToken string) (flinkv2.FcpmV2RegionList, *http.Response, error) {
+	req := c.FlinkClient.RegionsFcpmV2Api.
+		ListFcpmV2Regions(c.flinkApiContext()).
+		PageSize(ccloudV2ListPageSize)
 	if cloud != "" {
 		req = req.Cloud(cloud)
 	}
-	if region != "" {
-		req = req.RegionName(region)
+	if regionName != "" {
+		req = req.RegionName(regionName)
 	}
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
 	return req.Execute()
-}
-
-func (c *Client) UpdateFlinkComputePool(id string, update flinkv2.FcpmV2ComputePoolUpdate) (flinkv2.FcpmV2ComputePool, error) {
-	res, httpResp, err := c.FlinkClient.ComputePoolsFcpmV2Api.UpdateFcpmV2ComputePool(c.flinkApiContext(), id).FcpmV2ComputePoolUpdate(update).Execute()
-	return res, errors.CatchCCloudV2Error(err, httpResp)
-}
-
-func (c *Client) UpdateFlinkComputePoolConfig(fcpmV2OrgComputePoolConfigUpdate flinkv2.FcpmV2OrgComputePoolConfigUpdate) (flinkv2.FcpmV2OrgComputePoolConfig, error) {
-	res, httpResp, err := c.FlinkClient.OrgComputePoolConfigsFcpmV2Api.UpdateFcpmV2OrgComputePoolConfig(c.flinkApiContext()).FcpmV2OrgComputePoolConfigUpdate(fcpmV2OrgComputePoolConfigUpdate).Execute()
-	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
