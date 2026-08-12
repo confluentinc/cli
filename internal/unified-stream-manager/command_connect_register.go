@@ -23,17 +23,23 @@ func (c *command) newConnectRegisterCommand() *cobra.Command {
 				Text: "Register a Confluent Platform Connect cluster with the ID connect-group-xyz123.",
 				Code: "confluent unified-stream-manager connect register connect-group-xyz123 --confluent-platform-kafka-cluster 4k0R9d1GTS5tI9f4Y2xZ0Q --cloud aws --region us-east-1",
 			},
+			examples.Example{
+				Text: "Register a Connect cluster with the ID connect-group-xyz123.",
+				Code: "confluent unified-stream-manager connect register connect-group-xyz123 --kafka-cluster lkc-abc123 --cloud aws --region us-east-1",
+			},
 		),
 	}
 
 	cmd.Flags().String("confluent-platform-kafka-cluster", "", "The ID of the metadata Kafka cluster for the Connect Cluster.")
+	cmd.Flags().String("kafka-cluster", "", `The ID of the metadata Kafka cluster for the Connect Cluster.`)
 	pcmd.AddCloudFlag(cmd)
 	c.addRegionFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("confluent-platform-kafka-cluster"))
+	cmd.MarkFlagsOneRequired("confluent-platform-kafka-cluster", "kafka-cluster")
+	cmd.MarkFlagsMutuallyExclusive("confluent-platform-kafka-cluster", "kafka-cluster")
 	cmd.MarkFlagsRequiredTogether("cloud", "region")
 
 	return cmd
@@ -53,6 +59,13 @@ func (c *command) registerConnect(cmd *cobra.Command, args []string) error {
 	kafkaClusterId, err := cmd.Flags().GetString("confluent-platform-kafka-cluster")
 	if err != nil {
 		return err
+	}
+
+	if cmd.Flags().Changed("kafka-cluster") {
+		kafkaClusterId, err = cmd.Flags().GetString("kafka-cluster")
+		if err != nil {
+			return err
+		}
 	}
 
 	usmKafkaClusterId, ok := onPremToCloudKafkaIdMap[kafkaClusterId]
@@ -85,6 +98,10 @@ func (c *command) registerConnect(cmd *cobra.Command, args []string) error {
 	cluster, err := c.V2Client.CreateUsmConnectCluster(connectClusterRequest)
 	if err != nil {
 		return err
+	}
+
+	if cmd.Flags().Changed("kafka-cluster") {
+		return printHybridConnectTable(cmd, cluster, usmKafkaClusterId)
 	}
 
 	return printConnectTable(cmd, cluster, usmKafkaClusterId)
