@@ -12,6 +12,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -22,6 +23,12 @@ func (c *regionCommand) newUseCommand() *cobra.Command {
 		Long:  "Choose the Flink cloud provider and region combination to be used in subsequent Flink commands which support passing them with the `--cloud` and `--region` flags.",
 		Args:  cobra.NoArgs,
 		RunE:  c.use,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Select AWS region "N. Virginia (us-east-1)" for use in subsequent Flink commands.`,
+				Code: "confluent flink region use --cloud aws --region us-east-1",
+			},
+		),
 	}
 
 	pcmd.AddCloudFlag(cmd)

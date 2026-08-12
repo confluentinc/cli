@@ -1,2 +1,3 @@
 The current Flink endpoint has been unset due to the cloud or region change.
+Run `confluent flink endpoint list` and `confluent flink endpoint use` to select an endpoint for the new cloud and region.
 Using Flink region "Iowa (centralus)".

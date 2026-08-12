@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -17,6 +18,12 @@ func (c *regionCommand) newListCommand() *cobra.Command {
 		Short: "List Flink regions.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "List the available Flink AWS regions.",
+				Code: "confluent flink region list --cloud aws",
+			},
+		),
 	}
 
 	// Required flags

@@ -5,6 +5,7 @@ package flink
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -15,6 +16,12 @@ func (c *regionCommand) newUnsetCommand() *cobra.Command {
 		Long:  "Unset the current Flink cloud provider and region that was set with the `use` command.",
 		Args:  cobra.NoArgs,
 		RunE:  c.unset,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Unset the current Flink region us-west-1 with cloud provider = AWS.`,
+				Code: `confluent flink region unset`,
+			},
+		),
 	}
 
 	return cmd
