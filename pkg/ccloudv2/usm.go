@@ -57,7 +57,7 @@ func (c *Client) ListUsmConnectClusters(environment string) ([]usmv1.UsmV1Connec
 	done := false
 	pageToken := ""
 	for !done {
-		page, httpResp, err := c.executeListConnectClusters(environment, pageToken)
+		page, httpResp, err := c.executeListUsmConnectClusters(environment, pageToken)
 		if err != nil {
 			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
@@ -72,7 +72,7 @@ func (c *Client) ListUsmConnectClusters(environment string) ([]usmv1.UsmV1Connec
 	return list, nil
 }
 
-func (c *Client) executeListConnectClusters(environment string, pageToken string) (usmv1.UsmV1ConnectClusterList, *http.Response, error) {
+func (c *Client) executeListUsmConnectClusters(environment string, pageToken string) (usmv1.UsmV1ConnectClusterList, *http.Response, error) {
 	req := c.UsmClient.ConnectClustersUsmV1Api.
 		ListUsmV1ConnectClusters(c.usmApiContext()).
 		Environment(environment).
@@ -113,7 +113,7 @@ func (c *Client) ListUsmKafkaClusters(environment string) ([]usmv1.UsmV1KafkaClu
 	done := false
 	pageToken := ""
 	for !done {
-		page, httpResp, err := c.executeListKafkaClusters(environment, pageToken)
+		page, httpResp, err := c.executeListUsmKafkaClusters(environment, pageToken)
 		if err != nil {
 			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
@@ -128,7 +128,7 @@ func (c *Client) ListUsmKafkaClusters(environment string) ([]usmv1.UsmV1KafkaClu
 	return list, nil
 }
 
-func (c *Client) executeListKafkaClusters(environment string, pageToken string) (usmv1.UsmV1KafkaClusterList, *http.Response, error) {
+func (c *Client) executeListUsmKafkaClusters(environment string, pageToken string) (usmv1.UsmV1KafkaClusterList, *http.Response, error) {
 	req := c.UsmClient.KafkaClustersUsmV1Api.
 		ListUsmV1KafkaClusters(c.usmApiContext()).
 		Environment(environment).
