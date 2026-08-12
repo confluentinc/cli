@@ -1,0 +1,10 @@
++-----------------+-------------------------------------------------+
+| ID              | se-123456                                       |
+| Name            | prod-kafka-dr-endpoint                          |
+| Environment     | env-123456                                      |
+| Switchover Pair | sw-123456                                       |
+| Endpoints       | west-platt, east-platt                          |
+| Target          | west-platt                                      |
+| DR Endpoint     | glkc-sw-123456-se-123456.global.confluent.cloud |
+| Phase           | READY                                           |
++-----------------+-------------------------------------------------+

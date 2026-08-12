@@ -1,0 +1,9 @@
++---------------+--------------------------------+
+| ID            | sw-123456                      |
+| Name          | prod-kafka-dr                  |
+| Environment   | env-123456                     |
+| Members       | west=lkc-111111,               |
+|               | east=lkc-222222                |
+| Active Member | west                           |
+| Phase         | SWITCHING                      |
++---------------+--------------------------------+
