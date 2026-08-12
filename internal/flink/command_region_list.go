@@ -38,12 +38,12 @@ func (c *regionCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 	cloud = strings.ToUpper(cloud)
 
-	region, err := cmd.Flags().GetString("region")
+	regionName, err := cmd.Flags().GetString("region")
 	if err != nil {
 		return err
 	}
 
-	regions, err := c.V2Client.ListFlinkRegions(cloud, region)
+	regions, err := c.V2Client.ListFlinkRegions(cloud, regionName)
 	if err != nil {
 		return err
 	}

@@ -11,8 +11,8 @@ import (
 func (c *regionCommand) newUnsetCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unset",
-		Short: "Unset the current Flink cloud and region.",
-		Long:  "Unset the current Flink cloud and region that was set with the `use` command.",
+		Short: "Unset the current Flink cloud provider and region.",
+		Long:  "Unset the current Flink cloud provider and region that was set with the `use` command.",
 		Args:  cobra.NoArgs,
 		RunE:  c.unset,
 	}
@@ -22,10 +22,10 @@ func (c *regionCommand) newUnsetCommand() *cobra.Command {
 
 func (c *regionCommand) unset(_ *cobra.Command, _ []string) error {
 	cloudToUnset := c.Context.GetCurrentFlinkCloudProvider()
-	regionToUnset := c.Context.GetCurrentFlinkRegion()
-	output.Println(c.Config.EnableColor, "Unset the current Flink cloud and region")
+	regionNameToUnset := c.Context.GetCurrentFlinkRegion()
+	output.Println(c.Config.EnableColor, "Unset the current Flink cloud provider and region")
 
-	if cloudToUnset == "" && regionToUnset == "" {
+	if cloudToUnset == "" && regionNameToUnset == "" {
 		return nil
 	}
 	if err := c.Context.SetCurrentFlinkCloudProvider(""); err != nil {

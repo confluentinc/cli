@@ -18,8 +18,8 @@ import (
 func (c *regionCommand) newUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "use",
-		Short: "Use a Flink region in subsequent commands.",
-		Long:  "Choose a Flink region to be used in subsequent commands which support passing a region with the `--region` flag.",
+		Short: "Use a Flink cloud provider and region combination in subsequent commands.",
+		Long:  "Choose the Flink cloud provider and region combination to be used in subsequent Flink commands which support passing them with the `--cloud` and `--region` flags.",
 		Args:  cobra.NoArgs,
 		RunE:  c.use,
 	}
@@ -38,32 +38,33 @@ func (c *regionCommand) use(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	cloud = strings.ToUpper(cloud)
 
-	region, err := cmd.Flags().GetString("region")
+	regionName, err := cmd.Flags().GetString("region")
 	if err != nil {
 		return err
 	}
 
-	regions, err := c.V2Client.ListFlinkRegions(cloud, region)
+	regions, err := c.V2Client.ListFlinkRegions(cloud, regionName)
 	if err != nil {
 		return err
 	}
 	var selected *flinkv2.FcpmV2Region
 	for _, candidate := range regions {
-		if candidate.GetCloud() == strings.ToUpper(cloud) && candidate.GetRegionName() == region {
+		if candidate.GetCloud() == cloud && candidate.GetRegionName() == regionName {
 			selected = &candidate
 			break
 		}
 	}
 	if selected == nil {
 		return errors.NewErrorWithSuggestions(
-			fmt.Sprintf("no Flink region found for cloud %q and region %q", cloud, region),
+			fmt.Sprintf("no Flink region found for cloud %q and region name %q", cloud, regionName),
 			"List available Flink regions with `confluent flink region list`.",
 		)
 	}
 
-	// Scoped to the previous selection, so recording a new one clears it.
 	output.Println(c.Config.EnableColor, "The current Flink endpoint has been unset due to the cloud or region change.")
+	output.Println(c.Config.EnableColor, "Run `confluent flink endpoint list` and `confluent flink endpoint use` to select an endpoint for the new cloud and region.")
 	if err := c.Context.SetCurrentFlinkEndpoint(""); err != nil {
 		return err
 	}
@@ -72,7 +73,7 @@ func (c *regionCommand) use(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if err := c.Context.SetCurrentFlinkRegion(region); err != nil {
+	if err := c.Context.SetCurrentFlinkRegion(regionName); err != nil {
 		return err
 	}
 
