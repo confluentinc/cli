@@ -53,7 +53,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.3
 	github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.7.0
-	github.com/confluentinc/ccloud-sdk-go-v2/usm v0.1.0
+	github.com/confluentinc/ccloud-sdk-go-v2/usm v0.2.0
 	github.com/confluentinc/cmf-sdk-go v0.0.8
 	github.com/confluentinc/confluent-kafka-go/v2 v2.14.2
 	github.com/confluentinc/go-editor v0.11.0
@@ -68,7 +68,7 @@ require (
 	github.com/dghubble/sling v1.4.2
 	github.com/fatih/color v1.17.0
 	github.com/gdamore/tcell/v2 v2.7.4
-	github.com/go-git/go-git/v5 v5.19.1
+	github.com/go-git/go-git/v5 v5.19.2
 	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/gobuffalo/flect v1.0.2
 	github.com/gogo/protobuf v1.3.2

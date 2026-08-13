@@ -144,10 +144,10 @@ var ccloudV2Routes = []route{
 	{"/tableflow/v1/catalog-integrations", handleCatalogIntegrations},
 	{"/tableflow/v1/tableflow-topics/{display_name}", handleTableflowTopic},
 	{"/tableflow/v1/tableflow-topics", handleTableflowTopics},
-	{"/usm/v1/kafka-clusters", handleUsmKafkaClusters},
-	{"/usm/v1/kafka-clusters/{id}", handleUsmKafkaCluster},
-	{"/usm/v1/connect-clusters", handleUsmConnectClusters},
-	{"/usm/v1/connect-clusters/{id}", handleUsmConnectCluster},
+	{"/usm/v1/connect-clusters", handleUsmV1ConnectClusters},
+	{"/usm/v1/connect-clusters/{id}", handleUsmV1ConnectClustersId},
+	{"/usm/v1/kafka-clusters", handleUsmV1KafkaClusters},
+	{"/usm/v1/kafka-clusters/{id}", handleUsmV1KafkaClustersId},
 	{"/v2/metrics/cloud/query", handleMetricsQuery},
 	// cli-tfgen:cli-api-routes — DO NOT REMOVE (verified by TestCliTfgenMarkers)
 }
