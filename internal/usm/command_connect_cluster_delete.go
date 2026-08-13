@@ -7,6 +7,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/deletion"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
 func (c *connectClusterCommand) newDeleteCommand() *cobra.Command {
@@ -17,6 +18,12 @@ func (c *connectClusterCommand) newDeleteCommand() *cobra.Command {
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Deregister a Confluent Platform Connect cluster.",
+				Code: "confluent usm connect-cluster delete usmcc-abc123",
+			},
+		),
 	}
 
 	// Required flags

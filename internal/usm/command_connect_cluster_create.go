@@ -11,6 +11,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
 func (c *connectClusterCommand) newCreateCommand() *cobra.Command {
@@ -20,6 +21,12 @@ func (c *connectClusterCommand) newCreateCommand() *cobra.Command {
 		Args:    cobra.ExactArgs(1),
 		Aliases: []string{"register"},
 		RunE:    c.create,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Register a Confluent Platform Connect cluster with the ID connect-group-xyz123.",
+				Code: "confluent usm connect-cluster create connect-group-xyz123 --confluent-platform-kafka-cluster 4k0R9d1GTS5tI9f4Y2xZ0Q --cloud aws --region us-east-1",
+			},
+		),
 	}
 
 	// Required flags

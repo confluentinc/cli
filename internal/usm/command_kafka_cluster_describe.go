@@ -7,6 +7,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
 func (c *kafkaClusterCommand) newDescribeCommand() *cobra.Command {
@@ -16,6 +17,12 @@ func (c *kafkaClusterCommand) newDescribeCommand() *cobra.Command {
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.describe,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Describe a Confluent Platform Kafka cluster with the ID usmkc-abc123.",
+				Code: "confluent usm kafka-cluster describe usmkc-abc123",
+			},
+		),
 	}
 
 	// Required flags

@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -15,6 +16,12 @@ func (c *kafkaClusterCommand) newListCommand() *cobra.Command {
 		Short: "List USM Kafka clusters.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "List Kafka clusters.",
+				Code: "confluent usm kafka-cluster list",
+			},
+		),
 	}
 
 	// Required flags
