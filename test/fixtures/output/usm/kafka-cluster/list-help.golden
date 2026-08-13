@@ -3,6 +3,11 @@ List USM Kafka clusters.
 Usage:
   confluent usm kafka-cluster list [flags]
 
+Examples:
+List Kafka clusters.
+
+  $ confluent usm kafka-cluster list
+
 Flags:
       --environment string   Environment ID.
       --context string       CLI context name.

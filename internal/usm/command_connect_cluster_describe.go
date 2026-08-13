@@ -7,6 +7,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
 func (c *connectClusterCommand) newDescribeCommand() *cobra.Command {
@@ -16,6 +17,12 @@ func (c *connectClusterCommand) newDescribeCommand() *cobra.Command {
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.describe,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Describe a Confluent Platform Connect cluster with the USM ID usmcc-abc123.",
+				Code: "confluent usm connect-cluster describe usmcc-abc123",
+			},
+		),
 	}
 
 	// Required flags

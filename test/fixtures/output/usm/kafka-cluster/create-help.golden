@@ -6,6 +6,11 @@ Usage:
 Aliases:
   create, register
 
+Examples:
+Register a Confluent Platform Kafka cluster with the ID 4k0R9d1GTS5tI9f4Y2xZ0Q.
+
+  $ confluent usm kafka-cluster create 4k0R9d1GTS5tI9f4Y2xZ0Q --name my-kafka-cluster --cloud aws --region us-east-1
+
 Flags:
       --name string          REQUIRED: A human-readable name for the Confluent Platform Kafka cluster.
       --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
