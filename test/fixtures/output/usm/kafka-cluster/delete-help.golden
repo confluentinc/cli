@@ -6,6 +6,11 @@ Usage:
 Aliases:
   delete, deregister
 
+Examples:
+Deregister a Confluent Platform Kafka cluster.
+
+  $ confluent usm kafka-cluster delete usmkc-abc123
+
 Flags:
       --environment string   Environment ID.
       --context string       CLI context name.
