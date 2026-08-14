@@ -64,9 +64,36 @@ blocks:
             # following the pattern from cli-release/.semaphore/4-release-cli.yml).
             - $Env:VAULT_ADDR = "https://vault.cireops.gcp.internal.confluent.cloud"
             - vault login -no-print token=$(vault write -field=token "auth/semaphore_self_hosted/login" role="default" jwt="$Env:SEMAPHORE_OIDC_TOKEN")
-            - $Env:CONFLUENT_CLOUD_EMAIL = (vault kv get -field=CONFLUENT_CLOUD_EMAIL v1/ci/kv/apif/cli/live-testing-data)
-            - $Env:CONFLUENT_CLOUD_PASSWORD = (vault kv get -field=CONFLUENT_CLOUD_PASSWORD v1/ci/kv/apif/cli/live-testing-data)
-            - $Env:SLACK_WEBHOOK_URL = (vault kv get -field=SLACK_WEBHOOK_URL v1/ci/kv/apif/cli/slack-notifications-live-testing)
+            # Read whole secrets and export every field as an uppercased variable, which is
+            # what `vault-sem-get-secret` does for the linux/arm64 job above. Asking for
+            # named fields instead (`-field=CONFLUENT_CLOUD_EMAIL`) failed with `Field
+            # "CONFLUENT_CLOUD_EMAIL" not present in secret`, because the fields are not
+            # stored under those exact names -- the linux helper is what uppercases them.
+            # Never echo the values: only field names are ever printed.
+            - |
+              function Import-VaultSecret($Path) {
+                $secret = vault kv get -format=json $Path | ConvertFrom-Json
+                if ($LASTEXITCODE -ne 0) { throw "failed to read Vault secret $Path" }
+
+                # KV v2 nests fields under .data.data; KV v1 puts them directly on .data.
+                $fields = if ($secret.data.PSObject.Properties.Name -contains "data") { $secret.data.data } else { $secret.data }
+
+                foreach ($field in $fields.PSObject.Properties) {
+                  [Environment]::SetEnvironmentVariable($field.Name.ToUpper(), $field.Value)
+                }
+                Write-Host "Imported $Path fields: $(($fields.PSObject.Properties.Name | Sort-Object) -join ', ')"
+              }
+
+              Import-VaultSecret v1/ci/kv/apif/cli/live-testing-data
+              Import-VaultSecret v1/ci/kv/apif/cli/slack-notifications-live-testing
+
+              # Fail here rather than 20 minutes later inside `go test`, which would only
+              # report "required environment variable ... is not set".
+              foreach ($name in @("CONFLUENT_CLOUD_EMAIL", "CONFLUENT_CLOUD_PASSWORD", "SLACK_WEBHOOK_URL")) {
+                if (-not [Environment]::GetEnvironmentVariable($name)) {
+                  throw "$name is not set after importing Vault secrets"
+                }
+              }
 
             # Install Go (matches the pattern in semaphore.yml; chocolatey is community-maintained)
             - $ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -OutFile Go.zip -Uri https://go.dev/dl/go$(Get-Content .go-version).windows-amd64.zip -UseBasicParsing
