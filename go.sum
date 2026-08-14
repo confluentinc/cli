@@ -165,8 +165,6 @@ github.com/cloudflare/circl v1.6.3/go.mod h1:2eXP6Qfat4O/Yhh8BznvKnJ+uzEoTQ6jVKJ
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20250521223017-0e8f6f971b52 h1:19qEGhkbZa5fopKCe0VPIV+Sasby4Pv10z9ZaktwWso=
 github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20250521223017-0e8f6f971b52/go.mod h1:62EMf+5uFEt1BJ2q8WMrUoI9VUSxAbDnmZCGRt/MbA0=
-github.com/confluentinc/ccloud-sdk-go-v2-internal/notifications v0.1.0 h1:AGs1k07kekZDIeHHrqiBKYNJdaEGoLlEq4uJa4ChANI=
-github.com/confluentinc/ccloud-sdk-go-v2-internal/notifications v0.1.0/go.mod h1:2TF8hUgz/FHKneN1ikvLKHjpN7uzLioN375TF6chbq0=
 github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0 h1:zSF4OQUJXWH2JeAo9rsq13ibk+JFdzITGR8S7cFMpzw=
 github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0/go.mod h1:DoxqzzF3JzvJr3fWkvCiOHFlE0GoYpozWxFZ1Ud9ntA=
 github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0 h1:8fWyLwMuy8ec0MVF5Avd54UvbIxhDFhZzanHBVwgxdw=
@@ -227,6 +225,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.2.0 h1:ZHNF2DeqVlNPuKG
 github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.2.0/go.mod h1:KTShFBZA7WG8LcxlWjJpoZFdWkJ+uOw3dDuwAHs5eKU=
 github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.3.0 h1:mC0E1nKUt57AxMM4Lpdfd+KA/YZwJVwro9ER+dCUFi8=
 github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.3.0/go.mod h1:GIHF2cYOUKx+6ycYokr4i8E4cuNBC22xqvO/IhqZ31U=
+github.com/confluentinc/ccloud-sdk-go-v2/notifications v0.1.0 h1:LidTP8SPc9g3Cw56eW73kCbB9JbKZ5iJ0UkgmG6Gn9I=
+github.com/confluentinc/ccloud-sdk-go-v2/notifications v0.1.0/go.mod h1:VpOjD3MKw8uRUNhwBEkEbH1a+JTs50FiNANMh0LYOQ8=
 github.com/confluentinc/ccloud-sdk-go-v2/org v0.14.0 h1:n+4lb+CFCExljsp4Goyb4JTDL/UibGUhT0k++5JNhw8=
 github.com/confluentinc/ccloud-sdk-go-v2/org v0.14.0/go.mod h1:z+7wtFzDczbMGda7AG7w14BGE3pQSjaFYhNbvkZAlOs=
 github.com/confluentinc/ccloud-sdk-go-v2/provider-integration v0.2.0 h1:UN2a+aqYhk95ro+wVLkeB/8W7n+UV2KsE3jNFbbDCSw=

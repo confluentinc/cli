@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	notificationsv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/notifications/v1"
+	notificationsv1 "github.com/confluentinc/ccloud-sdk-go-v2/notifications/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"

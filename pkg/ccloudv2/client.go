@@ -1,7 +1,6 @@
 package ccloudv2
 
 import (
-	notificationsv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/notifications/v1"
 	aiv1 "github.com/confluentinc/ccloud-sdk-go-v2/ai/v1"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	billingv1 "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
@@ -29,6 +28,7 @@ import (
 	networkingipv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-ip/v1"
 	networkingprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink/v1"
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
+	notificationsv1 "github.com/confluentinc/ccloud-sdk-go-v2/notifications/v1"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	pi "github.com/confluentinc/ccloud-sdk-go-v2/provider-integration/v1"
 	piv2 "github.com/confluentinc/ccloud-sdk-go-v2/provider-integration/v2"

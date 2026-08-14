@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
-	notificationsv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/notifications/v1"
+	notificationsv1 "github.com/confluentinc/ccloud-sdk-go-v2/notifications/v1"
 )
 
 // Handler for "/notifications/v1/subscriptions"
