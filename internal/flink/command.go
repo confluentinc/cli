@@ -45,12 +45,18 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newSecretMappingCommand())
 	cmd.AddCommand(c.newSystemInfoCommand())
 
-	// On-Prem and Cloud Commands
-	cmd.AddCommand(c.newComputePoolCommand(cfg))
+	// On-Prem and Cloud Shared Commands
+	if cfg.IsCloudLogin() {
+		cmd.AddCommand(c.newComputePoolCommand())
+		cmd.AddCommand(c.newStatementCommand())
+	} else {
+		cmd.AddCommand(c.newComputePoolCommandOnPrem())
+		cmd.AddCommand(c.newStatementCommandOnPrem())
+	}
+
 	if !cfg.IsOnPremLogin() {
 		cmd.AddCommand(c.newShellCommand(prerunner, cfg))
 	}
-	cmd.AddCommand(c.newStatementCommand(cfg))
 
 	// Cloud Specific Commands
 	cmd.AddCommand(c.newArtifactCommand())
