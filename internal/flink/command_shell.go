@@ -38,7 +38,7 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner, cfg *config.Config) 
 			return c.startFlinkSqlClient(prerunner, cmd)
 		}
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-		c.addComputePoolFlag(cmd)
+		pcmd.AddComputePoolFlag(cmd, c.AuthenticatedCLICommand)
 		pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 		c.addDatabaseFlag(cmd)
 		pcmd.AddContextFlag(cmd, c.CLICommand)

@@ -29,10 +29,6 @@ func (c *command) newComputePoolDeleteCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) validComputePoolArgsMultiple(cmd *cobra.Command, args []string) []string {
-	return c.autocompleteComputePools(cmd, args)
-}
-
 func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
