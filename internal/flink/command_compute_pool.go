@@ -1,6 +1,8 @@
 package flink
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -42,5 +44,36 @@ func (c *command) validComputePoolArgs(cmd *cobra.Command, args []string) []stri
 		return nil
 	}
 
-	return c.autocompleteComputePools(cmd, args)
+	return c.validComputePoolArgsMultiple(cmd, args)
+}
+
+func (c *command) validComputePoolArgsMultiple(cmd *cobra.Command, args []string) []string {
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return c.autocompleteComputePools()
+}
+
+// Positional <id> completion, as opposed to the --compute-pool flag completion that
+// pcmd.AddComputePoolFlag owns. Deliberately self-contained rather than delegating to
+// pcmd.AutocompleteComputePools: this is the shape the generator emits, so keeping it here
+// means generation replaces this file without changing behavior.
+func (c *command) autocompleteComputePools() []string {
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil
+	}
+
+	computePools, err := c.V2Client.ListFlinkComputePools(environmentId, "")
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(computePools))
+	for i, computePool := range computePools {
+		spec := computePool.GetSpec()
+		suggestions[i] = fmt.Sprintf("%s\t%s", computePool.GetId(), spec.GetDisplayName())
+	}
+	return suggestions
 }
