@@ -76,24 +76,26 @@ blocks:
               function Import-VaultScript($Path, $Names) {
                 # Check the exit code before touching the output: on a partial response,
                 # downstream errors could echo the input, which holds secrets.
-                $script = vault kv get -field=script $Path
+                $exports = vault kv get -field=script $Path
                 if ($LASTEXITCODE -ne 0) { throw "failed to read Vault secret $Path" }
 
+                # Hashtable keys are case-insensitive, so the lookups below still succeed if
+                # the script happens to declare these names under a different case.
                 $defined = @{}
-                foreach ($line in ($script -split "\r?\n")) {
-                  if ($line -notmatch '^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$') { continue }
+                foreach ($line in ($exports -split "\r?\n")) {
+                  if ($line -match '^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$') {
+                    $name = $Matches[1]
+                    $value = $Matches[2].Trim()
 
-                  $name = $Matches[1]
-                  $value = $Matches[2].Trim()
-
-                  # Strip one layer of surrounding quotes, as `source` would.
-                  foreach ($quote in '"', "'") {
-                    if ($value.Length -ge 2 -and $value.StartsWith($quote) -and $value.EndsWith($quote)) {
-                      $value = $value.Substring(1, $value.Length - 2)
-                      break
+                    # Strip one layer of surrounding quotes, as `source` would.
+                    foreach ($quote in '"', "'") {
+                      if ($value.Length -ge 2 -and $value.StartsWith($quote) -and $value.EndsWith($quote)) {
+                        $value = $value.Substring(1, $value.Length - 2)
+                        break
+                      }
                     }
+                    $defined[$name] = $value
                   }
-                  $defined[$name] = $value
                 }
 
                 # Fail here rather than 20 minutes later inside `go test`, which would only
