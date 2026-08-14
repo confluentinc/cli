@@ -14,10 +14,9 @@ import (
 
 func (c *command) newStatementListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "list",
-		Short:       "List Flink SQL statements in Confluent Platform.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
-		RunE:        c.statementListOnPrem,
+		Use:   "list",
+		Short: "List Flink SQL statements in Confluent Platform.",
+		RunE:  c.statementListOnPrem,
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")

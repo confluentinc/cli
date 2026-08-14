@@ -5,19 +5,17 @@ import (
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
-	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
 func (c *command) newStatementRescaleCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "rescale <statement-name>",
-		Short:       "Rescale a Flink SQL statement.",
-		Long:        "Rescale a Flink SQL statement in Confluent Platform.",
-		Args:        cobra.ExactArgs(1),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
-		RunE:        c.statementRescaleOnPrem,
+		Use:   "rescale <statement-name>",
+		Short: "Rescale a Flink SQL statement.",
+		Long:  "Rescale a Flink SQL statement in Confluent Platform.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.statementRescaleOnPrem,
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
