@@ -20,7 +20,7 @@ func (c *notificationTypeCommand) newListCommand() *cobra.Command {
 	// Required flags
 
 	// Optional flags
-	cmd.Flags().String("resource-type", "", "Confluent Cloud resource type")
+	cmd.Flags().String("resource-type", "", "Confluent Cloud resource type.")
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)

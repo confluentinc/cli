@@ -28,14 +28,14 @@ func (c *resourceSubscriptionCommand) newCreateCommand() *cobra.Command {
 		return []string{"ENVIRONMENT", "CLUSTER", "CONNECTOR", "FLINK_COMPUTE_POOL", "FLINK_STATEMENT"}
 	})
 	cmd.Flags().String("notification-type", "", "The type of notification to subscribe to.")
-	cmd.Flags().StringSlice("integrations", nil, "Integrations to which notifications are to be sent.")
+	cmd.Flags().StringSlice("integrations", nil, "A comma-separated list of integration IDs to notify.")
 	cobra.CheckErr(cmd.MarkFlagRequired("integrations"))
 	cobra.CheckErr(cmd.MarkFlagRequired("notification-type"))
 	cobra.CheckErr(cmd.MarkFlagRequired("resource"))
 	cobra.CheckErr(cmd.MarkFlagRequired("resource-type"))
 
 	// Optional flags
-	cmd.Flags().String("current-state", "", "Denotes the state of the resource preference. When the resource preference is ENABLED, the user will receive notifications for the Confluent Cloud resource. If the resource preference is DISABLED, the user will not receive any notification for the resource. Note that, you will still receive notifications for `REQUIRED` notification type even when it is DISABLED.")
+	cmd.Flags().String("current-state", "", "Denotes the state of the resource subscription. When the resource subscription is ENABLED, the user will receive notifications of the configured notification type for the Confluent Cloud resource. If the resource subscription is DISABLED, the user will not receive them. Note that, you will still receive notifications for `REQUIRED` notification type even when it is DISABLED.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "current-state", func(_ *cobra.Command, _ []string) []string { return []string{"ENABLED", "DISABLED"} })
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)

@@ -184,6 +184,7 @@ var properNouns = []string{
 	"Connect",
 	"Control Center",
 	"CRL",
+	"Cloud Notifications",
 	"Data Encryption Key",
 	"Databricks",
 	"DEK",
@@ -214,6 +215,7 @@ var properNouns = []string{
 	"Tableflow",
 	"Unified Stream Manager",
 	"USM",
+	"Webhook",
 	"ZooKeeper™",
 	// cli-tfgen:lint-properNouns — DO NOT REMOVE (verified by TestCliTfgenMarkers)
 }
@@ -344,7 +346,6 @@ var vocabWords = []string{
 	"rbac",
 	"readonly",
 	"readwrite",
-	"recieve",
 	"recv",
 	"rescale",
 	"rest",
@@ -394,6 +395,7 @@ var vocabWords = []string{
 	"vv",
 	"vvv",
 	"vvvv",
+	"webhook",
 	"whitelist",
 	"wikipedia",
 	"workspace",

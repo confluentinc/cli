@@ -23,12 +23,12 @@ func (c *integrationCommand) newCreateCommand() *cobra.Command {
 	}
 
 	// Required flags
-	cmd.Flags().String("kind", "", "")
+	cmd.Flags().String("kind", "", "Integration-specific details (integration targets). One of: Slack, Webhook, MsTeams.")
 	cobra.CheckErr(cmd.MarkFlagRequired("kind"))
 
 	// Optional flags
-	cmd.Flags().String("webhook-url", "", "")
-	cmd.Flags().String("url", "", "")
+	cmd.Flags().String("webhook-url", "", "Slack: Slack Webhook URL for the particular Slack channel. MsTeams: MS Teams Webhook URL for the particular team channel.")
+	cmd.Flags().String("url", "", "URL endpoint for the webhook.")
 	cmd.Flags().String("description", "", "A human readable description for the particular integration.")
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)

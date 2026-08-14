@@ -4,9 +4,9 @@ Usage:
   confluent notifications integration update <id> [flags]
 
 Flags:
-      --kind string           
-      --webhook-url string    
-      --url string            
+      --kind string           Integration-specific details (integration targets). One of: Slack, Webhook, MsTeams.
+      --webhook-url string    Slack: Slack Webhook URL for the particular Slack channel. MsTeams: MS Teams Webhook URL for the particular team channel.
+      --url string            URL endpoint for the webhook.
       --display-name string   A human readable name for the particular integration.
       --description string    A human readable description for the particular integration.
       --context string        CLI context name.

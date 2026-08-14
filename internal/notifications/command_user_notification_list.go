@@ -23,13 +23,13 @@ func (c *userNotificationCommand) newListCommand() *cobra.Command {
 
 	// Optional flags
 	cmd.Flags().Bool("read", false, "Filter the results where read is true or false.")
-	cmd.Flags().StringSlice("severity", nil, "Filter notifications by severity. Pass the parameter multiple times to match any of the given values (`?severity=CRITICAL&severity=WARN`). A notification matches if its `severity` equals any of the listed values.")
+	cmd.Flags().StringSlice("severity", nil, "A comma-separated list of severity levels to filter by.")
 	cmd.Flags().String("include", "", "Comma-separated list of optional fields to populate in the response items. Allowed values: `integrations`, `recommended_actions`. By default these fields are omitted from list responses to keep collection payloads slim; set this parameter to opt in. This is a partial-response selector, not a value filter.")
-	cmd.Flags().StringSlice("type", nil, "Filter notifications by the Confluent Cloud resource type they relate to. Pass the parameter multiple times to match any of the given values (`?resource.type=CLUSTER&resource.type=CONNECTOR`). A notification matches if its `resource.type` equals any of the listed values.")
-	cmd.Flags().StringSlice("crn", nil, "Filter notifications by the CRN of the Confluent Cloud resource they relate to. Pass the parameter multiple times to match any of the given CRNs; a notification matches if its `resource.crn` equals any of the listed values.")
+	cmd.Flags().StringSlice("type", nil, "A comma-separated list of Confluent Cloud resource types to filter by.")
+	cmd.Flags().StringSlice("crn", nil, "A comma-separated list of Confluent Cloud resource CRNs to filter by.")
 	cmd.Flags().String("search", "", "Free-text partial-match search across the embedded notification type's `display_name` and `description`.")
 	cmd.Flags().String("time-range", "", "Filter notifications by a preset time window relative to now. Allowed values: `PAST_24H` (last 24 hours), `PAST_7D` (last 7 days), `PAST_30D` (last 30 days).")
-	cmd.Flags().StringSlice("sort", nil, "The list of fields and directions that are used to sort the collection.")
+	cmd.Flags().StringSlice("sort", nil, "A comma-separated list of fields and directions to sort by.")
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)

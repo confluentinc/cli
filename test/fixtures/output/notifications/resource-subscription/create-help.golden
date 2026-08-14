@@ -7,8 +7,8 @@ Flags:
       --resource string            REQUIRED: Denotes the Confluent Cloud resource definition.
       --resource-type string       REQUIRED: Denotes the Confluent Cloud resource type.
       --notification-type string   REQUIRED: The type of notification to subscribe to.
-      --integrations strings       REQUIRED: Integrations to which notifications are to be sent.
-      --current-state REQUIRED     Denotes the state of the resource preference. When the resource preference is ENABLED, the user will receive notifications for the Confluent Cloud resource. If the resource preference is DISABLED, the user will not receive any notification for the resource. Note that, you will still receive notifications for REQUIRED notification type even when it is DISABLED.
+      --integrations strings       REQUIRED: A comma-separated list of integration IDs to notify.
+      --current-state REQUIRED     Denotes the state of the resource subscription. When the resource subscription is ENABLED, the user will receive notifications of the configured notification type for the Confluent Cloud resource. If the resource subscription is DISABLED, the user will not receive them. Note that, you will still receive notifications for REQUIRED notification type even when it is DISABLED.
       --context string             CLI context name.
   -o, --output string              Specify the output format as "human", "json", or "yaml". (default "human")
 

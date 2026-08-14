@@ -4,7 +4,7 @@ Usage:
   confluent notifications notification-type list [flags]
 
 Flags:
-      --resource-type string   Confluent Cloud resource type
+      --resource-type string   Confluent Cloud resource type.
       --context string         CLI context name.
   -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
 

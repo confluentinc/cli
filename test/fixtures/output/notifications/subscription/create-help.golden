@@ -5,8 +5,8 @@ Usage:
 
 Flags:
       --notification-type string   REQUIRED: The type of notification to subscribe to.
-      --integrations strings       REQUIRED: Integrations to which notifications are to be sent.
-      --current-state REQUIRED     Denotes the state of the subscription. When the subscription is ENABLED, the user will receive notification on the configured Integrations. If the subscription is DISABLED, the user will not recieve any notification for the configured notification type. Note that, you cannot disable a subscription for REQUIRED notification type.
+      --integrations strings       REQUIRED: A comma-separated list of integration IDs to notify.
+      --current-state REQUIRED     Denotes the state of the subscription. When the subscription is ENABLED, the user will receive notification on the configured integrations. If the subscription is DISABLED, the user will not receive any notification for the configured notification type. Note that, you cannot disable a subscription for REQUIRED notification type.
       --context string             CLI context name.
   -o, --output string              Specify the output format as "human", "json", or "yaml". (default "human")
 

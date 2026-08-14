@@ -26,9 +26,9 @@ func (c *subscriptionCommand) newUpdateCommand() *cobra.Command {
 	// Required flags
 
 	// Optional flags
-	cmd.Flags().String("current-state", "", "Denotes the state of the subscription. When the subscription is ENABLED, the user will receive notification on the configured Integrations. If the subscription is DISABLED, the user will not recieve any notification for the configured notification type. Note that, you cannot disable a subscription for `REQUIRED` notification type.")
+	cmd.Flags().String("current-state", "", "Denotes the state of the subscription. When the subscription is ENABLED, the user will receive notification on the configured integrations. If the subscription is DISABLED, the user will not receive any notification for the configured notification type. Note that, you cannot disable a subscription for `REQUIRED` notification type.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "current-state", func(_ *cobra.Command, _ []string) []string { return []string{"ENABLED", "DISABLED"} })
-	cmd.Flags().StringSlice("integrations", nil, "Integrations to which notifications are to be sent.")
+	cmd.Flags().StringSlice("integrations", nil, "A comma-separated list of integration IDs to notify.")
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
