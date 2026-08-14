@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   artifact            Manage Flink UDF artifacts.
-  compute-pool        Manage Flink compute pools.
+  compute-pool        Manage Flink compute pools in Confluent Cloud.
   compute-pool-config Manage Flink compute pools configs.
   connection          Manage Flink connections.
   connectivity-type   Manage Flink connectivity type.
@@ -13,7 +13,7 @@ Available Commands:
   materialized-table  Manage Flink materialized tables.
   region              Manage and select Confluent Cloud Flink regions.
   shell               Start Flink interactive SQL client.
-  statement           Manage Flink SQL statements.
+  statement           Manage Flink SQL statements in Confluent Cloud.
 
 Global Flags:
   -h, --help            Show help for this command.
