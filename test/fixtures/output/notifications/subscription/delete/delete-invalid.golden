@@ -1,0 +1,4 @@
+Error: notifications subscription "invalid" not found
+
+Suggestions:
+    List available notifications subscriptions with `confluent notifications subscription list`.

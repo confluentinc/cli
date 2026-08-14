@@ -1,0 +1,19 @@
+Manage Cloud Notifications.
+
+Usage:
+  confluent notifications [command]
+
+Available Commands:
+  integration           Manage Confluent Cloud notifications integrations.
+  notification-type     Manage Confluent Cloud notifications notification types.
+  resource-preference   Manage Confluent Cloud notifications resource preferences.
+  resource-subscription Manage Confluent Cloud notifications resource subscriptions.
+  subscription          Manage Confluent Cloud notifications subscriptions.
+  user-notification     Manage Confluent Cloud notifications user notifications.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent notifications [command] --help" for more information about a command.

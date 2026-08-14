@@ -1,0 +1,15 @@
+Manage Confluent Cloud notifications notification types.
+
+Usage:
+  confluent notifications notification-type [command]
+
+Available Commands:
+  describe    Describe a notifications notification type.
+  list        List notifications notification types.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent notifications notification-type [command] --help" for more information about a command.

@@ -1,0 +1,8 @@
+[
+  {
+    "id": "dlz-f3a90de",
+    "display_name": "Slack integration",
+    "description": "A Slack channel integration",
+    "slack_target_webhook_url": "https://hooks.slack.com/services/{id}/{id}/{id}"
+  }
+]

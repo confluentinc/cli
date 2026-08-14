@@ -1,0 +1,16 @@
+Manage Confluent Cloud notifications user notifications.
+
+Usage:
+  confluent notifications user-notification [command]
+
+Available Commands:
+  describe    Describe a notifications user notification.
+  list        List notifications user notifications.
+  update      Update an existing notifications user notification.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent notifications user-notification [command] --help" for more information about a command.
