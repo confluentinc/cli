@@ -27,6 +27,7 @@ type out struct {
 	DisplayName  string `human:"Display Name"`
 	Environment  string `human:"Environment"`
 	ActiveMember string `human:"Active Member"`
+	FirstActive  string `human:"First Active,omitempty"`
 	FailoverType string `human:"Failover Type,omitempty"`
 	Phase        string `human:"Phase"`
 	Members      string `human:"Members,omitempty"`
@@ -92,8 +93,9 @@ func newPairOut(pair switchoverv1.SwitchoverV1SwitchoverPair) *out {
 	return &out{
 		Id:           pair.GetId(),
 		DisplayName:  pair.Spec.GetDisplayName(),
-		Environment:  pair.Spec.GetEnvironment(),
+		Environment:  pair.Spec.GetEnvironmentCrn(),
 		ActiveMember: pair.Spec.GetActiveMember(),
+		FirstActive:  pair.Spec.GetFirstActive(),
 		FailoverType: pair.Spec.GetFailoverType(),
 		Phase:        pair.Status.GetPhase(),
 		Members:      formatMembers(pair.Spec.GetMembers()),
@@ -108,7 +110,7 @@ func formatMembers(members []switchoverv1.SwitchoverV1SwitchoverPairMember) stri
 		if member.Location != nil {
 			location = fmt.Sprintf(", %s/%s", member.Location.GetCloud(), member.Location.GetRegion())
 		}
-		lines[i] = fmt.Sprintf("%s (%s%s)", member.GetName(), member.GetMemberId(), location)
+		lines[i] = fmt.Sprintf("%s (%s%s)", member.GetName(), member.GetMemberCrn(), location)
 	}
 	return strings.Join(lines, "\n")
 }
