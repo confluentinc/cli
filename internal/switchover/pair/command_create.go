@@ -51,12 +51,12 @@ func parseMemberFlag(raw string) (switchoverv1.SwitchoverV1SwitchoverPairMember,
 		case "name":
 			member.Name = value
 		case "id":
-			member.MemberId = value
+			member.MemberCrn = value
 		default:
 			return member, fmt.Errorf(`invalid --member key %q: expected "name" or "id"`, key)
 		}
 	}
-	if member.Name == "" || member.MemberId == "" {
+	if member.Name == "" || member.MemberCrn == "" {
 		return member, fmt.Errorf(`invalid --member value %q: both "name" and "id" are required`, raw)
 	}
 	return member, nil
@@ -92,12 +92,20 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// The backend addresses every reference by CRN (ORC-9794): spec.environment_crn and each
+	// member's member_crn. Flags stay ID-based -- the CRNs are assembled here from the current
+	// organization plus the environment/cluster IDs the user supplied.
+	environmentCrn := fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s", c.Context.GetCurrentOrganization(), environmentId)
+	for i, member := range members {
+		members[i].MemberCrn = fmt.Sprintf("%s/cloud-cluster=%s", environmentCrn, member.MemberCrn)
+	}
+
 	pair := switchoverv1.SwitchoverV1SwitchoverPair{
 		Spec: &switchoverv1.SwitchoverV1SwitchoverPairSpec{
-			DisplayName:  switchoverv1.PtrString(displayName),
-			Members:      &members,
-			ActiveMember: switchoverv1.PtrString(activeMember),
-			Environment:  switchoverv1.PtrString(environmentId),
+			DisplayName:    switchoverv1.PtrString(displayName),
+			Members:        &members,
+			ActiveMember:   switchoverv1.PtrString(activeMember),
+			EnvironmentCrn: switchoverv1.PtrString(environmentCrn),
 		},
 	}
 
