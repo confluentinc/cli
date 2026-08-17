@@ -23,7 +23,6 @@ func (c *command) newStatementListCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	cmd.Flags().String("compute-pool", "", "Optional flag to filter the Flink statements by compute pool ID.")
 	cmd.Flags().String("status", "", "Optional flag to filter the Flink statements by statement status.")
-	addPageSizeFlag(cmd)
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -58,12 +57,7 @@ func (c *command) statementListOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	pageSize, err := getPageSize(cmd)
-	if err != nil {
-		return err
-	}
-
-	sdkStatements, err := client.ListStatements(c.createContext(), environment, computePool, status, pageSize)
+	sdkStatements, err := client.ListStatements(c.createContext(), environment, computePool, status)
 	if err != nil {
 		return err
 	}
