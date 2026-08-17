@@ -1,0 +1,10 @@
++--------------------------------+---------------------+
+| ID                             | usmcc-cloud         |
+| Confluent Platform Connect     | connect-group-cloud |
+| Cluster                        |                     |
+| USM Kafka Cluster Id           |                     |
+| Kafka Cluster Id               | lkc-abc123          |
+| Environment                    | env-00000           |
+| Cloud                          | AWS                 |
+| Region                         | us-east-1           |
++--------------------------------+---------------------+
