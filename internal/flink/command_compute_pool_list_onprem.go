@@ -17,7 +17,6 @@ func (c *command) newComputePoolListCommandOnPrem() *cobra.Command {
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
-	addPageSizeFlag(cmd)
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
@@ -31,17 +30,12 @@ func (c *command) computePoolListOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	pageSize, err := getPageSize(cmd)
-	if err != nil {
-		return err
-	}
-
 	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	sdkComputePools, err := client.ListComputePools(c.createContext(), environment, pageSize)
+	sdkComputePools, err := client.ListComputePools(c.createContext(), environment)
 	if err != nil {
 		return err
 	}

@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -124,26 +123,6 @@ func createApplication(name string) cmfsdk.FlinkApplication {
 		},
 		Status: &status,
 	}
-}
-
-// paginateApplications emulates the CMF applications endpoint's zero-based page/size paging
-// (offset = page * size) so that --page-size is exercised end-to-end. A size <= 0 falls back
-// to 100.
-func paginateApplications(all []cmfsdk.FlinkApplication, pageParam, sizeParam string) []cmfsdk.FlinkApplication {
-	page, _ := strconv.Atoi(pageParam)
-	size, err := strconv.Atoi(sizeParam)
-	if err != nil || size <= 0 {
-		size = 100
-	}
-	start := page * size
-	if start >= len(all) {
-		return []cmfsdk.FlinkApplication{}
-	}
-	end := start + size
-	if end > len(all) {
-		end = len(all)
-	}
-	return all[start:end]
 }
 
 // Helper function to create a Flink environment.
@@ -715,18 +694,26 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 			}
 
 			// For the 'test' environment, return an empty list.
-			// For the 'default' environment, return three applications, paged.
+			// For the 'default' environment, return applications but only on page 0.
 			// For the 'update-failure' environment, return the 'update-failure-application' application.
-			var allItems []cmfsdk.FlinkApplication
-			switch environment {
-			case "default":
-				allItems = []cmfsdk.FlinkApplication{createApplication("default-application-1"), createApplication("default-application-2"), createApplication("default-application-s")}
-			case "update-failure":
-				allItems = []cmfsdk.FlinkApplication{createApplication("update-failure-application")}
+			applicationsPage := map[string]interface{}{
+				"items": []cmfsdk.FlinkApplication{},
 			}
 
-			applicationsPage := map[string]interface{}{
-				"items": paginateApplications(allItems, r.URL.Query().Get("page"), r.URL.Query().Get("size")),
+			page := r.URL.Query().Get("page")
+
+			if environment == "default" && page == "0" {
+				items := []cmfsdk.FlinkApplication{createApplication("default-application-1"), createApplication("default-application-2"), createApplication("default-application-s")}
+				applicationsPage = map[string]interface{}{
+					"items": items,
+				}
+			}
+
+			if environment == "update-failure" && page == "0" {
+				items := []cmfsdk.FlinkApplication{createApplication("update-failure-application")}
+				applicationsPage = map[string]interface{}{
+					"items": items,
+				}
 			}
 
 			err := json.NewEncoder(w).Encode(applicationsPage)

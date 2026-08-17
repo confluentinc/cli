@@ -130,14 +130,6 @@ func addCmfFlagSet(cmd *cobra.Command) {
 	cmd.Flags().String("certificate-authority-path", "", `Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CMF_CERTIFICATE_AUTHORITY_PATH" may be set in place of this flag.`)
 }
 
-func addPageSizeFlag(cmd *cobra.Command) {
-	cmd.Flags().Int32("page-size", 100, "Number of results to fetch per API request while paginating; does not cap the total results returned.")
-}
-
-func getPageSize(cmd *cobra.Command) (int32, error) {
-	return cmd.Flags().GetInt32("page-size")
-}
-
 func (c *command) createContext() context.Context {
 	if !c.Config.IsOnPremLogin() {
 		return context.Background()

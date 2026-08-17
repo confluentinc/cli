@@ -19,7 +19,6 @@ func (c *command) newSavepointListCommand() *cobra.Command {
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	cmd.Flags().String("application", "", "The name of the Flink application to list the savepoints.")
 	cmd.Flags().String("statement", "", "The name of the Flink statement to list the savepoints.")
-	addPageSizeFlag(cmd)
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -46,17 +45,12 @@ func (c *command) savepointList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	pageSize, err := getPageSize(cmd)
-	if err != nil {
-		return err
-	}
-
 	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	sdkSavepoints, err := client.ListSavepoint(c.createContext(), environment, statement, application, statement != "", pageSize)
+	sdkSavepoints, err := client.ListSavepoint(c.createContext(), environment, statement, application, statement != "")
 	if err != nil {
 		return err
 	}
