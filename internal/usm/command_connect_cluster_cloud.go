@@ -14,9 +14,9 @@ import (
 // kafka_cluster_id as "Kafka Cluster ID" instead of "Confluent Platform Kafka Cluster Id".
 type connectClusterCloudOut struct {
 	ID                                string `human:"ID" serialized:"id"`
-	ConfluentPlatformConnectClusterId string `human:"Confluent Platform Connect Cluster ID" serialized:"confluent_platform_connect_cluster_id"`
+	ConfluentPlatformConnectClusterId string `human:"Confluent Platform Connect Cluster Id" serialized:"confluent_platform_connect_cluster_id"`
 	UsmKafkaClusterId                 string `human:"USM Kafka Cluster Id" serialized:"usm_kafka_cluster_id"`
-	KafkaClusterId                    string `human:"Kafka Cluster ID" serialized:"kafka_cluster_id"`
+	KafkaClusterId                    string `human:"Kafka Cluster Id" serialized:"kafka_cluster_id"`
 	Environment                       string `human:"Environment" serialized:"environment"`
 	Cloud                             string `human:"Cloud" serialized:"cloud"`
 	Region                            string `human:"Region" serialized:"region"`

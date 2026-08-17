@@ -1,9 +1,9 @@
 +--------------------------------+---------------+
 | ID                             | usmcc-f3a90de |
 | Confluent Platform Connect     | test-name     |
-| Cluster ID                     |               |
+| Cluster Id                     |               |
 | USM Kafka Cluster Id           | usmkc-00000   |
-| Kafka Cluster ID               | lkc-abc123    |
+| Kafka Cluster Id               | lkc-abc123    |
 | Environment                    | env-596       |
 | Cloud                          | AWS           |
 | Region                         | us-east-1     |
