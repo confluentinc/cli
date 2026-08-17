@@ -35,6 +35,9 @@ func (s *CLITestSuite) TestUsmConnectClusterDescribe() {
 		{args: "usm connect-cluster describe usmcc-1", fixture: "usm/connect-cluster/describe/describe.golden"},
 		{args: "usm connect-cluster describe usmcc-1 -o json", fixture: "usm/connect-cluster/describe/describe-json.golden"},
 		{args: "usm connect-cluster describe usmcc-1 -o yaml", fixture: "usm/connect-cluster/describe/describe-yaml.golden"},
+		{args: "usm connect-cluster describe usmcc-cloud", fixture: "usm/connect-cluster/describe/describe-cloud.golden"},
+		{args: "usm connect-cluster describe usmcc-cloud -o json", fixture: "usm/connect-cluster/describe/describe-cloud-json.golden"},
+		{args: "usm connect-cluster describe usmcc-cloud -o yaml", fixture: "usm/connect-cluster/describe/describe-cloud-yaml.golden"},
 		{args: "usm connect-cluster describe invalid", fixture: "usm/connect-cluster/describe/describe-invalid.golden", exitCode: 1},
 	}
 
