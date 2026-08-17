@@ -13,13 +13,13 @@ import (
 // backed by a Confluent Cloud (lkc-) Kafka cluster. It relabels the generic
 // kafka_cluster_id as "Kafka Cluster ID" instead of "Confluent Platform Kafka Cluster Id".
 type connectClusterCloudOut struct {
-	ID                                string `human:"ID" serialized:"id"`
-	ConfluentPlatformConnectClusterId string `human:"Confluent Platform Connect Cluster Id" serialized:"confluent_platform_connect_cluster_id"`
-	UsmKafkaClusterId                 string `human:"USM Kafka Cluster Id" serialized:"usm_kafka_cluster_id"`
-	KafkaClusterId                    string `human:"Kafka Cluster Id" serialized:"kafka_cluster_id"`
-	Environment                       string `human:"Environment" serialized:"environment"`
-	Cloud                             string `human:"Cloud" serialized:"cloud"`
-	Region                            string `human:"Region" serialized:"region"`
+	ID                              string `human:"ID" serialized:"id"`
+	ConfluentPlatformConnectCluster string `human:"Confluent Platform Connect Cluster" serialized:"confluent_platform_connect_cluster"`
+	UsmKafkaClusterId               string `human:"USM Kafka Cluster Id" serialized:"usm_kafka_cluster_id"`
+	KafkaClusterId                  string `human:"Kafka Cluster Id" serialized:"kafka_cluster_id"`
+	Environment                     string `human:"Environment" serialized:"environment"`
+	Cloud                           string `human:"Cloud" serialized:"cloud"`
+	Region                          string `human:"Region" serialized:"region"`
 }
 
 // isCloudKafkaCluster reports whether the metadata Kafka cluster id refers to a
@@ -37,13 +37,13 @@ func printConnectClusterByType(cmd *cobra.Command, connectCluster usmv1.UsmV1Con
 
 	table := output.NewTable(cmd)
 	table.Add(&connectClusterCloudOut{
-		ID:                                connectCluster.GetId(),
-		ConfluentPlatformConnectClusterId: connectCluster.GetConfluentPlatformConnectClusterId(),
-		UsmKafkaClusterId:                 connectCluster.GetUsmKafkaClusterId(),
-		KafkaClusterId:                    connectCluster.GetKafkaClusterId(),
-		Environment:                       connectCluster.Environment.GetId(),
-		Cloud:                             connectCluster.GetCloud(),
-		Region:                            connectCluster.GetRegion(),
+		ID:                              connectCluster.GetId(),
+		ConfluentPlatformConnectCluster: connectCluster.GetConfluentPlatformConnectClusterId(),
+		UsmKafkaClusterId:               connectCluster.GetUsmKafkaClusterId(),
+		KafkaClusterId:                  connectCluster.GetKafkaClusterId(),
+		Environment:                     connectCluster.Environment.GetId(),
+		Cloud:                           connectCluster.GetCloud(),
+		Region:                          connectCluster.GetRegion(),
 	})
 	return table.Print()
 }
