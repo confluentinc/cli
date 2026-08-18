@@ -91,8 +91,8 @@ func newEndpointOut(endpoint switchoverv1.SwitchoverV1SwitchoverEndpoint) *out {
 	return &out{
 		Id:             endpoint.GetId(),
 		DisplayName:    endpoint.Spec.GetDisplayName(),
-		SwitchoverPair: endpoint.Spec.GetParentResourceId(),
-		Environment:    endpoint.Spec.GetEnvironment(),
+		SwitchoverPair: endpoint.Spec.GetParentResourceCrn(),
+		Environment:    endpoint.Spec.GetEnvironmentCrn(),
 		Target:         endpoint.Spec.GetTarget(),
 		Phase:          endpoint.Status.GetPhase(),
 		Endpoints:      formatEndpoints(endpoint.Spec.GetEndpoints()),
@@ -105,14 +105,20 @@ func formatEndpoints(endpoints []switchoverv1.SwitchoverV1EndpointConfig) string
 	for i, endpoint := range endpoints {
 		filter := endpoint.EndpointFilter
 		parts := []string{endpoint.GetName(), filter.GetType()}
-		if networkId := filter.GetNetworkId(); networkId != "" {
-			parts = append(parts, "network="+networkId)
+		if networkCrn := filter.GetNetworkCrn(); networkCrn != "" {
+			parts = append(parts, "network="+networkCrn)
 		}
-		if accessPoint := filter.GetAccessPoint(); accessPoint != "" {
-			parts = append(parts, "access-point="+accessPoint)
+		if accessPointCrn := filter.GetAccessPointCrn(); accessPointCrn != "" {
+			parts = append(parts, "access-point="+accessPointCrn)
 		}
 		if hostname := endpoint.GetHostname(); hostname != "" {
 			parts = append(parts, "hostname="+hostname)
+		}
+		if cloud, region := endpoint.GetCloud(), endpoint.GetRegion(); cloud != "" || region != "" {
+			parts = append(parts, strings.TrimPrefix(cloud+"/"+region, "/"))
+		}
+		if connectionType := endpoint.GetConnectionType(); connectionType != "" {
+			parts = append(parts, connectionType)
 		}
 		lines[i] = strings.Join(parts, " ")
 	}

@@ -54,9 +54,9 @@ func parseEndpointFlag(raw string) (switchoverv1.SwitchoverV1EndpointConfig, err
 		case "type":
 			filter.Type = value
 		case "network":
-			filter.NetworkId = switchoverv1.PtrString(value)
+			filter.NetworkCrn = switchoverv1.PtrString(value)
 		case "access-point":
-			filter.AccessPoint = switchoverv1.PtrString(value)
+			filter.AccessPointCrn = switchoverv1.PtrString(value)
 		default:
 			return config, fmt.Errorf(`invalid --endpoint key %q`, key)
 		}
@@ -98,12 +98,16 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// Flags stay ID-based; the CRNs the backend expects are assembled here (ORC-9794).
+	environmentCrn := fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s", c.Context.GetCurrentOrganization(), environmentId)
+	parentResourceCrn := fmt.Sprintf("%s/switchover-pair=%s", environmentCrn, switchoverPairId)
+
 	endpoint := switchoverv1.SwitchoverV1SwitchoverEndpoint{
 		Spec: &switchoverv1.SwitchoverV1SwitchoverEndpointSpec{
-			DisplayName:      switchoverv1.PtrString(displayName),
-			Endpoints:        &endpoints,
-			Environment:      switchoverv1.PtrString(environmentId),
-			ParentResourceId: switchoverv1.PtrString(switchoverPairId),
+			DisplayName:       switchoverv1.PtrString(displayName),
+			Endpoints:         &endpoints,
+			EnvironmentCrn:    switchoverv1.PtrString(environmentCrn),
+			ParentResourceCrn: switchoverv1.PtrString(parentResourceCrn),
 		},
 	}
 
