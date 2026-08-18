@@ -48,8 +48,8 @@ func newComputePoolCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.
 		c.newDeleteCommand(),
 		c.newDescribeCommand(),
 		c.newListCommand(),
-		c.newUpdateCommand(),
 		c.newUnsetCommand(),
+		c.newUpdateCommand(),
 		c.newUseCommand(),
 	)
 

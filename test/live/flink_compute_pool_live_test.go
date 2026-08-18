@@ -102,7 +102,7 @@ func (s *CLILiveTestSuite) TestFlinkComputePoolCRUDLive() {
 	updateSteps := []CLILiveTest{
 		{
 			Name:         "Update Flink compute pool name",
-			Args:         "flink compute-pool update {{.compute_pool_id}} --display-name " + computePoolName + "-updated --environment {{.env_id}}",
+			Args:         "flink compute-pool update {{.compute_pool_id}} --name " + computePoolName + "-updated --environment {{.env_id}}",
 			UseStateVars: true,
 		},
 		{

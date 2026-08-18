@@ -23,7 +23,7 @@ func (c *computePoolCommand) newUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update name and CFU count of a Flink compute pool.",
-				Code: `confluent flink compute-pool update lfcp-123456 --display-name "new name" --max-cfu 5`,
+				Code: `confluent flink compute-pool update lfcp-123456 --name "new name" --max-cfu 5`,
 			},
 		),
 	}
@@ -32,7 +32,7 @@ func (c *computePoolCommand) newUpdateCommand() *cobra.Command {
 
 	// Optional flags
 	cmd.Flags().Bool("default-pool", false, "Indicate whether the Flink compute pool is a default compute pool or not.")
-	cmd.Flags().String("display-name", "", "The name of the Flink compute pool.")
+	cmd.Flags().String("name", "", "The name of the Flink compute pool.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Int32("max-cfu", 5, "Maximum number of Confluent Flink Units (CFU).")
 	pcmd.RegisterFlagCompletionFunc(cmd, "max-cfu", func(_ *cobra.Command, _ []string) []string { return []string{"5", "10", "20", "30", "40", "50"} })
@@ -66,8 +66,8 @@ func (c *computePoolCommand) update(cmd *cobra.Command, args []string) error {
 		specUpdate.DefaultPool = flinkv2.PtrBool(defaultPool)
 	}
 
-	if cmd.Flags().Changed("display-name") {
-		displayName, err := cmd.Flags().GetString("display-name")
+	if cmd.Flags().Changed("name") {
+		displayName, err := cmd.Flags().GetString("name")
 		if err != nil {
 			return err
 		}
@@ -82,11 +82,11 @@ func (c *computePoolCommand) update(cmd *cobra.Command, args []string) error {
 		specUpdate.Environment = &flinkv2.GlobalObjectReference{Id: environmentId}
 	}
 
-	maxCfu, err := cmd.Flags().GetInt32("max-cfu")
-	if err != nil {
-		return err
-	}
-	if maxCfu != 0 {
+	if cmd.Flags().Changed("max-cfu") {
+		maxCfu, err := cmd.Flags().GetInt32("max-cfu")
+		if err != nil {
+			return err
+		}
 		specUpdate.MaxCfu = flinkv2.PtrInt32(maxCfu)
 	}
 
