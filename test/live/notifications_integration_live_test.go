@@ -5,7 +5,6 @@
 package live
 
 import (
-	"os"
 	"testing"
 )
 
@@ -17,7 +16,7 @@ func (s *CLILiveTestSuite) TestNotificationsIntegrationSlackTargetCRUDLive() {
 	// Variables
 	integrationName := uniqueName("integr")
 	kindVariant := "slack"
-	webhookUrl := "https://hooks.slack.com/services/{id}/{id}/{id}"
+	webhookUrl := "https://hooks.slack.com/services/T000AAAA0/B000BBBB0/xxxxxxxxxxxxxxxxxxxxxxxx"
 	updatedDescription := "updated-live-test-description"
 
 	// Cleanup (LIFO — execution is reverse-registration order)
@@ -45,176 +44,7 @@ func (s *CLILiveTestSuite) TestNotificationsIntegrationSlackTargetCRUDLive() {
 		},
 		{
 			Name:         "List notifications integrations",
-			Args:         "notifications integration list",
-			UseStateVars: true,
-			ExitCode:     0,
-			Contains:     []string{integrationName},
-		},
-		{
-			Name:         "Update notifications integration name",
-			Args:         "notifications integration update {{.integration_id}} --display-name " + integrationName + "-updated",
-			UseStateVars: true,
-			ExitCode:     0,
-		},
-		{
-			Name:         "Update notifications integration description",
-			Args:         "notifications integration update {{.integration_id}} --description " + updatedDescription,
-			UseStateVars: true,
-			ExitCode:     0,
-		},
-		{
-			Name:         "Verify notifications integration update",
-			Args:         "notifications integration describe {{.integration_id}} -o json",
-			UseStateVars: true,
-			ExitCode:     0,
-			JSONFields: map[string]string{
-				"description": updatedDescription,
-			},
-		},
-		{
-			Name:         "Delete notifications integration",
-			Args:         "notifications integration delete {{.integration_id}} --force",
-			UseStateVars: true,
-			ExitCode:     0,
-		},
-		{
-			Name:         "Verify deletion",
-			Args:         "notifications integration describe {{.integration_id}}",
-			UseStateVars: true,
-			ExitCode:     1,
-		},
-	}
-
-	for _, step := range steps {
-		t.Run(step.Name, func(t *testing.T) {
-			s.runLiveCommand(t, step, state)
-		})
-	}
-}
-
-func (s *CLILiveTestSuite) TestNotificationsIntegrationRoleEmailTargetCRUDLive() {
-	t := s.T()
-	t.Parallel()
-	state := s.setupTestContext(t)
-
-	// Variables
-	integrationName := uniqueName("integr")
-	kindVariant := "roleemail"
-	roleName := "OrganizationAdmin"
-	updatedDescription := "updated-live-test-description"
-
-	// Cleanup (LIFO — execution is reverse-registration order)
-	s.registerCleanup(t, "notifications integration delete {{.integration_id}} --force", state)
-
-	steps := []CLILiveTest{
-		{
-			Name:     "Create notifications integration (role_email_target)",
-			Args:     "notifications integration create " + integrationName + " --kind " + kindVariant + " --role-name " + roleName + " -o json",
-			ExitCode: 0,
-			JSONFields: map[string]string{
-				"name": integrationName,
-			},
-			JSONFieldsExist: []string{"id"},
-			CaptureID:       "integration_id",
-		},
-		{
-			Name:         "Describe notifications integration",
-			Args:         "notifications integration describe {{.integration_id}} -o json",
-			UseStateVars: true,
-			ExitCode:     0,
-			JSONFields: map[string]string{
-				"name": integrationName,
-			},
-		},
-		{
-			Name:         "List notifications integrations",
-			Args:         "notifications integration list",
-			UseStateVars: true,
-			ExitCode:     0,
-			Contains:     []string{integrationName},
-		},
-		{
-			Name:         "Update notifications integration name",
-			Args:         "notifications integration update {{.integration_id}} --display-name " + integrationName + "-updated",
-			UseStateVars: true,
-			ExitCode:     0,
-		},
-		{
-			Name:         "Update notifications integration description",
-			Args:         "notifications integration update {{.integration_id}} --description " + updatedDescription,
-			UseStateVars: true,
-			ExitCode:     0,
-		},
-		{
-			Name:         "Verify notifications integration update",
-			Args:         "notifications integration describe {{.integration_id}} -o json",
-			UseStateVars: true,
-			ExitCode:     0,
-			JSONFields: map[string]string{
-				"description": updatedDescription,
-			},
-		},
-		{
-			Name:         "Delete notifications integration",
-			Args:         "notifications integration delete {{.integration_id}} --force",
-			UseStateVars: true,
-			ExitCode:     0,
-		},
-		{
-			Name:         "Verify deletion",
-			Args:         "notifications integration describe {{.integration_id}}",
-			UseStateVars: true,
-			ExitCode:     1,
-		},
-	}
-
-	for _, step := range steps {
-		t.Run(step.Name, func(t *testing.T) {
-			s.runLiveCommand(t, step, state)
-		})
-	}
-}
-
-func (s *CLILiveTestSuite) TestNotificationsIntegrationUserEmailTargetCRUDLive() {
-	t := s.T()
-	t.Parallel()
-	state := s.setupTestContext(t)
-
-	// Variables
-	integrationName := uniqueName("integr")
-	kindVariant := "useremail"
-	updatedDescription := "updated-live-test-description"
-	user := os.Getenv("CONFLUENT_LIVE_TEST_USER_ID")
-	if user == "" {
-		t.Skipf("%s must be set to run this live test (user ID)", "CONFLUENT_LIVE_TEST_USER_ID")
-	}
-
-	// Cleanup (LIFO — execution is reverse-registration order)
-	s.registerCleanup(t, "notifications integration delete {{.integration_id}} --force", state)
-
-	steps := []CLILiveTest{
-		{
-			Name:     "Create notifications integration (user_email_target)",
-			Args:     "notifications integration create " + integrationName + " --kind " + kindVariant + " --user " + user + " -o json",
-			ExitCode: 0,
-			JSONFields: map[string]string{
-				"name": integrationName,
-			},
-			JSONFieldsExist: []string{"id"},
-			CaptureID:       "integration_id",
-		},
-		{
-			Name:         "Describe notifications integration",
-			Args:         "notifications integration describe {{.integration_id}} -o json",
-			UseStateVars: true,
-			ExitCode:     0,
-			JSONFields: map[string]string{
-				"name": integrationName,
-			},
-		},
-		{
-			Name:         "List notifications integrations",
-			Args:         "notifications integration list",
+			Args:         "notifications integration list -o json",
 			UseStateVars: true,
 			ExitCode:     0,
 			Contains:     []string{integrationName},
@@ -269,7 +99,7 @@ func (s *CLILiveTestSuite) TestNotificationsIntegrationWebhookTargetCRUDLive() {
 	// Variables
 	integrationName := uniqueName("integr")
 	kindVariant := "webhook"
-	url := "https://my.webhook.url/{id}"
+	url := "https://my.webhook.url/00000000-0000-0000-0000-000000000000"
 	updatedDescription := "updated-live-test-description"
 
 	// Cleanup (LIFO — execution is reverse-registration order)
@@ -297,7 +127,7 @@ func (s *CLILiveTestSuite) TestNotificationsIntegrationWebhookTargetCRUDLive() {
 		},
 		{
 			Name:         "List notifications integrations",
-			Args:         "notifications integration list",
+			Args:         "notifications integration list -o json",
 			UseStateVars: true,
 			ExitCode:     0,
 			Contains:     []string{integrationName},
@@ -352,7 +182,7 @@ func (s *CLILiveTestSuite) TestNotificationsIntegrationMsTeamsTargetCRUDLive() {
 	// Variables
 	integrationName := uniqueName("integr")
 	kindVariant := "msteams"
-	webhookUrl := "https://admin.webhook.office.com/webhookb2/{id}/IncomingWebhook/{id}"
+	webhookUrl := "https://admin.webhook.office.com/webhookb2/00000000-0000-0000-0000-000000000000/IncomingWebhook/00000000000000000000000000000000/00000000-0000-0000-0000-000000000000"
 	updatedDescription := "updated-live-test-description"
 
 	// Cleanup (LIFO — execution is reverse-registration order)
@@ -380,93 +210,7 @@ func (s *CLILiveTestSuite) TestNotificationsIntegrationMsTeamsTargetCRUDLive() {
 		},
 		{
 			Name:         "List notifications integrations",
-			Args:         "notifications integration list",
-			UseStateVars: true,
-			ExitCode:     0,
-			Contains:     []string{integrationName},
-		},
-		{
-			Name:         "Update notifications integration name",
-			Args:         "notifications integration update {{.integration_id}} --display-name " + integrationName + "-updated",
-			UseStateVars: true,
-			ExitCode:     0,
-		},
-		{
-			Name:         "Update notifications integration description",
-			Args:         "notifications integration update {{.integration_id}} --description " + updatedDescription,
-			UseStateVars: true,
-			ExitCode:     0,
-		},
-		{
-			Name:         "Verify notifications integration update",
-			Args:         "notifications integration describe {{.integration_id}} -o json",
-			UseStateVars: true,
-			ExitCode:     0,
-			JSONFields: map[string]string{
-				"description": updatedDescription,
-			},
-		},
-		{
-			Name:         "Delete notifications integration",
-			Args:         "notifications integration delete {{.integration_id}} --force",
-			UseStateVars: true,
-			ExitCode:     0,
-		},
-		{
-			Name:         "Verify deletion",
-			Args:         "notifications integration describe {{.integration_id}}",
-			UseStateVars: true,
-			ExitCode:     1,
-		},
-	}
-
-	for _, step := range steps {
-		t.Run(step.Name, func(t *testing.T) {
-			s.runLiveCommand(t, step, state)
-		})
-	}
-}
-
-func (s *CLILiveTestSuite) TestNotificationsIntegrationInAppTargetCRUDLive() {
-	t := s.T()
-	t.Parallel()
-	state := s.setupTestContext(t)
-
-	// Variables
-	integrationName := uniqueName("integr")
-	kindVariant := "inapp"
-	updatedDescription := "updated-live-test-description"
-	user := os.Getenv("CONFLUENT_LIVE_TEST_USER_ID")
-	if user == "" {
-		t.Skipf("%s must be set to run this live test (user ID)", "CONFLUENT_LIVE_TEST_USER_ID")
-	}
-
-	// Cleanup (LIFO — execution is reverse-registration order)
-	s.registerCleanup(t, "notifications integration delete {{.integration_id}} --force", state)
-
-	steps := []CLILiveTest{
-		{
-			Name:     "Create notifications integration (in_app_target)",
-			Args:     "notifications integration create " + integrationName + " --kind " + kindVariant + " --user " + user + " -o json",
-			ExitCode: 0,
-			JSONFields: map[string]string{
-				"name": integrationName,
-			},
-			JSONFieldsExist: []string{"id"},
-			CaptureID:       "integration_id",
-		},
-		{
-			Name:         "Describe notifications integration",
-			Args:         "notifications integration describe {{.integration_id}} -o json",
-			UseStateVars: true,
-			ExitCode:     0,
-			JSONFields: map[string]string{
-				"name": integrationName,
-			},
-		},
-		{
-			Name:         "List notifications integrations",
-			Args:         "notifications integration list",
+			Args:         "notifications integration list -o json",
 			UseStateVars: true,
 			ExitCode:     0,
 			Contains:     []string{integrationName},

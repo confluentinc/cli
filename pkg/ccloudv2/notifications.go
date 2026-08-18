@@ -290,16 +290,16 @@ func (c *Client) executeListNotificationsUserNotifications(read *bool, severity 
 	if read != nil {
 		req = req.Read(*read)
 	}
-	if severity != nil {
+	if len(severity) > 0 {
 		req = req.Severity(notificationsv1.MultipleSearchFilter{Items: severity})
 	}
 	if include != "" {
 		req = req.Include(include)
 	}
-	if resourceType != nil {
+	if len(resourceType) > 0 {
 		req = req.ResourceType(notificationsv1.MultipleSearchFilter{Items: resourceType})
 	}
-	if resourceCrn != nil {
+	if len(resourceCrn) > 0 {
 		req = req.ResourceCrn(notificationsv1.MultipleSearchFilter{Items: resourceCrn})
 	}
 	if search != "" {
@@ -308,7 +308,7 @@ func (c *Client) executeListNotificationsUserNotifications(read *bool, severity 
 	if timeRange != "" {
 		req = req.TimeRange(timeRange)
 	}
-	if sort != nil {
+	if len(sort) > 0 {
 		req = req.Sort(sort)
 	}
 	if pageToken != "" {

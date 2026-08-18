@@ -20,14 +20,15 @@ func (s *CLILiveTestSuite) TestNotificationsUserNotificationCRUDLive() {
 
 	steps := []CLILiveTest{
 		{
-			Name:         "Describe notifications user notification",
-			Args:         "notifications user-notification describe {{.user_notification_id}} -o json",
+			Name:         "List notifications user notifications",
+			Args:         "notifications user-notification list -o json",
 			UseStateVars: true,
 			ExitCode:     0,
+			CaptureID:    "user_notification_id",
 		},
 		{
-			Name:         "List notifications user notifications",
-			Args:         "notifications user-notification list",
+			Name:         "Describe notifications user notification",
+			Args:         "notifications user-notification describe {{.user_notification_id}} -o json",
 			UseStateVars: true,
 			ExitCode:     0,
 		},

@@ -43,7 +43,7 @@ func (s *CLILiveTestSuite) TestNotificationsSubscriptionCRUDLive() {
 		},
 		{
 			Name:         "List notifications subscriptions",
-			Args:         "notifications subscription list",
+			Args:         "notifications subscription list -o json",
 			UseStateVars: true,
 			ExitCode:     0,
 		},

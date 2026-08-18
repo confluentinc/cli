@@ -13,6 +13,6 @@
   },
   "target": {
     "kind": "Slack",
-    "webhook_url": "https://hooks.slack.com/services/{id}/{id}/{id}"
+    "webhook_url": "https://hooks.slack.com/services/T000AAAA0/B000BBBB0/xxxxxxxxxxxxxxxxxxxxxxxx"
   }
 }

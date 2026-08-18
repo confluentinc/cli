@@ -13,6 +13,6 @@
   },
   "target": {
     "kind": "Webhook",
-    "url": "https://my.webhook.url/{id}"
+    "url": "https://my.webhook.url/00000000-0000-0000-0000-000000000000"
   }
 }

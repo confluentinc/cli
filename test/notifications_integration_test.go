@@ -4,10 +4,10 @@ package test
 
 func (s *CLITestSuite) TestNotificationsIntegrationCreate() {
 	tests := []CLITest{
-		{args: "notifications integration create test-name --kind slack --webhook-url https://hooks.slack.com/services/{id}/{id}/{id} --description \"A Slack channel integration\"", fixture: "notifications/integration/create/create-description.golden"},
-		{args: "notifications integration create test-name --kind slack --webhook-url https://hooks.slack.com/services/{id}/{id}/{id}", fixture: "notifications/integration/create/create-slack-target.golden"},
-		{args: "notifications integration create test-name --kind webhook --url https://my.webhook.url/{id}", fixture: "notifications/integration/create/create-webhook-target.golden"},
-		{args: "notifications integration create test-name --kind msteams --webhook-url https://admin.webhook.office.com/webhookb2/{id}/IncomingWebhook/{id}", fixture: "notifications/integration/create/create-ms-teams-target.golden"},
+		{args: "notifications integration create test-name --kind slack --webhook-url https://hooks.slack.com/services/T000AAAA0/B000BBBB0/xxxxxxxxxxxxxxxxxxxxxxxx --description \"A Slack channel integration\"", fixture: "notifications/integration/create/create-description.golden"},
+		{args: "notifications integration create test-name --kind slack --webhook-url https://hooks.slack.com/services/T000AAAA0/B000BBBB0/xxxxxxxxxxxxxxxxxxxxxxxx", fixture: "notifications/integration/create/create-slack-target.golden"},
+		{args: "notifications integration create test-name --kind webhook --url https://my.webhook.url/00000000-0000-0000-0000-000000000000", fixture: "notifications/integration/create/create-webhook-target.golden"},
+		{args: "notifications integration create test-name --kind msteams --webhook-url https://admin.webhook.office.com/webhookb2/00000000-0000-0000-0000-000000000000/IncomingWebhook/00000000000000000000000000000000/00000000-0000-0000-0000-000000000000", fixture: "notifications/integration/create/create-ms-teams-target.golden"},
 	}
 
 	for _, test := range tests {
@@ -66,9 +66,9 @@ func (s *CLITestSuite) TestNotificationsIntegrationUpdate() {
 	tests := []CLITest{
 		{args: "notifications integration update integration-1 --display-name \"Slack integration\"", fixture: "notifications/integration/update/update-display-name.golden"},
 		{args: "notifications integration update integration-1 --description \"A Slack channel integration\"", fixture: "notifications/integration/update/update-description.golden"},
-		{args: "notifications integration update integration-1 --kind slack --webhook-url https://hooks.slack.com/services/{id}/{id}/{id}", fixture: "notifications/integration/update/update-slack-target.golden"},
-		{args: "notifications integration update integration-1 --kind webhook --url https://my.webhook.url/{id}", fixture: "notifications/integration/update/update-webhook-target.golden"},
-		{args: "notifications integration update integration-1 --kind msteams --webhook-url https://admin.webhook.office.com/webhookb2/{id}/IncomingWebhook/{id}", fixture: "notifications/integration/update/update-ms-teams-target.golden"},
+		{args: "notifications integration update integration-1 --kind slack --webhook-url https://hooks.slack.com/services/T000AAAA0/B000BBBB0/xxxxxxxxxxxxxxxxxxxxxxxx", fixture: "notifications/integration/update/update-slack-target.golden"},
+		{args: "notifications integration update integration-1 --kind webhook --url https://my.webhook.url/00000000-0000-0000-0000-000000000000", fixture: "notifications/integration/update/update-webhook-target.golden"},
+		{args: "notifications integration update integration-1 --kind msteams --webhook-url https://admin.webhook.office.com/webhookb2/00000000-0000-0000-0000-000000000000/IncomingWebhook/00000000000000000000000000000000/00000000-0000-0000-0000-000000000000", fixture: "notifications/integration/update/update-ms-teams-target.golden"},
 		{args: "notifications integration update invalid", fixture: "notifications/integration/update/update-invalid.golden", exitCode: 1},
 	}
 

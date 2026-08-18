@@ -1,6 +1,6 @@
-+--------------------------+-------------------------------------------------+
-| ID                       | dlz-f3a90de                                     |
-| Display Name             | Slack integration                               |
-| Description              | A Slack channel integration                     |
-| Slack Target Webhook Url | https://hooks.slack.com/services/{id}/{id}/{id} |
-+--------------------------+-------------------------------------------------+
++--------------------------+-------------------------------------------------------------------------------+
+| ID                       | dlz-f3a90de                                                                   |
+| Display Name             | Slack integration                                                             |
+| Description              | A Slack channel integration                                                   |
+| Slack Target Webhook Url | https://hooks.slack.com/services/T000AAAA0/B000BBBB0/xxxxxxxxxxxxxxxxxxxxxxxx |
++--------------------------+-------------------------------------------------------------------------------+

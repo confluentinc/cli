@@ -13,27 +13,21 @@ func (s *CLILiveTestSuite) TestNotificationsNotificationTypeCRUDLive() {
 	t.Parallel()
 	state := s.setupTestContext(t)
 
-	// Variables
-	notificationTypeName := uniqueName("notifi")
-
 	// Cleanup (LIFO — execution is reverse-registration order)
 
 	steps := []CLILiveTest{
+		{
+			Name:         "List notifications notification types",
+			Args:         "notifications notification-type list -o json",
+			UseStateVars: true,
+			ExitCode:     0,
+			CaptureID:    "notification_type_id",
+		},
 		{
 			Name:         "Describe notifications notification type",
 			Args:         "notifications notification-type describe {{.notification_type_id}} -o json",
 			UseStateVars: true,
 			ExitCode:     0,
-			JSONFields: map[string]string{
-				"name": notificationTypeName,
-			},
-		},
-		{
-			Name:         "List notifications notification types",
-			Args:         "notifications notification-type list",
-			UseStateVars: true,
-			ExitCode:     0,
-			Contains:     []string{notificationTypeName},
 		},
 	}
 

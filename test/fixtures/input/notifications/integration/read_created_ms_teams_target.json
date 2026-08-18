@@ -13,6 +13,6 @@
   },
   "target": {
     "kind": "MsTeams",
-    "webhook_url": "https://admin.webhook.office.com/webhookb2/{id}/IncomingWebhook/{id}"
+    "webhook_url": "https://admin.webhook.office.com/webhookb2/00000000-0000-0000-0000-000000000000/IncomingWebhook/00000000000000000000000000000000/00000000-0000-0000-0000-000000000000"
   }
 }
