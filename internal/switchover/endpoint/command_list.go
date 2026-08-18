@@ -65,8 +65,8 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		list.Add(&listOut{
 			Id:             endpoint.GetId(),
 			DisplayName:    endpoint.Spec.GetDisplayName(),
-			SwitchoverPair: endpoint.Spec.GetParentResourceId(),
-			Environment:    endpoint.Spec.GetEnvironment(),
+			SwitchoverPair: endpoint.Spec.GetParentResourceCrn(),
+			Environment:    endpoint.Spec.GetEnvironmentCrn(),
 			Phase:          endpoint.Status.GetPhase(),
 		})
 	}
