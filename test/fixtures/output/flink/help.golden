@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   artifact            Manage Flink UDF artifacts.
-  compute-pool        Manage Flink compute pools in Confluent Cloud.
+  compute-pool        Manage and select Confluent Cloud Flink compute pools.
   compute-pool-config Manage Flink compute pools configs.
   connection          Manage Flink connections.
   connectivity-type   Manage Flink connectivity type.

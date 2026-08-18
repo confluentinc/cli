@@ -1,4 +1,4 @@
-Manage Flink compute pools in Confluent Cloud.
+Manage and select Confluent Cloud Flink compute pools.
 
 Usage:
   confluent flink compute-pool [command]
@@ -9,7 +9,7 @@ Available Commands:
   describe    Describe a Flink compute pool.
   list        List Flink compute pools.
   unset       Unset the current Flink compute pool.
-  update      Update a Flink compute pool.
+  update      Update an existing Flink compute pool.
   use         Use a Flink compute pool in subsequent commands.
 
 Global Flags:
