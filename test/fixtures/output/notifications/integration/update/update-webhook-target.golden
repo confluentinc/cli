@@ -1,0 +1,7 @@
+Updated notifications integration "integration-1".
++--------------------------+-------------------------------------------------+
+| ID                       | dlz-f3a90de                                     |
+| Display Name             | Slack integration                               |
+| Description              | A Slack channel integration                     |
+| Slack Target Webhook Url | https://hooks.slack.com/services/{id}/{id}/{id} |
++--------------------------+-------------------------------------------------+

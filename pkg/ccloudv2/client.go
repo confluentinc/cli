@@ -28,6 +28,7 @@ import (
 	networkingipv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-ip/v1"
 	networkingprivatelinkv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink/v1"
 	networkingv1 "github.com/confluentinc/ccloud-sdk-go-v2/networking/v1"
+	notificationsv1 "github.com/confluentinc/ccloud-sdk-go-v2/notifications/v1"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	pi "github.com/confluentinc/ccloud-sdk-go-v2/provider-integration/v1"
 	piv2 "github.com/confluentinc/ccloud-sdk-go-v2/provider-integration/v2"
@@ -73,6 +74,7 @@ type Client struct {
 	NetworkingGatewayClient      *networkinggatewayv1.APIClient
 	NetworkingIpClient           *networkingipv1.APIClient
 	NetworkingPrivateLinkClient  *networkingprivatelinkv1.APIClient
+	NotificationsClient          *notificationsv1.APIClient
 	OrgClient                    *orgv2.APIClient
 	ProviderIntegrationClient    *pi.APIClient
 	ProviderIntegrationV2Client  *piv2.APIClient
@@ -125,6 +127,7 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		NetworkingGatewayClient:      newNetworkingGatewayClient(httpClient, url, userAgent, unsafeTrace),
 		NetworkingIpClient:           newNetworkingIpClient(httpClient, url, userAgent, unsafeTrace),
 		NetworkingPrivateLinkClient:  newNetworkingPrivateLinkClient(httpClient, url, userAgent, unsafeTrace),
+		NotificationsClient:          newNotificationsClient(httpClient, url, userAgent, unsafeTrace),
 		OrgClient:                    newOrgClient(httpClient, url, userAgent, unsafeTrace),
 		ProviderIntegrationClient:    newProviderIntegrationClient(httpClient, url, userAgent, unsafeTrace),
 		ProviderIntegrationV2Client:  newProviderIntegrationV2Client(httpClient, url, userAgent, unsafeTrace),

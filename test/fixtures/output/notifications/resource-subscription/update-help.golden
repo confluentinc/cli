@@ -1,0 +1,17 @@
+Update an existing notifications resource subscription.
+
+Usage:
+  confluent notifications resource-subscription update <id> [flags]
+
+Flags:
+      --resource string          Denotes the Confluent Cloud resource definition.
+      --resource-type string     Denotes the Confluent Cloud resource type.
+      --current-state REQUIRED   Denotes the state of the resource subscription. When the resource subscription is ENABLED, the user will receive notifications of the configured notification type for the Confluent Cloud resource. If the resource subscription is DISABLED, the user will not receive them. Note that, you will still receive notifications for REQUIRED notification type even when it is DISABLED.
+      --integrations strings     A comma-separated list of integration IDs to notify.
+      --context string           CLI context name.
+  -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
