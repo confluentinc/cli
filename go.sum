@@ -176,6 +176,8 @@ github.com/confluentinc/ccloud-sdk-go-v2-internal/switchover v0.0.0-202608172248
 github.com/confluentinc/ccloud-sdk-go-v2-internal/switchover v0.0.0-20260817224845-0abe95882c07/go.mod h1:yv1VtjqyqD7G5gpdrzR2hGyIAfEOuLA3aTQW0TZ6Iek=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/switchover v0.0.0-20260817232824-e7dc1e87409f h1:T5vYQU5LyL4m/p/ZKCkyxHvs3kr52lyi/FpFsdGnfZU=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/switchover v0.0.0-20260817232824-e7dc1e87409f/go.mod h1:yv1VtjqyqD7G5gpdrzR2hGyIAfEOuLA3aTQW0TZ6Iek=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/switchover v0.0.0-20260818000441-970165a538e7 h1:VpsSFUdpDMld9FbmhxYjGA1ngQTUOxnDCDgzfoLUbMY=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/switchover v0.0.0-20260818000441-970165a538e7/go.mod h1:yv1VtjqyqD7G5gpdrzR2hGyIAfEOuLA3aTQW0TZ6Iek=
 github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0 h1:zSF4OQUJXWH2JeAo9rsq13ibk+JFdzITGR8S7cFMpzw=
 github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0/go.mod h1:DoxqzzF3JzvJr3fWkvCiOHFlE0GoYpozWxFZ1Ud9ntA=
 github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0 h1:8fWyLwMuy8ec0MVF5Avd54UvbIxhDFhZzanHBVwgxdw=
