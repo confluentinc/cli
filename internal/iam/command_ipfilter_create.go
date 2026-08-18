@@ -17,7 +17,7 @@ import (
 
 const resourceScopeStr = "crn://confluent.cloud/organization=%s/environment=%s"
 
-func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
+func (c *ipFilterCommand) newCreateCommand(_ *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create an IP filter.",
