@@ -2,3 +2,4 @@ Error: resource not found
 
 Suggestions:
     List available Flink compute pools with `confluent flink compute-pool list`.
+    Make sure you have selected the Flink compute pool's environment with `confluent environment use`.

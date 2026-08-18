@@ -21,8 +21,8 @@ type computePoolCommand struct {
 type computePoolOut struct {
 	IsCurrent   bool   `human:"Current" serialized:"is_current"`
 	ID          string `human:"ID" serialized:"id"`
-	Cloud       string `human:"Cloud" serialized:"cloud"`
 	Name        string `human:"Name" serialized:"name"`
+	Cloud       string `human:"Cloud" serialized:"cloud"`
 	Environment string `human:"Environment" serialized:"environment"`
 	MaxCfu      int32  `human:"Max CFU" serialized:"max_cfu"`
 	Region      string `human:"Region" serialized:"region"`
@@ -61,8 +61,8 @@ func (c *computePoolCommand) printComputePool(cmd *cobra.Command, computePool fl
 	out := &computePoolOut{
 		IsCurrent:   computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
 		ID:          computePool.GetId(),
-		Cloud:       computePool.Spec.GetCloud(),
 		Name:        computePool.Spec.GetDisplayName(),
+		Cloud:       computePool.Spec.GetCloud(),
 		Environment: computePool.Spec.Environment.GetId(),
 		MaxCfu:      computePool.Spec.GetMaxCfu(),
 		Region:      computePool.Spec.GetRegion(),

@@ -49,7 +49,7 @@ func (c *computePoolCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.NewErrorWithSuggestions(
 			errors.CatchCCloudV2Error(err, httpResp).Error(),
-			"List available Flink compute pools with `confluent flink compute-pool list`.",
+			"List available Flink compute pools with `confluent flink compute-pool list`.\nMake sure you have selected the Flink compute pool's environment with `confluent environment use`.",
 		)
 	}
 

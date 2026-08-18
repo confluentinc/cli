@@ -2,13 +2,13 @@ Updated Flink compute pool "lfcp-123456".
 +--------------+-------------------+
 | Current      | false             |
 | ID           | lfcp-123456       |
-| Cloud        | AWS               |
 | Name         | my-compute-pool-1 |
+| Cloud        | AWS               |
 | Environment  | env-123           |
 | Max CFU      | 5                 |
 | Region       | eu-west-1         |
 | Current CFU  | 0                 |
 | Status       | PROVISIONED       |
 | Default Pool | false             |
-| Network      |                   |
+| Network      | n-123456          |
 +--------------+-------------------+

@@ -56,8 +56,8 @@ func (c *computePoolCommand) list(cmd *cobra.Command, _ []string) error {
 		out := &computePoolOut{
 			IsCurrent:   computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
 			ID:          computePool.GetId(),
-			Cloud:       computePool.Spec.GetCloud(),
 			Name:        computePool.Spec.GetDisplayName(),
+			Cloud:       computePool.Spec.GetCloud(),
 			Environment: computePool.Spec.Environment.GetId(),
 			MaxCfu:      computePool.Spec.GetMaxCfu(),
 			Region:      computePool.Spec.GetRegion(),
