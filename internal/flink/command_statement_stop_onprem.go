@@ -5,19 +5,17 @@ import (
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
-	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
 func (c *command) newStatementStopCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "stop <statement-name>",
-		Short:       "Stop a Flink SQL statement.",
-		Long:        "Stop a Flink SQL statement in Confluent Platform.",
-		Args:        cobra.ExactArgs(1),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
-		RunE:        c.statementStopOnPrem,
+		Use:   "stop <statement-name>",
+		Short: "Stop a Flink SQL statement.",
+		Long:  "Stop a Flink SQL statement in Confluent Platform.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.statementStopOnPrem,
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")

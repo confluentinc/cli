@@ -9,11 +9,10 @@ import (
 
 func (c *command) newComputePoolListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "list",
-		Short:       "List Flink compute pools.",
-		Args:        cobra.NoArgs,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
-		RunE:        c.computePoolList,
+		Use:   "list",
+		Short: "List Flink compute pools.",
+		Args:  cobra.NoArgs,
+		RunE:  c.computePoolList,
 	}
 
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)

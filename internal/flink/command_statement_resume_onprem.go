@@ -5,19 +5,17 @@ import (
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
-	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
 func (c *command) newStatementResumeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "resume <statement-name>",
-		Short:       "Resume a Flink SQL statement.",
-		Long:        "Resume a Flink SQL statement in Confluent Platform.",
-		Args:        cobra.ExactArgs(1),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
-		RunE:        c.statementResumeOnPrem,
+		Use:   "resume <statement-name>",
+		Short: "Resume a Flink SQL statement.",
+		Long:  "Resume a Flink SQL statement in Confluent Platform.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.statementResumeOnPrem,
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")

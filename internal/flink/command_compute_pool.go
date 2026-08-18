@@ -5,10 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
-
-	"github.com/confluentinc/cli/v4/pkg/config"
-	"github.com/confluentinc/cli/v4/pkg/flink"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
 type computePoolOut struct {
@@ -24,33 +21,20 @@ type computePoolOut struct {
 	Status      string `human:"Status" serialized:"status"`
 }
 
-type computePoolOutOnPrem struct {
-	CreationTime string `human:"Creation Time" serialized:"creation_time"`
-	Name         string `human:"Name" serialized:"name"`
-	Type         string `human:"Type" serialized:"type"`
-	Phase        string `human:"Phase" serialized:"phase"`
-}
-
-func (c *command) newComputePoolCommand(cfg *config.Config) *cobra.Command {
+func (c *command) newComputePoolCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "compute-pool",
-		Short: "Manage Flink compute pools.",
+		Use:         "compute-pool",
+		Short:       "Manage Flink compute pools in Confluent Cloud.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	if cfg.IsCloudLogin() {
-		cmd.AddCommand(c.newComputePoolCreateCommand())
-		cmd.AddCommand(c.newComputePoolDeleteCommand())
-		cmd.AddCommand(c.newComputePoolDescribeCommand())
-		cmd.AddCommand(c.newComputePoolListCommand())
-		cmd.AddCommand(c.newComputePoolUnsetCommand())
-		cmd.AddCommand(c.newComputePoolUpdateCommand())
-		cmd.AddCommand(c.newComputePoolUseCommand())
-	} else {
-		cmd.AddCommand(c.newComputePoolCreateCommandOnPrem())
-		cmd.AddCommand(c.newComputePoolDeleteCommandOnPrem())
-		cmd.AddCommand(c.newComputePoolDescribeCommandOnPrem())
-		cmd.AddCommand(c.newComputePoolListCommandOnPrem())
-	}
+	cmd.AddCommand(c.newComputePoolCreateCommand())
+	cmd.AddCommand(c.newComputePoolDeleteCommand())
+	cmd.AddCommand(c.newComputePoolDescribeCommand())
+	cmd.AddCommand(c.newComputePoolListCommand())
+	cmd.AddCommand(c.newComputePoolUnsetCommand())
+	cmd.AddCommand(c.newComputePoolUpdateCommand())
+	cmd.AddCommand(c.newComputePoolUseCommand())
 
 	return cmd
 }
@@ -60,36 +44,36 @@ func (c *command) validComputePoolArgs(cmd *cobra.Command, args []string) []stri
 		return nil
 	}
 
-	return c.autocompleteComputePools(cmd, args)
+	return c.validComputePoolArgsMultiple(cmd, args)
 }
 
-func convertSdkComputePoolToLocalComputePool(sdkComputePool cmfsdk.ComputePool) LocalComputePool {
-	localPool := LocalComputePool{
-		ApiVersion: sdkComputePool.ApiVersion,
-		Kind:       sdkComputePool.Kind,
-		Metadata: LocalComputePoolMetadata{
-			Name:              sdkComputePool.Metadata.Name,
-			CreationTimestamp: sdkComputePool.Metadata.CreationTimestamp,
-			Uid:               sdkComputePool.Metadata.Uid,
-			Labels:            sdkComputePool.Metadata.Labels,
-			Annotations:       sdkComputePool.Metadata.Annotations,
-		},
-		Spec: LocalComputePoolSpec{
-			Type:        sdkComputePool.Spec.Type,
-			ClusterSpec: sdkComputePool.Spec.ClusterSpec,
-		},
+func (c *command) validComputePoolArgsMultiple(cmd *cobra.Command, args []string) []string {
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
 	}
 
-	if phase := extractComputePoolPhase(sdkComputePool); phase != "" {
-		localPool.Status = &LocalComputePoolStatus{
-			Phase: phase,
-		}
-	}
-
-	return localPool
+	return c.autocompleteComputePools()
 }
 
-func extractComputePoolPhase(pool cmfsdk.ComputePool) string {
-	phase, _ := flink.GetMapField[string](pool.GetStatus(), "phase", fmt.Sprintf("compute pool %q", pool.GetMetadata().Name))
-	return phase
+// Positional <id> completion, as opposed to the --compute-pool flag completion that
+// pcmd.AddComputePoolFlag owns. Deliberately self-contained rather than delegating to
+// pcmd.AutocompleteComputePools: this is the shape the generator emits, so keeping it here
+// means generation replaces this file without changing behavior.
+func (c *command) autocompleteComputePools() []string {
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil
+	}
+
+	computePools, err := c.V2Client.ListFlinkComputePools(environmentId, "")
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(computePools))
+	for i, computePool := range computePools {
+		spec := computePool.GetSpec()
+		suggestions[i] = fmt.Sprintf("%s\t%s", computePool.GetId(), spec.GetDisplayName())
+	}
+	return suggestions
 }
