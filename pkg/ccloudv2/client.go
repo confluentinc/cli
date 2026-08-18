@@ -38,6 +38,8 @@ import (
 	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2/tableflow/v1"
 	usmv1 "github.com/confluentinc/ccloud-sdk-go-v2/usm/v1"
 
+	switchoverv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/switchover/v1"
+
 	"github.com/confluentinc/cli/v4/pkg/config"
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
@@ -80,6 +82,7 @@ type Client struct {
 	ServiceQuotaClient           *servicequotav1.APIClient
 	SrcmClient                   *srcmv3.APIClient
 	SsoClient                    *ssov2.APIClient
+	SwitchoverClient             *switchoverv1.APIClient
 	TableflowClient              *tableflowv1.APIClient
 	UsmClient                    *usmv1.APIClient
 	// cli-tfgen:cli-client-fields — DO NOT REMOVE (verified by TestCliTfgenMarkers)
@@ -132,6 +135,7 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		ServiceQuotaClient:           newServiceQuotaClient(httpClient, url, userAgent, unsafeTrace),
 		SrcmClient:                   newSrcmClient(httpClient, url, userAgent, unsafeTrace),
 		SsoClient:                    newSsoClient(httpClient, url, userAgent, unsafeTrace),
+		SwitchoverClient:             newSwitchoverClient(httpClient, url, userAgent, unsafeTrace),
 		TableflowClient:              newTableflowClient(httpClient, url, userAgent, unsafeTrace),
 		UsmClient:                    newUsmClient(httpClient, url, userAgent, unsafeTrace),
 		// cli-tfgen:cli-client-init — DO NOT REMOVE (verified by TestCliTfgenMarkers)
