@@ -47,7 +47,7 @@ func (c *computePoolCommand) delete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirmWithExtraWarning(cmd, args, existenceFunc, "Flink compute pool", "All statements leveraging the compute pool will be STOPPED immediately and be available for 30 days in the statement list history.\nAfter that, they will be permanently deleted."); err != nil {
+	if err := deletion.ValidateAndConfirmWithExtraWarning(cmd, args, existenceFunc, "Flink compute pool", " All statements leveraging the compute pool will be STOPPED immediately and be available for 30 days in the statement list history.\nAfter that, they will be permanently deleted."); err != nil {
 		return err
 	}
 
