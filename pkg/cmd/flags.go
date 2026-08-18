@@ -148,7 +148,7 @@ func AddComputePoolFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 }
 
 func AutocompleteComputePools(environmentId string, client *ccloudv2.Client) []string {
-	computePools, err := client.ListFlinkComputePools(environmentId, "")
+	computePools, err := client.ListFlinkComputePools("", environmentId, "")
 	if err != nil {
 		return nil
 	}
