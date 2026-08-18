@@ -1,9 +1,9 @@
-Error: required flag(s) "environment" not set
+Error: invalid argument "3000000000" for "--page-size" flag: strconv.ParseInt: parsing "3000000000": value out of range
 Usage:
-  confluent flink compute-pool list [flags]
+  confluent flink application list [flags]
 
 Flags:
-      --environment string                  REQUIRED: Name of the Flink environment.
+      --environment string                  Name of the Flink environment.
       --page-size int32                     Number of results to fetch per API request while paginating; does not cap the total results returned. (default 100)
       --url string                          Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.
       --client-key-path string              Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.
