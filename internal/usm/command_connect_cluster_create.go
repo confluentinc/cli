@@ -91,5 +91,5 @@ func (c *connectClusterCommand) create(cmd *cobra.Command, args []string) error 
 		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
-	return printConnectClusterByType(cmd, connectCluster)
+	return printConnectCluster(cmd, connectCluster)
 }
