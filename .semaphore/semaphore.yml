@@ -41,7 +41,8 @@ blocks:
       epilogue:
         always:
           commands:
-            - test-results publish . -N "linux/amd64"
+            # --ignore-missing: build-only jobs run no tests; an early failure can leave one unwritten
+            - test-results publish unit-test-report.xml integration-test-report.xml -N "linux/amd64" --ignore-missing
 
   - name: linux/arm64
     run:
@@ -96,7 +97,7 @@ blocks:
       epilogue:
         always:
           commands:
-            - test-results publish . -N "windows/amd64"
+            - test-results publish unit-test-report.xml integration-test-report.xml -N "windows/amd64" --ignore-missing
 
 after_pipeline:
   task:
