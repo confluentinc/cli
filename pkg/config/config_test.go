@@ -565,8 +565,41 @@ func TestConfig_OverwrittenEnvironment(t *testing.T) {
 func TestConfig_getFilename(t *testing.T) {
 	home, err := os.UserHomeDir()
 	require.NoError(t, err)
-	path := filepath.Join(home, ".confluent", "config.json")
+
+	// Set explicitly rather than relying on the package default, so this cannot start passing or
+	// failing because of a channel another test left behind.
+	t.Cleanup(func() { pversion.SetProcessChannel(pversion.Dev) })
+	pversion.SetProcessChannel(pversion.Dev)
+
+	path := filepath.Join(home, ".confluent-dev", "config.json")
 	require.Equal(t, path, New().GetFilename())
+}
+
+func TestConfig_getFilename_perChannel(t *testing.T) {
+	home, err := os.UserHomeDir()
+	require.NoError(t, err)
+	t.Cleanup(func() { pversion.SetProcessChannel(pversion.Dev) })
+
+	// Driven by the version strings the build system actually produces, so this fails if either the
+	// classifier or the directory naming drifts.
+	tests := []struct {
+		name    string
+		version string
+		dir     string
+	}{
+		{"GA release", "4.72.0", ".confluent"},
+		{"release candidate", "5.0.0-rc1", ".confluent-prerelease"},
+		{"local goreleaser snapshot", "4.72.0-SNAPSHOT-d962911bb", ".confluent-dev"},
+		{"nothing stamped", "0.0.0", ".confluent-dev"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			pversion.SetProcessChannel(pversion.ChannelOf(test.version))
+
+			require.Equal(t, filepath.Join(home, test.dir, "config.json"), New().GetFilename())
+		})
+	}
 }
 
 func TestConfig_AddContext(t *testing.T) {
