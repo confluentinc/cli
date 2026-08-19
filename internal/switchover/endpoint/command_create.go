@@ -98,15 +98,15 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Flags stay ID-based; the CRNs the backend expects are assembled here (ORC-9794).
-	environmentCrn := fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s", c.Context.GetCurrentOrganization(), environmentId)
-	parentResourceCrn := fmt.Sprintf("%s/switchover-pair=%s", environmentCrn, switchoverPairId)
+	// The endpoint's environment travels inside parent_resource_crn (the pair CRN); the create body
+	// does not take a separate environment_crn. The parent CRN is assembled from the current
+	// organization, the --environment flag, and the --switchover-pair ID.
+	parentResourceCrn := fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/switchover-pair=%s", c.Context.GetCurrentOrganization(), environmentId, switchoverPairId)
 
 	endpoint := switchoverv1.SwitchoverV1SwitchoverEndpoint{
 		Spec: &switchoverv1.SwitchoverV1SwitchoverEndpointSpec{
 			DisplayName:       switchoverv1.PtrString(displayName),
 			Endpoints:         &endpoints,
-			EnvironmentCrn:    switchoverv1.PtrString(environmentCrn),
 			ParentResourceCrn: switchoverv1.PtrString(parentResourceCrn),
 		},
 	}
