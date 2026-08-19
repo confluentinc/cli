@@ -47,7 +47,7 @@ func (c *command) newStatementUpdateCommand() *cobra.Command {
 	}
 
 	c.addPrincipalFlag(cmd)
-	c.addComputePoolFlag(cmd)
+	pcmd.AddComputePoolFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Bool("stopped", false, "Request to stop or resume the statement.")
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)

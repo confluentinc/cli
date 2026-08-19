@@ -9,12 +9,11 @@ import (
 
 func (c *command) newStatementExceptionListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "list <statement-name>",
-		Short:       "List exceptions for a Flink SQL statement.",
-		Long:        "List exceptions for a Flink SQL statement in Confluent Platform.",
-		Args:        cobra.ExactArgs(1),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
-		RunE:        c.statementExceptionListOnPrem,
+		Use:   "list <statement-name>",
+		Short: "List exceptions for a Flink SQL statement.",
+		Long:  "List exceptions for a Flink SQL statement in Confluent Platform.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.statementExceptionListOnPrem,
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")

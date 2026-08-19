@@ -38,7 +38,7 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("sql", "", "The Flink SQL statement.")
-	c.addComputePoolFlag(cmd)
+	pcmd.AddComputePoolFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	c.addDatabaseFlag(cmd)
 	cmd.Flags().Bool("wait", false, "Block until the statement is running or has failed.")
@@ -60,7 +60,7 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	environment, err := c.V2Client.GetOrgEnvironment(environmentId)
+	environment, _, err := c.V2Client.GetOrgEnvironment(environmentId)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
 	}

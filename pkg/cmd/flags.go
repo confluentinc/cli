@@ -94,11 +94,6 @@ func AddCloudFlag(cmd *cobra.Command) {
 	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return kafka.Clouds })
 }
 
-func AddCloudAwsAzureFlag(cmd *cobra.Command) {
-	cmd.Flags().String("cloud", "", fmt.Sprintf("Specify the cloud provider as %s.", utils.ArrayToCommaDelimitedString(kafka.Clouds[:2], "or")))
-	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return kafka.Clouds[:2] })
-}
-
 func AddCloudAwsFlag(cmd *cobra.Command) {
 	cmd.Flags().String("cloud", "", fmt.Sprintf("Specify the cloud provider as %s.", utils.ArrayToCommaDelimitedString(kafka.Clouds[:1], "or")))
 	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return kafka.Clouds[:1] })
@@ -133,6 +128,34 @@ func AutocompleteClusters(environmentId string, client *ccloudv2.Client) []strin
 	suggestions := make([]string, len(clusters))
 	for i, cluster := range clusters {
 		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
+	}
+	return suggestions
+}
+
+func AddComputePoolFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
+	cmd.Flags().String("compute-pool", "", "Flink compute pool ID.")
+	RegisterFlagCompletionFunc(cmd, "compute-pool", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+		return AutocompleteComputePools(environmentId, c.V2Client)
+	})
+}
+
+func AutocompleteComputePools(environmentId string, client *ccloudv2.Client) []string {
+	computePools, err := client.ListFlinkComputePools("", environmentId, "")
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(computePools))
+	for i, computePool := range computePools {
+		suggestions[i] = fmt.Sprintf("%s\t%s", computePool.GetId(), computePool.Spec.GetDisplayName())
 	}
 	return suggestions
 }
@@ -194,7 +217,7 @@ func AutocompleteEnvironments(v1Client *ccloudv1.Client, v2Client *ccloudv2.Clie
 	}
 
 	if auditLog := user.GetOrganization().GetAuditLog(); auditLog.GetServiceAccountId() != 0 {
-		environment, err := v2Client.GetOrgEnvironment(auditLog.GetAccountId())
+		environment, _, err := v2Client.GetOrgEnvironment(auditLog.GetAccountId())
 		if err != nil {
 			return nil
 		}

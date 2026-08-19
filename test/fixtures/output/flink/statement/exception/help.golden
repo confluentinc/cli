@@ -1,4 +1,4 @@
-Manage Flink SQL statement exceptions.
+Manage Flink SQL statement exceptions in Confluent Cloud.
 
 Usage:
   confluent flink statement exception [command]

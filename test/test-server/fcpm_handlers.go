@@ -26,6 +26,7 @@ func handleFcpmComputePools(t *testing.T) http.HandlerFunc {
 					Environment: &flinkv2.GlobalObjectReference{
 						Id: "env-123",
 					},
+					Network: &flinkv2.EnvScopedObjectReference{Id: "n-123456"},
 				},
 				Status: &flinkv2.FcpmV2ComputePoolStatus{Phase: "PROVISIONED"},
 			}
@@ -39,6 +40,7 @@ func handleFcpmComputePools(t *testing.T) http.HandlerFunc {
 					Environment: &flinkv2.GlobalObjectReference{
 						Id: "env-456",
 					},
+					Network: &flinkv2.EnvScopedObjectReference{Id: "n-222222"},
 				},
 				Status: &flinkv2.FcpmV2ComputePoolStatus{Phase: "PROVISIONED"},
 			}
@@ -57,6 +59,7 @@ func handleFcpmComputePools(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 			create.Spec.Cloud = flinkv2.PtrString(strings.ToUpper(create.Spec.GetCloud()))
 			create.Spec.DefaultPool = flinkv2.PtrBool(create.Spec.GetDefaultPool())
+			create.Spec.Network = &flinkv2.EnvScopedObjectReference{Id: "n-123456"}
 
 			v := flinkv2.FcpmV2ComputePool{
 				Id:     flinkv2.PtrString("lfcp-123456"),
@@ -116,6 +119,7 @@ func handleFcpmComputePoolsId(t *testing.T) http.HandlerFunc {
 					Cloud:       flinkv2.PtrString("AWS"),
 					Region:      flinkv2.PtrString("eu-west-1"),
 					Environment: &flinkv2.GlobalObjectReference{Id: "env-123"},
+					Network:     &flinkv2.EnvScopedObjectReference{Id: "n-123456"},
 				},
 				Status: &flinkv2.FcpmV2ComputePoolStatus{Phase: "PROVISIONED"},
 			}
@@ -123,6 +127,7 @@ func handleFcpmComputePoolsId(t *testing.T) http.HandlerFunc {
 				computePool.Spec.DisplayName = flinkv2.PtrString("my-compute-pool-2")
 				computePool.Spec.Region = flinkv2.PtrString("eu-west-2")
 				computePool.Spec.Environment = &flinkv2.GlobalObjectReference{Id: "env-456"}
+				computePool.Spec.Network = &flinkv2.EnvScopedObjectReference{Id: "n-222222"}
 			}
 		case http.MethodPatch:
 			update := new(flinkv2.FcpmV2ComputePool)
@@ -138,6 +143,7 @@ func handleFcpmComputePoolsId(t *testing.T) http.HandlerFunc {
 					Cloud:       flinkv2.PtrString("AWS"),
 					Region:      flinkv2.PtrString("eu-west-1"),
 					Environment: &flinkv2.GlobalObjectReference{Id: "env-123"},
+					Network:     &flinkv2.EnvScopedObjectReference{Id: "n-123456"},
 				},
 				Status: &flinkv2.FcpmV2ComputePoolStatus{Phase: "PROVISIONED"},
 			}

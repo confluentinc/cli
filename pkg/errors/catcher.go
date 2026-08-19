@@ -14,8 +14,6 @@ import (
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-
-	"github.com/confluentinc/cli/v4/pkg/plural"
 )
 
 /*
@@ -204,18 +202,6 @@ func CatchResourceNotFoundError(err error, id string) error {
 	}
 
 	return err
-}
-
-func CatchCCloudV2ResourceNotFoundError(err error, resourceType string, r *http.Response) error {
-	if err == nil {
-		return nil
-	}
-
-	if r != nil && r.StatusCode == http.StatusForbidden {
-		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("%s not found or access forbidden", resourceType), fmt.Sprintf(ListResourceSuggestions, plural.Plural(resourceType), resourceType))
-	}
-
-	return CatchCCloudV2Error(err, r)
 }
 
 func CatchComputePoolNotFoundError(err error, computePoolId string, r *http.Response) error {

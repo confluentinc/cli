@@ -10,6 +10,8 @@ Flags:
       --topic-name string    REQUIRED: The Kafka topic name containing the data for the RTCE topic.
       --environment string   Environment ID.
       --cluster string       Kafka cluster ID.
+      --wait                 Wait for the RTCE topic to reach a ready or failed state before returning.
+      --timeout duration     Maximum time to wait for the RTCE topic to reach a ready or failed state when --wait is set (e.g., '30s', '5m', '2h'). (default 1h0m0s)
       --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 

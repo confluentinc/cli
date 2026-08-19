@@ -1,0 +1,9 @@
++--------------------------------+--------------------+
+| ID                             | usmkc-f3a90de      |
+| Name                           | My-Prod-CP-Cluster |
+| Confluent Platform Kafka       | test-name          |
+| Cluster Id                     |                    |
+| Cloud                          | AWS                |
+| Region                         | us-east-1          |
+| Environment                    | env-596            |
++--------------------------------+--------------------+

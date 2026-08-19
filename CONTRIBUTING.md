@@ -219,7 +219,7 @@ Add the following line to `internal/command.go`, and make sure to import its pac
 To build the CLI binary, run `make build`. After this, we can run our command in the following way, and see that it (hopefully) works!
 
     make build
-    dist/confluent_<os>_<arch>/confluent config file describe 3
+    dist/confluent_<os>_<arch>/confluent config describe 3
 
 #### Integration Testing
 

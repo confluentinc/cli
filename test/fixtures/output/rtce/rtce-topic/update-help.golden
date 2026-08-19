@@ -1,4 +1,4 @@
-Update an RTCE topic.
+Update an existing RTCE topic.
 
 Usage:
   confluent rtce rtce-topic update <topic-name> [flags]

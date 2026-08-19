@@ -46,8 +46,8 @@ import (
 	servicequota "github.com/confluentinc/cli/v4/internal/service-quota"
 	streamshare "github.com/confluentinc/cli/v4/internal/stream-share"
 	"github.com/confluentinc/cli/v4/internal/tableflow"
-	unifiedstreammanager "github.com/confluentinc/cli/v4/internal/unified-stream-manager"
 	"github.com/confluentinc/cli/v4/internal/update"
+	"github.com/confluentinc/cli/v4/internal/usm"
 	"github.com/confluentinc/cli/v4/internal/version"
 	pauth "github.com/confluentinc/cli/v4/pkg/auth"
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
@@ -118,7 +118,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(connect.New(cfg, prerunner))
 	cmd.AddCommand(context.New(prerunner))
 	cmd.AddCommand(endpoint.New(cfg, prerunner))
-	cmd.AddCommand(environment.New(prerunner))
+	cmd.AddCommand(environment.New(cfg, prerunner))
 	cmd.AddCommand(feedback.New(prerunner))
 	cmd.AddCommand(flink.New(cfg, prerunner))
 	cmd.AddCommand(iam.New(cfg, prerunner))
@@ -128,7 +128,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, loginCredentialsManager, loginOrganizationManager, authTokenHandler))
 	cmd.AddCommand(logout.New(cfg, prerunner, authTokenHandler))
 	cmd.AddCommand(network.New(cfg, prerunner))
-	cmd.AddCommand(organization.New(prerunner))
+	cmd.AddCommand(organization.New(cfg, prerunner))
 	cmd.AddCommand(plugin.New(cfg, prerunner))
 	cmd.AddCommand(prompt.New(cfg))
 	cmd.AddCommand(providerintegration.New(prerunner))
@@ -139,8 +139,8 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(shell.New(cmd, func() *cobra.Command { return NewConfluentCommand(cfg) }))
 	cmd.AddCommand(streamshare.New(prerunner))
 	cmd.AddCommand(tableflow.New(prerunner))
-	cmd.AddCommand(unifiedstreammanager.New(cfg, prerunner))
 	cmd.AddCommand(update.New(cfg, prerunner))
+	cmd.AddCommand(usm.New(cfg, prerunner))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
 	// cli-tfgen:cli-commands — DO NOT REMOVE (verified by TestCliTfgenMarkers)
 

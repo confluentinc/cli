@@ -17,6 +17,7 @@ func (c *command) newCatalogDatabaseListCommand() *cobra.Command {
 
 	cmd.Flags().String("catalog", "", "Name of the catalog.")
 	cobra.CheckErr(cmd.MarkFlagRequired("catalog"))
+	addPageSizeFlag(cmd)
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -29,12 +30,17 @@ func (c *command) catalogDatabaseList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	pageSize, err := getPageSize(cmd)
+	if err != nil {
+		return err
+	}
+
 	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	sdkDatabases, err := client.ListDatabases(c.createContext(), catalogName)
+	sdkDatabases, err := client.ListDatabases(c.createContext(), catalogName, pageSize)
 	if err != nil {
 		return err
 	}
