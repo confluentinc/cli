@@ -1,7 +1,7 @@
 Update an existing environment.
 
 Usage:
-  confluent environment update <id> [flags]
+  confluent environment update [id] [flags]
 
 Flags:
       --governance-package string   Specify the Stream Governance package as "essentials" or "advanced". On create, if not specified, the "essentials" package is used. Downgrading the package from "advanced" to "essentials" is not allowed once the Schema Registry cluster is provisioned.

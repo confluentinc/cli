@@ -58,7 +58,7 @@ func (c *Client) ListOrgEnvironments() ([]orgv2.OrgV2Environment, error) {
 	done := false
 	pageToken := ""
 	for !done {
-		page, httpResp, err := c.executeListEnvironments(pageToken)
+		page, httpResp, err := c.executeListOrgEnvironments(pageToken)
 		if err != nil {
 			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
@@ -73,7 +73,7 @@ func (c *Client) ListOrgEnvironments() ([]orgv2.OrgV2Environment, error) {
 	return list, nil
 }
 
-func (c *Client) executeListEnvironments(pageToken string) (orgv2.OrgV2EnvironmentList, *http.Response, error) {
+func (c *Client) executeListOrgEnvironments(pageToken string) (orgv2.OrgV2EnvironmentList, *http.Response, error) {
 	req := c.OrgClient.EnvironmentsOrgV2Api.
 		ListOrgV2Environments(c.orgApiContext()).
 		PageSize(ccloudV2ListPageSize)
