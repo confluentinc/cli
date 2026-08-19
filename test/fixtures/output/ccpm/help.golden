@@ -4,7 +4,7 @@ Usage:
   confluent ccpm [command]
 
 Available Commands:
-  plugin      Manage custom Connect plugins.
+  custom-connect-plugin Manage Confluent Cloud CCPM custom Connect plugins.
 
 Global Flags:
   -h, --help            Show help for this command.

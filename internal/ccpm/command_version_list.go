@@ -4,11 +4,12 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *pluginCommand) newListVersionCommand() *cobra.Command {
+func (c *customConnectPluginVersionCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List custom Connect plugin versions.",
@@ -17,7 +18,7 @@ func (c *pluginCommand) newListVersionCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all versions of a custom connect plugin.",
-				Code: "confluent ccpm plugin version list --plugin plugin-123456 --environment env-abcdef",
+				Code: "confluent ccpm custom-connect-plugin version list --plugin plugin-123456 --environment env-abcdef",
 			},
 		),
 	}
@@ -30,7 +31,7 @@ func (c *pluginCommand) newListVersionCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *pluginCommand) listVersion(cmd *cobra.Command, args []string) error {
+func (c *customConnectPluginVersionCommand) listVersion(cmd *cobra.Command, args []string) error {
 	pluginId, err := cmd.Flags().GetString("plugin")
 	if err != nil {
 		return err
@@ -41,13 +42,13 @@ func (c *pluginCommand) listVersion(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pluginResp, err := c.V2Client.DescribeCCPMPlugin(pluginId, environment)
+	pluginResp, httpResp, err := c.V2Client.GetCcpmCustomConnectPlugin(pluginId, environment)
 	if err != nil {
-		return err
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	// Use V2Client to call CCPM API
-	versions, err := c.V2Client.ListCCPMPluginVersions(pluginId, environment)
+	versions, err := c.V2Client.ListCcpmCustomConnectPluginVersions(pluginId, environment)
 	if err != nil {
 		return err
 	}

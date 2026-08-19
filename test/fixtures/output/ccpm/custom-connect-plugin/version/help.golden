@@ -1,7 +1,7 @@
 Manage custom Connect plugin versions.
 
 Usage:
-  confluent ccpm plugin version [command]
+  confluent ccpm custom-connect-plugin version [command]
 
 Available Commands:
   create      Create a custom Connect plugin version.
@@ -14,4 +14,4 @@ Global Flags:
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
-Use "confluent ccpm plugin version [command] --help" for more information about a command.
+Use "confluent ccpm custom-connect-plugin version [command] --help" for more information about a command.

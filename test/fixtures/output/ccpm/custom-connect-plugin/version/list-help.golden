@@ -1,12 +1,12 @@
 List custom Connect plugin versions.
 
 Usage:
-  confluent ccpm plugin version list [flags]
+  confluent ccpm custom-connect-plugin version list [flags]
 
 Examples:
 List all versions of a custom connect plugin.
 
-  $ confluent ccpm plugin version list --plugin plugin-123456 --environment env-abcdef
+  $ confluent ccpm custom-connect-plugin version list --plugin plugin-123456 --environment env-abcdef
 
 Flags:
       --plugin string        REQUIRED: Plugin ID.

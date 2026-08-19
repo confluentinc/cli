@@ -1,21 +1,22 @@
 Error: required flag(s) "name" not set
 Usage:
-  confluent ccpm plugin create [flags]
+  confluent ccpm custom-connect-plugin create [flags]
 
 Examples:
 Create a custom Connect plugin for AWS.
 
-  $ confluent ccpm plugin create --name "My Custom Plugin" --cloud AWS --description "A custom connector for data processing" --environment env-12345
+  $ confluent ccpm custom-connect-plugin create --name "My Custom Plugin" --cloud AWS --description "A custom connector for data processing" --environment env-12345
 
 Create a custom Connect plugin for GCP with minimal description.
 
-  $ confluent ccpm plugin create --name "GCP Data Connector" --cloud GCP --environment env-abcdef
+  $ confluent ccpm custom-connect-plugin create --name "GCP Data Connector" --cloud GCP --environment env-abcdef
 
 Flags:
-      --name string          REQUIRED: Display name of the custom Connect plugin.
       --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --name string          REQUIRED: Display name of Custom Connect Plugin.
+      --description string   Description of Custom Connect Plugin.
       --environment string   Environment ID.
-      --description string   Description of the custom Connect plugin.
+      --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
