@@ -6,6 +6,8 @@ Usage:
 Flags:
       --region string        Cloud region for Flink (use "confluent flink region list" to see all).
       --environment string   Environment ID.
+      --network string       Network ID.
+      --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
