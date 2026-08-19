@@ -39,6 +39,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newSystemInfoCommand())
 
 	// On-Prem and Cloud Shared Commands
+	cmd.AddCommand(c.newArtifactCommand(cfg))
 	if cfg.IsCloudLogin() {
 		// compute-pool is generated. Keep this entry spelled exactly as the generator's merger
 		// writes it — `new<Kind>Command(cfg, prerunner),` on its own line — so its insertion at
@@ -59,7 +60,6 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	// Cloud Specific Commands
-	cmd.AddCommand(c.newArtifactCommand())
 	cmd.AddCommand(c.newComputePoolConfigCommand())
 	cmd.AddCommand(c.newConnectionCommand())
 	cmd.AddCommand(c.newConnectivityTypeCommand())

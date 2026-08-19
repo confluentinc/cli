@@ -1,0 +1,1 @@
+Error: failed to update artifact "non-exist-artifact" in the environment "test-env": The artifact name is invalid
