@@ -8,7 +8,7 @@ Aliases:
 
 Available Commands:
   describe    Describe a user-configurable field.
-  list        List user-configurable fields in ~/.confluent/config.json.
+  list        List user-configurable fields in the CLI configuration file.
   update      Update a user-configurable field's value.
 
 Global Flags:

@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
+	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/plugin"
@@ -27,11 +28,11 @@ func (c *command) newInstallCommand() *cobra.Command {
 }
 
 func (c *command) install(_ *cobra.Command, args []string) error {
-	home, err := os.UserHomeDir()
+	confluentDir, err := config.StateDir()
 	if err != nil {
 		return err
 	}
-	confluentDir := filepath.Join(home, ".confluent")
+
 	dir, err := os.MkdirTemp(confluentDir, "cli-plugins")
 	if err != nil {
 		return err
