@@ -188,6 +188,7 @@ var properNouns = []string{
 	"Databricks",
 	"DEK",
 	"Endpoint",
+	"Flink Compute Pool",
 	"Flink",
 	"Go",
 	"Groovy",
