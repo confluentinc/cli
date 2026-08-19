@@ -128,7 +128,7 @@ func (s *CLILiveTestSuite) TestFlinkComputePoolCRUDLive() {
 			"flink compute-pool describe {{.compute_pool_id}} --environment {{.env_id}} -o json",
 			state,
 			func(output string) bool {
-				status := extractJSONField(t, output, "phase")
+				status := extractJSONField(t, output, "status")
 				return strings.EqualFold(status, "PROVISIONED")
 			},
 			10*time.Second,
