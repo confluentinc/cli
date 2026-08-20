@@ -1,15 +1,15 @@
 Create a USM Connect cluster.
 
 Usage:
-  confluent usm connect-cluster create <confluent-platform-connect-cluster-id> [flags]
+  confluent usm connect-cluster register <confluent-platform-connect-cluster-id> [flags]
 
 Aliases:
-  create, register
+  register, create
 
 Examples:
 Register a Confluent Platform Connect cluster with the ID connect-group-xyz123.
 
-  $ confluent usm connect-cluster create connect-group-xyz123 --confluent-platform-kafka-cluster 4k0R9d1GTS5tI9f4Y2xZ0Q --cloud aws --region us-east-1
+  $ confluent usm connect-cluster register connect-group-xyz123 --confluent-platform-kafka-cluster 4k0R9d1GTS5tI9f4Y2xZ0Q --cloud aws --region us-east-1
 
 Flags:
       --confluent-platform-kafka-cluster string   REQUIRED: The unique identifier of the metadata Kafka cluster for the Connect Cluster.

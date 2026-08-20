@@ -1,4 +1,4 @@
-       ID       |        Name        |    Confluent Platform Kafka    | Cloud |  Region   | Environment  
-                |                    |           Cluster Id           |       |           |              
-----------------+--------------------+--------------------------------+-------+-----------+--------------
-  usmkc-f3a90de | My-Prod-CP-Cluster | 4k0R9d1GTS5tI9f4Y2xZ0Q         | AWS   | us-east-1 | env-00000    
+       ID       |    Confluent Platform Kafka    |        Name        | Cloud |  Region   | Environment
+                |           Cluster Id           |                    |       |           |
+----------------+--------------------------------+--------------------+-------+-----------+--------------
+  usmkc-f3a90de | 4k0R9d1GTS5tI9f4Y2xZ0Q         | My-Prod-CP-Cluster | AWS   | us-east-1 | env-00000
