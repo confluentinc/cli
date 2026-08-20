@@ -29,6 +29,7 @@ type Logger struct {
 	Level  Level
 	logger hclog.Logger
 	buffer []leveledMessage
+	out    io.Writer
 }
 
 type leveledMessage struct {
@@ -63,6 +64,7 @@ func New(level Level, output io.Writer) *Logger {
 			Color:           colorForOutput(output),
 			ColorHeaderOnly: true,
 		}),
+		out: output,
 	}
 }
 
@@ -82,7 +84,7 @@ func colorForOutput(output io.Writer) hclog.ColorOption {
 
 func (l *Logger) SetVerbosity(verbosity int) {
 	if verbosity == 0 {
-		verbosity = verbosityFromEnv()
+		verbosity = l.verbosityFromEnv()
 	}
 
 	level := min(Level(verbosity), UNSAFE_TRACE)
@@ -91,9 +93,18 @@ func (l *Logger) SetVerbosity(verbosity int) {
 	l.logger.SetLevel(mapToHclogLevel(level))
 }
 
-func verbosityFromEnv() int {
-	verbosity, err := strconv.Atoi(os.Getenv(VerbosityEnvVar))
+// verbosityFromEnv reads the verbosity from VerbosityEnvVar. An unset variable returns 0 silently; a
+// value that isn't a non-negative integer returns 0 but warns, since someone who set it meant to
+// raise verbosity and would otherwise get no output and no hint why.
+func (l *Logger) verbosityFromEnv() int {
+	raw, ok := os.LookupEnv(VerbosityEnvVar)
+	if !ok || raw == "" {
+		return 0
+	}
+
+	verbosity, err := strconv.Atoi(raw)
 	if err != nil || verbosity < 0 {
+		fmt.Fprintf(l.out, "[WARN] Ignoring invalid environment variable %q=%q; expected a number from 0 (quietest) to 4 (most verbose).\n", VerbosityEnvVar, raw)
 		return 0
 	}
 	return verbosity
