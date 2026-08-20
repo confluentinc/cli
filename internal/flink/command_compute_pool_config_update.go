@@ -17,7 +17,7 @@ func (c *orgComputePoolConfigCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "Update the existing Flink org compute pool config.",
-		Args:  cobra.NoArgs,
+		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -33,6 +33,11 @@ func (c *orgComputePoolConfigCommand) newUpdateCommand() *cobra.Command {
 	cmd.Flags().Bool("default-pool", false, "Whether default compute pools are enabled for the organization.")
 	cmd.Flags().Int32("max-cfu", 5, "Maximum number of Confluent Flink Units (CFUs) that default compute pools in this organization should auto-scale to.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "max-cfu", func(_ *cobra.Command, _ []string) []string { return []string{"5", "10", "20", "30", "40", "50"} })
+
+	// Retaining and hiding the extraneous "environment" flag to keep backward compatibility
+	// Plan is to remove it in next major version v5, no Deprecation label is needed
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	cobra.CheckErr(cmd.Flags().MarkHidden("environment"))
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
