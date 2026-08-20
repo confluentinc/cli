@@ -1,7 +1,7 @@
 Create a CCPM custom Connect plugin.
 
 Usage:
-  confluent ccpm custom-connect-plugin create <name> [flags]
+  confluent ccpm custom-connect-plugin create [flags]
 
 Examples:
 Create a custom Connect plugin for AWS.
@@ -14,6 +14,7 @@ Create a custom Connect plugin for GCP with minimal description.
 
 Flags:
       --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --name string          REQUIRED: Display name of Custom Connect Plugin.
       --description string   Description of Custom Connect Plugin.
       --environment string   Environment ID.
       --context string       CLI context name.
