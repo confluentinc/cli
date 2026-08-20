@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/mattn/go-isatty"
 )
 
 // VerbosityEnvVar sets the log level when no -v flag is passed, using the same 0-5 scale as -v.
@@ -57,10 +58,26 @@ func New(level Level, output io.Writer) *Logger {
 	return &Logger{
 		Level: level,
 		logger: hclog.New(&hclog.LoggerOptions{
-			Output: output,
-			Level:  mapToHclogLevel(level),
+			Output:          output,
+			Level:           mapToHclogLevel(level),
+			Color:           colorForOutput(output),
+			ColorHeaderOnly: true,
 		}),
 	}
+}
+
+// hclog's AutoColor leaves color on for any writer without a file descriptor, which would put
+// escape codes into test buffers, so decide explicitly rather than delegating.
+func colorForOutput(output io.Writer) hclog.ColorOption {
+	file, ok := output.(*os.File)
+	if !ok {
+		return hclog.ColorOff
+	}
+
+	if isatty.IsTerminal(file.Fd()) || isatty.IsCygwinTerminal(file.Fd()) {
+		return hclog.ForceColor
+	}
+	return hclog.ColorOff
 }
 
 func (l *Logger) SetVerbosity(verbosity int) {
