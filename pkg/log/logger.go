@@ -4,9 +4,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 
 	"github.com/hashicorp/go-hclog"
 )
+
+// VerbosityEnvVar sets the log level when no -v flag is passed, using the same 0-5 scale as -v.
+// A flag always wins, since -v is a count flag and 0 can only mean "not passed".
+const VerbosityEnvVar = "CONFLUENT_VERBOSITY"
 
 // TODO: once we migrate from ccloud-sdk-v1 we should change these functions to act on the
 // TODO: global logger instead of (l *Logger) and then we can call log.Debug() instead of log.CliLogger.Debug()
@@ -59,10 +64,22 @@ func New(level Level, output io.Writer) *Logger {
 }
 
 func (l *Logger) SetVerbosity(verbosity int) {
+	if verbosity == 0 {
+		verbosity = verbosityFromEnv()
+	}
+
 	level := min(Level(verbosity), UNSAFE_TRACE)
 
 	l.Level = level
 	l.logger.SetLevel(mapToHclogLevel(level))
+}
+
+func verbosityFromEnv() int {
+	verbosity, err := strconv.Atoi(os.Getenv(VerbosityEnvVar))
+	if err != nil || verbosity < 0 {
+		return 0
+	}
+	return verbosity
 }
 
 func (l *Logger) UnsafeTrace(args ...any) {

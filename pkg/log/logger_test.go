@@ -60,3 +60,30 @@ func TestLogger_FlushAfterRaisingVerbosity(t *testing.T) {
 		})
 	}
 }
+
+func TestLogger_SetVerbosity(t *testing.T) {
+	tests := []struct {
+		name      string
+		verbosity int
+		env       string
+		want      Level
+	}{
+		{name: "no flag and no environment variable", want: ERROR},
+		{name: "flag only", verbosity: int(DEBUG), want: DEBUG},
+		{name: "environment variable only", env: "3", want: DEBUG},
+		{name: "flag wins over environment variable", verbosity: int(WARN), env: "4", want: WARN},
+		{name: "environment variable is clamped", env: "99", want: UNSAFE_TRACE},
+		{name: "unparsable environment variable is ignored", env: "debug", want: ERROR},
+		{name: "negative environment variable is ignored", env: "-1", want: ERROR},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Setenv(VerbosityEnvVar, test.env)
+			l := New(ERROR, new(bytes.Buffer))
+
+			l.SetVerbosity(test.verbosity)
+
+			require.Equal(t, test.want, l.Level)
+		})
+	}
+}
