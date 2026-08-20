@@ -62,20 +62,19 @@ func readLicenseJwt(cmd *cobra.Command) (string, error) {
 		return "", err
 	}
 
-	if path == "" {
-		return jwt, nil
+	if path != "" {
+		contents, err := os.ReadFile(path)
+		if err != nil {
+			return "", err
+		}
+		jwt = string(contents)
 	}
 
-	contents, err := os.ReadFile(path)
-	if err != nil {
-		return "", err
-	}
-
-	jwt = strings.TrimSpace(string(contents))
+	jwt = strings.TrimSpace(jwt)
 	if jwt == "" {
 		return "", errors.NewErrorWithSuggestions(
-			"license file is empty",
-			"Ensure the file specified by `--license-file` contains a JWT-encoded license.",
+			"license is empty",
+			"Provide a JWT-encoded license with `--license-jwt` or `--license-file`.",
 		)
 	}
 
