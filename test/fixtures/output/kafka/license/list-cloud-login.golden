@@ -1,0 +1,5 @@
+Error: you must log out of Confluent Cloud to use this command
+
+Suggestions:
+    Log out with `confluent logout`.
+    

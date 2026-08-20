@@ -421,6 +421,33 @@ func (s *CLITestSuite) TestKafkaBrokerList() {
 	}
 }
 
+func (s *CLITestSuite) TestKafkaLicense() {
+	tests := []CLITest{
+		{args: fmt.Sprintf("kafka license list --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/list.golden"},
+		{args: fmt.Sprintf("kafka license list --url %s -o json", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/list-json.golden"},
+		{args: fmt.Sprintf("kafka license list --url %s -o yaml", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/list-yaml.golden"},
+		{args: fmt.Sprintf("kafka license update --license-jwt fake.license.jwt --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/update.golden"},
+		{args: fmt.Sprintf("kafka license update --license-jwt fake.license.jwt --dry-run --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/update-dry-run.golden"},
+		{args: fmt.Sprintf("kafka license update --license-jwt fake.license.jwt --url %s -o json", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/update-json.golden"},
+		{args: fmt.Sprintf("kafka license update --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/update-no-license.golden", exitCode: 1},
+		{args: fmt.Sprintf("kafka license update --license-jwt fake.license.jwt --license-file license.jwt --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/update-mutually-exclusive.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		s.runIntegrationTest(test)
+	}
+
+	tests = []CLITest{
+		{args: "kafka license list", fixture: "kafka/license/list-not-logged-in.golden", exitCode: 1},
+		{args: "kafka license list", login: "cloud", fixture: "kafka/license/list-cloud-login.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestKafkaLink() {
 	tests := []CLITest{
 		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o yaml", fixture: "kafka/link/configuration/list-yaml.golden", useKafka: "lkc-describe-topic"},
