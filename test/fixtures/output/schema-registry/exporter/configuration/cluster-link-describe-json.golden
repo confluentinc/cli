@@ -1,0 +1,3 @@
+{
+  "topic.config.sync.associations.filters": "{\"topicsToInclude\":[\"*\"],\"topicsToExclude\":[],\"contextType\":\"AUTO\",\"subjectRenameFormat\":\"my-${subject}\",\"sourceSRDeployment\":\"CONFLUENT_CLOUD\",\"sourceLSRC\":\"lsrc-abc123\"}"
+}
