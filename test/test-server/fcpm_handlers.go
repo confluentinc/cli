@@ -77,6 +77,7 @@ func handleFcpmComputePoolConfigs(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			config1 := flinkv2.FcpmV2OrgComputePoolConfig{
+				OrganizationId: flinkv2.PtrString("org-1"),
 				Spec: &flinkv2.FcpmV2OrgComputePoolConfigSpec{
 					DefaultPoolEnabled: flinkv2.PtrBool(false),
 					DefaultPoolMaxCfu:  flinkv2.PtrInt32(50),
@@ -89,6 +90,7 @@ func handleFcpmComputePoolConfigs(t *testing.T) http.HandlerFunc {
 			err := json.NewDecoder(r.Body).Decode(update)
 			require.NoError(t, err)
 			config1 := flinkv2.FcpmV2OrgComputePoolConfig{
+				OrganizationId: flinkv2.PtrString("org-1"),
 				Spec: &flinkv2.FcpmV2OrgComputePoolConfigSpec{
 					DefaultPoolEnabled: flinkv2.PtrBool(update.Spec.GetDefaultPoolEnabled()),
 					DefaultPoolMaxCfu:  flinkv2.PtrInt32(update.Spec.GetDefaultPoolMaxCfu()),

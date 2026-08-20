@@ -1,11 +1,11 @@
-Manage Flink compute pools configs.
+Manage Confluent Cloud Flink org compute pool configs.
 
 Usage:
   confluent flink compute-pool-config [command]
 
 Available Commands:
-  describe    Describe a Flink compute pool config.
-  update      Update a Flink compute pool config.
+  describe    Describe the Flink org compute pool config.
+  update      Update the existing Flink org compute pool config.
 
 Global Flags:
   -h, --help            Show help for this command.

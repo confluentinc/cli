@@ -40,15 +40,10 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	// On-Prem and Cloud Shared Commands
 	if cfg.IsCloudLogin() {
-		// compute-pool is generated. Keep this entry spelled exactly as the generator's merger
-		// writes it — `new<Kind>Command(cfg, prerunner),` on its own line — so its insertion at
-		// the cli-tfgen:cli-subcommands marker below dedups to a no-op. That marker sits in an
-		// unconditional AddCommand block; a second registration there would shadow the on-prem
-		// compute-pool for every non-cloud login, since cobra resolves a child by name.
 		cmd.AddCommand(
 			newComputePoolCommand(cfg, prerunner),
 		)
-		cmd.AddCommand(c.newStatementCommand())
+		cmd.AddCommand(c.newStatementCommand()) //To be moved up after APIE-1477
 	} else {
 		cmd.AddCommand(c.newComputePoolCommandOnPrem())
 		cmd.AddCommand(c.newStatementCommandOnPrem())
@@ -60,7 +55,6 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	// Cloud Specific Commands
 	cmd.AddCommand(c.newArtifactCommand())
-	cmd.AddCommand(c.newComputePoolConfigCommand())
 	cmd.AddCommand(c.newConnectionCommand())
 	cmd.AddCommand(c.newConnectivityTypeCommand())
 	cmd.AddCommand(c.newEndpointCommand())
@@ -68,6 +62,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	// Generated commands.
 	cmd.AddCommand(
+		newOrgComputePoolConfigCommand(cfg, prerunner),
 		newRegionCommand(cfg, prerunner),
 		// cli-tfgen:cli-subcommands
 	)
