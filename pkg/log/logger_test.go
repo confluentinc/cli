@@ -63,27 +63,35 @@ func TestLogger_FlushAfterRaisingVerbosity(t *testing.T) {
 
 func TestLogger_SetVerbosity(t *testing.T) {
 	tests := []struct {
-		name      string
-		verbosity int
-		env       string
-		want      Level
+		name        string
+		verbosity   int
+		env         string
+		want        Level
+		wantWarning bool
 	}{
 		{name: "no flag and no environment variable", want: ERROR},
 		{name: "flag only", verbosity: int(DEBUG), want: DEBUG},
 		{name: "environment variable only", env: "3", want: DEBUG},
 		{name: "flag wins over environment variable", verbosity: int(WARN), env: "4", want: WARN},
 		{name: "environment variable is clamped", env: "99", want: UNSAFE_TRACE},
-		{name: "unparsable environment variable is ignored", env: "debug", want: ERROR},
-		{name: "negative environment variable is ignored", env: "-1", want: ERROR},
+		{name: "unparsable environment variable warns and is ignored", env: "debug", want: ERROR, wantWarning: true},
+		{name: "negative environment variable warns and is ignored", env: "-1", want: ERROR, wantWarning: true},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Setenv(VerbosityEnvVar, test.env)
-			l := New(ERROR, new(bytes.Buffer))
+			out := new(bytes.Buffer)
+			l := New(ERROR, out)
 
 			l.SetVerbosity(test.verbosity)
 
 			require.Equal(t, test.want, l.Level)
+			if test.wantWarning {
+				require.Contains(t, out.String(), "[WARN]")
+				require.Contains(t, out.String(), VerbosityEnvVar)
+			} else {
+				require.Empty(t, out.String())
+			}
 		})
 	}
 }
