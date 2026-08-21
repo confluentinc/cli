@@ -1,10 +1,10 @@
---- cli/Makefile	2026-05-04 11:53:58.813568102 -0700
-+++ debian/Makefile	2026-05-04 11:53:51.900990793 -0700
-@@ -1,242 +1,179 @@
+--- cli/Makefile	2026-08-21 21:38:28.801439074 +0000
++++ debian/Makefile	2026-08-11 19:37:20.278886564 +0000
+@@ -1,256 +1,179 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v2.13.3
 +SHELL=/bin/bash
- 
+
 -# Compile natively based on the current system
 -.PHONY: build
 -build:
@@ -63,7 +63,7 @@
 +ifndef VERSION
 +	VERSION=$(CLI_VERSION)
  endif
- 
+
 +export PACKAGE_TITLE=cli
 +export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
 +export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
@@ -146,12 +146,25 @@
 +	filepath=windows_amd64/confluent.exe; \
 +	curl -fs https://$${baseurl}/confluent-cli/binaries/$(CLI_VERSION)/confluent$${version}_windows_amd64.exe -o $${filepath}; \
 +	chmod 755 $${filepath}
-+
+
+-# Build a dev binary onto your PATH as `confluent-dev`. A local build reports the "dev" release
+-# channel, so it keeps its state in ~/.confluent-dev, isolated from an installed release's
+-# ~/.confluent. Debug symbols are kept, unlike the test builds, so delve can attach.
+-CONFLUENT_DEV_BIN ?= $(HOME)/.local/bin/confluent-dev
+-CONFLUENT_DEV_VERSION ?= 0.0.0-dev-$(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
+-
+-.PHONY: build-dev
+-build-dev:
+-	@mkdir -p $(dir $(CONFLUENT_DEV_BIN))
+-	go build -ldflags="-X main.version=$(CONFLUENT_DEV_VERSION) -X main.commit=$(shell git rev-parse HEAD 2>/dev/null || echo unknown) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)" -o $(CONFLUENT_DEV_BIN) ./cmd/confluent
+-	@echo "Built confluent-dev at $(CONFLUENT_DEV_BIN)"
+-	@echo "It keeps state in ~/.confluent-dev, isolated from the ~/.confluent of any installed release."
+-	@echo "Make sure $(dir $(CONFLUENT_DEV_BIN)) is on your PATH."
 +	cp LICENSE $(DESTDIR)$(DOCPATH)/LICENSE
 +	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
- 
+
 +	chown -R root:root $(DESTDIR)$(PREFIX)
- 
+
 -.PHONY: clean
  clean:
 -	for dir in bin dist docs legal prebuilt release-notes; do \
@@ -262,7 +275,7 @@
 +	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g; s/##EXCLUDEARCH1##/amd64/g; s/##EXCLUDEARCH2##/arm64/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
 +	rm -f $@ && tar -czf RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
- 
+
 -.PHONY: build-for-integration-test
 -build-for-integration-test:
 -ifdef CI
@@ -270,8 +283,7 @@
 -else
 -	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 -endif
-+rpm-build-area: RPM_BUILDING/BUILD RPM_BUILDING/RPMS RPM_BUILDING/SOURCES RPM_BUILDING/SPECS RPM_BUILDING/SRPMS
- 
+-
 -.PHONY: build-for-integration-test-windows
 -build-for-integration-test-windows:
 -ifdef CI
@@ -279,9 +291,7 @@
 -else
 -	go build -cover -ldflags="-s -w -X main.commit="00000000" -X main.date="1970-01-01T00:00:00Z" -X main.isTest=true" -o test/bin/confluent.exe ./cmd/confluent
 -endif
-+RPM_BUILDING/%:
-+	mkdir -p $@
- 
+-
 -.PHONY: integration-test
 -integration-test:
 -ifdef CI
@@ -296,10 +306,13 @@
 -	go test -timeout 0 -v $$(go list ./... | grep github.com/confluentinc/cli/v4/test) $(INTEGRATION_TEST_ARGS) && \
 -	go tool covdata textfmt -i $${GOCOVERDIR} -o coverage.integration.out
 -endif
--
++rpm-build-area: RPM_BUILDING/BUILD RPM_BUILDING/RPMS RPM_BUILDING/SOURCES RPM_BUILDING/SPECS RPM_BUILDING/SRPMS
+
 -.PHONY: test
 -test: unit-test integration-test
--
++RPM_BUILDING/%:
++	mkdir -p $@
+
 -.PHONY: build-for-live-test
 -build-for-live-test:
 -	go build -ldflags="-s -w -X main.disableUpdates=true" -o test/live/bin/confluent ./cmd/confluent
@@ -411,6 +424,5 @@
 -	@tail -n +2 coverage.integration.out >> coverage.txt
 -	@echo "Coverage data saved to: coverage.txt"
 -	@artifact push workflow coverage.txt
-\ No newline at end of file
 +RELEASE_%:
 +	echo 0 > $@
