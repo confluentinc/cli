@@ -1,0 +1,101 @@
+### query
+
+Runs a bounded ("snapshot") Flink SQL statement to completion and returns the whole
+result set, synchronously, from the client. Backs `confluent query`
+(`internal/query/command.go`).
+
+**Status: Open Preview.** The verb, the flags and the result shape are all expected to
+move.
+
+#### Why this exists
+
+The Flink gateway has no synchronous execute endpoint. A statement is submitted, polled
+until it leaves `PENDING`, and then its result pages are pulled one at a time following
+`metadata.next`. `Run` performs that handshake behind a single call so a non-interactive
+command can behave like an ordinary database query.
+
+```go
+result, err := query.Run(ctx, query.Options{
+	Client:         gatewayClient,
+	EnvironmentId:  environmentId,
+	OrganizationId: organizationId,
+	RequireBounded: true,
+}, statementName)
+```
+
+The statement must already exist — submitting it is the caller's job, so the caller keeps
+ownership of naming, properties and cleanup.
+
+#### Why not reuse the shell
+
+`Store` + `ResultFetcher` + `MaterializedStatementResults` already does submit, poll and
+page. It is not reused here, because it was written for a scrolling viewer where being
+wrong degrades to "the user presses refresh again". Three of those degradations become
+silent data corruption once a script is reading stdout:
+
+| Shell behavior | Consequence for a synchronous command |
+| --- | --- |
+| `MaterializedStatementResults.cleanup()` evicts from the front past `MaxResultsCapacity` (10,000) | a 50k-row `SELECT` prints the **last** 10k and exits 0 |
+| `Append` skips rows whose field count ≠ header count, returning a bool that `fetchNextPageAndUpdateState` discards | short result set, no signal |
+| `updateState` sets `Completed` on `PageToken == ""` without checking the phase | exit 0 with a partial result set |
+
+This package handles each explicitly: no cap unless `Options.MaxRows` is set (and then
+`Result.Truncated` says so), a hard error from `ConvertToInternalResults` on a schema
+mismatch, and termination only when the page token is gone **and** the statement has
+reached a terminal phase.
+
+It also skips the shell's table-mode materialization. `Result.Rows` is the raw changelog
+as the gateway delivered it. For a bounded append-only snapshot the changelog and the
+materialized table are identical; for anything else the caller decides.
+
+#### The drain loop
+
+`page_token` is a positional offset into the collect-sink protocol, not an opaque cursor.
+There is therefore no token that advances past a page which did not supply one. When the
+token runs out while the statement is still `RUNNING`:
+
+- the page was **empty** — the gateway is saying "nothing yet". Re-requesting the same
+  offset is harmless, so the loop backs off and retries.
+- the page carried **rows** — advancing is impossible and re-requesting would duplicate
+  them. The loop stops and sets `Result.Incomplete`, which the command surfaces as a
+  warning.
+
+Whether that second branch is reachable in practice is still unconfirmed — it needs an
+answer from the gateway team, not inference from client code. It is written defensively
+because the alternative failure mode is a silent short read.
+
+#### Known limitations
+
+- **Cloud only.** `Options.Client` is a `ccloudv2.GatewayClientInterface`. On-prem goes
+  through CMF (`store_onprem.go`, itself a near-copy of `store.go`), so parity means a
+  second implementation and a second test surface.
+- **No token refresh.** The shell wraps every gateway call in `synchronizedTokenRefresh`;
+  this package does not. A snapshot query that outlives the dataplane token dies on a 401.
+  This bounds how honest the command's default 10-minute timeout is.
+- **No expired-page-token handling.** The gateway retains result pages for a bounded
+  window; an expired token surfaces as a raw error.
+- **The whole result set is held in memory** as `[]types.StatementResultRow`. There is no
+  streaming-to-stdout path, so the peak footprint scales with the result.
+- **Ops are dropped from serialized output.** The command's `-o json` / `-o yaml` rows are
+  keyed by column name and carry no `op`, so a non-append-only statement loses its
+  update/delete markers. Human output grows an `Operation` column instead. Real gap if
+  non-append-only ever needs supporting.
+- **No statement cleanup on success.** Each query leaves a terminal statement behind
+  against the 50K-per-environment pool.
+- **`--unsafe-trace` dumps customer rows**, and this is the surface most likely to run in
+  CI with retained logs.
+
+#### Working on this
+
+```bash
+go test ./pkg/flink/query/                                              # unit tests, mocked gateway
+```
+
+The unit tests drive `pkg/flink/test/mock.MockGatewayClientInterface` and inject
+`Options.sleep`, so backoff costs no wall time.
+
+Two unrelated failures reproduce on a clean `main` and are not caused by changes here:
+`pkg/flink/internal/controller` and `TestFlinkShell`/`TestFlinkShellOnPrem` panic without
+a TTY. If `make lint-go` reports `unsupported version of the configuration`, a
+golangci-lint v2 on `PATH` is shadowing the v1.64.8 the Makefile pins — run
+`$(go env GOPATH)/bin/golangci-lint run` directly.
