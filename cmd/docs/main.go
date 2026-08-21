@@ -17,6 +17,11 @@ import (
 // This code is adapted from https://github.com/spf13/cobra/blob/master/doc/rest_docs.md
 
 func main() {
+	// Docs describe the released CLI, so paths in them must be the stable channel's; this binary
+	// carries no version stamp and would otherwise resolve to a dev build. Set before anything
+	// else, since the channel is an unsynchronized global and the test server below is concurrent.
+	pversion.SetProcessChannel(pversion.Stable)
+
 	// Set up test server for feature flags called by the code
 	testBackend := testserver.StartTestCloudServer(&testing.T{}, true)
 	defer testBackend.Close()

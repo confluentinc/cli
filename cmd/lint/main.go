@@ -409,6 +409,10 @@ func init() {
 }
 
 func main() {
+	// Lint the released CLI's surface, so paths baked into flag defaults are the stable channel's.
+	// Must precede command construction; this binary carries no version stamp of its own.
+	pversion.SetProcessChannel(pversion.Stable)
+
 	// Set up test server for feature flags called by the code
 	testBackend := testserver.StartTestCloudServer(&testing.T{}, true)
 	defer testBackend.Close()
