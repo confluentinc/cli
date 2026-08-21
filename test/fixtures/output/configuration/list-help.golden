@@ -1,4 +1,4 @@
-List user-configurable fields in ~/.confluent/config.json.
+List user-configurable fields in the CLI configuration file.
 
 Usage:
   confluent configuration list [flags]
