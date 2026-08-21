@@ -109,6 +109,15 @@ func handleMe(t *testing.T, isAuditLogEnabled bool) http.HandlerFunc {
 	}
 }
 
+// Handler for: "/api/iam/v2/sessions"
+func handleDeleteSession(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, http.MethodDelete, r.Method)
+		require.NotEmpty(t, r.URL.Query().Get("client_id"))
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
 // Handler for: "/api/sessions"
 func handleLogin(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
