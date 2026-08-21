@@ -7,10 +7,10 @@ Aliases:
   kafka-cluster, kafka
 
 Available Commands:
-  deregister  Delete one or more USM Kafka clusters.
+  deregister  Deregister one or more USM Kafka clusters.
   describe    Describe a USM Kafka cluster.
   list        List USM Kafka clusters.
-  register    Create a USM Kafka cluster.
+  register    Register a USM Kafka cluster.
 
 Global Flags:
   -h, --help            Show help for this command.

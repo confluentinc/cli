@@ -39,10 +39,10 @@ func newConnectClusterCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cob
 	}
 
 	cmd.AddCommand(
+		c.newCreateCommand(),
 		c.newDeleteCommand(),
 		c.newDescribeCommand(),
 		c.newListCommand(),
-		c.newCreateCommand(),
 	)
 
 	return cmd

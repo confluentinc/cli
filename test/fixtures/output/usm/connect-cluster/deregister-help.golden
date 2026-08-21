@@ -1,4 +1,4 @@
-Delete one or more USM Connect clusters.
+Deregister one or more USM Connect clusters.
 
 Usage:
   confluent usm connect-cluster deregister <id-1> [id-2] ... [id-n] [flags]

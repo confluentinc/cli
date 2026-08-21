@@ -13,7 +13,7 @@ import (
 func (c *connectClusterCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "deregister <id-1> [id-2] ... [id-n]",
-		Short:             "Delete one or more USM Connect clusters.",
+		Short:             "Deregister one or more USM Connect clusters.",
 		Aliases:           []string{"delete"},
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),

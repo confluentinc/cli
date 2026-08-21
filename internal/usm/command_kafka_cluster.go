@@ -40,10 +40,10 @@ func newKafkaClusterCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra
 	}
 
 	cmd.AddCommand(
+		c.newCreateCommand(),
 		c.newDeleteCommand(),
 		c.newDescribeCommand(),
 		c.newListCommand(),
-		c.newCreateCommand(),
 	)
 
 	return cmd
