@@ -12,6 +12,7 @@ func (c *command) newExporterConfigurationCommand(cfg *config.Config) *cobra.Com
 		Short: "Manage the schema exporter configuration.",
 	}
 
+	cmd.AddCommand(c.newExporterConfigurationClusterLinkCommand(cfg))
 	cmd.AddCommand(c.newExporterConfigurationDescribeCommand(cfg))
 
 	return cmd
