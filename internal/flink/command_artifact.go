@@ -6,6 +6,7 @@ import (
 	flinkartifactv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-artifact/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -21,17 +22,26 @@ type flinkArtifactOut struct {
 	DocumentationLink string `human:"Documentation Link" serialized:"documentation_link"`
 }
 
-func (c *command) newArtifactCommand() *cobra.Command {
+func (c *command) newArtifactCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "artifact",
-		Short:       "Manage Flink UDF artifacts.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:   "artifact",
+		Short: "Manage Flink UDF artifacts.",
 	}
 
-	cmd.AddCommand(c.newCreateCommand())
-	cmd.AddCommand(c.newDeleteCommand())
-	cmd.AddCommand(c.newDescribeCommand())
-	cmd.AddCommand(c.newListCommand())
+	if cfg.IsCloudLogin() {
+		cmd.Annotations = map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin}
+		cmd.AddCommand(c.newCreateCommand())
+		cmd.AddCommand(c.newDeleteCommand())
+		cmd.AddCommand(c.newDescribeCommand())
+		cmd.AddCommand(c.newListCommand())
+	} else {
+		cmd.AddCommand(c.newArtifactCreateCommandOnPrem())
+		cmd.AddCommand(c.newArtifactDeleteCommandOnPrem())
+		cmd.AddCommand(c.newArtifactDescribeCommandOnPrem())
+		cmd.AddCommand(c.newArtifactListCommandOnPrem())
+		cmd.AddCommand(c.newArtifactUpdateCommandOnPrem())
+		cmd.AddCommand(c.newArtifactVersionCommandOnPrem())
+	}
 
 	return cmd
 }
