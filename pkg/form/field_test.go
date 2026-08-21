@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	"github.com/confluentinc/cli/v4/pkg/mock"
 )
@@ -12,11 +13,9 @@ import (
 func TestRead(t *testing.T) {
 	var field Field
 
-	prompt := &mock.Prompt{
-		ReadLineFunc: func() (string, error) {
-			return "user", nil
-		},
-	}
+	ctrl := gomock.NewController(t)
+	prompt := mock.NewMockPrompt(ctrl)
+	prompt.EXPECT().ReadLine().Return("user", nil).AnyTimes()
 
 	username, _ := field.read(prompt)
 	require.Equal(t, "user", username)
@@ -25,11 +24,9 @@ func TestRead(t *testing.T) {
 func TestRead_Password(t *testing.T) {
 	field := Field{IsHidden: true}
 
-	prompt := &mock.Prompt{
-		ReadLineMaskedFunc: func() (string, error) {
-			return "pass", nil
-		},
-	}
+	ctrl := gomock.NewController(t)
+	prompt := mock.NewMockPrompt(ctrl)
+	prompt.EXPECT().ReadLineMasked().Return("pass", nil).AnyTimes()
 
 	password, _ := field.read(prompt)
 	require.Equal(t, "pass", password)
