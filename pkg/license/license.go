@@ -16,12 +16,12 @@ type out struct {
 	Category string `human:"Category" json:"category" yaml:"category"`
 	// The short name is a REST transport detail -- it exists so the API has a URL-safe key
 	// for `self` links. Operators read the display category, so it is serialized only.
-	ShortName  string `human:"-" json:"category_short_name" yaml:"category_short_name"`
-	Type       string `human:"Type" json:"license_type" yaml:"license_type"`
-	Status     string `human:"Status" json:"status" yaml:"status"`
-	Expiration string `human:"Expires At,omitempty" json:"expires_at,omitempty" yaml:"expires_at,omitempty"`
-	Audience   string `human:"Audience,omitempty" json:"audience,omitempty" yaml:"audience,omitempty"`
-	ClusterId  string `human:"-" json:"cluster_id" yaml:"cluster_id"`
+	CategoryShortName string `human:"-" json:"category_short_name" yaml:"category_short_name"`
+	LicenseType       string `human:"Type" json:"license_type" yaml:"license_type"`
+	Status            string `human:"Status" json:"status" yaml:"status"`
+	ExpiresAt         string `human:"Expires At,omitempty" json:"expires_at,omitempty" yaml:"expires_at,omitempty"`
+	Audience          string `human:"Audience,omitempty" json:"audience,omitempty" yaml:"audience,omitempty"`
+	ClusterId         string `human:"-" json:"cluster_id" yaml:"cluster_id"`
 	// TopicName is the internal Kafka topic the license is stored in, e.g.
 	// `_confluent-command`. The API omits it when it does not apply, so it is passed through
 	// as-is and dropped from output when absent.
@@ -44,15 +44,15 @@ func newOut(license kafkarestv3.LicenseData) *out {
 	}
 
 	return &out{
-		Category:   license.Category,
-		ShortName:  license.CategoryShortName,
-		Type:       license.LicenseType,
-		Status:     license.Status,
-		Expiration: expiration,
-		Audience:   license.Audience,
-		ClusterId:  license.ClusterId,
-		TopicName:  license.TopicName,
-		LicenseJwt: license.LicenseJwt,
+		Category:          license.Category,
+		CategoryShortName: license.CategoryShortName,
+		LicenseType:       license.LicenseType,
+		Status:            license.Status,
+		ExpiresAt:         expiration,
+		Audience:          license.Audience,
+		ClusterId:         license.ClusterId,
+		TopicName:         license.TopicName,
+		LicenseJwt:        license.LicenseJwt,
 	}
 }
 

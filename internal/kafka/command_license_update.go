@@ -18,23 +18,21 @@ func (c *licenseCommand) newUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update the license from a file.",
-				Code: "confluent kafka license update --license-file license.jwt --url http://localhost:8090/kafka",
+				Code: "confluent kafka license update --license license.jwt --url http://localhost:8090/kafka",
 			},
 			examples.Example{
 				Text: "Validate a license without storing it.",
-				Code: "confluent kafka license update --license-file license.jwt --dry-run --url http://localhost:8090/kafka",
+				Code: "confluent kafka license update --license license.jwt --dry-run --url http://localhost:8090/kafka",
 			},
 		),
 	}
 
-	cmd.Flags().String("license-jwt", "", "JWT-encoded license to validate and store.")
-	cmd.Flags().String("license-file", "", "Path to a file containing a JWT-encoded license to validate and store.")
+	cmd.Flags().String("license", "", "JWT-encoded license, or path to a file containing one, to validate and store.")
 	cmd.Flags().Bool("dry-run", false, "Validate the license and report the resulting state without storing it.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 
-	cmd.MarkFlagsMutuallyExclusive("license-jwt", "license-file")
-	cmd.MarkFlagsOneRequired("license-jwt", "license-file")
+	cobra.CheckErr(cmd.MarkFlagRequired("license"))
 
 	return cmd
 }

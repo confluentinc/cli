@@ -6,15 +6,14 @@ Usage:
 Examples:
 Update the license from a file.
 
-  $ confluent kafka license update --license-file license.jwt --url http://localhost:8090/kafka
+  $ confluent kafka license update --license license.jwt --url http://localhost:8090/kafka
 
 Validate a license without storing it.
 
-  $ confluent kafka license update --license-file license.jwt --dry-run --url http://localhost:8090/kafka
+  $ confluent kafka license update --license license.jwt --dry-run --url http://localhost:8090/kafka
 
 Flags:
-      --license-jwt string                  JWT-encoded license to validate and store.
-      --license-file string                 Path to a file containing a JWT-encoded license to validate and store.
+      --license string                      REQUIRED: JWT-encoded license, or path to a file containing one, to validate and store.
       --dry-run                             Validate the license and report the resulting state without storing it.
       --url string                          Base URL of REST Proxy Endpoint of Kafka Cluster (include "/kafka" for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
       --certificate-authority-path string   Path to a PEM-encoded Certificate Authority to verify the Confluent REST Proxy.

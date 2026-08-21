@@ -50,33 +50,30 @@ func Update(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext c
 	return PrintUpdateResult(cmd, result)
 }
 
-// readLicenseJwt resolves the license JWT from exactly one of `--license-jwt` or `--license-file`.
+// readLicenseJwt resolves the license from the `--license` flag, which is either the
+// JWT-encoded license itself or a path to a file containing it. If the value is an existing
+// file, its contents are read; otherwise the value is treated as the license.
 func readLicenseJwt(cmd *cobra.Command) (string, error) {
-	jwt, err := cmd.Flags().GetString("license-jwt")
+	license, err := cmd.Flags().GetString("license")
 	if err != nil {
 		return "", err
 	}
 
-	path, err := cmd.Flags().GetString("license-file")
-	if err != nil {
-		return "", err
-	}
-
-	if path != "" {
-		contents, err := os.ReadFile(path)
+	if info, err := os.Stat(license); err == nil && !info.IsDir() {
+		contents, err := os.ReadFile(license)
 		if err != nil {
 			return "", err
 		}
-		jwt = string(contents)
+		license = string(contents)
 	}
 
-	jwt = strings.TrimSpace(jwt)
-	if jwt == "" {
+	license = strings.TrimSpace(license)
+	if license == "" {
 		return "", errors.NewErrorWithSuggestions(
 			"license is empty",
-			"Provide a JWT-encoded license with `--license-jwt` or `--license-file`.",
+			"Provide a JWT-encoded license, or a path to a file containing one, with `--license`.",
 		)
 	}
 
-	return jwt, nil
+	return license, nil
 }

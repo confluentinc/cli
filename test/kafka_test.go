@@ -426,12 +426,12 @@ func (s *CLITestSuite) TestKafkaLicense() {
 		{args: fmt.Sprintf("kafka license list --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/list.golden"},
 		{args: fmt.Sprintf("kafka license list --url %s -o json", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/list-json.golden"},
 		{args: fmt.Sprintf("kafka license list --url %s -o yaml", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/list-yaml.golden"},
-		{args: fmt.Sprintf("kafka license update --license-jwt fake.license.jwt --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/update.golden"},
-		{args: fmt.Sprintf("kafka license update --license-jwt fake.license.jwt --dry-run --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/update-dry-run.golden"},
-		{args: fmt.Sprintf("kafka license update --license-jwt fake.license.jwt --url %s -o json", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/update-json.golden"},
+		{args: fmt.Sprintf("kafka license update --license fake.license.jwt --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/update.golden"},
+		{args: fmt.Sprintf("kafka license update --license test/fixtures/input/kafka/license/license.jwt --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/update.golden"},
+		{args: fmt.Sprintf("kafka license update --license fake.license.jwt --dry-run --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/update-dry-run.golden"},
+		{args: fmt.Sprintf("kafka license update --license fake.license.jwt --url %s -o json", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/update-json.golden"},
 		{args: fmt.Sprintf("kafka license update --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/update-no-license.golden", exitCode: 1},
-		{args: fmt.Sprintf(`kafka license update --license-jwt "   " --url %s`, s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/update-blank-jwt.golden", exitCode: 1},
-		{args: fmt.Sprintf("kafka license update --license-jwt fake.license.jwt --license-file license.jwt --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/update-mutually-exclusive.golden", exitCode: 1},
+		{args: fmt.Sprintf(`kafka license update --license "   " --url %s`, s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/update-blank-jwt.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {

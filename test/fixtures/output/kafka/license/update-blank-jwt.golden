@@ -1,4 +1,4 @@
 Error: license is empty
 
 Suggestions:
-    Provide a JWT-encoded license with `--license-jwt` or `--license-file`.
+    Provide a JWT-encoded license, or a path to a file containing one, with `--license`.
