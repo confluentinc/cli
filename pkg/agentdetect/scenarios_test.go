@@ -2,8 +2,8 @@ package agentdetect
 
 import "errors"
 
-// Synthetic process trees, so every row of the failure-mode table can be
-// demonstrated on one laptop without installing six different agents.
+// Synthetic process trees, so every failure mode can be demonstrated locally
+// without installing six different agents.
 //
 // These drive the same Detect() code path as a live run — only the ProcSource
 // and the environment lookup are swapped. Nothing about the detection logic is
@@ -102,15 +102,15 @@ var scenarios = []scenario{
 	},
 	{
 		Name: "timeout-wrapped",
-		Desc: "Agent → timeout → CLI. Exactly the workaround friction log 1 records for `consume`\n" +
-			"         running forever. The wrapper's presence is itself the usability finding.",
+		Desc: "Agent → timeout → CLI. A command being force-timed-out (e.g. one that would\n" +
+			"         otherwise run forever); the wrapper's presence is itself the finding.",
 		Tree: chain("timeout", "bash", "claude"),
 		Env:  map[string]string{"CLAUDECODE": "1"},
 	},
 	{
 		Name: "xargs-fanout",
-		Desc: "Agent → xargs -P20 → CLI. The shape from FF-9295 that trips token-service rate\n" +
-			"         limiting. Worth counting, because it predicts 429s.",
+		Desc: "Agent → xargs -P20 → CLI. A parallel fan-out that can trip server-side rate\n" +
+			"         limiting; worth counting because it predicts throttling.",
 		Tree: chain("xargs", "bash", "claude"),
 	},
 	{
@@ -119,12 +119,11 @@ var scenarios = []scenario{
 			"         agent call. Reported as ide_host, deliberately not as an agent.",
 		Tree: chain("zsh", "cursor"),
 	},
-	// The four in-editor surfaces, transcribed from real runs on darwin/arm64
-	// 2026-07-31. Unlike the trees above these are not illustrative constructions
-	// — they are what three IDE chat panels and one integrated terminal actually
-	// looked like. Phase 1 reports the same thing for all of them: an editor is
-	// in the ancestry (ide_host), plus whatever env var is set. The agent-vs-human
-	// distinction is deliberately not attempted; see ide_surfaces_test.go.
+	// Four in-editor surfaces captured from real process trees: three IDE chat
+	// panels and one integrated terminal. Phase 1 reports the same thing for all
+	// of them — an editor is in the ancestry (ide_host), plus whatever env var is
+	// set. The agent-vs-human distinction is deliberately not attempted; see
+	// ide_surfaces_test.go.
 	{
 		Name: "vscode-claude-chat",
 		Desc: "Claude Code's VS Code extension. The extension launches the real CLI as a child of the\n" +
@@ -171,7 +170,7 @@ var scenarios = []scenario{
 			{Pid: 101, Ppid: 102, Name: "zsh"},
 			{Pid: 102, Ppid: 103, Name: "cursorsandbox"},
 			{Pid: 103, Ppid: 104, Name: "cursor helper (plugin)", Cmdline: []string{
-				"Cursor Helper (Plugin): extension-host agentdetect-poc [1-2]",
+				"Cursor Helper (Plugin): extension-host agentdetect [1-2]",
 			}},
 			{Pid: 104, Ppid: 1, Name: "cursor"},
 		},
@@ -194,8 +193,9 @@ var scenarios = []scenario{
 	{
 		Name: "ide-terminal-stale-env",
 		Desc: "The same integrated terminal, with a stale agent variable inherited into it. Reports\n" +
-			"         ide_host plus the env vendor, with no agent ancestor — the ambiguous env_only + in-editor\n" +
-			"         shape that downstream analytics has to weigh, not something this package resolves.",
+			"         ide_host plus the env vendor, with no agent ancestor — the ambiguous case where only\n" +
+			"         the env var fired and an editor is in the chain, for downstream analytics to weigh\n" +
+			"         rather than something this package resolves.",
 		Tree: []ProcInfo{
 			{Pid: 100, Ppid: 101, Name: "zsh"},
 			{Pid: 101, Ppid: 102, Name: "code helper"},

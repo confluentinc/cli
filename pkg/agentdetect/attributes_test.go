@@ -237,9 +237,9 @@ func TestTablesRevisionIsAlwaysReported(t *testing.T) {
 
 	res = Detect(Options{
 		Source: src, StartPid: start, Getenv: env(nil),
-		IsTerminal: notATTY, Tables: "ld-2026-08-13",
+		IsTerminal: notATTY, Tables: "remote-rev-1",
 	})
-	if got := res.Attributes().Tables; got != "ld-2026-08-13" {
+	if got := res.Attributes().Tables; got != "remote-rev-1" {
 		t.Errorf("agent_tables = %q, want the supplied revision", got)
 	}
 }

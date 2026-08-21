@@ -8,10 +8,9 @@ import (
 	"time"
 )
 
-// These tests reconstruct the rows of the failure-mode table in
-// agent-detection-signals-comparison.md against a synthetic process tree, so
-// the claims in the memo are executable rather than asserted. They need no real
-// agent installed and run identically on every platform.
+// These tests exercise Detect() against synthetic process trees covering the
+// failure modes agent detection has to handle. They need no real agent installed
+// and run identically on every platform.
 
 func env(pairs map[string]string) func(string) (string, bool) {
 	return func(k string) (string, bool) {
@@ -313,7 +312,7 @@ func TestWrapperChainStillDetects(t *testing.T) {
 }
 
 // Chain composition: the wrappers between an agent and us are themselves the
-// finding. `timeout` in the ancestry is evidence for friction log 1 item 3.
+// finding — e.g. `timeout` in the ancestry flags a command being force-timed-out.
 func TestWrapperCompositionIsRecorded(t *testing.T) {
 	src, start := tree("sh", "timeout", "xargs", "bash", "claude")
 	res := detect(t, src, start, nil)
@@ -334,8 +333,8 @@ func TestWrapperCompositionIsRecorded(t *testing.T) {
 	if res.Signals.Wrappers[0].Depth != 2 {
 		t.Errorf("timeout depth = %d, want 2", res.Signals.Wrappers[0].Depth)
 	}
-	// sh → timeout → xargs → bash → claude: two adjacent wrappers, which is the
-	// FF-9295 fan-out shape wrapped in a timeout.
+	// sh → timeout → xargs → bash → claude: two adjacent wrappers — a parallel
+	// fan-out wrapped in a timeout.
 	if got := res.Signals.ChainShape; got != "swwsa" {
 		t.Errorf("chain_shape = %q, want %q", got, "swwsa")
 	}
@@ -867,12 +866,10 @@ func TestRedactionCoversCredentialsInArgv(t *testing.T) {
 	}
 }
 
-// Observed on darwin/arm64, 2026-07-28: Claude Code's native install names the
-// binary by version (~/.local/share/claude/versions/2.1.219), so the cheap
-// kernel name field reads "2.1.219". No fingerprint table can match that, and
-// no amount of table maintenance fixes it. The usable name exists only in the
-// executable path, which is why the truncated kernel name is not enough on its
-// own — and why, when the path is also unhelpful, argv is the only way through.
+// Claude Code's native install names the binary by version
+// (~/.local/share/claude/versions/2.1.219), so the cheap kernel name field reads
+// "2.1.219" — which no fingerprint table can match. The usable name lives only in
+// the executable path, and when the path is unhelpful too, argv is the only way through.
 func TestVersionNamedBinaryDefeatsCommMatching(t *testing.T) {
 	src, start := tree("zsh", "2.1.219")
 	res := detect(t, src, start, nil)

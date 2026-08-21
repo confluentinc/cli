@@ -2,10 +2,9 @@ package agentdetect
 
 import "testing"
 
-// IDE surfaces. The macOS chains are transcribed from real runs on
-// darwin/arm64, 2026-07-31; the Linux chain is MODELED from VS Code's
-// documented process model (Chromium re-execs one binary per child role), not
-// observed.
+// IDE surfaces. The macOS chains are captured from real process trees; the Linux
+// chain is MODELED from VS Code's documented process model (Chromium re-execs one
+// binary per child role), not captured.
 //
 // Phase 1 keeps a single IDE signal: an editor anywhere in the ancestry means
 // "agent-capable environment" (Signals.IDEHost). We deliberately do NOT try to

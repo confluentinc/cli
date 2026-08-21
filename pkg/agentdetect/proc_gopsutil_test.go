@@ -7,19 +7,15 @@ import (
 	"testing"
 )
 
-// The rest of this package's tests drive Detect() against synthetic trees, which
-// deliberately never touch the platform. These two exercise the real
-// gopsutil-backed source against the live process tree instead.
+// The rest of this package's tests drive Detect() against synthetic trees that
+// never touch the platform. These two exercise the real gopsutil-backed source
+// against the live process tree instead — a source that errors on every ancestor
+// still produces a well-formed, empty report, so the assertions here are about
+// the walk reaching real processes, not about what it finds in them.
 //
-// They exist because the proof of concept's Windows source compiled for three
-// architectures and had never once been executed, and "it builds" was mistaken
-// for "it works" as a result. A source that returns an error for every ancestor
-// still produces a confident, well-formed, empty report — so the assertions here
-// are about the walk reaching real processes, not about what it finds in them.
-//
-// Nothing here asserts a vendor. What the tree contains depends on who is running
-// the tests and from where; asserting on it would make this fail in CI, or pass for
-// the wrong reason on a developer's laptop.
+// Nothing here asserts a vendor: what the tree contains depends on who runs the
+// tests and from where, so asserting on it would fail in CI or pass for the wrong
+// reason locally.
 
 func TestLiveSourceReadsTheRealProcessTree(t *testing.T) {
 	info, err := newProcSource().Info(os.Getpid())

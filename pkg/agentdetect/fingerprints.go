@@ -4,12 +4,12 @@ import "strings"
 
 // Fingerprint tables.
 //
-// In production tables should ship as a LaunchDarkly-delivered JSON
-// document w/compiled-in fallback version, for easier iterating.
+// Intended to ship via feature flag as a JSON document with a compiled-in
+// fallback, so the tables can iterate independently of CLI releases.
 //
-// Everything below is a starting point assembled from research, a proof of
-// concept, and public agent packaging conventions. It is NOT verified against
-// every vendor's current release and may be wrong now or in the future.
+// Everything below is a starting point based on public agent packaging
+// conventions. It is NOT verified against every vendor's current release and may
+// be wrong now or in the future.
 
 // ---------------------------------------------------------------------------
 // Signal: environment variables
