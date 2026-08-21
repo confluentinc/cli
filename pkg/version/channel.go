@@ -28,16 +28,18 @@ func (c Channel) String() string {
 	return channels[c]
 }
 
-// StateDirSuffix is appended to ".confluent" to name the channel's state directory. Stable returns
-// an empty string, which is what keeps existing installs on the path they already use.
+// StateDirSuffix is appended to ".confluent" to name the channel's state directory. Only Stable
+// returns an empty string, which is what keeps existing installs on the path they already use; any
+// unrecognized channel falls through to the dev suffix so an unfamiliar build isolates itself rather
+// than sharing production state.
 func (c Channel) StateDirSuffix() string {
 	switch c {
+	case Stable:
+		return ""
 	case Prerelease:
 		return "-prerelease"
-	case Dev:
-		return "-dev"
 	default:
-		return ""
+		return "-dev"
 	}
 }
 
@@ -65,11 +67,24 @@ func ChannelOf(s string) Channel {
 	switch {
 	case prerelease == "":
 		return Stable
-	case strings.Contains(strings.ToUpper(prerelease), snapshotMarker):
+	case hasSnapshotToken(prerelease):
 		return Dev
 	default:
 		return Prerelease
 	}
+}
+
+// hasSnapshotToken reports whether the snapshot marker appears as a whole segment of the prerelease,
+// not merely as a substring, so a published label like 5.0.0-presnapshot stays a prerelease. The
+// segment is the goreleaser template's own `-SNAPSHOT-<sha>`, joined with hyphens onto any existing
+// prerelease dot-identifiers, so both delimiters bound a token.
+func hasSnapshotToken(prerelease string) bool {
+	for _, token := range strings.FieldsFunc(prerelease, func(r rune) bool { return r == '-' || r == '.' }) {
+		if strings.EqualFold(token, snapshotMarker) {
+			return true
+		}
+	}
+	return false
 }
 
 // processChannel is the channel of the running binary. The version is fixed at link time, so there

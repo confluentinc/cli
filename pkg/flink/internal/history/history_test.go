@@ -6,6 +6,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	pconfig "github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/flink/config"
+	pversion "github.com/confluentinc/cli/v4/pkg/version"
 )
 
 func TestLoadHistory(t *testing.T) {
@@ -45,6 +49,49 @@ func TestLoadHistory(t *testing.T) {
 
 	// Reset history path
 	history.historyPath = prevPath
+}
+
+func TestInitPath_ScopesByChannel(t *testing.T) {
+	home, err := os.UserHomeDir()
+	require.NoError(t, err)
+	t.Setenv(config.HomeConfluentPathEnvVar, "")
+	t.Cleanup(func() { pversion.SetProcessChannel(pversion.Dev) })
+
+	tests := []struct {
+		name    string
+		channel pversion.Channel
+		dir     string
+	}{
+		{"stable keeps the historical path", pversion.Stable, ".confluent"},
+		{"dev is isolated", pversion.Dev, ".confluent-dev"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			pversion.SetProcessChannel(test.channel)
+
+			history := initPath(filename)
+
+			require.NotNil(t, history)
+			require.Equal(t, filepath.Join(home, test.dir), history.confluentPath)
+		})
+	}
+}
+
+func TestInitPath_HomeConfluentPathOverridesChannel(t *testing.T) {
+	home, err := os.UserHomeDir()
+	require.NoError(t, err)
+	t.Setenv(config.HomeConfluentPathEnvVar, ".confluent-custom")
+	t.Cleanup(func() { pversion.SetProcessChannel(pversion.Dev) })
+	pversion.SetProcessChannel(pversion.Stable)
+
+	history := initPath(filename)
+
+	require.NotNil(t, history)
+	require.Equal(t, filepath.Join(home, ".confluent-custom"), history.confluentPath,
+		"HOME_CONFLUENT_PATH must win over the channel default")
+	require.NotEqual(t, filepath.Join(home, pconfig.StateDirName()), history.confluentPath,
+		"the override must actually diverge from the channel default it is overriding")
 }
 
 func TestHistorySave(t *testing.T) {

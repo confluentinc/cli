@@ -602,6 +602,22 @@ func TestConfig_getFilename_perChannel(t *testing.T) {
 	}
 }
 
+func TestStateDir_ErrorWhenHomeUnresolvable(t *testing.T) {
+	// Clearing the home-directory env vars is what makes os.UserHomeDir fail: HOME on Unix,
+	// USERPROFILE on Windows. Both are cleared so the test is platform-agnostic.
+	t.Setenv("HOME", "")
+	t.Setenv("USERPROFILE", "")
+	if runtime.GOOS == "windows" {
+		// os.UserHomeDir consults HOMEDRIVE+HOMEPATH before erroring on Windows.
+		t.Setenv("HOMEDRIVE", "")
+		t.Setenv("HOMEPATH", "")
+	}
+
+	_, err := StateDir()
+
+	require.Error(t, err, "StateDir must fail rather than fall back to the working directory")
+}
+
 func TestConfig_AddContext(t *testing.T) {
 	filename := "/tmp/TestConfig_AddContext.json"
 	conf := AuthenticatedOnPremConfigMock()

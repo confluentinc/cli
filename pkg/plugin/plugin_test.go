@@ -13,6 +13,7 @@ import (
 
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/mock"
+	pversion "github.com/confluentinc/cli/v4/pkg/version"
 )
 
 func TestIsExec_Dir(t *testing.T) {
@@ -99,6 +100,33 @@ func TestSearchPath(t *testing.T) {
 	pluginPaths, ok := pluginMap[pluginName]
 	require.True(t, ok)
 	require.Equal(t, fileName, filepath.Base(pluginPaths[0]))
+}
+
+// SearchPath also scans the channel-scoped state directory ($HOME/<StateDirName>/plugins), not just
+// $PATH; a regression there would make installed plugins undiscoverable while TestSearchPath (which
+// only exercises $PATH) still passed.
+func TestSearchPath_ChannelStateDir(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	t.Cleanup(func() { pversion.SetProcessChannel(pversion.Dev) })
+	pversion.SetProcessChannel(pversion.Dev)
+
+	// An empty $PATH forces discovery through the state directory alone.
+	t.Setenv("PATH", t.TempDir())
+
+	pluginDir := filepath.Join(home, ".confluent-dev", "plugins")
+	require.NoError(t, os.MkdirAll(pluginDir, 0700))
+	name := "confluent-foo"
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	require.NoError(t, os.WriteFile(filepath.Join(pluginDir, name), nil, fs.ModePerm))
+
+	pluginPaths, ok := SearchPath(&config.Config{})["confluent-foo"]
+
+	require.True(t, ok, "a plugin under the channel state directory must be discovered")
+	require.Equal(t, name, filepath.Base(pluginPaths[0]))
 }
 
 func TestVersionRegex(t *testing.T) {

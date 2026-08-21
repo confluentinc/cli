@@ -24,6 +24,10 @@ func TestChannelOf(t *testing.T) {
 		// so misreading it as Prerelease would drop developers into the testers' state directory.
 		{"goreleaser snapshot", "4.72.0-SNAPSHOT-d962911bb", Dev},
 		{"goreleaser snapshot, lowercased", "4.72.0-snapshot-d962911bb", Dev},
+		// The marker is matched as a whole segment, not a substring, so a published label that merely
+		// contains the letters stays a prerelease.
+		{"snapshot only as a substring", "5.0.0-snapshotx", Prerelease},
+		{"snapshot only as a substring, prefixed", "5.0.0-presnapshot.1", Prerelease},
 		// goreleaser does not strip the tag's prerelease segment, so during an RC cycle a local
 		// build carries both. The snapshot marker has to win, or every developer lands in the
 		// prerelease directory precisely when real testers are using it.
@@ -49,6 +53,7 @@ func TestChannel_StateDirSuffix(t *testing.T) {
 	req.Empty(Stable.StateDirSuffix(), "stable must keep using the existing ~/.confluent path")
 	req.Equal("-prerelease", Prerelease.StateDirSuffix())
 	req.Equal("-dev", Dev.StateDirSuffix())
+	req.Equal("-dev", Channel(99).StateDirSuffix(), "an unrecognized channel must isolate itself, not share production state")
 }
 
 func TestProcessChannel_DefaultsToDev(t *testing.T) {
