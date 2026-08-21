@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -62,16 +63,30 @@ func buildStampedCli(t *testing.T, version string) string {
 	t.Helper()
 
 	binary := filepath.Join(t.TempDir(), "confluent")
-	args := []string{"build", "-o", binary}
-	if version != "" {
-		args = append(args, "-ldflags=-X main.version="+version)
+	if runtime.GOOS == "windows" {
+		binary += ".exe"
 	}
-	args = append(args, "../cmd/confluent")
+
+	// isTest keeps the stamped binary off the real update service, which `version` and
+	// `configuration update` below would otherwise hit; the normal integration build stamps it too.
+	ldflags := "-X main.isTest=true"
+	if version != "" {
+		ldflags += " -X main.version=" + version
+	}
+
+	args := []string{"build", "-ldflags=" + ldflags, "-o", binary, mainPackagePath()}
 
 	output, err := exec.Command("go", args...).CombinedOutput()
 	require.NoError(t, err, "go build failed: %s", output)
 
 	return binary
+}
+
+// mainPackagePath resolves cmd/confluent from this file's own location rather than the working
+// directory, which a sibling suite (TestCLI) changes to the repo root without restoring.
+func mainPackagePath() string {
+	_, thisFile, _, _ := runtime.Caller(0)
+	return filepath.Join(filepath.Dir(thisFile), "..", "cmd", "confluent")
 }
 
 func runStampedCli(t *testing.T, binary, home string, args ...string) {
