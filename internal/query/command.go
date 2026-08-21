@@ -184,6 +184,10 @@ type queryOut struct {
 	Rows      []map[string]any `json:"rows" yaml:"rows"`
 	RowCount  int              `json:"row_count" yaml:"row_count"`
 	Truncated bool             `json:"truncated" yaml:"truncated"`
+	// Incomplete mirrors Result.Incomplete: the gateway stopped returning page tokens
+	// while the statement was still running, so rows may be missing. The stderr
+	// warning alone is invisible to a script that only reads stdout.
+	Incomplete bool `json:"incomplete" yaml:"incomplete"`
 }
 
 func (c *command) runQuery(cmd *cobra.Command, args []string) error {
@@ -537,6 +541,7 @@ func (c *command) printQueryResult(cmd *cobra.Command, name string, result *quer
 			Rows:          rows,
 			RowCount:      len(rows),
 			Truncated:     result.Truncated,
+			Incomplete:    result.Incomplete,
 		})
 	}
 
