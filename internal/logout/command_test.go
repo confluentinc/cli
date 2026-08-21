@@ -5,10 +5,10 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
-	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	climock "github.com/confluentinc/cli/v4/mock"
 	pauth "github.com/confluentinc/cli/v4/pkg/auth"
@@ -23,37 +23,25 @@ const (
 	ccloudURL      = "https://confluent.cloud"
 )
 
-var (
-	orgManagerImpl           = pauth.NewLoginOrganizationManagerImpl()
-	LoginOrganizationManager = &climock.LoginOrganizationManager{
-		GetLoginOrganizationFromFlagFunc: func(cmd *cobra.Command) func() string {
-			return orgManagerImpl.GetLoginOrganizationFromFlag(cmd)
-		},
-		GetLoginOrganizationFromEnvironmentVariableFunc: func() func() string {
-			return orgManagerImpl.GetLoginOrganizationFromEnvironmentVariable()
-		},
-	}
-	AuthTokenHandler = &climock.AuthTokenHandler{
-		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, _ string) (string, string, error) {
-			return testToken, "refreshToken", nil
-		},
-		GetConfluentTokenFunc: func(_ *mdsv1.APIClient, _ *pauth.Credentials, _ bool) (string, string, error) {
-			return testToken, "", nil
-		},
-	}
-)
+func newTestAuthTokenHandler(ctrl *gomock.Controller) *climock.MockAuthTokenHandler {
+	authTokenHandler := climock.NewMockAuthTokenHandler(ctrl)
+	authTokenHandler.EXPECT().GetCCloudTokens(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(testToken, "refreshToken", nil).AnyTimes()
+	authTokenHandler.EXPECT().GetConfluentToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(testToken, "", nil).AnyTimes()
+	return authTokenHandler
+}
 
 func TestLogout(t *testing.T) {
 	req := require.New(t)
 	cfg := config.AuthenticatedConfigMockWithContextName(config.MockContextName)
 	contextName := cfg.Context().Name
-	logoutCmd, cfg := newLogoutCmd(getAuthMock(), nil, true, req, AuthTokenHandler, contextName)
+	ctrl := gomock.NewController(t)
+	logoutCmd, cfg := newLogoutCmd(ctrl, getAuthMock(), nil, true, req, newTestAuthTokenHandler(ctrl), contextName)
 	_, err := pcmd.ExecuteCommand(logoutCmd)
 	req.NoError(err)
 	verifyLoggedOutState(t, cfg, contextName)
 }
 
-func newLogoutCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, authTokenHandler pauth.AuthTokenHandler, contextName string) (*cobra.Command, *config.Config) {
+func newLogoutCmd(ctrl *gomock.Controller, auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, authTokenHandler pauth.AuthTokenHandler, contextName string) (*cobra.Command, *config.Config) {
 	config.SetTempHomeDir()
 	cfg := config.AuthenticatedConfigMockWithContextName(contextName)
 	var prerunner pcmd.PreRunner
@@ -62,7 +50,7 @@ func newLogoutCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInter
 		mdsClient := climock.NewMdsClientMock(testToken)
 		prerunner = climock.NewPreRunnerMock(nil, nil, mdsClient, nil, cfg)
 	} else {
-		ccloudClientFactory := climock.NewCCloudClientFactoryMock(auth, userInterface, req)
+		ccloudClientFactory := climock.NewCCloudClientFactoryMock(ctrl, auth, userInterface, req)
 		prerunner = climock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, nil, nil, cfg)
 	}
 	logoutCmd := New(cfg, prerunner, authTokenHandler)
