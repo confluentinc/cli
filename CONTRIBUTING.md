@@ -48,6 +48,16 @@ We use `pre-commit` hooks and `gitleaks` to prevent secrets from being committed
     brew install pre-commit
     pre-commit install
 
+#### Running a Dev Build
+
+A CLI built from source keeps its state separate from an installed release. Every local build is tagged as a `dev` build, so its config, contexts, and cached tokens live in `~/.confluent-dev` rather than the usual `~/.confluent`, and it never reads or overwrites them from an installed `confluent`.
+
+    make build-dev              # builds confluent-dev into ~/.local/bin by default
+    confluent-dev version       # reports Version: v0.0.0-dev-<sha> and Development: true
+    confluent-dev context list  # empty until you log in with confluent-dev; your real login is untouched
+
+Override `CONFLUENT_DEV_BIN` to install it elsewhere. Two caveats. On macOS, a password saved with `confluent login --save` goes to the system keychain keyed by username and URL, which is not channel-scoped, so a dev build and a release logged into the same account still share that saved password; avoid `--save` when testing against a production account. And because `confluent-dev` matches the pattern the CLI uses to find plugins (any `PATH` executable named `confluent-<name>`), an installed `confluent` lists it as a `confluent dev` plugin - harmless, but naming the binary `confluent_dev` avoids the entry.
+
 ### File Layout
 
 This repo mostly follows the [Standard Go Project Layout](https://github.com/golang-standards/project-layout).
@@ -216,10 +226,10 @@ Add the following line to `internal/command.go`, and make sure to import its pac
 
 #### Running the Command
 
-To build the CLI binary, run `make build`. After this, we can run our command in the following way, and see that it (hopefully) works!
+Build the CLI and run your command. `make build-dev` puts an isolated `confluent-dev` on your PATH (see [Running a Dev Build](#running-a-dev-build)), so trying out a command cannot touch an installed release's config:
 
-    make build
-    dist/confluent_<os>_<arch>/confluent config describe 3
+    make build-dev
+    confluent-dev config describe 3
 
 #### Integration Testing
 
@@ -272,7 +282,7 @@ For most resource types, a `delete` command should support multiple arguments. T
 See [Supporting Multiple Deletion](pkg/deletion/README.md) for instructions on how to write such commands.
 
 ### Building the documentation
-You can build the CLI documentation locally by running this command from the root directory. This will generate documentation in [RST](https://www.sphinx-doc.org/en/master/index.html) format in the `cli/docs` directory. 
+You can build the CLI documentation locally by running this command from the root directory. This will generate documentation in [RST](https://www.sphinx-doc.org/en/master/index.html) format in the `cli/docs` directory.
 
 ```
 go run cmd/docs/main.go
