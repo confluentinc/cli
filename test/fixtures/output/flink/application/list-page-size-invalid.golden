@@ -4,6 +4,7 @@ Usage:
 
 Flags:
       --environment string                  Name of the Flink environment.
+      --filter string                       Filter the applications with a CMF filter expression, for example "name=my-app*,state=RUNNING". Terms are comma-separated "key=value" pairs; "name" accepts a trailing "*" wildcard, and "state" values are case-insensitive.
       --page-size int32                     Number of results to fetch per API request while paginating; does not cap the total results returned. (default 100)
       --url string                          Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.
       --client-key-path string              Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.
