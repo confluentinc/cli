@@ -209,7 +209,7 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 	}
 
 	if computePool == "" && (cloud == "" || region == "") {
-		return errors.New("Flink cloud and region flags are required when compute pool is not specified.")
+		return errors.New("the `--cloud` and `--region` flags are required when `--compute-pool` is not specified")
 	}
 
 	name := types.GenerateStatementName()
