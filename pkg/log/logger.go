@@ -4,9 +4,15 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/mattn/go-isatty"
 )
+
+// VerbosityEnvVar sets the log level when no -v flag is passed, using the same 0-5 scale as -v.
+// A flag always wins, since -v is a count flag and 0 can only mean "not passed".
+const VerbosityEnvVar = "CONFLUENT_VERBOSITY"
 
 // TODO: once we migrate from ccloud-sdk-v1 we should change these functions to act on the
 // TODO: global logger instead of (l *Logger) and then we can call log.Debug() instead of log.CliLogger.Debug()
@@ -23,6 +29,7 @@ type Logger struct {
 	Level  Level
 	logger hclog.Logger
 	buffer []leveledMessage
+	out    io.Writer
 }
 
 type leveledMessage struct {
@@ -52,17 +59,55 @@ func New(level Level, output io.Writer) *Logger {
 	return &Logger{
 		Level: level,
 		logger: hclog.New(&hclog.LoggerOptions{
-			Output: output,
-			Level:  mapToHclogLevel(level),
+			Output:          output,
+			Level:           mapToHclogLevel(level),
+			Color:           colorForOutput(output),
+			ColorHeaderOnly: true,
 		}),
+		out: output,
 	}
 }
 
+// hclog's AutoColor leaves color on for any writer without a file descriptor, which would put
+// escape codes into test buffers, so decide explicitly rather than delegating.
+func colorForOutput(output io.Writer) hclog.ColorOption {
+	file, ok := output.(*os.File)
+	if !ok {
+		return hclog.ColorOff
+	}
+
+	if isatty.IsTerminal(file.Fd()) || isatty.IsCygwinTerminal(file.Fd()) {
+		return hclog.ForceColor
+	}
+	return hclog.ColorOff
+}
+
 func (l *Logger) SetVerbosity(verbosity int) {
+	if verbosity == 0 {
+		verbosity = l.verbosityFromEnv()
+	}
+
 	level := min(Level(verbosity), UNSAFE_TRACE)
 
 	l.Level = level
 	l.logger.SetLevel(mapToHclogLevel(level))
+}
+
+// verbosityFromEnv reads the verbosity from VerbosityEnvVar. An unset variable returns 0 silently; a
+// value that isn't a non-negative integer returns 0 but warns, since someone who set it meant to
+// raise verbosity and would otherwise get no output and no hint why.
+func (l *Logger) verbosityFromEnv() int {
+	raw, ok := os.LookupEnv(VerbosityEnvVar)
+	if !ok || raw == "" {
+		return 0
+	}
+
+	verbosity, err := strconv.Atoi(raw)
+	if err != nil || verbosity < 0 {
+		fmt.Fprintf(l.out, "[WARN] Ignoring invalid environment variable %q=%q; expected a number from 0 (quietest) to 4 (most verbose).\n", VerbosityEnvVar, raw)
+		return 0
+	}
+	return verbosity
 }
 
 func (l *Logger) UnsafeTrace(args ...any) {
