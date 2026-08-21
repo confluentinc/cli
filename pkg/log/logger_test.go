@@ -2,6 +2,7 @@ package log
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -41,6 +42,21 @@ func TestLogger_Flush(t *testing.T) {
 			} else {
 				require.Empty(t, buf.String())
 			}
+		})
+	}
+}
+
+func TestLogger_FlushAfterRaisingVerbosity(t *testing.T) {
+	for _, verbosity := range []Level{DEBUG, TRACE, UNSAFE_TRACE} {
+		t.Run(fmt.Sprintf("raised to %d", verbosity), func(t *testing.T) {
+			buf := new(bytes.Buffer)
+			l := New(ERROR, buf)
+
+			l.Debug("hi there")
+			l.SetVerbosity(int(verbosity))
+			l.Flush()
+
+			require.Contains(t, buf.String(), "hi there")
 		})
 	}
 }
