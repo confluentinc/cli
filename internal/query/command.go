@@ -131,7 +131,7 @@ func (c *command) autocompleteComputePools(cmd *cobra.Command, args []string) []
 		return nil
 	}
 
-	computePools, err := c.V2Client.ListFlinkComputePools(environmentId, "")
+	computePools, err := c.V2Client.ListFlinkComputePools("", environmentId, "")
 	if err != nil {
 		return nil
 	}
