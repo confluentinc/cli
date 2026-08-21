@@ -23,8 +23,7 @@ func TestAttributesEmitKeysNotVendors(t *testing.T) {
 				Name:        "claude",
 				ArgvPattern: "@anthropic-ai/claude-code",
 			},
-			IDEHost:  &AncestorMatch{Vendor: "vscode", Name: "code"},
-			IDESpawn: &IDESpawnMatch{Vendor: "vscode", Via: spawnExtensionHost},
+			IDEHost: &AncestorMatch{Vendor: "vscode", Name: "code"},
 		},
 	}
 
@@ -40,12 +39,6 @@ func TestAttributesEmitKeysNotVendors(t *testing.T) {
 	// also contradict the design doc's own example for this field.
 	if attrs.IDEHost == nil || *attrs.IDEHost != "code" {
 		t.Errorf("ide_host = %v, want the table key %q not the vendor", attrs.IDEHost, "code")
-	}
-
-	// IDESpawn.Via is this package's vocabulary, not a table key, so it is the
-	// one ancestry field that is emitted verbatim.
-	if attrs.IDESpawn == nil || *attrs.IDESpawn != spawnExtensionHost {
-		t.Errorf("ide_spawn = %v, want %q", attrs.IDESpawn, spawnExtensionHost)
 	}
 
 	// And the vendors must not have leaked in anywhere else.
@@ -102,7 +95,7 @@ func TestChainShapeCarriesTheUnattributedPopulation(t *testing.T) {
 	// would not identify which population an entry came from.
 	eligible := map[byte]procKind{}
 	all := []procKind{
-		kindAgent, kindIDEHost, kindIDEExtHost, kindIDEUtility, kindIDENodeHost,
+		kindAgent, kindIDEHost,
 		kindInterpreter, kindShell, kindTerminal, kindWrapper, kindRemote, kindInit, kindUnknown,
 	}
 	for _, k := range all {
@@ -217,7 +210,7 @@ func TestAttributesCarryNoLocalDiagnostics(t *testing.T) {
 	}
 
 	allowed := []string{
-		"agent_env", "agent_proc", "agent_argv", "ide_host", "ide_spawn",
+		"agent_env", "agent_proc", "agent_argv", "ide_host",
 		"interactive", "chain_shape", "wrappers", "ci", "agent_tables",
 	}
 	for key := range got {
@@ -267,7 +260,7 @@ func TestAbsentEvidenceIsNullNotEmpty(t *testing.T) {
 	if attrs.AgentArgv == nil {
 		t.Fatal("agent_argv = null, want the pattern")
 	}
-	if attrs.IDEHost != nil || attrs.IDESpawn != nil {
-		t.Error("ide fields should be null when no editor was found")
+	if attrs.IDEHost != nil {
+		t.Error("ide_host should be null when no editor was found")
 	}
 }

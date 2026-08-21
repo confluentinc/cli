@@ -45,28 +45,20 @@ type Signals struct {
 
 	AgentAncestor *AncestorMatch `json:"agent_ancestor"`
 
-	// Unattributed is every ancestor that neither table named.
-	// Kind names the population: `interpreter` and `unknown` mean our argv table is missing a vendor (fixable without a
-	// release); `ide-ext-host` and `ide-node-host` are likely Copilot's
-	// extension host carries only Chromium flags, Cursor rewrites its argv to a
-	// process title, and off macOS the node host can't be resolved to extension
-	// host vs pty host. Those two size the ancestry-only blind spot and are the
-	// strongest argument for keeping the env signal.
-	//
-	// `unknown` and `ide-node-host` are loose counts — the former catches every
-	// unrecognized binary including a human's homegrown script, the latter
-	// contains a human's integrated terminal by construction on Linux/Windows.
-	// Only interpreter and ide-ext-host are clean.
+	// Unattributed is every ancestor that neither table named. Kind names the
+	// population: `interpreter` and `unknown` mean our argv table is missing a
+	// vendor (fixable without a release). `unknown` is a loose count — it
+	// catches every unrecognized binary, including a human's homegrown script;
+	// `interpreter` is clean.
 	//
 	// Containment isn't airtight: an agent colliding with a shell or wrapper row
 	// (`task`, `env`, `just`) escapes both counts, and a wrong Kind in
-	// procFingerprints converts a miss into an INVISIBLE one (as the `code` row
-	// did on Linux/Windows until kindIDENodeHost existed).
+	// procFingerprints converts a miss into an INVISIBLE one.
 	//
-	// Outside the bound entirely: non-Chromium editors (JetBrains, Zed), which
-	// run the agent in-process with no ancestor to attribute or count. Adding
-	// rows for them would make it WORSE, since a kindIDEHost row isn't
-	// argv-eligible and would convert a counted unknown into an uncounted host.
+	// In-editor agents are the largest blind spot: a `code` process is
+	// kindIDEHost (not argv-eligible), and non-Chromium editors (JetBrains, Zed)
+	// run the agent in-process with no ancestor to attribute or count at all.
+	// The env signal is what covers this population — see doc.go.
 	//
 	// Local diagnostics only — ChainShape is the wire carrier, with Kind from
 	// character and Depth from position. Only ArgvReadable isn't recoverable
@@ -76,12 +68,11 @@ type Signals struct {
 	// IDEHost is the presence of a known IDE process in the terminal ancestry.
 	// In testing we found that some IDEs with AI Chat interfaces may not show the agent
 	// E.g. in VS Code the Copilot chat agent will spawn a new terminal session to run the command
-	// This signal gives us some basis to determine how much we're under-reporting agent usage in IDEs
+	// This signal gives us some basis to determine how much we're under-reporting agent usage in IDEs.
+	//
+	// Means "agent-capable environment", never "agent-initiated" — a human
+	// typing in the integrated terminal produces the identical signal.
 	IDEHost *AncestorMatch `json:"ide_host"`
-
-	// IDESpawn narrows IDEHost to help tell the difference between an agent tool call
-	// and a human typing in the integrated terminal.
-	IDESpawn *IDESpawnMatch `json:"ide_spawn"`
 
 	// Wrappers names task runners and process wrappers sitting between the
 	// agent and our cli. Entries are keys from a fixed table, not raw process names.
@@ -89,8 +80,7 @@ type Signals struct {
 
 	// ChainShape is the ancestry as one character per ancestor, nearest first:
 	//
-	//	a agent   e ide-host   x ide-ext-host   u ide-utility
-	//	h ide-node-host   i interpreter   s shell   t terminal
+	//	a agent   e ide-host   i interpreter   s shell   t terminal
 	//	w wrapper   r remote   n init   ? unknown
 	//
 	// E.g. "sasst" is shell → agent → shell → shell → terminal.
@@ -145,36 +135,6 @@ func (m AncestorMatch) MatchedOn() string {
 		return "name"
 	}
 }
-
-// IDESpawnMatch records which type of editor process spawned us.
-//
-// Vendor may be empty for an editor fork if we have no fingerprint for it.
-type IDESpawnMatch struct {
-	Vendor string `json:"vendor,omitempty"`
-	// Via is spawnExtensionHost or spawnIDEUtility.
-	Via   string `json:"via"`
-	Depth int    `json:"depth"`
-}
-
-const (
-	// spawnExtensionHost — an extension host, or a process it spawned, is in the
-	// ancestry. For the surfaces measured this means an agent tool call, but it
-	// is not itself a vendor claim.
-	spawnExtensionHost = "extension_host"
-
-	// spawnIDEUtility — a non-extension editor helper. The pty host is what
-	// spawns shells, so in a shell ancestry this is the integrated terminal:
-	// positive evidence for a human-typed command. Named for what was observed
-	// rather than for the inference, so interpretation stays downstream.
-	spawnIDEUtility = "ide_utility"
-
-	// spawnIDENodeHost — an editor utility process hosting node, role
-	// unresolved. The Linux/Windows form of the two values above: extension
-	// host and pty host share one executable and argv there, so this covers
-	// BOTH an agent tool call and a human's integrated terminal and must not be
-	// read as either. See kindIDENodeHost.
-	spawnIDENodeHost = "ide_node_host"
-)
 
 // UnattributedAncestor records an ancestor that could have been hosting an
 // agent and that neither table named.
@@ -305,7 +265,6 @@ func Detect(opts Options) Result {
 	w := walk(opts)
 	res.Signals.AgentAncestor = w.agent
 	res.Signals.IDEHost = w.ide
-	res.Signals.IDESpawn = w.spawn
 	res.Signals.Unattributed = w.unattributed
 	res.Signals.Wrappers = w.wrappers
 	res.Signals.ChainShape = w.shape
@@ -369,7 +328,6 @@ func detectTTY(isTerminal func(fd uintptr) bool) Interactive {
 type walkResult struct {
 	agent        *AncestorMatch
 	ide          *AncestorMatch
-	spawn        *IDESpawnMatch
 	unattributed []UnattributedAncestor
 	wrappers     []WrapperMatch
 	shape        string
@@ -381,7 +339,6 @@ func walk(opts Options) walkResult {
 	var (
 		agent *AncestorMatch
 		ide   *AncestorMatch
-		spawn *IDESpawnMatch
 		// Empty rather than nil: a count of zero is a finding, and a consumer must
 		// not have to distinguish "none" from "absent" for these.
 		unattributed = make([]UnattributedAncestor, 0, 2)
@@ -452,27 +409,6 @@ func walk(opts Options) walkResult {
 			fp.Kind = kindUnknown
 		}
 
-		// Platform normalization, so everything is one code path
-		// rather than one per OS.
-		//
-		// On macOS lookupFingerprint already resolved the role from the helper
-		// basename. Off macOS the basename is the editor's own (`code`) or an
-		// unknown fork, and the role is only in argv. Restricted to kindIDEHost
-		// and kindUnknown since a --type flag can only ever REFINE those two
-		// (the least informative kinds), never override a kind that already
-		// carries a role.
-		//
-		// The two aren't equally safe to refine, which the bool passed below
-		// captures: a kindIDEHost basename means we know it's an editor, so any
-		// role its argv claims is credible; a kindUnknown one doesn't, so
-		// classifyChromiumRole only accepts roles that can't invent a signal for
-		// an unidentified product — see its doc.
-		if fp.Kind == kindIDEHost || fp.Kind == kindUnknown {
-			if roleKind, ok := classifyChromiumRole(info.Cmdline, fp.Kind == kindIDEHost); ok {
-				fp.Kind = roleKind
-			}
-		}
-
 		entry := ChainEntry{
 			Depth:  depth,
 			Pid:    info.Pid,
@@ -491,27 +427,11 @@ func walk(opts Options) walkResult {
 			nameVendor, nameKey = fp.Vendor, emittableName
 		}
 
-		// --- Provenance ---------------------------------------------------
-		// Recorded independently of vendor attribution: Cursor rewrites its
-		// extension host's argv to a title string and Copilot's carries only
-		// Chromium flags, so for those surfaces provenance is all there is.
-		switch fp.Kind {
-		case kindIDEHost:
-			if ide == nil {
-				ide = &AncestorMatch{Vendor: fp.Vendor, Depth: depth, Name: emittableName}
-			}
-		case kindIDEExtHost:
-			if spawn == nil {
-				spawn = &IDESpawnMatch{Vendor: fp.Vendor, Via: spawnExtensionHost, Depth: depth}
-			}
-		case kindIDEUtility:
-			if spawn == nil {
-				spawn = &IDESpawnMatch{Vendor: fp.Vendor, Via: spawnIDEUtility, Depth: depth}
-			}
-		case kindIDENodeHost:
-			if spawn == nil {
-				spawn = &IDESpawnMatch{Vendor: fp.Vendor, Via: spawnIDENodeHost, Depth: depth}
-			}
+		// Record the nearest editor in the ancestry. Means "agent-capable
+		// environment", not "agent-initiated" — a human in the integrated
+		// terminal looks identical.
+		if fp.Kind == kindIDEHost && ide == nil {
+			ide = &AncestorMatch{Vendor: fp.Vendor, Depth: depth, Name: emittableName}
 		}
 
 		// --- Argv evidence ------------------------------------------------
@@ -579,7 +499,6 @@ func walk(opts Options) walkResult {
 	return walkResult{
 		agent:        agent,
 		ide:          ide,
-		spawn:        spawn,
 		unattributed: unattributed,
 		wrappers:     wrappers,
 		shape:        string(shape),
@@ -605,14 +524,10 @@ func walk(opts Options) walkResult {
 //
 // kindUnknown IS eligible: an agent shipped under a name we have no
 // fingerprint for is otherwise invisible even when its argv says exactly what
-// it is. kindIDENodeHost IS eligible too, and may turn out to be a human's
-// integrated terminal — accepted because its argv is Electron's own
-// boilerplate, not user-authored, so it can't manufacture the false positive
-// this guard exists to prevent. It only costs a looser Unattributed bound;
-// see Signals.Unattributed.
+// it is.
 func argvEligible(k procKind) bool {
 	switch k {
-	case kindAgent, kindInterpreter, kindIDEExtHost, kindIDENodeHost, kindUnknown:
+	case kindAgent, kindInterpreter, kindUnknown:
 		return true
 	}
 	return false

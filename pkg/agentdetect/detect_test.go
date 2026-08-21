@@ -128,9 +128,6 @@ func TestInheritedEnvWithNoAgentAncestor(t *testing.T) {
 	if res.Signals.AgentAncestor != nil {
 		t.Errorf("ancestor = %+v, want nil", res.Signals.AgentAncestor)
 	}
-	if res.Signals.IDESpawn != nil {
-		t.Errorf("ide_spawn = %+v, want nil", res.Signals.IDESpawn)
-	}
 }
 
 // The recall gap the name table cannot close: the agent is a node process, so
@@ -692,8 +689,8 @@ func TestChainRecordsOnlyTableKeyNames(t *testing.T) {
 			if e.Name != "" {
 				t.Errorf("suffix-matched helper recorded name %q, want empty", e.Name)
 			}
-			if e.Kind != kindIDEExtHost {
-				t.Errorf("depth 3 kind = %q, want %q", e.Kind, kindIDEExtHost)
+			if e.Kind != kindIDEHost {
+				t.Errorf("depth 3 kind = %q, want %q", e.Kind, kindIDEHost)
 			}
 		}
 	}
@@ -961,7 +958,6 @@ type scenarioExpectation struct {
 	envVendors     []string // non-generic env vendors, in any order; nil means none
 	ancestorVendor string   // "" means AgentAncestor must be nil
 	ideHostVendor  string   // "" means IDEHost must be nil
-	ideSpawnVia    string   // "" means IDESpawn must be nil
 	stoppedAt      string   // "" means don't check
 	wantCI         bool
 }
@@ -980,28 +976,26 @@ var scenarioExpectations = map[string]scenarioExpectation{
 	"xargs-fanout":      {ancestorVendor: "claude-code"},
 	"ide-terminal":      {ideHostVendor: "cursor"},
 
-	// The in-editor surfaces. Three agent calls and two human controls that all
-	// used to report identically. What separates them is the combination:
-	// claude-chat has a real agent process, copilot and cursor have only an
-	// extension host, and the two terminal cases have a non-extension helper.
+	// The in-editor surfaces. Phase 1 collapses all of these to the same IDE
+	// signal (an editor is in the ancestry) plus whatever env var is set. The
+	// agent process in vscode-claude-chat wears the editor helper's basename, so
+	// it is kindIDEHost and not argv-eligible — ancestry no longer names it, and
+	// the env var is what carries the vendor. That accepted recall loss is what
+	// dropping the extension-host/pty-host role split costs.
 	"vscode-claude-chat": {
-		envVendors: []string{"claude-code"}, ancestorVendor: "claude-code",
-		ideHostVendor: "vscode", ideSpawnVia: spawnExtensionHost,
+		envVendors: []string{"claude-code"}, ideHostVendor: "vscode",
 	},
 	"vscode-copilot-chat": {
-		envVendors:    []string{"github-copilot"},
-		ideHostVendor: "vscode", ideSpawnVia: spawnExtensionHost,
+		envVendors: []string{"github-copilot"}, ideHostVendor: "vscode",
 	},
 	"cursor-agent-chat": {
-		envVendors:    []string{"cursor"},
-		ideHostVendor: "cursor", ideSpawnVia: spawnExtensionHost,
+		envVendors: []string{"cursor"}, ideHostVendor: "cursor",
 	},
 	"ide-integrated-terminal": {
-		ideHostVendor: "vscode", ideSpawnVia: spawnIDEUtility,
+		ideHostVendor: "vscode",
 	},
 	"ide-terminal-stale-env": {
-		envVendors:    []string{"claude-code"},
-		ideHostVendor: "vscode", ideSpawnVia: spawnIDEUtility,
+		envVendors: []string{"claude-code"}, ideHostVendor: "vscode",
 	},
 
 	"nested-agents": {envVendors: []string{"claude-code"}, ancestorVendor: "codex"},
@@ -1048,15 +1042,6 @@ func TestScenariosMatchDocumentedOutcome(t *testing.T) {
 				t.Errorf("ide_host = nil, want vendor %q", want.ideHostVendor)
 			case want.ideHostVendor != "" && res.Signals.IDEHost.Vendor != want.ideHostVendor:
 				t.Errorf("ide_host vendor = %q, want %q", res.Signals.IDEHost.Vendor, want.ideHostVendor)
-			}
-
-			switch {
-			case want.ideSpawnVia == "" && res.Signals.IDESpawn != nil:
-				t.Errorf("ide_spawn = %+v, want nil", res.Signals.IDESpawn)
-			case want.ideSpawnVia != "" && res.Signals.IDESpawn == nil:
-				t.Errorf("ide_spawn = nil, want via %q", want.ideSpawnVia)
-			case want.ideSpawnVia != "" && res.Signals.IDESpawn.Via != want.ideSpawnVia:
-				t.Errorf("ide_spawn via = %q, want %q", res.Signals.IDESpawn.Via, want.ideSpawnVia)
 			}
 
 			if want.stoppedAt != "" && res.Walk.StoppedAt != want.stoppedAt {
@@ -1273,8 +1258,8 @@ func TestWalkNormalizesNamesBeforeTheShapeRules(t *testing.T) {
 		1001: {Pid: 1001, Ppid: 1002, Name: "/Applications/Visual Studio Code.app/Contents/Frameworks/Code Helper (Plugin).app/Contents/MacOS/Code Helper (Plugin)"},
 		1002: {Pid: 1002, Ppid: 1, Name: "/Applications/Visual Studio Code.app/Contents/MacOS/Electron"},
 	}
-	if s := detect(t, helper, 1000, nil).Signals.IDESpawn; s == nil || s.Via != spawnExtensionHost {
-		t.Errorf("ide_spawn = %+v, want via %q from a full helper path", s, spawnExtensionHost)
+	if h := detect(t, helper, 1000, nil).Signals.IDEHost; h == nil || h.Vendor != "vscode" {
+		t.Errorf("ide_host = %+v, want vscode from a full helper path", h)
 	}
 }
 

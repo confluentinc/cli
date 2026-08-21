@@ -11,15 +11,12 @@
 //   - The process ancestor tree, matched by executable basename and by the
 //     identity positions of each ancestor's argv.
 //
-// Provenance (e.g. "an editor's extension host spawned us") is reported
-// separately from vendor attribution, since it's often the only claim
-// available and is a weaker one. Its strength is platform-dependent and must
-// not be pooled in analysis: macOS gives each editor child role its own
-// executable name, so agent-initiated and human-typed calls inside an editor
-// are cleanly separable; Linux and Windows re-exec one binary for every role
-// with identical argv, collapsing the two into a single reported value
-// (Signals.IDESpawn, kindIDENodeHost). Non-Chromium editors (JetBrains, Zed)
-// run the agent in-process and offer no separation on any platform.
+// An editor in the ancestry (Signals.IDEHost) is reported as "agent-capable
+// environment", not "agent-initiated" — a human typing in the integrated
+// terminal is indistinguishable from an agent tool call, so the two are not
+// separated here. In-editor agents that set no env var and run in-process
+// (JetBrains, Zed) or as a bare node child are the main recall gap; the env
+// signal is what covers the known ones.
 //
 // Detect returns a Result, where every field is either a value from this
 // package's own fixed vocabulary (a vendor id, a procKind, a fingerprint-table

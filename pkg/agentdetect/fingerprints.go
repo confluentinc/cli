@@ -117,55 +117,6 @@ const (
 	kindAgent   procKind = "agent"
 	kindIDEHost procKind = "ide-host" // editor that may host an agent, but isn't one
 
-	// kindIDEExtHost is an editor's EXTENSION HOST, or a process it spawned. A
-	// stronger claim than kindIDEHost: an extension host in the ancestry means
-	// an extension — not the integrated terminal — spawned this command.
-	//
-	// Observed on darwin/arm64: Claude Code's VS Code extension, GitHub Copilot
-	// chat, and Cursor's agent all route tool calls through a "* Helper
-	// (Plugin)" process, while the integrated terminal routes through the pty
-	// host, a NON-plugin helper (kindIDEUtility below).
-	//
-	// Honest limit: this means extension-initiated, not strictly
-	// agent-initiated — a task-runner extension or a human clicking "run" in an
-	// extension's UI lands here too. Still far tighter than "an editor is
-	// somewhere above us"; the finer distinction is left to downstream
-	// analytics.
-	//
-	// Also argv-eligible: these processes are Electron running as node
-	// (ELECTRON_RUN_AS_NODE), so an agent shipped as a node script has its real
-	// identity in argv even though its basename is the helper's.
-	kindIDEExtHost procKind = "ide-ext-host"
-
-	// kindIDEUtility is any other editor helper process — pty host, renderer,
-	// GPU, file watcher, shared process. The one that matters is the pty host:
-	// seeing it in a shell ancestry is positive evidence of a human-typed
-	// command.
-	kindIDEUtility procKind = "ide-utility"
-
-	// kindIDENodeHost is an editor utility process hosting node, where we can
-	// tell that much and no more. Exists because outside macOS, kindIDEExtHost
-	// and kindIDEUtility are not separable.
-	//
-	// On macOS the role is in the basename (extension host runs from the
-	// "(Plugin)" bundle, pty host from the plain one), even though their argv is
-	// byte-identical (`--type=utility --utility-sub-type=node.mojom.NodeService`;
-	// see fixtures in ide_surfaces_test.go). Linux and Windows have no per-role
-	// bundles — Chromium re-execs the same `code` / `Code.exe` binary and the
-	// role lives only in that identical argv.
-	//
-	// So on those platforms a NodeService utility parent is EITHER an agent's
-	// extension host or a human's integrated terminal, and no signal we collect
-	// resolves it. This is still strictly better than treating it as kindIDEHost
-	// (not argv-eligible, an invisible miss): argv is read here, so an agent
-	// naming itself is attributed and one that doesn't is at least counted in
-	// Unattributed.
-	//
-	// Deliberately separate from kindIDEExtHost rather than reused, since that
-	// would report a mac-strength claim from a Linux-strength observation and
-	// turn the integrated-terminal negative control into a false positive.
-	kindIDENodeHost procKind = "ide-node-host"
-
 	kindInterpreter procKind = "interpreter" // name says nothing; identity is in argv
 	kindShell       procKind = "shell"       // expected in the chain; keep walking
 	kindTerminal    procKind = "terminal"    // terminal emulator; usually the human boundary
@@ -182,12 +133,6 @@ func (k procKind) code() byte {
 		return 'a'
 	case kindIDEHost:
 		return 'e'
-	case kindIDEExtHost:
-		return 'x'
-	case kindIDEUtility:
-		return 'u'
-	case kindIDENodeHost:
-		return 'h'
 	case kindInterpreter:
 		return 'i'
 	case kindShell:
@@ -302,17 +247,11 @@ var procFingerprints = map[string]procFingerprint{
 // ---------------------------------------------------------------------------
 
 // Electron packages its child processes as sibling .app bundles named
-// "<Product> Helper[ (Role)]", so the executable basename encodes the role — a
-// property of Electron's packaging, not of any one vendor, which is why this
-// is a suffix rule rather than table rows.
-//
-// A rule rather than enumeration means an editor we've never seen is still
-// classified correctly (role known, vendor unknown) on first contact, instead
-// of being a silent miss until someone notices a new fork.
-const (
-	helperSuffix    = " helper"
-	extHostRoleName = "(plugin)"
-)
+// "<Product> Helper[ (Role)]", so an editor helper in the ancestry still means
+// "we're inside that editor" even when the editor's own basename never
+// appears. A suffix rule rather than table rows so an editor we've never seen
+// is still recognized (vendor unknown) on first contact.
+const helperSuffix = " helper"
 
 // resolveFingerprint identifies a process from everything we observed about
 // it, in decreasing order of how directly the evidence names the program: the
@@ -453,149 +392,36 @@ func lookupVersionedName(name string) (procFingerprint, string, bool) {
 }
 
 func classifyEditorHelper(name string) (procFingerprint, bool) {
-	// "code helper (plugin)" → product "code", role "(plugin)".
-	// "code helper"          → product "code", role "".
-	product, role, ok := splitHelperName(name)
+	// "code helper (plugin)" → product "code"; the role is discarded — any
+	// editor helper counts only as "we're inside that editor".
+	product, ok := splitHelperName(name)
 	if !ok {
 		return procFingerprint{}, false
 	}
 
-	// Vendor comes from the existing editor rows, so "cursor helper (plugin)"
-	// attributes to the same vendor id as "cursor" itself. An unrecognized
-	// product yields an empty vendor and a known role.
+	// Vendor comes from the existing editor rows, so "cursor helper" attributes
+	// to the same vendor id as "cursor" itself. An unrecognized product yields
+	// an empty vendor but is still a known IDE host.
 	var vendor string
 	if fp, known := procFingerprints[product]; known && fp.Kind == kindIDEHost {
 		vendor = fp.Vendor
 	}
-
-	kind := kindIDEUtility
-	if role == extHostRoleName {
-		kind = kindIDEExtHost
-	}
-	return procFingerprint{Vendor: vendor, Kind: kind}, true
+	return procFingerprint{Vendor: vendor, Kind: kindIDEHost}, true
 }
 
-// splitHelperName recognizes "<product> helper" and "<product> helper (<role>)".
-// The product must be non-empty, so a bare "helper" is not an editor helper.
-func splitHelperName(name string) (string, string, bool) {
+// splitHelperName recognizes "<product> helper" and "<product> helper (<role>)",
+// returning the product. The product must be non-empty, so a bare "helper" is
+// not an editor helper. Any "(<role>)" suffix is stripped and ignored.
+func splitHelperName(name string) (string, bool) {
 	rest := name
-	var role string
 	if i := strings.IndexByte(rest, '('); i >= 0 {
-		role = strings.TrimSpace(rest[i:])
 		rest = strings.TrimSpace(rest[:i])
 	}
 	product, found := strings.CutSuffix(rest, helperSuffix)
 	if !found || product == "" {
-		return "", "", false
-	}
-	return product, role, true
-}
-
-// ---------------------------------------------------------------------------
-// Signal: Chromium process role, for the platforms that keep it out of the name
-// ---------------------------------------------------------------------------
-
-// classifyEditorHelper above covers macOS, where Electron gives each child
-// role its own .app bundle and basename. Linux and Windows have no bundles:
-// Chromium re-execs the SAME executable for every child, so VS Code's
-// extension host, pty host, renderer and GPU process are all basename `code`
-// / `Code.exe`, with the role carried in a `--type=` flag instead. Without
-// this, all of them matched the `code` row as kindIDEHost (not
-// argv-eligible), making the entire in-editor agent population outside macOS
-// an invisible miss.
-//
-// This is role detection, NOT vendor attribution, which is why it is allowed to
-// read the argv of a kind argvEligible otherwise excludes. It matches an exact
-// Chromium flag against a fixed value list; it never substring-scans for vendor
-// names. The precision hazard argvEligible guards against — argv that is
-// user-authored command text — does not exist here, because these flags are
-// written by Electron, never by the user.
-const (
-	chromiumTypeFlag    = "--type"
-	chromiumSubTypeFlag = "--utility-sub-type"
-
-	// chromiumUtilityType is the generic utility role. On its own it says nothing
-	// about which utility, so it is refined by the sub-type below.
-	chromiumUtilityType = "utility"
-
-	// nodeServiceSubType is the utility sub-type Electron uses for a child that
-	// runs node. Both the extension host and the pty host are NodeService
-	// utilities, which is precisely why this resolves to kindIDENodeHost and not
-	// to either of the two specific kinds.
-	nodeServiceSubType = "node.mojom.nodeservice"
-)
-
-// chromiumRoles is the fixed vocabulary of --type values we act on. An
-// unrecognized value classifies nothing — same allow-list posture as
-// argvEligible.
-//
-// extensionhost and ptyhost are here because older VS Code builds fork those
-// roles directly with a named type rather than through a utility process, so
-// they're unambiguous and get the strong kinds. Everything else is a
-// renderer-class child that never hosts an agent.
-var chromiumRoles = map[string]procKind{
-	"extensionhost":     kindIDEExtHost,
-	"ptyhost":           kindIDEUtility,
-	"renderer":          kindIDEUtility,
-	"gpu-process":       kindIDEUtility,
-	"zygote":            kindIDEUtility,
-	"broker":            kindIDEUtility,
-	"crashpad-handler":  kindIDEUtility,
-	chromiumUtilityType: kindIDEUtility,
-}
-
-// classifyChromiumRole reads an editor child's role out of its argv. The bool
-// is false when argv carries no --type at all, when the value is unrecognized,
-// or when the role is one we decline to infer for an unidentified product —
-// see knownEditor.
-//
-// knownEditor says whether the basename already matched an editor row, and
-// gates the refinement because `--type=` is a CHROMIUM flag, not a VS Code
-// one — Slack, Discord, Postman and every other Electron app emits it, so for
-// an unidentified process most of these roles would be invented.
-//
-// The asymmetry: kindIDEUtility is positive evidence for a HUMAN (the pty
-// host is what the integrated terminal hangs off), so typing an unidentified
-// Electron renderer as one would manufacture human evidence for a non-editor
-// and strip its kindUnknown argv eligibility. The two roles that survive for
-// an unknown product (extensionhost, NodeService utility) can't make that
-// error — neither claims a human, and both stay argv-eligible.
-func classifyChromiumRole(argv []string, knownEditor bool) (procKind, bool) {
-	typeVal, ok := chromiumFlagValue(argv, chromiumTypeFlag)
-	if !ok {
 		return "", false
 	}
-	kind, known := chromiumRoles[typeVal]
-	if !known {
-		return "", false
-	}
-	// A bare utility is a renderer-class child. A NodeService utility is the
-	// ambiguous one: extension host and pty host are indistinguishable here.
-	if typeVal == chromiumUtilityType {
-		if sub, ok := chromiumFlagValue(argv, chromiumSubTypeFlag); ok && sub == nodeServiceSubType {
-			kind = kindIDENodeHost
-		}
-	}
-	if !knownEditor && kind != kindIDEExtHost && kind != kindIDENodeHost {
-		return "", false
-	}
-	return kind, true
-}
-
-// chromiumFlagValue finds `--flag=value`, and also `--flag value` — Chromium
-// only emits the inline form, but accepting both costs one branch and removes a
-// silent miss if that ever changes.
-func chromiumFlagValue(argv []string, flag string) (string, bool) {
-	for i, arg := range argv {
-		lower := strings.ToLower(arg)
-		if value, found := strings.CutPrefix(lower, flag+"="); found {
-			return value, value != ""
-		}
-		if lower == flag && i+1 < len(argv) {
-			return strings.ToLower(argv[i+1]), true
-		}
-	}
-	return "", false
+	return product, true
 }
 
 // ---------------------------------------------------------------------------

@@ -122,14 +122,15 @@ var scenarios = []scenario{
 	// The four in-editor surfaces, transcribed from real runs on darwin/arm64
 	// 2026-07-31. Unlike the trees above these are not illustrative constructions
 	// — they are what three IDE chat panels and one integrated terminal actually
-	// looked like, and all three agent cases originally reported
-	// "no agent ancestor matched" with an ancestor typed unknown.
+	// looked like. Phase 1 reports the same thing for all of them: an editor is
+	// in the ancestry (ide_host), plus whatever env var is set. The agent-vs-human
+	// distinction is deliberately not attempted; see ide_surfaces_test.go.
 	{
 		Name: "vscode-claude-chat",
 		Desc: "Claude Code's VS Code extension. The extension launches the real CLI as a child of the\n" +
 			"         extension host, so it runs as the Electron helper binary — basename\n" +
-			"         'code helper (plugin)', never 'node'. A distinct agent process DOES exist and its\n" +
-			"         argv names the vendor, so matching recovers it once unknowns are eligible.",
+			"         'code helper (plugin)', never 'node'. That basename is kindIDEHost and not\n" +
+			"         argv-eligible, so ancestry cannot name the agent; the CLAUDECODE env var carries it.",
 		Tree: []ProcInfo{
 			{Pid: 100, Ppid: 101, Name: "zsh"},
 			{Pid: 101, Ppid: 102, Name: "code helper (plugin)", Cmdline: []string{
@@ -147,9 +148,9 @@ var scenarios = []scenario{
 	{
 		Name: "vscode-copilot-chat",
 		Desc: "Copilot chat in VS Code. The shell's direct parent IS the extension host, whose argv is\n" +
-			"         Chromium boilerplate — there is NO agent process, so no fingerprint table\n" +
-			"         can name the vendor from ancestry. Provenance is still recoverable and the env var is\n" +
-			"         correct: the one shape where env-var detection is strictly better than the process tree.",
+			"         Chromium boilerplate — there is NO agent process, so no fingerprint table can name\n" +
+			"         the vendor from ancestry. The editor is reported as ide_host and the COPILOT_CLI env\n" +
+			"         var is the only vendor signal: the shape where env-var detection beats the process tree.",
 		Tree: []ProcInfo{
 			{Pid: 100, Ppid: 101, Name: "bash"},
 			{Pid: 101, Ppid: 102, Name: "code helper (plugin)", Cmdline: []string{
@@ -162,10 +163,9 @@ var scenarios = []scenario{
 	},
 	{
 		Name: "cursor-agent-chat",
-		Desc: "Cursor's agent. Same in-extension-host shape as Copilot, plus two wrinkles: Cursor rewrites\n" +
-			"         the extension host's argv to a process title (destroying anything the table could match)\n" +
-			"         and interposes cursorsandbox, which it applies to agent commands but not to the\n" +
-			"         integrated terminal — making the sandbox itself corroborating evidence.",
+		Desc: "Cursor's agent. Same in-extension-host shape as Copilot, plus cursorsandbox interposed\n" +
+			"         between the shell and the helper. Reported as ide_host (cursor) with the sandbox as a\n" +
+			"         wrapper and CURSOR_AGENT as the vendor signal; the rewritten helper argv names nothing.",
 		Tree: []ProcInfo{
 			{Pid: 100, Ppid: 101, Name: "zsh"},
 			{Pid: 101, Ppid: 102, Name: "zsh"},
@@ -179,10 +179,9 @@ var scenarios = []scenario{
 	},
 	{
 		Name: "ide-integrated-terminal",
-		Desc: "The negative control, and the reason provenance is worth collecting: a human typing in VS\n" +
-			"         Code's integrated terminal. The pty host is a NON-plugin helper, so this chain is\n" +
-			"         separable from all three agent surfaces above by executable name alone — no argv read.\n" +
-			"         Before this distinction existed all four reported the same thing.",
+		Desc: "A human typing in VS Code's integrated terminal. In Phase 1 this reports the same ide_host\n" +
+			"         as the agent surfaces above and no agent — the agent-vs-human split is not attempted.\n" +
+			"         With no env var set, this is correctly silent on the agent question.",
 		Tree: []ProcInfo{
 			{Pid: 100, Ppid: 101, Name: "zsh"},
 			{Pid: 101, Ppid: 102, Name: "code helper", Cmdline: []string{
@@ -194,10 +193,9 @@ var scenarios = []scenario{
 	},
 	{
 		Name: "ide-terminal-stale-env",
-		Desc: "The same integrated terminal, with a stale agent variable inherited into it. Still env_only\n" +
-			"         — but now that is a POSITIVE finding rather than a shrug: a non-extension editor helper\n" +
-			"         in the chain actively supports the inheritance reading instead of merely failing to\n" +
-			"         contradict it.",
+		Desc: "The same integrated terminal, with a stale agent variable inherited into it. Reports\n" +
+			"         ide_host plus the env vendor, with no agent ancestor — the ambiguous env_only + in-editor\n" +
+			"         shape that downstream analytics has to weigh, not something this package resolves.",
 		Tree: []ProcInfo{
 			{Pid: 100, Ppid: 101, Name: "zsh"},
 			{Pid: 101, Ppid: 102, Name: "code helper"},

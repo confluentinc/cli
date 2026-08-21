@@ -42,11 +42,6 @@ type Attributes struct {
 	// never "agent-initiated"; see Signals.IDEHost.
 	IDEHost *string `json:"ide_host,omitempty"`
 
-	// IDESpawn is spawnExtensionHost, spawnIDEUtility or spawnIDENodeHost — this
-	// package's own vocabulary, derived from Electron's packaging shape rather
-	// than a table. Not comparable across platforms; see Signals.IDESpawn.
-	IDESpawn *string `json:"ide_spawn,omitempty"`
-
 	// Interactive is a fixed three-character string, stdin/stdout/stderr in that
 	// order: "ioe" when all three are terminals, "-" in place of any that is
 	// not. A fully redirected invocation is "---".
@@ -109,7 +104,6 @@ func (r Result) Attributes() Attributes {
 
 	attrs := Attributes{
 		AgentEnv:    nonEmpty(s.AgentEnv),
-		IDESpawn:    nil,
 		Interactive: encodeInteractive(s.Interactive),
 		ChainShape:  s.ChainShape,
 		CI:          nonEmpty(s.CI),
@@ -122,9 +116,6 @@ func (r Result) Attributes() Attributes {
 	}
 	if h := s.IDEHost; h != nil {
 		attrs.IDEHost = optional(h.Name)
-	}
-	if sp := s.IDESpawn; sp != nil {
-		attrs.IDESpawn = optional(sp.Via)
 	}
 
 	for _, w := range s.Wrappers {
