@@ -11,6 +11,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/plugin"
 	"github.com/confluentinc/cli/v4/pkg/utils"
@@ -50,12 +51,12 @@ func (c *command) newSearchCommand() *cobra.Command {
 }
 
 func (c *command) search(cmd *cobra.Command, _ []string) error {
-	home, err := os.UserHomeDir()
+	stateDir, err := config.StateDir()
 	if err != nil {
 		return err
 	}
 
-	dir, err := os.MkdirTemp(filepath.Join(home, ".confluent"), "cli-plugins")
+	dir, err := os.MkdirTemp(stateDir, "cli-plugins")
 	if err != nil {
 		return err
 	}
