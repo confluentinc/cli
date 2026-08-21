@@ -9,7 +9,7 @@ import (
 
 // The wire format is where a privacy or interpretability mistake becomes
 // permanent, so these tests assert what LEAVES the process rather than what
-// detection computed. Everything below runs against Attributes, never Result.
+// detection computed.
 
 // The whole point of emitting keys: a payload must carry the evidence, and the
 // vendor must be recoverable from it rather than baked in. Vendors deliberately
@@ -35,8 +35,7 @@ func TestAttributesEmitKeysNotVendors(t *testing.T) {
 	if attrs.AgentArgv == nil || *attrs.AgentArgv != "@anthropic-ai/claude-code" {
 		t.Errorf("agent_argv = %v, want the table pattern", attrs.AgentArgv)
 	}
-	// "code" is the key, "vscode" is the vendor. Emitting the vendor here would
-	// also contradict the design doc's own example for this field.
+	// "code" is the key, "vscode" is the vendor.
 	if attrs.IDEHost == nil || *attrs.IDEHost != "code" {
 		t.Errorf("ide_host = %v, want the table key %q not the vendor", attrs.IDEHost, "code")
 	}
@@ -172,9 +171,7 @@ func TestInteractiveEncoding(t *testing.T) {
 	}
 }
 
-// CIGeneric is its own bool in Signals because a near-constant member would
-// poison a provider set. On the wire it folds in, which is only safe because
-// Detect makes the two mutually exclusive.
+// CIGeneric is its own bool in Signals; on the wire it folds in.
 func TestGenericCIFoldsIntoTheProviderList(t *testing.T) {
 	src, start := tree("bash")
 
