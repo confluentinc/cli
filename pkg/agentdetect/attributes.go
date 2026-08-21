@@ -17,8 +17,8 @@ package agentdetect
 // known. Every field is optional, so an older service ignores what it does
 // not recognize and an older CLI simply omits everything.
 type Attributes struct {
-	// AgentEnv carries fingerprint KEYS (env var names, or "file:<path>" for
-	// filesystem markers), not vendor ids. See Signals.AgentEnv.
+	// AgentEnv carries fingerprint KEYS (env var names), not vendor ids. See
+	// Signals.AgentEnv.
 	AgentEnv []string `json:"agent_env,omitempty"`
 
 	// AgentProc and AgentArgv are the evidence for the nearest agent ancestor:

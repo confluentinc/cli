@@ -86,9 +86,9 @@ func TestFieldProbe(t *testing.T) {
 	}
 
 	t.Log("--- walk health ---")
-	t.Logf("  depth_reached=%d stopped_at=%s truncated=%v cmdline_reads=%d errors=%d",
+	t.Logf("  depth_reached=%d stopped_at=%s truncated=%v cmdline_reads=%d lookup_failed=%v",
 		res.Walk.DepthReached, res.Walk.StoppedAt, res.Walk.Truncated,
-		res.Walk.CmdlineReads, res.Walk.Errors)
+		res.Walk.CmdlineReads, res.Walk.LookupFailed)
 
 	t.Log("--- signals (diagnostic shape) ---")
 	t.Log("\n" + indent(t, res.Signals))

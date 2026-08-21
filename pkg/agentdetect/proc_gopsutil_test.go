@@ -49,8 +49,8 @@ func TestLiveWalkTerminatesAndReachesAnAncestor(t *testing.T) {
 	res := Detect(Options{KeepChain: true})
 
 	if res.Walk.DepthReached < 1 {
-		t.Fatalf("DepthReached = %d, want >= 1; stopped_at = %q, errors = %d",
-			res.Walk.DepthReached, res.Walk.StoppedAt, res.Walk.Errors)
+		t.Fatalf("DepthReached = %d, want >= 1; stopped_at = %q, lookup_failed = %v",
+			res.Walk.DepthReached, res.Walk.StoppedAt, res.Walk.LookupFailed)
 	}
 
 	// A real walk from a test binary terminates at init, at a terminal, or at the

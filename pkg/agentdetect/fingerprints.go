@@ -33,25 +33,6 @@ var envFingerprints = []string{
 	"AGENT",
 }
 
-// TODO NC - do we care about Devin? Where are we looking for this path?
-// fileFingerprints is for agents that identify by presence of a path rather than an env var
-var fileFingerprints = []string{
-	"/opt/.devin",
-}
-
-// filePrefix namespaces a filesystem marker inside Signals.AgentEnv, so one
-// list can carry both env vars and file markers ("same signal, different
-// evidence location") without a near-empty second field per class.
-//
-// The reservation is structural, not by convention: no environment variable
-// name can contain a colon, so a key either starts with a prefix or is a
-// variable, with no overlap possible. TestEnvKeysAreDistinguishable pins it.
-//
-// A future marker class (registry key, socket, mount) takes a new const here,
-// with no change to Signals.AgentEnv or existing rows. Keep prefixes short,
-// lowercase, and colon-terminated.
-const filePrefix = "file:"
-
 // vendorForProcKey and vendorForArgvPattern map the two ancestry key
 // populations back to a vendor: Attributes.AgentProc resolves through the
 // first, Attributes.AgentArgv through the second. Unlike the environment
@@ -172,10 +153,11 @@ var procFingerprints = map[string]procFingerprint{
 	"goose":        {Vendor: "goose", Kind: kindAgent},
 	"opencode":     {Vendor: "opencode", Kind: kindAgent},
 	"cline":        {Vendor: "cline", Kind: kindAgent},
-	"devin":        {Vendor: "devin", Kind: kindAgent},
 	"crush":        {Vendor: "crush", Kind: kindAgent},
 	"amp":          {Vendor: "amp", Kind: kindAgent},
 	"q":            {Vendor: "amazon-q", Kind: kindAgent},
+	// Devin's filesystem-marker detection was dropped in Phase 1; if it also
+	// ships a named CLI process, add a row here.
 
 	// Editors that host agents. Presence means "agent-capable environment",
 	// not "agent-initiated call" — a human using the built-in terminal looks

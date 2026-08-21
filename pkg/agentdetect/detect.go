@@ -168,9 +168,10 @@ type WalkMeta struct {
 	// CmdlineReads counts ancestors where argv was readable.
 	CmdlineReads int `json:"cmdline_reads"`
 
-	// // TODO NC why not a bool? Errors is 0 or 1 ("did a lookup fail"), not a running total; StoppedAt
-	// says where the failure was.
-	Errors int `json:"errors"`
+	// LookupFailed records whether a proc lookup failed. It is a bool, not a
+	// count: the walk breaks on the first failed lookup, so at most one can occur,
+	// and StoppedAt ("lookup_error") says where.
+	LookupFailed bool `json:"lookup_failed"`
 
 	// Chain is raw observation — process names, pids and (optionally) redacted
 	// argv for local debugging ONLY.
@@ -208,9 +209,8 @@ type Options struct {
 	Getenv       func(string) (string, bool)
 	StartPid     int
 
-	// Stat and IsTerminal are here for mock-ability so we can run synthetic-tree tests.
-	// Stat reports whether a path exists; IsTerminal takes a file descriptor.
-	Stat       func(string) error
+	// IsTerminal is here for mock-ability so we can run synthetic-tree tests. It
+	// takes a file descriptor and reports whether it is a terminal.
 	IsTerminal func(fd uintptr) bool
 
 	// Tables names which fingerprint table revision to use.
@@ -237,12 +237,6 @@ func Detect(opts Options) Result {
 	if opts.Getenv == nil {
 		opts.Getenv = os.LookupEnv
 	}
-	if opts.Stat == nil {
-		opts.Stat = func(path string) error {
-			_, err := os.Stat(path)
-			return err
-		}
-	}
 	if opts.IsTerminal == nil {
 		// Reuses the CLI's existing isatty wrapper, already mocked in pkg/mock.
 		fs := &cliio.RealFileSystem{}
@@ -258,7 +252,7 @@ func Detect(opts Options) Result {
 	}
 
 	res := Result{Schema: "agentdetect/v1", Tables: opts.Tables}
-	res.Signals.AgentEnv = detectEnv(opts.Getenv, opts.Stat)
+	res.Signals.AgentEnv = detectEnv(opts.Getenv)
 	res.Signals.CI, res.Signals.CIGeneric = detectCI(opts.Getenv)
 	res.Signals.Interactive = detectTTY(opts.IsTerminal)
 
@@ -276,7 +270,7 @@ func Detect(opts Options) Result {
 
 // detectEnv returns the fingerprint keys that fired, in table order. See
 // Signals.AgentEnv.
-func detectEnv(getenv func(string) (string, bool), stat func(string) error) []string {
+func detectEnv(getenv func(string) (string, bool)) []string {
 	matches := make([]string, 0, 2)
 	for _, v := range envFingerprints {
 		// Presence-with-nonempty-value. A var set to "" or "0" is treated as
@@ -284,11 +278,6 @@ func detectEnv(getenv func(string) (string, bool), stat func(string) error) []st
 		// The value itself is never recorded anywhere.
 		if val, ok := getenv(v); ok && truthy(val) {
 			matches = append(matches, v)
-		}
-	}
-	for _, p := range fileFingerprints {
-		if err := stat(p); err == nil {
-			matches = append(matches, filePrefix+p)
 		}
 	}
 	return matches
@@ -348,8 +337,11 @@ func walk(opts Options) walkResult {
 		deadline     = time.Now().Add(opts.Budget)
 		seen         = make([]int, 0, 8)
 		pid          = opts.StartPid
-		// childStart is the start time of the process we just walked up FROM.
-		// Zero means unknown, which disables the check for that step.
+		// childStart is the start time of the nearest descendant we could read one
+		// for. Start times are monotonic up the ancestry, so any ancestor must have
+		// started no later than this; an unreadable stamp is skipped rather than
+		// stored (see below), so it can't blind the guard for later hops. Zero only
+		// at the very first step, where there is no descendant to compare against.
 		childStart int64
 	)
 
@@ -376,7 +368,7 @@ func walk(opts Options) walkResult {
 
 		info, err := opts.Source.Info(pid)
 		if err != nil {
-			meta.Errors++
+			meta.LookupFailed = true
 			if opts.KeepChain {
 				// The error text itself isn't carried; StoppedAt already records which guard fired.
 				meta.Chain = append(meta.Chain, ChainEntry{Depth: depth, Pid: pid, Kind: kindUnknown, Error: "lookup_failed"})
@@ -394,7 +386,13 @@ func walk(opts Options) walkResult {
 			meta.Truncated = true
 			break
 		}
-		childStart = info.StartTime
+		// Only carry forward a readable stamp: an unreadable one (0) must not
+		// overwrite the last good childStart, or the guard would stay disabled for
+		// the hop after any ancestor whose StartTime we couldn't read, not just for
+		// that ancestor itself.
+		if info.StartTime != 0 {
+			childStart = info.StartTime
+		}
 
 		meta.DepthReached = depth
 		if len(info.Cmdline) > 0 {

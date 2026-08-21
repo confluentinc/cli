@@ -5,8 +5,7 @@
 // barely overlap:
 //
 //   - Environment markers the agent vendors leave: variables they set
-//     (CLAUDECODE, CURSOR_AGENT, …) and filesystem markers for the ones that
-//     identify by path instead. Reported as fingerprint-table keys, never
+//     (CLAUDECODE, CURSOR_AGENT, …). Reported as fingerprint-table keys, never
 //     vendor ids — see Signals.AgentEnv.
 //   - The process ancestor tree, matched by executable basename and by the
 //     identity positions of each ancestor's argv.

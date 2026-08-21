@@ -2,7 +2,6 @@ package agentdetect
 
 import (
 	"encoding/json"
-	"os"
 	"slices"
 	"strings"
 	"testing"
@@ -21,12 +20,8 @@ func env(pairs map[string]string) func(string) (string, bool) {
 	}
 }
 
-// noStat and notATTY complete the hermetic surface. Without the first, a machine
-// that happens to have /opt/.devin would add a phantom vendor match to every
-// synthetic tree below; without the second, the TTY signals would differ between
-// a developer's terminal and CI.
-func noStat(string) error { return os.ErrNotExist }
-
+// notATTY keeps the surface hermetic: without it the TTY signals would differ
+// between a developer's terminal and CI.
 func notATTY(uintptr) bool { return false }
 
 // envVendorForKey is a test-only mirror of which vendor each env-marker key
@@ -36,24 +31,23 @@ func notATTY(uintptr) bool { return false }
 // spelling out "CLAUDECODE fired". AI_AGENT and AGENT are deliberately
 // absent: they indicate agent-ness without naming anyone.
 var envVendorForKey = map[string]string{
-	"CLAUDECODE":               "claude-code",
-	"CLAUDE_CODE":              "claude-code",
-	"CURSOR_AGENT":             "cursor",
-	"CODEX_SANDBOX":            "codex",
-	"CODEX_CI":                 "codex",
-	"CODEX_THREAD_ID":          "codex",
-	"GEMINI_CLI":               "gemini-cli",
-	"COPILOT_CLI":              "github-copilot",
-	"COPILOT_MODEL":            "github-copilot",
-	"COPILOT_AGENT":            "github-copilot",
-	"REPL_ID":                  "replit",
-	filePrefix + "/opt/.devin": "devin",
+	"CLAUDECODE":      "claude-code",
+	"CLAUDE_CODE":     "claude-code",
+	"CURSOR_AGENT":    "cursor",
+	"CODEX_SANDBOX":   "codex",
+	"CODEX_CI":        "codex",
+	"CODEX_THREAD_ID": "codex",
+	"GEMINI_CLI":      "gemini-cli",
+	"COPILOT_CLI":     "github-copilot",
+	"COPILOT_MODEL":   "github-copilot",
+	"COPILOT_AGENT":   "github-copilot",
+	"REPL_ID":         "replit",
 }
 
 // envVendors translates Signals.AgentEnv through envVendorForKey, skipping
 // AI_AGENT/AGENT (no vendor) and failing loudly on any key the map doesn't
-// cover — which would mean envFingerprints/fileFingerprints grew a row this
-// test map wasn't updated for.
+// cover — which would mean envFingerprints grew a row this test map wasn't
+// updated for.
 func envVendors(res Result) []string {
 	var out []string
 	for _, key := range res.Signals.AgentEnv {
@@ -83,7 +77,7 @@ func detect(t *testing.T, src fakeSource, start int, vars map[string]string) Res
 	t.Helper()
 	return Detect(Options{
 		Source: src, StartPid: start, Getenv: env(vars),
-		Stat: noStat, IsTerminal: notATTY, KeepChain: true,
+		IsTerminal: notATTY, KeepChain: true,
 	})
 }
 
@@ -506,7 +500,7 @@ func TestDepthCapTruncates(t *testing.T) {
 
 	res := Detect(Options{
 		Source: src, StartPid: start, Getenv: env(nil),
-		Stat: noStat, IsTerminal: notATTY, MaxDepth: 5,
+		IsTerminal: notATTY, MaxDepth: 5,
 	})
 	if !res.Walk.Truncated {
 		t.Error("want truncated walk")
@@ -520,8 +514,8 @@ func TestLookupErrorIsNonFatal(t *testing.T) {
 	src := fakeSource{1000: {Pid: 1000, Ppid: 4242, Name: "zsh"}} // 4242 missing
 	res := detect(t, src, 1000, nil)
 
-	if res.Walk.Errors != 1 {
-		t.Errorf("errors = %d, want 1", res.Walk.Errors)
+	if !res.Walk.LookupFailed {
+		t.Errorf("lookup_failed = %v, want true", res.Walk.LookupFailed)
 	}
 	if res.Walk.StoppedAt != "lookup_error" {
 		t.Errorf("stopped_at = %q, want lookup_error", res.Walk.StoppedAt)
@@ -556,7 +550,6 @@ func TestBudgetExpiryStopsWalkAndKeepsPartialResults(t *testing.T) {
 		Source:     slowSource{inner: src, delay: 2 * time.Millisecond},
 		StartPid:   start,
 		Getenv:     env(nil),
-		Stat:       noStat,
 		IsTerminal: notATTY,
 		Budget:     10 * time.Millisecond,
 	})
@@ -600,7 +593,6 @@ func TestDetectStaysWithinItsBudget(t *testing.T) {
 		Source:     slowSource{inner: src, delay: 5 * time.Millisecond},
 		StartPid:   start,
 		Getenv:     env(nil),
-		Stat:       noStat,
 		IsTerminal: notATTY,
 		Budget:     budget,
 	})
@@ -639,7 +631,7 @@ func TestArgvIsAbsentUnlessExplicitlyRequested(t *testing.T) {
 
 	// With it on, argv appears and the credential in it is scrubbed.
 	withArgv := Detect(Options{
-		Source: src, StartPid: 1000, Getenv: env(nil), Stat: noStat, IsTerminal: notATTY,
+		Source: src, StartPid: 1000, Getenv: env(nil), IsTerminal: notATTY,
 		KeepChain: true, ShowCmdlines: true,
 	})
 	var found bool
@@ -824,30 +816,6 @@ func TestCIReportsNormalizedProviders(t *testing.T) {
 	}
 }
 
-// Filesystem markers go through the injected Stat, so the synthetic trees are not
-// at the mercy of whatever happens to exist on the machine running the tests.
-func TestFileMarkerUsesInjectedStat(t *testing.T) {
-	src, start := tree("zsh", "ghostty")
-
-	// Default: nothing exists, so no marker matches.
-	if got := envVendors(detect(t, src, start, nil)); len(got) != 0 {
-		t.Errorf("env vendors = %v, want none", got)
-	}
-
-	present := Detect(Options{
-		Source: src, StartPid: start, Getenv: env(nil), IsTerminal: notATTY,
-		Stat: func(path string) error {
-			if path == "/opt/.devin" {
-				return nil
-			}
-			return os.ErrNotExist
-		},
-	})
-	if got := envVendors(present); len(got) != 1 || got[0] != "devin" {
-		t.Errorf("env vendors = %v, want [devin]", got)
-	}
-}
-
 // The security commitment, enforced rather than asserted in a comment: raw process
 // names, pids and argv cannot be serialized out of a Result, whatever a caller
 // does with it. This is the test that fails if someone gives ChainEntry JSON tags
@@ -860,7 +828,7 @@ func TestResultSerializationCannotCarryRawObservations(t *testing.T) {
 		}},
 	}
 	res := Detect(Options{
-		Source: src, StartPid: 1000, Getenv: env(nil), Stat: noStat, IsTerminal: notATTY,
+		Source: src, StartPid: 1000, Getenv: env(nil), IsTerminal: notATTY,
 		KeepChain: true, ShowCmdlines: true, // the most permissive settings there are
 	})
 	if len(res.Walk.Chain) == 0 {
@@ -1019,7 +987,7 @@ func TestScenariosMatchDocumentedOutcome(t *testing.T) {
 			src, start := s.source()
 			res := Detect(Options{
 				Source: src, StartPid: start, Getenv: s.getenv(),
-				Stat: noStat, IsTerminal: notATTY, KeepChain: true,
+				IsTerminal: notATTY, KeepChain: true,
 			})
 
 			if got := envVendors(res); !sameSet(got, want.envVendors) {
@@ -1265,7 +1233,7 @@ func TestWalkNormalizesNamesBeforeTheShapeRules(t *testing.T) {
 
 // Every non-generic env-marker key should have an entry in envVendorForKey, so
 // the test suite's vendor-named assertions stay meaningful and don't silently
-// stop covering a row added to envFingerprints/fileFingerprints.
+// stop covering a row added to envFingerprints.
 func TestEnvVendorForKeyCoversAllMarkers(t *testing.T) {
 	for _, v := range envFingerprints {
 		if v == "AI_AGENT" || v == "AGENT" {
@@ -1274,60 +1242,5 @@ func TestEnvVendorForKeyCoversAllMarkers(t *testing.T) {
 		if _, ok := envVendorForKey[v]; !ok {
 			t.Errorf("%s: no entry in envVendorForKey", v)
 		}
-	}
-	for _, p := range fileFingerprints {
-		if _, ok := envVendorForKey[filePrefix+p]; !ok {
-			t.Errorf("%s: no entry in envVendorForKey", p)
-		}
-	}
-}
-
-// The two populations in Signals.AgentEnv have to stay tellable apart, since they
-// share one list. The prefix is the mechanism and this is why it is safe: a colon
-// cannot appear in an environment variable name, so no variable can ever collide
-// with the reserved namespace.
-func TestEnvKeysAreDistinguishable(t *testing.T) {
-	for _, v := range envFingerprints {
-		if strings.Contains(v, ":") {
-			t.Errorf("%s: contains a colon and could collide with the %q namespace", v, filePrefix)
-		}
-	}
-
-	res := Detect(Options{
-		Source: fakeSource{}, StartPid: 1, Getenv: env(nil),
-		Stat:       func(path string) error { return nil }, // every marker present
-		IsTerminal: notATTY,
-	})
-	if len(res.Signals.AgentEnv) != len(fileFingerprints) {
-		t.Fatalf("agent_env = %v, want one key per file marker", res.Signals.AgentEnv)
-	}
-	for _, key := range res.Signals.AgentEnv {
-		if !strings.HasPrefix(key, filePrefix) {
-			t.Errorf("file marker key %q is missing the %q prefix", key, filePrefix)
-		}
-	}
-}
-
-// The scheme was chosen over a field-per-marker-class on the promise that a new
-// class costs a prefix and nothing else. This asserts the shape that promise
-// depends on, so the next person to add one has the rule in front of them rather
-// than having to infer it from the single existing example.
-func TestMarkerPrefixIsAWellFormedNamespace(t *testing.T) {
-	// Every prefix in use. A new class appends here.
-	prefixes := []string{filePrefix}
-
-	seen := map[string]bool{}
-	for _, p := range prefixes {
-		switch {
-		case !strings.HasSuffix(p, ":"):
-			t.Errorf("prefix %q must end in a colon; that is what makes it unable to collide with a variable name", p)
-		case strings.Count(p, ":") != 1:
-			t.Errorf("prefix %q must contain exactly one colon", p)
-		case p != strings.ToLower(p):
-			t.Errorf("prefix %q must be lowercase; env var names are conventionally upper, which keeps the two scannable apart", p)
-		case seen[p]:
-			t.Errorf("prefix %q is declared twice", p)
-		}
-		seen[p] = true
 	}
 }
