@@ -28,7 +28,7 @@ func (c *command) newTriggerSwitchCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("active-member", "", "The name of the member to promote to active. If omitted, the other member is promoted.")
-	cmd.Flags().String("failover-type", "CLEAN", "The failover semantics to apply: CLEAN, UNCLEAN, or RESTORE.")
+	cmd.Flags().String("failover-type", "PLANNED", "The failover semantics to apply: PLANNED, UNPLANNED, or RESTORE.")
 	cmd.Flags().Bool("force", false, "Skip the confirmation prompt.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -55,6 +55,10 @@ func (c *command) triggerSwitch(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// The :failover body carries the environment as a CRN (ORC-9794), unlike other operations
+	// which take it as a query parameter.
+	environmentCrn := fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s", c.Context.GetCurrentOrganization(), environmentId)
+
 	promptMsg := fmt.Sprintf(`This triggers a %s failover on switchover pair "%s", redirecting live traffic between regions. Do you want to proceed?`, failoverType, id)
 	if err := deletion.ConfirmPrompt(cmd, promptMsg); err != nil {
 		return err
@@ -62,8 +66,8 @@ func (c *command) triggerSwitch(cmd *cobra.Command, args []string) error {
 
 	req := switchoverv1.SwitchoverV1SwitchoverPairFailoverRequest{
 		Spec: switchoverv1.SwitchoverV1SwitchoverPairFailoverRequestSpec{
-			Environment:  environmentId,
-			FailoverType: switchoverv1.PtrString(failoverType),
+			EnvironmentCrn: environmentCrn,
+			FailoverType:   failoverType,
 		},
 	}
 	if activeMember != "" {
