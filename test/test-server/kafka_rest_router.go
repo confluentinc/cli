@@ -25,6 +25,10 @@ const (
 	clientID2           = "client-2"
 	topicName1          = "topic-1"
 	shareGroupID1       = "share-group-1"
+	streamsGroupID1     = "streams-group-1"
+	streamsGroupID2     = "streams-group-2"
+	streamsMemberID     = "member-1"
+	subtopologyID       = "subtopology-1"
 )
 
 type route struct {
@@ -53,6 +57,18 @@ var kafkaRestRoutes = []route{
 	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lag-summary", handleKafkaRestLagSummary},
 	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags", handleKafkaRestLags},
 	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags/{topic_name}/partitions/{partition_id}", handleKafkaRestLag},
+	{"/kafka/v3/clusters/{cluster_id}/streams-groups", handleKafkaRestStreamsGroups},
+	{"/kafka/v3/clusters/{cluster_id}/streams-groups/{group_id}", handleKafkaRestStreamsGroup},
+	{"/kafka/v3/clusters/{cluster_id}/streams-groups/{group_id}/members", handleKafkaRestStreamsGroupMembers},
+	{"/kafka/v3/clusters/{cluster_id}/streams-groups/{group_id}/members/{member_id}", handleKafkaRestStreamsGroupMember},
+	{"/kafka/v3/clusters/{cluster_id}/streams-groups/{group_id}/members/{member_id}/assignments", handleKafkaRestStreamsGroupMemberAssignments},
+	{"/kafka/v3/clusters/{cluster_id}/streams-groups/{group_id}/members/{member_id}/assignments/{assignments_type}", handleKafkaRestStreamsGroupMemberAssignmentTasks},
+	{"/kafka/v3/clusters/{cluster_id}/streams-groups/{group_id}/members/{member_id}/assignments/{assignments_type}/subtopologies/{subtopology_id}", handleKafkaRestStreamsGroupMemberAssignmentTaskPartitions},
+	{"/kafka/v3/clusters/{cluster_id}/streams-groups/{group_id}/members/{member_id}/target-assignments", handleKafkaRestStreamsGroupMemberTargetAssignments},
+	{"/kafka/v3/clusters/{cluster_id}/streams-groups/{group_id}/members/{member_id}/target-assignments/{assignments_type}", handleKafkaRestStreamsGroupMemberTargetAssignmentTasks},
+	{"/kafka/v3/clusters/{cluster_id}/streams-groups/{group_id}/members/{member_id}/target-assignments/{assignments_type}/subtopologies/{subtopology_id}", handleKafkaRestStreamsGroupMemberTargetAssignmentTaskPartitions},
+	{"/kafka/v3/clusters/{cluster_id}/streams-groups/{group_id}/subtopologies", handleKafkaRestStreamsGroupSubtopologies},
+	{"/kafka/v3/clusters/{cluster_id}/streams-groups/{group_id}/subtopologies/{subtopology_id}", handleKafkaRestStreamsGroupSubtopology},
 	{"/kafka/v3/clusters/{cluster_id}/share-groups", handleKafkaRestShareGroups},
 	{"/kafka/v3/clusters/{cluster_id}/share-groups/{share_group_id}", handleKafkaRestShareGroup},
 	{"/kafka/v3/clusters/{cluster_id}/share-groups/{share_group_id}/consumers", handleKafkaRestShareGroupConsumers},
@@ -2433,6 +2449,338 @@ func handleClustersClusterIdTopicsTopicsNamePartitionsReplicaStatus(t *testing.T
 			},
 		})
 		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/streams-groups"
+func handleKafkaRestStreamsGroups(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		clusterId := mux.Vars(r)["cluster_id"]
+		switch r.Method {
+		case http.MethodGet:
+			response := map[string]interface{}{
+				"kind":     "KafkaStreamsGroupList",
+				"metadata": map[string]interface{}{},
+				"data": []map[string]interface{}{
+					{
+						"kind":                    "KafkaStreamsGroup",
+						"metadata":                map[string]interface{}{},
+						"cluster_id":              clusterId,
+						"group_id":                streamsGroupID1,
+						"state":                   "STABLE",
+						"member_count":            int32(2),
+						"subtopology_count":       int32(1),
+						"group_epoch":             int32(3),
+						"topology_epoch":          int32(2),
+						"target_assignment_epoch": int32(2),
+						"members":                 map[string]interface{}{"related": "/kafka/v3/clusters/" + clusterId + "/streams-groups/" + streamsGroupID1 + "/members"},
+						"subtopologies":           map[string]interface{}{"related": "/kafka/v3/clusters/" + clusterId + "/streams-groups/" + streamsGroupID1 + "/subtopologies"},
+					},
+					{
+						"kind":                    "KafkaStreamsGroup",
+						"metadata":                map[string]interface{}{},
+						"cluster_id":              clusterId,
+						"group_id":                streamsGroupID2,
+						"state":                   "RECONCILING",
+						"member_count":            int32(1),
+						"subtopology_count":       int32(2),
+						"group_epoch":             int32(1),
+						"topology_epoch":          int32(1),
+						"target_assignment_epoch": int32(1),
+						"members":                 map[string]interface{}{"related": "/kafka/v3/clusters/" + clusterId + "/streams-groups/" + streamsGroupID2 + "/members"},
+						"subtopologies":           map[string]interface{}{"related": "/kafka/v3/clusters/" + clusterId + "/streams-groups/" + streamsGroupID2 + "/subtopologies"},
+					},
+				},
+			}
+			err := json.NewEncoder(w).Encode(response)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/streams-groups/{group_id}"
+func handleKafkaRestStreamsGroup(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		clusterId := vars["cluster_id"]
+		groupId := vars["group_id"]
+		switch r.Method {
+		case http.MethodGet:
+			if groupId == streamsGroupID1 {
+				response := map[string]interface{}{
+					"kind":                    "KafkaStreamsGroup",
+					"metadata":                map[string]interface{}{},
+					"cluster_id":              clusterId,
+					"group_id":                streamsGroupID1,
+					"state":                   "STABLE",
+					"member_count":            int32(2),
+					"subtopology_count":       int32(1),
+					"group_epoch":             int32(3),
+					"topology_epoch":          int32(2),
+					"target_assignment_epoch": int32(2),
+					"members":                 map[string]interface{}{"related": "/kafka/v3/clusters/" + clusterId + "/streams-groups/" + streamsGroupID1 + "/members"},
+					"subtopologies":           map[string]interface{}{"related": "/kafka/v3/clusters/" + clusterId + "/streams-groups/" + streamsGroupID1 + "/subtopologies"},
+				}
+				err := json.NewEncoder(w).Encode(response)
+				require.NoError(t, err)
+			} else {
+				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this streams group."))
+			}
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/streams-groups/{group_id}/members"
+func handleKafkaRestStreamsGroupMembers(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		clusterId := vars["cluster_id"]
+		groupId := vars["group_id"]
+		switch r.Method {
+		case http.MethodGet:
+			response := map[string]interface{}{
+				"kind":     "KafkaStreamsGroupMemberList",
+				"metadata": map[string]interface{}{},
+				"data": []map[string]interface{}{
+					{
+						"kind":              "KafkaStreamsGroupMember",
+						"metadata":          map[string]interface{}{},
+						"cluster_id":        clusterId,
+						"group_id":          groupId,
+						"member_id":         streamsMemberID,
+						"process_id":        "process-1",
+						"client_id":         "client-1",
+						"instance_id":       "instance-1",
+						"member_epoch":      int32(2),
+						"topology_epoch":    int32(2),
+						"is_classic":        false,
+						"assignments":       map[string]interface{}{"related": "/kafka/v3/clusters/" + clusterId + "/streams-groups/" + groupId + "/members/" + streamsMemberID + "/assignments"},
+						"target_assignment": map[string]interface{}{"related": "/kafka/v3/clusters/" + clusterId + "/streams-groups/" + groupId + "/members/" + streamsMemberID + "/target-assignments"},
+					},
+				},
+			}
+			err := json.NewEncoder(w).Encode(response)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/streams-groups/{group_id}/members/{member_id}"
+func handleKafkaRestStreamsGroupMember(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		clusterId := vars["cluster_id"]
+		groupId := vars["group_id"]
+		memberId := vars["member_id"]
+		switch r.Method {
+		case http.MethodGet:
+			if memberId == streamsMemberID {
+				response := map[string]interface{}{
+					"kind":              "KafkaStreamsGroupMember",
+					"metadata":          map[string]interface{}{},
+					"cluster_id":        clusterId,
+					"group_id":          groupId,
+					"member_id":         streamsMemberID,
+					"process_id":        "process-1",
+					"client_id":         "client-1",
+					"instance_id":       "instance-1",
+					"member_epoch":      int32(2),
+					"topology_epoch":    int32(2),
+					"is_classic":        false,
+					"assignments":       map[string]interface{}{"related": "/kafka/v3/clusters/" + clusterId + "/streams-groups/" + groupId + "/members/" + streamsMemberID + "/assignments"},
+					"target_assignment": map[string]interface{}{"related": "/kafka/v3/clusters/" + clusterId + "/streams-groups/" + groupId + "/members/" + streamsMemberID + "/target-assignments"},
+				}
+				err := json.NewEncoder(w).Encode(response)
+				require.NoError(t, err)
+			} else {
+				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this streams group member."))
+			}
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/streams-groups/{group_id}/members/{member_id}/assignments"
+func handleKafkaRestStreamsGroupMemberAssignments(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		clusterId := vars["cluster_id"]
+		groupId := vars["group_id"]
+		memberId := vars["member_id"]
+		switch r.Method {
+		case http.MethodGet:
+			response := map[string]interface{}{
+				"kind":          "KafkaStreamsGroupMemberAssignment",
+				"metadata":      map[string]interface{}{},
+				"cluster_id":    clusterId,
+				"group_id":      groupId,
+				"member_id":     memberId,
+				"active_tasks":  map[string]interface{}{"related": "/kafka/v3/clusters/" + clusterId + "/streams-groups/" + groupId + "/members/" + memberId + "/assignments/active"},
+				"standby_tasks": map[string]interface{}{"related": "/kafka/v3/clusters/" + clusterId + "/streams-groups/" + groupId + "/members/" + memberId + "/assignments/standby"},
+				"warmup_tasks":  map[string]interface{}{"related": "/kafka/v3/clusters/" + clusterId + "/streams-groups/" + groupId + "/members/" + memberId + "/assignments/warmup"},
+			}
+			err := json.NewEncoder(w).Encode(response)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/streams-groups/{group_id}/members/{member_id}/target-assignments"
+func handleKafkaRestStreamsGroupMemberTargetAssignments(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		clusterId := vars["cluster_id"]
+		groupId := vars["group_id"]
+		memberId := vars["member_id"]
+		switch r.Method {
+		case http.MethodGet:
+			response := map[string]interface{}{
+				"kind":          "KafkaStreamsGroupMemberAssignment",
+				"metadata":      map[string]interface{}{},
+				"cluster_id":    clusterId,
+				"group_id":      groupId,
+				"member_id":     memberId,
+				"active_tasks":  map[string]interface{}{"related": "/kafka/v3/clusters/" + clusterId + "/streams-groups/" + groupId + "/members/" + memberId + "/target-assignments/active"},
+				"standby_tasks": map[string]interface{}{"related": "/kafka/v3/clusters/" + clusterId + "/streams-groups/" + groupId + "/members/" + memberId + "/target-assignments/standby"},
+				"warmup_tasks":  map[string]interface{}{"related": "/kafka/v3/clusters/" + clusterId + "/streams-groups/" + groupId + "/members/" + memberId + "/target-assignments/warmup"},
+			}
+			err := json.NewEncoder(w).Encode(response)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/streams-groups/{group_id}/members/{member_id}/assignments/{assignments_type}"
+func handleKafkaRestStreamsGroupMemberAssignmentTasks(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			response := map[string]interface{}{
+				"kind":     "KafkaStreamsTaskList",
+				"metadata": map[string]interface{}{},
+				"data": []map[string]interface{}{
+					{
+						"kind":           "KafkaStreamsTask",
+						"metadata":       map[string]interface{}{},
+						"subtopology_id": subtopologyID,
+						"partition_ids":  []int32{0, 1, 2},
+					},
+				},
+			}
+			err := json.NewEncoder(w).Encode(response)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/streams-groups/{group_id}/members/{member_id}/target-assignments/{assignments_type}"
+func handleKafkaRestStreamsGroupMemberTargetAssignmentTasks(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			response := map[string]interface{}{
+				"kind":     "KafkaStreamsTaskList",
+				"metadata": map[string]interface{}{},
+				"data": []map[string]interface{}{
+					{
+						"kind":           "KafkaStreamsTask",
+						"metadata":       map[string]interface{}{},
+						"subtopology_id": subtopologyID,
+						"partition_ids":  []int32{0, 1},
+					},
+				},
+			}
+			err := json.NewEncoder(w).Encode(response)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/streams-groups/{group_id}/members/{member_id}/assignments/{assignments_type}/subtopologies/{subtopology_id}"
+func handleKafkaRestStreamsGroupMemberAssignmentTaskPartitions(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			response := map[string]interface{}{
+				"kind":           "KafkaStreamsTask",
+				"metadata":       map[string]interface{}{},
+				"subtopology_id": subtopologyID,
+				"partition_ids":  []int32{0, 1, 2},
+			}
+			err := json.NewEncoder(w).Encode(response)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/streams-groups/{group_id}/members/{member_id}/target-assignments/{assignments_type}/subtopologies/{subtopology_id}"
+func handleKafkaRestStreamsGroupMemberTargetAssignmentTaskPartitions(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			response := map[string]interface{}{
+				"kind":           "KafkaStreamsTask",
+				"metadata":       map[string]interface{}{},
+				"subtopology_id": subtopologyID,
+				"partition_ids":  []int32{0, 1},
+			}
+			err := json.NewEncoder(w).Encode(response)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/streams-groups/{group_id}/subtopologies"
+func handleKafkaRestStreamsGroupSubtopologies(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		clusterId := vars["cluster_id"]
+		groupId := vars["group_id"]
+		switch r.Method {
+		case http.MethodGet:
+			response := map[string]interface{}{
+				"kind":     "KafkaStreamsGroupSubtopologyList",
+				"metadata": map[string]interface{}{},
+				"data": []map[string]interface{}{
+					{
+						"kind":           "KafkaStreamsGroupSubtopology",
+						"metadata":       map[string]interface{}{},
+						"cluster_id":     clusterId,
+						"group_id":       groupId,
+						"subtopology_id": subtopologyID,
+						"source_topics":  []string{"input-topic-1", "input-topic-2"},
+					},
+				},
+			}
+			err := json.NewEncoder(w).Encode(response)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/streams-groups/{group_id}/subtopologies/{subtopology_id}"
+func handleKafkaRestStreamsGroupSubtopology(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		clusterId := vars["cluster_id"]
+		groupId := vars["group_id"]
+		subtopId := vars["subtopology_id"]
+		switch r.Method {
+		case http.MethodGet:
+			if subtopId == subtopologyID {
+				response := map[string]interface{}{
+					"kind":           "KafkaStreamsGroupSubtopology",
+					"metadata":       map[string]interface{}{},
+					"cluster_id":     clusterId,
+					"group_id":       groupId,
+					"subtopology_id": subtopologyID,
+					"source_topics":  []string{"input-topic-1", "input-topic-2"},
+				}
+				err := json.NewEncoder(w).Encode(response)
+				require.NoError(t, err)
+			} else {
+				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this streams group subtopology."))
+			}
+		}
 	}
 }
 
