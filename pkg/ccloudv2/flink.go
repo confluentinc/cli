@@ -28,16 +28,6 @@ func (c *Client) DescribeFlinkComputePool(id, environment string) (flinkv2.FcpmV
 	return res, errors.CatchComputePoolNotFoundError(err, id, httpResp)
 }
 
-func (c *Client) DescribeFlinkComputePoolConfig() (flinkv2.FcpmV2OrgComputePoolConfig, error) {
-	res, httpResp, err := c.FlinkClient.OrgComputePoolConfigsFcpmV2Api.GetFcpmV2OrgComputePoolConfig(c.flinkApiContext()).Execute()
-	return res, errors.CatchCCloudV2Error(err, httpResp)
-}
-
-func (c *Client) UpdateFlinkComputePoolConfig(fcpmV2OrgComputePoolConfigUpdate flinkv2.FcpmV2OrgComputePoolConfigUpdate) (flinkv2.FcpmV2OrgComputePoolConfig, error) {
-	res, httpResp, err := c.FlinkClient.OrgComputePoolConfigsFcpmV2Api.UpdateFcpmV2OrgComputePoolConfig(c.flinkApiContext()).FcpmV2OrgComputePoolConfigUpdate(fcpmV2OrgComputePoolConfigUpdate).Execute()
-	return res, errors.CatchCCloudV2Error(err, httpResp)
-}
-
 // ===== Flink compute pools API calls =====
 
 func (c *Client) CreateFlinkComputePool(req flinkv2.FcpmV2ComputePool) (flinkv2.FcpmV2ComputePool, *http.Response, error) {
@@ -105,6 +95,21 @@ func (c *Client) executeListFlinkComputePools(specRegion string, environment str
 		req = req.PageToken(pageToken)
 	}
 	return req.Execute()
+}
+
+// ===== Flink org compute pool configs API calls =====
+
+func (c *Client) GetFlinkOrgComputePoolConfig() (flinkv2.FcpmV2OrgComputePoolConfig, *http.Response, error) {
+	getReq := c.FlinkClient.OrgComputePoolConfigsFcpmV2Api.
+		GetFcpmV2OrgComputePoolConfig(c.flinkApiContext())
+	return getReq.Execute()
+}
+
+func (c *Client) UpdateFlinkOrgComputePoolConfig(update flinkv2.FcpmV2OrgComputePoolConfigUpdate) (flinkv2.FcpmV2OrgComputePoolConfig, *http.Response, error) {
+	updateReq := c.FlinkClient.OrgComputePoolConfigsFcpmV2Api.
+		UpdateFcpmV2OrgComputePoolConfig(c.flinkApiContext()).
+		FcpmV2OrgComputePoolConfigUpdate(update)
+	return updateReq.Execute()
 }
 
 // ===== Flink regions API calls =====
