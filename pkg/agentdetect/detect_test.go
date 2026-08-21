@@ -25,11 +25,8 @@ func env(pairs map[string]string) func(string) (string, bool) {
 func notATTY(uintptr) bool { return false }
 
 // envVendorForKey is a test-only mirror of which vendor each env-marker key
-// belongs to. Production carries no such mapping for these keys (see
-// envFingerprints) since the keys are themselves vendor-specific; this map
-// exists purely so scenarios below can assert "claude-code fired" instead of
-// spelling out "CLAUDECODE fired". AI_AGENT and AGENT are deliberately
-// absent: they indicate agent-ness without naming anyone.
+// belongs to; purely so scenarios can assert "claude-code fired" instead of
+// spelling out "CLAUDECODE fired"
 var envVendorForKey = map[string]string{
 	"CLAUDECODE":      "claude-code",
 	"CLAUDE_CODE":     "claude-code",
@@ -46,8 +43,7 @@ var envVendorForKey = map[string]string{
 
 // envVendors translates Signals.AgentEnv through envVendorForKey, skipping
 // AI_AGENT/AGENT (no vendor) and failing loudly on any key the map doesn't
-// cover — which would mean envFingerprints grew a row this test map wasn't
-// updated for.
+// cover — indicating the map needs an update.
 func envVendors(res Result) []string {
 	var out []string
 	for _, key := range res.Signals.AgentEnv {
@@ -67,8 +63,7 @@ func hasEnvVendor(res Result, vendor string) bool {
 }
 
 // tree builds a chain from the caller upward: tree("zsh", "claude") means the
-// CLI's parent is zsh and zsh's parent is claude. It is chain() indexed by pid,
-// which is the shape a ProcSource has to be.
+// CLI's parent is zsh and zsh's parent is claude.
 func tree(names ...string) (fakeSource, int) {
 	return sourceFor(chain(names...))
 }
@@ -81,8 +76,7 @@ func detect(t *testing.T, src fakeSource, start int, vars map[string]string) Res
 	})
 }
 
-// Both signals fire and name the same vendor. They are reported side by side; no
-// field in Result claims they agree, because that comparison is analytics' job.
+// Both signals fire and name the same vendor. They are reported side by side.
 func TestDirectAgentCall(t *testing.T) {
 	src, start := tree("zsh", "claude")
 	res := detect(t, src, start, map[string]string{"CLAUDECODE": "1"})
@@ -113,9 +107,7 @@ func TestInheritedEnvWithNoAgentAncestor(t *testing.T) {
 	src, start := tree("zsh", "tmux", "ghostty")
 	res := detect(t, src, start, map[string]string{"CLAUDECODE": "1"})
 
-	// The env var claims an agent; the ancestry contradicts it. Both halves of that
-	// contradiction have to survive into the payload for the over-reporting rate to
-	// be measurable at all.
+	// The env var claims an agent; the ancestry contradicts it.
 	if !hasEnvVendor(res, "claude-code") {
 		t.Fatalf("env vendors = %v, want claude-code reported", envVendors(res))
 	}
@@ -164,9 +156,7 @@ func TestInterpreterHostedAgentNeedsCmdline(t *testing.T) {
 	}
 }
 
-// The recall estimator. A candidate host we cannot attribute is counted rather
-// than ignored, which is what makes the miss rate measurable from production
-// instead of arguable from first principles.
+// A candidate host we cannot attribute is counted rather than ignored.
 func TestUnattributedInterpreterIsCounted(t *testing.T) {
 	src := fakeSource{
 		1000: {Pid: 1000, Ppid: 1001, Name: "zsh"},
@@ -184,21 +174,15 @@ func TestUnattributedInterpreterIsCounted(t *testing.T) {
 	if g.Depth != 2 {
 		t.Errorf("depth = %d, want 2", g.Depth)
 	}
-	// Kind is what routes the gap to a fix: interpreter means the argv table is
-	// missing a vendor.
 	if g.Kind != kindInterpreter {
 		t.Errorf("kind = %q, want %q", g.Kind, kindInterpreter)
 	}
-	// argv WAS readable here, so this is a fingerprint-table gap, not a
-	// platform blind spot. The distinction drives different fixes.
 	if !g.ArgvReadable {
 		t.Error("argv_readable = false, want true (cmdline was present)")
 	}
 }
 
-// Permission-denied shape (any platform, not just Windows): same tree, no
-// argv. Still counted, but flagged as unreachable-by-fingerprint rather than
-// as a table gap.
+// Permission-denied shape; same tree, no argv.
 func TestUnreadableArgvIsADistinctGap(t *testing.T) {
 	src, start := tree("zsh", "node")
 	res := detect(t, src, start, nil)
@@ -211,13 +195,8 @@ func TestUnreadableArgvIsADistinctGap(t *testing.T) {
 	}
 }
 
-// The precision guard that replaced the tier ladder. Argv matching is now
-// unrestricted by read level, so the only thing keeping it honest is that it
-// does not run against processes whose argv is user-authored text.
-//
 // This tree is a human typing a command that happens to mention an agent's
-// install path. Matching the shell's argv would report an agent call and inflate
-// the one number this whole exercise exists to produce.
+// install path. Matching the shell's argv would report an agent call in error.
 func TestUserTypedCommandMentioningAnAgentIsNotAMatch(t *testing.T) {
 	src := fakeSource{
 		1000: {Pid: 1000, Ppid: 1001, Name: "zsh", Cmdline: []string{
@@ -231,17 +210,13 @@ func TestUserTypedCommandMentioningAnAgentIsNotAMatch(t *testing.T) {
 		t.Errorf("ancestor = %+v, want nil; a shell's argv is user text, not identity",
 			res.Signals.AgentAncestor)
 	}
-	// And it must not be counted as a gap either — a shell is not a candidate
-	// agent host, so it belongs in neither the numerator nor the denominator.
+
 	if len(res.Signals.Unattributed) != 0 {
 		t.Errorf("unattributed = %+v, want none", res.Signals.Unattributed)
 	}
 }
 
-// The corroboration case, and the reason evidence is two fields rather than one
-// "tier". cursor-agent is in the name table AND names itself in argv; both fire,
-// and reporting only the cheaper one would discard a confirmation already paid
-// for by the same syscall.
+// The corroboration case
 func TestNameAndArgvEvidenceAreBothReported(t *testing.T) {
 	src := fakeSource{
 		1000: {Pid: 1000, Ppid: 1001, Name: "zsh"},
@@ -326,8 +301,6 @@ func TestWrapperChainStillDetects(t *testing.T) {
 	src, start := tree("sh", "make", "npm", "bash", "claude")
 	res := detect(t, src, start, nil)
 
-	// No env var here: ancestry is the only signal that fires, which is the case
-	// the env-var-only approach misses outright.
 	if len(envVendors(res)) != 0 {
 		t.Fatalf("env vendors = %v, want none", envVendors(res))
 	}
