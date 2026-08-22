@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/client9/gospell"
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 )
@@ -52,6 +53,30 @@ func TestFlagKebabCase(t *testing.T) {
 		require.NoError(t, err)
 		err = rule(cmd.Flag("certificate-authority-path"), cmd)
 		require.NoError(t, err)
+	})
+}
+
+func TestRequireValidExamplesAllowsEqualsForBoolFlags(t *testing.T) {
+	rule := RequireValidExamples()
+
+	t.Run("bool flag with \"=\" is allowed", func(t *testing.T) {
+		cmd := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
+		cmd.Flags().Bool("force", false, "a bool flag")
+		cmd.Example = "  $ confluent example --force=false\n"
+		err := cmd.Execute()
+		require.NoError(t, err)
+		err = rule(cmd)
+		require.Nil(t, err.(*multierror.Error).ErrorOrNil())
+	})
+
+	t.Run("non-bool flag with \"=\" is rejected", func(t *testing.T) {
+		cmd := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
+		cmd.Flags().String("cluster", "", "a string flag")
+		cmd.Example = "  $ confluent example --cluster=lkc-123456\n"
+		err := cmd.Execute()
+		require.NoError(t, err)
+		err = rule(cmd)
+		require.Error(t, err)
 	})
 }
 

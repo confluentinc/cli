@@ -1,6 +1,7 @@
 package logout
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -12,11 +13,12 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 type command struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.CLICommand
 	cfg              *config.Config
 	authTokenHandler pauth.AuthTokenHandler
 }
@@ -28,16 +30,18 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, authTokenHandler pauth.Au
 	}
 
 	context := "Confluent Cloud or Confluent Platform"
-	c := &command{
-		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner),
-		cfg:                     cfg,
-		authTokenHandler:        authTokenHandler,
-	}
 	if cfg.IsCloudLogin() {
 		context = "Confluent Cloud"
 	} else if cfg.IsOnPremLogin() {
 		context = "Confluent Platform"
-		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
+	}
+
+	c := &command{
+		// Anonymous (not Authenticated): logout must not require being logged in, and must not
+		// trigger an auto-login via env-var credentials only to immediately log back out.
+		CLICommand:       pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		cfg:              cfg,
+		authTokenHandler: authTokenHandler,
 	}
 
 	cmd.Short = fmt.Sprintf("Log out of %s.", context)
@@ -49,11 +53,14 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner, authTokenHandler pauth.Au
 
 func (c *command) logout(_ *cobra.Command, _ []string) error {
 	ctx := c.Config.Context()
-	if ctx != nil {
-		if ccloudv2.IsCCloudURL(ctx.Platform.Server, c.cfg.IsTest) {
-			if _, err := c.revokeCCloudRefreshToken(ctx); err != nil {
-				return err
-			}
+	if ctx == nil {
+		// Already logged out: do nothing.
+		return nil
+	}
+
+	if ccloudv2.IsCCloudURL(ctx.Platform.Server, c.cfg.IsTest) {
+		if _, err := c.revokeCCloudRefreshToken(ctx); err != nil {
+			return err
 		}
 	}
 
@@ -67,14 +74,28 @@ func (c *command) logout(_ *cobra.Command, _ []string) error {
 
 func (c *command) revokeCCloudRefreshToken(ctx *config.Context) (*ccloudv1.AuthenticateReply, error) {
 	contextState := c.Config.ContextStates[ctx.Name]
+	if contextState == nil {
+		// Missing or corrupt context state: nothing to revoke, but logout should still succeed.
+		return nil, nil
+	}
 	if err := contextState.DecryptAuthToken(ctx.Name); err != nil {
 		return nil, err
 	}
 
+	var userAgent string
+	if c.Version != nil {
+		userAgent = c.Version.UserAgent
+	}
+	client := ccloudv1.NewClientWithJWT(context.Background(), contextState.AuthToken, &ccloudv1.Params{
+		BaseURL:   ctx.GetPlatformServer(),
+		Logger:    log.CliLogger,
+		UserAgent: userAgent,
+	})
+
 	req := &ccloudv1.AuthenticateRequest{IdToken: contextState.AuthToken}
 	if sso.IsOkta(ctx.Platform.Server) {
-		return c.Client.Auth.OktaLogout(req)
+		return client.Auth.OktaLogout(req)
 	} else {
-		return c.Client.Auth.Logout(req)
+		return client.Auth.Logout(req)
 	}
 }
