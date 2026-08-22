@@ -5,11 +5,9 @@ import "strings"
 // Fingerprint tables.
 //
 // Intended to ship via feature flag as a JSON document with a compiled-in
-// fallback, so the tables can iterate independently of CLI releases.
-//
-// Everything below is a starting point based on public agent packaging
-// conventions. It is NOT verified against every vendor's current release and may
-// be wrong now or in the future.
+// fallback, so they can iterate independently of CLI releases. A starting point
+// from field tests and public agent packaging conventions — NOT verified against
+// every vendor's current release, and may be wrong now or later.
 
 // ---------------------------------------------------------------------------
 // Signal: environment variables
@@ -33,18 +31,10 @@ var envFingerprints = []string{
 	"AGENT",
 }
 
-// vendorForProcKey and vendorForArgvPattern map the two ancestry key
-// populations back to a vendor: Attributes.AgentProc resolves through the
-// first, Attributes.AgentArgv through the second. Unlike the environment
-// markers above, a basename or argv pattern doesn't always spell out its
-// vendor ("q" is Amazon Q, "@openai/codex" is codex), so the mapping is kept
-// here as the reference implementation analytics owns at query time — a row
-// added without a vendor fails a test instead of silently producing an
-// unmappable key.
-//
-// Two lookups rather than one because the key spaces are genuinely distinct —
-// "code" vs. "@openai/codex" — matching how the wire format keeps them in
-// separate fields.
+// vendorForProcKey and vendorForArgvPattern resolve an ancestry key back to a
+// vendor — a basename or argv pattern doesn't always spell one out ("q" is
+// amazon-q), so this is the reference mapping. Two lookups because the key spaces
+// are distinct ("code" vs "@openai/codex"), as the wire format keeps them.
 func vendorForProcKey(key string) (string, bool) {
 	fp, ok := procFingerprints[key]
 	if !ok {
@@ -62,12 +52,8 @@ func vendorForArgvPattern(pattern string) (string, bool) {
 	return "", false
 }
 
-// CI variables. Not agent signals, but they change how an agent signal should
-// be read — an agent var inside CI is more likely an inherited image setting
-// than a live agent.
-//
-// Provider is what gets reported, not Var: a normalized id, same discipline
-// as the vendor ids.
+// CI variables — not agent signals, but context: an agent var inside CI is more
+// likely an inherited image setting than a live agent.
 type ciFingerprint struct {
 	Var      string
 	Provider string
@@ -84,8 +70,7 @@ var ciFingerprints = []ciFingerprint{
 }
 
 // genericCIVar is set by essentially every CI system, including all of the above,
-// so on its own it means "some CI we cannot name" and folded into the provider
-// list it would be a near-constant member. Reported separately for that reason.
+// so on its own without a vendor match it means "some CI we cannot name".
 const genericCIVar = "CI"
 
 // ---------------------------------------------------------------------------
@@ -138,10 +123,6 @@ type procFingerprint struct {
 
 // Some keys below are weak identities — "q" (Amazon Q, but also a one-letter
 // binary), "amp", "code" (VS Code, but also unrelated tools) and "studio".
-// There's no Ambiguous flag for these: the payload carries the matched KEY,
-// not the vendor, so ambiguity is a property analytics can already derive
-// from the key itself.
-
 var procFingerprints = map[string]procFingerprint{
 	// Agents that ship as a named executable — the happy path.
 	"claude":       {Vendor: "claude-code", Kind: kindAgent},
@@ -156,30 +137,26 @@ var procFingerprints = map[string]procFingerprint{
 	"crush":        {Vendor: "crush", Kind: kindAgent},
 	"amp":          {Vendor: "amp", Kind: kindAgent},
 	"q":            {Vendor: "amazon-q", Kind: kindAgent},
-	// Devin's filesystem-marker detection was dropped in Phase 1; if it also
-	// ships a named CLI process, add a row here.
 
 	// Editors that host agents. Presence means "agent-capable environment",
-	// not "agent-initiated call" — a human using the built-in terminal looks
-	// identical. Reported separately for exactly that reason.
+	// not "agent-initiated call".
 	"cursor":   {Vendor: "cursor", Kind: kindIDEHost},
 	"code":     {Vendor: "vscode", Kind: kindIDEHost},
 	"windsurf": {Vendor: "windsurf", Kind: kindIDEHost},
 	"zed":      {Vendor: "zed", Kind: kindIDEHost},
 
-	// JetBrains ships one launcher per product; "jetbrains" is never a process
-	// basename. The version-suffix rule below strips Windows' "64" bitness
-	// suffix, so these rows also cover idea64/rider64/... without a second row
-	// per product.
+	// JetBrains ships one launcher per product; "jetbrains" is never a basename.
+	// The version-suffix rule below also covers idea64/rider64 (Windows bitness).
 	"idea":     {Vendor: "jetbrains", Kind: kindIDEHost},
 	"pycharm":  {Vendor: "jetbrains", Kind: kindIDEHost},
 	"goland":   {Vendor: "jetbrains", Kind: kindIDEHost},
 	"webstorm": {Vendor: "jetbrains", Kind: kindIDEHost},
-	"phpstorm": {Vendor: "jetbrains", Kind: kindIDEHost}, "rubymine": {Vendor: "jetbrains", Kind: kindIDEHost},
-	"clion": {Vendor: "jetbrains", Kind: kindIDEHost}, "rider": {Vendor: "jetbrains", Kind: kindIDEHost},
+	"phpstorm": {Vendor: "jetbrains", Kind: kindIDEHost},
+	"rubymine": {Vendor: "jetbrains", Kind: kindIDEHost},
+	"clion":    {Vendor: "jetbrains", Kind: kindIDEHost},
+	"rider":    {Vendor: "jetbrains", Kind: kindIDEHost},
 	"datagrip": {Vendor: "jetbrains", Kind: kindIDEHost},
-	// Android Studio is IntelliJ-derived. "studio" is a common enough word to be
-	// a weak identity; see the note above the procFingerprint type.
+	// Android Studio is IntelliJ-derived; "studio" is a weak identity (see above).
 	"studio": {Vendor: "jetbrains", Kind: kindIDEHost},
 
 	// Interpreters: the name identifies nothing, so argv is the only evidence.
@@ -189,12 +166,10 @@ var procFingerprints = map[string]procFingerprint{
 	"python": {Kind: kindInterpreter},
 	"ruby":   {Kind: kindInterpreter},
 	"java":   {Kind: kindInterpreter},
-	// Versioned basenames ("python3.13") aren't rows here — the version-suffix
-	// rule below resolves them to this stem.
-	// uv/uvx: a mainstream install path for Python-packaged agents (incl.
-	// aider). Interpreter rather than wrapper because the program run is named
-	// in their argv (`uv tool run aider`), which a wrapper kind would exclude
-	// from matching.
+	// Versioned basenames ("python3.13") resolve to the stem via the rule below.
+	// uv/uvx: a common install path for Python agents (e.g. aider). Interpreter,
+	// not wrapper, because the program is named in argv (`uv tool run aider`) — a
+	// wrapper kind would exclude that from matching.
 	"uv": {Kind: kindInterpreter}, "uvx": {Kind: kindInterpreter},
 
 	// Expected intermediaries. Keep walking.
@@ -208,9 +183,8 @@ var procFingerprints = map[string]procFingerprint{
 	"just": {Kind: kindWrapper}, "xargs": {Kind: kindWrapper}, "timeout": {Kind: kindWrapper},
 	"env": {Kind: kindWrapper}, "sandbox-exec": {Kind: kindWrapper}, "sudo": {Kind: kindWrapper},
 
-	// Cursor's sandbox helper, applied to agent-run commands but NOT the
-	// integrated terminal — unlike the generic wrappers above, its presence is
-	// itself corroborating provenance evidence.
+	// Cursor's sandbox helper, applied to agent commands but not the integrated
+	// terminal — so its presence is itself corroborating evidence.
 	"cursorsandbox": {Vendor: "cursor", Kind: kindWrapper},
 
 	"alacritty": {Kind: kindTerminal}, "iterm2": {Kind: kindTerminal},
@@ -225,31 +199,24 @@ var procFingerprints = map[string]procFingerprint{
 }
 
 // ---------------------------------------------------------------------------
-// Signal: editor helper processes, classified by shape rather than by name
+// Signal: editor helper processes, matched by the Electron " helper" suffix
 // ---------------------------------------------------------------------------
 
-// Electron packages its child processes as sibling .app bundles named
-// "<Product> Helper[ (Role)]", so an editor helper in the ancestry still means
-// "we're inside that editor" even when the editor's own basename never
-// appears. A suffix rule rather than table rows so an editor we've never seen
-// is still recognized (vendor unknown) on first contact.
+// Electron names child processes "<Product> Helper[ (Role)]", so a helper in the
+// ancestry means we're inside that editor even when the editor's own basename
+// never appears. A suffix rule, not table rows, so an unseen fork still registers
+// (vendor unknown) on first contact.
 const helperSuffix = " helper"
 
-// resolveFingerprint identifies a process from everything we observed about
-// it, in decreasing order of how directly the evidence names the program: the
-// executable basename, then argv[0]'s basename, then the directories the
-// executable sits in.
+// resolveFingerprint identifies a process by, in order, its executable basename,
+// argv[0]'s basename, then the directories the executable sits in — each tried
+// only if the previous missed, and each returning a table KEY, never an observed
+// string.
 //
-// The basename alone is not enough: Claude Code's native install is
-// .local/share/claude/versions/2.1.231 — the basename is a bare version, and
-// argv[0] is a bare "claude" that no pattern should match (a bare "claude"
-// pattern would fire on any file of that name). Without the path-segment
-// fallback, this install is never attributed by ancestry on any platform —
-// it lands as an anonymous entry in Unattributed.
-//
-// Each step below is tried only when the previous found nothing, and every
-// one returns a table KEY, so a match here is still vocabulary, never an
-// observed string.
+// The path fallback matters because Claude Code's native install names the binary
+// by version (.local/share/claude/versions/2.1.231): the basename is a bare
+// version and argv[0] a bare "claude", so without it the install is never
+// attributed by ancestry.
 func resolveFingerprint(info ProcInfo) (procFingerprint, string, bool) {
 	if fp, key, ok := lookupFingerprint(normalizeName(info.Name)); ok {
 		return fp, key, true
@@ -274,24 +241,18 @@ func resolveFingerprint(info ProcInfo) (procFingerprint, string, bool) {
 // built from. A leading "v" is tolerated: "v20.11.0".
 const versionSegmentChars = "0123456789."
 
-// maxPathSegmentHops is how far above the executable to look. Two reaches the
-// product directory of the layout that motivated this — <product>/versions/<ver>
-// — and stops well short of a home directory or a checkout root.
+// maxPathSegmentHops is how far above the executable to look: two reaches
+// <product>/versions/<ver> and stops short of a home dir or checkout root.
 const maxPathSegmentHops = 2
 
-// lookupVersionedPath resolves a program whose basename is a version by
-// reading the directories it sits in.
+// lookupVersionedPath resolves a program whose basename is a version by reading
+// the directories it sits in.
 //
-// Deliberately triggered only by a version-shaped basename, not by "the
-// basename did not resolve" — a rule that searched every unrecognized
-// binary's path would attribute an agent to anyone whose username is
-// "claude" or who has a checkout at ~/dev/cursor.
-//
-// Restricted to argv-eligible kinds, since a path segment is weaker evidence
-// than a basename and a wrong guess is asymmetric: typing a process
-// kindIDEHost or kindWrapper removes its argv eligibility, converting a
-// counted Unattributed entry into an invisible miss. This restriction means
-// the rule can only ever add an attribution, never delete a signal.
+// Triggered only by a version-shaped basename — a rule that searched every
+// unrecognized binary's path would attribute an agent to anyone with a checkout
+// at ~/dev/cursor. Restricted to argv-eligible kinds so it can only ever add an
+// attribution: typing a kindIDEHost/kindWrapper process would strip its argv
+// eligibility and turn a counted miss into an invisible one.
 func lookupVersionedPath(path string) (procFingerprint, string, bool) {
 	segments := strings.FieldsFunc(strings.ToLower(strings.TrimSpace(path)), func(r rune) bool {
 		return r == '/' || r == '\\'
@@ -328,14 +289,10 @@ func isVersionSegment(s string) bool {
 	return strings.ContainsAny(s, "0123456789")
 }
 
-// lookupFingerprint resolves a normalized basename to a fingerprint,
-// preferring the exact table, then the version-suffix rule, then the
-// Electron helper rule.
-//
-// key is the table key that matched, or "" when the match came from the
-// helper shape rule rather than a row — a key is vocabulary licensed to be
-// recorded (see walk), whereas the observed basename is not, which is why a
-// versioned name resolves to its STEM here rather than reporting itself.
+// lookupFingerprint resolves a normalized basename, preferring the exact table,
+// then the version-suffix rule, then the Electron helper rule. key is the matched
+// table key, or "" when the helper rule matched — only a key is licensed to be
+// recorded, which is also why a versioned name resolves to its stem.
 func lookupFingerprint(name string) (procFingerprint, string, bool) {
 	if fp, ok := procFingerprints[name]; ok {
 		return fp, name, true
@@ -351,16 +308,11 @@ func lookupFingerprint(name string) (procFingerprint, string, bool) {
 // built from: "python3.13", "idea64".
 const versionSuffixChars = "0123456789."
 
-// lookupVersionedName resolves a versioned basename to the table stem it
-// belongs to — "python3.13" → "python", "idea64" → "idea". A rule rather
-// than table rows, since enumerating means every new version is a silent
-// miss until someone notices.
-//
-// Restricted to interpreters and editor hosts deliberately: those are the
-// kinds whose real basenames carry versions, and neither is an agent
-// attribution. Trimming digits off an unrecognized binary until it landed on
-// an agent row would fabricate a vendor — the same error the argv precision
-// guards exist to prevent.
+// lookupVersionedName resolves a versioned basename to its table stem
+// ("python3.13" → "python", "idea64" → "idea"), so new versions aren't silent
+// misses. Restricted to interpreters and editor hosts — the kinds whose basenames
+// carry versions, neither an agent attribution; trimming digits off an unknown
+// binary until it hit an agent row would fabricate a vendor.
 func lookupVersionedName(name string) (procFingerprint, string, bool) {
 	stem := strings.TrimRight(name, versionSuffixChars)
 	if stem == name || stem == "" {
@@ -374,16 +326,15 @@ func lookupVersionedName(name string) (procFingerprint, string, bool) {
 }
 
 func classifyEditorHelper(name string) (procFingerprint, bool) {
-	// "code helper (plugin)" → product "code"; the role is discarded — any
-	// editor helper counts only as "we're inside that editor".
+	// "code helper (plugin)" → "code"; the role is discarded — a helper only
+	// means "we're inside that editor".
 	product, ok := splitHelperName(name)
 	if !ok {
 		return procFingerprint{}, false
 	}
 
-	// Vendor comes from the existing editor rows, so "cursor helper" attributes
-	// to the same vendor id as "cursor" itself. An unrecognized product yields
-	// an empty vendor but is still a known IDE host.
+	// Vendor from the editor row if we have one ("cursor helper" → cursor); an
+	// unknown product is still a known IDE host, just vendorless.
 	var vendor string
 	if fp, known := procFingerprints[product]; known && fp.Kind == kindIDEHost {
 		vendor = fp.Vendor
@@ -391,9 +342,8 @@ func classifyEditorHelper(name string) (procFingerprint, bool) {
 	return procFingerprint{Vendor: vendor, Kind: kindIDEHost}, true
 }
 
-// splitHelperName recognizes "<product> helper" and "<product> helper (<role>)",
-// returning the product. The product must be non-empty, so a bare "helper" is
-// not an editor helper. Any "(<role>)" suffix is stripped and ignored.
+// splitHelperName returns the product from "<product> helper[ (role)]", stripping
+// any "(role)". A bare "helper" (empty product) is not a match.
 func splitHelperName(name string) (string, bool) {
 	rest := name
 	if i := strings.IndexByte(rest, '('); i >= 0 {
@@ -410,29 +360,17 @@ func splitHelperName(name string) (string, bool) {
 // Signal: command line, for agents whose executable name says nothing
 // ---------------------------------------------------------------------------
 
-// Matched as a lowercased substring against the identity POSITIONS of the
-// argv of any ancestor argvEligible() admits — argv[0] for an unknown
-// basename, argv[0] plus the first few non-flag arguments for a host whose
-// arguments name what it is running. See argvIdentityFields. Ordered: first
-// match wins.
+// Matched as a lowercased substring against the identity POSITIONS of an
+// argv-eligible ancestor (see argvIdentityFields); first match wins. This table
+// carries most of the recall, since agents are usually node scripts.
 //
-// This table carries most of the recall, since the modal packaging for an
-// agent is a node script. The guards this approval rests on:
+// Safe because matching is against THIS fixed list only (no heuristics); only the
+// Pattern and Vendor are emitted, never raw argv (see AncestorMatch); and
+// argvEligible / argvIdentityFields keep matching off user-authored command text.
 //
-//  1. Matching is against THIS fixed list only — no heuristic, no regex over
-//     free text, no "looks like an agent" inference.
-//  2. What gets emitted is the Pattern and Vendor, both table entries. Raw
-//     argv never enters a payload; see AncestorMatch.
-//  3. argvEligible() keeps matching off shells/terminals/wrappers (whose argv
-//     is user-authored), and argvIdentityFields() keeps it off the argument
-//     positions of everything else.
-//
-// Deliberately absent: cody, continue, tabby — editor extensions with no CLI
-// of their own, so there is no process or argv for a pattern to match.
-//
-// Patterns should stay specific enough to be identities: a bare "claude"
-// would match a filename in shell history, while "@anthropic-ai/claude-code"
-// is an installed package path that effectively cannot occur by accident.
+// Patterns must be specific enough to be identities — "@anthropic-ai/claude-code"
+// can't occur by accident, a bare "claude" would match shell history. Editor
+// extensions with no CLI (cody, continue, tabby) are absent: no argv to match.
 type cmdlineFingerprint struct {
 	Pattern string
 	Vendor  string
