@@ -15,8 +15,9 @@ import "testing"
 // the editor helper's name is caught by its env var, not by ancestry.
 
 // A VS Code editor helper in the ancestry is reported as an IDE host, even
-// though the editor's own `code` process is deeper up. Classification is by the
-// Electron " helper" suffix, so a fork we have never seen is still recognized.
+// though the editor's own `code` process is deeper up. The helper resolves to
+// its editor's table key, so the recorded name is "code", not the observed
+// helper basename.
 func TestVSCodeHelperInAncestryIsIDEHost(t *testing.T) {
 	src := fakeSource{
 		76073: {Pid: 76073, Ppid: 76067, Name: "agentdetect"},
@@ -29,9 +30,16 @@ func TestVSCodeHelperInAncestryIsIDEHost(t *testing.T) {
 	if res.Signals.IDEHost == nil || res.Signals.IDEHost.Vendor != "vscode" {
 		t.Fatalf("ide_host = %+v, want vscode", res.Signals.IDEHost)
 	}
-	// The helper is the nearest editor process, so it is what IDEHost records.
+	// The helper is the nearest editor process, so it is what IDEHost records —
+	// resolved to the editor's key, which is also what reaches the wire.
 	if res.Signals.IDEHost.Depth != 2 {
 		t.Errorf("ide_host depth = %d, want 2", res.Signals.IDEHost.Depth)
+	}
+	if res.Signals.IDEHost.Name != "code" {
+		t.Errorf("ide_host name = %q, want %q", res.Signals.IDEHost.Name, "code")
+	}
+	if got := res.Attributes().IDEHost; got == nil || *got != "code" {
+		t.Errorf("attributes ide_host = %v, want %q", got, "code")
 	}
 }
 

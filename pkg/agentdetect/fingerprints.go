@@ -198,34 +198,28 @@ var procFingerprints = map[string]procFingerprint{
 	"init": {Kind: kindInit}, "systemd": {Kind: kindInit}, "launchd": {Kind: kindInit},
 }
 
-// ---------------------------------------------------------------------------
-// Signal: editor helper processes, matched by the Electron " helper" suffix
-// ---------------------------------------------------------------------------
-
 // Electron names child processes "<Product> Helper[ (Role)]". Matching the suffix
-// maps any role of a known editor's helper to that editor; classifyEditorHelper
-// gates it on a known editor so non-editor Electron apps aren't swept in.
+// maps a helper to that editor; classifyEditorHelper gates it on known Electron editors
+// so non-editor Electron apps aren't swept in.
 const helperSuffix = " helper"
 
-// resolveFingerprint identifies a process by, in order, its executable basename,
-// argv[0]'s basename, then the directories the executable sits in — each tried
-// only if the previous missed, and each returning a table KEY, never an observed
-// string.
+// resolveFingerprint identifies a process by (in order): its executable basename,
+// argv[0]'s basename, then the directories the executable sits in. Each is tried
+// only if the previous missed, and each returns a fingerprint table key.
 //
-// The path fallback matters because Claude Code's native install names the binary
-// by version (.local/share/claude/versions/2.1.231): the basename is a bare
-// version and argv[0] a bare "claude", so without it the install is never
-// attributed by ancestry.
+// Note: The path fallback matters because manual testing found that Claude Code's
+// native install names the binary by version (.local/share/claude/versions/2.1.231):
+// the basename is a bare version and argv[0] a bare "claude", so without the fallback
+// Claude Code installs were never attributed by ancestry.
 func resolveFingerprint(info ProcInfo) (procFingerprint, string, bool) {
 	if fp, key, ok := lookupFingerprint(normalizeName(info.Name)); ok {
 		return fp, key, true
 	}
 
 	// argv[0] is the program's own identity claim, not user-authored command
-	// text — a shell's argv[0] is the shell, not what it was asked to run.
+	// text, i.e. a shell's argv[0] is the shell, not what it was asked to run.
 	//
-	// Not authoritative enough to come first: it's settable (exec -a), and a
-	// login shell presents as "-zsh", matching nothing. Only consulted once the
+	// Not authoritative enough to come first. Only consulted once the
 	// real basename has already failed.
 	if len(info.Cmdline) > 0 {
 		if fp, key, ok := lookupFingerprint(normalizeName(info.Cmdline[0])); ok {
@@ -236,22 +230,20 @@ func resolveFingerprint(info ProcInfo) (procFingerprint, string, bool) {
 	return lookupVersionedPath(info.Name)
 }
 
-// versionSegmentChars are what a path segment made of nothing but a version is
-// built from. A leading "v" is tolerated: "v20.11.0".
+// versionSegmentChars are the characters a purely-version path segment is made
+// of. A leading "v" is tolerated: "v20.11.0".
 const versionSegmentChars = "0123456789."
 
 // maxPathSegmentHops is how far above the executable to look: two reaches
-// <product>/versions/<ver> and stops short of a home dir or checkout root.
+// <product>/versions/<ver>; stops short of a home dir or checkout root.
 const maxPathSegmentHops = 2
 
 // lookupVersionedPath resolves a program whose basename is a version by reading
 // the directories it sits in.
 //
-// Triggered only by a version-shaped basename — a rule that searched every
-// unrecognized binary's path would attribute an agent to anyone with a checkout
+// Triggered only by a *version-shaped* basename to skip false positives like a checkout
 // at ~/dev/cursor. Restricted to argv-eligible kinds so it can only ever add an
-// attribution: typing a kindIDEHost/kindWrapper process would strip its argv
-// eligibility and turn a counted miss into an invisible one.
+// attribution.
 func lookupVersionedPath(path string) (procFingerprint, string, bool) {
 	segments := strings.FieldsFunc(strings.ToLower(strings.TrimSpace(path)), func(r rune) bool {
 		return r == '/' || r == '\\'
@@ -288,10 +280,10 @@ func isVersionSegment(s string) bool {
 	return strings.ContainsAny(s, "0123456789")
 }
 
-// lookupFingerprint resolves a normalized basename, preferring the exact table,
+// lookupFingerprint resolves a normalized basename, preferring the exact table match,
 // then the version-suffix rule, then the Electron helper rule. key is the matched
-// table key, or "" when the helper rule matched — only a key is licensed to be
-// recorded, which is also why a versioned name resolves to its stem.
+// table key — always the editor's own key ("code"), never the observed helper
+// basename ("code helper (plugin)"), so only table vocabulary is ever recorded.
 func lookupFingerprint(name string) (procFingerprint, string, bool) {
 	if fp, ok := procFingerprints[name]; ok {
 		return fp, name, true
@@ -299,8 +291,7 @@ func lookupFingerprint(name string) (procFingerprint, string, bool) {
 	if fp, key, ok := lookupVersionedName(name); ok {
 		return fp, key, true
 	}
-	fp, ok := classifyEditorHelper(name)
-	return fp, "", ok
+	return classifyEditorHelper(name)
 }
 
 // versionSuffixChars are the characters a trailing version or bitness suffix is
@@ -324,12 +315,13 @@ func lookupVersionedName(name string) (procFingerprint, string, bool) {
 	return fp, stem, true
 }
 
-func classifyEditorHelper(name string) (procFingerprint, bool) {
-	// "code helper (plugin)" → "code"; the role is discarded — a helper only
-	// means "we're inside that editor".
+// classifyEditorHelper resolves an Electron helper basename to its editor,
+// returning the editor's table key ("code helper (plugin)" → "code"); the role
+// is discarded — a helper only means "we're inside that editor".
+func classifyEditorHelper(name string) (procFingerprint, string, bool) {
 	product, ok := splitHelperName(name)
 	if !ok {
-		return procFingerprint{}, false
+		return procFingerprint{}, "", false
 	}
 
 	// Gate on a KNOWN editor. The " helper" suffix is Electron's, not any
@@ -338,9 +330,9 @@ func classifyEditorHelper(name string) (procFingerprint, bool) {
 	// signal. An unrecognized product falls through to kindUnknown instead.
 	fp, known := procFingerprints[product]
 	if !known || fp.Kind != kindIDEHost {
-		return procFingerprint{}, false
+		return procFingerprint{}, "", false
 	}
-	return procFingerprint{Vendor: fp.Vendor, Kind: kindIDEHost}, true
+	return fp, product, true
 }
 
 // splitHelperName returns the product from "<product> helper[ (role)]", stripping

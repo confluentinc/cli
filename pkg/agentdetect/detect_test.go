@@ -643,15 +643,16 @@ func TestChainRecordsOnlyTableKeyNames(t *testing.T) {
 				e.Depth, e.Name)
 		}
 	}
-	// Specifically: the unknown binary and the suffix-matched helper contribute a
-	// Kind but no name.
+	// Specifically: the unknown binary contributes a Kind but no name, and the
+	// suffix-matched helper resolves to its editor's table key ("code"), never the
+	// observed helper basename.
 	for _, e := range res.Walk.Chain {
 		if e.Depth == 2 && e.Name != "" {
 			t.Errorf("unknown binary recorded name %q, want empty", e.Name)
 		}
 		if e.Depth == 3 {
-			if e.Name != "" {
-				t.Errorf("suffix-matched helper recorded name %q, want empty", e.Name)
+			if e.Name != "code" {
+				t.Errorf("suffix-matched helper recorded name %q, want %q", e.Name, "code")
 			}
 			if e.Kind != kindIDEHost {
 				t.Errorf("depth 3 kind = %q, want %q", e.Kind, kindIDEHost)
