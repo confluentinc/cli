@@ -202,10 +202,9 @@ var procFingerprints = map[string]procFingerprint{
 // Signal: editor helper processes, matched by the Electron " helper" suffix
 // ---------------------------------------------------------------------------
 
-// Electron names child processes "<Product> Helper[ (Role)]", so a helper in the
-// ancestry means we're inside that editor even when the editor's own basename
-// never appears. A suffix rule, not table rows, so an unseen fork still registers
-// (vendor unknown) on first contact.
+// Electron names child processes "<Product> Helper[ (Role)]". Matching the suffix
+// maps any role of a known editor's helper to that editor; classifyEditorHelper
+// gates it on a known editor so non-editor Electron apps aren't swept in.
 const helperSuffix = " helper"
 
 // resolveFingerprint identifies a process by, in order, its executable basename,
@@ -333,13 +332,15 @@ func classifyEditorHelper(name string) (procFingerprint, bool) {
 		return procFingerprint{}, false
 	}
 
-	// Vendor from the editor row if we have one ("cursor helper" → cursor); an
-	// unknown product is still a known IDE host, just vendorless.
-	var vendor string
-	if fp, known := procFingerprints[product]; known && fp.Kind == kindIDEHost {
-		vendor = fp.Vendor
+	// Gate on a KNOWN editor. The " helper" suffix is Electron's, not any
+	// editor's, so Slack, Discord, Hyper (a terminal) and every other Electron
+	// app match the shape too — classifying those as IDEHost would pollute the
+	// signal. An unrecognized product falls through to kindUnknown instead.
+	fp, known := procFingerprints[product]
+	if !known || fp.Kind != kindIDEHost {
+		return procFingerprint{}, false
 	}
-	return procFingerprint{Vendor: vendor, Kind: kindIDEHost}, true
+	return procFingerprint{Vendor: fp.Vendor, Kind: kindIDEHost}, true
 }
 
 // splitHelperName returns the product from "<product> helper[ (role)]", stripping

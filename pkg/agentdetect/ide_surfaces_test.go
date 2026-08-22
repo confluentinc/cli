@@ -64,20 +64,20 @@ func TestInEditorAgentUnderHelperIsNotAttributed(t *testing.T) {
 	}
 }
 
-// Helper classification is by the Electron " helper" suffix, not an enumerated
-// list, so a VS Code fork we have never seen is still an IDE host on first
-// contact — with its vendor where an editor row supplies one, empty otherwise.
-// Any "(role)" suffix is discarded: Phase 1 keeps only "in an editor".
-func TestHelperClassificationGeneralizesAcrossForks(t *testing.T) {
-	forks := map[string]string{ // helper basename → expected vendor
-		"code helper (plugin)":       "vscode",
-		"cursor helper (plugin)":     "cursor",
-		"windsurf helper (plugin)":   "windsurf",
-		"code helper":                "vscode",
-		"code helper (renderer)":     "vscode",
-		"someeditor helper (plugin)": "", // unknown fork: known IDE host, unknown vendor
+// The " helper" suffix matches a known editor's child regardless of role, so any
+// "(role)" suffix is discarded and Cursor/Windsurf (VS Code forks) are covered by
+// their own rows. It is gated on a known editor: the suffix is Electron's, not an
+// editor's, so classifying every helper would sweep in non-editor Electron apps —
+// see TestNonEditorElectronHelpersAreNotIDEHosts.
+func TestHelperClassificationMatchesKnownEditors(t *testing.T) {
+	editors := map[string]string{ // helper basename → expected vendor
+		"code helper (plugin)":     "vscode",
+		"cursor helper (plugin)":   "cursor",
+		"windsurf helper (plugin)": "windsurf",
+		"code helper":              "vscode",
+		"code helper (renderer)":   "vscode",
 	}
-	for name, wantVendor := range forks {
+	for name, wantVendor := range editors {
 		fp, _, ok := lookupFingerprint(name)
 		if !ok {
 			t.Errorf("lookupFingerprint(%q): no match", name)
@@ -90,11 +90,24 @@ func TestHelperClassificationGeneralizesAcrossForks(t *testing.T) {
 			t.Errorf("lookupFingerprint(%q).Vendor = %q, want %q", name, fp.Vendor, wantVendor)
 		}
 	}
+}
 
-	// Must not swallow unrelated names that merely contain the word.
-	for _, name := range []string{"helper", "helper (plugin)", "myhelper"} {
+// The " helper" suffix is an Electron packaging convention, not an editor one, so
+// a non-editor Electron app (Slack, Discord) — and Hyper, itself a terminal — must
+// NOT be classified as an IDE host just for having a helper child. An editor we
+// have no row for falls through the same way. Bare "helper" is not a match either.
+func TestNonEditorElectronHelpersAreNotIDEHosts(t *testing.T) {
+	for _, name := range []string{
+		"slack helper (renderer)",
+		"discord helper (gpu)",
+		"hyper helper",
+		"someeditor helper (plugin)", // an editor, but one we have no row for
+		"helper",
+		"helper (plugin)",
+		"myhelper",
+	} {
 		if fp, _, ok := lookupFingerprint(name); ok && fp.Kind == kindIDEHost {
-			t.Errorf("lookupFingerprint(%q) = %+v, must not classify as an editor helper", name, fp)
+			t.Errorf("lookupFingerprint(%q) = %+v, must not classify as an IDE host", name, fp)
 		}
 	}
 }
