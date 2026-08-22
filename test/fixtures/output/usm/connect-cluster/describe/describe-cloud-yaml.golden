@@ -1,0 +1,7 @@
+id: usmcc-cloud
+confluent_platform_connect_cluster: connect-group-cloud
+kafka_cluster_id: lkc-abc123
+usm_kafka_cluster_id: ""
+environment: env-00000
+cloud: AWS
+region: us-east-1

@@ -1,0 +1,9 @@
+{
+  "id": "usmcc-f3a90de",
+  "confluent_platform_connect_cluster": "test-name",
+  "kafka_cluster_id": "lkc-abc123",
+  "usm_kafka_cluster_id": "usmkc-00000",
+  "environment": "env-596",
+  "cloud": "AWS",
+  "region": "us-east-1"
+}

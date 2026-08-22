@@ -1,5 +1,4 @@
-Create a USM Connect cluster.
-
+Error: if any flags in the group [confluent-platform-kafka-cluster kafka-cluster] are set none of the others can be; [confluent-platform-kafka-cluster kafka-cluster] were all set
 Usage:
   confluent usm connect-cluster create <confluent-platform-connect-cluster-id> [flags]
 
@@ -24,3 +23,4 @@ Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
