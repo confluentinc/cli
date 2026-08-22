@@ -282,8 +282,7 @@ func isVersionSegment(s string) bool {
 
 // lookupFingerprint resolves a normalized basename, preferring the exact table match,
 // then the version-suffix rule, then the Electron helper rule. key is the matched
-// table key — always the editor's own key ("code"), never the observed helper
-// basename ("code helper (plugin)"), so only table vocabulary is ever recorded.
+// table key.
 func lookupFingerprint(name string) (procFingerprint, string, bool) {
 	if fp, ok := procFingerprints[name]; ok {
 		return fp, name, true
@@ -300,9 +299,7 @@ const versionSuffixChars = "0123456789."
 
 // lookupVersionedName resolves a versioned basename to its table stem
 // ("python3.13" → "python", "idea64" → "idea"), so new versions aren't silent
-// misses. Restricted to interpreters and editor hosts — the kinds whose basenames
-// carry versions, neither an agent attribution; trimming digits off an unknown
-// binary until it hit an agent row would fabricate a vendor.
+// misses. Restricted to interpreters and editor hosts.
 func lookupVersionedName(name string) (procFingerprint, string, bool) {
 	stem := strings.TrimRight(name, versionSuffixChars)
 	if stem == name || stem == "" {
@@ -316,18 +313,16 @@ func lookupVersionedName(name string) (procFingerprint, string, bool) {
 }
 
 // classifyEditorHelper resolves an Electron helper basename to its editor,
-// returning the editor's table key ("code helper (plugin)" → "code"); the role
-// is discarded — a helper only means "we're inside that editor".
+// returning the editor's table key ("code helper (plugin)" → "code"); only
+// means "we're inside that editor".
 func classifyEditorHelper(name string) (procFingerprint, string, bool) {
 	product, ok := splitHelperName(name)
 	if !ok {
 		return procFingerprint{}, "", false
 	}
 
-	// Gate on a KNOWN editor. The " helper" suffix is Electron's, not any
-	// editor's, so Slack, Discord, Hyper (a terminal) and every other Electron
-	// app match the shape too — classifying those as IDEHost would pollute the
-	// signal. An unrecognized product falls through to kindUnknown instead.
+	// Gate on a known code editor, not any Electron app.
+	// An unrecognized product falls through to kindUnknown.
 	fp, known := procFingerprints[product]
 	if !known || fp.Kind != kindIDEHost {
 		return procFingerprint{}, "", false
@@ -350,20 +345,14 @@ func splitHelperName(name string) (string, bool) {
 }
 
 // ---------------------------------------------------------------------------
-// Signal: command line, for agents whose executable name says nothing
+// Signal: command line, for agents whose executable name is ambiguous
 // ---------------------------------------------------------------------------
 
 // Matched as a lowercased substring against the identity POSITIONS of an
-// argv-eligible ancestor (see argvIdentityFields); first match wins. This table
-// carries most of the recall, since agents are usually node scripts.
+// argv-eligible ancestor (see argvIdentityFields); first match wins.
 //
-// Safe because matching is against THIS fixed list only (no heuristics); only the
-// Pattern and Vendor are emitted, never raw argv (see AncestorMatch); and
-// argvEligible / argvIdentityFields keep matching off user-authored command text.
-//
-// Patterns must be specific enough to be identities — "@anthropic-ai/claude-code"
-// can't occur by accident, a bare "claude" would match shell history. Editor
-// extensions with no CLI (cody, continue, tabby) are absent: no argv to match.
+// Matching is against this fixed list only; only the Pattern and Vendor are emitted;
+// argvEligible / argvIdentityFields keep it from counting user-authored command text.
 type cmdlineFingerprint struct {
 	Pattern string
 	Vendor  string
