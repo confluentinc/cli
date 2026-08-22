@@ -95,6 +95,9 @@ func handleKafkaRestLicenses(t *testing.T) http.HandlerFunc {
 			})
 			require.NoError(t, err)
 		case http.MethodPut:
+			// The CLI always sends dry_run as an explicit query parameter.
+			require.Contains(t, []string{"true", "false"}, r.URL.Query().Get("dry_run"))
+
 			var req cpkafkarestv3.UpdateLicenseRequestData
 			require.NoError(t, json.NewDecoder(r.Body).Decode(&req))
 			require.NotEmpty(t, req.LicenseJwt)

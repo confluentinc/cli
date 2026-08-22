@@ -430,6 +430,7 @@ func (s *CLITestSuite) TestKafkaLicense() {
 		{args: fmt.Sprintf("kafka license update --license test/fixtures/input/kafka/license/license.jwt --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/update.golden"},
 		{args: fmt.Sprintf("kafka license update --license fake.license.jwt --dry-run --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/update-dry-run.golden"},
 		{args: fmt.Sprintf("kafka license update --license fake.license.jwt --url %s -o json", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/update-json.golden"},
+		{args: fmt.Sprintf("kafka license update --license fake.license.jwt --url %s -o yaml", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/update-yaml.golden"},
 		{args: fmt.Sprintf("kafka license update --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/update-no-license.golden", exitCode: 1},
 		{args: fmt.Sprintf(`kafka license update --license "   " --url %s`, s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/license/update-blank-jwt.golden", exitCode: 1},
 	}
