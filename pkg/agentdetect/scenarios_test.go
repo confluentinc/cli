@@ -2,18 +2,17 @@ package agentdetect
 
 import "errors"
 
-// Synthetic process trees, so every failure mode can be demonstrated locally
-// without installing six different agents.
+// Synthetic process trees to test failure modes locally
+// without installing all the different agents.
 //
 // These drive the same Detect() code path as a live run — only the ProcSource
 // and the environment lookup are swapped. Nothing about the detection logic is
-// special-cased for them.
+// changed for them.
 
 type scenario struct {
 	Name string
-	// Desc is why the scenario exists. It is reported on failure, so a broken
-	// expectation says what behaviour was supposed to be demonstrated instead of
-	// only which name it was filed under.
+	// Desc is why the scenario exists. It is reported on failure, says what
+	// behaviour was supposed to be demonstrated.
 	Desc string
 	Tree []ProcInfo // index 0 is the CLI's parent, walking upward
 	Env  map[string]string
@@ -119,11 +118,10 @@ var scenarios = []scenario{
 			"         agent call. Reported as ide_host, deliberately not as an agent.",
 		Tree: chain("zsh", "cursor"),
 	},
-	// Four in-editor surfaces captured from real process trees: three IDE chat
-	// panels and one integrated terminal. Phase 1 reports the same thing for all
-	// of them — an editor is in the ancestry (ide_host), plus whatever env var is
-	// set. The agent-vs-human distinction is deliberately not attempted; see
-	// ide_surfaces_test.go.
+	// In-editor surfaces: three IDE chat panels and an integrated terminal captured
+	// from real process trees, plus a stale-env variant of the terminal. All report
+	// the same thing — an editor in the ancestry (ide_host) plus any env var; the
+	// agent-vs-human split is deliberately not attempted (see ide_surfaces_test.go).
 	{
 		Name: "vscode-claude-chat",
 		Desc: "Claude Code's VS Code extension. The extension launches the real CLI as a child of the\n" +
@@ -178,9 +176,9 @@ var scenarios = []scenario{
 	},
 	{
 		Name: "ide-integrated-terminal",
-		Desc: "A human typing in VS Code's integrated terminal. In Phase 1 this reports the same ide_host\n" +
-			"         as the agent surfaces above and no agent — the agent-vs-human split is not attempted.\n" +
-			"         With no env var set, this is correctly silent on the agent question.",
+		Desc: "A human typing in VS Code's integrated terminal. Reports the same ide_host as the agent\n" +
+			"         surfaces above and no agent — the agent-vs-human split is not attempted. With no env\n" +
+			"         var set, this is correctly silent on the agent question.",
 		Tree: []ProcInfo{
 			{Pid: 100, Ppid: 101, Name: "zsh"},
 			{Pid: 101, Ppid: 102, Name: "code helper", Cmdline: []string{

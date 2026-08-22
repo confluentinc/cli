@@ -2,22 +2,16 @@ package agentdetect
 
 import "testing"
 
-// IDE surfaces. The macOS chains are captured from real process trees; the Linux
-// chain is MODELED from VS Code's documented process model (Chromium re-execs one
-// binary per child role), not captured.
+// IDE surfaces. macOS chains are captured from real process trees; the Linux
+// chain is MODELED from VS Code's process model, not captured yet.
 //
-// Phase 1 keeps a single IDE signal: an editor anywhere in the ancestry means
-// "agent-capable environment" (Signals.IDEHost). We deliberately do NOT try to
-// tell an agent tool call apart from a human in the integrated terminal — that
-// distinction only exists on macOS, needs VS-Code-fork-specific process-role
-// detection, and is ambiguous even when it fires. The recall cost is pinned as
-// a test below (TestInEditorAgentUnderHelperIsNotAttributed): an agent wearing
-// the editor helper's name is caught by its env var, not by ancestry.
+// One IDE signal: an editor anywhere in the ancestry means "agent-capable
+// environment" (Signals.IDEHost); an agent wearing the helper's name is caught by
+// its env var, not ancestry (see TestInEditorAgentUnderHelperIsNotAttributed).
 
-// A VS Code editor helper in the ancestry is reported as an IDE host, even
-// though the editor's own `code` process is deeper up. The helper resolves to
-// its editor's table key, so the recorded name is "code", not the observed
-// helper basename.
+// A VS Code helper in the ancestry is an IDE host even though `code` itself is
+// deeper up. The helper resolves to its editor's key, so the recorded name is
+// "code", not the observed helper basename.
 func TestVSCodeHelperInAncestryIsIDEHost(t *testing.T) {
 	src := fakeSource{
 		76073: {Pid: 76073, Ppid: 76067, Name: "agentdetect"},
@@ -30,8 +24,7 @@ func TestVSCodeHelperInAncestryIsIDEHost(t *testing.T) {
 	if res.Signals.IDEHost == nil || res.Signals.IDEHost.Vendor != "vscode" {
 		t.Fatalf("ide_host = %+v, want vscode", res.Signals.IDEHost)
 	}
-	// The helper is the nearest editor process, so it is what IDEHost records —
-	// resolved to the editor's key, which is also what reaches the wire.
+	// Nearest editor wins, recorded as the editor's key — which also reaches the wire.
 	if res.Signals.IDEHost.Depth != 2 {
 		t.Errorf("ide_host depth = %d, want 2", res.Signals.IDEHost.Depth)
 	}
@@ -43,12 +36,9 @@ func TestVSCodeHelperInAncestryIsIDEHost(t *testing.T) {
 	}
 }
 
-// The recall cost of dropping in-editor role detection, pinned so it stays a
-// deliberate choice rather than a silent regression. An agent whose process
-// wears the editor helper's basename — VS Code runs extensions and the node
-// children they spawn as the Electron helper — is kindIDEHost, NOT
-// argv-eligible, so its argv is never read and ancestry cannot name it. The
-// env var it sets is the signal that catches it.
+// The recall cost of dropping in-editor role detection, pinned as a deliberate
+// choice: an agent running under the editor helper's basename is kindIDEHost, not
+// argv-eligible, so ancestry can't name it — the env var it sets is what catches it.
 func TestInEditorAgentUnderHelperIsNotAttributed(t *testing.T) {
 	src := fakeSource{
 		76073: {Pid: 76073, Ppid: 76067, Name: "agentdetect"},
@@ -72,10 +62,8 @@ func TestInEditorAgentUnderHelperIsNotAttributed(t *testing.T) {
 	}
 }
 
-// The " helper" suffix matches a known editor's child regardless of role, so any
-// "(role)" suffix is discarded and Cursor/Windsurf (VS Code forks) are covered by
-// their own rows. It is gated on a known editor: the suffix is Electron's, not an
-// editor's, so classifying every helper would sweep in non-editor Electron apps —
+// A known editor's helper matches regardless of role (any "(role)" is discarded);
+// Cursor/Windsurf forks are covered by their own rows. Gated on a known editor —
 // see TestNonEditorElectronHelpersAreNotIDEHosts.
 func TestHelperClassificationMatchesKnownEditors(t *testing.T) {
 	editors := map[string]string{ // helper basename → expected vendor
@@ -100,10 +88,9 @@ func TestHelperClassificationMatchesKnownEditors(t *testing.T) {
 	}
 }
 
-// The " helper" suffix is an Electron packaging convention, not an editor one, so
-// a non-editor Electron app (Slack, Discord) — and Hyper, itself a terminal — must
-// NOT be classified as an IDE host just for having a helper child. An editor we
-// have no row for falls through the same way. Bare "helper" is not a match either.
+// " helper" is an Electron convention, not an editor one, so non-editor Electron
+// apps (Slack, Discord, the Hyper terminal) and unknown editor forks must not
+// become IDE hosts. Bare "helper" is not a match either.
 func TestNonEditorElectronHelpersAreNotIDEHosts(t *testing.T) {
 	for _, name := range []string{
 		"slack helper (renderer)",
@@ -136,10 +123,8 @@ func TestEditorMainProcessIsIDEHost(t *testing.T) {
 	}
 }
 
-// On Linux/Windows the editor re-execs one `code` binary for every child role,
-// so an in-editor agent's parent is basename `code` → kindIDEHost, not
-// argv-eligible. Phase 1 makes no attempt to read the role out of --type; the
-// behavior matches macOS and the env var carries the vendor.
+// On Linux/Windows the editor re-execs one `code` binary per child role, so an
+// in-editor agent's parent is basename `code` → kindIDEHost, not argv-eligible.
 func TestLinuxInEditorIsIDEHostAndEnvCarriesVendor(t *testing.T) {
 	src := fakeSource{
 		1000: {Pid: 1000, Ppid: 1001, Name: "agentdetect"},
@@ -164,18 +149,9 @@ func TestLinuxInEditorIsIDEHostAndEnvCarriesVendor(t *testing.T) {
 	}
 }
 
-// Argv matching covers unknown-kind ancestors, not just interpreters — otherwise
-// any agent shipped under a name we have no fingerprint for is invisible even
-// when its argv names it outright. A miss is tagged with its kind so the two
-// populations stay distinguishable in telemetry.
-//
-// For an unknown basename that means argv[0] only: an unrecognized binary is far
-// more often an ordinary tool operating ON a path than an agent, so its arguments
-// are user data. The recall this gives up — an unrecognized LAUNCHER whose child
-// agent is named in an argument — is real, and it is the trade that keeps
-// `rg @anthropic-ai/claude-code` from being counted as an agent call. What is lost
-// still shows up in the unattributed-unknown count rather than vanishing, so the
-// size of the trade is measurable from production instead of assumed.
+// Argv matching covers kindUnknown ancestors & interpreters. For an
+// unknown basename that means argv[0] only — its other args are user data, so
+// `rg @anthropic-ai/claude-code` isn't counted as an agent.
 func TestUnknownAncestorsAreArgvMatchedAndCounted(t *testing.T) {
 	// Matched: an unrecognized binary invoked by its own agent install path.
 	src := fakeSource{
@@ -189,8 +165,7 @@ func TestUnknownAncestorsAreArgvMatchedAndCounted(t *testing.T) {
 		t.Fatalf("ancestor = %+v, want codex via argv[0]", res.Signals.AgentAncestor)
 	}
 
-	// The given-up half, asserted so the trade is deliberate rather than accidental:
-	// the same agent path in an ARGUMENT of an unknown binary is not attributed.
+	// The given-up half: the same path as an ARGUMENT of an unknown binary is not attributed.
 	inArg := fakeSource{
 		1000: {Pid: 1000, Ppid: 1001, Name: "zsh"},
 		1001: {Pid: 1001, Ppid: 1, Name: "some-unknown-launcher", Cmdline: []string{
@@ -207,9 +182,7 @@ func TestUnknownAncestorsAreArgvMatchedAndCounted(t *testing.T) {
 			res.Signals.Unattributed)
 	}
 
-	// Unmatched: counted as an unknown gap, kept apart from the interpreter gap
-	// so "our table is missing a vendor" and "we saw a process we can't type at
-	// all" remain separate numbers.
+	// Unmatched: counted as an unknown gap, kept separate from the interpreter gap.
 	miss := fakeSource{
 		1000: {Pid: 1000, Ppid: 1001, Name: "zsh"},
 		1001: {Pid: 1001, Ppid: 1, Name: "some-unknown-launcher", Cmdline: []string{
@@ -236,15 +209,10 @@ func TestUnknownAncestorsAreArgvMatchedAndCounted(t *testing.T) {
 	}
 }
 
-// Identity resolution beyond the executable basename.
-//
-// These are regression tests for a miss found by the field probe, not a
-// hypothetical: Claude Code's native install put the agent three frames up the
-// real ancestry with agent_ancestor null. The exact observed values are used.
+// Identity resolution beyond the executable basename. Regression tests for a real
+// miss: Claude Code's native install left agent_ancestor null. Observed values.
 
-// The install that motivated the whole rule. argv[0] resolves it, which is the
-// cheap path; TestVersionedPathResolvesWhenArgvIsUnreadable covers the case
-// where it does not.
+// The install that motivated the rule; argv[0] resolves it here, the cheap path.
 func TestNativeInstallWithAVersionedBasenameIsAttributed(t *testing.T) {
 	src := fakeSource{
 		1000: {Pid: 1000, Ppid: 1001, Name: "/bin/zsh", Cmdline: []string{"/bin/zsh"}},
@@ -268,8 +236,7 @@ func TestNativeInstallWithAVersionedBasenameIsAttributed(t *testing.T) {
 	}
 }
 
-// argv is permission-gated, and a rewritten or unreadable argv is exactly when
-// the path rule has to carry it. Same install, no argv.
+// When argv is unreadable, the path rule has to carry it. Same install, no argv.
 func TestVersionedPathResolvesWhenArgvIsUnreadable(t *testing.T) {
 	src := fakeSource{
 		1000: {Pid: 1000, Ppid: 1001, Name: "/bin/zsh"},
@@ -292,9 +259,8 @@ func TestVersionedPathResolvesWhenArgvIsUnreadable(t *testing.T) {
 	}
 }
 
-// The trigger is "the basename is a version", not "the basename is unrecognized".
-// A rule without that restriction attributes an agent to anyone whose username or
-// checkout happens to be named like one — straight into the headline number.
+// The trigger is "basename is a version", not "basename unrecognized" — otherwise a
+// username or checkout named like an agent would be attributed.
 func TestPathSegmentsAreOnlyReadForAVersionedBasename(t *testing.T) {
 	for _, path := range []string{
 		"/Users/claude/bin/mytool",       // username
@@ -313,10 +279,9 @@ func TestPathSegmentsAreOnlyReadForAVersionedBasename(t *testing.T) {
 	}
 }
 
-// A path segment is weaker evidence than a basename, and a wrong one that types a
-// process kindIDEHost or kindWrapper would REMOVE its argv eligibility, turning a
-// counted unknown into an invisible miss. Restricting the rule to argv-eligible
-// kinds means it can only ever add an attribution.
+// A path segment is weak evidence; typing a kindIDEHost/kindWrapper process would
+// strip its argv eligibility. Restricting to argv-eligible kinds means the rule
+// can only ever add an attribution.
 func TestPathSegmentsCannotDeleteASignal(t *testing.T) {
 	// "code" is a real table key, and an ineligible one.
 	src := fakeSource{
@@ -336,8 +301,7 @@ func TestPathSegmentsCannotDeleteASignal(t *testing.T) {
 	}
 }
 
-// argv[0] is an identity claim, but a weak one, and it must not outrank a real
-// basename that already resolved.
+// argv[0] is a weak identity claim; it must not outrank a resolved basename.
 func TestArgv0DoesNotOverrideAResolvedBasename(t *testing.T) {
 	src := fakeSource{
 		1000: {Pid: 1000, Ppid: 1001, Name: "/bin/zsh", Cmdline: []string{"claude"}},
@@ -353,16 +317,14 @@ func TestArgv0DoesNotOverrideAResolvedBasename(t *testing.T) {
 	}
 }
 
-// A login shell's argv[0] is "-zsh". It must not resolve to anything, and must
-// not stop the real basename from having already won.
+// A login shell's argv[0] ("-zsh") must resolve to nothing.
 func TestLoginShellArgv0IsHarmless(t *testing.T) {
 	if _, _, ok := lookupFingerprint(normalizeName("-zsh")); ok {
 		t.Error(`normalizeName("-zsh") resolved; it should match nothing`)
 	}
 }
 
-// Two hops reaches <product>/versions/<version> and stops there. Three would
-// start reading directories that have nothing to do with the program.
+// Two hops reaches <product>/versions/<ver>; three would read unrelated dirs.
 func TestPathSegmentSearchIsBounded(t *testing.T) {
 	src := fakeSource{
 		1000: {Pid: 1000, Ppid: 1001, Name: "/bin/bash"},

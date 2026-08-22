@@ -915,12 +915,8 @@ var scenarioExpectations = map[string]scenarioExpectation{
 	"xargs-fanout":      {ancestorVendor: "claude-code"},
 	"ide-terminal":      {ideHostVendor: "cursor"},
 
-	// The in-editor surfaces. Phase 1 collapses all of these to the same IDE
-	// signal (an editor is in the ancestry) plus whatever env var is set. The
-	// agent process in vscode-claude-chat wears the editor helper's basename, so
-	// it is kindIDEHost and not argv-eligible — ancestry no longer names it, and
-	// the env var is what carries the vendor. That accepted recall loss is what
-	// dropping the extension-host/pty-host role split costs.
+	// The in-editor surfaces all collapse to the same IDE signal (an editor is in
+	// the ancestry) plus whatever env var is set.
 	"vscode-claude-chat": {
 		envVendors: []string{"claude-code"}, ideHostVendor: "vscode",
 	},

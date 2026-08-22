@@ -9,13 +9,9 @@ import (
 
 // The rest of this package's tests drive Detect() against synthetic trees that
 // never touch the platform. These two exercise the real gopsutil-backed source
-// against the live process tree instead — a source that errors on every ancestor
-// still produces a well-formed, empty report, so the assertions here are about
-// the walk reaching real processes, not about what it finds in them.
-//
-// Nothing here asserts a vendor: what the tree contains depends on who runs the
-// tests and from where, so asserting on it would fail in CI or pass for the wrong
-// reason locally.
+// against the live process tree. A source that errors on every ancestor
+// still produces a well-formed, empty report; the assertions here are to confirm
+// the walk reaches real processes, not concerned with what it finds.
 
 func TestLiveSourceReadsTheRealProcessTree(t *testing.T) {
 	info, err := newProcSource().Info(os.Getpid())
@@ -33,9 +29,7 @@ func TestLiveSourceReadsTheRealProcessTree(t *testing.T) {
 		t.Error("Name is empty — the exec-path read and the name fallback both failed")
 	}
 
-	// StartTime gates the pid-reuse guard. Zero disables it, which is exactly the
-	// condition that left the guard silently off on Windows with the hand-rolled
-	// source, so it is worth failing on rather than tolerating.
+	// StartTime gates our pid-reuse guard & a zero value disables it, so it fails rather than tolerating.
 	if info.StartTime == 0 {
 		t.Error("StartTime is 0 — the pid-reuse guard is disabled on this platform")
 	}
@@ -49,9 +43,8 @@ func TestLiveWalkTerminatesAndReachesAnAncestor(t *testing.T) {
 			res.Walk.DepthReached, res.Walk.StoppedAt, res.Walk.LookupFailed)
 	}
 
-	// A real walk from a test binary terminates at init, at a terminal, or at the
-	// remote boundary. Landing on lookup_error at depth 1 is the signature of a
-	// source that cannot read anything — the failure this test is here to catch.
+	// Landing on lookup_error at depth 1 is the signature of a
+	// source that cannot read anything.
 	if res.Walk.StoppedAt == "lookup_error" && res.Walk.DepthReached <= 1 {
 		t.Errorf("walk failed immediately: stopped_at = %q at depth %d", res.Walk.StoppedAt, res.Walk.DepthReached)
 	}
@@ -71,8 +64,7 @@ func TestLiveWalkTerminatesAndReachesAnAncestor(t *testing.T) {
 }
 
 // The real source, driven through a real walk, must not put an observed process
-// name or argument into anything serializable — the same invariant the synthetic
-// test pins, checked once against live data where the names are real.
+// name or argument into anything serializable.
 func TestLiveResultSerializesNoRawObservations(t *testing.T) {
 	res := Detect(Options{KeepChain: true, ShowCmdlines: true})
 	if len(res.Walk.Chain) == 0 {
