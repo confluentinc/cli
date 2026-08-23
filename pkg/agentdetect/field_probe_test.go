@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-// This file is a manual field probe, not part of the automated test suite.
+// This file is a manual field probe; the test is skipped unless AGENTDETECT_PROBE is set.
 // TestFieldProbe runs detection against the REAL process ancestry and
 // environment of the machine it is launched on and prints what it found; it
 // asserts nothing. Use it to see what an agent or IDE surface actually looks

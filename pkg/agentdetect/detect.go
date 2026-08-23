@@ -68,8 +68,8 @@ type Signals struct {
 	// E.g. "sasst" is shell → agent → shell → shell → terminal.
 	//
 	// This is the wire carrier for Unattributed and most of WalkMeta: ancestry
-	// depth is its length, a completed walk ends in 'n' or 'r', a depth-capped
-	// walk has length == defaultMaxDepth, and 'w' positions index Wrappers.
+	// depth is its length, a depth-capped walk has length == defaultMaxDepth,
+	// and 'w' positions index Wrappers.
 	ChainShape string `json:"chain_shape"`
 
 	// Interactive is three separate bools here but one three-character string in
@@ -311,21 +311,13 @@ type walkResult struct {
 }
 
 // hardTimeoutSlack is the outer backstop above opts.Budget. walk enforces its own
-// budget cooperatively, checking the deadline between ancestor reads, but a single
-// ProcSource.Info call can block past that: on darwin, several of the underlying
-// gopsutil calls ignore their per-call context (see proc_gopsutil.go), so the
-// walk's own deadline check is never reached until that one call returns. This
-// slack bounds how long one such call may hold up the caller before boundedWalk
-// gives up on the walk and returns anyway, so Detect can never stall the command
-// the user actually ran regardless of platform syscall behavior.
+// budget, but a ProcSource.Info call can block past that. This slack bounds how long one such
+// call may hold up the caller before boundedWalk gives up on the walk and returns anyway
 const hardTimeoutSlack = 200 * time.Millisecond
 
 // boundedWalk runs walk with a hard wall-clock ceiling of opts.Budget plus
-// hardTimeoutSlack. If that ceiling is hit, the walk goroutine is abandoned, not
-// killed — the syscall it is blocked in will eventually return on its own and the
-// goroutine will exit then — but its result is discarded and never reaches the
-// caller. This is the actual enforcement of "bounded and non-fatal by
-// construction"; walk's own deadline check is necessary but not sufficient.
+// hardTimeoutSlack. If walk returns before the ceiling, boundedWalk returns its result. If the
+// ceiling is exceeded, boundedWalk returns a truncated result with StoppedAt="hard_timeout".
 func boundedWalk(opts Options) walkResult {
 	done := make(chan walkResult, 1)
 	go func() { done <- walk(opts) }()
@@ -351,11 +343,7 @@ func walk(opts Options) walkResult {
 		deadline     = time.Now().Add(opts.Budget)
 		seen         = make([]int, 0, 8)
 		pid          = opts.StartPid
-		// childStart is the start time of the nearest descendant we could read,
-		// seeded with the CLI's own so the guard also covers depth 1 (StartPid)
-		// — the one ancestor with no descendant read of its own to compare
-		// against otherwise. A failed lookup leaves it at zero, same as any
-		// other unreadable start time: the guard is disabled, not tripped.
+		// childStart is the start time of the nearest descendant we could read.
 		childStart int64
 	)
 	if self, err := opts.Source.Info(opts.SelfPid); err == nil {

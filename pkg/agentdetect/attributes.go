@@ -28,10 +28,9 @@ type Attributes struct {
 	// not. A fully redirected invocation is "---".
 	Interactive string `json:"interactive,omitempty"`
 
-	// ChainShape encodes ancestry depth, whether the walk completed (ends in
-	// 'n' or 'r'), every wrapper's position, and the entire Unattributed
-	// population — kind from the character, depth from the position. See
-	// Signals.ChainShape and Signals.Unattributed.
+	// ChainShape encodes ancestry depth, every wrapper's position, and the
+	// entire Unattributed population — kind from the character, depth from
+	// the position. See Signals.ChainShape and Signals.Unattributed.
 	ChainShape string `json:"chain_shape,omitempty"`
 
 	// Wrappers are procFingerprints keys, nearest first. Depths aren't sent

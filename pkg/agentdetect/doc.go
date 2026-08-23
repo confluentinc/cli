@@ -16,7 +16,7 @@
 // In-editor agents that set no env var and run in-process (JetBrains, Zed)
 // or as a bare node child are the main recall gap; the env signal helps cover the known ones.
 //
-// Detect method returns a Result, where every field is either a value from this
+// Detect returns a Result, where every field is either a value from this
 // package's own fixed list (a vendor id, a procKind, a fingerprint-table key)
 // or a count — never a raw observed process name, path, or argument. The one
 // exception, WalkMeta.Chain, is local-debugging-only and unserializable.
