@@ -86,8 +86,8 @@ type Signals struct {
 
 // WrapperMatch is a task runner or process wrapper in the ancestry.
 type WrapperMatch struct {
-	Name  string `json:"name"`
-	Depth int    `json:"depth"`
+	Name  fpKey `json:"name"`
+	Depth int   `json:"depth"`
 }
 
 // AncestorMatch is a vendor attribution for a proc. ancestor plus the evidence
@@ -100,10 +100,10 @@ type AncestorMatch struct {
 	Depth  int    `json:"depth"`
 
 	// Name is the fingerprint-table key the executable basename matched.
-	Name string `json:"name,omitempty"`
+	Name fpKey `json:"name,omitempty"`
 
 	// ArgvPattern is the fingerprint-table pattern found in the argv.
-	ArgvPattern string `json:"argv_pattern,omitempty"`
+	ArgvPattern fpKey `json:"argv_pattern,omitempty"`
 }
 
 // MatchedOn is a derived summary of which evidence fired, for display and grouping
@@ -163,10 +163,10 @@ type ChainEntry struct {
 	Depth       int
 	Pid         int
 	Ppid        int
-	Name        string
+	Name        fpKey
 	Kind        procKind
 	Vendor      string
-	ArgvPattern string
+	ArgvPattern fpKey
 	Unmatched   bool     // candidate host we could not attribute
 	Cmdline     []string // redacted; only set when Options.ShowCmdlines is set
 	Error       string
@@ -231,7 +231,7 @@ func Detect(opts Options) Result {
 	res.Signals.CI, res.Signals.CIGeneric = detectCI(opts.Getenv)
 	res.Signals.Interactive = detectTTY(opts.IsTerminal)
 
-	w := walk(opts)
+	w := boundedWalk(opts)
 	res.Signals.AgentAncestor = w.agent
 	res.Signals.IDEHost = w.ide
 	res.Signals.Unattributed = w.unattributed
@@ -296,6 +296,34 @@ type walkResult struct {
 	wrappers     []WrapperMatch
 	shape        string
 	meta         WalkMeta
+}
+
+// hardTimeoutSlack is the outer backstop above opts.Budget. walk enforces its own
+// budget cooperatively, checking the deadline between ancestor reads, but a single
+// ProcSource.Info call can block past that: on darwin, several of the underlying
+// gopsutil calls ignore their per-call context (see proc_gopsutil.go), so the
+// walk's own deadline check is never reached until that one call returns. This
+// slack bounds how long one such call may hold up the caller before boundedWalk
+// gives up on the walk and returns anyway, so Detect can never stall the command
+// the user actually ran regardless of platform syscall behavior.
+const hardTimeoutSlack = 200 * time.Millisecond
+
+// boundedWalk runs walk with a hard wall-clock ceiling of opts.Budget plus
+// hardTimeoutSlack. If that ceiling is hit, the walk goroutine is abandoned, not
+// killed — the syscall it is blocked in will eventually return on its own and the
+// goroutine will exit then — but its result is discarded and never reaches the
+// caller. This is the actual enforcement of "bounded and non-fatal by
+// construction"; walk's own deadline check is necessary but not sufficient.
+func boundedWalk(opts Options) walkResult {
+	done := make(chan walkResult, 1)
+	go func() { done <- walk(opts) }()
+
+	select {
+	case w := <-done:
+		return w
+	case <-time.After(opts.Budget + hardTimeoutSlack):
+		return walkResult{meta: WalkMeta{StoppedAt: "hard_timeout", Truncated: true}}
+	}
 }
 
 // walk climbs the ancestor chain, reporting the CLOSEST match
@@ -382,7 +410,7 @@ func walk(opts Options) walkResult {
 			wrappers = append(wrappers, WrapperMatch{Name: emittableName, Depth: depth})
 		}
 
-		nameVendor, nameKey := "", ""
+		nameVendor, nameKey := "", fpKey("")
 		if fp.Kind == kindAgent {
 			nameVendor, nameKey = fp.Vendor, emittableName
 		}
@@ -394,7 +422,7 @@ func walk(opts Options) walkResult {
 
 		// Argv evidence, for kinds whose argv states their own identity. Both tables
 		// are consulted independently, so an agent named by basename and argv reports both.
-		pattern, argvVendor := "", ""
+		pattern, argvVendor := fpKey(""), ""
 		if argvEligible(fp.Kind) {
 			pattern, argvVendor = matchCmdline(fp.Kind, info.Cmdline)
 			entry.ArgvPattern = pattern
@@ -468,7 +496,7 @@ func argvEligible(k procKind) bool {
 
 // matchCmdline returns the matched pattern and its vendor, both empty on a miss.
 // Matching is confined to identity argv POSITIONS, a precision guard atop argvEligible.
-func matchCmdline(kind procKind, argv []string) (string, string) {
+func matchCmdline(kind procKind, argv []string) (fpKey, string) {
 	fields := argvIdentityFields(kind, argv)
 	if len(fields) == 0 {
 		return "", ""
@@ -478,15 +506,18 @@ func matchCmdline(kind procKind, argv []string) (string, string) {
 	joined = strings.ReplaceAll(joined, `\`, "/")
 	for _, fp := range cmdlineFingerprints {
 		if strings.Contains(joined, fp.Pattern) {
-			return fp.Pattern, fp.Vendor
+			return fpKey(fp.Pattern), fp.Vendor
 		}
 	}
 	return "", ""
 }
 
-// maxIdentityArgs is how many non-flag args after argv[0] can still be naming the
-// program rather than describing its work: 2 for `node --flag /path/cli.js`, 3 for
-// launcher forms like `uv tool run aider`. Past that, args are input, not identity.
+// maxIdentityArgs bounds how many non-flag args after argv[0] the loop below will
+// append: 2 for `node --flag /path/cli.js`, 3 for launcher forms like `uv tool run
+// aider`. Flags are skipped rather than counted, so one before the identity args
+// doesn't eat into the budget. Once exactly this many non-flag args have been
+// appended, the loop stops considering any more — args past that point are input,
+// not identity.
 const maxIdentityArgs = 3
 
 // argvIdentityFields selects the argv positions worth matching for a kind.

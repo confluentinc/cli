@@ -83,10 +83,10 @@ func TestLiveResultSerializesNoRawObservations(t *testing.T) {
 		if e.Name == "" {
 			continue
 		}
-		if _, ok := procFingerprints[e.Name]; ok {
+		if _, ok := procFingerprints[string(e.Name)]; ok {
 			continue
 		}
-		if strings.Contains(payload, e.Name) {
+		if strings.Contains(payload, string(e.Name)) {
 			t.Errorf("serialized Result leaks observed process name %q", e.Name)
 		}
 	}

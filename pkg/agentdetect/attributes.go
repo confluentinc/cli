@@ -74,15 +74,15 @@ func (r Result) Attributes() Attributes {
 	}
 
 	if a := s.AgentAncestor; a != nil {
-		attrs.AgentProc = optional(a.Name)
-		attrs.AgentArgv = optional(a.ArgvPattern)
+		attrs.AgentProc = optional(string(a.Name))
+		attrs.AgentArgv = optional(string(a.ArgvPattern))
 	}
 	if h := s.IDEHost; h != nil {
-		attrs.IDEHost = optional(h.Name)
+		attrs.IDEHost = optional(string(h.Name))
 	}
 
 	for _, w := range s.Wrappers {
-		attrs.Wrappers = append(attrs.Wrappers, w.Name)
+		attrs.Wrappers = append(attrs.Wrappers, string(w.Name))
 	}
 
 	if s.CIGeneric {

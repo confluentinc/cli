@@ -319,7 +319,7 @@ func TestWrapperCompositionIsRecorded(t *testing.T) {
 
 	names := make([]string, 0, len(res.Signals.Wrappers))
 	for _, w := range res.Signals.Wrappers {
-		names = append(names, w.Name)
+		names = append(names, string(w.Name))
 	}
 	want := []string{"timeout", "xargs"}
 	if len(names) != len(want) {
@@ -638,7 +638,7 @@ func TestChainRecordsOnlyTableKeyNames(t *testing.T) {
 		if e.Name == "" {
 			continue
 		}
-		if _, ok := procFingerprints[e.Name]; !ok {
+		if _, ok := procFingerprints[string(e.Name)]; !ok {
 			t.Errorf("chain depth %d recorded name %q, which is not a fingerprint-table key",
 				e.Depth, e.Name)
 		}
@@ -1049,7 +1049,7 @@ func TestVersionSuffixResolvesToTableStem(t *testing.T) {
 		if fp.Vendor != want.vendor {
 			t.Errorf("lookupFingerprint(%q).Vendor = %q, want %q", name, fp.Vendor, want.vendor)
 		}
-		if key != want.key {
+		if string(key) != want.key {
 			t.Errorf("lookupFingerprint(%q) key = %q, want the table stem %q", name, key, want.key)
 		}
 	}

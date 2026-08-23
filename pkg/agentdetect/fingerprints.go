@@ -31,21 +31,36 @@ var envFingerprints = []string{
 	"AGENT",
 }
 
+// fpKey is a key drawn from this package's own fixed fingerprint tables — a
+// procFingerprints map key or a cmdlineFingerprints pattern — never raw
+// process text. The only values of this type in existence are ones returned
+// by resolveFingerprint, matchCmdline, and the lookup helpers they call, so a
+// future edit that tries to assign an observed process name or argv straight
+// into an fpKey-typed field (AncestorMatch.Name, WrapperMatch.Name, etc.) is a
+// compile error rather than a privacy leak caught only by a test at runtime.
+type fpKey string
+
 // vendorForProcKey and vendorForArgvPattern resolve an ancestry key back to a
 // vendor — a basename or argv pattern doesn't always spell one out ("q" is
 // amazon-q), so this is the reference mapping. Two lookups because the key spaces
 // are distinct ("code" vs "@openai/codex"), as the wire format keeps them.
-func vendorForProcKey(key string) (string, bool) {
-	fp, ok := procFingerprints[key]
+//
+// Unexported for now: the only caller is this package's own table-completeness
+// test. A follow-up PR assigning Attributes onto CliV1Usage will need to map
+// AgentProc/AgentArgv/IDEHost keys back to a vendor id for that event — at that
+// point export these two functions (or re-derive the mapping downstream from
+// procFingerprints/cmdlineFingerprints directly) rather than duplicating the table.
+func vendorForProcKey(key fpKey) (string, bool) {
+	fp, ok := procFingerprints[string(key)]
 	if !ok {
 		return "", false
 	}
 	return fp.Vendor, true
 }
 
-func vendorForArgvPattern(pattern string) (string, bool) {
+func vendorForArgvPattern(pattern fpKey) (string, bool) {
 	for _, fp := range cmdlineFingerprints {
-		if fp.Pattern == pattern {
+		if fp.Pattern == string(pattern) {
 			return fp.Vendor, true
 		}
 	}
@@ -211,7 +226,7 @@ const helperSuffix = " helper"
 // native install names the binary by version (.local/share/claude/versions/2.1.231):
 // the basename is a bare version and argv[0] a bare "claude", so without the fallback
 // Claude Code installs were never attributed by ancestry.
-func resolveFingerprint(info ProcInfo) (procFingerprint, string, bool) {
+func resolveFingerprint(info ProcInfo) (procFingerprint, fpKey, bool) {
 	if fp, key, ok := lookupFingerprint(normalizeName(info.Name)); ok {
 		return fp, key, true
 	}
@@ -244,7 +259,7 @@ const maxPathSegmentHops = 2
 // Triggered only by a *version-shaped* basename to skip false positives like a checkout
 // at ~/dev/cursor. Restricted to argv-eligible kinds so it can only ever add an
 // attribution.
-func lookupVersionedPath(path string) (procFingerprint, string, bool) {
+func lookupVersionedPath(path string) (procFingerprint, fpKey, bool) {
 	segments := strings.FieldsFunc(strings.ToLower(strings.TrimSpace(path)), func(r rune) bool {
 		return r == '/' || r == '\\'
 	})
@@ -266,7 +281,7 @@ func lookupVersionedPath(path string) (procFingerprint, string, bool) {
 		if !ok || !argvEligible(fp.Kind) {
 			continue
 		}
-		return fp, segments[i], true
+		return fp, fpKey(segments[i]), true
 	}
 	return procFingerprint{}, "", false
 }
@@ -283,9 +298,9 @@ func isVersionSegment(s string) bool {
 // lookupFingerprint resolves a normalized basename, preferring the exact table match,
 // then the version-suffix rule, then the Electron helper rule. key is the matched
 // table key.
-func lookupFingerprint(name string) (procFingerprint, string, bool) {
+func lookupFingerprint(name string) (procFingerprint, fpKey, bool) {
 	if fp, ok := procFingerprints[name]; ok {
-		return fp, name, true
+		return fp, fpKey(name), true
 	}
 	if fp, key, ok := lookupVersionedName(name); ok {
 		return fp, key, true
@@ -300,7 +315,7 @@ const versionSuffixChars = "0123456789."
 // lookupVersionedName resolves a versioned basename to its table stem
 // ("python3.13" → "python", "idea64" → "idea"), so new versions aren't silent
 // misses. Restricted to interpreters and editor hosts.
-func lookupVersionedName(name string) (procFingerprint, string, bool) {
+func lookupVersionedName(name string) (procFingerprint, fpKey, bool) {
 	stem := strings.TrimRight(name, versionSuffixChars)
 	if stem == name || stem == "" {
 		return procFingerprint{}, "", false
@@ -309,13 +324,13 @@ func lookupVersionedName(name string) (procFingerprint, string, bool) {
 	if !ok || (fp.Kind != kindInterpreter && fp.Kind != kindIDEHost) {
 		return procFingerprint{}, "", false
 	}
-	return fp, stem, true
+	return fp, fpKey(stem), true
 }
 
 // classifyEditorHelper resolves an Electron helper basename to its editor,
 // returning the editor's table key ("code helper (plugin)" → "code"); only
 // means "we're inside that editor".
-func classifyEditorHelper(name string) (procFingerprint, string, bool) {
+func classifyEditorHelper(name string) (procFingerprint, fpKey, bool) {
 	product, ok := splitHelperName(name)
 	if !ok {
 		return procFingerprint{}, "", false
@@ -327,7 +342,7 @@ func classifyEditorHelper(name string) (procFingerprint, string, bool) {
 	if !known || fp.Kind != kindIDEHost {
 		return procFingerprint{}, "", false
 	}
-	return fp, product, true
+	return fp, fpKey(product), true
 }
 
 // splitHelperName returns the product from "<product> helper[ (role)]", stripping

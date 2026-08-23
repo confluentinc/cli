@@ -55,7 +55,7 @@ func TestAttributesEmitKeysNotVendors(t *testing.T) {
 // drifted apart.
 func TestEveryEmittableAncestryKeyResolves(t *testing.T) {
 	for key, fp := range procFingerprints {
-		vendor, known := vendorForProcKey(key)
+		vendor, known := vendorForProcKey(fpKey(key))
 		if !known {
 			t.Errorf("procFingerprints key %q does not resolve", key)
 			continue
@@ -69,7 +69,7 @@ func TestEveryEmittableAncestryKeyResolves(t *testing.T) {
 	}
 
 	for _, fp := range cmdlineFingerprints {
-		vendor, known := vendorForArgvPattern(fp.Pattern)
+		vendor, known := vendorForArgvPattern(fpKey(fp.Pattern))
 		if !known || vendor == "" {
 			t.Errorf("argv pattern %q resolves to (%q, %v), want a vendor", fp.Pattern, vendor, known)
 		}
