@@ -185,6 +185,15 @@ type Options struct {
 	Getenv       func(string) (string, bool)
 	StartPid     int
 
+	// SelfPid seeds the pid-reuse guard's baseline with this process's own
+	// start time, so the guard can also catch reuse of the immediate parent
+	// (StartPid) — the one ancestor depth childStart could not otherwise
+	// cover, since childStart is normally only set from a descendant already
+	// walked. A lookup failure (e.g. a test ProcSource with no entry for it)
+	// just leaves the guard disabled for that depth, same as a platform that
+	// reports no start times at all. Defaults to os.Getpid().
+	SelfPid int
+
 	// IsTerminal is here for mock-ability so we can run synthetic-tree tests. It
 	// takes a file descriptor and reports whether it is a terminal.
 	IsTerminal func(fd uintptr) bool
@@ -220,6 +229,9 @@ func Detect(opts Options) Result {
 	// Parent PID
 	if opts.StartPid == 0 {
 		opts.StartPid = os.Getppid()
+	}
+	if opts.SelfPid == 0 {
+		opts.SelfPid = os.Getpid()
 	}
 
 	if opts.Tables == "" {
@@ -339,9 +351,16 @@ func walk(opts Options) walkResult {
 		deadline     = time.Now().Add(opts.Budget)
 		seen         = make([]int, 0, 8)
 		pid          = opts.StartPid
-		// childStart is the start time of the nearest descendant we could read
+		// childStart is the start time of the nearest descendant we could read,
+		// seeded with the CLI's own so the guard also covers depth 1 (StartPid)
+		// — the one ancestor with no descendant read of its own to compare
+		// against otherwise. A failed lookup leaves it at zero, same as any
+		// other unreadable start time: the guard is disabled, not tripped.
 		childStart int64
 	)
+	if self, err := opts.Source.Info(opts.SelfPid); err == nil {
+		childStart = self.StartTime
+	}
 
 	for depth := 1; ; depth++ {
 		if pid <= 1 {

@@ -263,6 +263,43 @@ func TestPidReuseStopsWalkBeforeFabricatingAnAncestor(t *testing.T) {
 	}
 }
 
+// The guard's descendant stamp normally comes from an ancestor already walked, so
+// depth 1 (StartPid) had no descendant read to compare against and went unchecked.
+// SelfPid closes that: seeded with the CLI's own start time, the guard can catch a
+// depth-1 "parent" that is really a recycled pid too.
+func TestPidReuseGuardCoversTheImmediateParent(t *testing.T) {
+	src := fakeSource{
+		999:  {Pid: 999, Ppid: 1000, Name: "confluent", StartTime: 5000}, // the CLI itself
+		1000: {Pid: 1000, Ppid: 1, Name: "claude", StartTime: 9000},      // started AFTER the CLI: reused
+	}
+	res := Detect(Options{
+		Source: src, StartPid: 1000, SelfPid: 999,
+		Getenv: env(nil), IsTerminal: notATTY,
+	})
+
+	if res.Walk.StoppedAt != "pid_reuse" {
+		t.Errorf("stopped_at = %q, want pid_reuse", res.Walk.StoppedAt)
+	}
+	if res.Signals.AgentAncestor != nil {
+		t.Errorf("ancestor = %+v, want nil — a pid-reused depth-1 ancestor must not be trusted",
+			res.Signals.AgentAncestor)
+	}
+}
+
+// A SelfPid lookup failure (no ProcSource entry, same as a Detect() caller who
+// leaves it defaulted against a source that cannot resolve os.Getpid()) must
+// disable the depth-1 check rather than break the walk.
+func TestPidReuseGuardIsDisabledWhenSelfIsUnreadable(t *testing.T) {
+	src, start := tree("zsh", "claude")
+	res := Detect(Options{
+		Source: src, StartPid: start, SelfPid: 424242, // not in src
+		Getenv: env(nil), IsTerminal: notATTY,
+	})
+	if res.Signals.AgentAncestor == nil {
+		t.Error("unreadable SelfPid must not fail the walk or the guard; agent ancestor should still be found")
+	}
+}
+
 // The guard must not fire on ordinary trees, where parents start first, nor on
 // platforms that supply no start time at all (StartTime zero).
 func TestPidReuseGuardDoesNotFireOnValidChains(t *testing.T) {
