@@ -24,14 +24,14 @@ func (c *connectClusterCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Register a Confluent Platform Connect cluster with the ID connect-group-xyz123.",
-				Code: "confluent usm connect-cluster register connect-group-xyz123 --confluent-platform-kafka-cluster 4k0R9d1GTS5tI9f4Y2xZ0Q --cloud aws --region us-east-1",
+				Code: "confluent usm connect-cluster register connect-group-xyz123 --kafka-cluster-id 4k0R9d1GTS5tI9f4Y2xZ0Q --cloud aws --region us-east-1",
 			},
 		),
 	}
 
 	// Required flags
-	cmd.Flags().String("confluent-platform-kafka-cluster", "", "The unique identifier of the metadata Kafka cluster for the Connect Cluster.")
-	cobra.CheckErr(cmd.MarkFlagRequired("confluent-platform-kafka-cluster"))
+	cmd.Flags().String("kafka-cluster-id", "", "The unique identifier of the metadata Kafka cluster for the Connect Cluster.")
+	cobra.CheckErr(cmd.MarkFlagRequired("kafka-cluster-id"))
 
 	// Optional flags
 	pcmd.AddCloudFlag(cmd)
@@ -50,7 +50,7 @@ func (c *connectClusterCommand) create(cmd *cobra.Command, args []string) error 
 	createReq := usmv1.UsmV1ConnectCluster{}
 
 	createReq.ConfluentPlatformConnectClusterId = usmv1.PtrString(arg)
-	kafkaClusterId, err := cmd.Flags().GetString("confluent-platform-kafka-cluster")
+	kafkaClusterId, err := cmd.Flags().GetString("kafka-cluster-id")
 	if err != nil {
 		return err
 	}
