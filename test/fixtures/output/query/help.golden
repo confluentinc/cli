@@ -4,8 +4,6 @@ Unlike statement creation, which submits a statement and returns immediately, th
 
 With "-o json" or "-o yaml", output defaults to an envelope carrying the column schema alongside the rows, since the rows on their own carry no type information. Pass "--raw" for a bare array of row objects instead.
 
-This command is in Open Preview and may change in a backward-incompatible way in a minor release.
-
 Usage:
   confluent query [name] [flags]
 

@@ -4,8 +4,7 @@ Runs a bounded ("snapshot") Flink SQL statement to completion and returns the wh
 result set, synchronously, from the client. Backs `confluent query`
 (`internal/query/command.go`).
 
-**Status: Open Preview.** The verb, the flags and the result shape are all expected to
-move.
+The verb, the flags and the result shape are all expected to move.
 
 #### Why this exists
 
@@ -69,9 +68,13 @@ because the alternative failure mode is a silent short read.
 - **Cloud only.** `Options.Client` is a `ccloudv2.GatewayClientInterface`. On-prem goes
   through CMF (`store_onprem.go`, itself a near-copy of `store.go`), so parity means a
   second implementation and a second test surface.
-- **No token refresh.** The shell wraps every gateway call in `synchronizedTokenRefresh`;
-  this package does not. A snapshot query that outlives the dataplane token dies on a 401.
-  This bounds how honest the command's default 10-minute timeout is.
+- **Token refresh is best-effort, not retry-aware.** `Options.RefreshToken` is invoked
+  before each gateway call (see the command's `refreshGatewayToken`), unlike the shell's
+  `synchronizedTokenRefresh`, which wraps every call including mid-flight retries. In
+  practice this rarely matters: the command's default 10-minute `--timeout` is on the
+  same order as the dataplane token's own lifetime, so a run is unlikely to still be
+  going when a refresh would be needed. It only bites if `--timeout` is raised well past
+  the default.
 - **No expired-page-token handling.** The gateway retains result pages for a bounded
   window; an expired token surfaces as a raw error.
 - **The whole result set is held in memory** as `[]types.StatementResultRow`. There is no
