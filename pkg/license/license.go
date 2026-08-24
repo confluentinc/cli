@@ -18,8 +18,8 @@ import (
 
 type licenseOut struct {
 	Category          string `human:"Category" json:"category" yaml:"category"`
-	CategoryShortName string `human:"Short Name" json:"category_short_name" yaml:"category_short_name"`
-	LicenseType       string `human:"Type" json:"license_type" yaml:"license_type"`
+	CategoryShortName string `human:"Category Short Name" json:"category_short_name" yaml:"category_short_name"`
+	LicenseType       string `human:"License Type" json:"license_type" yaml:"license_type"`
 	Status            string `human:"Status" json:"status" yaml:"status"`
 	ExpiresAt         string `human:"Expires At,omitempty" json:"expires_at,omitempty" yaml:"expires_at,omitempty"`
 	Audience          string `human:"Audience,omitempty" json:"audience,omitempty" yaml:"audience,omitempty"`
