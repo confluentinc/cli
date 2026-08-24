@@ -30,8 +30,8 @@ func (c *connectClusterCommand) newCreateCommand() *cobra.Command {
 	}
 
 	// Required flags
-	cmd.Flags().String("confluent-platform-kafka-cluster", "", "The unique identifier of the metadata Kafka cluster for the Connect Cluster.")
-	cobra.CheckErr(cmd.MarkFlagRequired("confluent-platform-kafka-cluster"))
+	cmd.Flags().String("kafka-cluster-id", "", "The unique identifier of the metadata Kafka cluster for the Connect Cluster.")
+	cobra.CheckErr(cmd.MarkFlagRequired("kafka-cluster-id"))
 
 	// Optional flags
 	pcmd.AddCloudFlag(cmd)
@@ -50,7 +50,7 @@ func (c *connectClusterCommand) create(cmd *cobra.Command, args []string) error 
 	createReq := usmv1.UsmV1ConnectCluster{}
 
 	createReq.ConfluentPlatformConnectClusterId = usmv1.PtrString(arg)
-	kafkaClusterId, err := cmd.Flags().GetString("confluent-platform-kafka-cluster")
+	kafkaClusterId, err := cmd.Flags().GetString("kafka-cluster-id")
 	if err != nil {
 		return err
 	}

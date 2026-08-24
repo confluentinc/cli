@@ -19,7 +19,7 @@ type connectClusterCommand struct {
 type connectClusterOut struct {
 	ID                              string `human:"ID" serialized:"id"`
 	ConfluentPlatformConnectCluster string `human:"Confluent Platform Connect Cluster" serialized:"confluent_platform_connect_cluster"`
-	ConfluentPlatformKafkaClusterId string `human:"Confluent Platform Kafka Cluster Id" serialized:"confluent_platform_kafka_cluster_id"`
+	KafkaClusterId                  string `human:"Kafka Cluster Id" serialized:"kafka_cluster_id"`
 	Environment                     string `human:"Environment" serialized:"environment"`
 	UsmKafkaClusterId               string `human:"USM Kafka Cluster Id" serialized:"usm_kafka_cluster_id"`
 	Cloud                           string `human:"Cloud" serialized:"cloud"`
@@ -53,7 +53,7 @@ func printConnectCluster(cmd *cobra.Command, connectCluster usmv1.UsmV1ConnectCl
 	out := &connectClusterOut{
 		ID:                              connectCluster.GetId(),
 		ConfluentPlatformConnectCluster: connectCluster.GetConfluentPlatformConnectClusterId(),
-		ConfluentPlatformKafkaClusterId: connectCluster.GetKafkaClusterId(),
+		KafkaClusterId:                  connectCluster.GetKafkaClusterId(),
 		Environment:                     connectCluster.Environment.GetId(),
 		UsmKafkaClusterId:               connectCluster.GetUsmKafkaClusterId(),
 		Cloud:                           connectCluster.GetCloud(),

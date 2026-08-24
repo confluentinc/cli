@@ -4,8 +4,8 @@ package test
 
 func (s *CLITestSuite) TestUsmConnectClusterCreate() {
 	tests := []CLITest{
-		{args: "usm connect-cluster register test-name --confluent-platform-kafka-cluster 4k0R9d1GTS5tI9f4Y2xZ0Q", fixture: "usm/connect-cluster/create/create.golden"},
-		{args: "usm connect-cluster register test-name --confluent-platform-kafka-cluster 4k0R9d1GTS5tI9f4Y2xZ0Q --region us-east-1", fixture: "usm/connect-cluster/create/create-region.golden"},
+		{args: "usm connect-cluster register test-name --kafka-cluster-id 4k0R9d1GTS5tI9f4Y2xZ0Q", fixture: "usm/connect-cluster/create/create.golden"},
+		{args: "usm connect-cluster register test-name --kafka-cluster-id 4k0R9d1GTS5tI9f4Y2xZ0Q --region us-east-1", fixture: "usm/connect-cluster/create/create-region.golden"},
 	}
 
 	for _, test := range tests {
