@@ -44,7 +44,7 @@ const (
 
 	// queryFeatureFlag gates the command while it is in Open Preview, following the
 	// same Hidden-until-targeted pattern as other preview commands (see
-	// internal/unified-stream-manager/command.go).
+	// internal/network/command_access_point_private_link_ingress_endpoint.go).
 	queryFeatureFlag = "cli.query"
 )
 
@@ -68,9 +68,9 @@ func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
 			"This command is in Open Preview and may change in a backward-incompatible way in a minor release.",
 		Args: cobra.MaximumNArgs(1),
 		// Hidden until the org is targeted by the flag, matching how other
-		// Open-Preview-only commands gate visibility (e.g. unified-stream-manager).
-		// cfg.IsTest keeps it visible to the integration suite regardless of the
-		// (unreachable, in tests) LaunchDarkly evaluation.
+		// Open-Preview-only commands gate visibility (e.g. the private link ingress
+		// endpoint command). cfg.IsTest keeps it visible to the integration suite
+		// regardless of the (unreachable, in tests) LaunchDarkly evaluation.
 		Hidden: !(cfg.IsTest || featureflags.Manager.BoolVariation(queryFeatureFlag, cfg.Context(), cliconfig.CliLaunchDarklyClient, true, false)),
 		Annotations: map[string]string{
 			pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin,
@@ -241,7 +241,7 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if maxRows < 0 {
-		return errors.New(`the "--max-rows" flag must not be negative`)
+		return errors.New("the `--max-rows` flag must not be negative")
 	}
 
 	raw, err := cmd.Flags().GetBool("raw")
@@ -249,7 +249,7 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if raw && !output.GetFormat(cmd).IsSerialized() {
-		return errors.New(`the "--raw" flag requires "-o json" or "-o yaml"`)
+		return errors.New("the `--raw` flag requires `-o json` or `-o yaml`")
 	}
 
 	statementProperties, err := c.buildQueryProperties(cmd, environment.GetDisplayName(), database)
@@ -419,7 +419,7 @@ func (c *command) handleQueryError(client *ccloudv2.FlinkGatewayClient, environm
 		}
 		return errors.NewErrorWithSuggestions(
 			fmt.Sprintf(`query %s before statement "%s" finished`, reason, name),
-			fmt.Sprintf("Check the statement with `confluent flink statement describe %s`, or raise the limit with the \"--timeout\" flag.", name),
+			fmt.Sprintf("Check the statement with `confluent flink statement describe %s`, or raise the limit with the `--timeout` flag.", name),
 		)
 	}
 
