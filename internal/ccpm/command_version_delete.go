@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
-func (c *pluginCommand) newDeleteVersionCommand() *cobra.Command {
+func (c *customConnectPluginVersionCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <id-1> [id-2] ... [id-n]",
 		Short: "Delete one or more custom Connect plugin versions.",
@@ -18,11 +18,11 @@ func (c *pluginCommand) newDeleteVersionCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete a specific version of a custom connect plugin.",
-				Code: "confluent ccpm plugin version delete ver-789012 --plugin plugin-123456 --environment env-abcdef",
+				Code: "confluent ccpm custom-connect-plugin version delete ver-789012 --plugin plugin-123456 --environment env-abcdef",
 			},
 			examples.Example{
 				Text: "Force delete a plugin version without confirmation.",
-				Code: "confluent ccpm plugin version delete ver-789012 --plugin plugin-123456 --environment env-abcdef --force",
+				Code: "confluent ccpm custom-connect-plugin version delete ver-789012 --plugin plugin-123456 --environment env-abcdef --force",
 			},
 		),
 	}
@@ -35,7 +35,7 @@ func (c *pluginCommand) newDeleteVersionCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *pluginCommand) deleteVersion(cmd *cobra.Command, args []string) error {
+func (c *customConnectPluginVersionCommand) deleteVersion(cmd *cobra.Command, args []string) error {
 	pluginId, err := cmd.Flags().GetString("plugin")
 	if err != nil {
 		return err
@@ -47,7 +47,7 @@ func (c *pluginCommand) deleteVersion(cmd *cobra.Command, args []string) error {
 	}
 
 	existenceFunc := func(id string) bool {
-		_, err := c.V2Client.DescribeCCPMPluginVersion(pluginId, id, environment)
+		_, _, err := c.V2Client.GetCcpmCustomConnectPluginVersion(pluginId, id, environment)
 		return err == nil
 	}
 
@@ -56,7 +56,7 @@ func (c *pluginCommand) deleteVersion(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		return c.V2Client.DeleteCCPMPluginVersion(pluginId, id, environment)
+		return c.V2Client.DeleteCcpmCustomConnectPluginVersion(pluginId, id, environment)
 	}
 
 	_, err = deletion.Delete(cmd, args, deleteFunc, resource.CCPMCustomConnectorPluginVersion)

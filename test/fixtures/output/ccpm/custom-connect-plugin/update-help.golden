@@ -1,4 +1,5 @@
-Error: accepts 1 arg(s), received 0
+Update an existing CCPM custom Connect plugin.
+
 Usage:
   confluent ccpm custom-connect-plugin update <id> [flags]
 
@@ -22,4 +23,3 @@ Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-
