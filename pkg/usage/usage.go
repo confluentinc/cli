@@ -38,9 +38,10 @@ func (u *Usage) Collect(cmd *cobra.Command, _ []string) {
 
 // CollectAgentDetect runs agent detection and assigns the results onto this
 // Usage's agent-detect fields. Detect degrades to empty signals on its own
-// (walk timeout, depth cap, lookup failure) rather than returning an error, so
-// this can never fail the invocation; the recover is only a backstop against a
-// panic escaping Detect.
+// (walk timeout, depth cap, lookup failure, or an internal panic — all
+// recovered inside Detect's own walk goroutine) rather than returning an
+// error, so this can never fail the invocation; the recover here is only a
+// backstop for the synchronous setup/mapping code in this function itself.
 //
 // The CliV1Usage fields assigned below are flat additions from APIE-1607 (see
 // https://confluentinc.atlassian.net/wiki/spaces/AEGI/pages/6089736699), named
