@@ -1,0 +1,14 @@
+Statement successfully submitted.
+Waiting for statement to be ready. Statement phase: PENDING.
+Warnings:
+
+CRITICAL [UPSERT_PRIMARY_KEY_MISMATCH] (Logged: 2026-07-30T09:15:00Z)
+The primary key does not match the upsert key derived from the query.
+
+MODERATE [MISSING_WINDOW_START_END] (Logged: 2026-07-30T08:00:00Z)
+The GROUP BY clause contains only `window_start` with no corresponding `window_end`.
+
+Statement phase is RUNNING.
+Listening for execution errors. Press Enter to detach.
+Finished statement execution. Statement phase: COMPLETED.
+
