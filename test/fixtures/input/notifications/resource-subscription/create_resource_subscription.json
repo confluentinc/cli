@@ -1,0 +1,27 @@
+{
+  "api_version": "notifications/v1",
+  "current_state": "ENABLED",
+  "id": "dlz-f3a90de",
+  "integrations": [
+    {
+      "id": "",
+      "related": "https://example.com",
+      "resource_name": "https://example.com"
+    }
+  ],
+  "kind": "ResourceSubscription",
+  "metadata": {
+    "created_at": "2006-01-02T15:04:05-07:00",
+    "deleted_at": "2006-01-02T15:04:05-07:00",
+    "resource_name": "crn://confluent.cloud/organization=9bb441c4-edef-46ac-8a41-c49e44a3fd9a/resource-subscription=rs-12345",
+    "self": "https://api.confluent.cloud/notifications/v1/resource-subscriptions/rs-12345",
+    "updated_at": "2006-01-02T15:04:05-07:00"
+  },
+  "notification_type": {
+    "id": "not-abc123",
+    "related": "https://example.com",
+    "resource_name": "https://example.com"
+  },
+  "resource": "environment=env-456xy/cloud-cluster=lkc-df123/connector=my_datagen_connector",
+  "resource_type": "CONNECTOR"
+}

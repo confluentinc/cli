@@ -1,0 +1,21 @@
+List notifications user notifications.
+
+Usage:
+  confluent notifications user-notification list [flags]
+
+Flags:
+      --read                   Filter the results where read is true or false.
+      --severity strings       A comma-separated list of severity levels to filter by.
+      --include integrations   Comma-separated list of optional fields to populate in the response items. Allowed values: integrations, `recommended_actions`. By default these fields are omitted from list responses to keep collection payloads slim; set this parameter to opt in. This is a partial-response selector, not a value filter.
+      --type strings           A comma-separated list of Confluent Cloud resource types to filter by.
+      --crn strings            A comma-separated list of Confluent Cloud resource CRNs to filter by.
+      --search display_name    Free-text partial-match search across the embedded notification type's display_name and `description`.
+      --time-range PAST_24H    Filter notifications by a preset time window relative to now. Allowed values: PAST_24H (last 24 hours), `PAST_7D` (last 7 days), `PAST_30D` (last 30 days).
+      --sort strings           A comma-separated list of fields and directions to sort by.
+      --context string         CLI context name.
+  -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

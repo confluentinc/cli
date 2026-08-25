@@ -1,0 +1,17 @@
+Manage Confluent Cloud notifications resource subscriptions.
+
+Usage:
+  confluent notifications resource-subscription [command]
+
+Available Commands:
+  create      Create a notifications resource subscription.
+  delete      Delete one or more notifications resource subscriptions.
+  describe    Describe a notifications resource subscription.
+  update      Update an existing notifications resource subscription.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent notifications resource-subscription [command] --help" for more information about a command.

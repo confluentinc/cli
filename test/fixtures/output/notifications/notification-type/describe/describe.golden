@@ -1,0 +1,10 @@
++-----------------------+--------------------------------+
+| ID                    | dlz-f3a90de                    |
+| Display Name          | Cluster Shrink                 |
+| Category              | BILLING_LICENSING              |
+| Description           | Cluster shrink operation is    |
+|                       | completed                      |
+| Subscription Priority | REQUIRED                       |
+| Is Included In Plan   | false                          |
+| Severity              | INFO                           |
++-----------------------+--------------------------------+

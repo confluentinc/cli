@@ -378,29 +378,30 @@ func substituteStateVars(t *testing.T, s string, state *LiveTestState) string {
 	return buf.String()
 }
 
-// extractID extracts the "id" field from JSON output.
+// extractID extracts the "id" field from JSON output. A list command's JSON output is a
+// top-level array, so the id comes from its first element; a describe command's is a top-level
+// object.
 func extractID(t *testing.T, output string) string {
 	t.Helper()
 
 	trimmed := strings.TrimSpace(output)
-	var parsed map[string]interface{}
-	if err := json.Unmarshal([]byte(trimmed), &parsed); err != nil {
-		// Not JSON — try to extract from table-style output (first column of second line)
-		lines := strings.Split(trimmed, "\n")
-		for i, line := range lines {
-			if i == 0 {
-				continue // skip header
-			}
-			fields := strings.Fields(line)
-			if len(fields) > 0 {
-				return fields[0]
-			}
+
+	var array []map[string]interface{}
+	if err := json.Unmarshal([]byte(trimmed), &array); err == nil {
+		if len(array) == 0 {
+			return ""
+		}
+		if id, ok := array[0]["id"]; ok {
+			return fmt.Sprintf("%v", id)
 		}
 		return ""
 	}
 
-	if id, ok := parsed["id"]; ok {
-		return fmt.Sprintf("%v", id)
+	var object map[string]interface{}
+	if err := json.Unmarshal([]byte(trimmed), &object); err == nil {
+		if id, ok := object["id"]; ok {
+			return fmt.Sprintf("%v", id)
+		}
 	}
 	return ""
 }
