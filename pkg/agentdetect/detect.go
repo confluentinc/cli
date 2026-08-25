@@ -320,7 +320,18 @@ const hardTimeoutSlack = 200 * time.Millisecond
 // ceiling is exceeded, boundedWalk returns a truncated result with StoppedAt="hard_timeout".
 func boundedWalk(opts Options) walkResult {
 	done := make(chan walkResult, 1)
-	go func() { done <- walk(opts) }()
+	go func() {
+		// walk touches live OS process data through ProcSource, so a panic here
+		// must degrade to an empty result rather than crash the process: a panic
+		// in this goroutine can't be caught by boundedWalk's own recover, only by
+		// one inside the goroutine itself.
+		defer func() {
+			if r := recover(); r != nil {
+				done <- walkResult{meta: WalkMeta{StoppedAt: "panic", Truncated: true}}
+			}
+		}()
+		done <- walk(opts)
+	}()
 
 	select {
 	case w := <-done:
