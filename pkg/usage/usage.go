@@ -47,6 +47,14 @@ func (u *Usage) Collect(cmd *cobra.Command, _ []string) {
 // https://confluentinc.atlassian.net/wiki/spaces/AEGI/pages/6089736699), named
 // and typed to mirror agentdetect.Attributes one field at a time. This won't
 // compile until that schema update lands in ccloud-sdk-go-v2.
+//
+// UNVERIFIED AGAINST THE FINAL SCHEMA: the doc lists these as plain
+// string/[]string, with no pointer notation; the pointer types assumed here
+// (*string, *[]string) are a bet that codegen marks them optional to match
+// the existing CliV1Usage fields (Command, Flags, StackFrames), not a
+// confirmed fact. Re-check every assignment and both helpers below once the
+// generated struct actually exists — a required (non-pointer) field would
+// need reshaping, not just a type fix.
 func (u *Usage) CollectAgentDetect() {
 	defer func() {
 		if r := recover(); r != nil {
