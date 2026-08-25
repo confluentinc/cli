@@ -532,17 +532,13 @@ func TestLookupErrorIsNonFatal(t *testing.T) {
 }
 
 // panicSource simulates a ProcSource that panics reading live OS process data,
-// e.g. an unexpected nil deref deep in a platform-specific gopsutil call.
 type panicSource struct{}
 
 func (panicSource) Info(int) (ProcInfo, error) {
 	panic("simulated ProcSource panic")
 }
 
-// The walk goroutine can't be recovered from boundedWalk's own stack frame — a
-// panic in a different goroutine crashes the process unless that goroutine
-// recovers itself. This is the guard behind "a detection error ... must
-// degrade to empty fields and never fail the invocation" (APIE-1608).
+// verify panic in a different goroutine does not crash the process
 func TestWalkPanicDegradesInsteadOfCrashing(t *testing.T) {
 	res := Detect(Options{
 		Source: panicSource{}, StartPid: 1000, Getenv: env(nil),
