@@ -3,15 +3,15 @@ name: pr-review
 description:
   Reviews pull requests for the Confluent CLI. Use when reviewing PRs, doing self-review before
   sharing with the team, or when the user mentions "review PR", "help with PR", "review changes",
-  "self-review", "review local changes", or "check my PR". Focuses on Cobra command wiring,
-  Cloud/On-Prem mode gating, error/output formatting, backward compatibility, and golden-file
-  integration tests.
+  "self-review", "review local changes", or "check my PR". Focuses on output/serialization design,
+  backend-first validation, error-handling semantics, backward compatibility, generator alignment,
+  and failure-path integration tests.
 allowed-tools:
   - Read
   - Bash
   - Grep
   - Glob
-  - Task
+  - Agent
 ---
 
 # PR Review Skill
@@ -39,9 +39,11 @@ draft PR or against local changes before pushing.
 Goals:
 
 - Catch issues early, before formal review
+- Check that `*Out` structs match the API/spec and behave consistently across human/json/yaml
+- Confirm new validation is deferred to the backend rather than hand-rolled client-side
+- Confirm every new command/flag has integration tests covering the failure paths, not just success
+- Catch backward-compatibility breaks (serialized-field and stdout/stderr changes) before a reviewer does
 - Verify Cobra command wiring is complete (registration, `Args`, annotations, completion)
-- Confirm every new command/flag has a golden-file integration test
-- Catch backward-compatibility breaks before they reach a reviewer
 
 ### Formal Review Mode (for reviewers)
 
@@ -126,59 +128,128 @@ gh issue view <ISSUE_NUMBER> --json body,comments
 **IMPORTANT: only review lines that were actually changed in the PR diff.** Context lines from the
 diff are for understanding, not for review. Do not flag pre-existing issues in unchanged code.
 
-#### 1. Cobra command wiring (MANDATORY for new commands/subcommands)
+The checkpoints below are ordered by how often they actually decide a review here — output-shape
+and validation questions dominate; arity and error casing are near-noise (the linter owns them).
+Weight your attention accordingly.
 
-- [ ] Command is registered (subcommand added to its parent; new top-level command wired in
-      `internal/command.go`)
-- [ ] `Args` is set and matches arity: `cobra.ExactArgs(N)`, or `cobra.MinimumNArgs(1)` for
-      variadic/`delete` commands
-- [ ] `ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs)` present where completion applies
-- [ ] Mode gating uses `annotations.RunRequirement` (`RequireCloudLogin` / `RequireOnPremLogin` /
-      etc.), not a runtime `if` on login state
+#### 1. Output and serialization design (the highest-traffic review surface)
 
-Red flags:
+The `*Out` struct and its `human:` / `serialized:` (or `json:`/`yaml:`) tags **are** the command's
+user contract. Reviewers scrutinize their design far more than any other single thing:
 
-- New subcommand file but no registration on the parent → command silently does not exist
-- A command that reads positional args with no `Args` validator → panics or misbehaves on bad input
-- `if cfg.IsCloudLogin() { ... } else { ... }` splitting behavior that should be an annotation +
-  `_onprem.go` sibling
+- [ ] Serialized field names **mirror the API/spec**, not an invented CLI name. Matching the spec is
+      what lets these commands be generated later; a divergent name is a standing question.
+- [ ] `omitempty` is on **optional** response fields only. A field the API always returns should not
+      carry it; an optional one should (so it drops out cleanly when absent).
+- [ ] `human:"-"` is the right tool to hide a field from the human table while keeping it in
+      `-o json`/`-o yaml` — prefer it over dropping the field from the struct entirely.
+- [ ] The field set is **consistent across human/json/yaml**, or an intentional divergence is
+      explained. "Is it OK for customers to see a different set of fields in each format?" is a real
+      review question here, not a nitpick.
+- [ ] New table columns are chosen deliberately (start narrow; adding later is easy, removing is a
+      breaking change). Long/unbounded values may warrant `human:"-"` rather than a wrapped column.
 
-#### 2. Error and output formatting
+#### 2. Prefer backend validation over client-side checks
 
-- [ ] Error strings are lowercase, no trailing period, `...ErrorMsg`; suggestions are full
-      sentences, `...Suggestions`; combined with `errors.NewErrorWithSuggestions`
-- [ ] User-facing strings use backticks for commands/flags and double quotes for names/IDs
-- [ ] Auth/config errors name the missing or invalid setting
+The house rule (stated repeatedly by senior reviewers) is to **let the backend validate** and
+surface its error, rather than duplicating spec constraints in the CLI:
 
-#### 3. Client and auth access
+- [ ] New hand-rolled validation of a spec-recorded constraint (allowed enum values, required-ness,
+      formats) is questioned — the backend already enforces it and returns a field-named error.
+- [ ] Flag **relationships** use Cobra's built-ins — `cmd.MarkFlagsMutuallyExclusive(...)` for
+      `oneOf` groups, `cmd.MarkFlagsRequiredTogether(...)` for co-required flags — not a bespoke
+      `if flagA != "" && flagB != "" { return err }` ladder.
+- [ ] Case normalization (`strings.ToUpper` on an enum before sending) is a conscious choice, not a
+      reflex; for `x-extensible-enum` fields a client-side allow-list breaks forward-compat.
 
-- [ ] Handlers access clients lazily via `c.V2Client` / `c.MDSClient` / `c.GetKafkaREST()` — they
-      do not authenticate or construct clients themselves (that belongs in `PreRunner`)
+Red flag: string-matching against backend error wording to branch behavior — brittle the moment the
+backend rewords, and usually a sign validation should have stayed server-side.
 
-#### 4. Backward compatibility
+#### 3. Backward compatibility
 
 - [ ] No renamed/removed command, subcommand, or flag outside a major release
 - [ ] No changed/removed serialized field name under `-o json` / `-o yaml`; no new `omitempty` on a
       previously-always-emitted field; no output-format change
+- [ ] Renaming a `human:` column header is **not** breaking; changing a `serialized:` key **is**.
+      Keep that distinction straight before flagging.
+- [ ] Printing a status line (e.g. `Updated "x".`) to **stdout** on a command that also has
+      `-o json`/`-o yaml` output breaks `| jq` — status messages belong on stderr, or are omitted
+      for resources that print a payload.
 - [ ] EA/OP instability is disclosed in the command's `Short`/`Long`
 
-A useful check for the serialized-output surface: if a `*.golden` file for a `json`/`yaml` test
-changed, confirm the field-name/shape delta is intentional and non-breaking (or gated on a major).
+If a `*.golden` file for a `json`/`yaml` test changed, confirm the field-name/shape delta is
+intentional and non-breaking (or gated on a major).
 
-#### 5. Testing
+#### 4. Error-handling semantics (not casing)
 
-- [ ] Every new command and flag has an integration test in `test/` with matching golden files
+Casing rules (lowercase, no trailing period, `...ErrorMsg`/`...Suggestions` suffixes,
+`NewErrorWithSuggestions`) are real but **owned by convention + `lint-cli`** — mention them only in
+passing. Spend the review on what the linter can't see:
+
+- [ ] An `existenceFunc` / precheck doesn't collapse **every** failure (401, 500, timeout,
+      connection-refused) into "not found" — only a true 404 should map to "not found"; other errors
+      must preserve their cause.
+- [ ] Status-code gating uses the right boundary. `< 400` treats a 3xx redirect as success and
+      unmarshals into a zero-value struct (printing a blank "success"); prefer an explicit 2xx check
+      (`>= 200 && < 300`), noting `201` on create.
+- [ ] Errors aren't silently swallowed — the underlying cause reaches the user rather than a generic
+      substitute message. (For a deeper pass, dispatch the user-global `silent-failure-hunter` agent.)
+- [ ] Auth/config errors name the missing or invalid setting.
+- [ ] User-facing strings use backticks for commands/flags and double quotes for names/IDs.
+
+#### 5. Cobra wiring and client access
+
+- [ ] Command is registered (subcommand added to its parent; new top-level command wired in
+      `internal/command.go`) — an unregistered subcommand file silently does not exist.
+- [ ] `Args` is set and matches arity (`cobra.ExactArgs(N)`, or `cobra.MinimumNArgs(1)` for
+      variadic/`delete`); `ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs)` where completion
+      applies. (Low-frequency in practice — check, don't belabor.)
+- [ ] Mode gating uses the `annotations.RunRequirement` annotation with the **correct** requirement
+      (`RequireCloudLogin` / `RequireOnPremLogin` / etc.); meaningfully divergent Cloud vs. on-prem
+      behavior lives in a `command_<sub>_onprem.go` sibling, not an `if cfg.IsCloudLogin()` branch.
+- [ ] Handlers access clients lazily via `c.V2Client` / `c.MDSClient` / `c.GetKafkaREST()` — they do
+      not authenticate or construct clients themselves (that belongs in `PreRunner`).
+
+#### 6. Testing — cover failure paths, not just "a golden exists"
+
+- [ ] Every new command and flag has an integration test in `test/` with matching golden files.
+- [ ] **Each new command has a failure-path case**, not only the happy path — e.g. not-found and
+      missing-required-flag cases. A green happy-path golden hides an untested error branch.
+- [ ] Mock handlers **assert the request they received** (forwarded query params, method, body), not
+      just return a canned response — otherwise a wrong-value-sent-to-server bug (including data-loss
+      paths like `delete --version`) still passes its golden.
 - [ ] Golden diffs reflect the intended user-visible change only (no incidental churn from an
-      unrelated merge)
-- [ ] New non-trivial logic in `internal/`/`pkg/` has a co-located unit test
+      unrelated merge).
+- [ ] New non-trivial or frequently-reused logic in `internal/`/`pkg/` has a co-located unit test.
 
 ### Step 5: Check Project-Specific Patterns
+
+#### Generator alignment (much of this codebase is generated)
+
+Large parts of the CMF/CP command surface are emitted by `cli-terraform-generator`, and the standing
+initiative is to hand-write **as little as possible**. When a PR adds custom Go:
+
+- [ ] Ask whether the logic could be **derived from the OpenAPI spec** or **generated** instead of
+      hand-maintained (e.g. pending/terminal phase sets from the status enum, defaults from the spec).
+- [ ] A one-off helper that will recur (map-field extraction, output conversion) is worth
+      generalizing into `pkg/flink` (or similar) so the generator has a single target — reviewers
+      actively push for fewer, more generic custom functions.
+- [ ] CLI behavior stays unified with the Terraform provider where both consume the same API
+      (defaults, timeouts, naming) — flag divergence for discussion rather than silently shipping it.
 
 #### Multi-resource delete
 
 - [ ] Delete commands accept variadic args (`cobra.MinimumNArgs(1)`) and route confirmation +
       deletion through `deletion.ValidateAndConfirm` and `deletion.Delete` rather than a hand-rolled
       prompt/loop
+
+#### Internal-reference hygiene
+
+- [ ] No internal identifiers (JIRA/APIE tickets, RFC links, internal service names like `cc-api`)
+      leak into **user-facing** strings — `Short`/`Long`/`Example`, error messages, suggestions. Keep
+      them in engineer-facing doc comments if they're useful there.
+- [ ] Comments introduced by the PR don't carry stale ticket references or sit above the wrong
+      function.
 
 #### Docs drift
 
@@ -222,11 +293,12 @@ changed, confirm the field-name/shape delta is intentional and non-breaking (or 
 
 ### Critical Requirements Checklist
 
-- [ ] Cobra wiring (registration + Args + annotations + completion): [status, location of any gap]
-- [ ] Error / output formatting: [status]
-- [ ] Client access via PreRunner: [status]
-- [ ] Backward compatibility (commands/flags, -o json/yaml): [status]
-- [ ] Integration tests + golden files for new commands/flags: [status]
+- [ ] Output/serialization design (spec-matched names, `omitempty` on optionals, cross-format field set): [status]
+- [ ] Validation deferred to backend; flag relationships via `MarkFlags*`: [status]
+- [ ] Backward compatibility (commands/flags, `-o json`/`yaml`, stdout vs stderr): [status]
+- [ ] Error-handling semantics (no collapsed/swallowed errors, right status boundary): [status]
+- [ ] Cobra wiring + client access via PreRunner: [status, location of any gap]
+- [ ] Tests cover failure paths + mock request assertions, not just a happy-path golden: [status]
 
 ### Issues to Address Before PR
 
@@ -293,19 +365,24 @@ changed, confirm the field-name/shape delta is intentional and non-breaking (or 
 
 Use these labels in findings:
 
-| Category        | Description                                                              |
-| --------------- | ------------------------------------------------------------------------ |
-| `cobra-wiring`  | Missing registration, `Args`, annotation gating, or completion hookup    |
-| `mode-gating`   | Runtime `if` on login state where an annotation / `_onprem.go` belongs   |
-| `errors`        | Error/suggestion casing or `NewErrorWithSuggestions` not used            |
-| `output`        | Backtick/quote convention; serialized-field formatting                   |
-| `compatibility` | Breaking command/flag rename or `-o json`/`-o yaml` change outside major |
-| `deletion`      | Hand-rolled confirmation instead of the `deletion` helpers               |
-| `client-access` | Auth/client constructed in a handler instead of via `PreRunner`          |
-| `testing`       | Missing integration test/golden for a new command/flag; incidental churn |
-| `docs`          | Stale help-text example, missing EA/OP callout                           |
-| `secrets`       | Credentials or real IDs in the diff                                      |
-| `style`         | Naming/conventions where `golangci-lint` / `lint-cli` do not enforce     |
+| Category         | Description                                                                                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------------ |
+| `output-design`  | Serialized name not spec-matched; wrong `omitempty`; human/json/yaml field-set drift; column choice          |
+| `validation`     | Client-side check that belongs on the backend; flag relationship not via `MarkFlags*`                        |
+| `compatibility`  | Breaking command/flag rename, `-o json`/`-o yaml` change, or status line on stdout outside major             |
+| `error-handling` | Collapsed/swallowed error, wrong status-code boundary, brittle error-string match                            |
+| `generator`      | Hand-written code that could be spec-derived/generated; one-off helper worth generalizing; CLI/TF divergence |
+| `testing`        | Missing failure-path case or mock request assertion; missing golden; incidental churn                        |
+| `cobra-wiring`   | Missing registration, `Args`, annotation gating, or completion hookup                                        |
+| `mode-gating`    | Wrong `RunRequirement`, or runtime `if` on login state where an `_onprem.go` sibling belongs                 |
+| `client-access`  | Auth/client constructed in a handler instead of via `PreRunner`                                              |
+| `errors-format`  | Error/suggestion casing or `NewErrorWithSuggestions` not used (lint usually owns this)                       |
+| `output-format`  | Backtick/quote convention in user-facing strings                                                             |
+| `deletion`       | Hand-rolled confirmation instead of the `deletion` helpers                                                   |
+| `docs`           | Stale help-text example, missing EA/OP callout                                                               |
+| `internal-refs`  | JIRA/RFC/internal service names leaking into user-facing strings or stale comments                           |
+| `secrets`        | Credentials or real IDs in the diff                                                                          |
+| `style`          | Naming/conventions where `golangci-lint` / `lint-cli` do not enforce                                         |
 
 ## Tips
 
@@ -313,8 +390,8 @@ Use these labels in findings:
 - For a new command, trace it end to end: file exists → registered on parent → `Args` set →
   annotation set → integration test + golden present. A missing link usually means the command is
   dead, panics, or is untested.
-- Use `Task` with the Explore agent for blast-radius questions (e.g. "find every caller of this
-  serialized struct before renaming a field").
+- Use the `Agent` tool with the Explore agent for blast-radius questions (e.g. "find every caller of
+  this serialized struct before renaming a field").
 - Companion skills to ground review in current state:
   - `docs-drift` — validates in-code help text and root markdown against the live command tree
   - `cli-design` (user-global) — clig.dev conventions for flag naming, arity, and output when the

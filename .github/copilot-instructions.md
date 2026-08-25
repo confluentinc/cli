@@ -25,9 +25,13 @@ reference) lives in `AGENTS.md` (symlinked as `CLAUDE.md`), `CONTRIBUTING.md`, a
   `pkg/deletion` (multi-resource delete), and `pkg/ccloudv2` (the Cloud v2 client).
 - **Two runtime modes.** The CLI runs in either a Cloud or an on-prem (Confluent Platform) mode
   depending on login state, and many commands are valid in only one. Mode gating is expressed with
-  a Cobra annotation, never a runtime `if` (see checkpoint 3).
+  a Cobra annotation, never a runtime `if` (see checkpoint 5).
 - **Machine-readable output (`-o json` / `-o yaml`) is a compatibility surface.** Serialized field
-  names and formats are part of the customer contract; changing them is a breaking change.
+  names and formats are part of the customer contract; changing them is a breaking change. Output
+  structs are also the highest-traffic review surface (see checkpoint 1).
+- **Much of the CMF/CP surface is generated.** Command code, goldens, and live tests for newer
+  areas are emitted by `cli-terraform-generator`; reviewers push to keep hand-written code minimal
+  and spec-aligned so it can be generated (see checkpoint 7).
 
 ## Code Review Guidelines (GitHub PR Reviews)
 
@@ -36,70 +40,145 @@ When reviewing pull requests for this project, focus on the checkpoints below. L
 formatting and style — don't comment on anything the tooling already enforces (gofmt, goimports,
 import ordering, naked returns, misspellings, etc.).
 
-### 1. Error messages and suggestions
+The checkpoints are ordered by how often they actually decide a review in this repo. Output-shape,
+validation, and compatibility questions dominate; argument arity and error-message casing are
+near-noise (convention and `lint-cli` own them). Weight comments accordingly.
 
-Per `pkg/errors/README.md`:
+### 1. Output and serialization design (the highest-traffic review surface)
 
-- Error messages are **lowercase, no trailing period**; the variable suffix is `ErrorMsg`.
-- Suggestions are a **capitalized full sentence with a period**; the variable suffix is
-  `Suggestions`.
-- The two are combined via `errors.NewErrorWithSuggestions(errMsg, suggestions)`. Flag hand-rolled
-  error construction that bypasses this.
-- Auth/configuration errors should name the missing or invalid setting so users don't have to read
-  source to debug.
+An `*Out` struct and its `human:` / `serialized:` (or `json:`/`yaml:`) tags **are** the command's
+user contract, and reviewers scrutinize their design more than anything else. Per
+`pkg/output/README.md` and observed convention:
 
-### 2. Output formatting
-
-Per `pkg/output/README.md`, in any user-facing string (help text, errors, suggestions):
-
-- CLI commands and flags are wrapped in **backticks**: `` `confluent kafka cluster list` ``.
-- Resource names and IDs are wrapped in **double quotes**: `"lkc-123456"`.
-
-### 3. Cloud / On-Prem gating — the non-inferable pattern
-
-Commands valid in only one mode must gate via the Cobra annotation, not a runtime branch:
+- Serialized field names should **mirror the API/spec**, not an invented CLI name — matching the
+  spec is what allows these commands to be generated later. Flag a divergent name.
+- `omitempty` belongs on **optional** response fields only. A field the API always returns should
+  not carry it; an optional one should. (Note the compatibility caveat in checkpoint 3: _adding_
+  `omitempty` to a field that already ships without it is a breaking change.)
+- Use `human:"-"` to hide a field from the human table while keeping it in `-o json`/`-o yaml`,
+  rather than dropping the field from the struct.
+- Field sets should be **consistent across human/json/yaml**, or an intentional divergence should be
+  explained in the PR — "a different set of fields per format" is a legitimate thing to question.
+- New table columns should be chosen deliberately (narrow is easy to widen later; removing a column
+  is breaking). Long/unbounded values may warrant `human:"-"` over a wrapped column.
 
 ```go
-Annotations: map[string]string{annotations.RunRequirement: annotations.RequireCloudLogin}
+// Avoid: invented serialized name; omitempty on a field the API always returns;
+// a long/unbounded value forced into the human table.
+type licenseOut struct {
+    Type      string `human:"Type" serialized:"type"`                 // spec calls it "license_type"
+    ExpiresAt string `human:"Expires At,omitempty" serialized:"expires_at,omitempty"` // always returned
+    RawJwt    string `human:"Raw JWT" serialized:"raw_jwt"`           // long; clutters the table
+}
+
+// Prefer: serialized names match the spec; omitempty only on optional fields;
+// keep the long value in json/yaml but out of the human table with human:"-".
+type licenseOut struct {
+    LicenseType string `human:"License Type" serialized:"license_type"`
+    ExpiresAt   string `human:"Expires At" serialized:"expires_at"`
+    RawJwt      string `human:"-" serialized:"raw_jwt"`
+}
 ```
 
-When Cloud and on-prem implementations diverge meaningfully, the convention is a sibling
-`command_<sub>_onprem.go` file rather than `if cloudLogin { ... } else { ... }` inside one handler.
-Flag PRs that add mode-conditional logic as a runtime branch. See `pkg/cmd/ANNOTATIONS.md`.
+### 2. Prefer backend validation over client-side checks
 
-### 4. Cobra command wiring
+The house rule is to **let the backend validate** and surface its error, not duplicate spec
+constraints in the CLI:
 
-- Argument validation is explicit: `cobra.ExactArgs(N)` for fixed arity, `cobra.MinimumNArgs(1)`
-  for variadic commands (especially `delete`). Missing `Args` on a command that takes positional
-  arguments is a review blocker.
-- Tab completion uses `ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs)`.
-- **Multi-resource delete** uses `deletion.ValidateAndConfirm` + `deletion.Delete`
-  (`pkg/deletion/README.md`). Do not accept a hand-rolled confirmation prompt.
-- **Auth and SDK clients** are built in the shared `PreRunner` during `PersistentPreRunE`. Inside
-  `RunE`, they're accessed lazily via `c.V2Client`, `c.MDSClient`, `c.GetKafkaREST()`. Flag any
-  handler that authenticates or constructs a client itself.
+- Question new hand-rolled validation of a spec-recorded constraint (allowed enum values,
+  required-ness, formats) — the backend already enforces it and returns a field-named error.
+- Flag **relationships** should use Cobra built-ins — `cmd.MarkFlagsMutuallyExclusive(...)` for
+  `oneOf` groups, `cmd.MarkFlagsRequiredTogether(...)` for co-required flags — not a bespoke
+  `if flagA != "" && flagB != "" { ... }` ladder.
+- Case normalization (`strings.ToUpper` on an enum) should be a conscious choice; for
+  `x-extensible-enum` fields a client-side allow-list breaks forward-compat.
+- Do **not** branch on backend error wording — string-matching a server message is brittle and is
+  usually a sign validation should have stayed server-side.
 
-### 5. Backward compatibility (enterprise binary)
+### 3. Backward compatibility (enterprise binary)
 
 Breaking changes require a major release. Treat these as blockers outside a major bump:
 
 - Removing or renaming a command, subcommand, or flag.
 - Changing serialized field names or output format under `-o json` / `-o yaml`.
 - Removing a serialized field, or adding `omitempty` to a field that didn't have it.
+- Printing a status line (e.g. `Updated "x".`) to **stdout** on a command that also emits
+  `-o json`/`-o yaml` — it breaks `| jq`. Status messages belong on stderr, or are omitted for
+  resources that print a payload.
 
-Safe in minor/patch: adding commands/flags/output fields, renaming human-readable column headers in
-default tabular output, hiding a flag. Features marked **EA** (Early Access) or **OP** (Open
+Safe in minor/patch: adding commands/flags/output fields, **renaming a human-readable (`human:`)
+column header**, hiding a flag. Renaming a `serialized:` key is breaking; renaming its `human:`
+label is not — keep that distinction straight. Features marked **EA** (Early Access) or **OP** (Open
 Preview) may break across minor versions — those should say so in the command's `Short`/`Long`.
 
-### 6. Testing
+### 4. Error-handling semantics (not casing)
+
+The casing rules (lowercase error, no trailing period, `ErrorMsg`/`Suggestions` suffixes, combined
+via `errors.NewErrorWithSuggestions`, per `pkg/errors/README.md`) are real but owned by convention
+and `lint-cli` — don't spend review budget on them. Spend it on what tooling can't see:
+
+- An existence/precheck helper must not collapse **every** failure (401, 500, timeout,
+  connection-refused) into "not found" — only a true 404 should map to "not found".
+- Status-code gating needs the right boundary: `< 400` treats a 3xx redirect as success and
+  unmarshals into a zero-value struct (printing a blank "success"). Prefer an explicit 2xx check,
+  noting `201` on create.
+- Errors must not be silently swallowed — the underlying cause should reach the user rather than a
+  generic substitute.
+- Auth/configuration errors should name the missing or invalid setting.
+- User-facing strings wrap commands/flags in **backticks** and names/IDs in **double quotes**
+  (`pkg/output/README.md`).
+
+### 5. Cobra wiring and Cloud/On-Prem gating
+
+- A subcommand must be registered on its parent (new top-level commands in `internal/command.go`);
+  an unregistered command file silently does not exist.
+- `Args` should match arity (`cobra.ExactArgs(N)`, or `cobra.MinimumNArgs(1)` for variadic/`delete`),
+  with `ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs)` where completion applies. Worth a
+  glance, but low-frequency — don't over-index on it.
+- Mode-specific commands gate via the `annotations.RunRequirement` annotation
+  (`RequireCloudLogin` / `RequireOnPremLogin` / etc.) with the **correct** requirement; meaningfully
+  divergent Cloud vs. on-prem behavior belongs in a `command_<sub>_onprem.go` sibling, not an
+  `if cloudLogin { ... } else { ... }` branch. See `pkg/cmd/ANNOTATIONS.md`.
+- **Multi-resource delete** uses `deletion.ValidateAndConfirm` + `deletion.Delete`
+  (`pkg/deletion/README.md`) — not a hand-rolled confirmation prompt.
+- **Auth and SDK clients** are built in the shared `PreRunner`; inside `RunE` they're accessed
+  lazily via `c.V2Client`, `c.MDSClient`, `c.GetKafkaREST()`. Flag any handler that authenticates or
+  constructs a client itself.
+
+### 6. Testing — cover failure paths, not just "a golden exists"
 
 - **Every new command and flag needs an integration test.** Integration tests live in `test/`,
   build the CLI against the mock server in `mock/`, and diff stdout/stderr against golden files in
   `test/fixtures/output/<command>/<test>.golden`. A new command/flag with no `test/` coverage is a
   review blocker (global flags like `-v` / `--unsafe-trace` are exempt).
+- **Each new command needs a failure-path case**, not just the happy path — e.g. not-found and
+  missing-required-flag. A green happy-path golden hides an untested error branch.
+- **Mock handlers should assert the request they received** (forwarded query params, method, body),
+  not just return a canned response — otherwise a wrong-value-sent-to-server bug (including
+  data-loss paths like `delete --version`) still passes its golden.
 - Golden files are regenerated with `-update` **only** when the diff is the intended user-visible
-  change. A golden churn unrelated to the PR's purpose is a red flag.
-- Unit tests are co-located with source in `internal/` and `pkg/` (testify, suite-based).
+  change. Golden churn unrelated to the PR's purpose is a red flag.
+- Unit tests are co-located with source in `internal/` and `pkg/` (testify, suite-based); new
+  frequently-reused helpers deserve one.
+
+### 7. Generator alignment and internal-reference hygiene
+
+- Much of the CMF/CP command surface is emitted by `cli-terraform-generator`. Flag hand-written Go
+  that only re-derives a value already present in the OpenAPI spec — e.g. a hardcoded pending/terminal
+  phase set that duplicates the status enum, or a default hardcoded in the command that the spec
+  already defines. Flag a one-off helper (map-field extraction, output conversion) that duplicates a
+  sibling instead of being generalized into `pkg/flink` (or similar). (Deeper "should this whole thing
+  be generated?" judgment is for human reviewers, not a per-diff check.)
+- No internal identifiers (JIRA/APIE tickets, RFC links, internal service names like `cc-api`)
+  should leak into **user-facing** strings — `Short`/`Long`/`Example`, errors, suggestions. They may
+  stay in engineer-facing doc comments. Also flag PR-introduced comments that carry a stale ticket
+  reference or sit above the wrong function.
+
+### 8. PR description
+
+- Flag if the PR description leaves the applicable sections of `.github/pull_request_template.md`
+  unfilled — release notes, blast radius, tests, and breaking-change / feature-flag status. A blank
+  template on a non-trivial change is worth a comment.
 
 ## Files to skip in reviews (generated or infrastructure)
 
@@ -120,20 +199,3 @@ Do not review these for style, patterns, or best practices:
 - Don't flag that a change "might fail the build" — Semaphore runs `make lint && make test` and the
   author fixes failures before merge.
 - Focus reviews on logic, the checkpoints above, and the compatibility contract.
-
-## Review checklist
-
-Before approving, confirm:
-
-- [ ] Error messages/suggestions follow the casing + `NewErrorWithSuggestions` convention;
-      user-facing strings use backticks for commands/flags and double quotes for names/IDs.
-- [ ] Mode-specific commands gate via the `annotations.RunRequirement` annotation (or a
-      `_onprem.go` sibling), not a runtime branch.
-- [ ] Cobra `Args` validation is present and correct; multi-delete uses the `deletion` helpers;
-      clients are accessed via `PreRunner`, not constructed in the handler.
-- [ ] No breaking change to a command/flag name or to `-o json`/`-o yaml` serialized output outside
-      a major release (EA/OP exceptions called out in help text).
-- [ ] Every new command and flag has an integration test with golden files; golden diffs are
-      intended, not incidental churn.
-- [ ] PR description and applicable checklist items in `.github/pull_request_template.md` are filled
-      in (release notes, blast radius, tests, breaking-change and feature-flag status).
