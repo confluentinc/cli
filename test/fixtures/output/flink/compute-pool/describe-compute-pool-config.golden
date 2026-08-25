@@ -1,4 +1,5 @@
 +----------------------+-------+
+| Organization Id      | org-1 |
 | Default Pool Enabled | false |
 | Default Pool Max CFU | 50    |
 +----------------------+-------+

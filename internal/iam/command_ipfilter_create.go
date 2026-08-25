@@ -12,21 +12,18 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
-	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 const resourceScopeStr = "crn://confluent.cloud/organization=%s/environment=%s"
 
-func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
+func (c *ipFilterCommand) newCreateCommand(_ *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create an IP filter.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
 	}
-	isKafkaEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.kafka.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
-	ifKsqlEnabled := cfg.IsTest || (cfg.Context() != nil && featureflags.Manager.BoolVariation("auth.ip_filter.ksql.cli.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
 	cmd.Example = examples.BuildExampleString(
 		examples.Example{
 			Text: `Create an IP filter named "demo-ip-filter" with operation group "management" and IP groups "ipg-12345" and "ipg-67890":`,
@@ -37,12 +34,6 @@ func (c *ipFilterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 	cmd.Flags().StringSlice("ip-groups", []string{}, "A comma-separated list of IP group IDs.")
 	cmd.Flags().String("environment", "", "Identifier of the environment for which this filter applies. Without this flag, applies only to the organization.")
 	opGroups := []string{"MANAGEMENT", "SCHEMA", "FLINK"}
-	if isKafkaEnabled {
-		opGroups = append(opGroups, "KAFKA_MANAGEMENT", "KAFKA_DATA", "KAFKA_DISCOVERY")
-	}
-	if ifKsqlEnabled {
-		opGroups = append(opGroups, "KSQL")
-	}
 	cmd.Flags().StringSlice("operations", nil, fmt.Sprintf("A comma-separated list of operation groups: %s.", utils.ArrayToCommaDelimitedString(opGroups, "or")))
 	cmd.Flags().Bool("no-public-networks", false, "Use in place of ip-groups to reference the no public networks IP Group.")
 	cmd.MarkFlagsMutuallyExclusive("ip-groups", "no-public-networks")

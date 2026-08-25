@@ -9,11 +9,10 @@ import (
 
 func (c *command) newComputePoolListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "list",
-		Short:       "List Flink compute pools in Confluent Platform.",
-		Args:        cobra.NoArgs,
-		RunE:        c.computePoolListOnPrem,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
+		Use:   "list",
+		Short: "List Flink compute pools in Confluent Platform.",
+		Args:  cobra.NoArgs,
+		RunE:  c.computePoolListOnPrem,
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")

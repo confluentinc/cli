@@ -132,6 +132,34 @@ func AutocompleteClusters(environmentId string, client *ccloudv2.Client) []strin
 	return suggestions
 }
 
+func AddComputePoolFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
+	cmd.Flags().String("compute-pool", "", "Flink compute pool ID.")
+	RegisterFlagCompletionFunc(cmd, "compute-pool", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+		return AutocompleteComputePools(environmentId, c.V2Client)
+	})
+}
+
+func AutocompleteComputePools(environmentId string, client *ccloudv2.Client) []string {
+	computePools, err := client.ListFlinkComputePools("", environmentId, "")
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(computePools))
+	for i, computePool := range computePools {
+		suggestions[i] = fmt.Sprintf("%s\t%s", computePool.GetId(), computePool.Spec.GetDisplayName())
+	}
+	return suggestions
+}
+
 func AddEndpointFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 	cmd.Flags().String("kafka-endpoint", "", "Endpoint to be used for this Kafka cluster.")
 }

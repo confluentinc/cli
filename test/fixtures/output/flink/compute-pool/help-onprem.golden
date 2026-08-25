@@ -1,4 +1,4 @@
-Manage Flink compute pools.
+Manage Flink compute pools in Confluent Platform.
 
 Usage:
   confluent flink compute-pool [command]

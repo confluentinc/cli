@@ -38,7 +38,7 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("sql", "", "The Flink SQL statement.")
-	c.addComputePoolFlag(cmd)
+	pcmd.AddComputePoolFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	c.addDatabaseFlag(cmd)
 	cmd.Flags().Bool("wait", false, "Block until the statement is running or has failed.")
@@ -173,6 +173,8 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	warnings := types.NewStatementWarnings(statement.Status.GetWarnings())
+
 	table := output.NewTable(cmd)
 	table.Add(&statementOut{
 		CreationDate: statement.Metadata.GetCreatedAt(),
@@ -181,7 +183,13 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		ComputePool:  statement.Spec.GetComputePoolId(),
 		Status:       statement.Status.GetPhase(),
 		StatusDetail: statement.Status.GetDetail(),
+		Warnings:     warnings,
 	})
-	table.Filter([]string{"CreationDate", "Name", "Statement", "ComputePool", "Status", "StatusDetail"})
-	return table.Print()
+	table.Filter([]string{"CreationDate", "Name", "Statement", "ComputePool", "Status", "StatusDetail", "Warnings"})
+	if err := table.Print(); err != nil {
+		return err
+	}
+
+	printStatementWarnings(cmd, warnings)
+	return nil
 }

@@ -13,6 +13,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
 	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/utils"
@@ -41,7 +42,7 @@ func (c *command) newStatementListCommand() *cobra.Command {
 
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
-	c.addComputePoolFlag(cmd)
+	pcmd.AddComputePoolFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -100,6 +101,7 @@ func (c *command) statementList(cmd *cobra.Command, _ []string) error {
 			ComputePool:            statement.Spec.GetComputePoolId(),
 			Status:                 statement.Status.GetPhase(),
 			StatusDetail:           statement.Status.GetDetail(),
+			Warnings:               types.NewStatementWarnings(statement.Status.GetWarnings()),
 			LatestOffsets:          statement.Status.GetLatestOffsets(),
 			LatestOffsetsTimestamp: flinkgatewayv1.PtrTime(statement.Status.GetLatestOffsetsTimestamp()),
 		})
