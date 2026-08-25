@@ -36,14 +36,16 @@ func (u *Usage) Collect(cmd *cobra.Command, _ []string) {
 	u.Flags = &flags
 }
 
-// CollectAgentDetect runs agent detection and records the results for usage
-// reporting. Detect degrades to empty signals on its own (walk timeout, depth
-// cap, lookup failure) rather than returning an error, so this can never fail
-// the invocation; the recover is only a backstop against a panic escaping Detect.
+// CollectAgentDetect runs agent detection and assigns the results onto this
+// Usage's agent-detect fields. Detect degrades to empty signals on its own
+// (walk timeout, depth cap, lookup failure) rather than returning an error, so
+// this can never fail the invocation; the recover is only a backstop against a
+// panic escaping Detect.
 //
-// TODO(APIE-1608): assign attrs onto the new CliV1Usage agent-detect fields once
-// APIE-1607 lands the schema update. Until then the computed Attributes are only
-// trace-logged.
+// The CliV1Usage fields assigned below are flat additions from APIE-1607 (see
+// https://confluentinc.atlassian.net/wiki/spaces/AEGI/pages/6089736699), named
+// and typed to mirror agentdetect.Attributes one field at a time. This won't
+// compile until that schema update lands in ccloud-sdk-go-v2.
 func (u *Usage) CollectAgentDetect() {
 	defer func() {
 		if r := recover(); r != nil {
@@ -52,7 +54,25 @@ func (u *Usage) CollectAgentDetect() {
 	}()
 
 	attrs := agentdetect.Detect(agentdetect.Options{}).Attributes()
-	log.CliLogger.Tracef("agent detection attributes: %+v", attrs)
+
+	u.AgentEnv = optionalStrings(attrs.AgentEnv)
+	u.AgentProc = attrs.AgentProc
+	u.AgentArgv = attrs.AgentArgv
+	u.IdeHost = attrs.IDEHost
+	u.Interactive = cliv1.PtrString(attrs.Interactive)
+	u.ChainShape = cliv1.PtrString(attrs.ChainShape)
+	u.Wrappers = optionalStrings(attrs.Wrappers)
+	u.Ci = optionalStrings(attrs.CI)
+	u.AgentTables = cliv1.PtrString(attrs.Tables)
+}
+
+// optionalStrings mirrors the CliV1Usage convention (see Flags, StackFrames):
+// an unset slice is a nil pointer, not a pointer to an empty slice.
+func optionalStrings(s []string) *[]string {
+	if len(s) == 0 {
+		return nil
+	}
+	return &s
 }
 
 // Report sends usage data to cc-cli-usage-service.
