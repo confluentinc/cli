@@ -51,7 +51,7 @@ func (c *connectClusterCommand) list(cmd *cobra.Command, _ []string) error {
 		out := &connectClusterOut{
 			ID:                              connectCluster.GetId(),
 			ConfluentPlatformConnectCluster: connectCluster.GetConfluentPlatformConnectClusterId(),
-			ConfluentPlatformKafkaClusterId: connectCluster.GetKafkaClusterId(),
+			KafkaClusterId:                  connectCluster.GetKafkaClusterId(),
 			Environment:                     connectCluster.Environment.GetId(),
 			UsmKafkaClusterId:               connectCluster.GetUsmKafkaClusterId(),
 			Cloud:                           connectCluster.GetCloud(),
