@@ -59,15 +59,25 @@ func (u *Usage) CollectAgentDetect() {
 	u.AgentProc = attrs.AgentProc
 	u.AgentArgv = attrs.AgentArgv
 	u.IdeHost = attrs.IDEHost
-	u.Interactive = cliv1.PtrString(attrs.Interactive)
-	u.ChainShape = cliv1.PtrString(attrs.ChainShape)
+	u.Interactive = optionalString(attrs.Interactive)
+	u.ChainShape = optionalString(attrs.ChainShape)
 	u.Wrappers = optionalStrings(attrs.Wrappers)
 	u.Ci = optionalStrings(attrs.CI)
-	u.AgentTables = cliv1.PtrString(attrs.Tables)
+	u.AgentTables = optionalString(attrs.Tables)
 }
 
-// optionalStrings mirrors the CliV1Usage convention (see Flags, StackFrames):
-// an unset slice is a nil pointer, not a pointer to an empty slice.
+// optionalString and optionalStrings mirror the CliV1Usage convention (see
+// Flags, StackFrames): an unset field is a nil pointer, never a pointer to an
+// empty value. attrs.ChainShape in particular can be "" (e.g. an ancestry walk
+// that finds pid 1 immediately), so wrapping unconditionally would send an
+// empty string instead of omitting the field.
+func optionalString(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
+}
+
 func optionalStrings(s []string) *[]string {
 	if len(s) == 0 {
 		return nil
