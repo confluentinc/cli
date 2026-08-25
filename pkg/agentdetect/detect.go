@@ -322,9 +322,7 @@ func boundedWalk(opts Options) walkResult {
 	done := make(chan walkResult, 1)
 	go func() {
 		// walk touches live OS process data through ProcSource, so a panic here
-		// must degrade to an empty result rather than crash the process: a panic
-		// in this goroutine can't be caught by boundedWalk's own recover, only by
-		// one inside the goroutine itself.
+		// must degrade to an empty result rather than crash the process
 		defer func() {
 			if r := recover(); r != nil {
 				done <- walkResult{meta: WalkMeta{StoppedAt: "panic", Truncated: true}}
