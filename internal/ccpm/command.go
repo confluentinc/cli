@@ -14,6 +14,10 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	cmd.AddCommand(newPluginCommand(prerunner))
+	cmd.AddCommand(
+		newCustomConnectPluginCommand(cfg, prerunner),
+		// cli-tfgen:cli-subcommands
+	)
+
 	return cmd
 }

@@ -5,11 +5,11 @@ Usage:
 Examples:
 Create a new version 1.0.0 of a custom connect plugin.
 
-  $ confluent ccpm plugin version create --plugin plugin-123456 --version 1.0.0 --environment env-abcdef --plugin-file datagen.zip --connector-classes 'io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE'
+  $ confluent ccpm custom-connect-plugin version create --plugin plugin-123456 --version 1.0.0 --environment env-abcdef --plugin-file datagen.zip --connector-classes 'io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE'
 
 Create a new version 2.1.0 of a custom connect plugin with multiple connector classes and optional fields.
 
-  $ confluent ccpm plugin version create --plugin plugin-123456 --version 2.1.0 --environment env-abcdef --plugin-file datagen.zip --connector-classes 'io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE,io.confluent.kafka.connect.sink.SinkConnector:SINK' --sensitive-properties 'passwords,keys,tokens' --documentation-link 'https://github.com/confluentinc/kafka-connect-datagen'
+  $ confluent ccpm custom-connect-plugin version create --plugin plugin-123456 --version 2.1.0 --environment env-abcdef --plugin-file datagen.zip --connector-classes 'io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE,io.confluent.kafka.connect.sink.SinkConnector:SINK' --sensitive-properties 'passwords,keys,tokens' --documentation-link 'https://github.com/confluentinc/kafka-connect-datagen'
 
 Flags:
       --plugin string                  REQUIRED: Plugin ID.
