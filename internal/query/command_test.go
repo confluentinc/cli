@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -33,7 +34,7 @@ func TestNew(t *testing.T) {
 	require.Equal(t, "query [sql]", cmd.Use)
 	require.False(t, cmd.Hidden, "cfg.IsTest should keep the command visible in tests")
 
-	for _, name := range []string{"sql", "compute-pool", "service-account", "database", "property", "wait-timeout", "max-rows", "raw", "environment", "context", "output", "cloud", "region"} {
+	for _, name := range []string{"sql", "file", "compute-pool", "service-account", "database", "cluster", "property", "wait-timeout", "max-rows", "raw", "environment", "catalog", "context", "output", "cloud", "region"} {
 		require.NotNil(t, cmd.Flags().Lookup(name), "expected --%s to be registered", name)
 	}
 
@@ -41,30 +42,135 @@ func TestNew(t *testing.T) {
 	// argument instead, so requiredness is enforced by resolveSQL, not by cobra.
 	sqlFlag := cmd.Flags().Lookup("sql")
 	require.Empty(t, sqlFlag.Annotations[cobra.BashCompOneRequiredFlag])
+
+	// --catalog shares storage with --environment: setting one is setting the other.
+	require.NoError(t, cmd.Flags().Set("catalog", "env-999"))
+	environment, err := cmd.Flags().GetString("environment")
+	require.NoError(t, err)
+	require.Equal(t, "env-999", environment)
 }
 
-func TestResolveSQL(t *testing.T) {
-	newSQLCmd := func(sqlFlagValue string) *cobra.Command {
+func TestResolveEnvironmentAlias(t *testing.T) {
+	newEnvCmd := func() *cobra.Command {
 		cmd := &cobra.Command{}
-		cmd.Flags().String("sql", "", "")
-		if sqlFlagValue != "" {
-			require.NoError(t, cmd.Flags().Set("sql", sqlFlagValue))
+		v := new(stringValueForTest)
+		cmd.Flags().Var(v, "environment", "")
+		cmd.Flags().Var(v, "catalog", "")
+		return cmd
+	}
+
+	// Neither given, or only one given: fine.
+	require.NoError(t, resolveEnvironmentAlias(newEnvCmd()))
+
+	cmd := newEnvCmd()
+	require.NoError(t, cmd.Flags().Set("environment", "env-123"))
+	require.NoError(t, resolveEnvironmentAlias(cmd))
+
+	// Both explicitly given: a usage error, even though they'd resolve to the same
+	// underlying value.
+	cmd = newEnvCmd()
+	require.NoError(t, cmd.Flags().Set("environment", "env-123"))
+	require.NoError(t, cmd.Flags().Set("catalog", "env-123"))
+	require.ErrorContains(t, resolveEnvironmentAlias(cmd), "must not be given both")
+}
+
+// stringValueForTest is a minimal pflag.Value letting two flag names share one
+// value, the way addCatalogAlias does for "environment"/"catalog".
+type stringValueForTest string
+
+func (s *stringValueForTest) String() string     { return string(*s) }
+func (s *stringValueForTest) Set(v string) error { *s = stringValueForTest(v); return nil }
+func (s *stringValueForTest) Type() string       { return "string" }
+
+func TestResolveDatabase(t *testing.T) {
+	newDBCmd := func(database, cluster string) *cobra.Command {
+		cmd := &cobra.Command{}
+		cmd.Flags().String("database", "", "")
+		cmd.Flags().String("cluster", "", "")
+		if database != "" {
+			require.NoError(t, cmd.Flags().Set("database", database))
+		}
+		if cluster != "" {
+			require.NoError(t, cmd.Flags().Set("cluster", cluster))
 		}
 		return cmd
 	}
 
-	sql, err := resolveSQL(newSQLCmd("SELECT 1"), nil)
+	commandWithActiveCluster := func(activeCluster string) *command {
+		return newTestCommand(&cliconfig.Context{KafkaClusterContext: &cliconfig.KafkaClusterContext{ActiveKafkaCluster: activeCluster}})
+	}
+
+	c := commandWithActiveCluster("")
+
+	got, err := c.resolveDatabase(newDBCmd("", ""))
+	require.NoError(t, err)
+	require.Empty(t, got)
+
+	got, err = c.resolveDatabase(newDBCmd("lkc-database", ""))
+	require.NoError(t, err)
+	require.Equal(t, "lkc-database", got)
+
+	got, err = c.resolveDatabase(newDBCmd("", "lkc-cluster"))
+	require.NoError(t, err)
+	require.Equal(t, "lkc-cluster", got)
+
+	_, err = c.resolveDatabase(newDBCmd("lkc-database", "lkc-cluster"))
+	require.ErrorContains(t, err, "must not be given both")
+
+	// Neither flag given: falls back to the active Kafka cluster context, same
+	// "flag, then context" chain environment and compute pool follow.
+	c = commandWithActiveCluster("lkc-context-default")
+	got, err = c.resolveDatabase(newDBCmd("", ""))
+	require.NoError(t, err)
+	require.Equal(t, "lkc-context-default", got)
+
+	// An explicit --database still wins over the context default.
+	got, err = c.resolveDatabase(newDBCmd("lkc-explicit", ""))
+	require.NoError(t, err)
+	require.Equal(t, "lkc-explicit", got)
+}
+
+func TestResolveSQL(t *testing.T) {
+	newSQLCmd := func(sqlFlagValue, fileFlagValue string) *cobra.Command {
+		cmd := &cobra.Command{}
+		cmd.Flags().String("sql", "", "")
+		cmd.Flags().String("file", "", "")
+		if sqlFlagValue != "" {
+			require.NoError(t, cmd.Flags().Set("sql", sqlFlagValue))
+		}
+		if fileFlagValue != "" {
+			require.NoError(t, cmd.Flags().Set("file", fileFlagValue))
+		}
+		return cmd
+	}
+
+	sql, err := resolveSQL(newSQLCmd("SELECT 1", ""), nil)
 	require.NoError(t, err)
 	require.Equal(t, "SELECT 1", sql)
 
-	sql, err = resolveSQL(newSQLCmd(""), []string{"SELECT 2"})
+	sql, err = resolveSQL(newSQLCmd("", ""), []string{"SELECT 2"})
 	require.NoError(t, err)
 	require.Equal(t, "SELECT 2", sql)
 
-	_, err = resolveSQL(newSQLCmd("SELECT 1"), []string{"SELECT 2"})
-	require.ErrorContains(t, err, "must not be given both")
+	sqlFile := filepath.Join(t.TempDir(), "query.sql")
+	require.NoError(t, os.WriteFile(sqlFile, []byte("SELECT 3"), 0o600))
+	sql, err = resolveSQL(newSQLCmd("", sqlFile), nil)
+	require.NoError(t, err)
+	require.Equal(t, "SELECT 3", sql)
 
-	_, err = resolveSQL(newSQLCmd(""), nil)
+	_, err = resolveSQL(newSQLCmd("", "/nonexistent/query.sql"), nil)
+	require.ErrorContains(t, err, "failed to read the SQL statement")
+
+	_, err = resolveSQL(newSQLCmd("SELECT 1", ""), []string{"SELECT 2"})
+	require.ErrorContains(t, err, "must be given exactly one way")
+
+	_, err = resolveSQL(newSQLCmd("SELECT 1", sqlFile), nil)
+	require.ErrorContains(t, err, "must be given exactly one way")
+
+	_, err = resolveSQL(newSQLCmd("", sqlFile), []string{"SELECT 2"})
+	require.ErrorContains(t, err, "must be given exactly one way")
+
+	_, err = resolveSQL(newSQLCmd("", ""), nil)
 	require.ErrorContains(t, err, "is required")
 }
 
@@ -128,12 +234,18 @@ func TestBuildQueryProperties(t *testing.T) {
 			},
 		},
 		{
-			name:    "property flag overrides the snapshot mode default",
+			name:    "property flag cannot override the snapshot mode",
 			catalog: "env-123",
 			flags:   []string{"sql.snapshot.mode=earliest"},
+			wantErr: true,
+		},
+		{
+			name:    "property flag redundantly setting the snapshot mode to its default is allowed",
+			catalog: "env-123",
+			flags:   []string{"sql.snapshot.mode=now"},
 			expected: map[string]string{
 				"sql.current-catalog": "env-123",
-				"sql.snapshot.mode":   "earliest",
+				"sql.snapshot.mode":   "now",
 			},
 		},
 		{
@@ -252,6 +364,7 @@ func TestPrintQueryResult(t *testing.T) {
 			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
 		})
 		require.Contains(t, out, `"statement_name": "stmt"`)
+		require.Contains(t, out, `"engine": "snapshot"`)
 		require.Contains(t, out, `"phase": "RUNNING"`)
 		require.Contains(t, out, `"truncated": true`)
 		require.Contains(t, out, `"incomplete": true`)
@@ -287,6 +400,7 @@ func TestPrintQueryResult(t *testing.T) {
 			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, true))
 		})
 		require.NotContains(t, out, "statement_name")
+		require.NotContains(t, out, "engine")
 		require.Contains(t, out, `"id": 1021`)
 	})
 
@@ -303,6 +417,7 @@ func TestPrintQueryResult(t *testing.T) {
 			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
 		})
 		require.Contains(t, out, "statement_name: stmt")
+		require.Contains(t, out, "engine: snapshot")
 	})
 }
 
@@ -478,14 +593,25 @@ func TestHandleQueryError(t *testing.T) {
 		require.True(t, settled)
 	})
 
-	t.Run("a 404 results-fetch error suggests the page-retention window", func(t *testing.T) {
+	t.Run("a 404 results-fetch error suggests the statement is gone or mistyped", func(t *testing.T) {
 		c := newTestCommand(nil)
 		settled := false
 		err := c.handleQueryError(nil, "env-1", "stmt", &query.ResultsFetchError{Err: flinkerror.NewError("not found", "", http.StatusNotFound)}, &settled)
 		require.Error(t, err)
 		var withSuggestions errors.ErrorWithSuggestions
 		require.ErrorAs(t, err, &withSuggestions)
-		require.Contains(t, withSuggestions.GetSuggestionsMsg(), "only retains result pages for a limited window")
+		require.Contains(t, withSuggestions.GetSuggestionsMsg(), "no longer exists")
+		require.False(t, settled)
+	})
+
+	t.Run("a 408 results-fetch error tells the user to re-run the query", func(t *testing.T) {
+		c := newTestCommand(nil)
+		settled := false
+		err := c.handleQueryError(nil, "env-1", "stmt", &query.ResultsFetchError{Err: flinkerror.NewError("Snapshot statement results are only available for 1 hour after the statement is created.", "", http.StatusRequestTimeout)}, &settled)
+		require.Error(t, err)
+		var withSuggestions errors.ErrorWithSuggestions
+		require.ErrorAs(t, err, &withSuggestions)
+		require.Contains(t, withSuggestions.GetSuggestionsMsg(), "Re-run the query")
 		require.False(t, settled)
 	})
 

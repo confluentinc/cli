@@ -263,10 +263,9 @@ func handleStatementUpdate(t *testing.T) http.HandlerFunc {
 		principal := req.Spec.GetPrincipal()
 		computePool := req.Spec.GetComputePoolId()
 
-		// The real gateway replaces the statement wholesale rather than patching it,
-		// and rejects a body that omits the SQL text with "Statement is nil or empty".
-		// Reject it here too: a mock more permissive than the gateway let a broken
-		// stop path pass every test and only fail against staging.
+		// The real gateway rejects a body omitting the SQL text; a mock more
+		// permissive than that let a broken stop path pass every test and only
+		// fail against staging.
 		if req.Spec.GetStatement() == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			err = writeError(w, "Request is malformed: Violations: Statement is nil or empty")

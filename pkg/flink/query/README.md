@@ -50,18 +50,32 @@ materialized table are identical; for anything else the caller decides.
 #### The drain loop
 
 `page_token` is a positional offset into the collect-sink protocol, not an opaque cursor.
-There is therefore no token that advances past a page which did not supply one. When the
-token runs out while the statement is still `RUNNING`:
+There is therefore no token that advances past a page which did not supply one.
 
-- the page was **empty** — the gateway is saying "nothing yet". Re-requesting the same
-  offset is harmless, so the loop backs off and retries.
-- the page carried **rows** — advancing is impossible and re-requesting would duplicate
-  them. The loop stops and sets `Result.Incomplete`, which the command surfaces as a
-  warning.
+The gateway's own foreground/streaming endpoint (`GetStatementResultEndpoint` in
+`cc-flink-gateway-service-v2`, `internal/service/sql/v1/service.go`) only leaves `next`
+empty when the JobManager itself reports `IsFinished == true` — every other case, even an
+empty page, gets a fresh `next` token. So an empty `next` is not ambiguous at the
+protocol level; it means the JobManager is genuinely done producing rows.
 
-Whether that second branch is reachable in practice is still unconfirmed — it needs an
-answer from the gateway team, not inference from client code. It is written defensively
-because the alternative failure mode is a silent short read.
+What can still go wrong is a race between two *separately updated* signals: the
+JobManager's own `IsFinished` (which drives whether `next` is populated) versus the
+statement's `Status.Phase`, read here via a separate `GetStatement` call reconciled by a
+different subsystem. If that call lands just before the JobManager flips to finished,
+`terminalBeforeFetch` comes back `false` even though the page fetched right after is
+already the last one. `drain()` handles this by re-reading the phase once more instead of
+conceding immediately:
+
+- the page was **empty** — treated as "nothing yet". Re-requesting the same offset is
+  harmless, so the loop backs off and retries.
+- the page carried **rows** and the phase read before the fetch wasn't terminal — the
+  loop re-reads the phase once more before giving up. Only if that second read is still
+  non-terminal does it set `Result.Incomplete`, which the command surfaces as a warning.
+
+This is confirmed from gateway source for the one execution path this package exercises
+(foreground, JobManager-backed snapshot statements) — not verified for other paths (e.g.
+any legacy/batch branch this package never hits), so the phase re-check stays as
+defense-in-depth rather than being narrowed or removed.
 
 #### Known limitations
 
@@ -75,8 +89,15 @@ because the alternative failure mode is a silent short read.
   same order as the dataplane token's own lifetime, so a run is unlikely to still be
   going when a refresh would be needed. It only bites if `--timeout` is raised well past
   the default.
-- **No expired-page-token handling.** The gateway retains result pages for a bounded
-  window; an expired token surfaces as a raw error.
+- **Expired-result handling lives in the command, not here.** This package just returns
+  `ResultsFetchError` on any failed page fetch. `internal/query/command.go`'s
+  `handleQueryError` is what distinguishes a 404 (statement deleted or mistyped) from a
+  408 (the snapshot result window has closed) and gives each a targeted suggestion.
+  Confirmed from gateway source: for `sql.snapshot.mode=now` statements, results are
+  retained for exactly one hour after statement creation
+  (`cc-flink-gateway-service-v2` `internal/service/sql/v1/service.go`,
+  `GetStatementResultEndpoint`), after which the gateway returns 408 with an explicit
+  message instead of continuing to page.
 - **The whole result set is held in memory** as `[]types.StatementResultRow`. There is no
   streaming-to-stdout path, so the peak footprint scales with the result.
 - **Ops are dropped from serialized output.** The command's `-o json` / `-o yaml` rows are

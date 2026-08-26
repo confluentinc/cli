@@ -118,8 +118,8 @@ func TestRunDrainsEveryPage(t *testing.T) {
 	running := statement("RUNNING", boundedTraits("id"))
 	completed := statement("COMPLETED", boundedTraits("id"))
 
-	// Statement leaves PENDING while it is still producing, then completes once the
-	// last page has been handed out. The phase is read before each page, not after.
+	// Leaves PENDING, produces, completes after the last page — phase read before
+	// each page, not after.
 	gomock.InOrder(
 		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(running, nil),
 		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(running, nil),
@@ -139,9 +139,8 @@ func TestRunDrainsEveryPage(t *testing.T) {
 	require.False(t, result.Incomplete)
 }
 
-// The interactive shell treats a missing page token as "all results fetched". This
-// asserts that a run does not silently exit successfully when the statement is still
-// running and there is no token left to advance with.
+// Unlike the shell (missing token = done), a run must not silently succeed when
+// the statement is still running and there's no token left to advance with.
 func TestRunFlagsIncompleteWhenPagesStopBeforeStatementDoes(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	running := statement("RUNNING", boundedTraits("id"))
@@ -161,11 +160,9 @@ func TestRunFlagsIncompleteWhenPagesStopBeforeStatementDoes(t *testing.T) {
 	require.Equal(t, [][]string{{"1"}}, rowValues(t, result))
 }
 
-// The statement can reach a terminal phase during the GetStatementResults call, not
-// just between loop iterations — reproduced in practice against a real gateway. The
-// phase read before that call (terminalBeforeFetch) is stale by the time the page with
-// no next token comes back, so the drain loop must re-read it before concluding the
-// read was short.
+// The statement can reach a terminal phase during the GetStatementResults call
+// itself (reproduced against a real gateway) — terminalBeforeFetch is stale by
+// then, so drain must re-read phase before concluding the read was short.
 func TestRunDoesNotFlagIncompleteWhenStatementCompletesDuringTheFinalFetch(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	running := statement("RUNNING", boundedTraits("id"))
@@ -208,11 +205,9 @@ func TestRunRetriesEmptyPagesUntilStatementIsTerminal(t *testing.T) {
 	require.Equal(t, [][]string{{"1"}}, rowValues(t, result))
 }
 
-// The fix reads the statement's phase before fetching a page, not after. If it read
-// the phase afterward instead, a statement that finished in the gap between the two
-// calls could make a possibly-short page look complete. Pinning the exact call order
-// here means a regression back to "results then status" fails loudly instead of just
-// occasionally under-counting rows in production.
+// Phase must be read before fetching a page, not after — reading it after could
+// miss a completion happening in the gap. Pinning the call order here makes a
+// regression fail loudly instead of occasionally under-counting rows in prod.
 func TestRunReadsStatementStateBeforeFetchingResults(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	running := statement("RUNNING", boundedTraits("id"))
@@ -318,8 +313,8 @@ func TestRunAllowsUnboundedStatementWhenNotRequired(t *testing.T) {
 	require.Len(t, result.Rows, 1)
 }
 
-// A row whose width does not match the schema must fail the run. The shell drops such
-// rows and returns a bool nobody reads, which would mean a short result set here.
+// A row whose width doesn't match the schema must fail the run — unlike the shell,
+// which drops such rows silently.
 func TestRunFailsOnRowSchemaMismatch(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	completed := statement("COMPLETED", boundedTraits("id", "status"))
@@ -362,9 +357,8 @@ func TestRunStopsOnCancelledContext(t *testing.T) {
 	require.ErrorIs(t, err, context.Canceled)
 }
 
-// A failure fetching a page is wrapped so the caller can tell it apart from a
-// failure reading the statement itself — the gateway's page-retention window is the
-// motivating case, but the wrapping applies to any GetStatementResults failure.
+// A page-fetch failure is wrapped so the caller can tell it apart from a failure
+// reading the statement itself.
 func TestRunWrapsResultsFetchErrors(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	completed := statement("COMPLETED", boundedTraits("id"))
@@ -386,24 +380,4 @@ func TestRunPropagatesGatewayErrors(t *testing.T) {
 
 	_, err := Run(context.Background(), testOptions(client), testStatementName)
 	require.ErrorContains(t, err, "unauthorized")
-}
-
-func TestExtractPageToken(t *testing.T) {
-	tests := []struct {
-		name    string
-		nextUrl string
-		want    string
-	}{
-		{name: "no next url", nextUrl: "", want: ""},
-		{name: "token present", nextUrl: "https://example.com/results?page_token=20", want: "20"},
-		{name: "url without a token", nextUrl: "https://example.com/results", want: ""},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			token, err := extractPageToken(test.nextUrl)
-			require.NoError(t, err)
-			require.Equal(t, test.want, token)
-		})
-	}
 }
