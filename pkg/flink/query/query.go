@@ -258,6 +258,18 @@ func drain(ctx context.Context, opts Options, statementName string, schema flink
 		}
 
 		if len(pageRows) > 0 {
+			// terminalBeforeFetch only reflects the phase read before the results
+			// call above — the statement can reach a terminal phase during that
+			// call, which would make this a false Incomplete on a query that
+			// actually finished. Re-read the phase once before conceding; a
+			// GetStatement failure here falls back to Incomplete rather than
+			// losing the rows already collected.
+			if statement, err := opts.authenticatedClient().GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId); err == nil {
+				result.Statement = statement
+				if IsTerminal(types.PHASE(statement.Status.GetPhase())) {
+					return nil
+				}
+			}
 			result.Incomplete = true
 			return nil
 		}
