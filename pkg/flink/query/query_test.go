@@ -151,11 +151,38 @@ func TestRunFlagsIncompleteWhenPagesStopBeforeStatementDoes(t *testing.T) {
 		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(running, nil),
 		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
 			Return(page("", []any{"1"}), nil),
+		// The re-check before conceding Incomplete: still RUNNING, so it stays Incomplete.
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(running, nil),
 	)
 
 	result, err := Run(context.Background(), testOptions(client), testStatementName)
 	require.NoError(t, err)
 	require.True(t, result.Incomplete)
+	require.Equal(t, [][]string{{"1"}}, rowValues(t, result))
+}
+
+// The statement can reach a terminal phase during the GetStatementResults call, not
+// just between loop iterations — reproduced in practice against a real gateway. The
+// phase read before that call (terminalBeforeFetch) is stale by the time the page with
+// no next token comes back, so the drain loop must re-read it before concluding the
+// read was short.
+func TestRunDoesNotFlagIncompleteWhenStatementCompletesDuringTheFinalFetch(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	running := statement("RUNNING", boundedTraits("id"))
+	completed := statement("COMPLETED", boundedTraits("id"))
+
+	gomock.InOrder(
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(running, nil),
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(running, nil),
+		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
+			Return(page("", []any{"1"}), nil),
+		// The statement finished during the GetStatementResults call above.
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil),
+	)
+
+	result, err := Run(context.Background(), testOptions(client), testStatementName)
+	require.NoError(t, err)
+	require.False(t, result.Incomplete)
 	require.Equal(t, [][]string{{"1"}}, rowValues(t, result))
 }
 
