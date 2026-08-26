@@ -55,9 +55,10 @@ type command struct {
 // meant to cover other backends (e.g. Lightning Tables) later without a rename.
 func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "query [name]",
+		Use:   "query [sql]",
 		Short: "Run a bounded Flink SQL query and print its results.",
 		Long: "Run a bounded (snapshot) Flink SQL query, block until it finishes, and print the complete result set.\n\n" +
+			"The SQL can be given as \"--sql\" or as a positional argument, but not both.\n\n" +
 			"Unlike statement creation, which submits a statement and returns immediately, this command waits for every " +
 			"result page and exits with a non-zero status if the statement fails. It is intended for scripting and " +
 			"one-shot queries against a bounded (point-in-time) result set.\n\n" +
@@ -84,18 +85,22 @@ func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
 				Text: "Emit a bare JSON array of rows, with no envelope, for a script that only wants the data.",
 				Code: `confluent query --sql "SELECT * FROM orders LIMIT 10;" --output json --raw`,
 			},
+			examples.Example{
+				Text: "Pass the SQL as a positional argument instead of \"--sql\".",
+				Code: `confluent query "SELECT * FROM orders LIMIT 10;"`,
+			},
 		),
 	}
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	cmd.RunE = c.runQuery
 
-	cmd.Flags().String("sql", "", "The Flink SQL statement.")
+	cmd.Flags().String("sql", "", "The Flink SQL statement. Alternatively, pass it as a positional argument.")
 	c.addComputePoolFlag(cmd)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	c.addDatabaseFlag(cmd)
 	cmd.Flags().StringSlice("property", []string{}, "A mechanism to pass properties in the form key=value when creating a Flink statement.")
-	cmd.Flags().Duration("timeout", config.DefaultTimeoutDuration, "Maximum time to wait for the query to finish before giving up.")
+	cmd.Flags().Duration("wait-timeout", config.DefaultTimeoutDuration, "Maximum time to wait for the query to finish before giving up.")
 	cmd.Flags().Int("max-rows", 0, "Stop fetching and discard the rest after this many rows, or 0 to fetch every row. Client-side only: rows past the limit are still produced by the query.")
 	cmd.Flags().Bool("raw", false, `Emit the rows as a bare array with no envelope. Requires "-o json" or "-o yaml".`)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -103,8 +108,6 @@ func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
-
-	cobra.CheckErr(cmd.MarkFlagRequired("sql"))
 
 	return cmd
 }
@@ -184,6 +187,12 @@ type queryOut struct {
 	// while the statement was still running, so rows may be missing. The stderr
 	// warning alone is invisible to a script that only reads stdout.
 	Incomplete bool `json:"incomplete" yaml:"incomplete"`
+	// AppendOnly is nil when the gateway hasn't reported it (traits not yet known),
+	// true for a statement that only ever inserts, false when it emits updates and
+	// deletes — Rows is then the raw changelog, not a materialized table. This is the
+	// only signal a script gets for that distinction: rows carry no per-row operation
+	// marker, and the equivalent warning otherwise only reaches stderr.
+	AppendOnly *bool `json:"append_only,omitempty" yaml:"append_only,omitempty"`
 }
 
 func (c *command) runQuery(cmd *cobra.Command, args []string) error {
@@ -197,27 +206,16 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
 	}
 
+	// No separate cloud/region requirement here: computePool falls back to context
+	// (set by `flink compute-pool use` or `--compute-pool`), and GetFlinkGatewayClient
+	// below is the single place that decides whether enough is known to pick a gateway
+	// endpoint — from the compute pool if given, otherwise from the cloud/region
+	// context (set by `flink region use` or `--cloud`/`--region`).
 	computePool := c.Context.GetCurrentFlinkComputePool()
-	cloud, err := cmd.Flags().GetString("cloud")
-	if err != nil {
-		return err
-	}
-
-	region, err := cmd.Flags().GetString("region")
-	if err != nil {
-		return err
-	}
-
-	if computePool == "" && (cloud == "" || region == "") {
-		return errors.New("the `--cloud` and `--region` flags are required when `--compute-pool` is not specified")
-	}
 
 	name := types.GenerateStatementName()
-	if len(args) == 1 {
-		name = args[0]
-	}
 
-	sql, err := cmd.Flags().GetString("sql")
+	sql, err := resolveSQL(cmd, args)
 	if err != nil {
 		return err
 	}
@@ -227,7 +225,7 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	timeout, err := cmd.Flags().GetDuration("timeout")
+	timeout, err := cmd.Flags().GetDuration("wait-timeout")
 	if err != nil {
 		return err
 	}
@@ -352,7 +350,29 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 		output.ErrPrintln(false, "Warning: this statement emits updates and deletions. The rows below are the raw changelog, not a materialized table.")
 	}
 
-	return c.printQueryResult(cmd, name, result, appendOnlyKnown && !isAppendOnly, raw)
+	return c.printQueryResult(cmd, name, result, isAppendOnly, appendOnlyKnown, raw)
+}
+
+// resolveSQL returns the SQL text from whichever of "--sql" or the positional argument
+// was given. Exactly one of the two is required; neither or both is a usage error.
+func resolveSQL(cmd *cobra.Command, args []string) (string, error) {
+	sql, err := cmd.Flags().GetString("sql")
+	if err != nil {
+		return "", err
+	}
+
+	if len(args) == 1 {
+		if sql != "" {
+			return "", errors.New("the SQL statement must not be given both as a positional argument and with the `--sql` flag")
+		}
+		return args[0], nil
+	}
+
+	if sql == "" {
+		return "", errors.New("the SQL statement is required: pass it as a positional argument or with the `--sql` flag")
+	}
+
+	return sql, nil
 }
 
 // buildQueryProperties seeds the statement with the catalog and snapshot mode, then
@@ -415,7 +435,7 @@ func (c *command) handleQueryError(client *ccloudv2.FlinkGatewayClient, environm
 		}
 		return errors.NewErrorWithSuggestions(
 			fmt.Sprintf(`query %s before statement "%s" finished`, reason, name),
-			fmt.Sprintf("Check the statement with `confluent flink statement describe %s`, or raise the limit with the `--timeout` flag.", name),
+			fmt.Sprintf("Check the statement with `confluent flink statement describe %s`, or raise the limit with the `--wait-timeout` flag.", name),
 		)
 	}
 
@@ -452,7 +472,7 @@ func (c *command) handleQueryError(client *ccloudv2.FlinkGatewayClient, environm
 // gateway call: the dataplane token behind client is short-lived, and this command has
 // no equivalent of the shell's synchronizedTokenRefresh wrapping every call, so without
 // this a query that outlives that token dies on a 401 well before the command's own
-// --timeout is reached.
+// --wait-timeout is reached.
 func (c *command) refreshGatewayToken(client *ccloudv2.FlinkGatewayClient, jwtValidator jwt.Validator) func() error {
 	return func() error {
 		jwtCtx := &cliconfig.Context{State: &cliconfig.ContextState{AuthToken: client.AuthToken}}
@@ -484,6 +504,10 @@ func (c *command) stopStatement(client *ccloudv2.FlinkGatewayClient, environment
 			done <- err
 			return
 		}
+		if statement.Spec == nil {
+			done <- fmt.Errorf(`statement "%s" has no spec`, name)
+			return
+		}
 		statement.Spec.Stopped = flinkgatewayv1.PtrBool(true)
 		done <- client.UpdateStatement(environmentId, name, c.Context.LastOrgId, statement)
 	}()
@@ -502,7 +526,7 @@ func (c *command) stopStatement(client *ccloudv2.FlinkGatewayClient, environment
 	}
 }
 
-func (c *command) printQueryResult(cmd *cobra.Command, name string, result *query.Result, showOperation, raw bool) error {
+func (c *command) printQueryResult(cmd *cobra.Command, name string, result *query.Result, isAppendOnly, appendOnlyKnown, raw bool) error {
 	columns := make([]queryColumnOut, len(result.Columns))
 	headers := make([]string, len(result.Columns))
 	for i, column := range result.Columns {
@@ -511,14 +535,17 @@ func (c *command) printQueryResult(cmd *cobra.Command, name string, result *quer
 		headers[i] = column.GetName()
 	}
 
+	showOperation := appendOnlyKnown && !isAppendOnly
+
 	if output.GetFormat(cmd).IsSerialized() {
 		rows := make([]map[string]any, len(result.Rows))
 		for i, row := range result.Rows {
+			// Every row is guaranteed len(headers) fields: Run() hard-errors on a
+			// row/schema mismatch (see ConvertToInternalResults) before this
+			// function ever sees a result, so there is nothing to guard here.
 			fields := make(map[string]any, len(headers))
 			for j, field := range row.GetFields() {
-				if j < len(headers) {
-					fields[headers[j]] = field.ToSerializedValue()
-				}
+				fields[headers[j]] = field.ToSerializedValue()
 			}
 			rows[i] = fields
 		}
@@ -530,6 +557,11 @@ func (c *command) printQueryResult(cmd *cobra.Command, name string, result *quer
 			return output.SerializedOutput(cmd, rows)
 		}
 
+		var appendOnly *bool
+		if appendOnlyKnown {
+			appendOnly = &isAppendOnly
+		}
+
 		return output.SerializedOutput(cmd, &queryOut{
 			StatementName: name,
 			Phase:         string(result.Phase()),
@@ -538,6 +570,7 @@ func (c *command) printQueryResult(cmd *cobra.Command, name string, result *quer
 			RowCount:      len(rows),
 			Truncated:     result.Truncated,
 			Incomplete:    result.Incomplete,
+			AppendOnly:    appendOnly,
 		})
 	}
 

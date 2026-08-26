@@ -30,15 +30,42 @@ func TestNew(t *testing.T) {
 
 	cmd := New(cfg, prerunner)
 
-	require.Equal(t, "query [name]", cmd.Use)
+	require.Equal(t, "query [sql]", cmd.Use)
 	require.False(t, cmd.Hidden, "cfg.IsTest should keep the command visible in tests")
 
-	for _, name := range []string{"sql", "compute-pool", "service-account", "database", "property", "timeout", "max-rows", "raw", "environment", "context", "output", "cloud", "region"} {
+	for _, name := range []string{"sql", "compute-pool", "service-account", "database", "property", "wait-timeout", "max-rows", "raw", "environment", "context", "output", "cloud", "region"} {
 		require.NotNil(t, cmd.Flags().Lookup(name), "expected --%s to be registered", name)
 	}
 
+	// "sql" is deliberately not cobra-required: it can come from the positional
+	// argument instead, so requiredness is enforced by resolveSQL, not by cobra.
 	sqlFlag := cmd.Flags().Lookup("sql")
-	require.Equal(t, "true", sqlFlag.Annotations[cobra.BashCompOneRequiredFlag][0])
+	require.Empty(t, sqlFlag.Annotations[cobra.BashCompOneRequiredFlag])
+}
+
+func TestResolveSQL(t *testing.T) {
+	newSQLCmd := func(sqlFlagValue string) *cobra.Command {
+		cmd := &cobra.Command{}
+		cmd.Flags().String("sql", "", "")
+		if sqlFlagValue != "" {
+			require.NoError(t, cmd.Flags().Set("sql", sqlFlagValue))
+		}
+		return cmd
+	}
+
+	sql, err := resolveSQL(newSQLCmd("SELECT 1"), nil)
+	require.NoError(t, err)
+	require.Equal(t, "SELECT 1", sql)
+
+	sql, err = resolveSQL(newSQLCmd(""), []string{"SELECT 2"})
+	require.NoError(t, err)
+	require.Equal(t, "SELECT 2", sql)
+
+	_, err = resolveSQL(newSQLCmd("SELECT 1"), []string{"SELECT 2"})
+	require.ErrorContains(t, err, "must not be given both")
+
+	_, err = resolveSQL(newSQLCmd(""), nil)
+	require.ErrorContains(t, err, "is required")
 }
 
 // captureStdout redirects the package-level os.Stdout (which output.Print and
@@ -175,7 +202,7 @@ func TestPrintQueryResult(t *testing.T) {
 		}
 
 		out := captureStdout(t, func() {
-			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false))
+			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
 		})
 		require.Contains(t, out, "1021")
 		require.Contains(t, out, "SHIPPED")
@@ -192,7 +219,7 @@ func TestPrintQueryResult(t *testing.T) {
 		}
 
 		out := captureStdout(t, func() {
-			require.NoError(t, c.printQueryResult(cmd, "stmt", result, true, false))
+			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, true, false))
 		})
 		require.Contains(t, out, "Operation")
 	})
@@ -205,7 +232,7 @@ func TestPrintQueryResult(t *testing.T) {
 		}
 
 		out := captureStdout(t, func() {
-			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false))
+			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
 		})
 		require.Empty(t, out)
 	})
@@ -222,13 +249,29 @@ func TestPrintQueryResult(t *testing.T) {
 		}
 
 		out := captureStdout(t, func() {
-			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false))
+			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
 		})
 		require.Contains(t, out, `"statement_name": "stmt"`)
 		require.Contains(t, out, `"phase": "RUNNING"`)
 		require.Contains(t, out, `"truncated": true`)
 		require.Contains(t, out, `"incomplete": true`)
 		require.Contains(t, out, `"id": 1021`)
+		require.NotContains(t, out, "append_only")
+	})
+
+	t.Run("json envelope carries append_only when known", func(t *testing.T) {
+		c := newTestCommand(nil)
+		cmd := newOutputCmd(t, "json")
+		result := &query.Result{
+			Statement: flinkgatewayv1.SqlV1Statement{Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "COMPLETED"}},
+			Columns:   testColumns(),
+			Rows:      []types.StatementResultRow{testRow()},
+		}
+
+		out := captureStdout(t, func() {
+			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, true, false))
+		})
+		require.Contains(t, out, `"append_only": false`)
 	})
 
 	t.Run("raw serialized output is a bare array with no envelope", func(t *testing.T) {
@@ -241,7 +284,7 @@ func TestPrintQueryResult(t *testing.T) {
 		}
 
 		out := captureStdout(t, func() {
-			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, true))
+			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, true))
 		})
 		require.NotContains(t, out, "statement_name")
 		require.Contains(t, out, `"id": 1021`)
@@ -257,7 +300,7 @@ func TestPrintQueryResult(t *testing.T) {
 		}
 
 		out := captureStdout(t, func() {
-			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false))
+			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
 		})
 		require.Contains(t, out, "statement_name: stmt")
 	})
