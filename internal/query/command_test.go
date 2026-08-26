@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -33,7 +34,7 @@ func TestNew(t *testing.T) {
 	require.Equal(t, "query [sql]", cmd.Use)
 	require.False(t, cmd.Hidden, "cfg.IsTest should keep the command visible in tests")
 
-	for _, name := range []string{"sql", "compute-pool", "service-account", "database", "property", "wait-timeout", "max-rows", "raw", "environment", "context", "output", "cloud", "region"} {
+	for _, name := range []string{"sql", "file", "compute-pool", "service-account", "database", "property", "wait-timeout", "max-rows", "raw", "environment", "context", "output", "cloud", "region"} {
 		require.NotNil(t, cmd.Flags().Lookup(name), "expected --%s to be registered", name)
 	}
 
@@ -44,27 +45,46 @@ func TestNew(t *testing.T) {
 }
 
 func TestResolveSQL(t *testing.T) {
-	newSQLCmd := func(sqlFlagValue string) *cobra.Command {
+	newSQLCmd := func(sqlFlagValue, fileFlagValue string) *cobra.Command {
 		cmd := &cobra.Command{}
 		cmd.Flags().String("sql", "", "")
+		cmd.Flags().String("file", "", "")
 		if sqlFlagValue != "" {
 			require.NoError(t, cmd.Flags().Set("sql", sqlFlagValue))
+		}
+		if fileFlagValue != "" {
+			require.NoError(t, cmd.Flags().Set("file", fileFlagValue))
 		}
 		return cmd
 	}
 
-	sql, err := resolveSQL(newSQLCmd("SELECT 1"), nil)
+	sql, err := resolveSQL(newSQLCmd("SELECT 1", ""), nil)
 	require.NoError(t, err)
 	require.Equal(t, "SELECT 1", sql)
 
-	sql, err = resolveSQL(newSQLCmd(""), []string{"SELECT 2"})
+	sql, err = resolveSQL(newSQLCmd("", ""), []string{"SELECT 2"})
 	require.NoError(t, err)
 	require.Equal(t, "SELECT 2", sql)
 
-	_, err = resolveSQL(newSQLCmd("SELECT 1"), []string{"SELECT 2"})
-	require.ErrorContains(t, err, "must not be given both")
+	sqlFile := filepath.Join(t.TempDir(), "query.sql")
+	require.NoError(t, os.WriteFile(sqlFile, []byte("SELECT 3"), 0o600))
+	sql, err = resolveSQL(newSQLCmd("", sqlFile), nil)
+	require.NoError(t, err)
+	require.Equal(t, "SELECT 3", sql)
 
-	_, err = resolveSQL(newSQLCmd(""), nil)
+	_, err = resolveSQL(newSQLCmd("", "/nonexistent/query.sql"), nil)
+	require.ErrorContains(t, err, "failed to read the SQL statement")
+
+	_, err = resolveSQL(newSQLCmd("SELECT 1", ""), []string{"SELECT 2"})
+	require.ErrorContains(t, err, "must be given exactly one way")
+
+	_, err = resolveSQL(newSQLCmd("SELECT 1", sqlFile), nil)
+	require.ErrorContains(t, err, "must be given exactly one way")
+
+	_, err = resolveSQL(newSQLCmd("", sqlFile), []string{"SELECT 2"})
+	require.ErrorContains(t, err, "must be given exactly one way")
+
+	_, err = resolveSQL(newSQLCmd("", ""), nil)
 	require.ErrorContains(t, err, "is required")
 }
 
@@ -128,12 +148,18 @@ func TestBuildQueryProperties(t *testing.T) {
 			},
 		},
 		{
-			name:    "property flag overrides the snapshot mode default",
+			name:    "property flag cannot override the snapshot mode",
 			catalog: "env-123",
 			flags:   []string{"sql.snapshot.mode=earliest"},
+			wantErr: true,
+		},
+		{
+			name:    "property flag redundantly setting the snapshot mode to its default is allowed",
+			catalog: "env-123",
+			flags:   []string{"sql.snapshot.mode=now"},
 			expected: map[string]string{
 				"sql.current-catalog": "env-123",
-				"sql.snapshot.mode":   "earliest",
+				"sql.snapshot.mode":   "now",
 			},
 		},
 		{
@@ -252,6 +278,7 @@ func TestPrintQueryResult(t *testing.T) {
 			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
 		})
 		require.Contains(t, out, `"statement_name": "stmt"`)
+		require.Contains(t, out, `"engine": "snapshot"`)
 		require.Contains(t, out, `"phase": "RUNNING"`)
 		require.Contains(t, out, `"truncated": true`)
 		require.Contains(t, out, `"incomplete": true`)
@@ -287,6 +314,7 @@ func TestPrintQueryResult(t *testing.T) {
 			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, true))
 		})
 		require.NotContains(t, out, "statement_name")
+		require.NotContains(t, out, "engine")
 		require.Contains(t, out, `"id": 1021`)
 	})
 
@@ -303,6 +331,7 @@ func TestPrintQueryResult(t *testing.T) {
 			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
 		})
 		require.Contains(t, out, "statement_name: stmt")
+		require.Contains(t, out, "engine: snapshot")
 	})
 }
 

@@ -27,7 +27,8 @@ Pass the SQL as a positional argument instead of "--sql".
   $ confluent query "SELECT * FROM orders LIMIT 10;"
 
 Flags:
-      --sql string               The Flink SQL statement. Alternatively, pass it as a positional argument.
+      --sql string               The Flink SQL statement. Alternatively, pass it as a positional argument or with "-f".
+  -f, --file string              Path to a file containing the Flink SQL statement. Alternatively, pass the SQL with "--sql" or as a positional argument.
       --compute-pool string      Flink compute pool ID.
       --service-account string   Service account ID.
       --database string          The database which will be used as the default database. When using Kafka, this is the cluster ID.

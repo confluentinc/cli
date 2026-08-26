@@ -32,11 +32,16 @@ import (
 )
 
 const (
-	// snapshotModeProperty makes the statement a bounded, point-in-time read. It is
-	// a statement property rather than a flag on the API, so the command sets it as
-	// a default that `--property` can override.
+	// snapshotModeProperty makes the statement a bounded, point-in-time read. It is a
+	// statement property rather than a flag on the API. Unlike every other entry
+	// `--property` seeds, this one is not overridable: the append-only guarantee the
+	// serialized envelope's `append_only` field depends on only holds for a snapshot
+	// read, so letting `--property` change it would make that field lie.
 	snapshotModeProperty = "sql.snapshot.mode"
 	snapshotModeNow      = "now"
+
+	// engineSnapshot is the only value Engine ever takes today; see queryOut.Engine.
+	engineSnapshot = "snapshot"
 
 	// stopTimeout bounds how long we wait for a statement to be stopped after the
 	// user interrupts the command.
@@ -95,7 +100,8 @@ func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	cmd.RunE = c.runQuery
 
-	cmd.Flags().String("sql", "", "The Flink SQL statement. Alternatively, pass it as a positional argument.")
+	cmd.Flags().String("sql", "", `The Flink SQL statement. Alternatively, pass it as a positional argument or with "-f".`)
+	cmd.Flags().StringP("file", "f", "", `Path to a file containing the Flink SQL statement. Alternatively, pass the SQL with "--sql" or as a positional argument.`)
 	c.addComputePoolFlag(cmd)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	c.addDatabaseFlag(cmd)
@@ -175,9 +181,14 @@ type queryColumnOut struct {
 }
 
 type queryOut struct {
-	StatementName string           `json:"statement_name" yaml:"statement_name"`
-	Phase         string           `json:"phase" yaml:"phase"`
-	Columns       []queryColumnOut `json:"columns" yaml:"columns"`
+	StatementName string `json:"statement_name" yaml:"statement_name"`
+	// Engine is always "snapshot" for now: M2 (Lightning Query routing) is not
+	// implemented yet. Emitting it now, rather than only once M2 lands, means a
+	// script that switches on this field today won't need to change its parsing
+	// once routing exists.
+	Engine  string           `json:"engine" yaml:"engine"`
+	Phase   string           `json:"phase" yaml:"phase"`
+	Columns []queryColumnOut `json:"columns" yaml:"columns"`
 	// Values carry their SQL type: a number serializes as a number and a NULL as null.
 	// See types.StatementResultField.ToSerializedValue for what each type maps to.
 	Rows      []map[string]any `json:"rows" yaml:"rows"`
@@ -353,31 +364,43 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 	return c.printQueryResult(cmd, name, result, isAppendOnly, appendOnlyKnown, raw)
 }
 
-// resolveSQL returns the SQL text from whichever of "--sql" or the positional argument
-// was given. Exactly one of the two is required; neither or both is a usage error.
+// resolveSQL returns the SQL text from whichever of "--sql", "--file", or the
+// positional argument was given. Exactly one of the three is required; giving none or
+// more than one is a usage error.
 func resolveSQL(cmd *cobra.Command, args []string) (string, error) {
 	sql, err := cmd.Flags().GetString("sql")
 	if err != nil {
 		return "", err
 	}
 
-	if len(args) == 1 {
-		if sql != "" {
-			return "", errors.New("the SQL statement must not be given both as a positional argument and with the `--sql` flag")
-		}
+	file, err := cmd.Flags().GetString("file")
+	if err != nil {
+		return "", err
+	}
+
+	positional := len(args) == 1
+
+	switch {
+	case positional && sql != "", positional && file != "", sql != "" && file != "":
+		return "", errors.New("the SQL statement must be given exactly one way: as a positional argument, with the `--sql` flag, or with the `--file` flag")
+	case positional:
 		return args[0], nil
+	case sql != "":
+		return sql, nil
+	case file != "":
+		contents, err := os.ReadFile(file)
+		if err != nil {
+			return "", fmt.Errorf(`failed to read the SQL statement from "%s": %v`, file, err)
+		}
+		return string(contents), nil
+	default:
+		return "", errors.New("the SQL statement is required: pass it as a positional argument, with the `--sql` flag, or with the `--file` flag")
 	}
-
-	if sql == "" {
-		return "", errors.New("the SQL statement is required: pass it as a positional argument or with the `--sql` flag")
-	}
-
-	return sql, nil
 }
 
 // buildQueryProperties seeds the statement with the catalog and snapshot mode, then
-// lets --property override anything, so the snapshot default never blocks a user who
-// needs a different mode.
+// lets --property override anything else. snapshotModeProperty is the one exception:
+// see its doc comment for why it must not be overridable.
 func (c *command) buildQueryProperties(cmd *cobra.Command, catalog, database string) (map[string]string, error) {
 	statementProperties := map[string]string{
 		config.KeyCatalog:    catalog,
@@ -396,6 +419,12 @@ func (c *command) buildQueryProperties(cmd *cobra.Command, catalog, database str
 		configMap, err := properties.ConfigSliceToMap(configs)
 		if err != nil {
 			return nil, err
+		}
+		if mode, ok := configMap[snapshotModeProperty]; ok && mode != snapshotModeNow {
+			return nil, errors.NewErrorWithSuggestions(
+				fmt.Sprintf("the `--property` flag must not set `%s`", snapshotModeProperty),
+				"This command only supports a snapshot (point-in-time, append-only) read, so this property is fixed and cannot be overridden.",
+			)
 		}
 		for key, value := range configMap {
 			statementProperties[key] = value
@@ -564,6 +593,7 @@ func (c *command) printQueryResult(cmd *cobra.Command, name string, result *quer
 
 		return output.SerializedOutput(cmd, &queryOut{
 			StatementName: name,
+			Engine:        engineSnapshot,
 			Phase:         string(result.Phase()),
 			Columns:       columns,
 			Rows:          rows,
