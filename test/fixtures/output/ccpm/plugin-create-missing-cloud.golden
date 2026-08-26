@@ -1,15 +1,15 @@
 Error: required flag(s) "cloud" not set
 Usage:
-  confluent ccpm custom-connect-plugin create [flags]
+  confluent ccpm plugin create [flags]
 
 Examples:
 Create a custom Connect plugin for AWS.
 
-  $ confluent ccpm custom-connect-plugin create --name "My Custom Plugin" --cloud AWS --description "A custom connector for data processing" --environment env-12345
+  $ confluent ccpm plugin create --name "My Custom Plugin" --cloud AWS --description "A custom connector for data processing" --environment env-12345
 
 Create a custom Connect plugin for GCP with minimal description.
 
-  $ confluent ccpm custom-connect-plugin create --name "GCP Data Connector" --cloud GCP --environment env-abcdef
+  $ confluent ccpm plugin create --name "GCP Data Connector" --cloud GCP --environment env-abcdef
 
 Flags:
       --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".

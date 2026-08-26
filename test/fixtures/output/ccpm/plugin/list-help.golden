@@ -1,16 +1,21 @@
-List custom Connect plugin versions.
+List CCPM custom Connect plugins.
 
 Usage:
-  confluent ccpm custom-connect-plugin version list [flags]
+  confluent ccpm plugin list [flags]
 
 Examples:
-List all versions of a custom connect plugin.
+List all custom Connect plugins in an environment.
 
-  $ confluent ccpm custom-connect-plugin version list --plugin plugin-123456 --environment env-abcdef
+  $ confluent ccpm plugin list --environment env-12345
+
+List custom Connect plugins filtered by cloud provider.
+
+  $ confluent ccpm plugin list --environment env-12345 --cloud AWS
 
 Flags:
-      --plugin string        REQUIRED: Plugin ID.
+      --cloud string         Specify the cloud provider as "aws", "azure", or "gcp".
       --environment string   Environment ID.
+      --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

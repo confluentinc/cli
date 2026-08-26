@@ -1,6 +1,6 @@
 Error: required flag(s) "plugin" not set
 Usage:
-  confluent ccpm custom-connect-plugin version list [flags]
+  confluent ccpm plugin version list [flags]
 
 Examples:
 List all versions of a custom connect plugin.

@@ -1,6 +1,6 @@
 Error: required flag(s) "plugin-file", "connector-classes" not set
 Usage:
-  confluent ccpm custom-connect-plugin version create [flags]
+  confluent ccpm plugin version create [flags]
 
 Examples:
 Create a new version 1.0.0 of a custom connect plugin.

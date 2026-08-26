@@ -1,19 +1,14 @@
-List CCPM custom Connect plugins.
+Describe a CCPM custom Connect plugin.
 
 Usage:
-  confluent ccpm custom-connect-plugin list [flags]
+  confluent ccpm plugin describe <id> [flags]
 
 Examples:
-List all custom Connect plugins in an environment.
+Describe a custom Connect plugin by ID.
 
-  $ confluent ccpm custom-connect-plugin list --environment env-12345
-
-List custom Connect plugins filtered by cloud provider.
-
-  $ confluent ccpm custom-connect-plugin list --environment env-12345 --cloud AWS
+  $ confluent ccpm plugin describe ccp-123456 --environment env-12345
 
 Flags:
-      --cloud string         Specify the cloud provider as "aws", "azure", or "gcp".
       --environment string   Environment ID.
       --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")

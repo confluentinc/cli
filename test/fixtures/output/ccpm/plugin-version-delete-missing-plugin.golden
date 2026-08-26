@@ -1,6 +1,6 @@
 Error: required flag(s) "plugin" not set
 Usage:
-  confluent ccpm custom-connect-plugin version delete <id-1> [id-2] ... [id-n] [flags]
+  confluent ccpm plugin version delete <id-1> [id-2] ... [id-n] [flags]
 
 Examples:
 Delete a specific version of a custom connect plugin.

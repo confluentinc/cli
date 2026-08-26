@@ -1,10 +1,7 @@
 Manage Confluent Cloud CCPM custom Connect plugins.
 
 Usage:
-  confluent ccpm custom-connect-plugin [command]
-
-Aliases:
-  custom-connect-plugin, plugin
+  confluent ccpm plugin [command]
 
 Available Commands:
   create      Create a CCPM custom Connect plugin.
@@ -19,4 +16,4 @@ Global Flags:
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
-Use "confluent ccpm custom-connect-plugin [command] --help" for more information about a command.
+Use "confluent ccpm plugin [command] --help" for more information about a command.
