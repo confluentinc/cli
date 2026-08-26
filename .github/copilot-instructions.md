@@ -169,10 +169,10 @@ and `lint-cli` — don't spend review budget on them. Spend it on what tooling c
   already defines. Flag a one-off helper (map-field extraction, output conversion) that duplicates a
   sibling instead of being generalized into `pkg/flink` (or similar). (Deeper "should this whole thing
   be generated?" judgment is for human reviewers, not a per-diff check.)
-- No internal identifiers (JIRA/APIE tickets, RFC links, internal service names like `cc-api`)
-  should leak into **user-facing** strings — `Short`/`Long`/`Example`, errors, suggestions. They may
-  stay in engineer-facing doc comments. Also flag PR-introduced comments that carry a stale ticket
-  reference or sit above the wrong function.
+- No internal identifiers (ticket keys, RFC links, internal service or system names) should leak into
+  **user-facing** strings — `Short`/`Long`/`Example`, errors, suggestions. They may stay in
+  engineer-facing doc comments. Also flag PR-introduced comments that carry a stale ticket reference
+  or sit above the wrong function.
 
 ### 8. PR description
 

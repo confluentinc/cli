@@ -245,9 +245,9 @@ initiative is to hand-write **as little as possible**. When a PR adds custom Go:
 
 #### Internal-reference hygiene
 
-- [ ] No internal identifiers (JIRA/APIE tickets, RFC links, internal service names like `cc-api`)
-      leak into **user-facing** strings — `Short`/`Long`/`Example`, error messages, suggestions. Keep
-      them in engineer-facing doc comments if they're useful there.
+- [ ] No internal identifiers (ticket keys, RFC links, internal service or system names) leak into
+      **user-facing** strings — `Short`/`Long`/`Example`, error messages, suggestions. Keep them in
+      engineer-facing doc comments if they're useful there.
 - [ ] Comments introduced by the PR don't carry stale ticket references or sit above the wrong
       function.
 
@@ -259,12 +259,11 @@ initiative is to hand-write **as little as possible**. When a PR adds custom Go:
 
 ### Step 6: Check PR Hygiene
 
-- [ ] PR title is `[<JIRA-TICKET>] <Description>` (plain `chore:`/`docs:` prefixes only for
-      non-ticketed work)
+- [ ] PR title is concise, accurate, and clearly describes the change
 - [ ] PR description fills in the template: release notes, What / Blast Radius, tests, breaking-change
       status, feature-flag enablement
 - [ ] One logical change per PR; no unrelated changes bundled in
-- [ ] No secrets in the diff (`.env`, API keys, real cluster IDs beyond fixtures)
+- [ ] No secrets in the diff (API keys, real cluster IDs beyond fixtures)
 
 ## What NOT to Flag
 
@@ -380,7 +379,7 @@ Use these labels in findings:
 | `output-format`  | Backtick/quote convention in user-facing strings                                                             |
 | `deletion`       | Hand-rolled confirmation instead of the `deletion` helpers                                                   |
 | `docs`           | Stale help-text example, missing EA/OP callout                                                               |
-| `internal-refs`  | JIRA/RFC/internal service names leaking into user-facing strings or stale comments                           |
+| `internal-refs`  | Internal ticket/RFC links or service names leaking into user-facing strings or stale comments                |
 | `secrets`        | Credentials or real IDs in the diff                                                                          |
 | `style`          | Naming/conventions where `golangci-lint` / `lint-cli` do not enforce                                         |
 
