@@ -14,7 +14,7 @@ func (s *CLILiveTestSuite) TestFlinkComputePoolConfigCRUDLive() {
 
 	// Variables
 	updatedDefaultPoolEnabled := "true"
-	updatedDefaultPoolMaxCfu := "25"
+	updatedDefaultPoolMaxCfu := "30"
 
 	// Cleanup (LIFO — execution is reverse-registration order)
 
