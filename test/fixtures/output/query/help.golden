@@ -1,0 +1,47 @@
+Run a bounded (snapshot) Flink SQL query, block until it finishes, and print the complete result set.
+
+The SQL can be given as "--sql" or as a positional argument, but not both.
+
+Unlike statement creation, which submits a statement and returns immediately, this command waits for every result page and exits with a non-zero status if the statement fails. It is intended for scripting and one-shot queries against a bounded (point-in-time) result set.
+
+With "-o json" or "-o yaml", output defaults to an envelope carrying the column schema alongside the rows, since the rows on their own carry no type information. Pass "--raw" for a bare array of row objects instead.
+
+Usage:
+  confluent query [sql] [flags]
+
+Examples:
+Run a bounded query in the current compute pool and print the rows as a table.
+
+  $ confluent query --sql "SELECT * FROM orders LIMIT 10;"
+
+Run a bounded query against Kafka cluster "my-cluster" and emit JSON for a script to consume.
+
+  $ confluent query --sql "SELECT status, COUNT(*) FROM orders GROUP BY status;" --compute-pool lfcp-123456 --database my-cluster --output json
+
+Emit a bare JSON array of rows, with no envelope, for a script that only wants the data.
+
+  $ confluent query --sql "SELECT * FROM orders LIMIT 10;" --output json --raw
+
+Pass the SQL as a positional argument instead of "--sql".
+
+  $ confluent query "SELECT * FROM orders LIMIT 10;"
+
+Flags:
+      --sql string               The Flink SQL statement. Alternatively, pass it as a positional argument.
+      --compute-pool string      Flink compute pool ID.
+      --service-account string   Service account ID.
+      --database string          The database which will be used as the default database. When using Kafka, this is the cluster ID.
+      --property strings         A mechanism to pass properties in the form key=value when creating a Flink statement.
+      --wait-timeout duration    Maximum time to wait for the query to finish before giving up. (default 10m0s)
+      --max-rows int             Stop fetching and discard the rest after this many rows, or 0 to fetch every row. Client-side only: rows past the limit are still produced by the query.
+      --raw                      Emit the rows as a bare array with no envelope. Requires "-o json" or "-o yaml".
+      --environment string       Environment ID.
+      --context string           CLI context name.
+  -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
+      --cloud string             Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string            Cloud region for Flink (use "confluent flink region list" to see all).
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
