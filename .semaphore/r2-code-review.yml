@@ -1,0 +1,31 @@
+version: v1.0
+name: R2 Code Review for Confluent CLI
+
+# Hand-rolled MANUAL promotion for R2 (Claude Code) automated code review.
+# Manual (no auto_promote) is deliberate: R2 reviews on every push by design, so gating it behind a
+# manual trigger avoids a full Opus review on every commit. It runs only when someone clicks "promote".
+# It is hand-maintained rather than servicebot's `code_review: enable: true` because service.yml sets
+# `semaphore.pipeline_enable: false`, which disqualifies the servicebot-managed path. If Confluent
+# later ships an official servicebot code_review path, adopting it means flipping pipeline_enable and
+# retiring this file.
+
+agent:
+  machine:
+    type: s1-prod-ubuntu24-04-amd64-1
+
+execution_time_limit:
+  minutes: 20
+
+blocks:
+  - name: "R2 Code Review"
+    dependencies: []
+    task:
+      jobs:
+        - name: "R2 Code Review"
+          commands:
+            - checkout
+            # `r2` is provided by the Semaphore agent image and posts its results to the PR
+            # out-of-band (this pipeline reports nothing itself). `|| true` keeps a broken review from
+            # blocking CI (report tool issues to #r2); note it also masks a silent no-op, so a run that
+            # posts no PR comments may mean R2 failed to start, not that it found nothing.
+            - r2 code-review --verbose --timeout=15m || true
