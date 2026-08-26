@@ -17,7 +17,7 @@ to hand-write as little as possible.
 
 Internal-reference hygiene:
 
-- No internal identifiers (JIRA/APIE tickets, RFC links, internal service names like `cc-api`) should
-  leak into user-facing strings: `Short`/`Long`/`Example`, errors, suggestions. They may stay in
-  engineer-facing doc comments if useful there.
+- No internal identifiers (ticket keys, RFC links, internal service or system names) should leak into
+  user-facing strings: `Short`/`Long`/`Example`, errors, suggestions. They may stay in engineer-facing
+  doc comments if useful there.
 - Flag PR-introduced comments that carry a stale ticket reference or sit above the wrong function.
