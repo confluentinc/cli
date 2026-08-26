@@ -24,6 +24,11 @@ The authoritative conventions live in `AGENTS.md` (symlinked as `CLAUDE.md`) and
 `pkg/deletion/README.md`, `pkg/cmd/ANNOTATIONS.md`). This skill applies them to a diff; when a
 convention is ambiguous, read the source of truth rather than re-deriving it from the diff.
 
+The same review conventions are mirrored, in review-framed form, as path-scoped rules in
+`.claude/rules/` (e.g. `output-and-compatibility.md`, `validation-and-errors.md`). Those are what the
+automated R2 code review consumes, since it runs headless and read-only in CI and cannot invoke this
+skill (which relies on `gh` and subagents). Keep the two in sync when a convention changes.
+
 ## Two Review Modes
 
 The mode is selected by the invocation context, not by the user. If the user supplies a PR
