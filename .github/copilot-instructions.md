@@ -193,8 +193,9 @@ Do not review these for style, patterns, or best practices:
 
 ## Style preferences (avoid nitpicking)
 
-- `golangci-lint` owns formatting, import ordering (`gci`: stdlib → default → `confluentinc/` →
-  `confluentinc/cli/`), naked returns, unused code, and misspellings. Don't comment on any of it.
+- `golangci-lint` owns formatting, import ordering (`gci`: stdlib → default →
+  `github.com/confluentinc/` → `github.com/confluentinc/cli/`), naked returns, unused code, and
+  misspellings. Don't comment on any of it.
 - `lint-cli` spell-checks user-facing strings. Don't duplicate its findings by hand.
 - Don't flag that a change "might fail the build" — Semaphore runs `make lint && make test` and the
   author fixes failures before merge.
