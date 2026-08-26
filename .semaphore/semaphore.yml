@@ -116,3 +116,5 @@ promotions:
     pipeline_file: ".semaphore/macos.yml"
   - name: "Run live integration tests"
     pipeline_file: ".semaphore/live-tests.yml"
+  - name: "R2 Code Review (manual)"
+    pipeline_file: "r2-code-review.yml"
