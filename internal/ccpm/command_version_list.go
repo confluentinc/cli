@@ -18,7 +18,7 @@ func (c *customConnectPluginVersionCommand) newListCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all versions of a custom connect plugin.",
-				Code: "confluent ccpm custom-connect-plugin version list --plugin plugin-123456 --environment env-abcdef",
+				Code: "confluent ccpm plugin version list --plugin plugin-123456 --environment env-abcdef",
 			},
 		),
 	}

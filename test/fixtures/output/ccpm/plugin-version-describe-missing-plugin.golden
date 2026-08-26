@@ -5,11 +5,11 @@ Usage:
 Examples:
 Describe a specific version of a custom connect plugin.
 
-  $ confluent ccpm custom-connect-plugin version describe version-789012 --plugin plugin-123456 --environment env-abcdef
+  $ confluent ccpm plugin version describe version-789012 --plugin plugin-123456 --environment env-abcdef
 
 Get detailed information about version 1.0.0 of a plugin.
 
-  $ confluent ccpm custom-connect-plugin version describe version-1.0.0 --plugin plugin-123456 --environment env-abcdef
+  $ confluent ccpm plugin version describe version-1.0.0 --plugin plugin-123456 --environment env-abcdef
 
 Flags:
       --plugin string        REQUIRED: Plugin ID.

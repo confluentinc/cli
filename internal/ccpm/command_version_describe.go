@@ -17,11 +17,11 @@ func (c *customConnectPluginVersionCommand) newDescribeCommand() *cobra.Command 
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe a specific version of a custom connect plugin.",
-				Code: "confluent ccpm custom-connect-plugin version describe version-789012 --plugin plugin-123456 --environment env-abcdef",
+				Code: "confluent ccpm plugin version describe version-789012 --plugin plugin-123456 --environment env-abcdef",
 			},
 			examples.Example{
 				Text: "Get detailed information about version 1.0.0 of a plugin.",
-				Code: "confluent ccpm custom-connect-plugin version describe version-1.0.0 --plugin plugin-123456 --environment env-abcdef",
+				Code: "confluent ccpm plugin version describe version-1.0.0 --plugin plugin-123456 --environment env-abcdef",
 			},
 		),
 	}

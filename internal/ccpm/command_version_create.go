@@ -24,11 +24,11 @@ func (c *customConnectPluginVersionCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a new version 1.0.0 of a custom connect plugin.",
-				Code: "confluent ccpm custom-connect-plugin version create --plugin plugin-123456 --version 1.0.0 --environment env-abcdef --plugin-file datagen.zip --connector-classes 'io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE'",
+				Code: "confluent ccpm plugin version create --plugin plugin-123456 --version 1.0.0 --environment env-abcdef --plugin-file datagen.zip --connector-classes 'io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE'",
 			},
 			examples.Example{
 				Text: "Create a new version 2.1.0 of a custom connect plugin with multiple connector classes and optional fields.",
-				Code: "confluent ccpm custom-connect-plugin version create --plugin plugin-123456 --version 2.1.0 --environment env-abcdef --plugin-file datagen.zip --connector-classes 'io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE,io.confluent.kafka.connect.sink.SinkConnector:SINK' --sensitive-properties 'passwords,keys,tokens' --documentation-link 'https://github.com/confluentinc/kafka-connect-datagen'",
+				Code: "confluent ccpm plugin version create --plugin plugin-123456 --version 2.1.0 --environment env-abcdef --plugin-file datagen.zip --connector-classes 'io.confluent.kafka.connect.datagen.DatagenConnector:SOURCE,io.confluent.kafka.connect.sink.SinkConnector:SINK' --sensitive-properties 'passwords,keys,tokens' --documentation-link 'https://github.com/confluentinc/kafka-connect-datagen'",
 			},
 		),
 	}
