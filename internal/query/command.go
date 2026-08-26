@@ -32,11 +32,16 @@ import (
 )
 
 const (
-	// snapshotModeProperty makes the statement a bounded, point-in-time read. It is
-	// a statement property rather than a flag on the API, so the command sets it as
-	// a default that `--property` can override.
+	// snapshotModeProperty makes the statement a bounded, point-in-time read. It is a
+	// statement property rather than a flag on the API. Unlike every other entry
+	// `--property` seeds, this one is not overridable: the append-only guarantee the
+	// serialized envelope's `append_only` field depends on only holds for a snapshot
+	// read, so letting `--property` change it would make that field lie.
 	snapshotModeProperty = "sql.snapshot.mode"
 	snapshotModeNow      = "now"
+
+	// engineSnapshot is the only value Engine ever takes today; see queryOut.Engine.
+	engineSnapshot = "snapshot"
 
 	// stopTimeout bounds how long we wait for a statement to be stopped after the
 	// user interrupts the command.
@@ -95,15 +100,18 @@ func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	cmd.RunE = c.runQuery
 
-	cmd.Flags().String("sql", "", "The Flink SQL statement. Alternatively, pass it as a positional argument.")
+	cmd.Flags().String("sql", "", `The Flink SQL statement. Alternatively, pass it as a positional argument or with "-f".`)
+	cmd.Flags().StringP("file", "f", "", `Path to a file containing the Flink SQL statement. Alternatively, pass the SQL with "--sql" or as a positional argument.`)
 	c.addComputePoolFlag(cmd)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	c.addDatabaseFlag(cmd)
+	c.addClusterAlias(cmd)
 	cmd.Flags().StringSlice("property", []string{}, "A mechanism to pass properties in the form key=value when creating a Flink statement.")
 	cmd.Flags().Duration("wait-timeout", config.DefaultTimeoutDuration, "Maximum time to wait for the query to finish before giving up.")
 	cmd.Flags().Int("max-rows", 0, "Stop fetching and discard the rest after this many rows, or 0 to fetch every row. Client-side only: rows past the limit are still produced by the query.")
 	cmd.Flags().Bool("raw", false, `Emit the rows as a bare array with no envelope. Requires "-o json" or "-o yaml".`)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	c.addCatalogAlias(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddCloudFlag(cmd)
@@ -147,6 +155,38 @@ func (c *command) addDatabaseFlag(cmd *cobra.Command) {
 	pcmd.RegisterFlagCompletionFunc(cmd, "database", c.autocompleteDatabases)
 }
 
+// addClusterAlias registers "--cluster" as an independent flag rather than sharing
+// storage with "--database" the way addCatalogAlias shares storage between
+// "--environment" and "--catalog". The difference matters: "cluster" is a name
+// ParseFlagsIntoContext already treats specially everywhere in the CLI — giving it
+// persists the value as the active Kafka cluster context — while "--database" on
+// this command has never had that side effect. Sharing storage would leak the
+// persist-to-context behavior onto every "--database" invocation too. Keeping them
+// independent means "--database" stays exactly as request-scoped as before, and
+// "--cluster" behaves exactly as it does on every other command — a real difference
+// between the two spellings, not a bug. See resolveDatabase for how the two are
+// reconciled at read time.
+func (c *command) addClusterAlias(cmd *cobra.Command) {
+	cmd.Flags().String("cluster", "", `Alias for "--database". Unlike "--database", this also sets the CLI's active Kafka cluster context, the same as it does on every other command.`)
+	pcmd.RegisterFlagCompletionFunc(cmd, "cluster", c.autocompleteDatabases)
+}
+
+// addCatalogAlias registers "--catalog" as a second name for the exact same
+// underlying flag Value as "--environment", rather than a separate flag whose value
+// gets copied over inside RunE. Flag parsing happens before any PreRun hook,
+// including ParseFlagsIntoContext (which reads "--environment" directly to persist
+// the active environment for this invocation) — a copy performed inside runQuery
+// would run too late to affect it. Sharing the pflag.Value sidesteps the timing
+// problem entirely: by the time ParseFlagsIntoContext runs, it sees the same value
+// no matter which name the user typed. Safe to share, unlike --database/--cluster,
+// because "--environment" already has this exact persist-to-context behavior today —
+// aliasing it to "--catalog" doesn't add a new side effect, just a second name for an
+// existing one.
+func (c *command) addCatalogAlias(cmd *cobra.Command) {
+	environmentFlag := cmd.Flags().Lookup("environment")
+	cmd.Flags().Var(environmentFlag.Value, "catalog", `Alias for "--environment".`)
+}
+
 func (c *command) autocompleteDatabases(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
@@ -175,9 +215,14 @@ type queryColumnOut struct {
 }
 
 type queryOut struct {
-	StatementName string           `json:"statement_name" yaml:"statement_name"`
-	Phase         string           `json:"phase" yaml:"phase"`
-	Columns       []queryColumnOut `json:"columns" yaml:"columns"`
+	StatementName string `json:"statement_name" yaml:"statement_name"`
+	// Engine is always "snapshot" for now: M2 (Lightning Query routing) is not
+	// implemented yet. Emitting it now, rather than only once M2 lands, means a
+	// script that switches on this field today won't need to change its parsing
+	// once routing exists.
+	Engine  string           `json:"engine" yaml:"engine"`
+	Phase   string           `json:"phase" yaml:"phase"`
+	Columns []queryColumnOut `json:"columns" yaml:"columns"`
 	// Values carry their SQL type: a number serializes as a number and a NULL as null.
 	// See types.StatementResultField.ToSerializedValue for what each type maps to.
 	Rows      []map[string]any `json:"rows" yaml:"rows"`
@@ -196,6 +241,10 @@ type queryOut struct {
 }
 
 func (c *command) runQuery(cmd *cobra.Command, args []string) error {
+	if err := resolveEnvironmentAlias(cmd); err != nil {
+		return err
+	}
+
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
@@ -220,7 +269,7 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	database, err := cmd.Flags().GetString("database")
+	database, err := resolveDatabase(cmd)
 	if err != nil {
 		return err
 	}
@@ -353,31 +402,76 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 	return c.printQueryResult(cmd, name, result, isAppendOnly, appendOnlyKnown, raw)
 }
 
-// resolveSQL returns the SQL text from whichever of "--sql" or the positional argument
-// was given. Exactly one of the two is required; neither or both is a usage error.
+// resolveEnvironmentAlias errors if both "--environment" and "--catalog" were
+// explicitly given. The two share the same underlying flag storage (see
+// addCatalogAlias), so there is nothing else to reconcile — this only guards against
+// an ambiguous invocation that would otherwise silently let whichever flag appears
+// last on the command line win.
+func resolveEnvironmentAlias(cmd *cobra.Command) error {
+	if cmd.Flags().Changed("environment") && cmd.Flags().Changed("catalog") {
+		return errors.New("the environment must not be given both with the `--environment` flag and with the `--catalog` flag")
+	}
+	return nil
+}
+
+// resolveDatabase returns whichever of "--database" or its alias "--cluster" was
+// given (see addClusterAlias for why the two are independent flags rather than
+// sharing storage). Giving both is a usage error, mirroring resolveSQL.
+func resolveDatabase(cmd *cobra.Command) (string, error) {
+	database, err := cmd.Flags().GetString("database")
+	if err != nil {
+		return "", err
+	}
+	cluster, err := cmd.Flags().GetString("cluster")
+	if err != nil {
+		return "", err
+	}
+	if database != "" && cluster != "" {
+		return "", errors.New("the database must not be given both with the `--database` flag and with the `--cluster` flag")
+	}
+	if cluster != "" {
+		return cluster, nil
+	}
+	return database, nil
+}
+
+// resolveSQL returns the SQL text from whichever of "--sql", "--file", or the
+// positional argument was given. Exactly one of the three is required; giving none or
+// more than one is a usage error.
 func resolveSQL(cmd *cobra.Command, args []string) (string, error) {
 	sql, err := cmd.Flags().GetString("sql")
 	if err != nil {
 		return "", err
 	}
 
-	if len(args) == 1 {
-		if sql != "" {
-			return "", errors.New("the SQL statement must not be given both as a positional argument and with the `--sql` flag")
-		}
+	file, err := cmd.Flags().GetString("file")
+	if err != nil {
+		return "", err
+	}
+
+	positional := len(args) == 1
+
+	switch {
+	case positional && sql != "", positional && file != "", sql != "" && file != "":
+		return "", errors.New("the SQL statement must be given exactly one way: as a positional argument, with the `--sql` flag, or with the `--file` flag")
+	case positional:
 		return args[0], nil
+	case sql != "":
+		return sql, nil
+	case file != "":
+		contents, err := os.ReadFile(file)
+		if err != nil {
+			return "", fmt.Errorf(`failed to read the SQL statement from "%s": %v`, file, err)
+		}
+		return string(contents), nil
+	default:
+		return "", errors.New("the SQL statement is required: pass it as a positional argument, with the `--sql` flag, or with the `--file` flag")
 	}
-
-	if sql == "" {
-		return "", errors.New("the SQL statement is required: pass it as a positional argument or with the `--sql` flag")
-	}
-
-	return sql, nil
 }
 
 // buildQueryProperties seeds the statement with the catalog and snapshot mode, then
-// lets --property override anything, so the snapshot default never blocks a user who
-// needs a different mode.
+// lets --property override anything else. snapshotModeProperty is the one exception:
+// see its doc comment for why it must not be overridable.
 func (c *command) buildQueryProperties(cmd *cobra.Command, catalog, database string) (map[string]string, error) {
 	statementProperties := map[string]string{
 		config.KeyCatalog:    catalog,
@@ -396,6 +490,12 @@ func (c *command) buildQueryProperties(cmd *cobra.Command, catalog, database str
 		configMap, err := properties.ConfigSliceToMap(configs)
 		if err != nil {
 			return nil, err
+		}
+		if mode, ok := configMap[snapshotModeProperty]; ok && mode != snapshotModeNow {
+			return nil, errors.NewErrorWithSuggestions(
+				fmt.Sprintf("the `--property` flag must not set `%s`", snapshotModeProperty),
+				"This command only supports a snapshot (point-in-time, append-only) read, so this property is fixed and cannot be overridden.",
+			)
 		}
 		for key, value := range configMap {
 			statementProperties[key] = value
@@ -564,6 +664,7 @@ func (c *command) printQueryResult(cmd *cobra.Command, name string, result *quer
 
 		return output.SerializedOutput(cmd, &queryOut{
 			StatementName: name,
+			Engine:        engineSnapshot,
 			Phase:         string(result.Phase()),
 			Columns:       columns,
 			Rows:          rows,

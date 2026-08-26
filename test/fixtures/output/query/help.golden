@@ -27,15 +27,18 @@ Pass the SQL as a positional argument instead of "--sql".
   $ confluent query "SELECT * FROM orders LIMIT 10;"
 
 Flags:
-      --sql string               The Flink SQL statement. Alternatively, pass it as a positional argument.
+      --sql string               The Flink SQL statement. Alternatively, pass it as a positional argument or with "-f".
+  -f, --file string              Path to a file containing the Flink SQL statement. Alternatively, pass the SQL with "--sql" or as a positional argument.
       --compute-pool string      Flink compute pool ID.
       --service-account string   Service account ID.
       --database string          The database which will be used as the default database. When using Kafka, this is the cluster ID.
+      --cluster string           Alias for "--database". Unlike "--database", this also sets the CLI's active Kafka cluster context, the same as it does on every other command.
       --property strings         A mechanism to pass properties in the form key=value when creating a Flink statement.
       --wait-timeout duration    Maximum time to wait for the query to finish before giving up. (default 10m0s)
       --max-rows int             Stop fetching and discard the rest after this many rows, or 0 to fetch every row. Client-side only: rows past the limit are still produced by the query.
       --raw                      Emit the rows as a bare array with no envelope. Requires "-o json" or "-o yaml".
       --environment string       Environment ID.
+      --catalog string           Alias for "--environment".
       --context string           CLI context name.
   -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
       --cloud string             Specify the cloud provider as "aws", "azure", or "gcp".
