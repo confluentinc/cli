@@ -193,7 +193,7 @@ passing. Spend the review on what the linter can't see:
       unmarshals into a zero-value struct (printing a blank "success"); prefer an explicit 2xx check
       (`>= 200 && < 300`), noting `201` on create.
 - [ ] Errors aren't silently swallowed — the underlying cause reaches the user rather than a generic
-      substitute message. (For a deeper pass, dispatch the user-global `silent-failure-hunter` agent.)
+      substitute message.
 - [ ] Auth/config errors name the missing or invalid setting.
 - [ ] User-facing strings use backticks for commands/flags and double quotes for names/IDs.
 
@@ -391,9 +391,9 @@ Use these labels in findings:
   dead, panics, or is untested.
 - Use the `Agent` tool with the Explore agent for blast-radius questions (e.g. "find every caller of
   this serialized struct before renaming a field").
-- Companion skills to ground review in current state:
-  - `docs-drift` — validates in-code help text and root markdown against the live command tree
-  - `cli-design` (user-global) — clig.dev conventions for flag naming, arity, and output when the
-    change adds or reshapes a command's surface
+- Companion skill to ground review in current state: the `docs-drift` skill validates in-code help
+  text and root markdown against the live command tree.
+- When the change adds or reshapes a command's surface, check flag naming, arity, and output against
+  clig.dev (the Command Line Interface Guidelines).
 - When suggesting a simpler alternative, confirm it exists on the current Cobra / SDK version before
   posting.
