@@ -14,9 +14,7 @@ func TestAtomicToSerializedValue(t *testing.T) {
 		want  any
 	}{
 		{
-			// A NULL and a CHAR containing the word "NULL" arrive from the gateway as the
-			// same text and are only told apart by the field type. Serializing both as
-			// "NULL" makes them indistinguishable to a consumer.
+			// A NULL and a CHAR "NULL" arrive as the same text, told apart only by type.
 			name:  "a NULL becomes JSON null",
 			field: AtomicStatementResultField{Type: Null, Value: "NULL"},
 			want:  nil,
@@ -35,8 +33,7 @@ func TestAtomicToSerializedValue(t *testing.T) {
 		{name: "boolean true", field: AtomicStatementResultField{Type: Boolean, Value: "true"}, want: true},
 		{name: "boolean false", field: AtomicStatementResultField{Type: Boolean, Value: "false"}, want: false},
 		{
-			// float64 cannot represent every BIGINT, and a bare JSON literal is read into
-			// a float64 by JavaScript and jq alike.
+			// float64 can't represent every BIGINT; JS/jq both parse JSON numbers as float64.
 			name:  "bigint stays text so it survives a float64 parser",
 			field: AtomicStatementResultField{Type: Bigint, Value: "9007199254740993"},
 			want:  "9007199254740993",
@@ -47,8 +44,7 @@ func TestAtomicToSerializedValue(t *testing.T) {
 			want:  "1.23",
 		},
 		{
-			// encoding/json refuses NaN and ±Inf. Falling back to the gateway's text keeps
-			// a whole drained result set from failing at the last step.
+			// encoding/json refuses NaN/±Inf; falling back to text avoids failing the marshal.
 			name:  "NaN falls back to text rather than failing the marshal",
 			field: AtomicStatementResultField{Type: Double, Value: "NaN"},
 			want:  "NaN",
