@@ -24,8 +24,14 @@ const (
 )
 
 func (c Channel) String() string {
-	channels := [...]string{"stable", "prerelease", "dev"}
-	return channels[c]
+	switch c {
+	case Stable:
+		return "stable"
+	case Prerelease:
+		return "prerelease"
+	default:
+		return "dev"
+	}
 }
 
 // StateDirSuffix is appended to ".confluent" to name the channel's state directory. Only Stable
