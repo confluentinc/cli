@@ -56,6 +56,14 @@ func TestChannel_StateDirSuffix(t *testing.T) {
 	req.Equal("-dev", Channel(99).StateDirSuffix(), "an unrecognized channel must isolate itself, not share production state")
 }
 
+func TestChannel_String(t *testing.T) {
+	req := require.New(t)
+
+	req.Equal("stable", Stable.String())
+	req.Equal("prerelease", Prerelease.String())
+	req.Equal("dev", Dev.String())
+}
+
 func TestProcessChannel_DefaultsToDev(t *testing.T) {
 	require.Equal(t, Dev, ProcessChannel(), "a binary with no version stamped in must not touch production state")
 }
