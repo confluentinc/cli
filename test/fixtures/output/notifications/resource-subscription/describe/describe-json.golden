@@ -1,0 +1,7 @@
+{
+  "id": "dlz-f3a90de",
+  "resource": "environment=env-456xy/cloud-cluster=lkc-df123/connector=my_datagen_connector",
+  "resource_type": "CONNECTOR",
+  "notification_type": "not-abc123",
+  "current_state": "ENABLED"
+}

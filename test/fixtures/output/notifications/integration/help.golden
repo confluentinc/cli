@@ -1,0 +1,18 @@
+Manage Confluent Cloud notifications integrations.
+
+Usage:
+  confluent notifications integration [command]
+
+Available Commands:
+  create      Create a notifications integration.
+  delete      Delete one or more notifications integrations.
+  describe    Describe a notifications integration.
+  list        List notifications integrations.
+  update      Update an existing notifications integration.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent notifications integration [command] --help" for more information about a command.
