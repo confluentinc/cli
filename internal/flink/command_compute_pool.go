@@ -26,7 +26,7 @@ type computePoolOut struct {
 	Environment string `human:"Environment" serialized:"environment"`
 	MaxCfu      int32  `human:"Max CFU" serialized:"max_cfu"`
 	Region      string `human:"Region" serialized:"region"`
-	CurrentCfu  int32  `human:"Current CFU" serialized:"current_cfu"`
+	CurrentCfu  int32  `human:"Current CFU" serialized:"currrent_cfu"`
 	Status      string `human:"Status" serialized:"status"`
 	DefaultPool bool   `human:"Default Pool" serialized:"default_pool"`
 }
