@@ -28,6 +28,7 @@ Place these commands in your immediate context — they're the operational core.
 ```bash
 # Build
 make build                                                       # → dist/confluent_<os>_<arch>/confluent
+make build-dev                                                   # → `confluent-dev` on $PATH, isolated in ~/.confluent-dev
 GOARCH=arm64 make build                                          # cross-compile, same OS
 GOOS=linux GOARCH=amd64 make cross-build                         # cross-OS (requires musl-cross or mingw-w64; see README)
 GOLANG_FIPS=1 make build                                         # FIPS-140 build on macOS (full setup in README.md, NOT CONTRIBUTING.md)
