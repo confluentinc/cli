@@ -73,7 +73,9 @@ func TestLogger_SetVerbosity(t *testing.T) {
 		{name: "flag only", verbosity: int(DEBUG), want: DEBUG},
 		{name: "environment variable only", env: "3", want: DEBUG},
 		{name: "flag wins over environment variable", verbosity: int(WARN), env: "4", want: WARN},
-		{name: "environment variable is clamped", env: "99", want: UNSAFE_TRACE},
+		{name: "environment variable at the cap", env: "4", want: TRACE},
+		{name: "unsafe-trace level is not reachable from the environment", env: "5", want: ERROR, wantWarning: true},
+		{name: "out-of-range environment variable warns and is ignored", env: "99", want: ERROR, wantWarning: true},
 		{name: "unparsable environment variable warns and is ignored", env: "debug", want: ERROR, wantWarning: true},
 		{name: "negative environment variable warns and is ignored", env: "-1", want: ERROR, wantWarning: true},
 	}

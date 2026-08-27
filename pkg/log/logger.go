@@ -10,8 +10,9 @@ import (
 	"github.com/mattn/go-isatty"
 )
 
-// VerbosityEnvVar sets the log level when no -v flag is passed, using the same 0-5 scale as -v.
-// A flag always wins, since -v is a count flag and 0 can only mean "not passed".
+// VerbosityEnvVar sets the log level when no -v flag is passed, using the same 0-4 scale as -v.
+// A flag always wins, since -v is a count flag and 0 can only mean "not passed". Level 5
+// (UNSAFE_TRACE) is unreachable here; it stays gated behind the --unsafe-trace flag.
 const VerbosityEnvVar = "CONFLUENT_VERBOSITY"
 
 // TODO: once we migrate from ccloud-sdk-v1 we should change these functions to act on the
@@ -94,8 +95,9 @@ func (l *Logger) SetVerbosity(verbosity int) {
 }
 
 // verbosityFromEnv reads the verbosity from VerbosityEnvVar. An unset variable returns 0 silently; a
-// value that isn't a non-negative integer returns 0 but warns, since someone who set it meant to
-// raise verbosity and would otherwise get no output and no hint why.
+// value outside 0-4 (non-integer, negative, or >= 5) returns 0 but warns, since someone who set it
+// meant to raise verbosity and would otherwise get no output and no hint why. Level 5 (UNSAFE_TRACE)
+// is excluded on purpose: it logs credentials, so it must come from --unsafe-trace, not an env var.
 func (l *Logger) verbosityFromEnv() int {
 	raw, ok := os.LookupEnv(VerbosityEnvVar)
 	if !ok || raw == "" {
@@ -103,7 +105,7 @@ func (l *Logger) verbosityFromEnv() int {
 	}
 
 	verbosity, err := strconv.Atoi(raw)
-	if err != nil || verbosity < 0 {
+	if err != nil || verbosity < 0 || verbosity > int(TRACE) {
 		fmt.Fprintf(l.out, "[WARN] Ignoring invalid environment variable %q=%q; expected a number from 0 (quietest) to 4 (most verbose).\n", VerbosityEnvVar, raw)
 		return 0
 	}
