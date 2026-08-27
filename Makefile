@@ -68,7 +68,7 @@ CONFLUENT_DEV_VERSION ?= 0.0.0-dev-$(shell git rev-parse --short HEAD 2>/dev/nul
 .PHONY: build-dev
 build-dev:
 	@mkdir -p $(dir $(CONFLUENT_DEV_BIN))
-	go build -ldflags="-X main.version=$(CONFLUENT_DEV_VERSION) -X main.commit=$(shell git rev-parse HEAD 2>/dev/null || echo unknown) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)" -o $(CONFLUENT_DEV_BIN) ./cmd/confluent
+	go build -ldflags="-X main.disableUpdates=true -X main.version=$(CONFLUENT_DEV_VERSION) -X main.commit=$(shell git rev-parse HEAD 2>/dev/null || echo unknown) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)" -o $(CONFLUENT_DEV_BIN) ./cmd/confluent
 	@echo "Built confluent-dev at $(CONFLUENT_DEV_BIN)"
 	@echo "It keeps state in ~/.confluent-dev, isolated from the ~/.confluent of any installed release."
 	@echo "Make sure $(dir $(CONFLUENT_DEV_BIN)) is on your PATH."
