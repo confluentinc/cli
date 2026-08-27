@@ -116,3 +116,5 @@ promotions:
     pipeline_file: ".semaphore/macos.yml"
   - name: "Run live integration tests"
     pipeline_file: ".semaphore/live-tests.yml"
+  - name: "Run relevant live tests (PR)"
+    pipeline_file: ".semaphore/live-tests-pr.yml"
