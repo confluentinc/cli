@@ -1,7 +1,8 @@
 Updated organization "abc-123".
-+-------------+-----------------+
-| Current     | true            |
-| ID          | abc-123         |
-| Name        | default-updated |
-| JIT Enabled | true            |
-+-------------+-----------------+
++--------------+-----------------+
+| Current      | true            |
+| ID           | abc-123         |
+| Name         | default-updated |
+| JIT Enabled  | true            |
+| SCIM Enabled | true            |
++--------------+-----------------+

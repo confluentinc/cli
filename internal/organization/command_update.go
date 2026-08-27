@@ -25,6 +25,7 @@ func (c *organizationCommand) newUpdateCommand() *cobra.Command {
 	// Optional flags
 	cmd.Flags().String("name", "", "Name of the Confluent Cloud organization.")
 	cmd.Flags().Bool("jit-enabled", false, "Toggle Just-In-Time (JIT) user provisioning for SSO-enabled organizations.")
+	cmd.Flags().Bool("scim-enabled", false, "Toggle System for Cross-domain Identity Management (SCIM) user provisioning for SSO-enabled organizations.")
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -51,6 +52,14 @@ func (c *organizationCommand) update(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 		updateReq.JitEnabled = orgv2.PtrBool(jitEnabled)
+	}
+
+	if cmd.Flags().Changed("scim-enabled") {
+		scimEnabled, err := cmd.Flags().GetBool("scim-enabled")
+		if err != nil {
+			return err
+		}
+		updateReq.ScimEnabled = orgv2.PtrBool(scimEnabled)
 	}
 
 	organization, httpResp, err := c.V2Client.UpdateOrgOrganization(id, updateReq)
