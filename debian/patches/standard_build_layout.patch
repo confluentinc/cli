@@ -1,4 +1,4 @@
---- cli/Makefile	2026-10-05 16:28:00.302268645 +0000
+--- cli/Makefile	2026-10-05 16:28:33.039803769 +0000
 +++ debian/Makefile	2026-08-11 19:37:20.278886564 +0000
 @@ -1,256 +1,179 @@
 -SHELL := /bin/bash
@@ -156,7 +156,7 @@
 -.PHONY: build-dev
 -build-dev:
 -	@mkdir -p $(dir $(CONFLUENT_DEV_BIN))
--	go build -ldflags="-X main.version=$(CONFLUENT_DEV_VERSION) -X main.commit=$(shell git rev-parse HEAD 2>/dev/null || echo unknown) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)" -o $(CONFLUENT_DEV_BIN) ./cmd/confluent
+-	go build -ldflags="-X main.disableUpdates=true -X main.version=$(CONFLUENT_DEV_VERSION) -X main.commit=$(shell git rev-parse HEAD 2>/dev/null || echo unknown) -X main.date=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)" -o $(CONFLUENT_DEV_BIN) ./cmd/confluent
 -	@echo "Built confluent-dev at $(CONFLUENT_DEV_BIN)"
 -	@echo "It keeps state in ~/.confluent-dev, isolated from the ~/.confluent of any installed release."
 -	@echo "Make sure $(dir $(CONFLUENT_DEV_BIN)) is on your PATH."
