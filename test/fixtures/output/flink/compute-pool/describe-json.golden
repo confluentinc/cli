@@ -6,7 +6,7 @@
   "environment": "env-123",
   "max_cfu": 1,
   "region": "eu-west-1",
-  "currrent_cfu": 0,
+  "current_cfu": 0,
   "status": "PROVISIONED",
   "default_pool": false
 }
