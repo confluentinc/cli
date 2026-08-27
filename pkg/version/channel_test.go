@@ -62,6 +62,7 @@ func TestChannel_String(t *testing.T) {
 	req.Equal("stable", Stable.String())
 	req.Equal("prerelease", Prerelease.String())
 	req.Equal("dev", Dev.String())
+	req.Equal("dev", Channel(99).String(), "an unrecognized channel must not panic")
 }
 
 func TestProcessChannel_DefaultsToDev(t *testing.T) {
