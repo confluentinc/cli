@@ -179,6 +179,41 @@ func (s *CLILiveTestSuite) waitForCondition(t *testing.T, argsTemplate string, s
 	}
 }
 
+// waitForDeletion polls a describe command at the given interval until it exits
+// non-zero (the resource is gone) or the timeout expires. It is the exit-code
+// counterpart of waitForCondition: deletion is confirmed by the command
+// failing, not by anything it prints, so it can't be expressed via
+// waitForCondition's output-only predicate. Used to verify a resource is fully
+// deleted past any eventually-consistent DELETING phase. The command template
+// supports {{.key}} substitution from state.
+func (s *CLILiveTestSuite) waitForDeletion(t *testing.T, argsTemplate string, state *LiveTestState,
+	interval, timeout time.Duration) {
+	t.Helper()
+
+	deadline := time.Now().Add(timeout)
+	args := substituteStateVars(t, argsTemplate, state)
+	env := buildCommandEnv([]string{homeEnvVar(state.homeDir)})
+
+	for {
+		cmd := exec.Command(s.binPath, shellSplit(args)...)
+		cmd.Env = env
+		out, err := cmd.CombinedOutput()
+
+		if err != nil {
+			if _, ok := err.(*exec.ExitError); ok {
+				return // non-zero exit — the resource no longer exists
+			}
+			// Any other error means the command could not run — surface it.
+			t.Fatalf("waitForDeletion failed to run %q: %v\n%s", args, err, string(out))
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("waitForDeletion timed out after %s — resource still exists:\n%s", timeout, string(out))
+		}
+		t.Logf("Resource still exists, retrying deletion check in %s...", interval)
+		time.Sleep(interval)
+	}
+}
+
 // copyDir recursively copies a directory tree from src to dst.
 func copyDir(src, dst string) error {
 	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {

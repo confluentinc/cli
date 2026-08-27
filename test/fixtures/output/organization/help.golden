@@ -1,4 +1,4 @@
-Manage your Confluent Cloud organizations.
+Manage Confluent Cloud organizations.
 
 Usage:
   confluent organization [command]
@@ -7,10 +7,10 @@ Aliases:
   organization, org
 
 Available Commands:
-  describe    Describe the current Confluent Cloud organization.
-  list        List Confluent Cloud organizations.
+  describe    Describe the current organization.
+  list        List organizations.
   scim-token  Manage Organization scim tokens.
-  update      Update the current Confluent Cloud organization.
+  update      Update the current organization.
 
 Global Flags:
   -h, --help            Show help for this command.

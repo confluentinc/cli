@@ -11,6 +11,7 @@ It may take up to 5 minutes for the Kafka cluster to be ready.
 | Region               | us-west-2                            |
 | Availability         | single-zone                          |
 | Status               | PROVISIONING                         |
+| Deletion Protection  | false                                |
 | Endpoint             | SASL_SSL://kafka-endpoint            |
 | REST Endpoint        | https://pkc-endpoint                 |
 +----------------------+--------------------------------------+

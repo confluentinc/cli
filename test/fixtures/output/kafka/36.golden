@@ -11,6 +11,7 @@
 | Region               | us-west-2                              |
 | Availability         | single-zone                            |
 | Status               | UP                                     |
+| Deletion Protection  | false                                  |
 | Endpoint             | SASL_SSL://kafka-endpoint              |
 | Encryption Key ID    | abc123                                 |
 | REST Endpoint        | http://127.0.0.1:1025                  |

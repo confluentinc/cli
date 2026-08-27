@@ -36,6 +36,14 @@ func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 				Text: `Update the Max eCKU count of a Kafka cluster:`,
 				Code: `confluent kafka cluster update lkc-123456 --max-ecku 5`,
 			},
+			examples.Example{
+				Text: "Enable deletion protection on a Kafka cluster:",
+				Code: "confluent kafka cluster update lkc-123456 --deletion-protection",
+			},
+			examples.Example{
+				Text: "Disable deletion protection on a Kafka cluster:",
+				Code: "confluent kafka cluster update lkc-123456 --deletion-protection=false",
+			},
 		),
 	}
 
@@ -44,12 +52,13 @@ func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String("type", "", `Type of the Kafka cluster. Only supports upgrading from "Basic" to "Standard".`)
 	cmd.Flags().Int("max-ecku", 0, `Maximum number of Elastic Confluent Kafka Units (eCKUs) that Kafka clusters should auto-scale to. `+
 		`Kafka clusters with "HIGH" availability must have at least two eCKUs.`)
+	cmd.Flags().Bool("deletion-protection", false, "Enable deletion protection for the Kafka cluster. Use \"--deletion-protection=false\" to disable.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cmd.MarkFlagsOneRequired("name", "cku", "type", "max-ecku")
+	cmd.MarkFlagsOneRequired("name", "cku", "type", "max-ecku", "deletion-protection")
 
 	return cmd
 }
@@ -83,6 +92,14 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("`--name` flag value must not be empty")
 		}
 		update.Spec.SetDisplayName(name)
+	}
+
+	if cmd.Flags().Changed("deletion-protection") {
+		deletionProtection, err := cmd.Flags().GetBool("deletion-protection")
+		if err != nil {
+			return err
+		}
+		update.Spec.SetDeletionProtection(deletionProtection)
 	}
 
 	if cmd.Flags().Changed("cku") {

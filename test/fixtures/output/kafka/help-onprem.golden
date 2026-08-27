@@ -8,6 +8,7 @@ Available Commands:
   broker        Manage Kafka brokers.
   cluster       Manage Kafka clusters.
   consumer      Manage Kafka consumers.
+  license       Manage Confluent Platform licenses.
   link          Manage inter-cluster links.
   partition     Manage Kafka partitions.
   replica       Manage Kafka replicas.

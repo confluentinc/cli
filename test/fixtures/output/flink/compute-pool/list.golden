@@ -1,4 +1,4 @@
-  Current |     ID      |       Name        | Environment | Current CFU | Max CFU | Default Pool | Cloud |  Region   |   Status     
-----------+-------------+-------------------+-------------+-------------+---------+--------------+-------+-----------+--------------
-          | lfcp-123456 | my-compute-pool-1 | env-123     |           0 |       1 | false        | AWS   | eu-west-1 | PROVISIONED  
-          | lfcp-222222 | my-compute-pool-2 | env-456     |           0 |       2 | false        | AWS   | eu-west-2 | PROVISIONED  
+  Current |     ID      |       Name        | Cloud | Environment | Max CFU |  Region   | Current CFU |   Status    | Default Pool  
+----------+-------------+-------------------+-------+-------------+---------+-----------+-------------+-------------+---------------
+          | lfcp-123456 | my-compute-pool-1 | AWS   | env-123     |       1 | eu-west-1 |           0 | PROVISIONED | false         
+          | lfcp-222222 | my-compute-pool-2 | AWS   | env-456     |       2 | eu-west-2 |           0 | PROVISIONED | false         

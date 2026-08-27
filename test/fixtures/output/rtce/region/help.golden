@@ -1,4 +1,4 @@
-Manage RTCE regions.
+Manage Confluent Cloud RTCE regions.
 
 Usage:
   confluent rtce region [command]

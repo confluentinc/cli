@@ -1,0 +1,1 @@
+Are you sure you want to delete Flink secret mapping "non-exist-secret-mapping"? (y/n): Error: failed to delete non-exist-secret-mapping: 404 Not Found

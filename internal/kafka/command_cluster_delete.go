@@ -55,9 +55,11 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	errs := multierror.Append(err, c.removeKafkaClusterConfigs(deletedIds))
 	if errs.ErrorOrNil() != nil {
 		if len(args)-len(deletedIds) > 1 {
-			return errors.NewErrorWithSuggestions(err.Error(), "Ensure the clusters are not associated with any active Connect clusters.")
+			return errors.NewErrorWithSuggestions(errs.Error(),
+				"Ensure the clusters are not associated with any active Connect clusters and that deletion protection is not enabled.")
 		} else {
-			return errors.NewErrorWithSuggestions(err.Error(), "Ensure the cluster is not associated with any active Connect clusters.")
+			return errors.NewErrorWithSuggestions(errs.Error(),
+				"Ensure the cluster is not associated with any active Connect clusters and that deletion protection is not enabled.")
 		}
 	}
 

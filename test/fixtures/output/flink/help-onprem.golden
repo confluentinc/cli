@@ -6,11 +6,14 @@ Usage:
 Available Commands:
   application         Manage Flink applications.
   catalog             Manage Flink catalogs in Confluent Platform.
-  compute-pool        Manage Flink compute pools.
+  compute-pool        Manage Flink compute pools in Confluent Platform.
   detached-savepoint  Manage Flink detached savepoints.
   environment         Manage Flink environments.
   savepoint           Manage Flink savepoints.
-  statement           Manage Flink SQL statements.
+  secret              Manage Flink secrets in Confluent Platform.
+  secret-mapping      Manage Flink secret mappings.
+  statement           Manage Flink SQL statements in Confluent Platform.
+  system-info         Display CMF system information.
 
 Global Flags:
   -h, --help            Show help for this command.

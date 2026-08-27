@@ -161,8 +161,8 @@ func (c *command) retrieveUnsecuredToken(e ckgo.OAuthBearerTokenRefresh) (ckgo.O
 	return oauthBearerToken, nil
 }
 
-func newProducer(kafka *config.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckgo.Producer, error) {
-	configMap, err := getProducerConfigMap(kafka, clientID)
+func newProducer(ctx *config.Context, kafka *config.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckgo.Producer, error) {
+	configMap, err := getProducerConfigMap(ctx, kafka, clientID)
 	if err != nil {
 		return nil, fmt.Errorf(errors.FailedToGetConfigurationErrorMsg, err)
 	}
@@ -170,8 +170,8 @@ func newProducer(kafka *config.KafkaClusterConfig, clientID, configPath string, 
 	return newProducerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func newConsumer(group string, kafka *config.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckgo.Consumer, error) {
-	configMap, err := getConsumerConfigMap(group, kafka, clientID)
+func newConsumer(group string, ctx *config.Context, kafka *config.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckgo.Consumer, error) {
+	configMap, err := getConsumerConfigMap(group, ctx, kafka, clientID)
 	if err != nil {
 		return nil, fmt.Errorf(errors.FailedToGetConfigurationErrorMsg, err)
 	}

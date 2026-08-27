@@ -2,9 +2,11 @@ package auth
 
 import (
 	"fmt"
+	"net/http/httputil"
 	"os"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/dghubble/sling"
 
@@ -14,7 +16,9 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/jwt"
 	"github.com/confluentinc/cli/v4/pkg/keychain"
+	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/secret"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 const (
@@ -227,9 +231,27 @@ func GetDataplaneToken(ctx *config.Context) (string, error) {
 		Error string `json:"error"`
 	}{}
 
-	if _, err := sling.New().Add("Content-Type", "application/json").Add("Authorization", "Bearer "+ctx.GetAuthToken()).Post(endpoint).BodyJSON(map[string]any{}).ReceiveSuccess(res); err != nil {
+	client := utils.DefaultClient() // Declare a new client so that sling doesn't use the global default
+	client.Timeout = 30 * time.Second
+
+	s := sling.New().Client(client).Add("Content-Type", "application/json").Add("Authorization", "Bearer "+ctx.GetAuthToken()).Post(endpoint).BodyJSON(map[string]any{})
+
+	req, err := s.Request()
+	if err != nil {
 		return "", err
 	}
+
+	dump, err := httputil.DumpRequestOut(req, true)
+	if err != nil {
+		return "", err
+	}
+	log.CliLogger.UnsafeTracef("%s\n", dump)
+
+	req = req.WithContext(utils.GetCloudTracedContext()) // Adds Trace logs for TRACE and UNSAFE_TRACE levels
+	if _, err = s.Do(req, res, nil); err != nil {
+		return "", err
+	}
+
 	if res.Error != "" {
 		return "", errors.New(res.Error)
 	}
