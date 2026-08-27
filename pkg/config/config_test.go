@@ -618,6 +618,34 @@ func TestStateDir_ErrorWhenHomeUnresolvable(t *testing.T) {
 	require.Error(t, err, "StateDir must fail rather than fall back to the working directory")
 }
 
+func TestStateDir_ByChannel(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	t.Cleanup(func() { pversion.SetProcessChannel(pversion.Dev) })
+
+	tests := []struct {
+		name    string
+		channel pversion.Channel
+		dir     string
+	}{
+		{"stable keeps the historical path", pversion.Stable, ".confluent"},
+		{"prerelease is isolated", pversion.Prerelease, ".confluent-prerelease"},
+		{"dev is isolated", pversion.Dev, ".confluent-dev"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			pversion.SetProcessChannel(test.channel)
+
+			dir, err := StateDir()
+
+			require.NoError(t, err)
+			require.Equal(t, filepath.Join(home, test.dir), dir)
+		})
+	}
+}
+
 func TestConfig_AddContext(t *testing.T) {
 	filename := "/tmp/TestConfig_AddContext.json"
 	conf := AuthenticatedOnPremConfigMock()
