@@ -20,6 +20,7 @@ import (
 type MockInputControllerInterface struct {
 	ctrl     *gomock.Controller
 	recorder *MockInputControllerInterfaceMockRecorder
+	isgomock struct{}
 }
 
 // MockInputControllerInterfaceMockRecorder is the mock recorder for MockInputControllerInterface.
@@ -96,29 +97,29 @@ func (mr *MockInputControllerInterfaceMockRecorder) HasUserEnabledReverseSearch(
 }
 
 // HasUserInitiatedExit mocks base method.
-func (m *MockInputControllerInterface) HasUserInitiatedExit(arg0 string) bool {
+func (m *MockInputControllerInterface) HasUserInitiatedExit(userInput string) bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "HasUserInitiatedExit", arg0)
+	ret := m.ctrl.Call(m, "HasUserInitiatedExit", userInput)
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
 // HasUserInitiatedExit indicates an expected call of HasUserInitiatedExit.
-func (mr *MockInputControllerInterfaceMockRecorder) HasUserInitiatedExit(arg0 any) *gomock.Call {
+func (mr *MockInputControllerInterfaceMockRecorder) HasUserInitiatedExit(userInput any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasUserInitiatedExit", reflect.TypeOf((*MockInputControllerInterface)(nil).HasUserInitiatedExit), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasUserInitiatedExit", reflect.TypeOf((*MockInputControllerInterface)(nil).HasUserInitiatedExit), userInput)
 }
 
 // SetDiagnostics mocks base method.
-func (m *MockInputControllerInterface) SetDiagnostics(arg0 []lsp.Diagnostic) {
+func (m *MockInputControllerInterface) SetDiagnostics(diagnostics []lsp.Diagnostic) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetDiagnostics", arg0)
+	m.ctrl.Call(m, "SetDiagnostics", diagnostics)
 }
 
 // SetDiagnostics indicates an expected call of SetDiagnostics.
-func (mr *MockInputControllerInterfaceMockRecorder) SetDiagnostics(arg0 any) *gomock.Call {
+func (mr *MockInputControllerInterfaceMockRecorder) SetDiagnostics(diagnostics any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDiagnostics", reflect.TypeOf((*MockInputControllerInterface)(nil).SetDiagnostics), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDiagnostics", reflect.TypeOf((*MockInputControllerInterface)(nil).SetDiagnostics), diagnostics)
 }
 
 // StartReverseSearch mocks base method.
