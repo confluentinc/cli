@@ -17,10 +17,11 @@ type organizationCommand struct {
 }
 
 type organizationOut struct {
-	IsCurrent  bool   `human:"Current" serialized:"is_current"`
-	ID         string `human:"ID" serialized:"id"`
-	Name       string `human:"Name" serialized:"name"`
-	JitEnabled bool   `human:"JIT Enabled" serialized:"jit_enabled"`
+	IsCurrent   bool   `human:"Current" serialized:"is_current"`
+	ID          string `human:"ID" serialized:"id"`
+	Name        string `human:"Name" serialized:"name"`
+	JitEnabled  bool   `human:"JIT Enabled" serialized:"jit_enabled"`
+	ScimEnabled bool   `human:"SCIM Enabled" serialized:"scim_enabled"`
 }
 
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command { //nolint:unparam
@@ -48,10 +49,11 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command { //nolint
 func (c *organizationCommand) printOrganization(cmd *cobra.Command, organization orgv2.OrgV2Organization) error {
 	table := output.NewTable(cmd)
 	out := &organizationOut{
-		IsCurrent:  organization.GetId() == c.Context.GetCurrentOrganization(),
-		ID:         organization.GetId(),
-		Name:       organization.GetDisplayName(),
-		JitEnabled: organization.GetJitEnabled(),
+		IsCurrent:   organization.GetId() == c.Context.GetCurrentOrganization(),
+		ID:          organization.GetId(),
+		Name:        organization.GetDisplayName(),
+		JitEnabled:  organization.GetJitEnabled(),
+		ScimEnabled: organization.GetScimEnabled(),
 	}
 	table.Add(out)
 	return table.Print()

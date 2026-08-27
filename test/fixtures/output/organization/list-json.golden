@@ -3,18 +3,21 @@
     "is_current": true,
     "id": "abc-123",
     "name": "org1",
-    "jit_enabled": true
+    "jit_enabled": true,
+    "scim_enabled": true
   },
   {
     "is_current": false,
     "id": "abc-456",
     "name": "org2",
-    "jit_enabled": true
+    "jit_enabled": true,
+    "scim_enabled": false
   },
   {
     "is_current": false,
     "id": "abc-789",
     "name": "org3",
-    "jit_enabled": true
+    "jit_enabled": true,
+    "scim_enabled": true
   }
 ]
