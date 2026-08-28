@@ -1,7 +1,7 @@
 Updated IAM service account "sa-12345".
-+-------------+-----------------+
-| Current     | true            |
-| ID          |                 |
-| Name        |                 |
-| Description | new-description |
-+-------------+-----------------+
++-------------+------------------+
+| Current     | false            |
+| ID          | sa-12345         |
+| Name        | new-display-name |
+| Description | new-description  |
++-------------+------------------+

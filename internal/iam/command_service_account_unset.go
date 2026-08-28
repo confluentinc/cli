@@ -5,6 +5,7 @@ package iam
 import (
 	"github.com/spf13/cobra"
 
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
@@ -16,6 +17,9 @@ func (c *serviceAccountCommand) newUnsetCommand() *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE:  c.unset,
 	}
+
+	// TODO: Remove the unnecessary `--context` flag in CLI next major version v5.0.0
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	return cmd
 }

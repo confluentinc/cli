@@ -23,19 +23,6 @@ func (c *Client) iamApiContext() context.Context {
 	return context.WithValue(context.Background(), iamv2.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
-// iam service-account api calls
-
-func (c *Client) executeListServiceAccounts(pageToken string, displayName []string) (iamv2.IamV2ServiceAccountList, *http.Response, error) {
-	req := c.IamClient.ServiceAccountsIamV2Api.ListIamV2ServiceAccounts(c.iamApiContext()).PageSize(ccloudV2ListPageSize)
-	if len(displayName) > 0 {
-		req = req.DisplayName(displayName)
-	}
-	if pageToken != "" {
-		req = req.PageToken(pageToken)
-	}
-	return req.Execute()
-}
-
 // iam user api calls
 
 func (c *Client) DeleteIamUser(id string) error {
