@@ -175,13 +175,30 @@ func (s *CLITestSuite) TestIamServiceAccount() {
 		{args: "iam service-account describe sa-12345 -o yaml", fixture: "iam/service-account/describe-yaml.golden"},
 		{args: "iam service-account describe sa-12345", fixture: "iam/service-account/describe.golden"},
 		{args: "iam service-account describe sa-6789", fixture: "iam/service-account/service-account-not-found.golden", exitCode: 1},
-		{args: "iam service-account update sa-12345 --description new-description", fixture: "iam/service-account/update.golden"},
-		{args: "iam service-account update sa-12345 --description new-description-2", fixture: "iam/service-account/update-2.golden"},
+		{args: "iam service-account update sa-12345 --description new-description --display-name new-display-name", fixture: "iam/service-account/update.golden"},
 		{args: "iam service-account delete sa-12345 --force", fixture: "iam/service-account/delete.golden"},
 	}
 
 	for _, test := range tests {
 		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIamServiceAccountUse() {
+	resetConfiguration(s.T(), false)
+
+	tests := []CLITest{
+		{args: "iam service-account describe", fixture: "iam/service-account/describe-no-selection.golden", exitCode: 1, login: "cloud"},
+		{args: "iam service-account use sa-12345", fixture: "iam/service-account/use.golden"},
+		{args: "iam service-account describe", fixture: "iam/service-account/describe-current.golden"},
+		{args: `iam service-account update --description "updated the current service account"`, fixture: "iam/service-account/update-current.golden"},
+		{args: "iam service-account unset", fixture: "iam/service-account/unset.golden"},
+		{args: "iam service-account describe", fixture: "iam/service-account/describe-no-selection.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.workflow = true
 		s.runIntegrationTest(test)
 	}
 }

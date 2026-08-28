@@ -1,1 +1,7 @@
-Updated the description of service account "sa-12345" to "new-description".
+Updated IAM service account "sa-12345".
++-------------+------------------+
+| Current     | false            |
+| ID          | sa-12345         |
+| Name        | new-display-name |
+| Description | new-description  |
++-------------+------------------+
