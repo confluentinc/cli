@@ -4,10 +4,11 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
-func (c *pluginCommand) newDescribeVersionCommand() *cobra.Command {
+func (c *customConnectPluginVersionCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <id>",
 		Short: "Describe a custom Connect plugin version.",
@@ -33,7 +34,7 @@ func (c *pluginCommand) newDescribeVersionCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *pluginCommand) describeVersion(cmd *cobra.Command, args []string) error {
+func (c *customConnectPluginVersionCommand) describeVersion(cmd *cobra.Command, args []string) error {
 	versionId := args[0]
 
 	pluginId, err := cmd.Flags().GetString("plugin")
@@ -45,15 +46,15 @@ func (c *pluginCommand) describeVersion(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-	pluginResp, err := c.V2Client.DescribeCCPMPlugin(pluginId, environment)
+	pluginResp, httpResp, err := c.V2Client.GetCcpmCustomConnectPlugin(pluginId, environment)
 	if err != nil {
-		return err
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	// Use V2Client to call CCPM API
-	version, err := c.V2Client.DescribeCCPMPluginVersion(pluginId, versionId, environment)
+	version, httpResp, err := c.V2Client.GetCcpmCustomConnectPluginVersion(pluginId, versionId, environment)
 	if err != nil {
-		return err
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 	return c.printVersionTable(cmd, pluginResp, version)
 }
