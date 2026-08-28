@@ -285,7 +285,21 @@ func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 			var req iamv2.IamV2ServiceAccount
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			res := &iamv2.IamV2ServiceAccount{Id: iamv2.PtrString(id), DisplayName: req.DisplayName, Description: req.Description}
+
+			// Merge the patch onto the persisted fixture (matching the GET case above) so a
+			// partial update's response reflects a realistic full service account, not just
+			// the fields the request happened to touch.
+			res := iamv2.IamV2ServiceAccount{
+				Id:          iamv2.PtrString(id),
+				DisplayName: iamv2.PtrString("service-account"),
+				Description: iamv2.PtrString("at your service."),
+			}
+			if req.DisplayName != nil {
+				res.DisplayName = req.DisplayName
+			}
+			if req.Description != nil {
+				res.Description = req.Description
+			}
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodDelete:

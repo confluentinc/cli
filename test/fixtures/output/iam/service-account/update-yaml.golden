@@ -1,4 +1,4 @@
 is_current: false
 id: sa-12345
-name: ""
+name: service-account
 description: new-description
