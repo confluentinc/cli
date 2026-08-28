@@ -540,7 +540,7 @@ func AddResourceOwnerFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) 
 		"created resource. Principal can be a %s.", utils.ArrayToCommaDelimitedString(items, "or"))
 	cmd.Flags().String("resource-owner", "", description)
 	RegisterFlagCompletionFunc(cmd, "resource-owner", func(cmd *cobra.Command, args []string) []string {
-		if err := cmd.PersistentPreRunE(cmd, args); err != nil {
+		if err := command.PersistentPreRunE(cmd, args); err != nil {
 			return nil
 		}
 
