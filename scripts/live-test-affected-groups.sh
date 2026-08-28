@@ -96,7 +96,9 @@ emit() { echo "GROUPS=$1"; echo "RUN=${2:-}"; }
 
 # --- changed files ----------------------------------------------------------
 if [ -n "${CHANGED_FILES_OVERRIDE:-}" ]; then
-  CHANGED=$(printf '%s\n' $CHANGED_FILES_OVERRIDE)
+  # Quote the expansion (no word-splitting/globbing) and normalize spaces to
+  # newlines, so an override like "a b" or "pkg/*" is taken literally.
+  CHANGED=$(printf '%s' "$CHANGED_FILES_OVERRIDE" | tr ' ' '\n')
 else
   git fetch -q origin "${BASE_REF#origin/}" 2>/dev/null || true
   if MB=$(git merge-base HEAD "$BASE_REF" 2>/dev/null); then
