@@ -19,6 +19,8 @@ const (
 	RUNNING   PHASE = "RUNNING"   // More results are available (pagination)
 	COMPLETED PHASE = "COMPLETED" // All results were fetched
 	FAILED    PHASE = "FAILED"
+	STOPPED   PHASE = "STOPPED"  // The statement was stopped; no more results are coming
+	DELETING  PHASE = "DELETING" // The statement is being deleted; no more results are coming
 )
 
 // ProcessedStatement Custom Internal type that shall be used internally by the client
