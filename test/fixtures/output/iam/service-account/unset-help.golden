@@ -1,10 +1,7 @@
-Unset the current service account that was set with `confluent iam service-account use`.
+Unset the current IAM service account.
 
 Usage:
   confluent iam service-account unset [flags]
-
-Flags:
-      --context string   CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

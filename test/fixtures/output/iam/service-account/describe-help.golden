@@ -1,7 +1,7 @@
-Describe a service account.
+Describe an IAM service account.
 
 Usage:
-  confluent iam service-account describe <id> [flags]
+  confluent iam service-account describe [id] [flags]
 
 Flags:
       --context string   CLI context name.

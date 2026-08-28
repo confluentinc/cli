@@ -25,45 +25,6 @@ func (c *Client) iamApiContext() context.Context {
 
 // iam service-account api calls
 
-func (c *Client) CreateIamServiceAccount(serviceAccount iamv2.IamV2ServiceAccount, assignedResourceOwner string) (iamv2.IamV2ServiceAccount, *http.Response, error) {
-	return c.IamClient.ServiceAccountsIamV2Api.CreateIamV2ServiceAccount(c.iamApiContext()).
-		AssignedResourceOwner(assignedResourceOwner).
-		IamV2ServiceAccount(serviceAccount).Execute()
-}
-
-func (c *Client) DeleteIamServiceAccount(id string) error {
-	httpResp, err := c.IamClient.ServiceAccountsIamV2Api.DeleteIamV2ServiceAccount(c.iamApiContext(), id).Execute()
-	return errors.CatchCCloudV2Error(err, httpResp)
-}
-
-func (c *Client) GetIamServiceAccount(id string) (iamv2.IamV2ServiceAccount, *http.Response, error) {
-	return c.IamClient.ServiceAccountsIamV2Api.GetIamV2ServiceAccount(c.iamApiContext(), id).Execute()
-}
-
-func (c *Client) UpdateIamServiceAccount(id string, update iamv2.IamV2ServiceAccount) (iamv2.IamV2ServiceAccount, *http.Response, error) {
-	return c.IamClient.ServiceAccountsIamV2Api.UpdateIamV2ServiceAccount(c.iamApiContext(), id).IamV2ServiceAccount(update).Execute()
-}
-
-func (c *Client) ListIamServiceAccounts(displayName []string) ([]iamv2.IamV2ServiceAccount, error) {
-	var list []iamv2.IamV2ServiceAccount
-
-	done := false
-	pageToken := ""
-	for !done {
-		page, httpResp, err := c.executeListServiceAccounts(pageToken, displayName)
-		if err != nil {
-			return nil, errors.CatchCCloudV2Error(err, httpResp)
-		}
-		list = append(list, page.GetData()...)
-
-		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return list, nil
-}
-
 func (c *Client) executeListServiceAccounts(pageToken string, displayName []string) (iamv2.IamV2ServiceAccountList, *http.Response, error) {
 	req := c.IamClient.ServiceAccountsIamV2Api.ListIamV2ServiceAccounts(c.iamApiContext()).PageSize(ccloudV2ListPageSize)
 	if len(displayName) > 0 {
@@ -159,6 +120,72 @@ func (c *Client) ListIamInvitations() ([]iamv2.IamV2Invitation, error) {
 
 func (c *Client) executeListInvitations(pageToken string) (iamv2.IamV2InvitationList, *http.Response, error) {
 	req := c.IamClient.InvitationsIamV2Api.ListIamV2Invitations(c.iamApiContext()).PageSize(99)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+	return req.Execute()
+}
+
+// ===== IAM service accounts API calls =====
+
+func (c *Client) CreateIamServiceAccount(assignedResourceOwner string, req iamv2.IamV2ServiceAccount) (iamv2.IamV2ServiceAccount, *http.Response, error) {
+	createReq := c.IamClient.ServiceAccountsIamV2Api.
+		CreateIamV2ServiceAccount(c.iamApiContext()).
+		IamV2ServiceAccount(req)
+	if assignedResourceOwner != "" {
+		createReq = createReq.AssignedResourceOwner(assignedResourceOwner)
+	}
+	return createReq.Execute()
+}
+
+func (c *Client) GetIamServiceAccount(id string) (iamv2.IamV2ServiceAccount, *http.Response, error) {
+	getReq := c.IamClient.ServiceAccountsIamV2Api.
+		GetIamV2ServiceAccount(c.iamApiContext(), id)
+	return getReq.Execute()
+}
+
+func (c *Client) UpdateIamServiceAccount(id string, update iamv2.IamV2ServiceAccount) (iamv2.IamV2ServiceAccount, *http.Response, error) {
+	updateReq := c.IamClient.ServiceAccountsIamV2Api.
+		UpdateIamV2ServiceAccount(c.iamApiContext(), id).
+		IamV2ServiceAccount(update)
+	return updateReq.Execute()
+}
+
+func (c *Client) DeleteIamServiceAccount(id string) error {
+	deleteReq := c.IamClient.ServiceAccountsIamV2Api.
+		DeleteIamV2ServiceAccount(c.iamApiContext(), id)
+	httpResp, err := deleteReq.Execute()
+	return errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) ListIamServiceAccounts(displayName []string) ([]iamv2.IamV2ServiceAccount, error) {
+	var list []iamv2.IamV2ServiceAccount
+
+	done := false
+	pageToken := ""
+	for !done {
+		page, httpResp, err := c.executeListIamServiceAccounts(displayName, pageToken)
+		if err != nil {
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
+		}
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return list, nil
+}
+
+func (c *Client) executeListIamServiceAccounts(displayName []string, pageToken string) (iamv2.IamV2ServiceAccountList, *http.Response, error) {
+	req := c.IamClient.ServiceAccountsIamV2Api.
+		ListIamV2ServiceAccounts(c.iamApiContext()).
+		PageSize(ccloudV2ListPageSize)
+	if displayName != nil {
+		req = req.DisplayName(displayName)
+	}
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
