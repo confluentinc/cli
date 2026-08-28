@@ -125,29 +125,14 @@ func (c *Client) DeleteCcpmCustomConnectPluginVersion(pluginId string, id string
 }
 
 func (c *Client) ListCcpmCustomConnectPluginVersions(pluginId string, environment string) ([]ccpmv1.CcpmV1CustomConnectPluginVersion, error) {
-	var list []ccpmv1.CcpmV1CustomConnectPluginVersion
-
-	done := false
-	pageToken := ""
-	for !done {
-		page, httpResp, err := c.executeListCcpmCustomConnectPluginVersions(pluginId, environment, pageToken)
-		if err != nil {
-			return nil, errors.CatchCCloudV2Error(err, httpResp)
-		}
-		list = append(list, page.GetData()...)
-
-		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return list, nil
-}
-
-func (c *Client) executeListCcpmCustomConnectPluginVersions(pluginId string, environment string, pageToken string) (ccpmv1.CcpmV1CustomConnectPluginVersionList, *http.Response, error) {
 	req := c.CcpmClient.CustomConnectPluginVersionsCcpmV1Api.
 		ListCcpmV1CustomConnectPluginVersions(c.ccpmApiContext(), pluginId).
 		Environment(environment)
-	return req.Execute()
+
+	list, httpResp, err := req.Execute()
+	if err != nil {
+		return nil, errors.CatchCCloudV2Error(err, httpResp)
+	}
+
+	return list.GetData(), nil
 }
