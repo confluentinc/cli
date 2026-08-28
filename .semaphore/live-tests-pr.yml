@@ -29,12 +29,19 @@ blocks:
             - . vault-sem-get-secret v1/ci/kv/apif/cli/live-testing-data
             - |
               set -e
-              GROUPS="$(BASE_REF=origin/main bash scripts/live-test-affected-groups.sh)"
-              echo "==> Affected live-test groups for this PR: ${GROUPS}"
+              # Detector prints two lines: GROUPS=<...> and RUN=<regex|empty>.
+              OUT="$(BASE_REF=origin/main bash scripts/live-test-affected-groups.sh)"
+              GROUPS="$(printf '%s\n' "$OUT" | sed -n 's/^GROUPS=//p')"
+              RUN="$(printf '%s\n' "$OUT" | sed -n 's/^RUN=//p')"
+              echo "==> groups=[$GROUPS] run=[${RUN:-<all in groups>}]"
               if [ "$GROUPS" = "NONE" ]; then
                 echo "Nothing with live coverage changed; skipping live tests."
                 exit 0
-              elif [ "$GROUPS" = "all" ]; then
+              fi
+              # Exported (not passed as a make arg): make would strip the trailing `$`
+              # anchor from a command-line variable. Empty -> Makefile default pattern.
+              export CLI_LIVE_TEST_RUN="$RUN"
+              if [ "$GROUPS" = "all" ]; then
                 make live-test
               else
                 make live-test CLI_LIVE_TEST_GROUPS="$GROUPS"

@@ -133,17 +133,24 @@ test: unit-test integration-test
 build-for-live-test:
 	go build -ldflags="-s -w -X main.disableUpdates=true" -o test/live/bin/confluent ./cmd/confluent
 
+# Optional CLI_LIVE_TEST_RUN (an environment variable) overrides the -run pattern
+# to a specific set of suite methods; it must be exported, not passed as a make
+# argument, since make would strip the trailing `$` anchor. Defaults to all Live
+# tests in the selected groups. The scoped PR pipeline uses it to run only the
+# tests for the commands a PR changed, e.g.:
+#   CLI_LIVE_TEST_RUN='^TestLive$/^(TestKafkaTopicCRUDLive)$' make live-test CLI_LIVE_TEST_GROUPS=kafka
 .PHONY: live-test
 live-test: build-for-live-test
-	@if [ -z "$(CLI_LIVE_TEST_GROUPS)" ]; then \
-		CLI_LIVE_TEST=1 go test ./test/live/ -v -run=".*Live$$" \
+	@RUN_PATTERN="$${CLI_LIVE_TEST_RUN:-.*Live$$}"; \
+	if [ -z "$(CLI_LIVE_TEST_GROUPS)" ]; then \
+		CLI_LIVE_TEST=1 go test ./test/live/ -v -run="$$RUN_PATTERN" \
 			-tags="live_test,all" -timeout 1440m -parallel 10; \
 	else \
 		TAGS="live_test"; \
 		for group in $$(echo "$(CLI_LIVE_TEST_GROUPS)" | tr ',' ' '); do \
 			TAGS="$$TAGS,$$group"; \
 		done; \
-		CLI_LIVE_TEST=1 go test ./test/live/ -v -run=".*Live$$" \
+		CLI_LIVE_TEST=1 go test ./test/live/ -v -run="$$RUN_PATTERN" \
 			-tags="$$TAGS" -timeout 1440m -parallel 10; \
 	fi
 
