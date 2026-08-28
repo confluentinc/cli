@@ -9,8 +9,11 @@ auto_cancel:
   running:
     when: "branch != 'main'"
 
+# Raised from 1h so the merge-queue live-test block below (which only runs on
+# gh-readonly-queue/* branches) has room; normal PR/branch runs finish quickly and
+# are unaffected -- this is a ceiling, not a fixed duration.
 execution_time_limit:
-  hours: 1
+  hours: 12
 
 blocks:
   - name: linux/amd64
@@ -98,6 +101,40 @@ blocks:
         always:
           commands:
             - test-results publish unit-test-report.xml integration-test-report.xml -N "windows/amd64" --ignore-missing
+
+  # Automatic pre-merge gate: GitHub merge queue builds a temporary
+  # gh-readonly-queue/main/* branch (main + the queued PR(s)); this block runs ONLY
+  # there, so the affected live tests must pass before the PR merges -- no manual
+  # click. On normal PR/branch runs the `run/when` skips it, so this pipeline's
+  # required check passes fast and the PR can enter the queue.
+  # Requires: merge queue enabled on main, and this pipeline's check kept required.
+  # If Semaphore does NOT build gh-readonly-queue branches, do NOT make it required
+  # (the queue would deadlock waiting for a check that never runs).
+  - name: "Relevant Live Tests (merge queue)"
+    dependencies: ["linux/amd64"]
+    run:
+      when: "branch =~ '^gh-readonly-queue/'"
+    task:
+      jobs:
+        - name: "Detect & run affected live tests"
+          execution_time_limit:
+            hours: 8
+          commands:
+            - checkout
+            - sem-version go $(cat .go-version)
+            - export PATH=$(go env GOPATH)/bin:$PATH
+            - . vault-sem-get-secret v1/ci/kv/apif/cli/live-testing-data
+            - |
+              set -e
+              GROUPS="$(BASE_REF=origin/main bash scripts/live-test-affected-groups.sh)"
+              echo "Affected live-test groups: $GROUPS"
+              if [ "$GROUPS" = "NONE" ]; then
+                echo "Nothing with live coverage changed; skipping live tests."
+              elif [ "$GROUPS" = "all" ]; then
+                make live-test
+              else
+                make live-test CLI_LIVE_TEST_GROUPS="$GROUPS"
+              fi
 
 after_pipeline:
   task:
