@@ -329,6 +329,14 @@ func handleIamServiceAccounts(t *testing.T) http.HandlerFunc {
 			var req iamv2.IamV2ServiceAccount
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
+
+			resourceOwner := r.URL.Query().Get("assigned_resource_owner")
+			if req.GetDisplayName() == "resource-owner-service" {
+				require.Equal(t, "u-123", resourceOwner, `expected "assigned_resource_owner" query param to be set`)
+			} else {
+				require.Empty(t, resourceOwner, `did not expect "assigned_resource_owner" query param`)
+			}
+
 			serviceAccount := iamv2.IamV2ServiceAccount{
 				Id:          iamv2.PtrString("sa-55555"),
 				DisplayName: req.DisplayName,
