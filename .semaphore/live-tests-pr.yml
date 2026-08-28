@@ -1,0 +1,48 @@
+version: v1.0
+name: Relevant Live Tests (PR, manual)
+agent:
+  machine:
+    type: s1-prod-ubuntu24-04-amd64-2
+
+# A newer push to the PR cancels an in-flight scoped run (unlike nightly, which never cancels).
+auto_cancel:
+  running:
+    when: "true"
+
+global_job_config:
+  prologue:
+    commands:
+      - checkout
+      - sem-version go $(cat .go-version)
+      - export PATH=$(go env GOPATH)/bin:$PATH
+
+# Scoped runs are a subset of the 24h nightly. Tune once you see real durations.
+execution_time_limit:
+  hours: 8
+
+blocks:
+  - name: "Relevant Live Tests"
+    task:
+      jobs:
+        - name: "Detect affected groups & run"
+          commands:
+            - . vault-sem-get-secret v1/ci/kv/apif/cli/live-testing-data
+            - |
+              set -e
+              # Detector prints two lines: GROUPS=<...> and RUN=<regex|empty>.
+              OUT="$(BASE_REF=origin/main bash scripts/live-test-affected-groups.sh)"
+              GROUPS="$(printf '%s\n' "$OUT" | sed -n 's/^GROUPS=//p')"
+              RUN="$(printf '%s\n' "$OUT" | sed -n 's/^RUN=//p')"
+              echo "==> groups=[$GROUPS] run=[${RUN:-<all in groups>}]"
+              if [ "$GROUPS" = "NONE" ]; then
+                echo "Nothing with live coverage changed; skipping live tests."
+                exit 0
+              fi
+              # Exported (not passed as a make arg): make would strip the trailing `$`
+              # anchor from a command-line variable. Empty -> Makefile default pattern.
+              export CLI_LIVE_TEST_RUN="$RUN"
+              if [ "$GROUPS" = "all" ]; then
+                make live-test
+              else
+                make live-test CLI_LIVE_TEST_GROUPS="$GROUPS"
+              fi
