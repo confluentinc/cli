@@ -349,6 +349,7 @@ var vocabWords = []string{
 	"ruleset",
 	"s3",
 	"s3vectors",
+	"sa",
 	"sagemaker",
 	"sasl",
 	"savepoint",

@@ -273,41 +273,6 @@ func CatchKSQLNotFoundError(err error, clusterId string) error {
 	return err
 }
 
-func CatchServiceNameInUseError(err error, r *http.Response, serviceName string) error {
-	if err == nil {
-		return nil
-	}
-
-	if r == nil {
-		return err
-	}
-
-	err = CatchCCloudV2Error(err, r)
-	if strings.Contains(err.Error(), "Service name is already in use") {
-		return NewErrorWithSuggestions(fmt.Sprintf(`service name "%s" is already in use`, serviceName), "To list all service account, use `confluent iam service-account list`.")
-	}
-
-	return err
-}
-
-func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccountId string) error {
-	if err == nil {
-		return nil
-	}
-
-	if r != nil {
-		switch r.StatusCode {
-		case http.StatusNotFound:
-			errorMsg := fmt.Sprintf(ServiceAccountNotFoundErrorMsg, serviceAccountId)
-			return NewErrorWithSuggestions(errorMsg, ServiceAccountNotFoundSuggestions)
-		case http.StatusForbidden:
-			return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), "service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
-		}
-	}
-
-	return CatchCCloudV2Error(err, r)
-}
-
 func isResourceNotFoundError(err error) bool {
 	return strings.Contains(err.Error(), "resource not found")
 }
