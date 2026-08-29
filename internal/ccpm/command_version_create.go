@@ -10,11 +10,12 @@ import (
 	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
-func (c *pluginCommand) newCreateVersionCommand() *cobra.Command {
+func (c *customConnectPluginVersionCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a custom Connect plugin version.",
@@ -49,7 +50,7 @@ func (c *pluginCommand) newCreateVersionCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *pluginCommand) createVersion(cmd *cobra.Command, args []string) error {
+func (c *customConnectPluginVersionCommand) createVersion(cmd *cobra.Command, args []string) error {
 	pluginId, err := cmd.Flags().GetString("plugin")
 	if err != nil {
 		return err
@@ -71,9 +72,9 @@ func (c *pluginCommand) createVersion(cmd *cobra.Command, args []string) error {
 	}
 
 	// Get plugin details to determine cloud provider
-	plugin, err := c.V2Client.DescribeCCPMPlugin(pluginId, environment)
+	plugin, httpResp, err := c.V2Client.GetCcpmCustomConnectPlugin(pluginId, environment)
 	if err != nil {
-		return err
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	cloud := plugin.Spec.GetCloud()
@@ -120,9 +121,9 @@ func (c *pluginCommand) createVersion(cmd *cobra.Command, args []string) error {
 		Environment:   &ccpmv1.EnvScopedObjectReference{Id: environment},
 	}
 
-	resp, err := c.V2Client.CreateCCPMPresignedUrl(presignedUrlRequest)
+	resp, httpResp, err := c.V2Client.CreateCCPMPresignedUrl(presignedUrlRequest)
 	if err != nil {
-		return err
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	// Upload file
@@ -168,15 +169,15 @@ func (c *pluginCommand) createVersion(cmd *cobra.Command, args []string) error {
 		request.Spec.DocumentationLink = &documentationLink
 	}
 
-	pluginResp, err := c.V2Client.DescribeCCPMPlugin(pluginId, environment)
+	pluginResp, httpResp, err := c.V2Client.GetCcpmCustomConnectPlugin(pluginId, environment)
 	if err != nil {
-		return err
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	// Use V2Client to call CCPM API
-	pluginVersion, err := c.V2Client.CreateCCPMPluginVersion(pluginId, request)
+	pluginVersion, httpResp, err := c.V2Client.CreateCcpmCustomConnectPluginVersion(pluginId, request)
 	if err != nil {
-		return err
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	return c.printVersionTable(cmd, pluginResp, pluginVersion)
