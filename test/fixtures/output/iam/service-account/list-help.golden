@@ -4,7 +4,7 @@ Usage:
   confluent iam service-account list [flags]
 
 Flags:
-      --display-name strings   A comma-separated list of display names for service accounts. Pass multiple times to see filtered results matching any of the values.
+      --display-name strings   A comma-separated list of service account display names for filtered results.
       --context string         CLI context name.
   -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
 
