@@ -22,9 +22,10 @@ func (c *userCommand) newUpdateCommand() *cobra.Command {
 	}
 
 	// Required flags
+	cmd.Flags().String("full-name", "", "The user's full name.")
+	cobra.CheckErr(cmd.MarkFlagRequired("full-name"))
 
 	// Optional flags
-	cmd.Flags().String("full-name", "", "The user's full name.")
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
