@@ -53,6 +53,7 @@ var kafkaRestRoutes = []route{
 	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lag-summary", handleKafkaRestLagSummary},
 	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags", handleKafkaRestLags},
 	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags/{topic_name}/partitions/{partition_id}", handleKafkaRestLag},
+	{"/kafka/v3/clusters/{cluster_id}/licenses", handleKafkaRestLicenses},
 	{"/kafka/v3/clusters/{cluster_id}/share-groups", handleKafkaRestShareGroups},
 	{"/kafka/v3/clusters/{cluster_id}/share-groups/{share_group_id}", handleKafkaRestShareGroup},
 	{"/kafka/v3/clusters/{cluster_id}/share-groups/{share_group_id}/consumers", handleKafkaRestShareGroupConsumers},

@@ -248,6 +248,23 @@ func handleStatementGet(t *testing.T) http.HandlerFunc {
 			Metadata: &flinkgatewayv1.StatementObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC))},
 		}
 
+		if statement.GetName() == "my-statement-with-warnings" {
+			statement.Status.Warnings = &[]flinkgatewayv1.SqlV1StatementWarning{
+				{
+					Severity:  "MODERATE",
+					Reason:    "MISSING_WINDOW_START_END",
+					Message:   "The GROUP BY clause contains only `window_start` with no corresponding `window_end`.",
+					CreatedAt: time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC),
+				},
+				{
+					Severity:  "CRITICAL",
+					Reason:    "HIGH_STATE_OPERATOR_WITHOUT_TTL",
+					Message:   "Your query includes one or more highly state-intensive operators but does not set a time-to-live (TTL) value.",
+					CreatedAt: time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC),
+				},
+			}
+		}
+
 		err := json.NewEncoder(w).Encode(statement)
 		require.NoError(t, err)
 	}

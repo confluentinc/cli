@@ -1,4 +1,4 @@
-Manage service accounts.
+Manage and select Confluent Cloud IAM service accounts.
 
 Usage:
   confluent iam service-account [command]
@@ -7,13 +7,13 @@ Aliases:
   service-account, sa
 
 Available Commands:
-  create      Create a service account.
-  delete      Delete one or more service accounts.
-  describe    Describe a service account.
-  list        List service accounts.
-  unset       Unset the current service account.
-  update      Update a service account.
-  use         Choose a service account to be used in subsequent commands.
+  create      Create an IAM service account.
+  delete      Delete one or more IAM service accounts.
+  describe    Describe an IAM service account.
+  list        List IAM service accounts.
+  unset       Unset the current IAM service account.
+  update      Update an existing IAM service account.
+  use         Use an IAM service account in subsequent commands.
 
 Global Flags:
   -h, --help            Show help for this command.

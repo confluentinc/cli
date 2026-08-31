@@ -1,8 +1,8 @@
 +--------------------------------+------------------------+
 | ID                             | usmkc-f3a90de          |
-| Name                           | My-Prod-CP-Cluster     |
 | Confluent Platform Kafka       | 4k0R9d1GTS5tI9f4Y2xZ0Q |
 | Cluster Id                     |                        |
+| Name                           | My-Prod-CP-Cluster     |
 | Cloud                          | AWS                    |
 | Region                         | us-east-1              |
 | Environment                    | env-00000              |

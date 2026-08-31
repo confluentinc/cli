@@ -22,7 +22,7 @@ Flags:
       --provider-integration string            Specify the provider integration id.
       --bucket-name string                     Specify the name of the AWS S3 bucket.
       --table-formats string                   Specify the table formats, one of DELTA or ICEBERG. (default "ICEBERG")
-      --metadata-column-naming-scheme string   Specify the naming scheme for Tableflow's internal metadata columns in the materialized table, one of DEFAULT or PORTABLE.
+      --metadata-column-naming-scheme string   Specify the naming scheme for Tableflow's internal metadata columns in the materialized table, one of DEFAULT or PORTABLE. If unset, new Google Cloud topics default to PORTABLE and topics on other clouds default to DEFAULT.
       --storage-account-name string            Specify the storage account name for Azure Data Lake.
       --container-name string                  Specify the container name for Azure Data Lake.
       --error-handling string                  Specify the error handling strategy, one of SUSPEND, SKIP, or LOG.

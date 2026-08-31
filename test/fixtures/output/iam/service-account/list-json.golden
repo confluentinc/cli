@@ -1,10 +1,12 @@
 [
   {
+    "is_current": false,
     "id": "sa-12345",
     "name": "service-account",
     "description": "at your service."
   },
   {
+    "is_current": false,
     "id": "sa-67890",
     "name": "other-service-account",
     "description": "another one."

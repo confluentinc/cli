@@ -10,7 +10,7 @@ lang_version: 1.26.5
 git:
   enable: true
   hooks:
-    enable: true
+    enable: false
 github:
   enable: true
 gitignore:

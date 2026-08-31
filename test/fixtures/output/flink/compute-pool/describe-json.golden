@@ -8,6 +8,5 @@
   "region": "eu-west-1",
   "currrent_cfu": 0,
   "status": "PROVISIONED",
-  "default_pool": false,
-  "network": "n-123456"
+  "default_pool": false
 }

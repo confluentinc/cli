@@ -14,7 +14,7 @@ require (
 	github.com/charmbracelet/glamour v0.7.0
 	github.com/charmbracelet/lipgloss v0.11.0
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
-	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20250521223017-0e8f6f971b52
+	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20251024191705-f32f6cebfdd1
 	github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0
@@ -31,7 +31,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/flink v0.11.0
 	github.com/confluentinc/ccloud-sdk-go-v2/flink-artifact v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.19.0
-	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.15.0
+	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.17.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering v0.5.0
 	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0
@@ -58,7 +58,7 @@ require (
 	github.com/confluentinc/go-editor v0.11.0
 	github.com/confluentinc/go-prompt v0.2.40
 	github.com/confluentinc/go-ps1 v1.0.2
-	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.20-0.20260316174929-09a1f69c2b9e
+	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.20-0.20260820183509-6e34d6b0d5d2
 	github.com/confluentinc/mds-sdk-go-public/mdsv1 v0.0.0-20240923163156-b922b35891f9
 	github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1 v0.0.0-20240923163156-b922b35891f9
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
