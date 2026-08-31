@@ -32,9 +32,18 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		newProviderCommand(prerunner),
 		newRbacCommand(cfg, prerunner),
 		newServiceAccountCommand(cfg, prerunner),
-		newUserCommand(cfg, prerunner),
 		// cli-tfgen:cli-subcommands
 	)
+
+	// `confluent iam user` has two shapes by login mode: the generated Confluent
+	// Cloud command (command_user.go) and the on-prem command (command_user_onprem.go).
+	if cfg.IsCloudLogin() {
+		cmd.AddCommand(
+			newUserCommand(cfg, prerunner),
+		)
+	} else {
+		cmd.AddCommand(newUserCommandOnPrem(prerunner))
+	}
 
 	return cmd
 }
