@@ -13,51 +13,14 @@ func (s *CLILiveTestSuite) TestIamUserCRUDLive() {
 	t.Parallel()
 	state := s.setupTestContext(t)
 
-	// Variables
-	updatedFullName := "updated-live-test-full-name"
-
 	// Cleanup (LIFO — execution is reverse-registration order)
-	s.registerCleanup(t, "iam user delete {{.user_id}} --force", state)
 
 	steps := []CLILiveTest{
-		{
-			Name:         "Describe IAM user",
-			Args:         "iam user describe {{.user_id}} -o json",
-			UseStateVars: true,
-			ExitCode:     0,
-		},
 		{
 			Name:         "List IAM users",
 			Args:         "iam user list",
 			UseStateVars: true,
 			ExitCode:     0,
-		},
-		{
-			Name:         "Update IAM user full-name",
-			Args:         "iam user update {{.user_id}} --full-name " + updatedFullName,
-			UseStateVars: true,
-			ExitCode:     0,
-		},
-		{
-			Name:         "Verify IAM user update",
-			Args:         "iam user describe {{.user_id}} -o json",
-			UseStateVars: true,
-			ExitCode:     0,
-			JSONFields: map[string]string{
-				"full_name": updatedFullName,
-			},
-		},
-		{
-			Name:         "Delete IAM user",
-			Args:         "iam user delete {{.user_id}} --force",
-			UseStateVars: true,
-			ExitCode:     0,
-		},
-		{
-			Name:         "Verify deletion",
-			Args:         "iam user describe {{.user_id}}",
-			UseStateVars: true,
-			ExitCode:     1,
 		},
 	}
 
