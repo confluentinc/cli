@@ -1,4 +1,4 @@
-Error: CCPM custom connector plugin "ccp-123456" not found
+Error: CCPM custom Connect plugin "ccp-123456" not found
 
 Suggestions:
-    List available CCPM custom connector plugins with `confluent ccpm plugin list`.
+    List available CCPM custom Connect plugins with `confluent ccpm plugin list`.

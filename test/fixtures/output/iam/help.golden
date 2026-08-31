@@ -12,7 +12,7 @@ Available Commands:
   pool                  Manage identity pools.
   provider              Manage identity providers.
   rbac                  Manage RBAC permissions.
-  service-account       Manage service accounts.
+  service-account       Manage and select Confluent Cloud IAM service accounts.
   user                  Manage users.
 
 Global Flags:

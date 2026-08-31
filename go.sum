@@ -163,8 +163,8 @@ github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDk
 github.com/cloudflare/circl v1.6.3 h1:9GPOhQGF9MCYUeXyMYlqTR6a5gTrgR/fBLXvUgtVcg8=
 github.com/cloudflare/circl v1.6.3/go.mod h1:2eXP6Qfat4O/Yhh8BznvKnJ+uzEoTQ6jVKJRn81BiS4=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
-github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20250521223017-0e8f6f971b52 h1:19qEGhkbZa5fopKCe0VPIV+Sasby4Pv10z9ZaktwWso=
-github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20250521223017-0e8f6f971b52/go.mod h1:62EMf+5uFEt1BJ2q8WMrUoI9VUSxAbDnmZCGRt/MbA0=
+github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20251024191705-f32f6cebfdd1 h1:mXLlTii+xqGk9wNtAoPnrJsvR1bwuaEmWD4TuUoTYfw=
+github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20251024191705-f32f6cebfdd1/go.mod h1:62EMf+5uFEt1BJ2q8WMrUoI9VUSxAbDnmZCGRt/MbA0=
 github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0 h1:zSF4OQUJXWH2JeAo9rsq13ibk+JFdzITGR8S7cFMpzw=
 github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0/go.mod h1:DoxqzzF3JzvJr3fWkvCiOHFlE0GoYpozWxFZ1Ud9ntA=
 github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0 h1:8fWyLwMuy8ec0MVF5Avd54UvbIxhDFhZzanHBVwgxdw=
@@ -197,8 +197,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/flink-artifact v0.3.0 h1:DVWL3Y4b5azgCA
 github.com/confluentinc/ccloud-sdk-go-v2/flink-artifact v0.3.0/go.mod h1:P4fdIkI1ynjSvhDEGX283KhtzG51eGHQc5Cqtp7bu1Q=
 github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.19.0 h1:fS7l0rJQ1PT5J8Qg4EBZvD+hIq5zaF+Io9LtwNpQpSg=
 github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.19.0/go.mod h1:ZkJWrKzzyILrvExh2F6ZeR6tE/meO1HDLs3fEfRYhUc=
-github.com/confluentinc/ccloud-sdk-go-v2/iam v0.15.0 h1:37Gjdo+0Ev3g2NPEXyiVm7yTT85AlWbjXYRLvq6Aj9E=
-github.com/confluentinc/ccloud-sdk-go-v2/iam v0.15.0/go.mod h1:jnWqax4kM22sutPGMtGmHqe2usgfqYig4UtmHsLENz0=
+github.com/confluentinc/ccloud-sdk-go-v2/iam v0.17.0 h1:I5nYXbiSU37Vb6cPmatzJk7szQJUNojTNPkscb+jK/4=
+github.com/confluentinc/ccloud-sdk-go-v2/iam v0.17.0/go.mod h1:jnWqax4kM22sutPGMtGmHqe2usgfqYig4UtmHsLENz0=
 github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering v0.5.0 h1:xD7CXcyAqezFnSVFB4U27oWUY4FlbyciVP0ftDIiI18=
 github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering v0.5.0/go.mod h1:uAlz9SscVXU6XkDj2DHCytJcieT8tR0lnMPJMOX1BQ0=
 github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.3.0 h1:COUuWIW9GLz/Wq8mgrrvT3Pe78CZSL2mlZkE2vNvkQo=
@@ -253,8 +253,8 @@ github.com/confluentinc/go-prompt v0.2.40 h1:tveghQJ+FVOVvF0dgQaZEm7YZSQ3r3tyuLM
 github.com/confluentinc/go-prompt v0.2.40/go.mod h1:Bc4kUldoYFpXx7frWasxAG0wpp+xOcu/Ehq930/FJBw=
 github.com/confluentinc/go-ps1 v1.0.2 h1:+4cKOzWs3AWmxL2s96oHu0QutZESDRXECnhFzm2ic4o=
 github.com/confluentinc/go-ps1 v1.0.2/go.mod h1:qmgG9xQgFd4u7/CS6eA9nNP8eQqOtXuRHmZ4+w7Vprs=
-github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.20-0.20260316174929-09a1f69c2b9e h1:3JFHt6KP6eI1ZyUppvJ+BOA7fjPLGy58ocAs0/LfGSw=
-github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.20-0.20260316174929-09a1f69c2b9e/go.mod h1:qJAUraWU9BERQWyalrPsxt+ECELWPV+qsyOaP00VidY=
+github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.20-0.20260820183509-6e34d6b0d5d2 h1:p7kUtr2i9DbhSzW6Dhd1aCH2MH1ZjYjMsBKgZen+pQg=
+github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.20-0.20260820183509-6e34d6b0d5d2/go.mod h1:qJAUraWU9BERQWyalrPsxt+ECELWPV+qsyOaP00VidY=
 github.com/confluentinc/mds-sdk-go-public/mdsv1 v0.0.0-20240923163156-b922b35891f9 h1:RQmmuDAQOmNFqPH+h3DkhLH44A9R/pp5gSGaf0kTOYk=
 github.com/confluentinc/mds-sdk-go-public/mdsv1 v0.0.0-20240923163156-b922b35891f9/go.mod h1:2Ug8TKPkJXnazoTwlf72RawtttFZYNB3WB/8w3Hgfro=
 github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1 v0.0.0-20240923163156-b922b35891f9 h1:YfBq6AtVqOipWYfoIK6SN8fRPb6jTq7LiIc9BWDnXPo=
