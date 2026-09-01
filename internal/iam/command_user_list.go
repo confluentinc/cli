@@ -38,7 +38,7 @@ func (c *userCommand) list(cmd *cobra.Command, _ []string) error {
 		out := &userOut{
 			ID:                   user.GetId(),
 			Name:                 user.GetFullName(),
-			AuthenticationMethod: user.GetAuthType(),
+			AuthenticationMethod: authMethodFormats[user.GetAuthType()],
 			Email:                user.GetEmail(),
 		}
 		list.Add(out)

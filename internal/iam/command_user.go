@@ -53,7 +53,7 @@ func printUser(cmd *cobra.Command, user iamv2.IamV2User) error {
 	out := &userOut{
 		ID:                   user.GetId(),
 		Name:                 user.GetFullName(),
-		AuthenticationMethod: user.GetAuthType(),
+		AuthenticationMethod: authMethodFormats[user.GetAuthType()],
 		Email:                user.GetEmail(),
 	}
 	table.Add(out)

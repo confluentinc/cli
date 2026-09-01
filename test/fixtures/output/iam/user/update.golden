@@ -2,6 +2,6 @@ Updated IAM user "u-111aaa".
 +-----------------------+-----------------------+
 | ID                    | u-111aaa              |
 | Name                  | Test                  |
-| Authentication Method | AUTH_TYPE_LOCAL       |
+| Authentication Method | Username/Password     |
 | Email                 | u-111aaa@confluent.io |
 +-----------------------+-----------------------+

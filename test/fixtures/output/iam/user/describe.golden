@@ -1,6 +1,6 @@
 +-----------------------+-----------------------+
 | ID                    | u-111aaa              |
 | Name                  | 111 Aaa               |
-| Authentication Method | AUTH_TYPE_LOCAL       |
+| Authentication Method | Username/Password     |
 | Email                 | u-111aaa@confluent.io |
 +-----------------------+-----------------------+
