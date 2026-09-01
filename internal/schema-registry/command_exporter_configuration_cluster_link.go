@@ -3,16 +3,17 @@ package schemaregistry
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v4/pkg/config"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 )
 
-func (c *command) newExporterConfigurationClusterLinkCommand(cfg *config.Config) *cobra.Command {
+func (c *command) newExporterConfigurationClusterLinkCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "cluster-link",
-		Short: "Manage the schema exporter's Cluster Link config.",
+		Use:         "cluster-link",
+		Short:       "Manage the schema exporter's Cluster Link config.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
-	cmd.AddCommand(c.newExporterConfigurationClusterLinkDescribeCommand(cfg))
+	cmd.AddCommand(c.newExporterConfigurationClusterLinkDescribeCommand())
 
 	return cmd
 }

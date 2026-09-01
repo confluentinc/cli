@@ -7,7 +7,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *command) newExporterConfigurationClusterLinkDescribeCommand() *cobra.Command {
+func (c *command) newExporterConfigurationClusterLinkDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <name>",
 		Short: "Describe the schema exporter's Cluster Link config.",
@@ -17,25 +17,9 @@ func (c *command) newExporterConfigurationClusterLinkDescribeCommand() *cobra.Co
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	addCaLocationAndClientPathFlags(cmd)
 	addSchemaRegistryEndpointFlag(cmd)
 	pcmd.AddOutputFlagWithDefaultValue(cmd, output.JSON.String())
 
 	return cmd
-}
-
-func (c *command) exporterConfigurationClusterLinkDescribe(cmd *cobra.Command, args []string) error {
-	client, err := c.GetSchemaRegistryClient(cmd)
-	if err != nil {
-		return err
-	}
-
-	configs, err := client.GetExporterClusterLinkConfig(args[0])
-	if err != nil {
-		return err
-	}
-
-	table := output.NewTable(cmd)
-	table.Add(configs)
-	return table.Print()
 }

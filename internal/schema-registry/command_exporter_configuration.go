@@ -12,7 +12,11 @@ func (c *command) newExporterConfigurationCommand(cfg *config.Config) *cobra.Com
 		Short: "Manage the schema exporter configuration.",
 	}
 
-	cmd.AddCommand(c.newExporterConfigurationClusterLinkCommand(cfg))
+	if cfg.IsCloudLogin() {
+		cmd.AddCommand(c.newExporterConfigurationClusterLinkCommand())
+	} else {
+		cmd.AddCommand(c.newExporterConfigurationClusterLinkCommandOnPrem())
+	}
 	cmd.AddCommand(c.newExporterConfigurationDescribeCommand(cfg))
 
 	return cmd
