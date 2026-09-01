@@ -3,6 +3,9 @@
 package iam
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
@@ -34,6 +37,9 @@ func (c *userCommand) newUpdateCommand() *cobra.Command {
 
 func (c *userCommand) update(cmd *cobra.Command, args []string) error {
 	id := args[0]
+	if !strings.HasPrefix(id, "u-") {
+		return fmt.Errorf("failed parsing resource ID: missing prefix \"u-\" is required")
+	}
 
 	updateReq := iamv2.IamV2UserUpdate{}
 

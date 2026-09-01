@@ -3,6 +3,9 @@
 package iam
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -30,6 +33,9 @@ func (c *userCommand) newDescribeCommand() *cobra.Command {
 
 func (c *userCommand) describe(cmd *cobra.Command, args []string) error {
 	id := args[0]
+	if !strings.HasPrefix(id, "u-") {
+		return fmt.Errorf("failed parsing resource ID: missing prefix \"u-\" is required")
+	}
 
 	user, httpResp, err := c.V2Client.GetIamUser(id)
 	if err != nil {
