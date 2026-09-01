@@ -1,1 +1,7 @@
-Updated the full name of user "u-11aaa" to "Test".
+Updated IAM user "u-111aaa".
++-----------------------+-----------------------+
+| ID                    | u-111aaa              |
+| Name                  | Test                  |
+| Authentication Method | AUTH_TYPE_LOCAL       |
+| Email                 | u-111aaa@confluent.io |
++-----------------------+-----------------------+

@@ -210,19 +210,33 @@ func handleIamUser(t *testing.T) http.HandlerFunc {
 		userId := vars["id"]
 		var user iamv2.IamV2User
 		switch userId {
-		case "u-0", "u-1":
+		case "u-dne":
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return
-		case "u-2":
-			user = buildIamUser("u-2@confluent.io", "Bono", "u-2", "AUTH_TYPE_LOCAL")
+		case "u-111aaa":
+			user = buildIamUser("u-111aaa@confluent.io", "111 Aaa", "u-111aaa", "AUTH_TYPE_LOCAL")
+		case "u-222bbb":
+			user = buildIamUser("u-222bbb@confluent.io", "222 Bbb", "u-222bbb", "AUTH_TYPE_SSO")
 		case "u-11aaa":
 			user = buildIamUser("u-11aaa@confluent.io", "11 Aaa", "u-11aaa", "AUTH_TYPE_LOCAL")
 		default:
-			user = buildIamUser("mhe@confluent.io", "Muwei He", userId, "AUTH_TYPE_LOCAL")
+			user = buildIamUser("cdong@confluent.io", "Channing Dong", userId, "AUTH_TYPE_LOCAL")
 		}
-		err := json.NewEncoder(w).Encode(user)
-		require.NoError(t, err)
+		switch r.Method {
+		case http.MethodPatch:
+			// Merge the request body over the canned user, echoing what the API would store,
+			// so the update test verifies the payload was actually sent.
+			err := json.NewDecoder(r.Body).Decode(&user)
+			require.NoError(t, err)
+			err = json.NewEncoder(w).Encode(user)
+			require.NoError(t, err)
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
+		default:
+			err := json.NewEncoder(w).Encode(user)
+			require.NoError(t, err)
+		}
 	}
 }
 
