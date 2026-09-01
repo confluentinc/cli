@@ -581,19 +581,6 @@ func AutocompleteResourceOwners(client *ccloudv2.Client) []string {
 	return suggestions
 }
 
-func AutocompleteUsers(client *ccloudv2.Client) []string {
-	users, err := client.ListIamUsers()
-	if err != nil {
-		return nil
-	}
-
-	suggestions := make([]string, len(users))
-	for i, user := range users {
-		suggestions[i] = fmt.Sprintf("%s\t%s", user.GetId(), user.GetFullName())
-	}
-	return suggestions
-}
-
 func AddTypeFlag(cmd *cobra.Command) {
 	cmd.Flags().String("type", "basic", fmt.Sprintf("Specify the type of the Kafka cluster as %s.", utils.ArrayToCommaDelimitedString(kafka.Types, "or")))
 	RegisterFlagCompletionFunc(cmd, "type", func(_ *cobra.Command, _ []string) []string { return kafka.Types })
