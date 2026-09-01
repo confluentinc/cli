@@ -1,6 +1,6 @@
-+-----------------------+-------------------+
-| ID                    | u-17              |
-| Name                  | Muwei He          |
-| Email                 | mhe@confluent.io  |
-| Authentication Method | Username/Password |
-+-----------------------+-------------------+
++-----------------------+------------------+
+| ID                    | u-17             |
+| Name                  | Muwei He         |
+| Authentication Method | AUTH_TYPE_LOCAL  |
+| Email                 | mhe@confluent.io |
++-----------------------+------------------+
