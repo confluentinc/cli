@@ -223,8 +223,20 @@ func handleIamUser(t *testing.T) http.HandlerFunc {
 		default:
 			user = buildIamUser("cdong@confluent.io", "Channing Dong", userId, "AUTH_TYPE_LOCAL")
 		}
-		err := json.NewEncoder(w).Encode(user)
-		require.NoError(t, err)
+		switch r.Method {
+		case http.MethodPatch:
+			// Merge the request body over the canned user, echoing what the API would store,
+			// so the update test verifies the payload was actually sent.
+			err := json.NewDecoder(r.Body).Decode(&user)
+			require.NoError(t, err)
+			err = json.NewEncoder(w).Encode(user)
+			require.NoError(t, err)
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
+		default:
+			err := json.NewEncoder(w).Encode(user)
+			require.NoError(t, err)
+		}
 	}
 }
 
