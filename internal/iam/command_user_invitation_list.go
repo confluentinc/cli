@@ -37,7 +37,7 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 	list := output.NewList(cmd)
 	for _, invitation := range invitations {
 		var name string
-		if user, err := c.V2Client.GetIamUserById(invitation.User.GetId()); err == nil {
+		if user, _, err := c.V2Client.GetIamUser(invitation.User.GetId()); err == nil {
 			name = user.GetFullName()
 		}
 
