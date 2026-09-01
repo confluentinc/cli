@@ -4,7 +4,7 @@ Usage:
   confluent iam user update <id> [flags]
 
 Flags:
-      --full-name string   REQUIRED: The user's full name.
+      --full-name string   The user's full name.
       --context string     CLI context name.
   -o, --output string      Specify the output format as "human", "json", or "yaml". (default "human")
 
