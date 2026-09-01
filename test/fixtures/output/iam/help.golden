@@ -13,7 +13,7 @@ Available Commands:
   provider              Manage identity providers.
   rbac                  Manage RBAC permissions.
   service-account       Manage and select Confluent Cloud IAM service accounts.
-  user                  Manage users.
+  user                  Manage Confluent Cloud IAM users.
 
 Global Flags:
   -h, --help            Show help for this command.
