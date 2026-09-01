@@ -235,8 +235,8 @@ func (s *CLITestSuite) TestIamUserList() {
 
 func (s *CLITestSuite) TestIamUserDescribe() {
 	tests := []CLITest{
-		{args: "iam user describe u-0", fixture: "iam/user/resource-not-found.golden", exitCode: 1},
-		{args: "iam user describe u-17", fixture: "iam/user/describe.golden"},
+		{args: "iam user describe u-111aaa", fixture: "iam/user/describe.golden"},
+		{args: "iam user describe u-dne", fixture: "iam/user/resource-not-found.golden", exitCode: 1},
 		{args: "iam user describe 0", fixture: "iam/user/bad-resource-id.golden", exitCode: 1},
 	}
 
@@ -258,13 +258,12 @@ func (s *CLITestSuite) TestIamUserDescribe() {
 
 func (s *CLITestSuite) TestIamUserDelete() {
 	tests := []CLITest{
-		{args: "iam user delete u-2 --force", fixture: "iam/user/delete.golden"},
-		{args: "iam user delete u-11aaa u-1", fixture: "iam/user/delete-multiple-fail.golden", exitCode: 1},
-		{args: "iam user delete u-11aaa u-22bbb", input: "n\n", fixture: "iam/user/delete-multiple-refuse.golden"},
-		{args: "iam user delete u-11aaa u-22bbb", input: "y\n", fixture: "iam/user/delete-multiple-success.golden"},
-		{args: "iam user delete u-2", input: "y\n", fixture: "iam/user/delete-prompt.golden"},
-		{args: "iam user delete 0 --force", fixture: "iam/user/bad-resource-id-delete.golden", exitCode: 1},
-		{args: "iam user delete u-1 --force", fixture: "iam/user/delete-dne.golden", exitCode: 1},
+		{args: "iam user delete u-111aaa --force", fixture: "iam/user/delete.golden"},
+		{args: "iam user delete u-111aaa u-dne", fixture: "iam/user/delete-multiple-fail.golden", exitCode: 1},
+		{args: "iam user delete u-111aaa u-222bbb", input: "n\n", fixture: "iam/user/delete-multiple-refuse.golden"},
+		{args: "iam user delete u-111aaa u-222bbb", input: "y\n", fixture: "iam/user/delete-multiple-success.golden"},
+		{args: "iam user delete u-111aaa", input: "y\n", fixture: "iam/user/delete-prompt.golden"},
+		{args: "iam user delete u-dne --force", fixture: "iam/user/delete-dne.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -275,9 +274,9 @@ func (s *CLITestSuite) TestIamUserDelete() {
 
 func (s *CLITestSuite) TestIamUserUpdate() {
 	tests := []CLITest{
-		{args: "iam user update u-11aaa --full-name Test", fixture: "iam/user/update.golden"},
+		{args: "iam user update u-111aaa --full-name Test", fixture: "iam/user/update.golden"},
+		{args: "iam user update u-dne --full-name Test", fixture: "iam/user/update-dne.golden", exitCode: 1},
 		{args: "iam user update 0 --full-name Test", fixture: "iam/user/bad-resource-id.golden", exitCode: 1},
-		{args: "iam user update u-1 --full-name Test", fixture: "iam/user/update-dne.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
