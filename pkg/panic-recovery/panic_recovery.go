@@ -20,7 +20,7 @@ func CollectPanic(cmd *cobra.Command, args []string, cfg *config.Config) *usage.
 	fullCommand, flags, _ := cmd.Find(args)
 	trimmedFlags := ParseFlags(fullCommand, flags)
 	parsedStack := parseStack(string(debug.Stack()))
-	return &usage.Usage{
+	u := &usage.Usage{
 		Os:          cliv1.PtrString(runtime.GOOS),
 		Arch:        cliv1.PtrString(runtime.GOARCH),
 		Version:     cliv1.PtrString(cfg.Version.Version),
@@ -29,6 +29,10 @@ func CollectPanic(cmd *cobra.Command, args []string, cfg *config.Config) *usage.
 		Error:       cliv1.PtrBool(true),
 		StackFrames: &parsedStack,
 	}
+	// This constructs its own Usage independently of usage.New()/Collect(), so agent-detect
+	// fields must be populated here too, or a panic never reports them.
+	u.CollectAgentDetect()
+	return u
 }
 
 // ParseFlags collects the flags of a command after being found with Find()
