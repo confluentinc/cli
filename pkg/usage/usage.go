@@ -50,7 +50,9 @@ func (u *Usage) Collect(cmd *cobra.Command, _ []string) {
 func (u *Usage) CollectAgentDetect() {
 	defer func() {
 		if r := recover(); r != nil {
-			log.CliLogger.Tracef("agent detection panicked: %v", r)
+			// Log only the panic's type, not its value: a panic surfacing from deep in a
+			// dependency (e.g. gopsutil) could carry a raw process path or arg as its message.
+			log.CliLogger.Tracef("agent detection panicked: %T", r)
 		}
 	}()
 
@@ -67,9 +69,10 @@ func (u *Usage) CollectAgentDetect() {
 	u.AgentTables = optionalString(attrs.Tables)
 }
 
-// optionalString and optionalStrings mirror the CliV1Usage convention (see
-// Flags, StackFrames) to force an unset field to a nil pointer, never a pointer to an
-// empty value.
+// optionalString and optionalStrings force an unset value to a nil pointer, never a pointer
+// to an empty value. Unlike Flags (always sent, even empty), an empty agent-detect field
+// means detection produced nothing, which is a meaningfully different signal from "ran and
+// found zero" — so these are omitted from the wire rather than sent empty.
 func optionalString(s string) *string {
 	if s == "" {
 		return nil
