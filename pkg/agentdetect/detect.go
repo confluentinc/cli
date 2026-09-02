@@ -331,10 +331,13 @@ func boundedWalk(opts Options) walkResult {
 		done <- walk(opts)
 	}()
 
+	timer := time.NewTimer(opts.Budget + hardTimeoutSlack)
+	defer timer.Stop()
+
 	select {
 	case w := <-done:
 		return w
-	case <-time.After(opts.Budget + hardTimeoutSlack):
+	case <-timer.C:
 		return walkResult{meta: WalkMeta{StoppedAt: "hard_timeout", Truncated: true}}
 	}
 }
