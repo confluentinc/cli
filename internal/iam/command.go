@@ -26,10 +26,10 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		newCertificateAuthorityCommand(prerunner),
 		newCertificatePoolCommand(cfg, prerunner),
 		newGroupMappingCommand(prerunner),
+		newIdentityProviderCommand(cfg, prerunner),
 		newIpFilterCommand(cfg, prerunner),
 		newIpGroupCommand(prerunner),
 		newPoolCommand(cfg, prerunner),
-		newProviderCommand(prerunner),
 		newRbacCommand(cfg, prerunner),
 		newServiceAccountCommand(cfg, prerunner),
 		// cli-tfgen:cli-subcommands
