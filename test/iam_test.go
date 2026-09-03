@@ -312,6 +312,9 @@ func (s *CLITestSuite) TestIamUserInvitationList() {
 func (s *CLITestSuite) TestIamProvider() {
 	tests := []CLITest{
 		{args: "iam identity-provider create okta --description 'new description' --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com", fixture: "iam/identity-provider/create.golden"},
+		// The real API rejects an absent description key ("Null description"); the handler asserts
+		// the key is present, so this fails if create ever stops sending it when the flag is omitted.
+		{args: "iam identity-provider create okta --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com", fixture: "iam/identity-provider/create-without-description.golden"},
 		{args: "iam identity-provider create okta-with-identity-claim --description 'new description' --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com --identity-claim claims.sub", fixture: "iam/identity-provider/create-with-identity-claim.golden"},
 		{args: "iam identity-provider delete op-12345 --force", fixture: "iam/identity-provider/delete.golden"},
 		{args: "iam identity-provider delete op-12345 op-54321", fixture: "iam/identity-provider/delete-multiple-fail.golden", exitCode: 1},

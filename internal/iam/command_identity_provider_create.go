@@ -32,10 +32,7 @@ func (c *identityProviderCommand) newCreateCommand() *cobra.Command {
 	cobra.CheckErr(cmd.MarkFlagRequired("jwks-uri"))
 
 	// Optional flags
-	// TODO: the OpenAPI spec marks description required, but the published CLI has always
-	// accepted it as optional (relaxed via cli.flag_overrides in the generator registry).
-	// Validate against the real API whether it is truly required, then either fix the spec
-	// or make this flag required as a CLI v5 breaking change.
+	// TODO: Marking `--description` flag as required in CLI v5
 	cmd.Flags().String("description", "", "A description of the identity provider.")
 	cmd.Flags().String("identity-claim", "", "The JSON Web Token (JWT) claim to extract the authenticating identity to Confluent resources from Registered Claim Names.")
 
@@ -55,9 +52,7 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 	if err != nil {
 		return err
 	}
-	if cmd.Flags().Changed("description") {
-		createReq.Description = identityproviderv2.PtrString(description)
-	}
+	createReq.Description = identityproviderv2.PtrString(description)
 
 	identityClaim, err := cmd.Flags().GetString("identity-claim")
 	if err != nil {

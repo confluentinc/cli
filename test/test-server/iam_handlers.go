@@ -473,6 +473,9 @@ func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
 			var req identityproviderv2.IamV2IdentityProvider
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
+			// The real API rejects an absent description ("Null description") while accepting
+			// "" — create must always send the key, even when --description is omitted.
+			require.NotNil(t, req.Description, "identity provider create must always send description")
 			identityProvider := &identityproviderv2.IamV2IdentityProvider{
 				DisplayName: req.DisplayName,
 				Description: req.Description,
