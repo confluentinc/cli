@@ -55,7 +55,7 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 	if err != nil {
 		return err
 	}
-	if description != "" {
+	if cmd.Flags().Changed("description") {
 		createReq.Description = identityproviderv2.PtrString(description)
 	}
 
