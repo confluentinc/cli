@@ -1,4 +1,4 @@
-//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --prefix "" --dst ../mock/filesystem.go --pkg mock io.go FileSystem
+//go:generate go run go.uber.org/mock/mockgen -typed -destination=../mock/filesystem.go -package=mock github.com/confluentinc/cli/v4/pkg/io FileSystem
 
 package io
 
