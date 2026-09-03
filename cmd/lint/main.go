@@ -300,6 +300,7 @@ var vocabWords = []string{
 	"jsonschema",
 	"jwks",
 	"JWT",
+	"cryptographic",
 	"enum",
 	"kafka",
 	"kek",
