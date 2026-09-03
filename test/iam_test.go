@@ -2,7 +2,7 @@ package test
 
 import "fmt"
 
-func (s *CLITestSuite) TestIamRbacRole_OnPrem() {
+func (s *CLITestSuite) TestIamRbacRoleOnPrem() {
 	tests := []CLITest{
 		{args: "iam rbac role describe DeveloperRead -o json", fixture: "iam/rbac/role/describe-json-onprem.golden"},
 		{args: "iam rbac role describe DeveloperRead -o yaml", fixture: "iam/rbac/role/describe-yaml-onprem.golden"},
@@ -18,7 +18,7 @@ func (s *CLITestSuite) TestIamRbacRole_OnPrem() {
 	}
 }
 
-func (s *CLITestSuite) TestIamRbacRole_Cloud() {
+func (s *CLITestSuite) TestIamRbacRoleCloud() {
 	tests := []CLITest{
 		{args: "iam rbac role describe CloudClusterAdmin -o json", fixture: "iam/rbac/role/describe-json-cloud.golden"},
 		{args: "iam rbac role describe CloudClusterAdmin -o yaml", fixture: "iam/rbac/role/describe-yaml-cloud.golden"},
@@ -33,7 +33,7 @@ func (s *CLITestSuite) TestIamRbacRole_Cloud() {
 	}
 }
 
-func (s *CLITestSuite) TestIamRbacRoleBinding_Cloud() {
+func (s *CLITestSuite) TestIamRbacRoleBindingCloud() {
 	tests := []CLITest{
 		{args: "iam rbac role-binding create --principal User:sa-12345 --role DeveloperRead --resource Topic:payroll --kafka-cluster lkc-1111aaa --current-environment --cloud-cluster lkc-1111aaa", fixture: "iam/rbac/role-binding/create-service-account-developer-read.golden"},
 		{args: "iam rbac role-binding create --principal User:pool-12345 --role DeveloperRead --resource Topic:payroll --kafka-cluster lkc-1111aaa --current-environment --cloud-cluster lkc-1111aaa", fixture: "iam/rbac/role-binding/create-identity-pool-developer-read.golden"},
@@ -59,7 +59,7 @@ func (s *CLITestSuite) TestIamRbacRoleBinding_Cloud() {
 	}
 }
 
-func (s *CLITestSuite) TestIamRbacRoleBindingList_Cloud() {
+func (s *CLITestSuite) TestIamRbacRoleBindingListCloud() {
 	tests := []CLITest{
 		{args: "iam rbac role-binding list", fixture: "iam/rbac/role-binding/list-no-principal-nor-role-cloud.golden", exitCode: 1},
 		{args: "iam rbac role-binding list --environment env-596 --cloud-cluster lkc-1111aaa", fixture: "iam/rbac/role-binding/list-no-principal-nor-role-cloud.golden", exitCode: 1},
@@ -88,7 +88,7 @@ func (s *CLITestSuite) TestIamRbacRoleBindingList_Cloud() {
 	}
 }
 
-func (s *CLITestSuite) TestIamRbacRoleBinding_OnPrem() {
+func (s *CLITestSuite) TestIamRbacRoleBindingOnPrem() {
 	tests := []CLITest{
 		{args: "iam rbac role-binding create --principal User:bob --role DeveloperRead --resource Topic:connect-configs --cluster-name theMdsConnectCluster", fixture: "iam/rbac/role-binding/create-cluster-name-onprem.golden"},
 		{args: "iam rbac role-binding create --principal User:bob --role DeveloperRead --resource Topic:connect-configs --kafka-cluster kafka-GUID", fixture: "iam/rbac/role-binding/create-cluster-id-onprem.golden"},
@@ -118,7 +118,7 @@ func (s *CLITestSuite) TestIamRbacRoleBinding_OnPrem() {
 	}
 }
 
-func (s *CLITestSuite) TestIamRbacRoleBindingList_OnPrem() {
+func (s *CLITestSuite) TestIamRbacRoleBindingListOnPrem() {
 	tests := []CLITest{
 		{args: "iam rbac role-binding list --kafka-cluster CID", fixture: "iam/rbac/role-binding/list-no-principal-nor-role-onprem.golden", exitCode: 1},
 		{args: "iam rbac role-binding list --kafka-cluster CID --principal frodo", fixture: "iam/rbac/role-binding/list-principal-format-error-onprem.golden", exitCode: 1},
@@ -416,7 +416,7 @@ func (s *CLITestSuite) TestIamGroupMapping() {
 	}
 }
 
-func (s *CLITestSuite) TestIam_Autocomplete() {
+func (s *CLITestSuite) TestIamAutocomplete() {
 	tests := []CLITest{
 		{args: `__complete iam certificate-authority describe ""`, fixture: "iam/certificate-authority/describe-autocomplete.golden"},
 		{args: `__complete iam pool describe --provider op-12345 ""`, fixture: "iam/pool/describe-autocomplete.golden"},
