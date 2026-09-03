@@ -123,7 +123,7 @@ require (
 	golang.org/x/text v0.41.0
 	google.golang.org/grpc v1.82.1
 	google.golang.org/protobuf v1.36.11
-	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
+	gopkg.in/launchdarkly/go-sdk-common.v4 v4.0.1
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/apimachinery v0.30.2
 	pgregory.net/rapid v1.2.0
