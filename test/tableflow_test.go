@@ -75,6 +75,7 @@ func (s *CLITestSuite) TestTableflowTopic() {
 		{args: "tableflow topic disable topic-managed --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/disable-topic.golden"},
 		{args: "tableflow topic disable topic-managed topic-byob --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/disable-multiple-topics.golden"},
 		{args: "tableflow topic disable topic-azure --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/disable-topic-azure.golden"},
+		{args: "tableflow topic disable topic-gcp --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/disable-topic-gcp.golden"},
 		{args: "tableflow topic delete topic-managed --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/delete-topic.golden"},
 		{args: "tableflow topic delete topic-managed topic-byob --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/delete-multiple-topics.golden"},
 		{args: "tableflow topic delete topic-azure --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/delete-azure-topic.golden"},
