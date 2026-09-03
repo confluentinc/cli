@@ -27,7 +27,7 @@ func (c *identityProviderCommand) newCreateCommand() *cobra.Command {
 
 	// Required flags
 	cmd.Flags().String("issuer-uri", "", "A publicly accessible URL uniquely identifying the OAuth identity provider authorized to issue access tokens.")
-	cmd.Flags().String("jwks-uri", "", "A publicly accessible JSON Web Key Set (JWKS) URI for the OAuth identity provider. JWKS provides a set of cryptographic keys used to verify the authenticity and integrity of JSON Web Tokens (JWTs) issued by the OAuth identity provider.")
+	cmd.Flags().String("jwks-uri", "", "A publicly accessible JSON Web Key Set (JWKS) URI for the OAuth identity provider.")
 	cobra.CheckErr(cmd.MarkFlagRequired("issuer-uri"))
 	cobra.CheckErr(cmd.MarkFlagRequired("jwks-uri"))
 

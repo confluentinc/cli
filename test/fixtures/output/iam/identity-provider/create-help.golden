@@ -10,7 +10,7 @@ Create an identity provider named "demo-identity-provider".
 
 Flags:
       --issuer-uri string       REQUIRED: A publicly accessible URL uniquely identifying the OAuth identity provider authorized to issue access tokens.
-      --jwks-uri string         REQUIRED: A publicly accessible JSON Web Key Set (JWKS) URI for the OAuth identity provider. JWKS provides a set of cryptographic keys used to verify the authenticity and integrity of JSON Web Tokens (JWTs) issued by the OAuth identity provider.
+      --jwks-uri string         REQUIRED: A publicly accessible JSON Web Key Set (JWKS) URI for the OAuth identity provider.
       --description string      A description of the identity provider.
       --identity-claim string   The JSON Web Token (JWT) claim to extract the authenticating identity to Confluent resources from Registered Claim Names.
       --context string          CLI context name.

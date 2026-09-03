@@ -324,6 +324,8 @@ func (s *CLITestSuite) TestIamProvider() {
 		{args: "iam identity-provider update op-12345 --name updated-name --description 'updated description'", fixture: "iam/identity-provider/update.golden"},
 		{args: "iam identity-provider update op-67890 --identity-claim claims.sub.updated", fixture: "iam/identity-provider/update-with-identity-claim.golden"},
 		{args: "iam identity-provider list", fixture: "iam/identity-provider/list.golden"},
+		// "provider" must keep working as an alias of "identity-provider" for backward compatibility.
+		{args: "iam provider list", fixture: "iam/identity-provider/list.golden"},
 	}
 
 	for _, test := range tests {

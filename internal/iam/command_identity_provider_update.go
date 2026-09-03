@@ -37,7 +37,7 @@ func (c *identityProviderCommand) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String("description", "", "A description of the identity provider.")
 	cmd.Flags().String("identity-claim", "", "The JSON Web Token (JWT) claim to extract the authenticating identity to Confluent resources from Registered Claim Names.")
 	cmd.Flags().String("issuer-uri", "", "A publicly accessible URL uniquely identifying the OAuth identity provider authorized to issue access tokens.")
-	cmd.Flags().String("jwks-uri", "", "A publicly accessible JSON Web Key Set (JWKS) URI for the OAuth identity provider. JWKS provides a set of cryptographic keys used to verify the authenticity and integrity of JSON Web Tokens (JWTs) issued by the OAuth identity provider.")
+	cmd.Flags().String("jwks-uri", "", "A publicly accessible JSON Web Key Set (JWKS) URI for the OAuth identity provider.")
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
