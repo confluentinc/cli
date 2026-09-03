@@ -359,6 +359,7 @@ func AddProtocolFlag(cmd *cobra.Command) {
 	RegisterFlagCompletionFunc(cmd, "protocol", func(_ *cobra.Command, _ []string) []string { return protocols })
 }
 
+// TODO: clean up this function in CLI v5 and eliminate the --provider flag
 func AddProviderFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 	cmd.Flags().String("provider", "", "ID of this pool's identity provider.")
 
@@ -371,6 +372,7 @@ func AddProviderFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 	})
 }
 
+// TODO: clean up this function in CLI v5 and eliminate the --provider flag
 func AutocompleteIdentityProviders(client *ccloudv2.Client) []string {
 	identityProviders, err := client.ListIamIdentityProviders()
 	if err != nil {

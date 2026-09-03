@@ -426,6 +426,12 @@ func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
 				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
 			}
+			if req.Issuer != nil {
+				res.Issuer = req.Issuer
+			}
+			if req.JwksUri != nil {
+				res.JwksUri = req.JwksUri
+			}
 			if id == "op-67890" {
 				res.IdentityClaim = req.IdentityClaim
 				res.DisplayName = identityproviderv2.PtrString("okta-with-identity-claim")
