@@ -17,7 +17,7 @@ const (
 	byos    = "BYOS"
 	managed = "MANAGED"
 	azure   = "AzureDataLakeStorageGen2"
-	gcs     = "GoogleCloudStorage"
+	gcp     = "GoogleCloudStorage"
 
 	suspend = "SUSPEND"
 	skip    = "SKIP"
@@ -122,7 +122,7 @@ func getStorageType(topic tableflowv1.TableflowV1TableflowTopic) (string, error)
 	}
 
 	if config.TableflowV1GoogleCloudStorageSpec != nil {
-		return gcs, nil
+		return gcp, nil
 	}
 
 	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "config")
@@ -242,7 +242,7 @@ func printTopicTable(cmd *cobra.Command, topic tableflowv1.TableflowV1TableflowT
 		out.StorageAccountName = topic.Spec.Storage.TableflowV1AzureAdlsSpec.GetStorageAccountName()
 		out.StorageRegion = topic.Spec.Storage.TableflowV1AzureAdlsSpec.GetStorageRegion()
 		out.TablePath = topic.Spec.Storage.TableflowV1AzureAdlsSpec.GetTablePath()
-	} else if storageType == gcs {
+	} else if storageType == gcp {
 		out.BucketName = topic.Spec.Storage.TableflowV1GoogleCloudStorageSpec.GetBucketName()
 		out.BucketRegion = topic.Spec.Storage.TableflowV1GoogleCloudStorageSpec.GetBucketRegion()
 		out.ProviderIntegrationId = topic.Spec.Storage.TableflowV1GoogleCloudStorageSpec.GetProviderIntegrationId()

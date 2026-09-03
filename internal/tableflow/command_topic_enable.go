@@ -41,7 +41,7 @@ func (c *command) newTopicEnableCommand() *cobra.Command {
 	cmd.Flags().String("retention-ms", "604800000", "Specify the max age of snapshots (Iceberg) or versions (Delta) (snapshot/version expiration) to keep on the table in milliseconds for the Tableflow enabled topic.")
 	cmd.Flags().String("storage-type", "MANAGED", "Specify the storage type of the Kafka cluster, one of MANAGED, BYOS, AzureDataLakeStorageGen2, or GoogleCloudStorage.")
 	cmd.Flags().String("provider-integration", "", "Specify the provider integration id.")
-	cmd.Flags().String("bucket-name", "", "Specify the name of the AWS S3 or GCS bucket.")
+	cmd.Flags().String("bucket-name", "", "Specify the name of the AWS or GCP storage bucket.")
 	cmd.Flags().String("table-formats", "ICEBERG", "Specify the table formats, one of DELTA or ICEBERG.")
 	cmd.Flags().String("metadata-column-naming-scheme", "", "Specify the naming scheme for Tableflow's internal metadata columns in the materialized table, one of DEFAULT or PORTABLE.")
 	cmd.Flags().String("storage-account-name", "", "Specify the storage account name for Azure Data Lake.")
@@ -210,7 +210,7 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 		}
 		createTopic.Spec.Storage = &tableflowv1.TableflowV1TableflowTopicSpecStorageOneOf{
 			TableflowV1GoogleCloudStorageSpec: &tableflowv1.TableflowV1GoogleCloudStorageSpec{
-				Kind:                  gcs,
+				Kind:                  gcp,
 				BucketName:            bucketName,
 				ProviderIntegrationId: providerIntegration,
 			},
