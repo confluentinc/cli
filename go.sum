@@ -165,6 +165,8 @@ github.com/cloudflare/circl v1.6.3/go.mod h1:2eXP6Qfat4O/Yhh8BznvKnJ+uzEoTQ6jVKJ
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20251024191705-f32f6cebfdd1 h1:mXLlTii+xqGk9wNtAoPnrJsvR1bwuaEmWD4TuUoTYfw=
 github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20251024191705-f32f6cebfdd1/go.mod h1:62EMf+5uFEt1BJ2q8WMrUoI9VUSxAbDnmZCGRt/MbA0=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/tableflow v0.28.0 h1:lFKE3qlAjL0nsJUgovtccnW4NQCjsM4Im+Yf+SULXV8=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/tableflow v0.28.0/go.mod h1:qnxBGqDqQvVNXT+0e1F2H02m+pHJcWpMRPeANQeHOLk=
 github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0 h1:zSF4OQUJXWH2JeAo9rsq13ibk+JFdzITGR8S7cFMpzw=
 github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0/go.mod h1:DoxqzzF3JzvJr3fWkvCiOHFlE0GoYpozWxFZ1Ud9ntA=
 github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0 h1:8fWyLwMuy8ec0MVF5Avd54UvbIxhDFhZzanHBVwgxdw=
@@ -237,8 +239,6 @@ github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.3 h1:ozdDSJHruQIgtxS5hwz8Rp8p
 github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.3/go.mod h1:cD0AeCMBAWBesmWxWCMgVYNABYgHJ/ahCj7b4HP2R2I=
 github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1 h1:WZJYfgXJrvTIYQpCFps/qHF7T8ekgPlX/SFqx4EY2zQ=
 github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1/go.mod h1:kB+MXWYYg9ohrTCb27LlfpTbuexAzyYAmum105ow0ho=
-github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.7.0 h1:yf/1TiSCiAT0cD1dBZB6SU+hUAAL+uCezLx5MM9aHCA=
-github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.7.0/go.mod h1:A0gPt6EjmzCV+CftXu2TeefIOiha2OTbATVOPp0ccx0=
 github.com/confluentinc/ccloud-sdk-go-v2/usm v0.2.0 h1:Sc0kt9hWy5armZDBV88shYb/S7Xrf4nH8Giy7wqoYbg=
 github.com/confluentinc/ccloud-sdk-go-v2/usm v0.2.0/go.mod h1:nodmc/nyMbMbiXAM9vVIpeFP5HRwIhmmE+pM3hQl9MQ=
 github.com/confluentinc/cmf-sdk-go v0.0.8 h1:ziiV4/lNKh49m7RxwPCDL04OFV54lA3SkeynsQ2SDC8=
