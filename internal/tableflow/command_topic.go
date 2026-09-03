@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2/tableflow/v1"
+	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/tableflow/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/kafka"
@@ -17,6 +17,7 @@ const (
 	byos    = "BYOS"
 	managed = "MANAGED"
 	azure   = "AzureDataLakeStorageGen2"
+	gcp     = "GoogleCloudStorage"
 
 	suspend = "SUSPEND"
 	skip    = "SKIP"
@@ -118,6 +119,10 @@ func getStorageType(topic tableflowv1.TableflowV1TableflowTopic) (string, error)
 
 	if config.TableflowV1AzureAdlsSpec != nil {
 		return azure, nil
+	}
+
+	if config.TableflowV1GoogleCloudStorageSpec != nil {
+		return gcp, nil
 	}
 
 	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "config")
@@ -237,6 +242,11 @@ func printTopicTable(cmd *cobra.Command, topic tableflowv1.TableflowV1TableflowT
 		out.StorageAccountName = topic.Spec.Storage.TableflowV1AzureAdlsSpec.GetStorageAccountName()
 		out.StorageRegion = topic.Spec.Storage.TableflowV1AzureAdlsSpec.GetStorageRegion()
 		out.TablePath = topic.Spec.Storage.TableflowV1AzureAdlsSpec.GetTablePath()
+	} else if storageType == gcp {
+		out.BucketName = topic.Spec.Storage.TableflowV1GoogleCloudStorageSpec.GetBucketName()
+		out.BucketRegion = topic.Spec.Storage.TableflowV1GoogleCloudStorageSpec.GetBucketRegion()
+		out.ProviderIntegrationId = topic.Spec.Storage.TableflowV1GoogleCloudStorageSpec.GetProviderIntegrationId()
+		out.TablePath = topic.Spec.Storage.TableflowV1GoogleCloudStorageSpec.GetTablePath()
 	}
 
 	table := output.NewTable(cmd)

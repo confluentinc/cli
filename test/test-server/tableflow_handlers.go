@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
-	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2/tableflow/v1"
+	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/tableflow/v1"
 )
 
 // Handler for: "/tableflow/v1/tableflow-topics/{display_name}"
@@ -96,6 +96,9 @@ func handleTableflowTopicsCreate(t *testing.T, environment string) http.HandlerF
 		} else if tableflowTopic.Spec.Storage.TableflowV1AzureAdlsSpec != nil {
 			tableflowTopic.Spec.Storage.TableflowV1AzureAdlsSpec.SetStorageRegion("US1")
 			tableflowTopic.Spec.Storage.TableflowV1AzureAdlsSpec.SetTablePath("s3://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId2")
+		} else if tableflowTopic.Spec.Storage.TableflowV1GoogleCloudStorageSpec != nil {
+			tableflowTopic.Spec.Storage.TableflowV1GoogleCloudStorageSpec.SetBucketRegion("us-east-1")
+			tableflowTopic.Spec.Storage.TableflowV1GoogleCloudStorageSpec.SetTablePath("gs://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId")
 		}
 
 		err = json.NewEncoder(w).Encode(tableflowTopic)
@@ -116,6 +119,8 @@ func handleTableflowTopicGet(t *testing.T, environmentId, clusterId, display_nam
 			tableflowTopic = getTopicManaged("topic-managed", environmentId, clusterId)
 		case "topic-azure":
 			tableflowTopic = getTopicAzure("topic-azure", environmentId, clusterId)
+		case "topic-gcp":
+			tableflowTopic = getTopicGcp("topic-gcp", environmentId, clusterId)
 		case "topic-error-log":
 			tableflowTopic = getTopicManaged("topic-error-log", "env-596", "lkc-123456")
 			tableflowTopic.Spec.Config.SetErrorHandling(tableflowv1.TableflowV1TableFlowTopicConfigsSpecErrorHandlingOneOf{
@@ -133,8 +138,9 @@ func handleTableflowTopicsList(t *testing.T, environmentId, clusterId string) ht
 		topicOne := getTopicByob("topic-byob", environmentId, clusterId)
 		topicTwo := getTopicManaged("topic-managed", environmentId, clusterId)
 		topicThree := getTopicAzure("topic-azure", environmentId, clusterId)
+		topicFour := getTopicGcp("topic-gcp", environmentId, clusterId)
 
-		recordList := tableflowv1.TableflowV1TableflowTopicList{Data: []tableflowv1.TableflowV1TableflowTopic{topicOne, topicTwo, topicThree}}
+		recordList := tableflowv1.TableflowV1TableflowTopicList{Data: []tableflowv1.TableflowV1TableflowTopic{topicOne, topicTwo, topicThree, topicFour}}
 		setPageToken(&recordList, &recordList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
@@ -157,6 +163,8 @@ func handleTableflowTopicUpdate(t *testing.T, display_name string) http.HandlerF
 			tableflowTopic = getTopicManaged("topic-managed", "env-596", "lkc-123456")
 		case "topic-azure":
 			tableflowTopic = getTopicAzure("topic-azure", "env-596", "lkc-123456")
+		case "topic-gcp":
+			tableflowTopic = getTopicGcp("topic-gcp", "env-596", "lkc-123456")
 		case "topic-error-log":
 			tableflowTopic = getTopicManaged("topic-error-log", "env-596", "lkc-123456")
 		}
@@ -185,7 +193,7 @@ func handleTableflowTopicDelete(t *testing.T, display_name string) http.HandlerF
 			w.WriteHeader(http.StatusNotFound)
 			err := writeErrorJson(w, "The Tableflow topic was not found.")
 			require.NoError(t, err)
-		case "topic-byob", "topic-managed", "topic-azure":
+		case "topic-byob", "topic-managed", "topic-azure", "topic-gcp":
 			w.WriteHeader(http.StatusNoContent)
 		}
 	}
@@ -335,6 +343,38 @@ func getTopicAzure(display_name, environmentId, clusterId string) tableflowv1.Ta
 		Status: &tableflowv1.TableflowV1TableflowTopicStatus{
 			Phase: tableflowv1.PtrString("RUNNING"),
 			//ErrorMessage: tableflowv1.PtrString(""),
+			WriteMode: "UPSERT",
+		},
+	}
+}
+
+func getTopicGcp(display_name, environmentId, clusterId string) tableflowv1.TableflowV1TableflowTopic {
+	return tableflowv1.TableflowV1TableflowTopic{
+		Spec: &tableflowv1.TableflowV1TableflowTopicSpec{
+			DisplayName: tableflowv1.PtrString(display_name),
+			Suspended:   tableflowv1.PtrBool(false),
+			Storage: &tableflowv1.TableflowV1TableflowTopicSpecStorageOneOf{
+				TableflowV1GoogleCloudStorageSpec: &tableflowv1.TableflowV1GoogleCloudStorageSpec{
+					Kind:                  "GoogleCloudStorage",
+					BucketName:            "bucket_1",
+					BucketRegion:          tableflowv1.PtrString("us-east-1"),
+					ProviderIntegrationId: "cspi-stgce89r7",
+					TablePath:             tableflowv1.PtrString("gs://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId"),
+				},
+			},
+			Config: &tableflowv1.TableflowV1TableFlowTopicConfigsSpec{
+				EnableCompaction:           tableflowv1.PtrBool(true),
+				EnablePartitioning:         tableflowv1.PtrBool(true),          // read-only property that needs confirmation, assuming constantly true for now
+				RetentionMs:                tableflowv1.PtrString("604800000"), // 7 days to milliseconds
+				RecordFailureStrategy:      tableflowv1.PtrString("SKIP"),
+				MetadataColumnNamingScheme: tableflowv1.PtrString("PORTABLE"),
+			},
+			TableFormats: &[]string{"ICEBERG"},
+			Environment:  &tableflowv1.GlobalObjectReference{Id: environmentId},
+			KafkaCluster: &tableflowv1.EnvScopedObjectReference{Id: clusterId, Environment: tableflowv1.PtrString(environmentId)},
+		},
+		Status: &tableflowv1.TableflowV1TableflowTopicStatus{
+			Phase:     tableflowv1.PtrString("RUNNING"),
 			WriteMode: "UPSERT",
 		},
 	}
