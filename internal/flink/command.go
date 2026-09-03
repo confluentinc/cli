@@ -42,8 +42,8 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	if cfg.IsCloudLogin() {
 		cmd.AddCommand(
 			newComputePoolCommand(cfg, prerunner),
+			newStatementCommand(cfg, prerunner),
 		)
-		cmd.AddCommand(c.newStatementCommand()) //To be moved up after APIE-1477
 	} else {
 		cmd.AddCommand(c.newComputePoolCommandOnPrem())
 		cmd.AddCommand(c.newStatementCommandOnPrem())
@@ -60,7 +60,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newEndpointCommand())
 	cmd.AddCommand(c.newMaterializedTableCommand())
 
-	// Generated commands.
+	// Generated Cloud commands
 	cmd.AddCommand(
 		newOrgComputePoolConfigCommand(cfg, prerunner),
 		newRegionCommand(cfg, prerunner),

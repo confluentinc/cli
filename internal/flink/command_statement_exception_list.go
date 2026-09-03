@@ -7,12 +7,12 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *command) newStatementExceptionListCommand() *cobra.Command {
+func (c *statementCommand) newStatementExceptionListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "list <statement-name>",
 		Short:             "List exceptions for a Flink SQL statement.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgs),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.statementExceptionList,
 	}
 
@@ -25,7 +25,7 @@ func (c *command) newStatementExceptionListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) statementExceptionList(cmd *cobra.Command, args []string) error {
+func (c *statementCommand) statementExceptionList(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err

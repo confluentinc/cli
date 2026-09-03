@@ -12,6 +12,16 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
+var allowedStatuses = []string{
+	"pending",
+	"running",
+	"completed",
+	"deleting",
+	"failing",
+	"failed",
+	"stopped",
+}
+
 func (c *command) newStatementListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
