@@ -1,13 +1,20 @@
 package flink
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/spf13/cobra"
 
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
+
+type statementCommand struct {
+	*pcmd.AuthenticatedCLICommand
+}
 
 // printStatementWarnings renders warnings below the table, on stderr so that stdout stays the
 // command's data. Serialized output already carries them in the warnings field.
@@ -35,37 +42,48 @@ type statementOut struct {
 	LatestOffsetsTimestamp *time.Time               `human:"Latest Offsets Timestamp" serialized:"latest_offsets_timestamp"`
 }
 
-func (c *command) newStatementCommand() *cobra.Command {
+func newStatementCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command { //nolint:unparam
 	cmd := &cobra.Command{
-		Use:   "statement",
-		Short: "Manage Flink SQL statements in Confluent Cloud.",
+		Use:         "statement",
+		Short:       "Manage Flink SQL statements in Confluent Cloud.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	cmd.AddCommand(c.newStatementCreateCommand())
-	cmd.AddCommand(c.newStatementDeleteCommand())
-	cmd.AddCommand(c.newStatementDescribeCommand())
-	cmd.AddCommand(c.newStatementExceptionCommand())
-	cmd.AddCommand(c.newStatementListCommand())
-	cmd.AddCommand(c.newStatementResumeCommand())
-	cmd.AddCommand(c.newStatementStopCommand())
-	cmd.AddCommand(c.newStatementUpdateCommand())
+	c := &statementCommand{
+		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner),
+	}
+
+	cmd.AddCommand(
+		c.newCreateCommand(),
+		c.newDeleteCommand(),
+		c.newDescribeCommand(),
+		c.newStatementExceptionCommand(),
+		c.newListCommand(),
+		c.newStatementResumeCommand(),
+		c.newStatementStopCommand(),
+		c.newUpdateCommand(),
+	)
 
 	return cmd
 }
 
-func (c *command) validStatementArgs(cmd *cobra.Command, args []string) []string {
+func (c *statementCommand) validArgs(cmd *cobra.Command, args []string) []string {
 	if len(args) > 0 {
 		return nil
 	}
 
-	return c.validStatementArgsMultiple(cmd, args)
+	return c.validArgsMultiple(cmd, args)
 }
 
-func (c *command) validStatementArgsMultiple(cmd *cobra.Command, args []string) []string {
+func (c *statementCommand) validArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}
 
+	return c.autocompleteStatements()
+}
+
+func (c *statementCommand) autocompleteStatements() []string {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil
@@ -84,6 +102,35 @@ func (c *command) validStatementArgsMultiple(cmd *cobra.Command, args []string) 
 	suggestions := make([]string, len(statements))
 	for i, statement := range statements {
 		suggestions[i] = statement.GetName()
+	}
+	return suggestions
+}
+
+// addDatabaseFlag mirrors the shared (*command).addDatabaseFlag; statementCommand embeds
+// *pcmd.AuthenticatedCLICommand rather than *command, so it carries its own copy.
+func (c *statementCommand) addDatabaseFlag(cmd *cobra.Command) {
+	cmd.Flags().String("database", "", "The database which will be used as the default database. When using Kafka, this is the cluster ID.")
+	pcmd.RegisterFlagCompletionFunc(cmd, "database", c.autocompleteDatabases)
+}
+
+func (c *statementCommand) autocompleteDatabases(cmd *cobra.Command, args []string) []string {
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil
+	}
+
+	clusters, err := c.V2Client.ListKafkaClusters(environmentId)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(clusters))
+	for i, cluster := range clusters {
+		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
 	}
 	return suggestions
 }
