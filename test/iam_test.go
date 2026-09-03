@@ -311,18 +311,20 @@ func (s *CLITestSuite) TestIamUserInvitationList() {
 
 func (s *CLITestSuite) TestIamProvider() {
 	tests := []CLITest{
-		{args: "iam provider create okta --description 'new description' --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com", fixture: "iam/identity-provider/create.golden"},
-		{args: "iam provider create okta-with-identity-claim --description 'new description' --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com --identity-claim claims.sub", fixture: "iam/identity-provider/create-with-identity-claim.golden"},
-		{args: "iam provider delete op-12345 --force", fixture: "iam/identity-provider/delete.golden"},
-		{args: "iam provider delete op-12345 op-54321", fixture: "iam/identity-provider/delete-multiple-fail.golden", exitCode: 1},
-		{args: "iam provider delete op-12345 op-67890", input: "n\n", fixture: "iam/identity-provider/delete-multiple-refuse.golden"},
-		{args: "iam provider delete op-12345 op-67890", input: "y\n", fixture: "iam/identity-provider/delete-multiple-success.golden"},
-		{args: "iam provider delete op-12345", input: "y\n", fixture: "iam/identity-provider/delete-prompt.golden"},
-		{args: "iam provider delete op-1 --force", fixture: "iam/identity-provider/delete-dne.golden", exitCode: 1},
-		{args: "iam provider describe op-12345", fixture: "iam/identity-provider/describe.golden"},
-		{args: "iam provider describe op-67890", fixture: "iam/identity-provider/describe-with-identity-claim.golden"},
-		{args: "iam provider update op-12345 --name updated-name --description 'updated description'", fixture: "iam/identity-provider/update.golden"},
-		{args: "iam provider update op-67890 --identity-claim claims.sub.updated", fixture: "iam/identity-provider/update-with-identity-claim.golden"},
+		{args: "iam identity-provider create okta --description 'new description' --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com", fixture: "iam/identity-provider/create.golden"},
+		{args: "iam identity-provider create okta-with-identity-claim --description 'new description' --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com --identity-claim claims.sub", fixture: "iam/identity-provider/create-with-identity-claim.golden"},
+		{args: "iam identity-provider delete op-12345 --force", fixture: "iam/identity-provider/delete.golden"},
+		{args: "iam identity-provider delete op-12345 op-54321", fixture: "iam/identity-provider/delete-multiple-fail.golden", exitCode: 1},
+		{args: "iam identity-provider delete op-12345 op-67890", input: "n\n", fixture: "iam/identity-provider/delete-multiple-refuse.golden"},
+		{args: "iam identity-provider delete op-12345 op-67890", input: "y\n", fixture: "iam/identity-provider/delete-multiple-success.golden"},
+		{args: "iam identity-provider delete op-12345", input: "y\n", fixture: "iam/identity-provider/delete-prompt.golden"},
+		{args: "iam identity-provider delete op-1 --force", fixture: "iam/identity-provider/delete-dne.golden", exitCode: 1},
+		{args: "iam identity-provider describe op-12345", fixture: "iam/identity-provider/describe.golden"},
+		{args: "iam identity-provider describe op-67890", fixture: "iam/identity-provider/describe-with-identity-claim.golden"},
+		{args: "iam identity-provider update op-12345 --name updated-name --description 'updated description'", fixture: "iam/identity-provider/update.golden"},
+		{args: "iam identity-provider update op-67890 --identity-claim claims.sub.updated", fixture: "iam/identity-provider/update-with-identity-claim.golden"},
+		{args: "iam identity-provider list", fixture: "iam/identity-provider/list.golden"},
+		// "provider" must keep working as an alias of "identity-provider" for backward compatibility.
 		{args: "iam provider list", fixture: "iam/identity-provider/list.golden"},
 	}
 
@@ -418,7 +420,7 @@ func (s *CLITestSuite) TestIam_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete iam certificate-authority describe ""`, fixture: "iam/certificate-authority/describe-autocomplete.golden"},
 		{args: `__complete iam pool describe --provider op-12345 ""`, fixture: "iam/pool/describe-autocomplete.golden"},
-		{args: `__complete iam provider describe ""`, fixture: "iam/identity-provider/describe-autocomplete.golden"},
+		{args: `__complete iam identity-provider describe ""`, fixture: "iam/identity-provider/describe-autocomplete.golden"},
 		{args: `__complete iam service-account describe ""`, fixture: "iam/service-account/describe-autocomplete.golden"},
 		{args: `__complete iam user describe ""`, fixture: "iam/user/describe-autocomplete.golden"},
 	}
