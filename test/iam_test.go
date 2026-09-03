@@ -323,6 +323,9 @@ func (s *CLITestSuite) TestIamProvider() {
 		{args: "iam identity-provider describe op-67890", fixture: "iam/identity-provider/describe-with-identity-claim.golden"},
 		{args: "iam identity-provider update op-12345 --name updated-name --description 'updated description'", fixture: "iam/identity-provider/update.golden"},
 		{args: "iam identity-provider update op-67890 --identity-claim claims.sub.updated", fixture: "iam/identity-provider/update-with-identity-claim.golden"},
+		// The handler echoes issuer/jwks_uri from the PATCH body, so this fails if the flags stop reaching the request.
+		{args: "iam identity-provider update op-12345 --issuer-uri https://company.updated-provider.com --jwks-uri https://company.updated-provider.com/oauth2/v1/keys", fixture: "iam/identity-provider/update-issuer-jwks.golden"},
+		{args: "iam identity-provider update invalid --description 'updated description'", fixture: "iam/identity-provider/update-invalid-prefix.golden", exitCode: 1},
 		{args: "iam identity-provider list", fixture: "iam/identity-provider/list.golden"},
 		// "provider" must keep working as an alias of "identity-provider" for backward compatibility.
 		{args: "iam provider list", fixture: "iam/identity-provider/list.golden"},
