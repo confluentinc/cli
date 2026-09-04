@@ -1,6 +1,7 @@
 package auth
 
 import (
+	stderrors "errors"
 	"fmt"
 	"os"
 	"runtime"
@@ -240,7 +241,7 @@ func GetDataplaneToken(ctx *config.Context) (string, error) {
 		return "", err
 	}
 	if res.Error != "" {
-		return "", fmt.Errorf(res.Error)
+		return "", stderrors.New(res.Error)
 	}
 	return res.Token, nil
 }

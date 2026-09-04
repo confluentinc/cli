@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/binary"
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -475,7 +476,7 @@ func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string,
 func getKeyAndValue(schemaBased bool, data, delimiter string) (string, string, error) {
 	dataSplit := strings.Split(data, delimiter)
 	if len(dataSplit) < 2 {
-		return "", "", fmt.Errorf(missingKeyOrValueErrorMsg)
+		return "", "", stderrors.New(missingKeyOrValueErrorMsg)
 	}
 
 	if !schemaBased {
@@ -494,7 +495,7 @@ func getKeyAndValue(schemaBased bool, data, delimiter string) (string, string, e
 		}
 	}
 
-	return "", "", fmt.Errorf(missingOrMalformedKeyErrorMsg)
+	return "", "", stderrors.New(missingOrMalformedKeyErrorMsg)
 }
 
 func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (serdes.SerializationProvider, []byte, error) {

@@ -1,6 +1,7 @@
 package apikey
 
 import (
+	stderrors "errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -42,7 +43,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		if resource.LookupType(resourceId) != resource.KafkaCluster {
-			return fmt.Errorf(nonKafkaNotImplementedErrorMsg)
+			return stderrors.New(nonKafkaNotImplementedErrorMsg)
 		}
 		clusterId = resourceId
 	} else {

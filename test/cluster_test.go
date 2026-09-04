@@ -3,7 +3,6 @@ package test
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -116,7 +115,7 @@ func serveClusterScopedId(meta *cluster.ScopedId, t *testing.T) *httptest.Server
 	router.HandleFunc("/v1/metadata/id", func(w http.ResponseWriter, r *http.Request) {
 		b, err := json.Marshal(meta)
 		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
+		_, err = w.Write(b)
 		require.NoError(t, err)
 	})
 	return httptest.NewServer(router)
@@ -127,7 +126,7 @@ func serveTLSClusterScopedId(meta *cluster.ScopedId, t *testing.T) *httptest.Ser
 	router.HandleFunc("/v1/metadata/id", func(w http.ResponseWriter, r *http.Request) {
 		b, err := json.Marshal(meta)
 		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
+		_, err = w.Write(b)
 		require.NoError(t, err)
 	})
 	server := httptest.NewUnstartedServer(router)

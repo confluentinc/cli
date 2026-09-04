@@ -3,7 +3,6 @@ package testserver
 import (
 	"encoding/base64"
 	"encoding/json"
-	"io"
 	"net/http"
 	"os"
 	"strconv"
@@ -104,7 +103,7 @@ func handleMe(t *testing.T, isAuditLogEnabled bool) http.HandlerFunc {
 			Organization: org,
 		})
 		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
+		_, err = w.Write(b)
 		require.NoError(t, err)
 	}
 }
@@ -212,7 +211,7 @@ func handleServiceAccounts(t *testing.T) http.HandlerFunc {
 			}
 			listReply, err := ccstructs.MarshalJSONToBytes(res)
 			require.NoError(t, err)
-			_, err = io.WriteString(w, string(listReply))
+			_, err = w.Write(listReply)
 			require.NoError(t, err)
 		}
 	}
@@ -336,7 +335,7 @@ func handleEnvMetadata(t *testing.T) http.HandlerFunc {
 			Clouds: clouds,
 		})
 		require.NoError(t, err)
-		_, err = io.WriteString(w, string(reply))
+		_, err = w.Write(reply)
 		require.NoError(t, err)
 	}
 }
@@ -395,7 +394,7 @@ func handleV2Authenticate(t *testing.T) http.HandlerFunc {
 		}
 		b, err := json.Marshal(&reply)
 		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
+		_, err = w.Write(b)
 		require.NoError(t, err)
 	}
 }

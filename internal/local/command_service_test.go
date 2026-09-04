@@ -47,8 +47,8 @@ func TestInjectConfigsNoNewline(t *testing.T) {
 func TestSetServiceEnvs(t *testing.T) {
 	req := require.New(t)
 
-	req.NoError(os.Setenv("KAFKA_LOG4J_OPTS", "saveme"))
-	req.NoError(os.Setenv("CONNECT_LOG4J_OPTS", "useme"))
+	t.Setenv("KAFKA_LOG4J_OPTS", "saveme")
+	t.Setenv("CONNECT_LOG4J_OPTS", "useme")
 
 	req.NoError(setServiceEnvs("connect"))
 

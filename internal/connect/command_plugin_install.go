@@ -163,7 +163,7 @@ func (c *pluginInstallCommand) install(cmd *cobra.Command, args []string) error 
 	}
 
 	output.Println(c.Config.EnableColor, "")
-	output.Printf(c.Config.EnableColor, successStr)
+	output.Print(c.Config.EnableColor, successStr)
 
 	return nil
 }
@@ -339,7 +339,7 @@ func removePluginInstallations(previousInstallations []string, prompt form.Promp
 func (c *pluginInstallCommand) installPlugin(client *hub.Client, pluginManifest *cpstructs.Manifest, archivePath, pluginDir string, dryRun bool) error {
 	installStr := fmt.Sprintf("Installing %s %s, provided by %s\n\n", pluginManifest.Title, pluginManifest.Version, pluginManifest.Owner.Name)
 	if dryRun {
-		output.Printf(c.Config.EnableColor, utils.AddDryRunPrefix(installStr))
+		output.Print(c.Config.EnableColor, utils.AddDryRunPrefix(installStr))
 		return nil
 	}
 	output.Print(c.Config.EnableColor, installStr)
