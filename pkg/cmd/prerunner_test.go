@@ -84,7 +84,7 @@ func getPreRunBase(ctrl *gomock.Controller) *pcmd.PreRun {
 	}
 }
 
-func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
+func TestPreRunAnonymousSetLoggingLevel(t *testing.T) {
 	cfg := &config.Config{IsTest: true, Contexts: map[string]*config.Context{}}
 	featureflags.Init(cfg)
 
@@ -112,7 +112,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 	}
 }
 
-func TestPreRun_TokenExpires(t *testing.T) {
+func TestPreRunTokenExpires(t *testing.T) {
 	cfg := config.AuthenticatedCloudConfigMock()
 	cfg.Context().State.AuthToken = expiredAuthTokenForDevCloud
 
@@ -230,7 +230,7 @@ func TestUpdateToken(t *testing.T) {
 	}
 }
 
-func TestPrerun_AutoLogin(t *testing.T) {
+func TestPrerunAutoLogin(t *testing.T) {
 	type credentialsFuncReturnValues struct {
 		creds *pauth.Credentials
 		err   error
@@ -414,7 +414,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 	}
 }
 
-func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
+func TestPrerunReLoginToLastOrgUsed(t *testing.T) {
 	ccloudCreds := &pauth.Credentials{
 		Username: "username",
 		Password: "password",
@@ -472,7 +472,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
+func TestPrerunAutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 	tests := []struct {
 		name    string
 		isCloud bool
