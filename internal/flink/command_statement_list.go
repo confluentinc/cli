@@ -19,43 +19,34 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
-var allowedStatuses = []string{
-	"pending",
-	"running",
-	"completed",
-	"deleting",
-	"failing",
-	"failed",
-	"stopped",
-}
-
-func (c *command) newStatementListCommand() *cobra.Command {
+func (c *statementCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Flink SQL statements.",
+		Args:  cobra.NoArgs,
 		Example: examples.BuildExampleString(examples.Example{
 			Text: "List running statements.",
 			Code: "confluent flink statement list --status running",
 		}),
-		RunE: c.statementList,
+		RunE: c.list,
 	}
 
+	// Optional flags
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddComputePoolFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddOutputFlag(cmd)
-
 	cmd.Flags().String("status", "", "Filter the results by statement status.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "status", func(*cobra.Command, []string) []string {
 		return allowedStatuses
 	})
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
-func (c *command) statementList(cmd *cobra.Command, _ []string) error {
+func (c *statementCommand) list(cmd *cobra.Command, _ []string) error {
 	client, err := c.GetFlinkGatewayClient(false)
 	if err != nil {
 		return err
@@ -109,7 +100,7 @@ func (c *command) statementList(cmd *cobra.Command, _ []string) error {
 	return list.Print()
 }
 
-func (c *command) validateProvidedComputePool(environmentId, computePoolId string) error {
+func (c *statementCommand) validateProvidedComputePool(environmentId, computePoolId string) error {
 	if computePoolId == "" {
 		return nil
 	}

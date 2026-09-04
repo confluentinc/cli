@@ -26,15 +26,16 @@ type describeStatementOut struct {
 	Principal              string                   `human:"Principal" serialized:"principal"`
 }
 
-func (c *command) newStatementDescribeCommand() *cobra.Command {
+func (c *statementCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <name>",
 		Short:             "Describe a Flink SQL statement.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgs),
-		RunE:              c.statementDescribe,
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.describe,
 	}
 
+	// Optional flags
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -44,7 +45,7 @@ func (c *command) newStatementDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) statementDescribe(cmd *cobra.Command, args []string) error {
+func (c *statementCommand) describe(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err

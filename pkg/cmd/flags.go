@@ -160,6 +160,21 @@ func AutocompleteComputePools(environmentId string, client *ccloudv2.Client) []s
 	return suggestions
 }
 
+func AddDatabaseFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
+	cmd.Flags().String("database", "", "The database which will be used as the default database. When using Kafka, this is the cluster ID.")
+	RegisterFlagCompletionFunc(cmd, "database", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+		return AutocompleteClusters(environmentId, c.V2Client)
+	})
+}
+
 func AddEndpointFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 	cmd.Flags().String("kafka-endpoint", "", "Endpoint to be used for this Kafka cluster.")
 }
