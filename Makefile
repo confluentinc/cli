@@ -144,3 +144,12 @@ test: unit-test integration-test
 .PHONY: generate-packaging-patch
 generate-packaging-patch:
 	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
+
+.PHONY: coverage
+coverage: ## Merge coverage data from unit and integration tests into coverage.txt
+	@echo "Merging coverage data..."
+	@echo "mode: atomic" > coverage.txt
+	@tail -n +2 coverage.out >> coverage.txt
+	@tail -n +2 test/coverage.out >> coverage.txt
+	@echo "Coverage data saved to: coverage.txt"
+	@artifact push workflow coverage.txt

@@ -3,7 +3,7 @@ name: Confluent CLI
 
 agent:
   machine:
-    type: s1-prod-ubuntu20-04-amd64-1
+    type: s1-prod-ubuntu24-04-amd64-1
 
 auto_cancel:
   running:
@@ -17,61 +17,87 @@ blocks:
     dependencies: []
     task:
       jobs:
-        - name: linux/amd64
+        - name: "Test linux/amd64"
           commands:
             - checkout
+            - . vault-get-secret cli/sonar-token
             - sem-version go $(cat .go-version)
             - export PATH=$(go env GOPATH)/bin:$PATH
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
             - make lint
             - make test
+            - make coverage
             - make test-installer
+# Temporarily disable these builds until rate limiting is resolved
+#        - name: "Build linux/amd64 (GLIBC)"
+#          commands:
+#            - checkout
+#            - docker build . --file docker/Dockerfile_build_linux_amd64 --tag test-build
+        - name: "Build linux/amd64 (Alpine)"
+          commands:
+            - checkout
+            - docker build . --file docker/Dockerfile_alpine_amd64 --tag test-build
       epilogue:
         always:
           commands:
-            - test-results publish . -N "linux/amd64"
+            # --ignore-missing: build-only jobs run no tests; an early failure can leave one unwritten
+            - test-results publish unit-test-report.xml integration-test-report.xml -N "linux/amd64" --ignore-missing
 
-  - name: darwin/arm64
+  - name: linux/arm64
+    run:
+      when: "branch = 'main'"
     dependencies: []
     task:
       agent:
         machine:
-          type: s1-prod-macos-13-5-arm64
+          type: s1-prod-ubuntu24-04-arm64-1
       jobs:
-        - name: darwin/arm64
+# Temporarily disable these builds until rate limiting is resolved
+#        - name: "Build linux/arm64 (GLIBC)"
+#          commands:
+#            - checkout
+#            - docker build . --file docker/Dockerfile_build_linux_arm64 --tag test-build
+        - name: "Build linux/arm64 (Alpine)"
           commands:
             - checkout
-            - sem-version go $(cat .go-version)
-            - export PATH=$(go env GOPATH)/bin:$PATH
-            - make test
-      epilogue:
-        always:
-          commands:
-            - test-results publish . -N "darwin/arm64"
+            - docker build . --file docker/Dockerfile_alpine_arm64 --tag test-build
 
   - name: windows/amd64
+    run:
+      when: "branch = 'main'"
     dependencies: []
     task:
       agent:
         machine:
           type: s1-prod-windows
       jobs:
-        - name: windows/amd64
+        - name: "Build & Test windows/amd64"
           commands:
             - checkout
             # https://confluentinc.atlassian.net/browse/DP-9532
-            - choco install -y golang --version $(Get-Content .go-version)
-            - $env:GOCOVERDIR = 'test/coverage'
-            - New-Item $env:GOCOVERDIR -ItemType Directory
+            # Do not install Go with Chocolatey since it is community maintained and may not have the latest version
+            - $ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -OutFile Go.zip -Uri https://go.dev/dl/go$(Get-Content .go-version).windows-amd64.zip -UseBasicParsing
+            - 7z x Go.zip -oC:\
+            # Install MSYS2 and mingw-w64 GCC to match the release pipeline
+            - if (!(Test-Path "C:\msys64\usr\bin\bash.exe")) { curl.exe -L --retry 5 --retry-delay 5 -o msys2.tar.xz https://repo.msys2.org/distrib/x86_64/msys2-base-x86_64-20260322.tar.xz }
+            - if (!(Test-Path "C:\msys64\usr\bin\bash.exe")) { 7z x msys2.tar.xz }
+            - if (!(Test-Path "C:\msys64\usr\bin\bash.exe")) { 7z x msys2.tar -oC:\ }
+            - C:\msys64\usr\bin\bash -lc "pacman -Sy --noconfirm mingw-w64-x86_64-gcc"
+            - $Env:PATH = "C:\msys64\mingw64\bin;C:\Go\bin;C:\Users\semaphore\go\bin;$Env:PATH"
+            - $Env:CC = "x86_64-w64-mingw32-gcc"
+            - $Env:EXISTING_FLAGS = $(go env CGO_LDFLAGS)
+            - go env -w CGO_LDFLAGS="-fstack-protector $Env:EXISTING_FLAGS"
+            - $Env:GOCOVERDIR = "test/coverage"
+            - New-Item $Env:GOCOVERDIR -ItemType Directory
             - go install gotest.tools/gotestsum@v1.8.2
             - gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
             - gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v $(go list ./... | Select-String test)
-            - go tool covdata textfmt -i $env:GOCOVERDIR -o test/coverage.out
+            - go tool covdata textfmt -i $Env:GOCOVERDIR -o test/coverage.out
       epilogue:
         always:
           commands:
-            - test-results publish . -N "windows/amd64"
+            - test-results publish unit-test-report.xml integration-test-report.xml -N "windows/amd64" --ignore-missing
 
 after_pipeline:
   task:
@@ -79,3 +105,12 @@ after_pipeline:
       - name: Publish Results
         commands:
           - test-results gen-pipeline-report
+      - name: Report SonarQube Results
+        commands:
+          - checkout
+          - sem-version java 17
+          - emit-sonarqube-data -a coverage.txt --enable_sonarqube_enterprise
+
+promotions:
+  - name: "Run macOS builds (manual)"
+    pipeline_file: ".semaphore/macos.yml"
