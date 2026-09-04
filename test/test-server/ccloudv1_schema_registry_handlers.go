@@ -1,7 +1,6 @@
 package testserver
 
 import (
-	"io"
 	"net/http"
 	"testing"
 
@@ -35,7 +34,7 @@ func handleSchemaRegistries(t *testing.T) http.HandlerFunc {
 
 			b, err := ccloudv1.MarshalJSONToBytes(createReply)
 			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
+			_, err = w.Write(b)
 			require.NoError(t, err)
 		}
 	}
