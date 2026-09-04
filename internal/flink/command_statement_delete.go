@@ -8,25 +8,26 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
-func (c *command) newStatementDeleteCommand() *cobra.Command {
+func (c *statementCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "delete <name-1> [name-2] ... [name-n]",
 		Short:             "Delete one or more Flink SQL statements.",
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgsMultiple),
-		RunE:              c.statementDelete,
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
+		RunE:              c.delete,
 	}
 
+	// Optional flags
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddForceFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddForceFlag(cmd)
 
 	return cmd
 }
 
-func (c *command) statementDelete(cmd *cobra.Command, args []string) error {
+func (c *statementCommand) delete(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
