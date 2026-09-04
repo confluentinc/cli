@@ -7,13 +7,13 @@ Available Commands:
   certificate-authority Manage certificate authorities.
   certificate-pool      Manage certificate pools.
   group-mapping         Manage SSO group mappings.
+  identity-provider     Manage Confluent Cloud IAM identity providers.
   ip-filter             Manage IP filters.
   ip-group              Manage IP groups.
   pool                  Manage identity pools.
-  provider              Manage identity providers.
   rbac                  Manage RBAC permissions.
   service-account       Manage and select Confluent Cloud IAM service accounts.
-  user                  Manage users.
+  user                  Manage Confluent Cloud IAM users.
 
 Global Flags:
   -h, --help            Show help for this command.

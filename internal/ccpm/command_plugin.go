@@ -95,6 +95,9 @@ func (c *customConnectPluginCommand) autocompleteCustomConnectPlugins() []string
 	for i, customConnectPlugin := range customConnectPlugins {
 		spec := customConnectPlugin.GetSpec()
 		suggestions[i] = fmt.Sprintf("%s\t%s", customConnectPlugin.GetId(), spec.GetDisplayName())
+		if description := spec.GetDescription(); description != "" {
+			suggestions[i] += ": " + description
+		}
 	}
 	return suggestions
 }
