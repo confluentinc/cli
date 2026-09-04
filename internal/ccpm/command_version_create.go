@@ -72,9 +72,9 @@ func (c *customConnectPluginVersionCommand) createVersion(cmd *cobra.Command, ar
 	}
 
 	// Get plugin details to determine cloud provider
-	plugin, httpResp, err := c.V2Client.GetCcpmCustomConnectPlugin(pluginId, environment)
+	plugin, err := c.V2Client.GetCcpmCustomConnectPlugin(pluginId, environment)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+		return err
 	}
 
 	cloud := plugin.Spec.GetCloud()
@@ -169,9 +169,9 @@ func (c *customConnectPluginVersionCommand) createVersion(cmd *cobra.Command, ar
 		request.Spec.DocumentationLink = &documentationLink
 	}
 
-	pluginResp, httpResp, err := c.V2Client.GetCcpmCustomConnectPlugin(pluginId, environment)
+	pluginResp, err := c.V2Client.GetCcpmCustomConnectPlugin(pluginId, environment)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+		return err
 	}
 
 	// Use V2Client to call CCPM API

@@ -173,7 +173,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 
 	catalog := c.Context.GetCurrentFlinkCatalog()
 	if catalog == "" {
-		environment, _, err := c.V2Client.GetOrgEnvironment(environmentId)
+		environment, err := c.V2Client.GetOrgEnvironment(environmentId)
 		if err != nil {
 			return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
 		}
