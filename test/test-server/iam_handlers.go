@@ -420,7 +420,7 @@ func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 			res := &identityproviderv2.IamV2IdentityProvider{
-				Id:          req.Id,
+				Id:          identityproviderv2.PtrString(id),
 				DisplayName: req.DisplayName,
 				Description: req.Description,
 				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
