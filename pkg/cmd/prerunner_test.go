@@ -2,12 +2,12 @@ package cmd_test
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"testing"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
@@ -44,68 +44,47 @@ const (
 		"WF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
 )
 
-var (
-	mockLoginCredentialsManager = &climock.LoginCredentialsManager{
-		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-		GetPrerunCredentialsFromConfigFunc: func(_ *config.Config) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-		GetCloudCredentialsFromPromptFunc: func(_ string) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-		GetCredentialsFromKeychainFunc: func(_ bool, _, _ string) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-		GetCredentialsFromConfigFunc: func(_ *config.Config, _ config.MachineParams) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-	}
-	AuthTokenHandler = &climock.AuthTokenHandler{
-		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, _ string) (string, string, error) {
-			return "", "", nil
-		},
-		GetConfluentTokenFunc: func(_ *mdsv1.APIClient, _ *pauth.Credentials, _ bool) (string, string, error) {
-			return "", "", nil
-		},
-	}
-)
+func getPreRunBase(ctrl *gomock.Controller) *pcmd.PreRun {
+	loginCredentialsManager := climock.NewMockLoginCredentialsManager(ctrl)
+	loginCredentialsManager.EXPECT().GetCloudCredentialsFromEnvVar(gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return nil, nil
+	}).AnyTimes()
+	loginCredentialsManager.EXPECT().GetPrerunCredentialsFromConfig(gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return nil, nil
+	}).AnyTimes()
+	loginCredentialsManager.EXPECT().GetCloudCredentialsFromPrompt(gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return nil, nil
+	}).AnyTimes()
+	loginCredentialsManager.EXPECT().GetCredentialsFromKeychain(gomock.Any(), gomock.Any(), gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return nil, nil
+	}).AnyTimes()
+	loginCredentialsManager.EXPECT().GetCredentialsFromConfig(gomock.Any(), gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return nil, nil
+	}).AnyTimes()
 
-func getPreRunBase() *pcmd.PreRun {
+	authTokenHandler := climock.NewMockAuthTokenHandler(ctrl)
+	authTokenHandler.EXPECT().GetCCloudTokens(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", nil).AnyTimes()
+	authTokenHandler.EXPECT().GetConfluentToken(gomock.Any(), gomock.Any(), gomock.Any()).Return("", "", nil).AnyTimes()
+
+	ccloudClientFactory := climock.NewMockCCloudClientFactory(ctrl)
+	ccloudClientFactory.EXPECT().JwtHTTPClientFactory(gomock.Any(), gomock.Any(), gomock.Any()).Return(&ccloudv1.Client{}).AnyTimes()
+	ccloudClientFactory.EXPECT().AnonHTTPClientFactory(gomock.Any()).Return(&ccloudv1.Client{}).AnyTimes()
+
+	mdsClientManager := climock.NewMockMDSClientManager(ctrl)
+	mdsClientManager.EXPECT().GetMDSClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(&mdsv1.APIClient{}, nil).AnyTimes()
+
 	return &pcmd.PreRun{
-		Config:  config.AuthenticatedCloudConfigMock(),
-		Version: pmock.NewVersionMock(),
-		CCloudClientFactory: &climock.CCloudClientFactory{
-			JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
-				return &ccloudv1.Client{}
-			},
-			AnonHTTPClientFactoryFunc: func(baseURL string) *ccloudv1.Client {
-				return &ccloudv1.Client{}
-			},
-		},
-		MDSClientManager: &climock.MDSClientManager{
-			GetMDSClientFunc: func(_, _, _, _ string, _ bool) (*mdsv1.APIClient, error) {
-				return &mdsv1.APIClient{}, nil
-			},
-		},
-		LoginCredentialsManager: mockLoginCredentialsManager,
+		Config:                  config.AuthenticatedCloudConfigMock(),
+		Version:                 pmock.NewVersionMock(),
+		CCloudClientFactory:     ccloudClientFactory,
+		MDSClientManager:        mdsClientManager,
+		LoginCredentialsManager: loginCredentialsManager,
 		JWTValidator:            jwt.NewValidator(),
-		AuthTokenHandler:        AuthTokenHandler,
+		AuthTokenHandler:        authTokenHandler,
 	}
 }
 
-func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
+func TestPreRunAnonymousSetLoggingLevel(t *testing.T) {
 	cfg := &config.Config{IsTest: true, Contexts: map[string]*config.Context{}}
 	featureflags.Init(cfg)
 
@@ -118,7 +97,8 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 	}
 
 	for flags, level := range tests {
-		r := getPreRunBase()
+		ctrl := gomock.NewController(t)
+		r := getPreRunBase(ctrl)
 
 		cmd := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 		cmd.Flags().CountP("verbose", "v", "Increase verbosity")
@@ -132,11 +112,12 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 	}
 }
 
-func TestPreRun_TokenExpires(t *testing.T) {
+func TestPreRunTokenExpires(t *testing.T) {
 	cfg := config.AuthenticatedCloudConfigMock()
 	cfg.Context().State.AuthToken = expiredAuthTokenForDevCloud
 
-	r := getPreRunBase()
+	ctrl := gomock.NewController(t)
+	r := getPreRunBase(ctrl)
 	r.Config = cfg
 
 	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
@@ -205,46 +186,33 @@ func TestUpdateToken(t *testing.T) {
 
 			cfg.Context().State.AuthToken = test.authToken
 
-			r := getPreRunBase()
+			ctrl := gomock.NewController(t)
+			r := getPreRunBase(ctrl)
 			r.Config = cfg
 
-			r.LoginCredentialsManager = &climock.LoginCredentialsManager{
-				GetPrerunCredentialsFromConfigFunc: func(_ *config.Config) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return nil, nil
-					}
-				},
-				GetCredentialsFromKeychainFunc: func(_ bool, _, _ string) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return nil, nil
-					}
-				},
-				GetCredentialsFromConfigFunc: func(_ *config.Config, _ config.MachineParams) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return &pauth.Credentials{Username: "username", Password: "password"}, nil
-					}
-				},
-				GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return nil, nil
-					}
-				},
-				GetOnPremSsoCredentialsFromConfigFunc: func(_ *config.Config, _ bool) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return nil, nil
-					}
-				},
-				GetOnPremPrerunCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return nil, nil
-					}
-				},
-				GetOnPremCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return nil, nil
-					}
-				},
-			}
+			loginCredentialsManager := climock.NewMockLoginCredentialsManager(ctrl)
+			loginCredentialsManager.EXPECT().GetPrerunCredentialsFromConfig(gomock.Any()).Return(func() (*pauth.Credentials, error) {
+				return nil, nil
+			}).AnyTimes()
+			loginCredentialsManager.EXPECT().GetCredentialsFromKeychain(gomock.Any(), gomock.Any(), gomock.Any()).Return(func() (*pauth.Credentials, error) {
+				return nil, nil
+			}).AnyTimes()
+			loginCredentialsManager.EXPECT().GetCredentialsFromConfig(gomock.Any(), gomock.Any()).Return(func() (*pauth.Credentials, error) {
+				return &pauth.Credentials{Username: "username", Password: "password"}, nil
+			}).AnyTimes()
+			loginCredentialsManager.EXPECT().GetCloudCredentialsFromEnvVar(gomock.Any()).Return(func() (*pauth.Credentials, error) {
+				return nil, nil
+			}).AnyTimes()
+			loginCredentialsManager.EXPECT().GetOnPremSsoCredentialsFromConfig(gomock.Any(), gomock.Any()).Return(func() (*pauth.Credentials, error) {
+				return nil, nil
+			}).AnyTimes()
+			loginCredentialsManager.EXPECT().GetOnPremPrerunCredentialsFromEnvVar().Return(func() (*pauth.Credentials, error) {
+				return nil, nil
+			}).AnyTimes()
+			loginCredentialsManager.EXPECT().GetOnPremCredentialsFromEnvVar().Return(func() (*pauth.Credentials, error) {
+				return nil, nil
+			}).AnyTimes()
+			r.LoginCredentialsManager = loginCredentialsManager
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 			var rootCmd *pcmd.AuthenticatedCLICommand
@@ -262,7 +230,7 @@ func TestUpdateToken(t *testing.T) {
 	}
 }
 
-func TestPrerun_AutoLogin(t *testing.T) {
+func TestPrerunAutoLogin(t *testing.T) {
 	type credentialsFuncReturnValues struct {
 		creds *pauth.Credentials
 		err   error
@@ -361,68 +329,53 @@ func TestPrerun_AutoLogin(t *testing.T) {
 			err := pauth.PersistLogout(cfg)
 			require.NoError(t, err)
 
-			r := getPreRunBase()
+			ctrl := gomock.NewController(t)
+			r := getPreRunBase(ctrl)
 			r.Config = cfg
-			r.CCloudClientFactory = &climock.CCloudClientFactory{
-				JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
-					return &ccloudv1.Client{Auth: &ccloudv1mock.Auth{
-						UserFunc: func() (*ccloudv1.GetMeReply, error) {
-							return &ccloudv1.GetMeReply{
-								User:         &ccloudv1.User{Id: 23},
-								Organization: &ccloudv1.Organization{ResourceId: "o-123"},
-								Accounts:     []*ccloudv1.Account{{Id: "env-596", Name: "Default"}},
-							}, nil
-						},
-					}}
+
+			ccloudClientFactory := climock.NewMockCCloudClientFactory(ctrl)
+			ccloudClientFactory.EXPECT().JwtHTTPClientFactory(gomock.Any(), gomock.Any(), gomock.Any()).Return(&ccloudv1.Client{Auth: &ccloudv1mock.Auth{
+				UserFunc: func() (*ccloudv1.GetMeReply, error) {
+					return &ccloudv1.GetMeReply{
+						User:         &ccloudv1.User{Id: 23},
+						Organization: &ccloudv1.Organization{ResourceId: "o-123"},
+						Accounts:     []*ccloudv1.Account{{Id: "env-596", Name: "Default"}},
+					}, nil
 				},
-				AnonHTTPClientFactoryFunc: func(baseURL string) *ccloudv1.Client {
-					return &ccloudv1.Client{}
-				},
-			}
-			r.AuthTokenHandler = &climock.AuthTokenHandler{
-				GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, _ string) (string, string, error) {
-					return validAuthToken, "", nil
-				},
-				GetConfluentTokenFunc: func(_ *mdsv1.APIClient, _ *pauth.Credentials, _ bool) (string, string, error) {
-					return validAuthToken, "", nil
-				},
-			}
+			}}).AnyTimes()
+			ccloudClientFactory.EXPECT().AnonHTTPClientFactory(gomock.Any()).Return(&ccloudv1.Client{}).AnyTimes()
+			r.CCloudClientFactory = ccloudClientFactory
+
+			authTokenHandler := climock.NewMockAuthTokenHandler(ctrl)
+			authTokenHandler.EXPECT().GetCCloudTokens(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(validAuthToken, "", nil).AnyTimes()
+			authTokenHandler.EXPECT().GetConfluentToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(validAuthToken, "", nil).AnyTimes()
+			r.AuthTokenHandler = authTokenHandler
 
 			var ccloudEnvVarCalled bool
 			var ccloudConfigCalled bool
 			var ccloudKeychainCalled bool
 			var confluentEnvVarCalled bool
-			r.LoginCredentialsManager = &climock.LoginCredentialsManager{
-				GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						ccloudEnvVarCalled = true
-						return test.envVarReturn.creds, test.envVarReturn.err
-					}
-				},
-				GetPrerunCredentialsFromConfigFunc: func(_ *config.Config) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						ccloudConfigCalled = true
-						return test.configReturn.creds, test.configReturn.err
-					}
-				},
-				GetOnPremPrerunCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						confluentEnvVarCalled = true
-						return test.envVarReturn.creds, test.envVarReturn.err
-					}
-				},
-				GetCredentialsFromConfigFunc: func(_ *config.Config, _ config.MachineParams) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return nil, nil
-					}
-				},
-				GetCredentialsFromKeychainFunc: func(_ bool, _, _ string) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						ccloudKeychainCalled = true
-						return test.keychainReturn.creds, test.keychainReturn.err
-					}
-				},
-			}
+			loginCredentialsManager := climock.NewMockLoginCredentialsManager(ctrl)
+			loginCredentialsManager.EXPECT().GetCloudCredentialsFromEnvVar(gomock.Any()).Return(func() (*pauth.Credentials, error) {
+				ccloudEnvVarCalled = true
+				return test.envVarReturn.creds, test.envVarReturn.err
+			}).AnyTimes()
+			loginCredentialsManager.EXPECT().GetPrerunCredentialsFromConfig(gomock.Any()).Return(func() (*pauth.Credentials, error) {
+				ccloudConfigCalled = true
+				return test.configReturn.creds, test.configReturn.err
+			}).AnyTimes()
+			loginCredentialsManager.EXPECT().GetOnPremPrerunCredentialsFromEnvVar().Return(func() (*pauth.Credentials, error) {
+				confluentEnvVarCalled = true
+				return test.envVarReturn.creds, test.envVarReturn.err
+			}).AnyTimes()
+			loginCredentialsManager.EXPECT().GetCredentialsFromConfig(gomock.Any(), gomock.Any()).Return(func() (*pauth.Credentials, error) {
+				return nil, nil
+			}).AnyTimes()
+			loginCredentialsManager.EXPECT().GetCredentialsFromKeychain(gomock.Any(), gomock.Any(), gomock.Any()).Return(func() (*pauth.Credentials, error) {
+				ccloudKeychainCalled = true
+				return test.keychainReturn.creds, test.keychainReturn.err
+			}).AnyTimes()
+			r.LoginCredentialsManager = loginCredentialsManager
 
 			root := &cobra.Command{
 				Run: func(cmd *cobra.Command, args []string) {},
@@ -461,56 +414,48 @@ func TestPrerun_AutoLogin(t *testing.T) {
 	}
 }
 
-func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
+func TestPrerunReLoginToLastOrgUsed(t *testing.T) {
 	ccloudCreds := &pauth.Credentials{
 		Username: "username",
 		Password: "password",
 	}
-	r := getPreRunBase()
-	r.CCloudClientFactory = &climock.CCloudClientFactory{
-		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
-			return &ccloudv1.Client{Auth: &ccloudv1mock.Auth{
-				UserFunc: func() (*ccloudv1.GetMeReply, error) {
-					return &ccloudv1.GetMeReply{
-						User:         &ccloudv1.User{Id: 23},
-						Organization: &ccloudv1.Organization{ResourceId: "o-123"},
-						Accounts:     []*ccloudv1.Account{{Id: "env-596", Name: "Default"}},
-					}, nil
-				},
-			}}
+	ctrl := gomock.NewController(t)
+	r := getPreRunBase(ctrl)
+
+	ccloudClientFactory := climock.NewMockCCloudClientFactory(ctrl)
+	ccloudClientFactory.EXPECT().JwtHTTPClientFactory(gomock.Any(), gomock.Any(), gomock.Any()).Return(&ccloudv1.Client{Auth: &ccloudv1mock.Auth{
+		UserFunc: func() (*ccloudv1.GetMeReply, error) {
+			return &ccloudv1.GetMeReply{
+				User:         &ccloudv1.User{Id: 23},
+				Organization: &ccloudv1.Organization{ResourceId: "o-123"},
+				Accounts:     []*ccloudv1.Account{{Id: "env-596", Name: "Default"}},
+			}, nil
 		},
-		AnonHTTPClientFactoryFunc: func(baseURL string) *ccloudv1.Client {
-			return &ccloudv1.Client{}
-		},
-	}
-	r.AuthTokenHandler = &climock.AuthTokenHandler{
-		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, organizationId string) (string, string, error) {
-			require.Equal(t, "o-555", organizationId)
-			return validAuthToken, "", nil
-		},
-	}
-	r.LoginCredentialsManager = &climock.LoginCredentialsManager{
-		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return ccloudCreds, nil
-			}
-		},
-		GetPrerunCredentialsFromConfigFunc: func(_ *config.Config) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-		GetCredentialsFromConfigFunc: func(_ *config.Config, _ config.MachineParams) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-		GetCredentialsFromKeychainFunc: func(_ bool, _, _ string) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-	}
+	}}).AnyTimes()
+	ccloudClientFactory.EXPECT().AnonHTTPClientFactory(gomock.Any()).Return(&ccloudv1.Client{}).AnyTimes()
+	r.CCloudClientFactory = ccloudClientFactory
+
+	authTokenHandler := climock.NewMockAuthTokenHandler(ctrl)
+	authTokenHandler.EXPECT().GetCCloudTokens(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, organizationId string) (string, string, error) {
+		require.Equal(t, "o-555", organizationId)
+		return validAuthToken, "", nil
+	}).AnyTimes()
+	r.AuthTokenHandler = authTokenHandler
+
+	loginCredentialsManager := climock.NewMockLoginCredentialsManager(ctrl)
+	loginCredentialsManager.EXPECT().GetCloudCredentialsFromEnvVar(gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return ccloudCreds, nil
+	}).AnyTimes()
+	loginCredentialsManager.EXPECT().GetPrerunCredentialsFromConfig(gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return nil, nil
+	}).AnyTimes()
+	loginCredentialsManager.EXPECT().GetCredentialsFromConfig(gomock.Any(), gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return nil, nil
+	}).AnyTimes()
+	loginCredentialsManager.EXPECT().GetCredentialsFromKeychain(gomock.Any(), gomock.Any(), gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return nil, nil
+	}).AnyTimes()
+	r.LoginCredentialsManager = loginCredentialsManager
 
 	cfg := config.AuthenticatedToOrgCloudConfigMock(555, "o-555")
 	cfg.Context().Platform = &config.Platform{Name: "confluent.cloud", Server: "https://confluent.cloud"}
@@ -527,7 +472,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
+func TestPrerunAutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 	tests := []struct {
 		name    string
 		isCloud bool
@@ -552,21 +497,17 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 			cfg.Context().Platform.Server = "https://confluent.cloud"
 
 			var envVarCalled bool
-			mockLoginCredentialsManager := &climock.LoginCredentialsManager{
-				GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						envVarCalled = true
-						return nil, nil
-					}
-				},
-				GetCredentialsFromKeychainFunc: func(_ bool, _, _ string) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return nil, nil
-					}
-				},
-			}
+			ctrl := gomock.NewController(t)
+			mockLoginCredentialsManager := climock.NewMockLoginCredentialsManager(ctrl)
+			mockLoginCredentialsManager.EXPECT().GetCloudCredentialsFromEnvVar(gomock.Any()).Return(func() (*pauth.Credentials, error) {
+				envVarCalled = true
+				return nil, nil
+			}).AnyTimes()
+			mockLoginCredentialsManager.EXPECT().GetCredentialsFromKeychain(gomock.Any(), gomock.Any(), gomock.Any()).Return(func() (*pauth.Credentials, error) {
+				return nil, nil
+			}).AnyTimes()
 
-			r := getPreRunBase()
+			r := getPreRunBase(ctrl)
 			r.Config = cfg
 			r.LoginCredentialsManager = mockLoginCredentialsManager
 
@@ -593,7 +534,8 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 func TestInitializeOnPremKafkaRest(t *testing.T) {
 	cfg := config.AuthenticatedOnPremConfigMock()
 	cfg.Context().State.AuthToken = validAuthToken
-	r := getPreRunBase()
+	ctrl := gomock.NewController(t)
+	r := getPreRunBase(ctrl)
 	r.Config = cfg
 	cobraCmd := &cobra.Command{Use: "test"}
 	cobraCmd.Flags().CountP("verbose", "v", "Increase verbosity")
