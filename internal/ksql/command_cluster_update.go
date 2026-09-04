@@ -65,7 +65,7 @@ func (c *ksqlCommand) newUpdateCommand() *cobra.Command {
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.update,
-		Hidden:            true, // until cc-api #2507 merges + public SDK regenerates
+		Hidden:            true, // until the public SDK exposes the update method
 		Example:           buildUpdateExamples(),
 	}
 

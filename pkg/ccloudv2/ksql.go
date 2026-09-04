@@ -77,13 +77,10 @@ func (c *Client) CreateKsqlCluster(displayName, environmentId, kafkaClusterId, c
 // UpdateKsqlCluster issues PATCH /ksqldbcm/v2/clusters/{id} with
 // {"spec":{"environment":{"id":...},"csu":N}} to trigger a self-serve resize.
 //
-// Currently wired against ccloud-sdk-go-v2-internal/ksql (NOT the public
-// SDK) — cc-api PR #2507 (KSQL-14844) is held from merge until release-
-// ready per the cc-api owners' direction, and per @sgagniere the internal
-// SDK can be regenerated from the cc-api branch. Before merging cli #3368
-// to main, switch back to the public ccloud-sdk-go-v2/ksql SDK once
-// cc-api #2507 merges and the public SDK has a release with
-// UpdateKsqldbcmV2Cluster. See KSQL-14849 for the work item.
+// Currently wired against an internal SDK rather than the public
+// ccloud-sdk-go-v2/ksql module, which does not yet expose this method.
+// Switch back to the public SDK once it ships a release with
+// UpdateKsqldbcmV2Cluster, before merging to main.
 func (c *Client) UpdateKsqlCluster(id, environmentId string, csu int32) (ksqlv2.KsqldbcmV2Cluster, error) {
 	update := ksqlv2.KsqldbcmV2ClusterUpdate{
 		Spec: &ksqlv2.KsqldbcmV2ClusterSpecUpdate{
