@@ -1,6 +1,7 @@
 package asyncapi
 
 import (
+	stderrors "errors"
 	"fmt"
 	"os"
 	"slices"
@@ -213,7 +214,7 @@ func (c *command) addChannelToCluster(details *accountDetails, spec *Spec, topic
 	}
 	// If topic exists and overwrite flag is false, move to the next channel in spec
 	if topicExistedAlready && !overwrite {
-		return fmt.Errorf(parseErrorMessage)
+		return stderrors.New(parseErrorMessage)
 	}
 	// Register schema
 	schemaId, err := registerSchema(details, topicName, spec.Components)

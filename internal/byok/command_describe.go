@@ -1,7 +1,7 @@
 package byok
 
 import (
-	"fmt"
+	stderrors "errors"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -51,7 +51,7 @@ func (c *command) outputByokKeyDescription(cmd *cobra.Command, key byokv1.ByokV1
 		keyString = key.Key.ByokV1GcpKey.KeyId
 		roles = append(roles, key.Key.ByokV1GcpKey.GetSecurityGroup())
 	default:
-		return fmt.Errorf(byokUnknownKeyTypeErrorMsg)
+		return stderrors.New(byokUnknownKeyTypeErrorMsg)
 	}
 
 	table := output.NewTable(cmd)
