@@ -3,7 +3,6 @@ package testserver
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"slices"
@@ -310,7 +309,7 @@ func writeErrorJson(w http.ResponseWriter, message string) error {
 	if err != nil {
 		return err
 	}
-	_, err = io.WriteString(w, string(errorJson))
+	_, err = w.Write(errorJson)
 	return err
 }
 

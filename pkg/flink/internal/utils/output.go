@@ -11,7 +11,7 @@ import (
 
 func OutputErr(s string) {
 	c := fColor.New(color.ErrorColor)
-	output.Println(false, c.Sprintf(s))
+	output.Println(false, c.Sprint(s))
 }
 
 func OutputErrf(s string, args ...any) {

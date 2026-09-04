@@ -86,7 +86,7 @@ lint: lint-go lint-cli
 
 .PHONY: lint-go
 lint-go:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.0 && \
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8 && \
 	golangci-lint run --timeout 10m
 	@echo "✅  golangci-lint"
 
@@ -144,3 +144,12 @@ test: unit-test integration-test
 .PHONY: generate-packaging-patch
 generate-packaging-patch:
 	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
+
+.PHONY: coverage
+coverage: ## Merge coverage data from unit and integration tests into coverage.txt
+	@echo "Merging coverage data..."
+	@echo "mode: atomic" > coverage.txt
+	@tail -n +2 coverage.out >> coverage.txt
+	@tail -n +2 test/coverage.out >> coverage.txt
+	@echo "Coverage data saved to: coverage.txt"
+	@artifact push workflow coverage.txt

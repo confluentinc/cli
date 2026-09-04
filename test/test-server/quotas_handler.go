@@ -2,7 +2,6 @@ package testserver
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 	"testing"
 
@@ -69,7 +68,7 @@ func handleAppliedQuotas(t *testing.T) http.HandlerFunc {
 
 		reply, err := json.Marshal(quotaList)
 		require.NoError(t, err)
-		_, err = io.WriteString(w, string(reply))
+		_, err = w.Write(reply)
 		require.NoError(t, err)
 	}
 }
