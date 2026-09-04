@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
-	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/tableflow/v1"
+	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2/tableflow/v1"
 )
 
 // Handler for: "/tableflow/v1/tableflow-topics/{display_name}"
