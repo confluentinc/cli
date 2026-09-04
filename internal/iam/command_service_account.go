@@ -87,7 +87,7 @@ func (c *serviceAccountCommand) autocompleteServiceAccounts() []string {
 
 	suggestions := make([]string, len(serviceAccounts))
 	for i, serviceAccount := range serviceAccounts {
-		suggestions[i] = fmt.Sprintf("%s\t%s", serviceAccount.GetId(), serviceAccount.GetDisplayName())
+		suggestions[i] = fmt.Sprintf("%s\t%s: %s", serviceAccount.GetId(), serviceAccount.GetDisplayName(), serviceAccount.GetDescription())
 	}
 	return suggestions
 }

@@ -89,7 +89,7 @@ func (c *identityProviderCommand) autocompleteIdentityProviders() []string {
 
 	suggestions := make([]string, len(identityProviders))
 	for i, identityProvider := range identityProviders {
-		suggestions[i] = fmt.Sprintf("%s\t%s", identityProvider.GetId(), identityProvider.GetDisplayName())
+		suggestions[i] = fmt.Sprintf("%s\t%s: %s", identityProvider.GetId(), identityProvider.GetDisplayName(), identityProvider.GetDescription())
 	}
 	return suggestions
 }
