@@ -1,0 +1,4 @@
+    Name   |    Creation Time     |   Job ID   | Job State  
+-----------+----------------------+------------+------------
+  inst-001 | 2025-09-18T10:00:00Z | job-abc123 | RUNNING    
+  inst-002 | 2025-09-17T08:30:00Z | job-def456 | FINISHED   

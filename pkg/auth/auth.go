@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/dghubble/sling"
 
@@ -230,7 +231,10 @@ func GetDataplaneToken(ctx *config.Context) (string, error) {
 		Error string `json:"error"`
 	}{}
 
-	s := sling.New().Add("Content-Type", "application/json").Add("Authorization", "Bearer "+ctx.GetAuthToken()).Post(endpoint).BodyJSON(map[string]any{})
+	client := utils.DefaultClient() // Declare a new client so that sling doesn't use the global default
+	client.Timeout = 30 * time.Second
+
+	s := sling.New().Client(client).Add("Content-Type", "application/json").Add("Authorization", "Bearer "+ctx.GetAuthToken()).Post(endpoint).BodyJSON(map[string]any{})
 
 	req, err := s.Request()
 	if err != nil {

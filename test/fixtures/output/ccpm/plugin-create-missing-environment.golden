@@ -1,8 +1,8 @@
 +------------------+------------+
 | ID               | ccp-123456 |
-| Name             | my-plugin  |
-| Description      |            |
 | Cloud            | AWS        |
-| Runtime Language | JAVA       |
+| Name             | my-plugin  |
 | Environment      | env-596    |
+| Runtime Language | JAVA       |
+| Description      |            |
 +------------------+------------+

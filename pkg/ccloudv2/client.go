@@ -102,7 +102,7 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		ApiKeysClient:                newApiKeysClient(httpClient, url, userAgent, unsafeTrace),
 		BillingClient:                newBillingClient(httpClient, url, userAgent, unsafeTrace),
 		ByokClient:                   newByokV1Client(httpClient, url, userAgent, unsafeTrace),
-		CcpmClient:                   newCCPMClient(httpClient, url, userAgent, unsafeTrace),
+		CcpmClient:                   newCcpmClient(httpClient, url, userAgent, unsafeTrace),
 		CdxClient:                    newCdxClient(httpClient, url, userAgent, unsafeTrace),
 		CertificateAuthorityClient:   newCertificateAuthorityClient(httpClient, url, userAgent, unsafeTrace),
 		CliClient:                    newCliClient(url, userAgent, unsafeTrace),

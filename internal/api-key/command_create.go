@@ -171,8 +171,15 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if resourceType == resource.KafkaCluster {
+	switch resourceType {
+	case resource.KafkaCluster:
 		if err := c.keystore.StoreAPIKey(c.V2Client, userKey, resourceId); err != nil {
+			return fmt.Errorf(unableToStoreApiKeyErrorMsg, err)
+		}
+	case resource.Global:
+		// Global keys' secrets are irretrievable after creation, so always store them locally — same
+		// rationale as Kafka cluster keys. The user can still copy the printed secret if they want.
+		if err := c.keystore.StoreGlobalAPIKey(userKey); err != nil {
 			return fmt.Errorf(unableToStoreApiKeyErrorMsg, err)
 		}
 	}
@@ -182,13 +189,23 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if use {
-		if resourceType != resource.KafkaCluster {
+		switch resourceType {
+		case resource.KafkaCluster:
+			if err := c.useAPIKey(userKey.Key, resourceId); err != nil {
+				return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, userKey.Key))
+			}
+			output.Printf(c.Config.EnableColor, useAPIKeyMsg, userKey.Key)
+		case resource.Global:
+			if err := c.Context.SetActiveGlobalAPIKey(userKey.Key); err != nil {
+				return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, userKey.Key))
+			}
+			if err := c.Config.Save(); err != nil {
+				return err
+			}
+			output.Printf(c.Config.EnableColor, useGlobalAPIKeyMsg, userKey.Key)
+		default:
 			return fmt.Errorf("`--use` set but ineffective: %s", nonKafkaNotImplementedErrorMsg)
 		}
-		if err := c.useAPIKey(userKey.Key, resourceId); err != nil {
-			return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, userKey.Key))
-		}
-		output.Printf(c.Config.EnableColor, useAPIKeyMsg, userKey.Key)
 	}
 
 	return nil

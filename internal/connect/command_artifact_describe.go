@@ -43,7 +43,7 @@ func (c *artifactCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if _, err = c.V2Client.GetOrgEnvironment(environment); err != nil {
+	if _, _, err = c.V2Client.GetOrgEnvironment(environment); err != nil {
 		return fmt.Errorf("environment '%s' not found", environment)
 	}
 

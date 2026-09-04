@@ -143,7 +143,7 @@ func (c *command) produceCloud(cmd *cobra.Command, args []string) error {
 		cluster.Bootstrap = bootstrap
 	}
 
-	if err := addApiKeyToCluster(cmd, cluster); err != nil {
+	if err := addApiKeyToCluster(cmd, c.Context, cluster); err != nil {
 		return err
 	}
 
@@ -184,7 +184,7 @@ func (c *command) produceCloud(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	producer, err := newProducer(cluster, c.clientID, configFile, config)
+	producer, err := newProducer(c.Context, cluster, c.clientID, configFile, config)
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateProducerErrorMsg, err)
 	}

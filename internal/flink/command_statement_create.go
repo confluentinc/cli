@@ -19,12 +19,12 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/retry"
 )
 
-func (c *command) newStatementCreateCommand() *cobra.Command {
+func (c *statementCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create [name]",
 		Short: "Create a Flink SQL statement.",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  c.statementCreate,
+		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a Flink SQL statement in the current compute pool.",
@@ -37,30 +37,32 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 		),
 	}
 
+	// Required flags
 	cmd.Flags().String("sql", "", "The Flink SQL statement.")
-	c.addComputePoolFlag(cmd)
+	cobra.CheckErr(cmd.MarkFlagRequired("sql"))
+
+	// Optional flags
+	pcmd.AddComputePoolFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
-	c.addDatabaseFlag(cmd)
+	pcmd.AddDatabaseFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Bool("wait", false, "Block until the statement is running or has failed.")
 	cmd.Flags().StringSlice("property", []string{}, "A mechanism to pass properties in the form key=value when creating a Flink statement.")
+	pcmd.AddCloudFlag(cmd)
+	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
-	pcmd.AddCloudFlag(cmd)
-	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
-
-	cobra.CheckErr(cmd.MarkFlagRequired("sql"))
 
 	return cmd
 }
 
-func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
+func (c *statementCommand) create(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	environment, err := c.V2Client.GetOrgEnvironment(environmentId)
+	environment, _, err := c.V2Client.GetOrgEnvironment(environmentId)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
 	}
@@ -173,6 +175,8 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	warnings := types.NewStatementWarnings(statement.Status.GetWarnings())
+
 	table := output.NewTable(cmd)
 	table.Add(&statementOut{
 		CreationDate: statement.Metadata.GetCreatedAt(),
@@ -181,7 +185,13 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		ComputePool:  statement.Spec.GetComputePoolId(),
 		Status:       statement.Status.GetPhase(),
 		StatusDetail: statement.Status.GetDetail(),
+		Warnings:     warnings,
 	})
-	table.Filter([]string{"CreationDate", "Name", "Statement", "ComputePool", "Status", "StatusDetail"})
-	return table.Print()
+	table.Filter([]string{"CreationDate", "Name", "Statement", "ComputePool", "Status", "StatusDetail", "Warnings"})
+	if err := table.Print(); err != nil {
+		return err
+	}
+
+	printStatementWarnings(cmd, warnings)
+	return nil
 }

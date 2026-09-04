@@ -21,12 +21,11 @@ import (
 
 func (c *command) newStatementCreateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "create [name]",
-		Short:       "Create a Flink SQL statement.",
-		Long:        "Create a Flink SQL statement in Confluent Platform.",
-		Args:        cobra.MaximumNArgs(1),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
-		RunE:        c.statementCreateOnPrem,
+		Use:   "create [name]",
+		Short: "Create a Flink SQL statement.",
+		Long:  "Create a Flink SQL statement in Confluent Platform.",
+		Args:  cobra.MaximumNArgs(1),
+		RunE:  c.statementCreateOnPrem,
 	}
 
 	cmd.Flags().String("sql", "", "The Flink SQL statement.")

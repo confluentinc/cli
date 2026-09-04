@@ -12,6 +12,9 @@
 # Local agent/tooling artifacts
 /.planning/
 
+# Editor/IDE
+/.idea/
+
 # RPM/DEB
 /rpm/
 /deb/
@@ -325,3 +328,6 @@ flycheck_*.el
 # Chart dependencies
 **/charts/*.tgz
 charts/package/
+
+# Generated binary for manual testing agentdetect pkg
+agentdetect-debug

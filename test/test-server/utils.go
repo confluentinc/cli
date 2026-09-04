@@ -189,6 +189,18 @@ func fillKeyStoreV2() {
 			Description: apikeysv2.PtrString(""),
 		},
 	}
+	keyStoreV2["UIGLOBALKEY100"] = &apikeysv2.IamV2ApiKey{
+		Id: apikeysv2.PtrString("UIGLOBALKEY100"),
+		Spec: &apikeysv2.IamV2ApiKeySpec{
+			Resource: &apikeysv2.ObjectReference{
+				Id:         "global",
+				ApiVersion: apikeysv2.PtrString("iam/v2"),
+				Kind:       apikeysv2.PtrString("Global"),
+			},
+			Owner:       &apikeysv2.ObjectReference{Id: "u-22bbb"},
+			Description: apikeysv2.PtrString(""),
+		},
+	}
 	keyStoreV2["SERVICEACCOUNTKEY1"] = &apikeysv2.IamV2ApiKey{
 		Id: apikeysv2.PtrString("SERVICEACCOUNTKEY1"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{

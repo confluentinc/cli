@@ -59,6 +59,9 @@ type CLITest struct {
 	exitCode int
 	// If true, don't reset the config/state between tests to enable testing CLI workflows
 	workflow bool
+	// If true, run the CLI from a private copy of the test binary; for tests which replace
+	// the running binary, such as `confluent update`
+	isolatedBin bool
 	// An optional function that allows you to specify other calls
 	wantFunc func(t *testing.T)
 	input    string
@@ -118,6 +121,11 @@ func (s *CLITestSuite) runIntegrationTest(test CLITest) {
 			resetConfiguration(t, test.arePluginsEnabled)
 		}
 
+		bin := testBin
+		if test.isolatedBin {
+			bin = copyTestBin(t)
+		}
+
 		// Executes login command if test specifies
 		switch test.login {
 		case "cloud":
@@ -135,34 +143,34 @@ func (s *CLITestSuite) runIntegrationTest(test CLITest) {
 				}
 			}()
 
-			output := runCommand(t, testBin, env, loginString, 0, "")
+			output := runCommand(t, bin, env, loginString, 0, "")
 			if *debug {
 				fmt.Println(output)
 			}
 		case "onprem":
 			loginURL := s.getLoginURL(false, test)
 			env := []string{pauth.ConfluentPlatformUsername + "=fake@user.com", pauth.ConfluentPlatformPassword + "=pass1"}
-			output := runCommand(t, testBin, env, "login --url "+loginURL, 0, "")
+			output := runCommand(t, bin, env, "login --url "+loginURL, 0, "")
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
 		if test.useKafka != "" {
-			output := runCommand(t, testBin, []string{}, fmt.Sprintf("kafka cluster use %s", test.useKafka), 0, "")
+			output := runCommand(t, bin, []string{}, fmt.Sprintf("kafka cluster use %s", test.useKafka), 0, "")
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
 		if test.authKafka {
-			output := runCommand(t, testBin, []string{}, fmt.Sprintf("api-key create --resource %s --use", test.useKafka), 0, "")
+			output := runCommand(t, bin, []string{}, fmt.Sprintf("api-key create --resource %s --use", test.useKafka), 0, "")
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
-		output := runCommand(t, testBin, test.env, test.args, test.exitCode, test.input)
+		output := runCommand(t, bin, test.env, test.args, test.exitCode, test.input)
 		if *debug {
 			fmt.Println(output)
 		}
@@ -205,6 +213,30 @@ func (s *CLITestSuite) validateTestOutput(test CLITest, t *testing.T, output str
 	}
 }
 
+// copyTestBin copies the test binary into its own temporary directory and returns the
+// absolute path to the copy. `confluent update` replaces the running binary and leaves a
+// `.confluent.exe.old` sidecar beside it; on Windows that sidecar stays locked by the
+// process which just exited, so consecutive updates sharing a directory fail to rename
+// over it. Giving each test its own directory keeps those sidecars from colliding, and
+// leaves the shared test binary untouched.
+func copyTestBin(t *testing.T) string {
+	// SetupSuite has already suffixed testBin with ".exe" on Windows.
+	binary, err := os.ReadFile(testBin)
+	require.NoError(t, err)
+
+	dir, err := os.MkdirTemp("", "confluent-test-bin")
+	require.NoError(t, err)
+
+	// Best effort: on Windows the sidecar may still be locked by the process which just
+	// exited, and failing to clean up a temporary directory shouldn't fail the test.
+	t.Cleanup(func() { _ = os.RemoveAll(dir) })
+
+	path := filepath.Join(dir, filepath.Base(testBin))
+	require.NoError(t, os.WriteFile(path, binary, 0755))
+
+	return path
+}
+
 func runCommand(t *testing.T, binaryName string, env []string, argString string, exitCode int, input string) string {
 	dir, err := os.Getwd()
 	require.NoError(t, err)
@@ -221,7 +253,12 @@ func runCommand(t *testing.T, binaryName string, env []string, argString string,
 	args, err := shlex.Split(argString)
 	require.NoError(t, err)
 
-	cmd := exec.Command(filepath.Join(dir, binaryName), args...)
+	binaryPath := binaryName
+	if !filepath.IsAbs(binaryPath) {
+		binaryPath = filepath.Join(dir, binaryPath)
+	}
+
+	cmd := exec.Command(binaryPath, args...)
 	cmd.Env = append(os.Environ(), env...)
 	cmd.Stdin = strings.NewReader(input)
 

@@ -10,6 +10,7 @@
   "region": "us-east-1",
   "availability": "single-zone",
   "status": "PROVISIONING",
+  "deletion_protection": false,
   "endpoint": "SASL_SSL://kafka-endpoint",
   "rest_endpoint": "https://pkc-endpoint"
 }

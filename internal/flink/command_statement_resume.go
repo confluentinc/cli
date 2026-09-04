@@ -13,12 +13,12 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
-func (c *command) newStatementResumeCommand() *cobra.Command {
+func (c *statementCommand) newStatementResumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "resume <name>",
 		Short:             "Resume a Flink SQL statement.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgs),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.statementResume,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -45,7 +45,7 @@ func (c *command) newStatementResumeCommand() *cobra.Command {
 	}
 
 	c.addPrincipalFlag(cmd)
-	c.addComputePoolFlag(cmd)
+	pcmd.AddComputePoolFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -54,7 +54,7 @@ func (c *command) newStatementResumeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) statementResume(cmd *cobra.Command, args []string) error {
+func (c *statementCommand) statementResume(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err

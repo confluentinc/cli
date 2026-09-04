@@ -647,6 +647,12 @@ func handleSRDeks(t *testing.T) http.HandlerFunc {
 			var req srsdk.CreateDekRequest
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
+			// An unset --encrypted-key-material flag must be omitted from the request,
+			// not sent as an empty string. A present-but-empty value is treated by the
+			// backend as caller-supplied ciphertext and breaks DEK generation on shared KEKs.
+			if req.EncryptedKeyMaterial != nil {
+				require.NotEmpty(t, req.GetEncryptedKeyMaterial())
+			}
 			res := srsdk.Dek{
 				KekName:              srsdk.PtrString("kek-name"),
 				Algorithm:            req.Algorithm,

@@ -1,0 +1,25 @@
+Register a USM Kafka cluster.
+
+Usage:
+  confluent usm kafka-cluster register <confluent-platform-kafka-cluster-id> [flags]
+
+Aliases:
+  register, create
+
+Examples:
+Register a Confluent Platform Kafka cluster with the ID 4k0R9d1GTS5tI9f4Y2xZ0Q.
+
+  $ confluent usm kafka-cluster register 4k0R9d1GTS5tI9f4Y2xZ0Q --name my-kafka-cluster --cloud aws --region us-east-1
+
+Flags:
+      --name string          REQUIRED: A human-readable name for the Confluent Platform Kafka cluster.
+      --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string        REQUIRED: The home region of the Confluent Platform Kafka cluster where the metadata should be stored.
+      --environment string   Environment ID.
+      --context string       CLI context name.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

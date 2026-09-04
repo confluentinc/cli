@@ -83,7 +83,7 @@ func validateUserProvidedFlinkEndpoint(endpoint, cloud, region string, c *comman
 		return false, err
 	}
 
-	endpoints, err := c.V2Client.ListEndpoints(environmentId, cloud, region, flinkEndpointService, nil, "")
+	endpoints, err := c.V2Client.ListEndpoints(cloud, region, flinkEndpointService, nil, environmentId, "")
 	if err != nil {
 		return false, err
 	}

@@ -5,78 +5,94 @@ import (
 
 	"github.com/spf13/cobra"
 
-	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
-
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
+type statementCommand struct {
+	*pcmd.AuthenticatedCLICommand
+}
+
+var allowedStatuses = []string{
+	"pending",
+	"running",
+	"completed",
+	"deleting",
+	"failing",
+	"failed",
+	"stopped",
+}
+
+// printStatementWarnings renders warnings below the table, on stderr so that stdout stays the
+// command's data. Serialized output already carries them in the warnings field.
+func printStatementWarnings(cmd *cobra.Command, warnings []types.StatementWarning) {
+	if output.GetFormat(cmd) != output.Human {
+		return
+	}
+
+	if block := types.FormatStatementWarnings(warnings); block != "" {
+		output.ErrPrintln(false, "")
+		output.ErrPrintln(false, block)
+		output.ErrPrintln(false, "")
+	}
+}
+
 type statementOut struct {
-	CreationDate           time.Time         `human:"Creation Date" serialized:"creation_date"`
-	Name                   string            `human:"Name" serialized:"name"`
-	Statement              string            `human:"Statement" serialized:"statement"`
-	ComputePool            string            `human:"Compute Pool,omitempty" serialized:"compute_pool,omitempty"`
-	Status                 string            `human:"Status" serialized:"status"`
-	StatusDetail           string            `human:"Status Detail,omitempty" serialized:"status_detail,omitempty"`
-	LatestOffsets          map[string]string `human:"Latest Offsets" serialized:"latest_offsets"`
-	LatestOffsetsTimestamp *time.Time        `human:"Latest Offsets Timestamp" serialized:"latest_offsets_timestamp"`
+	CreationDate           time.Time                `human:"Creation Date" serialized:"creation_date"`
+	Name                   string                   `human:"Name" serialized:"name"`
+	Statement              string                   `human:"Statement" serialized:"statement"`
+	ComputePool            string                   `human:"Compute Pool,omitempty" serialized:"compute_pool,omitempty"`
+	Status                 string                   `human:"Status" serialized:"status"`
+	StatusDetail           string                   `human:"Status Detail,omitempty" serialized:"status_detail,omitempty"`
+	Warnings               []types.StatementWarning `human:"-" serialized:"warnings,omitempty"`
+	LatestOffsets          map[string]string        `human:"Latest Offsets" serialized:"latest_offsets"`
+	LatestOffsetsTimestamp *time.Time               `human:"Latest Offsets Timestamp" serialized:"latest_offsets_timestamp"`
 }
 
-type statementOutOnPrem struct {
-	CreationDate string `human:"Creation Date" serialized:"creation_date"`
-	Name         string `human:"Name" serialized:"name"`
-	Statement    string `human:"Statement" serialized:"statement"`
-	ComputePool  string `human:"Compute Pool" serialized:"compute_pool"`
-	Status       string `human:"Status" serialized:"status"`
-	StatusDetail string `human:"Status Detail,omitempty" serialized:"status_detail,omitempty"`
-	Parallelism  int32  `human:"Parallelism" serialized:"parallelism"`
-	Stopped      bool   `human:"Stopped" serialized:"stopped"`
-	SqlKind      string `human:"SQL Kind,omitempty" serialized:"sql_kind,omitempty"`
-	AppendOnly   bool   `human:"Append Only,omitempty" serialized:"append_only,omitempty"`
-	Bounded      bool   `human:"Bounded,omitempty" serialized:"bounded,omitempty"`
-}
-
-func (c *command) newStatementCommand(cfg *config.Config) *cobra.Command {
+func newStatementCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command { //nolint:unparam
 	cmd := &cobra.Command{
-		Use:   "statement",
-		Short: "Manage Flink SQL statements.",
+		Use:         "statement",
+		Short:       "Manage Flink SQL statements in Confluent Cloud.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	if cfg.IsCloudLogin() {
-		cmd.AddCommand(c.newStatementCreateCommand())
-		cmd.AddCommand(c.newStatementDeleteCommand())
-		cmd.AddCommand(c.newStatementDescribeCommand())
-		cmd.AddCommand(c.newStatementListCommand())
-		cmd.AddCommand(c.newStatementResumeCommand())
-		cmd.AddCommand(c.newStatementStopCommand())
-		cmd.AddCommand(c.newStatementUpdateCommand())
-	} else {
-		cmd.AddCommand(c.newStatementCreateCommandOnPrem())
-		cmd.AddCommand(c.newStatementDeleteCommandOnPrem())
-		cmd.AddCommand(c.newStatementDescribeCommandOnPrem())
-		cmd.AddCommand(c.newStatementListCommandOnPrem())
-		cmd.AddCommand(c.newStatementRescaleCommandOnPrem())
-		cmd.AddCommand(c.newStatementResumeCommandOnPrem())
-		cmd.AddCommand(c.newStatementStopCommandOnPrem())
-		cmd.AddCommand(c.newStatementWebUiForwardCommand())
+	c := &statementCommand{
+		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner),
 	}
-	cmd.AddCommand(c.newStatementExceptionCommand(cfg))
+
+	cmd.AddCommand(
+		c.newCreateCommand(),
+		c.newDeleteCommand(),
+		c.newDescribeCommand(),
+		c.newStatementExceptionCommand(),
+		c.newListCommand(),
+		c.newStatementResumeCommand(),
+		c.newStatementStopCommand(),
+		c.newUpdateCommand(),
+	)
 
 	return cmd
 }
 
-func (c *command) validStatementArgs(cmd *cobra.Command, args []string) []string {
+func (c *statementCommand) validArgs(cmd *cobra.Command, args []string) []string {
 	if len(args) > 0 {
 		return nil
 	}
 
-	return c.validStatementArgsMultiple(cmd, args)
+	return c.validArgsMultiple(cmd, args)
 }
 
-func (c *command) validStatementArgsMultiple(cmd *cobra.Command, args []string) []string {
+func (c *statementCommand) validArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}
 
+	return c.autocompleteStatements()
+}
+
+func (c *statementCommand) autocompleteStatements() []string {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil
@@ -97,75 +113,4 @@ func (c *command) validStatementArgsMultiple(cmd *cobra.Command, args []string) 
 		suggestions[i] = statement.GetName()
 	}
 	return suggestions
-}
-
-func convertSdkStatementToLocalStatement(outputStatement cmfsdk.Statement) LocalStatement {
-	localStmt := LocalStatement{
-		ApiVersion: outputStatement.ApiVersion,
-		Kind:       outputStatement.Kind,
-		Metadata: LocalStatementMetadata{
-			Name:              outputStatement.Metadata.Name,
-			CreationTimestamp: outputStatement.Metadata.CreationTimestamp,
-			UpdateTimestamp:   outputStatement.Metadata.UpdateTimestamp,
-			Uid:               outputStatement.Metadata.Uid,
-			Labels:            outputStatement.Metadata.Labels,
-			Annotations:       outputStatement.Metadata.Annotations,
-		},
-		Spec: LocalStatementSpec{
-			Statement:          outputStatement.Spec.Statement,
-			Properties:         outputStatement.Spec.Properties,
-			FlinkConfiguration: outputStatement.Spec.FlinkConfiguration,
-			ComputePoolName:    outputStatement.Spec.ComputePoolName,
-			Parallelism:        outputStatement.Spec.Parallelism,
-			Stopped:            outputStatement.Spec.Stopped,
-		},
-	}
-
-	if outputStatement.Status != nil {
-		localStatus := &LocalStatementStatus{
-			Phase:  outputStatement.Status.Phase,
-			Detail: outputStatement.Status.Detail,
-		}
-
-		if outputStatement.Status.Traits != nil {
-			localTraits := &LocalStatementTraits{
-				SqlKind:       outputStatement.Status.Traits.SqlKind,
-				IsBounded:     outputStatement.Status.Traits.IsBounded,
-				IsAppendOnly:  outputStatement.Status.Traits.IsAppendOnly,
-				UpsertColumns: outputStatement.Status.Traits.UpsertColumns,
-			}
-
-			if outputStatement.Status.Traits.Schema != nil {
-				localSchema := &LocalResultSchema{}
-				if outputStatement.Status.Traits.Schema.Columns != nil {
-					localSchema.Columns = make([]LocalResultSchemaColumn, 0, len(outputStatement.Status.Traits.Schema.Columns))
-					for _, sdkCol := range outputStatement.Status.Traits.Schema.Columns {
-						localSchema.Columns = append(localSchema.Columns, LocalResultSchemaColumn{
-							Name: sdkCol.Name,
-							Type: copyDataType(sdkCol.Type),
-						})
-					}
-				}
-				localTraits.Schema = localSchema
-			}
-			localStatus.Traits = localTraits
-		}
-		localStmt.Status = localStatus
-	}
-
-	if outputStatement.Result != nil {
-		localStmt.Result = &LocalStatementResult{
-			ApiVersion: outputStatement.Result.ApiVersion,
-			Kind:       outputStatement.Result.Kind,
-			Metadata: LocalStatementResultMetadata{
-				CreationTimestamp: outputStatement.Result.Metadata.CreationTimestamp,
-				Annotations:       outputStatement.Result.Metadata.Annotations,
-			},
-			Results: LocalStatementResults{
-				Data: outputStatement.Result.Results.Data,
-			},
-		}
-	}
-
-	return localStmt
 }

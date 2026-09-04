@@ -12,6 +12,7 @@
 | Availability         | single-zone                         |
 | Network              | n-abcde1                            |
 | Status               | PROVISIONING                        |
+| Deletion Protection  | false                               |
 | Endpoint             |                                     |
 | REST Endpoint        |                                     |
 +----------------------+-------------------------------------+
