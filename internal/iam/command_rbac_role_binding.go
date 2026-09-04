@@ -2,6 +2,7 @@ package iam
 
 import (
 	"context"
+	stderrors "errors"
 	"fmt"
 	"net/http"
 	"slices"
@@ -603,15 +604,15 @@ func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, 
 			return "", err
 		}
 		if clusterScopedRolesV2.Contains(role) && !cmd.Flags().Changed("cloud-cluster") {
-			return "", fmt.Errorf(specifyCloudClusterErrorMsg)
+			return "", stderrors.New(specifyCloudClusterErrorMsg)
 		}
 		if (environmentScopedRoles[role] || clusterScopedRolesV2.Contains(role)) && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
-			return "", fmt.Errorf(specifyEnvironmentErrorMsg)
+			return "", stderrors.New(specifyEnvironmentErrorMsg)
 		}
 	}
 
 	if cmd.Flags().Changed("cloud-cluster") && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
-		return "", fmt.Errorf(specifyEnvironmentErrorMsg)
+		return "", stderrors.New(specifyEnvironmentErrorMsg)
 	}
 	return crnPattern, nil
 }

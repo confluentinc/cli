@@ -202,7 +202,7 @@ func (c *command) getReleaseNotes(cliName, latestBinaryVersion string) string {
 	}
 
 	if errMsg != "" {
-		log.CliLogger.Debugf(errMsg)
+		log.CliLogger.Debug(errMsg)
 		return ""
 	}
 
