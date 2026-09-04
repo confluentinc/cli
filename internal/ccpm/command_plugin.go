@@ -94,7 +94,7 @@ func (c *customConnectPluginCommand) autocompleteCustomConnectPlugins() []string
 	suggestions := make([]string, len(customConnectPlugins))
 	for i, customConnectPlugin := range customConnectPlugins {
 		spec := customConnectPlugin.GetSpec()
-		suggestions[i] = fmt.Sprintf("%s\t%s", customConnectPlugin.GetId(), spec.GetDisplayName())
+		suggestions[i] = fmt.Sprintf("%s\t%s: %s", customConnectPlugin.GetId(), spec.GetDisplayName(), spec.GetDescription())
 	}
 	return suggestions
 }
