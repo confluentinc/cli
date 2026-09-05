@@ -36,25 +36,28 @@ func (c *Client) CreateCCPMPresignedUrl(req ccpmv1.CcpmV1PresignedUrl) (ccpmv1.C
 
 // ===== CCPM custom Connect plugins API calls =====
 
-func (c *Client) CreateCcpmCustomConnectPlugin(req ccpmv1.CcpmV1CustomConnectPlugin) (ccpmv1.CcpmV1CustomConnectPlugin, *http.Response, error) {
+func (c *Client) CreateCcpmCustomConnectPlugin(req ccpmv1.CcpmV1CustomConnectPlugin) (ccpmv1.CcpmV1CustomConnectPlugin, error) {
 	createReq := c.CcpmClient.CustomConnectPluginsCcpmV1Api.
 		CreateCcpmV1CustomConnectPlugin(c.ccpmApiContext()).
 		CcpmV1CustomConnectPlugin(req)
-	return createReq.Execute()
+	res, httpResp, err := createReq.Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) GetCcpmCustomConnectPlugin(id string, environment string) (ccpmv1.CcpmV1CustomConnectPlugin, *http.Response, error) {
+func (c *Client) GetCcpmCustomConnectPlugin(id string, environment string) (ccpmv1.CcpmV1CustomConnectPlugin, error) {
 	getReq := c.CcpmClient.CustomConnectPluginsCcpmV1Api.
 		GetCcpmV1CustomConnectPlugin(c.ccpmApiContext(), id)
 	getReq = getReq.Environment(environment)
-	return getReq.Execute()
+	res, httpResp, err := getReq.Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateCcpmCustomConnectPlugin(id string, update ccpmv1.CcpmV1CustomConnectPluginUpdate) (ccpmv1.CcpmV1CustomConnectPlugin, *http.Response, error) {
+func (c *Client) UpdateCcpmCustomConnectPlugin(id string, update ccpmv1.CcpmV1CustomConnectPluginUpdate) (ccpmv1.CcpmV1CustomConnectPlugin, error) {
 	updateReq := c.CcpmClient.CustomConnectPluginsCcpmV1Api.
 		UpdateCcpmV1CustomConnectPlugin(c.ccpmApiContext(), id).
 		CcpmV1CustomConnectPluginUpdate(update)
-	return updateReq.Execute()
+	res, httpResp, err := updateReq.Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DeleteCcpmCustomConnectPlugin(id string, environment string) error {
