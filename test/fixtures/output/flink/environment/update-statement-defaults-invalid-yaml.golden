@@ -1,0 +1,5 @@
+Error: failed to parse statement defaults: yaml: unmarshal errors:
+  line 1: field config-overrides not found in type flink.LocalAllStatementDefaults1
+
+Suggestions:
+    Provide statement defaults matching the expected shape, for example: {"detached":{"flinkConfiguration":{...}},"interactive":{"flinkConfiguration":{...}}}.
