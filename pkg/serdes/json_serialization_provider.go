@@ -23,7 +23,7 @@ type JsonSerializationProvider struct {
 	ser *jsonschema.Serializer
 }
 
-func (j *JsonSerializationProvider) InitSerializer(srClientUrl, srClusterId, mode string, schemaId int, srAuth SchemaRegistryAuth) error {
+func (j *JsonSerializationProvider) InitSerializer(srClientUrl, srClusterId, kafkaClusterId, mode string, schemaId int, srAuth SchemaRegistryAuth) error {
 	serdeClient, err := initSchemaRegistryClient(srClientUrl, srClusterId, srAuth, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create serializer-specific Schema Registry client: %w", err)
@@ -62,6 +62,8 @@ func (j *JsonSerializationProvider) InitSerializer(srClientUrl, srClusterId, mod
 		serdeConfig.UseSchemaID = schemaId
 		serdeConfig.UseLatestVersion = false
 	}
+
+	serdeConfig.SubjectNameStrategyType, serdeConfig.SubjectNameStrategyConfig = subjectStrategy(kafkaClusterId)
 
 	var serdeType serde.Type
 	if mode == "key" {
