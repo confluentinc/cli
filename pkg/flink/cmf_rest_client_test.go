@@ -1,11 +1,88 @@
 package flink
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
+
+func TestGetApplicationName(t *testing.T) {
+	tests := []struct {
+		name        string
+		application cmfsdk.FlinkApplication
+		wantName    string
+		wantErr     string
+	}{
+		{
+			name:        "valid name",
+			application: cmfsdk.FlinkApplication{Metadata: map[string]interface{}{"name": "my-application"}},
+			wantName:    "my-application",
+		},
+		{
+			name:        "missing name",
+			application: cmfsdk.FlinkApplication{Metadata: map[string]interface{}{}},
+			wantErr:     `application name is required: ensure the resource file contains a non-empty "metadata.name" field`,
+		},
+		{
+			name:        "empty name",
+			application: cmfsdk.FlinkApplication{Metadata: map[string]interface{}{"name": ""}},
+			wantErr:     `application name is required: ensure the resource file contains a non-empty "metadata.name" field`,
+		},
+		{
+			name:        "non-string name",
+			application: cmfsdk.FlinkApplication{Metadata: map[string]interface{}{"name": 123}},
+			wantErr:     `application name is required: ensure the resource file contains a non-empty "metadata.name" field`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotName, err := getApplicationName(tt.application)
+			if tt.wantErr != "" {
+				require.EqualError(t, err, tt.wantErr)
+				require.Empty(t, gotName)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, tt.wantName, gotName)
+		})
+	}
+}
+
+func TestApplicationMethodsRejectInvalidNames(t *testing.T) {
+	tests := []struct {
+		name   string
+		invoke func(*CmfRestClient) error
+	}{
+		{
+			name: "create",
+			invoke: func(client *CmfRestClient) error {
+				_, err := client.CreateApplication(context.Background(), "environment", cmfsdk.FlinkApplication{})
+				return err
+			},
+		},
+		{
+			name: "update",
+			invoke: func(client *CmfRestClient) error {
+				_, err := client.UpdateApplication(context.Background(), "environment", cmfsdk.FlinkApplication{})
+				return err
+			},
+		},
+	}
+
+	wantErr := `application name is required: ensure the resource file contains a non-empty "metadata.name" field`
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.invoke(&CmfRestClient{})
+			require.EqualError(t, err, wantErr)
+		})
+	}
+}
 
 func TestListAllPages(t *testing.T) {
 	// pagedFetcher emulates a CMF endpoint that pages by zero-based index (offset = page * size).
