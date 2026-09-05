@@ -320,12 +320,24 @@ const hardTimeoutSlack = 200 * time.Millisecond
 // ceiling is exceeded, boundedWalk returns a truncated result with StoppedAt="hard_timeout".
 func boundedWalk(opts Options) walkResult {
 	done := make(chan walkResult, 1)
-	go func() { done <- walk(opts) }()
+	go func() {
+		// walk touches live OS process data through ProcSource, so a panic here
+		// must degrade to an empty result rather than crash the process
+		defer func() {
+			if r := recover(); r != nil {
+				done <- walkResult{meta: WalkMeta{StoppedAt: "panic", Truncated: true}}
+			}
+		}()
+		done <- walk(opts)
+	}()
+
+	timer := time.NewTimer(opts.Budget + hardTimeoutSlack)
+	defer timer.Stop()
 
 	select {
 	case w := <-done:
 		return w
-	case <-time.After(opts.Budget + hardTimeoutSlack):
+	case <-timer.C:
 		return walkResult{meta: WalkMeta{StoppedAt: "hard_timeout", Truncated: true}}
 	}
 }

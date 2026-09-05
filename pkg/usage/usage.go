@@ -8,6 +8,7 @@ import (
 
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 
+	"github.com/confluentinc/cli/v4/pkg/agentdetect"
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v4/pkg/log"
 )
@@ -33,6 +34,57 @@ func (u *Usage) Collect(cmd *cobra.Command, _ []string) {
 		}
 	})
 	u.Flags = &flags
+}
+
+// CollectAgentDetect runs agent detection and assigns the results onto this
+// Usage's agent-detect fields.
+//
+// The CliV1Usage fields assigned below are flat additions from APIE-1607 (see
+// https://confluentinc.atlassian.net/wiki/spaces/AEGI/pages/6089736699), named
+// and typed to mirror agentdetect.Attributes one field at a time. This won't
+// compile until that schema update lands in ccloud-sdk-go-v2.
+//
+// UNVERIFIED AGAINST THE FINAL SCHEMA
+// Re-check every assignment and both helpers below once the
+// generated struct exists.
+func (u *Usage) CollectAgentDetect() {
+	defer func() {
+		if r := recover(); r != nil {
+			// Log only the panic's type, not its value: a panic surfacing from deep in a
+			// dependency (e.g. gopsutil) could carry a raw process path or arg as its message.
+			log.CliLogger.Tracef("agent detection panicked: %T", r)
+		}
+	}()
+
+	attrs := agentdetect.Detect(agentdetect.Options{}).Attributes()
+
+	u.AgentEnv = optionalStrings(attrs.AgentEnv)
+	u.AgentProc = attrs.AgentProc
+	u.AgentArgv = attrs.AgentArgv
+	u.IdeHost = attrs.IDEHost
+	u.Interactive = optionalString(attrs.Interactive)
+	u.ChainShape = optionalString(attrs.ChainShape)
+	u.Wrappers = optionalStrings(attrs.Wrappers)
+	u.Ci = optionalStrings(attrs.CI)
+	u.AgentTables = optionalString(attrs.Tables)
+}
+
+// optionalString and optionalStrings force an unset value to a nil pointer, never a pointer
+// to an empty value. Unlike Flags (always sent, even empty), an empty agent-detect field
+// means detection produced nothing, which is a meaningfully different signal from "ran and
+// found zero" — so these are omitted from the wire rather than sent empty.
+func optionalString(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
+}
+
+func optionalStrings(s []string) *[]string {
+	if len(s) == 0 {
+		return nil
+	}
+	return &s
 }
 
 // Report sends usage data to cc-cli-usage-service.
