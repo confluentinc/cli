@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -24,6 +26,7 @@ var flinkGatewayRoutes = []route{
 	{"/sql/v1/organizations/{organization_id}/environments/{environment}/statements", handleSqlEnvironmentsEnvironmentStatements},
 	{"/sql/v1/organizations/{organization_id}/environments/{environment}/statements/{statement}", handleSqlEnvironmentsEnvironmentStatementsStatement},
 	{"/sql/v1/organizations/{organization_id}/environments/{environment}/statements/{statement}/exceptions", handleSqlEnvironmentsEnvironmentStatementExceptions},
+	{"/sql/v1/organizations/{organization_id}/environments/{environment}/statements/{statement}/results", handleSqlEnvironmentsEnvironmentStatementsStatementResults},
 	{"/sql/v1/organizations/{organization_id}/environments/{environment_id}/connections", handleSqlEnvironmentsEnvironmentConnections},
 	{"/sql/v1/organizations/{organization_id}/environments/{environment_id}/connections/{connection}", handleSqlEnvironmentsEnvironmentConnectionsConnection},
 	{"/sql/v1/organizations/{organization_id}/environments/{environment_id}/databases/{kafka_cluster_id}/materialized-tables", handleSqlMaterializedTables},
@@ -184,6 +187,13 @@ func handleSqlEnvironmentsEnvironmentStatements(t *testing.T) http.HandlerFunc {
 
 			statement.Status = &flinkgatewayv1.SqlV1StatementStatus{Phase: "PENDING"}
 
+			if strings.HasPrefix(statement.GetName(), queryTestStatementPrefix) {
+				fixture := buildQueryTestFixture(statement.GetName(), statement.Spec.GetStatement())
+				queryTestFixturesMu.Lock()
+				queryTestFixtures[statement.GetName()] = fixture
+				queryTestFixturesMu.Unlock()
+			}
+
 			err = json.NewEncoder(w).Encode(statement)
 			require.NoError(t, err)
 		}
@@ -209,6 +219,134 @@ func handleSqlEnvironmentsEnvironmentStatementExceptions(t *testing.T) http.Hand
 	}
 }
 
+// queryTestStatementPrefix marks a statement created by `confluent query`
+// (types.GenerateStatementName always produces this prefix). Fixtures below are
+// keyed by statement name and only apply to names with this prefix, so they never
+// affect the fixed-name statements the rest of this file's tests use.
+const queryTestStatementPrefix = "cli-"
+
+// queryTestFixture is the mock's stand-in for a real gateway statement plus its
+// paginated result set. Built once from the submitted SQL text (there is no other
+// per-invocation signal available, since `confluent query` never lets a test choose
+// the statement name) and served back unchanged for every subsequent GetStatement/
+// GetStatementResults call the drain loop makes.
+type queryTestFixture struct {
+	statement flinkgatewayv1.SqlV1Statement
+	pages     [][]map[string]any
+}
+
+var (
+	queryTestFixturesMu sync.Mutex
+	queryTestFixtures   = make(map[string]*queryTestFixture)
+)
+
+func queryColumn(name, sqlType string) flinkgatewayv1.ColumnDetails {
+	return flinkgatewayv1.ColumnDetails{Name: name, Type: flinkgatewayv1.DataType{Type: sqlType}}
+}
+
+func queryRow(op int, values ...string) map[string]any {
+	row := make([]any, len(values))
+	for i, v := range values {
+		row[i] = v
+	}
+	return map[string]any{"op": op, "row": row}
+}
+
+// buildQueryTestFixture maps a fixed set of `--sql` values, used by test/query_test.go,
+// to a scripted statement lifecycle. Add a case here for every new integration test
+// scenario that needs the drain loop to actually run.
+func buildQueryTestFixture(name, sql string) *queryTestFixture {
+	traits := &flinkgatewayv1.SqlV1StatementTraits{IsBounded: flinkgatewayv1.PtrBool(true), IsAppendOnly: flinkgatewayv1.PtrBool(true)}
+	phase := "COMPLETED"
+	detail := "SQL statement is completed"
+	var pages [][]map[string]any
+
+	switch sql {
+	case "SELECT order_id, status FROM orders LIMIT 2;":
+		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{
+			queryColumn("order_id", "INTEGER"),
+			queryColumn("status", "VARCHAR"),
+		}}
+		pages = [][]map[string]any{{queryRow(0, "1021", "SHIPPED"), queryRow(0, "1044", "PENDING")}}
+	case "SELECT id FROM multi_page_table;":
+		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{queryColumn("id", "INTEGER")}}
+		pages = [][]map[string]any{
+			{queryRow(0, "1"), queryRow(0, "2")},
+			{queryRow(0, "3")},
+		}
+	case "SELECT id FROM many_rows;":
+		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{queryColumn("id", "INTEGER")}}
+		pages = [][]map[string]any{{
+			queryRow(0, "1"), queryRow(0, "2"), queryRow(0, "3"), queryRow(0, "4"), queryRow(0, "5"),
+		}}
+	case "SELECT * FROM changelog;":
+		traits.IsAppendOnly = flinkgatewayv1.PtrBool(false)
+		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{queryColumn("id", "INTEGER")}}
+		pages = [][]map[string]any{{queryRow(0, "1"), queryRow(2, "1")}}
+	case "SELECT * FROM unbounded_stream;":
+		traits.IsBounded = flinkgatewayv1.PtrBool(false)
+	case "SELECT * FROM will_fail;":
+		traits = nil
+		phase = "FAILED"
+		detail = "Something went wrong compiling the statement"
+	case "CREATE TABLE t (id INT);":
+		traits = nil
+	default:
+		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{queryColumn("id", "INTEGER")}}
+		pages = [][]map[string]any{{queryRow(0, "1")}}
+	}
+
+	status := &flinkgatewayv1.SqlV1StatementStatus{Phase: phase, Detail: flinkgatewayv1.PtrString(detail), Traits: traits}
+	return &queryTestFixture{
+		statement: flinkgatewayv1.SqlV1Statement{
+			Name: flinkgatewayv1.PtrString(name),
+			Spec: &flinkgatewayv1.SqlV1StatementSpec{
+				Statement:     flinkgatewayv1.PtrString(sql),
+				ComputePoolId: flinkgatewayv1.PtrString(validFlinkStatementComputePoolId),
+			},
+			Status:   status,
+			Metadata: &flinkgatewayv1.StatementObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))},
+		},
+		pages: pages,
+	}
+}
+
+func handleSqlEnvironmentsEnvironmentStatementsStatementResults(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		name := mux.Vars(r)["statement"]
+
+		queryTestFixturesMu.Lock()
+		fixture, ok := queryTestFixtures[name]
+		queryTestFixturesMu.Unlock()
+		if !ok || len(fixture.pages) == 0 {
+			w.WriteHeader(http.StatusNotFound)
+			err := writeError(w, fmt.Sprintf(`statement "%s" has no results`, name))
+			require.NoError(t, err)
+			return
+		}
+
+		pageIndex := 0
+		if token := r.URL.Query().Get("page_token"); token != "" {
+			parsed, err := strconv.Atoi(token)
+			require.NoError(t, err)
+			pageIndex = parsed
+		}
+
+		data := make([]any, len(fixture.pages[pageIndex]))
+		for i, row := range fixture.pages[pageIndex] {
+			data[i] = row
+		}
+
+		result := flinkgatewayv1.SqlV1StatementResult{Results: &flinkgatewayv1.SqlV1StatementResultResults{Data: &data}}
+		if pageIndex+1 < len(fixture.pages) {
+			result.Metadata.SetNext(fmt.Sprintf("%s?page_token=%d", r.URL.Path, pageIndex+1))
+		}
+
+		err := json.NewEncoder(w).Encode(result)
+		require.NoError(t, err)
+	}
+}
+
 // Handler for "/sql/v1/organizations/{organization_id}/environments/{environment_id}/statements/{statement_name}"
 func handleSqlEnvironmentsEnvironmentStatementsStatement(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -226,6 +364,18 @@ func handleSqlEnvironmentsEnvironmentStatementsStatement(t *testing.T) http.Hand
 
 func handleStatementGet(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		name := mux.Vars(r)["statement"]
+		if strings.HasPrefix(name, queryTestStatementPrefix) {
+			queryTestFixturesMu.Lock()
+			fixture, ok := queryTestFixtures[name]
+			queryTestFixturesMu.Unlock()
+			if ok {
+				err := json.NewEncoder(w).Encode(fixture.statement)
+				require.NoError(t, err)
+				return
+			}
+		}
+
 		statement := flinkgatewayv1.SqlV1Statement{
 			Name: flinkgatewayv1.PtrString(mux.Vars(r)["statement"]),
 			Spec: &flinkgatewayv1.SqlV1StatementSpec{
@@ -279,6 +429,16 @@ func handleStatementUpdate(t *testing.T) http.HandlerFunc {
 		stopped := req.Spec.GetStopped()
 		principal := req.Spec.GetPrincipal()
 		computePool := req.Spec.GetComputePoolId()
+
+		// The real gateway rejects a body omitting the SQL text; a mock more
+		// permissive than that let a broken stop path pass every test and only
+		// fail against staging.
+		if req.Spec.GetStatement() == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			err = writeError(w, "Request is malformed: Violations: Statement is nil or empty")
+			require.NoError(t, err)
+			return
+		}
 
 		// Handle the stop case, principal and computerPool shouldn't matter
 		if stopped {
