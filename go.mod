@@ -4,7 +4,7 @@ go 1.26.5
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.54.15
+	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/billgraziano/dpapi v0.5.0
 	github.com/bradleyjkemp/cupaloy/v2 v2.8.0
 	github.com/brianstrauch/cobra-shell v0.5.0
@@ -146,7 +146,6 @@ require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.0 // indirect
-	github.com/aws/aws-sdk-go-v2 v1.26.1 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.27.10 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.10 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.1 // indirect
