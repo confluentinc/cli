@@ -33,6 +33,8 @@ var flinkRoutes = []route{
 	{"/cmf/api/v1/secrets/{secretName}", handleCmfSecret},
 	{"/cmf/api/v1/detached-savepoints", handleCmfDetachedSavepoints},
 	{"/cmf/api/v1/detached-savepoints/{detachedSavepointName}", handleCmfDetachedSavepoint},
+	{"/cmf/api/v1/kubernetes-clusters", handleCmfKubernetesClusters},
+	{"/cmf/api/v1/kubernetes-clusters/{kubernetesClusterName}", handleCmfKubernetesCluster},
 	{"/cmf/api/v1/system-information", handleCmfSystemInformation},
 }
 
