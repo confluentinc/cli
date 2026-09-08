@@ -1,6 +1,6 @@
 module github.com/confluentinc/cli/v4
 
-go 1.26.5
+go 1.26.7
 
 require (
 	github.com/antihax/optional v1.0.0
@@ -16,7 +16,7 @@ require (
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20251024191705-f32f6cebfdd1
 	github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0
-	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
+	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.5.0
 	github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.9
 	github.com/confluentinc/ccloud-sdk-go-v2/cam v0.3.0
