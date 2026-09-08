@@ -143,10 +143,6 @@ func (s *CLITestSuite) TestApiKey() {
 		{args: "api-key create", fixture: "api-key/54.golden", exitCode: 1},
 		{args: "api-key use UIAPIKEY103 --resource lkc-unknown", fixture: "api-key/resource-unknown-error.golden", exitCode: 1},
 		{args: "api-key create --resource lkc-unknown", fixture: "api-key/resource-unknown-error.golden", exitCode: 1},
-
-		// expiration: creating with a valid/invalid --expiration date (placed last to not disturb key numbering)
-		{args: "api-key create --resource cloud --expiration 2099-12-31", login: "cloud", fixture: "api-key/create-expiration.golden"},
-		{args: "api-key create --resource cloud --expiration not-a-date", login: "cloud", fixture: "api-key/create-expiration-invalid.golden", exitCode: 1},
 	}
 
 	resetConfiguration(s.T(), false)
@@ -253,6 +249,22 @@ func (s *CLITestSuite) TestApiKeyDelete() {
 		{args: "api-key delete MYKEY6 MYKEY18 MYKEY20", fixture: "api-key/delete/multiple-fail-plural.golden", exitCode: 1},
 		{args: "api-key delete MYKEY7 MYKEY8", input: "n\n", fixture: "api-key/delete/multiple-refuse.golden"},
 		{args: "api-key delete MYKEY7 MYKEY8", input: "y\n", fixture: "api-key/delete/multiple-success.golden"},
+	}
+
+	resetConfiguration(s.T(), false)
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestApiKeyExpiration() {
+	// Runs after TestApiKeyDelete (suite methods run in alphabetical order) so the created key
+	// does not consume the key number the delete tests expect to be absent (MYKEY20).
+	tests := []CLITest{
+		{args: "api-key create --resource cloud --expiration 2099-12-31", fixture: "api-key/create-expiration.golden"},
+		{args: "api-key create --resource cloud --expiration not-a-date", fixture: "api-key/create-expiration-invalid.golden", exitCode: 1},
 	}
 
 	resetConfiguration(s.T(), false)

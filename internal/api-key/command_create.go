@@ -67,7 +67,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 
 	c.addResourceFlag(cmd, false)
 	cmd.Flags().String("description", "", "Description of API key.")
-	cmd.Flags().String("expiration", "", `Expiration date of the API key, in UTC, formatted as "YYYY-MM-DD" (for example, "2026-12-31"). The key remains valid through the end of this date. If not specified, the key never expires.`)
+	cmd.Flags().String("expiration", "", `Expiration date of the API key, in UTC (for example, "2026-12-31"). The key remains valid through the end of this date. If not specified, the key never expires.`)
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Bool("use", false, "Use the created API key for the provided resource.")
@@ -98,7 +98,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		if _, err := time.Parse("2006-01-02", expiration); err != nil {
 			return errors.NewErrorWithSuggestions(
 				fmt.Sprintf(`invalid expiration date "%s"`, expiration),
-				`Specify the expiration date in UTC, formatted as "YYYY-MM-DD" (for example, "2026-12-31").`,
+				`Specify the expiration date in UTC (for example, "2026-12-31").`,
 			)
 		}
 	}
