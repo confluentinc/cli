@@ -56,6 +56,11 @@ func (c *command) search(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	// A dev or prerelease channel's state directory may not exist yet; MkdirTemp needs it present.
+	if err := os.MkdirAll(stateDir, 0700); err != nil {
+		return err
+	}
+
 	dir, err := os.MkdirTemp(stateDir, "cli-plugins")
 	if err != nil {
 		return err
