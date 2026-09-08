@@ -6,34 +6,8 @@
     "owner_email": "\u003cdeactivated user\u003e",
     "resource_type": "kafka",
     "resource": "lkc-bob",
-    "created": "1999-02-24T00:00:00Z"
-  },
-  {
-    "key": "MULTICLUSTERKEY1",
-    "description": "works for two clusters",
-    "owner": "u-44ddd",
-    "owner_email": "mhe@confluent.io",
-    "resource_type": "kafka",
-    "resource": "lkc-abc",
-    "created": "1999-02-24T00:00:00Z"
-  },
-  {
-    "key": "MULTICLUSTERKEY2",
-    "description": "works for two clusters but on a different sr cluster",
-    "owner": "u-44ddd",
-    "owner_email": "mhe@confluent.io",
-    "resource_type": "kafka",
-    "resource": "lkc-abc",
-    "created": "1999-02-24T00:00:00Z"
-  },
-  {
-    "key": "MULTICLUSTERKEY3",
-    "description": "works for two clusters and owned by service account",
-    "owner": "sa-12345",
-    "owner_email": "\u003cservice account\u003e",
-    "resource_type": "kafka",
-    "resource": "lkc-abc",
-    "created": "1999-02-24T00:00:00Z"
+    "created": "1999-02-24T00:00:00Z",
+    "expiration": ""
   },
   {
     "key": "MYKEY1",
@@ -42,7 +16,8 @@
     "owner_email": "bstrauch@confluent.io",
     "resource_type": "kafka",
     "resource": "lkc-bob",
-    "created": "1999-02-24T00:00:00Z"
+    "created": "1999-02-24T00:00:00Z",
+    "expiration": ""
   },
   {
     "key": "MYKEY2",
@@ -51,7 +26,8 @@
     "owner_email": "mtodzo@confluent.io",
     "resource_type": "kafka",
     "resource": "lkc-abc",
-    "created": "1999-02-24T00:00:00Z"
+    "created": "1999-02-24T00:00:00Z",
+    "expiration": "2099-12-31"
   },
   {
     "key": "MYKEY3",
@@ -60,7 +36,8 @@
     "owner_email": "mhe@confluent.io",
     "resource_type": "kafka",
     "resource": "lkc-bob",
-    "created": "1999-02-24T00:00:00Z"
+    "created": "1999-02-24T00:00:00Z",
+    "expiration": ""
   },
   {
     "key": "SERVICEACCOUNTKEY1",
@@ -69,7 +46,8 @@
     "owner_email": "\u003cservice account\u003e",
     "resource_type": "kafka",
     "resource": "lkc-bob",
-    "created": "1999-02-24T00:00:00Z"
+    "created": "1999-02-24T00:00:00Z",
+    "expiration": ""
   },
   {
     "key": "UIAPIKEY100",
@@ -78,7 +56,8 @@
     "owner_email": "u-22bbb@confluent.io",
     "resource_type": "kafka",
     "resource": "lkc-cool1",
-    "created": "1999-02-24T00:00:00Z"
+    "created": "1999-02-24T00:00:00Z",
+    "expiration": ""
   },
   {
     "key": "UIAPIKEY101",
@@ -87,7 +66,8 @@
     "owner_email": "u-22bbb@confluent.io",
     "resource_type": "kafka",
     "resource": "lkc-other1",
-    "created": "1999-02-24T00:00:00Z"
+    "created": "1999-02-24T00:00:00Z",
+    "expiration": ""
   },
   {
     "key": "UIAPIKEY102",
@@ -96,7 +76,8 @@
     "owner_email": "u-22bbb@confluent.io",
     "resource_type": "ksql",
     "resource": "lksqlc-ksql1",
-    "created": "1999-02-24T00:00:00Z"
+    "created": "1999-02-24T00:00:00Z",
+    "expiration": ""
   },
   {
     "key": "UIAPIKEY103",
@@ -105,7 +86,8 @@
     "owner_email": "u-22bbb@confluent.io",
     "resource_type": "kafka",
     "resource": "lkc-cool1",
-    "created": "1999-02-24T00:00:00Z"
+    "created": "1999-02-24T00:00:00Z",
+    "expiration": ""
   },
   {
     "key": "UIGLOBALKEY100",
@@ -114,6 +96,7 @@
     "owner_email": "u-22bbb@confluent.io",
     "resource_type": "global",
     "resource": "",
-    "created": "1999-02-24T00:00:00Z"
+    "created": "1999-02-24T00:00:00Z",
+    "expiration": ""
   }
 ]

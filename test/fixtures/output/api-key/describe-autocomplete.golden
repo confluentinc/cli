@@ -1,7 +1,4 @@
 DEACTIVATEDUSERKEY
-MULTICLUSTERKEY1	works for two clusters
-MULTICLUSTERKEY2	works for two clusters but on a different sr cluster
-MULTICLUSTERKEY3	works for two clusters and owned by service account
 MYKEY1	first-key
 MYKEY10
 MYKEY11	auditlog-key
@@ -14,7 +11,8 @@ MYKEY17
 MYKEY18
 MYKEY19	human-output
 MYKEY2
-MYKEY20	created-and-used
+MYKEY20
+MYKEY21	created-and-used
 MYKEY3
 MYKEY4	my-cool-app
 MYKEY6	my-ksql-app
