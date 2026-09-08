@@ -3,6 +3,7 @@ package apikey
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -66,6 +67,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 
 	c.addResourceFlag(cmd, false)
 	cmd.Flags().String("description", "", "Description of API key.")
+	cmd.Flags().String("expiration", "", `Expiration date of the API key, in UTC, formatted as "YYYY-MM-DD" (for example, "2026-12-31"). The key remains valid through the end of this date. If not specified, the key never expires.`)
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Bool("use", false, "Use the created API key for the provided resource.")
@@ -86,6 +88,19 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return err
+	}
+
+	expiration, err := cmd.Flags().GetString("expiration")
+	if err != nil {
+		return err
+	}
+	if expiration != "" {
+		if _, err := time.Parse("2006-01-02", expiration); err != nil {
+			return errors.NewErrorWithSuggestions(
+				fmt.Sprintf(`invalid expiration date "%s"`, expiration),
+				`Specify the expiration date in UTC, formatted as "YYYY-MM-DD" (for example, "2026-12-31").`,
+			)
+		}
 	}
 
 	serviceAccount, err := cmd.Flags().GetString("service-account")
@@ -110,17 +125,13 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	key := apikeysv2.IamV2ApiKey{Spec: &apikeysv2.IamV2ApiKeySpec{
-		Description: apikeysv2.PtrString(description),
-		Owner:       &apikeysv2.ObjectReference{Id: ownerId},
-		Resource:    &apikeysv2.ObjectReference{Id: resourceId},
-	}}
+	resourceRef := apikeysv2.TypedEnvScopedObjectReference{Id: resourceId}
 
 	switch resourceType {
 	case resource.Cloud:
-		key.Spec.Resource.Id = resource.Cloud
+		resourceRef.Id = resource.Cloud
 	case resource.Global:
-		key.Spec.Resource.Id = resource.Global
+		resourceRef.Id = resource.Global
 	case resource.Flink:
 		environmentId, err := c.Context.EnvironmentId()
 		if err != nil {
@@ -141,10 +152,19 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 			return fmt.Errorf("must provide both `--cloud` and `--region`")
 		}
 
-		key.Spec.Resource.Id = fmt.Sprintf("%s.%s", cloud, region)
-		key.Spec.Resource.Environment = &environmentId
+		resourceRef.Id = fmt.Sprintf("%s.%s", cloud, region)
+		resourceRef.Environment = &environmentId
 	case resource.Tableflow:
-		key.Spec.Resource.Id = resource.Tableflow
+		resourceRef.Id = resource.Tableflow
+	}
+
+	key := apikeysv2.IamV2ApiKey{Spec: &apikeysv2.IamV2ApiKeySpec{
+		Description: apikeysv2.PtrString(description),
+		Owner:       &apikeysv2.TypedGlobalObjectReference{Id: ownerId},
+		Resource:    *apikeysv2.NewNullableTypedEnvScopedObjectReference(&resourceRef),
+	}}
+	if expiration != "" {
+		key.Spec.ExpiresAt = apikeysv2.PtrString(expiration)
 	}
 
 	v2Key, httpResp, err := c.V2Client.CreateApiKey(key)

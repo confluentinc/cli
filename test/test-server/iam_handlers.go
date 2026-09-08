@@ -144,7 +144,7 @@ func handleIamApiKeysCreate(t *testing.T) http.HandlerFunc {
 
 		apiKey := req
 
-		switch req.Spec.Resource.GetKind() {
+		switch req.Spec.Resource.Get().GetKind() {
 		case "Region":
 			apiKey = &apikeysv2.IamV2ApiKey{
 				Id:         apikeysv2.PtrString("FLINKREGIONAPIKEY"),
@@ -156,12 +156,13 @@ func handleIamApiKeysCreate(t *testing.T) http.HandlerFunc {
 			apiKey.Spec = &apikeysv2.IamV2ApiKeySpec{
 				Owner:  req.Spec.Owner,
 				Secret: apikeysv2.PtrString(fmt.Sprintf("MYSECRET%d", keyIndex)),
-				Resource: &apikeysv2.ObjectReference{
-					Id:         req.Spec.Resource.GetId(),
+				Resource: *apikeysv2.NewNullableTypedEnvScopedObjectReference(&apikeysv2.TypedEnvScopedObjectReference{
+					Id:         req.Spec.Resource.Get().GetId(),
 					ApiVersion: apikeysv2.PtrString("cmk/v2"),
-					Kind:       apikeysv2.PtrString(getKind(req.Spec.Resource.GetId())),
-				},
+					Kind:       apikeysv2.PtrString(getKind(req.Spec.Resource.Get().GetId())),
+				}),
 				Description: req.Spec.Description,
+				ExpiresAt:   req.Spec.ExpiresAt,
 			}
 			apiKey.Metadata = &apikeysv2.ObjectMeta{CreatedAt: keyTime}
 			keyIndex++

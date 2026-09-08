@@ -426,11 +426,6 @@ func handleLaunchDarkly(t *testing.T) http.HandlerFunc {
 			"cloud_growth.marketplace_linking_advertisement_experiment.enable": true,
 		}
 
-		val, ok := ldUser.GetCustom("org.resource_id")
-		if ok && val.StringValue() == "multicluster-key-org" {
-			flags["cli.multicluster-api-keys.enable"] = true
-		}
-
 		err = json.NewEncoder(w).Encode(&flags)
 		require.NoError(t, err)
 	}
