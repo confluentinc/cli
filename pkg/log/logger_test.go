@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestLogger_Flush(t *testing.T) {
+func TestLoggerFlush(t *testing.T) {
 	tests := []struct {
 		name     string
 		level    Level
@@ -45,7 +45,7 @@ func TestLogger_Flush(t *testing.T) {
 	}
 }
 
-func TestLogger_Flush_EmitsAtOrBelowThreshold(t *testing.T) {
+func TestLoggerFlushEmitsAtOrBelowThreshold(t *testing.T) {
 	// Logged at the least-verbose level, so every line buffers instead of emitting; the threshold
 	// is then raised before the flush.
 	buffered := map[Level]string{
