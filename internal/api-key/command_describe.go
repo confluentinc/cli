@@ -5,12 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
-
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
-	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -23,6 +19,7 @@ type out struct {
 	ResourceType string `human:"Resource Type" serialized:"resource_type"`
 	Resource     string `human:"Resource" serialized:"resource"`
 	Created      string `human:"Created" serialized:"created"`
+	Expiration   string `human:"Expiration" serialized:"expiration"`
 }
 
 func (c *command) newDescribeCommand() *cobra.Command {
@@ -69,28 +66,20 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		email = c.getEmail(ownerId, auditLogServiceAccountId, resourceIdToUserIdMap, usersMap, serviceAccountsMap)
 	}
 
-	resources := []apikeysv2.ObjectReference{apiKey.Spec.GetResource()}
-
-	multiClusterResources := apiKey.Spec.GetResources()
-
-	// Check if multicluster keys are enabled, and if so check the resources field
-	if featureflags.Manager.BoolVariation("cli.multicluster-api-keys.enable", c.Context, config.CliLaunchDarklyClient, true, false) && len(multiClusterResources) > 0 {
-		resources = multiClusterResources
-	}
+	resource := apiKey.Spec.GetResource()
 
 	list := output.NewList(cmd)
 	// Note that if more resource types are added with no logical clusters, then additional logic
 	// needs to be added here to determine the resource type.
-	for _, resource := range resources {
-		list.Add(&out{
-			Key:          apiKey.GetId(),
-			Description:  apiKey.Spec.GetDescription(),
-			Owner:        ownerId,
-			OwnerEmail:   email,
-			ResourceType: getResourceType(resource),
-			Resource:     getResourceId(resource.GetId()),
-			Created:      apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
-		})
-	}
+	list.Add(&out{
+		Key:          apiKey.GetId(),
+		Description:  apiKey.Spec.GetDescription(),
+		Owner:        ownerId,
+		OwnerEmail:   email,
+		ResourceType: getResourceType(resource),
+		Resource:     getResourceId(resource.GetId()),
+		Created:      apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
+		Expiration:   apiKey.Spec.GetExpiresAt(),
+	})
 	return list.Print()
 }

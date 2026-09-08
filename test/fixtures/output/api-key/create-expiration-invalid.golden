@@ -1,0 +1,4 @@
+Error: invalid expiration date "not-a-date"
+
+Suggestions:
+    Specify the expiration date in UTC, formatted as "YYYY-MM-DD" (for example, "2026-12-31").
