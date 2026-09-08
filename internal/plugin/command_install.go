@@ -33,6 +33,11 @@ func (c *command) install(_ *cobra.Command, args []string) error {
 		return err
 	}
 
+	// A dev or prerelease channel's state directory may not exist yet; MkdirTemp needs it present.
+	if err := os.MkdirAll(confluentDir, 0700); err != nil {
+		return err
+	}
+
 	dir, err := os.MkdirTemp(confluentDir, "cli-plugins")
 	if err != nil {
 		return err
