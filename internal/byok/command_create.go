@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/spf13/cobra"
 
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
