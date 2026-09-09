@@ -1,5 +1,5 @@
-+-----------+------------+
-| Name      | savepointS |
-| Statement | test-stmt  |
-| Format    | CANONICAL  |
-+-----------+------------+
++-----------+----------------+
+| Name      | savepoint-stmt |
+| Statement | test-stmt      |
+| Format    | CANONICAL      |
++-----------+----------------+
