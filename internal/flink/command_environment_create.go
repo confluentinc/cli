@@ -1,8 +1,10 @@
 package flink
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,8 +15,14 @@ import (
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
+
+// statementDefaultsShapeSuggestion documents the expected `--statement-defaults`
+// shape. It is surfaced as a suggestion when parsing fails rather than in the
+// flag help so it stays next to the error the user actually hit.
+const statementDefaultsShapeSuggestion = `Provide statement defaults matching the expected shape, for example: {"detached":{"flinkConfiguration":{...}},"interactive":{"flinkConfiguration":{...}}}.`
 
 func (c *command) newEnvironmentCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -80,15 +88,8 @@ func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
 		}
 	}
 	if defaultsStatement != "" {
-		defaultsStatementParsedLocal, err := parseDefaultsAsGenericType[LocalAllStatementDefaults1](defaultsStatement, "statement")
-		if err != nil {
+		if defaultsStatementParsed, err = parseStatementDefaults(defaultsStatement); err != nil {
 			return err
-		}
-		if defaultsStatementParsedLocal.Detached != nil {
-			defaultsStatementParsed.SetDetached(cmfsdk.StatementDefaults{FlinkConfiguration: defaultsStatementParsedLocal.Detached.FlinkConfiguration})
-		}
-		if defaultsStatementParsedLocal.Interactive != nil {
-			defaultsStatementParsed.SetInteractive(cmfsdk.StatementDefaults{FlinkConfiguration: defaultsStatementParsedLocal.Interactive.FlinkConfiguration})
 		}
 	}
 
@@ -112,6 +113,26 @@ func (c *command) environmentCreate(cmd *cobra.Command, args []string) error {
 	return output.SerializedOutput(cmd, localEnv)
 }
 
+// parseStatementDefaults strictly parses the `--statement-defaults` value into
+// the SDK type, rejecting unknown/mis-nested fields. On failure it surfaces the
+// expected shape as a suggestion instead of silently dropping the input.
+func parseStatementDefaults(input string) (cmfsdk.AllStatementDefaults1, error) {
+	var statementDefaults cmfsdk.AllStatementDefaults1
+
+	parsed, err := parseDefaultsAsGenericType[LocalAllStatementDefaults1](input, "statement")
+	if err != nil {
+		return statementDefaults, errors.NewErrorWithSuggestions(err.Error(), statementDefaultsShapeSuggestion)
+	}
+
+	if parsed.Detached != nil {
+		statementDefaults.SetDetached(cmfsdk.StatementDefaults{FlinkConfiguration: parsed.Detached.FlinkConfiguration})
+	}
+	if parsed.Interactive != nil {
+		statementDefaults.SetInteractive(cmfsdk.StatementDefaults{FlinkConfiguration: parsed.Interactive.FlinkConfiguration})
+	}
+	return statementDefaults, nil
+}
+
 func parseDefaultsAsGenericType[T any](input, label string) (T, error) {
 	var out T
 	var data []byte
@@ -124,24 +145,57 @@ func parseDefaultsAsGenericType[T any](input, label string) (T, error) {
 		if err != nil {
 			return out, fmt.Errorf("failed to read %s defaults JSON file: %w", label, err)
 		}
-		err = json.Unmarshal(data, &out)
+		err = decodeStrictJson(data, &out)
 
 	case ".yaml", ".yml":
 		data, err = os.ReadFile(input)
 		if err != nil {
 			return out, fmt.Errorf("failed to read %s defaults YAML file: %w", label, err)
 		}
-		err = yaml.Unmarshal(data, &out)
+		err = decodeStrictYaml(data, &out)
 
 	default:
 		// inline JSON string
-		err = json.Unmarshal([]byte(input), &out)
+		err = decodeStrictJson([]byte(input), &out)
 	}
 
 	if err != nil {
 		return out, fmt.Errorf("failed to parse %s defaults: %w", label, err)
 	}
 	return out, nil
+}
+
+// decodeStrictJson decodes a single JSON value into out, rejecting unknown
+// fields and trailing data so mis-shaped input surfaces instead of being
+// silently dropped. Decoding into a map is unaffected (a map has no unknown
+// fields).
+func decodeStrictJson(data []byte, out any) error {
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(out); err != nil {
+		return err
+	}
+	if decoder.More() {
+		return fmt.Errorf("unexpected trailing data after JSON value")
+	}
+	return nil
+}
+
+// decodeStrictYaml is the YAML counterpart of decodeStrictJson; it also rejects
+// unknown fields and any additional documents.
+func decodeStrictYaml(data []byte, out any) error {
+	decoder := yaml.NewDecoder(bytes.NewReader(data))
+	decoder.KnownFields(true)
+	if err := decoder.Decode(out); err != nil {
+		return err
+	}
+	if err := decoder.Decode(&struct{}{}); err != io.EOF {
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("unexpected additional YAML document")
+	}
+	return nil
 }
 
 func jsonMarshalHelper(v interface{}, label string) (string, error) {

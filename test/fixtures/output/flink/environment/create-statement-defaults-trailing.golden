@@ -1,0 +1,4 @@
+Error: failed to parse statement defaults: unexpected trailing data after JSON value
+
+Suggestions:
+    Provide statement defaults matching the expected shape, for example: {"detached":{"flinkConfiguration":{...}},"interactive":{"flinkConfiguration":{...}}}.
