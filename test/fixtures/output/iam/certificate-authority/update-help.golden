@@ -1,4 +1,4 @@
-Update a certificate authority.
+Update an existing IAM certificate authority.
 
 Usage:
   confluent iam certificate-authority update <id> [flags]
@@ -11,11 +11,11 @@ Update the certificate chain for certificate authority "op-123456" using the cer
 Flags:
       --name string                         Name of the certificate authority.
       --description string                  Description of the certificate authority.
-      --certificate-chain string            A base64 encoded string containing the signing certificate chain.
       --certificate-chain-filename string   The name of the certificate file.
       --crl-url string                      The URL from which to fetch the CRL (Certificate Revocation List) for the certificate authority.
-      --crl-chain string                    A base64 encoded string containing the CRL for this certificate authority.
       --require-crl-on-client-certificate   Require CRL validation on client certificates.
+      --certificate-chain string            The PEM encoded string containing the signing certificate chain used to validate client certs.
+      --crl-chain crl_url                   The PEM encoded string containing the CRL for this certificate authority. Defaults to this over crl_url if available.
       --context string                      CLI context name.
   -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
 
