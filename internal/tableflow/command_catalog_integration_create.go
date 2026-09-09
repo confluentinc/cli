@@ -32,6 +32,10 @@ func (c *command) newCatalogIntegrationCreateCommand() *cobra.Command {
 				Text: "Create a Unity catalog integration.",
 				Code: "confluent tableflow catalog-integration create my-catalog-integration --type unity --workspace-endpoint https://dbc-1.cloud.databricks.com --catalog-name tableflow-quickstart-catalog --unity-client-id $CLIENT_ID --unity-client-secret $CLIENT_SECRET",
 			},
+			examples.Example{
+				Text: "Create a BigLake Metastore catalog integration.",
+				Code: "confluent tableflow catalog-integration create my-catalog-integration --type biglake --provider-integration cspi-stgce89r7 --gcp-project-id my-gcp-project --catalog-name my-biglake-catalog",
+			},
 		),
 	}
 
@@ -49,6 +53,7 @@ func (c *command) newCatalogIntegrationCreateCommand() *cobra.Command {
 	cmd.Flags().String("unity-client-id", "", "Specify the Unity client id.")
 	cmd.Flags().String("unity-client-secret", "", "Specify the Unity client secret.")
 	cmd.Flags().String("custom-schema", "", "Specify the custom schema name for Unity Catalog.")
+	cmd.Flags().String("gcp-project-id", "", "Specify the GCP project id that hosts the BigLake Metastore catalog.")
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -57,7 +62,7 @@ func (c *command) newCatalogIntegrationCreateCommand() *cobra.Command {
 
 	cobra.CheckErr(cmd.MarkFlagRequired("type"))
 	cmd.MarkFlagsRequiredTogether("endpoint", "warehouse", "allowed-scope", "client-id", "client-secret")
-	cmd.MarkFlagsRequiredTogether("workspace-endpoint", "catalog-name", "unity-client-id", "unity-client-secret")
+	cmd.MarkFlagsRequiredTogether("workspace-endpoint", "unity-client-id", "unity-client-secret")
 
 	return cmd
 }
@@ -191,6 +196,39 @@ func (c *command) createCatalogIntegration(cmd *cobra.Command, args []string) er
 		}
 		createCatalogIntegration.Spec.Config = &tableflowv1.TableflowV1CatalogIntegrationSpecConfigOneOf{
 			TableflowV1CatalogIntegrationUnitySpec: unitySpec,
+		}
+	} else if strings.ToLower(catalogIntegrationType) == biglake {
+		if !cmd.Flags().Changed("provider-integration") || !cmd.Flags().Changed("gcp-project-id") || !cmd.Flags().Changed("catalog-name") {
+			return fmt.Errorf("`--provider-integration`, `--gcp-project-id` and `--catalog-name` flags are required for catalog integration type `biglake`.")
+		}
+		providerIntegration, err := cmd.Flags().GetString("provider-integration")
+		if err != nil {
+			return err
+		}
+		gcpProjectId, err := cmd.Flags().GetString("gcp-project-id")
+		if err != nil {
+			return err
+		}
+		catalogName, err := cmd.Flags().GetString("catalog-name")
+		if err != nil {
+			return err
+		}
+
+		bigLakeSpec := &tableflowv1.TableflowV1CatalogIntegrationBigLakeMetastoreSpec{
+			Kind:                  bigLakeMetastoreKind,
+			ProviderIntegrationId: providerIntegration,
+			GcpProjectId:          gcpProjectId,
+			CatalogName:           catalogName,
+		}
+		if cmd.Flags().Changed("custom-namespace") {
+			customNamespace, err := cmd.Flags().GetString("custom-namespace")
+			if err != nil {
+				return err
+			}
+			bigLakeSpec.SetCustomNamespace(customNamespace)
+		}
+		createCatalogIntegration.Spec.Config = &tableflowv1.TableflowV1CatalogIntegrationSpecConfigOneOf{
+			TableflowV1CatalogIntegrationBigLakeMetastoreSpec: bigLakeSpec,
 		}
 	}
 
