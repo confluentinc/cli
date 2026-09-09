@@ -29,13 +29,15 @@ func (s *CLITestSuite) TestCCPMPlugin() {
 		{args: "ccpm plugin describe ccp-123456 --environment env-123456", fixture: "ccpm/plugin-describe.golden"},
 		{args: "ccpm plugin describe ccp-123456 --environment env-123456 -o json", fixture: "ccpm/plugin-describe-json.golden"},
 		{args: "ccpm plugin describe ccp-123456 --environment env-123456 -o yaml", fixture: "ccpm/plugin-describe-yaml.golden"},
-		{args: "ccpm plugin describe invalid-id --environment env-123456", fixture: "ccpm/plugin-describe-not-found.golden", exitCode: 1},
+		{args: "ccpm plugin describe ccp-000000 --environment env-123456", fixture: "ccpm/plugin-describe-not-found.golden", exitCode: 1},
+		{args: "ccpm plugin describe invalid-id --environment env-123456", fixture: "ccpm/plugin-describe-invalid-prefix.golden", exitCode: 1},
 
 		// Plugin update tests - using exact IDs from test-server
 		{args: "ccpm plugin update ccp-123456 --name updated-plugin-name --environment env-123456", fixture: "ccpm/plugin-update.golden"},
 		{args: "ccpm plugin update ccp-123456 --description 'Updated description' --environment env-123456", fixture: "ccpm/plugin-update.golden"},
 		{args: "ccpm plugin update ccp-123456 --name updated-name --description 'Updated description' --environment env-123456", fixture: "ccpm/plugin-update.golden"},
-		{args: "ccpm plugin update invalid-id --name updated-name --environment env-123456", fixture: "ccpm/plugin-update-not-found.golden", exitCode: 1},
+		{args: "ccpm plugin update ccp-000000 --name updated-name --environment env-123456", fixture: "ccpm/plugin-update-not-found.golden", exitCode: 1},
+		{args: "ccpm plugin update invalid-id --name updated-name --environment env-123456", fixture: "ccpm/plugin-update-invalid-prefix.golden", exitCode: 1},
 
 		// Plugin delete tests - using exact IDs from test-server
 		{args: "ccpm plugin delete ccp-123456 --environment env-123456 --force", fixture: "ccpm/plugin-delete.golden"},

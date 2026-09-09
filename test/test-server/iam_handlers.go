@@ -419,12 +419,17 @@ func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 			var req identityproviderv2.IamV2IdentityProvider
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			res := &identityproviderv2.IamV2IdentityProvider{
-				Id:          req.Id,
-				DisplayName: req.DisplayName,
-				Description: req.Description,
-				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
-				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
+			// Like the real API, PATCH merges the request into the stored object: the id comes
+			// from the URL path, and fields absent from the body keep their stored values.
+			res := buildIamProvider(id, "identity-provider", "providing identities.", "https://company.provider.com", "https://company.provider.com/oauth2/v1/keys", "")
+			if id == "op-67890" {
+				res = buildIamProvider(id, "okta-with-identity-claim", "providing identities with identity claim.", "https://company.new-provider.com", "https://company.new-provider.com/oauth2/v1/keys", "claims.sub")
+			}
+			if req.DisplayName != nil {
+				res.DisplayName = req.DisplayName
+			}
+			if req.Description != nil {
+				res.Description = req.Description
 			}
 			if req.Issuer != nil {
 				res.Issuer = req.Issuer
@@ -432,12 +437,8 @@ func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 			if req.JwksUri != nil {
 				res.JwksUri = req.JwksUri
 			}
-			if id == "op-67890" {
+			if req.IdentityClaim != nil {
 				res.IdentityClaim = req.IdentityClaim
-				res.DisplayName = identityproviderv2.PtrString("okta-with-identity-claim")
-				res.Description = identityproviderv2.PtrString("providing identities with identity claim.")
-				res.Issuer = identityproviderv2.PtrString("https://company.new-provider.com")
-				res.JwksUri = identityproviderv2.PtrString("https://company.new-provider.com/oauth2/v1/keys")
 			}
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)

@@ -46,9 +46,9 @@ func (c *customConnectPluginVersionCommand) describeVersion(cmd *cobra.Command, 
 	if err != nil {
 		return err
 	}
-	pluginResp, httpResp, err := c.V2Client.GetCcpmCustomConnectPlugin(pluginId, environment)
+	pluginResp, err := c.V2Client.GetCcpmCustomConnectPlugin(pluginId, environment)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+		return err
 	}
 
 	// Use V2Client to call CCPM API

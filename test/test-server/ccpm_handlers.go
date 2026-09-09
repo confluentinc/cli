@@ -171,8 +171,9 @@ func handleCCPMPluginId(t *testing.T) http.HandlerFunc {
 			// Describe plugin
 			environment := r.URL.Query().Get("environment")
 
-			if pluginId == "invalid-id" {
-				http.Error(w, "Plugin not found", http.StatusNotFound)
+			if pluginId != "ccp-123456" {
+				w.WriteHeader(http.StatusNotFound)
+				require.NoError(t, writeErrorJson(w, "The custom Connect plugin was not found."))
 				return
 			}
 
@@ -207,8 +208,9 @@ func handleCCPMPluginId(t *testing.T) http.HandlerFunc {
 
 		case http.MethodPatch:
 			// Update plugin
-			if pluginId == "invalid-id" {
-				http.Error(w, "Plugin not found", http.StatusNotFound)
+			if pluginId != "ccp-123456" {
+				w.WriteHeader(http.StatusNotFound)
+				require.NoError(t, writeErrorJson(w, "The custom Connect plugin was not found."))
 				return
 			}
 
@@ -262,8 +264,9 @@ func handleCCPMPluginId(t *testing.T) http.HandlerFunc {
 			// Delete plugin
 			environment := r.URL.Query().Get("environment")
 
-			if pluginId == "invalid-id" {
-				http.Error(w, "Plugin not found", http.StatusNotFound)
+			if pluginId != "ccp-123456" {
+				w.WriteHeader(http.StatusNotFound)
+				require.NoError(t, writeErrorJson(w, "The custom Connect plugin was not found."))
 				return
 			}
 
@@ -292,8 +295,9 @@ func handleCCPMPluginVersions(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			// List versions
-			if pluginId == "invalid-id" {
-				http.Error(w, "Plugin not found", http.StatusNotFound)
+			if pluginId != "ccp-123456" {
+				w.WriteHeader(http.StatusNotFound)
+				require.NoError(t, writeErrorJson(w, "The custom Connect plugin was not found."))
 				return
 			}
 
@@ -367,8 +371,9 @@ func handleCCPMPluginVersions(t *testing.T) http.HandlerFunc {
 
 		case http.MethodPost:
 			// Create version
-			if pluginId == "invalid-id" {
-				http.Error(w, "Plugin not found", http.StatusNotFound)
+			if pluginId != "ccp-123456" {
+				w.WriteHeader(http.StatusNotFound)
+				require.NoError(t, writeErrorJson(w, "The custom Connect plugin was not found."))
 				return
 			}
 
