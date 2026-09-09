@@ -186,6 +186,8 @@ func addClusterFlags(cmd *cobra.Command, cfg *config.Config, cliCommand *pcmd.CL
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for the role binding.")
 		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster name for the role binding.")
 		cmd.Flags().String("flink-region", "", `Flink region for the role binding, formatted as "cloud.region".`)
+		cmd.Flags().String("usm-kafka-cluster", "", "USM Kafka cluster ID for the role binding.")
+		cmd.Flags().String("usm-connect-cluster", "", "USM Connect cluster ID for the role binding.")
 	} else {
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID for the role binding.")
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for the role binding.")
@@ -626,6 +628,22 @@ func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, 
 		crnPattern += "/flink-region=" + flinkRegion
 	}
 
+	if cmd.Flags().Changed("usm-kafka-cluster") {
+		usmKafkaCluster, err := cmd.Flags().GetString("usm-kafka-cluster")
+		if err != nil {
+			return "", err
+		}
+		crnPattern += "/usm-kafka-cluster=" + usmKafkaCluster
+	}
+
+	if cmd.Flags().Changed("usm-connect-cluster") {
+		usmConnectCluster, err := cmd.Flags().GetString("usm-connect-cluster")
+		if err != nil {
+			return "", err
+		}
+		crnPattern += "/usm-connect-cluster=" + usmConnectCluster
+	}
+
 	if cmd.Flags().Changed("role") {
 		role, err := cmd.Flags().GetString("role")
 		if err != nil {
@@ -639,7 +657,7 @@ func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, 
 		}
 	}
 
-	if cmd.Flags().Changed("cloud-cluster") && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
+	if (cmd.Flags().Changed("cloud-cluster") || cmd.Flags().Changed("usm-kafka-cluster") || cmd.Flags().Changed("usm-connect-cluster")) && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
 		return "", errors.New(specifyEnvironmentErrorMsg)
 	}
 	return crnPattern, nil
