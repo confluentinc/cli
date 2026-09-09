@@ -24,10 +24,14 @@ type fileLock struct {
 	f    *os.File
 }
 
+// newFileLock builds a lock for the sidecar file next to configPath. It does not open or
+// acquire anything yet; call lock to do that.
 func newFileLock(configPath string) *fileLock {
 	return &fileLock{path: configPath + ".lock"}
 }
 
+// lock opens (creating if needed) the sidecar file and blocks until it acquires an exclusive
+// lock on it or timeout elapses, whichever comes first.
 func (l *fileLock) lock(timeout time.Duration) error {
 	f, err := os.OpenFile(l.path, os.O_CREATE|os.O_RDWR, 0600)
 	if err != nil {
@@ -43,6 +47,8 @@ func (l *fileLock) lock(timeout time.Duration) error {
 	return nil
 }
 
+// unlock releases the lock and closes the underlying file handle. It is a no-op if the lock
+// was never acquired.
 func (l *fileLock) unlock() error {
 	if l.f == nil {
 		return nil
