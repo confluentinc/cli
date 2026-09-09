@@ -19,11 +19,22 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/wait"
 )
 
 const (
 	initialBackoff = 300 * time.Millisecond
 	maxBackoff     = 2 * time.Second
+
+	// awaitPollInterval is short relative to compute-pool-style polling (seconds,
+	// not minutes): a statement typically leaves PENDING well under a second
+	// after the gateway schedules it onto a compute pool.
+	awaitPollInterval = 500 * time.Millisecond
+
+	// unboundedPollTimeout exists only because wait.Options requires a nonzero
+	// Timeout. The real bound is the ctx deadline the caller already set from
+	// --wait-timeout, which wait.Poll checks independently via ctx.Done().
+	unboundedPollTimeout = 24 * time.Hour
 )
 
 // Options configures a single run. Only Client, EnvironmentId and OrganizationId
@@ -48,6 +59,10 @@ type Options struct {
 
 	// sleep is swapped out in tests so they do not wait in real time.
 	sleep func(context.Context, time.Duration) error
+
+	// pollInterval overrides awaitPollInterval in tests. Zero means use the
+	// default.
+	pollInterval time.Duration
 }
 
 // authenticatedClient refreshes the token if configured, mirroring
@@ -114,6 +129,9 @@ func Run(ctx context.Context, opts Options, statementName string) (*Result, erro
 	if opts.sleep == nil {
 		opts.sleep = sleepContext
 	}
+	if opts.pollInterval == 0 {
+		opts.pollInterval = awaitPollInterval
+	}
 
 	statement, err := await(ctx, opts, statementName)
 	if err != nil {
@@ -145,28 +163,19 @@ func Run(ctx context.Context, opts Options, statementName string) (*Result, erro
 }
 
 // await polls until the statement leaves PENDING, so that its traits — the result
-// schema and the boundedness flag — are populated.
+// schema and the boundedness flag — are populated. Uses the same wait.PollPhases
+// helper other CLI commands use to block on a resource reaching a terminal phase
+// (e.g. flink compute-pool create --wait), rather than a bespoke retry loop.
 func await(ctx context.Context, opts Options, statementName string) (flinkgatewayv1.SqlV1Statement, error) {
-	backoff := initialBackoff
-	for {
-		if err := ctx.Err(); err != nil {
-			return flinkgatewayv1.SqlV1Statement{}, err
-		}
-
-		statement, err := opts.authenticatedClient().GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId)
-		if err != nil {
-			return flinkgatewayv1.SqlV1Statement{}, err
-		}
-
-		if types.PHASE(statement.Status.GetPhase()) != types.PENDING {
-			return statement, nil
-		}
-
-		if err := opts.sleep(ctx, backoff); err != nil {
-			return flinkgatewayv1.SqlV1Statement{}, err
-		}
-		backoff = min(backoff*2, maxBackoff)
-	}
+	return wait.PollPhases(ctx, wait.PhaseOptions[flinkgatewayv1.SqlV1Statement]{
+		Fetch: func() (flinkgatewayv1.SqlV1Statement, error) {
+			return opts.authenticatedClient().GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId)
+		},
+		Phase:         func(s flinkgatewayv1.SqlV1Statement) string { return s.Status.GetPhase() },
+		PendingPhases: []string{string(types.PENDING)},
+		PollInterval:  opts.pollInterval,
+		Timeout:       unboundedPollTimeout,
+	})
 }
 
 // drain pulls result pages until there's no next page and the statement is

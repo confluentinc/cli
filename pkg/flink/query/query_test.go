@@ -29,6 +29,7 @@ func testOptions(client *mock.MockGatewayClientInterface) Options {
 		EnvironmentId:  testEnvironmentId,
 		OrganizationId: testOrganizationId,
 		sleep:          func(context.Context, time.Duration) error { return nil },
+		pollInterval:   time.Millisecond,
 	}
 }
 
@@ -341,20 +342,58 @@ func TestRunSkipsResultsForStatementWithoutSchema(t *testing.T) {
 	require.Empty(t, result.Columns)
 }
 
+// await no longer sleeps through Options.sleep (see wait.PollPhases); a
+// cancellation arriving mid-poll must still stop the run. Simulated here by
+// cancelling as a side effect of the GetStatement call itself, since
+// wait.Poll only checks ctx.Done() between fetches, not sleep.
 func TestRunStopsOnCancelledContext(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+
+	ctx, cancel := context.WithCancel(context.Background())
+	client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).
+		DoAndReturn(func(string, string, string) (flinkgatewayv1.SqlV1Statement, error) {
+			cancel()
+			return statement("PENDING", nil), nil
+		}).AnyTimes()
+
+	_, err := Run(ctx, testOptions(client), testStatementName)
+	require.ErrorIs(t, err, context.Canceled)
+}
+
+// The realistic --wait-timeout case: the statement just never leaves PENDING
+// in time, with no error at all. wait.Poll's own deadline never fires here
+// (it's the 24h placeholder), so this exercises the ctx.Done() branch on a
+// context whose deadline elapses naturally rather than one cancelled by a test
+// side effect.
+func TestRunTimesOutWhileStatementStaysPending(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).
 		Return(statement("PENDING", nil), nil).AnyTimes()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	options := testOptions(client)
-	options.sleep = func(context.Context, time.Duration) error {
-		cancel()
-		return context.Canceled
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Millisecond)
+	defer cancel()
 
-	_, err := Run(ctx, options, testStatementName)
-	require.ErrorIs(t, err, context.Canceled)
+	_, err := Run(ctx, testOptions(client), testStatementName)
+	require.ErrorIs(t, err, context.DeadlineExceeded)
+}
+
+// Options.pollInterval is a private field defaulted in Run(), same as sleep;
+// this exercises that default directly by constructing Options without going
+// through testOptions. A statement that is already terminal on the first
+// GetStatement call never reaches wait.Poll's ticker, so this also confirms
+// the default doesn't itself break the zero-poll case (wait.Poll rejects a
+// non-positive PollInterval outright).
+func TestRunDefaultsPollInterval(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).
+		Return(statement("COMPLETED", nil), nil)
+
+	_, err := Run(context.Background(), Options{
+		Client:         client,
+		EnvironmentId:  testEnvironmentId,
+		OrganizationId: testOrganizationId,
+	}, testStatementName)
+	require.NoError(t, err)
 }
 
 // A page-fetch failure is wrapped so the caller can tell it apart from a failure
@@ -373,11 +412,42 @@ func TestRunWrapsResultsFetchErrors(t *testing.T) {
 	require.ErrorContains(t, err, "page not found")
 }
 
-func TestRunPropagatesGatewayErrors(t *testing.T) {
+// A GetStatement error while awaiting PENDING is transient by wait.Poll's design
+// (matching every other CLI command built on it): it retries rather than
+// aborting, so a persistent error surfaces once the caller's own context
+// deadline fires, as ctx.Err() rather than the underlying error text. That
+// deadline is what --wait-timeout controls, and handleQueryError already turns
+// it into a "query timed out" message.
+func TestRunSurfacesContextDeadlineOnPersistentAwaitErrors(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).
-		Return(flinkgatewayv1.SqlV1Statement{}, errors.New("unauthorized"))
+		Return(flinkgatewayv1.SqlV1Statement{}, errors.New("unauthorized")).AnyTimes()
 
-	_, err := Run(context.Background(), testOptions(client), testStatementName)
-	require.ErrorContains(t, err, "unauthorized")
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Millisecond)
+	defer cancel()
+
+	_, err := Run(ctx, testOptions(client), testStatementName)
+	require.ErrorIs(t, err, context.DeadlineExceeded)
+}
+
+// A transient GetStatement error while awaiting PENDING must not abort the
+// run: wait.Poll retries until the statement is fetched successfully.
+func TestRunRecoversFromTransientAwaitError(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	completed := statement("COMPLETED", boundedTraits("id"))
+
+	gomock.InOrder(
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).
+			Return(flinkgatewayv1.SqlV1Statement{}, errors.New("temporary blip")),
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).
+			Return(completed, nil),
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).
+			Return(completed, nil),
+	)
+	client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
+		Return(page("", []any{"1"}), nil)
+
+	result, err := Run(context.Background(), testOptions(client), testStatementName)
+	require.NoError(t, err)
+	require.Equal(t, [][]string{{"1"}}, rowValues(t, result))
 }

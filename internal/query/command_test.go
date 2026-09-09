@@ -504,6 +504,26 @@ func TestStopStatement(t *testing.T) {
 		})
 		require.Contains(t, out, `could not stop statement "stmt"`)
 	})
+
+	t.Run("a statement with no spec reports a warning and returns false", func(t *testing.T) {
+		// GetStatement succeeds but the gateway returns a statement with no Spec at
+		// all, exercising the defensive nil check ahead of setting Spec.Stopped.
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodGet {
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"name": "stmt"}`))
+			}
+		}))
+		defer server.Close()
+
+		client := ccloudv2.NewFlinkGatewayClient(server.URL, "test", false, "token")
+		c := newTestCommand(newTestContext(server.URL, "token"))
+
+		out := captureStderr(t, func() {
+			require.False(t, c.stopStatement(client, "env-1", "stmt"))
+		})
+		require.Contains(t, out, `has no spec`)
+	})
 }
 
 func captureStderr(t *testing.T, fn func()) string {

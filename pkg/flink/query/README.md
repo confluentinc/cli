@@ -116,7 +116,8 @@ go test ./pkg/flink/query/                                              # unit t
 ```
 
 The unit tests drive `pkg/flink/test/mock.MockGatewayClientInterface` and inject
-`Options.sleep`, so backoff costs no wall time.
+`Options.sleep` (drain's retry backoff) and `Options.pollInterval` (await's
+wait.PollPhases interval), so waiting costs negligible wall time.
 
 Two unrelated failures reproduce on a clean `main` and are not caused by changes here:
 `pkg/flink/internal/controller` and `TestFlinkShell`/`TestFlinkShellOnPrem` panic without

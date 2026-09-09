@@ -20,6 +20,10 @@ func (s *CLITestSuite) TestQuery() {
 		// --raw drops the envelope (and the statement name with it), so this one is exact.
 		{args: `query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 -o json --raw`, fixture: "query/select-raw.golden"},
 
+		// --raw is meaningless for the default table output; rejected before a
+		// statement is ever created, so no random name in the output.
+		{args: `query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 --raw`, fixture: "query/raw-without-serialized-output.golden", exitCode: 1},
+
 		// --max-rows stops the drain early. Truncated is one of the two conditions that
 		// makes runQuery's deferred cleanup stop the statement, so the name shows up again
 		// in the "Stopped statement" message.
