@@ -11,6 +11,7 @@ import (
 type flinkEnvironmentOutput struct {
 	Name                         string `human:"Name" serialized:"name"`
 	KubernetesNamespace          string `human:"Kubernetes Namespace" serialized:"kubernetes_namespace"`
+	KubernetesClusterName        string `human:"Kubernetes Cluster Name,omitempty" serialized:"kubernetes_cluster_name,omitempty"`
 	CreatedTime                  string `human:"Created Time" serialized:"created_time"`
 	UpdatedTime                  string `human:"Updated Time" serialized:"updated_time"`
 	FlinkApplicationDefaults     string `human:"Flink Application Defaults,omitempty" serialized:"flink_application_defaults,omitempty"`
@@ -44,6 +45,7 @@ func convertSdkEnvironmentToLocalEnvironment(sdkOutputEnvironment cmfsdk.Environ
 		UpdatedTime:              sdkOutputEnvironment.UpdatedTime,
 		FlinkApplicationDefaults: sdkOutputEnvironment.FlinkApplicationDefaults,
 		KubernetesNamespace:      sdkOutputEnvironment.KubernetesNamespace,
+		KubernetesClusterName:    sdkOutputEnvironment.GetKubernetesClusterName(),
 		ComputePoolDefaults:      sdkOutputEnvironment.ComputePoolDefaults,
 	}
 

@@ -1,0 +1,6 @@
+warning: GOCOVERDIR not set, no coverage data emitted
+    Name    |     Created Time     |     Updated Time     | Lifecycle State | Connection State
+------------+----------------------+----------------------+-----------------+-------------------
+  cluster-1 | 2025-04-01T10:00:00Z | 2025-04-10T15:30:00Z | ACTIVE          | CONNECTED
+  cluster-2 | 2025-04-01T10:00:00Z | 2025-04-10T15:30:00Z | ACTIVE          | DISCONNECTED
+  cluster-3 | 2025-04-01T10:00:00Z | 2025-04-10T15:30:00Z | DECOMMISSIONED  | DECOMMISSIONED

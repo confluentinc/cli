@@ -1,3 +1,4 @@
+warning: GOCOVERDIR not set, no coverage data emitted
 +--------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Name                           | defaults-all                                                                                                                                             |
 | Kubernetes Namespace           | defaults-all-namespace                                                                                                                                   |
