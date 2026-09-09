@@ -8,7 +8,9 @@ func (s *CLITestSuite) TestTableflowCatalogIntegration() {
 		{args: "tableflow catalog-integration create my-snowflake-ci --cluster lkc-123456 --type snowflake --endpoint https://vuser1_polaris.snowflakecomputing.com/ --client-id client-id --client-secret client-secret --warehouse warehouse --allowed-scope allowed-scope --custom-namespace my-custom-ns", fixture: "tableflow/catalog-integration/create-snowflake-custom-namespace.golden"},
 		{args: "tableflow catalog-integration create my-catalog-integration --cluster lkc-123456 --type unity --workspace-endpoint https://dbc-1.cloud.databricks.com --catalog-name tableflow-quickstart-catalog --unity-client-id $CLIENT_ID --unity-client-secret $CLIENT_SECRET", fixture: "tableflow/catalog-integration/create-unity.golden"},
 		{args: "tableflow catalog-integration create my-catalog-integration --cluster lkc-123456 --type unity --workspace-endpoint https://dbc-1.cloud.databricks.com --catalog-name tableflow-quickstart-catalog --unity-client-id $CLIENT_ID --unity-client-secret $CLIENT_SECRET --custom-schema my-custom-schema", fixture: "tableflow/catalog-integration/create-unity-custom-schema.golden"},
-		{args: "tableflow catalog-integration delete tci-abc123 tci-def456 --cluster lkc-123456", input: "y\n", fixture: "tableflow/catalog-integration/delete-multiple.golden"},
+		{args: "tableflow catalog-integration create my-biglake-ci --cluster lkc-123456 --type biglake --provider-integration cspi-stgce89r7 --gcp-project-id my-gcp-project --catalog-name catalog-name", fixture: "tableflow/catalog-integration/create-biglake.golden"},
+		{args: "tableflow catalog-integration create my-biglake-ci --cluster lkc-123456 --type biglake --provider-integration cspi-stgce89r7 --gcp-project-id my-gcp-project --catalog-name catalog-name --custom-namespace my-custom-ns", fixture: "tableflow/catalog-integration/create-biglake-custom-namespace.golden"},
+		{args: "tableflow catalog-integration delete tci-abc123 tci-def456 tci-jkl012 --cluster lkc-123456", input: "y\n", fixture: "tableflow/catalog-integration/delete-multiple.golden"},
 		{args: "tableflow catalog-integration delete tci-abc123 tci-def456 tci-invalid --cluster lkc-123456", fixture: "tableflow/catalog-integration/delete-invalid.golden", exitCode: 1},
 		{args: "tableflow catalog-integration list --cluster lkc-123456", fixture: "tableflow/catalog-integration/list.golden"},
 		{args: "tableflow catalog-integration list --cluster lkc-123456 -o json", fixture: "tableflow/catalog-integration/list-json.golden"},
@@ -16,6 +18,8 @@ func (s *CLITestSuite) TestTableflowCatalogIntegration() {
 		{args: "tableflow catalog-integration describe tci-abc123 --cluster lkc-123456 -o json", fixture: "tableflow/catalog-integration/describe-aws-glue-json.golden"},
 		{args: "tableflow catalog-integration describe tci-def456 --cluster lkc-123456", fixture: "tableflow/catalog-integration/describe-snowflake.golden"},
 		{args: "tableflow catalog-integration describe tci-ghi789 --cluster lkc-123456", fixture: "tableflow/catalog-integration/describe-unity.golden"},
+		{args: "tableflow catalog-integration describe tci-jkl012 --cluster lkc-123456", fixture: "tableflow/catalog-integration/describe-biglake.golden"},
+		{args: "tableflow catalog-integration describe tci-jkl012 --cluster lkc-123456 -o json", fixture: "tableflow/catalog-integration/describe-biglake-json.golden"},
 	}
 
 	for _, test := range tests {
@@ -32,6 +36,7 @@ func (s *CLITestSuite) TestTableflowCatalogIntegrationUpdate() {
 		{args: "tableflow catalog-integration update tci-abc123 --cluster lkc-123456 --custom-database new-custom-db", fixture: "tableflow/catalog-integration/update-aws-glue-custom-database.golden"},
 		{args: "tableflow catalog-integration update tci-def456 --cluster lkc-123456 --custom-namespace new-custom-ns", fixture: "tableflow/catalog-integration/update-snowflake-custom-namespace.golden"},
 		{args: "tableflow catalog-integration update tci-ghi789 --cluster lkc-123456 --custom-schema new-custom-schema", fixture: "tableflow/catalog-integration/update-unity-custom-schema.golden"},
+		{args: "tableflow catalog-integration update tci-jkl012 --cluster lkc-123456 --custom-namespace new-custom-ns", fixture: "tableflow/catalog-integration/update-biglake-custom-namespace.golden"},
 		{args: "tableflow catalog-integration update tci-abc123 --cluster lkc-123456", fixture: "tableflow/catalog-integration/update-fail-no-flags.golden", exitCode: 1},
 	}
 

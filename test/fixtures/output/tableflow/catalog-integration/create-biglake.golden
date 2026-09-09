@@ -1,0 +1,12 @@
++-------------------------+----------------+
+| ID                      | tci-jkl012     |
+| Name                    | my-biglake-ci  |
+| Environment             | env-596        |
+| Kafka Cluster           | lkc-123456     |
+| Type                    | biglake        |
+| Provider Integration ID | cspi-stgce89r7 |
+| GCP Project ID          | my-gcp-project |
+| Catalog Name            | catalog-name   |
+| Suspended               | false          |
+| Phase                   | PENDING        |
++-------------------------+----------------+
