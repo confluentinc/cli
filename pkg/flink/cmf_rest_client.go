@@ -158,11 +158,22 @@ func (cmfClient *CmfRestClient) CmfApiContext() context.Context {
 	return context.WithValue(context.Background(), cmfsdk.ContextAccessToken, cmfClient.AuthToken)
 }
 
+func getApplicationName(application cmfsdk.FlinkApplication) (string, error) {
+	applicationName, ok := application.Metadata["name"].(string)
+	if !ok || applicationName == "" {
+		return "", fmt.Errorf(`application name is required: ensure the resource file contains a non-empty "metadata.name" field`)
+	}
+	return applicationName, nil
+}
+
 // CreateApplication Create a Flink application in the specified environment.
 // Internally, since the call for Create and Update is the same, we check if the environment doesn't contain said application before creation.
 func (cmfClient *CmfRestClient) CreateApplication(ctx context.Context, environment string, application cmfsdk.FlinkApplication) (cmfsdk.FlinkApplication, error) {
 	// Get the name of the application
-	applicationName := application.Metadata["name"].(string)
+	applicationName, err := getApplicationName(application)
+	if err != nil {
+		return cmfsdk.FlinkApplication{}, err
+	}
 	_, httpResponse, _ := cmfClient.FlinkApplicationsApi.GetApplication(ctx, environment, applicationName).Execute()
 	// check if the application exists by checking the status code
 	if httpResponse != nil && httpResponse.StatusCode == http.StatusOK {
@@ -203,7 +214,10 @@ func (cmfClient *CmfRestClient) ListApplications(ctx context.Context, environmen
 // Internally, since the call for Create and Update is the same, we check if the environment contains said application before updation.
 func (cmfClient *CmfRestClient) UpdateApplication(ctx context.Context, environment string, application cmfsdk.FlinkApplication) (cmfsdk.FlinkApplication, error) {
 	// Get the name of the application
-	applicationName := application.Metadata["name"].(string)
+	applicationName, err := getApplicationName(application)
+	if err != nil {
+		return cmfsdk.FlinkApplication{}, err
+	}
 	_, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplication(ctx, environment, applicationName).Execute()
 	// check if the application exists by checking the status code
 	if httpResponse != nil && httpResponse.StatusCode == http.StatusNotFound {
