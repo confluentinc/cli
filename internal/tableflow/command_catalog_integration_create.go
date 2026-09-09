@@ -160,7 +160,9 @@ func (c *command) createCatalogIntegration(cmd *cobra.Command, args []string) er
 			TableflowV1CatalogIntegrationSnowflakeSpec: snowflakeSpec,
 		}
 	} else if strings.ToLower(catalogIntegrationType) == unity {
-		if !cmd.Flags().Changed("workspace-endpoint") { // we only need to check for one since this flag set is marked as required together
+		// workspace-endpoint/unity-client-id/unity-client-secret are marked required together, so we only need to check one.
+		// catalog-name is shared with biglake, so it must be checked explicitly here.
+		if !cmd.Flags().Changed("workspace-endpoint") || !cmd.Flags().Changed("catalog-name") {
 			return fmt.Errorf("`--workspace-endpoint`, `--catalog-name`, `--unity-client-id` and `--unity-client-secret` flags are required for catalog integration type `unity`.")
 		}
 		workspaceEndpoint, err := cmd.Flags().GetString("workspace-endpoint")

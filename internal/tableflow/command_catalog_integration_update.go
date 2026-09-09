@@ -1,6 +1,8 @@
 package tableflow
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2/tableflow/v1"
@@ -190,20 +192,23 @@ func (c *command) updateCatalogIntegration(cmd *cobra.Command, args []string) er
 		if err != nil {
 			return err
 		}
-		if catalogIntegrationType == biglake {
+		switch catalogIntegrationType {
+		case biglake:
 			updateCatalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationUpdateSpecConfigOneOf{
 				TableflowV1CatalogIntegrationBigLakeMetastoreUpdateSpec: &tableflowv1.TableflowV1CatalogIntegrationBigLakeMetastoreUpdateSpec{
 					Kind: bigLakeMetastoreKind,
 				},
 			})
 			updateCatalogIntegration.Spec.Config.TableflowV1CatalogIntegrationBigLakeMetastoreUpdateSpec.SetCustomNamespace(customNamespace)
-		} else {
+		case snowflake:
 			updateCatalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationUpdateSpecConfigOneOf{
 				TableflowV1CatalogIntegrationSnowflakeUpdateSpec: &tableflowv1.TableflowV1CatalogIntegrationSnowflakeUpdateSpec{
 					Kind: snowflakeKind,
 				},
 			})
 			updateCatalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeUpdateSpec.SetCustomNamespace(customNamespace)
+		default:
+			return fmt.Errorf("`--custom-namespace` is not supported for catalog integration type `%s`", catalogIntegrationType)
 		}
 	}
 
