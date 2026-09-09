@@ -286,17 +286,24 @@ func (c *command) consumeCloud(cmd *cobra.Command, args []string) error {
 		subject = schemaRegistryContext
 	}
 
+	log.CliLogger.Tracef("consumeCloud: kafkaClusterId=%q topic=%q", cluster.ID, topic)
+
+	srAuth := serdes.SchemaRegistryAuth{ApiKey: srApiKey, ApiSecret: srApiSecret, Token: token}
+	valueSubject := resolveAssociatedValueSubject(valueFormat, srEndpoint, srClusterId, cluster.ID, topic, srAuth)
+
 	groupHandler := &GroupHandler{
 		SrClient:          srClient,
 		SrApiKey:          srApiKey,
 		SrApiSecret:       srApiSecret,
 		SrClusterId:       srClusterId,
 		SrClusterEndpoint: srEndpoint,
+		KafkaClusterId:    cluster.ID,
 		Token:             token,
 		KeyFormat:         keyFormat,
 		ValueFormat:       valueFormat,
 		Out:               cmd.OutOrStdout(),
 		Subject:           subject,
+		ValueSubject:      valueSubject,
 		Topic:             topic,
 		Properties: ConsumerProperties{
 			Delimiter:   delimiter,
