@@ -10,8 +10,10 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// lockHandle takes an exclusive flock, polling in non-blocking mode so we can
-// honor the timeout (a bare LOCK_EX would block uninterruptibly).
+// lockHandle takes an exclusive flock, polling in non-blocking mode so we can honor the
+// timeout (a bare LOCK_EX would block uninterruptibly). Only EWOULDBLOCK means contention
+// from another holder; any other error is a real failure and is returned immediately
+// instead of being retried until timeout.
 func lockHandle(f *os.File, timeout time.Duration) error {
 	deadline := time.Now().Add(timeout)
 	for {
@@ -29,6 +31,7 @@ func lockHandle(f *os.File, timeout time.Duration) error {
 	}
 }
 
+// unlockHandle releases the flock taken by lockHandle.
 func unlockHandle(f *os.File) error {
 	return unix.Flock(int(f.Fd()), unix.LOCK_UN)
 }
