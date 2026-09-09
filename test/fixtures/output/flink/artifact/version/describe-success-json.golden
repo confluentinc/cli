@@ -1,0 +1,19 @@
+{
+  "apiVersion": "cmf.confluent.io/v1",
+  "kind": "Artifact",
+  "metadata": {
+    "name": "test-artifact",
+    "creationTimestamp": "2025-03-12 23:42:00 +0000 UTC",
+    "updateTimestamp": "2025-03-12 23:42:00 +0000 UTC",
+    "uid": "11111111-1111-1111-1111-111111111111"
+  },
+  "spec": {},
+  "status": {
+    "version": 2,
+    "creationTimestamp": "2025-03-12 23:42:00 +0000 UTC",
+    "path": "artifacts/test-artifact/2",
+    "size": 1024,
+    "checksum": "d41d8cd98f00b204e9800998ecf8427e",
+    "phase": "READY"
+  }
+}

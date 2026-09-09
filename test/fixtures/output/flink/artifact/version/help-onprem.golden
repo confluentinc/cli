@@ -1,0 +1,18 @@
+Manage versions of a Flink artifact in Confluent Platform.
+
+Usage:
+  confluent flink artifact version [command]
+
+Available Commands:
+  create      Upload a new Flink artifact version in Confluent Platform.
+  delete      Delete a version of a Flink artifact in Confluent Platform.
+  describe    Describe a Flink artifact version in Confluent Platform.
+  download    Download a Flink artifact's content in Confluent Platform.
+  list        List the versions of a Flink artifact in Confluent Platform.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent flink artifact version [command] --help" for more information about a command.
