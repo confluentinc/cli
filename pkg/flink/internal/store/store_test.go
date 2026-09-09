@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -67,7 +68,8 @@ func TestStoreProcessLocalStatement(t *testing.T) {
 	stores := make([]types.StoreInterface, 2)
 
 	// Cloud store
-	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
+	tlsClientConfig := &tls.Config{}
+	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken", tlsClientConfig)
 	mockAppController := mock.NewMockApplicationControllerInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
 		OrganizationId:  "orgId",
