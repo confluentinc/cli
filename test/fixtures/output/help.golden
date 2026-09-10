@@ -37,6 +37,7 @@ Available Commands:
   service-quota        Look up Confluent Cloud service quota limits.
   shell                Start an interactive shell.
   stream-share         Manage stream shares.
+  switchover           Manage Kafka disaster recovery switchover resources.
   tableflow            Manage Tableflow.
   update               Update the Confluent CLI.
   usm                  Manage Unified Stream Manager(USM).
