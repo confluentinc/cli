@@ -6,12 +6,16 @@ import (
 	"path/filepath"
 )
 
+// configFilePerm is the mode config files are written with: owner read/write
+// only, since they hold credentials.
+const configFilePerm os.FileMode = 0600
+
 // writeFileAtomic writes data to path via a temp file in the SAME directory,
 // then renames it into place. Same-directory is required: a temp on another
 // filesystem breaks rename with EXDEV. On POSIX the parent directory is fsynced
 // after the rename so a crash can't lose the rename even when the bytes are
 // durable; on Windows the rename itself is the durability boundary.
-func writeFileAtomic(path string, data []byte, perm os.FileMode) error {
+func writeFileAtomic(path string, data []byte) error {
 	dir := filepath.Dir(path)
 
 	tmp, err := os.CreateTemp(dir, filepath.Base(path)+".tmp-*")
@@ -31,7 +35,7 @@ func writeFileAtomic(path string, data []byte, perm os.FileMode) error {
 		tmp.Close()
 		return fmt.Errorf("unable to fsync temp config file: %w", err)
 	}
-	if err := tmp.Chmod(perm); err != nil {
+	if err := tmp.Chmod(configFilePerm); err != nil {
 		tmp.Close()
 		return fmt.Errorf("unable to set temp config file permissions: %w", err)
 	}
