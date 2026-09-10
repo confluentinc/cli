@@ -226,9 +226,35 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	sql, err := resolveSQL(cmd, args)
+	if err != nil {
+		return err
+	}
+
+	database, err := c.resolveDatabase(cmd)
+	if err != nil {
+		return err
+	}
+
 	timeout, err := cmd.Flags().GetDuration("wait-timeout")
 	if err != nil {
 		return err
+	}
+
+	maxRows, err := cmd.Flags().GetInt("max-rows")
+	if err != nil {
+		return err
+	}
+	if maxRows < 0 {
+		return errors.New("the `--max-rows` flag must not be negative")
+	}
+
+	raw, err := cmd.Flags().GetBool("raw")
+	if err != nil {
+		return err
+	}
+	if raw && !output.GetFormat(cmd).IsSerialized() {
+		return errors.New("the `--raw` flag requires `-o json` or `-o yaml`")
 	}
 
 	// Built now, before any network call, so --wait-timeout bounds the whole
@@ -255,32 +281,6 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 	computePool := c.Context.GetCurrentFlinkComputePool()
 
 	name := types.GenerateStatementName()
-
-	sql, err := resolveSQL(cmd, args)
-	if err != nil {
-		return err
-	}
-
-	database, err := c.resolveDatabase(cmd)
-	if err != nil {
-		return err
-	}
-
-	maxRows, err := cmd.Flags().GetInt("max-rows")
-	if err != nil {
-		return err
-	}
-	if maxRows < 0 {
-		return errors.New("the `--max-rows` flag must not be negative")
-	}
-
-	raw, err := cmd.Flags().GetBool("raw")
-	if err != nil {
-		return err
-	}
-	if raw && !output.GetFormat(cmd).IsSerialized() {
-		return errors.New("the `--raw` flag requires `-o json` or `-o yaml`")
-	}
 
 	statementProperties, err := c.buildQueryProperties(cmd, environment.GetDisplayName(), database)
 	if err != nil {
