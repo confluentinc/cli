@@ -40,6 +40,7 @@ import (
 	"github.com/confluentinc/cli/v4/internal/plugin"
 	"github.com/confluentinc/cli/v4/internal/prompt"
 	providerintegration "github.com/confluentinc/cli/v4/internal/provider-integration"
+	"github.com/confluentinc/cli/v4/internal/query"
 	"github.com/confluentinc/cli/v4/internal/rtce"
 	schemaregistry "github.com/confluentinc/cli/v4/internal/schema-registry"
 	"github.com/confluentinc/cli/v4/internal/secret"
@@ -132,6 +133,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(plugin.New(cfg, prerunner))
 	cmd.AddCommand(prompt.New(cfg))
 	cmd.AddCommand(providerintegration.New(prerunner))
+	cmd.AddCommand(query.New(cfg, prerunner))
 	cmd.AddCommand(rtce.New(cfg, prerunner))
 	cmd.AddCommand(schemaregistry.New(cfg, prerunner))
 	cmd.AddCommand(secret.New(prerunner, secrets.NewPasswordProtectionPlugin()))
