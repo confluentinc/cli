@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
+	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 
 	"github.com/confluentinc/cli/v4/pkg/auth"
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
@@ -29,6 +30,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/jwt"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/properties"
+	"github.com/confluentinc/cli/v4/pkg/wait"
 )
 
 const (
@@ -224,7 +226,26 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	environment, _, err := c.V2Client.GetOrgEnvironment(environmentId)
+	timeout, err := cmd.Flags().GetDuration("wait-timeout")
+	if err != nil {
+		return err
+	}
+
+	// Built now, before any network call, so --wait-timeout bounds the whole
+	// command — environment/gateway-client lookup and statement creation
+	// included — not just the drain loop. GatewayClientInterface's and
+	// V2Client's methods take no context of their own (see query.wait.Call's
+	// doc comment), so every one of those calls below is wrapped in wait.Call to
+	// actually honor it.
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+	ctx, cancelTimeout := context.WithTimeout(ctx, timeout)
+	defer cancelTimeout()
+
+	environment, err := wait.Call(ctx, func() (orgv2.OrgV2Environment, error) {
+		env, _, err := c.V2Client.GetOrgEnvironment(environmentId)
+		return env, err
+	})
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
 	}
@@ -241,11 +262,6 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 	}
 
 	database, err := c.resolveDatabase(cmd)
-	if err != nil {
-		return err
-	}
-
-	timeout, err := cmd.Flags().GetDuration("wait-timeout")
 	if err != nil {
 		return err
 	}
@@ -282,9 +298,9 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 	var client *ccloudv2.FlinkGatewayClient
 	if computePool != "" {
 		statement.Spec.ComputePoolId = flinkgatewayv1.PtrString(computePool)
-		client, err = c.GetFlinkGatewayClient(true)
+		client, err = wait.Call(ctx, func() (*ccloudv2.FlinkGatewayClient, error) { return c.GetFlinkGatewayClient(true) })
 	} else {
-		client, err = c.GetFlinkGatewayClient(false)
+		client, err = wait.Call(ctx, func() (*ccloudv2.FlinkGatewayClient, error) { return c.GetFlinkGatewayClient(false) })
 	}
 	if err != nil {
 		return err
@@ -302,7 +318,9 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 		principal = c.Context.GetUser().GetResourceId()
 	}
 
-	if _, err := client.CreateStatement(statement, principal, environmentId, c.Context.LastOrgId); err != nil {
+	if _, err := wait.Call(ctx, func() (flinkgatewayv1.SqlV1Statement, error) {
+		return client.CreateStatement(statement, principal, environmentId, c.Context.LastOrgId)
+	}); err != nil {
 		return err
 	}
 
@@ -320,11 +338,6 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 			c.stopStatement(client, environmentId, name)
 		}
 	}()
-
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer cancel()
-	ctx, cancelTimeout := context.WithTimeout(ctx, timeout)
-	defer cancelTimeout()
 
 	options := query.Options{
 		Client:         client,

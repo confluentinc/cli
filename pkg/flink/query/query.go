@@ -166,7 +166,7 @@ func Run(ctx context.Context, opts Options, statementName string) (*Result, erro
 func await(ctx context.Context, opts Options, statementName string) (flinkgatewayv1.SqlV1Statement, error) {
 	return wait.PollPhases(ctx, wait.PhaseOptions[flinkgatewayv1.SqlV1Statement]{
 		Fetch: func() (flinkgatewayv1.SqlV1Statement, error) {
-			return callWithContext(ctx, func() (flinkgatewayv1.SqlV1Statement, error) {
+			return wait.Call(ctx, func() (flinkgatewayv1.SqlV1Statement, error) {
 				return opts.authenticatedClient().GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId)
 			})
 		},
@@ -201,7 +201,7 @@ func drain(ctx context.Context, opts Options, statementName string, schema flink
 			return err
 		}
 
-		page, err := callWithContext(ctx, func() (flinkgatewayv1.SqlV1StatementResult, error) {
+		page, err := wait.Call(ctx, func() (flinkgatewayv1.SqlV1StatementResult, error) {
 			return opts.authenticatedClient().GetStatementResults(opts.EnvironmentId, statementName, opts.OrganizationId, pageToken)
 		})
 		if err != nil {
@@ -255,7 +255,7 @@ func drain(ctx context.Context, opts Options, statementName string, schema flink
 // failed refresh leaves the prior statement in place rather than losing the rows
 // already collected — the caller still has a usable Result either way.
 func refreshStatement(ctx context.Context, opts Options, statementName string, result *Result) {
-	statement, err := callWithContext(ctx, func() (flinkgatewayv1.SqlV1Statement, error) {
+	statement, err := wait.Call(ctx, func() (flinkgatewayv1.SqlV1Statement, error) {
 		return opts.authenticatedClient().GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId)
 	})
 	if err == nil {
@@ -271,37 +271,6 @@ func IsTerminal(phase types.PHASE) bool {
 		return true
 	}
 	return false
-}
-
-// callWithContext races fn against ctx. GatewayClientInterface's methods take no
-// context and ignore any deadline the caller set — ccloudv2.FlinkGatewayClient
-// builds every request from context.Background() internally — so without this, a
-// single slow or hung gateway call blocks well past --wait-timeout with no way to
-// interrupt it. Confirmed against real staging: a GetStatementResults call once
-// hung for 49 minutes despite a 2-minute --wait-timeout.
-//
-// This only returns control to the caller once ctx fires; it cannot actually
-// abort the in-flight HTTP call, so fn's goroutine keeps running in the
-// background until the underlying transport eventually gives up or the process
-// exits. That leak is real, but a silently-broken --wait-timeout promise is worse.
-func callWithContext[T any](ctx context.Context, fn func() (T, error)) (T, error) {
-	type result struct {
-		val T
-		err error
-	}
-	ch := make(chan result, 1)
-	go func() {
-		val, err := fn()
-		ch <- result{val, err}
-	}()
-
-	select {
-	case r := <-ch:
-		return r.val, r.err
-	case <-ctx.Done():
-		var zero T
-		return zero, ctx.Err()
-	}
 }
 
 func sleepContext(ctx context.Context, duration time.Duration) error {
