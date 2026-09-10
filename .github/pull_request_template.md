@@ -20,6 +20,7 @@ Checklist
 Check each item below to ensure high-quality CLI development practices are followed. PR approval will not be granted until the checklist is fully reviewed.
 For detailed instructions, please refer to this Confluence page: https://confluentinc.atlassian.net/wiki/spaces/AEGI/pages/3949592874/
 -->
+- [ ] I have added release notes above and verified that they follow the style of existing [release notes](https://docs.confluent.io/confluent-cli/current/release-notes.html).
 - [ ] I have successfully built and used a custom CLI binary, without linter issues from this PR.
 - [ ] I have clearly specified in the `What` section below whether this PR applies to Confluent Cloud, Confluent Platform, or both. 
 - [ ] I have verified this PR in Confluent Cloud pre-prod or production environment, if applicable.
@@ -31,6 +32,7 @@ For detailed instructions, please refer to this Confluence page: https://conflue
 - [ ] I have put checkmarks below confirming that the feature associated with this PR is enabled in:
   - [ ] Confluent Cloud prod
   - [ ] Confluent Cloud stag
+  - [ ] Confluent Cloud devel
   - [ ] Confluent Platform
   - [ ] Check this box if the feature is enabled for certain organizations only
 
@@ -67,6 +69,11 @@ Copy and paste the links below for easy reference.
 
 Test & Review
 -------------
+- [ ] I have added or updated integration tests.
+- [ ] I have added or updated unit tests.
+- [ ] I have attached manual verification results or screenshots below.
+  - [ ] I have tested in a production environment.
+  - [ ] I have tested all new or updated commands and flags.
 <!-- Has this PR been tested? If so, explain **how** it was tested. Include: 
 - Steps taken to verify the changes. 
 - Links to manual verification documents, logs, or screenshots to save reviewers' time. 
