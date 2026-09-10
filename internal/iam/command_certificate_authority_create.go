@@ -58,17 +58,13 @@ func (c *certificateAuthorityCommand) create(cmd *cobra.Command, args []string) 
 	if err != nil {
 		return err
 	}
-	if description != "" {
-		createReq.Description = certificateauthorityv2.PtrString(description)
-	}
+	createReq.Description = certificateauthorityv2.PtrString(description)
 
 	certificateChainFilename, err := cmd.Flags().GetString("certificate-chain-filename")
 	if err != nil {
 		return err
 	}
-	if certificateChainFilename != "" {
-		createReq.CertificateChainFilename = certificateauthorityv2.PtrString(certificateChainFilename)
-	}
+	createReq.CertificateChainFilename = certificateauthorityv2.PtrString(certificateChainFilename)
 
 	crlUrl, err := cmd.Flags().GetString("crl-url")
 	if err != nil {
@@ -90,9 +86,7 @@ func (c *certificateAuthorityCommand) create(cmd *cobra.Command, args []string) 
 	if err != nil {
 		return err
 	}
-	if certificateChain != "" {
-		createReq.CertificateChain = certificateauthorityv2.PtrString(certificateChain)
-	}
+	createReq.CertificateChain = certificateauthorityv2.PtrString(certificateChain)
 
 	crlChain, err := cmd.Flags().GetString("crl-chain")
 	if err != nil {
