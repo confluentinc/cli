@@ -35,7 +35,7 @@ Flags:
       --certificate-chain string            REQUIRED: The PEM encoded string containing the signing certificate chain used to validate client certs.
       --crl-url string                      The URL from which to fetch the CRL (Certificate Revocation List) for the certificate authority.
       --require-crl-on-client-certificate   Require CRL validation on client certificates.
-      --crl-chain crl_url                   The PEM encoded string containing the CRL for this certificate authority. Defaults to this over crl_url if available.
+      --crl-chain string                    The PEM encoded string containing the CRL for this certificate authority. Defaults to this over --crl-url if available.
       --context string                      CLI context name.
   -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
 

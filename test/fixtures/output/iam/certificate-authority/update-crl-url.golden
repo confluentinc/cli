@@ -5,7 +5,7 @@ Updated IAM certificate authority "op-12345".
 | Description                       | new description                          |
 | Certificate Chain Filename        | certificate-2.pem                        |
 | CRL URL                           | example.url                              |
-| Require CRL On Client Certificate | false                                    |
+| Require CRL On Client Certificate | true                                     |
 | Fingerprints                      | B1BC968BD4f49D622AA89A81F2150152A41D829C |
 | Expiration Dates                  | 2017-07-21 17:32:28 +0000 UTC            |
 | Serial Numbers                    | 219C542DE8f6EC7177FA4EE8C3705797         |

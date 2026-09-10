@@ -40,7 +40,7 @@ func (c *certificateAuthorityCommand) newCreateCommand() *cobra.Command {
 	// Optional flags
 	cmd.Flags().String("crl-url", "", "The URL from which to fetch the CRL (Certificate Revocation List) for the certificate authority.")
 	cmd.Flags().Bool("require-crl-on-client-certificate", false, "Require CRL validation on client certificates.")
-	cmd.Flags().String("crl-chain", "", "The PEM encoded string containing the CRL for this certificate authority. Defaults to this over `crl_url` if available.")
+	cmd.Flags().String("crl-chain", "", "The PEM encoded string containing the CRL for this certificate authority. Defaults to this over --crl-url if available.")
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
