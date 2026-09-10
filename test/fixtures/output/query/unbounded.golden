@@ -1,0 +1,5 @@
+Stopped\ statement\ "cli-\d{4}-\d{2}-\d{2}-\d{6}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"\.\
+Error:\ statement\ "cli-\d{4}-\d{2}-\d{2}-\d{6}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"\ produces\ an\ unbounded\ result\ and\ cannot\ be\ run\ as\ a\ snapshot\ query\
+\
+Suggestions:\
+\ \ \ \ Bound\ the\ query\ with\ a\ LIMIT\ clause\ or\ a\ time\ predicate\ and\ run\ `confluent\ query`\ again\.\ Statement\ "cli-\d{4}-\d{2}-\d{2}-\d{6}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"\ was\ stopped\.\
