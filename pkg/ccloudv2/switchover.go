@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	switchoverv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/switchover/v1"
+	switchoverv1 "github.com/confluentinc/ccloud-sdk-go-v2/switchover/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
 )
@@ -82,7 +82,7 @@ func (c *Client) executeListSwitchoverPairs(environment, pageToken string) (swit
 }
 
 func (c *Client) DeleteSwitchoverPair(id, environment string) error {
-	httpResp, err := c.SwitchoverClient.SwitchoverPairsSwitchoverV1Api.DeleteSwitchoverV1SwitchoverPair(c.switchoverApiContext(), id).Environment(environment).Execute()
+	_, httpResp, err := c.SwitchoverClient.SwitchoverPairsSwitchoverV1Api.DeleteSwitchoverV1SwitchoverPair(c.switchoverApiContext(), id).Environment(environment).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
@@ -134,6 +134,6 @@ func (c *Client) executeListSwitchoverEndpoints(environment, switchoverPair, pag
 }
 
 func (c *Client) DeleteSwitchoverEndpoint(id, environment string) error {
-	httpResp, err := c.SwitchoverClient.SwitchoverEndpointsSwitchoverV1Api.DeleteSwitchoverV1SwitchoverEndpoint(c.switchoverApiContext(), id).Environment(environment).Execute()
+	_, httpResp, err := c.SwitchoverClient.SwitchoverEndpointsSwitchoverV1Api.DeleteSwitchoverV1SwitchoverEndpoint(c.switchoverApiContext(), id).Environment(environment).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
