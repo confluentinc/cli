@@ -279,6 +279,15 @@ func buildQueryTestFixture(name, sql string) *queryTestFixture {
 		pages = [][]map[string]any{{
 			queryRow(0, "1"), queryRow(0, "2"), queryRow(0, "3"), queryRow(0, "4"), queryRow(0, "5"),
 		}}
+	case "SELECT id FROM limit_bounded_stream;":
+		// A LIMIT-satisfied read over a streaming source: every requested row is
+		// delivered (no next token), but the job's own phase never settles to
+		// COMPLETED just because the row stream ended — it stays RUNNING until
+		// something explicitly stops it. Regression fixture for a real false
+		// "Incomplete" positive found against staging.
+		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{queryColumn("id", "INTEGER")}}
+		phase = "RUNNING"
+		pages = [][]map[string]any{{queryRow(0, "1"), queryRow(0, "2")}}
 	case "SELECT * FROM changelog;":
 		traits.IsAppendOnly = flinkgatewayv1.PtrBool(false)
 		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{queryColumn("id", "INTEGER")}}
