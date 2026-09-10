@@ -1160,3 +1160,27 @@ func TestParseFlagsIntoConfig(t *testing.T) {
 		}
 	}
 }
+
+func TestReadConfigFromDisk_WiresGraphAndPassesValidate(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+
+	seed := New()
+	seed.Filename = path
+	require.NoError(t, seed.Save())
+
+	got, err := readConfigFromDisk(path, seed)
+	require.NoError(t, err)
+	require.Equal(t, path, got.Filename, "json:\"-\" Filename must be carried from the template")
+	require.NoError(t, got.Validate())
+}
+
+func TestSnapshotBaseline_IsIndependentCopy(t *testing.T) {
+	c := New()
+	c.CurrentContext = "a"
+	c.snapshotBaseline()
+
+	c.CurrentContext = "b"
+
+	require.Equal(t, "a", c.baseline.CurrentContext, "baseline must not alias live config")
+}
