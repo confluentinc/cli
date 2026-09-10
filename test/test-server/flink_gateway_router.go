@@ -219,17 +219,12 @@ func handleSqlEnvironmentsEnvironmentStatementExceptions(t *testing.T) http.Hand
 	}
 }
 
-// queryTestStatementPrefix marks a statement created by `confluent query`
-// (types.GenerateStatementName always produces this prefix). Fixtures below are
-// keyed by statement name and only apply to names with this prefix, so they never
-// affect the fixed-name statements the rest of this file's tests use.
+// queryTestStatementPrefix marks a statement created by `confluent query` (see
+// types.GenerateStatementName); fixtures below only apply to names with this prefix.
 const queryTestStatementPrefix = "cli-"
 
-// queryTestFixture is the mock's stand-in for a real gateway statement plus its
-// paginated result set. Built once from the submitted SQL text (there is no other
-// per-invocation signal available, since `confluent query` never lets a test choose
-// the statement name) and served back unchanged for every subsequent GetStatement/
-// GetStatementResults call the drain loop makes.
+// queryTestFixture is the mock's stand-in for a gateway statement plus its
+// paginated results, built from the submitted SQL and replayed for every later call.
 type queryTestFixture struct {
 	statement flinkgatewayv1.SqlV1Statement
 	pages     [][]map[string]any
@@ -252,9 +247,8 @@ func queryRow(op int, values ...string) map[string]any {
 	return map[string]any{"op": op, "row": row}
 }
 
-// buildQueryTestFixture maps a fixed set of `--sql` values, used by test/query_test.go,
-// to a scripted statement lifecycle. Add a case here for every new integration test
-// scenario that needs the drain loop to actually run.
+// buildQueryTestFixture maps a fixed set of `--sql` values to a scripted statement
+// lifecycle; add a case per new test scenario.
 func buildQueryTestFixture(name, sql string) *queryTestFixture {
 	traits := &flinkgatewayv1.SqlV1StatementTraits{IsBounded: flinkgatewayv1.PtrBool(true), IsAppendOnly: flinkgatewayv1.PtrBool(true)}
 	phase := "COMPLETED"
@@ -280,11 +274,8 @@ func buildQueryTestFixture(name, sql string) *queryTestFixture {
 			queryRow(0, "1"), queryRow(0, "2"), queryRow(0, "3"), queryRow(0, "4"), queryRow(0, "5"),
 		}}
 	case "SELECT id FROM limit_bounded_stream;":
-		// A LIMIT-satisfied read over a streaming source: every requested row is
-		// delivered (no next token), but the job's own phase never settles to
-		// COMPLETED just because the row stream ended — it stays RUNNING until
-		// something explicitly stops it. Regression fixture for a real false
-		// "Incomplete" positive found against staging.
+		// Every row delivered (no next token), but phase stays RUNNING — regression
+		// fixture for a real false "Incomplete" positive found against staging.
 		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{queryColumn("id", "INTEGER")}}
 		phase = "RUNNING"
 		pages = [][]map[string]any{{queryRow(0, "1"), queryRow(0, "2")}}
@@ -422,9 +413,7 @@ func handleStatementUpdate(t *testing.T) http.HandlerFunc {
 		principal := req.Spec.GetPrincipal()
 		computePool := req.Spec.GetComputePoolId()
 
-		// The real gateway rejects a body omitting the SQL text; a mock more
-		// permissive than that let a broken stop path pass every test and only
-		// fail against staging.
+		// The real gateway rejects a body with no SQL text; a looser mock let a broken path pass here and fail only against staging.
 		if req.Spec.GetStatement() == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			err = writeError(w, "Request is malformed: Violations: Statement is nil or empty")
