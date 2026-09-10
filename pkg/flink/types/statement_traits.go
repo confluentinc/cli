@@ -39,9 +39,8 @@ func (s *StatementTraits) GetIsBounded() (bool, bool) {
 	return false, false
 }
 
-// GetIsAppendOnly reports whether the statement only ever emits insertions (the
-// changelog and materialized table are then the same thing). The second return
-// value is false when the trait is absent.
+// GetIsAppendOnly reports whether the statement only ever emits insertions. The
+// second return value is false when the trait is absent.
 func (s *StatementTraits) GetIsAppendOnly() (bool, bool) {
 	if s.FlinkGatewayV1StatementTraits != nil && s.FlinkGatewayV1StatementTraits.IsAppendOnly != nil {
 		return s.FlinkGatewayV1StatementTraits.GetIsAppendOnly(), true
