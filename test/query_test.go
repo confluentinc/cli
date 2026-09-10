@@ -62,6 +62,12 @@ func (s *CLITestSuite) TestQuery() {
 
 		// resolveSQL requires exactly one of --sql, --file or the positional argument.
 		{args: "query --compute-pool lfcp-123456 --service-account sa-123456", fixture: "query/missing-sql.golden", exitCode: 1},
+
+		// Regression case for a real bug found against staging: local flag validation
+		// (resolveSQL here) must run before any network call, including the
+		// GetOrgEnvironment lookup. env-dne would fail that lookup too, but the missing
+		// --sql should be reported first — proving the ordering, not just the message.
+		{args: "query --compute-pool lfcp-123456 --service-account sa-123456 --environment env-dne", fixture: "query/missing-sql.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
