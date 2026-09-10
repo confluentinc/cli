@@ -62,6 +62,8 @@ func (s *CLITestSuite) TestQuery() {
 
 		// resolveSQL requires exactly one of --sql, --file or the positional argument.
 		{args: "query --compute-pool lfcp-123456 --service-account sa-123456", fixture: "query/missing-sql.golden", exitCode: 1},
+
+		{args: "query --compute-pool lfcp-123456 --service-account sa-123456 --environment env-dne", fixture: "query/missing-sql.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {

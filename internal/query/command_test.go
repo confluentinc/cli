@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
@@ -470,6 +471,70 @@ func TestRefreshGatewayToken(t *testing.T) {
 		refresh := c.refreshGatewayToken(client, fakeJwtValidator{err: errors.New("expired")})
 		require.ErrorContains(t, refresh(), "could not mint a dataplane token")
 		require.Equal(t, "expired", client.AuthToken)
+	})
+}
+
+func TestCreateStatement(t *testing.T) {
+	t.Run("returns the create error on success or failure", func(t *testing.T) {
+		wantErr := errors.New("boom")
+		err := createStatement(context.Background(), time.Second, func() (flinkgatewayv1.SqlV1Statement, error) {
+			return flinkgatewayv1.SqlV1Statement{}, wantErr
+		}, func() { t.Fatal("cleanup should not run") })
+		require.Equal(t, wantErr, err)
+	})
+
+	t.Run("cleans up a create that lands after ctx is cancelled", func(t *testing.T) {
+		release := make(chan struct{})
+		cleaned := make(chan struct{})
+		ctx, cancel := context.WithCancel(context.Background())
+
+		errCh := make(chan error, 1)
+		go func() {
+			errCh <- createStatement(ctx, time.Second, func() (flinkgatewayv1.SqlV1Statement, error) {
+				<-release
+				return flinkgatewayv1.SqlV1Statement{}, nil
+			}, func() { close(cleaned) })
+		}()
+
+		cancel()
+		close(release)
+
+		require.ErrorIs(t, <-errCh, context.Canceled)
+		<-cleaned
+	})
+
+	t.Run("does not clean up a create that fails after ctx is cancelled", func(t *testing.T) {
+		release := make(chan struct{})
+		cleaned := make(chan struct{}, 1)
+		ctx, cancel := context.WithCancel(context.Background())
+
+		errCh := make(chan error, 1)
+		go func() {
+			errCh <- createStatement(ctx, time.Second, func() (flinkgatewayv1.SqlV1Statement, error) {
+				<-release
+				return flinkgatewayv1.SqlV1Statement{}, errors.New("create failed")
+			}, func() { cleaned <- struct{}{} })
+		}()
+
+		cancel()
+		close(release)
+
+		require.ErrorIs(t, <-errCh, context.Canceled)
+		select {
+		case <-cleaned:
+			t.Fatal("cleanup should not run")
+		case <-time.After(50 * time.Millisecond):
+		}
+	})
+
+	t.Run("gives up after the grace period without cleaning up", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+
+		err := createStatement(ctx, time.Millisecond, func() (flinkgatewayv1.SqlV1Statement, error) {
+			select {}
+		}, func() { t.Fatal("cleanup should not run") })
+		require.ErrorIs(t, err, context.Canceled)
 	})
 }
 
