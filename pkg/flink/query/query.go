@@ -1,11 +1,5 @@
-// Package query runs a bounded ("snapshot") Flink SQL statement to completion,
-// synchronously, and returns the whole result set.
-//
-// It does not reuse the interactive shell's Store/ResultFetcher stack: that
-// pipeline silently evicts rows past a 10,000-row cap, drops schema-mismatched
-// rows, and treats a missing page token as "done" without checking phase — all
-// silent data loss once a script reads stdout. This package's drain loop reports
-// each condition instead.
+// Package query runs a bounded ("snapshot") Flink SQL statement to completion and
+// returns the whole result set — not via the shell's Store/ResultFetcher, which silently drops rows.
 package query
 
 import (
@@ -26,14 +20,11 @@ const (
 	initialBackoff = 300 * time.Millisecond
 	maxBackoff     = 2 * time.Second
 
-	// awaitPollInterval is short relative to compute-pool-style polling (seconds,
-	// not minutes): a statement typically leaves PENDING well under a second
-	// after the gateway schedules it onto a compute pool.
+	// A statement typically leaves PENDING in well under a second.
 	awaitPollInterval = 500 * time.Millisecond
 
-	// unboundedPollTimeout exists only because wait.Options requires a nonzero
-	// Timeout. The real bound is the ctx deadline the caller already set from
-	// --wait-timeout, which wait.Poll checks independently via ctx.Done().
+	// A placeholder: wait.Options requires a nonzero Timeout, but the real bound is
+	// the caller's ctx deadline, which wait.Poll checks independently.
 	unboundedPollTimeout = 24 * time.Hour
 )
 
@@ -52,9 +43,7 @@ type Options struct {
 	// than draining a stream that never ends.
 	RequireBounded bool
 
-	// RefreshToken runs before every gateway call, since the dataplane token is
-	// short-lived. Failures are logged, not returned — the next gateway call
-	// surfaces its own error if the token is truly bad. Nil means no refresh.
+	// RefreshToken runs before every gateway call; nil means no refresh.
 	RefreshToken func() error
 
 	// sleep is swapped out in tests so they do not wait in real time.
@@ -104,9 +93,7 @@ func (e *UnboundedError) Error() string {
 	return fmt.Sprintf(`statement "%s" produces an unbounded result and cannot be run as a snapshot query`, e.StatementName)
 }
 
-// ResultsFetchError distinguishes a failed page fetch from a failed
-// statement-status read, so the caller can give a more specific suggestion for
-// the gateway's page-retention window.
+// ResultsFetchError distinguishes a failed page fetch from a failed status read.
 type ResultsFetchError struct {
 	Err error
 }
@@ -119,9 +106,7 @@ func (e *ResultsFetchError) Unwrap() error {
 	return e.Err
 }
 
-// Run waits for an already-submitted statement to start, then drains every result
-// page. The statement must already exist — submitting it is the caller's job, so the
-// caller keeps ownership of naming, properties and cleanup.
+// Run waits for an already-submitted statement to start, then drains every result page.
 func Run(ctx context.Context, opts Options, statementName string) (*Result, error) {
 	if opts.sleep == nil {
 		opts.sleep = sleepContext
@@ -159,10 +144,7 @@ func Run(ctx context.Context, opts Options, statementName string) (*Result, erro
 	return result, nil
 }
 
-// await polls until the statement leaves PENDING, so that its traits — the result
-// schema and the boundedness flag — are populated. Uses the same wait.PollPhases
-// helper other CLI commands use to block on a resource reaching a terminal phase
-// (e.g. flink compute-pool create --wait), rather than a bespoke retry loop.
+// await polls until the statement leaves PENDING, so its traits (schema, boundedness) are populated.
 func await(ctx context.Context, opts Options, statementName string) (flinkgatewayv1.SqlV1Statement, error) {
 	return wait.PollPhases(ctx, wait.PhaseOptions[flinkgatewayv1.SqlV1Statement]{
 		Fetch: func() (flinkgatewayv1.SqlV1Statement, error) {
@@ -177,21 +159,8 @@ func await(ctx context.Context, opts Options, statementName string) (flinkgatewa
 	})
 }
 
-// drain pulls result pages until the gateway stops handing out a next-page
-// token. That absence is itself the authoritative "no more rows" signal: the
-// gateway's protocol guarantee is that it never omits the token while more rows
-// remain, so unlike an earlier version of this loop, no statement-phase check is
-// needed to decide whether the read is complete — the token already says so.
-// Checking phase instead of trusting the token is what caused a real false
-// positive: a bounded, LIMIT-satisfied query delivering every requested row
-// still reported "may be incomplete", because the statement's own phase can
-// stay RUNNING long after (or even indefinitely after) the last row is served —
-// nothing about "no more rows" implies the job has reached a terminal phase.
-//
-// page_token is a positional offset, not a real cursor, so nothing can advance
-// past a token-less page — that's fine, since a token-less page is final. A page
-// with a token but no rows means "nothing new yet, keep polling this cursor";
-// back off between empty pages so an idle wait doesn't hammer the gateway.
+// drain pulls pages until the gateway omits the next-page token — the authoritative
+// "no more rows" signal; checking phase instead caused a real false-positive.
 func drain(ctx context.Context, opts Options, statementName string, schema flinkgatewayv1.SqlV1ResultSchema, result *Result) error {
 	pageToken := ""
 	backoff := initialBackoff
@@ -239,6 +208,7 @@ func drain(ctx context.Context, opts Options, statementName string, schema flink
 		pageToken = nextPageToken
 
 		if len(pageRows) == 0 {
+			// A token but no rows means "nothing new yet, keep polling"; back off so idle waiting doesn't hammer the gateway.
 			if err := opts.sleep(ctx, backoff); err != nil {
 				return err
 			}
@@ -249,11 +219,8 @@ func drain(ctx context.Context, opts Options, statementName string, schema flink
 	}
 }
 
-// refreshStatement re-reads the statement once draining is done, so
-// Result.Statement/Phase() reflect where things actually landed (in particular
-// FAILED) rather than the value from before draining started. Best-effort: a
-// failed refresh leaves the prior statement in place rather than losing the rows
-// already collected — the caller still has a usable Result either way.
+// refreshStatement re-reads the statement so Phase() reflects where it actually
+// landed. Best-effort: a failed refresh just keeps the prior value.
 func refreshStatement(ctx context.Context, opts Options, statementName string, result *Result) {
 	statement, err := wait.Call(ctx, func() (flinkgatewayv1.SqlV1Statement, error) {
 		return opts.authenticatedClient().GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId)
