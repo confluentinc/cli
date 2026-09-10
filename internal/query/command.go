@@ -208,9 +208,6 @@ type queryOut struct {
 	Rows      []map[string]any `json:"rows" yaml:"rows"`
 	RowCount  int              `json:"row_count" yaml:"row_count"`
 	Truncated bool             `json:"truncated" yaml:"truncated"`
-	// Incomplete mirrors Result.Incomplete: rows may be missing. Repeated here since
-	// the stderr warning is invisible to a script reading only stdout.
-	Incomplete bool `json:"incomplete" yaml:"incomplete"`
 	// AppendOnly is nil until traits are known, true for insert-only statements,
 	// false when Rows is a changelog rather than a materialized table — the only
 	// such signal a script gets, since rows carry no per-row operation marker.
@@ -343,20 +340,19 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 		return c.handleQueryError(client, environmentId, name, err, &settled)
 	}
 
-	// result.Statement's phase predates the drain loop's decision to truncate or
-	// give up — it says nothing about whether the job kept running after. Truncated
-	// and Incomplete both mean "we chose to stop reading," so both warrant a stop.
-	settled = !result.Truncated && !result.Incomplete && query.IsTerminal(result.Phase())
+	// drain() refreshes result.Statement once it's done, so this reflects the
+	// statement's actual final phase — but a bounded (LIMIT-satisfied) read over a
+	// streaming source can leave the job RUNNING indefinitely even though every
+	// requested row was delivered; the row stream ending is not a promise that the
+	// job itself will ever reach a terminal phase on its own. Truncated is the
+	// other case that always warrants a stop: we chose to stop reading early.
+	settled = !result.Truncated && query.IsTerminal(result.Phase())
 
 	if result.Phase() == types.FAILED {
 		return errors.NewErrorWithSuggestions(
 			fmt.Sprintf(`statement "%s" failed: %s`, name, result.Statement.Status.GetDetail()),
 			fmt.Sprintf("Inspect the failure with `confluent flink statement exception list %s`.", name),
 		)
-	}
-
-	if result.Incomplete {
-		output.ErrPrintf(false, "Warning: the gateway stopped returning result pages while statement \"%s\" was still in phase %s. The result set below may be incomplete.\n", name, result.Phase())
 	}
 
 	if result.Truncated {
@@ -643,7 +639,6 @@ func (c *command) printQueryResult(cmd *cobra.Command, name string, result *quer
 			Rows:          rows,
 			RowCount:      len(rows),
 			Truncated:     result.Truncated,
-			Incomplete:    result.Incomplete,
 			AppendOnly:    appendOnly,
 		})
 	}

@@ -102,6 +102,8 @@ func TestRunDrainsASinglePage(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	completed := statement("COMPLETED", boundedTraits("id", "status"))
 
+	// One call for await (leaves PENDING immediately), one for drain's
+	// end-of-loop refreshStatement — not a per-page phase check.
 	client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil).Times(2)
 	client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
 		Return(page("", []any{"1", "SHIPPED"}, []any{"2", "PENDING"}), nil)
@@ -110,7 +112,6 @@ func TestRunDrainsASinglePage(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, [][]string{{"1", "SHIPPED"}, {"2", "PENDING"}}, rowValues(t, result))
 	require.False(t, result.Truncated)
-	require.False(t, result.Incomplete)
 	require.Equal(t, types.COMPLETED, result.Phase())
 }
 
@@ -119,111 +120,66 @@ func TestRunDrainsEveryPage(t *testing.T) {
 	running := statement("RUNNING", boundedTraits("id"))
 	completed := statement("COMPLETED", boundedTraits("id"))
 
-	// Leaves PENDING, produces, completes after the last page — phase read before
-	// each page, not after.
+	// Pages are followed purely by token; the statement's phase is only read once
+	// up front (await) and once at the end (refreshStatement), not per page.
 	gomock.InOrder(
-		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(running, nil),
 		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(running, nil),
 		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
 			Return(page("10", []any{"1"}), nil),
-		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(running, nil),
 		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "10").
 			Return(page("20", []any{"2"}), nil),
-		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil),
 		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "20").
 			Return(page("", []any{"3"}), nil),
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil),
 	)
 
 	result, err := Run(context.Background(), testOptions(client), testStatementName)
 	require.NoError(t, err)
 	require.Equal(t, [][]string{{"1"}, {"2"}, {"3"}}, rowValues(t, result))
-	require.False(t, result.Incomplete)
+	require.Equal(t, types.COMPLETED, result.Phase())
 }
 
-// Unlike the shell (missing token = done), a run must not silently succeed when
-// the statement is still running and there's no token left to advance with.
-func TestRunFlagsIncompleteWhenPagesStopBeforeStatementDoes(t *testing.T) {
+// Regression test for a real false positive found running this against staging:
+// a bounded, LIMIT-satisfied query delivered every one of the requested rows,
+// but the underlying job's phase stayed RUNNING — it never transitions to
+// COMPLETED just because the row stream ended. A token-less page must be
+// treated as done regardless of phase; there is no "recheck and maybe concede
+// incomplete" step anymore, because the token itself is the authoritative
+// completion signal.
+func TestRunTreatsATokenLessPageAsDoneRegardlessOfPhase(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	running := statement("RUNNING", boundedTraits("id"))
 
 	gomock.InOrder(
 		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(running, nil),
-		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(running, nil),
 		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
 			Return(page("", []any{"1"}), nil),
-		// The re-check before conceding Incomplete: still RUNNING, so it stays Incomplete.
 		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(running, nil),
 	)
 
 	result, err := Run(context.Background(), testOptions(client), testStatementName)
 	require.NoError(t, err)
-	require.True(t, result.Incomplete)
 	require.Equal(t, [][]string{{"1"}}, rowValues(t, result))
+	require.Equal(t, types.RUNNING, result.Phase())
 }
 
-// The statement can reach a terminal phase during the GetStatementResults call
-// itself (reproduced against a real gateway) — terminalBeforeFetch is stale by
-// then, so drain must re-read phase before concluding the read was short.
-func TestRunDoesNotFlagIncompleteWhenStatementCompletesDuringTheFinalFetch(t *testing.T) {
+// A page with a token but zero rows means "nothing new yet" — keep polling that
+// cursor. Only a token-less page means done; an empty page that still hands out
+// a token is not the same thing.
+func TestRunRetriesEmptyPagesThatStillCarryAToken(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	running := statement("RUNNING", boundedTraits("id"))
-	completed := statement("COMPLETED", boundedTraits("id"))
 
 	gomock.InOrder(
 		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(running, nil),
-		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(running, nil),
-		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
+		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").Return(page("5"), nil),
+		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "5").
 			Return(page("", []any{"1"}), nil),
-		// The statement finished during the GetStatementResults call above.
-		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil),
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(running, nil),
 	)
 
 	result, err := Run(context.Background(), testOptions(client), testStatementName)
 	require.NoError(t, err)
-	require.False(t, result.Incomplete)
-	require.Equal(t, [][]string{{"1"}}, rowValues(t, result))
-}
-
-// An empty page with no token is the gateway saying "nothing yet". Re-requesting the
-// same offset is safe, so the loop should keep waiting rather than declaring victory.
-func TestRunRetriesEmptyPagesUntilStatementIsTerminal(t *testing.T) {
-	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
-	running := statement("RUNNING", boundedTraits("id"))
-	completed := statement("COMPLETED", boundedTraits("id"))
-
-	gomock.InOrder(
-		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(running, nil),
-		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(running, nil),
-		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").Return(page(""), nil),
-		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil),
-		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
-			Return(page("", []any{"1"}), nil),
-	)
-
-	result, err := Run(context.Background(), testOptions(client), testStatementName)
-	require.NoError(t, err)
-	require.False(t, result.Incomplete)
-	require.Equal(t, [][]string{{"1"}}, rowValues(t, result))
-}
-
-// Phase must be read before fetching a page, not after — reading it after could
-// miss a completion happening in the gap. Pinning the call order here makes a
-// regression fail loudly instead of occasionally under-counting rows in prod.
-func TestRunReadsStatementStateBeforeFetchingResults(t *testing.T) {
-	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
-	running := statement("RUNNING", boundedTraits("id"))
-	completed := statement("COMPLETED", boundedTraits("id"))
-
-	gomock.InOrder(
-		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(running, nil),
-		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil),
-		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
-			Return(page("", []any{"1"}), nil),
-	)
-
-	result, err := Run(context.Background(), testOptions(client), testStatementName)
-	require.NoError(t, err)
-	require.False(t, result.Incomplete)
 	require.Equal(t, [][]string{{"1"}}, rowValues(t, result))
 }
 
@@ -236,9 +192,9 @@ func TestRunWaitsForPendingStatement(t *testing.T) {
 		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(pending, nil),
 		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(pending, nil),
 		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil),
-		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil),
 		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
 			Return(page("", []any{"1"}), nil),
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil),
 	)
 
 	result, err := Run(context.Background(), testOptions(client), testStatementName)
@@ -320,7 +276,9 @@ func TestRunFailsOnRowSchemaMismatch(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	completed := statement("COMPLETED", boundedTraits("id", "status"))
 
-	client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil).Times(2)
+	// Only one call (await): the conversion error short-circuits drain before it
+	// ever reaches the token check that would trigger refreshStatement.
+	client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil)
 	client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
 		Return(page("", []any{"1"}), nil)
 
@@ -396,13 +354,61 @@ func TestRunDefaultsPollInterval(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// GatewayClientInterface takes no context and ignores any deadline the caller
+// set (ccloudv2.FlinkGatewayClient builds every request from
+// context.Background()). Confirmed against real staging: a GetStatementResults
+// call once hung for 49 minutes despite a 2-minute --wait-timeout. callWithContext
+// is what makes Run return once ctx fires regardless — this pins that down by
+// blocking GetStatementResults forever and asserting Run still returns promptly.
+func TestRunReturnsPromptlyWhenResultsCallHangsPastDeadline(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	completed := statement("COMPLETED", boundedTraits("id"))
+
+	client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil).AnyTimes()
+	client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
+		DoAndReturn(func(string, string, string, string) (flinkgatewayv1.SqlV1StatementResult, error) {
+			select {} // never returns; the shared client has no way to cancel this
+		})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Millisecond)
+	defer cancel()
+
+	start := time.Now()
+	_, err := Run(ctx, testOptions(client), testStatementName)
+	elapsed := time.Since(start)
+
+	require.ErrorIs(t, err, context.DeadlineExceeded)
+	require.Less(t, elapsed, time.Second, "Run must not wait for the hung call once ctx fires")
+}
+
+// Same as above, for the GetStatement call await() makes.
+func TestRunReturnsPromptlyWhenAwaitCallHangsPastDeadline(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).
+		DoAndReturn(func(string, string, string) (flinkgatewayv1.SqlV1Statement, error) {
+			select {} // never returns
+		}).AnyTimes()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Millisecond)
+	defer cancel()
+
+	start := time.Now()
+	_, err := Run(ctx, testOptions(client), testStatementName)
+	elapsed := time.Since(start)
+
+	require.ErrorIs(t, err, context.DeadlineExceeded)
+	require.Less(t, elapsed, time.Second, "Run must not wait for the hung call once ctx fires")
+}
+
 // A page-fetch failure is wrapped so the caller can tell it apart from a failure
 // reading the statement itself.
 func TestRunWrapsResultsFetchErrors(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	completed := statement("COMPLETED", boundedTraits("id"))
 
-	client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil).Times(2)
+	// Only one call (await): a failed fetch returns immediately, before drain
+	// ever reaches the token check that would trigger refreshStatement.
+	client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil)
 	client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
 		Return(flinkgatewayv1.SqlV1StatementResult{}, errors.New("page not found"))
 

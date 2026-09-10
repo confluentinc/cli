@@ -29,6 +29,13 @@ func (s *CLITestSuite) TestQuery() {
 		// in the "Stopped statement" message.
 		{args: `query --sql "SELECT id FROM many_rows;" --compute-pool lfcp-123456 --service-account sa-123456 --max-rows 2`, fixture: "query/max-rows.golden", regex: true},
 
+		// Regression case for a real false positive found against staging: a
+		// LIMIT-satisfied read over a streaming source delivers every row (no next
+		// token) but the job's phase stays RUNNING. No "may be incomplete" warning —
+		// all rows print — but the deferred cleanup still stops the non-terminal
+		// statement, same as it does after --max-rows.
+		{args: `query --sql "SELECT id FROM limit_bounded_stream;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "query/limit-bounded-stream.golden", regex: true},
+
 		// Non-append-only: an Operation column and a changelog warning, no stop (the
 		// statement already reached a terminal phase on its own).
 		{args: `query --sql "SELECT * FROM changelog;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "query/changelog.golden"},

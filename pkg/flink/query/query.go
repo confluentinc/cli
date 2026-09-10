@@ -87,9 +87,6 @@ type Result struct {
 	Rows []types.StatementResultRow
 	// Truncated reports that MaxRows stopped the drain before the result set ended.
 	Truncated bool
-	// Incomplete reports the gateway stopped giving page tokens while still
-	// running, so rows may be missing. See drain.
-	Incomplete bool
 }
 
 // Phase is the statement phase at the end of the run.
@@ -169,7 +166,9 @@ func Run(ctx context.Context, opts Options, statementName string) (*Result, erro
 func await(ctx context.Context, opts Options, statementName string) (flinkgatewayv1.SqlV1Statement, error) {
 	return wait.PollPhases(ctx, wait.PhaseOptions[flinkgatewayv1.SqlV1Statement]{
 		Fetch: func() (flinkgatewayv1.SqlV1Statement, error) {
-			return opts.authenticatedClient().GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId)
+			return callWithContext(ctx, func() (flinkgatewayv1.SqlV1Statement, error) {
+				return opts.authenticatedClient().GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId)
+			})
 		},
 		Phase:         func(s flinkgatewayv1.SqlV1Statement) string { return s.Status.GetPhase() },
 		PendingPhases: []string{string(types.PENDING)},
@@ -178,18 +177,21 @@ func await(ctx context.Context, opts Options, statementName string) (flinkgatewa
 	})
 }
 
-// drain pulls result pages until there's no next page and the statement is
-// terminal.
-//
-// Phase is read before each page fetch, not after: reading it after could miss a
-// completion that happened during the fetch, making a genuinely short page look
-// complete. Reading it first means a token-less page is only "final" once nothing
-// more could have been added before the fetch — one extra status call per page.
+// drain pulls result pages until the gateway stops handing out a next-page
+// token. That absence is itself the authoritative "no more rows" signal: the
+// gateway's protocol guarantee is that it never omits the token while more rows
+// remain, so unlike an earlier version of this loop, no statement-phase check is
+// needed to decide whether the read is complete — the token already says so.
+// Checking phase instead of trusting the token is what caused a real false
+// positive: a bounded, LIMIT-satisfied query delivering every requested row
+// still reported "may be incomplete", because the statement's own phase can
+// stay RUNNING long after (or even indefinitely after) the last row is served —
+// nothing about "no more rows" implies the job has reached a terminal phase.
 //
 // page_token is a positional offset, not a real cursor, so nothing can advance
-// past a token-less page. An empty page while still RUNNING just means "not yet";
-// retry the same offset. A page with rows but no token means the gateway can't
-// give one — Incomplete says so rather than guessing the run finished.
+// past a token-less page — that's fine, since a token-less page is final. A page
+// with a token but no rows means "nothing new yet, keep polling this cursor";
+// back off between empty pages so an idle wait doesn't hammer the gateway.
 func drain(ctx context.Context, opts Options, statementName string, schema flinkgatewayv1.SqlV1ResultSchema, result *Result) error {
 	pageToken := ""
 	backoff := initialBackoff
@@ -199,14 +201,9 @@ func drain(ctx context.Context, opts Options, statementName string, schema flink
 			return err
 		}
 
-		statement, err := opts.authenticatedClient().GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId)
-		if err != nil {
-			return err
-		}
-		result.Statement = statement
-		terminalBeforeFetch := IsTerminal(types.PHASE(statement.Status.GetPhase()))
-
-		page, err := opts.authenticatedClient().GetStatementResults(opts.EnvironmentId, statementName, opts.OrganizationId, pageToken)
+		page, err := callWithContext(ctx, func() (flinkgatewayv1.SqlV1StatementResult, error) {
+			return opts.authenticatedClient().GetStatementResults(opts.EnvironmentId, statementName, opts.OrganizationId, pageToken)
+		})
 		if err != nil {
 			return &ResultsFetchError{Err: err}
 		}
@@ -222,6 +219,7 @@ func drain(ctx context.Context, opts Options, statementName string, schema flink
 		if opts.MaxRows > 0 && len(result.Rows) > opts.MaxRows {
 			result.Rows = result.Rows[:opts.MaxRows]
 			result.Truncated = true
+			refreshStatement(ctx, opts, statementName, result)
 			return nil
 		}
 
@@ -234,34 +232,34 @@ func drain(ctx context.Context, opts Options, statementName string, schema flink
 			}
 		}
 
-		if nextPageToken != "" {
-			pageToken = nextPageToken
-			backoff = initialBackoff
-			continue
-		}
-
-		if terminalBeforeFetch {
+		if nextPageToken == "" {
+			refreshStatement(ctx, opts, statementName, result)
 			return nil
 		}
+		pageToken = nextPageToken
 
-		if len(pageRows) > 0 {
-			// terminalBeforeFetch predates the results call, so it could miss a
-			// completion that happened during it. Re-check once before conceding;
-			// a failed re-check falls back to Incomplete.
-			if statement, err := opts.authenticatedClient().GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId); err == nil {
-				result.Statement = statement
-				if IsTerminal(types.PHASE(statement.Status.GetPhase())) {
-					return nil
-				}
+		if len(pageRows) == 0 {
+			if err := opts.sleep(ctx, backoff); err != nil {
+				return err
 			}
-			result.Incomplete = true
-			return nil
+			backoff = min(backoff*2, maxBackoff)
+		} else {
+			backoff = initialBackoff
 		}
+	}
+}
 
-		if err := opts.sleep(ctx, backoff); err != nil {
-			return err
-		}
-		backoff = min(backoff*2, maxBackoff)
+// refreshStatement re-reads the statement once draining is done, so
+// Result.Statement/Phase() reflect where things actually landed (in particular
+// FAILED) rather than the value from before draining started. Best-effort: a
+// failed refresh leaves the prior statement in place rather than losing the rows
+// already collected — the caller still has a usable Result either way.
+func refreshStatement(ctx context.Context, opts Options, statementName string, result *Result) {
+	statement, err := callWithContext(ctx, func() (flinkgatewayv1.SqlV1Statement, error) {
+		return opts.authenticatedClient().GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId)
+	})
+	if err == nil {
+		result.Statement = statement
 	}
 }
 
@@ -273,6 +271,37 @@ func IsTerminal(phase types.PHASE) bool {
 		return true
 	}
 	return false
+}
+
+// callWithContext races fn against ctx. GatewayClientInterface's methods take no
+// context and ignore any deadline the caller set — ccloudv2.FlinkGatewayClient
+// builds every request from context.Background() internally — so without this, a
+// single slow or hung gateway call blocks well past --wait-timeout with no way to
+// interrupt it. Confirmed against real staging: a GetStatementResults call once
+// hung for 49 minutes despite a 2-minute --wait-timeout.
+//
+// This only returns control to the caller once ctx fires; it cannot actually
+// abort the in-flight HTTP call, so fn's goroutine keeps running in the
+// background until the underlying transport eventually gives up or the process
+// exits. That leak is real, but a silently-broken --wait-timeout promise is worse.
+func callWithContext[T any](ctx context.Context, fn func() (T, error)) (T, error) {
+	type result struct {
+		val T
+		err error
+	}
+	ch := make(chan result, 1)
+	go func() {
+		val, err := fn()
+		ch <- result{val, err}
+	}()
+
+	select {
+	case r := <-ch:
+		return r.val, r.err
+	case <-ctx.Done():
+		var zero T
+		return zero, ctx.Err()
+	}
 }
 
 func sleepContext(ctx context.Context, duration time.Duration) error {
