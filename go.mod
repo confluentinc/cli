@@ -1,6 +1,6 @@
 module github.com/confluentinc/cli/v4
 
-go 1.26.7
+go 1.26.8
 
 require (
 	github.com/antihax/optional v1.0.0
@@ -51,6 +51,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.3
 	github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1
+	github.com/confluentinc/ccloud-sdk-go-v2/switchover v0.0.0-20260909150805-7dfad3daf9b5
 	github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.7.0
 	github.com/confluentinc/ccloud-sdk-go-v2/usm v0.2.0
 	github.com/confluentinc/cmf-sdk-go v0.0.8
