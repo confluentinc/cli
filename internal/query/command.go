@@ -104,9 +104,9 @@ func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	cmd.Flags().String("sql", "", `The Flink SQL statement. Alternatively, pass it as a positional argument or with "-f".`)
 	cmd.Flags().StringP("file", "f", "", `Path to a file containing the Flink SQL statement. Alternatively, pass the SQL with "--sql" or as a positional argument.`)
-	c.addComputePoolFlag(cmd)
+	pcmd.AddComputePoolFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
-	c.addDatabaseFlag(cmd)
+	pcmd.AddDatabaseFlag(cmd, c.AuthenticatedCLICommand)
 	c.addClusterAlias(cmd)
 	cmd.Flags().StringSlice("property", []string{}, "A mechanism to pass properties in the form key=value when creating a Flink statement.")
 	cmd.Flags().Duration("wait-timeout", config.DefaultTimeoutDuration, "Maximum time to wait for the query to finish before giving up.")
@@ -122,45 +122,21 @@ func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	return cmd
 }
 
-// addComputePoolFlag and addDatabaseFlag mirror internal/flink's helpers, duplicated
-// since this command lives outside the `flink` package boundary.
-func (c *command) addComputePoolFlag(cmd *cobra.Command) {
-	cmd.Flags().String("compute-pool", "", "Flink compute pool ID.")
-	pcmd.RegisterFlagCompletionFunc(cmd, "compute-pool", c.autocompleteComputePools)
-}
-
-func (c *command) autocompleteComputePools(cmd *cobra.Command, args []string) []string {
-	if err := c.PersistentPreRunE(cmd, args); err != nil {
-		return nil
-	}
-
-	environmentId, err := c.Context.EnvironmentId()
-	if err != nil {
-		return nil
-	}
-
-	computePools, err := c.V2Client.ListFlinkComputePools("", environmentId, "")
-	if err != nil {
-		return nil
-	}
-
-	suggestions := make([]string, len(computePools))
-	for i, computePool := range computePools {
-		suggestions[i] = fmt.Sprintf("%s\t%s", computePool.GetId(), computePool.Spec.GetDisplayName())
-	}
-	return suggestions
-}
-
-func (c *command) addDatabaseFlag(cmd *cobra.Command) {
-	cmd.Flags().String("database", "", "The database which will be used as the default database. When using Kafka, this is the cluster ID.")
-	pcmd.RegisterFlagCompletionFunc(cmd, "database", c.autocompleteDatabases)
-}
-
 // addClusterAlias is a separate flag, not shared storage: ParseFlagsIntoContext
 // persists "cluster" to the active Kafka context but never "database".
 func (c *command) addClusterAlias(cmd *cobra.Command) {
 	cmd.Flags().String("cluster", "", `Alias for "--database". Unlike "--database", this also sets the CLI's active Kafka cluster context, the same as it does on every other command.`)
-	pcmd.RegisterFlagCompletionFunc(cmd, "cluster", c.autocompleteDatabases)
+	pcmd.RegisterFlagCompletionFunc(cmd, "cluster", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+		return pcmd.AutocompleteClusters(environmentId, c.V2Client)
+	})
 }
 
 // addCatalogAlias shares --environment's pflag.Value directly, since --environment
@@ -168,28 +144,6 @@ func (c *command) addClusterAlias(cmd *cobra.Command) {
 func (c *command) addCatalogAlias(cmd *cobra.Command) {
 	environmentFlag := cmd.Flags().Lookup("environment")
 	cmd.Flags().Var(environmentFlag.Value, "catalog", `Alias for "--environment".`)
-}
-
-func (c *command) autocompleteDatabases(cmd *cobra.Command, args []string) []string {
-	if err := c.PersistentPreRunE(cmd, args); err != nil {
-		return nil
-	}
-
-	environmentId, err := c.Context.EnvironmentId()
-	if err != nil {
-		return nil
-	}
-
-	clusters, err := c.V2Client.ListKafkaClusters(environmentId)
-	if err != nil {
-		return nil
-	}
-
-	suggestions := make([]string, len(clusters))
-	for i, cluster := range clusters {
-		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
-	}
-	return suggestions
 }
 
 type queryColumnOut struct {
