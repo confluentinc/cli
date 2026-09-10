@@ -72,7 +72,7 @@ func printCertificateAuthority(cmd *cobra.Command, certificateAuthority certific
 		CrlUpdatedAt:                  certificateAuthority.CrlUpdatedAt,
 	}
 	table.Add(out)
-	return table.Print()
+	return table.PrintWithAutoWrap(false)
 }
 
 func (c *certificateAuthorityCommand) validArgs(cmd *cobra.Command, args []string) []string {
