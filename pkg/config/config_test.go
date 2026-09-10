@@ -269,6 +269,8 @@ func TestConfig_Load(t *testing.T) {
 				ctx.KafkaClusterContext.KafkaClusterConfigs = cfg.Contexts[contextName].KafkaClusterContext.KafkaClusterConfigs
 			}
 
+			// baseline is a load-time impl detail, not under test here.
+			cfg.baseline = nil
 			if !t.Failed() && !reflect.DeepEqual(cfg, test.want) {
 				t.Errorf("Config.Load() =\n%+v, want \n%+v", cfg, test.want)
 			}
@@ -709,6 +711,8 @@ func TestConfig_AddContext(t *testing.T) {
 			if (err != nil) != test.wantErr {
 				t.Errorf("AddContext() error = %v, wantErr %v", err, test.wantErr)
 			}
+			// baseline is a save-time impl detail, not under test here.
+			test.config.baseline = nil
 			if !test.wantErr && !reflect.DeepEqual(test.want, test.config) {
 				t.Errorf("AddContext() got = %v, want %v", test.config, test.want)
 			}
@@ -726,6 +730,9 @@ func TestConfig_CreateContext(t *testing.T) {
 	}
 
 	SetTempHomeDir()
+	// Isolate from the shared default config path so Save's read-merge can't pick
+	// up another test's leftover config.
+	cfg.Filename = filepath.Join(t.TempDir(), "config.json")
 	err := cfg.CreateContext("context", "https://example.com", "api-key", "api-secret")
 	require.NoError(t, err)
 
@@ -738,6 +745,9 @@ func TestConfig_CreateContext(t *testing.T) {
 
 func TestConfig_UseContext(t *testing.T) {
 	cfg := AuthenticatedCloudConfigMock()
+	// Isolate from the shared default config path so Save's read-merge can't pick
+	// up (or leave behind) another test's leftover config.
+	cfg.Filename = filepath.Join(t.TempDir(), "config.json")
 	contextName := cfg.Context().Name
 	cfg.CurrentContext = ""
 	type fields struct {
@@ -1250,6 +1260,39 @@ func TestReadConfigFromDisk_WiresGraphAndPassesValidate(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, path, got.Filename, "json:\"-\" Filename must be carried from the template")
 	require.NoError(t, got.Validate())
+}
+
+func TestSave_MergesConcurrentDiskChange(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+
+	// Seed: two platforms.
+	seed := New()
+	seed.Filename = path
+	seed.Platforms["a"] = &Platform{Name: "a"}
+	seed.Platforms["b"] = &Platform{Name: "b"}
+	require.NoError(t, seed.Save())
+
+	// This process loads, then another session adds platform "c" on disk.
+	ours, err := readConfigFromDisk(path, seed)
+	require.NoError(t, err)
+	ours.snapshotBaseline()
+
+	other, err := readConfigFromDisk(path, seed)
+	require.NoError(t, err)
+	other.snapshotBaseline()
+	other.Platforms["c"] = &Platform{Name: "c"}
+	require.NoError(t, other.Save())
+
+	// Now this process deletes "a" and saves.
+	delete(ours.Platforms, "a")
+	require.NoError(t, ours.Save())
+
+	final, err := readConfigFromDisk(path, seed)
+	require.NoError(t, err)
+	require.NotContains(t, final.Platforms, "a", "our delete must persist")
+	require.Contains(t, final.Platforms, "b")
+	require.Contains(t, final.Platforms, "c", "the other session's concurrent add must not be lost")
 }
 
 func TestSnapshotBaseline_IsIndependentCopy(t *testing.T) {
