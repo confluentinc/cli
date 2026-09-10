@@ -5,16 +5,8 @@ import (
 	"strconv"
 )
 
-// ToSerializedValue renders a field as a value that carries its SQL type into
-// `-o json`/`-o yaml`, so a number reads as a number and NULL as null.
-//
-// Not ToSDKType: that produces the gateway's wire shape (every atom a string, MAP
-// as pairs) — correct for the API, wrong for a script.
-//
-// Two constraints: only native Go types are used (json.Number renders as a bare
-// literal in encoding/json but quoted in yaml.v3, which would make the formats
-// disagree), and a value that can't be represented natively keeps the gateway's
-// exact text rather than becoming a zero or an approximation.
+// ToSerializedValue renders a field as its SQL type for `-o json`/`-o yaml` (a
+// number as a number, NULL as null) — unlike ToSDKType, the gateway's string-only wire shape.
 
 func (f AtomicStatementResultField) ToSerializedValue() any {
 	// A NULL arrives as Type Null carrying the literal text "NULL", which is otherwise
@@ -42,13 +34,7 @@ func (f AtomicStatementResultField) ToSerializedValue() any {
 		}
 	}
 
-	// Everything else stays text on purpose:
-	//   - BIGINT exceeds float64's exact range (2^53); JS/jq parse JSON numbers as
-	//     float64, so a bare literal would silently corrupt large values. Same
-	//     reasoning keeps DECIMAL a string.
-	//   - DECIMAL is arbitrary-precision; float64 would round it.
-	//   - DATE/TIME/TIMESTAMP/INTERVAL have no native JSON form.
-	//   - CHAR/VARCHAR/BINARY/VARBINARY are already text.
+	// Everything else stays text: BIGINT/DECIMAL would lose precision as float64, and the rest have no native JSON form anyway.
 	return f.Value
 }
 

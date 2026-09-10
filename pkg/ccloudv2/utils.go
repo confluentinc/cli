@@ -121,10 +121,7 @@ func getServerUrl(baseURL string) string {
 	return u.String()
 }
 
-// ExtractPageToken pulls page_token out of an absolute "next page" URL. Exported
-// for callers outside this package with a similar next-URL shape. Errors on a
-// non-empty URL with no page_token — callers treating an empty URL itself as "no
-// more pages" must check for that first, as extractNextPageToken below does.
+// ExtractPageToken pulls page_token out of an absolute "next page" URL.
 func ExtractPageToken(nextPageUrlString string) (string, error) {
 	nextPageUrl, err := url.Parse(nextPageUrlString)
 	if err != nil {
