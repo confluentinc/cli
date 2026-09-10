@@ -6,6 +6,39 @@ import (
 	"time"
 )
 
+// Call races fn against ctx. Use it to bound a call whose own API takes no
+// context and so ignores any deadline the caller set — for example
+// ccloudv2.FlinkGatewayClient, which builds every request from
+// context.Background() internally regardless of what the caller passed in.
+// Without this, a single slow or hung call blocks past whatever timeout the
+// caller promised, with no way to interrupt it: confirmed against real
+// staging, where a single gateway call once hung for 49 minutes despite a
+// 2-minute --wait-timeout.
+//
+// This only returns control to the caller once ctx fires; it cannot actually
+// abort the in-flight call, so fn's goroutine keeps running in the background
+// until it completes or the process exits. That leak is real, but a silently
+// broken timeout promise is worse.
+func Call[T any](ctx context.Context, fn func() (T, error)) (T, error) {
+	type result struct {
+		val T
+		err error
+	}
+	ch := make(chan result, 1)
+	go func() {
+		val, err := fn()
+		ch <- result{val, err}
+	}()
+
+	select {
+	case r := <-ch:
+		return r.val, r.err
+	case <-ctx.Done():
+		var zero T
+		return zero, ctx.Err()
+	}
+}
+
 // Options describes a single Poll invocation. T is the polled resource type.
 //
 // Delay (if non-zero) sleeps before the first Fetch. Use it to give the
