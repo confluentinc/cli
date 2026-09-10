@@ -1,4 +1,4 @@
-Describe a certificate authority.
+Describe an IAM certificate authority.
 
 Usage:
   confluent iam certificate-authority describe <id> [flags]
