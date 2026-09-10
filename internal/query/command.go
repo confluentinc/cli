@@ -46,6 +46,10 @@ const (
 	// stopTimeout bounds how long we wait for a statement to stop after interrupt.
 	stopTimeout = 5 * time.Second
 
+	// createStatementGracePeriod bounds how long we wait, after ctx cancellation, for an
+	// in-flight CreateStatement to land so we can stop it instead of leaking it.
+	createStatementGracePeriod = 10 * time.Second
+
 	// queryFeatureFlag gates the command's visibility.
 	queryFeatureFlag = "cli.query"
 )
@@ -226,9 +230,35 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	sql, err := resolveSQL(cmd, args)
+	if err != nil {
+		return err
+	}
+
+	database, err := c.resolveDatabase(cmd)
+	if err != nil {
+		return err
+	}
+
 	timeout, err := cmd.Flags().GetDuration("wait-timeout")
 	if err != nil {
 		return err
+	}
+
+	maxRows, err := cmd.Flags().GetInt("max-rows")
+	if err != nil {
+		return err
+	}
+	if maxRows < 0 {
+		return errors.New("the `--max-rows` flag must not be negative")
+	}
+
+	raw, err := cmd.Flags().GetBool("raw")
+	if err != nil {
+		return err
+	}
+	if raw && !output.GetFormat(cmd).IsSerialized() {
+		return errors.New("the `--raw` flag requires `-o json` or `-o yaml`")
 	}
 
 	// Built now, before any network call, so --wait-timeout bounds the whole
@@ -255,32 +285,6 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 	computePool := c.Context.GetCurrentFlinkComputePool()
 
 	name := types.GenerateStatementName()
-
-	sql, err := resolveSQL(cmd, args)
-	if err != nil {
-		return err
-	}
-
-	database, err := c.resolveDatabase(cmd)
-	if err != nil {
-		return err
-	}
-
-	maxRows, err := cmd.Flags().GetInt("max-rows")
-	if err != nil {
-		return err
-	}
-	if maxRows < 0 {
-		return errors.New("the `--max-rows` flag must not be negative")
-	}
-
-	raw, err := cmd.Flags().GetBool("raw")
-	if err != nil {
-		return err
-	}
-	if raw && !output.GetFormat(cmd).IsSerialized() {
-		return errors.New("the `--raw` flag requires `-o json` or `-o yaml`")
-	}
 
 	statementProperties, err := c.buildQueryProperties(cmd, environment.GetDisplayName(), database)
 	if err != nil {
@@ -318,9 +322,9 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 		principal = c.Context.GetUser().GetResourceId()
 	}
 
-	if _, err := wait.Call(ctx, func() (flinkgatewayv1.SqlV1Statement, error) {
+	if err := createStatement(ctx, createStatementGracePeriod, func() (flinkgatewayv1.SqlV1Statement, error) {
 		return client.CreateStatement(statement, principal, environmentId, c.Context.LastOrgId)
-	}); err != nil {
+	}, func() { c.stopStatement(client, environmentId, name) }); err != nil {
 		return err
 	}
 
@@ -573,6 +577,31 @@ func (c *command) refreshGatewayToken(client *ccloudv2.FlinkGatewayClient, jwtVa
 		}
 		client.AuthToken = dataplaneToken
 		return nil
+	}
+}
+
+// createStatement runs create and returns its error. If ctx is cancelled first, it
+// still waits up to gracePeriod for create to land, calling cleanup instead of
+// leaking an unstoppable statement if it succeeded.
+func createStatement(ctx context.Context, gracePeriod time.Duration, create func() (flinkgatewayv1.SqlV1Statement, error), cleanup func()) error {
+	done := make(chan error, 1)
+	go func() {
+		_, err := create()
+		done <- err
+	}()
+
+	select {
+	case err := <-done:
+		return err
+	case <-ctx.Done():
+		select {
+		case err := <-done:
+			if err == nil {
+				cleanup()
+			}
+		case <-time.After(gracePeriod):
+		}
+		return ctx.Err()
 	}
 }
 
