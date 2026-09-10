@@ -1,4 +1,4 @@
-Create a certificate authority.
+Create an IAM certificate authority.
 
 Usage:
   confluent iam certificate-authority create <name> [flags]
@@ -31,11 +31,11 @@ An example of a certificate chain:
 
 Flags:
       --description string                  REQUIRED: Description of the certificate authority.
-      --certificate-chain string            REQUIRED: A base64 encoded string containing the signing certificate chain.
       --certificate-chain-filename string   REQUIRED: The name of the certificate file.
+      --certificate-chain string            REQUIRED: The PEM encoded string containing the signing certificate chain used to validate client certs.
       --crl-url string                      The URL from which to fetch the CRL (Certificate Revocation List) for the certificate authority.
-      --crl-chain string                    A base64 encoded string containing the CRL for this certificate authority.
       --require-crl-on-client-certificate   Require CRL validation on client certificates.
+      --crl-chain crl_url                   The PEM encoded string containing the CRL for this certificate authority. Defaults to this over crl_url if available.
       --context string                      CLI context name.
   -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
 
