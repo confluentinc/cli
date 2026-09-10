@@ -100,6 +100,12 @@ type Config struct {
 	overwrittenCurrentEnvironment  string
 	overwrittenCurrentKafkaCluster string
 
+	// baseline is this process's view of the persisted config as of its last
+	// load or successful save. Save() diffs baseline against the live config to
+	// learn what THIS process changed, so a concurrent writer's fields can be
+	// preserved. Never serialized.
+	baseline *Config
+
 	// Deprecated
 	DisablePluginsOnce bool `json:"disable_plugins_once,omitempty"`
 }
@@ -190,27 +196,12 @@ func (c *Config) Load() error {
 		return fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, filename, err)
 	}
 
+	if err := wireContexts(c); err != nil {
+		return err
+	}
+
 	var save bool
 	for _, context := range c.Contexts {
-		// Some "pre-validation"
-		if context.Name == "" {
-			return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.Filename)
-		}
-		if context.CredentialName == "" {
-			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.Filename)
-		}
-		if context.PlatformName == "" {
-			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.Filename)
-		}
-		context.Credential = c.Credentials[context.CredentialName]
-		context.Platform = c.Platforms[context.PlatformName]
-		context.Config = c
-		if context.KafkaClusterContext == nil {
-			return errors.NewCorruptedConfigError(`context "%s" missing KafkaClusterContext`, context.Name, c.Filename)
-		}
-		context.KafkaClusterContext.Context = context
-		context.State = c.ContextStates[context.Name]
-
 		// Migrate deprecated NetrcMachineName to MachineName
 		if context.NetrcMachineName != "" && context.MachineName == "" {
 			context.MachineName = context.NetrcMachineName
@@ -237,6 +228,75 @@ func (c *Config) Load() error {
 	}
 
 	return c.Validate()
+}
+
+// wireContexts rebuilds the cross-references Load() relies on: each context's
+// Credential/Platform/Config back-pointer, its KafkaClusterContext parent, and
+// its State pointer aliased to c.ContextStates[name]. Validate()'s DeepEqual on
+// context state only holds because State and ContextStates[name] are the same
+// object, so a bare json.Unmarshal is never enough.
+func wireContexts(c *Config) error {
+	for _, context := range c.Contexts {
+		if context.Name == "" {
+			return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.Filename)
+		}
+		if context.CredentialName == "" {
+			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.Filename)
+		}
+		if context.PlatformName == "" {
+			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.Filename)
+		}
+		context.Credential = c.Credentials[context.CredentialName]
+		context.Platform = c.Platforms[context.PlatformName]
+		context.Config = c
+		if context.KafkaClusterContext == nil {
+			return errors.NewCorruptedConfigError(`context "%s" missing KafkaClusterContext`, context.Name, c.Filename)
+		}
+		context.KafkaClusterContext.Context = context
+		context.State = c.ContextStates[context.Name]
+	}
+	return nil
+}
+
+// readConfigFromDisk re-reads the persisted config and rebuilds its pointer
+// graph. It does NOT run migrations and never writes — it is the "theirs" side
+// of Save()'s merge, so it must not recurse into Save(). json:"-" fields
+// (Filename, IsTest, Version, DisableUpdates) are copied from template because a
+// fresh unmarshal cannot recover them.
+func readConfigFromDisk(path string, template *Config) (*Config, error) {
+	input, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	disk := New()
+	if err := json.Unmarshal(input, disk); err != nil {
+		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, path, err)
+	}
+
+	disk.Filename = template.Filename
+	disk.IsTest = template.IsTest
+	disk.Version = template.Version
+	disk.DisableUpdates = template.DisableUpdates
+
+	if err := wireContexts(disk); err != nil {
+		return nil, err
+	}
+	return disk, nil
+}
+
+// snapshotBaseline deep-copies the persisted fields into c.baseline via a JSON
+// round-trip (json:"-" and unexported fields are intentionally excluded — the
+// merge only diffs persisted state).
+func (c *Config) snapshotBaseline() {
+	data, err := json.Marshal(c)
+	if err != nil {
+		c.baseline = New()
+		return
+	}
+	b := New()
+	_ = json.Unmarshal(data, b)
+	c.baseline = b
 }
 
 // Save writes the CLI config to disk.
