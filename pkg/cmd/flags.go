@@ -132,6 +132,24 @@ func AutocompleteClusters(environmentId string, client *ccloudv2.Client) []strin
 	return suggestions
 }
 
+// AddDatabaseFlag is AddClusterFlag under a "database" name, for commands (e.g.
+// `confluent query`) that use "database" as the generic term for the resource a
+// Kafka cluster ID happens to identify.
+func AddDatabaseFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
+	cmd.Flags().String("database", "", "The database which will be used as the default database. When using Kafka, this is the cluster ID.")
+	RegisterFlagCompletionFunc(cmd, "database", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+		return AutocompleteClusters(environmentId, c.V2Client)
+	})
+}
+
 func AddComputePoolFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 	cmd.Flags().String("compute-pool", "", "Flink compute pool ID.")
 	RegisterFlagCompletionFunc(cmd, "compute-pool", func(cmd *cobra.Command, args []string) []string {
