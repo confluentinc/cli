@@ -13,7 +13,7 @@ func TestWriteFileAtomic_ReplacesExistingAndSetsPerms(t *testing.T) {
 	path := filepath.Join(dir, "config.json")
 	require.NoError(t, os.WriteFile(path, []byte("old"), 0600))
 
-	require.NoError(t, writeFileAtomic(path, []byte("new-contents"), 0600))
+	require.NoError(t, writeFileAtomic(path, []byte("new-contents")))
 
 	got, err := os.ReadFile(path)
 	require.NoError(t, err)
@@ -28,7 +28,7 @@ func TestWriteFileAtomic_LeavesNoTempOnSuccess(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 
-	require.NoError(t, writeFileAtomic(path, []byte("x"), 0600))
+	require.NoError(t, writeFileAtomic(path, []byte("x")))
 
 	entries, err := os.ReadDir(dir)
 	require.NoError(t, err)
