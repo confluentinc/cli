@@ -35,7 +35,7 @@ func (c *APIKeyPair) EncryptSecret() error {
 		c.Nonce = nonce
 	}
 
-	if !strings.HasPrefix(c.Secret, secret.AesGcm) {
+	if !strings.HasPrefix(c.Secret, secret.AesGcm) && !strings.HasPrefix(c.Secret, secret.Dpapi) {
 		encryptedSecret, err := secret.Encrypt(c.Key, c.Secret, c.Salt, c.Nonce)
 		if err != nil {
 			return err
