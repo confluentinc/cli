@@ -3,7 +3,7 @@ package pair
 import (
 	"github.com/spf13/cobra"
 
-	switchoverv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/switchover/v1"
+	switchoverv1 "github.com/confluentinc/ccloud-sdk-go-v2/switchover/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
@@ -59,7 +59,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		list.Add(&listOut{
 			Id:           pair.GetId(),
 			DisplayName:  pair.Spec.GetDisplayName(),
-			Environment:  pair.Spec.GetEnvironment(),
+			Environment:  pair.Spec.GetEnvironmentCrn(),
 			ActiveMember: pair.Spec.GetActiveMember(),
 			FailoverType: pair.Spec.GetFailoverType(),
 			Phase:        pair.Status.GetPhase(),
