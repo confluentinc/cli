@@ -349,15 +349,14 @@ func TestPrintQueryResult(t *testing.T) {
 		require.Empty(t, out)
 	})
 
-	t.Run("json envelope carries schema, truncated and incomplete", func(t *testing.T) {
+	t.Run("json envelope carries schema and truncated", func(t *testing.T) {
 		c := newTestCommand(nil)
 		cmd := newOutputCmd(t, "json")
 		result := &query.Result{
-			Statement:  flinkgatewayv1.SqlV1Statement{Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "RUNNING"}},
-			Columns:    testColumns(),
-			Rows:       []types.StatementResultRow{testRow()},
-			Truncated:  true,
-			Incomplete: true,
+			Statement: flinkgatewayv1.SqlV1Statement{Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "RUNNING"}},
+			Columns:   testColumns(),
+			Rows:      []types.StatementResultRow{testRow()},
+			Truncated: true,
 		}
 
 		out := captureStdout(t, func() {
@@ -367,8 +366,8 @@ func TestPrintQueryResult(t *testing.T) {
 		require.Contains(t, out, `"engine": "snapshot"`)
 		require.Contains(t, out, `"phase": "RUNNING"`)
 		require.Contains(t, out, `"truncated": true`)
-		require.Contains(t, out, `"incomplete": true`)
 		require.Contains(t, out, `"id": 1021`)
+		require.NotContains(t, out, "incomplete")
 		require.NotContains(t, out, "append_only")
 	})
 
@@ -504,6 +503,26 @@ func TestStopStatement(t *testing.T) {
 		})
 		require.Contains(t, out, `could not stop statement "stmt"`)
 	})
+
+	t.Run("a statement with no spec reports a warning and returns false", func(t *testing.T) {
+		// GetStatement succeeds but the gateway returns a statement with no Spec at
+		// all, exercising the defensive nil check ahead of setting Spec.Stopped.
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodGet {
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"name": "stmt"}`))
+			}
+		}))
+		defer server.Close()
+
+		client := ccloudv2.NewFlinkGatewayClient(server.URL, "test", false, "token")
+		c := newTestCommand(newTestContext(server.URL, "token"))
+
+		out := captureStderr(t, func() {
+			require.False(t, c.stopStatement(client, "env-1", "stmt"))
+		})
+		require.Contains(t, out, `has no spec`)
+	})
 }
 
 func captureStderr(t *testing.T, fn func()) string {
@@ -588,6 +607,27 @@ func TestHandleQueryError(t *testing.T) {
 
 		settled := false
 		err := c.handleQueryError(client, "env-1", "stmt", context.DeadlineExceeded, &settled)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "timed out")
+		require.True(t, settled)
+	})
+
+	t.Run("a context deadline wrapped in ResultsFetchError is still reported as timed out", func(t *testing.T) {
+		// callWithContext (pkg/flink/query) returns ctx.Err() from inside drain's
+		// results-fetch call, which wraps it in ResultsFetchError. The
+		// context.DeadlineExceeded branch above must still catch this via
+		// errors.Is unwrapping ResultsFetchError, not fall through to the generic
+		// results-fetch handling below (which has no useful suggestion for a
+		// timeout).
+		server := testserver.NewFlinkGatewayRouter(t)
+		httpServer := httptest.NewServer(server)
+		defer httpServer.Close()
+
+		client := ccloudv2.NewFlinkGatewayClient(httpServer.URL, "test", false, "token")
+		c := newTestCommand(newTestContext(httpServer.URL, "token"))
+
+		settled := false
+		err := c.handleQueryError(client, "env-1", "stmt", &query.ResultsFetchError{Err: context.DeadlineExceeded}, &settled)
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "timed out")
 		require.True(t, settled)
