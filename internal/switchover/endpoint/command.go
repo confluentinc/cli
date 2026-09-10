@@ -9,7 +9,7 @@ import (
 	"github.com/tidwall/pretty"
 	"gopkg.in/yaml.v3"
 
-	switchoverv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/switchover/v1"
+	switchoverv1 "github.com/confluentinc/ccloud-sdk-go-v2/switchover/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -125,7 +125,7 @@ func formatEndpoints(endpoints []switchoverv1.SwitchoverV1EndpointConfig) string
 	return strings.Join(lines, "\n")
 }
 
-func formatConditions(conditions []switchoverv1.SwitchoverV1Condition) string {
+func formatConditions(conditions []switchoverv1.SwitchoverV1SwitchoverEndpointCondition) string {
 	lines := make([]string, len(conditions))
 	for i, condition := range conditions {
 		line := fmt.Sprintf("%s=%s", condition.GetType(), condition.GetStatus())
