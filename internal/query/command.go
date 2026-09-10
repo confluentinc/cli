@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
+	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 
 	"github.com/confluentinc/cli/v4/pkg/auth"
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
@@ -29,6 +30,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/jwt"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/properties"
+	"github.com/confluentinc/cli/v4/pkg/wait"
 )
 
 const (
@@ -208,9 +210,6 @@ type queryOut struct {
 	Rows      []map[string]any `json:"rows" yaml:"rows"`
 	RowCount  int              `json:"row_count" yaml:"row_count"`
 	Truncated bool             `json:"truncated" yaml:"truncated"`
-	// Incomplete mirrors Result.Incomplete: rows may be missing. Repeated here since
-	// the stderr warning is invisible to a script reading only stdout.
-	Incomplete bool `json:"incomplete" yaml:"incomplete"`
 	// AppendOnly is nil until traits are known, true for insert-only statements,
 	// false when Rows is a changelog rather than a materialized table — the only
 	// such signal a script gets, since rows carry no per-row operation marker.
@@ -227,7 +226,26 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	environment, _, err := c.V2Client.GetOrgEnvironment(environmentId)
+	timeout, err := cmd.Flags().GetDuration("wait-timeout")
+	if err != nil {
+		return err
+	}
+
+	// Built now, before any network call, so --wait-timeout bounds the whole
+	// command — environment/gateway-client lookup and statement creation
+	// included — not just the drain loop. GatewayClientInterface's and
+	// V2Client's methods take no context of their own (see query.wait.Call's
+	// doc comment), so every one of those calls below is wrapped in wait.Call to
+	// actually honor it.
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer cancel()
+	ctx, cancelTimeout := context.WithTimeout(ctx, timeout)
+	defer cancelTimeout()
+
+	environment, err := wait.Call(ctx, func() (orgv2.OrgV2Environment, error) {
+		env, _, err := c.V2Client.GetOrgEnvironment(environmentId)
+		return env, err
+	})
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
 	}
@@ -244,11 +262,6 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 	}
 
 	database, err := c.resolveDatabase(cmd)
-	if err != nil {
-		return err
-	}
-
-	timeout, err := cmd.Flags().GetDuration("wait-timeout")
 	if err != nil {
 		return err
 	}
@@ -285,9 +298,9 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 	var client *ccloudv2.FlinkGatewayClient
 	if computePool != "" {
 		statement.Spec.ComputePoolId = flinkgatewayv1.PtrString(computePool)
-		client, err = c.GetFlinkGatewayClient(true)
+		client, err = wait.Call(ctx, func() (*ccloudv2.FlinkGatewayClient, error) { return c.GetFlinkGatewayClient(true) })
 	} else {
-		client, err = c.GetFlinkGatewayClient(false)
+		client, err = wait.Call(ctx, func() (*ccloudv2.FlinkGatewayClient, error) { return c.GetFlinkGatewayClient(false) })
 	}
 	if err != nil {
 		return err
@@ -305,7 +318,9 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 		principal = c.Context.GetUser().GetResourceId()
 	}
 
-	if _, err := client.CreateStatement(statement, principal, environmentId, c.Context.LastOrgId); err != nil {
+	if _, err := wait.Call(ctx, func() (flinkgatewayv1.SqlV1Statement, error) {
+		return client.CreateStatement(statement, principal, environmentId, c.Context.LastOrgId)
+	}); err != nil {
 		return err
 	}
 
@@ -324,11 +339,6 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 		}
 	}()
 
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer cancel()
-	ctx, cancelTimeout := context.WithTimeout(ctx, timeout)
-	defer cancelTimeout()
-
 	options := query.Options{
 		Client:         client,
 		EnvironmentId:  environmentId,
@@ -343,20 +353,19 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 		return c.handleQueryError(client, environmentId, name, err, &settled)
 	}
 
-	// result.Statement's phase predates the drain loop's decision to truncate or
-	// give up — it says nothing about whether the job kept running after. Truncated
-	// and Incomplete both mean "we chose to stop reading," so both warrant a stop.
-	settled = !result.Truncated && !result.Incomplete && query.IsTerminal(result.Phase())
+	// drain() refreshes result.Statement once it's done, so this reflects the
+	// statement's actual final phase — but a bounded (LIMIT-satisfied) read over a
+	// streaming source can leave the job RUNNING indefinitely even though every
+	// requested row was delivered; the row stream ending is not a promise that the
+	// job itself will ever reach a terminal phase on its own. Truncated is the
+	// other case that always warrants a stop: we chose to stop reading early.
+	settled = !result.Truncated && query.IsTerminal(result.Phase())
 
 	if result.Phase() == types.FAILED {
 		return errors.NewErrorWithSuggestions(
 			fmt.Sprintf(`statement "%s" failed: %s`, name, result.Statement.Status.GetDetail()),
 			fmt.Sprintf("Inspect the failure with `confluent flink statement exception list %s`.", name),
 		)
-	}
-
-	if result.Incomplete {
-		output.ErrPrintf(false, "Warning: the gateway stopped returning result pages while statement \"%s\" was still in phase %s. The result set below may be incomplete.\n", name, result.Phase())
 	}
 
 	if result.Truncated {
@@ -643,7 +652,6 @@ func (c *command) printQueryResult(cmd *cobra.Command, name string, result *quer
 			Rows:          rows,
 			RowCount:      len(rows),
 			Truncated:     result.Truncated,
-			Incomplete:    result.Incomplete,
 			AppendOnly:    appendOnly,
 		})
 	}

@@ -36,12 +36,11 @@ silent data corruption once a script is reading stdout:
 | --- | --- |
 | `MaterializedStatementResults.cleanup()` evicts from the front past `MaxResultsCapacity` (10,000) | a 50k-row `SELECT` prints the **last** 10k and exits 0 |
 | `Append` skips rows whose field count ≠ header count, returning a bool that `fetchNextPageAndUpdateState` discards | short result set, no signal |
-| `updateState` sets `Completed` on `PageToken == ""` without checking the phase | exit 0 with a partial result set |
 
 This package handles each explicitly: no cap unless `Options.MaxRows` is set (and then
-`Result.Truncated` says so), a hard error from `ConvertToInternalResults` on a schema
-mismatch, and termination only when the page token is gone **and** the statement has
-reached a terminal phase.
+`Result.Truncated` says so), and a hard error from `ConvertToInternalResults` on a schema
+mismatch. Terminating on an empty page token, same as the shell's `updateState`, turns
+out to be correct rather than a shell-only shortcut — see the drain loop section below.
 
 It also skips the shell's table-mode materialization. `Result.Rows` is the raw changelog
 as the gateway delivered it. For a bounded append-only snapshot the changelog and the
@@ -52,30 +51,29 @@ materialized table are identical; for anything else the caller decides.
 `page_token` is a positional offset into the collect-sink protocol, not an opaque cursor.
 There is therefore no token that advances past a page which did not supply one.
 
-The gateway's own foreground/streaming endpoint (`GetStatementResultEndpoint` in
-`cc-flink-gateway-service-v2`, `internal/service/sql/v1/service.go`) only leaves `next`
-empty when the JobManager itself reports `IsFinished == true` — every other case, even an
-empty page, gets a fresh `next` token. So an empty `next` is not ambiguous at the
-protocol level; it means the JobManager is genuinely done producing rows.
+An earlier version of this loop treated a token-less page as ambiguous whenever the
+statement's own `Status.Phase` wasn't yet terminal, re-checking phase once before
+conceding `Result.Incomplete`. That was wrong, and a real, reproducible bug: a bounded,
+`LIMIT`-satisfied query delivering every one of the requested rows still printed "may be
+incomplete", because a `LIMIT`-bounded read over a streaming source can leave the
+underlying job in `RUNNING` indefinitely — the row stream ending is not a promise that
+the job itself will ever reach a terminal phase on its own, so waiting for one is waiting
+for something that may never happen.
 
-What can still go wrong is a race between two *separately updated* signals: the
-JobManager's own `IsFinished` (which drives whether `next` is populated) versus the
-statement's `Status.Phase`, read here via a separate `GetStatement` call reconciled by a
-different subsystem. If that call lands just before the JobManager flips to finished,
-`terminalBeforeFetch` comes back `false` even though the page fetched right after is
-already the last one. `drain()` handles this by re-reading the phase once more instead of
-conceding immediately:
+The gateway's protocol guarantee is simpler and doesn't need phase at all: it never omits
+the next-page token while more rows remain. A token-less page **is** the complete
+signal — done, full stop — regardless of what `Status.Phase` says. `drain()` trusts that:
 
-- the page was **empty** — treated as "nothing yet". Re-requesting the same offset is
-  harmless, so the loop backs off and retries.
-- the page carried **rows** and the phase read before the fetch wasn't terminal — the
-  loop re-reads the phase once more before giving up. Only if that second read is still
-  non-terminal does it set `Result.Incomplete`, which the command surfaces as a warning.
+- no next token → done. `refreshStatement` re-reads the statement once, purely so
+  `Result.Statement`/`Phase()` reflect where things actually landed (e.g. `FAILED`), not
+  for the completion decision itself.
+- a next token with zero rows → "nothing new yet, keep polling this cursor". The loop
+  backs off between empty pages so an idle wait doesn't hammer the gateway.
 
-This is confirmed from gateway source for the one execution path this package exercises
-(foreground, JobManager-backed snapshot statements) — not verified for other paths (e.g.
-any legacy/batch branch this package never hits), so the phase re-check stays as
-defense-in-depth rather than being narrowed or removed.
+There is no more "incomplete" outcome. If the job hasn't reached a terminal phase once
+draining is done — which a `LIMIT`-bounded read over a streaming source routinely
+doesn't — `internal/query/command.go`'s deferred cleanup stops it, the same as it does
+after a `Truncated` (`--max-rows`) read.
 
 #### Known limitations
 
@@ -85,10 +83,19 @@ defense-in-depth rather than being narrowed or removed.
 - **Token refresh is best-effort, not retry-aware.** `Options.RefreshToken` is invoked
   before each gateway call (see the command's `refreshGatewayToken`), unlike the shell's
   `synchronizedTokenRefresh`, which wraps every call including mid-flight retries. In
-  practice this rarely matters: the command's default 10-minute `--timeout` is on the
-  same order as the dataplane token's own lifetime, so a run is unlikely to still be
-  going when a refresh would be needed. It only bites if `--timeout` is raised well past
-  the default.
+  practice this rarely matters: the command's default 10-minute `--wait-timeout` is on
+  the same order as the dataplane token's own lifetime, so a run is unlikely to still be
+  going when a refresh would be needed. It only bites if `--wait-timeout` is raised well
+  past the default, or a single call runs long past it — see the next point.
+- **`GatewayClientInterface` takes no context, so `--wait-timeout` can't actually abort an
+  in-flight call.** `ccloudv2.FlinkGatewayClient` builds every request from
+  `context.Background()` internally; confirmed against real staging, where a single
+  `GetStatementResults` call once hung for 49 minutes despite a 2-minute
+  `--wait-timeout`. `callWithContext` races each call against `ctx` in a goroutine so
+  `Run` still returns once the deadline fires, but it cannot cancel the underlying HTTP
+  call — that goroutine keeps running until the transport itself gives up. A proper fix
+  means threading a real context through `GatewayClientInterface` and every caller
+  (the interactive shell included), which is out of scope for this package alone.
 - **Expired-result handling lives in the command, not here.** This package just returns
   `ResultsFetchError` on any failed page fetch. `internal/query/command.go`'s
   `handleQueryError` is what distinguishes a 404 (statement deleted or mistyped) from a
@@ -116,7 +123,8 @@ go test ./pkg/flink/query/                                              # unit t
 ```
 
 The unit tests drive `pkg/flink/test/mock.MockGatewayClientInterface` and inject
-`Options.sleep`, so backoff costs no wall time.
+`Options.sleep` (drain's retry backoff) and `Options.pollInterval` (await's
+wait.PollPhases interval), so waiting costs negligible wall time.
 
 Two unrelated failures reproduce on a clean `main` and are not caused by changes here:
 `pkg/flink/internal/controller` and `TestFlinkShell`/`TestFlinkShellOnPrem` panic without
