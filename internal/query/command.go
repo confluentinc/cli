@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
 
@@ -46,12 +47,21 @@ const (
 	// stopTimeout bounds how long we wait for a statement to stop after interrupt.
 	stopTimeout = 5 * time.Second
 
+	// createStatementGracePeriod bounds how long we wait, after ctx cancellation, for an
+	// in-flight CreateStatement to land so we can stop it instead of leaking it.
+	createStatementGracePeriod = 10 * time.Second
+
 	// queryFeatureFlag gates the command's visibility.
 	queryFeatureFlag = "cli.query"
 )
 
 type command struct {
 	*pcmd.AuthenticatedCLICommand
+
+	// authTokenMu guards client.AuthToken: a wait.Call-wrapped refresh can still be
+	// running (and about to write it) after ctx fires, while the deferred
+	// stopStatement call reads it concurrently to build its own request.
+	authTokenMu sync.Mutex
 }
 
 // New mounts `confluent query` at the top level, not under `flink`: the same
@@ -62,12 +72,12 @@ func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		Use:   "query [sql]",
 		Short: "Run a bounded Flink SQL query and print its results.",
 		Long: "Run a bounded (snapshot) Flink SQL query, block until it finishes, and print the complete result set.\n\n" +
-			"The SQL can be given as \"--sql\" or as a positional argument, but not both.\n\n" +
+			"The SQL can be given as `--sql` or as a positional argument, but not both.\n\n" +
 			"Unlike statement creation, which submits a statement and returns immediately, this command waits for every " +
 			"result page and exits with a non-zero status if the statement fails. It is intended for scripting and " +
 			"one-shot queries against a bounded (point-in-time) result set.\n\n" +
-			"With \"-o json\" or \"-o yaml\", output defaults to an envelope carrying the column schema alongside the rows, " +
-			"since the rows on their own carry no type information. Pass \"--raw\" for a bare array of row objects instead.",
+			"With `-o json` or `-o yaml`, output defaults to an envelope carrying the column schema alongside the rows, " +
+			"since the rows on their own carry no type information. Pass `--raw` for a bare array of row objects instead.",
 		Args: cobra.MaximumNArgs(1),
 		// Hidden until the flag targets an org; cfg.IsTest keeps it visible to the
 		// integration suite regardless of the (unreachable in tests) LD evaluation.
@@ -89,13 +99,13 @@ func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
 				Code: `confluent query --sql "SELECT * FROM orders LIMIT 10;" --output json --raw`,
 			},
 			examples.Example{
-				Text: "Pass the SQL as a positional argument instead of \"--sql\".",
+				Text: "Pass the SQL as a positional argument instead of `--sql`.",
 				Code: `confluent query "SELECT * FROM orders LIMIT 10;"`,
 			},
 		),
 	}
 
-	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	c := &command{AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	cmd.RunE = c.runQuery
 
 	cmd.Flags().String("sql", "", `The Flink SQL statement. Alternatively, pass it as a positional argument or with "-f".`)
@@ -226,9 +236,38 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	sql, err := resolveSQL(cmd, args)
+	if err != nil {
+		return err
+	}
+
+	database, err := c.resolveDatabase(cmd)
+	if err != nil {
+		return err
+	}
+
 	timeout, err := cmd.Flags().GetDuration("wait-timeout")
 	if err != nil {
 		return err
+	}
+	if timeout <= 0 {
+		return errors.New("the `--wait-timeout` flag must be positive")
+	}
+
+	maxRows, err := cmd.Flags().GetInt("max-rows")
+	if err != nil {
+		return err
+	}
+	if maxRows < 0 {
+		return errors.New("the `--max-rows` flag must not be negative")
+	}
+
+	raw, err := cmd.Flags().GetBool("raw")
+	if err != nil {
+		return err
+	}
+	if raw && !output.GetFormat(cmd).IsSerialized() {
+		return errors.New("the `--raw` flag requires `-o json` or `-o yaml`")
 	}
 
 	// Built now, before any network call, so --wait-timeout bounds the whole
@@ -255,32 +294,6 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 	computePool := c.Context.GetCurrentFlinkComputePool()
 
 	name := types.GenerateStatementName()
-
-	sql, err := resolveSQL(cmd, args)
-	if err != nil {
-		return err
-	}
-
-	database, err := c.resolveDatabase(cmd)
-	if err != nil {
-		return err
-	}
-
-	maxRows, err := cmd.Flags().GetInt("max-rows")
-	if err != nil {
-		return err
-	}
-	if maxRows < 0 {
-		return errors.New("the `--max-rows` flag must not be negative")
-	}
-
-	raw, err := cmd.Flags().GetBool("raw")
-	if err != nil {
-		return err
-	}
-	if raw && !output.GetFormat(cmd).IsSerialized() {
-		return errors.New("the `--raw` flag requires `-o json` or `-o yaml`")
-	}
 
 	statementProperties, err := c.buildQueryProperties(cmd, environment.GetDisplayName(), database)
 	if err != nil {
@@ -318,9 +331,9 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 		principal = c.Context.GetUser().GetResourceId()
 	}
 
-	if _, err := wait.Call(ctx, func() (flinkgatewayv1.SqlV1Statement, error) {
+	if err := createStatement(ctx, createStatementGracePeriod, func() (flinkgatewayv1.SqlV1Statement, error) {
 		return client.CreateStatement(statement, principal, environmentId, c.Context.LastOrgId)
-	}); err != nil {
+	}, func() { c.stopStatement(client, environmentId, name) }); err != nil {
 		return err
 	}
 
@@ -354,22 +367,39 @@ func (c *command) runQuery(cmd *cobra.Command, args []string) error {
 	}
 
 	// drain() refreshes result.Statement once it's done, so this reflects the
-	// statement's actual final phase — but a bounded (LIMIT-satisfied) read over a
-	// streaming source can leave the job RUNNING indefinitely even though every
-	// requested row was delivered; the row stream ending is not a promise that the
-	// job itself will ever reach a terminal phase on its own. Truncated is the
-	// other case that always warrants a stop: we chose to stop reading early.
-	settled = !result.Truncated && query.IsTerminal(result.Phase())
+	// statement's actual final phase even after Truncated: a bounded
+	// (LIMIT-satisfied) read over a streaming source can leave the job RUNNING
+	// indefinitely even though every requested row was delivered, and stopping
+	// early on --max-rows can likewise leave it RUNNING with more we chose not to
+	// read. Trusting the refreshed phase either way avoids stopping a statement
+	// that already finished on its own — which the gateway rejects, producing a
+	// confusing "could not stop" warning for a statement that in fact succeeded.
+	settled = query.IsTerminal(result.Phase())
 
-	if result.Phase() == types.FAILED {
+	// A phase of STOPPED or DELETING here can only mean something other than this
+	// invocation ended the statement — our own stop attempt, if any, hasn't run yet
+	// at this point (it's still behind the settled defer above). Reporting that as
+	// success would hide a result set that may not reflect a natural completion.
+	switch result.Phase() {
+	case types.FAILED:
 		return errors.NewErrorWithSuggestions(
 			fmt.Sprintf(`statement "%s" failed: %s`, name, result.Statement.Status.GetDetail()),
 			fmt.Sprintf("Inspect the failure with `confluent flink statement exception list %s`.", name),
 		)
+	case types.STOPPED:
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(`statement "%s" was stopped before this command stopped it`, name),
+			"The result set may be incomplete.",
+		)
+	case types.DELETING:
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(`statement "%s" is being deleted`, name),
+			"Its compute pool may have been deleted. The result set may be incomplete.",
+		)
 	}
 
 	if result.Truncated {
-		output.ErrPrintf(false, "Warning: stopped after %d rows because of the \"--max-rows\" flag. The result set below is truncated.\n", maxRows)
+		output.ErrPrintf(false, "Warning: stopped after %d rows because of the `--max-rows` flag. The result set below is truncated.\n", maxRows)
 	}
 
 	traits := result.Statement.Status.GetTraits()
@@ -562,6 +592,9 @@ func (c *command) handleQueryError(client *ccloudv2.FlinkGatewayClient, environm
 // outliving the short-lived dataplane token dies on a 401 before --wait-timeout.
 func (c *command) refreshGatewayToken(client *ccloudv2.FlinkGatewayClient, jwtValidator jwt.Validator) func() error {
 	return func() error {
+		c.authTokenMu.Lock()
+		defer c.authTokenMu.Unlock()
+
 		jwtCtx := &cliconfig.Context{State: &cliconfig.ContextState{AuthToken: client.AuthToken}}
 		if jwtValidator.Validate(jwtCtx) == nil {
 			return nil
@@ -576,24 +609,39 @@ func (c *command) refreshGatewayToken(client *ccloudv2.FlinkGatewayClient, jwtVa
 	}
 }
 
+// createStatement runs create and returns its error. If ctx is cancelled first, it
+// still waits up to gracePeriod for create to land, calling cleanup instead of
+// leaking an unstoppable statement if it succeeded.
+func createStatement(ctx context.Context, gracePeriod time.Duration, create func() (flinkgatewayv1.SqlV1Statement, error), cleanup func()) error {
+	done := make(chan error, 1)
+	go func() {
+		_, err := create()
+		done <- err
+	}()
+
+	select {
+	case err := <-done:
+		return err
+	case <-ctx.Done():
+		select {
+		case err := <-done:
+			if err == nil {
+				cleanup()
+			}
+		case <-time.After(gracePeriod):
+		}
+		return ctx.Err()
+	}
+}
+
 // stopStatement makes a best-effort, bounded attempt to stop an abandoned
 // statement and reports the outcome either way.
 func (c *command) stopStatement(client *ccloudv2.FlinkGatewayClient, environmentId, name string) bool {
 	done := make(chan error, 1)
 	go func() {
-		// The gateway rejects a body carrying only spec.stopped as malformed; read
-		// the statement back and flip the flag on what it returns.
-		statement, err := client.GetStatement(environmentId, name, c.Context.LastOrgId)
-		if err != nil {
-			done <- err
-			return
-		}
-		if statement.Spec == nil {
-			done <- fmt.Errorf(`statement "%s" has no spec`, name)
-			return
-		}
-		statement.Spec.Stopped = flinkgatewayv1.PtrBool(true)
-		done <- client.UpdateStatement(environmentId, name, c.Context.LastOrgId, statement)
+		c.authTokenMu.Lock()
+		defer c.authTokenMu.Unlock()
+		done <- client.StopStatement(environmentId, name, c.Context.LastOrgId)
 	}()
 
 	select {

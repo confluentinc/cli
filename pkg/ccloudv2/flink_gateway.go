@@ -131,6 +131,21 @@ func (c *FlinkGatewayClient) UpdateStatement(environmentId, statementName, organ
 	return flinkerror.CatchError(err, httpResp)
 }
 
+// StopStatement requests that a running statement stop. The gateway rejects an
+// update body carrying only spec.stopped as malformed, so this reads the
+// statement back and flips the flag on what it returns.
+func (c *FlinkGatewayClient) StopStatement(environmentId, statementName, organizationId string) error {
+	statement, err := c.GetStatement(environmentId, statementName, organizationId)
+	if err != nil {
+		return err
+	}
+	if statement.Spec == nil {
+		return fmt.Errorf(`statement "%s" has no spec`, statementName)
+	}
+	statement.Spec.Stopped = flinkgatewayv1.PtrBool(true)
+	return c.UpdateStatement(environmentId, statementName, organizationId, statement)
+}
+
 func (c *FlinkGatewayClient) GetStatementResults(environmentId, statementName, orgId, pageToken string) (flinkgatewayv1.SqlV1StatementResult, error) {
 	req := c.StatementResultsSqlV1Api.GetSqlv1StatementResult(c.flinkGatewayApiContext(), orgId, environmentId, statementName)
 	if pageToken != "" {
