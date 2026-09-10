@@ -62,3 +62,25 @@ func TestThreeWayMerge_UntouchedScalarTakesDisk(t *testing.T) {
 
 	require.True(t, got.EnableColor, "a field we didn't change must keep the disk value")
 }
+
+func TestThreeWayMerge_OurMapValueChangeWins(t *testing.T) {
+	base := cfgWithPlatforms("a")
+	ours := cfgWithPlatforms("a")
+	ours.Platforms["a"] = &Platform{Name: "a", Server: "https://new"} // we edited "a"
+	disk := cfgWithPlatforms("a")                                     // disk unchanged
+
+	got := threeWayMerge(base, ours, disk)
+
+	require.Equal(t, "https://new", got.Platforms["a"].Server, "our value change to an existing key must win")
+}
+
+func TestThreeWayMerge_UntouchedMapValueTakesDisk(t *testing.T) {
+	base := cfgWithPlatforms("a")
+	ours := cfgWithPlatforms("a") // we didn't touch "a"
+	disk := cfgWithPlatforms("a")
+	disk.Platforms["a"] = &Platform{Name: "a", Server: "https://disk-changed"} // another session edited "a"
+
+	got := threeWayMerge(base, ours, disk)
+
+	require.Equal(t, "https://disk-changed", got.Platforms["a"].Server, "a key we didn't touch must keep disk's in-place change")
+}
