@@ -3,3 +3,10 @@
 %:
 	APPLY_PATCHES=no dh $@ --without systemd
 
+# The payload is prebuilt confluent binaries for every platform the CLI supports, including ELF for
+# other architectures that the build host's binutils cannot read. dh_strip and dh_shlibdeps inspect
+# every ELF in the payload and fail on those, and neither has work to do for pinned release
+# binaries. Both enter the sequence only for an architecture-specific package.
+override_dh_strip:
+
+override_dh_shlibdeps:
