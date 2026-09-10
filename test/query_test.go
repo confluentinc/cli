@@ -20,10 +20,21 @@ func (s *CLITestSuite) TestQuery() {
 		// --raw drops the envelope (and the statement name with it), so this one is exact.
 		{args: `query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 -o json --raw`, fixture: "query/select-raw.golden"},
 
+		// --raw is meaningless for the default table output; rejected before a
+		// statement is ever created, so no random name in the output.
+		{args: `query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 --raw`, fixture: "query/raw-without-serialized-output.golden", exitCode: 1},
+
 		// --max-rows stops the drain early. Truncated is one of the two conditions that
 		// makes runQuery's deferred cleanup stop the statement, so the name shows up again
 		// in the "Stopped statement" message.
 		{args: `query --sql "SELECT id FROM many_rows;" --compute-pool lfcp-123456 --service-account sa-123456 --max-rows 2`, fixture: "query/max-rows.golden", regex: true},
+
+		// Regression case for a real false positive found against staging: a
+		// LIMIT-satisfied read over a streaming source delivers every row (no next
+		// token) but the job's phase stays RUNNING. No "may be incomplete" warning —
+		// all rows print — but the deferred cleanup still stops the non-terminal
+		// statement, same as it does after --max-rows.
+		{args: `query --sql "SELECT id FROM limit_bounded_stream;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "query/limit-bounded-stream.golden", regex: true},
 
 		// Non-append-only: an Operation column and a changelog warning, no stop (the
 		// statement already reached a terminal phase on its own).
