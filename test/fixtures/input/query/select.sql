@@ -1,0 +1,1 @@
+SELECT order_id, status FROM orders LIMIT 2;
