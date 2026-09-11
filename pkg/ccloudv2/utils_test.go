@@ -137,7 +137,7 @@ func TestRefreshAndSave_LogsRefreshFailure(t *testing.T) {
 		refreshAndSave(cfg, newTestV1Client(server.URL))
 	})
 
-	require.Contains(t, logs, "failed to refresh session")
+	require.Contains(t, logs, "Failed to refresh session")
 }
 
 func TestRefreshAndSave_LogsSaveFailure(t *testing.T) {
@@ -158,8 +158,8 @@ func TestRefreshAndSave_LogsSaveFailure(t *testing.T) {
 		refreshAndSave(cfg, newTestV1Client(server.URL))
 	})
 
-	require.Contains(t, logs, "failed to save config")
-	require.NotContains(t, logs, "failed to refresh session")
+	require.Contains(t, logs, "Failed to save config")
+	require.NotContains(t, logs, "Failed to refresh session")
 }
 
 func TestRefreshAndSave_LogsNothingOnSuccess(t *testing.T) {
