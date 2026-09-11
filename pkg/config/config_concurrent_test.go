@@ -1,10 +1,13 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -263,4 +266,41 @@ func TestSave_SecondSaveInSameProcess_PreservesConcurrentSecretRotation(t *testi
 	require.Equal(t, "secret-rotated", final.Credentials["cred"].APIKeyPair.Secret,
 		"the second save must not revert the concurrent rotation")
 	require.Equal(t, "env-c", final.Contexts["ctx"].CurrentEnvironment)
+}
+
+// On a fresh machine two sessions can both read the config as missing before either
+// writes it. If one then creates it, the other's initial in-Load save must merge that
+// file rather than overwrite it with a default. The sidecar lock is held here to force
+// the exact window: the loading session reads the file missing, then blocks on the lock
+// inside its save while another session's config lands on disk.
+func TestLoad_FreshMachineDoesNotClobberConcurrentlyCreatedConfig(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+
+	holder := newFileLock(path)
+	require.NoError(t, holder.lock(lockTimeout))
+
+	b := New()
+	b.Filename = path
+	loadErr := make(chan error, 1)
+	go func() { loadErr <- b.Load() }() // reads the missing file, then blocks on the held lock
+
+	// b has passed the missing-file read and is waiting on the lock; now another session's
+	// config appears on disk before we release it.
+	time.Sleep(300 * time.Millisecond)
+	other := New()
+	other.Filename = path
+	other.Platforms["from-other"] = &Platform{Name: "from-other", Server: "https://other.example.com"}
+	data, err := json.MarshalIndent(other, "", "  ")
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(path, data, 0600))
+	require.NoError(t, holder.unlock())
+
+	require.NoError(t, <-loadErr)
+
+	final := New()
+	final.Filename = path
+	require.NoError(t, final.Load())
+	require.Contains(t, final.Platforms, "from-other",
+		"a config another session created after this session read the file missing must survive the fresh-machine load")
 }

@@ -196,7 +196,12 @@ func (c *Config) Load() error {
 	input, err := os.ReadFile(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
-			// Save a default version if none exists yet.
+			// Save a default version if none exists yet. Snapshot a baseline first so this
+			// save merges under the lock instead of overwriting: another session can create
+			// the config between this missing-file read and the locked save, and that file
+			// must survive. A config constructed without Load keeps a nil baseline and still
+			// writes whole.
+			c.snapshotBaseline()
 			if err := c.Save(); err != nil {
 				return fmt.Errorf("unable to save configuration file: %w", err)
 			}
