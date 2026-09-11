@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Two sessions each add a DIFFERENT platform concurrently. Before the lock+merge
-// work, the last writer's whole-file overwrite dropped the other's platform.
+// each goroutine adds a different platform concurrently; before the lock and merge
+// work, the last writer's whole-file overwrite dropped the others.
 func TestSave_ConcurrentDifferentFields_NoLostWrite(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
