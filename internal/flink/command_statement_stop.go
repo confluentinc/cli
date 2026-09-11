@@ -1,7 +1,11 @@
 package flink
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
+
+	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
@@ -43,7 +47,17 @@ func (c *statementCommand) statementStop(_ *cobra.Command, args []string) error 
 		return err
 	}
 
-	if err := client.StopStatement(environmentId, args[0], c.Context.GetCurrentOrganization()); err != nil {
+	// The gateway rejects a spec.stopped-only body, so this reads the statement
+	// back before flipping it.
+	statement, err := client.GetStatement(environmentId, args[0], c.Context.GetCurrentOrganization())
+	if err != nil {
+		return err
+	}
+	if statement.Spec == nil {
+		return fmt.Errorf(`statement "%s" has no spec`, args[0])
+	}
+	statement.Spec.Stopped = flinkgatewayv1.PtrBool(true)
+	if err := client.UpdateStatement(environmentId, args[0], c.Context.GetCurrentOrganization(), statement); err != nil {
 		return err
 	}
 
