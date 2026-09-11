@@ -202,3 +202,65 @@ func TestSave_ConcurrentSharedCredential_NotClobbered(t *testing.T) {
 		"a's concurrent credential rotation must not be clobbered by b's unrelated save")
 	require.Equal(t, "env-from-b", final.Contexts["ctx"].CurrentEnvironment)
 }
+
+// A process that merges a concurrent disk change into its first save must not revert
+// that change on a later save in the same process. The merge writes the concurrent
+// field to disk but leaves the live config's copy stale, so if the post-save baseline
+// tracks the merged (disk) value while ours stays stale, the next diff misreads the
+// untouched field as a local edit and overwrites the concurrent change.
+func TestSave_SecondSaveInSameProcess_PreservesConcurrentDiskChange(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	newSavedConfig(t, path, "secret-original")
+
+	p := loadDecrypted(t, path)     // this process, baseline captured at load
+	other := loadDecrypted(t, path) // a concurrent session
+	require.True(t, p.EnableColor, "precondition: color starts enabled (New()'s default)")
+
+	other.EnableColor = false // a field p never touches
+	require.NoError(t, other.Save())
+
+	p.Contexts["ctx"].CurrentEnvironment = "env-b" // p's first, unrelated edit
+	require.NoError(t, p.Save())
+
+	mid := loadDecrypted(t, path)
+	require.False(t, mid.EnableColor, "the first save must merge in the concurrent color change")
+
+	p.Contexts["ctx"].CurrentEnvironment = "env-c" // p's second edit, still not touching color
+	require.NoError(t, p.Save())
+
+	final := loadDecrypted(t, path)
+	require.False(t, final.EnableColor, "the second save must not revert the concurrently-disabled color")
+	require.Equal(t, "env-c", final.Contexts["ctx"].CurrentEnvironment)
+}
+
+// The same second-save hazard on a secret rather than a scalar. The post-save baseline
+// is a snapshot of the live config, whose credential secret is plaintext, while disk
+// holds ciphertext; this pins that decryptToMatch still aligns the two so a concurrent
+// rotation this process never touched survives a later save in the same process.
+func TestSave_SecondSaveInSameProcess_PreservesConcurrentSecretRotation(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	newSavedConfig(t, path, "secret-original")
+
+	p := loadDecrypted(t, path)     // this process, holds decrypted "secret-original"
+	other := loadDecrypted(t, path) // a concurrent session
+
+	other.Credentials["cred"].APIKeyPair.Secret = "secret-rotated" // a field p never touches
+	require.NoError(t, other.Save())
+
+	p.Contexts["ctx"].CurrentEnvironment = "env-b" // p's first, unrelated edit
+	require.NoError(t, p.Save())
+
+	mid := loadDecrypted(t, path)
+	require.Equal(t, "secret-rotated", mid.Credentials["cred"].APIKeyPair.Secret,
+		"the first save must merge in the concurrent rotation")
+
+	p.Contexts["ctx"].CurrentEnvironment = "env-c" // p's second edit, still not touching the secret
+	require.NoError(t, p.Save())
+
+	final := loadDecrypted(t, path)
+	require.Equal(t, "secret-rotated", final.Credentials["cred"].APIKeyPair.Secret,
+		"the second save must not revert the concurrent rotation")
+	require.Equal(t, "env-c", final.Contexts["ctx"].CurrentEnvironment)
+}
