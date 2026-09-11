@@ -1,4 +1,4 @@
-List group mappings.
+List IAM group mappings.
 
 Usage:
   confluent iam group-mapping list [flags]
