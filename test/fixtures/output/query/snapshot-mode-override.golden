@@ -1,0 +1,4 @@
+Error: the `--property` flag must not set `sql.snapshot.mode`
+
+Suggestions:
+    This command only supports a snapshot (point-in-time, append-only) read, so this property is fixed and cannot be overridden.
