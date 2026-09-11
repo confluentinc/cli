@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -116,8 +117,12 @@ func TestRefreshAndSave_LogsSaveFailure(t *testing.T) {
 	defer server.Close()
 
 	cfg := newTestConfig(t)
-	// point Save() at a parent directory that doesn't exist, so the lock file can't be created.
-	cfg.Filename = filepath.Join(cfg.Filename, "..", "missing-dir", "config.json")
+	// Put a regular file where Save() needs the config directory, so its MkdirAll
+	// fails with ENOTDIR. A merely-absent parent no longer forces a failure: Save()
+	// now creates the directory itself for fresh-machine first runs.
+	notADir := filepath.Join(t.TempDir(), "not-a-dir")
+	require.NoError(t, os.WriteFile(notADir, nil, 0600))
+	cfg.Filename = filepath.Join(notADir, "config.json")
 
 	logs := captureWarnings(t, func() {
 		refreshAndSave(cfg, newTestV1Client(server.URL))
