@@ -84,8 +84,8 @@ func NewRetryableHttpClient(cfg *config.Config, unsafeTrace bool) *http.Client {
 }
 
 // refreshAndSave refreshes the session after a 401 and persists the result. Either step can
-// fail without aborting the retry that triggered it (whether it should is deferred to
-// APIE-1626), so both failures are logged here rather than surfaced to the caller.
+// fail without aborting the retry that triggered it, so both failures are logged here
+// rather than surfaced to the caller.
 func refreshAndSave(cfg *config.Config, v1Client *ccloudv1.Client) {
 	if err := cfg.Context().RefreshSession(v1Client); err != nil {
 		log.CliLogger.Warnf("failed to refresh session after 401: %v", err)
