@@ -1,0 +1,19 @@
+Manage switchover pairs.
+
+Usage:
+  confluent switchover pair [command]
+
+Available Commands:
+  create         Create a switchover pair.
+  delete         Delete one or more switchover pairs.
+  describe       Describe a switchover pair.
+  list           List switchover pairs.
+  trigger-switch Trigger a failover or switchback on a switchover pair.
+  update         Update a switchover pair.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent switchover pair [command] --help" for more information about a command.

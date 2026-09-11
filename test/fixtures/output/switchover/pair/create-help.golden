@@ -1,0 +1,21 @@
+Create a switchover pair between two Kafka clusters for disaster recovery.
+
+Usage:
+  confluent switchover pair create <display-name> [flags]
+
+Examples:
+Create switchover pair "prod-kafka-dr" between two Kafka clusters (west and east), active on west.
+
+  $ confluent switchover pair create prod-kafka-dr --member name=west,crn=crn://confluent.cloud/organization=abc/environment=env-111111/cloud-cluster=lkc-111111 --member name=east,crn=crn://confluent.cloud/organization=abc/environment=env-222222/cloud-cluster=lkc-222222 --active-member west
+
+Flags:
+      --member stringArray     REQUIRED: A member of the pair, in the form "name=<name>,crn=<member-crn>". The CRN carries the member's own environment, so the two members may live in different environments. Must be specified exactly twice.
+      --active-member string   REQUIRED: The name of the member that starts as active; must match one of the --member names.
+      --environment string     Environment ID.
+      --context string         CLI context name.
+  -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
