@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
@@ -269,6 +270,8 @@ func TestConfig_Load(t *testing.T) {
 				ctx.KafkaClusterContext.KafkaClusterConfigs = cfg.Contexts[contextName].KafkaClusterContext.KafkaClusterConfigs
 			}
 
+			// baseline is a load-time impl detail, not under test here.
+			cfg.baseline = nil
 			if !t.Failed() && !reflect.DeepEqual(cfg, test.want) {
 				t.Errorf("Config.Load() =\n%+v, want \n%+v", cfg, test.want)
 			}
@@ -632,6 +635,8 @@ func TestConfig_AddContext(t *testing.T) {
 			if (err != nil) != test.wantErr {
 				t.Errorf("AddContext() error = %v, wantErr %v", err, test.wantErr)
 			}
+			// baseline is a save-time impl detail, not under test here.
+			test.config.baseline = nil
 			if !test.wantErr && !reflect.DeepEqual(test.want, test.config) {
 				t.Errorf("AddContext() got = %v, want %v", test.config, test.want)
 			}
@@ -649,6 +654,9 @@ func TestConfig_CreateContext(t *testing.T) {
 	}
 
 	SetTempHomeDir()
+	// Isolate from the shared default config path so Save's read-merge can't pick
+	// up another test's leftover config.
+	cfg.Filename = filepath.Join(t.TempDir(), "config.json")
 	err := cfg.CreateContext("context", "https://example.com", "api-key", "api-secret")
 	require.NoError(t, err)
 
@@ -661,6 +669,9 @@ func TestConfig_CreateContext(t *testing.T) {
 
 func TestConfig_UseContext(t *testing.T) {
 	cfg := AuthenticatedCloudConfigMock()
+	// Isolate from the shared default config path so Save's read-merge can't pick
+	// up (or leave behind) another test's leftover config.
+	cfg.Filename = filepath.Join(t.TempDir(), "config.json")
 	contextName := cfg.Context().Name
 	cfg.CurrentContext = ""
 	type fields struct {
@@ -1159,4 +1170,136 @@ func TestParseFlagsIntoConfig(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestReadConfigFromDisk_WiresGraphAndPassesValidate(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+
+	seed := New()
+	seed.Filename = path
+	require.NoError(t, seed.Save())
+
+	got, err := readConfigFromDisk(path, seed)
+	require.NoError(t, err)
+	require.Equal(t, path, got.Filename, "json:\"-\" Filename must be carried from the template")
+	require.NoError(t, got.Validate())
+}
+
+func TestSave_MergesConcurrentDiskChange(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+
+	// Seed: two platforms.
+	seed := New()
+	seed.Filename = path
+	seed.Platforms["a"] = &Platform{Name: "a"}
+	seed.Platforms["b"] = &Platform{Name: "b"}
+	require.NoError(t, seed.Save())
+
+	// This process loads, then another session adds platform "c" on disk.
+	ours, err := readConfigFromDisk(path, seed)
+	require.NoError(t, err)
+	ours.snapshotBaseline()
+
+	other, err := readConfigFromDisk(path, seed)
+	require.NoError(t, err)
+	other.snapshotBaseline()
+	other.Platforms["c"] = &Platform{Name: "c"}
+	require.NoError(t, other.Save())
+
+	// Now this process deletes "a" and saves.
+	delete(ours.Platforms, "a")
+	require.NoError(t, ours.Save())
+
+	final, err := readConfigFromDisk(path, seed)
+	require.NoError(t, err)
+	require.NotContains(t, final.Platforms, "a", "our delete must persist")
+	require.Contains(t, final.Platforms, "b")
+	require.Contains(t, final.Platforms, "c", "the other session's concurrent add must not be lost")
+}
+
+// A fresh machine has no ~/.confluent directory. Save() must create the parent
+// directory before opening the sidecar lock file inside it, or the lock open
+// ENOENTs and the CLI cannot start.
+func TestSave_CreatesMissingParentDirectory(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "does", "not", "exist", "config.json")
+
+	c := New()
+	c.Filename = path
+
+	require.NoError(t, c.Load(), "Load on a missing file Saves a default and must create the parent directory")
+	require.FileExists(t, path)
+
+	c.Platforms["p"] = &Platform{Name: "p"}
+	require.NoError(t, c.Save(), "a subsequent Save into the now-existing directory must also succeed")
+}
+
+// Validate() normalizes the config in memory (resetting an invalid active Kafka
+// cluster, initializing a nil KafkaClusterConfigs map) and re-persists via a
+// nested Context.Save(). That nested Save() runs while the enclosing Save()
+// holds the sidecar lock; it must not try to re-acquire it (which would block
+// for lockTimeout and then panic), and the normalization must reach disk.
+func TestSave_NormalizesInvalidActiveKafkaWithoutDeadlock(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+
+	// Seed a valid empty file so Save() takes the read-merge-write path that
+	// validates the throwaway "merged" config (the path the deadlock lived on).
+	seed := New()
+	seed.Filename = path
+	require.NoError(t, seed.Save())
+
+	// baseline = empty on-disk state, so the context below is a net addition and
+	// survives the three-way merge into "merged".
+	c := New()
+	c.Filename = path
+	c.snapshotBaseline()
+
+	c.Platforms["platform"] = &Platform{Name: "platform", Server: "https://example.com"}
+	c.Credentials["cred"] = &Credential{Name: "cred", CredentialType: Username}
+	state := new(ContextState)
+	ctx := &Context{
+		Name:           "ctx",
+		PlatformName:   "platform",
+		CredentialName: "cred",
+		Platform:       c.Platforms["platform"],
+		Credential:     c.Credentials["cred"],
+		State:          state,
+		Config:         c,
+	}
+	// Active cluster with no stored config and a nil configs map: Validate()
+	// resets the active cluster and initializes the map, each a nested Save().
+	ctx.KafkaClusterContext = &KafkaClusterContext{
+		ActiveKafkaCluster:  "lkc-ghost",
+		KafkaClusterConfigs: nil,
+		Context:             ctx,
+	}
+	c.Contexts["ctx"] = ctx
+	c.ContextStates["ctx"] = state
+	c.CurrentContext = "ctx"
+
+	done := make(chan error, 1)
+	go func() { done <- c.Save() }()
+	select {
+	case err := <-done:
+		require.NoError(t, err)
+	case <-time.After(5 * time.Second):
+		t.Fatal("Save() deadlocked re-acquiring the sidecar lock during Validate() normalization")
+	}
+
+	final, err := readConfigFromDisk(path, seed)
+	require.NoError(t, err)
+	require.Empty(t, final.Contexts["ctx"].KafkaClusterContext.GetActiveKafkaClusterId(),
+		"the invalid active Kafka cluster reset must be persisted, not just held in memory")
+}
+
+func TestSnapshotBaseline_IsIndependentCopy(t *testing.T) {
+	c := New()
+	c.CurrentContext = "a"
+	c.snapshotBaseline()
+
+	c.CurrentContext = "b"
+
+	require.Equal(t, "a", c.baseline.CurrentContext, "baseline must not alias live config")
 }
