@@ -1,4 +1,4 @@
-Update a group mapping.
+Update an existing IAM group mapping.
 
 Usage:
   confluent iam group-mapping update <id> [flags]
