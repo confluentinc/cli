@@ -94,7 +94,6 @@ type StatementResultField interface {
 	GetType() StatementResultFieldType
 	ToString() string
 	ToSDKType() any
-	// ToSerializedValue is implemented in result_fields_serialized.go.
 	ToSerializedValue() any
 }
 
