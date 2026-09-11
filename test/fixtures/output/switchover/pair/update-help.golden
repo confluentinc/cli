@@ -1,0 +1,20 @@
+Update a switchover pair's display name. This is the only mutable field.
+
+Usage:
+  confluent switchover pair update <id> [flags]
+
+Examples:
+Rename switchover pair "sw-123456".
+
+  $ confluent switchover pair update sw-123456 --display-name "prod-kafka-dr-renamed"
+
+Flags:
+      --display-name string   REQUIRED: A human-readable name for the switchover pair.
+      --environment string    Environment ID.
+      --context string        CLI context name.
+  -o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

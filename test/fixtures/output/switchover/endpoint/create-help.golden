@@ -1,0 +1,21 @@
+Create a switchover Endpoint bound to a switchover pair.
+
+Usage:
+  confluent switchover endpoint create <display-name> [flags]
+
+Examples:
+Create switchover endpoint "prod-kafka-dr-endpoint" for switchover pair "sw-123456".
+
+  $ confluent switchover endpoint create prod-kafka-dr-endpoint --switchover-pair sw-123456 --endpoint name=west-platt,type=private --endpoint name=east-platt,type=private
+
+Flags:
+      --switchover-pair string   REQUIRED: The ID of the switchover pair this endpoint is bound to.
+      --endpoint stringArray     REQUIRED: An endpoint side, in the form "name=<name>,type=<private|public>[,network=<network-id>][,access-point=<access-point-crn>]". A private endpoint sets exactly one of network or access-point. network takes a network ID (the CLI builds its CRN); access-point takes a full CRN, since its canonical form includes a gateway segment. Must be specified exactly twice.
+      --environment string       Environment ID.
+      --context string           CLI context name.
+  -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
