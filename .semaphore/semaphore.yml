@@ -65,7 +65,7 @@ blocks:
 
   - name: windows/amd64
     run:
-      when: "branch = 'main'"
+      when: "branch = 'main' or change_in(['/pkg/config', '/.semaphore/semaphore.yml'], {default_branch: 'main', pipeline_file: 'ignore'})"
     dependencies: []
     task:
       agent:
