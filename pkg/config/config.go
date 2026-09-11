@@ -100,6 +100,25 @@ type Config struct {
 	overwrittenCurrentEnvironment  string
 	overwrittenCurrentKafkaCluster string
 
+	// baseline is this process's view of the persisted config as of its last
+	// load or successful save. Save() diffs baseline against the live config to
+	// learn what THIS process changed, so a concurrent writer's fields can be
+	// preserved. Never serialized.
+	baseline *Config
+
+	// writing is set on the exact config whose Validate() runs under the write
+	// lock. Validate()'s in-memory normalization (nil-map init, invalid-active-
+	// cluster reset) reaches back through Context.Save() to persist itself; that
+	// nested Save() would deadlock on the already-held sidecar lock. The flag
+	// short-circuits it, so the enclosing locked write persists the normalized
+	// struct as soon as Validate() returns. Never serialized.
+	//
+	// Known limitation: KafkaClusterContext.Validate() couples normalization to
+	// persistence via Save(), so a lock timeout hit during that normalization
+	// surfaces as a panic rather than a returned error. Splitting normalization
+	// from persistence is a deferred follow-up.
+	writing bool
+
 	// Deprecated
 	DisablePluginsOnce bool `json:"disable_plugins_once,omitempty"`
 }
@@ -190,27 +209,13 @@ func (c *Config) Load() error {
 		return fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, filename, err)
 	}
 
+	if err := c.wireContexts(); err != nil {
+		return err
+	}
+	c.snapshotBaseline() // baseline = pristine on-disk state, before migrations
+
 	var save bool
 	for _, context := range c.Contexts {
-		// Some "pre-validation"
-		if context.Name == "" {
-			return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.Filename)
-		}
-		if context.CredentialName == "" {
-			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.Filename)
-		}
-		if context.PlatformName == "" {
-			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.Filename)
-		}
-		context.Credential = c.Credentials[context.CredentialName]
-		context.Platform = c.Platforms[context.PlatformName]
-		context.Config = c
-		if context.KafkaClusterContext == nil {
-			return errors.NewCorruptedConfigError(`context "%s" missing KafkaClusterContext`, context.Name, c.Filename)
-		}
-		context.KafkaClusterContext.Context = context
-		context.State = c.ContextStates[context.Name]
-
 		// Migrate deprecated NetrcMachineName to MachineName
 		if context.NetrcMachineName != "" && context.MachineName == "" {
 			context.MachineName = context.NetrcMachineName
@@ -233,29 +238,220 @@ func (c *Config) Load() error {
 	}
 
 	if save {
-		_ = c.Save()
+		if err := c.Save(); err != nil {
+			return err
+		}
 	}
 
 	return c.Validate()
 }
 
-// Save writes the CLI config to disk.
-func (c *Config) Save() error {
-	tempKafkaCluster := c.resolveOverwrittenKafkaCluster()
-	tempEnvironment := c.resolveOverwrittenCurrentEnvironment()
-	tempContext := c.resolveOverwrittenContext()
-	var tempAuthToken string
-	var tempAuthRefreshToken string
-	tempCredentials := map[string]string{}
+// wireContexts rebuilds the cross-references Load() relies on: each context's
+// Credential/Platform/Config back-pointer, its KafkaClusterContext parent, and
+// its State pointer aliased to c.ContextStates[name]. Validate()'s DeepEqual on
+// context state only holds because State and ContextStates[name] are the same
+// object, so a bare json.Unmarshal is never enough.
+func (c *Config) wireContexts() error {
+	for _, context := range c.Contexts {
+		if context.Name == "" {
+			return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.Filename)
+		}
+		if context.CredentialName == "" {
+			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.Filename)
+		}
+		if context.PlatformName == "" {
+			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.Filename)
+		}
+		context.Credential = c.Credentials[context.CredentialName]
+		context.Platform = c.Platforms[context.PlatformName]
+		context.Config = c
+		if context.KafkaClusterContext == nil {
+			return errors.NewCorruptedConfigError(`context "%s" missing KafkaClusterContext`, context.Name, c.Filename)
+		}
+		context.KafkaClusterContext.Context = context
+		context.State = c.ContextStates[context.Name]
+	}
+	return nil
+}
 
+// readConfigFromDisk re-reads the persisted config and rebuilds its pointer
+// graph. It does NOT run migrations and never writes; it is the "theirs" side
+// of Save()'s merge, so it must not recurse into Save(). json:"-" fields
+// (Filename, IsTest, Version, DisableUpdates) are copied from template because a
+// fresh unmarshal cannot recover them.
+func readConfigFromDisk(path string, template *Config) (*Config, error) {
+	input, err := os.ReadFile(path)
+	if err != nil {
+		// Keep the raw error for a missing file so saveLocked's os.IsNotExist
+		// check still fires; wrap any other read error as Load() does.
+		if os.IsNotExist(err) {
+			return nil, err
+		}
+		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, path, err)
+	}
+
+	disk := New()
+	if err := json.Unmarshal(input, disk); err != nil {
+		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, path, err)
+	}
+
+	disk.Filename = template.Filename
+	disk.IsTest = template.IsTest
+	disk.Version = template.Version
+	disk.DisableUpdates = template.DisableUpdates
+
+	if err := disk.wireContexts(); err != nil {
+		return nil, err
+	}
+	return disk, nil
+}
+
+// snapshotBaseline deep-copies the persisted fields into c.baseline via a JSON
+// round-trip (json:"-" and unexported fields are intentionally excluded, since the
+// merge only diffs persisted state).
+func (c *Config) snapshotBaseline() {
+	c.baseline = c.deepCopyPersisted()
+}
+
+// deepCopyPersisted returns an independent copy of c's persisted fields via a
+// JSON round-trip. json:"-" and unexported fields (Filename, baseline, ...) are
+// intentionally dropped, so only persisted state participates in the merge. The
+// copy shares no pointers with c, so wiring or encrypting it never mutates c.
+func (c *Config) deepCopyPersisted() *Config {
+	data, err := json.Marshal(c)
+	if err != nil {
+		return New()
+	}
+	b := New()
+	_ = json.Unmarshal(data, b)
+	return b
+}
+
+// Save atomically and safely persists the config. It serializes writers on a
+// sidecar lock, re-reads the current on-disk state under the lock, three-way-
+// merges this process's own changes onto it (so a concurrent session's fields
+// are not lost), and writes the result atomically.
+func (c *Config) Save() error {
+	// A Save() re-entered from Validate()'s normalization while this process
+	// already holds the lock is a no-op: the enclosing locked write persists the
+	// fully-normalized struct as soon as Validate() returns.
+	if c.writing {
+		return nil
+	}
+
+	// Create the config directory before opening the sidecar lock file inside it:
+	// on a fresh machine (~/.confluent absent) opening the lock would ENOENT.
+	filename := c.GetFilename()
+	if err := os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
+		return fmt.Errorf("unable to create config directory %s: %w", filename, err)
+	}
+
+	lock := newFileLock(filename)
+	if err := lock.lock(lockTimeout); err != nil {
+		return err
+	}
+	defer func() { _ = lock.unlock() }()
+	return c.saveLocked()
+}
+
+// saveLocked runs the read-merge-write under an already-held lock.
+func (c *Config) saveLocked() error {
+	// Resolve flag overrides on the live config so the merge sees the user's
+	// real selection, not an ephemeral --context/--environment/--cluster value.
+	tempKafkaCluster := c.resolveOverwrittenKafkaCluster()
+	defer c.restoreOverwrittenKafkaCluster(tempKafkaCluster)
+	tempEnvironment := c.resolveOverwrittenCurrentEnvironment()
+	defer c.restoreOverwrittenEnvironment(tempEnvironment)
+	tempContext := c.resolveOverwrittenContext()
+	defer c.restoreOverwrittenContext(tempContext)
+
+	// If we have no baseline (e.g. Save called on a config that was constructed,
+	// not loaded), treat our current state as the baseline: nothing to merge.
+	if c.baseline == nil {
+		c.snapshotBaseline()
+	}
+
+	disk, err := readConfigFromDisk(c.GetFilename(), c)
+	if err != nil {
+		// A missing or empty (e.g. a freshly-created temp) file has nothing to
+		// preserve: write our state directly, no merge.
+		if os.IsNotExist(err) || isEmptyFile(c.GetFilename()) {
+			if err := c.save(); err != nil {
+				return err
+			}
+			c.snapshotBaseline()
+			return nil
+		}
+		return err
+	}
+
+	// Merge against a deep copy of c, not c itself: threeWayMerge inserts the
+	// "ours" side's map values (our *Context pointers) into the result, and the
+	// wireContexts/encrypt steps below mutate them. Using a copy keeps live c
+	// pristine and plaintext for continued execution after the save.
+	merged := threeWayMerge(c.baseline, c.deepCopyPersisted(), disk)
+	if err := merged.wireContexts(); err != nil {
+		return err
+	}
+
+	// Encrypt on the merged struct, never on c: c stays plaintext for continued
+	// execution, and the encrypt helpers are guarded against double-encrypting
+	// the already-encrypted tokens that came from disk for untouched contexts.
+	if merged.Context() != nil {
+		st := merged.Context().GetState()
+		if err := merged.encryptContextStateTokens(st.AuthToken, st.AuthRefreshToken); err != nil {
+			return err
+		}
+	}
+	if err := merged.encryptCredentialsAPISecret(); err != nil {
+		return err
+	}
+
+	// Validate() normalizes merged in memory and, via Context.Save(), tries to
+	// re-persist under the lock we already hold. writing neutralizes that nested
+	// Save(); the normalized merged is written just below.
+	merged.writing = true
+	defer func() { merged.writing = false }()
+	if err := merged.Validate(); err != nil {
+		return err
+	}
+
+	data, err := json.MarshalIndent(merged, "", "  ")
+	if err != nil {
+		return fmt.Errorf("unable to marshal config: %w", err)
+	}
+
+	if err := writeFileAtomic(c.GetFilename(), data); err != nil {
+		return err
+	}
+
+	// Our persisted view is now current; the next Save diffs from here.
+	c.snapshotBaseline()
+	return nil
+}
+
+// save marshals and atomically writes the live config WITHOUT locking or
+// merging. Callers must hold the lock (or knowingly not need it, e.g. writing a
+// brand-new default file). Save() is the normal, locked, merging entry point.
+func (c *Config) save() error {
+	tempKafkaCluster := c.resolveOverwrittenKafkaCluster()
+	defer c.restoreOverwrittenKafkaCluster(tempKafkaCluster)
+	tempEnvironment := c.resolveOverwrittenCurrentEnvironment()
+	defer c.restoreOverwrittenEnvironment(tempEnvironment)
+	tempContext := c.resolveOverwrittenContext()
+	defer c.restoreOverwrittenContext(tempContext)
+
+	var tempAuthToken, tempAuthRefreshToken string
+	tempCredentials := map[string]string{}
 	if c.Context() != nil {
 		tempAuthToken = c.Context().GetState().AuthToken
 		tempAuthRefreshToken = c.Context().GetState().AuthRefreshToken
 		if err := c.encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken); err != nil {
 			return err
 		}
+		defer c.restoreOverwrittenAuthToken(tempAuthToken)
+		defer c.restoreOverwrittenAuthRefreshToken(tempAuthRefreshToken)
 	}
-
 	if c.Credentials != nil {
 		for name, credential := range c.Credentials {
 			if credential.APIKeyPair != nil {
@@ -265,35 +461,37 @@ func (c *Config) Save() error {
 		if err := c.encryptCredentialsAPISecret(); err != nil {
 			return err
 		}
+		defer c.restoreOverwrittenCredentials(tempCredentials)
 	}
 
+	// See saveLocked: writing neutralizes the nested Save() that Validate()'s
+	// normalization triggers, so it does not re-acquire the held lock.
+	c.writing = true
+	defer func() { c.writing = false }()
 	if err := c.Validate(); err != nil {
 		return err
 	}
 
-	cfg, err := json.MarshalIndent(c, "", "  ")
+	data, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
 		return fmt.Errorf("unable to marshal config: %w", err)
 	}
 
-	filename := c.GetFilename()
-
-	if err := os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
-		return fmt.Errorf("unable to create config directory %s: %w", filename, err)
+	if err := writeFileAtomic(c.GetFilename(), data); err != nil {
+		return err
 	}
-
-	if err := os.WriteFile(filename, cfg, 0600); err != nil {
-		return fmt.Errorf("unable to write config to file %s: %w", filename, err)
-	}
-
-	c.restoreOverwrittenContext(tempContext)
-	c.restoreOverwrittenEnvironment(tempEnvironment)
-	c.restoreOverwrittenKafkaCluster(tempKafkaCluster)
-	c.restoreOverwrittenAuthToken(tempAuthToken)
-	c.restoreOverwrittenAuthRefreshToken(tempAuthRefreshToken)
-	c.restoreOverwrittenCredentials(tempCredentials)
 
 	return nil
+}
+
+// isEmptyFile reports whether path exists but holds no bytes. This tolerates a
+// legacy zero-byte config file (nothing to preserve, so the caller skips the
+// merge); a non-empty but corrupt file is not "empty" and is correctly surfaced
+// as a hard error by the unmarshal instead. A missing file or any stat error is
+// not "empty"; the caller handles absence via os.IsNotExist.
+func isEmptyFile(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && info.Size() == 0
 }
 
 func (c *Config) encryptCredentialsAPISecret() error {
@@ -648,9 +846,30 @@ func (c *Config) GetFilename() string {
 	return c.Filename
 }
 
+// StateDirName is the name of the CLI's state directory within the user's home directory. It is
+// scoped to the build's release channel so a production install, a prerelease, and a local build
+// cannot read or overwrite each other's state. A stable build returns ".confluent", unchanged.
+func StateDirName() string {
+	return ".confluent" + pversion.ProcessChannel().StateDirSuffix()
+}
+
+// StateDir is the absolute path of the CLI's state directory.
+func StateDir() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", errors.NewErrorWithSuggestions(
+			fmt.Sprintf("unable to determine the home directory holding the CLI's state: %v", err),
+			"Set the `HOME` environment variable (`USERPROFILE` on Windows) to a writable directory.",
+		)
+	}
+	return filepath.Join(home, StateDirName()), nil
+}
+
+// GetDefaultFilename swallows a missing home directory because it backs a flag default built at
+// command-construction time, where there is no error to return. Prefer StateDir where you can.
 func GetDefaultFilename() string {
 	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".confluent", "config.json")
+	return filepath.Join(home, StateDirName(), "config.json")
 }
 
 func (c *Config) CheckIsOnPremLogin() error {
