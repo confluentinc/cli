@@ -72,8 +72,7 @@ func NewRetryableHttpClient(cfg *config.Config, unsafeTrace bool) *http.Client {
 			}
 			v1Client := ccloudv1.NewClient(params)
 
-			_ = cfg.Context().RefreshSession(v1Client)
-			_ = cfg.Save()
+			refreshAndSave(cfg, v1Client)
 
 			return true, err
 		}
@@ -82,6 +81,21 @@ func NewRetryableHttpClient(cfg *config.Config, unsafeTrace bool) *http.Client {
 	}
 
 	return client.StandardClient()
+}
+
+// refreshAndSave refreshes the session after a 401 and persists the result. Either step
+// can fail without aborting the retry that triggered it, so both failures are logged
+// here rather than surfaced to the caller. A refresh failure means the retry will 401
+// again and the command ultimately fails, so it is logged at error level to reach the
+// user at the default verbosity. A save failure after a good refresh usually still lets
+// the command succeed (the refreshed token just is not persisted), so it stays a warning.
+func refreshAndSave(cfg *config.Config, v1Client *ccloudv1.Client) {
+	if err := cfg.Context().RefreshSession(v1Client); err != nil {
+		log.CliLogger.Errorf("Failed to refresh session after 401: %v", err)
+	}
+	if err := cfg.Save(); err != nil {
+		log.CliLogger.Warnf("Failed to save config after session refresh: %v", err)
+	}
 }
 
 func NewRetryableHttpClientWithRedirect(unsafeTrace bool, checkRedirect func(*http.Request, []*http.Request) error) *http.Client {

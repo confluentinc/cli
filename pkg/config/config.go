@@ -100,6 +100,25 @@ type Config struct {
 	overwrittenCurrentEnvironment  string
 	overwrittenCurrentKafkaCluster string
 
+	// baseline is this process's view of the persisted config as of its last
+	// load or successful save. Save() diffs baseline against the live config to
+	// learn what THIS process changed, so a concurrent writer's fields can be
+	// preserved. Never serialized.
+	baseline *Config
+
+	// writing is set on the exact config whose Validate() runs under the write
+	// lock. Validate()'s in-memory normalization (nil-map init, invalid-active-
+	// cluster reset) reaches back through Context.Save() to persist itself; that
+	// nested Save() would deadlock on the already-held sidecar lock. The flag
+	// short-circuits it, so the enclosing locked write persists the normalized
+	// struct as soon as Validate() returns. Never serialized.
+	//
+	// Known limitation: KafkaClusterContext.Validate() couples normalization to
+	// persistence via Save(), so a lock timeout hit during that normalization
+	// surfaces as a panic rather than a returned error. Splitting normalization
+	// from persistence is a deferred follow-up.
+	writing bool
+
 	// Deprecated
 	DisablePluginsOnce bool `json:"disable_plugins_once,omitempty"`
 }
@@ -177,7 +196,12 @@ func (c *Config) Load() error {
 	input, err := os.ReadFile(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
-			// Save a default version if none exists yet.
+			// Save a default version if none exists yet. Snapshot a baseline first so this
+			// save merges under the lock instead of overwriting: another session can create
+			// the config between this missing-file read and the locked save, and that file
+			// must survive. A config constructed without Load keeps a nil baseline and still
+			// writes whole.
+			c.snapshotBaseline()
 			if err := c.Save(); err != nil {
 				return fmt.Errorf("unable to save configuration file: %w", err)
 			}
@@ -190,27 +214,13 @@ func (c *Config) Load() error {
 		return fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, filename, err)
 	}
 
+	if err := c.wireContexts(); err != nil {
+		return err
+	}
+	c.snapshotBaseline() // baseline = pristine on-disk state, before migrations
+
 	var save bool
 	for _, context := range c.Contexts {
-		// Some "pre-validation"
-		if context.Name == "" {
-			return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.Filename)
-		}
-		if context.CredentialName == "" {
-			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.Filename)
-		}
-		if context.PlatformName == "" {
-			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.Filename)
-		}
-		context.Credential = c.Credentials[context.CredentialName]
-		context.Platform = c.Platforms[context.PlatformName]
-		context.Config = c
-		if context.KafkaClusterContext == nil {
-			return errors.NewCorruptedConfigError(`context "%s" missing KafkaClusterContext`, context.Name, c.Filename)
-		}
-		context.KafkaClusterContext.Context = context
-		context.State = c.ContextStates[context.Name]
-
 		// Migrate deprecated NetrcMachineName to MachineName
 		if context.NetrcMachineName != "" && context.MachineName == "" {
 			context.MachineName = context.NetrcMachineName
@@ -233,29 +243,324 @@ func (c *Config) Load() error {
 	}
 
 	if save {
-		_ = c.Save()
+		if err := c.Save(); err != nil {
+			return err
+		}
 	}
 
 	return c.Validate()
 }
 
-// Save writes the CLI config to disk.
-func (c *Config) Save() error {
-	tempKafkaCluster := c.resolveOverwrittenKafkaCluster()
-	tempEnvironment := c.resolveOverwrittenCurrentEnvironment()
-	tempContext := c.resolveOverwrittenContext()
-	var tempAuthToken string
-	var tempAuthRefreshToken string
-	tempCredentials := map[string]string{}
+// wireContexts rebuilds the cross-references Load() relies on: each context's
+// Credential/Platform/Config back-pointer, its KafkaClusterContext parent, and
+// its State pointer aliased to c.ContextStates[name]. Validate()'s DeepEqual on
+// context state only holds because State and ContextStates[name] are the same
+// object, so a bare json.Unmarshal is never enough.
+func (c *Config) wireContexts() error {
+	for _, context := range c.Contexts {
+		if context.Name == "" {
+			return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.Filename)
+		}
+		if context.CredentialName == "" {
+			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.Filename)
+		}
+		if context.PlatformName == "" {
+			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.Filename)
+		}
+		context.Credential = c.Credentials[context.CredentialName]
+		context.Platform = c.Platforms[context.PlatformName]
+		context.Config = c
+		if context.KafkaClusterContext == nil {
+			return errors.NewCorruptedConfigError(`context "%s" missing KafkaClusterContext`, context.Name, c.Filename)
+		}
+		context.KafkaClusterContext.Context = context
+		context.State = c.ContextStates[context.Name]
+	}
+	return nil
+}
 
+// readConfigFromDisk re-reads the persisted config and rebuilds its pointer
+// graph. It does NOT run migrations and never writes; it is the "theirs" side
+// of Save()'s merge, so it must not recurse into Save(). json:"-" fields
+// (Filename, IsTest, Version, DisableUpdates) are copied from template because a
+// fresh unmarshal cannot recover them.
+func readConfigFromDisk(path string, template *Config) (*Config, error) {
+	input, err := os.ReadFile(path)
+	if err != nil {
+		// Keep the raw error for a missing file so saveLocked's os.IsNotExist
+		// check still fires; wrap any other read error as Load() does.
+		if os.IsNotExist(err) {
+			return nil, err
+		}
+		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, path, err)
+	}
+
+	disk := New()
+	if err := json.Unmarshal(input, disk); err != nil {
+		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, path, err)
+	}
+
+	disk.Filename = template.Filename
+	disk.IsTest = template.IsTest
+	disk.Version = template.Version
+	disk.DisableUpdates = template.DisableUpdates
+
+	if err := disk.wireContexts(); err != nil {
+		return nil, err
+	}
+	return disk, nil
+}
+
+// snapshotBaseline deep-copies the persisted fields into c.baseline via a JSON
+// round-trip (json:"-" and unexported fields are intentionally excluded, since the
+// merge only diffs persisted state).
+func (c *Config) snapshotBaseline() {
+	c.baseline = c.deepCopyPersisted()
+}
+
+// deepCopyPersisted returns an independent copy of c's persisted fields via a
+// JSON round-trip. json:"-" and unexported fields (Filename, baseline, ...) are
+// intentionally dropped, so only persisted state participates in the merge. The
+// copy shares no pointers with c, so wiring or encrypting it never mutates c.
+func (c *Config) deepCopyPersisted() *Config {
+	data, err := json.Marshal(c)
+	if err != nil {
+		return New()
+	}
+	b := New()
+	_ = json.Unmarshal(data, b)
+	return b
+}
+
+// Save atomically and safely persists the config. It serializes writers on a
+// sidecar lock, re-reads the current on-disk state under the lock, three-way-
+// merges this process's own changes onto it (so a concurrent session's fields
+// are not lost), and writes the result atomically.
+func (c *Config) Save() error {
+	// A Save() re-entered from Validate()'s normalization while this process
+	// already holds the lock is a no-op: the enclosing locked write persists the
+	// fully-normalized struct as soon as Validate() returns.
+	if c.writing {
+		return nil
+	}
+
+	// Create the config directory before opening the sidecar lock file inside it:
+	// on a fresh machine (~/.confluent absent) opening the lock would ENOENT.
+	filename := c.GetFilename()
+	if err := os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
+		return fmt.Errorf("unable to create config directory %s: %w", filename, err)
+	}
+
+	lock := newFileLock(filename)
+	if err := lock.lock(lockTimeout); err != nil {
+		return err
+	}
+	defer func() { _ = lock.unlock() }()
+	return c.saveLocked()
+}
+
+// saveLocked runs the read-merge-write under an already-held lock.
+func (c *Config) saveLocked() error {
+	// Resolve flag overrides on the live config so the merge sees the user's
+	// real selection, not an ephemeral --context/--environment/--cluster value.
+	tempKafkaCluster := c.resolveOverwrittenKafkaCluster()
+	defer c.restoreOverwrittenKafkaCluster(tempKafkaCluster)
+	tempEnvironment := c.resolveOverwrittenCurrentEnvironment()
+	defer c.restoreOverwrittenEnvironment(tempEnvironment)
+	tempContext := c.resolveOverwrittenContext()
+	defer c.restoreOverwrittenContext(tempContext)
+
+	// No baseline means this config was constructed, not loaded, so there is no
+	// common ancestor to merge against and the caller is declaring its state whole
+	// (e.g. test config reset). Overwrite directly, matching pre-merge semantics.
+	if c.baseline == nil {
+		return c.writeWholeConfig()
+	}
+
+	disk, err := readConfigFromDisk(c.GetFilename(), c)
+	if err != nil {
+		// A missing or empty (e.g. a freshly-created temp) file has nothing to
+		// preserve: write our state directly, no merge.
+		if os.IsNotExist(err) || isEmptyFile(c.GetFilename()) {
+			return c.writeWholeConfig()
+		}
+		return err
+	}
+
+	// ours is the live config's persisted state. PreRun left it partially decrypted:
+	// every credential secret and the current context's tokens are plaintext, while
+	// other contexts' tokens stay encrypted.
+	ours := c.deepCopyPersisted()
+
+	// Decrypt the encrypted baseline to ours' representation before diffing, so a
+	// secret we did not touch is not mistaken for a local change. We decrypt (a
+	// deterministic operation on every platform) rather than re-encrypt ours: Windows
+	// DPAPI ciphertext is not reproducible, so an encrypt-based match would flag every
+	// secret as changed and reintroduce the very lost-write bug this guards against.
+	base := c.baseline.deepCopyPersisted()
+	if err := base.decryptToMatch(ours); err != nil {
+		return err
+	}
+
+	merged, err := threeWayMerge(base, ours, disk)
+	if err != nil {
+		return err
+	}
+	if err := merged.wireContexts(); err != nil {
+		return err
+	}
+
+	// Re-encrypt the secrets that ended up plaintext (the ones we changed, taken from
+	// ours). Untouched secrets came from disk still encrypted; the guards skip them.
+	if err := merged.encryptSecrets(); err != nil {
+		return err
+	}
+
+	// Validate() normalizes merged in memory and, via Context.Save(), tries to
+	// re-persist under the lock we already hold. writing neutralizes that nested
+	// Save(); the normalized merged is written just below.
+	merged.writing = true
+	defer func() { merged.writing = false }()
+	if err := merged.Validate(); err != nil {
+		return err
+	}
+
+	data, err := json.MarshalIndent(merged, "", "  ")
+	if err != nil {
+		return fmt.Errorf("unable to marshal config: %w", err)
+	}
+
+	if err := writeFileAtomic(c.GetFilename(), data); err != nil {
+		return err
+	}
+
+	// The next Save's three-way merge diffs baseline against the live config, so the
+	// baseline must match the live config for every field this process did not edit,
+	// not the merged disk state. merged holds concurrent changes this process pulled in
+	// from disk but never wrote back into c; using merged as the ancestor would make a
+	// later Save read those untouched fields as local edits and revert the concurrent
+	// change. Snapshotting c keeps the ancestor aligned with what this process knows.
+	// c itself is left as-is, so its in-memory view of a field it did not touch stays
+	// at the loaded value until the process exits; that matches how a load-once CLI
+	// already behaves, and only the ancestor advances here.
+	c.baseline = c.deepCopyPersisted()
+	return nil
+}
+
+// writeWholeConfig persists c directly (no merge) and refreshes the baseline from
+// the resulting on-disk state, so the next Save has an encrypted ancestor to diff
+// against. Used when there is nothing to merge: a missing or empty file, or a
+// config that was constructed rather than loaded.
+func (c *Config) writeWholeConfig() error {
+	if err := c.save(); err != nil {
+		return err
+	}
+	// Refresh the baseline from disk (encrypted) rather than from the live config,
+	// which save() has restored to its decrypted form. A read failure here does not
+	// undo the successful write, so fall back to the live snapshot.
+	if disk, err := readConfigFromDisk(c.GetFilename(), c); err == nil {
+		c.baseline = disk
+	} else {
+		c.snapshotBaseline()
+	}
+	return nil
+}
+
+// encryptSecrets encrypts c's plaintext secrets into their on-disk form: every
+// context's auth tokens and all credential API secrets. Save() calls it on the merged
+// result to re-encrypt the secrets it took from the (plaintext) live config; secrets
+// carried over from disk are already encrypted and the guards skip them. Every context
+// is covered (not just the current one) because a merge can leave a plaintext token in
+// a context that is not current at write time, and none may reach disk.
+func (c *Config) encryptSecrets() error {
+	for _, ctx := range c.Contexts {
+		if ctx.GetState() == nil {
+			continue
+		}
+		st := ctx.GetState()
+		if err := c.encryptStateTokensForContext(ctx, st.AuthToken, st.AuthRefreshToken); err != nil {
+			return err
+		}
+	}
+	return c.encryptCredentialsAPISecret()
+}
+
+// decryptToMatch decrypts c's secrets to the same representation as ref so the two
+// can be diffed field for field. PreRun leaves the live config (ref) with every
+// credential secret and the current context's tokens in plaintext while other
+// contexts' tokens stay encrypted; this decrypts exactly the fields ref holds in
+// plaintext. Save() calls it on the baseline, which is encrypted straight from load
+// or writeWholeConfig but already in ref's representation after a merged save (whose
+// baseline is a live-config snapshot); the guard below only decrypts a field where
+// the baseline holds ciphertext ref does not, so an already-aligned field is a no-op.
+// It decrypts rather than re-encrypting ref because that is deterministic on every
+// platform (Windows DPAPI ciphertext is not), and it never runs Validate (which would
+// re-enter Save under the held lock).
+func (c *Config) decryptToMatch(ref *Config) error {
+	// Decrypt a field only where c holds ciphertext and ref holds plaintext: that is
+	// the one case where the two representations differ and c must be brought down to
+	// match. Gating on c's own cipher marker matters because a plaintext token that is
+	// not cipher-prefixed (e.g. a cloud refresh token, which is never encrypted) would
+	// otherwise be fed to Decrypt and fail authentication.
+	for name, credential := range c.Credentials {
+		refCredential := ref.Credentials[name]
+		if credential.APIKeyPair == nil || refCredential == nil || refCredential.APIKeyPair == nil {
+			continue
+		}
+		if isEncryptedSecret(credential.APIKeyPair.Secret) && !isEncryptedSecret(refCredential.APIKeyPair.Secret) {
+			if err := credential.APIKeyPair.DecryptSecret(); err != nil {
+				return err
+			}
+		}
+	}
+
+	for name, state := range c.ContextStates {
+		refState := ref.ContextStates[name]
+		if state == nil || refState == nil {
+			continue
+		}
+		if isEncryptedSecret(state.AuthToken) && !isEncryptedSecret(refState.AuthToken) {
+			if err := state.DecryptAuthToken(name); err != nil {
+				return err
+			}
+		}
+		if isEncryptedSecret(state.AuthRefreshToken) && !isEncryptedSecret(refState.AuthRefreshToken) {
+			if err := state.DecryptAuthRefreshToken(name); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// isEncryptedSecret reports whether s carries a cipher marker (so it is ciphertext,
+// not a plaintext value a command left in place). The ":" is part of the marker.
+func isEncryptedSecret(s string) bool {
+	return strings.HasPrefix(s, secret.AesGcm+":") || strings.HasPrefix(s, secret.Dpapi+":")
+}
+
+// save marshals and atomically writes the live config WITHOUT locking or
+// merging. Callers must hold the lock (or knowingly not need it, e.g. writing a
+// brand-new default file). Save() is the normal, locked, merging entry point.
+func (c *Config) save() error {
+	tempKafkaCluster := c.resolveOverwrittenKafkaCluster()
+	defer c.restoreOverwrittenKafkaCluster(tempKafkaCluster)
+	tempEnvironment := c.resolveOverwrittenCurrentEnvironment()
+	defer c.restoreOverwrittenEnvironment(tempEnvironment)
+	tempContext := c.resolveOverwrittenContext()
+	defer c.restoreOverwrittenContext(tempContext)
+
+	var tempAuthToken, tempAuthRefreshToken string
+	tempCredentials := map[string]string{}
 	if c.Context() != nil {
 		tempAuthToken = c.Context().GetState().AuthToken
 		tempAuthRefreshToken = c.Context().GetState().AuthRefreshToken
 		if err := c.encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken); err != nil {
 			return err
 		}
+		defer c.restoreOverwrittenAuthToken(tempAuthToken)
+		defer c.restoreOverwrittenAuthRefreshToken(tempAuthRefreshToken)
 	}
-
 	if c.Credentials != nil {
 		for name, credential := range c.Credentials {
 			if credential.APIKeyPair != nil {
@@ -265,35 +570,37 @@ func (c *Config) Save() error {
 		if err := c.encryptCredentialsAPISecret(); err != nil {
 			return err
 		}
+		defer c.restoreOverwrittenCredentials(tempCredentials)
 	}
 
+	// See saveLocked: writing neutralizes the nested Save() that Validate()'s
+	// normalization triggers, so it does not re-acquire the held lock.
+	c.writing = true
+	defer func() { c.writing = false }()
 	if err := c.Validate(); err != nil {
 		return err
 	}
 
-	cfg, err := json.MarshalIndent(c, "", "  ")
+	data, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
 		return fmt.Errorf("unable to marshal config: %w", err)
 	}
 
-	filename := c.GetFilename()
-
-	if err := os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
-		return fmt.Errorf("unable to create config directory %s: %w", filename, err)
+	if err := writeFileAtomic(c.GetFilename(), data); err != nil {
+		return err
 	}
-
-	if err := os.WriteFile(filename, cfg, 0600); err != nil {
-		return fmt.Errorf("unable to write config to file %s: %w", filename, err)
-	}
-
-	c.restoreOverwrittenContext(tempContext)
-	c.restoreOverwrittenEnvironment(tempEnvironment)
-	c.restoreOverwrittenKafkaCluster(tempKafkaCluster)
-	c.restoreOverwrittenAuthToken(tempAuthToken)
-	c.restoreOverwrittenAuthRefreshToken(tempAuthRefreshToken)
-	c.restoreOverwrittenCredentials(tempCredentials)
 
 	return nil
+}
+
+// isEmptyFile reports whether path exists but holds no bytes. This tolerates a
+// legacy zero-byte config file (nothing to preserve, so the caller skips the
+// merge); a non-empty but corrupt file is not "empty" and is correctly surfaced
+// as a hard error by the unmarshal instead. A missing file or any stat error is
+// not "empty"; the caller handles absence via os.IsNotExist.
+func isEmptyFile(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && info.Size() == 0
 }
 
 func (c *Config) encryptCredentialsAPISecret() error {
@@ -309,39 +616,49 @@ func (c *Config) encryptCredentialsAPISecret() error {
 }
 
 func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken string) error {
-	if c.Context().GetState().Salt == nil || c.Context().GetState().Nonce == nil {
+	return c.encryptStateTokensForContext(c.Context(), tempAuthToken, tempAuthRefreshToken)
+}
+
+// encryptStateTokensForContext encrypts ctx's auth tokens in place. It is idempotent:
+// an already-encrypted token carries a cipher prefix and matches none of the plaintext
+// token shapes below, so it is left untouched. The ctx parameter lets Save() encrypt
+// every context's state, not only the current one, so a plaintext token can never
+// reach disk under a context that is not current at write time.
+func (c *Config) encryptStateTokensForContext(ctx *Context, tempAuthToken, tempAuthRefreshToken string) error {
+	state := ctx.GetState()
+	if state.Salt == nil || state.Nonce == nil {
 		salt, nonce, err := secret.GenerateSaltAndNonce()
 		if err != nil {
 			return err
 		}
-		c.Context().GetState().Salt = salt
-		c.Context().GetState().Nonce = nonce
+		state.Salt = salt
+		state.Nonce = nonce
 	}
 
 	if regexp.MustCompile(authTokenRegex).MatchString(tempAuthToken) {
-		encryptedAuthToken, err := secret.Encrypt(c.Context().Name, tempAuthToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
+		encryptedAuthToken, err := secret.Encrypt(ctx.Name, tempAuthToken, state.Salt, state.Nonce)
 		if err != nil {
 			return err
 		}
-		c.Context().GetState().AuthToken = encryptedAuthToken
+		state.AuthToken = encryptedAuthToken
 	}
 
 	// The Confluent Gov environment and the Confluent Platform MDS return a refresh token that does not match `authRefreshTokenRegex` and cannot be distinguished from an already encrypted refresh token.
-	// We prefix encrypted tokens with "AES/GCM/NoPadding" on Unix systems and "DPAPI" on Windows to ensure that they are only encrypted once.
-	prefix := secret.AesGcm
+	// We prefix encrypted tokens with "AES/GCM/NoPadding:" on Unix systems and "DPAPI:" on Windows to ensure that they are only encrypted once. The ":" is part of the marker, so a plaintext token merely beginning with the marker word is still encrypted.
+	prefix := secret.AesGcm + ":"
 	if runtime.GOOS == "windows" {
-		prefix = secret.Dpapi
+		prefix = secret.Dpapi + ":"
 	}
-	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, prefix) && (strings.Contains(c.Context().PlatformName, "confluentgov.com") || strings.Contains(c.Context().PlatformName, "confluentgov-internal.com"))
+	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, prefix) && (strings.Contains(ctx.PlatformName, "confluentgov.com") || strings.Contains(ctx.PlatformName, "confluentgov-internal.com"))
 
-	isUnencryptedConfluentPlatform := tempAuthRefreshToken != "" && !strings.HasPrefix(tempAuthRefreshToken, prefix) && !c.Context().IsCloud(c.IsTest)
+	isUnencryptedConfluentPlatform := tempAuthRefreshToken != "" && !strings.HasPrefix(tempAuthRefreshToken, prefix) && !ctx.IsCloud(c.IsTest)
 
 	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) || isUnencryptedConfluentGov || isUnencryptedConfluentPlatform {
-		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
+		encryptedAuthRefreshToken, err := secret.Encrypt(ctx.Name, tempAuthRefreshToken, state.Salt, state.Nonce)
 		if err != nil {
 			return err
 		}
-		c.Context().State.AuthRefreshToken = encryptedAuthRefreshToken
+		state.AuthRefreshToken = encryptedAuthRefreshToken
 	}
 
 	return nil

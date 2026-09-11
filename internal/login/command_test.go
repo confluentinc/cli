@@ -13,6 +13,7 @@ import (
 	"math/big"
 	"net/http"
 	"os"
+	"path/filepath"
 	"reflect"
 	"slices"
 	"testing"
@@ -744,6 +745,11 @@ func TestValidateUrl(t *testing.T) {
 func newLoginCmd(ctrl *gomock.Controller, auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *config.Config) {
 	config.SetTempHomeDir()
 	cfg := config.New()
+	// give each test its own config file so Save()'s lock-and-merge re-reads only this
+	// test's state, not another login test's leftover at the shared default path.
+	tempDir, err := os.MkdirTemp("", "cli-login-test")
+	req.NoError(err)
+	cfg.Filename = filepath.Join(tempDir, "config.json")
 	var ccloudClientFactory *climock.MockCCloudClientFactory
 	var mdsClientManager *climock.MockMDSClientManager
 	var prerunner pcmd.PreRunner
