@@ -18,9 +18,10 @@ import (
 // only on disk (a concurrent add) survives, and a key we deleted (in base, absent
 // from ours) is removed.
 //
-// Secrets must be in the same (encrypted) representation across all three inputs
-// before this runs, or a secret we never touched reads as a local change and
-// overwrites a concurrent update. saveLocked guarantees that via encryptSecrets.
+// base and ours must be in the same representation before this runs, or a secret this
+// process never touched reads as base != ours (a local change) and overwrites a
+// concurrent update. saveLocked aligns them via decryptToMatch. disk's own
+// representation does not matter: an untouched field is taken from disk wholesale.
 func threeWayMerge(base, ours, disk *Config) (*Config, error) {
 	out := disk
 
