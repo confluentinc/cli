@@ -7,24 +7,24 @@ Unlike statement creation, which submits a statement and returns immediately, th
 With `-o json` or `-o yaml`, output defaults to an envelope carrying the column schema alongside the rows, since the rows on their own carry no type information. Pass `--raw` for a bare array of row objects instead.
 
 Usage:
-  confluent query [sql] [flags]
+  confluent flink query [sql] [flags]
 
 Examples:
 Run a bounded query in the current compute pool and print the rows as a table.
 
-  $ confluent query --sql "SELECT * FROM orders LIMIT 10;"
+  $ confluent flink query --sql "SELECT * FROM orders LIMIT 10;"
 
 Run a bounded query against Kafka cluster "my-cluster" and emit JSON for a script to consume.
 
-  $ confluent query --sql "SELECT status, COUNT(*) FROM orders GROUP BY status;" --compute-pool lfcp-123456 --database my-cluster --output json
+  $ confluent flink query --sql "SELECT status, COUNT(*) FROM orders GROUP BY status;" --compute-pool lfcp-123456 --database my-cluster --output json
 
 Emit a bare JSON array of rows, with no envelope, for a script that only wants the data.
 
-  $ confluent query --sql "SELECT * FROM orders LIMIT 10;" --output json --raw
+  $ confluent flink query --sql "SELECT * FROM orders LIMIT 10;" --output json --raw
 
 Pass the SQL as a positional argument instead of `--sql`.
 
-  $ confluent query "SELECT * FROM orders LIMIT 10;"
+  $ confluent flink query "SELECT * FROM orders LIMIT 10;"
 
 Flags:
       --sql string               The Flink SQL statement. Alternatively, pass it as a positional argument or with "-f".

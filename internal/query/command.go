@@ -59,8 +59,8 @@ type command struct {
 	authTokenMu sync.Mutex
 }
 
-// New mounts `confluent query` at the top level, not under `flink`, to also cover
-// future backends like Lightning Tables without a rename.
+// New mounts `confluent flink query`: the entry point for a bounded, one-shot Flink
+// SQL read, with no engine routing to other backends.
 func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query [sql]",
@@ -82,19 +82,19 @@ func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Run a bounded query in the current compute pool and print the rows as a table.",
-				Code: `confluent query --sql "SELECT * FROM orders LIMIT 10;"`,
+				Code: `confluent flink query --sql "SELECT * FROM orders LIMIT 10;"`,
 			},
 			examples.Example{
 				Text: "Run a bounded query against Kafka cluster \"my-cluster\" and emit JSON for a script to consume.",
-				Code: `confluent query --sql "SELECT status, COUNT(*) FROM orders GROUP BY status;" --compute-pool lfcp-123456 --database my-cluster --output json`,
+				Code: `confluent flink query --sql "SELECT status, COUNT(*) FROM orders GROUP BY status;" --compute-pool lfcp-123456 --database my-cluster --output json`,
 			},
 			examples.Example{
 				Text: "Emit a bare JSON array of rows, with no envelope, for a script that only wants the data.",
-				Code: `confluent query --sql "SELECT * FROM orders LIMIT 10;" --output json --raw`,
+				Code: `confluent flink query --sql "SELECT * FROM orders LIMIT 10;" --output json --raw`,
 			},
 			examples.Example{
 				Text: "Pass the SQL as a positional argument instead of `--sql`.",
-				Code: `confluent query "SELECT * FROM orders LIMIT 10;"`,
+				Code: `confluent flink query "SELECT * FROM orders LIMIT 10;"`,
 			},
 		),
 	}
@@ -439,7 +439,7 @@ func (c *command) handleQueryError(client *ccloudv2.FlinkGatewayClient, environm
 		*settled = true
 		return errors.NewErrorWithSuggestions(
 			err.Error(),
-			fmt.Sprintf("Bound the query with a LIMIT clause or a time predicate and run `confluent query` again. %s", fate),
+			fmt.Sprintf("Bound the query with a LIMIT clause or a time predicate and run `confluent flink query` again. %s", fate),
 		)
 	}
 

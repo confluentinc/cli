@@ -219,7 +219,7 @@ func handleSqlEnvironmentsEnvironmentStatementExceptions(t *testing.T) http.Hand
 	}
 }
 
-// queryTestStatementPrefix marks a statement created by `confluent query` (see
+// queryTestStatementPrefix marks a statement created by `confluent flink query` (see
 // types.GenerateStatementName); fixtures below only apply to names with this prefix.
 const queryTestStatementPrefix = "cli-"
 
