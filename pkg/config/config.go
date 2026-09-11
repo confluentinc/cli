@@ -106,6 +106,14 @@ type Config struct {
 	// preserved. Never serialized.
 	baseline *Config
 
+	// writing is set on the exact config whose Validate() runs under the write
+	// lock. Validate()'s in-memory normalization (nil-map init, invalid-active-
+	// cluster reset) reaches back through Context.Save() to persist itself; that
+	// nested Save() would deadlock on the already-held sidecar lock. The flag
+	// short-circuits it — the enclosing locked write persists the normalized
+	// struct as soon as Validate() returns. Never serialized.
+	writing bool
+
 	// Deprecated
 	DisablePluginsOnce bool `json:"disable_plugins_once,omitempty"`
 }
@@ -314,7 +322,21 @@ func (c *Config) deepCopyPersisted() *Config {
 // merges this process's own changes onto it (so a concurrent session's fields
 // are not lost), and writes the result atomically.
 func (c *Config) Save() error {
-	lock := newFileLock(c.GetFilename())
+	// A Save() re-entered from Validate()'s normalization while this process
+	// already holds the lock is a no-op: the enclosing locked write persists the
+	// fully-normalized struct as soon as Validate() returns.
+	if c.writing {
+		return nil
+	}
+
+	// Create the config directory before opening the sidecar lock file inside it:
+	// on a fresh machine (~/.confluent absent) opening the lock would ENOENT.
+	filename := c.GetFilename()
+	if err := os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
+		return fmt.Errorf("unable to create config directory %s: %w", filename, err)
+	}
+
+	lock := newFileLock(filename)
 	if err := lock.lock(lockTimeout); err != nil {
 		return err
 	}
@@ -375,7 +397,13 @@ func (c *Config) saveLocked() error {
 		return err
 	}
 
-	if err := merged.Validate(); err != nil {
+	// Validate() normalizes merged in memory and, via Context.Save(), tries to
+	// re-persist under the lock we already hold. writing neutralizes that nested
+	// Save(); the normalized merged is written just below.
+	merged.writing = true
+	err = merged.Validate()
+	merged.writing = false
+	if err != nil {
 		return err
 	}
 
@@ -431,7 +459,12 @@ func (c *Config) save() error {
 		defer c.restoreOverwrittenCredentials(tempCredentials)
 	}
 
-	if err := c.Validate(); err != nil {
+	// See saveLocked: writing neutralizes the nested Save() that Validate()'s
+	// normalization triggers, so it does not re-acquire the held lock.
+	c.writing = true
+	err := c.Validate()
+	c.writing = false
+	if err != nil {
 		return err
 	}
 
