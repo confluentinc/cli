@@ -88,10 +88,10 @@ func NewRetryableHttpClient(cfg *config.Config, unsafeTrace bool) *http.Client {
 // rather than surfaced to the caller.
 func refreshAndSave(cfg *config.Config, v1Client *ccloudv1.Client) {
 	if err := cfg.Context().RefreshSession(v1Client); err != nil {
-		log.CliLogger.Warnf("failed to refresh session after 401: %v", err)
+		log.CliLogger.Warnf("Failed to refresh session after 401: %v", err)
 	}
 	if err := cfg.Save(); err != nil {
-		log.CliLogger.Warnf("failed to save config after session refresh: %v", err)
+		log.CliLogger.Warnf("Failed to save config after session refresh: %v", err)
 	}
 }
 
