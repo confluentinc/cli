@@ -19,6 +19,7 @@ import (
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/secret"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 	pversion "github.com/confluentinc/cli/v4/pkg/version"
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
@@ -1294,6 +1295,61 @@ func TestSave_MergesConcurrentDiskChange(t *testing.T) {
 	require.NotContains(t, final.Platforms, "a", "our delete must persist")
 	require.Contains(t, final.Platforms, "b")
 	require.Contains(t, final.Platforms, "c", "the other session's concurrent add must not be lost")
+}
+
+// A Confluent Platform (non-cloud) refresh token that happens to begin with the
+// bare cipher marker word (no ":") is still plaintext and must be encrypted, not
+// mistaken for ciphertext and skipped. Mirrors the APIKeyPair delimiter fix.
+func TestEncryptContextStateTokens_EncryptsPlatformRefreshTokenBeginningWithCipherWord(t *testing.T) {
+	c := New()
+	c.Platforms["p"] = &Platform{Name: "p", Server: "https://mds.example.com"}
+	c.Credentials["cred"] = &Credential{Name: "cred", CredentialType: Username}
+	state := &ContextState{}
+	ctx := &Context{
+		Name:           "ctx",
+		PlatformName:   "https://mds.example.com",
+		CredentialName: "cred",
+		Platform:       c.Platforms["p"],
+		Credential:     c.Credentials["cred"],
+		State:          state,
+		Config:         c,
+	}
+	ctx.KafkaClusterContext = &KafkaClusterContext{Context: ctx}
+	c.Contexts["ctx"] = ctx
+	c.ContextStates["ctx"] = state
+	c.CurrentContext = "ctx"
+
+	refresh := secret.AesGcm + "-not-actually-encrypted" // begins with the marker word, no ":"
+	state.AuthRefreshToken = refresh
+
+	require.NoError(t, c.encryptContextStateTokens("", refresh))
+
+	require.NotEqual(t, refresh, state.AuthRefreshToken,
+		"a non-cloud refresh token merely beginning with the cipher word must be encrypted")
+}
+
+// A config that was constructed rather than loaded has no baseline, so there is
+// nothing to merge against and it declares its state whole (e.g. test config
+// reset). Save() must overwrite the existing file, not treat the live object as
+// unchanged and silently keep disk's values.
+func TestSave_NoBaselineOverwritesExistingFile(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+
+	seed := New()
+	seed.Filename = path
+	seed.DisablePlugins = false
+	require.NoError(t, seed.Save())
+
+	fresh := New()
+	fresh.Filename = path
+	fresh.DisablePlugins = true
+	require.NoError(t, fresh.Save())
+
+	final, err := readConfigFromDisk(path, seed)
+	require.NoError(t, err)
+	require.True(t, final.DisablePlugins,
+		"a constructed (never-loaded) config's Save must overwrite the existing file, not merge it away")
 }
 
 // A fresh machine has no ~/.confluent directory. Save() must create the parent
