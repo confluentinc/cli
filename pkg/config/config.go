@@ -365,10 +365,11 @@ func (c *Config) saveLocked() error {
 	tempContext := c.resolveOverwrittenContext()
 	defer c.restoreOverwrittenContext(tempContext)
 
-	// If we have no baseline (e.g. Save called on a config that was constructed,
-	// not loaded), treat our current state as the baseline: nothing to merge.
+	// No baseline means this config was constructed, not loaded, so there is no
+	// common ancestor to merge against and the caller is declaring its state whole
+	// (e.g. test config reset). Overwrite directly, matching pre-merge semantics.
 	if c.baseline == nil {
-		c.snapshotBaseline()
+		return c.writeWholeConfig()
 	}
 
 	disk, err := readConfigFromDisk(c.GetFilename(), c)
@@ -376,34 +377,37 @@ func (c *Config) saveLocked() error {
 		// A missing or empty (e.g. a freshly-created temp) file has nothing to
 		// preserve: write our state directly, no merge.
 		if os.IsNotExist(err) || isEmptyFile(c.GetFilename()) {
-			if err := c.save(); err != nil {
-				return err
-			}
-			c.snapshotBaseline()
-			return nil
+			return c.writeWholeConfig()
 		}
 		return err
 	}
 
-	// Merge against a deep copy of c, not c itself: threeWayMerge inserts the
-	// "ours" side's map values (our *Context pointers) into the result, and the
-	// wireContexts/encrypt steps below mutate them. Using a copy keeps live c
-	// pristine and plaintext for continued execution after the save.
-	merged := threeWayMerge(c.baseline, c.deepCopyPersisted(), disk)
+	// ours is the live config's persisted state. PreRun left it partially decrypted:
+	// every credential secret and the current context's tokens are plaintext, while
+	// other contexts' tokens stay encrypted.
+	ours := c.deepCopyPersisted()
+
+	// Decrypt the encrypted baseline to ours' representation before diffing, so a
+	// secret we did not touch is not mistaken for a local change. We decrypt (a
+	// deterministic operation on every platform) rather than re-encrypt ours: Windows
+	// DPAPI ciphertext is not reproducible, so an encrypt-based match would flag every
+	// secret as changed and reintroduce the very lost-write bug this guards against.
+	base := c.baseline.deepCopyPersisted()
+	if err := base.decryptToMatch(ours); err != nil {
+		return err
+	}
+
+	merged, err := threeWayMerge(base, ours, disk)
+	if err != nil {
+		return err
+	}
 	if err := merged.wireContexts(); err != nil {
 		return err
 	}
 
-	// Encrypt on the merged struct, never on c: c stays plaintext for continued
-	// execution, and the encrypt helpers are guarded against double-encrypting
-	// the already-encrypted tokens that came from disk for untouched contexts.
-	if merged.Context() != nil {
-		st := merged.Context().GetState()
-		if err := merged.encryptContextStateTokens(st.AuthToken, st.AuthRefreshToken); err != nil {
-			return err
-		}
-	}
-	if err := merged.encryptCredentialsAPISecret(); err != nil {
+	// Re-encrypt the secrets that ended up plaintext (the ones we changed, taken from
+	// ours). Untouched secrets came from disk still encrypted; the guards skip them.
+	if err := merged.encryptSecrets(); err != nil {
 		return err
 	}
 
@@ -425,9 +429,99 @@ func (c *Config) saveLocked() error {
 		return err
 	}
 
-	// Our persisted view is now current; the next Save diffs from here.
-	c.snapshotBaseline()
+	// merged is exactly what is now on disk (encrypted), so it becomes the ancestor
+	// the next Save diffs against.
+	c.baseline = merged.deepCopyPersisted()
 	return nil
+}
+
+// writeWholeConfig persists c directly (no merge) and refreshes the baseline from
+// the resulting on-disk state, so the next Save has an encrypted ancestor to diff
+// against. Used when there is nothing to merge: a missing or empty file, or a
+// config that was constructed rather than loaded.
+func (c *Config) writeWholeConfig() error {
+	if err := c.save(); err != nil {
+		return err
+	}
+	// Refresh the baseline from disk (encrypted) rather than from the live config,
+	// which save() has restored to its decrypted form. A read failure here does not
+	// undo the successful write, so fall back to the live snapshot.
+	if disk, err := readConfigFromDisk(c.GetFilename(), c); err == nil {
+		c.baseline = disk
+	} else {
+		c.snapshotBaseline()
+	}
+	return nil
+}
+
+// encryptSecrets encrypts c's plaintext secrets into their on-disk form: every
+// context's auth tokens and all credential API secrets. Save() calls it on the merged
+// result to re-encrypt the secrets it took from the (plaintext) live config; secrets
+// carried over from disk are already encrypted and the guards skip them. Every context
+// is covered (not just the current one) because a merge can leave a plaintext token in
+// a context that is not current at write time, and none may reach disk.
+func (c *Config) encryptSecrets() error {
+	for _, ctx := range c.Contexts {
+		if ctx.GetState() == nil {
+			continue
+		}
+		st := ctx.GetState()
+		if err := c.encryptStateTokensForContext(ctx, st.AuthToken, st.AuthRefreshToken); err != nil {
+			return err
+		}
+	}
+	return c.encryptCredentialsAPISecret()
+}
+
+// decryptToMatch decrypts c's secrets to the same representation as ref so the two
+// can be diffed field for field. PreRun leaves the live config (ref) with every
+// credential secret and the current context's tokens in plaintext while other
+// contexts' tokens stay encrypted; this decrypts exactly the fields ref holds in
+// plaintext. Save() calls it on the encrypted baseline. It decrypts rather than
+// re-encrypting ref because that is deterministic on every platform (Windows DPAPI
+// ciphertext is not), and it never runs Validate (which would re-enter Save under
+// the held lock).
+func (c *Config) decryptToMatch(ref *Config) error {
+	// Decrypt a field only where c holds ciphertext and ref holds plaintext: that is
+	// the one case where the two representations differ and c must be brought down to
+	// match. Gating on c's own cipher marker matters because a plaintext token that is
+	// not cipher-prefixed (e.g. a cloud refresh token, which is never encrypted) would
+	// otherwise be fed to Decrypt and fail authentication.
+	for name, credential := range c.Credentials {
+		refCredential := ref.Credentials[name]
+		if credential.APIKeyPair == nil || refCredential == nil || refCredential.APIKeyPair == nil {
+			continue
+		}
+		if isEncryptedSecret(credential.APIKeyPair.Secret) && !isEncryptedSecret(refCredential.APIKeyPair.Secret) {
+			if err := credential.APIKeyPair.DecryptSecret(); err != nil {
+				return err
+			}
+		}
+	}
+
+	for name, state := range c.ContextStates {
+		refState := ref.ContextStates[name]
+		if state == nil || refState == nil {
+			continue
+		}
+		if isEncryptedSecret(state.AuthToken) && !isEncryptedSecret(refState.AuthToken) {
+			if err := state.DecryptAuthToken(name); err != nil {
+				return err
+			}
+		}
+		if isEncryptedSecret(state.AuthRefreshToken) && !isEncryptedSecret(refState.AuthRefreshToken) {
+			if err := state.DecryptAuthRefreshToken(name); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// isEncryptedSecret reports whether s carries a cipher marker (so it is ciphertext,
+// not a plaintext value a command left in place). The ":" is part of the marker.
+func isEncryptedSecret(s string) bool {
+	return strings.HasPrefix(s, secret.AesGcm+":") || strings.HasPrefix(s, secret.Dpapi+":")
 }
 
 // save marshals and atomically writes the live config WITHOUT locking or
@@ -507,39 +601,49 @@ func (c *Config) encryptCredentialsAPISecret() error {
 }
 
 func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken string) error {
-	if c.Context().GetState().Salt == nil || c.Context().GetState().Nonce == nil {
+	return c.encryptStateTokensForContext(c.Context(), tempAuthToken, tempAuthRefreshToken)
+}
+
+// encryptStateTokensForContext encrypts ctx's auth tokens in place. It is idempotent:
+// an already-encrypted token carries a cipher prefix and matches none of the plaintext
+// token shapes below, so it is left untouched. The ctx parameter lets Save() encrypt
+// every context's state, not only the current one, so a plaintext token can never
+// reach disk under a context that is not current at write time.
+func (c *Config) encryptStateTokensForContext(ctx *Context, tempAuthToken, tempAuthRefreshToken string) error {
+	state := ctx.GetState()
+	if state.Salt == nil || state.Nonce == nil {
 		salt, nonce, err := secret.GenerateSaltAndNonce()
 		if err != nil {
 			return err
 		}
-		c.Context().GetState().Salt = salt
-		c.Context().GetState().Nonce = nonce
+		state.Salt = salt
+		state.Nonce = nonce
 	}
 
 	if regexp.MustCompile(authTokenRegex).MatchString(tempAuthToken) {
-		encryptedAuthToken, err := secret.Encrypt(c.Context().Name, tempAuthToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
+		encryptedAuthToken, err := secret.Encrypt(ctx.Name, tempAuthToken, state.Salt, state.Nonce)
 		if err != nil {
 			return err
 		}
-		c.Context().GetState().AuthToken = encryptedAuthToken
+		state.AuthToken = encryptedAuthToken
 	}
 
 	// The Confluent Gov environment and the Confluent Platform MDS return a refresh token that does not match `authRefreshTokenRegex` and cannot be distinguished from an already encrypted refresh token.
-	// We prefix encrypted tokens with "AES/GCM/NoPadding" on Unix systems and "DPAPI" on Windows to ensure that they are only encrypted once.
-	prefix := secret.AesGcm
+	// We prefix encrypted tokens with "AES/GCM/NoPadding:" on Unix systems and "DPAPI:" on Windows to ensure that they are only encrypted once. The ":" is part of the marker, so a plaintext token merely beginning with the marker word is still encrypted.
+	prefix := secret.AesGcm + ":"
 	if runtime.GOOS == "windows" {
-		prefix = secret.Dpapi
+		prefix = secret.Dpapi + ":"
 	}
-	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, prefix) && (strings.Contains(c.Context().PlatformName, "confluentgov.com") || strings.Contains(c.Context().PlatformName, "confluentgov-internal.com"))
+	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, prefix) && (strings.Contains(ctx.PlatformName, "confluentgov.com") || strings.Contains(ctx.PlatformName, "confluentgov-internal.com"))
 
-	isUnencryptedConfluentPlatform := tempAuthRefreshToken != "" && !strings.HasPrefix(tempAuthRefreshToken, prefix) && !c.Context().IsCloud(c.IsTest)
+	isUnencryptedConfluentPlatform := tempAuthRefreshToken != "" && !strings.HasPrefix(tempAuthRefreshToken, prefix) && !ctx.IsCloud(c.IsTest)
 
 	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) || isUnencryptedConfluentGov || isUnencryptedConfluentPlatform {
-		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
+		encryptedAuthRefreshToken, err := secret.Encrypt(ctx.Name, tempAuthRefreshToken, state.Salt, state.Nonce)
 		if err != nil {
 			return err
 		}
-		c.Context().State.AuthRefreshToken = encryptedAuthRefreshToken
+		state.AuthRefreshToken = encryptedAuthRefreshToken
 	}
 
 	return nil

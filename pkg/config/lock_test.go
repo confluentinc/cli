@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync/atomic"
 	"testing"
 	"time"
 
@@ -22,20 +21,23 @@ func TestFileLock_SerializesTwoHolders(t *testing.T) {
 	_, err := os.Stat(cfgPath + ".lock")
 	require.NoError(t, err)
 
-	var held atomic.Bool
-	held.Store(true)
+	// The second holder signals the instant it acquires. That signal must not
+	// arrive while l1 still holds the lock, and must arrive once l1 releases.
 	acquired := make(chan struct{})
-
 	go func() {
 		l2 := newFileLock(cfgPath)
 		require.NoError(t, l2.lock(lockTimeout))
-		require.False(t, held.Load(), "second holder acquired while first still held the lock")
-		require.NoError(t, l2.unlock())
 		close(acquired)
+		require.NoError(t, l2.unlock())
 	}()
 
-	time.Sleep(100 * time.Millisecond) // give the goroutine time to block on lock()
-	held.Store(false)
+	select {
+	case <-acquired:
+		t.Fatal("second holder acquired the lock while the first still held it")
+	case <-time.After(200 * time.Millisecond):
+		// Expected: still blocked on the held lock.
+	}
+
 	require.NoError(t, l1.unlock())
 
 	select {
