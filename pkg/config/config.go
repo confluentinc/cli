@@ -112,6 +112,11 @@ type Config struct {
 	// nested Save() would deadlock on the already-held sidecar lock. The flag
 	// short-circuits it, so the enclosing locked write persists the normalized
 	// struct as soon as Validate() returns. Never serialized.
+	//
+	// Known limitation: KafkaClusterContext.Validate() couples normalization to
+	// persistence via Save(), so a lock timeout hit during that normalization
+	// surfaces as a panic rather than a returned error. Splitting normalization
+	// from persistence is a deferred follow-up.
 	writing bool
 
 	// Deprecated
@@ -204,7 +209,7 @@ func (c *Config) Load() error {
 		return fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, filename, err)
 	}
 
-	if err := wireContexts(c); err != nil {
+	if err := c.wireContexts(); err != nil {
 		return err
 	}
 	c.snapshotBaseline() // baseline = pristine on-disk state, before migrations
@@ -246,7 +251,7 @@ func (c *Config) Load() error {
 // its State pointer aliased to c.ContextStates[name]. Validate()'s DeepEqual on
 // context state only holds because State and ContextStates[name] are the same
 // object, so a bare json.Unmarshal is never enough.
-func wireContexts(c *Config) error {
+func (c *Config) wireContexts() error {
 	for _, context := range c.Contexts {
 		if context.Name == "" {
 			return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.Filename)
@@ -277,7 +282,12 @@ func wireContexts(c *Config) error {
 func readConfigFromDisk(path string, template *Config) (*Config, error) {
 	input, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		// Keep the raw error for a missing file so saveLocked's os.IsNotExist
+		// check still fires; wrap any other read error as Load() does.
+		if os.IsNotExist(err) {
+			return nil, err
+		}
+		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, path, err)
 	}
 
 	disk := New()
@@ -290,7 +300,7 @@ func readConfigFromDisk(path string, template *Config) (*Config, error) {
 	disk.Version = template.Version
 	disk.DisableUpdates = template.DisableUpdates
 
-	if err := wireContexts(disk); err != nil {
+	if err := disk.wireContexts(); err != nil {
 		return nil, err
 	}
 	return disk, nil
@@ -363,8 +373,8 @@ func (c *Config) saveLocked() error {
 
 	disk, err := readConfigFromDisk(c.GetFilename(), c)
 	if err != nil {
-		// A missing or empty (e.g. crash-truncated, or a freshly-created temp)
-		// file has nothing to preserve: write our state directly, no merge.
+		// A missing or empty (e.g. a freshly-created temp) file has nothing to
+		// preserve: write our state directly, no merge.
 		if os.IsNotExist(err) || isEmptyFile(c.GetFilename()) {
 			if err := c.save(); err != nil {
 				return err
@@ -380,7 +390,7 @@ func (c *Config) saveLocked() error {
 	// wireContexts/encrypt steps below mutate them. Using a copy keeps live c
 	// pristine and plaintext for continued execution after the save.
 	merged := threeWayMerge(c.baseline, c.deepCopyPersisted(), disk)
-	if err := wireContexts(merged); err != nil {
+	if err := merged.wireContexts(); err != nil {
 		return err
 	}
 
@@ -401,9 +411,8 @@ func (c *Config) saveLocked() error {
 	// re-persist under the lock we already hold. writing neutralizes that nested
 	// Save(); the normalized merged is written just below.
 	merged.writing = true
-	err = merged.Validate()
-	merged.writing = false
-	if err != nil {
+	defer func() { merged.writing = false }()
+	if err := merged.Validate(); err != nil {
 		return err
 	}
 
@@ -412,11 +421,7 @@ func (c *Config) saveLocked() error {
 		return fmt.Errorf("unable to marshal config: %w", err)
 	}
 
-	filename := c.GetFilename()
-	if err := os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
-		return fmt.Errorf("unable to create config directory %s: %w", filename, err)
-	}
-	if err := writeFileAtomic(filename, data); err != nil {
+	if err := writeFileAtomic(c.GetFilename(), data); err != nil {
 		return err
 	}
 
@@ -462,9 +467,8 @@ func (c *Config) save() error {
 	// See saveLocked: writing neutralizes the nested Save() that Validate()'s
 	// normalization triggers, so it does not re-acquire the held lock.
 	c.writing = true
-	err := c.Validate()
-	c.writing = false
-	if err != nil {
+	defer func() { c.writing = false }()
+	if err := c.Validate(); err != nil {
 		return err
 	}
 
@@ -473,19 +477,18 @@ func (c *Config) save() error {
 		return fmt.Errorf("unable to marshal config: %w", err)
 	}
 
-	filename := c.GetFilename()
-	if err := os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
-		return fmt.Errorf("unable to create config directory %s: %w", filename, err)
-	}
-	if err := writeFileAtomic(filename, data); err != nil {
+	if err := writeFileAtomic(c.GetFilename(), data); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// isEmptyFile reports whether path exists but holds no bytes. A missing file or
-// any stat error is not "empty"; the caller handles absence via os.IsNotExist.
+// isEmptyFile reports whether path exists but holds no bytes. This tolerates a
+// legacy zero-byte config file (nothing to preserve, so the caller skips the
+// merge); a non-empty but corrupt file is not "empty" and is correctly surfaced
+// as a hard error by the unmarshal instead. A missing file or any stat error is
+// not "empty"; the caller handles absence via os.IsNotExist.
 func isEmptyFile(path string) bool {
 	info, err := os.Stat(path)
 	return err == nil && info.Size() == 0

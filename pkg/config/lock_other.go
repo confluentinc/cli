@@ -1,34 +1,27 @@
-//go:build !windows
+//go:build darwin || linux
 
 package config
 
 import (
-	"fmt"
 	"os"
-	"time"
 
 	"golang.org/x/sys/unix"
 )
 
-// lockHandle takes an exclusive flock, polling in non-blocking mode so we can honor the
-// timeout (a bare LOCK_EX would block uninterruptibly). Only EWOULDBLOCK means contention
-// from another holder; any other error is a real failure and is returned immediately
-// instead of being retried until timeout.
-func lockHandle(f *os.File, timeout time.Duration) error {
-	deadline := time.Now().Add(timeout)
-	for {
-		err := unix.Flock(int(f.Fd()), unix.LOCK_EX|unix.LOCK_NB)
-		if err == nil {
-			return nil
-		}
-		if err != unix.EWOULDBLOCK {
-			return fmt.Errorf("unable to lock config file: %w", err)
-		}
-		if time.Now().After(deadline) {
-			return errConfigLockContended
-		}
-		time.Sleep(10 * time.Millisecond)
+// tryLockHandle makes one non-blocking attempt at an exclusive flock. It reports
+// whether the lock was acquired; EWOULDBLOCK means another holder has it (not
+// acquired, no error), while any other error is a real failure. The shared
+// acquireWithTimeout loop owns the polling and timeout (a bare LOCK_EX would
+// block uninterruptibly and ignore the timeout).
+func tryLockHandle(f *os.File) (bool, error) {
+	err := unix.Flock(int(f.Fd()), unix.LOCK_EX|unix.LOCK_NB)
+	if err == nil {
+		return true, nil
 	}
+	if err == unix.EWOULDBLOCK {
+		return false, nil
+	}
+	return false, err
 }
 
 // unlockHandle releases the flock taken by lockHandle.
