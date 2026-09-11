@@ -1,7 +1,7 @@
 ### query
 
 Runs a bounded ("snapshot") Flink SQL statement to completion and returns the whole
-result set, synchronously, from the client. Backs `confluent query`
+result set, synchronously, from the client. Backs `confluent flink query`
 (`internal/query/command.go`).
 
 The verb, the flags and the result shape are all expected to move.
