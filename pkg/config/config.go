@@ -429,9 +429,16 @@ func (c *Config) saveLocked() error {
 		return err
 	}
 
-	// merged is exactly what is now on disk (encrypted), so it becomes the ancestor
-	// the next Save diffs against.
-	c.baseline = merged.deepCopyPersisted()
+	// The next Save's three-way merge diffs baseline against the live config, so the
+	// baseline must match the live config for every field this process did not edit,
+	// not the merged disk state. merged holds concurrent changes this process pulled in
+	// from disk but never wrote back into c; using merged as the ancestor would make a
+	// later Save read those untouched fields as local edits and revert the concurrent
+	// change. Snapshotting c keeps the ancestor aligned with what this process knows.
+	// c itself is left as-is, so its in-memory view of a field it did not touch stays
+	// at the loaded value until the process exits; that matches how a load-once CLI
+	// already behaves, and only the ancestor advances here.
+	c.baseline = c.deepCopyPersisted()
 	return nil
 }
 
@@ -477,10 +484,13 @@ func (c *Config) encryptSecrets() error {
 // can be diffed field for field. PreRun leaves the live config (ref) with every
 // credential secret and the current context's tokens in plaintext while other
 // contexts' tokens stay encrypted; this decrypts exactly the fields ref holds in
-// plaintext. Save() calls it on the encrypted baseline. It decrypts rather than
-// re-encrypting ref because that is deterministic on every platform (Windows DPAPI
-// ciphertext is not), and it never runs Validate (which would re-enter Save under
-// the held lock).
+// plaintext. Save() calls it on the baseline, which is encrypted straight from load
+// or writeWholeConfig but already in ref's representation after a merged save (whose
+// baseline is a live-config snapshot); the guard below only decrypts a field where
+// the baseline holds ciphertext ref does not, so an already-aligned field is a no-op.
+// It decrypts rather than re-encrypting ref because that is deterministic on every
+// platform (Windows DPAPI ciphertext is not), and it never runs Validate (which would
+// re-enter Save under the held lock).
 func (c *Config) decryptToMatch(ref *Config) error {
 	// Decrypt a field only where c holds ciphertext and ref holds plaintext: that is
 	// the one case where the two representations differ and c must be brought down to
