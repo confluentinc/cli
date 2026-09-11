@@ -648,9 +648,30 @@ func (c *Config) GetFilename() string {
 	return c.Filename
 }
 
+// StateDirName is the name of the CLI's state directory within the user's home directory. It is
+// scoped to the build's release channel so a production install, a prerelease, and a local build
+// cannot read or overwrite each other's state. A stable build returns ".confluent", unchanged.
+func StateDirName() string {
+	return ".confluent" + pversion.ProcessChannel().StateDirSuffix()
+}
+
+// StateDir is the absolute path of the CLI's state directory.
+func StateDir() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", errors.NewErrorWithSuggestions(
+			fmt.Sprintf("unable to determine the home directory holding the CLI's state: %v", err),
+			"Set the `HOME` environment variable (`USERPROFILE` on Windows) to a writable directory.",
+		)
+	}
+	return filepath.Join(home, StateDirName()), nil
+}
+
+// GetDefaultFilename swallows a missing home directory because it backs a flag default built at
+// command-construction time, where there is no error to return. Prefer StateDir where you can.
 func GetDefaultFilename() string {
 	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".confluent", "config.json")
+	return filepath.Join(home, StateDirName(), "config.json")
 }
 
 func (c *Config) CheckIsOnPremLogin() error {
