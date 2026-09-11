@@ -413,6 +413,9 @@ func (s *CLITestSuite) TestIamGroupMapping() {
 		{args: "iam group-mapping delete group-dne --force", fixture: "iam/group-mapping/delete-dne.golden", exitCode: 1},
 		{args: "iam group-mapping describe group-abc", fixture: "iam/group-mapping/describe.golden"},
 		{args: `iam group-mapping update group-abc --name updated-group-mapping --description "updated description" --filter claims.principal.startsWith("user")`, fixture: "iam/group-mapping/update.golden"},
+		// No one-required flag rule: a no-flag update sends an empty PATCH, which the handler models as a no-op.
+		{args: "iam group-mapping update group-abc", fixture: "iam/group-mapping/update-no-flags.golden"},
+		{args: `iam group-mapping update invalid --description "updated description"`, fixture: "iam/group-mapping/update-invalid-prefix.golden", exitCode: 1},
 		{args: "iam group-mapping list", fixture: "iam/group-mapping/list.golden"},
 	}
 

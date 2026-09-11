@@ -878,7 +878,18 @@ func handleIamGroupMapping(t *testing.T) http.HandlerFunc {
 			var req ssov2.IamV2SsoGroupMapping
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			res := buildIamGroupMapping(req.GetId(), req.GetDisplayName(), req.GetDescription(), req.GetFilter())
+			// PATCH semantics: only the fields present in the body change; a body with no
+			// fields (a no-flag update) returns the stored mapping unchanged.
+			res := buildIamGroupMapping(id, "another-group-mapping", "another description", "true")
+			if req.DisplayName != nil {
+				res.DisplayName = req.DisplayName
+			}
+			if req.Description != nil {
+				res.Description = req.Description
+			}
+			if req.Filter != nil {
+				res.Filter = req.Filter
+			}
 			err = json.NewEncoder(w).Encode(&res)
 			require.NoError(t, err)
 		case http.MethodDelete:
