@@ -51,37 +51,23 @@ func TestNew(t *testing.T) {
 	require.Equal(t, "env-999", environment)
 }
 
-func TestResolveEnvironmentAlias(t *testing.T) {
-	newEnvCmd := func() *cobra.Command {
-		cmd := &cobra.Command{}
-		v := new(stringValueForTest)
-		cmd.Flags().Var(v, "environment", "")
-		cmd.Flags().Var(v, "catalog", "")
-		return cmd
-	}
+func TestMutuallyExclusiveFlags(t *testing.T) {
+	cfg := cliconfig.AuthenticatedCloudConfigMock()
+	prerunner := climock.NewPreRunnerMock(nil, nil, nil, nil, cfg)
 
-	// Neither given, or only one given: fine.
-	require.NoError(t, resolveEnvironmentAlias(newEnvCmd()))
+	cmd := New(cfg, prerunner)
+	require.NoError(t, cmd.Flags().Set("database", "lkc-database"))
+	require.NoError(t, cmd.Flags().Set("cluster", "lkc-cluster"))
+	require.ErrorContains(t, cmd.ValidateFlagGroups(), "if any flags in the group [database cluster] are set none of the others can be")
 
-	cmd := newEnvCmd()
+	// --catalog shares storage with --environment, so setting one sets the other
+	// too; cobra's exclusivity check still fires since it tracks Changed() per
+	// flag name, independent of the shared underlying value.
+	cmd = New(cfg, prerunner)
 	require.NoError(t, cmd.Flags().Set("environment", "env-123"))
-	require.NoError(t, resolveEnvironmentAlias(cmd))
-
-	// Both explicitly given: a usage error, even though they'd resolve to the same
-	// underlying value.
-	cmd = newEnvCmd()
-	require.NoError(t, cmd.Flags().Set("environment", "env-123"))
-	require.NoError(t, cmd.Flags().Set("catalog", "env-123"))
-	require.ErrorContains(t, resolveEnvironmentAlias(cmd), "must not be given both")
+	require.NoError(t, cmd.Flags().Set("catalog", "env-456"))
+	require.ErrorContains(t, cmd.ValidateFlagGroups(), "if any flags in the group [environment catalog] are set none of the others can be")
 }
-
-// stringValueForTest is a minimal pflag.Value letting two flag names share one
-// value, the way addCatalogAlias does for "environment"/"catalog".
-type stringValueForTest string
-
-func (s *stringValueForTest) String() string     { return string(*s) }
-func (s *stringValueForTest) Set(v string) error { *s = stringValueForTest(v); return nil }
-func (s *stringValueForTest) Type() string       { return "string" }
 
 func TestResolveDatabase(t *testing.T) {
 	newDBCmd := func(database, cluster string) *cobra.Command {
@@ -115,8 +101,12 @@ func TestResolveDatabase(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "lkc-cluster", got)
 
-	_, err = c.resolveDatabase(newDBCmd("lkc-database", "lkc-cluster"))
-	require.ErrorContains(t, err, "must not be given both")
+	// Cobra's MarkFlagsMutuallyExclusive rejects both being set before RunE is ever
+	// reached; resolveDatabase itself just needs a defined precedence if called
+	// directly, and prefers --cluster.
+	got, err = c.resolveDatabase(newDBCmd("lkc-database", "lkc-cluster"))
+	require.NoError(t, err)
+	require.Equal(t, "lkc-cluster", got)
 
 	// Neither flag given: falls back to the active Kafka cluster context, same
 	// "flag, then context" chain environment and compute pool follow.
