@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -21,7 +22,11 @@ func TestWriteFileAtomic_ReplacesExistingAndSetsPerms(t *testing.T) {
 
 	info, err := os.Stat(path)
 	require.NoError(t, err)
-	require.Equal(t, os.FileMode(0600), info.Mode().Perm())
+	// Windows does not expose POSIX permission bits through Mode().Perm(), so the
+	// 0600 assertion only holds off Windows (matching config_test.go's own guard).
+	if runtime.GOOS != "windows" {
+		require.Equal(t, os.FileMode(0600), info.Mode().Perm())
+	}
 }
 
 func TestWriteFileAtomic_LeavesNoTempOnSuccess(t *testing.T) {
