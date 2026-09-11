@@ -1,0 +1,7 @@
+Warning:\ stopped\ after\ 2\ rows\ because\ of\ the\ `\-\-max\-rows`\ flag\.\ The\ result\ set\ below\ is\ truncated\.\
+\+\-\-\-\-\+\
+\|\ id\ \|\
+\+\-\-\-\-\+\
+\|\ 1\ \ \|\
+\|\ 2\ \ \|\
+\+\-\-\-\-\+\
