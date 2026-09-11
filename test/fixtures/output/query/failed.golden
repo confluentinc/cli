@@ -1,0 +1,4 @@
+Error:\ statement\ "cli-\d{4}-\d{2}-\d{2}-\d{6}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}"\ failed:\ Something\ went\ wrong\ compiling\ the\ statement\
+\
+Suggestions:\
+\ \ \ \ Inspect\ the\ failure\ with\ `confluent\ flink\ statement\ exception\ list\ cli-\d{4}-\d{2}-\d{2}-\d{6}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}`\.\
