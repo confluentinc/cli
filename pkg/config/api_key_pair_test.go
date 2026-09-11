@@ -30,3 +30,17 @@ func TestAPIKeyPair_EncryptSecret_SkipsAlreadyEncryptedAesGcmSecret(t *testing.T
 	require.NoError(t, err)
 	require.Equal(t, aesGcmSecret, pair.Secret)
 }
+
+// The cipher markers are stored as a "PREFIX:payload" pair, so the prefix guard
+// must include the ":". A plaintext secret that merely begins with the marker
+// word (no delimiter) must still be encrypted, not mistaken for ciphertext.
+func TestAPIKeyPair_EncryptSecret_EncryptsPlaintextBeginningWithCipherWord(t *testing.T) {
+	plain := secret.Dpapi + "-this-is-actually-plaintext"
+	pair := &APIKeyPair{Key: "key", Secret: plain}
+
+	require.NoError(t, pair.EncryptSecret())
+
+	require.NotEqual(t, plain, pair.Secret, "a plaintext secret merely beginning with the cipher word must be encrypted")
+	require.NoError(t, pair.DecryptSecret())
+	require.Equal(t, plain, pair.Secret, "encryption of a marker-word plaintext must round-trip")
+}
