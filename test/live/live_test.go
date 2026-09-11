@@ -19,6 +19,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/confluentinc/cli/v4/pkg/config"
 )
 
 var liveBin = "test/live/bin/confluent"
@@ -142,12 +144,17 @@ func (s *CLILiveTestSuite) setupTestContext(t *testing.T) *LiveTestState {
 	state.homeDir = homeDir
 
 	if configDir := os.Getenv("CLI_LIVE_TEST_CONFIG_DIR"); configDir != "" {
-		// Pre-authenticated mode: copy existing CLI config into isolated HOME
+		// Pre-authenticated mode: copy an existing CLI config into an isolated HOME. The source is
+		// usually a stable install's ~/.confluent; the destination must be where the binary under
+		// test will look.
+		//
+		// StateDirName() answers for this process, not that binary. They agree only because neither
+		// is version-stamped, so stamping build-for-live-test would break this.
 		srcDir := configDir
 		if filepath.Base(srcDir) != ".confluent" {
 			srcDir = filepath.Join(srcDir, ".confluent")
 		}
-		dstDir := filepath.Join(homeDir, ".confluent")
+		dstDir := filepath.Join(homeDir, config.StateDirName())
 		require.NoError(t, copyDir(srcDir, dstDir), "failed to copy config from %s", srcDir)
 
 		// Validate the copied config is authenticated
