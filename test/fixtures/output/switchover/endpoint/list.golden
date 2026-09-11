@@ -1,0 +1,3 @@
+     ID     |      Display Name      |                                       Switchover Pair                                       |                            Environment                            | Phase  
+------------+------------------------+---------------------------------------------------------------------------------------------+-------------------------------------------------------------------+--------
+  se-123456 | prod-kafka-dr-endpoint | crn://confluent.cloud/organization=org-123/environment=env-123456/switchover-pair=sw-123456 | crn://confluent.cloud/organization=org-123/environment=env-123456 | READY  
