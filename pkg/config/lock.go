@@ -10,7 +10,7 @@ import (
 
 // lockTimeout bounds how long a writer waits for the sidecar lock. It must
 // dwarf the sub-millisecond read-modify-write it guards, so only genuine
-// contention — never the operation itself — can time out.
+// contention, never the operation itself, can time out.
 const lockTimeout = 10 * time.Second
 
 // fileLock guards config writes with a sidecar `<config>.lock` file. We lock a
