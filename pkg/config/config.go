@@ -110,7 +110,7 @@ type Config struct {
 	// lock. Validate()'s in-memory normalization (nil-map init, invalid-active-
 	// cluster reset) reaches back through Context.Save() to persist itself; that
 	// nested Save() would deadlock on the already-held sidecar lock. The flag
-	// short-circuits it — the enclosing locked write persists the normalized
+	// short-circuits it, so the enclosing locked write persists the normalized
 	// struct as soon as Validate() returns. Never serialized.
 	writing bool
 
@@ -270,7 +270,7 @@ func wireContexts(c *Config) error {
 }
 
 // readConfigFromDisk re-reads the persisted config and rebuilds its pointer
-// graph. It does NOT run migrations and never writes — it is the "theirs" side
+// graph. It does NOT run migrations and never writes; it is the "theirs" side
 // of Save()'s merge, so it must not recurse into Save(). json:"-" fields
 // (Filename, IsTest, Version, DisableUpdates) are copied from template because a
 // fresh unmarshal cannot recover them.
@@ -297,7 +297,7 @@ func readConfigFromDisk(path string, template *Config) (*Config, error) {
 }
 
 // snapshotBaseline deep-copies the persisted fields into c.baseline via a JSON
-// round-trip (json:"-" and unexported fields are intentionally excluded — the
+// round-trip (json:"-" and unexported fields are intentionally excluded, since the
 // merge only diffs persisted state).
 func (c *Config) snapshotBaseline() {
 	c.baseline = c.deepCopyPersisted()
@@ -305,7 +305,7 @@ func (c *Config) snapshotBaseline() {
 
 // deepCopyPersisted returns an independent copy of c's persisted fields via a
 // JSON round-trip. json:"-" and unexported fields (Filename, baseline, ...) are
-// intentionally dropped — only persisted state participates in the merge. The
+// intentionally dropped, so only persisted state participates in the merge. The
 // copy shares no pointers with c, so wiring or encrypting it never mutates c.
 func (c *Config) deepCopyPersisted() *Config {
 	data, err := json.Marshal(c)
@@ -485,7 +485,7 @@ func (c *Config) save() error {
 }
 
 // isEmptyFile reports whether path exists but holds no bytes. A missing file or
-// any stat error is not "empty" — the caller handles absence via os.IsNotExist.
+// any stat error is not "empty"; the caller handles absence via os.IsNotExist.
 func isEmptyFile(path string) bool {
 	info, err := os.Stat(path)
 	return err == nil && info.Size() == 0

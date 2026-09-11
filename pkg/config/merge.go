@@ -4,7 +4,7 @@ import "reflect"
 
 // threeWayMerge produces the config to persist. Disk ("theirs") is the base:
 // fields another session changed and this process did not touch are preserved.
-// This process's own changes — computed as base ("common ancestor") vs ours —
+// This process's own changes, computed as base ("common ancestor") vs ours,
 // are then overlaid. For scalars, a value we changed from base wins; a value we
 // left alone keeps disk's. For maps, our adds/updates win and our deletes (in
 // base, absent from ours) are removed from disk, while keys only present on disk
