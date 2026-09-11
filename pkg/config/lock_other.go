@@ -24,7 +24,7 @@ func tryLockHandle(f *os.File) (bool, error) {
 	return false, err
 }
 
-// unlockHandle releases the flock taken by lockHandle.
+// unlockHandle releases the flock taken by tryLockHandle.
 func unlockHandle(f *os.File) error {
 	return unix.Flock(int(f.Fd()), unix.LOCK_UN)
 }
