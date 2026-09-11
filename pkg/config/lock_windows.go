@@ -26,7 +26,7 @@ func tryLockHandle(f *os.File) (bool, error) {
 	return false, err
 }
 
-// unlockHandle releases the lock taken by lockHandle.
+// unlockHandle releases the lock taken by tryLockHandle.
 func unlockHandle(f *os.File) error {
 	var overlapped windows.Overlapped
 	return windows.UnlockFileEx(windows.Handle(f.Fd()), 0, 1, 0, &overlapped)
