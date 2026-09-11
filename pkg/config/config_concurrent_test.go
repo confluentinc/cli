@@ -45,7 +45,7 @@ func TestSave_ConcurrentDifferentFields_NoLostWrite(t *testing.T) {
 
 // helper: a saved single-context config with an API-key credential and two known
 // Kafka clusters (so switching the active cluster passes Validate).
-func newSavedConfig(t *testing.T, path, apiSecret string) {
+func newSavedConfig(t *testing.T, path string) {
 	t.Helper()
 
 	c := New()
@@ -54,7 +54,7 @@ func newSavedConfig(t *testing.T, path, apiSecret string) {
 	c.Credentials["cred"] = &Credential{
 		Name:           "cred",
 		CredentialType: APIKey,
-		APIKeyPair:     &APIKeyPair{Key: "api-key", Secret: apiSecret},
+		APIKeyPair:     &APIKeyPair{Key: "api-key", Secret: "secret-original"},
 	}
 	state := new(ContextState)
 	ctx := &Context{
@@ -160,7 +160,7 @@ func TestEncryptSecrets_EncryptsNonCurrentContextTokens(t *testing.T) {
 func TestSave_ConcurrentSameContextDifferentFields_NoLostWrite(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
-	newSavedConfig(t, path, "secret-original")
+	newSavedConfig(t, path)
 
 	a := loadDecrypted(t, path)
 	b := loadDecrypted(t, path)
@@ -185,7 +185,7 @@ func TestSave_ConcurrentSameContextDifferentFields_NoLostWrite(t *testing.T) {
 func TestSave_ConcurrentSharedCredential_NotClobbered(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
-	newSavedConfig(t, path, "secret-original")
+	newSavedConfig(t, path)
 
 	b := loadDecrypted(t, path) // holds decrypted "secret-original"
 	a := loadDecrypted(t, path)
@@ -211,7 +211,7 @@ func TestSave_ConcurrentSharedCredential_NotClobbered(t *testing.T) {
 func TestSave_SecondSaveInSameProcess_PreservesConcurrentDiskChange(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
-	newSavedConfig(t, path, "secret-original")
+	newSavedConfig(t, path)
 
 	p := loadDecrypted(t, path)     // this process, baseline captured at load
 	other := loadDecrypted(t, path) // a concurrent session
@@ -241,7 +241,7 @@ func TestSave_SecondSaveInSameProcess_PreservesConcurrentDiskChange(t *testing.T
 func TestSave_SecondSaveInSameProcess_PreservesConcurrentSecretRotation(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
-	newSavedConfig(t, path, "secret-original")
+	newSavedConfig(t, path)
 
 	p := loadDecrypted(t, path)     // this process, holds decrypted "secret-original"
 	other := loadDecrypted(t, path) // a concurrent session
