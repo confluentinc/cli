@@ -40,7 +40,7 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner, cfg *config.Config) 
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 		pcmd.AddComputePoolFlag(cmd, c.AuthenticatedCLICommand)
 		pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
-		c.addDatabaseFlag(cmd)
+		pcmd.AddDatabaseFlag(cmd, c.AuthenticatedCLICommand)
 		pcmd.AddContextFlag(cmd, c.CLICommand)
 		pcmd.AddCloudFlag(cmd)
 		pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
@@ -173,7 +173,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 
 	catalog := c.Context.GetCurrentFlinkCatalog()
 	if catalog == "" {
-		environment, _, err := c.V2Client.GetOrgEnvironment(environmentId)
+		environment, err := c.V2Client.GetOrgEnvironment(environmentId)
 		if err != nil {
 			return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
 		}

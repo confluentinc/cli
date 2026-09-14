@@ -1,4 +1,4 @@
-//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst ../../mock/ccloud_client_factory.go --pkg mock --selfpkg github.com/confluentinc/cli/v4 ccloud_client_factory.go CCloudClientFactory
+//go:generate go run go.uber.org/mock/mockgen -typed -destination=../../mock/ccloud_client_factory.go -package=mock github.com/confluentinc/cli/v4/pkg/auth CCloudClientFactory
 package auth
 
 import (

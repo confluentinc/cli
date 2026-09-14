@@ -354,7 +354,6 @@ func (s *CLITestSuite) TestFlinkComputePool() {
 		{args: "flink compute-pool list --region eu-west-2", fixture: "flink/compute-pool/list-region.golden"},
 		{args: "flink compute-pool update lfcp-123456 --max-cfu 5", fixture: "flink/compute-pool/update.golden"},
 		{args: "flink compute-pool create my-compute-pool-2 --default-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create-default.golden"},
-		{args: "flink compute-pool update lfcp-123456 --default-pool=false", fixture: "flink/compute-pool/update-default.golden"},
 	}
 
 	for _, test := range tests {

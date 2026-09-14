@@ -5,8 +5,14 @@ import (
 
 	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
 
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
+
+type customConnectPluginVersionCommand struct {
+	*pcmd.AuthenticatedCLICommand
+}
 
 type versionOut struct {
 	PluginId                  string   `human:"Plugin ID" serialized:"plugin_id"`
@@ -22,21 +28,27 @@ type versionOut struct {
 	Environment               string   `human:"Environment" serialized:"environment"`
 }
 
-func (c *pluginCommand) newVersionCommand() *cobra.Command {
+func newCustomConnectPluginVersionCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command { //nolint:unparam
 	cmd := &cobra.Command{
 		Use:   "version",
 		Short: "Manage custom Connect plugin versions.",
 	}
 
-	cmd.AddCommand(c.newCreateVersionCommand())
-	cmd.AddCommand(c.newDescribeVersionCommand())
-	cmd.AddCommand(c.newDeleteVersionCommand())
-	cmd.AddCommand(c.newListVersionCommand())
+	c := &customConnectPluginVersionCommand{
+		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner),
+	}
+
+	cmd.AddCommand(
+		c.newCreateCommand(),
+		c.newDeleteCommand(),
+		c.newDescribeCommand(),
+		c.newListCommand(),
+	)
 
 	return cmd
 }
 
-func (c *pluginCommand) printVersionTable(cmd *cobra.Command,
+func (c *customConnectPluginVersionCommand) printVersionTable(cmd *cobra.Command,
 	plugin ccpmv1.CcpmV1CustomConnectPlugin, version ccpmv1.CcpmV1CustomConnectPluginVersion) error {
 	table := output.NewTable(cmd)
 	table.Add(&versionOut{

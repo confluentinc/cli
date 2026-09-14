@@ -1,4 +1,4 @@
-Error: CCPM custom connector plugin "invalid-id" not found
+Error: CCPM custom Connect plugin "invalid-id" not found
 
 Suggestions:
-    List available CCPM custom connector plugins with `confluent ccpm plugin list`.
+    List available CCPM custom Connect plugins with `confluent ccpm plugin list`.

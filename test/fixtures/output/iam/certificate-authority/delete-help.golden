@@ -1,4 +1,4 @@
-Delete one or more certificate authorities.
+Delete one or more IAM certificate authorities.
 
 Usage:
   confluent iam certificate-authority delete <id-1> [id-2] ... [id-n] [flags]

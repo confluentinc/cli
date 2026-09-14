@@ -1,7 +1,7 @@
-List identity providers.
+Describe an IAM identity provider.
 
 Usage:
-  confluent iam provider list [flags]
+  confluent iam identity-provider describe <id> [flags]
 
 Flags:
       --context string   CLI context name.
