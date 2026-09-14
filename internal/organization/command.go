@@ -39,6 +39,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command { //nolint
 		c.newDescribeCommand(),
 		c.newListCommand(),
 		c.newUpdateCommand(),
+		newScimTokenCommand(cfg, prerunner),
 		// cli-tfgen:cli-subcommands
 	)
 
