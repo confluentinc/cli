@@ -111,6 +111,7 @@ Features marked **EA** (Early Access) or **OP** (Open Preview) may break across 
 
 ## PR and commit conventions
 
+- Use the template at `.github/pull_request_template.md` for the pull request description; this is mandatory.
 - Branch off `main`. PR title format: `[<JIRA-TICKET>] <Description>` — the dominant convention in `git log` (e.g., `[CLI-3708]`, `[APIE-890]`, `[MATRIX-1286]`). Plain prefixes (`chore:`, `docs:`) only for non-ticketed work.
 - One logical change per PR.
 - Run `make lint && make test` before opening; CI runs both via Semaphore.

@@ -1,4 +1,4 @@
-List custom Connect plugins.
+List CCPM custom Connect plugins.
 
 Usage:
   confluent ccpm plugin list [flags]
@@ -13,8 +13,9 @@ List custom Connect plugins filtered by cloud provider.
   $ confluent ccpm plugin list --environment env-12345 --cloud AWS
 
 Flags:
-      --environment string   Environment ID.
       --cloud string         Specify the cloud provider as "aws", "azure", or "gcp".
+      --environment string   Environment ID.
+      --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

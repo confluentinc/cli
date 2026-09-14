@@ -11,13 +11,13 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
-func (c *command) newStatementUpdateCommand() *cobra.Command {
+func (c *statementCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <name>",
 		Short:             "Update a Flink SQL statement.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgs),
-		RunE:              c.statementUpdate,
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Request to resume the currently stopped statement "my-statement" using original principal id and under the original compute pool.`,
@@ -46,6 +46,7 @@ func (c *command) newStatementUpdateCommand() *cobra.Command {
 		),
 	}
 
+	// Optional flags
 	c.addPrincipalFlag(cmd)
 	pcmd.AddComputePoolFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Bool("stopped", false, "Request to stop or resume the statement.")
@@ -59,7 +60,7 @@ func (c *command) newStatementUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) addPrincipalFlag(cmd *cobra.Command) {
+func (c *statementCommand) addPrincipalFlag(cmd *cobra.Command) {
 	cmd.Flags().String("principal", "", "A user or service account the statement runs as.")
 
 	pcmd.RegisterFlagCompletionFunc(cmd, "principal", func(cmd *cobra.Command, args []string) []string {
@@ -88,7 +89,7 @@ func (c *command) addPrincipalFlag(cmd *cobra.Command) {
 	})
 }
 
-func (c *command) statementUpdate(cmd *cobra.Command, args []string) error {
+func (c *statementCommand) update(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err

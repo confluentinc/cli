@@ -1,4 +1,4 @@
-Unset the current service account that was set with `confluent iam service-account use`.
+Unset the current IAM service account.
 
 Usage:
   confluent iam service-account unset [flags]
