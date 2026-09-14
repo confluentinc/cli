@@ -651,7 +651,9 @@ func TestStateDir_ByChannel(t *testing.T) {
 }
 
 func TestConfig_AddContext(t *testing.T) {
-	filename := "/tmp/TestConfig_AddContext.json"
+	// AddContext persists via Save, so use a per-test temp path rather than a shared,
+	// non-portable /tmp file (the latter breaks on Windows and races parallel runs).
+	filename := filepath.Join(t.TempDir(), "TestConfig_AddContext.json")
 	conf := AuthenticatedOnPremConfigMock()
 	conf.Filename = filename
 	context := conf.Context()
@@ -875,6 +877,10 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_Env(t *testing.T) {
 	ctx := testInputs.statefulConfig.Context()
 	// temp file so json files in test_json do not get overwritten
 	configFile, _ := os.CreateTemp("", "TestConfig_Save.json")
+	// Close the handle so the atomic write can rename over the file on Windows, where
+	// os.Rename cannot replace a file that is still open. GetCurrentKafkaEnvContext and
+	// friends persist via Config.Save, so this path exercises the atomic write.
+	_ = configFile.Close()
 	ctx.Config.Filename = configFile.Name()
 
 	// Creating another environment with another kafka cluster
@@ -917,6 +923,10 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_NonEnv(t *testing.T) {
 	ctx := testInputs.statefulConfig.Context()
 	// temp file so json files in test_json do not get overwritten
 	configFile, _ := os.CreateTemp("", "TestConfig_Save.json")
+	// Close the handle so the atomic write can rename over the file on Windows, where
+	// os.Rename cannot replace a file that is still open. GetCurrentKafkaEnvContext and
+	// friends persist via Config.Save, so this path exercises the atomic write.
+	_ = configFile.Close()
 	ctx.Config.Filename = configFile.Name()
 	otherKafkaClusterId := "other-kafka"
 	otherKafkaCluster := &KafkaClusterConfig{
