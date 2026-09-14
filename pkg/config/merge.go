@@ -49,6 +49,27 @@ func threeWayMerge(base, ours, disk *Config) (*Config, error) {
 	if out.ContextStates, err = mergeMapDeep(base.ContextStates, ours.ContextStates, disk.ContextStates); err != nil {
 		return nil, err
 	}
+	// Contexts and ContextStates are two halves of one persisted unit, but the merges
+	// above run per map. A context this process edited survives while a concurrent
+	// delete drops its unedited state (or the reverse), leaving an orphan that Validate
+	// rejects or "repairs" by recreating an empty state, dropping the auth tokens.
+	// Re-pair them: a surviving context keeps its state (from ours, else disk), and a
+	// state whose context is gone is dropped.
+	for name := range out.Contexts {
+		if _, ok := out.ContextStates[name]; ok {
+			continue
+		}
+		if state, ok := ours.ContextStates[name]; ok {
+			out.ContextStates[name] = state
+		} else if state, ok := disk.ContextStates[name]; ok {
+			out.ContextStates[name] = state
+		}
+	}
+	for name := range out.ContextStates {
+		if _, ok := out.Contexts[name]; !ok {
+			delete(out.ContextStates, name)
+		}
+	}
 	if out.SavedCredentials, err = mergeMapDeep(base.SavedCredentials, ours.SavedCredentials, disk.SavedCredentials); err != nil {
 		return nil, err
 	}
