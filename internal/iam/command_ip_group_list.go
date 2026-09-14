@@ -3,6 +3,8 @@
 package iam
 
 import (
+	"slices"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -35,10 +37,12 @@ func (c *ipGroupCommand) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, ipGroup := range ipGroups {
+		cidrBlocks := ipGroup.GetCidrBlocks()
+		slices.Sort(cidrBlocks)
 		out := &ipGroupOut{
 			ID:         ipGroup.GetId(),
 			Name:       ipGroup.GetGroupName(),
-			CidrBlocks: ipGroup.GetCidrBlocks(),
+			CidrBlocks: cidrBlocks,
 		}
 		list.Add(out)
 	}

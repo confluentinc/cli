@@ -3,6 +3,8 @@
 package iam
 
 import (
+	"slices"
+
 	"github.com/spf13/cobra"
 
 	iamipfilteringv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
@@ -26,6 +28,7 @@ func newIpGroupCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Comm
 	cmd := &cobra.Command{
 		Use:         "ip-group",
 		Short:       "Manage Confluent Cloud IAM IP groups.",
+		Long:        "Manage IP groups and their permissions.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
@@ -47,10 +50,12 @@ func newIpGroupCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Comm
 
 func printIpGroup(cmd *cobra.Command, ipGroup iamipfilteringv2.IamV2IpGroup) error {
 	table := output.NewTable(cmd)
+	cidrBlocks := ipGroup.GetCidrBlocks()
+	slices.Sort(cidrBlocks)
 	out := &ipGroupOut{
 		ID:         ipGroup.GetId(),
 		Name:       ipGroup.GetGroupName(),
-		CidrBlocks: ipGroup.GetCidrBlocks(),
+		CidrBlocks: cidrBlocks,
 	}
 	table.Add(out)
 	return table.Print()

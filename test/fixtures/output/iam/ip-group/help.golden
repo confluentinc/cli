@@ -1,4 +1,4 @@
-Manage Confluent Cloud IAM IP groups.
+Manage IP groups and their permissions.
 
 Usage:
   confluent iam ip-group [command]
