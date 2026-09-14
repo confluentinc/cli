@@ -542,14 +542,13 @@ func isEncryptedSecret(s string) bool {
 // save marshals and atomically writes the live config WITHOUT locking or
 // merging. Callers must hold the lock (or knowingly not need it, e.g. writing a
 // brand-new default file). Save() is the normal, locked, merging entry point.
+//
+// The only caller is writeWholeConfig, reached from saveLocked, which has already
+// resolved the temporary --context/--environment/--cluster overrides to their
+// persisted values. save() must not resolve them again: a second pass runs against
+// the now-switched current context and would write one context's flag value onto
+// another. Override resolution therefore lives only in the Save()/saveLocked entry.
 func (c *Config) save() error {
-	tempKafkaCluster := c.resolveOverwrittenKafkaCluster()
-	defer c.restoreOverwrittenKafkaCluster(tempKafkaCluster)
-	tempEnvironment := c.resolveOverwrittenCurrentEnvironment()
-	defer c.restoreOverwrittenEnvironment(tempEnvironment)
-	tempContext := c.resolveOverwrittenContext()
-	defer c.restoreOverwrittenContext(tempContext)
-
 	var tempAuthToken, tempAuthRefreshToken string
 	tempCredentials := map[string]string{}
 	if c.Context() != nil {
