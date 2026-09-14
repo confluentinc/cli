@@ -7,6 +7,7 @@ import (
 
 	switchoverv1 "github.com/confluentinc/ccloud-sdk-go-v2/switchover/v1"
 
+	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
@@ -20,14 +21,24 @@ func newSwitchoverClient(httpClient *http.Client, url, userAgent string, unsafeT
 	return switchoverv1.NewAPIClient(cfg)
 }
 
-// switchoverApiContext normally authenticates with the logged-in session's
-// bearer token. Local-test-only escape hatch: if CONFLUENT_CLOUD_API_KEY and
-// CONFLUENT_CLOUD_API_SECRET (a Cloud API key, `api-key create --resource
-// cloud`) are set, use Basic auth instead — the stag Switchover Early Access
-// gate only applies to the bearer/login path, not Cloud API keys.
+// switchoverApiContext selects the credential the Switchover API is called with,
+// in preference order:
+//  1. an explicit CONFLUENT_CLOUD_API_KEY / CONFLUENT_CLOUD_API_SECRET env pair,
+//  2. a Cloud API key stored in the logged-in context (api-key cloud login),
+//  3. the logged-in session's bearer token.
+//
+// (1) and (2) are sent as HTTP Basic auth. Basic auth (Cloud API key) is a
+// first-class, supported path: the Switchover Early Access gate applies only to
+// the bearer/login path, not Cloud API keys.
 func (c *Client) switchoverApiContext() context.Context {
 	if key, secret := os.Getenv("CONFLUENT_CLOUD_API_KEY"), os.Getenv("CONFLUENT_CLOUD_API_SECRET"); key != "" && secret != "" {
 		return context.WithValue(context.Background(), switchoverv1.ContextBasicAuth, switchoverv1.BasicAuth{UserName: key, Password: secret})
+	}
+	if ctx := c.cfg.Context(); ctx != nil && ctx.GetCredentialType() == config.APIKey && ctx.Credential.APIKeyPair != nil {
+		pair := ctx.Credential.APIKeyPair
+		if err := pair.DecryptSecret(); err == nil {
+			return context.WithValue(context.Background(), switchoverv1.ContextBasicAuth, switchoverv1.BasicAuth{UserName: pair.Key, Password: pair.Secret})
+		}
 	}
 	return context.WithValue(context.Background(), switchoverv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
