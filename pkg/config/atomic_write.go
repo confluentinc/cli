@@ -10,15 +10,44 @@ import (
 // only, since they hold credentials.
 const configFilePerm os.FileMode = 0600
 
+// resolveConfigTarget follows a symlink at path to the real file it points to, so an
+// atomic rename replaces that target rather than the symlink itself. os.WriteFile (the
+// pre-atomic write) followed symlinks this way, so a user-managed config.json symlink
+// keeps working. A non-symlink or absent path is returned unchanged.
+func resolveConfigTarget(path string) (string, error) {
+	info, err := os.Lstat(path)
+	if err != nil || info.Mode()&os.ModeSymlink == 0 {
+		return path, nil // absent (fresh file), unstattable, or not a symlink
+	}
+	if resolved, err := filepath.EvalSymlinks(path); err == nil {
+		return resolved, nil
+	}
+	// Broken link (target does not exist yet): resolve one hop and create the target,
+	// matching os.WriteFile following the link with O_CREATE.
+	target, err := os.Readlink(path)
+	if err != nil {
+		return "", fmt.Errorf("unable to resolve config symlink %s: %w", path, err)
+	}
+	if !filepath.IsAbs(target) {
+		target = filepath.Join(filepath.Dir(path), target)
+	}
+	return target, nil
+}
+
 // writeFileAtomic writes data to path via a temp file in the SAME directory,
 // then renames it into place. Same-directory is required: a temp on another
 // filesystem breaks rename with EXDEV. On POSIX the parent directory is fsynced
 // after the rename so a crash can't lose the rename even when the bytes are
-// durable; on Windows the rename itself is the durability boundary.
+// durable; on Windows the rename itself is the durability boundary. A symlinked
+// path is followed to its target so the rename replaces the target, not the link.
 func writeFileAtomic(path string, data []byte) error {
-	dir := filepath.Dir(path)
+	target, err := resolveConfigTarget(path)
+	if err != nil {
+		return err
+	}
+	dir := filepath.Dir(target)
 
-	tmp, err := os.CreateTemp(dir, filepath.Base(path)+".tmp-*")
+	tmp, err := os.CreateTemp(dir, filepath.Base(target)+".tmp-*")
 	if err != nil {
 		return fmt.Errorf("unable to create temp config file: %w", err)
 	}
@@ -43,7 +72,7 @@ func writeFileAtomic(path string, data []byte) error {
 		return fmt.Errorf("unable to close temp config file: %w", err)
 	}
 
-	if err := renameReplace(tmpName, path); err != nil {
+	if err := renameReplace(tmpName, target); err != nil {
 		return fmt.Errorf("unable to rename config file into place: %w", err)
 	}
 
