@@ -26,6 +26,10 @@ var version = "v0.0.0"
 */
 
 func main() {
+	// Whitelist the released CLI's surface, so paths baked into flag defaults are the stable
+	// channel's. Must precede command construction; this binary carries no version stamp.
+	pversion.SetProcessChannel(pversion.Stable)
+
 	fmt.Println("BEGIN;")
 	fmt.Println("")
 	fmt.Println("INSERT INTO whitelist(version, keyword) VALUES")

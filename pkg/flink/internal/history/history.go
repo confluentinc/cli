@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	pconfig "github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/flink/config"
 	"github.com/confluentinc/cli/v4/pkg/log"
 )
@@ -58,9 +59,11 @@ func initPath(file string) *History {
 		return nil
 	}
 
+	// HOME_CONFLUENT_PATH predates channel-scoped state directories and still wins, so anyone
+	// relying on it keeps the layout they have.
 	confluentDir := os.Getenv(config.HomeConfluentPathEnvVar)
 	if confluentDir == "" {
-		confluentDir = config.HomeConfluentPathDefault
+		confluentDir = pconfig.StateDirName()
 	}
 	confluentPath := filepath.Join(home, confluentDir)
 	historyPath := filepath.Join(confluentPath, file)
