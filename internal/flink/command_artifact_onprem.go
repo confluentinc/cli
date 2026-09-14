@@ -12,6 +12,7 @@ import (
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/properties"
 	"github.com/confluentinc/cli/v4/pkg/utils"
@@ -26,6 +27,23 @@ const (
 // artifactLookupSuggestions is shared by the delete handlers when an artifact can't be found (or CMF is unreachable).
 const artifactLookupSuggestions = "List available Flink artifacts with `confluent flink artifact list`." +
 	"\nCheck that CMF is running and accessible."
+
+func (c *command) newArtifactCommandOnPrem() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "artifact",
+		Short:       "Manage Flink UDF artifacts.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
+	}
+
+	cmd.AddCommand(c.newArtifactCreateCommandOnPrem())
+	cmd.AddCommand(c.newArtifactDeleteCommandOnPrem())
+	cmd.AddCommand(c.newArtifactDescribeCommandOnPrem())
+	cmd.AddCommand(c.newArtifactListCommandOnPrem())
+	cmd.AddCommand(c.newArtifactUpdateCommandOnPrem())
+	cmd.AddCommand(c.newArtifactVersionCommandOnPrem())
+
+	return cmd
+}
 
 // artifactOutOnPrem is the human-readable row used by the artifact list command (kept lean; no labels/annotations).
 type artifactOutOnPrem struct {
