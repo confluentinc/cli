@@ -15,7 +15,9 @@ type APIKeyPair struct {
 }
 
 func (c *APIKeyPair) DecryptSecret() error {
-	if (strings.HasPrefix(c.Secret, secret.AesGcm) && c.Salt != nil) || strings.HasPrefix(c.Secret, secret.Dpapi) {
+	// Ciphertext is stored as "PREFIX:payload", so the ":" is part of the marker:
+	// a plaintext secret that merely begins with the marker word is not encrypted.
+	if (strings.HasPrefix(c.Secret, secret.AesGcm+":") && c.Salt != nil) || strings.HasPrefix(c.Secret, secret.Dpapi+":") {
 		decryptedSecret, err := secret.Decrypt(c.Key, c.Secret, c.Salt, c.Nonce)
 		if err != nil {
 			return err
@@ -35,7 +37,7 @@ func (c *APIKeyPair) EncryptSecret() error {
 		c.Nonce = nonce
 	}
 
-	if !strings.HasPrefix(c.Secret, secret.AesGcm) {
+	if !isEncryptedSecret(c.Secret) {
 		encryptedSecret, err := secret.Encrypt(c.Key, c.Secret, c.Salt, c.Nonce)
 		if err != nil {
 			return err
