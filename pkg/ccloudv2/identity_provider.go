@@ -80,23 +80,33 @@ func (c *Client) executeListIamIdentityPools(providerId, pageToken string) (iden
 
 // ===== identity providers API calls =====
 
-func (c *Client) CreateIamIdentityProvider(identityProvider identityproviderv2.IamV2IdentityProvider) (identityproviderv2.IamV2IdentityProvider, error) {
-	resp, httpResp, err := c.IdentityProviderClient.IdentityProvidersIamV2Api.CreateIamV2IdentityProvider(c.identityProviderApiContext()).IamV2IdentityProvider(identityProvider).Execute()
-	return resp, errors.CatchCCloudV2Error(err, httpResp)
+func (c *Client) CreateIamIdentityProvider(req identityproviderv2.IamV2IdentityProvider) (identityproviderv2.IamV2IdentityProvider, error) {
+	createReq := c.IdentityProviderClient.IdentityProvidersIamV2Api.
+		CreateIamV2IdentityProvider(c.identityProviderApiContext()).
+		IamV2IdentityProvider(req)
+	res, httpResp, err := createReq.Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) GetIamIdentityProvider(id string) (identityproviderv2.IamV2IdentityProvider, error) {
-	resp, httpResp, err := c.IdentityProviderClient.IdentityProvidersIamV2Api.GetIamV2IdentityProvider(c.identityProviderApiContext(), id).Execute()
-	return resp, errors.CatchCCloudV2Error(err, httpResp)
+	getReq := c.IdentityProviderClient.IdentityProvidersIamV2Api.
+		GetIamV2IdentityProvider(c.identityProviderApiContext(), id)
+	res, httpResp, err := getReq.Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateIamIdentityProvider(update identityproviderv2.IamV2IdentityProvider) (identityproviderv2.IamV2IdentityProvider, error) {
-	resp, httpResp, err := c.IdentityProviderClient.IdentityProvidersIamV2Api.UpdateIamV2IdentityProvider(c.identityProviderApiContext(), *update.Id).IamV2IdentityProvider(update).Execute()
-	return resp, errors.CatchCCloudV2Error(err, httpResp)
+func (c *Client) UpdateIamIdentityProvider(id string, update identityproviderv2.IamV2IdentityProvider) (identityproviderv2.IamV2IdentityProvider, error) {
+	updateReq := c.IdentityProviderClient.IdentityProvidersIamV2Api.
+		UpdateIamV2IdentityProvider(c.identityProviderApiContext(), id).
+		IamV2IdentityProvider(update)
+	res, httpResp, err := updateReq.Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DeleteIamIdentityProvider(id string) error {
-	httpResp, err := c.IdentityProviderClient.IdentityProvidersIamV2Api.DeleteIamV2IdentityProvider(c.identityProviderApiContext(), id).Execute()
+	deleteReq := c.IdentityProviderClient.IdentityProvidersIamV2Api.
+		DeleteIamV2IdentityProvider(c.identityProviderApiContext(), id)
+	httpResp, err := deleteReq.Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
@@ -117,11 +127,14 @@ func (c *Client) ListIamIdentityProviders() ([]identityproviderv2.IamV2IdentityP
 			return nil, err
 		}
 	}
+
 	return list, nil
 }
 
 func (c *Client) executeListIamIdentityProviders(pageToken string) (identityproviderv2.IamV2IdentityProviderList, *http.Response, error) {
-	req := c.IdentityProviderClient.IdentityProvidersIamV2Api.ListIamV2IdentityProviders(c.identityProviderApiContext()).PageSize(ccloudV2ListPageSize)
+	req := c.IdentityProviderClient.IdentityProvidersIamV2Api.
+		ListIamV2IdentityProviders(c.identityProviderApiContext()).
+		PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}

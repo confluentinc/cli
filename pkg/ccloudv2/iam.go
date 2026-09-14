@@ -70,27 +70,30 @@ func (c *Client) executeListInvitations(pageToken string) (iamv2.IamV2Invitation
 
 // ===== IAM service accounts API calls =====
 
-func (c *Client) CreateIamServiceAccount(assignedResourceOwner string, req iamv2.IamV2ServiceAccount) (iamv2.IamV2ServiceAccount, *http.Response, error) {
+func (c *Client) CreateIamServiceAccount(assignedResourceOwner string, req iamv2.IamV2ServiceAccount) (iamv2.IamV2ServiceAccount, error) {
 	createReq := c.IamClient.ServiceAccountsIamV2Api.
 		CreateIamV2ServiceAccount(c.iamApiContext()).
 		IamV2ServiceAccount(req)
 	if assignedResourceOwner != "" {
 		createReq = createReq.AssignedResourceOwner(assignedResourceOwner)
 	}
-	return createReq.Execute()
+	res, httpResp, err := createReq.Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) GetIamServiceAccount(id string) (iamv2.IamV2ServiceAccount, *http.Response, error) {
+func (c *Client) GetIamServiceAccount(id string) (iamv2.IamV2ServiceAccount, error) {
 	getReq := c.IamClient.ServiceAccountsIamV2Api.
 		GetIamV2ServiceAccount(c.iamApiContext(), id)
-	return getReq.Execute()
+	res, httpResp, err := getReq.Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateIamServiceAccount(id string, update iamv2.IamV2ServiceAccount) (iamv2.IamV2ServiceAccount, *http.Response, error) {
+func (c *Client) UpdateIamServiceAccount(id string, update iamv2.IamV2ServiceAccount) (iamv2.IamV2ServiceAccount, error) {
 	updateReq := c.IamClient.ServiceAccountsIamV2Api.
 		UpdateIamV2ServiceAccount(c.iamApiContext(), id).
 		IamV2ServiceAccount(update)
-	return updateReq.Execute()
+	res, httpResp, err := updateReq.Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DeleteIamServiceAccount(id string) error {
@@ -136,17 +139,19 @@ func (c *Client) executeListIamServiceAccounts(displayName []string, pageToken s
 
 // ===== IAM users API calls =====
 
-func (c *Client) GetIamUser(id string) (iamv2.IamV2User, *http.Response, error) {
+func (c *Client) GetIamUser(id string) (iamv2.IamV2User, error) {
 	getReq := c.IamClient.UsersIamV2Api.
 		GetIamV2User(c.iamApiContext(), id)
-	return getReq.Execute()
+	res, httpResp, err := getReq.Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateIamUser(id string, update iamv2.IamV2UserUpdate) (iamv2.IamV2User, *http.Response, error) {
+func (c *Client) UpdateIamUser(id string, update iamv2.IamV2UserUpdate) (iamv2.IamV2User, error) {
 	updateReq := c.IamClient.UsersIamV2Api.
 		UpdateIamV2User(c.iamApiContext(), id).
 		IamV2UserUpdate(update)
-	return updateReq.Execute()
+	res, httpResp, err := updateReq.Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DeleteIamUser(id string) error {

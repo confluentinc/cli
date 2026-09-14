@@ -37,7 +37,7 @@ func (c *command) materializedTableDescribe(cmd *cobra.Command, args []string) e
 		return err
 	}
 
-	if _, _, err := c.V2Client.GetOrgEnvironment(environmentId); err != nil {
+	if _, err := c.V2Client.GetOrgEnvironment(environmentId); err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), fmt.Sprintf(envNotFoundErrorMsg, environmentId))
 	}
 

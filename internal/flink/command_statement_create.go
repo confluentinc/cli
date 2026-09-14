@@ -62,7 +62,7 @@ func (c *statementCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	environment, _, err := c.V2Client.GetOrgEnvironment(environmentId)
+	environment, err := c.V2Client.GetOrgEnvironment(environmentId)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
 	}
