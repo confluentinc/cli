@@ -1,14 +1,14 @@
-Manage IP groups and their permissions.
+Manage Confluent Cloud IAM IP groups.
 
 Usage:
   confluent iam ip-group [command]
 
 Available Commands:
-  create      Create an IP group.
-  delete      Delete an IP group.
-  describe    Describe an IP group.
-  list        List IP groups.
-  update      Update an IP group.
+  create      Create an IAM IP group.
+  delete      Delete one or more IAM IP groups.
+  describe    Describe an IAM IP group.
+  list        List IAM IP groups.
+  update      Update an existing IAM IP group.
 
 Global Flags:
   -h, --help            Show help for this command.

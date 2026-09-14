@@ -826,17 +826,26 @@ func handleIamIpGroups(t *testing.T) http.HandlerFunc {
 // Handler for: "/iam/v2/ip-groups/{id}"
 func handleIamIpGroup(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+		if id != ipGroupId {
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+			return
+		}
 		switch r.Method {
 		case http.MethodPatch:
 			var req iamipfilteringv2.IamV2IpGroup
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			res := &iamipfilteringv2.IamV2IpGroup{
-				Id:         req.Id,
-				GroupName:  req.GroupName,
-				CidrBlocks: req.CidrBlocks,
+			// PATCH semantics: only the fields present in the body change; the id is the path's.
+			res := buildIamIpGroup(id, "demo-ip-group", []string{"168.150.200.0/24", "147.150.200.0/24"})
+			if req.GroupName != nil {
+				res.GroupName = req.GroupName
 			}
-			err = json.NewEncoder(w).Encode(res)
+			if req.CidrBlocks != nil {
+				res.CidrBlocks = req.CidrBlocks
+			}
+			err = json.NewEncoder(w).Encode(&res)
 			require.NoError(t, err)
 		case http.MethodGet:
 			ipGroup := buildIamIpGroup(ipGroupId, "demo-ip-group", []string{"168.150.200.0/24", "147.150.200.0/24"})

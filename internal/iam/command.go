@@ -28,7 +28,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		newGroupMappingCommand(cfg, prerunner),
 		newIdentityProviderCommand(cfg, prerunner),
 		newIpFilterCommand(cfg, prerunner),
-		newIpGroupCommand(prerunner),
+		newIpGroupCommand(cfg, prerunner),
 		newPoolCommand(cfg, prerunner),
 		newRbacCommand(cfg, prerunner),
 		newServiceAccountCommand(cfg, prerunner),
