@@ -304,3 +304,98 @@ func TestLoad_FreshMachineDoesNotClobberConcurrentlyCreatedConfig(t *testing.T) 
 	require.Contains(t, final.Platforms, "from-other",
 		"a config another session created after this session read the file missing must survive the fresh-machine load")
 }
+
+// addContextWithToken adds a second, non-current context carrying an auth token, shaped
+// like newSavedConfig's context so Validate accepts it.
+func addContextWithToken(c *Config, name, authToken string) {
+	state := &ContextState{AuthToken: authToken}
+	ctx := &Context{
+		Name:           name,
+		PlatformName:   "platform",
+		CredentialName: "cred",
+		Platform:       c.Platforms["platform"],
+		Credential:     c.Credentials["cred"],
+		State:          state,
+		Config:         c,
+	}
+	ctx.KafkaClusterContext = &KafkaClusterContext{
+		ActiveKafkaCluster:  "lkc-1",
+		KafkaClusterConfigs: map[string]*KafkaClusterConfig{"lkc-1": {ID: "lkc-1", Name: "one"}},
+		Context:             ctx,
+	}
+	c.Contexts[name] = ctx
+	c.ContextStates[name] = state
+}
+
+// Contexts and ContextStates are two halves of one persisted unit. When one session
+// deletes a context while this process edits that same context, an independent per-map
+// merge keeps the edited Context but drops its unedited state, orphaning it so Validate
+// drops the auth token or rejects the save. The two halves must stay coupled.
+func TestSave_ConcurrentContextDeleteVsEdit_KeepsStateWithContext(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	newSavedConfig(t, path) // context "ctx" (current)
+
+	seed := loadDecrypted(t, path)
+	addContextWithToken(seed, "target", "org-1-target.jwt.token") // a second, non-current context
+	require.NoError(t, seed.Save())
+
+	a := loadDecrypted(t, path) // this process
+	b := loadDecrypted(t, path) // concurrent session
+
+	require.NoError(t, b.DeleteContext("target")) // concurrent delete of both halves
+
+	a.Contexts["target"].CurrentEnvironment = "env-z" // this process edits the same context
+	require.NoError(t, a.Save())
+
+	final := loadDecrypted(t, path)
+	require.Contains(t, final.Contexts, "target", "the edited context must survive")
+	require.Contains(t, final.ContextStates, "target", "its state must survive with it, not be orphaned")
+	require.NotEmpty(t, final.ContextStates["target"].AuthToken,
+		"the context's auth token must not be dropped by the concurrent delete")
+}
+
+// save() must resolve flag overrides exactly once. It is only reached from saveLocked
+// (via writeWholeConfig), which already swapped flag values out for the persisted ones;
+// a second resolve here re-applies them against the now-switched current context and
+// writes one context's --cluster value onto another. Uses the constructed-config
+// (nil baseline) whole-write path.
+func TestSave_WholeConfigWrite_DoesNotDoubleResolveOverrides(t *testing.T) {
+	c := New()
+	c.Filename = filepath.Join(t.TempDir(), "config.json")
+	c.Platforms["platform"] = &Platform{Name: "platform", Server: "https://example.com"}
+	c.Credentials["cred"] = &Credential{Name: "cred", CredentialType: APIKey, APIKeyPair: &APIKeyPair{Key: "k", Secret: "s"}}
+
+	addCtx := func(name, activeKafka string) {
+		state := new(ContextState)
+		ctx := &Context{
+			Name: name, PlatformName: "platform", CredentialName: "cred",
+			Platform: c.Platforms["platform"], Credential: c.Credentials["cred"], State: state, Config: c,
+		}
+		ctx.KafkaClusterContext = &KafkaClusterContext{
+			ActiveKafkaCluster: activeKafka,
+			KafkaClusterConfigs: map[string]*KafkaClusterConfig{
+				"kA": {ID: "kA", Name: "a"}, "kB": {ID: "kB", Name: "b"}, "kX": {ID: "kX", Name: "x"},
+			},
+			Context: ctx,
+		}
+		c.Contexts[name] = ctx
+		c.ContextStates[name] = state
+	}
+	addCtx("A", "kA")
+	addCtx("B", "kX") // B's active currently holds the --cluster flag value
+
+	// Simulate `--context B --cluster kX`: current switched to B, real values stashed.
+	c.CurrentContext = "B"
+	c.overwrittenCurrentContext = "A"       // A is the real current context
+	c.overwrittenCurrentKafkaCluster = "kB" // kB is B's real active cluster
+
+	require.NoError(t, c.Save())
+
+	reloaded := New()
+	reloaded.Filename = c.Filename
+	require.NoError(t, reloaded.Load())
+	require.Equal(t, "kA", reloaded.Contexts["A"].KafkaClusterContext.GetActiveKafkaClusterId(),
+		"context A's cluster must not be overwritten by B's --cluster value through a second resolve")
+	require.Equal(t, "A", reloaded.CurrentContext, "the persisted current context must be the real one, not the --context flag")
+}
