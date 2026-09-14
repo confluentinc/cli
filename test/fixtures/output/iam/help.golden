@@ -4,7 +4,7 @@ Usage:
   confluent iam [command]
 
 Available Commands:
-  certificate-authority Manage certificate authorities.
+  certificate-authority Manage Confluent Cloud IAM certificate authorities.
   certificate-pool      Manage certificate pools.
   group-mapping         Manage SSO group mappings.
   identity-provider     Manage Confluent Cloud IAM identity providers.

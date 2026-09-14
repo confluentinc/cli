@@ -1,4 +1,4 @@
-List certificate authorities.
+List IAM certificate authorities.
 
 Usage:
   confluent iam certificate-authority list [flags]

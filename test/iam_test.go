@@ -374,7 +374,10 @@ func (s *CLITestSuite) TestIamCertificateAuthority() {
 		{args: `iam certificate-authority update op-12345 --name "new name" --description "new description" --certificate-chain ABC123 --certificate-chain-filename certificate-2.pem --crl-url example.url`, fixture: "iam/certificate-authority/update-crl-url.golden"},
 		{args: "iam certificate-authority update op-12345 --require-crl-on-client-certificate=false", fixture: "iam/certificate-authority/update-require-crl.golden"},
 		{args: "iam certificate-authority update op-54321 --require-crl-on-client-certificate=true", fixture: "iam/certificate-authority/update-require-crl-true.golden"},
-		{args: `iam certificate-authority update op-12345 --name "new name" --description "new description" --certificate-chain-filename certificate-2.pem`, fixture: "iam/certificate-authority/update-fail.golden", exitCode: 1},
+		// The hand-written command marked certificate-chain and certificate-chain-filename
+		// MarkFlagsRequiredTogether; the generated command has no such constraint (accepted
+		// divergence, APIE-1478), so updating the filename alone succeeds.
+		{args: `iam certificate-authority update op-12345 --name "new name" --description "new description" --certificate-chain-filename certificate-2.pem`, fixture: "iam/certificate-authority/update-filename-only.golden"},
 		{args: "iam certificate-authority list", fixture: "iam/certificate-authority/list.golden"},
 		{args: "iam certificate-authority list -o json", fixture: "iam/certificate-authority/list-json.golden"},
 	}

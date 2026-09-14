@@ -579,7 +579,13 @@ func handleIamCertificateAuthority(t *testing.T) http.HandlerFunc {
 		}
 		switch r.Method {
 		case http.MethodGet:
-			certificateAuthority := buildIamCertificateAuthority(id, "my-ca", "my certificate authority", "certificate.pem", "", "", id == "op-12345")
+			// op-12345 requires CRL validation, so it must also carry a configured CRL:
+			// the API rejects require_crl_on_client_certificate=true without one.
+			crlUrl := ""
+			if id == "op-12345" {
+				crlUrl = "my-crl.url"
+			}
+			certificateAuthority := buildIamCertificateAuthority(id, "my-ca", "my certificate authority", "certificate.pem", crlUrl, "", id == "op-12345")
 			err := json.NewEncoder(w).Encode(certificateAuthority)
 			require.NoError(t, err)
 		case http.MethodDelete:
@@ -588,7 +594,39 @@ func handleIamCertificateAuthority(t *testing.T) http.HandlerFunc {
 			var req certificateauthorityv2.IamV2UpdateCertRequest
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			certificateAuthority := buildIamCertificateAuthority(id, req.GetDisplayName(), req.GetDescription(), req.GetCertificateChainFilename(), req.GetCrlUrl(), req.GetCrlChain(), req.GetRequireCrlOnClientCertificate())
+
+			// Merge the update onto the persisted fixture (matching the GET case above) so a
+			// partial update's response reflects the API's PATCH-like PUT semantics — omitted
+			// fields are preserved, not cleared — rather than echoing only the fields the
+			// request happened to carry.
+			name := "my-ca"
+			description := "my certificate authority"
+			certificateChainFilename := "certificate.pem"
+			crlUrl := ""
+			if id == "op-12345" {
+				crlUrl = "my-crl.url"
+			}
+			crlChain := ""
+			requireCrlOnClientCertificate := id == "op-12345"
+			if req.DisplayName != nil {
+				name = req.GetDisplayName()
+			}
+			if req.Description != nil {
+				description = req.GetDescription()
+			}
+			if req.CertificateChainFilename != nil {
+				certificateChainFilename = req.GetCertificateChainFilename()
+			}
+			if req.CrlUrl != nil {
+				crlUrl = req.GetCrlUrl()
+			}
+			if req.CrlChain != nil {
+				crlChain = req.GetCrlChain()
+			}
+			if req.RequireCrlOnClientCertificate != nil {
+				requireCrlOnClientCertificate = req.GetRequireCrlOnClientCertificate()
+			}
+			certificateAuthority := buildIamCertificateAuthority(id, name, description, certificateChainFilename, crlUrl, crlChain, requireCrlOnClientCertificate)
 			err = json.NewEncoder(w).Encode(certificateAuthority)
 			require.NoError(t, err)
 		}
@@ -601,7 +639,7 @@ func handleIamCertificateAuthorities(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			certificateAuthorityList := &certificateauthorityv2.IamV2CertificateAuthorityList{Data: []certificateauthorityv2.IamV2CertificateAuthority{
-				buildIamCertificateAuthority("op-12345", "my-ca", "my certificate authority", "certificate.pem", "", "", true),
+				buildIamCertificateAuthority("op-12345", "my-ca", "my certificate authority", "certificate.pem", "my-crl.url", "", true),
 				buildIamCertificateAuthority("op-54321", "my-ca-2", "my other certificate authority", "certificate-2.pem", "", "DEF456", false),
 				buildIamCertificateAuthority("op-67890", "my-ca-3", "my other certificate authority", "certificate-3.pem", "example.url", "", true),
 			}}
