@@ -1,14 +1,14 @@
-Manage users.
+Manage Confluent Cloud IAM users.
 
 Usage:
   confluent iam user [command]
 
 Available Commands:
-  delete      Delete one or more users from your organization.
-  describe    Describe a user.
+  delete      Delete one or more IAM users.
+  describe    Describe an IAM user.
   invitation  Manage invitations.
-  list        List an organization's users.
-  update      Update a user.
+  list        List IAM users.
+  update      Update an existing IAM user.
 
 Global Flags:
   -h, --help            Show help for this command.

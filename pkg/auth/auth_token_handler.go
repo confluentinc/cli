@@ -1,4 +1,4 @@
-//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst ../../mock/auth_token_handler.go --pkg mock --selfpkg github.com/confluentinc/cli/v4 auth_token_handler.go AuthTokenHandler
+//go:generate go run go.uber.org/mock/mockgen -typed -destination=../../mock/auth_token_handler.go -package=mock github.com/confluentinc/cli/v4/pkg/auth AuthTokenHandler
 package auth
 
 import (

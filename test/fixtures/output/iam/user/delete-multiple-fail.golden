@@ -1,4 +1,4 @@
-Error: user "u-1" not found
+Error: IAM user "u-dne" not found
 
 Suggestions:
-    List available users with `confluent iam user list`.
+    List available IAM users with `confluent iam user list`.

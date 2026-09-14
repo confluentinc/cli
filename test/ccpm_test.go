@@ -42,6 +42,9 @@ func (s *CLITestSuite) TestCCPMPlugin() {
 		{args: "ccpm plugin delete ccp-123456 --environment env-123456", input: "y\n", fixture: "ccpm/plugin-delete-prompt.golden"},
 		{args: "ccpm plugin delete ccp-123456 --environment env-123456", input: "n\n", fixture: "ccpm/plugin-delete-cancelled.golden"},
 		{args: "ccpm plugin delete invalid-id --environment env-123456 --force", fixture: "ccpm/plugin-delete-not-found.golden", exitCode: 1},
+
+		// Positional autocomplete: the hint pairs the id with "<name>: <description>".
+		{args: `__complete ccpm plugin describe ""`, fixture: "ccpm/plugin-describe-autocomplete.golden"},
 	}
 
 	for _, test := range tests {

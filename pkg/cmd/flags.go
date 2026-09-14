@@ -160,6 +160,21 @@ func AutocompleteComputePools(environmentId string, client *ccloudv2.Client) []s
 	return suggestions
 }
 
+func AddDatabaseFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
+	cmd.Flags().String("database", "", "The database which will be used as the default database. When using Kafka, this is the cluster ID.")
+	RegisterFlagCompletionFunc(cmd, "database", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+		return AutocompleteClusters(environmentId, c.V2Client)
+	})
+}
+
 func AddEndpointFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 	cmd.Flags().String("kafka-endpoint", "", "Endpoint to be used for this Kafka cluster.")
 }
@@ -359,6 +374,7 @@ func AddProtocolFlag(cmd *cobra.Command) {
 	RegisterFlagCompletionFunc(cmd, "protocol", func(_ *cobra.Command, _ []string) []string { return protocols })
 }
 
+// TODO: clean up this function in CLI v5 and eliminate the --provider flag
 func AddProviderFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 	cmd.Flags().String("provider", "", "ID of this pool's identity provider.")
 
@@ -371,6 +387,7 @@ func AddProviderFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 	})
 }
 
+// TODO: clean up this function in CLI v5 and eliminate the --provider flag
 func AutocompleteIdentityProviders(client *ccloudv2.Client) []string {
 	identityProviders, err := client.ListIamIdentityProviders()
 	if err != nil {
@@ -577,19 +594,6 @@ func AutocompleteResourceOwners(client *ccloudv2.Client) []string {
 	for i, serviceAccount := range serviceAccounts {
 		description := fmt.Sprintf("%s: %s", serviceAccount.GetDisplayName(), serviceAccount.GetDisplayName())
 		suggestions[i+offset] = fmt.Sprintf("%s\t%s", serviceAccount.GetId(), description)
-	}
-	return suggestions
-}
-
-func AutocompleteUsers(client *ccloudv2.Client) []string {
-	users, err := client.ListIamUsers()
-	if err != nil {
-		return nil
-	}
-
-	suggestions := make([]string, len(users))
-	for i, user := range users {
-		suggestions[i] = fmt.Sprintf("%s\t%s", user.GetId(), user.GetFullName())
 	}
 	return suggestions
 }
