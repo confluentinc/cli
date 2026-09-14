@@ -1,4 +1,4 @@
-Manage IP groups and their permissions.
+Manage IAM IP groups and their permissions.
 
 Usage:
   confluent iam ip-group [command]

@@ -28,7 +28,7 @@ func newIpGroupCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Comm
 	cmd := &cobra.Command{
 		Use:         "ip-group",
 		Short:       "Manage Confluent Cloud IAM IP groups.",
-		Long:        "Manage IP groups and their permissions.",
+		Long:        "Manage IAM IP groups and their permissions.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
