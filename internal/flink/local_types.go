@@ -334,3 +334,30 @@ type LocalStatementTraits struct {
 	UpsertColumns *[]int32           `json:"upsertColumns,omitempty" yaml:"upsertColumns,omitempty"`
 	Schema        *LocalResultSchema `json:"schema,omitempty" yaml:"schema,omitempty"`
 }
+
+type LocalArtifact struct {
+	ApiVersion string                 `json:"apiVersion" yaml:"apiVersion"`
+	Kind       string                 `json:"kind" yaml:"kind"`
+	Metadata   LocalArtifactMetadata  `json:"metadata" yaml:"metadata"`
+	Spec       map[string]interface{} `json:"spec" yaml:"spec"`
+	Status     *LocalArtifactStatus   `json:"status,omitempty" yaml:"status,omitempty"`
+}
+
+type LocalArtifactMetadata struct {
+	Name              string             `json:"name" yaml:"name"`
+	CreationTimestamp *string            `json:"creationTimestamp,omitempty" yaml:"creationTimestamp,omitempty"`
+	UpdateTimestamp   *string            `json:"updateTimestamp,omitempty" yaml:"updateTimestamp,omitempty"`
+	Uid               *string            `json:"uid,omitempty" yaml:"uid,omitempty"`
+	Labels            *map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
+	Annotations       *map[string]string `json:"annotations,omitempty" yaml:"annotations,omitempty"`
+}
+
+type LocalArtifactStatus struct {
+	Version           *int32  `json:"version,omitempty" yaml:"version,omitempty"`
+	CreationTimestamp *string `json:"creationTimestamp,omitempty" yaml:"creationTimestamp,omitempty"`
+	Path              *string `json:"path,omitempty" yaml:"path,omitempty"`
+	Size              *int64  `json:"size,omitempty" yaml:"size,omitempty"`
+	Checksum          *string `json:"checksum,omitempty" yaml:"checksum,omitempty"`
+	Phase             *string `json:"phase,omitempty" yaml:"phase,omitempty"`
+	Message           *string `json:"message,omitempty" yaml:"message,omitempty"`
+}
