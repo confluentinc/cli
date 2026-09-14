@@ -29,6 +29,30 @@ func TestWriteFileAtomic_ReplacesExistingAndSetsPerms(t *testing.T) {
 	}
 }
 
+// A symlinked config path must be followed like os.WriteFile did on main: the real
+// target is replaced atomically and the symlink is preserved, not swapped for a
+// regular file. Skipped on Windows, where symlinks need privilege and differ.
+func TestWriteFileAtomic_FollowsSymlink(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("symlink semantics and privileges differ on Windows")
+	}
+	dir := t.TempDir()
+	target := filepath.Join(dir, "real.json")
+	link := filepath.Join(dir, "config.json")
+	require.NoError(t, os.WriteFile(target, []byte("old"), 0600))
+	require.NoError(t, os.Symlink(target, link))
+
+	require.NoError(t, writeFileAtomic(link, []byte("new-contents")))
+
+	info, err := os.Lstat(link)
+	require.NoError(t, err)
+	require.NotZero(t, info.Mode()&os.ModeSymlink, "config.json must stay a symlink, not become a regular file")
+
+	got, err := os.ReadFile(target)
+	require.NoError(t, err)
+	require.Equal(t, "new-contents", string(got), "the symlink's target must receive the new contents")
+}
+
 func TestWriteFileAtomic_LeavesNoTempOnSuccess(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
