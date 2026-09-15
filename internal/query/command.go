@@ -48,16 +48,16 @@ type command struct {
 // SQL read, with no engine routing to other backends.
 func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "query [sql]",
+		Use:   "query",
 		Short: "Run a bounded Flink SQL query and print its results.",
 		Long: "Run a bounded (snapshot) Flink SQL query, block until it finishes, and print the complete result set.\n\n" +
-			"The SQL can be given as `--sql` or as a positional argument, but not both.\n\n" +
+			"The SQL is given with `--sql`, or with `--file` to read it from a file.\n\n" +
 			"Unlike statement creation, which submits a statement and returns immediately, this command waits for every " +
 			"result page and exits with a non-zero status if the statement fails. It is intended for scripting and " +
 			"one-shot queries against a bounded (point-in-time) result set.\n\n" +
 			"With `-o json` or `-o yaml`, output defaults to an envelope carrying the column schema alongside the rows, " +
 			"since the rows on their own carry no type information. Pass `--raw` for a bare array of row objects instead.",
-		Args: cobra.MaximumNArgs(1),
+		Args: cobra.NoArgs,
 		// Hidden until the flag targets an org; cfg.IsTest keeps it visible to the
 		// integration suite regardless of the (unreachable in tests) LD evaluation.
 		Hidden: !(cfg.IsTest || featureflags.Manager.BoolVariation(queryFeatureFlag, cfg.Context(), cliconfig.CliLaunchDarklyClient, true, false)),
@@ -77,22 +77,17 @@ func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
 				Text: "Emit a bare JSON array of rows, with no envelope, for a script that only wants the data.",
 				Code: `confluent flink query --sql "SELECT * FROM orders LIMIT 10;" --output json --raw`,
 			},
-			examples.Example{
-				Text: "Pass the SQL as a positional argument instead of `--sql`.",
-				Code: `confluent flink query "SELECT * FROM orders LIMIT 10;"`,
-			},
 		),
 	}
 
 	c := &command{AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	cmd.RunE = c.runQuery
 
-	cmd.Flags().String("sql", "", `The Flink SQL statement. Alternatively, pass it as a positional argument or with "-f".`)
-	cmd.Flags().StringP("file", "f", "", `Path to a file containing the Flink SQL statement. Alternatively, pass the SQL with "--sql" or as a positional argument.`)
+	cmd.Flags().String("sql", "", `The Flink SQL statement. Alternatively, pass it with "-f".`)
+	cmd.Flags().StringP("file", "f", "", `Path to a file containing the Flink SQL statement. Alternatively, pass the SQL with "--sql".`)
 	pcmd.AddComputePoolFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddDatabaseFlag(cmd, c.AuthenticatedCLICommand)
-	c.addClusterAlias(cmd)
 	cmd.Flags().StringSlice("property", []string{}, "A mechanism to pass properties in the form key=value when creating a Flink statement.")
 	cmd.Flags().Duration("wait-timeout", config.DefaultTimeoutDuration, "Maximum time to wait for the query to finish before giving up.")
 	cmd.Flags().Int("max-rows", 0, "Stop fetching and discard the rest after this many rows, or 0 to fetch every row. Client-side only: rows past the limit are still produced by the query.")
@@ -104,27 +99,11 @@ func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 
-	cmd.MarkFlagsMutuallyExclusive("database", "cluster")
+	cmd.MarkFlagsOneRequired("sql", "file")
+	cmd.MarkFlagsMutuallyExclusive("sql", "file")
 	cmd.MarkFlagsMutuallyExclusive("environment", "catalog")
 
 	return cmd
-}
-
-// addClusterAlias is a separate flag, not shared storage: ParseFlagsIntoContext
-// persists "cluster" to the active Kafka context but never "database".
-func (c *command) addClusterAlias(cmd *cobra.Command) {
-	cmd.Flags().String("cluster", "", `Alias for "--database". Unlike "--database", this also sets the CLI's active Kafka cluster context, the same as it does on every other command.`)
-	pcmd.RegisterFlagCompletionFunc(cmd, "cluster", func(cmd *cobra.Command, args []string) []string {
-		if err := c.PersistentPreRunE(cmd, args); err != nil {
-			return nil
-		}
-
-		environmentId, err := c.Context.EnvironmentId()
-		if err != nil {
-			return nil
-		}
-		return pcmd.AutocompleteClusters(environmentId, c.V2Client)
-	})
 }
 
 // addCatalogAlias shares --environment's pflag.Value directly, since --environment
@@ -134,13 +113,13 @@ func (c *command) addCatalogAlias(cmd *cobra.Command) {
 	cmd.Flags().Var(environmentFlag.Value, "catalog", `Alias for "--environment".`)
 }
 
-func (c *command) runQuery(cmd *cobra.Command, args []string) error {
+func (c *command) runQuery(cmd *cobra.Command, _ []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	sql, err := resolveSQL(cmd, args)
+	sql, err := resolveSQL(cmd)
 	if err != nil {
 		return err
 	}
@@ -302,48 +281,32 @@ func (c *command) resolveDatabase(cmd *cobra.Command) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	cluster, err := cmd.Flags().GetString("cluster")
-	if err != nil {
-		return "", err
-	}
-	if cluster != "" {
-		return cluster, nil
-	}
 	if database != "" {
 		return database, nil
 	}
 	return c.Context.KafkaClusterContext.GetActiveKafkaClusterId(), nil
 }
 
-func resolveSQL(cmd *cobra.Command, args []string) (string, error) {
+// resolveSQL assumes cobra's flag-group validation already guaranteed exactly
+// one of "sql"/"file" is set.
+func resolveSQL(cmd *cobra.Command) (string, error) {
 	sql, err := cmd.Flags().GetString("sql")
 	if err != nil {
 		return "", err
+	}
+	if sql != "" {
+		return sql, nil
 	}
 
 	file, err := cmd.Flags().GetString("file")
 	if err != nil {
 		return "", err
 	}
-
-	positional := len(args) == 1
-
-	switch {
-	case positional && sql != "", positional && file != "", sql != "" && file != "":
-		return "", errors.New("the SQL statement must be given exactly one way: as a positional argument, with the `--sql` flag, or with the `--file` flag")
-	case positional:
-		return args[0], nil
-	case sql != "":
-		return sql, nil
-	case file != "":
-		contents, err := os.ReadFile(file)
-		if err != nil {
-			return "", fmt.Errorf(`failed to read the SQL statement from "%s": %v`, file, err)
-		}
-		return string(contents), nil
-	default:
-		return "", errors.New("the SQL statement is required: pass it as a positional argument, with the `--sql` flag, or with the `--file` flag")
+	contents, err := os.ReadFile(file)
+	if err != nil {
+		return "", fmt.Errorf(`failed to read the SQL statement from "%s": %v`, file, err)
 	}
+	return string(contents), nil
 }
 
 func (c *command) buildQueryProperties(cmd *cobra.Command, catalog, database string) (map[string]string, error) {
