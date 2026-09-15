@@ -1,6 +1,7 @@
-+-------------+---------+
-| Current     | true    |
-| ID          | abc-123 |
-| Name        | default |
-| JIT Enabled | true    |
-+-------------+---------+
++--------------+---------+
+| Current      | true    |
+| ID           | abc-123 |
+| Name         | default |
+| JIT Enabled  | true    |
+| SCIM Enabled | true    |
++--------------+---------+
