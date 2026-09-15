@@ -8,18 +8,18 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
-	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
+	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
 )
 
 var ksqlCluster1 = ksqlv2.KsqldbcmV2Cluster{
 	Id: ksqlv2.PtrString("lksqlc-ksql5"),
 	Spec: &ksqlv2.KsqldbcmV2ClusterSpec{
 		DisplayName: ksqlv2.PtrString("account ksql"),
-		KafkaCluster: &ksqlv2.ObjectReference{
+		KafkaCluster: &ksqlv2.EnvScopedObjectReference{
 			Id:          "lkc-qwert",
 			Environment: ksqlv2.PtrString("env-12345"),
 		},
-		Environment:              &ksqlv2.ObjectReference{Id: "env-12345"},
+		Environment:              &ksqlv2.GlobalObjectReference{Id: "env-12345"},
 		UseDetailedProcessingLog: ksqlv2.PtrBool(true),
 	},
 	Status: &ksqlv2.KsqldbcmV2ClusterStatus{
@@ -34,11 +34,11 @@ var ksqlCluster2 = ksqlv2.KsqldbcmV2Cluster{
 	Id: ksqlv2.PtrString("lksqlc-woooo"),
 	Spec: &ksqlv2.KsqldbcmV2ClusterSpec{
 		DisplayName: ksqlv2.PtrString("kay cee queue elle"),
-		KafkaCluster: &ksqlv2.ObjectReference{
+		KafkaCluster: &ksqlv2.EnvScopedObjectReference{
 			Id:          "lkc-zxcvb",
 			Environment: ksqlv2.PtrString("env-12345"),
 		},
-		Environment: &ksqlv2.ObjectReference{Id: "env-12345"},
+		Environment: &ksqlv2.GlobalObjectReference{Id: "env-12345"},
 	},
 	Status: &ksqlv2.KsqldbcmV2ClusterStatus{
 		HttpEndpoint: ksqlv2.PtrString("SASL_SSL://ksql-endpoint"),
@@ -52,11 +52,11 @@ var ksqlClusterForDetailedProcessingLogFalse = ksqlv2.KsqldbcmV2Cluster{
 	Id: ksqlv2.PtrString("lksqlc-woooo"),
 	Spec: &ksqlv2.KsqldbcmV2ClusterSpec{
 		DisplayName: ksqlv2.PtrString("kay cee queue elle"),
-		KafkaCluster: &ksqlv2.ObjectReference{
+		KafkaCluster: &ksqlv2.EnvScopedObjectReference{
 			Id:          "lkc-zxcvb",
 			Environment: ksqlv2.PtrString("env-12345"),
 		},
-		Environment:              &ksqlv2.ObjectReference{Id: "env-12345"},
+		Environment:              &ksqlv2.GlobalObjectReference{Id: "env-12345"},
 		UseDetailedProcessingLog: ksqlv2.PtrBool(false),
 	},
 	Status: &ksqlv2.KsqldbcmV2ClusterStatus{
@@ -121,12 +121,12 @@ func handleKsqlCluster(t *testing.T) http.HandlerFunc {
 					Id: ksqlv2.PtrString("lksqlc-ksql1"),
 					Spec: &ksqlv2.KsqldbcmV2ClusterSpec{
 						DisplayName: ksqlv2.PtrString("account ksql"),
-						KafkaCluster: &ksqlv2.ObjectReference{
+						KafkaCluster: &ksqlv2.EnvScopedObjectReference{
 							Id:          "lkc-12345",
 							Environment: ksqlv2.PtrString("env-12345"),
 						},
-						CredentialIdentity: &ksqlv2.ObjectReference{Id: "u-123456"},
-						Environment:        &ksqlv2.ObjectReference{Id: "env-12345"},
+						CredentialIdentity: &ksqlv2.TypedGlobalObjectReference{Id: "u-123456"},
+						Environment:        &ksqlv2.GlobalObjectReference{Id: "env-12345"},
 					},
 					Status: &ksqlv2.KsqldbcmV2ClusterStatus{
 						HttpEndpoint: ksqlv2.PtrString("SASL_SSL://ksql-endpoint"),
@@ -140,12 +140,12 @@ func handleKsqlCluster(t *testing.T) http.HandlerFunc {
 					Id: ksqlv2.PtrString("lksqlc-12345"),
 					Spec: &ksqlv2.KsqldbcmV2ClusterSpec{
 						DisplayName: ksqlv2.PtrString("account ksql"),
-						KafkaCluster: &ksqlv2.ObjectReference{
+						KafkaCluster: &ksqlv2.EnvScopedObjectReference{
 							Id:          "lkc-abcde",
 							Environment: ksqlv2.PtrString("env-12345"),
 						},
-						Environment:        &ksqlv2.ObjectReference{Id: "env-12345"},
-						CredentialIdentity: ksqlv2.NewObjectReference("sa-12345", "", ""),
+						Environment:        &ksqlv2.GlobalObjectReference{Id: "env-12345"},
+						CredentialIdentity: ksqlv2.NewTypedGlobalObjectReference("sa-12345", "", ""),
 					},
 					Status: &ksqlv2.KsqldbcmV2ClusterStatus{
 						HttpEndpoint: ksqlv2.PtrString("SASL_SSL://ksql-endpoint"),
