@@ -907,7 +907,9 @@ func handleIamGroupMappings(t *testing.T) http.HandlerFunc {
 func handleIamGroupMapping(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if id != groupMappingId && id != "group-def" {
+		// pool-legacy stands for a group mapping created during early access, whose id carries
+		// the identity-pool prefix but still resolves; the command's id guard must accept it.
+		if id != groupMappingId && id != "group-def" && id != "pool-legacy" {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return
