@@ -8,7 +8,10 @@ func (s *CLITestSuite) TestTableflowCatalogIntegration() {
 		{args: "tableflow catalog-integration create my-snowflake-ci --cluster lkc-123456 --type snowflake --endpoint https://vuser1_polaris.snowflakecomputing.com/ --client-id client-id --client-secret client-secret --warehouse warehouse --allowed-scope allowed-scope --custom-namespace my-custom-ns", fixture: "tableflow/catalog-integration/create-snowflake-custom-namespace.golden"},
 		{args: "tableflow catalog-integration create my-catalog-integration --cluster lkc-123456 --type unity --workspace-endpoint https://dbc-1.cloud.databricks.com --catalog-name tableflow-quickstart-catalog --unity-client-id $CLIENT_ID --unity-client-secret $CLIENT_SECRET", fixture: "tableflow/catalog-integration/create-unity.golden"},
 		{args: "tableflow catalog-integration create my-catalog-integration --cluster lkc-123456 --type unity --workspace-endpoint https://dbc-1.cloud.databricks.com --catalog-name tableflow-quickstart-catalog --unity-client-id $CLIENT_ID --unity-client-secret $CLIENT_SECRET --custom-schema my-custom-schema", fixture: "tableflow/catalog-integration/create-unity-custom-schema.golden"},
-		{args: "tableflow catalog-integration delete tci-abc123 tci-def456 --cluster lkc-123456", input: "y\n", fixture: "tableflow/catalog-integration/delete-multiple.golden"},
+		{args: "tableflow catalog-integration create my-catalog-integration --cluster lkc-123456 --type unity --workspace-endpoint https://dbc-1.cloud.databricks.com --unity-client-id $CLIENT_ID --unity-client-secret $CLIENT_SECRET", fixture: "tableflow/catalog-integration/create-unity-missing-catalog-name.golden", exitCode: 1},
+		{args: "tableflow catalog-integration create my-biglake-ci --cluster lkc-123456 --type biglake --provider-integration cspi-stgce89r7 --gcp-project-id my-gcp-project --catalog-name catalog-name", fixture: "tableflow/catalog-integration/create-biglake.golden"},
+		{args: "tableflow catalog-integration create my-biglake-ci --cluster lkc-123456 --type biglake --provider-integration cspi-stgce89r7 --gcp-project-id my-gcp-project --catalog-name catalog-name --custom-namespace my-custom-ns", fixture: "tableflow/catalog-integration/create-biglake-custom-namespace.golden"},
+		{args: "tableflow catalog-integration delete tci-abc123 tci-def456 tci-jkl012 --cluster lkc-123456", input: "y\n", fixture: "tableflow/catalog-integration/delete-multiple.golden"},
 		{args: "tableflow catalog-integration delete tci-abc123 tci-def456 tci-invalid --cluster lkc-123456", fixture: "tableflow/catalog-integration/delete-invalid.golden", exitCode: 1},
 		{args: "tableflow catalog-integration list --cluster lkc-123456", fixture: "tableflow/catalog-integration/list.golden"},
 		{args: "tableflow catalog-integration list --cluster lkc-123456 -o json", fixture: "tableflow/catalog-integration/list-json.golden"},
@@ -16,6 +19,8 @@ func (s *CLITestSuite) TestTableflowCatalogIntegration() {
 		{args: "tableflow catalog-integration describe tci-abc123 --cluster lkc-123456 -o json", fixture: "tableflow/catalog-integration/describe-aws-glue-json.golden"},
 		{args: "tableflow catalog-integration describe tci-def456 --cluster lkc-123456", fixture: "tableflow/catalog-integration/describe-snowflake.golden"},
 		{args: "tableflow catalog-integration describe tci-ghi789 --cluster lkc-123456", fixture: "tableflow/catalog-integration/describe-unity.golden"},
+		{args: "tableflow catalog-integration describe tci-jkl012 --cluster lkc-123456", fixture: "tableflow/catalog-integration/describe-biglake.golden"},
+		{args: "tableflow catalog-integration describe tci-jkl012 --cluster lkc-123456 -o json", fixture: "tableflow/catalog-integration/describe-biglake-json.golden"},
 	}
 
 	for _, test := range tests {
@@ -32,6 +37,8 @@ func (s *CLITestSuite) TestTableflowCatalogIntegrationUpdate() {
 		{args: "tableflow catalog-integration update tci-abc123 --cluster lkc-123456 --custom-database new-custom-db", fixture: "tableflow/catalog-integration/update-aws-glue-custom-database.golden"},
 		{args: "tableflow catalog-integration update tci-def456 --cluster lkc-123456 --custom-namespace new-custom-ns", fixture: "tableflow/catalog-integration/update-snowflake-custom-namespace.golden"},
 		{args: "tableflow catalog-integration update tci-ghi789 --cluster lkc-123456 --custom-schema new-custom-schema", fixture: "tableflow/catalog-integration/update-unity-custom-schema.golden"},
+		{args: "tableflow catalog-integration update tci-jkl012 --cluster lkc-123456 --custom-namespace new-custom-ns", fixture: "tableflow/catalog-integration/update-biglake-custom-namespace.golden"},
+		{args: "tableflow catalog-integration update tci-abc123 --cluster lkc-123456 --custom-namespace new-custom-ns", fixture: "tableflow/catalog-integration/update-aws-custom-namespace-fail.golden", exitCode: 1},
 		{args: "tableflow catalog-integration update tci-abc123 --cluster lkc-123456", fixture: "tableflow/catalog-integration/update-fail-no-flags.golden", exitCode: 1},
 	}
 
@@ -57,6 +64,7 @@ func (s *CLITestSuite) TestTableflowTopic() {
 		{args: "tableflow topic enable topic-byob --cluster lkc-123456 --retention-ms 604800000 --storage-type BYOS --provider-integration cspi-stgce89r7 --bucket-name bucket_1 --record-failure-strategy SKIP", fixture: "tableflow/topic/enable-topic-byob.golden"},
 		{args: "tableflow topic enable topic-managed --cluster lkc-123456 --retention-ms 604800000 --storage-type MANAGED --table-formats DELTA", fixture: "tableflow/topic/enable-topic-managed.golden"},
 		{args: "tableflow topic enable topic-azure --cluster lkc-123456 --retention-ms 604800000 --storage-type AzureDataLakeStorageGen2 --provider-integration cspi-stgce89r7 --container-name container1 --storage-account-name acc1", fixture: "tableflow/topic/enable-topic-azure.golden"},
+		{args: "tableflow topic enable topic-gcp --cluster lkc-123456 --retention-ms 604800000 --storage-type GoogleCloudStorage --provider-integration cspi-stgce89r7 --bucket-name bucket_1", fixture: "tableflow/topic/enable-topic-gcp.golden"},
 		{args: "tableflow topic create topic-byob --cluster lkc-123456 --retention-ms 604800000 --storage-type BYOS --provider-integration cspi-stgce89r7 --bucket-name bucket_1 --record-failure-strategy SKIP", fixture: "tableflow/topic/enable-topic-byob.golden"},
 		{args: "tableflow topic create topic-managed --cluster lkc-123456 --retention-ms 604800000 --storage-type MANAGED --table-formats DELTA", fixture: "tableflow/topic/enable-topic-managed.golden"},
 		{args: "tableflow topic enable topic-azure --cluster lkc-123456 --retention-ms 604800000 --storage-type AzureDataLakeStorageGen2 --provider-integration cspi-stgce89r7 --container-name container1 --storage-account-name acc1", fixture: "tableflow/topic/enable-topic-azure.golden"},
@@ -74,9 +82,11 @@ func (s *CLITestSuite) TestTableflowTopic() {
 		{args: "tableflow topic disable topic-managed --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/disable-topic.golden"},
 		{args: "tableflow topic disable topic-managed topic-byob --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/disable-multiple-topics.golden"},
 		{args: "tableflow topic disable topic-azure --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/disable-topic-azure.golden"},
+		{args: "tableflow topic disable topic-gcp --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/disable-topic-gcp.golden"},
 		{args: "tableflow topic delete topic-managed --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/delete-topic.golden"},
 		{args: "tableflow topic delete topic-managed topic-byob --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/delete-multiple-topics.golden"},
 		{args: "tableflow topic delete topic-azure --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/delete-azure-topic.golden"},
+		{args: "tableflow topic delete topic-gcp --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/delete-gcp-topic.golden"},
 		{args: "tableflow topic delete invalid-topic --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/delete-topic-invalid-1.golden", exitCode: 1},
 		{args: "tableflow topic delete invalid-topic --cluster lkc-invalid", input: "y\n", fixture: "tableflow/topic/delete-topic-invalid-2.golden", exitCode: 1},
 	}
@@ -91,8 +101,10 @@ func (s *CLITestSuite) TestTableflowTopicDescribe() {
 	tests := []CLITest{
 		{args: "tableflow topic describe topic-byob --cluster lkc-123456", fixture: "tableflow/topic/describe-topic.golden"},
 		{args: "tableflow topic describe topic-azure --cluster lkc-123456", fixture: "tableflow/topic/describe-topic-azure.golden"},
+		{args: "tableflow topic describe topic-gcp --cluster lkc-123456", fixture: "tableflow/topic/describe-topic-gcp.golden"},
 		{args: "tableflow topic describe topic-byob --cluster lkc-123456 --output json", fixture: "tableflow/topic/describe-topic-json.golden"},
 		{args: "tableflow topic describe topic-azure --cluster lkc-123456 --output json", fixture: "tableflow/topic/describe-topic-azure-json.golden"},
+		{args: "tableflow topic describe topic-gcp --cluster lkc-123456 --output json", fixture: "tableflow/topic/describe-topic-gcp-json.golden"},
 	}
 
 	for _, test := range tests {

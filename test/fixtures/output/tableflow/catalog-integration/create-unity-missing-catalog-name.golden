@@ -1,0 +1,1 @@
+Error: `--workspace-endpoint`, `--catalog-name`, `--unity-client-id` and `--unity-client-secret` flags are required for catalog integration type `unity`.
