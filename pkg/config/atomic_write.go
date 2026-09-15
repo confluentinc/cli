@@ -10,28 +10,31 @@ import (
 // only, since they hold credentials.
 const configFilePerm os.FileMode = 0600
 
-// resolveConfigTarget follows a symlink at path to the real file it points to, so an
-// atomic rename replaces that target rather than the symlink itself. os.WriteFile (the
-// pre-atomic write) followed symlinks this way, so a user-managed config.json symlink
-// keeps working. A non-symlink or absent path is returned unchanged.
+// maxSymlinkHops bounds symlink chain resolution so a cyclic link can't loop forever,
+// mirroring the OS's own ELOOP guard.
+const maxSymlinkHops = 40
+
+// resolveConfigTarget follows a symlink at path all the way to the real file it points
+// to, so an atomic rename replaces that target rather than a link in the chain.
+// os.WriteFile (the pre-atomic write) followed symlinks this way, including chains that
+// end at a not-yet-existing target, so a user-managed config.json symlink keeps working.
+// A non-symlink or absent path is returned unchanged (the write creates/replaces it).
 func resolveConfigTarget(path string) (string, error) {
-	info, err := os.Lstat(path)
-	if err != nil || info.Mode()&os.ModeSymlink == 0 {
-		return path, nil // absent (fresh file), unstattable, or not a symlink
+	for hop := 0; hop < maxSymlinkHops; hop++ {
+		info, err := os.Lstat(path)
+		if err != nil || info.Mode()&os.ModeSymlink == 0 {
+			return path, nil // absent (fresh file), unstattable, or a regular file: write here
+		}
+		target, err := os.Readlink(path)
+		if err != nil {
+			return "", fmt.Errorf("unable to resolve config symlink %s: %w", path, err)
+		}
+		if !filepath.IsAbs(target) {
+			target = filepath.Join(filepath.Dir(path), target)
+		}
+		path = target
 	}
-	if resolved, err := filepath.EvalSymlinks(path); err == nil {
-		return resolved, nil
-	}
-	// Broken link (target does not exist yet): resolve one hop and create the target,
-	// matching os.WriteFile following the link with O_CREATE.
-	target, err := os.Readlink(path)
-	if err != nil {
-		return "", fmt.Errorf("unable to resolve config symlink %s: %w", path, err)
-	}
-	if !filepath.IsAbs(target) {
-		target = filepath.Join(filepath.Dir(path), target)
-	}
-	return target, nil
+	return "", fmt.Errorf("config symlink chain too deep (over %d hops)", maxSymlinkHops)
 }
 
 // writeFileAtomic writes data to path via a temp file in the SAME directory,
