@@ -1,6 +1,7 @@
 package results
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -173,6 +174,90 @@ func normalizeMultiSet(result any, dataType flinkgatewayv1.DataType) any {
 		normalized = append(normalized, []any{value, count})
 	}
 	return normalized
+}
+
+func (s *ResultConverterTestSuite) TestConvertVariantFieldExamples() {
+	tests := []struct {
+		name string
+		wire string
+		want string
+	}{
+		{"simple object", `[1,[["a",[11,"a"]]]]`, `{"a":"a"}`},
+		{
+			"nested example from spec",
+			`[1,[["device",[11,"sensor-7"]],["meta",[1,[["n",[4,"7"]],["ok",[3,"TRUE"]]]]],["price",[10,"100.00"]],["seen_at",[13,"2026-07-28 09:14:02.117000"]],["seq",[7,"9223372036854775807"]],["tags",[2,[[11,"hot"],[0]]]],["temp",[9,"21.5"]],["weird",[-1,"x'0102'","x'7f2a'"]]]]`,
+			`{"device":"sensor-7","meta":{"n":7,"ok":true},"price":100,"seen_at":"2026-07-28T09:14:02.117","seq":9223372036854775807,"tags":["hot",null],"temp":21.5,"weird":"<unsupported>"}`,
+		},
+		{"bytes as base64", `[15,"x'7f0203'"]`, `"fwID"`},
+		{"time", `[16,"09:14:02.123"]`, `"09:14:02.123"`},
+		{"timestamp nanosecond", `[17,"2026-07-28 09:14:02.123456789"]`, `"2026-07-28T09:14:02.123456789"`},
+		{"timestamp_ltz always utc", `[14,"2026-07-28 09:14:02.117000","-05:00"]`, `"2026-07-28T09:14:02.117+00:00"`},
+		{"timestamp_ltz nanosecond always utc", `[18,"2026-07-28 09:14:02.123456789","-05:00"]`, `"2026-07-28T09:14:02.123456789+00:00"`},
+		{"non-finite double falls back to string", `[9,"NaN"]`, `"NaN"`},
+		{"non-json number falls back to string", `[8,"1."]`, `"1."`},
+		{"missing scalar falls back to string", `[6]`, `""`},
+		{"top-level null", `[0]`, `null`},
+		{"unsupported marker", `[-1,"x'0102'","x'7f2a'"]`, `"<unsupported>"`},
+		{"invalid marker", `[-2]`, `"<invalid>"`},
+	}
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			var raw any
+			require.NoError(s.T(), json.Unmarshal([]byte(test.wire), &raw))
+			resultField := convertToInternalField(raw, flinkgatewayv1.ColumnDetails{
+				Name: testColumnName,
+				Type: flinkgatewayv1.DataType{Type: "VARIANT"},
+			})
+			require.Equal(s.T(), types.Variant, resultField.GetType())
+			require.Equal(s.T(), test.want, resultField.ToString())
+		})
+	}
+}
+
+func (s *ResultConverterTestSuite) TestConvertVariantNestedInArray() {
+	variantType := flinkgatewayv1.DataType{Type: string(types.Variant)}
+	column := flinkgatewayv1.ColumnDetails{
+		Name: testColumnName,
+		Type: flinkgatewayv1.DataType{Type: string(types.Array), ElementType: &variantType},
+	}
+	var raw any
+	require.NoError(s.T(), json.Unmarshal([]byte(`[[1,[["a",[11,"x"]]]],[0]]`), &raw))
+	resultField := convertToInternalField(raw, column)
+	require.Equal(s.T(), types.Array, resultField.GetType())
+	require.Equal(s.T(), `[{"a":"x"}, null]`, resultField.ToString())
+}
+
+func (s *ResultConverterTestSuite) TestConvertVariantField() {
+	rapid.Check(s.T(), func(t *rapid.T) {
+		dataType := generators.VariantDataType().Draw(t, "data type")
+		field := generators.VariantResultItem().Draw(t, "a field")
+		resultField := convertToInternalField(field, flinkgatewayv1.ColumnDetails{
+			Name: testColumnName,
+			Type: dataType,
+		})
+		require.NotNil(t, resultField)
+		require.Equal(t, types.Variant, resultField.GetType())
+		require.IsType(t, types.VariantStatementResultField{}, resultField)
+		// A VARIANT cell always renders as valid JSON.
+		var parsed any
+		require.NoError(t, json.Unmarshal([]byte(resultField.ToString()), &parsed))
+	})
+}
+
+func (s *ResultConverterTestSuite) TestConvertVariantFieldOnPrem() {
+	rapid.Check(s.T(), func(t *rapid.T) {
+		dataType := generators.VariantDataTypeOnPrem().Draw(t, "data type")
+		field := generators.VariantResultItem().Draw(t, "a field")
+		resultField := convertToInternalFieldOnPrem(field, cmfsdk.ResultSchemaColumn{
+			Name: testColumnName,
+			Type: dataType,
+		})
+		require.NotNil(t, resultField)
+		require.Equal(t, types.Variant, resultField.GetType())
+		require.IsType(t, types.VariantStatementResultField{}, resultField)
+		var parsed any
+		require.NoError(t, json.Unmarshal([]byte(resultField.ToString()), &parsed))
+	})
 }
 
 func (s *ResultConverterTestSuite) TestConvertFieldOnPrem() {
