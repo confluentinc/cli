@@ -460,8 +460,11 @@ func (s *CLITestSuite) TestIamIpGroup() {
 		{args: "iam ip-group delete ipg-wjnde --force", fixture: "iam/ip-group/delete.golden"},
 		{args: "iam ip-group delete ipg-wjnde", input: "y\n", fixture: "iam/ip-group/delete-prompt.golden"},
 		{args: "iam ip-group delete ipg-dne --force", fixture: "iam/ip-group/delete-dne.golden", exitCode: 1},
-		// Update is a plain PATCH of the changed fields; --cidr-blocks replaces the list.
-		{args: "iam ip-group update ipg-wjnde --name new-demo-group --cidr-blocks 1.2.3.4/12,147.150.200.0/24", fixture: "iam/ip-group/update.golden"},
+		{args: "iam ip-group update ipg-wjnde --name new-demo-group --add-cidr-blocks 1.2.3.4/12 --remove-cidr-blocks 168.150.200.0/24", fixture: "iam/ip-group/update.golden"},
+		{args: "iam ip-group update ipg-wjnde --name new-demo-group --add-cidr-blocks 1.2.3.4/12,147.150.200.0/24 --remove-cidr-blocks 168.150.200.0/24", fixture: "iam/ip-group/update-resource-duplicate.golden"},
+		{args: "iam ip-group update ipg-wjnde --name new-demo-group --add-cidr-blocks 1.2.3.4/12 --remove-cidr-blocks 1.2.3.4/12", fixture: "iam/ip-group/update-resource-add-and-remove.golden"},
+		{args: "iam ip-group update ipg-wjnde --name new-demo-group --add-cidr-blocks 1.2.3.4/12 --remove-cidr-blocks 1.1.1.1/1", fixture: "iam/ip-group/update-resource-remove-not-exist.golden"},
+		// A name-only update: the full-object seed carries the current CIDR blocks.
 		{args: "iam ip-group update ipg-wjnde --name new-demo-group", fixture: "iam/ip-group/update-name-only.golden"},
 	}
 

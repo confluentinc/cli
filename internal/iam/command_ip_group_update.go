@@ -10,6 +10,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/types"
 )
 
 func (c *ipGroupCommand) newUpdateCommand() *cobra.Command {
@@ -21,8 +22,8 @@ func (c *ipGroupCommand) newUpdateCommand() *cobra.Command {
 		RunE:              c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update the name and CIDR blocks of IP group "ipg-12345":`,
-				Code: `confluent iam ip-group update ipg-12345 --name "New Group Name" --cidr-blocks 123.234.0.0/16,168.150.200.0/24`,
+				Text: `Update the name and add a CIDR block to IP group "ipg-12345":`,
+				Code: `confluent iam ip-group update ipg-12345 --name "New Group Name" --add-cidr-blocks 123.234.0.0/16`,
 			},
 		),
 	}
@@ -31,7 +32,8 @@ func (c *ipGroupCommand) newUpdateCommand() *cobra.Command {
 
 	// Optional flags
 	cmd.Flags().String("name", "", "Updated name of the IP group.")
-	cmd.Flags().StringSlice("cidr-blocks", nil, "A comma-separated list of CIDR blocks in IP group.")
+	cmd.Flags().StringSlice("add-cidr-blocks", nil, "A comma-separated list of CIDR blocks to add.")
+	cmd.Flags().StringSlice("remove-cidr-blocks", nil, "A comma-separated list of CIDR blocks to remove.")
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -51,7 +53,6 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	updateReq.GroupName = current.GroupName
-	updateReq.CidrBlocks = current.CidrBlocks
 
 	if cmd.Flags().Changed("name") {
 		groupName, err := cmd.Flags().GetString("name")
@@ -61,13 +62,19 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 		updateReq.GroupName = iamipfilteringv2.PtrString(groupName)
 	}
 
-	if cmd.Flags().Changed("cidr-blocks") {
-		cidrBlocks, err := cmd.Flags().GetStringSlice("cidr-blocks")
-		if err != nil {
-			return err
-		}
-		updateReq.CidrBlocks = &cidrBlocks
+	addCidrBlocks, err := cmd.Flags().GetStringSlice("add-cidr-blocks")
+	if err != nil {
+		return err
 	}
+	removeCidrBlocks, err := cmd.Flags().GetStringSlice("remove-cidr-blocks")
+	if err != nil {
+		return err
+	}
+	cidrBlocks, warnings := types.AddAndRemove(current.GetCidrBlocks(), addCidrBlocks, removeCidrBlocks)
+	for _, warning := range warnings {
+		output.ErrPrintf(c.Config.EnableColor, "[WARN] %s\n", warning)
+	}
+	updateReq.CidrBlocks = &cidrBlocks
 
 	ipGroup, err := c.V2Client.UpdateIamIpGroup(id, updateReq)
 	if err != nil {
