@@ -1,0 +1,9 @@
+Updated IAM group mapping "pool-legacy".
++-------------+-----------------------+
+| ID          | pool-legacy           |
+| Name        | another-group-mapping |
+| Description | updated description   |
+| Filter      | true                  |
+| Principal   | pool-legacy           |
+| State       | ENABLED               |
++-------------+-----------------------+
