@@ -72,8 +72,6 @@ func (c *Client) UpdateIamIpFilter(filter iamipfilteringv2.IamV2IpFilter, id str
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-// iam ip group api calls
-
 // ===== IAM IP filtering IP groups API calls =====
 
 func (c *Client) CreateIamIpGroup(req iamipfilteringv2.IamV2IpGroup) (iamipfilteringv2.IamV2IpGroup, error) {
