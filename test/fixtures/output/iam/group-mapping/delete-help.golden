@@ -1,4 +1,4 @@
-Delete one or more group mappings.
+Delete one or more IAM group mappings.
 
 Usage:
   confluent iam group-mapping delete <id-1> [id-2] ... [id-n] [flags]

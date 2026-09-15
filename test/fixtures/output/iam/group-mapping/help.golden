@@ -1,14 +1,14 @@
-Manage SSO group mappings.
+Manage Confluent Cloud IAM group mappings.
 
 Usage:
   confluent iam group-mapping [command]
 
 Available Commands:
-  create      Create a group mapping.
-  delete      Delete one or more group mappings.
-  describe    Describe a group mapping.
-  list        List group mappings.
-  update      Update a group mapping.
+  create      Create an IAM group mapping.
+  delete      Delete one or more IAM group mappings.
+  describe    Describe an IAM group mapping.
+  list        List IAM group mappings.
+  update      Update an existing IAM group mapping.
 
 Global Flags:
   -h, --help            Show help for this command.
