@@ -1,6 +1,7 @@
 package results
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -173,6 +174,60 @@ func normalizeMultiSet(result any, dataType flinkgatewayv1.DataType) any {
 		normalized = append(normalized, []any{value, count})
 	}
 	return normalized
+}
+
+func (s *ResultConverterTestSuite) TestConvertVariantFieldNil() {
+	resultField := convertToInternalField(nil, flinkgatewayv1.ColumnDetails{
+		Name: testColumnName,
+		Type: flinkgatewayv1.DataType{Type: string(types.Variant)},
+	})
+	require.Equal(s.T(), types.Null, resultField.GetType())
+}
+
+func (s *ResultConverterTestSuite) TestConvertVariantNestedInArray() {
+	variantType := flinkgatewayv1.DataType{Type: string(types.Variant)}
+	column := flinkgatewayv1.ColumnDetails{
+		Name: testColumnName,
+		Type: flinkgatewayv1.DataType{Type: string(types.Array), ElementType: &variantType},
+	}
+	var raw any
+	require.NoError(s.T(), json.Unmarshal([]byte(`[[1,[["a",[11,"x"]]]],[0]]`), &raw))
+	resultField := convertToInternalField(raw, column)
+	require.Equal(s.T(), types.Array, resultField.GetType())
+	require.Equal(s.T(), `[{"a":"x"}, null]`, resultField.ToString())
+}
+
+func (s *ResultConverterTestSuite) TestConvertVariantField() {
+	rapid.Check(s.T(), func(t *rapid.T) {
+		dataType := generators.VariantDataType().Draw(t, "data type")
+		field := generators.VariantResultItem().Draw(t, "a field")
+		resultField := convertToInternalField(field, flinkgatewayv1.ColumnDetails{
+			Name: testColumnName,
+			Type: dataType,
+		})
+		require.NotNil(t, resultField)
+		require.Equal(t, types.Variant, resultField.GetType())
+		require.IsType(t, types.VariantStatementResultField{}, resultField)
+		// A VARIANT cell always renders as valid JSON.
+		var parsed any
+		require.NoError(t, json.Unmarshal([]byte(resultField.ToString()), &parsed))
+	})
+}
+
+func (s *ResultConverterTestSuite) TestConvertVariantFieldOnPrem() {
+	rapid.Check(s.T(), func(t *rapid.T) {
+		dataType := generators.VariantDataTypeOnPrem().Draw(t, "data type")
+		field := generators.VariantResultItem().Draw(t, "a field")
+		resultField := convertToInternalFieldOnPrem(field, cmfsdk.ResultSchemaColumn{
+			Name: testColumnName,
+			Type: dataType,
+		})
+		require.NotNil(t, resultField)
+		require.Equal(t, types.Variant, resultField.GetType())
+		require.IsType(t, types.VariantStatementResultField{}, resultField)
+		var parsed any
+		require.NoError(t, json.Unmarshal([]byte(resultField.ToString()), &parsed))
+	})
 }
 
 func (s *ResultConverterTestSuite) TestConvertFieldOnPrem() {
