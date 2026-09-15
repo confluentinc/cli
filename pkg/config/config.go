@@ -188,6 +188,11 @@ func (c *Config) DecryptCredentials() error {
 	return c.Validate()
 }
 
+// afterMissingConfigRead is a test seam invoked in Load's missing-file branch after the
+// read and before the initial (locked) save. It is a no-op in production; a test uses it
+// to deterministically interleave a competing writer at exactly that point.
+var afterMissingConfigRead = func() {}
+
 // Load reads the CLI config from disk.
 // Save a default version if none exists yet.
 func (c *Config) Load() error {
@@ -202,6 +207,7 @@ func (c *Config) Load() error {
 			// must survive. A config constructed without Load keeps a nil baseline and still
 			// writes whole.
 			c.snapshotBaseline()
+			afterMissingConfigRead()
 			if err := c.Save(); err != nil {
 				return fmt.Errorf("unable to save configuration file: %w", err)
 			}

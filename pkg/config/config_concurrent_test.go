@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -277,25 +276,32 @@ func TestLoad_FreshMachineDoesNotClobberConcurrentlyCreatedConfig(t *testing.T) 
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 
-	holder := newFileLock(path)
-	require.NoError(t, holder.lock(lockTimeout))
+	// Pause b right after it reads the file as missing, before its initial save, so the
+	// competing config appears in exactly that window (deterministic, no timing race).
+	reached := make(chan struct{})
+	proceed := make(chan struct{})
+	afterMissingConfigRead = func() {
+		afterMissingConfigRead = func() {} // one-shot: b's own later saves are not gated
+		close(reached)
+		<-proceed
+	}
+	t.Cleanup(func() { afterMissingConfigRead = func() {} })
 
 	b := New()
 	b.Filename = path
 	loadErr := make(chan error, 1)
-	go func() { loadErr <- b.Load() }() // reads the missing file, then blocks on the held lock
+	go func() { loadErr <- b.Load() }()
 
-	// b has passed the missing-file read and is waiting on the lock; now another session's
-	// config appears on disk before we release it.
-	time.Sleep(300 * time.Millisecond)
+	<-reached // b has read the file as missing and is paused before its save
+
 	other := New()
 	other.Filename = path
 	other.Platforms["from-other"] = &Platform{Name: "from-other", Server: "https://other.example.com"}
 	data, err := json.MarshalIndent(other, "", "  ")
 	require.NoError(t, err)
 	require.NoError(t, os.WriteFile(path, data, 0600))
-	require.NoError(t, holder.unlock())
 
+	close(proceed) // b resumes into its locked save, which must merge rather than clobber
 	require.NoError(t, <-loadErr)
 
 	final := New()
