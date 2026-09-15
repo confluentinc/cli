@@ -45,7 +45,7 @@ Results are written to `test/eval/results/environment-crosstalk.json`:
 
 ```json
 {
-  "build": "HEAD",
+  "build": "a1b2c3d",
   "cells": {
     "shared": {
       "Trials": 5,
