@@ -161,8 +161,7 @@ func (c *command) runQuery(cmd *cobra.Command, _ []string) error {
 	defer cancelTimeout()
 
 	environment, err := wait.Call(ctx, func() (orgv2.OrgV2Environment, error) {
-		env, _, err := c.V2Client.GetOrgEnvironment(environmentId)
-		return env, err
+		return c.V2Client.GetOrgEnvironment(environmentId)
 	})
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
