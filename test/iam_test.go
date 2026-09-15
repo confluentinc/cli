@@ -456,16 +456,22 @@ func (s *CLITestSuite) TestIamIpGroup() {
 	tests := []CLITest{
 		{args: "iam ip-group create demo-ip-group --cidr-blocks 168.150.200.0/24,147.150.200.0/24", fixture: "iam/ip-group/create.golden"},
 		{args: "iam ip-group list", fixture: "iam/ip-group/list.golden"},
-		{args: "iam ip-group describe ipg-wjnde", fixture: "iam/ip-group/describe.golden"},
-		{args: "iam ip-group delete ipg-wjnde --force", fixture: "iam/ip-group/delete.golden"},
-		{args: "iam ip-group delete ipg-wjnde", input: "y\n", fixture: "iam/ip-group/delete-prompt.golden"},
+		{args: "iam ip-group describe ipg-123abc", fixture: "iam/ip-group/describe.golden"},
+		{args: "iam ip-group delete ipg-123abc --force", fixture: "iam/ip-group/delete.golden"},
+		{args: "iam ip-group delete ipg-123abc", input: "y\n", fixture: "iam/ip-group/delete-prompt.golden"},
 		{args: "iam ip-group delete ipg-dne --force", fixture: "iam/ip-group/delete-dne.golden", exitCode: 1},
-		{args: "iam ip-group update ipg-wjnde --name new-demo-group --add-cidr-blocks 1.2.3.4/12 --remove-cidr-blocks 168.150.200.0/24", fixture: "iam/ip-group/update.golden"},
-		{args: "iam ip-group update ipg-wjnde --name new-demo-group --add-cidr-blocks 1.2.3.4/12,147.150.200.0/24 --remove-cidr-blocks 168.150.200.0/24", fixture: "iam/ip-group/update-resource-duplicate.golden"},
-		{args: "iam ip-group update ipg-wjnde --name new-demo-group --add-cidr-blocks 1.2.3.4/12 --remove-cidr-blocks 1.2.3.4/12", fixture: "iam/ip-group/update-resource-add-and-remove.golden"},
-		{args: "iam ip-group update ipg-wjnde --name new-demo-group --add-cidr-blocks 1.2.3.4/12 --remove-cidr-blocks 1.1.1.1/1", fixture: "iam/ip-group/update-resource-remove-not-exist.golden"},
+		// Multi-id delete: the confirmation names every id, each DELETE is issued, and a failure
+		// on one id does not stop the others (mixed run exits 1 after deleting the rest).
+		{args: "iam ip-group delete ipg-123abc ipg-456def", input: "n\n", fixture: "iam/ip-group/delete-multiple-refuse.golden"},
+		{args: "iam ip-group delete ipg-123abc ipg-456def", input: "y\n", fixture: "iam/ip-group/delete-multiple-success.golden"},
+		{args: "iam ip-group delete ipg-123abc ipg-inuse --force", fixture: "iam/ip-group/delete-multiple-mixed.golden", exitCode: 1},
+		{args: "iam ip-group delete ipg-123abc ipg-dne --force", fixture: "iam/ip-group/delete-multiple-dne.golden", exitCode: 1},
+		{args: "iam ip-group update ipg-123abc --name new-demo-group --add-cidr-blocks 1.2.3.4/12 --remove-cidr-blocks 168.150.200.0/24", fixture: "iam/ip-group/update.golden"},
+		{args: "iam ip-group update ipg-123abc --name new-demo-group --add-cidr-blocks 1.2.3.4/12,147.150.200.0/24 --remove-cidr-blocks 168.150.200.0/24", fixture: "iam/ip-group/update-resource-duplicate.golden"},
+		{args: "iam ip-group update ipg-123abc --name new-demo-group --add-cidr-blocks 1.2.3.4/12 --remove-cidr-blocks 1.2.3.4/12", fixture: "iam/ip-group/update-resource-add-and-remove.golden"},
+		{args: "iam ip-group update ipg-123abc --name new-demo-group --add-cidr-blocks 1.2.3.4/12 --remove-cidr-blocks 1.1.1.1/1", fixture: "iam/ip-group/update-resource-remove-not-exist.golden"},
 		// A name-only update: the full-object seed carries the current CIDR blocks.
-		{args: "iam ip-group update ipg-wjnde --name new-demo-group", fixture: "iam/ip-group/update-name-only.golden"},
+		{args: "iam ip-group update ipg-123abc --name new-demo-group", fixture: "iam/ip-group/update-name-only.golden"},
 		// Backend errors the command attaches suggestions to (cli.error_suggestions).
 		{args: "iam ip-group update ipg-lockout --add-cidr-blocks 1.2.3.4/32", fixture: "iam/ip-group/update-lock-out.golden", exitCode: 1},
 		{args: "iam ip-group delete ipg-inuse --force", fixture: "iam/ip-group/delete-related-filters.golden", exitCode: 1},

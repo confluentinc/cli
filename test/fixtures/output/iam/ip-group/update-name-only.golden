@@ -1,6 +1,6 @@
-Updated IAM IP group "ipg-wjnde".
+Updated IAM IP group "ipg-123abc".
 +-------------+--------------------------------+
-| ID          | ipg-wjnde                      |
+| ID          | ipg-123abc                     |
 | Name        | new-demo-group                 |
 | CIDR Blocks | 147.150.200.0/24,              |
 |             | 168.150.200.0/24               |

@@ -827,9 +827,10 @@ func handleIamIpGroups(t *testing.T) http.HandlerFunc {
 func handleIamIpGroup(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		// ipg-inuse and ipg-lockout exist only to reproduce two backend errors the command
-		// attaches suggestions to (cli.error_suggestions in the generator registry).
-		if id != ipGroupId && id != "ipg-inuse" && id != "ipg-lockout" {
+		// ipGroupSecondId is a plain second group for multi-id deletes. ipg-inuse and ipg-lockout
+		// exist only to reproduce two backend errors the command attaches suggestions to
+		// (cli.error_suggestions in the generator registry).
+		if id != ipGroupId && id != ipGroupSecondId && id != "ipg-inuse" && id != "ipg-lockout" {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return
@@ -856,7 +857,7 @@ func handleIamIpGroup(t *testing.T) http.HandlerFunc {
 			err = json.NewEncoder(w).Encode(&res)
 			require.NoError(t, err)
 		case http.MethodGet:
-			ipGroup := buildIamIpGroup(ipGroupId, "demo-ip-group", []string{"168.150.200.0/24", "147.150.200.0/24"})
+			ipGroup := buildIamIpGroup(id, "demo-ip-group", []string{"168.150.200.0/24", "147.150.200.0/24"})
 			err := json.NewEncoder(w).Encode(ipGroup)
 			require.NoError(t, err)
 		case http.MethodDelete:
