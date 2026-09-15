@@ -826,23 +826,47 @@ func handleIamIpGroups(t *testing.T) http.HandlerFunc {
 // Handler for: "/iam/v2/ip-groups/{id}"
 func handleIamIpGroup(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+		// ipGroupSecondId is a plain second group for multi-id deletes. ipg-inuse and ipg-lockout
+		// exist only to reproduce two backend errors the command attaches suggestions to
+		// (cli.error_suggestions in the generator registry).
+		if id != ipGroupId && id != ipGroupSecondId && id != "ipg-inuse" && id != "ipg-lockout" {
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+			return
+		}
 		switch r.Method {
 		case http.MethodPatch:
 			var req iamipfilteringv2.IamV2IpGroup
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			res := &iamipfilteringv2.IamV2IpGroup{
-				Id:         req.Id,
-				GroupName:  req.GroupName,
-				CidrBlocks: req.CidrBlocks,
+			if id == "ipg-lockout" {
+				w.WriteHeader(http.StatusBadRequest)
+				err = writeErrorJson(w, "this action would lock out the requester from IP address 203.0.113.7. Please try again from a permitted IP address.")
+				require.NoError(t, err)
+				return
 			}
-			err = json.NewEncoder(w).Encode(res)
+			// PATCH semantics: only the fields present in the body change; the id is the path's.
+			res := buildIamIpGroup(id, "demo-ip-group", []string{"168.150.200.0/24", "147.150.200.0/24"})
+			if req.GroupName != nil {
+				res.GroupName = req.GroupName
+			}
+			if req.CidrBlocks != nil {
+				res.CidrBlocks = req.CidrBlocks
+			}
+			err = json.NewEncoder(w).Encode(&res)
 			require.NoError(t, err)
 		case http.MethodGet:
-			ipGroup := buildIamIpGroup(ipGroupId, "demo-ip-group", []string{"168.150.200.0/24", "147.150.200.0/24"})
+			ipGroup := buildIamIpGroup(id, "demo-ip-group", []string{"168.150.200.0/24", "147.150.200.0/24"})
 			err := json.NewEncoder(w).Encode(ipGroup)
 			require.NoError(t, err)
 		case http.MethodDelete:
+			if id == "ipg-inuse" {
+				w.WriteHeader(http.StatusConflict)
+				err := writeErrorJson(w, "cannot delete an IP group with related IP filters")
+				require.NoError(t, err)
+				return
+			}
 			w.WriteHeader(http.StatusNoContent)
 		}
 	}
