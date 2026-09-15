@@ -265,6 +265,8 @@ github.com/confluentinc/proto-go-setter v0.3.0 h1:6BhgpDV5rWdEa+6LsnQWGV1udFboCa
 github.com/confluentinc/proto-go-setter v0.3.0/go.mod h1:WJkmDZf4f/nxGzjYJ+o3AsXI2hk64gLM5XlZrmlzs1s=
 github.com/confluentinc/schema-registry-sdk-go v0.1.1-0.20251021214222-018e0cd35bf9 h1:8rPUxlx0J0VVIOqF1pO25divMhyPZfD64bq1HDQnyUY=
 github.com/confluentinc/schema-registry-sdk-go v0.1.1-0.20251021214222-018e0cd35bf9/go.mod h1:yuuBwRHiqXeYbeuiUX8R7HgbquPJh8XTGpW7O08ErmU=
+github.com/confluentinc/schema-registry-sdk-go v0.1.3-0.20260812213011-262e9f97627b h1:vfMHWJhsDWlzRTDFugCw1JZm8I6tWK9TABHYnxjvqqw=
+github.com/confluentinc/schema-registry-sdk-go v0.1.3-0.20260812213011-262e9f97627b/go.mod h1:p5zwkMP5gyR4mgsoVQFjCI1EZMbYtxhzsJNnflrECPE=
 github.com/containerd/errdefs v1.0.0 h1:tg5yIfIlQIrxYtu9ajqY42W3lpS19XqdxRQeEwYG8PI=
 github.com/containerd/errdefs v1.0.0/go.mod h1:+YBYIdtsnF4Iw6nWZhJcqGSg/dwvV7tyJ/kCkyJ2k+M=
 github.com/containerd/errdefs/pkg v0.3.0 h1:9IKJ06FvyNlexW690DXuQNx2KA2cUJXx151Xdx3ZPPE=
