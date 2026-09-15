@@ -94,6 +94,7 @@ type StatementResultField interface {
 	GetType() StatementResultFieldType
 	ToString() string
 	ToSDKType() any
+	ToSerializedValue() any
 }
 
 type AtomicStatementResultField struct {
