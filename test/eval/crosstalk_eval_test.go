@@ -57,6 +57,11 @@ func TestEnvironmentCrosstalkEval(t *testing.T) {
 			root := t.TempDir()
 			p := cell.make(root)
 			results := RunScenario(bin, cloudURL, p, sessions, realRun)
+			for _, r := range results {
+				if r.RunErr != nil {
+					t.Logf("%s trial %d session %d run error: %v", cell.name, trial, r.Session, r.RunErr)
+				}
+			}
 			outcomes = append(outcomes, GradeTrial(results))
 		}
 		report.Cells[cell.name] = Aggregate(outcomes)
