@@ -423,6 +423,9 @@ func (s *CLITestSuite) TestIamGroupMapping() {
 		{args: `iam group-mapping update group-abc --name updated-group-mapping --description "updated description" --filter claims.principal.startsWith("user")`, fixture: "iam/group-mapping/update.golden"},
 		// No one-required flag rule: a no-flag update sends an empty PATCH, which the handler models as a no-op.
 		{args: "iam group-mapping update group-abc", fixture: "iam/group-mapping/update-no-flags.golden"},
+		// Flags are gated on Changed, not on a non-empty value: an explicit --description "" is sent
+		// and clears the field (the hand-written command silently treated it as a no-op).
+		{args: `iam group-mapping update group-abc --description ""`, fixture: "iam/group-mapping/update-clear-description.golden"},
 		{args: `iam group-mapping update invalid --description "updated description"`, fixture: "iam/group-mapping/update-invalid-prefix.golden", exitCode: 1},
 		{args: `iam group-mapping update pool-legacy --description "updated description"`, fixture: "iam/group-mapping/update-legacy-prefix.golden"},
 		{args: "iam group-mapping list", fixture: "iam/group-mapping/list.golden"},
