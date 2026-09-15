@@ -26,8 +26,11 @@ type SessionResult struct {
 
 // RunScenario runs each session concurrently through login -> environment use, holds all sessions at
 // a barrier until every one has finished writing its environment selection, then returns. Grading of
-// the resulting config happens in the caller. The barrier makes the shared-state clobber
-// deterministic: in shared mode the last writer wins for everyone.
+// the resulting config happens in the caller. The barrier is phase-2 scaffolding for a future step
+// that reads/acts after every session's write has landed; phase 1 has no such post-barrier action, so
+// it does not affect results here. Today's deterministic outcome comes from grading each session's
+// final on-disk config.json after all writes complete (in shared mode, two sessions writing distinct
+// environments to one file leave exactly one intended environment surviving - a genuine clobber).
 func RunScenario(bin, cloudURL string, p Provisioner, sessions []Session, run CommandFunc) []SessionResult {
 	results := make([]SessionResult, len(sessions))
 

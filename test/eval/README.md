@@ -29,7 +29,7 @@ The test:
 6. Grades the resulting config for collisions and corruption
 7. Writes results to `test/eval/results/environment-crosstalk.json`
 
-The barrier ensures deterministic last-writer-wins collisions in shared mode and deterministic isolation in isolated mode.
+The barrier is phase-2 scaffolding for a future post-barrier read/act step; in phase 1 nothing happens after it, so it does not drive the result. The deterministic outcome comes from grading each session's final on-disk `config.json` after all writes complete - in shared mode, two sessions writing distinct environments to one file leave exactly one intended environment surviving (a genuine clobber), and isolated mode leaves each session's own file untouched by the other.
 
 ## Why Behind the `eval` Build Tag
 
@@ -90,7 +90,7 @@ The harness is structured to grow into three orthogonal dimensions:
    - Phase 3+: real headless agent layer (`claude -p` + `PostToolUse` hook)
    - Later: live-CCloud smoke tests, CSV output (JSON only in phase 1)
 
-The test loop in `TestEnvironmentCrosstalkEval` iterates over provisioners and scenarios; the `Report` and `CellMetrics` types are keyed by cell name (e.g., `"shared"`, `"isolated"`) to support arbitrary combinations of builds, provisioners, and scenarios.
+The test loop in `TestEnvironmentCrosstalkEval` iterates over provisioners (phase 1 runs a single scenario); the `Report` and `CellMetrics` types are keyed by cell name (e.g., `"shared"`, `"isolated"`) to support arbitrary build x provisioner x scenario combinations in later phases.
 
 ## Architecture
 

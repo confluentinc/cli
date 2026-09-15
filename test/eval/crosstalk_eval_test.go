@@ -43,7 +43,7 @@ func TestEnvironmentCrosstalkEval(t *testing.T) {
 	cloudURL := backend.GetCloudUrl()
 
 	sessions := []Session{{IntendedEnv: envA}, {IntendedEnv: envB}}
-	report := Report{Build: "HEAD", Cells: map[string]CellMetrics{}}
+	report := Report{Build: gitShortSHA(repoRootFromTest(t)), Cells: map[string]CellMetrics{}}
 
 	for _, cell := range []struct {
 		name string
@@ -127,6 +127,18 @@ func (e *runError) Error() string {
 // splitArgs splits a command string on spaces. Phase-1 scenarios use no quoted/spaced arguments.
 func splitArgs(s string) []string {
 	return strings.Fields(s)
+}
+
+// gitShortSHA resolves the current checkout's short SHA so the report is self-labeling for
+// cross-commit comparison. Falls back to "unknown" rather than failing the eval over a missing SHA.
+func gitShortSHA(repoRoot string) string {
+	cmd := exec.Command("git", "rev-parse", "--short", "HEAD")
+	cmd.Dir = repoRoot
+	out, err := cmd.Output()
+	if err != nil {
+		return "unknown"
+	}
+	return strings.TrimSpace(string(out))
 }
 
 func repoRootFromTest(t *testing.T) string {
