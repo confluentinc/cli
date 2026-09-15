@@ -128,6 +128,41 @@ func TestTable_NoAutoWrap(t *testing.T) {
 	}
 }
 
+func TestTable_NoHTMLEscape(t *testing.T) {
+	// <, >, and & must appear verbatim in -o json output, not HTML-escaped.
+	buf := new(bytes.Buffer)
+	cmd := &cobra.Command{}
+	cmd.Flags().String("output", JSON.String(), "")
+	cmd.SetOut(buf)
+
+	table := NewTable(cmd)
+	table.Add(&out{
+		Id:          1,
+		Name:        "lkc-123456",
+		Description: "SELECT 1 WHERE 1 < 2 AND 3 > 2 & true",
+	})
+
+	err := table.Print()
+	require.NoError(t, err)
+
+	expected := strings.Join([]string{
+		"{",
+		`  "is_current": false,`,
+		`  "id": 1,`,
+		`  "name": "lkc-123456",`,
+		`  "description": "SELECT 1 WHERE 1 < 2 AND 3 > 2 & true"`,
+		"}",
+	}, "\n") + "\n"
+	require.Equal(t, expected, buf.String())
+}
+
+func TestMarshalJSON_NoHTMLEscape(t *testing.T) {
+	// marshalJSON backs both the Table and SerializedOutput JSON paths.
+	out, err := marshalJSON(map[string]string{"statement": "SELECT 1 WHERE 1 < 2 AND 3 > 2 & true"})
+	require.NoError(t, err)
+	require.Equal(t, `{"statement":"SELECT 1 WHERE 1 < 2 AND 3 > 2 & true"}`, string(out))
+}
+
 func TestTable_Filter(t *testing.T) {
 	tests := map[string][]string{
 		Human.String(): {
