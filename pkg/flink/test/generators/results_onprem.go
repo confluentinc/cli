@@ -31,6 +31,8 @@ func GetResultItemGeneratorForTypeOnPrem(dataType cmfsdk.DataType) *rapid.Genera
 	case types.Row:
 		elementTypes := dataType.GetFields()
 		return RowResultItemOnPrem(elementTypes)
+	case types.Variant:
+		return VariantResultItem()
 	case types.Null:
 		return rapid.SampledFrom([]any{nil})
 	default:
@@ -185,6 +187,11 @@ func RowDataTypeOnPrem(maxNestingDepth int) *rapid.Generator[cmfsdk.DataType] {
 			Fields:   &fieldTypes,
 		}
 	})
+}
+
+// VariantDataTypeOnPrem generates the VARIANT data type (value generator is shared with cloud)
+func VariantDataTypeOnPrem() *rapid.Generator[cmfsdk.DataType] {
+	return rapid.Just(cmfsdk.DataType{Nullable: true, Type: "VARIANT"})
 }
 
 func DataTypeOnPrem(maxNestingDepth int) *rapid.Generator[cmfsdk.DataType] {
