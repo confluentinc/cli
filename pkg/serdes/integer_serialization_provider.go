@@ -11,7 +11,7 @@ import (
 
 type IntegerSerializationProvider struct{}
 
-func (IntegerSerializationProvider) InitSerializer(_, _, _ string, _ int, _ SchemaRegistryAuth) error {
+func (IntegerSerializationProvider) InitSerializer(_, _, _, _ string, _ int, _ SchemaRegistryAuth) error {
 	return nil
 }
 

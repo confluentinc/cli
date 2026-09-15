@@ -8,7 +8,7 @@ import (
 
 type StringSerializationProvider struct{}
 
-func (s *StringSerializationProvider) InitSerializer(_, _, _ string, _ int, _ SchemaRegistryAuth) error {
+func (s *StringSerializationProvider) InitSerializer(_, _, _, _ string, _ int, _ SchemaRegistryAuth) error {
 	return nil
 }
 
