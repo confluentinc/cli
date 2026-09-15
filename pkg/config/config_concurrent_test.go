@@ -136,6 +136,85 @@ func TestDecryptToMatch_SkipsPlaintextBaselineTokens(t *testing.T) {
 	require.Equal(t, "refreshToken", base.ContextStates["ctx"].AuthRefreshToken)
 }
 
+// decryptToMatch must bring the baseline into the live config's full representation,
+// not just its ciphertext: a secret's salt and nonce are part of its on-disk identity.
+// If the baseline keeps a stale salt after its secret is decrypted, the three-way merge
+// pairs disk's ciphertext with the wrong salt and decryption later fails.
+func TestDecryptToMatch_AlignsSaltAndNonceWithDecryptedSecret(t *testing.T) {
+	stored := &APIKeyPair{Key: "k", Secret: "plaintext"}
+	require.NoError(t, stored.EncryptSecret()) // sets Salt/Nonce and encrypts
+
+	base := New()
+	base.Credentials["cred"] = &Credential{Name: "cred", APIKeyPair: &APIKeyPair{
+		Key: "k", Secret: stored.Secret, Salt: stored.Salt, Nonce: stored.Nonce,
+	}}
+	// ref is a fresh plaintext pair with no salt/nonce, like a just-created credential.
+	ref := New()
+	ref.Credentials["cred"] = &Credential{Name: "cred", APIKeyPair: &APIKeyPair{Key: "k", Secret: "plaintext"}}
+
+	require.NoError(t, base.decryptToMatch(ref))
+
+	require.Equal(t, "plaintext", base.Credentials["cred"].APIKeyPair.Secret)
+	require.Nil(t, base.Credentials["cred"].APIKeyPair.Salt,
+		"baseline salt must match ref's (nil) so the merge keeps disk's ciphertext and salt together")
+	require.Nil(t, base.Credentials["cred"].APIKeyPair.Nonce,
+		"baseline nonce must match ref's (nil) so the merge keeps disk's ciphertext and nonce together")
+}
+
+// A context state's single salt/nonce is shared by both auth tokens. decryptToMatch must
+// realign it to ref once it decrypts a token, but only when no token in the baseline is
+// still encrypted: clearing the salt while the refresh token stays ciphertext would
+// strand that ciphertext (its own load could no longer decrypt it).
+func TestDecryptToMatch_ContextStateSaltAlignmentRespectsEncryptedToken(t *testing.T) {
+	// Both tokens decrypted in ref: the baseline's salt/nonce realign to ref's (nil here).
+	enc := encryptedState(t, "header.payload.signature", "v1.refreshtoken")
+
+	base := New()
+	base.ContextStates["ctx"] = &ContextState{AuthToken: enc.AuthToken, Salt: enc.Salt, Nonce: enc.Nonce}
+	ref := New()
+	ref.ContextStates["ctx"] = &ContextState{AuthToken: "header.payload.signature"} // plaintext, no salt
+
+	require.NoError(t, base.decryptToMatch(ref))
+	require.Nil(t, base.ContextStates["ctx"].Salt, "with both tokens plaintext, salt must realign to ref's nil")
+
+	// Refresh token stays encrypted in ref (e.g. a Confluent Platform refresh token PreRun
+	// leaves encrypted), so the baseline's salt must be preserved, not cleared.
+	base2 := New()
+	base2.ContextStates["ctx"] = &ContextState{
+		AuthToken: enc.AuthToken, AuthRefreshToken: enc.AuthRefreshToken, Salt: enc.Salt, Nonce: enc.Nonce,
+	}
+	ref2 := New()
+	ref2.ContextStates["ctx"] = &ContextState{
+		AuthToken:        "header.payload.signature", // decrypted
+		AuthRefreshToken: enc.AuthRefreshToken,       // still encrypted, shares the salt
+		Salt:             enc.Salt,
+		Nonce:            enc.Nonce,
+	}
+
+	require.NoError(t, base2.decryptToMatch(ref2))
+	require.Equal(t, enc.Salt, base2.ContextStates["ctx"].Salt,
+		"salt must be preserved while the refresh token stays encrypted")
+}
+
+// encryptedState returns a context state whose auth tokens are encrypted with a generated
+// salt/nonce, produced by the real encryptSecrets path so the ciphertext, salt, and nonce
+// are internally consistent.
+func encryptedState(t *testing.T, authToken, authRefreshToken string) *ContextState {
+	t.Helper()
+	c := New()
+	state := &ContextState{AuthToken: authToken, AuthRefreshToken: authRefreshToken}
+	ctx := &Context{Name: "ctx", PlatformName: "https://confluent.cloud", State: state, Config: c}
+	ctx.KafkaClusterContext = &KafkaClusterContext{Context: ctx}
+	c.Contexts["ctx"] = ctx
+	c.ContextStates["ctx"] = state
+	c.CurrentContext = "ctx"
+
+	require.NoError(t, c.encryptSecrets())
+	require.True(t, isEncryptedSecret(state.AuthToken))
+	require.True(t, isEncryptedSecret(state.AuthRefreshToken))
+	return state
+}
+
 // A merge can leave a plaintext token in a context that is not current at write time
 // (e.g. after a concurrent `context use` switch). encryptSecrets must encrypt every
 // context's token, not only the current one, so none reaches disk plaintext.
@@ -404,4 +483,38 @@ func TestSave_WholeConfigWrite_DoesNotDoubleResolveOverrides(t *testing.T) {
 	require.Equal(t, "kA", reloaded.Contexts["A"].KafkaClusterContext.GetActiveKafkaClusterId(),
 		"context A's cluster must not be overwritten by B's --cluster value through a second resolve")
 	require.Equal(t, "A", reloaded.CurrentContext, "the persisted current context must be the real one, not the --context flag")
+}
+
+// Two contexts created in separate load/save cycles that reuse one API key (so one
+// credential is overwritten) must leave that credential decryptable. The second
+// create loads the config (credential still encrypted, its salt present) and replaces
+// the credential with a fresh plaintext pair that has no salt. The merge must keep the
+// credential's ciphertext, salt, and nonce as one unit; if decryptToMatch aligns only
+// the ciphertext, the merge pairs disk's ciphertext with a regenerated salt and the
+// next load fails GCM authentication. Reproduces the integration-test flow in
+// test/context_test.go's contextCreateArgs.
+func TestSave_TwoContextCreatesSharedCredential_SecretStaysDecryptable(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+
+	createContextReusingAPIKey(t, path, "0")
+	createContextReusingAPIKey(t, path, "1")
+
+	next := New()
+	next.Filename = path
+	require.NoError(t, next.Load())
+	require.NoError(t, next.DecryptCredentials(),
+		"a credential overwritten across two create cycles must stay decryptable")
+	require.Equal(t, "api-secret-value", next.Credentials["api-key-test"].APIKeyPair.Secret)
+}
+
+// createContextReusingAPIKey mirrors test/context_test.go's contextCreateArgs: a fresh
+// New()+Load()+CreateContext per call, all using the same API key so the derived
+// credential name collides and the credential is overwritten on the second call.
+func createContextReusingAPIKey(t *testing.T, path, name string) {
+	t.Helper()
+	cfg := New()
+	cfg.Filename = path
+	require.NoError(t, cfg.Load())
+	require.NoError(t, cfg.CreateContext(name, "https://example.com", "test", "api-secret-value"))
 }
