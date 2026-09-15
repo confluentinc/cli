@@ -273,20 +273,6 @@ func AddExternalIdentifierFlag(cmd *cobra.Command) {
 	cmd.Flags().String("external-identifier", "", "External Identifier for this pool.")
 }
 
-func AutocompleteGroupMappings(client *ccloudv2.Client) []string {
-	groupMappings, err := client.ListIamGroupMappings()
-	if err != nil {
-		return nil
-	}
-
-	suggestions := make([]string, len(groupMappings))
-	for i, groupMapping := range groupMappings {
-		description := fmt.Sprintf("%s: %s", groupMapping.GetDisplayName(), groupMapping.GetDescription())
-		suggestions[i] = fmt.Sprintf("%s\t%s", groupMapping.GetId(), description)
-	}
-	return suggestions
-}
-
 func AutocompleteCertificatePool(client *ccloudv2.Client, provider string) []string {
 	certificatePools, err := client.ListIamCertificatePools(provider)
 	if err != nil {
