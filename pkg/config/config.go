@@ -478,6 +478,12 @@ func (c *Config) writeWholeConfig() error {
 // carried over from disk are already encrypted and the guards skip them. Every context
 // is covered (not just the current one) because a merge can leave a plaintext token in
 // a context that is not current at write time, and none may reach disk.
+//
+// Nested secrets (Context.GlobalAPIKeys, KafkaClusterConfig.APIKeys) are intentionally
+// not handled here, mirroring decryptToMatch's scope: no command decrypts them in place
+// and then saves. They are decrypted only in read paths (ResolveKafkaAPIKey) or encrypted
+// before the save (StoreGlobalAPIKey), so they always cross the merge as an intact
+// ciphertext/salt/nonce unit and never need re-encryption from a plaintext form.
 func (c *Config) encryptSecrets() error {
 	for _, ctx := range c.Contexts {
 		if ctx.GetState() == nil {
@@ -491,8 +497,11 @@ func (c *Config) encryptSecrets() error {
 	return c.encryptCredentialsAPISecret()
 }
 
-// decryptToMatch decrypts c's secrets to the same representation as ref so the two
-// can be diffed field for field. PreRun leaves the live config (ref) with every
+// decryptToMatch brings c's secrets into the same representation as ref so the two
+// can be diffed field for field. That means both the ciphertext AND its salt/nonce:
+// a secret is a (ciphertext, salt, nonce) unit, and aligning only the ciphertext
+// leaves the field-wise merge free to pair one source's ciphertext with another's
+// salt. PreRun leaves the live config (ref) with every
 // credential secret and the current context's tokens in plaintext while other
 // contexts' tokens stay encrypted; this decrypts exactly the fields ref holds in
 // plaintext. Save() calls it on the baseline, which is encrypted straight from load
@@ -517,6 +526,13 @@ func (c *Config) decryptToMatch(ref *Config) error {
 			if err := credential.APIKeyPair.DecryptSecret(); err != nil {
 				return err
 			}
+			// A secret's salt and nonce are part of its representation, not just its
+			// ciphertext. Align them to ref too, so the three-way merge diffs the whole
+			// crypto triple as one unit. Leaving c's stale salt here lets the field-wise
+			// merge pair disk's ciphertext with a regenerated salt, which then fails GCM
+			// authentication on the next load.
+			credential.APIKeyPair.Salt = refCredential.APIKeyPair.Salt
+			credential.APIKeyPair.Nonce = refCredential.APIKeyPair.Nonce
 		}
 	}
 
@@ -534,6 +550,14 @@ func (c *Config) decryptToMatch(ref *Config) error {
 			if err := state.DecryptAuthRefreshToken(name); err != nil {
 				return err
 			}
+		}
+		// Align salt/nonce to ref for the same reason as credentials above, but only once
+		// no encrypted token in c still depends on them: a state's single salt/nonce is
+		// shared by both tokens, so clearing it while one stays encrypted would strand
+		// that ciphertext.
+		if !isEncryptedSecret(state.AuthToken) && !isEncryptedSecret(state.AuthRefreshToken) {
+			state.Salt = refState.Salt
+			state.Nonce = refState.Nonce
 		}
 	}
 	return nil
