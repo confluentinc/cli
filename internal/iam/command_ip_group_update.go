@@ -3,11 +3,14 @@
 package iam
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	iamipfilteringv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering/v2"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/types"
@@ -78,6 +81,9 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 
 	ipGroup, err := c.V2Client.UpdateIamIpGroup(id, updateReq)
 	if err != nil {
+		if strings.Contains(err.Error(), "lock out") {
+			return errors.NewErrorWithSuggestions(err.Error(), "Double check the IP group you are updating. Otherwise, try again from an IP address permitted within this updated IP group or another IP group.")
+		}
 		return err
 	}
 

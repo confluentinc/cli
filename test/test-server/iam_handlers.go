@@ -827,7 +827,9 @@ func handleIamIpGroups(t *testing.T) http.HandlerFunc {
 func handleIamIpGroup(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if id != ipGroupId {
+		// ipg-inuse and ipg-lockout exist only to reproduce two backend errors the command
+		// attaches suggestions to (cli.error_suggestions in the generator registry).
+		if id != ipGroupId && id != "ipg-inuse" && id != "ipg-lockout" {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return
@@ -837,6 +839,12 @@ func handleIamIpGroup(t *testing.T) http.HandlerFunc {
 			var req iamipfilteringv2.IamV2IpGroup
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
+			if id == "ipg-lockout" {
+				w.WriteHeader(http.StatusBadRequest)
+				err = writeErrorJson(w, "this action would lock out the requester from IP address 203.0.113.7. Please try again from a permitted IP address.")
+				require.NoError(t, err)
+				return
+			}
 			// PATCH semantics: only the fields present in the body change; the id is the path's.
 			res := buildIamIpGroup(id, "demo-ip-group", []string{"168.150.200.0/24", "147.150.200.0/24"})
 			if req.GroupName != nil {
@@ -852,6 +860,12 @@ func handleIamIpGroup(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(ipGroup)
 			require.NoError(t, err)
 		case http.MethodDelete:
+			if id == "ipg-inuse" {
+				w.WriteHeader(http.StatusConflict)
+				err := writeErrorJson(w, "cannot delete an IP group with related IP filters")
+				require.NoError(t, err)
+				return
+			}
 			w.WriteHeader(http.StatusNoContent)
 		}
 	}

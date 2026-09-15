@@ -466,6 +466,9 @@ func (s *CLITestSuite) TestIamIpGroup() {
 		{args: "iam ip-group update ipg-wjnde --name new-demo-group --add-cidr-blocks 1.2.3.4/12 --remove-cidr-blocks 1.1.1.1/1", fixture: "iam/ip-group/update-resource-remove-not-exist.golden"},
 		// A name-only update: the full-object seed carries the current CIDR blocks.
 		{args: "iam ip-group update ipg-wjnde --name new-demo-group", fixture: "iam/ip-group/update-name-only.golden"},
+		// Backend errors the command attaches suggestions to (cli.error_suggestions).
+		{args: "iam ip-group update ipg-lockout --add-cidr-blocks 1.2.3.4/32", fixture: "iam/ip-group/update-lock-out.golden", exitCode: 1},
+		{args: "iam ip-group delete ipg-inuse --force", fixture: "iam/ip-group/delete-related-filters.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
