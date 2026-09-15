@@ -32,15 +32,16 @@ func TestNew(t *testing.T) {
 
 	cmd := New(cfg, prerunner)
 
-	require.Equal(t, "query [sql]", cmd.Use)
+	require.Equal(t, "query", cmd.Use)
 	require.False(t, cmd.Hidden, "cfg.IsTest should keep the command visible in tests")
 
-	for _, name := range []string{"sql", "file", "compute-pool", "service-account", "database", "cluster", "property", "wait-timeout", "max-rows", "raw", "environment", "catalog", "context", "output", "cloud", "region"} {
+	for _, name := range []string{"sql", "file", "compute-pool", "service-account", "database", "property", "wait-timeout", "max-rows", "raw", "environment", "catalog", "context", "output", "cloud", "region"} {
 		require.NotNil(t, cmd.Flags().Lookup(name), "expected --%s to be registered", name)
 	}
+	require.Nil(t, cmd.Flags().Lookup("cluster"), "the --cluster alias was removed; --database is now the only way to set it")
 
-	// "sql" is deliberately not cobra-required: it can come from the positional
-	// argument instead, so requiredness is enforced by resolveSQL, not by cobra.
+	// Neither "sql" nor "file" is individually cobra-required: exactly one of
+	// them is required via MarkFlagsOneRequired/MarkFlagsMutuallyExclusive.
 	sqlFlag := cmd.Flags().Lookup("sql")
 	require.Empty(t, sqlFlag.Annotations[cobra.BashCompOneRequiredFlag])
 
@@ -55,30 +56,30 @@ func TestMutuallyExclusiveFlags(t *testing.T) {
 	cfg := cliconfig.AuthenticatedCloudConfigMock()
 	prerunner := climock.NewPreRunnerMock(nil, nil, nil, nil, cfg)
 
-	cmd := New(cfg, prerunner)
-	require.NoError(t, cmd.Flags().Set("database", "lkc-database"))
-	require.NoError(t, cmd.Flags().Set("cluster", "lkc-cluster"))
-	require.ErrorContains(t, cmd.ValidateFlagGroups(), "if any flags in the group [database cluster] are set none of the others can be")
-
 	// --catalog shares storage with --environment, so setting one sets the other
 	// too; cobra's exclusivity check still fires since it tracks Changed() per
 	// flag name, independent of the shared underlying value.
-	cmd = New(cfg, prerunner)
+	cmd := New(cfg, prerunner)
 	require.NoError(t, cmd.Flags().Set("environment", "env-123"))
 	require.NoError(t, cmd.Flags().Set("catalog", "env-456"))
+	require.NoError(t, cmd.Flags().Set("sql", "SELECT 1;"))
 	require.ErrorContains(t, cmd.ValidateFlagGroups(), "if any flags in the group [environment catalog] are set none of the others can be")
+
+	cmd = New(cfg, prerunner)
+	require.NoError(t, cmd.Flags().Set("sql", "SELECT 1;"))
+	require.NoError(t, cmd.Flags().Set("file", "/tmp/query.sql"))
+	require.ErrorContains(t, cmd.ValidateFlagGroups(), "if any flags in the group [sql file] are set none of the others can be")
+
+	cmd = New(cfg, prerunner)
+	require.ErrorContains(t, cmd.ValidateFlagGroups(), "at least one of the flags in the group [sql file] is required")
 }
 
 func TestResolveDatabase(t *testing.T) {
-	newDBCmd := func(database, cluster string) *cobra.Command {
+	newDBCmd := func(database string) *cobra.Command {
 		cmd := &cobra.Command{}
 		cmd.Flags().String("database", "", "")
-		cmd.Flags().String("cluster", "", "")
 		if database != "" {
 			require.NoError(t, cmd.Flags().Set("database", database))
-		}
-		if cluster != "" {
-			require.NoError(t, cmd.Flags().Set("cluster", cluster))
 		}
 		return cmd
 	}
@@ -89,34 +90,23 @@ func TestResolveDatabase(t *testing.T) {
 
 	c := commandWithActiveCluster("")
 
-	got, err := c.resolveDatabase(newDBCmd("", ""))
+	got, err := c.resolveDatabase(newDBCmd(""))
 	require.NoError(t, err)
 	require.Empty(t, got)
 
-	got, err = c.resolveDatabase(newDBCmd("lkc-database", ""))
+	got, err = c.resolveDatabase(newDBCmd("lkc-database"))
 	require.NoError(t, err)
 	require.Equal(t, "lkc-database", got)
-
-	got, err = c.resolveDatabase(newDBCmd("", "lkc-cluster"))
-	require.NoError(t, err)
-	require.Equal(t, "lkc-cluster", got)
-
-	// Cobra's MarkFlagsMutuallyExclusive rejects both being set before RunE is ever
-	// reached; resolveDatabase itself just needs a defined precedence if called
-	// directly, and prefers --cluster.
-	got, err = c.resolveDatabase(newDBCmd("lkc-database", "lkc-cluster"))
-	require.NoError(t, err)
-	require.Equal(t, "lkc-cluster", got)
 
 	// Neither flag given: falls back to the active Kafka cluster context, same
 	// "flag, then context" chain environment and compute pool follow.
 	c = commandWithActiveCluster("lkc-context-default")
-	got, err = c.resolveDatabase(newDBCmd("", ""))
+	got, err = c.resolveDatabase(newDBCmd(""))
 	require.NoError(t, err)
 	require.Equal(t, "lkc-context-default", got)
 
 	// An explicit --database still wins over the context default.
-	got, err = c.resolveDatabase(newDBCmd("lkc-explicit", ""))
+	got, err = c.resolveDatabase(newDBCmd("lkc-explicit"))
 	require.NoError(t, err)
 	require.Equal(t, "lkc-explicit", got)
 }
@@ -135,34 +125,24 @@ func TestResolveSQL(t *testing.T) {
 		return cmd
 	}
 
-	sql, err := resolveSQL(newSQLCmd("SELECT 1", ""), nil)
+	sql, err := resolveSQL(newSQLCmd("SELECT 1", ""))
 	require.NoError(t, err)
 	require.Equal(t, "SELECT 1", sql)
 
-	sql, err = resolveSQL(newSQLCmd("", ""), []string{"SELECT 2"})
-	require.NoError(t, err)
-	require.Equal(t, "SELECT 2", sql)
-
 	sqlFile := filepath.Join(t.TempDir(), "query.sql")
 	require.NoError(t, os.WriteFile(sqlFile, []byte("SELECT 3"), 0o600))
-	sql, err = resolveSQL(newSQLCmd("", sqlFile), nil)
+	sql, err = resolveSQL(newSQLCmd("", sqlFile))
 	require.NoError(t, err)
 	require.Equal(t, "SELECT 3", sql)
 
-	_, err = resolveSQL(newSQLCmd("", "/nonexistent/query.sql"), nil)
+	_, err = resolveSQL(newSQLCmd("", "/nonexistent/query.sql"))
 	require.ErrorContains(t, err, "failed to read the SQL statement")
 
-	_, err = resolveSQL(newSQLCmd("SELECT 1", ""), []string{"SELECT 2"})
-	require.ErrorContains(t, err, "must be given exactly one way")
-
-	_, err = resolveSQL(newSQLCmd("SELECT 1", sqlFile), nil)
-	require.ErrorContains(t, err, "must be given exactly one way")
-
-	_, err = resolveSQL(newSQLCmd("", sqlFile), []string{"SELECT 2"})
-	require.ErrorContains(t, err, "must be given exactly one way")
-
-	_, err = resolveSQL(newSQLCmd("", ""), nil)
-	require.ErrorContains(t, err, "is required")
+	// resolveSQL trusts cobra's flag-group validation to have already rejected
+	// "neither" or "both"; --sql wins if it's ever called with both set anyway.
+	sql, err = resolveSQL(newSQLCmd("SELECT 1", sqlFile))
+	require.NoError(t, err)
+	require.Equal(t, "SELECT 1", sql)
 }
 
 // captureStdout redirects the package-level os.Stdout (which output.Print and
