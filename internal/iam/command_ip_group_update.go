@@ -44,6 +44,15 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 
 	updateReq := iamipfilteringv2.IamV2IpGroup{}
 
+	// Full-object update: the API rejects a partial body, so seed every updatable field from the
+	// current object and let the flags below overlay it.
+	current, err := c.V2Client.GetIamIpGroup(id)
+	if err != nil {
+		return err
+	}
+	updateReq.GroupName = current.GroupName
+	updateReq.CidrBlocks = current.CidrBlocks
+
 	if cmd.Flags().Changed("name") {
 		groupName, err := cmd.Flags().GetString("name")
 		if err != nil {
@@ -52,11 +61,11 @@ func (c *ipGroupCommand) update(cmd *cobra.Command, args []string) error {
 		updateReq.GroupName = iamipfilteringv2.PtrString(groupName)
 	}
 
-	cidrBlocks, err := cmd.Flags().GetStringSlice("cidr-blocks")
-	if err != nil {
-		return err
-	}
-	if len(cidrBlocks) > 0 {
+	if cmd.Flags().Changed("cidr-blocks") {
+		cidrBlocks, err := cmd.Flags().GetStringSlice("cidr-blocks")
+		if err != nil {
+			return err
+		}
 		updateReq.CidrBlocks = &cidrBlocks
 	}
 
