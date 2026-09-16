@@ -114,7 +114,7 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		FlinkArtifactClient:          newFlinkArtifactClient(httpClient, url, userAgent, unsafeTrace),
 		FlinkClient:                  newFlinkClient(httpClient, url, userAgent, unsafeTrace),
 		IamClient:                    newIamClient(httpClient, url, userAgent, unsafeTrace),
-		IamIpFilteringClient:         newIamIpFiltering(httpClient, url, userAgent, unsafeTrace),
+		IamIpFilteringClient:         newIamIpFilteringClient(httpClient, url, userAgent, unsafeTrace),
 		IdentityProviderClient:       newIdentityProviderClient(httpClient, url, userAgent, unsafeTrace),
 		KafkaQuotasClient:            newKafkaQuotasClient(httpClient, url, userAgent, unsafeTrace),
 		KsqlClient:                   newKsqlClient(httpClient, url, userAgent, unsafeTrace),
