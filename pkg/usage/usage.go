@@ -58,14 +58,14 @@ func (u *Usage) CollectAgentDetect() {
 
 	attrs := agentdetect.Detect(agentdetect.Options{}).Attributes()
 
-	u.AgentEnv = optionalStrings(attrs.AgentEnv)
+	u.AgentEnvVars = optionalStrings(attrs.AgentEnvVars)
 	u.AgentProc = attrs.AgentProc
 	u.AgentArgv = attrs.AgentArgv
 	u.IdeHost = attrs.IDEHost
 	u.Interactive = optionalString(attrs.Interactive)
 	u.ChainShape = optionalString(attrs.ChainShape)
-	u.Wrappers = optionalStrings(attrs.Wrappers)
-	u.Ci = optionalStrings(attrs.CI)
+	u.CmdWrappers = optionalStrings(attrs.CmdWrappers)
+	u.CiProviders = optionalStrings(attrs.CiProviders)
 	u.AgentTables = optionalString(attrs.Tables)
 }
 
