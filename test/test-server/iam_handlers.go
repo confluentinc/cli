@@ -840,6 +840,10 @@ func handleIamIpGroup(t *testing.T) http.HandlerFunc {
 			var req iamipfilteringv2.IamV2IpGroup
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
+			// The API rejects a partial body, so the command always sends the full object; the
+			// overlay below would otherwise mask a regression to a partial PATCH.
+			require.NotNil(t, req.GroupName, "full-object update must send group_name")
+			require.NotNil(t, req.CidrBlocks, "full-object update must send cidr_blocks")
 			if id == "ipg-lockout" {
 				w.WriteHeader(http.StatusBadRequest)
 				err = writeErrorJson(w, "this action would lock out the requester from IP address 203.0.113.7. Please try again from a permitted IP address.")
