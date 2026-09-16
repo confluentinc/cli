@@ -11,7 +11,22 @@ import (
 	pauth "github.com/confluentinc/cli/v4/pkg/auth"
 )
 
-type CommandFunc func(bin string, env []string, args string) error
+// Invocation is one captured `confluent` subprocess run.
+type Invocation struct {
+	Command    string `json:"command"` // args only, e.g. "environment use env-596" (never the bin path)
+	ExitCode   int    `json:"exit_code"`
+	Stdout     string `json:"stdout"`
+	Stderr     string `json:"stderr"`
+	DurationMs int64  `json:"duration_ms"`
+	Err        string `json:"err,omitempty"` // non-exec failure (timeout, spawn error)
+}
+
+// Failed reports whether the invocation should halt the session (nonzero exit or a non-exec error).
+func (i Invocation) Failed() bool {
+	return i.ExitCode != 0 || i.Err != ""
+}
+
+type CommandFunc func(bin string, env []string, args string) Invocation
 
 type Session struct {
 	IntendedEnv string
@@ -21,7 +36,7 @@ type SessionResult struct {
 	Session     int
 	HomeDir     string
 	IntendedEnv string
-	RunErr      error
+	Invocations []Invocation // in run order (login, environment use, ...)
 }
 
 // RunScenario runs each session concurrently through login -> environment use, holds all sessions at
@@ -54,18 +69,20 @@ func RunScenario(bin, cloudURL string, p Provisioner, sessions []Session, run Co
 
 			env := sessionEnv(home)
 
-			if err := run(bin, env, fmt.Sprintf("login --url %s", cloudURL)); err != nil {
-				results[i].RunErr = fmt.Errorf("login: %w", err)
+			login := run(bin, env, fmt.Sprintf("login --url %s", cloudURL))
+			results[i].Invocations = append(results[i].Invocations, login)
+			if login.Failed() {
 				wroteWG.Done()
 				return
 			}
-			if err := run(bin, env, fmt.Sprintf("environment use %s", s.IntendedEnv)); err != nil {
-				results[i].RunErr = fmt.Errorf("environment use: %w", err)
-				wroteWG.Done()
+
+			use := run(bin, env, fmt.Sprintf("environment use %s", s.IntendedEnv))
+			results[i].Invocations = append(results[i].Invocations, use)
+			wroteWG.Done() // signal this session has written (win or lose)
+			if use.Failed() {
 				return
 			}
-			wroteWG.Done() // signal this session has written
-			<-release      // barrier: wait for all sessions to finish writing
+			<-release // barrier: wait for all sessions to finish writing
 		}(i, s)
 	}
 	runWG.Wait()
