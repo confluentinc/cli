@@ -16,6 +16,7 @@ import (
 	flinkerror "github.com/confluentinc/cli/v4/pkg/errors/flink"
 	"github.com/confluentinc/cli/v4/pkg/flink/query"
 	"github.com/confluentinc/cli/v4/pkg/jwt"
+	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -54,7 +55,13 @@ func createStatement(ctx context.Context, gracePeriod time.Duration, create func
 // stopStatement makes a best-effort, bounded attempt to stop an abandoned
 // statement and reports the outcome either way. The gateway rejects a
 // spec.stopped-only body, so this reads the statement back before flipping it.
-func (c *command) stopStatement(client *ccloudv2.FlinkGatewayClient, environmentId, name string) bool {
+//
+// announce controls whether the outcome is printed to stderr (interrupted/error
+// paths, where the user needs to know) or only logged at debug level (the routine
+// end-of-run cleanup for a statement that simply hadn't reached a terminal phase
+// yet — expected for Kafka-backed sources even after every row shipped, and not
+// something a successful run should be noisy about).
+func (c *command) stopStatement(client *ccloudv2.FlinkGatewayClient, environmentId, name string, announce bool) bool {
 	done := make(chan error, 1)
 	go func() {
 		c.authTokenMu.Lock()
@@ -72,18 +79,57 @@ func (c *command) stopStatement(client *ccloudv2.FlinkGatewayClient, environment
 		}()
 	}()
 
+	report := func(warning, debug string) {
+		if announce {
+			output.ErrPrintf(false, "%s\n", warning)
+		} else {
+			log.CliLogger.Debugf("%s", debug)
+		}
+	}
+
 	select {
 	case err := <-done:
 		if err != nil {
-			output.ErrPrintf(false, "Warning: could not stop statement \"%s\": %v. It may still be running.\n", name, err)
+			report(
+				fmt.Sprintf(`Warning: could not stop statement "%s": %v. It may still be running.`, name, err),
+				fmt.Sprintf(`could not stop statement "%s" after query completion: %v`, name, err),
+			)
 			return false
 		}
-		output.ErrPrintf(false, "Stopped statement \"%s\".\n", name)
+		report(
+			fmt.Sprintf(`Successfully stopped statement "%s".`, name),
+			fmt.Sprintf(`stopped statement "%s" after query completion`, name),
+		)
 		return true
 	case <-time.After(stopTimeout):
-		output.ErrPrintf(false, "Warning: timed out trying to stop statement \"%s\". It may still be running.\n", name)
+		report(
+			fmt.Sprintf(`Warning: timed out trying to stop statement "%s". It may still be running.`, name),
+			fmt.Sprintf(`timed out trying to stop statement "%s" after query completion`, name),
+		)
 		return false
 	}
+}
+
+// interruptedError turns a context cancellation/timeout into a well-formed,
+// actionable message instead of the bare "context canceled"/"context deadline
+// exceeded" ctx.Err() text. name is empty when interrupted before a statement
+// exists yet (e.g. during the initial environment lookup), in which case there is
+// nothing to name or check.
+func interruptedError(err error, name string) error {
+	reason := "interrupted"
+	if goerrors.Is(err, context.DeadlineExceeded) {
+		reason = "timed out"
+	}
+	if name == "" {
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf("query %s before it started", reason),
+			"Try again, or raise the limit with the `--wait-timeout` flag.",
+		)
+	}
+	return errors.NewErrorWithSuggestions(
+		fmt.Sprintf(`query %s before statement "%s" finished`, reason, name),
+		fmt.Sprintf("Check the statement with `confluent flink statement describe %s`, or raise the limit with the `--wait-timeout` flag.", name),
+	)
 }
 
 // handleQueryError turns a failed or interrupted run into a message naming the
@@ -93,7 +139,7 @@ func (c *command) handleQueryError(client *ccloudv2.FlinkGatewayClient, environm
 	if goerrors.As(err, &unbounded) {
 		// Only claim the statement was stopped when it actually was.
 		fate := fmt.Sprintf("Statement \"%s\" was stopped.", name)
-		if !c.stopStatement(client, environmentId, name) {
+		if !c.stopStatement(client, environmentId, name, true) {
 			fate = fmt.Sprintf("Stop it with `confluent flink statement stop %s`.", name)
 		}
 		*settled = true
@@ -104,16 +150,9 @@ func (c *command) handleQueryError(client *ccloudv2.FlinkGatewayClient, environm
 	}
 
 	if goerrors.Is(err, context.Canceled) || goerrors.Is(err, context.DeadlineExceeded) {
-		c.stopStatement(client, environmentId, name)
+		c.stopStatement(client, environmentId, name, true)
 		*settled = true
-		reason := "interrupted"
-		if goerrors.Is(err, context.DeadlineExceeded) {
-			reason = "timed out"
-		}
-		return errors.NewErrorWithSuggestions(
-			fmt.Sprintf(`query %s before statement "%s" finished`, reason, name),
-			fmt.Sprintf("Check the statement with `confluent flink statement describe %s`, or raise the limit with the `--wait-timeout` flag.", name),
-		)
+		return interruptedError(err, name)
 	}
 
 	// Every other error, including ResultsFetchError below, leaves settled false:

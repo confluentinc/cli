@@ -2,6 +2,7 @@ package query
 
 import (
 	"context"
+	goerrors "errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -164,6 +165,9 @@ func (c *command) runQuery(cmd *cobra.Command, _ []string) error {
 		return c.V2Client.GetOrgEnvironment(environmentId)
 	})
 	if err != nil {
+		if goerrors.Is(err, context.Canceled) || goerrors.Is(err, context.DeadlineExceeded) {
+			return interruptedError(err, "")
+		}
 		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
 	}
 
@@ -211,16 +215,25 @@ func (c *command) runQuery(cmd *cobra.Command, _ []string) error {
 
 	if err := createStatement(ctx, createStatementGracePeriod, func() (flinkgatewayv1.SqlV1Statement, error) {
 		return client.CreateStatement(statement, principal, environmentId, c.Context.LastOrgId)
-	}, func() { c.stopStatement(client, environmentId, name) }); err != nil {
+	}, func() { c.stopStatement(client, environmentId, name, true) }); err != nil {
+		if goerrors.Is(err, context.Canceled) || goerrors.Is(err, context.DeadlineExceeded) {
+			return interruptedError(err, name)
+		}
 		return err
 	}
 
 	// The statement now exists server-side; this defer stops it unless settled is
 	// set, so no exit path can forget to release the compute it's holding.
+	// announceStop starts false and is set true below only if the client, not the
+	// server, decided to stop early (--max-rows truncation) — that's worth telling
+	// the user about. A full, untruncated drain landing on a non-terminal phase is
+	// routine (a Kafka-backed source can sit at RUNNING forever after every row has
+	// shipped), so that case is logged, not printed.
 	settled := false
+	announceStop := false
 	defer func() {
 		if !settled {
-			c.stopStatement(client, environmentId, name)
+			c.stopStatement(client, environmentId, name, announceStop)
 		}
 	}()
 
@@ -241,6 +254,7 @@ func (c *command) runQuery(cmd *cobra.Command, _ []string) error {
 	// drain() refreshes result.Statement, so this reflects reality even after
 	// Truncated — a job can stay RUNNING after its last row ships either way.
 	settled = query.IsTerminal(result.Phase())
+	announceStop = result.Truncated
 
 	// STOPPED/DELETING here means something other than us ended the statement.
 	switch result.Phase() {

@@ -12,12 +12,13 @@ func (s *CLITestSuite) TestQuery() {
 		// Multi-page result set.
 		{args: `flink query --sql "SELECT id FROM multi_page_table;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "query/multi-page.golden"},
 
-		// -o json / -o yaml default to the schema+rows envelope; the statement name it
-		// carries is random per run (types.GenerateStatementName), so these are regexes.
-		{args: `flink query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 -o json`, fixture: "query/select-json.golden", regex: true},
-		{args: `flink query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 -o yaml`, fixture: "query/select-yaml.golden", regex: true},
+		// -o json / -o yaml default to the schema+rows envelope. No statement name in
+		// it (dropped to match the PRD's engine-agnostic envelope shape) and nothing
+		// else random, so these are exact matches.
+		{args: `flink query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 -o json`, fixture: "query/select-json.golden"},
+		{args: `flink query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 -o yaml`, fixture: "query/select-yaml.golden"},
 
-		// --raw drops the envelope (and the statement name with it), so this one is exact.
+		// --raw drops the envelope, so this one is exact too.
 		{args: `flink query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 -o json --raw`, fixture: "query/select-raw.golden"},
 
 		// --raw is meaningless for the default table output; rejected before a

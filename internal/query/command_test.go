@@ -333,28 +333,13 @@ func TestPrintQueryResult(t *testing.T) {
 		out := captureStdout(t, func() {
 			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
 		})
-		require.Contains(t, out, `"statement_name": "stmt"`)
 		require.Contains(t, out, `"engine": "snapshot"`)
 		require.Contains(t, out, `"phase": "RUNNING"`)
 		require.Contains(t, out, `"truncated": true`)
 		require.Contains(t, out, `"id": 1021`)
 		require.NotContains(t, out, "incomplete")
+		require.NotContains(t, out, "statement_name")
 		require.NotContains(t, out, "append_only")
-	})
-
-	t.Run("json envelope carries append_only when known", func(t *testing.T) {
-		c := newTestCommand(nil)
-		cmd := newOutputCmd(t, "json")
-		result := &query.Result{
-			Statement: flinkgatewayv1.SqlV1Statement{Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "COMPLETED"}},
-			Columns:   testColumns(),
-			Rows:      []types.StatementResultRow{testRow()},
-		}
-
-		out := captureStdout(t, func() {
-			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, true, false))
-		})
-		require.Contains(t, out, `"append_only": false`)
 	})
 
 	t.Run("raw serialized output is a bare array with no envelope", func(t *testing.T) {
@@ -386,9 +371,37 @@ func TestPrintQueryResult(t *testing.T) {
 		out := captureStdout(t, func() {
 			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
 		})
-		require.Contains(t, out, "statement_name: stmt")
 		require.Contains(t, out, "engine: snapshot")
+		require.NotContains(t, out, "statement_name")
 	})
+
+	t.Run("human output escapes control characters instead of executing them", func(t *testing.T) {
+		c := newTestCommand(nil)
+		cmd := newOutputCmd(t, "")
+		result := &query.Result{
+			Statement: flinkgatewayv1.SqlV1Statement{Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "COMPLETED"}},
+			Columns:   testColumns(),
+			Rows: []types.StatementResultRow{{
+				Operation: types.Insert,
+				Fields: []types.StatementResultField{
+					types.AtomicStatementResultField{Type: types.Integer, Value: "1021"},
+					types.AtomicStatementResultField{Type: types.Varchar, Value: "\x1b[0;31mred\x1b[0m"},
+				},
+			}},
+		}
+
+		out := captureStdout(t, func() {
+			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
+		})
+		require.NotContains(t, out, "\x1b")
+		require.Contains(t, out, `\x1b[0;31mred\x1b[0m`)
+	})
+}
+
+func TestEscapeControlChars(t *testing.T) {
+	require.Equal(t, "hello", escapeControlChars("hello"))
+	require.Equal(t, `\x1b[0;31mred\x1b[0m`, escapeControlChars("\x1b[0;31mred\x1b[0m"))
+	require.Equal(t, `a\x09b`, escapeControlChars("a\tb"))
 }
 
 // fakeJwtValidator lets tests control whether refreshGatewayToken thinks the
@@ -517,9 +530,22 @@ func TestStopStatement(t *testing.T) {
 		c := newTestCommand(newTestContext(server.URL, "token"))
 
 		out := captureStderr(t, func() {
-			require.True(t, c.stopStatement(client, "env-1", "stmt"))
+			require.True(t, c.stopStatement(client, "env-1", "stmt", true))
 		})
-		require.Contains(t, out, `Stopped statement "stmt"`)
+		require.Contains(t, out, `Successfully stopped statement "stmt"`)
+	})
+
+	t.Run("announce=false stays silent on stderr", func(t *testing.T) {
+		server := httptest.NewServer(testserver.NewFlinkGatewayRouter(t))
+		defer server.Close()
+
+		client := ccloudv2.NewFlinkGatewayClient(server.URL, "test", false, "token")
+		c := newTestCommand(newTestContext(server.URL, "token"))
+
+		out := captureStderr(t, func() {
+			require.True(t, c.stopStatement(client, "env-1", "stmt", false))
+		})
+		require.Empty(t, out)
 	})
 
 	t.Run("failed stop reports a warning and returns false", func(t *testing.T) {
@@ -534,7 +560,7 @@ func TestStopStatement(t *testing.T) {
 		c := newTestCommand(newTestContext(server.URL, "token"))
 
 		out := captureStderr(t, func() {
-			require.False(t, c.stopStatement(client, "env-1", "stmt"))
+			require.False(t, c.stopStatement(client, "env-1", "stmt", true))
 		})
 		require.Contains(t, out, `could not stop statement "stmt"`)
 	})
@@ -554,7 +580,7 @@ func TestStopStatement(t *testing.T) {
 		c := newTestCommand(newTestContext(server.URL, "token"))
 
 		out := captureStderr(t, func() {
-			require.False(t, c.stopStatement(client, "env-1", "stmt"))
+			require.False(t, c.stopStatement(client, "env-1", "stmt", true))
 		})
 		require.Contains(t, out, `has no spec`)
 	})
@@ -597,7 +623,7 @@ func TestHandleQueryError(t *testing.T) {
 		require.ErrorAs(t, err, &withSuggestions)
 		require.Contains(t, withSuggestions.GetSuggestionsMsg(), `Statement "stmt" was stopped.`)
 		require.True(t, settled)
-		require.Contains(t, out, `Stopped statement "stmt"`)
+		require.Contains(t, out, `Successfully stopped statement "stmt"`)
 	})
 
 	t.Run("unbounded error names the manual stop command when the stop attempt fails", func(t *testing.T) {
@@ -617,6 +643,15 @@ func TestHandleQueryError(t *testing.T) {
 		require.ErrorAs(t, err, &withSuggestions)
 		require.Contains(t, withSuggestions.GetSuggestionsMsg(), "confluent flink statement stop stmt")
 		require.True(t, settled)
+	})
+
+	t.Run("interrupted before a statement exists names nothing and suggests retrying", func(t *testing.T) {
+		err := interruptedError(context.Canceled, "")
+		require.Contains(t, err.Error(), "interrupted")
+		require.NotContains(t, err.Error(), "statement")
+		var withSuggestions errors.ErrorWithSuggestions
+		require.ErrorAs(t, err, &withSuggestions)
+		require.Contains(t, withSuggestions.GetSuggestionsMsg(), "Try again")
 	})
 
 	t.Run("context canceled is reported as interrupted", func(t *testing.T) {
