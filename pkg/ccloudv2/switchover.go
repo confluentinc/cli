@@ -3,11 +3,13 @@ package ccloudv2
 import (
 	"context"
 	"net/http"
-	"os"
 
 	switchoverv1 "github.com/confluentinc/ccloud-sdk-go-v2/switchover/v1"
 
+	"github.com/confluentinc/cli/v4/pkg/auth"
+	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 func newSwitchoverClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *switchoverv1.APIClient {
@@ -20,16 +22,50 @@ func newSwitchoverClient(httpClient *http.Client, url, userAgent string, unsafeT
 	return switchoverv1.NewAPIClient(cfg)
 }
 
-// switchoverApiContext normally authenticates with the logged-in session's
-// bearer token. Local-test-only escape hatch: if CONFLUENT_CLOUD_API_KEY and
-// CONFLUENT_CLOUD_API_SECRET (a Cloud API key, `api-key create --resource
-// cloud`) are set, use Basic auth instead — the stag Switchover Early Access
-// gate only applies to the bearer/login path, not Cloud API keys.
+// switchoverApiContext selects the credential the Switchover API is called with.
+//
+// The Switchover API is served by frontdoor-api-gateway, which accepts Cloud /
+// Global API keys and regional customer access tokens but not raw login-session
+// JWTs. Credentials are resolved from the CLI's existing keystore and login
+// state, in this order:
+//
+//  1. The active Global API key in the local keystore (set by
+//     'api-key create --resource global' or 'api-key use <key>'), sent as HTTP
+//     Basic auth. A key the user explicitly selected always wins over ambient
+//     login state, so the acting principal can be pinned (for example to a
+//     service account for a failover) and the token exchange bypassed without
+//     logging out. This is also the break-glass path when the exchange is down.
+//  2. The login session: the session token is exchanged for a regional customer
+//     access token via auth.GetRegionalToken and sent as a bearer. This is the
+//     default for 'confluent login' users, matching how the other CLI clients
+//     authenticate to token-exchange-backed APIs.
+//  3. A Cloud API key stored in the context by an API-key login, as Basic auth.
+//  4. The raw session token. frontdoor rejects it today, but it keeps the error
+//     surfaced as a 401 from the API rather than a silent unauthenticated request,
+//     and it will start working if frontdoor ever accepts session JWTs.
 func (c *Client) switchoverApiContext() context.Context {
-	if key, secret := os.Getenv("CONFLUENT_CLOUD_API_KEY"), os.Getenv("CONFLUENT_CLOUD_API_SECRET"); key != "" && secret != "" {
-		return context.WithValue(context.Background(), switchoverv1.ContextBasicAuth, switchoverv1.BasicAuth{UserName: key, Password: secret})
+	ctx := c.cfg.Context()
+	if pair := ctx.GetActiveGlobalAPIKeyPair(); pair != nil {
+		if err := pair.DecryptSecret(); err == nil {
+			return context.WithValue(context.Background(), switchoverv1.ContextBasicAuth, switchoverv1.BasicAuth{UserName: pair.Key, Password: pair.Secret})
+		} else {
+			log.CliLogger.Debugf("switchover: could not decrypt active Global API key %q, falling back to login: %v", pair.Key, err)
+		}
 	}
-	return context.WithValue(context.Background(), switchoverv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
+	if ctx != nil && ctx.GetAuthToken() != "" {
+		token, err := auth.GetRegionalToken(ctx)
+		if err == nil {
+			return context.WithValue(context.Background(), switchoverv1.ContextAccessToken, token)
+		}
+		log.CliLogger.Debugf("switchover: regional token exchange failed, falling back to stored API key: %v", err)
+	}
+	if ctx != nil && ctx.GetCredentialType() == config.APIKey && ctx.Credential.APIKeyPair != nil {
+		pair := ctx.Credential.APIKeyPair
+		if err := pair.DecryptSecret(); err == nil {
+			return context.WithValue(context.Background(), switchoverv1.ContextBasicAuth, switchoverv1.BasicAuth{UserName: pair.Key, Password: pair.Secret})
+		}
+	}
+	return context.WithValue(context.Background(), switchoverv1.ContextAccessToken, ctx.GetAuthToken())
 }
 
 func (c *Client) CreateSwitchoverPair(pair switchoverv1.SwitchoverV1SwitchoverPair) (switchoverv1.SwitchoverV1SwitchoverPair, error) {
