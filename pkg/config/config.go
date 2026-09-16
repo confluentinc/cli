@@ -80,7 +80,7 @@ type Config struct {
 	DisablePluginsOnceWindows bool       `json:"disable_plugins_once_windows,omitempty"`
 	DisableUpdateCheck        bool       `json:"disable_update_check"`
 	EnableColor               bool       `json:"enable_color"`
-	LastUpdateCheckAt         *time.Time `json:"last_update_check_at,omitempty"`
+	LastUpdateCheckAt         *time.Time `json:"-"`
 
 	Platforms        map[string]*Platform        `json:"platforms,omitempty"`
 	Credentials      map[string]*Credential      `json:"credentials,omitempty"`
@@ -254,7 +254,28 @@ func (c *Config) Load() error {
 		}
 	}
 
+	c.loadCache()
 	return c.Validate()
+}
+
+// updateCheckCache is the disposable cache-store representation of the fields split
+// out of Config below. loadCache/saveCache round-trip them through the cache store
+// instead of the config file.
+type updateCheckCache struct {
+	LastUpdateCheckAt *time.Time `json:"last_update_check_at,omitempty"`
+}
+
+func (c *Config) loadCache() {
+	s := newCacheStore()
+	var uc updateCheckCache
+	if s.readJSON("update_check.json", &uc) {
+		c.LastUpdateCheckAt = uc.LastUpdateCheckAt
+	}
+}
+
+func (c *Config) saveCache() error {
+	s := newCacheStore()
+	return s.writeJSON("update_check.json", updateCheckCache{LastUpdateCheckAt: c.LastUpdateCheckAt})
 }
 
 // wireContexts rebuilds the cross-references Load() relies on: each context's
@@ -440,6 +461,10 @@ func (c *Config) saveLocked() error {
 		return err
 	}
 
+	if err := c.saveCache(); err != nil {
+		return err
+	}
+
 	// The next Save's three-way merge diffs baseline against the live config, so the
 	// baseline must match the live config for every field this process did not edit,
 	// not the merged disk state. merged holds concurrent changes this process pulled in
@@ -459,6 +484,9 @@ func (c *Config) saveLocked() error {
 // config that was constructed rather than loaded.
 func (c *Config) writeWholeConfig() error {
 	if err := c.save(); err != nil {
+		return err
+	}
+	if err := c.saveCache(); err != nil {
 		return err
 	}
 	// Refresh the baseline from disk (encrypted) rather than from the live config,
