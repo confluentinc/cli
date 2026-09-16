@@ -1,0 +1,22 @@
+Trigger a failover (or switchback) on a switchover pair. This redirects live traffic between the pair's members.
+
+Usage:
+  confluent switchover pair trigger-switch <id> [flags]
+
+Examples:
+Fail switchover pair "sw-123456" over to its "east" member.
+
+  $ confluent switchover pair trigger-switch sw-123456 --active-member east
+
+Flags:
+      --active-member string   The name of the member to promote to active. If omitted, the other member is promoted.
+      --failover-type string   The failover semantics to apply: PLANNED, UNPLANNED, or RESTORE. (default "PLANNED")
+      --force                  Skip the confirmation prompt.
+      --environment string     Environment ID.
+      --context string         CLI context name.
+  -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
