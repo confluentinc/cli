@@ -30,7 +30,7 @@ The test:
 4. Executes each session through login and environment selection
 5. Holds all sessions at a barrier until every session has written its environment choice
 6. Grades the resulting config for collisions and corruption
-7. Writes results to `test/eval/results/environment-crosstalk.json` and `test/eval/results/index.html`
+7. Writes `test/eval/results/report.json` plus a multi-page HTML report: `test/eval/results/index.html` (one row per scenario) and one `test/eval/results/<slugified-scenario-name>.html` drill-down page per scenario (e.g. `environment-crosstalk.html`)
 
 The barrier is phase-2 scaffolding for a future post-barrier read/act step; in phase 1 nothing happens after it, so it does not drive the result. The outcome comes from grading each session's final on-disk `config.json` after all writes complete. In shared mode, two sessions writing to one file race: depending on scheduling, that race surfaces as a collision (one session's write wins outright, leaving the other pointed at the wrong environment) or as corruption (an interleaved/torn write leaves the file unparseable or structurally incomplete) - either way, every trial fails (`pass^k = 0`). Isolated mode leaves each session's own file untouched by the other, so neither failure mode is reachable.
 
@@ -44,10 +44,17 @@ The harness is excluded from `make test` and runs only with `-tags eval` because
 
 ## How to Read the Report
 
-Results are written to `test/eval/results/environment-crosstalk.json` and a drill-down
-`test/eval/results/index.html` (open the HTML in a browser for the coverage-report view - summary
-table per cell, then `<details>` down to each trial, each session, and each invocation's captured
-stdout/stderr).
+Results are written to `test/eval/results/report.json` and a multi-page, theme-aware HTML report
+(follows the OS light/dark preference, no JavaScript):
+
+- `test/eval/results/index.html` - one row per scenario: sessions x trials, "clean runs" (N of
+  total trials where every session graded ok) for the shared and isolated cells, a plain-text
+  summary of what damage the shared cell showed, and a link to that scenario's own page. A
+  collapsible glossary at the top defines each metric.
+- `test/eval/results/<slug>.html` per scenario (e.g. `environment-crosstalk.html`, from the
+  scenario name run through the same slugify rule the report uses to link to it) - the full
+  cell-summary table plus the `<details>` drill-down: trial → session → invocation, with each
+  invocation's captured stdout/stderr.
 
 The JSON nests trial- and session-level detail under each cell, so a collision or corruption can be
 traced back to the exact invocation that caused it:
@@ -112,7 +119,7 @@ traced back to the exact invocation that caused it:
 - **collision_rate:** fraction of sessions that read the wrong active environment (intended ≠ observed)
 - **corruption_rate:** fraction of sessions where `~/.confluent/config.json` failed validation (e.g., torn write)
 - **error_rate:** fraction of sessions where a `confluent` invocation itself failed (nonzero exit, timeout, or spawn error) - graded separately from collisions so a broken run isn't miscounted as state damage
-- **pass_caret_k (pass^k):** fraction of trials where _every_ session graded "ok"
+- **pass_caret_k (pass^k):** fraction of trials where _every_ session graded "ok". The HTML report's index page calls this "clean runs" and shows it as "N / total" - same number, plainer name; the glossary on that page notes the pass^k formalism.
 
 **Per-session verdicts** (in priority order - the first that applies wins): `error` (an invocation
 failed), `corruption` (config unparseable/incomplete), `collision` (observed env ≠ intended env),
@@ -137,7 +144,7 @@ The harness is structured to grow into three orthogonal dimensions:
    - Phase 1: `environment-crosstalk` (concurrent `confluent login` + `confluent environment use`)
    - Phase 2+: additional crosstalk scenarios (cluster selection, API key collision, login context)
    - Phase 3+: real headless agent layer (`claude -p` + `PostToolUse` hook)
-   - Later: live-CCloud smoke tests, CSV output (JSON + HTML drill-down in phase 1)
+   - Later: live-CCloud smoke tests, CSV output (JSON + multi-page HTML drill-down in phase 1)
 
 The test loop in `TestEnvironmentCrosstalkEval` iterates over provisioners (phase 1 runs a single scenario); `Report` nests `ScenarioReport` → `CellReport` (keyed by cell name, e.g., `"shared"`, `"isolated"`) → `TrialResult` → `SessionOutcome` to support arbitrary build x provisioner x scenario combinations, and per-session drill-down, in later phases.
 
@@ -147,7 +154,8 @@ The test loop in `TestEnvironmentCrosstalkEval` iterates over provisioners (phas
 - `scenario.go`: `Invocation` (one captured `confluent` run), `RunScenario` executes sessions concurrently with a barrier and returns each session's captured `Invocations` in order
 - `grader.go`: `ReadActiveEnvironment`, `GradeConfigIntegrity`, `GradeTargetFidelity` - low-level config-file checks
 - `metrics.go`: `GradeSession` grades one session into a `Verdict` (`ok`/`collision`/`corruption`/`error`) with a `Detail`; `GradeTrial` grades a trial's sessions; `Aggregate` rolls graded trials into `CellMetrics`
-- `report.go`: `CellReport`/`ScenarioReport`/`Report` nested types, `WriteJSON`, `WriteHTML` (self-contained drill-down page), `Summary()` for human-readable output
+- `report.go`: `CellReport`/`ScenarioReport`/`Report` nested types, `WriteJSON`, `WriteHTMLReport` (renders the embedded `templates/*.tmpl` set into `index.html` + one per-scenario page), `Summary()` for human-readable output. Template helpers: `slugify` (scenario name → filename), `codeify` (renders backtick-delimited spans as `<code>`, HTML-escaping everything else first), `cleanRuns`/`sharedDamage` (index-page summaries), `cellByName`.
+- `templates/`: the committed HTML/CSS source - `styles.tmpl` (shared theme-aware CSS, light + `prefers-color-scheme: dark`), `index.tmpl` (scenario list + glossary), `scenario.tmpl` (per-scenario drill-down). Parsed once via `embed.FS` at package init; a malformed template fails at import time, and `TestReportTemplatesParseAndResolveNames` guards that all three names resolve.
 - `crosstalk_eval_test.go`: `TestEnvironmentCrosstalkEval` the flagship end-to-end eval; `realRun` captures each invocation's full transcript
 - `*_test.go`: unit tests for each module (grader, scenario, provisioner, metrics, report)
 
