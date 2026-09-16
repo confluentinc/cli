@@ -199,10 +199,10 @@ func writeReport(t *testing.T, r Report) {
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := r.WriteJSON(filepath.Join(dir, "environment-crosstalk.json")); err != nil {
+	if err := r.WriteJSON(filepath.Join(dir, "report.json")); err != nil {
 		t.Fatal(err)
 	}
-	if err := r.WriteHTML(filepath.Join(dir, "index.html")); err != nil {
+	if err := r.WriteHTMLReport(dir); err != nil {
 		t.Fatal(err)
 	}
 }
