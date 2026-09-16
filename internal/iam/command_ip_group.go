@@ -74,18 +74,5 @@ func (c *ipGroupCommand) validArgsMultiple(cmd *cobra.Command, args []string) []
 		return nil
 	}
 
-	return c.autocompleteIpGroups()
-}
-
-func (c *ipGroupCommand) autocompleteIpGroups() []string {
-	ipGroups, err := c.V2Client.ListIamIpGroups()
-	if err != nil {
-		return nil
-	}
-
-	suggestions := make([]string, len(ipGroups))
-	for i, ipGroup := range ipGroups {
-		suggestions[i] = ipGroup.GetId()
-	}
-	return suggestions
+	return pcmd.AutocompleteIpGroups(c.V2Client)
 }
