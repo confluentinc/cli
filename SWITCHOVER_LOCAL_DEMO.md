@@ -129,24 +129,44 @@ same way for the `devel` environment. If you know your staging org ID, add
 Everything below (`switchover pair`/`switchover endpoint` commands) works
 identically once logged in, regardless of which environment you logged into.
 
-### Bypassing the stag EA gate with a Cloud API key
+### Authentication: login session or Global API key
 
-The Switchover Early Access gate on `stag`/`devel` is only enforced on the
-bearer-token (`login`) path — a Cloud API key (Basic auth) sails through it.
-If your staging org doesn't have EA granted yet, set both of these and the
-`switchover` commands will use Basic auth instead of your login session's
-bearer token:
+The Switchover API is served by frontdoor-api-gateway, which accepts Cloud /
+Global API keys and regional customer access tokens but **not** raw
+login-session JWTs. The `switchover` commands therefore resolve credentials
+from the CLI's existing mechanisms, in this order (see
+`pkg/ccloudv2/switchover.go`'s `switchoverApiContext`):
 
-```bash
-export CONFLUENT_CLOUD_API_KEY=<key>
-export CONFLUENT_CLOUD_API_SECRET=<secret>
-```
+1. **Active Global API key** in the local keystore — sent as Basic auth. An
+   explicitly selected key always wins over the login session, which lets you
+   pin the acting principal (e.g. a service account) for a failover:
 
-Create a Cloud API key first (still requires being logged in once, to create
-it): `confluent-dev api-key create --resource cloud`. You still need
-`confluent-dev login` for non-switchover commands / context; this env var
-pair only affects the switchover API calls (see
-`pkg/ccloudv2/switchover.go`'s `switchoverApiContext`).
+   ```bash
+   confluent-dev api-key create --resource global      # stores + activates it
+   # or, for a key created in the UI:
+   confluent-dev api-key store <key> '<secret>' --resource global
+   confluent-dev api-key use <key>
+   ```
+
+2. **Login session** (default) — the session token is exchanged for a regional
+   customer access token (`auth.GetRegionalToken`, the `regional_token` field
+   of `POST /api/access_tokens`) and sent as a bearer. Plain `confluent-dev
+   login` is enough; no key required.
+
+There are no switchover-specific environment variables. To go back from the
+Global-key path to your login identity, activate a different key or clear
+`active_global_api_key` in `~/.confluent/config.json`. `--unsafe-trace` shows
+which credential was sent (`Authorization: Basic` = key, `Bearer` plus a
+`POST /api/access_tokens` line = login).
+
+Note the keystore holds Kafka-cluster and Global keys only; a
+`--resource cloud` key cannot be stored locally and so cannot be used through
+the CLI today.
+
+Separately, the org must be enabled for Switchover Early Access
+(`switchover.api.enable` flag / `switchover-enabled-orgs` segment); a
+non-enabled org gets a `403 organization is not enabled for Switchover` from
+`cc-switchover` regardless of credential.
 
 ### Switchover pairs
 

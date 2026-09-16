@@ -12,7 +12,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "switchover",
 		Short:       "Manage Kafka disaster recovery switchover resources.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
 	cmd.AddCommand(pair.New(prerunner))
