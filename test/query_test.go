@@ -9,15 +9,16 @@ func (s *CLITestSuite) TestQuery() {
 
 		{args: `flink query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 --database lkc-123456`, fixture: "query/select.golden"},
 
-		// Positional SQL instead of --sql, and a multi-page result set.
-		{args: `flink query "SELECT id FROM multi_page_table;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "query/multi-page.golden"},
+		// Multi-page result set.
+		{args: `flink query --sql "SELECT id FROM multi_page_table;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "query/multi-page.golden"},
 
-		// -o json / -o yaml default to the schema+rows envelope; the statement name it
-		// carries is random per run (types.GenerateStatementName), so these are regexes.
-		{args: `flink query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 -o json`, fixture: "query/select-json.golden", regex: true},
-		{args: `flink query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 -o yaml`, fixture: "query/select-yaml.golden", regex: true},
+		// -o json / -o yaml default to the schema+rows envelope. No statement name in
+		// it (dropped to match the PRD's engine-agnostic envelope shape) and nothing
+		// else random, so these are exact matches.
+		{args: `flink query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 -o json`, fixture: "query/select-json.golden"},
+		{args: `flink query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 -o yaml`, fixture: "query/select-yaml.golden"},
 
-		// --raw drops the envelope (and the statement name with it), so this one is exact.
+		// --raw drops the envelope, so this one is exact too.
 		{args: `flink query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 -o json --raw`, fixture: "query/select-raw.golden"},
 
 		// --raw is meaningless for the default table output; rejected before a
@@ -56,14 +57,19 @@ func (s *CLITestSuite) TestQuery() {
 		// -f/--file reads the same SQL as the happy path, so it produces the same table.
 		{args: "flink query -f test/fixtures/input/query/select.sql --compute-pool lfcp-123456 --service-account sa-123456 --database lkc-123456", fixture: "query/select.golden"},
 
-		// --catalog/--cluster are aliases for --environment/--database and don't change
-		// what's printed.
-		{args: `flink query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 --catalog env-596 --cluster lkc-123456`, fixture: "query/select.golden"},
+		// --catalog is an alias for --environment and doesn't change what's printed.
+		{args: `flink query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 --catalog env-596 --database lkc-123456`, fixture: "query/select.golden"},
 
-		// resolveSQL requires exactly one of --sql, --file or the positional argument.
+		// Cobra rejects the command before RunE runs unless exactly one of --sql/--file is set.
 		{args: "flink query --compute-pool lfcp-123456 --service-account sa-123456", fixture: "query/missing-sql.golden", exitCode: 1},
 
-		{args: "flink query --compute-pool lfcp-123456 --service-account sa-123456 --environment env-dne", fixture: "query/missing-sql.golden", exitCode: 1},
+		{args: `flink query --sql "SELECT 1;" --file test/fixtures/input/query/select.sql --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "query/sql-and-file.golden", exitCode: 1},
+
+		// --cluster no longer exists; only --database sets the default Kafka cluster.
+		{args: `flink query --sql "SELECT 1;" --compute-pool lfcp-123456 --service-account sa-123456 --cluster lkc-123456`, fixture: "query/unknown-cluster-flag.golden", exitCode: 1},
+
+		// The SQL is no longer accepted positionally.
+		{args: `flink query "SELECT 1;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "query/unexpected-positional-arg.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {

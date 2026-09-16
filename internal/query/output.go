@@ -1,7 +1,10 @@
 package query
 
 import (
+	"fmt"
 	"os"
+	"strings"
+	"unicode"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
@@ -10,19 +13,16 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-// engineSnapshot is the only value Engine ever takes today; see queryOut.Engine.
-const engineSnapshot = "snapshot"
-
 type queryColumnOut struct {
 	Name string `json:"name" yaml:"name"`
 	Type string `json:"type" yaml:"type"`
 }
 
+// queryOut mirrors the PRD's canonical envelope shape (phase/columns/rows/
+// row_count/truncated). statement_name, append_only, and engine were all
+// dropped: the first two were Snapshot-only additions with no PRD equivalent;
+// engine was Lightning-only, which this CLI doesn't support (per Florian).
 type queryOut struct {
-	StatementName string `json:"statement_name" yaml:"statement_name"`
-	// Engine is always "snapshot" until M2 (Lightning routing) ships; emitting it
-	// now means a script switching on this field today won't need to change later.
-	Engine  string           `json:"engine" yaml:"engine"`
 	Phase   string           `json:"phase" yaml:"phase"`
 	Columns []queryColumnOut `json:"columns" yaml:"columns"`
 	// Values carry their SQL type (number, null, etc); see
@@ -30,8 +30,6 @@ type queryOut struct {
 	Rows      []map[string]any `json:"rows" yaml:"rows"`
 	RowCount  int              `json:"row_count" yaml:"row_count"`
 	Truncated bool             `json:"truncated" yaml:"truncated"`
-	// AppendOnly is nil until traits are known; false means Rows is a changelog, not a materialized table.
-	AppendOnly *bool `json:"append_only,omitempty" yaml:"append_only,omitempty"`
 }
 
 func (c *command) printQueryResult(cmd *cobra.Command, name string, result *query.Result, isAppendOnly, appendOnlyKnown, raw bool) error {
@@ -63,20 +61,12 @@ func (c *command) printQueryResult(cmd *cobra.Command, name string, result *quer
 			return output.SerializedOutput(cmd, rows)
 		}
 
-		var appendOnly *bool
-		if appendOnlyKnown {
-			appendOnly = &isAppendOnly
-		}
-
 		return output.SerializedOutput(cmd, &queryOut{
-			StatementName: name,
-			Engine:        engineSnapshot,
-			Phase:         string(result.Phase()),
-			Columns:       columns,
-			Rows:          rows,
-			RowCount:      len(rows),
-			Truncated:     result.Truncated,
-			AppendOnly:    appendOnly,
+			Phase:     string(result.Phase()),
+			Columns:   columns,
+			Rows:      rows,
+			RowCount:  len(rows),
+			Truncated: result.Truncated,
 		})
 	}
 
@@ -96,7 +86,7 @@ func (c *command) printQueryResult(cmd *cobra.Command, name string, result *quer
 			fields = append(fields, row.Operation.String())
 		}
 		for _, field := range row.GetFields() {
-			fields = append(fields, field.ToString())
+			fields = append(fields, escapeControlChars(field.ToString()))
 		}
 		rows[i] = fields
 	}
@@ -112,4 +102,24 @@ func (c *command) printQueryResult(cmd *cobra.Command, name string, result *quer
 	table.Render()
 
 	return nil
+}
+
+// escapeControlChars neutralizes control characters (e.g. raw ANSI escape codes)
+// before a field value reaches the terminal. JSON/YAML already escape these via
+// their own serializers; this is the equivalent for the plain-table renderer,
+// which otherwise lets the terminal execute them (recoloring, moving the cursor).
+func escapeControlChars(s string) string {
+	if !strings.ContainsFunc(s, unicode.IsControl) {
+		return s
+	}
+
+	var sb strings.Builder
+	for _, r := range s {
+		if unicode.IsControl(r) {
+			fmt.Fprintf(&sb, "\\x%02x", r)
+			continue
+		}
+		sb.WriteRune(r)
+	}
+	return sb.String()
 }
