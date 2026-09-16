@@ -9,7 +9,7 @@ Fail switchover pair "sw-123456" over to its "east" member.
   $ confluent switchover pair trigger-switch sw-123456 --active-member east
 
 Flags:
-      --active-member string   The name of the member to promote to active. If omitted, the other member is promoted.
+      --active-member string   The name of the member to promote to active. Required for PLANNED and UNPLANNED failovers; must be omitted for RESTORE.
       --failover-type string   The failover semantics to apply: PLANNED, UNPLANNED, or RESTORE. (default "PLANNED")
       --force                  Skip the confirmation prompt.
       --environment string     Environment ID.

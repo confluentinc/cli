@@ -142,7 +142,7 @@ from the CLI's existing mechanisms, in this order (see
    pin the acting principal (e.g. a service account) for a failover:
 
    ```bash
-   confluent-dev api-key create --resource global      # stores + activates it
+   confluent-dev api-key create --resource global --use   # --use activates it; without it the key is only stored
    # or, for a key created in the UI:
    confluent-dev api-key store <key> '<secret>' --resource global
    confluent-dev api-key use <key>
@@ -154,8 +154,10 @@ from the CLI's existing mechanisms, in this order (see
    login` is enough; no key required.
 
 There are no switchover-specific environment variables. To go back from the
-Global-key path to your login identity, activate a different key or clear
-`active_global_api_key` in `~/.confluent/config.json`. `--unsafe-trace` shows
+Global-key path to your login identity, clear `active_global_api_key` in
+`~/.confluent/config.json` for your context — `api-key use <another-key>` only
+changes which Global key wins, and a Kafka cluster-scoped key does not clear the
+field (there is no `api-key unuse` yet). `--unsafe-trace` shows
 which credential was sent (`Authorization: Basic` = key, `Bearer` plus a
 `POST /api/access_tokens` line = login).
 

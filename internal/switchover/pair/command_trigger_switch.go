@@ -27,7 +27,7 @@ func (c *command) newTriggerSwitchCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("active-member", "", "The name of the member to promote to active. If omitted, the other member is promoted.")
+	cmd.Flags().String("active-member", "", "The name of the member to promote to active. Required for PLANNED and UNPLANNED failovers; must be omitted for RESTORE.")
 	cmd.Flags().String("failover-type", "PLANNED", "The failover semantics to apply: PLANNED, UNPLANNED, or RESTORE.")
 	cmd.Flags().Bool("force", false, "Skip the confirmation prompt.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
