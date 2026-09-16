@@ -79,3 +79,19 @@ func TestFeatureFlags_PersistToCacheNotContexts(t *testing.T) {
 	require.NoError(t, reloaded.Load())
 	require.Equal(t, true, reloaded.Contexts["ctx"].FeatureFlags.CliValues["flag"])
 }
+
+func TestSave_CacheWriteFailureDoesNotFailSave(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	stateDir := filepath.Join(home, StateDirName())
+	require.NoError(t, os.MkdirAll(stateDir, 0700))
+	// A regular file where the cache dir should be makes os.MkdirAll(.cache) fail.
+	require.NoError(t, os.WriteFile(filepath.Join(stateDir, ".cache"), []byte("x"), 0600))
+
+	c := New()
+	now := time.Now()
+	c.LastUpdateCheckAt = &now
+
+	require.NoError(t, c.Save()) // config write must still succeed
+	require.FileExists(t, c.GetFilename())
+}
