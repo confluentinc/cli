@@ -26,36 +26,40 @@ const (
 // realRun executes one confluent invocation with the given per-session env and space-split args,
 // bounded by a timeout so a hung subprocess can't hang the whole eval, and captures the full
 // transcript (exit code, stdout, stderr, duration) instead of collapsing it to a bare error.
-func realRun(bin string, env []string, args string) Invocation {
-	start := time.Now()
-	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
-	defer cancel()
+// coverDir is a shared scratch dir for GOCOVERDIR: the coverage-instrumented binary otherwise warns
+// "GOCOVERDIR not set" on every invocation, polluting every captured transcript with the same noise.
+func realRun(coverDir string) CommandFunc {
+	return func(bin string, env []string, args string) Invocation {
+		start := time.Now()
+		ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
+		defer cancel()
 
-	cmd := exec.CommandContext(ctx, bin, splitArgs(args)...)
-	cmd.Env = env
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
+		cmd := exec.CommandContext(ctx, bin, splitArgs(args)...)
+		cmd.Env = append(append([]string{}, env...), "GOCOVERDIR="+coverDir)
+		var stdout, stderr bytes.Buffer
+		cmd.Stdout = &stdout
+		cmd.Stderr = &stderr
 
-	err := cmd.Run()
-	inv := Invocation{
-		Command:    args,
-		Stdout:     stdout.String(),
-		Stderr:     stderr.String(),
-		DurationMs: time.Since(start).Milliseconds(),
+		err := cmd.Run()
+		inv := Invocation{
+			Command:    args,
+			Stdout:     stdout.String(),
+			Stderr:     stderr.String(),
+			DurationMs: time.Since(start).Milliseconds(),
+		}
+		if cmd.ProcessState != nil {
+			inv.ExitCode = cmd.ProcessState.ExitCode()
+		}
+		switch {
+		case ctx.Err() != nil:
+			inv.Err = "timeout: " + ctx.Err().Error()
+		case cmd.ProcessState == nil && err != nil:
+			inv.Err = err.Error() // spawn failure - the process never ran
+		case err != nil && !errors.As(err, new(*exec.ExitError)):
+			inv.Err = err.Error()
+		}
+		return inv
 	}
-	if cmd.ProcessState != nil {
-		inv.ExitCode = cmd.ProcessState.ExitCode()
-	}
-	switch {
-	case ctx.Err() != nil:
-		inv.Err = "timeout: " + ctx.Err().Error()
-	case cmd.ProcessState == nil && err != nil:
-		inv.Err = err.Error() // spawn failure - the process never ran
-	case err != nil && !errors.As(err, new(*exec.ExitError)):
-		inv.Err = err.Error()
-	}
-	return inv
 }
 
 func TestEnvironmentCrosstalkEval(t *testing.T) {
@@ -65,6 +69,7 @@ func TestEnvironmentCrosstalkEval(t *testing.T) {
 	cloudURL := backend.GetCloudUrl()
 
 	sessions := []Session{{IntendedEnv: envA}, {IntendedEnv: envB}}
+	run := realRun(t.TempDir()) // one shared GOCOVERDIR for every invocation in this test
 
 	cells := []CellReport{}
 	for _, cell := range []struct {
@@ -78,7 +83,7 @@ func TestEnvironmentCrosstalkEval(t *testing.T) {
 		for trial := 0; trial < evalTrials; trial++ {
 			root := t.TempDir()
 			p := cell.make(root)
-			results := RunScenario(bin, cloudURL, p, sessions, realRun)
+			results := RunScenario(bin, cloudURL, p, sessions, run)
 			tr := GradeTrial(trial, results)
 			for _, s := range tr.Sessions {
 				if s.Verdict == VerdictError {

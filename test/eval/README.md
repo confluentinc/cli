@@ -6,10 +6,13 @@ The eval harness measures the impact of state isolation on CLI robustness under 
 
 In multi-agent scenarios where concurrent sessions share a single `~/.confluent/config.json`, a last-writer-wins race condition causes environment-selection collisions: an agent intends to use one environment (e.g., `env-596`) but reads another (e.g., `env-595`) written by a concurrent peer. Isolation—giving each session its own home directory—eliminates these collisions and their downstream impact on correctness.
 
-**Phase 1 observed result** (2 concurrent sessions, 5 trials):
+**Phase 1 observed result** (2 concurrent sessions, 5 trials): the shared cell fails every trial
+(`pass^k = 0`) - the only invariant across runs. The damage itself splits variably between
+environment-selection collisions and torn-write config corruption depending on scheduling; the
+split is not deterministic. Representative samples from two separate runs:
 
-- **Shared state:** 50% collision rate, 0% corruption rate, 0.0 pass^k (no trials passed)
-- **Isolated state:** 0% collision rate, 0% corruption rate, 1.0 pass^k (all trials passed)
+- **Shared state:** run 1 - 50% collision rate, 0% corruption rate; run 2 - 40% collision rate, 20% corruption rate. Both: `pass^k = 0`.
+- **Isolated state:** 0% collision rate, 0% corruption rate, `pass^k = 1.0` (every trial passes, every run)
 
 This demonstrates the value of the state-isolation effort (APIE-1515 multi-agent infrastructure) on the CLI v4 codebase today.
 
@@ -29,7 +32,7 @@ The test:
 6. Grades the resulting config for collisions and corruption
 7. Writes results to `test/eval/results/environment-crosstalk.json` and `test/eval/results/index.html`
 
-The barrier is phase-2 scaffolding for a future post-barrier read/act step; in phase 1 nothing happens after it, so it does not drive the result. The deterministic outcome comes from grading each session's final on-disk `config.json` after all writes complete - in shared mode, two sessions writing distinct environments to one file leave exactly one intended environment surviving (a genuine clobber), and isolated mode leaves each session's own file untouched by the other.
+The barrier is phase-2 scaffolding for a future post-barrier read/act step; in phase 1 nothing happens after it, so it does not drive the result. The outcome comes from grading each session's final on-disk `config.json` after all writes complete. In shared mode, two sessions writing to one file race: depending on scheduling, that race surfaces as a collision (one session's write wins outright, leaving the other pointed at the wrong environment) or as corruption (an interleaved/torn write leaves the file unparseable or structurally incomplete) - either way, every trial fails (`pass^k = 0`). Isolated mode leaves each session's own file untouched by the other, so neither failure mode is reachable.
 
 ## Why Behind the `eval` Build Tag
 
