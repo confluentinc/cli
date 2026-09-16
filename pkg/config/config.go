@@ -271,11 +271,42 @@ func (c *Config) loadCache() {
 	if s.readJSON("update_check.json", &uc) {
 		c.LastUpdateCheckAt = uc.LastUpdateCheckAt
 	}
+	c.loadFeatureFlagCache(s)
 }
 
 func (c *Config) saveCache() error {
 	s := newCacheStore()
-	return s.writeJSON("update_check.json", updateCheckCache{LastUpdateCheckAt: c.LastUpdateCheckAt})
+	if err := s.writeJSON("update_check.json", updateCheckCache{LastUpdateCheckAt: c.LastUpdateCheckAt}); err != nil {
+		return err
+	}
+	return c.saveFeatureFlagCache(s)
+}
+
+// loadFeatureFlagCache restores each context's FeatureFlags from the cache store, keyed
+// by context name.
+func (c *Config) loadFeatureFlagCache(s *cacheStore) {
+	flags := map[string]*FeatureFlags{}
+	if !s.readJSON("feature_flags.json", &flags) {
+		return
+	}
+	for name, ctx := range c.Contexts {
+		if ff, ok := flags[name]; ok {
+			ctx.FeatureFlags = ff
+		}
+	}
+}
+
+func (c *Config) saveFeatureFlagCache(s *cacheStore) error {
+	flags := map[string]*FeatureFlags{}
+	for name, ctx := range c.Contexts {
+		if ctx.FeatureFlags != nil {
+			flags[name] = ctx.FeatureFlags
+		}
+	}
+	if len(flags) == 0 {
+		return nil
+	}
+	return s.writeJSON("feature_flags.json", flags)
 }
 
 // wireContexts rebuilds the cross-references Load() relies on: each context's
