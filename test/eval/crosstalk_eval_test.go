@@ -3,7 +3,9 @@
 package eval
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -22,18 +24,38 @@ const (
 )
 
 // realRun executes one confluent invocation with the given per-session env and space-split args,
-// bounded by a timeout so a hung subprocess can't hang the whole eval.
-func realRun(bin string, env []string, args string) error {
+// bounded by a timeout so a hung subprocess can't hang the whole eval, and captures the full
+// transcript (exit code, stdout, stderr, duration) instead of collapsing it to a bare error.
+func realRun(bin string, env []string, args string) Invocation {
+	start := time.Now()
 	ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, bin, splitArgs(args)...)
 	cmd.Env = env
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return &runError{args: args, out: string(out), err: err}
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	inv := Invocation{
+		Command:    args,
+		Stdout:     stdout.String(),
+		Stderr:     stderr.String(),
+		DurationMs: time.Since(start).Milliseconds(),
 	}
-	return nil
+	if cmd.ProcessState != nil {
+		inv.ExitCode = cmd.ProcessState.ExitCode()
+	}
+	switch {
+	case ctx.Err() != nil:
+		inv.Err = "timeout: " + ctx.Err().Error()
+	case cmd.ProcessState == nil && err != nil:
+		inv.Err = err.Error() // spawn failure - the process never ran
+	case err != nil && !errors.As(err, new(*exec.ExitError)):
+		inv.Err = err.Error()
+	}
+	return inv
 }
 
 func TestEnvironmentCrosstalkEval(t *testing.T) {
@@ -43,8 +65,8 @@ func TestEnvironmentCrosstalkEval(t *testing.T) {
 	cloudURL := backend.GetCloudUrl()
 
 	sessions := []Session{{IntendedEnv: envA}, {IntendedEnv: envB}}
-	report := Report{Build: gitShortSHA(repoRootFromTest(t)), Cells: map[string]CellMetrics{}}
 
+	cells := []CellReport{}
 	for _, cell := range []struct {
 		name string
 		make func(root string) Provisioner
@@ -52,39 +74,64 @@ func TestEnvironmentCrosstalkEval(t *testing.T) {
 		{"shared", NewSharedProvisioner},
 		{"isolated", NewIsolatedProvisioner},
 	} {
-		var outcomes []TrialOutcome
+		var trials []TrialResult
 		for trial := 0; trial < evalTrials; trial++ {
 			root := t.TempDir()
 			p := cell.make(root)
 			results := RunScenario(bin, cloudURL, p, sessions, realRun)
-			for _, r := range results {
-				if r.RunErr != nil {
-					t.Logf("%s trial %d session %d run error: %v", cell.name, trial, r.Session, r.RunErr)
+			tr := GradeTrial(trial, results)
+			for _, s := range tr.Sessions {
+				if s.Verdict == VerdictError {
+					t.Logf("%s trial %d session %d errored: %s", cell.name, trial, s.Session, s.Detail)
 				}
 			}
-			outcomes = append(outcomes, GradeTrial(results))
+			trials = append(trials, tr)
 		}
-		report.Cells[cell.name] = Aggregate(outcomes)
+		cells = append(cells, CellReport{Name: cell.name, Metrics: Aggregate(trials), Trials: trials})
+	}
+
+	report := Report{
+		Build:       gitShortSHA(repoRootFromTest(t)),
+		GeneratedAt: time.Now().UTC().Format(time.RFC3339),
+		Scenarios: []ScenarioReport{
+			{
+				Name:        "environment-crosstalk",
+				Description: "measures whether concurrent `confluent login` + `confluent environment use` sessions collide or corrupt state when sharing a config directory, versus each session getting its own.",
+				Sessions:    len(sessions),
+				Trials:      evalTrials,
+				Cells:       cells,
+			},
+		},
 	}
 
 	t.Log("\n" + report.Summary())
 	writeReport(t, report)
 
-	shared := report.Cells["shared"]
-	isolated := report.Cells["isolated"]
+	var shared, isolated CellMetrics
+	for _, c := range cells {
+		switch c.Name {
+		case "shared":
+			shared = c.Metrics
+		case "isolated":
+			isolated = c.Metrics
+		}
+	}
 
-	// The headline claim: shared state collides or corrupts under concurrent writes, isolated
-	// state does neither. A shared config.json can end up with the wrong active environment
-	// (collision) or a torn/invalid write (corruption) - both are concurrent-state damage that
-	// isolation removes.
-	if shared.CollisionRate == 0 && shared.CorruptionRate == 0 {
-		t.Errorf("expected collisions or corruptions under shared state, got both rates 0 (barrier or scenario broken?)")
+	// The headline claim: shared state collides, corrupts, or errors under concurrent writes;
+	// isolated state does none of those. A shared config.json can end up with the wrong active
+	// environment (collision), a torn/invalid write (corruption), or a failing invocation (error) -
+	// all are concurrent-state damage that isolation removes.
+	if shared.CollisionRate == 0 && shared.CorruptionRate == 0 && shared.ErrorRate == 0 {
+		t.Errorf("expected collisions, corruptions, or errors under shared state, got all rates 0 (barrier or scenario broken?)")
 	}
 	if isolated.CollisionRate != 0 {
 		t.Errorf("expected zero collisions under isolated state, got %.3f", isolated.CollisionRate)
 	}
 	if isolated.CorruptionRate != 0 {
 		t.Errorf("expected zero corruptions under isolated state, got %.3f", isolated.CorruptionRate)
+	}
+	if isolated.ErrorRate != 0 {
+		t.Errorf("expected zero errors under isolated state, got %.3f", isolated.ErrorRate)
 	}
 	if isolated.PassCaretK != 1.0 {
 		t.Errorf("expected isolated pass^k = 1.0, got %.3f", isolated.PassCaretK)
@@ -112,16 +159,6 @@ func buildCLI(t *testing.T) string {
 		t.Fatalf("built binary missing at %s: %v", bin, err)
 	}
 	return bin
-}
-
-type runError struct {
-	args string
-	out  string
-	err  error
-}
-
-func (e *runError) Error() string {
-	return e.args + ": " + e.err.Error() + "\n" + e.out
 }
 
 // splitArgs splits a command string on spaces. Phase-1 scenarios use no quoted/spaced arguments.
@@ -158,6 +195,9 @@ func writeReport(t *testing.T, r Report) {
 		t.Fatal(err)
 	}
 	if err := r.WriteJSON(filepath.Join(dir, "environment-crosstalk.json")); err != nil {
+		t.Fatal(err)
+	}
+	if err := r.WriteHTML(filepath.Join(dir, "index.html")); err != nil {
 		t.Fatal(err)
 	}
 }
