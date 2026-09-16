@@ -1,7 +1,7 @@
-Delete an IP group.
+Delete one or more IAM IP groups.
 
 Usage:
-  confluent iam ip-group delete <id> [flags]
+  confluent iam ip-group delete <id-1> [id-2] ... [id-n] [flags]
 
 Examples:
 Delete IP group "ipg-12345":

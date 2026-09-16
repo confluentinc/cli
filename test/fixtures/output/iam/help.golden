@@ -9,7 +9,7 @@ Available Commands:
   group-mapping         Manage Confluent Cloud IAM group mappings.
   identity-provider     Manage Confluent Cloud IAM identity providers.
   ip-filter             Manage IP filters.
-  ip-group              Manage IP groups.
+  ip-group              Manage Confluent Cloud IAM IP groups.
   pool                  Manage identity pools.
   rbac                  Manage RBAC permissions.
   service-account       Manage and select Confluent Cloud IAM service accounts.
