@@ -1,0 +1,51 @@
+{{define "index"}}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CLI Eval Report</title>
+{{template "styles" .}}
+</head>
+<body>
+<h1>CLI Eval Report</h1>
+<div class="meta">build <span class="mono">{{.Build}}</span> &middot; generated {{.GeneratedAt}} &middot; {{len .Scenarios}} scenario{{if ne (len .Scenarios) 1}}s{{end}}</div>
+
+<details class="glossary">
+<summary>&#9432; How these scores are calculated</summary>
+<dl>
+<dt><code>Clean runs</code></dt>
+<dd>fraction of trials where every session in the trial graded "ok" - shown as N / total. This is formally the <code>pass^k</code> metric.</dd>
+<dt><code>Collision rate</code></dt>
+<dd>fraction of sessions that landed on the wrong environment (intended &ne; observed).</dd>
+<dt><code>Corruption rate</code></dt>
+<dd>fraction of sessions whose <code>config.json</code> failed integrity validation (e.g. a torn write).</dd>
+<dt><code>Error rate</code></dt>
+<dd>fraction of sessions where a <code>confluent</code> invocation itself failed (nonzero exit, timeout, or spawn error) - tracked separately from state damage.</dd>
+</dl>
+</details>
+
+<table>
+<tr>
+<th>Scenario</th>
+<th class="num">Sessions &times; Trials</th>
+<th class="num">Shared: clean runs <span class="info" tabindex="0" data-tip="fraction of trials with zero collisions, corruptions, or errors (pass^k)">&#9432;</span></th>
+<th class="num">Isolated: clean runs <span class="info" tabindex="0" data-tip="fraction of trials with zero collisions, corruptions, or errors (pass^k)">&#9432;</span></th>
+<th>Shared damage</th>
+<th></th>
+</tr>
+{{range .Scenarios}}
+{{$slug := slugify .Name}}
+{{$shared := cellByName .Cells "shared"}}
+{{$isolated := cellByName .Cells "isolated"}}
+<tr class="{{if cellClean $shared.Metrics}}clean{{else}}dirty{{end}}">
+<td><a href="{{$slug}}.html">{{.Name}}</a><br><span class="meta">{{codeify .Description}}</span></td>
+<td class="num">{{.Sessions}} &times; {{.Trials}}</td>
+<td class="num"><span class="{{if cellClean $shared.Metrics}}good{{else}}bad{{end}}">{{cleanRuns $shared}}</span></td>
+<td class="num"><span class="{{if cellClean $isolated.Metrics}}good{{else}}bad{{end}}">{{cleanRuns $isolated}}</span></td>
+<td>{{sharedDamage $shared}}</td>
+<td><a href="{{$slug}}.html">view &rarr;</a></td>
+</tr>
+{{end}}
+</table>
+</body>
+</html>
+{{end}}

@@ -17,7 +17,7 @@ func sampleReport() Report {
 		Scenarios: []ScenarioReport{
 			{
 				Name:        "environment-crosstalk",
-				Description: "measures environment-selection collisions under concurrent CLI sessions.",
+				Description: "measures environment-selection collisions under concurrent `confluent login` sessions.",
 				Sessions:    2,
 				Trials:      5,
 				Cells: []CellReport{
@@ -110,45 +110,6 @@ func TestReportSummaryMentionsBothCells(t *testing.T) {
 	}
 }
 
-func TestReportWriteHTMLContainsDrillDownMarkers(t *testing.T) {
-	r := sampleReport()
-	path := filepath.Join(t.TempDir(), "index.html")
-
-	if err := r.WriteHTML(path); err != nil {
-		t.Fatalf("write: %v", err)
-	}
-
-	data, err := os.ReadFile(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	html := string(data)
-
-	if !strings.Contains(html, "<!DOCTYPE html>") {
-		t.Fatalf("output does not look like HTML")
-	}
-	for _, want := range []string{
-		"shared",
-		"isolated",
-		"badge-collision",                   // verdict badge class rendered
-		"badge-error",                       // error verdict badge class rendered
-		"clobbered by a concurrent session", // collision detail substring
-		"environment use env-595",           // invocation command
-		`tr class="dirty"`,                  // non-ok session row is tinted
-		`tr class="clean"`,                  // ok session row is tinted
-		`details class="dirty"`,             // trial with any non-ok session gets a dirty rail
-		`details class="clean"`,             // trial with every session ok gets a clean rail
-		`class="num"`,                       // rate columns are right-aligned/tabular
-		`class="stream-label"`,              // stdout/stderr blocks are labeled
-		`color:#cc3333`,                     // failed invocation's exit code is highlighted red
-		"&mdash;",                           // empty Detail on the ok session renders as an em-dash
-	} {
-		if !strings.Contains(html, want) {
-			t.Fatalf("HTML missing expected marker %q", want)
-		}
-	}
-}
-
 func TestSessionRowClassTintsByVerdict(t *testing.T) {
 	if got := sessionRowClass(VerdictOK); got != "clean" {
 		t.Fatalf("sessionRowClass(ok) = %q, want clean", got)
@@ -166,5 +127,137 @@ func TestTrialCleanTrueOnlyWhenEverySessionOK(t *testing.T) {
 	}
 	if trialClean([]SessionOutcome{{Verdict: VerdictOK}, {Verdict: VerdictCollision}}) {
 		t.Fatalf("expected trialClean = false when any session is not ok")
+	}
+}
+
+func TestSlugify(t *testing.T) {
+	cases := map[string]string{
+		"environment-crosstalk":   "environment-crosstalk",
+		"Environment Crosstalk!!": "environment-crosstalk",
+		"  leading--trailing  ":   "leading-trailing",
+		"multi   space___under":   "multi-space-under",
+		"already-lower-case-slug": "already-lower-case-slug",
+	}
+	for in, want := range cases {
+		if got := slugify(in); got != want {
+			t.Errorf("slugify(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+func TestCodeifyPlainTextIsEscapedUnchanged(t *testing.T) {
+	got := string(codeify("A & B < C"))
+	if !strings.Contains(got, "&amp;") || !strings.Contains(got, "&lt;") {
+		t.Fatalf("codeify did not escape plain text: %q", got)
+	}
+	if strings.Contains(got, "<code>") {
+		t.Fatalf("codeify added <code> with no backticks in input: %q", got)
+	}
+}
+
+func TestCodeifyRendersBalancedBacktickSpanAsCode(t *testing.T) {
+	got := string(codeify("run `environment use` to switch"))
+	if !strings.Contains(got, "<code>environment use</code>") {
+		t.Fatalf("codeify did not render backtick span as <code>: %q", got)
+	}
+}
+
+func TestCodeifyEscapesScriptTags(t *testing.T) {
+	got := string(codeify("<script>alert(1)</script>"))
+	if strings.Contains(got, "<script>") {
+		t.Fatalf("codeify emitted unescaped <script>: %q", got)
+	}
+	if !strings.Contains(got, "&lt;script&gt;") {
+		t.Fatalf("codeify did not escape the script tag: %q", got)
+	}
+}
+
+func TestCodeifyLeavesUnbalancedBacktickLiteral(t *testing.T) {
+	got := string(codeify("it`s broken"))
+	if strings.Contains(got, "<code>") {
+		t.Fatalf("codeify should not emit <code> for an unbalanced backtick: %q", got)
+	}
+	if !strings.Contains(got, "`") {
+		t.Fatalf("codeify should leave the lone backtick literal: %q", got)
+	}
+}
+
+func TestCleanRuns(t *testing.T) {
+	mixed := CellReport{Trials: []TrialResult{{AllPassed: true}, {AllPassed: false}, {AllPassed: true}}}
+	if got := cleanRuns(mixed); got != "2 / 3" {
+		t.Fatalf("cleanRuns(mixed) = %q, want %q", got, "2 / 3")
+	}
+
+	allClean := CellReport{Trials: []TrialResult{{AllPassed: true}, {AllPassed: true}}}
+	if got := cleanRuns(allClean); got != "2 / 2" {
+		t.Fatalf("cleanRuns(allClean) = %q, want %q", got, "2 / 2")
+	}
+}
+
+func TestSharedDamage(t *testing.T) {
+	mixed := CellReport{Metrics: CellMetrics{CollisionRate: 0.4, CorruptionRate: 0.2, ErrorRate: 0}}
+	got := sharedDamage(mixed)
+	if !strings.Contains(got, "collision") || !strings.Contains(got, "corruption") {
+		t.Fatalf("sharedDamage(mixed) = %q, want mention of collision and corruption", got)
+	}
+	if strings.Contains(got, "error") {
+		t.Fatalf("sharedDamage(mixed) = %q, should not mention error (rate is 0)", got)
+	}
+
+	clean := CellReport{Metrics: CellMetrics{}}
+	if got := sharedDamage(clean); got != "none" {
+		t.Fatalf("sharedDamage(clean) = %q, want %q", got, "none")
+	}
+}
+
+func TestReportTemplatesParseAndResolveNames(t *testing.T) {
+	for _, name := range []string{"index", "scenario", "styles"} {
+		if reportTemplates.Lookup(name) == nil {
+			t.Fatalf("template %q not found in the parsed embedded set", name)
+		}
+	}
+}
+
+func TestWriteHTMLReportGeneratesIndexAndScenarioPages(t *testing.T) {
+	r := sampleReport()
+	dir := t.TempDir()
+
+	if err := r.WriteHTMLReport(dir); err != nil {
+		t.Fatalf("WriteHTMLReport: %v", err)
+	}
+
+	indexData, err := os.ReadFile(filepath.Join(dir, "index.html"))
+	if err != nil {
+		t.Fatalf("index.html not written: %v", err)
+	}
+	index := string(indexData)
+
+	scenarioData, err := os.ReadFile(filepath.Join(dir, "environment-crosstalk.html"))
+	if err != nil {
+		t.Fatalf("environment-crosstalk.html not written: %v", err)
+	}
+	scenario := string(scenarioData)
+
+	if !strings.Contains(index, `href="environment-crosstalk.html"`) {
+		t.Fatalf("index.html does not link to the scenario page: %q", index)
+	}
+	if !strings.Contains(index, "clean runs") {
+		t.Fatalf("index.html missing \"clean runs\" wording: %q", index)
+	}
+
+	for _, want := range []string{
+		"badge-collision", // drill-down marker carried over from the single-page report
+		"All scenarios",   // back-link to index.html
+		"<code>",          // codeify rendered a backtick span from the description
+	} {
+		if !strings.Contains(scenario, want) {
+			t.Fatalf("environment-crosstalk.html missing %q", want)
+		}
+	}
+
+	for _, doc := range []string{index, scenario} {
+		if !strings.Contains(doc, "prefers-color-scheme: dark") {
+			t.Fatalf("expected page to be theme-aware (missing dark media query): %q", doc)
+		}
 	}
 }

@@ -1,0 +1,62 @@
+{{define "scenario"}}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{{.Name}} - CLI Eval Report</title>
+{{template "styles" .}}
+</head>
+<body>
+<p><a href="index.html">&larr; All scenarios</a></p>
+<h1>{{.Name}}</h1>
+<p>{{codeify .Description}}</p>
+<div class="meta">build <span class="mono">{{.Build}}</span> &middot; generated {{.GeneratedAt}}</div>
+
+<table>
+<tr><th>Cell</th><th class="num">Trials</th><th class="num">Collision Rate</th><th class="num">Corruption Rate</th><th class="num">Error Rate</th><th class="num">Pass^k</th></tr>
+{{range .Cells}}
+<tr class="{{if cellClean .Metrics}}clean{{else}}dirty{{end}}">
+<td>{{.Name}}</td>
+<td class="num">{{.Metrics.Trials}}</td>
+<td class="num">{{pct .Metrics.CollisionRate}}</td>
+<td class="num">{{pct .Metrics.CorruptionRate}}</td>
+<td class="num">{{pct .Metrics.ErrorRate}}</td>
+<td class="num">{{rate .Metrics.PassCaretK}}</td>
+</tr>
+{{end}}
+</table>
+
+{{range .Cells}}
+<h3>{{.Name}}</h3>
+{{range .Trials}}
+<details class="{{if trialClean .Sessions}}clean{{else}}dirty{{end}}">
+<summary>trial {{.Trial}} &mdash; {{tally .Sessions}}</summary>
+<table>
+<tr><th>Session</th><th>Intended &rarr; Observed</th><th>Verdict</th><th>Detail</th></tr>
+{{range .Sessions}}
+<tr class="{{sessionRowClass .Verdict}}">
+<td>{{.Session}}</td>
+<td class="mono">{{.IntendedEnv}} &rarr; {{if .ObservedEnv}}{{.ObservedEnv}}{{else}}&mdash;{{end}}</td>
+<td><span class="badge {{verdictClass .Verdict}}">{{.Verdict}}</span></td>
+<td>{{if .Detail}}{{codeify .Detail}}{{else}}&mdash;{{end}}</td>
+</tr>
+{{end}}
+</table>
+{{range .Sessions}}
+<details>
+<summary>session {{.Session}} invocations ({{len .Invocations}})</summary>
+{{range .Invocations}}
+<div>
+<div class="mono">$ {{.Command}} <span style="color:{{if .ExitCode}}var(--bad){{else}}var(--meta){{end}}">[exit {{.ExitCode}}, {{.DurationMs}}ms]</span></div>
+{{if .Err}}<pre>err: {{.Err}}</pre>{{end}}
+{{if .Stdout}}<div class="stream-label">stdout</div><pre>{{.Stdout}}</pre>{{end}}
+{{if .Stderr}}<div class="stream-label">stderr</div><pre>{{.Stderr}}</pre>{{end}}
+</div>
+{{end}}
+</details>
+{{end}}
+</details>
+{{end}}
+{{end}}
+</body>
+</html>
+{{end}}

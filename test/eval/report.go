@@ -4,10 +4,13 @@ package eval
 
 import (
 	"bytes"
+	"embed"
 	"encoding/json"
 	"fmt"
 	"html/template"
 	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -39,24 +42,63 @@ func (r Report) WriteJSON(path string) error {
 	return os.WriteFile(path, data, 0o644)
 }
 
-func (r Report) WriteHTML(path string) error {
-	tmpl, err := template.New("report").Funcs(template.FuncMap{
-		"pct":             formatPercent,
-		"rate":            formatRate,
-		"cellClean":       cellIsClean,
-		"verdictClass":    verdictBadgeClass,
-		"tally":           tallyVerdicts,
-		"sessionRowClass": sessionRowClass,
-		"trialClean":      trialClean,
-	}).Parse(reportHTMLTemplate)
-	if err != nil {
+//go:embed templates/*.tmpl
+var templatesFS embed.FS
+
+// reportTemplates is parsed once at package init from the committed template set. A malformed or
+// misnamed .tmpl file surfaces immediately (panic on import) rather than silently rendering a blank
+// page; TestReportTemplatesParseAndResolveNames additionally guards that "index"/"scenario"/"styles"
+// all resolve by name.
+var reportTemplates = template.Must(template.New("report").Funcs(template.FuncMap{
+	"pct":             formatPercent,
+	"rate":            formatRate,
+	"cellClean":       cellIsClean,
+	"verdictClass":    verdictBadgeClass,
+	"tally":           tallyVerdicts,
+	"sessionRowClass": sessionRowClass,
+	"trialClean":      trialClean,
+	"slugify":         slugify,
+	"codeify":         codeify,
+	"cleanRuns":       cleanRuns,
+	"sharedDamage":    sharedDamage,
+	"cellByName":      cellByName,
+}).ParseFS(templatesFS, "templates/*.tmpl"))
+
+// scenarioPage is the data a scenario page renders from: the scenario itself plus the report-level
+// build metadata that the shared header on every page shows.
+type scenarioPage struct {
+	ScenarioReport
+	Build       string
+	GeneratedAt string
+}
+
+// WriteHTMLReport renders the multi-page report into dir: an index.html linking to one
+// "<slug>.html" per scenario, where slug is the scenario name run through slugify.
+func (r Report) WriteHTMLReport(dir string) error {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
+
 	var buf bytes.Buffer
-	if err := tmpl.Execute(&buf, r); err != nil {
+	if err := reportTemplates.ExecuteTemplate(&buf, "index", r); err != nil {
+		return fmt.Errorf("render index: %w", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "index.html"), buf.Bytes(), 0o644); err != nil {
 		return err
 	}
-	return os.WriteFile(path, buf.Bytes(), 0o644)
+
+	for _, sc := range r.Scenarios {
+		buf.Reset()
+		page := scenarioPage{ScenarioReport: sc, Build: r.Build, GeneratedAt: r.GeneratedAt}
+		if err := reportTemplates.ExecuteTemplate(&buf, "scenario", page); err != nil {
+			return fmt.Errorf("render scenario %q: %w", sc.Name, err)
+		}
+		path := filepath.Join(dir, slugify(sc.Name)+".html")
+		if err := os.WriteFile(path, buf.Bytes(), 0o644); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // Summary renders a short human-readable rollup for stdout/test logs.
@@ -82,7 +124,7 @@ func formatRate(f float64) string {
 }
 
 // cellIsClean reports whether a cell's metrics show no damage at all - the green/red split in the
-// HTML summary table.
+// HTML summary tables.
 func cellIsClean(m CellMetrics) bool {
 	return m.CollisionRate == 0 && m.CorruptionRate == 0 && m.ErrorRate == 0 && m.PassCaretK == 1.0
 }
@@ -130,95 +172,69 @@ func tallyVerdicts(sessions []SessionOutcome) string {
 		counts[VerdictOK], counts[VerdictCollision], counts[VerdictCorruption], counts[VerdictError])
 }
 
-const reportHTMLTemplate = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>CLI Eval Report</title>
-<style>
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; margin: 2rem; color: #1a1a1a; background: #fafafa; }
-  h1, h2, h3 { margin: 1.2em 0 0.3em; }
-  h1 { margin-top: 0; }
-  .meta { color: #666; font-size: 0.9em; margin-bottom: 1.5em; }
-  .scenario { border: 1px solid #ddd; border-radius: 6px; padding: 1em 1.5em; margin-bottom: 2em; background: #fff; }
-  table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
-  th, td { border: 1px solid #ddd; padding: 6px 10px; text-align: left; font-size: 0.9em; vertical-align: top; }
-  th { background: #eee; }
-  .scenario table th { position: sticky; top: 0; background: #eee; }
-  td.num { text-align: right; font-variant-numeric: tabular-nums; }
-  tr.clean td { background: #e9f9ec; }
-  tr.dirty td { background: #fdecea; }
-  .mono { font-family: SFMono-Regular, Menlo, Consolas, monospace; }
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.78em; font-weight: 600; color: #fff; }
-  .badge-ok { background: #1f7a3d; }
-  .badge-collision { background: #cc3333; }
-  .badge-corruption { background: #a8650a; }
-  .badge-error { background: #6b6b6b; }
-  details { margin: 0.3em 0; }
-  details details { margin-left: 1.25em; }
-  details.clean { border-left: 3px solid #2ea44f; padding-left: 0.5em; }
-  details.dirty { border-left: 3px solid #cc3333; padding-left: 0.5em; }
-  summary { cursor: pointer; font-weight: 600; }
-  pre { background: #272822; color: #f8f8f2; padding: 8px 10px; overflow-x: auto; font-size: 0.82em; border-radius: 4px; margin: 0.3em 0; }
-  .stream-label { color: #888; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.04em; margin-top: 0.4em; }
-</style>
-</head>
-<body>
-<h1>CLI Eval Report</h1>
-<div class="meta">build <span class="mono">{{.Build}}</span> &middot; generated {{.GeneratedAt}}</div>
+var slugNonAlnum = regexp.MustCompile(`[^a-z0-9]+`)
 
-{{range .Scenarios}}
-<div class="scenario">
-<h2>{{.Name}}</h2>
-<p>{{.Description}}</p>
-<table>
-<tr><th>Cell</th><th>Trials</th><th>Collision Rate</th><th>Corruption Rate</th><th>Error Rate</th><th>Pass^k</th></tr>
-{{range .Cells}}
-<tr class="{{if cellClean .Metrics}}clean{{else}}dirty{{end}}">
-<td>{{.Name}}</td>
-<td class="num">{{.Metrics.Trials}}</td>
-<td class="num">{{pct .Metrics.CollisionRate}}</td>
-<td class="num">{{pct .Metrics.CorruptionRate}}</td>
-<td class="num">{{pct .Metrics.ErrorRate}}</td>
-<td class="num">{{rate .Metrics.PassCaretK}}</td>
-</tr>
-{{end}}
-</table>
+// slugify turns a scenario name into a filename-safe slug: lowercase, non-alphanumeric runs
+// collapsed to a single "-", with leading/trailing "-" trimmed.
+func slugify(s string) string {
+	s = strings.ToLower(s)
+	s = slugNonAlnum.ReplaceAllString(s, "-")
+	return strings.Trim(s, "-")
+}
 
-{{range .Cells}}
-<h3>{{.Name}}</h3>
-{{range .Trials}}
-<details class="{{if trialClean .Sessions}}clean{{else}}dirty{{end}}">
-<summary>trial {{.Trial}} &mdash; {{tally .Sessions}}</summary>
-<table>
-<tr><th>Session</th><th>Intended &rarr; Observed</th><th>Verdict</th><th>Detail</th></tr>
-{{range .Sessions}}
-<tr class="{{sessionRowClass .Verdict}}">
-<td>{{.Session}}</td>
-<td class="mono">{{.IntendedEnv}} &rarr; {{if .ObservedEnv}}{{.ObservedEnv}}{{else}}&mdash;{{end}}</td>
-<td><span class="badge {{verdictClass .Verdict}}">{{.Verdict}}</span></td>
-<td>{{if .Detail}}{{.Detail}}{{else}}&mdash;{{end}}</td>
-</tr>
-{{end}}
-</table>
-{{range .Sessions}}
-<details>
-<summary>session {{.Session}} invocations ({{len .Invocations}})</summary>
-{{range .Invocations}}
-<div>
-<div class="mono">$ {{.Command}} <span style="color:{{if .ExitCode}}#cc3333{{else}}#888{{end}}">[exit {{.ExitCode}}, {{.DurationMs}}ms]</span></div>
-{{if .Err}}<pre>err: {{.Err}}</pre>{{end}}
-{{if .Stdout}}<div class="stream-label">stdout</div><pre>{{.Stdout}}</pre>{{end}}
-{{if .Stderr}}<div class="stream-label">stderr</div><pre>{{.Stderr}}</pre>{{end}}
-</div>
-{{end}}
-</details>
-{{end}}
-</details>
-{{end}}
-{{end}}
-</div>
-{{end}}
-</body>
-</html>
-`
+var backtickSpan = regexp.MustCompile("`([^`]+)`")
+
+// codeify HTML-escapes s and then renders balanced backtick-delimited spans as <code>...</code>.
+// Escaping runs first so the span contents are already safe, and an unbalanced/leftover backtick is
+// left as a literal character rather than eating the rest of the string.
+func codeify(s string) template.HTML {
+	escaped := template.HTMLEscapeString(s)
+	rendered := backtickSpan.ReplaceAllStringFunc(escaped, func(span string) string {
+		inner := span[1 : len(span)-1]
+		return "<code>" + inner + "</code>"
+	})
+	return template.HTML(rendered)
+}
+
+// cleanRuns reports a cell's trials as "N / total", where N is the count that graded AllPassed
+// (i.e. pass^k's numerator) - the plain-language framing the index page leads with.
+func cleanRuns(c CellReport) string {
+	total := len(c.Trials)
+	clean := 0
+	for _, t := range c.Trials {
+		if t.AllPassed {
+			clean++
+		}
+	}
+	return fmt.Sprintf("%d / %d", clean, total)
+}
+
+// sharedDamage summarizes a cell's non-zero rates as plain text, e.g. "50.0% collision, 20.0%
+// corruption", or "none" if the cell shows no damage at all.
+func sharedDamage(c CellReport) string {
+	var parts []string
+	if c.Metrics.CollisionRate > 0 {
+		parts = append(parts, formatPercent(c.Metrics.CollisionRate)+" collision")
+	}
+	if c.Metrics.CorruptionRate > 0 {
+		parts = append(parts, formatPercent(c.Metrics.CorruptionRate)+" corruption")
+	}
+	if c.Metrics.ErrorRate > 0 {
+		parts = append(parts, formatPercent(c.Metrics.ErrorRate)+" error")
+	}
+	if len(parts) == 0 {
+		return "none"
+	}
+	return strings.Join(parts, ", ")
+}
+
+// cellByName finds a cell by name, returning the zero value if absent (the index page's shared/
+// isolated columns render blank rather than panicking if a scenario ever lacks one of them).
+func cellByName(cells []CellReport, name string) CellReport {
+	for _, c := range cells {
+		if c.Name == name {
+			return c
+		}
+	}
+	return CellReport{}
+}
