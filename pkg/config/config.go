@@ -274,12 +274,17 @@ func (c *Config) loadCache() {
 	c.loadFeatureFlagCache(s)
 }
 
-func (c *Config) saveCache() error {
+// saveCache persists the cache-store fields best-effort: CacheDir is disposable and
+// non-authoritative, so a write failure here (e.g. a blocked/full/permission-denied
+// cache dir) must never fail an otherwise-successful Save().
+func (c *Config) saveCache() {
 	s := newCacheStore()
 	if err := s.writeJSON("update_check.json", updateCheckCache{LastUpdateCheckAt: c.LastUpdateCheckAt}); err != nil {
-		return err
+		log.CliLogger.Warnf("unable to persist cache: %v", err)
 	}
-	return c.saveFeatureFlagCache(s)
+	if err := c.saveFeatureFlagCache(s); err != nil {
+		log.CliLogger.Warnf("unable to persist cache: %v", err)
+	}
 }
 
 // loadFeatureFlagCache restores each context's FeatureFlags from the cache store, keyed
@@ -492,9 +497,7 @@ func (c *Config) saveLocked() error {
 		return err
 	}
 
-	if err := c.saveCache(); err != nil {
-		return err
-	}
+	c.saveCache()
 
 	// The next Save's three-way merge diffs baseline against the live config, so the
 	// baseline must match the live config for every field this process did not edit,
@@ -517,9 +520,7 @@ func (c *Config) writeWholeConfig() error {
 	if err := c.save(); err != nil {
 		return err
 	}
-	if err := c.saveCache(); err != nil {
-		return err
-	}
+	c.saveCache()
 	// Refresh the baseline from disk (encrypted) rather than from the live config,
 	// which save() has restored to its decrypted form. A read failure here does not
 	// undo the successful write, so fall back to the live snapshot.
