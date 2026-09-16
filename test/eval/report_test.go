@@ -33,8 +33,15 @@ func sampleReport() Report {
 										Session: 1, IntendedEnv: "env-595", ObservedEnv: "env-596", Verdict: VerdictCollision,
 										Detail: `acted on "env-596", intended "env-595" (clobbered by a concurrent session)`,
 										Invocations: []Invocation{
-											{Command: "login --url http://mock", ExitCode: 0, DurationMs: 12},
+											{Command: "login --url http://mock", ExitCode: 0, DurationMs: 12, Stderr: "warning: retrying connection"},
 											{Command: "environment use env-595", ExitCode: 0, DurationMs: 8},
+										},
+									},
+									{
+										Session: 2, IntendedEnv: "env-596", ObservedEnv: "", Verdict: VerdictError,
+										Detail: `"login --url http://mock" failed: exit 1: connection refused`,
+										Invocations: []Invocation{
+											{Command: "login --url http://mock", ExitCode: 1, DurationMs: 5},
 										},
 									},
 								},
@@ -124,11 +131,40 @@ func TestReportWriteHTMLContainsDrillDownMarkers(t *testing.T) {
 		"shared",
 		"isolated",
 		"badge-collision",                   // verdict badge class rendered
+		"badge-error",                       // error verdict badge class rendered
 		"clobbered by a concurrent session", // collision detail substring
 		"environment use env-595",           // invocation command
+		`tr class="dirty"`,                  // non-ok session row is tinted
+		`tr class="clean"`,                  // ok session row is tinted
+		`details class="dirty"`,             // trial with any non-ok session gets a dirty rail
+		`details class="clean"`,             // trial with every session ok gets a clean rail
+		`class="num"`,                       // rate columns are right-aligned/tabular
+		`class="stream-label"`,              // stdout/stderr blocks are labeled
+		`color:#cc3333`,                     // failed invocation's exit code is highlighted red
+		"&mdash;",                           // empty Detail on the ok session renders as an em-dash
 	} {
 		if !strings.Contains(html, want) {
 			t.Fatalf("HTML missing expected marker %q", want)
 		}
+	}
+}
+
+func TestSessionRowClassTintsByVerdict(t *testing.T) {
+	if got := sessionRowClass(VerdictOK); got != "clean" {
+		t.Fatalf("sessionRowClass(ok) = %q, want clean", got)
+	}
+	for _, v := range []Verdict{VerdictCollision, VerdictCorruption, VerdictError} {
+		if got := sessionRowClass(v); got != "dirty" {
+			t.Fatalf("sessionRowClass(%s) = %q, want dirty", v, got)
+		}
+	}
+}
+
+func TestTrialCleanTrueOnlyWhenEverySessionOK(t *testing.T) {
+	if !trialClean([]SessionOutcome{{Verdict: VerdictOK}, {Verdict: VerdictOK}}) {
+		t.Fatalf("expected trialClean = true when every session is ok")
+	}
+	if trialClean([]SessionOutcome{{Verdict: VerdictOK}, {Verdict: VerdictCollision}}) {
+		t.Fatalf("expected trialClean = false when any session is not ok")
 	}
 }
