@@ -12,13 +12,13 @@
 <details class="glossary">
 <summary>&#9432; How these scores are calculated</summary>
 <dl>
-<dt><code>Clean runs</code></dt>
+<dt>Clean runs</dt>
 <dd>fraction of trials where every session in the trial graded "ok" - shown as N / total. This is formally the <code>pass^k</code> metric.</dd>
-<dt><code>Collision rate</code></dt>
+<dt>Collision rate</dt>
 <dd>fraction of sessions that landed on the wrong environment (intended &ne; observed).</dd>
-<dt><code>Corruption rate</code></dt>
+<dt>Corruption rate</dt>
 <dd>fraction of sessions whose <code>config.json</code> failed integrity validation (e.g. a torn write).</dd>
-<dt><code>Error rate</code></dt>
+<dt>Error rate</dt>
 <dd>fraction of sessions where a <code>confluent</code> invocation itself failed (nonzero exit, timeout, or spawn error) - tracked separately from state damage.</dd>
 </dl>
 </details>
