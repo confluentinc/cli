@@ -2,10 +2,10 @@ package query
 
 import (
 	"context"
-	goerrors "errors"
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 
@@ -168,7 +168,7 @@ func (c *command) runQuery(cmd *cobra.Command, _ []string) error {
 		return c.V2Client.GetOrgEnvironment(environmentId)
 	})
 	if err != nil {
-		if goerrors.Is(err, context.Canceled) || goerrors.Is(err, context.DeadlineExceeded) {
+		if isInterrupted(err) {
 			return interruptedError(cmd, err, "", false)
 		}
 		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
@@ -202,7 +202,7 @@ func (c *command) runQuery(cmd *cobra.Command, _ []string) error {
 	}
 	if err != nil {
 		// No statement exists yet at this point, same as the environment lookup above.
-		if goerrors.Is(err, context.Canceled) || goerrors.Is(err, context.DeadlineExceeded) {
+		if isInterrupted(err) {
 			return interruptedError(cmd, err, "", false)
 		}
 		return err
@@ -222,8 +222,11 @@ func (c *command) runQuery(cmd *cobra.Command, _ []string) error {
 
 	if stopped, err := createStatement(ctx, createStatementGracePeriod, func() (flinkgatewayv1.SqlV1Statement, error) {
 		return client.CreateStatement(statement, principal, environmentId, c.Context.LastOrgId)
-	}, func() bool { return c.stopStatement(client, environmentId, name, false) }); err != nil {
-		if goerrors.Is(err, context.Canceled) || goerrors.Is(err, context.DeadlineExceeded) {
+	}, func() bool {
+		stopped, _ := c.stopStatement(client, environmentId, name)
+		return stopped
+	}); err != nil {
+		if isInterrupted(err) {
 			return interruptedError(cmd, err, name, stopped)
 		}
 		return err
@@ -231,13 +234,24 @@ func (c *command) runQuery(cmd *cobra.Command, _ []string) error {
 
 	// The statement now exists server-side; this defer stops it unless settled is
 	// set, so no exit path can forget to release the compute it's holding.
-	// announceStop only becomes true for --max-rows truncation; a full drain
-	// landing on a non-terminal phase is routine and just logged, not printed.
+	// announceStop stays false only for the routine case: a fully successful,
+	// untruncated drain landing on a non-terminal phase (expected for Kafka-backed
+	// sources). It's set true below for --max-rows truncation and for any error,
+	// since both are cases the user needs to know the cleanup outcome of.
 	settled := false
 	announceStop := false
 	defer func() {
-		if !settled {
-			c.stopStatement(client, environmentId, name, announceStop)
+		if settled {
+			return
+		}
+		if announceStop {
+			c.stopStatementAndReport(client, environmentId, name)
+		} else if ok, err := c.stopStatement(client, environmentId, name); !ok {
+			// Even the routine, deliberately-quiet cleanup must surface a *failed*
+			// stop: the statement is still running and burning compute, which the
+			// user needs to know even though the query itself succeeded. Only a
+			// successful quiet stop stays silent (see bug #2).
+			reportStopFailure(name, err)
 		}
 	}()
 
@@ -252,6 +266,11 @@ func (c *command) runQuery(cmd *cobra.Command, _ []string) error {
 
 	result, err := query.Run(ctx, options, name)
 	if err != nil {
+		// If handleQueryError leaves settled false (any error it doesn't already
+		// stop and announce itself), the deferred cleanup above must still speak
+		// up: the user just saw an error and needs to know whether the leftover
+		// statement was actually cleaned up, not have that outcome logged quietly.
+		announceStop = true
 		return c.handleQueryError(cmd, client, environmentId, name, err, &settled)
 	}
 
@@ -290,7 +309,15 @@ func (c *command) runQuery(cmd *cobra.Command, _ []string) error {
 		output.ErrPrintln(false, "Warning: this statement emits updates and deletions. The rows below are the raw changelog, not a materialized table.")
 	}
 
-	return c.printQueryResult(cmd, name, result, isAppendOnly, appendOnlyKnown, raw)
+	if err := c.printQueryResult(cmd, name, result, isAppendOnly, appendOnlyKnown, raw); err != nil {
+		// A failed print is still an error the user sees, so the deferred cleanup
+		// must announce the stop outcome like every other error path — otherwise
+		// the user is left an "Error:" with no word on whether the statement,
+		// which may still be RUNNING, was released.
+		announceStop = true
+		return err
+	}
+	return nil
 }
 
 func (c *command) resolveDatabase(cmd *cobra.Command) (string, error) {
@@ -304,26 +331,36 @@ func (c *command) resolveDatabase(cmd *cobra.Command) (string, error) {
 	return c.Context.KafkaClusterContext.GetActiveKafkaClusterId(), nil
 }
 
-// resolveSQL assumes cobra's flag-group validation already guaranteed exactly
-// one of "sql"/"file" is set.
+// resolveSQL reads the SQL from whichever of "sql"/"file" was given. Cobra's
+// MarkFlagsOneRequired/MarkFlagsMutuallyExclusive only check whether a flag was
+// set, not whether its value is non-empty, so `--sql ""` (e.g. from an unset
+// shell variable) — or a --file pointing at an empty/whitespace-only file —
+// passes flag-group validation; the emptiness check at the end covers both
+// sources uniformly.
 func resolveSQL(cmd *cobra.Command) (string, error) {
 	sql, err := cmd.Flags().GetString("sql")
 	if err != nil {
 		return "", err
 	}
-	if sql != "" {
-		return sql, nil
+
+	if sql == "" {
+		file, err := cmd.Flags().GetString("file")
+		if err != nil {
+			return "", err
+		}
+		if file != "" {
+			contents, err := os.ReadFile(file)
+			if err != nil {
+				return "", fmt.Errorf(`failed to read the SQL statement from "%s": %v`, file, err)
+			}
+			sql = string(contents)
+		}
 	}
 
-	file, err := cmd.Flags().GetString("file")
-	if err != nil {
-		return "", err
+	if strings.TrimSpace(sql) == "" {
+		return "", errors.New("the SQL statement is required: pass it with `--sql` or `--file`")
 	}
-	contents, err := os.ReadFile(file)
-	if err != nil {
-		return "", fmt.Errorf(`failed to read the SQL statement from "%s": %v`, file, err)
-	}
-	return string(contents), nil
+	return sql, nil
 }
 
 func (c *command) buildQueryProperties(cmd *cobra.Command, catalog, database string) (map[string]string, error) {
