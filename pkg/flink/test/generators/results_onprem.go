@@ -12,7 +12,12 @@ import (
 )
 
 func GetResultItemGeneratorForTypeOnPrem(dataType cmfsdk.DataType) *rapid.Generator[any] {
-	fieldType := types.NewResultFieldType(dataType.GetType())
+	fieldType, err := types.NewResultFieldType(dataType.GetType())
+	if err != nil {
+		// Only ever called with types this test suite itself defines, so this
+		// is a test-infra bug, not a runtime scenario worth handling gracefully.
+		panic(err)
+	}
 	switch fieldType {
 	case types.Array:
 		elementType := dataType.GetElementType()
@@ -199,8 +204,12 @@ func MockResultColumnsOnPrem(numColumns, maxNestingDepth int) *rapid.Generator[[
 		var columnDetails []cmfsdk.ResultSchemaColumn
 		for i := 0; i < numColumns; i++ {
 			dataType := DataTypeOnPrem(maxNestingDepth).Draw(t, "column type")
+			fieldType, err := types.NewResultFieldType(dataType.GetType())
+			if err != nil {
+				t.Fatalf("%v", err)
+			}
 			columnDetails = append(columnDetails, cmfsdk.ResultSchemaColumn{
-				Name: string(types.NewResultFieldType(dataType.GetType())),
+				Name: string(fieldType),
 				Type: dataType,
 			})
 		}

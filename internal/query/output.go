@@ -78,6 +78,9 @@ func (c *command) printQueryResult(cmd *cobra.Command, name string, result *quer
 	if showOperation {
 		headers = append([]string{"Operation"}, headers...)
 	}
+	for i, header := range headers {
+		headers[i] = escapeControlChars(header)
+	}
 
 	rows := make([][]string, len(result.Rows))
 	for i, row := range result.Rows {
@@ -109,17 +112,27 @@ func (c *command) printQueryResult(cmd *cobra.Command, name string, result *quer
 // their own serializers; this is the equivalent for the plain-table renderer,
 // which otherwise lets the terminal execute them (recoloring, moving the cursor).
 func escapeControlChars(s string) string {
-	if !strings.ContainsFunc(s, unicode.IsControl) {
+	if !strings.ContainsFunc(s, needsEscape) {
 		return s
 	}
 
 	var sb strings.Builder
 	for _, r := range s {
-		if unicode.IsControl(r) {
+		if needsEscape(r) {
 			fmt.Fprintf(&sb, "\\x%02x", r)
 			continue
 		}
 		sb.WriteRune(r)
 	}
 	return sb.String()
+}
+
+// needsEscape reports whether r is a control character this renderer neutralizes.
+// Tab is left as-is: it's a legitimate data character (e.g. inside a multi-line
+// VARCHAR) and carries no cursor/injection risk. Newline and carriage return
+// stay escaped despite also being "legitimate" — a raw one in a table cell
+// breaks the layout or lets a value inject fake rows — as do ANSI/cursor escapes
+// like \x1b, the original reason this exists.
+func needsEscape(r rune) bool {
+	return unicode.IsControl(r) && r != '\t'
 }
