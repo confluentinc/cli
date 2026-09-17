@@ -23,12 +23,13 @@
 </dl>
 </details>
 
+{{$cleanRunsTip := "fraction of trials with zero collisions, corruptions, or errors (pass^k)"}}
 <table>
 <tr>
 <th>Scenario</th>
 <th class="num">Sessions &times; Trials</th>
-<th class="num">Shared: clean runs <span class="info" tabindex="0" data-tip="fraction of trials with zero collisions, corruptions, or errors (pass^k)">&#9432;</span></th>
-<th class="num">Isolated: clean runs <span class="info" tabindex="0" data-tip="fraction of trials with zero collisions, corruptions, or errors (pass^k)">&#9432;</span></th>
+<th class="num">Shared: clean runs <span class="info" tabindex="0" data-tip="{{$cleanRunsTip}}">&#9432;</span></th>
+<th class="num">Isolated: clean runs <span class="info" tabindex="0" data-tip="{{$cleanRunsTip}}">&#9432;</span></th>
 <th>Shared damage</th>
 <th></th>
 </tr>

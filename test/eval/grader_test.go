@@ -38,20 +38,6 @@ func TestReadActiveEnvironmentReturnsCurrentEnv(t *testing.T) {
 	}
 }
 
-func TestGradeTargetFidelityFailsOnClobberedEnv(t *testing.T) {
-	home := t.TempDir()
-	writeConfig(t, home, goodConfig) // active is env-596
-
-	ok, err := GradeTargetFidelity(home, "env-595") // intended a different env
-
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if ok {
-		t.Fatalf("expected fidelity failure: active env-596 != intended env-595")
-	}
-}
-
 func TestGradeConfigIntegrityFailsOnTruncatedFile(t *testing.T) {
 	home := t.TempDir()
 	writeConfig(t, home, `{"current_context": "ctx-1", "contexts": {`) // torn write

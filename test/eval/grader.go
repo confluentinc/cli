@@ -60,12 +60,3 @@ func GradeConfigIntegrity(homeDir string) error {
 	}
 	return nil
 }
-
-// GradeTargetFidelity reports whether the session's active environment matches what it intended.
-func GradeTargetFidelity(homeDir, intendedEnv string) (bool, error) {
-	active, err := ReadActiveEnvironment(homeDir)
-	if err != nil {
-		return false, err
-	}
-	return active == intendedEnv, nil
-}

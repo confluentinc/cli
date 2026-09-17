@@ -28,7 +28,7 @@
 {{range .Cells}}
 <h3>{{.Name}}</h3>
 {{range .Trials}}
-<details class="{{if trialClean .Sessions}}clean{{else}}dirty{{end}}">
+<details class="{{if .AllPassed}}clean{{else}}dirty{{end}}">
 <summary>trial {{.Trial}} &mdash; {{tally .Sessions}}</summary>
 <table>
 <tr><th>Session</th><th>Intended &rarr; Observed</th><th>Verdict</th><th>Detail</th></tr>

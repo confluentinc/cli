@@ -112,15 +112,8 @@ func TestEnvironmentCrosstalkEval(t *testing.T) {
 	t.Log("\n" + report.Summary())
 	writeReport(t, report)
 
-	var shared, isolated CellMetrics
-	for _, c := range cells {
-		switch c.Name {
-		case "shared":
-			shared = c.Metrics
-		case "isolated":
-			isolated = c.Metrics
-		}
-	}
+	shared := cellByName(cells, "shared").Metrics
+	isolated := cellByName(cells, "isolated").Metrics
 
 	// The headline claim: shared state collides, corrupts, or errors under concurrent writes;
 	// isolated state does none of those. A shared config.json can end up with the wrong active

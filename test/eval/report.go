@@ -56,7 +56,6 @@ var reportTemplates = template.Must(template.New("report").Funcs(template.FuncMa
 	"verdictClass":    verdictBadgeClass,
 	"tally":           tallyVerdicts,
 	"sessionRowClass": sessionRowClass,
-	"trialClean":      trialClean,
 	"slugify":         slugify,
 	"codeify":         codeify,
 	"cleanRuns":       cleanRuns,
@@ -136,17 +135,6 @@ func sessionRowClass(v Verdict) string {
 		return "clean"
 	}
 	return "dirty"
-}
-
-// trialClean reports whether every session in a trial graded ok - the colored rail on the trial's
-// collapsed <details> summary.
-func trialClean(sessions []SessionOutcome) bool {
-	for _, s := range sessions {
-		if s.Verdict != VerdictOK {
-			return false
-		}
-	}
-	return true
 }
 
 func verdictBadgeClass(v Verdict) string {

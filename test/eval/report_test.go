@@ -121,15 +121,6 @@ func TestSessionRowClassTintsByVerdict(t *testing.T) {
 	}
 }
 
-func TestTrialCleanTrueOnlyWhenEverySessionOK(t *testing.T) {
-	if !trialClean([]SessionOutcome{{Verdict: VerdictOK}, {Verdict: VerdictOK}}) {
-		t.Fatalf("expected trialClean = true when every session is ok")
-	}
-	if trialClean([]SessionOutcome{{Verdict: VerdictOK}, {Verdict: VerdictCollision}}) {
-		t.Fatalf("expected trialClean = false when any session is not ok")
-	}
-}
-
 func TestSlugify(t *testing.T) {
 	cases := map[string]string{
 		"environment-crosstalk":   "environment-crosstalk",

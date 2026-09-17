@@ -5,6 +5,8 @@ package eval
 import (
 	"fmt"
 	"strings"
+
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 // Verdict is the outcome of grading one session within a trial.
@@ -90,11 +92,7 @@ func failureReason(inv Invocation) string {
 }
 
 func excerpt(s string, n int) string {
-	trimmed := strings.TrimSpace(s)
-	if len(trimmed) <= n {
-		return trimmed
-	}
-	return trimmed[:n] + "..."
+	return utils.Abbreviate(strings.TrimSpace(s), n)
 }
 
 // GradeTrial grades one concurrent trial's session results into a TrialResult.
