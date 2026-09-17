@@ -441,7 +441,7 @@ func (c *Config) Save() error {
 		return err
 	}
 	// Persist the disposable cache once, after the config write succeeds and while the
-	// lock is still held. Best-effort: saveCache never fails the save.
+	// lock is still held.
 	c.saveCache()
 	return nil
 }
