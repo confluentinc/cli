@@ -51,8 +51,7 @@ func TestLastUpdateCheckAt_PersistsToCacheNotConfig(t *testing.T) {
 	require.Equal(t, now, reloaded.LastUpdateCheckAt.UTC())
 }
 
-// newTestConfigWithOneContext builds a valid Config with one context named "ctx",
-// mirroring config_concurrent_test.go's createContextReusingAPIKey helper.
+// newTestConfigWithOneContext builds a valid Config with one context named "ctx".
 func newTestConfigWithOneContext(t *testing.T) *Config {
 	t.Helper()
 	c := New()
