@@ -9,28 +9,20 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 )
 
-func convertToInternalField(field any, details flinkgatewayv1.ColumnDetails) types.StatementResultField {
-	converter := GetConverterForType(details.GetType())
-	if converter != nil {
-		return converter(field)
+func convertToInternalField(field any, details flinkgatewayv1.ColumnDetails) (types.StatementResultField, error) {
+	converter, err := GetConverterForType(details.GetType())
+	if err != nil {
+		return nil, err
 	}
-
-	return types.AtomicStatementResultField{
-		Type:  types.Null,
-		Value: "NULL",
-	}
+	return converter(field)
 }
 
-func convertToInternalFieldOnPrem(field any, details cmfsdk.ResultSchemaColumn) types.StatementResultField {
-	converter := GetConverterForTypeOnPrem(details.GetType())
-	if converter != nil {
-		return converter(field)
+func convertToInternalFieldOnPrem(field any, details cmfsdk.ResultSchemaColumn) (types.StatementResultField, error) {
+	converter, err := GetConverterForTypeOnPrem(details.GetType())
+	if err != nil {
+		return nil, err
 	}
-
-	return types.AtomicStatementResultField{
-		Type:  types.Null,
-		Value: "NULL",
-	}
+	return converter(field)
 }
 
 func ConvertToInternalResults(results []any, resultSchema flinkgatewayv1.SqlV1ResultSchema) (*types.StatementResults, error) {
@@ -54,7 +46,11 @@ func ConvertToInternalResults(results []any, resultSchema flinkgatewayv1.SqlV1Re
 		convertedFields := make([]types.StatementResultField, len(items))
 		for colIdx, field := range items {
 			columnSchema := resultSchema.GetColumns()[colIdx]
-			convertedFields[colIdx] = convertToInternalField(field, columnSchema)
+			convertedField, err := convertToInternalField(field, columnSchema)
+			if err != nil {
+				return nil, err
+			}
+			convertedFields[colIdx] = convertedField
 		}
 
 		op, _ := resultItem["op"].(float64)
@@ -85,7 +81,11 @@ func ConvertToInternalResultsOnPrem(results cmfsdk.StatementResults, resultSchem
 		convertedFields := make([]types.StatementResultField, len(items))
 		for colIdx, field := range items {
 			columnSchema := resultSchema.GetColumns()[colIdx]
-			convertedFields[colIdx] = convertToInternalFieldOnPrem(field, columnSchema)
+			convertedField, err := convertToInternalFieldOnPrem(field, columnSchema)
+			if err != nil {
+				return nil, err
+			}
+			convertedFields[colIdx] = convertedField
 		}
 
 		op, _ := resultItem["op"].(float64)
