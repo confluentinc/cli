@@ -216,8 +216,11 @@ func sharedDamage(c CellReport) string {
 	return strings.Join(parts, ", ")
 }
 
-// cellByName finds a cell by name, returning the zero value if absent (the index page's shared/
-// isolated columns render blank rather than panicking if a scenario ever lacks one of them).
+// cellByName finds a cell by name, returning the zero value (no panic) if absent. On the index page
+// that renders as a "0 / 0" dirty row (cleanRuns -> "0 / 0"; cellClean -> false, since PassCaretK
+// 0 != 1.0) rather than a blank one - a known limitation of the current shared/isolated-only index.
+// Generalizing the index to render cells by iteration is deferred until the build dimension can
+// introduce cells beyond shared/isolated.
 func cellByName(cells []CellReport, name string) CellReport {
 	for _, c := range cells {
 		if c.Name == name {

@@ -4,21 +4,13 @@ package eval
 
 import (
 	"math"
-	"os"
-	"path/filepath"
 	"testing"
 )
 
 func writeSessionConfig(t *testing.T, home, activeEnv string) {
 	t.Helper()
-	dir := filepath.Join(home, ".confluent")
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		t.Fatal(err)
-	}
 	body := `{"current_context": "ctx-1", "contexts": {"ctx-1": {"current_environment": "` + activeEnv + `"}}}`
-	if err := os.WriteFile(filepath.Join(dir, "config.json"), []byte(body), 0o644); err != nil {
-		t.Fatal(err)
-	}
+	writeConfig(t, home, body)
 }
 
 func TestGradeSessionOKWhenObservedMatchesIntended(t *testing.T) {
@@ -63,13 +55,7 @@ func TestGradeSessionCollisionWhenObservedDiffersFromIntended(t *testing.T) {
 
 func TestGradeSessionCorruptionWhenConfigUnparseable(t *testing.T) {
 	home := t.TempDir()
-	dir := filepath.Join(home, ".confluent")
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(filepath.Join(dir, "config.json"), []byte(`{"current_context": "ctx-1", "contexts": {`), 0o644); err != nil {
-		t.Fatal(err)
-	}
+	writeConfig(t, home, `{"current_context": "ctx-1", "contexts": {`) // torn write
 
 	got := GradeSession(SessionResult{Session: 0, HomeDir: home, IntendedEnv: "env-596"})
 
@@ -83,7 +69,9 @@ func TestGradeSessionCorruptionWhenConfigUnparseable(t *testing.T) {
 
 func TestGradeSessionErrorWhenInvocationFailedDoesNotCountAsCollision(t *testing.T) {
 	home := t.TempDir()
-	writeSessionConfig(t, home, "env-596") // config is actually fine, but the run itself failed
+	// config genuinely disagrees with intent - without the error short-circuit this would grade as
+	// a real collision, so this proves error wins priority rather than merely absence of "ok".
+	writeSessionConfig(t, home, "env-595")
 
 	got := GradeSession(SessionResult{
 		Session:     0,

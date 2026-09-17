@@ -35,6 +35,11 @@ func realRun(coverDir string) CommandFunc {
 		defer cancel()
 
 		cmd := exec.CommandContext(ctx, bin, splitArgs(args)...)
+		// bin is built coverage-instrumented (build-for-integration-test), so it warns
+		// "GOCOVERDIR not set" on stderr unless pointed somewhere; coverDir is a throwaway temp dir
+		// that exists purely to silence that warning in captured transcripts. This eval's coverage is
+		// intentionally NOT merged into `make coverage` - the eval package is excluded from the
+		// normal suite by its `eval` build tag, so nothing else reads these coverage files.
 		cmd.Env = append(append([]string{}, env...), "GOCOVERDIR="+coverDir)
 		var stdout, stderr bytes.Buffer
 		cmd.Stdout = &stdout
@@ -55,6 +60,7 @@ func realRun(coverDir string) CommandFunc {
 			inv.Err = "timeout: " + ctx.Err().Error()
 		case cmd.ProcessState == nil && err != nil:
 			inv.Err = err.Error() // spawn failure - the process never ran
+			inv.ExitCode = -1     // no real exit code exists; avoid rendering a misleading "exit 0"
 		case err != nil && !errors.As(err, new(*exec.ExitError)):
 			inv.Err = err.Error()
 		}
@@ -115,12 +121,13 @@ func TestEnvironmentCrosstalkEval(t *testing.T) {
 	shared := cellByName(cells, "shared").Metrics
 	isolated := cellByName(cells, "isolated").Metrics
 
-	// The headline claim: shared state collides, corrupts, or errors under concurrent writes;
-	// isolated state does none of those. A shared config.json can end up with the wrong active
-	// environment (collision), a torn/invalid write (corruption), or a failing invocation (error) -
-	// all are concurrent-state damage that isolation removes.
-	if shared.CollisionRate == 0 && shared.CorruptionRate == 0 && shared.ErrorRate == 0 {
-		t.Errorf("expected collisions, corruptions, or errors under shared state, got all rates 0 (barrier or scenario broken?)")
+	// The headline claim: shared state collides or corrupts under concurrent writes; isolated state
+	// does neither. A shared config.json can end up with the wrong active environment (collision) or
+	// a torn/invalid write (corruption) - both are concurrent-state damage that isolation removes.
+	// Invocation errors are graded separately (VerdictError) and do NOT prove crosstalk on their
+	// own, so an error-only shared run must still fail this check rather than pass by coincidence.
+	if shared.CollisionRate == 0 && shared.CorruptionRate == 0 {
+		t.Errorf("expected state damage (collisions or corruptions) under shared state, got none - crosstalk not demonstrated (an error-only run does not prove the collision; barrier or scenario may be broken)")
 	}
 	if isolated.CollisionRate != 0 {
 		t.Errorf("expected zero collisions under isolated state, got %.3f", isolated.CollisionRate)

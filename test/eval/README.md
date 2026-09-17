@@ -29,7 +29,7 @@ The test:
 3. Runs two concurrent sessions (each targeting a different environment: `env-596` and `env-595`)
 4. Executes each session through login and environment selection
 5. Holds all sessions at a barrier until every session has written its environment choice
-6. Grades the resulting config for collisions and corruption
+6. Grades each session (invocation error, config corruption, or environment collision, in that priority)
 7. Writes `test/eval/results/report.json` plus a multi-page HTML report: `test/eval/results/index.html` (one row per scenario) and one `test/eval/results/<slugified-scenario-name>.html` drill-down page per scenario (e.g. `environment-crosstalk.html`)
 
 The barrier is phase-2 scaffolding for a future post-barrier read/act step; in phase 1 nothing happens after it, so it does not drive the result. The outcome comes from grading each session's final on-disk `config.json` after all writes complete. In shared mode, two sessions writing to one file race: depending on scheduling, that race surfaces as a collision (one session's write wins outright, leaving the other pointed at the wrong environment) or as corruption (an interleaved/torn write leaves the file unparseable or structurally incomplete) - either way, every trial fails (`pass^k = 0`). Isolated mode leaves each session's own file untouched by the other, so neither failure mode is reachable.
@@ -55,6 +55,12 @@ Results are written to `test/eval/results/report.json` and a multi-page, theme-a
   scenario name run through the same slugify rule the report uses to link to it) - the full
   cell-summary table plus the `<details>` drill-down: trial → session → invocation, with each
   invocation's captured stdout/stderr.
+
+**Captured transcripts:** each invocation's full stdout/stderr is captured verbatim into both
+`report.json` and the HTML pages. That's safe today - the eval only runs against the mock backend,
+`test/eval/results/` is gitignored, and this harness doesn't run in CI - but before pointing it at a
+live backend (a later phase) or archiving `results/` as a CI artifact, add redaction of any auth
+material from captured output first.
 
 The JSON nests trial- and session-level detail under each cell, so a collision or corruption can be
 traced back to the exact invocation that caused it:
@@ -118,7 +124,7 @@ traced back to the exact invocation that caused it:
 - **trials:** number of concurrent trials (independent test runs) in the cell
 - **collision_rate:** fraction of sessions that read the wrong active environment (intended ≠ observed)
 - **corruption_rate:** fraction of sessions where `~/.confluent/config.json` failed validation (e.g., torn write)
-- **error_rate:** fraction of sessions where a `confluent` invocation itself failed (nonzero exit, timeout, or spawn error) - graded separately from collisions so a broken run isn't miscounted as state damage
+- **error_rate:** fraction of sessions where a `confluent` invocation itself failed (nonzero exit, timeout, or spawn error) - graded separately from collisions so a broken run isn't miscounted as state damage. `TestEnvironmentCrosstalkEval`'s headline assertion checks collision/corruption rates only: an error-only shared run does not prove crosstalk was demonstrated, so it fails the eval rather than passing by coincidence
 - **pass_caret_k (pass^k):** fraction of trials where _every_ session graded "ok". The HTML report's index page calls this "clean runs" and shows it as "N / total" - same number, plainer name; the glossary on that page notes the pass^k formalism.
 
 **Per-session verdicts** (in priority order - the first that applies wins): `error` (an invocation
