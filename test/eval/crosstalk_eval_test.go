@@ -26,8 +26,6 @@ const (
 // realRun executes one confluent invocation with the given per-session env and space-split args,
 // bounded by a timeout so a hung subprocess can't hang the whole eval, and captures the full
 // transcript (exit code, stdout, stderr, duration) instead of collapsing it to a bare error.
-// coverDir is a shared scratch dir for GOCOVERDIR: the coverage-instrumented binary otherwise warns
-// "GOCOVERDIR not set" on every invocation, polluting every captured transcript with the same noise.
 func realRun(coverDir string) CommandFunc {
 	return func(bin string, env []string, args string) Invocation {
 		start := time.Now()

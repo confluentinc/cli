@@ -46,9 +46,7 @@ func (r Report) WriteJSON(path string) error {
 var templatesFS embed.FS
 
 // reportTemplates is parsed once at package init from the committed template set. A malformed or
-// misnamed .tmpl file surfaces immediately (panic on import) rather than silently rendering a blank
-// page; TestReportTemplatesParseAndResolveNames additionally guards that "index"/"scenario"/"styles"
-// all resolve by name.
+// misnamed .tmpl file surfaces immediately (panic on import) rather than silently rendering a blank page.
 var reportTemplates = template.Must(template.New("report").Funcs(template.FuncMap{
 	"pct":             formatPercent,
 	"rate":            formatRate,
