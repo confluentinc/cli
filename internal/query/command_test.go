@@ -72,6 +72,15 @@ func TestMutuallyExclusiveFlags(t *testing.T) {
 
 	cmd = New(cfg, prerunner)
 	require.ErrorContains(t, cmd.ValidateFlagGroups(), "at least one of the flags in the group [sql file] is required")
+
+	// MarkFlagsOneRequired only checks whether "sql" was Set(), not whether its
+	// value is non-empty, so an explicitly empty --sql (e.g. from an unset shell
+	// variable) passes flag-group validation with no usable SQL anywhere. This is
+	// exactly why resolveSQL has its own "the SQL statement is required" check —
+	// don't remove it on the assumption cobra already covers this case.
+	cmd = New(cfg, prerunner)
+	require.NoError(t, cmd.Flags().Set("sql", ""))
+	require.NoError(t, cmd.ValidateFlagGroups())
 }
 
 func TestResolveDatabase(t *testing.T) {
@@ -138,11 +147,30 @@ func TestResolveSQL(t *testing.T) {
 	_, err = resolveSQL(newSQLCmd("", "/nonexistent/query.sql"))
 	require.ErrorContains(t, err, "failed to read the SQL statement")
 
-	// resolveSQL trusts cobra's flag-group validation to have already rejected
-	// "neither" or "both"; --sql wins if it's ever called with both set anyway.
+	// --sql wins if it's ever called with both set (cobra's flag-group
+	// validation should have already rejected this, but resolveSQL doesn't rely
+	// on that alone — see the empty-string case below).
 	sql, err = resolveSQL(newSQLCmd("SELECT 1", sqlFile))
 	require.NoError(t, err)
 	require.Equal(t, "SELECT 1", sql)
+
+	// cobra's MarkFlagsOneRequired only checks whether a flag was Set(), not
+	// whether its value is non-empty, so `--sql ""` (e.g. from an unset shell
+	// variable) passes flag-group validation with neither flag usably set.
+	_, err = resolveSQL(newSQLCmd("", ""))
+	require.ErrorContains(t, err, "the SQL statement is required")
+
+	// A whitespace-only --sql is treated the same as empty.
+	_, err = resolveSQL(newSQLCmd("   \n\t ", ""))
+	require.ErrorContains(t, err, "the SQL statement is required")
+
+	// A --file pointing at an empty (or whitespace-only) file: os.ReadFile
+	// succeeds with no error, so this must be caught by the same emptiness check,
+	// not silently submit an empty statement to the gateway.
+	emptyFile := filepath.Join(t.TempDir(), "empty.sql")
+	require.NoError(t, os.WriteFile(emptyFile, []byte("  \n"), 0o600))
+	_, err = resolveSQL(newSQLCmd("", emptyFile))
+	require.ErrorContains(t, err, "the SQL statement is required")
 }
 
 // captureStdout redirects the package-level os.Stdout (which output.Print and
@@ -397,12 +425,38 @@ func TestPrintQueryResult(t *testing.T) {
 		require.NotContains(t, out, "\x1b")
 		require.Contains(t, out, `\x1b[0;31mred\x1b[0m`)
 	})
+
+	t.Run("human output escapes control characters in column headers too, not just row values", func(t *testing.T) {
+		c := newTestCommand(nil)
+		cmd := newOutputCmd(t, "")
+		result := &query.Result{
+			Statement: flinkgatewayv1.SqlV1Statement{Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "COMPLETED"}},
+			Columns: []flinkgatewayv1.ColumnDetails{
+				{Name: "\x1b[31minjected\x1b[0m", Type: flinkgatewayv1.DataType{Type: "INTEGER"}},
+			},
+			Rows: []types.StatementResultRow{{
+				Operation: types.Insert,
+				Fields:    []types.StatementResultField{types.AtomicStatementResultField{Type: types.Integer, Value: "1"}},
+			}},
+		}
+
+		out := captureStdout(t, func() {
+			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
+		})
+		require.NotContains(t, out, "\x1b")
+		require.Contains(t, out, `\x1b[31minjected\x1b[0m`)
+	})
 }
 
 func TestEscapeControlChars(t *testing.T) {
 	require.Equal(t, "hello", escapeControlChars("hello"))
 	require.Equal(t, `\x1b[0;31mred\x1b[0m`, escapeControlChars("\x1b[0;31mred\x1b[0m"))
-	require.Equal(t, `a\x09b`, escapeControlChars("a\tb"))
+	// Tab is a legitimate data character and passes through unescaped.
+	require.Equal(t, "a\tb", escapeControlChars("a\tb"))
+	// Newline and carriage return stay escaped: raw in a table cell they break
+	// the layout or inject fake rows.
+	require.Equal(t, `a\x0ab`, escapeControlChars("a\nb"))
+	require.Equal(t, `a\x0db`, escapeControlChars("a\rb"))
 }
 
 // fakeJwtValidator lets tests control whether refreshGatewayToken thinks the
@@ -494,7 +548,29 @@ func TestCreateStatement(t *testing.T) {
 		<-cleaned
 	})
 
-	t.Run("does not clean up a create that fails after ctx is cancelled", func(t *testing.T) {
+	t.Run("honors an interrupt even when create resolves in the same tick", func(t *testing.T) {
+		// ctx is already cancelled and create returns immediately, so both the
+		// done channel and ctx.Done() are ready when the outer select runs and Go
+		// may pick either branch. Both must end the same way — stop the statement
+		// we just created and report the interrupt — never fall through as a clean
+		// success and let the caller run the query with a dead context.
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+
+		cleaned := make(chan struct{}, 1)
+		stopped, err := createStatement(ctx, time.Second, func() (flinkgatewayv1.SqlV1Statement, error) {
+			return flinkgatewayv1.SqlV1Statement{}, nil
+		}, func() bool { cleaned <- struct{}{}; return true })
+		require.ErrorIs(t, err, context.Canceled)
+		require.True(t, stopped)
+		require.Len(t, cleaned, 1)
+	})
+
+	t.Run("returns the real create error, not ctx.Err(), when create fails after ctx is cancelled", func(t *testing.T) {
+		// A create failure means no statement was ever named server-side, so it
+		// must surface as itself, not get relabeled as an interruption — which
+		// would send the caller off naming/suggesting `stop` on a statement that
+		// never existed (see interruptedError).
 		release := make(chan struct{})
 		cleaned := make(chan struct{}, 1)
 		ctx, cancel := context.WithCancel(context.Background())
@@ -511,7 +587,9 @@ func TestCreateStatement(t *testing.T) {
 		cancel()
 		close(release)
 
-		require.ErrorIs(t, <-errCh, context.Canceled)
+		err := <-errCh
+		require.ErrorContains(t, err, "create failed")
+		require.NotErrorIs(t, err, context.Canceled)
 		select {
 		case <-cleaned:
 			t.Fatal("cleanup should not run")
@@ -540,21 +618,25 @@ func TestStopStatement(t *testing.T) {
 		c := newTestCommand(newTestContext(server.URL, "token"))
 
 		out := captureStderr(t, func() {
-			require.True(t, c.stopStatement(client, "env-1", "stmt", true))
+			require.True(t, c.stopStatementAndReport(client, "env-1", "stmt"))
 		})
 		require.Contains(t, out, `Successfully stopped statement "stmt"`)
 	})
 
-	t.Run("announce=false stays silent on stderr", func(t *testing.T) {
+	t.Run("the quiet stop stays silent on stderr", func(t *testing.T) {
 		server := httptest.NewServer(testserver.NewFlinkGatewayRouter(t))
 		defer server.Close()
 
 		client := ccloudv2.NewFlinkGatewayClient(server.URL, "test", false, "token")
 		c := newTestCommand(newTestContext(server.URL, "token"))
 
+		var ok bool
+		var err error
 		out := captureStderr(t, func() {
-			require.True(t, c.stopStatement(client, "env-1", "stmt", false))
+			ok, err = c.stopStatement(client, "env-1", "stmt")
 		})
+		require.True(t, ok)
+		require.NoError(t, err)
 		require.Empty(t, out)
 	})
 
@@ -570,7 +652,7 @@ func TestStopStatement(t *testing.T) {
 		c := newTestCommand(newTestContext(server.URL, "token"))
 
 		out := captureStderr(t, func() {
-			require.False(t, c.stopStatement(client, "env-1", "stmt", true))
+			require.False(t, c.stopStatementAndReport(client, "env-1", "stmt"))
 		})
 		require.Contains(t, out, `could not stop statement "stmt"`)
 	})
@@ -590,9 +672,20 @@ func TestStopStatement(t *testing.T) {
 		c := newTestCommand(newTestContext(server.URL, "token"))
 
 		out := captureStderr(t, func() {
-			require.False(t, c.stopStatement(client, "env-1", "stmt", true))
+			require.False(t, c.stopStatementAndReport(client, "env-1", "stmt"))
 		})
 		require.Contains(t, out, `has no spec`)
+	})
+
+	// reportStopFailure is what lets the otherwise-quiet end-of-run cleanup still
+	// surface a stop that failed — a statement left running keeps burning compute
+	// even though the query itself succeeded (finding #3).
+	t.Run("reportStopFailure distinguishes a timeout from other failures", func(t *testing.T) {
+		out := captureStderr(t, func() { reportStopFailure("stmt", errStopTimeout) })
+		require.Contains(t, out, `timed out trying to stop statement "stmt"`)
+
+		out = captureStderr(t, func() { reportStopFailure("stmt", errors.New("boom")) })
+		require.Contains(t, out, `could not stop statement "stmt": boom`)
 	})
 }
 
@@ -781,7 +874,9 @@ func TestHandleQueryError(t *testing.T) {
 		var withSuggestions errors.ErrorWithSuggestions
 		require.ErrorAs(t, err, &withSuggestions)
 		require.Contains(t, withSuggestions.GetSuggestionsMsg(), "no longer exists")
-		require.False(t, settled)
+		// The statement is already gone, so this error settles it: the deferred
+		// cleanup must not fire a second, contradictory stop attempt.
+		require.True(t, settled)
 	})
 
 	t.Run("a 408 results-fetch error tells the user to re-run the query", func(t *testing.T) {

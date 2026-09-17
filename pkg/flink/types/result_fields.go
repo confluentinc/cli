@@ -36,60 +36,66 @@ const (
 
 type StatementResultFieldType string
 
-func NewResultFieldType(objType string) StatementResultFieldType {
+// NewResultFieldType maps the Flink Gateway's wire type name to our internal
+// enum. An unrecognized name errors instead of silently becoming Null: without
+// this, an older CLI build would render a newly introduced SQL type's non-null
+// values as null, with no indication anything was wrong.
+func NewResultFieldType(objType string) (StatementResultFieldType, error) {
 	switch objType {
 	case "CHAR":
-		return Char
+		return Char, nil
 	case "VARCHAR":
-		return Varchar
+		return Varchar, nil
 	case "BOOLEAN":
-		return Boolean
+		return Boolean, nil
 	case "BINARY":
-		return Binary
+		return Binary, nil
 	case "VARBINARY":
-		return Varbinary
+		return Varbinary, nil
 	case "DECIMAL":
-		return Decimal
+		return Decimal, nil
 	case "TINYINT":
-		return Tinyint
+		return Tinyint, nil
 	case "SMALLINT":
-		return Smallint
+		return Smallint, nil
 	case "INTEGER":
-		return Integer
+		return Integer, nil
 	case "BIGINT":
-		return Bigint
+		return Bigint, nil
 	case "FLOAT":
-		return Float
+		return Float, nil
 	case "DOUBLE":
-		return Double
+		return Double, nil
 	case "DATE":
-		return Date
+		return Date, nil
 	case "TIME_WITHOUT_TIME_ZONE":
-		return TimeWithoutTimeZone
+		return TimeWithoutTimeZone, nil
 	case "TIMESTAMP_WITHOUT_TIME_ZONE":
-		return TimestampWithoutTimeZone
+		return TimestampWithoutTimeZone, nil
 	case "TIMESTAMP_WITH_TIME_ZONE":
-		return TimestampWithTimeZone
+		return TimestampWithTimeZone, nil
 	case "TIMESTAMP_WITH_LOCAL_TIME_ZONE":
-		return TimestampWithLocalTimeZone
+		return TimestampWithLocalTimeZone, nil
 	case "INTERVAL_YEAR_MONTH":
-		return IntervalYearMonth
+		return IntervalYearMonth, nil
 	case "INTERVAL_DAY_TIME":
-		return IntervalDayTime
+		return IntervalDayTime, nil
 	case "ARRAY":
-		return Array
+		return Array, nil
 	case "MULTISET":
-		return Multiset
+		return Multiset, nil
 	case "MAP":
-		return Map
+		return Map, nil
 	case "ROW":
-		return Row
+		return Row, nil
 	case "STRUCTURED_TYPE":
-		return StructuredType
+		return StructuredType, nil
 	case "VARIANT":
-		return Variant
+		return Variant, nil
+	case "NULL":
+		return Null, nil
 	default:
-		return Null
+		return "", fmt.Errorf("unsupported result field type %q: this CLI may be out of date", objType)
 	}
 }
 

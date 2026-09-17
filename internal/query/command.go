@@ -2,12 +2,13 @@ package query
 
 import (
 	"context"
-	goerrors "errors"
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -137,107 +138,39 @@ func (c *command) runQuery(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	timeout, err := cmd.Flags().GetDuration("wait-timeout")
+	timeout, maxRows, raw, err := parseQueryFlags(cmd)
 	if err != nil {
 		return err
-	}
-	if timeout <= 0 {
-		return errors.New("the `--wait-timeout` flag must be positive")
-	}
-
-	maxRows, err := cmd.Flags().GetInt("max-rows")
-	if err != nil {
-		return err
-	}
-	if maxRows < 0 {
-		return errors.New("the `--max-rows` flag must not be negative")
-	}
-
-	raw, err := cmd.Flags().GetBool("raw")
-	if err != nil {
-		return err
-	}
-	if raw && !output.GetFormat(cmd).IsSerialized() {
-		return errors.New("the `--raw` flag requires `-o json` or `-o yaml`")
 	}
 
 	ctx, cancelTimeout := context.WithTimeout(ctx, timeout)
 	defer cancelTimeout()
 
-	environment, err := wait.Call(ctx, func() (orgv2.OrgV2Environment, error) {
-		return c.V2Client.GetOrgEnvironment(environmentId)
-	})
+	client, name, err := c.createQueryStatement(ctx, cmd, environmentId, database, sql)
 	if err != nil {
-		if goerrors.Is(err, context.Canceled) || goerrors.Is(err, context.DeadlineExceeded) {
-			return interruptedError(cmd, err, "", false)
-		}
-		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
-	}
-
-	// computePool falls back to context (`flink compute-pool use`);
-	// GetFlinkGatewayClient below decides whether pool or cloud/region is enough.
-	computePool := c.Context.GetCurrentFlinkComputePool()
-
-	name := types.GenerateStatementName()
-
-	statementProperties, err := c.buildQueryProperties(cmd, environment.GetDisplayName(), database)
-	if err != nil {
-		return err
-	}
-
-	statement := flinkgatewayv1.SqlV1Statement{
-		Name: flinkgatewayv1.PtrString(name),
-		Spec: &flinkgatewayv1.SqlV1StatementSpec{
-			Statement:  flinkgatewayv1.PtrString(sql),
-			Properties: &statementProperties,
-		},
-	}
-
-	var client *ccloudv2.FlinkGatewayClient
-	if computePool != "" {
-		statement.Spec.ComputePoolId = flinkgatewayv1.PtrString(computePool)
-		client, err = wait.Call(ctx, func() (*ccloudv2.FlinkGatewayClient, error) { return c.GetFlinkGatewayClient(true) })
-	} else {
-		client, err = wait.Call(ctx, func() (*ccloudv2.FlinkGatewayClient, error) { return c.GetFlinkGatewayClient(false) })
-	}
-	if err != nil {
-		// No statement exists yet at this point, same as the environment lookup above.
-		if goerrors.Is(err, context.Canceled) || goerrors.Is(err, context.DeadlineExceeded) {
-			return interruptedError(cmd, err, "", false)
-		}
-		return err
-	}
-
-	jwtValidator := jwt.NewValidator()
-
-	serviceAccount, err := cmd.Flags().GetString("service-account")
-	if err != nil {
-		return err
-	}
-
-	principal := serviceAccount
-	if serviceAccount == "" {
-		principal = c.Context.GetUser().GetResourceId()
-	}
-
-	if stopped, err := createStatement(ctx, createStatementGracePeriod, func() (flinkgatewayv1.SqlV1Statement, error) {
-		return client.CreateStatement(statement, principal, environmentId, c.Context.LastOrgId)
-	}, func() bool { return c.stopStatement(client, environmentId, name, false) }); err != nil {
-		if goerrors.Is(err, context.Canceled) || goerrors.Is(err, context.DeadlineExceeded) {
-			return interruptedError(cmd, err, name, stopped)
-		}
 		return err
 	}
 
 	// The statement now exists server-side; this defer stops it unless settled is
 	// set, so no exit path can forget to release the compute it's holding.
-	// announceStop only becomes true for --max-rows truncation; a full drain
-	// landing on a non-terminal phase is routine and just logged, not printed.
+	// announceStop stays false only for the routine case: a fully successful,
+	// untruncated drain landing on a non-terminal phase (expected for Kafka-backed
+	// sources). It's set true below for --max-rows truncation and for any error,
+	// since both are cases the user needs to know the cleanup outcome of.
 	settled := false
 	announceStop := false
 	defer func() {
-		if !settled {
-			c.stopStatement(client, environmentId, name, announceStop)
+		if settled {
+			return
+		}
+		if announceStop {
+			c.stopStatementAndReport(client, environmentId, name)
+		} else if ok, err := c.stopStatement(client, environmentId, name); !ok {
+			// Even the routine, deliberately-quiet cleanup must surface a *failed*
+			// stop: the statement is still running and burning compute, which the
+			// user needs to know even though the query itself succeeded. Only a
+			// successful quiet stop stays silent (see bug #2).
+			reportStopFailure(name, err)
 		}
 	}()
 
@@ -247,11 +180,16 @@ func (c *command) runQuery(cmd *cobra.Command, _ []string) error {
 		OrganizationId: c.Context.LastOrgId,
 		MaxRows:        maxRows,
 		RequireBounded: true,
-		RefreshToken:   c.refreshGatewayToken(client, jwtValidator),
+		RefreshToken:   c.refreshGatewayToken(client, jwt.NewValidator()),
 	}
 
 	result, err := query.Run(ctx, options, name)
 	if err != nil {
+		// If handleQueryError leaves settled false (any error it doesn't already
+		// stop and announce itself), the deferred cleanup above must still speak
+		// up: the user just saw an error and needs to know whether the leftover
+		// statement was actually cleaned up, not have that outcome logged quietly.
+		announceStop = true
 		return c.handleQueryError(cmd, client, environmentId, name, err, &settled)
 	}
 
@@ -261,6 +199,155 @@ func (c *command) runQuery(cmd *cobra.Command, _ []string) error {
 	announceStop = result.Truncated
 
 	// STOPPED/DELETING here means something other than us ended the statement.
+	if err := phaseError(name, result); err != nil {
+		return err
+	}
+
+	if result.Truncated {
+		output.ErrPrintf(false, "Warning: stopped after %d rows because of the `--max-rows` flag. The result set below is truncated.\n", maxRows)
+	}
+
+	isAppendOnly, appendOnlyKnown := warnIfChangelog(result)
+	if err := c.printQueryResult(cmd, name, result, isAppendOnly, appendOnlyKnown, raw); err != nil {
+		// A failed print is still an error the user sees, so the deferred cleanup
+		// must announce the stop outcome like every other error path — otherwise
+		// the user is left an "Error:" with no word on whether the statement,
+		// which may still be RUNNING, was released.
+		announceStop = true
+		return err
+	}
+	return nil
+}
+
+// parseQueryFlags reads and validates the numeric/output flags that gate the run
+// before any network call.
+func parseQueryFlags(cmd *cobra.Command) (time.Duration, int, bool, error) {
+	timeout, err := cmd.Flags().GetDuration("wait-timeout")
+	if err != nil {
+		return 0, 0, false, err
+	}
+	if timeout <= 0 {
+		return 0, 0, false, errors.New("the `--wait-timeout` flag must be positive")
+	}
+
+	maxRows, err := cmd.Flags().GetInt("max-rows")
+	if err != nil {
+		return 0, 0, false, err
+	}
+	if maxRows < 0 {
+		return 0, 0, false, errors.New("the `--max-rows` flag must not be negative")
+	}
+
+	raw, err := cmd.Flags().GetBool("raw")
+	if err != nil {
+		return 0, 0, false, err
+	}
+	if raw && !output.GetFormat(cmd).IsSerialized() {
+		return 0, 0, false, errors.New("the `--raw` flag requires `-o json` or `-o yaml`")
+	}
+
+	return timeout, maxRows, raw, nil
+}
+
+// createQueryStatement resolves the environment and gateway client, builds the
+// bounded snapshot statement, and submits it, returning the client and the
+// generated statement name. A cancellation during any of these pre-result steps
+// is mapped to interruptedError.
+func (c *command) createQueryStatement(ctx context.Context, cmd *cobra.Command, environmentId, database, sql string) (*ccloudv2.FlinkGatewayClient, string, error) {
+	environment, err := wait.Call(ctx, func() (orgv2.OrgV2Environment, error) {
+		return c.V2Client.GetOrgEnvironment(environmentId)
+	})
+	if err != nil {
+		return nil, "", c.interruptOr(cmd, err, "", false,
+			errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`."))
+	}
+
+	statementProperties, err := c.buildQueryProperties(cmd, environment.GetDisplayName(), database)
+	if err != nil {
+		return nil, "", err
+	}
+
+	name := types.GenerateStatementName()
+	statement := flinkgatewayv1.SqlV1Statement{
+		Name: flinkgatewayv1.PtrString(name),
+		Spec: &flinkgatewayv1.SqlV1StatementSpec{
+			Statement:  flinkgatewayv1.PtrString(sql),
+			Properties: &statementProperties,
+		},
+	}
+
+	// computePool falls back to context (`flink compute-pool use`);
+	// GetFlinkGatewayClient decides whether pool or cloud/region is enough.
+	computePool := c.Context.GetCurrentFlinkComputePool()
+	if computePool != "" {
+		statement.Spec.ComputePoolId = flinkgatewayv1.PtrString(computePool)
+	}
+	client, err := wait.Call(ctx, func() (*ccloudv2.FlinkGatewayClient, error) {
+		return c.GetFlinkGatewayClient(computePool != "")
+	})
+	if err != nil {
+		// No statement exists yet at this point, same as the environment lookup above.
+		return nil, "", c.interruptOr(cmd, err, "", false, err)
+	}
+
+	principal, err := c.resolvePrincipal(cmd)
+	if err != nil {
+		return nil, "", err
+	}
+
+	stopped, err := createStatement(ctx, createStatementGracePeriod, func() (flinkgatewayv1.SqlV1Statement, error) {
+		return client.CreateStatement(statement, principal, environmentId, c.Context.LastOrgId)
+	}, func() bool {
+		stopped, _ := c.stopStatement(client, environmentId, name)
+		return stopped
+	})
+	if err != nil {
+		return nil, "", c.interruptOr(cmd, err, name, stopped, err)
+	}
+
+	return client, name, nil
+}
+
+// resolvePrincipal is the statement's spec.principal: the --service-account when
+// given, otherwise the logged-in user.
+func (c *command) resolvePrincipal(cmd *cobra.Command) (string, error) {
+	serviceAccount, err := cmd.Flags().GetString("service-account")
+	if err != nil {
+		return "", err
+	}
+	if serviceAccount != "" {
+		return serviceAccount, nil
+	}
+	return c.Context.GetUser().GetResourceId(), nil
+}
+
+// interruptOr maps a pre-result error to interruptedError when it's a Ctrl-C/
+// timeout, and to fallback otherwise. name is "" (and stopped ignored) before a
+// statement exists.
+func (c *command) interruptOr(cmd *cobra.Command, err error, name string, stopped bool, fallback error) error {
+	if isInterrupted(err) {
+		return interruptedError(cmd, err, name, stopped)
+	}
+	return fallback
+}
+
+// warnIfChangelog prints the changelog warning when the statement is known to be
+// non-append-only, and returns (isAppendOnly, appendOnlyKnown) for printQueryResult
+// (which uses them to decide whether to show the Operation column).
+func warnIfChangelog(result *query.Result) (bool, bool) {
+	traits := result.Statement.Status.GetTraits()
+	statementTraits := types.StatementTraits{FlinkGatewayV1StatementTraits: &traits}
+	isAppendOnly, appendOnlyKnown := statementTraits.GetIsAppendOnly()
+	if appendOnlyKnown && !isAppendOnly {
+		output.ErrPrintln(false, "Warning: this statement emits updates and deletions. The rows below are the raw changelog, not a materialized table.")
+	}
+	return isAppendOnly, appendOnlyKnown
+}
+
+// phaseError reports a terminal phase that something other than this command
+// caused (a server-side failure, or a stop/delete from elsewhere), or nil when
+// the phase is not one of those.
+func phaseError(name string, result *query.Result) error {
 	switch result.Phase() {
 	case types.FAILED:
 		return errors.NewErrorWithSuggestions(
@@ -278,19 +365,7 @@ func (c *command) runQuery(cmd *cobra.Command, _ []string) error {
 			"Its compute pool may have been deleted. The result set may be incomplete.",
 		)
 	}
-
-	if result.Truncated {
-		output.ErrPrintf(false, "Warning: stopped after %d rows because of the `--max-rows` flag. The result set below is truncated.\n", maxRows)
-	}
-
-	traits := result.Statement.Status.GetTraits()
-	statementTraits := types.StatementTraits{FlinkGatewayV1StatementTraits: &traits}
-	isAppendOnly, appendOnlyKnown := statementTraits.GetIsAppendOnly()
-	if appendOnlyKnown && !isAppendOnly {
-		output.ErrPrintln(false, "Warning: this statement emits updates and deletions. The rows below are the raw changelog, not a materialized table.")
-	}
-
-	return c.printQueryResult(cmd, name, result, isAppendOnly, appendOnlyKnown, raw)
+	return nil
 }
 
 func (c *command) resolveDatabase(cmd *cobra.Command) (string, error) {
@@ -304,26 +379,36 @@ func (c *command) resolveDatabase(cmd *cobra.Command) (string, error) {
 	return c.Context.KafkaClusterContext.GetActiveKafkaClusterId(), nil
 }
 
-// resolveSQL assumes cobra's flag-group validation already guaranteed exactly
-// one of "sql"/"file" is set.
+// resolveSQL reads the SQL from whichever of "sql"/"file" was given. Cobra's
+// MarkFlagsOneRequired/MarkFlagsMutuallyExclusive only check whether a flag was
+// set, not whether its value is non-empty, so `--sql ""` (e.g. from an unset
+// shell variable) — or a --file pointing at an empty/whitespace-only file —
+// passes flag-group validation; the emptiness check at the end covers both
+// sources uniformly.
 func resolveSQL(cmd *cobra.Command) (string, error) {
 	sql, err := cmd.Flags().GetString("sql")
 	if err != nil {
 		return "", err
 	}
-	if sql != "" {
-		return sql, nil
+
+	if sql == "" {
+		file, err := cmd.Flags().GetString("file")
+		if err != nil {
+			return "", err
+		}
+		if file != "" {
+			contents, err := os.ReadFile(file)
+			if err != nil {
+				return "", fmt.Errorf(`failed to read the SQL statement from "%s": %v`, file, err)
+			}
+			sql = string(contents)
+		}
 	}
 
-	file, err := cmd.Flags().GetString("file")
-	if err != nil {
-		return "", err
+	if strings.TrimSpace(sql) == "" {
+		return "", errors.New("the SQL statement is required: pass it with `--sql` or `--file`")
 	}
-	contents, err := os.ReadFile(file)
-	if err != nil {
-		return "", fmt.Errorf(`failed to read the SQL statement from "%s": %v`, file, err)
-	}
-	return string(contents), nil
+	return sql, nil
 }
 
 func (c *command) buildQueryProperties(cmd *cobra.Command, catalog, database string) (map[string]string, error) {
