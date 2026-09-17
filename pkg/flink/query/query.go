@@ -180,7 +180,7 @@ func drain(ctx context.Context, opts Options, statementName string, schema flink
 		pageResults := page.GetResults()
 		converted, err := results.ConvertToInternalResults(pageResults.GetData(), schema)
 		if err != nil {
-			return err
+			return &ResultsFetchError{Err: err}
 		}
 		pageRows := converted.GetRows()
 		result.Rows = append(result.Rows, pageRows...)

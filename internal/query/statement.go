@@ -20,6 +20,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/jwt"
 	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/wait"
 )
 
 const (
@@ -30,10 +31,20 @@ const (
 	createStatementGracePeriod = 10 * time.Second
 )
 
+// errStopTimeout marks a stop attempt that ran past stopTimeout, so callers can
+// tell a timeout apart from an outright failure when reporting the outcome.
+var errStopTimeout = goerrors.New("timed out")
+
 // createStatement runs create; on cancellation it waits up to gracePeriod for it
 // to land and calls cleanup instead of leaking an unstoppable statement. The
 // returned bool is cleanup's result (false if it was never called), so the
 // caller can report the outcome itself instead of cleanup announcing it too.
+//
+// If create() itself fails (with or without ctx also being done around the same
+// time), that real error is returned as-is, not ctx.Err() — a create failure
+// means no statement was ever named on the server, so reporting it as an
+// interruption would send the caller off naming and suggesting `stop`/`describe`
+// on a statement that never existed.
 func createStatement(ctx context.Context, gracePeriod time.Duration, create func() (flinkgatewayv1.SqlV1Statement, error), cleanup func() bool) (bool, error) {
 	done := make(chan error, 1)
 	go func() {
@@ -43,71 +54,87 @@ func createStatement(ctx context.Context, gracePeriod time.Duration, create func
 
 	select {
 	case err := <-done:
-		return false, err
+		if err != nil {
+			return false, err
+		}
+		// create succeeded, but select is random: ctx may have been cancelled at
+		// the same instant. Honor the interrupt now — stop the statement we just
+		// made and report it as interrupted — rather than letting the caller
+		// proceed into the query with an already-dead context.
+		if ctxErr := ctx.Err(); ctxErr != nil {
+			return cleanup(), ctxErr
+		}
+		return false, nil
 	case <-ctx.Done():
-		stopped := false
 		select {
 		case err := <-done:
-			if err == nil {
-				stopped = cleanup()
+			if err != nil {
+				return false, err
 			}
+			return cleanup(), ctx.Err()
 		case <-time.After(gracePeriod):
+			return false, ctx.Err()
 		}
-		return stopped, ctx.Err()
 	}
 }
 
 // stopStatement makes a best-effort, bounded attempt to stop an abandoned
 // statement. The gateway rejects a spec.stopped-only body, so this reads the
-// statement back before flipping it. announce controls stderr vs. debug-log
-// output: routine end-of-run cleanup logs quietly, interrupts/errors print.
-func (c *command) stopStatement(client *ccloudv2.FlinkGatewayClient, environmentId, name string, announce bool) bool {
-	done := make(chan error, 1)
-	go func() {
+// statement back before flipping it. It only debug-logs the outcome; callers
+// that must surface it to the user either fold the returned bool into their own
+// message via stopFate, or use stopStatementAndReport. The returned error is
+// errStopTimeout on timeout, the underlying failure otherwise, and nil on success.
+func (c *command) stopStatement(client *ccloudv2.FlinkGatewayClient, environmentId, name string) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), stopTimeout)
+	defer cancel()
+
+	_, err := wait.Call(ctx, func() (struct{}, error) {
 		c.authTokenMu.Lock()
 		defer c.authTokenMu.Unlock()
-		done <- func() error {
-			statement, err := client.GetStatement(environmentId, name, c.Context.LastOrgId)
-			if err != nil {
-				return err
-			}
-			if statement.Spec == nil {
-				return fmt.Errorf(`statement "%s" has no spec`, name)
-			}
-			statement.Spec.Stopped = flinkgatewayv1.PtrBool(true)
-			return client.UpdateStatement(environmentId, name, c.Context.LastOrgId, statement)
-		}()
-	}()
-
-	report := func(warning, debug string) {
-		if announce {
-			output.ErrPrintf(false, "%s\n", warning)
-		} else {
-			log.CliLogger.Debugf("%s", debug)
-		}
-	}
-
-	select {
-	case err := <-done:
+		statement, err := client.GetStatement(environmentId, name, c.Context.LastOrgId)
 		if err != nil {
-			report(
-				fmt.Sprintf(`Warning: could not stop statement "%s": %v.`, name, err),
-				fmt.Sprintf(`could not stop statement "%s" after query completion: %v`, name, err),
-			)
-			return false
+			return struct{}{}, err
 		}
-		report(
-			fmt.Sprintf(`Successfully stopped statement "%s".`, name),
-			fmt.Sprintf(`stopped statement "%s" after query completion`, name),
-		)
-		return true
-	case <-time.After(stopTimeout):
-		report(
-			fmt.Sprintf(`Warning: timed out trying to stop statement "%s".`, name),
-			fmt.Sprintf(`timed out trying to stop statement "%s" after query completion`, name),
-		)
-		return false
+		if statement.Spec == nil {
+			return struct{}{}, fmt.Errorf(`statement "%s" has no spec`, name)
+		}
+		statement.Spec.Stopped = flinkgatewayv1.PtrBool(true)
+		return struct{}{}, client.UpdateStatement(environmentId, name, c.Context.LastOrgId, statement)
+	})
+
+	switch {
+	case err == nil:
+		log.CliLogger.Debugf(`stopped statement "%s" after query completion`, name)
+		return true, nil
+	case goerrors.Is(err, context.DeadlineExceeded):
+		log.CliLogger.Debugf(`timed out trying to stop statement "%s" after query completion`, name)
+		return false, errStopTimeout
+	default:
+		log.CliLogger.Debugf(`could not stop statement "%s" after query completion: %v`, name, err)
+		return false, err
 	}
+}
+
+// stopStatementAndReport is stopStatement plus a user-facing stderr line, for
+// the deferred end-of-run cleanup: after an error or a truncated read the user
+// needs to see whether the leftover statement was actually released.
+func (c *command) stopStatementAndReport(client *ccloudv2.FlinkGatewayClient, environmentId, name string) bool {
+	ok, err := c.stopStatement(client, environmentId, name)
+	switch {
+	case ok:
+		output.ErrPrintf(false, "Successfully stopped statement \"%s\".\n", name)
+	case goerrors.Is(err, errStopTimeout):
+		output.ErrPrintf(false, "Warning: timed out trying to stop statement \"%s\".\n", name)
+	default:
+		output.ErrPrintf(false, "Warning: could not stop statement \"%s\": %v.\n", name, err)
+	}
+	return ok
+}
+
+// isInterrupted reports whether err is a Ctrl-C/SIGTERM cancellation or a
+// --wait-timeout expiry — the two cases interruptedError knows how to report.
+func isInterrupted(err error) bool {
+	return goerrors.Is(err, context.Canceled) || goerrors.Is(err, context.DeadlineExceeded)
 }
 
 // interruptedError turns a context cancellation/timeout into an actionable
@@ -160,10 +187,11 @@ func stopFate(name string, stopped bool) string {
 func (c *command) handleQueryError(cmd *cobra.Command, client *ccloudv2.FlinkGatewayClient, environmentId, name string, err error, settled *bool) error {
 	var unbounded *query.UnboundedError
 	if goerrors.As(err, &unbounded) {
-		// announce=false: the outcome is folded into this one error's suggestion
-		// below instead of also being printed separately by stopStatement, which
-		// would say "stopped" a second time right next to this same message.
-		fate := stopFate(name, c.stopStatement(client, environmentId, name, false))
+		// The outcome is folded into this one error's suggestion below via
+		// stopFate, instead of being printed separately, which would say
+		// "stopped" a second time right next to this same message.
+		stopped, _ := c.stopStatement(client, environmentId, name)
+		fate := stopFate(name, stopped)
 		*settled = true
 		return errors.NewErrorWithSuggestions(
 			err.Error(),
@@ -171,12 +199,12 @@ func (c *command) handleQueryError(cmd *cobra.Command, client *ccloudv2.FlinkGat
 		)
 	}
 
-	if goerrors.Is(err, context.Canceled) || goerrors.Is(err, context.DeadlineExceeded) {
-		// announce=false for the same reason as above: interruptedError below states
-		// the stop outcome itself, so stopStatement shouldn't also print it — that
-		// previously produced a confusing "Successfully stopped ..." line immediately
-		// followed by an unrelated "Error: query interrupted ..." for the same event.
-		stopped := c.stopStatement(client, environmentId, name, false)
+	if isInterrupted(err) {
+		// Quiet on purpose: interruptedError below states the stop outcome itself,
+		// so stopStatement shouldn't also print it — that previously produced a
+		// confusing "Successfully stopped ..." line immediately followed by an
+		// unrelated "Error: query interrupted ..." for the same event.
+		stopped, _ := c.stopStatement(client, environmentId, name)
 		*settled = true
 		return interruptedError(cmd, err, name, stopped)
 	}
@@ -190,6 +218,10 @@ func (c *command) handleQueryError(cmd *cobra.Command, client *ccloudv2.FlinkGat
 			switch coder.StatusCode() {
 			case http.StatusNotFound:
 				// A 404 means the statement is gone or mistyped; an expired result window is a separate 408 (below).
+				// It's already gone, so mark settled: the caller's deferred cleanup would
+				// otherwise fire its own stop attempt and print a second, contradictory
+				// 404 warning right after this message says the statement no longer exists.
+				*settled = true
 				return errors.NewErrorWithSuggestions(
 					resultsFetchErr.Error(),
 					fmt.Sprintf("Statement \"%s\" no longer exists — it may have been deleted, or the name is mistyped. Check %s.", name, describeCmd(name)),

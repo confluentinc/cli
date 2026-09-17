@@ -78,6 +78,9 @@ func (c *command) printQueryResult(cmd *cobra.Command, name string, result *quer
 	if showOperation {
 		headers = append([]string{"Operation"}, headers...)
 	}
+	for i, header := range headers {
+		headers[i] = escapeControlChars(header)
+	}
 
 	rows := make([][]string, len(result.Rows))
 	for i, row := range result.Rows {
