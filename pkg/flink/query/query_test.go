@@ -418,6 +418,40 @@ func TestRunWrapsResultsFetchErrors(t *testing.T) {
 	require.ErrorContains(t, err, "page not found")
 }
 
+// A page fetch can succeed but its rows still fail to convert (e.g. an
+// unrecognized column type); that failure must be wrapped the same way as a
+// network fetch failure, so handleQueryError's ResultsFetchError-specific
+// suggestions (404/408) still apply instead of silently degrading to the
+// generic fallback.
+func TestRunWrapsConversionErrorsTheSameAsResultsFetchErrors(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	badSchema := &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{
+		{Name: "id", Type: flinkgatewayv1.DataType{Type: "NOT_A_REAL_TYPE", Nullable: false}},
+	}}
+	completed := flinkgatewayv1.SqlV1Statement{
+		Name: flinkgatewayv1.PtrString(testStatementName),
+		Spec: &flinkgatewayv1.SqlV1StatementSpec{Statement: flinkgatewayv1.PtrString("SELECT * FROM t;")},
+		Status: &flinkgatewayv1.SqlV1StatementStatus{
+			Phase: "COMPLETED",
+			Traits: &flinkgatewayv1.SqlV1StatementTraits{
+				SqlKind:      flinkgatewayv1.PtrString("SELECT"),
+				IsBounded:    flinkgatewayv1.PtrBool(true),
+				IsAppendOnly: flinkgatewayv1.PtrBool(true),
+				Schema:       badSchema,
+			},
+		},
+	}
+
+	client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil)
+	client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
+		Return(page("", []any{"1"}), nil)
+
+	_, err := Run(context.Background(), testOptions(client), testStatementName)
+	var resultsErr *ResultsFetchError
+	require.ErrorAs(t, err, &resultsErr)
+	require.ErrorContains(t, err, "unsupported result field type")
+}
+
 // A GetStatement error while awaiting PENDING is transient by wait.Poll's design
 // (matching every other CLI command built on it): it retries rather than
 // aborting, so a persistent error surfaces once the caller's own context

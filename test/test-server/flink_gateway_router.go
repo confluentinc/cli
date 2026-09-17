@@ -289,6 +289,14 @@ func buildQueryTestFixture(name, sql string) *queryTestFixture {
 		traits = nil
 		phase = "FAILED"
 		detail = "Something went wrong compiling the statement"
+	case "SELECT * FROM unrecognized_column_type;":
+		// A column type this CLI build doesn't recognize: exercises the generic
+		// (non-Unbounded, non-Canceled) error branch of handleQueryError, where
+		// the deferred cleanup must still announce its outcome instead of only
+		// logging it (see internal/query/command.go's announceStop).
+		phase = "RUNNING"
+		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{queryColumn("id", "NOT_A_REAL_TYPE")}}
+		pages = [][]map[string]any{{queryRow(0, "1")}}
 	case "CREATE TABLE t (id INT);":
 		traits = nil
 	default:
