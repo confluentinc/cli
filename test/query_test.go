@@ -47,6 +47,12 @@ func (s *CLITestSuite) TestQuery() {
 		// The statement itself fails server-side.
 		{args: `flink query --sql "SELECT * FROM will_fail;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "query/failed.golden", regex: true, exitCode: 1},
 
+		// A results-conversion error (not Unbounded, not Canceled) falls through
+		// handleQueryError's generic branch, which leaves settled false — the
+		// deferred cleanup must still announce stopping the still-RUNNING
+		// statement instead of only logging it.
+		{args: `flink query --sql "SELECT * FROM unrecognized_column_type;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "query/unrecognized-column-type.golden", regex: true, exitCode: 1},
+
 		// DDL has no result schema, so Run() returns before ever calling GetStatementResults.
 		{args: `flink query --sql "CREATE TABLE t (id INT);" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "query/no-rows.golden", regex: true},
 

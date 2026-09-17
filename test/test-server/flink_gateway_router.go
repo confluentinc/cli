@@ -20,6 +20,7 @@ import (
 const (
 	validFlinkStatementPrincipalId   = "u-123456"
 	validFlinkStatementComputePoolId = "lfcp-123456"
+	statementCompletedDetail         = "SQL statement is completed"
 )
 
 var flinkGatewayRoutes = []route{
@@ -148,7 +149,7 @@ func handleSqlEnvironmentsEnvironmentStatements(t *testing.T) http.HandlerFunc {
 				},
 				Status: &flinkgatewayv1.SqlV1StatementStatus{
 					Phase:  "COMPLETED",
-					Detail: flinkgatewayv1.PtrString("SQL statement is completed"),
+					Detail: flinkgatewayv1.PtrString(statementCompletedDetail),
 					LatestOffsets: &map[string]string{
 						"customers_source": "partition:0,offset:9223372036854775808",
 					},
@@ -163,7 +164,7 @@ func handleSqlEnvironmentsEnvironmentStatements(t *testing.T) http.HandlerFunc {
 				},
 				Status: &flinkgatewayv1.SqlV1StatementStatus{
 					Phase:  "COMPLETED",
-					Detail: flinkgatewayv1.PtrString("SQL statement is completed"),
+					Detail: flinkgatewayv1.PtrString(statementCompletedDetail),
 					LatestOffsets: &map[string]string{
 						"customers_source": "partition:0,offset:9223372036854775808",
 					},
@@ -252,7 +253,7 @@ func queryRow(op int, values ...string) map[string]any {
 func buildQueryTestFixture(name, sql string) *queryTestFixture {
 	traits := &flinkgatewayv1.SqlV1StatementTraits{IsBounded: flinkgatewayv1.PtrBool(true), IsAppendOnly: flinkgatewayv1.PtrBool(true)}
 	phase := "COMPLETED"
-	detail := "SQL statement is completed"
+	detail := statementCompletedDetail
 	var pages [][]map[string]any
 
 	switch sql {
@@ -289,6 +290,14 @@ func buildQueryTestFixture(name, sql string) *queryTestFixture {
 		traits = nil
 		phase = "FAILED"
 		detail = "Something went wrong compiling the statement"
+	case "SELECT * FROM unrecognized_column_type;":
+		// A column type this CLI build doesn't recognize: exercises the generic
+		// (non-Unbounded, non-Canceled) error branch of handleQueryError, where
+		// the deferred cleanup must still announce its outcome instead of only
+		// logging it (see internal/query/command.go's announceStop).
+		phase = "RUNNING"
+		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{queryColumn("id", "NOT_A_REAL_TYPE")}}
+		pages = [][]map[string]any{{queryRow(0, "1")}}
 	case "CREATE TABLE t (id INT);":
 		traits = nil
 	default:
@@ -389,7 +398,7 @@ func handleStatementGet(t *testing.T) http.HandlerFunc {
 			},
 			Status: &flinkgatewayv1.SqlV1StatementStatus{
 				Phase:  "COMPLETED",
-				Detail: flinkgatewayv1.PtrString("SQL statement is completed"),
+				Detail: flinkgatewayv1.PtrString(statementCompletedDetail),
 				LatestOffsets: &map[string]string{
 					"customers_source": "partition:0,offset:9223372036854775808",
 				},

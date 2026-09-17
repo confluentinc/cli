@@ -170,19 +170,10 @@ func drain(ctx context.Context, opts Options, statementName string, schema flink
 			return err
 		}
 
-		page, err := wait.Call(ctx, func() (flinkgatewayv1.SqlV1StatementResult, error) {
-			return opts.authenticatedClient().GetStatementResults(opts.EnvironmentId, statementName, opts.OrganizationId, pageToken)
-		})
-		if err != nil {
-			return &ResultsFetchError{Err: err}
-		}
-
-		pageResults := page.GetResults()
-		converted, err := results.ConvertToInternalResults(pageResults.GetData(), schema)
+		pageRows, nextPageToken, err := fetchPage(ctx, opts, statementName, schema, pageToken)
 		if err != nil {
 			return err
 		}
-		pageRows := converted.GetRows()
 		result.Rows = append(result.Rows, pageRows...)
 
 		if opts.MaxRows > 0 && len(result.Rows) > opts.MaxRows {
@@ -192,31 +183,61 @@ func drain(ctx context.Context, opts Options, statementName string, schema flink
 			return nil
 		}
 
-		metadata := page.GetMetadata()
-		var nextPageToken string
-		if nextUrl := metadata.GetNext(); nextUrl != "" {
-			nextPageToken, err = ccloudv2.ExtractPageToken(nextUrl)
-			if err != nil {
-				return err
-			}
-		}
-
 		if nextPageToken == "" {
 			refreshStatement(ctx, opts, statementName, result)
 			return nil
 		}
 		pageToken = nextPageToken
 
-		if len(pageRows) == 0 {
-			// A token but no rows means "nothing new yet, keep polling"; back off so idle waiting doesn't hammer the gateway.
-			if err := opts.sleep(ctx, backoff); err != nil {
-				return err
-			}
-			backoff = min(backoff*2, maxBackoff)
-		} else {
-			backoff = initialBackoff
+		backoff, err = nextBackoff(ctx, opts, len(pageRows) > 0, backoff)
+		if err != nil {
+			return err
 		}
 	}
+}
+
+// fetchPage reads one results page, converts it, and returns its rows and the
+// token for the next page (empty when the gateway reported no next page). A
+// fetch or conversion failure is wrapped in ResultsFetchError so the caller can
+// tell it apart from a status read; a malformed next-page URL is not.
+func fetchPage(ctx context.Context, opts Options, statementName string, schema flinkgatewayv1.SqlV1ResultSchema, pageToken string) ([]types.StatementResultRow, string, error) {
+	page, err := wait.Call(ctx, func() (flinkgatewayv1.SqlV1StatementResult, error) {
+		return opts.authenticatedClient().GetStatementResults(opts.EnvironmentId, statementName, opts.OrganizationId, pageToken)
+	})
+	if err != nil {
+		return nil, "", &ResultsFetchError{Err: err}
+	}
+
+	pageResults := page.GetResults()
+	converted, err := results.ConvertToInternalResults(pageResults.GetData(), schema)
+	if err != nil {
+		return nil, "", &ResultsFetchError{Err: err}
+	}
+
+	metadata := page.GetMetadata()
+	nextPageToken := ""
+	if nextUrl := metadata.GetNext(); nextUrl != "" {
+		nextPageToken, err = ccloudv2.ExtractPageToken(nextUrl)
+		if err != nil {
+			return nil, "", err
+		}
+	}
+
+	return converted.GetRows(), nextPageToken, nil
+}
+
+// nextBackoff resets the backoff after a page that carried rows, and otherwise
+// sleeps the current backoff (a token but no rows means "nothing new yet, keep
+// polling") before doubling it up to maxBackoff, so idle waiting doesn't hammer
+// the gateway.
+func nextBackoff(ctx context.Context, opts Options, hadRows bool, backoff time.Duration) (time.Duration, error) {
+	if hadRows {
+		return initialBackoff, nil
+	}
+	if err := opts.sleep(ctx, backoff); err != nil {
+		return 0, err
+	}
+	return min(backoff*2, maxBackoff), nil
 }
 
 // refreshStatement re-reads the statement so Phase() reflects where it actually
