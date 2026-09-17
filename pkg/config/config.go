@@ -419,7 +419,13 @@ func (c *Config) Save() error {
 		return err
 	}
 	defer func() { _ = lock.unlock() }()
-	return c.saveLocked()
+	if err := c.saveLocked(); err != nil {
+		return err
+	}
+	// Persist the disposable cache once, after the config write succeeds and while the
+	// lock is still held. Best-effort: saveCache never fails the save.
+	c.saveCache()
+	return nil
 }
 
 // saveLocked runs the read-merge-write under an already-held lock.
@@ -497,8 +503,6 @@ func (c *Config) saveLocked() error {
 		return err
 	}
 
-	c.saveCache()
-
 	// The next Save's three-way merge diffs baseline against the live config, so the
 	// baseline must match the live config for every field this process did not edit,
 	// not the merged disk state. merged holds concurrent changes this process pulled in
@@ -520,7 +524,6 @@ func (c *Config) writeWholeConfig() error {
 	if err := c.save(); err != nil {
 		return err
 	}
-	c.saveCache()
 	// Refresh the baseline from disk (encrypted) rather than from the live config,
 	// which save() has restored to its decrypted form. A read failure here does not
 	// undo the successful write, so fall back to the live snapshot.
@@ -1076,8 +1079,7 @@ func StateDir() (string, error) {
 // GetDefaultFilename swallows a missing home directory because it backs a flag default built at
 // command-construction time, where there is no error to return. Prefer StateDir where you can.
 func GetDefaultFilename() string {
-	home, _ := os.UserHomeDir()
-	return filepath.Join(home, StateDirName(), "config.json")
+	return stateDirPath("config.json")
 }
 
 func (c *Config) CheckIsOnPremLogin() error {
