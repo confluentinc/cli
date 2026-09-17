@@ -41,35 +41,46 @@ func (c *command) printQueryResult(cmd *cobra.Command, name string, result *quer
 		headers[i] = column.GetName()
 	}
 
-	showOperation := appendOnlyKnown && !isAppendOnly
-
 	if output.GetFormat(cmd).IsSerialized() {
-		rows := make([]map[string]any, len(result.Rows))
-		for i, row := range result.Rows {
-			// Every row is guaranteed len(headers) fields: Run() hard-errors on a
-			// row/schema mismatch before this function ever sees a result.
-			fields := make(map[string]any, len(headers))
-			for j, field := range row.GetFields() {
-				fields[headers[j]] = field.ToSerializedValue()
-			}
-			rows[i] = fields
-		}
-
-		// A bare array has nowhere to put the schema, so the envelope is the
-		// default and --raw opts into the bare array.
-		if raw {
-			return output.SerializedOutput(cmd, rows)
-		}
-
-		return output.SerializedOutput(cmd, &queryOut{
-			Phase:     string(result.Phase()),
-			Columns:   columns,
-			Rows:      rows,
-			RowCount:  len(rows),
-			Truncated: result.Truncated,
-		})
+		return printSerializedResult(cmd, columns, headers, result, raw)
 	}
 
+	showOperation := appendOnlyKnown && !isAppendOnly
+	return printHumanTable(name, headers, showOperation, result)
+}
+
+// printSerializedResult emits the -o json/yaml form: the schema+rows envelope by
+// default, or a bare array of row objects with --raw.
+func printSerializedResult(cmd *cobra.Command, columns []queryColumnOut, headers []string, result *query.Result, raw bool) error {
+	rows := make([]map[string]any, len(result.Rows))
+	for i, row := range result.Rows {
+		// Every row is guaranteed len(headers) fields: Run() hard-errors on a
+		// row/schema mismatch before this function ever sees a result.
+		fields := make(map[string]any, len(headers))
+		for j, field := range row.GetFields() {
+			fields[headers[j]] = field.ToSerializedValue()
+		}
+		rows[i] = fields
+	}
+
+	// A bare array has nowhere to put the schema, so the envelope is the
+	// default and --raw opts into the bare array.
+	if raw {
+		return output.SerializedOutput(cmd, rows)
+	}
+
+	return output.SerializedOutput(cmd, &queryOut{
+		Phase:     string(result.Phase()),
+		Columns:   columns,
+		Rows:      rows,
+		RowCount:  len(rows),
+		Truncated: result.Truncated,
+	})
+}
+
+// printHumanTable renders the default -o human table, escaping control characters
+// in both headers and values so a result value can't inject terminal sequences.
+func printHumanTable(name string, headers []string, showOperation bool, result *query.Result) error {
 	if len(headers) == 0 || len(result.Rows) == 0 {
 		output.ErrPrintf(false, "The query returned no rows. Statement \"%s\" is in phase %s.\n", name, result.Phase())
 		return nil
@@ -77,6 +88,9 @@ func (c *command) printQueryResult(cmd *cobra.Command, name string, result *quer
 
 	if showOperation {
 		headers = append([]string{"Operation"}, headers...)
+	}
+	for i, header := range headers {
+		headers[i] = escapeControlChars(header)
 	}
 
 	rows := make([][]string, len(result.Rows))
@@ -109,17 +123,27 @@ func (c *command) printQueryResult(cmd *cobra.Command, name string, result *quer
 // their own serializers; this is the equivalent for the plain-table renderer,
 // which otherwise lets the terminal execute them (recoloring, moving the cursor).
 func escapeControlChars(s string) string {
-	if !strings.ContainsFunc(s, unicode.IsControl) {
+	if !strings.ContainsFunc(s, needsEscape) {
 		return s
 	}
 
 	var sb strings.Builder
 	for _, r := range s {
-		if unicode.IsControl(r) {
+		if needsEscape(r) {
 			fmt.Fprintf(&sb, "\\x%02x", r)
 			continue
 		}
 		sb.WriteRune(r)
 	}
 	return sb.String()
+}
+
+// needsEscape reports whether r is a control character this renderer neutralizes.
+// Tab is left as-is: it's a legitimate data character (e.g. inside a multi-line
+// VARCHAR) and carries no cursor/injection risk. Newline and carriage return
+// stay escaped despite also being "legitimate" — a raw one in a table cell
+// breaks the layout or lets a value inject fake rows — as do ANSI/cursor escapes
+// like \x1b, the original reason this exists.
+func needsEscape(r rune) bool {
+	return unicode.IsControl(r) && r != '\t'
 }
