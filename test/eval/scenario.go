@@ -5,6 +5,7 @@ package eval
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -136,6 +137,18 @@ type Scenario struct {
 	Grade       func(results []SessionResult) []SessionOutcome
 }
 
+var apiKeyPattern = regexp.MustCompile(`MYKEY[0-9]+`)
+
+// createdGlobalKey extracts the mock-assigned key id this session's `api-key create` printed.
+func createdGlobalKey(r SessionResult) string {
+	for _, inv := range r.Invocations {
+		if m := apiKeyPattern.FindString(inv.Stdout); m != "" {
+			return m
+		}
+	}
+	return ""
+}
+
 var crosstalkEnvs = []string{envA, envB}
 
 var Scenarios = []Scenario{
@@ -177,6 +190,33 @@ var Scenarios = []Scenario{
 				GradeSession(results[0], "lkc-12345", func(r SessionResult) (string, error) { return ReadActiveKafkaCluster(r.HomeDir, envA) }),
 				GradeSession(results[1], "lfcp-123456", func(r SessionResult) (string, error) { return ReadCurrentFlinkComputePool(r.HomeDir, envA) }),
 			}
+		},
+	},
+	{
+		Name:        "crud-lost-update",
+		Description: "two sessions each `api-key create --resource global` on one shared context; a lockless whole-file save drops one of the two created keys.",
+		Sessions: func(cloudURL string) []SessionScript {
+			return []SessionScript{
+				{Label: "creates key A", Setup: []string{loginStep(cloudURL)}, Contend: []string{"api-key create --resource global"}},
+				{Label: "creates key B", Setup: []string{loginStep(cloudURL)}, Contend: []string{"api-key create --resource global"}},
+			}
+		},
+		Grade: func(results []SessionResult) []SessionOutcome {
+			outs := make([]SessionOutcome, len(results))
+			for i, r := range results {
+				key := createdGlobalKey(r)
+				outs[i] = GradeSession(r, key, func(r SessionResult) (string, error) {
+					present, err := GlobalAPIKeyPresent(r.HomeDir, key)
+					if err != nil {
+						return "", err
+					}
+					if present {
+						return key, nil
+					}
+					return "", nil
+				})
+			}
+			return outs
 		},
 	},
 }

@@ -107,6 +107,20 @@ func ReadActiveKafkaCluster(homeDir, env string) (string, error) {
 	return c.Contexts[name].KafkaClusterContext.KafkaEnvironmentContexts[env].ActiveKafka, nil
 }
 
+// GlobalAPIKeyPresent reports whether the sole context's global_api_keys map contains key.
+func GlobalAPIKeyPresent(homeDir, key string) (bool, error) {
+	c, err := loadConfig(homeDir)
+	if err != nil {
+		return false, err
+	}
+	name, err := soleContext(homeDir)
+	if err != nil {
+		return false, err
+	}
+	_, ok := c.Contexts[name].GlobalAPIKeys[key]
+	return ok, nil
+}
+
 // ReadCurrentFlinkComputePool returns the current flink compute pool for the sole context under env.
 func ReadCurrentFlinkComputePool(homeDir, env string) (string, error) {
 	c, err := loadConfig(homeDir)

@@ -54,6 +54,28 @@ func TestReadCrossFieldSelections(t *testing.T) {
 	}
 }
 
+func TestGlobalAPIKeyPresent(t *testing.T) {
+	home := t.TempDir()
+	writeConfig(t, home, `{"current_context":"ctx","contexts":{"ctx":{"global_api_keys":{"MYKEY1":{}}}}}`)
+
+	if ok, err := GlobalAPIKeyPresent(home, "MYKEY1"); err != nil || !ok {
+		t.Errorf("expected MYKEY1 present (ok=%v err=%v)", ok, err)
+	}
+	if ok, _ := GlobalAPIKeyPresent(home, "MYKEY2"); ok {
+		t.Error("expected MYKEY2 absent")
+	}
+}
+
+func TestCreatedGlobalKeyParsesStdout(t *testing.T) {
+	r := SessionResult{Invocations: []Invocation{
+		{Command: "login --url x"},
+		{Command: "api-key create --resource global", Stdout: "It may take a couple of minutes...\nAPI Key: MYKEY2\nAPI Secret: MYSECRET2\n"},
+	}}
+	if got := createdGlobalKey(r); got != "MYKEY2" {
+		t.Errorf("parsed %q", got)
+	}
+}
+
 func TestGradeConfigIntegrityFailsOnTruncatedFile(t *testing.T) {
 	home := t.TempDir()
 	writeConfig(t, home, `{"current_context": "ctx-1", "contexts": {`) // torn write
