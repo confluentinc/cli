@@ -69,6 +69,9 @@ func (c *statementCommand) statementResume(cmd *cobra.Command, args []string) er
 	if err != nil {
 		return err
 	}
+	if statement.Spec == nil {
+		return fmt.Errorf(`statement "%s" has no spec`, args[0])
+	}
 
 	// Support resume a Flink statement with a different principal and/or compute-pool
 	principal, err := cmd.Flags().GetString("principal")
