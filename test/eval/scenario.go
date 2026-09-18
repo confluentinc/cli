@@ -149,6 +149,25 @@ func createdGlobalKey(r SessionResult) string {
 	return ""
 }
 
+// observeGlobalKeyPresent returns an observe probe for a session's own created global api-key. A key
+// that never parsed from stdout is treated as a read error (routes to a visible corruption verdict),
+// so a stdout-format change can't silently mask a dropped key as OK.
+func observeGlobalKeyPresent(key string) func(SessionResult) (string, error) {
+	return func(r SessionResult) (string, error) {
+		if key == "" {
+			return "", fmt.Errorf("no created api-key parsed from stdout")
+		}
+		present, err := GlobalAPIKeyPresent(r.HomeDir, key)
+		if err != nil {
+			return "", err
+		}
+		if present {
+			return key, nil
+		}
+		return "", nil
+	}
+}
+
 var crosstalkEnvs = []string{envA, envB}
 
 var Scenarios = []Scenario{
@@ -205,16 +224,7 @@ var Scenarios = []Scenario{
 			outs := make([]SessionOutcome, len(results))
 			for i, r := range results {
 				key := createdGlobalKey(r)
-				outs[i] = GradeSession(r, key, func(r SessionResult) (string, error) {
-					present, err := GlobalAPIKeyPresent(r.HomeDir, key)
-					if err != nil {
-						return "", err
-					}
-					if present {
-						return key, nil
-					}
-					return "", nil
-				})
+				outs[i] = GradeSession(r, key, observeGlobalKeyPresent(key))
 			}
 			return outs
 		},

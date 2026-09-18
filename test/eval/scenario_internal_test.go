@@ -117,6 +117,18 @@ func TestGradeSessionLadder(t *testing.T) {
 	}
 }
 
+func TestCrudEmptyKeyIsNotSilentlyOK(t *testing.T) {
+	home := t.TempDir()
+	writeConfig(t, home, `{"current_context":"ctx","contexts":{"ctx":{"global_api_keys":{}}}}`)
+	r := SessionResult{Session: 0, HomeDir: home, Invocations: []Invocation{{Command: "api-key create --resource global", Stdout: "no key here", ExitCode: 0}}}
+
+	out := GradeSession(r, "", observeGlobalKeyPresent(""))
+
+	if out.Verdict == VerdictOK {
+		t.Fatalf("empty parsed key must not grade OK (would mask a dropped key); got %s", out.Verdict)
+	}
+}
+
 func TestGradeSessionCorruptionOnBadConfig(t *testing.T) {
 	home := t.TempDir()
 	dir := filepath.Join(home, ".confluent")
