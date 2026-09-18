@@ -52,13 +52,13 @@ func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query",
 		Short: "Run a bounded Flink SQL query and print its results.",
-		Long: "Run a bounded (snapshot) Flink SQL query, block until it finishes, and print the complete result set.\n\n" +
-			"The SQL is given with `--sql`, or with `--file` to read it from a file.\n\n" +
+		Long: "Run a bounded Flink SQL query, wait for it to finish, and print the results.\n\n" +
+			"Provide the SQL statement with `--sql`, or use `--file` to read it from a file.\n\n" +
 			"Unlike statement creation, which submits a statement and returns immediately, this command waits for every " +
-			"result page and exits with a non-zero status if the statement fails. It is intended for scripting and " +
-			"one-shot queries against a bounded (point-in-time) result set.\n\n" +
-			"With `-o json` or `-o yaml`, output defaults to an envelope carrying the column schema alongside the rows, " +
-			"since the rows on their own carry no type information. Pass `--raw` for a bare array of row objects instead.",
+			"result page and exits with a non-zero status if the statement fails. Use it for scripts and one-time queries " +
+			"against a bounded, point-in-time result set.\n\n" +
+			"With -o json or -o yaml, output defaults to an envelope that includes the column schema and rows. Rows alone " +
+			"don't include type information. Use --raw to return a bare array of row objects.",
 		Args: cobra.NoArgs,
 		// Hidden until the flag targets an org; cfg.IsTest keeps it visible to the
 		// integration suite regardless of the (unreachable in tests) LD evaluation.
@@ -72,11 +72,11 @@ func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
 				Code: `confluent flink query --sql "SELECT * FROM orders LIMIT 10;"`,
 			},
 			examples.Example{
-				Text: "Run a bounded query against Kafka cluster \"my-cluster\" and emit JSON for a script to consume.",
+				Text: "Run a bounded query against Kafka cluster \"my-cluster\" and return JSON for a script.",
 				Code: `confluent flink query --sql "SELECT status, COUNT(*) FROM orders GROUP BY status;" --compute-pool lfcp-123456 --database my-cluster --output json`,
 			},
 			examples.Example{
-				Text: "Emit a bare JSON array of rows, with no envelope, for a script that only wants the data.",
+				Text: "Return a bare JSON array of rows, without an envelope, for a script that only wants the data.",
 				Code: `confluent flink query --sql "SELECT * FROM orders LIMIT 10;" --output json --raw`,
 			},
 		),
@@ -85,15 +85,15 @@ func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	c := &command{AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	cmd.RunE = c.runQuery
 
-	cmd.Flags().String("sql", "", `The Flink SQL statement. Alternatively, pass it with "-f".`)
-	cmd.Flags().StringP("file", "f", "", `Path to a file containing the Flink SQL statement. Alternatively, pass the SQL with "--sql".`)
+	cmd.Flags().String("sql", "", "Flink SQL statement. Alternatively, use --file.")
+	cmd.Flags().StringP("file", "f", "", "Path to a file that contains the Flink SQL statement. Alternatively, use --sql.")
 	pcmd.AddComputePoolFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddDatabaseFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().StringSlice("property", []string{}, "A mechanism to pass properties in the form key=value when creating a Flink statement.")
-	cmd.Flags().Duration("wait-timeout", config.DefaultTimeoutDuration, "Maximum time to wait for the query to finish before giving up.")
-	cmd.Flags().Int("max-rows", 0, "Stop fetching and discard the rest after this many rows, or 0 to fetch every row. Client-side only: rows past the limit are still produced by the query.")
-	cmd.Flags().Bool("raw", false, `Emit the rows as a bare array with no envelope. Requires "-o json" or "-o yaml".`)
+	cmd.Flags().StringSlice("property", []string{}, "Properties for the Flink statement in key=value format.")
+	cmd.Flags().Duration("wait-timeout", config.DefaultTimeoutDuration, "Maximum time to wait for the query to finish.")
+	cmd.Flags().Int("max-rows", 0, "Maximum number of rows to fetch. Use 0 to fetch every row. This limit is client-side only; the query still produces rows after the limit is reached.")
+	cmd.Flags().Bool("raw", false, `Return rows as a bare array without an envelope. Requires "-o json" or "-o yaml".`)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	c.addCatalogAlias(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -112,7 +112,7 @@ func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
 // already persists to context and ParseFlagsIntoContext reads it before RunE runs.
 func (c *command) addCatalogAlias(cmd *cobra.Command) {
 	environmentFlag := cmd.Flags().Lookup("environment")
-	cmd.Flags().Var(environmentFlag.Value, "catalog", `Alias for "--environment".`)
+	cmd.Flags().Var(environmentFlag.Value, "catalog", "Alias for --environment.")
 }
 
 func (c *command) runQuery(cmd *cobra.Command, _ []string) error {
