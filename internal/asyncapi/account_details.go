@@ -70,7 +70,7 @@ func (d *accountDetails) getTags() error {
 }
 
 func (d *accountDetails) getSchemaDetails() error {
-	schema, err := d.srClient.GetSchemaByVersion(d.channelDetails.currentSubject, "latest", false)
+	schema, err := d.srClient.GetSchemaByVersion(d.channelDetails.currentSubject, "latest", false, "")
 	if err != nil {
 		return err
 	}

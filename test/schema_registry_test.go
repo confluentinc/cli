@@ -120,6 +120,7 @@ func (s *CLITestSuite) TestSchemaRegistrySchema() {
 		{args: "schema-registry schema describe --subject payments --version 1 123", exitCode: 1, fixture: "schema-registry/schema/describe-both-id-and-subject.golden"},
 		{args: "schema-registry schema describe --show-references --subject payments --version 1 123", exitCode: 1, fixture: "schema-registry/schema/describe-both-id-and-subject.golden"},
 		{args: fmt.Sprintf("schema-registry schema describe --subject payments --version 2 --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/describe.golden"},
+		{args: fmt.Sprintf("schema-registry schema describe --subject payments --version 2 --format LOGICAL --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/describe-format-logical.golden"},
 		{args: fmt.Sprintf("schema-registry schema describe 10 --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/describe.golden"},
 		{args: fmt.Sprintf("schema-registry schema describe 1001 --show-references --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/describe-refs-id.golden"},
 		{args: fmt.Sprintf("schema-registry schema describe 1005 --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/describe-with-ruleset.golden"},

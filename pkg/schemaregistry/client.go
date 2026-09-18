@@ -159,13 +159,21 @@ func (c *Client) Register(subject string, req srsdk.RegisterSchemaRequest, norma
 	return res, err
 }
 
-func (c *Client) GetSchema(id int32, subject string) (srsdk.SchemaString, error) {
-	res, _, err := c.DefaultApi.GetSchema(c.context(), id).Subject(subject).Execute()
+func (c *Client) GetSchema(id int32, subject, format string) (srsdk.SchemaString, error) {
+	req := c.DefaultApi.GetSchema(c.context(), id).Subject(subject)
+	if format != "" {
+		req = req.Format(format)
+	}
+	res, _, err := req.Execute()
 	return res, err
 }
 
-func (c *Client) GetSchemaByVersion(subject, version string, deleted bool) (srsdk.Schema, error) {
-	res, _, err := c.DefaultApi.GetSchemaByVersion(c.context(), subject, version).Deleted(deleted).Execute()
+func (c *Client) GetSchemaByVersion(subject, version string, deleted bool, format string) (srsdk.Schema, error) {
+	req := c.DefaultApi.GetSchemaByVersion(c.context(), subject, version).Deleted(deleted)
+	if format != "" {
+		req = req.Format(format)
+	}
+	res, _, err := req.Execute()
 	return res, err
 }
 
