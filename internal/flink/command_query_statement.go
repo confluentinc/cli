@@ -1,4 +1,4 @@
-package query
+package flink
 
 import (
 	"context"
@@ -84,7 +84,7 @@ func createStatement(ctx context.Context, gracePeriod time.Duration, create func
 // that must surface it to the user either fold the returned bool into their own
 // message via stopFate, or use stopStatementAndReport. The returned error is
 // errStopTimeout on timeout, the underlying failure otherwise, and nil on success.
-func (c *command) stopStatement(client *ccloudv2.FlinkGatewayClient, environmentId, name string) (bool, error) {
+func (c *queryCommand) stopStatement(client *ccloudv2.FlinkGatewayClient, environmentId, name string) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), stopTimeout)
 	defer cancel()
 
@@ -118,7 +118,7 @@ func (c *command) stopStatement(client *ccloudv2.FlinkGatewayClient, environment
 // stopStatementAndReport is stopStatement plus a user-facing stderr line, for
 // the deferred end-of-run cleanup: after an error or a truncated read the user
 // needs to see whether the leftover statement was actually released.
-func (c *command) stopStatementAndReport(client *ccloudv2.FlinkGatewayClient, environmentId, name string) bool {
+func (c *queryCommand) stopStatementAndReport(client *ccloudv2.FlinkGatewayClient, environmentId, name string) bool {
 	ok, err := c.stopStatement(client, environmentId, name)
 	if ok {
 		output.ErrPrintf(false, "Successfully stopped statement \"%s\".\n", name)
@@ -194,7 +194,7 @@ func stopFate(name string, stopped bool) string {
 
 // handleQueryError turns a failed or interrupted run into a message naming the
 // statement; settled marks whether this call already stopped it.
-func (c *command) handleQueryError(cmd *cobra.Command, client *ccloudv2.FlinkGatewayClient, environmentId, name string, err error, settled *bool) error {
+func (c *queryCommand) handleQueryError(cmd *cobra.Command, client *ccloudv2.FlinkGatewayClient, environmentId, name string, err error, settled *bool) error {
 	var unbounded *query.UnboundedError
 	if goerrors.As(err, &unbounded) {
 		// The outcome is folded into this one error's suggestion below via
@@ -264,7 +264,7 @@ func describeCmd(name string) string {
 
 // refreshGatewayToken mirrors the shell's pre-call check: without it, a query
 // outliving the short-lived dataplane token dies on a 401 before --wait-timeout.
-func (c *command) refreshGatewayToken(client *ccloudv2.FlinkGatewayClient, jwtValidator jwt.Validator) func() error {
+func (c *queryCommand) refreshGatewayToken(client *ccloudv2.FlinkGatewayClient, jwtValidator jwt.Validator) func() error {
 	return func() error {
 		c.authTokenMu.Lock()
 		defer c.authTokenMu.Unlock()
