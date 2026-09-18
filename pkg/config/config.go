@@ -225,6 +225,12 @@ func (c *Config) Load() error {
 	}
 	c.snapshotBaseline() // baseline = pristine on-disk state, before migrations
 
+	// Load the cache before the migration block below: a migration can trigger a
+	// Save(), which also persists the cache. Saving before the cache is loaded
+	// would overwrite the on-disk cache (update-check timestamp and feature flags)
+	// with zero-value fields.
+	c.loadCache()
+
 	var save bool
 	for _, context := range c.Contexts {
 		// Migrate deprecated NetrcMachineName to MachineName
@@ -254,7 +260,6 @@ func (c *Config) Load() error {
 		}
 	}
 
-	c.loadCache()
 	return c.Validate()
 }
 
@@ -308,9 +313,8 @@ func (c *Config) saveFeatureFlagCache(s *cacheStore) error {
 			flags[name] = ctx.FeatureFlags
 		}
 	}
-	if len(flags) == 0 {
-		return nil
-	}
+	// Always rewrite the whole map, even when empty: a context whose flags were
+	// cleared or deleted must not leave a stale entry that Load would resurrect.
 	return s.writeJSON("feature_flags.json", flags)
 }
 
