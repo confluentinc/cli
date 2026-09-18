@@ -47,8 +47,7 @@ func (c *statementCommand) statementStop(_ *cobra.Command, args []string) error 
 		return err
 	}
 
-	// The gateway rejects a spec.stopped-only body, so this reads the statement
-	// back before flipping it.
+	// Read the statement back first; the gateway rejects a spec.stopped-only update.
 	statement, err := client.GetStatement(environmentId, args[0], c.Context.GetCurrentOrganization())
 	if err != nil {
 		return err

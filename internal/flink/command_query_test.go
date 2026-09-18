@@ -1,4 +1,4 @@
-package query
+package flink
 
 import (
 	"context"
@@ -15,7 +15,6 @@ import (
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
-	climock "github.com/confluentinc/cli/v4/mock"
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	cliconfig "github.com/confluentinc/cli/v4/pkg/config"
@@ -25,63 +24,6 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
-
-func TestNew(t *testing.T) {
-	cfg := cliconfig.AuthenticatedCloudConfigMock()
-	prerunner := climock.NewPreRunnerMock(nil, nil, nil, nil, cfg)
-
-	cmd := New(cfg, prerunner)
-
-	require.Equal(t, "query", cmd.Use)
-	require.False(t, cmd.Hidden, "cfg.IsTest should keep the command visible in tests")
-
-	for _, name := range []string{"sql", "file", "compute-pool", "service-account", "database", "property", "wait-timeout", "max-rows", "raw", "environment", "catalog", "context", "output", "cloud", "region"} {
-		require.NotNil(t, cmd.Flags().Lookup(name), "expected --%s to be registered", name)
-	}
-	require.Nil(t, cmd.Flags().Lookup("cluster"), "the --cluster alias was removed; --database is now the only way to set it")
-
-	// Neither "sql" nor "file" is individually cobra-required: exactly one of
-	// them is required via MarkFlagsOneRequired/MarkFlagsMutuallyExclusive.
-	sqlFlag := cmd.Flags().Lookup("sql")
-	require.Empty(t, sqlFlag.Annotations[cobra.BashCompOneRequiredFlag])
-
-	// --catalog shares storage with --environment: setting one is setting the other.
-	require.NoError(t, cmd.Flags().Set("catalog", "env-999"))
-	environment, err := cmd.Flags().GetString("environment")
-	require.NoError(t, err)
-	require.Equal(t, "env-999", environment)
-}
-
-func TestMutuallyExclusiveFlags(t *testing.T) {
-	cfg := cliconfig.AuthenticatedCloudConfigMock()
-	prerunner := climock.NewPreRunnerMock(nil, nil, nil, nil, cfg)
-
-	// --catalog shares storage with --environment, so setting one sets the other
-	// too; cobra's exclusivity check still fires since it tracks Changed() per
-	// flag name, independent of the shared underlying value.
-	cmd := New(cfg, prerunner)
-	require.NoError(t, cmd.Flags().Set("environment", "env-123"))
-	require.NoError(t, cmd.Flags().Set("catalog", "env-456"))
-	require.NoError(t, cmd.Flags().Set("sql", "SELECT 1;"))
-	require.ErrorContains(t, cmd.ValidateFlagGroups(), "if any flags in the group [environment catalog] are set none of the others can be")
-
-	cmd = New(cfg, prerunner)
-	require.NoError(t, cmd.Flags().Set("sql", "SELECT 1;"))
-	require.NoError(t, cmd.Flags().Set("file", "/tmp/query.sql"))
-	require.ErrorContains(t, cmd.ValidateFlagGroups(), "if any flags in the group [sql file] are set none of the others can be")
-
-	cmd = New(cfg, prerunner)
-	require.ErrorContains(t, cmd.ValidateFlagGroups(), "at least one of the flags in the group [sql file] is required")
-
-	// MarkFlagsOneRequired only checks whether "sql" was Set(), not whether its
-	// value is non-empty, so an explicitly empty --sql (e.g. from an unset shell
-	// variable) passes flag-group validation with no usable SQL anywhere. This is
-	// exactly why resolveSQL has its own "the SQL statement is required" check —
-	// don't remove it on the assumption cobra already covers this case.
-	cmd = New(cfg, prerunner)
-	require.NoError(t, cmd.Flags().Set("sql", ""))
-	require.NoError(t, cmd.ValidateFlagGroups())
-}
 
 func TestResolveDatabase(t *testing.T) {
 	newDBCmd := func(database string) *cobra.Command {
@@ -93,7 +35,7 @@ func TestResolveDatabase(t *testing.T) {
 		return cmd
 	}
 
-	commandWithActiveCluster := func(activeCluster string) *command {
+	commandWithActiveCluster := func(activeCluster string) *queryCommand {
 		return newTestCommand(&cliconfig.Context{KafkaClusterContext: &cliconfig.KafkaClusterContext{ActiveKafkaCluster: activeCluster}})
 	}
 
@@ -193,8 +135,8 @@ func captureStdout(t *testing.T, fn func()) string {
 	return string(out)
 }
 
-func newTestCommand(ctx *cliconfig.Context) *command {
-	return &command{AuthenticatedCLICommand: &pcmd.AuthenticatedCLICommand{Context: ctx}}
+func newTestCommand(ctx *cliconfig.Context) *queryCommand {
+	return &queryCommand{AuthenticatedCLICommand: &pcmd.AuthenticatedCLICommand{Context: ctx}}
 }
 
 func newTestContext(platformServer, authToken string) *cliconfig.Context {
