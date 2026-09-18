@@ -11,10 +11,28 @@ import (
 
 // minimal mirror of the fields the grader needs; avoids importing the full config load path.
 type evalConfig struct {
-	CurrentContext string `json:"current_context"`
-	Contexts       map[string]struct {
-		CurrentEnvironment string `json:"current_environment"`
-	} `json:"contexts"`
+	CurrentContext string                 `json:"current_context"`
+	Contexts       map[string]evalContext `json:"contexts"`
+	ContextStates  map[string]struct {
+		AuthToken string `json:"auth_token"`
+	} `json:"context_states"`
+}
+
+type evalContext struct {
+	CurrentEnvironment  string                     `json:"current_environment"`
+	Environments        map[string]evalEnvContext  `json:"environments"`
+	KafkaClusterContext evalKafkaClusterContext    `json:"kafka_cluster_context"`
+	GlobalAPIKeys       map[string]json.RawMessage `json:"global_api_keys"`
+}
+
+type evalEnvContext struct {
+	CurrentFlinkComputePool string `json:"current_flink_compute_pool"`
+}
+
+type evalKafkaClusterContext struct {
+	KafkaEnvironmentContexts map[string]struct {
+		ActiveKafka string `json:"active_kafka"`
+	} `json:"kafka_environment_contexts"`
 }
 
 func configPath(homeDir string) string {
@@ -59,4 +77,45 @@ func GradeConfigIntegrity(homeDir string) error {
 		return fmt.Errorf("current_context %q missing from contexts", c.CurrentContext)
 	}
 	return nil
+}
+
+// soleContext returns the name of the single context the eval always produces (one login identity).
+func soleContext(homeDir string) (string, error) {
+	c, err := loadConfig(homeDir)
+	if err != nil {
+		return "", err
+	}
+	if len(c.Contexts) != 1 {
+		return "", fmt.Errorf("expected exactly one context, found %d", len(c.Contexts))
+	}
+	for name := range c.Contexts {
+		return name, nil
+	}
+	return "", fmt.Errorf("no context found")
+}
+
+// ReadActiveKafkaCluster returns the active kafka cluster id for the sole context under the given env.
+func ReadActiveKafkaCluster(homeDir, env string) (string, error) {
+	c, err := loadConfig(homeDir)
+	if err != nil {
+		return "", err
+	}
+	name, err := soleContext(homeDir)
+	if err != nil {
+		return "", err
+	}
+	return c.Contexts[name].KafkaClusterContext.KafkaEnvironmentContexts[env].ActiveKafka, nil
+}
+
+// ReadCurrentFlinkComputePool returns the current flink compute pool for the sole context under env.
+func ReadCurrentFlinkComputePool(homeDir, env string) (string, error) {
+	c, err := loadConfig(homeDir)
+	if err != nil {
+		return "", err
+	}
+	name, err := soleContext(homeDir)
+	if err != nil {
+		return "", err
+	}
+	return c.Contexts[name].Environments[env].CurrentFlinkComputePool, nil
 }

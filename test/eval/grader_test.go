@@ -38,6 +38,22 @@ func TestReadActiveEnvironmentReturnsCurrentEnv(t *testing.T) {
 	}
 }
 
+func TestReadCrossFieldSelections(t *testing.T) {
+	home := t.TempDir()
+	writeConfig(t, home, `{"current_context":"ctx","contexts":{"ctx":{
+		"current_environment":"env-596",
+		"environments":{"env-596":{"current_flink_compute_pool":"lfcp-123456"}},
+		"kafka_cluster_context":{"kafka_environment_contexts":{"env-596":{"active_kafka":"lkc-12345"}}}
+	}}}`)
+
+	if got, err := ReadActiveKafkaCluster(home, "env-596"); err != nil || got != "lkc-12345" {
+		t.Errorf("kafka: got %q err %v", got, err)
+	}
+	if got, err := ReadCurrentFlinkComputePool(home, "env-596"); err != nil || got != "lfcp-123456" {
+		t.Errorf("flink: got %q err %v", got, err)
+	}
+}
+
 func TestGradeConfigIntegrityFailsOnTruncatedFile(t *testing.T) {
 	home := t.TempDir()
 	writeConfig(t, home, `{"current_context": "ctx-1", "contexts": {`) // torn write

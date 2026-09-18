@@ -163,4 +163,20 @@ var Scenarios = []Scenario{
 			return outs
 		},
 	},
+	{
+		Name:        "selection-cross-field",
+		Description: "two sessions set DIFFERENT `current_*` fields on one shared context (`kafka cluster use` vs `flink compute-pool use`); a lockless whole-file save drops one.",
+		Sessions: func(cloudURL string) []SessionScript {
+			return []SessionScript{
+				{Label: "uses kafka cluster", Setup: []string{loginStep(cloudURL), "environment use " + envA}, Contend: []string{"kafka cluster use lkc-12345"}},
+				{Label: "uses flink compute-pool", Setup: []string{loginStep(cloudURL), "environment use " + envA}, Contend: []string{"flink compute-pool use lfcp-123456"}},
+			}
+		},
+		Grade: func(results []SessionResult) []SessionOutcome {
+			return []SessionOutcome{
+				GradeSession(results[0], "lkc-12345", func(r SessionResult) (string, error) { return ReadActiveKafkaCluster(r.HomeDir, envA) }),
+				GradeSession(results[1], "lfcp-123456", func(r SessionResult) (string, error) { return ReadCurrentFlinkComputePool(r.HomeDir, envA) }),
+			}
+		},
+	},
 }
