@@ -1,0 +1,1 @@
+Error: must specify `--usm-kafka-cluster` or `--usm-connect-cluster` to indicate role binding scope
