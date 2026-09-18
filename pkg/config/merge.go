@@ -33,7 +33,6 @@ func threeWayMerge(base, ours, disk *Config) (*Config, error) {
 	out.CurrentContext = mergeScalar(base.CurrentContext, ours.CurrentContext, disk.CurrentContext)
 	out.DisablePluginsOnce = mergeScalar(base.DisablePluginsOnce, ours.DisablePluginsOnce, disk.DisablePluginsOnce)
 
-	out.LastUpdateCheckAt = mergePtr(base.LastUpdateCheckAt, ours.LastUpdateCheckAt, disk.LastUpdateCheckAt)
 	out.LocalPorts = mergePtr(base.LocalPorts, ours.LocalPorts, disk.LocalPorts)
 
 	var err error
