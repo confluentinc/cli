@@ -1,6 +1,5 @@
 *  @confluentinc/cli
 
 # Docs team co-reviews user-facing command text.
-# Both teams listed so a cli approval still satisfies the code-owner gate (Docs = optional co-reviewer).
 internal/**/command*.go  @confluentinc/cli @confluentinc/docs
 internal/**/command_test.go  @confluentinc/cli
