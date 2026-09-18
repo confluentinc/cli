@@ -1,4 +1,4 @@
-package query
+package flink
 
 import (
 	"fmt"
@@ -32,7 +32,7 @@ type queryOut struct {
 	Truncated bool             `json:"truncated" yaml:"truncated"`
 }
 
-func (c *command) printQueryResult(cmd *cobra.Command, name string, result *query.Result, isAppendOnly, appendOnlyKnown, raw bool) error {
+func (c *queryCommand) printQueryResult(cmd *cobra.Command, name string, result *query.Result, isAppendOnly, appendOnlyKnown, raw bool) error {
 	columns := make([]queryColumnOut, len(result.Columns))
 	headers := make([]string, len(result.Columns))
 	for i, column := range result.Columns {
