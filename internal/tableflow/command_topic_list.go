@@ -87,6 +87,11 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			out.StorageAccountName = topic.Spec.Storage.TableflowV1AzureAdlsSpec.GetStorageAccountName()
 			out.StorageRegion = topic.Spec.Storage.TableflowV1AzureAdlsSpec.GetStorageRegion()
 			out.TablePath = topic.Spec.Storage.TableflowV1AzureAdlsSpec.GetTablePath()
+		} else if storageType == gcp {
+			out.BucketName = topic.Spec.Storage.TableflowV1GoogleCloudStorageSpec.GetBucketName()
+			out.BucketRegion = topic.Spec.Storage.TableflowV1GoogleCloudStorageSpec.GetBucketRegion()
+			out.ProviderIntegrationId = topic.Spec.Storage.TableflowV1GoogleCloudStorageSpec.GetProviderIntegrationId()
+			out.TablePath = topic.Spec.Storage.TableflowV1GoogleCloudStorageSpec.GetTablePath()
 		}
 
 		list.Add(out)
