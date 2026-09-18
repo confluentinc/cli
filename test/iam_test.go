@@ -54,6 +54,8 @@ func (s *CLITestSuite) TestIamRbacRoleBinding_Cloud() {
 		{args: "iam rbac role-binding create --principal User:u-11aaa --role UsmClusterAdmin --environment env-596 --usm-kafka-cluster usmkc-123456", fixture: "iam/rbac/role-binding/create-usm-kafka-cluster-admin-cloud.golden"},
 		{args: "iam rbac role-binding create --principal User:u-11aaa --role UsmClusterAdmin --environment env-596 --usm-connect-cluster usmcc-123456", fixture: "iam/rbac/role-binding/create-usm-connect-cluster-admin-cloud.golden"},
 		{args: "iam rbac role-binding create --principal User:u-11aaa --role UsmClusterAdmin --usm-kafka-cluster usmkc-123456", fixture: "iam/rbac/role-binding/missing-environment-cloud.golden", exitCode: 1},
+		{args: "iam rbac role-binding create --principal User:u-11aaa --role UsmClusterAdmin --environment env-596", fixture: "iam/rbac/role-binding/missing-usm-cluster-cloud.golden", exitCode: 1},
+		{args: "iam rbac role-binding create --principal User:u-11aaa --role UsmClusterAdmin --environment env-596 --usm-kafka-cluster usmkc-123456 --usm-connect-cluster usmcc-123456", fixture: "iam/rbac/role-binding/mutually-exclusive-usm-cluster-cloud.golden", exitCode: 1},
 		{args: "iam rbac role-binding delete --principal User:u-11aaa --role UsmClusterAdmin --environment env-596 --usm-kafka-cluster usmkc-123456 --force", fixture: "iam/rbac/role-binding/delete-usm-kafka-cluster-admin-cloud.golden"},
 	}
 

@@ -35,6 +35,9 @@ const (
 	resourceFormatSuggestions      = "Resource must be specified in this format: `<Resource Type>:<Resource Name>`."
 	specifyCloudClusterErrorMsg    = "must specify `--cloud-cluster` to indicate role binding scope"
 	specifyEnvironmentErrorMsg     = "must specify `--environment` to indicate role binding scope"
+	specifyUsmClusterErrorMsg      = "must specify `--usm-kafka-cluster` or `--usm-connect-cluster` to indicate role binding scope"
+	bothUsmClustersErrorMsg        = "cannot specify both `--usm-kafka-cluster` and `--usm-connect-cluster`"
+	bothUsmClustersSuggestions     = "USM Kafka cluster and USM Connect cluster are independent scopes; specify only one of `--usm-kafka-cluster` or `--usm-connect-cluster`."
 )
 
 var (
@@ -52,6 +55,11 @@ var (
 	)
 	clusterScopedRolesV2   = types.NewSet("CloudClusterAdmin")
 	environmentScopedRoles = types.NewSet("EnvironmentAdmin")
+
+	// UsmClusterAdmin is the display name shared by the USM Kafka cluster and USM Connect cluster
+	// admin roles; the CRN pattern's scope segment (usm-kafka-cluster vs usm-connect-cluster)
+	// disambiguates which one, so this only enforces that one of the two flags is set.
+	usmClusterScopedRoles = types.NewSet("UsmClusterAdmin")
 
 	literalPatternType  = "LITERAL"
 	prefixedPatternType = "PREFIXED"
@@ -628,6 +636,10 @@ func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, 
 		crnPattern += "/flink-region=" + flinkRegion
 	}
 
+	if cmd.Flags().Changed("usm-kafka-cluster") && cmd.Flags().Changed("usm-connect-cluster") {
+		return "", errors.NewErrorWithSuggestions(bothUsmClustersErrorMsg, bothUsmClustersSuggestions)
+	}
+
 	if cmd.Flags().Changed("usm-kafka-cluster") {
 		usmKafkaCluster, err := cmd.Flags().GetString("usm-kafka-cluster")
 		if err != nil {
@@ -652,7 +664,10 @@ func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, 
 		if clusterScopedRolesV2.Contains(role) && !cmd.Flags().Changed("cloud-cluster") {
 			return "", errors.New(specifyCloudClusterErrorMsg)
 		}
-		if (environmentScopedRoles[role] || clusterScopedRolesV2.Contains(role)) && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
+		if usmClusterScopedRoles.Contains(role) && !cmd.Flags().Changed("usm-kafka-cluster") && !cmd.Flags().Changed("usm-connect-cluster") {
+			return "", errors.New(specifyUsmClusterErrorMsg)
+		}
+		if (environmentScopedRoles[role] || clusterScopedRolesV2.Contains(role) || usmClusterScopedRoles.Contains(role)) && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
 			return "", errors.New(specifyEnvironmentErrorMsg)
 		}
 	}
