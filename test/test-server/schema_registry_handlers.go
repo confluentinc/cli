@@ -104,6 +104,22 @@ func handleSRSubjectVersion(t *testing.T) http.HandlerFunc {
 		vars := mux.Vars(r)
 		switch r.Method {
 		case http.MethodGet:
+			if r.URL.Query().Get("format") == "LOGICAL" {
+				// Logical Types return the schema as STRUCT-syntax text, not a JSON document,
+				// even though schemaType is still reported as AVRO -- exercises the fallback in
+				// printSchema (command_schema_describe.go) that avoids erroring out when the
+				// returned schema string isn't valid JSON.
+				err := json.NewEncoder(w).Encode(srsdk.Schema{
+					Subject:    srsdk.PtrString(vars["subject"]),
+					Version:    srsdk.PtrInt32(2),
+					Id:         srsdk.PtrInt32(10),
+					SchemaType: srsdk.PtrString("AVRO"),
+					Schema:     srsdk.PtrString("STRUCT orders (\n  order_id STRING NOT NULL\n);\n"),
+				})
+				require.NoError(t, err)
+				return
+			}
+
 			versionStr := vars["version"]
 			if versionStr == "latest" {
 				subject := vars["subject"]
