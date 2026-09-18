@@ -1,4 +1,4 @@
-package query
+package flink
 
 import (
 	"context"
@@ -35,34 +35,34 @@ const (
 	snapshotModeProperty = "sql.snapshot.mode"
 	snapshotModeNow      = "now"
 
-	// queryFeatureFlag gates the command's visibility.
-	queryFeatureFlag = "cli.query"
+	// cliQueryFeatureFlag gates the command's visibility.
+	cliQueryFeatureFlag = "cli.query"
 )
 
-type command struct {
+type queryCommand struct {
 	*pcmd.AuthenticatedCLICommand
 
 	// authTokenMu guards client.AuthToken against a leaked refresh racing a stop attempt.
 	authTokenMu sync.Mutex
 }
 
-// New mounts `confluent flink query`: the entry point for a bounded, one-shot Flink
-// SQL read, with no engine routing to other backends.
-func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func (*command) newQueryCommand(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
+	c := &queryCommand{}
 	cmd := &cobra.Command{
 		Use:   "query",
 		Short: "Run a bounded Flink SQL query and print its results.",
 		Long: "Run a bounded Flink SQL query, wait for it to finish, and print the results.\n\n" +
 			"Provide the SQL statement with `--sql`, or use `--file` to read it from a file.\n\n" +
-			"Unlike statement creation, which submits a statement and returns immediately, this command waits for every " +
-			"result page and exits with a non-zero status if the statement fails. Use it for scripts and one-time queries " +
-			"against a bounded, point-in-time result set.\n\n" +
+			"Unlike creating a statement, which returns a handle as soon as it's submitted (optionally waiting only " +
+			"until it starts or fails, with `--wait`) and never the rows, this command always waits for every result " +
+			"page and prints the complete result set, exiting non-zero if the statement fails. Use it for scripts and " +
+			"one-time queries against a bounded, point-in-time result set.\n\n" +
 			"With -o json or -o yaml, output defaults to an envelope that includes the column schema and rows. Rows alone " +
 			"don't include type information. Use --raw to return a bare array of row objects.",
 		Args: cobra.NoArgs,
 		// Hidden until the flag targets an org; cfg.IsTest keeps it visible to the
 		// integration suite regardless of the (unreachable in tests) LD evaluation.
-		Hidden: !(cfg.IsTest || featureflags.Manager.BoolVariation(queryFeatureFlag, cfg.Context(), cliconfig.CliLaunchDarklyClient, true, false)),
+		Hidden: !(cfg.IsTest || featureflags.Manager.BoolVariation(cliQueryFeatureFlag, cfg.Context(), cliconfig.CliLaunchDarklyClient, true, false)),
 		Annotations: map[string]string{
 			pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin,
 		},
@@ -80,10 +80,9 @@ func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
 				Code: `confluent flink query --sql "SELECT * FROM orders LIMIT 10;" --output json --raw`,
 			},
 		),
+		RunE: c.runQuery,
 	}
-
-	c := &command{AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
-	cmd.RunE = c.runQuery
+	c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 
 	cmd.Flags().String("sql", "", "Flink SQL statement. Alternatively, use --file.")
 	cmd.Flags().StringP("file", "f", "", "Path to a file that contains the Flink SQL statement. Alternatively, use --sql.")
@@ -91,11 +90,10 @@ func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddDatabaseFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().StringSlice("property", []string{}, "Properties for the Flink statement in key=value format.")
-	cmd.Flags().Duration("wait-timeout", config.DefaultTimeoutDuration, "Maximum time to wait for the query to finish.")
+	cmd.Flags().Duration("timeout", config.DefaultTimeoutDuration, "Maximum time to wait for the query to finish.")
 	cmd.Flags().Int("max-rows", 0, "Maximum number of rows to fetch. Use 0 to fetch every row. This limit is client-side only; the query still produces rows after the limit is reached.")
 	cmd.Flags().Bool("raw", false, `Return rows as a bare array without an envelope. Requires "-o json" or "-o yaml".`)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	c.addCatalogAlias(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddCloudFlag(cmd)
@@ -103,19 +101,11 @@ func New(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	cmd.MarkFlagsOneRequired("sql", "file")
 	cmd.MarkFlagsMutuallyExclusive("sql", "file")
-	cmd.MarkFlagsMutuallyExclusive("environment", "catalog")
 
 	return cmd
 }
 
-// addCatalogAlias shares --environment's pflag.Value directly, since --environment
-// already persists to context and ParseFlagsIntoContext reads it before RunE runs.
-func (c *command) addCatalogAlias(cmd *cobra.Command) {
-	environmentFlag := cmd.Flags().Lookup("environment")
-	cmd.Flags().Var(environmentFlag.Value, "catalog", "Alias for --environment.")
-}
-
-func (c *command) runQuery(cmd *cobra.Command, _ []string) error {
+func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 	// Registered before any other work to shrink the window where a Ctrl-C
 	// predates any signal handling and falls through to the OS default
 	// disposition (silent kill). Doesn't close it entirely — PersistentPreRunE's
@@ -138,7 +128,7 @@ func (c *command) runQuery(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	timeout, maxRows, raw, err := parseQueryFlags(cmd)
+	timeout, maxRows, raw, err := resolveQueryFlags(cmd)
 	if err != nil {
 		return err
 	}
@@ -219,15 +209,15 @@ func (c *command) runQuery(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-// parseQueryFlags reads and validates the numeric/output flags that gate the run
+// resolveQueryFlags reads and validates the numeric/output flags that gate the run
 // before any network call.
-func parseQueryFlags(cmd *cobra.Command) (time.Duration, int, bool, error) {
-	timeout, err := cmd.Flags().GetDuration("wait-timeout")
+func resolveQueryFlags(cmd *cobra.Command) (time.Duration, int, bool, error) {
+	timeout, err := cmd.Flags().GetDuration("timeout")
 	if err != nil {
 		return 0, 0, false, err
 	}
 	if timeout <= 0 {
-		return 0, 0, false, errors.New("the `--wait-timeout` flag must be positive")
+		return 0, 0, false, errors.New("the `--timeout` flag must be positive")
 	}
 
 	maxRows, err := cmd.Flags().GetInt("max-rows")
@@ -253,7 +243,7 @@ func parseQueryFlags(cmd *cobra.Command) (time.Duration, int, bool, error) {
 // bounded snapshot statement, and submits it, returning the client and the
 // generated statement name. A cancellation during any of these pre-result steps
 // is mapped to interruptedError.
-func (c *command) createQueryStatement(ctx context.Context, cmd *cobra.Command, environmentId, database, sql string) (*ccloudv2.FlinkGatewayClient, string, error) {
+func (c *queryCommand) createQueryStatement(ctx context.Context, cmd *cobra.Command, environmentId, database, sql string) (*ccloudv2.FlinkGatewayClient, string, error) {
 	environment, err := wait.Call(ctx, func() (orgv2.OrgV2Environment, error) {
 		return c.V2Client.GetOrgEnvironment(environmentId)
 	})
@@ -310,7 +300,7 @@ func (c *command) createQueryStatement(ctx context.Context, cmd *cobra.Command, 
 
 // resolvePrincipal is the statement's spec.principal: the --service-account when
 // given, otherwise the logged-in user.
-func (c *command) resolvePrincipal(cmd *cobra.Command) (string, error) {
+func (c *queryCommand) resolvePrincipal(cmd *cobra.Command) (string, error) {
 	serviceAccount, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return "", err
@@ -324,7 +314,7 @@ func (c *command) resolvePrincipal(cmd *cobra.Command) (string, error) {
 // interruptOr maps a pre-result error to interruptedError when it's a Ctrl-C/
 // timeout, and to fallback otherwise. name is "" (and stopped ignored) before a
 // statement exists.
-func (c *command) interruptOr(cmd *cobra.Command, err error, name string, stopped bool, fallback error) error {
+func (c *queryCommand) interruptOr(cmd *cobra.Command, err error, name string, stopped bool, fallback error) error {
 	if isInterrupted(err) {
 		return interruptedError(cmd, err, name, stopped)
 	}
@@ -368,7 +358,7 @@ func phaseError(name string, result *query.Result) error {
 	return nil
 }
 
-func (c *command) resolveDatabase(cmd *cobra.Command) (string, error) {
+func (c *queryCommand) resolveDatabase(cmd *cobra.Command) (string, error) {
 	database, err := cmd.Flags().GetString("database")
 	if err != nil {
 		return "", err
@@ -411,7 +401,7 @@ func resolveSQL(cmd *cobra.Command) (string, error) {
 	return sql, nil
 }
 
-func (c *command) buildQueryProperties(cmd *cobra.Command, catalog, database string) (map[string]string, error) {
+func (c *queryCommand) buildQueryProperties(cmd *cobra.Command, catalog, database string) (map[string]string, error) {
 	statementProperties := map[string]string{
 		config.KeyCatalog:    catalog,
 		snapshotModeProperty: snapshotModeNow,

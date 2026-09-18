@@ -3,7 +3,6 @@ package flink
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v4/internal/query"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
 )
@@ -58,7 +57,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newConnectivityTypeCommand())
 	cmd.AddCommand(c.newEndpointCommand())
 	cmd.AddCommand(c.newMaterializedTableCommand())
-	cmd.AddCommand(query.New(cfg, prerunner))
+	cmd.AddCommand(c.newQueryCommand(cfg, prerunner))
 
 	// Generated Cloud commands
 	cmd.AddCommand(

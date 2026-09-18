@@ -2,7 +2,7 @@
 
 Runs a bounded ("snapshot") Flink SQL statement to completion and returns the whole
 result set, synchronously, from the client. Backs `confluent flink query`
-(`internal/query/command.go`).
+(`internal/flink/command_query.go`).
 
 The verb, the flags and the result shape are all expected to move.
 
@@ -72,7 +72,7 @@ signal — done, full stop — regardless of what `Status.Phase` says. `drain()`
 
 There is no more "incomplete" outcome. If the job hasn't reached a terminal phase once
 draining is done — which a `LIMIT`-bounded read over a streaming source routinely
-doesn't — `internal/query/command.go`'s deferred cleanup stops it, the same as it does
+doesn't — `internal/flink/command_query.go`'s deferred cleanup stops it, the same as it does
 after a `Truncated` (`--max-rows`) read.
 
 #### Known limitations
@@ -83,21 +83,21 @@ after a `Truncated` (`--max-rows`) read.
 - **Token refresh is best-effort, not retry-aware.** `Options.RefreshToken` is invoked
   before each gateway call (see the command's `refreshGatewayToken`), unlike the shell's
   `synchronizedTokenRefresh`, which wraps every call including mid-flight retries. In
-  practice this rarely matters: the command's default 10-minute `--wait-timeout` is on
+  practice this rarely matters: the command's default 10-minute `--timeout` is on
   the same order as the dataplane token's own lifetime, so a run is unlikely to still be
-  going when a refresh would be needed. It only bites if `--wait-timeout` is raised well
+  going when a refresh would be needed. It only bites if `--timeout` is raised well
   past the default, or a single call runs long past it — see the next point.
-- **`GatewayClientInterface` takes no context, so `--wait-timeout` can't actually abort an
+- **`GatewayClientInterface` takes no context, so `--timeout` can't actually abort an
   in-flight call.** `ccloudv2.FlinkGatewayClient` builds every request from
   `context.Background()` internally; confirmed against real staging, where a single
   `GetStatementResults` call once hung for 49 minutes despite a 2-minute
-  `--wait-timeout`. `callWithContext` races each call against `ctx` in a goroutine so
+  `--timeout`. `callWithContext` races each call against `ctx` in a goroutine so
   `Run` still returns once the deadline fires, but it cannot cancel the underlying HTTP
   call — that goroutine keeps running until the transport itself gives up. A proper fix
   means threading a real context through `GatewayClientInterface` and every caller
   (the interactive shell included), which is out of scope for this package alone.
 - **Expired-result handling lives in the command, not here.** This package just returns
-  `ResultsFetchError` on any failed page fetch. `internal/query/command.go`'s
+  `ResultsFetchError` on any failed page fetch. `internal/flink/flink_query_statement.go`'s
   `handleQueryError` is what distinguishes a 404 (statement deleted or mistyped) from a
   408 (the snapshot result window has closed) and gives each a targeted suggestion.
   Confirmed from gateway source: for `sql.snapshot.mode=now` statements, results are
