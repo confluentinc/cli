@@ -229,4 +229,29 @@ var Scenarios = []Scenario{
 			return outs
 		},
 	},
+	{
+		Name:        "auth-race",
+		Description: "one session keeps working (`environment use`) while another `logout`s on the shared context; the logout can clobber the first session's auth, or be resurrected by it.",
+		Sessions: func(cloudURL string) []SessionScript {
+			return []SessionScript{
+				{Label: "stays logged in, selects env", Setup: []string{loginStep(cloudURL)}, Contend: []string{"environment use " + envA}},
+				{Label: "logs out", Setup: []string{loginStep(cloudURL)}, Contend: []string{"logout"}},
+			}
+		},
+		Grade: func(results []SessionResult) []SessionOutcome {
+			return []SessionOutcome{
+				GradeSession(results[0], envA, func(r SessionResult) (string, error) { return ReadActiveEnvironment(r.HomeDir) }),
+				GradeSession(results[1], "cleared", func(r SessionResult) (string, error) {
+					cleared, err := CredsCleared(r.HomeDir)
+					if err != nil {
+						return "", err
+					}
+					if cleared {
+						return "cleared", nil
+					}
+					return "resurrected", nil
+				}),
+			}
+		},
+	},
 }

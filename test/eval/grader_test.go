@@ -76,6 +76,21 @@ func TestCreatedGlobalKeyParsesStdout(t *testing.T) {
 	}
 }
 
+func TestCredsCleared(t *testing.T) {
+	home := t.TempDir()
+	writeConfig(t, home, `{"current_context":"","contexts":{"ctx":{}},"context_states":{"ctx":{"auth_token":""}}}`)
+
+	if ok, err := CredsCleared(home); err != nil || !ok {
+		t.Errorf("expected creds cleared (ok=%v err=%v)", ok, err)
+	}
+
+	home2 := t.TempDir()
+	writeConfig(t, home2, `{"current_context":"ctx","contexts":{"ctx":{}},"context_states":{"ctx":{"auth_token":"tok"}}}`)
+	if ok, _ := CredsCleared(home2); ok {
+		t.Error("expected creds NOT cleared when auth_token is set")
+	}
+}
+
 func TestGradeConfigIntegrityFailsOnTruncatedFile(t *testing.T) {
 	home := t.TempDir()
 	writeConfig(t, home, `{"current_context": "ctx-1", "contexts": {`) // torn write

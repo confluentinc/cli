@@ -64,17 +64,18 @@ func ReadActiveEnvironment(homeDir string) (string, error) {
 	return ctx.CurrentEnvironment, nil
 }
 
-// GradeConfigIntegrity fails if the config is missing, unparseable, or structurally incomplete.
+// GradeConfigIntegrity fails if the config is missing, unparseable, or structurally incoherent. An
+// empty current_context is a valid logged-out state (not corruption); only a non-empty
+// current_context that names a missing context indicates a torn/incomplete config.
 func GradeConfigIntegrity(homeDir string) error {
 	c, err := loadConfig(homeDir)
 	if err != nil {
 		return err
 	}
-	if c.CurrentContext == "" {
-		return fmt.Errorf("config has empty current_context")
-	}
-	if _, ok := c.Contexts[c.CurrentContext]; !ok {
-		return fmt.Errorf("current_context %q missing from contexts", c.CurrentContext)
+	if c.CurrentContext != "" {
+		if _, ok := c.Contexts[c.CurrentContext]; !ok {
+			return fmt.Errorf("current_context %q missing from contexts", c.CurrentContext)
+		}
 	}
 	return nil
 }
@@ -92,6 +93,19 @@ func soleContext(homeDir string) (string, error) {
 		return name, nil
 	}
 	return "", fmt.Errorf("no context found")
+}
+
+// CredsCleared reports whether the sole context's auth token has been cleared (logged out).
+func CredsCleared(homeDir string) (bool, error) {
+	c, err := loadConfig(homeDir)
+	if err != nil {
+		return false, err
+	}
+	name, err := soleContext(homeDir)
+	if err != nil {
+		return false, err
+	}
+	return c.ContextStates[name].AuthToken == "", nil
 }
 
 // ReadActiveKafkaCluster returns the active kafka cluster id for the sole context under the given env.
