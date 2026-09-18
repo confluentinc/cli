@@ -73,8 +73,8 @@ func (s variantScalar) appendJSON(sb *strings.Builder) {
 	case VariantCodeTimestamp, VariantCodeTimestampNs:
 		sb.WriteString(jsonQuote(formatVariantTimestamp(s.raw)))
 	case VariantCodeTimestampLtz, VariantCodeTimestampLtzNs:
-		// LTZ renders at UTC with a literal +00:00; the wire's session offset is dropped.
-		sb.WriteString(jsonQuote(formatVariantTimestamp(s.raw) + "+00:00"))
+		// LTZ renders at UTC with a trailing Z; the wire's session offset is dropped.
+		sb.WriteString(jsonQuote(formatVariantTimestamp(s.raw) + "Z"))
 	case VariantCodeBytes:
 		sb.WriteString(jsonQuote(formatVariantBytes(s.raw)))
 	default:
