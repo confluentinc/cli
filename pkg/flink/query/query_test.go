@@ -318,7 +318,7 @@ func TestRunStopsOnCancelledContext(t *testing.T) {
 	require.ErrorIs(t, err, context.Canceled)
 }
 
-// The realistic --wait-timeout case: the statement just never leaves PENDING
+// The realistic --timeout case: the statement just never leaves PENDING
 // in time, with no error at all. wait.Poll's own deadline never fires here
 // (it's the 24h placeholder), so this exercises the ctx.Done() branch on a
 // context whose deadline elapses naturally rather than one cancelled by a test
@@ -357,7 +357,7 @@ func TestRunDefaultsPollInterval(t *testing.T) {
 // GatewayClientInterface takes no context and ignores any deadline the caller
 // set (ccloudv2.FlinkGatewayClient builds every request from
 // context.Background()). Confirmed against real staging: a GetStatementResults
-// call once hung for 49 minutes despite a 2-minute --wait-timeout. callWithContext
+// call once hung for 49 minutes despite a 2-minute --timeout. callWithContext
 // is what makes Run return once ctx fires regardless — this pins that down by
 // blocking GetStatementResults forever and asserting Run still returns promptly.
 func TestRunReturnsPromptlyWhenResultsCallHangsPastDeadline(t *testing.T) {
@@ -456,7 +456,7 @@ func TestRunWrapsConversionErrorsTheSameAsResultsFetchErrors(t *testing.T) {
 // (matching every other CLI command built on it): it retries rather than
 // aborting, so a persistent error surfaces once the caller's own context
 // deadline fires, as ctx.Err() rather than the underlying error text. That
-// deadline is what --wait-timeout controls, and handleQueryError already turns
+// deadline is what --timeout controls, and handleQueryError already turns
 // it into a "query timed out" message.
 func TestRunSurfacesContextDeadlineOnPersistentAwaitErrors(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))

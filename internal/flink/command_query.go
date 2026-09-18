@@ -90,11 +90,10 @@ func (*command) newQueryCommand(cfg *cliconfig.Config, prerunner pcmd.PreRunner)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddDatabaseFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().StringSlice("property", []string{}, "Properties for the Flink statement in key=value format.")
-	cmd.Flags().Duration("wait-timeout", config.DefaultTimeoutDuration, "Maximum time to wait for the query to finish.")
+	cmd.Flags().Duration("timeout", config.DefaultTimeoutDuration, "Maximum time to wait for the query to finish.")
 	cmd.Flags().Int("max-rows", 0, "Maximum number of rows to fetch. Use 0 to fetch every row. This limit is client-side only; the query still produces rows after the limit is reached.")
 	cmd.Flags().Bool("raw", false, `Return rows as a bare array without an envelope. Requires "-o json" or "-o yaml".`)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	c.addCatalogAlias(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddCloudFlag(cmd)
@@ -102,16 +101,8 @@ func (*command) newQueryCommand(cfg *cliconfig.Config, prerunner pcmd.PreRunner)
 
 	cmd.MarkFlagsOneRequired("sql", "file")
 	cmd.MarkFlagsMutuallyExclusive("sql", "file")
-	cmd.MarkFlagsMutuallyExclusive("environment", "catalog")
 
 	return cmd
-}
-
-// addCatalogAlias shares --environment's pflag.Value directly, since --environment
-// already persists to context and ParseFlagsIntoContext reads it before RunE runs.
-func (c *queryCommand) addCatalogAlias(cmd *cobra.Command) {
-	environmentFlag := cmd.Flags().Lookup("environment")
-	cmd.Flags().Var(environmentFlag.Value, "catalog", "Alias for --environment.")
 }
 
 func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
@@ -221,12 +212,12 @@ func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 // resolveQueryFlags reads and validates the numeric/output flags that gate the run
 // before any network call.
 func resolveQueryFlags(cmd *cobra.Command) (time.Duration, int, bool, error) {
-	timeout, err := cmd.Flags().GetDuration("wait-timeout")
+	timeout, err := cmd.Flags().GetDuration("timeout")
 	if err != nil {
 		return 0, 0, false, err
 	}
 	if timeout <= 0 {
-		return 0, 0, false, errors.New("the `--wait-timeout` flag must be positive")
+		return 0, 0, false, errors.New("the `--timeout` flag must be positive")
 	}
 
 	maxRows, err := cmd.Flags().GetInt("max-rows")

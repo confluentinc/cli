@@ -64,9 +64,6 @@ func (s *CLITestSuite) TestFlinkQuery() {
 		// -f/--file reads the same SQL as the happy path, so it produces the same table.
 		{args: "flink query -f test/fixtures/input/flink/query/select.sql --compute-pool lfcp-123456 --service-account sa-123456 --database lkc-123456", fixture: "flink/query/select.golden"},
 
-		// --catalog is an alias for --environment and doesn't change what's printed.
-		{args: `flink query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 --catalog env-596 --database lkc-123456`, fixture: "flink/query/select.golden"},
-
 		// Cobra rejects the command before RunE runs unless exactly one of --sql/--file is set.
 		{args: "flink query --compute-pool lfcp-123456 --service-account sa-123456", fixture: "flink/query/missing-sql.golden", exitCode: 1},
 

@@ -142,7 +142,7 @@ func reportStopFailure(name string, err error) {
 }
 
 // isInterrupted reports whether err is a Ctrl-C/SIGTERM cancellation or a
-// --wait-timeout expiry — the two cases interruptedError knows how to report.
+// --timeout expiry — the two cases interruptedError knows how to report.
 func isInterrupted(err error) bool {
 	return goerrors.Is(err, context.Canceled) || goerrors.Is(err, context.DeadlineExceeded)
 }
@@ -156,13 +156,13 @@ func interruptedError(cmd *cobra.Command, err error, name string, stopped bool) 
 		if name == "" {
 			return errors.NewErrorWithSuggestions(
 				"query timed out before it started",
-				"Try again, or raise the limit with the `--wait-timeout` flag.",
+				"Try again, or raise the limit with the `--timeout` flag.",
 			)
 		}
 		fate := stopFate(name, stopped)
 		return errors.NewErrorWithSuggestions(
 			fmt.Sprintf(`query timed out before statement "%s" finished`, name),
-			fmt.Sprintf("%s Raise the limit with the `--wait-timeout` flag if this keeps happening.", fate),
+			fmt.Sprintf("%s Raise the limit with the `--timeout` flag if this keeps happening.", fate),
 		)
 	}
 
@@ -263,7 +263,7 @@ func describeCmd(name string) string {
 }
 
 // refreshGatewayToken mirrors the shell's pre-call check: without it, a query
-// outliving the short-lived dataplane token dies on a 401 before --wait-timeout.
+// outliving the short-lived dataplane token dies on a 401 before --timeout.
 func (c *queryCommand) refreshGatewayToken(client *ccloudv2.FlinkGatewayClient, jwtValidator jwt.Validator) func() error {
 	return func() error {
 		c.authTokenMu.Lock()

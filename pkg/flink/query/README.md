@@ -83,15 +83,15 @@ after a `Truncated` (`--max-rows`) read.
 - **Token refresh is best-effort, not retry-aware.** `Options.RefreshToken` is invoked
   before each gateway call (see the command's `refreshGatewayToken`), unlike the shell's
   `synchronizedTokenRefresh`, which wraps every call including mid-flight retries. In
-  practice this rarely matters: the command's default 10-minute `--wait-timeout` is on
+  practice this rarely matters: the command's default 10-minute `--timeout` is on
   the same order as the dataplane token's own lifetime, so a run is unlikely to still be
-  going when a refresh would be needed. It only bites if `--wait-timeout` is raised well
+  going when a refresh would be needed. It only bites if `--timeout` is raised well
   past the default, or a single call runs long past it — see the next point.
-- **`GatewayClientInterface` takes no context, so `--wait-timeout` can't actually abort an
+- **`GatewayClientInterface` takes no context, so `--timeout` can't actually abort an
   in-flight call.** `ccloudv2.FlinkGatewayClient` builds every request from
   `context.Background()` internally; confirmed against real staging, where a single
   `GetStatementResults` call once hung for 49 minutes despite a 2-minute
-  `--wait-timeout`. `callWithContext` races each call against `ctx` in a goroutine so
+  `--timeout`. `callWithContext` races each call against `ctx` in a goroutine so
   `Run` still returns once the deadline fires, but it cannot cancel the underlying HTTP
   call — that goroutine keeps running until the transport itself gives up. A proper fix
   means threading a real context through `GatewayClientInterface` and every caller
