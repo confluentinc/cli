@@ -9,7 +9,7 @@ import (
 
 func TestCacheDir_UnderStateDir(t *testing.T) {
 	home := t.TempDir()
-	t.Setenv("HOME", home)
+	setTestHome(t, home)
 
 	got := CacheDir()
 
