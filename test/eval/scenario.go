@@ -3,7 +3,6 @@
 package eval
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"sync"
@@ -28,62 +27,76 @@ func (i Invocation) Failed() bool {
 
 type CommandFunc func(bin string, env []string, args string) Invocation
 
-type Session struct {
-	IntendedEnv string
-}
-
 type SessionResult struct {
 	Session     int
 	HomeDir     string
-	IntendedEnv string
-	Invocations []Invocation // in run order (login, environment use, ...)
+	IntendedEnv string       // unused by RunScenario now; kept so metrics.go's GradeSession still compiles until the grader rewrite
+	Invocations []Invocation // in run order
 }
 
-// RunScenario runs each session concurrently through login -> environment use, holds all sessions at
-// a barrier until every one has finished writing its environment selection, then returns. Grading of
-// the resulting config happens in the caller. The barrier is phase-2 scaffolding for a future step
-// that reads/acts after every session's write has landed; phase 1 has no such post-barrier action, so
-// it does not affect results here. Today's deterministic outcome comes from grading each session's
-// final on-disk config.json after all writes complete (in shared mode, two sessions writing distinct
-// environments to one file leave exactly one intended environment surviving - a genuine clobber).
-func RunScenario(bin, cloudURL string, p Provisioner, sessions []Session, run CommandFunc) []SessionResult {
-	results := make([]SessionResult, len(sessions))
+// SessionScript is one concurrent session's ordered workload. Setup steps run to completion first;
+// then all sessions release from the barrier together and run their Contend steps, so the contended
+// writes overlap. A login step already carries "--url <cloudURL>" (built via loginStep).
+type SessionScript struct {
+	Label   string
+	Setup   []string
+	Contend []string
+}
 
-	var wroteWG sync.WaitGroup // counts down as each session finishes `environment use`
-	wroteWG.Add(len(sessions))
-	release := make(chan struct{}) // closed once all sessions have written
+// loginStep builds the login command for the mock backend URL, so the "--url" format string is not
+// restated across scenario closures.
+func loginStep(cloudURL string) string {
+	return "login --url " + cloudURL
+}
 
-	// coordinator closes the release channel after everyone has written.
+// RunScenario runs each session's Setup steps, holds every session at a barrier until all have
+// finished setup, then releases them together to run their Contend steps - maximizing the stale-read
+// overlap the lost-update scenarios need. A session halts on its first failed step; a session that
+// fails in Setup still counts down the barrier (so it never deadlocks) and runs no Contend steps.
+// Grading runs on each session's final on-disk state after all sessions finish.
+func RunScenario(bin string, p Provisioner, scripts []SessionScript, run CommandFunc) []SessionResult {
+	results := make([]SessionResult, len(scripts))
+
+	var setupWG sync.WaitGroup
+	setupWG.Add(len(scripts))
+	release := make(chan struct{})
 	go func() {
-		wroteWG.Wait()
+		setupWG.Wait()
 		close(release)
 	}()
 
 	var runWG sync.WaitGroup
-	for i, s := range sessions {
+	for i, sc := range scripts {
 		runWG.Add(1)
-		go func(i int, s Session) {
+		go func(i int, sc SessionScript) {
 			defer runWG.Done()
 			home := p.HomeDir(i)
-			results[i] = SessionResult{Session: i, HomeDir: home, IntendedEnv: s.IntendedEnv}
-
+			results[i] = SessionResult{Session: i, HomeDir: home}
 			env := sessionEnv(home)
 
-			login := run(bin, env, fmt.Sprintf("login --url %s", cloudURL))
-			results[i].Invocations = append(results[i].Invocations, login)
-			if login.Failed() {
-				wroteWG.Done()
+			failed := false
+			for _, step := range sc.Setup {
+				inv := run(bin, env, step)
+				results[i].Invocations = append(results[i].Invocations, inv)
+				if inv.Failed() {
+					failed = true
+					break
+				}
+			}
+			setupWG.Done() // finished setup, pass or fail
+			if failed {
 				return
 			}
 
-			use := run(bin, env, fmt.Sprintf("environment use %s", s.IntendedEnv))
-			results[i].Invocations = append(results[i].Invocations, use)
-			wroteWG.Done() // signal this session has written (win or lose)
-			if use.Failed() {
-				return
+			<-release // barrier: all sessions run Contend together
+			for _, step := range sc.Contend {
+				inv := run(bin, env, step)
+				results[i].Invocations = append(results[i].Invocations, inv)
+				if inv.Failed() {
+					break
+				}
 			}
-			<-release // barrier: wait for all sessions to finish writing
-		}(i, s)
+		}(i, sc)
 	}
 	runWG.Wait()
 	return results
