@@ -21,8 +21,8 @@ const (
 
 type SessionOutcome struct {
 	Session     int          `json:"session"`
-	IntendedEnv string       `json:"intended_env"`
-	ObservedEnv string       `json:"observed_env"` // "" if never established
+	Intent      string       `json:"intent"`
+	Observed    string       `json:"observed"` // "" if never established
 	Verdict     Verdict      `json:"verdict"`
 	Detail      string       `json:"detail"` // human explanation
 	Invocations []Invocation `json:"invocations"`
@@ -42,15 +42,11 @@ type CellMetrics struct {
 	PassCaretK     float64 `json:"pass_caret_k"`
 }
 
-// GradeSession grades one session's captured run against the config it left behind, in priority
-// order: a failing invocation always wins (never double-counted as a collision), then config
-// integrity, then whether the session landed on its intended environment.
-func GradeSession(r SessionResult) SessionOutcome {
-	outcome := SessionOutcome{
-		Session:     r.Session,
-		IntendedEnv: r.IntendedEnv,
-		Invocations: r.Invocations,
-	}
+// GradeSession applies the error > corruption > collision > ok ladder to one session. A failed
+// invocation always wins; then config integrity; then observe reads the scenario-relevant state and
+// the session passes when it equals intent. observe is the only scenario-specific part.
+func GradeSession(r SessionResult, intent string, observe func(SessionResult) (string, error)) SessionOutcome {
+	outcome := SessionOutcome{Session: r.Session, Intent: intent, Invocations: r.Invocations}
 
 	for _, inv := range r.Invocations {
 		if inv.Failed() {
@@ -59,27 +55,24 @@ func GradeSession(r SessionResult) SessionOutcome {
 			return outcome
 		}
 	}
-
 	if err := GradeConfigIntegrity(r.HomeDir); err != nil {
 		outcome.Verdict = VerdictCorruption
 		outcome.Detail = fmt.Sprintf("config was unparseable or incomplete: %v", err)
 		return outcome
 	}
-
-	observed, err := ReadActiveEnvironment(r.HomeDir)
+	observed, err := observe(r)
 	if err != nil {
 		outcome.Verdict = VerdictCorruption
-		outcome.Detail = fmt.Sprintf("could not read active environment: %v", err)
+		outcome.Detail = fmt.Sprintf("could not read state: %v", err)
 		return outcome
 	}
-	outcome.ObservedEnv = observed
-
-	if observed == r.IntendedEnv {
+	outcome.Observed = observed
+	if observed == intent {
 		outcome.Verdict = VerdictOK
 		return outcome
 	}
 	outcome.Verdict = VerdictCollision
-	outcome.Detail = fmt.Sprintf("acted on %q, intended %q (clobbered by a concurrent session)", observed, r.IntendedEnv)
+	outcome.Detail = fmt.Sprintf("observed %q, intended %q (clobbered by a concurrent session)", observed, intent)
 	return outcome
 }
 
@@ -95,12 +88,13 @@ func excerpt(s string, n int) string {
 	return utils.Abbreviate(strings.TrimSpace(s), n)
 }
 
-// GradeTrial grades one concurrent trial's session results into a TrialResult.
+// GradeTrial grades one concurrent trial's session results. TEMPORARY: a later task replaces the
+// hardcoded env observe with the scenario's own grader; kept here so the package builds.
 func GradeTrial(trial int, results []SessionResult) TrialResult {
 	sessions := make([]SessionOutcome, len(results))
 	allPassed := true
 	for i, r := range results {
-		sessions[i] = GradeSession(r)
+		sessions[i] = GradeSession(r, "", func(r SessionResult) (string, error) { return ReadActiveEnvironment(r.HomeDir) })
 		if sessions[i].Verdict != VerdictOK {
 			allPassed = false
 		}

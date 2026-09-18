@@ -35,7 +35,9 @@
 {{range .Sessions}}
 <tr class="{{sessionRowClass .Verdict}}">
 <td>{{.Session}}</td>
-<td class="mono">{{.IntendedEnv}} &rarr; {{if .ObservedEnv}}{{.ObservedEnv}}{{else}}&mdash;{{end}}</td>
+<td class="mono">
+  {{.Intent}} &rarr; {{if .Observed}}{{.Observed}}{{else}}&mdash;{{end}}
+</td>
 <td><span class="badge {{verdictClass .Verdict}}">{{.Verdict}}</span></td>
 <td>{{if .Detail}}{{codeify .Detail}}{{else}}&mdash;{{end}}</td>
 </tr>

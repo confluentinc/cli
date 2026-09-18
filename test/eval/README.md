@@ -92,8 +92,8 @@ traced back to the exact invocation that caused it:
               "sessions": [
                 {
                   "session": 1,
-                  "intended_env": "env-595",
-                  "observed_env": "env-596",
+                  "intent": "env-595",
+                  "observed": "env-596",
                   "verdict": "collision",
                   "detail": "acted on \"env-596\", intended \"env-595\" (clobbered by a concurrent session)",
                   "invocations": [
@@ -159,7 +159,7 @@ The test loop in `TestEnvironmentCrosstalkEval` iterates over provisioners (phas
 - `provisioner.go`: `Provisioner` interface—each session gets a HOME dir via `HomeDir(session int)`
 - `scenario.go`: `Invocation` (one captured `confluent` run), `RunScenario` executes sessions concurrently with a barrier and returns each session's captured `Invocations` in order
 - `grader.go`: `ReadActiveEnvironment`, `GradeConfigIntegrity` - low-level config-file checks
-- `metrics.go`: `GradeSession` grades one session into a `Verdict` (`ok`/`collision`/`corruption`/`error`) with a `Detail`; `GradeTrial` grades a trial's sessions; `Aggregate` rolls graded trials into `CellMetrics`
+- `metrics.go`: `GradeSession(r, intent, observe)` grades one session into a `Verdict` (`ok`/`collision`/`corruption`/`error`) with a `Detail` (`observe` reads the scenario-relevant state and is the only scenario-specific part); `GradeTrial` grades a trial's sessions; `Aggregate` rolls graded trials into `CellMetrics`
 - `report.go`: `CellReport`/`ScenarioReport`/`Report` nested types, `WriteJSON`, `WriteHTMLReport` (renders the embedded `templates/*.tmpl` set into `index.html` + one per-scenario page), `Summary()` for human-readable output. Template helpers: `slugify` (scenario name → filename), `codeify` (renders backtick-delimited spans as `<code>`, HTML-escaping everything else first), `cleanRuns`/`sharedDamage` (index-page summaries), `cellByName`.
 - `templates/`: the committed HTML/CSS source - `styles.tmpl` (shared theme-aware CSS, light + `prefers-color-scheme: dark`), `index.tmpl` (scenario list + glossary), `scenario.tmpl` (per-scenario drill-down). Parsed once via `embed.FS` at package init; a malformed template fails at import time, and `TestReportTemplatesParseAndResolveNames` guards that all three names resolve.
 - `crosstalk_eval_test.go`: `TestEnvironmentCrosstalkEval` the flagship end-to-end eval; `realRun` captures each invocation's full transcript

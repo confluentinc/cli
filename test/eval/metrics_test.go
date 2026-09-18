@@ -7,29 +7,22 @@ import (
 	"testing"
 )
 
-func writeSessionConfig(t *testing.T, home, activeEnv string) {
-	t.Helper()
-	body := `{"current_context": "ctx-1", "contexts": {"ctx-1": {"current_environment": "` + activeEnv + `"}}}`
-	writeConfig(t, home, body)
-}
-
 func TestGradeSessionOKWhenObservedMatchesIntended(t *testing.T) {
 	home := t.TempDir()
-	writeSessionConfig(t, home, "env-596")
+	writeEnvConfig(t, home, "ctx-1", "env-596")
 	r := SessionResult{
 		Session:     0,
 		HomeDir:     home,
-		IntendedEnv: "env-596",
 		Invocations: []Invocation{{Command: "login --url http://mock", ExitCode: 0}},
 	}
 
-	got := GradeSession(r)
+	got := GradeSession(r, "env-596", observeEnv)
 
 	if got.Verdict != VerdictOK {
 		t.Fatalf("verdict = %q, want ok", got.Verdict)
 	}
-	if got.ObservedEnv != "env-596" {
-		t.Fatalf("observed env = %q, want env-596", got.ObservedEnv)
+	if got.Observed != "env-596" {
+		t.Fatalf("observed env = %q, want env-596", got.Observed)
 	}
 	if got.Detail != "" {
 		t.Fatalf("detail = %q, want empty for ok verdict", got.Detail)
@@ -38,15 +31,15 @@ func TestGradeSessionOKWhenObservedMatchesIntended(t *testing.T) {
 
 func TestGradeSessionCollisionWhenObservedDiffersFromIntended(t *testing.T) {
 	home := t.TempDir()
-	writeSessionConfig(t, home, "env-595") // clobbered by a peer session
+	writeEnvConfig(t, home, "ctx-1", "env-595") // clobbered by a peer session
 
-	got := GradeSession(SessionResult{Session: 1, HomeDir: home, IntendedEnv: "env-596"})
+	got := GradeSession(SessionResult{Session: 1, HomeDir: home}, "env-596", observeEnv)
 
 	if got.Verdict != VerdictCollision {
 		t.Fatalf("verdict = %q, want collision", got.Verdict)
 	}
-	if got.ObservedEnv != "env-595" {
-		t.Fatalf("observed env = %q, want env-595", got.ObservedEnv)
+	if got.Observed != "env-595" {
+		t.Fatalf("observed env = %q, want env-595", got.Observed)
 	}
 	if got.Detail == "" {
 		t.Fatalf("expected a non-empty detail explaining the collision")
@@ -57,13 +50,13 @@ func TestGradeSessionCorruptionWhenConfigUnparseable(t *testing.T) {
 	home := t.TempDir()
 	writeConfig(t, home, `{"current_context": "ctx-1", "contexts": {`) // torn write
 
-	got := GradeSession(SessionResult{Session: 0, HomeDir: home, IntendedEnv: "env-596"})
+	got := GradeSession(SessionResult{Session: 0, HomeDir: home}, "env-596", observeEnv)
 
 	if got.Verdict != VerdictCorruption {
 		t.Fatalf("verdict = %q, want corruption", got.Verdict)
 	}
-	if got.ObservedEnv != "" {
-		t.Fatalf("observed env = %q, want empty on corruption", got.ObservedEnv)
+	if got.Observed != "" {
+		t.Fatalf("observed env = %q, want empty on corruption", got.Observed)
 	}
 }
 
@@ -71,20 +64,19 @@ func TestGradeSessionErrorWhenInvocationFailedDoesNotCountAsCollision(t *testing
 	home := t.TempDir()
 	// config genuinely disagrees with intent - without the error short-circuit this would grade as
 	// a real collision, so this proves error wins priority rather than merely absence of "ok".
-	writeSessionConfig(t, home, "env-595")
+	writeEnvConfig(t, home, "ctx-1", "env-595")
 
 	got := GradeSession(SessionResult{
 		Session:     0,
 		HomeDir:     home,
-		IntendedEnv: "env-596",
 		Invocations: []Invocation{{Command: "login --url http://mock", ExitCode: 1, Stderr: "connection refused"}},
-	})
+	}, "env-596", observeEnv)
 
 	if got.Verdict != VerdictError {
 		t.Fatalf("verdict = %q, want error", got.Verdict)
 	}
-	if got.ObservedEnv != "" {
-		t.Fatalf("observed env = %q, want empty on error (never got to grade the config)", got.ObservedEnv)
+	if got.Observed != "" {
+		t.Fatalf("observed env = %q, want empty on error (never got to grade the config)", got.Observed)
 	}
 	if got.Detail == "" {
 		t.Fatalf("expected a non-empty detail explaining the failing invocation")
@@ -93,12 +85,14 @@ func TestGradeSessionErrorWhenInvocationFailedDoesNotCountAsCollision(t *testing
 
 func TestGradeTrialAllPassedOnlyWhenEverySessionOK(t *testing.T) {
 	home1, home2 := t.TempDir(), t.TempDir()
-	writeSessionConfig(t, home1, "env-596")
-	writeSessionConfig(t, home2, "env-595") // collides with its own intent below
+	// GradeTrial's temporary shim (see metrics.go) always grades against an empty intent, so an
+	// empty observed env is what "passes" here; a non-empty one collides.
+	writeEnvConfig(t, home1, "ctx-1", "")
+	writeEnvConfig(t, home2, "ctx-1", "env-595")
 
 	trial := GradeTrial(0, []SessionResult{
-		{Session: 0, HomeDir: home1, IntendedEnv: "env-596"},
-		{Session: 1, HomeDir: home2, IntendedEnv: "env-596"},
+		{Session: 0, HomeDir: home1},
+		{Session: 1, HomeDir: home2},
 	})
 
 	if trial.AllPassed {

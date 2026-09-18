@@ -30,7 +30,6 @@ type CommandFunc func(bin string, env []string, args string) Invocation
 type SessionResult struct {
 	Session     int
 	HomeDir     string
-	IntendedEnv string       // unused by RunScenario now; kept so metrics.go's GradeSession still compiles until the grader rewrite
 	Invocations []Invocation // in run order
 }
 

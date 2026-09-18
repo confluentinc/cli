@@ -28,9 +28,9 @@ func sampleReport() Report {
 							{
 								Trial: 0,
 								Sessions: []SessionOutcome{
-									{Session: 0, IntendedEnv: "env-596", ObservedEnv: "env-596", Verdict: VerdictOK},
+									{Session: 0, Intent: "env-596", Observed: "env-596", Verdict: VerdictOK},
 									{
-										Session: 1, IntendedEnv: "env-595", ObservedEnv: "env-596", Verdict: VerdictCollision,
+										Session: 1, Intent: "env-595", Observed: "env-596", Verdict: VerdictCollision,
 										Detail: `acted on "env-596", intended "env-595" (clobbered by a concurrent session)`,
 										Invocations: []Invocation{
 											{Command: "login --url http://mock", ExitCode: 0, DurationMs: 12, Stderr: "warning: retrying connection"},
@@ -38,7 +38,7 @@ func sampleReport() Report {
 										},
 									},
 									{
-										Session: 2, IntendedEnv: "env-596", ObservedEnv: "", Verdict: VerdictError,
+										Session: 2, Intent: "env-596", Observed: "", Verdict: VerdictError,
 										Detail: `"login --url http://mock" failed: exit 1: connection refused`,
 										Invocations: []Invocation{
 											{Command: "login --url http://mock", ExitCode: 1, DurationMs: 5},
@@ -56,8 +56,8 @@ func sampleReport() Report {
 							{
 								Trial: 0,
 								Sessions: []SessionOutcome{
-									{Session: 0, IntendedEnv: "env-596", ObservedEnv: "env-596", Verdict: VerdictOK},
-									{Session: 1, IntendedEnv: "env-595", ObservedEnv: "env-595", Verdict: VerdictOK},
+									{Session: 0, Intent: "env-596", Observed: "env-596", Verdict: VerdictOK},
+									{Session: 1, Intent: "env-595", Observed: "env-595", Verdict: VerdictOK},
 								},
 								AllPassed: true,
 							},
