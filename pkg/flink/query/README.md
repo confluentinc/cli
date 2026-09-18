@@ -97,7 +97,7 @@ after a `Truncated` (`--max-rows`) read.
   means threading a real context through `GatewayClientInterface` and every caller
   (the interactive shell included), which is out of scope for this package alone.
 - **Expired-result handling lives in the command, not here.** This package just returns
-  `ResultsFetchError` on any failed page fetch. `internal/flink/command_query_statement.go`'s
+  `ResultsFetchError` on any failed page fetch. `internal/flink/flink_query_statement.go`'s
   `handleQueryError` is what distinguishes a 404 (statement deleted or mistyped) from a
   408 (the snapshot result window has closed) and gives each a targeted suggestion.
   Confirmed from gateway source: for `sql.snapshot.mode=now` statements, results are
