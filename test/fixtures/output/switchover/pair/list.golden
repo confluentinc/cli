@@ -1,0 +1,4 @@
+     ID     |   Display Name   |                            Environment                            | Active Member | Failover Type |       Phase        
+------------+------------------+-------------------------------------------------------------------+---------------+---------------+--------------------
+  sw-123456 | prod-kafka-dr    | crn://confluent.cloud/organization=org-123/environment=env-123456 | west          |               | READY_TO_FAILOVER  
+  sw-234567 | staging-kafka-dr | crn://confluent.cloud/organization=org-123/environment=env-123456 | west          |               | READY_TO_FAILOVER  

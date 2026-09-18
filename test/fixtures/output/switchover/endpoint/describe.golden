@@ -1,0 +1,12 @@
++-----------------+---------------------------------------------------------------------------------------------+
+| ID              | se-123456                                                                                   |
+| Display Name    | prod-kafka-dr-endpoint                                                                      |
+| Switchover Pair | crn://confluent.cloud/organization=org-123/environment=env-123456/switchover-pair=sw-123456 |
+| Environment     | crn://confluent.cloud/organization=org-123/environment=env-123456                           |
+| Target          | west-platt                                                                                  |
+| Phase           | READY                                                                                       |
+| Endpoints       | west-platt private                                                                          |
+|                 | network=crn://confluent.cloud/organization=org-123/environment=env-123456/network=n-111111  |
+|                 | east-platt private                                                                          |
+|                 | network=crn://confluent.cloud/organization=org-123/environment=env-234567/network=n-222222  |
++-----------------+---------------------------------------------------------------------------------------------+
