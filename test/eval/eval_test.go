@@ -107,6 +107,15 @@ func TestEval(t *testing.T) {
 
 func buildCLI(t *testing.T) string {
 	t.Helper()
+	// Allow running against a binary built elsewhere (e.g. from another git ref) instead of the
+	// current checkout - the seed of the v4-vs-v5 build dimension. Must be a coverage-instrumented
+	// build-for-integration-test binary, or login --url won't take the cloud path.
+	if bin := os.Getenv("EVAL_CLI_BIN"); bin != "" {
+		if _, err := os.Stat(bin); err != nil {
+			t.Fatalf("EVAL_CLI_BIN=%q not usable: %v", bin, err)
+		}
+		return bin
+	}
 	// build-for-integration-test runs from the repo root and emits test/bin/confluent.
 	repoRoot := repoRootFromTest(t)
 	target := "build-for-integration-test"
@@ -136,6 +145,11 @@ func splitArgs(s string) []string {
 // gitShortSHA resolves the current checkout's short SHA so the report is self-labeling for
 // cross-commit comparison. Falls back to "unknown" rather than failing the eval over a missing SHA.
 func gitShortSHA(repoRoot string) string {
+	// Allow labeling the report with an explicit ref (e.g. the origin/main SHA when running against
+	// an origin/main-built binary via EVAL_CLI_BIN) rather than the current checkout's HEAD.
+	if label := os.Getenv("EVAL_BUILD_LABEL"); label != "" {
+		return label
+	}
 	cmd := exec.Command("git", "rev-parse", "--short", "HEAD")
 	cmd.Dir = repoRoot
 	out, err := cmd.Output()

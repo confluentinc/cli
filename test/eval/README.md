@@ -134,6 +134,22 @@ transcript (command, exit code, stdout, stderr, duration) for that session's run
 
 Each "session" within a trial represents one concurrent agent's config directory. Each "trial" is a full concurrent run under one provisioner. Rates are aggregated across all trials in a cell.
 
+## Running Against Another Build
+
+By default the eval builds the CLI from the current checkout. To run it against a pre-built binary
+instead (e.g. one built from `origin/main`, or later a v5 branch), set `EVAL_CLI_BIN` to that
+binary's path and `EVAL_BUILD_LABEL` to the ref it represents, so the report is labeled with the
+binary's origin instead of the checkout's `HEAD`:
+
+```bash
+EVAL_CLI_BIN=/path/to/confluent EVAL_BUILD_LABEL=origin/main \
+  go test -tags eval ./test/eval/ -run TestEval
+```
+
+The binary must be a `build-for-integration-test` build (coverage-instrumented, `isTest=true`) -
+a plain `make build` binary routes `login --url` differently and won't take the mock backend's
+cloud path.
+
 ## Designed-for Growth
 
 The harness is structured to grow into three orthogonal dimensions:

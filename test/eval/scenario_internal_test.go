@@ -139,3 +139,28 @@ func TestGradeSessionCorruptionOnBadConfig(t *testing.T) {
 		t.Errorf("expected corruption on unparseable config, got %s", out.Verdict)
 	}
 }
+
+func TestBuildCLIHonorsEvalCLIBinOverride(t *testing.T) {
+	// Arrange: a fake prebuilt binary and the override pointing at it.
+	dir := t.TempDir()
+	fake := filepath.Join(dir, "confluent")
+	if err := os.WriteFile(fake, []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("EVAL_CLI_BIN", fake)
+
+	// Act
+	got := buildCLI(t)
+
+	// Assert: returned the override without building.
+	if got != fake {
+		t.Errorf("buildCLI returned %q, want the EVAL_CLI_BIN override %q", got, fake)
+	}
+}
+
+func TestGitShortSHAHonorsBuildLabelOverride(t *testing.T) {
+	t.Setenv("EVAL_BUILD_LABEL", "78f96cece")
+	if got := gitShortSHA("/nonexistent-repo-root"); got != "78f96cece" {
+		t.Errorf("gitShortSHA returned %q, want the EVAL_BUILD_LABEL override", got)
+	}
+}
