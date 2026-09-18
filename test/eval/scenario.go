@@ -254,4 +254,32 @@ var Scenarios = []Scenario{
 			}
 		},
 	},
+	{
+		Name:        "mixed-workload",
+		Description: "three sessions doing unrelated real work on one shared context (select an env; create an api-key; use a cluster then log out); under shared state one session's work clobbers another's.",
+		Sessions: func(cloudURL string) []SessionScript {
+			return []SessionScript{
+				{Label: "selects an environment", Setup: []string{loginStep(cloudURL)}, Contend: []string{"environment use " + envA}},
+				{Label: "creates an api-key", Setup: []string{loginStep(cloudURL)}, Contend: []string{"api-key create --resource global"}},
+				{Label: "uses a cluster then logs out", Setup: []string{loginStep(cloudURL), "environment use " + envA}, Contend: []string{"kafka cluster use lkc-12345", "logout"}},
+			}
+		},
+		Grade: func(results []SessionResult) []SessionOutcome {
+			key := createdGlobalKey(results[1])
+			return []SessionOutcome{
+				GradeSession(results[0], envA, func(r SessionResult) (string, error) { return ReadActiveEnvironment(r.HomeDir) }),
+				GradeSession(results[1], key, observeGlobalKeyPresent(key)),
+				GradeSession(results[2], "cleared", func(r SessionResult) (string, error) {
+					cleared, err := CredsCleared(r.HomeDir)
+					if err != nil {
+						return "", err
+					}
+					if cleared {
+						return "cleared", nil
+					}
+					return "resurrected", nil
+				}),
+			}
+		},
+	},
 }
