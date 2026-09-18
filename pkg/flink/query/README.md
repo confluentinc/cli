@@ -2,7 +2,7 @@
 
 Runs a bounded ("snapshot") Flink SQL statement to completion and returns the whole
 result set, synchronously, from the client. Backs `confluent flink query`
-(`internal/query/command.go`).
+(`internal/flink/command_query.go`).
 
 The verb, the flags and the result shape are all expected to move.
 
@@ -72,7 +72,7 @@ signal — done, full stop — regardless of what `Status.Phase` says. `drain()`
 
 There is no more "incomplete" outcome. If the job hasn't reached a terminal phase once
 draining is done — which a `LIMIT`-bounded read over a streaming source routinely
-doesn't — `internal/query/command.go`'s deferred cleanup stops it, the same as it does
+doesn't — `internal/flink/command_query.go`'s deferred cleanup stops it, the same as it does
 after a `Truncated` (`--max-rows`) read.
 
 #### Known limitations
@@ -97,7 +97,7 @@ after a `Truncated` (`--max-rows`) read.
   means threading a real context through `GatewayClientInterface` and every caller
   (the interactive shell included), which is out of scope for this package alone.
 - **Expired-result handling lives in the command, not here.** This package just returns
-  `ResultsFetchError` on any failed page fetch. `internal/query/command.go`'s
+  `ResultsFetchError` on any failed page fetch. `internal/flink/command_query_statement.go`'s
   `handleQueryError` is what distinguishes a 404 (statement deleted or mistyped) from a
   408 (the snapshot result window has closed) and gives each a targeted suggestion.
   Confirmed from gateway source: for `sql.snapshot.mode=now` statements, results are

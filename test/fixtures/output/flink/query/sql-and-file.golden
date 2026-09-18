@@ -1,11 +1,4 @@
-Run a bounded Flink SQL query, wait for it to finish, and print the results.
-
-Provide the SQL statement with `--sql`, or use `--file` to read it from a file.
-
-Unlike statement creation, which submits a statement and returns immediately, this command waits for every result page and exits with a non-zero status if the statement fails. Use it for scripts and one-time queries against a bounded, point-in-time result set.
-
-With -o json or -o yaml, output defaults to an envelope that includes the column schema and rows. Rows alone don't include type information. Use --raw to return a bare array of row objects.
-
+Error: if any flags in the group [sql file] are set none of the others can be; [file sql] were all set
 Usage:
   confluent flink query [flags]
 
@@ -43,3 +36,4 @@ Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
