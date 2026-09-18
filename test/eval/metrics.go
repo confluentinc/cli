@@ -88,18 +88,39 @@ func excerpt(s string, n int) string {
 	return utils.Abbreviate(strings.TrimSpace(s), n)
 }
 
-// GradeTrial grades one concurrent trial's session results. TEMPORARY: a later task replaces the
-// hardcoded env observe with the scenario's own grader; kept here so the package builds.
-func GradeTrial(trial int, results []SessionResult) TrialResult {
-	sessions := make([]SessionOutcome, len(results))
+// GradeTrial grades one concurrent trial using the scenario's own per-session grader.
+func GradeTrial(trial int, results []SessionResult, grade func([]SessionResult) []SessionOutcome) TrialResult {
+	sessions := grade(results)
 	allPassed := true
-	for i, r := range results {
-		sessions[i] = GradeSession(r, "", func(r SessionResult) (string, error) { return ReadActiveEnvironment(r.HomeDir) })
-		if sessions[i].Verdict != VerdictOK {
+	for _, s := range sessions {
+		if s.Verdict != VerdictOK {
 			allPassed = false
+			break
 		}
 	}
 	return TrialResult{Trial: trial, Sessions: sessions, AllPassed: allPassed}
+}
+
+// assertRedSharedGreenIsolated is every scenario's expectation: shared shows state damage (a
+// collision or corruption; an error-only run does not prove crosstalk), isolated is perfectly clean.
+func assertRedSharedGreenIsolated(shared, isolated CellMetrics) []string {
+	var v []string
+	if shared.CollisionRate == 0 && shared.CorruptionRate == 0 {
+		v = append(v, "expected collisions or corruptions under shared state, got none (crosstalk not demonstrated)")
+	}
+	if isolated.CollisionRate != 0 {
+		v = append(v, fmt.Sprintf("expected zero collisions under isolated state, got %.3f", isolated.CollisionRate))
+	}
+	if isolated.CorruptionRate != 0 {
+		v = append(v, fmt.Sprintf("expected zero corruptions under isolated state, got %.3f", isolated.CorruptionRate))
+	}
+	if isolated.ErrorRate != 0 {
+		v = append(v, fmt.Sprintf("expected zero errors under isolated state, got %.3f", isolated.ErrorRate))
+	}
+	if isolated.PassCaretK != 1.0 {
+		v = append(v, fmt.Sprintf("expected isolated pass^k = 1.0, got %.3f", isolated.PassCaretK))
+	}
+	return v
 }
 
 // Aggregate rolls graded trials into per-cell rates.

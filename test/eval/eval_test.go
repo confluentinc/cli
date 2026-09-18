@@ -17,11 +17,7 @@ import (
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
-const (
-	evalTrials = 5
-	envA       = "env-596"
-	envB       = "env-595"
-)
+const evalTrials = 10
 
 // realRun executes one confluent invocation with the given per-session env and space-split args,
 // bounded by a timeout so a hung subprocess can't hang the whole eval, and captures the full
@@ -66,79 +62,47 @@ func realRun(coverDir string) CommandFunc {
 	}
 }
 
-func TestEnvironmentCrosstalkEval(t *testing.T) {
-	bin := buildCLI(t) // absolute path to test/bin/confluent
+func TestEval(t *testing.T) {
+	bin := buildCLI(t)
 	backend := testserver.StartTestBackend(t, false)
 	t.Cleanup(backend.Close)
 	cloudURL := backend.GetCloudUrl()
+	run := realRun(t.TempDir())
 
-	sessions := []Session{{IntendedEnv: envA}, {IntendedEnv: envB}}
-	run := realRun(t.TempDir()) // one shared GOCOVERDIR for every invocation in this test
-
-	cells := []CellReport{}
-	for _, cell := range []struct {
-		name string
-		make func(root string) Provisioner
-	}{
-		{"shared", NewSharedProvisioner},
-		{"isolated", NewIsolatedProvisioner},
-	} {
-		var trials []TrialResult
-		for trial := 0; trial < evalTrials; trial++ {
-			root := t.TempDir()
-			p := cell.make(root)
-			results := RunScenario(bin, cloudURL, p, sessions, run)
-			tr := GradeTrial(trial, results)
-			for _, s := range tr.Sessions {
-				if s.Verdict == VerdictError {
-					t.Logf("%s trial %d session %d errored: %s", cell.name, trial, s.Session, s.Detail)
-				}
+	var scenarioReports []ScenarioReport
+	for _, sc := range Scenarios {
+		scripts := sc.Sessions(cloudURL)
+		var cells []CellReport
+		var sharedM, isolatedM CellMetrics
+		for _, cell := range []struct {
+			name string
+			make func(root string) Provisioner
+		}{{"shared", NewSharedProvisioner}, {"isolated", NewIsolatedProvisioner}} {
+			var trials []TrialResult
+			for trial := 0; trial < evalTrials; trial++ {
+				p := cell.make(t.TempDir())
+				results := RunScenario(bin, p, scripts, run)
+				trials = append(trials, GradeTrial(trial, results, sc.Grade))
 			}
-			trials = append(trials, tr)
+			m := Aggregate(trials)
+			cells = append(cells, CellReport{Name: cell.name, Metrics: m, Trials: trials})
+			if cell.name == "shared" {
+				sharedM = m
+			} else {
+				isolatedM = m
+			}
 		}
-		cells = append(cells, CellReport{Name: cell.name, Metrics: Aggregate(trials), Trials: trials})
+		for _, v := range assertRedSharedGreenIsolated(sharedM, isolatedM) {
+			t.Errorf("scenario %q: %s", sc.Name, v)
+		}
+		scenarioReports = append(scenarioReports, ScenarioReport{
+			Name: sc.Name, Description: sc.Description, Sessions: len(scripts), Trials: evalTrials, Cells: cells,
+		})
 	}
 
-	report := Report{
-		Build:       gitShortSHA(repoRootFromTest(t)),
-		GeneratedAt: time.Now().UTC().Format(time.RFC3339),
-		Scenarios: []ScenarioReport{
-			{
-				Name:        "environment-crosstalk",
-				Description: "measures whether concurrent `confluent login` + `confluent environment use` sessions collide or corrupt state when sharing a config directory, versus each session getting its own.",
-				Sessions:    len(sessions),
-				Trials:      evalTrials,
-				Cells:       cells,
-			},
-		},
-	}
-
+	report := Report{Build: gitShortSHA(repoRootFromTest(t)), GeneratedAt: time.Now().UTC().Format(time.RFC3339), Scenarios: scenarioReports}
 	t.Log("\n" + report.Summary())
 	writeReport(t, report)
-
-	shared := cellByName(cells, "shared").Metrics
-	isolated := cellByName(cells, "isolated").Metrics
-
-	// The headline claim: shared state collides or corrupts under concurrent writes; isolated state
-	// does neither. A shared config.json can end up with the wrong active environment (collision) or
-	// a torn/invalid write (corruption) - both are concurrent-state damage that isolation removes.
-	// Invocation errors are graded separately (VerdictError) and do NOT prove crosstalk on their
-	// own, so an error-only shared run must still fail this check rather than pass by coincidence.
-	if shared.CollisionRate == 0 && shared.CorruptionRate == 0 {
-		t.Errorf("expected state damage (collisions or corruptions) under shared state, got none - crosstalk not demonstrated (an error-only run does not prove the collision; barrier or scenario may be broken)")
-	}
-	if isolated.CollisionRate != 0 {
-		t.Errorf("expected zero collisions under isolated state, got %.3f", isolated.CollisionRate)
-	}
-	if isolated.CorruptionRate != 0 {
-		t.Errorf("expected zero corruptions under isolated state, got %.3f", isolated.CorruptionRate)
-	}
-	if isolated.ErrorRate != 0 {
-		t.Errorf("expected zero errors under isolated state, got %.3f", isolated.ErrorRate)
-	}
-	if isolated.PassCaretK != 1.0 {
-		t.Errorf("expected isolated pass^k = 1.0, got %.3f", isolated.PassCaretK)
-	}
 }
 
 func buildCLI(t *testing.T) string {

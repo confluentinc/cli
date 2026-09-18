@@ -3,6 +3,7 @@
 package eval
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"sync"
@@ -120,4 +121,46 @@ func sessionEnv(home string) []string {
 		pauth.ConfluentCloudPassword+"=pass1",
 	)
 	return out
+}
+
+const (
+	envA = "env-596"
+	envB = "env-595"
+)
+
+// Scenario is one row in the eval matrix: a concurrent workload plus how to grade it.
+type Scenario struct {
+	Name        string
+	Description string
+	Sessions    func(cloudURL string) []SessionScript
+	Grade       func(results []SessionResult) []SessionOutcome
+}
+
+var crosstalkEnvs = []string{envA, envB}
+
+var Scenarios = []Scenario{
+	{
+		Name:        "environment-crosstalk",
+		Description: "concurrent `confluent login` + `confluent environment use` sessions; shared state lands the wrong active environment, isolated state does not.",
+		Sessions: func(cloudURL string) []SessionScript {
+			scripts := make([]SessionScript, len(crosstalkEnvs))
+			for i, env := range crosstalkEnvs {
+				scripts[i] = SessionScript{
+					Label:   fmt.Sprintf("uses %s", env),
+					Setup:   []string{loginStep(cloudURL)},
+					Contend: []string{"environment use " + env},
+				}
+			}
+			return scripts
+		},
+		Grade: func(results []SessionResult) []SessionOutcome {
+			outs := make([]SessionOutcome, len(results))
+			for i, r := range results {
+				outs[i] = GradeSession(r, crosstalkEnvs[i], func(r SessionResult) (string, error) {
+					return ReadActiveEnvironment(r.HomeDir)
+				})
+			}
+			return outs
+		},
+	},
 }

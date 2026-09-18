@@ -85,15 +85,22 @@ func TestGradeSessionErrorWhenInvocationFailedDoesNotCountAsCollision(t *testing
 
 func TestGradeTrialAllPassedOnlyWhenEverySessionOK(t *testing.T) {
 	home1, home2 := t.TempDir(), t.TempDir()
-	// GradeTrial's temporary shim (see metrics.go) always grades against an empty intent, so an
-	// empty observed env is what "passes" here; a non-empty one collides.
+	// The grade closure always grades against an empty intent, so an empty observed env is what
+	// "passes" here; a non-empty one collides.
 	writeEnvConfig(t, home1, "ctx-1", "")
 	writeEnvConfig(t, home2, "ctx-1", "env-595")
 
+	grade := func(results []SessionResult) []SessionOutcome {
+		outs := make([]SessionOutcome, len(results))
+		for i, r := range results {
+			outs[i] = GradeSession(r, "", func(r SessionResult) (string, error) { return ReadActiveEnvironment(r.HomeDir) })
+		}
+		return outs
+	}
 	trial := GradeTrial(0, []SessionResult{
 		{Session: 0, HomeDir: home1},
 		{Session: 1, HomeDir: home2},
-	})
+	}, grade)
 
 	if trial.AllPassed {
 		t.Fatalf("expected AllPassed = false when one session collided")
