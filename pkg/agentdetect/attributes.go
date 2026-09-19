@@ -10,9 +10,9 @@ package agentdetect
 // A follow-up PR will assign these fields onto CliV1Usage, after the update to that repo.
 // This also keeps the detection-to-wire mapping testable on its own.
 type Attributes struct {
-	// AgentEnv carries fingerprint KEYS (env var names), not vendor ids. See
+	// AgentEnvVars carries fingerprint KEYS (env var names), not vendor ids. See
 	// Signals.AgentEnv.
-	AgentEnv []string `json:"agent_env,omitempty"`
+	AgentEnvVars []string `json:"agent_env_vars,omitempty"`
 
 	// AgentProc and AgentArgv are the evidence for the nearest agent ancestor:
 	// the procFingerprints key its basename matched, and the cmdlineFingerprints
@@ -33,14 +33,14 @@ type Attributes struct {
 	// the position. See Signals.ChainShape and Signals.Unattributed.
 	ChainShape string `json:"chain_shape,omitempty"`
 
-	// Wrappers are procFingerprints keys, nearest first. Depths aren't sent
+	// CmdWrappers are procFingerprints keys, nearest first. Depths aren't sent
 	// separately: the 'w' positions in ChainShape correspond to this list in
 	// order.
-	Wrappers []string `json:"wrappers,omitempty"`
+	CmdWrappers []string `json:"cmd_wrappers,omitempty"`
 
-	// CI holds normalized CI provider ids. A bare CI variable with no recognizable
-	// provider appears as ciUnknown.
-	CI []string `json:"ci,omitempty"`
+	// CiProviders holds normalized CI provider ids. A bare CI variable with no
+	// recognizable provider appears as ciUnknown.
+	CiProviders []string `json:"ci_providers,omitempty"`
 
 	// Tables identifies the fingerprint table revision that produced everything
 	// above. Since tables ship independently of CLI releases
@@ -65,11 +65,11 @@ func (r Result) Attributes() Attributes {
 	s := r.Signals
 
 	attrs := Attributes{
-		AgentEnv:    nonEmpty(s.AgentEnv),
-		Interactive: encodeInteractive(s.Interactive),
-		ChainShape:  s.ChainShape,
-		CI:          nonEmpty(s.CI),
-		Tables:      r.Tables,
+		AgentEnvVars: nonEmpty(s.AgentEnv),
+		Interactive:  encodeInteractive(s.Interactive),
+		ChainShape:   s.ChainShape,
+		CiProviders:  nonEmpty(s.CI),
+		Tables:       r.Tables,
 	}
 
 	if a := s.AgentAncestor; a != nil {
@@ -81,11 +81,11 @@ func (r Result) Attributes() Attributes {
 	}
 
 	for _, w := range s.Wrappers {
-		attrs.Wrappers = append(attrs.Wrappers, string(w.Name))
+		attrs.CmdWrappers = append(attrs.CmdWrappers, string(w.Name))
 	}
 
 	if s.CIGeneric {
-		attrs.CI = append(attrs.CI, ciUnknown)
+		attrs.CiProviders = append(attrs.CiProviders, ciUnknown)
 	}
 
 	return attrs

@@ -531,6 +531,31 @@ func TestLookupErrorIsNonFatal(t *testing.T) {
 	}
 }
 
+// panicSource simulates a ProcSource that panics reading live OS process data,
+type panicSource struct{}
+
+func (panicSource) Info(int) (ProcInfo, error) {
+	panic("simulated ProcSource panic")
+}
+
+// verify panic in a different goroutine does not crash the process
+func TestWalkPanicDegradesInsteadOfCrashing(t *testing.T) {
+	res := Detect(Options{
+		Source: panicSource{}, StartPid: 1000, Getenv: env(nil),
+		IsTerminal: notATTY,
+	})
+
+	if res.Walk.StoppedAt != "panic" {
+		t.Errorf("stopped_at = %q, want panic", res.Walk.StoppedAt)
+	}
+	if !res.Walk.Truncated {
+		t.Error("want truncated walk")
+	}
+	if res.Signals.AgentAncestor != nil {
+		t.Error("agent ancestor must be empty when the walk panicked")
+	}
+}
+
 // slowSource makes every ancestor read cost real time, so the wall-clock budget
 // can be exercised without depending on how fast the machine running the test is.
 type slowSource struct {
