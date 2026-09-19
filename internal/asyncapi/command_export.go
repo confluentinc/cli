@@ -480,7 +480,7 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags, cmd *
 				return errors.CatchCCloudV2Error(err, httpResp)
 			}
 			// check if the key is for the right cluster
-			if key.Spec.Resource.Id != cluster.ID {
+			if key.Spec.Resource.Get().GetId() != cluster.ID {
 				return errors.NewErrorWithSuggestions(
 					fmt.Sprintf(errors.InvalidApiKeyErrorMsg, flags.kafkaApiKey, cluster.ID),
 					fmt.Sprintf(errors.InvalidApiKeySuggestions, cluster.ID),
