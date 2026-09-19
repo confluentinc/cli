@@ -1,6 +1,8 @@
 package properties
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -123,4 +125,77 @@ func TestCreateKeyValuePairsKeysWithDotsAndSorts(t *testing.T) {
 	m["link.mode"] = "BIDIRECTIONAL"
 	m["connection.mode"] = "OUTBOUND"
 	require.Equal(t, "\"connection.mode\"=\"OUTBOUND\"\n\"link.mode\"=\"BIDIRECTIONAL\"\n", CreateKeyValuePairs(m))
+}
+
+// Regression: behavior must match the StringSlice path for non-JSON configs. StringArray delivers a
+// comma-list as ONE element (pflag does not split), so the parser must split it itself.
+func TestConfigArrayToMap_CommaSeparatedList(t *testing.T) {
+	m, err := GetMapFromArray([]string{"cleanup.policy=compact,compression.type=gzip"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"cleanup.policy": "compact", "compression.type": "gzip"}, m)
+}
+
+func TestConfigArrayToMap_ValueWithComma(t *testing.T) {
+	m, err := GetMapFromArray([]string{"cleanup.policy=delete,compact"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"cleanup.policy": "delete,compact"}, m)
+}
+
+func TestConfigArrayToMap_MultipleFlags(t *testing.T) {
+	m, err := GetMapFromArray([]string{"a=1", "b=2"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"a": "1", "b": "2"}, m)
+}
+
+func TestConfigArrayToMap_Override(t *testing.T) {
+	m, err := GetMapFromArray([]string{"retention.ms=1", "retention.ms=2"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"retention.ms": "2"}, m)
+}
+
+func TestConfigArrayToMap_ValueWithEquals(t *testing.T) {
+	m, err := GetMapFromArray([]string{"key=a=b"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "a=b"}, m)
+}
+
+func TestConfigArrayToMap_UnescapesNonRawValues(t *testing.T) {
+	m, err := GetMapFromArray([]string{`foo=a\nb`})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"foo": "a\nb"}, m)
+}
+
+func TestConfigArrayToMap_RawValueKeyPreservesJSON(t *testing.T) {
+	json := `{"schema":"{\"type\":\"record\",\"name\":\"TestRecord\",\"doc\":\"Basic test.\\na=b.\",\"fields\":[{\"name\":\"field1\",\"type\":[\"null\",\"string\"]}]}"}`
+	m, err := GetMapFromArray([]string{"confluent.value.association=" + json}, "confluent.value.association")
+	require.NoError(t, err)
+	require.Equal(t, json, m["confluent.value.association"])
+}
+
+func TestConfigArrayToMap_JSONWithCommasThenNormalConfig(t *testing.T) {
+	m, err := GetMapFromArray(
+		[]string{`confluent.key.association={"subject":"x","lifecycle":"STRONG"},retention.ms=500`},
+		"confluent.key.association",
+	)
+	require.NoError(t, err)
+	require.Equal(t, `{"subject":"x","lifecycle":"STRONG"}`, m["confluent.key.association"])
+	require.Equal(t, "500", m["retention.ms"])
+}
+
+func TestConfigArrayToMap_MalformedJSONReturnsError(t *testing.T) {
+	_, err := GetMapFromArray([]string{`confluent.value.association={"broken`}, "confluent.value.association")
+	require.Error(t, err)
+}
+
+// The file path is unchanged and shared with GetMap.
+func TestGetMapFromArray_FilePreservesJSON(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "topic.properties")
+	// The file path stores jsonValueKeys verbatim: a JSON value containing "\n" and "=" must not be un-escaped.
+	json := `{"schema":"{\"type\":\"record\",\"name\":\"TestRecord\",\"doc\":\"Basic test.\\na=b.\",\"fields\":[{\"name\":\"field1\",\"type\":[\"null\",\"string\"]}]}"}`
+	require.NoError(t, os.WriteFile(path, []byte("confluent.value.association="+json+"\n"), 0o600))
+
+	m, err := GetMapFromArray([]string{path}, "confluent.value.association")
+	require.NoError(t, err)
+	require.Equal(t, json, m["confluent.value.association"])
 }
