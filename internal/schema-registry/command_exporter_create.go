@@ -38,7 +38,7 @@ func (c *command) newExporterCreateCommand(cfg *config.Config) *cobra.Command {
 	pcmd.AddConfigFlag(cmd)
 	cmd.Flags().StringSlice("subjects", []string{"*"}, "A comma-separated list of exporter subjects.")
 	cmd.Flags().String("subject-format", "${subject}", "Exporter subject rename format. The format string can contain ${subject}, which will be replaced with the default subject name.")
-	addContextTypeFlag(cmd)
+	addContextTypeFlag(cfg.IsCloudLogin(), cmd)
 	cmd.Flags().String("context-name", "", "Exporter context name.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
