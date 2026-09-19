@@ -21,6 +21,7 @@ type artifactOut struct {
 	Environment   string `human:"Environment" serialized:"environment"`
 	ContentFormat string `human:"Content Format" serialized:"content_format"`
 	Status        string `human:"Status" serialized:"status"`
+	ErrorMessage  string `human:"Error Message" serialized:"error_message"`
 }
 
 func newArtifactCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -49,6 +50,7 @@ func convertToArtifactOut(artifact camv1.CamV1ConnectArtifact) *artifactOut {
 		Environment:   artifact.Spec.GetEnvironment(),
 		ContentFormat: artifact.Spec.GetContentFormat(),
 		Status:        artifact.Status.GetPhase(),
+		ErrorMessage:  artifact.Status.GetErrorMessage(),
 	}
 }
 
