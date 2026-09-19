@@ -27,17 +27,19 @@ type pluginInfo struct {
 
 // SearchPath goes through the files in the user's $PATH and checks if they are plugins
 func SearchPath(cfg *config.Config) map[string][]string {
-	if runtime.GOOS == "windows" {
-		log.CliLogger.Debugf(`Searching $PATH and %%USERPROFILE%%\.confluent\plugins for plugins. Plugins can be disabled in %s.`, cfg.GetFilename())
-	} else {
-		log.CliLogger.Debugf("Searching $PATH and ~/.confluent/plugins for plugins. Plugins can be disabled in %s.", cfg.GetFilename())
-	}
-
 	pathDirList := filepath.SplitList(os.Getenv("PATH"))
-	home, _ := os.UserHomeDir()
-	pluginDir := filepath.Join(home, ".confluent", "plugins")
-	if !slices.Contains(pathDirList, pluginDir) {
-		pathDirList = append(pathDirList, pluginDir)
+
+	// Degrading to $PATH alone is deliberate: a relative plugin directory would pick up executables
+	// from whatever directory the CLI happens to be run in.
+	stateDir, err := config.StateDir()
+	if err != nil {
+		log.CliLogger.Debugf("Searching only $PATH for plugins: %v. Plugins can be disabled in %s.", err, cfg.GetFilename())
+	} else {
+		pluginDir := filepath.Join(stateDir, "plugins")
+		log.CliLogger.Debugf("Searching $PATH and %s for plugins. Plugins can be disabled in %s.", pluginDir, cfg.GetFilename())
+		if !slices.Contains(pathDirList, pluginDir) {
+			pathDirList = append(pathDirList, pluginDir)
+		}
 	}
 
 	plugins := make(map[string][]string)
