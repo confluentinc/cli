@@ -415,11 +415,14 @@ func (c *Config) Save() error {
 	// on a fresh machine (~/.confluent absent) opening the lock would ENOENT.
 	filename := c.GetFilename()
 	if err := os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
+		fmt.Fprintf(os.Stderr, "TEMP-DIAG Save mkdir %s: %v\n", filename, err) // TEMP-DIAG
 		return fmt.Errorf("unable to create config directory %s: %w", filename, err)
 	}
 
 	lock := newFileLock(filename)
+	lockStart := time.Now() // TEMP-DIAG
 	if err := lock.lock(lockTimeout); err != nil {
+		fmt.Fprintf(os.Stderr, "TEMP-DIAG Save lock %s after %v: %v\n", filename, time.Since(lockStart), err) // TEMP-DIAG
 		return err
 	}
 	// Run the locked write in a closure so its deferred unlock fires on return,
@@ -428,6 +431,7 @@ func (c *Config) Save() error {
 		defer func() { _ = lock.unlock() }()
 		return c.saveLocked()
 	}(); err != nil {
+		fmt.Fprintf(os.Stderr, "TEMP-DIAG Save saveLocked %s (lockwait %v): %v\n", filename, time.Since(lockStart), err) // TEMP-DIAG
 		return err
 	}
 	// Persist the disposable cache after releasing the lock, not under it: the cache

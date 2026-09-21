@@ -194,6 +194,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 				}
 
 				if err := r.ccloudAutoLogin(machineName); err != nil {
+					fmt.Fprintf(os.Stderr, "TEMP-DIAG ccloudAutoLogin err: %v\n", err) // TEMP-DIAG
 					log.CliLogger.Debugf("Auto login failed: %v", err)
 				} else {
 					setContextErr = r.setAuthenticatedContext(command)
@@ -242,6 +243,7 @@ func (r *PreRun) ParseFlagsIntoContext(command *CLICommand) func(*cobra.Command,
 func (r *PreRun) setAuthenticatedContext(cliCommand *AuthenticatedCLICommand) error {
 	ctx := cliCommand.Config.Context()
 	if !ctx.HasLogin() {
+		fmt.Fprintf(os.Stderr, "TEMP-DIAG setAuthenticatedContext no-login: ctx=%q credType=%q token.len=%d\n", ctx.Name, ctx.GetCredentialType(), len(ctx.GetAuthToken())) // TEMP-DIAG
 		return new(errors.NotLoggedInError)
 	}
 	cliCommand.Context = ctx
@@ -424,6 +426,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 		if setContextErr != nil {
 			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
 				if err := r.confluentAutoLogin(cmd); err != nil {
+					fmt.Fprintf(os.Stderr, "TEMP-DIAG confluentAutoLogin err: %v\n", err) // TEMP-DIAG
 					log.CliLogger.Debugf("Auto login failed: %v", err)
 				} else {
 					setContextErr = r.setAuthenticatedContext(command)
