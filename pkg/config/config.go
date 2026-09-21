@@ -422,12 +422,18 @@ func (c *Config) Save() error {
 	if err := lock.lock(lockTimeout); err != nil {
 		return err
 	}
-	defer func() { _ = lock.unlock() }()
-	if err := c.saveLocked(); err != nil {
+	// Run the locked write in a closure so its deferred unlock fires on return,
+	// releasing the lock before saveCache() below rather than at Save()'s end.
+	if err := func() error {
+		defer func() { _ = lock.unlock() }()
+		return c.saveLocked()
+	}(); err != nil {
 		return err
 	}
-	// Persist the disposable cache once, after the config write succeeds and while the
-	// lock is still held.
+	// Persist the disposable cache after releasing the lock, not under it: the cache
+	// lives in separate, best-effort files under .cache/, so holding the config lock
+	// across its writes buys no consistency and only inflates lock contention for
+	// concurrent writers.
 	c.saveCache()
 	return nil
 }
