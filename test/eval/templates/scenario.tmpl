@@ -34,7 +34,7 @@
 <tr><th>Session</th><th>Intended &rarr; Observed</th><th>Verdict</th><th>Detail</th></tr>
 {{range .Sessions}}
 <tr class="{{sessionRowClass .Verdict}}">
-<td>{{.Session}}</td>
+<td>{{.Session}}{{if .Label}} &middot; {{.Label}}{{end}}</td>
 <td class="mono">
   {{.Intent}} &rarr; {{if .Observed}}{{.Observed}}{{else}}&mdash;{{end}}
 </td>

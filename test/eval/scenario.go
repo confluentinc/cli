@@ -32,6 +32,7 @@ type CommandFunc func(bin string, env []string, args string) Invocation
 type SessionResult struct {
 	Session     int
 	HomeDir     string
+	Label       string       // descriptive role, carried from the script's SessionScript.Label
 	Invocations []Invocation // in run order
 }
 
@@ -72,7 +73,7 @@ func RunScenario(bin string, p Provisioner, scripts []SessionScript, run Command
 		go func(i int, sc SessionScript) {
 			defer runWG.Done()
 			home := p.HomeDir(i)
-			results[i] = SessionResult{Session: i, HomeDir: home}
+			results[i] = SessionResult{Session: i, HomeDir: home, Label: sc.Label}
 			env := sessionEnv(home)
 
 			failed := false
@@ -168,6 +169,21 @@ func observeGlobalKeyPresent(key string) func(SessionResult) (string, error) {
 	}
 }
 
+// observeCredsCleared returns an observe probe that reports whether the session's context is logged
+// out ("cleared") or still has credentials ("resurrected" by a concurrent write).
+func observeCredsCleared() func(SessionResult) (string, error) {
+	return func(r SessionResult) (string, error) {
+		cleared, err := CredsCleared(r.HomeDir)
+		if err != nil {
+			return "", err
+		}
+		if cleared {
+			return "cleared", nil
+		}
+		return "resurrected", nil
+	}
+}
+
 var crosstalkEnvs = []string{envA, envB}
 
 var Scenarios = []Scenario{
@@ -241,16 +257,7 @@ var Scenarios = []Scenario{
 		Grade: func(results []SessionResult) []SessionOutcome {
 			return []SessionOutcome{
 				GradeSession(results[0], envA, func(r SessionResult) (string, error) { return ReadActiveEnvironment(r.HomeDir) }),
-				GradeSession(results[1], "cleared", func(r SessionResult) (string, error) {
-					cleared, err := CredsCleared(r.HomeDir)
-					if err != nil {
-						return "", err
-					}
-					if cleared {
-						return "cleared", nil
-					}
-					return "resurrected", nil
-				}),
+				GradeSession(results[1], "cleared", observeCredsCleared()),
 			}
 		},
 	},
@@ -269,16 +276,7 @@ var Scenarios = []Scenario{
 			return []SessionOutcome{
 				GradeSession(results[0], envA, func(r SessionResult) (string, error) { return ReadActiveEnvironment(r.HomeDir) }),
 				GradeSession(results[1], key, observeGlobalKeyPresent(key)),
-				GradeSession(results[2], "cleared", func(r SessionResult) (string, error) {
-					cleared, err := CredsCleared(r.HomeDir)
-					if err != nil {
-						return "", err
-					}
-					if cleared {
-						return "cleared", nil
-					}
-					return "resurrected", nil
-				}),
+				GradeSession(results[2], "cleared", observeCredsCleared()),
 			}
 		},
 	},

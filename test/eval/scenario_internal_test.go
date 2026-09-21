@@ -158,6 +158,17 @@ func TestBuildCLIHonorsEvalCLIBinOverride(t *testing.T) {
 	}
 }
 
+func TestGradeSessionCarriesLabelFromSessionResult(t *testing.T) {
+	home := t.TempDir()
+	writeEnvConfig(t, home, "ctx", "env-a")
+
+	out := GradeSession(SessionResult{Session: 0, HomeDir: home, Label: "logs out"}, "env-a", observeEnv)
+
+	if out.Label != "logs out" {
+		t.Errorf("expected Label to carry through to the outcome, got %q", out.Label)
+	}
+}
+
 func TestGitShortSHAHonorsBuildLabelOverride(t *testing.T) {
 	t.Setenv("EVAL_BUILD_LABEL", "78f96cece")
 	if got := gitShortSHA("/nonexistent-repo-root"); got != "78f96cece" {

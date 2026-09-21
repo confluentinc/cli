@@ -21,6 +21,7 @@ const (
 
 type SessionOutcome struct {
 	Session     int          `json:"session"`
+	Label       string       `json:"label"`
 	Intent      string       `json:"intent"`
 	Observed    string       `json:"observed"` // "" if never established
 	Verdict     Verdict      `json:"verdict"`
@@ -46,7 +47,7 @@ type CellMetrics struct {
 // invocation always wins; then config integrity; then observe reads the scenario-relevant state and
 // the session passes when it equals intent. observe is the only scenario-specific part.
 func GradeSession(r SessionResult, intent string, observe func(SessionResult) (string, error)) SessionOutcome {
-	outcome := SessionOutcome{Session: r.Session, Intent: intent, Invocations: r.Invocations}
+	outcome := SessionOutcome{Session: r.Session, Label: r.Label, Intent: intent, Invocations: r.Invocations}
 
 	for _, inv := range r.Invocations {
 		if inv.Failed() {
