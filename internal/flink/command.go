@@ -57,6 +57,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newConnectivityTypeCommand())
 	cmd.AddCommand(c.newEndpointCommand())
 	cmd.AddCommand(c.newMaterializedTableCommand())
+	cmd.AddCommand(c.newQueryCommand(cfg, prerunner))
 
 	// Generated Cloud commands
 	cmd.AddCommand(
