@@ -153,6 +153,16 @@ func (f VariantStatementResultField) ToSDKType() any {
 	return f.ToString()
 }
 
+// ToPrettyString renders the value as indented JSON for the row-details view.
+func (f VariantStatementResultField) ToPrettyString() string {
+	compact := f.ToString()
+	indented := bytes.Buffer{}
+	if err := json.Indent(&indented, []byte(compact), "", "  "); err != nil {
+		return compact
+	}
+	return indented.String()
+}
+
 // decodeVariant walks the self-describing [code, ...] wire format. It is
 // SDK-agnostic and total: anything unreadable becomes an INVALID marker and a bad
 // child degrades in place, so a single bad node never fails the row.

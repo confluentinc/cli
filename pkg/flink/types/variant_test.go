@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"encoding/json"
 	"testing"
 
@@ -71,4 +72,19 @@ func TestVariantToSDKTypeIsRenderedJSON(t *testing.T) {
 
 func TestNewResultFieldTypeVariant(t *testing.T) {
 	require.Equal(t, Variant, NewResultFieldType("VARIANT"))
+}
+
+func TestVariantToPrettyString(t *testing.T) {
+	var raw any
+	require.NoError(t, json.Unmarshal([]byte(`[1,[["a",[4,"1"]],["big",[7,"9223372036854775807"]]]]`), &raw))
+	field := NewVariantStatementResultField(raw)
+	pretty := field.ToPrettyString()
+
+	require.Contains(t, pretty, "\n  ")                // multi-line and indented
+	require.Contains(t, pretty, "9223372036854775807") // large-integer precision preserved
+
+	// Same content as the compact form, only whitespace differs.
+	compacted := bytes.Buffer{}
+	require.NoError(t, json.Compact(&compacted, []byte(pretty)))
+	require.Equal(t, field.ToString(), compacted.String())
 }
