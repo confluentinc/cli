@@ -11,6 +11,7 @@ Available Commands:
   connectivity-type   Manage Flink connectivity type.
   endpoint            Manage Flink endpoint.
   materialized-table  Manage Flink materialized tables.
+  query               Run a bounded Flink SQL query and print its results.
   region              Manage and select Confluent Cloud Flink regions.
   shell               Start Flink interactive SQL client.
   statement           Manage Flink SQL statements in Confluent Cloud.

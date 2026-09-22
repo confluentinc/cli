@@ -1,0 +1,38 @@
+Error: unknown flag: --cluster
+Usage:
+  confluent flink query [flags]
+
+Examples:
+Run a bounded query in the current compute pool and print the rows as a table.
+
+  $ confluent flink query --sql "SELECT * FROM orders LIMIT 10;"
+
+Run a bounded query against Kafka cluster "my-cluster" and return JSON for a script.
+
+  $ confluent flink query --sql "SELECT status, COUNT(*) FROM orders GROUP BY status;" --compute-pool lfcp-123456 --database my-cluster --output json
+
+Return a bare JSON array of rows, without an envelope, for a script that only wants the data.
+
+  $ confluent flink query --sql "SELECT * FROM orders LIMIT 10;" --output json --raw
+
+Flags:
+      --sql string               Flink SQL statement. Alternatively, use "--file" or "-f".
+  -f, --file string              Path to a file that contains the Flink SQL statement. Alternatively, use --sql.
+      --compute-pool string      Flink compute pool ID.
+      --service-account string   Service account ID.
+      --database string          The database which will be used as the default database. When using Kafka, this is the cluster ID.
+      --property strings         Properties for the Flink statement in key=value format.
+      --timeout duration         Maximum time to wait for the query to finish. (default 10m0s)
+      --max-rows int             Maximum number of rows to fetch. Use 0 to fetch every row. This limit is client-side only; the query still produces rows after the limit is reached.
+      --raw                      Return rows as a bare array without an envelope. Requires "-o json" or "-o yaml".
+      --environment string       Environment ID.
+      --context string           CLI context name.
+  -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
+      --cloud string             Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string            Cloud region for Flink (use "confluent flink region list" to see all).
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

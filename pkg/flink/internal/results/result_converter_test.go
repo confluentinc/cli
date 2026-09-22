@@ -33,12 +33,15 @@ func (s *ResultConverterTestSuite) TestConvertField() {
 		maxNestingDepth := rapid.IntRange(0, 5).Draw(t, maxNestingDepthLabel)
 		dataType := generators.DataType(maxNestingDepth).Draw(t, "data type")
 		field := generators.GetResultItemGeneratorForType(dataType).Draw(t, "a field")
-		resultField := convertToInternalField(field, flinkgatewayv1.ColumnDetails{
+		resultField, err := convertToInternalField(field, flinkgatewayv1.ColumnDetails{
 			Name: testColumnName,
 			Type: dataType,
 		})
+		require.NoError(t, err)
 		require.NotNil(t, resultField)
-		require.Equal(t, types.NewResultFieldType(dataType.GetType()), resultField.GetType())
+		expectedType, err := types.NewResultFieldType(dataType.GetType())
+		require.NoError(t, err)
+		require.Equal(t, expectedType, resultField.GetType())
 		if maxNestingDepth == 0 {
 			require.IsType(t, types.AtomicStatementResultField{}, resultField)
 		}
@@ -177,10 +180,11 @@ func normalizeMultiSet(result any, dataType flinkgatewayv1.DataType) any {
 }
 
 func (s *ResultConverterTestSuite) TestConvertVariantFieldNil() {
-	resultField := convertToInternalField(nil, flinkgatewayv1.ColumnDetails{
+	resultField, err := convertToInternalField(nil, flinkgatewayv1.ColumnDetails{
 		Name: testColumnName,
 		Type: flinkgatewayv1.DataType{Type: string(types.Variant)},
 	})
+	require.NoError(s.T(), err)
 	require.Equal(s.T(), types.Null, resultField.GetType())
 }
 
@@ -192,7 +196,8 @@ func (s *ResultConverterTestSuite) TestConvertVariantNestedInArray() {
 	}
 	var raw any
 	require.NoError(s.T(), json.Unmarshal([]byte(`[[1,[["a",[11,"x"]]]],[0]]`), &raw))
-	resultField := convertToInternalField(raw, column)
+	resultField, err := convertToInternalField(raw, column)
+	require.NoError(s.T(), err)
 	require.Equal(s.T(), types.Array, resultField.GetType())
 	require.Equal(s.T(), `[{"a":"x"}, null]`, resultField.ToString())
 }
@@ -201,10 +206,11 @@ func (s *ResultConverterTestSuite) TestConvertVariantField() {
 	rapid.Check(s.T(), func(t *rapid.T) {
 		dataType := generators.VariantDataType().Draw(t, "data type")
 		field := generators.VariantResultItem().Draw(t, "a field")
-		resultField := convertToInternalField(field, flinkgatewayv1.ColumnDetails{
+		resultField, err := convertToInternalField(field, flinkgatewayv1.ColumnDetails{
 			Name: testColumnName,
 			Type: dataType,
 		})
+		require.NoError(t, err)
 		require.NotNil(t, resultField)
 		require.Equal(t, types.Variant, resultField.GetType())
 		require.IsType(t, types.VariantStatementResultField{}, resultField)
@@ -218,10 +224,11 @@ func (s *ResultConverterTestSuite) TestConvertVariantFieldOnPrem() {
 	rapid.Check(s.T(), func(t *rapid.T) {
 		dataType := generators.VariantDataTypeOnPrem().Draw(t, "data type")
 		field := generators.VariantResultItem().Draw(t, "a field")
-		resultField := convertToInternalFieldOnPrem(field, cmfsdk.ResultSchemaColumn{
+		resultField, err := convertToInternalFieldOnPrem(field, cmfsdk.ResultSchemaColumn{
 			Name: testColumnName,
 			Type: dataType,
 		})
+		require.NoError(t, err)
 		require.NotNil(t, resultField)
 		require.Equal(t, types.Variant, resultField.GetType())
 		require.IsType(t, types.VariantStatementResultField{}, resultField)
@@ -235,12 +242,15 @@ func (s *ResultConverterTestSuite) TestConvertFieldOnPrem() {
 		maxNestingDepth := rapid.IntRange(0, 5).Draw(t, maxNestingDepthLabel)
 		dataType := generators.DataTypeOnPrem(maxNestingDepth).Draw(t, "data type")
 		field := generators.GetResultItemGeneratorForTypeOnPrem(dataType).Draw(t, "a field")
-		resultField := convertToInternalFieldOnPrem(field, cmfsdk.ResultSchemaColumn{
+		resultField, err := convertToInternalFieldOnPrem(field, cmfsdk.ResultSchemaColumn{
 			Name: testColumnName,
 			Type: dataType,
 		})
+		require.NoError(t, err)
 		require.NotNil(t, resultField)
-		require.Equal(t, types.NewResultFieldType(dataType.GetType()), resultField.GetType())
+		expectedType, err := types.NewResultFieldType(dataType.GetType())
+		require.NoError(t, err)
+		require.Equal(t, expectedType, resultField.GetType())
 		if maxNestingDepth == 0 {
 			require.IsType(t, types.AtomicStatementResultField{}, resultField)
 		}
@@ -251,47 +261,39 @@ func (s *ResultConverterTestSuite) TestConvertFieldOnPrem() {
 func (s *ResultConverterTestSuite) TestConvertFieldFailsForMissingDataType() {
 	dataType := generators.DataType(0).Example()
 	field := generators.GetResultItemGeneratorForType(dataType).Example()
-	resultField := convertToInternalField(field, flinkgatewayv1.ColumnDetails{
+	_, err := convertToInternalField(field, flinkgatewayv1.ColumnDetails{
 		Name: testColumnName,
 	})
-	require.NotNil(s.T(), resultField)
-	require.Equal(s.T(), types.Null, resultField.GetType())
-	require.IsType(s.T(), types.AtomicStatementResultField{}, resultField)
+	require.ErrorContains(s.T(), err, "unsupported result field type")
 }
 
 func (s *ResultConverterTestSuite) TestConvertFieldFailsForMissingDataTypeOnPrem() {
 	dataType := generators.DataTypeOnPrem(0).Example()
 	field := generators.GetResultItemGeneratorForTypeOnPrem(dataType).Example()
-	resultField := convertToInternalFieldOnPrem(field, cmfsdk.ResultSchemaColumn{
+	_, err := convertToInternalFieldOnPrem(field, cmfsdk.ResultSchemaColumn{
 		Name: testColumnName,
 	})
-	require.NotNil(s.T(), resultField)
-	require.Equal(s.T(), types.Null, resultField.GetType())
-	require.IsType(s.T(), types.AtomicStatementResultField{}, resultField)
+	require.ErrorContains(s.T(), err, "unsupported result field type")
 }
 
 func (s *ResultConverterTestSuite) TestConvertFieldFailsForEmptyDataType() {
 	dataType := generators.DataType(0).Example()
 	field := generators.GetResultItemGeneratorForType(dataType).Example()
-	resultField := convertToInternalField(field, flinkgatewayv1.ColumnDetails{
+	_, err := convertToInternalField(field, flinkgatewayv1.ColumnDetails{
 		Name: testColumnName,
 		Type: flinkgatewayv1.DataType{},
 	})
-	require.NotNil(s.T(), resultField)
-	require.Equal(s.T(), types.Null, resultField.GetType())
-	require.IsType(s.T(), types.AtomicStatementResultField{}, resultField)
+	require.ErrorContains(s.T(), err, "unsupported result field type")
 }
 
 func (s *ResultConverterTestSuite) TestConvertFieldFailsForEmptyDataTypeOnPrem() {
 	dataType := generators.DataTypeOnPrem(0).Example()
 	field := generators.GetResultItemGeneratorForTypeOnPrem(dataType).Example()
-	resultField := convertToInternalFieldOnPrem(field, cmfsdk.ResultSchemaColumn{
+	_, err := convertToInternalFieldOnPrem(field, cmfsdk.ResultSchemaColumn{
 		Name: testColumnName,
 		Type: cmfsdk.DataType{},
 	})
-	require.NotNil(s.T(), resultField)
-	require.Equal(s.T(), types.Null, resultField.GetType())
-	require.IsType(s.T(), types.AtomicStatementResultField{}, resultField)
+	require.ErrorContains(s.T(), err, "unsupported result field type")
 }
 
 func (s *ResultConverterTestSuite) TestConvertFieldFailsIfDataTypesDiffer() {
@@ -305,10 +307,11 @@ func (s *ResultConverterTestSuite) TestConvertFieldFailsIfDataTypesDiffer() {
 		ElementType: &varcharType,
 	}
 	arrayField := generators.GetResultItemGeneratorForType(arrayType).Example()
-	resultField := convertToInternalField(arrayField, flinkgatewayv1.ColumnDetails{
+	resultField, err := convertToInternalField(arrayField, flinkgatewayv1.ColumnDetails{
 		Name: testColumnName,
 		Type: varcharType,
 	})
+	require.NoError(s.T(), err)
 	require.NotNil(s.T(), resultField)
 	require.Equal(s.T(), types.Null, resultField.GetType())
 	require.IsType(s.T(), types.AtomicStatementResultField{}, resultField)
@@ -325,13 +328,38 @@ func (s *ResultConverterTestSuite) TestConvertFieldFailsIfDataTypesDifferOnPrem(
 		ElementType: &varcharType,
 	}
 	arrayField := generators.GetResultItemGeneratorForTypeOnPrem(arrayType).Example()
-	resultField := convertToInternalFieldOnPrem(arrayField, cmfsdk.ResultSchemaColumn{
+	resultField, err := convertToInternalFieldOnPrem(arrayField, cmfsdk.ResultSchemaColumn{
 		Name: testColumnName,
 		Type: varcharType,
 	})
+	require.NoError(s.T(), err)
 	require.NotNil(s.T(), resultField)
 	require.Equal(s.T(), types.Null, resultField.GetType())
 	require.IsType(s.T(), types.AtomicStatementResultField{}, resultField)
+}
+
+// TestConvertFieldStructuredTypeOnPrem guards against GetConverterForTypeOnPrem
+// silently regressing to null on STRUCTURED_TYPE, as it did before this test
+// existed: it had no case for it (unlike the cloud GetConverterForType), and the
+// property-based tests above never caught this because the on-prem generators
+// never generate a STRUCTURED_TYPE column to begin with.
+func (s *ResultConverterTestSuite) TestConvertFieldStructuredTypeOnPrem() {
+	nameType := cmfsdk.DataType{Nullable: false, Type: "VARCHAR"}
+	structuredType := cmfsdk.DataType{
+		Nullable: false,
+		Type:     "STRUCTURED_TYPE",
+		Fields:   &[]cmfsdk.DataTypeField{*cmfsdk.NewDataTypeField("name", nameType)},
+	}
+
+	resultField, err := convertToInternalFieldOnPrem([]any{"Jim"}, cmfsdk.ResultSchemaColumn{
+		Name: testColumnName,
+		Type: structuredType,
+	})
+	require.NoError(s.T(), err)
+	require.NotNil(s.T(), resultField)
+	require.Equal(s.T(), types.StructuredType, resultField.GetType())
+	require.IsType(s.T(), types.StructuredTypeStatementResultField{}, resultField)
+	require.Equal(s.T(), map[string]any{"name": "Jim"}, resultField.ToSDKType())
 }
 
 func (s *ResultConverterTestSuite) TestConvertResults() {
