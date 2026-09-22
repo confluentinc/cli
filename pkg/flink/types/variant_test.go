@@ -71,7 +71,9 @@ func TestVariantToSDKTypeIsRenderedJSON(t *testing.T) {
 }
 
 func TestNewResultFieldTypeVariant(t *testing.T) {
-	require.Equal(t, Variant, NewResultFieldType("VARIANT"))
+	fieldType, err := NewResultFieldType("VARIANT")
+	require.NoError(t, err)
+	require.Equal(t, Variant, fieldType)
 }
 
 func TestVariantToPrettyString(t *testing.T) {
