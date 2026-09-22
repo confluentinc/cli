@@ -198,38 +198,29 @@ var afterMissingConfigRead = func() {}
 func (c *Config) Load() error {
 	filename := c.GetFilename()
 
-	input, err := os.ReadFile(filename)
+	missing, err := c.loadLocked(filename)
 	if err != nil {
-		if os.IsNotExist(err) {
-			// Save a default version if none exists yet. Snapshot a baseline first so this
-			// save merges under the lock instead of overwriting: another session can create
-			// the config between this missing-file read and the locked save, and that file
-			// must survive. A config constructed without Load keeps a nil baseline and still
-			// writes whole.
-			c.snapshotBaseline()
-			afterMissingConfigRead()
-			if err := c.Save(); err != nil {
-				return fmt.Errorf("unable to save configuration file: %w", err)
-			}
-			return nil
-		}
-		return fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, filename, err)
+		return err
 	}
-
-	if err := json.Unmarshal(input, c); err != nil {
-		return fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, filename, err)
+	if missing {
+		// Save a default version if none exists yet. Snapshot a baseline first so this
+		// save merges under the lock instead of overwriting: another session can create
+		// the config between this missing-file read and the locked save, and that file
+		// must survive. A config constructed without Load keeps a nil baseline and still
+		// writes whole. This runs outside loadLocked's lock: Save() re-acquires the same
+		// sidecar lock, and flock is not reentrant.
+		c.snapshotBaseline()
+		afterMissingConfigRead()
+		if err := c.Save(); err != nil {
+			return fmt.Errorf("unable to save configuration file: %w", err)
+		}
+		return nil
 	}
 
 	if err := c.wireContexts(); err != nil {
 		return err
 	}
 	c.snapshotBaseline() // baseline = pristine on-disk state, before migrations
-
-	// Load the cache before the migration block below: a migration can trigger a
-	// Save(), which also persists the cache. Saving before the cache is loaded
-	// would overwrite the on-disk cache (update-check timestamp and feature flags)
-	// with zero-value fields.
-	c.loadCache()
 
 	var save bool
 	for _, context := range c.Contexts {
@@ -261,6 +252,53 @@ func (c *Config) Load() error {
 	}
 
 	return c.Validate()
+}
+
+// loadLocked performs Load's disk reads - config.json, the secret store, and the cache -
+// under the same sidecar lock Save() uses, so a reader never sees config.json and
+// secrets.json from two different Save() generations. It returns missing=true when
+// config.json does not exist yet, leaving that branch's handling (which calls Save() and
+// so must not run while this lock is held) to the caller. The lock is released via defer
+// before this function returns, well before wireContexts/Validate run: Validate's
+// normalization can re-enter Save(), which acquires this same lock, and flock is not
+// reentrant.
+func (c *Config) loadLocked(filename string) (missing bool, err error) {
+	// Create the config directory before opening the sidecar lock file inside it, same as
+	// Save(): on a fresh machine (parent directory absent) opening the lock would ENOENT
+	// before we ever get to discover the config file itself is missing.
+	if err := os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
+		return false, fmt.Errorf("unable to create config directory %s: %w", filename, err)
+	}
+
+	lock := newFileLock(filename)
+	if err := lock.lock(lockTimeout); err != nil {
+		return false, err
+	}
+	defer func() { _ = lock.unlock() }()
+
+	input, err := os.ReadFile(filename)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return true, nil
+		}
+		return false, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, filename, err)
+	}
+
+	if err := json.Unmarshal(input, c); err != nil {
+		return false, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, filename, err)
+	}
+
+	if err := c.loadSecretStore(); err != nil {
+		return false, err
+	}
+
+	// Load the cache here, under the same lock, rather than after a migration-triggered
+	// Save() below: that Save() also persists the cache, and saving before the cache is
+	// loaded would overwrite the on-disk cache (update-check timestamp and feature flags)
+	// with zero-value fields.
+	c.loadCache()
+
+	return false, nil
 }
 
 // updateCheckCache is the disposable cache-store representation of the fields split

@@ -208,6 +208,15 @@ func TestConfig_Load(t *testing.T) {
 		return
 	}
 
+	// The fixtures below carry a credential API secret, a nested Kafka API-key secret,
+	// auth tokens, and a saved password - all now secret-store-only (json:"-"), so a bare
+	// Load() from these files can't recover them, and Validate() would otherwise treat the
+	// secret-less nested API key as malformed and delete it. Seed the matching secret store
+	// records (under an isolated HOME) so loadSecretStore() restores the real values, same
+	// as it would for an on-disk config with a real secrets.json.
+	setTestHome(t, t.TempDir())
+	seedLoadTestSecrets(t)
+
 	testConfigsOnPrem := SetupTestInputs(false)
 	testConfigsCloud := SetupTestInputs(true)
 	tests := []struct {
@@ -278,6 +287,29 @@ func TestConfig_Load(t *testing.T) {
 			}
 		})
 	}
+}
+
+// seedLoadTestSecrets writes the secret-store records TestConfig_Load's fixtures need to
+// round-trip. The shared cluster config's nested Kafka API-key secret, and the saved
+// password SetupTestInputs hardcodes for "my-context", are recorded under both identities
+// the fixtures use as owning credential: "api-key-abc-key-123" (apiCredentialName, a
+// stateless context's identityKey) and "username-test-user" (loginCredential.Name, a
+// stateful context's identityKey) - each fixture's context uses one or the other. The
+// stateful identity also carries the auth tokens SetupTestInputs hardcodes for a stateful
+// context. Values are stored verbatim (this test never decrypts), matching what
+// saveSecretStore would have produced for these fixtures.
+func seedLoadTestSecrets(t *testing.T) {
+	t.Helper()
+	nestedKey := map[string]map[string]*apiKeySecret{kafkaClusterID: {apiKeyString: {Secret: apiSecretString}}}
+	require.NoError(t, newSecretStore().write(&secretFile{Secrets: map[string]*secretRecord{
+		apiCredentialName: {Secret: apiSecretString, Password: "encrypted-password", KafkaAPIKeys: nestedKey},
+		"username-test-user": {
+			AuthToken:        regularOrgContextState.AuthToken,
+			AuthRefreshToken: regularOrgContextState.AuthRefreshToken,
+			Password:         "encrypted-password",
+			KafkaAPIKeys:     nestedKey,
+		},
+	}}))
 }
 
 func TestConfig_Save(t *testing.T) {
