@@ -3,8 +3,6 @@
 package connect
 
 import (
-	"time"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
@@ -16,13 +14,13 @@ type customConnectorRuntimeCommand struct {
 }
 
 type customConnectorRuntimeOut struct {
-	ID                             string     `human:"ID" serialized:"id"`
-	CustomConnectPluginRuntimeName string     `human:"Custom Connect Plugin Runtime Name" serialized:"custom_connect_plugin_runtime_name"`
-	RuntimeAkVersion               string     `human:"Runtime Ak Version" serialized:"runtime_ak_version"`
-	SupportedJavaVersions          []string   `human:"Supported Java Versions" serialized:"supported_java_versions"`
-	ProductMaturity                string     `human:"Product Maturity" serialized:"product_maturity"`
-	EndOfLifeAt                    *time.Time `human:"End Of Life At" serialized:"end_of_life_at"`
-	Description                    string     `human:"Description" serialized:"description"`
+	ID                             string   `human:"ID" serialized:"id"`
+	CustomConnectPluginRuntimeName string   `human:"Custom Connect Plugin Runtime Name" serialized:"custom_connect_plugin_runtime_name"`
+	RuntimeAkVersion               string   `human:"Runtime Ak Version" serialized:"runtime_ak_version"`
+	SupportedJavaVersions          []string `human:"Supported Java Versions" serialized:"supported_java_versions"`
+	ProductMaturity                string   `human:"Product Maturity" serialized:"product_maturity"`
+	EndOfLifeAt                    string   `human:"End Of Life At" serialized:"end_of_life_at"` // TODO: Manual override of *time.Time to string for v4; remove in v5
+	Description                    string   `human:"Description" serialized:"description"`
 }
 
 func newCustomConnectorRuntimeCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command { //nolint:unparam

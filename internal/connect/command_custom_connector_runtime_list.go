@@ -41,9 +41,14 @@ func (c *customConnectorRuntimeCommand) list(cmd *cobra.Command, _ []string) err
 			RuntimeAkVersion:               customConnectorRuntime.GetRuntimeAkVersion(),
 			SupportedJavaVersions:          customConnectorRuntime.GetSupportedJavaVersions(),
 			ProductMaturity:                customConnectorRuntime.GetProductMaturity(),
-			EndOfLifeAt:                    customConnectorRuntime.EndOfLifeAt,
 			Description:                    customConnectorRuntime.GetDescription(),
 		}
+		// TODO: Remove this block in v5; this is a manual override for backward compatibility in v4
+		eol, ok := customConnectorRuntime.GetEndOfLifeAtOk()
+		if ok {
+			out.EndOfLifeAt = eol.String()
+		}
+		// end of TODO block
 		list.Add(out)
 	}
 	return list.Print()
