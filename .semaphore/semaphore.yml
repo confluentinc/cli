@@ -26,6 +26,10 @@ blocks:
           - . vault-get-secret cli/sonar-token
           - sem-version go $(cat .go-version)
           - export PATH=$(go env GOPATH)/bin:$PATH
+          # Restore the Go module and build caches. Exact key hit (go.sum unchanged)
+          # skips all downloads; the bare prefix still warm-starts a changed go.sum.
+          - cache restore gomod-$(checksum go.sum),gomod-
+          - cache restore gobuild-$(checksum go.sum),gobuild-
       jobs:
         - name: "Lint linux/amd64"
           commands:
@@ -44,6 +48,10 @@ blocks:
       epilogue:
         always:
           commands:
+            # Store both caches keyed on go.sum. cache store is a no-op on an existing
+            # key, so the parallel jobs racing to store the same key is safe.
+            - cache store gomod-$(checksum go.sum) $(go env GOMODCACHE)
+            - cache store gobuild-$(checksum go.sum) $(go env GOCACHE)
             # --ignore-missing: each job produces only its own report (lint produces none)
             - test-results publish unit-test-report.xml integration-test-report.xml -N "linux/amd64" --ignore-missing
 
