@@ -153,6 +153,13 @@ func (f VariantStatementResultField) ToSDKType() any {
 	return f.ToString()
 }
 
+func (f VariantStatementResultField) ToSerializedValue() any {
+	// A VARIANT is self-describing; ToSDKType already renders it as JSON text that
+	// preserves large-integer precision a float round-trip would lose, so `-o json`/
+	// `-o yaml` serialize the same rendered text.
+	return f.ToSDKType()
+}
+
 // ToPrettyString renders the value as indented JSON for the row-details view.
 func (f VariantStatementResultField) ToPrettyString() string {
 	compact := f.ToString()
