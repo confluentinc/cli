@@ -1,6 +1,6 @@
 module github.com/confluentinc/cli/v4
 
-go 1.26.8
+go 1.26.7
 
 require (
 	github.com/antihax/optional v1.0.0
@@ -23,7 +23,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/ccpm v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5
 	github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority v0.0.3
-	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.4.0
+	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.4.1
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.27.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.7.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin v0.0.9
