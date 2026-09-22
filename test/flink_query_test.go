@@ -13,6 +13,11 @@ func (s *CLITestSuite) TestFlinkQuery() {
 		// Multi-page result set.
 		{args: `flink query --sql "SELECT id FROM multi_page_table;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "flink/query/multi-page.golden"},
 
+		// VARIANT column: renders as JSON text (VARIANT support landed on main via #3514).
+		// Covers both the human table and the -o json envelope for a VARIANT cell.
+		{args: `flink query --sql "SELECT v FROM variant_table;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "flink/query/variant.golden"},
+		{args: `flink query --sql "SELECT v FROM variant_table;" --compute-pool lfcp-123456 --service-account sa-123456 -o json`, fixture: "flink/query/variant-json.golden"},
+
 		// -o json / -o yaml default to the schema+rows envelope. No statement name in
 		// it (dropped to match the PRD's engine-agnostic envelope shape) and nothing
 		// else random, so these are exact matches.

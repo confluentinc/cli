@@ -180,10 +180,11 @@ func normalizeMultiSet(result any, dataType flinkgatewayv1.DataType) any {
 }
 
 func (s *ResultConverterTestSuite) TestConvertVariantFieldNil() {
-	resultField := convertToInternalField(nil, flinkgatewayv1.ColumnDetails{
+	resultField, err := convertToInternalField(nil, flinkgatewayv1.ColumnDetails{
 		Name: testColumnName,
 		Type: flinkgatewayv1.DataType{Type: string(types.Variant)},
 	})
+	require.NoError(s.T(), err)
 	require.Equal(s.T(), types.Null, resultField.GetType())
 }
 
@@ -195,7 +196,8 @@ func (s *ResultConverterTestSuite) TestConvertVariantNestedInArray() {
 	}
 	var raw any
 	require.NoError(s.T(), json.Unmarshal([]byte(`[[1,[["a",[11,"x"]]]],[0]]`), &raw))
-	resultField := convertToInternalField(raw, column)
+	resultField, err := convertToInternalField(raw, column)
+	require.NoError(s.T(), err)
 	require.Equal(s.T(), types.Array, resultField.GetType())
 	require.Equal(s.T(), `[{"a":"x"}, null]`, resultField.ToString())
 }
@@ -204,10 +206,11 @@ func (s *ResultConverterTestSuite) TestConvertVariantField() {
 	rapid.Check(s.T(), func(t *rapid.T) {
 		dataType := generators.VariantDataType().Draw(t, "data type")
 		field := generators.VariantResultItem().Draw(t, "a field")
-		resultField := convertToInternalField(field, flinkgatewayv1.ColumnDetails{
+		resultField, err := convertToInternalField(field, flinkgatewayv1.ColumnDetails{
 			Name: testColumnName,
 			Type: dataType,
 		})
+		require.NoError(t, err)
 		require.NotNil(t, resultField)
 		require.Equal(t, types.Variant, resultField.GetType())
 		require.IsType(t, types.VariantStatementResultField{}, resultField)
@@ -221,10 +224,11 @@ func (s *ResultConverterTestSuite) TestConvertVariantFieldOnPrem() {
 	rapid.Check(s.T(), func(t *rapid.T) {
 		dataType := generators.VariantDataTypeOnPrem().Draw(t, "data type")
 		field := generators.VariantResultItem().Draw(t, "a field")
-		resultField := convertToInternalFieldOnPrem(field, cmfsdk.ResultSchemaColumn{
+		resultField, err := convertToInternalFieldOnPrem(field, cmfsdk.ResultSchemaColumn{
 			Name: testColumnName,
 			Type: dataType,
 		})
+		require.NoError(t, err)
 		require.NotNil(t, resultField)
 		require.Equal(t, types.Variant, resultField.GetType())
 		require.IsType(t, types.VariantStatementResultField{}, resultField)
