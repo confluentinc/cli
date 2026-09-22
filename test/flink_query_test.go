@@ -29,14 +29,14 @@ func (s *CLITestSuite) TestFlinkQuery() {
 		// --max-rows stops the drain early. Truncated is one of the two conditions that
 		// makes runQuery's deferred cleanup stop the statement, so the name shows up again
 		// in the "Stopped statement" message.
-		{args: `flink query --sql "SELECT id FROM many_rows;" --compute-pool lfcp-123456 --service-account sa-123456 --max-rows 2`, fixture: "flink/query/max-rows.golden", regex: true},
+		{args: `flink query --sql "SELECT id FROM many_rows;" --compute-pool lfcp-123456 --service-account sa-123456 --max-rows 2`, fixture: "flink/query/max-rows.golden"},
 
 		// Regression case for a real false positive found against staging: a
 		// LIMIT-satisfied read over a streaming source delivers every row (no next
 		// token) but the job's phase stays RUNNING. No "may be incomplete" warning —
 		// all rows print — but the deferred cleanup still stops the non-terminal
 		// statement, same as it does after --max-rows.
-		{args: `flink query --sql "SELECT id FROM limit_bounded_stream;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "flink/query/limit-bounded-stream.golden", regex: true},
+		{args: `flink query --sql "SELECT id FROM limit_bounded_stream;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "flink/query/limit-bounded-stream.golden"},
 
 		// Non-append-only: an Operation column and a changelog warning, no stop (the
 		// statement already reached a terminal phase on its own).
