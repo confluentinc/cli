@@ -1,7 +1,6 @@
 package output
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"reflect"
@@ -126,7 +125,7 @@ func (t *Table) printCore(writer io.Writer, auto bool) error {
 
 		switch t.format {
 		default:
-			out, err := json.Marshal(v)
+			out, err := marshalJSON(v)
 			if err != nil {
 				return err
 			}
