@@ -1,0 +1,6 @@
+      ID      | Custom Connect Plugin Runtime  | Runtime Ak Version | Supported Java Versions | Product Maturity |         End Of Life At         |          Description            
+              |              Name              |                    |                         |                  |                                |                                 
+--------------+--------------------------------+--------------------+-------------------------+------------------+--------------------------------+---------------------------------
+  dlz-f3a90de | 3.9.0                          | 3.9.0              | 11, 17                  | GA               | 2006-01-02 15:04:05 -0700      | Custom Connector Plugin         
+              |                                |                    |                         |                  | -0700                          | runtime using AK 3.9.0 and      
+              |                                |                    |                         |                  |                                | supporting Java 11 and 17       

@@ -1,10 +1,10 @@
-Manage custom connector runtimes.
+Manage Confluent Cloud Connect custom connector runtimes.
 
 Usage:
   confluent connect custom-connector-runtime [command]
 
 Available Commands:
-  list        List custom connector runtimes.
+  list        List Connect custom connector runtimes.
 
 Global Flags:
   -h, --help            Show help for this command.
