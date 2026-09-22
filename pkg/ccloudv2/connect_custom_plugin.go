@@ -78,3 +78,36 @@ func (c *Client) executeListPlugins(pageToken, cloud string) (connectcustomplugi
 	}
 	return req.Execute()
 }
+
+// ===== Connect custom plugin custom connector runtimes API calls =====
+
+func (c *Client) ListConnectCustomConnectorRuntimes() ([]connectcustompluginv1.ConnectV1CustomConnectorRuntime, error) {
+	var list []connectcustompluginv1.ConnectV1CustomConnectorRuntime
+
+	done := false
+	pageToken := ""
+	for !done {
+		page, httpResp, err := c.executeListConnectCustomConnectorRuntimes(pageToken)
+		if err != nil {
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
+		}
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return list, nil
+}
+
+func (c *Client) executeListConnectCustomConnectorRuntimes(pageToken string) (connectcustompluginv1.ConnectV1CustomConnectorRuntimeList, *http.Response, error) {
+	req := c.ConnectCustomPluginClient.CustomConnectorRuntimesConnectV1Api.
+		ListConnectV1CustomConnectorRuntimes(c.connectCustomPluginApiContext()).
+		PageSize(ccloudV2ListPageSize)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+	return req.Execute()
+}

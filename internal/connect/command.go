@@ -24,6 +24,7 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(
 		newArtifactCommand(prerunner),
 		newClusterCommand(cfg, prerunner),
+		newCustomConnectorRuntimeCommand(cfg, prerunner),
 		newCustomPluginCommand(prerunner),
 		newEventCommand(prerunner),
 		newLogsCommand(prerunner),
