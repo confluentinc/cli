@@ -38,15 +38,6 @@ func (u *Usage) Collect(cmd *cobra.Command, _ []string) {
 
 // CollectAgentDetect runs agent detection and assigns the results onto this
 // Usage's agent-detect fields.
-//
-// The CliV1Usage fields assigned below are flat additions from APIE-1607 (see
-// https://confluentinc.atlassian.net/wiki/spaces/AEGI/pages/6089736699), named
-// and typed to mirror agentdetect.Attributes one field at a time. This won't
-// compile until that schema update lands in ccloud-sdk-go-v2.
-//
-// UNVERIFIED AGAINST THE FINAL SCHEMA
-// Re-check every assignment and both helpers below once the
-// generated struct exists.
 func (u *Usage) CollectAgentDetect() {
 	defer func() {
 		if r := recover(); r != nil {
