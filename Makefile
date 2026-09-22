@@ -117,7 +117,7 @@ ifdef CI
 	go install gotest.tools/gotestsum@v1.13.0 && \
 	export GOCOVERDIR=test/coverage && \
 	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
-	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v -race $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
+	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
 	go tool covdata textfmt -i $${GOCOVERDIR} -o coverage.integration.out
 else
 	export GOCOVERDIR=test/coverage && \
