@@ -195,6 +195,7 @@ func reportUsage(cmd *cobra.Command, cfg *config.Config, u *usage.Usage) error {
 		if err != nil {
 			return err
 		}
+		u.CollectAgentDetect()
 		u.Report(ccloudv2.NewClient(cfg, unsafeTrace))
 	}
 	return nil
