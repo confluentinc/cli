@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"sync"
 	"time"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -183,14 +184,33 @@ func setUpConfig(conf *Config, ctx *Context, platform *Platform, credential *Cre
 	}
 }
 
-// SetTempHomeDir temporarily changes the path of the home directory so the current configuration file isn't altered.
+var (
+	testHomeOnce sync.Once
+	testHomeDir  string
+)
+
+// SetTempHomeDir points the home directory at a temp location so tests never touch
+// the real config file. The directory is unique per test process (created once and
+// reused), not the shared os.TempDir: Save() reads and three-way-merges whatever is
+// on disk, so a home shared across parallel `go test` package binaries lets one
+// process's write corrupt another's config mid-merge. A per-process home isolates the
+// binaries from each other while staying stable within a process, so tests that save
+// and reload within one process are unaffected.
 func SetTempHomeDir() {
+	testHomeOnce.Do(func() {
+		dir, err := os.MkdirTemp("", "confluent-cli-test-home-")
+		if err != nil {
+			panic(err)
+		}
+		testHomeDir = dir
+	})
+
 	key := "HOME"
 	if runtime.GOOS == "windows" {
 		key = "USERPROFILE"
 	}
 
-	if err := os.Setenv(key, os.TempDir()); err != nil {
+	if err := os.Setenv(key, testHomeDir); err != nil {
 		panic(err)
 	}
 }
