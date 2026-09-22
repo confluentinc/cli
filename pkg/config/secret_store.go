@@ -291,3 +291,91 @@ func (c *Config) saveSecretStore() error {
 
 	return newSecretStore().write(&secretFile{Secrets: records})
 }
+
+// readSecretFileFromDisk reads and unmarshals the secret store at path, mirroring
+// readConfigFromDisk. A missing file is not an error - a fresh install has no secrets.json
+// yet - and returns an empty secretFile so Load still succeeds.
+func readSecretFileFromDisk(path string) (*secretFile, error) {
+	input, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return &secretFile{}, nil
+		}
+		return nil, fmt.Errorf("unable to read secret store %s: %w", path, err)
+	}
+
+	file := &secretFile{}
+	if err := json.Unmarshal(input, file); err != nil {
+		return nil, fmt.Errorf("unable to unmarshal secret store %s: %w", path, err)
+	}
+	return file, nil
+}
+
+// loadSecretStore repopulates c's secret fields from the encrypted secret store, keyed by
+// each context's identityKey - the reverse of saveSecretStore. It must run before
+// wireContexts/Validate: ctx.GetState() is not wired to ContextStates until wireContexts
+// runs, so this reads ContextStates/Credentials/SavedCredentials directly by name/identity;
+// and Validate's nested-API-key pruning (validateGlobalAPIKeys, KafkaClusterContext.Validate)
+// would delete a key whose secret still reads empty. Every value is copied verbatim - the
+// ciphertext, salt, and nonce as one unit - never decrypted here; callers decrypt later via
+// DecryptCredentials/DecryptContextStates/ResolveKafkaAPIKey.
+func (c *Config) loadSecretStore() error {
+	file, err := readSecretFileFromDisk(newSecretStore().path)
+	if err != nil {
+		return err
+	}
+	if len(file.Secrets) == 0 {
+		return nil
+	}
+
+	for name, ctx := range c.Contexts {
+		rec, ok := file.Secrets[ctx.identityKey()]
+		if !ok || rec == nil {
+			continue
+		}
+
+		if state := c.ContextStates[name]; state != nil && (rec.AuthToken != "" || rec.AuthRefreshToken != "") {
+			state.AuthToken = rec.AuthToken
+			state.AuthRefreshToken = rec.AuthRefreshToken
+			state.Salt = rec.TokenSalt
+			state.Nonce = rec.TokenNonce
+		}
+
+		if credential := c.Credentials[ctx.CredentialName]; credential != nil && credential.APIKeyPair != nil && rec.Secret != "" {
+			credential.APIKeyPair.Secret = rec.Secret
+			credential.APIKeyPair.Salt = rec.SecretSalt
+			credential.APIKeyPair.Nonce = rec.SecretNonce
+		}
+
+		if saved := c.SavedCredentials[name]; saved != nil && rec.Password != "" {
+			saved.EncryptedPassword = rec.Password
+			saved.Salt = rec.PasswordSalt
+			saved.Nonce = rec.PasswordNonce
+		}
+
+		for keyId, triple := range rec.GlobalAPIKeys {
+			if pair := ctx.GlobalAPIKeys[keyId]; pair != nil && triple != nil {
+				pair.Secret = triple.Secret
+				pair.Salt = triple.Salt
+				pair.Nonce = triple.Nonce
+			}
+		}
+
+		clusters := allKafkaClusterConfigs(ctx.KafkaClusterContext)
+		for clusterId, keys := range rec.KafkaAPIKeys {
+			cluster := clusters[clusterId]
+			if cluster == nil {
+				continue
+			}
+			for keyId, triple := range keys {
+				if pair := cluster.APIKeys[keyId]; pair != nil && triple != nil {
+					pair.Secret = triple.Secret
+					pair.Salt = triple.Salt
+					pair.Nonce = triple.Nonce
+				}
+			}
+		}
+	}
+
+	return nil
+}

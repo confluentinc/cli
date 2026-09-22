@@ -134,6 +134,105 @@ func TestSave_NestedApiKeySecretsLeaveConfigFile(t *testing.T) {
 	require.Equal(t, "cluster-secret", plainCluster)
 }
 
+// TestLoad_RepopulatesSecretsFromStore pins the load-side counterpart of
+// TestSave_SecretsLeaveConfigFile: a credential's API secret, extracted to the secret
+// store on save, must be repopulated into a freshly loaded Config so DecryptCredentials
+// still recovers the real plaintext.
+func TestLoad_RepopulatesSecretsFromStore(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	c := newTestConfigWithAPIKeyContext(t)
+	require.NoError(t, c.Save())
+
+	reloaded := New()
+	reloaded.Filename = c.GetFilename()
+	require.NoError(t, reloaded.Load())
+	require.NoError(t, reloaded.DecryptCredentials())
+
+	require.Equal(t, "the-api-secret", reloaded.Credentials["api-key-AK"].APIKeyPair.Secret)
+}
+
+// TestSecrets_SurviveContextRename pins that the secret store's identity key
+// (Context.identityKey, CredentialName) stays stable across a rename, so a renamed
+// context's secrets are not orphaned in the store.
+func TestSecrets_SurviveContextRename(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	c := newTestConfigWithAPIKeyContext(t)
+	require.NoError(t, c.Save())
+	require.NoError(t, c.renameContextForTest("orig", "renamed"))
+	require.NoError(t, c.Save())
+
+	reloaded := New()
+	reloaded.Filename = c.GetFilename()
+	require.NoError(t, reloaded.Load())
+	require.NoError(t, reloaded.DecryptCredentials())
+	require.Equal(t, "the-api-secret", reloaded.Credentials["api-key-AK"].APIKeyPair.Secret)
+}
+
+// TestLoad_DecryptsOverEncryptedCloudNonV1RefreshToken covers the deferred edge from the
+// task-2.2 review: saveSecretStore's shadow context (used to encrypt state tokens) has no
+// PlatformName, so ctx.IsCloud reads false inside encryptStateTokensForContext even for a
+// real cloud context, and a cloud refresh token that isn't `v1.`-prefixed gets encrypted
+// there when it otherwise might not be. The stored ciphertext is still self-describing
+// (cipher prefix + TokenSalt/Nonce), so it must decrypt back to the original token on load
+// regardless of why it was encrypted.
+func TestLoad_DecryptsOverEncryptedCloudNonV1RefreshToken(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	c := newTestConfigWithAPIKeyContext(t)
+	ctx := c.Contexts["orig"]
+
+	cloudPlatform := &Platform{Name: "confluent.cloud", Server: "https://confluent.cloud"}
+	c.Platforms["confluent.cloud"] = cloudPlatform
+	ctx.PlatformName = "confluent.cloud"
+	ctx.Platform = cloudPlatform
+	require.True(t, ctx.IsCloud(false), "precondition: the real context must read as cloud")
+
+	ctx.State.AuthRefreshToken = "opaque-cloud-refresh-token" // cloud token, not v1.-prefixed
+	require.NoError(t, c.Save())
+
+	reloaded := New()
+	reloaded.Filename = c.GetFilename()
+	require.NoError(t, reloaded.Load())
+
+	reloadedCtx := reloaded.Contexts["orig"]
+	require.NoError(t, reloadedCtx.GetState().DecryptAuthRefreshToken(reloadedCtx.Name))
+	require.Equal(t, "opaque-cloud-refresh-token", reloadedCtx.GetState().AuthRefreshToken)
+}
+
+// TestLoad_RepopulatesNestedAPIKeySecretsFromStore is the load-side counterpart of
+// TestSave_NestedApiKeySecretsLeaveConfigFile: a global API key's and a cluster-scoped API
+// key's secrets, extracted to the secret store on save, must be repopulated into a freshly
+// loaded Config so each decrypts back to its real value.
+func TestLoad_RepopulatesNestedAPIKeySecretsFromStore(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	c := newTestConfigWithAPIKeyContext(t)
+	ctx := c.Contexts["orig"]
+
+	require.NoError(t, ctx.StoreGlobalAPIKey(&APIKeyPair{Key: "GLOBAL-KEY", Secret: "global-secret"}))
+
+	cluster := &KafkaClusterConfig{
+		ID:        "lkc-nested",
+		Name:      "nested-cluster",
+		Bootstrap: "https://nested.example.com",
+		APIKeys:   map[string]*APIKeyPair{"CLUSTER-KEY": {Key: "CLUSTER-KEY", Secret: "cluster-secret"}},
+	}
+	ctx.KafkaClusterContext.AddKafkaClusterConfig(cluster)
+	require.NoError(t, cluster.EncryptAPIKeys())
+
+	require.NoError(t, c.Save())
+
+	reloaded := New()
+	reloaded.Filename = c.GetFilename()
+	require.NoError(t, reloaded.Load())
+
+	reloadedCtx := reloaded.Contexts["orig"]
+	require.NoError(t, reloadedCtx.DecryptGlobalAPIKeys())
+	require.Equal(t, "global-secret", reloadedCtx.GlobalAPIKeys["GLOBAL-KEY"].Secret)
+
+	reloadedCluster := reloadedCtx.KafkaClusterContext.KafkaClusterConfigs["lkc-nested"]
+	require.NoError(t, reloadedCluster.DecryptAPIKeys())
+	require.Equal(t, "cluster-secret", reloadedCluster.APIKeys["CLUSTER-KEY"].Secret)
+}
+
 func TestSecretsFilename_UnderStateDir(t *testing.T) {
 	setTestHome(t, t.TempDir())
 	require.Equal(t, stateDirPath("secrets.json"), SecretsFilename())
