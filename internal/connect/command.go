@@ -21,13 +21,16 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Manage Kafka Connect.",
 	}
 
-	cmd.AddCommand(newArtifactCommand(prerunner))
-	cmd.AddCommand(newClusterCommand(cfg, prerunner))
-	cmd.AddCommand(newCustomPluginCommand(prerunner))
-	cmd.AddCommand(newEventCommand(prerunner))
-	cmd.AddCommand(newLogsCommand(prerunner))
-	cmd.AddCommand(newOffsetCommand(prerunner))
-	cmd.AddCommand(newPluginCommand(cfg, prerunner))
+	cmd.AddCommand(
+		newArtifactCommand(prerunner),
+		newClusterCommand(cfg, prerunner),
+		newCustomPluginCommand(prerunner),
+		newEventCommand(prerunner),
+		newLogsCommand(prerunner),
+		newOffsetCommand(prerunner),
+		newPluginCommand(cfg, prerunner),
+		// cli-tfgen:cli-subcommands
+	)
 
 	return cmd
 }
