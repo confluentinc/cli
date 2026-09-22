@@ -440,6 +440,107 @@ func TestSave_ConcurrentContextDeleteVsEdit_KeepsStateWithContext(t *testing.T) 
 		"the context's auth token must not be dropped by the concurrent delete")
 }
 
+// newTwoIdentityConfig seeds two independent identities (own credential, own context, own
+// token) under path, so a concurrent token rewrite to one must not clobber the other.
+func newTwoIdentityConfig(t *testing.T, path string) {
+	t.Helper()
+
+	c := New()
+	c.Filename = path
+	c.Platforms["platform"] = &Platform{Name: "platform", Server: "https://example.com"}
+
+	addIdentity := func(name string) {
+		credName := "cred-" + name
+		c.Credentials[credName] = &Credential{
+			Name:           credName,
+			CredentialType: APIKey,
+			APIKeyPair:     &APIKeyPair{Key: "api-key-" + name, Secret: "secret-" + name},
+		}
+		state := &ContextState{AuthToken: "header.payload." + name}
+		ctx := &Context{
+			Name:           name,
+			PlatformName:   "platform",
+			CredentialName: credName,
+			Platform:       c.Platforms["platform"],
+			Credential:     c.Credentials[credName],
+			State:          state,
+			Config:         c,
+		}
+		ctx.KafkaClusterContext = &KafkaClusterContext{
+			ActiveKafkaCluster:  "lkc-1",
+			KafkaClusterConfigs: map[string]*KafkaClusterConfig{"lkc-1": {ID: "lkc-1", Name: "one"}},
+			Context:             ctx,
+		}
+		c.Contexts[name] = ctx
+		c.ContextStates[name] = state
+	}
+	addIdentity("a")
+	addIdentity("b")
+	c.CurrentContext = "a"
+
+	require.NoError(t, c.Save())
+}
+
+// Two sessions each rewrite a DIFFERENT identity's token, interleaved. Before the secret
+// store's own three-way merge, saveSecretStore rebuilt and overwrote the whole record set
+// from whichever process saved last, so the earlier session's rotation of its own identity's
+// token was lost the moment the other session (which never touched it) saved afterward.
+func TestSecretStore_ConcurrentDifferentIdentitiesBothPersist(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	newTwoIdentityConfig(t, path)
+
+	a := loadDecrypted(t, path)
+	b := loadDecrypted(t, path)
+
+	a.ContextStates["a"].AuthToken = "header.payload.a-rotated"
+	require.NoError(t, a.Save())
+
+	b.ContextStates["b"].AuthToken = "header.payload.b-rotated"
+	require.NoError(t, b.Save())
+
+	final := New()
+	final.Filename = path
+	require.NoError(t, final.Load())
+	require.NoError(t, final.ContextStates["a"].DecryptAuthToken("a"))
+	require.NoError(t, final.ContextStates["b"].DecryptAuthToken("b"))
+	require.Equal(t, "header.payload.a-rotated", final.ContextStates["a"].AuthToken,
+		"a's own token rotation must survive b's concurrent, unrelated save")
+	require.Equal(t, "header.payload.b-rotated", final.ContextStates["b"].AuthToken,
+		"b's own token rotation must survive too - both identities persist")
+}
+
+// A concurrent logout (cleared token) must not be resurrected by an unrelated save from a
+// session whose baseline still holds the old token. Without a baseline to diff against,
+// saveSecretStore cannot tell "b never touched this token" from "b's stale copy should win",
+// so it would re-encrypt b's stale plaintext and bring the cleared token back from the dead.
+func TestSecretStore_ConcurrentLogoutNotResurrected(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	newSavedConfig(t, path) // context "ctx" (current), no token yet
+
+	seed := loadDecrypted(t, path)
+	seed.ContextStates["ctx"].AuthToken = "header.payload.original"
+	require.NoError(t, seed.Save())
+
+	a := loadDecrypted(t, path) // will log out
+	b := loadDecrypted(t, path) // stale baseline, saves something unrelated afterward
+
+	a.ContextStates["ctx"].AuthToken = ""
+	a.ContextStates["ctx"].AuthRefreshToken = ""
+	require.NoError(t, a.Save())
+
+	b.Contexts["ctx"].CurrentEnvironment = "env-from-b"
+	require.NoError(t, b.Save())
+
+	final := New()
+	final.Filename = path
+	require.NoError(t, final.Load())
+	require.Empty(t, final.ContextStates["ctx"].AuthToken,
+		"a's concurrent logout must not be resurrected by b's unrelated, stale-baseline save")
+	require.Equal(t, "env-from-b", final.Contexts["ctx"].CurrentEnvironment)
+}
+
 // save() must resolve flag overrides exactly once. It is only reached from saveLocked
 // (via writeWholeConfig), which already swapped flag values out for the persisted ones;
 // a second resolve here re-applies them against the now-switched current context and

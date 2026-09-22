@@ -106,6 +106,13 @@ type Config struct {
 	// preserved. Never serialized.
 	baseline *Config
 
+	// secretBaseline is this process's view of the persisted secret store as of its last
+	// load or successful save, mirroring baseline above but for secrets.json. It needs its
+	// own field (rather than living inside baseline) because deepCopyPersisted's JSON round
+	// trip drops every json:"-" secret field, so baseline can never hold one. Never
+	// serialized; see loadSecretStore and saveSecretStore in secret_store.go.
+	secretBaseline *secretFile
+
 	// writing is set on the exact config whose Validate() runs under the write
 	// lock. Validate()'s in-memory normalization (nil-map init, invalid-active-
 	// cluster reset) reaches back through Context.Save() to persist itself; that
@@ -513,6 +520,15 @@ func (c *Config) saveLocked() error {
 		return err
 	}
 
+	// Captured before threeWayMerge mutates disk in place (it returns disk itself, with its
+	// fields overwritten by the merge result) - saveSecretStore needs disk's PRE-merge
+	// context set to tell a token's owning context being deleted from a token deliberately
+	// cleared elsewhere (see saveSecretStore's own comment on this).
+	diskContextNames := make(map[string]bool, len(disk.Contexts))
+	for name := range disk.Contexts {
+		diskContextNames[name] = true
+	}
+
 	merged, err := threeWayMerge(base, ours, disk)
 	if err != nil {
 		return err
@@ -557,7 +573,7 @@ func (c *Config) saveLocked() error {
 	// own diffing, on top of leaving the final config.json write) - so merged never carries
 	// a usable secret value. saveSecretStore reads c directly and encrypts what it finds
 	// still plaintext, so this is correct regardless of what merged did or didn't preserve.
-	if err := c.saveSecretStore(); err != nil {
+	if err := c.saveSecretStore(diskContextNames); err != nil {
 		return err
 	}
 
@@ -744,7 +760,9 @@ func (c *Config) save() error {
 	// only by the deferred calls below, which haven't run yet), so saveSecretStore's own
 	// encrypt-if-needed step is a no-op for them; it still needs to run to pick up c's
 	// saved password and nested API keys, which never round-trip through plaintext at all.
-	if err := c.saveSecretStore(); err != nil {
+	// nil: this whole-config write (see writeWholeConfig's callers) has nothing to merge
+	// secrets.json against either.
+	if err := c.saveSecretStore(nil); err != nil {
 		return err
 	}
 

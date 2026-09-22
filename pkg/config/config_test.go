@@ -287,8 +287,9 @@ func TestConfig_Load(t *testing.T) {
 				ctx.KafkaClusterContext.KafkaClusterConfigs = cfg.Contexts[contextName].KafkaClusterContext.KafkaClusterConfigs
 			}
 
-			// baseline is a load-time impl detail, not under test here.
+			// baseline/secretBaseline are load-time impl details, not under test here.
 			cfg.baseline = nil
+			cfg.secretBaseline = nil
 			if !t.Failed() && !reflect.DeepEqual(cfg, test.want) {
 				t.Errorf("Config.Load() =\n%+v, want \n%+v", cfg, test.want)
 			}
@@ -767,8 +768,9 @@ func TestConfig_AddContext(t *testing.T) {
 			if (err != nil) != test.wantErr {
 				t.Errorf("AddContext() error = %v, wantErr %v", err, test.wantErr)
 			}
-			// baseline is a save-time impl detail, not under test here.
+			// baseline/secretBaseline are save-time impl details, not under test here.
 			test.config.baseline = nil
+			test.config.secretBaseline = nil
 			if !test.wantErr && !reflect.DeepEqual(test.want, test.config) {
 				t.Errorf("AddContext() got = %v, want %v", test.config, test.want)
 			}
