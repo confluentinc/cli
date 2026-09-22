@@ -36,6 +36,8 @@ func GetConverterForType(dataType flinkgatewayv1.DataType) (SDKToStatementResult
 		converter = toRowStatementResultFieldConverter(dataType.GetFields())
 	case types.StructuredType:
 		converter = toStructuredStatementResultFieldConverter(dataType.GetFields())
+	case types.Variant:
+		converter = toVariantStatementResultFieldConverter()
 	default:
 		converter = toAtomicStatementResultFieldConverter(fieldType)
 	}
@@ -65,6 +67,8 @@ func GetConverterForTypeOnPrem(dataType cmfsdk.DataType) (SDKToStatementResultFi
 		converter = toRowStatementResultFieldConverterOnPrem(dataType.GetFields())
 	case types.StructuredType:
 		converter = toStructuredStatementResultFieldConverterOnPrem(dataType.GetFields())
+	case types.Variant:
+		converter = toVariantStatementResultFieldConverter()
 	default:
 		converter = toAtomicStatementResultFieldConverter(fieldType)
 	}
@@ -343,5 +347,15 @@ func toStructuredStatementResultFieldConverterOnPrem(fieldTypes []cmfsdk.DataTyp
 			FieldTypes: elementTypes,
 			Values:     values,
 		}, nil
+	}
+}
+
+func toVariantStatementResultFieldConverter() SDKToStatementResultFieldConverter {
+	return func(field any) (types.StatementResultField, error) {
+		if field == nil {
+			// A SQL NULL cell renders like every other NULL, not as a variant.
+			return nullField, nil
+		}
+		return types.NewVariantStatementResultField(field), nil
 	}
 }

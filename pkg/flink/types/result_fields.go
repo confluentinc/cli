@@ -30,6 +30,7 @@ const (
 	Map                        StatementResultFieldType = "MAP"
 	Row                        StatementResultFieldType = "ROW"
 	StructuredType             StatementResultFieldType = "STRUCTURED_TYPE"
+	Variant                    StatementResultFieldType = "VARIANT"
 	Null                       StatementResultFieldType = "NULL"
 )
 
@@ -89,6 +90,8 @@ func NewResultFieldType(objType string) (StatementResultFieldType, error) {
 		return Row, nil
 	case "STRUCTURED_TYPE":
 		return StructuredType, nil
+	case "VARIANT":
+		return Variant, nil
 	case "NULL":
 		return Null, nil
 	default:
