@@ -16,8 +16,12 @@ Create a Unity catalog integration.
 
   $ confluent tableflow catalog-integration create my-catalog-integration --type unity --workspace-endpoint https://dbc-1.cloud.databricks.com --catalog-name tableflow-quickstart-catalog --unity-client-id $CLIENT_ID --unity-client-secret $CLIENT_SECRET
 
+Create a BigLake Metastore catalog integration.
+
+  $ confluent tableflow catalog-integration create my-catalog-integration --type biglake --provider-integration cspi-stgce89r7 --gcp-project-id my-gcp-project --catalog-name my-biglake-catalog
+
 Flags:
-      --type string                   REQUIRED: Specify the catalog integration type as "aws", "snowflake", or "unity".
+      --type string                   REQUIRED: Specify the catalog integration type as "aws", "snowflake", "unity", or "biglake".
       --provider-integration string   Specify the provider integration id.
       --custom-database string        Specify the custom database name for AWS Glue.
       --endpoint string               Specify the The catalog integration connection endpoint for Snowflake Open Catalog.
@@ -31,6 +35,7 @@ Flags:
       --unity-client-id string        Specify the Unity client id.
       --unity-client-secret string    Specify the Unity client secret.
       --custom-schema string          Specify the custom schema name for Unity Catalog.
+      --gcp-project-id string         Specify the GCP project id that hosts the BigLake Metastore catalog.
       --cluster string                Kafka cluster ID.
       --environment string            Environment ID.
       --context string                CLI context name.

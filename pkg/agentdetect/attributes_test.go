@@ -176,17 +176,17 @@ func TestGenericCIFoldsIntoTheProviderList(t *testing.T) {
 	src, start := tree("bash")
 
 	res := detect(t, src, start, map[string]string{"CI": "true"})
-	if got := res.Attributes().CI; !slices.Equal(got, []string{ciUnknown}) {
-		t.Errorf("bare CI: ci = %v, want [%s]", got, ciUnknown)
+	if got := res.Attributes().CiProviders; !slices.Equal(got, []string{ciUnknown}) {
+		t.Errorf("bare CI: ci_providers = %v, want [%s]", got, ciUnknown)
 	}
 
 	res = detect(t, src, start, map[string]string{"CI": "true", "GITHUB_ACTIONS": "true"})
 	attrs := res.Attributes()
-	if !slices.Equal(attrs.CI, []string{"github-actions"}) {
-		t.Errorf("named provider: ci = %v, want [github-actions]", attrs.CI)
+	if !slices.Equal(attrs.CiProviders, []string{"github-actions"}) {
+		t.Errorf("named provider: ci_providers = %v, want [github-actions]", attrs.CiProviders)
 	}
-	if slices.Contains(attrs.CI, ciUnknown) {
-		t.Errorf("ci = %v: %q must never appear beside a named provider", attrs.CI, ciUnknown)
+	if slices.Contains(attrs.CiProviders, ciUnknown) {
+		t.Errorf("ci_providers = %v: %q must never appear beside a named provider", attrs.CiProviders, ciUnknown)
 	}
 }
 
@@ -207,8 +207,8 @@ func TestAttributesCarryNoLocalDiagnostics(t *testing.T) {
 	}
 
 	allowed := []string{
-		"agent_env", "agent_proc", "agent_argv", "ide_host",
-		"interactive", "chain_shape", "wrappers", "ci", "agent_tables",
+		"agent_env_vars", "agent_proc", "agent_argv", "ide_host",
+		"interactive", "chain_shape", "cmd_wrappers", "ci_providers", "agent_tables",
 	}
 	for key := range got {
 		if !slices.Contains(allowed, key) {

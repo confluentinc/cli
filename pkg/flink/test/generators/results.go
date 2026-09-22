@@ -18,7 +18,12 @@ const (
 )
 
 func GetResultItemGeneratorForType(dataType flinkgatewayv1.DataType) *rapid.Generator[any] {
-	fieldType := types.NewResultFieldType(dataType.GetType())
+	fieldType, err := types.NewResultFieldType(dataType.GetType())
+	if err != nil {
+		// Only ever called with types this test suite itself defines, so this
+		// is a test-infra bug, not a runtime scenario worth handling gracefully.
+		panic(err)
+	}
 	switch fieldType {
 	case types.Array:
 		elementType := dataType.GetElementType()
@@ -40,6 +45,8 @@ func GetResultItemGeneratorForType(dataType flinkgatewayv1.DataType) *rapid.Gene
 	case types.StructuredType:
 		elementTypes := dataType.GetFields()
 		return StructuredTypeResultItem(elementTypes)
+	case types.Variant:
+		return VariantResultItem()
 	case types.Null:
 		return rapid.SampledFrom([]any{nil})
 	default:
@@ -137,6 +144,95 @@ func StructuredTypeResultItem(fieldTypes []flinkgatewayv1.RowFieldType) *rapid.G
 			results = append(results, result.Draw(t, fieldType.GetName()))
 		}
 		return results
+	})
+}
+
+// VariantResultItem generates a random VARIANT value in [code, ...] wire form,
+// matching what the SDK produces after JSON decoding (SDK-agnostic)
+func VariantResultItem() *rapid.Generator[any] {
+	return rapid.Custom(func(t *rapid.T) any {
+		maxNestingDepth := rapid.IntRange(0, 3).Draw(t, "variant nesting depth")
+		return variantNode(maxNestingDepth).Draw(t, "a variant node")
+	})
+}
+
+func variantNode(maxNestingDepth int) *rapid.Generator[any] {
+	return rapid.Custom(func(t *rapid.T) any {
+		if maxNestingDepth <= 0 {
+			return variantLeafNode().Draw(t, "a variant leaf")
+		}
+		switch rapid.IntRange(0, 2).Draw(t, "variant node kind") {
+		case 0:
+			return variantObjectNode(maxNestingDepth-1).Draw(t, "a variant object")
+		case 1:
+			return variantArrayNode(maxNestingDepth-1).Draw(t, "a variant array")
+		default:
+			return variantLeafNode().Draw(t, "a variant leaf")
+		}
+	})
+}
+
+func variantObjectNode(maxNestingDepth int) *rapid.Generator[any] {
+	return rapid.Custom(func(t *rapid.T) any {
+		size := rapid.IntRange(0, 3).Draw(t, "variant object size")
+		pairs := make([]any, 0, size)
+		for i := 0; i < size; i++ {
+			key := rapid.StringMatching("[a-z]{1,8}").Draw(t, "variant key")
+			pairs = append(pairs, []any{key, variantNode(maxNestingDepth).Draw(t, "a variant value")})
+		}
+		return []any{float64(types.VariantCodeObject), pairs}
+	})
+}
+
+func variantArrayNode(maxNestingDepth int) *rapid.Generator[any] {
+	return rapid.Custom(func(t *rapid.T) any {
+		size := rapid.IntRange(0, 3).Draw(t, "variant array size")
+		elements := make([]any, 0, size)
+		for i := 0; i < size; i++ {
+			elements = append(elements, variantNode(maxNestingDepth).Draw(t, "a variant element"))
+		}
+		return []any{float64(types.VariantCodeArray), elements}
+	})
+}
+
+// variantLeafGenerators each produce one representative VARIANT leaf node
+var variantLeafGenerators = []func(*rapid.T) any{
+	func(*rapid.T) any { return []any{float64(types.VariantCodeNull)} },
+	func(t *rapid.T) any {
+		return []any{float64(types.VariantCodeBoolean), rapid.SampledFrom([]string{"TRUE", "FALSE"}).Draw(t, "a bool")}
+	},
+	func(t *rapid.T) any {
+		return []any{float64(types.VariantCodeInt), fmt.Sprintf("%d", rapid.Int32().Draw(t, "an int"))}
+	},
+	func(t *rapid.T) any {
+		return []any{float64(types.VariantCodeBigint), fmt.Sprintf("%d", rapid.Int64().Draw(t, "a bigint"))}
+	},
+	func(*rapid.T) any { return []any{float64(types.VariantCodeDouble), "21.5"} },
+	func(*rapid.T) any { return []any{float64(types.VariantCodeDecimal), "100.00"} },
+	func(t *rapid.T) any {
+		return []any{float64(types.VariantCodeString), rapid.String().Draw(t, "a string")}
+	},
+	func(*rapid.T) any { return []any{float64(types.VariantCodeDate), "2026-07-28"} },
+	func(*rapid.T) any { return []any{float64(types.VariantCodeTimestamp), "2026-07-28 09:14:02.117000"} },
+	func(*rapid.T) any {
+		return []any{float64(types.VariantCodeTimestampNs), "2026-07-28 09:14:02.123456789"}
+	},
+	func(*rapid.T) any { return []any{float64(types.VariantCodeBytes), "x'7f0203'"} },
+	func(*rapid.T) any { return []any{float64(types.VariantCodeTime), "09:14:02.123"} },
+	func(*rapid.T) any {
+		return []any{float64(types.VariantCodeTimestampLtz), "2026-07-28 09:14:02.117000", "+00:00"}
+	},
+	func(*rapid.T) any {
+		return []any{float64(types.VariantCodeTimestampLtzNs), "2026-07-28 09:14:02.123456789", "+00:00"}
+	},
+	func(*rapid.T) any { return []any{float64(types.VariantCodeUnknown), "x'0102'", "x'7f2a'"} },
+	func(*rapid.T) any { return []any{float64(types.VariantCodeInvalid)} },
+}
+
+func variantLeafNode() *rapid.Generator[any] {
+	return rapid.Custom(func(t *rapid.T) any {
+		idx := rapid.IntRange(0, len(variantLeafGenerators)-1).Draw(t, "variant leaf kind")
+		return variantLeafGenerators[idx](t)
 	})
 }
 
@@ -306,6 +402,11 @@ func StructuredDataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1.Dat
 	})
 }
 
+// VariantDataType generates the VARIANT data type
+func VariantDataType() *rapid.Generator[flinkgatewayv1.DataType] {
+	return rapid.Just(flinkgatewayv1.DataType{Nullable: true, Type: "VARIANT"})
+}
+
 func GenResultFieldType() *rapid.Generator[types.StatementResultFieldType] {
 	return rapid.Custom(func(t *rapid.T) types.StatementResultFieldType {
 		// this should about even the chances for an atomic vs. non-atomic field
@@ -329,8 +430,12 @@ func MockResultColumns(numColumns, maxNestingDepth int) *rapid.Generator[[]flink
 		var columnDetails []flinkgatewayv1.ColumnDetails
 		for i := 0; i < numColumns; i++ {
 			dataType := DataType(maxNestingDepth).Draw(t, "column type")
+			fieldType, err := types.NewResultFieldType(dataType.GetType())
+			if err != nil {
+				t.Fatalf("%v", err)
+			}
 			columnDetails = append(columnDetails, flinkgatewayv1.ColumnDetails{
-				Name: string(types.NewResultFieldType(dataType.GetType())),
+				Name: string(fieldType),
 				Type: dataType,
 			})
 		}

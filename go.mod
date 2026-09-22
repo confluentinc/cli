@@ -23,7 +23,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/ccpm v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5
 	github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority v0.0.3
-	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.3.0
+	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.4.1
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.27.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.7.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin v0.0.9
@@ -52,7 +52,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.3
 	github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/switchover v0.1.0
-	github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.7.0
+	github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.8.0
 	github.com/confluentinc/ccloud-sdk-go-v2/usm v0.2.0
 	github.com/confluentinc/cmf-sdk-go v0.0.8
 	github.com/confluentinc/confluent-kafka-go/v2 v2.14.2
@@ -111,11 +111,11 @@ require (
 	github.com/tidwall/gjson v1.17.1
 	github.com/tidwall/pretty v1.2.1
 	github.com/tidwall/sjson v1.2.5
-	go.opentelemetry.io/otel v1.44.0
+	go.opentelemetry.io/otel v1.45.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.39.0
-	go.opentelemetry.io/otel/metric v1.44.0
-	go.opentelemetry.io/otel/sdk v1.44.0
-	go.opentelemetry.io/otel/sdk/metric v1.44.0
+	go.opentelemetry.io/otel/metric v1.45.0
+	go.opentelemetry.io/otel/sdk v1.45.0
+	go.opentelemetry.io/otel/sdk/metric v1.45.0
 	go.uber.org/mock v0.5.2
 	golang.org/x/crypto v0.56.0
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f
@@ -191,7 +191,7 @@ require (
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.9.0 // indirect
-	github.com/go-logr/logr v1.4.3 // indirect
+	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
@@ -279,7 +279,7 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.61.0 // indirect
-	go.opentelemetry.io/otel/trace v1.44.0 // indirect
+	go.opentelemetry.io/otel/trace v1.45.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.10.0 // indirect
 	golang.org/x/mod v0.40.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
