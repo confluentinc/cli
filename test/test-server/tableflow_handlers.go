@@ -403,6 +403,10 @@ func handleCatalogIntegrationGet(t *testing.T, environmentId, clusterId, id stri
 			catalogIntegration := getCatalogIntegration(id, environmentId, clusterId, "my-unity-ci", "Unity")
 			err := json.NewEncoder(w).Encode(catalogIntegration)
 			require.NoError(t, err)
+		case "tci-jkl012":
+			catalogIntegration := getCatalogIntegration(id, environmentId, clusterId, "my-biglake-ci", "BigLakeMetastore")
+			err := json.NewEncoder(w).Encode(catalogIntegration)
+			require.NoError(t, err)
 		}
 	}
 }
@@ -443,6 +447,11 @@ func handleCatalogIntegrationUpdate(t *testing.T, id string) http.HandlerFunc {
 			if body.Spec.GetConfig().TableflowV1CatalogIntegrationUnityUpdateSpec != nil && body.Spec.GetConfig().TableflowV1CatalogIntegrationUnityUpdateSpec.GetCustomSchema() != "" {
 				catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationUnitySpec.SetCustomSchema(body.Spec.GetConfig().TableflowV1CatalogIntegrationUnityUpdateSpec.GetCustomSchema())
 			}
+		case "tci-jkl012":
+			catalogIntegration = getCatalogIntegration(id, body.GetSpec().Environment.Id, body.GetSpec().KafkaCluster.Id, "my-biglake-ci", "BigLakeMetastore")
+			if body.Spec.GetConfig().TableflowV1CatalogIntegrationBigLakeMetastoreUpdateSpec != nil && body.Spec.GetConfig().TableflowV1CatalogIntegrationBigLakeMetastoreUpdateSpec.GetCustomNamespace() != "" {
+				catalogIntegration.Spec.Config.TableflowV1CatalogIntegrationBigLakeMetastoreSpec.SetCustomNamespace(body.Spec.GetConfig().TableflowV1CatalogIntegrationBigLakeMetastoreUpdateSpec.GetCustomNamespace())
+			}
 		default:
 			catalogIntegration = getCatalogIntegration(id, body.GetSpec().Environment.Id, body.GetSpec().KafkaCluster.Id, "my-aws-glue-ci", "AwsGlue")
 		}
@@ -461,9 +470,10 @@ func handleCatalogIntegrationList(t *testing.T, environment, clusterId string) h
 		catalogIntegrationOne := getCatalogIntegration("tci-abc123", environment, clusterId, "my-aws-glue-ci", "AwsGlue")
 		catalogIntegrationTwo := getCatalogIntegration("tci-def456", environment, clusterId, "my-snowflake-ci", "Snowflake")
 		catalogIntegrationThree := getCatalogIntegration("tci-ghi789", environment, clusterId, "my-unity-ci", "Unity")
+		catalogIntegrationFour := getCatalogIntegration("tci-jkl012", environment, clusterId, "my-biglake-ci", "BigLakeMetastore")
 		catalogIntegrationTwo.Status.SetPhase("PENDING")
 
-		recordList := tableflowv1.TableflowV1CatalogIntegrationList{Data: []tableflowv1.TableflowV1CatalogIntegration{catalogIntegrationOne, catalogIntegrationTwo, catalogIntegrationThree}}
+		recordList := tableflowv1.TableflowV1CatalogIntegrationList{Data: []tableflowv1.TableflowV1CatalogIntegration{catalogIntegrationOne, catalogIntegrationTwo, catalogIntegrationThree, catalogIntegrationFour}}
 		setPageToken(&recordList, &recordList.Metadata, r.URL)
 		err := json.NewEncoder(w).Encode(recordList)
 		require.NoError(t, err)
@@ -483,6 +493,8 @@ func handleCatalogIntegrationCreate(t *testing.T) http.HandlerFunc {
 			id = "tci-def456"
 		} else if catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec != nil {
 			id = "tci-ghi789"
+		} else if catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationBigLakeMetastoreSpec != nil {
+			id = "tci-jkl012"
 		} else {
 			id = "tci-abc123" // default
 		}
@@ -539,6 +551,15 @@ func getCatalogIntegration(id, environment, cluster, name, specConfigKind string
 		}
 		unitySpec.SetCustomSchema("my-custom-schema")
 		catalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationUnitySpecAsTableflowV1CatalogIntegrationSpecConfigOneOf(unitySpec))
+	case "BigLakeMetastore":
+		bigLakeSpec := &tableflowv1.TableflowV1CatalogIntegrationBigLakeMetastoreSpec{
+			Kind:                  specConfigKind,
+			ProviderIntegrationId: "cspi-stgce89r7",
+			GcpProjectId:          "my-gcp-project",
+			CatalogName:           "catalog-name",
+		}
+		bigLakeSpec.SetCustomNamespace("my-custom-ns")
+		catalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationBigLakeMetastoreSpecAsTableflowV1CatalogIntegrationSpecConfigOneOf(bigLakeSpec))
 	}
 
 	return catalogIntegration
