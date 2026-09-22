@@ -136,7 +136,10 @@ func encryptedAPIKeySecret(pair *APIKeyPair) (*apiKeySecret, error) {
 // via saveSecretStore(c). This sets presence only (any non-empty value; merged's own Secret
 // field is json:"-" and never reaches the write below either way) for a key this process's own
 // live c already knows about. A key only a concurrent session added exists only on disk and
-// is not rehydrated - reconciling that is task 2.4's three-way merge, not this.
+// is not rehydrated here - saveSecretStore's own three-way merge (mergeMapDeep over
+// GlobalAPIKeys/KafkaAPIKeys) reconciles that at the secret-store level; this function only
+// keeps Validate() from pruning the (json:"-", so structurally invisible to it) key's public id
+// in the meantime.
 func rehydrateNestedAPIKeySecretPresence(c, merged *Config) {
 	for name, ctx := range c.Contexts {
 		mergedCtx, ok := merged.Contexts[name]
@@ -172,22 +175,29 @@ func rehydrateNestedAPIKeySecretPresence(c, merged *Config) {
 }
 
 // saveSecretStore extracts c's secret material into the secret store, keyed by identity
-// (Secrets) or by context name (Tokens). It reads the live c directly, never a
-// merged/deep-copied Config: every secret field is json:"-", so json.Marshal (the copy
-// mechanism threeWayMerge's inputs go through) silently drops it, and a value read back from
-// that copy is always empty - encrypting that empty value would quietly replace the real
-// secret with ciphertext of "".
+// (Secrets) or by context name (Tokens), and persists it under the caller's already-held
+// save lock. It reads the live c directly, never a merged/deep-copied Config: every secret
+// field is json:"-", so json.Marshal (the copy mechanism threeWayMerge's inputs go through)
+// silently drops it, and a value read back from that copy is always empty - encrypting that
+// empty value would quietly replace the real secret with ciphertext of "".
 //
 // A credential's API secret and a context's auth tokens toggle to plaintext in c for use
 // during a session (PreRun decrypts them), so each is encrypted here into a local copy of its
 // holder (never the live one) before being copied into the record; the copy's EncryptSecret /
 // encryptStateTokensForContext call is a no-op if the live value is already ciphertext (e.g.
 // when this runs inside save(), after save's own in-place encryption), so this is safe to call
-// with either representation. A saved password and both nested API-key maps (GlobalAPIKeys,
-// KafkaClusterConfig.APIKeys) are encrypted the moment they're stored and never decrypted back
-// into the live config, so they cross here as an intact ciphertext/salt/nonce unit - no
-// encrypt/decrypt.
-func (c *Config) saveSecretStore() error {
+// with either representation. Salt/nonce are reused whenever already set (both EncryptSecret
+// and encryptStateTokensForContext only generate a fresh pair when nil), so re-encrypting an
+// untouched value reproduces byte-identical ciphertext - the property the three-way merge
+// below relies on to tell "this process changed it" from "this process didn't." A saved
+// password and both nested API-key maps (GlobalAPIKeys, KafkaClusterConfig.APIKeys) are
+// encrypted the moment they're stored and never decrypted back into the live config, so they
+// cross here as an intact ciphertext/salt/nonce unit - no encrypt/decrypt, same stability.
+//
+// diskContextNames is the set of context names present in config.json as read from disk this
+// same save cycle (nil when the caller is writing a whole config with nothing to merge
+// against, e.g. a fresh install or a from-scratch write): see the three-way-merge branch below.
+func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 	records := map[string]*secretRecord{}
 	record := func(key string) *secretRecord {
 		if r, ok := records[key]; ok {
@@ -300,11 +310,60 @@ func (c *Config) saveSecretStore() error {
 		}
 	}
 
-	if len(records) == 0 && len(tokens) == 0 {
+	ours := &secretFile{Secrets: records, Tokens: tokens}
+
+	// No baseline (never loaded) or no disk read (the caller is writing a whole config with
+	// nothing to merge against) means there is no common ancestor: declare our state whole,
+	// matching saveLocked's own nil-baseline/missing-file short circuits for config.json.
+	if diskContextNames == nil || c.secretBaseline == nil {
+		if len(records) == 0 && len(tokens) == 0 {
+			return nil
+		}
+		if err := newSecretStore().write(ours); err != nil {
+			return err
+		}
+		c.secretBaseline = ours
 		return nil
 	}
 
-	return newSecretStore().write(&secretFile{Secrets: records, Tokens: tokens})
+	store := newSecretStore()
+	disk, err := readSecretFileFromDisk(store.path)
+	if err != nil {
+		return err
+	}
+
+	merged := &secretFile{}
+	if merged.Secrets, err = mergeMapDeep(c.secretBaseline.Secrets, records, disk.Secrets); err != nil {
+		return fmt.Errorf("unable to merge secret store: %w", err)
+	}
+	if merged.Tokens, err = mergeMapDeep(c.secretBaseline.Tokens, tokens, disk.Tokens); err != nil {
+		return fmt.Errorf("unable to merge secret store: %w", err)
+	}
+
+	// A token's presence is coupled to its owning context surviving, exactly like
+	// ContextStates is coupled to Contexts in threeWayMerge. mergeMapDeep alone cannot tell a
+	// deliberate token clear (context stays; only the token empties, e.g. logout - must not be
+	// resurrected) from a token that only vanished from disk because a CONCURRENT session
+	// deleted its owning context, which this process's own edit then revives (that token must
+	// not be lost). The distinguishing signal is whether the context was already on disk: if
+	// it was, an untouched-but-now-missing token is a deliberate clear elsewhere, so the merge
+	// above correctly dropped it; if it wasn't, this save is the one reviving the context, so
+	// its token comes along too.
+	for name, tok := range tokens {
+		if _, ok := merged.Tokens[name]; ok {
+			continue
+		}
+		if diskContextNames[name] {
+			continue
+		}
+		merged.Tokens[name] = tok
+	}
+
+	if err := store.write(merged); err != nil {
+		return err
+	}
+	c.secretBaseline = ours
+	return nil
 }
 
 // readSecretFileFromDisk reads and unmarshals the secret store at path, mirroring
@@ -335,11 +394,17 @@ func readSecretFileFromDisk(path string) (*secretFile, error) {
 // would delete a key whose secret still reads empty. Every value is copied verbatim - the
 // ciphertext, salt, and nonce as one unit - never decrypted here; callers decrypt later via
 // DecryptCredentials/DecryptContextStates/ResolveKafkaAPIKey.
+//
+// The file read here is also snapshotted as c.secretBaseline, this process's common ancestor
+// for saveSecretStore's own three-way merge - mirroring snapshotBaseline for config.json,
+// except the secret store needs a separate baseline because deepCopyPersisted's JSON round
+// trip drops every json:"-" secret field and so cannot hold one.
 func (c *Config) loadSecretStore() error {
 	file, err := readSecretFileFromDisk(newSecretStore().path)
 	if err != nil {
 		return err
 	}
+	c.secretBaseline = file
 	if len(file.Secrets) == 0 && len(file.Tokens) == 0 {
 		return nil
 	}
