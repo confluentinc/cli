@@ -23,7 +23,7 @@ Return a bare JSON array of rows, without an envelope, for a script that only wa
   $ confluent flink query --sql "SELECT * FROM orders LIMIT 10;" --output json --raw
 
 Flags:
-      --sql string               Flink SQL statement. Alternatively, use --file.
+      --sql string               Flink SQL statement. Alternatively, use "--file" or "-f".
   -f, --file string              Path to a file that contains the Flink SQL statement. Alternatively, use --sql.
       --compute-pool string      Flink compute pool ID.
       --service-account string   Service account ID.

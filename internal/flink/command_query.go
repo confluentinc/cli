@@ -84,7 +84,7 @@ func (*command) newQueryCommand(cfg *cliconfig.Config, prerunner pcmd.PreRunner)
 	}
 	c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 
-	cmd.Flags().String("sql", "", "Flink SQL statement. Alternatively, use --file.")
+	cmd.Flags().String("sql", "", `Flink SQL statement. Alternatively, use "--file" or "-f".`)
 	cmd.Flags().StringP("file", "f", "", "Path to a file that contains the Flink SQL statement. Alternatively, use --sql.")
 	pcmd.AddComputePoolFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
@@ -128,6 +128,11 @@ func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	principal, err := c.resolvePrincipal(cmd)
+	if err != nil {
+		return err
+	}
+
 	timeout, maxRows, raw, err := resolveQueryFlags(cmd)
 	if err != nil {
 		return err
@@ -136,7 +141,7 @@ func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 	ctx, cancelTimeout := context.WithTimeout(ctx, timeout)
 	defer cancelTimeout()
 
-	client, name, err := c.createQueryStatement(ctx, cmd, environmentId, database, sql)
+	client, name, err := c.createQueryStatement(ctx, cmd, environmentId, database, sql, principal)
 	if err != nil {
 		return err
 	}
@@ -241,9 +246,10 @@ func resolveQueryFlags(cmd *cobra.Command) (time.Duration, int, bool, error) {
 
 // createQueryStatement resolves the environment and gateway client, builds the
 // bounded snapshot statement, and submits it, returning the client and the
-// generated statement name. A cancellation during any of these pre-result steps
-// is mapped to interruptedError.
-func (c *queryCommand) createQueryStatement(ctx context.Context, cmd *cobra.Command, environmentId, database, sql string) (*ccloudv2.FlinkGatewayClient, string, error) {
+// generated statement name. All command flags are resolved by the caller and
+// passed in, so this makes only API calls. A cancellation during any of these
+// pre-result steps is mapped to interruptedError.
+func (c *queryCommand) createQueryStatement(ctx context.Context, cmd *cobra.Command, environmentId, database, sql, principal string) (*ccloudv2.FlinkGatewayClient, string, error) {
 	environment, err := wait.Call(ctx, func() (orgv2.OrgV2Environment, error) {
 		return c.V2Client.GetOrgEnvironment(environmentId)
 	})
@@ -278,11 +284,6 @@ func (c *queryCommand) createQueryStatement(ctx context.Context, cmd *cobra.Comm
 	if err != nil {
 		// No statement exists yet at this point, same as the environment lookup above.
 		return nil, "", c.interruptOr(cmd, err, "", false, err)
-	}
-
-	principal, err := c.resolvePrincipal(cmd)
-	if err != nil {
-		return nil, "", err
 	}
 
 	stopped, err := createStatement(ctx, createStatementGracePeriod, func() (flinkgatewayv1.SqlV1Statement, error) {
