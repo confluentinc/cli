@@ -28,6 +28,21 @@ type secretRecord struct {
 	Password      string `json:"password,omitempty"`
 	PasswordSalt  []byte `json:"password_salt,omitempty"`
 	PasswordNonce []byte `json:"password_nonce,omitempty"`
+
+	// GlobalAPIKeys holds org-scoped API keys (Context.GlobalAPIKeys), keyed by API key id.
+	GlobalAPIKeys map[string]*apiKeySecret `json:"global_api_keys,omitempty"`
+
+	// KafkaAPIKeys holds per-cluster API keys (KafkaClusterConfig.APIKeys), keyed by cluster id
+	// then by API key id.
+	KafkaAPIKeys map[string]map[string]*apiKeySecret `json:"kafka_api_keys,omitempty"`
+}
+
+// apiKeySecret is a nested API key's secret material, as stored on disk: ciphertext paired
+// with its own salt/nonce.
+type apiKeySecret struct {
+	Secret string `json:"secret,omitempty"`
+	Salt   []byte `json:"salt,omitempty"`
+	Nonce  []byte `json:"nonce,omitempty"`
 }
 
 // secretFile is the on-disk shape of the secret store, keyed by credential identity
@@ -66,10 +81,99 @@ func (c *Context) identityKey() string {
 	return c.CredentialName
 }
 
-// saveSecretStore extracts the secret material already encrypted in c's contexts,
-// credentials, and saved passwords into the secret store, keyed by identity. Callers
-// must run it after encryptSecrets, under the Save lock, so it captures ciphertext
-// rather than the plaintext the live config holds mid-session.
+// allKafkaClusterConfigs returns every KafkaClusterConfig reachable from k, keyed by cluster
+// id, across both shapes KafkaClusterContext.Validate walks: a single non-env map, or one map
+// per environment for a cloud username/password context.
+func allKafkaClusterConfigs(k *KafkaClusterContext) map[string]*KafkaClusterConfig {
+	if k == nil {
+		return nil
+	}
+	if !k.EnvContext {
+		return k.KafkaClusterConfigs
+	}
+	all := map[string]*KafkaClusterConfig{}
+	for _, envContext := range k.KafkaEnvContexts {
+		for id, kcc := range envContext.KafkaClusterConfigs {
+			all[id] = kcc
+		}
+	}
+	return all
+}
+
+// encryptedAPIKeySecret returns pair's secret/salt/nonce as an apiKeySecret triple, encrypting
+// a local copy first if pair's own secret is still plaintext (EncryptSecret is a no-op if it
+// is already ciphertext). nil, nil means pair has no secret to store. The live pair itself is
+// never mutated.
+func encryptedAPIKeySecret(pair *APIKeyPair) (*apiKeySecret, error) {
+	if pair == nil || pair.Secret == "" {
+		return nil, nil
+	}
+	shadow := &APIKeyPair{Key: pair.Key, Secret: pair.Secret, Salt: pair.Salt, Nonce: pair.Nonce}
+	if err := shadow.EncryptSecret(); err != nil {
+		return nil, err
+	}
+	return &apiKeySecret{Secret: shadow.Secret, Salt: shadow.Salt, Nonce: shadow.Nonce}, nil
+}
+
+// rehydrateNestedAPIKeySecretPresence guards merged's nested API-key structural fields
+// (GlobalAPIKeys, KafkaClusterConfig.APIKeys) against Validate()'s "missing secret" cleanup.
+// merged is rebuilt through threeWayMerge's JSON-based deep copies, which drop every json:"-"
+// field including these secrets, so merged's own copy of a real, live, encrypted key always
+// reads as empty - Validate() would then delete the key's public id along with its "missing"
+// secret, even though the real encrypted secret is correctly on its way to the secret store
+// via saveSecretStore(c). This sets presence only (any non-empty value; merged's own Secret
+// field is json:"-" and never reaches the write below either way) for a key this process's own
+// live c already knows about. A key only a concurrent session added exists only on disk and
+// is not rehydrated - reconciling that is task 2.4's three-way merge, not this.
+func rehydrateNestedAPIKeySecretPresence(c, merged *Config) {
+	for name, ctx := range c.Contexts {
+		mergedCtx, ok := merged.Contexts[name]
+		if !ok || mergedCtx == nil {
+			continue
+		}
+
+		for keyId, pair := range ctx.GlobalAPIKeys {
+			if pair == nil || pair.Secret == "" {
+				continue
+			}
+			if mergedPair, ok := mergedCtx.GlobalAPIKeys[keyId]; ok && mergedPair != nil {
+				mergedPair.Secret = pair.Secret
+			}
+		}
+
+		mergedClusters := allKafkaClusterConfigs(mergedCtx.KafkaClusterContext)
+		for clusterId, cluster := range allKafkaClusterConfigs(ctx.KafkaClusterContext) {
+			mergedCluster, ok := mergedClusters[clusterId]
+			if !ok || mergedCluster == nil {
+				continue
+			}
+			for keyId, pair := range cluster.APIKeys {
+				if pair == nil || pair.Secret == "" {
+					continue
+				}
+				if mergedPair, ok := mergedCluster.APIKeys[keyId]; ok && mergedPair != nil {
+					mergedPair.Secret = pair.Secret
+				}
+			}
+		}
+	}
+}
+
+// saveSecretStore extracts c's secret material into the secret store, keyed by identity.
+// It reads the live c directly, never a merged/deep-copied Config: every secret field is
+// json:"-", so json.Marshal (the copy mechanism threeWayMerge's inputs go through) silently
+// drops it, and a value read back from that copy is always empty - encrypting that empty
+// value would quietly replace the real secret with ciphertext of "".
+//
+// A credential's API secret and a context's auth tokens toggle to plaintext in c for use
+// during a session (PreRun decrypts them), so each is encrypted here into a local copy of its
+// holder (never the live one) before being copied into the record; the copy's EncryptSecret /
+// encryptStateTokensForContext call is a no-op if the live value is already ciphertext (e.g.
+// when this runs inside save(), after save's own in-place encryption), so this is safe to call
+// with either representation. A saved password and both nested API-key maps (GlobalAPIKeys,
+// KafkaClusterConfig.APIKeys) are encrypted the moment they're stored and never decrypted back
+// into the live config, so they cross here as an intact ciphertext/salt/nonce unit - no
+// encrypt/decrypt.
 func (c *Config) saveSecretStore() error {
 	records := map[string]*secretRecord{}
 	record := func(key string) *secretRecord {
@@ -86,21 +190,39 @@ func (c *Config) saveSecretStore() error {
 		if state == nil || (state.AuthToken == "" && state.AuthRefreshToken == "") {
 			continue
 		}
+		shadow := &Context{Name: ctx.Name, State: &ContextState{
+			AuthToken:        state.AuthToken,
+			AuthRefreshToken: state.AuthRefreshToken,
+			Salt:             state.Salt,
+			Nonce:            state.Nonce,
+		}}
+		if err := c.encryptStateTokensForContext(shadow, shadow.State.AuthToken, shadow.State.AuthRefreshToken); err != nil {
+			return err
+		}
 		r := record(ctx.identityKey())
-		r.AuthToken = state.AuthToken
-		r.AuthRefreshToken = state.AuthRefreshToken
-		r.TokenSalt = state.Salt
-		r.TokenNonce = state.Nonce
+		r.AuthToken = shadow.State.AuthToken
+		r.AuthRefreshToken = shadow.State.AuthRefreshToken
+		r.TokenSalt = shadow.State.Salt
+		r.TokenNonce = shadow.State.Nonce
 	}
 
 	for name, credential := range c.Credentials {
 		if credential == nil || credential.APIKeyPair == nil || credential.APIKeyPair.Secret == "" {
 			continue
 		}
+		shadow := &APIKeyPair{
+			Key:    credential.APIKeyPair.Key,
+			Secret: credential.APIKeyPair.Secret,
+			Salt:   credential.APIKeyPair.Salt,
+			Nonce:  credential.APIKeyPair.Nonce,
+		}
+		if err := shadow.EncryptSecret(); err != nil {
+			return err
+		}
 		r := record(name)
-		r.Secret = credential.APIKeyPair.Secret
-		r.SecretSalt = credential.APIKeyPair.Salt
-		r.SecretNonce = credential.APIKeyPair.Nonce
+		r.Secret = shadow.Secret
+		r.SecretSalt = shadow.Salt
+		r.SecretNonce = shadow.Nonce
 	}
 
 	// SavedCredentials is keyed by context name, not identity, so it is mapped to the
@@ -114,6 +236,53 @@ func (c *Config) saveSecretStore() error {
 		r.Password = saved.EncryptedPassword
 		r.PasswordSalt = saved.Salt
 		r.PasswordNonce = saved.Nonce
+	}
+
+	for _, ctx := range c.Contexts {
+		if len(ctx.GlobalAPIKeys) > 0 {
+			r := record(ctx.identityKey())
+			for keyId, pair := range ctx.GlobalAPIKeys {
+				triple, err := encryptedAPIKeySecret(pair)
+				if err != nil {
+					return err
+				}
+				if triple == nil {
+					continue
+				}
+				if r.GlobalAPIKeys == nil {
+					r.GlobalAPIKeys = map[string]*apiKeySecret{}
+				}
+				r.GlobalAPIKeys[keyId] = triple
+			}
+		}
+
+		for clusterId, cluster := range allKafkaClusterConfigs(ctx.KafkaClusterContext) {
+			if cluster == nil || len(cluster.APIKeys) == 0 {
+				continue
+			}
+			var keys map[string]*apiKeySecret
+			for keyId, pair := range cluster.APIKeys {
+				triple, err := encryptedAPIKeySecret(pair)
+				if err != nil {
+					return err
+				}
+				if triple == nil {
+					continue
+				}
+				if keys == nil {
+					keys = map[string]*apiKeySecret{}
+				}
+				keys[keyId] = triple
+			}
+			if len(keys) == 0 {
+				continue
+			}
+			r := record(ctx.identityKey())
+			if r.KafkaAPIKeys == nil {
+				r.KafkaAPIKeys = map[string]map[string]*apiKeySecret{}
+			}
+			r.KafkaAPIKeys[clusterId] = keys
+		}
 	}
 
 	if len(records) == 0 {

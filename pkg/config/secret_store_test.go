@@ -30,6 +30,42 @@ func TestSave_SecretsLeaveConfigFile(t *testing.T) {
 	require.NotContains(t, string(secRaw), "the-api-secret") // encrypted, not plaintext
 }
 
+// TestSave_NestedApiKeySecretsLeaveConfigFile pins the extraction contract for nested
+// API-key secrets: a global or cluster-scoped key's id stays in config.json (public
+// metadata), but its secret leaves for the secret store, still encrypted.
+func TestSave_NestedApiKeySecretsLeaveConfigFile(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	c := newTestConfigWithAPIKeyContext(t)
+	ctx := c.Contexts["orig"]
+
+	require.NoError(t, ctx.StoreGlobalAPIKey(&APIKeyPair{Key: "GLOBAL-KEY", Secret: "global-secret"}))
+
+	cluster := &KafkaClusterConfig{
+		ID:        "lkc-nested",
+		Name:      "nested-cluster",
+		Bootstrap: "https://nested.example.com",
+		APIKeys:   map[string]*APIKeyPair{"CLUSTER-KEY": {Key: "CLUSTER-KEY", Secret: "cluster-secret"}},
+	}
+	ctx.KafkaClusterContext.AddKafkaClusterConfig(cluster)
+	require.NoError(t, cluster.EncryptAPIKeys())
+
+	require.NoError(t, c.Save())
+
+	cfgRaw, err := os.ReadFile(c.GetFilename())
+	require.NoError(t, err)
+	require.Contains(t, string(cfgRaw), `"GLOBAL-KEY"`)
+	require.Contains(t, string(cfgRaw), `"CLUSTER-KEY"`)
+	require.NotContains(t, string(cfgRaw), "global-secret")
+	require.NotContains(t, string(cfgRaw), "cluster-secret")
+
+	secRaw, err := os.ReadFile(SecretsFilename())
+	require.NoError(t, err)
+	require.Contains(t, string(secRaw), "global_api_keys")
+	require.Contains(t, string(secRaw), "kafka_api_keys")
+	require.NotContains(t, string(secRaw), "global-secret")
+	require.NotContains(t, string(secRaw), "cluster-secret")
+}
+
 func TestSecretsFilename_UnderStateDir(t *testing.T) {
 	setTestHome(t, t.TempDir())
 	require.Equal(t, stateDirPath("secrets.json"), SecretsFilename())

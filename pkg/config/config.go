@@ -483,6 +483,13 @@ func (c *Config) saveLocked() error {
 		return err
 	}
 
+	// merged's nested API-key secrets (GlobalAPIKeys, KafkaClusterConfig.APIKeys) always read
+	// as empty at this point - see rehydrateNestedAPIKeySecretPresence - which would otherwise
+	// make the Validate() call below delete the key's public id along with its "missing"
+	// secret. Rehydrate presence (not correctness: the value is discarded before the write
+	// below either way) from c before that happens.
+	rehydrateNestedAPIKeySecretPresence(c, merged)
+
 	// Re-encrypt the secrets that ended up plaintext (the ones we changed, taken from
 	// ours). Untouched secrets came from disk still encrypted; the guards skip them.
 	if err := merged.encryptSecrets(); err != nil {
@@ -507,9 +514,12 @@ func (c *Config) saveLocked() error {
 		return err
 	}
 
-	// merged (not c) holds the just-encrypted secrets; c's own copies stay plaintext
-	// mid-session, so the store must be built from merged.
-	if err := merged.saveSecretStore(); err != nil {
+	// Read from c, not merged: merged's fields came through threeWayMerge's JSON-based
+	// deep copies, which drop every json:"-" field (that's how a secret leaves the merge's
+	// own diffing, on top of leaving the final config.json write) - so merged never carries
+	// a usable secret value. saveSecretStore reads c directly and encrypts what it finds
+	// still plaintext, so this is correct regardless of what merged did or didn't preserve.
+	if err := c.saveSecretStore(); err != nil {
 		return err
 	}
 
@@ -692,9 +702,10 @@ func (c *Config) save() error {
 		return err
 	}
 
-	// Still inside save(): the deferred restores above have not run yet, so c's
-	// secrets are still in the ciphertext form just written to disk. Calling this
-	// after save() returns would capture the plaintext those defers restore.
+	// c's own secrets are already ciphertext here (encrypted above, restored to plaintext
+	// only by the deferred calls below, which haven't run yet), so saveSecretStore's own
+	// encrypt-if-needed step is a no-op for them; it still needs to run to pick up c's
+	// saved password and nested API keys, which never round-trip through plaintext at all.
 	if err := c.saveSecretStore(); err != nil {
 		return err
 	}
