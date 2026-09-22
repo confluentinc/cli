@@ -269,6 +269,12 @@ func buildQueryTestFixture(name, sql string) *queryTestFixture {
 			{queryRow(0, "1"), queryRow(0, "2")},
 			{queryRow(0, "3")},
 		}
+	case "SELECT v FROM variant_table;":
+		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{queryColumn("v", "VARIANT")}}
+		// A VARIANT cell is the self-describing [code, ...] payload, not a string, so
+		// build the row directly instead of through queryRow. This encodes {"a": "x"}.
+		variantValue := []any{1, []any{[]any{"a", []any{11, "x"}}}}
+		pages = [][]map[string]any{{{"op": 0, "row": []any{variantValue}}}}
 	case "SELECT id FROM many_rows;":
 		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{queryColumn("id", "INTEGER")}}
 		pages = [][]map[string]any{{
