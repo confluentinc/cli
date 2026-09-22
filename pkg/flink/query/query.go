@@ -1,5 +1,5 @@
 // Package query runs a bounded ("snapshot") Flink SQL statement to completion and
-// returns the whole result set — not via the shell's Store/ResultFetcher, which silently drops rows.
+// returns the whole result set. See README.md for the design.
 package query
 
 import (
