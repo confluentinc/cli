@@ -81,6 +81,12 @@ func (c *command) listCatalogIntegration(cmd *cobra.Command, args []string) erro
 			out.ClientId = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec.GetClientId()
 			out.CustomSchema = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec.GetCustomSchema()
 		}
+		if catalogIntegrationType == biglake {
+			out.ProviderIntegrationId = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationBigLakeMetastoreSpec.GetProviderIntegrationId()
+			out.GcpProjectId = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationBigLakeMetastoreSpec.GetGcpProjectId()
+			out.CatalogName = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationBigLakeMetastoreSpec.GetCatalogName()
+			out.CustomNamespace = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationBigLakeMetastoreSpec.GetCustomNamespace()
+		}
 
 		list.Add(out)
 	}
