@@ -212,18 +212,20 @@ func TestConfig_Load(t *testing.T) {
 	// auth tokens, and a saved password - all now secret-store-only (json:"-"), so a bare
 	// Load() from these files can't recover them, and Validate() would otherwise treat the
 	// secret-less nested API key as malformed and delete it. Seed the matching secret store
-	// records (under an isolated HOME) so loadSecretStore() restores the real values, same
-	// as it would for an on-disk config with a real secrets.json.
-	setTestHome(t, t.TempDir())
-	seedLoadTestSecrets(t)
-
+	// records (under an isolated HOME, fresh per sub-test below) so loadSecretStore()
+	// restores the real values, same as it would for an on-disk config with a real
+	// secrets.json. A fresh HOME per sub-test matters now that tokens are keyed by context
+	// name rather than identity: every fixture below reuses the same context name
+	// ("my-context"), so a single shared secrets.json would leak the stateful fixture's
+	// token into the stateless ones' otherwise-tokenless load.
 	testConfigsOnPrem := SetupTestInputs(false)
 	testConfigsCloud := SetupTestInputs(true)
 	tests := []struct {
-		name    string
-		want    *Config
-		wantErr bool
-		file    string
+		name      string
+		want      *Config
+		wantErr   bool
+		file      string
+		withToken bool // "my-context" is shared by every fixture below; only the stateful ones hold a token.
 	}{
 		{
 			name: "succeed loading stateless on-prem config from file",
@@ -231,9 +233,10 @@ func TestConfig_Load(t *testing.T) {
 			file: "test_json/stateless_onprem.json",
 		},
 		{
-			name: "succeed loading on-prem config with state from file",
-			want: testConfigsOnPrem.statefulConfig,
-			file: "test_json/stateful_onprem.json",
+			name:      "succeed loading on-prem config with state from file",
+			want:      testConfigsOnPrem.statefulConfig,
+			file:      "test_json/stateful_onprem.json",
+			withToken: true,
 		},
 		{
 			name: "succeed loading stateless cloud config from file",
@@ -241,9 +244,10 @@ func TestConfig_Load(t *testing.T) {
 			file: "test_json/stateless_cloud.json",
 		},
 		{
-			name: "succeed loading cloud config with state from file",
-			want: testConfigsCloud.statefulConfig,
-			file: "test_json/stateful_cloud.json",
+			name:      "succeed loading cloud config with state from file",
+			want:      testConfigsCloud.statefulConfig,
+			file:      "test_json/stateful_cloud.json",
+			withToken: true,
 		},
 		{
 			name: "should load disable update checks",
@@ -262,6 +266,9 @@ func TestConfig_Load(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			setTestHome(t, t.TempDir())
+			seedLoadTestSecrets(t, test.withToken)
+
 			cfg := New()
 			cfg.Filename = test.file
 			for _, context := range test.want.Contexts {
@@ -294,22 +301,31 @@ func TestConfig_Load(t *testing.T) {
 // password SetupTestInputs hardcodes for "my-context", are recorded under both identities
 // the fixtures use as owning credential: "api-key-abc-key-123" (apiCredentialName, a
 // stateless context's identityKey) and "username-test-user" (loginCredential.Name, a
-// stateful context's identityKey) - each fixture's context uses one or the other. The
-// stateful identity also carries the auth tokens SetupTestInputs hardcodes for a stateful
-// context. Values are stored verbatim (this test never decrypts), matching what
-// saveSecretStore would have produced for these fixtures.
-func seedLoadTestSecrets(t *testing.T) {
+// stateful context's identityKey) - each fixture's context uses one or the other. Values
+// are stored verbatim (this test never decrypts), matching what saveSecretStore would have
+// produced for these fixtures.
+//
+// withToken additionally seeds the auth tokens SetupTestInputs hardcodes for the stateful
+// context, keyed by context NAME (contextName, "my-context") rather than identity - see
+// tokenRecord. Every fixture TestConfig_Load loads reuses that same context name, so a
+// caller loading a stateless fixture must pass false: seeding the token unconditionally
+// would leak the stateful fixture's token into a load that should see none.
+func seedLoadTestSecrets(t *testing.T, withToken bool) {
 	t.Helper()
 	nestedKey := map[string]map[string]*apiKeySecret{kafkaClusterID: {apiKeyString: {Secret: apiSecretString}}}
-	require.NoError(t, newSecretStore().write(&secretFile{Secrets: map[string]*secretRecord{
-		apiCredentialName: {Secret: apiSecretString, Password: "encrypted-password", KafkaAPIKeys: nestedKey},
-		"username-test-user": {
-			AuthToken:        regularOrgContextState.AuthToken,
-			AuthRefreshToken: regularOrgContextState.AuthRefreshToken,
-			Password:         "encrypted-password",
-			KafkaAPIKeys:     nestedKey,
-		},
-	}}))
+	file := &secretFile{Secrets: map[string]*secretRecord{
+		apiCredentialName:    {Secret: apiSecretString, Password: "encrypted-password", KafkaAPIKeys: nestedKey},
+		"username-test-user": {Password: "encrypted-password", KafkaAPIKeys: nestedKey},
+	}}
+	if withToken {
+		file.Tokens = map[string]*tokenRecord{
+			contextName: {
+				AuthToken:        regularOrgContextState.AuthToken,
+				AuthRefreshToken: regularOrgContextState.AuthRefreshToken,
+			},
+		}
+	}
+	require.NoError(t, newSecretStore().write(file))
 }
 
 func TestConfig_Save(t *testing.T) {

@@ -8,17 +8,13 @@ import (
 )
 
 // secretRecord holds one credential identity's secret material as stored on disk: each
-// value is ciphertext paired with its own salt/nonce. A login identity can hold auth
-// tokens AND a saved password, encrypted independently, so each secret kind carries its
-// own salt/nonce pair rather than sharing one - pairing a ciphertext with the wrong
-// salt/nonce fails GCM authentication on load.
+// value is ciphertext paired with its own salt/nonce. A credential identity can be shared
+// by several contexts (a saved password, GlobalAPIKeys, and nested Kafka API keys are all
+// identity-scoped), so each secret kind carries its own salt/nonce pair rather than
+// sharing one - pairing a ciphertext with the wrong salt/nonce fails GCM authentication on
+// load. Auth tokens are NOT identity-scoped: they are endpoint-scoped and keyed by context
+// name instead, in tokenRecord/secretFile.Tokens - see tokenRecord's doc comment.
 type secretRecord struct {
-	// AuthToken and AuthRefreshToken share one salt/nonce, from ContextState.
-	AuthToken        string `json:"auth_token,omitempty"`
-	AuthRefreshToken string `json:"auth_refresh_token,omitempty"`
-	TokenSalt        []byte `json:"token_salt,omitempty"`
-	TokenNonce       []byte `json:"token_nonce,omitempty"`
-
 	// Secret is the api-key secret, from APIKeyPair.
 	Secret      string `json:"secret,omitempty"`
 	SecretSalt  []byte `json:"secret_salt,omitempty"`
@@ -37,6 +33,21 @@ type secretRecord struct {
 	KafkaAPIKeys map[string]map[string]*apiKeySecret `json:"kafka_api_keys,omitempty"`
 }
 
+// tokenRecord holds one context's auth tokens as stored on disk, keyed by CONTEXT NAME
+// (secretFile.Tokens), not credential identity. A token is encrypted with the context
+// name as GCM associated data and is endpoint-scoped, while the credential identity
+// (secretRecord's key) is username-only: two contexts can share one identity (same
+// username, different URL/CA-cert) while holding two different tokens. Keying tokens by
+// identity would broadcast one context's token onto the other on load - GCM
+// authentication then fails on Unix (wrong AAD), and DPAPI on Windows ignores AAD
+// entirely and would silently load the wrong token.
+type tokenRecord struct {
+	AuthToken        string `json:"auth_token,omitempty"`
+	AuthRefreshToken string `json:"auth_refresh_token,omitempty"`
+	Salt             []byte `json:"salt,omitempty"`
+	Nonce            []byte `json:"nonce,omitempty"`
+}
+
 // apiKeySecret is a nested API key's secret material, as stored on disk: ciphertext paired
 // with its own salt/nonce.
 type apiKeySecret struct {
@@ -45,11 +56,12 @@ type apiKeySecret struct {
 	Nonce  []byte `json:"nonce,omitempty"`
 }
 
-// secretFile is the on-disk shape of the secret store, keyed by credential identity
-// (Context.identityKey) so contexts sharing a login share one entry and a context rename
-// never orphans it.
+// secretFile is the on-disk shape of the secret store. Secrets is keyed by credential
+// identity (Context.identityKey) so contexts sharing a login share one entry and a context
+// rename never orphans it. Tokens is keyed by context name - see tokenRecord.
 type secretFile struct {
 	Secrets map[string]*secretRecord `json:"secrets,omitempty"`
+	Tokens  map[string]*tokenRecord  `json:"tokens,omitempty"`
 }
 
 // secretStore reads and writes the encrypted secret file at path.
@@ -159,11 +171,12 @@ func rehydrateNestedAPIKeySecretPresence(c, merged *Config) {
 	}
 }
 
-// saveSecretStore extracts c's secret material into the secret store, keyed by identity.
-// It reads the live c directly, never a merged/deep-copied Config: every secret field is
-// json:"-", so json.Marshal (the copy mechanism threeWayMerge's inputs go through) silently
-// drops it, and a value read back from that copy is always empty - encrypting that empty
-// value would quietly replace the real secret with ciphertext of "".
+// saveSecretStore extracts c's secret material into the secret store, keyed by identity
+// (Secrets) or by context name (Tokens). It reads the live c directly, never a
+// merged/deep-copied Config: every secret field is json:"-", so json.Marshal (the copy
+// mechanism threeWayMerge's inputs go through) silently drops it, and a value read back from
+// that copy is always empty - encrypting that empty value would quietly replace the real
+// secret with ciphertext of "".
 //
 // A credential's API secret and a context's auth tokens toggle to plaintext in c for use
 // during a session (PreRun decrypts them), so each is encrypted here into a local copy of its
@@ -185,6 +198,7 @@ func (c *Config) saveSecretStore() error {
 		return r
 	}
 
+	tokens := map[string]*tokenRecord{}
 	for _, ctx := range c.Contexts {
 		state := ctx.GetState()
 		if state == nil || (state.AuthToken == "" && state.AuthRefreshToken == "") {
@@ -199,11 +213,12 @@ func (c *Config) saveSecretStore() error {
 		if err := c.encryptStateTokensForContext(shadow, shadow.State.AuthToken, shadow.State.AuthRefreshToken); err != nil {
 			return err
 		}
-		r := record(ctx.identityKey())
-		r.AuthToken = shadow.State.AuthToken
-		r.AuthRefreshToken = shadow.State.AuthRefreshToken
-		r.TokenSalt = shadow.State.Salt
-		r.TokenNonce = shadow.State.Nonce
+		tokens[ctx.Name] = &tokenRecord{
+			AuthToken:        shadow.State.AuthToken,
+			AuthRefreshToken: shadow.State.AuthRefreshToken,
+			Salt:             shadow.State.Salt,
+			Nonce:            shadow.State.Nonce,
+		}
 	}
 
 	for name, credential := range c.Credentials {
@@ -285,11 +300,11 @@ func (c *Config) saveSecretStore() error {
 		}
 	}
 
-	if len(records) == 0 {
+	if len(records) == 0 && len(tokens) == 0 {
 		return nil
 	}
 
-	return newSecretStore().write(&secretFile{Secrets: records})
+	return newSecretStore().write(&secretFile{Secrets: records, Tokens: tokens})
 }
 
 // readSecretFileFromDisk reads and unmarshals the secret store at path, mirroring
@@ -311,8 +326,9 @@ func readSecretFileFromDisk(path string) (*secretFile, error) {
 	return file, nil
 }
 
-// loadSecretStore repopulates c's secret fields from the encrypted secret store, keyed by
-// each context's identityKey - the reverse of saveSecretStore. It must run before
+// loadSecretStore repopulates c's secret fields from the encrypted secret store - Secrets by
+// each context's identityKey, Tokens by exact context name (no broadcast across contexts
+// sharing an identity: see tokenRecord) - the reverse of saveSecretStore. It must run before
 // wireContexts/Validate: ctx.GetState() is not wired to ContextStates until wireContexts
 // runs, so this reads ContextStates/Credentials/SavedCredentials directly by name/identity;
 // and Validate's nested-API-key pruning (validateGlobalAPIKeys, KafkaClusterContext.Validate)
@@ -324,21 +340,23 @@ func (c *Config) loadSecretStore() error {
 	if err != nil {
 		return err
 	}
-	if len(file.Secrets) == 0 {
+	if len(file.Secrets) == 0 && len(file.Tokens) == 0 {
 		return nil
 	}
 
 	for name, ctx := range c.Contexts {
+		if tok, ok := file.Tokens[name]; ok && tok != nil && (tok.AuthToken != "" || tok.AuthRefreshToken != "") {
+			if state := c.ContextStates[name]; state != nil {
+				state.AuthToken = tok.AuthToken
+				state.AuthRefreshToken = tok.AuthRefreshToken
+				state.Salt = tok.Salt
+				state.Nonce = tok.Nonce
+			}
+		}
+
 		rec, ok := file.Secrets[ctx.identityKey()]
 		if !ok || rec == nil {
 			continue
-		}
-
-		if state := c.ContextStates[name]; state != nil && (rec.AuthToken != "" || rec.AuthRefreshToken != "") {
-			state.AuthToken = rec.AuthToken
-			state.AuthRefreshToken = rec.AuthRefreshToken
-			state.Salt = rec.TokenSalt
-			state.Nonce = rec.TokenNonce
 		}
 
 		if credential := c.Credentials[ctx.CredentialName]; credential != nil && credential.APIKeyPair != nil && rec.Secret != "" {

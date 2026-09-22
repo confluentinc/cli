@@ -50,6 +50,7 @@ func TestSave_SecretsLeaveConfigFile(t *testing.T) {
 	secRaw, err := os.ReadFile(SecretsFilename())
 	require.NoError(t, err)
 	require.Contains(t, string(secRaw), "secrets")
+	require.Contains(t, string(secRaw), "tokens")
 	require.NotContains(t, string(secRaw), "the-api-secret") // encrypted, not plaintext
 	require.NotContains(t, string(secRaw), "header.payload.signature")
 	require.NotContains(t, string(secRaw), "the-password")
@@ -63,11 +64,14 @@ func TestSave_SecretsLeaveConfigFile(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "the-api-secret", plainSecret)
 
-	plainAuthToken, err := secret.Decrypt("orig", rec.AuthToken, rec.TokenSalt, rec.TokenNonce)
+	tok := file.Tokens["orig"]
+	require.NotNil(t, tok)
+
+	plainAuthToken, err := secret.Decrypt("orig", tok.AuthToken, tok.Salt, tok.Nonce)
 	require.NoError(t, err)
 	require.Equal(t, "header.payload.signature", plainAuthToken)
 
-	plainRefreshToken, err := secret.Decrypt("orig", rec.AuthRefreshToken, rec.TokenSalt, rec.TokenNonce)
+	plainRefreshToken, err := secret.Decrypt("orig", tok.AuthRefreshToken, tok.Salt, tok.Nonce)
 	require.NoError(t, err)
 	require.Equal(t, "v1.some-refresh-token", plainRefreshToken)
 
