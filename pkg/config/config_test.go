@@ -362,7 +362,9 @@ func TestConfig_Save(t *testing.T) {
 			got, _ := os.ReadFile(configFile.Name())
 			want, _ := os.ReadFile(test.wantFile)
 			wantString := replacePlaceholdersInWant(t, got, want)
-			require.Equal(t, utils.NormalizeNewLines(wantString), utils.NormalizeNewLines(string(got)))
+			// TrimRight tolerates a trailing newline on the fixture file: pre-commit's
+			// end-of-file-fixer enforces one, but json.MarshalIndent (got) never writes one.
+			require.Equal(t, strings.TrimRight(utils.NormalizeNewLines(wantString), "\n"), strings.TrimRight(utils.NormalizeNewLines(string(got)), "\n"))
 			fd, err := os.Stat(configFile.Name())
 			require.NoError(t, err)
 			if runtime.GOOS != "windows" && fd.Mode() != 0600 {
@@ -398,7 +400,9 @@ func TestConfig_SaveWithEnvironmentOverwrite(t *testing.T) {
 	got, _ := os.ReadFile(configFile.Name())
 	want, _ := os.ReadFile("test_json/account_overwrite.json")
 	wantString := replacePlaceholdersInWant(t, got, want)
-	require.Equal(t, utils.NormalizeNewLines(wantString), utils.NormalizeNewLines(string(got)))
+	// TrimRight tolerates a trailing newline on the fixture file: pre-commit's
+	// end-of-file-fixer enforces one, but json.MarshalIndent (got) never writes one.
+	require.Equal(t, strings.TrimRight(utils.NormalizeNewLines(wantString), "\n"), strings.TrimRight(utils.NormalizeNewLines(string(got)), "\n"))
 
 	fd, err := os.Stat(configFile.Name())
 	require.NoError(t, err)

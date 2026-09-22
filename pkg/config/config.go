@@ -507,6 +507,12 @@ func (c *Config) saveLocked() error {
 		return err
 	}
 
+	// merged (not c) holds the just-encrypted secrets; c's own copies stay plaintext
+	// mid-session, so the store must be built from merged.
+	if err := merged.saveSecretStore(); err != nil {
+		return err
+	}
+
 	// The next Save's three-way merge diffs baseline against the live config, so the
 	// baseline must match the live config for every field this process did not edit,
 	// not the merged disk state. merged holds concurrent changes this process pulled in
@@ -683,6 +689,13 @@ func (c *Config) save() error {
 	}
 
 	if err := writeFileAtomic(c.GetFilename(), data); err != nil {
+		return err
+	}
+
+	// Still inside save(): the deferred restores above have not run yet, so c's
+	// secrets are still in the ciphertext form just written to disk. Calling this
+	// after save() returns would capture the plaintext those defers restore.
+	if err := c.saveSecretStore(); err != nil {
 		return err
 	}
 
