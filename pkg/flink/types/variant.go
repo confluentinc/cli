@@ -153,6 +153,15 @@ func (f VariantStatementResultField) ToSDKType() any {
 	return f.ToString()
 }
 
+func (f VariantStatementResultField) ToSerializedValue() any {
+	// A VARIANT renders as JSON text, per the Result Schema and Payload Format spec
+	// (https://confluentinc.atlassian.net/wiki/spaces/FLINK/pages/3037888565): it is
+	// semi-structured and self-describing, so it is deliberately rendered as a JSON
+	// string rather than decomposed like ARRAY/ROW/STRUCTURED. This keeps `-o json`/
+	// `-o yaml` consistent with ToSDKType and the interactive shell.
+	return f.ToSDKType()
+}
+
 // ToPrettyString renders the value as indented JSON for the row-details view.
 func (f VariantStatementResultField) ToPrettyString() string {
 	compact := f.ToString()
