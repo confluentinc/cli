@@ -112,6 +112,160 @@ func allKafkaClusterConfigs(k *KafkaClusterContext) map[string]*KafkaClusterConf
 	return all
 }
 
+// stripSecretTriple returns a copy of rec with Secret/SecretSalt/SecretNonce zeroed, so the
+// generic mergeMapDeep can safely structural-diff everything else in a secretRecord
+// (Password, GlobalAPIKeys, KafkaAPIKeys - all stable ciphertext, see mergeSecretTriple's
+// comment) without the churning API-secret triple contaminating that decision. Password and
+// the nested API-key maps are still present in the copy (shared, read-only references -
+// mergeMapDeep only ever reads them via a JSON marshal). A nil rec copies to a non-nil empty
+// record so an identity whose only content was the secret still participates in the
+// generic merge as "present, empty" rather than vanishing from the key set entirely.
+func stripSecretTriple(rec *secretRecord) *secretRecord {
+	if rec == nil {
+		return &secretRecord{}
+	}
+	stripped := *rec
+	stripped.Secret, stripped.SecretSalt, stripped.SecretNonce = "", nil, nil
+	return &stripped
+}
+
+// stripSecretTriples applies stripSecretTriple across a whole identity-keyed map.
+func stripSecretTriples(records map[string]*secretRecord) map[string]*secretRecord {
+	out := make(map[string]*secretRecord, len(records))
+	for id, rec := range records {
+		out[id] = stripSecretTriple(rec)
+	}
+	return out
+}
+
+// mergeSecretTriple three-way-merges one identity's API-secret (ciphertext, salt, nonce)
+// unit. It cannot go through the generic mergeMapDeep like the rest of a secretRecord: a
+// credential's API secret toggles to plaintext in the live config for use during a session
+// (PreRun decrypts it) and is re-encrypted on every save, and on Windows that reproduces
+// DIFFERENT ciphertext for an unchanged secret every time (DPAPI is non-deterministic and
+// GenerateSaltAndNonce returns nil,nil there, so there is no salt/nonce to reuse the way
+// AES-GCM does on Unix). A byte-level diff would then misread every untouched secret as
+// locally changed on Windows - exactly the lost-write bug Config.decryptToMatch already
+// solves at the config.json level, quoted in its own comment: re-encrypting to compare
+// "would flag every secret as changed and reintroduce the very lost-write bug this guards
+// against." The fix is the same here: decide on PLAINTEXT (decrypting base to compare,
+// mirroring decryptToMatch), and move the whole (ciphertext, salt, nonce) triple as one
+// unit so a decrypted comparison never ends up pairing one source's ciphertext with
+// another's salt.
+func (c *Config) mergeSecretTriple(identity string, base, ours, disk *secretRecord) (secret string, salt, nonce []byte, err error) {
+	credential := c.Credentials[identity]
+
+	toPlain := func(rec *secretRecord) (string, error) {
+		if rec == nil || rec.Secret == "" {
+			return "", nil
+		}
+		if !isEncryptedSecret(rec.Secret) {
+			return rec.Secret, nil
+		}
+		if credential == nil || credential.APIKeyPair == nil {
+			// No key material to decrypt with: this process's live Credentials map has
+			// nothing for this identity (only ours' emptiness matters for the branches
+			// below, and ours is only ever non-empty when the identity IS in
+			// c.Credentials, so this path is base-only). Read as "we have no opinion" -
+			// not as an opaque non-empty value, which would wrongly look like "we hold a
+			// secret" and block a legitimate concurrent add from disk.
+			return "", nil
+		}
+		shadow := &APIKeyPair{Key: credential.APIKeyPair.Key, Secret: rec.Secret, Salt: rec.SecretSalt, Nonce: rec.SecretNonce}
+		if err := shadow.DecryptSecret(); err != nil {
+			return "", err
+		}
+		return shadow.Secret, nil
+	}
+
+	basePlain, err := toPlain(base)
+	if err != nil {
+		return "", nil, nil, err
+	}
+	oursPlain, err := toPlain(ours)
+	if err != nil {
+		return "", nil, nil, err
+	}
+	diskHas := disk != nil && disk.Secret != ""
+
+	if oursPlain == "" {
+		// We don't currently hold a secret for this identity. If we never did either, a
+		// concurrent add on disk survives; if we used to (base had one), our clearing it
+		// wins.
+		if basePlain == "" && diskHas {
+			return disk.Secret, disk.SecretSalt, disk.SecretNonce, nil
+		}
+		return "", nil, nil, nil
+	}
+
+	if oursPlain == basePlain {
+		// Unchanged (by content, not by ciphertext bytes): defer to disk's current value,
+		// exactly as if this process had never touched it. Preserves a concurrent rotation
+		// this process never touched, and does not resurrect a concurrent clear.
+		if diskHas {
+			return disk.Secret, disk.SecretSalt, disk.SecretNonce, nil
+		}
+		return "", nil, nil, nil
+	}
+
+	// Changed (added or edited): our own value wins. It may still be plaintext here -
+	// encryptSecrets/EncryptSecret has already run on it earlier in saveSecretStore, so in
+	// practice this is ciphertext by the time it reaches here.
+	return ours.Secret, ours.SecretSalt, ours.SecretNonce, nil
+}
+
+// mergeToken three-way-merges one context's auth-token (ciphertext, salt, nonce) unit - the
+// token analog of mergeSecretTriple, with the same Windows non-determinism hazard (a
+// current context's tokens toggle to plaintext for the session and are re-encrypted every
+// save) and the same fix. Unlike a secretRecord, a tokenRecord is ENTIRELY the churning
+// unit - Tokens is never run through the generic mergeMapDeep at all; this function alone
+// decides each context's whole entry, including add/delete.
+func (c *Config) mergeToken(ctxName string, base, ours, disk *tokenRecord) (authToken, authRefreshToken string, salt, nonce []byte, err error) {
+	toPlain := func(rec *tokenRecord) (string, string, error) {
+		if rec == nil {
+			return "", "", nil
+		}
+		shadow := &ContextState{AuthToken: rec.AuthToken, AuthRefreshToken: rec.AuthRefreshToken, Salt: rec.Salt, Nonce: rec.Nonce}
+		if isEncryptedSecret(shadow.AuthToken) {
+			if err := shadow.DecryptAuthToken(ctxName); err != nil {
+				return "", "", err
+			}
+		}
+		if isEncryptedSecret(shadow.AuthRefreshToken) {
+			if err := shadow.DecryptAuthRefreshToken(ctxName); err != nil {
+				return "", "", err
+			}
+		}
+		return shadow.AuthToken, shadow.AuthRefreshToken, nil
+	}
+
+	baseToken, baseRefresh, err := toPlain(base)
+	if err != nil {
+		return "", "", nil, nil, err
+	}
+	oursToken, oursRefresh, err := toPlain(ours)
+	if err != nil {
+		return "", "", nil, nil, err
+	}
+	diskHas := disk != nil && (disk.AuthToken != "" || disk.AuthRefreshToken != "")
+
+	if oursToken == "" && oursRefresh == "" {
+		if baseToken == "" && baseRefresh == "" && diskHas {
+			return disk.AuthToken, disk.AuthRefreshToken, disk.Salt, disk.Nonce, nil
+		}
+		return "", "", nil, nil, nil
+	}
+
+	if oursToken == baseToken && oursRefresh == baseRefresh {
+		if diskHas {
+			return disk.AuthToken, disk.AuthRefreshToken, disk.Salt, disk.Nonce, nil
+		}
+		return "", "", nil, nil, nil
+	}
+
+	return ours.AuthToken, ours.AuthRefreshToken, ours.Salt, ours.Nonce, nil
+}
+
 // encryptedAPIKeySecret returns pair's secret/salt/nonce as an apiKeySecret triple, encrypting
 // a local copy first if pair's own secret is still plaintext (EncryptSecret is a no-op if it
 // is already ciphertext). nil, nil means pair has no secret to store. The live pair itself is
@@ -186,13 +340,16 @@ func rehydrateNestedAPIKeySecretPresence(c, merged *Config) {
 // holder (never the live one) before being copied into the record; the copy's EncryptSecret /
 // encryptStateTokensForContext call is a no-op if the live value is already ciphertext (e.g.
 // when this runs inside save(), after save's own in-place encryption), so this is safe to call
-// with either representation. Salt/nonce are reused whenever already set (both EncryptSecret
-// and encryptStateTokensForContext only generate a fresh pair when nil), so re-encrypting an
-// untouched value reproduces byte-identical ciphertext - the property the three-way merge
-// below relies on to tell "this process changed it" from "this process didn't." A saved
-// password and both nested API-key maps (GlobalAPIKeys, KafkaClusterConfig.APIKeys) are
-// encrypted the moment they're stored and never decrypted back into the live config, so they
-// cross here as an intact ciphertext/salt/nonce unit - no encrypt/decrypt, same stability.
+// with either representation. On Unix this reproduces byte-identical ciphertext for an
+// untouched value (salt/nonce are reused whenever already set), but on Windows it does NOT:
+// DPAPI is non-deterministic and GenerateSaltAndNonce returns nil,nil there, so a plaintext
+// value re-encrypts to different ciphertext every save. mergeSecretTriple/mergeToken below
+// diff on PLAINTEXT specifically to tolerate that; see their own comments. A saved password
+// and both nested API-key maps (GlobalAPIKeys, KafkaClusterConfig.APIKeys) are encrypted the
+// moment they're stored and never decrypted back into the live config, so they cross here as
+// an intact ciphertext/salt/nonce unit that IS stable across platforms - encryptedAPIKeySecret
+// (and Password's direct copy below) never re-derives them, so the generic mergeMapDeep is
+// safe for those two.
 //
 // diskContextNames is the set of context names present in config.json as read from disk this
 // same save cycle (nil when the caller is writing a whole config with nothing to merge
@@ -332,22 +489,84 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 		return err
 	}
 
+	// Secrets: the generic structural merge (identity add/delete, Password, the nested
+	// API-key maps) runs on copies with the churning API-secret triple stripped out, so that
+	// triple's platform-dependent (re-)encryption never contaminates it - see
+	// stripSecretTriple. The triple itself is decided separately, on plaintext, by
+	// mergeSecretTriple and spliced back in below.
 	merged := &secretFile{}
-	if merged.Secrets, err = mergeMapDeep(c.secretBaseline.Secrets, records, disk.Secrets); err != nil {
-		return fmt.Errorf("unable to merge secret store: %w", err)
-	}
-	if merged.Tokens, err = mergeMapDeep(c.secretBaseline.Tokens, tokens, disk.Tokens); err != nil {
+	if merged.Secrets, err = mergeMapDeep(
+		stripSecretTriples(c.secretBaseline.Secrets), stripSecretTriples(records), stripSecretTriples(disk.Secrets),
+	); err != nil {
 		return fmt.Errorf("unable to merge secret store: %w", err)
 	}
 
+	identities := map[string]bool{}
+	for id := range c.secretBaseline.Secrets {
+		identities[id] = true
+	}
+	for id := range records {
+		identities[id] = true
+	}
+	for id := range disk.Secrets {
+		identities[id] = true
+	}
+	for id := range identities {
+		secret, salt, nonce, err := c.mergeSecretTriple(id, c.secretBaseline.Secrets[id], records[id], disk.Secrets[id])
+		if err != nil {
+			return err
+		}
+		rec, ok := merged.Secrets[id]
+		if !ok {
+			if secret == "" {
+				continue
+			}
+			rec = &secretRecord{}
+			merged.Secrets[id] = rec
+		}
+		rec.Secret, rec.SecretSalt, rec.SecretNonce = secret, salt, nonce
+	}
+	// Drop an identity left with no content at all: its only material was the secret
+	// triple, and that's now cleared.
+	for id, rec := range merged.Secrets {
+		if rec.Secret == "" && rec.Password == "" && len(rec.GlobalAPIKeys) == 0 && len(rec.KafkaAPIKeys) == 0 {
+			delete(merged.Secrets, id)
+		}
+	}
+
+	// Tokens: a tokenRecord is entirely the churning unit (no stable sibling fields the way
+	// Password/nested keys are for a secretRecord), so mergeToken alone decides each
+	// context's whole entry - no generic mergeMapDeep pass first.
+	merged.Tokens = map[string]*tokenRecord{}
+	ctxNames := map[string]bool{}
+	for name := range c.secretBaseline.Tokens {
+		ctxNames[name] = true
+	}
+	for name := range tokens {
+		ctxNames[name] = true
+	}
+	for name := range disk.Tokens {
+		ctxNames[name] = true
+	}
+	for name := range ctxNames {
+		authToken, authRefreshToken, salt, nonce, err := c.mergeToken(name, c.secretBaseline.Tokens[name], tokens[name], disk.Tokens[name])
+		if err != nil {
+			return err
+		}
+		if authToken == "" && authRefreshToken == "" {
+			continue
+		}
+		merged.Tokens[name] = &tokenRecord{AuthToken: authToken, AuthRefreshToken: authRefreshToken, Salt: salt, Nonce: nonce}
+	}
+
 	// A token's presence is coupled to its owning context surviving, exactly like
-	// ContextStates is coupled to Contexts in threeWayMerge. mergeMapDeep alone cannot tell a
+	// ContextStates is coupled to Contexts in threeWayMerge. mergeToken alone cannot tell a
 	// deliberate token clear (context stays; only the token empties, e.g. logout - must not be
 	// resurrected) from a token that only vanished from disk because a CONCURRENT session
 	// deleted its owning context, which this process's own edit then revives (that token must
 	// not be lost). The distinguishing signal is whether the context was already on disk: if
-	// it was, an untouched-but-now-missing token is a deliberate clear elsewhere, so the merge
-	// above correctly dropped it; if it wasn't, this save is the one reviving the context, so
+	// it was, an untouched-but-now-missing token is a deliberate clear elsewhere, so mergeToken
+	// correctly dropped it above; if it wasn't, this save is the one reviving the context, so
 	// its token comes along too.
 	for name, tok := range tokens {
 		if _, ok := merged.Tokens[name]; ok {

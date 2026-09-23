@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/v4/pkg/secret"
 )
 
 // each goroutine adds a different platform concurrently; before the lock and merge
@@ -539,6 +541,87 @@ func TestSecretStore_ConcurrentLogoutNotResurrected(t *testing.T) {
 	require.Empty(t, final.ContextStates["ctx"].AuthToken,
 		"a's concurrent logout must not be resurrected by b's unrelated, stale-baseline save")
 	require.Equal(t, "env-from-b", final.Contexts["ctx"].CurrentEnvironment)
+}
+
+// tamperTokenCiphertext overwrites cfg's OWN in-memory secret baseline for ctxName with a
+// different encryption of the SAME plaintext (fresh salt/nonce). This reproduces, on any
+// platform, the exact shape Windows produces on every save: DPAPI is non-deterministic and
+// GenerateSaltAndNonce returns nil,nil there, so re-encrypting an untouched plaintext token
+// yields different ciphertext bytes than what secretBaseline holds, even though nothing
+// about the token actually changed.
+func tamperTokenCiphertext(t *testing.T, cfg *Config, ctxName, plaintext string) {
+	t.Helper()
+	altSalt, altNonce, err := secret.GenerateSaltAndNonce()
+	require.NoError(t, err)
+	altCiphertext, err := secret.Encrypt(ctxName, plaintext, altSalt, altNonce)
+	require.NoError(t, err)
+	cfg.secretBaseline.Tokens[ctxName] = &tokenRecord{AuthToken: altCiphertext, Salt: altSalt, Nonce: altNonce}
+}
+
+// A ciphertext-only diff (as if re-encrypting an untouched plaintext always reproduced the
+// same bytes, true on Unix but NOT on Windows: DPAPI is non-deterministic and
+// GenerateSaltAndNonce returns nil,nil there) would see a's own untouched token as "changed"
+// the moment its baseline's ciphertext differs by even one byte from a fresh re-encryption -
+// even though the plaintext a holds is identical to what the baseline decrypts to. This
+// reproduces that exact shape on Unix (see tamperTokenCiphertext) and pins that the merge
+// must decide on plaintext: a's tampered baseline must not make its own untouched token look
+// locally changed and clobber a concurrent rotation it never touched.
+func TestSecretStore_UnchangedPlaintextDifferentCiphertext_NotClobbered(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	newSavedConfig(t, path) // context "ctx" (current), no token yet
+
+	seed := loadDecrypted(t, path)
+	seed.ContextStates["ctx"].AuthToken = "header.payload.original"
+	require.NoError(t, seed.Save())
+
+	a := loadDecrypted(t, path) // holds "header.payload.original" plaintext live, untouched
+	tamperTokenCiphertext(t, a, "ctx", "header.payload.original")
+
+	other := loadDecrypted(t, path) // concurrent session, rotates the token
+	other.ContextStates["ctx"].AuthToken = "header.payload.rotated"
+	require.NoError(t, other.Save())
+
+	a.Contexts["ctx"].CurrentEnvironment = "env-from-a" // a's own, unrelated edit
+	require.NoError(t, a.Save())
+
+	final := New()
+	final.Filename = path
+	require.NoError(t, final.Load())
+	require.NoError(t, final.ContextStates["ctx"].DecryptAuthToken("ctx"))
+	require.Equal(t, "header.payload.rotated", final.ContextStates["ctx"].AuthToken,
+		"a's tampered baseline ciphertext must not make an untouched token look locally changed and clobber the concurrent rotation")
+}
+
+// The same tampered-ciphertext hazard on the logout-not-resurrected guarantee: a's baseline
+// disagrees with a fresh re-encryption of the SAME plaintext (see tamperTokenCiphertext), but
+// a never touched the token. A ciphertext-only diff would misread that as a local change and
+// resurrect the concurrent logout; deciding on plaintext must not.
+func TestSecretStore_UnchangedPlaintextDifferentCiphertext_LogoutStaysCleared(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	newSavedConfig(t, path)
+
+	seed := loadDecrypted(t, path)
+	seed.ContextStates["ctx"].AuthToken = "header.payload.original"
+	require.NoError(t, seed.Save())
+
+	a := loadDecrypted(t, path)
+	tamperTokenCiphertext(t, a, "ctx", "header.payload.original")
+
+	other := loadDecrypted(t, path) // concurrent session, logs out
+	other.ContextStates["ctx"].AuthToken = ""
+	other.ContextStates["ctx"].AuthRefreshToken = ""
+	require.NoError(t, other.Save())
+
+	a.Contexts["ctx"].CurrentEnvironment = "env-from-a" // a's own, unrelated edit
+	require.NoError(t, a.Save())
+
+	final := New()
+	final.Filename = path
+	require.NoError(t, final.Load())
+	require.Empty(t, final.ContextStates["ctx"].AuthToken,
+		"a's tampered baseline ciphertext must not make an untouched token look locally changed and resurrect the concurrent logout")
 }
 
 // save() must resolve flag overrides exactly once. It is only reached from saveLocked
