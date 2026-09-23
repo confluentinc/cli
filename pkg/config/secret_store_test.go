@@ -276,6 +276,66 @@ func TestEncryptStateTokensForContext_EmptyGovRefreshTokenNotEncrypted(t *testin
 	require.Empty(t, ctx.State.AuthRefreshToken, "an empty gov refresh token must not be encrypted")
 }
 
+// TestSave_SchemaRegistryCredentialLeavesConfigFile pins that a (deprecated) Schema Registry
+// cluster's API secret leaves config.json for the secret store on save and decrypts back to its
+// real value there. SrCredentials is the fourth *APIKeyPair holder; with APIKeyPair.Secret retagged
+// json:"-", an unhandled SrCredentials secret would be dropped from config.json and stored nowhere.
+func TestSave_SchemaRegistryCredentialLeavesConfigFile(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	c := newTestConfigWithAPIKeyContext(t)
+	ctx := c.Contexts["orig"]
+	ctx.SchemaRegistryClusters = map[string]*SchemaRegistryCluster{
+		"lsrc-1": {
+			Id:                     "lsrc-1",
+			SchemaRegistryEndpoint: "https://sr.example.com",
+			SrCredentials:          &APIKeyPair{Key: "SR-KEY", Secret: "sr-secret"},
+		},
+	}
+
+	require.NoError(t, c.Save())
+
+	cfgRaw, err := os.ReadFile(c.GetFilename())
+	require.NoError(t, err)
+	require.Contains(t, string(cfgRaw), `"SR-KEY"`)
+	require.NotContains(t, string(cfgRaw), "sr-secret")
+
+	secRaw, err := os.ReadFile(SecretsFilename())
+	require.NoError(t, err)
+	require.NotContains(t, string(secRaw), "sr-secret")
+
+	var file secretFile
+	require.NoError(t, json.Unmarshal(secRaw, &file))
+	triple := file.Secrets["api-key-AK"].SchemaRegistryCredentials["lsrc-1"]
+	require.NotNil(t, triple)
+	plain, err := secret.Decrypt("SR-KEY", triple.Secret, triple.Salt, triple.Nonce)
+	require.NoError(t, err)
+	require.Equal(t, "sr-secret", plain)
+}
+
+// TestLoad_RepopulatesSchemaRegistryCredentialFromStore is the load-side counterpart: a Schema
+// Registry credential extracted to the store on save must be repopulated into a freshly loaded
+// Config so it decrypts back to its real value.
+func TestLoad_RepopulatesSchemaRegistryCredentialFromStore(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	c := newTestConfigWithAPIKeyContext(t)
+	c.Contexts["orig"].SchemaRegistryClusters = map[string]*SchemaRegistryCluster{
+		"lsrc-1": {
+			Id:                     "lsrc-1",
+			SchemaRegistryEndpoint: "https://sr.example.com",
+			SrCredentials:          &APIKeyPair{Key: "SR-KEY", Secret: "sr-secret"},
+		},
+	}
+	require.NoError(t, c.Save())
+
+	reloaded := New()
+	reloaded.Filename = c.GetFilename()
+	require.NoError(t, reloaded.Load())
+
+	pair := reloaded.Contexts["orig"].SchemaRegistryClusters["lsrc-1"].SrCredentials
+	require.NoError(t, pair.DecryptSecret())
+	require.Equal(t, "sr-secret", pair.Secret)
+}
+
 func TestSecretsFilename_UnderStateDir(t *testing.T) {
 	setTestHome(t, t.TempDir())
 	require.Equal(t, stateDirPath("secrets.json"), SecretsFilename())
