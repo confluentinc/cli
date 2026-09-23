@@ -31,6 +31,20 @@ func TestAPIKeyPair_EncryptSecret_SkipsAlreadyEncryptedAesGcmSecret(t *testing.T
 	require.Equal(t, aesGcmSecret, pair.Secret)
 }
 
+// An empty secret must never be handed to secret.Encrypt: DPAPI (CryptProtectData) rejects
+// empty input with "The parameter is incorrect." on Windows, so an empty API secret must stay
+// empty rather than be encrypted into ciphertext-of-"". No salt/nonce is derived either, so a
+// credential that never had an API secret contributes nothing to the on-disk store.
+func TestAPIKeyPair_EncryptSecret_LeavesEmptySecretEmpty(t *testing.T) {
+	pair := &APIKeyPair{Key: "key", Secret: ""}
+
+	require.NoError(t, pair.EncryptSecret())
+
+	require.Empty(t, pair.Secret, "an empty secret must not be encrypted (DPAPI rejects empty input)")
+	require.Nil(t, pair.Salt)
+	require.Nil(t, pair.Nonce)
+}
+
 // The cipher markers are stored as a "PREFIX:payload" pair, so the prefix guard
 // must include the ":". A plaintext secret that merely begins with the marker
 // word (no delimiter) must still be encrypted, not mistaken for ciphertext.

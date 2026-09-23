@@ -28,6 +28,13 @@ func (c *APIKeyPair) DecryptSecret() error {
 }
 
 func (c *APIKeyPair) EncryptSecret() error {
+	// An empty secret must never reach secret.Encrypt: DPAPI (CryptProtectData) rejects empty
+	// input with "The parameter is incorrect." on Windows, while AES-GCM would silently store
+	// ciphertext-of-"". A credential with no API secret stays empty and derives no salt/nonce.
+	if c.Secret == "" {
+		return nil
+	}
+
 	if c.Salt == nil || c.Nonce == nil {
 		salt, nonce, err := secret.GenerateSaltAndNonce()
 		if err != nil {

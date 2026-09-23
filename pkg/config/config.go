@@ -811,7 +811,9 @@ func (c *Config) encryptStateTokensForContext(ctx *Context, tempAuthToken, tempA
 		state.Nonce = nonce
 	}
 
-	if regexp.MustCompile(authTokenRegex).MatchString(tempAuthToken) {
+	// Guard every secret.Encrypt call against empty input: DPAPI rejects it on Windows. The auth
+	// token regex never matches "", but the belt-and-suspenders check keeps the invariant local.
+	if tempAuthToken != "" && regexp.MustCompile(authTokenRegex).MatchString(tempAuthToken) {
 		encryptedAuthToken, err := secret.Encrypt(ctx.Name, tempAuthToken, state.Salt, state.Nonce)
 		if err != nil {
 			return err
@@ -829,7 +831,9 @@ func (c *Config) encryptStateTokensForContext(ctx *Context, tempAuthToken, tempA
 
 	isUnencryptedConfluentPlatform := tempAuthRefreshToken != "" && !strings.HasPrefix(tempAuthRefreshToken, prefix) && !ctx.IsCloud(c.IsTest)
 
-	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) || isUnencryptedConfluentGov || isUnencryptedConfluentPlatform {
+	// The gov branch does not itself require a non-empty token, so guard empty explicitly here too:
+	// DPAPI rejects empty input on Windows.
+	if tempAuthRefreshToken != "" && (regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) || isUnencryptedConfluentGov || isUnencryptedConfluentPlatform) {
 		encryptedAuthRefreshToken, err := secret.Encrypt(ctx.Name, tempAuthRefreshToken, state.Salt, state.Nonce)
 		if err != nil {
 			return err
