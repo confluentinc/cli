@@ -31,6 +31,12 @@ type secretRecord struct {
 	// KafkaAPIKeys holds per-cluster API keys (KafkaClusterConfig.APIKeys), keyed by cluster id
 	// then by API key id.
 	KafkaAPIKeys map[string]map[string]*apiKeySecret `json:"kafka_api_keys,omitempty"`
+
+	// SchemaRegistryCredentials holds the (deprecated) SchemaRegistryCluster.SrCredentials secret,
+	// keyed by Schema Registry cluster id. Unlike the Kafka/Global API keys, an SR credential is
+	// never decrypted in place during a session, so it crosses the save as a stable ciphertext
+	// triple and merges through the generic mergeMapDeep like Password.
+	SchemaRegistryCredentials map[string]*apiKeySecret `json:"schema_registry_credentials,omitempty"`
 }
 
 // tokenRecord holds one context's auth tokens as stored on disk, keyed by CONTEXT NAME
@@ -465,6 +471,24 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 			}
 			r.KafkaAPIKeys[clusterId] = keys
 		}
+
+		for srClusterId, srCluster := range ctx.SchemaRegistryClusters {
+			if srCluster == nil {
+				continue
+			}
+			triple, err := encryptedAPIKeySecret(srCluster.SrCredentials)
+			if err != nil {
+				return err
+			}
+			if triple == nil {
+				continue
+			}
+			r := record(ctx.identityKey())
+			if r.SchemaRegistryCredentials == nil {
+				r.SchemaRegistryCredentials = map[string]*apiKeySecret{}
+			}
+			r.SchemaRegistryCredentials[srClusterId] = triple
+		}
 	}
 
 	ours := &secretFile{Secrets: records, Tokens: tokens}
@@ -529,7 +553,7 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 	// Drop an identity left with no content at all: its only material was the secret
 	// triple, and that's now cleared.
 	for id, rec := range merged.Secrets {
-		if rec.Secret == "" && rec.Password == "" && len(rec.GlobalAPIKeys) == 0 && len(rec.KafkaAPIKeys) == 0 {
+		if rec.Secret == "" && rec.Password == "" && len(rec.GlobalAPIKeys) == 0 && len(rec.KafkaAPIKeys) == 0 && len(rec.SchemaRegistryCredentials) == 0 {
 			delete(merged.Secrets, id)
 		}
 	}
@@ -676,6 +700,16 @@ func (c *Config) loadSecretStore() error {
 					pair.Nonce = triple.Nonce
 				}
 			}
+		}
+
+		for srClusterId, triple := range rec.SchemaRegistryCredentials {
+			srCluster := ctx.SchemaRegistryClusters[srClusterId]
+			if srCluster == nil || srCluster.SrCredentials == nil || triple == nil {
+				continue
+			}
+			srCluster.SrCredentials.Secret = triple.Secret
+			srCluster.SrCredentials.Salt = triple.Salt
+			srCluster.SrCredentials.Nonce = triple.Nonce
 		}
 	}
 
