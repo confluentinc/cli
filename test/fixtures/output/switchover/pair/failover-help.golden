@@ -1,12 +1,12 @@
 Trigger a failover (or switchback) on a switchover pair. This redirects live traffic between the pair's members.
 
 Usage:
-  confluent switchover pair trigger-switch <id> [flags]
+  confluent switchover pair failover <id> [flags]
 
 Examples:
 Fail switchover pair "sw-123456" over to its "east" member.
 
-  $ confluent switchover pair trigger-switch sw-123456 --active-member east
+  $ confluent switchover pair failover sw-123456 --active-member east
 
 Flags:
       --active-member string   The name of the member to promote to active. Required for PLANNED and UNPLANNED failovers; must be omitted for RESTORE.

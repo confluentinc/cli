@@ -12,17 +12,17 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/examples"
 )
 
-func (c *command) newTriggerSwitchCommand() *cobra.Command {
+func (c *command) newFailoverCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "trigger-switch <id>",
+		Use:   "failover <id>",
 		Short: "Trigger a failover or switchback on a switchover pair.",
 		Long:  "Trigger a failover (or switchback) on a switchover pair. This redirects live traffic between the pair's members.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.triggerSwitch,
+		RunE:  c.failover,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Fail switchover pair "sw-123456" over to its "east" member.`,
-				Code: `confluent switchover pair trigger-switch sw-123456 --active-member east`,
+				Code: `confluent switchover pair failover sw-123456 --active-member east`,
 			},
 		),
 	}
@@ -37,7 +37,7 @@ func (c *command) newTriggerSwitchCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) triggerSwitch(cmd *cobra.Command, args []string) error {
+func (c *command) failover(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
 	activeMember, err := cmd.Flags().GetString("active-member")
