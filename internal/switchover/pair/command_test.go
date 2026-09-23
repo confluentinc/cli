@@ -3,8 +3,9 @@ package pair
 import (
 	"testing"
 
-	switchoverv1 "github.com/confluentinc/ccloud-sdk-go-v2/switchover/v1"
 	"github.com/stretchr/testify/require"
+
+	switchoverv1 "github.com/confluentinc/ccloud-sdk-go-v2/switchover/v1"
 )
 
 func condition(member, typ, status, reason, message string) switchoverv1.SwitchoverV1Condition {
