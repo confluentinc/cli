@@ -412,14 +412,18 @@ func encryptedAPIKeySecret(pair *APIKeyPair) (*apiKeySecret, error) {
 // field including these secrets, so merged's own copy of a real, live, encrypted key always
 // reads as empty - Validate() would then delete the key's public id along with its "missing"
 // secret, even though the real encrypted secret is correctly on its way to the secret store
-// via saveSecretStore(c). This sets presence only (any non-empty value; merged's own Secret
-// field is json:"-" and never reaches the write below either way) for a key this process's own
-// live c already knows about. A key only a concurrent session added exists only on disk and
-// is not rehydrated here - saveSecretStore's own three-way merge (mergeMapDeep over
-// GlobalAPIKeys/KafkaAPIKeys) reconciles that at the secret-store level; this function only
-// keeps Validate() from pruning the (json:"-", so structurally invisible to it) key's public id
-// in the meantime.
-func rehydrateNestedAPIKeySecretPresence(c, merged *Config) {
+// via saveSecretStore(c).
+//
+// It sets presence only (any non-empty value; merged's own Secret field is json:"-" and never
+// reaches the write either way), from two sources: (1) this process's own live c, for a key c added
+// this session that is not yet on disk; and (2) the on-disk secret store, for a key ONLY a concurrent
+// session added - such a key rides in via the config.json merge (its public id in disk -> merged) but
+// with an empty secret, and c has never heard of it, so without this pass Validate() would prune its
+// id before the write. saveSecretStore's own three-way merge then reconciles the secret material
+// itself; this function only keeps Validate() from pruning the (json:"-", so structurally invisible)
+// public id in the meantime.
+func rehydrateNestedAPIKeySecretPresence(c, merged *Config) error {
+	// Pass 1: keys this process's own live c knows about (including ones not yet persisted).
 	for name, ctx := range c.Contexts {
 		mergedCtx, ok := merged.Contexts[name]
 		if !ok || mergedCtx == nil {
@@ -451,6 +455,47 @@ func rehydrateNestedAPIKeySecretPresence(c, merged *Config) {
 			}
 		}
 	}
+
+	// Pass 2: disk-only keys a concurrent session added, still empty in merged after pass 1.
+	disk, err := readSecretFileFromDisk(newSecretStore().path)
+	if err != nil {
+		return err
+	}
+	for _, mergedCtx := range merged.Contexts {
+		if mergedCtx == nil {
+			continue
+		}
+		rec := disk.Secrets[mergedCtx.identityKey()]
+		if rec == nil {
+			continue
+		}
+
+		for keyId, mergedPair := range mergedCtx.GlobalAPIKeys {
+			if mergedPair == nil || mergedPair.Secret != "" {
+				continue
+			}
+			if triple := rec.GlobalAPIKeys[keyId]; triple != nil && triple.Secret != "" {
+				mergedPair.Secret = triple.Secret
+			}
+		}
+
+		for clusterId, cluster := range allKafkaClusterConfigs(mergedCtx.KafkaClusterContext) {
+			keys := rec.KafkaAPIKeys[clusterId]
+			if keys == nil {
+				continue
+			}
+			for keyId, mergedPair := range cluster.APIKeys {
+				if mergedPair == nil || mergedPair.Secret != "" {
+					continue
+				}
+				if triple := keys[keyId]; triple != nil && triple.Secret != "" {
+					mergedPair.Secret = triple.Secret
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 // saveSecretStore extracts c's secret material into the secret store, keyed by identity

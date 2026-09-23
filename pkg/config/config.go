@@ -542,7 +542,9 @@ func (c *Config) saveLocked() error {
 	// make the Validate() call below delete the key's public id along with its "missing"
 	// secret. Rehydrate presence (not correctness: the value is discarded before the write
 	// below either way) from c before that happens.
-	rehydrateNestedAPIKeySecretPresence(c, merged)
+	if err := rehydrateNestedAPIKeySecretPresence(c, merged); err != nil {
+		return err
+	}
 
 	// Re-encrypt the secrets that ended up plaintext (the ones we changed, taken from
 	// ours). Untouched secrets came from disk still encrypted; the guards skip them.

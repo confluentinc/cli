@@ -746,6 +746,36 @@ func TestSecretStore_NestedKafkaKeyUnchangedPlaintextDifferentCiphertext_NotClob
 		"a's churned baseline ciphertext must not make an untouched Kafka key look changed and clobber the concurrent rotation")
 }
 
+// A nested API key added ONLY by a concurrent session arrives in this process's save via the
+// config.json merge (disk -> merged) carrying just its public id; its secret is json:"-", so
+// merged's copy reads empty and merged.Validate() would prune the id as "malformed" before the
+// write. rehydrateNestedAPIKeySecretPresence must restore presence for such disk-only keys from the
+// on-disk secret store too, not only for keys this process's own live config knows about, so the
+// concurrently-added key survives (and its secret rides through the secret-store merge).
+func TestSecretStore_ConcurrentDiskOnlyNestedKeyNotPruned(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	newConfigWithNestedKeys(t, path)
+
+	a := loadDecrypted(t, path) // never learns about the concurrently-added key
+
+	other := loadDecrypted(t, path)
+	require.NoError(t, other.Contexts["ctx"].StoreGlobalAPIKey(&APIKeyPair{Key: "GK2", Secret: "gk2-secret"}))
+	require.NoError(t, other.Save())
+
+	a.Contexts["ctx"].CurrentEnvironment = "env-from-a" // a's own, unrelated edit
+	require.NoError(t, a.Save())
+
+	final := New()
+	final.Filename = path
+	require.NoError(t, final.Load())
+	pair := final.Contexts["ctx"].GlobalAPIKeys["GK2"]
+	require.NotNil(t, pair, "a concurrently-added nested key must not be pruned by this process's Validate")
+	require.NoError(t, pair.DecryptSecret())
+	require.Equal(t, "gk2-secret", pair.Secret)
+}
+
 // save() must resolve flag overrides exactly once. It is only reached from saveLocked
 // (via writeWholeConfig), which already swapped flag values out for the persisted ones;
 // a second resolve here re-applies them against the now-switched current context and
