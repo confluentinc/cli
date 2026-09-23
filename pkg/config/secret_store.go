@@ -9,21 +9,16 @@ import (
 
 // secretRecord holds one credential identity's secret material as stored on disk: each
 // value is ciphertext paired with its own salt/nonce. A credential identity can be shared
-// by several contexts (a saved password, GlobalAPIKeys, and nested Kafka API keys are all
-// identity-scoped), so each secret kind carries its own salt/nonce pair rather than
-// sharing one - pairing a ciphertext with the wrong salt/nonce fails GCM authentication on
-// load. Auth tokens are NOT identity-scoped: they are endpoint-scoped and keyed by context
-// name instead, in tokenRecord/secretFile.Tokens - see tokenRecord's doc comment.
+// by several contexts (GlobalAPIKeys and nested Kafka API keys are identity-scoped), so each
+// secret kind carries its own salt/nonce pair rather than sharing one - pairing a ciphertext
+// with the wrong salt/nonce fails GCM authentication on load. Auth tokens and saved passwords
+// are NOT identity-scoped: they are endpoint-scoped and keyed by context name instead, in
+// tokenRecord/secretFile.Tokens and passwordRecord/secretFile.Passwords - see their doc comments.
 type secretRecord struct {
 	// Secret is the api-key secret, from APIKeyPair.
 	Secret      string `json:"secret,omitempty"`
 	SecretSalt  []byte `json:"secret_salt,omitempty"`
 	SecretNonce []byte `json:"secret_nonce,omitempty"`
-
-	// Password is the saved login password, from LoginCredential.
-	Password      string `json:"password,omitempty"`
-	PasswordSalt  []byte `json:"password_salt,omitempty"`
-	PasswordNonce []byte `json:"password_nonce,omitempty"`
 
 	// GlobalAPIKeys holds org-scoped API keys (Context.GlobalAPIKeys), keyed by API key id.
 	GlobalAPIKeys map[string]*apiKeySecret `json:"global_api_keys,omitempty"`
@@ -54,6 +49,19 @@ type tokenRecord struct {
 	Nonce            []byte `json:"nonce,omitempty"`
 }
 
+// passwordRecord holds one context's saved login password as stored on disk, keyed by CONTEXT
+// NAME (secretFile.Passwords), not credential identity. SavedCredentials is endpoint-specific: two
+// contexts can share one credential identity (same username, different URL/CA-cert) while each
+// holds its own saved password. Keying passwords by identity would collapse both into one record,
+// so after reload both would get the last-writer password and one login would fail. The password
+// is encrypted with the username as GCM associated data and is never decrypted in place during a
+// session, so it crosses the save as a stable ciphertext triple.
+type passwordRecord struct {
+	Password string `json:"password,omitempty"`
+	Salt     []byte `json:"salt,omitempty"`
+	Nonce    []byte `json:"nonce,omitempty"`
+}
+
 // apiKeySecret is a nested API key's secret material, as stored on disk: ciphertext paired
 // with its own salt/nonce.
 type apiKeySecret struct {
@@ -64,10 +72,12 @@ type apiKeySecret struct {
 
 // secretFile is the on-disk shape of the secret store. Secrets is keyed by credential
 // identity (Context.identityKey) so contexts sharing a login share one entry and a context
-// rename never orphans it. Tokens is keyed by context name - see tokenRecord.
+// rename never orphans it. Tokens and Passwords are keyed by context name - see tokenRecord
+// and passwordRecord.
 type secretFile struct {
-	Secrets map[string]*secretRecord `json:"secrets,omitempty"`
-	Tokens  map[string]*tokenRecord  `json:"tokens,omitempty"`
+	Secrets   map[string]*secretRecord   `json:"secrets,omitempty"`
+	Tokens    map[string]*tokenRecord    `json:"tokens,omitempty"`
+	Passwords map[string]*passwordRecord `json:"passwords,omitempty"`
 }
 
 // secretStore reads and writes the encrypted secret file at path.
@@ -120,12 +130,13 @@ func allKafkaClusterConfigs(k *KafkaClusterContext) map[string]*KafkaClusterConf
 
 // stripSecretTriple returns a copy of rec with Secret/SecretSalt/SecretNonce zeroed, so the
 // generic mergeMapDeep can safely structural-diff everything else in a secretRecord
-// (Password, GlobalAPIKeys, KafkaAPIKeys - all stable ciphertext, see mergeSecretTriple's
-// comment) without the churning API-secret triple contaminating that decision. Password and
-// the nested API-key maps are still present in the copy (shared, read-only references -
-// mergeMapDeep only ever reads them via a JSON marshal). A nil rec copies to a non-nil empty
-// record so an identity whose only content was the secret still participates in the
-// generic merge as "present, empty" rather than vanishing from the key set entirely.
+// (GlobalAPIKeys, KafkaAPIKeys, SchemaRegistryCredentials - all stable ciphertext, see
+// mergeSecretTriple's comment) without the churning API-secret triple contaminating that decision.
+// The remaining maps are still present in
+// the copy (shared, read-only references - mergeMapDeep only ever reads them via a JSON marshal).
+// A nil rec copies to a non-nil empty record so an identity whose only content was the secret still
+// participates in the generic merge as "present, empty" rather than vanishing from the key set
+// entirely.
 func stripSecretTriple(rec *secretRecord) *secretRecord {
 	if rec == nil {
 		return &secretRecord{}
@@ -413,17 +424,20 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 		r.SecretNonce = shadow.Nonce
 	}
 
-	// SavedCredentials is keyed by context name, not identity, so it is mapped to the
-	// owning context's identityKey here.
-	for ctxName, ctx := range c.Contexts {
+	// Saved passwords are endpoint-specific (SavedCredentials is keyed by context name), so they
+	// are stored by context name in their own map - never folded into the identity-keyed record,
+	// where two contexts sharing one credential identity would collide. See passwordRecord.
+	passwords := map[string]*passwordRecord{}
+	for ctxName := range c.Contexts {
 		saved, ok := c.SavedCredentials[ctxName]
 		if !ok || saved == nil || saved.EncryptedPassword == "" {
 			continue
 		}
-		r := record(ctx.identityKey())
-		r.Password = saved.EncryptedPassword
-		r.PasswordSalt = saved.Salt
-		r.PasswordNonce = saved.Nonce
+		passwords[ctxName] = &passwordRecord{
+			Password: saved.EncryptedPassword,
+			Salt:     saved.Salt,
+			Nonce:    saved.Nonce,
+		}
 	}
 
 	for _, ctx := range c.Contexts {
@@ -491,13 +505,13 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 		}
 	}
 
-	ours := &secretFile{Secrets: records, Tokens: tokens}
+	ours := &secretFile{Secrets: records, Tokens: tokens, Passwords: passwords}
 
 	// No baseline (never loaded) or no disk read (the caller is writing a whole config with
 	// nothing to merge against) means there is no common ancestor: declare our state whole,
 	// matching saveLocked's own nil-baseline/missing-file short circuits for config.json.
 	if diskContextNames == nil || c.secretBaseline == nil {
-		if len(records) == 0 && len(tokens) == 0 {
+		if len(records) == 0 && len(tokens) == 0 && len(passwords) == 0 {
 			return nil
 		}
 		if err := newSecretStore().write(ours); err != nil {
@@ -553,14 +567,14 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 	// Drop an identity left with no content at all: its only material was the secret
 	// triple, and that's now cleared.
 	for id, rec := range merged.Secrets {
-		if rec.Secret == "" && rec.Password == "" && len(rec.GlobalAPIKeys) == 0 && len(rec.KafkaAPIKeys) == 0 && len(rec.SchemaRegistryCredentials) == 0 {
+		if rec.Secret == "" && len(rec.GlobalAPIKeys) == 0 && len(rec.KafkaAPIKeys) == 0 && len(rec.SchemaRegistryCredentials) == 0 {
 			delete(merged.Secrets, id)
 		}
 	}
 
-	// Tokens: a tokenRecord is entirely the churning unit (no stable sibling fields the way
-	// Password/nested keys are for a secretRecord), so mergeToken alone decides each
-	// context's whole entry - no generic mergeMapDeep pass first.
+	// Tokens: a tokenRecord is entirely the churning unit (unlike a stable password or the nested
+	// key/SR triples), so mergeToken alone decides each context's whole entry - no generic
+	// mergeMapDeep pass first.
 	merged.Tokens = map[string]*tokenRecord{}
 	ctxNames := map[string]bool{}
 	for name := range c.secretBaseline.Tokens {
@@ -602,6 +616,13 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 		merged.Tokens[name] = tok
 	}
 
+	// Passwords: a saved password is a stable ciphertext triple (never decrypted in place during a
+	// session, so no Windows re-encryption churn), so unlike tokens it merges through the generic
+	// structural mergeMapDeep - the same three-way merge SavedCredentials itself uses in config.json.
+	if merged.Passwords, err = mergeMapDeep(c.secretBaseline.Passwords, passwords, disk.Passwords); err != nil {
+		return fmt.Errorf("unable to merge secret store passwords: %w", err)
+	}
+
 	if err := store.write(merged); err != nil {
 		return err
 	}
@@ -629,8 +650,9 @@ func readSecretFileFromDisk(path string) (*secretFile, error) {
 }
 
 // loadSecretStore repopulates c's secret fields from the encrypted secret store - Secrets by
-// each context's identityKey, Tokens by exact context name (no broadcast across contexts
-// sharing an identity: see tokenRecord) - the reverse of saveSecretStore. It must run before
+// each context's identityKey, Tokens and Passwords by exact context name (no broadcast across
+// contexts sharing an identity: see tokenRecord/passwordRecord) - the reverse of saveSecretStore.
+// It must run before
 // wireContexts/Validate: ctx.GetState() is not wired to ContextStates until wireContexts
 // runs, so this reads ContextStates/Credentials/SavedCredentials directly by name/identity;
 // and Validate's nested-API-key pruning (validateGlobalAPIKeys, KafkaClusterContext.Validate)
@@ -648,7 +670,7 @@ func (c *Config) loadSecretStore() error {
 		return err
 	}
 	c.secretBaseline = file
-	if len(file.Secrets) == 0 && len(file.Tokens) == 0 {
+	if len(file.Secrets) == 0 && len(file.Tokens) == 0 && len(file.Passwords) == 0 {
 		return nil
 	}
 
@@ -662,6 +684,17 @@ func (c *Config) loadSecretStore() error {
 			}
 		}
 
+		// Passwords are keyed by context name, not identity (see passwordRecord), so they are
+		// repopulated by exact context name - independent of the identity-keyed secretRecord, which
+		// may be absent for a context whose only stored secret is a password.
+		if pw, ok := file.Passwords[name]; ok && pw != nil && pw.Password != "" {
+			if saved := c.SavedCredentials[name]; saved != nil {
+				saved.EncryptedPassword = pw.Password
+				saved.Salt = pw.Salt
+				saved.Nonce = pw.Nonce
+			}
+		}
+
 		rec, ok := file.Secrets[ctx.identityKey()]
 		if !ok || rec == nil {
 			continue
@@ -671,12 +704,6 @@ func (c *Config) loadSecretStore() error {
 			credential.APIKeyPair.Secret = rec.Secret
 			credential.APIKeyPair.Salt = rec.SecretSalt
 			credential.APIKeyPair.Nonce = rec.SecretNonce
-		}
-
-		if saved := c.SavedCredentials[name]; saved != nil && rec.Password != "" {
-			saved.EncryptedPassword = rec.Password
-			saved.Salt = rec.PasswordSalt
-			saved.Nonce = rec.PasswordNonce
 		}
 
 		for keyId, triple := range rec.GlobalAPIKeys {
