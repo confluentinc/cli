@@ -152,7 +152,7 @@ func stripSecretTriples(records map[string]*secretRecord) map[string]*secretReco
 // mirroring decryptToMatch), and move the whole (ciphertext, salt, nonce) triple as one
 // unit so a decrypted comparison never ends up pairing one source's ciphertext with
 // another's salt.
-func (c *Config) mergeSecretTriple(identity string, base, ours, disk *secretRecord) (secret string, salt, nonce []byte, err error) {
+func (c *Config) mergeSecretTriple(identity string, base, ours, disk *secretRecord) (string, []byte, []byte, error) {
 	credential := c.Credentials[identity]
 
 	toPlain := func(rec *secretRecord) (string, error) {
@@ -220,7 +220,7 @@ func (c *Config) mergeSecretTriple(identity string, base, ours, disk *secretReco
 // save) and the same fix. Unlike a secretRecord, a tokenRecord is ENTIRELY the churning
 // unit - Tokens is never run through the generic mergeMapDeep at all; this function alone
 // decides each context's whole entry, including add/delete.
-func (c *Config) mergeToken(ctxName string, base, ours, disk *tokenRecord) (authToken, authRefreshToken string, salt, nonce []byte, err error) {
+func (c *Config) mergeToken(ctxName string, base, ours, disk *tokenRecord) (string, string, []byte, []byte, error) {
 	toPlain := func(rec *tokenRecord) (string, string, error) {
 		if rec == nil {
 			return "", "", nil
