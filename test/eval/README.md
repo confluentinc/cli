@@ -6,7 +6,7 @@ The eval harness measures the impact of state isolation on CLI robustness under 
 
 In multi-agent scenarios where concurrent sessions share a single `~/.confluent/config.json`, a last-writer-wins race condition causes state damage: collisions (an agent intends one outcome - e.g. active environment `env-596` - but reads another written by a concurrent peer), lost updates (one session's write silently overwrites another's), and torn-write config corruption. Isolation - giving each session its own home directory - eliminates these failure modes and their downstream impact on correctness.
 
-Five scenarios exercise this, all driven by the same `Scenarios` registry in `scenario.go`:
+Five scenarios exercise this, each defined in its own file under `scenarios/` and collected in the `scenarios.All` registry:
 
 - **environment-crosstalk** - concurrent `login` + `environment use` sessions racing over the active environment.
 - **selection-cross-field** - two sessions set different `current_*` fields (`kafka cluster use` vs `flink compute-pool use`) on one shared context.
@@ -33,9 +33,9 @@ The test:
 
 1. Builds the CLI with coverage instrumentation via `make build-for-integration-test`
 2. Starts a mock Confluent Cloud backend on a fixed port
-3. For each scenario in the `Scenarios` registry, runs both the `shared` and `isolated` provisioners across 10 trials
+3. For each scenario in the `scenarios.All` registry, runs both the `shared` and `isolated` provisioners across 10 trials
 4. Each trial runs every session's `Setup` steps (e.g. login, environment selection) to completion, holds all sessions at a barrier until every session has finished setup, then releases them together to run their `Contend` steps (the racing writes) - maximizing the overlap between concurrent writes
-5. Grades each session (invocation error, config corruption, or collision against the scenario's expected outcome, in that priority) via `assertRedSharedGreenIsolated` in `metrics.go`
+5. Grades each session (invocation error, config corruption, or collision against the scenario's expected outcome, in that priority), then applies `AssertRedSharedGreenIsolated` from `metrics.go`
 6. Writes `test/eval/results/report.json` plus a multi-page HTML report: `test/eval/results/index.html` (one row per scenario) and one `test/eval/results/<slugified-scenario-name>.html` drill-down page per scenario (e.g. `environment-crosstalk.html`)
 
 The outcome comes from grading each session's final on-disk `config.json` after all writes complete. In shared mode, concurrent sessions writing to one file race: depending on scheduling, that race surfaces as a collision (one session's write wins outright, leaving another pointed at the wrong state) or as corruption (an interleaved/torn write leaves the file unparseable or structurally incomplete) - either way, every trial fails (`pass^k = 0`). Isolated mode leaves each session's own file untouched by the others, so neither failure mode is reachable.
@@ -130,7 +130,7 @@ traced back to the exact invocation that caused it:
 - **trials:** number of concurrent trials (independent test runs) in the cell
 - **collision_rate:** fraction of sessions whose observed state didn't match what they intended (intended ≠ observed) - e.g. the wrong active environment, a dropped api-key, or resurrected credentials, depending on the scenario
 - **corruption_rate:** fraction of sessions where `~/.confluent/config.json` failed validation (e.g., torn write)
-- **error_rate:** fraction of sessions where a `confluent` invocation itself failed (nonzero exit, timeout, or spawn error) - graded separately from collisions so a broken run isn't miscounted as state damage. `assertRedSharedGreenIsolated`'s headline assertion checks collision/corruption rates only: an error-only shared run does not prove crosstalk was demonstrated, so it fails the eval rather than passing by coincidence
+- **error_rate:** fraction of sessions where a `confluent` invocation itself failed (nonzero exit, timeout, or spawn error) - graded separately from collisions so a broken run isn't miscounted as state damage. `AssertRedSharedGreenIsolated`'s headline assertion checks collision/corruption rates only: an error-only shared run does not prove crosstalk was demonstrated, so it fails the eval rather than passing by coincidence
 - **pass_caret_k (pass^k):** fraction of trials where _every_ session graded "ok". The HTML report's index page calls this "clean runs" and shows it as "N / total" - same number, plainer name; the glossary on that page notes the pass^k formalism.
 
 **Per-session verdicts** (in priority order - the first that applies wins): `error` (an invocation
@@ -139,6 +139,22 @@ failed), `corruption` (config unparseable/incomplete), `collision` (observed sta
 transcript (command, exit code, stdout, stderr, duration) for that session's run.
 
 Each "session" within a trial represents one concurrent agent's config directory. Each "trial" is a full concurrent run under one provisioner. Rates are aggregated across all trials in a cell.
+
+## Adding a Scenario
+
+1. Create `scenarios/<name>.go` defining an unexported `eval.Scenario` var, and append it to `All`
+   in `scenarios/scenarios.go` (the order there is the report order).
+2. `Sessions` returns one `eval.SessionScript` per concurrent session. Put login and any
+   preconditions in `Setup`, and only the racing writes in `Contend`: the barrier sits between
+   the two, so a write in `Setup` isn't forced to overlap and won't reliably race.
+3. `Grade` returns one `eval.GradeSession(result, intent, observe)` per session. `observe` reads
+   the session's on-disk state; reuse a probe from `scenarios.go` or a reader from `grader.go`,
+   extending the `evalConfig` mirror there if the field isn't modeled yet.
+4. Make `observe` return an error, never an empty "ok", when it can't determine the outcome (see
+   `observeGlobalKeyPresent`), so a parsing miss shows up as corruption instead of a false pass.
+5. Check every command exists and works against the mock backend's Cloud path before relying on
+   it, then run the eval: a new scenario must still be RED under `shared` and GREEN under
+   `isolated`.
 
 ## Running Against Another Build
 
@@ -169,10 +185,10 @@ The harness is structured to grow into three orthogonal dimensions:
    - Future: provider-specific isolation strategies as agent layers land
 
 3. **Scenario** (concurrent behavior under test)
-   - Today: five scenarios in the `Scenarios` registry (environment-crosstalk, selection-cross-field, crud-lost-update, auth-race, mixed-workload) - see "What It Proves" above
+   - Today: five scenarios in the `scenarios.All` registry (environment-crosstalk, selection-cross-field, crud-lost-update, auth-race, mixed-workload) - see "What It Proves" above
    - Future: a real headless agent layer (`claude -p` + `PostToolUse` hook), live-CCloud smoke tests
 
-`TestEval` iterates over `Scenarios`, and within each scenario over both provisioners; `Report` nests
+`TestEval` iterates over `scenarios.All`, and within each scenario over both provisioners; `Report` nests
 `ScenarioReport` → `CellReport` (keyed by cell name, e.g., `"shared"`, `"isolated"`) → `TrialResult` →
 `SessionOutcome` to support arbitrary build x provisioner x scenario combinations, and per-session
 drill-down, as the harness grows.
@@ -180,12 +196,13 @@ drill-down, as the harness grows.
 ## Architecture
 
 - `provisioner.go`: `Provisioner` interface—each session gets a HOME dir via `HomeDir(session int)`
-- `scenario.go`: `Invocation` (one captured `confluent` run), `SessionScript` (a session's `Setup`/`Contend` steps plus its descriptive `Label`), `RunScenario` executes sessions concurrently with a barrier and returns each session's captured `Invocations` in order, `Scenario`/`Scenarios` the registry of the five scenarios (workload + grading) driving `TestEval`
+- `scenario.go`: `Invocation` (one captured `confluent` run), `SessionScript` (a session's `Setup`/`Contend` steps plus its descriptive `Label`), `RunScenario` executes sessions concurrently with a barrier and returns each session's captured `Invocations` in order, `Scenario` the contract every scenario implements (workload + grading)
 - `grader.go`: `ReadActiveEnvironment`, `GradeConfigIntegrity` - low-level config-file checks
-- `metrics.go`: `GradeSession(r, intent, observe)` grades one session into a `Verdict` (`ok`/`collision`/`corruption`/`error`) with a `Detail` (`observe` reads the scenario-relevant state and is the only scenario-specific part); `GradeTrial` grades a trial's sessions; `Aggregate` rolls graded trials into `CellMetrics`; `assertRedSharedGreenIsolated` is the headline assertion applied per-scenario
+- `metrics.go`: `GradeSession(r, intent, observe)` grades one session into a `Verdict` (`ok`/`collision`/`corruption`/`error`) with a `Detail` (`observe` reads the scenario-relevant state and is the only scenario-specific part); `GradeTrial` grades a trial's sessions; `Aggregate` rolls graded trials into `CellMetrics`; `AssertRedSharedGreenIsolated` is the headline assertion applied per-scenario
 - `report.go`: `CellReport`/`ScenarioReport`/`Report` nested types, `WriteJSON`, `WriteHTMLReport` (renders the embedded `templates/*.tmpl` set into `index.html` + one per-scenario page), `Summary()` for human-readable output. Template helpers: `slugify` (scenario name → filename), `codeify` (renders backtick-delimited spans as `<code>`, HTML-escaping everything else first), `cleanRuns`/`sharedDamage` (index-page summaries), `cellByName`.
 - `templates/`: the committed HTML/CSS source - `styles.tmpl` (shared theme-aware CSS, light + `prefers-color-scheme: dark`), `index.tmpl` (scenario list + glossary), `scenario.tmpl` (per-scenario drill-down, including each session's role label). Parsed once via `embed.FS` at package init; a malformed template fails at import time, and `TestReportTemplatesParseAndResolveNames` guards that all three names resolve.
-- `eval_test.go`: `TestEval` the flagship end-to-end eval, looping over `Scenarios` x provisioners x `evalTrials`; `realRun` captures each invocation's full transcript
-- `*_test.go`: unit tests for each module (grader, scenario, provisioner, metrics, report)
+- `scenarios/`: package `scenarios`, one file per scenario (e.g. `auth_race.go`) plus `scenarios.go`, which holds the `All` registry and the helpers scenarios share (`loginStep`, the `observe*` probes, `createdGlobalKey`)
+- `eval_test.go`: `TestEval` the flagship end-to-end eval, looping over `scenarios.All` x provisioners x `evalTrials`; `realRun` captures each invocation's full transcript. It lives in the external `eval_test` package because `scenarios` imports `eval`, so an in-package test importing `scenarios` would be an import cycle
+- `*_test.go`: unit tests for each module (grader, scenario, provisioner, metrics, report, scenarios)
 
-All files carry `//go:build eval` except `doc.go`.
+All files carry `//go:build eval` except the two `doc.go` files.

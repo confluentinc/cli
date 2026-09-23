@@ -102,9 +102,9 @@ func GradeTrial(trial int, results []SessionResult, grade func([]SessionResult) 
 	return TrialResult{Trial: trial, Sessions: sessions, AllPassed: allPassed}
 }
 
-// assertRedSharedGreenIsolated is every scenario's expectation: shared shows state damage (a
+// AssertRedSharedGreenIsolated is every scenario's expectation: shared shows state damage (a
 // collision or corruption; an error-only run does not prove crosstalk), isolated is perfectly clean.
-func assertRedSharedGreenIsolated(shared, isolated CellMetrics) []string {
+func AssertRedSharedGreenIsolated(shared, isolated CellMetrics) []string {
 	var v []string
 	if shared.CollisionRate == 0 && shared.CorruptionRate == 0 {
 		v = append(v, "expected collisions or corruptions under shared state, got none (crosstalk not demonstrated)")

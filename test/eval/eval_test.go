@@ -1,6 +1,6 @@
 //go:build eval
 
-package eval
+package eval_test
 
 import (
 	"bytes"
@@ -14,6 +14,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/confluentinc/cli/v4/test/eval"
+	"github.com/confluentinc/cli/v4/test/eval/scenarios"
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
@@ -22,8 +24,8 @@ const evalTrials = 10
 // realRun executes one confluent invocation with the given per-session env and space-split args,
 // bounded by a timeout so a hung subprocess can't hang the whole eval, and captures the full
 // transcript (exit code, stdout, stderr, duration) instead of collapsing it to a bare error.
-func realRun(coverDir string) CommandFunc {
-	return func(bin string, env []string, args string) Invocation {
+func realRun(coverDir string) eval.CommandFunc {
+	return func(bin string, env []string, args string) eval.Invocation {
 		start := time.Now()
 		ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
 		defer cancel()
@@ -40,7 +42,7 @@ func realRun(coverDir string) CommandFunc {
 		cmd.Stderr = &stderr
 
 		err := cmd.Run()
-		inv := Invocation{
+		inv := eval.Invocation{
 			Command:    args,
 			Stdout:     stdout.String(),
 			Stderr:     stderr.String(),
@@ -69,38 +71,38 @@ func TestEval(t *testing.T) {
 	cloudURL := backend.GetCloudUrl()
 	run := realRun(t.TempDir())
 
-	var scenarioReports []ScenarioReport
-	for _, sc := range Scenarios {
+	var scenarioReports []eval.ScenarioReport
+	for _, sc := range scenarios.All {
 		scripts := sc.Sessions(cloudURL)
-		var cells []CellReport
-		var sharedM, isolatedM CellMetrics
+		var cells []eval.CellReport
+		var sharedM, isolatedM eval.CellMetrics
 		for _, cell := range []struct {
 			name string
-			make func(root string) Provisioner
-		}{{"shared", NewSharedProvisioner}, {"isolated", NewIsolatedProvisioner}} {
-			var trials []TrialResult
+			make func(root string) eval.Provisioner
+		}{{"shared", eval.NewSharedProvisioner}, {"isolated", eval.NewIsolatedProvisioner}} {
+			var trials []eval.TrialResult
 			for trial := 0; trial < evalTrials; trial++ {
 				p := cell.make(t.TempDir())
-				results := RunScenario(bin, p, scripts, run)
-				trials = append(trials, GradeTrial(trial, results, sc.Grade))
+				results := eval.RunScenario(bin, p, scripts, run)
+				trials = append(trials, eval.GradeTrial(trial, results, sc.Grade))
 			}
-			m := Aggregate(trials)
-			cells = append(cells, CellReport{Name: cell.name, Metrics: m, Trials: trials})
+			m := eval.Aggregate(trials)
+			cells = append(cells, eval.CellReport{Name: cell.name, Metrics: m, Trials: trials})
 			if cell.name == "shared" {
 				sharedM = m
 			} else {
 				isolatedM = m
 			}
 		}
-		for _, v := range assertRedSharedGreenIsolated(sharedM, isolatedM) {
+		for _, v := range eval.AssertRedSharedGreenIsolated(sharedM, isolatedM) {
 			t.Errorf("scenario %q: %s", sc.Name, v)
 		}
-		scenarioReports = append(scenarioReports, ScenarioReport{
+		scenarioReports = append(scenarioReports, eval.ScenarioReport{
 			Name: sc.Name, Description: sc.Description, Sessions: len(scripts), Trials: evalTrials, Cells: cells,
 		})
 	}
 
-	report := Report{Build: gitShortSHA(repoRootFromTest(t)), GeneratedAt: time.Now().UTC().Format(time.RFC3339), Scenarios: scenarioReports}
+	report := eval.Report{Build: gitShortSHA(repoRootFromTest(t)), GeneratedAt: time.Now().UTC().Format(time.RFC3339), Scenarios: scenarioReports}
 	t.Log("\n" + report.Summary())
 	writeReport(t, report)
 }
@@ -169,7 +171,7 @@ func repoRootFromTest(t *testing.T) string {
 	return filepath.Clean(filepath.Join(wd, "..", ".."))
 }
 
-func writeReport(t *testing.T, r Report) {
+func writeReport(t *testing.T, r eval.Report) {
 	t.Helper()
 	dir := filepath.Join(repoRootFromTest(t), "test", "eval", "results")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -180,5 +182,30 @@ func writeReport(t *testing.T, r Report) {
 	}
 	if err := r.WriteHTMLReport(dir); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestBuildCLIHonorsEvalCLIBinOverride(t *testing.T) {
+	// Arrange: a fake prebuilt binary and the override pointing at it.
+	dir := t.TempDir()
+	fake := filepath.Join(dir, "confluent")
+	if err := os.WriteFile(fake, []byte("#!/bin/sh\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("EVAL_CLI_BIN", fake)
+
+	// Act
+	got := buildCLI(t)
+
+	// Assert: returned the override without building.
+	if got != fake {
+		t.Errorf("buildCLI returned %q, want the EVAL_CLI_BIN override %q", got, fake)
+	}
+}
+
+func TestGitShortSHAHonorsBuildLabelOverride(t *testing.T) {
+	t.Setenv("EVAL_BUILD_LABEL", "78f96cece")
+	if got := gitShortSHA("/nonexistent-repo-root"); got != "78f96cece" {
+		t.Errorf("gitShortSHA returned %q, want the EVAL_BUILD_LABEL override", got)
 	}
 }

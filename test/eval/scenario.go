@@ -3,9 +3,7 @@
 package eval
 
 import (
-	"fmt"
 	"os"
-	"regexp"
 	"strings"
 	"sync"
 
@@ -38,17 +36,11 @@ type SessionResult struct {
 
 // SessionScript is one concurrent session's ordered workload. Setup steps run to completion first;
 // then all sessions release from the barrier together and run their Contend steps, so the contended
-// writes overlap. A login step already carries "--url <cloudURL>" (built via loginStep).
+// writes overlap. A login step already carries "--url <cloudURL>".
 type SessionScript struct {
 	Label   string
 	Setup   []string
 	Contend []string
-}
-
-// loginStep builds the login command for the mock backend URL, so the "--url" format string is not
-// restated across scenario closures.
-func loginStep(cloudURL string) string {
-	return "login --url " + cloudURL
 }
 
 // RunScenario runs each session's Setup steps, holds every session at a barrier until all have
@@ -125,159 +117,10 @@ func sessionEnv(home string) []string {
 	return out
 }
 
-const (
-	envA = "env-596"
-	envB = "env-595"
-)
-
 // Scenario is one row in the eval matrix: a concurrent workload plus how to grade it.
 type Scenario struct {
 	Name        string
 	Description string
 	Sessions    func(cloudURL string) []SessionScript
 	Grade       func(results []SessionResult) []SessionOutcome
-}
-
-var apiKeyPattern = regexp.MustCompile(`MYKEY[0-9]+`)
-
-// createdGlobalKey extracts the mock-assigned key id this session's `api-key create` printed.
-func createdGlobalKey(r SessionResult) string {
-	for _, inv := range r.Invocations {
-		if m := apiKeyPattern.FindString(inv.Stdout); m != "" {
-			return m
-		}
-	}
-	return ""
-}
-
-// observeGlobalKeyPresent returns an observe probe for a session's own created global api-key. A key
-// that never parsed from stdout is treated as a read error (routes to a visible corruption verdict),
-// so a stdout-format change can't silently mask a dropped key as OK.
-func observeGlobalKeyPresent(key string) func(SessionResult) (string, error) {
-	return func(r SessionResult) (string, error) {
-		if key == "" {
-			return "", fmt.Errorf("no created api-key parsed from stdout")
-		}
-		present, err := GlobalAPIKeyPresent(r.HomeDir, key)
-		if err != nil {
-			return "", err
-		}
-		if present {
-			return key, nil
-		}
-		return "", nil
-	}
-}
-
-// observeCredsCleared returns an observe probe that reports whether the session's context is logged
-// out ("cleared") or still has credentials ("resurrected" by a concurrent write).
-func observeCredsCleared() func(SessionResult) (string, error) {
-	return func(r SessionResult) (string, error) {
-		cleared, err := CredsCleared(r.HomeDir)
-		if err != nil {
-			return "", err
-		}
-		if cleared {
-			return "cleared", nil
-		}
-		return "resurrected", nil
-	}
-}
-
-var crosstalkEnvs = []string{envA, envB}
-
-var Scenarios = []Scenario{
-	{
-		Name:        "environment-crosstalk",
-		Description: "concurrent `confluent login` + `confluent environment use` sessions; shared state lands the wrong active environment, isolated state does not.",
-		Sessions: func(cloudURL string) []SessionScript {
-			scripts := make([]SessionScript, len(crosstalkEnvs))
-			for i, env := range crosstalkEnvs {
-				scripts[i] = SessionScript{
-					Label:   fmt.Sprintf("uses %s", env),
-					Setup:   []string{loginStep(cloudURL)},
-					Contend: []string{"environment use " + env},
-				}
-			}
-			return scripts
-		},
-		Grade: func(results []SessionResult) []SessionOutcome {
-			outs := make([]SessionOutcome, len(results))
-			for i, r := range results {
-				outs[i] = GradeSession(r, crosstalkEnvs[i], func(r SessionResult) (string, error) {
-					return ReadActiveEnvironment(r.HomeDir)
-				})
-			}
-			return outs
-		},
-	},
-	{
-		Name:        "selection-cross-field",
-		Description: "two sessions set DIFFERENT `current_*` fields on one shared context (`kafka cluster use` vs `flink compute-pool use`); a lockless whole-file save drops one.",
-		Sessions: func(cloudURL string) []SessionScript {
-			return []SessionScript{
-				{Label: "uses kafka cluster", Setup: []string{loginStep(cloudURL), "environment use " + envA}, Contend: []string{"kafka cluster use lkc-12345"}},
-				{Label: "uses flink compute-pool", Setup: []string{loginStep(cloudURL), "environment use " + envA}, Contend: []string{"flink compute-pool use lfcp-123456"}},
-			}
-		},
-		Grade: func(results []SessionResult) []SessionOutcome {
-			return []SessionOutcome{
-				GradeSession(results[0], "lkc-12345", func(r SessionResult) (string, error) { return ReadActiveKafkaCluster(r.HomeDir, envA) }),
-				GradeSession(results[1], "lfcp-123456", func(r SessionResult) (string, error) { return ReadCurrentFlinkComputePool(r.HomeDir, envA) }),
-			}
-		},
-	},
-	{
-		Name:        "crud-lost-update",
-		Description: "two sessions each `api-key create --resource global` on one shared context; a lockless whole-file save drops one of the two created keys.",
-		Sessions: func(cloudURL string) []SessionScript {
-			return []SessionScript{
-				{Label: "creates key A", Setup: []string{loginStep(cloudURL)}, Contend: []string{"api-key create --resource global"}},
-				{Label: "creates key B", Setup: []string{loginStep(cloudURL)}, Contend: []string{"api-key create --resource global"}},
-			}
-		},
-		Grade: func(results []SessionResult) []SessionOutcome {
-			outs := make([]SessionOutcome, len(results))
-			for i, r := range results {
-				key := createdGlobalKey(r)
-				outs[i] = GradeSession(r, key, observeGlobalKeyPresent(key))
-			}
-			return outs
-		},
-	},
-	{
-		Name:        "auth-race",
-		Description: "one session keeps working (`environment use`) while another `logout`s on the shared context; the logout can clobber the first session's auth, or be resurrected by it.",
-		Sessions: func(cloudURL string) []SessionScript {
-			return []SessionScript{
-				{Label: "stays logged in, selects env", Setup: []string{loginStep(cloudURL)}, Contend: []string{"environment use " + envA}},
-				{Label: "logs out", Setup: []string{loginStep(cloudURL)}, Contend: []string{"logout"}},
-			}
-		},
-		Grade: func(results []SessionResult) []SessionOutcome {
-			return []SessionOutcome{
-				GradeSession(results[0], envA, func(r SessionResult) (string, error) { return ReadActiveEnvironment(r.HomeDir) }),
-				GradeSession(results[1], "cleared", observeCredsCleared()),
-			}
-		},
-	},
-	{
-		Name:        "mixed-workload",
-		Description: "three sessions doing unrelated real work on one shared context (select an env; create an api-key; use a cluster then log out); under shared state one session's work clobbers another's.",
-		Sessions: func(cloudURL string) []SessionScript {
-			return []SessionScript{
-				{Label: "selects an environment", Setup: []string{loginStep(cloudURL)}, Contend: []string{"environment use " + envA}},
-				{Label: "creates an api-key", Setup: []string{loginStep(cloudURL)}, Contend: []string{"api-key create --resource global"}},
-				{Label: "uses a cluster then logs out", Setup: []string{loginStep(cloudURL), "environment use " + envA}, Contend: []string{"kafka cluster use lkc-12345", "logout"}},
-			}
-		},
-		Grade: func(results []SessionResult) []SessionOutcome {
-			key := createdGlobalKey(results[1])
-			return []SessionOutcome{
-				GradeSession(results[0], envA, func(r SessionResult) (string, error) { return ReadActiveEnvironment(r.HomeDir) }),
-				GradeSession(results[1], key, observeGlobalKeyPresent(key)),
-				GradeSession(results[2], "cleared", observeCredsCleared()),
-			}
-		},
-	},
 }

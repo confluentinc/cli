@@ -66,16 +66,6 @@ func TestGlobalAPIKeyPresent(t *testing.T) {
 	}
 }
 
-func TestCreatedGlobalKeyParsesStdout(t *testing.T) {
-	r := SessionResult{Invocations: []Invocation{
-		{Command: "login --url x"},
-		{Command: "api-key create --resource global", Stdout: "It may take a couple of minutes...\nAPI Key: MYKEY2\nAPI Secret: MYSECRET2\n"},
-	}}
-	if got := createdGlobalKey(r); got != "MYKEY2" {
-		t.Errorf("parsed %q", got)
-	}
-}
-
 func TestCredsCleared(t *testing.T) {
 	home := t.TempDir()
 	writeConfig(t, home, `{"current_context":"","contexts":{"ctx":{}},"context_states":{"ctx":{"auth_token":""}}}`)
