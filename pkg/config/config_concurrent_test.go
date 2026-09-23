@@ -624,6 +624,128 @@ func TestSecretStore_UnchangedPlaintextDifferentCiphertext_LogoutStaysCleared(t 
 		"a's tampered baseline ciphertext must not make an untouched token look locally changed and resurrect the concurrent logout")
 }
 
+// newConfigWithNestedKeys seeds a config with one context holding a Global API key and a
+// cluster-scoped Kafka API key (both with secrets) under path.
+func newConfigWithNestedKeys(t *testing.T, path string) {
+	t.Helper()
+
+	c := New()
+	c.Filename = path
+	c.Platforms["platform"] = &Platform{Name: "platform", Server: "https://example.com"}
+	c.Credentials["cred"] = &Credential{
+		Name:           "cred",
+		CredentialType: APIKey,
+		APIKeyPair:     &APIKeyPair{Key: "api-key", Secret: "secret-original"},
+	}
+	state := new(ContextState)
+	ctx := &Context{
+		Name:           "ctx",
+		PlatformName:   "platform",
+		CredentialName: "cred",
+		Platform:       c.Platforms["platform"],
+		Credential:     c.Credentials["cred"],
+		State:          state,
+		Config:         c,
+		GlobalAPIKeys:  map[string]*APIKeyPair{},
+	}
+	cluster := &KafkaClusterConfig{
+		ID:        "lkc-1",
+		Name:      "one",
+		Bootstrap: "https://example.com",
+		APIKeys:   map[string]*APIKeyPair{"CK": {Key: "CK", Secret: "ck-original"}},
+	}
+	require.NoError(t, cluster.EncryptAPIKeys())
+	ctx.KafkaClusterContext = &KafkaClusterContext{
+		KafkaClusterConfigs: map[string]*KafkaClusterConfig{"lkc-1": cluster},
+		Context:             ctx,
+	}
+	c.Contexts["ctx"] = ctx
+	c.ContextStates["ctx"] = state
+	c.CurrentContext = "ctx"
+
+	require.NoError(t, ctx.StoreGlobalAPIKey(&APIKeyPair{Key: "GK", Secret: "gk-original"}))
+	require.NoError(t, c.Save())
+}
+
+// tamperNestedKeyCiphertext overwrites cfg's OWN in-memory secret baseline for a nested API key
+// (Global or, when clusterId != "", a Kafka cluster key) with a different encryption of the SAME
+// plaintext (fresh salt/nonce). This reproduces, on any platform, the shape Windows produces on
+// every save: ResolveKafkaAPIKey decrypts a nested key in place and it re-encrypts to different
+// ciphertext, even though nothing about the key's plaintext changed.
+func tamperNestedKeyCiphertext(t *testing.T, cfg *Config, identity, clusterId, keyId, plaintext string) {
+	t.Helper()
+	pair := &APIKeyPair{Key: keyId, Secret: plaintext}
+	require.NoError(t, pair.EncryptSecret())
+	triple := &apiKeySecret{Secret: pair.Secret, Salt: pair.Salt, Nonce: pair.Nonce}
+
+	rec := cfg.secretBaseline.Secrets[identity]
+	require.NotNil(t, rec)
+	if clusterId == "" {
+		rec.GlobalAPIKeys[keyId] = triple
+	} else {
+		rec.KafkaAPIKeys[clusterId][keyId] = triple
+	}
+}
+
+// A ciphertext-only diff would see a's own untouched Global API key as "changed" the moment its
+// baseline's ciphertext differs from a fresh re-encryption (true on Windows: ResolveKafkaAPIKey
+// decrypts nested keys in place, which then re-encrypt non-deterministically). This reproduces that
+// shape on Unix (tamperNestedKeyCiphertext) and pins that the nested-key merge decides on plaintext:
+// a's churned baseline must not make its own untouched key look changed and clobber a concurrent
+// rotation it never touched.
+func TestSecretStore_NestedGlobalKeyUnchangedPlaintextDifferentCiphertext_NotClobbered(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	newConfigWithNestedKeys(t, path)
+
+	a := loadDecrypted(t, path) // holds "gk-original" (ciphertext) live, untouched
+	tamperNestedKeyCiphertext(t, a, "cred", "", "GK", "gk-original")
+
+	other := loadDecrypted(t, path) // concurrent session, rotates the Global key
+	rotated := other.Contexts["ctx"].GlobalAPIKeys["GK"]
+	rotated.Secret, rotated.Salt, rotated.Nonce = "gk-rotated", nil, nil
+	require.NoError(t, other.Save())
+
+	a.Contexts["ctx"].CurrentEnvironment = "env-from-a" // a's own, unrelated edit
+	require.NoError(t, a.Save())
+
+	final := New()
+	final.Filename = path
+	require.NoError(t, final.Load())
+	pair := final.Contexts["ctx"].GlobalAPIKeys["GK"]
+	require.NoError(t, pair.DecryptSecret())
+	require.Equal(t, "gk-rotated", pair.Secret,
+		"a's churned baseline ciphertext must not make an untouched Global key look changed and clobber the concurrent rotation")
+}
+
+// The Kafka cluster-scoped analog of the Global-key churn test above.
+func TestSecretStore_NestedKafkaKeyUnchangedPlaintextDifferentCiphertext_NotClobbered(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	newConfigWithNestedKeys(t, path)
+
+	a := loadDecrypted(t, path)
+	tamperNestedKeyCiphertext(t, a, "cred", "lkc-1", "CK", "ck-original")
+
+	other := loadDecrypted(t, path) // concurrent session, rotates the cluster key
+	rotated := other.Contexts["ctx"].KafkaClusterContext.KafkaClusterConfigs["lkc-1"].APIKeys["CK"]
+	rotated.Secret, rotated.Salt, rotated.Nonce = "ck-rotated", nil, nil
+	require.NoError(t, other.Save())
+
+	a.Contexts["ctx"].CurrentEnvironment = "env-from-a"
+	require.NoError(t, a.Save())
+
+	final := New()
+	final.Filename = path
+	require.NoError(t, final.Load())
+	pair := final.Contexts["ctx"].KafkaClusterContext.KafkaClusterConfigs["lkc-1"].APIKeys["CK"]
+	require.NoError(t, pair.DecryptSecret())
+	require.Equal(t, "ck-rotated", pair.Secret,
+		"a's churned baseline ciphertext must not make an untouched Kafka key look changed and clobber the concurrent rotation")
+}
+
 // save() must resolve flag overrides exactly once. It is only reached from saveLocked
 // (via writeWholeConfig), which already swapped flag values out for the persisted ones;
 // a second resolve here re-applies them against the now-switched current context and
