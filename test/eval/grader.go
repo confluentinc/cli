@@ -95,7 +95,8 @@ func soleContext(homeDir string) (string, error) {
 	return "", fmt.Errorf("no context found")
 }
 
-// CredsCleared reports whether the sole context's auth token has been cleared (logged out).
+// CredsCleared reports whether the sole context's auth token has been cleared (logged out). Logout
+// keeps the context_states entry and only blanks its token, so a missing entry is an error.
 func CredsCleared(homeDir string) (bool, error) {
 	c, err := loadConfig(homeDir)
 	if err != nil {
@@ -105,7 +106,11 @@ func CredsCleared(homeDir string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return c.ContextStates[name].AuthToken == "", nil
+	state, ok := c.ContextStates[name]
+	if !ok {
+		return false, fmt.Errorf("context_states missing entry for context %q", name)
+	}
+	return state.AuthToken == "", nil
 }
 
 // ReadActiveKafkaCluster returns the active kafka cluster id for the sole context under the given env.

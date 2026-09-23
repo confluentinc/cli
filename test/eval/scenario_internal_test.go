@@ -51,6 +51,35 @@ func TestRunScenarioBarrierReleasesContendAfterAllSetup(t *testing.T) {
 	}
 }
 
+func TestRunScenarioSerializesSetupAcrossSessions(t *testing.T) {
+	// Arrange: each setup step lingers long enough that concurrent setups would overlap.
+	p := NewSharedProvisioner(t.TempDir())
+	scripts := []SessionScript{
+		{Setup: []string{"setup a"}, Contend: []string{"contend a"}},
+		{Setup: []string{"setup b"}, Contend: []string{"contend b"}},
+		{Setup: []string{"setup c"}, Contend: []string{"contend c"}},
+	}
+	var inSetup, overlaps atomic.Int32
+	run := func(bin string, env []string, args string) Invocation {
+		if strings.HasPrefix(args, "setup") {
+			if inSetup.Add(1) > 1 {
+				overlaps.Add(1)
+			}
+			time.Sleep(20 * time.Millisecond)
+			inSetup.Add(-1)
+		}
+		return Invocation{Command: args, ExitCode: 0}
+	}
+
+	// Act
+	RunScenario("bin", p, scripts, run)
+
+	// Assert
+	if overlaps.Load() != 0 {
+		t.Errorf("setup steps from different sessions overlapped %d time(s); shared-home setup must not race", overlaps.Load())
+	}
+}
+
 func TestRunScenarioHaltsSessionOnFailedSetupStep(t *testing.T) {
 	// Arrange
 	root := t.TempDir()

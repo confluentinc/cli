@@ -12,7 +12,7 @@ var crosstalkEnvs = []string{envA, envB}
 
 var environmentCrosstalk = eval.Scenario{
 	Name:        "environment-crosstalk",
-	Description: "concurrent `confluent login` + `confluent environment use` sessions; shared state lands the wrong active environment, isolated state does not.",
+	Description: "two logged-in sessions run `confluent environment use` for different environments at once; shared state lands the wrong active environment, isolated state does not.",
 	Sessions: func(cloudURL string) []eval.SessionScript {
 		scripts := make([]eval.SessionScript, len(crosstalkEnvs))
 		for i, env := range crosstalkEnvs {

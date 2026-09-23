@@ -164,3 +164,31 @@ func TestAggregateAllOKTrialsPassCaretKIsOne(t *testing.T) {
 		t.Fatalf("expected all rates 0, got %+v", m)
 	}
 }
+
+func TestAssertRedSharedGreenIsolated(t *testing.T) {
+	damaged := CellMetrics{CollisionRate: 0.5}
+	clean := CellMetrics{PassCaretK: 1.0}
+	tests := []struct {
+		name             string
+		shared, isolated CellMetrics
+		wantViolations   int
+	}{
+		{"red shared, green isolated", damaged, clean, 0},
+		{"corruption alone counts as shared damage", CellMetrics{CorruptionRate: 0.2}, clean, 0},
+		{"clean shared is not a demonstration", CellMetrics{}, clean, 1},
+		{"error-only shared is not a demonstration", CellMetrics{ErrorRate: 1.0}, clean, 1},
+		{"isolated collision", damaged, CellMetrics{CollisionRate: 0.1, PassCaretK: 1.0}, 1},
+		{"isolated corruption", damaged, CellMetrics{CorruptionRate: 0.1, PassCaretK: 1.0}, 1},
+		{"isolated error", damaged, CellMetrics{ErrorRate: 0.1, PassCaretK: 1.0}, 1},
+		{"isolated flaky trial", damaged, CellMetrics{PassCaretK: 0.9}, 1},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			v := AssertRedSharedGreenIsolated(tc.shared, tc.isolated)
+
+			if len(v) != tc.wantViolations {
+				t.Errorf("got %d violation(s) %q, want %d", len(v), v, tc.wantViolations)
+			}
+		})
+	}
+}

@@ -81,6 +81,17 @@ func TestCredsCleared(t *testing.T) {
 	}
 }
 
+func TestCredsClearedErrorsWhenContextStateMissing(t *testing.T) {
+	home := t.TempDir()
+	writeConfig(t, home, `{"current_context":"","contexts":{"ctx":{}},"context_states":{}}`)
+
+	_, err := CredsCleared(home)
+
+	if err == nil {
+		t.Error("expected an error when the context's state entry is missing, not a clean logout")
+	}
+}
+
 func TestGradeConfigIntegrityFailsOnTruncatedFile(t *testing.T) {
 	home := t.TempDir()
 	writeConfig(t, home, `{"current_context": "ctx-1", "contexts": {`) // torn write

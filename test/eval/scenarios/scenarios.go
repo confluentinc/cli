@@ -34,6 +34,19 @@ func observeActiveEnvironment(r eval.SessionResult) (string, error) {
 	return eval.ReadActiveEnvironment(r.HomeDir)
 }
 
+// observeLoggedInEnvironment reports the session's active environment, or "logged out" when a
+// concurrent logout cleared its credentials even though the environment survived.
+func observeLoggedInEnvironment(r eval.SessionResult) (string, error) {
+	cleared, err := eval.CredsCleared(r.HomeDir)
+	if err != nil {
+		return "", err
+	}
+	if cleared {
+		return "logged out", nil
+	}
+	return observeActiveEnvironment(r)
+}
+
 var apiKeyPattern = regexp.MustCompile(`MYKEY[0-9]+`)
 
 // createdGlobalKey extracts the mock-assigned key id this session's `api-key create` printed.

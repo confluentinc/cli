@@ -17,7 +17,7 @@ var mixedWorkload = eval.Scenario{
 	Grade: func(results []eval.SessionResult) []eval.SessionOutcome {
 		key := createdGlobalKey(results[1])
 		return []eval.SessionOutcome{
-			eval.GradeSession(results[0], envA, observeActiveEnvironment),
+			eval.GradeSession(results[0], envA, observeLoggedInEnvironment),
 			eval.GradeSession(results[1], key, observeGlobalKeyPresent(key)),
 			eval.GradeSession(results[2], "cleared", observeCredsCleared()),
 		}

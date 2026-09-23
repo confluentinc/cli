@@ -15,7 +15,7 @@ var authRace = eval.Scenario{
 	},
 	Grade: func(results []eval.SessionResult) []eval.SessionOutcome {
 		return []eval.SessionOutcome{
-			eval.GradeSession(results[0], envA, observeActiveEnvironment),
+			eval.GradeSession(results[0], envA, observeLoggedInEnvironment),
 			eval.GradeSession(results[1], "cleared", observeCredsCleared()),
 		}
 	},
