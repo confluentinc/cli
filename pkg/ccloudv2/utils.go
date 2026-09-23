@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
 
@@ -58,6 +59,11 @@ func IsCCloudURL(url string, isTest bool) bool {
 func NewRetryableHttpClient(cfg *config.Config, unsafeTrace bool) *http.Client {
 	client := retryablehttp.NewClient()
 	client.Logger = plog.NewLeveledLogger(unsafeTrace)
+	if cfg != nil && cfg.IsTest {
+		// keep the retry count (it shows up in error output) but skip the real backoff
+		client.RetryWaitMin = time.Millisecond
+		client.RetryWaitMax = time.Millisecond
+	}
 	client.CheckRetry = func(_ context.Context, resp *http.Response, err error) (bool, error) {
 		if resp == nil {
 			return false, err
