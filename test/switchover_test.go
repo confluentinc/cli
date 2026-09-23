@@ -14,7 +14,7 @@ func (s *CLITestSuite) TestSwitchover() {
 		{args: "switchover pair describe sw-000000", fixture: "switchover/pair/describe-not-found.golden", exitCode: 1},
 
 		// SwitchoverEndpoint
-		{args: `switchover endpoint create prod-endpoint --parent-resource-crn crn://confluent.cloud/organization=org-123/environment=env-123456/switchover-pair=sw-123456 --endpoint name=west-platt,type=private,network=n-111111 --endpoint name=east-platt,type=private,network=n-222222`, fixture: "switchover/endpoint/create.golden"},
+		{args: `switchover endpoint create prod-endpoint --parent-resource-crn crn://confluent.cloud/organization=org-123/environment=env-123456/switchover-pair=sw-123456 --endpoint name=west-platt,type=private,network=crn://confluent.cloud/organization=org-123/environment=env-123456/network=n-111111 --endpoint name=east-platt,type=private,network=crn://confluent.cloud/organization=org-123/environment=env-234567/network=n-222222`, fixture: "switchover/endpoint/create.golden"},
 		{args: "switchover endpoint list", fixture: "switchover/endpoint/list.golden"},
 		{args: "switchover endpoint describe se-123456", fixture: "switchover/endpoint/describe.golden"},
 		{args: "switchover endpoint describe se-123456 --output json", fixture: "switchover/endpoint/describe-json.golden"},

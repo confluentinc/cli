@@ -29,7 +29,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("parent-resource-crn", "", "The CRN of the switchover pair this endpoint is bound to.")
-	cmd.Flags().StringArray("endpoint", nil, `An endpoint side, in the form "name=<name>,type=<private|public>[,network=<network-id>][,access-point=<access-point-crn>]". A private endpoint sets exactly one of network or access-point. network takes a network ID (the CLI builds its CRN); access-point takes a full CRN, since its canonical form includes a gateway segment. Must be specified exactly twice.`)
+	cmd.Flags().StringArray("endpoint", nil, `An endpoint side, in the form "name=<name>,type=<private|public>[,network=<network-crn>][,access-point=<access-point-crn>]". A private endpoint sets exactly one of network or access-point, each given as a full CRN. Must be specified exactly twice.`)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -64,6 +64,19 @@ func parseEndpointFlag(raw string) (switchoverv1.SwitchoverV1EndpointConfig, err
 	if config.Name == "" || filter.Type == "" {
 		return config, fmt.Errorf(`invalid --endpoint value %q: "name" and "type" are required`, raw)
 	}
+	hasNetwork, hasAccessPoint := filter.NetworkCrn != nil, filter.AccessPointCrn != nil
+	switch filter.Type {
+	case "private":
+		if hasNetwork == hasAccessPoint {
+			return config, fmt.Errorf(`invalid --endpoint value %q: a private endpoint requires exactly one of "network" or "access-point"`, raw)
+		}
+	case "public":
+		if hasNetwork || hasAccessPoint {
+			return config, fmt.Errorf(`invalid --endpoint value %q: a public endpoint does not take "network" or "access-point"`, raw)
+		}
+	default:
+		return config, fmt.Errorf(`invalid --endpoint value %q: "type" must be "private" or "public"`, raw)
+	}
 	config.EndpointFilter = filter
 	return config, nil
 }
@@ -93,26 +106,9 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		endpoints[i] = endpointConfig
 	}
 
-	environmentId, err := c.Context.EnvironmentId()
-	if err != nil {
-		return err
-	}
-
-	organizationId := c.Context.GetCurrentOrganization()
-
 	// The endpoint's environment travels inside parent_resource_crn (the pair CRN, passed through
-	// as given); the create body does not take a separate environment_crn.
-
-	// network=<id> is given as a plain network ID; assemble its network_crn here (org + the
-	// endpoint's environment + the id). access_point_crn is passed through as a full CRN because its
-	// canonical form carries a gateway segment the --endpoint flag does not supply.
-	for i := range endpoints {
-		if networkId := endpoints[i].EndpointFilter.GetNetworkCrn(); networkId != "" {
-			endpoints[i].EndpointFilter.NetworkCrn = switchoverv1.PtrString(
-				fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/network=%s", organizationId, environmentId, networkId))
-		}
-	}
-
+	// as given); the create body does not take a separate environment_crn. network_crn and
+	// access_point_crn are likewise passed through as full CRNs.
 	endpoint := switchoverv1.SwitchoverV1SwitchoverEndpoint{
 		Spec: &switchoverv1.SwitchoverV1SwitchoverEndpointSpec{
 			DisplayName:       switchoverv1.PtrString(displayName),

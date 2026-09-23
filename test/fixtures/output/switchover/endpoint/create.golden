@@ -6,7 +6,7 @@
 | Target              | west-platt                                                                                  |
 | Phase               | READY                                                                                       |
 | Endpoints           | west-platt (private)                                                                        |
-|                     | network=crn://confluent.cloud/organization=abc-123/environment=env-596/network=n-111111     |
+|                     | network=crn://confluent.cloud/organization=org-123/environment=env-123456/network=n-111111  |
 |                     | east-platt (private)                                                                        |
-|                     | network=crn://confluent.cloud/organization=abc-123/environment=env-596/network=n-222222     |
+|                     | network=crn://confluent.cloud/organization=org-123/environment=env-234567/network=n-222222  |
 +---------------------+---------------------------------------------------------------------------------------------+

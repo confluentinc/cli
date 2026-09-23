@@ -10,7 +10,7 @@ Create switchover endpoint "prod-kafka-dr-endpoint" for switchover pair "sw-1234
 
 Flags:
       --parent-resource-crn string   REQUIRED: The CRN of the switchover pair this endpoint is bound to.
-      --endpoint stringArray         REQUIRED: An endpoint side, in the form "name=<name>,type=<private|public>[,network=<network-id>][,access-point=<access-point-crn>]". A private endpoint sets exactly one of network or access-point. network takes a network ID (the CLI builds its CRN); access-point takes a full CRN, since its canonical form includes a gateway segment. Must be specified exactly twice.
+      --endpoint stringArray         REQUIRED: An endpoint side, in the form "name=<name>,type=<private|public>[,network=<network-crn>][,access-point=<access-point-crn>]". A private endpoint sets exactly one of network or access-point, each given as a full CRN. Must be specified exactly twice.
       --environment string           Environment ID.
       --context string               CLI context name.
   -o, --output string                Specify the output format as "human", "json", or "yaml". (default "human")
