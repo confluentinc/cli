@@ -74,6 +74,13 @@ func handleSwitchoverPairFailover(t *testing.T) http.HandlerFunc {
 		}
 		pair := buildPair(id, "prod-kafka-dr", active)
 		pair.Status.SetPhase("UPDATING")
+		pair.Status.SetConditions([]switchoverv1.SwitchoverV1Condition{{
+			Member:  switchoverv1.PtrString("east"),
+			Type:    "ResourcePlannedFailoverComplete",
+			Status:  "False",
+			Reason:  switchoverv1.PtrString("TopicsTransitioning"),
+			Message: switchoverv1.PtrString("3/10 topics completed"),
+		}})
 		w.WriteHeader(http.StatusAccepted)
 		require.NoError(t, json.NewEncoder(w).Encode(pair))
 	}

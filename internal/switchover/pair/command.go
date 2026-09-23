@@ -79,10 +79,16 @@ func formatMembers(members []switchoverv1.SwitchoverV1SwitchoverPairMember) stri
 	return strings.Join(blocks, "\n")
 }
 
+// formatConditions renders one line per condition. Pair conditions are reported per member (each
+// member's Kafka cluster writes its own), so the member name leads the line; otherwise a reader of
+// a two-member pair cannot tell which side a condition describes.
 func formatConditions(conditions []switchoverv1.SwitchoverV1Condition) string {
 	lines := make([]string, len(conditions))
 	for i, condition := range conditions {
 		line := fmt.Sprintf("%s=%s", condition.GetType(), condition.GetStatus())
+		if member := condition.GetMember(); member != "" {
+			line = fmt.Sprintf("Member=%s %s", member, line)
+		}
 		if reason := condition.GetReason(); reason != "" {
 			line += fmt.Sprintf(" (%s)", reason)
 		}
