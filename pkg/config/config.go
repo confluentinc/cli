@@ -269,7 +269,7 @@ func (c *Config) Load() error {
 // before this function returns, well before wireContexts/Validate run: Validate's
 // normalization can re-enter Save(), which acquires this same lock, and flock is not
 // reentrant.
-func (c *Config) loadLocked(filename string) (missing bool, err error) {
+func (c *Config) loadLocked(filename string) (bool, error) {
 	// Create the config directory before opening the sidecar lock file inside it, same as
 	// Save(): on a fresh machine (parent directory absent) opening the lock would ENOENT
 	// before we ever get to discover the config file itself is missing.
