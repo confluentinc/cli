@@ -237,6 +237,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.3 h1:ozdDSJHruQIgtxS5hwz8Rp8p
 github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.3/go.mod h1:cD0AeCMBAWBesmWxWCMgVYNABYgHJ/ahCj7b4HP2R2I=
 github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1 h1:WZJYfgXJrvTIYQpCFps/qHF7T8ekgPlX/SFqx4EY2zQ=
 github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1/go.mod h1:kB+MXWYYg9ohrTCb27LlfpTbuexAzyYAmum105ow0ho=
+github.com/confluentinc/ccloud-sdk-go-v2/switchover v0.1.0 h1:RQY2jcbUo8ZhqLRKkugtIfDLY/FFBqMdi1AibooP4EA=
+github.com/confluentinc/ccloud-sdk-go-v2/switchover v0.1.0/go.mod h1:sZ2nAt/EbWwYmnjIckI+dpi02MuE4AGX8K2f/0bfD5s=
 github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.8.0 h1:b5s9pHopcsLeBSfvkj3j4SdAsiPwigY0x6jdkXnzAbo=
 github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.8.0/go.mod h1:NqM6aLdXeXhf+JMc0Y39fZjU9pWSHfhosfYRp/DKHxk=
 github.com/confluentinc/ccloud-sdk-go-v2/usm v0.2.0 h1:Sc0kt9hWy5armZDBV88shYb/S7Xrf4nH8Giy7wqoYbg=
