@@ -118,10 +118,11 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 func printSwitchoverPair(cmd *cobra.Command, pair switchoverv1.SwitchoverV1SwitchoverPair) error {
 	// Serialized output mirrors the API response verbatim (full spec/status).
 	if output.GetFormat(cmd).IsSerialized() {
-		return printSerialized(cmd, pair)
+		return output.SerializedOutputFromJsonTags(cmd, pair)
 	}
 
 	table := output.NewTable(cmd)
 	table.Add(newPairOut(pair))
-	return table.Print()
+	// Members is multi-line; auto-wrap would reflow its line breaks (see formatMembers).
+	return table.PrintWithAutoWrap(false)
 }

@@ -1,10 +1,10 @@
 +-----------------+--------------------------------------------------------------------------------------------+
 | ID              | sw-123456                                                                                  |
-| Display Name    | renamed-dr                                                                                 |
+| Display Name    | prod-kafka-dr                                                                              |
 | Environment CRN | crn://confluent.cloud/organization=org-123/environment=env-123456                          |
-| Active Member   | west                                                                                       |
+| Active Member   | east                                                                                       |
 | First Active    | west                                                                                       |
-| Phase           | READY_TO_FAILOVER                                                                          |
+| Phase           | UPDATING                                                                                   |
 | Members         | west                                                                                       |
 |                 | crn://confluent.cloud/organization=org-123/environment=env-123456/cloud-cluster=lkc-111111 |
 |                 | east                                                                                       |

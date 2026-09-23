@@ -4,12 +4,12 @@ Usage:
   confluent switchover pair [command]
 
 Available Commands:
-  create         Create a switchover pair.
-  delete         Delete one or more switchover pairs.
-  describe       Describe a switchover pair.
-  list           List switchover pairs.
-  trigger-switch Trigger a failover or switchback on a switchover pair.
-  update         Update a switchover pair.
+  create      Create a switchover pair.
+  delete      Delete one or more switchover pairs.
+  describe    Describe a switchover pair.
+  failover    Trigger a failover or switchback on a switchover pair.
+  list        List switchover pairs.
+  update      Update a switchover pair.
 
 Global Flags:
   -h, --help            Show help for this command.

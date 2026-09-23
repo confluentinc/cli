@@ -1,4 +1,4 @@
-Manage switchover endpoints. This API is not yet implemented on the backend; commands will fail against a live Confluent Cloud environment.
+Manage switchover endpoints.
 
 Usage:
   confluent switchover endpoint [command]

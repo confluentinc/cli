@@ -57,18 +57,13 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		if endpoints == nil {
 			endpoints = []switchoverv1.SwitchoverV1SwitchoverEndpoint{}
 		}
-		return printSerialized(cmd, endpoints)
+		return output.SerializedOutputFromJsonTags(cmd, endpoints)
 	}
 
 	list := output.NewList(cmd)
 	for _, endpoint := range endpoints {
-		list.Add(&listOut{
-			Id:             endpoint.GetId(),
-			DisplayName:    endpoint.Spec.GetDisplayName(),
-			SwitchoverPair: endpoint.Spec.GetParentResourceCrn(),
-			Environment:    endpoint.Spec.GetEnvironmentCrn(),
-			Phase:          endpoint.Status.GetPhase(),
-		})
+		list.Add(newEndpointOut(endpoint))
 	}
-	return list.Print()
+	// Endpoints is multi-line; auto-wrap would reflow its line breaks (see formatEndpoints).
+	return list.PrintWithAutoWrap(false)
 }

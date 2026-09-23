@@ -23,18 +23,18 @@ func (c *command) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create switchover endpoint "prod-kafka-dr-endpoint" for switchover pair "sw-123456".`,
-				Code: `confluent switchover endpoint create prod-kafka-dr-endpoint --switchover-pair sw-123456 --endpoint name=west-platt,type=private --endpoint name=east-platt,type=private`,
+				Code: `confluent switchover endpoint create prod-kafka-dr-endpoint --parent-resource-crn crn://confluent.cloud/organization=org-123/environment=env-123456/switchover-pair=sw-123456 --endpoint name=west-platt,type=private --endpoint name=east-platt,type=private`,
 			},
 		),
 	}
 
-	cmd.Flags().String("switchover-pair", "", "The ID of the switchover pair this endpoint is bound to.")
+	cmd.Flags().String("parent-resource-crn", "", "The CRN of the switchover pair this endpoint is bound to.")
 	cmd.Flags().StringArray("endpoint", nil, `An endpoint side, in the form "name=<name>,type=<private|public>[,network=<network-id>][,access-point=<access-point-crn>]". A private endpoint sets exactly one of network or access-point. network takes a network ID (the CLI builds its CRN); access-point takes a full CRN, since its canonical form includes a gateway segment. Must be specified exactly twice.`)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("switchover-pair"))
+	cobra.CheckErr(cmd.MarkFlagRequired("parent-resource-crn"))
 	cobra.CheckErr(cmd.MarkFlagRequired("endpoint"))
 
 	return cmd
@@ -71,7 +71,7 @@ func parseEndpointFlag(raw string) (switchoverv1.SwitchoverV1EndpointConfig, err
 func (c *command) create(cmd *cobra.Command, args []string) error {
 	displayName := args[0]
 
-	switchoverPairId, err := cmd.Flags().GetString("switchover-pair")
+	parentResourceCrn, err := cmd.Flags().GetString("parent-resource-crn")
 	if err != nil {
 		return err
 	}
@@ -100,10 +100,8 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	organizationId := c.Context.GetCurrentOrganization()
 
-	// The endpoint's environment travels inside parent_resource_crn (the pair CRN); the create body
-	// does not take a separate environment_crn. The parent CRN is assembled from the current
-	// organization, the --environment flag, and the --switchover-pair ID.
-	parentResourceCrn := fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/switchover-pair=%s", organizationId, environmentId, switchoverPairId)
+	// The endpoint's environment travels inside parent_resource_crn (the pair CRN, passed through
+	// as given); the create body does not take a separate environment_crn.
 
 	// network=<id> is given as a plain network ID; assemble its network_crn here (org + the
 	// endpoint's environment + the id). access_point_crn is passed through as a full CRN because its
@@ -134,10 +132,11 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 func printSwitchoverEndpoint(cmd *cobra.Command, endpoint switchoverv1.SwitchoverV1SwitchoverEndpoint) error {
 	// Serialized output mirrors the API response verbatim (full spec/status).
 	if output.GetFormat(cmd).IsSerialized() {
-		return printSerialized(cmd, endpoint)
+		return output.SerializedOutputFromJsonTags(cmd, endpoint)
 	}
 
 	table := output.NewTable(cmd)
 	table.Add(newEndpointOut(endpoint))
-	return table.Print()
+	// Endpoints is multi-line; auto-wrap would reflow its line breaks (see formatEndpoints).
+	return table.PrintWithAutoWrap(false)
 }
