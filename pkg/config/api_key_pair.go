@@ -9,9 +9,9 @@ import (
 // APIKeyPair holds an API Key and Secret.
 type APIKeyPair struct {
 	Key    string `json:"api_key,omitempty"`
-	Secret string `json:"api_secret,omitempty"`
-	Salt   []byte `json:"salt,omitempty"`
-	Nonce  []byte `json:"nonce,omitempty"`
+	Secret string `json:"-"`
+	Salt   []byte `json:"-"`
+	Nonce  []byte `json:"-"`
 }
 
 func (c *APIKeyPair) DecryptSecret() error {
