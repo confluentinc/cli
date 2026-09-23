@@ -128,21 +128,24 @@ func allKafkaClusterConfigs(k *KafkaClusterContext) map[string]*KafkaClusterConf
 	return all
 }
 
-// stripSecretTriple returns a copy of rec with Secret/SecretSalt/SecretNonce zeroed, so the
-// generic mergeMapDeep can safely structural-diff everything else in a secretRecord
-// (GlobalAPIKeys, KafkaAPIKeys, SchemaRegistryCredentials - all stable ciphertext, see
-// mergeSecretTriple's comment) without the churning API-secret triple contaminating that decision.
-// The remaining maps are still present in
-// the copy (shared, read-only references - mergeMapDeep only ever reads them via a JSON marshal).
-// A nil rec copies to a non-nil empty record so an identity whose only content was the secret still
-// participates in the generic merge as "present, empty" rather than vanishing from the key set
-// entirely.
+// stripSecretTriple returns a copy of rec with the CHURNING fields zeroed - the API-secret triple
+// (Secret/SecretSalt/SecretNonce) and the nested API-key maps (GlobalAPIKeys, KafkaAPIKeys) - so the
+// generic mergeMapDeep can safely structural-diff only what remains stable: SchemaRegistryCredentials
+// (never decrypted in place, so its ciphertext is byte-stable across saves and platforms). The Secret
+// triple and the nested maps are decrypted in place during a session (PreRun and ResolveKafkaAPIKey)
+// and re-encrypted every save, which on Windows reproduces DIFFERENT ciphertext for an unchanged
+// value; a byte-compare would misread that as a local change. Each is instead decided separately on
+// PLAINTEXT (mergeSecretTriple, mergeAPIKeySecretMap) and spliced back in. SchemaRegistryCredentials
+// stays present in the copy (a shared, read-only reference - mergeMapDeep only reads it via a JSON
+// marshal). A nil rec copies to a non-nil empty record so an identity whose only content was a churning
+// field still participates in the generic merge as "present, empty" rather than vanishing entirely.
 func stripSecretTriple(rec *secretRecord) *secretRecord {
 	if rec == nil {
 		return &secretRecord{}
 	}
 	stripped := *rec
 	stripped.Secret, stripped.SecretSalt, stripped.SecretNonce = "", nil, nil
+	stripped.GlobalAPIKeys, stripped.KafkaAPIKeys = nil, nil
 	return &stripped
 }
 
@@ -229,6 +232,111 @@ func (c *Config) mergeSecretTriple(identity string, base, ours, disk *secretReco
 	// encryptSecrets/EncryptSecret has already run on it earlier in saveSecretStore, so in
 	// practice this is ciphertext by the time it reaches here.
 	return ours.Secret, ours.SecretSalt, ours.SecretNonce, nil
+}
+
+// decryptAPIKeySecret decrypts a nested API-key triple, using keyId as the encryption key: a nested
+// key's map key IS its APIKeyPair.Key (StoreGlobalAPIKey/AddKafkaClusterConfig key each pair by its
+// own Key). Empty or already-plaintext input is returned unchanged.
+func decryptAPIKeySecret(keyId string, triple *apiKeySecret) (string, error) {
+	if triple == nil || triple.Secret == "" {
+		return "", nil
+	}
+	if !isEncryptedSecret(triple.Secret) {
+		return triple.Secret, nil
+	}
+	shadow := &APIKeyPair{Key: keyId, Secret: triple.Secret, Salt: triple.Salt, Nonce: triple.Nonce}
+	if err := shadow.DecryptSecret(); err != nil {
+		return "", err
+	}
+	return shadow.Secret, nil
+}
+
+// mergeAPIKeySecretMap three-way-merges one nested API-key map (a context's GlobalAPIKeys, or a
+// single cluster's slice of KafkaAPIKeys) per key on decrypted PLAINTEXT, the nested-key analog of
+// mergeSecretTriple with the same Windows non-determinism hazard and fix: ResolveKafkaAPIKey decrypts
+// these pairs in place for the session and they re-encrypt to different ciphertext every save, so a
+// byte-compare would flag an untouched key as changed and clobber a concurrent rotation/deletion. The
+// intact (ciphertext, salt, nonce) triple is moved as one unit so a plaintext decision never pairs one
+// source's ciphertext with another's salt. Returns nil for an empty result so an identity contributes
+// no empty map.
+func (c *Config) mergeAPIKeySecretMap(base, ours, disk map[string]*apiKeySecret) (map[string]*apiKeySecret, error) {
+	keyIds := map[string]bool{}
+	for id := range base {
+		keyIds[id] = true
+	}
+	for id := range ours {
+		keyIds[id] = true
+	}
+	for id := range disk {
+		keyIds[id] = true
+	}
+
+	merged := map[string]*apiKeySecret{}
+	for keyId := range keyIds {
+		basePlain, err := decryptAPIKeySecret(keyId, base[keyId])
+		if err != nil {
+			return nil, err
+		}
+		oursPlain, err := decryptAPIKeySecret(keyId, ours[keyId])
+		if err != nil {
+			return nil, err
+		}
+		diskHas := disk[keyId] != nil && disk[keyId].Secret != ""
+
+		switch {
+		case oursPlain == "":
+			// We don't hold this key. A concurrent add on disk survives if we never did either;
+			// our clearing it (base had one) wins otherwise.
+			if basePlain == "" && diskHas {
+				merged[keyId] = disk[keyId]
+			}
+		case oursPlain == basePlain:
+			// Unchanged by content: defer to disk, preserving a concurrent rotation this process
+			// never touched and not resurrecting a concurrent delete.
+			if diskHas {
+				merged[keyId] = disk[keyId]
+			}
+		default:
+			// Added or edited: our own value wins.
+			merged[keyId] = ours[keyId]
+		}
+	}
+
+	if len(merged) == 0 {
+		return nil, nil
+	}
+	return merged, nil
+}
+
+// mergeKafkaAPIKeys three-way-merges the cluster-keyed KafkaAPIKeys map by delegating each cluster's
+// inner key map to mergeAPIKeySecretMap. Returns nil for an empty result.
+func (c *Config) mergeKafkaAPIKeys(base, ours, disk map[string]map[string]*apiKeySecret) (map[string]map[string]*apiKeySecret, error) {
+	clusterIds := map[string]bool{}
+	for id := range base {
+		clusterIds[id] = true
+	}
+	for id := range ours {
+		clusterIds[id] = true
+	}
+	for id := range disk {
+		clusterIds[id] = true
+	}
+
+	merged := map[string]map[string]*apiKeySecret{}
+	for clusterId := range clusterIds {
+		keys, err := c.mergeAPIKeySecretMap(base[clusterId], ours[clusterId], disk[clusterId])
+		if err != nil {
+			return nil, err
+		}
+		if len(keys) > 0 {
+			merged[clusterId] = keys
+		}
+	}
+
+	if len(merged) == 0 {
+		return nil, nil
+	}
+	return merged, nil
 }
 
 // mergeToken three-way-merges one context's auth-token (ciphertext, salt, nonce) unit - the
@@ -527,11 +635,11 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 		return err
 	}
 
-	// Secrets: the generic structural merge (identity add/delete, Password, the nested
-	// API-key maps) runs on copies with the churning API-secret triple stripped out, so that
-	// triple's platform-dependent (re-)encryption never contaminates it - see
-	// stripSecretTriple. The triple itself is decided separately, on plaintext, by
-	// mergeSecretTriple and spliced back in below.
+	// Secrets: the generic structural merge (identity add/delete, SchemaRegistryCredentials) runs on
+	// copies with the churning fields - the API-secret triple and the nested API-key maps - stripped
+	// out, so their platform-dependent (re-)encryption never contaminates it (see stripSecretTriple).
+	// Each churning field is decided separately, on plaintext (mergeSecretTriple for the credential
+	// secret, mergeAPIKeySecretMap/mergeKafkaAPIKeys for the nested keys), and spliced back in below.
 	merged := &secretFile{}
 	if merged.Secrets, err = mergeMapDeep(
 		stripSecretTriples(c.secretBaseline.Secrets), stripSecretTriples(records), stripSecretTriples(disk.Secrets),
@@ -549,23 +657,47 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 	for id := range disk.Secrets {
 		identities[id] = true
 	}
+	globalOf := func(rec *secretRecord) map[string]*apiKeySecret {
+		if rec == nil {
+			return nil
+		}
+		return rec.GlobalAPIKeys
+	}
+	kafkaOf := func(rec *secretRecord) map[string]map[string]*apiKeySecret {
+		if rec == nil {
+			return nil
+		}
+		return rec.KafkaAPIKeys
+	}
 	for id := range identities {
-		secret, salt, nonce, err := c.mergeSecretTriple(id, c.secretBaseline.Secrets[id], records[id], disk.Secrets[id])
+		base, ours, dsk := c.secretBaseline.Secrets[id], records[id], disk.Secrets[id]
+
+		secret, salt, nonce, err := c.mergeSecretTriple(id, base, ours, dsk)
 		if err != nil {
 			return err
 		}
+		global, err := c.mergeAPIKeySecretMap(globalOf(base), globalOf(ours), globalOf(dsk))
+		if err != nil {
+			return err
+		}
+		kafka, err := c.mergeKafkaAPIKeys(kafkaOf(base), kafkaOf(ours), kafkaOf(dsk))
+		if err != nil {
+			return err
+		}
+
 		rec, ok := merged.Secrets[id]
 		if !ok {
-			if secret == "" {
+			if secret == "" && len(global) == 0 && len(kafka) == 0 {
 				continue
 			}
 			rec = &secretRecord{}
 			merged.Secrets[id] = rec
 		}
 		rec.Secret, rec.SecretSalt, rec.SecretNonce = secret, salt, nonce
+		rec.GlobalAPIKeys, rec.KafkaAPIKeys = global, kafka
 	}
-	// Drop an identity left with no content at all: its only material was the secret
-	// triple, and that's now cleared.
+	// Drop an identity left with no content at all: its only material was a churning field,
+	// and that's now cleared.
 	for id, rec := range merged.Secrets {
 		if rec.Secret == "" && len(rec.GlobalAPIKeys) == 0 && len(rec.KafkaAPIKeys) == 0 && len(rec.SchemaRegistryCredentials) == 0 {
 			delete(merged.Secrets, id)
