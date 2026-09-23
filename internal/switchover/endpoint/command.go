@@ -60,29 +60,36 @@ func newEndpointOut(endpoint switchoverv1.SwitchoverV1SwitchoverEndpoint) *out {
 	}
 }
 
+// formatEndpoints renders one endpoint side per block, one attribute per line. The tables that
+// show it are printed with auto-wrap disabled, so these line breaks are kept as-is; with
+// auto-wrap on, tablewriter reflows all whitespace and runs adjacent sides into one line.
 func formatEndpoints(endpoints []switchoverv1.SwitchoverV1EndpointConfig) string {
-	lines := make([]string, len(endpoints))
+	blocks := make([]string, len(endpoints))
 	for i, endpoint := range endpoints {
 		filter := endpoint.EndpointFilter
-		parts := []string{endpoint.GetName(), filter.GetType()}
+		lines := []string{fmt.Sprintf("%s (%s)", endpoint.GetName(), filter.GetType())}
 		if networkCrn := filter.GetNetworkCrn(); networkCrn != "" {
-			parts = append(parts, "network="+networkCrn)
+			lines = append(lines, "network="+networkCrn)
 		}
 		if accessPointCrn := filter.GetAccessPointCrn(); accessPointCrn != "" {
-			parts = append(parts, "access-point="+accessPointCrn)
+			lines = append(lines, "access-point="+accessPointCrn)
 		}
 		if hostname := endpoint.GetHostname(); hostname != "" {
-			parts = append(parts, "hostname="+hostname)
+			lines = append(lines, "hostname="+hostname)
 		}
+		location := []string{}
 		if cloud, region := endpoint.GetCloud(), endpoint.GetRegion(); cloud != "" || region != "" {
-			parts = append(parts, strings.TrimPrefix(cloud+"/"+region, "/"))
+			location = append(location, strings.TrimPrefix(cloud+"/"+region, "/"))
 		}
 		if connectionType := endpoint.GetConnectionType(); connectionType != "" {
-			parts = append(parts, connectionType)
+			location = append(location, connectionType)
 		}
-		lines[i] = strings.Join(parts, " ")
+		if len(location) > 0 {
+			lines = append(lines, strings.Join(location, " "))
+		}
+		blocks[i] = strings.Join(lines, "\n")
 	}
-	return strings.Join(lines, "\n")
+	return strings.Join(blocks, "\n")
 }
 
 func formatConditions(conditions []switchoverv1.SwitchoverV1SwitchoverEndpointCondition) string {

@@ -137,5 +137,6 @@ func printSwitchoverEndpoint(cmd *cobra.Command, endpoint switchoverv1.Switchove
 
 	table := output.NewTable(cmd)
 	table.Add(newEndpointOut(endpoint))
-	return table.Print()
+	// Endpoints is multi-line; auto-wrap would reflow its line breaks (see formatEndpoints).
+	return table.PrintWithAutoWrap(false)
 }

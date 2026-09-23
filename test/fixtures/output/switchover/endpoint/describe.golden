@@ -5,8 +5,8 @@
 | Environment CRN     | crn://confluent.cloud/organization=org-123/environment=env-123456                           |
 | Target              | west-platt                                                                                  |
 | Phase               | READY                                                                                       |
-| Endpoints           | west-platt private                                                                          |
+| Endpoints           | west-platt (private)                                                                        |
 |                     | network=crn://confluent.cloud/organization=org-123/environment=env-123456/network=n-111111  |
-|                     | east-platt private                                                                          |
+|                     | east-platt (private)                                                                        |
 |                     | network=crn://confluent.cloud/organization=org-123/environment=env-234567/network=n-222222  |
 +---------------------+---------------------------------------------------------------------------------------------+

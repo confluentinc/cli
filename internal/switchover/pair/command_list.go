@@ -58,5 +58,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	for _, pair := range pairs {
 		list.Add(newPairOut(pair))
 	}
-	return list.Print()
+	// Members is multi-line; auto-wrap would reflow its line breaks (see formatMembers).
+	return list.PrintWithAutoWrap(false)
 }

@@ -63,16 +63,20 @@ func newPairOut(pair switchoverv1.SwitchoverV1SwitchoverPair) *out {
 	}
 }
 
+// formatMembers renders one member per block: a name/location line followed by the member CRN on
+// its own line. The tables that show it are printed with auto-wrap disabled, so these line breaks
+// are kept as-is; with auto-wrap on, tablewriter reflows all whitespace and runs adjacent members
+// into one line.
 func formatMembers(members []switchoverv1.SwitchoverV1SwitchoverPairMember) string {
-	lines := make([]string, len(members))
+	blocks := make([]string, len(members))
 	for i, member := range members {
-		location := ""
+		header := member.GetName()
 		if member.Location != nil {
-			location = fmt.Sprintf(", %s/%s", member.Location.GetCloud(), member.Location.GetRegion())
+			header = fmt.Sprintf("%s (%s/%s)", member.GetName(), member.Location.GetCloud(), member.Location.GetRegion())
 		}
-		lines[i] = fmt.Sprintf("%s (%s%s)", member.GetName(), member.GetMemberCrn(), location)
+		blocks[i] = header + "\n" + member.GetMemberCrn()
 	}
-	return strings.Join(lines, "\n")
+	return strings.Join(blocks, "\n")
 }
 
 func formatConditions(conditions []switchoverv1.SwitchoverV1Condition) string {

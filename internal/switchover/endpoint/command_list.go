@@ -64,5 +64,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	for _, endpoint := range endpoints {
 		list.Add(newEndpointOut(endpoint))
 	}
-	return list.Print()
+	// Endpoints is multi-line; auto-wrap would reflow its line breaks (see formatEndpoints).
+	return list.PrintWithAutoWrap(false)
 }

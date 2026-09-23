@@ -123,5 +123,6 @@ func printSwitchoverPair(cmd *cobra.Command, pair switchoverv1.SwitchoverV1Switc
 
 	table := output.NewTable(cmd)
 	table.Add(newPairOut(pair))
-	return table.Print()
+	// Members is multi-line; auto-wrap would reflow its line breaks (see formatMembers).
+	return table.PrintWithAutoWrap(false)
 }
