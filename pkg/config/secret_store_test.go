@@ -237,6 +237,45 @@ func TestLoad_RepopulatesNestedAPIKeySecretsFromStore(t *testing.T) {
 	require.Equal(t, "cluster-secret", reloadedCluster.APIKeys["CLUSTER-KEY"].Secret)
 }
 
+// TestSave_EmptyCredentialSecretNotEncrypted is the Unix-simulated counterpart of the Windows
+// DPAPI failure: encryptCredentialsAPISecret runs over every credential on save, and a
+// credential with an empty API secret (e.g. a username/password login) must not be handed to
+// secret.Encrypt - DPAPI rejects empty input on Windows. The empty secret must stay empty and
+// produce no ciphertext-of-"" in either file.
+func TestSave_EmptyCredentialSecretNotEncrypted(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	c := newTestConfigWithAPIKeyContext(t)
+	c.Credentials["empty-cred"] = &Credential{
+		Name:           "empty-cred",
+		CredentialType: Username,
+		APIKeyPair:     &APIKeyPair{},
+	}
+
+	require.NoError(t, c.Save())
+
+	require.Empty(t, c.Credentials["empty-cred"].APIKeyPair.Secret,
+		"an empty credential secret must stay empty, never encrypted into ciphertext-of-empty")
+
+	reloaded := New()
+	reloaded.Filename = c.GetFilename()
+	require.NoError(t, reloaded.Load())
+	require.NoError(t, reloaded.DecryptCredentials())
+	require.Empty(t, reloaded.Credentials["empty-cred"].APIKeyPair.Secret)
+}
+
+// TestEncryptStateTokensForContext_EmptyGovRefreshTokenNotEncrypted pins the token analog of the
+// empty-encrypt guard: a Confluent Gov context with no refresh token must not encrypt the empty
+// string (the gov branch does not otherwise require a non-empty token), which DPAPI would reject.
+func TestEncryptStateTokensForContext_EmptyGovRefreshTokenNotEncrypted(t *testing.T) {
+	c := New()
+	ctx := &Context{Name: "gov", PlatformName: "confluentgov.com", State: &ContextState{}}
+
+	require.NoError(t, c.encryptStateTokensForContext(ctx, "", ""))
+
+	require.Empty(t, ctx.State.AuthToken)
+	require.Empty(t, ctx.State.AuthRefreshToken, "an empty gov refresh token must not be encrypted")
+}
+
 func TestSecretsFilename_UnderStateDir(t *testing.T) {
 	setTestHome(t, t.TempDir())
 	require.Equal(t, stateDirPath("secrets.json"), SecretsFilename())
