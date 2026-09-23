@@ -117,7 +117,7 @@ ifdef CI
 	go install gotest.tools/gotestsum@v1.13.0 && \
 	export GOCOVERDIR=test/coverage && \
 	rm -rf $${GOCOVERDIR} && mkdir $${GOCOVERDIR} && \
-	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v $$(go list ./... | grep github.com/confluentinc/cli/v4/test) $(INTEGRATION_TEST_ARGS) && \
+	gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v $$(go list ./... | grep github.com/confluentinc/cli/v4/test) && \
 	go tool covdata textfmt -i $${GOCOVERDIR} -o coverage.integration.out
 else
 	export GOCOVERDIR=test/coverage && \
@@ -237,6 +237,6 @@ coverage: ## Merge coverage data from unit and integration tests into coverage.t
 	@echo "Merging coverage data..."
 	@echo "mode: atomic" > coverage.txt
 	@tail -n +2 coverage.unit.out >> coverage.txt
-	@tail -q -n +2 coverage.integration*.out >> coverage.txt
+	@tail -n +2 coverage.integration.out >> coverage.txt
 	@echo "Coverage data saved to: coverage.txt"
 	@artifact push workflow coverage.txt

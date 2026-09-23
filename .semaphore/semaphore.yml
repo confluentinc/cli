@@ -13,9 +13,10 @@ execution_time_limit:
   hours: 1
 
 blocks:
-  # Lint, unit, and sharded integration tests run as parallel jobs so wall-clock time is bounded
-  # by the slowest job rather than their sum. Each test job publishes its coverage profile to the
-  # `coverage/` workflow artifact directory, which the SonarQube job in `after_pipeline` merges.
+  # Lint, unit, and integration tests run as parallel jobs so wall-clock time
+  # is bounded by the slowest (integration) rather than their sum. Each job
+  # publishes its coverage profile as a workflow artifact; the `coverage` block
+  # below pulls both and merges them.
   - name: linux/amd64 tests
     dependencies: []
     task:
@@ -35,14 +36,11 @@ blocks:
         - name: "Unit Test linux/amd64"
           commands:
             - make unit-test
-            - artifact push workflow coverage.unit.out --destination coverage/coverage.unit.out --force
+            - artifact push workflow coverage.unit.out --force
         - name: "Integration Test linux/amd64"
-          parallelism: 6
           commands:
-            # A bare assignment (unlike `export` or inline substitution) fails the job if the script does
-            - RUN_PATTERN=$(test/shard-tests.sh $SEMAPHORE_JOB_INDEX $SEMAPHORE_JOB_COUNT)
-            - make integration-test INTEGRATION_TEST_ARGS="-run '$RUN_PATTERN'"
-            - artifact push workflow coverage.integration.out --destination coverage/coverage.integration.$SEMAPHORE_JOB_INDEX.out --force
+            - make integration-test
+            - artifact push workflow coverage.integration.out --force
       epilogue:
         always:
           commands:
@@ -53,15 +51,28 @@ blocks:
     dependencies: []
     task:
       jobs:
-# Temporarily disable these builds until rate limiting is resolved
-#        - name: "Build linux/amd64 (GLIBC)"
-#          commands:
-#            - checkout
-#            - docker build . --file docker/Dockerfile_build_linux_amd64 --tag test-build
+        # Temporarily disable these builds until rate limiting is resolved
+        #        - name: "Build linux/amd64 (GLIBC)"
+        #          commands:
+        #            - checkout
+        #            - docker build . --file docker/Dockerfile_build_linux_amd64 --tag test-build
         - name: "Build linux/amd64 (Alpine)"
           commands:
             - checkout
             - docker build . --file docker/Dockerfile_alpine_amd64 --tag test-build
+
+  # Merge the coverage profiles from the parallel unit and integration jobs into
+  # coverage.txt, which the after_pipeline SonarQube job consumes.
+  - name: coverage
+    dependencies: ["linux/amd64 tests"]
+    task:
+      jobs:
+        - name: "Merge coverage"
+          commands:
+            - checkout
+            - artifact pull workflow coverage.unit.out --force
+            - artifact pull workflow coverage.integration.out --force
+            - make coverage
 
   - name: linux/arm64
     run:
@@ -72,11 +83,11 @@ blocks:
         machine:
           type: s1-prod-ubuntu24-04-arm64-1
       jobs:
-# Temporarily disable these builds until rate limiting is resolved
-#        - name: "Build linux/arm64 (GLIBC)"
-#          commands:
-#            - checkout
-#            - docker build . --file docker/Dockerfile_build_linux_arm64 --tag test-build
+        # Temporarily disable these builds until rate limiting is resolved
+        #        - name: "Build linux/arm64 (GLIBC)"
+        #          commands:
+        #            - checkout
+        #            - docker build . --file docker/Dockerfile_build_linux_arm64 --tag test-build
         - name: "Build linux/arm64 (Alpine)"
           commands:
             - checkout
@@ -127,14 +138,6 @@ after_pipeline:
       - name: Report SonarQube Results
         commands:
           - checkout
-          # Merged here rather than in a pipeline block so it stays off the pipeline's critical path.
-          # after_pipeline always runs, so bail before reporting a failed shard's partial coverage.
-          - '[ "$SEMAPHORE_PIPELINE_RESULT" = "passed" ]'
-          - artifact pull workflow coverage
-          - cp coverage/*.out .
-          - make coverage
-          # `emit-sonarqube-data -a` pulls coverage.txt from the artifact `make coverage` just pushed
-          - rm coverage.txt
           - sem-version java 17
           - emit-sonarqube-data -a coverage.txt --enable_sonarqube_enterprise
 
