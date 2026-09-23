@@ -298,26 +298,31 @@ func TestConfig_Load(t *testing.T) {
 }
 
 // seedLoadTestSecrets writes the secret-store records TestConfig_Load's fixtures need to
-// round-trip. The shared cluster config's nested Kafka API-key secret, and the saved
-// password SetupTestInputs hardcodes for "my-context", are recorded under both identities
-// the fixtures use as owning credential: "api-key-abc-key-123" (apiCredentialName, a
+// round-trip. The shared cluster config's nested Kafka API-key secret is recorded under both
+// identities the fixtures use as owning credential: "api-key-abc-key-123" (apiCredentialName, a
 // stateless context's identityKey) and "username-test-user" (loginCredential.Name, a
 // stateful context's identityKey) - each fixture's context uses one or the other. Values
 // are stored verbatim (this test never decrypts), matching what saveSecretStore would have
 // produced for these fixtures.
 //
-// withToken additionally seeds the auth tokens SetupTestInputs hardcodes for the stateful
-// context, keyed by context NAME (contextName, "my-context") rather than identity - see
-// tokenRecord. Every fixture TestConfig_Load loads reuses that same context name, so a
-// caller loading a stateless fixture must pass false: seeding the token unconditionally
-// would leak the stateful fixture's token into a load that should see none.
+// The saved password SetupTestInputs hardcodes for "my-context" is keyed by context NAME rather
+// than identity - see passwordRecord. withToken additionally seeds the auth tokens SetupTestInputs
+// hardcodes for the stateful context, also keyed by context name - see tokenRecord. Every fixture
+// TestConfig_Load loads reuses that same context name, so a caller loading a stateless fixture must
+// pass false: seeding the token unconditionally would leak the stateful fixture's token into a load
+// that should see none.
 func seedLoadTestSecrets(t *testing.T, withToken bool) {
 	t.Helper()
 	nestedKey := map[string]map[string]*apiKeySecret{kafkaClusterID: {apiKeyString: {Secret: apiSecretString}}}
-	file := &secretFile{Secrets: map[string]*secretRecord{
-		apiCredentialName:    {Secret: apiSecretString, Password: "encrypted-password", KafkaAPIKeys: nestedKey},
-		"username-test-user": {Password: "encrypted-password", KafkaAPIKeys: nestedKey},
-	}}
+	file := &secretFile{
+		Secrets: map[string]*secretRecord{
+			apiCredentialName:    {Secret: apiSecretString, KafkaAPIKeys: nestedKey},
+			"username-test-user": {KafkaAPIKeys: nestedKey},
+		},
+		Passwords: map[string]*passwordRecord{
+			contextName: {Password: "encrypted-password"},
+		},
+	}
 	if withToken {
 		file.Tokens = map[string]*tokenRecord{
 			contextName: {

@@ -75,7 +75,9 @@ func TestSave_SecretsLeaveConfigFile(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "v1.some-refresh-token", plainRefreshToken)
 
-	plainPassword, err := secret.Decrypt("orig-user", rec.Password, rec.PasswordSalt, rec.PasswordNonce)
+	pw := file.Passwords["orig"]
+	require.NotNil(t, pw)
+	plainPassword, err := secret.Decrypt("orig-user", pw.Password, pw.Salt, pw.Nonce)
 	require.NoError(t, err)
 	require.Equal(t, "the-password", plainPassword)
 }
@@ -334,6 +336,64 @@ func TestLoad_RepopulatesSchemaRegistryCredentialFromStore(t *testing.T) {
 	pair := reloaded.Contexts["orig"].SchemaRegistryClusters["lsrc-1"].SrCredentials
 	require.NoError(t, pair.DecryptSecret())
 	require.Equal(t, "sr-secret", pair.Secret)
+}
+
+// TestSave_SavedPasswordsKeyedByContextNotIdentity pins blocker 3: SavedCredentials is
+// endpoint-specific (keyed by context name in memory), so two contexts that share one credential
+// identity (same username, different URL/CA-cert) must each retain their own saved password across
+// save/load. Keying the password by credential identity collapsed both into one record, so after
+// reload both got the last-writer password and one login would fail.
+func TestSave_SavedPasswordsKeyedByContextNotIdentity(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	c := New()
+	c.Filename = filepath.Join(t.TempDir(), "config.json")
+
+	// Two contexts sharing one credential identity ("shared-user"), different endpoints.
+	c.Credentials["shared-user"] = &Credential{Name: "shared-user", Username: "shared-user", CredentialType: Username}
+	addContext := func(name, server string) {
+		c.Platforms[name] = &Platform{Name: name, Server: server}
+		state := new(ContextState)
+		ctx := &Context{
+			Name:           name,
+			PlatformName:   name,
+			CredentialName: "shared-user",
+			Platform:       c.Platforms[name],
+			Credential:     c.Credentials["shared-user"],
+			State:          state,
+			Config:         c,
+		}
+		ctx.KafkaClusterContext = &KafkaClusterContext{KafkaClusterConfigs: map[string]*KafkaClusterConfig{}, Context: ctx}
+		c.Contexts[name] = ctx
+		c.ContextStates[name] = state
+	}
+	addContext("ctx-a", "https://a.example.com")
+	addContext("ctx-b", "https://b.example.com")
+
+	savePassword := func(ctxName, password string) {
+		salt, nonce, err := secret.GenerateSaltAndNonce()
+		require.NoError(t, err)
+		encrypted, err := secret.Encrypt("shared-user", password, salt, nonce)
+		require.NoError(t, err)
+		c.SavedCredentials[ctxName] = &LoginCredential{Username: "shared-user", EncryptedPassword: encrypted, Salt: salt, Nonce: nonce}
+	}
+	savePassword("ctx-a", "password-a")
+	savePassword("ctx-b", "password-b")
+
+	require.NoError(t, c.Save())
+
+	reloaded := New()
+	reloaded.Filename = c.GetFilename()
+	require.NoError(t, reloaded.Load())
+
+	decrypt := func(ctxName string) string {
+		saved := reloaded.SavedCredentials[ctxName]
+		require.NotNil(t, saved)
+		plain, err := secret.Decrypt("shared-user", saved.EncryptedPassword, saved.Salt, saved.Nonce)
+		require.NoError(t, err)
+		return plain
+	}
+	require.Equal(t, "password-a", decrypt("ctx-a"), "ctx-a must keep its own password")
+	require.Equal(t, "password-b", decrypt("ctx-b"), "ctx-b's password must not collide with ctx-a's shared identity")
 }
 
 func TestSecretsFilename_UnderStateDir(t *testing.T) {
