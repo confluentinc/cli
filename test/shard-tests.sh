@@ -17,8 +17,9 @@ if [ "$(echo "$methods" | wc -l)" -ne "$declared" ]; then
 	exit 1
 fi
 
-# the pattern only reaches tests nested under TestCLI
-if grep -hE '^func Test' ./*.go | grep -qv '^func TestCLI('; then
+# the pattern only reaches tests nested under TestCLI, and `go list` also selects packages below
+# test/ (test/live is excluded by its build tag)
+if grep -rhE --include='*.go' --exclude-dir=live --exclude-dir=fixtures '^func Test' . | grep -qv '^func TestCLI('; then
 	echo "shard-tests.sh: found a top-level test other than TestCLI, which no shard would run" >&2
 	exit 1
 fi
