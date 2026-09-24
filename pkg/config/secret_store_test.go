@@ -396,6 +396,26 @@ func TestSave_SavedPasswordsKeyedByContextNotIdentity(t *testing.T) {
 	require.Equal(t, "password-b", decrypt("ctx-b"), "ctx-b's password must not collide with ctx-a's shared identity")
 }
 
+// TestSaveSecretStore_EmptyConfigWritesEmptyStoreAndSetsBaseline pins should-fix 6: a whole-config
+// write with no secrets must still write an empty store (overwriting a stale secrets.json left from a
+// prior state) and set secretBaseline, so the next save has a common ancestor and can three-way
+// merge concurrent secret writes rather than overwriting them.
+func TestSaveSecretStore_EmptyConfigWritesEmptyStoreAndSetsBaseline(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	stale := &secretFile{Secrets: map[string]*secretRecord{"stale": {Secret: secret.AesGcm + ":stale"}}}
+	require.NoError(t, newSecretStore().write(stale))
+
+	c := New()
+	c.Filename = filepath.Join(t.TempDir(), "config.json")
+	require.NoError(t, c.Save())
+
+	require.NotNil(t, c.secretBaseline, "an empty whole-write must set the secret baseline for the next save's merge")
+
+	disk, err := readSecretFileFromDisk(SecretsFilename())
+	require.NoError(t, err)
+	require.Empty(t, disk.Secrets, "a fresh empty config must overwrite a stale secrets.json, not keep it")
+}
+
 func TestSecretsFilename_UnderStateDir(t *testing.T) {
 	setTestHome(t, t.TempDir())
 	require.Equal(t, stateDirPath("secrets.json"), SecretsFilename())
