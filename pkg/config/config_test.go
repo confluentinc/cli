@@ -335,6 +335,7 @@ func seedLoadTestSecrets(t *testing.T, withToken bool) {
 }
 
 func TestConfig_Save(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	if runtime.GOOS == "windows" {
 		return
 	}
@@ -430,6 +431,7 @@ func TestConfig_Save(t *testing.T) {
 }
 
 func TestConfig_SaveWithEnvironmentOverwrite(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	if runtime.GOOS == "windows" {
 		return
 	}
@@ -785,6 +787,7 @@ func TestConfig_AddContext(t *testing.T) {
 }
 
 func TestConfig_CreateContext(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	cfg := &Config{
 		ContextStates: make(map[string]*ContextState),
 		Contexts:      make(map[string]*Context),
@@ -807,6 +810,7 @@ func TestConfig_CreateContext(t *testing.T) {
 }
 
 func TestConfig_UseContext(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	cfg := AuthenticatedCloudConfigMock()
 	// Isolate from the shared default config path so Save's read-merge can't pick
 	// up (or leave behind) another test's leftover config.
@@ -1320,6 +1324,7 @@ func TestParseFlagsIntoConfig(t *testing.T) {
 }
 
 func TestReadConfigFromDisk_WiresGraphAndPassesValidate(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 
@@ -1334,6 +1339,7 @@ func TestReadConfigFromDisk_WiresGraphAndPassesValidate(t *testing.T) {
 }
 
 func TestSave_MergesConcurrentDiskChange(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 
@@ -1402,6 +1408,7 @@ func TestEncryptContextStateTokens_EncryptsPlatformRefreshTokenBeginningWithCiph
 // reset). Save() must overwrite the existing file, not treat the live object as
 // unchanged and silently keep disk's values.
 func TestSave_NoBaselineOverwritesExistingFile(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 
@@ -1425,6 +1432,7 @@ func TestSave_NoBaselineOverwritesExistingFile(t *testing.T) {
 // directory before opening the sidecar lock file inside it, or the lock open
 // ENOENTs and the CLI cannot start.
 func TestSave_CreatesMissingParentDirectory(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	path := filepath.Join(t.TempDir(), "does", "not", "exist", "config.json")
 
 	c := New()
@@ -1443,6 +1451,7 @@ func TestSave_CreatesMissingParentDirectory(t *testing.T) {
 // holds the sidecar lock; it must not try to re-acquire it (which would block
 // for lockTimeout and then panic), and the normalization must reach disk.
 func TestSave_NormalizesInvalidActiveKafkaWithoutDeadlock(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 

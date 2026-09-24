@@ -16,6 +16,7 @@ import (
 // each goroutine adds a different platform concurrently; before the lock and merge
 // work, the last writer's whole-file overwrite dropped the others.
 func TestSave_ConcurrentDifferentFields_NoLostWrite(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 
@@ -241,6 +242,7 @@ func TestEncryptSecrets_EncryptsNonCurrentContextTokens(t *testing.T) {
 // Kafka cluster). Both live inside one Contexts map value, so an atomic per-key
 // overlay drops the earlier writer's field; the merge must combine them.
 func TestSave_ConcurrentSameContextDifferentFields_NoLostWrite(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 	newSavedConfig(t, path)
@@ -266,6 +268,7 @@ func TestSave_ConcurrentSameContextDifferentFields_NoLostWrite(t *testing.T) {
 // is encrypted, so a representation-blind diff wrongly reads the credential as
 // locally changed and overwrites the concurrent rotation.
 func TestSave_ConcurrentSharedCredential_NotClobbered(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 	newSavedConfig(t, path)
@@ -292,6 +295,7 @@ func TestSave_ConcurrentSharedCredential_NotClobbered(t *testing.T) {
 // tracks the merged (disk) value while ours stays stale, the next diff misreads the
 // untouched field as a local edit and overwrites the concurrent change.
 func TestSave_SecondSaveInSameProcess_PreservesConcurrentDiskChange(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 	newSavedConfig(t, path)
@@ -322,6 +326,7 @@ func TestSave_SecondSaveInSameProcess_PreservesConcurrentDiskChange(t *testing.T
 // holds ciphertext; this pins that decryptToMatch still aligns the two so a concurrent
 // rotation this process never touched survives a later save in the same process.
 func TestSave_SecondSaveInSameProcess_PreservesConcurrentSecretRotation(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 	newSavedConfig(t, path)
@@ -419,6 +424,7 @@ func addContextWithToken(c *Config, name, authToken string) {
 // merge keeps the edited Context but drops its unedited state, orphaning it so Validate
 // drops the auth token or rejects the save. The two halves must stay coupled.
 func TestSave_ConcurrentContextDeleteVsEdit_KeepsStateWithContext(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 	newSavedConfig(t, path) // context "ctx" (current)
@@ -488,6 +494,7 @@ func newTwoIdentityConfig(t *testing.T, path string) {
 // from whichever process saved last, so the earlier session's rotation of its own identity's
 // token was lost the moment the other session (which never touched it) saved afterward.
 func TestSecretStore_ConcurrentDifferentIdentitiesBothPersist(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 	newTwoIdentityConfig(t, path)
@@ -517,6 +524,7 @@ func TestSecretStore_ConcurrentDifferentIdentitiesBothPersist(t *testing.T) {
 // saveSecretStore cannot tell "b never touched this token" from "b's stale copy should win",
 // so it would re-encrypt b's stale plaintext and bring the cleared token back from the dead.
 func TestSecretStore_ConcurrentLogoutNotResurrected(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 	newSavedConfig(t, path) // context "ctx" (current), no token yet
@@ -567,6 +575,7 @@ func tamperTokenCiphertext(t *testing.T, cfg *Config, ctxName, plaintext string)
 // must decide on plaintext: a's tampered baseline must not make its own untouched token look
 // locally changed and clobber a concurrent rotation it never touched.
 func TestSecretStore_UnchangedPlaintextDifferentCiphertext_NotClobbered(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 	newSavedConfig(t, path) // context "ctx" (current), no token yet
@@ -598,6 +607,7 @@ func TestSecretStore_UnchangedPlaintextDifferentCiphertext_NotClobbered(t *testi
 // a never touched the token. A ciphertext-only diff would misread that as a local change and
 // resurrect the concurrent logout; deciding on plaintext must not.
 func TestSecretStore_UnchangedPlaintextDifferentCiphertext_LogoutStaysCleared(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 	newSavedConfig(t, path)
@@ -782,6 +792,7 @@ func TestSecretStore_ConcurrentDiskOnlyNestedKeyNotPruned(t *testing.T) {
 // writes one context's --cluster value onto another. Uses the constructed-config
 // (nil baseline) whole-write path.
 func TestSave_WholeConfigWrite_DoesNotDoubleResolveOverrides(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	c := New()
 	c.Filename = filepath.Join(t.TempDir(), "config.json")
 	c.Platforms["platform"] = &Platform{Name: "platform", Server: "https://example.com"}
@@ -830,6 +841,7 @@ func TestSave_WholeConfigWrite_DoesNotDoubleResolveOverrides(t *testing.T) {
 // next load fails GCM authentication. Reproduces the integration-test flow in
 // test/context_test.go's contextCreateArgs.
 func TestSave_TwoContextCreatesSharedCredential_SecretStaysDecryptable(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 
