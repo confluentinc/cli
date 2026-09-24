@@ -248,6 +248,7 @@ func (s *CLITestSuite) TestApiKeyDescribe() {
 }
 
 func (s *CLITestSuite) TestApiKeyDelete() {
+	// These creates share goldens with the first creates in TestApiKey, so re-record both together.
 	tests := []CLITest{
 		{args: "api-key create --resource lkc-bob", fixture: "api-key/1.golden"},                                // MYKEY3
 		{args: "api-key create --description my-cool-app --resource lkc-cool1", fixture: "api-key/10.golden"},   // MYKEY4

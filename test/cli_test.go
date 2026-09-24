@@ -72,7 +72,6 @@ type CLITestSuite struct {
 	suite.Suite
 	TestBackend *testserver.TestBackend
 	rootT       *testing.T
-	env         []string
 }
 
 // TestCLI runs the CLI integration test suite.
@@ -108,31 +107,56 @@ func (s *CLITestSuite) TearDownSuite() {
 }
 
 func (s *CLITestSuite) SetupTest() {
-	s.env = os.Environ()
+	// Registered first so it runs last, after t.Setenv's own cleanups, which could otherwise restore
+	// a value that a method leaked with os.Setenv.
+	env := os.Environ()
+	s.T().Cleanup(func() { s.resetProcessState(env) })
 
-	homeKey := "HOME"
+	homeKeys, tempKeys := []string{"HOME"}, []string{"TMPDIR"}
 	if runtime.GOOS == "windows" {
-		homeKey = "USERPROFILE"
+		homeKeys, tempKeys = []string{"USERPROFILE"}, []string{"TMP", "TEMP"}
 	}
-	s.T().Setenv(homeKey, s.T().TempDir())
+	home, temp := s.T().TempDir(), s.T().TempDir()
+	for _, key := range homeKeys {
+		s.T().Setenv(key, home)
+	}
+	for _, key := range tempKeys {
+		s.T().Setenv(key, temp)
+	}
+
+	// A fresh HOME has no config file, and the CLI's defaults (color, plugins) differ from the
+	// baseline every test expects.
 	resetConfiguration(s.T(), false)
 
 	testserver.ResetState()
 }
 
-// TearDownTest restores env vars that a method set without cleaning up, since the mock server reads some per request.
-func (s *CLITestSuite) TearDownTest() {
+// resetProcessState restores the env to snapshot, since the mock server reads some env vars per
+// request.
+func (s *CLITestSuite) resetProcessState(snapshot []string) {
 	// the backend's audit-log mode tracks DISABLE_AUDIT_LOG, so put both back together
 	if os.Getenv("DISABLE_AUDIT_LOG") == "true" {
 		s.TestBackend.Close()
 		s.TestBackend = testserver.StartTestBackend(s.rootT, true)
 	}
 
-	os.Clearenv()
-	for _, kv := range s.env {
-		if k, v, ok := strings.Cut(kv, "="); ok {
-			_ = os.Setenv(k, v)
+	// Skip empty keys: Windows exposes per-drive working directories as "=C:=C:\..." entries,
+	// which can't be set and must not be cleared.
+	want := map[string]string{}
+	for _, kv := range snapshot {
+		if k, v, ok := strings.Cut(kv, "="); ok && k != "" {
+			want[k] = v
 		}
+	}
+	for _, kv := range os.Environ() {
+		if k, _, ok := strings.Cut(kv, "="); ok && k != "" {
+			if _, keep := want[k]; !keep {
+				_ = os.Unsetenv(k)
+			}
+		}
+	}
+	for k, v := range want {
+		_ = os.Setenv(k, v)
 	}
 }
 

@@ -7,8 +7,9 @@ import (
 
 const initialKeyIndex = int32(3)
 
-// ResetState restores the data that handlers mutate at runtime to its seed values.
-// Any new package-level variable that a handler writes to must be reset here, or tests become order-dependent.
+// ResetState restores the data that handlers mutate at runtime to its seed values. Any new
+// package-level variable that a handler writes to must be reset here, or tests become
+// order-dependent.
 func ResetState() {
 	keyIndex = initialKeyIndex
 	keyStoreV2 = map[string]*apikeysv2.IamV2ApiKey{}
