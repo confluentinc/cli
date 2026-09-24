@@ -71,6 +71,7 @@ type CLITest struct {
 type CLITestSuite struct {
 	suite.Suite
 	TestBackend *testserver.TestBackend
+	rootT       *testing.T
 }
 
 // TestCLI runs the CLI integration test suite.
@@ -94,7 +95,8 @@ func (s *CLITestSuite) SetupSuite() {
 	output, err := exec.Command("make", target).CombinedOutput()
 	req.NoError(err, string(output))
 
-	s.TestBackend = testserver.StartTestBackend(s.T(), true) // by default do not disable audit-log
+	s.rootT = s.T()
+	s.TestBackend = testserver.StartTestBackend(s.rootT, true) // by default do not disable audit-log
 	os.Setenv("DISABLE_AUDIT_LOG", "false")
 
 	config.SetTempHomeDir()
@@ -102,6 +104,60 @@ func (s *CLITestSuite) SetupSuite() {
 
 func (s *CLITestSuite) TearDownSuite() {
 	s.TestBackend.Close()
+}
+
+func (s *CLITestSuite) SetupTest() {
+	// Registered first so it runs last, after t.Setenv's own cleanups, which could otherwise restore
+	// a value that a method leaked with os.Setenv.
+	env := os.Environ()
+	s.T().Cleanup(func() { s.resetProcessState(env) })
+
+	homeKeys, tempKeys := []string{"HOME"}, []string{"TMPDIR"}
+	if runtime.GOOS == "windows" {
+		homeKeys, tempKeys = []string{"USERPROFILE"}, []string{"TMP", "TEMP"}
+	}
+	home, temp := s.T().TempDir(), s.T().TempDir()
+	for _, key := range homeKeys {
+		s.T().Setenv(key, home)
+	}
+	for _, key := range tempKeys {
+		s.T().Setenv(key, temp)
+	}
+
+	// A fresh HOME has no config file, and the CLI's defaults (color, plugins) differ from the
+	// baseline every test expects.
+	resetConfiguration(s.T(), false)
+
+	testserver.ResetState()
+}
+
+// resetProcessState restores the env to snapshot, since the mock server reads some env vars per
+// request.
+func (s *CLITestSuite) resetProcessState(snapshot []string) {
+	// the backend's audit-log mode tracks DISABLE_AUDIT_LOG, so put both back together
+	if os.Getenv("DISABLE_AUDIT_LOG") == "true" {
+		s.TestBackend.Close()
+		s.TestBackend = testserver.StartTestBackend(s.rootT, true)
+	}
+
+	// Skip empty keys: Windows exposes per-drive working directories as "=C:=C:\..." entries,
+	// which can't be set and must not be cleared.
+	want := map[string]string{}
+	for _, kv := range snapshot {
+		if k, v, ok := strings.Cut(kv, "="); ok && k != "" {
+			want[k] = v
+		}
+	}
+	for _, kv := range os.Environ() {
+		if k, _, ok := strings.Cut(kv, "="); ok && k != "" {
+			if _, keep := want[k]; !keep {
+				_ = os.Unsetenv(k)
+			}
+		}
+	}
+	for k, v := range want {
+		_ = os.Setenv(k, v)
+	}
 }
 
 func (s *CLITestSuite) runIntegrationTest(test CLITest) {
@@ -114,7 +170,7 @@ func (s *CLITestSuite) runIntegrationTest(test CLITest) {
 		if isAuditLogDisabled != test.disableAuditLog {
 			s.TestBackend.Close()
 			os.Setenv("DISABLE_AUDIT_LOG", strconv.FormatBool(test.disableAuditLog))
-			s.TestBackend = testserver.StartTestBackend(t, !test.disableAuditLog)
+			s.TestBackend = testserver.StartTestBackend(s.rootT, !test.disableAuditLog)
 		}
 
 		if !test.workflow {

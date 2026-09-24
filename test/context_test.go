@@ -145,7 +145,10 @@ func (s *CLITestSuite) TestContextUse() {
 }
 
 func (s *CLITestSuite) TestContextAutocomplete() {
+	resetConfiguration(s.T(), false)
+
 	s.contextCreateArgs("0")
+	s.contextCreateArgs("1")
 
 	tests := []CLITest{
 		{args: `__complete context describe ""`, fixture: "context/describe/describe-autocomplete.golden"},
