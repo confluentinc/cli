@@ -13,25 +13,25 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/version"
 )
 
-func (s *CLITestSuite) TestHelp() {
-	configurations := []*config.Config{
-		{
-			CurrentContext: "cloud",
-			Contexts:       map[string]*config.Context{"cloud": {PlatformName: "https://confluent.cloud"}},
-		},
-		{
-			CurrentContext: "onprem",
-			Contexts:       map[string]*config.Context{"onprem": {PlatformName: "https://example.com"}},
-		},
+// Cloud and on-prem are separate methods so they can run in different CI shards.
+func (s *CLITestSuite) TestHelpCloud() {
+	s.testHelpForPlatform("cloud", "https://confluent.cloud")
+}
+
+func (s *CLITestSuite) TestHelpOnPrem() {
+	s.testHelpForPlatform("onprem", "https://example.com")
+}
+
+func (s *CLITestSuite) testHelpForPlatform(login, platformName string) {
+	cfg := &config.Config{
+		CurrentContext:      login,
+		Contexts:            map[string]*config.Context{login: {PlatformName: platformName}},
+		Version:             new(version.Version),
+		IsTest:              true,
+		DisableFeatureFlags: true,
 	}
 
-	for _, cfg := range configurations {
-		cfg.Version = new(version.Version)
-		cfg.IsTest = true
-		cfg.DisableFeatureFlags = true
-
-		s.testHelp(internal.NewConfluentCommand(cfg), cfg.CurrentContext)
-	}
+	s.testHelp(internal.NewConfluentCommand(cfg), login)
 }
 
 func (s *CLITestSuite) testHelp(cmd *cobra.Command, login string) {
