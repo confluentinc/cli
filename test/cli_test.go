@@ -71,6 +71,8 @@ type CLITest struct {
 type CLITestSuite struct {
 	suite.Suite
 	TestBackend *testserver.TestBackend
+	rootT       *testing.T
+	env         []string
 }
 
 // TestCLI runs the CLI integration test suite.
@@ -94,7 +96,8 @@ func (s *CLITestSuite) SetupSuite() {
 	output, err := exec.Command("make", target).CombinedOutput()
 	req.NoError(err, string(output))
 
-	s.TestBackend = testserver.StartTestBackend(s.T(), true) // by default do not disable audit-log
+	s.rootT = s.T()
+	s.TestBackend = testserver.StartTestBackend(s.rootT, true) // by default do not disable audit-log
 	os.Setenv("DISABLE_AUDIT_LOG", "false")
 
 	config.SetTempHomeDir()
@@ -102,6 +105,35 @@ func (s *CLITestSuite) SetupSuite() {
 
 func (s *CLITestSuite) TearDownSuite() {
 	s.TestBackend.Close()
+}
+
+func (s *CLITestSuite) SetupTest() {
+	s.env = os.Environ()
+
+	homeKey := "HOME"
+	if runtime.GOOS == "windows" {
+		homeKey = "USERPROFILE"
+	}
+	s.T().Setenv(homeKey, s.T().TempDir())
+	resetConfiguration(s.T(), false)
+
+	testserver.ResetState()
+}
+
+// TearDownTest restores env vars that a method set without cleaning up, since the mock server reads some per request.
+func (s *CLITestSuite) TearDownTest() {
+	// the backend's audit-log mode tracks DISABLE_AUDIT_LOG, so put both back together
+	if os.Getenv("DISABLE_AUDIT_LOG") == "true" {
+		s.TestBackend.Close()
+		s.TestBackend = testserver.StartTestBackend(s.rootT, true)
+	}
+
+	os.Clearenv()
+	for _, kv := range s.env {
+		if k, v, ok := strings.Cut(kv, "="); ok {
+			_ = os.Setenv(k, v)
+		}
+	}
 }
 
 func (s *CLITestSuite) runIntegrationTest(test CLITest) {
@@ -114,7 +146,7 @@ func (s *CLITestSuite) runIntegrationTest(test CLITest) {
 		if isAuditLogDisabled != test.disableAuditLog {
 			s.TestBackend.Close()
 			os.Setenv("DISABLE_AUDIT_LOG", strconv.FormatBool(test.disableAuditLog))
-			s.TestBackend = testserver.StartTestBackend(t, !test.disableAuditLog)
+			s.TestBackend = testserver.StartTestBackend(s.rootT, !test.disableAuditLog)
 		}
 
 		if !test.workflow {
