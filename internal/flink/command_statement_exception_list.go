@@ -7,7 +7,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *statementCommand) newStatementExceptionListCommand() *cobra.Command {
+func (c *statementCommand) newExceptionListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "list <statement-name>",
 		Short:             "List exceptions for a Flink SQL statement.",
