@@ -398,6 +398,47 @@ func TestLoad_FreshMachineDoesNotClobberConcurrentlyCreatedConfig(t *testing.T) 
 		"a config another session created after this session read the file missing must survive the fresh-machine load")
 }
 
+// The secret-store analog of TestLoad_FreshMachineDoesNotClobberConcurrentlyCreatedConfig: a
+// process that reads the config missing (so its Load never ran loadSecretStore and secretBaseline
+// stays nil) must not blind-overwrite a peer's secrets.json written in that same window. The
+// nil-baseline whole-write path must merge against an empty baseline so the peer's disk-only secret
+// entries survive, exactly as the config-side save merges rather than clobbers.
+func TestSave_FreshMachineDoesNotClobberConcurrentlyWrittenSecrets(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+
+	reached := make(chan struct{})
+	proceed := make(chan struct{})
+	afterMissingConfigRead = func() {
+		afterMissingConfigRead = func() {} // one-shot
+		close(reached)
+		<-proceed
+	}
+	t.Cleanup(func() { afterMissingConfigRead = func() {} })
+
+	a := New()
+	a.Filename = path
+	loadErr := make(chan error, 1)
+	go func() { loadErr <- a.Load() }()
+
+	<-reached // a has read the config missing and is paused before its initial save
+
+	// A concurrent peer writes real secrets to the store in exactly this window.
+	peer := &secretFile{Secrets: map[string]*secretRecord{
+		"peer-identity": {Secret: secret.AesGcm + ":peer-ciphertext", SecretSalt: []byte("peer-salt"), SecretNonce: []byte("peer-nonce")},
+	}}
+	require.NoError(t, newSecretStore().write(peer))
+
+	close(proceed) // a resumes into its save, which must merge rather than clobber
+	require.NoError(t, <-loadErr)
+
+	final, err := readSecretFileFromDisk(SecretsFilename())
+	require.NoError(t, err)
+	require.Contains(t, final.Secrets, "peer-identity",
+		"a peer's secrets written after this session read the config missing must survive the fresh-machine save")
+}
+
 // addContextWithToken adds a second, non-current context carrying an auth token, shaped
 // like newSavedConfig's context so Validate accepts it.
 func addContextWithToken(c *Config, name, authToken string) {

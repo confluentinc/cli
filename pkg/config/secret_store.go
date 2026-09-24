@@ -660,13 +660,11 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 
 	ours := &secretFile{Secrets: records, Tokens: tokens, Passwords: passwords}
 
-	// No baseline (never loaded) or no disk read (the caller is writing a whole config with
-	// nothing to merge against) means there is no common ancestor: declare our state whole,
-	// matching saveLocked's own nil-baseline/missing-file short circuits for config.json. The
-	// store is written even when empty - both to overwrite a stale secrets.json left from a prior
-	// state, and to set secretBaseline so the next save has a common ancestor to merge against
-	// rather than overwriting concurrent secret writes.
-	if diskContextNames == nil || c.secretBaseline == nil {
+	// A whole-config write for a config we DID load (we still hold its secret baseline, but the
+	// caller passed no disk context set) declares our state whole, symmetric with config.json's own
+	// writeWholeConfig short circuit for a missing/empty file. Written even when empty, both to clear
+	// a store left from a prior state and to set secretBaseline for the next save's merge.
+	if diskContextNames == nil && c.secretBaseline != nil {
 		if err := newSecretStore().write(ours); err != nil {
 			return err
 		}
@@ -678,6 +676,24 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 	disk, err := readSecretFileFromDisk(store.path)
 	if err != nil {
 		return err
+	}
+
+	// No secret baseline of our own: the config was constructed, or a fresh-machine load whose
+	// missing-file path snapshotted a config baseline (so config.json still MERGES on this save) but
+	// never ran loadSecretStore. The secret side must be symmetric with that config merge and not
+	// blind-overwrite a concurrent peer's store, so merge against an EMPTY baseline - the peer's
+	// disk-only entries then read as concurrent adds and survive. A truly fresh machine (no store on
+	// disk) has nothing to preserve, so ours (possibly empty) is written whole, still setting the
+	// baseline for the next save.
+	if c.secretBaseline == nil {
+		if len(disk.Secrets) == 0 && len(disk.Tokens) == 0 && len(disk.Passwords) == 0 {
+			if err := newSecretStore().write(ours); err != nil {
+				return err
+			}
+			c.secretBaseline = ours
+			return nil
+		}
+		c.secretBaseline = &secretFile{}
 	}
 
 	// Secrets: the generic structural merge (identity add/delete, SchemaRegistryCredentials) runs on

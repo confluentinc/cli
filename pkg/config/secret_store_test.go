@@ -396,14 +396,14 @@ func TestSave_SavedPasswordsKeyedByContextNotIdentity(t *testing.T) {
 	require.Equal(t, "password-b", decrypt("ctx-b"), "ctx-b's password must not collide with ctx-a's shared identity")
 }
 
-// TestSaveSecretStore_EmptyConfigWritesEmptyStoreAndSetsBaseline pins should-fix 6: a whole-config
-// write with no secrets must still write an empty store (overwriting a stale secrets.json left from a
-// prior state) and set secretBaseline, so the next save has a common ancestor and can three-way
-// merge concurrent secret writes rather than overwriting them.
-func TestSaveSecretStore_EmptyConfigWritesEmptyStoreAndSetsBaseline(t *testing.T) {
+// TestSaveSecretStore_FreshEmptyConfigWritesEmptyStoreAndSetsBaseline pins should-fix 6 on a truly
+// fresh machine (no store on disk): a whole-config write with no secrets must still write the (empty)
+// store and set secretBaseline, so the next save has a common ancestor and can three-way merge
+// concurrent secret writes rather than overwriting them. (A store that already exists on disk is
+// preserved, not overwritten - see TestSave_FreshMachineDoesNotClobberConcurrentlyWrittenSecrets,
+// since a stale entry is indistinguishable from a concurrent peer's write.)
+func TestSaveSecretStore_FreshEmptyConfigWritesEmptyStoreAndSetsBaseline(t *testing.T) {
 	setTestHome(t, t.TempDir())
-	stale := &secretFile{Secrets: map[string]*secretRecord{"stale": {Secret: secret.AesGcm + ":stale"}}}
-	require.NoError(t, newSecretStore().write(stale))
 
 	c := New()
 	c.Filename = filepath.Join(t.TempDir(), "config.json")
@@ -411,9 +411,11 @@ func TestSaveSecretStore_EmptyConfigWritesEmptyStoreAndSetsBaseline(t *testing.T
 
 	require.NotNil(t, c.secretBaseline, "an empty whole-write must set the secret baseline for the next save's merge")
 
+	_, statErr := os.Stat(SecretsFilename())
+	require.NoError(t, statErr, "a truly fresh machine's empty config must still write the store")
 	disk, err := readSecretFileFromDisk(SecretsFilename())
 	require.NoError(t, err)
-	require.Empty(t, disk.Secrets, "a fresh empty config must overwrite a stale secrets.json, not keep it")
+	require.Empty(t, disk.Secrets)
 }
 
 func TestSecretsFilename_UnderStateDir(t *testing.T) {
