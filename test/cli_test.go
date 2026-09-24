@@ -146,7 +146,7 @@ func (s *CLITestSuite) runIntegrationTest(test CLITest) {
 		if isAuditLogDisabled != test.disableAuditLog {
 			s.TestBackend.Close()
 			os.Setenv("DISABLE_AUDIT_LOG", strconv.FormatBool(test.disableAuditLog))
-			s.TestBackend = testserver.StartTestBackend(t, !test.disableAuditLog)
+			s.TestBackend = testserver.StartTestBackend(s.rootT, !test.disableAuditLog)
 		}
 
 		if !test.workflow {
