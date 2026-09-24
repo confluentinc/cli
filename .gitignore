@@ -21,6 +21,10 @@
 *.gpg
 *passphrase
 
+# pkg/config's sidecar lock files (config.json.lock, secrets.json.lock, ...), including the
+# ones TestConfig_Load creates next to its checked-in fixtures under pkg/config/test_json/.
+*.json.lock
+
 #
 # BEGIN managed content - any manual changes below this block will be discarded
 #

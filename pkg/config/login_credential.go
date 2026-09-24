@@ -4,7 +4,7 @@ type LoginCredential struct {
 	IsCloud           bool   `json:"is_cloud"`
 	Url               string `json:"url"`
 	Username          string `json:"username"`
-	EncryptedPassword string `json:"encrypted_password"`
-	Salt              []byte `json:"salt,omitempty"`
-	Nonce             []byte `json:"nonce,omitempty"`
+	EncryptedPassword string `json:"-"`
+	Salt              []byte `json:"-"`
+	Nonce             []byte `json:"-"`
 }
