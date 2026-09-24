@@ -20,10 +20,10 @@ type ContextState struct {
 	// Deprecated
 	Auth *AuthConfig `json:"auth,omitempty"`
 
-	AuthToken        string `json:"auth_token"`
-	AuthRefreshToken string `json:"auth_refresh_token"`
-	Salt             []byte `json:"salt,omitempty"`
-	Nonce            []byte `json:"nonce,omitempty"`
+	AuthToken        string `json:"-"`
+	AuthRefreshToken string `json:"-"`
+	Salt             []byte `json:"-"`
+	Nonce            []byte `json:"-"`
 }
 
 func (c *ContextState) DecryptAuthToken(ctxName string) error {
