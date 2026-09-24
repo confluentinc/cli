@@ -359,6 +359,7 @@ func TestSave_SecondSaveInSameProcess_PreservesConcurrentSecretRotation(t *testi
 // the exact window: the loading session reads the file missing, then blocks on the lock
 // inside its save while another session's config lands on disk.
 func TestLoad_FreshMachineDoesNotClobberConcurrentlyCreatedConfig(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 
