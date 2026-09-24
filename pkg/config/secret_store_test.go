@@ -422,6 +422,7 @@ func TestSecretsFilename_UnderStateDir(t *testing.T) {
 }
 
 func TestIdentityKey_StableAcrossRename(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	c := newTestConfigWithAPIKeyContext(t)
 	before := c.Contexts["orig"].identityKey()
 
