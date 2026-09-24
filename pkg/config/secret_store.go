@@ -662,11 +662,11 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 
 	// No baseline (never loaded) or no disk read (the caller is writing a whole config with
 	// nothing to merge against) means there is no common ancestor: declare our state whole,
-	// matching saveLocked's own nil-baseline/missing-file short circuits for config.json.
+	// matching saveLocked's own nil-baseline/missing-file short circuits for config.json. The
+	// store is written even when empty - both to overwrite a stale secrets.json left from a prior
+	// state, and to set secretBaseline so the next save has a common ancestor to merge against
+	// rather than overwriting concurrent secret writes.
 	if diskContextNames == nil || c.secretBaseline == nil {
-		if len(records) == 0 && len(tokens) == 0 && len(passwords) == 0 {
-			return nil
-		}
 		if err := newSecretStore().write(ours); err != nil {
 			return err
 		}
