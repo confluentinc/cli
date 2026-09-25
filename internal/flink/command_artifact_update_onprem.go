@@ -9,12 +9,11 @@ import (
 
 func (c *command) newArtifactUpdateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "update <name>",
-		Short:       "Update a Flink artifact's metadata in Confluent Platform.",
-		Long:        "Update the labels of a Flink artifact in Confluent Platform without uploading new content.",
-		Args:        cobra.ExactArgs(1),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
-		RunE:        c.artifactUpdateOnPrem,
+		Use:   "update <name>",
+		Short: "Update a Flink artifact's metadata in Confluent Platform.",
+		Long:  "Update the labels of a Flink artifact in Confluent Platform without uploading new content.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.artifactUpdateOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Replace the labels of Flink artifact "my-artifact" in the environment "my-environment".`,
@@ -24,7 +23,7 @@ func (c *command) newArtifactUpdateCommandOnPrem() *cobra.Command {
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
-	cmd.Flags().StringSlice("label", nil, `A comma-separated list of "key=value" label pairs. Provide the complete set of labels to apply; omit the flag to leave existing labels unchanged.`)
+	cmd.Flags().StringSlice("label", nil, `A comma-separated list of "key=value" label pairs. Replaces all existing labels, removing any that are not listed; omit the flag to leave existing labels unchanged.`)
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 

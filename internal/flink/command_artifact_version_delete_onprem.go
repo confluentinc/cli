@@ -14,12 +14,11 @@ import (
 
 func (c *command) newArtifactVersionDeleteCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "delete <name>",
-		Short:       "Delete a version of a Flink artifact in Confluent Platform.",
-		Long:        "Delete a version of a Flink artifact in Confluent Platform. Deleting the last remaining version deletes the artifact.",
-		Args:        cobra.ExactArgs(1),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
-		RunE:        c.artifactVersionDeleteOnPrem,
+		Use:   "delete <name>",
+		Short: "Delete a version of a Flink artifact in Confluent Platform.",
+		Long:  "Delete a version of a Flink artifact in Confluent Platform. Deleting the last remaining version deletes the artifact.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.artifactVersionDeleteOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete version 2 of Flink artifact "my-artifact" in the environment "my-environment".`,

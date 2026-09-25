@@ -9,12 +9,11 @@ import (
 
 func (c *command) newArtifactVersionCreateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "create <name>",
-		Short:       "Upload a new Flink artifact version in Confluent Platform.",
-		Long:        "Upload a new version of a Flink artifact in Confluent Platform. If the uploaded content is identical to the latest version, the artifact is left unchanged and no new version is created.",
-		Args:        cobra.ExactArgs(1),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
-		RunE:        c.artifactVersionCreateOnPrem,
+		Use:   "create <name>",
+		Short: "Upload a new Flink artifact version in Confluent Platform.",
+		Long:  "Upload a new version of a Flink artifact in Confluent Platform. If the uploaded content is identical to the latest version, the artifact is left unchanged and no new version is created.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.artifactVersionCreateOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Upload a new version of Flink artifact "my-artifact" in the environment "my-environment".`,
