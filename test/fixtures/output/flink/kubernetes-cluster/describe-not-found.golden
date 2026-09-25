@@ -1,0 +1,2 @@
+warning: GOCOVERDIR not set, no coverage data emitted
+Error: failed to describe Kubernetes cluster "non-existent": {"message":"Kubernetes cluster 'non-existent' not found"}

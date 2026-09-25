@@ -1,3 +1,4 @@
+warning: GOCOVERDIR not set, no coverage data emitted
 Error: accepts 1 arg(s), received 0
 Usage:
   confluent flink environment describe <name> [flags]
@@ -13,4 +14,3 @@ Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-
