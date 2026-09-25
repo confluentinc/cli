@@ -178,7 +178,16 @@ func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 		RefreshToken:   c.refreshGatewayToken(client, jwt.NewValidator()),
 	}
 
+	// Show a live row count on stderr while draining, so the command isn't silent
+	// for the minutes a large result can take. It renders only to an interactive
+	// terminal and never to stdout, so piped/redirected output is unaffected. It
+	// must be cleared before anything else is written (result, warning, error).
+	progress := newQueryProgress()
+	progress.start()
+	options.OnProgress = progress.update
+
 	result, err := query.Run(ctx, options, name)
+	progress.clear()
 	if err != nil {
 		// If handleQueryError leaves settled false (any error it doesn't already
 		// stop and announce itself), the deferred cleanup above must still speak

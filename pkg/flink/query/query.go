@@ -46,6 +46,12 @@ type Options struct {
 	// RefreshToken runs before every gateway call; nil means no refresh.
 	RefreshToken func() error
 
+	// OnProgress, when non-nil, is called after each page with the running row
+	// count, so a caller can show progress instead of a silent multi-minute drain.
+	// It carries no output of its own; the caller decides what (if anything) to
+	// render, and must keep it off stdout.
+	OnProgress func(rows int)
+
 	// sleep is swapped out in tests so they do not wait in real time.
 	sleep func(context.Context, time.Duration) error
 
@@ -179,9 +185,12 @@ func drain(ctx context.Context, opts Options, statementName string, schema flink
 		if opts.MaxRows > 0 && len(result.Rows) > opts.MaxRows {
 			result.Rows = result.Rows[:opts.MaxRows]
 			result.Truncated = true
+			reportProgress(opts, len(result.Rows))
 			refreshStatement(ctx, opts, statementName, result)
 			return nil
 		}
+
+		reportProgress(opts, len(result.Rows))
 
 		if nextPageToken == "" {
 			refreshStatement(ctx, opts, statementName, result)
@@ -193,6 +202,13 @@ func drain(ctx context.Context, opts Options, statementName string, schema flink
 		if err != nil {
 			return err
 		}
+	}
+}
+
+// reportProgress hands the running row count to OnProgress when set.
+func reportProgress(opts Options, rows int) {
+	if opts.OnProgress != nil {
+		opts.OnProgress(rows)
 	}
 }
 
