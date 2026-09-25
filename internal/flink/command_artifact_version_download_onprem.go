@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 
@@ -73,22 +74,42 @@ func (c *command) artifactVersionDownloadOnPrem(cmd *cobra.Command, args []strin
 	defer os.Remove(downloadedFile.Name())
 	defer downloadedFile.Close()
 
-	destination, err := os.Create(outputFile)
-	if err != nil {
-		return fmt.Errorf("failed to create output file: %w", err)
-	}
-
-	if _, err := io.Copy(destination, downloadedFile); err != nil {
-		destination.Close()
-		// Remove the partial output file so a failed download doesn't leave a truncated or corrupt artifact behind.
-		os.Remove(outputFile)
-		return fmt.Errorf("failed to write output file: %w", err)
-	}
-
-	if err := destination.Close(); err != nil {
-		return fmt.Errorf("failed to write output file: %w", err)
+	if err := replaceFile(outputFile, downloadedFile); err != nil {
+		return err
 	}
 
 	output.Printf(false, "Downloaded Flink artifact %q to %q.\n", name, outputFile)
+	return nil
+}
+
+// replaceFile writes content to a temporary file in path's directory and renames it over path, so a failed write
+// never truncates or corrupts a file already at path. An existing file keeps its permissions; a new one gets 0644.
+func replaceFile(path string, content io.Reader) error {
+	perm := os.FileMode(0644)
+	if info, err := os.Stat(path); err == nil {
+		perm = info.Mode().Perm()
+	}
+
+	temp, err := os.CreateTemp(filepath.Dir(path), "."+filepath.Base(path)+".*.tmp")
+	if err != nil {
+		return fmt.Errorf("failed to create output file: %w", err)
+	}
+	// Removes the temporary file if any step below fails; after a successful rename it no longer exists.
+	defer os.Remove(temp.Name())
+
+	if _, err := io.Copy(temp, content); err != nil {
+		temp.Close()
+		return fmt.Errorf("failed to write output file: %w", err)
+	}
+	if err := temp.Chmod(perm); err != nil {
+		temp.Close()
+		return fmt.Errorf("failed to write output file: %w", err)
+	}
+	if err := temp.Close(); err != nil {
+		return fmt.Errorf("failed to write output file: %w", err)
+	}
+	if err := os.Rename(temp.Name(), path); err != nil {
+		return fmt.Errorf("failed to write output file: %w", err)
+	}
 	return nil
 }
