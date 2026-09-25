@@ -61,7 +61,7 @@ var (
 )
 
 func init() {
-	fillKeyStoreV2()
+	ResetState()
 }
 
 // Handler for: "/iam/v2/api-keys/{id}"
