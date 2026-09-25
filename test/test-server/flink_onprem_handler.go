@@ -1890,6 +1890,23 @@ func assertArtifactLabelContract(t *testing.T, rawArtifact string) {
 	}
 }
 
+// assertArtifactFileUploaded requires the multipart request to carry exactly one "file" part whose bytes match the
+// given fixture, so an implementation that uploads only the metadata part can't pass the create tests.
+func assertArtifactFileUploaded(t *testing.T, r *http.Request, fixturePath string) {
+	fileHeaders := r.MultipartForm.File["file"]
+	require.Len(t, fileHeaders, 1, `expected exactly one "file" part`)
+
+	uploaded, err := fileHeaders[0].Open()
+	require.NoError(t, err)
+	defer uploaded.Close()
+
+	actual, err := io.ReadAll(uploaded)
+	require.NoError(t, err)
+	expected, err := os.ReadFile(fixturePath)
+	require.NoError(t, err)
+	require.Equal(t, expected, actual, "uploaded bytes must match the artifact file")
+}
+
 // createArtifactObject builds a fully-populated Artifact for the given name and version with deterministic field values.
 func createArtifactObject(name string, version int32) cmfsdk.Artifact {
 	timestamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
@@ -1953,6 +1970,7 @@ func handleCmfArtifacts(t *testing.T) http.HandlerFunc {
 			require.NoError(t, r.ParseMultipartForm(32<<20))
 			rawArtifact := r.FormValue("artifact")
 			assertArtifactLabelContract(t, rawArtifact)
+			assertArtifactFileUploaded(t, r, "test/fixtures/input/flink/artifact/artifact.jar")
 			var artifact cmfsdk.Artifact
 			require.NoError(t, json.Unmarshal([]byte(rawArtifact), &artifact))
 
@@ -2094,9 +2112,14 @@ func handleCmfArtifactContent(t *testing.T) http.HandlerFunc {
 
 		switch r.Method {
 		case http.MethodGet:
+			// Return version-specific bytes so the download tests can tell whether `--version` was forwarded.
+			content := "dummy artifact content"
+			if version := r.URL.Query().Get("version"); version != "" {
+				content = fmt.Sprintf("dummy artifact content v%s", version)
+			}
 			w.Header().Set("Content-Type", "application/octet-stream")
 			w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.jar"`, artifactName))
-			_, err := w.Write([]byte("dummy artifact content"))
+			_, err := w.Write([]byte(content))
 			require.NoError(t, err)
 			return
 		default:
