@@ -547,18 +547,30 @@ func (s *CLITestSuite) TestFlinkArtifactVersionDeleteOnPrem() {
 
 func (s *CLITestSuite) TestFlinkArtifactVersionDownloadOnPrem() {
 	defer os.Remove("downloaded-artifact.jar")
+	defer os.Remove("downloaded-artifact-missing.jar")
 
-	// verifyDownloadedContent asserts the downloaded bytes match the mock body. The output file is reused across cases
-	// and auth passes, which also exercises that download overwrites an existing file (no --force needed).
-	verifyDownloadedContent := func(t *testing.T) {
-		content, err := os.ReadFile("downloaded-artifact.jar")
-		require.NoError(t, err)
-		require.Equal(t, "dummy artifact content", string(content))
+	// verifyDownloadedContent asserts the downloaded bytes match the mock body for the requested version. The output file
+	// is reused across cases and auth passes, and the longer versioned body is written before the latest one, so these
+	// cases also verify that download fully replaces an existing file (no --force needed).
+	verifyDownloadedContent := func(expected string) func(t *testing.T) {
+		return func(t *testing.T) {
+			content, err := os.ReadFile("downloaded-artifact.jar")
+			require.NoError(t, err)
+			require.Equal(t, expected, string(content))
+		}
+	}
+
+	verifyNoOutputFile := func(t *testing.T) {
+		_, err := os.Stat("downloaded-artifact-missing.jar")
+		require.True(t, os.IsNotExist(err), "a failed download must not create the output file")
 	}
 
 	tests := []CLITest{
-		{args: "flink artifact version download test-artifact --output-file downloaded-artifact.jar --environment test-env", fixture: "flink/artifact/version/download-success.golden", wantFunc: verifyDownloadedContent},
-		{args: "flink artifact version download test-artifact --version 1 --output-file downloaded-artifact.jar --environment test-env", fixture: "flink/artifact/version/download-version-success.golden", wantFunc: verifyDownloadedContent},
+		// success
+		{args: "flink artifact version download test-artifact --version 1 --output-file downloaded-artifact.jar --environment test-env", fixture: "flink/artifact/version/download-version-success.golden", wantFunc: verifyDownloadedContent("dummy artifact content v1")},
+		{args: "flink artifact version download test-artifact --output-file downloaded-artifact.jar --environment test-env", fixture: "flink/artifact/version/download-success.golden", wantFunc: verifyDownloadedContent("dummy artifact content")},
+		// failure
+		{args: "flink artifact version download non-exist-artifact --output-file downloaded-artifact-missing.jar --environment test-env", fixture: "flink/artifact/version/download-non-exist-failure.golden", exitCode: 1, wantFunc: verifyNoOutputFile},
 	}
 
 	runIntegrationTestsWithMultipleAuth(s, tests)
