@@ -178,6 +178,19 @@ func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 		RefreshToken:   c.refreshGatewayToken(client, jwt.NewValidator()),
 	}
 
+	// A bare --raw JSON array is the "dump a large result to a file" path, so
+	// stream it to stdout as pages arrive instead of buffering the whole set.
+	// Every other format (the JSON/YAML envelope, --raw YAML, the human table)
+	// still buffers via printQueryResult below. If Run fails after streaming has
+	// started, the emitted array is left unterminated — an inherent cost of not
+	// buffering, called out for the reviewer.
+	var streamer *rawJSONArrayStreamer
+	if raw && output.GetFormat(cmd) == output.JSON {
+		streamer = newRawJSONArrayStreamer(os.Stdout)
+		options.OnSchema = streamer.setColumns
+		options.OnRows = streamer.writeRows
+	}
+
 	result, err := query.Run(ctx, options, name)
 	if err != nil {
 		// If handleQueryError leaves settled false (any error it doesn't already
@@ -203,6 +216,19 @@ func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 	}
 
 	isAppendOnly, appendOnlyKnown := warnIfChangelog(result)
+
+	// In streaming mode the rows already reached stdout during Run; only the
+	// closing bracket remains. (The changelog warning above says "below", which is
+	// slightly off when rows stream first — acceptable for --raw, which is the
+	// append-only dump path; revisit if envelope streaming lands.)
+	if streamer != nil {
+		if err := streamer.close(); err != nil {
+			announceStop = true
+			return err
+		}
+		return nil
+	}
+
 	if err := c.printQueryResult(cmd, name, result, isAppendOnly, appendOnlyKnown, raw); err != nil {
 		// A failed print is still an error the user sees, so the deferred cleanup
 		// must announce the stop outcome like every other error path — otherwise
