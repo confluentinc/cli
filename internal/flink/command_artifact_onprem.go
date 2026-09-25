@@ -31,7 +31,7 @@ const artifactLookupSuggestions = "List available Flink artifacts with `confluen
 func (c *command) newArtifactCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "artifact",
-		Short:       "Manage Flink UDF artifacts.",
+		Short:       "Manage Flink UDF artifacts in Confluent Platform.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
 	}
 

@@ -11,12 +11,11 @@ import (
 
 func (c *command) newArtifactDeleteCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "delete <name-1> [name-2] ... [name-n]",
-		Short:       "Delete one or more Flink artifacts in Confluent Platform.",
-		Long:        "Delete one or more Flink artifacts in Confluent Platform, including all of their versions.",
-		Args:        cobra.MinimumNArgs(1),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
-		RunE:        c.artifactDeleteOnPrem,
+		Use:   "delete <name-1> [name-2] ... [name-n]",
+		Short: "Delete one or more Flink artifacts in Confluent Platform.",
+		Long:  "Delete one or more Flink artifacts in Confluent Platform, including all of their versions.",
+		Args:  cobra.MinimumNArgs(1),
+		RunE:  c.artifactDeleteOnPrem,
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")

@@ -9,12 +9,11 @@ import (
 
 func (c *command) newArtifactCreateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "create <name>",
-		Short:       "Create a Flink artifact in Confluent Platform.",
-		Long:        "Create a Flink artifact in Confluent Platform by uploading a JAR or ZIP file. This creates version 1 of the artifact.",
-		Args:        cobra.ExactArgs(1),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
-		RunE:        c.artifactCreateOnPrem,
+		Use:   "create <name>",
+		Short: "Create a Flink artifact in Confluent Platform.",
+		Long:  "Create a Flink artifact in Confluent Platform by uploading a JAR or ZIP file. This creates version 1 of the artifact.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.artifactCreateOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create Flink artifact "my-artifact" in the environment "my-environment".`,

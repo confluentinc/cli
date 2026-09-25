@@ -9,11 +9,10 @@ import (
 
 func (c *command) newArtifactVersionListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "list <name>",
-		Short:       "List the versions of a Flink artifact in Confluent Platform.",
-		Args:        cobra.ExactArgs(1),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
-		RunE:        c.artifactVersionListOnPrem,
+		Use:   "list <name>",
+		Short: "List the versions of a Flink artifact in Confluent Platform.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.artifactVersionListOnPrem,
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")

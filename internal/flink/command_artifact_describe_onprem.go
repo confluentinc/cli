@@ -8,12 +8,11 @@ import (
 
 func (c *command) newArtifactDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "describe <name>",
-		Short:       "Describe a Flink artifact in Confluent Platform.",
-		Long:        "Describe a Flink artifact in Confluent Platform. Details reflect the latest version of the artifact.",
-		Args:        cobra.ExactArgs(1),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
-		RunE:        c.artifactDescribeOnPrem,
+		Use:   "describe <name>",
+		Short: "Describe a Flink artifact in Confluent Platform.",
+		Long:  "Describe a Flink artifact in Confluent Platform. Details reflect the latest version of the artifact.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.artifactDescribeOnPrem,
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")

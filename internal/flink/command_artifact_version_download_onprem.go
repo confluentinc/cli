@@ -7,19 +7,17 @@ import (
 
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c *command) newArtifactVersionDownloadCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "download <name>",
-		Short:       "Download a Flink artifact's content in Confluent Platform.",
-		Long:        "Download the binary content of a Flink artifact in Confluent Platform. Defaults to the latest version unless `--version` is specified.",
-		Args:        cobra.ExactArgs(1),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
-		RunE:        c.artifactVersionDownloadOnPrem,
+		Use:   "download <name>",
+		Short: "Download a Flink artifact's content in Confluent Platform.",
+		Long:  "Download the binary content of a Flink artifact in Confluent Platform. Defaults to the latest version unless `--version` is specified.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.artifactVersionDownloadOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Download the latest version of Flink artifact "my-artifact" in the environment "my-environment".`,
