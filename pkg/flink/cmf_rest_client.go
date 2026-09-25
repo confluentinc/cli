@@ -7,9 +7,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
 	_nethttp "net/http"
+	"net/http/httputil"
 	"net/textproto"
 	neturl "net/url"
 	"os"
@@ -500,9 +502,7 @@ func (cmfClient *CmfRestClient) GetSystemInformation(ctx context.Context) (map[s
 		return nil, fmt.Errorf("failed to create system information request: %s", err)
 	}
 
-	setCmfAuthHeader(ctx, req)
-
-	resp, err := cmfClient.GetConfig().HTTPClient.Do(req)
+	resp, err := cmfClient.doCmfRequest(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get system information: %s", err)
 	}
@@ -744,6 +744,43 @@ func setCmfAuthHeader(ctx context.Context, request *http.Request) {
 	}
 }
 
+// doCmfRequest sends a manually built CMF request the way the generated SDK sends its own: with the configured
+// User-Agent, default headers, and bearer token, and with request and response dumps when `--unsafe-trace` is set.
+// Unlike the SDK, the request dump leaves out the body, since an artifact upload carries the whole binary file.
+func (cmfClient *CmfRestClient) doCmfRequest(ctx context.Context, request *http.Request) (*http.Response, error) {
+	cfg := cmfClient.GetConfig()
+	if cfg.UserAgent != "" {
+		request.Header.Set("User-Agent", cfg.UserAgent)
+	}
+	for header, value := range cfg.DefaultHeader {
+		request.Header.Add(header, value)
+	}
+	setCmfAuthHeader(ctx, request)
+
+	if cfg.Debug {
+		dump, err := httputil.DumpRequestOut(request, false)
+		if err != nil {
+			return nil, err
+		}
+		log.Printf("\n%s\n", string(dump))
+	}
+
+	response, err := cfg.HTTPClient.Do(request)
+	if err != nil {
+		return nil, err
+	}
+
+	if cfg.Debug {
+		dump, err := httputil.DumpResponse(response, true)
+		if err != nil {
+			response.Body.Close()
+			return nil, err
+		}
+		log.Printf("\n%s\n", string(dump))
+	}
+	return response, nil
+}
+
 // cmfErrorFromBody builds an error from a failed CMF response, preferring the response body over the status line.
 func cmfErrorFromBody(status string, body []byte) error {
 	if trimmed := strings.TrimSpace(string(body)); trimmed != "" {
@@ -754,9 +791,7 @@ func cmfErrorFromBody(status string, body []byte) error {
 
 // uploadArtifact sends a multipart/form-data request for the artifact create and update endpoints.
 // The generated SDK serializes the "artifact" object part with fmt "%v" (Go struct representation) rather than JSON,
-// so the request is built here (mirroring GetSystemInformation's manual CMF request handling) to send a proper JSON part.
-// Like GetSystemInformation, this bypasses the SDK's request pipeline, so `--unsafe-trace` request logging and the
-// configured User-Agent do not apply to the manually built artifact-upload and system-information requests.
+// so the request is built here to send a proper JSON part, then dispatched through doCmfRequest.
 func (cmfClient *CmfRestClient) uploadArtifact(ctx context.Context, method, url string, artifact cmfsdk.Artifact, file *os.File) (cmfsdk.Artifact, error) {
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
@@ -796,9 +831,8 @@ func (cmfClient *CmfRestClient) uploadArtifact(ctx context.Context, method, url 
 		return cmfsdk.Artifact{}, err
 	}
 	request.Header.Set("Content-Type", writer.FormDataContentType())
-	setCmfAuthHeader(ctx, request)
 
-	response, err := cmfClient.GetConfig().HTTPClient.Do(request)
+	response, err := cmfClient.doCmfRequest(ctx, request)
 	if err != nil {
 		return cmfsdk.Artifact{}, err
 	}
