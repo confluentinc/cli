@@ -250,21 +250,6 @@ func AddDryRunFlag(cmd *cobra.Command) {
 	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes.")
 }
 
-func AddKsqlClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
-	cmd.Flags().String("ksql-cluster", "", "KSQL cluster for the pipeline.")
-	RegisterFlagCompletionFunc(cmd, "ksql-cluster", func(cmd *cobra.Command, args []string) []string {
-		if err := c.PersistentPreRunE(cmd, args); err != nil {
-			return nil
-		}
-
-		environmentId, err := c.Context.EnvironmentId()
-		if err != nil {
-			return nil
-		}
-		return autocompleteKSQLClusters(environmentId, c.V2Client)
-	})
-}
-
 func AddFilterFlag(cmd *cobra.Command) {
 	cmd.Flags().String("filter", "true", "A supported Common Expression Language (CEL) filter expression.")
 }
@@ -283,19 +268,6 @@ func AutocompleteCertificatePool(client *ccloudv2.Client, provider string) []str
 	for i, certificatePool := range certificatePools {
 		description := fmt.Sprintf("%s: %s", certificatePool.GetDisplayName(), certificatePool.GetDescription())
 		suggestions[i] = fmt.Sprintf("%s\t%s", certificatePool.GetId(), description)
-	}
-	return suggestions
-}
-
-func autocompleteKSQLClusters(environmentId string, client *ccloudv2.Client) []string {
-	clusters, err := client.ListKsqlClusters(environmentId)
-	if err != nil {
-		return nil
-	}
-
-	suggestions := make([]string, len(clusters))
-	for i, cluster := range clusters {
-		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
 	}
 	return suggestions
 }
@@ -351,6 +323,36 @@ func AddPrincipalFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 		}
 
 		return AutocompleteServiceAccounts(command.V2Client)
+	})
+}
+
+// AddFlinkStatementPrincipalFlag registers --principal for a Flink statement, completing users as
+// well as service accounts: a statement runs as either.
+func AddFlinkStatementPrincipalFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
+	cmd.Flags().String("principal", "", "A user or service account the statement runs as.")
+	RegisterFlagCompletionFunc(cmd, "principal", func(cmd *cobra.Command, args []string) []string {
+		if err := command.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		users, err := command.V2Client.ListIamUsers()
+		if err != nil {
+			return nil
+		}
+
+		serviceAccounts, err := command.V2Client.ListIamServiceAccounts(nil)
+		if err != nil {
+			return nil
+		}
+
+		suggestions := make([]string, len(users)+len(serviceAccounts))
+		for i, user := range users {
+			suggestions[i] = fmt.Sprintf("%s\t%s", user.GetId(), user.GetFullName())
+		}
+		for i, serviceAccount := range serviceAccounts {
+			suggestions[len(users)+i] = fmt.Sprintf("%s\t%s", serviceAccount.GetId(), serviceAccount.GetDescription())
+		}
+		return suggestions
 	})
 }
 

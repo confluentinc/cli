@@ -14,14 +14,15 @@ Create a Flink SQL statement named "my-statement" in compute pool "lfcp-123456" 
 
 Flags:
       --sql string               REQUIRED: The Flink SQL statement.
-      --compute-pool string      Flink compute pool ID.
-      --service-account string   Service account ID.
-      --database string          The database which will be used as the default database. When using Kafka, this is the cluster ID.
-      --wait                     Block until the statement is running or has failed.
-      --property strings         A mechanism to pass properties in the form key=value when creating a Flink statement.
       --cloud string             Specify the cloud provider as "aws", "azure", or "gcp".
       --region string            Cloud region for Flink (use "confluent flink region list" to see all).
       --environment string       Environment ID.
+      --database string          The database which will be used as the default database. When using Kafka, this is the cluster ID.
+      --compute-pool string      Flink compute pool ID.
+      --service-account string   Service account ID.
+      --property strings         A mechanism to pass properties in the form key=value when creating a Flink statement.
+      --wait                     Wait for the Flink SQL statement to reach a ready or failed state before returning.
+      --timeout duration         Maximum time to wait for the Flink SQL statement to reach a ready or failed state when --wait is set (e.g., '30s', '5m', '2h'). (default 1h0m0s)
       --context string           CLI context name.
   -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
 
