@@ -10,7 +10,7 @@ import (
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List user-configurable fields in ~/.confluent/config.json.",
+		Short: "List user-configurable fields in the CLI configuration file.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}
