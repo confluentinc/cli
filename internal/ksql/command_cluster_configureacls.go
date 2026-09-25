@@ -5,8 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
-	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 
 	"github.com/confluentinc/cli/v4/pkg/acl"
 	"github.com/confluentinc/cli/v4/pkg/ccstructs"
