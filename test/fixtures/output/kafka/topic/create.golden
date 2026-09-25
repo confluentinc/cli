@@ -9,7 +9,7 @@ Create a topic named "my_topic" with default options.
 
 Flags:
       --partitions uint32       Number of topic partitions.
-      --config strings          A comma-separated list of configuration overrides ("key=value") for the topic being created.
+      --config stringArray      A comma-separated list of "key=value" pairs, or path to a configuration file containing a newline-separated list of "key=value" pairs.
       --kafka-endpoint string   Endpoint to be used for this Kafka cluster.
       --dry-run                 Run the command without committing changes.
       --if-not-exists           Exit gracefully if topic already exists.
