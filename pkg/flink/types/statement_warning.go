@@ -6,7 +6,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
+
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 // severityOrder ranks severities for display, most severe first. Severity is an extensible enum, so
@@ -64,6 +68,20 @@ func FormatStatementWarnings(warnings []StatementWarning) string {
 	}
 
 	return fmt.Sprintf("Warnings:\n\n%s", strings.Join(entries, "\n\n"))
+}
+
+// PrintStatementWarnings renders warnings below the table, on stderr so that stdout stays the
+// command's data. Serialized output already carries them in the warnings field.
+func PrintStatementWarnings(cmd *cobra.Command, warnings []StatementWarning) {
+	if output.GetFormat(cmd) != output.Human {
+		return
+	}
+
+	if block := FormatStatementWarnings(warnings); block != "" {
+		output.ErrPrintln(false, "")
+		output.ErrPrintln(false, block)
+		output.ErrPrintln(false, "")
+	}
 }
 
 func sortBySeverity(warnings []StatementWarning) {
