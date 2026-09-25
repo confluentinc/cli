@@ -50,15 +50,20 @@ func (c *command) savepointDetach(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(&savepointOut{
-		Name:         cmfSavepoint.Metadata.GetName(),
-		Application:  application,
-		Path:         cmfSavepoint.Spec.GetPath(),
-		Format:       cmfSavepoint.Spec.GetFormatType(),
-		BackoffLimit: cmfSavepoint.Spec.GetBackoffLimit(),
-		Uid:          cmfSavepoint.Metadata.GetUid(),
-		State:        cmfSavepoint.Status.GetState(),
-	})
-	return table.Print()
+	if output.GetFormat(cmd) == output.Human {
+		table := output.NewTable(cmd)
+		table.Add(&savepointOut{
+			Name:         cmfSavepoint.Metadata.GetName(),
+			Application:  application,
+			Path:         cmfSavepoint.Spec.GetPath(),
+			Format:       cmfSavepoint.Spec.GetFormatType(),
+			BackoffLimit: cmfSavepoint.Spec.GetBackoffLimit(),
+			Uid:          cmfSavepoint.Metadata.GetUid(),
+			State:        cmfSavepoint.Status.GetState(),
+		})
+		return table.Print()
+	}
+
+	localSavepoint := convertSdkSavepointToLocalSavepoint(cmfSavepoint)
+	return output.SerializedOutput(cmd, localSavepoint)
 }
