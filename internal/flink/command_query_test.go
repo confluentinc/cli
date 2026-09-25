@@ -1,6 +1,7 @@
 package flink
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"net/http"
@@ -115,26 +116,6 @@ func TestResolveSQL(t *testing.T) {
 	require.ErrorContains(t, err, "the SQL statement is required")
 }
 
-// captureStdout redirects the package-level os.Stdout (which output.Print and
-// tablewriter both write to directly) for the duration of fn and returns what
-// was written.
-func captureStdout(t *testing.T, fn func()) string {
-	t.Helper()
-
-	orig := os.Stdout
-	r, w, err := os.Pipe()
-	require.NoError(t, err)
-	os.Stdout = w
-	defer func() { os.Stdout = orig }()
-
-	fn()
-
-	require.NoError(t, w.Close())
-	out, err := io.ReadAll(r)
-	require.NoError(t, err)
-	return string(out)
-}
-
 func newTestCommand(ctx *cliconfig.Context) *queryCommand {
 	return &queryCommand{AuthenticatedCLICommand: &pcmd.AuthenticatedCLICommand{Context: ctx}}
 }
@@ -217,16 +198,6 @@ func TestBuildQueryProperties(t *testing.T) {
 	}
 }
 
-func newOutputCmd(t *testing.T, format string) *cobra.Command {
-	t.Helper()
-	cmd := &cobra.Command{}
-	pcmd.AddOutputFlag(cmd)
-	if format != "" {
-		require.NoError(t, cmd.Flags().Set("output", format))
-	}
-	return cmd
-}
-
 func testColumns() []flinkgatewayv1.ColumnDetails {
 	return []flinkgatewayv1.ColumnDetails{
 		{Name: "id", Type: flinkgatewayv1.DataType{Type: "INTEGER"}},
@@ -244,152 +215,100 @@ func testRow() types.StatementResultRow {
 	}
 }
 
-func TestPrintQueryResult(t *testing.T) {
-	t.Run("human table output with rows", func(t *testing.T) {
-		c := newTestCommand(nil)
-		cmd := newOutputCmd(t, "")
-		result := &query.Result{
-			Statement: flinkgatewayv1.SqlV1Statement{Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "COMPLETED"}},
-			Columns:   testColumns(),
-			Rows:      []types.StatementResultRow{testRow()},
+func TestQueryStreamers(t *testing.T) {
+	run := func(t *testing.T, s resultStreamer, columns []flinkgatewayv1.ColumnDetails, rows []types.StatementResultRow, phase string, truncated bool) {
+		t.Helper()
+		require.NoError(t, s.setColumns(columns))
+		if len(rows) > 0 {
+			require.NoError(t, s.writeRows(rows))
 		}
+		require.NoError(t, s.close(phase, len(rows), truncated))
+	}
 
-		out := captureStdout(t, func() {
-			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
-		})
+	t.Run("human table output with rows", func(t *testing.T) {
+		var buf bytes.Buffer
+		run(t, newHumanTableStreamer(&buf, "stmt", false), testColumns(), []types.StatementResultRow{testRow()}, "COMPLETED", false)
+		out := buf.String()
 		require.Contains(t, out, "1021")
 		require.Contains(t, out, "SHIPPED")
 		require.NotContains(t, out, "Operation")
 	})
 
-	t.Run("human table output shows Operation column when requested", func(t *testing.T) {
-		c := newTestCommand(nil)
-		cmd := newOutputCmd(t, "")
-		result := &query.Result{
-			Statement: flinkgatewayv1.SqlV1Statement{Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "COMPLETED"}},
-			Columns:   testColumns(),
-			Rows:      []types.StatementResultRow{testRow()},
-		}
-
-		out := captureStdout(t, func() {
-			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, true, false))
-		})
-		require.Contains(t, out, "Operation")
+	t.Run("human table shows Operation column when requested", func(t *testing.T) {
+		var buf bytes.Buffer
+		run(t, newHumanTableStreamer(&buf, "stmt", true), testColumns(), []types.StatementResultRow{testRow()}, "COMPLETED", false)
+		require.Contains(t, buf.String(), "Operation")
 	})
 
-	t.Run("human output with no rows prints a message to stderr, not stdout", func(t *testing.T) {
-		c := newTestCommand(nil)
-		cmd := newOutputCmd(t, "")
-		result := &query.Result{
-			Statement: flinkgatewayv1.SqlV1Statement{Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "COMPLETED"}},
-		}
-
-		out := captureStdout(t, func() {
-			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
-		})
-		require.Empty(t, out)
+	t.Run("human output with no rows writes nothing to stdout", func(t *testing.T) {
+		var buf bytes.Buffer
+		run(t, newHumanTableStreamer(&buf, "stmt", false), testColumns(), nil, "COMPLETED", false)
+		require.Empty(t, buf.String())
 	})
 
 	t.Run("json envelope carries schema and truncated", func(t *testing.T) {
-		c := newTestCommand(nil)
-		cmd := newOutputCmd(t, "json")
-		result := &query.Result{
-			Statement: flinkgatewayv1.SqlV1Statement{Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "RUNNING"}},
-			Columns:   testColumns(),
-			Rows:      []types.StatementResultRow{testRow()},
-			Truncated: true,
-		}
-
-		out := captureStdout(t, func() {
-			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
-		})
+		var buf bytes.Buffer
+		run(t, newJSONEnvelopeStreamer(&buf), testColumns(), []types.StatementResultRow{testRow()}, "RUNNING", true)
+		out := buf.String()
 		require.Contains(t, out, `"phase": "RUNNING"`)
 		require.Contains(t, out, `"truncated": true`)
 		require.Contains(t, out, `"id": 1021`)
-		require.NotContains(t, out, "incomplete")
 		require.NotContains(t, out, "statement_name")
 		require.NotContains(t, out, "append_only")
 		require.NotContains(t, out, "engine")
 	})
 
-	t.Run("raw serialized output is a bare array with no envelope", func(t *testing.T) {
-		c := newTestCommand(nil)
-		cmd := newOutputCmd(t, "json")
-		result := &query.Result{
-			Statement: flinkgatewayv1.SqlV1Statement{Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "COMPLETED"}},
-			Columns:   testColumns(),
-			Rows:      []types.StatementResultRow{testRow()},
-		}
-
-		out := captureStdout(t, func() {
-			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, true))
-		})
-		require.NotContains(t, out, "statement_name")
-		require.NotContains(t, out, "engine")
+	t.Run("raw json is a bare array with no envelope", func(t *testing.T) {
+		var buf bytes.Buffer
+		run(t, newRawJSONArrayStreamer(&buf), testColumns(), []types.StatementResultRow{testRow()}, "COMPLETED", false)
+		out := buf.String()
 		require.Contains(t, out, `"id": 1021`)
+		require.NotContains(t, out, "phase")
+		require.NotContains(t, out, "columns")
 	})
 
-	t.Run("yaml serialized output", func(t *testing.T) {
-		c := newTestCommand(nil)
-		cmd := newOutputCmd(t, "yaml")
-		result := &query.Result{
-			Statement: flinkgatewayv1.SqlV1Statement{Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "COMPLETED"}},
-			Columns:   testColumns(),
-			Rows:      []types.StatementResultRow{testRow()},
-		}
-
-		out := captureStdout(t, func() {
-			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
-		})
-		require.Contains(t, out, `phase: COMPLETED`)
-		require.NotContains(t, out, "statement_name")
-		require.NotContains(t, out, "engine")
+	t.Run("yaml envelope", func(t *testing.T) {
+		var buf bytes.Buffer
+		run(t, newYAMLStreamer(&buf, false), testColumns(), []types.StatementResultRow{testRow()}, "COMPLETED", false)
+		require.Contains(t, buf.String(), "phase: COMPLETED")
 	})
 
-	t.Run("human output escapes control characters instead of executing them", func(t *testing.T) {
-		c := newTestCommand(nil)
-		cmd := newOutputCmd(t, "")
-		result := &query.Result{
-			Statement: flinkgatewayv1.SqlV1Statement{Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "COMPLETED"}},
-			Columns:   testColumns(),
-			Rows: []types.StatementResultRow{{
-				Operation: types.Insert,
-				Fields: []types.StatementResultField{
-					types.AtomicStatementResultField{Type: types.Integer, Value: "1021"},
-					types.AtomicStatementResultField{Type: types.Varchar, Value: "\x1b[0;31mred\x1b[0m"},
-				},
-			}},
-		}
+	t.Run("yaml raw is a bare list", func(t *testing.T) {
+		var buf bytes.Buffer
+		run(t, newYAMLStreamer(&buf, true), testColumns(), []types.StatementResultRow{testRow()}, "COMPLETED", false)
+		out := buf.String()
+		require.Contains(t, out, "- id: 1021")
+		require.NotContains(t, out, "phase:")
+	})
 
-		out := captureStdout(t, func() {
-			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
-		})
+	t.Run("human escapes control chars in values", func(t *testing.T) {
+		var buf bytes.Buffer
+		rows := []types.StatementResultRow{{
+			Operation: types.Insert,
+			Fields: []types.StatementResultField{
+				types.AtomicStatementResultField{Type: types.Integer, Value: "1021"},
+				types.AtomicStatementResultField{Type: types.Varchar, Value: "\x1b[0;31mred\x1b[0m"},
+			},
+		}}
+		run(t, newHumanTableStreamer(&buf, "stmt", false), testColumns(), rows, "COMPLETED", false)
+		out := buf.String()
 		require.NotContains(t, out, "\x1b")
 		require.Contains(t, out, `\x1b[0;31mred\x1b[0m`)
 	})
 
-	t.Run("human output escapes control characters in column headers too, not just row values", func(t *testing.T) {
-		c := newTestCommand(nil)
-		cmd := newOutputCmd(t, "")
-		result := &query.Result{
-			Statement: flinkgatewayv1.SqlV1Statement{Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "COMPLETED"}},
-			Columns: []flinkgatewayv1.ColumnDetails{
-				{Name: "\x1b[31minjected\x1b[0m", Type: flinkgatewayv1.DataType{Type: "INTEGER"}},
-			},
-			Rows: []types.StatementResultRow{{
-				Operation: types.Insert,
-				Fields:    []types.StatementResultField{types.AtomicStatementResultField{Type: types.Integer, Value: "1"}},
-			}},
-		}
-
-		out := captureStdout(t, func() {
-			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
-		})
+	t.Run("human escapes control chars in headers", func(t *testing.T) {
+		var buf bytes.Buffer
+		columns := []flinkgatewayv1.ColumnDetails{{Name: "\x1b[31minjected\x1b[0m", Type: flinkgatewayv1.DataType{Type: "INTEGER"}}}
+		rows := []types.StatementResultRow{{
+			Operation: types.Insert,
+			Fields:    []types.StatementResultField{types.AtomicStatementResultField{Type: types.Integer, Value: "1"}},
+		}}
+		run(t, newHumanTableStreamer(&buf, "stmt", false), columns, rows, "COMPLETED", false)
+		out := buf.String()
 		require.NotContains(t, out, "\x1b")
 		require.Contains(t, out, `\x1b[31minjected\x1b[0m`)
 	})
 }
-
 func TestEscapeControlChars(t *testing.T) {
 	require.Equal(t, "hello", escapeControlChars("hello"))
 	require.Equal(t, `\x1b[0;31mred\x1b[0m`, escapeControlChars("\x1b[0;31mred\x1b[0m"))

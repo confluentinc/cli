@@ -115,6 +115,75 @@ func TestRunDrainsASinglePage(t *testing.T) {
 	require.Equal(t, types.COMPLETED, result.Phase())
 }
 
+func TestRunStreamsPagesInsteadOfBufferingWhenOnRowsSet(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	running := statement("RUNNING", boundedTraits("id"))
+	completed := statement("COMPLETED", boundedTraits("id"))
+
+	gomock.InOrder(
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(running, nil),
+		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
+			Return(page("10", []any{"1"}), nil),
+		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "10").
+			Return(page("", []any{"2"}, []any{"3"}), nil),
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil),
+	)
+
+	var gotColumns []flinkgatewayv1.ColumnDetails
+	var streamed [][]string
+	opts := testOptions(client)
+	opts.OnSchema = func(columns []flinkgatewayv1.ColumnDetails) error {
+		gotColumns = columns
+		return nil
+	}
+	opts.OnRows = func(rows []types.StatementResultRow) error {
+		for _, row := range rows {
+			fields := make([]string, len(row.GetFields()))
+			for j, field := range row.GetFields() {
+				fields[j] = field.ToString()
+			}
+			streamed = append(streamed, fields)
+		}
+		return nil
+	}
+
+	result, err := Run(context.Background(), opts, testStatementName)
+	require.NoError(t, err)
+
+	// Rows streamed out; nothing retained in the buffer.
+	require.Equal(t, [][]string{{"1"}, {"2"}, {"3"}}, streamed)
+	require.Empty(t, result.Rows)
+	require.Equal(t, 3, result.RowCount)
+	require.Len(t, gotColumns, 1)
+	require.Equal(t, "id", gotColumns[0].GetName())
+}
+
+func TestRunTruncatesAtMaxRowsWhileStreaming(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	completed := statement("COMPLETED", boundedTraits("id"))
+
+	client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil).Times(2)
+	client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
+		Return(page("", []any{"1"}, []any{"2"}, []any{"3"}), nil)
+
+	var streamed [][]string
+	opts := testOptions(client)
+	opts.MaxRows = 2
+	opts.OnRows = func(rows []types.StatementResultRow) error {
+		for _, row := range rows {
+			streamed = append(streamed, []string{row.GetFields()[0].ToString()})
+		}
+		return nil
+	}
+
+	result, err := Run(context.Background(), opts, testStatementName)
+	require.NoError(t, err)
+	require.Equal(t, [][]string{{"1"}, {"2"}}, streamed)
+	require.Empty(t, result.Rows)
+	require.Equal(t, 2, result.RowCount)
+	require.True(t, result.Truncated)
+}
+
 func TestRunDrainsEveryPage(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	running := statement("RUNNING", boundedTraits("id"))
