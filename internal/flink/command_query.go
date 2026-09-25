@@ -137,6 +137,7 @@ func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	maxRows, humanCapDefault := applyHumanRowCap(cmd, maxRows)
 
 	ctx, cancelTimeout := context.WithTimeout(ctx, timeout)
 	defer cancelTimeout()
@@ -178,7 +179,16 @@ func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 		RefreshToken:   c.refreshGatewayToken(client, jwt.NewValidator()),
 	}
 
+	// Show a live row count on stderr while draining, so the command isn't silent
+	// for the minutes a large result can take. It renders only to an interactive
+	// terminal and never to stdout, so piped/redirected output is unaffected. It
+	// must be cleared before anything else is written (result, warning, error).
+	progress := newQueryProgress()
+	progress.start()
+	options.OnProgress = progress.update
+
 	result, err := query.Run(ctx, options, name)
+	progress.clear()
 	if err != nil {
 		// If handleQueryError leaves settled false (any error it doesn't already
 		// stop and announce itself), the deferred cleanup above must still speak
@@ -199,7 +209,13 @@ func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 	}
 
 	if result.Truncated {
-		output.ErrPrintf(false, "Warning: stopped after %d rows because of the `--max-rows` flag. The result set below is truncated.\n", maxRows)
+		if humanCapDefault {
+			// The default -o human ceiling, not a flag the user chose: point them at
+			// the format that has no cap rather than at --max-rows.
+			output.ErrPrintf(false, "Showing the first %d rows. Use `-o json` for the full result, or `--max-rows` to change the limit.\n", maxRows)
+		} else {
+			output.ErrPrintf(false, "Warning: stopped after %d rows because of the `--max-rows` flag. The result set below is truncated.\n", maxRows)
+		}
 	}
 
 	isAppendOnly, appendOnlyKnown := warnIfChangelog(result)
@@ -212,6 +228,23 @@ func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	return nil
+}
+
+// humanRowCap is the default ceiling on rows rendered as a table. -o human is for
+// reading, not bulk export: nobody scans millions of rows in a terminal, and the
+// table buffers every row to size its columns. -o json/yaml have no such cap.
+const humanRowCap = 10000
+
+// applyHumanRowCap defaults -o human to humanRowCap when the user did not set
+// --max-rows, so a large result neither floods the terminal nor is held whole in
+// memory. An explicit --max-rows wins (including 0, meaning unlimited). The second
+// return reports whether the default cap was applied, so the truncation notice can
+// word itself as a default rather than as the user's flag.
+func applyHumanRowCap(cmd *cobra.Command, maxRows int) (int, bool) {
+	if output.GetFormat(cmd) == output.Human && !cmd.Flags().Changed("max-rows") {
+		return humanRowCap, true
+	}
+	return maxRows, false
 }
 
 // resolveQueryFlags reads and validates the numeric/output flags that gate the run
