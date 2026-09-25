@@ -35,6 +35,7 @@ import (
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 	srcmv3 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v3"
 	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
+	switchoverv1 "github.com/confluentinc/ccloud-sdk-go-v2/switchover/v1"
 	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2/tableflow/v1"
 	usmv1 "github.com/confluentinc/ccloud-sdk-go-v2/usm/v1"
 
@@ -80,6 +81,7 @@ type Client struct {
 	ServiceQuotaClient           *servicequotav1.APIClient
 	SrcmClient                   *srcmv3.APIClient
 	SsoClient                    *ssov2.APIClient
+	SwitchoverClient             *switchoverv1.APIClient
 	TableflowClient              *tableflowv1.APIClient
 	UsmClient                    *usmv1.APIClient
 	// cli-tfgen:cli-client-fields — DO NOT REMOVE (verified by TestCliTfgenMarkers)
@@ -132,6 +134,7 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		ServiceQuotaClient:           newServiceQuotaClient(httpClient, url, userAgent, unsafeTrace),
 		SrcmClient:                   newSrcmClient(httpClient, url, userAgent, unsafeTrace),
 		SsoClient:                    newSsoClient(httpClient, url, userAgent, unsafeTrace),
+		SwitchoverClient:             newSwitchoverClient(httpClient, url, userAgent, unsafeTrace),
 		TableflowClient:              newTableflowClient(httpClient, url, userAgent, unsafeTrace),
 		UsmClient:                    newUsmClient(httpClient, url, userAgent, unsafeTrace),
 		// cli-tfgen:cli-client-init — DO NOT REMOVE (verified by TestCliTfgenMarkers)
