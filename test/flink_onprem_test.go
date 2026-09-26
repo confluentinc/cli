@@ -40,6 +40,15 @@ func (s *CLITestSuite) TestFlinkApplicationList() {
 		{args: "flink application list --environment default --page-size 2 --output json", fixture: "flink/application/list-json.golden"},
 		// a non-positive page size falls back to the default and still returns the full list
 		{args: "flink application list --environment default --page-size -1 --output json", fixture: "flink/application/list-json.golden"},
+		// filtering: --filter passes a CMF filter expression through; "state" values are case-folded
+		{args: "flink application list --environment default --filter name=default-application-s --output json", fixture: "flink/application/list-name-filter-json.golden"},
+		{args: "flink application list --environment default --filter name=default-application-1* --output json", fixture: "flink/application/list-name-wildcard-json.golden"},
+		// lower-case and upper-case "state" resolve to the same result, proving the case-folding
+		{args: "flink application list --environment default --filter state=reconciling --output json", fixture: "flink/application/list-status-filter-json.golden"},
+		{args: "flink application list --environment default --filter state=RECONCILING --output json", fixture: "flink/application/list-status-filter-json.golden"},
+		// an unknown state is forwarded as-is and simply matches nothing (no client-side validation)
+		{args: "flink application list --environment default --filter state=bogus --output json", fixture: "flink/application/list-status-no-match-json.golden"},
+		{args: "flink application list --environment default --filter name=default-application-1*,state=reconciling --output json", fixture: "flink/application/list-name-status-json.golden"},
 	}
 
 	runIntegrationTestsWithMultipleAuth(s, tests)

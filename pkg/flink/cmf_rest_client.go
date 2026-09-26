@@ -189,9 +189,14 @@ func (cmfClient *CmfRestClient) DescribeApplication(ctx context.Context, environ
 	return cmfApplication, nil
 }
 
-func (cmfClient *CmfRestClient) ListApplications(ctx context.Context, environment string, pageSize int32) ([]cmfsdk.FlinkApplication, error) {
+func (cmfClient *CmfRestClient) ListApplications(ctx context.Context, environment, filter string, pageSize int32) ([]cmfsdk.FlinkApplication, error) {
+	request := cmfClient.FlinkApplicationsApi.GetApplications(ctx, environment)
+	if filter != "" {
+		request = request.Filter(filter)
+	}
+
 	return listAllPages(pageSize, func(page, size int32) ([]cmfsdk.FlinkApplication, error) {
-		applicationsPage, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplications(ctx, environment).Page(page).Size(size).Execute()
+		applicationsPage, httpResponse, err := request.Page(page).Size(size).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list applications in the environment "%s": %s`, environment, parsedErr)
 		}
