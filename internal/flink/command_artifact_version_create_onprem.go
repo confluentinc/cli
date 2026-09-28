@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
 func (c *command) newArtifactVersionCreateCommandOnPrem() *cobra.Command {
@@ -62,6 +63,12 @@ func (c *command) artifactVersionCreateOnPrem(cmd *cobra.Command, args []string)
 	outputArtifact, err := client.UpdateArtifact(c.createContext(), environment, name, newSdkArtifact(name, nil), file)
 	if err != nil {
 		return err
+	}
+
+	// When the upload is identical to the latest version, CMF creates no new version: it returns the latest one and says
+	// so in the status message. Serialized output already includes the message, so only the table needs it printed.
+	if status := outputArtifact.GetStatus(); status.GetMessage() != "" && output.GetFormat(cmd) == output.Human {
+		output.Println(false, status.GetMessage())
 	}
 
 	return printArtifactVersionOnPrem(cmd, outputArtifact)
