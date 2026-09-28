@@ -33,10 +33,10 @@ func SearchPath(cfg *config.Config) map[string][]string {
 	// from whatever directory the CLI happens to be run in.
 	stateDir, err := config.StateDir()
 	if err != nil {
-		log.CliLogger.Debugf("Searching only $PATH for plugins: %v. Plugins can be disabled in %s.", err, cfg.GetFilename())
+		log.CliLogger.Debugf("Searching only $PATH for plugins: %v. Plugins can be disabled in %s.", err, config.SettingsFilename())
 	} else {
 		pluginDir := filepath.Join(stateDir, "plugins")
-		log.CliLogger.Debugf("Searching $PATH and %s for plugins. Plugins can be disabled in %s.", pluginDir, cfg.GetFilename())
+		log.CliLogger.Debugf("Searching $PATH and %s for plugins. Plugins can be disabled in %s.", pluginDir, config.SettingsFilename())
 		if !slices.Contains(pathDirList, pluginDir) {
 			pathDirList = append(pathDirList, pluginDir)
 		}

@@ -31,7 +31,7 @@ func TestSave_ConcurrentDifferentFields_NoLostWrite(t *testing.T) {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			c, err := readConfigFromDisk(path, seed)
+			c, err := readConfigFromDisk(seed)
 			require.NoError(t, err)
 			require.NoError(t, c.snapshotBaseline())
 			name := fmt.Sprintf("platform-%d", i)
@@ -41,7 +41,7 @@ func TestSave_ConcurrentDifferentFields_NoLostWrite(t *testing.T) {
 	}
 	wg.Wait()
 
-	final, err := readConfigFromDisk(path, seed)
+	final, err := readConfigFromDisk(seed)
 	require.NoError(t, err)
 	for i := 0; i < n; i++ {
 		require.Contains(t, final.Platforms, fmt.Sprintf("platform-%d", i),
@@ -385,9 +385,7 @@ func TestLoad_FreshMachineDoesNotClobberConcurrentlyCreatedConfig(t *testing.T) 
 	other := New()
 	other.Filename = path
 	other.Platforms["from-other"] = &Platform{Name: "from-other", Server: "https://other.example.com"}
-	data, err := json.MarshalIndent(other, "", "  ")
-	require.NoError(t, err)
-	require.NoError(t, os.WriteFile(path, data, 0600))
+	require.NoError(t, other.saveConfigStores())
 
 	close(proceed) // b resumes into its locked save, which must merge rather than clobber
 	require.NoError(t, <-loadErr)
