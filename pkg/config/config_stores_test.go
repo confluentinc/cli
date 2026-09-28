@@ -31,8 +31,9 @@ func jsonTags(t reflect.Type) map[string]string {
 		if !field.IsExported() {
 			continue
 		}
-		tag, ok := field.Tag.Lookup("json")
-		if !ok || tag == "-" {
+		// encoding/json persists an untagged exported field under its Go name.
+		tag := field.Tag.Get("json")
+		if tag == "-" {
 			continue
 		}
 		name := strings.Split(tag, ",")[0]
@@ -291,7 +292,7 @@ func nonDefaultPersisted(t *testing.T) *Config {
 	v := reflect.ValueOf(c).Elem()
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Type().Field(i)
-		if tag, ok := field.Tag.Lookup("json"); !field.IsExported() || !ok || tag == "-" {
+		if !field.IsExported() || field.Tag.Get("json") == "-" {
 			continue
 		}
 		fv := v.Field(i)
