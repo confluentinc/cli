@@ -21,8 +21,8 @@ func (c *command) newArtifactVersionDeleteCommandOnPrem() *cobra.Command {
 		RunE:  c.artifactVersionDeleteOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Delete version 2 of Flink artifact "my-artifact" in the environment "my-environment".`,
-				Code: "confluent flink artifact version delete my-artifact --version 2 --environment my-environment",
+				Text: `Delete version 2 of Flink artifact "my-udf.jar" in the environment "my-environment".`,
+				Code: "confluent flink artifact version delete my-udf.jar --version 2 --environment my-environment",
 			},
 		),
 	}

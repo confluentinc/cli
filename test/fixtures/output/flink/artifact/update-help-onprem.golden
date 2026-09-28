@@ -4,9 +4,9 @@ Usage:
   confluent flink artifact update <name> [flags]
 
 Examples:
-Replace the labels of Flink artifact "my-artifact" in the environment "my-environment".
+Replace the labels of Flink artifact "my-udf.jar" in the environment "my-environment".
 
-  $ confluent flink artifact update my-artifact --label owner=team-a,tier=gold --environment my-environment
+  $ confluent flink artifact update my-udf.jar --label owner=team-a,tier=gold --environment my-environment
 
 Flags:
       --environment string                  REQUIRED: Name of the Flink environment.

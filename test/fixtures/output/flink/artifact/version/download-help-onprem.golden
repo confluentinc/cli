@@ -4,9 +4,9 @@ Usage:
   confluent flink artifact version download <name> [flags]
 
 Examples:
-Download the latest version of Flink artifact "my-artifact" in the environment "my-environment".
+Download the latest version of Flink artifact "my-udf.jar" in the environment "my-environment".
 
-  $ confluent flink artifact version download my-artifact --output-file my-artifact.jar --environment my-environment
+  $ confluent flink artifact version download my-udf.jar --output-file my-udf.jar --environment my-environment
 
 Flags:
       --environment string                  REQUIRED: Name of the Flink environment.

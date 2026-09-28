@@ -15,8 +15,8 @@ func (c *command) newArtifactVersionDescribeCommandOnPrem() *cobra.Command {
 		RunE:  c.artifactVersionDescribeOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Describe version 2 of Flink artifact "my-artifact" in the environment "my-environment".`,
-				Code: "confluent flink artifact version describe my-artifact --version 2 --environment my-environment",
+				Text: `Describe version 2 of Flink artifact "my-udf.jar" in the environment "my-environment".`,
+				Code: "confluent flink artifact version describe my-udf.jar --version 2 --environment my-environment",
 			},
 		),
 	}
