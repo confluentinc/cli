@@ -7,9 +7,10 @@ import (
 	"path/filepath"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
-// settingsFile is settings.json: machine-managed preferences.
+// settingsFile is settings.json: preferences and the platforms contexts reference.
 type settingsFile struct {
 	DisableFeatureFlags       bool                 `json:"disable_feature_flags"`
 	DisablePlugins            bool                 `json:"disable_plugins"`
@@ -63,7 +64,10 @@ func writeStoreFile(path string, v any) error {
 		return fmt.Errorf("unable to marshal store %s: %w", path, err)
 	}
 
-	return writeFileAtomic(path, data)
+	if err := writeFileAtomic(path, data); err != nil {
+		return fmt.Errorf("unable to write %s: %w", path, err)
+	}
+	return nil
 }
 
 // loadConfigStores reads settings.json and contexts.json into c. A missing or zero-byte
@@ -96,6 +100,8 @@ func (c *Config) loadConfigStores() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
+	warnOneSidedStores(settingsFound, contextsFound, len(contexts.Contexts) > 0)
 
 	if settingsFound {
 		c.DisableFeatureFlags = settings.DisableFeatureFlags
@@ -134,7 +140,8 @@ func (c *Config) loadConfigStores() (bool, error) {
 // saveConfigStores writes c's persisted fields to settings.json, then contexts.json. Settings
 // is written first: a crash between the two writes then leaves only an orphan platform on
 // disk, never a context pointing at a platform that was never written (Validate() rejects
-// the latter).
+// the latter). This relies on production code only ever adding platforms, never removing
+// them; a change that prunes platforms must revisit the order.
 func (c *Config) saveConfigStores() error {
 	settings := &settingsFile{
 		DisableFeatureFlags:       c.DisableFeatureFlags,
@@ -158,4 +165,26 @@ func (c *Config) saveConfigStores() error {
 		SavedCredentials: c.SavedCredentials,
 	}
 	return writeStoreFile(ContextsFilename(), contexts)
+}
+
+// warnOneSidedStores flags a store that holds nothing while its sibling holds data. A missing
+// contexts.json is not flagged: deleting it is the documented way to reset contexts.
+func warnOneSidedStores(settingsFound, contextsFound, hasContexts bool) {
+	if hasContexts && !settingsFound {
+		log.CliLogger.Warnf("%s is missing or empty, but contexts in %s reference the platforms it holds", SettingsFilename(), ContextsFilename())
+	}
+	if settingsFound && !contextsFound {
+		if info, err := os.Stat(ContextsFilename()); err == nil && info.Size() == 0 {
+			log.CliLogger.Warnf("%s is empty, so no contexts were loaded", ContextsFilename())
+		}
+	}
+}
+
+// newMissingPlatformError reports a context whose platform is absent from settings.json. It is
+// not a corrupted-config error: the fix may be restoring settings.json, not deleting contexts.
+func newMissingPlatformError(contextName, platformName string) error {
+	return errors.NewErrorWithSuggestions(
+		fmt.Sprintf(`context "%s" references platform "%s", which is missing from "%s"`, contextName, platformName, SettingsFilename()),
+		fmt.Sprintf("Restore \"%s\" from a backup, or delete \"%s\" and run `confluent login`.", SettingsFilename(), ContextsFilename()),
+	)
 }
