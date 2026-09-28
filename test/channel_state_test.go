@@ -52,14 +52,19 @@ func (s *CLITestSuite) TestChannelState_ReleaseConfigIsInvisibleToLocalBuild() {
 	release := s.stampedCli("9.9.9")
 	local := s.stampedCli("")
 
-	// disable_update_check lives in settings.json
+	stores := []string{"settings.json", "contexts.json"}
 	runStampedCli(s.T(), release, home, "configuration", "update", "disable_update_check", "true")
-	before := readFile(s.T(), filepath.Join(home, ".confluent", "settings.json"))
+	before := map[string][]byte{}
+	for _, store := range stores {
+		before[store] = readFile(s.T(), filepath.Join(home, ".confluent", store))
+	}
 	runStampedCli(s.T(), local, home, "configuration", "update", "disable_update_check", "true")
 
-	s.Require().Equal(before, readFile(s.T(), filepath.Join(home, ".confluent", "settings.json")),
-		"a local build must not modify the release build's configuration")
-	s.Require().FileExists(filepath.Join(home, ".confluent-dev", "settings.json"))
+	for _, store := range stores {
+		s.Require().Equal(before[store], readFile(s.T(), filepath.Join(home, ".confluent", store)),
+			"a local build must not modify the release build's %s", store)
+		s.Require().FileExists(filepath.Join(home, ".confluent-dev", store))
+	}
 }
 
 // stampedCli returns the CLI compiled with the given main.version, or with none when version is

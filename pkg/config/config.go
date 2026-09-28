@@ -280,7 +280,7 @@ func (c *Config) Load() error {
 func (c *Config) loadLocked(filename string) (bool, error) {
 	// Create the config directory before opening the sidecar lock file inside it, same as
 	// Save(): on a fresh machine (parent directory absent) opening the lock would ENOENT
-	// before we ever get to discover the config file itself is missing.
+	// before we ever get to discover the config stores are missing.
 	if err := os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
 		return false, fmt.Errorf("unable to create config directory %s: %w", filename, err)
 	}
@@ -375,19 +375,19 @@ func (c *Config) saveFeatureFlagCache(s *cacheStore) error {
 func (c *Config) wireContexts() error {
 	for _, context := range c.Contexts {
 		if context.Name == "" {
-			return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.Filename)
+			return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", ContextsFilename())
 		}
 		if context.CredentialName == "" {
-			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.Filename)
+			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, ContextsFilename())
 		}
 		if context.PlatformName == "" {
-			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.Filename)
+			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, ContextsFilename())
 		}
 		context.Credential = c.Credentials[context.CredentialName]
 		context.Platform = c.Platforms[context.PlatformName]
 		context.Config = c
 		if context.KafkaClusterContext == nil {
-			return errors.NewCorruptedConfigError(`context "%s" missing KafkaClusterContext`, context.Name, c.Filename)
+			return errors.NewCorruptedConfigError(`context "%s" missing KafkaClusterContext`, context.Name, ContextsFilename())
 		}
 		context.KafkaClusterContext.Context = context
 		context.State = c.ContextStates[context.Name]
@@ -939,7 +939,7 @@ func (c *Config) Validate() error {
 	if c.CurrentContext != "" {
 		if _, ok := c.Contexts[c.CurrentContext]; !ok {
 			log.CliLogger.Trace("current context does not exist")
-			return errors.NewCorruptedConfigError(`the current context "%s" does not exist`, c.CurrentContext, c.Filename)
+			return errors.NewCorruptedConfigError(`the current context "%s" does not exist`, c.CurrentContext, ContextsFilename())
 		}
 	}
 
@@ -953,18 +953,18 @@ func (c *Config) Validate() error {
 		}
 		if _, ok := c.Credentials[context.CredentialName]; !ok {
 			log.CliLogger.Trace("unspecified credential error")
-			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.Filename)
+			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, ContextsFilename())
 		}
 		if _, ok := c.Platforms[context.PlatformName]; !ok {
 			log.CliLogger.Trace("unspecified platform error")
-			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.Filename)
+			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, ContextsFilename())
 		}
 		if _, ok := c.ContextStates[context.Name]; !ok {
 			c.ContextStates[context.Name] = new(ContextState)
 		}
 		if !c.IsTest && !reflect.DeepEqual(*c.ContextStates[context.Name], *context.State) {
 			log.CliLogger.Tracef("state of context %s in config does not match actual state of context", context.Name)
-			return errors.NewCorruptedConfigError(`context state mismatch for context "%s"`, context.Name, c.Filename)
+			return errors.NewCorruptedConfigError(`context state mismatch for context "%s"`, context.Name, ContextsFilename())
 		}
 	}
 
@@ -972,7 +972,7 @@ func (c *Config) Validate() error {
 	for contextName := range c.ContextStates {
 		if _, ok := c.Contexts[contextName]; !ok {
 			log.CliLogger.Trace("context state mapped to nonexistent context")
-			return errors.NewCorruptedConfigError(`context state mapping error for context "%s"`, contextName, c.Filename)
+			return errors.NewCorruptedConfigError(`context state mapping error for context "%s"`, contextName, ContextsFilename())
 		}
 	}
 
