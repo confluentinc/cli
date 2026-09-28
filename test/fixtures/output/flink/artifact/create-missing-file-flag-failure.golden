@@ -3,9 +3,9 @@ Usage:
   confluent flink artifact create <name> [flags]
 
 Examples:
-Create Flink artifact "my-artifact" in the environment "my-environment".
+Create Flink artifact "my-udf.jar" from the file "my-udf-1.0.jar" in the environment "my-environment".
 
-  $ confluent flink artifact create my-artifact --artifact-file artifact.jar --environment my-environment
+  $ confluent flink artifact create my-udf.jar --artifact-file my-udf-1.0.jar --environment my-environment
 
 Flags:
       --environment string                  REQUIRED: Name of the Flink environment.
