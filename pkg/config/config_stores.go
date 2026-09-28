@@ -31,9 +31,9 @@ type contextsFile struct {
 	SavedCredentials map[string]*LoginCredential `json:"saved_credentials,omitempty"`
 }
 
-// readConfigStoreFile reads and unmarshals path into v. A missing or zero-byte file
-// contributes nothing (found is false, err is nil); malformed JSON is a hard error.
-func readConfigStoreFile(path string, v any) (bool, error) {
+// readStoreFile reads and unmarshals path into v. A missing or zero-byte file contributes
+// nothing (found is false, err is nil); malformed JSON is a hard error.
+func readStoreFile(path string, v any) (bool, error) {
 	input, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -50,30 +50,53 @@ func readConfigStoreFile(path string, v any) (bool, error) {
 	return true, nil
 }
 
-// writeConfigStoreFile marshals v and atomically writes it to path, creating the state
-// directory first, mirroring secretStore.write.
-func writeConfigStoreFile(path string, v any) error {
+// writeStoreFile marshals v and atomically writes it to path, creating the parent
+// directory first. Shared by the config stores below and by secretStore.write.
+func writeStoreFile(path string, v any) error {
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0700); err != nil {
-		return fmt.Errorf("unable to create config store directory %s: %w", dir, err)
+		return fmt.Errorf("unable to create store directory %s: %w", dir, err)
 	}
 
 	data, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
-		return fmt.Errorf("unable to marshal config store %s: %w", path, err)
+		return fmt.Errorf("unable to marshal store %s: %w", path, err)
 	}
 
 	return writeFileAtomic(path, data)
 }
 
 // loadConfigStores reads settings.json and contexts.json into c. A missing or zero-byte
-// file contributes nothing; found is false only when neither file holds data.
+// file contributes nothing; found is false only when neither file holds data. Both files
+// are read and decoded before anything is applied to c, so a malformed file leaves c
+// untouched rather than half-applied. Each shape is seeded from c's current values before
+// decoding, so a key absent from the file (an older or hand-edited store) keeps c's
+// existing value - notably New()'s defaults - instead of silently zeroing it.
 func (c *Config) loadConfigStores() (bool, error) {
-	settings := &settingsFile{}
-	settingsFound, err := readConfigStoreFile(SettingsFilename(), settings)
+	// Only scalars are seeded from c (see the doc comment above); map/pointer fields stay at
+	// their zero value, since seeding those would alias c's own map/struct and let
+	// json.Unmarshal merge into it instead of replacing it wholesale.
+	settings := &settingsFile{
+		DisableFeatureFlags:       c.DisableFeatureFlags,
+		DisablePlugins:            c.DisablePlugins,
+		DisablePluginsOnceWindows: c.DisablePluginsOnceWindows,
+		DisableUpdateCheck:        c.DisableUpdateCheck,
+		EnableColor:               c.EnableColor,
+		DisablePluginsOnce:        c.DisablePluginsOnce,
+	}
+	settingsFound, err := readStoreFile(SettingsFilename(), settings)
 	if err != nil {
 		return false, err
 	}
+
+	contexts := &contextsFile{
+		CurrentContext: c.CurrentContext,
+	}
+	contextsFound, err := readStoreFile(ContextsFilename(), contexts)
+	if err != nil {
+		return false, err
+	}
+
 	if settingsFound {
 		c.DisableFeatureFlags = settings.DisableFeatureFlags
 		c.DisablePlugins = settings.DisablePlugins
@@ -89,11 +112,6 @@ func (c *Config) loadConfigStores() (bool, error) {
 		}
 	}
 
-	contexts := &contextsFile{}
-	contextsFound, err := readConfigStoreFile(ContextsFilename(), contexts)
-	if err != nil {
-		return false, err
-	}
 	if contextsFound {
 		c.CurrentContext = contexts.CurrentContext
 		if contexts.Contexts != nil {
@@ -128,7 +146,7 @@ func (c *Config) saveConfigStores() error {
 		LocalPorts:                c.LocalPorts,
 		DisablePluginsOnce:        c.DisablePluginsOnce,
 	}
-	if err := writeConfigStoreFile(SettingsFilename(), settings); err != nil {
+	if err := writeStoreFile(SettingsFilename(), settings); err != nil {
 		return err
 	}
 
@@ -139,5 +157,5 @@ func (c *Config) saveConfigStores() error {
 		ContextStates:    c.ContextStates,
 		SavedCredentials: c.SavedCredentials,
 	}
-	return writeConfigStoreFile(ContextsFilename(), contexts)
+	return writeStoreFile(ContextsFilename(), contexts)
 }

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 )
 
 // secretRecord holds one credential identity's secret material as stored on disk: each
@@ -93,17 +92,7 @@ func newSecretStore() *secretStore {
 
 // write persists file to the store's path, creating its parent directory first.
 func (s *secretStore) write(file *secretFile) error {
-	dir := filepath.Dir(s.path)
-	if err := os.MkdirAll(dir, 0700); err != nil {
-		return fmt.Errorf("unable to create secret store directory %s: %w", dir, err)
-	}
-
-	data, err := json.MarshalIndent(file, "", "  ")
-	if err != nil {
-		return fmt.Errorf("unable to marshal secret store: %w", err)
-	}
-
-	return writeFileAtomic(s.path, data)
+	return writeStoreFile(s.path, file)
 }
 
 // identityKey is the rename-stable key for a context's secrets: CredentialName is set once at
