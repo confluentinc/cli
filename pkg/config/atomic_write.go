@@ -17,8 +17,9 @@ const maxSymlinkHops = 40
 // resolveConfigTarget follows a symlink at path all the way to the real file it points
 // to, so an atomic rename replaces that target rather than a link in the chain.
 // os.WriteFile (the pre-atomic write) followed symlinks this way, including chains that
-// end at a not-yet-existing target, so a user-managed config.json symlink keeps working.
-// A non-symlink or absent path is returned unchanged (the write creates/replaces it).
+// end at a not-yet-existing target, so a user-managed store symlink (e.g. settings.json)
+// keeps working. A non-symlink or absent path is returned unchanged (the write
+// creates/replaces it).
 func resolveConfigTarget(path string) (string, error) {
 	for hop := 0; hop < maxSymlinkHops; hop++ {
 		info, err := os.Lstat(path)

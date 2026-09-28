@@ -8,8 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/stretchr/testify/require"
+
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
 )
