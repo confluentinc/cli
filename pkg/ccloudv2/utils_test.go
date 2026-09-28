@@ -93,10 +93,14 @@ func newTestV1Client(baseURL string) *ccloudv1.Client {
 }
 
 // newTestConfig returns a mock cloud config whose Save() writes under a fresh
-// temp directory rather than the real user config path.
+// temp HOME rather than the real user config path.
 func newTestConfig(t *testing.T) *config.Config {
 	t.Helper()
 
+	// the config stores live under HOME (USERPROFILE on Windows), not next to Filename
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
 	cfg := config.AuthenticatedCloudConfigMock()
 	cfg.Filename = filepath.Join(t.TempDir(), "config.json")
 	return cfg

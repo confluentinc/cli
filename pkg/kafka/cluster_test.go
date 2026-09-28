@@ -35,6 +35,10 @@ func TestFindCluster_Unexpired(t *testing.T) {
 }
 
 func TestFindCluster_Expired(t *testing.T) {
+	// refreshing an expired cluster saves the bare Config to the default state dir under HOME
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
 	update := time.Now().Add(-7 * 24 * time.Hour)
 
 	ctx := &config.Context{
