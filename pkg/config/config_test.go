@@ -1791,7 +1791,8 @@ func TestLoad_CorruptedContextErrorNamesContextsFile(t *testing.T) {
 	var corruptedErr *errors.CorruptedConfigError
 	require.ErrorAs(t, err, &corruptedErr)
 	output := errors.GetErrorStringWithSuggestions(corruptedErr.UserFacingError())
-	require.Contains(t, output, fmt.Sprintf("%q is corrupted", ContextsFilename()))
+	// %q would escape Windows path separators; the suggestion quotes the path verbatim.
+	require.Contains(t, output, fmt.Sprintf(`"%s" is corrupted`, ContextsFilename()))
 	require.NotContains(t, output, "config.json")
 }
 
