@@ -15,15 +15,11 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
-// readConfigurationFileErrorPrefix is the literal text preceding the "%s" path placeholder
-// in errors.UnableToReadConfigurationFileErrorMsg, derived rather than hardcoded so it stays
-// coupled to that constant.
+// readConfigurationFileErrorPrefix is UnableToReadConfigurationFileErrorMsg's text before the path.
 var readConfigurationFileErrorPrefix = strings.SplitN(errors.UnableToReadConfigurationFileErrorMsg, "%s", 2)[0]
 
-// jsonTags returns, for every exported field of t whose json tag is not "-", the full tag
-// string (name plus options such as omitempty) keyed by the tag's name - or by the field's Go
-// name when the tag omits one (e.g. a bare ",omitempty"), since that's what encoding/json
-// itself persists under.
+// jsonTags maps every persisted field of t (exported, tag not "-") to its full json tag, keyed by
+// the name encoding/json persists it under.
 func jsonTags(t reflect.Type) map[string]string {
 	tags := map[string]string{}
 	for i := 0; i < t.NumField(); i++ {
@@ -134,9 +130,7 @@ func TestConfigStores_RoundTrip(t *testing.T) {
 	require.Equal(t, c.SavedCredentials, reloaded.SavedCredentials)
 }
 
-// TestConfigStores_MissingKeyKeepsDefault is the regression test for the bug where decoding
-// settings.json onto a fresh zero-value settingsFile clobbered New()'s defaults (EnableColor)
-// for any key the file happened to omit.
+// A key absent from settings.json keeps New()'s default (e.g. EnableColor) instead of zeroing it.
 func TestConfigStores_MissingKeyKeepsDefault(t *testing.T) {
 	setTestHome(t, t.TempDir())
 	require.NoError(t, os.MkdirAll(filepath.Dir(SettingsFilename()), 0700))
@@ -179,9 +173,7 @@ func TestConfigStores_MissingFiles(t *testing.T) {
 	requireNonNilMaps(t, c3)
 }
 
-// TestConfigStores_OnlyZeroByteContextsFile covers a zero-byte contexts.json with no
-// settings.json at all: found must still be false, since a zero-byte file contributes
-// nothing, same as a missing one.
+// A zero-byte contexts.json with no settings.json contributes nothing, same as a missing one.
 func TestConfigStores_OnlyZeroByteContextsFile(t *testing.T) {
 	setTestHome(t, t.TempDir())
 	require.NoError(t, os.MkdirAll(filepath.Dir(ContextsFilename()), 0700))
@@ -195,8 +187,7 @@ func TestConfigStores_OnlyZeroByteContextsFile(t *testing.T) {
 	requireNonNilMaps(t, c)
 }
 
-// TestConfigStores_OnlyZeroByteSettingsFile is the settings.json mirror of
-// TestConfigStores_OnlyZeroByteContextsFile.
+// The settings.json mirror of TestConfigStores_OnlyZeroByteContextsFile.
 func TestConfigStores_OnlyZeroByteSettingsFile(t *testing.T) {
 	setTestHome(t, t.TempDir())
 	require.NoError(t, os.MkdirAll(filepath.Dir(SettingsFilename()), 0700))
@@ -249,9 +240,7 @@ func TestConfigStores_MalformedIsHardError(t *testing.T) {
 	require.Contains(t, err.Error(), SettingsFilename())
 }
 
-// TestConfigStores_MalformedLeavesConfigUntouched guards the read-both-before-applying-either
-// ordering: a valid settings.json paired with a malformed contexts.json must not leave c
-// half-applied with only the settings side written.
+// A malformed contexts.json must not leave c half-applied with the valid settings.json side.
 func TestConfigStores_MalformedLeavesConfigUntouched(t *testing.T) {
 	setTestHome(t, t.TempDir())
 	require.NoError(t, os.MkdirAll(filepath.Dir(SettingsFilename()), 0700))
