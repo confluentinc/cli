@@ -267,6 +267,7 @@ func TestConfig_Load(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			setTestHome(t, t.TempDir())
+			seedLegacyConfigStores(t, test.file)
 			seedLoadTestSecrets(t, test.withToken)
 
 			cfg := New()
@@ -335,7 +336,6 @@ func seedLoadTestSecrets(t *testing.T, withToken bool) {
 }
 
 func TestConfig_Save(t *testing.T) {
-	setTestHome(t, t.TempDir())
 	if runtime.GOOS == "windows" {
 		return
 	}
@@ -392,6 +392,9 @@ func TestConfig_Save(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			// a HOME per sub-test: sub-tests reuse config objects, and shared stores would turn a
+			// later sub-test's whole write into a merge against an earlier one's output
+			setTestHome(t, t.TempDir())
 			configFile, _ := os.CreateTemp("", "TestConfig_Save.json")
 			test.config.Filename = configFile.Name()
 			ctx := test.config.Context()
@@ -414,17 +417,13 @@ func TestConfig_Save(t *testing.T) {
 				t.Errorf("Config.Save() error = %v, wantErr %v", err, test.wantErr)
 			}
 
-			got, _ := os.ReadFile(configFile.Name())
+			got := loadConfigStoresAsLegacyJSON(t)
 			want, _ := os.ReadFile(test.wantFile)
 			wantString := replacePlaceholdersInWant(t, got, want)
 			// TrimRight tolerates a trailing newline on the fixture file: pre-commit's
 			// end-of-file-fixer enforces one, but json.MarshalIndent (got) never writes one.
 			require.Equal(t, strings.TrimRight(utils.NormalizeNewLines(wantString), "\n"), strings.TrimRight(utils.NormalizeNewLines(string(got)), "\n"))
-			fd, err := os.Stat(configFile.Name())
-			require.NoError(t, err)
-			if runtime.GOOS != "windows" && fd.Mode() != 0600 {
-				t.Errorf("Config.Save() file should only be readable by user")
-			}
+			requireConfigStoresUserOnly(t)
 			os.Remove(configFile.Name())
 		})
 	}
@@ -453,17 +452,26 @@ func TestConfig_SaveWithEnvironmentOverwrite(t *testing.T) {
 	err = config.Save()
 	require.NoError(t, err)
 
-	got, _ := os.ReadFile(configFile.Name())
+	got := loadConfigStoresAsLegacyJSON(t)
 	want, _ := os.ReadFile("test_json/account_overwrite.json")
 	wantString := replacePlaceholdersInWant(t, got, want)
 	// TrimRight tolerates a trailing newline on the fixture file: pre-commit's
 	// end-of-file-fixer enforces one, but json.MarshalIndent (got) never writes one.
 	require.Equal(t, strings.TrimRight(utils.NormalizeNewLines(wantString), "\n"), strings.TrimRight(utils.NormalizeNewLines(string(got)), "\n"))
 
-	fd, err := os.Stat(configFile.Name())
-	require.NoError(t, err)
-	if runtime.GOOS != "windows" && fd.Mode() != 0600 {
-		t.Errorf("Config.Save() file should only be readable by user")
+	requireConfigStoresUserOnly(t)
+}
+
+// requireConfigStoresUserOnly asserts settings.json and contexts.json are readable only by the user.
+func requireConfigStoresUserOnly(t *testing.T) {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		return
+	}
+	for _, path := range []string{SettingsFilename(), ContextsFilename()} {
+		fd, err := os.Stat(path)
+		require.NoError(t, err)
+		require.Equal(t, os.FileMode(0600), fd.Mode(), "%s should only be readable by user", path)
 	}
 }
 
@@ -1332,7 +1340,7 @@ func TestReadConfigFromDisk_WiresGraphAndPassesValidate(t *testing.T) {
 	seed.Filename = path
 	require.NoError(t, seed.Save())
 
-	got, err := readConfigFromDisk(path, seed)
+	got, err := readConfigFromDisk(seed)
 	require.NoError(t, err)
 	require.Equal(t, path, got.Filename, "json:\"-\" Filename must be carried from the template")
 	require.NoError(t, got.Validate())
@@ -1351,11 +1359,11 @@ func TestSave_MergesConcurrentDiskChange(t *testing.T) {
 	require.NoError(t, seed.Save())
 
 	// This process loads, then another session adds platform "c" on disk.
-	ours, err := readConfigFromDisk(path, seed)
+	ours, err := readConfigFromDisk(seed)
 	require.NoError(t, err)
 	ours.snapshotBaseline()
 
-	other, err := readConfigFromDisk(path, seed)
+	other, err := readConfigFromDisk(seed)
 	require.NoError(t, err)
 	other.snapshotBaseline()
 	other.Platforms["c"] = &Platform{Name: "c"}
@@ -1365,7 +1373,7 @@ func TestSave_MergesConcurrentDiskChange(t *testing.T) {
 	delete(ours.Platforms, "a")
 	require.NoError(t, ours.Save())
 
-	final, err := readConfigFromDisk(path, seed)
+	final, err := readConfigFromDisk(seed)
 	require.NoError(t, err)
 	require.NotContains(t, final.Platforms, "a", "our delete must persist")
 	require.Contains(t, final.Platforms, "b")
@@ -1422,7 +1430,7 @@ func TestSave_NoBaselineOverwritesExistingFile(t *testing.T) {
 	fresh.DisablePlugins = true
 	require.NoError(t, fresh.Save())
 
-	final, err := readConfigFromDisk(path, seed)
+	final, err := readConfigFromDisk(seed)
 	require.NoError(t, err)
 	require.True(t, final.DisablePlugins,
 		"a constructed (never-loaded) config's Save must overwrite the existing file, not merge it away")
@@ -1439,7 +1447,8 @@ func TestSave_CreatesMissingParentDirectory(t *testing.T) {
 	c.Filename = path
 
 	require.NoError(t, c.Load(), "Load on a missing file Saves a default and must create the parent directory")
-	require.FileExists(t, path)
+	require.DirExists(t, filepath.Dir(path), "the lock anchor's directory must be created")
+	require.FileExists(t, SettingsFilename())
 
 	c.Platforms["p"] = &Platform{Name: "p"}
 	require.NoError(t, c.Save(), "a subsequent Save into the now-existing directory must also succeed")
@@ -1499,7 +1508,7 @@ func TestSave_NormalizesInvalidActiveKafkaWithoutDeadlock(t *testing.T) {
 		t.Fatal("Save() deadlocked re-acquiring the sidecar lock during Validate() normalization")
 	}
 
-	final, err := readConfigFromDisk(path, seed)
+	final, err := readConfigFromDisk(seed)
 	require.NoError(t, err)
 	require.Empty(t, final.Contexts["ctx"].KafkaClusterContext.GetActiveKafkaClusterId(),
 		"the invalid active Kafka cluster reset must be persisted, not just held in memory")
@@ -1513,4 +1522,117 @@ func TestSnapshotBaseline_IsIndependentCopy(t *testing.T) {
 	c.CurrentContext = "b"
 
 	require.Equal(t, "a", c.baseline.CurrentContext, "baseline must not alias live config")
+}
+
+func TestSaveLoad_UsesSplitConfigStores(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	c := New()
+	require.NoError(t, c.Load())
+	require.NoError(t, c.CreateContext("orig", "https://example.com", "AK", "the-api-secret"))
+	c.CurrentContext = "orig"
+	c.EnableColor = false
+
+	require.NoError(t, c.Save())
+
+	require.FileExists(t, SettingsFilename())
+	require.FileExists(t, ContextsFilename())
+	require.NoFileExists(t, c.GetFilename(), "config.json is only the lock anchor and must never be written")
+	reloaded := New()
+	require.NoError(t, reloaded.Load())
+	require.False(t, reloaded.EnableColor)
+	require.Equal(t, "orig", reloaded.CurrentContext)
+	require.Contains(t, reloaded.Contexts, "orig")
+	require.Equal(t, "AK", reloaded.Contexts["orig"].Credential.APIKeyPair.Key)
+}
+
+func TestSave_SplitStoresAreSecretFree(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	c := newTestConfigWithAPIKeyContext(t)
+	c.CurrentContext = "orig"
+	ctx := c.Contexts["orig"]
+	ctx.State.AuthToken = "header.payload.signature"
+	ctx.State.AuthRefreshToken = "v1.some-refresh-token"
+	salt, nonce, err := secret.GenerateSaltAndNonce()
+	require.NoError(t, err)
+	encryptedPassword, err := secret.Encrypt("orig-user", "the-password", salt, nonce)
+	require.NoError(t, err)
+	c.SavedCredentials["orig"] = &LoginCredential{Username: "orig-user", EncryptedPassword: encryptedPassword, Salt: salt, Nonce: nonce}
+	require.NoError(t, ctx.StoreGlobalAPIKey(&APIKeyPair{Key: "GLOBAL-KEY", Secret: "global-secret"}))
+
+	require.NoError(t, c.Save())
+
+	raw := readConfigStoresRaw(t)
+	require.Contains(t, raw, `"GLOBAL-KEY"`, "public key ids stay in contexts.json")
+	require.Contains(t, raw, `"orig-user"`, "the saved username stays in contexts.json")
+	for _, leaked := range []string{
+		"the-api-secret", "header.payload.signature", "v1.some-refresh-token", "the-password", "global-secret",
+		encryptedPassword, "auth_token", "encrypted_password", `"salt"`, `"nonce"`,
+		secret.AesGcm + ":", secret.Dpapi + ":",
+	} {
+		require.NotContains(t, raw, leaked)
+	}
+}
+
+// The three-way merge spans both split stores: a pref edit (settings.json) and a context edit
+// (contexts.json) made by two sessions from the same baseline must both survive.
+func TestSave_MergesAcrossSplitStores(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	path := filepath.Join(t.TempDir(), "config.json")
+	newSavedConfig(t, path)
+	a := loadDecrypted(t, path)
+	b := loadDecrypted(t, path)
+	a.DisableUpdateCheck = true
+	b.Contexts["ctx"].SetCurrentEnvironment("env-b")
+
+	require.NoError(t, a.Save())
+	require.NoError(t, b.Save())
+
+	settings := &settingsFile{}
+	found, err := readStoreFile(SettingsFilename(), settings)
+	require.NoError(t, err)
+	require.True(t, found)
+	require.True(t, settings.DisableUpdateCheck)
+	contexts := &contextsFile{}
+	found, err = readStoreFile(ContextsFilename(), contexts)
+	require.NoError(t, err)
+	require.True(t, found)
+	require.Equal(t, "env-b", contexts.Contexts["ctx"].CurrentEnvironment)
+	final := loadDecrypted(t, path)
+	require.True(t, final.DisableUpdateCheck, "the pref edit must survive the other session's save")
+	require.Equal(t, "env-b", final.Contexts["ctx"].CurrentEnvironment)
+}
+
+// seedLegacyConfigStores splits a v4 whole-file fixture into the (already isolated) HOME's
+// settings.json and contexts.json.
+func seedLegacyConfigStores(t *testing.T, fixturePath string) {
+	t.Helper()
+	data, err := os.ReadFile(fixturePath)
+	require.NoError(t, err)
+	cfg := New()
+	require.NoError(t, json.Unmarshal(data, cfg))
+	require.NoError(t, cfg.saveConfigStores())
+}
+
+// loadConfigStoresAsLegacyJSON reassembles the split stores into the bytes the v4 whole-file
+// write produced, so fixture comparisons stay string-exact.
+func loadConfigStoresAsLegacyJSON(t *testing.T) []byte {
+	t.Helper()
+	cfg := New()
+	found, err := cfg.loadConfigStores()
+	require.NoError(t, err)
+	require.True(t, found)
+	data, err := json.MarshalIndent(cfg, "", "  ")
+	require.NoError(t, err)
+	return data
+}
+
+// readConfigStoresRaw returns the raw bytes of settings.json and contexts.json, for asserting
+// what does or does not reach the plaintext stores.
+func readConfigStoresRaw(t *testing.T) string {
+	t.Helper()
+	settings, err := os.ReadFile(SettingsFilename())
+	require.NoError(t, err)
+	contexts, err := os.ReadFile(ContextsFilename())
+	require.NoError(t, err)
+	return string(settings) + string(contexts)
 }

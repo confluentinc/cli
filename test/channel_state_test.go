@@ -49,13 +49,14 @@ func TestChannelState_ReleaseConfigIsInvisibleToLocalBuild(t *testing.T) {
 	release := buildStampedCli(t, "9.9.9")
 	local := buildStampedCli(t, "")
 
+	// disable_update_check lives in settings.json
 	runStampedCli(t, release, home, "configuration", "update", "disable_update_check", "true")
-	before := readFile(t, filepath.Join(home, ".confluent", "config.json"))
+	before := readFile(t, filepath.Join(home, ".confluent", "settings.json"))
 	runStampedCli(t, local, home, "configuration", "update", "disable_update_check", "true")
 
-	require.Equal(t, before, readFile(t, filepath.Join(home, ".confluent", "config.json")),
+	require.Equal(t, before, readFile(t, filepath.Join(home, ".confluent", "settings.json")),
 		"a local build must not modify the release build's configuration")
-	require.FileExists(t, filepath.Join(home, ".confluent-dev", "config.json"))
+	require.FileExists(t, filepath.Join(home, ".confluent-dev", "settings.json"))
 }
 
 // buildStampedCli compiles the CLI with the given main.version, or with none when version is empty.
