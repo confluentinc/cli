@@ -45,14 +45,14 @@ func (s *CLITestSuite) TestLogout_RemoveUsernamePassword() {
 			s.Contains(output, loggedInAsOutput)
 		}
 
-		got, err := os.ReadFile(config.GetDefaultFilename())
+		got, err := os.ReadFile(config.ContextsFilename())
 		s.NoError(err)
 		s.Require().Contains(utils.NormalizeNewLines(string(got)), "saved_credentials")
 
 		output = runCommand(s.T(), test.bin, env, "logout -vvvv", 0, "")
 		s.Contains(output, "You are now logged out.")
 
-		got, err = os.ReadFile(config.GetDefaultFilename())
+		got, err = os.ReadFile(config.ContextsFilename())
 		s.NoError(err)
 		s.Require().NotContains(utils.NormalizeNewLines(string(got)), "saved_credentials")
 	}
@@ -86,7 +86,7 @@ func (s *CLITestSuite) TestLogout_RemoveUsernamePasswordFail() {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", auth.ConfluentPlatformPassword)}
 		}
 
-		got, err := os.ReadFile(config.GetDefaultFilename())
+		got, err := os.ReadFile(config.ContextsFilename())
 		s.NoError(err)
 		s.Require().NotContains(utils.NormalizeNewLines(string(got)), "saved_credentials")
 
@@ -95,7 +95,7 @@ func (s *CLITestSuite) TestLogout_RemoveUsernamePasswordFail() {
 		output := runCommand(s.T(), test.bin, env, "logout", 0, "")
 		s.Contains(output, "You are now logged out.")
 
-		got, err = os.ReadFile(config.GetDefaultFilename())
+		got, err = os.ReadFile(config.ContextsFilename())
 		s.NoError(err)
 		s.Require().NotContains(utils.NormalizeNewLines(string(got)), "saved_credentials")
 	}

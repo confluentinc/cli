@@ -1622,6 +1622,10 @@ func (s *StoreTestSuite) TestProcessStatementWithServiceAccount() {
 
 // Cloud only; On-prem does not set user identity
 func (s *StoreTestSuite) TestProcessStatementWithUserIdentity() {
+	// the context's bare Config saves to the default state dir under HOME
+	home := s.T().TempDir()
+	s.T().Setenv("HOME", home)
+	s.T().Setenv("USERPROFILE", home)
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 
 	user := "u-1234"

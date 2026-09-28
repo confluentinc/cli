@@ -1,0 +1,189 @@
+package config
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/log"
+)
+
+// settingsFile is settings.json: preferences and the platforms contexts reference.
+type settingsFile struct {
+	DisableFeatureFlags       bool                 `json:"disable_feature_flags"`
+	DisablePlugins            bool                 `json:"disable_plugins"`
+	DisablePluginsOnceWindows bool                 `json:"disable_plugins_once_windows,omitempty"`
+	DisableUpdateCheck        bool                 `json:"disable_update_check"`
+	EnableColor               bool                 `json:"enable_color"`
+	Platforms                 map[string]*Platform `json:"platforms,omitempty"`
+	LocalPorts                *LocalPorts          `json:"local_ports,omitempty"`
+	// Deprecated
+	DisablePluginsOnce bool `json:"disable_plugins_once,omitempty"`
+}
+
+// contextsFile is contexts.json: the secret-free selection state.
+type contextsFile struct {
+	CurrentContext   string                      `json:"current_context"`
+	Contexts         map[string]*Context         `json:"contexts,omitempty"`
+	Credentials      map[string]*Credential      `json:"credentials,omitempty"`
+	ContextStates    map[string]*ContextState    `json:"context_states,omitempty"`
+	SavedCredentials map[string]*LoginCredential `json:"saved_credentials,omitempty"`
+}
+
+// readStoreFile reads and unmarshals path into v. A missing or zero-byte file contributes
+// nothing (found is false, err is nil); malformed JSON is a hard error.
+func readStoreFile(path string, v any) (bool, error) {
+	input, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+		return false, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, path, err)
+	}
+	if len(input) == 0 {
+		return false, nil
+	}
+	if err := json.Unmarshal(input, v); err != nil {
+		return false, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, path, err)
+	}
+	return true, nil
+}
+
+// writeStoreFile marshals v and atomically writes it to path, creating the parent
+// directory first. Shared by the config stores below and by secretStore.write.
+func writeStoreFile(path string, v any) error {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return fmt.Errorf("unable to create store directory %s: %w", dir, err)
+	}
+
+	data, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return fmt.Errorf("unable to marshal store %s: %w", path, err)
+	}
+
+	if err := writeFileAtomic(path, data); err != nil {
+		return fmt.Errorf("unable to write %s: %w", path, err)
+	}
+	return nil
+}
+
+// loadConfigStores reads settings.json and contexts.json into c. A missing or zero-byte
+// file contributes nothing; found is false only when neither file holds data. Both files
+// are read and decoded before anything is applied to c, so a malformed file leaves c
+// untouched rather than half-applied. Each shape is seeded from c's current values before
+// decoding, so a key absent from the file (an older or hand-edited store) keeps c's
+// existing value - notably New()'s defaults - instead of silently zeroing it.
+func (c *Config) loadConfigStores() (bool, error) {
+	// Only scalars are seeded: seeding a map or pointer would alias c's own and let json.Unmarshal
+	// merge into it (mutating c before both files parse) instead of replacing it wholesale.
+	settings := &settingsFile{
+		DisableFeatureFlags:       c.DisableFeatureFlags,
+		DisablePlugins:            c.DisablePlugins,
+		DisablePluginsOnceWindows: c.DisablePluginsOnceWindows,
+		DisableUpdateCheck:        c.DisableUpdateCheck,
+		EnableColor:               c.EnableColor,
+		DisablePluginsOnce:        c.DisablePluginsOnce,
+	}
+	settingsFound, err := readStoreFile(SettingsFilename(), settings)
+	if err != nil {
+		return false, err
+	}
+
+	contexts := &contextsFile{
+		CurrentContext: c.CurrentContext,
+	}
+	contextsFound, err := readStoreFile(ContextsFilename(), contexts)
+	if err != nil {
+		return false, err
+	}
+
+	warnOneSidedStores(settingsFound, contextsFound, len(contexts.Contexts) > 0)
+
+	if settingsFound {
+		c.DisableFeatureFlags = settings.DisableFeatureFlags
+		c.DisablePlugins = settings.DisablePlugins
+		c.DisablePluginsOnceWindows = settings.DisablePluginsOnceWindows
+		c.DisableUpdateCheck = settings.DisableUpdateCheck
+		c.EnableColor = settings.EnableColor
+		c.DisablePluginsOnce = settings.DisablePluginsOnce
+		if settings.Platforms != nil {
+			c.Platforms = settings.Platforms
+		}
+		if settings.LocalPorts != nil {
+			c.LocalPorts = settings.LocalPorts
+		}
+	}
+
+	if contextsFound {
+		c.CurrentContext = contexts.CurrentContext
+		if contexts.Contexts != nil {
+			c.Contexts = contexts.Contexts
+		}
+		if contexts.Credentials != nil {
+			c.Credentials = contexts.Credentials
+		}
+		if contexts.ContextStates != nil {
+			c.ContextStates = contexts.ContextStates
+		}
+		if contexts.SavedCredentials != nil {
+			c.SavedCredentials = contexts.SavedCredentials
+		}
+	}
+
+	return settingsFound || contextsFound, nil
+}
+
+// saveConfigStores writes c's persisted fields to settings.json, then contexts.json. Settings
+// is written first: a crash between the two writes then leaves only an orphan platform on
+// disk, never a context pointing at a platform that was never written (Validate() rejects
+// the latter). This relies on production code only ever adding platforms, never removing
+// them; a change that prunes platforms must revisit the order.
+func (c *Config) saveConfigStores() error {
+	settings := &settingsFile{
+		DisableFeatureFlags:       c.DisableFeatureFlags,
+		DisablePlugins:            c.DisablePlugins,
+		DisablePluginsOnceWindows: c.DisablePluginsOnceWindows,
+		DisableUpdateCheck:        c.DisableUpdateCheck,
+		EnableColor:               c.EnableColor,
+		Platforms:                 c.Platforms,
+		LocalPorts:                c.LocalPorts,
+		DisablePluginsOnce:        c.DisablePluginsOnce,
+	}
+	if err := writeStoreFile(SettingsFilename(), settings); err != nil {
+		return err
+	}
+
+	contexts := &contextsFile{
+		CurrentContext:   c.CurrentContext,
+		Contexts:         c.Contexts,
+		Credentials:      c.Credentials,
+		ContextStates:    c.ContextStates,
+		SavedCredentials: c.SavedCredentials,
+	}
+	return writeStoreFile(ContextsFilename(), contexts)
+}
+
+// warnOneSidedStores flags a store that holds nothing while its sibling holds data. A missing
+// contexts.json is not flagged: deleting it is the documented way to reset contexts.
+func warnOneSidedStores(settingsFound, contextsFound, hasContexts bool) {
+	if hasContexts && !settingsFound {
+		log.CliLogger.Warnf("%s is missing or empty, but contexts in %s reference the platforms it holds", SettingsFilename(), ContextsFilename())
+	}
+	if settingsFound && !contextsFound {
+		if info, err := os.Stat(ContextsFilename()); err == nil && info.Size() == 0 {
+			log.CliLogger.Warnf("%s is empty, so no contexts were loaded", ContextsFilename())
+		}
+	}
+}
+
+// newMissingPlatformError reports a context whose platform is absent from settings.json. It is
+// not a corrupted-config error: the fix may be restoring settings.json, not deleting contexts.
+func newMissingPlatformError(contextName, platformName string) error {
+	return errors.NewErrorWithSuggestions(
+		fmt.Sprintf(`context "%s" references platform "%s", which is missing from "%s"`, contextName, platformName, SettingsFilename()),
+		fmt.Sprintf("Restore \"%s\" from a backup, or delete \"%s\" and run `confluent login`.", SettingsFilename(), ContextsFilename()),
+	)
+}
