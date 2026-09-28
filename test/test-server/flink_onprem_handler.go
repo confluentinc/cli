@@ -1875,19 +1875,32 @@ func handleCmfSecret(t *testing.T) http.HandlerFunc {
 	}
 }
 
-// assertArtifactLabelContract enforces the CLI's label contract on the submitted artifact JSON: the "labels" field must
-// be omitted entirely to preserve existing labels (nil map / --label not passed), and the CLI must never send an empty
-// object, which CMF interprets as "clear all labels". When present, labels must carry the caller's entries.
-func assertArtifactLabelContract(t *testing.T, rawArtifact string) {
+// submittedArtifactLabels returns the "labels" field of the submitted artifact JSON, or nil when the field is omitted.
+func submittedArtifactLabels(t *testing.T, rawArtifact string) *map[string]string {
 	var probe struct {
 		Metadata struct {
 			Labels *map[string]string `json:"labels"`
 		} `json:"metadata"`
 	}
 	require.NoError(t, json.Unmarshal([]byte(rawArtifact), &probe))
-	if probe.Metadata.Labels != nil {
-		require.NotEmpty(t, *probe.Metadata.Labels, "CLI must omit the labels field to preserve labels, never send an empty object")
+	return probe.Metadata.Labels
+}
+
+// assertArtifactLabelContract enforces the CLI's label contract on the submitted artifact JSON: the "labels" field must
+// be omitted entirely to preserve existing labels (nil map / --label not passed), and the CLI must not send an empty
+// object, which CMF interprets as "clear all labels", unless `--clear-labels` asked for it (see
+// assertArtifactLabelsCleared). When present, labels must carry the caller's entries.
+func assertArtifactLabelContract(t *testing.T, rawArtifact string) {
+	if labels := submittedArtifactLabels(t, rawArtifact); labels != nil {
+		require.NotEmpty(t, *labels, "CLI must omit the labels field to preserve labels, never send an empty object")
 	}
+}
+
+// assertArtifactLabelsCleared requires the explicit empty "labels" object that `update --clear-labels` sends.
+func assertArtifactLabelsCleared(t *testing.T, rawArtifact string) {
+	labels := submittedArtifactLabels(t, rawArtifact)
+	require.NotNil(t, labels, `--clear-labels must send an empty "labels" object, not omit the field`)
+	require.Empty(t, *labels, `--clear-labels must send an empty "labels" object`)
 }
 
 // assertArtifactFileUploaded requires the multipart request to carry exactly one "file" part whose bytes match the
@@ -1932,9 +1945,10 @@ func createArtifactObject(name string, version int32) cmfsdk.Artifact {
 }
 
 // buildArtifactResponse echoes the submitted name, labels, and annotations while attaching a deterministic server-side status.
+// Like CMF, it responds without labels to an empty "labels" object, which clears them.
 func buildArtifactResponse(submitted cmfsdk.Artifact, version int32) cmfsdk.Artifact {
 	artifact := createArtifactObject(submitted.Metadata.Name, version)
-	if submitted.Metadata.Labels != nil {
+	if len(submitted.Metadata.Labels) > 0 {
 		artifact.Metadata.Labels = submitted.Metadata.Labels
 	}
 	if submitted.Metadata.Annotations != nil {
@@ -2030,7 +2044,12 @@ func handleCmfArtifact(t *testing.T) http.HandlerFunc {
 		case http.MethodPut:
 			require.NoError(t, r.ParseMultipartForm(32<<20))
 			rawArtifact := r.FormValue("artifact")
-			assertArtifactLabelContract(t, rawArtifact)
+			// This fixture name is used only by the `update --clear-labels` test.
+			if artifactName == "clear-labels-artifact" {
+				assertArtifactLabelsCleared(t, rawArtifact)
+			} else {
+				assertArtifactLabelContract(t, rawArtifact)
+			}
 			var artifact cmfsdk.Artifact
 			require.NoError(t, json.Unmarshal([]byte(rawArtifact), &artifact))
 

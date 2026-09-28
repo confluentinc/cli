@@ -471,8 +471,11 @@ func (s *CLITestSuite) TestFlinkArtifactUpdateOnPrem() {
 		{args: "flink artifact update test-artifact --environment test-env", fixture: "flink/artifact/update-metadata-only-success.golden"},
 		// metadata-only update in JSON: the response carries no "labels" field, confirming the CLI omitted labels (preserve) rather than sending an empty object (clear)
 		{args: "flink artifact update test-artifact --environment test-env --output json", fixture: "flink/artifact/update-metadata-only-json.golden"},
+		// --clear-labels: the test server requires an explicit empty "labels" object and, like CMF, responds without labels
+		{args: "flink artifact update clear-labels-artifact --clear-labels --environment test-env --output json", fixture: "flink/artifact/update-clear-labels-json.golden"},
 		// failure
 		{args: "flink artifact update invalid-artifact --label owner=team-a --environment test-env", fixture: "flink/artifact/update-non-exist-failure.golden", exitCode: 1},
+		{args: "flink artifact update test-artifact --label owner=team-a --clear-labels --environment test-env", fixture: "flink/artifact/update-label-and-clear-labels-failure.golden", exitCode: 1},
 	}
 
 	runIntegrationTestsWithMultipleAuth(s, tests)
