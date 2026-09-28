@@ -76,66 +76,53 @@ type artifactVersionOutOnPrem struct {
 }
 
 func newArtifactOutOnPrem(artifact cmfsdk.Artifact) *artifactOutOnPrem {
-	out := &artifactOutOnPrem{Name: artifact.Metadata.Name}
-	// Artifact-level view: Creation Time is when the artifact was first created (Metadata), not the current version.
-	// The version-level view below deliberately uses Status.CreationTimestamp instead; keep the two sources distinct.
-	if artifact.Metadata.CreationTimestamp != nil {
-		out.CreationTime = *artifact.Metadata.CreationTimestamp
+	status := artifact.GetStatus()
+	return &artifactOutOnPrem{
+		Name:    artifact.Metadata.GetName(),
+		Version: formatOptionalNumber(status.GetVersionOk()),
+		Phase:   status.GetPhase(),
+		Size:    formatOptionalNumber(status.GetSizeOk()),
+		// Artifact-level view: Creation Time is when the artifact was first created (Metadata), not the current version.
+		// The version-level view below deliberately uses Status.CreationTimestamp instead; keep the two sources distinct.
+		CreationTime: artifact.Metadata.GetCreationTimestamp(),
 	}
-	if artifact.Status != nil {
-		if artifact.Status.Version != nil {
-			out.Version = strconv.Itoa(int(*artifact.Status.Version))
-		}
-		if artifact.Status.Phase != nil {
-			out.Phase = *artifact.Status.Phase
-		}
-		if artifact.Status.Size != nil {
-			out.Size = strconv.FormatInt(*artifact.Status.Size, 10)
-		}
-	}
-	return out
 }
 
 func newArtifactVersionOutOnPrem(artifact cmfsdk.Artifact) *artifactVersionOutOnPrem {
-	out := &artifactVersionOutOnPrem{}
-	if artifact.Status != nil {
-		if artifact.Status.Version != nil {
-			out.Version = strconv.Itoa(int(*artifact.Status.Version))
-		}
-		if artifact.Status.Phase != nil {
-			out.Phase = *artifact.Status.Phase
-		}
-		if artifact.Status.Size != nil {
-			out.Size = strconv.FormatInt(*artifact.Status.Size, 10)
-		}
-		if artifact.Status.Checksum != nil {
-			out.Checksum = *artifact.Status.Checksum
-		}
+	status := artifact.GetStatus()
+	return &artifactVersionOutOnPrem{
+		Version:  formatOptionalNumber(status.GetVersionOk()),
+		Phase:    status.GetPhase(),
+		Size:     formatOptionalNumber(status.GetSizeOk()),
+		Checksum: status.GetChecksum(),
 		// Version-level view: Creation Time is when this specific version was uploaded (Status), not the artifact.
 		// This intentionally differs from newArtifactOutOnPrem, which reads Metadata.CreationTimestamp.
-		if artifact.Status.CreationTimestamp != nil {
-			out.CreationTime = *artifact.Status.CreationTimestamp
-		}
+		CreationTime: status.GetCreationTimestamp(),
 	}
-	return out
+}
+
+// formatOptionalNumber formats a number field from a CMF response. It returns "" when CMF omitted the field, so the
+// table shows a blank instead of the plain getter's zero value.
+func formatOptionalNumber[T int32 | int64](value *T, ok bool) string {
+	if !ok {
+		return ""
+	}
+	return strconv.FormatInt(int64(*value), 10)
 }
 
 // newArtifactDescribeOutOnPrem builds the single-artifact human view, reusing the list row for the shared columns and
 // adding Labels/Annotations. They are left nil (and thus omitted from the table) when the artifact has none.
 func newArtifactDescribeOutOnPrem(artifact cmfsdk.Artifact) *artifactDescribeOutOnPrem {
 	base := newArtifactOutOnPrem(artifact)
-	out := &artifactDescribeOutOnPrem{
+	return &artifactDescribeOutOnPrem{
 		Name:         base.Name,
 		Version:      base.Version,
 		Phase:        base.Phase,
 		Size:         base.Size,
 		CreationTime: base.CreationTime,
+		Labels:       artifact.Metadata.GetLabels(),
+		Annotations:  artifact.Metadata.GetAnnotations(),
 	}
-	// These are value-type maps with `human:"...,omitempty"`, so assigning a nil map is a no-op (the row is omitted).
-	// Unlike convertSdkArtifactToLocalArtifact, no nil guard is needed here.
-	out.Labels = artifact.Metadata.Labels
-	out.Annotations = artifact.Metadata.Annotations
-	return out
 }
 
 // printArtifactOnPrem prints a single artifact (artifact-level view).
