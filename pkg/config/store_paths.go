@@ -20,7 +20,8 @@ func CacheDir() string { return stateDirPath(".cache") }
 // SecretsFilename is the encrypted secret store, kept out of the plaintext config file.
 func SecretsFilename() string { return stateDirPath("secrets.json") }
 
-// SettingsFilename is machine-managed preferences, split out of config.json.
+// SettingsFilename holds preferences and the platforms every context references, split out of
+// config.json.
 func SettingsFilename() string { return stateDirPath("settings.json") }
 
 // ContextsFilename is the secret-free context selection state, split out of config.json.
