@@ -77,9 +77,8 @@ func writeStoreFile(path string, v any) error {
 // decoding, so a key absent from the file (an older or hand-edited store) keeps c's
 // existing value - notably New()'s defaults - instead of silently zeroing it.
 func (c *Config) loadConfigStores() (bool, error) {
-	// Only scalars are seeded from c (see the doc comment above); map/pointer fields stay at
-	// their zero value, since seeding those would alias c's own map/struct and let
-	// json.Unmarshal merge into it instead of replacing it wholesale.
+	// Only scalars are seeded: seeding a map or pointer would alias c's own and let json.Unmarshal
+	// merge into it (mutating c before both files parse) instead of replacing it wholesale.
 	settings := &settingsFile{
 		DisableFeatureFlags:       c.DisableFeatureFlags,
 		DisablePlugins:            c.DisablePlugins,
