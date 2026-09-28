@@ -74,8 +74,11 @@ func (c *Context) validate() error {
 	if c.CredentialName == "" || c.Credential == nil {
 		return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, c.Name, ContextsFilename())
 	}
-	if c.PlatformName == "" || c.Platform == nil {
+	if c.PlatformName == "" {
 		return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, c.Name, ContextsFilename())
+	}
+	if c.Platform == nil {
+		return newMissingPlatformError(c.Name, c.PlatformName)
 	}
 	if c.Environments == nil {
 		c.Environments = map[string]*EnvironmentContext{}

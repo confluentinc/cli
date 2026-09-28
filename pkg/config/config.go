@@ -395,12 +395,15 @@ func (c *Config) wireContexts() error {
 	return nil
 }
 
+// errNoConfigStores reports that neither config store holds data, so there is nothing to merge.
+var errNoConfigStores = errors.New("no config stores on disk")
+
 // readConfigFromDisk re-reads the persisted config stores and rebuilds their pointer
 // graph. It does NOT run migrations and never writes; it is the "theirs" side
 // of Save()'s merge, so it must not recurse into Save(). json:"-" fields
 // (Filename, IsTest, Version, DisableUpdates) are copied from template because a
-// fresh unmarshal cannot recover them. When neither store holds data it returns a bare
-// os.ErrNotExist, so saveLocked's os.IsNotExist check fires.
+// fresh unmarshal cannot recover them. It returns errNoConfigStores (unwrapped) when neither
+// store holds data.
 func readConfigFromDisk(template *Config) (*Config, error) {
 	disk := New()
 	found, err := disk.loadConfigStores()
@@ -408,7 +411,7 @@ func readConfigFromDisk(template *Config) (*Config, error) {
 		return nil, err
 	}
 	if !found {
-		return nil, os.ErrNotExist
+		return nil, errNoConfigStores
 	}
 
 	disk.Filename = template.Filename
@@ -510,7 +513,7 @@ func (c *Config) saveLocked() error {
 	disk, err := readConfigFromDisk(c)
 	if err != nil {
 		// Missing or empty stores have nothing to preserve: write our state directly, no merge.
-		if os.IsNotExist(err) {
+		if err == errNoConfigStores {
 			return c.writeWholeConfig()
 		}
 		return err
@@ -619,16 +622,16 @@ func (c *Config) writeWholeConfig() error {
 	if err := c.save(); err != nil {
 		return err
 	}
-	// Refresh the baseline from disk (encrypted) rather than from the live config,
-	// which save() has restored to its decrypted form. A read failure here does not
-	// undo the successful write, so fall back to the live snapshot; if even that fails,
+	// Refresh the baseline from disk rather than the live config: the disk copy is exactly what
+	// the next Save's merge will diff against, after Validate's normalization. A read failure
+	// does not undo the successful write, so fall back to the live snapshot; if even that fails,
 	// report it and keep the previous baseline rather than an empty one.
 	disk, err := readConfigFromDisk(c)
 	if err == nil {
 		c.baseline = disk
 		return nil
 	}
-	log.CliLogger.Debugf("Failed to re-read config after writing it, using the in-memory snapshot: %v", err)
+	log.CliLogger.Warnf("unable to re-read the config stores after saving: %v", err)
 	return c.snapshotBaseline()
 }
 
@@ -957,7 +960,7 @@ func (c *Config) Validate() error {
 		}
 		if _, ok := c.Platforms[context.PlatformName]; !ok {
 			log.CliLogger.Trace("unspecified platform error")
-			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, ContextsFilename())
+			return newMissingPlatformError(context.Name, context.PlatformName)
 		}
 		if _, ok := c.ContextStates[context.Name]; !ok {
 			c.ContextStates[context.Name] = new(ContextState)
@@ -1148,6 +1151,7 @@ func (c *Config) HasBasicLogin() bool {
 
 // GetFilename names the sidecar lock anchor (config.json's legacy path), not a data file: the
 // config is persisted to settings.json and contexts.json, and config.json is never written.
+// The lock only serializes processes sharing the same Filename, which production always does.
 func (c *Config) GetFilename() string {
 	if c.Filename == "" {
 		c.Filename = GetDefaultFilename()
