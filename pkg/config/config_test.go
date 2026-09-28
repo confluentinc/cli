@@ -19,6 +19,7 @@ import (
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/secret"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 	pversion "github.com/confluentinc/cli/v4/pkg/version"
@@ -1634,7 +1635,7 @@ func readConfigStoresRaw(t *testing.T) string {
 	require.NoError(t, err)
 	contexts, err := os.ReadFile(ContextsFilename())
 	require.NoError(t, err)
-	return string(settings) + string(contexts)
+	return string(settings) + "\n---\n" + string(contexts)
 }
 
 // A corrupted-config error's suggestion tells the user which file to delete, so it must name
@@ -1679,4 +1680,94 @@ func TestSave_ZeroByteStoresWriteWhole(t *testing.T) {
 	found, err = readStoreFile(ContextsFilename(), contexts)
 	require.NoError(t, err)
 	require.True(t, found)
+}
+
+// contextsWithMissingPlatform is a contexts.json whose one context references platform "p",
+// which lives in settings.json.
+const contextsWithMissingPlatform = `{
+  "current_context": "ctx",
+  "contexts": {"ctx": {"name": "ctx", "platform": "p", "credential": "cred", "kafka_cluster_context": {}}},
+  "credentials": {"cred": {"name": "cred", "username": "user"}}
+}`
+
+// writeStore writes data to path, creating the state directory first.
+func writeStore(t *testing.T, path, data string) {
+	t.Helper()
+	require.NoError(t, os.MkdirAll(filepath.Dir(path), 0700))
+	require.NoError(t, os.WriteFile(path, []byte(data), 0600))
+}
+
+// captureWarnings runs fn with the CLI logger at WARN verbosity and returns what it logged.
+func captureWarnings(t *testing.T, fn func()) string {
+	t.Helper()
+	var buf strings.Builder
+	original := log.CliLogger
+	log.CliLogger = log.New(log.WARN, &buf)
+	t.Cleanup(func() { log.CliLogger = original })
+	fn()
+	return buf.String()
+}
+
+// A platform missing from settings.json is a settings.json problem, so the error must not tell
+// the user to delete contexts.json as the only way out.
+func TestLoad_MissingPlatformNamesSettingsFile(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	writeStore(t, ContextsFilename(), contextsWithMissingPlatform)
+
+	var err error
+	warnings := captureWarnings(t, func() { err = New().Load() })
+
+	require.Error(t, err)
+	require.Equal(t, fmt.Sprintf(`context "ctx" references platform "p", which is missing from "%s"`, SettingsFilename()), err.Error())
+	errors.VerifyErrorAndSuggestions(require.New(t), err, err.Error(),
+		fmt.Sprintf("Restore \"%s\" from a backup, or delete \"%s\" and run `confluent login`.", SettingsFilename(), ContextsFilename()))
+	require.Contains(t, warnings, SettingsFilename())
+}
+
+func TestLoad_ZeroByteContextsWithSettingsWarnsAndSucceeds(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	writeStore(t, SettingsFilename(), `{"disable_update_check": true}`)
+	writeStore(t, ContextsFilename(), "")
+	c := New()
+
+	var err error
+	warnings := captureWarnings(t, func() { err = c.Load() })
+
+	require.NoError(t, err)
+	require.True(t, c.DisableUpdateCheck)
+	require.Contains(t, warnings, ContextsFilename())
+}
+
+// An unreadable store must fail Load, not be mistaken for a fresh machine and overwritten.
+func TestLoad_UnreadableContextsFileIsNotOverwritten(t *testing.T) {
+	if runtime.GOOS == "windows" || os.Geteuid() == 0 {
+		t.Skip("chmod 0000 does not deny reads on Windows or to root")
+	}
+	setTestHome(t, t.TempDir())
+	writeStore(t, ContextsFilename(), contextsWithMissingPlatform)
+	require.NoError(t, os.Chmod(ContextsFilename(), 0000))
+	t.Cleanup(func() { _ = os.Chmod(ContextsFilename(), 0600) })
+
+	err := New().Load()
+
+	require.Error(t, err)
+	require.Contains(t, err.Error(), ContextsFilename())
+	info, statErr := os.Stat(ContextsFilename())
+	require.NoError(t, statErr)
+	require.Equal(t, os.FileMode(0000), info.Mode().Perm(), "the unreadable store must not be replaced")
+	require.NoError(t, os.Chmod(ContextsFilename(), 0600))
+	data, readErr := os.ReadFile(ContextsFilename())
+	require.NoError(t, readErr)
+	require.Equal(t, contextsWithMissingPlatform, string(data))
+}
+
+func TestLoad_ContextsPathIsDirectoryIsNotOverwritten(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	require.NoError(t, os.MkdirAll(ContextsFilename(), 0700))
+
+	err := New().Load()
+
+	require.Error(t, err)
+	require.Contains(t, err.Error(), ContextsFilename())
+	require.DirExists(t, ContextsFilename())
 }
