@@ -69,13 +69,13 @@ func newContext(name string, platform *Platform, credential *Credential, kafkaCl
 
 func (c *Context) validate() error {
 	if c.Name == "" {
-		return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", c.Config.Filename)
+		return errors.NewCorruptedConfigError(errors.NoNameContextErrorMsg, "", ContextsFilename())
 	}
 	if c.CredentialName == "" || c.Credential == nil {
-		return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, c.Name, c.Config.Filename)
+		return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, c.Name, ContextsFilename())
 	}
 	if c.PlatformName == "" || c.Platform == nil {
-		return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, c.Name, c.Config.Filename)
+		return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, c.Name, ContextsFilename())
 	}
 	if c.Environments == nil {
 		c.Environments = map[string]*EnvironmentContext{}
