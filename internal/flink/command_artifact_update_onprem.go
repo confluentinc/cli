@@ -19,15 +19,21 @@ func (c *command) newArtifactUpdateCommandOnPrem() *cobra.Command {
 				Text: `Replace the labels of Flink artifact "my-udf.jar" in the environment "my-environment".`,
 				Code: "confluent flink artifact update my-udf.jar --label owner=team-a,tier=gold --environment my-environment",
 			},
+			examples.Example{
+				Text: `Remove all labels from Flink artifact "my-udf.jar" in the environment "my-environment".`,
+				Code: "confluent flink artifact update my-udf.jar --clear-labels --environment my-environment",
+			},
 		),
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	cmd.Flags().StringSlice("label", nil, `A comma-separated list of "key=value" label pairs. Replaces all existing labels, removing any that are not listed; omit the flag to leave existing labels unchanged.`)
+	cmd.Flags().Bool("clear-labels", false, "Remove all labels from the Flink artifact.")
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
+	cmd.MarkFlagsMutuallyExclusive("label", "clear-labels")
 
 	return cmd
 }
@@ -44,6 +50,15 @@ func (c *command) artifactUpdateOnPrem(cmd *cobra.Command, args []string) error 
 	labels, err := getLabelsFlag(cmd)
 	if err != nil {
 		return err
+	}
+
+	clearLabels, err := cmd.Flags().GetBool("clear-labels")
+	if err != nil {
+		return err
+	}
+	if clearLabels {
+		// Unlike a nil map, an empty map is sent as `"labels": {}`, which CMF treats as "remove all labels".
+		labels = map[string]string{}
 	}
 
 	client, err := c.GetCmfClient(cmd)
