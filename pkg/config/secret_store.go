@@ -160,7 +160,7 @@ func stripSecretTriples(records map[string]*secretRecord) map[string]*secretReco
 // GenerateSaltAndNonce returns nil,nil there, so there is no salt/nonce to reuse the way
 // AES-GCM does on Unix). A byte-level diff would then misread every untouched secret as
 // locally changed on Windows - exactly the lost-write bug Config.decryptToMatch already
-// solves at the config.json level, quoted in its own comment: re-encrypting to compare
+// solves at the config-store level, quoted in its own comment: re-encrypting to compare
 // "would flag every secret as changed and reintroduce the very lost-write bug this guards
 // against." The fix is the same here: decide on PLAINTEXT (decrypting base to compare,
 // mirroring decryptToMatch), and move the whole (ciphertext, salt, nonce) triple as one
@@ -412,7 +412,7 @@ func encryptedAPIKeySecret(pair *APIKeyPair) (*apiKeySecret, error) {
 // It sets presence only (any non-empty value; merged's own Secret field is json:"-" and never
 // reaches the write either way), from two sources: (1) this process's own live c, for a key c added
 // this session that is not yet on disk; and (2) the on-disk secret store, for a key ONLY a concurrent
-// session added - such a key rides in via the config.json merge (its public id in disk -> merged) but
+// session added - such a key rides in via the config-store merge (its public id in disk -> merged) but
 // with an empty secret, and c has never heard of it, so without this pass Validate() would prune its
 // id before the write. saveSecretStore's own three-way merge then reconciles the secret material
 // itself; this function only keeps Validate() from pruning the (json:"-", so structurally invisible)
@@ -516,7 +516,7 @@ func rehydrateNestedAPIKeySecretPresence(c, merged *Config) error {
 // (and Password's direct copy below) never re-derives them, so the generic mergeMapDeep is
 // safe for those two.
 //
-// diskContextNames is the set of context names present in config.json as read from disk this
+// diskContextNames is the set of context names present in contexts.json as read from disk this
 // same save cycle (nil when the caller is writing a whole config with nothing to merge
 // against, e.g. a fresh install or a from-scratch write): see the three-way-merge branch below.
 func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
@@ -661,7 +661,7 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 	ours := &secretFile{Secrets: records, Tokens: tokens, Passwords: passwords}
 
 	// A whole-config write for a config we DID load (we still hold its secret baseline, but the
-	// caller passed no disk context set) declares our state whole, symmetric with config.json's own
+	// caller passed no disk context set) declares our state whole, symmetric with the config stores' own
 	// writeWholeConfig short circuit for a missing/empty file. Written even when empty, both to clear
 	// a store left from a prior state and to set secretBaseline for the next save's merge.
 	if diskContextNames == nil && c.secretBaseline != nil {
@@ -679,7 +679,7 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 	}
 
 	// No secret baseline of our own: the config was constructed, or a fresh-machine load whose
-	// missing-file path snapshotted a config baseline (so config.json still MERGES on this save) but
+	// missing-file path snapshotted a config baseline (so the config stores still MERGE on this save) but
 	// never ran loadSecretStore. The secret side must be symmetric with that config merge and not
 	// blind-overwrite a concurrent peer's store, so merge against an EMPTY baseline - the peer's
 	// disk-only entries then read as concurrent adds and survive. A truly fresh machine (no store on
@@ -822,7 +822,7 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 
 	// Passwords: a saved password is a stable ciphertext triple (never decrypted in place during a
 	// session, so no Windows re-encryption churn), so unlike tokens it merges through the generic
-	// structural mergeMapDeep - the same three-way merge SavedCredentials itself uses in config.json.
+	// structural mergeMapDeep - the same three-way merge SavedCredentials itself uses in contexts.json.
 	if merged.Passwords, err = mergeMapDeep(c.secretBaseline.Passwords, passwords, disk.Passwords); err != nil {
 		return fmt.Errorf("unable to merge secret store passwords: %w", err)
 	}
@@ -865,7 +865,7 @@ func readSecretFileFromDisk(path string) (*secretFile, error) {
 // DecryptCredentials/DecryptContextStates/ResolveKafkaAPIKey.
 //
 // The file read here is also snapshotted as c.secretBaseline, this process's common ancestor
-// for saveSecretStore's own three-way merge - mirroring snapshotBaseline for config.json,
+// for saveSecretStore's own three-way merge - mirroring snapshotBaseline for the config stores,
 // except the secret store needs a separate baseline because deepCopyPersisted's JSON round
 // trip drops every json:"-" secret field and so cannot hold one.
 func (c *Config) loadSecretStore() error {
