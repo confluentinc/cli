@@ -1636,3 +1636,47 @@ func readConfigStoresRaw(t *testing.T) string {
 	require.NoError(t, err)
 	return string(settings) + string(contexts)
 }
+
+// A corrupted-config error's suggestion tells the user which file to delete, so it must name
+// contexts.json (the file wireContexts/Validate found broken), not the never-written config.json.
+func TestLoad_CorruptedContextErrorNamesContextsFile(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	corrupted := `{"current_context": "ctx", "contexts": {"ctx": {"name": "ctx", "platform": "p"}}}`
+	require.NoError(t, os.MkdirAll(filepath.Dir(ContextsFilename()), 0700))
+	require.NoError(t, os.WriteFile(ContextsFilename(), []byte(corrupted), 0600))
+
+	err := New().Load()
+
+	require.Error(t, err)
+	var corruptedErr *errors.CorruptedConfigError
+	require.ErrorAs(t, err, &corruptedErr)
+	output := errors.GetErrorStringWithSuggestions(corruptedErr.UserFacingError())
+	require.Contains(t, output, fmt.Sprintf("%q is corrupted", ContextsFilename()))
+	require.NotContains(t, output, "config.json")
+}
+
+// Zero-byte stores hold nothing to merge, so a Save with a baseline takes the whole-write path.
+func TestSave_ZeroByteStoresWriteWhole(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	for _, path := range []string{SettingsFilename(), ContextsFilename()} {
+		require.NoError(t, os.MkdirAll(filepath.Dir(path), 0700))
+		require.NoError(t, os.WriteFile(path, nil, 0600))
+	}
+	// a baseline equal to the live config: were the stores merged instead, an unchanged "p"
+	// would take disk's (empty) side and be dropped
+	c := New()
+	c.Platforms["p"] = &Platform{Name: "p", Server: "https://example.com"}
+	c.snapshotBaseline()
+
+	require.NoError(t, c.Save())
+
+	settings := &settingsFile{}
+	found, err := readStoreFile(SettingsFilename(), settings)
+	require.NoError(t, err)
+	require.True(t, found)
+	require.Contains(t, settings.Platforms, "p")
+	contexts := &contextsFile{}
+	found, err = readStoreFile(ContextsFilename(), contexts)
+	require.NoError(t, err)
+	require.True(t, found)
+}
