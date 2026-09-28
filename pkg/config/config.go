@@ -270,14 +270,13 @@ func (c *Config) Load() error {
 	return c.Validate()
 }
 
-// loadLocked performs Load's disk reads - config.json, the secret store, and the cache -
-// under the same sidecar lock Save() uses, so a reader never sees config.json and
-// secrets.json from two different Save() generations. It returns missing=true when
-// config.json does not exist yet, leaving that branch's handling (which calls Save() and
-// so must not run while this lock is held) to the caller. The lock is released via defer
-// before this function returns, well before wireContexts/Validate run: Validate's
-// normalization can re-enter Save(), which acquires this same lock, and flock is not
-// reentrant.
+// loadLocked performs Load's disk reads - settings.json, contexts.json, the secret store,
+// and the cache - under the same sidecar lock Save() uses, so a reader never sees stores
+// from two different Save() generations. It returns missing=true when neither config store
+// holds data yet, leaving that branch's handling (which calls Save() and so must not run
+// while this lock is held) to the caller. The lock is released via defer before this
+// function returns, well before wireContexts/Validate run: Validate's normalization can
+// re-enter Save(), which acquires this same lock, and flock is not reentrant.
 func (c *Config) loadLocked(filename string) (bool, error) {
 	// Create the config directory before opening the sidecar lock file inside it, same as
 	// Save(): on a fresh machine (parent directory absent) opening the lock would ENOENT
@@ -292,16 +291,12 @@ func (c *Config) loadLocked(filename string) (bool, error) {
 	}
 	defer func() { _ = lock.unlock() }()
 
-	input, err := os.ReadFile(filename)
+	found, err := c.loadConfigStores()
 	if err != nil {
-		if os.IsNotExist(err) {
-			return true, nil
-		}
-		return false, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, filename, err)
+		return false, err
 	}
-
-	if err := json.Unmarshal(input, c); err != nil {
-		return false, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, filename, err)
+	if !found {
+		return true, nil
 	}
 
 	if err := c.loadSecretStore(); err != nil {
@@ -400,25 +395,20 @@ func (c *Config) wireContexts() error {
 	return nil
 }
 
-// readConfigFromDisk re-reads the persisted config and rebuilds its pointer
+// readConfigFromDisk re-reads the persisted config stores and rebuilds their pointer
 // graph. It does NOT run migrations and never writes; it is the "theirs" side
 // of Save()'s merge, so it must not recurse into Save(). json:"-" fields
 // (Filename, IsTest, Version, DisableUpdates) are copied from template because a
-// fresh unmarshal cannot recover them.
-func readConfigFromDisk(path string, template *Config) (*Config, error) {
-	input, err := os.ReadFile(path)
-	if err != nil {
-		// Keep the raw error for a missing file so saveLocked's os.IsNotExist
-		// check still fires; wrap any other read error as Load() does.
-		if os.IsNotExist(err) {
-			return nil, err
-		}
-		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, path, err)
-	}
-
+// fresh unmarshal cannot recover them. When neither store holds data it returns a bare
+// os.ErrNotExist, so saveLocked's os.IsNotExist check fires.
+func readConfigFromDisk(template *Config) (*Config, error) {
 	disk := New()
-	if err := json.Unmarshal(input, disk); err != nil {
-		return nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, path, err)
+	found, err := disk.loadConfigStores()
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, os.ErrNotExist
 	}
 
 	disk.Filename = template.Filename
@@ -517,11 +507,10 @@ func (c *Config) saveLocked() error {
 		return c.writeWholeConfig()
 	}
 
-	disk, err := readConfigFromDisk(c.GetFilename(), c)
+	disk, err := readConfigFromDisk(c)
 	if err != nil {
-		// A missing or empty (e.g. a freshly-created temp) file has nothing to
-		// preserve: write our state directly, no merge.
-		if os.IsNotExist(err) || isEmptyFile(c.GetFilename()) {
+		// Missing or empty stores have nothing to preserve: write our state directly, no merge.
+		if os.IsNotExist(err) {
 			return c.writeWholeConfig()
 		}
 		return err
@@ -596,18 +585,13 @@ func (c *Config) saveLocked() error {
 		return err
 	}
 
-	data, err := json.MarshalIndent(merged, "", "  ")
-	if err != nil {
-		return fmt.Errorf("unable to marshal config: %w", err)
-	}
-
-	if err := writeFileAtomic(c.GetFilename(), data); err != nil {
+	if err := merged.saveConfigStores(); err != nil {
 		return err
 	}
 
 	// Read from c, not merged: merged's fields came through threeWayMerge's JSON-based
 	// deep copies, which drop every json:"-" field (that's how a secret leaves the merge's
-	// own diffing, on top of leaving the final config.json write) - so merged never carries
+	// own diffing, on top of leaving the final config store write) - so merged never carries
 	// a usable secret value. saveSecretStore reads c directly and encrypts what it finds
 	// still plaintext, so this is correct regardless of what merged did or didn't preserve.
 	if err := c.saveSecretStore(diskContextNames); err != nil {
@@ -629,7 +613,7 @@ func (c *Config) saveLocked() error {
 
 // writeWholeConfig persists c directly (no merge) and refreshes the baseline from
 // the resulting on-disk state, so the next Save has an encrypted ancestor to diff
-// against. Used when there is nothing to merge: a missing or empty file, or a
+// against. Used when there is nothing to merge: missing or empty stores, or a
 // config that was constructed rather than loaded.
 func (c *Config) writeWholeConfig() error {
 	if err := c.save(); err != nil {
@@ -639,7 +623,7 @@ func (c *Config) writeWholeConfig() error {
 	// which save() has restored to its decrypted form. A read failure here does not
 	// undo the successful write, so fall back to the live snapshot; if even that fails,
 	// report it and keep the previous baseline rather than an empty one.
-	disk, err := readConfigFromDisk(c.GetFilename(), c)
+	disk, err := readConfigFromDisk(c)
 	if err == nil {
 		c.baseline = disk
 		return nil
@@ -786,12 +770,7 @@ func (c *Config) save() error {
 		return err
 	}
 
-	data, err := json.MarshalIndent(c, "", "  ")
-	if err != nil {
-		return fmt.Errorf("unable to marshal config: %w", err)
-	}
-
-	if err := writeFileAtomic(c.GetFilename(), data); err != nil {
+	if err := c.saveConfigStores(); err != nil {
 		return err
 	}
 
@@ -806,16 +785,6 @@ func (c *Config) save() error {
 	}
 
 	return nil
-}
-
-// isEmptyFile reports whether path exists but holds no bytes. This tolerates a
-// legacy zero-byte config file (nothing to preserve, so the caller skips the
-// merge); a non-empty but corrupt file is not "empty" and is correctly surfaced
-// as a hard error by the unmarshal instead. A missing file or any stat error is
-// not "empty"; the caller handles absence via os.IsNotExist.
-func isEmptyFile(path string) bool {
-	info, err := os.Stat(path)
-	return err == nil && info.Size() == 0
 }
 
 func (c *Config) encryptCredentialsAPISecret() error {
@@ -1177,6 +1146,8 @@ func (c *Config) HasBasicLogin() bool {
 	}
 }
 
+// GetFilename names the sidecar lock anchor (config.json's legacy path), not a data file: the
+// config is persisted to settings.json and contexts.json, and config.json is never written.
 func (c *Config) GetFilename() string {
 	if c.Filename == "" {
 		c.Filename = GetDefaultFilename()

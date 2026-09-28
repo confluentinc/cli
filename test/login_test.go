@@ -189,7 +189,7 @@ func (s *CLITestSuite) TestLogin_SaveUsernamePassword() {
 			s.Contains(output, loggedInAsOutput)
 		}
 
-		got, err := os.ReadFile(config.GetDefaultFilename())
+		got, err := os.ReadFile(config.ContextsFilename())
 		s.NoError(err)
 
 		cfg := &config.Config{}
@@ -227,8 +227,8 @@ func (s *CLITestSuite) TestLogin_UpdateSavedPassword() {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", auth.ConfluentPlatformPassword)}
 		}
 
-		configFile := config.GetDefaultFilename()
-		old, err := os.ReadFile(configFile)
+		contextsFile := config.ContextsFilename()
+		old, err := os.ReadFile(contextsFile)
 		s.NoError(err)
 		oldData := config.Config{}
 		err = json.Unmarshal(old, &oldData)
@@ -242,7 +242,7 @@ func (s *CLITestSuite) TestLogin_UpdateSavedPassword() {
 			s.Contains(output, loggedInAsOutput)
 		}
 
-		got, err := os.ReadFile(configFile)
+		got, err := os.ReadFile(contextsFile)
 		s.NoError(err)
 		data := config.Config{}
 		err = json.Unmarshal(got, &data)
@@ -329,7 +329,7 @@ func (s *CLITestSuite) TestLogin_RemoveSlashFromPlatformName() {
 
 	_ = runCommand(s.T(), testBin, env, args, 0, "")
 
-	got, err := os.ReadFile(config.GetDefaultFilename())
+	got, err := os.ReadFile(config.ContextsFilename())
 	s.NoError(err)
 
 	cfg := &config.Config{}
