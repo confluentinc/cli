@@ -500,6 +500,9 @@ func (s *CLITestSuite) TestFlinkArtifactVersionCreateOnPrem() {
 		{args: "flink artifact version create test-artifact --artifact-file test/fixtures/input/flink/artifact/artifact-v2.jar --environment test-env", fixture: "flink/artifact/version/create-success.golden"},
 		{args: "flink artifact version create test-artifact --artifact-file test/fixtures/input/flink/artifact/artifact-v2.jar --environment test-env --output json", fixture: "flink/artifact/version/create-success-json.golden"},
 		{args: "flink artifact version create test-artifact --artifact-file test/fixtures/input/flink/artifact/artifact-v2.jar --environment test-env --output yaml", fixture: "flink/artifact/version/create-success-yaml.golden"},
+		// identical content: CMF creates no new version and says so, which the human output prints above the table
+		{args: "flink artifact version create identical-artifact --artifact-file test/fixtures/input/flink/artifact/artifact-v2.jar --environment test-env", fixture: "flink/artifact/version/create-identical-content.golden"},
+		{args: "flink artifact version create identical-artifact --artifact-file test/fixtures/input/flink/artifact/artifact-v2.jar --environment test-env --output json", fixture: "flink/artifact/version/create-identical-content-json.golden"},
 		// failure
 		{args: "flink artifact version create non-exist-artifact --artifact-file test/fixtures/input/flink/artifact/artifact-v2.jar --environment test-env", fixture: "flink/artifact/version/create-non-exist-failure.golden", exitCode: 1},
 		{args: "flink artifact version create test-artifact --artifact-file test/fixtures/input/flink/artifact/artifact.txt --environment test-env", fixture: "flink/artifact/version/create-invalid-extension-failure.golden", exitCode: 1},

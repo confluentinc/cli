@@ -2053,10 +2053,21 @@ func handleCmfArtifact(t *testing.T) http.HandlerFunc {
 			var artifact cmfsdk.Artifact
 			require.NoError(t, json.Unmarshal([]byte(rawArtifact), &artifact))
 
-			// A "file" part indicates a new version upload; its absence is a metadata-only update.
+			hasFile := r.MultipartForm != nil && len(r.MultipartForm.File["file"]) > 0
+			// This fixture name stands for an upload identical to the latest version. Like CMF, respond 200 with that
+			// version and a status message saying no new version was created.
+			if hasFile && artifactName == "identical-artifact" {
+				response := buildArtifactResponse(artifact, 1)
+				response.Status.SetMessage(fmt.Sprintf("Identical content already exists as version 1 of Artifact '%s' in Environment '%s'; no new version was created.", artifactName, vars["environment"]))
+				require.NoError(t, json.NewEncoder(w).Encode(response))
+				return
+			}
+
+			// A "file" part indicates a new version upload (201, like CMF); its absence is a metadata-only update (200).
 			version := int32(1)
-			if r.MultipartForm != nil && len(r.MultipartForm.File["file"]) > 0 {
+			if hasFile {
 				version = 2
+				w.WriteHeader(http.StatusCreated)
 			}
 
 			err := json.NewEncoder(w).Encode(buildArtifactResponse(artifact, version))
