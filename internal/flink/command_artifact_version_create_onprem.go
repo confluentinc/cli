@@ -16,8 +16,8 @@ func (c *command) newArtifactVersionCreateCommandOnPrem() *cobra.Command {
 		RunE:  c.artifactVersionCreateOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Upload a new version of Flink artifact "my-artifact" in the environment "my-environment".`,
-				Code: "confluent flink artifact version create my-artifact --artifact-file artifact-v2.jar --environment my-environment",
+				Text: `Upload the file "my-udf-2.0.jar" as a new version of Flink artifact "my-udf.jar" in the environment "my-environment".`,
+				Code: "confluent flink artifact version create my-udf.jar --artifact-file my-udf-2.0.jar --environment my-environment",
 			},
 		),
 	}

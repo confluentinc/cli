@@ -16,8 +16,8 @@ func (c *command) newArtifactUpdateCommandOnPrem() *cobra.Command {
 		RunE:  c.artifactUpdateOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Replace the labels of Flink artifact "my-artifact" in the environment "my-environment".`,
-				Code: "confluent flink artifact update my-artifact --label owner=team-a,tier=gold --environment my-environment",
+				Text: `Replace the labels of Flink artifact "my-udf.jar" in the environment "my-environment".`,
+				Code: "confluent flink artifact update my-udf.jar --label owner=team-a,tier=gold --environment my-environment",
 			},
 		),
 	}

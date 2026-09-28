@@ -21,8 +21,8 @@ func (c *command) newArtifactVersionDownloadCommandOnPrem() *cobra.Command {
 		RunE:  c.artifactVersionDownloadOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Download the latest version of Flink artifact "my-artifact" in the environment "my-environment".`,
-				Code: "confluent flink artifact version download my-artifact --output-file my-artifact.jar --environment my-environment",
+				Text: `Download the latest version of Flink artifact "my-udf.jar" in the environment "my-environment".`,
+				Code: "confluent flink artifact version download my-udf.jar --output-file my-udf.jar --environment my-environment",
 			},
 		),
 	}

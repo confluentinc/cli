@@ -4,9 +4,9 @@ Usage:
   confluent flink artifact version create <name> [flags]
 
 Examples:
-Upload a new version of Flink artifact "my-artifact" in the environment "my-environment".
+Upload the file "my-udf-2.0.jar" as a new version of Flink artifact "my-udf.jar" in the environment "my-environment".
 
-  $ confluent flink artifact version create my-artifact --artifact-file artifact-v2.jar --environment my-environment
+  $ confluent flink artifact version create my-udf.jar --artifact-file my-udf-2.0.jar --environment my-environment
 
 Flags:
       --environment string                  REQUIRED: Name of the Flink environment.

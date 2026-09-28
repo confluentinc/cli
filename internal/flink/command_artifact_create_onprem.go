@@ -11,13 +11,13 @@ func (c *command) newArtifactCreateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a Flink artifact in Confluent Platform.",
-		Long:  "Create a Flink artifact in Confluent Platform by uploading a JAR or ZIP file. This creates version 1 of the artifact.",
+		Long:  "Create a Flink artifact in Confluent Platform by uploading a JAR or ZIP file. This creates version 1 of the artifact. To use the artifact as a UDF, its name must end in `.jar`.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.artifactCreateOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create Flink artifact "my-artifact" in the environment "my-environment".`,
-				Code: "confluent flink artifact create my-artifact --artifact-file artifact.jar --environment my-environment",
+				Text: `Create Flink artifact "my-udf.jar" from the file "my-udf-1.0.jar" in the environment "my-environment".`,
+				Code: "confluent flink artifact create my-udf.jar --artifact-file my-udf-1.0.jar --environment my-environment",
 			},
 		),
 	}
