@@ -281,3 +281,63 @@ func TestConfigStores_WritesSettingsBeforeContexts(t *testing.T) {
 	var settings settingsFile
 	require.NoError(t, json.Unmarshal(settingsRaw, &settings))
 }
+
+// nonDefaultPersisted returns a Config whose every persisted field (exported, json tag not "-")
+// differs from New()'s value, so a field dropped from any copy in the store code shows up as a
+// diff. It fails on a field kind it does not know, forcing an update when Config grows one.
+func nonDefaultPersisted(t *testing.T) *Config {
+	t.Helper()
+	c := New()
+	v := reflect.ValueOf(c).Elem()
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Type().Field(i)
+		if tag, ok := field.Tag.Lookup("json"); !field.IsExported() || !ok || tag == "-" {
+			continue
+		}
+		fv := v.Field(i)
+		switch fv.Kind() {
+		case reflect.Bool:
+			fv.SetBool(!fv.Bool())
+		case reflect.String:
+			fv.SetString("value-" + field.Name)
+		case reflect.Map:
+			m := reflect.MakeMap(fv.Type())
+			m.SetMapIndex(reflect.ValueOf("key-"+field.Name), reflect.New(fv.Type().Elem().Elem()))
+			fv.Set(m)
+		case reflect.Pointer:
+			fv.Set(reflect.New(fv.Type().Elem()))
+		default:
+			t.Fatalf("persisted field %s has unhandled kind %s", field.Name, fv.Kind())
+		}
+	}
+	return c
+}
+
+// Every persisted field must survive saveConfigStores + loadConfigStores, and a key absent from
+// both stores must keep the loading config's value (the seed copies).
+func TestConfigStores_ReflectiveRoundTrip(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	want := nonDefaultPersisted(t)
+	wantJSON, err := json.Marshal(want)
+	require.NoError(t, err)
+
+	require.NoError(t, want.saveConfigStores())
+	reloaded := New()
+	found, err := reloaded.loadConfigStores()
+
+	require.NoError(t, err)
+	require.True(t, found)
+	gotJSON, err := json.Marshal(reloaded)
+	require.NoError(t, err)
+	require.JSONEq(t, string(wantJSON), string(gotJSON), "a persisted field was lost in the store round trip")
+
+	require.NoError(t, os.WriteFile(SettingsFilename(), []byte(`{}`), 0600))
+	require.NoError(t, os.WriteFile(ContextsFilename(), []byte(`{}`), 0600))
+	seeded := nonDefaultPersisted(t)
+	found, err = seeded.loadConfigStores()
+	require.NoError(t, err)
+	require.True(t, found)
+	seededJSON, err := json.Marshal(seeded)
+	require.NoError(t, err)
+	require.JSONEq(t, string(wantJSON), string(seededJSON), "a key absent from the stores must keep the config's value")
+}
