@@ -35,8 +35,10 @@ const (
 	snapshotModeProperty = "sql.snapshot.mode"
 	snapshotModeNow      = "now"
 
-	// cliQueryFeatureFlag gates the command's visibility.
-	cliQueryFeatureFlag = "cli.query"
+	// flinkQueryFeatureFlag gates the command's visibility. It lives in the Confluent
+	// Cloud LaunchDarkly project (like the other flink.* flags this CLI reads), so it
+	// can be targeted by org.
+	flinkQueryFeatureFlag = "flink.query.cli.enable"
 )
 
 type queryCommand struct {
@@ -62,7 +64,7 @@ func (*command) newQueryCommand(cfg *cliconfig.Config, prerunner pcmd.PreRunner)
 		Args: cobra.NoArgs,
 		// Hidden until the flag targets an org; cfg.IsTest keeps it visible to the
 		// integration suite regardless of the (unreachable in tests) LD evaluation.
-		Hidden: !(cfg.IsTest || featureflags.Manager.BoolVariation(cliQueryFeatureFlag, cfg.Context(), cliconfig.CliLaunchDarklyClient, true, false)),
+		Hidden: !(cfg.IsTest || featureflags.Manager.BoolVariation(flinkQueryFeatureFlag, cfg.Context(), cliconfig.CcloudProdLaunchDarklyClient, true, false)),
 		Annotations: map[string]string{
 			pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin,
 		},
