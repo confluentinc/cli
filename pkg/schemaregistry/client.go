@@ -124,6 +124,11 @@ func (c *Client) GetExporterConfig(name string) (map[string]string, error) {
 	return res, err
 }
 
+func (c *Client) GetExporterClusterLinkConfig(name string) (map[string]string, error) {
+	res, _, err := c.DefaultApi.GetExporterClusterLinkConfig(c.context(), name).Execute()
+	return res, err
+}
+
 func (c *Client) ResumeExporter(name string) (srsdk.UpdateExporterResponse, error) {
 	res, _, err := c.DefaultApi.ResumeExporter(c.context(), name).Execute()
 	return res, err

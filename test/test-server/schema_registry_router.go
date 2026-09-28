@@ -29,6 +29,7 @@ var schemaRegistryRoutes = []route{
 	{"/exporters/{name}", handleSRExporter},
 	{"/exporters/{name}/status", handleSRExporterStatus},
 	{"/exporters/{name}/config", handleSRExporterConfig},
+	{"/exporters/{name}/config/clusterlink", handleSRExporterClusterLinkConfig},
 	{"/exporters/{name}/pause", handleSRExporterPause},
 	{"/exporters/{name}/resume", handleSRExporterResume},
 	{"/exporters/{name}/reset", handleSRExporterReset},

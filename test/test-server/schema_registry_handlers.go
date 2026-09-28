@@ -389,6 +389,20 @@ func handleSRExporterConfig(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for: "/exporters/{name}/config/clusterlink"
+func handleSRExporterClusterLinkConfig(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		filterConfig := `{"topicsToInclude":["*"],"topicsToExclude":[],"contextType":"AUTO",` +
+			`"subjectRenameFormat":"my-${subject}","sourceSRDeployment":"CONFLUENT_CLOUD",` +
+			`"sourceLSRC":"lsrc-abc123"}`
+		config := map[string]string{
+			"topic.config.sync.associations.filters": filterConfig,
+		}
+		err := json.NewEncoder(w).Encode(config)
+		require.NoError(t, err)
+	}
+}
+
 // Handler for: "/exporters/{name}/pause"
 func handleSRExporterPause(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
