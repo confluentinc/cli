@@ -3,6 +3,7 @@ package config
 import (
 	"bytes"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	perrors "github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/secret"
 	pversion "github.com/confluentinc/cli/v4/pkg/version"
 )
@@ -1056,6 +1058,10 @@ func TestMigrate_WireContextsFailureIsHardError(t *testing.T) {
 	require.Equal(t, int32(0), migrations.Load())
 	requireFileAbsent(t, migrationBackupPath(home))
 	requireFileAbsent(t, SecretsFilename())
+
+	// migrationErrorMsg's %w must keep the underlying typed error reachable, not just its text.
+	var corrupted *perrors.CorruptedConfigError
+	require.True(t, errors.As(err, &corrupted), "expected a *errors.CorruptedConfigError in the chain")
 }
 
 func TestMigrate_AnnouncesOnce(t *testing.T) {
