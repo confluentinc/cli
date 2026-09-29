@@ -295,25 +295,22 @@ func (c *Config) migrateFromLegacy() (bool, error) {
 }
 
 // legacyMigrationPending is the store side of the migration guard: no backup yet (a completed
-// migration never re-runs, even if the stores are later deleted) and the split stores not all
-// present (an existing v5 install is never overwritten by a v4 file written after it).
+// migration never re-runs, even if the stores are later deleted) and no secrets.json. Keying on
+// secrets.json alone is sound because every save writes settings.json, then contexts.json, then
+// secrets.json, so an interrupted run never leaves secrets.json behind. It also means deleting
+// contexts.json (the documented context reset) never re-imports the legacy file.
 func legacyMigrationPending() (bool, error) {
 	if _, err := os.Stat(legacyBackupPath()); err == nil {
 		return false, nil
 	} else if !os.IsNotExist(err) {
 		return false, fmt.Errorf("unable to check migration backup %s: %w", legacyBackupPath(), err)
 	}
-
-	for _, path := range []string{SettingsFilename(), ContextsFilename(), SecretsFilename()} {
-		if !storeFileHasData(path) {
-			return true, nil
-		}
-	}
-	return false, nil
+	return !storeFileHasData(SecretsFilename()), nil
 }
 
-// storeFileHasData matches readStoreFile's notion of presence: missing or zero-byte holds nothing.
+// storeFileHasData reports whether path is a regular file holding data. Missing or zero-byte holds
+// nothing, matching readStoreFile.
 func storeFileHasData(path string) bool {
 	info, err := os.Stat(path)
-	return err == nil && info.Size() > 0
+	return err == nil && info.Mode().IsRegular() && info.Size() > 0
 }

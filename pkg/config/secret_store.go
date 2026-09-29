@@ -835,8 +835,8 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 }
 
 // readSecretFileFromDisk reads and unmarshals the secret store at path, mirroring
-// readConfigFromDisk. A missing file is not an error - a fresh install has no secrets.json
-// yet - and returns an empty secretFile so Load still succeeds.
+// readConfigFromDisk. A missing or zero-byte file is not an error - a fresh install has no
+// secrets.json yet - and returns an empty secretFile so Load still succeeds.
 func readSecretFileFromDisk(path string) (*secretFile, error) {
 	input, err := os.ReadFile(path)
 	if err != nil {
@@ -847,6 +847,9 @@ func readSecretFileFromDisk(path string) (*secretFile, error) {
 	}
 
 	file := &secretFile{}
+	if len(input) == 0 {
+		return file, nil
+	}
 	if err := json.Unmarshal(input, file); err != nil {
 		return nil, fmt.Errorf("unable to unmarshal secret store %s: %w", path, err)
 	}
