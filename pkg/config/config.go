@@ -571,6 +571,7 @@ func (c *Config) saveLocked() error {
 	// own diffing, on top of leaving the final config store write) - so merged never carries
 	// a usable secret value. saveSecretStore reads c directly and encrypts what it finds
 	// still plaintext, so this is correct regardless of what merged did or didn't preserve.
+	// The legacy migration guard relies on secrets.json being written last.
 	if err := c.saveSecretStore(diskContextNames); err != nil {
 		return err
 	}
@@ -755,7 +756,8 @@ func (c *Config) save() error {
 	// encrypt-if-needed step is a no-op for them; it still needs to run to pick up c's
 	// saved password and nested API keys, which never round-trip through plaintext at all.
 	// nil: this whole-config write (see writeWholeConfig's callers) has nothing to merge
-	// secrets.json against either.
+	// secrets.json against either. The legacy migration guard relies on secrets.json being
+	// written last.
 	if err := c.saveSecretStore(nil); err != nil {
 		return err
 	}
