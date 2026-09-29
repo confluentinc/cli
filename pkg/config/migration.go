@@ -64,8 +64,8 @@ func (o *legacyLoginCredential) applyTo(live *LoginCredential) {
 }
 
 // legacyCredential reaches Credential.APIKeyPair, the only secret-bearing field under Credential.
-// The deprecated Credential.Password field (v4 "password,omitempty") is not decoded: nothing
-// reads it at HEAD, and it was never wired into the live Credential type.
+// The deprecated Credential.Password field (v4 "password,omitempty", credential.go:6 on main) is
+// not decoded: it was deleted at HEAD and is read by nothing.
 type legacyCredential struct {
 	APIKeyPair *legacyAPIKeyPair `json:"api_key_pair"`
 }
