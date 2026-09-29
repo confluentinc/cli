@@ -180,6 +180,14 @@ func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 		RefreshToken:   c.refreshGatewayToken(client, jwt.NewValidator()),
 	}
 
+	// Stream every format page by page as it arrives, so a large result never
+	// buffers. json/yaml emit trailing metadata after the rows; the human table
+	// re-aligns per page (Snowflake-style). If Run fails after streaming starts,
+	// the emitted output is left unterminated — the inherent cost of not buffering.
+	streamer := newResultStreamer(output.GetFormat(cmd), raw, name)
+	options.OnSchema = streamer.setColumns
+	options.OnRows = streamer.writeRows
+
 	result, err := query.Run(ctx, options, name)
 	if err != nil {
 		// If handleQueryError leaves settled false (any error it doesn't already
@@ -204,12 +212,12 @@ func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 		output.ErrPrintf(false, "Warning: stopped after %d rows because of the `--max-rows` flag. The result set below is truncated.\n", maxRows)
 	}
 
-	isAppendOnly, appendOnlyKnown := warnIfChangelog(result)
-	if err := c.printQueryResult(cmd, name, result, isAppendOnly, appendOnlyKnown, raw); err != nil {
-		// A failed print is still an error the user sees, so the deferred cleanup
-		// must announce the stop outcome like every other error path — otherwise
-		// the user is left an "Error:" with no word on whether the statement,
-		// which may still be RUNNING, was released.
+	// Changelog warning goes to stderr; rows already streamed to stdout.
+	warnIfChangelog(result)
+
+	// Rows already reached stdout during Run; close writes any trailing metadata
+	// (json/yaml) or the no-rows notice (human).
+	if err := streamer.close(string(result.Phase()), result.RowCount, result.Truncated); err != nil {
 		announceStop = true
 		return err
 	}
