@@ -205,7 +205,7 @@ var afterMissingConfigRead = func() {}
 func (c *Config) Load() error {
 	filename := c.GetFilename()
 
-	missing, err := c.loadLocked(filename)
+	missing, _, err := c.loadLocked(filename)
 	if err != nil {
 		return err
 	}
@@ -272,35 +272,44 @@ func (c *Config) Load() error {
 
 // loadLocked performs Load's disk reads - settings.json, contexts.json, the secret store,
 // and the cache - under the same sidecar lock Save() uses, so a reader never sees stores
-// from two different Save() generations. It returns missing=true when neither config store
-// holds data yet, leaving that branch's handling (which calls Save() and so must not run
-// while this lock is held) to the caller. The lock is released via defer before this
-// function returns, well before wireContexts/Validate run: Validate's normalization can
-// re-enter Save(), which acquires this same lock, and flock is not reentrant.
-func (c *Config) loadLocked(filename string) (bool, error) {
+// from two different Save() generations. It returns (missing, migrated, err). It first
+// migrates a pending v4 config.json into those stores, and migrated reports whether it did.
+// missing is true when neither config store holds data yet, leaving that branch's handling
+// (which calls Save() and so must not run while this lock is held) to the caller. The lock
+// is released via defer before this function returns, well before wireContexts/Validate
+// run: Validate's normalization can re-enter Save(), which acquires this same lock, and
+// flock is not reentrant.
+func (c *Config) loadLocked(filename string) (bool, bool, error) {
 	// Create the config directory before opening the sidecar lock file inside it, same as
 	// Save(): on a fresh machine (parent directory absent) opening the lock would ENOENT
 	// before we ever get to discover the config stores are missing.
 	if err := os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
-		return false, fmt.Errorf("unable to create config directory %s: %w", filename, err)
+		return false, false, fmt.Errorf("unable to create config directory %s: %w", filename, err)
 	}
 
 	lock := newFileLock(filename)
 	if err := lock.lock(lockTimeout); err != nil {
-		return false, err
+		return false, false, err
 	}
 	defer func() { _ = lock.unlock() }()
 
+	// migrate before reading the stores, not in the !found branch: an interrupted migration
+	// leaves stores behind, and the reads below then load what the migration just wrote.
+	migrated, err := c.migrateFromLegacy()
+	if err != nil {
+		return false, false, err
+	}
+
 	found, err := c.loadConfigStores()
 	if err != nil {
-		return false, err
+		return false, migrated, err
 	}
 	if !found {
-		return true, nil
+		return true, migrated, nil
 	}
 
 	if err := c.loadSecretStore(); err != nil {
-		return false, err
+		return false, migrated, err
 	}
 
 	// Load the cache here, under the same lock, rather than after a migration-triggered
@@ -309,7 +318,7 @@ func (c *Config) loadLocked(filename string) (bool, error) {
 	// with zero-value fields.
 	c.loadCache()
 
-	return false, nil
+	return false, migrated, nil
 }
 
 // updateCheckCache is the disposable cache-store representation of the fields split
