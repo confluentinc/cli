@@ -205,7 +205,7 @@ var afterMissingConfigRead = func() {}
 func (c *Config) Load() error {
 	filename := c.GetFilename()
 
-	missing, _, err := c.loadLocked(filename)
+	missing, migrated, err := c.loadLocked(filename)
 	if err != nil {
 		return err
 	}
@@ -221,6 +221,9 @@ func (c *Config) Load() error {
 		if err := c.Save(); err != nil {
 			return fmt.Errorf("unable to save configuration file: %w", err)
 		}
+		// migrateFromLegacy always leaves found stores behind, so migrated is never true here;
+		// still, run the same announcement/downgrade-check path a fresh install takes.
+		c.announceMigration(migrated)
 		return nil
 	}
 
@@ -258,7 +261,11 @@ func (c *Config) Load() error {
 		}
 	}
 
-	return c.Validate()
+	if err := c.Validate(); err != nil {
+		return err
+	}
+	c.announceMigration(migrated)
+	return nil
 }
 
 // loadLocked performs Load's disk reads - settings.json, contexts.json, the secret store,

@@ -1027,3 +1027,167 @@ func TestMigrate_PlaintextV4FileSurvivesMergedSave(t *testing.T) {
 	require.True(t, reloaded.DisableUpdateCheck)
 	requireStatefulCloudPlaintext(t, reloaded)
 }
+
+// TestMigrate_WireContextsFailureIsHardError covers Task 4.2's carried-over wrap: a legacy file
+// whose context has no platform fails wireContexts, and the caller must still learn which legacy
+// file caused it.
+func TestMigrate_WireContextsFailureIsHardError(t *testing.T) {
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Stable)
+	migrations := countLegacyMigrations(t)
+	legacyPath := seedLegacyConfig(t, home, []byte(`{
+		"current_context": "ctx1",
+		"credentials": {"cred1": {"name": "cred1", "username": "test-user", "credential_type": 0}},
+		"contexts": {
+			"ctx1": {
+				"name": "ctx1",
+				"credential": "cred1",
+				"kafka_cluster_context": {"environment_context": false}
+			}
+		},
+		"context_states": {"ctx1": {}}
+	}`))
+
+	err := New().Load()
+
+	require.ErrorContains(t, err, "unable to migrate configuration file")
+	require.ErrorContains(t, err, fmt.Sprintf("%q", legacyPath))
+	require.Equal(t, int32(0), migrations.Load())
+	requireFileAbsent(t, migrationBackupPath(home))
+	requireFileAbsent(t, SecretsFilename())
+}
+
+func TestMigrate_AnnouncesOnce(t *testing.T) {
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Stable)
+	seedLegacyConfig(t, home, cipherLegacyFixture())
+	c := New()
+
+	stderr := captureStderr(t, func() {
+		require.NoError(t, c.Load())
+	})
+
+	require.Contains(t, stderr, migrationAnnouncementMsg)
+
+	stderr = captureStderr(t, func() {
+		require.NoError(t, New().Load())
+	})
+
+	require.NotContains(t, stderr, migrationAnnouncementMsg)
+}
+
+func TestMigrate_NoAnnouncementWithoutContexts(t *testing.T) {
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Stable)
+	// a legacy file with no contexts: migration and backup still happen, but there is nothing
+	// worth telling the user about.
+	seedLegacyConfig(t, home, []byte(`{"disable_update_check": true}`))
+
+	stderr := captureStderr(t, func() {
+		require.NoError(t, New().Load())
+	})
+
+	require.NotContains(t, stderr, migrationAnnouncementMsg)
+	requireFileExists(t, migrationBackupPath(home))
+}
+
+func TestMigrate_NonStableSeedAnnouncement(t *testing.T) {
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Dev)
+	legacyPath := seedLegacyConfig(t, home, cipherLegacyFixture())
+
+	stderr := captureStderr(t, func() {
+		require.NoError(t, New().Load())
+	})
+
+	stateDir, err := StateDir()
+	require.NoError(t, err)
+	require.Contains(t, stderr, fmt.Sprintf(migrationSeedMsg, legacyPath, stateDir))
+}
+
+func TestMigrate_WarnsOncePerLegacyWrite(t *testing.T) {
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Stable)
+	legacyPath := seedLegacyConfig(t, home, cipherLegacyFixture())
+	require.NoError(t, New().Load())
+
+	// silent immediately after migration: the legacy file has not changed since the stamp.
+	stderr := captureStderr(t, func() {
+		require.NoError(t, New().Load())
+	})
+	require.NotContains(t, stderr, "changed after your configuration moved")
+
+	rewriteLegacyFile(t, legacyPath)
+
+	stderr = captureStderr(t, func() {
+		require.NoError(t, New().Load())
+	})
+	require.Contains(t, stderr, fmt.Sprintf(legacyFileChangedWarningMsg, legacyPath))
+
+	// silent again: the new stamp now matches.
+	stderr = captureStderr(t, func() {
+		require.NoError(t, New().Load())
+	})
+	require.NotContains(t, stderr, "changed after your configuration moved")
+
+	rewriteLegacyFile(t, legacyPath)
+
+	stderr = captureStderr(t, func() {
+		require.NoError(t, New().Load())
+	})
+	require.Contains(t, stderr, fmt.Sprintf(legacyFileChangedWarningMsg, legacyPath))
+}
+
+func TestMigrate_NoDowngradeWarningOnNonStable(t *testing.T) {
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Stable)
+	legacyPath := seedLegacyConfig(t, home, cipherLegacyFixture())
+	require.NoError(t, New().Load())
+	setTestChannel(t, pversion.Dev)
+	rewriteLegacyFile(t, legacyPath)
+
+	stderr := captureStderr(t, func() {
+		require.NoError(t, New().Load())
+	})
+
+	require.NotContains(t, stderr, "changed after your configuration moved")
+}
+
+func TestMigrate_MissingStampRecordsSilently(t *testing.T) {
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Stable)
+	legacyPath := seedLegacyConfig(t, home, cipherLegacyFixture())
+	require.NoError(t, New().Load())
+	require.NoError(t, os.Remove(filepath.Join(CacheDir(), "legacy_config.json")))
+	rewriteLegacyFile(t, legacyPath)
+
+	stderr := captureStderr(t, func() {
+		require.NoError(t, New().Load())
+	})
+
+	require.NotContains(t, stderr, "changed after your configuration moved")
+	requireFileExists(t, filepath.Join(CacheDir(), "legacy_config.json"))
+
+	// the stamp was recreated, so a further reload without another write stays silent.
+	stderr = captureStderr(t, func() {
+		require.NoError(t, New().Load())
+	})
+	require.NotContains(t, stderr, "changed after your configuration moved")
+}
+
+// rewriteLegacyFile overwrites path with new bytes and advances its mtime, simulating a v4
+// downgrade writing to the frozen legacy file.
+func rewriteLegacyFile(t *testing.T, path string) {
+	t.Helper()
+	info, err := os.Stat(path)
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(path, []byte(`{"current_context":"","disable_update_check":true}`), 0600))
+	require.NoError(t, os.Chtimes(path, time.Time{}, info.ModTime().Add(time.Second)))
+}
