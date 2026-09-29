@@ -7,7 +7,58 @@ import (
 	"time"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/output"
+	pversion "github.com/confluentinc/cli/v4/pkg/version"
 )
+
+// migrationErrorMsg wraps a migration-time failure with the legacy file it came from, quoted the
+// way errors.UnableToReadConfigurationFileErrorMsg quotes its path.
+const migrationErrorMsg = `unable to migrate configuration file "%s": %w`
+
+// migrationAnnouncementMsg is printed once, after a Stable migration seeds a config with at
+// least one context.
+const migrationAnnouncementMsg = `Confluent CLI moved your configuration to settings.json, contexts.json, secrets.json, and .cache/. Versions before v5 keep using the old config.json and won't see logins or context changes you make here, or vice versa.`
+
+// migrationSeedMsg is printed once, after a non-Stable channel copies contexts and logins from
+// the Stable install's legacy file. Args: legacyConfigPath(), the running channel's StateDir().
+const migrationSeedMsg = `Confluent CLI copied your contexts and logins from "%s" into this build's own configuration in "%s". Changes you make here won't affect that installation, or vice versa.`
+
+// legacyFileChangedWarningMsg warns that a pre-v5 install wrote to the frozen legacy file after
+// migration. Arg: legacyConfigPath().
+const legacyFileChangedWarningMsg = `"%s" changed after your configuration moved to settings.json, contexts.json, and secrets.json. This version doesn't read config.json, so logins and context changes made with a version before v5 won't appear here.`
+
+// legacyFileStampCache is the cache file recording the legacy file's mtime and size at the last
+// point it was known good, so a later Stable load can detect a downgraded v4 writing to it.
+const legacyFileStampCache = "legacy_config.json"
+
+// legacyFileStamp is the stat sample compared across loads: mtime and size are enough to detect a
+// write without reading the file.
+type legacyFileStamp struct {
+	ModTimeUnixNano int64 `json:"mtime_unix_nano"`
+	Size            int64 `json:"size"`
+}
+
+// statLegacyFileStamp stats path and reports its stamp, or (zero, false) when the file is gone.
+func statLegacyFileStamp(path string) (legacyFileStamp, bool) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return legacyFileStamp{}, false
+	}
+	return legacyFileStamp{ModTimeUnixNano: info.ModTime().UnixNano(), Size: info.Size()}, true
+}
+
+// recordLegacyFileStamp stamps the legacy file's current mtime/size, best-effort: a failed write
+// here must never fail an otherwise-successful migration or load.
+func recordLegacyFileStamp(path string) {
+	stamp, ok := statLegacyFileStamp(path)
+	if !ok {
+		return
+	}
+	if err := newCacheStore().writeJSON(legacyFileStampCache, stamp); err != nil {
+		log.CliLogger.Warnf("unable to persist cache: %v", err)
+	}
+}
 
 // legacyAPIKeyPair holds the secret-bearing fields of a v4 APIKeyPair, retagged json:"-" at HEAD.
 type legacyAPIKeyPair struct {
@@ -277,21 +328,89 @@ func (c *Config) migrateFromLegacy() (bool, error) {
 	}
 	// save() and saveSecretStore reach tokens through ctx.GetState(), which only wiring sets.
 	if err := c.wireContexts(); err != nil {
-		return false, err
+		return false, fmt.Errorf(migrationErrorMsg, path, err)
 	}
 	// nothing on disk is an ancestor of the legacy state, so there is no baseline to merge against.
 	c.baseline = nil
 	c.secretBaseline = nil
 	if err := c.saveLocked(); err != nil {
-		return false, fmt.Errorf("unable to migrate configuration file %s: %w", path, err)
+		return false, fmt.Errorf(migrationErrorMsg, path, err)
 	}
 	c.saveCache()
 
 	if err := writeFileAtomic(legacyBackupPath(), data); err != nil {
 		return false, fmt.Errorf("unable to write migration backup %s: %w", legacyBackupPath(), err)
 	}
+	// only the Stable channel ever re-detects a downgrade writing to this file, so only it needs
+	// the stamp; Prerelease/Dev never write or compare against it.
+	if pversion.ProcessChannel() == pversion.Stable {
+		recordLegacyFileStamp(path)
+	}
 	afterLegacyMigration()
 	return true, nil
+}
+
+// announceMigration prints the one-time user-facing message for this Load, or (when this Load
+// did not migrate) re-checks the frozen legacy file for a downgrade write. It runs after
+// loadLocked's lock is released and only on a successful Load.
+func (c *Config) announceMigration(migrated bool) {
+	if migrated {
+		c.announceCompletedMigration()
+		return
+	}
+	if pversion.ProcessChannel() == pversion.Stable {
+		c.warnIfLegacyFileChanged()
+	}
+}
+
+// announceCompletedMigration prints the Stable move announcement or the non-Stable seed
+// announcement, skipping either when the migrated config has no contexts worth telling the user
+// about.
+func (c *Config) announceCompletedMigration() {
+	if len(c.Contexts) == 0 {
+		return
+	}
+
+	if pversion.ProcessChannel() == pversion.Stable {
+		output.ErrPrintln(c.EnableColor, migrationAnnouncementMsg)
+		output.ErrPrintln(c.EnableColor, "")
+		return
+	}
+
+	stateDir, err := StateDir()
+	if err != nil {
+		// StateDir only fails when the home directory can't be resolved; fall back to the same
+		// (relative) path stateDirPath itself tolerates rather than skip the announcement.
+		stateDir = stateDirPath("")
+	}
+	output.ErrPrintln(c.EnableColor, fmt.Sprintf(migrationSeedMsg, legacyConfigPath(), stateDir))
+	output.ErrPrintln(c.EnableColor, "")
+}
+
+// warnIfLegacyFileChanged re-detects a v4 downgrade writing to the frozen legacy file. It only
+// runs once a migration has completed (the backup exists) and costs one stat of the legacy file.
+func (c *Config) warnIfLegacyFileChanged() {
+	if _, err := os.Stat(legacyBackupPath()); err != nil {
+		return
+	}
+
+	current, exists := statLegacyFileStamp(legacyConfigPath())
+	if !exists {
+		return
+	}
+
+	s := newCacheStore()
+	var previous legacyFileStamp
+	hadStamp := s.readJSON(legacyFileStampCache, &previous)
+
+	if hadStamp && (previous.ModTimeUnixNano != current.ModTimeUnixNano || previous.Size != current.Size) {
+		output.ErrPrintln(c.EnableColor, fmt.Sprintf(legacyFileChangedWarningMsg, legacyConfigPath()))
+		output.ErrPrintln(c.EnableColor, "")
+	}
+
+	if err := s.writeJSON(legacyFileStampCache, current); err != nil {
+		log.CliLogger.Warnf("unable to persist cache: %v", err)
+	}
 }
 
 // legacyMigrationPending is the store side of the migration guard: no backup yet (a completed
