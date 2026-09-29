@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -466,6 +467,13 @@ func seedLegacyConfig(t *testing.T, home string, data []byte) string {
 	return path
 }
 
+// writeTestStore writes a store file directly, bypassing the save path.
+func writeTestStore(t *testing.T, path, data string) {
+	t.Helper()
+	require.NoError(t, os.MkdirAll(filepath.Dir(path), 0700))
+	require.NoError(t, os.WriteFile(path, []byte(data), 0600))
+}
+
 // migrationBackupPath is where the running channel's backup of the legacy file lands.
 func migrationBackupPath(home string) string {
 	return filepath.Join(home, StateDirName(), "config.json.v4-backup")
@@ -566,8 +574,7 @@ func TestMigrate_StablePopulatesStores(t *testing.T) {
 			setTestHome(t, home)
 			setTestChannel(t, pversion.Stable)
 			migrations := countLegacyMigrations(t)
-			legacy := tc.legacy
-			seedLegacyConfig(t, home, legacy)
+			seedLegacyConfig(t, home, tc.legacy)
 			c := New()
 
 			err := c.Load()
@@ -581,11 +588,6 @@ func TestMigrate_StablePopulatesStores(t *testing.T) {
 			requireMigratedSecretsInMemory(t, c, tc.envContext)
 			require.Equal(t, "ctx1", c.CurrentContext)
 
-			reloaded := New()
-			require.NoError(t, reloaded.Load())
-			requireMigratedSecretsInMemory(t, reloaded, tc.envContext)
-			require.Equal(t, int32(1), migrations.Load())
-
 			cache := newCacheStore()
 			var uc updateCheckCache
 			require.True(t, cache.readJSON("update_check.json", &uc))
@@ -597,9 +599,25 @@ func TestMigrate_StablePopulatesStores(t *testing.T) {
 
 			backup, err := os.ReadFile(migrationBackupPath(home))
 			require.NoError(t, err)
-			require.Equal(t, legacy, backup)
+			require.Equal(t, tc.legacy, backup)
 		})
 	}
+}
+
+func TestMigrate_ReloadKeepsMigratedSecrets(t *testing.T) {
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Stable)
+	migrations := countLegacyMigrations(t)
+	seedLegacyConfig(t, home, cipherLegacyFixture())
+	require.NoError(t, New().Load())
+	reloaded := New()
+
+	err := reloaded.Load()
+
+	require.NoError(t, err)
+	require.Equal(t, int32(1), migrations.Load())
+	requireMigratedSecretsInMemory(t, reloaded, true)
 }
 
 func TestMigrate_LeavesLegacyFileFrozen(t *testing.T) {
@@ -668,21 +686,100 @@ func TestMigrate_ResumesAfterInterruptedRun(t *testing.T) {
 	setTestChannel(t, pversion.Stable)
 	migrations := countLegacyMigrations(t)
 	seedLegacyConfig(t, home, cipherLegacyFixture())
-	// a completed run minus its last writes is exactly what a crash after contexts.json leaves.
-	require.NoError(t, New().Load())
-	require.NoError(t, os.Remove(SecretsFilename()))
-	require.NoError(t, os.Remove(migrationBackupPath(home)))
-	requireFileExists(t, SettingsFilename())
-	requireFileExists(t, ContextsFilename())
-	migrations.Store(0)
+	// stores that disagree with the legacy file, so a whole re-run is distinguishable from a
+	// no-op or a merge; no secrets.json and no backup, as an interrupted run leaves them.
+	writeTestStore(t, SettingsFilename(), `{
+		"disable_update_check": true,
+		"platforms": {"stale-platform": {"name": "stale-platform", "server": "https://stale"}}
+	}`)
+	writeTestStore(t, ContextsFilename(), `{
+		"current_context": "stale",
+		"contexts": {
+			"stale": {
+				"name": "stale",
+				"platform": "stale-platform",
+				"credential": "stale-cred",
+				"kafka_cluster_context": {"environment_context": false}
+			}
+		}
+	}`)
 
 	c := New()
 	err := c.Load()
 
 	require.NoError(t, err)
 	require.Equal(t, int32(1), migrations.Load())
+	require.Equal(t, "ctx1", c.CurrentContext)
+	require.NotContains(t, c.Contexts, "stale")
+	require.NotContains(t, c.Platforms, "stale-platform")
+	require.False(t, c.DisableUpdateCheck)
 	requireMigratedSecretsOnDisk(t, true)
 	requireMigratedSecretsInMemory(t, c, true)
+	requireFileExists(t, migrationBackupPath(home))
+}
+
+func TestMigrate_ZeroByteSecretsStoreIsMigrated(t *testing.T) {
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Stable)
+	migrations := countLegacyMigrations(t)
+	require.NoError(t, New().Load())
+	require.NoError(t, os.Truncate(SecretsFilename(), 0))
+	seedLegacyConfig(t, home, cipherLegacyFixture())
+
+	c := New()
+	err := c.Load()
+
+	require.NoError(t, err)
+	require.Equal(t, int32(1), migrations.Load())
+	require.Equal(t, "ctx1", c.CurrentContext)
+	requireMigratedSecretsOnDisk(t, true)
+	requireFileExists(t, migrationBackupPath(home))
+}
+
+func TestMigrate_ContextsResetDoesNotReimport(t *testing.T) {
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Stable)
+	migrations := countLegacyMigrations(t)
+	require.NoError(t, New().Load())
+	// deleting contexts.json is the documented way to reset contexts (see warnOneSidedStores).
+	require.NoError(t, os.Remove(ContextsFilename()))
+	seedLegacyConfig(t, home, cipherLegacyFixture())
+
+	c := New()
+	err := c.Load()
+
+	require.NoError(t, err)
+	require.Equal(t, int32(0), migrations.Load())
+	require.Empty(t, c.Contexts)
+	require.Equal(t, "", c.CurrentContext)
+	requireFileAbsent(t, ContextsFilename())
+	requireFileAbsent(t, migrationBackupPath(home))
+}
+
+func TestMigrate_FailedStoreWriteLeavesNoBackup(t *testing.T) {
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Stable)
+	migrations := countLegacyMigrations(t)
+	seedLegacyConfig(t, home, cipherLegacyFixture())
+	// a directory in secrets.json's place makes the last store write fail.
+	require.NoError(t, os.MkdirAll(SecretsFilename(), 0700))
+
+	err := New().Load()
+
+	require.ErrorContains(t, err, "unable to migrate configuration file")
+	require.Equal(t, int32(0), migrations.Load())
+	requireFileAbsent(t, migrationBackupPath(home))
+
+	require.NoError(t, os.Remove(SecretsFilename()))
+
+	err = New().Load()
+
+	require.NoError(t, err)
+	require.Equal(t, int32(1), migrations.Load())
+	requireMigratedSecretsOnDisk(t, true)
 	requireFileExists(t, migrationBackupPath(home))
 }
 
@@ -818,4 +915,115 @@ func TestMigrate_ConcurrentFirstRunsMigrateOnce(t *testing.T) {
 		require.NoError(t, errs[i], "loader %d", i)
 		require.Equal(t, "ctx1", c.CurrentContext, "loader %d", i)
 	}
+}
+
+// plaintextV4Values are the secrets stateful_cloud.json holds in plaintext, as v4 could leave them.
+var plaintextV4Values = []string{"def-secret-456", "eyJ.eyJ.abc", "v1.abc"}
+
+// requireNoPlaintextInStores checks that no plaintext v4 secret reached any store file.
+func requireNoPlaintextInStores(t *testing.T) {
+	t.Helper()
+	for _, path := range []string{SettingsFilename(), ContextsFilename(), SecretsFilename()} {
+		data, err := os.ReadFile(path)
+		require.NoError(t, err)
+		for _, value := range plaintextV4Values {
+			require.NotContains(t, string(data), value, "plaintext %q in %s", value, path)
+		}
+	}
+}
+
+// seedStatefulCloudLegacy copies the plaintext stateful_cloud.json fixture in as home's v4 file.
+func seedStatefulCloudLegacy(t *testing.T, home string) {
+	t.Helper()
+	legacy, err := os.ReadFile(filepath.Join("test_json", "stateful_cloud.json"))
+	require.NoError(t, err)
+	seedLegacyConfig(t, home, legacy)
+}
+
+// statefulCloudKafkaPair is the fixture context's nested Kafka API key.
+func statefulCloudKafkaPair(c *Config) *APIKeyPair {
+	kcc := c.Contexts["my-context"].KafkaClusterContext
+	return kcc.KafkaEnvContexts["env-123456"].KafkaClusterConfigs["anonymous-id"].APIKeys["abc-key-123"]
+}
+
+// loadAndDecrypt loads the stores and decrypts the context's tokens and nested Kafka key in place,
+// as PreRun and ResolveKafkaAPIKey would.
+func loadAndDecrypt(t *testing.T) *Config {
+	t.Helper()
+	c := New()
+	require.NoError(t, c.Load())
+	require.NoError(t, c.DecryptContextStates())
+	require.NoError(t, c.DecryptCredentials())
+	require.NoError(t, statefulCloudKafkaPair(c).DecryptSecret())
+	return c
+}
+
+// requireStatefulCloudPlaintext checks that c holds the fixture's original plaintext secrets.
+func requireStatefulCloudPlaintext(t *testing.T, c *Config) {
+	t.Helper()
+	require.Equal(t, "eyJ.eyJ.abc", c.ContextStates["my-context"].AuthToken)
+	require.Equal(t, "v1.abc", c.ContextStates["my-context"].AuthRefreshToken)
+	require.Equal(t, "def-secret-456", statefulCloudKafkaPair(c).Secret)
+}
+
+func TestMigrate_PlaintextV4FileIsEncrypted(t *testing.T) {
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Stable)
+	seedStatefulCloudLegacy(t, home)
+
+	err := New().Load()
+
+	require.NoError(t, err)
+	requireNoPlaintextInStores(t)
+	file, err := readSecretFileFromDisk(SecretsFilename())
+	require.NoError(t, err)
+	p := nativeCipherPrefix()
+	token := file.Tokens["my-context"]
+	require.NotNil(t, token)
+	require.True(t, strings.HasPrefix(token.AuthToken, p), "auth token not encrypted: %q", token.AuthToken)
+	require.True(t, strings.HasPrefix(token.AuthRefreshToken, p), "refresh token not encrypted: %q", token.AuthRefreshToken)
+	identity := file.Secrets["username-test-user"]
+	require.NotNil(t, identity)
+	require.Contains(t, identity.KafkaAPIKeys["anonymous-id"], "abc-key-123")
+	kafka := identity.KafkaAPIKeys["anonymous-id"]["abc-key-123"]
+	require.True(t, strings.HasPrefix(kafka.Secret, p), "kafka secret not encrypted: %q", kafka.Secret)
+	// no context references this credential, so it is saved but never loaded back: decrypt the
+	// stored record directly instead.
+	cred := file.Secrets["api-key-abc-key-123"]
+	require.NotNil(t, cred)
+	require.True(t, strings.HasPrefix(cred.Secret, p), "credential secret not encrypted: %q", cred.Secret)
+	credPair := &APIKeyPair{Key: "abc-key-123", Secret: cred.Secret, Salt: cred.SecretSalt, Nonce: cred.SecretNonce}
+	require.NoError(t, credPair.DecryptSecret())
+	require.Equal(t, "def-secret-456", credPair.Secret)
+}
+
+func TestMigrate_PlaintextV4FileDecryptsAfterReload(t *testing.T) {
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Stable)
+	seedStatefulCloudLegacy(t, home)
+	require.NoError(t, New().Load())
+
+	c := loadAndDecrypt(t)
+
+	requireStatefulCloudPlaintext(t, c)
+}
+
+func TestMigrate_PlaintextV4FileSurvivesMergedSave(t *testing.T) {
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Stable)
+	seedStatefulCloudLegacy(t, home)
+	require.NoError(t, New().Load())
+	c := loadAndDecrypt(t)
+
+	c.DisableUpdateCheck = true
+	err := c.Save()
+
+	require.NoError(t, err)
+	requireNoPlaintextInStores(t)
+	reloaded := loadAndDecrypt(t)
+	require.True(t, reloaded.DisableUpdateCheck)
+	requireStatefulCloudPlaintext(t, reloaded)
 }
