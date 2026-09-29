@@ -253,3 +253,67 @@ func (c *Config) applyLegacyConfig(path string, data []byte) error {
 	overlay.applyTo(c)
 	return nil
 }
+
+// afterLegacyMigration is a test seam called once per completed migration.
+var afterLegacyMigration = func() {}
+
+// migrateFromLegacy seeds the split stores from a v4 config.json when one is pending, and reports
+// whether it did. The caller must hold the store lock. The backup is written last, as the commit
+// marker: until it exists, a failed or interrupted run is retried whole by the next load.
+func (c *Config) migrateFromLegacy() (bool, error) {
+	pending, err := legacyMigrationPending()
+	if err != nil || !pending {
+		return false, err
+	}
+
+	path := legacyConfigPath()
+	data, found, err := readLegacyConfigFile(path)
+	if err != nil || !found {
+		return false, err
+	}
+
+	if err := c.applyLegacyConfig(path, data); err != nil {
+		return false, err
+	}
+	// save() and saveSecretStore reach tokens through ctx.GetState(), which only wiring sets.
+	if err := c.wireContexts(); err != nil {
+		return false, err
+	}
+	// nothing on disk is an ancestor of the legacy state, so there is no baseline to merge against.
+	c.baseline = nil
+	c.secretBaseline = nil
+	if err := c.saveLocked(); err != nil {
+		return false, fmt.Errorf("unable to migrate configuration file %s: %w", path, err)
+	}
+	c.saveCache()
+
+	if err := writeFileAtomic(legacyBackupPath(), data); err != nil {
+		return false, fmt.Errorf("unable to write migration backup %s: %w", legacyBackupPath(), err)
+	}
+	afterLegacyMigration()
+	return true, nil
+}
+
+// legacyMigrationPending is the store side of the migration guard: no backup yet (a completed
+// migration never re-runs, even if the stores are later deleted) and the split stores not all
+// present (an existing v5 install is never overwritten by a v4 file written after it).
+func legacyMigrationPending() (bool, error) {
+	if _, err := os.Stat(legacyBackupPath()); err == nil {
+		return false, nil
+	} else if !os.IsNotExist(err) {
+		return false, fmt.Errorf("unable to check migration backup %s: %w", legacyBackupPath(), err)
+	}
+
+	for _, path := range []string{SettingsFilename(), ContextsFilename(), SecretsFilename()} {
+		if !storeFileHasData(path) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// storeFileHasData matches readStoreFile's notion of presence: missing or zero-byte holds nothing.
+func storeFileHasData(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && info.Size() > 0
+}
