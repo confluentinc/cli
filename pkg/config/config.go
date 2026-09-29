@@ -223,9 +223,6 @@ func (c *Config) Load() error {
 		if err := c.Save(); err != nil {
 			return fmt.Errorf("unable to save configuration file: %w", err)
 		}
-		// migrateFromLegacy always leaves found stores behind, so migrated is never true here;
-		// still, run the same announcement/downgrade-check path a fresh install takes.
-		c.announceMigration(migrated)
 		return nil
 	}
 
