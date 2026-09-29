@@ -38,11 +38,13 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	// On-Prem and Cloud Shared Commands
 	if cfg.IsCloudLogin() {
+		cmd.AddCommand(c.newArtifactCommand())
 		cmd.AddCommand(
 			newComputePoolCommand(cfg, prerunner),
 			newStatementCommand(cfg, prerunner),
 		)
 	} else {
+		cmd.AddCommand(c.newArtifactCommandOnPrem())
 		cmd.AddCommand(c.newComputePoolCommandOnPrem())
 		cmd.AddCommand(c.newStatementCommandOnPrem())
 	}
@@ -52,7 +54,6 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	// Cloud Specific Commands
-	cmd.AddCommand(c.newArtifactCommand())
 	cmd.AddCommand(c.newConnectionCommand())
 	cmd.AddCommand(c.newConnectivityTypeCommand())
 	cmd.AddCommand(c.newEndpointCommand())
