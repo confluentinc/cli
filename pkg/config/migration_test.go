@@ -1,14 +1,22 @@
 package config
 
 import (
+	"bytes"
 	"encoding/base64"
 	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/v4/pkg/secret"
+	pversion "github.com/confluentinc/cli/v4/pkg/version"
 )
 
 // legacyConfigFileCase is one readLegacyConfigFile scenario: a path and the (data, found) it
@@ -110,6 +118,12 @@ func TestApplyLegacyConfig_Malformed(t *testing.T) {
 // non-secret "pinned" selections (current_environment, the top-level and per-environment
 // active_kafka) that must survive the decode untouched.
 func legacyFixture() []byte {
+	return legacyFixtureWithSecretPrefix("")
+}
+
+// legacyFixtureWithSecretPrefix is legacyFixture with p prepended to every secret marker (not to
+// salts, nonces, or feature flags).
+func legacyFixtureWithSecretPrefix(p string) []byte {
 	b64 := func(marker string) string { return base64.StdEncoding.EncodeToString([]byte(marker)) }
 
 	return []byte(fmt.Sprintf(`{
@@ -146,7 +160,7 @@ func legacyFixture() []byte {
 				},
 				"global_api_keys": {
 					"global1": {
-						"api_key": "global-key",
+						"api_key": "global1",
 						"api_secret": "%s"
 					}
 				},
@@ -210,14 +224,14 @@ func legacyFixture() []byte {
 			}
 		}
 	}`,
-		"MARKER-cred-api-secret", b64("MARKER-cred-salt"), b64("MARKER-cred-nonce"),
+		p+"MARKER-cred-api-secret", b64("MARKER-cred-salt"), b64("MARKER-cred-nonce"),
 		"MARKER-feature-flags-value",
-		"MARKER-global-api-secret",
-		"MARKER-kafka-cluster-configs-secret",
-		"MARKER-kafka-env-contexts-secret",
-		"MARKER-sr-credential-secret",
-		"MARKER-auth-token", "MARKER-auth-refresh-token", b64("MARKER-state-salt"), b64("MARKER-state-nonce"),
-		"MARKER-saved-password", b64("MARKER-saved-salt"), b64("MARKER-saved-nonce"),
+		p+"MARKER-global-api-secret",
+		p+"MARKER-kafka-cluster-configs-secret",
+		p+"MARKER-kafka-env-contexts-secret",
+		p+"MARKER-sr-credential-secret",
+		p+"MARKER-auth-token", p+"MARKER-auth-refresh-token", b64("MARKER-state-salt"), b64("MARKER-state-nonce"),
+		p+"MARKER-saved-password", b64("MARKER-saved-salt"), b64("MARKER-saved-nonce"),
 	))
 }
 
@@ -400,5 +414,408 @@ func TestLegacyOverlay_CoversEveryRetaggedField(t *testing.T) {
 
 	for key := range legacyOverlayAllowlist {
 		require.True(t, visitedAllowlist[key], "stale allowlist entry %s: never visited by the walk", key)
+	}
+}
+
+// nativeCipherPrefix is the cipher marker this platform's save path treats as already encrypted
+// for every secret (an on-prem refresh token is only recognized by the native one), so a marker
+// carrying it is stored as-is instead of being encrypted.
+func nativeCipherPrefix() string {
+	if runtime.GOOS == "windows" {
+		return secret.Dpapi + ":"
+	}
+	return secret.AesGcm + ":"
+}
+
+// cipherLegacyFixture is the all-markers legacy file with every secret shaped like ciphertext.
+// Its Kafka cluster context is an environment context, so only the kafka_environment_contexts
+// key is reachable by the save path (allKafkaClusterConfigs), not the kafka_cluster_configs one.
+func cipherLegacyFixture() []byte {
+	return legacyFixtureWithSecretPrefix(nativeCipherPrefix())
+}
+
+// directKafkaCipherLegacyFixture is cipherLegacyFixture with a non-environment Kafka cluster
+// context, the shape whose kafka_cluster_configs key the save path reaches instead.
+func directKafkaCipherLegacyFixture() []byte {
+	return bytes.Replace(cipherLegacyFixture(), []byte(`"environment_context": true`), []byte(`"environment_context": false`), 1)
+}
+
+// setTestChannel runs the rest of the test on ch, restoring the previous channel afterward.
+func setTestChannel(t *testing.T, ch pversion.Channel) {
+	t.Helper()
+	prev := pversion.ProcessChannel()
+	pversion.SetProcessChannel(ch)
+	t.Cleanup(func() { pversion.SetProcessChannel(prev) })
+}
+
+// countLegacyMigrations counts afterLegacyMigration calls for the rest of the test.
+func countLegacyMigrations(t *testing.T) *atomic.Int32 {
+	t.Helper()
+	var n atomic.Int32
+	afterLegacyMigration = func() { n.Add(1) }
+	t.Cleanup(func() { afterLegacyMigration = func() {} })
+	return &n
+}
+
+// seedLegacyConfig writes data as home's v4 config.json and returns its path.
+func seedLegacyConfig(t *testing.T, home string, data []byte) string {
+	t.Helper()
+	path := filepath.Join(home, ".confluent", "config.json")
+	require.NoError(t, os.MkdirAll(filepath.Dir(path), 0700))
+	require.NoError(t, os.WriteFile(path, data, 0600))
+	return path
+}
+
+// migrationBackupPath is where the running channel's backup of the legacy file lands.
+func migrationBackupPath(home string) string {
+	return filepath.Join(home, StateDirName(), "config.json.v4-backup")
+}
+
+func requireFileExists(t *testing.T, path string) {
+	t.Helper()
+	_, err := os.Stat(path)
+	require.NoError(t, err, "expected %s to exist", path)
+}
+
+func requireFileAbsent(t *testing.T, path string) {
+	t.Helper()
+	_, err := os.Stat(path)
+	require.True(t, os.IsNotExist(err), "expected %s to be absent, got err=%v", path, err)
+}
+
+// requireMigratedSecretsOnDisk checks that secrets.json holds every cipher marker, verbatim, under
+// the key a normal Save uses: tokens and passwords by context name, the rest by identity.
+// envContext names the fixture's Kafka shape, which decides the one nested Kafka key saved.
+func requireMigratedSecretsOnDisk(t *testing.T, envContext bool) {
+	t.Helper()
+	p := nativeCipherPrefix()
+
+	file, err := readSecretFileFromDisk(SecretsFilename())
+	require.NoError(t, err)
+
+	token := file.Tokens["ctx1"]
+	require.NotNil(t, token)
+	require.Equal(t, p+"MARKER-auth-token", token.AuthToken)
+	require.Equal(t, p+"MARKER-auth-refresh-token", token.AuthRefreshToken)
+	require.Equal(t, []byte("MARKER-state-salt"), token.Salt)
+	require.Equal(t, []byte("MARKER-state-nonce"), token.Nonce)
+
+	password := file.Passwords["ctx1"]
+	require.NotNil(t, password)
+	require.Equal(t, p+"MARKER-saved-password", password.Password)
+	require.Equal(t, []byte("MARKER-saved-salt"), password.Salt)
+	require.Equal(t, []byte("MARKER-saved-nonce"), password.Nonce)
+
+	rec := file.Secrets["cred1"]
+	require.NotNil(t, rec)
+	require.Equal(t, p+"MARKER-cred-api-secret", rec.Secret)
+	require.Equal(t, []byte("MARKER-cred-salt"), rec.SecretSalt)
+	require.Equal(t, []byte("MARKER-cred-nonce"), rec.SecretNonce)
+	require.Contains(t, rec.GlobalAPIKeys, "global1")
+	require.Equal(t, p+"MARKER-global-api-secret", rec.GlobalAPIKeys["global1"].Secret)
+	require.Contains(t, rec.SchemaRegistryCredentials, "sr1")
+	require.Equal(t, p+"MARKER-sr-credential-secret", rec.SchemaRegistryCredentials["sr1"].Secret)
+
+	cluster, marker := "cluster1", "MARKER-kafka-cluster-configs-secret"
+	if envContext {
+		cluster, marker = "cluster2", "MARKER-kafka-env-contexts-secret"
+	}
+	require.Contains(t, rec.KafkaAPIKeys[cluster], "key1")
+	require.Equal(t, p+marker, rec.KafkaAPIKeys[cluster]["key1"].Secret)
+}
+
+// requireMigratedSecretsInMemory checks that c holds every cipher marker, verbatim.
+func requireMigratedSecretsInMemory(t *testing.T, c *Config, envContext bool) {
+	t.Helper()
+	p := nativeCipherPrefix()
+
+	require.Equal(t, p+"MARKER-auth-token", c.ContextStates["ctx1"].AuthToken)
+	require.Equal(t, p+"MARKER-auth-refresh-token", c.ContextStates["ctx1"].AuthRefreshToken)
+	require.Equal(t, p+"MARKER-saved-password", c.SavedCredentials["ctx1"].EncryptedPassword)
+	require.Equal(t, p+"MARKER-cred-api-secret", c.Credentials["cred1"].APIKeyPair.Secret)
+
+	ctx := c.Contexts["ctx1"]
+	require.Contains(t, ctx.GlobalAPIKeys, "global1")
+	require.Equal(t, p+"MARKER-global-api-secret", ctx.GlobalAPIKeys["global1"].Secret)
+	require.Contains(t, ctx.SchemaRegistryClusters, "sr1")
+	require.Equal(t, p+"MARKER-sr-credential-secret", ctx.SchemaRegistryClusters["sr1"].SrCredentials.Secret)
+
+	cluster, marker := "cluster1", "MARKER-kafka-cluster-configs-secret"
+	if envContext {
+		cluster, marker = "cluster2", "MARKER-kafka-env-contexts-secret"
+	}
+	clusters := allKafkaClusterConfigs(ctx.KafkaClusterContext)
+	require.Contains(t, clusters, cluster)
+	require.Contains(t, clusters[cluster].APIKeys, "key1")
+	require.Equal(t, p+marker, clusters[cluster].APIKeys["key1"].Secret)
+}
+
+func TestMigrate_StablePopulatesStores(t *testing.T) {
+	cases := []struct {
+		name       string
+		legacy     []byte
+		envContext bool
+	}{
+		{name: "environment kafka context", legacy: cipherLegacyFixture(), envContext: true},
+		{name: "direct kafka context", legacy: directKafkaCipherLegacyFixture(), envContext: false},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			home := t.TempDir()
+			setTestHome(t, home)
+			setTestChannel(t, pversion.Stable)
+			migrations := countLegacyMigrations(t)
+			legacy := tc.legacy
+			seedLegacyConfig(t, home, legacy)
+			c := New()
+
+			err := c.Load()
+
+			require.NoError(t, err)
+			require.Equal(t, int32(1), migrations.Load())
+			requireFileExists(t, SettingsFilename())
+			requireFileExists(t, ContextsFilename())
+			requireFileExists(t, SecretsFilename())
+			requireMigratedSecretsOnDisk(t, tc.envContext)
+			requireMigratedSecretsInMemory(t, c, tc.envContext)
+			require.Equal(t, "ctx1", c.CurrentContext)
+
+			reloaded := New()
+			require.NoError(t, reloaded.Load())
+			requireMigratedSecretsInMemory(t, reloaded, tc.envContext)
+			require.Equal(t, int32(1), migrations.Load())
+
+			cache := newCacheStore()
+			var uc updateCheckCache
+			require.True(t, cache.readJSON("update_check.json", &uc))
+			require.NotNil(t, uc.LastUpdateCheckAt)
+			require.Equal(t, "2020-01-02T03:04:05Z", uc.LastUpdateCheckAt.UTC().Format(time.RFC3339))
+			flags := map[string]*FeatureFlags{}
+			require.True(t, cache.readJSON("feature_flags.json", &flags))
+			require.Equal(t, "MARKER-feature-flags-value", flags["ctx1"].CliValues["marker"])
+
+			backup, err := os.ReadFile(migrationBackupPath(home))
+			require.NoError(t, err)
+			require.Equal(t, legacy, backup)
+		})
+	}
+}
+
+func TestMigrate_LeavesLegacyFileFrozen(t *testing.T) {
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Stable)
+	// secret-free: the merged Save below decrypts secrets, and the marker fixture's cipher-shaped
+	// placeholders can't be decrypted.
+	legacy := []byte(`{
+		"current_context": "ctx1",
+		"platforms": {"platform1": {"name": "platform1", "server": "https://example.com"}},
+		"credentials": {"cred1": {"name": "cred1", "username": "test-user", "credential_type": 0}},
+		"contexts": {
+			"ctx1": {
+				"name": "ctx1",
+				"platform": "platform1",
+				"credential": "cred1",
+				"kafka_cluster_context": {"environment_context": false}
+			}
+		},
+		"context_states": {"ctx1": {}}
+	}`)
+	legacyPath := seedLegacyConfig(t, home, legacy)
+	c := New()
+	require.NoError(t, c.Load())
+	require.Equal(t, "ctx1", c.CurrentContext)
+
+	c.CurrentContext = ""
+	err := c.Save()
+
+	require.NoError(t, err)
+	reloaded := New()
+	require.NoError(t, reloaded.Load())
+	require.Equal(t, "", reloaded.CurrentContext)
+	got, err := os.ReadFile(legacyPath)
+	require.NoError(t, err)
+	require.Equal(t, legacy, got)
+}
+
+func TestMigrate_IsOneShot(t *testing.T) {
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Stable)
+	migrations := countLegacyMigrations(t)
+	seedLegacyConfig(t, home, cipherLegacyFixture())
+	require.NoError(t, New().Load())
+	require.Equal(t, int32(1), migrations.Load())
+	for _, path := range []string{SettingsFilename(), ContextsFilename(), SecretsFilename()} {
+		require.NoError(t, os.Remove(path))
+	}
+
+	c := New()
+	err := c.Load()
+
+	require.NoError(t, err)
+	require.Equal(t, int32(1), migrations.Load())
+	require.Empty(t, c.Contexts)
+	require.Equal(t, "", c.CurrentContext)
+	requireFileExists(t, SettingsFilename())
+	requireFileExists(t, ContextsFilename())
+}
+
+func TestMigrate_ResumesAfterInterruptedRun(t *testing.T) {
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Stable)
+	migrations := countLegacyMigrations(t)
+	seedLegacyConfig(t, home, cipherLegacyFixture())
+	// a completed run minus its last writes is exactly what a crash after contexts.json leaves.
+	require.NoError(t, New().Load())
+	require.NoError(t, os.Remove(SecretsFilename()))
+	require.NoError(t, os.Remove(migrationBackupPath(home)))
+	requireFileExists(t, SettingsFilename())
+	requireFileExists(t, ContextsFilename())
+	migrations.Store(0)
+
+	c := New()
+	err := c.Load()
+
+	require.NoError(t, err)
+	require.Equal(t, int32(1), migrations.Load())
+	requireMigratedSecretsOnDisk(t, true)
+	requireMigratedSecretsInMemory(t, c, true)
+	requireFileExists(t, migrationBackupPath(home))
+}
+
+func TestMigrate_FreshInstallIsNotMigrated(t *testing.T) {
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Stable)
+	migrations := countLegacyMigrations(t)
+	require.NoError(t, New().Load())
+	requireFileExists(t, SettingsFilename())
+	requireFileExists(t, ContextsFilename())
+	requireFileExists(t, SecretsFilename())
+	seedLegacyConfig(t, home, cipherLegacyFixture())
+
+	c := New()
+	err := c.Load()
+
+	require.NoError(t, err)
+	require.Equal(t, int32(0), migrations.Load())
+	require.Empty(t, c.Contexts)
+	requireFileAbsent(t, migrationBackupPath(home))
+}
+
+func TestMigrate_EmptyLegacyFileIsIgnored(t *testing.T) {
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Stable)
+	migrations := countLegacyMigrations(t)
+	seedLegacyConfig(t, home, nil)
+
+	c := New()
+	err := c.Load()
+
+	require.NoError(t, err)
+	require.Equal(t, int32(0), migrations.Load())
+	require.Empty(t, c.Contexts)
+	requireFileExists(t, SettingsFilename())
+	requireFileExists(t, ContextsFilename())
+	requireFileAbsent(t, migrationBackupPath(home))
+}
+
+func TestMigrate_MalformedLegacyFileIsHardError(t *testing.T) {
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Stable)
+	migrations := countLegacyMigrations(t)
+	legacyPath := seedLegacyConfig(t, home, []byte(`{"contexts":`))
+
+	err := New().Load()
+
+	require.ErrorContains(t, err, readConfigurationFileErrorPrefix)
+	require.ErrorContains(t, err, legacyPath)
+	require.Equal(t, int32(0), migrations.Load())
+	requireFileAbsent(t, SettingsFilename())
+	requireFileAbsent(t, ContextsFilename())
+	requireFileAbsent(t, SecretsFilename())
+	requireFileAbsent(t, migrationBackupPath(home))
+}
+
+func TestMigrate_NonStableSeedsReadOnly(t *testing.T) {
+	cases := []struct {
+		channel pversion.Channel
+		dir     string
+	}{
+		{channel: pversion.Dev, dir: ".confluent-dev"},
+		{channel: pversion.Prerelease, dir: ".confluent-prerelease"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.channel.String(), func(t *testing.T) {
+			home := t.TempDir()
+			setTestHome(t, home)
+			setTestChannel(t, tc.channel)
+			migrations := countLegacyMigrations(t)
+			legacy := cipherLegacyFixture()
+			legacyPath := seedLegacyConfig(t, home, legacy)
+			frozen := time.Date(2020, 1, 2, 3, 4, 5, 0, time.UTC)
+			require.NoError(t, os.Chtimes(legacyPath, frozen, frozen))
+			stableDir := filepath.Join(home, ".confluent")
+
+			err := New().Load()
+
+			require.NoError(t, err)
+			require.Equal(t, int32(1), migrations.Load())
+			stateDir := filepath.Join(home, tc.dir)
+			requireFileExists(t, filepath.Join(stateDir, "settings.json"))
+			requireFileExists(t, filepath.Join(stateDir, "contexts.json"))
+			requireFileExists(t, filepath.Join(stateDir, "secrets.json"))
+			requireMigratedSecretsOnDisk(t, true)
+			backup, err := os.ReadFile(filepath.Join(stateDir, "config.json.v4-backup"))
+			require.NoError(t, err)
+			require.Equal(t, legacy, backup)
+
+			entries, err := os.ReadDir(stableDir)
+			require.NoError(t, err)
+			require.Len(t, entries, 1)
+			require.Equal(t, "config.json", entries[0].Name())
+			got, err := os.ReadFile(legacyPath)
+			require.NoError(t, err)
+			require.Equal(t, legacy, got)
+			info, err := os.Stat(legacyPath)
+			require.NoError(t, err)
+			require.True(t, info.ModTime().Equal(frozen), "legacy mtime changed to %v", info.ModTime())
+		})
+	}
+}
+
+func TestMigrate_ConcurrentFirstRunsMigrateOnce(t *testing.T) {
+	const loaders = 4
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Stable)
+	migrations := countLegacyMigrations(t)
+	seedLegacyConfig(t, home, cipherLegacyFixture())
+	configs := make([]*Config, loaders)
+	for i := range configs {
+		configs[i] = New()
+	}
+	errs := make([]error, loaders)
+
+	var wg sync.WaitGroup
+	for i, c := range configs {
+		wg.Add(1)
+		go func(i int, c *Config) {
+			defer wg.Done()
+			errs[i] = c.Load()
+		}(i, c)
+	}
+	wg.Wait()
+
+	require.Equal(t, int32(1), migrations.Load())
+	for i, c := range configs {
+		require.NoError(t, errs[i], "loader %d", i)
+		require.Equal(t, "ctx1", c.CurrentContext, "loader %d", i)
 	}
 }
