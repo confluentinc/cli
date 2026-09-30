@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
@@ -12,6 +13,8 @@ import (
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	flinkerror "github.com/confluentinc/cli/v4/pkg/errors/flink"
 	"github.com/confluentinc/cli/v4/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 )
@@ -113,6 +116,272 @@ func TestRunDrainsASinglePage(t *testing.T) {
 	require.Equal(t, [][]string{{"1", "SHIPPED"}, {"2", "PENDING"}}, rowValues(t, result))
 	require.False(t, result.Truncated)
 	require.Equal(t, types.COMPLETED, result.Phase())
+}
+
+func TestRunForcesTokenRefreshAndRetriesOnUnauthorized(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	completed := statement("COMPLETED", boundedTraits("id"))
+	unauthorized := flinkerror.NewError("Unauthorized", "", http.StatusUnauthorized)
+
+	gomock.InOrder(
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil),
+		// The dataplane token lapses mid-drain: the first page fetch is rejected...
+		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
+			Return(flinkgatewayv1.SqlV1StatementResult{}, unauthorized),
+		// ...and after a forced refresh the retry succeeds.
+		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
+			Return(page("", []any{"1"}), nil),
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil),
+	)
+
+	forced := 0
+	opts := testOptions(client)
+	opts.RefreshToken = func(force bool) error {
+		if force {
+			forced++
+		}
+		return nil
+	}
+
+	result, err := Run(context.Background(), opts, testStatementName)
+	require.NoError(t, err)
+	require.Equal(t, [][]string{{"1"}}, rowValues(t, result))
+	require.Equal(t, 1, forced, "expected exactly one forced refresh after the 401")
+}
+
+func TestRunSurfacesRefreshFailureWhenTokenIsRejected(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	completed := statement("COMPLETED", boundedTraits("id"))
+	unauthorized := flinkerror.NewError("Unauthorized", "", http.StatusUnauthorized)
+
+	gomock.InOrder(
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil),
+		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
+			Return(flinkgatewayv1.SqlV1StatementResult{}, unauthorized),
+	)
+
+	opts := testOptions(client)
+	opts.RefreshToken = func(force bool) error {
+		if force {
+			return errors.New("re-login required")
+		}
+		return nil
+	}
+
+	_, err := Run(context.Background(), opts, testStatementName)
+	require.ErrorContains(t, err, "re-login required")
+}
+
+// Once ctx is done, gatewayCall's goroutine is abandoned by wait.Call but keeps
+// running the shared, context-less gateway client. The forced refresh + retry
+// are race-safe regardless (the client serializes its token), but they're wasted
+// work in an abandoned goroutine whose result is discarded, so gatewayCall skips
+// them. Tested directly because the leak is a background goroutine the
+// higher-level Run test can't observe deterministically.
+func TestGatewayCallSkipsForcedRefreshAndRetryOnceContextIsDone(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	forced := 0
+	calls := 0
+	opts := Options{
+		RefreshToken: func(force bool) error {
+			if force {
+				forced++
+			}
+			return nil
+		},
+	}
+	unauthorized := flinkerror.NewError("Unauthorized", "", http.StatusUnauthorized)
+
+	_, err := gatewayCall(ctx, opts, func(ccloudv2.GatewayClientInterface) (int, error) {
+		calls++
+		return 0, unauthorized
+	})
+
+	require.ErrorIs(t, err, context.Canceled)
+	require.Equal(t, 0, forced, "must not force a token refresh in an abandoned goroutine")
+	require.Equal(t, 1, calls, "must not retry the call in an abandoned goroutine")
+}
+
+// A freshly-minted token the gateway still rejects after its backoff retries is
+// an unusable login, not a propagation blip: gatewayCall surfaces it as a
+// terminal AuthError so the caller prompts a re-login instead of retrying.
+func TestGatewayCallReturnsAuthErrorWhenFreshTokenStaysUnauthorized(t *testing.T) {
+	forced := 0
+	retries := 0
+	opts := Options{
+		RefreshToken: func(force bool) error {
+			if force {
+				forced++
+			}
+			return nil
+		},
+		sleep: func(context.Context, time.Duration) error { retries++; return nil },
+	}
+	unauthorized := flinkerror.NewError("Unauthorized", "", http.StatusUnauthorized)
+
+	_, err := gatewayCall(context.Background(), opts, func(ccloudv2.GatewayClientInterface) (int, error) {
+		return 0, unauthorized
+	})
+
+	var authErr *AuthError
+	require.ErrorAs(t, err, &authErr)
+	require.Equal(t, 1, forced, "the token is minted once, then the same fresh token is retried")
+	require.GreaterOrEqual(t, retries, 1, "the post-mint call must back off and retry before giving up")
+}
+
+// A forced refresh that cannot mint a token is a transient token-endpoint or
+// network problem, not an expired login: gatewayCall surfaces it as an ordinary
+// error, never a terminal AuthError, so a caller like await keeps polling
+// instead of aborting with a misleading re-login prompt.
+func TestGatewayCallTreatsMintFailureAsTransient(t *testing.T) {
+	forced := 0
+	opts := Options{
+		RefreshToken: func(force bool) error {
+			if force {
+				forced++
+				return errors.New("token endpoint unreachable")
+			}
+			return nil
+		},
+	}
+	unauthorized := flinkerror.NewError("Unauthorized", "", http.StatusUnauthorized)
+
+	_, err := gatewayCall(context.Background(), opts, func(ccloudv2.GatewayClientInterface) (int, error) {
+		return 0, unauthorized
+	})
+
+	require.ErrorContains(t, err, "token endpoint unreachable")
+	var authErr *AuthError
+	require.False(t, errors.As(err, &authErr), "a mint failure is transient, not a terminal AuthError")
+	require.Equal(t, 1, forced, "a mint failure is not re-minted inside the call; the poll loop retries it")
+}
+
+// Right after a fresh token is minted the gateway can still answer 401 for a
+// brief propagation window. gatewayCall backs off and retries the call rather
+// than mistaking that window for an expired login and aborting.
+func TestGatewayCallRetriesPostMintUnauthorizedThenSucceeds(t *testing.T) {
+	slept := 0
+	calls := 0
+	opts := Options{
+		RefreshToken: func(bool) error { return nil },
+		sleep:        func(context.Context, time.Duration) error { slept++; return nil },
+	}
+	unauthorized := flinkerror.NewError("Unauthorized", "", http.StatusUnauthorized)
+
+	res, err := gatewayCall(context.Background(), opts, func(ccloudv2.GatewayClientInterface) (int, error) {
+		calls++
+		if calls <= 2 { // the original call plus the first post-mint retry still 401
+			return 0, unauthorized
+		}
+		return 42, nil
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, 42, res)
+	require.GreaterOrEqual(t, slept, 1, "a lingering post-mint 401 must back off before retrying")
+}
+
+// A forced-refresh (mint) failure while the statement is still PENDING is
+// transient, not fatal: the run keeps polling and recovers on a later poll
+// instead of aborting with a re-login prompt.
+func TestRunKeepsAwaitingWhenMintFailsTransiently(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	completed := statement("COMPLETED", boundedTraits("id"))
+	unauthorized := flinkerror.NewError("Unauthorized", "", http.StatusUnauthorized)
+
+	gomock.InOrder(
+		// First poll: the token lapsed and the mint fails transiently.
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).
+			Return(statement("PENDING", nil), unauthorized),
+		// A later poll succeeds, so the run proceeds and drains.
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil),
+		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
+			Return(page("", []any{"1"}), nil),
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil),
+	)
+
+	forced := 0
+	opts := testOptions(client)
+	opts.RefreshToken = func(force bool) error {
+		if force {
+			forced++
+			return errors.New("token endpoint unreachable")
+		}
+		return nil
+	}
+
+	result, err := Run(context.Background(), opts, testStatementName)
+	require.NoError(t, err)
+	require.Equal(t, [][]string{{"1"}}, rowValues(t, result))
+	require.Equal(t, 1, forced, "the transient mint failure is attempted once; the next poll recovers")
+}
+
+// When the mint succeeds but the gateway keeps rejecting the fresh token, the
+// login is unusable: the run aborts as an AuthError instead of polling to
+// --timeout re-minting every interval.
+func TestRunAbortsAwaitWhenFreshTokenStaysUnauthorized(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	unauthorized := flinkerror.NewError("Unauthorized", "", http.StatusUnauthorized)
+	client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).
+		Return(statement("PENDING", nil), unauthorized).AnyTimes()
+
+	forced := 0
+	opts := testOptions(client)
+	opts.RefreshToken = func(force bool) error {
+		if force {
+			forced++
+		}
+		return nil
+	}
+
+	// Generous deadline: the test proves the run returns because the error is
+	// fatal, not because the context expired.
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	start := time.Now()
+	_, err := Run(ctx, opts, testStatementName)
+	require.Less(t, time.Since(start), time.Second, "an unusable login must abort the run, not wait out --timeout")
+
+	var authErr *AuthError
+	require.ErrorAs(t, err, &authErr)
+	require.GreaterOrEqual(t, forced, 1, "the fresh token is minted before the run gives up")
+}
+
+// refreshStatement is best-effort: a 401 on the final status re-read must not
+// trigger a forced token mint, since its result is discarded on error. The run
+// still succeeds with the statement await already saw.
+func TestRunDoesNotForceRefreshOnBestEffortStatementReread(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	completed := statement("COMPLETED", boundedTraits("id"))
+	unauthorized := flinkerror.NewError("Unauthorized", "", http.StatusUnauthorized)
+
+	gomock.InOrder(
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil),
+		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
+			Return(page("", []any{"1"}), nil),
+		// The final refreshStatement re-read is rejected; best-effort, so it's dropped
+		// without a forced mint or a retry.
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).
+			Return(flinkgatewayv1.SqlV1Statement{}, unauthorized),
+	)
+
+	forced := 0
+	opts := testOptions(client)
+	opts.RefreshToken = func(force bool) error {
+		if force {
+			forced++
+		}
+		return nil
+	}
+
+	result, err := Run(context.Background(), opts, testStatementName)
+	require.NoError(t, err)
+	require.Equal(t, [][]string{{"1"}}, rowValues(t, result))
+	require.Equal(t, types.COMPLETED, result.Phase(), "keeps the statement await saw when the re-read fails")
+	require.Equal(t, 0, forced, "a best-effort re-read must not force a token mint on a 401")
 }
 
 func TestRunDrainsEveryPage(t *testing.T) {

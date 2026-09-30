@@ -23,12 +23,16 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/wait"
 )
 
-const (
-	// stopTimeout bounds how long we wait for a statement to stop after interrupt.
-	stopTimeout = 5 * time.Second
+// createStatementGracePeriod bounds how long we wait for a cancelled CreateStatement to land, so it can still be stopped.
+const createStatementGracePeriod = 10 * time.Second
 
-	// createStatementGracePeriod bounds how long we wait for a cancelled CreateStatement to land, so it can still be stopped.
-	createStatementGracePeriod = 10 * time.Second
+// stopTimeout bounds the two gateway calls of a stop (GetStatement + UpdateStatement).
+// stopTokenMintTimeout separately bounds the pre-stop token mint so a slow
+// /api/access_tokens POST can't eat into stopTimeout. Both are vars, not consts,
+// so tests can shrink them. See finding #2 in the review.
+var (
+	stopTimeout          = 5 * time.Second
+	stopTokenMintTimeout = 5 * time.Second
 )
 
 // errStopTimeout marks a stop attempt that ran past stopTimeout, so callers can
@@ -85,21 +89,50 @@ func createStatement(ctx context.Context, gracePeriod time.Duration, create func
 // message via stopFate, or use stopStatementAndReport. The returned error is
 // errStopTimeout on timeout, the underlying failure otherwise, and nil on success.
 func (c *queryCommand) stopStatement(client *ccloudv2.FlinkGatewayClient, environmentId, name string) (bool, error) {
+	refresh := c.refreshGatewayToken(client, jwt.NewValidator())
+
+	// Finding #2: mint the dataplane token on its own budget, before and outside the
+	// stop's. A long drain can leave the token lapsed, and minting does a real
+	// /api/access_tokens POST (30s client timeout); keeping that inside stopTimeout
+	// could starve the two gateway calls and time the whole stop out. Best-effort:
+	// on failure or its own timeout we fall back to the existing token, and the 401
+	// retry below is the real safety net. force=false — a short query still holds a
+	// valid token and needn't hit the endpoint. No lock needed: client.SetAuthToken
+	// and the reads inside GetStatement/UpdateStatement are serialized by the client
+	// itself, so an abandoned drain goroutine still refreshing can't race this stop.
+	mintCtx, mintCancel := context.WithTimeout(context.Background(), stopTokenMintTimeout)
+	if _, tokenErr := wait.Call(mintCtx, func() (struct{}, error) {
+		return struct{}{}, refresh(false)
+	}); tokenErr != nil {
+		log.CliLogger.Debugf(`could not refresh token before stopping statement "%s"; using the existing one: %v`, name, tokenErr)
+	}
+	mintCancel()
+
+	// Create the stop's deadline only now, after the mint, so the two gateway calls
+	// always get a full, independent stopTimeout no matter how long the mint took.
 	ctx, cancel := context.WithTimeout(context.Background(), stopTimeout)
 	defer cancel()
 
 	_, err := wait.Call(ctx, func() (struct{}, error) {
-		c.authTokenMu.Lock()
-		defer c.authTokenMu.Unlock()
-		statement, err := client.GetStatement(environmentId, name, c.Context.LastOrgId)
-		if err != nil {
+		// Findings #3 & #4: force a fresh token and retry on a 401, mirroring the
+		// drain path's gatewayCall. Without it a token that looks locally valid but
+		// the gateway rejects (clock skew / server-side revocation), or one that
+		// lapses between the GET and the UPDATE, leaves the statement un-stopped.
+		var statement flinkgatewayv1.SqlV1Statement
+		if err := callWithForcedRefreshOn401(ctx, refresh, func() error {
+			var e error
+			statement, e = client.GetStatement(environmentId, name, c.Context.LastOrgId)
+			return e
+		}); err != nil {
 			return struct{}{}, err
 		}
 		if statement.Spec == nil {
 			return struct{}{}, fmt.Errorf(`statement "%s" has no spec`, name)
 		}
 		statement.Spec.Stopped = flinkgatewayv1.PtrBool(true)
-		return struct{}{}, client.UpdateStatement(environmentId, name, c.Context.LastOrgId, statement)
+		return struct{}{}, callWithForcedRefreshOn401(ctx, refresh, func() error {
+			return client.UpdateStatement(environmentId, name, c.Context.LastOrgId, statement)
+		})
 	})
 
 	switch {
@@ -113,6 +146,32 @@ func (c *queryCommand) stopStatement(client *ccloudv2.FlinkGatewayClient, enviro
 		log.CliLogger.Debugf(`could not stop statement "%s" after query completion: %v`, name, err)
 		return false, err
 	}
+}
+
+// callWithForcedRefreshOn401 runs a stop-path gateway call and, on a 401, forces a
+// fresh dataplane token and retries once — the stop path's equivalent of the drain
+// path's query.gatewayCall. Non-401 errors pass through untouched, as does the case
+// where ctx is already done (the stop budget is spent; don't start another call). A
+// forced-refresh failure keeps the original 401 rather than masking it.
+func callWithForcedRefreshOn401(ctx context.Context, refresh func(bool) error, call func() error) error {
+	err := call()
+	if err == nil || !isGatewayUnauthorized(err) {
+		return err
+	}
+	if ctx.Err() != nil {
+		return err
+	}
+	if refreshErr := refresh(true); refreshErr != nil {
+		log.CliLogger.Debugf("could not force-refresh the dataplane token to retry a stop call: %v", refreshErr)
+		return err
+	}
+	return call()
+}
+
+// isGatewayUnauthorized reports whether err carries an HTTP 401 from the gateway.
+func isGatewayUnauthorized(err error) bool {
+	var coder flinkerror.Coder
+	return goerrors.As(err, &coder) && coder.StatusCode() == http.StatusUnauthorized
 }
 
 // stopStatementAndReport is stopStatement plus a user-facing stderr line, for
@@ -219,6 +278,25 @@ func (c *queryCommand) handleQueryError(cmd *cobra.Command, client *ccloudv2.Fli
 		return interruptedError(cmd, err, name, stopped)
 	}
 
+	// The gateway rejected the token and a forced refresh couldn't recover it —
+	// the cloud login itself has expired. Point the user at re-login rather than
+	// the generic "describe the statement" suggestion, which wouldn't help.
+	// Checked before ResultsFetchError because a drain-path AuthError arrives
+	// wrapped in one; goerrors.As unwraps to find it either way.
+	var authErr *query.AuthError
+	if goerrors.As(err, &authErr) {
+		// Mark settled so the caller's deferred cleanup doesn't fire its own stop:
+		// the login is expired, so that stop can't mint a token either and would
+		// 401, printing a contradictory "could not stop statement ... Unauthorized"
+		// right after this re-login suggestion (the same reason the 404 branch below
+		// sets settled). Fold the leftover statement into the suggestion instead.
+		*settled = true
+		return errors.NewErrorWithSuggestions(
+			authErr.Error(),
+			fmt.Sprintf("Log in again with `confluent login`, then stop statement \"%s\" with `confluent flink statement stop %s` if it is still running.", name, name),
+		)
+	}
+
 	// Every other error, including ResultsFetchError below, leaves settled false:
 	// the caller's deferred cleanup makes the stop attempt these branches skip.
 	var resultsFetchErr *query.ResultsFetchError
@@ -264,21 +342,34 @@ func describeCmd(name string) string {
 
 // refreshGatewayToken mirrors the shell's pre-call check: without it, a query
 // outliving the short-lived dataplane token dies on a 401 before --timeout.
-func (c *queryCommand) refreshGatewayToken(client *ccloudv2.FlinkGatewayClient, jwtValidator jwt.Validator) func() error {
-	return func() error {
-		c.authTokenMu.Lock()
-		defer c.authTokenMu.Unlock()
+// When force is set the not-yet-expired shortcut is skipped and a new token is
+// always minted — used to recover after the gateway rejects a token that still
+// looked valid locally.
+func (c *queryCommand) refreshGatewayToken(client *ccloudv2.FlinkGatewayClient, jwtValidator jwt.Validator) func(bool) error {
+	return func(force bool) error {
+		return c.mintDataplaneToken(client, jwtValidator, force)
+	}
+}
 
-		jwtCtx := &cliconfig.Context{State: &cliconfig.ContextState{AuthToken: client.AuthToken}}
+// mintDataplaneToken swaps the client's auth token for a freshly-minted
+// dataplane token. Unless force is set it first checks the current token, and
+// skips the /api/access_tokens round-trip while it is still valid. A mint
+// failure leaves the token untouched and is returned; the caller decides
+// whether that is fatal (the query path) or best-effort (the stop path, which
+// falls back to the existing token). The client serializes the token's read and
+// write internally, so callers need no lock of their own.
+func (c *queryCommand) mintDataplaneToken(client *ccloudv2.FlinkGatewayClient, jwtValidator jwt.Validator, force bool) error {
+	if !force {
+		jwtCtx := &cliconfig.Context{State: &cliconfig.ContextState{AuthToken: client.GetAuthToken()}}
 		if jwtValidator.Validate(jwtCtx) == nil {
 			return nil
 		}
-
-		dataplaneToken, err := auth.GetDataplaneToken(c.Context)
-		if err != nil {
-			return err
-		}
-		client.AuthToken = dataplaneToken
-		return nil
 	}
+
+	dataplaneToken, err := auth.GetDataplaneToken(c.Context)
+	if err != nil {
+		return err
+	}
+	client.SetAuthToken(dataplaneToken)
+	return nil
 }
