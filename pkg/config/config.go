@@ -205,7 +205,7 @@ var afterMissingConfigRead = func() {}
 func (c *Config) Load() error {
 	filename := c.GetFilename()
 
-	missing, migrated, err := c.loadLocked(filename)
+	missing, migration, err := c.loadLocked(filename)
 	if err != nil {
 		return err
 	}
@@ -223,6 +223,7 @@ func (c *Config) Load() error {
 		if err := c.Save(); err != nil {
 			return fmt.Errorf("unable to save configuration file: %w", err)
 		}
+		c.announceMigration(migration)
 		return nil
 	}
 
@@ -270,50 +271,50 @@ func (c *Config) Load() error {
 	if err := c.Validate(); err != nil {
 		return err
 	}
-	c.announceMigration(migrated)
+	c.announceMigration(migration)
 	return nil
 }
 
 // loadLocked performs Load's disk reads - settings.json, contexts.json, the secret store,
 // and the cache - under the same sidecar lock Save() uses, so a reader never sees stores
-// from two different Save() generations. It returns (missing, migrated, err). It first
-// migrates a pending v4 config.json into those stores, and migrated reports whether it did.
+// from two different Save() generations. It returns (missing, migration, err). It first
+// migrates a pending v4 config.json into those stores, and migration reports what it did.
 // missing is true when neither config store holds data yet, leaving that branch's handling
 // (which calls Save() and so must not run while this lock is held) to the caller. The lock
 // is released via defer before this function returns, well before wireContexts/Validate
 // run: Validate's normalization can re-enter Save(), which acquires this same lock, and
 // flock is not reentrant.
-func (c *Config) loadLocked(filename string) (bool, bool, error) {
+func (c *Config) loadLocked(filename string) (bool, legacyMigration, error) {
 	// Create the config directory before opening the sidecar lock file inside it, same as
 	// Save(): on a fresh machine (parent directory absent) opening the lock would ENOENT
 	// before we ever get to discover the config stores are missing.
 	if err := os.MkdirAll(filepath.Dir(filename), 0700); err != nil {
-		return false, false, fmt.Errorf("unable to create config directory %s: %w", filename, err)
+		return false, legacyMigration{}, fmt.Errorf("unable to create config directory %s: %w", filename, err)
 	}
 
 	lock := newFileLock(filename)
 	if err := lock.lock(lockTimeout); err != nil {
-		return false, false, err
+		return false, legacyMigration{}, err
 	}
 	defer func() { _ = lock.unlock() }()
 
 	// migrate before reading the stores, not in the !found branch: an interrupted migration
 	// leaves stores behind, and the reads below then load what the migration just wrote.
-	migrated, err := c.migrateFromLegacy()
+	migration, err := c.migrateFromLegacy()
 	if err != nil {
-		return false, false, err
+		return false, migration, err
 	}
 
 	found, err := c.loadConfigStores()
 	if err != nil {
-		return false, migrated, err
+		return false, migration, err
 	}
 	if !found {
-		return true, migrated, nil
+		return true, migration, nil
 	}
 
 	if err := c.loadSecretStore(); err != nil {
-		return false, migrated, err
+		return false, migration, err
 	}
 
 	// Load the cache here, under the same lock, rather than after a migration-triggered
@@ -322,7 +323,7 @@ func (c *Config) loadLocked(filename string) (bool, bool, error) {
 	// with zero-value fields.
 	c.loadCache()
 
-	return false, migrated, nil
+	return false, migration, nil
 }
 
 // updateCheckCache is the disposable cache-store representation of the fields split
@@ -427,15 +428,28 @@ func readConfigFromDisk(template *Config) (*Config, error) {
 		return nil, errNoConfigStores
 	}
 
-	disk.Filename = template.Filename
-	disk.IsTest = template.IsTest
-	disk.Version = template.Version
-	disk.DisableUpdates = template.DisableUpdates
+	disk.copyRuntimeFields(template)
 
 	if err := disk.wireContexts(); err != nil {
 		return nil, err
 	}
 	return disk, nil
+}
+
+// copyRuntimeFields copies the json:"-" fields a caller sets before Load, which no decode can
+// recover, from template onto c.
+func (c *Config) copyRuntimeFields(template *Config) {
+	c.Filename = template.Filename
+	c.IsTest = template.IsTest
+	c.Version = template.Version
+	c.DisableUpdates = template.DisableUpdates
+}
+
+// resetToNew discards everything decoded onto c, keeping only its runtime fields.
+func (c *Config) resetToNew() {
+	fresh := New()
+	fresh.copyRuntimeFields(c)
+	*c = *fresh
 }
 
 // snapshotBaseline deep-copies the persisted fields into c.baseline via a JSON
@@ -610,7 +624,6 @@ func (c *Config) saveLocked() error {
 	// own diffing, on top of leaving the final config store write) - so merged never carries
 	// a usable secret value. saveSecretStore reads c directly and encrypts what it finds
 	// still plaintext, so this is correct regardless of what merged did or didn't preserve.
-	// The legacy migration guard relies on secrets.json being written last.
 	if err := c.saveSecretStore(diskContextNames); err != nil {
 		return err
 	}
@@ -796,8 +809,7 @@ func (c *Config) save() error {
 	// encrypt-if-needed step is a no-op for them; it still needs to run to pick up c's
 	// saved password and nested API keys, which never round-trip through plaintext at all.
 	// nil: this whole-config write (see writeWholeConfig's callers) has nothing to merge
-	// secrets.json against either. The legacy migration guard relies on secrets.json being
-	// written last.
+	// secrets.json against either.
 	if err := c.saveSecretStore(nil); err != nil {
 		return err
 	}

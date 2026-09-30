@@ -13,12 +13,13 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
-// legacyConfigDirName and legacyConfigFileName mirror pkg/config's legacyConfigPath: v4 only
+// legacyConfigDirName and legacyConfigFileName mirror pkg/config's legacyConfigFilename: v4 only
 // ever wrote the stable path, so every channel reads its seed file from the same place.
 const (
-	legacyConfigDirName  = ".confluent"
-	legacyConfigFileName = "config.json"
-	legacyBackupFileName = "config.json.v4-backup"
+	legacyConfigDirName     = ".confluent"
+	legacyConfigFileName    = "config.json"
+	legacyBackupFileName    = "config.json.v4-backup"
+	legacyMigratingFileName = "config.json.v4-migrating"
 
 	devStateDirName = ".confluent-dev"
 
@@ -141,7 +142,7 @@ func requireBytesUnchanged(t *testing.T, path string, want []byte) {
 }
 
 // requireMigratedStores asserts the running channel's own state directory holds every migrated
-// store plus a byte-identical backup of the legacy file, the migration's commit marker.
+// store plus a byte-identical backup of the legacy file, and no in-progress marker.
 func requireMigratedStores(t *testing.T, stateDir string, legacyBytes []byte) {
 	t.Helper()
 
@@ -150,6 +151,7 @@ func requireMigratedStores(t *testing.T, stateDir string, legacyBytes []byte) {
 	}
 	require.DirExists(t, filepath.Join(stateDir, cacheDirName))
 	requireBytesUnchanged(t, filepath.Join(stateDir, legacyBackupFileName), legacyBytes)
+	require.NoFileExists(t, filepath.Join(stateDir, legacyMigratingFileName))
 }
 
 // runStampedCliCombinedOutput is runStampedCli's sibling that returns output instead of
