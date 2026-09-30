@@ -56,9 +56,11 @@ func (*command) newQueryCommand(cfg *cliconfig.Config, prerunner pcmd.PreRunner)
 		Long: "Run a bounded Flink SQL query, wait for it to finish, and print the results.\n\n" +
 			"Provide the SQL statement with `--sql`, or use `--file` to read it from a file.\n\n" +
 			"Unlike creating a statement, which returns a handle as soon as it's submitted (optionally waiting only " +
-			"until it starts or fails, with `--wait`) and never the rows, this command always waits for every result " +
-			"page and prints the complete result set, exiting non-zero if the statement fails. Use it for scripts and " +
-			"one-time queries against a bounded, point-in-time result set.\n\n" +
+			"until it starts or fails, with `--wait`) and never the rows, this command always waits for the statement " +
+			"to finish, exiting non-zero if it fails. Use it for scripts and one-time queries against a bounded, " +
+			"point-in-time result set.\n\n" +
+			"With -o human (the default), only the first 100 rows are printed as a preview. Raise `--max-rows` to fetch " +
+			"more, or use -o json / -o yaml for the complete result set.\n\n" +
 			"With -o json or -o yaml, output defaults to an envelope that includes the column schema and rows. Rows alone " +
 			"don't include type information. Use --raw to return a bare array of row objects.",
 		Args: cobra.NoArgs,
@@ -93,7 +95,7 @@ func (*command) newQueryCommand(cfg *cliconfig.Config, prerunner pcmd.PreRunner)
 	pcmd.AddDatabaseFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().StringSlice("property", []string{}, "Properties for the Flink statement in key=value format.")
 	cmd.Flags().Duration("timeout", config.DefaultTimeoutDuration, "Maximum time to wait for the query to finish.")
-	cmd.Flags().Int("max-rows", 0, "Maximum number of rows to fetch. Use 0 to fetch every row. This limit is client-side only; the query still produces rows after the limit is reached.")
+	cmd.Flags().Int("max-rows", 0, `Maximum number of rows to fetch. Defaults to 100 for "-o human"; raise it to fetch more. "-o json"/"-o yaml" fetch every row. This limit is client-side only; the query still produces rows after the limit is reached.`)
 	cmd.Flags().Bool("raw", false, `Return rows as a bare array without an envelope. Requires "-o json" or "-o yaml".`)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -106,6 +108,10 @@ func (*command) newQueryCommand(cfg *cliconfig.Config, prerunner pcmd.PreRunner)
 
 	return cmd
 }
+
+// defaultHumanRows caps the -o human preview when --max-rows isn't set; json/yaml
+// stay uncapped. Like Spark's df.show() default.
+const defaultHumanRows = 100
 
 func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 	// Registered before any other work to shrink the window where a Ctrl-C
@@ -139,6 +145,8 @@ func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
+	maxRows, humanDefaultCap := resolveDisplayCap(output.GetFormat(cmd), cmd.Flags().Changed("max-rows"), maxRows)
 
 	ctx, cancelTimeout := context.WithTimeout(ctx, timeout)
 	defer cancelTimeout()
@@ -190,15 +198,16 @@ func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 	// drain() refreshes result.Statement, so this reflects reality even after
 	// Truncated — a job can stay RUNNING after its last row ships either way.
 	settled = query.IsTerminal(result.Phase())
-	announceStop = result.Truncated
-	return c.emitResult(name, result, streamer, maxRows, &announceStop)
+	// The implicit human cap isn't user-requested, so its cleanup stays quiet.
+	announceStop = result.Truncated && !humanDefaultCap
+	return c.emitResult(name, result, streamer, maxRows, humanDefaultCap, &announceStop)
 }
 
 // emitResult finishes output after a successful drain. Streamed formats already
 // wrote rows during Run, so this closes the document and surfaces any terminal-
 // phase error afterward; -o human renders the buffered table. It sets
 // *announceStop on a write failure so the deferred cleanup speaks up.
-func (c *queryCommand) emitResult(name string, result *query.Result, streamer resultStreamer, maxRows int, announceStop *bool) error {
+func (c *queryCommand) emitResult(name string, result *query.Result, streamer resultStreamer, maxRows int, humanDefaultCap bool, announceStop *bool) error {
 	// -o human hasn't printed anything yet, so a terminal-phase error (STOPPED/
 	// DELETING) returns before the table. Streamed rows already reached stdout, so
 	// fall through and let close() terminate the document first.
@@ -207,7 +216,7 @@ func (c *queryCommand) emitResult(name string, result *query.Result, streamer re
 		return phaseErr
 	}
 
-	if result.Truncated {
+	if result.Truncated && !humanDefaultCap {
 		output.ErrPrintf(false, "Warning: stopped after %d rows because of the `--max-rows` flag. The result set below is truncated.\n", maxRows)
 	}
 	isAppendOnly, appendOnlyKnown := warnIfChangelog(result)
@@ -223,6 +232,12 @@ func (c *queryCommand) emitResult(name string, result *query.Result, streamer re
 	if err := printHumanResult(os.Stdout, name, result, isAppendOnly, appendOnlyKnown); err != nil {
 		*announceStop = true
 		return err
+	}
+
+	// After the table, on stderr (so a piped table stays clean), only when the
+	// preview cap actually cut rows off.
+	if result.Truncated && humanDefaultCap {
+		output.ErrPrintf(false, "\nOnly showing the first %d rows. Use `--max-rows` to show more, or `-o json`/`-o yaml` for the full result.\n", maxRows)
 	}
 	return nil
 }
@@ -241,6 +256,16 @@ func (c *queryCommand) releaseStatement(client *ccloudv2.FlinkGatewayClient, env
 	if ok, err := c.stopStatement(client, environmentId, name); !ok {
 		reportStopFailure(name, err)
 	}
+}
+
+// resolveDisplayCap defaults -o human to defaultHumanRows when --max-rows isn't
+// set (json/yaml stay uncapped), and reports whether that implicit cap applied so
+// the caller shows the preview notice rather than the --max-rows warning.
+func resolveDisplayCap(format output.Format, maxRowsChanged bool, maxRows int) (int, bool) {
+	if format == output.Human && !maxRowsChanged {
+		return defaultHumanRows, true
+	}
+	return maxRows, false
 }
 
 // resolveQueryFlags reads and validates the numeric/output flags that gate the run
