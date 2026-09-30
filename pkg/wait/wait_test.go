@@ -123,6 +123,46 @@ func TestPoll_PersistentFetchErrorReturnsLastErrAtTimeout(t *testing.T) {
 	require.GreaterOrEqual(t, calls, 2)
 }
 
+// TestPoll_FatalFetchErrorAbortsImmediately: a fetch error IsFatalErr classifies
+// as fatal aborts the poll on the spot with that error, rather than being retried
+// as transient until the timeout.
+func TestPoll_FatalFetchErrorAbortsImmediately(t *testing.T) {
+	fatal := errors.New("re-login required")
+	calls := 0
+	_, err := Poll(context.Background(), Options[fakeResource]{
+		Fetch: func() (fakeResource, error) {
+			calls++
+			return fakeResource{}, fatal
+		},
+		IsTerminal:   func(fakeResource) bool { return true },
+		IsFatalErr:   func(e error) bool { return errors.Is(e, fatal) },
+		PollInterval: time.Millisecond,
+		Timeout:      time.Minute,
+	})
+	require.ErrorIs(t, err, fatal)
+	require.Equal(t, 1, calls, "a fatal fetch error must abort on the first fetch, not poll")
+}
+
+// A non-fatal fetch error is still transient even when IsFatalErr is set: only
+// the errors it matches abort.
+func TestPoll_NonFatalFetchErrorStaysTransientWhenIsFatalErrSet(t *testing.T) {
+	fatal := errors.New("re-login required")
+	transient := errors.New("502 bad gateway")
+	calls := 0
+	_, err := Poll(context.Background(), Options[fakeResource]{
+		Fetch: func() (fakeResource, error) {
+			calls++
+			return fakeResource{}, transient
+		},
+		IsTerminal:   func(fakeResource) bool { return true },
+		IsFatalErr:   func(e error) bool { return errors.Is(e, fatal) },
+		PollInterval: time.Millisecond,
+		Timeout:      20 * time.Millisecond,
+	})
+	require.ErrorIs(t, err, transient)
+	require.GreaterOrEqual(t, calls, 2, "a non-fatal error must keep polling to the deadline")
+}
+
 func TestPoll_FetchErrorOnlyOnFirstCallReturnsAtTimeout(t *testing.T) {
 	fetchErr := fmt.Errorf("initial fetch failure")
 	v, err := Poll(context.Background(), Options[fakeResource]{
