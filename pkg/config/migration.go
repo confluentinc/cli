@@ -49,8 +49,12 @@ func statLegacyFileStamp(path string) (legacyFileStamp, bool) {
 }
 
 // recordLegacyFileStamp stamps the legacy file's current mtime/size, best-effort: a failed write
-// here must never fail an otherwise-successful migration or load.
+// here must never fail an otherwise-successful migration or load. Only Stable re-detects a
+// downgrade writing to this file, so other channels skip it.
 func recordLegacyFileStamp(path string) {
+	if pversion.ProcessChannel() != pversion.Stable {
+		return
+	}
 	stamp, ok := statLegacyFileStamp(path)
 	if !ok {
 		return
@@ -341,11 +345,7 @@ func (c *Config) migrateFromLegacy() (bool, error) {
 	if err := writeFileAtomic(legacyBackupPath(), data); err != nil {
 		return false, fmt.Errorf("unable to write migration backup %s: %w", legacyBackupPath(), err)
 	}
-	// only the Stable channel ever re-detects a downgrade writing to this file, so only it needs
-	// the stamp; Prerelease/Dev never write or compare against it.
-	if pversion.ProcessChannel() == pversion.Stable {
-		recordLegacyFileStamp(path)
-	}
+	recordLegacyFileStamp(path)
 	afterLegacyMigration()
 	return true, nil
 }
@@ -358,9 +358,7 @@ func (c *Config) announceMigration(migrated bool) {
 		c.announceCompletedMigration()
 		return
 	}
-	if pversion.ProcessChannel() == pversion.Stable {
-		c.warnIfLegacyFileChanged()
-	}
+	c.warnIfLegacyFileChanged()
 }
 
 // announceCompletedMigration prints the Stable move announcement or the non-Stable seed
@@ -388,8 +386,12 @@ func (c *Config) announceCompletedMigration() {
 }
 
 // warnIfLegacyFileChanged re-detects a v4 downgrade writing to the frozen legacy file. It only
-// runs once a migration has completed (the backup exists) and costs one stat of the legacy file.
+// runs on Stable once a migration has completed (the backup exists) and costs one stat of the
+// legacy file.
 func (c *Config) warnIfLegacyFileChanged() {
+	if pversion.ProcessChannel() != pversion.Stable {
+		return
+	}
 	if _, err := os.Stat(legacyBackupPath()); err != nil {
 		return
 	}
@@ -402,8 +404,11 @@ func (c *Config) warnIfLegacyFileChanged() {
 	s := newCacheStore()
 	var previous legacyFileStamp
 	hadStamp := s.readJSON(legacyFileStampCache, &previous)
+	if hadStamp && previous == current {
+		return
+	}
 
-	if hadStamp && (previous.ModTimeUnixNano != current.ModTimeUnixNano || previous.Size != current.Size) {
+	if hadStamp {
 		output.ErrPrintln(c.EnableColor, fmt.Sprintf(legacyFileChangedWarningMsg, legacyConfigPath()))
 		output.ErrPrintln(c.EnableColor, "")
 	}
