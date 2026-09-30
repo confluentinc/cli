@@ -1,0 +1,1 @@
+Are you sure you want to delete Flink compute pool "non-exist-pool"? (y/n): Error: failed to delete non-exist-pool: 404 Not Found

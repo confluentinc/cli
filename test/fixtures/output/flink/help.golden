@@ -1,0 +1,24 @@
+Manage Apache Flink.
+
+Usage:
+  confluent flink [command]
+
+Available Commands:
+  artifact            Manage Flink UDF artifacts.
+  compute-pool        Manage and select Confluent Cloud Flink compute pools.
+  compute-pool-config Manage Confluent Cloud Flink org compute pool configs.
+  connection          Manage Flink connections.
+  connectivity-type   Manage Flink connectivity type.
+  endpoint            Manage Flink endpoint.
+  materialized-table  Manage Flink materialized tables.
+  query               Run a bounded Flink SQL query and print its results.
+  region              Manage and select Confluent Cloud Flink regions.
+  shell               Start Flink interactive SQL client.
+  statement           Manage Flink SQL statements in Confluent Cloud.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent flink [command] --help" for more information about a command.

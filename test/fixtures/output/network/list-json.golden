@@ -1,0 +1,100 @@
+[
+  {
+    "id": "n-abcde6",
+    "name": "prod-aws-eu-west1",
+    "cloud": "AWS",
+    "region": "eu-west-1",
+    "cidr": "10.200.0.0/16",
+    "zones": ["use1-az1", "use1-az2", "use1-az3"],
+    "phase": "READY",
+    "active_connection_types": ["TRANSITGATEWAY", "PEERING"],
+    "zone_info": [
+      "use1-az1=10.200.0.0/27",
+      "use1-az2=10.200.0.32/27",
+      "use1-az3=10.200.0.64/27"
+    ]
+  },
+  {
+    "id": "n-abcde3",
+    "name": "prod-aws-us-east1",
+    "cloud": "AWS",
+    "region": "us-east-1",
+    "cidr": "10.200.0.0/16",
+    "zones": ["use1-az1", "use1-az2", "use1-az3"],
+    "phase": "READY",
+    "active_connection_types": ["TRANSITGATEWAY", "PEERING"],
+    "zone_info": [
+      "use1-az1=10.200.0.0/27",
+      "use1-az2=10.200.0.32/27",
+      "use1-az3=10.200.0.64/27"
+    ]
+  },
+  {
+    "id": "n-abcde5",
+    "cloud": "AWS",
+    "region": "us-east-1",
+    "cidr": "10.200.0.0/16",
+    "zones": ["use1-az1", "use1-az2", "use1-az3"],
+    "phase": "READY",
+    "active_connection_types": ["TRANSITGATEWAY", "PEERING"],
+    "zone_info": [
+      "use1-az1=10.200.0.0/27",
+      "use1-az2=10.200.0.32/27",
+      "use1-az3=10.200.0.64/27"
+    ]
+  },
+  {
+    "id": "n-abcde4",
+    "name": "prod-aws-us-east1",
+    "gateway": "gw-abcde1",
+    "cloud": "AWS",
+    "region": "us-west-2",
+    "cidr": "10.200.0.0/16",
+    "zones": ["use1-az1", "use1-az2", "use1-az3"],
+    "phase": "READY",
+    "active_connection_types": ["TRANSITGATEWAY", "PEERING"],
+    "zone_info": [
+      "use1-az1=10.200.0.0/27",
+      "use1-az2=10.200.0.32/27",
+      "use1-az3=10.200.0.64/27"
+    ]
+  },
+  {
+    "id": "n-abcde2",
+    "name": "prod-azure-eastus2",
+    "cloud": "AZURE",
+    "region": "eastus2",
+    "cidr": "10.0.0.0/16",
+    "zones": ["1", "2", "3"],
+    "phase": "READY",
+    "active_connection_types": ["PRIVATELINK"],
+    "dns_resolution": "PRIVATE"
+  },
+  {
+    "id": "n-abcde7",
+    "name": "prod-azure-eastus2",
+    "cloud": "AZURE",
+    "region": "eastus2",
+    "cidr": "10.0.0.0/16",
+    "zones": ["1", "2", "3"],
+    "phase": "READY",
+    "active_connection_types": ["PEERING"],
+    "zone_info": ["1=10.200.0.0/27", "2=10.200.0.32/27", "3=10.200.0.64/27"]
+  },
+  {
+    "id": "n-abcde1",
+    "name": "prod-gcp-us-central1",
+    "gateway": "gateway-12345",
+    "cloud": "GCP",
+    "region": "us-central1",
+    "cidr": "10.1.0.0/16",
+    "zones": ["us-central1-a", "us-central1-b", "us-central1-c"],
+    "phase": "READY",
+    "active_connection_types": ["PEERING"],
+    "zone_info": [
+      "us-central1-a=10.200.0.0/27",
+      "us-central1-b=10.200.0.32/27",
+      "us-central1-c=10.200.0.64/27"
+    ]
+  }
+]

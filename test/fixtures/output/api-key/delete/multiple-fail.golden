@@ -1,0 +1,4 @@
+Error: API key "MYKEY20" not found
+
+Suggestions:
+    List available API keys with `confluent api-key list`.

@@ -1,0 +1,4 @@
+      ID     |           Name           | Cloud |   Region    | Environment  
+-------------+--------------------------+-------+-------------+--------------
+  cfa-123456 | my-flink-artifact        | GCP   | us-central1 | env-123456   
+  cfa-789012 | my-flink-python-artifact | GCP   | us-central1 | env-789012   

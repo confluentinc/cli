@@ -1,0 +1,18 @@
+Manage IP filters and their permissions.
+
+Usage:
+  confluent iam ip-filter [command]
+
+Available Commands:
+  create      Create an IP filter.
+  delete      Delete an IP filter.
+  describe    Describe an IP filter.
+  list        List IP filters.
+  update      Update an IP filter.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent iam ip-filter [command] --help" for more information about a command.

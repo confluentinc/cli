@@ -1,0 +1,5 @@
+     Creation Time     |     Name      |           Databases             
+-----------------------+---------------+---------------------------------
+  2025-08-05T12:00:00Z | test-catalog1 | test-database, test-database-2  
+  2025-08-05T12:00:00Z | test-catalog2 | test-database, test-database-2  
+  2025-08-05T12:00:00Z | test-catalog3 | test-database, test-database-2  

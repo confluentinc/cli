@@ -1,0 +1,12 @@
+- id: ccp-123456
+  cloud: AWS
+  name: CliPluginTest1
+  environment: env-123456
+  runtime_language: JAVA
+  description: Test plugin
+- id: ccp-789012
+  cloud: GCP
+  name: CliPluginTest2
+  environment: env-123456
+  runtime_language: JAVA
+  description: Test plugin

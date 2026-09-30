@@ -1,0 +1,19 @@
+List Kafka cluster endpoints.
+
+Usage:
+  confluent kafka cluster endpoint list [flags]
+
+Examples:
+List the available Kafka cluster endpoints for cluster "lkc-123456".
+
+  $ confluent kafka cluster endpoint list --cluster lkc-123456
+
+Flags:
+      --cluster string   Kafka cluster ID.
+      --context string   CLI context name.
+  -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

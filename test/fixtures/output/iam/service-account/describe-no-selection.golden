@@ -1,0 +1,4 @@
+Error: no IAM service account selected
+
+Suggestions:
+    Select an IAM service account with `confluent iam service-account use` or as an argument.

@@ -1,0 +1,4 @@
+Error: IAM identity provider "op-1" not found
+
+Suggestions:
+    List available IAM identity providers with `confluent iam identity-provider list`.

@@ -1,0 +1,4 @@
+cluster: cluster-1
+topic_name: topic1
+id: 0
+leader: 2

@@ -1,0 +1,4 @@
+      ID     |           Name           | Cloud |  Region   | Environment  
+-------------+--------------------------+-------+-----------+--------------
+  cfa-123456 | my-flink-artifact        | AZURE | centralus | env-123456   
+  cfa-789012 | my-flink-python-artifact | AZURE | centralus | env-789012   

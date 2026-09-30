@@ -1,0 +1,691 @@
+package testserver
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
+	"sync"
+	"testing"
+	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/samber/lo"
+	"github.com/stretchr/testify/require"
+
+	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
+)
+
+const (
+	validFlinkStatementPrincipalId   = "u-123456"
+	validFlinkStatementComputePoolId = "lfcp-123456"
+	statementCompletedDetail         = "SQL statement is completed"
+)
+
+var flinkGatewayRoutes = []route{
+	{"/sql/v1/organizations/{organization_id}/environments/{environment}/statements", handleSqlEnvironmentsEnvironmentStatements},
+	{"/sql/v1/organizations/{organization_id}/environments/{environment}/statements/{statement}", handleSqlEnvironmentsEnvironmentStatementsStatement},
+	{"/sql/v1/organizations/{organization_id}/environments/{environment}/statements/{statement}/exceptions", handleSqlEnvironmentsEnvironmentStatementExceptions},
+	{"/sql/v1/organizations/{organization_id}/environments/{environment}/statements/{statement}/results", handleSqlEnvironmentsEnvironmentStatementsStatementResults},
+	{"/sql/v1/organizations/{organization_id}/environments/{environment_id}/connections", handleSqlEnvironmentsEnvironmentConnections},
+	{"/sql/v1/organizations/{organization_id}/environments/{environment_id}/connections/{connection}", handleSqlEnvironmentsEnvironmentConnectionsConnection},
+	{"/sql/v1/organizations/{organization_id}/environments/{environment_id}/databases/{kafka_cluster_id}/materialized-tables", handleSqlMaterializedTables},
+	{"/sql/v1/organizations/{organization_id}/environments/{environment_id}/materialized-tables", handleSqlMaterializedTablesList},
+	{"/sql/v1/organizations/{organization_id}/environments/{environment_id}/databases/{kafka_cluster_id}/materialized-tables/{table_name}", handleSqlMaterializedTablesTable},
+}
+
+func NewFlinkGatewayRouter(t *testing.T) *mux.Router {
+	router := mux.NewRouter()
+	router.Use(defaultHeaderMiddleware)
+
+	for _, route := range flinkGatewayRoutes {
+		router.HandleFunc(route.path, route.handler(t))
+	}
+
+	return router
+}
+
+func handleSqlEnvironmentsEnvironmentConnections(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			connections := flinkgatewayv1.SqlV1ConnectionList{Data: []flinkgatewayv1.SqlV1Connection{{
+				Name: flinkgatewayv1.PtrString("11111111-1111-1111-1"),
+				Spec: &flinkgatewayv1.SqlV1ConnectionSpec{
+					ConnectionType: flinkgatewayv1.PtrString("OPENAI"),
+					Endpoint:       flinkgatewayv1.PtrString("https://api.openai.com/v1/chat/completions"),
+					AuthData: &flinkgatewayv1.SqlV1ConnectionSpecAuthDataOneOf{
+						SqlV1PlaintextProvider: &flinkgatewayv1.SqlV1PlaintextProvider{
+							Kind: lo.ToPtr("PlaintextProvider"),
+							Data: lo.ToPtr("<REDACTED>"),
+						}},
+				},
+				Status: &flinkgatewayv1.SqlV1ConnectionStatus{
+					Phase:  "COMPLETED",
+					Detail: flinkgatewayv1.PtrString("Connection1 is completed"),
+				},
+				Metadata: &flinkgatewayv1.ObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))},
+			}, {
+				Name: flinkgatewayv1.PtrString("22222222-2222-2222-2"),
+				Spec: &flinkgatewayv1.SqlV1ConnectionSpec{
+					ConnectionType: flinkgatewayv1.PtrString("OPENAI"),
+					Endpoint:       flinkgatewayv1.PtrString("https://api.openai.com/v1/chat/completions"),
+					AuthData: &flinkgatewayv1.SqlV1ConnectionSpecAuthDataOneOf{
+						SqlV1PlaintextProvider: &flinkgatewayv1.SqlV1PlaintextProvider{
+							Kind: lo.ToPtr("PlaintextProvider"),
+							Data: lo.ToPtr("<REDACTED>"),
+						}},
+				},
+				Status: &flinkgatewayv1.SqlV1ConnectionStatus{
+					Phase:  "COMPLETED",
+					Detail: flinkgatewayv1.PtrString("Connection2 is completed"),
+				},
+				Metadata: &flinkgatewayv1.ObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC))},
+			}}}
+			setPageToken(&connections, &connections.Metadata, r.URL)
+			err := json.NewEncoder(w).Encode(connections)
+			require.NoError(t, err)
+		case http.MethodPost:
+			connection := &flinkgatewayv1.SqlV1Connection{}
+			err := json.NewDecoder(r.Body).Decode(connection)
+			require.NoError(t, err)
+
+			connection.Metadata = &flinkgatewayv1.ObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))}
+			connection.Status = &flinkgatewayv1.SqlV1ConnectionStatus{Phase: "PENDING"}
+			connection.Spec.AuthData.SqlV1PlaintextProvider.Data = lo.ToPtr("<REDACTED>")
+
+			err = json.NewEncoder(w).Encode(connection)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleSqlEnvironmentsEnvironmentConnectionsConnection(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			connectionName := mux.Vars(r)["connection"]
+			if strings.Contains(connectionName, "nonexist") {
+				err := writeResourceNotFoundError(w)
+				require.NoError(t, err)
+				return
+			}
+			connection := flinkgatewayv1.SqlV1Connection{
+				Name: flinkgatewayv1.PtrString("11111111-1111-1111-1"),
+				Spec: &flinkgatewayv1.SqlV1ConnectionSpec{
+					ConnectionType: flinkgatewayv1.PtrString("OPENAI"),
+					Endpoint:       flinkgatewayv1.PtrString("https://api.openai.com/v1/chat/completions"),
+					AuthData: &flinkgatewayv1.SqlV1ConnectionSpecAuthDataOneOf{
+						SqlV1PlaintextProvider: &flinkgatewayv1.SqlV1PlaintextProvider{
+							Kind: lo.ToPtr("PlaintextProvider"),
+							Data: lo.ToPtr("<REDACTED>"),
+						}},
+				},
+				Status: &flinkgatewayv1.SqlV1ConnectionStatus{
+					Phase:  "COMPLETED",
+					Detail: flinkgatewayv1.PtrString("Connection1 is completed"),
+				},
+				Metadata: &flinkgatewayv1.ObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))},
+			}
+			err := json.NewEncoder(w).Encode(connection)
+			require.NoError(t, err)
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
+		}
+	}
+}
+
+// Handler for "/sql/v1/organizations/{organization_id}/environments/{environment_id}/statements"
+func handleSqlEnvironmentsEnvironmentStatements(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			statements := flinkgatewayv1.SqlV1StatementList{Data: []flinkgatewayv1.SqlV1Statement{{
+				Name: flinkgatewayv1.PtrString("11111111-1111-1111-1"),
+				Spec: &flinkgatewayv1.SqlV1StatementSpec{
+					Statement:     flinkgatewayv1.PtrString("CREATE TABLE test;"),
+					ComputePoolId: flinkgatewayv1.PtrString(validFlinkStatementComputePoolId),
+				},
+				Status: &flinkgatewayv1.SqlV1StatementStatus{
+					Phase:  "COMPLETED",
+					Detail: flinkgatewayv1.PtrString(statementCompletedDetail),
+					LatestOffsets: &map[string]string{
+						"customers_source": "partition:0,offset:9223372036854775808",
+					},
+					LatestOffsetsTimestamp: flinkgatewayv1.PtrTime(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)),
+				},
+				Metadata: &flinkgatewayv1.StatementObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))},
+			}, {
+				Name: flinkgatewayv1.PtrString("22222222-2222-2222-2"),
+				Spec: &flinkgatewayv1.SqlV1StatementSpec{
+					Statement:     flinkgatewayv1.PtrString("CREATE TABLE test;"),
+					ComputePoolId: flinkgatewayv1.PtrString(validFlinkStatementComputePoolId),
+				},
+				Status: &flinkgatewayv1.SqlV1StatementStatus{
+					Phase:  "COMPLETED",
+					Detail: flinkgatewayv1.PtrString(statementCompletedDetail),
+					LatestOffsets: &map[string]string{
+						"customers_source": "partition:0,offset:9223372036854775808",
+					},
+					LatestOffsetsTimestamp: flinkgatewayv1.PtrTime(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)),
+				},
+				Metadata: &flinkgatewayv1.StatementObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC))},
+			}}}
+			setPageToken(&statements, &statements.Metadata, r.URL)
+			err := json.NewEncoder(w).Encode(statements)
+			require.NoError(t, err)
+		case http.MethodPost:
+			statement := &flinkgatewayv1.SqlV1Statement{}
+			err := json.NewDecoder(r.Body).Decode(statement)
+			require.NoError(t, err)
+
+			statement.Metadata = &flinkgatewayv1.StatementObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))}
+			switch strings.ToLower(statement.GetName()) {
+			case "my-statement":
+				statement.Spec.ComputePoolId = flinkgatewayv1.PtrString(validFlinkStatementComputePoolId)
+			}
+
+			statement.Status = &flinkgatewayv1.SqlV1StatementStatus{Phase: "PENDING"}
+
+			if strings.HasPrefix(statement.GetName(), queryTestStatementPrefix) {
+				fixture := buildQueryTestFixture(statement.GetName(), statement.Spec.GetStatement())
+				queryTestFixturesMu.Lock()
+				queryTestFixtures[statement.GetName()] = fixture
+				queryTestFixturesMu.Unlock()
+			}
+
+			err = json.NewEncoder(w).Encode(statement)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleSqlEnvironmentsEnvironmentStatementExceptions(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		statement := flinkgatewayv1.SqlV1StatementExceptionList{
+			Data: []flinkgatewayv1.SqlV1StatementException{{
+				Timestamp: flinkgatewayv1.PtrTime(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)),
+				Name:      flinkgatewayv1.PtrString("Bad exception"),
+				Message:   flinkgatewayv1.PtrString("exception in foo.go"),
+			}, {
+				Timestamp: flinkgatewayv1.PtrTime(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)),
+				Name:      flinkgatewayv1.PtrString("another Bad exception"),
+				Message:   flinkgatewayv1.PtrString("exception in bar.go"),
+			}},
+		}
+
+		err := json.NewEncoder(w).Encode(statement)
+		require.NoError(t, err)
+	}
+}
+
+// queryTestStatementPrefix marks a statement created by `confluent flink query` (see
+// types.GenerateStatementName); fixtures below only apply to names with this prefix.
+const queryTestStatementPrefix = "cli-"
+
+// queryTestFixture is the mock's stand-in for a gateway statement plus its
+// paginated results, built from the submitted SQL and replayed for every later call.
+type queryTestFixture struct {
+	statement flinkgatewayv1.SqlV1Statement
+	pages     [][]map[string]any
+}
+
+var (
+	queryTestFixturesMu sync.Mutex
+	queryTestFixtures   = make(map[string]*queryTestFixture)
+)
+
+func queryColumn(name, sqlType string) flinkgatewayv1.ColumnDetails {
+	return flinkgatewayv1.ColumnDetails{Name: name, Type: flinkgatewayv1.DataType{Type: sqlType}}
+}
+
+func queryRow(op int, values ...string) map[string]any {
+	row := make([]any, len(values))
+	for i, v := range values {
+		row[i] = v
+	}
+	return map[string]any{"op": op, "row": row}
+}
+
+// buildQueryTestFixture maps a fixed set of `--sql` values to a scripted statement
+// lifecycle; add a case per new test scenario.
+func buildQueryTestFixture(name, sql string) *queryTestFixture {
+	traits := &flinkgatewayv1.SqlV1StatementTraits{IsBounded: flinkgatewayv1.PtrBool(true), IsAppendOnly: flinkgatewayv1.PtrBool(true)}
+	phase := "COMPLETED"
+	detail := statementCompletedDetail
+	var pages [][]map[string]any
+
+	switch sql {
+	case "SELECT order_id, status FROM orders LIMIT 2;":
+		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{
+			queryColumn("order_id", "INTEGER"),
+			queryColumn("status", "VARCHAR"),
+		}}
+		pages = [][]map[string]any{{queryRow(0, "1021", "SHIPPED"), queryRow(0, "1044", "PENDING")}}
+	case "SELECT id FROM multi_page_table;":
+		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{queryColumn("id", "INTEGER")}}
+		pages = [][]map[string]any{
+			{queryRow(0, "1"), queryRow(0, "2")},
+			{queryRow(0, "3")},
+		}
+	case "SELECT v FROM variant_table;":
+		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{queryColumn("v", "VARIANT")}}
+		// A VARIANT cell is the self-describing [code, ...] payload, not a string, so
+		// build the row directly instead of through queryRow. This encodes {"a": "x"}.
+		variantValue := []any{1, []any{[]any{"a", []any{11, "x"}}}}
+		pages = [][]map[string]any{{{"op": 0, "row": []any{variantValue}}}}
+	case "SELECT id FROM many_rows;":
+		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{queryColumn("id", "INTEGER")}}
+		pages = [][]map[string]any{{
+			queryRow(0, "1"), queryRow(0, "2"), queryRow(0, "3"), queryRow(0, "4"), queryRow(0, "5"),
+		}}
+	case "SELECT id FROM limit_bounded_stream;":
+		// Every row delivered (no next token), but phase stays RUNNING — regression
+		// fixture for a real false "Incomplete" positive found against staging.
+		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{queryColumn("id", "INTEGER")}}
+		phase = "RUNNING"
+		pages = [][]map[string]any{{queryRow(0, "1"), queryRow(0, "2")}}
+	case "SELECT * FROM changelog;":
+		traits.IsAppendOnly = flinkgatewayv1.PtrBool(false)
+		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{queryColumn("id", "INTEGER")}}
+		pages = [][]map[string]any{{queryRow(0, "1"), queryRow(2, "1")}}
+	case "SELECT * FROM unbounded_stream;":
+		traits.IsBounded = flinkgatewayv1.PtrBool(false)
+	case "SELECT * FROM will_fail;":
+		traits = nil
+		phase = "FAILED"
+		detail = "Something went wrong compiling the statement"
+	case "SELECT * FROM unrecognized_column_type;":
+		// A column type this CLI build doesn't recognize: exercises the generic
+		// (non-Unbounded, non-Canceled) error branch of handleQueryError, where
+		// the deferred cleanup must still announce its outcome instead of only
+		// logging it (see internal/flink/command_query.go's announceStop).
+		phase = "RUNNING"
+		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{queryColumn("id", "NOT_A_REAL_TYPE")}}
+		pages = [][]map[string]any{{queryRow(0, "1")}}
+	case "CREATE TABLE t (id INT);":
+		traits = nil
+	default:
+		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{queryColumn("id", "INTEGER")}}
+		pages = [][]map[string]any{{queryRow(0, "1")}}
+	}
+
+	status := &flinkgatewayv1.SqlV1StatementStatus{Phase: phase, Detail: flinkgatewayv1.PtrString(detail), Traits: traits}
+	return &queryTestFixture{
+		statement: flinkgatewayv1.SqlV1Statement{
+			Name: flinkgatewayv1.PtrString(name),
+			Spec: &flinkgatewayv1.SqlV1StatementSpec{
+				Statement:     flinkgatewayv1.PtrString(sql),
+				ComputePoolId: flinkgatewayv1.PtrString(validFlinkStatementComputePoolId),
+			},
+			Status:   status,
+			Metadata: &flinkgatewayv1.StatementObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))},
+		},
+		pages: pages,
+	}
+}
+
+func handleSqlEnvironmentsEnvironmentStatementsStatementResults(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		name := mux.Vars(r)["statement"]
+
+		queryTestFixturesMu.Lock()
+		fixture, ok := queryTestFixtures[name]
+		queryTestFixturesMu.Unlock()
+		if !ok || len(fixture.pages) == 0 {
+			w.WriteHeader(http.StatusNotFound)
+			err := writeError(w, fmt.Sprintf(`statement "%s" has no results`, name))
+			require.NoError(t, err)
+			return
+		}
+
+		pageIndex := 0
+		if token := r.URL.Query().Get("page_token"); token != "" {
+			parsed, err := strconv.Atoi(token)
+			require.NoError(t, err)
+			pageIndex = parsed
+		}
+
+		data := make([]any, len(fixture.pages[pageIndex]))
+		for i, row := range fixture.pages[pageIndex] {
+			data[i] = row
+		}
+
+		result := flinkgatewayv1.SqlV1StatementResult{Results: &flinkgatewayv1.SqlV1StatementResultResults{Data: &data}}
+		if pageIndex+1 < len(fixture.pages) {
+			result.Metadata.SetNext(fmt.Sprintf("%s?page_token=%d", r.URL.Path, pageIndex+1))
+		}
+
+		err := json.NewEncoder(w).Encode(result)
+		require.NoError(t, err)
+	}
+}
+
+// Handler for "/sql/v1/organizations/{organization_id}/environments/{environment_id}/statements/{statement_name}"
+func handleSqlEnvironmentsEnvironmentStatementsStatement(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			handleStatementGet(t)(w, r)
+		case http.MethodPut:
+			handleStatementUpdate(t)(w, r)
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+	}
+}
+
+func handleStatementGet(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		name := mux.Vars(r)["statement"]
+		if strings.HasPrefix(name, queryTestStatementPrefix) {
+			queryTestFixturesMu.Lock()
+			fixture, ok := queryTestFixtures[name]
+			queryTestFixturesMu.Unlock()
+			if ok {
+				err := json.NewEncoder(w).Encode(fixture.statement)
+				require.NoError(t, err)
+				return
+			}
+		}
+
+		statement := flinkgatewayv1.SqlV1Statement{
+			Name: flinkgatewayv1.PtrString(mux.Vars(r)["statement"]),
+			Spec: &flinkgatewayv1.SqlV1StatementSpec{
+				Statement: flinkgatewayv1.PtrString("CREATE TABLE test;"),
+				Properties: &map[string]string{
+					"sql.current-catalog":  "default",
+					"sql.current-database": "my-cluster",
+				},
+				ComputePoolId: flinkgatewayv1.PtrString(validFlinkStatementComputePoolId),
+				Principal:     flinkgatewayv1.PtrString(validFlinkStatementPrincipalId),
+			},
+			Status: &flinkgatewayv1.SqlV1StatementStatus{
+				Phase:  "COMPLETED",
+				Detail: flinkgatewayv1.PtrString(statementCompletedDetail),
+				LatestOffsets: &map[string]string{
+					"customers_source": "partition:0,offset:9223372036854775808",
+				},
+				LatestOffsetsTimestamp: flinkgatewayv1.PtrTime(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)),
+			},
+			Metadata: &flinkgatewayv1.StatementObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC))},
+		}
+
+		if statement.GetName() == "my-statement-with-warnings" {
+			statement.Status.Warnings = &[]flinkgatewayv1.SqlV1StatementWarning{
+				{
+					Severity:  "MODERATE",
+					Reason:    "MISSING_WINDOW_START_END",
+					Message:   "The GROUP BY clause contains only `window_start` with no corresponding `window_end`.",
+					CreatedAt: time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC),
+				},
+				{
+					Severity:  "CRITICAL",
+					Reason:    "HIGH_STATE_OPERATOR_WITHOUT_TTL",
+					Message:   "Your query includes one or more highly state-intensive operators but does not set a time-to-live (TTL) value.",
+					CreatedAt: time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC),
+				},
+			}
+		}
+
+		err := json.NewEncoder(w).Encode(statement)
+		require.NoError(t, err)
+	}
+}
+
+func handleStatementUpdate(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		req := new(flinkgatewayv1.SqlV1Statement)
+		err := json.NewDecoder(r.Body).Decode(req)
+		require.NoError(t, err)
+
+		stopped := req.Spec.GetStopped()
+		principal := req.Spec.GetPrincipal()
+		computePool := req.Spec.GetComputePoolId()
+
+		// The real gateway rejects a body with no SQL text; a looser mock let a broken path pass here and fail only against staging.
+		if req.Spec.GetStatement() == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			err = writeError(w, "Request is malformed: Violations: Statement is nil or empty")
+			require.NoError(t, err)
+			return
+		}
+
+		// Handle the stop case, principal and computerPool shouldn't matter
+		if stopped {
+			w.WriteHeader(http.StatusAccepted)
+			err = json.NewEncoder(w).Encode(flinkgatewayv1.NewSqlV1Statement())
+			require.NoError(t, err)
+			return
+		}
+
+		// Handle the resume case: invalid principal ID
+		if principal != "" && principal != validFlinkStatementPrincipalId {
+			w.WriteHeader(http.StatusBadRequest)
+			err = writeError(w, "Bad Request")
+			require.NoError(t, err)
+			return
+		}
+
+		// Handle the resume case: invalid compute pool
+		if computePool != "" && computePool != validFlinkStatementComputePoolId {
+			w.WriteHeader(http.StatusBadRequest)
+			err = writeError(w, fmt.Sprintf("logical compute pool=%s not found", computePool))
+			require.NoError(t, err)
+			return
+		}
+
+		w.WriteHeader(http.StatusAccepted)
+	}
+}
+
+func handleSqlMaterializedTables(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			tables := flinkgatewayv1.SqlV1MaterializedTableList{Data: []flinkgatewayv1.SqlV1MaterializedTable{{
+				Name:           "table-1",
+				OrganizationId: "org-1",
+				EnvironmentId:  "env-1",
+				Spec: flinkgatewayv1.SqlV1MaterializedTableSpec{
+					KafkaClusterId: flinkgatewayv1.PtrString("lkc01"),
+					ComputePoolId:  flinkgatewayv1.PtrString("pool1"),
+					Principal:      flinkgatewayv1.PtrString("principal1"),
+					Query:          flinkgatewayv1.PtrString("query"),
+					Columns: &[]flinkgatewayv1.SqlV1ColumnDetails{
+						{
+							SqlV1ComputedColumn: &flinkgatewayv1.SqlV1ComputedColumn{
+								Name:       "Name1",
+								Type:       "Type1",
+								Comment:    flinkgatewayv1.PtrString("Comment1"),
+								Kind:       "Computed",
+								Expression: "Expression1",
+								Virtual:    flinkgatewayv1.PtrBool(true),
+							},
+						},
+					},
+					Watermark: &flinkgatewayv1.SqlV1Watermark{
+						Column:     flinkgatewayv1.PtrString("Col1"),
+						Expression: flinkgatewayv1.PtrString("Expr1"),
+					},
+					Distribution: &flinkgatewayv1.SqlV1Distribution{
+						Keys:        &[]string{"user_id", "region"},
+						BucketCount: flinkgatewayv1.PtrInt32(int32(8)),
+					},
+					Constraints: &[]flinkgatewayv1.SqlV1Constraint{
+						{
+							Name:     flinkgatewayv1.PtrString("constr1"),
+							Type:     flinkgatewayv1.PtrString("PRIMARY_KEY"),
+							Columns:  &[]string{"user_id", "region"},
+							Enforced: flinkgatewayv1.PtrBool(true),
+						},
+					},
+				},
+				Status: &flinkgatewayv1.SqlV1MaterializedTableStatus{
+					Phase:  flinkgatewayv1.PtrString("COMPLETED"),
+					Detail: flinkgatewayv1.PtrString("Table1 is completed"),
+				},
+				Metadata: flinkgatewayv1.ObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))},
+			},
+			}}
+			setPageToken(&tables, &tables.Metadata, r.URL)
+			err := json.NewEncoder(w).Encode(tables)
+			require.NoError(t, err)
+		case http.MethodPost:
+			table := &flinkgatewayv1.SqlV1MaterializedTable{}
+			err := json.NewDecoder(r.Body).Decode(table)
+			require.NoError(t, err)
+
+			table.Metadata = flinkgatewayv1.ObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))}
+			table.Status = &flinkgatewayv1.SqlV1MaterializedTableStatus{Phase: flinkgatewayv1.PtrString("COMPLETED")}
+			table.Spec.KafkaClusterId = flinkgatewayv1.PtrString("lkc01")
+			table.Spec.ComputePoolId = flinkgatewayv1.PtrString("pool1")
+			table.Spec.Principal = flinkgatewayv1.PtrString("principal1")
+			table.Spec.Query = flinkgatewayv1.PtrString("query1")
+			err = json.NewEncoder(w).Encode(table)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleSqlMaterializedTablesList(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			tables := flinkgatewayv1.SqlV1MaterializedTableList{Data: []flinkgatewayv1.SqlV1MaterializedTable{{
+				Name:           "table-1",
+				OrganizationId: "org-1",
+				EnvironmentId:  "env-1",
+				Spec: flinkgatewayv1.SqlV1MaterializedTableSpec{
+					KafkaClusterId: flinkgatewayv1.PtrString("lkc01"),
+					ComputePoolId:  flinkgatewayv1.PtrString("pool1"),
+					Principal:      flinkgatewayv1.PtrString("principal1"),
+					Query:          flinkgatewayv1.PtrString("query"),
+					Columns: &[]flinkgatewayv1.SqlV1ColumnDetails{
+						{
+							SqlV1ComputedColumn: &flinkgatewayv1.SqlV1ComputedColumn{
+								Name:       "Name1",
+								Type:       "Type1",
+								Comment:    flinkgatewayv1.PtrString("Comment1"),
+								Kind:       "Computed",
+								Expression: "Expression1",
+								Virtual:    flinkgatewayv1.PtrBool(true),
+							},
+						},
+						{
+							SqlV1PhysicalColumn: &flinkgatewayv1.SqlV1PhysicalColumn{
+								Name:    "Name2",
+								Type:    "Type2",
+								Comment: flinkgatewayv1.PtrString("Comment2"),
+								Kind:    "Physical",
+							},
+						},
+					},
+					Watermark: &flinkgatewayv1.SqlV1Watermark{
+						Column:     flinkgatewayv1.PtrString("Col1"),
+						Expression: flinkgatewayv1.PtrString("Expr1"),
+					},
+					Distribution: &flinkgatewayv1.SqlV1Distribution{
+						Keys:        &[]string{"user_id", "region"},
+						BucketCount: flinkgatewayv1.PtrInt32(int32(8)),
+					},
+					Constraints: &[]flinkgatewayv1.SqlV1Constraint{
+						{
+							Name:     flinkgatewayv1.PtrString("constr1"),
+							Type:     flinkgatewayv1.PtrString("PRIMARY_KEY"),
+							Columns:  &[]string{"user_id", "region"},
+							Enforced: flinkgatewayv1.PtrBool(true),
+						},
+						{
+							Name:     flinkgatewayv1.PtrString("constr2"),
+							Type:     flinkgatewayv1.PtrString("PRIMARY_KEY"),
+							Columns:  &[]string{"user_id1", "region1"},
+							Enforced: flinkgatewayv1.PtrBool(false),
+						}},
+				},
+				Status: &flinkgatewayv1.SqlV1MaterializedTableStatus{
+					Phase:  flinkgatewayv1.PtrString("COMPLETED"),
+					Detail: flinkgatewayv1.PtrString("Table1 is completed"),
+				},
+				Metadata: flinkgatewayv1.ObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))},
+			},
+			}}
+			setPageToken(&tables, &tables.Metadata, r.URL)
+			err := json.NewEncoder(w).Encode(tables)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleSqlMaterializedTablesTable(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			tableName := mux.Vars(r)["table_name"]
+			if strings.Contains(tableName, "nonexist") {
+				err := writeResourceNotFoundError(w)
+				require.NoError(t, err)
+				return
+			}
+			table := flinkgatewayv1.SqlV1MaterializedTable{
+				Name:           "table-1",
+				OrganizationId: "org-1",
+				EnvironmentId:  "env-1",
+				Spec: flinkgatewayv1.SqlV1MaterializedTableSpec{
+					KafkaClusterId: flinkgatewayv1.PtrString("lkc01"),
+					ComputePoolId:  flinkgatewayv1.PtrString("pool1"),
+					Principal:      flinkgatewayv1.PtrString("principal1"),
+					Query:          flinkgatewayv1.PtrString("query"),
+					Columns: &[]flinkgatewayv1.SqlV1ColumnDetails{
+						{
+							SqlV1ComputedColumn: &flinkgatewayv1.SqlV1ComputedColumn{
+								Name:       "Name1",
+								Type:       "Type1",
+								Comment:    flinkgatewayv1.PtrString("Comment1"),
+								Kind:       "Computed",
+								Expression: "Expression1",
+								Virtual:    flinkgatewayv1.PtrBool(true),
+							},
+						},
+					},
+					Watermark: &flinkgatewayv1.SqlV1Watermark{
+						Column:     flinkgatewayv1.PtrString("Col1"),
+						Expression: flinkgatewayv1.PtrString("Expr1"),
+					},
+					Distribution: &flinkgatewayv1.SqlV1Distribution{
+						Keys:        &[]string{"user_id", "region"},
+						BucketCount: flinkgatewayv1.PtrInt32(int32(8)),
+					},
+					Constraints: &[]flinkgatewayv1.SqlV1Constraint{
+						{
+							Name:     flinkgatewayv1.PtrString("constr1"),
+							Type:     flinkgatewayv1.PtrString("PRIMARY_KEY"),
+							Columns:  &[]string{"user_id", "region"},
+							Enforced: flinkgatewayv1.PtrBool(true),
+						}},
+				},
+			}
+			err := json.NewEncoder(w).Encode(table)
+			require.NoError(t, err)
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
+		case http.MethodPut:
+			handleTableUpdate(t)(w, r)
+		}
+	}
+}
+
+func handleTableUpdate(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		table := &flinkgatewayv1.SqlV1MaterializedTable{}
+		err := json.NewDecoder(r.Body).Decode(table)
+		require.NoError(t, err)
+
+		table.Metadata = flinkgatewayv1.ObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC))}
+		table.Status = &flinkgatewayv1.SqlV1MaterializedTableStatus{Phase: flinkgatewayv1.PtrString("COMPLETED")}
+		err = json.NewEncoder(w).Encode(table)
+		require.NoError(t, err)
+	}
+}

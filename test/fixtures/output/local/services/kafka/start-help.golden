@@ -1,0 +1,12 @@
+Start Apache Kafka®. For a faster and more lightweight experience, consider using `confluent local kafka start`. In the next major confluent CLI version, this command will be removed and replaced by ongoing support for `confluent local kafka`.
+
+Usage:
+  confluent local services kafka start [flags]
+
+Flags:
+  -c, --config string   Configure Apache Kafka® with a specific properties file.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

@@ -1,0 +1,19 @@
+{
+  "kafka_cluster": "lkc-123456",
+  "topic_name": "topic-gcp",
+  "enable_compaction": true,
+  "enable_partitioning": true,
+  "environment": "env-596",
+  "record_failure_strategy": "SKIP",
+  "metadata_column_naming_scheme": "PORTABLE",
+  "retention_ms": "604800000",
+  "storage_type": "GoogleCloudStorage",
+  "provider_integration_id": "cspi-stgce89r7",
+  "bucket_name": "bucket_1",
+  "bucket_region": "us-east-1",
+  "suspended": false,
+  "table_formats": "ICEBERG",
+  "table_path": "gs://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId",
+  "phase": "RUNNING",
+  "write_mode": "UPSERT"
+}

@@ -1,0 +1,6 @@
++-----------------+------------------------------+
+| Cluster         | lkc-ab123                    |
+| Environment     | env-987zy                    |
+| Service Account | sa-1337                      |
+| Topic Name      | confluent-connect-log-events |
++-----------------+------------------------------+

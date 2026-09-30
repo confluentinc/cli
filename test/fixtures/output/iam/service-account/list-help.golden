@@ -1,0 +1,14 @@
+List IAM service accounts.
+
+Usage:
+  confluent iam service-account list [flags]
+
+Flags:
+      --display-name strings   A comma-separated list of service account display names for filtered results.
+      --context string         CLI context name.
+  -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

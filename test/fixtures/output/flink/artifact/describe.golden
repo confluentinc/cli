@@ -1,0 +1,11 @@
++--------------------+-----------------+
+| ID                 | cfa-789013      |
+| Name               | CliArtifactTest |
+| Version            | 1.0.0           |
+| Cloud              | AWS             |
+| Region             | us-west-2       |
+| Environment        | env-789013      |
+| Content Format     | JAR             |
+| Description        |                 |
+| Documentation Link |                 |
++--------------------+-----------------+

@@ -1,0 +1,177 @@
+package tableflow
+
+import (
+	"fmt"
+
+	"github.com/spf13/cobra"
+
+	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2/tableflow/v1"
+
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/kafka"
+	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/utils"
+)
+
+const (
+	awsGlueKind          = "AwsGlue"
+	snowflakeKind        = "Snowflake"
+	unityKind            = "Unity"
+	bigLakeMetastoreKind = "BigLakeMetastore"
+
+	aws       = "aws"
+	snowflake = "snowflake"
+	unity     = "unity"
+	biglake   = "biglake"
+)
+
+var createCatalogIntegrationTypes = []string{aws, snowflake, unity, biglake}
+
+type catalogIntegrationOut struct {
+	Id                    string `human:"ID" serialized:"id"`
+	Name                  string `human:"Name" serialized:"name"`
+	Environment           string `human:"Environment" serialized:"environment"`
+	KafkaCluster          string `human:"Kafka Cluster" serialized:"kafka_cluster"`
+	Type                  string `human:"Type" serialized:"type"`
+	ProviderIntegrationId string `human:"Provider Integration ID,omitempty" serialized:"provider_integration_id,omitempty"`
+	GcpProjectId          string `human:"GCP Project ID,omitempty" serialized:"gcp_project_id,omitempty"`
+	Endpoint              string `human:"Endpoint,omitempty" serialized:"endpoint,omitempty"`
+	Warehouse             string `human:"Warehouse,omitempty" serialized:"warehouse,omitempty"`
+	AllowedScope          string `human:"Allowed Scope,omitempty" serialized:"allowed_scope,omitempty"`
+	WorkspaceEndpoint     string `human:"Workspace Endpoint,omitempty" serialized:"workspace_endpoint,omitempty"`
+	CatalogName           string `human:"Catalog Name,omitempty" serialized:"catalog_name,omitempty"`
+	ClientId              string `human:"Client ID,omitempty" serialized:"client_id,omitempty"`
+	CustomDatabase        string `human:"Custom Database,omitempty" serialized:"custom_database,omitempty"`
+	CustomNamespace       string `human:"Custom Namespace,omitempty" serialized:"custom_namespace,omitempty"`
+	CustomSchema          string `human:"Custom Schema,omitempty" serialized:"custom_schema,omitempty"`
+	Suspended             bool   `human:"Suspended" serialized:"suspended"`
+	Phase                 string `human:"Phase" serialized:"phase"`
+	ErrorMessage          string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
+}
+
+func (c *command) newCatalogIntegrationCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "catalog-integration",
+		Short: "Manage Tableflow catalog integrations.",
+	}
+
+	cmd.AddCommand(c.newCatalogIntegrationCreateCommand())
+	cmd.AddCommand(c.newCatalogIntegrationDeleteCommand())
+	cmd.AddCommand(c.newCatalogIntegrationDescribeCommand())
+	cmd.AddCommand(c.newCatalogIntegrationListCommand())
+	cmd.AddCommand(c.newCatalogIntegrationUpdateCommand())
+
+	return cmd
+}
+
+func addCatalogIntegrationTypeFlag(cmd *cobra.Command) {
+	cmd.Flags().String("type", "", fmt.Sprintf("Specify the catalog integration type as %s.", utils.ArrayToCommaDelimitedString(createCatalogIntegrationTypes, "or")))
+	pcmd.RegisterFlagCompletionFunc(cmd, "type", func(_ *cobra.Command, _ []string) []string { return createCatalogIntegrationTypes })
+}
+
+func (c *command) validCatalogIntegrationArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	return c.validCatalogIntegrationArgsMultiple(cmd, args)
+}
+
+func (c *command) validCatalogIntegrationArgsMultiple(cmd *cobra.Command, args []string) []string {
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return c.autocompleteCatalogIntegrations()
+}
+
+func (c *command) autocompleteCatalogIntegrations() []string {
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil
+	}
+
+	cluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
+	if err != nil {
+		return nil
+	}
+
+	catalogIntegrations, err := c.V2Client.ListCatalogIntegrations(environmentId, cluster.GetId())
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(catalogIntegrations))
+	for i, catalogIntegration := range catalogIntegrations {
+		suggestions[i] = fmt.Sprintf("%s\t%s", catalogIntegration.GetId(), catalogIntegration.Spec.GetDisplayName())
+	}
+	return suggestions
+}
+
+func getCatalogIntegrationType(catalogIntegration tableflowv1.TableflowV1CatalogIntegration) (string, error) {
+	config := catalogIntegration.Spec.GetConfig()
+
+	if config.TableflowV1CatalogIntegrationAwsGlueSpec != nil {
+		return aws, nil
+	}
+
+	if config.TableflowV1CatalogIntegrationSnowflakeSpec != nil {
+		return snowflake, nil
+	}
+
+	if config.TableflowV1CatalogIntegrationUnitySpec != nil {
+		return unity, nil
+	}
+
+	if config.TableflowV1CatalogIntegrationBigLakeMetastoreSpec != nil {
+		return biglake, nil
+	}
+
+	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "config")
+}
+
+func printCatalogIntegrationTable(cmd *cobra.Command, catalogIntegration tableflowv1.TableflowV1CatalogIntegration) error {
+	catalogIntegrationType, err := getCatalogIntegrationType(catalogIntegration)
+	if err != nil {
+		return err
+	}
+
+	out := &catalogIntegrationOut{
+		Id:           catalogIntegration.GetId(),
+		Name:         catalogIntegration.Spec.GetDisplayName(),
+		Type:         catalogIntegrationType,
+		Environment:  catalogIntegration.GetSpec().Environment.GetId(),
+		KafkaCluster: catalogIntegration.GetSpec().KafkaCluster.GetId(),
+		Suspended:    catalogIntegration.Spec.GetSuspended(),
+		Phase:        catalogIntegration.Status.GetPhase(),
+		ErrorMessage: catalogIntegration.Status.GetErrorMessage(),
+	}
+
+	if catalogIntegrationType == aws {
+		out.ProviderIntegrationId = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationAwsGlueSpec.GetProviderIntegrationId()
+		out.CustomDatabase = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationAwsGlueSpec.GetCustomDatabase()
+	}
+	if catalogIntegrationType == snowflake {
+		out.Endpoint = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeSpec.GetEndpoint()
+		out.Warehouse = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeSpec.GetWarehouse()
+		out.AllowedScope = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeSpec.GetAllowedScope()
+		out.CustomNamespace = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationSnowflakeSpec.GetCustomNamespace()
+	}
+	if catalogIntegrationType == unity {
+		out.WorkspaceEndpoint = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec.GetWorkspaceEndpoint()
+		out.CatalogName = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec.GetCatalogName()
+		out.ClientId = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec.GetClientId()
+		out.CustomSchema = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec.GetCustomSchema()
+	}
+	if catalogIntegrationType == biglake {
+		out.ProviderIntegrationId = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationBigLakeMetastoreSpec.GetProviderIntegrationId()
+		out.GcpProjectId = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationBigLakeMetastoreSpec.GetGcpProjectId()
+		out.CatalogName = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationBigLakeMetastoreSpec.GetCatalogName()
+		out.CustomNamespace = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationBigLakeMetastoreSpec.GetCustomNamespace()
+	}
+
+	table := output.NewTable(cmd)
+	table.Add(out)
+	return table.Print()
+}

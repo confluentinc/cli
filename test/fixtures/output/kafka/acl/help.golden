@@ -1,0 +1,16 @@
+Manage Kafka ACLs.
+
+Usage:
+  confluent kafka acl [command]
+
+Available Commands:
+  create      Create a Kafka ACL.
+  delete      Delete a Kafka ACL.
+  list        List Kafka ACLs for a resource.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent kafka acl [command] --help" for more information about a command.

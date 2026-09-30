@@ -1,0 +1,6 @@
+Error: unknown command "plugin1" for "confluent"
+
+Did you mean this?
+	plugin
+
+Run 'confluent --help' for usage.

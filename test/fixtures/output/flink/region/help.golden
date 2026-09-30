@@ -1,0 +1,16 @@
+Manage and select Confluent Cloud Flink regions.
+
+Usage:
+  confluent flink region [command]
+
+Available Commands:
+  list        List Flink regions.
+  unset       Unset the current Flink cloud provider and region.
+  use         Use a Flink cloud provider and region combination.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent flink region [command] --help" for more information about a command.

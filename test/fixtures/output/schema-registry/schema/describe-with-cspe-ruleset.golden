@@ -1,0 +1,23 @@
+Schema ID: 1006
+Type: AVRO
+Schema:
+{
+    "schema": 1
+}
+Ruleset:
+{
+  "encodingRules": [
+    {
+      "kind": "TRANSFORM",
+      "mode": "WRITEREAD",
+      "name": "encryptPayload",
+      "onFailure": "ERROR,NONE",
+      "params": {
+        "encrypt.kek.name": "local-kek1",
+        "encrypt.kms.key.id": "mykey",
+        "encrypt.kms.type": "local-kms"
+      },
+      "type": "ENCRYPT_PAYLOAD"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
++-------------------------------+---------------------------------------------------------+
+| ID                            | ap-99999                                                |
+| Environment                   | env-596                                                 |
+| Gateway                       | gw-88888                                                |
+| Phase                         | READY                                                   |
+| AWS VPC Endpoint ID           | vpce-1234567890abcdef0                                  |
+| AWS VPC Endpoint Service Name | com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000 |
+| DNS Domain                    | ap123abc.us-west-2.aws.accesspoint.confluent.cloud      |
++-------------------------------+---------------------------------------------------------+

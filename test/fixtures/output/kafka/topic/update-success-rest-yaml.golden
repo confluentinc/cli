@@ -1,0 +1,6 @@
+- name: compression.type
+  value: producer
+  read_only: true
+- name: retention.ms
+  value: "1"
+  read_only: false

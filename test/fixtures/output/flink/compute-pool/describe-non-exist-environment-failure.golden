@@ -1,0 +1,1 @@
+Error: failed to describe compute pool "test-pool" in the environment "non-exist": Environment not found

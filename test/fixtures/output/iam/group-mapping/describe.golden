@@ -1,0 +1,8 @@
++-------------+-----------------------+
+| ID          | group-abc             |
+| Name        | another-group-mapping |
+| Description | another description   |
+| Filter      | true                  |
+| Principal   | group-abc             |
+| State       | ENABLED               |
++-------------+-----------------------+

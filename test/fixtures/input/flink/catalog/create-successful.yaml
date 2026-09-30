@@ -1,0 +1,8 @@
+apiVersion: cmf/api/v1/catalog
+kind: KafkaCatalog
+metadata:
+  name: test-catalog
+spec:
+  kafkaClusters:
+    - databaseName: dev
+    - databaseName: prod 

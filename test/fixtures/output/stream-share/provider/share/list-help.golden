@@ -1,0 +1,18 @@
+List shares for provider.
+
+Usage:
+  confluent stream-share provider share list [flags]
+
+Examples:
+List provider shares for shared resource "sr-12345":
+
+  $ confluent stream-share provider share list --shared-resource sr-12345
+
+Flags:
+      --shared-resource string   Filter the results by exact match for shared resource.
+  -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

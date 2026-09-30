@@ -1,0 +1,33 @@
+Delete one or more schema versions. This command should only be used if absolutely necessary.
+
+Usage:
+  confluent schema-registry schema delete [flags]
+
+Examples:
+Soft delete the latest version of subject "payments".
+
+  $ confluent schema-registry schema delete --subject payments --version latest --certificate-authority-path <certification-authority-location> --schema-registry-endpoint <schema-registry-endpoint>
+
+Soft delete version "2" of subject "payments".
+
+  $ confluent schema-registry schema delete --subject payments --version 2 --certificate-authority-path <certification-authority-location> --schema-registry-endpoint <schema-registry-endpoint>
+
+Permanently delete version "2" of subject "payments", which must be soft deleted first.
+
+  $ confluent schema-registry schema delete --subject payments --version 2 --permanent --certificate-authority-path <certification-authority-location> --schema-registry-endpoint <schema-registry-endpoint>
+
+Flags:
+      --subject string                      REQUIRED: Subject of the schema.
+      --version string                      REQUIRED: Version of the schema. Can be a specific version, "all", or "latest".
+      --permanent                           Permanently delete the schema. You must first soft delete the schema by deleting the schema without this flag.
+      --context string                      CLI context name.
+      --certificate-authority-path string   File or directory path to Certificate Authority certificates to authenticate the Schema Registry client.
+      --client-cert-path string             File or directory path to client certificate to authenticate the Schema Registry client.
+      --client-key-path string              File or directory path to client key to authenticate the Schema Registry client.
+      --schema-registry-endpoint string     The URL of the Schema Registry cluster.
+      --force                               Skip the deletion confirmation prompt.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

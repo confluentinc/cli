@@ -1,0 +1,6 @@
+([]prompt.Suggest) (len=1) {
+  (prompt.Suggest) {
+    Text: (string) (len=16) "DESCRIBE Orders;",
+    Description: (string) (len=40) "Describe the schema of a table or a view"
+  }
+}

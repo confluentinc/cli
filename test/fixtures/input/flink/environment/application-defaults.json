@@ -1,0 +1,12 @@
+{
+    "metadata": {
+        "annotations": {
+            "fmc.platform.confluent.io/intra-cluster-ssl": "false"
+        }
+    },
+    "spec": {
+        "flinkConfiguration": {
+            "taskmanager.numberOfTaskSlots": "8"
+        }
+    }
+}

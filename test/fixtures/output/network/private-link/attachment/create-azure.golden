@@ -1,0 +1,7 @@
++--------+------------------+
+| ID     | pla-123456-azure |
+| Name   | azure-platt      |
+| Cloud  | AZURE            |
+| Region | eastus2          |
+| Phase  | PROVISIONING     |
++--------+------------------+

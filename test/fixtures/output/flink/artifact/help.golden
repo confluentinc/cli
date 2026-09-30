@@ -1,0 +1,17 @@
+Manage Flink UDF artifacts.
+
+Usage:
+  confluent flink artifact [command]
+
+Available Commands:
+  create      Create a Flink UDF artifact.
+  delete      Delete one or more Flink UDF artifacts.
+  describe    Describe a Flink UDF artifact.
+  list        List Flink UDF artifacts.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent flink artifact [command] --help" for more information about a command.

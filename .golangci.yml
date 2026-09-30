@@ -1,0 +1,34 @@
+issues:
+  exclude-dirs:
+    - mock
+    - pkg/flink/test/mock
+linters:
+  enable:
+    - dupword
+    - gci
+    - gofmt
+    - goimports
+    - gomoddirectives
+    - govet
+    - ineffassign
+    - misspell
+    - nakedret
+    - nolintlint
+    - nonamedreturns
+    - prealloc
+    - predeclared
+    - unconvert
+    - unparam
+    - unused
+    - usestdlibvars
+    - whitespace
+linters-settings:
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(github.com/confluentinc/)
+      - prefix(github.com/confluentinc/cli/)
+    custom-order: true
+  nakedret:
+    max-func-lines: 0

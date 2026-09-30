@@ -1,0 +1,9 @@
++----------------+-----------------------------+
+| ID             | cfa-gcp-jar123              |
+| Name           | my-connect-artifact-gcp-jar |
+| Description    | new-jar-artifact            |
+| Cloud          | GCP                         |
+| Environment    | env-123456                  |
+| Content Format | JAR                         |
+| Status         | READY                       |
++----------------+-----------------------------+

@@ -1,0 +1,21 @@
+Manage Apache Kafka®.
+
+Usage:
+  confluent local services kafka [command]
+
+Available Commands:
+  consume     Consume from a Kafka topic.
+  log         Print logs showing Apache Kafka® output.
+  produce     Produce to a Kafka topic.
+  start       Start Apache Kafka®.
+  status      Check if Apache Kafka® is running.
+  stop        Stop Apache Kafka®.
+  top         View resource usage for Apache Kafka®.
+  version     Print the current version of Apache Kafka®.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent local services kafka [command] --help" for more information about a command.

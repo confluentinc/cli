@@ -1,0 +1,1 @@
+Error: failed to list events for application "some-app" in the environment "non-existent": Environment not found

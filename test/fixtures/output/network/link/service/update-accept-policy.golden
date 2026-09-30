@@ -1,0 +1,10 @@
++-----------------------+------------------------------+
+| ID                    | nls-111111                   |
+| Name                  | my-network-link-service      |
+| Network               | n-abcde1                     |
+| Environment           | env-00000                    |
+| Description           | example network link service |
+| Accepted Environments | env-22222                    |
+| Accepted Networks     | n-111111                     |
+| Phase                 | READY                        |
++-----------------------+------------------------------+

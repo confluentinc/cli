@@ -1,0 +1,20 @@
+Create an IAM service account.
+
+Usage:
+  confluent iam service-account create <name> [flags]
+
+Examples:
+Create a service account named "my-service-account".
+
+  $ confluent iam service-account create my-service-account --description "new description"
+
+Flags:
+      --resource-owner string   The resource ID of the principal who will be assigned resource owner on the created resource. Principal can be a "user", "group-mapping", "service-account", or "identity-pool".
+      --description string      A free-form description of the Service Account.
+      --context string          CLI context name.
+  -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

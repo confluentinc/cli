@@ -1,0 +1,9 @@
+- cluster: cluster-1
+  topic_name: topic1
+  partition: 0
+  adding_replicas:
+    - 1
+    - 2
+    - 3
+  removing_replicas:
+    - 4

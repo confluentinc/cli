@@ -1,0 +1,5 @@
+Error: Flink compute pool "test-pool1" not found
+
+Suggestions:
+    List available Flink compute pools with `confluent flink compute-pool list`.
+    Check that CMF is running and accessible.

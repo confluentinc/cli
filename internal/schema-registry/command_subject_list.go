@@ -1,0 +1,63 @@
+package schemaregistry
+
+import (
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/output"
+)
+
+type subjectListOut struct {
+	Subject string `human:"Subject" serialized:"subject"`
+}
+
+func (c *command) newSubjectListCommand(cfg *config.Config) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list",
+		Short: "List subjects.",
+		Args:  cobra.NoArgs,
+		RunE:  c.subjectList,
+	}
+
+	cmd.Flags().Bool("all", false, "Include deleted subjects.")
+	cmd.Flags().String("prefix", ":*:", "Subject prefix.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	} else {
+		addCaLocationAndClientPathFlags(cmd)
+	}
+	addSchemaRegistryEndpointFlag(cmd)
+	pcmd.AddOutputFlag(cmd)
+
+	return cmd
+}
+
+func (c *command) subjectList(cmd *cobra.Command, _ []string) error {
+	client, err := c.GetSchemaRegistryClient(cmd)
+	if err != nil {
+		return err
+	}
+
+	all, err := cmd.Flags().GetBool("all")
+	if err != nil {
+		return err
+	}
+
+	prefix, err := cmd.Flags().GetString("prefix")
+	if err != nil {
+		return err
+	}
+
+	subjects, err := client.List(prefix, all)
+	if err != nil {
+		return err
+	}
+
+	list := output.NewList(cmd)
+	for _, subject := range subjects {
+		list.Add(&subjectListOut{Subject: subject})
+	}
+	return list.Print()
+}

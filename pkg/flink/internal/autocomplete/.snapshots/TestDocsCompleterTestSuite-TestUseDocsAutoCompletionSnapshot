@@ -1,0 +1,74 @@
+([]prompt.Suggest) (len=18) {
+  (prompt.Suggest) {
+    Text: (string) (len=6) "user |",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=13) "user` BIGINT,",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=12) "user STRING,",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=8) "used for",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=9) "used with",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=8) "use sync",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=16) "user_id` BIGINT,",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=12) "user BIGINT,",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=13) "use broadcast",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=8) "use hash",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=10) "use nested",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=12) "user` BIGINT",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=11) "USE CATALOG",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=14) "user_id, name,",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=12) "users HAVING",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=12) "userid ORDER",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=12) "user, amount",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=32) "USE [catalog_name.]database_name",
+    Description: (string) ""
+  }
+}

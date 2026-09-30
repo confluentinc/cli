@@ -1,0 +1,11 @@
+[WARN] Confirm that the users or service accounts that will interact with this cluster have the required privileges to access Schema Registry.
++-------------------------+--------------------------+
+| ID                      | lksqlc-woooo             |
+| Name                    | kay cee queue elle       |
+| Topic Prefix            | pksqlc-ghjkl             |
+| Kafka Cluster           | lkc-zxcvb                |
+| Storage                 | 123                      |
+| Endpoint                | SASL_SSL://ksql-endpoint |
+| Status                  | PROVISIONING             |
+| Detailed Processing Log | false                    |
++-------------------------+--------------------------+

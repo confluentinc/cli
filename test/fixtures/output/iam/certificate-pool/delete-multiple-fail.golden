@@ -1,0 +1,4 @@
+Error: certificate pool "pool-44444" not found
+
+Suggestions:
+    List available certificate pools with `confluent iam certificate-pool list`.

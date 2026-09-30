@@ -1,0 +1,7 @@
++---------------------+-----------------------------+
+| ID                  | pool-12345                  |
+| Name                | certificate-pool            |
+| Description         | certificate pool identities |
+| External Identifier | external-entity             |
+| Filter              | true                        |
++---------------------+-----------------------------+

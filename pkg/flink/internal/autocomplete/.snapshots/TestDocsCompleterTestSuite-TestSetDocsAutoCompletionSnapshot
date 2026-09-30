@@ -1,0 +1,58 @@
+([]prompt.Suggest) (len=14) {
+  (prompt.Suggest) {
+    Text: (string) (len=9) "SET BEGIN",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=9) "set Flink",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=6) "set to",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=10) "set single",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=21) "set 'rows-per-second'",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=14) "SET key1=val1,",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=17) "SETS supplier_id,",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=27) "SET 'table.local-time-zone'",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=4) "SET ",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=5) "SETS ",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=35) "SET 'table.exec.mini-batch.enabled'",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=9) "SET 'key'",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=7) "SETS ''",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=3) "set",
+    Description: (string) ""
+  }
+}

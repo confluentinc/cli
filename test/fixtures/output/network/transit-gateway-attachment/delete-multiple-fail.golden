@@ -1,0 +1,4 @@
+Error: transit gateway attachment "tgwa-invalid" not found
+
+Suggestions:
+    List available transit gateway attachments with `confluent network transit-gateway-attachment list`.

@@ -1,0 +1,9 @@
+Implicitly agreeing to the following license: Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)
+
+[DRY RUN] Installing Integration Test Plugin 0.1.0, provided by Confluent, Inc.
+
+[DRY RUN] Adding plugin installation directory to the plugin path in the following files:
+	* test/fixtures/input/connect/confluent-7.3.3/etc/kafka/connect-distributed.properties
+	* test/fixtures/input/connect/confluent-7.3.3/etc/kafka/connect-standalone.properties
+
+[DRY RUN] Installed Integration Test Plugin 0.1.0.

@@ -1,0 +1,4 @@
+Error: gateway "gw-invalid" not found
+
+Suggestions:
+    List available gateways with `confluent network gateway list`.

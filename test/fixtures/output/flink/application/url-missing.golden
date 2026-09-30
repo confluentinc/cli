@@ -1,0 +1,4 @@
+Error: url is required
+
+Suggestions:
+    Specify a URL with `--url` or set the variable "CONFLUENT_CMF_URL" in place of this flag.

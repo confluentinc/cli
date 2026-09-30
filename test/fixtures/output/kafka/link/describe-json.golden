@@ -1,0 +1,5 @@
+{
+  "link_name": "link-1",
+  "source_cluster": "lkc-describe-topic",
+  "state": "AVAILABLE"
+}

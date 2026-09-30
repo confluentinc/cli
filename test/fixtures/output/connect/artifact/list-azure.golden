@@ -1,0 +1,4 @@
+         ID        |             Name              |   Description    | Cloud | Environment | Content Format |   Status    
+-------------------+-------------------------------+------------------+-------+-------------+----------------+-------------
+  cfa-azure-jar123 | my-connect-artifact-azure-jar | new-jar-artifact | AZURE | env-123456  | JAR            | READY       
+  cfa-azure-zip123 | my-connect-artifact-azure-zip | new-zip-artifact | AZURE | env-123456  | ZIP            | PROCESSING  

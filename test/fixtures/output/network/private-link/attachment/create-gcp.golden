@@ -1,0 +1,7 @@
++--------+----------------+
+| ID     | pla-123456-gcp |
+| Name   | gcp-platt      |
+| Cloud  | GCP            |
+| Region | us-central1    |
+| Phase  | PROVISIONING   |
++--------+----------------+

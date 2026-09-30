@@ -1,0 +1,8 @@
++----------------------+-------------------------------+
+| ID                   | nle-abcde1                    |
+| Network              | n-123456                      |
+| Environment          | env-00000                     |
+| Description          | example network link endpoint |
+| Network Link Service | nls-abcde1                    |
+| Phase                | PENDING_ACCEPT                |
++----------------------+-------------------------------+

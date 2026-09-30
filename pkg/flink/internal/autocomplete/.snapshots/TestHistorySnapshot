@@ -1,0 +1,10 @@
+([]prompt.Suggest) (len=2) {
+  (prompt.Suggest) {
+    Text: (string) (len=10) "spec2 from",
+    Description: (string) (len=13) "History entry"
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=9) "spec from",
+    Description: (string) (len=13) "History entry"
+  }
+}

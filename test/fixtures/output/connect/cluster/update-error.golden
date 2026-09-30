@@ -1,0 +1,1 @@
+Error: unable to read configuration file "test/fixtures/input/connect/update-config-malformed.json": offsets are not allowed in configuration file for `confluent connect cluster update`

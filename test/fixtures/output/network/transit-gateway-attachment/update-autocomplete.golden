@@ -1,0 +1,6 @@
+--name	Name of the transit gateway attachment.
+tgwa-111111	aws-tgwa1
+tgwa-222222	aws-tgwa2
+tgwa-333333	aws-tgwa3
+:4
+Completion ended with directive: ShellCompDirectiveNoFileComp

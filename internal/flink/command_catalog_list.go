@@ -1,0 +1,70 @@
+package flink
+
+import (
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/output"
+)
+
+func (c *command) newCatalogListCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list",
+		Short: "List Flink catalogs in Confluent Platform.",
+		Args:  cobra.NoArgs,
+		RunE:  c.catalogList,
+	}
+
+	addPageSizeFlag(cmd)
+	addCmfFlagSet(cmd)
+	pcmd.AddOutputFlag(cmd)
+
+	return cmd
+}
+
+func (c *command) catalogList(cmd *cobra.Command, _ []string) error {
+	pageSize, err := getPageSize(cmd)
+	if err != nil {
+		return err
+	}
+
+	client, err := c.GetCmfClient(cmd)
+	if err != nil {
+		return err
+	}
+
+	sdkCatalogs, err := client.ListCatalog(c.createContext(), pageSize)
+	if err != nil {
+		return err
+	}
+
+	if output.GetFormat(cmd) == output.Human {
+		list := output.NewList(cmd)
+		for _, catalog := range sdkCatalogs {
+			databases := make([]string, 0, len(catalog.Spec.GetKafkaClusters()))
+			for _, kafkaCluster := range catalog.Spec.GetKafkaClusters() {
+				databases = append(databases, kafkaCluster.DatabaseName)
+			}
+			var creationTime string
+			if catalog.GetMetadata().CreationTimestamp != nil {
+				creationTime = *catalog.GetMetadata().CreationTimestamp
+			} else {
+				creationTime = ""
+			}
+			list.Add(&catalogOut{
+				CreationTime: creationTime,
+				Name:         catalog.Metadata.Name,
+				Databases:    databases,
+			})
+		}
+		return list.Print()
+	}
+
+	localCatalogs := make([]LocalKafkaCatalog, 0, len(sdkCatalogs))
+	for _, sdkCatalog := range sdkCatalogs {
+		localCatalog := convertSdkCatalogToLocalCatalog(sdkCatalog)
+		localCatalogs = append(localCatalogs, localCatalog)
+	}
+
+	return output.SerializedOutput(cmd, localCatalogs)
+}

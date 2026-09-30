@@ -1,0 +1,4 @@
+   Cluster  |  Share Group  |  Consumer  |  Client   
+------------+---------------+------------+-----------
+  cluster-1 | share-group-1 | consumer-1 | client-1  
+  cluster-1 | share-group-1 | consumer-2 | client-2  

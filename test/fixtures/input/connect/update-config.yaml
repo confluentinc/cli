@@ -1,0 +1,13 @@
+{
+  "name": "az-connector",
+  "azblob.account.name": "azsink",
+  "azblob.account.key": "key",
+  "azblob.container.name": "azsink",
+  "data.format": "JSON",
+  "kafka.api.key": "key",
+  "kafka.api.secret": "key",
+  "tasks.max": "1",
+  "time.interval": "HOURLY",
+  "topics": "apples",
+  "connector.class": "AzureBlobSink"
+}

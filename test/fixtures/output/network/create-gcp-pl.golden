@@ -1,0 +1,9 @@
++----------------------------+--------------+
+| ID                         | n-abcde1     |
+| Environment                | env-596      |
+| Name                       | gcp-pl       |
+| Cloud                      | GCP          |
+| Region                     | us-central1  |
+| Phase                      | PROVISIONING |
+| Supported Connection Types | PRIVATELINK  |
++----------------------------+--------------+

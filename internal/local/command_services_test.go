@@ -1,0 +1,398 @@
+package local
+
+import (
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
+
+	climock "github.com/confluentinc/cli/v4/mock"
+)
+
+const (
+	exampleDir  = "dir"
+	exampleFile = "file"
+)
+
+func TestGetConnectConfig(t *testing.T) {
+	want := map[string]string{
+		"bootstrap.servers":            "localhost:9092",
+		"plugin.path":                  exampleFile,
+		"consumer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
+		"producer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor",
+		"rest.extension.classes":       "io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension",
+	}
+	testGetConfig(t, "connect", want)
+
+	req := require.New(t)
+	req.Equal(exampleFile, os.Getenv("CLASSPATH"))
+}
+
+func TestGetControlCenterConfig(t *testing.T) {
+	want := map[string]string{
+		"confluent.controlcenter.data.dir":                 exampleDir,
+		"confluent.controlcenter.alertmanager.config.file": "dir/abc",
+		"confluent.controlcenter.prometheus.rules.file":    "dir/def",
+	}
+	os.Setenv("CONTROL_CENTER_HOME", "dir")
+	dir := os.Getenv("CONTROL_CENTER_HOME")
+
+	path := filepath.Join(dir, "/etc/confluent-control-center/control-center-local.properties")
+	err := os.MkdirAll(filepath.Dir(path), 0777)
+	if err != nil {
+		return
+	}
+	err = os.WriteFile(path, []byte("confluent.controlcenter.alertmanager.config.file=abc\n"+"confluent.controlcenter.prometheus.rules.file=def\n"), 0644)
+	if err != nil {
+		return
+	}
+	testGetConfigC3(t, "control-center", want)
+}
+
+func TestGetKafkaConfig(t *testing.T) {
+	want := map[string]string{
+		"log.dirs":         exampleDir,
+		"metric.reporters": "io.confluent.metrics.reporter.ConfluentMetricsReporter",
+		"confluent.metrics.reporter.bootstrap.servers": "localhost:9092",
+		"confluent.metrics.reporter.topic.replicas":    "1",
+	}
+	testGetConfig(t, "kafka", want)
+}
+
+func TestGetKafkaConfigC3(t *testing.T) {
+	want := map[string]string{
+		"log.dirs": filepath.Join("dir", "kraft-broker-logs"),
+		"confluent.metrics.reporter.bootstrap.servers":                     "localhost:9092",
+		"confluent.metrics.reporter.topic.replicas":                        "1",
+		"metric.reporters":                                                 "io.confluent.telemetry.reporter.TelemetryReporter",
+		"confluent.telemetry.exporter._c3.type":                            "http",
+		"confluent.telemetry.exporter._c3.enabled":                         "true",
+		"confluent.telemetry.exporter._c3.metrics.include":                 c3TelemetryMetricsInclude,
+		"confluent.telemetry.exporter._c3.client.base.url":                 "http://localhost:9090/api/v1/otlp",
+		"confluent.telemetry.exporter._c3.client.compression":              "gzip",
+		"confluent.telemetry.exporter._c3.api.key":                         "dummy",
+		"confluent.telemetry.exporter._c3.api.secret":                      "dummy",
+		"confluent.telemetry.exporter._c3.buffer.pending.batches.max":      "80",
+		"confluent.telemetry.exporter._c3.buffer.batch.items.max":          "4000",
+		"confluent.telemetry.exporter._c3.buffer.inflight.submissions.max": "10",
+		"confluent.telemetry.metrics.collector.interval.ms":                "60000",
+		"confluent.telemetry.remoteconfig._confluent.enabled":              "false",
+		"confluent.consumer.lag.emitter.enabled":                           "true",
+	}
+	testGetConfigC3(t, "kafka", want)
+}
+
+func TestGetKafkaRestConfig(t *testing.T) {
+	want := map[string]string{
+		"schema.registry.url":          "http://localhost:8081",
+		"zookeeper.connect":            "localhost:2181",
+		"consumer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
+		"producer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor",
+	}
+	testGetConfig(t, "kafka-rest", want)
+}
+
+func TestGetKraftConfigC3(t *testing.T) {
+	want := map[string]string{
+		"log.dirs": filepath.Join("dir", "kraft-controller-logs"),
+		"confluent.metrics.reporter.bootstrap.servers":                     "localhost:9092",
+		"confluent.metrics.reporter.topic.replicas":                        "1",
+		"metric.reporters":                                                 "io.confluent.telemetry.reporter.TelemetryReporter",
+		"confluent.telemetry.exporter._c3.type":                            "http",
+		"confluent.telemetry.exporter._c3.enabled":                         "true",
+		"confluent.telemetry.exporter._c3.metrics.include":                 c3TelemetryMetricsInclude,
+		"confluent.telemetry.exporter._c3.client.base.url":                 "http://localhost:9090/api/v1/otlp",
+		"confluent.telemetry.exporter._c3.client.compression":              "gzip",
+		"confluent.telemetry.exporter._c3.api.key":                         "dummy",
+		"confluent.telemetry.exporter._c3.api.secret":                      "dummy",
+		"confluent.telemetry.exporter._c3.buffer.pending.batches.max":      "80",
+		"confluent.telemetry.exporter._c3.buffer.batch.items.max":          "4000",
+		"confluent.telemetry.exporter._c3.buffer.inflight.submissions.max": "10",
+		"confluent.telemetry.metrics.collector.interval.ms":                "60000",
+		"confluent.telemetry.remoteconfig._confluent.enabled":              "false",
+		"confluent.consumer.lag.emitter.enabled":                           "true",
+	}
+	testGetConfigC3(t, "kraft-controller", want)
+}
+
+// TestC3MetricsIncludeExcludesDelta guards against regressing to ".*", which exported
+// delta-temporality metrics that the Control Center next-gen Prometheus OTLP receiver rejects
+// (500 "invalid temporality and type combination"), dropping all broker metrics.
+func TestC3MetricsIncludeExcludesDelta(t *testing.T) {
+	req := require.New(t)
+
+	// Exact value is locked so any change is intentional and visible in review.
+	req.Equal(`^(?!.*delta).*$`, c3TelemetryMetricsInclude)
+	req.NotEqual(".*", c3TelemetryMetricsInclude, "_c3.metrics.include must not be .* (sends delta metrics Prometheus rejects)")
+	req.Contains(c3TelemetryMetricsInclude, "(?!.*delta)", "_c3.metrics.include must exclude delta-temporality metrics")
+}
+
+// TestC3MetricsIncludeContract validates which metrics the filter admits vs. drops, using real metric
+// names from the incident. The broker applies metrics.include as a Java regex; Go's RE2 cannot compile
+// the negative lookahead, so this parses the excluded token out of the pattern and applies the
+// equivalent predicate ("admit a metric iff its name does not contain the token"). End-to-end behavior
+// is verified by the manual matrix in the PR description.
+func TestC3MetricsIncludeContract(t *testing.T) {
+	req := require.New(t)
+
+	// Expect an exclude pattern of the form ^(?!.*<token>).*$ and pull out <token>.
+	m := regexp.MustCompile(`^\^\(\?!\.\*(.+)\)\.\*\$$`).FindStringSubmatch(c3TelemetryMetricsInclude)
+	req.Len(m, 2, "metrics.include should be an exclude pattern: ^(?!.*<token>).*$")
+	token := m[1]
+	req.Equal("delta", token, "the excluded token should be the delta-temporality marker")
+
+	admits := func(name string) bool { return !strings.Contains(name, token) }
+
+	// Cumulative metrics Control Center uses — must be admitted.
+	for _, name := range []string{
+		"io.confluent.kafka.server.partition.under.replicated",
+		"io.confluent.kafka.server.partition.in.sync.replicas.count",
+		"io.confluent.kafka.server.request.total.time.ms.p99",
+		"io.confluent.kafka.rest.jersey.request_total",
+	} {
+		req.True(admits(name), "cumulative metric %q must be admitted", name)
+	}
+
+	// Delta-temporality variants Prometheus rejects — must be dropped.
+	for _, name := range []string{
+		"io.confluent.kafka.rest.jersey.request_total.delta",
+		"io.confluent.telemetry.exporter.sent_records_total.delta",
+		"io.confluent.kafka.server.request.queue.size.delta",
+	} {
+		req.False(admits(name), "delta-temporality metric %q must be dropped", name)
+	}
+}
+
+// TestPre8NoTelemetryExporter protects the version gating: on Confluent Platform < 8.0 the broker
+// and KRaft controller must NOT be configured with the Control Center next-gen telemetry exporter
+// (they use the classic Kafka-topic metrics reporter instead), so the metrics.include allow-list is
+// never emitted and those versions are unaffected by this change.
+func TestPre8NoTelemetryExporter(t *testing.T) {
+	req := require.New(t)
+
+	for _, service := range []string{"kafka", "kraft-controller"} {
+		config := getConfigForVersion(t, service, "7.9.0")
+
+		for key := range config {
+			req.NotContains(key, "confluent.telemetry.exporter._c3", "service %q on CP < 8.0 must not set any C3 telemetry exporter config", service)
+		}
+		req.Equal("io.confluent.metrics.reporter.ConfluentMetricsReporter", config["metric.reporters"], "service %q on CP < 8.0 should use the classic metrics reporter", service)
+	}
+}
+
+// TestC3TelemetryExporterVersionGate documents the exact version boundary so the change is safe to
+// roll out: the Control Center next-gen telemetry exporter (with the metrics.include allow-list) is
+// emitted only on Confluent Platform 8.0 and later. On 7.x and earlier the broker and KRaft controller
+// keep the classic Kafka-topic metrics reporter and never see this config, so upgrading the CLI cannot
+// change metrics behavior for an existing pre-8.0 deployment.
+func TestC3TelemetryExporterVersionGate(t *testing.T) {
+	req := require.New(t)
+	const includeKey = "confluent.telemetry.exporter._c3.metrics.include"
+
+	cases := []struct {
+		version  string
+		expectC3 bool
+	}{
+		{"6.2.0", false},
+		{"7.0.0", false},
+		{"7.9.0", false},
+		{"8.0.0", true},
+		{"8.2.1", true},
+		{"9.0.0", true},
+	}
+
+	for _, service := range []string{"kafka", "kraft-controller"} {
+		for _, c := range cases {
+			config := getConfigForVersion(t, service, c.version)
+			if c.expectC3 {
+				req.Equal(c3TelemetryMetricsInclude, config[includeKey], "service %q on %s should export the C3 allow-list", service, c.version)
+				req.Equal("io.confluent.telemetry.reporter.TelemetryReporter", config["metric.reporters"], "service %q on %s should use the telemetry reporter", service, c.version)
+			} else {
+				req.NotContains(config, includeKey, "service %q on %s must not set the C3 metrics include", service, c.version)
+				req.Equal("io.confluent.metrics.reporter.ConfluentMetricsReporter", config["metric.reporters"], "service %q on %s should keep the classic metrics reporter", service, c.version)
+			}
+		}
+	}
+}
+
+// TestC3TelemetryConfigIdenticalForKafkaAndKraft confirms the broker and the KRaft controller receive
+// the exact same telemetry configuration (including the metrics.include fix). Both export to the same
+// Control Center Prometheus, so a divergence between the two would silently break one of them.
+func TestC3TelemetryConfigIdenticalForKafkaAndKraft(t *testing.T) {
+	req := require.New(t)
+
+	kafka := getConfigForVersion(t, "kafka", "8.1.0")
+	kraft := getConfigForVersion(t, "kraft-controller", "8.1.0")
+
+	telemetry := func(config map[string]string) map[string]string {
+		out := make(map[string]string)
+		for key, val := range config {
+			if strings.HasPrefix(key, "confluent.telemetry.") || key == "metric.reporters" {
+				out[key] = val
+			}
+		}
+		return out
+	}
+
+	req.Equal(telemetry(kafka), telemetry(kraft), "kafka and kraft-controller must get identical telemetry config")
+	req.Equal(c3TelemetryMetricsInclude, kafka["confluent.telemetry.exporter._c3.metrics.include"])
+}
+
+func getConfigForVersion(t *testing.T, service, version string) map[string]string {
+	t.Helper()
+	req := require.New(t)
+
+	ctrl := gomock.NewController(t)
+	ch := climock.NewMockConfluentHome(ctrl)
+	ch.EXPECT().IsConfluentPlatform().Return(true, nil).AnyTimes()
+	ch.EXPECT().GetConfluentVersion().Return(version, nil).AnyTimes()
+	ch.EXPECT().GetFile(gomock.Any()).Return(exampleFile, nil).AnyTimes()
+	ch.EXPECT().FindFile(gomock.Any()).Return([]string{exampleFile}, nil).AnyTimes()
+	ch.EXPECT().ReadServiceConfig(gomock.Any(), gomock.Any()).Return([]byte("plugin.path=share/java"), nil).AnyTimes()
+
+	cc := climock.NewMockConfluentCurrent(ctrl)
+	cc.EXPECT().GetDataDir(gomock.Any()).Return(exampleDir, nil).AnyTimes()
+
+	c := &command{
+		ch: ch,
+		cc: cc,
+	}
+
+	got, err := c.getConfig(service)
+	req.NoError(err)
+	return got
+}
+
+func TestGetKsqlServerConfig(t *testing.T) {
+	want := map[string]string{
+		"kafkastore.connection.url":    "localhost:2181",
+		"ksql.schema.registry.url":     "http://localhost:8081",
+		"state.dir":                    exampleDir,
+		"consumer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
+		"producer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor",
+	}
+	testGetConfig(t, "ksql-server", want)
+}
+
+func TestGetSchemaRegistryConfig(t *testing.T) {
+	want := map[string]string{
+		"kafkastore.connection.url":    "localhost:2181",
+		"consumer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
+		"producer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor",
+	}
+	testGetConfig(t, "schema-registry", want)
+}
+
+func TestGetZookeeperConfig(t *testing.T) {
+	want := map[string]string{
+		"dataDir": exampleDir,
+	}
+	testGetConfig(t, "zookeeper", want)
+}
+
+func testGetConfig(t *testing.T, service string, want map[string]string) {
+	req := require.New(t)
+
+	ctrl := gomock.NewController(t)
+	ch := climock.NewMockConfluentHome(ctrl)
+	ch.EXPECT().IsConfluentPlatform().Return(true, nil).AnyTimes()
+	ch.EXPECT().GetConfluentVersion().Return("7.9.0", nil).AnyTimes()
+	ch.EXPECT().GetFile(gomock.Any()).Return(exampleFile, nil).AnyTimes()
+	ch.EXPECT().FindFile(gomock.Any()).Return([]string{exampleFile}, nil).AnyTimes()
+	ch.EXPECT().ReadServiceConfig(gomock.Any(), gomock.Any()).Return([]byte("plugin.path=share/java"), nil).AnyTimes()
+
+	cc := climock.NewMockConfluentCurrent(ctrl)
+	cc.EXPECT().GetDataDir(gomock.Any()).Return(exampleDir, nil).AnyTimes()
+
+	c := &command{
+		ch: ch,
+		cc: cc,
+	}
+
+	got, err := c.getConfig(service)
+
+	req.NoError(err)
+	req.Equal(want, got)
+}
+
+func testGetConfigC3(t *testing.T, service string, want map[string]string) {
+	req := require.New(t)
+
+	ctrl := gomock.NewController(t)
+	ch := climock.NewMockConfluentHome(ctrl)
+	ch.EXPECT().IsConfluentPlatform().Return(true, nil).AnyTimes()
+	ch.EXPECT().GetConfluentVersion().Return("8.1.0", nil).AnyTimes()
+	ch.EXPECT().GetFile(gomock.Any()).Return(exampleFile, nil).AnyTimes()
+	ch.EXPECT().FindFile(gomock.Any()).Return([]string{exampleFile}, nil).AnyTimes()
+	ch.EXPECT().ReadServiceConfig(gomock.Any(), gomock.Any()).Return([]byte("plugin.path=share/java"), nil).AnyTimes()
+
+	cc := climock.NewMockConfluentCurrent(ctrl)
+	cc.EXPECT().GetDataDir(gomock.Any()).Return(exampleDir, nil).AnyTimes()
+
+	c := &command{
+		ch: ch,
+		cc: cc,
+	}
+
+	got, err := c.getConfig(service)
+
+	req.NoError(err)
+	req.Equal(want, got)
+}
+
+func TestConfluentPlatformAvailableServices(t *testing.T) {
+	req := require.New(t)
+
+	ctrl := gomock.NewController(t)
+	ch := climock.NewMockConfluentHome(ctrl)
+	ch.EXPECT().IsConfluentPlatform().Return(true, nil).AnyTimes()
+	ch.EXPECT().GetConfluentVersion().Return("7.9.0", nil).AnyTimes()
+
+	c := &command{
+		ch: ch,
+	}
+
+	got, err := c.getAvailableServices()
+	req.NoError(err)
+
+	want := []string{
+		"zookeeper",
+		"kafka",
+		"schema-registry",
+		"kafka-rest",
+		"connect",
+		"ksql-server",
+		"control-center",
+	}
+	req.Equal(want, got)
+}
+
+func TestConfluentCommunitySoftwareAvailableServices(t *testing.T) {
+	req := require.New(t)
+
+	ctrl := gomock.NewController(t)
+	ch := climock.NewMockConfluentHome(ctrl)
+	ch.EXPECT().IsConfluentPlatform().Return(false, nil).AnyTimes()
+	ch.EXPECT().GetConfluentVersion().Return("7.9.0", nil).AnyTimes()
+
+	c := &command{
+		ch: ch,
+	}
+
+	got, err := c.getAvailableServices()
+	req.NoError(err)
+
+	want := []string{
+		"zookeeper",
+		"kafka",
+		"schema-registry",
+		"kafka-rest",
+		"connect",
+		"ksql-server",
+	}
+	req.Equal(want, got)
+}

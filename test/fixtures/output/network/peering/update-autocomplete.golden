@@ -1,0 +1,6 @@
+--name	Name of the peering.
+peer-111111	aws-peering
+peer-111112	gcp-peering
+peer-111113	azure-peering
+:4
+Completion ended with directive: ShellCompDirectiveNoFileComp

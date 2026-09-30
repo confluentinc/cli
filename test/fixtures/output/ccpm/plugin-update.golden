@@ -1,0 +1,9 @@
+Updated CCPM custom Connect plugin "ccp-123456".
++------------------+---------------------+
+| ID               | ccp-123456          |
+| Cloud            | AWS                 |
+| Name             | Updated Plugin Name |
+| Environment      | env-123456          |
+| Runtime Language | JAVA                |
+| Description      | Updated description |
++------------------+---------------------+

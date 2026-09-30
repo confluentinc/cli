@@ -1,0 +1,4 @@
+Error: API key "UIGLOBALKEY100" is a Global API key, but --resource was set to "Kafka cluster"
+
+Suggestions:
+    Re-run with `--resource global`, or omit `--resource` to auto-detect.

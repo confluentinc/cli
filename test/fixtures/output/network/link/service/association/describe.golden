@@ -1,0 +1,9 @@
++-----------------------+-------------------------------+
+| ID                    | nle-123456                    |
+| Name                  | my-network-link-endpoint      |
+| Environment           | env-00000                     |
+| Description           | example network link endpoint |
+| Network Link Endpoint | nle-123456                    |
+| Network Link Service  | nls-123456                    |
+| Phase                 | READY                         |
++-----------------------+-------------------------------+

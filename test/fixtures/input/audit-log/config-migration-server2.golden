@@ -1,0 +1,119 @@
+broker.id=0
+num.network.threads=3
+num.io.threads=8
+socket.send.buffer.bytes=102400
+socket.receive.buffer.bytes=102400
+socket.request.max.bytes=104857600
+log.dirs=/home/alice/tmp/red-kafka-0
+num.partitions=1
+num.recovery.threads.per.data.dir=1
+offsets.topic.replication.factor=1
+transaction.state.log.replication.factor=1
+transaction.state.log.min.isr=1
+log.retention.hours=168
+log.segment.bytes=1073741824
+log.retention.check.interval.ms=300000
+confluent.telemetry.enabled=false
+confluent.telemetry.exporter._local.topic.replicas=1
+zookeeper.connect=localhost:2181/red-kafka
+zookeeper.connection.timeout.ms=18000
+confluent.support.metrics.enable=false
+confluent.support.customer.id=anonymous
+group.initial.rebalance.delay.ms=0
+super.users=User:admin
+confluent.license.topic.replication.factor=1
+confluent.metadata.topic.replication.factor=1
+listeners=INTERNAL://:9193,EXTERNAL://:9192
+advertised.listeners=INTERNAL://127.0.0.1:9193,EXTERNAL://127.0.0.1:9192
+inter.broker.listener.name=INTERNAL
+authorizer.class.name=io.confluent.kafka.security.authorizer.ConfluentServerAuthorizer
+listener.security.protocol.map=INTERNAL:SASL_PLAINTEXT,EXTERNAL:SASL_PLAINTEXT
+
+sasl.mechanism.inter.broker.protocol=PLAIN
+listener.name.internal.sasl.enabled.mechanisms=PLAIN
+listener.name.internal.plain.sasl.jaas.config = \
+    org.apache.kafka.common.security.plain.PlainLoginModule required \
+        username="admin" \
+        password="admin-secret" \
+        user_admin="admin-secret" \
+        user_mds="password1";
+confluent.authorizer.access.rule.providers=ZK_ACL,CONFLUENT
+confluent.authorizer.group.provider=CONFLUENT
+confluent.authorizer.scope=myCluster
+confluent.http.server.listeners=http://0.0.0.0:8190
+
+confluent.metadata.server.advertised.listeners=
+confluent.metadata.server.listeners=
+confluent.metadata.bootstrap.servers=PLAINTEXT://127.0.0.1:9093
+confluent.metadata.security.protocol=SASL_PLAINTEXT
+confluent.metadata.sasl.mechanism=PLAIN
+confluent.metadata.sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required \
+    username="admin" \
+    password="admin-secret";
+
+
+listener.name.external.sasl.enabled.mechanisms=OAUTHBEARER
+listener.name.external.oauthbearer.sasl.jaas.config= \
+    org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+        publicKeyPath="/home/alice/testkeys/tokenPublicKey.pem";
+listener.name.external.oauthbearer.sasl.server.callback.handler.class=io.confluent.kafka.server.plugins.auth.token.TokenBearerValidatorCallbackHandler
+listener.name.external.oauthbearer.sasl.login.callback.handler.class=io.confluent.kafka.server.plugins.auth.token.TokenBearerServerLoginCallbackHandler
+confluent.security.event.logger.enable=true
+confluent.security.event.logger.exporter.kafka.bootstrap.servers=localhost:9093
+confluent.security.event.router.config={ \
+  "destinations": { \
+    "bootstrap_servers": [ \
+      "some-server" \
+    ], \
+    "topics": { \
+      "confluent-audit-log-events_payroll": { \
+        "retention_ms": 2592000000 \
+      }, \
+      "confluent-audit-log-events_billing": { \
+        "retention_ms": 2592000000 \
+      }, \
+      "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC": { \
+        "retention_ms": 100 \
+      } \
+    } \
+  }, \
+  "default_topics": { \
+    "allowed": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC", \
+    "denied": "confluent-audit-log-events_DIFFERENT-DEFAULT-TOPIC" \
+  }, \
+  "routes": { \
+    "crn://mds1.example.com/kafka=*/topic=billing-*": { \
+      "produce": { \
+        "allowed": "confluent-audit-log-events_billing", \
+        "denied": "confluent-audit-log-events_billing" \
+      }, \
+      "consume": { \
+        "allowed": "confluent-audit-log-events_billing", \
+        "denied": "confluent-audit-log-events_billing" \
+      }, \
+      "other": { \
+        "allowed": "confluent-audit-log-events_billing", \
+        "denied": "confluent-audit-log-events_billing" \
+      } \
+    }, \
+    "crn://diff-authority/kafka=different-cluster-id/topic=payroll-*": { \
+      "produce": { \
+        "allowed": "confluent-audit-log-events_payroll", \
+        "denied": "confluent-audit-log-events_payroll" \
+      }, \
+      "consume": { \
+        "allowed": "confluent-audit-log-events_payroll", \
+        "denied": "confluent-audit-log-events_payroll" \
+      } \
+    }, \
+    "crn://some-authority/kafka=clusterX": { \
+      "other": { \
+        "allowed": "confluent-audit-log-events_payroll", \
+        "denied": "confluent-audit-log-events_payroll" \
+      } \
+    } \
+  }, \
+  "excluded_principals": [ \
+    "User:Bob" \
+  ] \
+}

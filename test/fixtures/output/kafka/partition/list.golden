@@ -1,0 +1,4 @@
+   Cluster  | Topic Name | ID | Leader  
+------------+------------+----+---------
+  lkc-12345 | topic1     |  0 |      2  
+  lkc-12345 | topic1     |  1 |      1  

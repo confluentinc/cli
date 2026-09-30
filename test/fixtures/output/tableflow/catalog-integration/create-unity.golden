@@ -1,0 +1,12 @@
++--------------------+------------------------------------+
+| ID                 | tci-ghi789                         |
+| Name               | my-catalog-integration             |
+| Environment        | env-596                            |
+| Kafka Cluster      | lkc-123456                         |
+| Type               | unity                              |
+| Workspace Endpoint | https://dbc-1.cloud.databricks.com |
+| Catalog Name       | tableflow-quickstart-catalog       |
+| Client ID          | $CLIENT_ID                         |
+| Suspended          | false                              |
+| Phase              | PENDING                            |
++--------------------+------------------------------------+

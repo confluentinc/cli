@@ -1,0 +1,5 @@
+Error: Flink application "non-existent" not found
+
+Suggestions:
+    List available Flink applications with `confluent flink application list`.
+    Check that CMF is running and accessible.

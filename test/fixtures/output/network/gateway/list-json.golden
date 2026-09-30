@@ -1,0 +1,92 @@
+[
+  {
+    "id": "gw-07531",
+    "name": "my-gcp-gateway",
+    "environment": "env-596",
+    "region": "eastus",
+    "type": "GcpEgressPrivateServiceConnect",
+    "gcp_project": "project-12345",
+    "phase": "READY"
+  },
+  {
+    "id": "gw-09876",
+    "name": "my-azure-peering-gateway",
+    "environment": "env-596",
+    "region": "eastus2",
+    "type": "AzurePeering",
+    "phase": "READY"
+  },
+  {
+    "id": "gw-11111",
+    "name": "my-azure-ingress-gateway",
+    "environment": "env-596",
+    "region": "eastus2",
+    "type": "AzureIngressPrivateLink",
+    "azure_private_link_service_alias": "azure-ingress-pl.eastus2.azure.privatelinkservice",
+    "azure_private_link_service_resource_id": "/subscriptions/aa000000-a000-0a00-00aa-0000aaa0a0a0/resourceGroups/rg-1/providers/Microsoft.Network/privateLinkServices/azure-ingress-pl",
+    "phase": "READY"
+  },
+  {
+    "id": "gw-12345",
+    "name": "my-aws-gateway",
+    "environment": "env-596",
+    "region": "us-east-1",
+    "type": "AwsEgressPrivateLink",
+    "aws_principal_arn": "arn:aws:iam::123456789012:role",
+    "phase": "READY"
+  },
+  {
+    "id": "gw-13570",
+    "name": "my-gcp-peering-gateway",
+    "environment": "env-596",
+    "region": "eastus2",
+    "type": "GcpPeering",
+    "gcp_iam_principal": "g000000-a000-0a00-00aa-0000aaa0a0a0",
+    "phase": "READY"
+  },
+  {
+    "id": "gw-23456",
+    "name": "my-aws-gateway",
+    "environment": "env-596",
+    "region": "us-east-2",
+    "type": "AwsPrivateNetworkInterface",
+    "phase": "READY",
+    "zones": ["us-east-2a", "us-east-2b"],
+    "account": "000000000000"
+  },
+  {
+    "id": "gw-54321",
+    "name": "my-aws-peering-gateway",
+    "environment": "env-596",
+    "region": "us-east-2",
+    "type": "AwsPeering",
+    "phase": "READY"
+  },
+  {
+    "id": "gw-67890",
+    "name": "my-azure-gateway",
+    "environment": "env-596",
+    "region": "eastus",
+    "type": "AzureEgressPrivateLink",
+    "azure_subscription": "aa000000-a000-0a00-00aa-0000aaa0a0a0",
+    "phase": "READY"
+  },
+  {
+    "id": "gw-88888",
+    "name": "my-aws-ingress-gateway",
+    "environment": "env-596",
+    "region": "us-west-2",
+    "type": "AwsIngressPrivateLink",
+    "aws_vpc_endpoint_service_name": "com.amazonaws.vpce.us-west-2.vpce-svc-00000000000000000",
+    "phase": "READY"
+  },
+  {
+    "id": "gw-99999",
+    "name": "my-gcp-ingress-gateway",
+    "environment": "env-596",
+    "region": "us-central1",
+    "type": "GcpIngressPrivateServiceConnect",
+    "gcp_private_service_connect_service_attachment": "projects/traffic-prod/regions/us-central1/serviceAttachments/plattg-abc123-service-attachment",
+    "phase": "READY"
+  }
+]

@@ -1,0 +1,6 @@
+([]prompt.Suggest) (len=1) {
+  (prompt.Suggest) {
+    Text: (string) (len=8) "USE db1;",
+    Description: (string) (len=43) "Used to set the current database or catalog"
+  }
+}

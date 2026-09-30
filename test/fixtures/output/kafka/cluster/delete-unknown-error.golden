@@ -1,0 +1,4 @@
+Error: Kafka cluster "lkc-unknown" not found
+
+Suggestions:
+    Ensure the clusters you are specifying belong to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`.

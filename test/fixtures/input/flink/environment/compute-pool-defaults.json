@@ -1,0 +1,8 @@
+{
+  "metadata": {
+    "name": "test-pool"
+  },
+  "spec": {
+    "type": "DEDICATED"
+  }
+}

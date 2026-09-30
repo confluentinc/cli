@@ -1,0 +1,5 @@
+Error: Flink SQL statement "test-stmt1" not found
+
+Suggestions:
+    List available Flink SQL statements with `confluent flink statement list`.
+    Check that CMF is running and accessible.

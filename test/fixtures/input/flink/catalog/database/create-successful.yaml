@@ -1,0 +1,8 @@
+apiVersion: cmf/api/v1/database
+kind: KafkaDatabase
+metadata:
+  name: test-database
+spec:
+  kafkaCluster:
+    connectionConfig:
+      bootstrap.servers: localhost:9092

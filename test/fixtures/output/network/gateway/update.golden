@@ -1,0 +1,9 @@
++-------------------+--------------------------------+
+| ID                | gw-111111                      |
+| Name              | new-name                       |
+| Environment       | env-abc123                     |
+| Region            | us-east-1                      |
+| Type              | AwsEgressPrivateLink           |
+| AWS Principal ARN | arn:aws:iam::123456789012:role |
+| Phase             | READY                          |
++-------------------+--------------------------------+

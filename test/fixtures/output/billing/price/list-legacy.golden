@@ -1,0 +1,5 @@
+         Metric        |   Cluster Type    | Availability | Network Type |     Price       
+-----------------------+-------------------+--------------+--------------+-----------------
+  Cluster linking base | Basic             | Single zone  | Internet     | $1.00 USD/Hour  
+  Connect record       | Basic             | Single zone  | Internet     | $1.00 USD/GB    
+  Connect record       | Legacy - Standard | Single zone  | Internet     | $1.00 USD/GB    

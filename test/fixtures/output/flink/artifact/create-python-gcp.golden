@@ -1,0 +1,14 @@
++--------------------+--------------------------------+
+| ID                 | cfa-789012                     |
+| Name               | my-flink-python-artifact       |
+| Version            | 1.0.0                          |
+| Cloud              | gcp                            |
+| Region             | us-central1                    |
+| Environment        | env-789012                     |
+| Content Format     | ZIP                            |
+| Description        | This is a longer description   |
+|                    | example to verify the output   |
+|                    | of the CLI is not affected and |
+|                    | remains readable               |
+| Documentation Link | https://docs.confluent.io      |
++--------------------+--------------------------------+

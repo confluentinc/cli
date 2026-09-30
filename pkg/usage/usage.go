@@ -1,0 +1,86 @@
+package usage
+
+import (
+	"runtime"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+
+	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
+
+	"github.com/confluentinc/cli/v4/pkg/agentdetect"
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v4/pkg/log"
+)
+
+type Usage cliv1.CliV1Usage
+
+func New(version string) *Usage {
+	return &Usage{
+		Os:      cliv1.PtrString(runtime.GOOS),
+		Arch:    cliv1.PtrString(runtime.GOARCH),
+		Version: cliv1.PtrString(version),
+	}
+}
+
+// Collect is a post-run function that collects the command name and flag names. The error boolean is collected later.
+func (u *Usage) Collect(cmd *cobra.Command, _ []string) {
+	u.Command = cliv1.PtrString(cmd.CommandPath())
+
+	var flags []string
+	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
+		if flag.Changed {
+			flags = append(flags, flag.Name)
+		}
+	})
+	u.Flags = &flags
+}
+
+// CollectAgentDetect runs agent detection and assigns the results onto this
+// Usage's agent-detect fields.
+func (u *Usage) CollectAgentDetect() {
+	defer func() {
+		if r := recover(); r != nil {
+			// Log only the panic's type, not its value: a panic surfacing from deep in a
+			// dependency (e.g. gopsutil) could carry a raw process path or arg as its message.
+			log.CliLogger.Tracef("agent detection panicked: %T", r)
+		}
+	}()
+
+	attrs := agentdetect.Detect(agentdetect.Options{}).Attributes()
+
+	u.AgentEnvVars = optionalStrings(attrs.AgentEnvVars)
+	u.AgentProc = attrs.AgentProc
+	u.AgentArgv = attrs.AgentArgv
+	u.IdeHost = attrs.IDEHost
+	u.Interactive = optionalString(attrs.Interactive)
+	u.ChainShape = optionalString(attrs.ChainShape)
+	u.CmdWrappers = optionalStrings(attrs.CmdWrappers)
+	u.CiProviders = optionalStrings(attrs.CiProviders)
+	u.AgentTables = optionalString(attrs.Tables)
+}
+
+// optionalString and optionalStrings force an unset value to a nil pointer, never a pointer
+// to an empty value. Unlike Flags (always sent, even empty), an empty agent-detect field
+// means detection produced nothing, which is a meaningfully different signal from "ran and
+// found zero" — so these are omitted from the wire rather than sent empty.
+func optionalString(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
+}
+
+func optionalStrings(s []string) *[]string {
+	if len(s) == 0 {
+		return nil
+	}
+	return &s
+}
+
+// Report sends usage data to cc-cli-usage-service.
+func (u *Usage) Report(client *ccloudv2.Client) {
+	if err := client.CreateCliUsage(cliv1.CliV1Usage(*u)); err != nil {
+		log.CliLogger.Warnf("Failed to report CLI usage: %v", err)
+	}
+}

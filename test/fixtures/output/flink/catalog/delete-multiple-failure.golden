@@ -1,0 +1,2 @@
+Deleted Flink catalog "test-catalog1".
+Error: failed to delete non-exist-catalog: 404 Not Found

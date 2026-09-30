@@ -1,0 +1,4 @@
+Error: unsupported file format: .properties
+
+Suggestions:
+    Supported file formats are .json, .yaml, and .yml.

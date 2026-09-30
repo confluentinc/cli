@@ -1,0 +1,6 @@
+  Mirror Topic Name | Partition | Error Message  | Error Code | Messages Truncated | Offset Truncated To  
+--------------------+-----------+----------------+------------+--------------------+----------------------
+  topic 2           |        -1 | Not authorized | 401        |                  0 |                      
+  topic-1           |         0 |                |            |                 25 | 10                   
+  topic-1           |         1 |                |            |                  0 |                      
+  topic-1           |         2 |                |            |                 25 | 15                   

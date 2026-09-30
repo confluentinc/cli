@@ -1,0 +1,4 @@
+Error: Kafka cluster endpoint "https://pni-abc123-invalid.rest.us-west-2.aws.confluent.cloud" is invalid for active cluster "lkc-describe"
+
+Suggestions:
+    Please run "confluent kafka cluster endpoint list" to see all available Kafka cluster endpoints, or "confluent kafka cluster use" to switch to a different cluster.

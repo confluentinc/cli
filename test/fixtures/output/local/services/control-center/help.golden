@@ -1,0 +1,19 @@
+Manage Control Center.
+
+Usage:
+  confluent local services control-center [command]
+
+Available Commands:
+  log         Print logs showing Control Center output.
+  start       Start Control Center.
+  status      Check if Control Center is running.
+  stop        Stop Control Center.
+  top         View resource usage for Control Center.
+  version     Print the current version of Control Center.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent local services control-center [command] --help" for more information about a command.

@@ -1,0 +1,24 @@
+List provider integrations, optionally filtered by cloud provider.
+
+Usage:
+  confluent provider-integration list [flags]
+
+Examples:
+List provider integrations in the current environment.
+
+  $ confluent provider-integration list
+
+List provider integrations in environment "env-abcdef".
+
+  $ confluent provider-integration list --environment env-abcdef
+
+Flags:
+      --cloud string         Specify the cloud provider as "aws", "azure", or "gcp".
+      --environment string   Environment ID.
+      --context string       CLI context name.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

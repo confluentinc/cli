@@ -1,0 +1,4 @@
+Error: IAM group mapping "group-dne" not found
+
+Suggestions:
+    List available IAM group mappings with `confluent iam group-mapping list`.

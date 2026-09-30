@@ -1,0 +1,15 @@
+Manage invitations.
+
+Usage:
+  confluent iam user invitation [command]
+
+Available Commands:
+  create      Invite a user to join your organization.
+  list        List the organization's invitations.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent iam user invitation [command] --help" for more information about a command.

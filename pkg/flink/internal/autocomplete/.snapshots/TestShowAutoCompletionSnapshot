@@ -1,0 +1,22 @@
+([]prompt.Suggest) (len=5) {
+  (prompt.Suggest) {
+    Text: (string) (len=14) "SHOW CATALOGS;",
+    Description: (string) (len=21) "Used to list catalogs"
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=15) "SHOW DATABASES;",
+    Description: (string) (len=22) "Used to list databases"
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=12) "SHOW TABLES;",
+    Description: (string) (len=38) "Lists all tables from current database"
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=21) "SHOW CURRENT CATALOG;",
+    Description: (string) (len=28) "Displays the current catalog"
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=22) "SHOW CURRENT DATABASE;",
+    Description: (string) (len=29) "Displays the current database"
+  }
+}

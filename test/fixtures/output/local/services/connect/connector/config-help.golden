@@ -1,0 +1,25 @@
+View or set connector configurations.
+
+Usage:
+  confluent local services connect connector config <connector-name> [flags]
+
+Examples:
+Print the current configuration of a connector named `s3-sink`:
+
+  $ confluent local services connect connector config s3-sink
+
+Configure a connector named `wikipedia-file-source` by passing its configuration properties in JSON format.
+
+  $ confluent local services connect connector config wikipedia-file-source --config <path-to-connector>/wikipedia-file-source.json
+
+Configure a connector named `wikipedia-file-source` by passing its configuration properties as Java properties.
+
+  $ confluent local services connect connector config wikipedia-file-source --config <path-to-connector>/wikipedia-file-source.properties
+
+Flags:
+  -c, --config string   Configuration file for a connector.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

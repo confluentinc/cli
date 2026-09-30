@@ -1,0 +1,24 @@
+machine leave-me-alone
+        login pls
+        password pls-do
+machine confluent-cli:mds-username-password:mds-context
+        login jamal@jj
+        password 12345
+machine confluent-cli:ccloud-username-password:ccloud-login
+        login jamal@jj
+        password 12345
+machine confluent-cli:ccloud-sso-refresh-token:ccloud-sso
+        login jamal@jj
+        password 12345
+machine confluent-cli:mds-username-password:login-cli-mock-email@confluent.io-http://test
+        login mock-user
+        password mock-password
+machine confluent-cli:ccloud-username-password:login-cli-mock-email@confluent.io-http://test
+        login mock-user
+        password mock-password
+machine confluent-cli:ccloud-sso-refresh-token:login-cli-mock-email@confluent.io-http://test
+        login mock-user
+        password mock-password
+machine leave-me-alone-too
+        login pls-pls
+        password please

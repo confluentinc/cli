@@ -1,0 +1,11 @@
++----------------------------+-------------------+
+| ID                         | n-abcde12         |
+| Environment                | env-00000         |
+| Name                       | dev-azure-eastus2 |
+| Cloud                      | AZURE             |
+| Region                     | eastus2           |
+| Zones                      | 1, 2, 3           |
+| Phase                      | PROVISIONING      |
+| Supported Connection Types | PRIVATELINK       |
+| DNS Resolution             | PRIVATE           |
++----------------------------+-------------------+

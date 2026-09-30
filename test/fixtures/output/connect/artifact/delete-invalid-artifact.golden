@@ -1,0 +1,4 @@
+Error: Connect Artifact "cfa-invalid" not found
+
+Suggestions:
+    List available Connect Artifacts with `confluent connect artifact list`.

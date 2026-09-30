@@ -1,0 +1,47 @@
+Create a catalog integration.
+
+Usage:
+  confluent tableflow catalog-integration create <name> [flags]
+
+Examples:
+Create an Aws Glue catalog integration.
+
+  $ confluent tableflow catalog-integration create my-catalog-integration --type aws --provider-integration cspi-stgce89r7
+
+Create a Snowflake catalog integration.
+
+  $ confluent tableflow catalog-integration create my-catalog-integration --type snowflake --endpoint https://vuser1_polaris.snowflakecomputing.com/ --warehouse catalog-name --allowed-scope session:role:R1 --client-id $CLIENT_ID --client-secret $CLIENT_SECRET
+
+Create a Unity catalog integration.
+
+  $ confluent tableflow catalog-integration create my-catalog-integration --type unity --workspace-endpoint https://dbc-1.cloud.databricks.com --catalog-name tableflow-quickstart-catalog --unity-client-id $CLIENT_ID --unity-client-secret $CLIENT_SECRET
+
+Create a BigLake Metastore catalog integration.
+
+  $ confluent tableflow catalog-integration create my-catalog-integration --type biglake --provider-integration cspi-stgce89r7 --gcp-project-id my-gcp-project --catalog-name my-biglake-catalog
+
+Flags:
+      --type string                   REQUIRED: Specify the catalog integration type as "aws", "snowflake", "unity", or "biglake".
+      --provider-integration string   Specify the provider integration id.
+      --custom-database string        Specify the custom database name for AWS Glue.
+      --endpoint string               Specify the The catalog integration connection endpoint for Snowflake Open Catalog.
+      --warehouse string              Specify the warehouse name of the Snowflake Open Catalog.
+      --allowed-scope string          Specify the allowed scope of the Snowflake Open Catalog.
+      --client-id string              Specify the client id.
+      --client-secret string          Specify the client secret.
+      --custom-namespace string       Specify the custom namespace for Snowflake Open Catalog.
+      --workspace-endpoint string     Specify the Databricks workspace URL associated with the Unity Catalog.
+      --catalog-name string           Specify the name of the catalog.
+      --unity-client-id string        Specify the Unity client id.
+      --unity-client-secret string    Specify the Unity client secret.
+      --custom-schema string          Specify the custom schema name for Unity Catalog.
+      --gcp-project-id string         Specify the GCP project id that hosts the BigLake Metastore catalog.
+      --cluster string                Kafka cluster ID.
+      --environment string            Environment ID.
+      --context string                CLI context name.
+  -o, --output string                 Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

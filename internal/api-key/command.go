@@ -1,0 +1,258 @@
+package apikey
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/spf13/cobra"
+
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
+
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/kafka"
+	"github.com/confluentinc/cli/v4/pkg/keystore"
+	presource "github.com/confluentinc/cli/v4/pkg/resource"
+)
+
+type command struct {
+	*pcmd.AuthenticatedCLICommand
+	keystore *keystore.ConfigKeyStore
+}
+
+const (
+	deleteOperation = "deleting"
+	getOperation    = "getting"
+	updateOperation = "updating"
+)
+
+const (
+	apiKeyNotValidForClusterSuggestions = "Specify the cluster this API key belongs to using the `--resource` flag. Alternatively, first execute the `confluent kafka cluster use` command to set the context to the proper cluster for this key and retry the `confluent api-key store` command."
+	apiKeyUseFailedErrorMsg             = "unable to set active API key"
+	apiKeyUseFailedSuggestions          = "If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `confluent api-key store %s <secret>`."
+	nonKafkaNotImplementedErrorMsg      = "functionality not yet available for resources other than Kafka clusters and Global API keys"
+	refuseToOverrideSecretSuggestions   = "If you would like to override the existing secret stored for API key \"%s\", use the `--force` flag."
+	unableToStoreApiKeyErrorMsg         = "unable to store API key locally: %w"
+)
+
+func New(prerunner pcmd.PreRunner) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "api-key",
+		Short:       "Manage API keys.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+	}
+
+	c := &command{AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+
+	cmd.AddCommand(c.newCreateCommand())
+	cmd.AddCommand(c.newDeleteCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newStoreCommand())
+	cmd.AddCommand(c.newUpdateCommand())
+	cmd.AddCommand(c.newUseCommand())
+
+	return cmd
+}
+
+func (c *command) addResourceFlag(cmd *cobra.Command, isStore bool) {
+	description := "The ID of the resource the API key is for."
+	if !isStore {
+		description += ` Use "cloud" for a Cloud API key, "global" for a Global API key, "flink" for a Flink API key, or "tableflow" for a Tableflow API key.`
+	}
+
+	cmd.Flags().String("resource", "", description)
+
+	pcmd.RegisterFlagCompletionFunc(cmd, "resource", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+
+		kafkaClusters, err := c.V2Client.ListKafkaClusters(environmentId)
+		if err != nil {
+			return nil
+		}
+
+		schemaRegistryClusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId)
+		if err != nil {
+			return nil
+		}
+
+		ksqlClusters, err := c.V2Client.ListKsqlClusters(environmentId)
+		if err != nil {
+			return nil
+		}
+
+		suggestions := make([]string, len(kafkaClusters)+len(schemaRegistryClusters)+len(ksqlClusters))
+		i := 0
+
+		for _, cluster := range kafkaClusters {
+			suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
+			i++
+		}
+
+		for _, cluster := range schemaRegistryClusters {
+			suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
+			i++
+		}
+
+		for _, cluster := range ksqlClusters {
+			suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
+			i++
+		}
+
+		if !isStore {
+			suggestions = append(suggestions, "cloud")
+			suggestions = append(suggestions, "flink")
+			suggestions = append(suggestions, "global")
+			suggestions = append(suggestions, "tableflow")
+		}
+
+		return suggestions
+	})
+}
+
+func (c *command) setKeyStoreIfNil() {
+	if c.keystore == nil {
+		c.keystore = &keystore.ConfigKeyStore{Config: c.Config}
+	}
+}
+
+func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	return c.validArgsMultiple(cmd, args)
+}
+
+func (c *command) validArgsMultiple(cmd *cobra.Command, args []string) []string {
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return pcmd.AutocompleteApiKeys(c.V2Client)
+}
+
+func (c *command) getAllUsers() ([]*ccloudv1.User, error) {
+	users, err := c.Client.User.GetServiceAccounts()
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := c.Client.Auth.User()
+	if err != nil {
+		return nil, err
+	}
+
+	if auditLog := user.GetOrganization().GetAuditLog(); auditLog.GetServiceAccountId() != 0 {
+		serviceAccount, err := c.Client.User.GetServiceAccount(auditLog.GetServiceAccountId())
+		if err != nil {
+			// ignore 403s so we can still get other users
+			if !strings.Contains(err.Error(), "Forbidden Access") {
+				return nil, err
+			}
+		} else {
+			users = append(users, serviceAccount)
+		}
+	}
+
+	adminUsers, err := c.Client.User.List()
+	if err != nil {
+		return nil, err
+	}
+	users = append(users, adminUsers...)
+
+	if currentUser := c.Context.GetUser(); currentUser != nil {
+		users = append(users, currentUser)
+	}
+
+	return users, nil
+}
+
+func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Client) (string, string, string, error) {
+	resource, err := cmd.Flags().GetString("resource")
+	if err != nil {
+		return "", "", "", err
+	}
+	if resource == "" {
+		return "", "", "", nil
+	}
+
+	resourceType := presource.LookupType(resource)
+
+	var clusterId string
+	var apiKey string
+
+	switch resourceType {
+	case presource.Cloud, presource.Flink, presource.Tableflow, presource.Global:
+		break
+	case presource.KafkaCluster:
+		cluster, err := kafka.FindCluster(c.V2Client, c.Context, resource)
+		if err != nil {
+			return "", "", "", errors.CatchResourceNotFoundError(err, resource)
+		}
+		clusterId = cluster.ID
+		apiKey = cluster.APIKey
+	case presource.KsqlCluster:
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return "", "", "", err
+		}
+		cluster, err := v2Client.DescribeKsqlCluster(resource, environmentId)
+		if err != nil {
+			return "", "", "", errors.CatchResourceNotFoundError(err, resource)
+		}
+		clusterId = cluster.GetId()
+	case presource.SchemaRegistryCluster:
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return "", "", "", err
+		}
+		cluster, err := v2Client.GetSchemaRegistryClusterById(resource, environmentId)
+		if err != nil {
+			return "", "", "", errors.CatchResourceNotFoundError(err, resource)
+		}
+		clusterId = cluster.GetId()
+	default:
+		return "", "", "", fmt.Errorf(`unsupported resource type for resource "%s"`, resource)
+	}
+
+	return resourceType, clusterId, apiKey, nil
+}
+
+func getResourceType(resource apikeysv2.ObjectReference) string {
+	switch resource.GetKind() {
+	case "Cloud":
+		return "cloud"
+	case "Global":
+		return "global"
+	case "Cluster":
+		if getResourceApi(resource) == "cmk" {
+			return "kafka"
+		}
+	case "ksqlDB":
+		return "ksql"
+	case "Region":
+		if getResourceApi(resource) == "fcpm" {
+			return "flink-region"
+		}
+	case "SchemaRegistry":
+		return "schema-registry"
+	case "Tableflow":
+		return "tableflow"
+	}
+
+	return ""
+}
+
+func getResourceApi(resource apikeysv2.ObjectReference) string {
+	return strings.Split(resource.GetApiVersion(), "/")[0]
+}

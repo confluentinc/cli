@@ -1,0 +1,25 @@
+Create a Flink compute pool.
+
+Usage:
+  confluent flink compute-pool create <name> [flags]
+
+Examples:
+Create Flink compute pool "my-compute-pool" in AWS with 5 CFUs.
+
+  $ confluent flink compute-pool create my-compute-pool --cloud aws --region us-west-2 --max-cfu 5
+
+Flags:
+      --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string        REQUIRED: Cloud region for Flink (use "confluent flink region list" to see all).
+      --default-pool         Indicate whether the Flink compute pool is a default compute pool or not.
+      --environment string   Environment ID.
+      --max-cfu int32        Maximum number of Confluent Flink Units (CFU). (default 5)
+      --wait                 Wait for the Flink compute pool to reach a ready or failed state before returning.
+      --timeout duration     Maximum time to wait for the Flink compute pool to reach a ready or failed state when --wait is set (e.g., '30s', '5m', '2h'). (default 1h0m0s)
+      --context string       CLI context name.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

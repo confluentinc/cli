@@ -1,0 +1,123 @@
+package testserver
+
+import (
+	"encoding/json"
+	"io"
+	"net/http"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
+)
+
+func handleAppliedQuotas(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		environment := r.URL.Query().Get("environment")
+		kafkaCluster := r.URL.Query().Get("kafka_cluster")
+		network := r.URL.Query().Get("network")
+		quotaCode := r.URL.Query().Get("id")
+
+		quota1 := servicequotav1.ServiceQuotaV1AppliedQuota{
+			Id:           servicequotav1.PtrString("quota_a"),
+			Scope:        servicequotav1.PtrString("kafka_cluster"),
+			DisplayName:  servicequotav1.PtrString("Quota A"),
+			Organization: servicequotav1.NewObjectReference("org-123", "", ""),
+			KafkaCluster: servicequotav1.NewObjectReference("lkc-1", "", ""),
+			Environment:  servicequotav1.NewObjectReference("env-1", "", ""),
+			Usage:        servicequotav1.PtrInt32(10),
+			AppliedLimit: servicequotav1.PtrInt32(15),
+		}
+
+		quota2 := servicequotav1.ServiceQuotaV1AppliedQuota{
+			Id:           servicequotav1.PtrString("quota_a"),
+			Scope:        servicequotav1.PtrString("kafka_cluster"),
+			DisplayName:  servicequotav1.PtrString("Quota A"),
+			Organization: servicequotav1.NewObjectReference("org-123", "", ""),
+			KafkaCluster: servicequotav1.NewObjectReference("lkc-2", "", ""),
+			Environment:  servicequotav1.NewObjectReference("env-2", "", ""),
+			Usage:        servicequotav1.PtrInt32(11),
+			AppliedLimit: servicequotav1.PtrInt32(16),
+		}
+
+		quota3 := servicequotav1.ServiceQuotaV1AppliedQuota{
+			Id:           servicequotav1.PtrString("quota_b"),
+			Scope:        servicequotav1.PtrString("kafka_cluster"),
+			DisplayName:  servicequotav1.PtrString("Quota B"),
+			Organization: servicequotav1.NewObjectReference("org-123", "", ""),
+			KafkaCluster: servicequotav1.NewObjectReference("lkc-1", "", ""),
+			Environment:  servicequotav1.NewObjectReference("env-1", "", ""),
+			AppliedLimit: servicequotav1.PtrInt32(17),
+		}
+
+		quota4 := servicequotav1.ServiceQuotaV1AppliedQuota{
+			Id:           servicequotav1.PtrString("quota_b"),
+			Scope:        servicequotav1.PtrString("kafka_cluster"),
+			DisplayName:  servicequotav1.PtrString("Quota B"),
+			Organization: servicequotav1.NewObjectReference("org-123", "", ""),
+			KafkaCluster: servicequotav1.NewObjectReference("lkc-2", "", ""),
+			Environment:  servicequotav1.NewObjectReference("env-2", "", ""),
+			AppliedLimit: servicequotav1.PtrInt32(18),
+		}
+
+		filteredData := filterQuotaResults([]servicequotav1.ServiceQuotaV1AppliedQuota{quota1, quota2, quota3, quota4}, environment, network, kafkaCluster, quotaCode)
+		quotaList := &servicequotav1.ServiceQuotaV1AppliedQuotaList{
+			ApiVersion: "service-quota/v1",
+			Kind:       "AppliedQuotaList",
+			Data:       filteredData,
+		}
+		setPageToken(quotaList, &quotaList.Metadata, r.URL)
+		reply, err := json.Marshal(quotaList)
+		require.NoError(t, err)
+		_, err = io.Writer.Write(w, reply)
+		require.NoError(t, err)
+	}
+}
+
+func filterQuotaResults(quotaList []servicequotav1.ServiceQuotaV1AppliedQuota, environment, network, kafkaCluster, quotaCode string) []servicequotav1.ServiceQuotaV1AppliedQuota {
+	// filter by environment id
+	filtered := []servicequotav1.ServiceQuotaV1AppliedQuota{}
+	if environment != "" {
+		for _, quota := range quotaList {
+			if quota.Environment != nil && quota.Environment.Id == environment {
+				filtered = append(filtered, quota)
+			}
+		}
+		quotaList = filtered
+	}
+
+	// filter by cluster id
+	filtered = []servicequotav1.ServiceQuotaV1AppliedQuota{}
+	if kafkaCluster != "" {
+		for _, quota := range quotaList {
+			if quota.KafkaCluster != nil && quota.KafkaCluster.Id == kafkaCluster {
+				filtered = append(filtered, quota)
+			}
+		}
+		quotaList = filtered
+	}
+
+	// filter by network id
+	filtered = []servicequotav1.ServiceQuotaV1AppliedQuota{}
+	if network != "" {
+		for _, quota := range quotaList {
+			if quota.Network != nil && quota.Network.Id == network {
+				filtered = append(filtered, quota)
+			}
+		}
+		quotaList = filtered
+	}
+
+	// filter by quota code (id)
+	filtered = []servicequotav1.ServiceQuotaV1AppliedQuota{}
+	if quotaCode != "" {
+		for _, quota := range quotaList {
+			if quota.Id != nil && *quota.Id == quotaCode {
+				filtered = append(filtered, quota)
+			}
+		}
+		quotaList = filtered
+	}
+
+	return quotaList
+}

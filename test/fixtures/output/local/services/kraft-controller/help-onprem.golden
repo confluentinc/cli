@@ -1,0 +1,19 @@
+Manage KRaft Controller.
+
+Usage:
+  confluent local services kraft-controller [command]
+
+Available Commands:
+  log         Print logs showing KRaft Controller output.
+  start       Start KRaft Controller.
+  status      Check if KRaft Controller is running.
+  stop        Stop KRaft Controller.
+  top         View resource usage for KRaft Controller.
+  version     Print the current version of KRaft Controller.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent local services kraft-controller [command] --help" for more information about a command.

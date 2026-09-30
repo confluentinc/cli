@@ -1,0 +1,41 @@
+Create a schema.
+
+Usage:
+  confluent schema-registry schema create [flags]
+
+Examples:
+Register a new Avro schema.
+
+  $ confluent schema-registry schema create --subject employee --schema employee.avsc --type avro
+
+Where "employee.avsc" may include the following content:
+
+  {
+  	"type" : "record",
+  	"namespace" : "Example",
+  	"name" : "Employee",
+  	"fields" : [
+  		{ "name" : "Name" , "type" : "string" },
+  		{ "name" : "Age" , "type" : "int" }
+  	]
+  }
+
+For more information on schema types and references, see https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html.
+
+Flags:
+      --schema string                     REQUIRED: The path to the schema file.
+      --subject string                    REQUIRED: Subject of the schema.
+      --type string                       Specify the schema type as "avro", "json", or "protobuf".
+      --references string                 The path to the references file.
+      --metadata string                   The path to metadata file.
+      --ruleset string                    The path to schema ruleset file.
+      --normalize                         Alphabetize the list of schema fields.
+      --context string                    CLI context name.
+      --environment string                Environment ID.
+      --schema-registry-endpoint string   The URL of the Schema Registry cluster.
+  -o, --output string                     Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

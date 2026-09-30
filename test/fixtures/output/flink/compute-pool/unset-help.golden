@@ -1,0 +1,14 @@
+Unset the current Flink compute pool that was set with the `use` command.
+
+Usage:
+  confluent flink compute-pool unset [flags]
+
+Examples:
+Unset default compute pool:
+
+  $ confluent flink compute-pool unset
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

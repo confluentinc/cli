@@ -1,0 +1,12 @@
++---------------------+----------------------------------+
+| ID                  | my-dns-forwarder-file            |
+| Name                | my-dns-forwarder                 |
+| Domains             | abc.com, def.com,                |
+|                     | example.domain,                  |
+|                     | my.dns.forwarder.example.domain, |
+|                     | xyz.com                          |
+| DNS Domain Mappings | abc.com={zone2, project2}        |
+| Environment         | env-00000                        |
+| Gateway             | gw-111111                        |
+| Phase               | READY                            |
++---------------------+----------------------------------+

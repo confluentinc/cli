@@ -1,0 +1,4 @@
+Error: configuration key "current_context" does not exist
+
+Suggestions:
+    Please use `confluent context use` to set the current context.

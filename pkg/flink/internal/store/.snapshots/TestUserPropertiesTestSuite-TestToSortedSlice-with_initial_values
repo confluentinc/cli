@@ -1,0 +1,14 @@
+([][]string) (len=3) {
+  ([]string) (len=2) {
+    (string) (len=11) "default-key",
+    (string) (len=23) "default-value (default)"
+  },
+  ([]string) (len=2) {
+    (string) (len=13) "initial.key.1",
+    (string) (len=6) "value1"
+  },
+  ([]string) (len=2) {
+    (string) (len=13) "initial.key.2",
+    (string) (len=6) "value2"
+  }
+}

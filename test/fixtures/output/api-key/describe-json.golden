@@ -1,0 +1,11 @@
+[
+  {
+    "key": "MYKEY1",
+    "description": "first-key",
+    "owner": "u11",
+    "owner_email": "bstrauch@confluent.io",
+    "resource_type": "kafka",
+    "resource": "lkc-bob",
+    "created": "1999-02-24T00:00:00Z"
+  }
+]

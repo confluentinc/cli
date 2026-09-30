@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "name": "test-pool"
+  },
+  "spec": {
+    "type": "DEDICATED",
+    "clusterSpec": {
+      "flinkConfiguration": {
+        "taskmanager.numberOfTaskSlots": "1"
+      },
+      "job": {
+        "parallelism": 1
+      },
+      "taskManager": {
+        "resource": {
+          "cpu": 0.5,
+          "memory": "1024m"
+        }
+      },
+      "serviceAccount": "flink"
+    }
+  }
+}

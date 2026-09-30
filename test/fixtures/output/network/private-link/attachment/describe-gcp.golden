@@ -1,0 +1,8 @@
++---------------------------+------------------------------------------------------------------------------------------+
+| ID                        | platt-gcp                                                                                |
+| Name                      | my-gcp-private-link-attachment                                                           |
+| Cloud                     | GCP                                                                                      |
+| Region                    | us-central1                                                                              |
+| GCP Service Attachment ID | projects/xxxxxxx/regions/us-central1/serviceAttachments/plattg-123456-service-attachment |
+| Phase                     | WAITING_FOR_CONNECTIONS                                                                  |
++---------------------------+------------------------------------------------------------------------------------------+

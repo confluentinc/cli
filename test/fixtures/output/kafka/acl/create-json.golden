@@ -1,0 +1,11 @@
+[
+  {
+    "principal": "User:Alice",
+    "permission": "ALLOW",
+    "operation": "ALL",
+    "host": "*",
+    "resource_type": "CLUSTER",
+    "resource_name": "kafka-cluster",
+    "pattern_type": "LITERAL"
+  }
+]

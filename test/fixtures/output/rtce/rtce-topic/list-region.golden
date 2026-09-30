@@ -1,0 +1,4 @@
+   Topic Name  | Cloud |          Description           | Environment | Kafka Cluster |  Region   |         Error Message          | Phase   
+---------------+-------+--------------------------------+-------------+---------------+-----------+--------------------------------+---------
+  orders_topic | AWS   | Customer orders table for      | env-00000   | lkc-00000     | us-west-2 | Failed to provision table:     | ACTIVE  
+               |       | real-time analytics            |             |               |           | insufficient resources         |         

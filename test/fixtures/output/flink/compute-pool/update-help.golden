@@ -1,0 +1,21 @@
+Update an existing Flink compute pool.
+
+Usage:
+  confluent flink compute-pool update [id] [flags]
+
+Examples:
+Update name and CFU count of a Flink compute pool.
+
+  $ confluent flink compute-pool update lfcp-123456 --name "new name" --max-cfu 5
+
+Flags:
+      --name string          The name of the Flink compute pool.
+      --environment string   Environment ID.
+      --max-cfu int32        Maximum number of Confluent Flink Units (CFU). (default 5)
+      --context string       CLI context name.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

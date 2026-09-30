@@ -1,0 +1,179 @@
+SHELL=/bin/bash
+
+ifndef VERSION
+	VERSION=$(CLI_VERSION)
+endif
+
+export PACKAGE_TITLE=cli
+export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
+export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
+
+# Defaults that are likely to vary by platform. These are cleanly separated so
+# it should be easy to maintain altered values on platform-specific branches
+# when the values aren't overridden by the script invoking the Makefile
+
+APPLY_PATCHES?=yes
+
+# DESTDIR may be overridden by e.g. debian packaging
+ifeq ($(DESTDIR),)
+DESTDIR=$(CURDIR)/BUILD/
+endif
+
+ifeq ($(PACKAGE_TYPE),archive)
+PREFIX=$(PACKAGE_NAME)
+SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
+else
+PREFIX=/usr
+SYSCONFDIR=/etc/$(PACKAGE_TITLE)
+endif
+
+_empty :=
+_space := $(_empty) $(empty)
+split_version := $(subst .,$(_space),$(CLI_VERSION))
+
+S390X_AVAILABLE := $(shell [ $(word 1,$(split_version)) -ge 4 ] && [ $(word 2,$(split_version)) -ge 59 ] && echo yes)
+
+all: install
+
+archive: install
+	rm -f $(CURDIR)/$(PACKAGE_NAME).tar.gz && cd $(DESTDIR) && tar -czf $(CURDIR)/$(PACKAGE_NAME).tar.gz $(PREFIX)
+	rm -f $(CURDIR)/$(PACKAGE_NAME).zip && cd $(DESTDIR) && zip -r $(CURDIR)/$(PACKAGE_NAME).zip $(PREFIX)
+
+apply-patches: $(wildcard debian/patches/*)
+ifeq ($(APPLY_PATCHES),yes)
+	git reset --hard HEAD
+	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
+endif
+
+BINPATH=$(PREFIX)/bin
+LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
+DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
+
+# Notes on the archive download links:
+# As of v3.0.0, the version number no longer has the 'v' prefix
+# As of v3.43.0, we download the '_disableupdates' variant
+# As of v4.1.0, the base URL is 'packages.confluent.io' and there is no version in the archive/binary name
+install: apply-patches
+	rm -rf $(DESTDIR)$(PREFIX)
+	mkdir -p $(DESTDIR)$(PREFIX)
+
+	mkdir -p $(DESTDIR)$(BINPATH)
+	mkdir -p $(DESTDIR)$(LIBPATH)
+	mkdir -p $(DESTDIR)$(DOCPATH)
+	mkdir -p $(DESTDIR)$(SYSCONFDIR)
+
+	cp packaging/confluent.sh $(DESTDIR)$(BINPATH)/confluent
+	chmod 755 $(DESTDIR)$(BINPATH)/confluent
+
+	cd $(DESTDIR)$(LIBPATH); \
+	v=""; if [[ $(word 1,$(split_version)) -eq 2 ]]; then v="v"; fi; \
+	disableupdates=""; if [[ $(word 1,$(split_version)) -ge 3 && $(word 2,$(split_version)) -ge 43 ]]; then disableupdates="_disableupdates"; fi; \
+	baseurl="s3-us-west-2.amazonaws.com/confluent.cloud"; if [[ $(word 1,$(split_version)) -ge 4 && $(word 2,$(split_version)) -ge 1 ]]; then baseurl="packages.confluent.io"; fi; \
+	version="_$${v}$(CLI_VERSION)"; if [[ $(word 1,$(split_version)) -ge 4 && $(word 2,$(split_version)) -ge 1 ]]; then version=""; fi; \
+	dirs="darwin_amd64 darwin_arm64 linux_amd64 linux_arm64"; \
+	if [[ -n "$(S390X_AVAILABLE)" ]]; then dirs="$${dirs} linux_s390x"; fi; \
+	for dir in $${dirs}; do \
+		archive=confluent$${version}_$${dir}$${disableupdates}.tar.gz; \
+		curl -fs https://$${baseurl}/confluent-cli/archives/$(CLI_VERSION)/$${archive} -o $${archive}; \
+		mkdir -p $${dir} $${dir}-temp; \
+		tar -xzf $${archive} -C $${dir}-temp confluent/confluent; \
+		mv $${dir}-temp/confluent/confluent $${dir}/confluent; \
+		rm -rf $${archive} $${dir}-temp; \
+		chmod 755 $${dir}/confluent; \
+	done; \
+	mkdir -p windows_amd64; \
+	version="_$(CLI_VERSION)"; if [[ $(word 1,$(split_version)) -ge 4 && $(word 2,$(split_version)) -ge 1 ]]; then version=""; fi; \
+	filepath=windows_amd64/confluent.exe; \
+	curl -fs https://$${baseurl}/confluent-cli/binaries/$(CLI_VERSION)/confluent$${version}_windows_amd64.exe -o $${filepath}; \
+	chmod 755 $${filepath}
+
+	cp LICENSE $(DESTDIR)$(DOCPATH)/LICENSE
+	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
+
+	chown -R root:root $(DESTDIR)$(PREFIX)
+
+clean:
+	rm -rf $(CURDIR)/$(PACKAGE_NAME)*
+	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)*rpm
+	rm -rf RPM_BUILDING
+
+distclean: clean
+ifneq ($(PACKAGE_TYPE),deb)
+	git reset --hard HEAD
+	git status --ignored --porcelain | cut -d ' ' -f 2 | xargs rm -rf
+endif
+
+RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
+
+# Get any -alpha, -beta (preview), -rc (release candidate), -SNAPSHOT (nightly), -cp (confluent patch), -hotfix piece that we need to put into the Release part of
+# the version since RPM versions don't support non-numeric
+# characters. Ultimately, for something like 0.8.2-beta, we want to end up with
+# Version=0.8.2 Release=0.X.beta
+# where X is the RPM release # of 0.8.2-beta (the prefix 0. forces this to be
+# considered earlier than any 0.8.2 final releases since those will start with
+# Version=0.8.2 Release=1)
+RPM_RELEASE_POSTFIX=$(subst -,,$(subst $(RPM_VERSION),,$(VERSION)))
+ifneq ($(RPM_RELEASE_POSTFIX),)
+	RPM_RELEASE_POSTFIX_UNDERSCORE=_$(RPM_RELEASE_POSTFIX)
+	RPM_RELEASE_ID=0.$(REVISION).$(RPM_RELEASE_POSTFIX)
+else
+	RPM_RELEASE_ID=$(REVISION)
+endif
+
+rpm: rpm-amd64-build rpm-arm64-build $(if $(S390X_AVAILABLE),rpm-s390x-build)
+	find RPM_BUILDING/{,S}RPMS/ -type f | xargs -n1 -iXXX mv XXX .
+	@echo
+	@echo "================================================="
+	@echo "The RPMs have been created and can be found here:"
+	@ls -laF $(FULL_PACKAGE_TITLE)*rpm
+	@echo "================================================="
+
+rpm-amd64-build: rpm-amd64-spec
+	echo "Building the amd64 RPM"
+	rpmbuild --target=x86_64 --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --target=x86_64 --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
+
+rpm-arm64-build: rpm-arm64-spec
+	echo "Building the arm64 RPM"
+	rpmbuild --target=aarch64 --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --target=aarch64 --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
+
+rpm-s390x-build: rpm-s390x-spec
+	echo "Building the s390x RPM"
+	rpmbuild --target=s390x --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz || rpmbuild --target=s390x --define="_topdir `pwd`/RPM_BUILDING" -tb RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
+
+# Unfortunately, because of version naming issues and the way rpmbuild expects
+# the paths in the tar file to be named, we need to rearchive the package. So
+# instead of depending on archive, this target just uses the unarchived,
+# installed version to generate a new archive. Note that we always regenerate
+# the symlink because the RPM_VERSION doesn't include all the version info -- it
+# can leave of things like -beta, -rc1, etc.
+rpm-amd64-spec: rpm-build-area install debian/$(FULL_PACKAGE_TITLE).spec.in RELEASE_$(RPM_VERSION)$(RPM_RELEASE_POSTFIX_UNDERSCORE)
+	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	mkdir $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	cp -R $(DESTDIR)/* $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g; s/##EXCLUDEARCH1##/arm64/g; s/##EXCLUDEARCH2##/s390x/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
+	rm -f $@ && tar -czf RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+
+rpm-arm64-spec: rpm-build-area install debian/$(FULL_PACKAGE_TITLE).spec.in RELEASE_$(RPM_VERSION)$(RPM_RELEASE_POSTFIX_UNDERSCORE)
+	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	mkdir $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	cp -R $(DESTDIR)/* $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g; s/##EXCLUDEARCH1##/amd64/g; s/##EXCLUDEARCH2##/s390x/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
+	rm -f $@ && tar -czf RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+
+rpm-s390x-spec: rpm-build-area install debian/$(FULL_PACKAGE_TITLE).spec.in RELEASE_$(RPM_VERSION)$(RPM_RELEASE_POSTFIX_UNDERSCORE)
+	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	mkdir $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	cp -R $(DESTDIR)/* $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g; s/##EXCLUDEARCH1##/amd64/g; s/##EXCLUDEARCH2##/arm64/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
+	rm -f $@ && tar -czf RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
+
+rpm-build-area: RPM_BUILDING/BUILD RPM_BUILDING/RPMS RPM_BUILDING/SOURCES RPM_BUILDING/SPECS RPM_BUILDING/SRPMS
+
+RPM_BUILDING/%:
+	mkdir -p $@
+
+RELEASE_%:
+	echo 0 > $@

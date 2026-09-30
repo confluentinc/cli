@@ -1,0 +1,7 @@
++--------+--------------------------------+
+| ID     | platt-gcp-2                    |
+| Name   | my-gcp-private-link-attachment |
+| Cloud  | GCP                            |
+| Region | us-central1                    |
+| Phase  | PROVISIONING                   |
++--------+--------------------------------+

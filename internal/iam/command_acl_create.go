@@ -1,0 +1,86 @@
+package iam
+
+import (
+	"fmt"
+
+	"github.com/hashicorp/go-multierror"
+	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
+
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/examples"
+)
+
+func (c *aclCommand) newCreateCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create",
+		Short: "Create a centralized ACL.",
+		Args:  cobra.NoArgs,
+		RunE:  c.create,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Create an ACL that grants the specified user "read" permission to the specified consumer group in the specified Kafka cluster:`,
+				Code: "confluent iam acl create --allow --principal User:User1 --operation read --consumer-group java_example_group_1 --kafka-cluster <kafka-cluster-id>",
+			},
+			examples.Example{
+				Text: `Create an ACL that grants the specified user "write" permission on all topics in the specified Kafka cluster:`,
+				Code: `confluent iam acl create --allow --principal User:User1 --operation write --topic "*" --kafka-cluster <kafka-cluster-id>`,
+			},
+			examples.Example{
+				Text: `Create an ACL that assigns a group "read" access to all topics that use the specified prefix in the specified Kafka cluster:`,
+				Code: "confluent iam acl create --allow --principal Group:Finance --operation read --topic financial --prefix --kafka-cluster <kafka-cluster-id>",
+			},
+		),
+	}
+
+	cmd.Flags().AddFlagSet(aclFlags())
+	pcmd.AddMDSOnPremMTLSFlags(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+
+	cobra.CheckErr(cmd.MarkFlagRequired("kafka-cluster"))
+	cobra.CheckErr(cmd.MarkFlagRequired("principal"))
+	cobra.CheckErr(cmd.MarkFlagRequired("operation"))
+
+	return cmd
+}
+
+func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
+	client, err := c.GetMDSClient(cmd)
+	if err != nil {
+		return err
+	}
+
+	acl := validateACLAddDelete(parse(cmd))
+	if acl.errors != nil {
+		return acl.errors
+	}
+
+	response, err := client.KafkaACLManagementApi.AddAclBinding(c.createContext(), *acl.CreateAclRequest)
+	if err != nil {
+		return c.handleAclError(cmd, err, response)
+	}
+
+	return printAcls(cmd, acl.CreateAclRequest.Scope.Clusters.KafkaCluster, []mdsv1.AclBinding{acl.CreateAclRequest.AclBinding})
+}
+
+func validateACLAddDelete(aclConfiguration *ACLConfiguration) *ACLConfiguration {
+	// delete is deliberately less powerful in the cli than in the API to prevent accidental
+	// deletion of too many acls at once. Expectation is that multi delete will be done via
+	// repeated invocation of the cli by external scripts.
+	if aclConfiguration.AclBinding.Entry.PermissionType == "" {
+		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, fmt.Errorf(errors.MustSetAllowOrDenyErrorMsg))
+	}
+
+	if aclConfiguration.AclBinding.Pattern.PatternType == "" {
+		aclConfiguration.AclBinding.Pattern.PatternType = mdsv1.PATTERNTYPE_LITERAL
+	}
+
+	if aclConfiguration.AclBinding.Pattern.ResourceType == "" {
+		aclConfiguration.errors = multierror.Append(aclConfiguration.errors, fmt.Errorf(errors.MustSetResourceTypeErrorMsg,
+			convertToFlags(mdsv1.ACLRESOURCETYPE_TOPIC, mdsv1.ACLRESOURCETYPE_GROUP,
+				mdsv1.ACLRESOURCETYPE_CLUSTER, mdsv1.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
+	}
+	return aclConfiguration
+}

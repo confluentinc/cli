@@ -1,0 +1,6 @@
++--------------------+-------------+
+| Name               | topic-exist |
+| Internal           | false       |
+| Replication Factor | 0           |
+| Partition Count    | 3           |
++--------------------+-------------+

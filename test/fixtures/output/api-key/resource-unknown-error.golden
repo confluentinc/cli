@@ -1,0 +1,7 @@
+Error: resource "lkc-unknown" not found
+
+Suggestions:
+    Check that the resource "lkc-unknown" exists.
+    To list Kafka clusters, use `confluent kafka cluster list`.
+    To check Schema Registry cluster information, use `confluent schema-registry cluster describe`.
+    To list KSQL clusters, use `confluent ksql cluster list`.

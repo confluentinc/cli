@@ -1,0 +1,6 @@
+- name: compression.type
+  value: gzip
+  operation: null
+- name: retention.ms
+  value: "1"
+  operation: null

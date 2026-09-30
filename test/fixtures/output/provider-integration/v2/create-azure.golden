@@ -1,0 +1,9 @@
++--------------------------------+---------------+
+| ID                             | pi-123456     |
+| Name                           | azure-test    |
+| Provider                       | azure         |
+| Environment                    | env-596       |
+| Status                         | DRAFT         |
+| Confluent Azure Multi-Tenant   | app-123456789 |
+| App ID                         |               |
++--------------------------------+---------------+

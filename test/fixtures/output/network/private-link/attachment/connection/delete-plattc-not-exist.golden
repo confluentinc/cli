@@ -1,0 +1,4 @@
+Error: private link attachment connection "plattc-invalid" not found
+
+Suggestions:
+    List available private link attachment connections with `confluent network private-link attachment connection list`.

@@ -1,0 +1,10 @@
+([][]string) (len=2) {
+  ([]string) (len=2) {
+    (string) (len=11) "default-key",
+    (string) (len=23) "default-value (default)"
+  },
+  ([]string) (len=2) {
+    (string) (len=26) "default-key-with-empty-val",
+    (string) (len=17) "<unset> (default)"
+  }
+}

@@ -1,0 +1,4 @@
+           Name           | Cloud |     Region      
+--------------------------+-------+-----------------
+  ap-northeast-1 (Tokyo)  | aws   | ap-northeast-1  
+  us-east-1 (N. Virginia) | aws   | us-east-1       

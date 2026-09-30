@@ -1,0 +1,29 @@
+[
+  {
+    "id": "nls-111111",
+    "name": "my-network-link-service-1",
+    "network": "n-abcde1",
+    "description": "example network link service",
+    "accepted_environments": ["env-11111"],
+    "accepted_networks": ["n-abcde2"],
+    "phase": "READY"
+  },
+  {
+    "id": "nls-222222",
+    "name": "my-network-link-service-2",
+    "network": "n-abcde1",
+    "description": "example network link service",
+    "accepted_environments": ["env-11111", "env-22222"],
+    "accepted_networks": ["n-abcde2", "n-abcde3"],
+    "phase": "READY"
+  },
+  {
+    "id": "nls-333333",
+    "name": "my-network-link-service-3",
+    "network": "n-abcde1",
+    "description": "example network link service",
+    "accepted_environments": ["env-11111", "env-22222", "env-33333"],
+    "accepted_networks": ["n-abcde2", "n-abcde3", "n-abcde4"],
+    "phase": "READY"
+  }
+]

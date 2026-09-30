@@ -1,0 +1,6 @@
+- id: usmkc-f3a90de
+  confluent_platform_kafka_cluster_id: 4k0R9d1GTS5tI9f4Y2xZ0Q
+  name: My-Prod-CP-Cluster
+  cloud: AWS
+  region: us-east-1
+  environment: env-00000

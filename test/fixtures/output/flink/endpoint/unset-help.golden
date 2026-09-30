@@ -1,0 +1,14 @@
+Unset the current Flink endpoint that was previously set with the `use` command.
+
+Usage:
+  confluent flink endpoint unset [flags]
+
+Examples:
+Unset the current Flink endpoint "https://flink.us-east-1.aws.confluent.cloud".
+
+  $ confluent flink endpoint unset
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

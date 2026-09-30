@@ -1,0 +1,17 @@
+id: se-123456
+spec:
+    display_name: prod-kafka-dr-endpoint
+    endpoints:
+        - endpoint_filter:
+            network_crn: crn://confluent.cloud/organization=org-123/environment=env-123456/network=n-111111
+            type: private
+          name: west-platt
+        - endpoint_filter:
+            network_crn: crn://confluent.cloud/organization=org-123/environment=env-234567/network=n-222222
+            type: private
+          name: east-platt
+    environment_crn: crn://confluent.cloud/organization=org-123/environment=env-123456
+    parent_resource_crn: crn://confluent.cloud/organization=org-123/environment=env-123456/switchover-pair=sw-123456
+    target: west-platt
+status:
+    phase: READY

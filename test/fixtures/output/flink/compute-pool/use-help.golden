@@ -1,0 +1,9 @@
+Choose a Flink compute pool to be used in subsequent commands which support passing a compute pool with the `--compute-pool` flag.
+
+Usage:
+  confluent flink compute-pool use <id> [flags]
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

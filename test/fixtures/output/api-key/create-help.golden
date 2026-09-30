@@ -1,0 +1,53 @@
+Create API keys for a given resource. A resource is a Confluent product or service for which an API key can be created. Specify a Kafka cluster ID (for example, lkc-abc123) for the --resource parameter to create a Kafka cluster API key, a Schema Registry cluster ID (for example, lsrc-abc123) to create a Schema Registry API key, or a ksqlDB cluster ID (for example, lksqlc-abc123) to create a ksqlDB API key. To create a Flink region API key, specify "flink" along with the --environment and --region flags. To create a Tableflow API key, specify "tableflow", or specify "cloud" to create a Cloud resource management API key. To create a Global API key that can be used across all supported Confluent Cloud resources, specify "global".
+
+Usage:
+  confluent api-key create [flags]
+
+Examples:
+Create a Cloud API key:
+
+  $ confluent api-key create --resource cloud
+
+Create a Global API key:
+
+  $ confluent api-key create --resource global
+
+Create a Flink API key for region "N. Virginia (us-east-1)":
+
+  $ confluent api-key create --resource flink --cloud aws --region us-east-1
+
+Create an API key with full access to Kafka cluster "lkc-123456":
+
+  $ confluent api-key create --resource lkc-123456
+
+Create an API key for Kafka cluster "lkc-123456" and service account "sa-123456":
+
+  $ confluent api-key create --resource lkc-123456 --service-account sa-123456
+
+Create an API key for Schema Registry cluster "lsrc-123456":
+
+  $ confluent api-key create --resource lsrc-123456
+
+Create an API key for KSQL cluster "lksqlc-123456":
+
+  $ confluent api-key create --resource lksqlc-123456
+
+Create a Tableflow API key:
+
+  $ confluent api-key create --resource tableflow
+
+Flags:
+      --resource string          REQUIRED: The ID of the resource the API key is for. Use "cloud" for a Cloud API key, "global" for a Global API key, "flink" for a Flink API key, or "tableflow" for a Tableflow API key.
+      --description string       Description of API key.
+      --cloud string             Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string            Cloud region for Flink (use "confluent flink region list" to see all).
+      --use                      Use the created API key for the provided resource.
+      --context string           CLI context name.
+      --environment string       Environment ID.
+      --service-account string   Service account ID.
+  -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

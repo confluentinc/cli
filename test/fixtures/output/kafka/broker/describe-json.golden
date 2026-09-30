@@ -1,0 +1,6 @@
+{
+  "cluster_id": "cluster-1",
+  "broker_id": 1,
+  "host": "kafka1",
+  "port": 1
+}

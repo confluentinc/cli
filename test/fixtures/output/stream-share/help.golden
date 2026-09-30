@@ -1,0 +1,18 @@
+Manage stream shares.
+
+Usage:
+  confluent stream-share [command]
+
+Aliases:
+  stream-share, ss
+
+Available Commands:
+  consumer    Manage consumer actions.
+  provider    Manage provider actions.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent stream-share [command] --help" for more information about a command.

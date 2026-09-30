@@ -1,0 +1,54 @@
+- clustername: theMdsConnectCluster
+  scope:
+    clusters:
+        kafkacluster: kafka-GUID
+        connectcluster: connect-name
+        ksqlcluster: ""
+        schemaregistrycluster: ""
+        cmf: ""
+        flinkenvironment: ""
+  hosts:
+    - host: 10.5.5.5
+      port: 9005
+  protocol: HTTPS
+- clustername: theMdsKSQLCluster
+  scope:
+    clusters:
+        kafkacluster: kafka-GUID
+        connectcluster: ""
+        ksqlcluster: ksql-name
+        schemaregistrycluster: ""
+        cmf: ""
+        flinkenvironment: ""
+  hosts:
+    - host: 10.4.4.4
+      port: 9004
+  protocol: HTTPS
+- clustername: theMdsKafkaCluster
+  scope:
+    clusters:
+        kafkacluster: kafka-GUID
+        connectcluster: ""
+        ksqlcluster: ""
+        schemaregistrycluster: ""
+        cmf: ""
+        flinkenvironment: ""
+  hosts:
+    - host: 10.10.10.10
+      port: 8090
+    - host: mds.example.com
+      port: 8090
+  protocol: SASL_PLAINTEXT
+- clustername: theMdsSchemaRegistryCluster
+  scope:
+    clusters:
+        kafkacluster: kafka-GUID
+        connectcluster: ""
+        ksqlcluster: ""
+        schemaregistrycluster: schema-registry-name
+        cmf: ""
+        flinkenvironment: ""
+  hosts:
+    - host: 10.3.3.3
+      port: 9003
+  protocol: HTTPS

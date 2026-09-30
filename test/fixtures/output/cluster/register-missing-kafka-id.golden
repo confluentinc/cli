@@ -1,0 +1,1 @@
+Error: must specify `--kafka-cluster` to uniquely identify the scope

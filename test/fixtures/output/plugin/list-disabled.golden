@@ -1,0 +1,4 @@
+Error: plugins are disabled
+
+Suggestions:
+    To enable plugins, use `confluent configuration update disable_plugins false`.

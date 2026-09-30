@@ -1,0 +1,4 @@
+Error: access point "ap-invalid" not found
+
+Suggestions:
+    List available access points with `confluent network access-point private-link egress-endpoint list`.

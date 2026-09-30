@@ -1,0 +1,23 @@
+Manage and select Confluent Cloud IAM service accounts.
+
+Usage:
+  confluent iam service-account [command]
+
+Aliases:
+  service-account, sa
+
+Available Commands:
+  create      Create an IAM service account.
+  delete      Delete one or more IAM service accounts.
+  describe    Describe an IAM service account.
+  list        List IAM service accounts.
+  unset       Unset the current IAM service account.
+  update      Update an existing IAM service account.
+  use         Use an IAM service account in subsequent commands.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent iam service-account [command] --help" for more information about a command.

@@ -1,0 +1,25 @@
+{
+  "updated_category": "Customer-Managed Confluent Platform for Confluent Cloud",
+  "licenses": [
+    {
+      "category": "Customer-Managed Confluent Platform for Confluent Cloud",
+      "category_short_name": "cp_for_cc",
+      "license_type": "ENTERPRISE",
+      "status": "ACTIVE",
+      "expires_at": "2026-10-30T07:00:00Z",
+      "audience": "test-audience",
+      "cluster_id": "cluster-1",
+      "topic_name": "_confluent-command",
+      "license_jwt": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp.ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss"
+    },
+    {
+      "category": "Confluent Platform Developer License",
+      "category_short_name": "cp_developer",
+      "license_type": "FREE_TIER",
+      "status": "ACTIVE",
+      "audience": "free tier",
+      "cluster_id": "cluster-1",
+      "license_jwt": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp.ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss"
+    }
+  ]
+}

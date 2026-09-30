@@ -1,0 +1,14 @@
+[
+  {
+    "cluster": "lkc-12345",
+    "topic_name": "topic1",
+    "id": 0,
+    "leader": 2
+  },
+  {
+    "cluster": "lkc-12345",
+    "topic_name": "topic1",
+    "id": 1,
+    "leader": 1
+  }
+]

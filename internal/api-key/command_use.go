@@ -1,0 +1,108 @@
+package apikey
+
+import (
+	"fmt"
+
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/kafka"
+	"github.com/confluentinc/cli/v4/pkg/output"
+	"github.com/confluentinc/cli/v4/pkg/resource"
+)
+
+const (
+	useAPIKeyMsg       = "Using API Key \"%s\".\n"
+	useGlobalAPIKeyMsg = "Using Global API Key \"%s\".\n"
+)
+
+func (c *command) newUseCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:               "use <api-key>",
+		Short:             "Use an API key in subsequent commands.",
+		Long:              "Choose an API key to be used in subsequent commands which support passing an API key with the `--api-key` flag.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.use,
+	}
+
+	// Deprecated
+	c.addResourceFlag(cmd, false)
+	cobra.CheckErr(cmd.Flags().MarkHidden("resource"))
+
+	return cmd
+}
+
+func (c *command) use(cmd *cobra.Command, args []string) error {
+	c.setKeyStoreIfNil()
+
+	apiKey := args[0]
+
+	// Global keys are stored on the Context, not on a specific Kafka cluster. Check there first so
+	// `confluent api-key use <global-key>` without --resource works seamlessly.
+	if !cmd.Flags().Changed("resource") && c.Context.HasGlobalAPIKey(apiKey) {
+		if err := c.Context.SetActiveGlobalAPIKey(apiKey); err != nil {
+			return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, apiKey))
+		}
+		if err := c.Config.Save(); err != nil {
+			return err
+		}
+		output.Printf(c.Config.EnableColor, useGlobalAPIKeyMsg, apiKey)
+		return nil
+	}
+
+	var clusterId string
+
+	if cmd.Flags().Changed("resource") {
+		_, resourceId, _, err := c.resolveResourceId(cmd, c.V2Client)
+		if err != nil {
+			return err
+		}
+		if resource.LookupType(resourceId) != resource.KafkaCluster {
+			return errors.New(nonKafkaNotImplementedErrorMsg)
+		}
+		clusterId = resourceId
+	} else {
+		clusterId = c.Context.KafkaClusterContext.FindApiKeyClusterId(apiKey)
+		if clusterId == "" {
+			return errors.NewErrorWithSuggestions(
+				fmt.Sprintf(`API key "%s" and associated Kafka cluster are not stored in local CLI state`, apiKey),
+				fmt.Sprintf(apiKeyUseFailedSuggestions, apiKey),
+			)
+		}
+	}
+
+	if err := c.useAPIKey(apiKey, clusterId); err != nil {
+		return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, apiKey))
+	}
+
+	output.Printf(c.Config.EnableColor, useAPIKeyMsg, apiKey)
+	return nil
+}
+
+func (c *command) useAPIKey(apiKey, clusterId string) error {
+	kcc, err := kafka.FindCluster(c.V2Client, c.Context, clusterId)
+	if err != nil {
+		return err
+	}
+
+	if _, ok := kcc.APIKeys[apiKey]; !ok {
+		// check if this is API key exists server-side
+		key, httpResp, err := c.V2Client.GetApiKey(apiKey)
+		if err != nil {
+			return errors.CatchCCloudV2Error(err, httpResp)
+		}
+		// check if the key is for the right cluster
+		if key.Spec.GetResource().Id != clusterId {
+			return errors.NewErrorWithSuggestions(
+				fmt.Sprintf(errors.InvalidApiKeyErrorMsg, apiKey, clusterId),
+				fmt.Sprintf(errors.InvalidApiKeySuggestions, clusterId),
+			)
+		}
+		// the requested api-key exists, but the secret is not saved locally
+		return &errors.UnconfiguredAPISecretError{APIKey: apiKey, ClusterID: clusterId}
+	}
+	kcc.APIKey = apiKey
+	return c.Config.Save()
+}

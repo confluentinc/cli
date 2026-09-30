@@ -1,0 +1,4 @@
+Error: IAM user "u-dne" not found
+
+Suggestions:
+    List available IAM users with `confluent iam user list`.

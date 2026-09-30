@@ -1,0 +1,21 @@
+{
+  "route": "crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/topic=qa-test",
+  "categories": {
+    "authorize": {
+      "allowed": "confluent-audit-log-events_general_allowed_events",
+      "denied": "confluent-audit-log-events_general_denied_events"
+    },
+    "management": {
+      "allowed": "confluent-audit-log-events_general_allowed_events",
+      "denied": "confluent-audit-log-events_general_denied_events"
+    },
+    "produce": {
+      "allowed": "confluent-audit-log-events_finance_produce_allowed",
+      "denied": "confluent-audit-log-events_finance_denied"
+    },
+    "consume": {
+      "allowed": null,
+      "denied": "confluent-audit-log-events_finance_denied"
+    }
+  }
+}

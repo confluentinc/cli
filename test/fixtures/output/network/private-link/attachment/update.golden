@@ -1,0 +1,8 @@
++--------------------------+---------------------------------------------------------+
+| ID                       | platt-111111                                            |
+| Name                     | new-name                                                |
+| Cloud                    | AWS                                                     |
+| Region                   | us-west-2                                               |
+| AWS VPC Endpoint Service | com.amazonaws.vpce.us-west-2.vpce-svc-01234567890abcdef |
+| Phase                    | WAITING_FOR_CONNECTIONS                                 |
++--------------------------+---------------------------------------------------------+

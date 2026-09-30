@@ -1,0 +1,20 @@
+Describe a catalog integration.
+
+Usage:
+  confluent tableflow catalog-integration describe <id> [flags]
+
+Examples:
+Describe a catalog integration.
+
+  $ confluent tableflow catalog-integration describe tci-abc123
+
+Flags:
+      --cluster string       Kafka cluster ID.
+      --environment string   Environment ID.
+      --context string       CLI context name.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

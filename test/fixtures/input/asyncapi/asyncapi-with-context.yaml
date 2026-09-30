@@ -1,0 +1,31 @@
+asyncapi: 2.4.0
+info:
+  title: API Document for Confluent Cluster
+  version: 1.0.0
+servers:
+  cluster:
+    url: http://127.0.0.1:1025
+    description: Confluent Kafka instance.
+    protocol: kafka
+    security:
+    - confluentBroker: []
+  schema-registry:
+    url: http://127.0.0.1:56078
+    description: Confluent Kafka Schema Registry Server
+    protocol: kafka
+    security:
+    - confluentSchemaRegistry: []
+channels: {}
+components:
+  securitySchemes:
+    confluentBroker:
+      type: userPassword
+      x-configs:
+        sasl.mechanisms: PLAIN
+        sasl.password: '{{CLUSTER_API_SECRET}}'
+        sasl.username: '{{CLUSTER_API_KEY}}'
+        security.protocol: sasl_ssl
+    confluentSchemaRegistry:
+      type: userPassword
+      x-configs:
+        basic.auth.user.info: '{{SCHEMA_REGISTRY_API_KEY}}:{{SCHEMA_REGISTRY_API_SECRET}}'

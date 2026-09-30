@@ -1,0 +1,8 @@
+Schema ID: 10
+Type: AVRO
+Schema:
+{
+    "schema": 1
+}
+References:
+	ref -> payment 1

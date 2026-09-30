@@ -1,0 +1,19 @@
++----------------------------+--------------------------------+
+| ID                         | n-abcde2                       |
+| Environment                | env-00000                      |
+| Name                       | prod-gcp-us-central1           |
+| Gateway                    | gateway-12345                  |
+| Cloud                      | GCP                            |
+| Region                     | us-central1                    |
+| CIDR                       | 10.1.0.0/16                    |
+| Zones                      | us-central1-a, us-central1-b,  |
+|                            | us-central1-c                  |
+| Phase                      | READY                          |
+| Supported Connection Types | PEERING                        |
+| Active Connection Types    | PEERING                        |
+| GCP Project                | gcp-project                    |
+| GCP VPC Network            | gcp-vpc                        |
+| Zone Info                  | us-central1-a=10.200.0.0/27,   |
+|                            | us-central1-b=10.200.0.32/27,  |
+|                            | us-central1-c=10.200.0.64/27   |
++----------------------------+--------------------------------+

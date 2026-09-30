@@ -1,0 +1,10 @@
++----------------------------+-----------------------------------------------------------------------------------+
+| ID                         | ap-22222                                                                          |
+| Name                       | my-gcp-ingress-access-point                                                       |
+| Environment                | env-596                                                                           |
+| Gateway                    | gw-99999                                                                          |
+| Phase                      | READY                                                                             |
+| GCP PSC Service Attachment | projects/projectName/regions/us-central1/serviceAttachments/serviceAttachmentName |
+| GCP PSC Connection ID      | 111111111111111111                                                                |
+| DNS Domain                 | ap22222.us-central1.gcp.accesspoint.confluent.cloud                               |
++----------------------------+-----------------------------------------------------------------------------------+

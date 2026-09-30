@@ -1,0 +1,4 @@
+Error: 404 Not Found
+
+Suggestions:
+    Failed to get environment 'env-dne'. List available environments with `confluent environment list`.

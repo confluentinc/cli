@@ -1,0 +1,281 @@
+{
+  "destinations": {
+    "topics": {
+      "confluent-audit-log-events": {
+        "retention_ms": 7776000000
+      }
+    }
+  },
+  "excluded_principals": null,
+  "default_topics": {
+    "allowed": "confluent-audit-log-events",
+    "denied": "confluent-audit-log-events"
+  },
+  "routes": {
+    "crn:///kafka=cluster123": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      },
+      "management": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=cluster123/all=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=cluster123/cluster-registry=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=cluster123/connect=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=cluster123/connect=*/all=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=cluster123/connect=*/connector=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=cluster123/connect=*/secret=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=cluster123/control-center-alerts=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=cluster123/control-center-broker-metrics=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=cluster123/delegation-token=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=cluster123/group=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      },
+      "management": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=cluster123/ksql=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=cluster123/ksql=*/all=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=cluster123/ksql=*/ksql-cluster=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=cluster123/schema-registry=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=cluster123/schema-registry=*/all=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=cluster123/schema-registry=*/subject=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=cluster123/security-metadata=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=cluster123/topic=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      },
+      "management": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=cluster123/transaction-id=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      },
+      "management": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC/all=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC/cluster-registry=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC/connect=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC/connect=*/all=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC/connect=*/connector=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC/connect=*/secret=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC/control-center-alerts=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC/control-center-broker-metrics=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC/delegation-token=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC/group=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      },
+      "management": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC/ksql=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC/ksql=*/all=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC/ksql=*/ksql-cluster=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC/schema-registry=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC/schema-registry=*/all=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC/schema-registry=*/subject=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC/security-metadata=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC/topic=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      },
+      "management": {
+        "allowed": "",
+        "denied": ""
+      }
+    },
+    "crn:///kafka=clusterABC/transaction-id=*": {
+      "authorize": {
+        "allowed": "",
+        "denied": ""
+      }
+    }
+  },
+  "metadata": null
+}

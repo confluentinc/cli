@@ -1,0 +1,4 @@
+Error: RTCE topic "invalid" not found
+
+Suggestions:
+    List available RTCE topics with `confluent rtce rtce-topic list`.

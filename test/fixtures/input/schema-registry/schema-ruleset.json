@@ -1,0 +1,11 @@
+{
+  "domainRules": [
+    {
+      "name": "checkSsnLen",
+      "kind": "CONDITION",
+      "type": "CEL",
+      "mode": "WRITE",
+      "expr": "size(message.ssn) == 9"
+    }
+  ]
+}

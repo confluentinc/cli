@@ -1,0 +1,7 @@
++----------------+-------------------------------------------+
+| ID             | pool-12345                                |
+| Name           | identity-pool                             |
+| Description    | pooling identities                        |
+| Identity Claim | sub                                       |
+| Filter         | claims.iss="https://company.provider.com" |
++----------------+-------------------------------------------+

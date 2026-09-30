@@ -1,0 +1,18 @@
+Print the filesystem path of the data and logs of the services managed by the current `confluent local` command. If such a path does not exist, it will be created.
+
+Usage:
+  confluent local current [flags]
+
+Examples:
+In Linux, running `confluent local current` should resemble the following:
+
+  /tmp/confluent.SpBP4fQi
+
+In macOS, running `confluent local current` should resemble the following:
+
+  /var/folders/cs/1rndf6593qb3kb6r89h50vgr0000gp/T/confluent.000000
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

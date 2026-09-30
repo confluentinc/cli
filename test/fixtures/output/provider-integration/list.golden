@@ -1,0 +1,4 @@
+      ID     |    Name     | Provider | Environment |               IAM Role ARN                |             External ID              |                 Customer Role ARN                  | Usages  
+-------------+-------------+----------+-------------+-------------------------------------------+--------------------------------------+----------------------------------------------------+---------
+  cspi-42o61 | cdong-test2 | aws      | env-9zgy77  | arn:aws:iam::851725421142:role/cspi-42o61 | 999219d4-37f4-49ac-abfe-d2b6528fb21b | arn:aws:iam::037803949979:role/tarun-iam-test-role |         
+  cspi-4xgwq | cdong-test  | aws      | env-9zgy77  | arn:aws:iam::851725421142:role/cspi-4xgwq | b5f0a7e6-15e3-4879-aa01-881910554cd4 | arn:aws:iam::000000000000:role/my-test-aws-role    |         

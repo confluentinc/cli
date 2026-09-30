@@ -1,0 +1,4 @@
+Error: Flink endpoint "https://flink-n-abcde7.eastus.azure.confluent.cloud" is invalid for cloud = "azure" and region = "eastus2"
+
+Suggestions:
+    Please run "confluent flink endpoint list" to see all available Flink endpoints, or "confluent flink region use" to switch to a different cloud or region.
