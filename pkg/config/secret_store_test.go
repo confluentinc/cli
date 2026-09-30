@@ -307,7 +307,7 @@ func TestSave_SchemaRegistryCredentialLeavesConfigFile(t *testing.T) {
 
 	var file secretFile
 	require.NoError(t, json.Unmarshal(secRaw, &file))
-	triple := file.Secrets["api-key-AK"].SchemaRegistryCredentials["lsrc-1"]
+	triple := file.Secrets["api-key-AK"].SchemaRegistryCredentials["lsrc-1"]["SR-KEY"]
 	require.NotNil(t, triple)
 	plain, err := secret.Decrypt("SR-KEY", triple.Secret, triple.Salt, triple.Nonce)
 	require.NoError(t, err)
@@ -476,10 +476,10 @@ func TestSave_KafkaAPIKeysKeyedByContextNotIdentity(t *testing.T) {
 }
 
 // TestSave_SchemaRegistryCredentialKeyedByContextNotIdentity pins the same shared-identity
-// guarantee for SchemaRegistryCredentials: it holds a single triple per SR cluster id (not a
-// per-key map, since a deprecated SR credential has no key id to key by), so two contexts sharing
-// an identity with different credentials for the same SR cluster can't both survive - the save
-// must deterministically keep one rather than silently flip between them by map order.
+// guarantee for SchemaRegistryCredentials as the Kafka/Global maps: it is keyed by SR cluster id
+// then by API key id (SrCredentials.Key), a union like the other two, not a single triple per
+// cluster id - so two contexts sharing an identity, holding DIFFERENT credentials (different key
+// ids) for the SAME SR cluster, must each get their own secret back, not one clobbering the other.
 func TestSave_SchemaRegistryCredentialKeyedByContextNotIdentity(t *testing.T) {
 	setTestHome(t, t.TempDir())
 	c, addContext := newTestConfigWithSharedIdentity(t)
@@ -487,28 +487,104 @@ func TestSave_SchemaRegistryCredentialKeyedByContextNotIdentity(t *testing.T) {
 	ctxA := addContext("ctx-a", "https://a.example.com")
 	ctxB := addContext("ctx-b", "https://b.example.com")
 
-	addSrCred := func(ctx *Context, secret string) {
+	addSrCred := func(ctx *Context, keyId, secret string) {
 		ctx.SchemaRegistryClusters = map[string]*SchemaRegistryCluster{
 			"lsrc-1": {
 				Id:                     "lsrc-1",
 				SchemaRegistryEndpoint: "https://sr.example.com",
-				SrCredentials:          &APIKeyPair{Key: "SR-KEY", Secret: secret},
+				SrCredentials:          &APIKeyPair{Key: keyId, Secret: secret},
 			},
 		}
 	}
-	addSrCred(ctxA, "sr-secret-a")
-	addSrCred(ctxB, "sr-secret-b")
+	addSrCred(ctxA, "SR-A", "sr-secret-a")
+	addSrCred(ctxB, "SR-B", "sr-secret-b")
 
 	require.NoError(t, c.Save())
-	require.NoError(t, c.Save(), "a second save over the same shared identity must pick the same winner deterministically")
 
 	reloaded := New()
 	reloaded.Filename = c.GetFilename()
 	require.NoError(t, reloaded.Load())
 
-	pair := reloaded.Contexts["ctx-a"].SchemaRegistryClusters["lsrc-1"].SrCredentials
-	require.NoError(t, pair.DecryptSecret())
-	require.Equal(t, "sr-secret-a", pair.Secret, "ctx-a sorts first, so its credential must deterministically win")
+	pairA := reloaded.Contexts["ctx-a"].SchemaRegistryClusters["lsrc-1"].SrCredentials
+	require.NoError(t, pairA.DecryptSecret())
+	require.Equal(t, "sr-secret-a", pairA.Secret, "ctx-a must keep its own SR credential")
+
+	pairB := reloaded.Contexts["ctx-b"].SchemaRegistryClusters["lsrc-1"].SrCredentials
+	require.NoError(t, pairB.DecryptSecret())
+	require.Equal(t, "sr-secret-b", pairB.Secret, "ctx-b's SR credential must not be lost to ctx-a's shared identity")
+}
+
+// TestLoad_SchemaRegistryCredentialKeyMismatchLeavesSecretEmpty pins the load-side guard: a stored
+// SR credential is restored only when its key id matches the live context's own SrCredentials.Key.
+// A context whose key id isn't in the store (e.g. it never saved one, or a sibling context under
+// the shared identity holds a different key for the same SR cluster) must be left with an empty
+// secret, never handed another context's ciphertext - which would fail GCM auth on Unix or, on
+// Windows, where DPAPI ignores the AAD, silently decrypt to the wrong plaintext.
+func TestLoad_SchemaRegistryCredentialKeyMismatchLeavesSecretEmpty(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	c, addContext := newTestConfigWithSharedIdentity(t)
+
+	ctxA := addContext("ctx-a", "https://a.example.com")
+	ctxA.SchemaRegistryClusters = map[string]*SchemaRegistryCluster{
+		"lsrc-1": {
+			Id:                     "lsrc-1",
+			SchemaRegistryEndpoint: "https://sr.example.com",
+			SrCredentials:          &APIKeyPair{Key: "SR-A", Secret: "sr-secret-a"},
+		},
+	}
+	// A sibling context under the same identity, holding a DIFFERENT key for the same SR cluster
+	// and never storing a secret of its own - its key id is never in the store, so nothing should
+	// restore onto it, even though it shares both the identity and the SR cluster id with ctx-a.
+	ctxB := addContext("ctx-b", "https://b.example.com")
+	ctxB.SchemaRegistryClusters = map[string]*SchemaRegistryCluster{
+		"lsrc-1": {
+			Id:                     "lsrc-1",
+			SchemaRegistryEndpoint: "https://sr.example.com",
+			SrCredentials:          &APIKeyPair{Key: "SR-MISMATCH"},
+		},
+	}
+
+	require.NoError(t, c.Save())
+
+	reloaded := New()
+	reloaded.Filename = c.GetFilename()
+	require.NoError(t, reloaded.Load())
+
+	pairB := reloaded.Contexts["ctx-b"].SchemaRegistryClusters["lsrc-1"].SrCredentials
+	require.Empty(t, pairB.Secret,
+		"a key id with no matching stored entry must stay empty, never inherit another key's ciphertext")
+}
+
+// TestSave_SchemaRegistryCredentialDeletionPropagatesAcrossSharedIdentity is the SR analog of
+// TestSave_KafkaAPIKeyDeletionPropagatesAcrossSharedIdentity: deleting one context's SR credential
+// must propagate to disk even when it shares an identity with another context holding a credential
+// for the same SR cluster under a different key.
+func TestSave_SchemaRegistryCredentialDeletionPropagatesAcrossSharedIdentity(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	c, addContext := newTestConfigWithSharedIdentity(t)
+
+	ctxA := addContext("ctx-a", "https://a.example.com")
+	ctxA.SchemaRegistryClusters = map[string]*SchemaRegistryCluster{
+		"lsrc-1": {Id: "lsrc-1", SchemaRegistryEndpoint: "https://sr.example.com",
+			SrCredentials: &APIKeyPair{Key: "SR-A", Secret: "sr-secret-a"}},
+	}
+	ctxB := addContext("ctx-b", "https://b.example.com")
+	ctxB.SchemaRegistryClusters = map[string]*SchemaRegistryCluster{
+		"lsrc-1": {Id: "lsrc-1", SchemaRegistryEndpoint: "https://sr.example.com",
+			SrCredentials: &APIKeyPair{Key: "SR-B", Secret: "sr-secret-b"}},
+	}
+
+	require.NoError(t, c.Save())
+
+	ctxA.SchemaRegistryClusters["lsrc-1"].SrCredentials = nil
+	require.NoError(t, c.Save())
+
+	disk, err := readSecretFileFromDisk(SecretsFilename())
+	require.NoError(t, err)
+	rec := disk.Secrets["shared-user"]
+	require.NotNil(t, rec)
+	require.NotContains(t, rec.SchemaRegistryCredentials["lsrc-1"], "SR-A", "a deleted SR credential must not survive on disk")
+	require.Contains(t, rec.SchemaRegistryCredentials["lsrc-1"], "SR-B", "the other context's SR credential must survive the same save")
 }
 
 // TestSave_KafkaAPIKeyDeletionPropagatesAcrossSharedIdentity pins that deleting one context's

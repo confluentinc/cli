@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 )
 
 // secretRecord holds one credential identity's secret material as stored on disk: each
@@ -29,10 +28,13 @@ type secretRecord struct {
 	KafkaAPIKeys map[string]map[string]*apiKeySecret `json:"kafka_api_keys,omitempty"`
 
 	// SchemaRegistryCredentials holds the (deprecated) SchemaRegistryCluster.SrCredentials secret,
-	// keyed by Schema Registry cluster id. Unlike the Kafka/Global API keys, an SR credential is
-	// never decrypted in place during a session, so it crosses the save as a stable ciphertext
-	// triple and merges through the generic mergeMapDeep like Password.
-	SchemaRegistryCredentials map[string]*apiKeySecret `json:"schema_registry_credentials,omitempty"`
+	// keyed by Schema Registry cluster id then by API key id - the same shape as KafkaAPIKeys, and
+	// for the same reason: a shared identity can hold more than one SR credential for the same
+	// cluster (different key ids), so a single triple per cluster id can't represent both. The load
+	// path only restores a credential into a context whose own SrCredentials.Key matches the stored
+	// key id - never onto another context sharing the identity, which would pair the wrong key's
+	// ciphertext with this one's AAD.
+	SchemaRegistryCredentials map[string]map[string]*apiKeySecret `json:"schema_registry_credentials,omitempty"`
 }
 
 // tokenRecord holds one context's auth tokens as stored on disk, keyed by CONTEXT NAME
@@ -129,24 +131,26 @@ func allKafkaClusterConfigs(k *KafkaClusterContext) map[string]*KafkaClusterConf
 	return all
 }
 
-// stripSecretTriple returns a copy of rec with the CHURNING fields zeroed - the API-secret triple
-// (Secret/SecretSalt/SecretNonce) and the nested API-key maps (GlobalAPIKeys, KafkaAPIKeys) - so the
-// generic mergeMapDeep can safely structural-diff only what remains stable: SchemaRegistryCredentials
-// (never decrypted in place, so its ciphertext is byte-stable across saves and platforms). The Secret
-// triple and the nested maps are decrypted in place during a session (PreRun and ResolveKafkaAPIKey)
-// and re-encrypted every save, which on Windows reproduces DIFFERENT ciphertext for an unchanged
-// value; a byte-compare would misread that as a local change. Each is instead decided separately on
-// PLAINTEXT (mergeSecretTriple, mergeAPIKeySecretMap) and spliced back in. SchemaRegistryCredentials
-// stays present in the copy (a shared, read-only reference - mergeMapDeep only reads it via a JSON
-// marshal). A nil rec copies to a non-nil empty record so an identity whose only content was a churning
-// field still participates in the generic merge as "present, empty" rather than vanishing entirely.
+// stripSecretTriple returns a copy of rec with every CHURNING field zeroed - the API-secret triple
+// (Secret/SecretSalt/SecretNonce) and the three nested API-key maps (GlobalAPIKeys, KafkaAPIKeys,
+// SchemaRegistryCredentials) - so the generic mergeMapDeep only structural-diffs what's left
+// (identity add/delete). The Secret triple and GlobalAPIKeys/KafkaAPIKeys are decrypted in place
+// during a session (PreRun and ResolveKafkaAPIKey) and re-encrypted every save, which on Windows
+// reproduces DIFFERENT ciphertext for an unchanged value; a byte-compare would misread that as a
+// local change. SchemaRegistryCredentials is never decrypted in place in a session, but now that it
+// can hold more than one credential per SR cluster id it needs the same per-key union as the other
+// two, not a whole-map structural diff - so it's stripped and merged the same way. Each stripped
+// field is instead decided separately on PLAINTEXT (mergeSecretTriple, mergeAPIKeySecretMap via
+// mergeNestedAPIKeys) and spliced back in. A nil rec copies to a non-nil empty record so an
+// identity whose only content was a churning field still participates in the generic merge as
+// "present, empty" rather than vanishing entirely.
 func stripSecretTriple(rec *secretRecord) *secretRecord {
 	if rec == nil {
 		return &secretRecord{}
 	}
 	stripped := *rec
 	stripped.Secret, stripped.SecretSalt, stripped.SecretNonce = "", nil, nil
-	stripped.GlobalAPIKeys, stripped.KafkaAPIKeys = nil, nil
+	stripped.GlobalAPIKeys, stripped.KafkaAPIKeys, stripped.SchemaRegistryCredentials = nil, nil, nil
 	return &stripped
 }
 
@@ -309,9 +313,10 @@ func (c *Config) mergeAPIKeySecretMap(base, ours, disk map[string]*apiKeySecret)
 	return merged, nil
 }
 
-// mergeKafkaAPIKeys three-way-merges the cluster-keyed KafkaAPIKeys map by delegating each cluster's
+// mergeNestedAPIKeys three-way-merges a cluster-keyed nested API-key map - KafkaAPIKeys or
+// SchemaRegistryCredentials, both cluster id -> key id -> triple - by delegating each cluster's
 // inner key map to mergeAPIKeySecretMap. Returns nil for an empty result.
-func (c *Config) mergeKafkaAPIKeys(base, ours, disk map[string]map[string]*apiKeySecret) (map[string]map[string]*apiKeySecret, error) {
+func (c *Config) mergeNestedAPIKeys(base, ours, disk map[string]map[string]*apiKeySecret) (map[string]map[string]*apiKeySecret, error) {
 	clusterIds := map[string]bool{}
 	for id := range base {
 		clusterIds[id] = true
@@ -594,17 +599,7 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 		}
 	}
 
-	// Sorted so that, when two contexts share an identity and both hold an SR credential for the
-	// same SR cluster (a single-triple field that can't hold two), the alphabetically-first
-	// context's credential deterministically wins below, instead of depending on map order.
-	sortedCtxNames := make([]string, 0, len(c.Contexts))
-	for name := range c.Contexts {
-		sortedCtxNames = append(sortedCtxNames, name)
-	}
-	sort.Strings(sortedCtxNames)
-
-	for _, name := range sortedCtxNames {
-		ctx := c.Contexts[name]
+	for _, ctx := range c.Contexts {
 		if len(ctx.GlobalAPIKeys) > 0 {
 			r := record(ctx.identityKey())
 			for keyId, pair := range ctx.GlobalAPIKeys {
@@ -649,13 +644,11 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 			}
 		}
 
-		// SchemaRegistryCredentials is keyed by SR cluster id to a single triple, not a per-key map
-		// like the two above - it holds one credential, not a set of them - so two contexts sharing
-		// an identity with different credentials for the same SR cluster cannot both be stored. Keep
-		// whichever is written first for this identity/cluster pair; sortedCtxNames is sorted above so
-		// that choice is deterministic (alphabetically-first context name), not map-order-dependent.
+		// Merged per API key id, the same as KafkaAPIKeys above: a shared identity can hold more than
+		// one SR credential for the same SR cluster id, each under its own key, and a whole-map
+		// assignment here would let the last context processed drop the others.
 		for srClusterId, srCluster := range ctx.SchemaRegistryClusters {
-			if srCluster == nil {
+			if srCluster == nil || srCluster.SrCredentials == nil {
 				continue
 			}
 			triple, err := encryptedAPIKeySecret(srCluster.SrCredentials)
@@ -667,11 +660,12 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 			}
 			r := record(ctx.identityKey())
 			if r.SchemaRegistryCredentials == nil {
-				r.SchemaRegistryCredentials = map[string]*apiKeySecret{}
+				r.SchemaRegistryCredentials = map[string]map[string]*apiKeySecret{}
 			}
-			if _, exists := r.SchemaRegistryCredentials[srClusterId]; !exists {
-				r.SchemaRegistryCredentials[srClusterId] = triple
+			if r.SchemaRegistryCredentials[srClusterId] == nil {
+				r.SchemaRegistryCredentials[srClusterId] = map[string]*apiKeySecret{}
 			}
+			r.SchemaRegistryCredentials[srClusterId][srCluster.SrCredentials.Key] = triple
 		}
 	}
 
@@ -713,11 +707,11 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 		c.secretBaseline = &secretFile{}
 	}
 
-	// Secrets: the generic structural merge (identity add/delete, SchemaRegistryCredentials) runs on
-	// copies with the churning fields - the API-secret triple and the nested API-key maps - stripped
-	// out, so their platform-dependent (re-)encryption never contaminates it (see stripSecretTriple).
-	// Each churning field is decided separately, on plaintext (mergeSecretTriple for the credential
-	// secret, mergeAPIKeySecretMap/mergeKafkaAPIKeys for the nested keys), and spliced back in below.
+	// Secrets: the generic structural merge (identity add/delete only) runs on copies with the
+	// churning fields - the API-secret triple and the three nested API-key maps - stripped out, so
+	// their platform-dependent (re-)encryption never contaminates it (see stripSecretTriple). Each
+	// churning field is decided separately, on plaintext (mergeSecretTriple for the credential
+	// secret, mergeAPIKeySecretMap/mergeNestedAPIKeys for the nested keys), and spliced back in below.
 	merged := &secretFile{}
 	if merged.Secrets, err = mergeMapDeep(
 		stripSecretTriples(c.secretBaseline.Secrets), stripSecretTriples(records), stripSecretTriples(disk.Secrets),
@@ -747,6 +741,12 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 		}
 		return rec.KafkaAPIKeys
 	}
+	srOf := func(rec *secretRecord) map[string]map[string]*apiKeySecret {
+		if rec == nil {
+			return nil
+		}
+		return rec.SchemaRegistryCredentials
+	}
 	for id := range identities {
 		base, ours, dsk := c.secretBaseline.Secrets[id], records[id], disk.Secrets[id]
 
@@ -758,14 +758,18 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 		if err != nil {
 			return err
 		}
-		kafka, err := c.mergeKafkaAPIKeys(kafkaOf(base), kafkaOf(ours), kafkaOf(dsk))
+		kafka, err := c.mergeNestedAPIKeys(kafkaOf(base), kafkaOf(ours), kafkaOf(dsk))
+		if err != nil {
+			return err
+		}
+		sr, err := c.mergeNestedAPIKeys(srOf(base), srOf(ours), srOf(dsk))
 		if err != nil {
 			return err
 		}
 
 		rec, ok := merged.Secrets[id]
 		if !ok {
-			if secret == "" && len(global) == 0 && len(kafka) == 0 {
+			if secret == "" && len(global) == 0 && len(kafka) == 0 && len(sr) == 0 {
 				continue
 			}
 			rec = &secretRecord{}
@@ -773,6 +777,7 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 		}
 		rec.Secret, rec.SecretSalt, rec.SecretNonce = secret, salt, nonce
 		rec.GlobalAPIKeys, rec.KafkaAPIKeys = global, kafka
+		rec.SchemaRegistryCredentials = sr
 	}
 	// Drop an identity left with no content at all: its only material was a churning field,
 	// and that's now cleared.
@@ -939,9 +944,17 @@ func (c *Config) loadSecretStore() error {
 			}
 		}
 
-		for srClusterId, triple := range rec.SchemaRegistryCredentials {
-			srCluster := ctx.SchemaRegistryClusters[srClusterId]
-			if srCluster == nil || srCluster.SrCredentials == nil || triple == nil {
+		// Restored only on an exact key id match, never onto another context sharing the identity
+		// that happens to hold the same SR cluster id under a different key: a missing entry leaves
+		// the secret empty (safe - it just never decrypts), but the wrong entry would pair one
+		// context's ciphertext with another's AAD and either fail GCM auth (Unix) or, worse, decrypt
+		// silently to the wrong plaintext (Windows DPAPI ignores AAD).
+		for srClusterId, srCluster := range ctx.SchemaRegistryClusters {
+			if srCluster == nil || srCluster.SrCredentials == nil {
+				continue
+			}
+			triple := rec.SchemaRegistryCredentials[srClusterId][srCluster.SrCredentials.Key]
+			if triple == nil {
 				continue
 			}
 			srCluster.SrCredentials.Secret = triple.Secret
