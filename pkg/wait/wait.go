@@ -36,9 +36,13 @@ func Call[T any](ctx context.Context, fn func() (T, error)) (T, error) {
 //
 // PollInterval is the gap between successive Fetch calls after the first.
 type Options[T any] struct {
-	Fetch        func() (T, error)
-	IsTerminal   func(T) bool
-	IsFailed     func(T) bool
+	Fetch      func() (T, error)
+	IsTerminal func(T) bool
+	IsFailed   func(T) bool
+	// IsFatalErr, if set, classifies a Fetch error as fatal: the poll returns
+	// that error immediately instead of treating it as transient and retrying to
+	// the deadline. nil (the default) keeps every Fetch error transient.
+	IsFatalErr   func(error) bool
 	Delay        time.Duration
 	PollInterval time.Duration
 	Timeout      time.Duration
@@ -53,9 +57,12 @@ type PhaseOptions[T any] struct {
 	Phase         func(T) string
 	PendingPhases []string
 	FailedPhases  []string
-	Delay         time.Duration
-	PollInterval  time.Duration
-	Timeout       time.Duration
+	// IsFatalErr, if set, aborts polling with that error the moment Fetch returns
+	// it, instead of retrying it as transient. See Options.IsFatalErr.
+	IsFatalErr   func(error) bool
+	Delay        time.Duration
+	PollInterval time.Duration
+	Timeout      time.Duration
 }
 
 var (
@@ -89,6 +96,7 @@ func PollPhases[T any](ctx context.Context, opts PhaseOptions[T]) (T, error) {
 		Fetch:        opts.Fetch,
 		IsTerminal:   func(v T) bool { return !pending(opts.Phase(v)) },
 		IsFailed:     func(v T) bool { return failed(opts.Phase(v)) },
+		IsFatalErr:   opts.IsFatalErr,
 		Delay:        opts.Delay,
 		PollInterval: opts.PollInterval,
 		Timeout:      opts.Timeout,
@@ -119,6 +127,9 @@ func Poll[T any](ctx context.Context, opts Options[T]) (T, error) {
 		v, ferr := opts.Fetch()
 		if ferr != nil {
 			lastErr = ferr
+			if opts.IsFatalErr != nil && opts.IsFatalErr(ferr) {
+				return true, ferr
+			}
 			return false, nil
 		}
 		lastErr = nil

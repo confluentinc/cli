@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/signal"
 	"strings"
-	"sync"
 	"syscall"
 	"time"
 
@@ -43,9 +42,6 @@ const (
 
 type queryCommand struct {
 	*pcmd.AuthenticatedCLICommand
-
-	// authTokenMu guards client.AuthToken against a leaked refresh racing a stop attempt.
-	authTokenMu sync.Mutex
 }
 
 func (*command) newQueryCommand(cfg *cliconfig.Config, prerunner pcmd.PreRunner) *cobra.Command {
