@@ -100,13 +100,13 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 			}
 		}
 
-		jwtCtx := &config.Context{State: &config.ContextState{AuthToken: flinkGatewayClient.AuthToken}}
+		jwtCtx := &config.Context{State: &config.ContextState{AuthToken: flinkGatewayClient.GetAuthToken()}}
 		if tokenErr := jwtValidator.Validate(jwtCtx); tokenErr != nil {
 			dataplaneToken, err := auth.GetDataplaneToken(c.Context)
 			if err != nil {
 				return err
 			}
-			flinkGatewayClient.AuthToken = dataplaneToken
+			flinkGatewayClient.SetAuthToken(dataplaneToken)
 		}
 
 		return nil

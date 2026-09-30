@@ -89,8 +89,17 @@ func (c *queryCommand) stopStatement(client *ccloudv2.FlinkGatewayClient, enviro
 	defer cancel()
 
 	_, err := wait.Call(ctx, func() (struct{}, error) {
-		c.authTokenMu.Lock()
-		defer c.authTokenMu.Unlock()
+		// The drain may have run long enough for the dataplane token to lapse; a
+		// stale token here is exactly what leaves an abandoned statement running.
+		// Refresh only if it actually lapsed (best effort — fall back to the
+		// existing token): a short query still holds a valid token and needn't hit
+		// /api/access_tokens. No lock needed around this: client.SetAuthToken (via
+		// mintDataplaneToken) and the reads inside GetStatement/UpdateStatement are
+		// serialized by the client itself, so an abandoned drain goroutine still
+		// refreshing the token can't race this stop.
+		if tokenErr := c.mintDataplaneToken(client, jwt.NewValidator(), false); tokenErr != nil {
+			log.CliLogger.Debugf(`could not refresh token before stopping statement "%s"; using the existing one: %v`, name, tokenErr)
+		}
 		statement, err := client.GetStatement(environmentId, name, c.Context.LastOrgId)
 		if err != nil {
 			return struct{}{}, err
@@ -219,6 +228,25 @@ func (c *queryCommand) handleQueryError(cmd *cobra.Command, client *ccloudv2.Fli
 		return interruptedError(cmd, err, name, stopped)
 	}
 
+	// The gateway rejected the token and a forced refresh couldn't recover it —
+	// the cloud login itself has expired. Point the user at re-login rather than
+	// the generic "describe the statement" suggestion, which wouldn't help.
+	// Checked before ResultsFetchError because a drain-path AuthError arrives
+	// wrapped in one; goerrors.As unwraps to find it either way.
+	var authErr *query.AuthError
+	if goerrors.As(err, &authErr) {
+		// Mark settled so the caller's deferred cleanup doesn't fire its own stop:
+		// the login is expired, so that stop can't mint a token either and would
+		// 401, printing a contradictory "could not stop statement ... Unauthorized"
+		// right after this re-login suggestion (the same reason the 404 branch below
+		// sets settled). Fold the leftover statement into the suggestion instead.
+		*settled = true
+		return errors.NewErrorWithSuggestions(
+			authErr.Error(),
+			fmt.Sprintf("Log in again with `confluent login`, then stop statement \"%s\" with `confluent flink statement stop %s` if it is still running.", name, name),
+		)
+	}
+
 	// Every other error, including ResultsFetchError below, leaves settled false:
 	// the caller's deferred cleanup makes the stop attempt these branches skip.
 	var resultsFetchErr *query.ResultsFetchError
@@ -264,21 +292,34 @@ func describeCmd(name string) string {
 
 // refreshGatewayToken mirrors the shell's pre-call check: without it, a query
 // outliving the short-lived dataplane token dies on a 401 before --timeout.
-func (c *queryCommand) refreshGatewayToken(client *ccloudv2.FlinkGatewayClient, jwtValidator jwt.Validator) func() error {
-	return func() error {
-		c.authTokenMu.Lock()
-		defer c.authTokenMu.Unlock()
+// When force is set the not-yet-expired shortcut is skipped and a new token is
+// always minted — used to recover after the gateway rejects a token that still
+// looked valid locally.
+func (c *queryCommand) refreshGatewayToken(client *ccloudv2.FlinkGatewayClient, jwtValidator jwt.Validator) func(bool) error {
+	return func(force bool) error {
+		return c.mintDataplaneToken(client, jwtValidator, force)
+	}
+}
 
-		jwtCtx := &cliconfig.Context{State: &cliconfig.ContextState{AuthToken: client.AuthToken}}
+// mintDataplaneToken swaps the client's auth token for a freshly-minted
+// dataplane token. Unless force is set it first checks the current token, and
+// skips the /api/access_tokens round-trip while it is still valid. A mint
+// failure leaves the token untouched and is returned; the caller decides
+// whether that is fatal (the query path) or best-effort (the stop path, which
+// falls back to the existing token). The client serializes the token's read and
+// write internally, so callers need no lock of their own.
+func (c *queryCommand) mintDataplaneToken(client *ccloudv2.FlinkGatewayClient, jwtValidator jwt.Validator, force bool) error {
+	if !force {
+		jwtCtx := &cliconfig.Context{State: &cliconfig.ContextState{AuthToken: client.GetAuthToken()}}
 		if jwtValidator.Validate(jwtCtx) == nil {
 			return nil
 		}
-
-		dataplaneToken, err := auth.GetDataplaneToken(c.Context)
-		if err != nil {
-			return err
-		}
-		client.AuthToken = dataplaneToken
-		return nil
 	}
+
+	dataplaneToken, err := auth.GetDataplaneToken(c.Context)
+	if err != nil {
+		return err
+	}
+	client.SetAuthToken(dataplaneToken)
+	return nil
 }
