@@ -481,16 +481,21 @@ func migrationBackupPath(home string) string {
 	return filepath.Join(home, StateDirName(), "config.json.v4-backup")
 }
 
-func requireFileExists(t *testing.T, path string) {
+// newStableMigrationTest isolates HOME on the Stable channel and counts migrations.
+func newStableMigrationTest(t *testing.T) (string, *atomic.Int32) {
 	t.Helper()
-	_, err := os.Stat(path)
-	require.NoError(t, err, "expected %s to exist", path)
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Stable)
+	return home, countLegacyMigrations(t)
 }
 
-func requireFileAbsent(t *testing.T, path string) {
-	t.Helper()
-	_, err := os.Stat(path)
-	require.True(t, os.IsNotExist(err), "expected %s to be absent, got err=%v", path, err)
+// kafkaMarkerFor names the one nested Kafka key a normal save persists for the fixture's shape.
+func kafkaMarkerFor(envContext bool) (string, string) {
+	if envContext {
+		return "cluster2", "MARKER-kafka-env-contexts-secret"
+	}
+	return "cluster1", "MARKER-kafka-cluster-configs-secret"
 }
 
 // requireMigratedSecretsOnDisk checks that secrets.json holds every cipher marker, verbatim, under
@@ -526,10 +531,7 @@ func requireMigratedSecretsOnDisk(t *testing.T, envContext bool) {
 	require.Contains(t, rec.SchemaRegistryCredentials, "sr1")
 	require.Equal(t, p+"MARKER-sr-credential-secret", rec.SchemaRegistryCredentials["sr1"].Secret)
 
-	cluster, marker := "cluster1", "MARKER-kafka-cluster-configs-secret"
-	if envContext {
-		cluster, marker = "cluster2", "MARKER-kafka-env-contexts-secret"
-	}
+	cluster, marker := kafkaMarkerFor(envContext)
 	require.Contains(t, rec.KafkaAPIKeys[cluster], "key1")
 	require.Equal(t, p+marker, rec.KafkaAPIKeys[cluster]["key1"].Secret)
 }
@@ -550,10 +552,7 @@ func requireMigratedSecretsInMemory(t *testing.T, c *Config, envContext bool) {
 	require.Contains(t, ctx.SchemaRegistryClusters, "sr1")
 	require.Equal(t, p+"MARKER-sr-credential-secret", ctx.SchemaRegistryClusters["sr1"].SrCredentials.Secret)
 
-	cluster, marker := "cluster1", "MARKER-kafka-cluster-configs-secret"
-	if envContext {
-		cluster, marker = "cluster2", "MARKER-kafka-env-contexts-secret"
-	}
+	cluster, marker := kafkaMarkerFor(envContext)
 	clusters := allKafkaClusterConfigs(ctx.KafkaClusterContext)
 	require.Contains(t, clusters, cluster)
 	require.Contains(t, clusters[cluster].APIKeys, "key1")
@@ -583,9 +582,9 @@ func TestMigrate_StablePopulatesStores(t *testing.T) {
 
 			require.NoError(t, err)
 			require.Equal(t, int32(1), migrations.Load())
-			requireFileExists(t, SettingsFilename())
-			requireFileExists(t, ContextsFilename())
-			requireFileExists(t, SecretsFilename())
+			require.FileExists(t, SettingsFilename())
+			require.FileExists(t, ContextsFilename())
+			require.FileExists(t, SecretsFilename())
 			requireMigratedSecretsOnDisk(t, tc.envContext)
 			requireMigratedSecretsInMemory(t, c, tc.envContext)
 			require.Equal(t, "ctx1", c.CurrentContext)
@@ -607,10 +606,7 @@ func TestMigrate_StablePopulatesStores(t *testing.T) {
 }
 
 func TestMigrate_ReloadKeepsMigratedSecrets(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Stable)
-	migrations := countLegacyMigrations(t)
+	home, migrations := newStableMigrationTest(t)
 	seedLegacyConfig(t, home, cipherLegacyFixture())
 	require.NoError(t, New().Load())
 	reloaded := New()
@@ -660,10 +656,7 @@ func TestMigrate_LeavesLegacyFileFrozen(t *testing.T) {
 }
 
 func TestMigrate_IsOneShot(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Stable)
-	migrations := countLegacyMigrations(t)
+	home, migrations := newStableMigrationTest(t)
 	seedLegacyConfig(t, home, cipherLegacyFixture())
 	require.NoError(t, New().Load())
 	require.Equal(t, int32(1), migrations.Load())
@@ -678,15 +671,12 @@ func TestMigrate_IsOneShot(t *testing.T) {
 	require.Equal(t, int32(1), migrations.Load())
 	require.Empty(t, c.Contexts)
 	require.Equal(t, "", c.CurrentContext)
-	requireFileExists(t, SettingsFilename())
-	requireFileExists(t, ContextsFilename())
+	require.FileExists(t, SettingsFilename())
+	require.FileExists(t, ContextsFilename())
 }
 
 func TestMigrate_ResumesAfterInterruptedRun(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Stable)
-	migrations := countLegacyMigrations(t)
+	home, migrations := newStableMigrationTest(t)
 	seedLegacyConfig(t, home, cipherLegacyFixture())
 	// stores that disagree with the legacy file, so a whole re-run is distinguishable from a
 	// no-op or a merge; no secrets.json and no backup, as an interrupted run leaves them.
@@ -717,14 +707,11 @@ func TestMigrate_ResumesAfterInterruptedRun(t *testing.T) {
 	require.False(t, c.DisableUpdateCheck)
 	requireMigratedSecretsOnDisk(t, true)
 	requireMigratedSecretsInMemory(t, c, true)
-	requireFileExists(t, migrationBackupPath(home))
+	require.FileExists(t, migrationBackupPath(home))
 }
 
 func TestMigrate_ZeroByteSecretsStoreIsMigrated(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Stable)
-	migrations := countLegacyMigrations(t)
+	home, migrations := newStableMigrationTest(t)
 	require.NoError(t, New().Load())
 	require.NoError(t, os.Truncate(SecretsFilename(), 0))
 	seedLegacyConfig(t, home, cipherLegacyFixture())
@@ -736,14 +723,11 @@ func TestMigrate_ZeroByteSecretsStoreIsMigrated(t *testing.T) {
 	require.Equal(t, int32(1), migrations.Load())
 	require.Equal(t, "ctx1", c.CurrentContext)
 	requireMigratedSecretsOnDisk(t, true)
-	requireFileExists(t, migrationBackupPath(home))
+	require.FileExists(t, migrationBackupPath(home))
 }
 
 func TestMigrate_ContextsResetDoesNotReimport(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Stable)
-	migrations := countLegacyMigrations(t)
+	home, migrations := newStableMigrationTest(t)
 	require.NoError(t, New().Load())
 	// deleting contexts.json is the documented way to reset contexts (see warnOneSidedStores).
 	require.NoError(t, os.Remove(ContextsFilename()))
@@ -756,15 +740,12 @@ func TestMigrate_ContextsResetDoesNotReimport(t *testing.T) {
 	require.Equal(t, int32(0), migrations.Load())
 	require.Empty(t, c.Contexts)
 	require.Equal(t, "", c.CurrentContext)
-	requireFileAbsent(t, ContextsFilename())
-	requireFileAbsent(t, migrationBackupPath(home))
+	require.NoFileExists(t, ContextsFilename())
+	require.NoFileExists(t, migrationBackupPath(home))
 }
 
 func TestMigrate_FailedStoreWriteLeavesNoBackup(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Stable)
-	migrations := countLegacyMigrations(t)
+	home, migrations := newStableMigrationTest(t)
 	seedLegacyConfig(t, home, cipherLegacyFixture())
 	// a directory in secrets.json's place makes the last store write fail.
 	require.NoError(t, os.MkdirAll(SecretsFilename(), 0700))
@@ -773,7 +754,7 @@ func TestMigrate_FailedStoreWriteLeavesNoBackup(t *testing.T) {
 
 	require.ErrorContains(t, err, "unable to migrate configuration file")
 	require.Equal(t, int32(0), migrations.Load())
-	requireFileAbsent(t, migrationBackupPath(home))
+	require.NoFileExists(t, migrationBackupPath(home))
 
 	require.NoError(t, os.Remove(SecretsFilename()))
 
@@ -782,18 +763,15 @@ func TestMigrate_FailedStoreWriteLeavesNoBackup(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, int32(1), migrations.Load())
 	requireMigratedSecretsOnDisk(t, true)
-	requireFileExists(t, migrationBackupPath(home))
+	require.FileExists(t, migrationBackupPath(home))
 }
 
 func TestMigrate_FreshInstallIsNotMigrated(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Stable)
-	migrations := countLegacyMigrations(t)
+	home, migrations := newStableMigrationTest(t)
 	require.NoError(t, New().Load())
-	requireFileExists(t, SettingsFilename())
-	requireFileExists(t, ContextsFilename())
-	requireFileExists(t, SecretsFilename())
+	require.FileExists(t, SettingsFilename())
+	require.FileExists(t, ContextsFilename())
+	require.FileExists(t, SecretsFilename())
 	seedLegacyConfig(t, home, cipherLegacyFixture())
 
 	c := New()
@@ -802,14 +780,11 @@ func TestMigrate_FreshInstallIsNotMigrated(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, int32(0), migrations.Load())
 	require.Empty(t, c.Contexts)
-	requireFileAbsent(t, migrationBackupPath(home))
+	require.NoFileExists(t, migrationBackupPath(home))
 }
 
 func TestMigrate_EmptyLegacyFileIsIgnored(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Stable)
-	migrations := countLegacyMigrations(t)
+	home, migrations := newStableMigrationTest(t)
 	seedLegacyConfig(t, home, nil)
 
 	c := New()
@@ -818,16 +793,13 @@ func TestMigrate_EmptyLegacyFileIsIgnored(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, int32(0), migrations.Load())
 	require.Empty(t, c.Contexts)
-	requireFileExists(t, SettingsFilename())
-	requireFileExists(t, ContextsFilename())
-	requireFileAbsent(t, migrationBackupPath(home))
+	require.FileExists(t, SettingsFilename())
+	require.FileExists(t, ContextsFilename())
+	require.NoFileExists(t, migrationBackupPath(home))
 }
 
 func TestMigrate_MalformedLegacyFileIsHardError(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Stable)
-	migrations := countLegacyMigrations(t)
+	home, migrations := newStableMigrationTest(t)
 	legacyPath := seedLegacyConfig(t, home, []byte(`{"contexts":`))
 
 	err := New().Load()
@@ -835,10 +807,10 @@ func TestMigrate_MalformedLegacyFileIsHardError(t *testing.T) {
 	require.ErrorContains(t, err, readConfigurationFileErrorPrefix)
 	require.ErrorContains(t, err, legacyPath)
 	require.Equal(t, int32(0), migrations.Load())
-	requireFileAbsent(t, SettingsFilename())
-	requireFileAbsent(t, ContextsFilename())
-	requireFileAbsent(t, SecretsFilename())
-	requireFileAbsent(t, migrationBackupPath(home))
+	require.NoFileExists(t, SettingsFilename())
+	require.NoFileExists(t, ContextsFilename())
+	require.NoFileExists(t, SecretsFilename())
+	require.NoFileExists(t, migrationBackupPath(home))
 }
 
 func TestMigrate_NonStableSeedsReadOnly(t *testing.T) {
@@ -867,9 +839,9 @@ func TestMigrate_NonStableSeedsReadOnly(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, int32(1), migrations.Load())
 			stateDir := filepath.Join(home, tc.dir)
-			requireFileExists(t, filepath.Join(stateDir, "settings.json"))
-			requireFileExists(t, filepath.Join(stateDir, "contexts.json"))
-			requireFileExists(t, filepath.Join(stateDir, "secrets.json"))
+			require.FileExists(t, filepath.Join(stateDir, "settings.json"))
+			require.FileExists(t, filepath.Join(stateDir, "contexts.json"))
+			require.FileExists(t, filepath.Join(stateDir, "secrets.json"))
 			requireMigratedSecretsOnDisk(t, true)
 			backup, err := os.ReadFile(filepath.Join(stateDir, "config.json.v4-backup"))
 			require.NoError(t, err)
@@ -891,10 +863,7 @@ func TestMigrate_NonStableSeedsReadOnly(t *testing.T) {
 
 func TestMigrate_ConcurrentFirstRunsMigrateOnce(t *testing.T) {
 	const loaders = 4
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Stable)
-	migrations := countLegacyMigrations(t)
+	home, migrations := newStableMigrationTest(t)
 	seedLegacyConfig(t, home, cipherLegacyFixture())
 	configs := make([]*Config, loaders)
 	for i := range configs {
@@ -1034,10 +1003,7 @@ func TestMigrate_PlaintextV4FileSurvivesMergedSave(t *testing.T) {
 // whose context has no platform fails wireContexts, and the caller must still learn which legacy
 // file caused it.
 func TestMigrate_WireContextsFailureIsHardError(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Stable)
-	migrations := countLegacyMigrations(t)
+	home, migrations := newStableMigrationTest(t)
 	legacyPath := seedLegacyConfig(t, home, []byte(`{
 		"current_context": "ctx1",
 		"credentials": {"cred1": {"name": "cred1", "username": "test-user", "credential_type": 0}},
@@ -1056,8 +1022,8 @@ func TestMigrate_WireContextsFailureIsHardError(t *testing.T) {
 	require.ErrorContains(t, err, "unable to migrate configuration file")
 	require.ErrorContains(t, err, fmt.Sprintf("%q", legacyPath))
 	require.Equal(t, int32(0), migrations.Load())
-	requireFileAbsent(t, migrationBackupPath(home))
-	requireFileAbsent(t, SecretsFilename())
+	require.NoFileExists(t, migrationBackupPath(home))
+	require.NoFileExists(t, SecretsFilename())
 
 	// migrationErrorMsg's %w must keep the underlying typed error reachable, not just its text.
 	var corrupted *perrors.CorruptedConfigError
@@ -1097,7 +1063,7 @@ func TestMigrate_NoAnnouncementWithoutContexts(t *testing.T) {
 	})
 
 	require.NotContains(t, stderr, migrationAnnouncementMsg)
-	requireFileExists(t, migrationBackupPath(home))
+	require.FileExists(t, migrationBackupPath(home))
 }
 
 func TestMigrate_NonStableSeedAnnouncement(t *testing.T) {
@@ -1179,7 +1145,7 @@ func TestMigrate_MissingStampRecordsSilently(t *testing.T) {
 	})
 
 	require.NotContains(t, stderr, "changed after your configuration moved")
-	requireFileExists(t, filepath.Join(CacheDir(), "legacy_config.json"))
+	require.FileExists(t, filepath.Join(CacheDir(), "legacy_config.json"))
 
 	// the stamp was recreated, so a further reload without another write stays silent.
 	stderr = captureStderr(t, func() {
