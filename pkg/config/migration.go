@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
@@ -21,11 +22,27 @@ const migrationErrorMsg = `unable to migrate configuration file "%s": %w`
 const migrationAnnouncementMsg = `Confluent CLI moved your configuration to settings.json, contexts.json, secrets.json, and .cache/. Versions before v5 keep using the old config.json and won't see logins or context changes you make here, or vice versa.`
 
 // migrationSeedMsg is printed once, after a non-Stable channel copies contexts and logins from
-// the Stable install's legacy file. Args: legacyConfigPath(), the running channel's StateDir().
+// the Stable install's legacy file. Args: legacyConfigFilename(), the running channel's StateDir().
 const migrationSeedMsg = `Confluent CLI copied your contexts and logins from "%s" into this build's own configuration in "%s". Changes you make here won't affect that installation, or vice versa.`
 
+// migrationSeedSkippedMsg is printed when a non-Stable channel can't decode the legacy file and
+// starts fresh instead. Args: legacyConfigFilename(), the decode error.
+const migrationSeedSkippedMsg = `Skipped copying contexts and logins from "%s": %v`
+
+// migrationCheckErrorMsg reports a guard stat failure, which must never pass for "absent".
+const migrationCheckErrorMsg = `unable to check "%s" for a pending configuration migration: %w`
+
+// migrationMarkerErrorMsg and migrationBackupErrorMsg name the migration file that failed to write.
+const (
+	migrationMarkerErrorMsg = `unable to write migration marker "%s": %w`
+	migrationBackupErrorMsg = `unable to write migration backup "%s": %w`
+)
+
+// legacyFileChangedDuringReadErrorMsg reports a v4 write (which truncates first) racing the read.
+const legacyFileChangedDuringReadErrorMsg = `"%s" changed while it was being read; run the command again`
+
 // legacyFileChangedWarningMsg warns that a pre-v5 install wrote to the frozen legacy file after
-// migration. Arg: legacyConfigPath().
+// migration. Arg: legacyConfigFilename().
 const legacyFileChangedWarningMsg = `"%s" changed after your configuration moved to settings.json, contexts.json, and secrets.json. This version doesn't read config.json, so logins and context changes made with a version before v5 won't appear here.`
 
 // legacyFileStampCache is the cache file recording the legacy file's mtime and size at the last
@@ -39,24 +56,25 @@ type legacyFileStamp struct {
 	Size            int64 `json:"size"`
 }
 
+// legacyFileStampOf samples info's mtime and size.
+func legacyFileStampOf(info os.FileInfo) legacyFileStamp {
+	return legacyFileStamp{ModTimeUnixNano: info.ModTime().UnixNano(), Size: info.Size()}
+}
+
 // statLegacyFileStamp stats path and reports its stamp, or (zero, false) when the file is gone.
 func statLegacyFileStamp(path string) (legacyFileStamp, bool) {
 	info, err := os.Stat(path)
 	if err != nil {
 		return legacyFileStamp{}, false
 	}
-	return legacyFileStamp{ModTimeUnixNano: info.ModTime().UnixNano(), Size: info.Size()}, true
+	return legacyFileStampOf(info), true
 }
 
-// recordLegacyFileStamp stamps the legacy file's current mtime/size, best-effort: a failed write
-// here must never fail an otherwise-successful migration or load. Only Stable re-detects a
-// downgrade writing to this file, so other channels skip it.
-func recordLegacyFileStamp(path string) {
+// recordLegacyFileStamp persists stamp, best-effort: a failed write here must never fail an
+// otherwise-successful migration or load. Only Stable re-detects a downgrade writing to this
+// file, so other channels skip it.
+func recordLegacyFileStamp(stamp legacyFileStamp) {
 	if pversion.ProcessChannel() != pversion.Stable {
-		return
-	}
-	stamp, ok := statLegacyFileStamp(path)
-	if !ok {
 		return
 	}
 	if err := newCacheStore().writeJSON(legacyFileStampCache, stamp); err != nil {
@@ -260,29 +278,33 @@ func (o *legacyConfig) applyTo(c *Config) {
 	}
 }
 
-// readLegacyConfigFile reads a v4 config.json at path. It returns (nil, false, nil) when the
-// file is missing, not a regular file (following symlinks), or zero bytes; any other read
-// failure is a hard error.
-func readLegacyConfigFile(path string) ([]byte, bool, error) {
+// readLegacyConfigBytes is a test seam for the legacy file's read, which v4 can race.
+var readLegacyConfigBytes = os.ReadFile
+
+// readLegacyConfigFile reads a v4 config.json at path, returning its bytes and the stat taken
+// before the read. It returns (nil, nil, nil) when the file is missing, not a regular file
+// (following symlinks), or zero bytes; any other read failure is a hard error.
+func readLegacyConfigFile(path string) ([]byte, os.FileInfo, error) {
 	info, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, false, nil
+			return nil, nil, nil
 		}
-		return nil, false, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, path, err)
+		return nil, nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, path, err)
 	}
 	if !info.Mode().IsRegular() || info.Size() == 0 {
-		return nil, false, nil
+		return nil, nil, nil
 	}
 
-	data, err := os.ReadFile(path)
+	data, err := readLegacyConfigBytes(path)
 	if err != nil {
-		return nil, false, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, path, err)
+		return nil, nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, path, err)
 	}
+	// the stat saw data, so an empty read is v4 mid-rewrite, not an absent file.
 	if len(data) == 0 {
-		return nil, false, nil
+		return nil, nil, fmt.Errorf(legacyFileChangedDuringReadErrorMsg, path)
 	}
-	return data, true, nil
+	return data, info, nil
 }
 
 // applyLegacyConfig decodes a v4 config.json's bytes onto c, secrets included. It parses the
@@ -309,62 +331,114 @@ func (c *Config) applyLegacyConfig(path string, data []byte) error {
 	return nil
 }
 
+// decodeLegacyConfig decodes a v4 config.json onto c and wires its contexts: save() and
+// saveSecretStore reach tokens through ctx.GetState(), which only wiring sets.
+func (c *Config) decodeLegacyConfig(path string, data []byte) error {
+	if err := c.applyLegacyConfig(path, data); err != nil {
+		return err
+	}
+	if err := c.wireContexts(); err != nil {
+		return fmt.Errorf(migrationErrorMsg, path, err)
+	}
+	return nil
+}
+
 // afterLegacyMigration is a test seam called once per completed migration.
 var afterLegacyMigration = func() {}
 
-// migrateFromLegacy seeds the split stores from a v4 config.json when one is pending, and reports
-// whether it did. The caller must hold the store lock. The backup is written last, as the commit
-// marker: until it exists, a failed or interrupted run is retried whole by the next load.
-func (c *Config) migrateFromLegacy() (bool, error) {
-	pending, err := legacyMigrationPending()
+// legacyMigration is what one migrateFromLegacy call did, carried out of the store lock so
+// announceMigration can print about it afterward.
+type legacyMigration struct {
+	legacyPath string
+	migrated   bool
+	// seedErr is why a non-Stable channel skipped its seed; Stable returns the error instead.
+	seedErr error
+}
+
+// migrateFromLegacy seeds the split stores from a v4 config.json when one is pending. The caller
+// must hold the store lock. v4 only ever wrote the stable path, so every channel reads it from
+// there, and v5 never writes or renames it. The marker goes down before the first store write
+// and the backup after the last, so a failed or interrupted run is retried whole by the next load.
+func (c *Config) migrateFromLegacy() (legacyMigration, error) {
+	path, ok := legacyConfigFilename()
+	if !ok {
+		// don't guess a cwd-relative legacy path, which could be any directory's config.json.
+		return legacyMigration{}, nil
+	}
+	result := legacyMigration{legacyPath: path}
+
+	pending, err := legacyMigrationPending(path)
 	if err != nil || !pending {
-		return false, err
+		return result, err
 	}
 
-	path := legacyConfigPath()
-	data, found, err := readLegacyConfigFile(path)
-	if err != nil || !found {
-		return false, err
+	data, info, err := readLegacyConfigFile(path)
+	if err != nil || info == nil {
+		return result, err
 	}
 
-	if err := c.applyLegacyConfig(path, data); err != nil {
-		return false, err
+	if err := c.decodeLegacyConfig(path, data); err != nil {
+		if pversion.ProcessChannel() == pversion.Stable {
+			return result, err
+		}
+		// a non-Stable seed is a convenience copy, so a bad legacy file must not fail every
+		// command: nothing is written yet, and this channel starts fresh.
+		c.resetToNew()
+		result.seedErr = err
+		return result, nil
 	}
-	// save() and saveSecretStore reach tokens through ctx.GetState(), which only wiring sets.
-	if err := c.wireContexts(); err != nil {
-		return false, fmt.Errorf(migrationErrorMsg, path, err)
+
+	marker := legacyMigratingFilename()
+	if err := writeFileAtomic(marker, nil); err != nil {
+		return result, fmt.Errorf(migrationMarkerErrorMsg, marker, err)
 	}
-	// nothing on disk is an ancestor of the legacy state, so there is no baseline to merge against.
+
+	// nothing on disk is an ancestor of the legacy state, and an interrupted run's stores are only
+	// its own partial output, so every store is written whole: a nil config baseline and a
+	// non-nil secret one (a nil secret baseline would merge with an existing secrets.json).
 	c.baseline = nil
-	c.secretBaseline = nil
+	c.secretBaseline = &secretFile{}
 	if err := c.saveLocked(); err != nil {
-		return false, fmt.Errorf(migrationErrorMsg, path, err)
+		return result, fmt.Errorf(migrationErrorMsg, path, err)
 	}
 	c.saveCache()
 
-	if err := writeFileAtomic(legacyBackupPath(), data); err != nil {
-		return false, fmt.Errorf("unable to write migration backup %s: %w", legacyBackupPath(), err)
+	backup := legacyBackupFilename()
+	if err := writeFileAtomic(backup, data); err != nil {
+		return result, fmt.Errorf(migrationBackupErrorMsg, backup, err)
 	}
-	recordLegacyFileStamp(path)
+	// the pre-read stat, so a v4 write landing after the read still trips the downgrade warning.
+	recordLegacyFileStamp(legacyFileStampOf(info))
+
+	// a leftover marker is harmless once the backup exists: the next guard removes it.
+	if err := os.Remove(marker); err != nil {
+		log.CliLogger.Warnf(`unable to remove migration marker "%s": %v`, marker, err)
+	}
+
 	afterLegacyMigration()
-	return true, nil
+	result.migrated = true
+	return result, nil
 }
 
 // announceMigration prints the one-time user-facing message for this Load, or (when this Load
 // did not migrate) re-checks the frozen legacy file for a downgrade write. It runs after
 // loadLocked's lock is released and only on a successful Load.
-func (c *Config) announceMigration(migrated bool) {
-	if migrated {
-		c.announceCompletedMigration()
-		return
+func (c *Config) announceMigration(m legacyMigration) {
+	switch {
+	case m.migrated:
+		c.announceCompletedMigration(m.legacyPath)
+	case m.seedErr != nil:
+		output.ErrPrintln(c.EnableColor, fmt.Sprintf(migrationSeedSkippedMsg, m.legacyPath, m.seedErr))
+		output.ErrPrintln(c.EnableColor, "")
+	default:
+		c.warnIfLegacyFileChanged()
 	}
-	c.warnIfLegacyFileChanged()
 }
 
 // announceCompletedMigration prints the Stable move announcement or the non-Stable seed
 // announcement, skipping either when the migrated config has no contexts worth telling the user
 // about.
-func (c *Config) announceCompletedMigration() {
+func (c *Config) announceCompletedMigration(legacyPath string) {
 	if len(c.Contexts) == 0 {
 		return
 	}
@@ -381,7 +455,7 @@ func (c *Config) announceCompletedMigration() {
 		// (relative) path stateDirPath itself tolerates rather than skip the announcement.
 		stateDir = stateDirPath("")
 	}
-	output.ErrPrintln(c.EnableColor, fmt.Sprintf(migrationSeedMsg, legacyConfigPath(), stateDir))
+	output.ErrPrintln(c.EnableColor, fmt.Sprintf(migrationSeedMsg, legacyPath, stateDir))
 	output.ErrPrintln(c.EnableColor, "")
 }
 
@@ -392,11 +466,15 @@ func (c *Config) warnIfLegacyFileChanged() {
 	if pversion.ProcessChannel() != pversion.Stable {
 		return
 	}
-	if _, err := os.Stat(legacyBackupPath()); err != nil {
+	if _, err := os.Stat(legacyBackupFilename()); err != nil {
 		return
 	}
 
-	current, exists := statLegacyFileStamp(legacyConfigPath())
+	legacyPath, ok := legacyConfigFilename()
+	if !ok {
+		return
+	}
+	current, exists := statLegacyFileStamp(legacyPath)
 	if !exists {
 		return
 	}
@@ -409,7 +487,7 @@ func (c *Config) warnIfLegacyFileChanged() {
 	}
 
 	if hadStamp {
-		output.ErrPrintln(c.EnableColor, fmt.Sprintf(legacyFileChangedWarningMsg, legacyConfigPath()))
+		output.ErrPrintln(c.EnableColor, fmt.Sprintf(legacyFileChangedWarningMsg, legacyPath))
 		output.ErrPrintln(c.EnableColor, "")
 	}
 
@@ -418,23 +496,68 @@ func (c *Config) warnIfLegacyFileChanged() {
 	}
 }
 
-// legacyMigrationPending is the store side of the migration guard: no backup yet (a completed
-// migration never re-runs, even if the stores are later deleted) and no secrets.json. Keying on
-// secrets.json alone is sound because every save writes settings.json, then contexts.json, then
-// secrets.json, so an interrupted run never leaves secrets.json behind. It also means deleting
-// contexts.json (the documented context reset) never re-imports the legacy file.
-func legacyMigrationPending() (bool, error) {
-	if _, err := os.Stat(legacyBackupPath()); err == nil {
-		return false, nil
-	} else if !os.IsNotExist(err) {
-		return false, fmt.Errorf("unable to check migration backup %s: %w", legacyBackupPath(), err)
+// legacyMigrationPending is the migration guard. A backup means this channel already migrated,
+// so it never re-runs, even with every store deleted. Otherwise a marker means an interrupted run
+// to resume, and without one only a machine with none of the three stores migrates: any store
+// left on disk is v5 state, so a deliberate partial reset never re-imports the v4 file.
+func legacyMigrationPending(legacyPath string) (bool, error) {
+	marker := legacyMigratingFilename()
+
+	migrated, err := migrationFileExists(legacyBackupFilename())
+	if err != nil {
+		return false, err
 	}
-	return !storeFileHasData(SecretsFilename()), nil
+	if migrated {
+		// a crash after the backup but before the marker's removal leaves the marker behind.
+		if err := os.Remove(marker); err != nil && !os.IsNotExist(err) {
+			log.CliLogger.Warnf(`unable to remove stale migration marker "%s": %v`, marker, err)
+		}
+		return false, nil
+	}
+
+	pending, err := migrationFileExists(marker)
+	if err != nil {
+		return false, err
+	}
+	if !pending {
+		pending, err = noStoresExist()
+		if err != nil || !pending {
+			return false, err
+		}
+	}
+
+	if pversion.ProcessChannel() != pversion.Stable {
+		// once Stable has migrated, the legacy file is frozen and stale, so it's no seed.
+		stableMigrated, err := migrationFileExists(filepath.Join(filepath.Dir(legacyPath), legacyBackupName))
+		if err != nil {
+			return false, err
+		}
+		return !stableMigrated, nil
+	}
+	return true, nil
 }
 
-// storeFileHasData reports whether path is a regular file holding data. Missing or zero-byte holds
-// nothing, matching readStoreFile.
-func storeFileHasData(path string) bool {
-	info, err := os.Stat(path)
-	return err == nil && info.Mode().IsRegular() && info.Size() > 0
+// noStoresExist reports whether settings.json, contexts.json, and secrets.json are all absent.
+// A zero-byte or otherwise unreadable store is present.
+func noStoresExist() (bool, error) {
+	for _, store := range []string{SettingsFilename(), ContextsFilename(), SecretsFilename()} {
+		exists, err := migrationFileExists(store)
+		if err != nil || exists {
+			return false, err
+		}
+	}
+	return true, nil
+}
+
+// migrationFileExists reports whether path exists. Only "not exist" counts as absent: any other
+// stat failure is returned, so an unreadable file never passes for a missing one.
+func migrationFileExists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, fmt.Errorf(migrationCheckErrorMsg, path, err)
 }

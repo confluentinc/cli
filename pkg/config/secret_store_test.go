@@ -475,14 +475,15 @@ func TestSaveSecretStore_FreshEmptyConfigWritesEmptyStoreAndSetsBaseline(t *test
 	require.Empty(t, disk.Secrets)
 }
 
-func TestReadSecretFileFromDisk_ZeroByteIsEmpty(t *testing.T) {
+func TestReadSecretFileFromDisk_ZeroByteIsParseError(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "secrets.json")
 	require.NoError(t, os.WriteFile(path, nil, 0600))
 
 	file, err := readSecretFileFromDisk(path)
 
-	require.NoError(t, err)
-	require.Equal(t, &secretFile{}, file)
+	require.ErrorContains(t, err, "unable to unmarshal secret store")
+	require.ErrorContains(t, err, path)
+	require.Nil(t, file)
 }
 
 func TestSecretsFilename_UnderStateDir(t *testing.T) {
