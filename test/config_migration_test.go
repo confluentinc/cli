@@ -55,7 +55,7 @@ func (s *CLITestSuite) TestConfigMigrationDevSeed() {
 	compareOrUpdateGolden(t, configMigrationDevSeedGolden, firstRun)
 
 	requireBytesUnchanged(t, legacyPath, legacyBytes)
-	requireNoPath(t, filepath.Join(home, legacyConfigDirName, legacyBackupFileName))
+	require.NoFileExists(t, filepath.Join(home, legacyConfigDirName, legacyBackupFileName))
 	requireMigratedStores(t, filepath.Join(home, devStateDirName), legacyBytes)
 
 	secondRun := normalizeHome(runCommand(t, testBin, env, configMigrationListArgs, 0, ""), home)
@@ -138,14 +138,6 @@ func requireBytesUnchanged(t *testing.T, path string, want []byte) {
 	got, err := os.ReadFile(path)
 	require.NoError(t, err)
 	require.Equal(t, want, got)
-}
-
-// requireNoPath asserts nothing exists at path.
-func requireNoPath(t *testing.T, path string) {
-	t.Helper()
-
-	_, err := os.Stat(path)
-	require.True(t, os.IsNotExist(err), "expected %s to not exist", path)
 }
 
 // requireMigratedStores asserts the running channel's own state directory holds every migrated
