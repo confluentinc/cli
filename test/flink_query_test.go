@@ -36,6 +36,18 @@ func (s *CLITestSuite) TestFlinkQuery() {
 		// in the "Stopped statement" message.
 		{args: `flink query --sql "SELECT id FROM many_rows;" --compute-pool lfcp-123456 --service-account sa-123456 --max-rows 2`, fixture: "flink/query/max-rows.golden"},
 
+		// -o human caps at 100 by default, with a notice; -o json stays uncapped.
+		{args: `flink query --sql "SELECT id FROM hundreds;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "flink/query/human-cap.golden"},
+		{args: `flink query --sql "SELECT id FROM hundreds;" --compute-pool lfcp-123456 --service-account sa-123456 -o json --raw`, fixture: "flink/query/hundreds-raw.golden"},
+
+		// -o human with an explicit --max-rows 0 opts out of the default cap: all 150 rows
+		// print and no preview notice shows (Changed==true, so resolveDisplayCap returns uncapped).
+		{args: `flink query --sql "SELECT id FROM hundreds;" --compute-pool lfcp-123456 --service-account sa-123456 --max-rows 0`, fixture: "flink/query/human-uncap.golden"},
+
+		// Exactly 100 rows under the default -o human cap: the boundary is not truncated,
+		// so no preview notice prints.
+		{args: `flink query --sql "SELECT id FROM exactly_hundred;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "flink/query/exactly-hundred.golden"},
+
 		// Regression case for a real false positive found against staging: a
 		// LIMIT-satisfied read over a streaming source delivers every row (no next
 		// token) but the job's phase stays RUNNING. No "may be incomplete" warning —
