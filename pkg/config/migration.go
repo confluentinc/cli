@@ -558,6 +558,7 @@ func legacyMigrationPending(legacyPath string) (bool, error) {
 		}
 	}
 
+	// deferred until here so an unreadable legacy file only fails a load that would migrate.
 	if legacyErr != nil {
 		return false, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, legacyPath, legacyErr)
 	}
