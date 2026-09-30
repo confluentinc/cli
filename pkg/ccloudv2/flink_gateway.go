@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
@@ -29,7 +30,14 @@ type GatewayClientInterface interface {
 
 type FlinkGatewayClient struct {
 	*flinkgatewayv1.APIClient
-	AuthToken string
+
+	// authTokenMu guards authToken. The token read happens here, inside
+	// flinkGatewayApiContext, on every gateway call; `confluent flink query`
+	// refreshes it from a drain goroutine while a concurrent stop mints its own,
+	// so both the read and the write must go through this lock. Accessed only via
+	// GetAuthToken/SetAuthToken — the field stays unexported so nothing bypasses it.
+	authTokenMu sync.RWMutex
+	authToken   string
 }
 
 func NewFlinkGatewayClient(url, userAgent string, unsafeTrace bool, authToken string) *FlinkGatewayClient {
@@ -41,7 +49,7 @@ func NewFlinkGatewayClient(url, userAgent string, unsafeTrace bool, authToken st
 
 	return &FlinkGatewayClient{
 		APIClient: flinkgatewayv1.NewAPIClient(cfg),
-		AuthToken: authToken,
+		authToken: authToken,
 	}
 }
 
@@ -68,11 +76,19 @@ func checkRedirect(req *http.Request, via []*http.Request) error {
 }
 
 func (c *FlinkGatewayClient) GetAuthToken() string {
-	return c.AuthToken
+	c.authTokenMu.RLock()
+	defer c.authTokenMu.RUnlock()
+	return c.authToken
+}
+
+func (c *FlinkGatewayClient) SetAuthToken(authToken string) {
+	c.authTokenMu.Lock()
+	defer c.authTokenMu.Unlock()
+	c.authToken = authToken
 }
 
 func (c *FlinkGatewayClient) flinkGatewayApiContext() context.Context {
-	return context.WithValue(context.Background(), flinkgatewayv1.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), flinkgatewayv1.ContextAccessToken, c.GetAuthToken())
 }
 
 func (c *FlinkGatewayClient) DeleteStatement(environmentId, statementName, orgId string) error {

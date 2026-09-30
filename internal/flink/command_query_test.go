@@ -2,11 +2,13 @@ package flink
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -417,8 +419,24 @@ func TestRefreshGatewayToken(t *testing.T) {
 		c := newTestCommand(newTestContext("http://unused.invalid", "still-valid"))
 
 		refresh := c.refreshGatewayToken(client, fakeJwtValidator{err: nil})
-		require.NoError(t, refresh())
-		require.Equal(t, "still-valid", client.AuthToken)
+		require.NoError(t, refresh(false))
+		require.Equal(t, "still-valid", client.GetAuthToken())
+	})
+
+	t.Run("force refreshes even when the token still looks valid", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			require.Equal(t, "/api/access_tokens", r.URL.Path)
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"token":"forced-dataplane-token"}`))
+		}))
+		defer server.Close()
+
+		client := ccloudv2.NewFlinkGatewayClient("http://unused.invalid", "test", false, "still-valid")
+		c := newTestCommand(newTestContext(server.URL, "old-cloud-token"))
+
+		refresh := c.refreshGatewayToken(client, fakeJwtValidator{err: nil})
+		require.NoError(t, refresh(true))
+		require.Equal(t, "forced-dataplane-token", client.GetAuthToken())
 	})
 
 	t.Run("expired token is refreshed from the platform", func(t *testing.T) {
@@ -434,8 +452,8 @@ func TestRefreshGatewayToken(t *testing.T) {
 		c := newTestCommand(newTestContext(server.URL, "old-cloud-token"))
 
 		refresh := c.refreshGatewayToken(client, fakeJwtValidator{err: errors.New("expired")})
-		require.NoError(t, refresh())
-		require.Equal(t, "new-dataplane-token", client.AuthToken)
+		require.NoError(t, refresh(false))
+		require.Equal(t, "new-dataplane-token", client.GetAuthToken())
 	})
 
 	t.Run("refresh failure surfaces the platform's error", func(t *testing.T) {
@@ -449,8 +467,8 @@ func TestRefreshGatewayToken(t *testing.T) {
 		c := newTestCommand(newTestContext(server.URL, "old-cloud-token"))
 
 		refresh := c.refreshGatewayToken(client, fakeJwtValidator{err: errors.New("expired")})
-		require.ErrorContains(t, refresh(), "could not mint a dataplane token")
-		require.Equal(t, "expired", client.AuthToken)
+		require.ErrorContains(t, refresh(false), "could not mint a dataplane token")
+		require.Equal(t, "expired", client.GetAuthToken())
 	})
 }
 
@@ -563,6 +581,123 @@ func TestStopStatement(t *testing.T) {
 			require.True(t, c.stopStatementAndReport(client, "env-1", "stmt"))
 		})
 		require.Contains(t, out, `Successfully stopped statement "stmt"`)
+	})
+
+	t.Run("cleanup mints a fresh token and uses it for the stop", func(t *testing.T) {
+		// stopStatement refreshes the dataplane token before the GET/UPDATE so a run
+		// whose token lapsed can still be stopped (otherwise it orphans the
+		// statement). Prove the refreshed token — not the stale one the client
+		// started with — is what the gateway calls actually carry.
+		var mu sync.Mutex
+		var gatewayAuths []string
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			if r.URL.Path == "/api/access_tokens" {
+				// Minting uses the session token, not the (stale) gateway token.
+				_, _ = w.Write([]byte(`{"token":"fresh-dataplane-token"}`))
+				return
+			}
+			mu.Lock()
+			gatewayAuths = append(gatewayAuths, r.Header.Get("Authorization"))
+			mu.Unlock()
+			if r.Method == http.MethodGet {
+				_, _ = w.Write([]byte(`{"name":"stmt","spec":{"statement":"SELECT 1"},"status":{"phase":"RUNNING"}}`))
+				return
+			}
+			_, _ = w.Write([]byte(`{"name":"stmt"}`))
+		}))
+		defer server.Close()
+
+		client := ccloudv2.NewFlinkGatewayClient(server.URL, "test", false, "stale-token")
+		c := newTestCommand(newTestContext(server.URL, "cloud-token"))
+
+		ok, err := c.stopStatement(client, "env-1", "stmt")
+		require.NoError(t, err)
+		require.True(t, ok)
+		require.Equal(t, "fresh-dataplane-token", client.GetAuthToken())
+		require.NotEmpty(t, gatewayAuths, "expected the stop to make gateway calls")
+		for _, auth := range gatewayAuths {
+			require.Equal(t, "Bearer fresh-dataplane-token", auth)
+		}
+	})
+
+	t.Run("a 401 mid-stop forces a fresh token and retries the call", func(t *testing.T) {
+		// Findings 3 & 4: the drain path force-refreshes and retries on a 401, but the
+		// stop path did neither. Here the token lapses at the UpdateStatement step; the
+		// stop must mint a fresh token and retry the update rather than reporting
+		// failure and orphaning the statement.
+		var mu sync.Mutex
+		mintCount := 0
+		updateCount := 0
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			switch {
+			case r.URL.Path == "/api/access_tokens":
+				mu.Lock()
+				mintCount++
+				tok := fmt.Sprintf("dp-%d", mintCount)
+				mu.Unlock()
+				_, _ = w.Write([]byte(fmt.Sprintf(`{"token":%q}`, tok)))
+			case r.Method == http.MethodGet:
+				_, _ = w.Write([]byte(`{"name":"stmt","spec":{"statement":"SELECT 1"},"status":{"phase":"RUNNING"}}`))
+			default: // the PUT/PATCH update
+				mu.Lock()
+				updateCount++
+				n := updateCount
+				mu.Unlock()
+				if n == 1 { // the token lapsed exactly at the update
+					w.WriteHeader(http.StatusUnauthorized)
+					return
+				}
+				_, _ = w.Write([]byte(`{"name":"stmt"}`))
+			}
+		}))
+		defer server.Close()
+
+		client := ccloudv2.NewFlinkGatewayClient(server.URL, "test", false, "stale-token")
+		c := newTestCommand(newTestContext(server.URL, "cloud-token"))
+
+		ok, err := c.stopStatement(client, "env-1", "stmt")
+		require.NoError(t, err)
+		require.True(t, ok)
+		mu.Lock()
+		defer mu.Unlock()
+		require.Equal(t, 2, updateCount, "the 401'd update must be retried once")
+		require.GreaterOrEqual(t, mintCount, 2, "the retry must force a fresh token")
+	})
+
+	t.Run("a slow token mint does not consume the stop's call budget", func(t *testing.T) {
+		// Finding 2: the mint runs on its own budget, and the stop's two gateway calls
+		// get a full, independent stopTimeout afterward. The mint budget here is >= the
+		// stop budget and the mint sleeps past it, so if the stop's deadline were
+		// started before the mint (the bug) it would already be spent and the calls
+		// would time out. The calls succeeding proves their budget is independent.
+		origMint, origStop := stopTokenMintTimeout, stopTimeout
+		stopTokenMintTimeout = 300 * time.Millisecond
+		stopTimeout = 100 * time.Millisecond
+		defer func() { stopTokenMintTimeout, stopTimeout = origMint, origStop }()
+
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			if r.URL.Path == "/api/access_tokens" {
+				time.Sleep(600 * time.Millisecond) // past the mint budget; forces its timeout
+				_, _ = w.Write([]byte(`{"token":"fresh"}`))
+				return
+			}
+			if r.Method == http.MethodGet {
+				_, _ = w.Write([]byte(`{"name":"stmt","spec":{"statement":"SELECT 1"},"status":{"phase":"RUNNING"}}`))
+				return
+			}
+			_, _ = w.Write([]byte(`{"name":"stmt"}`))
+		}))
+		defer server.Close()
+
+		client := ccloudv2.NewFlinkGatewayClient(server.URL, "test", false, "existing-token")
+		c := newTestCommand(newTestContext(server.URL, "cloud-token"))
+
+		ok, err := c.stopStatement(client, "env-1", "stmt")
+		require.NoError(t, err)
+		require.True(t, ok, "a slow best-effort mint must not fail the stop")
 	})
 
 	t.Run("the quiet stop stays silent on stderr", func(t *testing.T) {
@@ -841,6 +976,33 @@ func TestHandleQueryError(t *testing.T) {
 		require.ErrorAs(t, err, &withSuggestions)
 		require.Contains(t, withSuggestions.GetSuggestionsMsg(), "confluent flink statement describe stmt")
 		require.False(t, settled)
+	})
+
+	t.Run("an auth error suggests logging in again and names the leftover statement", func(t *testing.T) {
+		c := newTestCommand(nil)
+		settled := false
+		err := c.handleQueryError(&cobra.Command{}, nil, "env-1", "stmt", &query.AuthError{Err: errors.New("token refresh failed")}, &settled)
+		require.Error(t, err)
+		var withSuggestions errors.ErrorWithSuggestions
+		require.ErrorAs(t, err, &withSuggestions)
+		require.Contains(t, withSuggestions.GetSuggestionsMsg(), "confluent login")
+		require.Contains(t, withSuggestions.GetSuggestionsMsg(), "confluent flink statement stop stmt")
+		// The login is expired, so the deferred cleanup's own stop would 401 too;
+		// settling here suppresses that contradictory second "could not stop" line.
+		require.True(t, settled)
+	})
+
+	t.Run("an auth error wrapped in a results-fetch error still suggests re-login", func(t *testing.T) {
+		// The drain path wraps the AuthError in a ResultsFetchError; the re-login
+		// branch must win over the generic results-fetch fallback.
+		c := newTestCommand(nil)
+		settled := false
+		err := c.handleQueryError(&cobra.Command{}, nil, "env-1", "stmt", &query.ResultsFetchError{Err: &query.AuthError{Err: errors.New("token refresh failed")}}, &settled)
+		require.Error(t, err)
+		var withSuggestions errors.ErrorWithSuggestions
+		require.ErrorAs(t, err, &withSuggestions)
+		require.Contains(t, withSuggestions.GetSuggestionsMsg(), "confluent login")
+		require.True(t, settled)
 	})
 
 	t.Run("any other error falls back to the generic suggestion", func(t *testing.T) {
