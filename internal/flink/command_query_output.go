@@ -172,7 +172,9 @@ type jsonEnvelopeStreamer struct {
 }
 
 func newJSONEnvelopeStreamer(w io.Writer) *jsonEnvelopeStreamer {
-	return &jsonEnvelopeStreamer{w: bufio.NewWriter(w)}
+	// columns starts as a non-nil empty slice so a schema-less statement (setColumns
+	// never called) still marshals "columns": [], not "columns": null.
+	return &jsonEnvelopeStreamer{w: bufio.NewWriter(w), columns: make([]queryColumnOut, 0)}
 }
 
 func (s *jsonEnvelopeStreamer) setColumns(columns []flinkgatewayv1.ColumnDetails) error {
@@ -278,6 +280,11 @@ func yamlListItem(v any, indent string) ([]byte, error) {
 }
 
 func (s *yamlStreamer) writeColumnsBlock() error {
+	if len(s.columns) == 0 {
+		// Empty must serialize as `columns: []`; a bare `columns:` parses as null.
+		_, err := s.w.WriteString("columns: []\n")
+		return err
+	}
 	if _, err := s.w.WriteString("columns:\n"); err != nil {
 		return err
 	}
@@ -290,14 +297,16 @@ func (s *yamlStreamer) writeColumnsBlock() error {
 			return err
 		}
 	}
-	_, err := s.w.WriteString("rows:\n")
-	return err
+	return nil
 }
 
 func (s *yamlStreamer) writeRows(rows []types.StatementResultRow) error {
 	if !s.opened {
 		if !s.raw {
 			if err := s.writeColumnsBlock(); err != nil {
+				return err
+			}
+			if _, err := s.w.WriteString("rows:\n"); err != nil {
 				return err
 			}
 		}
@@ -328,6 +337,10 @@ func (s *yamlStreamer) close(phase string, rowCount int, truncated bool) error {
 			return s.w.Flush()
 		}
 		if err := s.writeColumnsBlock(); err != nil {
+			return err
+		}
+		// No rows were ever written; emit an empty list so `rows` isn't null.
+		if _, err := s.w.WriteString("rows: []\n"); err != nil {
 			return err
 		}
 		s.opened = true
