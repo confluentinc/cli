@@ -60,6 +60,7 @@ func (c *command) newSchemaDescribeCommand(cfg *config.Config) *cobra.Command {
 	cmd.Flags().String("subject", "", subjectUsage)
 	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version or "latest".`)
 	cmd.Flags().Bool("show-references", false, "Display the entire schema graph, including references.")
+	cmd.Flags().String("format", "", `Format of the returned schema, e.g. "LOGICAL" (Schema Registry 8.4+).`)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -108,12 +109,17 @@ func (c *command) schemaDescribe(cmd *cobra.Command, args []string) error {
 	}
 
 	if id != "" {
-		return describeById(id, client)
+		return describeById(cmd, id, client)
 	}
 	return describeBySubject(cmd, client)
 }
 
-func describeById(id string, client *schemaregistry.Client) error {
+func describeById(cmd *cobra.Command, id string, client *schemaregistry.Client) error {
+	format, err := cmd.Flags().GetString("format")
+	if err != nil {
+		return err
+	}
+
 	schemaId, err := strconv.ParseInt(id, 10, 32)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(
@@ -122,7 +128,7 @@ func describeById(id string, client *schemaregistry.Client) error {
 		)
 	}
 
-	schemaString, err := client.GetSchema(int32(schemaId), "")
+	schemaString, err := client.GetSchema(int32(schemaId), "", format)
 	if err != nil {
 		return err
 	}
@@ -141,7 +147,12 @@ func describeBySubject(cmd *cobra.Command, client *schemaregistry.Client) error 
 		return err
 	}
 
-	schema, err := client.GetSchemaByVersion(subject, version, false)
+	format, err := cmd.Flags().GetString("format")
+	if err != nil {
+		return err
+	}
+
+	schema, err := client.GetSchemaByVersion(subject, version, false, format)
 	if err != nil {
 		return catchSchemaNotFoundError(err, subject, version)
 	}
@@ -160,6 +171,11 @@ func describeGraph(cmd *cobra.Command, id string, client *schemaregistry.Client)
 		return err
 	}
 
+	format, err := cmd.Flags().GetString("format")
+	if err != nil {
+		return err
+	}
+
 	visited := make(map[string]bool)
 	schemaID := int64(0)
 	if id != "" {
@@ -171,7 +187,7 @@ func describeGraph(cmd *cobra.Command, id string, client *schemaregistry.Client)
 
 	// A schema graph is a DAG, the root is fetched by ID or by subject and version
 	// All references are fetched by subject/version
-	rootSchema, schemaGraph, err := traverseDAG(client, visited, int32(schemaID), subject, version)
+	rootSchema, schemaGraph, err := traverseDAG(client, visited, int32(schemaID), subject, version, format)
 	if err != nil {
 		return err
 	}
@@ -192,7 +208,7 @@ func describeGraph(cmd *cobra.Command, id string, client *schemaregistry.Client)
 	return nil
 }
 
-func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int32, subject, version string) (srsdk.SchemaString, []schema, error) {
+func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int32, subject, version, format string) (srsdk.SchemaString, []schema, error) {
 	root := srsdk.SchemaString{}
 	var schemaGraph []schema
 	var refs []srsdk.SchemaReference
@@ -200,7 +216,7 @@ func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int3
 
 	if id > 0 {
 		// should only come here at most once for the root if it is fetched by id
-		schemaString, err := client.GetSchema(id, "")
+		schemaString, err := client.GetSchema(id, "", format)
 		if err != nil {
 			return srsdk.SchemaString{}, nil, err
 		}
@@ -213,7 +229,7 @@ func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int3
 	} else {
 		visited[subjectVersionString] = true
 
-		srsdkSchema, err := client.GetSchemaByVersion(subject, version, true)
+		srsdkSchema, err := client.GetSchemaByVersion(subject, version, true, format)
 		if err != nil {
 			return srsdk.SchemaString{}, nil, err
 		}
@@ -233,7 +249,7 @@ func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int3
 	}
 
 	for _, reference := range refs {
-		_, subGraph, err := traverseDAG(client, visited, 0, reference.GetSubject(), strconv.Itoa(int(reference.GetVersion())))
+		_, subGraph, err := traverseDAG(client, visited, 0, reference.GetSubject(), strconv.Itoa(int(reference.GetVersion())), format)
 		if err != nil {
 			return srsdk.SchemaString{}, nil, err
 		}
@@ -255,11 +271,14 @@ func printSchema(schemaId int64, schema, schemaType string, refs []srsdk.SchemaR
 
 	switch schemaType {
 	case "JSON", "AVRO":
+		// A non-default --format (e.g. "LOGICAL") can return the schema in a form that isn't
+		// JSON at all (Logical Types use a STRUCT-syntax string, not a JSON document) even though
+		// schemaType is still reported as JSON/AVRO. Fall back to the raw string instead of
+		// erroring out when it doesn't parse.
 		var jsonBuffer bytes.Buffer
-		if err := json.Indent(&jsonBuffer, []byte(schema), "", "    "); err != nil {
-			return err
+		if err := json.Indent(&jsonBuffer, []byte(schema), "", "    "); err == nil {
+			schema = jsonBuffer.String()
 		}
-		schema = jsonBuffer.String()
 	}
 
 	output.Println(false, "Schema:")
