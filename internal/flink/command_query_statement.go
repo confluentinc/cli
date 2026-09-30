@@ -91,6 +91,12 @@ func (c *queryCommand) stopStatement(client *ccloudv2.FlinkGatewayClient, enviro
 	_, err := wait.Call(ctx, func() (struct{}, error) {
 		c.authTokenMu.Lock()
 		defer c.authTokenMu.Unlock()
+		// The drain may have run long enough for the dataplane token to lapse; a
+		// stale token here is exactly what leaves an abandoned statement running.
+		// Mint a fresh one first (best effort — fall back to the existing token).
+		if dataplaneToken, tokenErr := auth.GetDataplaneToken(c.Context); tokenErr == nil {
+			client.AuthToken = dataplaneToken
+		}
 		statement, err := client.GetStatement(environmentId, name, c.Context.LastOrgId)
 		if err != nil {
 			return struct{}{}, err
@@ -264,14 +270,19 @@ func describeCmd(name string) string {
 
 // refreshGatewayToken mirrors the shell's pre-call check: without it, a query
 // outliving the short-lived dataplane token dies on a 401 before --timeout.
-func (c *queryCommand) refreshGatewayToken(client *ccloudv2.FlinkGatewayClient, jwtValidator jwt.Validator) func() error {
-	return func() error {
+// When force is set the not-yet-expired shortcut is skipped and a new token is
+// always minted — used to recover after the gateway rejects a token that still
+// looked valid locally.
+func (c *queryCommand) refreshGatewayToken(client *ccloudv2.FlinkGatewayClient, jwtValidator jwt.Validator) func(bool) error {
+	return func(force bool) error {
 		c.authTokenMu.Lock()
 		defer c.authTokenMu.Unlock()
 
-		jwtCtx := &cliconfig.Context{State: &cliconfig.ContextState{AuthToken: client.AuthToken}}
-		if jwtValidator.Validate(jwtCtx) == nil {
-			return nil
+		if !force {
+			jwtCtx := &cliconfig.Context{State: &cliconfig.ContextState{AuthToken: client.AuthToken}}
+			if jwtValidator.Validate(jwtCtx) == nil {
+				return nil
+			}
 		}
 
 		dataplaneToken, err := auth.GetDataplaneToken(c.Context)
