@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	stderrors "errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -39,7 +40,15 @@ const (
 )
 
 // legacyFileChangedDuringReadErrorMsg reports a v4 write (which truncates first) racing the read.
-const legacyFileChangedDuringReadErrorMsg = `"%s" changed while it was being read; run the command again`
+const (
+	legacyFileChangedDuringReadErrorMsg    = `"%s" changed while it was being read`
+	legacyFileChangedDuringReadSuggestions = "Run the command again."
+)
+
+// legacyFileChangedDuringReadError is the retryable error for a legacy file caught mid-rewrite.
+func legacyFileChangedDuringReadError(path string) error {
+	return errors.NewErrorWithSuggestions(fmt.Sprintf(legacyFileChangedDuringReadErrorMsg, path), legacyFileChangedDuringReadSuggestions)
+}
 
 // legacyFileChangedWarningMsg warns that a pre-v5 install wrote to the frozen legacy file after
 // migration. Arg: legacyConfigFilename().
@@ -278,8 +287,9 @@ func (o *legacyConfig) applyTo(c *Config) {
 	}
 }
 
-// readLegacyConfigBytes is a test seam for the legacy file's read, which v4 can race.
-var readLegacyConfigBytes = os.ReadFile
+// afterLegacyConfigStat is a test seam called between the legacy file's stat and its read, the
+// window a v4 rewrite can race.
+var afterLegacyConfigStat = func(path string) {}
 
 // readLegacyConfigFile reads a v4 config.json at path, returning its bytes and the stat taken
 // before the read. It returns (nil, nil, nil) when the file is missing, not a regular file
@@ -296,13 +306,14 @@ func readLegacyConfigFile(path string) ([]byte, os.FileInfo, error) {
 		return nil, nil, nil
 	}
 
-	data, err := readLegacyConfigBytes(path)
+	afterLegacyConfigStat(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, path, err)
 	}
 	// the stat saw data, so an empty read is v4 mid-rewrite, not an absent file.
 	if len(data) == 0 {
-		return nil, nil, fmt.Errorf(legacyFileChangedDuringReadErrorMsg, path)
+		return nil, nil, legacyFileChangedDuringReadError(path)
 	}
 	return data, info, nil
 }
@@ -373,8 +384,12 @@ func (c *Config) migrateFromLegacy() (legacyMigration, error) {
 	}
 
 	data, info, err := readLegacyConfigFile(path)
-	if err != nil || info == nil {
+	if err != nil {
 		return result, err
+	}
+	if info == nil {
+		// the guard's stat saw a non-empty regular file, so it changed since: retry next load.
+		return result, legacyFileChangedDuringReadError(path)
 	}
 
 	if err := c.decodeLegacyConfig(path, data); err != nil {
@@ -382,9 +397,11 @@ func (c *Config) migrateFromLegacy() (legacyMigration, error) {
 			return result, err
 		}
 		// a non-Stable seed is a convenience copy, so a bad legacy file must not fail every
-		// command: nothing is written yet, and this channel starts fresh.
+		// command: nothing is written yet, and this channel starts fresh. Dropping a marker from
+		// an earlier run keeps the skip warning from repeating on every load.
 		c.resetToNew()
-		result.seedErr = err
+		clearMigrationMarker()
+		result.seedErr = errorCause(err)
 		return result, nil
 	}
 
@@ -411,9 +428,7 @@ func (c *Config) migrateFromLegacy() (legacyMigration, error) {
 	recordLegacyFileStamp(legacyFileStampOf(info))
 
 	// a leftover marker is harmless once the backup exists: the next guard removes it.
-	if err := os.Remove(marker); err != nil {
-		log.CliLogger.Warnf(`unable to remove migration marker "%s": %v`, marker, err)
-	}
+	removeMigrationMarker()
 
 	afterLegacyMigration()
 	result.migrated = true
@@ -496,32 +511,35 @@ func (c *Config) warnIfLegacyFileChanged() {
 	}
 }
 
-// legacyMigrationPending is the migration guard. A backup means this channel already migrated,
-// so it never re-runs, even with every store deleted. Otherwise a marker means an interrupted run
-// to resume, and without one only a machine with none of the three stores migrates: any store
-// left on disk is v5 state, so a deliberate partial reset never re-imports the v4 file.
+// legacyMigrationPending is the migration guard. It stats the legacy file first, so a v5-only
+// machine never touches the migration files. A backup means this channel already migrated, so it
+// never re-runs, even with every store deleted. Otherwise a marker means an interrupted run to
+// resume, and without one only a machine with none of the three stores migrates: any store left
+// on disk is v5 state, so a deliberate partial reset never re-imports the v4 file. Every "don't
+// migrate" answer but a mid-rewrite legacy file drops the marker, so it can't revive a later run.
 func legacyMigrationPending(legacyPath string) (bool, error) {
-	marker := legacyMigratingFilename()
+	legacy, legacyErr := os.Stat(legacyPath)
+	if os.IsNotExist(legacyErr) || (legacyErr == nil && !legacy.Mode().IsRegular()) {
+		clearMigrationMarker()
+		return false, nil
+	}
 
 	migrated, err := migrationFileExists(legacyBackupFilename())
 	if err != nil {
 		return false, err
 	}
 	if migrated {
-		// a crash after the backup but before the marker's removal leaves the marker behind.
-		if err := os.Remove(marker); err != nil && !os.IsNotExist(err) {
-			log.CliLogger.Warnf(`unable to remove stale migration marker "%s": %v`, marker, err)
-		}
+		clearMigrationMarker()
 		return false, nil
 	}
 
-	pending, err := migrationFileExists(marker)
+	interrupted, err := migrationFileExists(legacyMigratingFilename())
 	if err != nil {
 		return false, err
 	}
-	if !pending {
-		pending, err = noStoresExist()
-		if err != nil || !pending {
+	if !interrupted {
+		fresh, err := noStoresExist()
+		if err != nil || !fresh {
 			return false, err
 		}
 	}
@@ -532,9 +550,55 @@ func legacyMigrationPending(legacyPath string) (bool, error) {
 		if err != nil {
 			return false, err
 		}
-		return !stableMigrated, nil
+		if stableMigrated {
+			if interrupted {
+				removeMigrationMarker()
+			}
+			return false, nil
+		}
+	}
+
+	if legacyErr != nil {
+		return false, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, legacyPath, legacyErr)
+	}
+	if legacy.Size() == 0 {
+		if interrupted {
+			// v4 truncates before it rewrites, so keep the marker and resume on the next load.
+			return false, legacyFileChangedDuringReadError(legacyPath)
+		}
+		return false, nil
 	}
 	return true, nil
+}
+
+// clearMigrationMarker removes the marker if there is one, best-effort.
+func clearMigrationMarker() {
+	marker := legacyMigratingFilename()
+	if _, err := os.Stat(marker); err != nil {
+		if !os.IsNotExist(err) {
+			log.CliLogger.Warnf(`unable to check migration marker "%s": %v`, marker, err)
+		}
+		return
+	}
+	removeMigrationMarker()
+}
+
+// removeMigrationMarker removes a marker known to exist, best-effort: a leftover one is only
+// ever acted on alongside a legacy file and no backup.
+func removeMigrationMarker() {
+	marker := legacyMigratingFilename()
+	if err := os.Remove(marker); err != nil {
+		log.CliLogger.Warnf(`unable to remove migration marker "%s": %v`, marker, err)
+	}
+}
+
+// errorCause unwraps err once, so a warning that already names the legacy file doesn't repeat
+// the wrapper that names it too.
+func errorCause(err error) error {
+	if cause := stderrors.Unwrap(err); cause != nil {
+		return cause
+	}
+	return err
 }
 
 // noStoresExist reports whether settings.json, contexts.json, and secrets.json are all absent.
