@@ -94,7 +94,7 @@ const (
 	InvalidJsonFileFormatErrorMsg   = "invalid json file format"
 	InvalidFilePathErrorMsg         = `invalid file path "%s"`
 	UnsupportedFileFormatErrorMsg   = `unsupported file format for file "%s"`
-	IncorrectNonceLengthErrorMsg    = `incorrect nonce length from secrets.json passed into encryption`
+	IncorrectNonceLengthErrorMsg    = `incorrect nonce length from "secrets.json" passed into encryption`
 
 	// sso package
 	BrowserAuthTimedOutErrorMsg    = "timed out while waiting for browser authentication to occur"
