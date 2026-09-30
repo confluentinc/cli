@@ -554,8 +554,8 @@ func requireMigratedSecretsOnDisk(t *testing.T, envContext bool) {
 	require.Equal(t, []byte("MARKER-cred-nonce"), rec.SecretNonce)
 	require.Contains(t, rec.GlobalAPIKeys, "global1")
 	require.Equal(t, p+"MARKER-global-api-secret", rec.GlobalAPIKeys["global1"].Secret)
-	require.Contains(t, rec.SchemaRegistryCredentials, "sr1")
-	require.Equal(t, p+"MARKER-sr-credential-secret", rec.SchemaRegistryCredentials["sr1"].Secret)
+	require.Contains(t, rec.SchemaRegistryCredentials["sr1"], "sr-key")
+	require.Equal(t, p+"MARKER-sr-credential-secret", rec.SchemaRegistryCredentials["sr1"]["sr-key"].Secret)
 
 	cluster, marker := kafkaMarkerFor(envContext)
 	require.Contains(t, rec.KafkaAPIKeys[cluster], "key1")
