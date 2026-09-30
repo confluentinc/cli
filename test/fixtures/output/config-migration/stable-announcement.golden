@@ -1,0 +1,5 @@
+Confluent CLI moved your configuration to settings.json, contexts.json, secrets.json, and .cache/. Versions before v5 keep using the old config.json and won't see logins or context changes you make here, or vice versa.
+
+  Current |    Name    |  Platform   |     Credential      
+----------+------------+-------------+---------------------
+  *       | my-context | http://test | username-test-user  
