@@ -4,7 +4,9 @@ package query
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
@@ -43,8 +45,11 @@ type Options struct {
 	// than draining a stream that never ends.
 	RequireBounded bool
 
-	// RefreshToken runs before every gateway call; nil means no refresh.
-	RefreshToken func() error
+	// RefreshToken refreshes the gateway token. It runs before every gateway call
+	// (force=false, which is a no-op while the current token is still valid) and
+	// again with force=true after an Unauthorized response, to mint a new token
+	// even when the old one looked unexpired. nil means no refresh.
+	RefreshToken func(force bool) error
 
 	// sleep is swapped out in tests so they do not wait in real time.
 	sleep func(context.Context, time.Duration) error
@@ -54,15 +59,33 @@ type Options struct {
 	pollInterval time.Duration
 }
 
-// authenticatedClient refreshes the token if configured, mirroring
-// Store.authenticatedGatewayClient.
-func (opts Options) authenticatedClient() ccloudv2.GatewayClientInterface {
+// gatewayCall runs a gateway call with token handling: a proactive refresh
+// before the call (non-fatal — the retry below is the real safety net), and, on
+// an Unauthorized response, a forced token refresh and one retry. A long drain
+// can outlive the dataplane token's lifetime; without the retry the call that
+// straddles expiry fails with a bare Unauthorized and the whole run dies.
+func gatewayCall[T any](opts Options, call func(ccloudv2.GatewayClientInterface) (T, error)) (T, error) {
 	if opts.RefreshToken != nil {
-		if err := opts.RefreshToken(); err != nil {
+		if err := opts.RefreshToken(false); err != nil {
 			log.CliLogger.Warnf("Failed to refresh Flink gateway token: %v", err)
 		}
 	}
-	return opts.Client
+	res, err := call(opts.Client)
+	if err == nil || opts.RefreshToken == nil || !isUnauthorized(err) {
+		return res, err
+	}
+	// The token was accepted earlier but the gateway now rejects it — it lapsed
+	// mid-run. Force a fresh token and retry the call once.
+	if refreshErr := opts.RefreshToken(true); refreshErr != nil {
+		return res, refreshErr
+	}
+	return call(opts.Client)
+}
+
+// isUnauthorized reports whether err carries an HTTP 401 from the gateway.
+func isUnauthorized(err error) bool {
+	var coder interface{ StatusCode() int }
+	return errors.As(err, &coder) && coder.StatusCode() == http.StatusUnauthorized
 }
 
 // Result is the outcome of a completed run.
@@ -149,7 +172,9 @@ func await(ctx context.Context, opts Options, statementName string) (flinkgatewa
 	return wait.PollPhases(ctx, wait.PhaseOptions[flinkgatewayv1.SqlV1Statement]{
 		Fetch: func() (flinkgatewayv1.SqlV1Statement, error) {
 			return wait.Call(ctx, func() (flinkgatewayv1.SqlV1Statement, error) {
-				return opts.authenticatedClient().GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId)
+				return gatewayCall(opts, func(c ccloudv2.GatewayClientInterface) (flinkgatewayv1.SqlV1Statement, error) {
+					return c.GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId)
+				})
 			})
 		},
 		Phase:         func(s flinkgatewayv1.SqlV1Statement) string { return s.Status.GetPhase() },
@@ -202,7 +227,9 @@ func drain(ctx context.Context, opts Options, statementName string, schema flink
 // tell it apart from a status read; a malformed next-page URL is not.
 func fetchPage(ctx context.Context, opts Options, statementName string, schema flinkgatewayv1.SqlV1ResultSchema, pageToken string) ([]types.StatementResultRow, string, error) {
 	page, err := wait.Call(ctx, func() (flinkgatewayv1.SqlV1StatementResult, error) {
-		return opts.authenticatedClient().GetStatementResults(opts.EnvironmentId, statementName, opts.OrganizationId, pageToken)
+		return gatewayCall(opts, func(c ccloudv2.GatewayClientInterface) (flinkgatewayv1.SqlV1StatementResult, error) {
+			return c.GetStatementResults(opts.EnvironmentId, statementName, opts.OrganizationId, pageToken)
+		})
 	})
 	if err != nil {
 		return nil, "", &ResultsFetchError{Err: err}
@@ -244,7 +271,9 @@ func nextBackoff(ctx context.Context, opts Options, hadRows bool, backoff time.D
 // landed. Best-effort: a failed refresh just keeps the prior value.
 func refreshStatement(ctx context.Context, opts Options, statementName string, result *Result) {
 	statement, err := wait.Call(ctx, func() (flinkgatewayv1.SqlV1Statement, error) {
-		return opts.authenticatedClient().GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId)
+		return gatewayCall(opts, func(c ccloudv2.GatewayClientInterface) (flinkgatewayv1.SqlV1Statement, error) {
+			return c.GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId)
+		})
 	})
 	if err == nil {
 		result.Statement = statement

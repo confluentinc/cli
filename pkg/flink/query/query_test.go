@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
+	flinkerror "github.com/confluentinc/cli/v4/pkg/errors/flink"
 	"github.com/confluentinc/cli/v4/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 )
@@ -113,6 +115,60 @@ func TestRunDrainsASinglePage(t *testing.T) {
 	require.Equal(t, [][]string{{"1", "SHIPPED"}, {"2", "PENDING"}}, rowValues(t, result))
 	require.False(t, result.Truncated)
 	require.Equal(t, types.COMPLETED, result.Phase())
+}
+
+func TestRunForcesTokenRefreshAndRetriesOnUnauthorized(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	completed := statement("COMPLETED", boundedTraits("id"))
+	unauthorized := flinkerror.NewError("Unauthorized", "", http.StatusUnauthorized)
+
+	gomock.InOrder(
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil),
+		// The dataplane token lapses mid-drain: the first page fetch is rejected...
+		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
+			Return(flinkgatewayv1.SqlV1StatementResult{}, unauthorized),
+		// ...and after a forced refresh the retry succeeds.
+		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
+			Return(page("", []any{"1"}), nil),
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil),
+	)
+
+	forced := 0
+	opts := testOptions(client)
+	opts.RefreshToken = func(force bool) error {
+		if force {
+			forced++
+		}
+		return nil
+	}
+
+	result, err := Run(context.Background(), opts, testStatementName)
+	require.NoError(t, err)
+	require.Equal(t, [][]string{{"1"}}, rowValues(t, result))
+	require.Equal(t, 1, forced, "expected exactly one forced refresh after the 401")
+}
+
+func TestRunSurfacesRefreshFailureWhenTokenIsRejected(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	completed := statement("COMPLETED", boundedTraits("id"))
+	unauthorized := flinkerror.NewError("Unauthorized", "", http.StatusUnauthorized)
+
+	gomock.InOrder(
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil),
+		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
+			Return(flinkgatewayv1.SqlV1StatementResult{}, unauthorized),
+	)
+
+	opts := testOptions(client)
+	opts.RefreshToken = func(force bool) error {
+		if force {
+			return errors.New("re-login required")
+		}
+		return nil
+	}
+
+	_, err := Run(context.Background(), opts, testStatementName)
+	require.ErrorContains(t, err, "re-login required")
 }
 
 func TestRunDrainsEveryPage(t *testing.T) {

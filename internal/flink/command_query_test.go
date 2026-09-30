@@ -417,8 +417,24 @@ func TestRefreshGatewayToken(t *testing.T) {
 		c := newTestCommand(newTestContext("http://unused.invalid", "still-valid"))
 
 		refresh := c.refreshGatewayToken(client, fakeJwtValidator{err: nil})
-		require.NoError(t, refresh())
+		require.NoError(t, refresh(false))
 		require.Equal(t, "still-valid", client.AuthToken)
+	})
+
+	t.Run("force refreshes even when the token still looks valid", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			require.Equal(t, "/api/access_tokens", r.URL.Path)
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"token":"forced-dataplane-token"}`))
+		}))
+		defer server.Close()
+
+		client := ccloudv2.NewFlinkGatewayClient("http://unused.invalid", "test", false, "still-valid")
+		c := newTestCommand(newTestContext(server.URL, "old-cloud-token"))
+
+		refresh := c.refreshGatewayToken(client, fakeJwtValidator{err: nil})
+		require.NoError(t, refresh(true))
+		require.Equal(t, "forced-dataplane-token", client.AuthToken)
 	})
 
 	t.Run("expired token is refreshed from the platform", func(t *testing.T) {
@@ -434,7 +450,7 @@ func TestRefreshGatewayToken(t *testing.T) {
 		c := newTestCommand(newTestContext(server.URL, "old-cloud-token"))
 
 		refresh := c.refreshGatewayToken(client, fakeJwtValidator{err: errors.New("expired")})
-		require.NoError(t, refresh())
+		require.NoError(t, refresh(false))
 		require.Equal(t, "new-dataplane-token", client.AuthToken)
 	})
 
@@ -449,7 +465,7 @@ func TestRefreshGatewayToken(t *testing.T) {
 		c := newTestCommand(newTestContext(server.URL, "old-cloud-token"))
 
 		refresh := c.refreshGatewayToken(client, fakeJwtValidator{err: errors.New("expired")})
-		require.ErrorContains(t, refresh(), "could not mint a dataplane token")
+		require.ErrorContains(t, refresh(false), "could not mint a dataplane token")
 		require.Equal(t, "expired", client.AuthToken)
 	})
 }
