@@ -56,13 +56,16 @@ func needsEscape(r rune) bool {
 // newResultStreamer picks the page-by-page streamer for a serialized format
 // (json/yaml). Human output is buffered (see printHumanTable), not handled here.
 func newResultStreamer(format output.Format, raw bool) resultStreamer {
-	if format == output.YAML {
-		return newYAMLStreamer(os.Stdout, raw)
+	var renderer rowRenderer
+	switch {
+	case format == output.YAML:
+		renderer = yamlRenderer{raw: raw}
+	case raw:
+		renderer = rawJSONRenderer{}
+	default:
+		renderer = jsonEnvelopeRenderer{}
 	}
-	if raw {
-		return newRawJSONArrayStreamer(os.Stdout)
-	}
-	return newJSONEnvelopeStreamer(os.Stdout)
+	return newSerialStreamer(os.Stdout, renderer)
 }
 
 // resultStreamer prints a serialized result one page at a time. setColumns runs
@@ -99,43 +102,58 @@ func rowMap(headers []string, row types.StatementResultRow) map[string]any {
 	return fields
 }
 
-// ---- JSON: bare --raw array -------------------------------------------------
-
-// rawJSONArrayStreamer writes rows as a pretty-printed JSON array, one page at a
-// time. Output is byte-for-byte identical to the buffered --raw path.
-type rawJSONArrayStreamer struct {
+// serialStreamer is the shared open → rows → close state machine for every
+// serialized format. It owns the paging/first-row/flush bookkeeping; a
+// rowRenderer supplies the format-specific bytes, so adding a format is a new
+// renderer rather than a fourth copy of this loop.
+type serialStreamer struct {
 	w        *bufio.Writer
+	renderer rowRenderer
 	headers  []string
-	wroteRow bool
+	columns  []queryColumnOut
 	opened   bool
+	wroteRow bool
 }
 
-func newRawJSONArrayStreamer(w io.Writer) *rawJSONArrayStreamer {
-	return &rawJSONArrayStreamer{w: bufio.NewWriter(w)}
+// rowRenderer turns one serialized format into byte producers. header runs once
+// before the first row; row renders one row's value; between is written before
+// every row after the first; close finishes the output — with hadRows=false it
+// must emit the whole empty result (e.g. "[]"), since header was never written.
+type rowRenderer interface {
+	header(columns []queryColumnOut) []byte
+	row(fields map[string]any) ([]byte, error)
+	between() []byte
+	close(hadRows bool, columns []queryColumnOut, phase string, rowCount int, truncated bool) []byte
 }
 
-func (s *rawJSONArrayStreamer) setColumns(columns []flinkgatewayv1.ColumnDetails) error {
+func newSerialStreamer(w io.Writer, renderer rowRenderer) *serialStreamer {
+	// columns starts non-nil so a schema-less statement (setColumns never called)
+	// still serializes columns as [] / an empty list, not null.
+	return &serialStreamer{w: bufio.NewWriter(w), renderer: renderer, columns: make([]queryColumnOut, 0)}
+}
+
+func (s *serialStreamer) setColumns(columns []flinkgatewayv1.ColumnDetails) error {
 	s.headers = columnNames(columns)
+	s.columns = columnOuts(columns)
 	return nil
 }
 
-func (s *rawJSONArrayStreamer) writeRows(rows []types.StatementResultRow) error {
-	if !s.opened {
-		if _, err := s.w.WriteString("[\n"); err != nil {
-			return err
-		}
-		s.opened = true
-	}
+func (s *serialStreamer) writeRows(rows []types.StatementResultRow) error {
 	for _, row := range rows {
-		encoded, err := json.Marshal(rowMap(s.headers, row))
-		if err != nil {
-			return err
-		}
-		object := indentLines(bytes.TrimRight(pretty.Pretty(encoded), "\n"), "  ")
-		if s.wroteRow {
-			if _, err := s.w.WriteString(",\n"); err != nil {
+		if !s.opened {
+			if _, err := s.w.Write(s.renderer.header(s.columns)); err != nil {
 				return err
 			}
+			s.opened = true
+		}
+		if s.wroteRow {
+			if _, err := s.w.Write(s.renderer.between()); err != nil {
+				return err
+			}
+		}
+		object, err := s.renderer.row(rowMap(s.headers, row))
+		if err != nil {
+			return err
 		}
 		if _, err := s.w.Write(object); err != nil {
 			return err
@@ -145,116 +163,122 @@ func (s *rawJSONArrayStreamer) writeRows(rows []types.StatementResultRow) error 
 	return s.w.Flush()
 }
 
-func (s *rawJSONArrayStreamer) close(string, int, bool) error {
-	if !s.opened {
-		if _, err := s.w.WriteString("[]\n"); err != nil {
-			return err
-		}
-		return s.w.Flush()
-	}
-	if _, err := s.w.WriteString("\n]\n"); err != nil {
+func (s *serialStreamer) close(phase string, rowCount int, truncated bool) error {
+	if _, err := s.w.Write(s.renderer.close(s.opened, s.columns, phase, rowCount, truncated)); err != nil {
 		return err
 	}
 	return s.w.Flush()
+}
+
+// jsonRowBytes pretty-prints one row object at the given indent, matching the
+// buffered output byte-for-byte.
+func jsonRowBytes(fields map[string]any, indent string) ([]byte, error) {
+	encoded, err := json.Marshal(fields)
+	if err != nil {
+		return nil, err
+	}
+	return indentLines(bytes.TrimRight(pretty.Pretty(encoded), "\n"), indent), nil
+}
+
+// ---- JSON: bare --raw array -------------------------------------------------
+
+// rawJSONRenderer writes rows as a pretty-printed JSON array. Byte-for-byte
+// identical to the buffered --raw path.
+type rawJSONRenderer struct{}
+
+func (rawJSONRenderer) header([]queryColumnOut) []byte            { return []byte("[\n") }
+func (rawJSONRenderer) row(fields map[string]any) ([]byte, error) { return jsonRowBytes(fields, "  ") }
+func (rawJSONRenderer) between() []byte                           { return []byte(",\n") }
+func (rawJSONRenderer) close(hadRows bool, _ []queryColumnOut, _ string, _ int, _ bool) []byte {
+	if !hadRows {
+		return []byte("[]\n")
+	}
+	return []byte("\n]\n")
 }
 
 // ---- JSON: default envelope -------------------------------------------------
 
-// jsonEnvelopeStreamer streams the schema+rows envelope. phase/row_count/truncated
+// jsonEnvelopeRenderer writes the schema+rows envelope. phase/row_count/truncated
 // are known only after the drain, so they are emitted after the rows (a key-order
 // change from the buffered form; JSON objects are unordered so it's harmless).
-type jsonEnvelopeStreamer struct {
-	w        *bufio.Writer
-	headers  []string
-	columns  []queryColumnOut
-	wroteRow bool
-	opened   bool
-}
+type jsonEnvelopeRenderer struct{}
 
-func newJSONEnvelopeStreamer(w io.Writer) *jsonEnvelopeStreamer {
-	return &jsonEnvelopeStreamer{w: bufio.NewWriter(w)}
-}
-
-func (s *jsonEnvelopeStreamer) setColumns(columns []flinkgatewayv1.ColumnDetails) error {
-	s.headers = columnNames(columns)
-	s.columns = columnOuts(columns)
-	return nil
-}
-
-func (s *jsonEnvelopeStreamer) open() error {
-	colsJSON, err := json.Marshal(s.columns)
-	if err != nil {
-		return err
-	}
+// columnsJSON renders the schema as a compact JSON value. Marshal can't fail for
+// []queryColumnOut (two string fields), so the error is safe to drop.
+func (jsonEnvelopeRenderer) columnsJSON(columns []queryColumnOut) string {
+	colsJSON, _ := json.Marshal(columns)
 	cols := indentLines(bytes.TrimRight(pretty.Pretty(colsJSON), "\n"), "  ")
-	if _, err := fmt.Fprintf(s.w, "{\n  \"columns\": %s,\n  \"rows\": [\n", bytes.TrimLeft(cols, " ")); err != nil {
-		return err
-	}
-	s.opened = true
-	return nil
+	return string(bytes.TrimLeft(cols, " "))
 }
-
-func (s *jsonEnvelopeStreamer) writeRows(rows []types.StatementResultRow) error {
-	if !s.opened {
-		if err := s.open(); err != nil {
-			return err
-		}
-	}
-	for _, row := range rows {
-		encoded, err := json.Marshal(rowMap(s.headers, row))
-		if err != nil {
-			return err
-		}
-		object := indentLines(bytes.TrimRight(pretty.Pretty(encoded), "\n"), "    ")
-		if s.wroteRow {
-			if _, err := s.w.WriteString(",\n"); err != nil {
-				return err
-			}
-		}
-		if _, err := s.w.Write(object); err != nil {
-			return err
-		}
-		s.wroteRow = true
-	}
-	return s.w.Flush()
+func (r jsonEnvelopeRenderer) header(columns []queryColumnOut) []byte {
+	return []byte(fmt.Sprintf("{\n  \"columns\": %s,\n  \"rows\": [\n", r.columnsJSON(columns)))
 }
-
-func (s *jsonEnvelopeStreamer) close(phase string, rowCount int, truncated bool) error {
-	if !s.opened {
-		if err := s.open(); err != nil {
-			return err
-		}
+func (jsonEnvelopeRenderer) row(fields map[string]any) ([]byte, error) {
+	return jsonRowBytes(fields, "    ")
+}
+func (jsonEnvelopeRenderer) between() []byte { return []byte(",\n") }
+func (r jsonEnvelopeRenderer) close(hadRows bool, columns []queryColumnOut, phase string, rowCount int, truncated bool) []byte {
+	meta := fmt.Sprintf("  \"phase\": %q,\n  \"row_count\": %d,\n  \"truncated\": %t\n}\n", phase, rowCount, truncated)
+	if !hadRows {
+		// No rows were written, so emit the whole envelope with an empty array.
+		return []byte(fmt.Sprintf("{\n  \"columns\": %s,\n  \"rows\": [],\n%s", r.columnsJSON(columns), meta))
 	}
-	if s.wroteRow {
-		if _, err := s.w.WriteString("\n"); err != nil {
-			return err
-		}
-	}
-	if _, err := fmt.Fprintf(s.w, "  ],\n  \"phase\": %q,\n  \"row_count\": %d,\n  \"truncated\": %t\n}\n", phase, rowCount, truncated); err != nil {
-		return err
-	}
-	return s.w.Flush()
+	return []byte(fmt.Sprintf("\n  ],\n%s", meta))
 }
 
 // ---- YAML -------------------------------------------------------------------
 
-// yamlStreamer streams the -o yaml forms (bare list with --raw, else envelope).
-type yamlStreamer struct {
-	w       *bufio.Writer
-	headers []string
-	columns []queryColumnOut
-	raw     bool
-	opened  bool
+// yamlRenderer writes the -o yaml forms: a bare list with --raw, else the
+// schema+rows envelope with trailing metadata.
+type yamlRenderer struct{ raw bool }
+
+func (r yamlRenderer) rowIndent() string {
+	if r.raw {
+		return ""
+	}
+	return "  "
 }
 
-func newYAMLStreamer(w io.Writer, raw bool) *yamlStreamer {
-	return &yamlStreamer{w: bufio.NewWriter(w), raw: raw}
+// columnsBlock renders the "columns:" block. An empty schema becomes
+// "columns: []" because a bare "columns:" parses back as null.
+func (yamlRenderer) columnsBlock(columns []queryColumnOut) []byte {
+	if len(columns) == 0 {
+		return []byte("columns: []\n")
+	}
+	var b bytes.Buffer
+	b.WriteString("columns:\n")
+	for _, c := range columns {
+		// Marshal can't fail for a queryColumnOut (two string fields); safe to drop.
+		item, _ := yamlListItem(c, "  ")
+		b.Write(item)
+	}
+	return b.Bytes()
 }
 
-func (s *yamlStreamer) setColumns(columns []flinkgatewayv1.ColumnDetails) error {
-	s.headers = columnNames(columns)
-	s.columns = columnOuts(columns)
-	return nil
+func (r yamlRenderer) header(columns []queryColumnOut) []byte {
+	if r.raw {
+		return nil
+	}
+	return append(r.columnsBlock(columns), []byte("rows:\n")...)
+}
+func (r yamlRenderer) row(fields map[string]any) ([]byte, error) {
+	return yamlListItem(fields, r.rowIndent())
+}
+func (yamlRenderer) between() []byte { return nil }
+func (r yamlRenderer) close(hadRows bool, columns []queryColumnOut, phase string, rowCount int, truncated bool) []byte {
+	if r.raw {
+		if !hadRows {
+			return []byte("[]\n")
+		}
+		return nil
+	}
+	tail := fmt.Sprintf("phase: %s\nrow_count: %d\ntruncated: %t\n", phase, rowCount, truncated)
+	if !hadRows {
+		// No rows: columns block + an explicit empty list so "rows" isn't null.
+		out := append(r.columnsBlock(columns), []byte("rows: []\n")...)
+		return append(out, tail...)
+	}
+	return []byte(tail)
 }
 
 // yamlListItem renders v as a YAML sequence item ("- ...") at the given indent.
@@ -275,70 +299,6 @@ func yamlListItem(v any, indent string) ([]byte, error) {
 		out.WriteByte('\n')
 	}
 	return out.Bytes(), nil
-}
-
-func (s *yamlStreamer) writeColumnsBlock() error {
-	if _, err := s.w.WriteString("columns:\n"); err != nil {
-		return err
-	}
-	for _, c := range s.columns {
-		item, err := yamlListItem(c, "  ")
-		if err != nil {
-			return err
-		}
-		if _, err := s.w.Write(item); err != nil {
-			return err
-		}
-	}
-	_, err := s.w.WriteString("rows:\n")
-	return err
-}
-
-func (s *yamlStreamer) writeRows(rows []types.StatementResultRow) error {
-	if !s.opened {
-		if !s.raw {
-			if err := s.writeColumnsBlock(); err != nil {
-				return err
-			}
-		}
-		s.opened = true
-	}
-	indent := ""
-	if !s.raw {
-		indent = "  "
-	}
-	for _, row := range rows {
-		item, err := yamlListItem(rowMap(s.headers, row), indent)
-		if err != nil {
-			return err
-		}
-		if _, err := s.w.Write(item); err != nil {
-			return err
-		}
-	}
-	return s.w.Flush()
-}
-
-func (s *yamlStreamer) close(phase string, rowCount int, truncated bool) error {
-	if !s.opened {
-		if s.raw {
-			if _, err := s.w.WriteString("[]\n"); err != nil {
-				return err
-			}
-			return s.w.Flush()
-		}
-		if err := s.writeColumnsBlock(); err != nil {
-			return err
-		}
-		s.opened = true
-	}
-	if s.raw {
-		return s.w.Flush()
-	}
-	if _, err := fmt.Fprintf(s.w, "phase: %s\nrow_count: %d\ntruncated: %t\n", phase, rowCount, truncated); err != nil {
-		return err
-	}
-	return s.w.Flush()
 }
 
 // ---- Human table (buffered) -------------------------------------------------

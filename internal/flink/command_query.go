@@ -154,20 +154,7 @@ func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 	// since both are cases the user needs to know the cleanup outcome of.
 	settled := false
 	announceStop := false
-	defer func() {
-		if settled {
-			return
-		}
-		if announceStop {
-			c.stopStatementAndReport(client, environmentId, name)
-		} else if ok, err := c.stopStatement(client, environmentId, name); !ok {
-			// Even the routine, deliberately-quiet cleanup must surface a *failed*
-			// stop: the statement is still running and burning compute, which the
-			// user needs to know even though the query itself succeeded. Only a
-			// successful quiet stop stays silent (see bug #2).
-			reportStopFailure(name, err)
-		}
-	}()
+	defer func() { c.releaseStatement(client, environmentId, name, settled, announceStop) }()
 
 	options := query.Options{
 		Client:         client,
@@ -202,34 +189,56 @@ func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 	// Truncated — a job can stay RUNNING after its last row ships either way.
 	settled = query.IsTerminal(result.Phase())
 	announceStop = result.Truncated
+	return c.emitResult(name, result, streamer, maxRows, &announceStop)
+}
 
-	// STOPPED/DELETING here means something other than us ended the statement.
-	if err := phaseError(name, result); err != nil {
-		return err
+// emitResult finishes output after a successful drain. Streamed formats already
+// wrote rows during Run, so this closes the document and surfaces any terminal-
+// phase error afterward; -o human renders the buffered table. It sets
+// *announceStop on a write failure so the deferred cleanup speaks up.
+func (c *queryCommand) emitResult(name string, result *query.Result, streamer resultStreamer, maxRows int, announceStop *bool) error {
+	// -o human hasn't printed anything yet, so a terminal-phase error (STOPPED/
+	// DELETING) returns before the table. Streamed rows already reached stdout, so
+	// fall through and let close() terminate the document first.
+	phaseErr := phaseError(name, result)
+	if phaseErr != nil && streamer == nil {
+		return phaseErr
 	}
 
 	if result.Truncated {
 		output.ErrPrintf(false, "Warning: stopped after %d rows because of the `--max-rows` flag. The result set below is truncated.\n", maxRows)
 	}
-
-	// Changelog warning goes to stderr; json/yaml rows already streamed to stdout.
 	isAppendOnly, appendOnlyKnown := warnIfChangelog(result)
 
 	if streamer != nil {
-		// Rows already reached stdout during Run; close writes trailing metadata.
 		if err := streamer.close(string(result.Phase()), result.RowCount, result.Truncated); err != nil {
-			announceStop = true
+			*announceStop = true
 			return err
 		}
-		return nil
+		return phaseErr
 	}
 
-	// -o human: buffered render after the drain.
 	if err := printHumanResult(os.Stdout, name, result, isAppendOnly, appendOnlyKnown); err != nil {
-		announceStop = true
+		*announceStop = true
 		return err
 	}
 	return nil
+}
+
+// releaseStatement stops the leftover statement on exit unless the run already
+// settled it. announceStop picks a reported vs quiet stop; a quiet stop still
+// surfaces a failure, since a running statement keeps burning compute.
+func (c *queryCommand) releaseStatement(client *ccloudv2.FlinkGatewayClient, environmentId, name string, settled, announceStop bool) {
+	if settled {
+		return
+	}
+	if announceStop {
+		c.stopStatementAndReport(client, environmentId, name)
+		return
+	}
+	if ok, err := c.stopStatement(client, environmentId, name); !ok {
+		reportStopFailure(name, err)
+	}
 }
 
 // resolveQueryFlags reads and validates the numeric/output flags that gate the run
@@ -341,7 +350,7 @@ func (c *queryCommand) interruptOr(cmd *cobra.Command, err error, name string, s
 }
 
 // warnIfChangelog prints the changelog warning when the statement is known to be
-// non-append-only, and returns (isAppendOnly, appendOnlyKnown) for printQueryResult
+// non-append-only, and returns (isAppendOnly, appendOnlyKnown) for printHumanResult
 // (which uses them to decide whether to show the Operation column).
 func warnIfChangelog(result *query.Result) (bool, bool) {
 	traits := result.Statement.Status.GetTraits()

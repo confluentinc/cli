@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/pretty"
+	"gopkg.in/yaml.v3"
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
@@ -229,7 +230,7 @@ func TestQueryStreamers(t *testing.T) {
 
 	t.Run("json envelope carries schema and truncated", func(t *testing.T) {
 		var buf bytes.Buffer
-		run(t, newJSONEnvelopeStreamer(&buf), testColumns(), []types.StatementResultRow{testRow()}, "RUNNING", true)
+		run(t, newSerialStreamer(&buf, jsonEnvelopeRenderer{}), testColumns(), []types.StatementResultRow{testRow()}, "RUNNING", true)
 		out := buf.String()
 		require.Contains(t, out, `"phase": "RUNNING"`)
 		require.Contains(t, out, `"truncated": true`)
@@ -241,7 +242,7 @@ func TestQueryStreamers(t *testing.T) {
 
 	t.Run("raw json is a bare array with no envelope", func(t *testing.T) {
 		var buf bytes.Buffer
-		run(t, newRawJSONArrayStreamer(&buf), testColumns(), []types.StatementResultRow{testRow()}, "COMPLETED", false)
+		run(t, newSerialStreamer(&buf, rawJSONRenderer{}), testColumns(), []types.StatementResultRow{testRow()}, "COMPLETED", false)
 		out := buf.String()
 		require.Contains(t, out, `"id": 1021`)
 		require.NotContains(t, out, "phase")
@@ -250,16 +251,58 @@ func TestQueryStreamers(t *testing.T) {
 
 	t.Run("yaml envelope", func(t *testing.T) {
 		var buf bytes.Buffer
-		run(t, newYAMLStreamer(&buf, false), testColumns(), []types.StatementResultRow{testRow()}, "COMPLETED", false)
+		run(t, newSerialStreamer(&buf, yamlRenderer{raw: false}), testColumns(), []types.StatementResultRow{testRow()}, "COMPLETED", false)
 		require.Contains(t, buf.String(), "phase: COMPLETED")
 	})
 
 	t.Run("yaml raw is a bare list", func(t *testing.T) {
 		var buf bytes.Buffer
-		run(t, newYAMLStreamer(&buf, true), testColumns(), []types.StatementResultRow{testRow()}, "COMPLETED", false)
+		run(t, newSerialStreamer(&buf, yamlRenderer{raw: true}), testColumns(), []types.StatementResultRow{testRow()}, "COMPLETED", false)
 		out := buf.String()
 		require.Contains(t, out, "- id: 1021")
 		require.NotContains(t, out, "phase:")
+	})
+
+	// A query matching no rows never calls writeRows; the envelope must still
+	// serialize rows as [], not null, so consumers can iterate it unconditionally.
+	t.Run("json envelope with schema but no rows keeps rows as array", func(t *testing.T) {
+		var buf bytes.Buffer
+		run(t, newSerialStreamer(&buf, jsonEnvelopeRenderer{}), testColumns(), nil, "COMPLETED", false)
+		var got map[string]any
+		require.NoError(t, json.Unmarshal(buf.Bytes(), &got))
+		require.Len(t, got["columns"], 2)
+		require.Equal(t, []any{}, got["rows"])
+	})
+
+	t.Run("yaml envelope with schema but no rows keeps rows as list", func(t *testing.T) {
+		var buf bytes.Buffer
+		run(t, newSerialStreamer(&buf, yamlRenderer{raw: false}), testColumns(), nil, "COMPLETED", false)
+		var got map[string]any
+		require.NoError(t, yaml.Unmarshal(buf.Bytes(), &got))
+		require.Len(t, got["columns"], 2)
+		require.Equal(t, []any{}, got["rows"])
+	})
+
+	// A schema-less statement (e.g. INSERT INTO) returns before OnSchema fires, so
+	// setColumns is never called; columns must still serialize as [], not null.
+	t.Run("json envelope schema-less keeps columns as array not null", func(t *testing.T) {
+		var buf bytes.Buffer
+		s := newSerialStreamer(&buf, jsonEnvelopeRenderer{})
+		require.NoError(t, s.close("COMPLETED", 0, false))
+		var got map[string]any
+		require.NoError(t, json.Unmarshal(buf.Bytes(), &got))
+		require.Equal(t, []any{}, got["columns"])
+		require.Equal(t, []any{}, got["rows"])
+	})
+
+	t.Run("yaml envelope schema-less keeps columns as list not null", func(t *testing.T) {
+		var buf bytes.Buffer
+		s := newSerialStreamer(&buf, yamlRenderer{raw: false})
+		require.NoError(t, s.close("COMPLETED", 0, false))
+		var got map[string]any
+		require.NoError(t, yaml.Unmarshal(buf.Bytes(), &got))
+		require.Equal(t, []any{}, got["columns"])
+		require.Equal(t, []any{}, got["rows"])
 	})
 }
 
@@ -868,7 +911,7 @@ func TestRawJSONArrayStreamerMatchesBuffered(t *testing.T) {
 			}
 
 			var buf bytes.Buffer
-			streamer := newRawJSONArrayStreamer(&buf)
+			streamer := newSerialStreamer(&buf, rawJSONRenderer{})
 			require.NoError(t, streamer.setColumns(test.columns))
 			for _, page := range test.pages {
 				require.NoError(t, streamer.writeRows(page))

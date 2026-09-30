@@ -195,23 +195,14 @@ func drain(ctx context.Context, opts Options, statementName string, schema flink
 			return err
 		}
 
-		// MaxRows: trim the page that would cross the cap, set Truncated, stop.
-		// Landing exactly on the cap isn't truncation unless a later page has more.
-		if opts.MaxRows > 0 && result.RowCount+len(pageRows) > opts.MaxRows {
-			pageRows = pageRows[:opts.MaxRows-result.RowCount]
-			if err := deliver(opts, result, pageRows); err != nil {
-				return err
-			}
-			result.Truncated = true
-			refreshStatement(ctx, opts, statementName, result)
-			return nil
-		}
-
+		pageRows, truncated := capToMaxRows(opts, result.RowCount, pageRows)
 		if err := deliver(opts, result, pageRows); err != nil {
 			return err
 		}
+		result.Truncated = truncated
 
-		if nextPageToken == "" {
+		// Stop at the cap, or when the gateway reports no next page.
+		if truncated || nextPageToken == "" {
 			refreshStatement(ctx, opts, statementName, result)
 			return nil
 		}
@@ -222,6 +213,16 @@ func drain(ctx context.Context, opts Options, statementName string, schema flink
 			return err
 		}
 	}
+}
+
+// capToMaxRows trims a page so the running total never exceeds MaxRows (0 = no
+// cap) and reports whether the cap was hit. Landing exactly on the cap isn't
+// truncation unless a later page proves there were more rows.
+func capToMaxRows(opts Options, rowCount int, pageRows []types.StatementResultRow) ([]types.StatementResultRow, bool) {
+	if opts.MaxRows > 0 && rowCount+len(pageRows) > opts.MaxRows {
+		return pageRows[:opts.MaxRows-rowCount], true
+	}
+	return pageRows, false
 }
 
 // deliver hands one page of rows to the caller: streamed via OnRows when set (so
