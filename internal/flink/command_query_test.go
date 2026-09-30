@@ -859,6 +859,28 @@ func TestHandleQueryError(t *testing.T) {
 		require.False(t, settled)
 	})
 
+	t.Run("an auth error suggests logging in again", func(t *testing.T) {
+		c := newTestCommand(nil)
+		settled := false
+		err := c.handleQueryError(&cobra.Command{}, nil, "env-1", "stmt", &query.AuthError{Err: errors.New("token refresh failed")}, &settled)
+		require.Error(t, err)
+		var withSuggestions errors.ErrorWithSuggestions
+		require.ErrorAs(t, err, &withSuggestions)
+		require.Contains(t, withSuggestions.GetSuggestionsMsg(), "confluent login")
+	})
+
+	t.Run("an auth error wrapped in a results-fetch error still suggests re-login", func(t *testing.T) {
+		// The drain path wraps the AuthError in a ResultsFetchError; the re-login
+		// branch must win over the generic results-fetch fallback.
+		c := newTestCommand(nil)
+		settled := false
+		err := c.handleQueryError(&cobra.Command{}, nil, "env-1", "stmt", &query.ResultsFetchError{Err: &query.AuthError{Err: errors.New("token refresh failed")}}, &settled)
+		require.Error(t, err)
+		var withSuggestions errors.ErrorWithSuggestions
+		require.ErrorAs(t, err, &withSuggestions)
+		require.Contains(t, withSuggestions.GetSuggestionsMsg(), "confluent login")
+	})
+
 	t.Run("any other error falls back to the generic suggestion", func(t *testing.T) {
 		c := newTestCommand(nil)
 		settled := false

@@ -12,6 +12,7 @@ import (
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	flinkerror "github.com/confluentinc/cli/v4/pkg/errors/flink"
 	"github.com/confluentinc/cli/v4/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 	"github.com/confluentinc/cli/v4/pkg/log"
@@ -64,7 +65,12 @@ type Options struct {
 // an Unauthorized response, a forced token refresh and one retry. A long drain
 // can outlive the dataplane token's lifetime; without the retry the call that
 // straddles expiry fails with a bare Unauthorized and the whole run dies.
-func gatewayCall[T any](opts Options, call func(ccloudv2.GatewayClientInterface) (T, error)) (T, error) {
+//
+// ctx guards the retry path: GatewayClientInterface ignores context, so
+// wait.Call abandons this goroutine when ctx fires but cannot stop the
+// in-flight call. Once ctx is done we must not force a fresh token or issue the
+// retry — that write and read would race the deferred stop's own token swap.
+func gatewayCall[T any](ctx context.Context, opts Options, call func(ccloudv2.GatewayClientInterface) (T, error)) (T, error) {
 	if opts.RefreshToken != nil {
 		if err := opts.RefreshToken(false); err != nil {
 			log.CliLogger.Warnf("Failed to refresh Flink gateway token: %v", err)
@@ -74,18 +80,50 @@ func gatewayCall[T any](opts Options, call func(ccloudv2.GatewayClientInterface)
 	if err == nil || opts.RefreshToken == nil || !isUnauthorized(err) {
 		return res, err
 	}
-	// The token was accepted earlier but the gateway now rejects it — it lapsed
-	// mid-run. Force a fresh token and retry the call once.
-	if refreshErr := opts.RefreshToken(true); refreshErr != nil {
-		return res, refreshErr
+	// This goroutine may already be abandoned (ctx fired mid-call). Don't mint a
+	// token or retry: the caller has moved on to cleanup and both would race it.
+	if ctxErr := ctx.Err(); ctxErr != nil {
+		return res, ctxErr
 	}
-	return call(opts.Client)
+	// The token was accepted earlier but the gateway now rejects it — it lapsed
+	// mid-run. Force a fresh token and retry the call once. A forced refresh that
+	// itself fails, or a retry the gateway still rejects, means the cloud login
+	// has expired: surface it as an AuthError so callers stop retrying and prompt
+	// a re-login instead of polling to the deadline.
+	if refreshErr := opts.RefreshToken(true); refreshErr != nil {
+		return res, &AuthError{Err: refreshErr}
+	}
+	res, err = call(opts.Client)
+	if err != nil && isUnauthorized(err) {
+		return res, &AuthError{Err: err}
+	}
+	return res, err
 }
 
 // isUnauthorized reports whether err carries an HTTP 401 from the gateway.
 func isUnauthorized(err error) bool {
-	var coder interface{ StatusCode() int }
+	var coder flinkerror.Coder
 	return errors.As(err, &coder) && coder.StatusCode() == http.StatusUnauthorized
+}
+
+// AuthError reports that the gateway rejected the token and a fresh one could
+// not be obtained — either the forced refresh failed or the retry was still
+// Unauthorized. It means the user's cloud login has expired and they must log
+// in again. Unlike a transient gateway error it is terminal: polling cannot
+// recover from it, so await treats it as fatal rather than retrying to the
+// deadline.
+type AuthError struct {
+	Err error
+}
+
+func (e *AuthError) Error() string { return e.Err.Error() }
+
+func (e *AuthError) Unwrap() error { return e.Err }
+
+// isAuthError reports whether err is (or wraps) an AuthError.
+func isAuthError(err error) bool {
+	var authErr *AuthError
+	return errors.As(err, &authErr)
 }
 
 // Result is the outcome of a completed run.
@@ -172,15 +210,18 @@ func await(ctx context.Context, opts Options, statementName string) (flinkgatewa
 	return wait.PollPhases(ctx, wait.PhaseOptions[flinkgatewayv1.SqlV1Statement]{
 		Fetch: func() (flinkgatewayv1.SqlV1Statement, error) {
 			return wait.Call(ctx, func() (flinkgatewayv1.SqlV1Statement, error) {
-				return gatewayCall(opts, func(c ccloudv2.GatewayClientInterface) (flinkgatewayv1.SqlV1Statement, error) {
+				return gatewayCall(ctx, opts, func(c ccloudv2.GatewayClientInterface) (flinkgatewayv1.SqlV1Statement, error) {
 					return c.GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId)
 				})
 			})
 		},
 		Phase:         func(s flinkgatewayv1.SqlV1Statement) string { return s.Status.GetPhase() },
 		PendingPhases: []string{string(types.PENDING)},
-		PollInterval:  opts.pollInterval,
-		Timeout:       unboundedPollTimeout,
+		// A lapsed cloud login can't be waited out — surface it now instead of
+		// re-minting a token every poll until the deadline.
+		IsFatalErr:   isAuthError,
+		PollInterval: opts.pollInterval,
+		Timeout:      unboundedPollTimeout,
 	})
 }
 
@@ -227,7 +268,7 @@ func drain(ctx context.Context, opts Options, statementName string, schema flink
 // tell it apart from a status read; a malformed next-page URL is not.
 func fetchPage(ctx context.Context, opts Options, statementName string, schema flinkgatewayv1.SqlV1ResultSchema, pageToken string) ([]types.StatementResultRow, string, error) {
 	page, err := wait.Call(ctx, func() (flinkgatewayv1.SqlV1StatementResult, error) {
-		return gatewayCall(opts, func(c ccloudv2.GatewayClientInterface) (flinkgatewayv1.SqlV1StatementResult, error) {
+		return gatewayCall(ctx, opts, func(c ccloudv2.GatewayClientInterface) (flinkgatewayv1.SqlV1StatementResult, error) {
 			return c.GetStatementResults(opts.EnvironmentId, statementName, opts.OrganizationId, pageToken)
 		})
 	})
@@ -271,7 +312,7 @@ func nextBackoff(ctx context.Context, opts Options, hadRows bool, backoff time.D
 // landed. Best-effort: a failed refresh just keeps the prior value.
 func refreshStatement(ctx context.Context, opts Options, statementName string, result *Result) {
 	statement, err := wait.Call(ctx, func() (flinkgatewayv1.SqlV1Statement, error) {
-		return gatewayCall(opts, func(c ccloudv2.GatewayClientInterface) (flinkgatewayv1.SqlV1Statement, error) {
+		return gatewayCall(ctx, opts, func(c ccloudv2.GatewayClientInterface) (flinkgatewayv1.SqlV1Statement, error) {
 			return c.GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId)
 		})
 	})
