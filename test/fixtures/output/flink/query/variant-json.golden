@@ -1,5 +1,4 @@
 {
-  "phase": "COMPLETED",
   "columns": [
     {
       "name": "v",
@@ -11,6 +10,7 @@
       "v": "{\"a\":\"x\"}"
     }
   ],
+  "phase": "COMPLETED",
   "row_count": 1,
   "truncated": false
 }
