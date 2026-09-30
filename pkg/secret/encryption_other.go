@@ -104,7 +104,7 @@ func Decrypt(username, encrypted string, salt, nonce []byte) (string, error) {
 
 	decryptedPassword, err := aesgcm.Open(nil, nonce, cipherText, []byte(username))
 	if err != nil {
-		return "", fmt.Errorf("CLI does not have write permission for `/etc/machine-id`, or `secrets.json` is corrupted: %w", err)
+		return "", fmt.Errorf("CLI does not have write permission for \"/etc/machine-id\", or \"secrets.json\" is corrupted: %w", err)
 	}
 
 	return string(decryptedPassword), nil
