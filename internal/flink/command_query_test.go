@@ -667,20 +667,20 @@ func TestStopStatement(t *testing.T) {
 	})
 
 	t.Run("a slow token mint does not consume the stop's call budget", func(t *testing.T) {
-		// Finding 2: the mint runs on its own budget, not the stop's, so a slow
-		// /api/access_tokens POST can't starve GetStatement/UpdateStatement of their
-		// time. The mint here is slower than its own budget (so it times out, best
-		// effort) yet the stop still completes on the existing token; under the old
-		// single-budget code the mint alone would have blown stopTimeout.
+		// Finding 2: the mint runs on its own budget, and the stop's two gateway calls
+		// get a full, independent stopTimeout afterward. The mint budget here is >= the
+		// stop budget and the mint sleeps past it, so if the stop's deadline were
+		// started before the mint (the bug) it would already be spent and the calls
+		// would time out. The calls succeeding proves their budget is independent.
 		origMint, origStop := stopTokenMintTimeout, stopTimeout
-		stopTokenMintTimeout = 20 * time.Millisecond
-		stopTimeout = 200 * time.Millisecond
+		stopTokenMintTimeout = 300 * time.Millisecond
+		stopTimeout = 100 * time.Millisecond
 		defer func() { stopTokenMintTimeout, stopTimeout = origMint, origStop }()
 
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			if r.URL.Path == "/api/access_tokens" {
-				time.Sleep(500 * time.Millisecond) // far past the mint budget
+				time.Sleep(600 * time.Millisecond) // past the mint budget; forces its timeout
 				_, _ = w.Write([]byte(`{"token":"fresh"}`))
 				return
 			}

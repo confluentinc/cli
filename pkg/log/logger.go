@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 
 	"github.com/hashicorp/go-hclog"
 )
@@ -22,7 +23,12 @@ var CliLogger *Logger
 type Logger struct {
 	Level  Level
 	logger hclog.Logger
-	buffer []leveledMessage
+
+	// bufferMu guards buffer: sub-level messages are buffered here, and
+	// `confluent flink query` logs from background goroutines (a drain or a
+	// token refresh wait.Call has abandoned) while the main goroutine also logs.
+	bufferMu sync.Mutex
+	buffer   []leveledMessage
 }
 
 type leveledMessage struct {
@@ -145,11 +151,20 @@ func (l *Logger) Errorf(format string, args ...any) {
 }
 
 func (l *Logger) append(level Level, message string) {
+	l.bufferMu.Lock()
 	l.buffer = append(l.buffer, leveledMessage{level, message})
+	l.bufferMu.Unlock()
 }
 
 func (l *Logger) Flush() {
-	for _, lm := range l.buffer {
+	// Take the buffer and reset it under the lock, then emit without holding it:
+	// the level methods below re-enter append for messages still below the level.
+	l.bufferMu.Lock()
+	buffer := l.buffer
+	l.buffer = []leveledMessage{}
+	l.bufferMu.Unlock()
+
+	for _, lm := range buffer {
 		if lm.level < l.Level {
 			continue
 		}

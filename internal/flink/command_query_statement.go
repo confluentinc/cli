@@ -89,9 +89,6 @@ func createStatement(ctx context.Context, gracePeriod time.Duration, create func
 // message via stopFate, or use stopStatementAndReport. The returned error is
 // errStopTimeout on timeout, the underlying failure otherwise, and nil on success.
 func (c *queryCommand) stopStatement(client *ccloudv2.FlinkGatewayClient, environmentId, name string) (bool, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), stopTimeout)
-	defer cancel()
-
 	refresh := c.refreshGatewayToken(client, jwt.NewValidator())
 
 	// Finding #2: mint the dataplane token on its own budget, before and outside the
@@ -110,6 +107,11 @@ func (c *queryCommand) stopStatement(client *ccloudv2.FlinkGatewayClient, enviro
 		log.CliLogger.Debugf(`could not refresh token before stopping statement "%s"; using the existing one: %v`, name, tokenErr)
 	}
 	mintCancel()
+
+	// Create the stop's deadline only now, after the mint, so the two gateway calls
+	// always get a full, independent stopTimeout no matter how long the mint took.
+	ctx, cancel := context.WithTimeout(context.Background(), stopTimeout)
+	defer cancel()
 
 	_, err := wait.Call(ctx, func() (struct{}, error) {
 		// Findings #3 & #4: force a fresh token and retry on a 401, mirroring the
