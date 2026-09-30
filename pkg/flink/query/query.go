@@ -4,12 +4,15 @@ package query
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	flinkerror "github.com/confluentinc/cli/v4/pkg/errors/flink"
 	"github.com/confluentinc/cli/v4/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 	"github.com/confluentinc/cli/v4/pkg/log"
@@ -19,6 +22,14 @@ import (
 const (
 	initialBackoff = 300 * time.Millisecond
 	maxBackoff     = 2 * time.Second
+
+	// After a forced mint the gateway can briefly still reject the fresh token
+	// (propagation/clock skew), so the call is retried a few times with this
+	// backoff before the token is declared unusable. Small and bounded: a real
+	// propagation window closes in well under a second, and a genuinely bad login
+	// shouldn't stall the abort for long.
+	maxPostRefreshCallAttempts = 3
+	postRefreshCallBackoff     = 500 * time.Millisecond
 
 	// A statement typically leaves PENDING in well under a second.
 	awaitPollInterval = 500 * time.Millisecond
@@ -43,8 +54,11 @@ type Options struct {
 	// than draining a stream that never ends.
 	RequireBounded bool
 
-	// RefreshToken runs before every gateway call; nil means no refresh.
-	RefreshToken func() error
+	// RefreshToken refreshes the gateway token. It runs before every gateway call
+	// (force=false, which is a no-op while the current token is still valid) and
+	// again with force=true after an Unauthorized response, to mint a new token
+	// even when the old one looked unexpired. nil means no refresh.
+	RefreshToken func(force bool) error
 
 	// sleep is swapped out in tests so they do not wait in real time.
 	sleep func(context.Context, time.Duration) error
@@ -54,15 +68,116 @@ type Options struct {
 	pollInterval time.Duration
 }
 
-// authenticatedClient refreshes the token if configured, mirroring
-// Store.authenticatedGatewayClient.
-func (opts Options) authenticatedClient() ccloudv2.GatewayClientInterface {
+// gatewayCall runs a gateway call with token handling: a proactive refresh
+// before the call (non-fatal — the retry below is the real safety net), and, on
+// an Unauthorized response, a forced token refresh and a bounded retry. A long
+// drain can outlive the dataplane token's lifetime; without the retry the call
+// that straddles expiry fails with a bare Unauthorized and the whole run dies.
+//
+// A 401 has two very different causes, and they must not be conflated:
+//
+//   - The forced mint fails (RefreshToken(true) errors). That's an inability to
+//     reach or use the token endpoint — most often transient (a network blip, a
+//     5xx). It is returned as an ordinary error, never an AuthError, so a caller
+//     like await treats it as retryable and polls on rather than aborting the run
+//     with a misleading "log in again".
+//   - The mint succeeds but the gateway still rejects the fresh token, and keeps
+//     rejecting it across the backoff retries below. A freshly-minted token the
+//     gateway won't accept is an unusable login: that, and only that, becomes a
+//     terminal AuthError so callers stop and prompt a re-login instead of polling
+//     to the deadline.
+//
+// The forced refresh and retries are safe even in a goroutine wait.Call has
+// abandoned: the gateway client serializes its own token, so this retry's token
+// read can't race the deferred stop's token write. The ctx checks are only an
+// optimization — once ctx is done the caller has moved on to cleanup and will
+// discard this result, so there's no point minting a token and retrying.
+func gatewayCall[T any](ctx context.Context, opts Options, call func(ccloudv2.GatewayClientInterface) (T, error)) (T, error) {
+	proactiveRefresh(opts)
+	res, err := call(opts.Client)
+	if err == nil || opts.RefreshToken == nil || !isUnauthorized(err) {
+		return res, err
+	}
+	// ctx is already done: the caller abandoned this goroutine and will discard
+	// the result, so skip the forced mint and retry as useless work.
+	if ctxErr := ctx.Err(); ctxErr != nil {
+		return res, ctxErr
+	}
+	// The token was accepted earlier but the gateway now rejects it — it lapsed
+	// mid-run. Try to mint a fresh one. A mint failure is transient, so return it
+	// as an ordinary error and let the caller's poll loop retry it.
+	if refreshErr := opts.RefreshToken(true); refreshErr != nil {
+		log.CliLogger.Warnf("Failed to force-refresh Flink gateway token: %v", refreshErr)
+		return res, refreshErr
+	}
+	// Fresh token in hand. Retry the call, backing off between attempts so a brief
+	// post-mint propagation window isn't mistaken for an expired login. Only a
+	// token the gateway rejects across every attempt is terminal.
+	for attempt := 0; attempt < maxPostRefreshCallAttempts; attempt++ {
+		if attempt > 0 {
+			if opts.sleep != nil {
+				if sleepErr := opts.sleep(ctx, postRefreshCallBackoff); sleepErr != nil {
+					return res, sleepErr
+				}
+			}
+			if ctxErr := ctx.Err(); ctxErr != nil {
+				return res, ctxErr
+			}
+		}
+		res, err = call(opts.Client)
+		if err == nil || !isUnauthorized(err) {
+			return res, err
+		}
+	}
+	return res, &AuthError{Err: err}
+}
+
+// proactiveRefresh runs the best-effort, non-forced token refresh both gateway
+// helpers do before a call. It never aborts the call: a failure is logged and
+// the existing token is used, since gatewayCall's 401 retry is the real safety
+// net. A nil RefreshToken (tests, callers that don't manage a token) is a no-op.
+func proactiveRefresh(opts Options) {
 	if opts.RefreshToken != nil {
-		if err := opts.RefreshToken(); err != nil {
+		if err := opts.RefreshToken(false); err != nil {
 			log.CliLogger.Warnf("Failed to refresh Flink gateway token: %v", err)
 		}
 	}
-	return opts.Client
+}
+
+// bestEffortCall is gatewayCall without the forced re-mint and one-shot retry:
+// just a proactive refresh then the call. For a status re-read whose result is
+// discarded on any error (refreshStatement), a 401 isn't worth a forced
+// /api/access_tokens round-trip and a second call — the caller keeps the value
+// it already had.
+func bestEffortCall[T any](opts Options, call func(ccloudv2.GatewayClientInterface) (T, error)) (T, error) {
+	proactiveRefresh(opts)
+	return call(opts.Client)
+}
+
+// isUnauthorized reports whether err carries an HTTP 401 from the gateway.
+func isUnauthorized(err error) bool {
+	var coder flinkerror.Coder
+	return errors.As(err, &coder) && coder.StatusCode() == http.StatusUnauthorized
+}
+
+// AuthError reports that the gateway kept rejecting a token even after a fresh
+// one was successfully minted — the login itself is unusable and the user must
+// log in again. A mere failure to mint a token is not an AuthError: that is
+// treated as transient (see gatewayCall). Unlike a transient gateway error this
+// is terminal: polling cannot recover from it, so await treats it as fatal
+// rather than retrying to the deadline.
+type AuthError struct {
+	Err error
+}
+
+func (e *AuthError) Error() string { return e.Err.Error() }
+
+func (e *AuthError) Unwrap() error { return e.Err }
+
+// isAuthError reports whether err is (or wraps) an AuthError.
+func isAuthError(err error) bool {
+	var authErr *AuthError
+	return errors.As(err, &authErr)
 }
 
 // Result is the outcome of a completed run.
@@ -149,13 +264,18 @@ func await(ctx context.Context, opts Options, statementName string) (flinkgatewa
 	return wait.PollPhases(ctx, wait.PhaseOptions[flinkgatewayv1.SqlV1Statement]{
 		Fetch: func() (flinkgatewayv1.SqlV1Statement, error) {
 			return wait.Call(ctx, func() (flinkgatewayv1.SqlV1Statement, error) {
-				return opts.authenticatedClient().GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId)
+				return gatewayCall(ctx, opts, func(c ccloudv2.GatewayClientInterface) (flinkgatewayv1.SqlV1Statement, error) {
+					return c.GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId)
+				})
 			})
 		},
 		Phase:         func(s flinkgatewayv1.SqlV1Statement) string { return s.Status.GetPhase() },
 		PendingPhases: []string{string(types.PENDING)},
-		PollInterval:  opts.pollInterval,
-		Timeout:       unboundedPollTimeout,
+		// A lapsed cloud login can't be waited out — surface it now instead of
+		// re-minting a token every poll until the deadline.
+		IsFatalErr:   isAuthError,
+		PollInterval: opts.pollInterval,
+		Timeout:      unboundedPollTimeout,
 	})
 }
 
@@ -202,7 +322,9 @@ func drain(ctx context.Context, opts Options, statementName string, schema flink
 // tell it apart from a status read; a malformed next-page URL is not.
 func fetchPage(ctx context.Context, opts Options, statementName string, schema flinkgatewayv1.SqlV1ResultSchema, pageToken string) ([]types.StatementResultRow, string, error) {
 	page, err := wait.Call(ctx, func() (flinkgatewayv1.SqlV1StatementResult, error) {
-		return opts.authenticatedClient().GetStatementResults(opts.EnvironmentId, statementName, opts.OrganizationId, pageToken)
+		return gatewayCall(ctx, opts, func(c ccloudv2.GatewayClientInterface) (flinkgatewayv1.SqlV1StatementResult, error) {
+			return c.GetStatementResults(opts.EnvironmentId, statementName, opts.OrganizationId, pageToken)
+		})
 	})
 	if err != nil {
 		return nil, "", &ResultsFetchError{Err: err}
@@ -241,10 +363,14 @@ func nextBackoff(ctx context.Context, opts Options, hadRows bool, backoff time.D
 }
 
 // refreshStatement re-reads the statement so Phase() reflects where it actually
-// landed. Best-effort: a failed refresh just keeps the prior value.
+// landed. Best-effort: a failed refresh just keeps the prior value, so it uses
+// bestEffortCall — a 401 here isn't worth a forced token mint for a value we
+// discard on error.
 func refreshStatement(ctx context.Context, opts Options, statementName string, result *Result) {
 	statement, err := wait.Call(ctx, func() (flinkgatewayv1.SqlV1Statement, error) {
-		return opts.authenticatedClient().GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId)
+		return bestEffortCall(opts, func(c ccloudv2.GatewayClientInterface) (flinkgatewayv1.SqlV1Statement, error) {
+			return c.GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId)
+		})
 	})
 	if err == nil {
 		result.Statement = statement
