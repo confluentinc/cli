@@ -5,12 +5,37 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
+	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
+
 	"github.com/confluentinc/cli/v4/pkg/errors/flink"
 )
+
+// The `confluent flink query` token refresh writes AuthToken from a background
+// drain goroutine while a concurrent stop reads it (the read happens inside
+// flinkGatewayApiContext on every gateway call). Run under -race, this fails if
+// the token isn't serialized on the client. The command-level mocks can't cover
+// this — they never touch the real client's token, which is where the read lives.
+func TestFlinkGatewayClientAuthTokenIsRaceFree(t *testing.T) {
+	client := NewFlinkGatewayClient("http://unused.invalid", "test", false, "initial")
+
+	var wg sync.WaitGroup
+	for i := 0; i < 50; i++ {
+		wg.Add(3)
+		go func(n int) { defer wg.Done(); client.SetAuthToken(fmt.Sprintf("token-%d", n)) }(i)
+		go func() { defer wg.Done(); _ = client.GetAuthToken() }()
+		// flinkGatewayApiContext is the real read path every gateway call takes.
+		go func() {
+			defer wg.Done()
+			require.NotNil(t, client.flinkGatewayApiContext().Value(flinkgatewayv1.ContextAccessToken))
+		}()
+	}
+	wg.Wait()
+}
 
 func TestFlinkErrorCodeWhenErrors(t *testing.T) {
 	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"errors":[{"detail":"There is an error"}]}`)), StatusCode: http.StatusMethodNotAllowed}

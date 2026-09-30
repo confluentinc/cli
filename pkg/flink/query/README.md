@@ -80,13 +80,20 @@ after a `Truncated` (`--max-rows`) read.
 - **Cloud only.** `Options.Client` is a `ccloudv2.GatewayClientInterface`. On-prem goes
   through CMF (`store_onprem.go`, itself a near-copy of `store.go`), so parity means a
   second implementation and a second test surface.
-- **Token refresh is best-effort, not retry-aware.** `Options.RefreshToken` is invoked
-  before each gateway call (see the command's `refreshGatewayToken`), unlike the shell's
-  `synchronizedTokenRefresh`, which wraps every call including mid-flight retries. In
-  practice this rarely matters: the command's default 10-minute `--timeout` is on
-  the same order as the dataplane token's own lifetime, so a run is unlikely to still be
-  going when a refresh would be needed. It only bites if `--timeout` is raised well
-  past the default, or a single call runs long past it — see the next point.
+- **Token refresh is retry-aware.** Every gateway call goes through `gatewayCall`, which
+  refreshes the token before the call (`Options.RefreshToken(false)`, a no-op while the
+  current token is still valid) and, if the gateway answers `401 Unauthorized`, forces a
+  fresh token (`RefreshToken(true)`) and retries the call once. This is what lets a drain
+  outlive the dataplane token's lifetime: without it, the one call that straddles token
+  expiry fails with a bare `Unauthorized` and kills the whole run, so a large-result
+  download (which routinely runs past the token's ~10-15 min lifetime) could never
+  finish. If the forced refresh itself fails, that error is surfaced (re-login needed)
+  rather than swallowed. The command's `refreshGatewayToken` supplies the closure and its
+  `stopStatement` mints a fresh token before the cleanup stop, so a long run doesn't
+  orphan its statement. The token lives on `ccloudv2.FlinkGatewayClient`, which serializes
+  its own read (every gateway call) and write (a refresh) behind a mutex, so a drain
+  goroutine `wait.Call` has abandoned can still refresh and retry without racing the
+  concurrent stop's own token swap.
 - **`GatewayClientInterface` takes no context, so `--timeout` can't actually abort an
   in-flight call.** `ccloudv2.FlinkGatewayClient` builds every request from
   `context.Background()` internally; confirmed against real staging, where a single
