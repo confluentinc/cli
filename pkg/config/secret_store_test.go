@@ -433,6 +433,177 @@ func TestIdentityKey_StableAcrossRename(t *testing.T) {
 	require.Equal(t, before, c.Contexts["renamed"].identityKey())
 }
 
+// TestSave_KafkaAPIKeysKeyedByContextNotIdentity pins that two contexts sharing one credential
+// identity (a renamed context logged in again, or two equivalent URLs) can each hold a Kafka API
+// key for the SAME cluster id without one overwriting the other's whole key map on save.
+func TestSave_KafkaAPIKeysKeyedByContextNotIdentity(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	c, addContext := newTestConfigWithSharedIdentity(t)
+
+	ctxA := addContext("ctx-a", "https://a.example.com")
+	ctxB := addContext("ctx-b", "https://b.example.com")
+
+	addKafkaKey := func(ctx *Context, keyId, secret string) {
+		cluster := &KafkaClusterConfig{
+			ID:        "lkc-1",
+			Name:      "shared-cluster",
+			Bootstrap: "https://shared.example.com",
+			APIKeys:   map[string]*APIKeyPair{keyId: {Key: keyId, Secret: secret}},
+		}
+		ctx.KafkaClusterContext.AddKafkaClusterConfig(cluster)
+		require.NoError(t, cluster.EncryptAPIKeys())
+	}
+	addKafkaKey(ctxA, "kA", "secret-a")
+	addKafkaKey(ctxB, "kB", "secret-b")
+
+	require.NoError(t, c.Save())
+
+	reloaded := New()
+	reloaded.Filename = c.GetFilename()
+	require.NoError(t, reloaded.Load())
+
+	clusterA := reloaded.Contexts["ctx-a"].KafkaClusterContext.KafkaClusterConfigs["lkc-1"]
+	require.NotNil(t, clusterA, "ctx-a must keep its own Kafka API key")
+	require.NoError(t, clusterA.DecryptAPIKeys())
+	require.NotNil(t, clusterA.APIKeys["kA"], "ctx-a must keep its own Kafka API key")
+	require.Equal(t, "secret-a", clusterA.APIKeys["kA"].Secret, "ctx-a must keep its own Kafka API key")
+
+	clusterB := reloaded.Contexts["ctx-b"].KafkaClusterContext.KafkaClusterConfigs["lkc-1"]
+	require.NotNil(t, clusterB, "ctx-b's key must not be lost to ctx-a's shared identity")
+	require.NoError(t, clusterB.DecryptAPIKeys())
+	require.NotNil(t, clusterB.APIKeys["kB"], "ctx-b's key must not be lost to ctx-a's shared identity")
+	require.Equal(t, "secret-b", clusterB.APIKeys["kB"].Secret, "ctx-b's key must not be lost to ctx-a's shared identity")
+}
+
+// TestSave_SchemaRegistryCredentialKeyedByContextNotIdentity pins the same shared-identity
+// guarantee for SchemaRegistryCredentials: it holds a single triple per SR cluster id (not a
+// per-key map, since a deprecated SR credential has no key id to key by), so two contexts sharing
+// an identity with different credentials for the same SR cluster can't both survive - the save
+// must deterministically keep one rather than silently flip between them by map order.
+func TestSave_SchemaRegistryCredentialKeyedByContextNotIdentity(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	c, addContext := newTestConfigWithSharedIdentity(t)
+
+	ctxA := addContext("ctx-a", "https://a.example.com")
+	ctxB := addContext("ctx-b", "https://b.example.com")
+
+	addSrCred := func(ctx *Context, secret string) {
+		ctx.SchemaRegistryClusters = map[string]*SchemaRegistryCluster{
+			"lsrc-1": {
+				Id:                     "lsrc-1",
+				SchemaRegistryEndpoint: "https://sr.example.com",
+				SrCredentials:          &APIKeyPair{Key: "SR-KEY", Secret: secret},
+			},
+		}
+	}
+	addSrCred(ctxA, "sr-secret-a")
+	addSrCred(ctxB, "sr-secret-b")
+
+	require.NoError(t, c.Save())
+	require.NoError(t, c.Save(), "a second save over the same shared identity must pick the same winner deterministically")
+
+	reloaded := New()
+	reloaded.Filename = c.GetFilename()
+	require.NoError(t, reloaded.Load())
+
+	pair := reloaded.Contexts["ctx-a"].SchemaRegistryClusters["lsrc-1"].SrCredentials
+	require.NoError(t, pair.DecryptSecret())
+	require.Equal(t, "sr-secret-a", pair.Secret, "ctx-a sorts first, so its credential must deterministically win")
+}
+
+// TestSave_KafkaAPIKeyDeletionPropagatesAcrossSharedIdentity pins that deleting one context's
+// Kafka API key still propagates to disk when it shares an identity with another context: the
+// record is rebuilt from all contexts on every save, so a key no context holds any longer must be
+// absent from the written store, not just from memory.
+func TestSave_KafkaAPIKeyDeletionPropagatesAcrossSharedIdentity(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	c, addContext := newTestConfigWithSharedIdentity(t)
+
+	ctxA := addContext("ctx-a", "https://a.example.com")
+	ctxB := addContext("ctx-b", "https://b.example.com")
+
+	clusterA := &KafkaClusterConfig{
+		ID: "lkc-1", Name: "shared-cluster", Bootstrap: "https://shared.example.com",
+		APIKeys: map[string]*APIKeyPair{"kA": {Key: "kA", Secret: "secret-a"}},
+	}
+	ctxA.KafkaClusterContext.AddKafkaClusterConfig(clusterA)
+	require.NoError(t, clusterA.EncryptAPIKeys())
+
+	clusterB := &KafkaClusterConfig{
+		ID: "lkc-1", Name: "shared-cluster", Bootstrap: "https://shared.example.com",
+		APIKeys: map[string]*APIKeyPair{"kB": {Key: "kB", Secret: "secret-b"}},
+	}
+	ctxB.KafkaClusterContext.AddKafkaClusterConfig(clusterB)
+	require.NoError(t, clusterB.EncryptAPIKeys())
+
+	require.NoError(t, c.Save())
+
+	delete(clusterA.APIKeys, "kA")
+	require.NoError(t, c.Save())
+
+	disk, err := readSecretFileFromDisk(SecretsFilename())
+	require.NoError(t, err)
+	rec := disk.Secrets["shared-user"]
+	require.NotNil(t, rec)
+	require.NotContains(t, rec.KafkaAPIKeys["lkc-1"], "kA", "a deleted key must not survive on disk")
+	require.Contains(t, rec.KafkaAPIKeys["lkc-1"], "kB", "the other context's key must survive the same save")
+}
+
+// TestSave_GlobalAPIKeysKeyedByContextNotIdentity pins the same shared-identity guarantee for
+// GlobalAPIKeys, a per-key map like KafkaAPIKeys rather than a single triple like the SR case.
+func TestSave_GlobalAPIKeysKeyedByContextNotIdentity(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	c, addContext := newTestConfigWithSharedIdentity(t)
+
+	ctxA := addContext("ctx-a", "https://a.example.com")
+	ctxB := addContext("ctx-b", "https://b.example.com")
+
+	require.NoError(t, ctxA.StoreGlobalAPIKey(&APIKeyPair{Key: "gA", Secret: "global-secret-a"}))
+	require.NoError(t, ctxB.StoreGlobalAPIKey(&APIKeyPair{Key: "gB", Secret: "global-secret-b"}))
+
+	require.NoError(t, c.Save())
+
+	reloaded := New()
+	reloaded.Filename = c.GetFilename()
+	require.NoError(t, reloaded.Load())
+
+	require.NoError(t, reloaded.Contexts["ctx-a"].DecryptGlobalAPIKeys())
+	require.Equal(t, "global-secret-a", reloaded.Contexts["ctx-a"].GlobalAPIKeys["gA"].Secret)
+
+	require.NoError(t, reloaded.Contexts["ctx-b"].DecryptGlobalAPIKeys())
+	require.Equal(t, "global-secret-b", reloaded.Contexts["ctx-b"].GlobalAPIKeys["gB"].Secret,
+		"ctx-b's Global API key must not be lost to ctx-a's shared identity")
+}
+
+// newTestConfigWithSharedIdentity builds a Config with credential identity "shared-user" and
+// returns an addContext helper (modeled on TestSave_SavedPasswordsKeyedByContextNotIdentity) that
+// wires a new context under that shared identity, each with its own platform/endpoint.
+func newTestConfigWithSharedIdentity(t *testing.T) (*Config, func(name, server string) *Context) {
+	t.Helper()
+	c := New()
+	c.Filename = filepath.Join(t.TempDir(), "config.json")
+	c.Credentials["shared-user"] = &Credential{Name: "shared-user", Username: "shared-user", CredentialType: Username}
+
+	addContext := func(name, server string) *Context {
+		c.Platforms[name] = &Platform{Name: name, Server: server}
+		state := new(ContextState)
+		ctx := &Context{
+			Name:           name,
+			PlatformName:   name,
+			CredentialName: "shared-user",
+			Platform:       c.Platforms[name],
+			Credential:     c.Credentials["shared-user"],
+			State:          state,
+			Config:         c,
+		}
+		ctx.KafkaClusterContext = &KafkaClusterContext{KafkaClusterConfigs: map[string]*KafkaClusterConfig{}, Context: ctx}
+		c.Contexts[name] = ctx
+		c.ContextStates[name] = state
+		return ctx
+	}
+	return c, addContext
+}
+
 // newTestConfigWithAPIKeyContext builds a valid Config with one api-key context named "orig",
 // whose credential is "api-key-AK" (key "AK", secret "the-api-secret").
 func newTestConfigWithAPIKeyContext(t *testing.T) *Config {

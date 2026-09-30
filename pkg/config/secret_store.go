@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 )
 
 // secretRecord holds one credential identity's secret material as stored on disk: each
@@ -593,7 +594,17 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 		}
 	}
 
-	for _, ctx := range c.Contexts {
+	// Sorted so that, when two contexts share an identity and both hold an SR credential for the
+	// same SR cluster (a single-triple field that can't hold two), the alphabetically-first
+	// context's credential deterministically wins below, instead of depending on map order.
+	sortedCtxNames := make([]string, 0, len(c.Contexts))
+	for name := range c.Contexts {
+		sortedCtxNames = append(sortedCtxNames, name)
+	}
+	sort.Strings(sortedCtxNames)
+
+	for _, name := range sortedCtxNames {
+		ctx := c.Contexts[name]
 		if len(ctx.GlobalAPIKeys) > 0 {
 			r := record(ctx.identityKey())
 			for keyId, pair := range ctx.GlobalAPIKeys {
@@ -611,11 +622,14 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 			}
 		}
 
+		// Merged per key id, not replaced wholesale: two contexts sharing an identity (a renamed
+		// context logged in again, or two equivalent URLs) can each hold keys for the SAME cluster
+		// id, and assigning the whole inner map here would let the last context processed silently
+		// drop the other's keys.
 		for clusterId, cluster := range allKafkaClusterConfigs(ctx.KafkaClusterContext) {
 			if cluster == nil || len(cluster.APIKeys) == 0 {
 				continue
 			}
-			var keys map[string]*apiKeySecret
 			for keyId, pair := range cluster.APIKeys {
 				triple, err := encryptedAPIKeySecret(pair)
 				if err != nil {
@@ -624,21 +638,22 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 				if triple == nil {
 					continue
 				}
-				if keys == nil {
-					keys = map[string]*apiKeySecret{}
+				r := record(ctx.identityKey())
+				if r.KafkaAPIKeys == nil {
+					r.KafkaAPIKeys = map[string]map[string]*apiKeySecret{}
 				}
-				keys[keyId] = triple
+				if r.KafkaAPIKeys[clusterId] == nil {
+					r.KafkaAPIKeys[clusterId] = map[string]*apiKeySecret{}
+				}
+				r.KafkaAPIKeys[clusterId][keyId] = triple
 			}
-			if len(keys) == 0 {
-				continue
-			}
-			r := record(ctx.identityKey())
-			if r.KafkaAPIKeys == nil {
-				r.KafkaAPIKeys = map[string]map[string]*apiKeySecret{}
-			}
-			r.KafkaAPIKeys[clusterId] = keys
 		}
 
+		// SchemaRegistryCredentials is keyed by SR cluster id to a single triple, not a per-key map
+		// like the two above - it holds one credential, not a set of them - so two contexts sharing
+		// an identity with different credentials for the same SR cluster cannot both be stored. Keep
+		// whichever is written first for this identity/cluster pair; sortedCtxNames is sorted above so
+		// that choice is deterministic (alphabetically-first context name), not map-order-dependent.
 		for srClusterId, srCluster := range ctx.SchemaRegistryClusters {
 			if srCluster == nil {
 				continue
@@ -654,7 +669,9 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 			if r.SchemaRegistryCredentials == nil {
 				r.SchemaRegistryCredentials = map[string]*apiKeySecret{}
 			}
-			r.SchemaRegistryCredentials[srClusterId] = triple
+			if _, exists := r.SchemaRegistryCredentials[srClusterId]; !exists {
+				r.SchemaRegistryCredentials[srClusterId] = triple
+			}
 		}
 	}
 
