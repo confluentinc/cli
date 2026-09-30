@@ -93,7 +93,7 @@ func (*command) newQueryCommand(cfg *cliconfig.Config, prerunner pcmd.PreRunner)
 	pcmd.AddDatabaseFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().StringSlice("property", []string{}, "Properties for the Flink statement in key=value format.")
 	cmd.Flags().Duration("timeout", config.DefaultTimeoutDuration, "Maximum time to wait for the query to finish.")
-	cmd.Flags().Int("max-rows", 0, "Maximum number of rows to fetch. Use 0 to fetch every row. This limit is client-side only; the query still produces rows after the limit is reached.")
+	cmd.Flags().Int("max-rows", 0, `Maximum number of rows to fetch. Use 0 to fetch every row. Defaults to 100 for "-o human" and to every row for "-o json"/"-o yaml". This limit is client-side only; the query still produces rows after the limit is reached.`)
 	cmd.Flags().Bool("raw", false, `Return rows as a bare array without an envelope. Requires "-o json" or "-o yaml".`)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -106,6 +106,13 @@ func (*command) newQueryCommand(cfg *cliconfig.Config, prerunner pcmd.PreRunner)
 
 	return cmd
 }
+
+// defaultHumanRows bounds the -o human table when the user didn't pass
+// --max-rows, so a large result prints a readable preview instead of scrolling
+// (and buffering) for minutes. The machine formats (json/yaml) stay uncapped so
+// they remain a faithful full dump. Spark's df.show() uses the same idea (its
+// default is 20); an explicit --max-rows overrides this for every format.
+const defaultHumanRows = 100
 
 func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 	// Registered before any other work to shrink the window where a Ctrl-C
@@ -139,6 +146,10 @@ func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
+	// -o human shows a bounded preview by default; the machine formats stay
+	// uncapped. An explicit --max-rows overrides the default for every format.
+	maxRows, humanDefaultCap := resolveDisplayCap(output.GetFormat(cmd), cmd.Flags().Changed("max-rows"), maxRows)
 
 	ctx, cancelTimeout := context.WithTimeout(ctx, timeout)
 	defer cancelTimeout()
@@ -193,14 +204,16 @@ func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 	// drain() refreshes result.Statement, so this reflects reality even after
 	// Truncated — a job can stay RUNNING after its last row ships either way.
 	settled = query.IsTerminal(result.Phase())
-	announceStop = result.Truncated
+	// The implicit -o human preview cap isn't a user-requested limit, so its
+	// cleanup stays quiet; an explicit --max-rows truncation still announces.
+	announceStop = result.Truncated && !humanDefaultCap
 
 	// STOPPED/DELETING here means something other than us ended the statement.
 	if err := phaseError(name, result); err != nil {
 		return err
 	}
 
-	if result.Truncated {
+	if result.Truncated && !humanDefaultCap {
 		output.ErrPrintf(false, "Warning: stopped after %d rows because of the `--max-rows` flag. The result set below is truncated.\n", maxRows)
 	}
 
@@ -213,7 +226,27 @@ func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 		announceStop = true
 		return err
 	}
+
+	// The bounded -o human preview: tell the user there's more, and how to get it.
+	// Printed after the table (Spark-style) and on stderr, so a redirect/pipe of
+	// the table stays clean. Only when the cap actually cut the result off.
+	if result.Truncated && humanDefaultCap {
+		output.ErrPrintf(false, "\nOnly showing the first %d rows. Use `--max-rows` to show more, or `-o json`/`-o yaml` for the full result.\n", maxRows)
+	}
 	return nil
+}
+
+// resolveDisplayCap applies the -o human preview default: when the user did not
+// pass --max-rows, the human table is bounded to defaultHumanRows while the
+// machine formats (json/yaml) stay uncapped. It returns the effective cap and
+// whether the implicit human cap was applied, so the caller prints the preview
+// notice ("only showing the first N…") rather than the explicit --max-rows
+// warning. An explicit --max-rows always wins, for every format.
+func resolveDisplayCap(format output.Format, maxRowsChanged bool, maxRows int) (int, bool) {
+	if format == output.Human && !maxRowsChanged {
+		return defaultHumanRows, true
+	}
+	return maxRows, false
 }
 
 // resolveQueryFlags reads and validates the numeric/output flags that gate the run
