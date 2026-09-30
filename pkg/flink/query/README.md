@@ -94,8 +94,10 @@ after a `Truncated` (`--max-rows`) read.
   surfaces as an `AuthError` (re-login needed), which `await` treats as fatal and
   `handleQueryError` turns into a re-login suggestion. The command's `refreshGatewayToken`
   supplies the closure and its
-  `stopStatement` mints a fresh token before the cleanup stop, so a long run doesn't
-  orphan its statement. The token lives on `ccloudv2.FlinkGatewayClient`, which serializes
+  `stopStatement` mints a fresh token before the cleanup stop (on its own budget, separate
+  from the stop's, so a slow mint can't starve the stop's two gateway calls) and force-refreshes
+  and retries on a 401, mirroring the drain path, so a long run doesn't orphan its statement.
+  The token lives on `ccloudv2.FlinkGatewayClient`, which serializes
   its own read (every gateway call) and write (a refresh) behind a mutex, so a drain
   goroutine `wait.Call` has abandoned can still refresh and retry without racing the
   concurrent stop's own token swap.

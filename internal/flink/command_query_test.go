@@ -2,6 +2,7 @@ package flink
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -618,6 +619,85 @@ func TestStopStatement(t *testing.T) {
 		for _, auth := range gatewayAuths {
 			require.Equal(t, "Bearer fresh-dataplane-token", auth)
 		}
+	})
+
+	t.Run("a 401 mid-stop forces a fresh token and retries the call", func(t *testing.T) {
+		// Findings 3 & 4: the drain path force-refreshes and retries on a 401, but the
+		// stop path did neither. Here the token lapses at the UpdateStatement step; the
+		// stop must mint a fresh token and retry the update rather than reporting
+		// failure and orphaning the statement.
+		var mu sync.Mutex
+		mintCount := 0
+		updateCount := 0
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			switch {
+			case r.URL.Path == "/api/access_tokens":
+				mu.Lock()
+				mintCount++
+				tok := fmt.Sprintf("dp-%d", mintCount)
+				mu.Unlock()
+				_, _ = w.Write([]byte(fmt.Sprintf(`{"token":%q}`, tok)))
+			case r.Method == http.MethodGet:
+				_, _ = w.Write([]byte(`{"name":"stmt","spec":{"statement":"SELECT 1"},"status":{"phase":"RUNNING"}}`))
+			default: // the PUT/PATCH update
+				mu.Lock()
+				updateCount++
+				n := updateCount
+				mu.Unlock()
+				if n == 1 { // the token lapsed exactly at the update
+					w.WriteHeader(http.StatusUnauthorized)
+					return
+				}
+				_, _ = w.Write([]byte(`{"name":"stmt"}`))
+			}
+		}))
+		defer server.Close()
+
+		client := ccloudv2.NewFlinkGatewayClient(server.URL, "test", false, "stale-token")
+		c := newTestCommand(newTestContext(server.URL, "cloud-token"))
+
+		ok, err := c.stopStatement(client, "env-1", "stmt")
+		require.NoError(t, err)
+		require.True(t, ok)
+		mu.Lock()
+		defer mu.Unlock()
+		require.Equal(t, 2, updateCount, "the 401'd update must be retried once")
+		require.GreaterOrEqual(t, mintCount, 2, "the retry must force a fresh token")
+	})
+
+	t.Run("a slow token mint does not consume the stop's call budget", func(t *testing.T) {
+		// Finding 2: the mint runs on its own budget, not the stop's, so a slow
+		// /api/access_tokens POST can't starve GetStatement/UpdateStatement of their
+		// time. The mint here is slower than its own budget (so it times out, best
+		// effort) yet the stop still completes on the existing token; under the old
+		// single-budget code the mint alone would have blown stopTimeout.
+		origMint, origStop := stopTokenMintTimeout, stopTimeout
+		stopTokenMintTimeout = 20 * time.Millisecond
+		stopTimeout = 200 * time.Millisecond
+		defer func() { stopTokenMintTimeout, stopTimeout = origMint, origStop }()
+
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			if r.URL.Path == "/api/access_tokens" {
+				time.Sleep(500 * time.Millisecond) // far past the mint budget
+				_, _ = w.Write([]byte(`{"token":"fresh"}`))
+				return
+			}
+			if r.Method == http.MethodGet {
+				_, _ = w.Write([]byte(`{"name":"stmt","spec":{"statement":"SELECT 1"},"status":{"phase":"RUNNING"}}`))
+				return
+			}
+			_, _ = w.Write([]byte(`{"name":"stmt"}`))
+		}))
+		defer server.Close()
+
+		client := ccloudv2.NewFlinkGatewayClient(server.URL, "test", false, "existing-token")
+		c := newTestCommand(newTestContext(server.URL, "cloud-token"))
+
+		ok, err := c.stopStatement(client, "env-1", "stmt")
+		require.NoError(t, err)
+		require.True(t, ok, "a slow best-effort mint must not fail the stop")
 	})
 
 	t.Run("the quiet stop stays silent on stderr", func(t *testing.T) {
