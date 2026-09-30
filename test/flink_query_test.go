@@ -36,6 +36,13 @@ func (s *CLITestSuite) TestFlinkQuery() {
 		// in the "Stopped statement" message.
 		{args: `flink query --sql "SELECT id FROM many_rows;" --compute-pool lfcp-123456 --service-account sa-123456 --max-rows 2`, fixture: "flink/query/max-rows.golden"},
 
+		// -o human caps at 100 rows by default (no --max-rows): the table shows the
+		// first 100 and a stderr notice points to --max-rows / -o json for the rest.
+		{args: `flink query --sql "SELECT id FROM hundreds;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "flink/query/human-cap.golden"},
+
+		// The same result under -o json is uncapped — every row, no notice.
+		{args: `flink query --sql "SELECT id FROM hundreds;" --compute-pool lfcp-123456 --service-account sa-123456 -o json --raw`, fixture: "flink/query/hundreds-raw.golden"},
+
 		// Regression case for a real false positive found against staging: a
 		// LIMIT-satisfied read over a streaming source delivers every row (no next
 		// token) but the job's phase stays RUNNING. No "may be incomplete" warning —

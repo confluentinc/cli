@@ -22,8 +22,33 @@ import (
 	flinkerror "github.com/confluentinc/cli/v4/pkg/errors/flink"
 	"github.com/confluentinc/cli/v4/pkg/flink/query"
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/output"
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
+
+func TestResolveDisplayCap(t *testing.T) {
+	tests := []struct {
+		name           string
+		format         output.Format
+		maxRowsChanged bool
+		maxRows        int
+		wantCap        int
+		wantHumanCap   bool
+	}{
+		{"human default caps at 100", output.Human, false, 0, defaultHumanRows, true},
+		{"human with explicit --max-rows uses it", output.Human, true, 50, 50, false},
+		{"json stays uncapped by default", output.JSON, false, 0, 0, false},
+		{"yaml stays uncapped by default", output.YAML, false, 0, 0, false},
+		{"yaml with explicit --max-rows uses it", output.YAML, true, 200, 200, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotCap, gotHumanCap := resolveDisplayCap(tt.format, tt.maxRowsChanged, tt.maxRows)
+			require.Equal(t, tt.wantCap, gotCap)
+			require.Equal(t, tt.wantHumanCap, gotHumanCap)
+		})
+	}
+}
 
 func TestResolveDatabase(t *testing.T) {
 	newDBCmd := func(database string) *cobra.Command {
