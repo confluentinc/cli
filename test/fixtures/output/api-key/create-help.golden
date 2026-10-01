@@ -39,6 +39,7 @@ Create a Tableflow API key:
 Flags:
       --resource string          REQUIRED: The ID of the resource the API key is for. Use "cloud" for a Cloud API key, "global" for a Global API key, "flink" for a Flink API key, or "tableflow" for a Tableflow API key.
       --description string       Description of API key.
+      --expiration string        Expiration date of the API key, in UTC (for example, "2026-12-31"). The key remains valid through the end of this date. If not specified, the key never expires.
       --cloud string             Specify the cloud provider as "aws", "azure", or "gcp".
       --region string            Cloud region for Flink (use "confluent flink region list" to see all).
       --use                      Use the created API key for the provided resource.
