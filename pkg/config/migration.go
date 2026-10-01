@@ -33,6 +33,9 @@ const migrationSeedSkippedMsg = `Skipped copying contexts and logins from "%s": 
 // migrationCheckErrorMsg reports a guard stat failure, which must never pass for "absent".
 const migrationCheckErrorMsg = `unable to check "%s" for a pending configuration migration: %w`
 
+// migrationBackupNotRegularErrorMsg reports something other than a file where the backup belongs.
+const migrationBackupNotRegularErrorMsg = `migration backup "%s" is not a regular file`
+
 // migrationMarkerErrorMsg and migrationBackupErrorMsg name the migration file that failed to write.
 const (
 	migrationMarkerErrorMsg = `unable to write migration marker "%s": %w`
@@ -369,8 +372,9 @@ func (c *Config) applyLegacyConfig(path string, data []byte) error {
 	return nil
 }
 
-// decodeLegacyConfig decodes a v4 config.json onto c and wires its contexts: save() and
-// saveSecretStore reach tokens through ctx.GetState(), which only wiring sets.
+// decodeLegacyConfig decodes a v4 config.json onto c, wires its contexts (save() and
+// saveSecretStore reach tokens through ctx.GetState(), which only wiring sets), and validates the
+// result, so bad source data is caught before the marker and only store writes fail after it.
 func (c *Config) decodeLegacyConfig(path string, data []byte) error {
 	if err := c.applyLegacyConfig(path, data); err != nil {
 		return err
@@ -378,7 +382,20 @@ func (c *Config) decodeLegacyConfig(path string, data []byte) error {
 	if err := c.wireContexts(); err != nil {
 		return fmt.Errorf(migrationErrorMsg, path, err)
 	}
+	if err := c.validateLocked(); err != nil {
+		return fmt.Errorf(migrationErrorMsg, path, err)
+	}
 	return nil
+}
+
+// validateLocked runs Validate under the already-held store lock. Its pruning calls Save(), which
+// writing turns into a no-op, as in save(); the pruned state is persisted by the migration's own
+// save, whose Validate then finds nothing left to prune or print.
+func (c *Config) validateLocked() error {
+	prev := c.writing
+	c.writing = true
+	defer func() { c.writing = prev }()
+	return c.Validate()
 }
 
 // afterLegacyMigration is a test seam called once per completed migration.
@@ -568,7 +585,7 @@ func legacyMigrationPending(legacyPath string) (bool, error) {
 		return false, nil
 	}
 
-	migrated, err := migrationFileExists(legacyBackupFilename())
+	migrated, err := legacyBackupExists()
 	if err != nil {
 		return false, err
 	}
@@ -654,6 +671,24 @@ func noStoresExist() (bool, error) {
 		if err != nil || exists {
 			return false, err
 		}
+	}
+	return true, nil
+}
+
+// legacyBackupExists reports whether this channel's backup exists. Only a regular file (following
+// symlinks) records a completed migration: anything else there is an error, so the marker stays
+// and a load after the user removes it resumes.
+func legacyBackupExists() (bool, error) {
+	backup := legacyBackupFilename()
+	info, err := os.Stat(backup)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+		return false, fmt.Errorf(migrationCheckErrorMsg, backup, err)
+	}
+	if !info.Mode().IsRegular() {
+		return false, fmt.Errorf(migrationBackupNotRegularErrorMsg, backup)
 	}
 	return true, nil
 }
