@@ -1,5 +1,4 @@
 {
-  "phase": "COMPLETED",
   "columns": [
     {
       "name": "order_id",
@@ -20,6 +19,7 @@
       "status": "PENDING"
     }
   ],
+  "phase": "COMPLETED",
   "row_count": 2,
   "truncated": false
 }
