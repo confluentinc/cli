@@ -46,6 +46,16 @@ type Options struct {
 	// RefreshToken runs before every gateway call; nil means no refresh.
 	RefreshToken func() error
 
+	// OnSchema, when non-nil, is called once with the result columns before any
+	// rows — the caller's cue to start streaming. Skipped for a schema-less
+	// statement (DDL/INSERT INTO).
+	OnSchema func(columns []flinkgatewayv1.ColumnDetails) error
+
+	// OnRows, when non-nil, receives each page as it's fetched and makes drain
+	// stream instead of buffer: rows aren't retained in Result.Rows, so peak
+	// memory is one page. The slice is valid only for the call.
+	OnRows func(rows []types.StatementResultRow) error
+
 	// sleep is swapped out in tests so they do not wait in real time.
 	sleep func(context.Context, time.Duration) error
 
@@ -73,7 +83,11 @@ type Result struct {
 	Columns []flinkgatewayv1.ColumnDetails
 	// Rows is the raw changelog as delivered. Every row is an insert for a bounded
 	// append-only snapshot; otherwise the caller decides how to materialize it.
+	// Empty when the run streamed via Options.OnRows instead of buffering.
 	Rows []types.StatementResultRow
+	// RowCount is the number of rows delivered, whether buffered into Rows or
+	// streamed via Options.OnRows.
+	RowCount int
 	// Truncated reports that MaxRows stopped the drain before the result set ended.
 	Truncated bool
 }
@@ -137,6 +151,12 @@ func Run(ctx context.Context, opts Options, statementName string) (*Result, erro
 		return result, nil
 	}
 
+	if opts.OnSchema != nil {
+		if err := opts.OnSchema(result.Columns); err != nil {
+			return result, err
+		}
+	}
+
 	if err := drain(ctx, opts, statementName, schema, result); err != nil {
 		return result, err
 	}
@@ -174,16 +194,15 @@ func drain(ctx context.Context, opts Options, statementName string, schema flink
 		if err != nil {
 			return err
 		}
-		result.Rows = append(result.Rows, pageRows...)
 
-		if opts.MaxRows > 0 && len(result.Rows) > opts.MaxRows {
-			result.Rows = result.Rows[:opts.MaxRows]
-			result.Truncated = true
-			refreshStatement(ctx, opts, statementName, result)
-			return nil
+		pageRows, truncated := capToMaxRows(opts, result.RowCount, pageRows)
+		if err := deliver(opts, result, pageRows); err != nil {
+			return err
 		}
+		result.Truncated = truncated
 
-		if nextPageToken == "" {
+		// Stop at the cap, or when the gateway reports no next page.
+		if truncated || nextPageToken == "" {
 			refreshStatement(ctx, opts, statementName, result)
 			return nil
 		}
@@ -194,6 +213,33 @@ func drain(ctx context.Context, opts Options, statementName string, schema flink
 			return err
 		}
 	}
+}
+
+// capToMaxRows trims a page so the running total never exceeds MaxRows (0 = no
+// cap) and reports whether the cap was hit. Landing exactly on the cap isn't
+// truncation unless a later page proves there were more rows.
+func capToMaxRows(opts Options, rowCount int, pageRows []types.StatementResultRow) ([]types.StatementResultRow, bool) {
+	if opts.MaxRows > 0 && rowCount+len(pageRows) > opts.MaxRows {
+		return pageRows[:opts.MaxRows-rowCount], true
+	}
+	return pageRows, false
+}
+
+// deliver hands one page of rows to the caller: streamed via OnRows when set (so
+// they are not retained), otherwise appended to Result.Rows. RowCount tracks the
+// running total for both paths.
+func deliver(opts Options, result *Result, pageRows []types.StatementResultRow) error {
+	if opts.OnRows != nil {
+		if len(pageRows) > 0 {
+			if err := opts.OnRows(pageRows); err != nil {
+				return err
+			}
+		}
+	} else {
+		result.Rows = append(result.Rows, pageRows...)
+	}
+	result.RowCount += len(pageRows)
+	return nil
 }
 
 // fetchPage reads one results page, converts it, and returns its rows and the
