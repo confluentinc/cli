@@ -42,12 +42,28 @@ const (
 // legacyFileChangedDuringReadErrorMsg reports a v4 write (which truncates first) racing the read.
 const (
 	legacyFileChangedDuringReadErrorMsg    = `"%s" changed while it was being read`
-	legacyFileChangedDuringReadSuggestions = "Run the command again."
+	legacyFileChangedDuringReadSuggestions = `Run the command again. If this keeps happening, restore or remove "%s".`
 )
 
 // legacyFileChangedDuringReadError is the retryable error for a legacy file caught mid-rewrite.
 func legacyFileChangedDuringReadError(path string) error {
-	return errors.NewErrorWithSuggestions(fmt.Sprintf(legacyFileChangedDuringReadErrorMsg, path), legacyFileChangedDuringReadSuggestions)
+	return errors.NewErrorWithSuggestions(
+		fmt.Sprintf(legacyFileChangedDuringReadErrorMsg, path),
+		fmt.Sprintf(legacyFileChangedDuringReadSuggestions, path),
+	)
+}
+
+// stableFileError marks a failure reading the Stable install's own files (the legacy file or its
+// backup), which a non-Stable seed skips instead of failing every command on.
+type stableFileError struct{ err error }
+
+func (e *stableFileError) Error() string { return e.err.Error() }
+
+func (e *stableFileError) Unwrap() error { return e.err }
+
+func isStableFileError(err error) bool {
+	var stableErr *stableFileError
+	return stderrors.As(err, &stableErr)
 }
 
 // legacyFileChangedWarningMsg warns that a pre-v5 install wrote to the frozen legacy file after
@@ -293,14 +309,15 @@ var afterLegacyConfigStat = func(path string) {}
 
 // readLegacyConfigFile reads a v4 config.json at path, returning its bytes and the stat taken
 // before the read. It returns (nil, nil, nil) when the file is missing, not a regular file
-// (following symlinks), or zero bytes; any other read failure is a hard error.
+// (following symlinks), or zero bytes, and a retryable error when the file changed during the
+// read; any other failure is a *stableFileError.
 func readLegacyConfigFile(path string) ([]byte, os.FileInfo, error) {
 	info, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, nil, nil
 		}
-		return nil, nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, path, err)
+		return nil, nil, unreadableLegacyFileError(path, err)
 	}
 	if !info.Mode().IsRegular() || info.Size() == 0 {
 		return nil, nil, nil
@@ -309,13 +326,23 @@ func readLegacyConfigFile(path string) ([]byte, os.FileInfo, error) {
 	afterLegacyConfigStat(path)
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil, nil, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, path, err)
+		return nil, nil, unreadableLegacyFileError(path, err)
 	}
-	// the stat saw data, so an empty read is v4 mid-rewrite, not an absent file.
-	if len(data) == 0 {
+
+	// v4 truncates then writes in place, so a read overlapping that write can be torn (empty, or a
+	// prefix that fails to parse) without the file ever looking absent: re-stat to catch it.
+	after, err := os.Stat(path)
+	if err != nil && !os.IsNotExist(err) {
+		return nil, nil, unreadableLegacyFileError(path, err)
+	}
+	if err != nil || int64(len(data)) != info.Size() || after.Size() != info.Size() || !after.ModTime().Equal(info.ModTime()) {
 		return nil, nil, legacyFileChangedDuringReadError(path)
 	}
 	return data, info, nil
+}
+
+func unreadableLegacyFileError(path string, err error) error {
+	return &stableFileError{fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, path, err)}
 }
 
 // applyLegacyConfig decodes a v4 config.json's bytes onto c, secrets included. It parses the
@@ -379,12 +406,21 @@ func (c *Config) migrateFromLegacy() (legacyMigration, error) {
 	result := legacyMigration{legacyPath: path}
 
 	pending, err := legacyMigrationPending(path)
-	if err != nil || !pending {
+	if err != nil {
+		if isStableFileError(err) {
+			return c.failOrSkipSeed(result, err)
+		}
 		return result, err
+	}
+	if !pending {
+		return result, nil
 	}
 
 	data, info, err := readLegacyConfigFile(path)
 	if err != nil {
+		if isStableFileError(err) {
+			return c.failOrSkipSeed(result, err)
+		}
 		return result, err
 	}
 	if info == nil {
@@ -393,16 +429,7 @@ func (c *Config) migrateFromLegacy() (legacyMigration, error) {
 	}
 
 	if err := c.decodeLegacyConfig(path, data); err != nil {
-		if pversion.ProcessChannel() == pversion.Stable {
-			return result, err
-		}
-		// a non-Stable seed is a convenience copy, so a bad legacy file must not fail every
-		// command: nothing is written yet, and this channel starts fresh. Dropping a marker from
-		// an earlier run keeps the skip warning from repeating on every load.
-		c.resetToNew()
-		clearMigrationMarker()
-		result.seedErr = errorCause(err)
-		return result, nil
+		return c.failOrSkipSeed(result, err)
 	}
 
 	marker := legacyMigratingFilename()
@@ -432,6 +459,23 @@ func (c *Config) migrateFromLegacy() (legacyMigration, error) {
 
 	afterLegacyMigration()
 	result.migrated = true
+	return result, nil
+}
+
+// failOrSkipSeed returns err on Stable. A non-Stable seed is a convenience copy, so it must not
+// fail every command: nothing is written yet, so this channel warns and starts fresh. Dropping a
+// marker from an earlier run keeps the warning from repeating on every load.
+func (c *Config) failOrSkipSeed(result legacyMigration, err error) (legacyMigration, error) {
+	if pversion.ProcessChannel() == pversion.Stable {
+		return result, err
+	}
+	c.resetToNew()
+	clearMigrationMarker()
+	var stableErr *stableFileError
+	if stderrors.As(err, &stableErr) {
+		err = stableErr.err
+	}
+	result.seedErr = errorCause(err)
 	return result, nil
 }
 
@@ -548,7 +592,7 @@ func legacyMigrationPending(legacyPath string) (bool, error) {
 		// once Stable has migrated, the legacy file is frozen and stale, so it's no seed.
 		stableMigrated, err := migrationFileExists(filepath.Join(filepath.Dir(legacyPath), legacyBackupName))
 		if err != nil {
-			return false, err
+			return false, &stableFileError{err}
 		}
 		if stableMigrated {
 			if interrupted {
@@ -560,7 +604,7 @@ func legacyMigrationPending(legacyPath string) (bool, error) {
 
 	// deferred until here so an unreadable legacy file only fails a load that would migrate.
 	if legacyErr != nil {
-		return false, fmt.Errorf(errors.UnableToReadConfigurationFileErrorMsg, legacyPath, legacyErr)
+		return false, unreadableLegacyFileError(legacyPath, legacyErr)
 	}
 	if legacy.Size() == 0 {
 		if interrupted {
