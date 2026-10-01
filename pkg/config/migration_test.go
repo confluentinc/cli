@@ -929,7 +929,7 @@ func requireLegacyFileChangedError(t *testing.T, err error, legacyPath string) {
 	require.EqualError(t, err, fmt.Sprintf(`"%s" changed while it was being read`, legacyPath))
 	var withSuggestions perrors.ErrorWithSuggestions
 	require.True(t, errors.As(err, &withSuggestions), "expected an error with suggestions")
-	require.Equal(t, "Run the command again.", withSuggestions.GetSuggestionsMsg())
+	require.Equal(t, fmt.Sprintf(`Run the command again. If this keeps happening, restore or remove "%s".`, legacyPath), withSuggestions.GetSuggestionsMsg())
 }
 
 func TestMigrate_MarkerWithZeroByteLegacyFileIsRetryable(t *testing.T) {
@@ -997,21 +997,6 @@ func TestMigrate_NoLegacyFileSkipsMigrationChecks(t *testing.T) {
 			require.FileExists(t, SettingsFilename())
 		})
 	}
-}
-
-func TestMigrate_WriteDuringMigrationIsDetected(t *testing.T) {
-	home, _ := newStableMigrationTest(t)
-	legacyPath := seedLegacyConfig(t, home, cipherLegacyFixture())
-	// a v4 write landing after the stat must not be folded into the stamp.
-	onLegacyConfigStat(t, func(path string) { rewriteLegacyFile(t, path) })
-	require.NoError(t, loadQuietly(t, New()))
-	onLegacyConfigStat(t, func(string) {})
-
-	stderr := captureStderr(t, func() {
-		require.NoError(t, New().Load())
-	})
-
-	require.Contains(t, stderr, fmt.Sprintf(legacyFileChangedWarningMsg, legacyPath))
 }
 
 func TestMigrate_FreshInstallIsNotMigrated(t *testing.T) {
@@ -1213,6 +1198,122 @@ func TestMigrate_NonStableMarkerWithMalformedLegacyFileWarnsOnce(t *testing.T) {
 	stderr = captureStderr(t, func() { require.NoError(t, New().Load()) })
 
 	require.NotContains(t, stderr, "Skipped copying")
+}
+
+// makeUnreadable chmods path to 000 for the rest of the test. Windows ignores the read bit and
+// root ignores the mode, so either skips.
+func makeUnreadable(t *testing.T, path string) {
+	t.Helper()
+	if runtime.GOOS == "windows" || os.Geteuid() == 0 {
+		t.Skip("file modes don't block reads on this platform or for this user")
+	}
+	require.NoError(t, os.Chmod(path, 0))
+	t.Cleanup(func() { _ = os.Chmod(path, 0600) })
+}
+
+func TestMigrate_NonStableUnreadableStableFileWarnsAndStartsFresh(t *testing.T) {
+	tests := []struct {
+		name  string
+		setup func(t *testing.T, home, legacyPath string)
+	}{
+		{
+			name:  "unreadable legacy file",
+			setup: func(t *testing.T, _, legacyPath string) { makeUnreadable(t, legacyPath) },
+		},
+		{
+			name: "unreadable Stable backup",
+			setup: func(t *testing.T, home, _ string) {
+				// a self-referencing symlink fails stat with ELOOP.
+				if err := os.Symlink(stableBackupPath(home), stableBackupPath(home)); err != nil {
+					t.Skip("creating a symlink is not supported on this platform:", err)
+				}
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			home := t.TempDir()
+			setTestHome(t, home)
+			setTestChannel(t, pversion.Dev)
+			migrations := countLegacyMigrations(t)
+			legacyPath := seedLegacyConfig(t, home, cipherLegacyFixture())
+			tc.setup(t, home, legacyPath)
+			c := New()
+
+			var err error
+			stderr := captureStderr(t, func() { err = c.Load() })
+
+			require.NoError(t, err)
+			require.Equal(t, 1, strings.Count(stderr, fmt.Sprintf(`Skipped copying contexts and logins from "%s": `, legacyPath)))
+			require.Equal(t, int32(0), migrations.Load())
+			require.Empty(t, c.Contexts)
+			require.FileExists(t, SettingsFilename())
+			require.FileExists(t, ContextsFilename())
+		})
+	}
+}
+
+func TestMigrate_StableUnreadableLegacyFileIsHardError(t *testing.T) {
+	home, migrations := newStableMigrationTest(t)
+	legacyPath := seedLegacyConfig(t, home, cipherLegacyFixture())
+	makeUnreadable(t, legacyPath)
+
+	err := loadQuietly(t, New())
+
+	require.ErrorContains(t, err, fmt.Sprintf(`unable to read configuration file "%s"`, legacyPath))
+	require.Equal(t, int32(0), migrations.Load())
+	require.NoFileExists(t, SettingsFilename())
+}
+
+func TestMigrate_TornReadIsRetryable(t *testing.T) {
+	tests := []struct {
+		name        string
+		channel     pversion.Channel
+		interrupted bool
+	}{
+		{name: "stable", channel: pversion.Stable},
+		{name: "stable resuming", channel: pversion.Stable, interrupted: true},
+		{name: "dev", channel: pversion.Dev},
+		{name: "dev resuming", channel: pversion.Dev, interrupted: true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			home := t.TempDir()
+			setTestHome(t, home)
+			setTestChannel(t, tc.channel)
+			migrations := countLegacyMigrations(t)
+			full := cipherLegacyFixture()
+			legacyPath := seedLegacyConfig(t, home, full)
+			if tc.interrupted {
+				writeTestStore(t, migrationMarkerPath(home), "")
+			}
+			// v4 truncates then writes, so a read can see a prefix of the new file.
+			onLegacyConfigStat(t, func(path string) { require.NoError(t, os.WriteFile(path, full[:len(full)/2], 0600)) })
+
+			var err error
+			stderr := captureStderr(t, func() { err = New().Load() })
+
+			requireLegacyFileChangedError(t, err, legacyPath)
+			require.NotContains(t, stderr, "Skipped copying")
+			require.Equal(t, int32(0), migrations.Load())
+			require.NoFileExists(t, SettingsFilename())
+			require.NoFileExists(t, ContextsFilename())
+			require.NoFileExists(t, SecretsFilename())
+			if tc.interrupted {
+				require.FileExists(t, migrationMarkerPath(home))
+			} else {
+				require.NoFileExists(t, migrationMarkerPath(home))
+			}
+
+			// once v4 finishes its write, the next load migrates.
+			onLegacyConfigStat(t, func(string) {})
+			require.NoError(t, os.WriteFile(legacyPath, full, 0600))
+			require.NoError(t, loadQuietly(t, New()))
+			require.Equal(t, int32(1), migrations.Load())
+		})
+	}
 }
 
 func TestMigrate_UnresolvableHomeSkipsMigration(t *testing.T) {
