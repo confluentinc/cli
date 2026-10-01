@@ -280,6 +280,23 @@ func buildQueryTestFixture(name, sql string) *queryTestFixture {
 		pages = [][]map[string]any{{
 			queryRow(0, "1"), queryRow(0, "2"), queryRow(0, "3"), queryRow(0, "4"), queryRow(0, "5"),
 		}}
+	case "SELECT id FROM hundreds;":
+		// More than the -o human default cap, to exercise the capped preview.
+		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{queryColumn("id", "INTEGER")}}
+		rows := make([]map[string]any, 0, 150)
+		for i := 1; i <= 150; i++ {
+			rows = append(rows, queryRow(0, strconv.Itoa(i)))
+		}
+		pages = [][]map[string]any{rows}
+	case "SELECT id FROM exactly_hundred;":
+		// Exactly the -o human default cap: the boundary must NOT be marked truncated,
+		// so no preview notice prints.
+		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{queryColumn("id", "INTEGER")}}
+		rows := make([]map[string]any, 0, 100)
+		for i := 1; i <= 100; i++ {
+			rows = append(rows, queryRow(0, strconv.Itoa(i)))
+		}
+		pages = [][]map[string]any{rows}
 	case "SELECT id FROM limit_bounded_stream;":
 		// Every row delivered (no next token), but phase stays RUNNING — regression
 		// fixture for a real false "Incomplete" positive found against staging.
