@@ -19,7 +19,7 @@ type out struct {
 	ResourceType string `human:"Resource Type" serialized:"resource_type"`
 	Resource     string `human:"Resource" serialized:"resource"`
 	Created      string `human:"Created" serialized:"created"`
-	Expiration   string `human:"Expiration" serialized:"expiration"`
+	Expiration   string `human:"Expiration" serialized:"expiration,omitempty"`
 }
 
 func (c *command) newDescribeCommand() *cobra.Command {

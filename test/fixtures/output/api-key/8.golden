@@ -5,7 +5,6 @@
   resource_type: kafka
   resource: lkc-bob
   created: "1999-02-24T00:00:00Z"
-  expiration: ""
 - key: MYKEY1
   description: first-key
   owner: u11
@@ -13,7 +12,6 @@
   resource_type: kafka
   resource: lkc-bob
   created: "1999-02-24T00:00:00Z"
-  expiration: ""
 - key: MYKEY2
   description: ""
   owner: u-17
@@ -29,7 +27,6 @@
   resource_type: kafka
   resource: lkc-bob
   created: "1999-02-24T00:00:00Z"
-  expiration: ""
 - key: SERVICEACCOUNTKEY1
   description: ""
   owner: sa-12345
@@ -37,7 +34,6 @@
   resource_type: kafka
   resource: lkc-bob
   created: "1999-02-24T00:00:00Z"
-  expiration: ""
 - key: UIAPIKEY100
   description: ""
   owner: u-22bbb
@@ -45,7 +41,6 @@
   resource_type: kafka
   resource: lkc-cool1
   created: "1999-02-24T00:00:00Z"
-  expiration: ""
 - key: UIAPIKEY101
   description: ""
   owner: u-22bbb
@@ -53,7 +48,6 @@
   resource_type: kafka
   resource: lkc-other1
   created: "1999-02-24T00:00:00Z"
-  expiration: ""
 - key: UIAPIKEY102
   description: ""
   owner: u-22bbb
@@ -61,7 +55,6 @@
   resource_type: ksql
   resource: lksqlc-ksql1
   created: "1999-02-24T00:00:00Z"
-  expiration: ""
 - key: UIAPIKEY103
   description: ""
   owner: u-22bbb
@@ -69,7 +62,6 @@
   resource_type: kafka
   resource: lkc-cool1
   created: "1999-02-24T00:00:00Z"
-  expiration: ""
 - key: UIGLOBALKEY100
   description: ""
   owner: u-22bbb
@@ -77,4 +69,3 @@
   resource_type: global
   resource: ""
   created: "1999-02-24T00:00:00Z"
-  expiration: ""

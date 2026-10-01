@@ -6,8 +6,7 @@
     "owner_email": "\u003cdeactivated user\u003e",
     "resource_type": "kafka",
     "resource": "lkc-bob",
-    "created": "1999-02-24T00:00:00Z",
-    "expiration": ""
+    "created": "1999-02-24T00:00:00Z"
   },
   {
     "key": "MYKEY1",
@@ -16,8 +15,7 @@
     "owner_email": "bstrauch@confluent.io",
     "resource_type": "kafka",
     "resource": "lkc-bob",
-    "created": "1999-02-24T00:00:00Z",
-    "expiration": ""
+    "created": "1999-02-24T00:00:00Z"
   },
   {
     "key": "MYKEY2",
@@ -36,8 +34,7 @@
     "owner_email": "mhe@confluent.io",
     "resource_type": "kafka",
     "resource": "lkc-bob",
-    "created": "1999-02-24T00:00:00Z",
-    "expiration": ""
+    "created": "1999-02-24T00:00:00Z"
   },
   {
     "key": "SERVICEACCOUNTKEY1",
@@ -46,8 +43,7 @@
     "owner_email": "\u003cservice account\u003e",
     "resource_type": "kafka",
     "resource": "lkc-bob",
-    "created": "1999-02-24T00:00:00Z",
-    "expiration": ""
+    "created": "1999-02-24T00:00:00Z"
   },
   {
     "key": "UIAPIKEY100",
@@ -56,8 +52,7 @@
     "owner_email": "u-22bbb@confluent.io",
     "resource_type": "kafka",
     "resource": "lkc-cool1",
-    "created": "1999-02-24T00:00:00Z",
-    "expiration": ""
+    "created": "1999-02-24T00:00:00Z"
   },
   {
     "key": "UIAPIKEY101",
@@ -66,8 +61,7 @@
     "owner_email": "u-22bbb@confluent.io",
     "resource_type": "kafka",
     "resource": "lkc-other1",
-    "created": "1999-02-24T00:00:00Z",
-    "expiration": ""
+    "created": "1999-02-24T00:00:00Z"
   },
   {
     "key": "UIAPIKEY102",
@@ -76,8 +70,7 @@
     "owner_email": "u-22bbb@confluent.io",
     "resource_type": "ksql",
     "resource": "lksqlc-ksql1",
-    "created": "1999-02-24T00:00:00Z",
-    "expiration": ""
+    "created": "1999-02-24T00:00:00Z"
   },
   {
     "key": "UIAPIKEY103",
@@ -86,8 +79,7 @@
     "owner_email": "u-22bbb@confluent.io",
     "resource_type": "kafka",
     "resource": "lkc-cool1",
-    "created": "1999-02-24T00:00:00Z",
-    "expiration": ""
+    "created": "1999-02-24T00:00:00Z"
   },
   {
     "key": "UIGLOBALKEY100",
@@ -96,7 +88,6 @@
     "owner_email": "u-22bbb@confluent.io",
     "resource_type": "global",
     "resource": "",
-    "created": "1999-02-24T00:00:00Z",
-    "expiration": ""
+    "created": "1999-02-24T00:00:00Z"
   }
 ]
