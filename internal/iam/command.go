@@ -23,12 +23,12 @@ func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	cmd.AddCommand(
 		newAclCommand(prerunner),
-		newCertificateAuthorityCommand(prerunner),
+		newCertificateAuthorityCommand(cfg, prerunner),
 		newCertificatePoolCommand(cfg, prerunner),
-		newGroupMappingCommand(prerunner),
+		newGroupMappingCommand(cfg, prerunner),
 		newIdentityProviderCommand(cfg, prerunner),
 		newIpFilterCommand(cfg, prerunner),
-		newIpGroupCommand(prerunner),
+		newIpGroupCommand(cfg, prerunner),
 		newPoolCommand(cfg, prerunner),
 		newRbacCommand(cfg, prerunner),
 		newServiceAccountCommand(cfg, prerunner),

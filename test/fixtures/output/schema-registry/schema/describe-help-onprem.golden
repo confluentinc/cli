@@ -16,6 +16,7 @@ Flags:
       --subject string                      Subject of the schema.
       --version string                      Version of the schema. Can be a specific version or "latest".
       --show-references                     Display the entire schema graph, including references.
+      --format string                       Format of the returned schema, e.g. "LOGICAL" (Schema Registry 8.4+).
       --context string                      CLI context name.
       --certificate-authority-path string   File or directory path to Certificate Authority certificates to authenticate the Schema Registry client.
       --client-cert-path string             File or directory path to client certificate to authenticate the Schema Registry client.

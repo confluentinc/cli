@@ -159,6 +159,7 @@ var procFingerprints = map[string]procFingerprint{
 	"code":     {Vendor: "vscode", Kind: kindIDEHost},
 	"windsurf": {Vendor: "windsurf", Kind: kindIDEHost},
 	"zed":      {Vendor: "zed", Kind: kindIDEHost},
+	"ibm bob":  {Vendor: "ibm-bob", Kind: kindIDEHost},
 
 	// JetBrains ships one launcher per product; "jetbrains" is never a basename.
 	// The version-suffix rule below also covers idea64/rider64 (Windows bitness).

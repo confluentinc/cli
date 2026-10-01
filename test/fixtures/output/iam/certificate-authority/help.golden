@@ -1,14 +1,14 @@
-Manage certificate authorities.
+Manage Confluent Cloud IAM certificate authorities.
 
 Usage:
   confluent iam certificate-authority [command]
 
 Available Commands:
-  create      Create a certificate authority.
-  delete      Delete one or more certificate authorities.
-  describe    Describe a certificate authority.
-  list        List certificate authorities.
-  update      Update a certificate authority.
+  create      Create an IAM certificate authority.
+  delete      Delete one or more IAM certificate authorities.
+  describe    Describe an IAM certificate authority.
+  list        List IAM certificate authorities.
+  update      Update an existing IAM certificate authority.
 
 Global Flags:
   -h, --help            Show help for this command.

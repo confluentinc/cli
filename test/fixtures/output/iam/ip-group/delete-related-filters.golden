@@ -1,0 +1,4 @@
+Error: failed to delete ipg-inuse: cannot delete an IP group with related IP filters
+
+Suggestions:
+    List IP filters with `confluent iam ip-filter list`.

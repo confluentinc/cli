@@ -1,0 +1,7 @@
+Schema ID: 10
+Type: AVRO
+Schema:
+STRUCT orders (
+  order_id STRING NOT NULL
+);
+

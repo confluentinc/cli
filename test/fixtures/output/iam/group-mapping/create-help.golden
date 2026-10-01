@@ -1,4 +1,4 @@
-Create a group mapping.
+Create an IAM group mapping.
 
 Usage:
   confluent iam group-mapping create <name> [flags]

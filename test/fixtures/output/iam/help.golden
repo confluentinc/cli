@@ -4,12 +4,12 @@ Usage:
   confluent iam [command]
 
 Available Commands:
-  certificate-authority Manage certificate authorities.
+  certificate-authority Manage Confluent Cloud IAM certificate authorities.
   certificate-pool      Manage certificate pools.
-  group-mapping         Manage SSO group mappings.
+  group-mapping         Manage Confluent Cloud IAM group mappings.
   identity-provider     Manage Confluent Cloud IAM identity providers.
   ip-filter             Manage IP filters.
-  ip-group              Manage IP groups.
+  ip-group              Manage Confluent Cloud IAM IP groups.
   pool                  Manage identity pools.
   rbac                  Manage RBAC permissions.
   service-account       Manage and select Confluent Cloud IAM service accounts.

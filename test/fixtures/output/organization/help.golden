@@ -9,6 +9,7 @@ Aliases:
 Available Commands:
   describe    Describe the current organization.
   list        List organizations.
+  scim-token  Manage Organization scim tokens.
   update      Update the current organization.
 
 Global Flags:

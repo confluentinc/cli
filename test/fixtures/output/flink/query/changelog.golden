@@ -1,0 +1,7 @@
+Warning: this statement emits updates and deletions. The rows below are the raw changelog, not a materialized table.
++-----------+----+
+| Operation | id |
++-----------+----+
+| +I        | 1  |
+| +U        | 1  |
++-----------+----+

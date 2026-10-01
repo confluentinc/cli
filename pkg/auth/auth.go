@@ -223,13 +223,45 @@ func generateCredentialName(username string) string {
 	return fmt.Sprintf("username-%s", username)
 }
 
+// accessTokensResponse is the response of POST /api/access_tokens. The
+// endpoint exchanges the login session token for two credentials: Token (a
+// data-plane access token, honored by dataplane gateways such as Kafka REST,
+// Schema Registry, and Flink) and RegionalToken (a regional customer access
+// token, honored by frontdoor-api-gateway as
+// CREDENTIAL_TYPE_REGIONAL_CUSTOMER_ACCESS_TOKEN).
+type accessTokensResponse struct {
+	Token         string `json:"token"`
+	RegionalToken string `json:"regional_token"`
+	Error         string `json:"error"`
+}
+
+// GetDataplaneToken exchanges the session token for a data-plane access token.
 func GetDataplaneToken(ctx *config.Context) (string, error) {
+	res, err := getAccessTokens(ctx)
+	if err != nil {
+		return "", err
+	}
+	return res.Token, nil
+}
+
+// GetRegionalToken exchanges the session token for a regional customer access
+// token, the credential accepted by APIs served via frontdoor-api-gateway
+// (which does not honor raw login-session JWTs).
+func GetRegionalToken(ctx *config.Context) (string, error) {
+	res, err := getAccessTokens(ctx)
+	if err != nil {
+		return "", err
+	}
+	if res.RegionalToken == "" {
+		return "", errors.New("access token exchange returned no regional token")
+	}
+	return res.RegionalToken, nil
+}
+
+func getAccessTokens(ctx *config.Context) (*accessTokensResponse, error) {
 	endpoint := strings.TrimSuffix(ctx.GetPlatformServer(), "/") + "/api/access_tokens"
 
-	res := &struct {
-		Token string `json:"token"`
-		Error string `json:"error"`
-	}{}
+	res := &accessTokensResponse{}
 
 	client := utils.DefaultClient() // Declare a new client so that sling doesn't use the global default
 	client.Timeout = 30 * time.Second
@@ -238,22 +270,22 @@ func GetDataplaneToken(ctx *config.Context) (string, error) {
 
 	req, err := s.Request()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	dump, err := httputil.DumpRequestOut(req, true)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	log.CliLogger.UnsafeTracef("%s\n", dump)
 
 	req = req.WithContext(utils.GetCloudTracedContext()) // Adds Trace logs for TRACE and UNSAFE_TRACE levels
 	if _, err = s.Do(req, res, nil); err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if res.Error != "" {
-		return "", errors.New(res.Error)
+		return nil, errors.New(res.Error)
 	}
-	return res.Token, nil
+	return res, nil
 }

@@ -54,7 +54,8 @@ const (
 	groupMappingId                   = "group-abc"
 	identityProviderId               = "op-12345"
 	identityPoolId                   = "pool-12345"
-	ipGroupId                        = "ipg-wjnde"
+	ipGroupId                        = "ipg-123abc"
+	ipGroupSecondId                  = "ipg-456def"
 	ipFilterId                       = "ipf-34dq3"
 	deactivatedUserId                = int32(6666)
 	deactivatedUserResourceId        = "sa-6666"

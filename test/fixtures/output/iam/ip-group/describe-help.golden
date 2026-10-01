@@ -1,4 +1,4 @@
-Describe an IP group.
+Describe an IAM IP group.
 
 Usage:
   confluent iam ip-group describe <id> [flags]

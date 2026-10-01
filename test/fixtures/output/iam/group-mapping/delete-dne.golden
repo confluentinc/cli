@@ -1,4 +1,4 @@
-Error: SSO group mapping "group-dne" not found
+Error: IAM group mapping "group-dne" not found
 
 Suggestions:
-    List available SSO group mappings with `confluent iam group-mapping list`.
+    List available IAM group mappings with `confluent iam group-mapping list`.

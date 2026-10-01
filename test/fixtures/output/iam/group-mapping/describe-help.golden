@@ -1,4 +1,4 @@
-Describe a group mapping.
+Describe an IAM group mapping.
 
 Usage:
   confluent iam group-mapping describe <id> [flags]

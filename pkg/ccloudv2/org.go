@@ -25,24 +25,27 @@ func (c *Client) orgApiContext() context.Context {
 
 // ===== org environments API calls =====
 
-func (c *Client) CreateOrgEnvironment(req orgv2.OrgV2Environment) (orgv2.OrgV2Environment, *http.Response, error) {
+func (c *Client) CreateOrgEnvironment(req orgv2.OrgV2Environment) (orgv2.OrgV2Environment, error) {
 	createReq := c.OrgClient.EnvironmentsOrgV2Api.
 		CreateOrgV2Environment(c.orgApiContext()).
 		OrgV2Environment(req)
-	return createReq.Execute()
+	res, httpResp, err := createReq.Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) GetOrgEnvironment(id string) (orgv2.OrgV2Environment, *http.Response, error) {
+func (c *Client) GetOrgEnvironment(id string) (orgv2.OrgV2Environment, error) {
 	getReq := c.OrgClient.EnvironmentsOrgV2Api.
 		GetOrgV2Environment(c.orgApiContext(), id)
-	return getReq.Execute()
+	res, httpResp, err := getReq.Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateOrgEnvironment(id string, update orgv2.OrgV2Environment) (orgv2.OrgV2Environment, *http.Response, error) {
+func (c *Client) UpdateOrgEnvironment(id string, update orgv2.OrgV2Environment) (orgv2.OrgV2Environment, error) {
 	updateReq := c.OrgClient.EnvironmentsOrgV2Api.
 		UpdateOrgV2Environment(c.orgApiContext(), id).
 		OrgV2Environment(update)
-	return updateReq.Execute()
+	res, httpResp, err := updateReq.Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DeleteOrgEnvironment(id string) error {
@@ -85,17 +88,19 @@ func (c *Client) executeListOrgEnvironments(pageToken string) (orgv2.OrgV2Enviro
 
 // ===== org organizations API calls =====
 
-func (c *Client) GetOrgOrganization(id string) (orgv2.OrgV2Organization, *http.Response, error) {
+func (c *Client) GetOrgOrganization(id string) (orgv2.OrgV2Organization, error) {
 	getReq := c.OrgClient.OrganizationsOrgV2Api.
 		GetOrgV2Organization(c.orgApiContext(), id)
-	return getReq.Execute()
+	res, httpResp, err := getReq.Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateOrgOrganization(id string, update orgv2.OrgV2Organization) (orgv2.OrgV2Organization, *http.Response, error) {
+func (c *Client) UpdateOrgOrganization(id string, update orgv2.OrgV2Organization) (orgv2.OrgV2Organization, error) {
 	updateReq := c.OrgClient.OrganizationsOrgV2Api.
 		UpdateOrgV2Organization(c.orgApiContext(), id).
 		OrgV2Organization(update)
-	return updateReq.Execute()
+	res, httpResp, err := updateReq.Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) ListOrgOrganizations() ([]orgv2.OrgV2Organization, error) {
@@ -104,7 +109,7 @@ func (c *Client) ListOrgOrganizations() ([]orgv2.OrgV2Organization, error) {
 	done := false
 	pageToken := ""
 	for !done {
-		page, httpResp, err := c.executeListOrganizations(pageToken)
+		page, httpResp, err := c.executeListOrgOrganizations(pageToken)
 		if err != nil {
 			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
@@ -119,9 +124,56 @@ func (c *Client) ListOrgOrganizations() ([]orgv2.OrgV2Organization, error) {
 	return list, nil
 }
 
-func (c *Client) executeListOrganizations(pageToken string) (orgv2.OrgV2OrganizationList, *http.Response, error) {
+func (c *Client) executeListOrgOrganizations(pageToken string) (orgv2.OrgV2OrganizationList, *http.Response, error) {
 	req := c.OrgClient.OrganizationsOrgV2Api.
 		ListOrgV2Organizations(c.orgApiContext()).
+		PageSize(ccloudV2ListPageSize)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+	return req.Execute()
+}
+
+// ===== org scim tokens API calls =====
+
+func (c *Client) CreateOrgScimToken(req orgv2.InlineObject) (orgv2.OrgV2ScimToken, *http.Response, error) {
+	createReq := c.OrgClient.ScimTokensOrgV2Api.
+		CreateOrgV2ScimToken(c.orgApiContext()).
+		InlineObject(req)
+	return createReq.Execute()
+}
+
+func (c *Client) DeleteOrgScimToken(id string) error {
+	deleteReq := c.OrgClient.ScimTokensOrgV2Api.
+		DeleteOrgV2ScimToken(c.orgApiContext(), id)
+	httpResp, err := deleteReq.Execute()
+	return errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) ListOrgScimTokens() ([]orgv2.OrgV2ScimToken, error) {
+	var list []orgv2.OrgV2ScimToken
+
+	done := false
+	pageToken := ""
+	for !done {
+		page, httpResp, err := c.executeListScimTokens(pageToken)
+		if err != nil {
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
+		}
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return list, nil
+}
+
+func (c *Client) executeListScimTokens(pageToken string) (orgv2.OrgV2ScimTokenList, *http.Response, error) {
+	req := c.OrgClient.ScimTokensOrgV2Api.
+		ListOrgV2ScimTokens(c.orgApiContext()).
 		PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)

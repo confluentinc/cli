@@ -1,4 +1,4 @@
-List IP groups.
+List IAM IP groups.
 
 Usage:
   confluent iam ip-group list [flags]

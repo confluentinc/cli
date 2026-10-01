@@ -1,8 +1,8 @@
 Updated IAM identity provider "op-12345".
 +-------------+-----------------------------------------------------+
 | ID          | op-12345                                            |
-| Name        |                                                     |
-| Description |                                                     |
+| Name        | identity-provider                                   |
+| Description | providing identities.                               |
 | Issuer URI  | https://company.updated-provider.com                |
 | JWKS URI    | https://company.updated-provider.com/oauth2/v1/keys |
 +-------------+-----------------------------------------------------+

@@ -315,3 +315,36 @@ func TestPollPhases_AllPendingPhasesContinuePolling(t *testing.T) {
 		})
 	}
 }
+
+func TestCall_ReturnsFnResult(t *testing.T) {
+	v, err := Call(context.Background(), func() (int, error) {
+		return 42, nil
+	})
+	require.NoError(t, err)
+	require.Equal(t, 42, v)
+}
+
+func TestCall_ReturnsFnError(t *testing.T) {
+	_, err := Call(context.Background(), func() (int, error) {
+		return 0, errors.New("boom")
+	})
+	require.ErrorContains(t, err, "boom")
+}
+
+// The whole point of Call: fn has no way to accept a context (that's the
+// GatewayClientInterface problem this exists for), so the only way to bound it
+// is to stop waiting on it — not to cancel it. This proves Call returns once ctx
+// fires even though fn itself never returns at all.
+func TestCall_ReturnsPromptlyWhenFnNeverReturns(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Millisecond)
+	defer cancel()
+
+	start := time.Now()
+	_, err := Call(ctx, func() (int, error) {
+		select {} // never returns
+	})
+	elapsed := time.Since(start)
+
+	require.ErrorIs(t, err, context.DeadlineExceeded)
+	require.Less(t, elapsed, time.Second, "Call must not wait for fn once ctx fires")
+}

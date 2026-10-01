@@ -1,0 +1,15 @@
+Manage Kafka disaster recovery switchover resources.
+
+Usage:
+  confluent switchover [command]
+
+Available Commands:
+  endpoint    Manage switchover endpoints.
+  pair        Manage switchover pairs.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent switchover [command] --help" for more information about a command.

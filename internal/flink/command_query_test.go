@@ -1,0 +1,854 @@
+package flink
+
+import (
+	"context"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
+
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+
+	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
+
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	cliconfig "github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	flinkerror "github.com/confluentinc/cli/v4/pkg/errors/flink"
+	"github.com/confluentinc/cli/v4/pkg/flink/query"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
+	testserver "github.com/confluentinc/cli/v4/test/test-server"
+)
+
+func TestResolveDatabase(t *testing.T) {
+	newDBCmd := func(database string) *cobra.Command {
+		cmd := &cobra.Command{}
+		cmd.Flags().String("database", "", "")
+		if database != "" {
+			require.NoError(t, cmd.Flags().Set("database", database))
+		}
+		return cmd
+	}
+
+	commandWithActiveCluster := func(activeCluster string) *queryCommand {
+		return newTestCommand(&cliconfig.Context{KafkaClusterContext: &cliconfig.KafkaClusterContext{ActiveKafkaCluster: activeCluster}})
+	}
+
+	c := commandWithActiveCluster("")
+
+	got, err := c.resolveDatabase(newDBCmd(""))
+	require.NoError(t, err)
+	require.Empty(t, got)
+
+	got, err = c.resolveDatabase(newDBCmd("lkc-database"))
+	require.NoError(t, err)
+	require.Equal(t, "lkc-database", got)
+
+	// Neither flag given: falls back to the active Kafka cluster context, same
+	// "flag, then context" chain environment and compute pool follow.
+	c = commandWithActiveCluster("lkc-context-default")
+	got, err = c.resolveDatabase(newDBCmd(""))
+	require.NoError(t, err)
+	require.Equal(t, "lkc-context-default", got)
+
+	// An explicit --database still wins over the context default.
+	got, err = c.resolveDatabase(newDBCmd("lkc-explicit"))
+	require.NoError(t, err)
+	require.Equal(t, "lkc-explicit", got)
+}
+
+func TestResolveSQL(t *testing.T) {
+	newSQLCmd := func(sqlFlagValue, fileFlagValue string) *cobra.Command {
+		cmd := &cobra.Command{}
+		cmd.Flags().String("sql", "", "")
+		cmd.Flags().String("file", "", "")
+		if sqlFlagValue != "" {
+			require.NoError(t, cmd.Flags().Set("sql", sqlFlagValue))
+		}
+		if fileFlagValue != "" {
+			require.NoError(t, cmd.Flags().Set("file", fileFlagValue))
+		}
+		return cmd
+	}
+
+	sql, err := resolveSQL(newSQLCmd("SELECT 1", ""))
+	require.NoError(t, err)
+	require.Equal(t, "SELECT 1", sql)
+
+	sqlFile := filepath.Join(t.TempDir(), "query.sql")
+	require.NoError(t, os.WriteFile(sqlFile, []byte("SELECT 3"), 0o600))
+	sql, err = resolveSQL(newSQLCmd("", sqlFile))
+	require.NoError(t, err)
+	require.Equal(t, "SELECT 3", sql)
+
+	_, err = resolveSQL(newSQLCmd("", "/nonexistent/query.sql"))
+	require.ErrorContains(t, err, "failed to read the SQL statement")
+
+	// --sql wins if it's ever called with both set (cobra's flag-group
+	// validation should have already rejected this, but resolveSQL doesn't rely
+	// on that alone — see the empty-string case below).
+	sql, err = resolveSQL(newSQLCmd("SELECT 1", sqlFile))
+	require.NoError(t, err)
+	require.Equal(t, "SELECT 1", sql)
+
+	// cobra's MarkFlagsOneRequired only checks whether a flag was Set(), not
+	// whether its value is non-empty, so `--sql ""` (e.g. from an unset shell
+	// variable) passes flag-group validation with neither flag usably set.
+	_, err = resolveSQL(newSQLCmd("", ""))
+	require.ErrorContains(t, err, "the SQL statement is required")
+
+	// A whitespace-only --sql is treated the same as empty.
+	_, err = resolveSQL(newSQLCmd("   \n\t ", ""))
+	require.ErrorContains(t, err, "the SQL statement is required")
+
+	// A --file pointing at an empty (or whitespace-only) file: os.ReadFile
+	// succeeds with no error, so this must be caught by the same emptiness check,
+	// not silently submit an empty statement to the gateway.
+	emptyFile := filepath.Join(t.TempDir(), "empty.sql")
+	require.NoError(t, os.WriteFile(emptyFile, []byte("  \n"), 0o600))
+	_, err = resolveSQL(newSQLCmd("", emptyFile))
+	require.ErrorContains(t, err, "the SQL statement is required")
+}
+
+// captureStdout redirects the package-level os.Stdout (which output.Print and
+// tablewriter both write to directly) for the duration of fn and returns what
+// was written.
+func captureStdout(t *testing.T, fn func()) string {
+	t.Helper()
+
+	orig := os.Stdout
+	r, w, err := os.Pipe()
+	require.NoError(t, err)
+	os.Stdout = w
+	defer func() { os.Stdout = orig }()
+
+	fn()
+
+	require.NoError(t, w.Close())
+	out, err := io.ReadAll(r)
+	require.NoError(t, err)
+	return string(out)
+}
+
+func newTestCommand(ctx *cliconfig.Context) *queryCommand {
+	return &queryCommand{AuthenticatedCLICommand: &pcmd.AuthenticatedCLICommand{Context: ctx}}
+}
+
+func newTestContext(platformServer, authToken string) *cliconfig.Context {
+	return &cliconfig.Context{
+		Platform:  &cliconfig.Platform{Server: platformServer},
+		State:     &cliconfig.ContextState{AuthToken: authToken},
+		LastOrgId: "org-1",
+	}
+}
+
+func TestBuildQueryProperties(t *testing.T) {
+	tests := []struct {
+		name     string
+		catalog  string
+		database string
+		flags    []string
+		expected map[string]string
+		wantErr  bool
+	}{
+		{
+			name:    "catalog and default snapshot mode, no database",
+			catalog: "env-123",
+			expected: map[string]string{
+				"sql.current-catalog": "env-123",
+				"sql.snapshot.mode":   "now",
+			},
+		},
+		{
+			name:     "database is included when set",
+			catalog:  "env-123",
+			database: "my-cluster",
+			expected: map[string]string{
+				"sql.current-catalog":  "env-123",
+				"sql.snapshot.mode":    "now",
+				"sql.current-database": "my-cluster",
+			},
+		},
+		{
+			name:    "property flag cannot override the snapshot mode",
+			catalog: "env-123",
+			flags:   []string{"sql.snapshot.mode=earliest"},
+			wantErr: true,
+		},
+		{
+			name:    "property flag redundantly setting the snapshot mode to its default is allowed",
+			catalog: "env-123",
+			flags:   []string{"sql.snapshot.mode=now"},
+			expected: map[string]string{
+				"sql.current-catalog": "env-123",
+				"sql.snapshot.mode":   "now",
+			},
+		},
+		{
+			name:    "malformed property flag is rejected",
+			catalog: "env-123",
+			flags:   []string{"not-a-key-value-pair"},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := &cobra.Command{}
+			cmd.Flags().StringSlice("property", []string{}, "")
+			for _, f := range tt.flags {
+				require.NoError(t, cmd.Flags().Set("property", f))
+			}
+
+			c := newTestCommand(nil)
+			got, err := c.buildQueryProperties(cmd, tt.catalog, tt.database)
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tt.expected, got)
+		})
+	}
+}
+
+func newOutputCmd(t *testing.T, format string) *cobra.Command {
+	t.Helper()
+	cmd := &cobra.Command{}
+	pcmd.AddOutputFlag(cmd)
+	if format != "" {
+		require.NoError(t, cmd.Flags().Set("output", format))
+	}
+	return cmd
+}
+
+func testColumns() []flinkgatewayv1.ColumnDetails {
+	return []flinkgatewayv1.ColumnDetails{
+		{Name: "id", Type: flinkgatewayv1.DataType{Type: "INTEGER"}},
+		{Name: "status", Type: flinkgatewayv1.DataType{Type: "VARCHAR"}},
+	}
+}
+
+func testRow() types.StatementResultRow {
+	return types.StatementResultRow{
+		Operation: types.Insert,
+		Fields: []types.StatementResultField{
+			types.AtomicStatementResultField{Type: types.Integer, Value: "1021"},
+			types.AtomicStatementResultField{Type: types.Varchar, Value: "SHIPPED"},
+		},
+	}
+}
+
+func TestPrintQueryResult(t *testing.T) {
+	t.Run("human table output with rows", func(t *testing.T) {
+		c := newTestCommand(nil)
+		cmd := newOutputCmd(t, "")
+		result := &query.Result{
+			Statement: flinkgatewayv1.SqlV1Statement{Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "COMPLETED"}},
+			Columns:   testColumns(),
+			Rows:      []types.StatementResultRow{testRow()},
+		}
+
+		out := captureStdout(t, func() {
+			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
+		})
+		require.Contains(t, out, "1021")
+		require.Contains(t, out, "SHIPPED")
+		require.NotContains(t, out, "Operation")
+	})
+
+	t.Run("human table output shows Operation column when requested", func(t *testing.T) {
+		c := newTestCommand(nil)
+		cmd := newOutputCmd(t, "")
+		result := &query.Result{
+			Statement: flinkgatewayv1.SqlV1Statement{Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "COMPLETED"}},
+			Columns:   testColumns(),
+			Rows:      []types.StatementResultRow{testRow()},
+		}
+
+		out := captureStdout(t, func() {
+			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, true, false))
+		})
+		require.Contains(t, out, "Operation")
+	})
+
+	t.Run("human output with no rows prints a message to stderr, not stdout", func(t *testing.T) {
+		c := newTestCommand(nil)
+		cmd := newOutputCmd(t, "")
+		result := &query.Result{
+			Statement: flinkgatewayv1.SqlV1Statement{Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "COMPLETED"}},
+		}
+
+		out := captureStdout(t, func() {
+			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
+		})
+		require.Empty(t, out)
+	})
+
+	t.Run("json envelope carries schema and truncated", func(t *testing.T) {
+		c := newTestCommand(nil)
+		cmd := newOutputCmd(t, "json")
+		result := &query.Result{
+			Statement: flinkgatewayv1.SqlV1Statement{Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "RUNNING"}},
+			Columns:   testColumns(),
+			Rows:      []types.StatementResultRow{testRow()},
+			Truncated: true,
+		}
+
+		out := captureStdout(t, func() {
+			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
+		})
+		require.Contains(t, out, `"phase": "RUNNING"`)
+		require.Contains(t, out, `"truncated": true`)
+		require.Contains(t, out, `"id": 1021`)
+		require.NotContains(t, out, "incomplete")
+		require.NotContains(t, out, "statement_name")
+		require.NotContains(t, out, "append_only")
+		require.NotContains(t, out, "engine")
+	})
+
+	t.Run("raw serialized output is a bare array with no envelope", func(t *testing.T) {
+		c := newTestCommand(nil)
+		cmd := newOutputCmd(t, "json")
+		result := &query.Result{
+			Statement: flinkgatewayv1.SqlV1Statement{Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "COMPLETED"}},
+			Columns:   testColumns(),
+			Rows:      []types.StatementResultRow{testRow()},
+		}
+
+		out := captureStdout(t, func() {
+			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, true))
+		})
+		require.NotContains(t, out, "statement_name")
+		require.NotContains(t, out, "engine")
+		require.Contains(t, out, `"id": 1021`)
+	})
+
+	t.Run("yaml serialized output", func(t *testing.T) {
+		c := newTestCommand(nil)
+		cmd := newOutputCmd(t, "yaml")
+		result := &query.Result{
+			Statement: flinkgatewayv1.SqlV1Statement{Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "COMPLETED"}},
+			Columns:   testColumns(),
+			Rows:      []types.StatementResultRow{testRow()},
+		}
+
+		out := captureStdout(t, func() {
+			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
+		})
+		require.Contains(t, out, `phase: COMPLETED`)
+		require.NotContains(t, out, "statement_name")
+		require.NotContains(t, out, "engine")
+	})
+
+	t.Run("human output escapes control characters instead of executing them", func(t *testing.T) {
+		c := newTestCommand(nil)
+		cmd := newOutputCmd(t, "")
+		result := &query.Result{
+			Statement: flinkgatewayv1.SqlV1Statement{Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "COMPLETED"}},
+			Columns:   testColumns(),
+			Rows: []types.StatementResultRow{{
+				Operation: types.Insert,
+				Fields: []types.StatementResultField{
+					types.AtomicStatementResultField{Type: types.Integer, Value: "1021"},
+					types.AtomicStatementResultField{Type: types.Varchar, Value: "\x1b[0;31mred\x1b[0m"},
+				},
+			}},
+		}
+
+		out := captureStdout(t, func() {
+			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
+		})
+		require.NotContains(t, out, "\x1b")
+		require.Contains(t, out, `\x1b[0;31mred\x1b[0m`)
+	})
+
+	t.Run("human output escapes control characters in column headers too, not just row values", func(t *testing.T) {
+		c := newTestCommand(nil)
+		cmd := newOutputCmd(t, "")
+		result := &query.Result{
+			Statement: flinkgatewayv1.SqlV1Statement{Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: "COMPLETED"}},
+			Columns: []flinkgatewayv1.ColumnDetails{
+				{Name: "\x1b[31minjected\x1b[0m", Type: flinkgatewayv1.DataType{Type: "INTEGER"}},
+			},
+			Rows: []types.StatementResultRow{{
+				Operation: types.Insert,
+				Fields:    []types.StatementResultField{types.AtomicStatementResultField{Type: types.Integer, Value: "1"}},
+			}},
+		}
+
+		out := captureStdout(t, func() {
+			require.NoError(t, c.printQueryResult(cmd, "stmt", result, false, false, false))
+		})
+		require.NotContains(t, out, "\x1b")
+		require.Contains(t, out, `\x1b[31minjected\x1b[0m`)
+	})
+}
+
+func TestEscapeControlChars(t *testing.T) {
+	require.Equal(t, "hello", escapeControlChars("hello"))
+	require.Equal(t, `\x1b[0;31mred\x1b[0m`, escapeControlChars("\x1b[0;31mred\x1b[0m"))
+	// Tab is a legitimate data character and passes through unescaped.
+	require.Equal(t, "a\tb", escapeControlChars("a\tb"))
+	// Newline and carriage return stay escaped: raw in a table cell they break
+	// the layout or inject fake rows.
+	require.Equal(t, `a\x0ab`, escapeControlChars("a\nb"))
+	require.Equal(t, `a\x0db`, escapeControlChars("a\rb"))
+}
+
+// fakeJwtValidator lets tests control whether refreshGatewayToken thinks the
+// current token is still valid without needing a real signed JWT.
+type fakeJwtValidator struct {
+	err error
+}
+
+func (f fakeJwtValidator) Validate(*cliconfig.Context) error {
+	return f.err
+}
+
+func TestRefreshGatewayToken(t *testing.T) {
+	t.Run("valid token is left alone", func(t *testing.T) {
+		client := ccloudv2.NewFlinkGatewayClient("http://unused.invalid", "test", false, "still-valid")
+		c := newTestCommand(newTestContext("http://unused.invalid", "still-valid"))
+
+		refresh := c.refreshGatewayToken(client, fakeJwtValidator{err: nil})
+		require.NoError(t, refresh())
+		require.Equal(t, "still-valid", client.AuthToken)
+	})
+
+	t.Run("expired token is refreshed from the platform", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			require.Equal(t, "/api/access_tokens", r.URL.Path)
+			require.Equal(t, "Bearer old-cloud-token", r.Header.Get("Authorization"))
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"token":"new-dataplane-token"}`))
+		}))
+		defer server.Close()
+
+		client := ccloudv2.NewFlinkGatewayClient("http://unused.invalid", "test", false, "expired")
+		c := newTestCommand(newTestContext(server.URL, "old-cloud-token"))
+
+		refresh := c.refreshGatewayToken(client, fakeJwtValidator{err: errors.New("expired")})
+		require.NoError(t, refresh())
+		require.Equal(t, "new-dataplane-token", client.AuthToken)
+	})
+
+	t.Run("refresh failure surfaces the platform's error", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"error":"could not mint a dataplane token"}`))
+		}))
+		defer server.Close()
+
+		client := ccloudv2.NewFlinkGatewayClient("http://unused.invalid", "test", false, "expired")
+		c := newTestCommand(newTestContext(server.URL, "old-cloud-token"))
+
+		refresh := c.refreshGatewayToken(client, fakeJwtValidator{err: errors.New("expired")})
+		require.ErrorContains(t, refresh(), "could not mint a dataplane token")
+		require.Equal(t, "expired", client.AuthToken)
+	})
+}
+
+func TestCreateStatement(t *testing.T) {
+	t.Run("returns the create error on success or failure", func(t *testing.T) {
+		wantErr := errors.New("boom")
+		_, err := createStatement(context.Background(), time.Second, func() (flinkgatewayv1.SqlV1Statement, error) {
+			return flinkgatewayv1.SqlV1Statement{}, wantErr
+		}, func() bool { t.Fatal("cleanup should not run"); return false })
+		require.Equal(t, wantErr, err)
+	})
+
+	t.Run("cleans up a create that lands after ctx is cancelled and reports cleanup's result", func(t *testing.T) {
+		release := make(chan struct{})
+		cleaned := make(chan struct{})
+		ctx, cancel := context.WithCancel(context.Background())
+
+		type outcome struct {
+			stopped bool
+			err     error
+		}
+		outCh := make(chan outcome, 1)
+		go func() {
+			stopped, err := createStatement(ctx, time.Second, func() (flinkgatewayv1.SqlV1Statement, error) {
+				<-release
+				return flinkgatewayv1.SqlV1Statement{}, nil
+			}, func() bool { close(cleaned); return true })
+			outCh <- outcome{stopped, err}
+		}()
+
+		cancel()
+		close(release)
+
+		got := <-outCh
+		require.ErrorIs(t, got.err, context.Canceled)
+		require.True(t, got.stopped)
+		<-cleaned
+	})
+
+	t.Run("honors an interrupt even when create resolves in the same tick", func(t *testing.T) {
+		// ctx is already cancelled and create returns immediately, so both the
+		// done channel and ctx.Done() are ready when the outer select runs and Go
+		// may pick either branch. Both must end the same way — stop the statement
+		// we just created and report the interrupt — never fall through as a clean
+		// success and let the caller run the query with a dead context.
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+
+		cleaned := make(chan struct{}, 1)
+		stopped, err := createStatement(ctx, time.Second, func() (flinkgatewayv1.SqlV1Statement, error) {
+			return flinkgatewayv1.SqlV1Statement{}, nil
+		}, func() bool { cleaned <- struct{}{}; return true })
+		require.ErrorIs(t, err, context.Canceled)
+		require.True(t, stopped)
+		require.Len(t, cleaned, 1)
+	})
+
+	t.Run("returns the real create error, not ctx.Err(), when create fails after ctx is cancelled", func(t *testing.T) {
+		// A create failure means no statement was ever named server-side, so it
+		// must surface as itself, not get relabeled as an interruption — which
+		// would send the caller off naming/suggesting `stop` on a statement that
+		// never existed (see interruptedError).
+		release := make(chan struct{})
+		cleaned := make(chan struct{}, 1)
+		ctx, cancel := context.WithCancel(context.Background())
+
+		errCh := make(chan error, 1)
+		go func() {
+			_, err := createStatement(ctx, time.Second, func() (flinkgatewayv1.SqlV1Statement, error) {
+				<-release
+				return flinkgatewayv1.SqlV1Statement{}, errors.New("create failed")
+			}, func() bool { cleaned <- struct{}{}; return true })
+			errCh <- err
+		}()
+
+		cancel()
+		close(release)
+
+		err := <-errCh
+		require.ErrorContains(t, err, "create failed")
+		require.NotErrorIs(t, err, context.Canceled)
+		select {
+		case <-cleaned:
+			t.Fatal("cleanup should not run")
+		case <-time.After(50 * time.Millisecond):
+		}
+	})
+
+	t.Run("gives up after the grace period without cleaning up", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+
+		stopped, err := createStatement(ctx, time.Millisecond, func() (flinkgatewayv1.SqlV1Statement, error) {
+			select {}
+		}, func() bool { t.Fatal("cleanup should not run"); return false })
+		require.ErrorIs(t, err, context.Canceled)
+		require.False(t, stopped)
+	})
+}
+
+func TestStopStatement(t *testing.T) {
+	t.Run("successful stop", func(t *testing.T) {
+		server := httptest.NewServer(testserver.NewFlinkGatewayRouter(t))
+		defer server.Close()
+
+		client := ccloudv2.NewFlinkGatewayClient(server.URL, "test", false, "token")
+		c := newTestCommand(newTestContext(server.URL, "token"))
+
+		out := captureStderr(t, func() {
+			require.True(t, c.stopStatementAndReport(client, "env-1", "stmt"))
+		})
+		require.Contains(t, out, `Successfully stopped statement "stmt"`)
+	})
+
+	t.Run("the quiet stop stays silent on stderr", func(t *testing.T) {
+		server := httptest.NewServer(testserver.NewFlinkGatewayRouter(t))
+		defer server.Close()
+
+		client := ccloudv2.NewFlinkGatewayClient(server.URL, "test", false, "token")
+		c := newTestCommand(newTestContext(server.URL, "token"))
+
+		var ok bool
+		var err error
+		out := captureStderr(t, func() {
+			ok, err = c.stopStatement(client, "env-1", "stmt")
+		})
+		require.True(t, ok)
+		require.NoError(t, err)
+		require.Empty(t, out)
+	})
+
+	t.Run("failed stop reports a warning and returns false", func(t *testing.T) {
+		// A 4xx, not 5xx: the retryable HTTP client retries 5xx/429 responses, which
+		// would blow past stopTimeout and hit the timeout branch instead of this one.
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusBadRequest)
+		}))
+		defer server.Close()
+
+		client := ccloudv2.NewFlinkGatewayClient(server.URL, "test", false, "token")
+		c := newTestCommand(newTestContext(server.URL, "token"))
+
+		out := captureStderr(t, func() {
+			require.False(t, c.stopStatementAndReport(client, "env-1", "stmt"))
+		})
+		require.Contains(t, out, `could not stop statement "stmt"`)
+	})
+
+	t.Run("a statement with no spec reports a warning and returns false", func(t *testing.T) {
+		// GetStatement succeeds but the gateway returns a statement with no Spec at
+		// all, exercising the defensive nil check ahead of setting Spec.Stopped.
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method == http.MethodGet {
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"name": "stmt"}`))
+			}
+		}))
+		defer server.Close()
+
+		client := ccloudv2.NewFlinkGatewayClient(server.URL, "test", false, "token")
+		c := newTestCommand(newTestContext(server.URL, "token"))
+
+		out := captureStderr(t, func() {
+			require.False(t, c.stopStatementAndReport(client, "env-1", "stmt"))
+		})
+		require.Contains(t, out, `has no spec`)
+	})
+
+	// reportStopFailure is what lets the otherwise-quiet end-of-run cleanup still
+	// surface a stop that failed — a statement left running keeps burning compute
+	// even though the query itself succeeded (finding #3).
+	t.Run("reportStopFailure distinguishes a timeout from other failures", func(t *testing.T) {
+		out := captureStderr(t, func() { reportStopFailure("stmt", errStopTimeout) })
+		require.Contains(t, out, `timed out trying to stop statement "stmt"`)
+
+		out = captureStderr(t, func() { reportStopFailure("stmt", errors.New("boom")) })
+		require.Contains(t, out, `could not stop statement "stmt": boom`)
+	})
+}
+
+func captureStderr(t *testing.T, fn func()) string {
+	t.Helper()
+
+	orig := os.Stderr
+	r, w, err := os.Pipe()
+	require.NoError(t, err)
+	os.Stderr = w
+	defer func() { os.Stderr = orig }()
+
+	fn()
+
+	require.NoError(t, w.Close())
+	out, err := io.ReadAll(r)
+	require.NoError(t, err)
+	return string(out)
+}
+
+func TestHandleQueryError(t *testing.T) {
+	t.Run("unbounded error stops the statement and names it in the suggestion", func(t *testing.T) {
+		server := httptest.NewServer(testserver.NewFlinkGatewayRouter(t))
+		defer server.Close()
+
+		client := ccloudv2.NewFlinkGatewayClient(server.URL, "test", false, "token")
+		c := newTestCommand(newTestContext(server.URL, "token"))
+
+		settled := false
+		var out string
+		var err error
+		out = captureStderr(t, func() {
+			err = c.handleQueryError(&cobra.Command{}, client, "env-1", "stmt", &query.UnboundedError{StatementName: "stmt"}, &settled)
+		})
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "unbounded result")
+		var withSuggestions errors.ErrorWithSuggestions
+		require.ErrorAs(t, err, &withSuggestions)
+		require.Contains(t, withSuggestions.GetSuggestionsMsg(), `Statement "stmt" was stopped.`)
+		require.True(t, settled)
+		// The stop outcome is stated once, in the suggestion above; stopStatement
+		// itself must stay silent (announce=false) so it isn't said twice.
+		require.Empty(t, out)
+	})
+
+	t.Run("unbounded error names the manual stop command when the stop attempt fails", func(t *testing.T) {
+		// A 4xx, not 5xx: see the equivalent comment in TestStopStatement.
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusBadRequest)
+		}))
+		defer server.Close()
+
+		client := ccloudv2.NewFlinkGatewayClient(server.URL, "test", false, "token")
+		c := newTestCommand(newTestContext(server.URL, "token"))
+
+		settled := false
+		err := c.handleQueryError(&cobra.Command{}, client, "env-1", "stmt", &query.UnboundedError{StatementName: "stmt"}, &settled)
+		require.Error(t, err)
+		var withSuggestions errors.ErrorWithSuggestions
+		require.ErrorAs(t, err, &withSuggestions)
+		require.Contains(t, withSuggestions.GetSuggestionsMsg(), "confluent flink statement stop stmt")
+		require.True(t, settled)
+	})
+
+	t.Run("interrupted before a statement exists is reported as Interrupted, not Error", func(t *testing.T) {
+		cmd := &cobra.Command{}
+		var err error
+		out := captureStderr(t, func() {
+			err = interruptedError(cmd, context.Canceled, "", false)
+		})
+		require.Error(t, err) // still non-nil: the run didn't produce results, so the exit code must be non-zero
+		require.Contains(t, err.Error(), "interrupted")
+		require.NotContains(t, err.Error(), "statement")
+		require.True(t, cmd.SilenceErrors, "cobra's own \"Error: ...\" line must be suppressed; this message states the outcome itself")
+		require.Contains(t, out, "Interrupted: no statement had been created yet.")
+		var withSuggestions errors.ErrorWithSuggestions
+		require.ErrorAs(t, err, &withSuggestions)
+		require.Empty(t, withSuggestions.GetSuggestionsMsg())
+	})
+
+	t.Run("interrupted after the statement was stopped is reported as Interrupted, not Error", func(t *testing.T) {
+		cmd := &cobra.Command{}
+		var err error
+		out := captureStderr(t, func() {
+			err = interruptedError(cmd, context.Canceled, "stmt", true)
+		})
+		require.Error(t, err)
+		require.True(t, cmd.SilenceErrors)
+		require.Contains(t, out, `Interrupted: statement "stmt" was stopped.`)
+		var withSuggestions errors.ErrorWithSuggestions
+		require.ErrorAs(t, err, &withSuggestions)
+		require.Empty(t, withSuggestions.GetSuggestionsMsg())
+	})
+
+	t.Run("interrupted when the statement could not be stopped is reported as Interrupted, not Error", func(t *testing.T) {
+		cmd := &cobra.Command{}
+		var err error
+		out := captureStderr(t, func() {
+			err = interruptedError(cmd, context.Canceled, "stmt", false)
+		})
+		// The user asked for this interruption; the outcome being unconfirmed is
+		// something to check on, not a failure of the command to do what was asked.
+		require.True(t, cmd.SilenceErrors, "cobra's own \"Error: ...\" line must be suppressed in favor of \"Interrupted: ...\"")
+		require.Contains(t, out, `Interrupted: query interrupted before statement "stmt" finished`)
+		var withSuggestions errors.ErrorWithSuggestions
+		require.ErrorAs(t, err, &withSuggestions)
+		require.Contains(t, withSuggestions.GetSuggestionsMsg(), "confluent flink statement stop stmt")
+	})
+
+	t.Run("a timeout is always reported as an Error, even when the statement was stopped cleanly", func(t *testing.T) {
+		// Unlike Ctrl-C, a timeout isn't something the user asked for, so it never
+		// gets the "Interrupted:" framing.
+		cmd := &cobra.Command{}
+		var err error
+		out := captureStderr(t, func() {
+			err = interruptedError(cmd, context.DeadlineExceeded, "stmt", true)
+		})
+		require.False(t, cmd.SilenceErrors)
+		require.Empty(t, out)
+		require.Contains(t, err.Error(), "timed out")
+		var withSuggestions errors.ErrorWithSuggestions
+		require.ErrorAs(t, err, &withSuggestions)
+		require.Contains(t, withSuggestions.GetSuggestionsMsg(), `Statement "stmt" was stopped.`)
+	})
+
+	t.Run("context canceled and cleanly stopped is reported as Interrupted, not Error", func(t *testing.T) {
+		server := httptest.NewServer(testserver.NewFlinkGatewayRouter(t))
+		defer server.Close()
+
+		client := ccloudv2.NewFlinkGatewayClient(server.URL, "test", false, "token")
+		c := newTestCommand(newTestContext(server.URL, "token"))
+
+		cmd := &cobra.Command{}
+		settled := false
+		var err error
+		out := captureStderr(t, func() {
+			err = c.handleQueryError(cmd, client, "env-1", "stmt", context.Canceled, &settled)
+		})
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "interrupted")
+		require.True(t, settled)
+		require.True(t, cmd.SilenceErrors)
+		// Previously this printed "Successfully stopped statement ..." to stderr
+		// right on top of the separate "Error: query interrupted ..." message.
+		// Now it's one line, and it isn't framed as an error at all.
+		require.Contains(t, out, `Interrupted: statement "stmt" was stopped.`)
+	})
+
+	t.Run("context deadline exceeded is reported as timed out", func(t *testing.T) {
+		server := httptest.NewServer(testserver.NewFlinkGatewayRouter(t))
+		defer server.Close()
+
+		client := ccloudv2.NewFlinkGatewayClient(server.URL, "test", false, "token")
+		c := newTestCommand(newTestContext(server.URL, "token"))
+
+		settled := false
+		err := c.handleQueryError(&cobra.Command{}, client, "env-1", "stmt", context.DeadlineExceeded, &settled)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "timed out")
+		require.True(t, settled)
+	})
+
+	t.Run("a context deadline wrapped in ResultsFetchError is still reported as timed out", func(t *testing.T) {
+		// drain's results-fetch call wraps ctx.Err() in ResultsFetchError; the
+		// DeadlineExceeded branch above must still catch it via errors.Is, not
+		// fall through to the generic results-fetch handling below.
+		server := testserver.NewFlinkGatewayRouter(t)
+		httpServer := httptest.NewServer(server)
+		defer httpServer.Close()
+
+		client := ccloudv2.NewFlinkGatewayClient(httpServer.URL, "test", false, "token")
+		c := newTestCommand(newTestContext(httpServer.URL, "token"))
+
+		settled := false
+		err := c.handleQueryError(&cobra.Command{}, client, "env-1", "stmt", &query.ResultsFetchError{Err: context.DeadlineExceeded}, &settled)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "timed out")
+		require.True(t, settled)
+	})
+
+	t.Run("a 404 results-fetch error suggests the statement is gone or mistyped", func(t *testing.T) {
+		c := newTestCommand(nil)
+		settled := false
+		err := c.handleQueryError(&cobra.Command{}, nil, "env-1", "stmt", &query.ResultsFetchError{Err: flinkerror.NewError("not found", "", http.StatusNotFound)}, &settled)
+		require.Error(t, err)
+		var withSuggestions errors.ErrorWithSuggestions
+		require.ErrorAs(t, err, &withSuggestions)
+		require.Contains(t, withSuggestions.GetSuggestionsMsg(), "no longer exists")
+		// The statement is already gone, so this error settles it: the deferred
+		// cleanup must not fire a second, contradictory stop attempt.
+		require.True(t, settled)
+	})
+
+	t.Run("a 408 results-fetch error tells the user to re-run the query", func(t *testing.T) {
+		c := newTestCommand(nil)
+		settled := false
+		err := c.handleQueryError(&cobra.Command{}, nil, "env-1", "stmt", &query.ResultsFetchError{Err: flinkerror.NewError("Snapshot statement results are only available for 1 hour after the statement is created.", "", http.StatusRequestTimeout)}, &settled)
+		require.Error(t, err)
+		var withSuggestions errors.ErrorWithSuggestions
+		require.ErrorAs(t, err, &withSuggestions)
+		require.Contains(t, withSuggestions.GetSuggestionsMsg(), "Re-run the query")
+		require.False(t, settled)
+	})
+
+	t.Run("a non-404 results-fetch error gets the generic suggestion", func(t *testing.T) {
+		c := newTestCommand(nil)
+		settled := false
+		err := c.handleQueryError(&cobra.Command{}, nil, "env-1", "stmt", &query.ResultsFetchError{Err: flinkerror.NewError("boom", "", http.StatusInternalServerError)}, &settled)
+		require.Error(t, err)
+		var withSuggestions errors.ErrorWithSuggestions
+		require.ErrorAs(t, err, &withSuggestions)
+		require.Contains(t, withSuggestions.GetSuggestionsMsg(), "confluent flink statement describe stmt")
+		require.False(t, settled)
+	})
+
+	t.Run("any other error falls back to the generic suggestion", func(t *testing.T) {
+		c := newTestCommand(nil)
+		settled := false
+		err := c.handleQueryError(&cobra.Command{}, nil, "env-1", "stmt", errors.New("some other failure"), &settled)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "some other failure")
+		require.False(t, settled)
+	})
+}

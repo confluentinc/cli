@@ -232,7 +232,7 @@ func AutocompleteEnvironments(v1Client *ccloudv1.Client, v2Client *ccloudv2.Clie
 	}
 
 	if auditLog := user.GetOrganization().GetAuditLog(); auditLog.GetServiceAccountId() != 0 {
-		environment, _, err := v2Client.GetOrgEnvironment(auditLog.GetAccountId())
+		environment, err := v2Client.GetOrgEnvironment(auditLog.GetAccountId())
 		if err != nil {
 			return nil
 		}
@@ -271,20 +271,6 @@ func AddFilterFlag(cmd *cobra.Command) {
 
 func AddExternalIdentifierFlag(cmd *cobra.Command) {
 	cmd.Flags().String("external-identifier", "", "External Identifier for this pool.")
-}
-
-func AutocompleteGroupMappings(client *ccloudv2.Client) []string {
-	groupMappings, err := client.ListIamGroupMappings()
-	if err != nil {
-		return nil
-	}
-
-	suggestions := make([]string, len(groupMappings))
-	for i, groupMapping := range groupMappings {
-		description := fmt.Sprintf("%s: %s", groupMapping.GetDisplayName(), groupMapping.GetDescription())
-		suggestions[i] = fmt.Sprintf("%s\t%s", groupMapping.GetId(), description)
-	}
-	return suggestions
 }
 
 func AutocompleteCertificatePool(client *ccloudv2.Client, provider string) []string {

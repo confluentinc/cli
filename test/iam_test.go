@@ -374,7 +374,10 @@ func (s *CLITestSuite) TestIamCertificateAuthority() {
 		{args: `iam certificate-authority update op-12345 --name "new name" --description "new description" --certificate-chain ABC123 --certificate-chain-filename certificate-2.pem --crl-url example.url`, fixture: "iam/certificate-authority/update-crl-url.golden"},
 		{args: "iam certificate-authority update op-12345 --require-crl-on-client-certificate=false", fixture: "iam/certificate-authority/update-require-crl.golden"},
 		{args: "iam certificate-authority update op-54321 --require-crl-on-client-certificate=true", fixture: "iam/certificate-authority/update-require-crl-true.golden"},
-		{args: `iam certificate-authority update op-12345 --name "new name" --description "new description" --certificate-chain-filename certificate-2.pem`, fixture: "iam/certificate-authority/update-fail.golden", exitCode: 1},
+		// The hand-written command marked certificate-chain and certificate-chain-filename
+		// MarkFlagsRequiredTogether; the generated command has no such constraint (accepted
+		// divergence, APIE-1478), so updating the filename alone succeeds.
+		{args: `iam certificate-authority update op-12345 --name "new name" --description "new description" --certificate-chain-filename certificate-2.pem`, fixture: "iam/certificate-authority/update-filename-only.golden"},
 		{args: "iam certificate-authority list", fixture: "iam/certificate-authority/list.golden"},
 		{args: "iam certificate-authority list -o json", fixture: "iam/certificate-authority/list-json.golden"},
 	}
@@ -412,7 +415,19 @@ func (s *CLITestSuite) TestIamGroupMapping() {
 		{args: "iam group-mapping delete group-abc group-def", input: "y\n", fixture: "iam/group-mapping/delete-multiple-success.golden"},
 		{args: "iam group-mapping delete group-dne --force", fixture: "iam/group-mapping/delete-dne.golden", exitCode: 1},
 		{args: "iam group-mapping describe group-abc", fixture: "iam/group-mapping/describe.golden"},
+		// Early-access group mappings carry the legacy "pool-" prefix; the id guard accepts both and
+		// rejects anything else. Describe and update each carry their own guard, so both are
+		// covered in both directions.
+		{args: "iam group-mapping describe pool-legacy", fixture: "iam/group-mapping/describe-legacy-prefix.golden"},
+		{args: "iam group-mapping describe invalid", fixture: "iam/group-mapping/describe-invalid-prefix.golden", exitCode: 1},
 		{args: `iam group-mapping update group-abc --name updated-group-mapping --description "updated description" --filter claims.principal.startsWith("user")`, fixture: "iam/group-mapping/update.golden"},
+		// No one-required flag rule: a no-flag update sends an empty PATCH, which the handler models as a no-op.
+		{args: "iam group-mapping update group-abc", fixture: "iam/group-mapping/update-no-flags.golden"},
+		// Flags are gated on Changed, not on a non-empty value: an explicit --description "" is sent
+		// and clears the field (the hand-written command silently treated it as a no-op).
+		{args: `iam group-mapping update group-abc --description ""`, fixture: "iam/group-mapping/update-clear-description.golden"},
+		{args: `iam group-mapping update invalid --description "updated description"`, fixture: "iam/group-mapping/update-invalid-prefix.golden", exitCode: 1},
+		{args: `iam group-mapping update pool-legacy --description "updated description"`, fixture: "iam/group-mapping/update-legacy-prefix.golden"},
 		{args: "iam group-mapping list", fixture: "iam/group-mapping/list.golden"},
 	}
 
@@ -441,12 +456,25 @@ func (s *CLITestSuite) TestIamIpGroup() {
 	tests := []CLITest{
 		{args: "iam ip-group create demo-ip-group --cidr-blocks 168.150.200.0/24,147.150.200.0/24", fixture: "iam/ip-group/create.golden"},
 		{args: "iam ip-group list", fixture: "iam/ip-group/list.golden"},
-		{args: "iam ip-group describe ipg-wjnde", fixture: "iam/ip-group/describe.golden"},
-		{args: "iam ip-group delete ipg-wjnde", fixture: "iam/ip-group/delete.golden"},
-		{args: "iam ip-group update ipg-wjnde --name new-demo-group --add-cidr-blocks 1.2.3.4/12 --remove-cidr-blocks 168.150.200.0/24", fixture: "iam/ip-group/update.golden"},
-		{args: "iam ip-group update ipg-wjnde --name new-demo-group --add-cidr-blocks 1.2.3.4/12,147.150.200.0/24 --remove-cidr-blocks 168.150.200.0/24", fixture: "iam/ip-group/update-resource-duplicate.golden"},
-		{args: "iam ip-group update ipg-wjnde --name new-demo-group --add-cidr-blocks 1.2.3.4/12 --remove-cidr-blocks 1.2.3.4/12", fixture: "iam/ip-group/update-resource-add-and-remove.golden"},
-		{args: "iam ip-group update ipg-wjnde --name new-demo-group --add-cidr-blocks 1.2.3.4/12 --remove-cidr-blocks 1.1.1.1/1", fixture: "iam/ip-group/update-resource-remove-not-exist.golden"},
+		{args: "iam ip-group describe ipg-123abc", fixture: "iam/ip-group/describe.golden"},
+		{args: "iam ip-group delete ipg-123abc --force", fixture: "iam/ip-group/delete.golden"},
+		{args: "iam ip-group delete ipg-123abc", input: "y\n", fixture: "iam/ip-group/delete-prompt.golden"},
+		{args: "iam ip-group delete ipg-dne --force", fixture: "iam/ip-group/delete-dne.golden", exitCode: 1},
+		// Multi-id delete: the confirmation names every id, each DELETE is issued, and a failure
+		// on one id does not stop the others (mixed run exits 1 after deleting the rest).
+		{args: "iam ip-group delete ipg-123abc ipg-456def", input: "n\n", fixture: "iam/ip-group/delete-multiple-refuse.golden"},
+		{args: "iam ip-group delete ipg-123abc ipg-456def", input: "y\n", fixture: "iam/ip-group/delete-multiple-success.golden"},
+		{args: "iam ip-group delete ipg-123abc ipg-inuse --force", fixture: "iam/ip-group/delete-multiple-mixed.golden", exitCode: 1},
+		{args: "iam ip-group delete ipg-123abc ipg-dne --force", fixture: "iam/ip-group/delete-multiple-dne.golden", exitCode: 1},
+		{args: "iam ip-group update ipg-123abc --name new-demo-group --add-cidr-blocks 1.2.3.4/12 --remove-cidr-blocks 168.150.200.0/24", fixture: "iam/ip-group/update.golden"},
+		{args: "iam ip-group update ipg-123abc --name new-demo-group --add-cidr-blocks 1.2.3.4/12,147.150.200.0/24 --remove-cidr-blocks 168.150.200.0/24", fixture: "iam/ip-group/update-resource-duplicate.golden"},
+		{args: "iam ip-group update ipg-123abc --name new-demo-group --add-cidr-blocks 1.2.3.4/12 --remove-cidr-blocks 1.2.3.4/12", fixture: "iam/ip-group/update-resource-add-and-remove.golden"},
+		{args: "iam ip-group update ipg-123abc --name new-demo-group --add-cidr-blocks 1.2.3.4/12 --remove-cidr-blocks 1.1.1.1/1", fixture: "iam/ip-group/update-resource-remove-not-exist.golden"},
+		// A name-only update: the full-object seed carries the current CIDR blocks.
+		{args: "iam ip-group update ipg-123abc --name new-demo-group", fixture: "iam/ip-group/update-name-only.golden"},
+		// Backend errors the command attaches suggestions to (cli.error_suggestions).
+		{args: "iam ip-group update ipg-lockout --add-cidr-blocks 1.2.3.4/32", fixture: "iam/ip-group/update-lock-out.golden", exitCode: 1},
+		{args: "iam ip-group delete ipg-inuse --force", fixture: "iam/ip-group/delete-related-filters.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
