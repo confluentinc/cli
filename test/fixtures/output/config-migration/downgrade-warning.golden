@@ -1,0 +1,5 @@
+"<HOME>/.confluent/config.json" changed after your configuration moved to settings.json, contexts.json, and secrets.json. This version doesn't read config.json, so logins and context changes made with a version before v5 won't appear here.
+
+  Current |    Name    |  Platform   |     Credential      
+----------+------------+-------------+---------------------
+  *       | my-context | http://test | username-test-user  
