@@ -1334,6 +1334,90 @@ func TestMigrate_UnresolvableHomeSkipsMigration(t *testing.T) {
 	require.NoFileExists(t, filepath.Join(cwd, ".confluent", "config.json.v4-backup"))
 }
 
+// sharedLoginLegacy is a v4 config.json whose two contexts share one credential (so one identity
+// in secrets.json) yet hold different keys for the same Kafka cluster and Schema Registry.
+const sharedLoginLegacy = `{
+	"current_context": "ctxA",
+	"platforms": {"p1": {"name": "p1", "server": "https://confluent.cloud"}},
+	"credentials": {"cred1": {"name": "cred1", "username": "u@example.com", "credential_type": 0}},
+	"contexts": {
+		"ctxA": {
+			"name": "ctxA", "platform": "p1", "credential": "cred1",
+			"kafka_cluster_context": {
+				"environment_context": false,
+				"active_kafka": "lkc-1",
+				"kafka_cluster_configs": {
+					"lkc-1": {"id": "lkc-1", "name": "c", "bootstrap_servers": "b:9092", "api_key": "kA",
+						"api_keys": {"kA": {"api_key": "kA", "api_secret": "secretA"}}}
+				}
+			},
+			"schema_registry_clusters": {
+				"sr1": {"id": "sr1", "schema_registry_endpoint": "https://sr", "schema_registry_credentials": {"api_key": "srA", "api_secret": "srSecretA"}}
+			}
+		},
+		"ctxB": {
+			"name": "ctxB", "platform": "p1", "credential": "cred1",
+			"kafka_cluster_context": {
+				"environment_context": false,
+				"active_kafka": "lkc-1",
+				"kafka_cluster_configs": {
+					"lkc-1": {"id": "lkc-1", "name": "c", "bootstrap_servers": "b:9092", "api_key": "kB",
+						"api_keys": {"kB": {"api_key": "kB", "api_secret": "secretB"}}}
+				}
+			},
+			"schema_registry_clusters": {
+				"sr1": {"id": "sr1", "schema_registry_endpoint": "https://sr", "schema_registry_credentials": {"api_key": "srB", "api_secret": "srSecretB"}}
+			}
+		}
+	},
+	"context_states": {"ctxA": {}, "ctxB": {}}
+}`
+
+// requireDecryptsTo checks that pair's stored secret decrypts to want, leaving pair untouched.
+func requireDecryptsTo(t *testing.T, pair *APIKeyPair, want, label string) {
+	t.Helper()
+	require.NotNil(t, pair, label)
+	shadow := &APIKeyPair{Key: pair.Key, Secret: pair.Secret, Salt: pair.Salt, Nonce: pair.Nonce}
+	require.NoError(t, shadow.DecryptSecret(), label)
+	require.Equal(t, want, shadow.Secret, label)
+}
+
+// requireSharedLoginSecrets checks that each sharedLoginLegacy context kept its own keys.
+func requireSharedLoginSecrets(t *testing.T, c *Config) {
+	t.Helper()
+	kafkaKey := func(ctx, key string) *APIKeyPair {
+		return c.Contexts[ctx].KafkaClusterContext.KafkaClusterConfigs["lkc-1"].APIKeys[key]
+	}
+	requireDecryptsTo(t, kafkaKey("ctxA", "kA"), "secretA", "ctxA kafka key")
+	requireDecryptsTo(t, kafkaKey("ctxB", "kB"), "secretB", "ctxB kafka key")
+	requireDecryptsTo(t, c.Contexts["ctxA"].SchemaRegistryClusters["sr1"].SrCredentials, "srSecretA", "ctxA sr key")
+	requireDecryptsTo(t, c.Contexts["ctxB"].SchemaRegistryClusters["sr1"].SrCredentials, "srSecretB", "ctxB sr key")
+}
+
+func TestMigrate_SharedLoginKeepsEveryKey(t *testing.T) {
+	home, migrations := newStableMigrationTest(t)
+	seedLegacyConfig(t, home, []byte(sharedLoginLegacy))
+	migrated := New()
+
+	require.NoError(t, loadQuietly(t, migrated))
+
+	require.Equal(t, int32(1), migrations.Load())
+	requireSharedLoginSecrets(t, migrated)
+
+	// two merged save and reload cycles, each from a freshly loaded config.
+	migrated.DisableUpdateCheck = true
+	require.NoError(t, migrated.Save())
+	reloaded := New()
+	require.NoError(t, loadQuietly(t, reloaded))
+	requireSharedLoginSecrets(t, reloaded)
+
+	reloaded.CurrentContext = "ctxB"
+	require.NoError(t, reloaded.Save())
+	again := New()
+	require.NoError(t, loadQuietly(t, again))
+	requireSharedLoginSecrets(t, again)
+}
+
 func TestMigrate_ConcurrentFirstRunsMigrateOnce(t *testing.T) {
 	const loaders = 4
 	home, migrations := newStableMigrationTest(t)
