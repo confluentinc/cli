@@ -430,6 +430,17 @@ func handleStatementGet(t *testing.T) http.HandlerFunc {
 			Metadata: &flinkgatewayv1.StatementObjectMeta{CreatedAt: flinkgatewayv1.PtrTime(time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC))},
 		}
 
+		// `create --wait` polls this endpoint until the phase leaves the pending set; these
+		// names pin the phase it sees.
+		switch statement.GetName() {
+		case "my-statement-pending":
+			statement.Status.Phase = "PENDING"
+			statement.Status.Detail = nil
+		case "my-statement-failed":
+			statement.Status.Phase = "FAILED"
+			statement.Status.Detail = flinkgatewayv1.PtrString("SQL statement failed")
+		}
+
 		if statement.GetName() == "my-statement-with-warnings" {
 			statement.Status.Warnings = &[]flinkgatewayv1.SqlV1StatementWarning{
 				{

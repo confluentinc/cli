@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
-func (c *statementCommand) newStatementResumeCommand() *cobra.Command {
+func (c *statementCommand) newResumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "resume <name>",
 		Short:             "Resume a Flink SQL statement.",
@@ -44,7 +44,7 @@ func (c *statementCommand) newStatementResumeCommand() *cobra.Command {
 		),
 	}
 
-	c.addPrincipalFlag(cmd)
+	pcmd.AddFlinkStatementPrincipalFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddComputePoolFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
