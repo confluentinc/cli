@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
-func (c *statementCommand) newStatementStopCommand() *cobra.Command {
+func (c *statementCommand) newStopCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "stop <name>",
 		Short:             "Stop a Flink SQL statement.",
