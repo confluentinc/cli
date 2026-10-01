@@ -16,3 +16,6 @@ func stateDirPath(elem ...string) string {
 // CacheDir is the disposable cache directory. Nothing here is authoritative; a
 // wiped CacheDir degrades to a refetch, never an error.
 func CacheDir() string { return stateDirPath(".cache") }
+
+// SecretsFilename is the encrypted secret store, kept out of the plaintext config file.
+func SecretsFilename() string { return stateDirPath("secrets.json") }
