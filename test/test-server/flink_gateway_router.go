@@ -492,7 +492,7 @@ func handleStatementUpdate(t *testing.T) http.HandlerFunc {
 		// Handle the resume case: invalid principal ID
 		if principal != "" && principal != validFlinkStatementPrincipalId {
 			w.WriteHeader(http.StatusBadRequest)
-			err = writeError(w, "Bad Request")
+			err = writeError(w, fmt.Sprintf("principal=%s not found", principal))
 			require.NoError(t, err)
 			return
 		}
