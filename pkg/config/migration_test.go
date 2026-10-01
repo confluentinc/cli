@@ -819,7 +819,8 @@ func TestMigrate_FailedStoreWriteLeavesNoBackup(t *testing.T) {
 
 func TestMigrate_FailedBackupWriteResumes(t *testing.T) {
 	home, migrations := newStableMigrationTest(t)
-	seedLegacyConfig(t, home, cipherLegacyFixture())
+	legacy := cipherLegacyFixture()
+	seedLegacyConfig(t, home, legacy)
 	// a directory appearing in the backup's place after the guard makes the backup write fail.
 	onLegacyConfigStat(t, func(string) { require.NoError(t, os.MkdirAll(migrationBackupPath(home), 0700)) })
 
@@ -829,18 +830,98 @@ func TestMigrate_FailedBackupWriteResumes(t *testing.T) {
 	require.Equal(t, int32(0), migrations.Load())
 	require.FileExists(t, migrationMarkerPath(home))
 
+	// while the directory stays, it can't pass for a completed migration.
 	onLegacyConfigStat(t, func(string) {})
-	require.NoError(t, os.Remove(migrationBackupPath(home)))
 
+	err = loadQuietly(t, New())
+
+	require.EqualError(t, err, fmt.Sprintf(`migration backup "%s" is not a regular file`, migrationBackupPath(home)))
+	require.Equal(t, int32(0), migrations.Load())
+	require.FileExists(t, migrationMarkerPath(home))
+
+	require.NoError(t, os.Remove(migrationBackupPath(home)))
 	c := New()
+
 	err = loadQuietly(t, c)
 
 	require.NoError(t, err)
 	require.Equal(t, int32(1), migrations.Load())
 	require.Equal(t, "ctx1", c.CurrentContext)
 	requireMigratedSecretsOnDisk(t, true)
-	require.FileExists(t, migrationBackupPath(home))
+	backup, err := os.ReadFile(migrationBackupPath(home))
+	require.NoError(t, err)
+	require.Equal(t, legacy, backup)
 	require.NoFileExists(t, migrationMarkerPath(home))
+}
+
+func TestMigrate_IrregularBackupWithoutMarkerIsHardError(t *testing.T) {
+	home, migrations := newStableMigrationTest(t)
+	require.NoError(t, loadQuietly(t, New()))
+	seedLegacyConfig(t, home, cipherLegacyFixture())
+	require.NoError(t, os.MkdirAll(migrationBackupPath(home), 0700))
+
+	err := loadQuietly(t, New())
+
+	require.EqualError(t, err, fmt.Sprintf(`migration backup "%s" is not a regular file`, migrationBackupPath(home)))
+	require.Equal(t, int32(0), migrations.Load())
+	require.NoFileExists(t, migrationMarkerPath(home))
+}
+
+// ghostCurrentContextLegacy is the all-markers legacy file with a current_context naming no
+// context: it decodes and wires, and only Validate rejects it.
+func ghostCurrentContextLegacy() []byte {
+	return bytes.Replace(cipherLegacyFixture(), []byte(`"current_context": "ctx1"`), []byte(`"current_context": "ghost"`), 1)
+}
+
+func TestMigrate_InvalidLegacyStateIsHardErrorOnStable(t *testing.T) {
+	home, migrations := newStableMigrationTest(t)
+	legacyPath := seedLegacyConfig(t, home, ghostCurrentContextLegacy())
+
+	err := loadQuietly(t, New())
+
+	require.ErrorContains(t, err, fmt.Sprintf(`unable to migrate configuration file "%s"`, legacyPath))
+	require.ErrorContains(t, err, `the current context "ghost" does not exist`)
+	require.Equal(t, int32(0), migrations.Load())
+	require.NoFileExists(t, migrationMarkerPath(home))
+	require.NoFileExists(t, SettingsFilename())
+	require.NoFileExists(t, ContextsFilename())
+	require.NoFileExists(t, SecretsFilename())
+}
+
+func TestMigrate_InvalidLegacyStateStartsNonStableFresh(t *testing.T) {
+	home := t.TempDir()
+	setTestHome(t, home)
+	setTestChannel(t, pversion.Dev)
+	migrations := countLegacyMigrations(t)
+	legacyPath := seedLegacyConfig(t, home, ghostCurrentContextLegacy())
+	c := New()
+
+	var err error
+	stderr := captureStderr(t, func() { err = c.Load() })
+
+	require.NoError(t, err)
+	require.Equal(t, 1, strings.Count(stderr, fmt.Sprintf(`Skipped copying contexts and logins from "%s": `, legacyPath)))
+	require.Equal(t, int32(0), migrations.Load())
+	require.Empty(t, c.Contexts)
+	require.FileExists(t, SettingsFilename())
+	require.FileExists(t, ContextsFilename())
+	require.NoFileExists(t, migrationMarkerPath(home))
+}
+
+func TestMigrate_PruningValidatePrintsOnceAndDoesNotDeadlock(t *testing.T) {
+	home, migrations := newStableMigrationTest(t)
+	// an active cluster with no config: Validate prunes it and calls Context.Save(), which must not
+	// try to re-take the held store lock.
+	seedLegacyConfig(t, home, bytes.Replace(directKafkaCipherLegacyFixture(), []byte(`"active_kafka": "cluster1"`), []byte(`"active_kafka": "lkc-missing"`), 1))
+	c := New()
+
+	var err error
+	stderr := captureStderr(t, func() { err = c.Load() })
+
+	require.NoError(t, err)
+	require.Equal(t, int32(1), migrations.Load())
+	require.Equal(t, 1, strings.Count(stderr, `Active Kafka cluster "lkc-missing" has no info stored`))
+	require.Equal(t, "", c.Contexts["ctx1"].KafkaClusterContext.ActiveKafkaCluster)
 }
 
 func TestMigrate_FailedMarkerWriteWritesNothing(t *testing.T) {
