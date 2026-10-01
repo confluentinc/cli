@@ -1,8 +1,6 @@
 package flink
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
@@ -10,16 +8,15 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
-	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
-func (c *statementCommand) newStatementResumeCommand() *cobra.Command {
+func (c *statementCommand) newResumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "resume <name>",
 		Short:             "Resume a Flink SQL statement.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              c.statementResume,
+		RunE:              c.resume,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Request to resume the currently stopped statement "my-statement" using original principal id and under the original compute pool.`,
@@ -44,17 +41,19 @@ func (c *statementCommand) newStatementResumeCommand() *cobra.Command {
 		),
 	}
 
-	c.addPrincipalFlag(cmd)
+	pcmd.AddFlinkStatementPrincipalFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddComputePoolFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
-func (c *statementCommand) statementResume(cmd *cobra.Command, args []string) error {
+func (c *statementCommand) resume(cmd *cobra.Command, args []string) error {
+	statementName := args[0]
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
@@ -65,40 +64,44 @@ func (c *statementCommand) statementResume(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	// Read the statement back first so the update preserves the rest of the spec.
-	statement, err := client.GetStatement(environmentId, args[0], c.Context.GetCurrentOrganization())
+	// Full-object update: the gateway rejects a partial body, so seed every field from the current
+	// statement and let the flags below overlay it.
+	current, err := client.GetStatement(environmentId, statementName, c.Context.GetCurrentOrganization())
 	if err != nil {
 		return err
 	}
-	if statement.Spec == nil {
-		return fmt.Errorf(`statement "%s" has no spec`, args[0])
+	updateReq := current
+	if updateReq.Spec == nil {
+		updateReq.Spec = &flinkgatewayv1.SqlV1StatementSpec{}
 	}
 
-	// Support resume a Flink statement with a different principal and/or compute-pool
-	principal, err := cmd.Flags().GetString("principal")
+	if cmd.Flags().Changed("compute-pool") {
+		computePoolId, err := cmd.Flags().GetString("compute-pool")
+		if err != nil {
+			return err
+		}
+		updateReq.Spec.ComputePoolId = flinkgatewayv1.PtrString(computePoolId)
+	}
+
+	if cmd.Flags().Changed("principal") {
+		principal, err := cmd.Flags().GetString("principal")
+		if err != nil {
+			return err
+		}
+		updateReq.Spec.Principal = flinkgatewayv1.PtrString(principal)
+	}
+
+	updateReq.Spec.Stopped = flinkgatewayv1.PtrBool(false)
+
+	if err := client.UpdateStatement(environmentId, statementName, c.Context.GetCurrentOrganization(), updateReq); err != nil {
+		return err
+	}
+	if output.GetFormat(cmd) == output.Human {
+		output.Printf(c.Config.EnableColor, "Requested to resume Flink SQL statement \"%s\".\n", statementName)
+	}
+	statement, err := client.GetStatement(environmentId, statementName, c.Context.GetCurrentOrganization())
 	if err != nil {
 		return err
 	}
-	if principal != "" {
-		statement.Spec.SetPrincipal(principal)
-	}
-
-	computePool, err := cmd.Flags().GetString("compute-pool")
-	if err != nil {
-		return err
-	}
-	if computePool != "" {
-		statement.Spec.SetComputePoolId(computePool)
-	}
-
-	statement.Spec.Stopped = flinkgatewayv1.PtrBool(false)
-
-	// the UPDATE statement is an async API
-	// An accepted response 202 doesn't necessarily mean the UPDATE will be successful/complete
-	if err := client.UpdateStatement(environmentId, args[0], c.Context.GetCurrentOrganization(), statement); err != nil {
-		return fmt.Errorf("failed to resume %s \"%s\": %w", resource.FlinkStatement, args[0], err)
-	}
-
-	output.Printf(c.Config.EnableColor, "Requested to resume %s \"%s\".\n", resource.FlinkStatement, args[0])
-	return nil
+	return printStatement(cmd, statement)
 }
