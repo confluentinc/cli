@@ -115,6 +115,29 @@ func TestRunDrainsASinglePage(t *testing.T) {
 	require.Equal(t, types.COMPLETED, result.Phase())
 }
 
+func TestRunReportsProgressPerPage(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	running := statement("RUNNING", boundedTraits("id"))
+	completed := statement("COMPLETED", boundedTraits("id"))
+
+	gomock.InOrder(
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(running, nil),
+		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "").
+			Return(page("10", []any{"1"}), nil),
+		client.EXPECT().GetStatementResults(testEnvironmentId, testStatementName, testOrganizationId, "10").
+			Return(page("", []any{"2"}, []any{"3"}), nil),
+		client.EXPECT().GetStatement(testEnvironmentId, testStatementName, testOrganizationId).Return(completed, nil),
+	)
+
+	var counts []int
+	opts := testOptions(client)
+	opts.OnProgress = func(rows int) { counts = append(counts, rows) }
+
+	_, err := Run(context.Background(), opts, testStatementName)
+	require.NoError(t, err)
+	require.Equal(t, []int{1, 3}, counts)
+}
+
 func TestRunDrainsEveryPage(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	running := statement("RUNNING", boundedTraits("id"))
