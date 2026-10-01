@@ -152,6 +152,11 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic create", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/create.golden", exitCode: 1},
 		{args: "kafka topic create topic1", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-success.golden"},
 		{args: "kafka topic create topic1 --dry-run", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-success.golden"},
+		{args: "kafka topic create topic1 --config test/fixtures/input/kafka/topic/topic-config.properties", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-success.golden"},
+		{args: "kafka topic create topic1 --config test/fixtures/input/kafka/topic/topic-config-json.properties", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-success.golden"},
+		{args: `kafka topic create topic1 --config 'confluent.key.association={"subject":"kafkaCLISubject"}' --config 'confluent.value.association={"schema":"{\"type\":\"record\",\"name\":\"TestRecord\",\"doc\":\"Basic test.\\na=b.\",\"fields\":[{\"name\":\"field1\",\"type\":[\"null\",\"string\"]}]}"}'`, useKafka: "lkc-create-topic", fixture: "kafka/topic/create-success.golden", name: "create topic with inline JSON association configs"},
+		{args: `kafka topic create topic1 --config 'confluent.key.association={"subject":"kafkaCLISubject"},confluent.value.association={"schema":"{\"type\":\"record\",\"name\":\"TestRecord\",\"doc\":\"Basic test.\\na=b.\",\"fields\":[{\"name\":\"field1\",\"type\":[\"null\",\"string\"]}]}"}'`, useKafka: "lkc-create-topic", fixture: "kafka/topic/create-success.golden", name: "create topic with inline JSON association configs 2"},
+		{args: `kafka topic create topic1 --config retention.ms=1 --config 'confluent.value.association={"schema":"{\"type\":\"record\",\"name\":\"TestRecord\",\"doc\":\"Basic test.\\na=b.\",\"fields\":[{\"name\":\"field1\",\"type\":[\"null\",\"string\"]}]}"}'`, useKafka: "lkc-create-topic", fixture: "kafka/topic/create-success.golden", name: "create topic with a JSON config and a plain config"},
 		{args: "kafka topic create topic-exist", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-dup-topic.golden", exitCode: 1},
 		{args: "kafka topic create topic-exceed-limit --partitions 9001", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-limit-topic.golden", exitCode: 1},
 
@@ -178,6 +183,9 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o json", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-json.golden"},
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o yaml", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-yaml.golden"},
 		{args: "kafka topic update topic-exist-rest --config num.partitions=6", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-partitions-count.golden"},
+		{args: "kafka topic update topic-exist-rest --config test/fixtures/input/kafka/topic/topic-config.properties", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest.golden"},
+		{args: "kafka topic update topic-exist-rest --config test/fixtures/input/kafka/topic/topic-config-json.properties", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-json-config.golden"},
+		{args: `kafka topic update topic-exist-rest --config 'confluent.key.association={"subject":"kafkaCLISubject"}' --config 'confluent.value.association={"schema":"{\"type\":\"record\",\"name\":\"TestRecord\",\"doc\":\"Basic test.\\na=b.\",\"fields\":[{\"name\":\"field1\",\"type\":[\"null\",\"string\"]}]}"}'`, useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-json-config.golden", name: "update topic with inline JSON association configs"},
 	}
 
 	if runtime.GOOS != "windows" {
