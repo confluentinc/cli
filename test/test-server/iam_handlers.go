@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"slices"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -22,6 +23,9 @@ import (
 )
 
 var (
+	// keyStoreMu guards keyStoreV2 and keyIndex: handlers run concurrently when several CLI
+	// processes hit the mock backend at once.
+	keyStoreMu       sync.Mutex
 	keyStoreV2       = map[string]*apikeysv2.IamV2ApiKey{}
 	keyTime          = apikeysv2.PtrTime(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
 	roleBindingStore = []mdsv2.IamV2RoleBinding{
@@ -85,6 +89,8 @@ func handleIamApiKeyUpdate(t *testing.T, keyStr string) http.HandlerFunc {
 		req := new(apikeysv2.IamV2ApiKey)
 		err := json.NewDecoder(r.Body).Decode(req)
 		require.NoError(t, err)
+		keyStoreMu.Lock()
+		defer keyStoreMu.Unlock()
 		apiKey := keyStoreV2[keyStr]
 		apiKey.Spec.Description = req.Spec.Description
 		err = json.NewEncoder(w).Encode(apiKey)
@@ -94,6 +100,8 @@ func handleIamApiKeyUpdate(t *testing.T, keyStr string) http.HandlerFunc {
 
 func handleIamApiKeyGet(t *testing.T, keyStr string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		keyStoreMu.Lock()
+		defer keyStoreMu.Unlock()
 		if apiKey, ok := keyStoreV2[keyStr]; ok {
 			err := json.NewEncoder(w).Encode(apiKey)
 			require.NoError(t, err)
@@ -111,7 +119,9 @@ func handleIamApiKeyDelete(t *testing.T, keyStr string) http.HandlerFunc {
 			require.NoError(t, err)
 			return
 		}
+		keyStoreMu.Lock()
 		delete(keyStoreV2, keyStr)
+		keyStoreMu.Unlock()
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
@@ -122,7 +132,9 @@ func handleIamApiKeys(t *testing.T) http.HandlerFunc {
 		if r.Method == http.MethodPost {
 			handleIamApiKeysCreate(t)(w, r)
 		} else if r.Method == http.MethodGet {
+			keyStoreMu.Lock()
 			apiKeysList := apiKeysFilterV2(r.URL)
+			keyStoreMu.Unlock()
 			setPageToken(apiKeysList, &apiKeysList.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(apiKeysList)
 			require.NoError(t, err)
@@ -152,6 +164,7 @@ func handleIamApiKeysCreate(t *testing.T) http.HandlerFunc {
 				Spec:       &apikeysv2.IamV2ApiKeySpec{Secret: apikeysv2.PtrString("FLINKREGIONAPISECRET")},
 			}
 		default:
+			keyStoreMu.Lock()
 			apiKey.Id = apikeysv2.PtrString(fmt.Sprintf("MYKEY%d", keyIndex))
 			apiKey.Spec = &apikeysv2.IamV2ApiKeySpec{
 				Owner:  req.Spec.Owner,
@@ -166,6 +179,7 @@ func handleIamApiKeysCreate(t *testing.T) http.HandlerFunc {
 			apiKey.Metadata = &apikeysv2.ObjectMeta{CreatedAt: keyTime}
 			keyIndex++
 			keyStoreV2[apiKey.GetId()] = apiKey
+			keyStoreMu.Unlock()
 		}
 
 		err = json.NewEncoder(w).Encode(apiKey)
