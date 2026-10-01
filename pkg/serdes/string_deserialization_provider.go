@@ -8,7 +8,7 @@ import (
 
 type StringDeserializationProvider struct{}
 
-func (s *StringDeserializationProvider) InitDeserializer(_, _, _ string, _ SchemaRegistryAuth, _ schemaregistry.Client) error {
+func (s *StringDeserializationProvider) InitDeserializer(_, _, _, _ string, _ SchemaRegistryAuth, _ schemaregistry.Client) error {
 	return nil
 }
 

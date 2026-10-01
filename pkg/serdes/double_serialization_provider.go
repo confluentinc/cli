@@ -12,7 +12,7 @@ import (
 
 type DoubleSerializationProvider struct{}
 
-func (DoubleSerializationProvider) InitSerializer(_, _, _ string, _ int, _ SchemaRegistryAuth) error {
+func (DoubleSerializationProvider) InitSerializer(_, _, _, _ string, _ int, _ SchemaRegistryAuth) error {
 	return nil
 }
 
