@@ -366,11 +366,11 @@ var legacyOverlayAllowlist = map[string]bool{
 // TestLegacyOverlay_CoversEveryRetaggedField walks the live Config type graph, following only
 // persisted (non json:"-") fields, and checks that every json:"-" field it finds under
 // pkg/config's own types has either an allowlist entry or a same-named field on a registered
-// overlay type. It also fails if an allowlist entry is never visited (a stale entry could mask
-// real drift elsewhere). It only verifies that a retagged field's TYPE has a matching overlay
-// field, not that the overlay's wrapper structs reach every holder along the way (e.g. both
-// KafkaClusterConfigs and KafkaEnvContexts) - TestApplyLegacyConfig_CopiesSecretsVerbatim covers
-// that with real markers.
+// overlay type; it also fails if an allowlist entry is never visited, catching a stale entry
+// that could mask real drift elsewhere. It only checks that a retagged field's TYPE has a
+// matching overlay field, not that the overlay's wrapper structs reach every holder along the
+// way (e.g. both KafkaClusterConfigs and KafkaEnvContexts);
+// TestApplyLegacyConfig_CopiesSecretsVerbatim covers that with real markers.
 func TestLegacyOverlay_CoversEveryRetaggedField(t *testing.T) {
 	pkgPath := reflect.TypeOf(Config{}).PkgPath()
 	visited := map[reflect.Type]bool{}
@@ -1573,9 +1573,8 @@ const legacyContextWithoutPlatform = `{
 	"context_states": {"ctx1": {}}
 }`
 
-// TestMigrate_WireContextsFailureIsHardError covers Task 4.2's carried-over wrap: a legacy file
-// whose context has no platform fails wireContexts, and the caller must still learn which legacy
-// file caused it.
+// TestMigrate_WireContextsFailureIsHardError covers a legacy file whose context has no platform:
+// it fails wireContexts, and the caller must still learn which legacy file caused it.
 func TestMigrate_WireContextsFailureIsHardError(t *testing.T) {
 	home, migrations := newStableMigrationTest(t)
 	legacyPath := seedLegacyConfig(t, home, []byte(legacyContextWithoutPlatform))
