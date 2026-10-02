@@ -14,6 +14,7 @@ func (c *statementCommand) newStopCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "stop <name>",
 		Short:             "Stop a Flink SQL statement.",
+		Long:              "Stop a running Flink SQL statement. The stop is accepted asynchronously. Check the result with `flink statement describe <name>`.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.stop,
@@ -27,9 +28,9 @@ func (c *statementCommand) newStopCommand() *cobra.Command {
 
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
+	deprecateStatementCloudAndRegionFlags(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
@@ -61,12 +62,7 @@ func (c *statementCommand) stop(cmd *cobra.Command, args []string) error {
 	if err := client.UpdateStatement(environmentId, statementName, c.Context.GetCurrentOrganization(), updateReq); err != nil {
 		return err
 	}
-	if output.GetFormat(cmd) == output.Human {
-		output.Printf(c.Config.EnableColor, "Requested to stop Flink SQL statement \"%s\".\n", statementName)
-	}
-	statement, err := client.GetStatement(environmentId, statementName, c.Context.GetCurrentOrganization())
-	if err != nil {
-		return err
-	}
-	return printStatement(cmd, statement)
+	output.Printf(c.Config.EnableColor, "Requested to stop Flink SQL statement \"%s\".\n", statementName)
+	output.Printf(c.Config.EnableColor, "Please use `confluent flink statement describe %s` to check the latest status.\n", statementName)
+	return nil
 }

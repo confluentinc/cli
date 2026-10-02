@@ -331,11 +331,12 @@ func (s *CLITestSuite) TestFlinkConnectivityType() {
 	}
 
 	tests := []CLITest{
+		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
 		{args: "flink connectivity-type use public", fixture: "flink/connectivity-type/use-public.golden"},
-		{args: "flink statement list --cloud aws --region eu-west-1", fixture: "flink/connectivity-type/list-public.golden"},
+		{args: "flink statement list", fixture: "flink/connectivity-type/list-public.golden"},
 		{args: "flink connectivity-type use private", fixture: "flink/connectivity-type/use-private.golden"},
 		// Checking that the private endpoint is getting hit. The error here tells us that we are not using the public URL anymore.
-		{args: "flink statement list --cloud aws --region eu-west-1", fixture: listPrivateFixture, exitCode: 1},
+		{args: "flink statement list", fixture: listPrivateFixture, exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -439,30 +440,32 @@ func (s *CLITestSuite) TestFlinkStatement() {
 	tests := []CLITest{
 		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
 		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
-		{args: "flink statement delete my-statement --force --cloud aws --region eu-west-1", fixture: "flink/statement/delete.golden"},
-		{args: "flink statement describe my-statement --cloud aws --region eu-west-1 -o yaml", fixture: "flink/statement/describe-yaml.golden"},
-		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/describe.golden"},
-		{args: "flink statement describe my-statement-with-warnings --cloud aws --region eu-west-1", fixture: "flink/statement/describe-warnings.golden"},
-		{args: "flink statement describe my-statement-with-warnings --cloud aws --region eu-west-1 -o yaml", fixture: "flink/statement/describe-warnings-yaml.golden"},
-		{args: "flink statement list --cloud aws --region eu-west-1", fixture: "flink/statement/list.golden"},
-		{args: "flink statement list --cloud aws --region eu-west-1 -o yaml", fixture: "flink/statement/list-yaml.golden"},
-		{args: "flink statement list --cloud aws --region eu-west-1 --status completed", fixture: "flink/statement/list-completed.golden"},
-		{args: "flink statement list --cloud aws --region eu-west-1 --status pending", fixture: "flink/statement/list-pending.golden"},
-		{args: "flink statement stop my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/stop.golden"},
-		{args: "flink statement resume my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/resume-valid.golden"},
-		{args: "flink statement resume my-statement --cloud aws --region eu-west-1 --principal u-123456", fixture: "flink/statement/resume-valid.golden"},
-		{args: "flink statement resume my-statement --cloud aws --region eu-west-1 --compute-pool lfcp-123456", fixture: "flink/statement/resume-valid.golden"},
-		{args: "flink statement resume my-statement --cloud aws --region eu-west-1 --principal u-123456 --compute-pool lfcp-123456", fixture: "flink/statement/resume-valid.golden"},
-		{args: "flink statement resume my-statement --cloud aws --region eu-west-1 --principal sa-654321", fixture: "flink/statement/resume-invalid-principal.golden", exitCode: 1},
-		{args: "flink statement resume my-statement --cloud aws --region eu-west-1 --compute-pool lfcp-654321", fixture: "flink/statement/resume-invalid-compute-pool.golden", exitCode: 1},
-		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --compute-pool lfcp-123456", fixture: "flink/statement/update-compute-pool.golden"},
-		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --principal u-123456", fixture: "flink/statement/update-principal.golden"},
-		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --stopped=false", fixture: "flink/statement/update-stopped.golden"},
-		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --stopped=false --principal u-123456", fixture: "flink/statement/update-stopped.golden"},
-		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --stopped=false --compute-pool lfcp-123456", fixture: "flink/statement/update-stopped.golden"},
-		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --stopped=false --compute-pool lfcp-123456 --principal u-123456", fixture: "flink/statement/update-stopped.golden"},
-		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --stopped=false --compute-pool lfcp-654321", fixture: "flink/statement/update-invalid-compute-pool.golden", exitCode: 1},
-		{args: "flink statement update my-statement --cloud aws --region eu-west-1 --stopped=false --principal u-654321", fixture: "flink/statement/update-invalid-principal.golden", exitCode: 1},
+		{args: "flink statement delete my-statement --force", fixture: "flink/statement/delete.golden"},
+		{args: "flink statement describe my-statement -o yaml", fixture: "flink/statement/describe-yaml.golden"},
+		{args: "flink statement describe my-statement", fixture: "flink/statement/describe.golden"},
+		// --cloud/--region are deprecated on statement commands and ignored: the selected region and endpoint decide.
+		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/describe-deprecated-region-flags.golden"},
+		{args: "flink statement describe my-statement-with-warnings", fixture: "flink/statement/describe-warnings.golden"},
+		{args: "flink statement describe my-statement-with-warnings -o yaml", fixture: "flink/statement/describe-warnings-yaml.golden"},
+		{args: "flink statement list", fixture: "flink/statement/list.golden"},
+		{args: "flink statement list -o yaml", fixture: "flink/statement/list-yaml.golden"},
+		{args: "flink statement list --status completed", fixture: "flink/statement/list-completed.golden"},
+		{args: "flink statement list --status pending", fixture: "flink/statement/list-pending.golden"},
+		{args: "flink statement stop my-statement", fixture: "flink/statement/stop.golden"},
+		{args: "flink statement resume my-statement", fixture: "flink/statement/resume-valid.golden"},
+		{args: "flink statement resume my-statement --principal u-123456", fixture: "flink/statement/resume-valid.golden"},
+		{args: "flink statement resume my-statement --compute-pool lfcp-123456", fixture: "flink/statement/resume-valid.golden"},
+		{args: "flink statement resume my-statement --principal u-123456 --compute-pool lfcp-123456", fixture: "flink/statement/resume-valid.golden"},
+		{args: "flink statement resume my-statement --principal sa-654321", fixture: "flink/statement/resume-invalid-principal.golden", exitCode: 1},
+		{args: "flink statement resume my-statement --compute-pool lfcp-654321", fixture: "flink/statement/resume-invalid-compute-pool.golden", exitCode: 1},
+		{args: "flink statement update my-statement --compute-pool lfcp-123456", fixture: "flink/statement/update-compute-pool.golden"},
+		{args: "flink statement update my-statement --principal u-123456", fixture: "flink/statement/update-principal.golden"},
+		{args: "flink statement update my-statement --stopped=false", fixture: "flink/statement/update-stopped.golden"},
+		{args: "flink statement update my-statement --stopped=false --principal u-123456", fixture: "flink/statement/update-stopped.golden"},
+		{args: "flink statement update my-statement --stopped=false --compute-pool lfcp-123456", fixture: "flink/statement/update-stopped.golden"},
+		{args: "flink statement update my-statement --stopped=false --compute-pool lfcp-123456 --principal u-123456", fixture: "flink/statement/update-stopped.golden"},
+		{args: "flink statement update my-statement --stopped=false --compute-pool lfcp-654321", fixture: "flink/statement/update-invalid-compute-pool.golden", exitCode: 1},
+		{args: "flink statement update my-statement --stopped=false --principal u-654321", fixture: "flink/statement/update-invalid-principal.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -474,8 +477,10 @@ func (s *CLITestSuite) TestFlinkStatement() {
 
 func (s *CLITestSuite) TestFlinkStatementCreate() {
 	tests := []CLITest{
+		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
+		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "flink/statement/create.golden"},
-		{args: `flink statement create my-statement-2 --sql "INSERT * INTO table;" --cloud aws --region eu-west-1 --service-account sa-123456`, fixture: "flink/statement/create-without-compute-pool.golden"},
+		{args: `flink statement create my-statement-2 --sql "INSERT * INTO table;" --service-account sa-123456`, fixture: "flink/statement/create-without-compute-pool.golden"},
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456`, fixture: "flink/statement/create-service-account-warning.golden"},
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 --wait`, fixture: "flink/statement/create-wait.golden"},
 		{args: `flink statement create my-statement-pending --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 --wait --timeout 6s`, fixture: "flink/statement/create-wait-timeout.golden", exitCode: 1},
@@ -486,6 +491,7 @@ func (s *CLITestSuite) TestFlinkStatementCreate() {
 	}
 
 	for _, test := range tests {
+		test.workflow = true
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
@@ -526,10 +532,10 @@ func (s *CLITestSuite) TestFlinkEndpointUse() {
 		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
 		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
 		{args: "flink endpoint list", fixture: "flink/endpoint/list-aws-after-use.golden"},
-		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/describe.golden"},
+		{args: "flink statement describe my-statement", fixture: "flink/statement/describe.golden"},
 		{args: "flink endpoint unset", fixture: "flink/endpoint/unset.golden"},
 		{args: "flink endpoint use http://127.0.0.1:1040", fixture: "flink/endpoint/use-private.golden"},
-		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: describeFailureFixture, exitCode: 1},
+		{args: "flink statement describe my-statement", fixture: describeFailureFixture, exitCode: 1},
 		{args: "flink region use --cloud azure --region eastus2", fixture: "flink/region/use-azure-ccn.golden"},
 		{args: "flink endpoint use https://flink-n-abcde2.eastus.azure.confluent.cloud", fixture: "flink/endpoint/use-azure-ccn.golden"},
 		{args: "flink endpoint use https://flink-n-abcde7.eastus.azure.confluent.cloud", fixture: "flink/endpoint/use-azure-ccn-peering.golden"},

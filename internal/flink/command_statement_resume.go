@@ -14,6 +14,7 @@ func (c *statementCommand) newResumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "resume <name>",
 		Short:             "Resume a Flink SQL statement.",
+		Long:              "Resume a stopped Flink SQL statement, optionally under a different principal or compute pool. The principal can only be changed while resuming, so `--principal` is accepted here and on `flink statement update --stopped=false`. The resume is accepted asynchronously. Check the result with `flink statement describe <name>`.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.resume,
@@ -45,9 +46,9 @@ func (c *statementCommand) newResumeCommand() *cobra.Command {
 	pcmd.AddComputePoolFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
+	deprecateStatementCloudAndRegionFlags(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
@@ -96,12 +97,7 @@ func (c *statementCommand) resume(cmd *cobra.Command, args []string) error {
 	if err := client.UpdateStatement(environmentId, statementName, c.Context.GetCurrentOrganization(), updateReq); err != nil {
 		return err
 	}
-	if output.GetFormat(cmd) == output.Human {
-		output.Printf(c.Config.EnableColor, "Requested to resume Flink SQL statement \"%s\".\n", statementName)
-	}
-	statement, err := client.GetStatement(environmentId, statementName, c.Context.GetCurrentOrganization())
-	if err != nil {
-		return err
-	}
-	return printStatement(cmd, statement)
+	output.Printf(c.Config.EnableColor, "Requested to resume Flink SQL statement \"%s\".\n", statementName)
+	output.Printf(c.Config.EnableColor, "Please use `confluent flink statement describe %s` to check the latest status.\n", statementName)
+	return nil
 }

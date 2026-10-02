@@ -1,4 +1,4 @@
-Stop a Flink SQL statement.
+Stop a running Flink SQL statement. The stop is accepted asynchronously. Check the result with `flink statement describe <name>`.
 
 Usage:
   confluent flink statement stop <name> [flags]
@@ -9,11 +9,8 @@ Request to stop the currently running statement "my-statement".
   $ confluent flink statement stop my-statement
 
 Flags:
-      --cloud string         Specify the cloud provider as "aws", "azure", or "gcp".
-      --region string        Cloud region for Flink (use "confluent flink region list" to see all).
       --environment string   Environment ID.
       --context string       CLI context name.
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
