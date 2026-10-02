@@ -111,10 +111,6 @@ To update the golden files from the current output:
 
     make integration-test INTEGRATION_TEST_ARGS="-update"
 
-To skip rebuilding the CLI, if it already exists in `dist/`:
-
-    make integration-test INTEGRATION_TEST_ARGS="-no-rebuild"
-
 To run a subset of integration tests, you must specify the suite and optionally the name of a specific test:
 
     # Run a suite of integration tests
@@ -272,7 +268,7 @@ For most resource types, a `delete` command should support multiple arguments. T
 See [Supporting Multiple Deletion](pkg/deletion/README.md) for instructions on how to write such commands.
 
 ### Building the documentation
-You can build the CLI documentation locally by running this command from the root directory. This will generate documentation in [RST](https://www.sphinx-doc.org/en/master/index.html) format in the `cli/docs` directory. 
+You can build the CLI documentation locally by running this command from the root directory. This will generate documentation in [RST](https://www.sphinx-doc.org/en/master/index.html) format in the `cli/docs` directory.
 
 ```
 go run cmd/docs/main.go
