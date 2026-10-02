@@ -154,6 +154,53 @@ func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate) (*
 	return client, nil
 }
 
+// Could refactor the above CustomCAAndClientCertClient to use this, but for now leaving it separate to avoid breaking changes
+func GetEnrichedCACertPool(caCertPath string) (*x509.CertPool, error) {
+	// Load system certs (or initialize a new one if unable to load system) as a certificate pool
+	caCertPool, err := x509.SystemCertPool()
+	if err != nil {
+		log.CliLogger.Warnf("Unable to load system certificates; continuing with custom certificates only")
+	}
+	log.CliLogger.Tracef("Loaded certificate pool from system")
+	if caCertPool == nil {
+		log.CliLogger.Tracef("(System certificate pool was blank)")
+		caCertPool = x509.NewCertPool()
+	}
+
+	// If the provided path is not empty, and is a valid file, add it to the certificate pool
+	if caCertPath == "" {
+		log.CliLogger.Tracef("No custom CA certificate specified, using system certs only")
+		return caCertPool, nil
+	}
+
+	// Validate and read the custom certificate file
+	absPath, err := filepath.Abs(caCertPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve certificate path: %w", err)
+	}
+
+	log.CliLogger.Debugf("Attempting to load certificate from absolute path %s", absPath)
+	caCertFile, err := os.Open(absPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open certificate file: %w", err)
+	}
+	defer caCertFile.Close()
+
+	customCaCerts, err := io.ReadAll(caCertFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read certificate: %w", err)
+	}
+	log.CliLogger.Tracef("Successfully read CA certificate")
+
+	// Append custom certs to the system pool
+	if ok := caCertPool.AppendCertsFromPEM(customCaCerts); !ok {
+		return nil, fmt.Errorf("no valid certificates found in file: %s", absPath)
+	}
+	log.CliLogger.Tracef("Successfully appended new certificate to the pool")
+
+	return caCertPool, nil
+}
+
 func isEmptyClientCert(cert tls.Certificate) bool {
 	return cert.Certificate == nil && cert.Leaf == nil && cert.OCSPStaple == nil && cert.PrivateKey == nil && cert.SignedCertificateTimestamps == nil && cert.SupportedSignatureAlgorithms == nil
 }
