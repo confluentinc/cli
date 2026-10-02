@@ -37,7 +37,7 @@ func newStatementCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Co
 	cmd := &cobra.Command{
 		Use:         "statement",
 		Short:       "Manage Flink SQL statements in Confluent Cloud.",
-		Long:        "Manage Flink SQL statements in Confluent Cloud. Statement commands talk to the Flink gateway of one cloud and region: select one with `flink region use --cloud --region`, then list and select the gateway URL with `flink endpoint list` and `flink endpoint use`. A compute pool passed to any Flink statement command must be in that cloud provider and region.",
+		Long:        "Manage Flink SQL statements in Confluent Cloud. Statement commands talk to the Flink gateway of one cloud and region: select one, for example with `confluent flink region use --cloud aws --region us-east-1`, then list and select the gateway URL with `confluent flink endpoint list` and `confluent flink endpoint use`. A compute pool passed to any Flink statement command must be in that cloud provider and region.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
