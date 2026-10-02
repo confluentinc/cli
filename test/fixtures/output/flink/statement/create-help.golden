@@ -14,8 +14,6 @@ Create a Flink SQL statement named "my-statement" in compute pool "lfcp-123456" 
 
 Flags:
       --sql string               REQUIRED: The Flink SQL statement.
-      --cloud string             Specify the cloud provider as "aws", "azure", or "gcp".
-      --region string            Cloud region for Flink (use "confluent flink region list" to see all).
       --environment string       Environment ID.
       --database string          The database which will be used as the default database. When using Kafka, this is the cluster ID.
       --compute-pool string      Flink compute pool ID.

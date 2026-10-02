@@ -1,4 +1,3 @@
-No Flink endpoint is specified, defaulting to public endpoint: `http://127.0.0.1:1026`
 +--------------------------+-------------------------------+
 | Name                     | my-statement-2                |
 | Compute Pool             |                               |

@@ -1,14 +1,2 @@
 Requested to stop Flink SQL statement "my-statement".
-+--------------------------+---------------------------------------------------------+
-| Name                     | my-statement                                            |
-| Compute Pool             | lfcp-123456                                             |
-| Statement                | CREATE TABLE test;                                      |
-| Principal                | u-123456                                                |
-| Properties               | sql.current-catalog=default                             |
-|                          | sql.current-database=my-cluster                         |
-| Creation Date            | 2022-01-01 00:00:00 +0000 UTC                           |
-| Status                   | COMPLETED                                               |
-| Status Detail            | SQL statement is completed                              |
-| Latest Offsets           | customers_source=partition:0,offset:9223372036854775808 |
-| Latest Offsets Timestamp | 2022-01-01 00:00:00 +0000 UTC                           |
-+--------------------------+---------------------------------------------------------+
+Please use `confluent flink statement describe my-statement` to check the latest status.
