@@ -83,10 +83,15 @@ blocks:
             - docker build . --file docker/Dockerfile_alpine_arm64 --tag test-build
 
   # Split like linux/amd64 tests, with fewer integration shards: the unit job is the long pole here,
-  # and Windows agents come from a smaller pool.
+  # and every Windows job pays ~7 min of toolchain setup.
   - name: windows/amd64
     run:
-      when: "branch = 'main' or change_in(['/.semaphore/semaphore.yml', '/test/cli_test.go', '/test/shard-tests.sh'], {default_branch: 'main', pipeline_file: 'ignore'})"
+      when: >-
+        branch = 'main' or change_in([
+        '/.semaphore/semaphore.yml',
+        '/test/cli_test.go',
+        '/test/shard-tests.sh'
+        ], {default_branch: 'main', pipeline_file: 'ignore'})
     dependencies: []
     task:
       agent:
@@ -117,8 +122,8 @@ blocks:
           parallelism: 3
           commands:
             # A non-login MSYS2 bash keeps the Windows PATH, which has no coreutils and whose `sort`
-            # is System32's sort.exe. The agent fails the job on the script's exit code.
-            - $Env:RUN_PATTERN = $(C:\msys64\usr\bin\env.exe PATH=/usr/bin bash test/shard-tests.sh $Env:SEMAPHORE_JOB_INDEX $Env:SEMAPHORE_JOB_COUNT)
+            # is System32's sort.exe. Fail explicitly: an empty pattern would run every test per shard.
+            - $Env:RUN_PATTERN = $(C:\msys64\usr\bin\env.exe PATH=/usr/bin bash test/shard-tests.sh $Env:SEMAPHORE_JOB_INDEX $Env:SEMAPHORE_JOB_COUNT); if ($LASTEXITCODE -ne 0 -or -not $Env:RUN_PATTERN) { exit 1 }
             - $Env:GOCOVERDIR = "test/coverage"
             - New-Item $Env:GOCOVERDIR -ItemType Directory
             - gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v $(go list ./... | Select-String github.com/confluentinc/cli/v4/test) -run $Env:RUN_PATTERN
