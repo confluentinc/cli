@@ -6,7 +6,7 @@ Usage:
 Available Commands:
   artifact                 Manage Connect artifacts.
   cluster                  Manage Connect clusters.
-  custom-connector-runtime Manage custom connector runtimes.
+  custom-connector-runtime Manage Confluent Cloud Connect custom connector runtimes.
   custom-plugin            Manage custom connector plugins.
   event                    Manage log events for managed connectors.
   logs                     Manage logs for connectors.
