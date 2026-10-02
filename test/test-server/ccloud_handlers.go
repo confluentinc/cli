@@ -29,7 +29,7 @@ var (
 		{Id: SRApiEnvId, Name: "srUpdate"},
 		{Id: "env-987zy", Name: "confluent-audit-log"},
 	}
-	keyIndex      = int32(3)
+	keyIndex      = initialKeyIndex
 	resourceIdMap = map[int32]string{auditLogServiceAccountId: auditLogServiceAccountResourceId, serviceAccountId: serviceAccountResourceId}
 
 	RegularOrg = &ccloudv1.Organization{
