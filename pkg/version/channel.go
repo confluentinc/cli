@@ -1,7 +1,7 @@
 package version
 
 import (
-	"strings"
+	"regexp"
 
 	"github.com/hashicorp/go-version"
 )
@@ -49,17 +49,16 @@ func (c Channel) StateDirSuffix() string {
 	}
 }
 
-// snapshotMarker is what goreleaser puts in a local build's version. Its default template is
-// "{{ .Version }}-SNAPSHOT-{{ .ShortCommit }}" and it does not strip an existing prerelease segment,
-// so during a release-candidate cycle `make build` stamps 5.0.0-rc1-SNAPSHOT-<sha>.
-const snapshotMarker = "SNAPSHOT"
+// publishedPrerelease matches the only prerelease labels the release pipeline publishes: rc, alpha,
+// beta, or preview, optionally numbered (rc1, rc.2, beta.3). It is anchored, so a goreleaser snapshot
+// cut during an RC cycle (5.0.0-rc1-SNAPSHOT-<sha>) or `git describe` output does not match.
+var publishedPrerelease = regexp.MustCompile(`^(rc|alpha|beta|preview)\d*(\.\d+)*$`)
 
 // ChannelOf classifies the version string the linker stamps into main.version.
 //
-// A prerelease segment alone cannot mean "published prerelease", since `make build` puts one on
-// every developer's binary; the snapshot marker is what separates them. Anything else carrying one
-// is treated as published, which errs toward isolating an unfamiliar build. That includes a
-// Confluent Platform suffix like 4.72.0-cp1, which no tag in this repo's history uses.
+// Only an allowlisted prerelease label counts as a published prerelease; any other prerelease
+// segment (a `make build` snapshot, -dirty, -cp1, -nightly) is a build we don't recognize, so it
+// isolates itself in the dev directory.
 //
 // Not folded into Version.IsReleased on purpose: it answers a different question, and treats 0.0.1
 // as released.
@@ -73,24 +72,11 @@ func ChannelOf(s string) Channel {
 	switch {
 	case prerelease == "":
 		return Stable
-	case hasSnapshotToken(prerelease):
-		return Dev
-	default:
+	case publishedPrerelease.MatchString(prerelease):
 		return Prerelease
+	default:
+		return Dev
 	}
-}
-
-// hasSnapshotToken reports whether the snapshot marker appears as a whole segment of the prerelease,
-// not merely as a substring, so a published label like 5.0.0-presnapshot stays a prerelease. The
-// segment is the goreleaser template's own `-SNAPSHOT-<sha>`, joined with hyphens onto any existing
-// prerelease dot-identifiers, so both delimiters bound a token.
-func hasSnapshotToken(prerelease string) bool {
-	for _, token := range strings.FieldsFunc(prerelease, func(r rune) bool { return r == '-' || r == '.' }) {
-		if strings.EqualFold(token, snapshotMarker) {
-			return true
-		}
-	}
-	return false
 }
 
 // processChannel is the channel of the running binary. The version is fixed at link time, so there

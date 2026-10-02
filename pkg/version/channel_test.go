@@ -16,18 +16,24 @@ func TestChannelOf(t *testing.T) {
 		{"GA release with a v prefix", "v4.72.0", Stable},
 		{"release candidate", "5.0.0-rc1", Prerelease},
 		{"release candidate with a v prefix", "v5.0.0-rc1", Prerelease},
-		{"preview", "5.0.0-preview.2", Prerelease},
+		{"release candidate, dotted", "5.0.0-rc.2", Prerelease},
+		{"alpha", "5.0.0-alpha", Prerelease},
 		{"beta", "5.0.0-beta3", Prerelease},
-		{"unrecognized prerelease marker", "5.0.0-nightly.4", Prerelease},
+		{"beta, dotted", "5.0.0-beta.3", Prerelease},
+		{"preview", "5.0.0-preview", Prerelease},
+		{"preview, dotted", "5.0.0-preview.2", Prerelease},
 		{"build metadata on a GA tag", "4.72.0+dirty", Stable},
+		// Only the allowlisted labels are published prereleases; anything else is a local or
+		// unfamiliar build and must not share the testers' state directory.
+		{"unrecognized prerelease marker", "5.0.0-nightly.4", Dev},
+		{"dirty working tree", "4.72.0-dirty", Dev},
+		{"git describe past a GA tag", "4.78.0-3-gabcdef", Dev},
+		{"git describe past an RC tag", "5.0.0-rc1-3-gabcdef", Dev},
+		{"Confluent Platform suffix", "4.72.0-cp1", Dev},
 		// What `make build` actually stamps. It carries a prerelease segment but is a local build,
 		// so misreading it as Prerelease would drop developers into the testers' state directory.
 		{"goreleaser snapshot", "4.72.0-SNAPSHOT-d962911bb", Dev},
 		{"goreleaser snapshot, lowercased", "4.72.0-snapshot-d962911bb", Dev},
-		// The marker is matched as a whole segment, not a substring, so a published label that merely
-		// contains the letters stays a prerelease.
-		{"snapshot only as a substring", "5.0.0-snapshotx", Prerelease},
-		{"snapshot only as a substring, prefixed", "5.0.0-presnapshot.1", Prerelease},
 		// goreleaser does not strip the tag's prerelease segment, so during an RC cycle a local
 		// build carries both. The snapshot marker has to win, or every developer lands in the
 		// prerelease directory precisely when real testers are using it.
