@@ -1,4 +1,4 @@
-Resume a Flink SQL statement.
+Resume a stopped Flink SQL statement, optionally under a different principal or compute pool. The principal can only be changed while resuming, so `--principal` is accepted here and on `flink statement update --stopped=false`. The resume is accepted asynchronously. Check the result with `flink statement describe <name>`.
 
 Usage:
   confluent flink statement resume <name> [flags]
@@ -27,8 +27,6 @@ Request to resume the currently stopped statement "my-statement" using service a
 Flags:
       --principal string      A user or service account the statement runs as.
       --compute-pool string   Flink compute pool ID.
-      --cloud string          Specify the cloud provider as "aws", "azure", or "gcp".
-      --region string         Cloud region for Flink (use "confluent flink region list" to see all).
       --environment string    Environment ID.
       --context string        CLI context name.
 

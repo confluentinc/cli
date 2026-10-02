@@ -1,0 +1,11 @@
++--------------------------+--------------------------------+
+| Name                     | my-statement                   |
+| Compute Pool             | lfcp-123456                    |
+| Statement                | INSERT * INTO table;           |
+| Principal                | sa-123456                      |
+| Properties               | sql.current-catalog=my-catalog |
+| Creation Date            | 2023-01-01 00:00:00 +0000 UTC  |
+| Status                   | PENDING                        |
+| Latest Offsets           |                                |
+| Latest Offsets Timestamp | <nil>                          |
++--------------------------+--------------------------------+

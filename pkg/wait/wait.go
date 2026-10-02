@@ -35,10 +35,16 @@ func Call[T any](ctx context.Context, fn func() (T, error)) (T, error) {
 // retry.StateChangeConf.Delay in terraform-provider-confluent.
 //
 // PollInterval is the gap between successive Fetch calls after the first.
+//
+// Initial (optional) seeds the last-known value Poll returns with an error: a
+// caller that already holds the object (a create response) passes it so a
+// timeout that fires before the first Fetch still reports a real phase rather
+// than the zero value.
 type Options[T any] struct {
 	Fetch        func() (T, error)
 	IsTerminal   func(T) bool
 	IsFailed     func(T) bool
+	Initial      T
 	Delay        time.Duration
 	PollInterval time.Duration
 	Timeout      time.Duration
@@ -53,6 +59,7 @@ type PhaseOptions[T any] struct {
 	Phase         func(T) string
 	PendingPhases []string
 	FailedPhases  []string
+	Initial       T
 	Delay         time.Duration
 	PollInterval  time.Duration
 	Timeout       time.Duration
@@ -89,6 +96,7 @@ func PollPhases[T any](ctx context.Context, opts PhaseOptions[T]) (T, error) {
 		Fetch:        opts.Fetch,
 		IsTerminal:   func(v T) bool { return !pending(opts.Phase(v)) },
 		IsFailed:     func(v T) bool { return failed(opts.Phase(v)) },
+		Initial:      opts.Initial,
 		Delay:        opts.Delay,
 		PollInterval: opts.PollInterval,
 		Timeout:      opts.Timeout,
@@ -105,18 +113,32 @@ func PollPhases[T any](ctx context.Context, opts PhaseOptions[T]) (T, error) {
 // where 429/5xx/network blips during polling were retried until timeout. If
 // the timeout elapses while the most recent Fetch errored, that error is
 // returned in place of ErrTimeout so the user sees the underlying cause.
+//
+// Every Fetch runs under the same deadline, through Call: a fetch that is still
+// in flight when the timeout elapses is abandoned (its goroutine finishes on its
+// own) and Poll returns ErrTimeout, so a slow GET can neither hold the caller
+// past Timeout nor turn into a success after it.
 func Poll[T any](ctx context.Context, opts Options[T]) (T, error) {
-	var (
-		last    T
-		lastErr error
-	)
+	last := opts.Initial
+	var lastErr error
 
 	if opts.PollInterval <= 0 {
 		return last, ErrInvalidPollInterval
 	}
 
+	fetchCtx, cancel := context.WithTimeout(ctx, opts.Timeout)
+	defer cancel()
+
 	check := func() (bool, error) {
-		v, ferr := opts.Fetch()
+		v, ferr := Call(fetchCtx, opts.Fetch)
+		if errors.Is(ferr, context.DeadlineExceeded) && fetchCtx.Err() != nil && ctx.Err() == nil {
+			// The poll's own deadline cut the fetch off: report the timeout, keeping the
+			// last-known value (and a prior fetch error, as the deadline branch below does).
+			if lastErr != nil {
+				return true, lastErr
+			}
+			return true, ErrTimeout
+		}
 		if ferr != nil {
 			lastErr = ferr
 			return false, nil

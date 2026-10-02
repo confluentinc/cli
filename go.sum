@@ -195,8 +195,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/flink v0.11.0 h1:gRRtad0RRit38+54vKg6Dt
 github.com/confluentinc/ccloud-sdk-go-v2/flink v0.11.0/go.mod h1:JHg9yHyCBLL0Zm24skG4pGaSR49IfxPJaQg/HXzMJpw=
 github.com/confluentinc/ccloud-sdk-go-v2/flink-artifact v0.3.0 h1:DVWL3Y4b5azgCADubtyp3EhGZuyJkleINaTy2V3iius=
 github.com/confluentinc/ccloud-sdk-go-v2/flink-artifact v0.3.0/go.mod h1:P4fdIkI1ynjSvhDEGX283KhtzG51eGHQc5Cqtp7bu1Q=
-github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.19.0 h1:fS7l0rJQ1PT5J8Qg4EBZvD+hIq5zaF+Io9LtwNpQpSg=
-github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.19.0/go.mod h1:ZkJWrKzzyILrvExh2F6ZeR6tE/meO1HDLs3fEfRYhUc=
+github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.20.0 h1:VTHEKtIJNaCTfd41XxCQDcmA3kOdb2rBZK60aimrnCE=
+github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.20.0/go.mod h1:1airG3iYM2sUpC+QgAHIMRpC9alL/2YwJA3th6bJwbs=
 github.com/confluentinc/ccloud-sdk-go-v2/iam v0.17.0 h1:I5nYXbiSU37Vb6cPmatzJk7szQJUNojTNPkscb+jK/4=
 github.com/confluentinc/ccloud-sdk-go-v2/iam v0.17.0/go.mod h1:jnWqax4kM22sutPGMtGmHqe2usgfqYig4UtmHsLENz0=
 github.com/confluentinc/ccloud-sdk-go-v2/iam-ip-filtering v0.5.0 h1:xD7CXcyAqezFnSVFB4U27oWUY4FlbyciVP0ftDIiI18=
