@@ -78,7 +78,7 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient(computePoolOnly bool) (*
 				return nil, err
 			}
 		} else {
-			return nil, errors.NewErrorWithSuggestions("no cloud provider and region selected", "Select a cloud provider and region with `confluent flink region use` or `--cloud` and `--region`.")
+			return nil, errors.NewErrorWithSuggestions("no cloud provider and region selected", "Select a cloud provider and region with `confluent flink region use`.")
 		}
 
 		unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
@@ -120,7 +120,7 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(access, id string)
 		return privateURL, nil
 	}
 	if access == "" {
-		output.ErrPrintf(c.Config.EnableColor, "No Flink endpoint is specified, defaulting to public endpoint: `%s`\n", publicURL)
+		output.ErrPrintf(c.Config.EnableColor, "No Flink endpoint is specified, defaulting to public endpoint: `%s`. Run `confluent flink endpoint use` to select a private Flink gateway endpoint if you have one.\n", publicURL)
 	}
 	return publicURL, nil
 }
@@ -146,7 +146,7 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(accessType, provider, r
 		return "", errors.NewErrorWithSuggestions("invalid region", "Please select a valid region - use `confluent flink region list` to see available regions")
 	}
 	if accessType == "" {
-		output.ErrPrintf(c.Config.EnableColor, "No Flink endpoint is specified, defaulting to public endpoint: `%s`\n", hostUrl)
+		output.ErrPrintf(c.Config.EnableColor, "No Flink endpoint is specified, defaulting to public endpoint: `%s`. Run `confluent flink endpoint use` to select a private Flink gateway endpoint if you have one.\n", hostUrl)
 	}
 
 	u, err := purl.Parse(hostUrl)

@@ -74,14 +74,18 @@ func RequireStartWithCapital(field string) CommandRule {
 	}
 }
 
-// RequireCapitalizeProperNouns checks that a field capitalizes proper nouns
+// backtickSpan matches a `code` span: a literal command, flag or value, whose words are not prose.
+var backtickSpan = regexp.MustCompile("`[^`]*`")
+
+// RequireCapitalizeProperNouns checks that a field capitalizes proper nouns. Words inside a
+// backtick span are skipped: `flink endpoint use` names a command, and command words are lowercase.
 func RequireCapitalizeProperNouns(field string, properNouns []string) CommandRule {
 	index := map[string]string{}
 	for _, n := range properNouns {
 		index[strings.ToLower(n)] = n
 	}
 	return func(cmd *cobra.Command) error {
-		fieldValue := getValueByName(cmd, field)
+		fieldValue := backtickSpan.ReplaceAllString(getValueByName(cmd, field), "")
 		var issues *multierror.Error
 		for _, word := range strings.Split(fieldValue, " ") {
 			if v, found := index[strings.ToLower(word)]; found && word != v {

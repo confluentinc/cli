@@ -1,1 +1,2 @@
 Requested to stop Flink SQL statement "my-statement".
+Please use `confluent flink statement describe my-statement` to check the latest status.

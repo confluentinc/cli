@@ -1,22 +1,13 @@
 +--------------------------+---------------------------------------------------------+
-| Name                     | my-statement-with-warnings                              |
+| Name                     | my-statement-failed                                     |
 | Compute Pool             | lfcp-123456                                             |
 | Statement                | CREATE TABLE test;                                      |
 | Principal                | u-123456                                                |
 | Properties               | sql.current-catalog=default                             |
 |                          | sql.current-database=my-cluster                         |
 | Creation Date            | 2022-01-01 00:00:00 +0000 UTC                           |
-| Status                   | COMPLETED                                               |
-| Status Detail            | SQL statement is completed                              |
+| Status                   | FAILED                                                  |
+| Status Detail            | SQL statement failed                                    |
 | Latest Offsets           | customers_source=partition:0,offset:9223372036854775808 |
 | Latest Offsets Timestamp | 2022-01-01 00:00:00 +0000 UTC                           |
 +--------------------------+---------------------------------------------------------+
-
-Warnings:
-
-CRITICAL [HIGH_STATE_OPERATOR_WITHOUT_TTL] (Logged: 2022-01-01T00:00:00Z)
-Your query includes one or more highly state-intensive operators but does not set a time-to-live (TTL) value.
-
-MODERATE [MISSING_WINDOW_START_END] (Logged: 2022-01-01T00:00:00Z)
-The GROUP BY clause contains only `window_start` with no corresponding `window_end`.
-
