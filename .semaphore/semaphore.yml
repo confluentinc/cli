@@ -13,22 +13,46 @@ execution_time_limit:
   hours: 1
 
 blocks:
-  - name: linux/amd64
+  # Lint, unit, and sharded integration tests run as parallel jobs so wall-clock time is bounded
+  # by the slowest job rather than their sum. Each test job publishes its coverage profile to the
+  # `coverage/` workflow artifact directory, which the SonarQube job in `after_pipeline` merges.
+  - name: linux/amd64 tests
     dependencies: []
     task:
+      prologue:
+        commands:
+          - checkout
+          - . vault-get-secret cli/sonar-token
+          - sem-version go $(cat .go-version)
+          - export PATH=$(go env GOPATH)/bin:$PATH
       jobs:
-        - name: "Test linux/amd64"
+        - name: "Lint linux/amd64"
           commands:
-            - checkout
-            - . vault-get-secret cli/sonar-token
-            - sem-version go $(cat .go-version)
-            - export PATH=$(go env GOPATH)/bin:$PATH
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
             - make lint
-            - make test
-            - make coverage
             - make test-installer
+        - name: "Unit Test linux/amd64"
+          commands:
+            - make unit-test
+            - artifact push workflow coverage.unit.out --destination coverage/coverage.unit.out --force
+        - name: "Integration Test linux/amd64"
+          parallelism: 6
+          commands:
+            # A bare assignment (unlike `export` or inline substitution) fails the job if the script does
+            - RUN_PATTERN=$(test/shard-tests.sh $SEMAPHORE_JOB_INDEX $SEMAPHORE_JOB_COUNT)
+            - make integration-test INTEGRATION_TEST_ARGS="-run '$RUN_PATTERN'"
+            - artifact push workflow coverage.integration.out --destination coverage/coverage.integration.$SEMAPHORE_JOB_INDEX.out --force
+      epilogue:
+        always:
+          commands:
+            # --ignore-missing: each job produces only its own report (lint produces none)
+            - test-results publish unit-test-report.xml integration-test-report.xml -N "linux/amd64" --ignore-missing
+
+  - name: linux/amd64 build
+    dependencies: []
+    task:
+      jobs:
 # Temporarily disable these builds until rate limiting is resolved
 #        - name: "Build linux/amd64 (GLIBC)"
 #          commands:
@@ -38,11 +62,6 @@ blocks:
           commands:
             - checkout
             - docker build . --file docker/Dockerfile_alpine_amd64 --tag test-build
-      epilogue:
-        always:
-          commands:
-            # --ignore-missing: build-only jobs run no tests; an early failure can leave one unwritten
-            - test-results publish unit-test-report.xml integration-test-report.xml -N "linux/amd64" --ignore-missing
 
   - name: linux/arm64
     run:
@@ -63,40 +82,56 @@ blocks:
             - checkout
             - docker build . --file docker/Dockerfile_alpine_arm64 --tag test-build
 
+  # Split like linux/amd64 tests, with fewer integration shards: the unit job is the long pole here,
+  # and every Windows job pays ~7 min of toolchain setup.
   - name: windows/amd64
     run:
-      when: "branch = 'main'"
+      when: >-
+        branch = 'main' or change_in([
+        '/.semaphore/semaphore.yml',
+        '/test/cli_test.go',
+        '/test/shard-tests.sh'
+        ], {default_branch: 'main', pipeline_file: 'ignore'})
     dependencies: []
     task:
       agent:
         machine:
           type: s1-prod-windows
+      prologue:
+        commands:
+          - checkout
+          # https://confluentinc.atlassian.net/browse/DP-9532
+          # Do not install Go with Chocolatey since it is community maintained and may not have the latest version
+          - $ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -OutFile Go.zip -Uri https://go.dev/dl/go$(Get-Content .go-version).windows-amd64.zip -UseBasicParsing
+          - 7z x Go.zip -oC:\
+          # Install MSYS2 and mingw-w64 GCC to match the release pipeline
+          - if (!(Test-Path "C:\msys64\usr\bin\bash.exe")) { curl.exe -L --retry 5 --retry-delay 5 -o msys2.tar.xz https://repo.msys2.org/distrib/x86_64/msys2-base-x86_64-20260322.tar.xz }
+          - if (!(Test-Path "C:\msys64\usr\bin\bash.exe")) { 7z x msys2.tar.xz }
+          - if (!(Test-Path "C:\msys64\usr\bin\bash.exe")) { 7z x msys2.tar -oC:\ }
+          - C:\msys64\usr\bin\bash -lc "pacman -Sy --noconfirm mingw-w64-x86_64-gcc"
+          - $Env:PATH = "C:\msys64\mingw64\bin;C:\Go\bin;C:\Users\semaphore\go\bin;$Env:PATH"
+          - $Env:CC = "x86_64-w64-mingw32-gcc"
+          - $Env:EXISTING_FLAGS = $(go env CGO_LDFLAGS)
+          - go env -w CGO_LDFLAGS="-fstack-protector $Env:EXISTING_FLAGS"
+          - go install gotest.tools/gotestsum@v1.8.2
       jobs:
-        - name: "Build & Test windows/amd64"
+        - name: "Unit Test windows/amd64"
           commands:
-            - checkout
-            # https://confluentinc.atlassian.net/browse/DP-9532
-            # Do not install Go with Chocolatey since it is community maintained and may not have the latest version
-            - $ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -OutFile Go.zip -Uri https://go.dev/dl/go$(Get-Content .go-version).windows-amd64.zip -UseBasicParsing
-            - 7z x Go.zip -oC:\
-            # Install MSYS2 and mingw-w64 GCC to match the release pipeline
-            - if (!(Test-Path "C:\msys64\usr\bin\bash.exe")) { curl.exe -L --retry 5 --retry-delay 5 -o msys2.tar.xz https://repo.msys2.org/distrib/x86_64/msys2-base-x86_64-20260322.tar.xz }
-            - if (!(Test-Path "C:\msys64\usr\bin\bash.exe")) { 7z x msys2.tar.xz }
-            - if (!(Test-Path "C:\msys64\usr\bin\bash.exe")) { 7z x msys2.tar -oC:\ }
-            - C:\msys64\usr\bin\bash -lc "pacman -Sy --noconfirm mingw-w64-x86_64-gcc"
-            - $Env:PATH = "C:\msys64\mingw64\bin;C:\Go\bin;C:\Users\semaphore\go\bin;$Env:PATH"
-            - $Env:CC = "x86_64-w64-mingw32-gcc"
-            - $Env:EXISTING_FLAGS = $(go env CGO_LDFLAGS)
-            - go env -w CGO_LDFLAGS="-fstack-protector $Env:EXISTING_FLAGS"
+            - gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v $(go list ./... | Select-String github.com/confluentinc/cli/v4/test -NotMatch) -ldflags "-buildmode=exe"
+        - name: "Integration Test windows/amd64"
+          parallelism: 3
+          commands:
+            # A non-login MSYS2 bash keeps the Windows PATH, which has no coreutils and whose `sort`
+            # is System32's sort.exe. Fail explicitly: an empty pattern would run every test per shard.
+            - $Env:RUN_PATTERN = $(C:\msys64\usr\bin\env.exe PATH=/usr/bin bash test/shard-tests.sh $Env:SEMAPHORE_JOB_INDEX $Env:SEMAPHORE_JOB_COUNT); if ($LASTEXITCODE -ne 0 -or -not $Env:RUN_PATTERN) { exit 1 }
             - $Env:GOCOVERDIR = "test/coverage"
             - New-Item $Env:GOCOVERDIR -ItemType Directory
-            - go install gotest.tools/gotestsum@v1.8.2
-            - gotestsum --junitfile unit-test-report.xml -- -timeout 0 -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
-            - gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v $(go list ./... | Select-String test)
+            - gotestsum --junitfile integration-test-report.xml -- -timeout 0 -v $(go list ./... | Select-String github.com/confluentinc/cli/v4/test) -run $Env:RUN_PATTERN
             - go tool covdata textfmt -i $Env:GOCOVERDIR -o test/coverage.out
       epilogue:
         always:
           commands:
+            # --ignore-missing: each job produces only its own report
             - test-results publish unit-test-report.xml integration-test-report.xml -N "windows/amd64" --ignore-missing
 
 after_pipeline:
@@ -108,6 +143,14 @@ after_pipeline:
       - name: Report SonarQube Results
         commands:
           - checkout
+          # Merged here rather than in a pipeline block so it stays off the pipeline's critical path.
+          # after_pipeline always runs, so bail before reporting a failed shard's partial coverage.
+          - '[ "$SEMAPHORE_PIPELINE_RESULT" = "passed" ]'
+          - artifact pull workflow coverage
+          - cp coverage/*.out .
+          - make coverage
+          # `emit-sonarqube-data -a` pulls coverage.txt from the artifact `make coverage` just pushed
+          - rm coverage.txt
           - sem-version java 17
           - emit-sonarqube-data -a coverage.txt --enable_sonarqube_enterprise
 

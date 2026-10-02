@@ -235,6 +235,7 @@ func (s *CLITestSuite) TestApiKeyDescribe() {
 	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
+		{args: "api-key update MYKEY1 --description first-key", fixture: "api-key/4.golden"},
 		{args: "api-key describe MYKEY1", fixture: "api-key/describe.golden"},
 		{args: "api-key describe MYKEY1 -o json", fixture: "api-key/describe-json.golden"},
 		{args: "api-key describe MULTICLUSTERKEY1", fixture: "api-key/describe-multicluster.golden", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}},
@@ -247,12 +248,17 @@ func (s *CLITestSuite) TestApiKeyDescribe() {
 }
 
 func (s *CLITestSuite) TestApiKeyDelete() {
+	// These creates share goldens with the first creates in TestApiKey, so re-record both together.
 	tests := []CLITest{
+		{args: "api-key create --resource lkc-bob", fixture: "api-key/1.golden"},                                // MYKEY3
+		{args: "api-key create --description my-cool-app --resource lkc-cool1", fixture: "api-key/10.golden"},   // MYKEY4
+		{args: "api-key create --description my-other-app --resource lkc-other1", fixture: "api-key/12.golden"}, // MYKEY5
+
 		// delete multiple API keys
-		{args: "api-key delete MYKEY7 MYKEY8 MYKEY20", fixture: "api-key/delete/multiple-fail.golden", exitCode: 1},
-		{args: "api-key delete MYKEY6 MYKEY18 MYKEY20", fixture: "api-key/delete/multiple-fail-plural.golden", exitCode: 1},
-		{args: "api-key delete MYKEY7 MYKEY8", input: "n\n", fixture: "api-key/delete/multiple-refuse.golden"},
-		{args: "api-key delete MYKEY7 MYKEY8", input: "y\n", fixture: "api-key/delete/multiple-success.golden"},
+		{args: "api-key delete MYKEY3 MYKEY4 MYKEY20", fixture: "api-key/delete/multiple-fail.golden", exitCode: 1},
+		{args: "api-key delete MYKEY5 MYKEY18 MYKEY20", fixture: "api-key/delete/multiple-fail-plural.golden", exitCode: 1},
+		{args: "api-key delete MYKEY3 MYKEY4", input: "n\n", fixture: "api-key/delete/multiple-refuse.golden"},
+		{args: "api-key delete MYKEY3 MYKEY4", input: "y\n", fixture: "api-key/delete/multiple-success.golden"},
 	}
 
 	resetConfiguration(s.T(), false)

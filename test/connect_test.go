@@ -259,12 +259,12 @@ func (s *CLITestSuite) TestConnectCustomPlugin() {
 
 func (s *CLITestSuite) TestConnectOffset() {
 	tests := []CLITest{
-		{args: "connect offset describe lcc-123 --cluster lkc-123 -o json", fixture: "connect/offset/describe-offset-json.golden"},
+		{args: "connect offset describe lcc-123 --cluster lkc-123 --timeout 1 -o json", fixture: "connect/offset/describe-offset-json.golden"},
 		{args: "connect offset describe lcc-101112 --cluster lkc-123 -o json", fixture: "connect/offset/describe-offset-fail.golden", exitCode: 1},
-		{args: "connect offset describe lcc-123 --cluster lkc-123", fixture: "connect/offset/describe-offset.golden"},
-		{args: "connect offset describe lcc-123 --staleness-threshold 10 --timeout 10 --cluster lkc-123", fixture: "connect/offset/describe-offset.golden"},
+		{args: "connect offset describe lcc-123 --cluster lkc-123 --timeout 1", fixture: "connect/offset/describe-offset.golden"},
+		{args: "connect offset describe lcc-123 --staleness-threshold 10 --timeout 1 --cluster lkc-123", fixture: "connect/offset/describe-offset.golden"},
 
-		{args: "connect offset describe lcc-123 --cluster lkc-123 -o yaml", fixture: "connect/offset/describe-offset-yaml.golden"},
+		{args: "connect offset describe lcc-123 --cluster lkc-123 --timeout 1 -o yaml", fixture: "connect/offset/describe-offset-yaml.golden"},
 		{args: "connect offset update lcc-123 --config-file test/fixtures/input/connect/offset.json --cluster lkc-123", fixture: "connect/offset/update-offset.golden"},
 		{args: "connect offset update lcc-123 --config-file test/fixtures/input/connect/offset.json --cluster lkc-123 -o json", fixture: "connect/offset/update-offset-json.golden"},
 		{args: "connect offset update lcc-123 --config-file test/fixtures/input/connect/offset.json --cluster lkc-123 -o yaml", fixture: "connect/offset/update-offset-yaml.golden"},
