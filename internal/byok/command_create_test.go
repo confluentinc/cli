@@ -7,6 +7,35 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestIsAWSKey(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected bool
+	}{
+		{
+			name:     "valid AWS KMS key ARN",
+			input:    "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab",
+			expected: true,
+		},
+		{
+			name:     "valid ARN for a non-KMS service",
+			input:    "arn:aws:iam::111122223333:user/David",
+			expected: false,
+		},
+		{
+			name:     "not an ARN at all",
+			input:    "projects/my-project/locations/global/keyRings/my-key-ring/cryptoKeys/my-key",
+			expected: false,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			assert.Equal(t, test.expected, isAWSKey(test.input))
+		})
+	}
+}
+
 func TestRemoveKeyVersionFromAzureKeyId(t *testing.T) {
 	tests := []struct {
 		name     string
