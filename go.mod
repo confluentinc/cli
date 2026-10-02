@@ -1,6 +1,6 @@
 module github.com/confluentinc/cli/v4
 
-go 1.26.5
+go 1.26.8
 
 require (
 	github.com/antihax/optional v1.0.0
@@ -19,7 +19,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.9
-	github.com/confluentinc/ccloud-sdk-go-v2/cam v0.3.0
+	github.com/confluentinc/ccloud-sdk-go-v2/cam v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/ccpm v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5
 	github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority v0.0.3
@@ -117,7 +117,7 @@ require (
 	go.uber.org/mock v0.4.0
 	golang.org/x/crypto v0.54.0
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f
-	golang.org/x/oauth2 v0.35.0
+	golang.org/x/oauth2 v0.37.0
 	golang.org/x/term v0.45.0
 	golang.org/x/text v0.40.0
 	google.golang.org/grpc v1.80.0

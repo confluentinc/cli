@@ -21,7 +21,7 @@ type artifactOut struct {
 	Environment   string `human:"Environment" serialized:"environment"`
 	ContentFormat string `human:"Content Format" serialized:"content_format"`
 	Status        string `human:"Status" serialized:"status"`
-	ErrorMessage  string `human:"Error Message" serialized:"error_message"`
+	ErrorMessage  string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
 }
 
 func newArtifactCommand(prerunner pcmd.PreRunner) *cobra.Command {

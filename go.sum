@@ -180,8 +180,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0 h1:a2EaPzwLEYkgil7rlsqRU
 github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0/go.mod h1:c7nUjQ5pQCqz4LagF1qatcj5NX4icoiSTaCxfdxAwsY=
 github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.9 h1:TFz/gJ0tPnTsEE56xJwLtU5ykTpfPv0vZwI1jS1QUMg=
 github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.9/go.mod h1:evP8lAu09jGJMQX54bUaJxmT17eQcN4GsmzjTAZst6w=
-github.com/confluentinc/ccloud-sdk-go-v2/cam v0.3.0 h1:9MMm9VeJ8ZVg9A6ofplPPvLZH4OGP56PtrJ/WP18EtY=
-github.com/confluentinc/ccloud-sdk-go-v2/cam v0.3.0/go.mod h1:vderFceIQXBEdhkulkwTZ0SPxHz4yZ3uDMne/FA4dJ8=
+github.com/confluentinc/ccloud-sdk-go-v2/cam v0.4.0 h1:oXJcc4YbJznUpeWhAmiahgBs0EGn/+EHkWKO/kPy7Ac=
+github.com/confluentinc/ccloud-sdk-go-v2/cam v0.4.0/go.mod h1:+x2Rb5gC3LaXSSTEEsr8mi1/DioKCWmF7P2Gftlvgeg=
 github.com/confluentinc/ccloud-sdk-go-v2/ccpm v0.0.1 h1:q++EceNVxARLSE5J9FO3Vbp9/dqPPep0z3AJpVC4HW8=
 github.com/confluentinc/ccloud-sdk-go-v2/ccpm v0.0.1/go.mod h1:toZWg8FVpQZ/80az0XTB4Fv22E5HJtEiMXxt4rU1JoI=
 github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5 h1:w0Z2hFxg8ng8gycWKRZFdus1R+q8D/I5AmN06NZso5s=
@@ -847,8 +847,8 @@ golang.org/x/oauth2 v0.0.0-20201109201403-9fd604954f58/go.mod h1:KelEdhl1UZF7XfJ
 golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5/go.mod h1:KelEdhl1UZF7XfJ4dDtk6s++YSgaE7mD/BuKKDLBl4A=
 golang.org/x/oauth2 v0.0.0-20210218202405-ba52d332ba99/go.mod h1:KelEdhl1UZF7XfJ4dDtk6s++YSgaE7mD/BuKKDLBl4A=
 golang.org/x/oauth2 v0.0.0-20210323180902-22b0adad7558/go.mod h1:KelEdhl1UZF7XfJ4dDtk6s++YSgaE7mD/BuKKDLBl4A=
-golang.org/x/oauth2 v0.35.0 h1:Mv2mzuHuZuY2+bkyWXIHMfhNdJAdwW3FuWeCPYN5GVQ=
-golang.org/x/oauth2 v0.35.0/go.mod h1:lzm5WQJQwKZ3nwavOZ3IS5Aulzxi68dUSgRHujetwEA=
+golang.org/x/oauth2 v0.37.0 h1:JUlcxA8oAtauLfiH8FX2/FkAWHAdi0QtGCGc+hofE98=
+golang.org/x/oauth2 v0.37.0/go.mod h1:IxwZNxUULJmpBFf9K/9NTMSIfZZuvuTy1gGxhigP/58=
 golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20181108010431-42b317875d0f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
