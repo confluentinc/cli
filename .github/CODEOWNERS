@@ -1,1 +1,5 @@
 *  @confluentinc/cli
+
+# Docs team co-reviews user-facing command text.
+internal/**/command*.go  @confluentinc/cli @confluentinc/docs
+internal/**/command_test.go  @confluentinc/cli

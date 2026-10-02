@@ -10,6 +10,7 @@ List the available Flink AWS regions.
 
 Flags:
       --cloud string     Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string    Filter the results by exact match for region_name.
       --context string   CLI context name.
   -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")
 

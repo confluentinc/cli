@@ -1,4 +1,4 @@
-Update an IP group.
+Update an existing IAM IP group.
 
 Usage:
   confluent iam ip-group update <id> [flags]

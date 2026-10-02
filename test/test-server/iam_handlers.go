@@ -210,19 +210,33 @@ func handleIamUser(t *testing.T) http.HandlerFunc {
 		userId := vars["id"]
 		var user iamv2.IamV2User
 		switch userId {
-		case "u-0", "u-1":
+		case "u-dne":
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return
-		case "u-2":
-			user = buildIamUser("u-2@confluent.io", "Bono", "u-2", "AUTH_TYPE_LOCAL")
+		case "u-111aaa":
+			user = buildIamUser("u-111aaa@confluent.io", "111 Aaa", "u-111aaa", "AUTH_TYPE_LOCAL")
+		case "u-222bbb":
+			user = buildIamUser("u-222bbb@confluent.io", "222 Bbb", "u-222bbb", "AUTH_TYPE_SSO")
 		case "u-11aaa":
 			user = buildIamUser("u-11aaa@confluent.io", "11 Aaa", "u-11aaa", "AUTH_TYPE_LOCAL")
 		default:
-			user = buildIamUser("mhe@confluent.io", "Muwei He", userId, "AUTH_TYPE_LOCAL")
+			user = buildIamUser("cdong@confluent.io", "Channing Dong", userId, "AUTH_TYPE_LOCAL")
 		}
-		err := json.NewEncoder(w).Encode(user)
-		require.NoError(t, err)
+		switch r.Method {
+		case http.MethodPatch:
+			// Merge the request body over the canned user, echoing what the API would store,
+			// so the update test verifies the payload was actually sent.
+			err := json.NewDecoder(r.Body).Decode(&user)
+			require.NoError(t, err)
+			err = json.NewEncoder(w).Encode(user)
+			require.NoError(t, err)
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
+		default:
+			err := json.NewEncoder(w).Encode(user)
+			require.NoError(t, err)
+		}
 	}
 }
 
@@ -285,7 +299,21 @@ func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 			var req iamv2.IamV2ServiceAccount
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			res := &iamv2.IamV2ServiceAccount{Id: iamv2.PtrString(req.GetId()), Description: req.Description}
+
+			// Merge the patch onto the persisted fixture (matching the GET case above) so a
+			// partial update's response reflects a realistic full service account, not just
+			// the fields the request happened to touch.
+			res := iamv2.IamV2ServiceAccount{
+				Id:          iamv2.PtrString(id),
+				DisplayName: iamv2.PtrString("service-account"),
+				Description: iamv2.PtrString("at your service."),
+			}
+			if req.DisplayName != nil {
+				res.DisplayName = req.DisplayName
+			}
+			if req.Description != nil {
+				res.Description = req.Description
+			}
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodDelete:
@@ -329,6 +357,14 @@ func handleIamServiceAccounts(t *testing.T) http.HandlerFunc {
 			var req iamv2.IamV2ServiceAccount
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
+
+			resourceOwner := r.URL.Query().Get("assigned_resource_owner")
+			if req.GetDisplayName() == "resource-owner-service" {
+				require.Equal(t, "u-123", resourceOwner, `expected "assigned_resource_owner" query param to be set`)
+			} else {
+				require.Empty(t, resourceOwner, `did not expect "assigned_resource_owner" query param`)
+			}
+
 			serviceAccount := iamv2.IamV2ServiceAccount{
 				Id:          iamv2.PtrString("sa-55555"),
 				DisplayName: req.DisplayName,
@@ -383,19 +419,26 @@ func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 			var req identityproviderv2.IamV2IdentityProvider
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			res := &identityproviderv2.IamV2IdentityProvider{
-				Id:          req.Id,
-				DisplayName: req.DisplayName,
-				Description: req.Description,
-				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
-				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
-			}
+			// Like the real API, PATCH merges the request into the stored object: the id comes
+			// from the URL path, and fields absent from the body keep their stored values.
+			res := buildIamProvider(id, "identity-provider", "providing identities.", "https://company.provider.com", "https://company.provider.com/oauth2/v1/keys", "")
 			if id == "op-67890" {
+				res = buildIamProvider(id, "okta-with-identity-claim", "providing identities with identity claim.", "https://company.new-provider.com", "https://company.new-provider.com/oauth2/v1/keys", "claims.sub")
+			}
+			if req.DisplayName != nil {
+				res.DisplayName = req.DisplayName
+			}
+			if req.Description != nil {
+				res.Description = req.Description
+			}
+			if req.Issuer != nil {
+				res.Issuer = req.Issuer
+			}
+			if req.JwksUri != nil {
+				res.JwksUri = req.JwksUri
+			}
+			if req.IdentityClaim != nil {
 				res.IdentityClaim = req.IdentityClaim
-				res.DisplayName = identityproviderv2.PtrString("okta-with-identity-claim")
-				res.Description = identityproviderv2.PtrString("providing identities with identity claim.")
-				res.Issuer = identityproviderv2.PtrString("https://company.new-provider.com")
-				res.JwksUri = identityproviderv2.PtrString("https://company.new-provider.com/oauth2/v1/keys")
 			}
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
@@ -431,6 +474,9 @@ func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
 			var req identityproviderv2.IamV2IdentityProvider
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
+			// The real API rejects an absent description ("Null description") while accepting
+			// "" — create must always send the key, even when --description is omitted.
+			require.NotNil(t, req.Description, "identity provider create must always send description")
 			identityProvider := &identityproviderv2.IamV2IdentityProvider{
 				DisplayName: req.DisplayName,
 				Description: req.Description,
@@ -534,7 +580,13 @@ func handleIamCertificateAuthority(t *testing.T) http.HandlerFunc {
 		}
 		switch r.Method {
 		case http.MethodGet:
-			certificateAuthority := buildIamCertificateAuthority(id, "my-ca", "my certificate authority", "certificate.pem", "", "", id == "op-12345")
+			// op-12345 requires CRL validation, so it must also carry a configured CRL:
+			// the API rejects require_crl_on_client_certificate=true without one.
+			crlUrl := ""
+			if id == "op-12345" {
+				crlUrl = "my-crl.url"
+			}
+			certificateAuthority := buildIamCertificateAuthority(id, "my-ca", "my certificate authority", "certificate.pem", crlUrl, "", id == "op-12345")
 			err := json.NewEncoder(w).Encode(certificateAuthority)
 			require.NoError(t, err)
 		case http.MethodDelete:
@@ -543,7 +595,39 @@ func handleIamCertificateAuthority(t *testing.T) http.HandlerFunc {
 			var req certificateauthorityv2.IamV2UpdateCertRequest
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			certificateAuthority := buildIamCertificateAuthority(id, req.GetDisplayName(), req.GetDescription(), req.GetCertificateChainFilename(), req.GetCrlUrl(), req.GetCrlChain(), req.GetRequireCrlOnClientCertificate())
+
+			// Merge the update onto the persisted fixture (matching the GET case above) so a
+			// partial update's response reflects the API's PATCH-like PUT semantics — omitted
+			// fields are preserved, not cleared — rather than echoing only the fields the
+			// request happened to carry.
+			name := "my-ca"
+			description := "my certificate authority"
+			certificateChainFilename := "certificate.pem"
+			crlUrl := ""
+			if id == "op-12345" {
+				crlUrl = "my-crl.url"
+			}
+			crlChain := ""
+			requireCrlOnClientCertificate := id == "op-12345"
+			if req.DisplayName != nil {
+				name = req.GetDisplayName()
+			}
+			if req.Description != nil {
+				description = req.GetDescription()
+			}
+			if req.CertificateChainFilename != nil {
+				certificateChainFilename = req.GetCertificateChainFilename()
+			}
+			if req.CrlUrl != nil {
+				crlUrl = req.GetCrlUrl()
+			}
+			if req.CrlChain != nil {
+				crlChain = req.GetCrlChain()
+			}
+			if req.RequireCrlOnClientCertificate != nil {
+				requireCrlOnClientCertificate = req.GetRequireCrlOnClientCertificate()
+			}
+			certificateAuthority := buildIamCertificateAuthority(id, name, description, certificateChainFilename, crlUrl, crlChain, requireCrlOnClientCertificate)
 			err = json.NewEncoder(w).Encode(certificateAuthority)
 			require.NoError(t, err)
 		}
@@ -556,7 +640,7 @@ func handleIamCertificateAuthorities(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			certificateAuthorityList := &certificateauthorityv2.IamV2CertificateAuthorityList{Data: []certificateauthorityv2.IamV2CertificateAuthority{
-				buildIamCertificateAuthority("op-12345", "my-ca", "my certificate authority", "certificate.pem", "", "", true),
+				buildIamCertificateAuthority("op-12345", "my-ca", "my certificate authority", "certificate.pem", "my-crl.url", "", true),
 				buildIamCertificateAuthority("op-54321", "my-ca-2", "my other certificate authority", "certificate-2.pem", "", "DEF456", false),
 				buildIamCertificateAuthority("op-67890", "my-ca-3", "my other certificate authority", "certificate-3.pem", "example.url", "", true),
 			}}
@@ -742,23 +826,51 @@ func handleIamIpGroups(t *testing.T) http.HandlerFunc {
 // Handler for: "/iam/v2/ip-groups/{id}"
 func handleIamIpGroup(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+		// ipGroupSecondId is a plain second group for multi-id deletes. ipg-inuse and ipg-lockout
+		// exist only to reproduce two backend errors the command attaches suggestions to
+		// (cli.error_suggestions in the generator registry).
+		if id != ipGroupId && id != ipGroupSecondId && id != "ipg-inuse" && id != "ipg-lockout" {
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+			return
+		}
 		switch r.Method {
 		case http.MethodPatch:
 			var req iamipfilteringv2.IamV2IpGroup
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			res := &iamipfilteringv2.IamV2IpGroup{
-				Id:         req.Id,
-				GroupName:  req.GroupName,
-				CidrBlocks: req.CidrBlocks,
+			// The API rejects a partial body, so the command always sends the full object; the
+			// overlay below would otherwise mask a regression to a partial PATCH.
+			require.NotNil(t, req.GroupName, "full-object update must send group_name")
+			require.NotNil(t, req.CidrBlocks, "full-object update must send cidr_blocks")
+			if id == "ipg-lockout" {
+				w.WriteHeader(http.StatusBadRequest)
+				err = writeErrorJson(w, "this action would lock out the requester from IP address 203.0.113.7. Please try again from a permitted IP address.")
+				require.NoError(t, err)
+				return
 			}
-			err = json.NewEncoder(w).Encode(res)
+			// PATCH semantics: only the fields present in the body change; the id is the path's.
+			res := buildIamIpGroup(id, "demo-ip-group", []string{"168.150.200.0/24", "147.150.200.0/24"})
+			if req.GroupName != nil {
+				res.GroupName = req.GroupName
+			}
+			if req.CidrBlocks != nil {
+				res.CidrBlocks = req.CidrBlocks
+			}
+			err = json.NewEncoder(w).Encode(&res)
 			require.NoError(t, err)
 		case http.MethodGet:
-			ipGroup := buildIamIpGroup(ipGroupId, "demo-ip-group", []string{"168.150.200.0/24", "147.150.200.0/24"})
+			ipGroup := buildIamIpGroup(id, "demo-ip-group", []string{"168.150.200.0/24", "147.150.200.0/24"})
 			err := json.NewEncoder(w).Encode(ipGroup)
 			require.NoError(t, err)
 		case http.MethodDelete:
+			if id == "ipg-inuse" {
+				w.WriteHeader(http.StatusConflict)
+				err := writeErrorJson(w, "cannot delete an IP group with related IP filters")
+				require.NoError(t, err)
+				return
+			}
 			w.WriteHeader(http.StatusNoContent)
 		}
 	}
@@ -823,7 +935,9 @@ func handleIamGroupMappings(t *testing.T) http.HandlerFunc {
 func handleIamGroupMapping(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if id != groupMappingId && id != "group-def" {
+		// pool-legacy stands for a group mapping created during early access, whose id carries
+		// the identity-pool prefix but still resolves; the command's id guard must accept it.
+		if id != groupMappingId && id != "group-def" && id != "pool-legacy" {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return
@@ -833,7 +947,18 @@ func handleIamGroupMapping(t *testing.T) http.HandlerFunc {
 			var req ssov2.IamV2SsoGroupMapping
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			res := buildIamGroupMapping(req.GetId(), req.GetDisplayName(), req.GetDescription(), req.GetFilter())
+			// PATCH semantics: only the fields present in the body change; a body with no
+			// fields (a no-flag update) returns the stored mapping unchanged.
+			res := buildIamGroupMapping(id, "another-group-mapping", "another description", "true")
+			if req.DisplayName != nil {
+				res.DisplayName = req.DisplayName
+			}
+			if req.Description != nil {
+				res.Description = req.Description
+			}
+			if req.Filter != nil {
+				res.Filter = req.Filter
+			}
 			err = json.NewEncoder(w).Encode(&res)
 			require.NoError(t, err)
 		case http.MethodDelete:

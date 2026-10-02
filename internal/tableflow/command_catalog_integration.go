@@ -15,16 +15,18 @@ import (
 )
 
 const (
-	awsGlueKind   = "AwsGlue"
-	snowflakeKind = "Snowflake"
-	unityKind     = "Unity"
+	awsGlueKind          = "AwsGlue"
+	snowflakeKind        = "Snowflake"
+	unityKind            = "Unity"
+	bigLakeMetastoreKind = "BigLakeMetastore"
 
 	aws       = "aws"
 	snowflake = "snowflake"
 	unity     = "unity"
+	biglake   = "biglake"
 )
 
-var createCatalogIntegrationTypes = []string{aws, snowflake, unity}
+var createCatalogIntegrationTypes = []string{aws, snowflake, unity, biglake}
 
 type catalogIntegrationOut struct {
 	Id                    string `human:"ID" serialized:"id"`
@@ -33,6 +35,7 @@ type catalogIntegrationOut struct {
 	KafkaCluster          string `human:"Kafka Cluster" serialized:"kafka_cluster"`
 	Type                  string `human:"Type" serialized:"type"`
 	ProviderIntegrationId string `human:"Provider Integration ID,omitempty" serialized:"provider_integration_id,omitempty"`
+	GcpProjectId          string `human:"GCP Project ID,omitempty" serialized:"gcp_project_id,omitempty"`
 	Endpoint              string `human:"Endpoint,omitempty" serialized:"endpoint,omitempty"`
 	Warehouse             string `human:"Warehouse,omitempty" serialized:"warehouse,omitempty"`
 	AllowedScope          string `human:"Allowed Scope,omitempty" serialized:"allowed_scope,omitempty"`
@@ -121,6 +124,10 @@ func getCatalogIntegrationType(catalogIntegration tableflowv1.TableflowV1Catalog
 		return unity, nil
 	}
 
+	if config.TableflowV1CatalogIntegrationBigLakeMetastoreSpec != nil {
+		return biglake, nil
+	}
+
 	return "", fmt.Errorf(errors.CorruptedNetworkResponseErrorMsg, "config")
 }
 
@@ -156,6 +163,12 @@ func printCatalogIntegrationTable(cmd *cobra.Command, catalogIntegration tablefl
 		out.CatalogName = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec.GetCatalogName()
 		out.ClientId = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec.GetClientId()
 		out.CustomSchema = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationUnitySpec.GetCustomSchema()
+	}
+	if catalogIntegrationType == biglake {
+		out.ProviderIntegrationId = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationBigLakeMetastoreSpec.GetProviderIntegrationId()
+		out.GcpProjectId = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationBigLakeMetastoreSpec.GetGcpProjectId()
+		out.CatalogName = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationBigLakeMetastoreSpec.GetCatalogName()
+		out.CustomNamespace = catalogIntegration.Spec.GetConfig().TableflowV1CatalogIntegrationBigLakeMetastoreSpec.GetCustomNamespace()
 	}
 
 	table := output.NewTable(cmd)

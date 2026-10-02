@@ -93,10 +93,19 @@ func handleOrgEnvironments(t *testing.T) http.HandlerFunc {
 			err := json.NewDecoder(r.Body).Decode(req)
 			require.NoError(t, err)
 
+			// The real API defaults Stream Governance to ESSENTIALS when the create request
+			// omits stream_governance_config entirely (the CLI sends no config unless
+			// --governance-package is set). A non-nil config always carries a non-empty
+			// package (the CLI gates the flag on non-empty); a nil package would be a 400,
+			// which we don't mock.
+			sgc := req.StreamGovernanceConfig
+			if sgc == nil {
+				sgc = &orgv2.OrgV2StreamGovernanceConfig{Package: "ESSENTIALS"}
+			}
 			environment := &orgv2.OrgV2Environment{
 				Id:                     orgv2.PtrString("env-5555"),
 				DisplayName:            orgv2.PtrString(req.GetDisplayName()),
-				StreamGovernanceConfig: req.StreamGovernanceConfig,
+				StreamGovernanceConfig: sgc,
 			}
 			err = json.NewEncoder(w).Encode(environment)
 			require.NoError(t, err)
@@ -134,6 +143,7 @@ func handleOrgOrganization(t *testing.T) http.HandlerFunc {
 			Id:          orgv2.PtrString(id),
 			DisplayName: orgv2.PtrString(displayName),
 			JitEnabled:  orgv2.PtrBool(true),
+			ScimEnabled: orgv2.PtrBool(true),
 		}
 		err := json.NewEncoder(w).Encode(organization)
 		require.NoError(t, err)
@@ -146,9 +156,9 @@ func handleOrgOrganizations(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			organizationList := &orgv2.OrgV2OrganizationList{Data: []orgv2.OrgV2Organization{
-				{Id: orgv2.PtrString("abc-123"), DisplayName: orgv2.PtrString("org1"), JitEnabled: orgv2.PtrBool(true)},
-				{Id: orgv2.PtrString("abc-456"), DisplayName: orgv2.PtrString("org2"), JitEnabled: orgv2.PtrBool(true)},
-				{Id: orgv2.PtrString("abc-789"), DisplayName: orgv2.PtrString("org3"), JitEnabled: orgv2.PtrBool(true)},
+				{Id: orgv2.PtrString("abc-123"), DisplayName: orgv2.PtrString("org1"), JitEnabled: orgv2.PtrBool(true), ScimEnabled: orgv2.PtrBool(true)},
+				{Id: orgv2.PtrString("abc-456"), DisplayName: orgv2.PtrString("org2"), JitEnabled: orgv2.PtrBool(true), ScimEnabled: orgv2.PtrBool(false)},
+				{Id: orgv2.PtrString("abc-789"), DisplayName: orgv2.PtrString("org3"), JitEnabled: orgv2.PtrBool(true), ScimEnabled: orgv2.PtrBool(true)},
 			}}
 			setPageToken(organizationList, &organizationList.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(organizationList)

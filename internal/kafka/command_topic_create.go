@@ -19,10 +19,6 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
-// confluent.*.association values are JSON strings. They must be stored verbatim,
-// so keys are passed as rawValueKeys to skip special-character un-escaping.
-var rawValueTopicConfigs = []string{"confluent.key.association", "confluent.value.association"}
-
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <topic>",
@@ -39,7 +35,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().Uint32("partitions", 0, "Number of topic partitions.")
-	pcmd.AddConfigFlag(cmd)
+	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the topic being created.`)
 	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddDryRunFlag(cmd)
 	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
@@ -62,7 +58,8 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	configMap, err := properties.GetMap(configs, rawValueTopicConfigs...)
+
+	configMap, err := properties.ConfigFlagToMap(configs)
 	if err != nil {
 		return err
 	}

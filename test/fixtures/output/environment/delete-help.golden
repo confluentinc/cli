@@ -1,4 +1,4 @@
-Delete one or more Confluent Cloud environments and all of their resources.
+Delete one or more Confluent Cloud environments and all resources they contain.
 
 Usage:
   confluent environment delete <id-1> [id-2] ... [id-n] [flags]

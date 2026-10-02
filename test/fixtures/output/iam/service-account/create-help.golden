@@ -1,4 +1,4 @@
-Create a service account.
+Create an IAM service account.
 
 Usage:
   confluent iam service-account create <name> [flags]
@@ -9,8 +9,8 @@ Create a service account named "my-service-account".
   $ confluent iam service-account create my-service-account --description "new description"
 
 Flags:
-      --description string      REQUIRED: Description of the service account.
       --resource-owner string   The resource ID of the principal who will be assigned resource owner on the created resource. Principal can be a "user", "group-mapping", "service-account", or "identity-pool".
+      --description string      A free-form description of the Service Account.
       --context string          CLI context name.
   -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
 

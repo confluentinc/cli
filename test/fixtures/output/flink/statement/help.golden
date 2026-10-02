@@ -1,4 +1,4 @@
-Manage Flink SQL statements.
+Manage Flink SQL statements in Confluent Cloud.
 
 Usage:
   confluent flink statement [command]
@@ -7,7 +7,7 @@ Available Commands:
   create      Create a Flink SQL statement.
   delete      Delete one or more Flink SQL statements.
   describe    Describe a Flink SQL statement.
-  exception   Manage Flink SQL statement exceptions.
+  exception   Manage Flink SQL statement exceptions in Confluent Cloud.
   list        List Flink SQL statements.
   resume      Resume a Flink SQL statement.
   stop        Stop a Flink SQL statement.

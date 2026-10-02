@@ -1,4 +1,6 @@
-+----------------------+------+
-| Default Pool Enabled | true |
-| Default Pool Max CFU | 5    |
-+----------------------+------+
+Updated Flink org compute pool config.
++----------------------+-------+
+| Organization Id      | org-1 |
+| Default Pool Enabled | true  |
+| Default Pool Max CFU | 5     |
++----------------------+-------+

@@ -1,5 +1,0 @@
-       ID      |      Name       |    Confluent Platform Kafka    | Cloud |  Region   | Environment  
-               |                 |           Cluster ID           |       |           |              
----------------+-----------------+--------------------------------+-------+-----------+--------------
-  usmkc-abc123 | kafka-cluster-1 | 4k0R9d1GTS5tI9f4Y2xZ0Q         | AWS   | us-west-2 | env-596      
-  usmkc-def456 | kafka-cluster-2 | 5k0R9d1GTS5tI9f4Y2xZ0Q         | Azure | eastus    | env-596      

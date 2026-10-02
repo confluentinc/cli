@@ -38,9 +38,9 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner, cfg *config.Config) 
 			return c.startFlinkSqlClient(prerunner, cmd)
 		}
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-		c.addComputePoolFlag(cmd)
+		pcmd.AddComputePoolFlag(cmd, c.AuthenticatedCLICommand)
 		pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
-		c.addDatabaseFlag(cmd)
+		pcmd.AddDatabaseFlag(cmd, c.AuthenticatedCLICommand)
 		pcmd.AddContextFlag(cmd, c.CLICommand)
 		pcmd.AddCloudFlag(cmd)
 		pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
@@ -360,6 +360,9 @@ func reportUsage(cmd *cobra.Command, cfg *config.Config, unsafeTrace bool) func(
 
 	return func() {
 		u := ppanic.CollectPanic(cmd, nil, cfg)
+		// Unlike internal/command.go's reportUsage, nothing upstream of this closure calls
+		// CollectAgentDetect for us, so it belongs here.
+		u.CollectAgentDetect()
 		u.Report(ccloudv2.NewClient(cfg, unsafeTrace))
 	}
 }

@@ -1,6 +1,8 @@
 package flink
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
@@ -11,12 +13,12 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
-func (c *command) newStatementStopCommand() *cobra.Command {
+func (c *statementCommand) newStatementStopCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "stop <name>",
 		Short:             "Stop a Flink SQL statement.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgs),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.statementStop,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -34,7 +36,7 @@ func (c *command) newStatementStopCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) statementStop(_ *cobra.Command, args []string) error {
+func (c *statementCommand) statementStop(_ *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
@@ -45,12 +47,15 @@ func (c *command) statementStop(_ *cobra.Command, args []string) error {
 		return err
 	}
 
+	// Read the statement back first; the gateway rejects a spec.stopped-only update.
 	statement, err := client.GetStatement(environmentId, args[0], c.Context.GetCurrentOrganization())
 	if err != nil {
 		return err
 	}
+	if statement.Spec == nil {
+		return fmt.Errorf(`statement "%s" has no spec`, args[0])
+	}
 	statement.Spec.Stopped = flinkgatewayv1.PtrBool(true)
-
 	if err := client.UpdateStatement(environmentId, args[0], c.Context.GetCurrentOrganization(), statement); err != nil {
 		return err
 	}

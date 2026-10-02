@@ -1,0 +1,320 @@
+// Package query runs a bounded ("snapshot") Flink SQL statement to completion and
+// returns the whole result set. See README.md for the design.
+package query
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
+
+	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v4/pkg/flink/internal/results"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/wait"
+)
+
+const (
+	initialBackoff = 300 * time.Millisecond
+	maxBackoff     = 2 * time.Second
+
+	// A statement typically leaves PENDING in well under a second.
+	awaitPollInterval = 500 * time.Millisecond
+
+	// A placeholder: wait.Options requires a nonzero Timeout, but the real bound is
+	// the caller's ctx deadline, which wait.Poll checks independently.
+	unboundedPollTimeout = 24 * time.Hour
+)
+
+// Options configures a single run. Only Client, EnvironmentId and OrganizationId
+// are required.
+type Options struct {
+	Client         ccloudv2.GatewayClientInterface
+	EnvironmentId  string
+	OrganizationId string
+
+	// MaxRows caps how many rows are collected; 0 means no cap. Hitting it sets
+	// Result.Truncated rather than silently dropping rows.
+	MaxRows int
+
+	// RequireBounded rejects a statement whose traits say it is unbounded, rather
+	// than draining a stream that never ends.
+	RequireBounded bool
+
+	// RefreshToken runs before every gateway call; nil means no refresh.
+	RefreshToken func() error
+
+	// OnSchema, when non-nil, is called once with the result columns before any
+	// rows — the caller's cue to start streaming. Skipped for a schema-less
+	// statement (DDL/INSERT INTO).
+	OnSchema func(columns []flinkgatewayv1.ColumnDetails) error
+
+	// OnRows, when non-nil, receives each page as it's fetched and makes drain
+	// stream instead of buffer: rows aren't retained in Result.Rows, so peak
+	// memory is one page. The slice is valid only for the call.
+	OnRows func(rows []types.StatementResultRow) error
+
+	// sleep is swapped out in tests so they do not wait in real time.
+	sleep func(context.Context, time.Duration) error
+
+	// pollInterval overrides awaitPollInterval in tests. Zero means use the
+	// default.
+	pollInterval time.Duration
+}
+
+// authenticatedClient refreshes the token if configured, mirroring
+// Store.authenticatedGatewayClient.
+func (opts Options) authenticatedClient() ccloudv2.GatewayClientInterface {
+	if opts.RefreshToken != nil {
+		if err := opts.RefreshToken(); err != nil {
+			log.CliLogger.Warnf("Failed to refresh Flink gateway token: %v", err)
+		}
+	}
+	return opts.Client
+}
+
+// Result is the outcome of a completed run.
+type Result struct {
+	// Statement as the gateway last reported it, including status and traits.
+	Statement flinkgatewayv1.SqlV1Statement
+	// Columns is the result schema, in order.
+	Columns []flinkgatewayv1.ColumnDetails
+	// Rows is the raw changelog as delivered. Every row is an insert for a bounded
+	// append-only snapshot; otherwise the caller decides how to materialize it.
+	// Empty when the run streamed via Options.OnRows instead of buffering.
+	Rows []types.StatementResultRow
+	// RowCount is the number of rows delivered, whether buffered into Rows or
+	// streamed via Options.OnRows.
+	RowCount int
+	// Truncated reports that MaxRows stopped the drain before the result set ended.
+	Truncated bool
+}
+
+// Phase is the statement phase at the end of the run.
+func (r *Result) Phase() types.PHASE {
+	return types.PHASE(r.Statement.Status.GetPhase())
+}
+
+// UnboundedError is returned when RequireBounded is set and the gateway reports the
+// statement produces an unbounded result.
+type UnboundedError struct {
+	StatementName string
+}
+
+func (e *UnboundedError) Error() string {
+	return fmt.Sprintf(`statement "%s" produces an unbounded result and cannot be run as a snapshot query`, e.StatementName)
+}
+
+// ResultsFetchError distinguishes a failed page fetch from a failed status read.
+type ResultsFetchError struct {
+	Err error
+}
+
+func (e *ResultsFetchError) Error() string {
+	return e.Err.Error()
+}
+
+func (e *ResultsFetchError) Unwrap() error {
+	return e.Err
+}
+
+// Run waits for an already-submitted statement to start, then drains every result page.
+func Run(ctx context.Context, opts Options, statementName string) (*Result, error) {
+	if opts.sleep == nil {
+		opts.sleep = sleepContext
+	}
+	if opts.pollInterval == 0 {
+		opts.pollInterval = awaitPollInterval
+	}
+
+	statement, err := await(ctx, opts, statementName)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &Result{Statement: statement}
+
+	traits := statement.Status.GetTraits()
+	statementTraits := types.StatementTraits{FlinkGatewayV1StatementTraits: &traits}
+	if isBounded, known := statementTraits.GetIsBounded(); opts.RequireBounded && known && !isBounded {
+		return result, &UnboundedError{StatementName: statementName}
+	}
+
+	schema := traits.GetSchema()
+	result.Columns = schema.GetColumns()
+
+	// DDL/INSERT INTO statements have no schema and nothing to poll; return early
+	// rather than reporting an empty table.
+	if len(result.Columns) == 0 {
+		return result, nil
+	}
+
+	if opts.OnSchema != nil {
+		if err := opts.OnSchema(result.Columns); err != nil {
+			return result, err
+		}
+	}
+
+	if err := drain(ctx, opts, statementName, schema, result); err != nil {
+		return result, err
+	}
+
+	return result, nil
+}
+
+// await polls until the statement leaves PENDING, so its traits (schema, boundedness) are populated.
+func await(ctx context.Context, opts Options, statementName string) (flinkgatewayv1.SqlV1Statement, error) {
+	return wait.PollPhases(ctx, wait.PhaseOptions[flinkgatewayv1.SqlV1Statement]{
+		Fetch: func() (flinkgatewayv1.SqlV1Statement, error) {
+			return wait.Call(ctx, func() (flinkgatewayv1.SqlV1Statement, error) {
+				return opts.authenticatedClient().GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId)
+			})
+		},
+		Phase:         func(s flinkgatewayv1.SqlV1Statement) string { return s.Status.GetPhase() },
+		PendingPhases: []string{string(types.PENDING)},
+		PollInterval:  opts.pollInterval,
+		Timeout:       unboundedPollTimeout,
+	})
+}
+
+// drain pulls pages until the gateway omits the next-page token — the authoritative
+// "no more rows" signal; checking phase instead caused a real false-positive.
+func drain(ctx context.Context, opts Options, statementName string, schema flinkgatewayv1.SqlV1ResultSchema, result *Result) error {
+	pageToken := ""
+	backoff := initialBackoff
+
+	for {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
+		pageRows, nextPageToken, err := fetchPage(ctx, opts, statementName, schema, pageToken)
+		if err != nil {
+			return err
+		}
+
+		pageRows, truncated := capToMaxRows(opts, result.RowCount, pageRows)
+		if err := deliver(opts, result, pageRows); err != nil {
+			return err
+		}
+		result.Truncated = truncated
+
+		// Stop at the cap, or when the gateway reports no next page.
+		if truncated || nextPageToken == "" {
+			refreshStatement(ctx, opts, statementName, result)
+			return nil
+		}
+		pageToken = nextPageToken
+
+		backoff, err = nextBackoff(ctx, opts, len(pageRows) > 0, backoff)
+		if err != nil {
+			return err
+		}
+	}
+}
+
+// capToMaxRows trims a page so the running total never exceeds MaxRows (0 = no
+// cap) and reports whether the cap was hit. Landing exactly on the cap isn't
+// truncation unless a later page proves there were more rows.
+func capToMaxRows(opts Options, rowCount int, pageRows []types.StatementResultRow) ([]types.StatementResultRow, bool) {
+	if opts.MaxRows > 0 && rowCount+len(pageRows) > opts.MaxRows {
+		return pageRows[:opts.MaxRows-rowCount], true
+	}
+	return pageRows, false
+}
+
+// deliver hands one page of rows to the caller: streamed via OnRows when set (so
+// they are not retained), otherwise appended to Result.Rows. RowCount tracks the
+// running total for both paths.
+func deliver(opts Options, result *Result, pageRows []types.StatementResultRow) error {
+	if opts.OnRows != nil {
+		if len(pageRows) > 0 {
+			if err := opts.OnRows(pageRows); err != nil {
+				return err
+			}
+		}
+	} else {
+		result.Rows = append(result.Rows, pageRows...)
+	}
+	result.RowCount += len(pageRows)
+	return nil
+}
+
+// fetchPage reads one results page, converts it, and returns its rows and the
+// token for the next page (empty when the gateway reported no next page). A
+// fetch or conversion failure is wrapped in ResultsFetchError so the caller can
+// tell it apart from a status read; a malformed next-page URL is not.
+func fetchPage(ctx context.Context, opts Options, statementName string, schema flinkgatewayv1.SqlV1ResultSchema, pageToken string) ([]types.StatementResultRow, string, error) {
+	page, err := wait.Call(ctx, func() (flinkgatewayv1.SqlV1StatementResult, error) {
+		return opts.authenticatedClient().GetStatementResults(opts.EnvironmentId, statementName, opts.OrganizationId, pageToken)
+	})
+	if err != nil {
+		return nil, "", &ResultsFetchError{Err: err}
+	}
+
+	pageResults := page.GetResults()
+	converted, err := results.ConvertToInternalResults(pageResults.GetData(), schema)
+	if err != nil {
+		return nil, "", &ResultsFetchError{Err: err}
+	}
+
+	metadata := page.GetMetadata()
+	nextPageToken := ""
+	if nextUrl := metadata.GetNext(); nextUrl != "" {
+		nextPageToken, err = ccloudv2.ExtractPageToken(nextUrl)
+		if err != nil {
+			return nil, "", err
+		}
+	}
+
+	return converted.GetRows(), nextPageToken, nil
+}
+
+// nextBackoff resets the backoff after a page that carried rows, and otherwise
+// sleeps the current backoff (a token but no rows means "nothing new yet, keep
+// polling") before doubling it up to maxBackoff, so idle waiting doesn't hammer
+// the gateway.
+func nextBackoff(ctx context.Context, opts Options, hadRows bool, backoff time.Duration) (time.Duration, error) {
+	if hadRows {
+		return initialBackoff, nil
+	}
+	if err := opts.sleep(ctx, backoff); err != nil {
+		return 0, err
+	}
+	return min(backoff*2, maxBackoff), nil
+}
+
+// refreshStatement re-reads the statement so Phase() reflects where it actually
+// landed. Best-effort: a failed refresh just keeps the prior value.
+func refreshStatement(ctx context.Context, opts Options, statementName string, result *Result) {
+	statement, err := wait.Call(ctx, func() (flinkgatewayv1.SqlV1Statement, error) {
+		return opts.authenticatedClient().GetStatement(opts.EnvironmentId, statementName, opts.OrganizationId)
+	})
+	if err == nil {
+		result.Statement = statement
+	}
+}
+
+// IsTerminal reports whether phase is one the statement cannot leave on its own.
+// Exported so callers holding a Result can check this without re-deriving the list.
+func IsTerminal(phase types.PHASE) bool {
+	switch phase {
+	case types.COMPLETED, types.FAILED, types.STOPPED, types.DELETING:
+		return true
+	}
+	return false
+}
+
+func sleepContext(ctx context.Context, duration time.Duration) error {
+	timer := time.NewTimer(duration)
+	defer timer.Stop()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
+}

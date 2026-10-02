@@ -64,7 +64,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	configMap, err := properties.GetMap(configs, rawValueTopicConfigs...)
+	configMap, err := properties.GetMap(configs)
 	if err != nil {
 		return err
 	}

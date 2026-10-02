@@ -1,18 +1,18 @@
 [
   {
     "id": "ccp-123456",
-    "name": "CliPluginTest1",
-    "description": "Test plugin",
     "cloud": "AWS",
+    "name": "CliPluginTest1",
+    "environment": "env-123456",
     "runtime_language": "JAVA",
-    "environment": "env-123456"
+    "description": "Test plugin"
   },
   {
     "id": "ccp-789012",
-    "name": "CliPluginTest2",
-    "description": "Test plugin",
     "cloud": "GCP",
+    "name": "CliPluginTest2",
+    "environment": "env-123456",
     "runtime_language": "JAVA",
-    "environment": "env-123456"
+    "description": "Test plugin"
   }
 ]

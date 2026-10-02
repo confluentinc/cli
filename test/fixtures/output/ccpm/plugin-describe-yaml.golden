@@ -1,6 +1,6 @@
 id: ccp-123456
-name: CliPluginTest
-description: Test plugin
 cloud: AWS
-runtime_language: JAVA
+name: CliPluginTest
 environment: env-123456
+runtime_language: JAVA
+description: Test plugin

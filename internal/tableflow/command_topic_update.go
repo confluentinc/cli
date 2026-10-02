@@ -32,6 +32,7 @@ func (c *command) newTopicUpdateCommand() *cobra.Command {
 
 	cmd.Flags().String("retention-ms", "", "Specify the Tableflow table retention time in milliseconds.")
 	cmd.Flags().String("table-formats", "", "Specify the table formats, one of DELTA or ICEBERG.")
+	cmd.Flags().String("metadata-column-naming-scheme", "", "Specify the naming scheme for Tableflow's internal metadata columns in the materialized table, one of DEFAULT or PORTABLE.")
 	addErrorHandlingFlags(cmd)
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -71,6 +72,11 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	metadataColumnNamingScheme, err := cmd.Flags().GetString("metadata-column-naming-scheme")
+	if err != nil {
+		return err
+	}
+
 	errorHandling, err := cmd.Flags().GetString("error-handling")
 	if err != nil {
 		return err
@@ -99,6 +105,10 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	if cmd.Flags().Changed("record-failure-strategy") {
 		topicUpdate.Spec.Config.SetRecordFailureStrategy(recordFailureStrategy)
+	}
+
+	if cmd.Flags().Changed("metadata-column-naming-scheme") {
+		topicUpdate.Spec.Config.SetMetadataColumnNamingScheme(metadataColumnNamingScheme)
 	}
 
 	if cmd.Flags().Changed("error-handling") {

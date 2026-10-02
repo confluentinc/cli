@@ -2,7 +2,7 @@ package test
 
 import "fmt"
 
-func (s *CLITestSuite) TestIamRbacRole_OnPrem() {
+func (s *CLITestSuite) TestIamRbacRoleOnPrem() {
 	tests := []CLITest{
 		{args: "iam rbac role describe DeveloperRead -o json", fixture: "iam/rbac/role/describe-json-onprem.golden"},
 		{args: "iam rbac role describe DeveloperRead -o yaml", fixture: "iam/rbac/role/describe-yaml-onprem.golden"},
@@ -18,7 +18,7 @@ func (s *CLITestSuite) TestIamRbacRole_OnPrem() {
 	}
 }
 
-func (s *CLITestSuite) TestIamRbacRole_Cloud() {
+func (s *CLITestSuite) TestIamRbacRoleCloud() {
 	tests := []CLITest{
 		{args: "iam rbac role describe CloudClusterAdmin -o json", fixture: "iam/rbac/role/describe-json-cloud.golden"},
 		{args: "iam rbac role describe CloudClusterAdmin -o yaml", fixture: "iam/rbac/role/describe-yaml-cloud.golden"},
@@ -33,7 +33,7 @@ func (s *CLITestSuite) TestIamRbacRole_Cloud() {
 	}
 }
 
-func (s *CLITestSuite) TestIamRbacRoleBinding_Cloud() {
+func (s *CLITestSuite) TestIamRbacRoleBindingCloud() {
 	tests := []CLITest{
 		{args: "iam rbac role-binding create --principal User:sa-12345 --role DeveloperRead --resource Topic:payroll --kafka-cluster lkc-1111aaa --current-environment --cloud-cluster lkc-1111aaa", fixture: "iam/rbac/role-binding/create-service-account-developer-read.golden"},
 		{args: "iam rbac role-binding create --principal User:pool-12345 --role DeveloperRead --resource Topic:payroll --kafka-cluster lkc-1111aaa --current-environment --cloud-cluster lkc-1111aaa", fixture: "iam/rbac/role-binding/create-identity-pool-developer-read.golden"},
@@ -59,7 +59,7 @@ func (s *CLITestSuite) TestIamRbacRoleBinding_Cloud() {
 	}
 }
 
-func (s *CLITestSuite) TestIamRbacRoleBindingList_Cloud() {
+func (s *CLITestSuite) TestIamRbacRoleBindingListCloud() {
 	tests := []CLITest{
 		{args: "iam rbac role-binding list", fixture: "iam/rbac/role-binding/list-no-principal-nor-role-cloud.golden", exitCode: 1},
 		{args: "iam rbac role-binding list --environment env-596 --cloud-cluster lkc-1111aaa", fixture: "iam/rbac/role-binding/list-no-principal-nor-role-cloud.golden", exitCode: 1},
@@ -88,7 +88,7 @@ func (s *CLITestSuite) TestIamRbacRoleBindingList_Cloud() {
 	}
 }
 
-func (s *CLITestSuite) TestIamRbacRoleBinding_OnPrem() {
+func (s *CLITestSuite) TestIamRbacRoleBindingOnPrem() {
 	tests := []CLITest{
 		{args: "iam rbac role-binding create --principal User:bob --role DeveloperRead --resource Topic:connect-configs --cluster-name theMdsConnectCluster", fixture: "iam/rbac/role-binding/create-cluster-name-onprem.golden"},
 		{args: "iam rbac role-binding create --principal User:bob --role DeveloperRead --resource Topic:connect-configs --kafka-cluster kafka-GUID", fixture: "iam/rbac/role-binding/create-cluster-id-onprem.golden"},
@@ -118,7 +118,7 @@ func (s *CLITestSuite) TestIamRbacRoleBinding_OnPrem() {
 	}
 }
 
-func (s *CLITestSuite) TestIamRbacRoleBindingList_OnPrem() {
+func (s *CLITestSuite) TestIamRbacRoleBindingListOnPrem() {
 	tests := []CLITest{
 		{args: "iam rbac role-binding list --kafka-cluster CID", fixture: "iam/rbac/role-binding/list-no-principal-nor-role-onprem.golden", exitCode: 1},
 		{args: "iam rbac role-binding list --kafka-cluster CID --principal frodo", fixture: "iam/rbac/role-binding/list-principal-format-error-onprem.golden", exitCode: 1},
@@ -157,7 +157,8 @@ func (s *CLITestSuite) TestIamRbacRoleBindingList_OnPrem() {
 func (s *CLITestSuite) TestIamServiceAccount() {
 	tests := []CLITest{
 		{args: "iam service-account create human-service --description human-output", fixture: "iam/service-account/create.golden"},
-		{args: "iam service-account create human-service --description human-output --resource-owner u-123", fixture: "iam/service-account/create.golden"},
+		{args: "iam service-account create resource-owner-service --description human-output --resource-owner u-123", fixture: "iam/service-account/create-resource-owner.golden"},
+		{args: "iam service-account create no-description-service", fixture: "iam/service-account/create-no-description.golden"},
 		{args: "iam service-account create json-service --description json-output -o json", fixture: "iam/service-account/create-json.golden"},
 		{args: "iam service-account create yaml-service --description yaml-output -o yaml", fixture: "iam/service-account/create-yaml.golden"},
 		{args: "iam service-account delete sa-12345 --force", fixture: "iam/service-account/delete.golden"},
@@ -175,13 +176,48 @@ func (s *CLITestSuite) TestIamServiceAccount() {
 		{args: "iam service-account describe sa-12345 -o yaml", fixture: "iam/service-account/describe-yaml.golden"},
 		{args: "iam service-account describe sa-12345", fixture: "iam/service-account/describe.golden"},
 		{args: "iam service-account describe sa-6789", fixture: "iam/service-account/service-account-not-found.golden", exitCode: 1},
-		{args: "iam service-account update sa-12345 --description new-description", fixture: "iam/service-account/update.golden"},
-		{args: "iam service-account update sa-12345 --description new-description-2", fixture: "iam/service-account/update-2.golden"},
+		{args: "iam service-account update sa-12345 --description new-description", fixture: "iam/service-account/update-description.golden"},
+		{args: "iam service-account update sa-12345 --display-name new-display-name", fixture: "iam/service-account/update-display-name.golden"},
+		{args: "iam service-account update sa-12345 --description new-description -o json", fixture: "iam/service-account/update-json.golden"},
+		{args: "iam service-account update sa-12345 --description new-description -o yaml", fixture: "iam/service-account/update-yaml.golden"},
 		{args: "iam service-account delete sa-12345 --force", fixture: "iam/service-account/delete.golden"},
 	}
 
 	for _, test := range tests {
 		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIamServiceAccountUse() {
+	resetConfiguration(s.T(), false)
+
+	tests := []CLITest{
+		{args: "iam service-account describe", fixture: "iam/service-account/describe-no-selection.golden", exitCode: 1, login: "cloud"},
+		{args: "iam service-account use sa-12345", fixture: "iam/service-account/use.golden"},
+		{args: "iam service-account describe", fixture: "iam/service-account/describe-current.golden"},
+		{args: `iam service-account update --description "updated the current service account"`, fixture: "iam/service-account/update-current.golden"},
+		{args: "iam service-account unset", fixture: "iam/service-account/unset.golden"},
+		{args: "iam service-account describe", fixture: "iam/service-account/describe-no-selection.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIamServiceAccountDeleteClearsSelection() {
+	resetConfiguration(s.T(), false)
+
+	tests := []CLITest{
+		{args: "iam service-account use sa-12345", fixture: "iam/service-account/use.golden", login: "cloud"},
+		{args: "iam service-account delete sa-12345 --force", fixture: "iam/service-account/delete.golden"},
+		{args: "iam service-account describe", fixture: "iam/service-account/describe-no-selection.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.workflow = true
 		s.runIntegrationTest(test)
 	}
 }
@@ -199,8 +235,8 @@ func (s *CLITestSuite) TestIamUserList() {
 
 func (s *CLITestSuite) TestIamUserDescribe() {
 	tests := []CLITest{
-		{args: "iam user describe u-0", fixture: "iam/user/resource-not-found.golden", exitCode: 1},
-		{args: "iam user describe u-17", fixture: "iam/user/describe.golden"},
+		{args: "iam user describe u-111aaa", fixture: "iam/user/describe.golden"},
+		{args: "iam user describe u-dne", fixture: "iam/user/resource-not-found.golden", exitCode: 1},
 		{args: "iam user describe 0", fixture: "iam/user/bad-resource-id.golden", exitCode: 1},
 	}
 
@@ -222,13 +258,12 @@ func (s *CLITestSuite) TestIamUserDescribe() {
 
 func (s *CLITestSuite) TestIamUserDelete() {
 	tests := []CLITest{
-		{args: "iam user delete u-2 --force", fixture: "iam/user/delete.golden"},
-		{args: "iam user delete u-11aaa u-1", fixture: "iam/user/delete-multiple-fail.golden", exitCode: 1},
-		{args: "iam user delete u-11aaa u-22bbb", input: "n\n", fixture: "iam/user/delete-multiple-refuse.golden"},
-		{args: "iam user delete u-11aaa u-22bbb", input: "y\n", fixture: "iam/user/delete-multiple-success.golden"},
-		{args: "iam user delete u-2", input: "y\n", fixture: "iam/user/delete-prompt.golden"},
-		{args: "iam user delete 0 --force", fixture: "iam/user/bad-resource-id-delete.golden", exitCode: 1},
-		{args: "iam user delete u-1 --force", fixture: "iam/user/delete-dne.golden", exitCode: 1},
+		{args: "iam user delete u-111aaa --force", fixture: "iam/user/delete.golden"},
+		{args: "iam user delete u-111aaa u-dne", fixture: "iam/user/delete-multiple-fail.golden", exitCode: 1},
+		{args: "iam user delete u-111aaa u-222bbb", input: "n\n", fixture: "iam/user/delete-multiple-refuse.golden"},
+		{args: "iam user delete u-111aaa u-222bbb", input: "y\n", fixture: "iam/user/delete-multiple-success.golden"},
+		{args: "iam user delete u-111aaa", input: "y\n", fixture: "iam/user/delete-prompt.golden"},
+		{args: "iam user delete u-dne --force", fixture: "iam/user/delete-dne.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -239,9 +274,9 @@ func (s *CLITestSuite) TestIamUserDelete() {
 
 func (s *CLITestSuite) TestIamUserUpdate() {
 	tests := []CLITest{
-		{args: "iam user update u-11aaa --full-name Test", fixture: "iam/user/update.golden"},
+		{args: "iam user update u-111aaa --full-name Test", fixture: "iam/user/update.golden"},
+		{args: "iam user update u-dne --full-name Test", fixture: "iam/user/update-dne.golden", exitCode: 1},
 		{args: "iam user update 0 --full-name Test", fixture: "iam/user/bad-resource-id.golden", exitCode: 1},
-		{args: "iam user update u-1 --full-name Test", fixture: "iam/user/update-dne.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -276,18 +311,26 @@ func (s *CLITestSuite) TestIamUserInvitationList() {
 
 func (s *CLITestSuite) TestIamProvider() {
 	tests := []CLITest{
-		{args: "iam provider create okta --description 'new description' --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com", fixture: "iam/identity-provider/create.golden"},
-		{args: "iam provider create okta-with-identity-claim --description 'new description' --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com --identity-claim claims.sub", fixture: "iam/identity-provider/create-with-identity-claim.golden"},
-		{args: "iam provider delete op-12345 --force", fixture: "iam/identity-provider/delete.golden"},
-		{args: "iam provider delete op-12345 op-54321", fixture: "iam/identity-provider/delete-multiple-fail.golden", exitCode: 1},
-		{args: "iam provider delete op-12345 op-67890", input: "n\n", fixture: "iam/identity-provider/delete-multiple-refuse.golden"},
-		{args: "iam provider delete op-12345 op-67890", input: "y\n", fixture: "iam/identity-provider/delete-multiple-success.golden"},
-		{args: "iam provider delete op-12345", input: "y\n", fixture: "iam/identity-provider/delete-prompt.golden"},
-		{args: "iam provider delete op-1 --force", fixture: "iam/identity-provider/delete-dne.golden", exitCode: 1},
-		{args: "iam provider describe op-12345", fixture: "iam/identity-provider/describe.golden"},
-		{args: "iam provider describe op-67890", fixture: "iam/identity-provider/describe-with-identity-claim.golden"},
-		{args: "iam provider update op-12345 --name updated-name --description 'updated description'", fixture: "iam/identity-provider/update.golden"},
-		{args: "iam provider update op-67890 --identity-claim claims.sub.updated", fixture: "iam/identity-provider/update-with-identity-claim.golden"},
+		{args: "iam identity-provider create okta --description 'new description' --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com", fixture: "iam/identity-provider/create.golden"},
+		// The real API rejects an absent description key ("Null description"); the handler asserts
+		// the key is present, so this fails if create ever stops sending it when the flag is omitted.
+		{args: "iam identity-provider create okta --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com", fixture: "iam/identity-provider/create-without-description.golden"},
+		{args: "iam identity-provider create okta-with-identity-claim --description 'new description' --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com --identity-claim claims.sub", fixture: "iam/identity-provider/create-with-identity-claim.golden"},
+		{args: "iam identity-provider delete op-12345 --force", fixture: "iam/identity-provider/delete.golden"},
+		{args: "iam identity-provider delete op-12345 op-54321", fixture: "iam/identity-provider/delete-multiple-fail.golden", exitCode: 1},
+		{args: "iam identity-provider delete op-12345 op-67890", input: "n\n", fixture: "iam/identity-provider/delete-multiple-refuse.golden"},
+		{args: "iam identity-provider delete op-12345 op-67890", input: "y\n", fixture: "iam/identity-provider/delete-multiple-success.golden"},
+		{args: "iam identity-provider delete op-12345", input: "y\n", fixture: "iam/identity-provider/delete-prompt.golden"},
+		{args: "iam identity-provider delete op-1 --force", fixture: "iam/identity-provider/delete-dne.golden", exitCode: 1},
+		{args: "iam identity-provider describe op-12345", fixture: "iam/identity-provider/describe.golden"},
+		{args: "iam identity-provider describe op-67890", fixture: "iam/identity-provider/describe-with-identity-claim.golden"},
+		{args: "iam identity-provider update op-12345 --name updated-name --description 'updated description'", fixture: "iam/identity-provider/update.golden"},
+		{args: "iam identity-provider update op-67890 --identity-claim claims.sub.updated", fixture: "iam/identity-provider/update-with-identity-claim.golden"},
+		// The handler echoes issuer/jwks_uri from the PATCH body, so this fails if the flags stop reaching the request.
+		{args: "iam identity-provider update op-12345 --issuer-uri https://company.updated-provider.com --jwks-uri https://company.updated-provider.com/oauth2/v1/keys", fixture: "iam/identity-provider/update-issuer-jwks.golden"},
+		{args: "iam identity-provider update invalid --description 'updated description'", fixture: "iam/identity-provider/update-invalid-prefix.golden", exitCode: 1},
+		{args: "iam identity-provider list", fixture: "iam/identity-provider/list.golden"},
+		// "provider" must keep working as an alias of "identity-provider" for backward compatibility.
 		{args: "iam provider list", fixture: "iam/identity-provider/list.golden"},
 	}
 
@@ -331,7 +374,10 @@ func (s *CLITestSuite) TestIamCertificateAuthority() {
 		{args: `iam certificate-authority update op-12345 --name "new name" --description "new description" --certificate-chain ABC123 --certificate-chain-filename certificate-2.pem --crl-url example.url`, fixture: "iam/certificate-authority/update-crl-url.golden"},
 		{args: "iam certificate-authority update op-12345 --require-crl-on-client-certificate=false", fixture: "iam/certificate-authority/update-require-crl.golden"},
 		{args: "iam certificate-authority update op-54321 --require-crl-on-client-certificate=true", fixture: "iam/certificate-authority/update-require-crl-true.golden"},
-		{args: `iam certificate-authority update op-12345 --name "new name" --description "new description" --certificate-chain-filename certificate-2.pem`, fixture: "iam/certificate-authority/update-fail.golden", exitCode: 1},
+		// The hand-written command marked certificate-chain and certificate-chain-filename
+		// MarkFlagsRequiredTogether; the generated command has no such constraint (accepted
+		// divergence, APIE-1478), so updating the filename alone succeeds.
+		{args: `iam certificate-authority update op-12345 --name "new name" --description "new description" --certificate-chain-filename certificate-2.pem`, fixture: "iam/certificate-authority/update-filename-only.golden"},
 		{args: "iam certificate-authority list", fixture: "iam/certificate-authority/list.golden"},
 		{args: "iam certificate-authority list -o json", fixture: "iam/certificate-authority/list-json.golden"},
 	}
@@ -369,7 +415,19 @@ func (s *CLITestSuite) TestIamGroupMapping() {
 		{args: "iam group-mapping delete group-abc group-def", input: "y\n", fixture: "iam/group-mapping/delete-multiple-success.golden"},
 		{args: "iam group-mapping delete group-dne --force", fixture: "iam/group-mapping/delete-dne.golden", exitCode: 1},
 		{args: "iam group-mapping describe group-abc", fixture: "iam/group-mapping/describe.golden"},
+		// Early-access group mappings carry the legacy "pool-" prefix; the id guard accepts both and
+		// rejects anything else. Describe and update each carry their own guard, so both are
+		// covered in both directions.
+		{args: "iam group-mapping describe pool-legacy", fixture: "iam/group-mapping/describe-legacy-prefix.golden"},
+		{args: "iam group-mapping describe invalid", fixture: "iam/group-mapping/describe-invalid-prefix.golden", exitCode: 1},
 		{args: `iam group-mapping update group-abc --name updated-group-mapping --description "updated description" --filter claims.principal.startsWith("user")`, fixture: "iam/group-mapping/update.golden"},
+		// No one-required flag rule: a no-flag update sends an empty PATCH, which the handler models as a no-op.
+		{args: "iam group-mapping update group-abc", fixture: "iam/group-mapping/update-no-flags.golden"},
+		// Flags are gated on Changed, not on a non-empty value: an explicit --description "" is sent
+		// and clears the field (the hand-written command silently treated it as a no-op).
+		{args: `iam group-mapping update group-abc --description ""`, fixture: "iam/group-mapping/update-clear-description.golden"},
+		{args: `iam group-mapping update invalid --description "updated description"`, fixture: "iam/group-mapping/update-invalid-prefix.golden", exitCode: 1},
+		{args: `iam group-mapping update pool-legacy --description "updated description"`, fixture: "iam/group-mapping/update-legacy-prefix.golden"},
 		{args: "iam group-mapping list", fixture: "iam/group-mapping/list.golden"},
 	}
 
@@ -379,11 +437,11 @@ func (s *CLITestSuite) TestIamGroupMapping() {
 	}
 }
 
-func (s *CLITestSuite) TestIam_Autocomplete() {
+func (s *CLITestSuite) TestIamAutocomplete() {
 	tests := []CLITest{
 		{args: `__complete iam certificate-authority describe ""`, fixture: "iam/certificate-authority/describe-autocomplete.golden"},
 		{args: `__complete iam pool describe --provider op-12345 ""`, fixture: "iam/pool/describe-autocomplete.golden"},
-		{args: `__complete iam provider describe ""`, fixture: "iam/identity-provider/describe-autocomplete.golden"},
+		{args: `__complete iam identity-provider describe ""`, fixture: "iam/identity-provider/describe-autocomplete.golden"},
 		{args: `__complete iam service-account describe ""`, fixture: "iam/service-account/describe-autocomplete.golden"},
 		{args: `__complete iam user describe ""`, fixture: "iam/user/describe-autocomplete.golden"},
 	}
@@ -398,12 +456,25 @@ func (s *CLITestSuite) TestIamIpGroup() {
 	tests := []CLITest{
 		{args: "iam ip-group create demo-ip-group --cidr-blocks 168.150.200.0/24,147.150.200.0/24", fixture: "iam/ip-group/create.golden"},
 		{args: "iam ip-group list", fixture: "iam/ip-group/list.golden"},
-		{args: "iam ip-group describe ipg-wjnde", fixture: "iam/ip-group/describe.golden"},
-		{args: "iam ip-group delete ipg-wjnde", fixture: "iam/ip-group/delete.golden"},
-		{args: "iam ip-group update ipg-wjnde --name new-demo-group --add-cidr-blocks 1.2.3.4/12 --remove-cidr-blocks 168.150.200.0/24", fixture: "iam/ip-group/update.golden"},
-		{args: "iam ip-group update ipg-wjnde --name new-demo-group --add-cidr-blocks 1.2.3.4/12,147.150.200.0/24 --remove-cidr-blocks 168.150.200.0/24", fixture: "iam/ip-group/update-resource-duplicate.golden"},
-		{args: "iam ip-group update ipg-wjnde --name new-demo-group --add-cidr-blocks 1.2.3.4/12 --remove-cidr-blocks 1.2.3.4/12", fixture: "iam/ip-group/update-resource-add-and-remove.golden"},
-		{args: "iam ip-group update ipg-wjnde --name new-demo-group --add-cidr-blocks 1.2.3.4/12 --remove-cidr-blocks 1.1.1.1/1", fixture: "iam/ip-group/update-resource-remove-not-exist.golden"},
+		{args: "iam ip-group describe ipg-123abc", fixture: "iam/ip-group/describe.golden"},
+		{args: "iam ip-group delete ipg-123abc --force", fixture: "iam/ip-group/delete.golden"},
+		{args: "iam ip-group delete ipg-123abc", input: "y\n", fixture: "iam/ip-group/delete-prompt.golden"},
+		{args: "iam ip-group delete ipg-dne --force", fixture: "iam/ip-group/delete-dne.golden", exitCode: 1},
+		// Multi-id delete: the confirmation names every id, each DELETE is issued, and a failure
+		// on one id does not stop the others (mixed run exits 1 after deleting the rest).
+		{args: "iam ip-group delete ipg-123abc ipg-456def", input: "n\n", fixture: "iam/ip-group/delete-multiple-refuse.golden"},
+		{args: "iam ip-group delete ipg-123abc ipg-456def", input: "y\n", fixture: "iam/ip-group/delete-multiple-success.golden"},
+		{args: "iam ip-group delete ipg-123abc ipg-inuse --force", fixture: "iam/ip-group/delete-multiple-mixed.golden", exitCode: 1},
+		{args: "iam ip-group delete ipg-123abc ipg-dne --force", fixture: "iam/ip-group/delete-multiple-dne.golden", exitCode: 1},
+		{args: "iam ip-group update ipg-123abc --name new-demo-group --add-cidr-blocks 1.2.3.4/12 --remove-cidr-blocks 168.150.200.0/24", fixture: "iam/ip-group/update.golden"},
+		{args: "iam ip-group update ipg-123abc --name new-demo-group --add-cidr-blocks 1.2.3.4/12,147.150.200.0/24 --remove-cidr-blocks 168.150.200.0/24", fixture: "iam/ip-group/update-resource-duplicate.golden"},
+		{args: "iam ip-group update ipg-123abc --name new-demo-group --add-cidr-blocks 1.2.3.4/12 --remove-cidr-blocks 1.2.3.4/12", fixture: "iam/ip-group/update-resource-add-and-remove.golden"},
+		{args: "iam ip-group update ipg-123abc --name new-demo-group --add-cidr-blocks 1.2.3.4/12 --remove-cidr-blocks 1.1.1.1/1", fixture: "iam/ip-group/update-resource-remove-not-exist.golden"},
+		// A name-only update: the full-object seed carries the current CIDR blocks.
+		{args: "iam ip-group update ipg-123abc --name new-demo-group", fixture: "iam/ip-group/update-name-only.golden"},
+		// Backend errors the command attaches suggestions to (cli.error_suggestions).
+		{args: "iam ip-group update ipg-lockout --add-cidr-blocks 1.2.3.4/32", fixture: "iam/ip-group/update-lock-out.golden", exitCode: 1},
+		{args: "iam ip-group delete ipg-inuse --force", fixture: "iam/ip-group/delete-related-filters.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {

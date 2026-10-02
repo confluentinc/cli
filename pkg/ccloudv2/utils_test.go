@@ -51,3 +51,14 @@ func TestToLower(t *testing.T) {
 func TestToUpper(t *testing.T) {
 	require.Equal(t, "SASL_SSL", ToUpper("sasl-ssl"))
 }
+
+func TestExtractPageToken(t *testing.T) {
+	token, err := ExtractPageToken("https://example.com/results?page_token=20")
+	require.NoError(t, err)
+	require.Equal(t, "20", token)
+}
+
+func TestExtractPageToken_MissingToken(t *testing.T) {
+	_, err := ExtractPageToken("https://example.com/results")
+	require.ErrorContains(t, err, `could not parse the value for query parameter "page_token"`)
+}

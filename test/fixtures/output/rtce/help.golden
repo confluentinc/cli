@@ -4,8 +4,8 @@ Usage:
   confluent rtce [command]
 
 Available Commands:
-  region      Manage RTCE regions.
-  rtce-topic  Manage RTCE topics.
+  region      Manage Confluent Cloud RTCE regions.
+  rtce-topic  Manage Confluent Cloud RTCE topics.
 
 Global Flags:
   -h, --help            Show help for this command.

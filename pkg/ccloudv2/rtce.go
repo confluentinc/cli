@@ -25,6 +25,45 @@ func (c *Client) rtceApiContext() context.Context {
 	return context.WithValue(context.Background(), rtcev1.ContextAccessToken, c.cfg.Context().GetAuthToken())
 }
 
+// ===== RTCE regions API calls =====
+
+func (c *Client) ListRtceRegions(cloud string, region string) ([]rtcev1.RtceV1Region, error) {
+	var list []rtcev1.RtceV1Region
+
+	done := false
+	pageToken := ""
+	for !done {
+		page, httpResp, err := c.executeListRegions(cloud, region, pageToken)
+		if err != nil {
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
+		}
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return list, nil
+}
+
+func (c *Client) executeListRegions(cloud string, region string, pageToken string) (rtcev1.RtceV1RegionList, *http.Response, error) {
+	req := c.RtceClient.RegionsRtceV1Api.
+		ListRtceV1Regions(c.rtceApiContext()).
+		PageSize(ccloudV2ListPageSize)
+	if cloud != "" {
+		req = req.Cloud(cloud)
+	}
+	if region != "" {
+		req = req.Region(region)
+	}
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+	return req.Execute()
+}
+
 // ===== RTCE topics API calls =====
 
 func (c *Client) CreateRtceTopic(req rtcev1.RtceV1RtceTopic) (rtcev1.RtceV1RtceTopic, *http.Response, error) {
@@ -90,45 +129,6 @@ func (c *Client) executeListRtceTopics(specCloud string, specRegion string, envi
 	}
 	if specRegion != "" {
 		req = req.SpecRegion(specRegion)
-	}
-	if pageToken != "" {
-		req = req.PageToken(pageToken)
-	}
-	return req.Execute()
-}
-
-// ===== RTCE regions API calls =====
-
-func (c *Client) ListRtceRegions(cloud string, region string) ([]rtcev1.RtceV1Region, error) {
-	var list []rtcev1.RtceV1Region
-
-	done := false
-	pageToken := ""
-	for !done {
-		page, httpResp, err := c.executeListRegions(cloud, region, pageToken)
-		if err != nil {
-			return nil, errors.CatchCCloudV2Error(err, httpResp)
-		}
-		list = append(list, page.GetData()...)
-
-		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return list, nil
-}
-
-func (c *Client) executeListRegions(cloud string, region string, pageToken string) (rtcev1.RtceV1RegionList, *http.Response, error) {
-	req := c.RtceClient.RegionsRtceV1Api.
-		ListRtceV1Regions(c.rtceApiContext()).
-		PageSize(ccloudV2ListPageSize)
-	if cloud != "" {
-		req = req.Cloud(cloud)
-	}
-	if region != "" {
-		req = req.Region(region)
 	}
 	if pageToken != "" {
 		req = req.PageToken(pageToken)

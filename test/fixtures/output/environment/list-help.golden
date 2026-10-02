@@ -1,4 +1,4 @@
-List Confluent Cloud environments.
+List environments.
 
 Usage:
   confluent environment list [flags]

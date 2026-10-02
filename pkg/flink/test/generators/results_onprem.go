@@ -12,7 +12,12 @@ import (
 )
 
 func GetResultItemGeneratorForTypeOnPrem(dataType cmfsdk.DataType) *rapid.Generator[any] {
-	fieldType := types.NewResultFieldType(dataType.GetType())
+	fieldType, err := types.NewResultFieldType(dataType.GetType())
+	if err != nil {
+		// Only ever called with types this test suite itself defines, so this
+		// is a test-infra bug, not a runtime scenario worth handling gracefully.
+		panic(err)
+	}
 	switch fieldType {
 	case types.Array:
 		elementType := dataType.GetElementType()
@@ -31,6 +36,8 @@ func GetResultItemGeneratorForTypeOnPrem(dataType cmfsdk.DataType) *rapid.Genera
 	case types.Row:
 		elementTypes := dataType.GetFields()
 		return RowResultItemOnPrem(elementTypes)
+	case types.Variant:
+		return VariantResultItem()
 	case types.Null:
 		return rapid.SampledFrom([]any{nil})
 	default:
@@ -187,6 +194,11 @@ func RowDataTypeOnPrem(maxNestingDepth int) *rapid.Generator[cmfsdk.DataType] {
 	})
 }
 
+// VariantDataTypeOnPrem generates the VARIANT data type (value generator is shared with cloud)
+func VariantDataTypeOnPrem() *rapid.Generator[cmfsdk.DataType] {
+	return rapid.Just(cmfsdk.DataType{Nullable: true, Type: "VARIANT"})
+}
+
 func DataTypeOnPrem(maxNestingDepth int) *rapid.Generator[cmfsdk.DataType] {
 	return rapid.Custom(func(t *rapid.T) cmfsdk.DataType {
 		resultFieldType := GenResultFieldType().Draw(t, resultFieldLabel)
@@ -199,8 +211,12 @@ func MockResultColumnsOnPrem(numColumns, maxNestingDepth int) *rapid.Generator[[
 		var columnDetails []cmfsdk.ResultSchemaColumn
 		for i := 0; i < numColumns; i++ {
 			dataType := DataTypeOnPrem(maxNestingDepth).Draw(t, "column type")
+			fieldType, err := types.NewResultFieldType(dataType.GetType())
+			if err != nil {
+				t.Fatalf("%v", err)
+			}
 			columnDetails = append(columnDetails, cmfsdk.ResultSchemaColumn{
-				Name: string(types.NewResultFieldType(dataType.GetType())),
+				Name: string(fieldType),
 				Type: dataType,
 			})
 		}

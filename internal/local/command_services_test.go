@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	climock "github.com/confluentinc/cli/v4/mock"
 )
@@ -245,29 +246,20 @@ func getConfigForVersion(t *testing.T, service, version string) map[string]strin
 	t.Helper()
 	req := require.New(t)
 
+	ctrl := gomock.NewController(t)
+	ch := climock.NewMockConfluentHome(ctrl)
+	ch.EXPECT().IsConfluentPlatform().Return(true, nil).AnyTimes()
+	ch.EXPECT().GetConfluentVersion().Return(version, nil).AnyTimes()
+	ch.EXPECT().GetFile(gomock.Any()).Return(exampleFile, nil).AnyTimes()
+	ch.EXPECT().FindFile(gomock.Any()).Return([]string{exampleFile}, nil).AnyTimes()
+	ch.EXPECT().ReadServiceConfig(gomock.Any(), gomock.Any()).Return([]byte("plugin.path=share/java"), nil).AnyTimes()
+
+	cc := climock.NewMockConfluentCurrent(ctrl)
+	cc.EXPECT().GetDataDir(gomock.Any()).Return(exampleDir, nil).AnyTimes()
+
 	c := &command{
-		ch: &climock.MockConfluentHome{
-			IsConfluentPlatformFunc: func() (bool, error) {
-				return true, nil
-			},
-			GetConfluentVersionFunc: func() (string, error) {
-				return version, nil
-			},
-			GetFileFunc: func(path ...string) (string, error) {
-				return exampleFile, nil
-			},
-			FindFileFunc: func(pattern string) ([]string, error) {
-				return []string{exampleFile}, nil
-			},
-			ReadServiceConfigFunc: func(service string, _ bool) ([]byte, error) {
-				return []byte("plugin.path=share/java"), nil
-			},
-		},
-		cc: &climock.MockConfluentCurrent{
-			GetDataDirFunc: func(service string) (string, error) {
-				return exampleDir, nil
-			},
-		},
+		ch: ch,
+		cc: cc,
 	}
 
 	got, err := c.getConfig(service)
@@ -305,29 +297,20 @@ func TestGetZookeeperConfig(t *testing.T) {
 func testGetConfig(t *testing.T, service string, want map[string]string) {
 	req := require.New(t)
 
+	ctrl := gomock.NewController(t)
+	ch := climock.NewMockConfluentHome(ctrl)
+	ch.EXPECT().IsConfluentPlatform().Return(true, nil).AnyTimes()
+	ch.EXPECT().GetConfluentVersion().Return("7.9.0", nil).AnyTimes()
+	ch.EXPECT().GetFile(gomock.Any()).Return(exampleFile, nil).AnyTimes()
+	ch.EXPECT().FindFile(gomock.Any()).Return([]string{exampleFile}, nil).AnyTimes()
+	ch.EXPECT().ReadServiceConfig(gomock.Any(), gomock.Any()).Return([]byte("plugin.path=share/java"), nil).AnyTimes()
+
+	cc := climock.NewMockConfluentCurrent(ctrl)
+	cc.EXPECT().GetDataDir(gomock.Any()).Return(exampleDir, nil).AnyTimes()
+
 	c := &command{
-		ch: &climock.MockConfluentHome{
-			IsConfluentPlatformFunc: func() (bool, error) {
-				return true, nil
-			},
-			GetConfluentVersionFunc: func() (string, error) {
-				return "7.9.0", nil
-			},
-			GetFileFunc: func(path ...string) (string, error) {
-				return exampleFile, nil
-			},
-			FindFileFunc: func(pattern string) ([]string, error) {
-				return []string{exampleFile}, nil
-			},
-			ReadServiceConfigFunc: func(service string, _ bool) ([]byte, error) {
-				return []byte("plugin.path=share/java"), nil
-			},
-		},
-		cc: &climock.MockConfluentCurrent{
-			GetDataDirFunc: func(service string) (string, error) {
-				return exampleDir, nil
-			},
-		},
+		ch: ch,
+		cc: cc,
 	}
 
 	got, err := c.getConfig(service)
@@ -339,29 +322,20 @@ func testGetConfig(t *testing.T, service string, want map[string]string) {
 func testGetConfigC3(t *testing.T, service string, want map[string]string) {
 	req := require.New(t)
 
+	ctrl := gomock.NewController(t)
+	ch := climock.NewMockConfluentHome(ctrl)
+	ch.EXPECT().IsConfluentPlatform().Return(true, nil).AnyTimes()
+	ch.EXPECT().GetConfluentVersion().Return("8.1.0", nil).AnyTimes()
+	ch.EXPECT().GetFile(gomock.Any()).Return(exampleFile, nil).AnyTimes()
+	ch.EXPECT().FindFile(gomock.Any()).Return([]string{exampleFile}, nil).AnyTimes()
+	ch.EXPECT().ReadServiceConfig(gomock.Any(), gomock.Any()).Return([]byte("plugin.path=share/java"), nil).AnyTimes()
+
+	cc := climock.NewMockConfluentCurrent(ctrl)
+	cc.EXPECT().GetDataDir(gomock.Any()).Return(exampleDir, nil).AnyTimes()
+
 	c := &command{
-		ch: &climock.MockConfluentHome{
-			IsConfluentPlatformFunc: func() (bool, error) {
-				return true, nil
-			},
-			GetConfluentVersionFunc: func() (string, error) {
-				return "8.1.0", nil
-			},
-			GetFileFunc: func(path ...string) (string, error) {
-				return exampleFile, nil
-			},
-			FindFileFunc: func(pattern string) ([]string, error) {
-				return []string{exampleFile}, nil
-			},
-			ReadServiceConfigFunc: func(service string, _ bool) ([]byte, error) {
-				return []byte("plugin.path=share/java"), nil
-			},
-		},
-		cc: &climock.MockConfluentCurrent{
-			GetDataDirFunc: func(service string) (string, error) {
-				return exampleDir, nil
-			},
-		},
+		ch: ch,
+		cc: cc,
 	}
 
 	got, err := c.getConfig(service)
@@ -373,15 +347,13 @@ func testGetConfigC3(t *testing.T, service string, want map[string]string) {
 func TestConfluentPlatformAvailableServices(t *testing.T) {
 	req := require.New(t)
 
+	ctrl := gomock.NewController(t)
+	ch := climock.NewMockConfluentHome(ctrl)
+	ch.EXPECT().IsConfluentPlatform().Return(true, nil).AnyTimes()
+	ch.EXPECT().GetConfluentVersion().Return("7.9.0", nil).AnyTimes()
+
 	c := &command{
-		ch: &climock.MockConfluentHome{
-			IsConfluentPlatformFunc: func() (bool, error) {
-				return true, nil
-			},
-			GetConfluentVersionFunc: func() (string, error) {
-				return "7.9.0", nil
-			},
-		},
+		ch: ch,
 	}
 
 	got, err := c.getAvailableServices()
@@ -402,15 +374,13 @@ func TestConfluentPlatformAvailableServices(t *testing.T) {
 func TestConfluentCommunitySoftwareAvailableServices(t *testing.T) {
 	req := require.New(t)
 
+	ctrl := gomock.NewController(t)
+	ch := climock.NewMockConfluentHome(ctrl)
+	ch.EXPECT().IsConfluentPlatform().Return(false, nil).AnyTimes()
+	ch.EXPECT().GetConfluentVersion().Return("7.9.0", nil).AnyTimes()
+
 	c := &command{
-		ch: &climock.MockConfluentHome{
-			IsConfluentPlatformFunc: func() (bool, error) {
-				return false, nil
-			},
-			GetConfluentVersionFunc: func() (string, error) {
-				return "7.9.0", nil
-			},
-		},
+		ch: ch,
 	}
 
 	got, err := c.getAvailableServices()

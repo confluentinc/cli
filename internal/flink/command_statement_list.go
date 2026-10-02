@@ -13,48 +13,40 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/flink/types"
 	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
-var allowedStatuses = []string{
-	"pending",
-	"running",
-	"completed",
-	"deleting",
-	"failing",
-	"failed",
-	"stopped",
-}
-
-func (c *command) newStatementListCommand() *cobra.Command {
+func (c *statementCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Flink SQL statements.",
+		Args:  cobra.NoArgs,
 		Example: examples.BuildExampleString(examples.Example{
 			Text: "List running statements.",
 			Code: "confluent flink statement list --status running",
 		}),
-		RunE: c.statementList,
+		RunE: c.list,
 	}
 
+	// Optional flags
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
-	c.addComputePoolFlag(cmd)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddOutputFlag(cmd)
-
+	pcmd.AddComputePoolFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("status", "", "Filter the results by statement status.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "status", func(*cobra.Command, []string) []string {
 		return allowedStatuses
 	})
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
-func (c *command) statementList(cmd *cobra.Command, _ []string) error {
+func (c *statementCommand) list(cmd *cobra.Command, _ []string) error {
 	client, err := c.GetFlinkGatewayClient(false)
 	if err != nil {
 		return err
@@ -100,6 +92,7 @@ func (c *command) statementList(cmd *cobra.Command, _ []string) error {
 			ComputePool:            statement.Spec.GetComputePoolId(),
 			Status:                 statement.Status.GetPhase(),
 			StatusDetail:           statement.Status.GetDetail(),
+			Warnings:               types.NewStatementWarnings(statement.Status.GetWarnings()),
 			LatestOffsets:          statement.Status.GetLatestOffsets(),
 			LatestOffsetsTimestamp: flinkgatewayv1.PtrTime(statement.Status.GetLatestOffsetsTimestamp()),
 		})
@@ -107,7 +100,7 @@ func (c *command) statementList(cmd *cobra.Command, _ []string) error {
 	return list.Print()
 }
 
-func (c *command) validateProvidedComputePool(environmentId, computePoolId string) error {
+func (c *statementCommand) validateProvidedComputePool(environmentId, computePoolId string) error {
 	if computePoolId == "" {
 		return nil
 	}

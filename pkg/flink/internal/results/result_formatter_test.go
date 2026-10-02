@@ -73,13 +73,16 @@ func (s *ResultFormatterTestSuite) TestFormatAtomicField() {
 	rapid.Check(s.T(), func(t *rapid.T) {
 		atomicDataType := generators.AtomicDataType().Draw(t, "atomic data type")
 		atomicField := generators.GetResultItemGeneratorForType(atomicDataType).Draw(t, "atomic result field")
-		convertedField := convertToInternalField(atomicField, flinkgatewayv1.ColumnDetails{
+		convertedField, err := convertToInternalField(atomicField, flinkgatewayv1.ColumnDetails{
 			Name: "Test_Column",
 			Type: atomicDataType,
 		})
+		require.NoError(t, err)
 
+		atomicFieldType, err := types.NewResultFieldType(atomicDataType.GetType())
+		require.NoError(t, err)
 		val := "NULL"
-		if types.NewResultFieldType(atomicDataType.GetType()) != types.Null {
+		if atomicFieldType != types.Null {
 			val, _ = atomicField.(string)
 		}
 

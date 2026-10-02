@@ -11,12 +11,11 @@ import (
 
 func (c *command) newStatementDeleteCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "delete <name-1> [name-2] ... [name-n]",
-		Short:       "Delete one or more Flink SQL statements.",
-		Long:        "Delete one or more Flink SQL statements in Confluent Platform.",
-		Args:        cobra.MinimumNArgs(1),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
-		RunE:        c.statementDeleteOnPrem,
+		Use:   "delete <name-1> [name-2] ... [name-n]",
+		Short: "Delete one or more Flink SQL statements.",
+		Long:  "Delete one or more Flink SQL statements in Confluent Platform.",
+		Args:  cobra.MinimumNArgs(1),
+		RunE:  c.statementDeleteOnPrem,
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")

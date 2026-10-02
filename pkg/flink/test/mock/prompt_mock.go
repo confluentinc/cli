@@ -21,6 +21,7 @@ import (
 type MockIPrompt struct {
 	ctrl     *gomock.Controller
 	recorder *MockIPromptMockRecorder
+	isgomock struct{}
 }
 
 // MockIPromptMockRecorder is the mock recorder for MockIPrompt.
@@ -205,15 +206,15 @@ func (mr *MockIPromptMockRecorder) SetConsoleParser(arg0 any) *gomock.Call {
 }
 
 // SetDiagnostics mocks base method.
-func (m *MockIPrompt) SetDiagnostics(arg0 []lsp.Diagnostic) {
+func (m *MockIPrompt) SetDiagnostics(diagnostics []lsp.Diagnostic) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetDiagnostics", arg0)
+	m.ctrl.Call(m, "SetDiagnostics", diagnostics)
 }
 
 // SetDiagnostics indicates an expected call of SetDiagnostics.
-func (mr *MockIPromptMockRecorder) SetDiagnostics(arg0 any) *gomock.Call {
+func (mr *MockIPromptMockRecorder) SetDiagnostics(diagnostics any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDiagnostics", reflect.TypeOf((*MockIPrompt)(nil).SetDiagnostics), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDiagnostics", reflect.TypeOf((*MockIPrompt)(nil).SetDiagnostics), diagnostics)
 }
 
 // SetExitChecker mocks base method.

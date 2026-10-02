@@ -351,6 +351,8 @@ func (s *Store) WaitForTerminalStatementState(ctx context.Context, statement typ
 
 			statement.Status = types.PHASE(statementObj.Status.GetPhase())
 			statement.StatusDetail = statusDetail
+			// Warnings can be added after submission, so refresh them on every poll.
+			statement.Warnings = types.NewStatementWarnings(statementObj.Status.GetWarnings())
 			if statement.IsTerminalState() {
 				break
 			}

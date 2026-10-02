@@ -1,0 +1,4 @@
+ccp-123456	CliPluginTest1: Test plugin
+ccp-789012	CliPluginTest2: Test plugin
+:4
+Completion ended with directive: ShellCompDirectiveNoFileComp

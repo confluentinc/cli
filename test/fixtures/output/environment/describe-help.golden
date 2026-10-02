@@ -1,4 +1,4 @@
-Describe a Confluent Cloud environment.
+Describe an environment.
 
 Usage:
   confluent environment describe [id] [flags]
