@@ -113,8 +113,10 @@ func (c *statementCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	propertiesMap[config.KeyCatalog] = environment.GetDisplayName()
-	if database != "" {
+	if _, ok := propertiesMap[config.KeyCatalog]; !ok {
+		propertiesMap[config.KeyCatalog] = environment.GetDisplayName()
+	}
+	if _, ok := propertiesMap[config.KeyDatabase]; !ok && database != "" {
 		propertiesMap[config.KeyDatabase] = database
 	}
 	if len(propertiesMap) > 0 {
@@ -153,6 +155,7 @@ func (c *statementCommand) create(cmd *cobra.Command, args []string) error {
 			},
 			Phase:         func(v flinkgatewayv1.SqlV1Statement) string { return v.Status.GetPhase() },
 			PendingPhases: []string{"PENDING", "FAILING"},
+			Initial:       statement,
 			Delay:         5 * time.Second,
 			PollInterval:  10 * time.Second,
 			Timeout:       timeout,
