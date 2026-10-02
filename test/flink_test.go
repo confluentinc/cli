@@ -339,9 +339,11 @@ func (s *CLITestSuite) TestFlinkConnectivityType() {
 		{args: "flink statement list", fixture: listPrivateFixture, exitCode: 1},
 	}
 
-	for _, test := range tests {
+	for i, test := range tests {
 		test.login = "cloud"
-		test.workflow = true
+		// The first case runs on a reset config (color off, nothing selected); the rest keep
+		// the state it leaves, so the test is independent of whatever ran before it.
+		test.workflow = i > 0
 		s.runIntegrationTest(test)
 	}
 }
@@ -468,8 +470,10 @@ func (s *CLITestSuite) TestFlinkStatement() {
 		{args: "flink statement update my-statement --stopped=false --principal u-654321", fixture: "flink/statement/update-invalid-principal.golden", exitCode: 1},
 	}
 
-	for _, test := range tests {
-		test.workflow = true
+	for i, test := range tests {
+		// The first case runs on a reset config (color off, nothing selected); the rest keep
+		// the state it leaves, so the test is independent of whatever ran before it.
+		test.workflow = i > 0
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
@@ -483,15 +487,19 @@ func (s *CLITestSuite) TestFlinkStatementCreate() {
 		{args: `flink statement create my-statement-2 --sql "INSERT * INTO table;" --service-account sa-123456`, fixture: "flink/statement/create-without-compute-pool.golden"},
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456`, fixture: "flink/statement/create-service-account-warning.golden"},
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 --wait`, fixture: "flink/statement/create-wait.golden"},
-		{args: `flink statement create my-statement-pending --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 --wait --timeout 6s`, fixture: "flink/statement/create-wait-timeout.golden", exitCode: 1},
+		{args: `flink statement create my-statement-pending --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 --wait --timeout 1s`, fixture: "flink/statement/create-wait-timeout.golden", exitCode: 1},
 		{args: `flink statement create my-statement-failed --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 --wait`, fixture: "flink/statement/create-wait-failed.golden"},
 		{args: `flink statement create --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 -o yaml`, fixture: "flink/statement/create-no-name-yaml.golden", regex: true},
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 --property property1=value1,property2=value2`, fixture: "flink/statement/create-with-properties.golden"},
+		// A --property under a defaulted key (the catalog) wins over the default.
+		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 --property sql.current-catalog=my-catalog`, fixture: "flink/statement/create-with-catalog-property.golden"},
 		{args: `flink statement create my-statement --sql "INSERT * INTO table;" --compute-pool lfcp-123456 --service-account sa-123456 --property invalid-format,property1=value1`, fixture: "flink/statement/create-invalid-property.golden", exitCode: 1},
 	}
 
-	for _, test := range tests {
-		test.workflow = true
+	for i, test := range tests {
+		// The first case runs on a reset config (color off, nothing selected); the rest keep
+		// the state it leaves, so the test is independent of whatever ran before it.
+		test.workflow = i > 0
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
