@@ -1,0 +1,7 @@
++---------------+--------------+
+| Name          | savepoint1   |
+| Application   | application1 |
+| Path          | abc/def      |
+| Format        | CANONICAL    |
+| Backoff Limit | 10           |
++---------------+--------------+

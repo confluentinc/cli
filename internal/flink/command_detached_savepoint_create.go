@@ -65,14 +65,19 @@ func (c *command) detachedSavepointCreate(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(&detachedSavepointOut{
-		Name:              detachedSavepoint.Metadata.GetName(),
-		Path:              detachedSavepoint.Spec.GetPath(),
-		Format:            detachedSavepoint.Spec.GetFormatType(),
-		BackoffLimit:      detachedSavepoint.Spec.GetBackoffLimit(),
-		CreationTimestamp: detachedSavepoint.Metadata.GetCreationTimestamp(),
-		Uid:               detachedSavepoint.Metadata.GetUid(),
-	})
-	return table.Print()
+	if output.GetFormat(cmd) == output.Human {
+		table := output.NewTable(cmd)
+		table.Add(&detachedSavepointOut{
+			Name:              detachedSavepoint.Metadata.GetName(),
+			Path:              detachedSavepoint.Spec.GetPath(),
+			Format:            detachedSavepoint.Spec.GetFormatType(),
+			BackoffLimit:      detachedSavepoint.Spec.GetBackoffLimit(),
+			CreationTimestamp: detachedSavepoint.Metadata.GetCreationTimestamp(),
+			Uid:               detachedSavepoint.Metadata.GetUid(),
+		})
+		return table.Print()
+	}
+
+	localDetachedSavepoint := convertSdkDetachedSavepointToLocalSavepoint(detachedSavepoint)
+	return output.SerializedOutput(cmd, localDetachedSavepoint)
 }
