@@ -128,9 +128,14 @@ func (s *Store) WaitPendingStatement(ctx context.Context, statement types.Proces
 		// Check for failed or cancelled statements
 		statementStatus = updatedStatement.Status
 		if statementStatus != types.COMPLETED && statementStatus != types.RUNNING {
+			failureMessage := updatedStatement.StatusDetail
+			if failureMessage == "" {
+				failureMessage = fmt.Sprintf("the server did not report a failure reason; run `confluent flink statement describe %s` for the full status", statement.StatementName)
+			}
 			return nil, &types.StatementError{
 				Message:        fmt.Sprintf("can't fetch results. Statement phase is: %s", statementStatus),
-				FailureMessage: updatedStatement.StatusDetail,
+				FailureMessage: failureMessage,
+				Suggestion:     "This statement reached a terminal state without producing results. Check the statement definition and run `confluent flink statement describe` for the full status.",
 				StatusCode:     types.StatusCode(err),
 			}
 		}
@@ -249,7 +254,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 			return nil, &types.StatementError{
 				Message: fmt.Sprintf("the server can't process this statement right now, exiting after %d retries",
 					len(capturedErrors)),
-				FailureMessage: fmt.Sprintf("captured retryable errors: %s", strings.Join(capturedErrors, "; ")),
+				FailureMessage: formatCapturedErrors(capturedErrors),
 			}
 		}
 
@@ -277,7 +282,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 
 	var errorsMsg string
 	if len(capturedErrors) > 0 {
-		errorsMsg = fmt.Sprintf("captured retryable errors: %s", strings.Join(capturedErrors, "; "))
+		errorsMsg = formatCapturedErrors(capturedErrors)
 	}
 
 	return nil, &types.StatementError{
@@ -285,6 +290,30 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 			timeout.Seconds(), config.KeyResultsTimeout),
 		FailureMessage: errorsMsg,
 	}
+}
+
+// formatCapturedErrors collapses repeated retryable status details into a single,
+// de-duplicated, insertion-ordered summary so an identical error is not printed once
+// per retry.
+func formatCapturedErrors(capturedErrors []string) string {
+	counts := make(map[string]int, len(capturedErrors))
+	order := make([]string, 0, len(capturedErrors))
+	for _, e := range capturedErrors {
+		if _, seen := counts[e]; !seen {
+			order = append(order, e)
+		}
+		counts[e]++
+	}
+
+	parts := make([]string, 0, len(order))
+	for _, e := range order {
+		if counts[e] > 1 {
+			parts = append(parts, fmt.Sprintf("%s (repeated %d times)", e, counts[e]))
+		} else {
+			parts = append(parts, e)
+		}
+	}
+	return fmt.Sprintf("captured retryable errors: %s", strings.Join(parts, "; "))
 }
 
 func (s *Store) getStatusDetail(statementObj flinkgatewayv1.SqlV1Statement) string {
