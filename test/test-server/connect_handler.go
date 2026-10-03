@@ -254,6 +254,20 @@ func handleConnectArtifactId(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			vars := mux.Vars(r)
 			id := vars["id"]
+
+			if id == "cfa-failed123" {
+				failed := &camv1.CamV1ConnectArtifact{}
+				failed.SetId("cfa-failed123")
+				failed.Spec = camv1.NewCamV1ConnectArtifactSpec("AWS", "env-123456", "my-failed-artifact")
+				failed.Spec.SetDescription("new-failed-artifact")
+				failed.Spec.SetContentFormat("JAR")
+				failed.Status = camv1.NewCamV1ConnectArtifactStatus("FAILED")
+				failed.Status.SetErrorMessage("No transforms found in the uploaded artifact")
+				err := json.NewEncoder(w).Encode(failed)
+				require.NoError(t, err)
+				return
+			}
+
 			artifact, exists := artifactStore[id]
 			if !exists {
 				w.WriteHeader(http.StatusNotFound)

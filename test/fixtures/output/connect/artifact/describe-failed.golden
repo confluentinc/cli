@@ -1,0 +1,11 @@
++----------------+--------------------------------+
+| ID             | cfa-failed123                  |
+| Name           | my-failed-artifact             |
+| Description    | new-failed-artifact            |
+| Cloud          | AWS                            |
+| Environment    | env-123456                     |
+| Content Format | JAR                            |
+| Status         | FAILED                         |
+| Error Message  | No transforms found in the     |
+|                | uploaded artifact              |
++----------------+--------------------------------+
