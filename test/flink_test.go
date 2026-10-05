@@ -93,46 +93,24 @@ func (s *CLITestSuite) TestFlinkConnection() {
 }
 
 func (s *CLITestSuite) TestFlinkMaterializedTableCreate() {
-	file, _ := os.CreateTemp(os.TempDir(), "test")
-	_, _ = file.Write([]byte("name,type,comment,Physical\n"))
-	_, _ = file.Write([]byte("name2,type2,comment2,Physical\n"))
-	defer func() {
-		_ = os.Remove(file.Name())
-	}()
-
-	fileMetadata, _ := os.CreateTemp(os.TempDir(), "test")
-	line := fmt.Sprintf("name,type,comment,Metadata,key,%t", true)
-	_, _ = fileMetadata.Write([]byte(line))
-	defer func() {
-		_ = os.Remove(fileMetadata.Name())
-	}()
-
-	fileComputed, _ := os.CreateTemp(os.TempDir(), "test")
-	lineComputed := fmt.Sprintf("name,type,comment,Computed,exp1,%t", true)
-	_, _ = fileComputed.Write([]byte(lineComputed))
-	defer func() {
-		_ = os.Remove(fileComputed.Name())
-	}()
-
-	fileConstraints, _ := os.CreateTemp(os.TempDir(), "test")
-	_, _ = fileConstraints.Write([]byte("name,type,colName1|colName2,true"))
-	defer func() {
-		_ = os.Remove(fileConstraints.Name())
-	}()
+	file := writeTempFile(s.T(), "name,type,comment,Physical\nname2,type2,comment2,Physical\n")
+	fileMetadata := writeTempFile(s.T(), fmt.Sprintf("name,type,comment,Metadata,key,%t", true))
+	fileComputed := writeTempFile(s.T(), fmt.Sprintf("name,type,comment,Computed,exp1,%t", true))
+	fileConstraints := writeTempFile(s.T(), "name,type,colName1|colName2,true")
 	tests := []CLITest{
 		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
 		{args: "flink endpoint use http://127.0.0.1:1026", fixture: "flink/endpoint/use-public.golden"},
 		{args: "flink materialized-table create my-table --cloud aws --region eu-west-1 --database lkc01 --compute-pool pool1 --principal principal1 --query query1 ", fixture: "flink/materialized-table/create/create.golden"},
 		{args: fmt.Sprintf("flink materialized-table create my-table --cloud aws --region eu-west-1 "+
 			"--database lkc01 --compute-pool pool1 --principal principal1 "+
-			"--query query1  --columns-physical %s --columns-metadata %s --columns-computed %s --distribution-bucket-count 32", file.Name(),
-			fileMetadata.Name(), fileComputed.Name(),
+			"--query query1  --columns-physical %s --columns-metadata %s --columns-computed %s --distribution-bucket-count 32", file,
+			fileMetadata, fileComputed,
 		), fixture: "flink/materialized-table/create/create-column.golden"},
 		{args: fmt.Sprintf("flink materialized-table create my-table --cloud aws --region eu-west-1 "+
 			"--database lkc01 --compute-pool pool1 --principal principal1 "+
 			"--query query1 --constraints %s --distribution-bucket-count 32 --distribution-keys col1,col2 --watermark-column wname1 "+
 			"--watermark-expression wexp1",
-			fileConstraints.Name(),
+			fileConstraints,
 		), fixture: "flink/materialized-table/create/create-filled.golden"},
 	}
 
@@ -187,17 +165,8 @@ func (s *CLITestSuite) TestFlinkMaterializedTableDelete() {
 }
 
 func (s *CLITestSuite) TestFlinkMaterializedTableUpdate() {
-	file, _ := os.CreateTemp(os.TempDir(), "test")
-	_, _ = file.Write([]byte("name,type,comment2,Physical"))
-	defer func() {
-		_ = os.Remove(file.Name())
-	}()
-
-	fileConstraints, _ := os.CreateTemp(os.TempDir(), "test")
-	_, _ = fileConstraints.Write([]byte("name,type,colName1|colName2,true"))
-	defer func() {
-		_ = os.Remove(fileConstraints.Name())
-	}()
+	file := writeTempFile(s.T(), "name,type,comment2,Physical")
+	fileConstraints := writeTempFile(s.T(), "name,type,colName1|colName2,true")
 
 	tests := []CLITest{
 		{args: "flink region use --cloud aws --region eu-west-1", fixture: "flink/region/use-aws.golden"},
@@ -205,7 +174,7 @@ func (s *CLITestSuite) TestFlinkMaterializedTableUpdate() {
 		{args: "flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --database lkc01 --compute-pool pool1 --principal principal1 --query query2", fixture: "flink/materialized-table/update/update.golden"},
 		{args: "flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --database lkc01 --compute-pool pool2 --principal principal1 --query query1", fixture: "flink/materialized-table/update/update-2.golden"},
 		{args: "flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --database lkc01 --principal principal1 --query query1", fixture: "flink/materialized-table/update/no-cp.golden"},
-		{args: fmt.Sprintf("flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --database lkc01 --compute-pool pool2 --principal principal1 --query query1 --watermark-expression expNew --constraints %s --columns-physical %s", fileConstraints.Name(), file.Name()), fixture: "flink/materialized-table/update/update-3.golden"},
+		{args: fmt.Sprintf("flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --database lkc01 --compute-pool pool2 --principal principal1 --query query1 --watermark-expression expNew --constraints %s --columns-physical %s", fileConstraints, file), fixture: "flink/materialized-table/update/update-3.golden"},
 		{args: "flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --database lkc01 --stopped=true", fixture: "flink/materialized-table/update/stop.golden"},
 		{args: "flink materialized-table update my-table-1 --cloud aws --region eu-west-1 --database lkc01 --stopped=false", fixture: "flink/materialized-table/update/resume.golden"},
 	}

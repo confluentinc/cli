@@ -337,6 +337,15 @@ func resetConfiguration(t *testing.T, arePluginsEnabled bool) {
 	require.NoError(t, err)
 }
 
+// writeTempFile writes content to a closed file under a temp dir the test removes afterward. Closing
+// matters on Windows, which can't delete a file that is still open.
+func writeTempFile(t *testing.T, content string) string {
+	t.Helper()
+	name := filepath.Join(t.TempDir(), "input")
+	require.NoError(t, os.WriteFile(name, []byte(content), 0600))
+	return name
+}
+
 func writeFixture(t *testing.T, fixture, content string) {
 	path := fixturePath(t, fixture)
 
