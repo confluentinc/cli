@@ -2,8 +2,8 @@ package test
 
 import (
 	"fmt"
-	"os"
 	"runtime"
+	"testing"
 )
 
 const (
@@ -354,16 +354,12 @@ func (s *CLITestSuite) TestKafkaClientConfigGlobalKey() {
 	}
 }
 
-func getCreateLinkConfigFile() string {
-	file, _ := os.CreateTemp(os.TempDir(), "test")
-	_, _ = file.Write([]byte("key=val\n key2=val2 \n key3=val password=pass"))
-	return file.Name()
+func getCreateLinkConfigFile(t *testing.T) string {
+	return writeTempFile(t, "key=val\n key2=val2 \n key3=val password=pass")
 }
 
-func getCreateBidirectionalLinkConfigFile() string {
-	file, _ := os.CreateTemp(os.TempDir(), "test")
-	_, _ = file.Write([]byte("link.mode=BIDIRECTIONAL \nkey=val\n key2=val2 \n key3=val password=pass"))
-	return file.Name()
+func getCreateBidirectionalLinkConfigFile(t *testing.T) string {
+	return writeTempFile(t, "link.mode=BIDIRECTIONAL \nkey=val\n key2=val2 \n key3=val password=pass")
 }
 
 func (s *CLITestSuite) TestKafkaBroker() {
@@ -456,8 +452,8 @@ func (s *CLITestSuite) TestKafkaLink() {
 		{args: "kafka link configuration list --cluster lkc-describe-topic link-1", fixture: "kafka/link/configuration/list.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link configuration list --cluster lkc-describe-topic link-4 -o yaml", fixture: "kafka/link/configuration/list-bidirectional-link-yaml.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link configuration list --cluster lkc-describe-topic link-4", fixture: "kafka/link/configuration/list-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link create bidirectional_link --remote-cluster lkc-describe-topic --local-api-key local-api-key123 --local-api-secret local-api-secret-123 --remote-api-key remote-api-key-123 --remote-api-secret remote-api-secret-123 --remote-bootstrap-server myhost:1234 --config " + getCreateBidirectionalLinkConfigFile(), fixture: "kafka/link/create-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link create my_link --source-cluster lkc-describe-topic --source-bootstrap-server myhost:1234 --config " + getCreateLinkConfigFile(), fixture: "kafka/link/create-link.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link create bidirectional_link --remote-cluster lkc-describe-topic --local-api-key local-api-key123 --local-api-secret local-api-secret-123 --remote-api-key remote-api-key-123 --remote-api-secret remote-api-secret-123 --remote-bootstrap-server myhost:1234 --config " + getCreateBidirectionalLinkConfigFile(s.T()), fixture: "kafka/link/create-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link create my_link --source-cluster lkc-describe-topic --source-bootstrap-server myhost:1234 --config " + getCreateLinkConfigFile(s.T()), fixture: "kafka/link/create-link.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link delete link-1 link-2 link-dne", fixture: "kafka/link/delete-link-multiple-fail.golden", useKafka: "lkc-describe-topic", exitCode: 1},
 		{args: "kafka link delete link-1 link-2", input: "n\n", fixture: "kafka/link/delete-link-multiple-refuse.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link delete link-1 link-2", input: "y\n", fixture: "kafka/link/delete-link-multiple.golden", useKafka: "lkc-describe-topic"},
@@ -481,7 +477,7 @@ func (s *CLITestSuite) TestKafkaLink() {
 	}
 
 	tests = []CLITest{
-		{args: "kafka link create bidirectional_link --remote-cluster lkc-abc123 --remote-bootstrap-server SASL_SSL://pkc-12345.us-west-2.aws.confluent.cloud:9092 --remote-api-key remoteKey --remote-api-secret remoteSecret --local-api-key localUser --local-api-secret localPassword --config " + getCreateBidirectionalLinkConfigFile(), fixture: "kafka/link/create-bidirectional-link-onprem.golden"},
+		{args: "kafka link create bidirectional_link --remote-cluster lkc-abc123 --remote-bootstrap-server SASL_SSL://pkc-12345.us-west-2.aws.confluent.cloud:9092 --remote-api-key remoteKey --remote-api-secret remoteSecret --local-api-key localUser --local-api-secret localPassword --config " + getCreateBidirectionalLinkConfigFile(s.T()), fixture: "kafka/link/create-bidirectional-link-onprem.golden"},
 		{args: "kafka link create source_initiated_link --destination-cluster 123456789 --destination-bootstrap-server my-host:1234 --source-api-key sourceKey --source-api-secret sourceSecret --destination-api-key destinationKey --destination-api-secret destinationSecret --config link.mode=SOURCE", fixture: "kafka/link/create-source-link-onprem.golden"},
 		{args: "kafka link create destination_initiated_link --source-cluster 123456789 --source-bootstrap-server my-host:1234 --source-api-key destinationKey --source-api-secret destinationSecret --config link.mode=DESTINATION", fixture: "kafka/link/create-destination-link-onprem.golden", exitCode: 1},
 	}
