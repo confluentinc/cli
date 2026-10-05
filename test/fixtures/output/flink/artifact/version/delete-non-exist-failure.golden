@@ -1,0 +1,5 @@
+Error: failed to describe artifact "non-exist-artifact" in the environment "test-env": The artifact name is invalid
+
+Suggestions:
+    List available Flink artifacts with `confluent flink artifact list`.
+    Check that CMF is running and accessible.
