@@ -5,9 +5,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"testing"
-
-	"github.com/stretchr/testify/require"
 )
 
 // The channel a build resolves its state directory from is decided in cmd/confluent/main.go, before
@@ -17,8 +14,11 @@ import (
 //
 // These build stamped binaries and run them, which is the only level at which that wiring is
 // observable. A regression here means every existing customer's login moves on upgrade.
+//
+// Each run gets its own home rather than the suite's, which SetupTest seeds with a dev-channel
+// config.json that would satisfy or break these directory assertions on its own.
 
-func TestChannelState_StampedBuildsUseSeparateDirectories(t *testing.T) {
+func (s *CLITestSuite) TestChannelState_StampedBuildsUseSeparateDirectories() {
 	tests := []struct {
 		name    string
 		version string
@@ -31,67 +31,65 @@ func TestChannelState_StampedBuildsUseSeparateDirectories(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			home := t.TempDir()
+		s.Run(test.name, func() {
+			home := s.T().TempDir()
 
-			runStampedCli(t, buildStampedCli(t, test.version), home)
+			s.runStampedCli(s.stampedCli(test.version), home)
 
-			require.DirExists(t, filepath.Join(home, test.want))
-			require.NoDirExists(t, filepath.Join(home, test.absent))
+			s.Require().DirExists(filepath.Join(home, test.want))
+			s.Require().NoDirExists(filepath.Join(home, test.absent))
 		})
 	}
 }
 
 // The isolation the feature promises, rather than the paths it happens to pick: state written by
 // one channel must be invisible to another sharing the same home directory.
-func TestChannelState_ReleaseConfigIsInvisibleToLocalBuild(t *testing.T) {
-	home := t.TempDir()
-	release := buildStampedCli(t, "9.9.9")
-	local := buildStampedCli(t, "")
+func (s *CLITestSuite) TestChannelState_ReleaseConfigIsInvisibleToLocalBuild() {
+	home := s.T().TempDir()
+	release := s.stampedCli("9.9.9")
+	local := s.stampedCli("")
 
-	runStampedCli(t, release, home, "configuration", "update", "disable_update_check", "true")
-	before := readFile(t, filepath.Join(home, ".confluent", "config.json"))
-	runStampedCli(t, local, home, "configuration", "update", "disable_update_check", "true")
+	s.runStampedCli(release, home, "configuration", "update", "disable_update_check", "true")
+	before := s.readFile(filepath.Join(home, ".confluent", "config.json"))
+	s.runStampedCli(local, home, "configuration", "update", "disable_update_check", "true")
 
-	require.Equal(t, before, readFile(t, filepath.Join(home, ".confluent", "config.json")),
+	s.Require().Equal(before, s.readFile(filepath.Join(home, ".confluent", "config.json")),
 		"a local build must not modify the release build's configuration")
-	require.FileExists(t, filepath.Join(home, ".confluent-dev", "config.json"))
+	s.Require().FileExists(filepath.Join(home, ".confluent-dev", "config.json"))
 }
 
-// buildStampedCli compiles the CLI with the given main.version, or with none when version is empty.
-func buildStampedCli(t *testing.T, version string) string {
-	t.Helper()
+// stampedClis caches binaries by version for the whole suite, so each one is built once.
+var stampedClis = map[string]string{}
 
-	binary := filepath.Join(t.TempDir(), "confluent")
+// stampedCli returns the CLI compiled with the given main.version, or with none when version is
+// empty.
+func (s *CLITestSuite) stampedCli(version string) string {
+	if binary, ok := stampedClis[version]; ok {
+		return binary
+	}
+
+	// rootT outlives this method, so the cached binary is still there for the next one.
+	binary := filepath.Join(s.rootT.TempDir(), "confluent")
 	if runtime.GOOS == "windows" {
 		binary += ".exe"
 	}
 
 	// isTest keeps the stamped binary off the real update service, which `version` and
-	// `configuration update` below would otherwise hit; the normal integration build stamps it too.
+	// `configuration update` would otherwise hit; the normal integration build stamps it too.
 	ldflags := "-X main.isTest=true"
 	if version != "" {
 		ldflags += " -X main.version=" + version
 	}
 
-	args := []string{"build", "-ldflags=" + ldflags, "-o", binary, mainPackagePath()}
+	// SetupSuite has already changed to the repo root.
+	output, err := exec.Command("go", "build", "-ldflags="+ldflags, "-o", binary, "./cmd/confluent").CombinedOutput()
+	s.Require().NoError(err, "go build failed: %s", output)
 
-	output, err := exec.Command("go", args...).CombinedOutput()
-	require.NoError(t, err, "go build failed: %s", output)
-
+	stampedClis[version] = binary
 	return binary
 }
 
-// mainPackagePath resolves cmd/confluent from this file's own location rather than the working
-// directory, which a sibling suite (TestCLI) changes to the repo root without restoring.
-func mainPackagePath() string {
-	_, thisFile, _, _ := runtime.Caller(0)
-	return filepath.Join(filepath.Dir(thisFile), "..", "cmd", "confluent")
-}
-
-func runStampedCli(t *testing.T, binary, home string, args ...string) {
-	t.Helper()
-
+func (s *CLITestSuite) runStampedCli(binary, home string, args ...string) {
 	if len(args) == 0 {
 		args = []string{"version"}
 	}
@@ -101,14 +99,12 @@ func runStampedCli(t *testing.T, binary, home string, args ...string) {
 	cmd.Env = append(os.Environ(), "HOME="+home, "USERPROFILE="+home)
 
 	output, err := cmd.CombinedOutput()
-	require.NoError(t, err, "%s %v failed: %s", binary, args, output)
+	s.Require().NoError(err, "%s %v failed: %s", binary, args, output)
 }
 
-func readFile(t *testing.T, path string) []byte {
-	t.Helper()
-
+func (s *CLITestSuite) readFile(path string) []byte {
 	contents, err := os.ReadFile(path)
-	require.NoError(t, err)
+	s.Require().NoError(err)
 
 	return contents
 }
