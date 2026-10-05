@@ -28,13 +28,8 @@ func (c *command) newInstallCommand() *cobra.Command {
 }
 
 func (c *command) install(_ *cobra.Command, args []string) error {
-	confluentDir, err := config.StateDir()
+	confluentDir, err := config.EnsureStateDir()
 	if err != nil {
-		return err
-	}
-
-	// A dev or prerelease channel's state directory may not exist yet; MkdirTemp needs it present.
-	if err := os.MkdirAll(confluentDir, 0700); err != nil {
 		return err
 	}
 

@@ -667,6 +667,19 @@ func StateDir() (string, error) {
 	return filepath.Join(home, StateDirName()), nil
 }
 
+// EnsureStateDir returns StateDir, creating it if missing; a dev or prerelease channel's directory
+// may not exist yet.
+func EnsureStateDir() (string, error) {
+	dir, err := StateDir()
+	if err != nil {
+		return "", err
+	}
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return "", err
+	}
+	return dir, nil
+}
+
 // GetDefaultFilename swallows a missing home directory because it backs a flag default built at
 // command-construction time, where there is no error to return. Prefer StateDir where you can.
 func GetDefaultFilename() string {

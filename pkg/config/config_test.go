@@ -602,9 +602,8 @@ func TestConfig_getFilename_perChannel(t *testing.T) {
 	}
 }
 
-func TestStateDir_ErrorWhenHomeUnresolvable(t *testing.T) {
-	// Clearing the home-directory env vars is what makes os.UserHomeDir fail: HOME on Unix,
-	// USERPROFILE on Windows. Both are cleared so the test is platform-agnostic.
+// unsetHome clears the env vars os.UserHomeDir reads, so it fails on every platform.
+func unsetHome(t *testing.T) {
 	t.Setenv("HOME", "")
 	t.Setenv("USERPROFILE", "")
 	if runtime.GOOS == "windows" {
@@ -612,10 +611,39 @@ func TestStateDir_ErrorWhenHomeUnresolvable(t *testing.T) {
 		t.Setenv("HOMEDRIVE", "")
 		t.Setenv("HOMEPATH", "")
 	}
+}
+
+func TestStateDir_ErrorWhenHomeUnresolvable(t *testing.T) {
+	unsetHome(t)
 
 	_, err := StateDir()
 
 	require.Error(t, err, "StateDir must fail rather than fall back to the working directory")
+}
+
+func TestEnsureStateDir_CreatesDirectory(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+
+	dir, err := EnsureStateDir()
+
+	require.NoError(t, err)
+	require.Equal(t, filepath.Join(home, StateDirName()), dir)
+	info, err := os.Stat(dir)
+	require.NoError(t, err)
+	require.True(t, info.IsDir())
+	if runtime.GOOS != "windows" {
+		require.Equal(t, os.FileMode(0700), info.Mode().Perm())
+	}
+}
+
+func TestEnsureStateDir_ErrorWhenHomeUnresolvable(t *testing.T) {
+	unsetHome(t)
+
+	_, err := EnsureStateDir()
+
+	require.Error(t, err)
 }
 
 func TestStateDir_ByChannel(t *testing.T) {

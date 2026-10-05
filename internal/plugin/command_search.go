@@ -51,13 +51,8 @@ func (c *command) newSearchCommand() *cobra.Command {
 }
 
 func (c *command) search(cmd *cobra.Command, _ []string) error {
-	stateDir, err := config.StateDir()
+	stateDir, err := config.EnsureStateDir()
 	if err != nil {
-		return err
-	}
-
-	// A dev or prerelease channel's state directory may not exist yet; MkdirTemp needs it present.
-	if err := os.MkdirAll(stateDir, 0700); err != nil {
 		return err
 	}
 
