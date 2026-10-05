@@ -254,9 +254,11 @@ func (c *Config) Load() error {
 		save = true
 	}
 
+	// A failed migration save (read-only config dir, lock timeout) must not stop the CLI
+	// from starting. The migrated values stay in memory and persist on the next save.
 	if save {
 		if err := c.Save(); err != nil {
-			return err
+			log.CliLogger.Warnf("Failed to save config after migration: %v", err)
 		}
 	}
 

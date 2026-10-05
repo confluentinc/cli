@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bytes"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -19,6 +20,7 @@ import (
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/secret"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 	pversion "github.com/confluentinc/cli/v4/pkg/version"
@@ -1496,4 +1498,34 @@ func TestSnapshotBaseline_IsIndependentCopy(t *testing.T) {
 	c.CurrentContext = "b"
 
 	require.Equal(t, "a", c.baseline.CurrentContext, "baseline must not alias live config")
+}
+
+// A migration save that fails (here a read-only config dir, so the lock file cannot be
+// created) must not stop the CLI from starting: Load keeps the migrated values in memory
+// and warns, and the migration retries on the next successful save.
+func TestLoad_MigrationSaveFailureIsNonFatal(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("directory permission bits do not restrict file creation on Windows")
+	}
+	if os.Geteuid() == 0 {
+		t.Skip("root ignores directory permission bits")
+	}
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	require.NoError(t, os.WriteFile(path, []byte(`{"disable_plugins_once": true}`), 0600))
+	require.NoError(t, os.Chmod(dir, 0500))
+	t.Cleanup(func() { _ = os.Chmod(dir, 0700) })
+	logs := new(bytes.Buffer)
+	original := log.CliLogger
+	log.CliLogger = log.New(log.WARN, logs)
+	t.Cleanup(func() { log.CliLogger = original })
+	c := New()
+	c.Filename = path
+
+	err := c.Load()
+
+	require.NoError(t, err, "a failed migration save must not fail Load")
+	require.True(t, c.DisablePluginsOnceWindows, "the migrated value must be kept in memory")
+	require.False(t, c.DisablePluginsOnce)
+	require.Contains(t, logs.String(), "Failed to save config after migration")
 }
