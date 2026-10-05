@@ -5,6 +5,9 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 // The channel a build resolves its state directory from is decided in cmd/confluent/main.go, before
@@ -34,7 +37,7 @@ func (s *CLITestSuite) TestChannelState_StampedBuildsUseSeparateDirectories() {
 		s.Run(test.name, func() {
 			home := s.T().TempDir()
 
-			s.runStampedCli(s.stampedCli(test.version), home)
+			runStampedCli(s.T(), s.stampedCli(test.version), home)
 
 			s.Require().DirExists(filepath.Join(home, test.want))
 			s.Require().NoDirExists(filepath.Join(home, test.absent))
@@ -49,27 +52,19 @@ func (s *CLITestSuite) TestChannelState_ReleaseConfigIsInvisibleToLocalBuild() {
 	release := s.stampedCli("9.9.9")
 	local := s.stampedCli("")
 
-	s.runStampedCli(release, home, "configuration", "update", "disable_update_check", "true")
-	before := s.readFile(filepath.Join(home, ".confluent", "config.json"))
-	s.runStampedCli(local, home, "configuration", "update", "disable_update_check", "true")
+	runStampedCli(s.T(), release, home, "configuration", "update", "disable_update_check", "true")
+	before := readFile(s.T(), filepath.Join(home, ".confluent", "config.json"))
+	runStampedCli(s.T(), local, home, "configuration", "update", "disable_update_check", "true")
 
-	s.Require().Equal(before, s.readFile(filepath.Join(home, ".confluent", "config.json")),
+	s.Require().Equal(before, readFile(s.T(), filepath.Join(home, ".confluent", "config.json")),
 		"a local build must not modify the release build's configuration")
 	s.Require().FileExists(filepath.Join(home, ".confluent-dev", "config.json"))
 }
 
-// stampedClis caches binaries by version for the whole suite, so each one is built once.
-var stampedClis = map[string]string{}
-
 // stampedCli returns the CLI compiled with the given main.version, or with none when version is
 // empty.
 func (s *CLITestSuite) stampedCli(version string) string {
-	if binary, ok := stampedClis[version]; ok {
-		return binary
-	}
-
-	// rootT outlives this method, so the cached binary is still there for the next one.
-	binary := filepath.Join(s.rootT.TempDir(), "confluent")
+	binary := filepath.Join(s.T().TempDir(), "confluent")
 	if runtime.GOOS == "windows" {
 		binary += ".exe"
 	}
@@ -82,14 +77,16 @@ func (s *CLITestSuite) stampedCli(version string) string {
 	}
 
 	// SetupSuite has already changed to the repo root.
-	output, err := exec.Command("go", "build", "-ldflags="+ldflags, "-o", binary, "./cmd/confluent").CombinedOutput()
+	cmd := exec.Command("go", "build", "-ldflags="+ldflags, "-o", binary, "./cmd/confluent")
+	cmd.Env = append(os.Environ(), s.goEnv...)
+	output, err := cmd.CombinedOutput()
 	s.Require().NoError(err, "go build failed: %s", output)
 
-	stampedClis[version] = binary
 	return binary
 }
 
-func (s *CLITestSuite) runStampedCli(binary, home string, args ...string) {
+func runStampedCli(t *testing.T, binary, home string, args ...string) {
+	t.Helper()
 	if len(args) == 0 {
 		args = []string{"version"}
 	}
@@ -99,12 +96,13 @@ func (s *CLITestSuite) runStampedCli(binary, home string, args ...string) {
 	cmd.Env = append(os.Environ(), "HOME="+home, "USERPROFILE="+home)
 
 	output, err := cmd.CombinedOutput()
-	s.Require().NoError(err, "%s %v failed: %s", binary, args, output)
+	require.NoError(t, err, "%s %v failed: %s", binary, args, output)
 }
 
-func (s *CLITestSuite) readFile(path string) []byte {
+func readFile(t *testing.T, path string) []byte {
+	t.Helper()
 	contents, err := os.ReadFile(path)
-	s.Require().NoError(err)
+	require.NoError(t, err)
 
 	return contents
 }
