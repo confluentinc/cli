@@ -15,8 +15,8 @@ const (
 	// Stable is a published GA release, and the only channel that uses the historical path.
 	Stable Channel = iota
 
-	// Prerelease is a published release candidate or preview, tagged with a semver prerelease
-	// segment such as v5.0.0-rc1.
+	// Prerelease is a published rc, alpha, beta, or preview release, tagged with a semver
+	// prerelease segment such as v5.0.0-rc1.
 	Prerelease
 
 	// Dev is anything built outside the release pipeline.
@@ -38,22 +38,23 @@ func (c Channel) StateDirSuffix() string {
 	}
 }
 
-// publishedPrerelease matches the only prerelease labels the release pipeline publishes: rc, alpha,
-// beta, or preview, optionally numbered (rc1, rc.2, beta.3). It is anchored, so a goreleaser snapshot
-// cut during an RC cycle (5.0.0-rc1-SNAPSHOT-<sha>) or `git describe` output does not match.
-var publishedPrerelease = regexp.MustCompile(`^(rc|alpha|beta|preview)\d*(\.\d+)*$`)
+// publishedPrerelease matches the prerelease labels this CLI treats as published: rc, alpha, beta,
+// or preview in any case, optionally numbered (rc1, rc.2, beta.3). It is anchored, so a goreleaser
+// snapshot cut during an RC cycle (5.0.0-rc1-SNAPSHOT-<sha>) or `git describe` output does not match.
+var publishedPrerelease = regexp.MustCompile(`(?i)^(rc|alpha|beta|preview)\d*(\.\d+)*$`)
 
 // ChannelOf classifies the version string the linker stamps into main.version.
 //
 // Only an allowlisted prerelease label counts as a published prerelease; any other prerelease
 // segment (a `make build` snapshot, -dirty, -cp1, -nightly) is a build we don't recognize, so it
-// isolates itself in the dev directory.
+// isolates itself in the dev directory. So does any build metadata (+dirty), which published
+// releases never carry.
 //
 // Not folded into Version.IsReleased on purpose: it answers a different question, and treats 0.0.1
 // as released.
 func ChannelOf(s string) Channel {
 	semver, err := version.NewSemver(s)
-	if err != nil || semver.Segments()[0] == 0 {
+	if err != nil || semver.Segments()[0] == 0 || semver.Metadata() != "" {
 		return Dev
 	}
 
