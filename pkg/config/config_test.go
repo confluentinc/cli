@@ -1339,11 +1339,11 @@ func TestSave_MergesConcurrentDiskChange(t *testing.T) {
 	// This process loads, then another session adds platform "c" on disk.
 	ours, err := readConfigFromDisk(path, seed)
 	require.NoError(t, err)
-	ours.snapshotBaseline()
+	require.NoError(t, ours.snapshotBaseline())
 
 	other, err := readConfigFromDisk(path, seed)
 	require.NoError(t, err)
-	other.snapshotBaseline()
+	require.NoError(t, other.snapshotBaseline())
 	other.Platforms["c"] = &Platform{Name: "c"}
 	require.NoError(t, other.Save())
 
@@ -1448,7 +1448,7 @@ func TestSave_NormalizesInvalidActiveKafkaWithoutDeadlock(t *testing.T) {
 	// survives the three-way merge into "merged".
 	c := New()
 	c.Filename = path
-	c.snapshotBaseline()
+	require.NoError(t, c.snapshotBaseline())
 
 	c.Platforms["platform"] = &Platform{Name: "platform", Server: "https://example.com"}
 	c.Credentials["cred"] = &Credential{Name: "cred", CredentialType: Username}
@@ -1491,7 +1491,7 @@ func TestSave_NormalizesInvalidActiveKafkaWithoutDeadlock(t *testing.T) {
 func TestSnapshotBaseline_IsIndependentCopy(t *testing.T) {
 	c := New()
 	c.CurrentContext = "a"
-	c.snapshotBaseline()
+	require.NoError(t, c.snapshotBaseline())
 
 	c.CurrentContext = "b"
 

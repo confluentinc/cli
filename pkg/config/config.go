@@ -206,7 +206,9 @@ func (c *Config) Load() error {
 			// the config between this missing-file read and the locked save, and that file
 			// must survive. A config constructed without Load keeps a nil baseline and still
 			// writes whole.
-			c.snapshotBaseline()
+			if err := c.snapshotBaseline(); err != nil {
+				return err
+			}
 			afterMissingConfigRead()
 			if err := c.Save(); err != nil {
 				return fmt.Errorf("unable to save configuration file: %w", err)
@@ -223,7 +225,11 @@ func (c *Config) Load() error {
 	if err := c.wireContexts(); err != nil {
 		return err
 	}
-	c.snapshotBaseline() // baseline = pristine on-disk state, before migrations
+	// baseline = pristine on-disk state, before migrations. A failed snapshot is fatal: with
+	// no baseline the next Save would overwrite whole, discarding concurrent changes.
+	if err := c.snapshotBaseline(); err != nil {
+		return err
+	}
 
 	var save bool
 	for _, context := range c.Contexts {
@@ -320,22 +326,31 @@ func readConfigFromDisk(path string, template *Config) (*Config, error) {
 // snapshotBaseline deep-copies the persisted fields into c.baseline via a JSON
 // round-trip (json:"-" and unexported fields are intentionally excluded, since the
 // merge only diffs persisted state).
-func (c *Config) snapshotBaseline() {
-	c.baseline = c.deepCopyPersisted()
+func (c *Config) snapshotBaseline() error {
+	baseline, err := c.deepCopyPersisted()
+	if err != nil {
+		return err
+	}
+	c.baseline = baseline
+	return nil
 }
 
 // deepCopyPersisted returns an independent copy of c's persisted fields via a
 // JSON round-trip. json:"-" and unexported fields (Filename, baseline, ...) are
 // intentionally dropped, so only persisted state participates in the merge. The
 // copy shares no pointers with c, so wiring or encrypting it never mutates c.
-func (c *Config) deepCopyPersisted() *Config {
+// A copy failure is returned, never replaced by an empty config: the merge would read an
+// empty ours or ancestor as every key deleted and wipe the file.
+func (c *Config) deepCopyPersisted() (*Config, error) {
 	data, err := json.Marshal(c)
 	if err != nil {
-		return New()
+		return nil, fmt.Errorf("unable to copy config: %w", err)
 	}
 	b := New()
-	_ = json.Unmarshal(data, b)
-	return b
+	if err := json.Unmarshal(data, b); err != nil {
+		return nil, fmt.Errorf("unable to copy config: %w", err)
+	}
+	return b, nil
 }
 
 // Save atomically and safely persists the config. It serializes writers on a
@@ -396,14 +411,26 @@ func (c *Config) saveLocked() error {
 	// ours is the live config's persisted state. PreRun left it partially decrypted:
 	// every credential secret and the current context's tokens are plaintext, while
 	// other contexts' tokens stay encrypted.
-	ours := c.deepCopyPersisted()
+	ours, err := c.deepCopyPersisted()
+	if err != nil {
+		return err
+	}
+	// Taken now rather than after the write so every fallible copy precedes it; c is not
+	// mutated in between (the merge works on copies), so this equals a post-write snapshot.
+	nextBaseline, err := c.deepCopyPersisted()
+	if err != nil {
+		return err
+	}
 
 	// Decrypt the encrypted baseline to ours' representation before diffing, so a
 	// secret we did not touch is not mistaken for a local change. We decrypt (a
 	// deterministic operation on every platform) rather than re-encrypt ours: Windows
 	// DPAPI ciphertext is not reproducible, so an encrypt-based match would flag every
 	// secret as changed and reintroduce the very lost-write bug this guards against.
-	base := c.baseline.deepCopyPersisted()
+	base, err := c.baseline.deepCopyPersisted()
+	if err != nil {
+		return err
+	}
 	if err := base.decryptToMatch(ours); err != nil {
 		return err
 	}
@@ -449,7 +476,7 @@ func (c *Config) saveLocked() error {
 	// c itself is left as-is, so its in-memory view of a field it did not touch stays
 	// at the loaded value until the process exits; that matches how a load-once CLI
 	// already behaves, and only the ancestor advances here.
-	c.baseline = c.deepCopyPersisted()
+	c.baseline = nextBaseline
 	return nil
 }
 
@@ -463,13 +490,13 @@ func (c *Config) writeWholeConfig() error {
 	}
 	// Refresh the baseline from disk (encrypted) rather than from the live config,
 	// which save() has restored to its decrypted form. A read failure here does not
-	// undo the successful write, so fall back to the live snapshot.
+	// undo the successful write, so fall back to the live snapshot; if even that fails,
+	// report it and keep the previous baseline rather than an empty one.
 	if disk, err := readConfigFromDisk(c.GetFilename(), c); err == nil {
 		c.baseline = disk
-	} else {
-		c.snapshotBaseline()
+		return nil
 	}
-	return nil
+	return c.snapshotBaseline()
 }
 
 // encryptSecrets encrypts c's plaintext secrets into their on-disk form: every

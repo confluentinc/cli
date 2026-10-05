@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"sync"
@@ -29,7 +30,7 @@ func TestSave_ConcurrentDifferentFields_NoLostWrite(t *testing.T) {
 			defer wg.Done()
 			c, err := readConfigFromDisk(path, seed)
 			require.NoError(t, err)
-			c.snapshotBaseline()
+			require.NoError(t, c.snapshotBaseline())
 			name := fmt.Sprintf("platform-%d", i)
 			c.Platforms[name] = &Platform{Name: name}
 			require.NoError(t, c.Save())
@@ -517,4 +518,23 @@ func createContextReusingAPIKey(t *testing.T, path, name string) {
 	cfg.Filename = path
 	require.NoError(t, cfg.Load())
 	require.NoError(t, cfg.CreateContext(name, "https://example.com", "test", "api-secret-value"))
+}
+
+// If ours cannot be copied, the merge must not run against an empty stand-in: that reads
+// every persisted key as deleted by this process and wipes the config on disk.
+func TestSave_UnmarshalablePersistedValue_FailsWithoutTouchingDisk(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	newSavedConfig(t, path)
+	c := loadDecrypted(t, path)
+	c.Contexts["ctx"].FeatureFlags = &FeatureFlags{CliValues: map[string]any{"flag": math.NaN()}}
+	before, err := os.ReadFile(path)
+	require.NoError(t, err)
+
+	saveErr := c.Save()
+
+	require.ErrorContains(t, saveErr, "unsupported value", "a config that cannot be marshaled must not save")
+	after, err := os.ReadFile(path)
+	require.NoError(t, err)
+	require.Equal(t, string(before), string(after), "a failed save must leave the on-disk config untouched")
 }
