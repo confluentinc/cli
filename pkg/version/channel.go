@@ -23,17 +23,6 @@ const (
 	Dev
 )
 
-func (c Channel) String() string {
-	switch c {
-	case Stable:
-		return "stable"
-	case Prerelease:
-		return "prerelease"
-	default:
-		return "dev"
-	}
-}
-
 // StateDirSuffix is appended to ".confluent" to name the channel's state directory. Only Stable
 // returns an empty string, which is what keeps existing installs on the path they already use; any
 // unrecognized channel falls through to the dev suffix so an unfamiliar build isolates itself rather

@@ -6,6 +6,6 @@ const HomeConfluentPathEnvVar = "HOME_CONFLUENT_PATH"
 
 // HomeConfluentPathDefault is the legacy stable-channel state directory name.
 //
-// Deprecated: the state directory now follows the build's release channel; use
-// config.StateDirName instead. Retained as an exported alias for source compatibility.
+// Deprecated: no longer the actual default directory, which now follows the build's release
+// channel; use config.StateDirName instead. Retained for source compatibility.
 const HomeConfluentPathDefault = ".confluent"
