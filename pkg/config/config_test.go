@@ -604,6 +604,7 @@ func TestConfig_getFilename_perChannel(t *testing.T) {
 
 // unsetHome clears the env vars os.UserHomeDir reads, so it fails on every platform.
 func unsetHome(t *testing.T) {
+	t.Helper()
 	t.Setenv("HOME", "")
 	t.Setenv("USERPROFILE", "")
 	if runtime.GOOS == "windows" {
@@ -619,31 +620,6 @@ func TestStateDir_ErrorWhenHomeUnresolvable(t *testing.T) {
 	_, err := StateDir()
 
 	require.Error(t, err, "StateDir must fail rather than fall back to the working directory")
-}
-
-func TestEnsureStateDir_CreatesDirectory(t *testing.T) {
-	home := t.TempDir()
-	t.Setenv("HOME", home)
-	t.Setenv("USERPROFILE", home)
-
-	dir, err := EnsureStateDir()
-
-	require.NoError(t, err)
-	require.Equal(t, filepath.Join(home, StateDirName()), dir)
-	info, err := os.Stat(dir)
-	require.NoError(t, err)
-	require.True(t, info.IsDir())
-	if runtime.GOOS != "windows" {
-		require.Equal(t, os.FileMode(0700), info.Mode().Perm())
-	}
-}
-
-func TestEnsureStateDir_ErrorWhenHomeUnresolvable(t *testing.T) {
-	unsetHome(t)
-
-	_, err := EnsureStateDir()
-
-	require.Error(t, err)
 }
 
 func TestStateDir_ByChannel(t *testing.T) {
@@ -672,6 +648,47 @@ func TestStateDir_ByChannel(t *testing.T) {
 			require.Equal(t, filepath.Join(home, test.dir), dir)
 		})
 	}
+}
+
+func TestEnsureStateDir_CreatesDirectory(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+
+	dir, err := EnsureStateDir()
+
+	require.NoError(t, err)
+	require.Equal(t, filepath.Join(home, StateDirName()), dir)
+	info, err := os.Stat(dir)
+	require.NoError(t, err)
+	require.True(t, info.IsDir())
+	if runtime.GOOS != "windows" {
+		require.Equal(t, os.FileMode(0700), info.Mode().Perm())
+	}
+}
+
+func TestEnsureStateDir_ErrorWhenHomeUnresolvable(t *testing.T) {
+	unsetHome(t)
+
+	_, err := EnsureStateDir()
+
+	require.Error(t, err)
+}
+
+func TestEnsureStateDir_ErrorWhenPathIsAFile(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	dir := filepath.Join(home, StateDirName())
+	require.NoError(t, os.WriteFile(dir, nil, 0600))
+
+	_, err := EnsureStateDir()
+
+	require.Error(t, err)
+	require.Contains(t, err.Error(), fmt.Sprintf("%q", dir))
+	var withSuggestions errors.ErrorWithSuggestions
+	require.ErrorAs(t, err, &withSuggestions)
+	require.NotEmpty(t, withSuggestions.GetSuggestionsMsg())
 }
 
 func TestConfig_AddContext(t *testing.T) {
