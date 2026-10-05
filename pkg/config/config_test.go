@@ -676,7 +676,9 @@ func TestEnsureStateDir_ErrorWhenHomeUnresolvable(t *testing.T) {
 }
 
 func TestEnsureStateDir_ErrorWhenPathIsAFile(t *testing.T) {
-	home := t.TempDir()
+	// a backslash in the home path, as on Windows, must reach the user unescaped
+	home := filepath.Join(t.TempDir(), `a\b`)
+	require.NoError(t, os.Mkdir(home, 0700))
 	t.Setenv("HOME", home)
 	t.Setenv("USERPROFILE", home)
 	dir := filepath.Join(home, StateDirName())
@@ -685,7 +687,7 @@ func TestEnsureStateDir_ErrorWhenPathIsAFile(t *testing.T) {
 	_, err := EnsureStateDir()
 
 	require.Error(t, err)
-	require.Contains(t, err.Error(), fmt.Sprintf("%q", dir))
+	require.Contains(t, err.Error(), `"`+dir+`"`)
 	var withSuggestions errors.ErrorWithSuggestions
 	require.ErrorAs(t, err, &withSuggestions)
 	require.NotEmpty(t, withSuggestions.GetSuggestionsMsg())

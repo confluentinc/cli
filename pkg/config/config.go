@@ -676,7 +676,7 @@ func EnsureStateDir() (string, error) {
 	}
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return "", errors.NewErrorWithSuggestions(
-			fmt.Sprintf("unable to create the CLI's state directory %q: %v", dir, err),
+			fmt.Sprintf("unable to create the CLI's state directory \"%s\": %v", dir, err),
 			"Make sure nothing else exists at that path and its parent directory is writable, or set the `HOME` environment variable (`USERPROFILE` on Windows) to a writable directory.",
 		)
 	}
