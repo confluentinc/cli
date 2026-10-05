@@ -89,6 +89,7 @@ blocks:
       when: >-
         branch = 'main' or change_in([
         '/.semaphore/semaphore.yml',
+        '/pkg/config',
         '/test/cli_test.go',
         '/test/shard-tests.sh'
         ], {default_branch: 'main', pipeline_file: 'ignore'})
