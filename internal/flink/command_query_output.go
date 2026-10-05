@@ -48,8 +48,8 @@ func needsEscape(r rune) bool {
 }
 
 // newResultStreamer picks the page-by-page streamer for a serialized format
-// (json/yaml). Both emit a bare array of row objects — no envelope. Human output
-// is buffered (see printHumanTable), not handled here.
+// (json/yaml). Both emit a bare array of row objects. Human output is buffered
+// (see printHumanTable), not handled here.
 func newResultStreamer(format output.Format) resultStreamer {
 	if format == output.YAML {
 		return newSerialStreamer(os.Stdout, yamlRenderer{})
