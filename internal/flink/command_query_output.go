@@ -139,7 +139,8 @@ func (s *serialStreamer) writeRows(rows []types.StatementResultRow) error {
 }
 
 // close ignores phase/row_count/truncated: a bare array carries no envelope
-// metadata, so those are surfaced via exit code / stderr instead.
+// metadata. phase and truncation surface via exit code / stderr instead;
+// row_count is just the length of the emitted array.
 func (s *serialStreamer) close(_ string, _ int, _ bool) error {
 	if _, err := s.w.Write(s.renderer.close(s.opened)); err != nil {
 		return err

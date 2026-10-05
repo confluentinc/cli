@@ -59,9 +59,9 @@ func (*command) newQueryCommand(cfg *cliconfig.Config, prerunner pcmd.PreRunner)
 			"until it starts or fails, with `--wait`) and never the rows, this command always waits for the statement " +
 			"to finish, exiting non-zero if it fails. Use it for scripts and one-time queries against a bounded, " +
 			"point-in-time result set.\n\n" +
-			"With -o human (the default), only the first 100 rows are printed as a preview. Raise `--max-rows` to fetch " +
-			"more, or use -o json / -o yaml for the complete result set.\n\n" +
-			"-o json and -o yaml return a bare array of row objects.",
+			"With `-o human` (the default), only the first 100 rows are printed as a preview. Raise `--max-rows` to fetch " +
+			"more, or use `-o json` / `-o yaml` for the complete result set.\n\n" +
+			"`-o json` and `-o yaml` return a bare array of row objects.",
 		Args: cobra.NoArgs,
 		// Hidden until the flag targets an org; cfg.IsTest keeps it visible to the
 		// integration suite regardless of the (unreachable in tests) LD evaluation.

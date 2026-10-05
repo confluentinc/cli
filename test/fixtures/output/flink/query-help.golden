@@ -4,9 +4,9 @@ Provide the SQL statement with `--sql`, or use `--file` to read it from a file.
 
 Unlike creating a statement, which returns a handle as soon as it's submitted (optionally waiting only until it starts or fails, with `--wait`) and never the rows, this command always waits for the statement to finish, exiting non-zero if it fails. Use it for scripts and one-time queries against a bounded, point-in-time result set.
 
-With -o human (the default), only the first 100 rows are printed as a preview. Raise `--max-rows` to fetch more, or use -o json / -o yaml for the complete result set.
+With `-o human` (the default), only the first 100 rows are printed as a preview. Raise `--max-rows` to fetch more, or use `-o json` / `-o yaml` for the complete result set.
 
--o json and -o yaml return a bare array of row objects.
+`-o json` and `-o yaml` return a bare array of row objects.
 
 Usage:
   confluent flink query [flags]
