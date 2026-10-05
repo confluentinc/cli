@@ -565,8 +565,132 @@ func TestConfig_OverwrittenEnvironment(t *testing.T) {
 func TestConfig_getFilename(t *testing.T) {
 	home, err := os.UserHomeDir()
 	require.NoError(t, err)
-	path := filepath.Join(home, ".confluent", "config.json")
+
+	// Set explicitly rather than relying on the package default, so this cannot start passing or
+	// failing because of a channel another test left behind.
+	t.Cleanup(func() { pversion.SetProcessChannel(pversion.Dev) })
+	pversion.SetProcessChannel(pversion.Dev)
+
+	path := filepath.Join(home, ".confluent-dev", "config.json")
 	require.Equal(t, path, New().GetFilename())
+}
+
+func TestConfig_getFilename_perChannel(t *testing.T) {
+	home, err := os.UserHomeDir()
+	require.NoError(t, err)
+	t.Cleanup(func() { pversion.SetProcessChannel(pversion.Dev) })
+
+	// Driven by the version strings the build system actually produces, so this fails if either the
+	// classifier or the directory naming drifts.
+	tests := []struct {
+		name    string
+		version string
+		dir     string
+	}{
+		{"GA release", "4.72.0", ".confluent"},
+		{"release candidate", "5.0.0-rc1", ".confluent-prerelease"},
+		{"local goreleaser snapshot", "4.72.0-SNAPSHOT-d962911bb", ".confluent-dev"},
+		{"nothing stamped", "0.0.0", ".confluent-dev"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			pversion.SetProcessChannel(pversion.ChannelOf(test.version))
+
+			require.Equal(t, filepath.Join(home, test.dir, "config.json"), New().GetFilename())
+		})
+	}
+}
+
+// unsetHome clears the env vars os.UserHomeDir reads, so it fails on every platform.
+func unsetHome(t *testing.T) {
+	t.Helper()
+	t.Setenv("HOME", "")
+	t.Setenv("USERPROFILE", "")
+	if runtime.GOOS == "windows" {
+		// os.UserHomeDir consults HOMEDRIVE+HOMEPATH before erroring on Windows.
+		t.Setenv("HOMEDRIVE", "")
+		t.Setenv("HOMEPATH", "")
+	}
+}
+
+func TestStateDir_ErrorWhenHomeUnresolvable(t *testing.T) {
+	unsetHome(t)
+
+	_, err := StateDir()
+
+	require.Error(t, err, "StateDir must fail rather than fall back to the working directory")
+}
+
+func TestStateDir_ByChannel(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	t.Cleanup(func() { pversion.SetProcessChannel(pversion.Dev) })
+
+	tests := []struct {
+		name    string
+		channel pversion.Channel
+		dir     string
+	}{
+		{"stable keeps the historical path", pversion.Stable, ".confluent"},
+		{"prerelease is isolated", pversion.Prerelease, ".confluent-prerelease"},
+		{"dev is isolated", pversion.Dev, ".confluent-dev"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			pversion.SetProcessChannel(test.channel)
+
+			dir, err := StateDir()
+
+			require.NoError(t, err)
+			require.Equal(t, filepath.Join(home, test.dir), dir)
+		})
+	}
+}
+
+func TestEnsureStateDir_CreatesDirectory(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+
+	dir, err := EnsureStateDir()
+
+	require.NoError(t, err)
+	require.Equal(t, filepath.Join(home, StateDirName()), dir)
+	info, err := os.Stat(dir)
+	require.NoError(t, err)
+	require.True(t, info.IsDir())
+	if runtime.GOOS != "windows" {
+		require.Equal(t, os.FileMode(0700), info.Mode().Perm())
+	}
+}
+
+func TestEnsureStateDir_ErrorWhenHomeUnresolvable(t *testing.T) {
+	unsetHome(t)
+
+	_, err := EnsureStateDir()
+
+	require.Error(t, err)
+}
+
+func TestEnsureStateDir_ErrorWhenPathIsAFile(t *testing.T) {
+	// a backslash in the home path, as on Windows, must reach the user unescaped
+	home := filepath.Join(t.TempDir(), `a\b`)
+	require.NoError(t, os.Mkdir(home, 0700))
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	dir := filepath.Join(home, StateDirName())
+	require.NoError(t, os.WriteFile(dir, nil, 0600))
+
+	_, err := EnsureStateDir()
+
+	require.Error(t, err)
+	require.Contains(t, err.Error(), `"`+dir+`"`)
+	var withSuggestions errors.ErrorWithSuggestions
+	require.ErrorAs(t, err, &withSuggestions)
+	require.NotEmpty(t, withSuggestions.GetSuggestionsMsg())
 }
 
 func TestConfig_AddContext(t *testing.T) {

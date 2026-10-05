@@ -1,0 +1,2 @@
+# shell scripts run under bash on every platform, including MSYS2 on the Windows CI agent
+*.sh text eol=lf
