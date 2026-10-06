@@ -157,6 +157,40 @@ func TestLoad_RepopulatesSecretsFromStore(t *testing.T) {
 	require.Equal(t, "the-api-secret", reloaded.Credentials["api-key-AK"].APIKeyPair.Secret)
 }
 
+// TestSecrets_UnreferencedCredentialSurvivesReloadAndResave pins that a credential no context
+// references keeps its secret across a load and a second merged save, as it did in config.json.
+func TestSecrets_UnreferencedCredentialSurvivesReloadAndResave(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	c := newTestConfigWithAPIKeyContext(t)
+	c.Credentials["api-key-ORPHAN"] = &Credential{
+		Name:           "api-key-ORPHAN",
+		CredentialType: APIKey,
+		APIKeyPair:     &APIKeyPair{Key: "ORPHAN", Secret: "orphan-secret"},
+	}
+	require.NoError(t, c.Save())
+
+	reloaded := New()
+	reloaded.Filename = c.GetFilename()
+	require.NoError(t, reloaded.Load())
+	require.NoError(t, reloaded.DecryptCredentials())
+	require.Equal(t, "orphan-secret", reloaded.Credentials["api-key-ORPHAN"].APIKeyPair.Secret)
+	require.NoError(t, reloaded.Save())
+
+	final := New()
+	final.Filename = c.GetFilename()
+	require.NoError(t, final.Load())
+	require.NoError(t, final.DecryptCredentials())
+	disk, err := readSecretFileFromDisk(SecretsFilename())
+	require.NoError(t, err)
+
+	require.Equal(t, "orphan-secret", final.Credentials["api-key-ORPHAN"].APIKeyPair.Secret)
+	rec := disk.Secrets["api-key-ORPHAN"]
+	require.NotNil(t, rec, "the unreferenced credential's secret must stay in the secret store")
+	plain, err := secret.Decrypt("ORPHAN", rec.Secret, rec.SecretSalt, rec.SecretNonce)
+	require.NoError(t, err)
+	require.Equal(t, "orphan-secret", plain)
+}
+
 // TestSecrets_SurviveContextRename pins that the secret store's identity key
 // (Context.identityKey, CredentialName) stays stable across a rename, so a renamed
 // context's secrets are not orphaned in the store.
