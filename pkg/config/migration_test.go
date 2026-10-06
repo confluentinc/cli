@@ -519,20 +519,35 @@ func onLegacyConfigStat(t *testing.T, fn func(path string)) {
 	t.Cleanup(func() { afterLegacyConfigStat = func(string) {} })
 }
 
+// loadWithStderr loads c and returns what it printed to stderr.
+func loadWithStderr(t *testing.T, c *Config) (string, error) {
+	t.Helper()
+	var err error
+	stderr := captureStderr(t, func() { err = c.Load() })
+	return stderr, err
+}
+
+// requireLoadStderr is loadWithStderr for a load that must succeed.
+func requireLoadStderr(t *testing.T, c *Config) string {
+	t.Helper()
+	stderr, err := loadWithStderr(t, c)
+	require.NoError(t, err)
+	return stderr
+}
+
 // loadQuietly loads c with stderr captured, keeping migration announcements out of test output.
 func loadQuietly(t *testing.T, c *Config) error {
 	t.Helper()
-	var err error
-	captureStderr(t, func() { err = c.Load() })
+	_, err := loadWithStderr(t, c)
 	return err
 }
 
-// newStableMigrationTest isolates HOME on the Stable channel and counts migrations.
-func newStableMigrationTest(t *testing.T) (string, *atomic.Int32) {
+// newMigrationTest isolates HOME on channel ch and counts migrations.
+func newMigrationTest(t *testing.T, ch pversion.Channel) (string, *atomic.Int32) {
 	t.Helper()
 	home := t.TempDir()
 	setTestHome(t, home)
-	setTestChannel(t, pversion.Stable)
+	setTestChannel(t, ch)
 	return home, countLegacyMigrations(t)
 }
 
@@ -615,10 +630,7 @@ func TestMigrate_StablePopulatesStores(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			home := t.TempDir()
-			setTestHome(t, home)
-			setTestChannel(t, pversion.Stable)
-			migrations := countLegacyMigrations(t)
+			home, migrations := newMigrationTest(t, pversion.Stable)
 			seedLegacyConfig(t, home, tc.legacy)
 			c := New()
 
@@ -651,7 +663,7 @@ func TestMigrate_StablePopulatesStores(t *testing.T) {
 }
 
 func TestMigrate_ReloadKeepsMigratedSecrets(t *testing.T) {
-	home, migrations := newStableMigrationTest(t)
+	home, migrations := newMigrationTest(t, pversion.Stable)
 	seedLegacyConfig(t, home, cipherLegacyFixture())
 	require.NoError(t, loadQuietly(t, New()))
 	reloaded := New()
@@ -664,9 +676,7 @@ func TestMigrate_ReloadKeepsMigratedSecrets(t *testing.T) {
 }
 
 func TestMigrate_LeavesLegacyFileFrozen(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Stable)
+	home, _ := newMigrationTest(t, pversion.Stable)
 	// secret-free: the merged Save below decrypts secrets, and the marker fixture's cipher-shaped
 	// placeholders can't be decrypted.
 	legacy := []byte(`{
@@ -701,7 +711,7 @@ func TestMigrate_LeavesLegacyFileFrozen(t *testing.T) {
 }
 
 func TestMigrate_IsOneShot(t *testing.T) {
-	home, migrations := newStableMigrationTest(t)
+	home, migrations := newMigrationTest(t, pversion.Stable)
 	seedLegacyConfig(t, home, cipherLegacyFixture())
 	require.NoError(t, loadQuietly(t, New()))
 	require.Equal(t, int32(1), migrations.Load())
@@ -721,7 +731,7 @@ func TestMigrate_IsOneShot(t *testing.T) {
 }
 
 func TestMigrate_ResumesAfterInterruptedRun(t *testing.T) {
-	home, migrations := newStableMigrationTest(t)
+	home, migrations := newMigrationTest(t, pversion.Stable)
 	seedLegacyConfig(t, home, cipherLegacyFixture())
 	// a marker and stores that disagree with the legacy file, so a whole re-run is
 	// distinguishable from a no-op or a merge; no backup, as a run interrupted before it leaves.
@@ -759,7 +769,7 @@ func TestMigrate_ResumesAfterInterruptedRun(t *testing.T) {
 }
 
 func TestMigrate_ZeroByteSecretsStoreIsNotMigrated(t *testing.T) {
-	home, migrations := newStableMigrationTest(t)
+	home, migrations := newMigrationTest(t, pversion.Stable)
 	require.NoError(t, loadQuietly(t, New()))
 	require.NoError(t, os.Truncate(SecretsFilename(), 0))
 	seedLegacyConfig(t, home, cipherLegacyFixture())
@@ -788,7 +798,7 @@ func TestMigrate_PartialStoreResetDoesNotReimport(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			home, migrations := newStableMigrationTest(t)
+			home, migrations := newMigrationTest(t, pversion.Stable)
 			require.NoError(t, loadQuietly(t, New()))
 			for _, store := range tc.deleted {
 				require.NoError(t, os.Remove(store()))
@@ -808,7 +818,7 @@ func TestMigrate_PartialStoreResetDoesNotReimport(t *testing.T) {
 }
 
 func TestMigrate_FailedStoreWriteLeavesNoBackup(t *testing.T) {
-	home, migrations := newStableMigrationTest(t)
+	home, migrations := newMigrationTest(t, pversion.Stable)
 	seedLegacyConfig(t, home, cipherLegacyFixture())
 	// a directory appearing in secrets.json's place after the guard makes the last store write
 	// fail; the stores written before it now count as present, so only the marker can resume.
@@ -836,7 +846,7 @@ func TestMigrate_FailedStoreWriteLeavesNoBackup(t *testing.T) {
 }
 
 func TestMigrate_FailedBackupWriteResumes(t *testing.T) {
-	home, migrations := newStableMigrationTest(t)
+	home, migrations := newMigrationTest(t, pversion.Stable)
 	legacy := cipherLegacyFixture()
 	seedLegacyConfig(t, home, legacy)
 	// a directory appearing in the backup's place after the guard makes the backup write fail.
@@ -873,7 +883,7 @@ func TestMigrate_FailedBackupWriteResumes(t *testing.T) {
 }
 
 func TestMigrate_IrregularBackupWithoutMarkerIsHardError(t *testing.T) {
-	home, migrations := newStableMigrationTest(t)
+	home, migrations := newMigrationTest(t, pversion.Stable)
 	require.NoError(t, loadQuietly(t, New()))
 	seedLegacyConfig(t, home, cipherLegacyFixture())
 	require.NoError(t, os.MkdirAll(migrationBackupPath(home), 0700))
@@ -892,7 +902,7 @@ func ghostCurrentContextLegacy() []byte {
 }
 
 func TestMigrate_InvalidLegacyStateIsHardErrorOnStable(t *testing.T) {
-	home, migrations := newStableMigrationTest(t)
+	home, migrations := newMigrationTest(t, pversion.Stable)
 	legacyPath := seedLegacyConfig(t, home, ghostCurrentContextLegacy())
 
 	err := loadQuietly(t, New())
@@ -907,15 +917,11 @@ func TestMigrate_InvalidLegacyStateIsHardErrorOnStable(t *testing.T) {
 }
 
 func TestMigrate_InvalidLegacyStateStartsNonStableFresh(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Dev)
-	migrations := countLegacyMigrations(t)
+	home, migrations := newMigrationTest(t, pversion.Dev)
 	legacyPath := seedLegacyConfig(t, home, ghostCurrentContextLegacy())
 	c := New()
 
-	var err error
-	stderr := captureStderr(t, func() { err = c.Load() })
+	stderr, err := loadWithStderr(t, c)
 
 	require.NoError(t, err)
 	require.Equal(t, 1, strings.Count(stderr, fmt.Sprintf(`Skipped copying contexts and logins from "%s": `, legacyPath)))
@@ -927,14 +933,13 @@ func TestMigrate_InvalidLegacyStateStartsNonStableFresh(t *testing.T) {
 }
 
 func TestMigrate_PruningValidatePrintsOnceAndDoesNotDeadlock(t *testing.T) {
-	home, migrations := newStableMigrationTest(t)
+	home, migrations := newMigrationTest(t, pversion.Stable)
 	// an active cluster with no config: Validate prunes it and calls Context.Save(), which must not
 	// try to re-take the held store lock.
 	seedLegacyConfig(t, home, bytes.Replace(directKafkaCipherLegacyFixture(), []byte(`"active_kafka": "cluster1"`), []byte(`"active_kafka": "lkc-missing"`), 1))
 	c := New()
 
-	var err error
-	stderr := captureStderr(t, func() { err = c.Load() })
+	stderr, err := loadWithStderr(t, c)
 
 	require.NoError(t, err)
 	require.Equal(t, int32(1), migrations.Load())
@@ -943,7 +948,7 @@ func TestMigrate_PruningValidatePrintsOnceAndDoesNotDeadlock(t *testing.T) {
 }
 
 func TestMigrate_FailedMarkerWriteWritesNothing(t *testing.T) {
-	home, migrations := newStableMigrationTest(t)
+	home, migrations := newMigrationTest(t, pversion.Stable)
 	seedLegacyConfig(t, home, cipherLegacyFixture())
 	require.NoError(t, os.MkdirAll(migrationMarkerPath(home), 0700))
 
@@ -971,7 +976,7 @@ func TestMigrate_StatErrorIsHardError(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			home, migrations := newStableMigrationTest(t)
+			home, migrations := newMigrationTest(t, pversion.Stable)
 			seedLegacyConfig(t, home, cipherLegacyFixture())
 			// a self-referencing symlink fails stat with ELOOP, which is not "absent".
 			looped := tc.path(home)
@@ -994,7 +999,7 @@ func TestMigrate_StatErrorIsHardError(t *testing.T) {
 }
 
 func TestMigrate_StaleMarkerWithBackupIsRemoved(t *testing.T) {
-	home, migrations := newStableMigrationTest(t)
+	home, migrations := newMigrationTest(t, pversion.Stable)
 	seedLegacyConfig(t, home, cipherLegacyFixture())
 	require.NoError(t, loadQuietly(t, New()))
 	// a crash between the backup write and the marker's removal leaves both behind.
@@ -1008,7 +1013,7 @@ func TestMigrate_StaleMarkerWithBackupIsRemoved(t *testing.T) {
 }
 
 func TestMigrate_EmptyReadAfterNonEmptyStatIsRetryable(t *testing.T) {
-	home, migrations := newStableMigrationTest(t)
+	home, migrations := newMigrationTest(t, pversion.Stable)
 	legacyPath := seedLegacyConfig(t, home, cipherLegacyFixture())
 	// v4 truncates config.json before rewriting it, so a read can land between the two.
 	onLegacyConfigStat(t, func(path string) { require.NoError(t, os.Truncate(path, 0)) })
@@ -1032,7 +1037,7 @@ func requireLegacyFileChangedError(t *testing.T, err error, legacyPath string) {
 }
 
 func TestMigrate_MarkerWithZeroByteLegacyFileIsRetryable(t *testing.T) {
-	home, migrations := newStableMigrationTest(t)
+	home, migrations := newMigrationTest(t, pversion.Stable)
 	// v4 mid-rewrite during a resume: the marker must survive for the retry.
 	legacyPath := seedLegacyConfig(t, home, nil)
 	writeTestStore(t, migrationMarkerPath(home), "")
@@ -1045,7 +1050,7 @@ func TestMigrate_MarkerWithZeroByteLegacyFileIsRetryable(t *testing.T) {
 }
 
 func TestMigrate_StaleMarkerWithoutLegacyFileIsRemoved(t *testing.T) {
-	home, migrations := newStableMigrationTest(t)
+	home, migrations := newMigrationTest(t, pversion.Stable)
 	legacyPath := seedLegacyConfig(t, home, cipherLegacyFixture())
 	onLegacyConfigStat(t, func(string) { require.NoError(t, os.MkdirAll(SecretsFilename(), 0700)) })
 	require.Error(t, loadQuietly(t, New()))
@@ -1081,7 +1086,7 @@ func TestMigrate_NoLegacyFileSkipsMigrationChecks(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			home, migrations := newStableMigrationTest(t)
+			home, migrations := newMigrationTest(t, pversion.Stable)
 			// a v5-only machine: no legacy file, so no migration file is worth a stat error.
 			looped := tc.path(home)
 			require.NoError(t, os.MkdirAll(filepath.Dir(looped), 0700))
@@ -1099,7 +1104,7 @@ func TestMigrate_NoLegacyFileSkipsMigrationChecks(t *testing.T) {
 }
 
 func TestMigrate_FreshInstallIsNotMigrated(t *testing.T) {
-	home, migrations := newStableMigrationTest(t)
+	home, migrations := newMigrationTest(t, pversion.Stable)
 	require.NoError(t, loadQuietly(t, New()))
 	require.FileExists(t, SettingsFilename())
 	require.FileExists(t, ContextsFilename())
@@ -1116,7 +1121,7 @@ func TestMigrate_FreshInstallIsNotMigrated(t *testing.T) {
 }
 
 func TestMigrate_EmptyLegacyFileIsIgnored(t *testing.T) {
-	home, migrations := newStableMigrationTest(t)
+	home, migrations := newMigrationTest(t, pversion.Stable)
 	seedLegacyConfig(t, home, nil)
 
 	c := New()
@@ -1131,7 +1136,7 @@ func TestMigrate_EmptyLegacyFileIsIgnored(t *testing.T) {
 }
 
 func TestMigrate_MalformedLegacyFileIsHardError(t *testing.T) {
-	home, migrations := newStableMigrationTest(t)
+	home, migrations := newMigrationTest(t, pversion.Stable)
 	legacyPath := seedLegacyConfig(t, home, []byte(`{"contexts":`))
 
 	err := loadQuietly(t, New())
@@ -1157,10 +1162,7 @@ func TestMigrate_NonStableSeedsReadOnly(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			home := t.TempDir()
-			setTestHome(t, home)
-			setTestChannel(t, tc.channel)
-			migrations := countLegacyMigrations(t)
+			home, migrations := newMigrationTest(t, tc.channel)
 			legacy := cipherLegacyFixture()
 			legacyPath := seedLegacyConfig(t, home, legacy)
 			frozen := time.Date(2020, 1, 2, 3, 4, 5, 0, time.UTC)
@@ -1195,10 +1197,7 @@ func TestMigrate_NonStableSeedsReadOnly(t *testing.T) {
 }
 
 func TestMigrate_NonStableSkipsSeedAfterStableMigrated(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Dev)
-	migrations := countLegacyMigrations(t)
+	home, migrations := newMigrationTest(t, pversion.Dev)
 	legacy := cipherLegacyFixture()
 	legacyPath := seedLegacyConfig(t, home, legacy)
 	writeTestStore(t, stableBackupPath(home), string(legacy))
@@ -1239,15 +1238,11 @@ func TestMigrate_NonStableSeedFailureStartsFresh(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			home := t.TempDir()
-			setTestHome(t, home)
-			setTestChannel(t, pversion.Dev)
-			migrations := countLegacyMigrations(t)
+			home, migrations := newMigrationTest(t, pversion.Dev)
 			legacyPath := seedLegacyConfig(t, home, []byte(tc.legacy))
 			c := New()
 
-			var err error
-			stderr := captureStderr(t, func() { err = c.Load() })
+			stderr, err := loadWithStderr(t, c)
 
 			require.NoError(t, err)
 			require.Contains(t, stderr, fmt.Sprintf(`Skipped copying contexts and logins from "%s": `, legacyPath))
@@ -1265,10 +1260,7 @@ func TestMigrate_NonStableSeedFailureStartsFresh(t *testing.T) {
 }
 
 func TestMigrate_NonStableStaleMarkerAfterStableMigratedIsRemoved(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Dev)
-	migrations := countLegacyMigrations(t)
+	home, migrations := newMigrationTest(t, pversion.Dev)
 	legacy := cipherLegacyFixture()
 	seedLegacyConfig(t, home, legacy)
 	writeTestStore(t, stableBackupPath(home), string(legacy))
@@ -1286,16 +1278,14 @@ func TestMigrate_NonStableStaleMarkerAfterStableMigratedIsRemoved(t *testing.T) 
 }
 
 func TestMigrate_NonStableMarkerWithMalformedLegacyFileWarnsOnce(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Dev)
+	home, _ := newMigrationTest(t, pversion.Dev)
 	seedLegacyConfig(t, home, []byte(`{"contexts":`))
 	writeTestStore(t, migrationMarkerPath(home), "")
-	stderr := captureStderr(t, func() { require.NoError(t, New().Load()) })
+	stderr := requireLoadStderr(t, New())
 	require.Equal(t, 1, strings.Count(stderr, "Skipped copying"))
 	require.NoFileExists(t, migrationMarkerPath(home))
 
-	stderr = captureStderr(t, func() { require.NoError(t, New().Load()) })
+	stderr = requireLoadStderr(t, New())
 
 	require.NotContains(t, stderr, "Skipped copying")
 }
@@ -1333,16 +1323,12 @@ func TestMigrate_NonStableUnreadableStableFileWarnsAndStartsFresh(t *testing.T) 
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			home := t.TempDir()
-			setTestHome(t, home)
-			setTestChannel(t, pversion.Dev)
-			migrations := countLegacyMigrations(t)
+			home, migrations := newMigrationTest(t, pversion.Dev)
 			legacyPath := seedLegacyConfig(t, home, cipherLegacyFixture())
 			tc.setup(t, home, legacyPath)
 			c := New()
 
-			var err error
-			stderr := captureStderr(t, func() { err = c.Load() })
+			stderr, err := loadWithStderr(t, c)
 
 			require.NoError(t, err)
 			require.Equal(t, 1, strings.Count(stderr, fmt.Sprintf(`Skipped copying contexts and logins from "%s": `, legacyPath)))
@@ -1355,7 +1341,7 @@ func TestMigrate_NonStableUnreadableStableFileWarnsAndStartsFresh(t *testing.T) 
 }
 
 func TestMigrate_StableUnreadableLegacyFileIsHardError(t *testing.T) {
-	home, migrations := newStableMigrationTest(t)
+	home, migrations := newMigrationTest(t, pversion.Stable)
 	legacyPath := seedLegacyConfig(t, home, cipherLegacyFixture())
 	makeUnreadable(t, legacyPath)
 
@@ -1380,10 +1366,7 @@ func TestMigrate_TornReadIsRetryable(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			home := t.TempDir()
-			setTestHome(t, home)
-			setTestChannel(t, tc.channel)
-			migrations := countLegacyMigrations(t)
+			home, migrations := newMigrationTest(t, tc.channel)
 			full := cipherLegacyFixture()
 			legacyPath := seedLegacyConfig(t, home, full)
 			if tc.interrupted {
@@ -1392,8 +1375,7 @@ func TestMigrate_TornReadIsRetryable(t *testing.T) {
 			// v4 truncates then writes, so a read can see a prefix of the new file.
 			onLegacyConfigStat(t, func(path string) { require.NoError(t, os.WriteFile(path, full[:len(full)/2], 0600)) })
 
-			var err error
-			stderr := captureStderr(t, func() { err = New().Load() })
+			stderr, err := loadWithStderr(t, New())
 
 			requireLegacyFileChangedError(t, err, legacyPath)
 			require.NotContains(t, stderr, "Skipped copying")
@@ -1495,7 +1477,7 @@ func requireSharedLoginSecrets(t *testing.T, c *Config) {
 }
 
 func TestMigrate_SharedLoginKeepsEveryKey(t *testing.T) {
-	home, migrations := newStableMigrationTest(t)
+	home, migrations := newMigrationTest(t, pversion.Stable)
 	seedLegacyConfig(t, home, []byte(sharedLoginLegacy))
 	migrated := New()
 
@@ -1520,7 +1502,7 @@ func TestMigrate_SharedLoginKeepsEveryKey(t *testing.T) {
 
 func TestMigrate_ConcurrentFirstRunsMigrateOnce(t *testing.T) {
 	const loaders = 4
-	home, migrations := newStableMigrationTest(t)
+	home, migrations := newMigrationTest(t, pversion.Stable)
 	seedLegacyConfig(t, home, cipherLegacyFixture())
 	configs := make([]*Config, loaders)
 	for i := range configs {
@@ -1597,9 +1579,7 @@ func requireStatefulCloudPlaintext(t *testing.T, c *Config) {
 }
 
 func TestMigrate_PlaintextV4FileIsEncrypted(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Stable)
+	home, _ := newMigrationTest(t, pversion.Stable)
 	seedStatefulCloudLegacy(t, home)
 
 	err := loadQuietly(t, New())
@@ -1629,9 +1609,7 @@ func TestMigrate_PlaintextV4FileIsEncrypted(t *testing.T) {
 }
 
 func TestMigrate_PlaintextV4FileDecryptsAfterReload(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Stable)
+	home, _ := newMigrationTest(t, pversion.Stable)
 	seedStatefulCloudLegacy(t, home)
 	require.NoError(t, loadQuietly(t, New()))
 
@@ -1641,9 +1619,7 @@ func TestMigrate_PlaintextV4FileDecryptsAfterReload(t *testing.T) {
 }
 
 func TestMigrate_PlaintextV4FileSurvivesMergedSave(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Stable)
+	home, _ := newMigrationTest(t, pversion.Stable)
 	seedStatefulCloudLegacy(t, home)
 	require.NoError(t, loadQuietly(t, New()))
 	c := loadAndDecrypt(t)
@@ -1676,7 +1652,7 @@ const legacyContextWithoutPlatform = `{
 // TestMigrate_WireContextsFailureIsHardError covers a legacy file whose context has no platform:
 // it fails wireContexts, and the caller must still learn which legacy file caused it.
 func TestMigrate_WireContextsFailureIsHardError(t *testing.T) {
-	home, migrations := newStableMigrationTest(t)
+	home, migrations := newMigrationTest(t, pversion.Stable)
 	legacyPath := seedLegacyConfig(t, home, []byte(legacyContextWithoutPlatform))
 
 	err := loadQuietly(t, New())
@@ -1692,50 +1668,36 @@ func TestMigrate_WireContextsFailureIsHardError(t *testing.T) {
 }
 
 func TestMigrate_AnnouncesOnce(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Stable)
+	home, _ := newMigrationTest(t, pversion.Stable)
 	seedLegacyConfig(t, home, cipherLegacyFixture())
 	c := New()
 
-	stderr := captureStderr(t, func() {
-		require.NoError(t, c.Load())
-	})
+	stderr := requireLoadStderr(t, c)
 
 	require.Contains(t, stderr, migrationAnnouncementMsg)
 
-	stderr = captureStderr(t, func() {
-		require.NoError(t, New().Load())
-	})
+	stderr = requireLoadStderr(t, New())
 
 	require.NotContains(t, stderr, migrationAnnouncementMsg)
 }
 
 func TestMigrate_NoAnnouncementWithoutContexts(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Stable)
+	home, _ := newMigrationTest(t, pversion.Stable)
 	// a legacy file with no contexts: migration and backup still happen, but there is nothing
 	// worth telling the user about.
 	seedLegacyConfig(t, home, []byte(`{"disable_update_check": true}`))
 
-	stderr := captureStderr(t, func() {
-		require.NoError(t, New().Load())
-	})
+	stderr := requireLoadStderr(t, New())
 
 	require.NotContains(t, stderr, migrationAnnouncementMsg)
 	require.FileExists(t, migrationBackupPath(home))
 }
 
 func TestMigrate_NonStableSeedAnnouncement(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Dev)
+	home, _ := newMigrationTest(t, pversion.Dev)
 	legacyPath := seedLegacyConfig(t, home, cipherLegacyFixture())
 
-	stderr := captureStderr(t, func() {
-		require.NoError(t, New().Load())
-	})
+	stderr := requireLoadStderr(t, New())
 
 	stateDir, err := StateDir()
 	require.NoError(t, err)
@@ -1743,75 +1705,55 @@ func TestMigrate_NonStableSeedAnnouncement(t *testing.T) {
 }
 
 func TestMigrate_WarnsOncePerLegacyWrite(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Stable)
+	home, _ := newMigrationTest(t, pversion.Stable)
 	legacyPath := seedLegacyConfig(t, home, cipherLegacyFixture())
 	require.NoError(t, loadQuietly(t, New()))
 
 	// silent immediately after migration: the legacy file has not changed since the stamp.
-	stderr := captureStderr(t, func() {
-		require.NoError(t, New().Load())
-	})
+	stderr := requireLoadStderr(t, New())
 	require.NotContains(t, stderr, "changed after your configuration moved")
 
 	rewriteLegacyFile(t, legacyPath)
 
-	stderr = captureStderr(t, func() {
-		require.NoError(t, New().Load())
-	})
+	stderr = requireLoadStderr(t, New())
 	require.Contains(t, stderr, fmt.Sprintf(legacyFileChangedWarningMsg, legacyPath))
 
 	// silent again: the new stamp now matches.
-	stderr = captureStderr(t, func() {
-		require.NoError(t, New().Load())
-	})
+	stderr = requireLoadStderr(t, New())
 	require.NotContains(t, stderr, "changed after your configuration moved")
 
 	rewriteLegacyFile(t, legacyPath)
 
-	stderr = captureStderr(t, func() {
-		require.NoError(t, New().Load())
-	})
+	stderr = requireLoadStderr(t, New())
 	require.Contains(t, stderr, fmt.Sprintf(legacyFileChangedWarningMsg, legacyPath))
 }
 
 func TestMigrate_NoDowngradeWarningOnNonStable(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Stable)
+	home, _ := newMigrationTest(t, pversion.Stable)
 	legacyPath := seedLegacyConfig(t, home, cipherLegacyFixture())
 	require.NoError(t, loadQuietly(t, New()))
 	setTestChannel(t, pversion.Dev)
 	rewriteLegacyFile(t, legacyPath)
 
-	stderr := captureStderr(t, func() {
-		require.NoError(t, New().Load())
-	})
+	stderr := requireLoadStderr(t, New())
 
 	require.NotContains(t, stderr, "changed after your configuration moved")
 }
 
 func TestMigrate_MissingStampRecordsSilently(t *testing.T) {
-	home := t.TempDir()
-	setTestHome(t, home)
-	setTestChannel(t, pversion.Stable)
+	home, _ := newMigrationTest(t, pversion.Stable)
 	legacyPath := seedLegacyConfig(t, home, cipherLegacyFixture())
 	require.NoError(t, loadQuietly(t, New()))
 	require.NoError(t, os.Remove(filepath.Join(CacheDir(), "legacy_config.json")))
 	rewriteLegacyFile(t, legacyPath)
 
-	stderr := captureStderr(t, func() {
-		require.NoError(t, New().Load())
-	})
+	stderr := requireLoadStderr(t, New())
 
 	require.NotContains(t, stderr, "changed after your configuration moved")
 	require.FileExists(t, filepath.Join(CacheDir(), "legacy_config.json"))
 
 	// the stamp was recreated, so a further reload without another write stays silent.
-	stderr = captureStderr(t, func() {
-		require.NoError(t, New().Load())
-	})
+	stderr = requireLoadStderr(t, New())
 	require.NotContains(t, stderr, "changed after your configuration moved")
 }
 
