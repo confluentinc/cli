@@ -4,11 +4,9 @@ Provide the SQL statement with `--sql`, or use `--file` to read it from a file.
 
 Unlike creating a statement, which returns a handle as soon as it's submitted (optionally waiting only until it starts or fails, with `--wait`) and never the rows, this command always waits for the statement to finish, exiting non-zero if it fails. Use it for scripts and one-time queries against a bounded, point-in-time result set.
 
-With `-o human` (the default), only the first 100 rows are printed as a preview. Raise `--max-rows` to fetch more, or use `-o json` / `-o yaml` for the complete result set.
+With -o human (the default), only the first 100 rows are printed as a preview. Raise `--max-rows` to fetch more, or use -o json / -o yaml for the complete result set.
 
-`-o json` and `-o yaml` return a bare array of row objects.
-
-When `--max-rows` cuts a result short, a warning is printed to standard error and the command still exits 0, so a script reading the rows on standard output is unaffected.
+With -o json or -o yaml, output defaults to an envelope that includes the column schema and rows. Rows alone don't include type information. Use --raw to return a bare array of row objects.
 
 Usage:
   confluent flink query [flags]
@@ -22,6 +20,10 @@ Run a bounded query against Kafka cluster "my-cluster" and return JSON for a scr
 
   $ confluent flink query --sql "SELECT status, COUNT(*) FROM orders GROUP BY status;" --compute-pool lfcp-123456 --database my-cluster --output json
 
+Return a bare JSON array of rows, without an envelope, for a script that only wants the data.
+
+  $ confluent flink query --sql "SELECT * FROM orders LIMIT 10;" --output json --raw
+
 Flags:
       --sql string               Flink SQL statement. Alternatively, use "--file" or "-f".
   -f, --file string              Path to a file that contains the Flink SQL statement. Alternatively, use --sql.
@@ -31,6 +33,7 @@ Flags:
       --property strings         Properties for the Flink statement in key=value format.
       --timeout duration         Maximum time to wait for the query to finish. (default 10m0s)
       --max-rows int             Maximum number of rows to fetch. Defaults to 100 for "-o human"; raise it to fetch more. "-o json"/"-o yaml" fetch every row by default. This limit is client-side only; the query still produces rows after the limit is reached.
+      --raw                      Return rows as a bare array without an envelope. Requires "-o json" or "-o yaml".
       --environment string       Environment ID.
       --context string           CLI context name.
   -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
