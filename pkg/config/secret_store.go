@@ -585,11 +585,12 @@ func (c *Config) saveSecretStore(diskContextNames map[string]bool) error {
 
 	// Saved passwords are endpoint-specific (SavedCredentials is keyed by context name), so they
 	// are stored by context name in their own map - never folded into the identity-keyed record,
-	// where two contexts sharing one credential identity would collide. See passwordRecord.
+	// where two contexts sharing one credential identity would collide. See passwordRecord. Every
+	// entry is stored, not only those of live contexts: one left behind by a deleted context is
+	// still offered for auto-login.
 	passwords := map[string]*passwordRecord{}
-	for ctxName := range c.Contexts {
-		saved, ok := c.SavedCredentials[ctxName]
-		if !ok || saved == nil || saved.EncryptedPassword == "" {
+	for ctxName, saved := range c.SavedCredentials {
+		if saved == nil || saved.EncryptedPassword == "" {
 			continue
 		}
 		passwords[ctxName] = &passwordRecord{
@@ -902,6 +903,18 @@ func (c *Config) loadSecretStore() error {
 		credential.APIKeyPair.Nonce = rec.SecretNonce
 	}
 
+	// Passwords are keyed by context name, not identity (see passwordRecord), and restored for every
+	// SavedCredentials entry, including one whose context was deleted, symmetric with saveSecretStore.
+	for name, saved := range c.SavedCredentials {
+		pw := file.Passwords[name]
+		if pw == nil || pw.Password == "" || saved == nil {
+			continue
+		}
+		saved.EncryptedPassword = pw.Password
+		saved.Salt = pw.Salt
+		saved.Nonce = pw.Nonce
+	}
+
 	for name, ctx := range c.Contexts {
 		if tok, ok := file.Tokens[name]; ok && tok != nil && (tok.AuthToken != "" || tok.AuthRefreshToken != "") {
 			if state := c.ContextStates[name]; state != nil {
@@ -909,17 +922,6 @@ func (c *Config) loadSecretStore() error {
 				state.AuthRefreshToken = tok.AuthRefreshToken
 				state.Salt = tok.Salt
 				state.Nonce = tok.Nonce
-			}
-		}
-
-		// Passwords are keyed by context name, not identity (see passwordRecord), so they are
-		// repopulated by exact context name - independent of the identity-keyed secretRecord, which
-		// may be absent for a context whose only stored secret is a password.
-		if pw, ok := file.Passwords[name]; ok && pw != nil && pw.Password != "" {
-			if saved := c.SavedCredentials[name]; saved != nil {
-				saved.EncryptedPassword = pw.Password
-				saved.Salt = pw.Salt
-				saved.Nonce = pw.Nonce
 			}
 		}
 

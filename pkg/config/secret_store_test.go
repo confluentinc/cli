@@ -430,6 +430,31 @@ func TestSave_SavedPasswordsKeyedByContextNotIdentity(t *testing.T) {
 	require.Equal(t, "password-b", decrypt("ctx-b"), "ctx-b's password must not collide with ctx-a's shared identity")
 }
 
+// TestSecrets_SavedPasswordSurvivesContextDelete pins that a saved login whose context is deleted
+// keeps its password, as it did in config.json: auto-login with no current context still scans
+// every SavedCredentials entry.
+func TestSecrets_SavedPasswordSurvivesContextDelete(t *testing.T) {
+	setTestHome(t, t.TempDir())
+	c := newTestConfigWithAPIKeyContext(t)
+	salt, nonce, err := secret.GenerateSaltAndNonce()
+	require.NoError(t, err)
+	encryptedPassword, err := secret.Encrypt("orig-user", "the-password", salt, nonce)
+	require.NoError(t, err)
+	c.SavedCredentials["orig"] = &LoginCredential{Username: "orig-user", EncryptedPassword: encryptedPassword, Salt: salt, Nonce: nonce}
+	require.NoError(t, c.Save())
+
+	require.NoError(t, c.DeleteContext("orig"))
+
+	reloaded := New()
+	reloaded.Filename = c.GetFilename()
+	require.NoError(t, reloaded.Load())
+	saved := reloaded.SavedCredentials["orig"]
+	require.NotNil(t, saved)
+	plain, err := secret.Decrypt("orig-user", saved.EncryptedPassword, saved.Salt, saved.Nonce)
+	require.NoError(t, err)
+	require.Equal(t, "the-password", plain)
+}
+
 // TestSaveSecretStore_FreshEmptyConfigWritesEmptyStoreAndSetsBaseline pins should-fix 6 on a truly
 // fresh machine (no store on disk): a whole-config write with no secrets must still write the (empty)
 // store and set secretBaseline, so the next save has a common ancestor and can three-way merge
