@@ -29,6 +29,7 @@ func TestVariantRendering(t *testing.T) {
 		{"timestamp_ltz always utc", `[14,"2026-07-28 09:14:02.117000","-05:00"]`, `"2026-07-28T09:14:02.117Z"`},
 		{"timestamp_ltz nanosecond always utc", `[18,"2026-07-28 09:14:02.123456789","-05:00"]`, `"2026-07-28T09:14:02.123456789Z"`},
 		{"time", `[16,"09:14:02.123"]`, `"09:14:02.123"`},
+		{"uuid", `[19,"00112233-4455-6677-8899-aabbccddeeff"]`, `"00112233-4455-6677-8899-aabbccddeeff"`},
 		{"bytes as base64", `[15,"x'7f0203'"]`, `"fwID"`},
 		{"bytes fallback on bad hex", `[15,"zz"]`, `"zz"`},
 		{"non-finite number quoted", `[9,"NaN"]`, `"NaN"`},
