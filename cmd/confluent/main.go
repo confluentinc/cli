@@ -22,6 +22,10 @@ var (
 )
 
 func main() {
+	// Must precede both the config load and command construction, since each resolves paths that
+	// depend on the channel.
+	pversion.SetProcessChannel(pversion.ChannelOf(version))
+
 	cfg := config.New()
 
 	err := cfg.Load()

@@ -1,6 +1,7 @@
 package test
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -72,6 +73,8 @@ type CLITestSuite struct {
 	suite.Suite
 	TestBackend *testserver.TestBackend
 	rootT       *testing.T
+	// goEnv pins the Go caches to the real home, since SetupTest gives each method an empty one.
+	goEnv []string
 }
 
 // TestCLI runs the CLI integration test suite.
@@ -85,6 +88,15 @@ func (s *CLITestSuite) SetupSuite() {
 	// dumb but effective
 	err := os.Chdir("..")
 	req.NoError(err)
+
+	// resolved before SetTempHomeDir swaps HOME, so `go build` in a test method reuses warm caches
+	out, err := exec.Command("go", "env", "-json", "GOCACHE", "GOMODCACHE", "GOPATH").Output()
+	req.NoError(err)
+	var goEnv map[string]string
+	req.NoError(json.Unmarshal(out, &goEnv))
+	for key, value := range goEnv {
+		s.goEnv = append(s.goEnv, key+"="+value)
+	}
 
 	target := "build-for-integration-test"
 	if runtime.GOOS == "windows" {
