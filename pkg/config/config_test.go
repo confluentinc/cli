@@ -1568,6 +1568,33 @@ func TestSnapshotBaseline_IsIndependentCopy(t *testing.T) {
 	require.Equal(t, "a", c.baseline.CurrentContext, "baseline must not alias live config")
 }
 
+// Load reads under the sidecar lock, so a config directory the CLI cannot create the lock file in
+// must fail with an error that names the directory and says how to fix it.
+func TestLoad_ReadOnlyConfigDirReturnsActionableError(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("directory permission bits do not restrict file creation on Windows")
+	}
+	if os.Geteuid() == 0 {
+		t.Skip("root ignores directory permission bits")
+	}
+	setTestHome(t, t.TempDir())
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	require.NoError(t, os.WriteFile(path, []byte(`{}`), 0600))
+	require.NoError(t, os.Chmod(dir, 0500))
+	t.Cleanup(func() { _ = os.Chmod(dir, 0700) })
+	c := New()
+	c.Filename = path
+
+	err := c.Load()
+
+	require.Error(t, err)
+	require.Contains(t, err.Error(), fmt.Sprintf(`"%s"`, dir), "the error must name the config directory")
+	var withSuggestions errors.ErrorWithSuggestions
+	require.ErrorAs(t, err, &withSuggestions)
+	require.Contains(t, withSuggestions.GetSuggestionsMsg(), "`HOME`")
+}
+
 // writeV4ConfigInReadOnlyDir writes a config needing migration into a read-only directory, so the
 // migration save in Load fails. It returns the directory and the config path.
 func writeV4ConfigInReadOnlyDir(t *testing.T) (string, string) {
