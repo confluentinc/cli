@@ -121,12 +121,12 @@ func TestApplyLegacyConfig_Malformed(t *testing.T) {
 // non-secret "pinned" selections (current_environment, the top-level and per-environment
 // active_kafka) that must survive the decode untouched.
 func legacyFixture() []byte {
-	return legacyFixtureWithSecretPrefix("")
+	return legacyFixtureWithSecrets(func(marker string) string { return marker })
 }
 
-// legacyFixtureWithSecretPrefix is legacyFixture with p prepended to every secret marker (not to
-// salts, nonces, or feature flags).
-func legacyFixtureWithSecretPrefix(p string) []byte {
+// legacyFixtureWithSecrets is legacyFixture with every secret marker (not salts, nonces, or feature
+// flags) replaced by secretFor(marker).
+func legacyFixtureWithSecrets(secretFor func(string) string) []byte {
 	b64 := func(marker string) string { return base64.StdEncoding.EncodeToString([]byte(marker)) }
 
 	return []byte(fmt.Sprintf(`{
@@ -227,14 +227,14 @@ func legacyFixtureWithSecretPrefix(p string) []byte {
 			}
 		}
 	}`,
-		p+"MARKER-cred-api-secret", b64("MARKER-cred-salt"), b64("MARKER-cred-nonce"),
+		secretFor("MARKER-cred-api-secret"), b64("MARKER-cred-salt"), b64("MARKER-cred-nonce"),
 		"MARKER-feature-flags-value",
-		p+"MARKER-global-api-secret",
-		p+"MARKER-kafka-cluster-configs-secret",
-		p+"MARKER-kafka-env-contexts-secret",
-		p+"MARKER-sr-credential-secret",
-		p+"MARKER-auth-token", p+"MARKER-auth-refresh-token", b64("MARKER-state-salt"), b64("MARKER-state-nonce"),
-		p+"MARKER-saved-password", b64("MARKER-saved-salt"), b64("MARKER-saved-nonce"),
+		secretFor("MARKER-global-api-secret"),
+		secretFor("MARKER-kafka-cluster-configs-secret"),
+		secretFor("MARKER-kafka-env-contexts-secret"),
+		secretFor("MARKER-sr-credential-secret"),
+		secretFor("MARKER-auth-token"), secretFor("MARKER-auth-refresh-token"), b64("MARKER-state-salt"), b64("MARKER-state-nonce"),
+		secretFor("MARKER-saved-password"), b64("MARKER-saved-salt"), b64("MARKER-saved-nonce"),
 	))
 }
 
@@ -420,9 +420,7 @@ func TestLegacyOverlay_CoversEveryRetaggedField(t *testing.T) {
 	}
 }
 
-// nativeCipherPrefix is the cipher marker this platform's save path treats as already encrypted
-// for every secret (an on-prem refresh token is only recognized by the native one), so a marker
-// carrying it is stored as-is instead of being encrypted.
+// nativeCipherPrefix is the cipher marker this platform's save path writes.
 func nativeCipherPrefix() string {
 	if runtime.GOOS == "windows" {
 		return secret.Dpapi + ":"
@@ -430,11 +428,33 @@ func nativeCipherPrefix() string {
 	return secret.AesGcm + ":"
 }
 
-// cipherLegacyFixture is the all-markers legacy file with every secret shaped like ciphertext.
+// windowsCipherMarkers memoizes cipherMarker on Windows, where DPAPI ciphertext differs per call.
+var windowsCipherMarkers sync.Map
+
+// cipherMarker returns marker as ciphertext the save path stores as-is. Windows needs a real DPAPI
+// blob: DecryptSecret decrypts every "dpapi:" value regardless of salt, and Load's
+// DisablePluginsOnceWindows save decrypts each one during its merge. Elsewhere the AES-GCM prefix
+// alone is enough, since nothing in these tests decrypts it.
+func cipherMarker(marker string) string {
+	if runtime.GOOS != "windows" {
+		return nativeCipherPrefix() + marker
+	}
+	if cached, ok := windowsCipherMarkers.Load(marker); ok {
+		return cached.(string)
+	}
+	encrypted, err := secret.Encrypt("", marker, nil, nil)
+	if err != nil {
+		panic(fmt.Sprintf("encrypting test marker %q: %v", marker, err))
+	}
+	cached, _ := windowsCipherMarkers.LoadOrStore(marker, encrypted)
+	return cached.(string)
+}
+
+// cipherLegacyFixture is the all-markers legacy file with every secret as ciphertext.
 // Its Kafka cluster context is an environment context, so only the kafka_environment_contexts
 // key is reachable by the save path (allKafkaClusterConfigs), not the kafka_cluster_configs one.
 func cipherLegacyFixture() []byte {
-	return legacyFixtureWithSecretPrefix(nativeCipherPrefix())
+	return legacyFixtureWithSecrets(cipherMarker)
 }
 
 // directKafkaCipherLegacyFixture is cipherLegacyFixture with a non-environment Kafka cluster
@@ -529,60 +549,58 @@ func kafkaMarkerFor(envContext bool) (string, string) {
 // envContext names the fixture's Kafka shape, which decides the one nested Kafka key saved.
 func requireMigratedSecretsOnDisk(t *testing.T, envContext bool) {
 	t.Helper()
-	p := nativeCipherPrefix()
 
 	file, err := readSecretFileFromDisk(SecretsFilename())
 	require.NoError(t, err)
 
 	token := file.Tokens["ctx1"]
 	require.NotNil(t, token)
-	require.Equal(t, p+"MARKER-auth-token", token.AuthToken)
-	require.Equal(t, p+"MARKER-auth-refresh-token", token.AuthRefreshToken)
+	require.Equal(t, cipherMarker("MARKER-auth-token"), token.AuthToken)
+	require.Equal(t, cipherMarker("MARKER-auth-refresh-token"), token.AuthRefreshToken)
 	require.Equal(t, []byte("MARKER-state-salt"), token.Salt)
 	require.Equal(t, []byte("MARKER-state-nonce"), token.Nonce)
 
 	password := file.Passwords["ctx1"]
 	require.NotNil(t, password)
-	require.Equal(t, p+"MARKER-saved-password", password.Password)
+	require.Equal(t, cipherMarker("MARKER-saved-password"), password.Password)
 	require.Equal(t, []byte("MARKER-saved-salt"), password.Salt)
 	require.Equal(t, []byte("MARKER-saved-nonce"), password.Nonce)
 
 	rec := file.Secrets["cred1"]
 	require.NotNil(t, rec)
-	require.Equal(t, p+"MARKER-cred-api-secret", rec.Secret)
+	require.Equal(t, cipherMarker("MARKER-cred-api-secret"), rec.Secret)
 	require.Equal(t, []byte("MARKER-cred-salt"), rec.SecretSalt)
 	require.Equal(t, []byte("MARKER-cred-nonce"), rec.SecretNonce)
 	require.Contains(t, rec.GlobalAPIKeys, "global1")
-	require.Equal(t, p+"MARKER-global-api-secret", rec.GlobalAPIKeys["global1"].Secret)
+	require.Equal(t, cipherMarker("MARKER-global-api-secret"), rec.GlobalAPIKeys["global1"].Secret)
 	require.Contains(t, rec.SchemaRegistryCredentials["sr1"], "sr-key")
-	require.Equal(t, p+"MARKER-sr-credential-secret", rec.SchemaRegistryCredentials["sr1"]["sr-key"].Secret)
+	require.Equal(t, cipherMarker("MARKER-sr-credential-secret"), rec.SchemaRegistryCredentials["sr1"]["sr-key"].Secret)
 
 	cluster, marker := kafkaMarkerFor(envContext)
 	require.Contains(t, rec.KafkaAPIKeys[cluster], "key1")
-	require.Equal(t, p+marker, rec.KafkaAPIKeys[cluster]["key1"].Secret)
+	require.Equal(t, cipherMarker(marker), rec.KafkaAPIKeys[cluster]["key1"].Secret)
 }
 
 // requireMigratedSecretsInMemory checks that c holds every cipher marker, verbatim.
 func requireMigratedSecretsInMemory(t *testing.T, c *Config, envContext bool) {
 	t.Helper()
-	p := nativeCipherPrefix()
 
-	require.Equal(t, p+"MARKER-auth-token", c.ContextStates["ctx1"].AuthToken)
-	require.Equal(t, p+"MARKER-auth-refresh-token", c.ContextStates["ctx1"].AuthRefreshToken)
-	require.Equal(t, p+"MARKER-saved-password", c.SavedCredentials["ctx1"].EncryptedPassword)
-	require.Equal(t, p+"MARKER-cred-api-secret", c.Credentials["cred1"].APIKeyPair.Secret)
+	require.Equal(t, cipherMarker("MARKER-auth-token"), c.ContextStates["ctx1"].AuthToken)
+	require.Equal(t, cipherMarker("MARKER-auth-refresh-token"), c.ContextStates["ctx1"].AuthRefreshToken)
+	require.Equal(t, cipherMarker("MARKER-saved-password"), c.SavedCredentials["ctx1"].EncryptedPassword)
+	require.Equal(t, cipherMarker("MARKER-cred-api-secret"), c.Credentials["cred1"].APIKeyPair.Secret)
 
 	ctx := c.Contexts["ctx1"]
 	require.Contains(t, ctx.GlobalAPIKeys, "global1")
-	require.Equal(t, p+"MARKER-global-api-secret", ctx.GlobalAPIKeys["global1"].Secret)
+	require.Equal(t, cipherMarker("MARKER-global-api-secret"), ctx.GlobalAPIKeys["global1"].Secret)
 	require.Contains(t, ctx.SchemaRegistryClusters, "sr1")
-	require.Equal(t, p+"MARKER-sr-credential-secret", ctx.SchemaRegistryClusters["sr1"].SrCredentials.Secret)
+	require.Equal(t, cipherMarker("MARKER-sr-credential-secret"), ctx.SchemaRegistryClusters["sr1"].SrCredentials.Secret)
 
 	cluster, marker := kafkaMarkerFor(envContext)
 	clusters := allKafkaClusterConfigs(ctx.KafkaClusterContext)
 	require.Contains(t, clusters, cluster)
 	require.Contains(t, clusters[cluster].APIKeys, "key1")
-	require.Equal(t, p+marker, clusters[cluster].APIKeys["key1"].Secret)
+	require.Equal(t, cipherMarker(marker), clusters[cluster].APIKeys["key1"].Secret)
 }
 
 func TestMigrate_StablePopulatesStores(t *testing.T) {
@@ -708,7 +726,7 @@ func TestMigrate_ResumesAfterInterruptedRun(t *testing.T) {
 	// a marker and stores that disagree with the legacy file, so a whole re-run is
 	// distinguishable from a no-op or a merge; no backup, as a run interrupted before it leaves.
 	writeTestStore(t, migrationMarkerPath(home), "")
-	writeTestStore(t, SecretsFilename(), fmt.Sprintf(`{"tokens": {"ctx1": {"auth_token": "%sSTALE-auth-token"}}}`, nativeCipherPrefix()))
+	writeTestStore(t, SecretsFilename(), fmt.Sprintf(`{"tokens": {"ctx1": {"auth_token": "%s"}}}`, cipherMarker("STALE-auth-token")))
 	writeTestStore(t, SettingsFilename(), `{
 		"disable_update_check": true,
 		"platforms": {"stale-platform": {"name": "stale-platform", "server": "https://stale"}}
@@ -1663,8 +1681,7 @@ func TestMigrate_WireContextsFailureIsHardError(t *testing.T) {
 
 	err := loadQuietly(t, New())
 
-	require.ErrorContains(t, err, "unable to migrate configuration file")
-	require.ErrorContains(t, err, fmt.Sprintf("%q", legacyPath))
+	require.ErrorContains(t, err, fmt.Sprintf(`unable to migrate configuration file "%s"`, legacyPath))
 	require.Equal(t, int32(0), migrations.Load())
 	require.NoFileExists(t, migrationBackupPath(home))
 	require.NoFileExists(t, SecretsFilename())
