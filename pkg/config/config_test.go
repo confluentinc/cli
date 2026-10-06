@@ -1500,10 +1500,10 @@ func TestSnapshotBaseline_IsIndependentCopy(t *testing.T) {
 	require.Equal(t, "a", c.baseline.CurrentContext, "baseline must not alias live config")
 }
 
-// A migration save that fails (here a read-only config dir, so the lock file cannot be
-// created) must not stop the CLI from starting: Load keeps the migrated values in memory
-// and warns, and the migration retries on the next successful save.
-func TestLoad_MigrationSaveFailureIsNonFatal(t *testing.T) {
+// writeV4ConfigInReadOnlyDir writes a config needing migration into a read-only directory, so the
+// migration save in Load fails. It returns the directory and the config path.
+func writeV4ConfigInReadOnlyDir(t *testing.T) (string, string) {
+	t.Helper()
 	if runtime.GOOS == "windows" {
 		t.Skip("directory permission bits do not restrict file creation on Windows")
 	}
@@ -1515,6 +1515,14 @@ func TestLoad_MigrationSaveFailureIsNonFatal(t *testing.T) {
 	require.NoError(t, os.WriteFile(path, []byte(`{"disable_plugins_once": true}`), 0600))
 	require.NoError(t, os.Chmod(dir, 0500))
 	t.Cleanup(func() { _ = os.Chmod(dir, 0700) })
+	return dir, path
+}
+
+// A migration save that fails (here a read-only config dir, so the lock file cannot be
+// created) must not stop the CLI from starting: Load keeps the migrated values in memory
+// and warns, and the migration retries on the next successful save.
+func TestLoad_MigrationSaveFailureIsNonFatal(t *testing.T) {
+	_, path := writeV4ConfigInReadOnlyDir(t)
 	logs := new(bytes.Buffer)
 	original := log.CliLogger
 	log.CliLogger = log.New(log.WARN, logs)
@@ -1528,4 +1536,23 @@ func TestLoad_MigrationSaveFailureIsNonFatal(t *testing.T) {
 	require.True(t, c.DisablePluginsOnceWindows, "the migrated value must be kept in memory")
 	require.False(t, c.DisablePluginsOnce)
 	require.Contains(t, logs.String(), "Failed to save config after migration")
+}
+
+func TestLoad_MigrationPersistsOnNextSaveAfterFailedMigrationSave(t *testing.T) {
+	dir, path := writeV4ConfigInReadOnlyDir(t)
+	c := New()
+	c.Filename = path
+	require.NoError(t, c.Load())
+	require.NoError(t, os.Chmod(dir, 0700))
+
+	err := c.Save()
+
+	require.NoError(t, err)
+	// read the raw file: a fresh Load would re-run the migration in memory and mask a missed write
+	raw, err := os.ReadFile(path)
+	require.NoError(t, err)
+	onDisk := map[string]any{}
+	require.NoError(t, json.Unmarshal(raw, &onDisk))
+	require.Equal(t, true, onDisk["disable_plugins_once_windows"])
+	require.NotContains(t, onDisk, "disable_plugins_once")
 }

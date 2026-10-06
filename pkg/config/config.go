@@ -262,6 +262,7 @@ func (c *Config) Load() error {
 		}
 	}
 
+	// the non-fatal guarantee above covers only the migration save, not saves Validate() triggers
 	return c.Validate()
 }
 
