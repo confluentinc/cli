@@ -4,6 +4,7 @@ import (
 	aiv1 "github.com/confluentinc/ccloud-sdk-go-v2/ai/v1"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	billingv1 "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
+	budgetv1 "github.com/confluentinc/ccloud-sdk-go-v2/budget/v1"
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
 	camv1 "github.com/confluentinc/ccloud-sdk-go-v2/cam/v1"
 	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
@@ -50,6 +51,7 @@ type Client struct {
 	AiClient                     *aiv1.APIClient
 	ApiKeysClient                *apikeysv2.APIClient
 	BillingClient                *billingv1.APIClient
+	BudgetClient                 *budgetv1.APIClient
 	ByokClient                   *byokv1.APIClient
 	CcpmClient                   *ccpmv1.APIClient
 	CdxClient                    *cdxv1.APIClient
@@ -103,6 +105,7 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		AiClient:                     newAiClient(httpClient, url, userAgent, unsafeTrace),
 		ApiKeysClient:                newApiKeysClient(httpClient, url, userAgent, unsafeTrace),
 		BillingClient:                newBillingClient(httpClient, url, userAgent, unsafeTrace),
+		BudgetClient:                 newBudgetClient(httpClient, url, userAgent, unsafeTrace),
 		ByokClient:                   newByokV1Client(httpClient, url, userAgent, unsafeTrace),
 		CcpmClient:                   newCcpmClient(httpClient, url, userAgent, unsafeTrace),
 		CdxClient:                    newCdxClient(httpClient, url, userAgent, unsafeTrace),
