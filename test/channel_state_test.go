@@ -91,7 +91,8 @@ func (s *CLITestSuite) stampedCli(version string) string {
 	return binary
 }
 
-func runStampedCli(t *testing.T, binary, home string, args ...string) {
+// runStampedCli runs binary against home (`version` when no args are given) and returns its output.
+func runStampedCli(t *testing.T, binary, home string, args ...string) string {
 	t.Helper()
 	if len(args) == 0 {
 		args = []string{"version"}
@@ -103,6 +104,8 @@ func runStampedCli(t *testing.T, binary, home string, args ...string) {
 
 	output, err := cmd.CombinedOutput()
 	require.NoError(t, err, "%s %v failed: %s", binary, args, output)
+
+	return string(output)
 }
 
 func readFile(t *testing.T, path string) []byte {

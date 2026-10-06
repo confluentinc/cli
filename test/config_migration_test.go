@@ -2,7 +2,6 @@ package test
 
 import (
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -39,11 +38,13 @@ const (
 	configMigrationListArgs = "context list"
 )
 
+// Both methods run against their own HOME rather than the one SetupTest gives each method:
+// resetConfiguration seeds that one with dev-channel stores, which would satisfy the migration guard
+// before the legacy file is ever read.
+
 // TestConfigMigrationDevSeed covers the non-Stable path: the shared (unstamped) test binary runs
 // on the Dev channel, so a v4 config.json at HOME seeds the Dev channel's own state directory
-// read-only, leaving the legacy file untouched. Uses a standalone flow (not CLITest/runIntegrationTest)
-// because resetConfiguration writes stores into the suite's shared temp HOME before every non-workflow
-// test, which would satisfy the migration guard before this test's own HOME override ever runs.
+// read-only, leaving the legacy file untouched.
 func (s *CLITestSuite) TestConfigMigrationDevSeed() {
 	t := s.T()
 	home := t.TempDir()
@@ -71,18 +72,19 @@ func (s *CLITestSuite) TestConfigMigrationStable() {
 	t := s.T()
 	home := t.TempDir()
 	binary := s.stampedCli("9.9.9")
+	listContexts := func() string {
+		return normalizeHome(runStampedCli(t, binary, home, strings.Fields(configMigrationListArgs)...), home)
+	}
 
 	legacyPath := filepath.Join(home, legacyConfigDirName, legacyConfigFileName)
 	legacyBytes := seedLegacyConfig(t, home)
 
-	firstRun := normalizeHome(runStampedCliCombinedOutput(t, binary, home, "context", "list"), home)
-	compareOrUpdateGolden(t, configMigrationStableGolden, firstRun)
+	compareOrUpdateGolden(t, configMigrationStableGolden, listContexts())
 
 	requireBytesUnchanged(t, legacyPath, legacyBytes)
 	requireMigratedStores(t, filepath.Join(home, legacyConfigDirName), legacyBytes)
 
-	secondRun := normalizeHome(runStampedCliCombinedOutput(t, binary, home, "context", "list"), home)
-	compareOrUpdateGolden(t, configMigrationTableGolden, secondRun)
+	compareOrUpdateGolden(t, configMigrationTableGolden, listContexts())
 
 	// simulate a pre-v5 install writing to the frozen legacy file: content and mtime both
 	// change, since warnIfLegacyFileChanged compares the stat stamp, not the file's contents.
@@ -91,11 +93,8 @@ func (s *CLITestSuite) TestConfigMigrationStable() {
 	future := time.Now().Add(time.Hour)
 	require.NoError(t, os.Chtimes(legacyPath, future, future))
 
-	warningRun := normalizeHome(runStampedCliCombinedOutput(t, binary, home, "context", "list"), home)
-	compareOrUpdateGolden(t, configMigrationWarningGolden, warningRun)
-
-	silentRun := normalizeHome(runStampedCliCombinedOutput(t, binary, home, "context", "list"), home)
-	compareOrUpdateGolden(t, configMigrationTableGolden, silentRun)
+	compareOrUpdateGolden(t, configMigrationWarningGolden, listContexts())
+	compareOrUpdateGolden(t, configMigrationTableGolden, listContexts())
 }
 
 // seedLegacyConfig copies the config-migration fixture into <home>/.confluent/config.json,
@@ -137,9 +136,7 @@ func compareOrUpdateGolden(t *testing.T, fixture, actual string) {
 func requireBytesUnchanged(t *testing.T, path string, want []byte) {
 	t.Helper()
 
-	got, err := os.ReadFile(path)
-	require.NoError(t, err)
-	require.Equal(t, want, got)
+	require.Equal(t, want, readFile(t, path))
 }
 
 // requireMigratedStores asserts the running channel's own state directory holds every migrated
@@ -153,18 +150,4 @@ func requireMigratedStores(t *testing.T, stateDir string, legacyBytes []byte) {
 	require.DirExists(t, filepath.Join(stateDir, cacheDirName))
 	requireBytesUnchanged(t, filepath.Join(stateDir, legacyBackupFileName), legacyBytes)
 	require.NoFileExists(t, filepath.Join(stateDir, legacyMigratingFileName))
-}
-
-// runStampedCliCombinedOutput is runStampedCli's sibling that returns output instead of
-// discarding it, for assertions that need to see the migration announcement or warning.
-func runStampedCliCombinedOutput(t *testing.T, binary, home string, args ...string) string {
-	t.Helper()
-
-	cmd := exec.Command(binary, args...)
-	cmd.Env = append(os.Environ(), "HOME="+home, "USERPROFILE="+home)
-
-	output, err := cmd.CombinedOutput()
-	require.NoError(t, err, "%s %v failed: %s", binary, args, output)
-
-	return string(output)
 }
