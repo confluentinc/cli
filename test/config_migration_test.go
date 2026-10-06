@@ -67,9 +67,10 @@ func (s *CLITestSuite) TestConfigMigrationDevSeed() {
 // legacy file staying frozen in place, and the once-per-change downgrade warning. It builds
 // exactly one stamped "9.9.9" binary (the Windows CI agent has shown go build exe-lock flakes) and
 // runs every step against it.
-func TestConfigMigrationStable(t *testing.T) {
+func (s *CLITestSuite) TestConfigMigrationStable() {
+	t := s.T()
 	home := t.TempDir()
-	binary := buildStampedCli(t, "9.9.9")
+	binary := s.stampedCli("9.9.9")
 
 	legacyPath := filepath.Join(home, legacyConfigDirName, legacyConfigFileName)
 	legacyBytes := seedLegacyConfig(t, home)
