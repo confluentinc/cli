@@ -1,8 +1,12 @@
 package config
 
 import (
+	stderrors "errors"
 	"fmt"
+	"io/fs"
 	"os"
+	"path/filepath"
+	"syscall"
 	"time"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
@@ -43,6 +47,9 @@ func newFileLock(configPath string) *fileLock {
 func (l *fileLock) lock(timeout time.Duration) error {
 	f, err := os.OpenFile(l.path, os.O_CREATE|os.O_RDWR, 0600)
 	if err != nil {
+		if isUnwritableDirErr(err) {
+			return errors.NewWrapErrorWithSuggestions(err, fmt.Sprintf(lockConfigDirErrorMsg, filepath.Dir(l.path)), lockConfigDirSuggestions)
+		}
 		return fmt.Errorf("unable to open config lock file %s: %w", l.path, err)
 	}
 	l.f = f
@@ -98,6 +105,17 @@ func (l *fileLock) unlock() error {
 	}
 	return closeErr
 }
+
+// isUnwritableDirErr reports whether err means the lock file cannot be created at all (no write
+// permission, or a read-only filesystem), which no amount of waiting fixes.
+func isUnwritableDirErr(err error) bool {
+	return stderrors.Is(err, fs.ErrPermission) || stderrors.Is(err, syscall.EROFS)
+}
+
+const (
+	lockConfigDirErrorMsg    = "unable to lock the config directory \"%s\""
+	lockConfigDirSuggestions = "The CLI needs write access to this directory to read and save its configuration.\nGrant write access, or set the `HOME` environment variable (`USERPROFILE` on Windows) to a writable directory."
+)
 
 var errConfigLockContended = errors.NewErrorWithSuggestions(
 	"another `confluent` process is updating the configuration file",
