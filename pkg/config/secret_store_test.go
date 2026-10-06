@@ -14,7 +14,7 @@ import (
 )
 
 // TestSave_SecretsLeaveConfigFile pins the extraction contract: a saved API-key secret,
-// context auth tokens, and a saved login password must not appear in config.json
+// context auth tokens, and a saved login password must not appear in the config stores
 // (plaintext or ciphertext), and must each decrypt back to their real value from the
 // secret store - not just be absent from either file as ciphertext-shaped noise. A
 // ciphertext of "" (this test's regression: see task-2.2-report.md) passes every
@@ -40,12 +40,11 @@ func TestSave_SecretsLeaveConfigFile(t *testing.T) {
 
 	require.NoError(t, c.Save())
 
-	cfgRaw, err := os.ReadFile(c.GetFilename())
-	require.NoError(t, err)
-	require.NotContains(t, string(cfgRaw), "the-api-secret")
-	require.NotContains(t, string(cfgRaw), `"secret"`)
-	require.NotContains(t, string(cfgRaw), "header.payload.signature")
-	require.NotContains(t, string(cfgRaw), "the-password")
+	cfgRaw := readConfigStoresRaw(t)
+	require.NotContains(t, cfgRaw, "the-api-secret")
+	require.NotContains(t, cfgRaw, `"secret"`)
+	require.NotContains(t, cfgRaw, "header.payload.signature")
+	require.NotContains(t, cfgRaw, "the-password")
 
 	secRaw, err := os.ReadFile(SecretsFilename())
 	require.NoError(t, err)
@@ -83,7 +82,7 @@ func TestSave_SecretsLeaveConfigFile(t *testing.T) {
 }
 
 // TestSave_NestedApiKeySecretsLeaveConfigFile pins the extraction contract for nested
-// API-key secrets: a global or cluster-scoped key's id stays in config.json (public
+// API-key secrets: a global or cluster-scoped key's id stays in contexts.json (public
 // metadata), but its secret leaves for the secret store and must decrypt back to its
 // real value there, not just be absent from either file as ciphertext-shaped noise.
 func TestSave_NestedApiKeySecretsLeaveConfigFile(t *testing.T) {
@@ -104,12 +103,11 @@ func TestSave_NestedApiKeySecretsLeaveConfigFile(t *testing.T) {
 
 	require.NoError(t, c.Save())
 
-	cfgRaw, err := os.ReadFile(c.GetFilename())
-	require.NoError(t, err)
-	require.Contains(t, string(cfgRaw), `"GLOBAL-KEY"`)
-	require.Contains(t, string(cfgRaw), `"CLUSTER-KEY"`)
-	require.NotContains(t, string(cfgRaw), "global-secret")
-	require.NotContains(t, string(cfgRaw), "cluster-secret")
+	cfgRaw := readConfigStoresRaw(t)
+	require.Contains(t, cfgRaw, `"GLOBAL-KEY"`)
+	require.Contains(t, cfgRaw, `"CLUSTER-KEY"`)
+	require.NotContains(t, cfgRaw, "global-secret")
+	require.NotContains(t, cfgRaw, "cluster-secret")
 
 	secRaw, err := os.ReadFile(SecretsFilename())
 	require.NoError(t, err)
@@ -313,9 +311,10 @@ func TestEncryptStateTokensForContext_EmptyGovRefreshTokenNotEncrypted(t *testin
 }
 
 // TestSave_SchemaRegistryCredentialLeavesConfigFile pins that a (deprecated) Schema Registry
-// cluster's API secret leaves config.json for the secret store on save and decrypts back to its
-// real value there. SrCredentials is the fourth *APIKeyPair holder; with APIKeyPair.Secret retagged
-// json:"-", an unhandled SrCredentials secret would be dropped from config.json and stored nowhere.
+// cluster's API secret leaves the config stores for the secret store on save and decrypts back to
+// its real value there. SrCredentials is the fourth *APIKeyPair holder; with APIKeyPair.Secret
+// retagged json:"-", an unhandled SrCredentials secret would be dropped from contexts.json and
+// stored nowhere.
 func TestSave_SchemaRegistryCredentialLeavesConfigFile(t *testing.T) {
 	setTestHome(t, t.TempDir())
 	c := newTestConfigWithAPIKeyContext(t)
@@ -330,10 +329,9 @@ func TestSave_SchemaRegistryCredentialLeavesConfigFile(t *testing.T) {
 
 	require.NoError(t, c.Save())
 
-	cfgRaw, err := os.ReadFile(c.GetFilename())
-	require.NoError(t, err)
-	require.Contains(t, string(cfgRaw), `"SR-KEY"`)
-	require.NotContains(t, string(cfgRaw), "sr-secret")
+	cfgRaw := readConfigStoresRaw(t)
+	require.Contains(t, cfgRaw, `"SR-KEY"`)
+	require.NotContains(t, cfgRaw, "sr-secret")
 
 	secRaw, err := os.ReadFile(SecretsFilename())
 	require.NoError(t, err)
