@@ -676,9 +676,13 @@ func TestEnsureStateDir_ErrorWhenHomeUnresolvable(t *testing.T) {
 }
 
 func TestEnsureStateDir_ErrorWhenPathIsAFile(t *testing.T) {
-	// a backslash in the home path, as on Windows, must reach the user unescaped
-	home := filepath.Join(t.TempDir(), `a\b`)
-	require.NoError(t, os.Mkdir(home, 0700))
+	// a backslash in the home path must reach the user unescaped; Windows paths already have them,
+	// and on other platforms a literal backslash in a directory name stands in
+	home := t.TempDir()
+	if runtime.GOOS != "windows" {
+		home = filepath.Join(home, `a\b`)
+		require.NoError(t, os.Mkdir(home, 0700))
+	}
 	t.Setenv("HOME", home)
 	t.Setenv("USERPROFILE", home)
 	dir := filepath.Join(home, StateDirName())
