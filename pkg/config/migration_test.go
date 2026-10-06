@@ -1129,15 +1129,16 @@ func TestMigrate_MalformedLegacyFileIsHardError(t *testing.T) {
 
 func TestMigrate_NonStableSeedsReadOnly(t *testing.T) {
 	tests := []struct {
+		name    string
 		channel pversion.Channel
 		dir     string
 	}{
-		{channel: pversion.Dev, dir: ".confluent-dev"},
-		{channel: pversion.Prerelease, dir: ".confluent-prerelease"},
+		{name: "dev", channel: pversion.Dev, dir: ".confluent-dev"},
+		{name: "prerelease", channel: pversion.Prerelease, dir: ".confluent-prerelease"},
 	}
 
 	for _, tc := range tests {
-		t.Run(tc.channel.String(), func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			home := t.TempDir()
 			setTestHome(t, home)
 			setTestChannel(t, tc.channel)
