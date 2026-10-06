@@ -405,8 +405,12 @@ func (c *Config) snapshotBaseline() error {
 // copy shares no pointers with c, so wiring or encrypting it never mutates c.
 // A copy failure is returned, never replaced by an empty config: the merge would read an
 // empty ours or ancestor as every key deleted and wipe the file.
+// marshalPersisted is a test seam for deepCopyPersisted's marshal: no persisted field can hold an
+// unmarshalable value, so a test swaps it to reach the failure path.
+var marshalPersisted = json.Marshal
+
 func (c *Config) deepCopyPersisted() (*Config, error) {
-	data, err := json.Marshal(c)
+	data, err := marshalPersisted(c)
 	if err != nil {
 		return nil, fmt.Errorf("unable to copy config: %w", err)
 	}

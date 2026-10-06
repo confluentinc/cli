@@ -2,8 +2,8 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"math"
 	"os"
 	"path/filepath"
 	"sync"
@@ -527,13 +527,15 @@ func TestSave_UnmarshalablePersistedValue_FailsWithoutTouchingDisk(t *testing.T)
 	path := filepath.Join(dir, "config.json")
 	newSavedConfig(t, path)
 	c := loadDecrypted(t, path)
-	c.Contexts["ctx"].FeatureFlags = &FeatureFlags{CliValues: map[string]any{"flag": math.NaN()}}
+	marshalErr := errors.New("unsupported value")
+	marshalPersisted = func(any) ([]byte, error) { return nil, marshalErr }
+	t.Cleanup(func() { marshalPersisted = json.Marshal })
 	before, err := os.ReadFile(path)
 	require.NoError(t, err)
 
 	saveErr := c.Save()
 
-	require.ErrorContains(t, saveErr, "unsupported value", "a config that cannot be marshaled must not save")
+	require.ErrorIs(t, saveErr, marshalErr, "a config that cannot be marshaled must not save")
 	after, err := os.ReadFile(path)
 	require.NoError(t, err)
 	require.Equal(t, string(before), string(after), "a failed save must leave the on-disk config untouched")
