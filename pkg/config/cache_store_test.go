@@ -40,9 +40,7 @@ func TestLastUpdateCheckAt_PersistsToCacheNotConfig(t *testing.T) {
 	c.LastUpdateCheckAt = &now
 	require.NoError(t, c.Save())
 
-	raw, err := os.ReadFile(c.GetFilename())
-	require.NoError(t, err)
-	require.NotContains(t, string(raw), "last_update_check_at")
+	require.NotContains(t, readConfigStoresRaw(t), "last_update_check_at")
 
 	reloaded := New()
 	reloaded.Filename = c.GetFilename()
@@ -76,11 +74,9 @@ func TestFeatureFlags_PersistToCacheNotContexts(t *testing.T) {
 	c.Contexts["ctx"].FeatureFlags = &FeatureFlags{CliValues: map[string]any{"flag": true}}
 	require.NoError(t, c.Save())
 
-	raw, err := os.ReadFile(c.GetFilename())
-	require.NoError(t, err)
 	// "ccloud_values" is unique to the FeatureFlags struct: a bare "feature_flags"
 	// check would false-positive on the unrelated top-level "disable_feature_flags" field.
-	require.NotContains(t, string(raw), "ccloud_values")
+	require.NotContains(t, readConfigStoresRaw(t), "ccloud_values")
 
 	reloaded := New()
 	reloaded.Filename = c.GetFilename()
@@ -136,5 +132,6 @@ func TestSave_CacheWriteFailureDoesNotFailSave(t *testing.T) {
 	c.LastUpdateCheckAt = &now
 
 	require.NoError(t, c.Save()) // config write must still succeed
-	require.FileExists(t, c.GetFilename())
+	require.FileExists(t, SettingsFilename())
+	require.FileExists(t, ContextsFilename())
 }

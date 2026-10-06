@@ -745,8 +745,12 @@ func TestValidateUrl(t *testing.T) {
 func newLoginCmd(ctrl *gomock.Controller, auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *config.Config) {
 	config.SetTempHomeDir()
 	cfg := config.New()
-	// give each test its own config file so Save()'s lock-and-merge re-reads only this
-	// test's state, not another login test's leftover at the shared default path.
+	// the config stores live under SetTempHomeDir's per-process HOME, so tests share them; a fresh
+	// config has no baseline, so its first Save() writes settings.json and contexts.json whole
+	// rather than merging a previous test's leftovers, and these tests do not run in parallel.
+	// secrets.json instead merges against an empty baseline and keeps earlier tests' records,
+	// which is harmless: tokens and passwords re-attach only to this test's contexts. The
+	// per-test path only gives each test its own lock file.
 	tempDir, err := os.MkdirTemp("", "cli-login-test")
 	req.NoError(err)
 	cfg.Filename = filepath.Join(tempDir, "config.json")
