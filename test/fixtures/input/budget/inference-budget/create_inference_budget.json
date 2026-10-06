@@ -1,0 +1,32 @@
+{
+  "api_version": "budget/v1",
+  "id": "inference-budget-f3a90de",
+  "kind": "InferenceBudget",
+  "metadata": {
+    "created_at": "2006-01-02T15:04:05-07:00",
+    "deleted_at": "2006-01-02T15:04:05-07:00",
+    "resource_name": "crn://confluent.cloud/organization=11111111-1111-1111-1111-111111111111/inference-budget=inference-budget-12345",
+    "self": "https://api.confluent.cloud/budget/v1/inference-budgets/inference-budget-12345",
+    "updated_at": "2006-01-02T15:04:05-07:00"
+  },
+  "spec": {
+    "enforcement_mode": "NOTIFY",
+    "max_inference_usd": "100.00",
+    "notification_thresholds": [
+      50,
+      90,
+      100
+    ],
+    "period": "MONTHLY",
+    "scope": "ORGANIZATION"
+  },
+  "status": {
+    "as_of": "2026-08-21T14:37:11Z",
+    "consumed_usd": "42.50",
+    "last_notified_percent": 0,
+    "last_reconciled": "2026-08-21T14:00:00Z",
+    "percent_consumed": 42.5,
+    "period_end": "2026-09-01T00:00:00Z",
+    "period_start": "2026-08-01T00:00:00Z"
+  }
+}

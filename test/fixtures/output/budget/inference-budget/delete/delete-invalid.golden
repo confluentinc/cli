@@ -1,0 +1,4 @@
+Error: budget inference budget "invalid" not found
+
+Suggestions:
+    List available budget inference budgets with `confluent budget inference-budget list`.

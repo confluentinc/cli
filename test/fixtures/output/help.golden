@@ -9,6 +9,7 @@ Available Commands:
   asyncapi             Manage AsyncAPI document tooling.
   audit-log            Manage audit log configuration.
   billing              Manage Confluent Cloud billing.
+  budget               Manage Confluent Inference Budget.
   byok                 Manage your keys in Confluent Cloud.
   ccpm                 Manage custom Connect plugin management (CCPM).
   cloud-signup         Sign up for Confluent Cloud.
