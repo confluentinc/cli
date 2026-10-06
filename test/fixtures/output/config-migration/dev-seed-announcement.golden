@@ -1,0 +1,5 @@
+Confluent CLI copied your contexts and logins from "<HOME>/.confluent/config.json" into this build's own configuration in "<HOME>/.confluent-dev". Changes you make here won't affect that installation, or vice versa.
+
+  Current |    Name    |  Platform   |     Credential      
+----------+------------+-------------+---------------------
+  *       | my-context | http://test | username-test-user  
