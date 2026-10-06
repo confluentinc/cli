@@ -14,10 +14,7 @@
       "name": "api-key-abc-key-123",
       "username": "",
       "api_key_pair": {
-        "api_key": "abc-key-123",
-        "api_secret": "API_SECRET_PLACEHOLDER",
-        "salt": "c2FsdHBsYWNlaG9sZGVy",
-        "nonce": "bm9uY2VwbGFjZWhvbGRlcg=="
+        "api_key": "abc-key-123"
       },
       "credential_type": 1
     },
@@ -45,10 +42,7 @@
             "bootstrap_servers": "http://test",
             "api_keys": {
               "abc-key-123": {
-                "api_key": "abc-key-123",
-                "api_secret": "API_SECRET_PLACEHOLDER",
-                "salt": "c2FsdHBsYWNlaG9sZGVy",
-                "nonce": "bm9uY2VwbGFjZWhvbGRlcg=="
+                "api_key": "abc-key-123"
               }
             },
             "api_key": "abc-key-123",
@@ -59,17 +53,13 @@
     }
   },
   "context_states": {
-    "my-context": {
-      "auth_token": "",
-      "auth_refresh_token": ""
-    }
+    "my-context": {}
   },
   "saved_credentials": {
     "my-context": {
       "is_cloud": false,
       "url": "",
-      "username": "test-user",
-      "encrypted_password": "encrypted-password"
+      "username": "test-user"
     }
   }
 }
