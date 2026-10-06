@@ -420,6 +420,7 @@ func (c *Config) saveLocked() error {
 	}
 	// Taken now rather than after the write so every fallible copy precedes it; c is not
 	// mutated in between (the merge works on copies), so this equals a post-write snapshot.
+	// Don't reuse ours: the merge shares its pointers with merged, which is then encrypted.
 	nextBaseline, err := c.deepCopyPersisted()
 	if err != nil {
 		return err
@@ -495,10 +496,12 @@ func (c *Config) writeWholeConfig() error {
 	// which save() has restored to its decrypted form. A read failure here does not
 	// undo the successful write, so fall back to the live snapshot; if even that fails,
 	// report it and keep the previous baseline rather than an empty one.
-	if disk, err := readConfigFromDisk(c.GetFilename(), c); err == nil {
+	disk, err := readConfigFromDisk(c.GetFilename(), c)
+	if err == nil {
 		c.baseline = disk
 		return nil
 	}
+	log.CliLogger.Debugf("Failed to re-read config after writing it, using the in-memory snapshot: %v", err)
 	return c.snapshotBaseline()
 }
 
