@@ -250,7 +250,7 @@ func TestQueryStreamers(t *testing.T) {
 		if len(rows) > 0 {
 			require.NoError(t, s.writeRows(rows))
 		}
-		require.NoError(t, s.close("COMPLETED", len(rows), false))
+		require.NoError(t, s.close())
 	}
 
 	t.Run("json is a bare array of rows, no envelope", func(t *testing.T) {
@@ -295,14 +295,14 @@ func TestQueryStreamers(t *testing.T) {
 	t.Run("json schema-less (setColumns never called) is an empty array", func(t *testing.T) {
 		var buf bytes.Buffer
 		s := newSerialStreamer(&buf, jsonRenderer{})
-		require.NoError(t, s.close("COMPLETED", 0, false))
+		require.NoError(t, s.close())
 		require.Equal(t, "[]\n", buf.String())
 	})
 
 	t.Run("yaml schema-less (setColumns never called) is an empty list", func(t *testing.T) {
 		var buf bytes.Buffer
 		s := newSerialStreamer(&buf, yamlRenderer{})
-		require.NoError(t, s.close("COMPLETED", 0, false))
+		require.NoError(t, s.close())
 		require.Equal(t, "[]\n", buf.String())
 	})
 }
@@ -846,22 +846,39 @@ func varcharField(v string) types.StatementResultField {
 	return types.AtomicStatementResultField{Type: types.Varchar, Value: v}
 }
 
-// bufferedJSON reproduces the pre-streaming code path: build the whole slice
-// of row maps and hand it to the same pretty-printer output.SerializedOutput uses
-// for -o json. The streamer must produce these exact bytes.
+// bufferedJSON builds the whole result as one pretty-printed JSON array, with
+// each row's keys in schema (header) order. The streamer, which writes the array
+// one row at a time, must produce these exact bytes.
 func bufferedJSON(t *testing.T, headers []string, rows []types.StatementResultRow) []byte {
 	t.Helper()
-	out := make([]map[string]any, len(rows))
+	var buf bytes.Buffer
+	buf.WriteByte('[')
 	for i, row := range rows {
-		fields := make(map[string]any, len(headers))
-		for j, field := range row.GetFields() {
-			fields[headers[j]] = field.ToSerializedValue()
+		if i > 0 {
+			buf.WriteByte(',')
 		}
-		out[i] = fields
+		buf.WriteByte('{')
+		fields := row.GetFields()
+		for j, header := range headers {
+			if j > 0 {
+				buf.WriteByte(',')
+			}
+			var value any
+			if j < len(fields) {
+				value = fields[j].ToSerializedValue()
+			}
+			key, err := json.Marshal(header)
+			require.NoError(t, err)
+			encodedValue, err := json.Marshal(value)
+			require.NoError(t, err)
+			buf.Write(key)
+			buf.WriteByte(':')
+			buf.Write(encodedValue)
+		}
+		buf.WriteByte('}')
 	}
-	encoded, err := json.Marshal(out)
-	require.NoError(t, err)
-	return pretty.Pretty(encoded)
+	buf.WriteByte(']')
+	return pretty.Pretty(buf.Bytes())
 }
 
 func TestJSONArrayStreamerMatchesBuffered(t *testing.T) {
@@ -898,6 +915,15 @@ func TestJSONArrayStreamerMatchesBuffered(t *testing.T) {
 				},
 			},
 		},
+		{
+			// Columns are not in alphabetical order: output must keep SELECT order
+			// (status, order_id), not sort the keys.
+			name:    "columns kept in schema order, not alphabetized",
+			columns: []flinkgatewayv1.ColumnDetails{column("status"), column("order_id")},
+			pages: [][]types.StatementResultRow{
+				{atomicRow(varcharField("SHIPPED"), intField("1021"))},
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -917,7 +943,7 @@ func TestJSONArrayStreamerMatchesBuffered(t *testing.T) {
 			for _, page := range test.pages {
 				require.NoError(t, streamer.writeRows(page))
 			}
-			require.NoError(t, streamer.close("", 0, false))
+			require.NoError(t, streamer.close())
 
 			require.Equal(t, string(bufferedJSON(t, headers, flat)), buf.String())
 		})

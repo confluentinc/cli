@@ -23,6 +23,12 @@ func (s *CLITestSuite) TestFlinkQuery() {
 		{args: `flink query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 -o json`, fixture: "flink/query/select-json.golden"},
 		{args: `flink query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 -o yaml`, fixture: "flink/query/select-yaml.golden"},
 
+		// Columns keep SELECT order (status before order_id), not alphabetical.
+		{args: `flink query --sql "SELECT status, order_id FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 -o json`, fixture: "flink/query/select-order-json.golden"},
+
+		// Schema known but zero rows: -o json emits an empty array, not null or 404.
+		{args: `flink query --sql "SELECT id FROM empty;" --compute-pool lfcp-123456 --service-account sa-123456 -o json`, fixture: "flink/query/empty-json.golden"},
+
 		// --max-rows stops the drain early. Truncated is one of the two conditions that
 		// makes runQuery's deferred cleanup stop the statement, so the name shows up again
 		// in the "Stopped statement" message.

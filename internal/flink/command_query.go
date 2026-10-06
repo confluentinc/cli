@@ -61,7 +61,8 @@ func (*command) newQueryCommand(cfg *cliconfig.Config, prerunner pcmd.PreRunner)
 			"point-in-time result set.\n\n" +
 			"With `-o human` (the default), only the first 100 rows are printed as a preview. Raise `--max-rows` to fetch " +
 			"more, or use `-o json` / `-o yaml` for the complete result set.\n\n" +
-			"`-o json` and `-o yaml` return a bare array of row objects.",
+			"`-o json` and `-o yaml` return a bare array of row objects.\n\n" +
+				"When `--max-rows` cuts a result short, a warning is printed to standard error and the command still exits 0, so a script reading the rows on standard output is unaffected.",
 		Args: cobra.NoArgs,
 		// Hidden until the flag targets an org; cfg.IsTest keeps it visible to the
 		// integration suite regardless of the (unreachable in tests) LD evaluation.
@@ -216,7 +217,7 @@ func (c *queryCommand) emitResult(name string, result *query.Result, streamer re
 	isAppendOnly, appendOnlyKnown := warnIfChangelog(result)
 
 	if streamer != nil {
-		if err := streamer.close(string(result.Phase()), result.RowCount, result.Truncated); err != nil {
+		if err := streamer.close(); err != nil {
 			*announceStop = true
 			return err
 		}

@@ -8,6 +8,8 @@ With `-o human` (the default), only the first 100 rows are printed as a preview.
 
 `-o json` and `-o yaml` return a bare array of row objects.
 
+When `--max-rows` cuts a result short, a warning is printed to standard error and the command still exits 0, so a script reading the rows on standard output is unaffected.
+
 Usage:
   confluent flink query [flags]
 

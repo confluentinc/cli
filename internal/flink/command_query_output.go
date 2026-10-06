@@ -62,7 +62,7 @@ func newResultStreamer(format output.Format) resultStreamer {
 type resultStreamer interface {
 	setColumns(columns []flinkgatewayv1.ColumnDetails) error
 	writeRows(rows []types.StatementResultRow) error
-	close(phase string, rowCount int, truncated bool) error
+	close() error
 }
 
 func columnNames(columns []flinkgatewayv1.ColumnDetails) []string {
@@ -73,13 +73,26 @@ func columnNames(columns []flinkgatewayv1.ColumnDetails) []string {
 	return headers
 }
 
-// rowMap keys a row's serialized values by column name.
-func rowMap(headers []string, row types.StatementResultRow) map[string]any {
-	fields := make(map[string]any, len(headers))
-	for j, field := range row.GetFields() {
-		fields[headers[j]] = field.ToSerializedValue()
+// rowField is one column's serialized value paired with its name.
+type rowField struct {
+	key   string
+	value any
+}
+
+// orderedRow pairs a row's serialized values with their column names in schema
+// (SELECT) order. Serialized output is emitted in this order, so columns keep
+// their query order instead of being alphabetized by a map.
+func orderedRow(headers []string, row types.StatementResultRow) []rowField {
+	fields := row.GetFields()
+	out := make([]rowField, 0, len(headers))
+	for i, header := range headers {
+		var value any
+		if i < len(fields) {
+			value = fields[i].ToSerializedValue()
+		}
+		out = append(out, rowField{key: header, value: value})
 	}
-	return fields
+	return out
 }
 
 // serialStreamer is the shared open → rows → close state machine for the
@@ -99,7 +112,7 @@ type serialStreamer struct {
 // must emit the whole empty result (e.g. "[]"), since header was never written.
 type rowRenderer interface {
 	header() []byte
-	row(fields map[string]any) ([]byte, error)
+	row(fields []rowField) ([]byte, error)
 	between() []byte
 	close(hadRows bool) []byte
 }
@@ -126,7 +139,7 @@ func (s *serialStreamer) writeRows(rows []types.StatementResultRow) error {
 				return err
 			}
 		}
-		object, err := s.renderer.row(rowMap(s.headers, row))
+		object, err := s.renderer.row(orderedRow(s.headers, row))
 		if err != nil {
 			return err
 		}
@@ -138,32 +151,48 @@ func (s *serialStreamer) writeRows(rows []types.StatementResultRow) error {
 	return s.w.Flush()
 }
 
-// close ignores phase/row_count/truncated: a bare array carries no envelope
-// metadata. phase and truncation surface via exit code / stderr instead;
-// row_count is just the length of the emitted array.
-func (s *serialStreamer) close(_ string, _ int, _ bool) error {
+// close finishes the output. It takes no phase/row_count/truncated: a bare array
+// carries no envelope metadata. phase and truncation surface via exit code /
+// stderr instead; row_count is just the length of the emitted array.
+func (s *serialStreamer) close() error {
 	if _, err := s.w.Write(s.renderer.close(s.opened)); err != nil {
 		return err
 	}
 	return s.w.Flush()
 }
 
-// jsonRowBytes pretty-prints one row object at the given indent, matching the
-// buffered output byte-for-byte.
-func jsonRowBytes(fields map[string]any, indent string) ([]byte, error) {
-	encoded, err := json.Marshal(fields)
-	if err != nil {
-		return nil, err
+// jsonRowBytes pretty-prints one row object at the given indent, keeping the
+// columns in schema order (json.Marshal of a map would sort them). pretty.Pretty
+// preserves key order, so only the compact object has to be built by hand.
+func jsonRowBytes(fields []rowField, indent string) ([]byte, error) {
+	var buf bytes.Buffer
+	buf.WriteByte('{')
+	for i, field := range fields {
+		if i > 0 {
+			buf.WriteByte(',')
+		}
+		key, err := json.Marshal(field.key)
+		if err != nil {
+			return nil, err
+		}
+		value, err := json.Marshal(field.value)
+		if err != nil {
+			return nil, err
+		}
+		buf.Write(key)
+		buf.WriteByte(':')
+		buf.Write(value)
 	}
-	return indentLines(bytes.TrimRight(pretty.Pretty(encoded), "\n"), indent), nil
+	buf.WriteByte('}')
+	return indentLines(bytes.TrimRight(pretty.Pretty(buf.Bytes()), "\n"), indent), nil
 }
 
 // jsonRenderer writes rows as a pretty-printed bare JSON array.
 type jsonRenderer struct{}
 
-func (jsonRenderer) header() []byte                            { return []byte("[\n") }
-func (jsonRenderer) row(fields map[string]any) ([]byte, error) { return jsonRowBytes(fields, "  ") }
-func (jsonRenderer) between() []byte                           { return []byte(",\n") }
+func (jsonRenderer) header() []byte                          { return []byte("[\n") }
+func (jsonRenderer) row(fields []rowField) ([]byte, error)   { return jsonRowBytes(fields, "  ") }
+func (jsonRenderer) between() []byte                         { return []byte(",\n") }
 func (jsonRenderer) close(hadRows bool) []byte {
 	if !hadRows {
 		return []byte("[]\n")
@@ -174,9 +203,9 @@ func (jsonRenderer) close(hadRows bool) []byte {
 // yamlRenderer writes rows as a bare YAML list of row objects.
 type yamlRenderer struct{}
 
-func (yamlRenderer) header() []byte                            { return nil }
-func (yamlRenderer) row(fields map[string]any) ([]byte, error) { return yamlListItem(fields, "") }
-func (yamlRenderer) between() []byte                           { return nil }
+func (yamlRenderer) header() []byte                        { return nil }
+func (yamlRenderer) row(fields []rowField) ([]byte, error) { return yamlListItem(fields, "") }
+func (yamlRenderer) between() []byte                       { return nil }
 func (yamlRenderer) close(hadRows bool) []byte {
 	if !hadRows {
 		return []byte("[]\n")
@@ -184,9 +213,22 @@ func (yamlRenderer) close(hadRows bool) []byte {
 	return nil
 }
 
-// yamlListItem renders v as a YAML sequence item ("- ...") at the given indent.
-func yamlListItem(v any, indent string) ([]byte, error) {
-	b, err := yaml.Marshal(v)
+// yamlListItem renders one row as a YAML sequence item ("- ...") at the given
+// indent, keeping columns in schema order. A yaml.Node mapping preserves key
+// order, which yaml.Marshal of a map would not.
+func yamlListItem(fields []rowField, indent string) ([]byte, error) {
+	node := &yaml.Node{Kind: yaml.MappingNode}
+	for _, field := range fields {
+		var keyNode, valueNode yaml.Node
+		if err := keyNode.Encode(field.key); err != nil {
+			return nil, err
+		}
+		if err := valueNode.Encode(field.value); err != nil {
+			return nil, err
+		}
+		node.Content = append(node.Content, &keyNode, &valueNode)
+	}
+	b, err := yaml.Marshal(node)
 	if err != nil {
 		return nil, err
 	}
