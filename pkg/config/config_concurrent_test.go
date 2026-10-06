@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"sync"
 	"testing"
@@ -989,13 +988,10 @@ func TestSave_UnmarshalablePersistedValue_FailsWithoutTouchingDisk(t *testing.T)
 	marshalErr := errors.New("unsupported value")
 	marshalPersisted = func(any) ([]byte, error) { return nil, marshalErr }
 	t.Cleanup(func() { marshalPersisted = json.Marshal })
-	before, err := os.ReadFile(path)
-	require.NoError(t, err)
+	before := readConfigStoresRaw(t)
 
 	saveErr := c.Save()
 
 	require.ErrorIs(t, saveErr, marshalErr, "a config that cannot be marshaled must not save")
-	after, err := os.ReadFile(path)
-	require.NoError(t, err)
-	require.Equal(t, string(before), string(after), "a failed save must leave the on-disk config untouched")
+	require.Equal(t, before, readConfigStoresRaw(t), "a failed save must leave the on-disk config untouched")
 }

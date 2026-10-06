@@ -1611,7 +1611,8 @@ func TestLoad_ReadOnlyConfigDirReturnsActionableError(t *testing.T) {
 func writeV4ConfigWithFailingMigrationSave(t *testing.T) (string, func()) {
 	t.Helper()
 	setTestHome(t, t.TempDir())
-	path := filepath.Join(t.TempDir(), "config.json")
+	path := SettingsFilename()
+	require.NoError(t, os.MkdirAll(filepath.Dir(path), 0700))
 	require.NoError(t, os.WriteFile(path, []byte(`{"disable_plugins_once": true}`), 0600))
 	calls := 0
 	marshalPersisted = func(v any) ([]byte, error) {
@@ -1629,13 +1630,12 @@ func writeV4ConfigWithFailingMigrationSave(t *testing.T) (string, func()) {
 // A migration save that fails must not stop the CLI from starting: Load keeps the migrated values
 // in memory and warns, and the migration retries on the next successful save.
 func TestLoad_MigrationSaveFailureIsNonFatal(t *testing.T) {
-	path, _ := writeV4ConfigWithFailingMigrationSave(t)
+	writeV4ConfigWithFailingMigrationSave(t)
 	logs := new(bytes.Buffer)
 	original := log.CliLogger
 	log.CliLogger = log.New(log.WARN, logs)
 	t.Cleanup(func() { log.CliLogger = original })
 	c := New()
-	c.Filename = path
 
 	err := c.Load()
 
@@ -1648,7 +1648,6 @@ func TestLoad_MigrationSaveFailureIsNonFatal(t *testing.T) {
 func TestLoad_MigrationPersistsOnNextSaveAfterFailedMigrationSave(t *testing.T) {
 	path, restoreSave := writeV4ConfigWithFailingMigrationSave(t)
 	c := New()
-	c.Filename = path
 	require.NoError(t, c.Load())
 	restoreSave()
 
@@ -1807,7 +1806,7 @@ func TestSave_ZeroByteStoresWriteWhole(t *testing.T) {
 	// would take disk's (empty) side and be dropped
 	c := New()
 	c.Platforms["p"] = &Platform{Name: "p", Server: "https://example.com"}
-	c.snapshotBaseline()
+	require.NoError(t, c.snapshotBaseline())
 
 	require.NoError(t, c.Save())
 
