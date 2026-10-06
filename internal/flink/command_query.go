@@ -59,10 +59,10 @@ func (*command) newQueryCommand(cfg *cliconfig.Config, prerunner pcmd.PreRunner)
 			"until it starts or fails, with `--wait`) and never the rows, this command always waits for the statement " +
 			"to finish, exiting non-zero if it fails. Use it for scripts and one-time queries against a bounded, " +
 			"point-in-time result set.\n\n" +
-			"With `-o human` (the default), only the first 100 rows are printed as a preview. Raise `--max-rows` to fetch " +
-			"more, or use `-o json` / `-o yaml` for the complete result set.\n\n" +
-			"`-o json` and `-o yaml` return a bare array of row objects.\n\n" +
-			"When `--max-rows` cuts a result short, a warning is printed to standard error and the command still exits 0, so a script reading the rows on standard output is unaffected.",
+			"With -o human (the default), only the first 100 rows are printed as a preview. Raise `--max-rows` to fetch " +
+			"more, or use -o json / -o yaml for the complete result set.\n\n" +
+			"With -o json or -o yaml, output defaults to an envelope that includes the column schema and rows. Rows alone " +
+			"don't include type information. Use --raw to return a bare array of row objects.",
 		Args: cobra.NoArgs,
 		// Hidden until the flag targets an org; cfg.IsTest keeps it visible to the
 		// integration suite regardless of the (unreachable in tests) LD evaluation.
@@ -79,6 +79,10 @@ func (*command) newQueryCommand(cfg *cliconfig.Config, prerunner pcmd.PreRunner)
 				Text: "Run a bounded query against Kafka cluster \"my-cluster\" and return JSON for a script.",
 				Code: `confluent flink query --sql "SELECT status, COUNT(*) FROM orders GROUP BY status;" --compute-pool lfcp-123456 --database my-cluster --output json`,
 			},
+			examples.Example{
+				Text: "Return a bare JSON array of rows, without an envelope, for a script that only wants the data.",
+				Code: `confluent flink query --sql "SELECT * FROM orders LIMIT 10;" --output json --raw`,
+			},
 		),
 		RunE: c.runQuery,
 	}
@@ -92,6 +96,7 @@ func (*command) newQueryCommand(cfg *cliconfig.Config, prerunner pcmd.PreRunner)
 	cmd.Flags().StringSlice("property", []string{}, "Properties for the Flink statement in key=value format.")
 	cmd.Flags().Duration("timeout", config.DefaultTimeoutDuration, "Maximum time to wait for the query to finish.")
 	cmd.Flags().Int("max-rows", 0, `Maximum number of rows to fetch. Defaults to 100 for "-o human"; raise it to fetch more. "-o json"/"-o yaml" fetch every row by default. This limit is client-side only; the query still produces rows after the limit is reached.`)
+	cmd.Flags().Bool("raw", false, `Return rows as a bare array without an envelope. Requires "-o json" or "-o yaml".`)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -136,7 +141,7 @@ func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	timeout, maxRows, err := resolveQueryFlags(cmd)
+	timeout, maxRows, raw, err := resolveQueryFlags(cmd)
 	if err != nil {
 		return err
 	}
@@ -175,7 +180,7 @@ func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 	// failure the emitted json/yaml is left unterminated.
 	var streamer resultStreamer
 	if output.GetFormat(cmd).IsSerialized() {
-		streamer = newResultStreamer(output.GetFormat(cmd))
+		streamer = newResultStreamer(output.GetFormat(cmd), raw)
 		options.OnSchema = streamer.setColumns
 		options.OnRows = streamer.writeRows
 	}
@@ -217,7 +222,7 @@ func (c *queryCommand) emitResult(name string, result *query.Result, streamer re
 	isAppendOnly, appendOnlyKnown := warnIfChangelog(result)
 
 	if streamer != nil {
-		if err := streamer.close(); err != nil {
+		if err := streamer.close(string(result.Phase()), result.RowCount, result.Truncated); err != nil {
 			*announceStop = true
 			return err
 		}
@@ -264,32 +269,33 @@ func resolveDisplayCap(format output.Format, maxRowsChanged bool, maxRows int) (
 }
 
 // resolveQueryFlags reads and validates the numeric/output flags that gate the run
-// before any network call: --timeout must be positive, and --max-rows must not be
-// negative (0 means no limit).
-func resolveQueryFlags(cmd *cobra.Command) (time.Duration, int, error) {
+// before any network call.
+func resolveQueryFlags(cmd *cobra.Command) (time.Duration, int, bool, error) {
 	timeout, err := cmd.Flags().GetDuration("timeout")
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, false, err
 	}
 	if timeout <= 0 {
-		return 0, 0, errors.NewErrorWithSuggestions(
-			"the `--timeout` flag must be positive",
-			"Set `--timeout` to a positive duration, such as `30s` or `10m`.",
-		)
+		return 0, 0, false, errors.New("the `--timeout` flag must be positive")
 	}
 
 	maxRows, err := cmd.Flags().GetInt("max-rows")
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, false, err
 	}
 	if maxRows < 0 {
-		return 0, 0, errors.NewErrorWithSuggestions(
-			"the `--max-rows` flag must not be negative",
-			"Set `--max-rows` to 0 for no limit, or a positive integer.",
-		)
+		return 0, 0, false, errors.New("the `--max-rows` flag must not be negative")
 	}
 
-	return timeout, maxRows, nil
+	raw, err := cmd.Flags().GetBool("raw")
+	if err != nil {
+		return 0, 0, false, err
+	}
+	if raw && !output.GetFormat(cmd).IsSerialized() {
+		return 0, 0, false, errors.New("the `--raw` flag requires `-o json` or `-o yaml`")
+	}
+
+	return timeout, maxRows, raw, nil
 }
 
 // createQueryStatement resolves the environment and gateway client, builds the
@@ -438,20 +444,14 @@ func resolveSQL(cmd *cobra.Command) (string, error) {
 		if file != "" {
 			contents, err := os.ReadFile(file)
 			if err != nil {
-				return "", errors.NewErrorWithSuggestions(
-					fmt.Sprintf(`failed to read the SQL statement from "%s": %v`, file, err),
-					"Check that the `--file` path is correct and the file is readable.",
-				)
+				return "", fmt.Errorf(`failed to read the SQL statement from "%s": %v`, file, err)
 			}
 			sql = string(contents)
 		}
 	}
 
 	if strings.TrimSpace(sql) == "" {
-		return "", errors.NewErrorWithSuggestions(
-			"the SQL statement is empty",
-			"Pass the statement with `--sql`, or point `--file` at a file that contains one.",
-		)
+		return "", errors.New("the SQL statement is required: pass it with `--sql` or `--file`")
 	}
 	return sql, nil
 }
