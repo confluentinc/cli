@@ -210,13 +210,24 @@ func TestConfig_Load(t *testing.T) {
 		return
 	}
 
+	// The fixtures below carry a credential API secret, a nested Kafka API-key secret,
+	// auth tokens, and a saved password - all now secret-store-only (json:"-"), so a bare
+	// Load() from these files can't recover them, and Validate() would otherwise treat the
+	// secret-less nested API key as malformed and delete it. Seed the matching secret store
+	// records (under an isolated HOME, fresh per sub-test below) so loadSecretStore()
+	// restores the real values, same as it would for an on-disk config with a real
+	// secrets.json. A fresh HOME per sub-test matters now that tokens are keyed by context
+	// name rather than identity: every fixture below reuses the same context name
+	// ("my-context"), so a single shared secrets.json would leak the stateful fixture's
+	// token into the stateless ones' otherwise-tokenless load.
 	testConfigsOnPrem := SetupTestInputs(false)
 	testConfigsCloud := SetupTestInputs(true)
 	tests := []struct {
-		name    string
-		want    *Config
-		wantErr bool
-		file    string
+		name      string
+		want      *Config
+		wantErr   bool
+		file      string
+		withToken bool // "my-context" is shared by every fixture below; only the stateful ones hold a token.
 	}{
 		{
 			name: "succeed loading stateless on-prem config from file",
@@ -224,9 +235,10 @@ func TestConfig_Load(t *testing.T) {
 			file: "test_json/stateless_onprem.json",
 		},
 		{
-			name: "succeed loading on-prem config with state from file",
-			want: testConfigsOnPrem.statefulConfig,
-			file: "test_json/stateful_onprem.json",
+			name:      "succeed loading on-prem config with state from file",
+			want:      testConfigsOnPrem.statefulConfig,
+			file:      "test_json/stateful_onprem.json",
+			withToken: true,
 		},
 		{
 			name: "succeed loading stateless cloud config from file",
@@ -234,9 +246,10 @@ func TestConfig_Load(t *testing.T) {
 			file: "test_json/stateless_cloud.json",
 		},
 		{
-			name: "succeed loading cloud config with state from file",
-			want: testConfigsCloud.statefulConfig,
-			file: "test_json/stateful_cloud.json",
+			name:      "succeed loading cloud config with state from file",
+			want:      testConfigsCloud.statefulConfig,
+			file:      "test_json/stateful_cloud.json",
+			withToken: true,
 		},
 		{
 			name: "should load disable update checks",
@@ -255,6 +268,9 @@ func TestConfig_Load(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			setTestHome(t, t.TempDir())
+			seedLoadTestSecrets(t, test.withToken)
+
 			cfg := New()
 			cfg.Filename = test.file
 			for _, context := range test.want.Contexts {
@@ -273,8 +289,9 @@ func TestConfig_Load(t *testing.T) {
 				ctx.KafkaClusterContext.KafkaClusterConfigs = cfg.Contexts[contextName].KafkaClusterContext.KafkaClusterConfigs
 			}
 
-			// baseline is a load-time impl detail, not under test here.
+			// baseline/secretBaseline are load-time impl details, not under test here.
 			cfg.baseline = nil
+			cfg.secretBaseline = nil
 			if !t.Failed() && !reflect.DeepEqual(cfg, test.want) {
 				t.Errorf("Config.Load() =\n%+v, want \n%+v", cfg, test.want)
 			}
@@ -282,7 +299,45 @@ func TestConfig_Load(t *testing.T) {
 	}
 }
 
+// seedLoadTestSecrets writes the secret-store records TestConfig_Load's fixtures need to
+// round-trip. The shared cluster config's nested Kafka API-key secret is recorded under both
+// identities the fixtures use as owning credential: "api-key-abc-key-123" (apiCredentialName, a
+// stateless context's identityKey) and "username-test-user" (loginCredential.Name, a
+// stateful context's identityKey) - each fixture's context uses one or the other. Values
+// are stored verbatim (this test never decrypts), matching what saveSecretStore would have
+// produced for these fixtures.
+//
+// The saved password SetupTestInputs hardcodes for "my-context" is keyed by context NAME rather
+// than identity - see passwordRecord. withToken additionally seeds the auth tokens SetupTestInputs
+// hardcodes for the stateful context, also keyed by context name - see tokenRecord. Every fixture
+// TestConfig_Load loads reuses that same context name, so a caller loading a stateless fixture must
+// pass false: seeding the token unconditionally would leak the stateful fixture's token into a load
+// that should see none.
+func seedLoadTestSecrets(t *testing.T, withToken bool) {
+	t.Helper()
+	nestedKey := map[string]map[string]*apiKeySecret{kafkaClusterID: {apiKeyString: {Secret: apiSecretString}}}
+	file := &secretFile{
+		Secrets: map[string]*secretRecord{
+			apiCredentialName:    {Secret: apiSecretString, KafkaAPIKeys: nestedKey},
+			"username-test-user": {KafkaAPIKeys: nestedKey},
+		},
+		Passwords: map[string]*passwordRecord{
+			contextName: {Password: "encrypted-password"},
+		},
+	}
+	if withToken {
+		file.Tokens = map[string]*tokenRecord{
+			contextName: {
+				AuthToken:        regularOrgContextState.AuthToken,
+				AuthRefreshToken: regularOrgContextState.AuthRefreshToken,
+			},
+		}
+	}
+	require.NoError(t, newSecretStore().write(file))
+}
+
 func TestConfig_Save(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	if runtime.GOOS == "windows" {
 		return
 	}
@@ -364,7 +419,9 @@ func TestConfig_Save(t *testing.T) {
 			got, _ := os.ReadFile(configFile.Name())
 			want, _ := os.ReadFile(test.wantFile)
 			wantString := replacePlaceholdersInWant(t, got, want)
-			require.Equal(t, utils.NormalizeNewLines(wantString), utils.NormalizeNewLines(string(got)))
+			// TrimRight tolerates a trailing newline on the fixture file: pre-commit's
+			// end-of-file-fixer enforces one, but json.MarshalIndent (got) never writes one.
+			require.Equal(t, strings.TrimRight(utils.NormalizeNewLines(wantString), "\n"), strings.TrimRight(utils.NormalizeNewLines(string(got)), "\n"))
 			fd, err := os.Stat(configFile.Name())
 			require.NoError(t, err)
 			if runtime.GOOS != "windows" && fd.Mode() != 0600 {
@@ -376,6 +433,7 @@ func TestConfig_Save(t *testing.T) {
 }
 
 func TestConfig_SaveWithEnvironmentOverwrite(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	if runtime.GOOS == "windows" {
 		return
 	}
@@ -400,7 +458,9 @@ func TestConfig_SaveWithEnvironmentOverwrite(t *testing.T) {
 	got, _ := os.ReadFile(configFile.Name())
 	want, _ := os.ReadFile("test_json/account_overwrite.json")
 	wantString := replacePlaceholdersInWant(t, got, want)
-	require.Equal(t, utils.NormalizeNewLines(wantString), utils.NormalizeNewLines(string(got)))
+	// TrimRight tolerates a trailing newline on the fixture file: pre-commit's
+	// end-of-file-fixer enforces one, but json.MarshalIndent (got) never writes one.
+	require.Equal(t, strings.TrimRight(utils.NormalizeNewLines(wantString), "\n"), strings.TrimRight(utils.NormalizeNewLines(string(got)), "\n"))
 
 	fd, err := os.Stat(configFile.Name())
 	require.NoError(t, err)
@@ -768,8 +828,9 @@ func TestConfig_AddContext(t *testing.T) {
 			if (err != nil) != test.wantErr {
 				t.Errorf("AddContext() error = %v, wantErr %v", err, test.wantErr)
 			}
-			// baseline is a save-time impl detail, not under test here.
+			// baseline/secretBaseline are save-time impl details, not under test here.
 			test.config.baseline = nil
+			test.config.secretBaseline = nil
 			if !test.wantErr && !reflect.DeepEqual(test.want, test.config) {
 				t.Errorf("AddContext() got = %v, want %v", test.config, test.want)
 			}
@@ -779,6 +840,7 @@ func TestConfig_AddContext(t *testing.T) {
 }
 
 func TestConfig_CreateContext(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	cfg := &Config{
 		ContextStates: make(map[string]*ContextState),
 		Contexts:      make(map[string]*Context),
@@ -801,6 +863,7 @@ func TestConfig_CreateContext(t *testing.T) {
 }
 
 func TestConfig_UseContext(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	cfg := AuthenticatedCloudConfigMock()
 	// Isolate from the shared default config path so Save's read-merge can't pick
 	// up (or leave behind) another test's leftover config.
@@ -1314,6 +1377,7 @@ func TestParseFlagsIntoConfig(t *testing.T) {
 }
 
 func TestReadConfigFromDisk_WiresGraphAndPassesValidate(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 
@@ -1328,6 +1392,7 @@ func TestReadConfigFromDisk_WiresGraphAndPassesValidate(t *testing.T) {
 }
 
 func TestSave_MergesConcurrentDiskChange(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 
@@ -1396,6 +1461,7 @@ func TestEncryptContextStateTokens_EncryptsPlatformRefreshTokenBeginningWithCiph
 // reset). Save() must overwrite the existing file, not treat the live object as
 // unchanged and silently keep disk's values.
 func TestSave_NoBaselineOverwritesExistingFile(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 
@@ -1419,6 +1485,7 @@ func TestSave_NoBaselineOverwritesExistingFile(t *testing.T) {
 // directory before opening the sidecar lock file inside it, or the lock open
 // ENOENTs and the CLI cannot start.
 func TestSave_CreatesMissingParentDirectory(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	path := filepath.Join(t.TempDir(), "does", "not", "exist", "config.json")
 
 	c := New()
@@ -1437,6 +1504,7 @@ func TestSave_CreatesMissingParentDirectory(t *testing.T) {
 // holds the sidecar lock; it must not try to re-acquire it (which would block
 // for lockTimeout and then panic), and the normalization must reach disk.
 func TestSave_NormalizesInvalidActiveKafkaWithoutDeadlock(t *testing.T) {
+	setTestHome(t, t.TempDir())
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
 
@@ -1500,29 +1568,59 @@ func TestSnapshotBaseline_IsIndependentCopy(t *testing.T) {
 	require.Equal(t, "a", c.baseline.CurrentContext, "baseline must not alias live config")
 }
 
-// writeV4ConfigInReadOnlyDir writes a config needing migration into a read-only directory, so the
-// migration save in Load fails. It returns the directory and the config path.
-func writeV4ConfigInReadOnlyDir(t *testing.T) (string, string) {
-	t.Helper()
+// Load reads under the sidecar lock, so a config directory the CLI cannot create the lock file in
+// must fail with an error that names the directory and says how to fix it.
+func TestLoad_ReadOnlyConfigDirReturnsActionableError(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("directory permission bits do not restrict file creation on Windows")
 	}
 	if os.Geteuid() == 0 {
 		t.Skip("root ignores directory permission bits")
 	}
+	setTestHome(t, t.TempDir())
 	dir := t.TempDir()
 	path := filepath.Join(dir, "config.json")
-	require.NoError(t, os.WriteFile(path, []byte(`{"disable_plugins_once": true}`), 0600))
+	require.NoError(t, os.WriteFile(path, []byte(`{}`), 0600))
 	require.NoError(t, os.Chmod(dir, 0500))
 	t.Cleanup(func() { _ = os.Chmod(dir, 0700) })
-	return dir, path
+	c := New()
+	c.Filename = path
+
+	err := c.Load()
+
+	require.Error(t, err)
+	require.Contains(t, err.Error(), fmt.Sprintf(`"%s"`, dir), "the error must name the config directory")
+	var withSuggestions errors.ErrorWithSuggestions
+	require.ErrorAs(t, err, &withSuggestions)
+	require.Contains(t, withSuggestions.GetSuggestionsMsg(), "`HOME`")
 }
 
-// A migration save that fails (here a read-only config dir, so the lock file cannot be
-// created) must not stop the CLI from starting: Load keeps the migrated values in memory
-// and warns, and the migration retries on the next successful save.
+// writeV4ConfigWithFailingMigrationSave writes a config needing migration and makes Load's
+// migration save fail after its locked read succeeds: marshalPersisted lets the pre-migration
+// baseline snapshot through and fails every later copy, which the migration save makes first. It
+// returns the config path and a func that makes saves succeed again.
+func writeV4ConfigWithFailingMigrationSave(t *testing.T) (string, func()) {
+	t.Helper()
+	setTestHome(t, t.TempDir())
+	path := filepath.Join(t.TempDir(), "config.json")
+	require.NoError(t, os.WriteFile(path, []byte(`{"disable_plugins_once": true}`), 0600))
+	calls := 0
+	marshalPersisted = func(v any) ([]byte, error) {
+		calls++
+		if calls > 1 {
+			return nil, fmt.Errorf("injected marshal failure")
+		}
+		return json.Marshal(v)
+	}
+	restore := func() { marshalPersisted = json.Marshal }
+	t.Cleanup(restore)
+	return path, restore
+}
+
+// A migration save that fails must not stop the CLI from starting: Load keeps the migrated values
+// in memory and warns, and the migration retries on the next successful save.
 func TestLoad_MigrationSaveFailureIsNonFatal(t *testing.T) {
-	_, path := writeV4ConfigInReadOnlyDir(t)
+	path, _ := writeV4ConfigWithFailingMigrationSave(t)
 	logs := new(bytes.Buffer)
 	original := log.CliLogger
 	log.CliLogger = log.New(log.WARN, logs)
@@ -1539,11 +1637,11 @@ func TestLoad_MigrationSaveFailureIsNonFatal(t *testing.T) {
 }
 
 func TestLoad_MigrationPersistsOnNextSaveAfterFailedMigrationSave(t *testing.T) {
-	dir, path := writeV4ConfigInReadOnlyDir(t)
+	path, restoreSave := writeV4ConfigWithFailingMigrationSave(t)
 	c := New()
 	c.Filename = path
 	require.NoError(t, c.Load())
-	require.NoError(t, os.Chmod(dir, 0700))
+	restoreSave()
 
 	err := c.Save()
 
