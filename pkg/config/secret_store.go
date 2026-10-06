@@ -864,9 +864,10 @@ func readSecretFileFromDisk(path string) (*secretFile, error) {
 	return file, nil
 }
 
-// loadSecretStore repopulates c's secret fields from the encrypted secret store - Secrets by
-// each context's identityKey, Tokens and Passwords by exact context name (no broadcast across
-// contexts sharing an identity: see tokenRecord/passwordRecord) - the reverse of saveSecretStore.
+// loadSecretStore repopulates c's secret fields from the encrypted secret store - credential
+// secrets by credential name, nested API keys by each context's identityKey, Tokens and Passwords
+// by exact context name (no broadcast across contexts sharing an identity: see
+// tokenRecord/passwordRecord) - the reverse of saveSecretStore.
 // It must run before
 // wireContexts/Validate: ctx.GetState() is not wired to ContextStates until wireContexts
 // runs, so this reads ContextStates/Credentials/SavedCredentials directly by name/identity;
@@ -887,6 +888,18 @@ func (c *Config) loadSecretStore() error {
 	c.secretBaseline = file
 	if len(file.Secrets) == 0 && len(file.Tokens) == 0 && len(file.Passwords) == 0 {
 		return nil
+	}
+
+	// Restored per credential, not via contexts: a credential no context references still owns its
+	// record, and leaving its secret empty here would make the next save's merge delete it.
+	for name, credential := range c.Credentials {
+		rec := file.Secrets[name]
+		if rec == nil || rec.Secret == "" || credential == nil || credential.APIKeyPair == nil {
+			continue
+		}
+		credential.APIKeyPair.Secret = rec.Secret
+		credential.APIKeyPair.Salt = rec.SecretSalt
+		credential.APIKeyPair.Nonce = rec.SecretNonce
 	}
 
 	for name, ctx := range c.Contexts {
@@ -913,12 +926,6 @@ func (c *Config) loadSecretStore() error {
 		rec, ok := file.Secrets[ctx.identityKey()]
 		if !ok || rec == nil {
 			continue
-		}
-
-		if credential := c.Credentials[ctx.CredentialName]; credential != nil && credential.APIKeyPair != nil && rec.Secret != "" {
-			credential.APIKeyPair.Secret = rec.Secret
-			credential.APIKeyPair.Salt = rec.SecretSalt
-			credential.APIKeyPair.Nonce = rec.SecretNonce
 		}
 
 		for keyId, triple := range rec.GlobalAPIKeys {
