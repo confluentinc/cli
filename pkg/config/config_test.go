@@ -1595,29 +1595,32 @@ func TestLoad_ReadOnlyConfigDirReturnsActionableError(t *testing.T) {
 	require.Contains(t, withSuggestions.GetSuggestionsMsg(), "`HOME`")
 }
 
-// writeV4ConfigInReadOnlyDir writes a config needing migration into a read-only directory, so the
-// migration save in Load fails. It returns the directory and the config path.
-func writeV4ConfigInReadOnlyDir(t *testing.T) (string, string) {
+// writeV4ConfigWithFailingMigrationSave writes a config needing migration and makes Load's
+// migration save fail after its locked read succeeds: marshalPersisted lets the pre-migration
+// baseline snapshot through and fails every later copy, which the migration save makes first. It
+// returns the config path and a func that makes saves succeed again.
+func writeV4ConfigWithFailingMigrationSave(t *testing.T) (string, func()) {
 	t.Helper()
-	if runtime.GOOS == "windows" {
-		t.Skip("directory permission bits do not restrict file creation on Windows")
-	}
-	if os.Geteuid() == 0 {
-		t.Skip("root ignores directory permission bits")
-	}
-	dir := t.TempDir()
-	path := filepath.Join(dir, "config.json")
+	setTestHome(t, t.TempDir())
+	path := filepath.Join(t.TempDir(), "config.json")
 	require.NoError(t, os.WriteFile(path, []byte(`{"disable_plugins_once": true}`), 0600))
-	require.NoError(t, os.Chmod(dir, 0500))
-	t.Cleanup(func() { _ = os.Chmod(dir, 0700) })
-	return dir, path
+	calls := 0
+	marshalPersisted = func(v any) ([]byte, error) {
+		calls++
+		if calls > 1 {
+			return nil, fmt.Errorf("injected marshal failure")
+		}
+		return json.Marshal(v)
+	}
+	restore := func() { marshalPersisted = json.Marshal }
+	t.Cleanup(restore)
+	return path, restore
 }
 
-// A migration save that fails (here a read-only config dir, so the lock file cannot be
-// created) must not stop the CLI from starting: Load keeps the migrated values in memory
-// and warns, and the migration retries on the next successful save.
+// A migration save that fails must not stop the CLI from starting: Load keeps the migrated values
+// in memory and warns, and the migration retries on the next successful save.
 func TestLoad_MigrationSaveFailureIsNonFatal(t *testing.T) {
-	_, path := writeV4ConfigInReadOnlyDir(t)
+	path, _ := writeV4ConfigWithFailingMigrationSave(t)
 	logs := new(bytes.Buffer)
 	original := log.CliLogger
 	log.CliLogger = log.New(log.WARN, logs)
@@ -1634,11 +1637,11 @@ func TestLoad_MigrationSaveFailureIsNonFatal(t *testing.T) {
 }
 
 func TestLoad_MigrationPersistsOnNextSaveAfterFailedMigrationSave(t *testing.T) {
-	dir, path := writeV4ConfigInReadOnlyDir(t)
+	path, restoreSave := writeV4ConfigWithFailingMigrationSave(t)
 	c := New()
 	c.Filename = path
 	require.NoError(t, c.Load())
-	require.NoError(t, os.Chmod(dir, 0700))
+	restoreSave()
 
 	err := c.Save()
 
