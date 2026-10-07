@@ -8,7 +8,10 @@ import (
 
 	configurationcontrolv1 "github.com/confluentinc/ccloud-sdk-go-v2/configurationcontrol/v1"
 
+	"github.com/confluentinc/cli/v4/pkg/auth"
+	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 // ===== API group client bootstrap =====
@@ -23,8 +26,51 @@ func newConfigurationcontrolClient(httpClient *http.Client, url, userAgent strin
 	return configurationcontrolv1.NewAPIClient(cfg)
 }
 
+// configurationcontrolApiContext selects the credential the Configuration Control API is called
+// with.
+//
+// The Configuration Control API is served by frontdoor-api-gateway, which accepts Cloud /
+// Global API keys and regional customer access tokens but not raw login-session JWTs (its spec's
+// declared cloud-api-key / confluent-sts-access-token schemes, same shape as switchover).
+// Credentials are resolved from the CLI's existing keystore and login state, in this order:
+//
+//  1. The active Global API key in the local keystore (set by
+//     'api-key create --resource global' or 'api-key use <key>'), sent as HTTP
+//     Basic auth. A key the user explicitly selected always wins over ambient
+//     login state, so the acting principal can be pinned and the token exchange
+//     bypassed without logging out. This is also the break-glass path when the
+//     exchange is down.
+//  2. The login session: the session token is exchanged for a regional customer
+//     access token via auth.GetRegionalToken and sent as a bearer. This is the
+//     default for 'confluent login' users, matching how the other CLI clients
+//     authenticate to token-exchange-backed APIs.
+//  3. A Cloud API key stored in the context by an API-key login, as Basic auth.
+//  4. The raw session token. frontdoor rejects it today, but it keeps the error
+//     surfaced as a 401 from the API rather than a silent unauthenticated request,
+//     and it will start working if frontdoor ever accepts session JWTs.
 func (c *Client) configurationcontrolApiContext() context.Context {
-	return context.WithValue(context.Background(), configurationcontrolv1.ContextAccessToken, c.cfg.Context().GetAuthToken())
+	ctx := c.cfg.Context()
+	if pair := ctx.GetActiveGlobalAPIKeyPair(); pair != nil {
+		if err := pair.DecryptSecret(); err == nil {
+			return context.WithValue(context.Background(), configurationcontrolv1.ContextBasicAuth, configurationcontrolv1.BasicAuth{UserName: pair.Key, Password: pair.Secret})
+		} else {
+			log.CliLogger.Debugf("configurationcontrol: could not decrypt active Global API key %q, falling back to login: %v", pair.Key, err)
+		}
+	}
+	if ctx != nil && ctx.GetAuthToken() != "" {
+		token, err := auth.GetRegionalToken(ctx)
+		if err == nil {
+			return context.WithValue(context.Background(), configurationcontrolv1.ContextAccessToken, token)
+		}
+		log.CliLogger.Debugf("configurationcontrol: regional token exchange failed, falling back to stored API key: %v", err)
+	}
+	if ctx != nil && ctx.GetCredentialType() == config.APIKey && ctx.Credential.APIKeyPair != nil {
+		pair := ctx.Credential.APIKeyPair
+		if err := pair.DecryptSecret(); err == nil {
+			return context.WithValue(context.Background(), configurationcontrolv1.ContextBasicAuth, configurationcontrolv1.BasicAuth{UserName: pair.Key, Password: pair.Secret})
+		}
+	}
+	return context.WithValue(context.Background(), configurationcontrolv1.ContextAccessToken, ctx.GetAuthToken())
 }
 
 // ===== configurationcontrol policies API calls =====
