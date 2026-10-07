@@ -25,6 +25,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority v0.0.3
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.4.1
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.27.0
+	github.com/confluentinc/ccloud-sdk-go-v2/configurationcontrol v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.7.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin v0.0.9
 	github.com/confluentinc/ccloud-sdk-go-v2/endpoint v0.4.0

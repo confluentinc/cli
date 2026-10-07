@@ -38,6 +38,8 @@ var ccloudV2Routes = []route{
 	{"/cdx/v1/shared-tokens:redeem", handleStreamSharingRedeemToken},
 	{"/cmk/v2/clusters", handleCmkClusters},
 	{"/cmk/v2/clusters/{id}", handleCmkCluster},
+	{"/configurationcontrol/v1/policies", handleConfigurationcontrolV1Policies},
+	{"/configurationcontrol/v1/policies/{name}", handleConfigurationcontrolV1PoliciesName},
 	{"/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins", handlePlugins},
 	{"/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins/{plugin}/config/validate", handlePluginValidate},
 	{"/connect/v1/environments/{env}/clusters/{clusters}/connectors", handleConnectors},

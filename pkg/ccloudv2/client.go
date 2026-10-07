@@ -11,6 +11,7 @@ import (
 	certificateauthorityv2 "github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority/v2"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	configurationcontrolv1 "github.com/confluentinc/ccloud-sdk-go-v2/configurationcontrol/v1"
 	connectcustompluginv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin/v1"
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	endpointv1 "github.com/confluentinc/ccloud-sdk-go-v2/endpoint/v1"
@@ -56,6 +57,7 @@ type Client struct {
 	CertificateAuthorityClient   *certificateauthorityv2.APIClient
 	CliClient                    *cliv1.APIClient
 	CmkClient                    *cmkv2.APIClient
+	ConfigurationcontrolClient   *configurationcontrolv1.APIClient
 	ConnectArtifactClient        *camv1.APIClient
 	ConnectClient                *connectv1.APIClient
 	ConnectCustomPluginClient    *connectcustompluginv1.APIClient
@@ -109,6 +111,7 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 		CertificateAuthorityClient:   newCertificateAuthorityClient(httpClient, url, userAgent, unsafeTrace),
 		CliClient:                    newCliClient(url, userAgent, unsafeTrace),
 		CmkClient:                    newCmkClient(httpClient, url, userAgent, unsafeTrace),
+		ConfigurationcontrolClient:   newConfigurationcontrolClient(httpClient, url, userAgent, unsafeTrace),
 		ConnectArtifactClient:        newConnectArtifactClient(httpClient, url, userAgent, unsafeTrace),
 		ConnectClient:                newConnectClient(httpClient, url, userAgent, unsafeTrace),
 		ConnectCustomPluginClient:    newConnectCustomPluginClient(httpClient, url, userAgent, unsafeTrace),

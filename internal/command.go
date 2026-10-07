@@ -23,6 +23,7 @@ import (
 	"github.com/confluentinc/cli/v4/internal/cluster"
 	"github.com/confluentinc/cli/v4/internal/completion"
 	"github.com/confluentinc/cli/v4/internal/configuration"
+	"github.com/confluentinc/cli/v4/internal/configurationcontrol"
 	"github.com/confluentinc/cli/v4/internal/connect"
 	"github.com/confluentinc/cli/v4/internal/context"
 	"github.com/confluentinc/cli/v4/internal/endpoint"
@@ -116,6 +117,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(cluster.New(prerunner, cfg.Version.UserAgent))
 	cmd.AddCommand(completion.New())
 	cmd.AddCommand(configuration.New(cfg, prerunner))
+	cmd.AddCommand(configurationcontrol.New(cfg, prerunner))
 	cmd.AddCommand(connect.New(cfg, prerunner))
 	cmd.AddCommand(context.New(prerunner))
 	cmd.AddCommand(endpoint.New(cfg, prerunner))

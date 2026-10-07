@@ -1,0 +1,33 @@
+{
+  "api_version": "configurationcontrol/v1",
+  "kind": "Policy",
+  "metadata": {
+    "created_at": "2006-01-02T15:04:05-07:00",
+    "deleted_at": "2006-01-02T15:04:05-07:00",
+    "name": "payments-cluster-compression",
+    "resource_name": "crn://confluent.cloud/organization=11111111-1111-1111-1111-111111111111/configuration-policy=payments-cluster-compression",
+    "resource_version": "2",
+    "self": "https://api.confluent.cloud/configurationcontrol/v1/policies/payments-cluster-compression",
+    "uid": "7c4a0e83-2b4a-4d8a-9e2d-6f1f0b6f3f9c",
+    "updated_at": "2006-01-02T15:04:05-07:00"
+  },
+  "spec": {
+    "action": "DENY",
+    "mode": "AUDIT",
+    "rules": [
+      {
+        "match": "resource.config[\"compression.type\"] in [\"zstd\", \"lz4\"]",
+        "mutate": "resource.config.merge({\"compression.type\": \"zstd\"})",
+        "name": "cap-compression-to-zstd-or-lz4"
+      }
+    ],
+    "scope": {
+      "resource_name": "crn://confluent.cloud/organization=11111111-1111-1111-1111-111111111111/environment=env-456xy/cloud-cluster=lkc-123abc/kafka=lkc-123abc"
+    },
+    "type": "CompressionPolicy"
+  },
+  "status": {
+    "error_message": "",
+    "phase": "READY"
+  }
+}
