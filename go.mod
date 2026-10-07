@@ -1,6 +1,6 @@
 module github.com/confluentinc/cli/v4
 
-go 1.26.8
+go 1.26.7
 
 require (
 	github.com/antihax/optional v1.0.0
@@ -20,7 +20,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/budget v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.9
-	github.com/confluentinc/ccloud-sdk-go-v2/cam v0.4.0
+	github.com/confluentinc/ccloud-sdk-go-v2/cam v0.5.0
 	github.com/confluentinc/ccloud-sdk-go-v2/ccpm v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5
 	github.com/confluentinc/ccloud-sdk-go-v2/certificate-authority v0.0.3
@@ -52,7 +52,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.7.3
 	github.com/confluentinc/ccloud-sdk-go-v2/sso v0.0.1
-	github.com/confluentinc/ccloud-sdk-go-v2/switchover v0.1.1
+	github.com/confluentinc/ccloud-sdk-go-v2/switchover v0.1.2
 	github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.8.0
 	github.com/confluentinc/ccloud-sdk-go-v2/usm v0.2.0
 	github.com/confluentinc/cmf-sdk-go v0.0.8
