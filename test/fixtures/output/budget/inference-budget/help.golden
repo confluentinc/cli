@@ -1,0 +1,18 @@
+Manage Confluent Cloud budget inference budgets.
+
+Usage:
+  confluent budget inference-budget [command]
+
+Available Commands:
+  create      Create a budget inference budget.
+  delete      Delete one or more budget inference budgets.
+  describe    Describe a budget inference budget.
+  list        List budget inference budgets.
+  update      Update an existing budget inference budget.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent budget inference-budget [command] --help" for more information about a command.
