@@ -87,7 +87,7 @@ func (c *policyCommand) autocompletePolicies() []string {
 
 	suggestions := make([]string, len(policies))
 	for i, policy := range policies {
-		suggestions[i] = policy.Spec.GetName()
+		suggestions[i] = policy.Metadata.GetName()
 	}
 	return suggestions
 }
