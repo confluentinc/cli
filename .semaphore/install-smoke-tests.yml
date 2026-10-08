@@ -1,0 +1,82 @@
+version: v1.0
+name: Install Smoke Tests for Confluent CLI
+
+agent:
+  machine:
+    type: s1-prod-ubuntu24-04-amd64-2
+
+auto_cancel:
+  running:
+    when: "false"
+
+execution_time_limit:
+  minutes: 30
+
+blocks:
+  - name: linux/amd64
+    dependencies: []
+    task:
+      agent:
+        machine:
+          type: s1-prod-ubuntu24-04-amd64-2
+      jobs:
+        - name: "RPM install linux/amd64"
+          commands:
+            - checkout
+            - sem-version go $(cat .go-version)
+            - export PATH=$(go env GOPATH)/bin:$PATH
+
+            - . vault-sem-get-secret v1/ci/kv/apif/cli/slack-notifications-live-testing
+
+            - export SMOKE_OS=linux SMOKE_ARCH=amd64 SMOKE_COMMAND=rpm_install
+
+            - make build-otel-smoke-metric
+
+            - |
+              if make install-smoke-rpm; then
+                RESULT=1
+              else
+                RESULT=0
+                echo "RPM install smoke test failed on linux/amd64, sending Slack notification..."
+                curl -X POST -H "Content-type: application/json" --data '{}' "$SLACK_WEBHOOK_URL"
+              fi
+
+              # Report pass/fail metric (never fails the pipeline)
+              ./bin/otel-smoke-metric "$RESULT" || true
+
+              # Surface failure to Semaphore
+              [ "$RESULT" = "1" ]
+
+  - name: linux/arm64
+    dependencies: []
+    task:
+      agent:
+        machine:
+          type: s1-prod-ubuntu24-04-arm64-1
+      jobs:
+        - name: "RPM install linux/arm64"
+          commands:
+            - checkout
+            - sem-version go $(cat .go-version)
+            - export PATH=$(go env GOPATH)/bin:$PATH
+
+            - . vault-sem-get-secret v1/ci/kv/apif/cli/slack-notifications-live-testing
+
+            - export SMOKE_OS=linux SMOKE_ARCH=arm64 SMOKE_COMMAND=rpm_install
+
+            - make build-otel-smoke-metric
+
+            - |
+              if make install-smoke-rpm; then
+                RESULT=1
+              else
+                RESULT=0
+                echo "RPM install smoke test failed on linux/arm64, sending Slack notification..."
+                curl -X POST -H "Content-type: application/json" --data '{}' "$SLACK_WEBHOOK_URL"
+              fi
+
+              # Report pass/fail metric (never fails the pipeline)
+              ./bin/otel-smoke-metric "$RESULT" || true
+
+              # Surface failure to Semaphore
+              [ "$RESULT" = "1" ]
