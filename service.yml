@@ -27,6 +27,12 @@ semaphore:
       branch: main
       pipeline_file: .semaphore/smoke-tests.yml
       status: ACTIVE
+    - name: CLI Install Smoke Tests (Daily)
+      description: Installs the published CLI release from the YUM repo
+      at: 0 14 * * *
+      branch: main
+      pipeline_file: .semaphore/install-smoke-tests.yml
+      status: ACTIVE
 make:
   enable: false
 sonarqube:
