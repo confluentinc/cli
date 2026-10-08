@@ -53,16 +53,16 @@ func (*command) newQueryCommand(cfg *cliconfig.Config, prerunner pcmd.PreRunner)
 	cmd := &cobra.Command{
 		Use:   "query",
 		Short: "Run a bounded Flink SQL query and print its results.",
-		Long: "Run a bounded Flink SQL query, wait for it to finish, and print the results.\n\n" +
-			"Provide the SQL statement with `--sql`, or use `--file` to read it from a file.\n\n" +
-			"Unlike creating a statement, which returns a handle as soon as it's submitted (optionally waiting only " +
-			"until it starts or fails, with `--wait`) and never the rows, this command always waits for the statement " +
-			"to finish, exiting non-zero if it fails. Use it for scripts and one-time queries against a bounded, " +
+		Long: "Run a bounded Flink SQL query, wait for completion, and print the results.\n\n" +
+			"Provide the SQL statement with `--sql`, or use `--file` to read the statement from a file.\n\n" +
+			"Unlike creating a statement, which returns a handle as soon as it is submitted (or optionally waits " +
+			"until it starts or fails when using `--wait`) and never returns the rows, this command always waits for the statement " +
+			"to finish, exiting with a non-zero if it fails. Use this command for scripts and one-time queries against a bounded, " +
 			"point-in-time result set.\n\n" +
-			"With -o human (the default), only the first 100 rows are printed as a preview. Raise `--max-rows` to fetch " +
-			"more, or use -o json / -o yaml for the complete result set.\n\n" +
-			"With -o json or -o yaml, output defaults to an envelope that includes the column schema and rows. Rows alone " +
-			"don't include type information. Use --raw to return a bare array of row objects.",
+			"With `-o human` (the default), only the first 100 rows are printed as a preview. Raise `--max-rows` to fetch " +
+			"more, or use `-o json` or `-o yaml` for the complete result set.\n\n" +
+			"With `-o json` or `-o yaml`, output defaults to an envelope that includes the column schema and rows. Rows alone " +
+			"don't include type information. Use `--raw` to return a bare array of row objects.",
 		Args: cobra.NoArgs,
 		// Hidden until the flag targets an org; cfg.IsTest keeps it visible to the
 		// integration suite regardless of the (unreachable in tests) LD evaluation.
