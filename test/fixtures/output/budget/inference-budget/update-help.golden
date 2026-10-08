@@ -1,0 +1,17 @@
+Update an existing budget inference budget.
+
+Usage:
+  confluent budget inference-budget update <id> [flags]
+
+Flags:
+      --enforcement-mode string    The action taken when consumption reaches the cap. The set of values may grow over time.
+      --max-inference-usd string   The maximum inference spend permitted within the period, in US dollars as a decimal string with two fractional digits (e.g. "100.00"). A string rather than a float so the currency amount is exact.
+      --period string              The period over which inference consumption accumulates and resets. The set of values may grow over time.
+      --scope string               The scope of resources whose inference consumption counts against this budget. The set of values may grow over time.
+      --context string             CLI context name.
+  -o, --output string              Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
