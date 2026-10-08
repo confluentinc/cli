@@ -183,6 +183,16 @@ live-test-smoke:
 build-otel-smoke-metric:
 	go build -o ./bin/otel-smoke-metric ./cmd/otel-smoke-metric
 
+INSTALL_SMOKE_IMAGE ?= registry.access.redhat.com/ubi9/ubi
+
+# Expects the latest release listed by install.sh unless EXPECTED_VERSION is set.
+.PHONY: install-smoke-rpm
+install-smoke-rpm:
+	@version="$${EXPECTED_VERSION:-v$$(./install.sh -l | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$$' | tail -1)}"; \
+	[ "$$version" != "v" ] || { echo "Unable to determine the latest release with \`./install.sh -l\`"; exit 1; }; \
+	echo "Expecting confluent-cli $$version"; \
+	docker run --rm -e EXPECTED_VERSION="$$version" -v "$(CURDIR)/test/install:/test:ro" $(INSTALL_SMOKE_IMAGE) /test/rpm.sh
+
 .PHONY: live-test-multicloud
 live-test-multicloud:
 	@CLI_LIVE_TEST_VARIANTS="aws:us-east-1:basic,gcp:us-east1:basic,azure:eastus:basic" \
