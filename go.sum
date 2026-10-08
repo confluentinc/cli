@@ -171,8 +171,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0 h1:8fWyLwMuy8ec0MVF5Avd5
 github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0/go.mod h1:wNa9Qg2e2v/+PQsUyKh+qB22hhLkPR6Ahy6rP+1jmGI=
 github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0 h1:a2EaPzwLEYkgil7rlsqRUlt994PMGubtdgRrF8Kbo10=
 github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0/go.mod h1:c7nUjQ5pQCqz4LagF1qatcj5NX4icoiSTaCxfdxAwsY=
-github.com/confluentinc/ccloud-sdk-go-v2/budget v0.1.0 h1:Vy7WI4qPSF/Ke+1X49KgiHCUhOIDT78eYgoCqWKO25E=
-github.com/confluentinc/ccloud-sdk-go-v2/budget v0.1.0/go.mod h1:YnDo5FvvnFox2YciATXqIpFdMY2woBmN92Q6fvaMKGY=
+github.com/confluentinc/ccloud-sdk-go-v2/budget v0.2.0 h1:3zmzbq3X6H73INME0EI5SjFLOHfzDSi6y1IgxgkVyIY=
+github.com/confluentinc/ccloud-sdk-go-v2/budget v0.2.0/go.mod h1:Iy5/qGQcZXOh+oyFVmsOJD7YBo5S3BOy16x8Xr4gELI=
 github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.9 h1:TFz/gJ0tPnTsEE56xJwLtU5ykTpfPv0vZwI1jS1QUMg=
 github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.9/go.mod h1:evP8lAu09jGJMQX54bUaJxmT17eQcN4GsmzjTAZst6w=
 github.com/confluentinc/ccloud-sdk-go-v2/cam v0.5.0 h1:/YlT4YIG6G7DhEbY3i+SvOiO4+jzl7ZtXhJ/43IPyh8=
