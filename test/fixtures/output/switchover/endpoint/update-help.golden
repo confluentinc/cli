@@ -1,4 +1,4 @@
-Update a switchover endpoint's display name. This is the only mutable field.
+Update an existing switchover endpoint.
 
 Usage:
   confluent switchover endpoint update <id> [flags]
@@ -17,4 +17,4 @@ Flags:
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
-  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, and -vvvv for trace).

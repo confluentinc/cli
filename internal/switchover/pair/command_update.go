@@ -12,8 +12,7 @@ import (
 func (c *command) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <id>",
-		Short: "Update a switchover pair.",
-		Long:  "Update a switchover pair's display name. This is the only mutable field.",
+		Short: "Update an existing switchover pair.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.update,
 		Example: examples.BuildExampleString(

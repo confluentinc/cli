@@ -17,7 +17,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <display-name>",
 		Short: "Create a switchover endpoint.",
-		Long:  "Create a switchover Endpoint bound to a switchover pair.",
+		Long:  "Create a switchover endpoint bound to a switchover pair.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
@@ -29,7 +29,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("parent-resource-crn", "", "The CRN of the switchover pair this endpoint is bound to.")
-	cmd.Flags().StringArray("endpoint", nil, `An endpoint side, in the form "name=<name>,type=<private|public>[,network=<network-crn>][,access-point=<access-point-crn>]". network and access-point are full CRNs. Must be specified exactly twice.`)
+	cmd.Flags().StringArray("endpoint", nil, `An endpoint in the form "name=<name>,type=<private|public>[,network=<network-crn>][,access-point=<access-point-crn>]". Network and access-point are full CRNs. Must be specified exactly twice.`)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)

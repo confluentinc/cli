@@ -16,7 +16,7 @@ func (c *command) newFailoverCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "failover <id>",
 		Short: "Trigger a failover or switchback on a switchover pair.",
-		Long:  "Trigger a failover (or switchback) on a switchover pair. This redirects live traffic between the pair's members.",
+		Long:  "Trigger a failover or switchback on a switchover pair. This redirects live traffic between the pair's members.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.failover,
 		Example: examples.BuildExampleString(
@@ -27,8 +27,8 @@ func (c *command) newFailoverCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("active-member", "", "The name of the member to promote to active. Required for PLANNED and UNPLANNED failovers; must be omitted for RESTORE.")
-	cmd.Flags().String("failover-type", "PLANNED", "The failover semantics to apply: PLANNED, UNPLANNED, or RESTORE.")
+	cmd.Flags().String("active-member", "", "Name of the member to promote to active status. Required for PLANNED and UNPLANNED failover types; Omit for RESTORE.")
+	cmd.Flags().String("failover-type", "PLANNED", "Type of failover operation to perform. Allowed values are PLANNED, UNPLANNED, RESTORE.")
 	cmd.Flags().Bool("force", false, "Skip the confirmation prompt.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
