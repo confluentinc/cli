@@ -1,4 +1,4 @@
-Trigger a failover (or switchback) on a switchover pair. This redirects live traffic between the pair's members.
+Trigger a failover or switchback on a switchover pair. This redirects live traffic between the pair's members.
 
 Usage:
   confluent switchover pair failover <id> [flags]
@@ -9,8 +9,8 @@ Fail switchover pair "sw-123456" over to its "east" member.
   $ confluent switchover pair failover sw-123456 --active-member east
 
 Flags:
-      --active-member string   The name of the member to promote to active. Required for PLANNED and UNPLANNED failovers; must be omitted for RESTORE.
-      --failover-type string   The failover semantics to apply: PLANNED, UNPLANNED, or RESTORE. (default "PLANNED")
+      --active-member string   Name of the member to promote to active status. Required for PLANNED and UNPLANNED failover types; Omit for RESTORE.
+      --failover-type string   Type of failover operation to perform. Allowed values are PLANNED, UNPLANNED, RESTORE. (default "PLANNED")
       --force                  Skip the confirmation prompt.
       --environment string     Environment ID.
       --context string         CLI context name.
@@ -19,4 +19,4 @@ Flags:
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
-  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, and -vvvv for trace).

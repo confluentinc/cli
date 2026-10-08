@@ -8,11 +8,11 @@ Available Commands:
   delete      Delete one or more switchover endpoints.
   describe    Describe a switchover endpoint.
   list        List switchover endpoints.
-  update      Update a switchover endpoint.
+  update      Update an existing switchover endpoint.
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
-  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, and -vvvv for trace).
 
 Use "confluent switchover endpoint [command] --help" for more information about a command.

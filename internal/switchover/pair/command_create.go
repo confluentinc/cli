@@ -29,7 +29,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringArray("member", nil, `A member of the pair, in the form "name=<name>,crn=<member-crn>". The CRN carries the member's own environment, so the two members may live in different environments. Must be specified exactly twice.`)
-	cmd.Flags().String("active-member", "", "The name of the member that starts as active; must match one of the --member names.")
+	cmd.Flags().String("active-member", "", "The name of the member that starts as active. Must match one of the --member names.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)

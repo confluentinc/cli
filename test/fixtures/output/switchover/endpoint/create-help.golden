@@ -1,4 +1,4 @@
-Create a switchover Endpoint bound to a switchover pair.
+Create a switchover endpoint bound to a switchover pair.
 
 Usage:
   confluent switchover endpoint create <display-name> [flags]
@@ -10,7 +10,7 @@ Create switchover endpoint "prod-kafka-dr-endpoint" for switchover pair "sw-1234
 
 Flags:
       --parent-resource-crn string   REQUIRED: The CRN of the switchover pair this endpoint is bound to.
-      --endpoint stringArray         REQUIRED: An endpoint side, in the form "name=<name>,type=<private|public>[,network=<network-crn>][,access-point=<access-point-crn>]". network and access-point are full CRNs. Must be specified exactly twice.
+      --endpoint stringArray         REQUIRED: An endpoint in the form "name=<name>,type=<private|public>[,network=<network-crn>][,access-point=<access-point-crn>]". Network and access-point are full CRNs. Must be specified exactly twice.
       --environment string           Environment ID.
       --context string               CLI context name.
   -o, --output string                Specify the output format as "human", "json", or "yaml". (default "human")
@@ -18,4 +18,4 @@ Flags:
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
-  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, and -vvvv for trace).
