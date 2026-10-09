@@ -22,8 +22,6 @@ type policyOut struct {
 	Type              string                                                    `human:"Type" serialized:"type"`
 	ScopeResourceName string                                                    `human:"Scope Resource Name" serialized:"scope_resource_name"`
 	Mode              string                                                    `human:"Mode" serialized:"mode"`
-	ErrorMessage      string                                                    `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
-	Phase             string                                                    `human:"Phase" serialized:"phase"`
 	Rules             []configurationcontrolv1.ConfigurationcontrolV1PolicyRule `human:"-" serialized:"rules"`
 }
 
@@ -55,8 +53,6 @@ func printPolicy(cmd *cobra.Command, policy configurationcontrolv1.Configuration
 		Type:              policy.Spec.GetType(),
 		ScopeResourceName: policy.Spec.Scope.GetResourceName(),
 		Mode:              policy.Spec.GetMode(),
-		ErrorMessage:      policy.Status.GetErrorMessage(),
-		Phase:             policy.Status.GetPhase(),
 		Rules:             policy.Spec.GetRules(),
 	}
 	table.Add(out)

@@ -3,7 +3,6 @@
   type: CompressionPolicy
   scope_resource_name: crn://confluent.cloud/organization=11111111-1111-1111-1111-111111111111/environment=env-456xy/cloud-cluster=lkc-123abc/kafka=lkc-123abc
   mode: AUDIT
-  phase: READY
   rules:
     - name: cap-compression-to-zstd-or-lz4
       match: resource.config["compression.type"] in ["zstd", "lz4"]
