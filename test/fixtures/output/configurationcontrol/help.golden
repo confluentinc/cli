@@ -1,4 +1,4 @@
-Manage Configuration Control.
+Manage Configuration Control resources.
 
 Usage:
   confluent configurationcontrol [command]

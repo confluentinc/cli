@@ -12,7 +12,7 @@ import (
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "configurationcontrol",
-		Short: "Manage Configuration Control.",
+		Short: "Manage Configuration Control resources.",
 	}
 
 	cmd.AddCommand(
