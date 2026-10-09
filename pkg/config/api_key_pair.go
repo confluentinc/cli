@@ -9,9 +9,9 @@ import (
 // APIKeyPair holds an API Key and Secret.
 type APIKeyPair struct {
 	Key    string `json:"api_key,omitempty"`
-	Secret string `json:"api_secret,omitempty"`
-	Salt   []byte `json:"salt,omitempty"`
-	Nonce  []byte `json:"nonce,omitempty"`
+	Secret string `json:"-"`
+	Salt   []byte `json:"-"`
+	Nonce  []byte `json:"-"`
 }
 
 func (c *APIKeyPair) DecryptSecret() error {
@@ -28,6 +28,13 @@ func (c *APIKeyPair) DecryptSecret() error {
 }
 
 func (c *APIKeyPair) EncryptSecret() error {
+	// An empty secret must never reach secret.Encrypt: DPAPI (CryptProtectData) rejects empty
+	// input with "The parameter is incorrect." on Windows, while AES-GCM would silently store
+	// ciphertext-of-"". A credential with no API secret stays empty and derives no salt/nonce.
+	if c.Secret == "" {
+		return nil
+	}
+
 	if c.Salt == nil || c.Nonce == nil {
 		salt, nonce, err := secret.GenerateSaltAndNonce()
 		if err != nil {
