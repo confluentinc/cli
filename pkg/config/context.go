@@ -24,7 +24,7 @@ type Context struct {
 	Environments        map[string]*EnvironmentContext `json:"environments,omitempty"`
 	KafkaClusterContext *KafkaClusterContext           `json:"kafka_cluster_context"`
 	LastOrgId           string                         `json:"last_org_id,omitempty"`
-	FeatureFlags        *FeatureFlags                  `json:"feature_flags,omitempty"`
+	FeatureFlags        *FeatureFlags                  `json:"-"`
 	IsMFA               bool                           `json:"is_mfa,omitempty"`
 	// GlobalAPIKeys stores org-scoped (Global) API key pairs that are not tied to a single resource.
 	GlobalAPIKeys map[string]*APIKeyPair `json:"global_api_keys,omitempty"`

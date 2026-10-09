@@ -80,7 +80,7 @@ type Config struct {
 	DisablePluginsOnceWindows bool       `json:"disable_plugins_once_windows,omitempty"`
 	DisableUpdateCheck        bool       `json:"disable_update_check"`
 	EnableColor               bool       `json:"enable_color"`
-	LastUpdateCheckAt         *time.Time `json:"last_update_check_at,omitempty"`
+	LastUpdateCheckAt         *time.Time `json:"-"`
 
 	Platforms        map[string]*Platform        `json:"platforms,omitempty"`
 	Credentials      map[string]*Credential      `json:"credentials,omitempty"`
@@ -231,6 +231,12 @@ func (c *Config) Load() error {
 		return err
 	}
 
+	// Load the cache before the migration block below: a migration can trigger a
+	// Save(), which also persists the cache. Saving before the cache is loaded
+	// would overwrite the on-disk cache (update-check timestamp and feature flags)
+	// with zero-value fields.
+	c.loadCache()
+
 	var save bool
 	for _, context := range c.Contexts {
 		// Migrate deprecated NetrcMachineName to MachineName
@@ -264,6 +270,61 @@ func (c *Config) Load() error {
 
 	// the non-fatal guarantee above covers only the migration save, not saves Validate() triggers
 	return c.Validate()
+}
+
+// updateCheckCache is the disposable cache-store representation of the fields split
+// out of Config below. loadCache/saveCache round-trip them through the cache store
+// instead of the config file.
+type updateCheckCache struct {
+	LastUpdateCheckAt *time.Time `json:"last_update_check_at,omitempty"`
+}
+
+func (c *Config) loadCache() {
+	s := newCacheStore()
+	var uc updateCheckCache
+	if s.readJSON("update_check.json", &uc) {
+		c.LastUpdateCheckAt = uc.LastUpdateCheckAt
+	}
+	c.loadFeatureFlagCache(s)
+}
+
+// saveCache persists the cache-store fields best-effort: CacheDir is disposable and
+// non-authoritative, so a write failure here (e.g. a blocked/full/permission-denied
+// cache dir) must never fail an otherwise-successful Save().
+func (c *Config) saveCache() {
+	s := newCacheStore()
+	if err := s.writeJSON("update_check.json", updateCheckCache{LastUpdateCheckAt: c.LastUpdateCheckAt}); err != nil {
+		log.CliLogger.Warnf("unable to persist cache: %v", err)
+	}
+	if err := c.saveFeatureFlagCache(s); err != nil {
+		log.CliLogger.Warnf("unable to persist cache: %v", err)
+	}
+}
+
+// loadFeatureFlagCache restores each context's FeatureFlags from the cache store, keyed
+// by context name.
+func (c *Config) loadFeatureFlagCache(s *cacheStore) {
+	flags := map[string]*FeatureFlags{}
+	if !s.readJSON("feature_flags.json", &flags) {
+		return
+	}
+	for name, ctx := range c.Contexts {
+		if ff, ok := flags[name]; ok {
+			ctx.FeatureFlags = ff
+		}
+	}
+}
+
+func (c *Config) saveFeatureFlagCache(s *cacheStore) error {
+	flags := map[string]*FeatureFlags{}
+	for name, ctx := range c.Contexts {
+		if ctx.FeatureFlags != nil {
+			flags[name] = ctx.FeatureFlags
+		}
+	}
+	// Always rewrite the whole map, even when empty: a context whose flags were
+	// cleared or deleted must not leave a stale entry that Load would resurrect.
+	return s.writeJSON("feature_flags.json", flags)
 }
 
 // wireContexts rebuilds the cross-references Load() relies on: each context's
@@ -344,8 +405,12 @@ func (c *Config) snapshotBaseline() error {
 // copy shares no pointers with c, so wiring or encrypting it never mutates c.
 // A copy failure is returned, never replaced by an empty config: the merge would read an
 // empty ours or ancestor as every key deleted and wipe the file.
+// marshalPersisted is a test seam for deepCopyPersisted's marshal: no persisted field can hold an
+// unmarshalable value, so a test swaps it to reach the failure path.
+var marshalPersisted = json.Marshal
+
 func (c *Config) deepCopyPersisted() (*Config, error) {
-	data, err := json.Marshal(c)
+	data, err := marshalPersisted(c)
 	if err != nil {
 		return nil, fmt.Errorf("unable to copy config: %w", err)
 	}
@@ -380,7 +445,13 @@ func (c *Config) Save() error {
 		return err
 	}
 	defer func() { _ = lock.unlock() }()
-	return c.saveLocked()
+	if err := c.saveLocked(); err != nil {
+		return err
+	}
+	// Persist the disposable cache once, after the config write succeeds and while the
+	// lock is still held.
+	c.saveCache()
+	return nil
 }
 
 // saveLocked runs the read-merge-write under an already-held lock.
@@ -1065,8 +1136,7 @@ func EnsureStateDir() (string, error) {
 // GetDefaultFilename swallows a missing home directory because it backs a flag default built at
 // command-construction time, where there is no error to return. Prefer StateDir where you can.
 func GetDefaultFilename() string {
-	home, _ := os.UserHomeDir()
-	return filepath.Join(home, StateDirName(), "config.json")
+	return stateDirPath("config.json")
 }
 
 func (c *Config) CheckIsOnPremLogin() error {
