@@ -1,11 +1,11 @@
-Manage Confluent Cloud configurationcontrol policies.
+Manage Confluent Cloud Configuration Control policies.
 
 Usage:
   confluent configurationcontrol policy [command]
 
 Available Commands:
-  describe    Describe a configurationcontrol policy.
-  list        List configurationcontrol policies.
+  describe    Describe a Configuration Control policy.
+  list        List Configuration Control policies.
 
 Global Flags:
   -h, --help            Show help for this command.

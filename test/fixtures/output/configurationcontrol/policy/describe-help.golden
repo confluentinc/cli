@@ -1,4 +1,4 @@
-Describe a configurationcontrol policy.
+Describe a Configuration Control policy.
 
 Usage:
   confluent configurationcontrol policy describe <name> [flags]

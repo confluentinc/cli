@@ -28,8 +28,8 @@ type policyOut struct {
 func newPolicyCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command { //nolint:unparam
 	cmd := &cobra.Command{
 		Use:         "policy",
-		Short:       "Manage Confluent Cloud configurationcontrol policies.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Short:       "Manage Confluent Cloud Configuration Control policies.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
 	c := &policyCommand{

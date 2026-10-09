@@ -1,4 +1,4 @@
-List configurationcontrol policies.
+List Configuration Control policies.
 
 Usage:
   confluent configurationcontrol policy list [flags]

@@ -12,7 +12,7 @@ import (
 func (c *policyCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List configurationcontrol policies.",
+		Short: "List Configuration Control policies.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}
