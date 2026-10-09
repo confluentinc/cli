@@ -6,6 +6,9 @@
 /prebuilt/
 /test/bin/
 /test/coverage/
+/test/cuj/agents/
+/test/cuj/bin/
+/test/cuj/runs/
 /test/live/bin/
 /vendor/
 

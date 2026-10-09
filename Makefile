@@ -240,3 +240,22 @@ coverage: ## Merge coverage data from unit and integration tests into coverage.t
 	@tail -n +2 coverage.integration.out >> coverage.txt
 	@echo "Coverage data saved to: coverage.txt"
 	@artifact push workflow coverage.txt
+
+.PHONY: build-for-cuj-test
+build-for-cuj-test:
+	go build -ldflags="-s -w -X main.disableUpdates=true" -o test/cuj/bin/confluent ./cmd/confluent
+
+CLI_CUJ_CLAUDE_VERSION := 2.1.282
+CUJ_AGENTS_STAMP := test/cuj/agents/.installed-claude-$(CLI_CUJ_CLAUDE_VERSION)
+
+.PHONY: install-cuj-agents
+install-cuj-agents: $(CUJ_AGENTS_STAMP)
+
+$(CUJ_AGENTS_STAMP):
+	rm -rf test/cuj/agents
+	npm install --prefix test/cuj/agents --no-audit --no-fund @anthropic-ai/claude-code@$(CLI_CUJ_CLAUDE_VERSION)
+	touch $@
+
+.PHONY: cuj-test
+cuj-test: build-for-cuj-test install-cuj-agents
+	CLI_CUJ_TEST=1 go test ./test/cuj/ -v -tags=cuj_test -timeout 120m $(CLI_CUJ_TEST_ARGS)
