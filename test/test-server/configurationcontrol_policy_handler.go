@@ -25,6 +25,7 @@ func handleConfigurationcontrolV1Policies(t *testing.T) http.HandlerFunc {
 			policyList := &configurationcontrolv1.ConfigurationcontrolV1PolicyList{
 				Data: []configurationcontrolv1.ConfigurationcontrolV1Policy{policy},
 			}
+			setPageToken(policyList, &policyList.Metadata, r.URL)
 
 			err := json.NewEncoder(w).Encode(policyList)
 			require.NoError(t, err)

@@ -4,7 +4,7 @@ Usage:
   confluent configurationcontrol [command]
 
 Available Commands:
-  policy      Manage Confluent Cloud configurationcontrol policies.
+  policy      Manage Confluent Cloud Configuration Control policies.
 
 Global Flags:
   -h, --help            Show help for this command.
