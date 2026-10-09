@@ -5,6 +5,7 @@
 package live
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -12,6 +13,12 @@ func (s *CLILiveTestSuite) TestScimTokenCRUDLive() {
 	t := s.T()
 	t.Parallel()
 	state := s.setupTestContext(t)
+
+	// SCIM tokens can only be managed in an organization with SCIM enabled. Skip before registering
+	// the cleanup, which would otherwise fail on the token ID that was never captured.
+	if output, err := s.tryRunRawCommand("organization scim-token list", []string{homeEnvVar(state.homeDir)}, "", 0); err != nil && strings.Contains(output, "SCIM is not enabled for the organization") {
+		t.Skip("Skipping: SCIM is not enabled for the live test organization")
+	}
 
 	// Cleanup (LIFO — execution is reverse-registration order)
 	s.registerCleanup(t, "organization scim-token delete {{.scim_token_id}} --force", state)
