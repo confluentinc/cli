@@ -260,6 +260,42 @@ func TestSave_ConcurrentSameContextDifferentFields_NoLostWrite(t *testing.T) {
 		"the concurrent Kafka-cluster change must survive")
 }
 
+// Two sessions loaded before either touched the current environment, so each lazily
+// creates the same env context. The later save's untouched (zero) active cluster must
+// not wipe the earlier session's `kafka cluster use` selection.
+func TestSave_ConcurrentEnvContextCreation_KeepsActiveCluster(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	newSavedConfig(t, path)
+	seed := loadDecrypted(t, path)
+	seed.Contexts["ctx"].CurrentEnvironment = "env-596"
+	seed.Contexts["ctx"].KafkaClusterContext = &KafkaClusterContext{
+		EnvContext:       true,
+		KafkaEnvContexts: map[string]*KafkaEnvContext{"env-a": {KafkaClusterConfigs: map[string]*KafkaClusterConfig{}}},
+		Context:          seed.Contexts["ctx"],
+	}
+	require.NoError(t, seed.Save())
+	a := loadDecrypted(t, path)
+	b := loadDecrypted(t, path)
+
+	aKafka := a.Contexts["ctx"].KafkaClusterContext // like `confluent kafka cluster use lkc-123`
+	aKafka.AddKafkaClusterConfig(&KafkaClusterConfig{ID: "lkc-123", Name: "a", APIKeys: map[string]*APIKeyPair{}})
+	aKafka.SetActiveKafkaCluster("lkc-123")
+	require.NoError(t, a.Save())
+	b.Contexts["ctx"].KafkaClusterContext.AddKafkaClusterConfig(&KafkaClusterConfig{ // like `confluent api-key store`
+		ID:      "lkc-cool1",
+		Name:    "b",
+		APIKeys: map[string]*APIKeyPair{"key": {Key: "key", Secret: "secret"}},
+	})
+	require.NoError(t, b.Save())
+
+	final := loadDecrypted(t, path)
+	finalKafka := final.Contexts["ctx"].KafkaClusterContext
+	require.Equal(t, "lkc-123", finalKafka.GetActiveKafkaClusterId(),
+		"the concurrent session's untouched active cluster must not wipe this selection")
+	require.NotNil(t, finalKafka.GetKafkaClusterConfig("lkc-cool1"), "the concurrent API key's cluster must survive")
+}
+
 // A session that never touched a shared credential must not clobber another
 // session's concurrent update to it. The live copy is decrypted while the baseline
 // is encrypted, so a representation-blind diff wrongly reads the credential as

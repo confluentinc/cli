@@ -147,3 +147,30 @@ func TestMergeValue_RecursesDeletesAndConcurrentAdds(t *testing.T) {
 	require.Contains(t, got, "mine", "our add must survive")
 	require.Contains(t, got, "x", "a concurrent add must survive")
 }
+
+// Two sessions lazily create the same env context from a base that lacks it. Our copy's
+// untouched fields are zero values, not edits, so they must not wipe disk's real value.
+func TestMergeValue_BothAddedZeroValueDoesNotOverrideDisk(t *testing.T) {
+	base := map[string]any{"kafka_environment_contexts": map[string]any{}}
+	ours := map[string]any{"kafka_environment_contexts": map[string]any{
+		"env-596": map[string]any{"active_kafka": "", "active_kafka_endpoint": ""}, // we never set a cluster
+	}}
+	disk := map[string]any{"kafka_environment_contexts": map[string]any{
+		"env-596": map[string]any{"active_kafka": "lkc-123", "active_kafka_endpoint": ""}, // another session ran `kafka cluster use`
+	}}
+
+	got := mergeValue(base, ours, disk).(map[string]any)
+
+	envContext := got["kafka_environment_contexts"].(map[string]any)["env-596"].(map[string]any)
+	require.Equal(t, "lkc-123", envContext["active_kafka"], "our zero value must not override disk's concurrent selection")
+}
+
+func TestMergeValue_BothAddedNonZeroValuesKeepOurs(t *testing.T) {
+	base := map[string]any{}
+	ours := map[string]any{"env": map[string]any{"active_kafka": "lkc-ours"}}
+	disk := map[string]any{"env": map[string]any{"active_kafka": "lkc-disk"}}
+
+	got := mergeValue(base, ours, disk).(map[string]any)
+
+	require.Equal(t, "lkc-ours", got["env"].(map[string]any)["active_kafka"], "a real value we set still wins a concurrent add")
+}

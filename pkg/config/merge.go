@@ -127,11 +127,16 @@ func mergeMapDeep[V any](base, ours, disk map[string]V) (map[string]V, error) {
 // mergeValue three-way-merges one JSON value. base is the common ancestor, ours
 // our value, disk the on-disk value. Objects recurse key by key so nested
 // concurrent edits both survive; any other value (scalar, array, null) is atomic
-// and takes ours when we changed it from base, else disk's.
+// and takes ours when we changed it from base, else disk's (but our zero value
+// never overrides disk's real one when base lacks the key).
 func mergeValue(base, ours, disk any) any {
 	oursObj, oursIsObj := ours.(map[string]any)
 	diskObj, diskIsObj := disk.(map[string]any)
 	if !oursIsObj || !diskIsObj {
+		// both sides added it: our zero is a new object's untouched field, not an edit
+		if base == nil && isZeroJSON(ours) && !isZeroJSON(disk) {
+			return disk
+		}
 		if !reflect.DeepEqual(base, ours) {
 			return ours
 		}
@@ -175,6 +180,26 @@ func mergeValue(base, ours, disk any) any {
 		}
 	}
 	return out
+}
+
+// isZeroJSON reports whether a generic JSON value is its type's zero value.
+func isZeroJSON(v any) bool {
+	switch v := v.(type) {
+	case nil:
+		return true
+	case string:
+		return v == ""
+	case bool:
+		return !v
+	case json.Number:
+		f, err := v.Float64()
+		return err == nil && f == 0
+	case map[string]any:
+		return len(v) == 0
+	case []any:
+		return len(v) == 0
+	}
+	return false
 }
 
 // toTree renders v as a generic JSON value. UseNumber keeps numbers as exact
