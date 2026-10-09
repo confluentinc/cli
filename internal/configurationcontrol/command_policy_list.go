@@ -41,8 +41,6 @@ func (c *policyCommand) list(cmd *cobra.Command, _ []string) error {
 			Type:              policy.Spec.GetType(),
 			ScopeResourceName: policy.Spec.Scope.GetResourceName(),
 			Mode:              policy.Spec.GetMode(),
-			ErrorMessage:      policy.Status.GetErrorMessage(),
-			Phase:             policy.Status.GetPhase(),
 			Rules:             policy.Spec.GetRules(),
 		}
 		list.Add(out)
