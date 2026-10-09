@@ -1,9 +1,12 @@
 package config
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/v4/pkg/secret"
 )
 
 // helper: a config with one platform keyed by name
@@ -163,6 +166,7 @@ func TestMergeValue_BothAddedZeroValueDoesNotOverrideDisk(t *testing.T) {
 
 	envContext := got["kafka_environment_contexts"].(map[string]any)["env-596"].(map[string]any)
 	require.Equal(t, "lkc-123", envContext["active_kafka"], "our zero value must not override disk's concurrent selection")
+	require.Equal(t, "", envContext["active_kafka_endpoint"], "a field zero on both sides stays zero")
 }
 
 func TestMergeValue_BothAddedNonZeroValuesKeepOurs(t *testing.T) {
@@ -173,4 +177,64 @@ func TestMergeValue_BothAddedNonZeroValuesKeepOurs(t *testing.T) {
 	got := mergeValue(base, ours, disk).(map[string]any)
 
 	require.Equal(t, "lkc-ours", got["env"].(map[string]any)["active_kafka"], "a real value we set still wins a concurrent add")
+}
+
+// The zero rule applies only when the ancestor lacks the key: clearing a value base held
+// (logout, cluster delete) is a real edit and must still win.
+func TestMergeValue_ClearingAValueBaseHeldStillWins(t *testing.T) {
+	for _, diskValue := range []string{"lkc-1", "lkc-2"} {
+		t.Run(diskValue, func(t *testing.T) {
+			base := map[string]any{"env": map[string]any{"active_kafka": "lkc-1"}}
+			ours := map[string]any{"env": map[string]any{"active_kafka": ""}} // we cleared it
+			disk := map[string]any{"env": map[string]any{"active_kafka": diskValue}}
+
+			got := mergeValue(base, ours, disk).(map[string]any)
+
+			require.Equal(t, "", got["env"].(map[string]any)["active_kafka"], "our clear of a value base held must win")
+		})
+	}
+}
+
+func TestIsZeroJSON(t *testing.T) {
+	tests := []struct {
+		value any
+		want  bool
+	}{
+		{nil, true},
+		{"", true},
+		{false, true},
+		{json.Number("0"), true},
+		{json.Number("0.0"), true},
+		{[]any{}, true},
+		{map[string]any{}, true},
+		{"x", false},
+		{true, false},
+		{json.Number("1"), false},
+		{[]any{"x"}, false},
+		{map[string]any{"k": "v"}, false},
+	}
+	for _, test := range tests {
+		require.Equal(t, test.want, isZeroJSON(test.value), "isZeroJSON(%#v)", test.value)
+	}
+}
+
+// A state both sides created is one login's crypto unit: both tokens share its salt and
+// nonce. A field-wise merge that keeps our salt but takes disk's refresh ciphertext (our
+// refresh token is empty) produces a state that can never be decrypted.
+func TestThreeWayMerge_BothAddedContextStateStaysDecryptable(t *testing.T) {
+	salt, nonce, err := secret.GenerateSaltAndNonce()
+	require.NoError(t, err)
+	base := New()
+	ours := New()
+	ours.Contexts["ctx"] = &Context{Name: "ctx"}
+	ours.ContextStates["ctx"] = &ContextState{AuthToken: "header.payload.ours", Salt: salt, Nonce: nonce}
+	disk := New()
+	disk.Contexts["ctx"] = &Context{Name: "ctx"}
+	disk.ContextStates["ctx"] = encryptedState(t, "header.payload.signature", "v1.refreshtoken")
+
+	got, err := threeWayMerge(base, ours, disk)
+	require.NoError(t, err)
+
+	require.NoError(t, got.ContextStates["ctx"].DecryptAuthRefreshToken("ctx"),
+		"a concurrently created state must keep its tokens with the salt and nonce they were encrypted under")
 }

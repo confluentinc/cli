@@ -49,6 +49,14 @@ func threeWayMerge(base, ours, disk *Config) (*Config, error) {
 	if out.ContextStates, err = mergeMapDeep(base.ContextStates, ours.ContextStates, disk.ContextStates); err != nil {
 		return nil, err
 	}
+	// A state the ancestor lacks is one login's crypto unit (both tokens share its salt and
+	// nonce), so a field-wise merge with a concurrent login's state could pair our salt with
+	// disk's ciphertext. Keep ours whole.
+	for name, state := range ours.ContextStates {
+		if base.ContextStates[name] == nil {
+			out.ContextStates[name] = state
+		}
+	}
 	// Contexts and ContextStates are two halves of one persisted unit, but the merges
 	// above run per map. A context this process edited survives while a concurrent
 	// delete drops its unedited state (or the reverse), leaving an orphan that Validate
@@ -128,12 +136,12 @@ func mergeMapDeep[V any](base, ours, disk map[string]V) (map[string]V, error) {
 // our value, disk the on-disk value. Objects recurse key by key so nested
 // concurrent edits both survive; any other value (scalar, array, null) is atomic
 // and takes ours when we changed it from base, else disk's (but our zero value
-// never overrides disk's real one when base lacks the key).
+// never overrides disk's real one when base lacks the key or holds null).
 func mergeValue(base, ours, disk any) any {
 	oursObj, oursIsObj := ours.(map[string]any)
 	diskObj, diskIsObj := disk.(map[string]any)
 	if !oursIsObj || !diskIsObj {
-		// both sides added it: our zero is a new object's untouched field, not an edit
+		// base lacks it or holds null: our zero is a new object's untouched field, not an edit
 		if base == nil && isZeroJSON(ours) && !isZeroJSON(disk) {
 			return disk
 		}

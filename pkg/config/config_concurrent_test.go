@@ -10,6 +10,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/v4/pkg/secret"
 )
 
 // each goroutine adds a different platform concurrently; before the lock and merge
@@ -294,6 +296,41 @@ func TestSave_ConcurrentEnvContextCreation_KeepsActiveCluster(t *testing.T) {
 	require.Equal(t, "lkc-123", finalKafka.GetActiveKafkaClusterId(),
 		"the concurrent session's untouched active cluster must not wipe this selection")
 	require.NotNil(t, finalKafka.GetKafkaClusterConfig("lkc-cool1"), "the concurrent API key's cluster must survive")
+}
+
+// Two first-time logins to the same new context race; the later one gets no refresh
+// token. Each login generates its own salt and nonce, so the stored state must keep one
+// login's tokens with that login's salt and nonce, or every later command fails to decrypt.
+func TestSave_ConcurrentFirstLoginsToSameContext_StateStaysDecryptable(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	newSavedConfig(t, path)
+	a := loadDecrypted(t, path)
+	b := loadDecrypted(t, path)
+
+	addLoginContext(t, a, "new", "header.payload.a", "v1.refresh-a")
+	require.NoError(t, a.Save())
+	addLoginContext(t, b, "new", "header.payload.b", "") // e.g. a login that returns no refresh token
+	require.NoError(t, b.Save())
+
+	final := New()
+	final.Filename = path
+	require.NoError(t, final.Load())
+	require.NoError(t, final.DecryptContextStates(), "the new context's state must stay decryptable")
+}
+
+// addLoginContext adds a context and makes it current with a fresh salt and nonce per
+// state, as a login does.
+func addLoginContext(t *testing.T, c *Config, name, authToken, refreshToken string) {
+	t.Helper()
+	addContextWithToken(c, name, authToken)
+	salt, nonce, err := secret.GenerateSaltAndNonce()
+	require.NoError(t, err)
+	state := c.ContextStates[name]
+	state.AuthRefreshToken = refreshToken
+	state.Salt = salt
+	state.Nonce = nonce
+	c.CurrentContext = name
 }
 
 // A session that never touched a shared credential must not clobber another
