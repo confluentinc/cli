@@ -186,6 +186,7 @@ var properNouns = []string{
 	"Connect",
 	"Control Center",
 	"CRL",
+	"Configuration Control",
 	"Custom Connect Plugin",
 	"Data Encryption Key",
 	"Databricks",
