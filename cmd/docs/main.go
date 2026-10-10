@@ -34,7 +34,7 @@ func main() {
 	// Generate documentation for both subsets of commands: cloud and on-prem
 	configs := []*config.Config{
 		{CurrentContext: "Cloud", Contexts: map[string]*config.Context{"Cloud": {PlatformName: "https://confluent.cloud"}}},
-		{CurrentContext: "On-Premises", Contexts: map[string]*config.Context{"On-Premises": {PlatformName: "https://example.com"}}},
+		{CurrentContext: "Confluent Platform", Contexts: map[string]*config.Context{"Confluent Platform": {PlatformName: "https://example.com"}}},
 	}
 
 	tabs := make([]docs.Tab, len(configs))
