@@ -17,6 +17,7 @@ import (
 	"github.com/confluentinc/cli/v4/internal/asyncapi"
 	auditlog "github.com/confluentinc/cli/v4/internal/audit-log"
 	"github.com/confluentinc/cli/v4/internal/billing"
+	"github.com/confluentinc/cli/v4/internal/budget"
 	"github.com/confluentinc/cli/v4/internal/byok"
 	ccpm "github.com/confluentinc/cli/v4/internal/ccpm"
 	cloudsignup "github.com/confluentinc/cli/v4/internal/cloud-signup"
@@ -110,6 +111,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(asyncapi.New(prerunner))
 	cmd.AddCommand(auditlog.New(prerunner))
 	cmd.AddCommand(billing.New(prerunner))
+	cmd.AddCommand(budget.New(cfg, prerunner))
 	cmd.AddCommand(byok.New(prerunner))
 	cmd.AddCommand(ccpm.New(cfg, prerunner))
 	cmd.AddCommand(cloudsignup.New(prerunner))
