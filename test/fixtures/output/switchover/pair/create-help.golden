@@ -10,7 +10,7 @@ Create switchover pair "prod-kafka-dr" between two Kafka clusters (west and east
 
 Flags:
       --member stringArray     REQUIRED: A member of the pair, in the form "name=<name>,crn=<member-crn>". The CRN carries the member's own environment, so the two members may live in different environments. Must be specified exactly twice.
-      --active-member string   REQUIRED: The name of the member that starts as active. Must match one of the --member names.
+      --active-member string   REQUIRED: The name of the member that starts as active. The name must match one of the --member names.
       --environment string     Environment ID.
       --context string         CLI context name.
   -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")

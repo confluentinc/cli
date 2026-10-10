@@ -27,7 +27,7 @@ func (c *command) newFailoverCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("active-member", "", "Name of the member to promote to active status. Required for PLANNED and UNPLANNED failover types; Omit for RESTORE.")
+	cmd.Flags().String("active-member", "", "Name of the member to promote to active status. Required for PLANNED and UNPLANNED failover types. Omit for RESTORE.")
 	cmd.Flags().String("failover-type", "PLANNED", "Type of failover operation to perform. Allowed values are PLANNED, UNPLANNED, RESTORE.")
 	cmd.Flags().Bool("force", false, "Skip the confirmation prompt.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
