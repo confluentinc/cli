@@ -65,7 +65,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	}
 
 	resourceType, clusterId, _, resolveErr := c.resolveResourceId(cmd, c.V2Client)
-	isGlobalKey := apiKey.GetSpec().Resource.GetKind() == "Global"
+	isGlobalKey := apiKey.GetSpec().Resource.Get().GetKind() == "Global"
 
 	// Detect Global API keys by either the explicit --resource global flag or the server-side resource Kind.
 	// Global keys are org-scoped and stored separately from cluster-scoped keys.
@@ -110,7 +110,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	apiKeyIsValidForTargetCluster := cluster.GetId() != "" && cluster.GetId() == apiKey.GetSpec().Resource.GetId()
+	apiKeyIsValidForTargetCluster := cluster.GetId() != "" && cluster.GetId() == apiKey.GetSpec().Resource.Get().GetId()
 
 	if !apiKeyIsValidForTargetCluster {
 		return errors.NewErrorWithSuggestions(
