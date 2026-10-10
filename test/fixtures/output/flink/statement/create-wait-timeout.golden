@@ -1,0 +1,4 @@
+Error: wait timed out: Flink SQL statement "my-statement-pending" is still in phase "PENDING"
+
+Suggestions:
+    Increase `--timeout` or omit `--wait`.

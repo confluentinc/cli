@@ -14,7 +14,7 @@ type exceptionOut struct {
 	Message   string    `human:"Message" serialized:"message"`
 }
 
-func (c *statementCommand) newStatementExceptionCommand() *cobra.Command {
+func (c *statementCommand) newExceptionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exception",
 		Short: "Manage Flink SQL statement exceptions in Confluent Cloud.",
@@ -23,7 +23,7 @@ func (c *statementCommand) newStatementExceptionCommand() *cobra.Command {
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 
-	cmd.AddCommand(c.newStatementExceptionListCommand())
+	cmd.AddCommand(c.newExceptionListCommand())
 
 	return cmd
 }
