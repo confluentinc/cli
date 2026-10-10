@@ -11,7 +11,7 @@ import (
 
 type IntegerDeserializationProvider struct{}
 
-func (IntegerDeserializationProvider) InitDeserializer(_, _, _ string, _ SchemaRegistryAuth, _ schemaregistry.Client) error {
+func (IntegerDeserializationProvider) InitDeserializer(_, _, _, _ string, _ SchemaRegistryAuth, _ schemaregistry.Client) error {
 	return nil
 }
 
