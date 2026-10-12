@@ -220,6 +220,9 @@ var variantLeafGenerators = []func(*rapid.T) any{
 	func(*rapid.T) any { return []any{float64(types.VariantCodeBytes), "x'7f0203'"} },
 	func(*rapid.T) any { return []any{float64(types.VariantCodeTime), "09:14:02.123"} },
 	func(*rapid.T) any {
+		return []any{float64(types.VariantCodeUuid), "00112233-4455-6677-8899-aabbccddeeff"}
+	},
+	func(*rapid.T) any {
 		return []any{float64(types.VariantCodeTimestampLtz), "2026-07-28 09:14:02.117000", "+00:00"}
 	},
 	func(*rapid.T) any {
