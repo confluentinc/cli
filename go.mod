@@ -18,6 +18,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0
+	github.com/confluentinc/ccloud-sdk-go-v2/budget v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.9
 	github.com/confluentinc/ccloud-sdk-go-v2/cam v0.5.0
 	github.com/confluentinc/ccloud-sdk-go-v2/ccpm v0.0.1

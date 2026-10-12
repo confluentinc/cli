@@ -17,6 +17,8 @@ var ccloudV2Routes = []route{
 	{"/byok/v1/keys", handleByokKeys},
 	{"/byok/v1/keys/{id}", handleByokKey},
 	{"/billing/v1/costs", handleBillingCosts},
+	{"/budget/v1/inference-budgets", handleBudgetV1InferenceBudgets},
+	{"/budget/v1/inference-budgets/{id}", handleBudgetV1InferenceBudgetsId},
 	{"/cam/v1/connect-artifacts", handleConnectArtifacts},
 	{"/cam/v1/connect-artifacts/{id}", handleConnectArtifactId},
 	{"/cam/v1/presigned-upload-url", handleConnectArtifactUploadUrl},
