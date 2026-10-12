@@ -88,6 +88,15 @@ func TestParseV2BaseCrnPattern_UsmConnectCluster(t *testing.T) {
 	require.Equal(t, "crn://confluent.cloud/organization=abc-123/environment=env-596/usm-connect-cluster=usmcc-123456", crnPattern)
 }
 
+func TestParseV2BaseCrnPattern_UsmClusterAdminRequiresUsmClusterFlag(t *testing.T) {
+	cmd := newCloudRoleBindingFlagSet()
+	require.NoError(t, cmd.Flags().Set("role", "UsmClusterAdmin"))
+	require.NoError(t, cmd.Flags().Set("environment", "env-596"))
+
+	_, err := newRoleBindingTestCommand().parseV2BaseCrnPattern(cmd)
+	require.EqualError(t, err, specifyUsmClusterErrorMsg)
+}
+
 func TestParseV2BaseCrnPattern_UsmRoleRequiresEnvironment(t *testing.T) {
 	cmd := newCloudRoleBindingFlagSet()
 	require.NoError(t, cmd.Flags().Set("role", "UsmClusterAdmin"))
