@@ -91,3 +91,13 @@ snake
 		require.NoError(t, err)
 	})
 }
+
+// A backtick span names a command, flag or value, so its words are not prose: `flink endpoint use`
+// is accepted even though Flink and Endpoint are proper nouns.
+func TestRequireCapitalizeProperNounsSkipsBacktickSpans(t *testing.T) {
+	rule := RequireCapitalizeProperNouns("Long", []string{"Flink", "Endpoint"})
+	cmd := &cobra.Command{Use: "statement", Long: "Select the gateway URL with `flink endpoint list` and `flink endpoint use`."}
+	require.NoError(t, rule(cmd))
+	cmd.Long = "Select the flink endpoint."
+	require.Error(t, rule(cmd))
+}

@@ -348,3 +348,42 @@ func TestCall_ReturnsPromptlyWhenFnNeverReturns(t *testing.T) {
 	require.ErrorIs(t, err, context.DeadlineExceeded)
 	require.Less(t, elapsed, time.Second, "Call must not wait for fn once ctx fires")
 }
+
+// TestPoll_InitialSeedsLastBeforeFirstFetch: a Timeout shorter than Delay fires before any fetch;
+// the value returned with ErrTimeout is the caller's Initial (a create response), not the zero value.
+func TestPoll_InitialSeedsLastBeforeFirstFetch(t *testing.T) {
+	fetched := false
+	v, err := Poll(context.Background(), Options[fakeResource]{
+		Fetch: func() (fakeResource, error) {
+			fetched = true
+			return fakeResource{phase: "RUNNING"}, nil
+		},
+		IsTerminal:   func(r fakeResource) bool { return r.phase != "PENDING" },
+		Initial:      fakeResource{phase: "PENDING"},
+		Delay:        50 * time.Millisecond,
+		PollInterval: time.Millisecond,
+		Timeout:      5 * time.Millisecond,
+	})
+	require.ErrorIs(t, err, ErrTimeout)
+	require.False(t, fetched)
+	require.Equal(t, "PENDING", v.phase)
+}
+
+// TestPoll_TimeoutBoundsAnInFlightFetch: a Fetch that outlives the Timeout neither holds Poll past
+// the deadline nor becomes a success afterwards; the last-known value is what the caller sees.
+func TestPoll_TimeoutBoundsAnInFlightFetch(t *testing.T) {
+	start := time.Now()
+	v, err := Poll(context.Background(), Options[fakeResource]{
+		Fetch: func() (fakeResource, error) {
+			time.Sleep(200 * time.Millisecond)
+			return fakeResource{phase: "RUNNING"}, nil
+		},
+		IsTerminal:   func(r fakeResource) bool { return r.phase != "PENDING" },
+		Initial:      fakeResource{phase: "PENDING"},
+		PollInterval: time.Millisecond,
+		Timeout:      20 * time.Millisecond,
+	})
+	require.ErrorIs(t, err, ErrTimeout)
+	require.Less(t, time.Since(start), 150*time.Millisecond)
+	require.Equal(t, "PENDING", v.phase)
+}

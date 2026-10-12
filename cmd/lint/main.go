@@ -350,6 +350,7 @@ var vocabWords = []string{
 	"rescale",
 	"rest",
 	"restapi",
+	"rfc3339",
 	"rtce",
 	"rtcetopic",
 	"ruleset",

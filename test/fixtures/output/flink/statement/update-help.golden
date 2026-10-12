@@ -1,9 +1,13 @@
-Update a Flink SQL statement.
+Stop or resume a Flink SQL statement, optionally resuming it under a different principal or compute pool. Pass `--stopped=true` to stop a running statement and `--stopped=false` to resume a stopped one. The principal and compute pool can only be changed while resuming: pass `--principal` or `--compute-pool` together with `--stopped=false`. The gateway rejects a principal change on a running statement, and on a stopped statement unless the same request resumes it. The update is accepted asynchronously. Check the result with `flink statement describe <name>`.
 
 Usage:
   confluent flink statement update <name> [flags]
 
 Examples:
+Request to stop the currently running statement "my-statement".
+
+  $ confluent flink statement update my-statement --stopped=true
+
 Request to resume the currently stopped statement "my-statement" using original principal id and under the original compute pool.
 
   $ confluent flink statement update my-statement --stopped=false
@@ -24,17 +28,11 @@ Request to resume the currently stopped statement "my-statement" using service a
 
   $ confluent flink statement update my-statement --stopped=false --principal sa-123456 --compute-pool lfcp-123456
 
-Request to stop the currently running statement "my-statement".
-
-  $ confluent flink statement update my-statement --stopped=true
-
 Flags:
-      --principal string      A user or service account the statement runs as.
-      --compute-pool string   Flink compute pool ID.
-      --stopped               Request to stop or resume the statement.
-      --cloud string          Specify the cloud provider as "aws", "azure", or "gcp".
-      --region string         Cloud region for Flink (use "confluent flink region list" to see all).
       --environment string    Environment ID.
+      --compute-pool string   Flink compute pool ID.
+      --principal string      A user or service account the statement runs as.
+      --stopped               Request to stop or resume the statement.
       --context string        CLI context name.
 
 Global Flags:
