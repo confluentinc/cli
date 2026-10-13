@@ -16,6 +16,7 @@ var (
 	TestKafkaRestProxyUrl      = url.URL{Scheme: "http", Host: "127.0.0.1:1025"}
 	TestFlinkGatewayUrl        = url.URL{Scheme: "http", Host: "127.0.0.1:1026"}
 	TestFlinkGatewayUrlPrivate = url.URL{Scheme: "http", Host: "127.0.0.1:1040"}
+	TestLightningUrl           = url.URL{Scheme: "http", Host: "127.0.0.1:1041"}
 	TestSchemaRegistryUrl      = url.URL{Scheme: "http", Host: "127.0.0.1:1027"}
 	TestPackagesUrl            = url.URL{Scheme: "http", Host: "127.0.0.1:1029"}
 	TestCmfUrl                 = url.URL{Scheme: "http", Host: "127.0.0.1:1079"}
@@ -28,6 +29,7 @@ type TestBackend struct {
 	v2Api          *httptest.Server
 	kafkaRestProxy *httptest.Server
 	flinkGateway   *httptest.Server
+	lightning      *httptest.Server
 	mds            *httptest.Server
 	sr             *httptest.Server
 	hub            *httptest.Server
@@ -41,6 +43,7 @@ func StartTestBackend(t *testing.T, isAuditLogEnabled bool) *TestBackend {
 		v2Api:          newTestCloudServer(NewV2Router(t), TestV2CloudUrl.Host),
 		kafkaRestProxy: newTestCloudServer(NewKafkaRestProxyRouter(t), TestKafkaRestProxyUrl.Host),
 		flinkGateway:   newTestCloudServer(NewFlinkGatewayRouter(t), TestFlinkGatewayUrl.Host),
+		lightning:      newTestCloudServer(NewLightningRouter(t), TestLightningUrl.Host),
 		mds:            httptest.NewServer(NewMdsRouter(t)),
 		sr:             newTestCloudServer(NewSRRouter(t), TestSchemaRegistryUrl.Host),
 		hub:            newTestCloudServer(NewHubRouter(t), TestHubUrl.Host),
@@ -86,6 +89,9 @@ func (b *TestBackend) Close() {
 	}
 	if b.flinkGateway != nil {
 		b.flinkGateway.Close()
+	}
+	if b.lightning != nil {
+		b.lightning.Close()
 	}
 	if b.mds != nil {
 		b.mds.Close()
