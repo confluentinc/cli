@@ -263,6 +263,19 @@ func buildQueryTestFixture(name, sql string) *queryTestFixture {
 			queryColumn("status", "VARCHAR"),
 		}}
 		pages = [][]map[string]any{{queryRow(0, "1021", "SHIPPED"), queryRow(0, "1044", "PENDING")}}
+	case "SELECT status, order_id FROM orders LIMIT 2;":
+		// Columns deliberately not in alphabetical order: -o json/-o yaml must keep
+		// SELECT order (status, order_id), not sort the keys.
+		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{
+			queryColumn("status", "VARCHAR"),
+			queryColumn("order_id", "INTEGER"),
+		}}
+		pages = [][]map[string]any{{queryRow(0, "SHIPPED", "1021"), queryRow(0, "PENDING", "1044")}}
+	case "SELECT id FROM empty;":
+		// Schema known, zero rows: -o json/-o yaml must still emit []. One empty page
+		// (not a missing-results 404).
+		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{queryColumn("id", "INTEGER")}}
+		pages = [][]map[string]any{{}}
 	case "SELECT id FROM multi_page_table;":
 		traits.Schema = &flinkgatewayv1.SqlV1ResultSchema{Columns: &[]flinkgatewayv1.ColumnDetails{queryColumn("id", "INTEGER")}}
 		pages = [][]map[string]any{
