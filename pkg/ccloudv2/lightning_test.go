@@ -207,6 +207,18 @@ func TestLightningExecuteQueryErrorPage(t *testing.T) {
 	require.EqualError(t, err, "403 Forbidden")
 }
 
+func TestLightningExecuteQueryServerErrorPage(t *testing.T) {
+	// A server error whose body isn't JSON is reported by its status, still with the request ID.
+	server := newLightningTestServer(t, http.StatusInternalServerError, "text/html", "<html><body>500 Internal Server Error</body></html>")
+
+	_, err := newTestLightningClient(server).ExecuteQuery("env-123456", "lkc-123456", "SELECT 1", 0)
+	require.EqualError(t, err, "500 Internal Server Error")
+
+	errorWithSuggestions, ok := err.(errors.ErrorWithSuggestions)
+	require.True(t, ok)
+	require.Equal(t, `When contacting Confluent Support, include request ID "a1b2c3d4".`, errorWithSuggestions.GetSuggestionsMsg())
+}
+
 func TestLightningExecuteQueryRetriesExhausted(t *testing.T) {
 	// After the last retry, the server's message is reported rather than a generic "giving up" error.
 	server := newLightningTestServer(t, http.StatusTooManyRequests, "application/json", `{"errors": [{"code": "FE_RATE_LIMITED", "status": "429", "detail": "Too many requests. Retry after a short delay."}]}`)
@@ -318,10 +330,15 @@ func TestLightningHttpClientRetries(t *testing.T) {
 		require.Equal(t, test.body, string(body))
 	}
 
-	// A 503 whose body can't be read isn't known to be a timeout, so it is retried.
-	retry, err := checkRetry(context.Background(), &http.Response{StatusCode: http.StatusServiceUnavailable, Body: io.NopCloser(iotest.ErrReader(errors.New("connection reset")))}, nil)
+	// A 503 whose body can't be read isn't known to be a timeout, so it is retried, and the response is
+	// still left with a body that can be read.
+	resp := &http.Response{StatusCode: http.StatusServiceUnavailable, Body: io.NopCloser(iotest.ErrReader(errors.New("connection reset")))}
+	retry, err := checkRetry(context.Background(), resp, nil)
 	require.NoError(t, err)
 	require.True(t, retry)
+	body, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	require.Empty(t, body)
 
 	retry, err = checkRetry(context.Background(), nil, errors.New("connection refused"))
 	require.False(t, retry)

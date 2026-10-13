@@ -95,4 +95,7 @@ func (s *CLITestSuite) TestLightningQuery() {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
+
+	// Without a login, the `lightning` parent fails with the login error instead of an empty help page.
+	s.runIntegrationTest(CLITest{args: "lightning", fixture: "lightning/not-logged-in.golden", exitCode: 1})
 }
