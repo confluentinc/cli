@@ -8,8 +8,9 @@ import (
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "lightning",
-		Short: "Manage Lightning Tables.",
+		Use:         "lightning",
+		Short:       "Manage Lightning Tables.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
 	cmd.AddCommand(newQueryCommand(prerunner))

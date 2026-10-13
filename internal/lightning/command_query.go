@@ -41,7 +41,7 @@ func newQueryCommand(prerunner pcmd.PreRunner) *cobra.Command {
 			"Provide the SQL statement with `--sql`, or use `--file` to read the statement from a file. The query runs against the Kafka cluster set with `--cluster`, or the active Kafka cluster if the flag is not set.\n\n" +
 			"The query runs synchronously, and the server returns at most 200 rows by default. If the result is too large or takes too long to return, the command fails instead of starting an asynchronous query; narrow the query, for example with a \"LIMIT\" clause or a more selective \"WHERE\" clause.\n\n" +
 			"With `-o human` (the default), only the first 100 rows are printed as a preview. Raise `--max-rows` to fetch more, or use `-o json` or `-o yaml` for every row the server returns.\n\n" +
-			"`-o json` and `-o yaml` return a bare array of row objects.\n\n" +
+			"The `-o json` and `-o yaml` flags return a bare array of row objects.\n\n" +
 			"When `--max-rows` cuts a result short, or the result may have reached the server's row limit, a warning is printed to standard error and the command still exits 0, so a script reading the rows on standard output is unaffected.",
 		Args: cobra.NoArgs,
 		Annotations: map[string]string{

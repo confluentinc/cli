@@ -1,4 +1,4 @@
-Warning: the result may be truncated because the server returns at most 200 rows by default. Narrow the query, for example with a more selective "WHERE" clause, to see the rest.
+Warning: the result may be truncated by the server's row limit, which is 200 rows by default. Narrow the query, for example with a more selective "WHERE" clause, to see the rest.
 +-----+
 | id  |
 +-----+

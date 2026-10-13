@@ -15,6 +15,7 @@ import (
 
 	rtcesqlv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/rtce-sql/v1alpha1"
 
+	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
@@ -33,6 +34,9 @@ func convertResult(result rtcesqlv1alpha1.QueryV1alpha1QueryResult) ([]string, [
 		return nil, nil, fmt.Errorf(`unsupported result format "%s"`, format)
 	}
 	data := result.GetData()
+	if data.String != nil {
+		return nil, nil, errors.New("the query result's rows are not a JSON array")
+	}
 
 	columns := result.Schema.GetColumns()
 	headers := make([]string, len(columns))
@@ -192,7 +196,7 @@ func printResult(stdout, stderr io.Writer, format output.Format, result queryRes
 		// The implicit -o human cap isn't user-requested, so it gets the notice after the table instead.
 		fmt.Fprintf(stderr, "Warning: stopped after %d rows because of the `--max-rows` flag. The result set below is truncated.\n", result.maxRows)
 	case result.serverLimited:
-		fmt.Fprintf(stderr, "Warning: the result may be truncated because the server returns at most %d rows by default. Narrow the query, for example with a more selective \"WHERE\" clause, to see the rest.\n", serverRowLimit)
+		fmt.Fprintf(stderr, "Warning: the result may be truncated by the server's row limit, which is %d rows by default. Narrow the query, for example with a more selective \"WHERE\" clause, to see the rest.\n", serverRowLimit)
 	}
 
 	switch format {

@@ -21,6 +21,8 @@ func (s *CLITestSuite) TestLightningQuery() {
 		// default, or the ones passed with --environment and --cluster.
 		{args: `lightning query --sql "SELECT catalog_name, database_name FROM whoami"`, useKafka: "lkc-123456", fixture: "lightning/query/whoami-active-cluster.golden"},
 		{args: `lightning query --sql "SELECT catalog_name, database_name FROM whoami" --environment env-123456 --cluster lkc-654321`, fixture: "lightning/query/whoami-flags.golden"},
+		// --context picks the context whose environment and Kafka cluster are used.
+		{args: `lightning query --sql "SELECT catalog_name, database_name FROM whoami" --context login-fake@user.com-http://127.0.0.1:1024`, useKafka: "lkc-123456", fixture: "lightning/query/whoami-active-cluster.golden"},
 
 		// Values render like `confluent flink query`: typed in -o json/-o yaml, text in the table.
 		{args: `lightning query --sql "SELECT * FROM scalar_types" --cluster lkc-123456`, fixture: "lightning/query/scalar-types.golden"},

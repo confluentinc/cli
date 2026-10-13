@@ -111,8 +111,13 @@ func TestResolveSQL(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "SELECT * FROM orders\n", sql)
 
-	_, err = resolveSQL(newCmd("", filepath.Join(dir, "missing.sql")))
-	require.ErrorContains(t, err, `failed to read the SQL statement from "`)
+	missingFile := filepath.Join(dir, "missing.sql")
+	_, readErr := os.ReadFile(missingFile)
+	_, err = resolveSQL(newCmd("", missingFile))
+	require.EqualError(t, err, fmt.Sprintf(`failed to read the SQL statement from "%s": %v`, missingFile, readErr))
+	errorWithSuggestions, ok := err.(errors.ErrorWithSuggestions)
+	require.True(t, ok)
+	require.Equal(t, "Check that the `--file` path is correct and the file is readable.", errorWithSuggestions.GetSuggestionsMsg())
 
 	_, err = resolveSQL(newCmd("", blankFile))
 	require.EqualError(t, err, "the SQL statement is empty")
@@ -255,6 +260,11 @@ func TestConvertResultErrors(t *testing.T) {
 			wantErr: `unsupported result format ""`,
 		},
 		{
+			name:    "rows that aren't an array",
+			raw:     `{"result_format": "JSON", "schema": {"columns": []}, "data": "W10="}`,
+			wantErr: "the query result's rows are not a JSON array",
+		},
+		{
 			name:    "row shorter than the schema",
 			raw:     `{"result_format": "JSON", "schema": {"columns": [{"name": "a", "type": {"type": "INTEGER", "nullable": true}}, {"name": "b", "type": {"type": "INTEGER", "nullable": true}}]}, "data": [["1"]]}`,
 			wantErr: "result row 1 has 1 values, expected 2",
@@ -275,6 +285,11 @@ func TestConvertResultErrors(t *testing.T) {
 			wantErr: `failed to read column "c": ARRAY value is not an array`,
 		},
 		{
+			name:    "NULL of an unknown type",
+			raw:     oneValue(`{"type": "NOT_A_REAL_TYPE", "nullable": true}`, `null`),
+			wantErr: `failed to read column "c": unsupported result field type "NOT_A_REAL_TYPE"`,
+		},
+		{
 			name:    "unknown array element type",
 			raw:     oneValue(`{"type": "ARRAY", "nullable": true, "element_type": {"type": "NOT_A_REAL_TYPE", "nullable": true}}`, `[]`),
 			wantErr: `unsupported result field type "NOT_A_REAL_TYPE"`,
@@ -287,6 +302,11 @@ func TestConvertResultErrors(t *testing.T) {
 		{
 			name:    "map entry that isn't a pair",
 			raw:     oneValue(`{"type": "MAP", "nullable": true, "key_type": {"type": "VARCHAR", "nullable": false}, "value_type": {"type": "INTEGER", "nullable": true}}`, `[["k"]]`),
+			wantErr: "MAP entry is not a [key, value] pair",
+		},
+		{
+			name:    "map entry with more than a key and a value",
+			raw:     oneValue(`{"type": "MAP", "nullable": true, "key_type": {"type": "VARCHAR", "nullable": false}, "value_type": {"type": "INTEGER", "nullable": true}}`, `[["k", "1", "2"]]`),
 			wantErr: "MAP entry is not a [key, value] pair",
 		},
 		{
@@ -323,6 +343,11 @@ func TestConvertResultErrors(t *testing.T) {
 			name:    "row with the wrong number of fields",
 			raw:     oneValue(`{"type": "ROW", "nullable": true, "fields": [{"name": "a", "field_type": {"type": "INTEGER", "nullable": true}}]}`, `["1", "2"]`),
 			wantErr: "ROW value has 2 fields but its type has 1",
+		},
+		{
+			name:    "row with fewer values than fields",
+			raw:     oneValue(`{"type": "ROW", "nullable": true, "fields": [{"name": "a", "field_type": {"type": "INTEGER", "nullable": true}}, {"name": "b", "field_type": {"type": "INTEGER", "nullable": true}}]}`, `["1"]`),
+			wantErr: "ROW value has 1 fields but its type has 2",
 		},
 		{
 			name:    "row sent as a string",
@@ -428,6 +453,14 @@ func TestPrintTable(t *testing.T) {
 `, buf.String())
 }
 
+func TestPrintTableDoesNotWrap(t *testing.T) {
+	// A long value with spaces stays on one line, so a piped table keeps one line per row.
+	value := strings.TrimSpace(strings.Repeat("word ", 10))
+	var buf bytes.Buffer
+	printTable(&buf, []string{"note"}, [][]types.StatementResultField{{types.AtomicStatementResultField{Type: types.Varchar, Value: value}}})
+	require.Contains(t, buf.String(), "| "+value+" |")
+}
+
 func TestPrintTableEscapesControlCharacters(t *testing.T) {
 	headers := []string{"note\x1b[2J"}
 	rows := [][]types.StatementResultField{{types.AtomicStatementResultField{Type: types.Varchar, Value: "\x1b[31mred\x1b[0m\nfake row"}}}
@@ -444,6 +477,8 @@ func TestEscapeControlChars(t *testing.T) {
 	require.Equal(t, "tab\tkept", escapeControlChars("tab\tkept"))
 	require.Equal(t, `line\x0abreak\x0d`, escapeControlChars("line\nbreak\r"))
 	require.Equal(t, `\x1b[0m`, escapeControlChars("\x1b[0m"))
+	require.Equal(t, `a\x7fb`, escapeControlChars("a\x7fb"))
+	require.Equal(t, `\x9b31m`, escapeControlChars("\u009b31m"))
 }
 
 func TestPrintYAMLKeepsTrailingNewlines(t *testing.T) {
@@ -522,7 +557,7 @@ func TestPrintResult(t *testing.T) {
 			name:       "server limit warning goes to stderr, with yaml rows on stdout",
 			format:     output.YAML,
 			result:     applyRowLimits([]string{"id"}, idRows(200), 0, false, false),
-			wantStderr: "Warning: the result may be truncated because the server returns at most 200 rows by default. Narrow the query, for example with a more selective \"WHERE\" clause, to see the rest.\n",
+			wantStderr: "Warning: the result may be truncated by the server's row limit, which is 200 rows by default. Narrow the query, for example with a more selective \"WHERE\" clause, to see the rest.\n",
 		},
 		{
 			name:       "preview notice goes to stderr, after the table on stdout",
