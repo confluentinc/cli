@@ -1,10 +1,12 @@
 package ccloudv2
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	goerrors "errors"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -21,12 +23,18 @@ import (
 )
 
 const (
-	// lightningSyncOnlyHeader makes the query endpoint answer inline or fail. Without it, a query whose
-	// result is too large or too slow to return inline is accepted as an asynchronous job (HTTP 202),
-	// which this CLI does not support; with it, that query fails with HTTP 422 and lightningAsyncRequiredCode.
+	// lightningSyncOnlyHeader makes the query endpoint answer inline or fail. Where asynchronous queries
+	// are enabled, a query whose result is too large or too slow to return inline is otherwise accepted as
+	// an asynchronous job (HTTP 202), which this CLI does not support; with the header, that query fails
+	// with HTTP 422 and lightningAsyncRequiredCode instead. Elsewhere, such a query runs inline until it
+	// finishes or reaches the API gateway's time limit.
 	lightningSyncOnlyHeader = "X-Lightning-Sync-Only"
 
 	lightningAsyncRequiredCode = "FE_ASYNC_REQUIRED"
+
+	// lightningGatewayTimeoutCode is the error code of the HTTP 503 the API gateway returns when a
+	// request runs into its time limit.
+	lightningGatewayTimeoutCode = "service_timeout"
 )
 
 type LightningClient struct {
@@ -50,8 +58,10 @@ func NewLightningClient(url, userAgent string, unsafeTrace bool, authToken strin
 
 // newLightningHttpClient retries only throttling and gateway errors. Unlike the other APIs, the query
 // endpoint also returns HTTP 500 for queries that fail the same way on every attempt, so retrying a 500
-// would only delay the error. When retries run out, the last response is returned as is, so the user
-// sees the server's message rather than a generic one.
+// would only delay the error. A gateway timeout (HTTP 504, or a 503 with lightningGatewayTimeoutCode)
+// isn't retried either: the query would most likely run into the time limit again. When retries run
+// out, the last response is returned as is, so the user sees the server's message rather than a
+// generic one.
 func newLightningHttpClient(unsafeTrace bool) *http.Client {
 	client := retryablehttp.NewClient()
 	client.Logger = plog.NewLeveledLogger(unsafeTrace)
@@ -60,13 +70,37 @@ func newLightningHttpClient(unsafeTrace bool) *http.Client {
 			return false, err
 		}
 		switch resp.StatusCode {
-		case http.StatusTooManyRequests, http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout:
+		case http.StatusTooManyRequests, http.StatusBadGateway:
 			return true, err
+		case http.StatusServiceUnavailable:
+			return !isLightningGatewayTimeout(resp), err
 		}
 		return false, err
 	}
 	client.ErrorHandler = retryablehttp.PassthroughErrorHandler
 	return client.StandardClient()
+}
+
+// isLightningGatewayTimeout reports whether a 503 response is the API gateway's time limit rather than
+// a temporary outage. It reads the body to find out and puts it back, so the response can still be read.
+func isLightningGatewayTimeout(resp *http.Response) bool {
+	body, err := io.ReadAll(resp.Body)
+	_ = resp.Body.Close()
+	resp.Body = io.NopCloser(bytes.NewReader(body))
+	if err != nil {
+		return false
+	}
+
+	var failure rtcesqlv1alpha1.Failure
+	if err := json.Unmarshal(body, &failure); err != nil {
+		return false
+	}
+	for _, e := range failure.GetErrors() {
+		if e.GetCode() == lightningGatewayTimeoutCode {
+			return true
+		}
+	}
+	return false
 }
 
 // GetLightningUrl returns the regional endpoint that serves Lightning Tables queries for a Kafka cluster
@@ -135,6 +169,11 @@ func catchLightningError(err error, httpResp *http.Response) error {
 	}
 
 	err = errors.CatchCCloudV2Error(err, httpResp)
+	if _, ok := err.(rtcesqlv1alpha1.GenericOpenAPIError); ok {
+		// Nothing could be read from the body (for example, an HTML page from a proxy), and the SDK's
+		// error may only say that the body couldn't be decoded, so report the status instead.
+		err = errors.New(httpResp.Status)
+	}
 	if requestId := httpResp.Header.Get("X-Request-Id"); requestId != "" && httpResp.StatusCode >= http.StatusInternalServerError {
 		return errors.NewErrorWithSuggestions(err.Error(), fmt.Sprintf(`When contacting Confluent Support, include request ID "%s".`, requestId))
 	}

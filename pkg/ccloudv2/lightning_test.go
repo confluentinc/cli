@@ -3,13 +3,16 @@ package ccloudv2
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
+	"testing/iotest"
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -165,6 +168,45 @@ func TestLightningExecuteQueryServerError(t *testing.T) {
 	require.Equal(t, `When contacting Confluent Support, include request ID "a1b2c3d4".`, errorWithSuggestions.GetSuggestionsMsg())
 }
 
+func TestLightningExecuteQueryServerErrorWithoutRequestId(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte(`{"errors": [{"code": "FE_INTERNAL_ERROR", "status": "500", "detail": "The statement could not be completed."}]}`))
+	}))
+	t.Cleanup(server.Close)
+
+	_, err := NewLightningClient(server.URL, "test-agent", false, "dataplane-token").ExecuteQuery("env-123456", "lkc-123456", "SELECT 1", 0)
+	require.EqualError(t, err, "The statement could not be completed.")
+	_, ok := err.(errors.ErrorWithSuggestions)
+	require.False(t, ok, "without a request ID, there is nothing to tell support")
+}
+
+func TestLightningExecuteQueryGatewayTimeout(t *testing.T) {
+	// The API gateway's time limit is not retried: the query would most likely run into it again.
+	server := newLightningTestServer(t, http.StatusServiceUnavailable, "text/plain; charset=utf-8", `{"errors": [{"status": "503", "code": "service_timeout", "detail": "Process took too long to complete. Try your request again later."}]}`)
+
+	_, err := newTestLightningClient(server).ExecuteQuery("env-123456", "lkc-123456", "SELECT * FROM t", 0)
+	require.EqualError(t, err, "Process took too long to complete. Try your request again later.")
+	require.Equal(t, int32(1), server.requests.Load())
+}
+
+func TestLightningExecuteQueryRestApiNotEnabled(t *testing.T) {
+	server := newLightningTestServer(t, http.StatusForbidden, "application/json", `{"errors": [{"status": "403", "code": "api_not_enabled", "title": "Forbidden", "detail": "The REST API is not enabled for this organization."}]}`)
+
+	_, err := newTestLightningClient(server).ExecuteQuery("env-123456", "lkc-123456", "SELECT 1", 0)
+	require.EqualError(t, err, "The REST API is not enabled for this organization.")
+}
+
+func TestLightningExecuteQueryErrorPage(t *testing.T) {
+	// An error body that isn't JSON, such as a proxy's HTML page, is reported by its status rather than as
+	// a body that couldn't be decoded.
+	server := newLightningTestServer(t, http.StatusForbidden, "text/html", "<html><body>403 Forbidden</body></html>")
+
+	_, err := newTestLightningClient(server).ExecuteQuery("env-123456", "lkc-123456", "SELECT 1", 0)
+	require.EqualError(t, err, "403 Forbidden")
+}
+
 func TestLightningExecuteQueryRetriesExhausted(t *testing.T) {
 	// After the last retry, the server's message is reported rather than a generic "giving up" error.
 	server := newLightningTestServer(t, http.StatusTooManyRequests, "application/json", `{"errors": [{"code": "FE_RATE_LIMITED", "status": "429", "detail": "Too many requests. Retry after a short delay."}]}`)
@@ -194,6 +236,14 @@ func TestCatchLightningErrorWithoutResponse(t *testing.T) {
 	require.True(t, ok)
 	require.Equal(t, "Lightning Tables may not be available for the Kafka cluster's cloud provider or region.", errorWithSuggestions.GetSuggestionsMsg())
 
+	// A DNS failure other than a missing host, such as a timeout, says nothing about the endpoint.
+	dnsTimeout := &url.Error{Op: "Post", URL: "https://sql.us-west-2.aws.confluent.cloud/query/v1alpha1", Err: &net.OpError{
+		Op:  "dial",
+		Net: "tcp",
+		Err: &net.DNSError{Err: "i/o timeout", Name: "sql.us-west-2.aws.confluent.cloud", IsTimeout: true},
+	}}
+	require.Equal(t, dnsTimeout, catchLightningError(dnsTimeout, nil))
+
 	// Any other failure to get a response is reported as is.
 	connectionErr := &url.Error{Op: "Post", URL: "https://sql.us-west-2.aws.confluent.cloud/query/v1alpha1", Err: errors.New("connection reset by peer")}
 	require.Equal(t, connectionErr, catchLightningError(connectionErr, nil))
@@ -206,7 +256,6 @@ func TestIsLightningAsyncRequired(t *testing.T) {
 		httpResp *http.Response
 	}{
 		{"no response", rtcesqlv1alpha1.GenericOpenAPIError{}, nil},
-		{"other status", rtcesqlv1alpha1.GenericOpenAPIError{}, &http.Response{StatusCode: http.StatusBadRequest}},
 		{"not an API error", errors.New("connection reset"), &http.Response{StatusCode: http.StatusUnprocessableEntity}},
 	}
 	for _, test := range tests {
@@ -216,17 +265,21 @@ func TestIsLightningAsyncRequired(t *testing.T) {
 	}
 
 	// GenericOpenAPIError's body is unexported, so a real one comes from a request.
-	execute := func(body string) (error, *http.Response) {
-		server := newLightningTestServer(t, http.StatusUnprocessableEntity, "application/json", body)
+	execute := func(status int, body string) (error, *http.Response) {
+		server := newLightningTestServer(t, status, "application/json", body)
 		client := newTestLightningClient(server)
 		_, httpResp, err := client.StatementsQueryV1alpha1Api.ExecuteQueryV1alpha1Statement(client.lightningApiContext()).QueryV1alpha1QueryRequest(*rtcesqlv1alpha1.NewQueryV1alpha1QueryRequest("env-123456", "lkc-123456", "SELECT 1")).Execute()
 		return err, httpResp
 	}
 
-	err, httpResp := execute(`{"errors": [{"code": "FE_OTHER"}, {"code": "FE_ASYNC_REQUIRED"}]}`)
+	err, httpResp := execute(http.StatusUnprocessableEntity, `{"errors": [{"code": "FE_OTHER"}, {"code": "FE_ASYNC_REQUIRED"}]}`)
 	require.True(t, isLightningAsyncRequired(err, httpResp))
 
-	err, httpResp = execute("not json")
+	err, httpResp = execute(http.StatusUnprocessableEntity, "not json")
+	require.False(t, isLightningAsyncRequired(err, httpResp))
+
+	// The code only counts on a 422.
+	err, httpResp = execute(http.StatusBadRequest, `{"errors": [{"code": "FE_ASYNC_REQUIRED"}]}`)
 	require.False(t, isLightningAsyncRequired(err, httpResp))
 }
 
@@ -235,22 +288,42 @@ func TestLightningHttpClientRetries(t *testing.T) {
 	require.True(t, ok)
 	checkRetry := roundTripper.Client.CheckRetry
 
-	for status, want := range map[int]bool{
-		http.StatusOK:                  false,
-		http.StatusBadRequest:          false,
-		http.StatusUnprocessableEntity: false,
-		http.StatusInternalServerError: false,
-		http.StatusTooManyRequests:     true,
-		http.StatusBadGateway:          true,
-		http.StatusServiceUnavailable:  true,
-		http.StatusGatewayTimeout:      true,
-	} {
-		retry, err := checkRetry(context.Background(), &http.Response{StatusCode: status}, nil)
+	const gatewayTimeout = `{"errors": [{"status": "503", "code": "service_timeout", "detail": "Process took too long to complete. Try your request again later."}]}`
+	tests := []struct {
+		status int
+		body   string
+		want   bool
+	}{
+		{http.StatusOK, "", false},
+		{http.StatusBadRequest, "", false},
+		{http.StatusUnprocessableEntity, "", false},
+		{http.StatusInternalServerError, "", false},
+		{http.StatusTooManyRequests, "", true},
+		{http.StatusBadGateway, "", true},
+		{http.StatusServiceUnavailable, "<html>503 Service Unavailable</html>", true},
+		{http.StatusServiceUnavailable, `{"errors": [{"status": "503", "detail": "RTCE service mTLS client is not ready"}]}`, true},
+		// The gateway's time limit: the query would most likely run into it again.
+		{http.StatusServiceUnavailable, gatewayTimeout, false},
+		{http.StatusGatewayTimeout, "", false},
+	}
+	for _, test := range tests {
+		resp := &http.Response{StatusCode: test.status, Body: io.NopCloser(strings.NewReader(test.body))}
+		retry, err := checkRetry(context.Background(), resp, nil)
 		require.NoError(t, err)
-		require.Equal(t, want, retry, "status %d", status)
+		require.Equal(t, test.want, retry, "status %d, body %s", test.status, test.body)
+
+		// The body is put back for whoever reads the response next.
+		body, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+		require.Equal(t, test.body, string(body))
 	}
 
-	retry, err := checkRetry(context.Background(), nil, errors.New("connection refused"))
+	// A 503 whose body can't be read isn't known to be a timeout, so it is retried.
+	retry, err := checkRetry(context.Background(), &http.Response{StatusCode: http.StatusServiceUnavailable, Body: io.NopCloser(iotest.ErrReader(errors.New("connection reset")))}, nil)
+	require.NoError(t, err)
+	require.True(t, retry)
+
+	retry, err = checkRetry(context.Background(), nil, errors.New("connection refused"))
 	require.False(t, retry)
 	require.Error(t, err)
 }
