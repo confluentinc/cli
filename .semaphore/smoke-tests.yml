@@ -26,8 +26,8 @@ blocks:
             - sem-version go $(cat .go-version)
             - export PATH=$(go env GOPATH)/bin:$PATH
 
-            - . vault-sem-get-secret v1/ci/kv/apif/cli/live-testing-data
-            - . vault-sem-get-secret v1/ci/kv/apif/cli/slack-notifications-live-testing
+            - . vault-get-secret cli/live-test-login
+            - . vault-get-secret cli/slack-notifications-live-testing
 
             - export SMOKE_OS=linux SMOKE_ARCH=arm64 SMOKE_COMMAND=environment_list
 
@@ -60,13 +60,12 @@ blocks:
             - $Env:PATH += ";C:\Program Files\Git\bin"
             - checkout
 
-            # Vault auth (vault-sem-get-secret is Linux-only; use native vault CLI on Windows,
-            # following the pattern from cli-release/.semaphore/4-release-cli.yml).
-            - $Env:VAULT_ADDR = "https://vault.cireops.gcp.internal.confluent.cloud"
-            - vault login -no-print token=$(vault write -field=token "auth/semaphore_self_hosted/login" role="default" jwt="$Env:SEMAPHORE_OIDC_TOKEN")
-            - $Env:CONFLUENT_CLOUD_EMAIL = (vault kv get -field=CONFLUENT_CLOUD_EMAIL v1/ci/kv/apif/cli/live-testing-data)
-            - $Env:CONFLUENT_CLOUD_PASSWORD = (vault kv get -field=CONFLUENT_CLOUD_PASSWORD v1/ci/kv/apif/cli/live-testing-data)
-            - $Env:SLACK_WEBHOOK_URL = (vault kv get -field=SLACK_WEBHOOK_URL v1/ci/kv/apif/cli/slack-notifications-live-testing)
+            # Vault auth (vault-get-secret is Linux-only; use native vault CLI on Windows)
+            - $Env:VAULT_ADDR = "https://non-prod.vault.internal.confluent.cloud"
+            - vault login -no-print token=$(vault write -field=token "auth/stag/semaphore/login" role="cli" jwt="$Env:SEMAPHORE_OIDC_TOKEN")
+            - $Env:CONFLUENT_CLOUD_EMAIL = (vault kv get -field=CONFLUENT_CLOUD_EMAIL stag/kv/semaphore/cli/live-test-login)
+            - $Env:CONFLUENT_CLOUD_PASSWORD = (vault kv get -field=CONFLUENT_CLOUD_PASSWORD stag/kv/semaphore/cli/live-test-login)
+            - $Env:SLACK_WEBHOOK_URL = (vault kv get -field=SLACK_WEBHOOK_URL stag/kv/semaphore/cli/slack-notifications-live-testing)
 
             # Install Go (matches the pattern in semaphore.yml; chocolatey is community-maintained)
             - $ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -OutFile Go.zip -Uri https://go.dev/dl/go$(Get-Content .go-version).windows-amd64.zip -UseBasicParsing
