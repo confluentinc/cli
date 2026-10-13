@@ -14,22 +14,20 @@ func (s *CLITestSuite) TestFlinkQuery() {
 		{args: `flink query --sql "SELECT id FROM multi_page_table;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "flink/query/multi-page.golden"},
 
 		// VARIANT column: renders as JSON text (VARIANT support landed on main via #3514).
-		// Covers both the human table and the -o json envelope for a VARIANT cell.
+		// Covers both the human table and the -o json array for a VARIANT cell.
 		{args: `flink query --sql "SELECT v FROM variant_table;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "flink/query/variant.golden"},
 		{args: `flink query --sql "SELECT v FROM variant_table;" --compute-pool lfcp-123456 --service-account sa-123456 -o json`, fixture: "flink/query/variant-json.golden"},
 
-		// -o json / -o yaml default to the schema+rows envelope. No statement name in
-		// it (dropped to match the PRD's engine-agnostic envelope shape) and nothing
-		// else random, so these are exact matches.
+		// -o json / -o yaml return a bare array of row objects (no envelope). Nothing
+		// random in the output, so these are exact matches.
 		{args: `flink query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 -o json`, fixture: "flink/query/select-json.golden"},
 		{args: `flink query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 -o yaml`, fixture: "flink/query/select-yaml.golden"},
 
-		// --raw drops the envelope, so this one is exact too.
-		{args: `flink query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 -o json --raw`, fixture: "flink/query/select-raw.golden"},
+		// Columns keep SELECT order (status before order_id), not alphabetical.
+		{args: `flink query --sql "SELECT status, order_id FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 -o json`, fixture: "flink/query/select-order-json.golden"},
 
-		// --raw is meaningless for the default table output; rejected before a
-		// statement is ever created, so no random name in the output.
-		{args: `flink query --sql "SELECT order_id, status FROM orders LIMIT 2;" --compute-pool lfcp-123456 --service-account sa-123456 --raw`, fixture: "flink/query/raw-without-serialized-output.golden", exitCode: 1},
+		// Schema known but zero rows: -o json emits an empty array, not null or 404.
+		{args: `flink query --sql "SELECT id FROM empty;" --compute-pool lfcp-123456 --service-account sa-123456 -o json`, fixture: "flink/query/empty-json.golden"},
 
 		// --max-rows stops the drain early. Truncated is one of the two conditions that
 		// makes runQuery's deferred cleanup stop the statement, so the name shows up again
@@ -38,7 +36,7 @@ func (s *CLITestSuite) TestFlinkQuery() {
 
 		// -o human caps at 100 by default, with a notice; -o json stays uncapped.
 		{args: `flink query --sql "SELECT id FROM hundreds;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "flink/query/human-cap.golden"},
-		{args: `flink query --sql "SELECT id FROM hundreds;" --compute-pool lfcp-123456 --service-account sa-123456 -o json --raw`, fixture: "flink/query/hundreds-raw.golden"},
+		{args: `flink query --sql "SELECT id FROM hundreds;" --compute-pool lfcp-123456 --service-account sa-123456 -o json`, fixture: "flink/query/hundreds-json.golden"},
 
 		// -o human with an explicit --max-rows 0 opts out of the default cap: all 150 rows
 		// print and no preview notice shows (Changed==true, so resolveDisplayCap returns uncapped).
