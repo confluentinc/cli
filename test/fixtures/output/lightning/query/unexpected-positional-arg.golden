@@ -1,0 +1,27 @@
+Error: unknown command "SELECT 1" for "confluent lightning query"
+Usage:
+  confluent lightning query [flags]
+
+Examples:
+Run a query against the active Kafka cluster and print the rows as a table.
+
+  $ confluent lightning query --sql "SELECT * FROM orders WHERE status = 'completed'"
+
+Run a query against Kafka cluster "lkc-123456" and return JSON for a script.
+
+  $ confluent lightning query --sql "SELECT order_id, status FROM orders LIMIT 10" --cluster lkc-123456 --output json
+
+Flags:
+      --sql string           SQL statement. Alternatively, use "--file" or "-f".
+  -f, --file string          Path to a file that contains the SQL statement. Alternatively, use "--sql".
+      --cluster string       Kafka cluster ID.
+      --max-rows int         Maximum number of rows to fetch. Defaults to 100 for "-o human"; raise it to fetch more. "-o json"/"-o yaml" fetch every row the server returns by default.
+      --environment string   Environment ID.
+      --context string       CLI context name.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, and -vvvv for trace).
+
