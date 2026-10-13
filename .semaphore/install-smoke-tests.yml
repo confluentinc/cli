@@ -26,7 +26,7 @@ blocks:
             - sem-version go $(cat .go-version)
             - export PATH=$(go env GOPATH)/bin:$PATH
 
-            - . vault-sem-get-secret v1/ci/kv/apif/cli/slack-notifications-live-testing
+            - . vault-get-secret cli/slack-notifications-live-testing
 
             - export SMOKE_OS=linux SMOKE_ARCH=amd64 SMOKE_COMMAND=rpm_install
 
@@ -60,7 +60,7 @@ blocks:
             - sem-version go $(cat .go-version)
             - export PATH=$(go env GOPATH)/bin:$PATH
 
-            - . vault-sem-get-secret v1/ci/kv/apif/cli/slack-notifications-live-testing
+            - . vault-get-secret cli/slack-notifications-live-testing
 
             - export SMOKE_OS=linux SMOKE_ARCH=arm64 SMOKE_COMMAND=rpm_install
 
