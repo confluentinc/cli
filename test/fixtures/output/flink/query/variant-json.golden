@@ -1,16 +1,5 @@
-{
-  "columns": [
-    {
-      "name": "v",
-      "type": "VARIANT"
-    }
-  ],
-  "rows": [
-    {
-      "v": "{\"a\":\"x\"}"
-    }
-  ],
-  "phase": "COMPLETED",
-  "row_count": 1,
-  "truncated": false
-}
+[
+  {
+    "v": "{\"a\":\"x\"}"
+  }
+]
