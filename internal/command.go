@@ -33,6 +33,7 @@ import (
 	"github.com/confluentinc/cli/v4/internal/iam"
 	"github.com/confluentinc/cli/v4/internal/kafka"
 	"github.com/confluentinc/cli/v4/internal/ksql"
+	"github.com/confluentinc/cli/v4/internal/lightning"
 	"github.com/confluentinc/cli/v4/internal/local"
 	"github.com/confluentinc/cli/v4/internal/login"
 	"github.com/confluentinc/cli/v4/internal/logout"
@@ -127,6 +128,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(iam.New(cfg, prerunner))
 	cmd.AddCommand(kafka.New(cfg, prerunner))
 	cmd.AddCommand(ksql.New(cfg, prerunner))
+	cmd.AddCommand(lightning.New(prerunner))
 	cmd.AddCommand(local.New(cfg, prerunner))
 	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, loginCredentialsManager, loginOrganizationManager, authTokenHandler))
 	cmd.AddCommand(logout.New(cfg, prerunner, authTokenHandler))
