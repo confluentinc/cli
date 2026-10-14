@@ -3,6 +3,7 @@ Release Notes
 <!--
 If this PR introduces any user-facing changes, please document them below. Please delete any unused section titles and placeholders.
 Please match the style of previous release notes: https://docs.confluent.io/confluent-cli/current/release-notes.html
+**DO NOT** put blank lines between a section title and its first entry or between entries; only use them to separate sections.
 -->
 
 Breaking Changes
