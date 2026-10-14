@@ -91,6 +91,8 @@ func (s *CLITestSuite) TestSchemaRegistryExporter() {
 		{args: fmt.Sprintf(`schema-registry exporter delete myexporter myexporter2 --environment %s --force`, testserver.SRApiEnvId), fixture: "schema-registry/exporter/delete-multiple-success.golden"},
 		{args: fmt.Sprintf("schema-registry exporter delete myexporter --environment %s", testserver.SRApiEnvId), input: "y\n", fixture: "schema-registry/exporter/delete-prompt.golden"},
 		{args: fmt.Sprintf("schema-registry exporter status describe myexporter --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/status/describe.golden"},
+		{args: fmt.Sprintf("schema-registry exporter configuration cluster-link describe myexporter --output json --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/configuration/cluster-link-describe-json.golden"},
+		{args: fmt.Sprintf("schema-registry exporter configuration cluster-link describe myexporter --output yaml --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/configuration/cluster-link-describe-yaml.golden"},
 		{args: fmt.Sprintf("schema-registry exporter configuration describe myexporter --output json --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/configuration/describe-json.golden"},
 		{args: fmt.Sprintf("schema-registry exporter configuration describe myexporter --output yaml --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/configuration/describe-yaml.golden"},
 		{args: fmt.Sprintf("schema-registry exporter pause myexporter --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/pause.golden"},
