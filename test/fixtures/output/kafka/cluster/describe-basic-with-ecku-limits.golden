@@ -10,6 +10,7 @@
 | Region               | us-west-2                     |
 | Availability         | single-zone                   |
 | Status               | UP                            |
+| Deletion Protection  | false                         |
 | Endpoint             | SASL_SSL://kafka-endpoint     |
 | REST Endpoint        | http://127.0.0.1:1025         |
 | Max eCKU             | 5                             |

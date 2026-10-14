@@ -10,10 +10,12 @@ Flags:
       --topic-name string    REQUIRED: The Kafka topic name containing the data for the RTCE topic.
       --environment string   Environment ID.
       --cluster string       Kafka cluster ID.
+      --wait                 Wait for the RTCE topic to reach a ready or failed state before returning.
+      --timeout duration     Maximum time to wait for the RTCE topic to reach a ready or failed state when --wait is set (e.g., '30s', '5m', '2h'). (default 1h0m0s)
       --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
-  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, and -vvvv for trace).

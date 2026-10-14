@@ -1,0 +1,8 @@
+Identical content already exists as version 1 of Artifact 'identical-artifact' in Environment 'test-env'; no new version was created.
++---------------+----------------------------------+
+| Version       | 1                                |
+| Phase         | READY                            |
+| Size          | 1024                             |
+| Checksum      | d41d8cd98f00b204e9800998ecf8427e |
+| Creation Time | 2025-03-12 23:42:00 +0000 UTC    |
++---------------+----------------------------------+

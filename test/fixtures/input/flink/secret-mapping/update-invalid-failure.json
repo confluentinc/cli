@@ -1,0 +1,10 @@
+{
+  "apiVersion": "cmf/v1",
+  "kind": "EnvironmentSecretMapping",
+  "metadata": {
+    "name": "invalid-secret-mapping"
+  },
+  "spec": {
+    "secretName": "my-updated-secret"
+  }
+}

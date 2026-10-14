@@ -1,0 +1,10 @@
+{
+  "id": "cfa-failed123",
+  "name": "my-failed-artifact",
+  "description": "new-failed-artifact",
+  "cloud": "AWS",
+  "environment": "env-123456",
+  "content_format": "JAR",
+  "status": "FAILED",
+  "error_message": "No transforms found in the uploaded artifact"
+}

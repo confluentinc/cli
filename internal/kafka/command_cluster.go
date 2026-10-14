@@ -52,7 +52,11 @@ func newClusterCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Comm
 		cmd.AddCommand(c.newListCommand())
 		cmd.AddCommand(c.newEndpointCommand(cfg))
 	} else {
-		cmd.AddCommand(c.newListCommandOnPrem())
+		listCmd := c.newListCommandOnPrem()
+		if !cfg.IsOnPremLogin() {
+			listCmd.Annotations = map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin}
+		}
+		cmd.AddCommand(listCmd)
 	}
 
 	return cmd

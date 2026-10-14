@@ -1,13 +1,21 @@
 package flink
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"log"
+	"mime/multipart"
 	"net/http"
 	_nethttp "net/http"
+	"net/http/httputil"
+	"net/textproto"
+	neturl "net/url"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -29,12 +37,13 @@ type OnPremCMFRestFlagValues struct {
 
 type CmfClientInterface interface {
 	GetStatement(ctx context.Context, environment, name string) (cmfsdk.Statement, error)
-	ListStatements(ctx context.Context, environment, computePool, status string) ([]cmfsdk.Statement, error)
+	ListStatements(ctx context.Context, environment, computePool, status string, pageSize int32) ([]cmfsdk.Statement, error)
 	CreateStatement(ctx context.Context, environment string, statement cmfsdk.Statement) (cmfsdk.Statement, error)
 	ListStatementExceptions(ctx context.Context, environment, statementName string) (cmfsdk.StatementExceptionList, error)
 	DeleteStatement(ctx context.Context, environment, statement string) error
 	UpdateStatement(ctx context.Context, environment, statementName string, statement cmfsdk.Statement) error
 	GetStatementResults(ctx context.Context, environment, statementName, pageToken string) (cmfsdk.StatementResult, error)
+	GetSystemInformation(ctx context.Context) (map[string]interface{}, error)
 	CmfApiContext() context.Context
 }
 
@@ -187,23 +196,14 @@ func (cmfClient *CmfRestClient) DescribeApplication(ctx context.Context, environ
 	return cmfApplication, nil
 }
 
-func (cmfClient *CmfRestClient) ListApplications(ctx context.Context, environment string) ([]cmfsdk.FlinkApplication, error) {
-	applications := make([]cmfsdk.FlinkApplication, 0)
-	// 100 is an arbitrary page size we've chosen.
-	var currentPageNumber int32 = 0
-	const pageSize = 100
-	done := false
-
-	for !done {
-		applicationsPage, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplications(ctx, environment).Page(currentPageNumber).Size(pageSize).Execute()
+func (cmfClient *CmfRestClient) ListApplications(ctx context.Context, environment string, pageSize int32) ([]cmfsdk.FlinkApplication, error) {
+	return listAllPages(pageSize, func(page, size int32) ([]cmfsdk.FlinkApplication, error) {
+		applicationsPage, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplications(ctx, environment).Page(page).Size(size).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list applications in the environment "%s": %s`, environment, parsedErr)
 		}
-		applications = append(applications, applicationsPage.GetItems()...)
-		currentPageNumber, done = extractPageOptions(len(applicationsPage.GetItems()), currentPageNumber)
-	}
-
-	return applications, nil
+		return applicationsPage.GetItems(), nil
+	})
 }
 
 // UpdateApplication Update an application in the specified environment.
@@ -226,6 +226,16 @@ func (cmfClient *CmfRestClient) UpdateApplication(ctx context.Context, environme
 		return cmfsdk.FlinkApplication{}, fmt.Errorf(`failed to update application "%s" in the environment "%s": %s`, applicationName, environment, parsedErr)
 	}
 	return outputApplication, nil
+}
+
+func (cmfClient *CmfRestClient) ListApplicationEvents(ctx context.Context, environment, application string, pageSize int32) ([]cmfsdk.FlinkApplicationEvent, error) {
+	return listAllPages(pageSize, func(page, size int32) ([]cmfsdk.FlinkApplicationEvent, error) {
+		eventsPage, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplicationEvents(ctx, environment, application).Page(page).Size(size).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list events for application "%s" in the environment "%s": %s`, application, environment, parsedErr)
+		}
+		return eventsPage.GetItems(), nil
+	})
 }
 
 // CreateEnvironment Create an environment.
@@ -260,25 +270,14 @@ func (cmfClient *CmfRestClient) DescribeEnvironment(ctx context.Context, environ
 	return cmfEnvironment, nil
 }
 
-// ListEnvironments Run through all the pages until we get an empty page, in that case, return.
-func (cmfClient *CmfRestClient) ListEnvironments(ctx context.Context) ([]cmfsdk.Environment, error) {
-	environments := make([]cmfsdk.Environment, 0)
-	done := false
-	// 100 is an arbitrary page size we've chosen.
-	const pageSize = 100
-	var currentPageNumber int32 = 0
-
-	for !done {
-		environmentsPage, httpResponse, err := cmfClient.EnvironmentsApi.GetEnvironments(ctx).Page(currentPageNumber).Size(pageSize).Execute()
+func (cmfClient *CmfRestClient) ListEnvironments(ctx context.Context, pageSize int32) ([]cmfsdk.Environment, error) {
+	return listAllPages(pageSize, func(page, size int32) ([]cmfsdk.Environment, error) {
+		environmentsPage, httpResponse, err := cmfClient.EnvironmentsApi.GetEnvironments(ctx).Page(page).Size(size).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf("failed to list environments: %s", parsedErr)
 		}
-
-		environments = append(environments, environmentsPage.GetItems()...)
-		currentPageNumber, done = extractPageOptions(len(environmentsPage.GetItems()), currentPageNumber)
-	}
-
-	return environments, nil
+		return environmentsPage.GetItems(), nil
+	})
 }
 
 // UpdateEnvironment updates an existing environment.
@@ -351,28 +350,21 @@ func (cmfClient *CmfRestClient) DeleteSavepoint(ctx context.Context, environment
 	}
 }
 
-func (cmfClient *CmfRestClient) ListSavepoint(ctx context.Context, environment, statement, application string, isStatement bool) ([]cmfsdk.Savepoint, error) {
-	savepoints := make([]cmfsdk.Savepoint, 0)
-	done := false
-	// 100 is an arbitrary page size we've chosen.
-	const pageSize = 100
-	var currentPageNumber int32 = 0
-	for !done {
+func (cmfClient *CmfRestClient) ListSavepoint(ctx context.Context, environment, statement, application string, isStatement bool, pageSize int32) ([]cmfsdk.Savepoint, error) {
+	return listAllPages(pageSize, func(page, size int32) ([]cmfsdk.Savepoint, error) {
 		var savepointsPage cmfsdk.SavepointsPage
 		var httpResponse *_nethttp.Response
 		var err error
 		if isStatement {
-			savepointsPage, httpResponse, err = cmfClient.SavepointsApi.GetSavepointsForFlinkStatement(ctx, environment, statement).Page(currentPageNumber).Size(pageSize).Execute()
+			savepointsPage, httpResponse, err = cmfClient.SavepointsApi.GetSavepointsForFlinkStatement(ctx, environment, statement).Page(page).Size(size).Execute()
 		} else {
-			savepointsPage, httpResponse, err = cmfClient.SavepointsApi.GetSavepointsForFlinkApplication(ctx, environment, application).Page(currentPageNumber).Size(pageSize).Execute()
+			savepointsPage, httpResponse, err = cmfClient.SavepointsApi.GetSavepointsForFlinkApplication(ctx, environment, application).Page(page).Size(size).Execute()
 		}
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list savepoints in the environment "%s": %s`, environment, parsedErr)
 		}
-		savepoints = append(savepoints, savepointsPage.GetItems()...)
-		currentPageNumber, done = extractPageOptions(len(savepointsPage.GetItems()), currentPageNumber)
-	}
-	return savepoints, nil
+		return savepointsPage.GetItems(), nil
+	})
 }
 
 func (cmfClient *CmfRestClient) DescribeDetachedSavepoint(ctx context.Context, name string) (cmfsdk.Savepoint, error) {
@@ -384,23 +376,14 @@ func (cmfClient *CmfRestClient) DescribeDetachedSavepoint(ctx context.Context, n
 	return detachedSavepoint, nil
 }
 
-func (cmfClient *CmfRestClient) ListDetachedSavepoint(ctx context.Context, filter string) ([]cmfsdk.Savepoint, error) {
-	savepoints := make([]cmfsdk.Savepoint, 0)
-	done := false
-	// 100 is an arbitrary page size we've chosen.
-	const pageSize = 100
-	var currentPageNumber int32 = 0
-
-	for !done {
-		savepointsPage, httpResponse, err := cmfClient.DetachedSavepointsApi.ListDetachedSavepoints(ctx).Page(currentPageNumber).Size(pageSize).Name(filter).Execute()
+func (cmfClient *CmfRestClient) ListDetachedSavepoint(ctx context.Context, filter string, pageSize int32) ([]cmfsdk.Savepoint, error) {
+	return listAllPages(pageSize, func(page, size int32) ([]cmfsdk.Savepoint, error) {
+		savepointsPage, httpResponse, err := cmfClient.DetachedSavepointsApi.ListDetachedSavepoints(ctx).Page(page).Size(size).Name(filter).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list detached savepoints %s`, parsedErr)
 		}
-		savepoints = append(savepoints, savepointsPage.GetItems()...)
-		currentPageNumber, done = extractPageOptions(len(savepointsPage.GetItems()), currentPageNumber)
-	}
-
-	return savepoints, nil
+		return savepointsPage.GetItems(), nil
+	})
 }
 
 func (cmfClient *CmfRestClient) DeleteDetachedSavepoint(ctx context.Context, name string) error {
@@ -433,23 +416,14 @@ func (cmfClient *CmfRestClient) DescribeComputePool(ctx context.Context, environ
 	return cmfComputePool, nil
 }
 
-func (cmfClient *CmfRestClient) ListComputePools(ctx context.Context, environment string) ([]cmfsdk.ComputePool, error) {
-	computePools := make([]cmfsdk.ComputePool, 0)
-	done := false
-	// 100 is an arbitrary page size we've chosen.
-	const pageSize = 100
-	var currentPageNumber int32 = 0
-
-	for !done {
-		computePoolsPage, httpResponse, err := cmfClient.SQLApi.GetComputePools(ctx, environment).Page(currentPageNumber).Size(pageSize).Execute()
+func (cmfClient *CmfRestClient) ListComputePools(ctx context.Context, environment string, pageSize int32) ([]cmfsdk.ComputePool, error) {
+	return listAllPages(pageSize, func(page, size int32) ([]cmfsdk.ComputePool, error) {
+		computePoolsPage, httpResponse, err := cmfClient.SQLApi.GetComputePools(ctx, environment).Page(page).Size(size).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list compute pools in the environment "%s": %s`, environment, parsedErr)
 		}
-		computePools = append(computePools, computePoolsPage.GetItems()...)
-		currentPageNumber, done = extractPageOptions(len(computePoolsPage.GetItems()), currentPageNumber)
-	}
-
-	return computePools, nil
+		return computePoolsPage.GetItems(), nil
+	})
 }
 
 func (cmfClient *CmfRestClient) CreateStatement(ctx context.Context, environment string, statement cmfsdk.Statement) (cmfsdk.Statement, error) {
@@ -482,13 +456,7 @@ func (cmfClient *CmfRestClient) DeleteStatement(ctx context.Context, environment
 	return parseSdkError(httpResp, err)
 }
 
-func (cmfClient *CmfRestClient) ListStatements(ctx context.Context, environment, computePool, status string) ([]cmfsdk.Statement, error) {
-	statements := make([]cmfsdk.Statement, 0)
-	done := false
-	// 100 is an arbitrary page size we've chosen.
-	const pageSize = 100
-	var currentPageNumber int32 = 0
-
+func (cmfClient *CmfRestClient) ListStatements(ctx context.Context, environment, computePool, status string, pageSize int32) ([]cmfsdk.Statement, error) {
 	request := cmfClient.SQLApi.GetStatements(ctx, environment)
 	if computePool != "" {
 		request = request.ComputePool(computePool)
@@ -497,16 +465,13 @@ func (cmfClient *CmfRestClient) ListStatements(ctx context.Context, environment,
 		request = request.Phase(status)
 	}
 
-	for !done {
-		statementsPage, httpResponse, err := request.Page(currentPageNumber).Size(pageSize).Execute()
+	return listAllPages(pageSize, func(page, size int32) ([]cmfsdk.Statement, error) {
+		statementsPage, httpResponse, err := request.Page(page).Size(size).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list statements in the environment "%s": %s`, environment, parsedErr)
 		}
-		statements = append(statements, statementsPage.GetItems()...)
-		currentPageNumber, done = extractPageOptions(len(statementsPage.GetItems()), currentPageNumber)
-	}
-
-	return statements, nil
+		return statementsPage.GetItems(), nil
+	})
 }
 
 func (cmfClient *CmfRestClient) ListStatementExceptions(ctx context.Context, environment, statementName string) (cmfsdk.StatementExceptionList, error) {
@@ -529,6 +494,37 @@ func (cmfClient *CmfRestClient) GetStatementResults(ctx context.Context, environ
 	return resp, nil
 }
 
+func (cmfClient *CmfRestClient) GetSystemInformation(ctx context.Context) (map[string]interface{}, error) {
+	url := cmfClient.cmfBaseURL() + "/cmf/api/v1/system-information"
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create system information request: %s", err)
+	}
+
+	resp, err := cmfClient.doCmfRequest(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get system information: %s", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read system information response: %s", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, cmfErrorFromBody(resp.Status, body)
+	}
+
+	var result map[string]interface{}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("failed to parse system information response: %s", err)
+	}
+
+	return result, nil
+}
+
 func (cmfClient *CmfRestClient) CreateCatalog(ctx context.Context, kafkaCatalog cmfsdk.KafkaCatalog) (cmfsdk.KafkaCatalog, error) {
 	catalogName := kafkaCatalog.Metadata.Name
 	outputCatalog, httpResponse, err := cmfClient.SQLApi.CreateKafkaCatalog(ctx).KafkaCatalog(kafkaCatalog).Execute()
@@ -546,23 +542,14 @@ func (cmfClient *CmfRestClient) DescribeCatalog(ctx context.Context, catalogName
 	return outputCatalog, nil
 }
 
-func (cmfClient *CmfRestClient) ListCatalog(ctx context.Context) ([]cmfsdk.KafkaCatalog, error) {
-	catalogs := make([]cmfsdk.KafkaCatalog, 0)
-	done := false
-	// 100 is an arbitrary page size we've chosen.
-	const pageSize = 100
-	var currentPageNumber int32 = 0
-
-	for !done {
-		catalogPage, httpResponse, err := cmfClient.SQLApi.GetKafkaCatalogs(ctx).Page(currentPageNumber).Size(pageSize).Execute()
+func (cmfClient *CmfRestClient) ListCatalog(ctx context.Context, pageSize int32) ([]cmfsdk.KafkaCatalog, error) {
+	return listAllPages(pageSize, func(page, size int32) ([]cmfsdk.KafkaCatalog, error) {
+		catalogPage, httpResponse, err := cmfClient.SQLApi.GetKafkaCatalogs(ctx).Page(page).Size(size).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list Kafka Catalog: %s`, parsedErr)
 		}
-		catalogs = append(catalogs, catalogPage.GetItems()...)
-		currentPageNumber, done = extractPageOptions(len(catalogPage.GetItems()), currentPageNumber)
-	}
-
-	return catalogs, nil
+		return catalogPage.GetItems(), nil
+	})
 }
 
 func (cmfClient *CmfRestClient) UpdateCatalog(ctx context.Context, catalogName string, kafkaCatalog cmfsdk.KafkaCatalog) error {
@@ -575,6 +562,107 @@ func (cmfClient *CmfRestClient) UpdateCatalog(ctx context.Context, catalogName s
 
 func (cmfClient *CmfRestClient) DeleteCatalog(ctx context.Context, catalogName string) error {
 	httpResp, err := cmfClient.SQLApi.DeleteKafkaCatalog(ctx, catalogName).Execute()
+	return parseSdkError(httpResp, err)
+}
+
+func (cmfClient *CmfRestClient) DescribeApplicationInstance(ctx context.Context, environment, application, instance string) (cmfsdk.FlinkApplicationInstance, error) {
+	cmfInstance, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplicationInstance(ctx, environment, application, instance).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.FlinkApplicationInstance{}, fmt.Errorf(`failed to describe instance "%s" of application "%s" in the environment "%s": %s`, instance, application, environment, parsedErr)
+	}
+	return cmfInstance, nil
+}
+
+func (cmfClient *CmfRestClient) ListApplicationInstances(ctx context.Context, environment, application string, pageSize int32) ([]cmfsdk.FlinkApplicationInstance, error) {
+	return listAllPages(pageSize, func(page, size int32) ([]cmfsdk.FlinkApplicationInstance, error) {
+		instancesPage, httpResponse, err := cmfClient.FlinkApplicationsApi.GetApplicationInstances(ctx, environment, application).Page(page).Size(size).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list instances of application "%s" in the environment "%s": %s`, application, environment, parsedErr)
+		}
+		return instancesPage.GetItems(), nil
+	})
+}
+
+func (cmfClient *CmfRestClient) CreateSecretMapping(ctx context.Context, envName string, secretMapping cmfsdk.EnvironmentSecretMapping) (cmfsdk.EnvironmentSecretMapping, error) {
+	var mappingName string
+	if secretMapping.Metadata != nil && secretMapping.Metadata.Name != nil {
+		mappingName = *secretMapping.Metadata.Name
+	}
+	outputMapping, httpResponse, err := cmfClient.EnvironmentsApi.CreateEnvironmentSecretMapping(ctx, envName).EnvironmentSecretMapping(secretMapping).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.EnvironmentSecretMapping{}, fmt.Errorf(`failed to create secret mapping "%s" in the environment "%s": %s`, mappingName, envName, parsedErr)
+	}
+	return outputMapping, nil
+}
+
+func (cmfClient *CmfRestClient) DescribeSecretMapping(ctx context.Context, envName, name string) (cmfsdk.EnvironmentSecretMapping, error) {
+	outputMapping, httpResponse, err := cmfClient.EnvironmentsApi.GetEnvironmentSecretMapping(ctx, envName, name).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.EnvironmentSecretMapping{}, fmt.Errorf(`failed to get secret mapping "%s" in the environment "%s": %s`, name, envName, parsedErr)
+	}
+	return outputMapping, nil
+}
+
+func (cmfClient *CmfRestClient) ListSecretMappings(ctx context.Context, envName string, pageSize int32) ([]cmfsdk.EnvironmentSecretMapping, error) {
+	return listAllPages(pageSize, func(page, size int32) ([]cmfsdk.EnvironmentSecretMapping, error) {
+		mappingsPage, httpResponse, err := cmfClient.EnvironmentsApi.GetEnvironmentSecretMappings(ctx, envName).Page(page).Size(size).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list secret mappings in the environment "%s": %s`, envName, parsedErr)
+		}
+		return mappingsPage.GetItems(), nil
+	})
+}
+
+func (cmfClient *CmfRestClient) UpdateSecretMapping(ctx context.Context, envName, name string, secretMapping cmfsdk.EnvironmentSecretMapping) (cmfsdk.EnvironmentSecretMapping, error) {
+	outputMapping, httpResponse, err := cmfClient.EnvironmentsApi.UpdateEnvironmentSecretMapping(ctx, envName, name).EnvironmentSecretMapping(secretMapping).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.EnvironmentSecretMapping{}, fmt.Errorf(`failed to update secret mapping "%s" in the environment "%s": %s`, name, envName, parsedErr)
+	}
+	return outputMapping, nil
+}
+
+func (cmfClient *CmfRestClient) DeleteSecretMapping(ctx context.Context, envName, name string) error {
+	httpResp, err := cmfClient.EnvironmentsApi.DeleteEnvironmentSecretMapping(ctx, envName, name).Execute()
+	return parseSdkError(httpResp, err)
+}
+
+func (cmfClient *CmfRestClient) CreateSecret(ctx context.Context, secret cmfsdk.Secret) (cmfsdk.Secret, error) {
+	secretName := secret.Metadata.Name
+	outputSecret, httpResponse, err := cmfClient.SecretsApi.CreateSecret(ctx).Secret(secret).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.Secret{}, fmt.Errorf(`failed to create secret "%s": %s`, secretName, parsedErr)
+	}
+	return outputSecret, nil
+}
+
+func (cmfClient *CmfRestClient) DescribeSecret(ctx context.Context, secretName string) (cmfsdk.Secret, error) {
+	outputSecret, httpResponse, err := cmfClient.SecretsApi.GetSecret(ctx, secretName).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.Secret{}, fmt.Errorf(`failed to get secret "%s": %s`, secretName, parsedErr)
+	}
+	return outputSecret, nil
+}
+
+func (cmfClient *CmfRestClient) ListSecrets(ctx context.Context, pageSize int32) ([]cmfsdk.Secret, error) {
+	return listAllPages(pageSize, func(page, size int32) ([]cmfsdk.Secret, error) {
+		secretsPage, httpResponse, err := cmfClient.SecretsApi.GetSecrets(ctx).Page(page).Size(size).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list secrets: %s`, parsedErr)
+		}
+		return secretsPage.GetItems(), nil
+	})
+}
+
+func (cmfClient *CmfRestClient) UpdateSecret(ctx context.Context, secretName string, secret cmfsdk.Secret) (cmfsdk.Secret, error) {
+	outputSecret, httpResponse, err := cmfClient.SecretsApi.UpdateSecret(ctx, secretName).Secret(secret).Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.Secret{}, fmt.Errorf(`failed to update secret "%s": %s`, secretName, parsedErr)
+	}
+	return outputSecret, nil
+}
+
+func (cmfClient *CmfRestClient) DeleteSecret(ctx context.Context, secretName string) error {
+	httpResp, err := cmfClient.SecretsApi.DeleteSecret(ctx, secretName).Execute()
 	return parseSdkError(httpResp, err)
 }
 
@@ -611,30 +699,249 @@ func (cmfClient *CmfRestClient) DescribeDatabase(ctx context.Context, catalogNam
 	return outputDatabase, nil
 }
 
-func (cmfClient *CmfRestClient) ListDatabases(ctx context.Context, catalogName string) ([]cmfsdk.KafkaDatabase, error) {
-	databases := make([]cmfsdk.KafkaDatabase, 0)
-	done := false
-	const pageSize = 100
-	var currentPageNumber int32 = 0
-
-	for !done {
-		databasePage, httpResponse, err := cmfClient.SQLApi.GetKafkaDatabases(ctx, catalogName).Page(currentPageNumber).Size(pageSize).Execute()
+func (cmfClient *CmfRestClient) ListDatabases(ctx context.Context, catalogName string, pageSize int32) ([]cmfsdk.KafkaDatabase, error) {
+	return listAllPages(pageSize, func(page, size int32) ([]cmfsdk.KafkaDatabase, error) {
+		databasePage, httpResponse, err := cmfClient.SQLApi.GetKafkaDatabases(ctx, catalogName).Page(page).Size(size).Execute()
 		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
 			return nil, fmt.Errorf(`failed to list databases in catalog "%s": %s`, catalogName, parsedErr)
 		}
-		databases = append(databases, databasePage.GetItems()...)
-		currentPageNumber, done = extractPageOptions(len(databasePage.GetItems()), currentPageNumber)
-	}
-
-	return databases, nil
+		return databasePage.GetItems(), nil
+	})
 }
 
-// Returns the next page number and whether we need to fetch more pages or not.
-func extractPageOptions(receivedItemsLength int, currentPageNumber int32) (int32, bool) {
-	if receivedItemsLength == 0 {
-		return currentPageNumber, true
+// CreateArtifact uploads a new artifact (version 1) to the specified environment.
+// Both the artifact metadata and the binary file are required by the CMF API.
+func (cmfClient *CmfRestClient) CreateArtifact(ctx context.Context, environment string, artifact cmfsdk.Artifact, file *os.File) (cmfsdk.Artifact, error) {
+	url := fmt.Sprintf("%s/cmf/api/v1/environments/%s/artifacts", cmfClient.cmfBaseURL(), neturl.PathEscape(environment))
+	outputArtifact, err := cmfClient.uploadArtifact(ctx, http.MethodPost, url, artifact, file)
+	if err != nil {
+		return cmfsdk.Artifact{}, fmt.Errorf(`failed to create artifact "%s" in the environment "%s": %s`, artifact.Metadata.Name, environment, err)
 	}
-	return currentPageNumber + 1, false
+	return outputArtifact, nil
+}
+
+// UpdateArtifact updates an artifact in the specified environment.
+// When file is nil, only the metadata is updated; when a file is provided, a new version is created (or deduplicated if identical to the latest).
+func (cmfClient *CmfRestClient) UpdateArtifact(ctx context.Context, environment, name string, artifact cmfsdk.Artifact, file *os.File) (cmfsdk.Artifact, error) {
+	url := fmt.Sprintf("%s/cmf/api/v1/environments/%s/artifacts/%s", cmfClient.cmfBaseURL(), neturl.PathEscape(environment), neturl.PathEscape(name))
+	outputArtifact, err := cmfClient.uploadArtifact(ctx, http.MethodPut, url, artifact, file)
+	if err != nil {
+		return cmfsdk.Artifact{}, fmt.Errorf(`failed to update artifact "%s" in the environment "%s": %s`, name, environment, err)
+	}
+	return outputArtifact, nil
+}
+
+// cmfBaseURL returns the CMF server base URL with any trailing slash trimmed. Used by the handful of methods that
+// build CMF requests manually rather than through the generated SDK.
+func (cmfClient *CmfRestClient) cmfBaseURL() string {
+	return strings.TrimRight(cmfClient.GetConfig().Servers[0].URL, "/")
+}
+
+// setCmfAuthHeader copies the bearer token from the context onto a manually built CMF request, if one is present.
+func setCmfAuthHeader(ctx context.Context, request *http.Request) {
+	if token, ok := ctx.Value(cmfsdk.ContextAccessToken).(string); ok && token != "" {
+		request.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	}
+}
+
+// doCmfRequest sends a manually built CMF request the way the generated SDK sends its own: with the configured
+// User-Agent, default headers, and bearer token, and with request and response dumps when `--unsafe-trace` is set.
+// Unlike the SDK, the request dump leaves out the body, since an artifact upload carries the whole binary file.
+func (cmfClient *CmfRestClient) doCmfRequest(ctx context.Context, request *http.Request) (*http.Response, error) {
+	cfg := cmfClient.GetConfig()
+	if cfg.UserAgent != "" {
+		request.Header.Set("User-Agent", cfg.UserAgent)
+	}
+	for header, value := range cfg.DefaultHeader {
+		request.Header.Add(header, value)
+	}
+	setCmfAuthHeader(ctx, request)
+
+	if cfg.Debug {
+		dump, err := httputil.DumpRequestOut(request, false)
+		if err != nil {
+			return nil, err
+		}
+		log.Printf("\n%s\n", string(dump))
+	}
+
+	response, err := cfg.HTTPClient.Do(request)
+	if err != nil {
+		return nil, err
+	}
+
+	if cfg.Debug {
+		dump, err := httputil.DumpResponse(response, true)
+		if err != nil {
+			response.Body.Close()
+			return nil, err
+		}
+		log.Printf("\n%s\n", string(dump))
+	}
+	return response, nil
+}
+
+// cmfErrorFromBody builds an error from a failed CMF response, preferring the response body over the status line.
+func cmfErrorFromBody(status string, body []byte) error {
+	if trimmed := strings.TrimSpace(string(body)); trimmed != "" {
+		return errors.New(trimmed)
+	}
+	return errors.New(status)
+}
+
+// uploadArtifact sends a multipart/form-data request for the artifact create and update endpoints.
+// The generated SDK serializes the "artifact" object part with fmt "%v" (Go struct representation) rather than JSON,
+// so the request is built here to send a proper JSON part, then dispatched through doCmfRequest.
+func (cmfClient *CmfRestClient) uploadArtifact(ctx context.Context, method, url string, artifact cmfsdk.Artifact, file *os.File) (cmfsdk.Artifact, error) {
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+
+	artifactJson, err := json.Marshal(artifact)
+	if err != nil {
+		return cmfsdk.Artifact{}, fmt.Errorf("failed to serialize artifact: %s", err)
+	}
+
+	partHeader := textproto.MIMEHeader{}
+	partHeader.Set("Content-Disposition", `form-data; name="artifact"`)
+	partHeader.Set("Content-Type", "application/json")
+	artifactPart, err := writer.CreatePart(partHeader)
+	if err != nil {
+		return cmfsdk.Artifact{}, err
+	}
+	if _, err := artifactPart.Write(artifactJson); err != nil {
+		return cmfsdk.Artifact{}, err
+	}
+
+	if file != nil {
+		filePart, err := writer.CreateFormFile("file", filepath.Base(file.Name()))
+		if err != nil {
+			return cmfsdk.Artifact{}, err
+		}
+		if _, err := io.Copy(filePart, file); err != nil {
+			return cmfsdk.Artifact{}, err
+		}
+	}
+
+	if err := writer.Close(); err != nil {
+		return cmfsdk.Artifact{}, err
+	}
+
+	request, err := http.NewRequestWithContext(ctx, method, url, body)
+	if err != nil {
+		return cmfsdk.Artifact{}, err
+	}
+	request.Header.Set("Content-Type", writer.FormDataContentType())
+
+	response, err := cmfClient.doCmfRequest(ctx, request)
+	if err != nil {
+		return cmfsdk.Artifact{}, err
+	}
+	defer response.Body.Close()
+
+	responseBody, err := io.ReadAll(response.Body)
+	if err != nil {
+		return cmfsdk.Artifact{}, err
+	}
+
+	// Create returns 201 and update 200, so treat any non-2xx status as a failure.
+	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
+		return cmfsdk.Artifact{}, cmfErrorFromBody(response.Status, responseBody)
+	}
+
+	var outputArtifact cmfsdk.Artifact
+	if err := json.Unmarshal(responseBody, &outputArtifact); err != nil {
+		return cmfsdk.Artifact{}, fmt.Errorf("failed to parse artifact response: %s", err)
+	}
+	return outputArtifact, nil
+}
+
+// DescribeArtifact fetches an artifact from the specified environment. When version is empty, the latest version is returned.
+func (cmfClient *CmfRestClient) DescribeArtifact(ctx context.Context, environment, name, version string) (cmfsdk.Artifact, error) {
+	request := cmfClient.ArtifactsApi.GetArtifact(ctx, environment, name)
+	if version != "" {
+		request = request.Version(version)
+	}
+	outputArtifact, httpResponse, err := request.Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return cmfsdk.Artifact{}, fmt.Errorf(`failed to describe artifact "%s" in the environment "%s": %s`, name, environment, parsedErr)
+	}
+	return outputArtifact, nil
+}
+
+func (cmfClient *CmfRestClient) ListArtifacts(ctx context.Context, environment string) ([]cmfsdk.Artifact, error) {
+	// Artifacts don't expose a page-size flag, so pass 0 to use listAllPages' default page size.
+	return listAllPages(0, func(page, size int32) ([]cmfsdk.Artifact, error) {
+		artifactsPage, httpResponse, err := cmfClient.ArtifactsApi.ListArtifacts(ctx, environment).Page(page).Size(size).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list artifacts in the environment "%s": %s`, environment, parsedErr)
+		}
+		return artifactsPage.GetItems(), nil
+	})
+}
+
+// ListArtifactVersions lists all versions of an artifact, newest-first.
+func (cmfClient *CmfRestClient) ListArtifactVersions(ctx context.Context, environment, name string) ([]cmfsdk.Artifact, error) {
+	// Artifact versions don't expose a page-size flag, so pass 0 to use listAllPages' default page size.
+	return listAllPages(0, func(page, size int32) ([]cmfsdk.Artifact, error) {
+		versionsPage, httpResponse, err := cmfClient.ArtifactsApi.ListArtifactVersions(ctx, environment, name).Page(page).Size(size).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list versions of artifact "%s" in the environment "%s": %s`, name, environment, parsedErr)
+		}
+		return versionsPage.GetItems(), nil
+	})
+}
+
+// DeleteArtifact deletes an artifact from the specified environment. When version is empty the entire artifact is removed;
+// otherwise the given version ("N" or "all") is removed.
+func (cmfClient *CmfRestClient) DeleteArtifact(ctx context.Context, environment, name, version string) error {
+	request := cmfClient.ArtifactsApi.DeleteArtifact(ctx, environment, name)
+	if version != "" {
+		request = request.Version(version)
+	}
+	httpResp, err := request.Execute()
+	return parseSdkError(httpResp, err)
+}
+
+// DownloadArtifactContent downloads the binary content of an artifact. When version is empty, the latest version is downloaded.
+// The returned *os.File is a temporary file the SDK created; the caller owns it and must Close and os.Remove it.
+func (cmfClient *CmfRestClient) DownloadArtifactContent(ctx context.Context, environment, name, version string) (*os.File, error) {
+	request := cmfClient.ArtifactsApi.DownloadArtifactContent(ctx, environment, name)
+	if version != "" {
+		request = request.Version(version)
+	}
+	file, httpResponse, err := request.Execute()
+	if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+		return nil, fmt.Errorf(`failed to download content of artifact "%s" in the environment "%s": %s`, name, environment, parsedErr)
+	}
+	return file, nil
+}
+
+// listAllPages collects items across all pages by repeatedly calling fetchPage until an empty
+// page is returned. pageSize sets the number of items requested per page; a pageSize <= 0 falls
+// back to the default of 100. fetchPage receives the zero-based page number and the page size.
+func listAllPages[T any](pageSize int32, fetchPage func(page, size int32) ([]T, error)) ([]T, error) {
+	items := make([]T, 0)
+	// 100 is an arbitrary default page size we've chosen.
+	const defaultPageSize int32 = 100
+
+	size := pageSize
+	if size <= 0 {
+		size = defaultPageSize
+	}
+
+	for page := int32(0); ; page++ {
+		pageItems, err := fetchPage(page, size)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, pageItems...)
+
+		if len(pageItems) == 0 {
+			break
+		}
+	}
+
+	return items, nil
 }
 
 // Creates a rich error message from the HTTP response and the SDK error if possible.

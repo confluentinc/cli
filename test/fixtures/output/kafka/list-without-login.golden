@@ -1,0 +1,5 @@
+Error: you must log in to Confluent Cloud with a username and password or log in to Confluent Platform to use this command
+
+Suggestions:
+    Log in with `confluent login` or `confluent login --url <mds-url>`.
+    If you need a Confluent Cloud account, sign up with `confluent cloud-signup`.

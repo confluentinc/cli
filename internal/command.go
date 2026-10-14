@@ -17,6 +17,7 @@ import (
 	"github.com/confluentinc/cli/v4/internal/asyncapi"
 	auditlog "github.com/confluentinc/cli/v4/internal/audit-log"
 	"github.com/confluentinc/cli/v4/internal/billing"
+	"github.com/confluentinc/cli/v4/internal/budget"
 	"github.com/confluentinc/cli/v4/internal/byok"
 	ccpm "github.com/confluentinc/cli/v4/internal/ccpm"
 	cloudsignup "github.com/confluentinc/cli/v4/internal/cloud-signup"
@@ -25,6 +26,7 @@ import (
 	"github.com/confluentinc/cli/v4/internal/configuration"
 	"github.com/confluentinc/cli/v4/internal/connect"
 	"github.com/confluentinc/cli/v4/internal/context"
+	"github.com/confluentinc/cli/v4/internal/endpoint"
 	"github.com/confluentinc/cli/v4/internal/environment"
 	"github.com/confluentinc/cli/v4/internal/feedback"
 	"github.com/confluentinc/cli/v4/internal/flink"
@@ -44,9 +46,10 @@ import (
 	"github.com/confluentinc/cli/v4/internal/secret"
 	servicequota "github.com/confluentinc/cli/v4/internal/service-quota"
 	streamshare "github.com/confluentinc/cli/v4/internal/stream-share"
+	"github.com/confluentinc/cli/v4/internal/switchover"
 	"github.com/confluentinc/cli/v4/internal/tableflow"
-	unifiedstreammanager "github.com/confluentinc/cli/v4/internal/unified-stream-manager"
 	"github.com/confluentinc/cli/v4/internal/update"
+	"github.com/confluentinc/cli/v4/internal/usm"
 	"github.com/confluentinc/cli/v4/internal/version"
 	pauth "github.com/confluentinc/cli/v4/pkg/auth"
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
@@ -76,7 +79,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 
 	cmd.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.FullCLIName))
 	cmd.PersistentFlags().BoolP("help", "h", false, "Show help for this command.")
-	cmd.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
+	cmd.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, and -vvvv for trace).")
 	cmd.PersistentFlags().Bool("unsafe-trace", false, "Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.")
 
 	authTokenHandler := pauth.NewAuthTokenHandler()
@@ -108,6 +111,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(asyncapi.New(prerunner))
 	cmd.AddCommand(auditlog.New(prerunner))
 	cmd.AddCommand(billing.New(prerunner))
+	cmd.AddCommand(budget.New(cfg, prerunner))
 	cmd.AddCommand(byok.New(prerunner))
 	cmd.AddCommand(ccpm.New(cfg, prerunner))
 	cmd.AddCommand(cloudsignup.New(prerunner))
@@ -116,7 +120,8 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(configuration.New(cfg, prerunner))
 	cmd.AddCommand(connect.New(cfg, prerunner))
 	cmd.AddCommand(context.New(prerunner))
-	cmd.AddCommand(environment.New(prerunner))
+	cmd.AddCommand(endpoint.New(cfg, prerunner))
+	cmd.AddCommand(environment.New(cfg, prerunner))
 	cmd.AddCommand(feedback.New(prerunner))
 	cmd.AddCommand(flink.New(cfg, prerunner))
 	cmd.AddCommand(iam.New(cfg, prerunner))
@@ -126,7 +131,7 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, loginCredentialsManager, loginOrganizationManager, authTokenHandler))
 	cmd.AddCommand(logout.New(cfg, prerunner, authTokenHandler))
 	cmd.AddCommand(network.New(cfg, prerunner))
-	cmd.AddCommand(organization.New(prerunner))
+	cmd.AddCommand(organization.New(cfg, prerunner))
 	cmd.AddCommand(plugin.New(cfg, prerunner))
 	cmd.AddCommand(prompt.New(cfg))
 	cmd.AddCommand(providerintegration.New(prerunner))
@@ -136,9 +141,10 @@ func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd.AddCommand(servicequota.New(prerunner))
 	cmd.AddCommand(shell.New(cmd, func() *cobra.Command { return NewConfluentCommand(cfg) }))
 	cmd.AddCommand(streamshare.New(prerunner))
+	cmd.AddCommand(switchover.New(prerunner))
 	cmd.AddCommand(tableflow.New(prerunner))
-	cmd.AddCommand(unifiedstreammanager.New(cfg, prerunner))
 	cmd.AddCommand(update.New(cfg, prerunner))
+	cmd.AddCommand(usm.New(cfg, prerunner))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
 	// cli-tfgen:cli-commands — DO NOT REMOVE (verified by TestCliTfgenMarkers)
 
@@ -193,6 +199,7 @@ func reportUsage(cmd *cobra.Command, cfg *config.Config, u *usage.Usage) error {
 		if err != nil {
 			return err
 		}
+		u.CollectAgentDetect()
 		u.Report(ccloudv2.NewClient(cfg, unsafeTrace))
 	}
 	return nil

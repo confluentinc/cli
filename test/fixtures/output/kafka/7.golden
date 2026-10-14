@@ -8,6 +8,7 @@
     "region": "us-central1",
     "availability": "single-zone",
     "status": "PROVISIONING",
+    "deletion_protection": false,
     "endpoint": ""
   },
   {
@@ -19,6 +20,7 @@
     "region": "us-central1",
     "availability": "multi-zone",
     "status": "PROVISIONING",
+    "deletion_protection": true,
     "endpoint": ""
   },
   {
@@ -31,6 +33,7 @@
     "availability": "single-zone",
     "network": "n-abcde1",
     "status": "UP",
+    "deletion_protection": false,
     "endpoint": "SASL_SSL://kafka-endpoint"
   }
 ]

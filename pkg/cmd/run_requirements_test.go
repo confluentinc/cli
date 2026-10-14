@@ -17,6 +17,7 @@ var (
 
 	regularOrgContextState                 = &config.ContextState{Auth: &config.AuthConfig{Organization: testserver.RegularOrg}}
 	endOfFreeTrialSuspendedOrgContextState = &config.ContextState{Auth: &config.AuthConfig{Organization: testserver.SuspendedOrg(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL)}}
+	pauseTrialSuspendedOrgContextState     = &config.ContextState{Auth: &config.AuthConfig{Organization: testserver.SuspendedOrg(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_PAUSE_TRIAL)}}
 	normalSuspendedOrgContextState         = &config.ContextState{Auth: &config.AuthConfig{Organization: testserver.SuspendedOrg(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION)}}
 
 	cloudCfg = func(contextState *config.ContextState) *config.Config {
@@ -89,6 +90,7 @@ func TestErrIfMissingRunRequirement_Error(t *testing.T) {
 	}{
 		{RequireCloudLogin, onPremCfg, config.RequireCloudLoginErr},
 		{RequireCloudLogin, cloudCfg(endOfFreeTrialSuspendedOrgContextState), config.RequireCloudLoginFreeTrialEndedOrgUnsuspendedErr},
+		{RequireCloudLogin, cloudCfg(pauseTrialSuspendedOrgContextState), config.RequireCloudLoginPauseTrialOrgUnsuspendedErr},
 		{RequireCloudLogin, cloudCfg(normalSuspendedOrgContextState), config.RequireCloudLoginOrgUnsuspendedErr},
 		{RequireCloudLoginAllowFreeTrialEnded, onPremCfg, config.RequireCloudLoginErr},
 		{RequireCloudLoginAllowFreeTrialEnded, cloudCfg(normalSuspendedOrgContextState), config.RequireCloudLoginOrgUnsuspendedErr},

@@ -1,0 +1,4 @@
+Error: API key "UIAPIKEY100" is not a Global API key
+
+Suggestions:
+    Omit `--resource global`, or pass the correct resource ID.

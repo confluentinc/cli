@@ -60,6 +60,8 @@ func (s *CLITestSuite) TestConnectArtifact() {
 		{args: "connect artifact describe cfa-jar123 --cloud aws --environment env-123456", fixture: "connect/artifact/describe-jar.golden"},
 		{args: "connect artifact describe cfa-jar123 --cloud aws --environment env-123456 -o json", fixture: "connect/artifact/describe-json.golden"},
 		{args: "connect artifact describe cfa-jar123 --cloud aws --environment env-123456 -o yaml", fixture: "connect/artifact/describe-yaml.golden"},
+		{args: "connect artifact describe cfa-failed123 --cloud aws --environment env-123456", fixture: "connect/artifact/describe-failed.golden"},
+		{args: "connect artifact describe cfa-failed123 --cloud aws --environment env-123456 -o json", fixture: "connect/artifact/describe-failed-json.golden"},
 		{args: "connect artifact delete cfa-zip123 --cloud aws --environment env-123456 --force", fixture: "connect/artifact/delete-force.golden"},
 		{args: "connect artifact delete cfa-zip123 --cloud aws --environment env-123456", input: "y\n", fixture: "connect/artifact/delete-prompt.golden"},
 		{args: "connect artifact delete cfa-invalid --cloud aws --environment env-123456", fixture: "connect/artifact/delete-invalid-artifact.golden", exitCode: 1},

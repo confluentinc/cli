@@ -14,6 +14,7 @@ MYKEY17
 MYKEY18
 MYKEY19	human-output
 MYKEY2
+MYKEY20	created-and-used
 MYKEY3
 MYKEY4	my-cool-app
 MYKEY6	my-ksql-app
@@ -23,5 +24,6 @@ UIAPIKEY100
 UIAPIKEY101
 UIAPIKEY102
 UIAPIKEY103
+UIGLOBALKEY100
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp

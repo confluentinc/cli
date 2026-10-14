@@ -143,7 +143,7 @@ func (c *command) produceCloud(cmd *cobra.Command, args []string) error {
 		cluster.Bootstrap = bootstrap
 	}
 
-	if err := addApiKeyToCluster(cmd, cluster); err != nil {
+	if err := addApiKeyToCluster(cmd, c.Context, cluster); err != nil {
 		return err
 	}
 
@@ -184,7 +184,7 @@ func (c *command) produceCloud(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	producer, err := newProducer(cluster, c.clientID, configFile, config)
+	producer, err := newProducer(c.Context, cluster, c.clientID, configFile, config)
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateProducerErrorMsg, err)
 	}
@@ -501,7 +501,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 			return nil, nil, err
 		}
 
-		schemaString, err := client.GetSchema(schemaId.Value(), subject)
+		schemaString, err := client.GetSchema(schemaId.Value(), subject, "")
 		if err != nil {
 			return nil, nil, err
 		}
@@ -645,7 +645,7 @@ func (c *command) initSchemaAndGetInfoOnPrem(cmd *cobra.Command, topic, mode str
 			return nil, nil, err
 		}
 
-		schemaString, err := client.GetSchema(schemaId.Value(), subject)
+		schemaString, err := client.GetSchema(schemaId.Value(), subject, "")
 		if err != nil {
 			return nil, nil, err
 		}

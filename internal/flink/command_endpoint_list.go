@@ -53,7 +53,7 @@ func (c *command) endpointList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	endpoints, err := c.V2Client.ListEndpoints(environmentId, cloud, region, flinkEndpointService, nil, "")
+	endpoints, err := c.V2Client.ListEndpoints(cloud, region, flinkEndpointService, nil, environmentId, "")
 	if err != nil {
 		return fmt.Errorf("unable to list Flink endpoints: %w", err)
 	}

@@ -12,6 +12,9 @@
 # Local agent/tooling artifacts
 /.planning/
 
+# Editor/IDE
+/.idea/
+
 # RPM/DEB
 /rpm/
 /deb/
@@ -42,6 +45,7 @@
 # Code coverage profiles and other test artifacts
 *.out
 coverage.*
+!coverage.go
 *.coverprofile
 profile.cov
 

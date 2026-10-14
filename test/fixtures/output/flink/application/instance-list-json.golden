@@ -1,0 +1,32 @@
+[
+  {
+    "apiVersion": "cmf.confluent.io/v1",
+    "kind": "FlinkApplicationInstance",
+    "metadata": {
+      "name": "inst-001",
+      "uid": "inst-001",
+      "creationTimestamp": "2025-09-18T10:00:00Z"
+    },
+    "status": {
+      "jobStatus": {
+        "jobId": "job-abc123",
+        "state": "RUNNING"
+      }
+    }
+  },
+  {
+    "apiVersion": "cmf.confluent.io/v1",
+    "kind": "FlinkApplicationInstance",
+    "metadata": {
+      "name": "inst-002",
+      "uid": "inst-002",
+      "creationTimestamp": "2025-09-17T08:30:00Z"
+    },
+    "status": {
+      "jobStatus": {
+        "jobId": "job-def456",
+        "state": "FINISHED"
+      }
+    }
+  }
+]

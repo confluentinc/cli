@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -16,6 +17,26 @@ import (
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 )
 
+const invalidSecretMappingName = "invalid-secret-mapping"
+
+func createSecretMapping(name string) cmfsdk.EnvironmentSecretMapping {
+	timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).String()
+	mappingName := name
+	secretName := "my-actual-secret"
+	return cmfsdk.EnvironmentSecretMapping{
+		ApiVersion: "cmf/v1",
+		Kind:       "EnvironmentSecretMapping",
+		Metadata: &cmfsdk.EnvironmentSecretMappingMetadata{
+			Name:              &mappingName,
+			CreationTimestamp: &timeStamp,
+		},
+		Spec: &cmfsdk.EnvironmentSecretMappingSpec{
+			SecretName: secretName,
+		},
+	}
+}
+
+const invalidSecretName = "invalid-secret"
 const invalidDatabaseName = "invalid-database"
 
 // Helper function to create a Flink application.
@@ -103,6 +124,26 @@ func createApplication(name string) cmfsdk.FlinkApplication {
 		},
 		Status: &status,
 	}
+}
+
+// paginateApplications emulates the CMF applications endpoint's zero-based page/size paging
+// (offset = page * size) so that --page-size is exercised end-to-end. A size <= 0 falls back
+// to 100.
+func paginateApplications(all []cmfsdk.FlinkApplication, pageParam, sizeParam string) []cmfsdk.FlinkApplication {
+	page, _ := strconv.Atoi(pageParam)
+	size, err := strconv.Atoi(sizeParam)
+	if err != nil || size <= 0 {
+		size = 100
+	}
+	start := page * size
+	if start >= len(all) {
+		return []cmfsdk.FlinkApplication{}
+	}
+	end := start + size
+	if end > len(all) {
+		end = len(all)
+	}
+	return all[start:end]
 }
 
 // Helper function to create a Flink environment.
@@ -567,6 +608,97 @@ func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for "cmf/api/v1alpha1/environments/{envName}/applications/{appName}/events"
+func handleCmfApplicationEvents(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		envName := vars["envName"]
+		appName := vars["appName"]
+
+		if r.Method != http.MethodGet {
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+			return
+		}
+
+		if envName != "default" && envName != "test" {
+			http.Error(w, "Environment not found", http.StatusNotFound)
+			return
+		}
+
+		// Validate application exists, matching handleCmfApplication behavior.
+		validApps := map[string]bool{
+			"default-application-1": true,
+			"default-application-2": true,
+			"default-application-s": true,
+		}
+		if envName == "default" && !validApps[appName] {
+			http.Error(w, "Application not found", http.StatusNotFound)
+			return
+		}
+
+		eventsPage := map[string]interface{}{
+			"items": []cmfsdk.FlinkApplicationEvent{},
+		}
+
+		page := r.URL.Query().Get("page")
+
+		if envName == "default" && appName == "default-application-1" && page == "0" {
+			timestamp1 := "2024-01-15T10:30:00Z"
+			timestamp2 := "2024-01-15T10:31:00Z"
+			instance := "default-application-1-instance-1"
+			eventType1 := "Normal"
+			eventType2 := "Warning"
+			message1 := "Application started successfully"
+			message2 := "Application restarting due to failure"
+			name1 := "event-001"
+			name2 := "event-002"
+			newStatus := "DEPLOYED"
+			exceptionString := "java.lang.RuntimeException: Job execution failed"
+			newStatusData := cmfsdk.EventDataNewStatusAsEventData(&cmfsdk.EventDataNewStatus{NewStatus: &newStatus})
+			jobExceptionData := cmfsdk.EventDataJobExceptionAsEventData(&cmfsdk.EventDataJobException{ExceptionString: &exceptionString})
+
+			events := []cmfsdk.FlinkApplicationEvent{
+				{
+					ApiVersion: "cmf.confluent.io/v1alpha1",
+					Kind:       "FlinkApplicationEvent",
+					Metadata: cmfsdk.EventMetadata{
+						Name:                     &name1,
+						CreationTimestamp:        &timestamp1,
+						FlinkApplicationInstance: &instance,
+					},
+					Status: cmfsdk.EventStatus{
+						Type:    &eventType1,
+						Message: &message1,
+						Data:    &newStatusData,
+					},
+				},
+				{
+					ApiVersion: "cmf.confluent.io/v1alpha1",
+					Kind:       "FlinkApplicationEvent",
+					Metadata: cmfsdk.EventMetadata{
+						Name:                     &name2,
+						CreationTimestamp:        &timestamp2,
+						FlinkApplicationInstance: &instance,
+					},
+					Status: cmfsdk.EventStatus{
+						Type:    &eventType2,
+						Message: &message2,
+						Data:    &jobExceptionData,
+					},
+				},
+			}
+			eventsPage = map[string]interface{}{
+				"items": events,
+			}
+		}
+
+		err := json.NewEncoder(w).Encode(eventsPage)
+		require.NoError(t, err)
+	}
+}
+
 // Handler for "cmf/api/v1/environments/{environment}/applications"
 // Used by list, create and update applications.
 func handleCmfApplications(t *testing.T) http.HandlerFunc {
@@ -583,26 +715,18 @@ func handleCmfApplications(t *testing.T) http.HandlerFunc {
 			}
 
 			// For the 'test' environment, return an empty list.
-			// For the 'default' environment, return applications but only on page 0.
+			// For the 'default' environment, return three applications, paged.
 			// For the 'update-failure' environment, return the 'update-failure-application' application.
+			var allItems []cmfsdk.FlinkApplication
+			switch environment {
+			case "default":
+				allItems = []cmfsdk.FlinkApplication{createApplication("default-application-1"), createApplication("default-application-2"), createApplication("default-application-s")}
+			case "update-failure":
+				allItems = []cmfsdk.FlinkApplication{createApplication("update-failure-application")}
+			}
+
 			applicationsPage := map[string]interface{}{
-				"items": []cmfsdk.FlinkApplication{},
-			}
-
-			page := r.URL.Query().Get("page")
-
-			if environment == "default" && page == "0" {
-				items := []cmfsdk.FlinkApplication{createApplication("default-application-1"), createApplication("default-application-2"), createApplication("default-application-s")}
-				applicationsPage = map[string]interface{}{
-					"items": items,
-				}
-			}
-
-			if environment == "update-failure" && page == "0" {
-				items := []cmfsdk.FlinkApplication{createApplication("update-failure-application")}
-				applicationsPage = map[string]interface{}{
-					"items": items,
-				}
+				"items": paginateApplications(allItems, r.URL.Query().Get("page"), r.URL.Query().Get("size")),
 			}
 
 			err := json.NewEncoder(w).Encode(applicationsPage)
@@ -710,6 +834,117 @@ func handleCmfApplication(t *testing.T) http.HandlerFunc {
 			}
 
 			http.Error(w, "Application not found", http.StatusNotFound)
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+// Helper function to create a Flink application instance.
+func createApplicationInstance(name, jobId, state, creationTimestamp string) cmfsdk.FlinkApplicationInstance {
+	instance := cmfsdk.FlinkApplicationInstance{
+		ApiVersion: "cmf.confluent.io/v1",
+		Kind:       "FlinkApplicationInstance",
+	}
+
+	metadata := cmfsdk.ApplicationInstanceMetadata{
+		Name:              &name,
+		Uid:               &name,
+		CreationTimestamp: &creationTimestamp,
+	}
+	instance.Metadata = &metadata
+
+	jobStatus := cmfsdk.ApplicationInstanceStatusJobStatus{
+		JobId: &jobId,
+		State: &state,
+	}
+	status := cmfsdk.ApplicationInstanceStatus{
+		JobStatus: &jobStatus,
+	}
+	instance.Status = &status
+
+	return instance
+}
+
+// Handler for "cmf/api/v1/environments/{environment}/applications/{application}/instances"
+// Used to list application instances.
+func handleCmfApplicationInstances(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		environment := vars["environment"]
+		application := vars["application"]
+
+		switch r.Method {
+		case http.MethodGet:
+			if environment != "default" && environment != "test" {
+				http.Error(w, "Environment not found", http.StatusNotFound)
+				return
+			}
+
+			if application != "default-application-1" && application != "default-application-2" {
+				http.Error(w, "Application not found", http.StatusNotFound)
+				return
+			}
+
+			instancesPage := map[string]interface{}{
+				"items": []cmfsdk.FlinkApplicationInstance{},
+			}
+
+			page := r.URL.Query().Get("page")
+
+			if application == "default-application-1" && page == "0" {
+				items := []cmfsdk.FlinkApplicationInstance{
+					createApplicationInstance("inst-001", "job-abc123", "RUNNING", "2025-09-18T10:00:00Z"),
+					createApplicationInstance("inst-002", "job-def456", "FINISHED", "2025-09-17T08:30:00Z"),
+				}
+				instancesPage = map[string]interface{}{
+					"items": items,
+				}
+			}
+
+			err := json.NewEncoder(w).Encode(instancesPage)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+// Handler for "cmf/api/v1/environments/{environment}/applications/{application}/instances/{instName}"
+// Used to describe a specific application instance.
+func handleCmfApplicationInstance(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		environment := vars["environment"]
+		application := vars["application"]
+		instName := vars["instName"]
+
+		switch r.Method {
+		case http.MethodGet:
+			if environment != "default" && environment != "test" {
+				http.Error(w, "Environment not found", http.StatusNotFound)
+				return
+			}
+
+			if application != "default-application-1" && application != "default-application-2" {
+				http.Error(w, "Application not found", http.StatusNotFound)
+				return
+			}
+
+			if application == "default-application-1" && instName == "inst-001" {
+				instance := createApplicationInstance("inst-001", "job-abc123", "RUNNING", "2025-09-18T10:00:00Z")
+				err := json.NewEncoder(w).Encode(instance)
+				require.NoError(t, err)
+				return
+			}
+
+			http.Error(w, "Instance not found", http.StatusNotFound)
+			return
 		default:
 			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
 		}
@@ -1386,6 +1621,535 @@ func handleCmfStatementExceptions(t *testing.T) http.HandlerFunc {
 				Data: data,
 			}
 			err := json.NewEncoder(w).Encode(exceptions)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func handleCmfSystemInformation(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		switch r.Method {
+		case http.MethodGet:
+			sysInfo := map[string]interface{}{
+				"status": map[string]interface{}{
+					"version":  "1.0.0",
+					"revision": "abc1234def5678",
+				},
+			}
+			err := json.NewEncoder(w).Encode(sysInfo)
+			require.NoError(t, err)
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func handleCmfSecretMappings(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+		switch r.Method {
+		case http.MethodGet:
+			mappings := []cmfsdk.EnvironmentSecretMapping{
+				createSecretMapping("test-mapping-1"),
+				createSecretMapping("test-mapping-2"),
+			}
+			mappingsPage := cmfsdk.EnvironmentSecretMappingsPage{}
+			page := r.URL.Query().Get("page")
+
+			if page == "0" {
+				mappingsPage.SetItems(mappings)
+			}
+
+			err := json.NewEncoder(w).Encode(mappingsPage)
+			require.NoError(t, err)
+		case http.MethodPost:
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var mapping cmfsdk.EnvironmentSecretMapping
+			err = json.Unmarshal(reqBody, &mapping)
+			require.NoError(t, err)
+
+			var mappingName string
+			if mapping.Metadata != nil && mapping.Metadata.Name != nil {
+				mappingName = *mapping.Metadata.Name
+			}
+
+			if mappingName == invalidSecretMappingName {
+				http.Error(w, "The EnvironmentSecretMapping object from resource file is invalid", http.StatusUnprocessableEntity)
+				return
+			}
+
+			timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
+			if mapping.Metadata == nil {
+				mapping.Metadata = &cmfsdk.EnvironmentSecretMappingMetadata{}
+			}
+			mapping.Metadata.CreationTimestamp = &timeStamp
+			err = json.NewEncoder(w).Encode(mapping)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func handleCmfSecretMapping(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		name := vars["name"]
+
+		switch r.Method {
+		case http.MethodGet:
+			if name == invalidSecretMappingName {
+				http.Error(w, "The secret mapping name is invalid", http.StatusNotFound)
+				return
+			}
+
+			mapping := createSecretMapping(name)
+			err := json.NewEncoder(w).Encode(mapping)
+			require.NoError(t, err)
+			return
+		case http.MethodPut:
+			if name == invalidSecretMappingName {
+				http.Error(w, "The secret mapping name is invalid", http.StatusNotFound)
+				return
+			}
+
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var mapping cmfsdk.EnvironmentSecretMapping
+			err = json.Unmarshal(reqBody, &mapping)
+			require.NoError(t, err)
+
+			timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).String()
+			if mapping.Metadata == nil {
+				mapping.Metadata = &cmfsdk.EnvironmentSecretMappingMetadata{}
+			}
+			mapping.Metadata.CreationTimestamp = &timeStamp
+			err = json.NewEncoder(w).Encode(mapping)
+			require.NoError(t, err)
+			return
+		case http.MethodDelete:
+			if name == "non-exist-secret-mapping" {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func createSecret(secretName string) cmfsdk.Secret {
+	timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).String()
+	maskedData := map[string]string{
+		"bootstrap.servers": "****",
+		"sasl.jaas.config":  "****",
+	}
+	return cmfsdk.Secret{
+		ApiVersion: "cmf/v1",
+		Kind:       "Secret",
+		Metadata: cmfsdk.SecretMetadata{
+			Name:              secretName,
+			CreationTimestamp: &timeStamp,
+		},
+		Spec: cmfsdk.SecretSpec{
+			Data: &maskedData,
+		},
+	}
+}
+
+func handleCmfSecrets(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+		switch r.Method {
+		case http.MethodGet:
+			secrets := []cmfsdk.Secret{
+				createSecret("test-secret-1"),
+				createSecret("test-secret-2"),
+			}
+			secretsPage := cmfsdk.SecretsPage{}
+			page := r.URL.Query().Get("page")
+
+			if page == "0" {
+				secretsPage.SetItems(secrets)
+			}
+
+			err := json.NewEncoder(w).Encode(secretsPage)
+			require.NoError(t, err)
+		case http.MethodPost:
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var secret cmfsdk.Secret
+			err = json.Unmarshal(reqBody, &secret)
+			require.NoError(t, err)
+
+			secretName := secret.Metadata.Name
+
+			if secretName == invalidSecretName {
+				http.Error(w, "The Secret object from resource file is invalid", http.StatusUnprocessableEntity)
+				return
+			}
+
+			timeStamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
+			secret.Metadata.CreationTimestamp = &timeStamp
+			// Mask the secret data in response
+			maskedData := make(map[string]string)
+			if secret.Spec.Data != nil {
+				for k := range *secret.Spec.Data {
+					maskedData[k] = "****"
+				}
+			}
+			secret.Spec.Data = &maskedData
+			err = json.NewEncoder(w).Encode(secret)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+func handleCmfSecret(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		secretName := vars["secretName"]
+
+		switch r.Method {
+		case http.MethodGet:
+			if secretName == invalidSecretName {
+				http.Error(w, "The secret name is invalid", http.StatusNotFound)
+				return
+			}
+
+			secret := createSecret(secretName)
+			err := json.NewEncoder(w).Encode(secret)
+			require.NoError(t, err)
+			return
+		case http.MethodPut:
+			if secretName == invalidSecretName {
+				http.Error(w, "The secret name is invalid", http.StatusNotFound)
+				return
+			}
+
+			reqBody, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			var secret cmfsdk.Secret
+			err = json.Unmarshal(reqBody, &secret)
+			require.NoError(t, err)
+
+			timeStamp := time.Date(2025, time.August, 5, 12, 0, 0, 0, time.UTC).String()
+			secret.Metadata.CreationTimestamp = &timeStamp
+			// Mask the secret data in response
+			maskedData := make(map[string]string)
+			if secret.Spec.Data != nil {
+				for k := range *secret.Spec.Data {
+					maskedData[k] = "****"
+				}
+			}
+			secret.Spec.Data = &maskedData
+			err = json.NewEncoder(w).Encode(secret)
+			require.NoError(t, err)
+			return
+		case http.MethodDelete:
+			if secretName == "non-exist-secret" {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+// submittedArtifactLabels returns the "labels" field of the submitted artifact JSON, or nil when the field is omitted.
+func submittedArtifactLabels(t *testing.T, rawArtifact string) *map[string]string {
+	var probe struct {
+		Metadata struct {
+			Labels *map[string]string `json:"labels"`
+		} `json:"metadata"`
+	}
+	require.NoError(t, json.Unmarshal([]byte(rawArtifact), &probe))
+	return probe.Metadata.Labels
+}
+
+// assertArtifactLabelContract enforces the CLI's label contract on the submitted artifact JSON: the "labels" field must
+// be omitted entirely to preserve existing labels (nil map / --label not passed), and the CLI must not send an empty
+// object, which CMF interprets as "clear all labels", unless `--clear-labels` asked for it (see
+// assertArtifactLabelsCleared). When present, labels must carry the caller's entries.
+func assertArtifactLabelContract(t *testing.T, rawArtifact string) {
+	if labels := submittedArtifactLabels(t, rawArtifact); labels != nil {
+		require.NotEmpty(t, *labels, "CLI must omit the labels field to preserve labels, never send an empty object")
+	}
+}
+
+// assertArtifactLabelsCleared requires the explicit empty "labels" object that `update --clear-labels` sends.
+func assertArtifactLabelsCleared(t *testing.T, rawArtifact string) {
+	labels := submittedArtifactLabels(t, rawArtifact)
+	require.NotNil(t, labels, `--clear-labels must send an empty "labels" object, not omit the field`)
+	require.Empty(t, *labels, `--clear-labels must send an empty "labels" object`)
+}
+
+// assertArtifactFileUploaded requires the multipart request to carry exactly one "file" part whose bytes match the
+// given fixture, so an implementation that uploads only the metadata part can't pass the create tests.
+func assertArtifactFileUploaded(t *testing.T, r *http.Request, fixturePath string) {
+	fileHeaders := r.MultipartForm.File["file"]
+	require.Len(t, fileHeaders, 1, `expected exactly one "file" part`)
+
+	uploaded, err := fileHeaders[0].Open()
+	require.NoError(t, err)
+	defer uploaded.Close()
+
+	actual, err := io.ReadAll(uploaded)
+	require.NoError(t, err)
+	expected, err := os.ReadFile(fixturePath)
+	require.NoError(t, err)
+	require.Equal(t, expected, actual, "uploaded bytes must match the artifact file")
+}
+
+// createArtifactObject builds a fully-populated Artifact for the given name and version with deterministic field values.
+func createArtifactObject(name string, version int32) cmfsdk.Artifact {
+	timestamp := time.Date(2025, time.March, 12, 23, 42, 0, 0, time.UTC).String()
+	return cmfsdk.Artifact{
+		ApiVersion: "cmf.confluent.io/v1",
+		Kind:       "Artifact",
+		Metadata: cmfsdk.ArtifactMetadata{
+			Name:              name,
+			Uid:               cmfsdk.PtrString("11111111-1111-1111-1111-111111111111"),
+			CreationTimestamp: &timestamp,
+			UpdateTimestamp:   &timestamp,
+		},
+		Spec: map[string]interface{}{},
+		Status: &cmfsdk.ArtifactStatus{
+			Version:           cmfsdk.PtrInt32(version),
+			CreationTimestamp: &timestamp,
+			Path:              cmfsdk.PtrString(fmt.Sprintf("artifacts/%s/%d", name, version)),
+			Size:              cmfsdk.PtrInt64(1024),
+			Checksum:          cmfsdk.PtrString("d41d8cd98f00b204e9800998ecf8427e"),
+			Phase:             cmfsdk.PtrString("READY"),
+		},
+	}
+}
+
+// buildArtifactResponse echoes the submitted name, labels, and annotations while attaching a deterministic server-side status.
+// Like CMF, it responds without labels to an empty "labels" object, which clears them.
+func buildArtifactResponse(submitted cmfsdk.Artifact, version int32) cmfsdk.Artifact {
+	artifact := createArtifactObject(submitted.Metadata.Name, version)
+	if len(submitted.Metadata.Labels) > 0 {
+		artifact.Metadata.Labels = submitted.Metadata.Labels
+	}
+	if submitted.Metadata.Annotations != nil {
+		artifact.Metadata.Annotations = submitted.Metadata.Annotations
+	}
+	return artifact
+}
+
+// Handler for "/cmf/api/v1/environments/{environment}/artifacts"
+// Used by list and create Flink artifacts.
+func handleCmfArtifacts(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		if mux.Vars(r)["environment"] == "non-exist" {
+			http.Error(w, "Environment not found", http.StatusNotFound)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			artifactsPage := cmfsdk.ArtifactsPage{}
+			if r.URL.Query().Get("page") == "0" {
+				artifactsPage.SetItems([]cmfsdk.Artifact{
+					createArtifactObject("test-artifact-1", 1),
+					createArtifactObject("test-artifact-2", 3),
+				})
+			}
+			err := json.NewEncoder(w).Encode(artifactsPage)
+			require.NoError(t, err)
+			return
+		case http.MethodPost:
+			require.NoError(t, r.ParseMultipartForm(32<<20))
+			rawArtifact := r.FormValue("artifact")
+			assertArtifactLabelContract(t, rawArtifact)
+			assertArtifactFileUploaded(t, r, "test/fixtures/input/flink/artifact/artifact.jar")
+			var artifact cmfsdk.Artifact
+			require.NoError(t, json.Unmarshal([]byte(rawArtifact), &artifact))
+
+			if artifact.Metadata.Name == "existing-artifact" {
+				http.Error(w, "The artifact name already exists, please try with another artifact name", http.StatusConflict)
+				return
+			}
+
+			w.WriteHeader(http.StatusCreated)
+			err := json.NewEncoder(w).Encode(buildArtifactResponse(artifact, 1))
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+// Handler for "/cmf/api/v1/environments/{environment}/artifacts/{artifactName}"
+// Used by describe, update (metadata-only), version create (with file), and delete a Flink artifact.
+func handleCmfArtifact(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		artifactName := vars["artifactName"]
+
+		if vars["environment"] == "non-exist" {
+			http.Error(w, "Environment not found", http.StatusNotFound)
+			return
+		}
+		if artifactName == "invalid-artifact" || artifactName == "non-exist-artifact" {
+			http.Error(w, "The artifact name is invalid", http.StatusNotFound)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			version := int32(3)
+			if requested := r.URL.Query().Get("version"); requested != "" {
+				parsed, err := strconv.Atoi(requested)
+				if err != nil {
+					http.Error(w, "invalid version", http.StatusBadRequest)
+					return
+				}
+				version = int32(parsed)
+			}
+			artifact := createArtifactObject(artifactName, version)
+			// Exercise the human describe view's Labels/Annotations rows for this fixture name.
+			if artifactName == "labeled-artifact" {
+				artifact.Metadata.Labels = map[string]string{"owner": "team-a", "tier": "gold"}
+				artifact.Metadata.Annotations = map[string]string{"note": "managed-externally"}
+			}
+			err := json.NewEncoder(w).Encode(artifact)
+			require.NoError(t, err)
+			return
+		case http.MethodPut:
+			require.NoError(t, r.ParseMultipartForm(32<<20))
+			rawArtifact := r.FormValue("artifact")
+			// This fixture name is used only by the `update --clear-labels` test.
+			if artifactName == "clear-labels-artifact" {
+				assertArtifactLabelsCleared(t, rawArtifact)
+			} else {
+				assertArtifactLabelContract(t, rawArtifact)
+			}
+			var artifact cmfsdk.Artifact
+			require.NoError(t, json.Unmarshal([]byte(rawArtifact), &artifact))
+
+			hasFile := r.MultipartForm != nil && len(r.MultipartForm.File["file"]) > 0
+			// This fixture name stands for an upload identical to the latest version. Like CMF, respond 200 with that
+			// version and a status message saying no new version was created.
+			if hasFile && artifactName == "identical-artifact" {
+				response := buildArtifactResponse(artifact, 1)
+				response.Status.SetMessage(fmt.Sprintf("Identical content already exists as version 1 of Artifact '%s' in Environment '%s'; no new version was created.", artifactName, vars["environment"]))
+				require.NoError(t, json.NewEncoder(w).Encode(response))
+				return
+			}
+
+			// A "file" part indicates a new version upload (201, like CMF); its absence is a metadata-only update (200).
+			version := int32(1)
+			if hasFile {
+				version = 2
+				w.WriteHeader(http.StatusCreated)
+			}
+
+			err := json.NewEncoder(w).Encode(buildArtifactResponse(artifact, version))
+			require.NoError(t, err)
+			return
+		case http.MethodDelete:
+			// Assert the CLI forwarded the --version flag verbatim: a version-scoped delete sends ?version=<value>,
+			// a whole-artifact delete sends none. (These fixture names are used only by the version-delete tests.)
+			version := r.URL.Query().Get("version")
+			switch artifactName {
+			case "delete-version-2":
+				require.Equal(t, "2", version)
+			case "delete-version-all":
+				require.Equal(t, "all", version)
+			default:
+				require.Empty(t, version, "whole-artifact delete must not send a version query param")
+			}
+			w.WriteHeader(http.StatusNoContent)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+// Handler for "/cmf/api/v1/environments/{environment}/artifacts/{artifactName}/versions"
+// Used by list the versions of a Flink artifact.
+func handleCmfArtifactVersions(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		artifactName := vars["artifactName"]
+
+		if artifactName == "invalid-artifact" || artifactName == "non-exist-artifact" {
+			http.Error(w, "The artifact name is invalid", http.StatusNotFound)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			versionsPage := cmfsdk.ArtifactsPage{}
+			if r.URL.Query().Get("page") == "0" {
+				versionsPage.SetItems([]cmfsdk.Artifact{
+					createArtifactObject(artifactName, 3),
+					createArtifactObject(artifactName, 2),
+					createArtifactObject(artifactName, 1),
+				})
+			}
+			err := json.NewEncoder(w).Encode(versionsPage)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
+// Handler for "/cmf/api/v1/environments/{environment}/artifacts/{artifactName}/content"
+// Used by download the content of a Flink artifact.
+func handleCmfArtifactContent(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		artifactName := vars["artifactName"]
+
+		if artifactName == "invalid-artifact" || artifactName == "non-exist-artifact" {
+			http.Error(w, "The artifact name is invalid", http.StatusNotFound)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			// Return version-specific bytes so the download tests can tell whether `--version` was forwarded.
+			content := "dummy artifact content"
+			if version := r.URL.Query().Get("version"); version != "" {
+				content = fmt.Sprintf("dummy artifact content v%s", version)
+			}
+			w.Header().Set("Content-Type", "application/octet-stream")
+			w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s.jar"`, artifactName))
+			_, err := w.Write([]byte(content))
 			require.NoError(t, err)
 			return
 		default:

@@ -11,12 +11,11 @@ import (
 
 func (c *command) newComputePoolDeleteCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "delete <name-1> [name-2] ... [name-n]",
-		Short:       "Delete one or more Flink compute pools.",
-		Long:        `Delete one or more Flink compute pools in Confluent Platform, a compute pool can only be deleted if there are no statements associated with it.`,
-		Args:        cobra.MinimumNArgs(1),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
-		RunE:        c.computePoolDeleteOnPrem,
+		Use:   "delete <name-1> [name-2] ... [name-n]",
+		Short: "Delete one or more Flink compute pools.",
+		Long:  `Delete one or more Flink compute pools in Confluent Platform, a compute pool can only be deleted if there are no statements associated with it.`,
+		Args:  cobra.MinimumNArgs(1),
+		RunE:  c.computePoolDeleteOnPrem,
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")

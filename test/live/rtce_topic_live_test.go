@@ -19,7 +19,7 @@ func (s *CLILiveTestSuite) TestRtceTopicCRUDLive() {
 	t.Parallel()
 	state := s.setupTestContext(t)
 
-	// Setup for extra prereqs
+	// Setup for prerequisites
 	schemaContent := `{"type":"record","name":"PrereqValue","fields":[{"name":"id","type":"string"}]}`
 	schemaDir, err := os.MkdirTemp("", "cli-live-schema-*")
 	require.NoError(t, err)
@@ -28,9 +28,9 @@ func (s *CLILiveTestSuite) TestRtceTopicCRUDLive() {
 	require.NoError(t, os.WriteFile(schemaFile, []byte(schemaContent), 0o644))
 
 	// Variables
-	cloud := "AWS"
+	cloud := liveTestCloud()
 	description := "live-test-description"
-	region := "us-east-1"
+	region := liveTestRegion()
 	topicName := "orders_topic"
 	updatedDescription := "updated-live-test-description"
 
@@ -118,21 +118,68 @@ func (s *CLILiveTestSuite) TestRtceTopicCRUDLive() {
 	createSteps := []CLILiveTest{
 		{
 			Name:         "Create RTCE topic",
-			Args:         "rtce rtce-topic create --cloud " + cloud + " --description " + description + " --region " + region + " --topic-name " + topicName + " --environment {{.env_id}} -o json",
+			Args:         "rtce rtce-topic create --cloud " + cloud + " --description " + description + " --region " + region + " --topic-name " + topicName + " --environment {{.env_id}} --wait -o json",
 			UseStateVars: true,
-			JSONFields:   map[string]string{},
+			JSONFields: map[string]string{
+				"topic_name": topicName,
+			},
+			JSONFieldsExist: []string{"cloud", "description", "region"},
 		},
 	}
 
+	// The create command was invoked with --wait, so it already blocked until the
+	// resource reached a terminal state — no separate readiness poll is needed
+	// here (the update/delete polls below stay, since those commands have no
+	// --wait yet).
 	for _, step := range createSteps {
 		t.Run(step.Name, func(t *testing.T) {
 			s.runLiveCommand(t, step, state)
 		})
 	}
 
-	// Wait for the resource to reach its ready state. The condition accepts
-	// any of the spec-declared target states (any-of semantics).
-	t.Run("Wait for RTCE topic ready", func(t *testing.T) {
+	// Read operations (no state change)
+	readSteps := []CLILiveTest{
+		{
+			Name:         "Describe RTCE topic",
+			Args:         "rtce rtce-topic describe " + topicName + " --environment {{.env_id}} -o json",
+			UseStateVars: true,
+			JSONFields: map[string]string{
+				"topic_name": topicName,
+			},
+			JSONFieldsExist: []string{"cloud", "description", "region"},
+		},
+		{
+			Name:         "List RTCE topics",
+			Args:         "rtce rtce-topic list --environment {{.env_id}}",
+			UseStateVars: true,
+			Contains:     []string{topicName},
+		},
+	}
+
+	for _, step := range readSteps {
+		t.Run(step.Name, func(t *testing.T) {
+			s.runLiveCommand(t, step, state)
+		})
+	}
+
+	// Update the resource, then wait for it to settle back to a ready state
+	// before verifying the change took effect (an update can briefly
+	// re-transition an async resource's lifecycle phase).
+	updateSteps := []CLILiveTest{
+		{
+			Name:         "Update RTCE topic description",
+			Args:         "rtce rtce-topic update " + topicName + " --description " + updatedDescription + " --environment {{.env_id}}",
+			UseStateVars: true,
+		},
+	}
+
+	for _, step := range updateSteps {
+		t.Run(step.Name, func(t *testing.T) {
+			s.runLiveCommand(t, step, state)
+		})
+	}
+
+	t.Run("Wait for RTCE topic ready after update", func(t *testing.T) {
 		s.waitForCondition(t,
 			"rtce rtce-topic describe "+topicName+" --environment {{.env_id}} -o json",
 			state,
@@ -140,45 +187,41 @@ func (s *CLILiveTestSuite) TestRtceTopicCRUDLive() {
 				status := extractJSONField(t, output, "phase")
 				return strings.EqualFold(status, "ACTIVE")
 			},
-			30*time.Second,
+			10*time.Second,
 			10*time.Minute,
 		)
 	})
 
-	// CRUD operations
-	crudSteps := []CLILiveTest{
-		{
-			Name:         "Describe RTCE topic",
-			Args:         "rtce rtce-topic describe " + topicName + " --environment {{.env_id}} -o json",
-			UseStateVars: true,
-			JSONFields:   map[string]string{},
-		},
-		{
-			Name:         "List RTCE topics",
-			Args:         "rtce rtce-topic list --environment {{.env_id}}",
-			UseStateVars: true,
-		},
-		{
-			Name:         "Update RTCE topic description",
-			Args:         "rtce rtce-topic update " + topicName + " --description " + updatedDescription + " --environment {{.env_id}}",
-			UseStateVars: true,
-		},
-		{
-			Name:         "Delete RTCE topic",
-			Args:         "rtce rtce-topic delete " + topicName + " --environment {{.env_id}} --force",
-			UseStateVars: true,
-		},
-		{
-			Name:         "Verify deletion",
-			Args:         "rtce rtce-topic describe " + topicName + " --environment {{.env_id}}",
-			UseStateVars: true,
-			ExitCode:     1,
+	verifyUpdateStep := CLILiveTest{
+		Name:         "Verify RTCE topic update",
+		Args:         "rtce rtce-topic describe " + topicName + " --environment {{.env_id}} -o json",
+		UseStateVars: true,
+		JSONFields: map[string]string{
+			"description": updatedDescription,
 		},
 	}
+	t.Run(verifyUpdateStep.Name, func(t *testing.T) {
+		s.runLiveCommand(t, verifyUpdateStep, state)
+	})
 
-	for _, step := range crudSteps {
-		t.Run(step.Name, func(t *testing.T) {
-			s.runLiveCommand(t, step, state)
-		})
+	// Delete the resource, then poll until it is fully gone (past any
+	// eventually-consistent DELETING phase — describe exits non-zero once the
+	// resource no longer exists).
+	deleteStep := CLILiveTest{
+		Name:         "Delete RTCE topic",
+		Args:         "rtce rtce-topic delete " + topicName + " --environment {{.env_id}} --force",
+		UseStateVars: true,
 	}
+	t.Run(deleteStep.Name, func(t *testing.T) {
+		s.runLiveCommand(t, deleteStep, state)
+	})
+
+	t.Run("Verify RTCE topic deletion", func(t *testing.T) {
+		s.waitForDeletion(t,
+			"rtce rtce-topic describe "+topicName+" --environment {{.env_id}}",
+			state,
+			10*time.Second,
+			10*time.Minute,
+		)
+	})
 }

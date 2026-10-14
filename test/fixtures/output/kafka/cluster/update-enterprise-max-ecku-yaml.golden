@@ -9,6 +9,7 @@ cloud: aws
 region: us-west-2
 availability: multi-zone
 status: UP
+deletion_protection: false
 endpoint: SASL_SSL://kafka-endpoint
 rest_endpoint: http://127.0.0.1:1025
 max_ecku: 5

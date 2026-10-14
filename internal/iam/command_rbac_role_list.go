@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -46,6 +47,15 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 		return err
 	}
 	roles = append(roles, usmRoles...)
+
+	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
+	if featureflags.Manager.BoolVariation("kafka.config.cluster.link.rbac.namespace.cli.enable", c.Context, ldClient, true, false) {
+		clusterLinkRoles, err := c.namespaceRoles(optional.NewString(clusterLinkNamespace.Value()))
+		if err != nil {
+			return err
+		}
+		roles = append(roles, clusterLinkRoles...)
+	}
 
 	if output.GetFormat(cmd).IsSerialized() {
 		return output.SerializedOutput(cmd, roles)

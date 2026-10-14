@@ -19,6 +19,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
@@ -61,87 +62,77 @@ var (
 			}, nil
 		},
 	}
-	mockUserInterface           = &ccloudv1mock.UserInterface{}
-	mockLoginCredentialsManager = &climock.LoginCredentialsManager{
-		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-		GetCloudCredentialsFromPromptFunc: func(_ string) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return &pauth.Credentials{
-					Username: promptUser,
-					Password: promptPassword,
-				}, nil
-			}
-		},
-		GetOnPremCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-		GetOnPremCredentialsFromPromptFunc: func() func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return &pauth.Credentials{
-					Username: promptUser,
-					Password: promptPassword,
-				}, nil
-			}
-		},
-		GetCredentialsFromConfigFunc: func(_ *config.Config, _ config.MachineParams) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-		GetOnPremSsoCredentialsFunc: func(_, _, _, _ string, _ bool) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-		GetOnPremSsoCredentialsFromConfigFunc: func(_ *config.Config, _ bool) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-		GetCredentialsFromKeychainFunc: func(_ bool, _, _ string) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
-	}
-	LoginOrganizationManager = &climock.LoginOrganizationManager{
-		GetLoginOrganizationFromFlagFunc: func(cmd *cobra.Command) func() string {
-			return pauth.NewLoginOrganizationManagerImpl().GetLoginOrganizationFromFlag(cmd)
-		},
-		GetLoginOrganizationFromEnvironmentVariableFunc: func() func() string {
-			return pauth.NewLoginOrganizationManagerImpl().GetLoginOrganizationFromEnvironmentVariable()
-		},
-	}
-	AuthTokenHandler = &climock.AuthTokenHandler{
-		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, credentials *pauth.Credentials, noBrowser bool, organizationId string) (string, string, error) {
-			if organizationId == "" || organizationId == organizationId1 {
-				return testToken1, refreshToken, nil
-			} else if organizationId == organizationId2 {
-				return testToken2, refreshToken, nil
-			} else {
-				return "", "", &ccloudv1.Error{Message: "invalid user", Code: http.StatusUnauthorized}
-			}
-		},
-		GetConfluentTokenFunc: func(_ *mdsv1.APIClient, _ *pauth.Credentials, _ bool) (string, string, error) {
-			return testToken1, "", nil
-		},
-	}
-	mockAuthResponse = mdsv1.AuthenticationResponse{
+	mockUserInterface = &ccloudv1mock.UserInterface{}
+	mockAuthResponse  = mdsv1.AuthenticationResponse{
 		AuthToken: testToken1,
 		TokenType: "JWT",
 		ExpiresIn: 100,
 	}
 )
 
+func newTestLoginCredentialsManager(ctrl *gomock.Controller) *climock.MockLoginCredentialsManager {
+	m := climock.NewMockLoginCredentialsManager(ctrl)
+	m.EXPECT().GetCloudCredentialsFromEnvVar(gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return nil, nil
+	}).AnyTimes()
+	m.EXPECT().GetCloudCredentialsFromPrompt(gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return &pauth.Credentials{
+			Username: promptUser,
+			Password: promptPassword,
+		}, nil
+	}).AnyTimes()
+	m.EXPECT().GetOnPremCredentialsFromEnvVar().Return(func() (*pauth.Credentials, error) {
+		return nil, nil
+	}).AnyTimes()
+	m.EXPECT().GetOnPremCredentialsFromPrompt().Return(func() (*pauth.Credentials, error) {
+		return &pauth.Credentials{
+			Username: promptUser,
+			Password: promptPassword,
+		}, nil
+	}).AnyTimes()
+	m.EXPECT().GetCredentialsFromConfig(gomock.Any(), gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return nil, nil
+	}).AnyTimes()
+	m.EXPECT().GetOnPremSsoCredentials(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return nil, nil
+	}).AnyTimes()
+	m.EXPECT().GetOnPremSsoCredentialsFromConfig(gomock.Any(), gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return nil, nil
+	}).AnyTimes()
+	m.EXPECT().GetCredentialsFromKeychain(gomock.Any(), gomock.Any(), gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return nil, nil
+	}).AnyTimes()
+	m.EXPECT().SetCloudClient(gomock.Any()).AnyTimes()
+	return m
+}
+
+func newTestLoginOrganizationManager(ctrl *gomock.Controller) *climock.MockLoginOrganizationManager {
+	m := climock.NewMockLoginOrganizationManager(ctrl)
+	m.EXPECT().GetLoginOrganizationFromFlag(gomock.Any()).DoAndReturn(func(cmd *cobra.Command) func() string {
+		return pauth.NewLoginOrganizationManagerImpl().GetLoginOrganizationFromFlag(cmd)
+	}).AnyTimes()
+	m.EXPECT().GetLoginOrganizationFromEnvironmentVariable().Return(pauth.NewLoginOrganizationManagerImpl().GetLoginOrganizationFromEnvironmentVariable()).AnyTimes()
+	return m
+}
+
+func newTestAuthTokenHandler(ctrl *gomock.Controller) *climock.MockAuthTokenHandler {
+	m := climock.NewMockAuthTokenHandler(ctrl)
+	m.EXPECT().GetCCloudTokens(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(_ pauth.CCloudClientFactory, _ string, credentials *pauth.Credentials, noBrowser bool, organizationId string) (string, string, error) {
+		if organizationId == "" || organizationId == organizationId1 {
+			return testToken1, refreshToken, nil
+		} else if organizationId == organizationId2 {
+			return testToken2, refreshToken, nil
+		} else {
+			return "", "", &ccloudv1.Error{Message: "invalid user", Code: http.StatusUnauthorized}
+		}
+	}).AnyTimes()
+	m.EXPECT().GetConfluentToken(gomock.Any(), gomock.Any(), gomock.Any()).Return(testToken1, "", nil).AnyTimes()
+	return m
+}
+
 func TestCredentialsOverride(t *testing.T) {
 	req := require.New(t)
+	ctrl := gomock.NewController(t)
 	auth := &ccloudv1mock.Auth{
 		LoginFunc: func(_ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
 			return &ccloudv1.AuthenticateReply{Token: testToken1}, nil
@@ -159,30 +150,21 @@ func TestCredentialsOverride(t *testing.T) {
 		},
 	}
 	userInterface := &ccloudv1mock.UserInterface{}
-	mockLoginCredentialsManager := &climock.LoginCredentialsManager{
-		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return envCreds, nil
-			}
-		},
-		GetCredentialsFromConfigFunc: func(_ *config.Config, _ config.MachineParams) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-		GetCloudCredentialsFromPromptFunc: func(_ string) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-		GetCredentialsFromKeychainFunc: func(_ bool, _, _ string) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
-	}
-	loginCmd, cfg := newLoginCmd(auth, userInterface, true, req, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
+	mockLoginCredentialsManager := climock.NewMockLoginCredentialsManager(ctrl)
+	mockLoginCredentialsManager.EXPECT().GetCloudCredentialsFromEnvVar(gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return envCreds, nil
+	}).AnyTimes()
+	mockLoginCredentialsManager.EXPECT().GetCredentialsFromConfig(gomock.Any(), gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return nil, nil
+	}).AnyTimes()
+	mockLoginCredentialsManager.EXPECT().GetCloudCredentialsFromPrompt(gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return nil, nil
+	}).AnyTimes()
+	mockLoginCredentialsManager.EXPECT().GetCredentialsFromKeychain(gomock.Any(), gomock.Any(), gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return nil, nil
+	}).AnyTimes()
+	mockLoginCredentialsManager.EXPECT().SetCloudClient(gomock.Any()).AnyTimes()
+	loginCmd, cfg := newLoginCmd(ctrl, auth, userInterface, true, req, newTestAuthTokenHandler(ctrl), mockLoginCredentialsManager, newTestLoginOrganizationManager(ctrl))
 
 	output, err := pcmd.ExecuteCommand(loginCmd)
 	req.NoError(err)
@@ -198,6 +180,7 @@ func TestCredentialsOverride(t *testing.T) {
 
 func TestOrgIdOverride(t *testing.T) {
 	req := require.New(t)
+	ctrl := gomock.NewController(t)
 	auth := &ccloudv1mock.Auth{
 		UserFunc: func() (*ccloudv1.GetMeReply, error) {
 			return &ccloudv1.GetMeReply{
@@ -213,13 +196,14 @@ func TestOrgIdOverride(t *testing.T) {
 	}
 	userInterface := &ccloudv1mock.UserInterface{}
 
-	loginOrganizationManager := &climock.LoginOrganizationManager{
-		GetLoginOrganizationFromFlagFunc: LoginOrganizationManager.GetLoginOrganizationFromFlagFunc,
-		GetLoginOrganizationFromEnvironmentVariableFunc: func() func() string {
-			return func() string { return organizationId2 }
-		},
-	}
-	loginCmd, cfg := newLoginCmd(auth, userInterface, true, req, AuthTokenHandler, mockLoginCredentialsManager, loginOrganizationManager)
+	loginOrganizationManager := climock.NewMockLoginOrganizationManager(ctrl)
+	loginOrganizationManager.EXPECT().GetLoginOrganizationFromFlag(gomock.Any()).DoAndReturn(func(cmd *cobra.Command) func() string {
+		return pauth.NewLoginOrganizationManagerImpl().GetLoginOrganizationFromFlag(cmd)
+	}).AnyTimes()
+	loginOrganizationManager.EXPECT().GetLoginOrganizationFromEnvironmentVariable().Return(func() string {
+		return organizationId2
+	}).AnyTimes()
+	loginCmd, cfg := newLoginCmd(ctrl, auth, userInterface, true, req, newTestAuthTokenHandler(ctrl), newTestLoginCredentialsManager(ctrl), loginOrganizationManager)
 
 	output, err := pcmd.ExecuteCommand(loginCmd)
 	req.NoError(err)
@@ -236,6 +220,7 @@ func TestOrgIdOverride(t *testing.T) {
 
 func TestLoginSuccess(t *testing.T) {
 	req := require.New(t)
+	ctrl := gomock.NewController(t)
 	useOrgTwo := false
 	auth := &ccloudv1mock.Auth{
 		LoginFunc: func(_ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
@@ -297,7 +282,7 @@ func TestLoginSuccess(t *testing.T) {
 			s.args = append(s.args, "--organization", s.orgId)
 		}
 
-		loginCmd, cfg := newLoginCmd(auth, userInterface, s.isCloud, req, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
+		loginCmd, cfg := newLoginCmd(ctrl, auth, userInterface, s.isCloud, req, newTestAuthTokenHandler(ctrl), newTestLoginCredentialsManager(ctrl), newTestLoginOrganizationManager(ctrl))
 		output, err := pcmd.ExecuteCommand(loginCmd, s.args...)
 		req.NoError(err)
 		if s.isCloud {
@@ -348,74 +333,53 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			loginCredentialsManager := &climock.LoginCredentialsManager{
-				GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return nil, nil
-					}
-				},
-				GetCloudCredentialsFromPromptFunc: func(_ string) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return &pauth.Credentials{
-							Username: promptUser,
-							Password: promptPassword,
-						}, nil
-					}
-				},
-				GetOnPremCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return nil, nil
-					}
-				},
-				GetOnPremCredentialsFromPromptFunc: func() func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return &pauth.Credentials{
-							Username: promptUser,
-							Password: promptPassword,
-						}, nil
-					}
-				},
-				GetCredentialsFromConfigFunc: func(_ *config.Config, _ config.MachineParams) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return nil, nil
-					}
-				},
-				GetOnPremSsoCredentialsFunc: func(_, _, _, _ string, _ bool) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return nil, nil
-					}
-				},
-				GetOnPremSsoCredentialsFromConfigFunc: func(_ *config.Config, _ bool) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return nil, nil
-					}
-				},
-				GetCredentialsFromKeychainFunc: func(_ bool, _, _ string) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return nil, nil
-					}
-				},
-				SetCloudClientFunc: func(_ *ccloudv1.Client) {},
-			}
-			if test.isCloud {
-				if test.setEnvVar {
-					loginCredentialsManager.GetCloudCredentialsFromEnvVarFunc = func(_ string) func() (*pauth.Credentials, error) {
-						return func() (*pauth.Credentials, error) {
-							return envCreds, nil
-						}
-					}
-				}
+			ctrl := gomock.NewController(t)
+			loginCredentialsManager := climock.NewMockLoginCredentialsManager(ctrl)
+			if test.isCloud && test.setEnvVar {
+				loginCredentialsManager.EXPECT().GetCloudCredentialsFromEnvVar(gomock.Any()).Return(func() (*pauth.Credentials, error) {
+					return envCreds, nil
+				}).AnyTimes()
 			} else {
-				if test.setEnvVar {
-					loginCredentialsManager.GetOnPremCredentialsFromEnvVarFunc = func() func() (*pauth.Credentials, error) {
-						return func() (*pauth.Credentials, error) {
-							return envCreds, nil
-						}
-					}
-				}
+				loginCredentialsManager.EXPECT().GetCloudCredentialsFromEnvVar(gomock.Any()).Return(func() (*pauth.Credentials, error) {
+					return nil, nil
+				}).AnyTimes()
 			}
+			if !test.isCloud && test.setEnvVar {
+				loginCredentialsManager.EXPECT().GetOnPremCredentialsFromEnvVar().Return(func() (*pauth.Credentials, error) {
+					return envCreds, nil
+				}).AnyTimes()
+			} else {
+				loginCredentialsManager.EXPECT().GetOnPremCredentialsFromEnvVar().Return(func() (*pauth.Credentials, error) {
+					return nil, nil
+				}).AnyTimes()
+			}
+			loginCredentialsManager.EXPECT().GetCloudCredentialsFromPrompt(gomock.Any()).Return(func() (*pauth.Credentials, error) {
+				return &pauth.Credentials{
+					Username: promptUser,
+					Password: promptPassword,
+				}, nil
+			}).AnyTimes()
+			loginCredentialsManager.EXPECT().GetOnPremCredentialsFromPrompt().Return(func() (*pauth.Credentials, error) {
+				return &pauth.Credentials{
+					Username: promptUser,
+					Password: promptPassword,
+				}, nil
+			}).AnyTimes()
+			loginCredentialsManager.EXPECT().GetCredentialsFromConfig(gomock.Any(), gomock.Any()).Return(func() (*pauth.Credentials, error) {
+				return nil, nil
+			}).AnyTimes()
+			loginCredentialsManager.EXPECT().GetOnPremSsoCredentials(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(func() (*pauth.Credentials, error) {
+				return nil, nil
+			}).AnyTimes()
+			loginCredentialsManager.EXPECT().GetOnPremSsoCredentialsFromConfig(gomock.Any(), gomock.Any()).Return(func() (*pauth.Credentials, error) {
+				return nil, nil
+			}).AnyTimes()
+			loginCredentialsManager.EXPECT().GetCredentialsFromKeychain(gomock.Any(), gomock.Any(), gomock.Any()).Return(func() (*pauth.Credentials, error) {
+				return nil, nil
+			}).AnyTimes()
+			loginCredentialsManager.EXPECT().SetCloudClient(gomock.Any()).AnyTimes()
 
-			loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, test.isCloud, req, AuthTokenHandler, loginCredentialsManager, LoginOrganizationManager)
+			loginCmd, _ := newLoginCmd(ctrl, mockAuth, mockUserInterface, test.isCloud, req, newTestAuthTokenHandler(ctrl), loginCredentialsManager, newTestLoginOrganizationManager(ctrl))
 			var loginArgs []string
 			if !test.isCloud {
 				loginArgs = []string{"--url", "http://localhost:8090"}
@@ -437,10 +401,6 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 
 func TestPromptLoginFlag(t *testing.T) {
 	req := require.New(t)
-	wrongCreds := &pauth.Credentials{
-		Username: "wrong_user",
-		Password: "wrong_password",
-	}
 
 	tests := []struct {
 		name    string
@@ -457,45 +417,31 @@ func TestPromptLoginFlag(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			mockLoginCredentialsManager := &climock.LoginCredentialsManager{
-				GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return wrongCreds, nil
-					}
-				},
-				GetCloudCredentialsFromPromptFunc: func(_ string) func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return &pauth.Credentials{
-							Username: promptUser,
-							Password: promptPassword,
-						}, nil
-					}
-				},
-				GetOnPremCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return wrongCreds, nil
-					}
-				},
-				GetOnPremCredentialsFromPromptFunc: func() func() (*pauth.Credentials, error) {
-					return func() (*pauth.Credentials, error) {
-						return &pauth.Credentials{
-							Username: promptUser,
-							Password: promptPassword,
-						}, nil
-					}
-				},
-				SetCloudClientFunc: func(_ *ccloudv1.Client) {},
-			}
-			loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, test.isCloud, req, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
+			ctrl := gomock.NewController(t)
+			mockLoginCredentialsManager := climock.NewMockLoginCredentialsManager(ctrl)
+			// With --prompt, the env-var credential getters must never be invoked.
+			mockLoginCredentialsManager.EXPECT().GetCloudCredentialsFromEnvVar(gomock.Any()).Times(0)
+			mockLoginCredentialsManager.EXPECT().GetOnPremCredentialsFromEnvVar().Times(0)
+			mockLoginCredentialsManager.EXPECT().GetCloudCredentialsFromPrompt(gomock.Any()).Return(func() (*pauth.Credentials, error) {
+				return &pauth.Credentials{
+					Username: promptUser,
+					Password: promptPassword,
+				}, nil
+			}).AnyTimes()
+			mockLoginCredentialsManager.EXPECT().GetOnPremCredentialsFromPrompt().Return(func() (*pauth.Credentials, error) {
+				return &pauth.Credentials{
+					Username: promptUser,
+					Password: promptPassword,
+				}, nil
+			}).AnyTimes()
+			mockLoginCredentialsManager.EXPECT().SetCloudClient(gomock.Any()).AnyTimes()
+			loginCmd, _ := newLoginCmd(ctrl, mockAuth, mockUserInterface, test.isCloud, req, newTestAuthTokenHandler(ctrl), mockLoginCredentialsManager, newTestLoginOrganizationManager(ctrl))
 			loginArgs := []string{"--prompt"}
 			if !test.isCloud {
 				loginArgs = append(loginArgs, "--url", "http://localhost:8090")
 			}
 			output, err := pcmd.ExecuteCommand(loginCmd, loginArgs...)
 			req.NoError(err)
-
-			req.False(mockLoginCredentialsManager.GetCloudCredentialsFromEnvVarCalled())
-			req.False(mockLoginCredentialsManager.GetOnPremCredentialsFromEnvVarCalled())
 
 			if test.isCloud {
 				req.Contains(output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, promptUser, organizationId1, ""))
@@ -508,30 +454,22 @@ func TestPromptLoginFlag(t *testing.T) {
 
 func TestLoginFail(t *testing.T) {
 	req := require.New(t)
-	mockLoginCredentialsManager := &climock.LoginCredentialsManager{
-		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, fmt.Errorf("DO NOT RETURN THIS ERR")
-			}
-		},
-		GetCredentialsFromConfigFunc: func(_ *config.Config, _ config.MachineParams) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-		GetCloudCredentialsFromPromptFunc: func(_ string) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, &ccloudv1.InvalidLoginError{}
-			}
-		},
-		GetCredentialsFromKeychainFunc: func(_ bool, _, _ string) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, nil
-			}
-		},
-		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
-	}
-	loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, true, req, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
+	ctrl := gomock.NewController(t)
+	mockLoginCredentialsManager := climock.NewMockLoginCredentialsManager(ctrl)
+	mockLoginCredentialsManager.EXPECT().GetCloudCredentialsFromEnvVar(gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return nil, fmt.Errorf("DO NOT RETURN THIS ERR")
+	}).AnyTimes()
+	mockLoginCredentialsManager.EXPECT().GetCredentialsFromConfig(gomock.Any(), gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return nil, nil
+	}).AnyTimes()
+	mockLoginCredentialsManager.EXPECT().GetCloudCredentialsFromPrompt(gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return nil, &ccloudv1.InvalidLoginError{}
+	}).AnyTimes()
+	mockLoginCredentialsManager.EXPECT().GetCredentialsFromKeychain(gomock.Any(), gomock.Any(), gomock.Any()).Return(func() (*pauth.Credentials, error) {
+		return nil, nil
+	}).AnyTimes()
+	mockLoginCredentialsManager.EXPECT().SetCloudClient(gomock.Any()).AnyTimes()
+	loginCmd, _ := newLoginCmd(ctrl, mockAuth, mockUserInterface, true, req, newTestAuthTokenHandler(ctrl), mockLoginCredentialsManager, newTestLoginOrganizationManager(ctrl))
 	_, err := pcmd.ExecuteCommand(loginCmd)
 	req.Error(err)
 	req.Equal(new(ccloudv1.InvalidLoginError), err)
@@ -566,6 +504,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
 			if test.setEnv {
 				os.Setenv(pauth.ConfluentPlatformCertificateAuthorityPath, "testcert.pem")
 			}
@@ -577,7 +516,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 			} else {
 				expectedCaCert = test.caCertPathFlag
 			}
-			loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg, expectedCaCert)
+			loginCmd := getNewLoginCommandForSelfSignedCertTest(ctrl, req, cfg, expectedCaCert)
 			_, err := pcmd.ExecuteCommand(loginCmd, "--url", "http://localhost:8090", "--certificate-authority-path", test.caCertPathFlag)
 			req.NoError(err)
 
@@ -602,7 +541,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 	}
 }
 
-func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *config.Config, expectedCaCertPath string) *cobra.Command {
+func getNewLoginCommandForSelfSignedCertTest(ctrl *gomock.Controller, req *require.Assertions, cfg *config.Config, expectedCaCertPath string) *cobra.Command {
 	mdsConfig := mdsv1.NewConfiguration()
 	mdsClient := mdsv1.NewAPIClient(mdsConfig)
 
@@ -635,18 +574,17 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *confi
 			return mockAuthResponse, nil, nil
 		},
 	}
-	mdsClientManager := &climock.MDSClientManager{
-		GetMDSClientFunc: func(_, caCertPath, _, _ string, _ bool) (*mdsv1.APIClient, error) {
-			// ensure the right caCertPath is used
-			req.Contains(caCertPath, expectedCaCertPath)
-			mdsClient.GetConfig().HTTPClient, err = utils.SelfSignedCertClient(certReader, tls.Certificate{})
-			if err != nil {
-				return nil, err
-			}
-			return mdsClient, nil
-		},
-	}
-	loginCmd := New(cfg, prerunner, nil, mdsClientManager, mockLoginCredentialsManager, LoginOrganizationManager, AuthTokenHandler)
+	mdsClientManager := climock.NewMockMDSClientManager(ctrl)
+	mdsClientManager.EXPECT().GetMDSClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(_, caCertPath, _, _ string, _ bool) (*mdsv1.APIClient, error) {
+		// ensure the right caCertPath is used
+		req.Contains(caCertPath, expectedCaCertPath)
+		mdsClient.GetConfig().HTTPClient, err = utils.SelfSignedCertClient(certReader, tls.Certificate{})
+		if err != nil {
+			return nil, err
+		}
+		return mdsClient, nil
+	}).AnyTimes()
+	loginCmd := New(cfg, prerunner, nil, mdsClientManager, newTestLoginCredentialsManager(ctrl), newTestLoginOrganizationManager(ctrl), newTestAuthTokenHandler(ctrl))
 	loginCmd.Flags().Bool("unsafe-trace", false, "")
 	loginCmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
@@ -655,6 +593,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *confi
 
 func TestLoginWithExistingContext(t *testing.T) {
 	req := require.New(t)
+	ctrl := gomock.NewController(t)
 	auth := &ccloudv1mock.Auth{
 		LoginFunc: func(_ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
 			return &ccloudv1.AuthenticateReply{Token: testToken1}, nil
@@ -704,7 +643,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 	}
 
 	for _, s := range suite {
-		loginCmd, cfg := newLoginCmd(auth, userInterface, s.isCloud, req, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
+		loginCmd, cfg := newLoginCmd(ctrl, auth, userInterface, s.isCloud, req, newTestAuthTokenHandler(ctrl), newTestLoginCredentialsManager(ctrl), newTestLoginOrganizationManager(ctrl))
 
 		// Login to the CLI control plane
 		_, err := pcmd.ExecuteCommand(loginCmd, s.args...)
@@ -717,7 +656,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(kafkaCluster.ID)
 
 		// Executing logout
-		logoutCmd := newLogoutCmd(auth, userInterface, s.isCloud, req, AuthTokenHandler, cfg)
+		logoutCmd := newLogoutCmd(ctrl, auth, userInterface, s.isCloud, req, newTestAuthTokenHandler(ctrl), cfg)
 		_, err = pcmd.ExecuteCommand(logoutCmd)
 		req.NoError(err)
 		verifyLoggedOutState(t, cfg, ctx.Name)
@@ -802,23 +741,20 @@ func TestValidateUrl(t *testing.T) {
 	}
 }
 
-func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *config.Config) {
+func newLoginCmd(ctrl *gomock.Controller, auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *config.Config) {
 	config.SetTempHomeDir()
 	cfg := config.New()
-	var ccloudClientFactory *climock.CCloudClientFactory
-	var mdsClientManager *climock.MDSClientManager
+	var ccloudClientFactory *climock.MockCCloudClientFactory
+	var mdsClientManager *climock.MockMDSClientManager
 	var prerunner pcmd.PreRunner
 
 	if !isCloud {
 		mdsClient := climock.NewMdsClientMock(testToken1)
-		mdsClientManager = &climock.MDSClientManager{
-			GetMDSClientFunc: func(_, _, _, _ string, _ bool) (*mdsv1.APIClient, error) {
-				return mdsClient, nil
-			},
-		}
+		mdsClientManager = climock.NewMockMDSClientManager(ctrl)
+		mdsClientManager.EXPECT().GetMDSClient(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(mdsClient, nil).AnyTimes()
 		prerunner = climock.NewPreRunnerMock(nil, nil, mdsClient, nil, cfg)
 	} else {
-		ccloudClientFactory = climock.NewCCloudClientFactoryMock(auth, userInterface, req)
+		ccloudClientFactory = climock.NewCCloudClientFactoryMock(ctrl, auth, userInterface, req)
 		prerunner = climock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, nil, nil, cfg)
 	}
 
@@ -827,11 +763,11 @@ func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterf
 	return loginCmd, cfg
 }
 
-func newLogoutCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, authTokenHandler pauth.AuthTokenHandler, cfg *config.Config) *cobra.Command {
+func newLogoutCmd(ctrl *gomock.Controller, auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, authTokenHandler pauth.AuthTokenHandler, cfg *config.Config) *cobra.Command {
 	var prerunner pcmd.PreRunner
 
 	if isCloud {
-		ccloudClientFactory := climock.NewCCloudClientFactoryMock(auth, userInterface, req)
+		ccloudClientFactory := climock.NewCCloudClientFactoryMock(ctrl, auth, userInterface, req)
 		prerunner = climock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, nil, nil, cfg)
 	} else {
 		mdsClient := climock.NewMdsClientMock(testToken1)

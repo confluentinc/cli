@@ -491,12 +491,20 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags, cmd *
 		}
 		clusterCreds = cluster.APIKeys[flags.kafkaApiKey]
 	} else {
-		clusterCreds = cluster.APIKeys[cluster.APIKey]
+		// No explicit --kafka-api-key: resolve the cluster-scoped active key, falling back to the
+		// active Global API key (see Context.ResolveKafkaAPIKey).
+		apiKey, apiSecret, err := c.Context.ResolveKafkaAPIKey(cluster)
+		if err != nil {
+			return err
+		}
+		if apiKey != "" {
+			clusterCreds = &config.APIKeyPair{Key: apiKey, Secret: apiSecret}
+		}
 	}
 	if clusterCreds == nil {
 		return errors.NewErrorWithSuggestions(
 			"API key not set for the Kafka cluster",
-			"Set an API key pair for the Kafka cluster using `confluent api-key create --resource <cluster-id>` and then use it with `--kafka-api-key`.",
+			"Set an API key pair for the Kafka cluster using `confluent api-key create --resource <cluster-id>` and then use it with `--kafka-api-key`, or set an active Global API key with `confluent api-key use`.",
 		)
 	}
 

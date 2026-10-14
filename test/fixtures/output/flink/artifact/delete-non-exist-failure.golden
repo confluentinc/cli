@@ -1,0 +1,5 @@
+Error: Flink artifact "non-exist-artifact" not found
+
+Suggestions:
+    List available Flink artifacts with `confluent flink artifact list`.
+    Check that CMF is running and accessible.

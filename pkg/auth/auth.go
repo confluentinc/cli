@@ -2,9 +2,11 @@ package auth
 
 import (
 	"fmt"
+	"net/http/httputil"
 	"os"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/dghubble/sling"
 
@@ -14,7 +16,9 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/jwt"
 	"github.com/confluentinc/cli/v4/pkg/keychain"
+	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/secret"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 const (
@@ -219,19 +223,69 @@ func generateCredentialName(username string) string {
 	return fmt.Sprintf("username-%s", username)
 }
 
+// accessTokensResponse is the response of POST /api/access_tokens. The
+// endpoint exchanges the login session token for two credentials: Token (a
+// data-plane access token, honored by dataplane gateways such as Kafka REST,
+// Schema Registry, and Flink) and RegionalToken (a regional customer access
+// token, honored by frontdoor-api-gateway as
+// CREDENTIAL_TYPE_REGIONAL_CUSTOMER_ACCESS_TOKEN).
+type accessTokensResponse struct {
+	Token         string `json:"token"`
+	RegionalToken string `json:"regional_token"`
+	Error         string `json:"error"`
+}
+
+// GetDataplaneToken exchanges the session token for a data-plane access token.
 func GetDataplaneToken(ctx *config.Context) (string, error) {
-	endpoint := strings.TrimSuffix(ctx.GetPlatformServer(), "/") + "/api/access_tokens"
-
-	res := &struct {
-		Token string `json:"token"`
-		Error string `json:"error"`
-	}{}
-
-	if _, err := sling.New().Add("Content-Type", "application/json").Add("Authorization", "Bearer "+ctx.GetAuthToken()).Post(endpoint).BodyJSON(map[string]any{}).ReceiveSuccess(res); err != nil {
+	res, err := getAccessTokens(ctx)
+	if err != nil {
 		return "", err
 	}
-	if res.Error != "" {
-		return "", errors.New(res.Error)
-	}
 	return res.Token, nil
+}
+
+// GetRegionalToken exchanges the session token for a regional customer access
+// token, the credential accepted by APIs served via frontdoor-api-gateway
+// (which does not honor raw login-session JWTs).
+func GetRegionalToken(ctx *config.Context) (string, error) {
+	res, err := getAccessTokens(ctx)
+	if err != nil {
+		return "", err
+	}
+	if res.RegionalToken == "" {
+		return "", errors.New("access token exchange returned no regional token")
+	}
+	return res.RegionalToken, nil
+}
+
+func getAccessTokens(ctx *config.Context) (*accessTokensResponse, error) {
+	endpoint := strings.TrimSuffix(ctx.GetPlatformServer(), "/") + "/api/access_tokens"
+
+	res := &accessTokensResponse{}
+
+	client := utils.DefaultClient() // Declare a new client so that sling doesn't use the global default
+	client.Timeout = 30 * time.Second
+
+	s := sling.New().Client(client).Add("Content-Type", "application/json").Add("Authorization", "Bearer "+ctx.GetAuthToken()).Post(endpoint).BodyJSON(map[string]any{})
+
+	req, err := s.Request()
+	if err != nil {
+		return nil, err
+	}
+
+	dump, err := httputil.DumpRequestOut(req, true)
+	if err != nil {
+		return nil, err
+	}
+	log.CliLogger.UnsafeTracef("%s\n", dump)
+
+	req = req.WithContext(utils.GetCloudTracedContext()) // Adds Trace logs for TRACE and UNSAFE_TRACE levels
+	if _, err = s.Do(req, res, nil); err != nil {
+		return nil, err
+	}
+
+	if res.Error != "" {
+		return nil, errors.New(res.Error)
+	}
+	return res, nil
 }

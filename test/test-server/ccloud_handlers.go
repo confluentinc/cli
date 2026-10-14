@@ -54,7 +54,8 @@ const (
 	groupMappingId                   = "group-abc"
 	identityProviderId               = "op-12345"
 	identityPoolId                   = "pool-12345"
-	ipGroupId                        = "ipg-wjnde"
+	ipGroupId                        = "ipg-123abc"
+	ipGroupSecondId                  = "ipg-456def"
 	ipFilterId                       = "ipf-34dq3"
 	deactivatedUserId                = int32(6666)
 	deactivatedUserResourceId        = "sa-6666"
@@ -411,17 +412,18 @@ func handleLaunchDarkly(t *testing.T) http.HandlerFunc {
 		require.NoError(t, json.Unmarshal(ldUserData, &ldUser))
 
 		flags := map[string]any{
-			"testBool":                                  true,
-			"testString":                                "string",
-			"testInt":                                   1,
-			"testAnotherInt":                            99,
-			"testJson":                                  map[string]any{"key": "val"},
-			"cli.deprecation_notices":                   []map[string]any{},
-			"cli.client_quotas.enable":                  true,
-			"cli.stream_designer.source_code.enable":    true,
-			"flink.rbac.namespace.cli.enable":           true,
-			"auth.rbac.identity_admin.enable":           true,
-			"flink.language_service.enable_diagnostics": true,
+			"testBool":                               true,
+			"testString":                             "string",
+			"testInt":                                1,
+			"testAnotherInt":                         99,
+			"testJson":                               map[string]any{"key": "val"},
+			"cli.deprecation_notices":                []map[string]any{},
+			"cli.client_quotas.enable":               true,
+			"cli.stream_designer.source_code.enable": true,
+			"flink.rbac.namespace.cli.enable":        true,
+			"kafka.config.cluster.link.rbac.namespace.cli.enable":              true,
+			"auth.rbac.identity_admin.enable":                                  true,
+			"flink.language_service.enable_diagnostics":                        true,
 			"cloud_growth.marketplace_linking_advertisement_experiment.enable": true,
 		}
 

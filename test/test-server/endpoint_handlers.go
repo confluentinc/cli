@@ -3,6 +3,9 @@ package testserver
 import (
 	"encoding/json"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -28,7 +31,7 @@ func handleEndpointV1Endpoints(t *testing.T) http.HandlerFunc {
 
 		var endpoints []endpointv1.EndpointV1Endpoint
 		switch {
-		case cloud == "AWS" && region == "eu-west-1":
+		case strings.ToUpper(cloud) == "AWS" && region == "eu-west-1":
 			endpoints = []endpointv1.EndpointV1Endpoint{
 				newFlinkRestEndpoint("aws", region, TestFlinkGatewayUrl.String(), false),
 				newFlinkRestEndpoint("aws", region, TestFlinkGatewayUrlPrivate.String(), true),
@@ -36,22 +39,22 @@ func handleEndpointV1Endpoints(t *testing.T) http.HandlerFunc {
 				// LANGUAGE_SERVICE endpoint must be filtered out by the CLI.
 				newFlinkLanguageServiceEndpoint("aws", region, "https://flinkpls.eu-west-1.aws.confluent.cloud", false),
 			}
-		case cloud == "AZURE" && region == "centralus":
+		case strings.ToUpper(cloud) == "AZURE" && region == "centralus":
 			endpoints = []endpointv1.EndpointV1Endpoint{
 				newFlinkRestEndpoint("azure", region, TestFlinkGatewayUrl.String(), false),
 			}
-		case cloud == "AZURE" && region == "eastus2":
+		case strings.ToUpper(cloud) == "AZURE" && region == "eastus2":
 			endpoints = []endpointv1.EndpointV1Endpoint{
 				newFlinkRestEndpoint("azure", region, TestFlinkGatewayUrl.String(), false),
 				newFlinkRestEndpoint("azure", region, "https://flink-n-abcde2.eastus.azure.confluent.cloud", true),
 				newFlinkRestEndpoint("azure", region, "https://flink-n-abcde7.eastus.azure.confluent.cloud", true),
 			}
-		case cloud == "GCP" && region == "europe-west3-a":
+		case strings.ToUpper(cloud) == "GCP" && region == "europe-west3-a":
 			endpoints = []endpointv1.EndpointV1Endpoint{
 				newFlinkRestEndpoint("gcp", region, TestFlinkGatewayUrl.String(), false),
 				newFlinkRestEndpoint("gcp", region, TestFlinkGatewayUrlPrivate.String(), true),
 			}
-		case cloud == "AZURE" && region == "italynorth":
+		case strings.ToUpper(cloud) == "AZURE" && region == "italynorth":
 			// Multi-PLATT (PrivateLink Gateway) shape: an access-point URL on the GLB
 			// domain that the legacy URL-template aggregation could not have constructed.
 			// Mirrors a real production env captured during FCP-4223 verification.
@@ -61,6 +64,16 @@ func handleEndpointV1Endpoints(t *testing.T) http.HandlerFunc {
 				// LANGUAGE_SERVICE row that the CLI must filter out.
 				newFlinkLanguageServiceEndpoint("azure", region, "https://flinkpls.italynorth.azure.confluent.cloud", false),
 			}
+		default:
+			endpoint := readEndpointV1EndpointFile(t, "read_created_endpoint.json")
+
+			endpointList := &endpointv1.EndpointV1EndpointList{
+				Data: []endpointv1.EndpointV1Endpoint{endpoint},
+			}
+
+			err := json.NewEncoder(w).Encode(endpointList)
+			require.NoError(t, err)
+			return
 		}
 
 		list := &endpointv1.EndpointV1EndpointList{Data: endpoints}
@@ -86,4 +99,16 @@ func newFlinkEndpoint(cloud, region, url string, isPrivate bool, endpointType st
 		IsPrivate:    endpointv1.PtrBool(isPrivate),
 		EndpointType: endpointv1.PtrString(endpointType),
 	}
+}
+
+func readEndpointV1EndpointFile(t *testing.T, filename string) endpointv1.EndpointV1Endpoint {
+	jsonPath := filepath.Join("test", "fixtures", "input", "endpoint", "endpoint", filename)
+	jsonData, err := os.ReadFile(jsonPath)
+	require.NoError(t, err)
+
+	endpoint := endpointv1.EndpointV1Endpoint{}
+	err = json.Unmarshal(jsonData, &endpoint)
+	require.NoError(t, err)
+
+	return endpoint
 }

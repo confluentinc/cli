@@ -119,6 +119,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		CurrentEnvironment: environmentId,
 		Environments:       map[string]*EnvironmentContext{environmentId: {}},
 		State:              regularOrgContextState,
+		GlobalAPIKeys:      map[string]*APIKeyPair{},
 	}
 	statelessContext := &Context{
 		Name:           contextName,
@@ -129,6 +130,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		Environments:   map[string]*EnvironmentContext{},
 		State:          &ContextState{},
 		Config:         &Config{SavedCredentials: savedCredentials},
+		GlobalAPIKeys:  map[string]*APIKeyPair{},
 	}
 	twoEnvStatefulContext := &Context{
 		Name:               contextName,
@@ -141,7 +143,8 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 			"env-123456": {},
 			"env-flag":   {},
 		},
-		State: regularOrgContextState,
+		State:         regularOrgContextState,
+		GlobalAPIKeys: map[string]*APIKeyPair{},
 	}
 	context := "onprem"
 	if isCloud {

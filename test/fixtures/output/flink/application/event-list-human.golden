@@ -1,0 +1,6 @@
+    Name    |  Type   |      Timestamp       |             Instance             |            Message              
+------------+---------+----------------------+----------------------------------+---------------------------------
+  event-001 | Normal  | 2024-01-15T10:30:00Z | default-application-1-instance-1 | Application started             
+            |         |                      |                                  | successfully                    
+  event-002 | Warning | 2024-01-15T10:31:00Z | default-application-1-instance-1 | Application restarting due to   
+            |         |                      |                                  | failure                         

@@ -121,7 +121,8 @@ func getServerUrl(baseURL string) string {
 	return u.String()
 }
 
-func extractPageToken(nextPageUrlString string) (string, error) {
+// ExtractPageToken pulls page_token out of an absolute "next page" URL.
+func ExtractPageToken(nextPageUrlString string) (string, error) {
 	nextPageUrl, err := url.Parse(nextPageUrlString)
 	if err != nil {
 		plog.CliLogger.Errorf("Could not parse %s into URL, %v", nextPageUrlString, err)
@@ -142,6 +143,6 @@ func extractNextPageToken(nextPageUrl NullableString) (string, bool, error) {
 	if nextPageUrlString == "" {
 		return "", true, nil
 	}
-	pageToken, err := extractPageToken(nextPageUrlString)
+	pageToken, err := ExtractPageToken(nextPageUrlString)
 	return pageToken, false, err
 }

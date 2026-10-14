@@ -1,4 +1,4 @@
-Delete one or more certificate authorities.
+Delete one or more IAM certificate authorities.
 
 Usage:
   confluent iam certificate-authority delete <id-1> [id-2] ... [id-n] [flags]
@@ -15,4 +15,4 @@ Flags:
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
-  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, and -vvvv for trace).
