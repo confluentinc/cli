@@ -262,6 +262,7 @@ var vocabWords = []string{
 	"codec",
 	"config",
 	"configs",
+	"configurationcontrol",
 	"confluent_jdbc",
 	"consumer.config",
 	"cosmosdb",
