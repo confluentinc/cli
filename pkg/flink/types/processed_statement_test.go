@@ -68,11 +68,11 @@ func TestPrintOutputDryRunStatementPrintsWarnings(t *testing.T) {
 	require.Contains(t, stdout, "Fix the query.")
 }
 
-func TestIsPendingOnPrem(t *testing.T) {
+func TestIsStarting(t *testing.T) {
 	for _, phase := range []PHASE{PENDING, RECONCILING, RESTARTING, "", "SOME_FUTURE_PHASE"} {
-		require.True(t, phase.IsPendingOnPrem(), phase)
+		require.True(t, phase.IsStarting(), phase)
 	}
 	for _, phase := range []PHASE{RUNNING, COMPLETED, FAILING, FAILED, STOPPED, DELETING, UNKNOWN} {
-		require.False(t, phase.IsPendingOnPrem(), phase)
+		require.False(t, phase.IsStarting(), phase)
 	}
 }

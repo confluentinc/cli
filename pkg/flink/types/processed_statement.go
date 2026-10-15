@@ -27,10 +27,10 @@ const (
 	UNKNOWN     PHASE = "UNKNOWN"  // On-prem only: CMF could not read the statement's phase
 )
 
-// IsPendingOnPrem reports whether to keep polling a CMF statement in this phase. Only the phases listed here end
-// the wait, so a phase added by a newer CMF (as 2.5 added RECONCILING and RESTARTING) keeps callers waiting
-// instead of failing.
-func (p PHASE) IsPendingOnPrem() bool {
+// IsStarting reports whether a CMF statement in this phase is still starting, so callers should keep polling.
+// Only the phases listed here end the wait, so a phase added by a newer CMF (as 2.5 added RECONCILING and
+// RESTARTING) keeps callers waiting instead of failing.
+func (p PHASE) IsStarting() bool {
 	switch p {
 	case RUNNING, COMPLETED, FAILING, FAILED, STOPPED, DELETING, UNKNOWN:
 		return false
