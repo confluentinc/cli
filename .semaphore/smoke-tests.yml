@@ -60,14 +60,6 @@ blocks:
             - $Env:PATH += ";C:\Program Files\Git\bin"
             - checkout
 
-            # Vault auth (vault-sem-get-secret is Linux-only; use native vault CLI on Windows,
-            # following the pattern from cli-release/.semaphore/4-release-cli.yml).
-            - $Env:VAULT_ADDR = "https://vault.cireops.gcp.internal.confluent.cloud"
-            - vault login -no-print token=$(vault write -field=token "auth/semaphore_self_hosted/login" role="default" jwt="$Env:SEMAPHORE_OIDC_TOKEN")
-            - $Env:CONFLUENT_CLOUD_EMAIL = (vault kv get -field=CONFLUENT_CLOUD_EMAIL v1/ci/kv/apif/cli/live-testing-data)
-            - $Env:CONFLUENT_CLOUD_PASSWORD = (vault kv get -field=CONFLUENT_CLOUD_PASSWORD v1/ci/kv/apif/cli/live-testing-data)
-            - $Env:SLACK_WEBHOOK_URL = (vault kv get -field=SLACK_WEBHOOK_URL v1/ci/kv/apif/cli/slack-notifications-live-testing)
-
             # Install Go (matches the pattern in semaphore.yml; chocolatey is community-maintained)
             - $ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -OutFile Go.zip -Uri https://go.dev/dl/go$(Get-Content .go-version).windows-amd64.zip -UseBasicParsing
             - 7z x Go.zip -oC:\
@@ -86,30 +78,78 @@ blocks:
             - $Env:SMOKE_ARCH = "amd64"
             - $Env:SMOKE_COMMAND = "environment_list"
 
-            # Build emitter + CLI directly (no `make` available without bash; mirrors Makefile targets)
+            # Build the emitter FIRST so it's available even if vault/test setup fails later.
             - go build -o bin\otel-smoke-metric.exe .\cmd\otel-smoke-metric
-            - go build -ldflags="-s -w -X main.disableUpdates=true" -o test\live\bin\confluent.exe .\cmd\confluent
 
-            - $Env:CLI_LIVE_TEST = "1"
-
-            # Run smoke + emit metric + Slack on failure as a single block so a non-zero
-            # `go test` exit code does NOT abort the job before metric emission.
+            # Single block runs vault auth, smoke test, Slack, and metric emission with a
+            # try/catch/finally so the metric is ALWAYS reported with a 0 on any failure.
             - |
-              go test ./test/live/ -v -run='.*Live$' -tags='live_test,smoke' -timeout 30m -parallel 4
-              if ($LASTEXITCODE -eq 0) {
-                $RESULT = "1"
-              } else {
-                $RESULT = "0"
-                Write-Host "Smoke tests failed on windows/amd64, sending Slack notification..."
-                try {
-                  Invoke-RestMethod -Method Post -Uri $Env:SLACK_WEBHOOK_URL -ContentType "application/json" -Body "{}"
-                } catch {
-                  Write-Host "Slack notification failed: $_"
+              $RESULT = "0"
+              try {
+                # Vault auth — vault-sem-get-secret is Linux-only, so use native vault CLI.
+                $Env:VAULT_ADDR = "https://vault.cireops.gcp.internal.confluent.cloud"
+                $vaultToken = vault write -field=token "auth/semaphore_self_hosted/login" role="default" jwt="$Env:SEMAPHORE_OIDC_TOKEN"
+                if ($LASTEXITCODE -ne 0) { throw "vault login failed" }
+                vault login -no-print token=$vaultToken
+                if ($LASTEXITCODE -ne 0) { throw "vault login token failed" }
+
+                # Pull every field from each secret as JSON and export them as env vars under
+                # both the original name AND an UPPER_SNAKE_CASE variant — this mirrors what
+                # vault-sem-get-secret does on Linux without us having to hard-code field names.
+                function Set-VaultFields {
+                  param([string]$Path)
+                  $json = vault kv get -format=json $Path
+                  if ($LASTEXITCODE -ne 0) { throw "vault kv get failed for $Path" }
+                  $secret = $json | ConvertFrom-Json
+                  $fields = if ($secret.data.PSObject.Properties.Name -contains 'data' -and $secret.data.data) {
+                    $secret.data.data
+                  } else {
+                    $secret.data
+                  }
+                  $names = @($fields.PSObject.Properties.Name)
+                  Write-Host "Fields in ${Path}: $($names -join ', ')"
+                  foreach ($prop in $fields.PSObject.Properties) {
+                    [Environment]::SetEnvironmentVariable($prop.Name, $prop.Value, 'Process')
+                    $upper = $prop.Name.ToUpper().Replace('-', '_')
+                    if ($upper -ne $prop.Name) {
+                      [Environment]::SetEnvironmentVariable($upper, $prop.Value, 'Process')
+                    }
+                  }
                 }
+                Set-VaultFields -Path "v1/ci/kv/apif/cli/live-testing-data"
+                Set-VaultFields -Path "v1/ci/kv/apif/cli/slack-notifications-live-testing"
+
+                # Build the CLI under test.
+                go build -ldflags="-s -w -X main.disableUpdates=true" -o test\live\bin\confluent.exe .\cmd\confluent
+                if ($LASTEXITCODE -ne 0) { throw "go build of confluent CLI failed" }
+
+                # Run the smoke test.
+                $Env:CLI_LIVE_TEST = "1"
+                go test ./test/live/ -v -run='.*Live$' -tags='live_test,smoke' -timeout 30m -parallel 4
+                if ($LASTEXITCODE -eq 0) {
+                  $RESULT = "1"
+                } else {
+                  Write-Host "Smoke test command exited non-zero on windows/amd64"
+                }
+              } catch {
+                Write-Host "Smoke pipeline failed before/during test on windows/amd64: $_"
+              } finally {
+                if ($RESULT -ne "1") {
+                  Write-Host "Smoke tests failed on windows/amd64, sending Slack notification..."
+                  if ($Env:SLACK_WEBHOOK_URL) {
+                    try {
+                      Invoke-RestMethod -Method Post -Uri $Env:SLACK_WEBHOOK_URL -ContentType "application/json" -Body "{}"
+                    } catch {
+                      Write-Host "Slack notification failed: $_"
+                    }
+                  } else {
+                    Write-Host "SLACK_WEBHOOK_URL not set — skipping Slack notification"
+                  }
+                }
+
+                # Always emit the metric so the windows/amd64 panel never goes to "No data" on infra failure.
+                & .\bin\otel-smoke-metric.exe $RESULT
               }
 
-              # Report pass/fail metric (never fails the pipeline; emitter always exits 0)
-              & .\bin\otel-smoke-metric.exe $RESULT
-
-              # Surface failure to Semaphore at the very end
+              # Surface failure to Semaphore at the very end.
               if ($RESULT -ne "1") { exit 1 }
