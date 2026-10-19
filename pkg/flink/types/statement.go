@@ -10,7 +10,16 @@ import (
 )
 
 func GenerateStatementName() string {
-	clientName := "cli"
+	return generateStatementName("cli")
+}
+
+// GenerateQueryStatementName keeps the "cli" prefix so existing CLI usage tracking
+// still matches, while letting `confluent flink query` statements be counted on their own.
+func GenerateQueryStatementName() string {
+	return generateStatementName("cli-query")
+}
+
+func generateStatementName(clientName string) string {
 	date := time.Now().Format("2006-01-02")
 	localTime := time.Now().Format("150405")
 	id := uuid.New().String()

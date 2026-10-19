@@ -55,6 +55,13 @@ func (s *StoreTestSuite) TestGenerateStatementName() {
 	}
 }
 
+func (s *StoreTestSuite) TestGenerateQueryStatementName() {
+	statementRegex := `^cli-query-\d{4}-\d{2}-\d{2}-\d{6}-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$`
+	for i := 0; i < 10; i++ {
+		s.Require().Regexp(statementRegex, types.GenerateQueryStatementName())
+	}
+}
+
 func (s *StoreTestSuite) TestGenerateStatementNameForOnPrem() {
 	statementRegex := `^cli-\d{8}-\d{6}-[a-f0-9]{24}$`
 	for i := 0; i < 10; i++ {
