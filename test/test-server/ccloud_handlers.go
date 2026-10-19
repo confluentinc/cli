@@ -61,6 +61,7 @@ const (
 	deactivatedUserResourceId        = "sa-6666"
 	auditLogServiceAccountId         = int32(1337)
 	auditLogServiceAccountResourceId = "sa-1337"
+	apiKeyOwnerUserResourceId        = "u-22bbb"
 )
 
 // Handler for: "/api/me"

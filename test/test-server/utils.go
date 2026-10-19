@@ -81,7 +81,7 @@ func fillKeyStoreV2() {
 				ApiVersion: apikeysv2.PtrString("cmk/v2"),
 				Kind:       apikeysv2.PtrString("Cluster"),
 			}),
-			Owner:       &apikeysv2.TypedGlobalObjectReference{Id: "u-22bbb"},
+			Owner:       &apikeysv2.TypedGlobalObjectReference{Id: apiKeyOwnerUserResourceId},
 			Description: apikeysv2.PtrString(""),
 		},
 	}
@@ -93,7 +93,7 @@ func fillKeyStoreV2() {
 				ApiVersion: apikeysv2.PtrString("cmk/v2"),
 				Kind:       apikeysv2.PtrString("Cluster"),
 			}),
-			Owner:       &apikeysv2.TypedGlobalObjectReference{Id: "u-22bbb"},
+			Owner:       &apikeysv2.TypedGlobalObjectReference{Id: apiKeyOwnerUserResourceId},
 			Description: apikeysv2.PtrString(""),
 		},
 	}
@@ -101,7 +101,7 @@ func fillKeyStoreV2() {
 		Id: apikeysv2.PtrString("UIAPIKEY102"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Resource:    *apikeysv2.NewNullableTypedEnvScopedObjectReference(&apikeysv2.TypedEnvScopedObjectReference{Id: "lksqlc-ksql1", Kind: apikeysv2.PtrString("ksqlDB")}),
-			Owner:       &apikeysv2.TypedGlobalObjectReference{Id: "u-22bbb"},
+			Owner:       &apikeysv2.TypedGlobalObjectReference{Id: apiKeyOwnerUserResourceId},
 			Description: apikeysv2.PtrString(""),
 		},
 	}
@@ -113,7 +113,7 @@ func fillKeyStoreV2() {
 				ApiVersion: apikeysv2.PtrString("cmk/v2"),
 				Kind:       apikeysv2.PtrString("Cluster"),
 			}),
-			Owner:       &apikeysv2.TypedGlobalObjectReference{Id: "u-22bbb"},
+			Owner:       &apikeysv2.TypedGlobalObjectReference{Id: apiKeyOwnerUserResourceId},
 			Description: apikeysv2.PtrString(""),
 		},
 	}
@@ -125,7 +125,7 @@ func fillKeyStoreV2() {
 				ApiVersion: apikeysv2.PtrString("iam/v2"),
 				Kind:       apikeysv2.PtrString("Global"),
 			}),
-			Owner:       &apikeysv2.TypedGlobalObjectReference{Id: "u-22bbb"},
+			Owner:       &apikeysv2.TypedGlobalObjectReference{Id: apiKeyOwnerUserResourceId},
 			Description: apikeysv2.PtrString(""),
 		},
 	}

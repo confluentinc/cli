@@ -70,44 +70,15 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	// Detect Global API keys by either the explicit --resource global flag or the server-side resource Kind.
 	// Global keys are org-scoped and stored separately from cluster-scoped keys.
 	if resourceType == resource.Global || isGlobalKey {
-		if resourceType == resource.Global && !isGlobalKey {
-			return errors.NewErrorWithSuggestions(
-				fmt.Sprintf("API key %q is not a Global API key", key),
-				"Omit `--resource global`, or pass the correct resource ID.",
-			)
-		}
-		if isGlobalKey && resourceType != "" && resourceType != resource.Global {
-			return errors.NewErrorWithSuggestions(
-				fmt.Sprintf("API key %q is a Global API key, but --resource was set to %q", key, resourceType),
-				"Re-run with `--resource global`, or omit `--resource` to auto-detect.",
-			)
+		if err := validateGlobalKeyResource(key, resourceType, isGlobalKey); err != nil {
+			return err
 		}
 		return c.storeGlobal(key, secret, force)
 	}
 
-	var cluster *config.KafkaClusterConfig
-
-	// Attempt to get cluster from --resource flag if set; if that doesn't work,
-	// attempt to fall back to the currently active Kafka cluster.
-	// Preserve historical behavior: if --resource resolution failed, silently fall through to the
-	// active cluster (the cluster/key-mismatch check below will surface real problems).
-	if resolveErr == nil && clusterId != "" {
-		if resourceType != resource.KafkaCluster {
-			return errors.New(nonKafkaNotImplementedErrorMsg)
-		}
-		cluster, err = kafka.FindCluster(c.V2Client, c.Context, clusterId)
-		if err != nil {
-			return err
-		}
-	} else {
-		cluster, err = kafka.GetClusterForCommand(c.V2Client, c.Context)
-		if err != nil {
-			// Replace the error msg since it suggests flags which are unavailable with this command
-			return errors.NewErrorWithSuggestions(
-				errors.NoKafkaSelectedErrorMsg,
-				apiKeyNotValidForClusterSuggestions,
-			)
-		}
+	cluster, err := c.getStoreTargetCluster(resourceType, clusterId, resolveErr)
+	if err != nil {
+		return err
 	}
 
 	apiKeyIsValidForTargetCluster := cluster.GetId() != "" && cluster.GetId() == apiKey.GetSpec().Resource.Get().GetId()
@@ -135,6 +106,45 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 
 	output.ErrPrintf(c.Config.EnableColor, "Stored secret for API key \"%s\".\n", key)
 	return nil
+}
+
+func validateGlobalKeyResource(key, resourceType string, isGlobalKey bool) error {
+	if resourceType == resource.Global && !isGlobalKey {
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf("API key %q is not a Global API key", key),
+			"Omit `--resource global`, or pass the correct resource ID.",
+		)
+	}
+	if isGlobalKey && resourceType != "" && resourceType != resource.Global {
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf("API key %q is a Global API key, but --resource was set to %q", key, resourceType),
+			"Re-run with `--resource global`, or omit `--resource` to auto-detect.",
+		)
+	}
+	return nil
+}
+
+// getStoreTargetCluster attempts to get the cluster from the --resource flag if set; if that doesn't work,
+// it falls back to the currently active Kafka cluster.
+// Preserve historical behavior: if --resource resolution failed, silently fall through to the
+// active cluster (the cluster/key-mismatch check in store will surface real problems).
+func (c *command) getStoreTargetCluster(resourceType, clusterId string, resolveErr error) (*config.KafkaClusterConfig, error) {
+	if resolveErr == nil && clusterId != "" {
+		if resourceType != resource.KafkaCluster {
+			return nil, errors.New(nonKafkaNotImplementedErrorMsg)
+		}
+		return kafka.FindCluster(c.V2Client, c.Context, clusterId)
+	}
+
+	cluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
+	if err != nil {
+		// Replace the error msg since it suggests flags which are unavailable with this command
+		return nil, errors.NewErrorWithSuggestions(
+			errors.NoKafkaSelectedErrorMsg,
+			apiKeyNotValidForClusterSuggestions,
+		)
+	}
+	return cluster, nil
 }
 
 func (c *command) storeGlobal(key, secret string, force bool) error {
