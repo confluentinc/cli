@@ -462,50 +462,65 @@ func (c *command) getBindings(cmd *cobra.Command, topicName string) (*bindings, 
 	return bindings, nil
 }
 
+var errApiKeyNotSet = errors.NewErrorWithSuggestions(
+	"API key not set for the Kafka cluster",
+	"Set an API key pair for the Kafka cluster using `confluent api-key create --resource <cluster-id>` and then use it with `--kafka-api-key`, or set an active Global API key with `confluent api-key use`.",
+)
+
+func (c *command) getClusterCreds(cluster *config.KafkaClusterConfig, kafkaApiKey string) (*config.APIKeyPair, error) {
+	if err := cluster.DecryptAPIKeys(); err != nil {
+		return nil, err
+	}
+
+	if kafkaApiKey != "" {
+		clusterCreds, ok := cluster.APIKeys[kafkaApiKey]
+		if !ok {
+			return nil, c.getUnconfiguredApiKeyError(cluster, kafkaApiKey)
+		}
+		if clusterCreds == nil {
+			return nil, errApiKeyNotSet
+		}
+		return clusterCreds, nil
+	}
+
+	// No explicit --kafka-api-key: resolve the cluster-scoped active key, falling back to the
+	// active Global API key (see Context.ResolveKafkaAPIKey).
+	apiKey, apiSecret, err := c.Context.ResolveKafkaAPIKey(cluster)
+	if err != nil {
+		return nil, err
+	}
+	if apiKey == "" {
+		return nil, errApiKeyNotSet
+	}
+	return &config.APIKeyPair{Key: apiKey, Secret: apiSecret}, nil
+}
+
+// getUnconfiguredApiKeyError explains why an API key passed with --kafka-api-key has no locally stored secret.
+func (c *command) getUnconfiguredApiKeyError(cluster *config.KafkaClusterConfig, kafkaApiKey string) error {
+	key, httpResp, err := c.V2Client.GetApiKey(kafkaApiKey)
+	if err != nil {
+		return errors.CatchCCloudV2Error(err, httpResp)
+	}
+	// check if the key is for the right cluster
+	if key.Spec.Resource.Get().GetId() != cluster.ID {
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(errors.InvalidApiKeyErrorMsg, kafkaApiKey, cluster.ID),
+			fmt.Sprintf(errors.InvalidApiKeySuggestions, cluster.ID),
+		)
+	}
+	// the requested api-key exists, but the secret is not saved locally
+	return &errors.UnconfiguredAPISecretError{APIKey: kafkaApiKey, ClusterID: cluster.ID}
+}
+
 func (c *command) getClusterDetails(details *accountDetails, flags *flags, cmd *cobra.Command) error {
 	cluster, err := pkafka.GetClusterForCommand(c.V2Client, c.Context)
 	if err != nil {
 		return fmt.Errorf(`failed to find Kafka cluster: %w`, err)
 	}
 
-	if err := cluster.DecryptAPIKeys(); err != nil {
+	clusterCreds, err := c.getClusterCreds(cluster, flags.kafkaApiKey)
+	if err != nil {
 		return err
-	}
-
-	var clusterCreds *config.APIKeyPair
-	if flags.kafkaApiKey != "" {
-		if _, ok := cluster.APIKeys[flags.kafkaApiKey]; !ok {
-			key, httpResp, err := c.V2Client.GetApiKey(flags.kafkaApiKey)
-			if err != nil {
-				return errors.CatchCCloudV2Error(err, httpResp)
-			}
-			// check if the key is for the right cluster
-			if key.Spec.Resource.Id != cluster.ID {
-				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.InvalidApiKeyErrorMsg, flags.kafkaApiKey, cluster.ID),
-					fmt.Sprintf(errors.InvalidApiKeySuggestions, cluster.ID),
-				)
-			}
-			// the requested api-key exists, but the secret is not saved locally
-			return &errors.UnconfiguredAPISecretError{APIKey: flags.kafkaApiKey, ClusterID: cluster.ID}
-		}
-		clusterCreds = cluster.APIKeys[flags.kafkaApiKey]
-	} else {
-		// No explicit --kafka-api-key: resolve the cluster-scoped active key, falling back to the
-		// active Global API key (see Context.ResolveKafkaAPIKey).
-		apiKey, apiSecret, err := c.Context.ResolveKafkaAPIKey(cluster)
-		if err != nil {
-			return err
-		}
-		if apiKey != "" {
-			clusterCreds = &config.APIKeyPair{Key: apiKey, Secret: apiSecret}
-		}
-	}
-	if clusterCreds == nil {
-		return errors.NewErrorWithSuggestions(
-			"API key not set for the Kafka cluster",
-			"Set an API key pair for the Kafka cluster using `confluent api-key create --resource <cluster-id>` and then use it with `--kafka-api-key`, or set an active Global API key with `confluent api-key use`.",
-		)
 	}
 
 	kafkaREST, err := c.GetKafkaREST(cmd)
