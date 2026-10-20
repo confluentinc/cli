@@ -788,6 +788,16 @@ func (s *CLITestSuite) TestKafkaConsumerGroup() {
 		{args: "kafka consumer group describe consumer-group-1 --cluster lkc-1234", fixture: "kafka/consumer/group/describe.golden"},
 		{args: "kafka consumer group describe consumer-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer/group/describe-json.golden"},
 		{args: "kafka consumer group describe consumer-group-1234 --cluster lkc-1234", fixture: "kafka/consumer/group/describe-dne.golden", exitCode: 1},
+		{args: "kafka consumer group delete --help", fixture: "kafka/consumer/group/delete-help.golden"},
+		{args: "kafka consumer group delete consumer-group-empty --cluster lkc-1234 --force", fixture: "kafka/consumer/group/delete-success.golden"},
+		{args: "kafka consumer group delete consumer-group-empty --cluster lkc-1234", input: "y\n", fixture: "kafka/consumer/group/delete-success-prompt.golden"},
+		{args: "kafka consumer group delete consumer-group-empty --cluster lkc-1234", input: "n\n", fixture: "kafka/consumer/group/delete-refuse.golden"},
+		{args: "kafka consumer group delete consumer-group-1 --cluster lkc-1234 --force", fixture: "kafka/consumer/group/delete-non-empty.golden", exitCode: 1},
+		{args: "kafka consumer group delete consumer-group-1234 --cluster lkc-1234 --force", fixture: "kafka/consumer/group/delete-dne.golden", exitCode: 1},
+		//nolint:dupword
+		{args: "kafka consumer group delete consumer-group-empty consumer-group-empty --cluster lkc-1234 --force", fixture: "kafka/consumer/group/delete-success.golden"},
+		{args: "kafka consumer group delete consumer-group-no-describe --cluster lkc-1234 --force", fixture: "kafka/consumer/group/delete-no-describe.golden"},
+		{args: "kafka consumer group delete consumer-group-empty consumer-group-1 --cluster lkc-1234 --force", fixture: "kafka/consumer/group/delete-partial-failure.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
