@@ -462,25 +462,16 @@ func (c *command) getBindings(cmd *cobra.Command, topicName string) (*bindings, 
 	return bindings, nil
 }
 
-var errApiKeyNotSet = errors.NewErrorWithSuggestions(
-	"API key not set for the Kafka cluster",
-	"Set an API key pair for the Kafka cluster using `confluent api-key create --resource <cluster-id>` and then use it with `--kafka-api-key`, or set an active Global API key with `confluent api-key use`.",
-)
-
 func (c *command) getClusterCreds(cluster *config.KafkaClusterConfig, kafkaApiKey string) (*config.APIKeyPair, error) {
 	if err := cluster.DecryptAPIKeys(); err != nil {
 		return nil, err
 	}
 
 	if kafkaApiKey != "" {
-		clusterCreds, ok := cluster.APIKeys[kafkaApiKey]
-		if !ok {
-			return nil, c.getUnconfiguredApiKeyError(cluster, kafkaApiKey)
+		if clusterCreds, ok := cluster.APIKeys[kafkaApiKey]; ok {
+			return clusterCreds, nil
 		}
-		if clusterCreds == nil {
-			return nil, errApiKeyNotSet
-		}
-		return clusterCreds, nil
+		return nil, c.getUnconfiguredApiKeyError(cluster, kafkaApiKey)
 	}
 
 	// No explicit --kafka-api-key: resolve the cluster-scoped active key, falling back to the
@@ -490,7 +481,10 @@ func (c *command) getClusterCreds(cluster *config.KafkaClusterConfig, kafkaApiKe
 		return nil, err
 	}
 	if apiKey == "" {
-		return nil, errApiKeyNotSet
+		return nil, errors.NewErrorWithSuggestions(
+			"API key not set for the Kafka cluster",
+			"Set an API key pair for the Kafka cluster using `confluent api-key create --resource <cluster-id>` and then use it with `--kafka-api-key`, or set an active Global API key with `confluent api-key use`.",
+		)
 	}
 	return &config.APIKeyPair{Key: apiKey, Secret: apiSecret}, nil
 }
