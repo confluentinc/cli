@@ -16,6 +16,7 @@ func (c *consumerCommand) newGroupDeleteCommand() *cobra.Command {
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validGroupArgsMultiple),
 		RunE:              c.groupDelete,
+		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete the consumer group "my-group". The group must have no active members.`,
