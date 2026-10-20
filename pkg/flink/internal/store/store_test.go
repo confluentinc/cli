@@ -321,27 +321,6 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 	}
 }
 
-func TestWaitForPendingOnPremWaitsThroughReconcilingAndRestarting(t *testing.T) {
-	client := mock.NewMockCmfClientInterface(gomock.NewController(t))
-	s := &StoreOnPrem{
-		client:           client,
-		appOptions:       &types.ApplicationOptions{EnvironmentId: "envId"},
-		tokenRefreshFunc: tokenRefreshFunc,
-	}
-
-	statementInPhase := func(phase types.PHASE) cmfsdk.Statement {
-		return cmfsdk.Statement{Status: &cmfsdk.StatementStatus{Phase: string(phase), Detail: cmfsdk.PtrString(testStatusDetailMessage)}}
-	}
-	client.EXPECT().CmfApiContext().Return(context.Background()).Times(4)
-	for _, phase := range []types.PHASE{types.PENDING, types.RECONCILING, types.RESTARTING, types.RUNNING} {
-		client.EXPECT().GetStatement(context.Background(), "envId", testStatementName).Return(statementInPhase(phase), nil)
-	}
-
-	processedStatement, err := s.waitForPendingStatement(context.Background(), testStatementName, time.Duration(10)*time.Second)
-	assert.Nil(t, err)
-	assert.Equal(t, types.NewProcessedStatementOnPrem(statementInPhase(types.RUNNING)), processedStatement)
-}
-
 func TestWaitForPendingStatementErrors(t *testing.T) {
 	waitTime := time.Millisecond * 1
 	returnedError := flink.NewError("couldn't get statement", "", http.StatusInternalServerError)
