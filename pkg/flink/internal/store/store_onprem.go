@@ -237,7 +237,7 @@ func (s *StoreOnPrem) waitForPendingStatement(ctx context.Context, statementName
 			}
 
 			phase = types.PHASE(statementObj.Status.GetPhase())
-			if !phase.IsStarting() {
+			if phase != types.PENDING {
 				processedStatement := types.NewProcessedStatementOnPrem(statementObj)
 				processedStatement.StatusDetail = statusDetail
 				return processedStatement, nil

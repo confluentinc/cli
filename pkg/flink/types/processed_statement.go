@@ -15,29 +15,13 @@ import (
 type PHASE string
 
 const (
-	PENDING     PHASE = "PENDING"     // Results are not available yet
-	RECONCILING PHASE = "RECONCILING" // On-prem only: the job is being deployed or updated; results are not available yet
-	RESTARTING  PHASE = "RESTARTING"  // On-prem only: the job is restarting; results are not available yet
-	RUNNING     PHASE = "RUNNING"     // More results are available (pagination)
-	COMPLETED   PHASE = "COMPLETED"   // All results were fetched
-	FAILING     PHASE = "FAILING"
-	FAILED      PHASE = "FAILED"
-	STOPPED     PHASE = "STOPPED"  // The statement was stopped; no more results are coming
-	DELETING    PHASE = "DELETING" // The statement is being deleted; no more results are coming
-	UNKNOWN     PHASE = "UNKNOWN"  // On-prem only: CMF could not read the statement's phase
+	PENDING   PHASE = "PENDING"   // Results are not available yet
+	RUNNING   PHASE = "RUNNING"   // More results are available (pagination)
+	COMPLETED PHASE = "COMPLETED" // All results were fetched
+	FAILED    PHASE = "FAILED"
+	STOPPED   PHASE = "STOPPED"  // The statement was stopped; no more results are coming
+	DELETING  PHASE = "DELETING" // The statement is being deleted; no more results are coming
 )
-
-// IsStarting reports whether a CMF statement in this phase is still starting, so callers should keep polling.
-// Only the phases listed here end the wait, so a phase added by a newer CMF (as 2.5 added RECONCILING and
-// RESTARTING) keeps callers waiting instead of failing.
-func (p PHASE) IsStarting() bool {
-	switch p {
-	case RUNNING, COMPLETED, FAILING, FAILED, STOPPED, DELETING, UNKNOWN:
-		return false
-	default:
-		return true
-	}
-}
 
 // ProcessedStatement Custom Internal type that shall be used internally by the client
 type ProcessedStatement struct {
