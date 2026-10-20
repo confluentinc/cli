@@ -23,6 +23,7 @@ func (c *consumerCommand) newGroupCommand(cfg *config.Config) *cobra.Command {
 	}
 
 	if cfg.IsCloudLogin() {
+		cmd.AddCommand(c.newGroupDeleteCommand())
 		cmd.AddCommand(c.newGroupDescribeCommand())
 		cmd.AddCommand(c.newGroupListCommand())
 	} else {
@@ -39,6 +40,14 @@ func (c *consumerCommand) validGroupArgs(cmd *cobra.Command, args []string) []st
 		return nil
 	}
 
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return pcmd.AutocompleteConsumerGroups(cmd, c.AuthenticatedCLICommand)
+}
+
+func (c *consumerCommand) validGroupArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}

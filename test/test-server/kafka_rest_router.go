@@ -49,6 +49,7 @@ var kafkaRestRoutes = []route{
 	{"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/tasks/{task_type}", handleKafkaClustersClusterIdBrokersBrokerIdTasksTaskTypeGet},
 	{"/kafka/v3/clusters/{cluster_id}/consumer-groups", handleKafkaRestConsumerGroups},
 	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}", handleKafkaRestConsumerGroup},
+	{"/kafka/v3/clusters/{cluster_id}/internal/consumer-groups/{consumer_group_id}", handleKafkaRestInternalConsumerGroup},
 	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/consumers", handleKafkaRestConsumers},
 	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lag-summary", handleKafkaRestLagSummary},
 	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags", handleKafkaRestLags},
@@ -813,22 +814,47 @@ func handleKafkaRestConsumerGroup(t *testing.T) http.HandlerFunc {
 		vars := mux.Vars(r)
 		switch r.Method {
 		case http.MethodGet:
-			if vars["consumer_group_id"] == "consumer-group-1" {
+			if vars["consumer_group_id"] == "consumer-group-1" || vars["consumer_group_id"] == "consumer-group-empty" {
+				state := "STABLE"
+				if vars["consumer_group_id"] == "consumer-group-empty" {
+					state = "EMPTY"
+				}
 				// aside from the ConsumerGroupData.Consumer, the ccloud-sdk-go-v2 and kafka-rest-sdk-go versions of this struct are identical,
 				// so we do not need to handle cloud and onprem cases separately
 				err := json.NewEncoder(w).Encode(cpkafkarestv3.ConsumerGroupData{
 					ClusterId:         vars["cluster_id"],
-					ConsumerGroupId:   "consumer-group-1",
+					ConsumerGroupId:   vars["consumer_group_id"],
 					IsSimple:          true,
 					PartitionAssignor: "org.apache.kafka.clients.consumer.RoundRobinAssignor",
-					State:             "STABLE",
+					State:             state,
 					Coordinator:       cpkafkarestv3.Relationship{Related: broker1Relationship},
 				})
 				require.NoError(t, err)
+			} else if vars["consumer_group_id"] == "consumer-group-no-describe" {
+				require.NoError(t, writeErrorResponse(w, http.StatusForbidden, 40301, "Not authorized to describe this consumer group."))
 			} else {
 				// group not found
 				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this consumer group."))
 			}
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/internal/consumer-groups/{consumer_group_id}"
+func handleKafkaRestInternalConsumerGroup(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		if r.Method != http.MethodDelete {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		switch vars["consumer_group_id"] {
+		case "consumer-group-empty", "consumer-group-no-describe":
+			w.WriteHeader(http.StatusNoContent)
+		case "consumer-group-1":
+			require.NoError(t, writeErrorResponse(w, http.StatusBadRequest, 400, "Bad Request: consumer-group-1 has state STABLE, delete only allowed in state 'empty' or 'dead'."))
+		default:
+			require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40405, "Consumer group id not found."))
 		}
 	}
 }
