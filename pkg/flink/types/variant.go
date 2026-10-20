@@ -36,8 +36,8 @@ const (
 )
 
 const (
-	variantUnknownMarker = "<unknown>"
-	variantInvalidMarker = "<invalid>"
+	variantUnsupportedMarker = "<unsupported>"
+	variantInvalidMarker     = "<invalid>"
 )
 
 // variantNode is one decoded node of a VARIANT value; each shape is its own type
@@ -80,7 +80,7 @@ func (s variantScalar) appendJSON(sb *strings.Builder) {
 		sb.WriteString(jsonQuote(formatVariantBytes(s.raw)))
 	default:
 		// Safety net for an unrecognized code; keeps the cell valid JSON.
-		sb.WriteString(jsonQuote(variantUnknownMarker))
+		sb.WriteString(jsonQuote(variantUnsupportedMarker))
 	}
 }
 
@@ -192,7 +192,7 @@ func decodeVariant(raw any) variantNode {
 	case VariantCodeArray:
 		return variantArray{elements: decodeVariantElements(arr)}
 	case VariantCodeUnknown:
-		return variantMarker{text: variantUnknownMarker}
+		return variantMarker{text: variantUnsupportedMarker}
 	case VariantCodeInvalid:
 		return variantMarker{text: variantInvalidMarker}
 	default:

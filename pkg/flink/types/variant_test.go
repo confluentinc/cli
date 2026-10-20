@@ -35,9 +35,9 @@ func TestVariantRendering(t *testing.T) {
 		{"non-finite number quoted", `[9,"NaN"]`, `"NaN"`},
 		{"non-json number quoted", `[8,"1."]`, `"1."`},
 		{"missing scalar quoted", `[6]`, `""`},
-		{"unknown code marker", `[-1,"x'0102'","x'7f2a'"]`, `"<unknown>"`},
+		{"unknown code marker", `[-1,"x'0102'","x'7f2a'"]`, `"<unsupported>"`},
 		{"invalid marker", `[-2]`, `"<invalid>"`},
-		{"unrecognized positive code", `[99,"x"]`, `"<unknown>"`},
+		{"unrecognized positive code", `[99,"x"]`, `"<unsupported>"`},
 		{"empty object", `[1,[]]`, `{}`},
 		{"empty array", `[2,[]]`, `[]`},
 		{"array of scalars", `[2,[[11,"hot"],[0]]]`, `["hot",null]`},
@@ -51,7 +51,7 @@ func TestVariantRendering(t *testing.T) {
 		{
 			"nested object from spec",
 			`[1,[["device",[11,"sensor-7"]],["meta",[1,[["n",[4,"7"]],["ok",[3,"TRUE"]]]]],["price",[10,"100.00"]],["seen_at",[13,"2026-07-28 09:14:02.117000"]],["seq",[7,"9223372036854775807"]],["tags",[2,[[11,"hot"],[0]]]],["temp",[9,"21.5"]],["weird",[-1,"x'0102'","x'7f2a'"]]]]`,
-			`{"device":"sensor-7","meta":{"n":7,"ok":true},"price":100,"seen_at":"2026-07-28T09:14:02.117","seq":9223372036854775807,"tags":["hot",null],"temp":21.5,"weird":"<unknown>"}`,
+			`{"device":"sensor-7","meta":{"n":7,"ok":true},"price":100,"seen_at":"2026-07-28T09:14:02.117","seq":9223372036854775807,"tags":["hot",null],"temp":21.5,"weird":"<unsupported>"}`,
 		},
 	}
 	for _, test := range tests {
