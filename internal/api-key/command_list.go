@@ -27,11 +27,16 @@ func (c *command) newListCommand() *cobra.Command {
 				Text: `List the API keys that belong to service account "sa-123456" on cluster "lkc-123456".`,
 				Code: "confluent api-key list --resource lkc-123456 --service-account sa-123456",
 			},
+			examples.Example{
+				Text: "List the API keys, including expired API keys.",
+				Code: "confluent api-key list --show-expired",
+			},
 		),
 	}
 
 	c.addResourceFlag(cmd, false)
 	cmd.Flags().Bool("current-user", false, "Show only API keys belonging to current user.")
+	cmd.Flags().Bool("show-expired", false, "Include expired API keys.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -93,7 +98,12 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	apiKeys, err := c.V2Client.ListApiKeys(serviceAccount, clusterId)
+	showExpired, err := cmd.Flags().GetBool("show-expired")
+	if err != nil {
+		return err
+	}
+
+	apiKeys, err := c.V2Client.ListApiKeys(serviceAccount, clusterId, showExpired)
 	if err != nil {
 		return err
 	}

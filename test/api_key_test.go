@@ -279,6 +279,8 @@ func (s *CLITestSuite) TestApiKeyExpiration() {
 
 func (s *CLITestSuite) TestApiKeyList() {
 	tests := []CLITest{
+		{args: "api-key list --resource lkc-bob --show-expired", fixture: "api-key/list-show-expired.golden"},
+		{args: "api-key list --resource lkc-bob --show-expired -o json", fixture: "api-key/list-show-expired-json.golden"},
 		{args: "api-key list --resource lkc-dne", env: []string{fmt.Sprintf("%s=no-environment-user@example.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}, fixture: "api-key/no-env.golden", exitCode: 1},
 	}
 

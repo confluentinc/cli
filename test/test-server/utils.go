@@ -73,6 +73,20 @@ func fillKeyStoreV2() {
 		},
 	}
 
+	keyStoreV2["EXPIREDKEY1"] = &apikeysv2.IamV2ApiKey{
+		Id: apikeysv2.PtrString("EXPIREDKEY1"),
+		Spec: &apikeysv2.IamV2ApiKeySpec{
+			Resource: *apikeysv2.NewNullableTypedEnvScopedObjectReference(&apikeysv2.TypedEnvScopedObjectReference{
+				Id:         "lkc-bob",
+				ApiVersion: apikeysv2.PtrString("cmk/v2"),
+				Kind:       apikeysv2.PtrString("Cluster"),
+			}),
+			Owner:       &apikeysv2.TypedGlobalObjectReference{Id: "u11"},
+			Description: apikeysv2.PtrString("Expired key"),
+			ExpiresAt:   apikeysv2.PtrString("2020-01-01"),
+		},
+	}
+
 	keyStoreV2["UIAPIKEY100"] = &apikeysv2.IamV2ApiKey{
 		Id: apikeysv2.PtrString("UIAPIKEY100"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
@@ -163,16 +177,24 @@ func apiKeysFilterV2(url *url.URL) *apikeysv2.IamV2ApiKeyList {
 	q := url.Query()
 	uid := q.Get("spec.owner")
 	resourceId := q.Get("spec.resource")
+	showExpired := q.Get("show_expired") == "true"
 
 	for _, key := range keyStoreV2 {
 		uidFilter := uid == "" || uid == key.Spec.Owner.GetId()
 		clusterFilter := resourceId == "" || containsResourceId(key, resourceId)
-		if uidFilter && clusterFilter {
+		expiredFilter := showExpired || !isExpired(key)
+		if uidFilter && clusterFilter && expiredFilter {
 			apiKeys = append(apiKeys, *key)
 		}
 	}
 	sort.Sort(ApiKeyListV2(apiKeys))
 	return &apikeysv2.IamV2ApiKeyList{Data: apiKeys}
+}
+
+// isExpired mirrors the API, which hides keys whose expiration date has passed unless show_expired=true.
+func isExpired(key *apikeysv2.IamV2ApiKey) bool {
+	expiresAt, err := time.Parse(time.DateOnly, key.Spec.GetExpiresAt())
+	return err == nil && expiresAt.AddDate(0, 0, 1).Before(time.Now())
 }
 
 func containsResourceId(key *apikeysv2.IamV2ApiKey, resourceId string) bool {
