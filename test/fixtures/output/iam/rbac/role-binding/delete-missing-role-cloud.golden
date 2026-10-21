@@ -7,6 +7,10 @@ Delete the role "ResourceOwner" for the resource "Topic:my-topic" on the Kafka c
 
   $ confluent iam rbac role-binding delete --principal User:u-123456 --role ResourceOwner --environment env-123456 --kafka-cluster lkc-123456 --resource Topic:my-topic
 
+Delete the role "UsmClusterAdmin" for the principal "User:u-123456" on the USM Kafka cluster "usmkc-123456" in the environment "env-123456":
+
+  $ confluent iam rbac role-binding delete --principal User:u-123456 --role UsmClusterAdmin --environment env-123456 --usm-kafka-cluster usmkc-123456
+
 Flags:
       --role string                      REQUIRED: Role name of the existing role binding.
       --principal string                 REQUIRED: Principal type and identifier using "Prefix:ID" format.
@@ -18,6 +22,8 @@ Flags:
       --schema-registry-cluster string   Schema Registry cluster ID for the role binding.
       --ksql-cluster string              ksqlDB cluster name for the role binding.
       --flink-region string              Flink region for the role binding, formatted as "cloud.region".
+      --usm-kafka-cluster string         USM Kafka cluster ID for the role binding.
+      --usm-connect-cluster string       USM Connect cluster ID for the role binding.
       --resource string                  Resource type and identifier using "Prefix:ID" format.
       --prefix                           Whether the provided resource name is treated as a prefix pattern.
   -o, --output string                    Specify the output format as "human", "json", or "yaml". (default "human")
