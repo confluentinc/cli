@@ -266,6 +266,7 @@ func (s *CLITestSuite) TestApiKeyExpiration() {
 		{args: "api-key create --resource cloud --expiration 2099-12-31", fixture: "api-key/create-expiration.golden"},
 		{args: "api-key describe MYKEY20", fixture: "api-key/describe-created-expiration.golden"},
 		{args: "api-key create --resource cloud --expiration not-a-date", fixture: "api-key/create-expiration-invalid.golden", exitCode: 1},
+		{args: `api-key create --resource cloud --expiration ""`, fixture: "api-key/create-expiration-empty.golden", exitCode: 1},
 	}
 
 	resetConfiguration(s.T(), false)

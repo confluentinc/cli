@@ -158,18 +158,22 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
+// getExpiration returns the --expiration date, or "" when the flag is omitted (the key never expires).
+// An explicitly empty value (e.g. --expiration "$UNSET_VAR") is rejected like any other invalid date,
+// rather than silently creating a key that never expires; this matches the API, which rejects an empty
+// expires_at.
 func getExpiration(cmd *cobra.Command) (string, error) {
 	expiration, err := cmd.Flags().GetString("expiration")
 	if err != nil {
 		return "", err
 	}
-	if expiration == "" {
+	if !cmd.Flags().Changed("expiration") {
 		return "", nil
 	}
 	if _, err := time.Parse("2006-01-02", expiration); err != nil {
 		return "", errors.NewErrorWithSuggestions(
 			fmt.Sprintf(`invalid expiration date "%s"`, expiration),
-			`Specify the expiration date in UTC (for example, "2026-12-31").`,
+			`Specify the expiration date in UTC (for example, "2026-12-31"), or omit --expiration for a key that never expires.`,
 		)
 	}
 	return expiration, nil

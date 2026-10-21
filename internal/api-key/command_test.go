@@ -51,6 +51,11 @@ func TestGetExpiration(t *testing.T) {
 	_, err = getExpiration(cmd)
 	require.EqualError(t, err, `invalid expiration date "12/31/2026"`)
 
+	// An explicitly empty value (e.g. an unset shell variable) is rejected, not treated as "never expires".
+	require.NoError(t, cmd.Flags().Set("expiration", ""))
+	_, err = getExpiration(cmd)
+	require.EqualError(t, err, `invalid expiration date ""`)
+
 	_, err = getExpiration(&cobra.Command{})
 	require.Error(t, err)
 }
