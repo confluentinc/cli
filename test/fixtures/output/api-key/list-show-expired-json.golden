@@ -1,0 +1,48 @@
+[
+  {
+    "key": "DEACTIVATEDUSERKEY",
+    "description": "",
+    "owner": "sa-6666",
+    "owner_email": "\u003cdeactivated user\u003e",
+    "resource_type": "kafka",
+    "resource": "lkc-bob",
+    "created": "1999-02-24T00:00:00Z"
+  },
+  {
+    "key": "EXPIREDKEY1",
+    "description": "Expired key",
+    "owner": "u11",
+    "owner_email": "bstrauch@confluent.io",
+    "resource_type": "kafka",
+    "resource": "lkc-bob",
+    "created": "1999-02-24T00:00:00Z",
+    "expiration": "2020-01-01"
+  },
+  {
+    "key": "MYKEY1",
+    "description": "first-key",
+    "owner": "u11",
+    "owner_email": "bstrauch@confluent.io",
+    "resource_type": "kafka",
+    "resource": "lkc-bob",
+    "created": "1999-02-24T00:00:00Z"
+  },
+  {
+    "key": "MYKEY3",
+    "description": "",
+    "owner": "u-44ddd",
+    "owner_email": "mhe@confluent.io",
+    "resource_type": "kafka",
+    "resource": "lkc-bob",
+    "created": "1999-02-24T00:00:00Z"
+  },
+  {
+    "key": "SERVICEACCOUNTKEY1",
+    "description": "",
+    "owner": "sa-12345",
+    "owner_email": "\u003cservice account\u003e",
+    "resource_type": "kafka",
+    "resource": "lkc-bob",
+    "created": "1999-02-24T00:00:00Z"
+  }
+]
