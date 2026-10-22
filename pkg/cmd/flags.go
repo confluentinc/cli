@@ -34,7 +34,7 @@ func AddApiSecretFlag(cmd *cobra.Command) {
 }
 
 func AutocompleteApiKeys(client *ccloudv2.Client) []string {
-	apiKeys, err := client.ListApiKeys("", "")
+	apiKeys, err := client.ListApiKeys("", "", false)
 	if err != nil {
 		return nil
 	}

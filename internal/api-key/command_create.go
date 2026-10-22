@@ -3,6 +3,7 @@ package apikey
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -66,6 +67,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 
 	c.addResourceFlag(cmd, false)
 	cmd.Flags().String("description", "", "Description of API key.")
+	cmd.Flags().String("expiration", "", `Expiration date of the API key, in UTC (for example, "2026-12-31"). The key remains valid through the end of this date. If not specified, the key never expires.`)
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Bool("use", false, "Use the created API key for the provided resource.")
@@ -88,21 +90,14 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	serviceAccount, err := cmd.Flags().GetString("service-account")
+	expiration, err := getExpiration(cmd)
 	if err != nil {
 		return err
 	}
-	if serviceAccount == "" {
-		serviceAccount = c.Context.GetCurrentServiceAccount()
-	}
 
-	ownerId := serviceAccount
-	if ownerId == "" {
-		userId, err := c.getCurrentUserId()
-		if err != nil {
-			return err
-		}
-		ownerId = userId
+	serviceAccount, ownerId, err := c.getOwner(cmd)
+	if err != nil {
+		return err
 	}
 
 	resourceType, resourceId, _, err := c.resolveResourceId(cmd, c.V2Client)
@@ -110,41 +105,18 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	resourceRef, err := c.buildResourceRef(cmd, resourceType, resourceId)
+	if err != nil {
+		return err
+	}
+
 	key := apikeysv2.IamV2ApiKey{Spec: &apikeysv2.IamV2ApiKeySpec{
 		Description: apikeysv2.PtrString(description),
-		Owner:       &apikeysv2.ObjectReference{Id: ownerId},
-		Resource:    &apikeysv2.ObjectReference{Id: resourceId},
+		Owner:       &apikeysv2.TypedGlobalObjectReference{Id: ownerId},
+		Resource:    *apikeysv2.NewNullableTypedEnvScopedObjectReference(resourceRef),
 	}}
-
-	switch resourceType {
-	case resource.Cloud:
-		key.Spec.Resource.Id = resource.Cloud
-	case resource.Global:
-		key.Spec.Resource.Id = resource.Global
-	case resource.Flink:
-		environmentId, err := c.Context.EnvironmentId()
-		if err != nil {
-			return nil
-		}
-
-		cloud, err := cmd.Flags().GetString("cloud")
-		if err != nil {
-			return err
-		}
-
-		region, err := cmd.Flags().GetString("region")
-		if err != nil {
-			return err
-		}
-
-		if cloud == "" || region == "" {
-			return fmt.Errorf("must provide both `--cloud` and `--region`")
-		}
-
-		key.Spec.Resource.Id = fmt.Sprintf("%s.%s", cloud, region)
-		key.Spec.Resource.Environment = &environmentId
-	case resource.Tableflow:
-		key.Spec.Resource.Id = resource.Tableflow
+	if expiration != "" {
+		key.Spec.ExpiresAt = apikeysv2.PtrString(expiration)
 	}
 
 	v2Key, httpResp, err := c.V2Client.CreateApiKey(key)
@@ -171,6 +143,101 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	if err := c.storeCreatedKey(userKey, resourceType, resourceId); err != nil {
+		return err
+	}
+
+	use, err := cmd.Flags().GetBool("use")
+	if err != nil {
+		return err
+	}
+	if use {
+		return c.useCreatedKey(userKey.Key, resourceType, resourceId)
+	}
+
+	return nil
+}
+
+// getExpiration returns the --expiration date, or "" when the flag is omitted (the key never expires).
+// An explicitly empty value (e.g. --expiration "$UNSET_VAR") is rejected like any other invalid date,
+// rather than silently creating a key that never expires; this matches the API, which rejects an empty
+// expires_at.
+func getExpiration(cmd *cobra.Command) (string, error) {
+	expiration, err := cmd.Flags().GetString("expiration")
+	if err != nil {
+		return "", err
+	}
+	if !cmd.Flags().Changed("expiration") {
+		return "", nil
+	}
+	if _, err := time.Parse("2006-01-02", expiration); err != nil {
+		return "", errors.NewErrorWithSuggestions(
+			fmt.Sprintf(`invalid expiration date "%s"`, expiration),
+			`Specify the expiration date in UTC (for example, "2026-12-31"), or omit --expiration for a key that never expires.`,
+		)
+	}
+	return expiration, nil
+}
+
+// getOwner returns the service account (from the flag or the current context, possibly empty) and the resolved
+// owner ID, which falls back to the current user when no service account is set.
+func (c *command) getOwner(cmd *cobra.Command) (string, string, error) {
+	serviceAccount, err := cmd.Flags().GetString("service-account")
+	if err != nil {
+		return "", "", err
+	}
+	if serviceAccount == "" {
+		serviceAccount = c.Context.GetCurrentServiceAccount()
+	}
+	if serviceAccount != "" {
+		return serviceAccount, serviceAccount, nil
+	}
+
+	userId, err := c.getCurrentUserId()
+	if err != nil {
+		return "", "", err
+	}
+	return serviceAccount, userId, nil
+}
+
+func (c *command) buildResourceRef(cmd *cobra.Command, resourceType, resourceId string) (*apikeysv2.TypedEnvScopedObjectReference, error) {
+	resourceRef := &apikeysv2.TypedEnvScopedObjectReference{Id: resourceId}
+
+	switch resourceType {
+	case resource.Cloud:
+		resourceRef.Id = resource.Cloud
+	case resource.Global:
+		resourceRef.Id = resource.Global
+	case resource.Flink:
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil, err
+		}
+
+		cloud, err := cmd.Flags().GetString("cloud")
+		if err != nil {
+			return nil, err
+		}
+
+		region, err := cmd.Flags().GetString("region")
+		if err != nil {
+			return nil, err
+		}
+
+		if cloud == "" || region == "" {
+			return nil, fmt.Errorf("must provide both `--cloud` and `--region`")
+		}
+
+		resourceRef.Id = fmt.Sprintf("%s.%s", cloud, region)
+		resourceRef.Environment = &environmentId
+	case resource.Tableflow:
+		resourceRef.Id = resource.Tableflow
+	}
+
+	return resourceRef, nil
+}
+
+func (c *command) storeCreatedKey(userKey *config.APIKeyPair, resourceType, resourceId string) error {
 	switch resourceType {
 	case resource.KafkaCluster:
 		if err := c.keystore.StoreAPIKey(c.V2Client, userKey, resourceId); err != nil {
@@ -183,31 +250,27 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 			return fmt.Errorf(unableToStoreApiKeyErrorMsg, err)
 		}
 	}
+	return nil
+}
 
-	use, err := cmd.Flags().GetBool("use")
-	if err != nil {
-		return err
-	}
-	if use {
-		switch resourceType {
-		case resource.KafkaCluster:
-			if err := c.useAPIKey(userKey.Key, resourceId); err != nil {
-				return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, userKey.Key))
-			}
-			output.Printf(c.Config.EnableColor, useAPIKeyMsg, userKey.Key)
-		case resource.Global:
-			if err := c.Context.SetActiveGlobalAPIKey(userKey.Key); err != nil {
-				return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, userKey.Key))
-			}
-			if err := c.Config.Save(); err != nil {
-				return err
-			}
-			output.Printf(c.Config.EnableColor, useGlobalAPIKeyMsg, userKey.Key)
-		default:
-			return fmt.Errorf("`--use` set but ineffective: %s", nonKafkaNotImplementedErrorMsg)
+func (c *command) useCreatedKey(key, resourceType, resourceId string) error {
+	switch resourceType {
+	case resource.KafkaCluster:
+		if err := c.useAPIKey(key, resourceId); err != nil {
+			return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, key))
 		}
+		output.Printf(c.Config.EnableColor, useAPIKeyMsg, key)
+	case resource.Global:
+		if err := c.Context.SetActiveGlobalAPIKey(key); err != nil {
+			return errors.NewWrapErrorWithSuggestions(err, apiKeyUseFailedErrorMsg, fmt.Sprintf(apiKeyUseFailedSuggestions, key))
+		}
+		if err := c.Config.Save(); err != nil {
+			return err
+		}
+		output.Printf(c.Config.EnableColor, useGlobalAPIKeyMsg, key)
+	default:
+		return fmt.Errorf("`--use` set but ineffective: %s", nonKafkaNotImplementedErrorMsg)
 	}
-
 	return nil
 }
 

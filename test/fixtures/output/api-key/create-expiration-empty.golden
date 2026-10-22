@@ -1,0 +1,4 @@
+Error: invalid expiration date ""
+
+Suggestions:
+    Specify the expiration date in UTC (for example, "2026-12-31"), or omit --expiration for a key that never expires.
