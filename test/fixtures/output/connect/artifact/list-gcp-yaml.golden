@@ -1,6 +1,7 @@
 - id: cfa-gcp-jar123
   name: my-connect-artifact-gcp-jar
   description: new-jar-artifact
+  type: CUSTOM_SMT
   cloud: GCP
   environment: env-123456
   content_format: JAR
@@ -8,6 +9,7 @@
 - id: cfa-gcp-zip123
   name: my-connect-artifact-gcp-zip
   description: new-zip-artifact
+  type: CUSTOM_SMT
   cloud: GCP
   environment: env-123456
   content_format: ZIP

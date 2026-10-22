@@ -1,0 +1,10 @@
++----------------+---------------------------------+
+| ID             | cfa-combined123                 |
+| Name           | my-connect-artifact-combined    |
+| Description    |                                 |
+| Type           | CUSTOM_SMT,CONNECT_EXTERNAL_DEP |
+| Cloud          | AWS                             |
+| Environment    | env-123456                      |
+| Content Format | JAR                             |
+| Status         | PROCESSING                      |
++----------------+---------------------------------+
