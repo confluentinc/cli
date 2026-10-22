@@ -24,8 +24,14 @@ blocks:
       jobs:
         - name: "Run Live Tests"
           commands:
-            - . vault-sem-get-secret v1/ci/kv/apif/cli/live-testing-data
-            - . vault-sem-get-secret v1/ci/kv/apif/cli/slack-notifications-live-testing
+            # TODO: move these two IDs out of Vault V1.
+            - . vault-setup
+            - export LIVE_TEST_ENVIRONMENT_ID=$(vault kv get -field=LIVE_TEST_ENVIRONMENT_ID v1/ci/kv/apif/cli/live-testing-data)
+            - export KAFKA_STANDARD_AWS_CLUSTER_ID=$(vault kv get -field=KAFKA_STANDARD_AWS_CLUSTER_ID v1/ci/kv/apif/cli/live-testing-data)
+
+            - . vault-get-secret cli/live-test-login
+            - . vault-get-secret cli/live-test-kafka-standard-api-key
+            - . vault-get-secret cli/slack-notifications-live-testing
 
             - |
               set -e
