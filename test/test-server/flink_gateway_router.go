@@ -221,8 +221,8 @@ func handleSqlEnvironmentsEnvironmentStatementExceptions(t *testing.T) http.Hand
 }
 
 // queryTestStatementPrefix marks a statement created by `confluent flink query` (see
-// types.GenerateStatementName); fixtures below only apply to names with this prefix.
-const queryTestStatementPrefix = "cli-"
+// types.GenerateQueryStatementName); fixtures below only apply to names with this prefix.
+const queryTestStatementPrefix = "cli-query-"
 
 // queryTestFixture is the mock's stand-in for a gateway statement plus its
 // paginated results, built from the submitted SQL and replayed for every later call.
