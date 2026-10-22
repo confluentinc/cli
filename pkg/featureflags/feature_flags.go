@@ -1,5 +1,3 @@
-//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --prefix "" --dst ../mock/launch_darkly.go --pkg mock --selfpkg github.com/confluentinc/cli/v4 launch_darkly.go LaunchDarklyManager
-
 package featureflags
 
 import (

@@ -178,7 +178,11 @@ func (t *InteractiveOutputController) renderRowView() {
 		headers := t.resultFetcher.GetMaterializedStatementResults().GetHeaders()
 		sb := strings.Builder{}
 		for rowIdx, field := range row.GetFields() {
-			sb.WriteString(fmt.Sprintf("[yellow]%s:\n[white]%s\n\n", tview.Escape(headers[rowIdx]), tview.Escape(field.ToString())))
+			value := tview.Escape(field.ToString())
+			if variant, ok := field.(types.VariantStatementResultField); ok {
+				value = tview.Escape(variant.ToPrettyString())
+			}
+			sb.WriteString(fmt.Sprintf("[yellow]%s:\n[white]%s\n\n", tview.Escape(headers[rowIdx]), value))
 		}
 		textView := tview.NewTextView().SetText(sb.String())
 

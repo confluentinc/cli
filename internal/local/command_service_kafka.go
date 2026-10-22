@@ -74,7 +74,7 @@ var (
 		"line-reader":                `The class name of the class to use for reading lines from stdin. By default each line is read as a separate message. (default "kafka.tools.ConsoleProducer$LineMessageReader")`,
 		"max-block-ms":               "The max time that the producer will block for during a send request. (default 60000)",
 		"max-memory-bytes":           "The total memory used by the producer to buffer records waiting to be sent to the server. (default 33554432)",
-		"max-partition-memory-bytes": "The buffer size allocated for a partition. When records are received which are small than this size, the producer will attempt to optimistically group them together until this size is reached. (default 16384)",
+		"max-partition-memory-bytes": "DEPRECATED: The buffer size allocated for a partition. When records are received which are smaller than this size, the producer will attempt to optimistically group them together until this size is reached. (default 16384)",
 		"message-send-max-retries":   "This property specifies the number of retries before the producer gives up and drops this message. Brokers can fail receiving a message for multiple reasons, and being unavailable transiently is just one of them. (default 3)",
 		"metadata-expiry-ms":         "The amount of time in milliseconds before a forced metadata refresh. This will occur independent of any leadership changes. (default 300000)",
 		"producer-property":          "A mechanism to pass user-defined properties in the form key=value to the producer.",

@@ -1,0 +1,4 @@
+Error: cannot specify both `--usm-kafka-cluster` and `--usm-connect-cluster`
+
+Suggestions:
+    USM Kafka cluster and USM Connect cluster are independent scopes; specify only one of `--usm-kafka-cluster` or `--usm-connect-cluster`.

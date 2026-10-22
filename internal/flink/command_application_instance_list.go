@@ -17,6 +17,7 @@ func (c *command) newApplicationInstanceListCommand() *cobra.Command {
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	cmd.Flags().String("application", "", "Name of the Flink application.")
+	addPageSizeFlag(cmd)
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -37,12 +38,17 @@ func (c *command) applicationInstanceList(cmd *cobra.Command, _ []string) error 
 		return err
 	}
 
+	pageSize, err := getPageSize(cmd)
+	if err != nil {
+		return err
+	}
+
 	client, err := c.GetCmfClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	instances, err := client.ListApplicationInstances(c.createContext(), environment, application)
+	instances, err := client.ListApplicationInstances(c.createContext(), environment, application, pageSize)
 	if err != nil {
 		return err
 	}

@@ -14,15 +14,15 @@ import (
 
 func (c *command) newStatementListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "list",
-		Short:       "List Flink SQL statements in Confluent Platform.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
-		RunE:        c.statementListOnPrem,
+		Use:   "list",
+		Short: "List Flink SQL statements in Confluent Platform.",
+		RunE:  c.statementListOnPrem,
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")
 	cmd.Flags().String("compute-pool", "", "Optional flag to filter the Flink statements by compute pool ID.")
 	cmd.Flags().String("status", "", "Optional flag to filter the Flink statements by statement status.")
+	addPageSizeFlag(cmd)
 	addCmfFlagSet(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -57,7 +57,12 @@ func (c *command) statementListOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	sdkStatements, err := client.ListStatements(c.createContext(), environment, computePool, status)
+	pageSize, err := getPageSize(cmd)
+	if err != nil {
+		return err
+	}
+
+	sdkStatements, err := client.ListStatements(c.createContext(), environment, computePool, status, pageSize)
 	if err != nil {
 		return err
 	}

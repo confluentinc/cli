@@ -1,8 +1,8 @@
 +------------------+---------------+
 | ID               | ccp-123456    |
-| Name             | CliPluginTest |
-| Description      | Test plugin   |
 | Cloud            | AWS           |
-| Runtime Language | JAVA          |
+| Name             | CliPluginTest |
 | Environment      | env-596       |
+| Runtime Language | JAVA          |
+| Description      | Test plugin   |
 +------------------+---------------+

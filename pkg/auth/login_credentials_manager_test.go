@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
@@ -58,7 +59,7 @@ type LoginCredentialsManagerTestSuite struct {
 	require *require.Assertions
 
 	ccloudClient *ccloudv1.Client
-	prompt       *mock.Prompt
+	prompt       *mock.MockPrompt
 
 	loginCredentialsManager LoginCredentialsManager
 }
@@ -81,20 +82,16 @@ func (suite *LoginCredentialsManagerTestSuite) SetupSuite() {
 			},
 		},
 	}
-	suite.prompt = &mock.Prompt{
-		ReadLineFunc: func() (string, error) {
-			return promptUsername, nil
-		},
-		ReadLineMaskedFunc: func() (string, error) {
-			return promptPassword, nil
-		},
-	}
 }
 
 func (suite *LoginCredentialsManagerTestSuite) SetupTest() {
 	suite.require = require.New(suite.T())
 	suite.clearCCEnvVars()
 	suite.clearCPEnvVars()
+	ctrl := gomock.NewController(suite.T())
+	suite.prompt = mock.NewMockPrompt(ctrl)
+	suite.prompt.EXPECT().ReadLine().Return(promptUsername, nil).AnyTimes()
+	suite.prompt.EXPECT().ReadLineMasked().Return(promptPassword, nil).AnyTimes()
 	suite.loginCredentialsManager = NewLoginCredentialsManager(suite.prompt, suite.ccloudClient)
 }
 

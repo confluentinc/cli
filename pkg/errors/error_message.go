@@ -10,6 +10,7 @@ const (
 	ByokKeyNotFoundSuggestions        = "Ensure the self-managed key exists and has not been deleted, or register a new key via `confluent byok register`."
 	EndOfFreeTrialErrorMsg            = `organization "%s" has been suspended because your free trial has ended`
 	EndOfFreeTrialSuggestions         = "To continue using Confluent Cloud, please enter a credit card with `confluent billing payment update` or claim a promo code with `confluent billing promo add`. To enter payment via the UI, please go to https://confluent.cloud/login."
+	PauseTrialSuggestions             = "To continue using Confluent Cloud, resume your paused organization at https://confluent.cloud/login."
 	EnsureCpSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."
 	ExactlyOneSetErrorMsg             = "exactly one of %v must be set"
 	ListResourceSuggestions           = "List available %s with `%s list`."
@@ -17,7 +18,7 @@ const (
 	MustSetAllowOrDenyErrorMsg        = "`--allow` or `--deny` must be set when adding or deleting an ACL"
 	MustSetResourceTypeErrorMsg       = "exactly one resource type (%s) must be set"
 	ServiceAccountNotFoundErrorMsg    = `service account "%s" not found`
-	ServiceAccountNotFoundSuggestions = "List service accounts with `confluent service-account list`."
+	ServiceAccountNotFoundSuggestions = "List service accounts with `confluent iam service-account list`."
 	SpecifyKafkaIdErrorMsg            = "must specify `--kafka-cluster` to uniquely identify the scope"
 	SpecifyCmfErrorMsg                = "must specify `--cmf` to uniquely identify the Flink environment scope"
 	UnknownConnectorIdErrorMsg        = `unknown connector ID "%s"`

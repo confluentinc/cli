@@ -6,6 +6,28 @@ import (
 	"time"
 )
 
+// Call races fn against ctx, for an API like FlinkGatewayClient's that ignores context
+// entirely. It can't abort fn once started, so its goroutine leaks until fn returns.
+func Call[T any](ctx context.Context, fn func() (T, error)) (T, error) {
+	type result struct {
+		val T
+		err error
+	}
+	ch := make(chan result, 1)
+	go func() {
+		val, err := fn()
+		ch <- result{val, err}
+	}()
+
+	select {
+	case r := <-ch:
+		return r.val, r.err
+	case <-ctx.Done():
+		var zero T
+		return zero, ctx.Err()
+	}
+}
+
 // Options describes a single Poll invocation. T is the polled resource type.
 //
 // Delay (if non-zero) sleeps before the first Fetch. Use it to give the

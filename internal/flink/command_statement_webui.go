@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/v4/pkg/auth"
-	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/flink"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -17,12 +16,11 @@ import (
 
 func (c *command) newStatementWebUiForwardCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "web-ui-forward <name>",
-		Short:       "Forward the web UI of a Flink statement.",
-		Long:        "Forward the web UI of a Flink statement in Confluent Platform.",
-		Args:        cobra.ExactArgs(1),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogout},
-		RunE:        c.statementWebUiForward,
+		Use:   "web-ui-forward <name>",
+		Short: "Forward the web UI of a Flink statement.",
+		Long:  "Forward the web UI of a Flink statement in Confluent Platform.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.statementWebUiForward,
 	}
 
 	cmd.Flags().String("environment", "", "Name of the Flink environment.")

@@ -88,13 +88,13 @@ func (c *command) schemaDelete(cmd *cobra.Command, _ []string) error {
 	}
 	if permanent {
 		if checkVersion != "latest" {
-			if _, err := client.GetSchemaByVersion(subject, checkVersion, true); err != nil {
+			if _, err := client.GetSchemaByVersion(subject, checkVersion, true, ""); err != nil {
 				return catchSchemaNotFoundError(err, subject, checkVersion)
-			} else if _, err := client.GetSchemaByVersion(subject, checkVersion, false); err == nil {
+			} else if _, err := client.GetSchemaByVersion(subject, checkVersion, false, ""); err == nil {
 				return fmt.Errorf("you must first soft delete a schema version before you can permanently delete it")
 			}
 		}
-	} else if _, err := client.GetSchemaByVersion(subject, checkVersion, false); err != nil {
+	} else if _, err := client.GetSchemaByVersion(subject, checkVersion, false, ""); err != nil {
 		return catchSchemaNotFoundError(err, subject, checkVersion)
 	}
 

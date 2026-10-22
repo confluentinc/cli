@@ -1,0 +1,4 @@
+Error: IAM IP group "ipg-dne" not found
+
+Suggestions:
+    List available IAM IP groups with `confluent iam ip-group list`.

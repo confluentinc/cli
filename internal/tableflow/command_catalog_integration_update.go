@@ -1,6 +1,8 @@
 package tableflow
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	tableflowv1 "github.com/confluentinc/ccloud-sdk-go-v2/tableflow/v1"
@@ -105,6 +107,13 @@ func (c *command) updateCatalogIntegration(cmd *cobra.Command, args []string) er
 				},
 			})
 		}
+		if catalogIntegrationType == biglake {
+			updateCatalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationUpdateSpecConfigOneOf{
+				TableflowV1CatalogIntegrationBigLakeMetastoreUpdateSpec: &tableflowv1.TableflowV1CatalogIntegrationBigLakeMetastoreUpdateSpec{
+					Kind: bigLakeMetastoreKind,
+				},
+			})
+		}
 	}
 
 	if cmd.Flags().Changed("custom-database") {
@@ -120,7 +129,7 @@ func (c *command) updateCatalogIntegration(cmd *cobra.Command, args []string) er
 		updateCatalogIntegration.Spec.Config.TableflowV1CatalogIntegrationAwsGlueUpdateSpec.SetCustomDatabase(customDatabase)
 	}
 
-	if cmd.Flags().Changed("endpoint") || cmd.Flags().Changed("warehouse") || cmd.Flags().Changed("allowed-scope") || cmd.Flags().Changed("client-id") || cmd.Flags().Changed("client-secret") || cmd.Flags().Changed("custom-namespace") {
+	if cmd.Flags().Changed("endpoint") || cmd.Flags().Changed("warehouse") || cmd.Flags().Changed("allowed-scope") || cmd.Flags().Changed("client-id") || cmd.Flags().Changed("client-secret") {
 		updateCatalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationUpdateSpecConfigOneOf{
 			TableflowV1CatalogIntegrationSnowflakeUpdateSpec: &tableflowv1.TableflowV1CatalogIntegrationSnowflakeUpdateSpec{
 				Kind: snowflakeKind,
@@ -167,6 +176,39 @@ func (c *command) updateCatalogIntegration(cmd *cobra.Command, args []string) er
 				return err
 			}
 			updateCatalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeUpdateSpec.SetCustomNamespace(customNamespace)
+		}
+	} else if cmd.Flags().Changed("custom-namespace") {
+		// `custom-namespace` is shared by Snowflake and BigLake Metastore.
+		// To update, we retrieve the config type from the backend.
+		customNamespace, err := cmd.Flags().GetString("custom-namespace")
+		if err != nil {
+			return err
+		}
+		catalogIntegration, err := c.V2Client.GetCatalogIntegration(environmentId, cluster.GetId(), args[0])
+		if err != nil {
+			return err
+		}
+		catalogIntegrationType, err := getCatalogIntegrationType(catalogIntegration)
+		if err != nil {
+			return err
+		}
+		switch catalogIntegrationType {
+		case biglake:
+			updateCatalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationUpdateSpecConfigOneOf{
+				TableflowV1CatalogIntegrationBigLakeMetastoreUpdateSpec: &tableflowv1.TableflowV1CatalogIntegrationBigLakeMetastoreUpdateSpec{
+					Kind: bigLakeMetastoreKind,
+				},
+			})
+			updateCatalogIntegration.Spec.Config.TableflowV1CatalogIntegrationBigLakeMetastoreUpdateSpec.SetCustomNamespace(customNamespace)
+		case snowflake:
+			updateCatalogIntegration.Spec.SetConfig(tableflowv1.TableflowV1CatalogIntegrationUpdateSpecConfigOneOf{
+				TableflowV1CatalogIntegrationSnowflakeUpdateSpec: &tableflowv1.TableflowV1CatalogIntegrationSnowflakeUpdateSpec{
+					Kind: snowflakeKind,
+				},
+			})
+			updateCatalogIntegration.Spec.Config.TableflowV1CatalogIntegrationSnowflakeUpdateSpec.SetCustomNamespace(customNamespace)
+		default:
+			return fmt.Errorf("`--custom-namespace` is not supported for catalog integration type `%s`", catalogIntegrationType)
 		}
 	}
 

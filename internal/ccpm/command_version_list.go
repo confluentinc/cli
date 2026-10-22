@@ -8,7 +8,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-func (c *pluginCommand) newListVersionCommand() *cobra.Command {
+func (c *customConnectPluginVersionCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List custom Connect plugin versions.",
@@ -30,7 +30,7 @@ func (c *pluginCommand) newListVersionCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *pluginCommand) listVersion(cmd *cobra.Command, args []string) error {
+func (c *customConnectPluginVersionCommand) listVersion(cmd *cobra.Command, args []string) error {
 	pluginId, err := cmd.Flags().GetString("plugin")
 	if err != nil {
 		return err
@@ -41,13 +41,13 @@ func (c *pluginCommand) listVersion(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pluginResp, err := c.V2Client.DescribeCCPMPlugin(pluginId, environment)
+	pluginResp, err := c.V2Client.GetCcpmCustomConnectPlugin(pluginId, environment)
 	if err != nil {
 		return err
 	}
 
 	// Use V2Client to call CCPM API
-	versions, err := c.V2Client.ListCCPMPluginVersions(pluginId, environment)
+	versions, err := c.V2Client.ListCcpmCustomConnectPluginVersions(pluginId, environment)
 	if err != nil {
 		return err
 	}

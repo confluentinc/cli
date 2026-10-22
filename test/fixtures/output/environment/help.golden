@@ -7,16 +7,16 @@ Aliases:
   environment, env
 
 Available Commands:
-  create      Create a new Confluent Cloud environment.
-  delete      Delete one or more Confluent Cloud environments.
-  describe    Describe a Confluent Cloud environment.
-  list        List Confluent Cloud environments.
-  update      Update an existing Confluent Cloud environment.
+  create      Create an environment.
+  delete      Delete one or more environments.
+  describe    Describe an environment.
+  list        List environments.
+  update      Update an existing environment.
   use         Use an environment in subsequent commands.
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
-  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, and -vvvv for trace).
 
 Use "confluent environment [command] --help" for more information about a command.

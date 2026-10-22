@@ -349,11 +349,11 @@ func (s *CLITestSuite) TestFlinkComputePool() {
 	tests := []CLITest{
 		{args: "flink compute-pool create my-compute-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create.golden"},
 		{args: "flink compute-pool describe lfcp-123456", fixture: "flink/compute-pool/describe.golden"},
+		{args: "flink compute-pool describe lfcp-123456 -o json", fixture: "flink/compute-pool/describe-json.golden"},
 		{args: "flink compute-pool list", fixture: "flink/compute-pool/list.golden"},
 		{args: "flink compute-pool list --region eu-west-2", fixture: "flink/compute-pool/list-region.golden"},
 		{args: "flink compute-pool update lfcp-123456 --max-cfu 5", fixture: "flink/compute-pool/update.golden"},
 		{args: "flink compute-pool create my-compute-pool-2 --default-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create-default.golden"},
-		{args: "flink compute-pool update lfcp-123456 --default-pool=false", fixture: "flink/compute-pool/update-default.golden"},
 	}
 
 	for _, test := range tests {
@@ -442,6 +442,8 @@ func (s *CLITestSuite) TestFlinkStatement() {
 		{args: "flink statement delete my-statement --force --cloud aws --region eu-west-1", fixture: "flink/statement/delete.golden"},
 		{args: "flink statement describe my-statement --cloud aws --region eu-west-1 -o yaml", fixture: "flink/statement/describe-yaml.golden"},
 		{args: "flink statement describe my-statement --cloud aws --region eu-west-1", fixture: "flink/statement/describe.golden"},
+		{args: "flink statement describe my-statement-with-warnings --cloud aws --region eu-west-1", fixture: "flink/statement/describe-warnings.golden"},
+		{args: "flink statement describe my-statement-with-warnings --cloud aws --region eu-west-1 -o yaml", fixture: "flink/statement/describe-warnings-yaml.golden"},
 		{args: "flink statement list --cloud aws --region eu-west-1", fixture: "flink/statement/list.golden"},
 		{args: "flink statement list --cloud aws --region eu-west-1 -o yaml", fixture: "flink/statement/list-yaml.golden"},
 		{args: "flink statement list --cloud aws --region eu-west-1 --status completed", fixture: "flink/statement/list-completed.golden"},

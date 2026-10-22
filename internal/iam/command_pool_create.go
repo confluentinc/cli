@@ -32,7 +32,7 @@ func (c *poolCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 		(cfg.Context() != nil &&
 			featureflags.Manager.BoolVariation("auth.workload_identity.resource_owner.enabled", cfg.Context(), featureflags.GetCcloudLaunchDarklyClient(cfg.Context().PlatformName), true, false))
 	if isResourceOwnerEnabled {
-		addResourceOwnerFlag(cmd, c.AuthenticatedCLICommand)
+		pcmd.AddResourceOwnerFlag(cmd, c.AuthenticatedCLICommand)
 	}
 	pcmd.AddFilterFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)

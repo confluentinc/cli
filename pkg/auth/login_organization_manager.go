@@ -1,4 +1,4 @@
-//go:generate mocker --dst ../../mock/login_organization_manager.go --pkg mock --selfpkg github.com/confluentinc/cli/v4 login_organization_manager.go LoginOrganizationManager --prefix ""
+//go:generate go run go.uber.org/mock/mockgen -typed -destination=../../mock/login_organization_manager.go -package=mock github.com/confluentinc/cli/v4/pkg/auth LoginOrganizationManager
 package auth
 
 import (
