@@ -58,7 +58,8 @@ func (c *command) logout(_ *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	if ccloudv2.IsCCloudURL(ctx.Platform.Server, c.cfg.IsTest) {
+	hasSession := ctx.HasLogin()
+	if hasSession && ccloudv2.IsCCloudURL(ctx.Platform.Server, c.cfg.IsTest) {
 		if _, err := c.revokeCCloudRefreshToken(ctx); err != nil {
 			return err
 		}
@@ -68,7 +69,9 @@ func (c *command) logout(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Println(c.Config.EnableColor, "You are now logged out.")
+	if hasSession || ctx.GetCredentialType() == config.APIKey {
+		output.Println(c.Config.EnableColor, "You are now logged out.")
+	}
 	return nil
 }
 

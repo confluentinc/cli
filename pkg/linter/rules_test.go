@@ -76,7 +76,7 @@ func TestRequireValidExamplesAllowsEqualsForBoolFlags(t *testing.T) {
 		err := cmd.Execute()
 		require.NoError(t, err)
 		err = rule(cmd)
-		require.Error(t, err)
+		require.ErrorContains(t, err.(*multierror.Error).ErrorOrNil(), "flag `--cluster` must not use \"=\"")
 	})
 }
 
