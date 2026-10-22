@@ -1,6 +1,7 @@
 package logout
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -39,6 +40,82 @@ func TestLogout(t *testing.T) {
 	_, err := pcmd.ExecuteCommand(logoutCmd)
 	req.NoError(err)
 	verifyLoggedOutState(t, cfg, contextName)
+}
+
+func TestRevokeCCloudRefreshTokenNoopWhenContextStateMissing(t *testing.T) {
+	req := require.New(t)
+	cfg := config.AuthenticatedConfigMockWithContextName(config.MockContextName)
+	ctx := cfg.Context()
+	// Simulate a missing/corrupt context_state entry for an otherwise-valid context.
+	delete(cfg.ContextStates, ctx.Name)
+
+	c := &command{CLICommand: &pcmd.CLICommand{Config: cfg}, cfg: cfg}
+
+	reply, err := c.revokeCCloudRefreshToken(ctx)
+	req.NoError(err)
+	req.Nil(reply)
+}
+
+func TestLogoutNoopWhenAlreadyLoggedOut(t *testing.T) {
+	req := require.New(t)
+	cfg := config.New()
+	prerunner := climock.NewPreRunnerMock(nil, nil, nil, nil, cfg)
+	// Logout returns before touching the auth token handler when already logged out.
+	logoutCmd := New(cfg, prerunner, nil)
+
+	_, err := pcmd.ExecuteCommand(logoutCmd)
+	req.NoError(err)
+}
+
+func TestLogoutWithoutSessionCleansCredentials(t *testing.T) {
+	for _, test := range []struct {
+		name      string
+		newConfig func() *config.Config
+	}{
+		{name: "cloud", newConfig: config.AuthenticatedCloudConfigMock},
+		{name: "platform", newConfig: config.AuthenticatedOnPremConfigMock},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			req := require.New(t)
+			cfg := test.newConfig()
+			cfg.Filename = filepath.Join(t.TempDir(), "config.json")
+			ctx := cfg.Context()
+			ctx.State.AuthToken = ""
+			ctx.State.AuthRefreshToken = "stale-refresh-token"
+			cfg.SavedCredentials[ctx.Name] = &config.LoginCredential{Username: promptUser}
+			prerunner := climock.NewPreRunnerMock(nil, nil, nil, nil, cfg)
+
+			output, err := pcmd.ExecuteCommand(New(cfg, prerunner, nil))
+
+			req.NoError(err)
+			req.Empty(output)
+			req.Empty(cfg.CurrentContext)
+			req.NotContains(cfg.SavedCredentials, ctx.Name)
+			req.Same(ctx, cfg.Contexts[ctx.Name])
+			verifyLoggedOutState(t, cfg, ctx.Name)
+			req.Empty(ctx.State.AuthRefreshToken)
+		})
+	}
+}
+
+func TestLogoutAPIKeyContext(t *testing.T) {
+	req := require.New(t)
+	cfg := config.New()
+	cfg.IsTest = true
+	cfg.Filename = filepath.Join(t.TempDir(), "config.json")
+	req.NoError(cfg.CreateContext("api-key-context", "http://127.0.0.1:1024", "test-key", "test-secret"))
+	req.NoError(cfg.UseContext("api-key-context"))
+	ctx := cfg.Context()
+	prerunner := climock.NewPreRunnerMock(nil, nil, nil, nil, cfg)
+
+	output, err := pcmd.ExecuteCommand(New(cfg, prerunner, nil))
+
+	req.NoError(err)
+	req.Equal("You are now logged out.\n", output)
+	req.Empty(cfg.CurrentContext)
+	req.Same(ctx, cfg.Contexts[ctx.Name])
+	req.Equal("test-key", ctx.Credential.APIKeyPair.Key)
+	req.Equal("test-secret", ctx.Credential.APIKeyPair.Secret)
 }
 
 func newLogoutCmd(ctrl *gomock.Controller, auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, authTokenHandler pauth.AuthTokenHandler, contextName string) (*cobra.Command, *config.Config) {
