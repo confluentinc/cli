@@ -405,17 +405,23 @@ func validateURL(url string, isCCloud bool) (string, string, error) {
 		msg = append(msg, "default MDS port 8090")
 	}
 
-	var pattern *regexp.Regexp
 	if isCCloud {
-		pattern = regexp.MustCompile(`^\w+://[^/ ]+`)
-	} else {
-		pattern = regexp.MustCompile(`^\w+://[^/ ]+:\d+(?:\/|$)`)
+		pattern := regexp.MustCompile(`^\w+://[^/ ]+`)
+		if !pattern.MatchString(url) {
+			return "", "", fmt.Errorf(errors.InvalidLoginURLErrorMsg)
+		}
+		return url, strings.Join(msg, " and "), nil
 	}
-	if !pattern.MatchString(url) {
+
+	// discard any path after the host:port, so a trailing path (e.g. copied from a browser address
+	// bar) doesn't get baked into the base URL used for every subsequent request
+	pattern := regexp.MustCompile(`^(\w+://[^/ ]+:\d+)(?:/|$)`)
+	matches := pattern.FindStringSubmatch(url)
+	if matches == nil {
 		return "", "", fmt.Errorf(errors.InvalidLoginURLErrorMsg)
 	}
 
-	return url, strings.Join(msg, " and "), nil
+	return matches[1], strings.Join(msg, " and "), nil
 }
 
 func (c *command) getOrganizationId(cmd *cobra.Command) string {

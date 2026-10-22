@@ -708,6 +708,18 @@ func TestValidateUrl(t *testing.T) {
 			warningMsg: "",
 		},
 		{
+			// trailing path must be stripped, not baked into the base URL
+			urlIn:      "https://infra.confluentgov.internal.com:8090/login",
+			urlOut:     "https://infra.confluentgov.internal.com:8090",
+			warningMsg: "",
+		},
+		{
+			urlIn:      "infra.confluentgov.internal.com/login",
+			urlOut:     "",
+			warningMsg: "https protocol and default MDS port 8090",
+			errMsg:     errors.InvalidLoginURLErrorMsg,
+		},
+		{
 			urlIn:      "127.0.0.1",
 			urlOut:     "https://127.0.0.1:8090",
 			warningMsg: "https protocol and default MDS port 8090",
