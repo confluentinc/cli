@@ -1,0 +1,13 @@
++-------------------+-------------------------------+
+| ID                | inference-budget-f3a90de      |
+| Max Inference Usd | 100.00                        |
+| Period            | MONTHLY                       |
+| Period End        | 2026-09-01 00:00:00 +0000 UTC |
+| Period Start      | 2026-08-01 00:00:00 +0000 UTC |
+| Scope             | ORGANIZATION                  |
+| Enforcement Mode  | NOTIFY                        |
+| As Of             | 2026-08-21 14:37:11 +0000 UTC |
+| Consumed Usd      | 42.50                         |
+| Last Reconciled   | 2026-08-21 14:00:00 +0000 UTC |
+| Percent Consumed  | 42.5                          |
++-------------------+-------------------------------+

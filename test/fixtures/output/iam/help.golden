@@ -4,20 +4,20 @@ Usage:
   confluent iam [command]
 
 Available Commands:
-  certificate-authority Manage certificate authorities.
+  certificate-authority Manage Confluent Cloud IAM certificate authorities.
   certificate-pool      Manage certificate pools.
-  group-mapping         Manage SSO group mappings.
+  group-mapping         Manage Confluent Cloud IAM group mappings.
+  identity-provider     Manage Confluent Cloud IAM identity providers.
   ip-filter             Manage IP filters.
-  ip-group              Manage IP groups.
+  ip-group              Manage Confluent Cloud IAM IP groups.
   pool                  Manage identity pools.
-  provider              Manage identity providers.
   rbac                  Manage RBAC permissions.
-  service-account       Manage service accounts.
-  user                  Manage users.
+  service-account       Manage and select Confluent Cloud IAM service accounts.
+  user                  Manage Confluent Cloud IAM users.
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
-  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, and -vvvv for trace).
 
 Use "confluent iam [command] --help" for more information about a command.

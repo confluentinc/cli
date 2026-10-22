@@ -31,7 +31,7 @@ type rtceTopicOut struct {
 func newRtceTopicCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command { //nolint:unparam
 	cmd := &cobra.Command{
 		Use:         "rtce-topic",
-		Short:       "Manage RTCE topics.",
+		Short:       "Manage Confluent Cloud RTCE topics.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 

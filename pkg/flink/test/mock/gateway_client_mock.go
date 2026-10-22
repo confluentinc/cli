@@ -20,6 +20,7 @@ import (
 type MockGatewayClientInterface struct {
 	ctrl     *gomock.Controller
 	recorder *MockGatewayClientInterfaceMockRecorder
+	isgomock struct{}
 }
 
 // MockGatewayClientInterfaceMockRecorder is the mock recorder for MockGatewayClientInterface.
@@ -40,61 +41,61 @@ func (m *MockGatewayClientInterface) EXPECT() *MockGatewayClientInterfaceMockRec
 }
 
 // CreateConnection mocks base method.
-func (m *MockGatewayClientInterface) CreateConnection(arg0 v1.SqlV1Connection, arg1, arg2 string) (v1.SqlV1Connection, error) {
+func (m *MockGatewayClientInterface) CreateConnection(connection v1.SqlV1Connection, environmentId, orgId string) (v1.SqlV1Connection, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateConnection", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "CreateConnection", connection, environmentId, orgId)
 	ret0, _ := ret[0].(v1.SqlV1Connection)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateConnection indicates an expected call of CreateConnection.
-func (mr *MockGatewayClientInterfaceMockRecorder) CreateConnection(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockGatewayClientInterfaceMockRecorder) CreateConnection(connection, environmentId, orgId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateConnection", reflect.TypeOf((*MockGatewayClientInterface)(nil).CreateConnection), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateConnection", reflect.TypeOf((*MockGatewayClientInterface)(nil).CreateConnection), connection, environmentId, orgId)
 }
 
 // CreateStatement mocks base method.
-func (m *MockGatewayClientInterface) CreateStatement(arg0 v1.SqlV1Statement, arg1, arg2, arg3 string) (v1.SqlV1Statement, error) {
+func (m *MockGatewayClientInterface) CreateStatement(statement v1.SqlV1Statement, principal, environmentId, orgId string) (v1.SqlV1Statement, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateStatement", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "CreateStatement", statement, principal, environmentId, orgId)
 	ret0, _ := ret[0].(v1.SqlV1Statement)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateStatement indicates an expected call of CreateStatement.
-func (mr *MockGatewayClientInterfaceMockRecorder) CreateStatement(arg0, arg1, arg2, arg3 any) *gomock.Call {
+func (mr *MockGatewayClientInterfaceMockRecorder) CreateStatement(statement, principal, environmentId, orgId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateStatement", reflect.TypeOf((*MockGatewayClientInterface)(nil).CreateStatement), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateStatement", reflect.TypeOf((*MockGatewayClientInterface)(nil).CreateStatement), statement, principal, environmentId, orgId)
 }
 
 // DeleteConnection mocks base method.
-func (m *MockGatewayClientInterface) DeleteConnection(arg0, arg1, arg2 string) error {
+func (m *MockGatewayClientInterface) DeleteConnection(environmentId, connectionName, orgId string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteConnection", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "DeleteConnection", environmentId, connectionName, orgId)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteConnection indicates an expected call of DeleteConnection.
-func (mr *MockGatewayClientInterfaceMockRecorder) DeleteConnection(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockGatewayClientInterfaceMockRecorder) DeleteConnection(environmentId, connectionName, orgId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteConnection", reflect.TypeOf((*MockGatewayClientInterface)(nil).DeleteConnection), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteConnection", reflect.TypeOf((*MockGatewayClientInterface)(nil).DeleteConnection), environmentId, connectionName, orgId)
 }
 
 // DeleteStatement mocks base method.
-func (m *MockGatewayClientInterface) DeleteStatement(arg0, arg1, arg2 string) error {
+func (m *MockGatewayClientInterface) DeleteStatement(environmentId, statementName, orgId string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteStatement", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "DeleteStatement", environmentId, statementName, orgId)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteStatement indicates an expected call of DeleteStatement.
-func (mr *MockGatewayClientInterfaceMockRecorder) DeleteStatement(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockGatewayClientInterfaceMockRecorder) DeleteStatement(environmentId, statementName, orgId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteStatement", reflect.TypeOf((*MockGatewayClientInterface)(nil).DeleteStatement), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteStatement", reflect.TypeOf((*MockGatewayClientInterface)(nil).DeleteStatement), environmentId, statementName, orgId)
 }
 
 // GetAuthToken mocks base method.
@@ -112,119 +113,119 @@ func (mr *MockGatewayClientInterfaceMockRecorder) GetAuthToken() *gomock.Call {
 }
 
 // GetConnection mocks base method.
-func (m *MockGatewayClientInterface) GetConnection(arg0, arg1, arg2 string) (v1.SqlV1Connection, error) {
+func (m *MockGatewayClientInterface) GetConnection(environmentId, connectionName, orgId string) (v1.SqlV1Connection, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetConnection", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "GetConnection", environmentId, connectionName, orgId)
 	ret0, _ := ret[0].(v1.SqlV1Connection)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetConnection indicates an expected call of GetConnection.
-func (mr *MockGatewayClientInterfaceMockRecorder) GetConnection(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockGatewayClientInterfaceMockRecorder) GetConnection(environmentId, connectionName, orgId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConnection", reflect.TypeOf((*MockGatewayClientInterface)(nil).GetConnection), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConnection", reflect.TypeOf((*MockGatewayClientInterface)(nil).GetConnection), environmentId, connectionName, orgId)
 }
 
 // GetExceptions mocks base method.
-func (m *MockGatewayClientInterface) GetExceptions(arg0, arg1, arg2 string) ([]v1.SqlV1StatementException, error) {
+func (m *MockGatewayClientInterface) GetExceptions(environmentId, statementId, orgId string) ([]v1.SqlV1StatementException, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetExceptions", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "GetExceptions", environmentId, statementId, orgId)
 	ret0, _ := ret[0].([]v1.SqlV1StatementException)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetExceptions indicates an expected call of GetExceptions.
-func (mr *MockGatewayClientInterfaceMockRecorder) GetExceptions(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockGatewayClientInterfaceMockRecorder) GetExceptions(environmentId, statementId, orgId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExceptions", reflect.TypeOf((*MockGatewayClientInterface)(nil).GetExceptions), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExceptions", reflect.TypeOf((*MockGatewayClientInterface)(nil).GetExceptions), environmentId, statementId, orgId)
 }
 
 // GetStatement mocks base method.
-func (m *MockGatewayClientInterface) GetStatement(arg0, arg1, arg2 string) (v1.SqlV1Statement, error) {
+func (m *MockGatewayClientInterface) GetStatement(environmentId, statementName, orgId string) (v1.SqlV1Statement, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetStatement", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "GetStatement", environmentId, statementName, orgId)
 	ret0, _ := ret[0].(v1.SqlV1Statement)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetStatement indicates an expected call of GetStatement.
-func (mr *MockGatewayClientInterfaceMockRecorder) GetStatement(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockGatewayClientInterfaceMockRecorder) GetStatement(environmentId, statementName, orgId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatement", reflect.TypeOf((*MockGatewayClientInterface)(nil).GetStatement), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatement", reflect.TypeOf((*MockGatewayClientInterface)(nil).GetStatement), environmentId, statementName, orgId)
 }
 
 // GetStatementResults mocks base method.
-func (m *MockGatewayClientInterface) GetStatementResults(arg0, arg1, arg2, arg3 string) (v1.SqlV1StatementResult, error) {
+func (m *MockGatewayClientInterface) GetStatementResults(environmentId, statementId, orgId, pageToken string) (v1.SqlV1StatementResult, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetStatementResults", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "GetStatementResults", environmentId, statementId, orgId, pageToken)
 	ret0, _ := ret[0].(v1.SqlV1StatementResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetStatementResults indicates an expected call of GetStatementResults.
-func (mr *MockGatewayClientInterfaceMockRecorder) GetStatementResults(arg0, arg1, arg2, arg3 any) *gomock.Call {
+func (mr *MockGatewayClientInterfaceMockRecorder) GetStatementResults(environmentId, statementId, orgId, pageToken any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatementResults", reflect.TypeOf((*MockGatewayClientInterface)(nil).GetStatementResults), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatementResults", reflect.TypeOf((*MockGatewayClientInterface)(nil).GetStatementResults), environmentId, statementId, orgId, pageToken)
 }
 
 // ListConnections mocks base method.
-func (m *MockGatewayClientInterface) ListConnections(arg0, arg1, arg2 string) ([]v1.SqlV1Connection, error) {
+func (m *MockGatewayClientInterface) ListConnections(environmentId, orgId, connectionType string) ([]v1.SqlV1Connection, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListConnections", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "ListConnections", environmentId, orgId, connectionType)
 	ret0, _ := ret[0].([]v1.SqlV1Connection)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListConnections indicates an expected call of ListConnections.
-func (mr *MockGatewayClientInterfaceMockRecorder) ListConnections(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockGatewayClientInterfaceMockRecorder) ListConnections(environmentId, orgId, connectionType any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListConnections", reflect.TypeOf((*MockGatewayClientInterface)(nil).ListConnections), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListConnections", reflect.TypeOf((*MockGatewayClientInterface)(nil).ListConnections), environmentId, orgId, connectionType)
 }
 
 // ListStatements mocks base method.
-func (m *MockGatewayClientInterface) ListStatements(arg0, arg1, arg2 string) ([]v1.SqlV1Statement, error) {
+func (m *MockGatewayClientInterface) ListStatements(environmentId, orgId, computePoolId string) ([]v1.SqlV1Statement, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListStatements", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "ListStatements", environmentId, orgId, computePoolId)
 	ret0, _ := ret[0].([]v1.SqlV1Statement)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListStatements indicates an expected call of ListStatements.
-func (mr *MockGatewayClientInterfaceMockRecorder) ListStatements(arg0, arg1, arg2 any) *gomock.Call {
+func (mr *MockGatewayClientInterfaceMockRecorder) ListStatements(environmentId, orgId, computePoolId any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListStatements", reflect.TypeOf((*MockGatewayClientInterface)(nil).ListStatements), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListStatements", reflect.TypeOf((*MockGatewayClientInterface)(nil).ListStatements), environmentId, orgId, computePoolId)
 }
 
 // UpdateConnection mocks base method.
-func (m *MockGatewayClientInterface) UpdateConnection(arg0, arg1, arg2 string, arg3 v1.SqlV1Connection) error {
+func (m *MockGatewayClientInterface) UpdateConnection(environmentId, connectionName, organizationId string, connection v1.SqlV1Connection) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateConnection", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "UpdateConnection", environmentId, connectionName, organizationId, connection)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateConnection indicates an expected call of UpdateConnection.
-func (mr *MockGatewayClientInterfaceMockRecorder) UpdateConnection(arg0, arg1, arg2, arg3 any) *gomock.Call {
+func (mr *MockGatewayClientInterfaceMockRecorder) UpdateConnection(environmentId, connectionName, organizationId, connection any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateConnection", reflect.TypeOf((*MockGatewayClientInterface)(nil).UpdateConnection), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateConnection", reflect.TypeOf((*MockGatewayClientInterface)(nil).UpdateConnection), environmentId, connectionName, organizationId, connection)
 }
 
 // UpdateStatement mocks base method.
-func (m *MockGatewayClientInterface) UpdateStatement(arg0, arg1, arg2 string, arg3 v1.SqlV1Statement) error {
+func (m *MockGatewayClientInterface) UpdateStatement(environmentId, statementName, orgId string, statement v1.SqlV1Statement) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateStatement", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "UpdateStatement", environmentId, statementName, orgId, statement)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateStatement indicates an expected call of UpdateStatement.
-func (mr *MockGatewayClientInterfaceMockRecorder) UpdateStatement(arg0, arg1, arg2, arg3 any) *gomock.Call {
+func (mr *MockGatewayClientInterfaceMockRecorder) UpdateStatement(environmentId, statementName, orgId, statement any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatement", reflect.TypeOf((*MockGatewayClientInterface)(nil).UpdateStatement), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateStatement", reflect.TypeOf((*MockGatewayClientInterface)(nil).UpdateStatement), environmentId, statementName, orgId, statement)
 }

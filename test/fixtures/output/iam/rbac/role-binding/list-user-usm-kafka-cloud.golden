@@ -1,0 +1,3 @@
+     ID    |  Principal   |        Email         |      Role       | Environment | Cloud Cluster | Cluster Type | Logical Cluster | Resource Type | Name | Pattern Type  
+-----------+--------------+----------------------+-----------------+-------------+---------------+--------------+-----------------+---------------+------+---------------
+  rb-88hhh | User:u-11aaa | u-11aaa@confluent.io | UsmClusterAdmin | env-596     |               | USM Kafka    | usmkc-123456    |               |      |               

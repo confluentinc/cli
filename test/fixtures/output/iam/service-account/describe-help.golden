@@ -1,7 +1,7 @@
-Describe a service account.
+Describe an IAM service account.
 
 Usage:
-  confluent iam service-account describe <id> [flags]
+  confluent iam service-account describe [id] [flags]
 
 Flags:
       --context string   CLI context name.
@@ -10,4 +10,4 @@ Flags:
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
-  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, and -vvvv for trace).

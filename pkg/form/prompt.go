@@ -1,4 +1,4 @@
-//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --prefix "" --dst ../mock/prompt.go --pkg mock --selfpkg github.com/confluentinc/cli/v4 prompt.go Prompt
+//go:generate go run go.uber.org/mock/mockgen -typed -destination=../mock/prompt.go -package=mock github.com/confluentinc/cli/v4/pkg/form Prompt
 
 package form
 

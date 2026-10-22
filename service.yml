@@ -6,13 +6,11 @@ contact:
   slack_team_channel: cli-eng
   slack_oncall_channel: cli-oncall
 lang: go
-lang_version: 1.26.5
+lang_version: 1.26.7
 git:
   enable: true
   hooks:
-    enable: true
-github:
-  enable: true
+    enable: false
 gitignore:
   enable: true
 semaphore:
@@ -22,17 +20,22 @@ semaphore:
     - name: CLI Live Tests (Daily)
       branch: main
       pipeline_file: .semaphore/live-tests.yml
-      at: "0 8 * * *"
-    - name: "CLI Smoke Tests - PROD"
-      description: "Lightweight per-platform smoke tests against Confluent Cloud"
-      scheduled: true
-      at: "0 */3 * * *"
+      at: 0 8 * * *
+    - name: CLI Smoke Tests - PROD
+      description: Lightweight per-platform smoke tests against Confluent Cloud
+      at: 0 */3 * * *
       branch: main
       pipeline_file: .semaphore/smoke-tests.yml
+      status: ACTIVE
+    - name: CLI Install Smoke Tests (Daily)
+      description: Installs the published CLI release from the YUM repo
+      at: 0 14 * * *
+      branch: main
+      pipeline_file: .semaphore/install-smoke-tests.yml
       status: ACTIVE
 make:
   enable: false
 sonarqube:
   enable: true
-  languages: ["go"]
+  languages: [go]
   main_branch: main

@@ -1,0 +1,4 @@
+Error: Kafka REST URL not found
+
+Suggestions:
+    Use the `--url` flag or set `CONFLUENT_REST_URL`.

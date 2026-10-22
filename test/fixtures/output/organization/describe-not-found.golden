@@ -1,4 +1,4 @@
-Error: organization not found or access forbidden: Resource not found or access forbidden
+Error: Resource not found or access forbidden
 
 Suggestions:
-    List available organizations with `organization list`.
+    List available organizations with `confluent organization list`.

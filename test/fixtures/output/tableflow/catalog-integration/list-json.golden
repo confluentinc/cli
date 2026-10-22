@@ -35,5 +35,18 @@
     "custom_schema": "my-custom-schema",
     "suspended": false,
     "phase": "CONNECTED"
+  },
+  {
+    "id": "tci-jkl012",
+    "name": "my-biglake-ci",
+    "environment": "env-596",
+    "kafka_cluster": "lkc-123456",
+    "type": "biglake",
+    "provider_integration_id": "cspi-stgce89r7",
+    "gcp_project_id": "my-gcp-project",
+    "catalog_name": "catalog-name",
+    "custom_namespace": "my-custom-ns",
+    "suspended": false,
+    "phase": "CONNECTED"
   }
 ]

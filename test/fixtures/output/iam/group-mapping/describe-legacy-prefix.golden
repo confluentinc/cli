@@ -1,0 +1,8 @@
++-------------+-----------------------+
+| ID          | pool-legacy           |
+| Name        | another-group-mapping |
+| Description | another description   |
+| Filter      | true                  |
+| Principal   | pool-legacy           |
+| State       | ENABLED               |
++-------------+-----------------------+
