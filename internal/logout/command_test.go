@@ -58,9 +58,9 @@ func TestRevokeCCloudRefreshTokenNoopWhenContextStateMissing(t *testing.T) {
 func TestLogoutNoopWhenAlreadyLoggedOut(t *testing.T) {
 	req := require.New(t)
 	cfg := config.New()
-	ctrl := gomock.NewController(t)
 	prerunner := climock.NewPreRunnerMock(nil, nil, nil, nil, cfg)
-	logoutCmd := New(cfg, prerunner, newTestAuthTokenHandler(ctrl))
+	// Logout returns before touching the auth token handler when already logged out.
+	logoutCmd := New(cfg, prerunner, nil)
 
 	_, err := pcmd.ExecuteCommand(logoutCmd)
 	req.NoError(err)
