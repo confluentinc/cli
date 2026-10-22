@@ -11,11 +11,11 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
-	rtcesqlv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/rtce-sql/v1alpha1"
+	rtcesqlv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/rtce-sql/v1"
 )
 
 var lightningRoutes = []route{
-	{"/query/v1alpha1", handleLightningQuery},
+	{"/query/v1", handleLightningQuery},
 }
 
 func NewLightningRouter(t *testing.T) *mux.Router {
@@ -29,7 +29,7 @@ func NewLightningRouter(t *testing.T) *mux.Router {
 	return router
 }
 
-// handleLightningQuery serves POST /query/v1alpha1. Scenarios are keyed off the SQL text; a query
+// handleLightningQuery serves POST /query/v1. Scenarios are keyed off the SQL text; a query
 // that matches none of them gets a 400.
 func handleLightningQuery(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +39,7 @@ func handleLightningQuery(t *testing.T) http.HandlerFunc {
 		require.Equal(t, "true", r.Header.Get("X-Lightning-Sync-Only"))
 		require.True(t, strings.HasPrefix(r.Header.Get("Authorization"), "Bearer"))
 
-		var request rtcesqlv1alpha1.QueryV1alpha1QueryRequest
+		var request rtcesqlv1.QueryV1QueryRequest
 		require.NoError(t, json.NewDecoder(r.Body).Decode(&request))
 		require.NotEmpty(t, request.GetCatalogName())
 		require.NotEmpty(t, request.GetDatabaseName())
@@ -146,10 +146,10 @@ func handleLightningQuery(t *testing.T) http.HandlerFunc {
 			return
 		case "SELECT * FROM promoted":
 			// A server that ignored X-Lightning-Sync-Only and accepted the query as an asynchronous job.
-			w.Header().Set("Location", fmt.Sprintf("/query/v1alpha1/jobs/%s/%s/promoted/statement_1b2c3d4e5f6a/status", request.GetCatalogName(), request.GetDatabaseName()))
+			w.Header().Set("Location", fmt.Sprintf("/query/v1/jobs/%s/%s/promoted/statement_1b2c3d4e5f6a/status", request.GetCatalogName(), request.GetDatabaseName()))
 			w.WriteHeader(http.StatusAccepted)
 			require.NoError(t, json.NewEncoder(w).Encode(map[string]any{
-				"api_version": "query/v1alpha1",
+				"api_version": "query/v1",
 				"kind":        "Statement",
 				"result": map[string]any{
 					"statement_id":     "statement_1b2c3d4e5f6a",
@@ -176,7 +176,7 @@ func handleLightningQuery(t *testing.T) http.HandlerFunc {
 		}
 
 		require.NoError(t, json.NewEncoder(w).Encode(map[string]any{
-			"api_version": "query/v1alpha1",
+			"api_version": "query/v1",
 			"kind":        "Statement",
 			"result": map[string]any{
 				"result_format": "JSON",

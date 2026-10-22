@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/stretchr/testify/require"
 
-	rtcesqlv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/rtce-sql/v1alpha1"
+	rtcesqlv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/rtce-sql/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
@@ -26,7 +26,7 @@ import (
 )
 
 const lightningInlineResult = `{
-	"api_version": "query/v1alpha1",
+	"api_version": "query/v1",
 	"kind": "Statement",
 	"result": {
 		"result_format": "JSON",
@@ -42,10 +42,10 @@ type lightningTestServer struct {
 
 	mu          sync.Mutex
 	lastRequest *http.Request
-	lastBody    rtcesqlv1alpha1.QueryV1alpha1QueryRequest
+	lastBody    rtcesqlv1.QueryV1QueryRequest
 }
 
-func (s *lightningTestServer) last() (*http.Request, rtcesqlv1alpha1.QueryV1alpha1QueryRequest) {
+func (s *lightningTestServer) last() (*http.Request, rtcesqlv1.QueryV1QueryRequest) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.lastRequest, s.lastBody
@@ -55,7 +55,7 @@ func newLightningTestServer(t *testing.T, status int, contentType, body string) 
 	server := &lightningTestServer{}
 	server.Server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		server.requests.Add(1)
-		var received rtcesqlv1alpha1.QueryV1alpha1QueryRequest
+		var received rtcesqlv1.QueryV1QueryRequest
 		require.NoError(t, json.NewDecoder(r.Body).Decode(&received))
 		server.mu.Lock()
 		server.lastRequest, server.lastBody = r.Clone(context.Background()), received
@@ -90,7 +90,7 @@ func TestLightningExecuteQuery(t *testing.T) {
 
 	request, body := server.last()
 	require.Equal(t, http.MethodPost, request.Method)
-	require.Equal(t, "/query/v1alpha1", request.URL.Path)
+	require.Equal(t, "/query/v1", request.URL.Path)
 	require.Equal(t, "true", request.Header.Get(lightningSyncOnlyHeader))
 	require.Equal(t, "Bearer dataplane-token", request.Header.Get("Authorization"))
 	require.Equal(t, "test-agent", request.Header.Get("User-Agent"))
@@ -102,8 +102,8 @@ func TestLightningExecuteQuery(t *testing.T) {
 
 	require.Equal(t, "JSON", result.GetResultFormat())
 	require.Len(t, result.Schema.GetColumns(), 1)
-	require.NotNil(t, result.Data.ArrayOfQueryV1alpha1ResultRow)
-	require.Len(t, *result.Data.ArrayOfQueryV1alpha1ResultRow, 2)
+	require.NotNil(t, result.Data.ArrayOfQueryV1ResultRow)
+	require.Len(t, *result.Data.ArrayOfQueryV1ResultRow, 2)
 }
 
 func TestLightningExecuteQueryMaxResultRows(t *testing.T) {
@@ -139,7 +139,7 @@ func TestLightningExecuteQueryAccepted(t *testing.T) {
 	// The SDK decodes a 202 as an inline result without rows; it must not be reported as an empty
 	// result, whatever its body.
 	for _, contentType := range []string{"application/json", "text/plain"} {
-		server := newLightningTestServer(t, http.StatusAccepted, contentType, `{"api_version": "query/v1alpha1", "kind": "Statement", "result": {"statement_id": "statement_1b2c3d4e5f6a", "environment_id": "env-123456", "kafka_cluster_id": "lkc-123456", "topic_name": "t"}}`)
+		server := newLightningTestServer(t, http.StatusAccepted, contentType, `{"api_version": "query/v1", "kind": "Statement", "result": {"statement_id": "statement_1b2c3d4e5f6a", "environment_id": "env-123456", "kafka_cluster_id": "lkc-123456", "topic_name": "t"}}`)
 
 		_, err := newTestLightningClient(server).ExecuteQuery("env-123456", "lkc-123456", "SELECT * FROM t", 0)
 		require.EqualError(t, err, "the query result is too large or too slow to return synchronously", contentType)
@@ -230,14 +230,14 @@ func TestLightningExecuteQueryRetriesExhausted(t *testing.T) {
 
 func TestLightningExecuteQueryUnreadableResult(t *testing.T) {
 	// Values are always strings, arrays, or null; anything else means the result can't be read.
-	server := newLightningTestServer(t, http.StatusOK, "application/json", `{"api_version": "query/v1alpha1", "kind": "Statement", "result": {"result_format": "JSON", "schema": {"columns": []}, "data": [[1]]}}`)
+	server := newLightningTestServer(t, http.StatusOK, "application/json", `{"api_version": "query/v1", "kind": "Statement", "result": {"result_format": "JSON", "schema": {"columns": []}, "data": [[1]]}}`)
 
 	_, err := newTestLightningClient(server).ExecuteQuery("env-123456", "lkc-123456", "SELECT 1", 0)
 	require.ErrorContains(t, err, "failed to read the query result: ")
 }
 
 func TestCatchLightningErrorWithoutResponse(t *testing.T) {
-	dnsErr := &url.Error{Op: "Post", URL: "https://sql.us-east1.gcp.confluent.cloud/query/v1alpha1", Err: &net.OpError{
+	dnsErr := &url.Error{Op: "Post", URL: "https://sql.us-east1.gcp.confluent.cloud/query/v1", Err: &net.OpError{
 		Op:  "dial",
 		Net: "tcp",
 		Err: &net.DNSError{Err: "no such host", Name: "sql.us-east1.gcp.confluent.cloud", IsNotFound: true},
@@ -249,7 +249,7 @@ func TestCatchLightningErrorWithoutResponse(t *testing.T) {
 	require.Equal(t, "Lightning Tables may not be available for the Kafka cluster's cloud provider or region.", errorWithSuggestions.GetSuggestionsMsg())
 
 	// A DNS failure other than a missing host, such as a timeout, says nothing about the endpoint.
-	dnsTimeout := &url.Error{Op: "Post", URL: "https://sql.us-west-2.aws.confluent.cloud/query/v1alpha1", Err: &net.OpError{
+	dnsTimeout := &url.Error{Op: "Post", URL: "https://sql.us-west-2.aws.confluent.cloud/query/v1", Err: &net.OpError{
 		Op:  "dial",
 		Net: "tcp",
 		Err: &net.DNSError{Err: "i/o timeout", Name: "sql.us-west-2.aws.confluent.cloud", IsTimeout: true},
@@ -257,7 +257,7 @@ func TestCatchLightningErrorWithoutResponse(t *testing.T) {
 	require.Equal(t, dnsTimeout, catchLightningError(dnsTimeout, nil))
 
 	// Any other failure to get a response is reported as is.
-	connectionErr := &url.Error{Op: "Post", URL: "https://sql.us-west-2.aws.confluent.cloud/query/v1alpha1", Err: errors.New("connection reset by peer")}
+	connectionErr := &url.Error{Op: "Post", URL: "https://sql.us-west-2.aws.confluent.cloud/query/v1", Err: errors.New("connection reset by peer")}
 	require.Equal(t, connectionErr, catchLightningError(connectionErr, nil))
 }
 
@@ -267,7 +267,7 @@ func TestIsLightningAsyncRequired(t *testing.T) {
 		err      error
 		httpResp *http.Response
 	}{
-		{"no response", rtcesqlv1alpha1.GenericOpenAPIError{}, nil},
+		{"no response", rtcesqlv1.GenericOpenAPIError{}, nil},
 		{"not an API error", errors.New("connection reset"), &http.Response{StatusCode: http.StatusUnprocessableEntity}},
 	}
 	for _, test := range tests {
@@ -280,7 +280,7 @@ func TestIsLightningAsyncRequired(t *testing.T) {
 	execute := func(status int, body string) (error, *http.Response) {
 		server := newLightningTestServer(t, status, "application/json", body)
 		client := newTestLightningClient(server)
-		_, httpResp, err := client.StatementsQueryV1alpha1Api.ExecuteQueryV1alpha1Statement(client.lightningApiContext()).QueryV1alpha1QueryRequest(*rtcesqlv1alpha1.NewQueryV1alpha1QueryRequest("env-123456", "lkc-123456", "SELECT 1")).Execute()
+		_, httpResp, err := client.StatementsQueryV1Api.ExecuteQueryV1Statement(client.lightningApiContext()).QueryV1QueryRequest(*rtcesqlv1.NewQueryV1QueryRequest("env-123456", "lkc-123456", "SELECT 1")).Execute()
 		return err, httpResp
 	}
 

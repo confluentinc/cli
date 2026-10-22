@@ -13,7 +13,7 @@ import (
 	"github.com/tidwall/pretty"
 	"gopkg.in/yaml.v3"
 
-	rtcesqlv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/rtce-sql/v1alpha1"
+	rtcesqlv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/rtce-sql/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
@@ -24,11 +24,11 @@ import (
 var nullField = types.AtomicStatementResultField{Type: types.Null, Value: "NULL"}
 
 // multisetCountType is the type of the count in each [element, count] pair of a MULTISET.
-var multisetCountType = rtcesqlv1alpha1.QueryV1alpha1DataType{Type: string(types.Integer)}
+var multisetCountType = rtcesqlv1.QueryV1DataType{Type: string(types.Integer)}
 
 // convertResult reads the column names and rows of an inline result. Values become the result
 // field types `confluent flink query` renders, so both commands print a value the same way.
-func convertResult(result rtcesqlv1alpha1.QueryV1alpha1QueryResult) ([]string, [][]types.StatementResultField, error) {
+func convertResult(result rtcesqlv1.QueryV1QueryResult) ([]string, [][]types.StatementResultField, error) {
 	// Rows are requested as JSON; anything else (including a response without a result) can't be read.
 	if format := result.GetResultFormat(); format != "JSON" {
 		return nil, nil, fmt.Errorf(`unsupported result format "%s"`, format)
@@ -44,9 +44,9 @@ func convertResult(result rtcesqlv1alpha1.QueryV1alpha1QueryResult) ([]string, [
 		headers[i] = column.GetName()
 	}
 
-	var resultRows []rtcesqlv1alpha1.QueryV1alpha1ResultRow
-	if data.ArrayOfQueryV1alpha1ResultRow != nil {
-		resultRows = *data.ArrayOfQueryV1alpha1ResultRow
+	var resultRows []rtcesqlv1.QueryV1ResultRow
+	if data.ArrayOfQueryV1ResultRow != nil {
+		resultRows = *data.ArrayOfQueryV1ResultRow
 	}
 
 	rows := make([][]types.StatementResultField, len(resultRows))
@@ -72,13 +72,13 @@ func convertResult(result rtcesqlv1alpha1.QueryV1alpha1QueryResult) ([]string, [
 // convertValue converts one value of the given type. Scalars arrive as strings, and ARRAY, MAP,
 // MULTISET, and ROW values as nested arrays; a JSON null is a SQL NULL at any depth. A value whose
 // shape doesn't match its type is an error rather than a silent NULL.
-func convertValue(value rtcesqlv1alpha1.QueryV1alpha1ResultValue, dataType rtcesqlv1alpha1.QueryV1alpha1DataType) (types.StatementResultField, error) {
+func convertValue(value rtcesqlv1.QueryV1ResultValue, dataType rtcesqlv1.QueryV1DataType) (types.StatementResultField, error) {
 	fieldType, err := types.NewResultFieldType(dataType.GetType())
 	if err != nil {
 		return nil, err
 	}
 
-	if value.String == nil && value.ArrayOfQueryV1alpha1ResultValue == nil {
+	if value.String == nil && value.ArrayOfQueryV1ResultValue == nil {
 		return nullField, nil
 	}
 
@@ -99,7 +99,7 @@ func convertValue(value rtcesqlv1alpha1.QueryV1alpha1ResultValue, dataType rtces
 	return types.AtomicStatementResultField{Type: fieldType, Value: *value.String}, nil
 }
 
-func convertArray(value rtcesqlv1alpha1.QueryV1alpha1ResultValue, elementType rtcesqlv1alpha1.QueryV1alpha1DataType) (types.StatementResultField, error) {
+func convertArray(value rtcesqlv1.QueryV1ResultValue, elementType rtcesqlv1.QueryV1DataType) (types.StatementResultField, error) {
 	elements, err := arrayElements(value, types.Array)
 	if err != nil {
 		return nil, err
@@ -122,7 +122,7 @@ func convertArray(value rtcesqlv1alpha1.QueryV1alpha1ResultValue, elementType rt
 
 // convertMap converts a MAP, or a MULTISET as a map from each element to its count. Both arrive as an
 // array of two-element [key, value] arrays.
-func convertMap(value rtcesqlv1alpha1.QueryV1alpha1ResultValue, fieldType types.StatementResultFieldType, keyType, valueType rtcesqlv1alpha1.QueryV1alpha1DataType) (types.StatementResultField, error) {
+func convertMap(value rtcesqlv1.QueryV1ResultValue, fieldType types.StatementResultFieldType, keyType, valueType rtcesqlv1.QueryV1DataType) (types.StatementResultField, error) {
 	pairs, err := arrayElements(value, fieldType)
 	if err != nil {
 		return nil, err
@@ -139,10 +139,10 @@ func convertMap(value rtcesqlv1alpha1.QueryV1alpha1ResultValue, fieldType types.
 
 	entries := make([]types.MapStatementResultFieldEntry, len(pairs))
 	for i, pair := range pairs {
-		if pair.ArrayOfQueryV1alpha1ResultValue == nil || len(*pair.ArrayOfQueryV1alpha1ResultValue) != 2 {
+		if pair.ArrayOfQueryV1ResultValue == nil || len(*pair.ArrayOfQueryV1ResultValue) != 2 {
 			return nil, fmt.Errorf("%s entry is not a [key, value] pair", fieldType)
 		}
-		keyAndValue := *pair.ArrayOfQueryV1alpha1ResultValue
+		keyAndValue := *pair.ArrayOfQueryV1ResultValue
 
 		key, err := convertValue(keyAndValue[0], keyType)
 		if err != nil {
@@ -159,7 +159,7 @@ func convertMap(value rtcesqlv1alpha1.QueryV1alpha1ResultValue, fieldType types.
 }
 
 // convertRow converts a ROW, whose values are positional: field names appear only in the schema.
-func convertRow(value rtcesqlv1alpha1.QueryV1alpha1ResultValue, fields []rtcesqlv1alpha1.QueryV1alpha1RowFieldType) (types.StatementResultField, error) {
+func convertRow(value rtcesqlv1.QueryV1ResultValue, fields []rtcesqlv1.QueryV1RowFieldType) (types.StatementResultField, error) {
 	elements, err := arrayElements(value, types.Row)
 	if err != nil {
 		return nil, err
@@ -180,11 +180,11 @@ func convertRow(value rtcesqlv1alpha1.QueryV1alpha1ResultValue, fields []rtcesql
 	return types.RowStatementResultField{Type: types.Row, ElementTypes: elementTypes, Values: values}, nil
 }
 
-func arrayElements(value rtcesqlv1alpha1.QueryV1alpha1ResultValue, fieldType types.StatementResultFieldType) ([]rtcesqlv1alpha1.QueryV1alpha1ResultValue, error) {
-	if value.ArrayOfQueryV1alpha1ResultValue == nil {
+func arrayElements(value rtcesqlv1.QueryV1ResultValue, fieldType types.StatementResultFieldType) ([]rtcesqlv1.QueryV1ResultValue, error) {
+	if value.ArrayOfQueryV1ResultValue == nil {
 		return nil, fmt.Errorf("%s value is not an array", fieldType)
 	}
-	return *value.ArrayOfQueryV1alpha1ResultValue, nil
+	return *value.ArrayOfQueryV1ResultValue, nil
 }
 
 // printResult prints the rows to stdout as a table for -o human, or as a bare array of row objects for

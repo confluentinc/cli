@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 
-	rtcesqlv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/rtce-sql/v1alpha1"
+	rtcesqlv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/rtce-sql/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
@@ -134,8 +134,8 @@ func TestResolveSQL(t *testing.T) {
 	require.Error(t, err, "a missing file flag is an error")
 }
 
-func parseResult(t *testing.T, raw string) rtcesqlv1alpha1.QueryV1alpha1QueryResult {
-	var result rtcesqlv1alpha1.QueryV1alpha1QueryResult
+func parseResult(t *testing.T, raw string) rtcesqlv1.QueryV1QueryResult {
+	var result rtcesqlv1.QueryV1QueryResult
 	require.NoError(t, json.Unmarshal([]byte(raw), &result))
 	return result
 }

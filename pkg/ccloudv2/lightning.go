@@ -14,7 +14,7 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 
-	rtcesqlv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/rtce-sql/v1alpha1"
+	rtcesqlv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/rtce-sql/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
@@ -38,20 +38,20 @@ const (
 )
 
 type LightningClient struct {
-	*rtcesqlv1alpha1.APIClient
+	*rtcesqlv1.APIClient
 	authToken string
 }
 
 func NewLightningClient(url, userAgent string, unsafeTrace bool, authToken string) *LightningClient {
-	cfg := rtcesqlv1alpha1.NewConfiguration()
+	cfg := rtcesqlv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
 	cfg.DefaultHeader = map[string]string{lightningSyncOnlyHeader: "true"}
 	cfg.HTTPClient = newLightningHttpClient(unsafeTrace)
-	cfg.Servers = rtcesqlv1alpha1.ServerConfigurations{{URL: url}}
+	cfg.Servers = rtcesqlv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
 	return &LightningClient{
-		APIClient: rtcesqlv1alpha1.NewAPIClient(cfg),
+		APIClient: rtcesqlv1.NewAPIClient(cfg),
 		authToken: authToken,
 	}
 }
@@ -91,7 +91,7 @@ func isLightningGatewayTimeout(resp *http.Response) bool {
 		return false
 	}
 
-	var failure rtcesqlv1alpha1.Failure
+	var failure rtcesqlv1.Failure
 	if err := json.Unmarshal(body, &failure); err != nil {
 		return false
 	}
@@ -120,27 +120,27 @@ func GetLightningUrl(cfg *config.Config, cloud, region string) (string, error) {
 }
 
 func (c *LightningClient) lightningApiContext() context.Context {
-	return context.WithValue(context.Background(), rtcesqlv1alpha1.ContextAccessToken, c.authToken)
+	return context.WithValue(context.Background(), rtcesqlv1.ContextAccessToken, c.authToken)
 }
 
 // ExecuteQuery runs a SQL query against the Lightning Tables of a Kafka cluster and returns its inline
 // result. A positive maxResultRows asks the server to return at most that many rows.
-func (c *LightningClient) ExecuteQuery(environmentId, kafkaClusterId, sql string, maxResultRows int32) (rtcesqlv1alpha1.QueryV1alpha1QueryResult, error) {
-	request := rtcesqlv1alpha1.NewQueryV1alpha1QueryRequest(environmentId, kafkaClusterId, sql)
+func (c *LightningClient) ExecuteQuery(environmentId, kafkaClusterId, sql string, maxResultRows int32) (rtcesqlv1.QueryV1QueryResult, error) {
+	request := rtcesqlv1.NewQueryV1QueryRequest(environmentId, kafkaClusterId, sql)
 	if maxResultRows > 0 {
-		request.SetOptions(rtcesqlv1alpha1.QueryV1alpha1QueryOptions{MaxResultRows: rtcesqlv1alpha1.PtrInt32(maxResultRows)})
+		request.SetOptions(rtcesqlv1.QueryV1QueryOptions{MaxResultRows: rtcesqlv1.PtrInt32(maxResultRows)})
 	}
 
-	resp, httpResp, err := c.StatementsQueryV1alpha1Api.ExecuteQueryV1alpha1Statement(c.lightningApiContext()).QueryV1alpha1QueryRequest(*request).Execute()
+	resp, httpResp, err := c.StatementsQueryV1Api.ExecuteQueryV1Statement(c.lightningApiContext()).QueryV1QueryRequest(*request).Execute()
 
 	// lightningSyncOnlyHeader should rule out an asynchronous job. Check for one before anything else:
 	// the SDK decodes a 202 as an inline result with no rows, which must not be reported as an empty result.
 	if httpResp != nil && httpResp.StatusCode == http.StatusAccepted {
-		return rtcesqlv1alpha1.QueryV1alpha1QueryResult{}, newLightningAsyncRequiredError()
+		return rtcesqlv1.QueryV1QueryResult{}, newLightningAsyncRequiredError()
 	}
 
 	if err != nil {
-		return rtcesqlv1alpha1.QueryV1alpha1QueryResult{}, catchLightningError(err, httpResp)
+		return rtcesqlv1.QueryV1QueryResult{}, catchLightningError(err, httpResp)
 	}
 
 	return resp.GetResult(), nil
@@ -169,7 +169,7 @@ func catchLightningError(err error, httpResp *http.Response) error {
 	}
 
 	err = errors.CatchCCloudV2Error(err, httpResp)
-	if _, ok := err.(rtcesqlv1alpha1.GenericOpenAPIError); ok {
+	if _, ok := err.(rtcesqlv1.GenericOpenAPIError); ok {
 		// Nothing could be read from the body (for example, an HTML page from a proxy), and the SDK's
 		// error may only say that the body couldn't be decoded, so report the status instead.
 		err = errors.New(httpResp.Status)
@@ -187,12 +187,12 @@ func isLightningAsyncRequired(err error, httpResp *http.Response) bool {
 		return false
 	}
 
-	openApiError, ok := err.(rtcesqlv1alpha1.GenericOpenAPIError)
+	openApiError, ok := err.(rtcesqlv1.GenericOpenAPIError)
 	if !ok {
 		return false
 	}
 
-	var failure rtcesqlv1alpha1.Failure
+	var failure rtcesqlv1.Failure
 	if err := json.Unmarshal(openApiError.Body(), &failure); err != nil {
 		return false
 	}
