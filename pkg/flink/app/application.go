@@ -85,6 +85,9 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 		utils.OutputErr("Error: failed to initialize console parser")
 		return errors.NewErrorWithSuggestions("failed to initialize console parser", "Restart your shell session or try another terminal.")
 	}
+	if winSize := consoleParser.GetWinSize(); winSize != nil && (winSize.Col == 0 || winSize.Row == 0) {
+		return errors.NewErrorWithSuggestions("failed to determine terminal size or terminal size is 0", "Check that your terminal window has valid dimensions.")
+	}
 	appController.AddCleanupFunction(func() {
 		utils.TearDownConsoleParser(consoleParser)
 		utils.RestoreStdin(stdinBefore)
@@ -148,6 +151,9 @@ func StartAppOnPrem(flinkCmfClient *flink.CmfRestClient, tokenRefreshFunc func()
 	if err != nil {
 		utils.OutputErr("Error: failed to initialize console parser")
 		return errors.NewErrorWithSuggestions("failed to initialize console parser", "Restart your shell session or try another terminal.")
+	}
+	if winSize := consoleParser.GetWinSize(); winSize != nil && (winSize.Col == 0 || winSize.Row == 0) {
+		return errors.NewErrorWithSuggestions("failed to determine terminal size or terminal size is 0", "Check that your terminal window has valid dimensions.")
 	}
 	appController.AddCleanupFunction(func() {
 		utils.TearDownConsoleParser(consoleParser)
