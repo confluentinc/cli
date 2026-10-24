@@ -290,9 +290,7 @@ func TestWslApplyPluginDefault(t *testing.T) {
 			expected:              true,
 		},
 		{
-			// Regression: once the default has been applied, a later run must not
-			// re-disable plugins and silently override a user's explicit opt-in.
-			name:                  "WSL, default already applied",
+			name:                  "WSL, default already applied, does not override explicit opt-in",
 			isWSL:                 true,
 			disablePluginsOnceWSL: true,
 			expected:              false,

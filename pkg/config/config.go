@@ -251,7 +251,6 @@ func (c *Config) Load() error {
 }
 
 // wslApplyPluginDefault reports whether the one-time WSL plugin-disable default should be applied now.
-// Once applied, DisablePluginsOnceWSL stops it from firing again, so a later `disable_plugins false` sticks.
 func wslApplyPluginDefault(isWSL, disablePluginsOnceWSL bool) bool {
 	return isWSL && !disablePluginsOnceWSL
 }
