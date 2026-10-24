@@ -179,6 +179,10 @@ func (c *Config) Load() error {
 	if err != nil {
 		if os.IsNotExist(err) {
 			// Save a default version if none exists yet.
+			if wslApplyPluginDefault(utils.IsWSL(), c.DisablePluginsOnceWSL) {
+				c.DisablePlugins = true
+				c.DisablePluginsOnceWSL = true
+			}
 			if err := c.Save(); err != nil {
 				return fmt.Errorf("unable to save configuration file: %w", err)
 			}
@@ -233,7 +237,7 @@ func (c *Config) Load() error {
 		save = true
 	}
 
-	if utils.IsWSL() && !c.DisablePluginsOnceWSL {
+	if wslApplyPluginDefault(utils.IsWSL(), c.DisablePluginsOnceWSL) {
 		c.DisablePlugins = true
 		c.DisablePluginsOnceWSL = true
 		save = true
@@ -244,6 +248,12 @@ func (c *Config) Load() error {
 	}
 
 	return c.Validate()
+}
+
+// wslApplyPluginDefault reports whether the one-time WSL plugin-disable default should be applied now.
+// Once applied, DisablePluginsOnceWSL stops it from firing again, so a later `disable_plugins false` sticks.
+func wslApplyPluginDefault(isWSL, disablePluginsOnceWSL bool) bool {
+	return isWSL && !disablePluginsOnceWSL
 }
 
 // Save writes the CLI config to disk.
