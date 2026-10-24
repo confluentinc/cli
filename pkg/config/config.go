@@ -78,6 +78,7 @@ type Config struct {
 	DisableFeatureFlags       bool       `json:"disable_feature_flags"`
 	DisablePlugins            bool       `json:"disable_plugins"`
 	DisablePluginsOnceWindows bool       `json:"disable_plugins_once_windows,omitempty"`
+	DisablePluginsOnceWSL     bool       `json:"disable_plugins_once_wsl,omitempty"`
 	DisableUpdateCheck        bool       `json:"disable_update_check"`
 	EnableColor               bool       `json:"enable_color"`
 	LastUpdateCheckAt         *time.Time `json:"last_update_check_at,omitempty"`
@@ -229,6 +230,12 @@ func (c *Config) Load() error {
 	if runtime.GOOS == "windows" && !c.DisablePluginsOnceWindows {
 		c.DisablePlugins = true
 		c.DisablePluginsOnceWindows = true
+		save = true
+	}
+
+	if utils.IsWSL() && !c.DisablePluginsOnceWSL {
+		c.DisablePlugins = true
+		c.DisablePluginsOnceWSL = true
 		save = true
 	}
 
