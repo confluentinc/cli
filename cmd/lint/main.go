@@ -199,6 +199,7 @@ var properNouns = []string{
 	"Kubernetes",
 	"ksqlDB Server",
 	"ksqlDB",
+	"Lightning Tables",
 	"Metastore",
 	"Node.js",
 	"Organization",

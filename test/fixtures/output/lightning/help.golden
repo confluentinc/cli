@@ -1,0 +1,14 @@
+Manage Lightning Tables.
+
+Usage:
+  confluent lightning [command]
+
+Available Commands:
+  query       Run a SQL query on Lightning Tables and print its results.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, and -vvvv for trace).
+
+Use "confluent lightning [command] --help" for more information about a command.
