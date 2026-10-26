@@ -110,6 +110,12 @@ func TestResolveSQL(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "SELECT * FROM orders\n", sql)
 
+	bomFile := filepath.Join(dir, "bom.sql")
+	require.NoError(t, os.WriteFile(bomFile, []byte("\uFEFFSELECT * FROM orders\n"), 0600))
+	sql, err = resolveSQL(newCmd("", bomFile))
+	require.NoError(t, err)
+	require.Equal(t, "SELECT * FROM orders\n", sql)
+
 	missingFile := filepath.Join(dir, "missing.sql")
 	_, readErr := os.ReadFile(missingFile)
 	_, err = resolveSQL(newCmd("", missingFile))

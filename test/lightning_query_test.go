@@ -11,6 +11,8 @@ func (s *CLITestSuite) TestLightningQuery() {
 		{args: `lightning query --sql "SELECT status, order_id FROM orders LIMIT 2" --cluster lkc-123456 -o json`, fixture: "lightning/query/select-order-json.golden"},
 
 		{args: "lightning query -f test/fixtures/input/lightning/query/select.sql --cluster lkc-123456", fixture: "lightning/query/select.golden"},
+		// A byte order mark at the start of the file is dropped.
+		{args: "lightning query -f test/fixtures/input/lightning/query/select-bom.sql --cluster lkc-123456", fixture: "lightning/query/select.golden"},
 
 		// The mock echoes the environment and cluster the query is sent to.
 		{args: `lightning query --sql "SELECT catalog_name, database_name FROM whoami"`, useKafka: "lkc-123456", fixture: "lightning/query/whoami-active-cluster.golden"},

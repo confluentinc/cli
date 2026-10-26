@@ -205,6 +205,9 @@ func resolveSQL(cmd *cobra.Command) (string, error) {
 		}
 	}
 
+	// Some editors start a file with a byte order mark, which the server rejects.
+	sql = strings.TrimPrefix(sql, "\uFEFF")
+
 	if strings.TrimSpace(sql) == "" {
 		return "", errors.NewErrorWithSuggestions(
 			"the SQL statement is empty",
