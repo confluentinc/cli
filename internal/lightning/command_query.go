@@ -18,13 +18,10 @@ import (
 )
 
 const (
-	// defaultHumanRows caps the -o human preview when --max-rows isn't set; json/yaml
-	// stay uncapped. Matches `confluent flink query`.
+	// defaultHumanRows is the default -o human row cap, as in `confluent flink query`.
 	defaultHumanRows = 100
 
-	// serverRowLimit is how many rows the query endpoint returns at most by default, which is also the
-	// largest options.max_result_rows it documents. The server applies it to a query that asks for no
-	// limit or a larger one, and the response doesn't say whether that left rows out.
+	// serverRowLimit is the server's maximum row count; the response doesn't say when it cuts rows off.
 	serverRowLimit = 200
 )
 
@@ -142,7 +139,6 @@ func (c *queryCommand) getLightningClient(cmd *cobra.Command, environmentId, clu
 	return ccloudv2.NewLightningClient(url, c.Version.UserAgent, unsafeTrace, dataplaneToken), nil
 }
 
-// resolveMaxRows reads --max-rows, which must not be negative (0 means no limit).
 func resolveMaxRows(cmd *cobra.Command) (int, error) {
 	maxRows, err := cmd.Flags().GetInt("max-rows")
 	if err != nil {
@@ -157,9 +153,7 @@ func resolveMaxRows(cmd *cobra.Command) (int, error) {
 	return maxRows, nil
 }
 
-// resolveDisplayCap defaults -o human to defaultHumanRows when --max-rows isn't
-// set (json/yaml stay uncapped), and reports whether that implicit cap applied so
-// the caller shows the preview notice rather than the --max-rows warning.
+// resolveDisplayCap caps -o human at defaultHumanRows unless --max-rows is set, and reports whether it did.
 func resolveDisplayCap(format output.Format, maxRowsChanged bool, maxRows int) (int, bool) {
 	if format == output.Human && !maxRowsChanged {
 		return defaultHumanRows, true
@@ -167,10 +161,7 @@ func resolveDisplayCap(format output.Format, maxRowsChanged bool, maxRows int) (
 	return maxRows, false
 }
 
-// maxResultRows is the row limit to send with the query, so the server stops at the cap instead of
-// building a result that may be too large to return synchronously. One extra row tells a result cut
-// at the cap from one that fits it exactly. 0 means no limit is sent: there is no cap, or the cap plus
-// the extra row exceeds serverRowLimit, so the server applies its own limit instead.
+// maxResultRows asks for one row more than the cap to detect truncation, or 0 to use the server's limit.
 func maxResultRows(maxRows int) int32 {
 	if maxRows <= 0 || maxRows >= serverRowLimit {
 		return 0
@@ -178,23 +169,16 @@ func maxResultRows(maxRows int) int32 {
 	return int32(maxRows + 1)
 }
 
-// queryResult is a converted result and what the row limits did to it.
 type queryResult struct {
-	headers []string
-	rows    [][]types.StatementResultField
-	// maxRows is the cap applied to rows, or 0 for none.
-	maxRows int
-	// truncated reports that maxRows cut rows off.
-	truncated bool
-	// humanDefaultCap reports that maxRows is the implicit -o human preview cap rather than --max-rows.
-	humanDefaultCap bool
-	// serverLimited reports that the server may have left rows out by applying its own row limit.
-	serverLimited bool
+	headers         []string
+	rows            [][]types.StatementResultField
+	maxRows         int  // 0 means no cap
+	truncated       bool // maxRows cut rows off
+	humanDefaultCap bool // maxRows is the -o human default, not --max-rows
+	serverLimited   bool // the server's row limit may have cut rows off
 }
 
-// applyRowLimits cuts rows to maxRows. sentLimit reports whether the query asked the server for at
-// most maxRows+1 rows; without that, the server applied its own limit, which a result that size may
-// have reached.
+// applyRowLimits cuts rows to maxRows and flags a result that may have hit the server's row limit.
 func applyRowLimits(headers []string, rows [][]types.StatementResultField, maxRows int, humanDefaultCap, sentLimit bool) queryResult {
 	result := queryResult{headers: headers, rows: rows, maxRows: maxRows, humanDefaultCap: humanDefaultCap}
 	if maxRows > 0 && len(rows) > maxRows {
@@ -205,11 +189,7 @@ func applyRowLimits(headers []string, rows [][]types.StatementResultField, maxRo
 	return result
 }
 
-// resolveSQL reads the SQL from whichever of "sql"/"file" was given. Cobra's
-// MarkFlagsOneRequired/MarkFlagsMutuallyExclusive only check whether a flag was
-// set, not whether its value is non-empty, so `--sql ""` (e.g. from an unset
-// shell variable) or a --file pointing at an empty/whitespace-only file passes
-// flag-group validation; the emptiness check at the end covers both sources.
+// resolveSQL reads --sql or --file and rejects an empty statement, which Cobra's flag checks allow.
 func resolveSQL(cmd *cobra.Command) (string, error) {
 	sql, err := cmd.Flags().GetString("sql")
 	if err != nil {

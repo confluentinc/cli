@@ -35,7 +35,7 @@ const lightningInlineResult = `{
 	}
 }`
 
-// lightningTestServer answers every query with one status and body, and records what it received.
+// lightningTestServer answers every query with one status and body, and records each request.
 type lightningTestServer struct {
 	*httptest.Server
 	requests atomic.Int32
@@ -74,7 +74,7 @@ func newLightningTestServer(t *testing.T, status int, contentType, body string) 
 func newTestLightningClient(server *lightningTestServer) *LightningClient {
 	client := NewLightningClient(server.URL, "test-agent", false, "dataplane-token")
 
-	// Keep retries fast; the retry policy itself is what's under test.
+	// Keep retries fast.
 	retryableClient := client.GetConfig().HTTPClient.Transport.(*retryablehttp.RoundTripper).Client
 	retryableClient.RetryWaitMin = time.Millisecond
 	retryableClient.RetryWaitMax = time.Millisecond
@@ -136,8 +136,7 @@ func TestLightningExecuteQueryUnprocessableEntity(t *testing.T) {
 }
 
 func TestLightningExecuteQueryAccepted(t *testing.T) {
-	// The SDK decodes a 202 as an inline result without rows; it must not be reported as an empty
-	// result, whatever its body.
+	// A 202 must not be reported as an empty result, whatever its body.
 	for _, contentType := range []string{"application/json", "text/plain"} {
 		server := newLightningTestServer(t, http.StatusAccepted, contentType, `{"api_version": "query/v1", "kind": "Statement", "result": {"statement_id": "statement_1b2c3d4e5f6a", "environment_id": "env-123456", "kafka_cluster_id": "lkc-123456", "topic_name": "t"}}`)
 
@@ -156,7 +155,7 @@ func TestLightningExecuteQueryBadRequest(t *testing.T) {
 }
 
 func TestLightningExecuteQueryServerError(t *testing.T) {
-	// A 500 often fails the same way every time, so it is reported at once, with the request ID.
+	// A 500 isn't retried and includes the request ID.
 	server := newLightningTestServer(t, http.StatusInternalServerError, "application/json", `{"errors": [{"code": "FE_INTERNAL_ERROR", "status": "500", "detail": "The statement could not be completed."}]}`)
 
 	_, err := newTestLightningClient(server).ExecuteQuery("env-123456", "lkc-123456", "SELECT 1", 0)
@@ -183,7 +182,7 @@ func TestLightningExecuteQueryServerErrorWithoutRequestId(t *testing.T) {
 }
 
 func TestLightningExecuteQueryGatewayTimeout(t *testing.T) {
-	// The API gateway's time limit is not retried: the query would most likely run into it again.
+	// A gateway timeout isn't retried.
 	server := newLightningTestServer(t, http.StatusServiceUnavailable, "text/plain; charset=utf-8", `{"errors": [{"status": "503", "code": "service_timeout", "detail": "Process took too long to complete. Try your request again later."}]}`)
 
 	_, err := newTestLightningClient(server).ExecuteQuery("env-123456", "lkc-123456", "SELECT * FROM t", 0)
@@ -199,8 +198,7 @@ func TestLightningExecuteQueryRestApiNotEnabled(t *testing.T) {
 }
 
 func TestLightningExecuteQueryErrorPage(t *testing.T) {
-	// An error body that isn't JSON, such as a proxy's HTML page, is reported by its status rather than as
-	// a body that couldn't be decoded.
+	// A non-JSON error body, such as a proxy's HTML page, is reported by its status.
 	server := newLightningTestServer(t, http.StatusForbidden, "text/html", "<html><body>403 Forbidden</body></html>")
 
 	_, err := newTestLightningClient(server).ExecuteQuery("env-123456", "lkc-123456", "SELECT 1", 0)
@@ -208,7 +206,7 @@ func TestLightningExecuteQueryErrorPage(t *testing.T) {
 }
 
 func TestLightningExecuteQueryServerErrorPage(t *testing.T) {
-	// A server error whose body isn't JSON is reported by its status, still with the request ID.
+	// A non-JSON 500 is reported by its status, with the request ID.
 	server := newLightningTestServer(t, http.StatusInternalServerError, "text/html", "<html><body>500 Internal Server Error</body></html>")
 
 	_, err := newTestLightningClient(server).ExecuteQuery("env-123456", "lkc-123456", "SELECT 1", 0)
@@ -220,7 +218,7 @@ func TestLightningExecuteQueryServerErrorPage(t *testing.T) {
 }
 
 func TestLightningExecuteQueryRetriesExhausted(t *testing.T) {
-	// After the last retry, the server's message is reported rather than a generic "giving up" error.
+	// After the last retry, the server's message is reported.
 	server := newLightningTestServer(t, http.StatusTooManyRequests, "application/json", `{"errors": [{"code": "FE_RATE_LIMITED", "status": "429", "detail": "Too many requests. Retry after a short delay."}]}`)
 
 	_, err := newTestLightningClient(server).ExecuteQuery("env-123456", "lkc-123456", "SELECT 1", 0)
@@ -229,7 +227,7 @@ func TestLightningExecuteQueryRetriesExhausted(t *testing.T) {
 }
 
 func TestLightningExecuteQueryUnreadableResult(t *testing.T) {
-	// Values are always strings, arrays, or null; anything else means the result can't be read.
+	// A value that isn't a string, array, or null can't be read.
 	server := newLightningTestServer(t, http.StatusOK, "application/json", `{"api_version": "query/v1", "kind": "Statement", "result": {"result_format": "JSON", "schema": {"columns": []}, "data": [[1]]}}`)
 
 	_, err := newTestLightningClient(server).ExecuteQuery("env-123456", "lkc-123456", "SELECT 1", 0)
@@ -248,7 +246,7 @@ func TestCatchLightningErrorWithoutResponse(t *testing.T) {
 	require.True(t, ok)
 	require.Equal(t, "Lightning Tables may not be available for the Kafka cluster's cloud provider or region.", errorWithSuggestions.GetSuggestionsMsg())
 
-	// A DNS failure other than a missing host, such as a timeout, says nothing about the endpoint.
+	// Other DNS failures, such as a timeout, are reported as is.
 	dnsTimeout := &url.Error{Op: "Post", URL: "https://sql.us-west-2.aws.confluent.cloud/query/v1", Err: &net.OpError{
 		Op:  "dial",
 		Net: "tcp",
@@ -314,7 +312,7 @@ func TestLightningHttpClientRetries(t *testing.T) {
 		{http.StatusBadGateway, "", true},
 		{http.StatusServiceUnavailable, "<html>503 Service Unavailable</html>", true},
 		{http.StatusServiceUnavailable, `{"errors": [{"status": "503", "detail": "RTCE service mTLS client is not ready"}]}`, true},
-		// The gateway's time limit: the query would most likely run into it again.
+		// The gateway's time limit.
 		{http.StatusServiceUnavailable, gatewayTimeout, false},
 		{http.StatusGatewayTimeout, "", false},
 	}
@@ -324,14 +322,13 @@ func TestLightningHttpClientRetries(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, test.want, retry, "status %d, body %s", test.status, test.body)
 
-		// The body is put back for whoever reads the response next.
+		// The body stays readable.
 		body, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
 		require.Equal(t, test.body, string(body))
 	}
 
-	// A 503 whose body can't be read isn't known to be a timeout, so it is retried, and the response is
-	// still left with a body that can be read.
+	// A 503 with an unreadable body is retried and keeps a readable body.
 	resp := &http.Response{StatusCode: http.StatusServiceUnavailable, Body: io.NopCloser(iotest.ErrReader(errors.New("connection reset")))}
 	retry, err := checkRetry(context.Background(), resp, nil)
 	require.NoError(t, err)

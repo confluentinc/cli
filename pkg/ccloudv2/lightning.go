@@ -23,17 +23,12 @@ import (
 )
 
 const (
-	// lightningSyncOnlyHeader makes the query endpoint answer inline or fail. Where asynchronous queries
-	// are enabled, a query whose result is too large or too slow to return inline is otherwise accepted as
-	// an asynchronous job (HTTP 202), which this CLI does not support; with the header, that query fails
-	// with HTTP 422 and lightningAsyncRequiredCode instead. Elsewhere, such a query runs inline until it
-	// finishes or reaches the API gateway's time limit.
+	// lightningSyncOnlyHeader makes the server reject a query it can't answer synchronously instead of starting an async job.
 	lightningSyncOnlyHeader = "X-Lightning-Sync-Only"
 
 	lightningAsyncRequiredCode = "FE_ASYNC_REQUIRED"
 
-	// lightningGatewayTimeoutCode is the error code of the HTTP 503 the API gateway returns when a
-	// request runs into its time limit.
+	// lightningGatewayTimeoutCode marks an HTTP 503 caused by the API gateway's time limit.
 	lightningGatewayTimeoutCode = "service_timeout"
 )
 
@@ -56,12 +51,7 @@ func NewLightningClient(url, userAgent string, unsafeTrace bool, authToken strin
 	}
 }
 
-// newLightningHttpClient retries only throttling and gateway errors. Unlike the other APIs, the query
-// endpoint also returns HTTP 500 for queries that fail the same way on every attempt, so retrying a 500
-// would only delay the error. A gateway timeout (HTTP 504, or a 503 with lightningGatewayTimeoutCode)
-// isn't retried either: the query would most likely run into the time limit again. When retries run
-// out, the last response is returned as is, so the user sees the server's message rather than a
-// generic one.
+// newLightningHttpClient retries only throttling and gateway errors; a 500 or a gateway timeout would likely fail again.
 func newLightningHttpClient(unsafeTrace bool) *http.Client {
 	client := retryablehttp.NewClient()
 	client.Logger = plog.NewLeveledLogger(unsafeTrace)
@@ -77,12 +67,12 @@ func newLightningHttpClient(unsafeTrace bool) *http.Client {
 		}
 		return false, err
 	}
+	// Return the last response, so the user sees the server's message.
 	client.ErrorHandler = retryablehttp.PassthroughErrorHandler
 	return client.StandardClient()
 }
 
-// isLightningGatewayTimeout reports whether a 503 response is the API gateway's time limit rather than
-// a temporary outage. It reads the body to find out and puts it back, so the response can still be read.
+// isLightningGatewayTimeout reports whether a 503 is the API gateway's time limit, leaving the body readable.
 func isLightningGatewayTimeout(resp *http.Response) bool {
 	body, err := io.ReadAll(resp.Body)
 	_ = resp.Body.Close()
@@ -103,9 +93,7 @@ func isLightningGatewayTimeout(resp *http.Response) bool {
 	return false
 }
 
-// GetLightningUrl returns the regional endpoint that serves Lightning Tables queries for a Kafka cluster
-// in the given cloud and region. There is no API to look it up, so it is derived from the platform
-// hostname, like the public Flink endpoint: https://sql.<region>.<cloud>.<hostname>.
+// GetLightningUrl derives the regional endpoint https://sql.<region>.<cloud>.<hostname>, since no API returns it.
 func GetLightningUrl(cfg *config.Config, cloud, region string) (string, error) {
 	if cfg.IsTest {
 		return testserver.TestLightningUrl.String(), nil
@@ -123,8 +111,7 @@ func (c *LightningClient) lightningApiContext() context.Context {
 	return context.WithValue(context.Background(), rtcesqlv1.ContextAccessToken, c.authToken)
 }
 
-// ExecuteQuery runs a SQL query against the Lightning Tables of a Kafka cluster and returns its inline
-// result. A positive maxResultRows asks the server to return at most that many rows.
+// ExecuteQuery runs a SQL query; a positive maxResultRows limits how many rows the server returns.
 func (c *LightningClient) ExecuteQuery(environmentId, kafkaClusterId, sql string, maxResultRows int32) (rtcesqlv1.QueryV1QueryResult, error) {
 	request := rtcesqlv1.NewQueryV1QueryRequest(environmentId, kafkaClusterId, sql)
 	if maxResultRows > 0 {
@@ -133,8 +120,7 @@ func (c *LightningClient) ExecuteQuery(environmentId, kafkaClusterId, sql string
 
 	resp, httpResp, err := c.StatementsQueryV1Api.ExecuteQueryV1Statement(c.lightningApiContext()).QueryV1QueryRequest(*request).Execute()
 
-	// lightningSyncOnlyHeader should rule out an asynchronous job. Check for one before anything else:
-	// the SDK decodes a 202 as an inline result with no rows, which must not be reported as an empty result.
+	// The SDK decodes an async job (HTTP 202) as an empty result, so check for one first.
 	if httpResp != nil && httpResp.StatusCode == http.StatusAccepted {
 		return rtcesqlv1.QueryV1QueryResult{}, newLightningAsyncRequiredError()
 	}
@@ -148,8 +134,7 @@ func (c *LightningClient) ExecuteQuery(environmentId, kafkaClusterId, sql string
 
 func catchLightningError(err error, httpResp *http.Response) error {
 	if httpResp == nil {
-		// The endpoint is derived rather than looked up, so a cloud or region without Lightning Tables
-		// has no endpoint at all.
+		// The endpoint is derived, so a cloud or region without Lightning Tables has no DNS record.
 		var dnsErr *net.DNSError
 		if goerrors.As(err, &dnsErr) && dnsErr.IsNotFound {
 			return errors.NewErrorWithSuggestions(
@@ -170,8 +155,7 @@ func catchLightningError(err error, httpResp *http.Response) error {
 
 	err = errors.CatchCCloudV2Error(err, httpResp)
 	if _, ok := err.(rtcesqlv1.GenericOpenAPIError); ok {
-		// Nothing could be read from the body (for example, an HTML page from a proxy), and the SDK's
-		// error may only say that the body couldn't be decoded, so report the status instead.
+		// The body couldn't be read, for example a proxy's HTML page, so report the status.
 		err = errors.New(httpResp.Status)
 	}
 	if requestId := httpResp.Header.Get("X-Request-Id"); requestId != "" && httpResp.StatusCode >= http.StatusInternalServerError {
@@ -180,8 +164,7 @@ func catchLightningError(err error, httpResp *http.Response) error {
 	return err
 }
 
-// isLightningAsyncRequired reports whether the query was rejected because answering it would require
-// asynchronous execution, which lightningSyncOnlyHeader disallows.
+// isLightningAsyncRequired reports whether the server rejected a query that needs async execution.
 func isLightningAsyncRequired(err error, httpResp *http.Response) bool {
 	if httpResp == nil || httpResp.StatusCode != http.StatusUnprocessableEntity {
 		return false

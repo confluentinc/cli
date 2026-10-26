@@ -78,7 +78,7 @@ func TestMaxResultRows(t *testing.T) {
 		{1, 2},
 		{defaultHumanRows, defaultHumanRows + 1},
 		{serverRowLimit - 1, serverRowLimit},
-		// Capping at the server's limit would need one row more than it returns, so it is left to the server.
+		// At or above the server's limit, no limit is sent.
 		{serverRowLimit, 0},
 		{1000, 0},
 	}
@@ -168,7 +168,7 @@ func TestConvertResultScalarTypes(t *testing.T) {
 		serialized = append(serialized, field.ToSerializedValue())
 	}
 	require.Equal(t, []string{"TRUE", "70000", "9007199254740993", "3.14159", "149.00", "hello", "2026-10-12 13:45:30.123456", "NULL"}, rendered)
-	// Same as `confluent flink query`: BIGINT and DECIMAL stay strings so they don't lose precision.
+	// As in `confluent flink query`, BIGINT and DECIMAL stay strings to keep precision.
 	require.Equal(t, []any{true, int64(70000), "9007199254740993", 3.14159, "149.00", "hello", "2026-10-12 13:45:30.123456", nil}, serialized)
 }
 
@@ -408,9 +408,7 @@ func TestPrintJSON(t *testing.T) {
 }
 
 func TestPrintJSONMatchesFlinkQueryForLongArrays(t *testing.T) {
-	// Each row is pretty-printed on its own, as `confluent flink query` does, so an array that fits on
-	// one line at the row's own indent stays on one line, even though printing the whole array at once
-	// would wrap it.
+	// Rows are pretty-printed one at a time, as in `confluent flink query`, so this array isn't wrapped.
 	row := orderedRow{{key: "c_ids", value: []any{strings.Repeat("x", 64)}}}
 
 	var buf bytes.Buffer
@@ -423,7 +421,7 @@ func TestPrintYAML(t *testing.T) {
 
 	var buf bytes.Buffer
 	require.NoError(t, printYAML(&buf, serializedRows(headers, rows)))
-	// Matches `confluent flink query`, which renders each row under its own "- " marker.
+	// Matches `confluent flink query`.
 	require.Equal(t, `- status: SHIPPED
   order_id: 1021
   tags:
@@ -454,7 +452,7 @@ func TestPrintTable(t *testing.T) {
 }
 
 func TestPrintTableDoesNotWrap(t *testing.T) {
-	// A long value with spaces stays on one line, so a piped table keeps one line per row.
+	// A long value with spaces isn't wrapped.
 	value := strings.TrimSpace(strings.Repeat("word ", 10))
 	var buf bytes.Buffer
 	printTable(&buf, []string{"note"}, [][]types.StatementResultField{{types.AtomicStatementResultField{Type: types.Varchar, Value: value}}})
@@ -482,8 +480,7 @@ func TestEscapeControlChars(t *testing.T) {
 }
 
 func TestPrintYAMLKeepsTrailingNewlines(t *testing.T) {
-	// A string ending in blank lines is a "|+" block in YAML; trimming more than the final newline of a
-	// rendered row would drop those lines from the last column's value.
+	// Trailing blank lines in a string value are kept.
 	for _, value := range []string{"a\n\n", "line1\nline2\n\n\n", "plain"} {
 		var buf bytes.Buffer
 		require.NoError(t, printYAML(&buf, []orderedRow{{{key: "first", value: value}, {key: "last", value: value}}}))

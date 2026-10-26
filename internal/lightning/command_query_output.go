@@ -23,13 +23,11 @@ import (
 // nullField is a SQL NULL: "NULL" in the table, null in json/yaml.
 var nullField = types.AtomicStatementResultField{Type: types.Null, Value: "NULL"}
 
-// multisetCountType is the type of the count in each [element, count] pair of a MULTISET.
+// multisetCountType is the type of a MULTISET element's count.
 var multisetCountType = rtcesqlv1.QueryV1DataType{Type: string(types.Integer)}
 
-// convertResult reads the column names and rows of an inline result. Values become the result
-// field types `confluent flink query` renders, so both commands print a value the same way.
+// convertResult converts a result to the field types `confluent flink query` uses, so both print values the same way.
 func convertResult(result rtcesqlv1.QueryV1QueryResult) ([]string, [][]types.StatementResultField, error) {
-	// Rows are requested as JSON; anything else (including a response without a result) can't be read.
 	if format := result.GetResultFormat(); format != "JSON" {
 		return nil, nil, fmt.Errorf(`unsupported result format "%s"`, format)
 	}
@@ -69,9 +67,7 @@ func convertResult(result rtcesqlv1.QueryV1QueryResult) ([]string, [][]types.Sta
 	return headers, rows, nil
 }
 
-// convertValue converts one value of the given type. Scalars arrive as strings, and ARRAY, MAP,
-// MULTISET, and ROW values as nested arrays; a JSON null is a SQL NULL at any depth. A value whose
-// shape doesn't match its type is an error rather than a silent NULL.
+// convertValue converts one value; a JSON null is a SQL NULL, and a value that doesn't match its type is an error.
 func convertValue(value rtcesqlv1.QueryV1ResultValue, dataType rtcesqlv1.QueryV1DataType) (types.StatementResultField, error) {
 	fieldType, err := types.NewResultFieldType(dataType.GetType())
 	if err != nil {
@@ -120,8 +116,7 @@ func convertArray(value rtcesqlv1.QueryV1ResultValue, elementType rtcesqlv1.Quer
 	return types.ArrayStatementResultField{Type: types.Array, ElementType: elementFieldType, Values: values}, nil
 }
 
-// convertMap converts a MAP, or a MULTISET as a map from each element to its count. Both arrive as an
-// array of two-element [key, value] arrays.
+// convertMap converts a MAP, or a MULTISET as a map of element to count, from [key, value] pairs.
 func convertMap(value rtcesqlv1.QueryV1ResultValue, fieldType types.StatementResultFieldType, keyType, valueType rtcesqlv1.QueryV1DataType) (types.StatementResultField, error) {
 	pairs, err := arrayElements(value, fieldType)
 	if err != nil {
@@ -158,7 +153,7 @@ func convertMap(value rtcesqlv1.QueryV1ResultValue, fieldType types.StatementRes
 	return types.MapStatementResultField{Type: fieldType, KeyType: keyFieldType, ValueType: valueFieldType, Entries: entries}, nil
 }
 
-// convertRow converts a ROW, whose values are positional: field names appear only in the schema.
+// convertRow converts a ROW, whose values are in the schema's field order.
 func convertRow(value rtcesqlv1.QueryV1ResultValue, fields []rtcesqlv1.QueryV1RowFieldType) (types.StatementResultField, error) {
 	elements, err := arrayElements(value, types.Row)
 	if err != nil {
@@ -187,13 +182,11 @@ func arrayElements(value rtcesqlv1.QueryV1ResultValue, fieldType types.Statement
 	return *value.ArrayOfQueryV1ResultValue, nil
 }
 
-// printResult prints the rows to stdout as a table for -o human, or as a bare array of row objects for
-// -o json and -o yaml. Notices go to stderr, so the output stays parseable, with the same wording as
-// `confluent flink query`.
+// printResult prints rows to stdout and notices to stderr, worded as in `confluent flink query`.
 func printResult(stdout, stderr io.Writer, format output.Format, result queryResult) error {
 	switch {
 	case result.truncated && !result.humanDefaultCap:
-		// The implicit -o human cap isn't user-requested, so it gets the notice after the table instead.
+		// The -o human default cap gets a notice after the table instead.
 		fmt.Fprintf(stderr, "Warning: stopped after %d rows because of the `--max-rows` flag. The result set below is truncated.\n", result.maxRows)
 	case result.serverLimited:
 		fmt.Fprintf(stderr, "Warning: the result may be truncated by the server's row limit, which is %d rows by default. Narrow the query, for example with a more selective \"WHERE\" clause, to see the rest.\n", serverRowLimit)
@@ -219,9 +212,7 @@ func printResult(stdout, stderr io.Writer, format output.Format, result queryRes
 	return nil
 }
 
-// printTable renders the -o human table, escaping control characters in both headers and values so
-// a result value can't inject terminal sequences. No column is truncated: the table may be piped, and
-// shortening a value would corrupt whatever reads it.
+// printTable prints the -o human table with control characters escaped and no value truncated.
 func printTable(w io.Writer, headers []string, rows [][]types.StatementResultField) {
 	escapedHeaders := make([]string, len(headers))
 	for i, header := range headers {
@@ -246,8 +237,6 @@ func printTable(w io.Writer, headers []string, rows [][]types.StatementResultFie
 	table.Render()
 }
 
-// escapeControlChars neutralizes control characters (e.g. raw ANSI escapes) in a table header or value
-// before it reaches the terminal.
 func escapeControlChars(s string) string {
 	if !strings.ContainsFunc(s, needsEscape) {
 		return s
@@ -264,22 +253,19 @@ func escapeControlChars(s string) string {
 	return sb.String()
 }
 
-// needsEscape reports whether r is a control character to neutralize. Tab is left as-is; a raw
-// newline, carriage return, or ANSI escape in a table cell breaks the layout or injects fake rows.
+// needsEscape keeps tabs; other control characters could break the table or inject terminal sequences.
 func needsEscape(r rune) bool {
 	return unicode.IsControl(r) && r != '\t'
 }
 
-// rowField is one column's serialized value paired with its name.
 type rowField struct {
 	key   string
 	value any
 }
 
-// orderedRow is a row object whose keys keep the column (SELECT) order, which a map would sort.
+// orderedRow keeps columns in SELECT order, which a map would sort.
 type orderedRow []rowField
 
-// serializedRows pairs each row's serialized values with their column names for -o json/-o yaml.
 func serializedRows(headers []string, rows [][]types.StatementResultField) []orderedRow {
 	out := make([]orderedRow, len(rows))
 	for i, row := range rows {
@@ -315,8 +301,7 @@ func (r orderedRow) MarshalJSON() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// printJSON prints the rows as a bare JSON array. Each row is pretty-printed on its own and indented
-// under the array, as `confluent flink query` does, so the output is the same byte for byte.
+// printJSON prints a JSON array formatted exactly like `confluent flink query` output.
 func printJSON(w io.Writer, rows []orderedRow) error {
 	if len(rows) == 0 {
 		_, err := io.WriteString(w, "[]\n")
@@ -336,12 +321,11 @@ func printJSON(w io.Writer, rows []orderedRow) error {
 		_, _ = bw.Write(indentLines(bytes.TrimRight(pretty.Pretty(object), "\n"), "  "))
 	}
 	_, _ = bw.WriteString("\n]\n")
-	// A bufio.Writer keeps its first write error, so Flush reports any of them.
+	// Flush returns any earlier write error.
 	return bw.Flush()
 }
 
-// printYAML prints the rows as a bare YAML list. Each row is rendered on its own under its "- "
-// marker, as `confluent flink query` does, so nested values are indented the same way.
+// printYAML prints a YAML list formatted like `confluent flink query` output.
 func printYAML(w io.Writer, rows []orderedRow) error {
 	if len(rows) == 0 {
 		_, err := io.WriteString(w, "[]\n")
@@ -359,8 +343,7 @@ func printYAML(w io.Writer, rows []orderedRow) error {
 	return bw.Flush()
 }
 
-// yamlListItem renders one row as a YAML sequence item. A yaml.Node mapping keeps the column order,
-// which yaml.Marshal of a map would sort.
+// yamlListItem renders one row as a YAML list item, keeping the column order.
 func yamlListItem(row orderedRow) ([]byte, error) {
 	node := &yaml.Node{Kind: yaml.MappingNode}
 	for _, field := range row {
@@ -379,7 +362,7 @@ func yamlListItem(row orderedRow) ([]byte, error) {
 		return nil, err
 	}
 
-	// Only the final newline is trimmed: more would be part of a multi-line string value.
+	// Trim only the final newline; more may belong to a multi-line string.
 	var out bytes.Buffer
 	for i, line := range bytes.Split(bytes.TrimSuffix(b, []byte("\n")), []byte("\n")) {
 		if i == 0 {

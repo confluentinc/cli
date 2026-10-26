@@ -29,13 +29,10 @@ func NewLightningRouter(t *testing.T) *mux.Router {
 	return router
 }
 
-// handleLightningQuery serves POST /query/v1. Scenarios are keyed off the SQL text; a query
-// that matches none of them gets a 400.
+// handleLightningQuery serves POST /query/v1, responding based on the SQL text.
 func handleLightningQuery(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, http.MethodPost, r.Method)
-		// Without this header, a query too large or slow to answer inline becomes an asynchronous job,
-		// which the CLI can't read, so every request must carry it.
 		require.Equal(t, "true", r.Header.Get("X-Lightning-Sync-Only"))
 		require.True(t, strings.HasPrefix(r.Header.Get("Authorization"), "Bearer"))
 
@@ -44,8 +41,7 @@ func handleLightningQuery(t *testing.T) http.HandlerFunc {
 		require.NotEmpty(t, request.GetCatalogName())
 		require.NotEmpty(t, request.GetDatabaseName())
 
-		// Like the real endpoint, a query gets at most 200 rows, or fewer if it asks for fewer; asking for
-		// no limit or a larger one gets 200, and the response doesn't say whether rows were left out.
+		// Like the real server, return at most 200 rows, or max_result_rows if lower.
 		var maxResultRows *int32
 		rowLimit := 200
 		if options, ok := request.GetOptionsOk(); ok && options.MaxResultRows != nil {
@@ -58,13 +54,13 @@ func handleLightningQuery(t *testing.T) http.HandlerFunc {
 		var columns []map[string]any
 		var rows [][]any
 
-		// The real endpoint trims the statement too, so a SQL file's trailing newline doesn't matter.
+		// Like the real server, ignore surrounding whitespace, such as a SQL file's trailing newline.
 		switch strings.TrimSpace(request.GetQuery()) {
 		case "SELECT order_id, status FROM orders LIMIT 2":
 			columns = []map[string]any{lightningColumn("order_id", "INTEGER"), lightningColumn("status", "VARCHAR")}
 			rows = [][]any{{"1021", "SHIPPED"}, {"1044", "PENDING"}}
 		case "SELECT status, order_id FROM orders LIMIT 2":
-			// Columns deliberately not in alphabetical order: -o json/-o yaml must keep the SELECT order.
+			// Not alphabetical, to check that the output keeps the SELECT order.
 			columns = []map[string]any{lightningColumn("status", "VARCHAR"), lightningColumn("order_id", "INTEGER")}
 			rows = [][]any{{"SHIPPED", "1021"}, {"PENDING", "1044"}}
 		case "SELECT catalog_name, database_name FROM whoami":
@@ -145,7 +141,7 @@ func handleLightningQuery(t *testing.T) http.HandlerFunc {
 			writeLightningError(t, w, http.StatusUnprocessableEntity, "FE_ASYNC_REQUIRED", "Query requires asynchronous execution, which the sync-only request disallows: Query would be promoted to asynchronous execution.")
 			return
 		case "SELECT * FROM promoted":
-			// A server that ignored X-Lightning-Sync-Only and accepted the query as an asynchronous job.
+			// A server that ignores the sync-only header and starts an async job.
 			w.Header().Set("Location", fmt.Sprintf("/query/v1/jobs/%s/%s/promoted/statement_1b2c3d4e5f6a/status", request.GetCatalogName(), request.GetDatabaseName()))
 			w.WriteHeader(http.StatusAccepted)
 			require.NoError(t, json.NewEncoder(w).Encode(map[string]any{
