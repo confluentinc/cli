@@ -47,6 +47,11 @@ func (s *CLITestSuite) TestLightningQuery() {
 		{args: `lightning query --sql "SELECT id FROM empty" --cluster lkc-123456 -o json`, fixture: "lightning/query/empty-json.golden"},
 		{args: `lightning query --sql "SELECT id FROM empty" --cluster lkc-123456 -o yaml`, fixture: "lightning/query/empty-yaml.golden"},
 
+		// A repeated column name fails for -o json/-o yaml, whose keys must be unique.
+		{args: `lightning query --sql "SELECT id, id FROM repeated_columns" --cluster lkc-123456`, fixture: "lightning/query/repeated-columns.golden"},
+		{args: `lightning query --sql "SELECT id, id FROM repeated_columns" --cluster lkc-123456 -o json`, fixture: "lightning/query/repeated-columns-serialized.golden", exitCode: 1},
+		{args: `lightning query --sql "SELECT id, id FROM repeated_columns" --cluster lkc-123456 -o yaml`, fixture: "lightning/query/repeated-columns-serialized.golden", exitCode: 1},
+
 		// A query that needs async execution fails, whether the server returns 422 or 202.
 		{args: `lightning query --sql "SELECT * FROM huge" --cluster lkc-123456`, fixture: "lightning/query/async-required.golden", exitCode: 1},
 		{args: `lightning query --sql "SELECT * FROM promoted" --cluster lkc-123456`, fixture: "lightning/query/async-required.golden", exitCode: 1},

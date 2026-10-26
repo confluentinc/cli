@@ -123,6 +123,10 @@ func handleLightningQuery(t *testing.T) http.HandlerFunc {
 		case "SELECT id FROM empty":
 			columns = []map[string]any{lightningColumn("id", "INTEGER")}
 			rows = [][]any{}
+		case "SELECT id, id FROM repeated_columns":
+			// The server doesn't rename a repeated column.
+			columns = []map[string]any{lightningColumn("id", "INTEGER"), lightningColumn("id", "INTEGER")}
+			rows = [][]any{{"1", "1"}}
 		case "SELECT id FROM unrecognized_column_type":
 			columns = []map[string]any{lightningColumn("id", "NOT_A_REAL_TYPE")}
 			rows = [][]any{{"1"}}

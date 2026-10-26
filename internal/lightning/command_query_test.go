@@ -573,6 +573,28 @@ func TestPrintResult(t *testing.T) {
 	}
 }
 
+func TestPrintResultRejectsRepeatedColumns(t *testing.T) {
+	headers := []string{"KEY", "ID", "KEY"}
+	row := []types.StatementResultField{
+		types.AtomicStatementResultField{Type: types.Varchar, Value: "a"},
+		types.AtomicStatementResultField{Type: types.Integer, Value: "1"},
+		types.AtomicStatementResultField{Type: types.Varchar, Value: "b"},
+	}
+	result := applyRowLimits(headers, [][]types.StatementResultField{row, row}, 1, false)
+
+	for _, format := range []output.Format{output.JSON, output.YAML} {
+		var stdout, stderr bytes.Buffer
+		err := printResult(&stdout, &stderr, format, result)
+		require.EqualError(t, err, `the result has more than one column named "KEY"`)
+		require.Empty(t, stdout.String())
+		require.Empty(t, stderr.String(), "no --max-rows warning before the error")
+	}
+
+	var stdout, stderr bytes.Buffer
+	require.NoError(t, printResult(&stdout, &stderr, output.Human, result))
+	require.Contains(t, stdout.String(), "| KEY | ID | KEY |")
+}
+
 type failingWriter struct{}
 
 func (failingWriter) Write([]byte) (int, error) {

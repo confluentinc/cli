@@ -184,6 +184,12 @@ func arrayElements(value rtcesqlv1.QueryV1ResultValue, fieldType types.Statement
 
 // printResult prints rows to stdout and notices to stderr, worded as in `confluent flink query`.
 func printResult(stdout, stderr io.Writer, format output.Format, result queryResult) error {
+	if format == output.JSON || format == output.YAML {
+		if err := checkUniqueColumns(result.headers); err != nil {
+			return err
+		}
+	}
+
 	// The -o human default cap gets a notice after the table instead.
 	if result.truncated && !result.humanDefaultCap {
 		fmt.Fprintf(stderr, "Warning: stopped after %d rows because of the `--max-rows` flag. The result set below is truncated.\n", result.maxRows)
@@ -205,6 +211,21 @@ func printResult(stdout, stderr io.Writer, format output.Format, result queryRes
 
 	if result.truncated && result.humanDefaultCap {
 		fmt.Fprintf(stderr, "\nOnly showing the first %d rows. Use `--max-rows` to show more, or `-o json`/`-o yaml` for the full result.\n", result.maxRows)
+	}
+	return nil
+}
+
+// checkUniqueColumns rejects a repeated column name, which would make a JSON parser drop a value and a YAML parser fail.
+func checkUniqueColumns(headers []string) error {
+	seen := make(map[string]bool, len(headers))
+	for _, header := range headers {
+		if seen[header] {
+			return errors.NewErrorWithSuggestions(
+				fmt.Sprintf(`the result has more than one column named "%s"`, header),
+				"Give each column a unique name with \"AS\", or use `-o human`.",
+			)
+		}
+		seen[header] = true
 	}
 	return nil
 }
