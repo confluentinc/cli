@@ -103,4 +103,4 @@
 | 100 |
 +-----+
 
-Only showing the first 100 rows. Use `--max-rows` to show more, or `-o json`/`-o yaml` for every row the server returns.
+Only showing the first 100 rows. Use `--max-rows` to show more, or `-o json`/`-o yaml` for the full result.

@@ -184,12 +184,9 @@ func arrayElements(value rtcesqlv1.QueryV1ResultValue, fieldType types.Statement
 
 // printResult prints rows to stdout and notices to stderr, worded as in `confluent flink query`.
 func printResult(stdout, stderr io.Writer, format output.Format, result queryResult) error {
-	switch {
-	case result.truncated && !result.humanDefaultCap:
-		// The -o human default cap gets a notice after the table instead.
+	// The -o human default cap gets a notice after the table instead.
+	if result.truncated && !result.humanDefaultCap {
 		fmt.Fprintf(stderr, "Warning: stopped after %d rows because of the `--max-rows` flag. The result set below is truncated.\n", result.maxRows)
-	case result.serverLimited:
-		fmt.Fprintf(stderr, "Warning: the result may be truncated by the server's row limit, which is %d rows by default. Narrow the query, for example with a more selective \"WHERE\" clause, to see the rest.\n", serverRowLimit)
 	}
 
 	switch format {
@@ -207,7 +204,7 @@ func printResult(stdout, stderr io.Writer, format output.Format, result queryRes
 	printTable(stdout, result.headers, result.rows)
 
 	if result.truncated && result.humanDefaultCap {
-		fmt.Fprintf(stderr, "\nOnly showing the first %d rows. Use `--max-rows` to show more, or `-o json`/`-o yaml` for every row the server returns.\n", result.maxRows)
+		fmt.Fprintf(stderr, "\nOnly showing the first %d rows. Use `--max-rows` to show more, or `-o json`/`-o yaml` for the full result.\n", result.maxRows)
 	}
 	return nil
 }

@@ -41,14 +41,9 @@ func handleLightningQuery(t *testing.T) http.HandlerFunc {
 		require.NotEmpty(t, request.GetCatalogName())
 		require.NotEmpty(t, request.GetDatabaseName())
 
-		// Like the real server, return at most 200 rows, or max_result_rows if lower.
 		var maxResultRows *int32
-		rowLimit := 200
 		if options, ok := request.GetOptionsOk(); ok && options.MaxResultRows != nil {
 			maxResultRows = options.MaxResultRows
-			if limit := int(*maxResultRows); limit > 0 && limit < rowLimit {
-				rowLimit = limit
-			}
 		}
 
 		var columns []map[string]any
@@ -125,9 +120,6 @@ func handleLightningQuery(t *testing.T) http.HandlerFunc {
 		case "SELECT id FROM exactly_hundred":
 			columns = []map[string]any{lightningColumn("id", "INTEGER")}
 			rows = lightningIdRows(100)
-		case "SELECT id FROM two_hundred_one":
-			columns = []map[string]any{lightningColumn("id", "INTEGER")}
-			rows = lightningIdRows(201)
 		case "SELECT id FROM empty":
 			columns = []map[string]any{lightningColumn("id", "INTEGER")}
 			rows = [][]any{}
@@ -167,8 +159,8 @@ func handleLightningQuery(t *testing.T) http.HandlerFunc {
 			return
 		}
 
-		if len(rows) > rowLimit {
-			rows = rows[:rowLimit]
+		if maxResultRows != nil && *maxResultRows > 0 && len(rows) > int(*maxResultRows) {
+			rows = rows[:*maxResultRows]
 		}
 
 		require.NoError(t, json.NewEncoder(w).Encode(map[string]any{

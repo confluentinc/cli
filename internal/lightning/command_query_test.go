@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -77,10 +78,8 @@ func TestMaxResultRows(t *testing.T) {
 		{0, 0},
 		{1, 2},
 		{defaultHumanRows, defaultHumanRows + 1},
-		{serverRowLimit - 1, serverRowLimit},
-		// At or above the server's limit, no limit is sent.
-		{serverRowLimit, 0},
-		{1000, 0},
+		{1000, 1001},
+		{math.MaxInt32, math.MaxInt32},
 	}
 	for _, test := range tests {
 		require.Equal(t, test.want, maxResultRows(test.maxRows), "maxRows %d", test.maxRows)
@@ -509,28 +508,22 @@ func idRows(count int) [][]types.StatementResultField {
 
 func TestApplyRowLimits(t *testing.T) {
 	tests := []struct {
-		name              string
-		rows              int
-		maxRows           int
-		sentLimit         bool
-		wantRows          int
-		wantTruncated     bool
-		wantServerLimited bool
+		name          string
+		rows          int
+		maxRows       int
+		wantRows      int
+		wantTruncated bool
 	}{
-		{"the extra row asked for shows truncation", 101, 100, true, 100, true, false},
-		{"exactly the cap is not truncated", 100, 100, true, 100, false, false},
-		{"a cap of 200 or more is left to the server", 200, 250, false, 200, false, true},
-		{"a server limit higher than the default can still be cut by the cap", 300, 250, false, 250, true, false},
-		{"no cap and fewer rows than the server's limit", 150, 0, false, 150, false, false},
-		{"no cap and as many rows as the server's limit", 200, 0, false, 200, false, true},
-		{"no rows", 0, 0, false, 0, false, false},
+		{"the extra row asked for shows truncation", 101, 100, 100, true},
+		{"exactly the cap is not truncated", 100, 100, 100, false},
+		{"no cap keeps every row", 300, 0, 300, false},
+		{"no rows", 0, 0, 0, false},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			result := applyRowLimits([]string{"id"}, idRows(test.rows), test.maxRows, false, test.sentLimit)
+			result := applyRowLimits([]string{"id"}, idRows(test.rows), test.maxRows, false)
 			require.Len(t, result.rows, test.wantRows)
 			require.Equal(t, test.wantTruncated, result.truncated)
-			require.Equal(t, test.wantServerLimited, result.serverLimited)
 		})
 	}
 }
@@ -546,33 +539,27 @@ func TestPrintResult(t *testing.T) {
 		{
 			name:       "--max-rows warning goes to stderr, before json rows on stdout",
 			format:     output.JSON,
-			result:     applyRowLimits([]string{"id"}, idRows(3), 2, false, true),
+			result:     applyRowLimits([]string{"id"}, idRows(3), 2, false),
 			wantStdout: "[\n  {\n    \"id\": 1\n  },\n  {\n    \"id\": 2\n  }\n]\n",
 			wantStderr: "Warning: stopped after 2 rows because of the `--max-rows` flag. The result set below is truncated.\n",
 		},
 		{
-			name:       "server limit warning goes to stderr, with yaml rows on stdout",
-			format:     output.YAML,
-			result:     applyRowLimits([]string{"id"}, idRows(200), 0, false, false),
-			wantStderr: "Warning: the result may be truncated by the server's row limit, which is 200 rows by default. Narrow the query, for example with a more selective \"WHERE\" clause, to see the rest.\n",
-		},
-		{
 			name:       "preview notice goes to stderr, after the table on stdout",
 			format:     output.Human,
-			result:     applyRowLimits([]string{"id"}, idRows(2), 1, true, true),
+			result:     applyRowLimits([]string{"id"}, idRows(2), 1, true),
 			wantStdout: "+----+\n| id |\n+----+\n| 1  |\n+----+\n",
-			wantStderr: "\nOnly showing the first 1 rows. Use `--max-rows` to show more, or `-o json`/`-o yaml` for every row the server returns.\n",
+			wantStderr: "\nOnly showing the first 1 rows. Use `--max-rows` to show more, or `-o json`/`-o yaml` for the full result.\n",
 		},
 		{
 			name:       "no rows leaves stdout empty",
 			format:     output.Human,
-			result:     applyRowLimits([]string{"id"}, nil, 100, true, true),
+			result:     applyRowLimits([]string{"id"}, nil, 100, true),
 			wantStderr: "The query returned no rows.\n",
 		},
 		{
 			name:       "no rows is an empty json array",
 			format:     output.JSON,
-			result:     applyRowLimits([]string{"id"}, nil, 0, false, false),
+			result:     applyRowLimits([]string{"id"}, nil, 0, false),
 			wantStdout: "[]\n",
 		},
 	}
@@ -580,13 +567,7 @@ func TestPrintResult(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			var stdout, stderr bytes.Buffer
 			require.NoError(t, printResult(&stdout, &stderr, test.format, test.result))
-			if test.format == output.YAML {
-				var parsed []map[string]int
-				require.NoError(t, yaml.Unmarshal(stdout.Bytes(), &parsed))
-				require.Len(t, parsed, 200)
-			} else {
-				require.Equal(t, test.wantStdout, stdout.String())
-			}
+			require.Equal(t, test.wantStdout, stdout.String())
 			require.Equal(t, test.wantStderr, stderr.String())
 		})
 	}

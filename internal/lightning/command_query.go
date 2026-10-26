@@ -2,6 +2,7 @@ package lightning
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"strings"
 
@@ -17,13 +18,8 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
-const (
-	// defaultHumanRows is the default -o human row cap, as in `confluent flink query`.
-	defaultHumanRows = 100
-
-	// serverRowLimit is the server's maximum row count; the response doesn't say when it cuts rows off.
-	serverRowLimit = 200
-)
+// defaultHumanRows is the default -o human row cap, as in `confluent flink query`.
+const defaultHumanRows = 100
 
 type queryCommand struct {
 	*pcmd.AuthenticatedCLICommand
@@ -36,10 +32,10 @@ func newQueryCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Run a SQL query on Lightning Tables and print its results.",
 		Long: "Run a SQL query on Lightning Tables and print the results. This command is in Early Access and may change in a future release.\n\n" +
 			"Provide the SQL statement with `--sql`, or use `--file` to read the statement from a file. The query runs against the Kafka cluster set with `--cluster`, or the active Kafka cluster if the flag is not set.\n\n" +
-			"The query runs synchronously, and the server returns at most 200 rows by default. If the result is too large or takes too long to return, the command fails instead of starting an asynchronous query; narrow the query, for example with a \"LIMIT\" clause or a more selective \"WHERE\" clause.\n\n" +
-			"With `-o human` (the default), only the first 100 rows are printed as a preview. Raise `--max-rows` to fetch more, or use `-o json` or `-o yaml` for every row the server returns.\n\n" +
+			"The query runs synchronously. If the result is too large or takes too long to return, the command fails instead of starting an asynchronous query; narrow the query, for example with a \"LIMIT\" clause or a more selective \"WHERE\" clause.\n\n" +
+			"With `-o human` (the default), only the first 100 rows are printed as a preview. Raise `--max-rows` to fetch more, or use `-o json` or `-o yaml` for the complete result set.\n\n" +
 			"The `-o json` and `-o yaml` flags return a bare array of row objects.\n\n" +
-			"When `--max-rows` cuts a result short, or the result may have reached the server's row limit, a warning is printed to standard error and the command still exits 0, so a script reading the rows on standard output is unaffected.",
+			"When `--max-rows` cuts a result short, a warning is printed to standard error and the command still exits 0, so a script reading the rows on standard output is unaffected.",
 		Args: cobra.NoArgs,
 		Annotations: map[string]string{
 			pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin,
@@ -61,7 +57,7 @@ func newQueryCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("sql", "", `SQL statement. Alternatively, use "--file" or "-f".`)
 	cmd.Flags().StringP("file", "f", "", `Path to a file that contains the SQL statement. Alternatively, use "--sql".`)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().Int("max-rows", 0, `Maximum number of rows to fetch. Defaults to 100 for "-o human"; raise it to fetch more. "-o json"/"-o yaml" fetch every row the server returns by default.`)
+	cmd.Flags().Int("max-rows", 0, `Maximum number of rows to fetch, or 0 for no limit. Defaults to 100 for "-o human"; raise it to fetch more. "-o json"/"-o yaml" fetch every row by default.`)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -99,8 +95,7 @@ func (c *queryCommand) query(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	limit := maxResultRows(maxRows)
-	result, err := client.ExecuteQuery(environmentId, clusterId, sql, limit)
+	result, err := client.ExecuteQuery(environmentId, clusterId, sql, maxResultRows(maxRows))
 	if err != nil {
 		return err
 	}
@@ -110,7 +105,7 @@ func (c *queryCommand) query(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	return printResult(os.Stdout, os.Stderr, output.GetFormat(cmd), applyRowLimits(headers, rows, maxRows, humanDefaultCap, limit > 0))
+	return printResult(os.Stdout, os.Stderr, output.GetFormat(cmd), applyRowLimits(headers, rows, maxRows, humanDefaultCap))
 }
 
 // getLightningClient returns a client for the Lightning endpoint in the Kafka cluster's cloud and region.
@@ -161,12 +156,12 @@ func resolveDisplayCap(format output.Format, maxRowsChanged bool, maxRows int) (
 	return maxRows, false
 }
 
-// maxResultRows asks for one row more than the cap to detect truncation, or 0 to use the server's limit.
+// maxResultRows asks for one row more than the cap to detect truncation, or 0 for no limit.
 func maxResultRows(maxRows int) int32 {
-	if maxRows <= 0 || maxRows >= serverRowLimit {
+	if maxRows <= 0 {
 		return 0
 	}
-	return int32(maxRows + 1)
+	return int32(min(maxRows, math.MaxInt32-1) + 1)
 }
 
 type queryResult struct {
@@ -175,17 +170,14 @@ type queryResult struct {
 	maxRows         int  // 0 means no cap
 	truncated       bool // maxRows cut rows off
 	humanDefaultCap bool // maxRows is the -o human default, not --max-rows
-	serverLimited   bool // the server's row limit may have cut rows off
 }
 
-// applyRowLimits cuts rows to maxRows and flags a result that may have hit the server's row limit.
-func applyRowLimits(headers []string, rows [][]types.StatementResultField, maxRows int, humanDefaultCap, sentLimit bool) queryResult {
+func applyRowLimits(headers []string, rows [][]types.StatementResultField, maxRows int, humanDefaultCap bool) queryResult {
 	result := queryResult{headers: headers, rows: rows, maxRows: maxRows, humanDefaultCap: humanDefaultCap}
 	if maxRows > 0 && len(rows) > maxRows {
 		result.rows = rows[:maxRows]
 		result.truncated = true
 	}
-	result.serverLimited = !sentLimit && !result.truncated && len(rows) >= serverRowLimit
 	return result
 }
 

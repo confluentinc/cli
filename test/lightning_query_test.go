@@ -27,10 +27,9 @@ func (s *CLITestSuite) TestLightningQuery() {
 		// Control characters are escaped in the table.
 		{args: `lightning query --sql "SELECT note FROM escapes" --cluster lkc-123456`, fixture: "lightning/query/escapes.golden"},
 
-		// The row limit sent is the cap plus one, or none if that exceeds the server's limit.
+		// The row limit sent is the cap plus one, or none without a cap.
 		{args: `lightning query --sql "SELECT max_result_rows FROM request_options" --cluster lkc-123456`, fixture: "lightning/query/request-options-human-default.golden"},
-		{args: `lightning query --sql "SELECT max_result_rows FROM request_options" --cluster lkc-123456 --max-rows 199`, fixture: "lightning/query/request-options-max-rows-199.golden"},
-		{args: `lightning query --sql "SELECT max_result_rows FROM request_options" --cluster lkc-123456 --max-rows 200`, fixture: "lightning/query/request-options-max-rows-200.golden"},
+		{args: `lightning query --sql "SELECT max_result_rows FROM request_options" --cluster lkc-123456 --max-rows 1000`, fixture: "lightning/query/request-options-max-rows.golden"},
 		{args: `lightning query --sql "SELECT max_result_rows FROM request_options" --cluster lkc-123456 -o json`, fixture: "lightning/query/request-options-json.golden"},
 
 		// -o human shows 100 rows by default, with a notice after the table.
@@ -42,9 +41,6 @@ func (s *CLITestSuite) TestLightningQuery() {
 		// --max-rows warns before the rows in every format.
 		{args: `lightning query --sql "SELECT id FROM hundreds" --cluster lkc-123456 --max-rows 2`, fixture: "lightning/query/max-rows.golden"},
 		{args: `lightning query --sql "SELECT id FROM hundreds" --cluster lkc-123456 --max-rows 2 -o json`, fixture: "lightning/query/max-rows-json.golden"},
-		// A result that reaches the server's 200-row limit warns that it may be truncated.
-		{args: `lightning query --sql "SELECT id FROM two_hundred_one" --cluster lkc-123456 --max-rows 200`, fixture: "lightning/query/server-limit.golden"},
-		{args: `lightning query --sql "SELECT id FROM two_hundred_one" --cluster lkc-123456 -o yaml`, fixture: "lightning/query/server-limit-yaml.golden"},
 
 		// No rows: a notice for -o human, an empty array for -o json/-o yaml.
 		{args: `lightning query --sql "SELECT id FROM empty" --cluster lkc-123456`, fixture: "lightning/query/empty.golden"},

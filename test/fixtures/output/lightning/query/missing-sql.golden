@@ -15,7 +15,7 @@ Flags:
       --sql string           SQL statement. Alternatively, use "--file" or "-f".
   -f, --file string          Path to a file that contains the SQL statement. Alternatively, use "--sql".
       --cluster string       Kafka cluster ID.
-      --max-rows int         Maximum number of rows to fetch. Defaults to 100 for "-o human"; raise it to fetch more. "-o json"/"-o yaml" fetch every row the server returns by default.
+      --max-rows int         Maximum number of rows to fetch, or 0 for no limit. Defaults to 100 for "-o human"; raise it to fetch more. "-o json"/"-o yaml" fetch every row by default.
       --environment string   Environment ID.
       --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
