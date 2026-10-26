@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
 
@@ -30,11 +31,15 @@ const (
 
 	// lightningGatewayTimeoutCode marks an HTTP 503 caused by the API gateway's time limit.
 	lightningGatewayTimeoutCode = "service_timeout"
+
+	// lightningQueryTimeout bounds a query and its retries; the API gateway itself gives up after 60 seconds.
+	lightningQueryTimeout = 2 * time.Minute
 )
 
 type LightningClient struct {
 	*rtcesqlv1.APIClient
-	authToken string
+	authToken    string
+	queryTimeout time.Duration
 }
 
 func NewLightningClient(url, userAgent string, unsafeTrace bool, authToken string) *LightningClient {
@@ -46,8 +51,9 @@ func NewLightningClient(url, userAgent string, unsafeTrace bool, authToken strin
 	cfg.UserAgent = userAgent
 
 	return &LightningClient{
-		APIClient: rtcesqlv1.NewAPIClient(cfg),
-		authToken: authToken,
+		APIClient:    rtcesqlv1.NewAPIClient(cfg),
+		authToken:    authToken,
+		queryTimeout: lightningQueryTimeout,
 	}
 }
 
@@ -118,7 +124,10 @@ func (c *LightningClient) ExecuteQuery(environmentId, kafkaClusterId, sql string
 		request.SetOptions(rtcesqlv1.QueryV1QueryOptions{MaxResultRows: rtcesqlv1.PtrInt32(maxResultRows)})
 	}
 
-	resp, httpResp, err := c.StatementsQueryV1Api.ExecuteQueryV1Statement(c.lightningApiContext()).QueryV1QueryRequest(*request).Execute()
+	ctx, cancel := context.WithTimeout(c.lightningApiContext(), c.queryTimeout)
+	defer cancel()
+
+	resp, httpResp, err := c.StatementsQueryV1Api.ExecuteQueryV1Statement(ctx).QueryV1QueryRequest(*request).Execute()
 
 	// The SDK decodes an async job (HTTP 202) as an empty result, so check for one first.
 	if httpResp != nil && httpResp.StatusCode == http.StatusAccepted {
@@ -126,6 +135,12 @@ func (c *LightningClient) ExecuteQuery(environmentId, kafkaClusterId, sql string
 	}
 
 	if err != nil {
+		if goerrors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return rtcesqlv1.QueryV1QueryResult{}, errors.NewErrorWithSuggestions(
+				"the query timed out waiting for a response",
+				"Check your network connection and proxy settings, then try again.",
+			)
+		}
 		return rtcesqlv1.QueryV1QueryResult{}, catchLightningError(err, httpResp)
 	}
 

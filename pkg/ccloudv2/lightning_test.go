@@ -116,6 +116,24 @@ func TestLightningExecuteQueryMaxResultRows(t *testing.T) {
 	require.Equal(t, int32(101), body.Options.GetMaxResultRows())
 }
 
+func TestLightningExecuteQueryTimeout(t *testing.T) {
+	// A server that never answers, until the test ends.
+	done := make(chan struct{})
+	server := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
+		<-done
+	}))
+	t.Cleanup(func() {
+		close(done)
+		server.Close()
+	})
+
+	client := NewLightningClient(server.URL, "test-agent", false, "dataplane-token")
+	client.queryTimeout = 50 * time.Millisecond
+
+	_, err := client.ExecuteQuery("env-123456", "lkc-123456", "SELECT id FROM t", 0)
+	require.EqualError(t, err, "the query timed out waiting for a response")
+}
+
 func TestLightningExecuteQueryAsyncRequired(t *testing.T) {
 	server := newLightningTestServer(t, http.StatusUnprocessableEntity, "application/json", `{"errors": [{"code": "FE_ASYNC_REQUIRED", "status": "422", "detail": "Query requires asynchronous execution, which the sync-only request disallows."}]}`)
 
