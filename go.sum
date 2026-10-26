@@ -163,6 +163,8 @@ github.com/cloudflare/circl v1.6.3/go.mod h1:2eXP6Qfat4O/Yhh8BznvKnJ+uzEoTQ6jVKJ
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20251024191705-f32f6cebfdd1 h1:mXLlTii+xqGk9wNtAoPnrJsvR1bwuaEmWD4TuUoTYfw=
 github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20251024191705-f32f6cebfdd1/go.mod h1:62EMf+5uFEt1BJ2q8WMrUoI9VUSxAbDnmZCGRt/MbA0=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/rtce-sql v0.2.0 h1:w4jrB/x7VdNLNmkmHxoTpo9t2Pc6jnx+ImCh8MQjyKk=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/rtce-sql v0.2.0/go.mod h1:7xseC3JeXIn59VOVvbOK1MZpaKJBd0JjSTMK5zE99bE=
 github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0 h1:zSF4OQUJXWH2JeAo9rsq13ibk+JFdzITGR8S7cFMpzw=
 github.com/confluentinc/ccloud-sdk-go-v2/ai v0.1.0/go.mod h1:DoxqzzF3JzvJr3fWkvCiOHFlE0GoYpozWxFZ1Ud9ntA=
 github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0 h1:8fWyLwMuy8ec0MVF5Avd54UvbIxhDFhZzanHBVwgxdw=
