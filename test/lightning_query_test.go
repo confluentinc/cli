@@ -62,6 +62,7 @@ func (s *CLITestSuite) TestLightningQuery() {
 		// Failures before the query is sent.
 		{args: `lightning query --sql "SELECT 1"`, fixture: "lightning/query/no-cluster.golden", exitCode: 1},
 		{args: `lightning query --sql "SELECT 1" --cluster lkc-unknown`, fixture: "lightning/query/unknown-cluster.golden", exitCode: 1},
+		{args: `lightning query --sql "SELECT 1" --cluster lkc-not-found`, fixture: "lightning/query/cluster-not-found.golden", exitCode: 1},
 		{args: `lightning query --sql "SELECT 1" --cluster lkc-123456 --max-rows -1`, fixture: "lightning/query/negative-max-rows.golden", exitCode: 1},
 		{args: `lightning query --sql "" --cluster lkc-123456`, fixture: "lightning/query/empty-sql.golden", exitCode: 1},
 
