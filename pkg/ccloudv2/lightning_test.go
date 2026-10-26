@@ -223,6 +223,14 @@ func TestLightningExecuteQueryErrorPage(t *testing.T) {
 	require.EqualError(t, err, "403 Forbidden")
 }
 
+func TestLightningExecuteQueryTooLarge(t *testing.T) {
+	server := newLightningTestServer(t, http.StatusRequestEntityTooLarge, "text/html", "<html><body>413 Request Entity Too Large</body></html>")
+
+	_, err := newTestLightningClient(server).ExecuteQuery("env-123456", "lkc-123456", "SELECT id FROM t", 0)
+	require.EqualError(t, err, "the SQL statement is too large")
+	require.Equal(t, int32(1), server.requests.Load(), "a 413 is not retried")
+}
+
 func TestLightningExecuteQueryServerErrorPage(t *testing.T) {
 	// A non-JSON 500 is reported by its status, with the request ID.
 	server := newLightningTestServer(t, http.StatusInternalServerError, "text/html", "<html><body>500 Internal Server Error</body></html>")

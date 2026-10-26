@@ -168,6 +168,11 @@ func catchLightningError(err error, httpResp *http.Response) error {
 		return newLightningAsyncRequiredError()
 	}
 
+	// The SQL is the only thing in the request body.
+	if httpResp.StatusCode == http.StatusRequestEntityTooLarge {
+		return errors.NewErrorWithSuggestions("the SQL statement is too large", "Shorten the statement and try again.")
+	}
+
 	err = errors.CatchCCloudV2Error(err, httpResp)
 	if _, ok := err.(rtcesqlv1.GenericOpenAPIError); ok {
 		// The body couldn't be read, for example a proxy's HTML page, so report the status.
