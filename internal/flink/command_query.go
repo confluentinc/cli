@@ -311,7 +311,7 @@ func (c *queryCommand) createQueryStatement(ctx context.Context, cmd *cobra.Comm
 		return nil, "", err
 	}
 
-	name := types.GenerateStatementName()
+	name := types.GenerateQueryStatementName()
 	statement := flinkgatewayv1.SqlV1Statement{
 		Name: flinkgatewayv1.PtrString(name),
 		Spec: &flinkgatewayv1.SqlV1StatementSpec{
