@@ -24,8 +24,11 @@ blocks:
       jobs:
         - name: "Run Live Tests"
           commands:
-            - . vault-sem-get-secret v1/ci/kv/apif/cli/live-testing-data
-            - . vault-sem-get-secret v1/ci/kv/apif/cli/slack-notifications-live-testing
+            - . vault-get-secret apif/live-test-environment
+            - . vault-get-secret apif/live-test-kafka-standard-cluster
+            - . vault-get-secret cli/live-test-login
+            - . vault-get-secret cli/live-test-kafka-standard-api-key
+            - . vault-get-secret cli/slack-notifications-live-testing
 
             - |
               set -e
