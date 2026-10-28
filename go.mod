@@ -71,7 +71,7 @@ require (
 	github.com/fatih/color v1.17.0
 	github.com/gdamore/tcell/v2 v2.7.4
 	github.com/go-git/go-git/v5 v5.19.2
-	github.com/go-jose/go-jose/v4 v4.1.4
+	github.com/go-jose/go-jose/v4 v4.1.6
 	github.com/gobuffalo/flect v1.0.2
 	github.com/gogo/protobuf v1.3.2
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
