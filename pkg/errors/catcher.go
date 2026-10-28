@@ -228,11 +228,18 @@ func CatchKafkaNotFoundError(err error, clusterId string, r *http.Response) erro
 		return &KafkaClusterNotFoundError{ClusterID: clusterId}
 	}
 
+	suggestions := ChooseRightEnvironmentSuggestions + "\nThe active Kafka cluster may have been deleted. Set a new active cluster with `confluent kafka cluster use`."
+
+	// Cloud returns 404 for an unknown cluster, or a cluster in another environment.
+	if r != nil && r.StatusCode == http.StatusNotFound {
+		return NewErrorWithSuggestions(fmt.Sprintf(KafkaClusterNotFoundErrorMsg, clusterId), suggestions)
+	}
+
 	if r != nil && r.StatusCode == http.StatusForbidden {
 		return NewWrapErrorWithSuggestions(
 			CatchCCloudV2Error(err, r),
 			fmt.Sprintf(`Kafka cluster "%s" not found or access forbidden`, clusterId),
-			ChooseRightEnvironmentSuggestions+"\nThe active Kafka cluster may have been deleted. Set a new active cluster with `confluent kafka cluster use`.",
+			suggestions,
 		)
 	}
 

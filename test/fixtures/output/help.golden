@@ -26,6 +26,7 @@ Available Commands:
   iam                  Manage RBAC and IAM permissions.
   kafka                Manage Apache Kafka.
   ksql                 Manage ksqlDB.
+  lightning            Manage Lightning Tables.
   local                Manage a local Confluent Platform development environment.
   login                Log in to Confluent Cloud or Confluent Platform.
   logout               Log out of Confluent Cloud.
