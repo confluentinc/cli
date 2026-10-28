@@ -9,9 +9,9 @@ Update the name and description of Connect artifact "cfa-abc123".
   $ confluent connect artifact update cfa-abc123 --name my-new-name --description "My new description" --cloud aws --environment env-abc123
 
 Flags:
+      --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
       --name string          Specify the new Connect artifact name.
       --description string   Specify the new Connect artifact description.
-      --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
       --environment string   Environment ID.
       --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")

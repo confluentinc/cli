@@ -26,9 +26,9 @@ func (c *artifactCommand) newUpdateCommand() *cobra.Command {
 		),
 	}
 
+	pcmd.AddCloudFlag(cmd)
 	cmd.Flags().String("name", "", "Specify the new Connect artifact name.")
 	cmd.Flags().String("description", "", "Specify the new Connect artifact description.")
-	pcmd.AddCloudFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
