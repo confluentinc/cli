@@ -284,6 +284,10 @@ func handleConnectArtifactId(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(artifact)
 			require.NoError(t, err)
 		case http.MethodPatch:
+			// The real endpoint is scoped by these query parameters, so the update must forward both.
+			require.Equal(t, "env-123456", r.URL.Query().Get("environment"))
+			require.Equal(t, "AWS", strings.ToUpper(r.URL.Query().Get("spec.cloud")))
+
 			id := mux.Vars(r)["id"]
 			artifact, exists := artifactStore[id]
 			if !exists {
