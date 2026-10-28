@@ -2,6 +2,7 @@
 | ID             | cfa-zip123              |
 | Name           | my-connect-artifact-zip |
 | Description    | new-zip-artifact        |
+| Type           | CUSTOM_SMT              |
 | Cloud          | AWS                     |
 | Environment    | env-123456              |
 | Content Format | ZIP                     |
