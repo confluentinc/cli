@@ -283,6 +283,33 @@ func handleConnectArtifactId(t *testing.T) http.HandlerFunc {
 			}
 			err := json.NewEncoder(w).Encode(artifact)
 			require.NoError(t, err)
+		case http.MethodPatch:
+			// The real endpoint is scoped by these query parameters, so the update must forward both.
+			require.Equal(t, "env-123456", r.URL.Query().Get("environment"))
+			require.Equal(t, "AWS", strings.ToUpper(r.URL.Query().Get("spec.cloud")))
+
+			id := mux.Vars(r)["id"]
+			artifact, exists := artifactStore[id]
+			if !exists {
+				w.WriteHeader(http.StatusNotFound)
+				err := writeErrorJson(w, "The Connect artifact was not found.")
+				require.NoError(t, err)
+				return
+			}
+
+			update := &camv1.CamV1ConnectArtifactUpdate{}
+			require.NoError(t, json.NewDecoder(r.Body).Decode(update))
+			// Respond with the merged artifact without persisting it, so other tests are unaffected.
+			spec := *artifact.Spec
+			if update.Spec.HasDisplayName() {
+				spec.SetDisplayName(update.Spec.GetDisplayName())
+			}
+			if update.Spec.HasDescription() {
+				spec.SetDescription(update.Spec.GetDescription())
+			}
+			artifact.Spec = &spec
+			err := json.NewEncoder(w).Encode(artifact)
+			require.NoError(t, err)
 		case http.MethodDelete:
 			vars := mux.Vars(r)
 			id := vars["id"]
