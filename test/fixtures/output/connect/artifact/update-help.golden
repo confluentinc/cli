@@ -1,0 +1,22 @@
+Update the name or description of a Connect artifact. All other fields are immutable.
+
+Usage:
+  confluent connect artifact update <id> [flags]
+
+Examples:
+Update the name and description of Connect artifact "cfa-abc123".
+
+  $ confluent connect artifact update cfa-abc123 --name my-new-name --description "My new description" --cloud aws --environment env-abc123
+
+Flags:
+      --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --name string          Specify the new Connect artifact name.
+      --description string   Specify the new Connect artifact description.
+      --environment string   Environment ID.
+      --context string       CLI context name.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, and -vvvv for trace).
