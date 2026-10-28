@@ -17,6 +17,7 @@ import (
 
 var (
 	allowedFileExtensions = []string{"jar", "zip"}
+	allowedArtifactTypes  = []string{"custom_smt", "connect_external_dep", "custom_smt,connect_external_dep"}
 )
 
 func (c *artifactCommand) newCreateCommand() *cobra.Command {
@@ -37,6 +38,7 @@ func (c *artifactCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("description", "", "Specify the Connect artifact description.")
+	cmd.Flags().String("type", "custom_smt", fmt.Sprintf("Specify the Connect artifact type as %s.", utils.ArrayToCommaDelimitedString(allowedArtifactTypes, "or")))
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -67,6 +69,14 @@ func (c *artifactCommand) createArtifact(cmd *cobra.Command, args []string) erro
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return err
+	}
+
+	artifactType, err := cmd.Flags().GetString("type")
+	if err != nil {
+		return err
+	}
+	if !slices.Contains(allowedArtifactTypes, strings.ToLower(artifactType)) {
+		return fmt.Errorf("only types allowed for `--type` are %s", utils.ArrayToCommaDelimitedString(allowedArtifactTypes, "and"))
 	}
 
 	extension := strings.TrimPrefix(filepath.Ext(artifactFile), ".")
@@ -110,6 +120,7 @@ func (c *artifactCommand) createArtifact(cmd *cobra.Command, args []string) erro
 			Cloud:       cloud,
 			Environment: environment,
 			Description: camv1.PtrString(description),
+			Type:        camv1.PtrString(strings.ToUpper(artifactType)),
 			UploadSource: &camv1.CamV1ConnectArtifactSpecUploadSourceOneOf{
 				CamV1UploadSourcePresignedUrl: &camv1.CamV1UploadSourcePresignedUrl{
 					Location: "PRESIGNED_URL_LOCATION",

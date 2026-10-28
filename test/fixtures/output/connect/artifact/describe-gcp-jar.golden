@@ -2,6 +2,7 @@
 | ID             | cfa-gcp-jar123              |
 | Name           | my-connect-artifact-gcp-jar |
 | Description    | new-jar-artifact            |
+| Type           | CUSTOM_SMT                  |
 | Cloud          | GCP                         |
 | Environment    | env-123456                  |
 | Content Format | JAR                         |
