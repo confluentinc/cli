@@ -1,0 +1,9 @@
++----------------+---------------------+
+| ID             | cfa-jar123          |
+| Name           | renamed-artifact    |
+| Description    | updated description |
+| Cloud          | AWS                 |
+| Environment    | env-123456          |
+| Content Format | JAR                 |
+| Status         | PROCESSING          |
++----------------+---------------------+
