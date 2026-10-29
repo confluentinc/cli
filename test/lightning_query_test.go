@@ -58,6 +58,9 @@ func (s *CLITestSuite) TestLightningQuery() {
 		{args: `lightning query --sql "SELECT * FROM huge" --cluster lkc-123456`, fixture: "lightning/query/async-required.golden", exitCode: 1},
 		{args: `lightning query --sql "SELECT * FROM promoted" --cluster lkc-123456`, fixture: "lightning/query/async-required.golden", exitCode: 1},
 
+		// A gateway timeout suggests narrowing the query, without a request ID.
+		{args: `lightning query --sql "SELECT * FROM slow" --cluster lkc-123456`, fixture: "lightning/query/gateway-timeout.golden", exitCode: 1},
+
 		// Server errors show the server's message, plus the request ID for a 5xx.
 		{args: `lightning query --sql "SELECT * FROM missing" --cluster lkc-123456`, fixture: "lightning/query/sql-error.golden", exitCode: 1},
 		{args: `lightning query --sql "SELECT * FROM server_error" --cluster lkc-123456`, fixture: "lightning/query/server-error.golden", exitCode: 1},

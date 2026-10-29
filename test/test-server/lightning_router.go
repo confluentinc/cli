@@ -151,6 +151,10 @@ func handleLightningQuery(t *testing.T) http.HandlerFunc {
 				},
 			}))
 			return
+		case "SELECT * FROM slow":
+			// The API gateway's time limit.
+			writeLightningError(t, w, http.StatusServiceUnavailable, "service_timeout", "Process took too long to complete. Try your request again later.")
+			return
 		case "SELECT * FROM missing":
 			writeLightningError(t, w, http.StatusBadRequest, "FE_SQL_VALIDATION_ERROR", fmt.Sprintf("Table 'missing' not found in database '%s'.", request.GetDatabaseName()))
 			return

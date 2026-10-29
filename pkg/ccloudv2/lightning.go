@@ -34,6 +34,8 @@ const (
 
 	// lightningQueryTimeout bounds a query and its retries; the API gateway itself gives up after 60 seconds.
 	lightningQueryTimeout = 2 * time.Minute
+
+	lightningNarrowQuerySuggestion = `Narrow the query, for example with a "LIMIT" clause or a more selective "WHERE" clause.`
 )
 
 type LightningClient struct {
@@ -173,6 +175,11 @@ func catchLightningError(err error, httpResp *http.Response) error {
 		return errors.NewErrorWithSuggestions("the SQL statement is too large", "Shorten the statement and try again.")
 	}
 
+	// The API gateway's time limit, which the same query would likely hit again.
+	if httpResp.StatusCode == http.StatusGatewayTimeout || (httpResp.StatusCode == http.StatusServiceUnavailable && isLightningGatewayTimeout(httpResp)) {
+		return errors.NewErrorWithSuggestions("the query took too long to complete", lightningNarrowQuerySuggestion)
+	}
+
 	err = errors.CatchCCloudV2Error(err, httpResp)
 	if _, ok := err.(rtcesqlv1.GenericOpenAPIError); ok {
 		// The body couldn't be read, for example a proxy's HTML page, so report the status.
@@ -211,6 +218,6 @@ func isLightningAsyncRequired(err error, httpResp *http.Response) bool {
 func newLightningAsyncRequiredError() error {
 	return errors.NewErrorWithSuggestions(
 		"the query result is too large or too slow to return synchronously",
-		`This command only runs queries that return their results synchronously. Narrow the query, for example with a "LIMIT" clause or a more selective "WHERE" clause.`,
+		"This command only runs queries that return their results synchronously. "+lightningNarrowQuerySuggestion,
 	)
 }

@@ -200,12 +200,24 @@ func TestLightningExecuteQueryServerErrorWithoutRequestId(t *testing.T) {
 }
 
 func TestLightningExecuteQueryGatewayTimeout(t *testing.T) {
-	// A gateway timeout isn't retried.
-	server := newLightningTestServer(t, http.StatusServiceUnavailable, "text/plain; charset=utf-8", `{"errors": [{"status": "503", "code": "service_timeout", "detail": "Process took too long to complete. Try your request again later."}]}`)
+	// A gateway timeout isn't retried, and suggests narrowing the query instead of a request ID.
+	tests := []struct {
+		status int
+		body   string
+	}{
+		{http.StatusServiceUnavailable, `{"errors": [{"status": "503", "code": "service_timeout", "detail": "Process took too long to complete. Try your request again later."}]}`},
+		{http.StatusGatewayTimeout, "<html><body>504 Gateway Time-out</body></html>"},
+	}
+	for _, test := range tests {
+		server := newLightningTestServer(t, test.status, "text/plain; charset=utf-8", test.body)
 
-	_, err := newTestLightningClient(server).ExecuteQuery("env-123456", "lkc-123456", "SELECT * FROM t", 0)
-	require.EqualError(t, err, "Process took too long to complete. Try your request again later.")
-	require.Equal(t, int32(1), server.requests.Load())
+		_, err := newTestLightningClient(server).ExecuteQuery("env-123456", "lkc-123456", "SELECT * FROM t", 0)
+		require.EqualError(t, err, "the query took too long to complete", "status %d", test.status)
+		errorWithSuggestions, ok := err.(errors.ErrorWithSuggestions)
+		require.True(t, ok)
+		require.Equal(t, lightningNarrowQuerySuggestion, errorWithSuggestions.GetSuggestionsMsg())
+		require.Equal(t, int32(1), server.requests.Load())
+	}
 }
 
 func TestLightningExecuteQueryRestApiNotEnabled(t *testing.T) {
