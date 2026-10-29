@@ -1,4 +1,4 @@
-Run a SQL query on Lightning Tables and print the results. This command is in Early Access and may change in a future release.
+Run a SQL query on Lightning Tables and print the results.
 
 Provide the SQL statement with `--sql`, or use `--file` to read the statement from a file. The query runs against the Kafka cluster set with `--cluster`, or the active Kafka cluster if the flag is not set.
 

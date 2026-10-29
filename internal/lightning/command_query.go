@@ -30,7 +30,7 @@ func newQueryCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "query",
 		Short: "Run a SQL query on Lightning Tables and print its results.",
-		Long: "Run a SQL query on Lightning Tables and print the results. This command is in Early Access and may change in a future release.\n\n" +
+		Long: "Run a SQL query on Lightning Tables and print the results.\n\n" +
 			"Provide the SQL statement with `--sql`, or use `--file` to read the statement from a file. The query runs against the Kafka cluster set with `--cluster`, or the active Kafka cluster if the flag is not set.\n\n" +
 			"The query runs synchronously. If the result is too large or takes too long to return, the command fails instead of starting an asynchronous query; narrow the query, for example with a \"LIMIT\" clause or a more selective \"WHERE\" clause.\n\n" +
 			"With `-o human` (the default), only the first 100 rows are printed as a preview. Raise `--max-rows` to fetch more, or use `-o json` or `-o yaml` for the complete result set.\n\n" +
