@@ -225,3 +225,52 @@ func TestDashIfEmpty(t *testing.T) {
 	require.Equal(t, "-", dashIfEmpty(""))
 	require.Equal(t, "lkc", dashIfEmpty("lkc"))
 }
+
+func TestRenderSource(t *testing.T) {
+	source := &ccloudv2.LogSource{
+		Name:                    "cluster-health",
+		DisplayName:             "Cluster health events",
+		ResourceType:            "kafka",
+		IdPrefix:                "lkc",
+		CrnElements:             []string{"organization", "environment", "cloud-cluster", "kafka"},
+		AllowedScopes:           []string{"ORGANIZATION", "ENVIRONMENT", "RESOURCE"},
+		FullTextSearchSupported: true,
+		FullTextSearchFields:    []string{"message"},
+		MaxLookbackDays:         3,
+		SearchFields: []ccloudv2.LogSearchField{
+			{Name: "id", Type: "string"},
+			{Name: "level", Type: "enum", AllowedValues: []string{"INFO", "WARN", "ERROR"}},
+		},
+		ReturnedFields: []ccloudv2.LogReturnedField{
+			{Name: "id", Type: "string", DefaultColumn: false, Description: "Unique identifier."},
+			{Name: "timestamp", Type: "instant", DefaultColumn: true, Description: "Event time."},
+			{Name: "level", Type: "enum", DefaultColumn: true},
+		},
+	}
+
+	expected := `Log source:        cluster-health
+Display name:      Cluster health events
+Resource:          kafka (lkc- IDs; crn: organization/environment/cloud-cluster/kafka)
+Scopes:            organization, environment, resource
+Max lookback:      3d
+Full-text search:  yes (--search-text over: message)
+
+Search fields (--search field=value):
+  id     string
+  level  enum    INFO, WARN, ERROR
+
+Returned fields (each log record):
+  timestamp  instant  *  Event time.
+  level      enum     *
+  id         string      Unique identifier.
+
+  * = default column in human output
+`
+	require.Equal(t, expected, renderSource(source))
+
+	minimal := renderSource(&ccloudv2.LogSource{Name: "x", DisplayName: "X", ResourceType: "thing", AllowedScopes: []string{"RESOURCE"}})
+	require.Contains(t, minimal, "Resource:          thing\n")
+	require.Contains(t, minimal, "Full-text search:  no\n")
+	require.NotContains(t, minimal, "Search fields")
+	require.NotContains(t, minimal, "Returned fields")
+}

@@ -16,6 +16,7 @@ func (s *CLITestSuite) TestLogsHelp() {
 		{args: "logs fetch --help", fixture: "logs/fetch-help.golden"},
 		{args: "logs source --help", fixture: "logs/source/help.golden"},
 		{args: "logs source list --help", fixture: "logs/source/list-help.golden"},
+		{args: "logs source describe --help", fixture: "logs/source/describe-help.golden"},
 	}
 
 	for _, test := range tests {
@@ -81,6 +82,8 @@ func (s *CLITestSuite) TestLogsFetchOutputFile() {
 func (s *CLITestSuite) TestLogsAutocomplete() {
 	tests := []CLITest{
 		{args: `__complete logs fetch --source ""`, fixture: "logs/fetch-source-autocomplete.golden"},
+		{args: `__complete logs source describe ""`, fixture: "logs/source/describe-autocomplete.golden"},
+		{args: `__complete logs source describe cluster-health ""`, fixture: "logs/source/describe-autocomplete-second-arg.golden"},
 	}
 
 	for _, test := range tests {
@@ -95,6 +98,22 @@ func (s *CLITestSuite) TestLogsSourceList() {
 		{args: "logs source list -o json", fixture: "logs/source/list-json.golden"},
 		{args: "logs source list -o yaml", fixture: "logs/source/list-yaml.golden"},
 		{args: "logs source list extra", fixture: "logs/source/list-extra-arg.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestLogsSourceDescribe() {
+	tests := []CLITest{
+		{args: "logs source describe cluster-health", fixture: "logs/source/describe.golden"},
+		{args: "logs source describe connector", fixture: "logs/source/describe-connector.golden"},
+		{args: "logs source describe cluster-health -o json", fixture: "logs/source/describe-json.golden"},
+		{args: "logs source describe cluster-health -o yaml", fixture: "logs/source/describe-yaml.golden"},
+		{args: "logs source describe no-such-source", fixture: "logs/source/describe-unknown.golden", exitCode: 1},
+		{args: "logs source describe", fixture: "logs/source/describe-missing-arg.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
