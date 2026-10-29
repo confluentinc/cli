@@ -109,7 +109,7 @@ func (c *Client) SearchConnectorLogs(crn, connectorId, startTime, endTime string
 	return &logsResponse, nil
 }
 
-func getLoggingRequest(loggingURL string, request LoggingSearchRequest, dataplaneToken string, pageSize int, pageToken string) (*http.Request, error) {
+func getLoggingRequest(loggingURL string, request any, dataplaneToken string, pageSize int, pageToken string) (*http.Request, error) {
 	requestBody, err := json.Marshal(request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request body: %w", err)
@@ -138,6 +138,10 @@ func getLoggingRequest(loggingURL string, request LoggingSearchRequest, dataplan
 }
 
 func getLoggingUrl(baseURL string) (string, error) {
+	return getLoggingUrlForPath(baseURL, "/logs/v1/search")
+}
+
+func getLoggingUrlForPath(baseURL, path string) (string, error) {
 	u, err := url.Parse(baseURL)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse platform server URL: %w", err)
@@ -156,7 +160,7 @@ func getLoggingUrl(baseURL string) (string, error) {
 	} else {
 		u.Host = "api.logging." + strings.TrimPrefix(u.Host, "api.")
 	}
-	u.Path = "/logs/v1/search"
+	u.Path = path
 	loggingURL := u.String()
 	return loggingURL, nil
 }
@@ -172,4 +176,151 @@ func getResponseErrorMessage(statusCode int, responseBody []byte, crn string) er
 		return fmt.Errorf("%s\n", errorMsg)
 	}
 	return nil
+}
+
+// LogsSearchRequest is the body of POST /logs/v1/search for the unified `confluent logs` commands. Unlike
+// LoggingSearchRequest, it carries the log source and an open-ended search map.
+type LogsSearchRequest struct {
+	CRN       string         `json:"crn"`
+	Source    string         `json:"source,omitempty"`
+	Search    map[string]any `json:"search,omitempty"`
+	Sort      string         `json:"sort,omitempty"`
+	StartTime string         `json:"start_time"`
+	EndTime   string         `json:"end_time"`
+}
+
+// LogsSearchResponse holds log records as generic maps, because each log source declares its own returned fields.
+type LogsSearchResponse struct {
+	Data       []map[string]any `json:"data"`
+	Metadata   *LoggingMetadata `json:"metadata,omitempty"`
+	ApiVersion string           `json:"api_version"`
+	Kind       string           `json:"kind"`
+}
+
+// LogSource describes one log source from GET /logs/v1/sources[/{name}].
+type LogSource struct {
+	ApiVersion              string             `json:"api_version"`
+	Kind                    string             `json:"kind"`
+	Name                    string             `json:"name"`
+	DisplayName             string             `json:"display_name"`
+	ResourceType            string             `json:"resource_type"`
+	IdPrefix                string             `json:"id_prefix,omitempty"`
+	CrnElements             []string           `json:"crn_elements"`
+	AllowedScopes           []string           `json:"allowed_scopes"`
+	SearchFields            []LogSearchField   `json:"search_fields"`
+	FullTextSearchSupported bool               `json:"full_text_search_supported"`
+	FullTextSearchFields    []string           `json:"full_text_search_fields,omitempty"`
+	ReturnedFields          []LogReturnedField `json:"returned_fields"`
+	MaxLookbackDays         int                `json:"max_lookback_days"`
+}
+
+type LogSearchField struct {
+	Name          string   `json:"name"`
+	Type          string   `json:"type"`
+	AllowedValues []string `json:"allowed_values,omitempty"`
+}
+
+type LogReturnedField struct {
+	Name          string `json:"name"`
+	Type          string `json:"type"`
+	DefaultColumn bool   `json:"default_column"`
+	Description   string `json:"description,omitempty"`
+}
+
+type loggingErrorResponse struct {
+	Errors []struct {
+		Status string `json:"status"`
+		Detail string `json:"detail"`
+	} `json:"errors"`
+}
+
+// SearchLogs queries POST /logs/v1/search for any log source.
+func (c *Client) SearchLogs(request LogsSearchRequest, pageSize int, pageToken string) (*LogsSearchResponse, error) {
+	loggingURL, err := getLoggingUrl(c.cfg.Context().GetPlatformServer())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get logging API URL: %w", err)
+	}
+
+	dataplaneToken, err := auth.GetDataplaneToken(c.cfg.Context())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get data plane token: %w", err)
+	}
+
+	req, err := getLoggingRequest(loggingURL, request, dataplaneToken, pageSize, pageToken)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create logging API request: %w", err)
+	}
+
+	body, err := c.doLoggingRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	var response LogsSearchResponse
+	if err := json.Unmarshal(body, &response); err != nil {
+		return nil, fmt.Errorf("failed to decode logging API response: %w", err)
+	}
+	return &response, nil
+}
+
+// DescribeLogSource queries GET /logs/v1/sources/{name}.
+func (c *Client) DescribeLogSource(name string) (*LogSource, error) {
+	body, err := c.getLoggingDiscovery("/logs/v1/sources/" + url.PathEscape(name))
+	if err != nil {
+		return nil, err
+	}
+
+	var source LogSource
+	if err := json.Unmarshal(body, &source); err != nil {
+		return nil, fmt.Errorf("failed to decode logging API response: %w", err)
+	}
+	return &source, nil
+}
+
+func (c *Client) getLoggingDiscovery(path string) ([]byte, error) {
+	loggingURL, err := getLoggingUrlForPath(c.cfg.Context().GetPlatformServer(), path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get logging API URL: %w", err)
+	}
+
+	dataplaneToken, err := auth.GetDataplaneToken(c.cfg.Context())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get data plane token: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, loggingURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+dataplaneToken)
+
+	return c.doLoggingRequest(req)
+}
+
+func (c *Client) doLoggingRequest(req *http.Request) ([]byte, error) {
+	httpClient := NewRetryableHttpClient(c.cfg, false)
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make HTTP request to logging API: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("logging API request failed with status %d and failed to read response body: %w", resp.StatusCode, err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, loggingStatusError(resp.StatusCode, body)
+	}
+	return body, nil
+}
+
+// loggingStatusError surfaces the API's own error detail, e.g. "Unknown source: connector".
+func loggingStatusError(statusCode int, body []byte) error {
+	var errResp loggingErrorResponse
+	if err := json.Unmarshal(body, &errResp); err == nil && len(errResp.Errors) > 0 && errResp.Errors[0].Detail != "" {
+		return fmt.Errorf("%s", errResp.Errors[0].Detail)
+	}
+	return fmt.Errorf("logging API request failed with status %d", statusCode)
 }
