@@ -1,0 +1,37 @@
+Run a SQL query on Lightning Tables and print the results.
+
+Provide the SQL statement with `--sql`, or use `--file` to read the statement from a file. The query runs against the Kafka cluster set with `--cluster`, or the active Kafka cluster if the flag is not set.
+
+The query runs synchronously. If the result is too large or takes too long to return, the command fails instead of starting an asynchronous query; narrow the query, for example with a "LIMIT" clause or a more selective "WHERE" clause.
+
+With `-o human` (the default), only the first 100 rows are printed as a preview. Raise `--max-rows` to fetch more, or use `-o json` or `-o yaml` for the complete result set.
+
+The `-o json` and `-o yaml` flags return a bare array of row objects.
+
+When `--max-rows` cuts a result short, a warning is printed to standard error and the command still exits 0, so a script reading the rows on standard output is unaffected.
+
+Usage:
+  confluent lightning query [flags]
+
+Examples:
+Run a query against the active Kafka cluster and print the rows as a table.
+
+  $ confluent lightning query --sql "SELECT * FROM orders WHERE status = 'completed'"
+
+Run a query against Kafka cluster "lkc-123456" and return JSON for a script.
+
+  $ confluent lightning query --sql "SELECT order_id, status FROM orders LIMIT 10" --cluster lkc-123456 --output json
+
+Flags:
+      --sql string           SQL statement. Alternatively, use "--file" or "-f".
+  -f, --file string          Path to a file that contains the SQL statement. Alternatively, use "--sql".
+      --cluster string       Kafka cluster ID.
+      --max-rows int         Maximum number of rows to fetch, or 0 for no limit. Defaults to 100 for "-o human"; raise it to fetch more. "-o json"/"-o yaml" fetch every row by default.
+      --environment string   Environment ID.
+      --context string       CLI context name.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, and -vvvv for trace).
