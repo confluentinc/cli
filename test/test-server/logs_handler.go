@@ -79,6 +79,26 @@ var logSources = map[string]string{
 }`,
 }
 
+// Handler for: "/logs/v1/sources"
+func handleLogsSources(_ *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		names := make([]string, 0, len(logSources))
+		for name := range logSources {
+			names = append(names, name)
+		}
+		slices.Sort(names)
+
+		data := make([]string, len(names))
+		for i, name := range names {
+			data[i] = logSources[name]
+		}
+
+		_, _ = fmt.Fprintf(w, `{"api_version":"logging/v1","kind":"SourceList","metadata":{"total_size":%d},"data":[%s]}`, len(data), strings.Join(data, ","))
+	}
+}
+
 // Handler for: "/logs/v1/sources/{name}"
 func handleLogsSource(_ *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

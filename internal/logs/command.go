@@ -13,6 +13,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	cmd.AddCommand(newFetchCommand(prerunner))
+	cmd.AddCommand(newSourceCommand(prerunner))
 
 	return cmd
 }

@@ -214,6 +214,18 @@ type LogSource struct {
 	MaxLookbackDays         int                `json:"max_lookback_days"`
 }
 
+// LogSourceList is the response of GET /logs/v1/sources.
+type LogSourceList struct {
+	ApiVersion string            `json:"api_version"`
+	Kind       string            `json:"kind"`
+	Metadata   LogSourceListMeta `json:"metadata"`
+	Data       []LogSource       `json:"data"`
+}
+
+type LogSourceListMeta struct {
+	TotalSize int `json:"total_size"`
+}
+
 type LogSearchField struct {
 	Name          string   `json:"name"`
 	Type          string   `json:"type"`
@@ -261,6 +273,20 @@ func (c *Client) SearchLogs(request LogsSearchRequest, pageSize int, pageToken s
 		return nil, fmt.Errorf("failed to decode logging API response: %w", err)
 	}
 	return &response, nil
+}
+
+// ListLogSources queries GET /logs/v1/sources.
+func (c *Client) ListLogSources() (*LogSourceList, error) {
+	body, err := c.getLoggingDiscovery("/logs/v1/sources")
+	if err != nil {
+		return nil, err
+	}
+
+	var sources LogSourceList
+	if err := json.Unmarshal(body, &sources); err != nil {
+		return nil, fmt.Errorf("failed to decode logging API response: %w", err)
+	}
+	return &sources, nil
 }
 
 // DescribeLogSource queries GET /logs/v1/sources/{name}.

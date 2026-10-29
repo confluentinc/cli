@@ -214,3 +214,14 @@ func TestWriteLogsToFile(t *testing.T) {
 
 	require.ErrorContains(t, writeLogsToFile(filepath.Join(t.TempDir(), "missing", "logs.jsonl"), first), "failed to open file")
 }
+
+func TestFormatScopes(t *testing.T) {
+	require.Equal(t, "organization, environment, resource", formatScopes([]string{"ORGANIZATION", "ENVIRONMENT", "RESOURCE"}))
+	require.Equal(t, "cloud-cluster", formatScopes([]string{"CLOUD_CLUSTER"}))
+	require.Equal(t, "", formatScopes(nil))
+}
+
+func TestDashIfEmpty(t *testing.T) {
+	require.Equal(t, "-", dashIfEmpty(""))
+	require.Equal(t, "lkc", dashIfEmpty("lkc"))
+}

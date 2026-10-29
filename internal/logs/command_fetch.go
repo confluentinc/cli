@@ -69,6 +69,10 @@ func newFetchCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
+	pcmd.RegisterFlagCompletionFunc(cmd, "source", func(cmd *cobra.Command, args []string) []string {
+		return completeSources(c.AuthenticatedCLICommand, cmd, args)
+	})
+
 	cobra.CheckErr(cmd.MarkFlagRequired("source"))
 	cmd.MarkFlagsMutuallyExclusive("since", "from")
 	cmd.MarkFlagsMutuallyExclusive("since", "to")

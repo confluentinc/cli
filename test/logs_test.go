@@ -14,6 +14,8 @@ func (s *CLITestSuite) TestLogsHelp() {
 	tests := []CLITest{
 		{args: "logs --help", fixture: "logs/help.golden"},
 		{args: "logs fetch --help", fixture: "logs/fetch-help.golden"},
+		{args: "logs source --help", fixture: "logs/source/help.golden"},
+		{args: "logs source list --help", fixture: "logs/source/list-help.golden"},
 	}
 
 	for _, test := range tests {
@@ -74,4 +76,29 @@ func (s *CLITestSuite) TestLogsFetchOutputFile() {
 			require.JSONEq(t, `{"cluster_id":"lkc-123","event_type":"SERVICE_ISSUE_DETECTED","id":"evt-101","level":"ERROR","message":"Broker lkc-123 unreachable","timestamp":"2026-10-14T14:41:08Z"}`, strings.TrimSpace(string(data)))
 		},
 	})
+}
+
+func (s *CLITestSuite) TestLogsAutocomplete() {
+	tests := []CLITest{
+		{args: `__complete logs fetch --source ""`, fixture: "logs/fetch-source-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestLogsSourceList() {
+	tests := []CLITest{
+		{args: "logs source list", fixture: "logs/source/list.golden"},
+		{args: "logs source list -o json", fixture: "logs/source/list-json.golden"},
+		{args: "logs source list -o yaml", fixture: "logs/source/list-yaml.golden"},
+		{args: "logs source list extra", fixture: "logs/source/list-extra-arg.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
 }
