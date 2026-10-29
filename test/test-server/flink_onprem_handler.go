@@ -1049,6 +1049,36 @@ func handleCmfSavepoint(t *testing.T) http.HandlerFunc {
 	}
 }
 
+func handleCmfSavepointDetach(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+
+		vars := mux.Vars(r)
+		environment := vars["envName"]
+		savepointName := vars["savepointName"]
+
+		if environment == "non-exist" {
+			http.Error(w, "Environment not found", http.StatusNotFound)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodPost:
+			if savepointName == "invalid-savepoint" {
+				http.Error(w, "The savepoint is invalid", http.StatusNotFound)
+				return
+			}
+
+			savepoint := createSavepoint(savepointName)
+			err := json.NewEncoder(w).Encode(savepoint)
+			require.NoError(t, err)
+			return
+		default:
+			require.Fail(t, fmt.Sprintf("Unexpected method %s", r.Method))
+		}
+	}
+}
+
 func handleCmfDetachedSavepoints(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleLoginType(t, r)
