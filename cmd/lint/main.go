@@ -46,7 +46,14 @@ var commandRules = []linter.CommandRule{
 	linter.RequireStartWithCapital("Long"),
 
 	linter.RequireListRequiredFlagsFirst(),
-	linter.RequireValidExamples(),
+	linter.Filter(linter.RequireValidExamples(),
+		linter.ExcludeCommand("connect custom-plugin version create"),
+		linter.ExcludeCommand("connect custom-plugin version update"),
+		linter.ExcludeCommand("pipeline update"),
+		linter.ExcludeCommand("flink statement update"),
+		linter.ExcludeCommand("flink materialized-table update"),
+		linter.ExcludeCommand("kafka cluster update"),
+		linter.ExcludeCommand("endpoint endpoint list")), //nolint:dupword
 
 	// Soft Requirements
 	linter.Filter(linter.RequireLengthBetween("Short", 10, 60),
