@@ -1,1 +1,1 @@
-Error: result row 1 has 2 values, expected 1
+Error: result row 1 has a different number of values (2) than there are columns (1)

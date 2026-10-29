@@ -272,7 +272,7 @@ func TestConvertResultErrors(t *testing.T) {
 		{
 			name:    "row shorter than the schema",
 			raw:     `{"result_format": "JSON", "schema": {"columns": [{"name": "a", "type": {"type": "INTEGER", "nullable": true}}, {"name": "b", "type": {"type": "INTEGER", "nullable": true}}]}, "data": [["1"]]}`,
-			wantErr: "result row 1 has 1 values, expected 2",
+			wantErr: "result row 1 has a different number of values (1) than there are columns (2)",
 		},
 		{
 			name:    "unknown column type",
@@ -347,12 +347,12 @@ func TestConvertResultErrors(t *testing.T) {
 		{
 			name:    "row with the wrong number of fields",
 			raw:     oneValue(`{"type": "ROW", "nullable": true, "fields": [{"name": "a", "field_type": {"type": "INTEGER", "nullable": true}}]}`, `["1", "2"]`),
-			wantErr: "ROW value has 2 fields but its type has 1",
+			wantErr: "ROW value has a different number of fields (2) than its type (1)",
 		},
 		{
 			name:    "row with fewer values than fields",
 			raw:     oneValue(`{"type": "ROW", "nullable": true, "fields": [{"name": "a", "field_type": {"type": "INTEGER", "nullable": true}}, {"name": "b", "field_type": {"type": "INTEGER", "nullable": true}}]}`, `["1"]`),
-			wantErr: "ROW value has 1 fields but its type has 2",
+			wantErr: "ROW value has a different number of fields (1) than its type (2)",
 		},
 		{
 			name:    "row sent as a string",

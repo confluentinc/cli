@@ -50,7 +50,7 @@ func convertResult(result rtcesqlv1.QueryV1QueryResult) ([]string, [][]types.Sta
 	rows := make([][]types.StatementResultField, len(resultRows))
 	for i, resultRow := range resultRows {
 		if len(resultRow.Items) != len(columns) {
-			return nil, nil, fmt.Errorf("result row %d has %d values, expected %d", i+1, len(resultRow.Items), len(columns))
+			return nil, nil, fmt.Errorf("result row %d has a different number of values (%d) than there are columns (%d)", i+1, len(resultRow.Items), len(columns))
 		}
 
 		row := make([]types.StatementResultField, len(columns))
@@ -160,7 +160,7 @@ func convertRow(value rtcesqlv1.QueryV1ResultValue, fields []rtcesqlv1.QueryV1Ro
 		return nil, err
 	}
 	if len(elements) != len(fields) {
-		return nil, fmt.Errorf("%s value has %d fields but its type has %d", types.Row, len(elements), len(fields))
+		return nil, fmt.Errorf("%s value has a different number of fields (%d) than its type (%d)", types.Row, len(elements), len(fields))
 	}
 
 	values := make([]types.StatementResultField, len(elements))

@@ -170,7 +170,7 @@ func catchLightningError(err error, httpResp *http.Response) error {
 		return newLightningAsyncRequiredError()
 	}
 
-	// The SQL is the only thing in the request body.
+	// The SQL is the only part of the request body that can be large.
 	if httpResp.StatusCode == http.StatusRequestEntityTooLarge {
 		return errors.NewErrorWithSuggestions("the SQL statement is too large", "Shorten the statement and try again.")
 	}
