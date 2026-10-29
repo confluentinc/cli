@@ -85,8 +85,9 @@ func (s *CLITestSuite) TestLogin_CcloudErrors() {
 
 	s.T().Run("malformed token", func(t *testing.T) {
 		env := []string{fmt.Sprintf("%s=malformed@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		runCommand(t, testBin, env, "logout", 0, "")
-		output := runCommand(t, testBin, env, args, 0, "")
+		output := runCommand(t, testBin, env, "logout", 0, "")
+		require.Contains(t, output, "You are now logged out.")
+		output = runCommand(t, testBin, env, args, 0, "")
 		require.Contains(t, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "malformed@user.com", "abc-123", "Confluent"))
 		require.Contains(t, output, loggedInEnvOutput)
 
@@ -97,8 +98,9 @@ func (s *CLITestSuite) TestLogin_CcloudErrors() {
 
 	s.T().Run("invalid jwt", func(t *testing.T) {
 		env := []string{fmt.Sprintf("%s=invalid@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		runCommand(t, testBin, env, "logout", 0, "")
-		output := runCommand(t, testBin, env, args, 0, "")
+		output := runCommand(t, testBin, env, "logout", 0, "")
+		require.Contains(t, output, "You are now logged out.")
+		output = runCommand(t, testBin, env, args, 0, "")
 		require.Contains(t, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "invalid@user.com", "abc-123", "Confluent"))
 		require.Contains(t, output, loggedInEnvOutput)
 
