@@ -1,0 +1,4 @@
+Error: the SQL statement is empty
+
+Suggestions:
+    Pass the statement with `--sql`, or point `--file` at a file that contains one.
