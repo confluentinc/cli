@@ -30,6 +30,7 @@ const (
 	ConnectArtifact                  = "Connect Artifact"
 	CustomConnectorPlugin            = "custom connector plugin"
 	CustomConnectorPluginVersion     = "custom connector plugin version"
+	ConsumerGroup                    = "consumer group"
 	ConsumerShare                    = "consumer share"
 	Context                          = "context"
 	Dek                              = "DEK"
