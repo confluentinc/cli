@@ -1,0 +1,4 @@
+Error: invalid `--search` value "level"
+
+Suggestions:
+    Use the form "field=value", for example `--search level=ERROR`.

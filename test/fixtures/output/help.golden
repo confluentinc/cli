@@ -29,6 +29,7 @@ Available Commands:
   local                Manage a local Confluent Platform development environment.
   login                Log in to Confluent Cloud or Confluent Platform.
   logout               Log out of Confluent Cloud.
+  logs                 Query logs from Confluent Cloud log sources.
   network              Manage Confluent Cloud networks.
   organization         Manage Confluent Cloud organizations.
   plugin               Manage Confluent plugins.
