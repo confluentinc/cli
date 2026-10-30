@@ -10,6 +10,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	loggingv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/logging/v1"
+
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
@@ -190,7 +192,7 @@ func (c *fetchCommand) fetch(cmd *cobra.Command, args []string) error {
 }
 
 // buildCRN resolves the CRN element values from the command's inputs and the active context.
-func (c *fetchCommand) buildCRN(source *ccloudv2.LogSource, scope, resourceId string) (string, error) {
+func (c *fetchCommand) buildCRN(source *loggingv1.LoggingV1Source, scope, resourceId string) (string, error) {
 	values := crnValues{Organization: c.Context.GetCurrentOrganization()}
 
 	if scope != scopeOrganization {
@@ -261,13 +263,13 @@ func writeLogsToFile(path string, records []map[string]any) error {
 
 // printHumanLogs prints the default columns the log source declares. The columns are only known at runtime, so the
 // row type is built with reflection and rendered by the standard list printer.
-func printHumanLogs(cmd *cobra.Command, source *ccloudv2.LogSource, resourceId string, records []map[string]any) error {
+func printHumanLogs(cmd *cobra.Command, source *loggingv1.LoggingV1Source, resourceId string, records []map[string]any) error {
 	if len(records) == 0 {
 		output.Println(false, "No logs found for the current query.")
 		return nil
 	}
 
-	var columns []ccloudv2.LogReturnedField
+	var columns []loggingv1.LoggingV1ReturnedFieldDescriptor
 	for _, field := range source.ReturnedFields {
 		if field.DefaultColumn {
 			columns = append(columns, field)

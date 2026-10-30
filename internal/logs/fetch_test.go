@@ -8,7 +8,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	loggingv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/logging/v1"
+
 	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
@@ -20,21 +21,21 @@ func suggestionsOf(err error) string {
 	return ""
 }
 
-var clusterHealth = &ccloudv2.LogSource{
+var clusterHealth = &loggingv1.LoggingV1Source{
 	Name:                    "cluster-health",
 	ResourceType:            "kafka",
-	IdPrefix:                "lkc",
+	IdPrefix:                loggingv1.PtrString("lkc"),
 	CrnElements:             []string{"organization", "environment", "cloud-cluster", "kafka"},
 	AllowedScopes:           []string{"ORGANIZATION", "ENVIRONMENT", "RESOURCE"},
 	FullTextSearchSupported: true,
 	MaxLookbackDays:         3,
-	SearchFields: []ccloudv2.LogSearchField{
+	SearchFields: []loggingv1.LoggingV1SearchFieldDescriptor{
 		{Name: "id", Type: "string"},
-		{Name: "level", Type: "enum", AllowedValues: []string{"INFO", "WARN", "ERROR"}},
+		{Name: "level", Type: "enum", AllowedValues: &[]string{"INFO", "WARN", "ERROR"}},
 	},
 }
 
-var connectorLogs = &ccloudv2.LogSource{
+var connectorLogs = &loggingv1.LoggingV1Source{
 	Name:          "connector",
 	ResourceType:  "connector",
 	CrnElements:   []string{"organization", "environment", "cloud-cluster", "connector"},
@@ -127,7 +128,7 @@ func TestScope(t *testing.T) {
 	err := validateScope(connectorLogs, "ORGANIZATION", "")
 	require.EqualError(t, err, `log source "connector" requires a resource ID`)
 	require.Contains(t, suggestionsOf(err), "confluent logs fetch <resource-id> --source connector")
-	err = validateScope(&ccloudv2.LogSource{Name: "x", AllowedScopes: []string{"ENVIRONMENT"}}, "ORGANIZATION", "")
+	err = validateScope(&loggingv1.LoggingV1Source{Name: "x", AllowedScopes: []string{"ENVIRONMENT"}}, "ORGANIZATION", "")
 	require.EqualError(t, err, `log source "x" does not support organization scope`)
 	require.Equal(t, "Supported scopes: environment.", suggestionsOf(err))
 }
@@ -170,7 +171,7 @@ func TestBuildCRN(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "crn://confluent.cloud/organization=org-1/environment=env-1/cloud-cluster=lkc-9/connector=my-connector", crn)
 
-	_, err = buildCRN(&ccloudv2.LogSource{Name: "x", CrnElements: []string{"organization", "flink-region", "thing"}}, "RESOURCE", values)
+	_, err = buildCRN(&loggingv1.LoggingV1Source{Name: "x", CrnElements: []string{"organization", "flink-region", "thing"}}, "RESOURCE", values)
 	require.ErrorContains(t, err, `uses a CRN element "flink-region" that this version of the CLI does not support`)
 }
 
