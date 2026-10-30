@@ -7,7 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	loggingv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/logging/v1"
+
 	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
@@ -125,8 +126,8 @@ func buildSearch(pairs []string, searchText string) (map[string]any, error) {
 
 // validateSearch checks the search fields and values against the log source's declared schema, so mistakes fail
 // fast. The server validates every request again.
-func validateSearch(source *ccloudv2.LogSource, search map[string]any) error {
-	fields := map[string]ccloudv2.LogSearchField{}
+func validateSearch(source *loggingv1.LoggingV1Source, search map[string]any) error {
+	fields := map[string]loggingv1.LoggingV1SearchFieldDescriptor{}
 	names := make([]string, 0, len(source.SearchFields))
 	for _, field := range source.SearchFields {
 		fields[field.Name] = field
@@ -152,12 +153,12 @@ func validateSearch(source *ccloudv2.LogSource, search map[string]any) error {
 			return errors.NewErrorWithSuggestions(fmt.Sprintf(unknownSearchFieldErrorMsg, key, source.Name), fmt.Sprintf(unknownSearchFieldSuggestions, strings.Join(names, ", "), source.Name))
 		}
 
-		if field.Type != "enum" || len(field.AllowedValues) == 0 {
+		if field.Type != "enum" || len(field.GetAllowedValues()) == 0 {
 			continue
 		}
 		for _, value := range searchValues(search[key]) {
-			if !slices.Contains(field.AllowedValues, value) {
-				return errors.NewErrorWithSuggestions(fmt.Sprintf(invalidSearchValueErrorMsg, value, key), fmt.Sprintf(invalidSearchValueSuggestions, strings.Join(field.AllowedValues, ", ")))
+			if !slices.Contains(field.GetAllowedValues(), value) {
+				return errors.NewErrorWithSuggestions(fmt.Sprintf(invalidSearchValueErrorMsg, value, key), fmt.Sprintf(invalidSearchValueSuggestions, strings.Join(field.GetAllowedValues(), ", ")))
 			}
 		}
 	}
@@ -189,7 +190,7 @@ func scopeFor(resourceId string, environmentSet bool) string {
 	}
 }
 
-func validateScope(source *ccloudv2.LogSource, scope, resourceId string) error {
+func validateScope(source *loggingv1.LoggingV1Source, scope, resourceId string) error {
 	if slices.Contains(source.AllowedScopes, scope) {
 		return nil
 	}
@@ -200,17 +201,17 @@ func validateScope(source *ccloudv2.LogSource, scope, resourceId string) error {
 	return errors.NewErrorWithSuggestions(fmt.Sprintf(unsupportedScopeErrorMsg, source.Name, strings.ToLower(scope)), fmt.Sprintf(unsupportedScopeSuggestions, strings.ToLower(strings.Join(source.AllowedScopes, ", "))))
 }
 
-func validateResourceId(source *ccloudv2.LogSource, resourceId string) error {
-	if resourceId == "" || source.IdPrefix == "" {
+func validateResourceId(source *loggingv1.LoggingV1Source, resourceId string) error {
+	if resourceId == "" || source.GetIdPrefix() == "" {
 		return nil
 	}
-	if !strings.HasPrefix(resourceId, source.IdPrefix+"-") {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(resourceIdMismatchErrorMsg, resourceId, source.Name), fmt.Sprintf(resourceIdMismatchSuggestions, source.IdPrefix))
+	if !strings.HasPrefix(resourceId, source.GetIdPrefix()+"-") {
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(resourceIdMismatchErrorMsg, resourceId, source.Name), fmt.Sprintf(resourceIdMismatchSuggestions, source.GetIdPrefix()))
 	}
 	return nil
 }
 
-func validateLookback(source *ccloudv2.LogSource, since string) error {
+func validateLookback(source *loggingv1.LoggingV1Source, since string) error {
 	if since == "" || source.MaxLookbackDays <= 0 {
 		return nil
 	}
@@ -234,7 +235,7 @@ type crnValues struct {
 
 // buildCRN builds the CRN the API expects. It follows the log source's declared crn_elements in order and stops at
 // the element the requested scope is truncated to, so the same code serves every log source.
-func buildCRN(source *ccloudv2.LogSource, scope string, values crnValues) (string, error) {
+func buildCRN(source *loggingv1.LoggingV1Source, scope string, values crnValues) (string, error) {
 	parts := make([]string, 0, len(source.CrnElements))
 	for i, element := range source.CrnElements {
 		var value string
