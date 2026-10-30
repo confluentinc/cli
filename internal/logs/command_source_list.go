@@ -63,7 +63,7 @@ func (c *sourceListCommand) list(cmd *cobra.Command, _ []string) error {
 			Name:        source.Name,
 			DisplayName: source.DisplayName,
 			Resource:    source.ResourceType,
-			IdPrefix:    dashIfEmpty(source.IdPrefix),
+			IdPrefix:    dashIfEmpty(source.GetIdPrefix()),
 			Scopes:      formatScopes(source.AllowedScopes),
 			MaxLookback: fmt.Sprintf("%dd", source.MaxLookbackDays),
 		})

@@ -11,7 +11,10 @@ import (
 	"strconv"
 	"strings"
 
+	loggingv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/logging/v1"
+
 	"github.com/confluentinc/cli/v4/pkg/auth"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 const (
@@ -197,48 +200,6 @@ type LogsSearchResponse struct {
 	Kind       string           `json:"kind"`
 }
 
-// LogSource describes one log source from GET /logs/v1/sources[/{name}].
-type LogSource struct {
-	ApiVersion              string             `json:"api_version"`
-	Kind                    string             `json:"kind"`
-	Name                    string             `json:"name"`
-	DisplayName             string             `json:"display_name"`
-	ResourceType            string             `json:"resource_type"`
-	IdPrefix                string             `json:"id_prefix,omitempty"`
-	CrnElements             []string           `json:"crn_elements"`
-	AllowedScopes           []string           `json:"allowed_scopes"`
-	SearchFields            []LogSearchField   `json:"search_fields"`
-	FullTextSearchSupported bool               `json:"full_text_search_supported"`
-	FullTextSearchFields    []string           `json:"full_text_search_fields,omitempty"`
-	ReturnedFields          []LogReturnedField `json:"returned_fields"`
-	MaxLookbackDays         int                `json:"max_lookback_days"`
-}
-
-// LogSourceList is the response of GET /logs/v1/sources.
-type LogSourceList struct {
-	ApiVersion string            `json:"api_version"`
-	Kind       string            `json:"kind"`
-	Metadata   LogSourceListMeta `json:"metadata"`
-	Data       []LogSource       `json:"data"`
-}
-
-type LogSourceListMeta struct {
-	TotalSize int `json:"total_size"`
-}
-
-type LogSearchField struct {
-	Name          string   `json:"name"`
-	Type          string   `json:"type"`
-	AllowedValues []string `json:"allowed_values,omitempty"`
-}
-
-type LogReturnedField struct {
-	Name          string `json:"name"`
-	Type          string `json:"type"`
-	DefaultColumn bool   `json:"default_column"`
-	Description   string `json:"description,omitempty"`
-}
-
 type loggingErrorResponse struct {
 	Errors []struct {
 		Status string `json:"status"`
@@ -275,52 +236,54 @@ func (c *Client) SearchLogs(request LogsSearchRequest, pageSize int, pageToken s
 	return &response, nil
 }
 
+// newLoggingClient builds the SDK client for the logging API, which is served from its own host rather than the
+// regular Confluent Cloud API URL, and a context carrying the data plane token it authenticates with.
+func (c *Client) newLoggingClient() (*loggingv1.APIClient, context.Context, error) {
+	loggingURL, err := getLoggingUrlForPath(c.cfg.Context().GetPlatformServer(), "")
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get logging API URL: %w", err)
+	}
+
+	dataplaneToken, err := auth.GetDataplaneToken(c.cfg.Context())
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get data plane token: %w", err)
+	}
+
+	cfg := loggingv1.NewConfiguration()
+	cfg.HTTPClient = NewRetryableHttpClient(c.cfg, false)
+	cfg.Servers = loggingv1.ServerConfigurations{{URL: loggingURL}}
+	cfg.UserAgent = c.cfg.Version.UserAgent
+
+	ctx := context.WithValue(context.Background(), loggingv1.ContextAccessToken, dataplaneToken)
+	return loggingv1.NewAPIClient(cfg), ctx, nil
+}
+
 // ListLogSources queries GET /logs/v1/sources.
-func (c *Client) ListLogSources() (*LogSourceList, error) {
-	body, err := c.getLoggingDiscovery("/logs/v1/sources")
+func (c *Client) ListLogSources() (*loggingv1.LoggingV1SourceList, error) {
+	client, ctx, err := c.newLoggingClient()
 	if err != nil {
 		return nil, err
 	}
 
-	var sources LogSourceList
-	if err := json.Unmarshal(body, &sources); err != nil {
-		return nil, fmt.Errorf("failed to decode logging API response: %w", err)
+	sources, httpResp, err := client.LogsLoggingV1Api.ListLoggingV1Sources(ctx).Execute()
+	if err != nil {
+		return nil, errors.CatchCCloudV2Error(err, httpResp)
 	}
 	return &sources, nil
 }
 
 // DescribeLogSource queries GET /logs/v1/sources/{name}.
-func (c *Client) DescribeLogSource(name string) (*LogSource, error) {
-	body, err := c.getLoggingDiscovery("/logs/v1/sources/" + url.PathEscape(name))
+func (c *Client) DescribeLogSource(name string) (*loggingv1.LoggingV1Source, error) {
+	client, ctx, err := c.newLoggingClient()
 	if err != nil {
 		return nil, err
 	}
 
-	var source LogSource
-	if err := json.Unmarshal(body, &source); err != nil {
-		return nil, fmt.Errorf("failed to decode logging API response: %w", err)
+	source, httpResp, err := client.LogsLoggingV1Api.DescribeLoggingV1Source(ctx, name).Execute()
+	if err != nil {
+		return nil, errors.CatchCCloudV2Error(err, httpResp)
 	}
 	return &source, nil
-}
-
-func (c *Client) getLoggingDiscovery(path string) ([]byte, error) {
-	loggingURL, err := getLoggingUrlForPath(c.cfg.Context().GetPlatformServer(), path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get logging API URL: %w", err)
-	}
-
-	dataplaneToken, err := auth.GetDataplaneToken(c.cfg.Context())
-	if err != nil {
-		return nil, fmt.Errorf("failed to get data plane token: %w", err)
-	}
-
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, loggingURL, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+dataplaneToken)
-
-	return c.doLoggingRequest(req)
 }
 
 func (c *Client) doLoggingRequest(req *http.Request) ([]byte, error) {
