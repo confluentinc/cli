@@ -1,0 +1,184 @@
+{
+  "api_version": "logging/v1",
+  "data": [
+    {
+      "allowed_scopes": ["ORGANIZATION", "ENVIRONMENT", "RESOURCE"],
+      "api_version": "logging/v1",
+      "crn_elements": ["organization", "environment", "cloud-cluster", "kafka"],
+      "display_name": "Cluster health events",
+      "full_text_search_fields": ["message"],
+      "full_text_search_supported": true,
+      "id_prefix": "lkc",
+      "kind": "Source",
+      "max_lookback_days": 3,
+      "name": "cluster-health",
+      "resource_type": "kafka",
+      "returned_fields": [
+        {
+          "default_column": false,
+          "description": "Unique identifier for this log record.",
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "default_column": true,
+          "description": "Event time, RFC 3339 UTC.",
+          "name": "timestamp",
+          "type": "timestamp"
+        },
+        {
+          "default_column": true,
+          "description": "Severity level: INFO, WARN, ERROR.",
+          "name": "level",
+          "type": "enum"
+        },
+        {
+          "default_column": true,
+          "description": "Human-readable description of the event.",
+          "name": "message",
+          "type": "string"
+        },
+        {
+          "default_column": false,
+          "description": "Confluent Resource Name of the resource the event concerns.",
+          "name": "crn",
+          "type": "string"
+        },
+        {
+          "default_column": false,
+          "description": "Component or subsystem that generated the event.",
+          "name": "source",
+          "type": "string"
+        },
+        {
+          "default_column": true,
+          "description": "Type of cluster health event.",
+          "name": "event_type",
+          "type": "enum"
+        },
+        {
+          "default_column": false,
+          "description": "Event-specific identifier, when provided.",
+          "name": "event_id",
+          "type": "string"
+        },
+        {
+          "default_column": false,
+          "description": "Status associated with the event, when applicable.",
+          "name": "status",
+          "type": "string"
+        },
+        {
+          "default_column": false,
+          "description": "Kafka client ID, when the event names one.",
+          "name": "client_id",
+          "type": "string"
+        },
+        {
+          "default_column": false,
+          "description": "lkc- ID the event belongs to.",
+          "name": "cluster_id",
+          "type": "string"
+        }
+      ],
+      "search_fields": [
+        {
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "allowed_values": [
+            "SERVICE_MAINTENANCE",
+            "HEALTH_ALERT",
+            "CONFLUENT_STATUS_UPDATED",
+            "SERVICE_ISSUE_DETECTED"
+          ],
+          "name": "event_type",
+          "type": "enum"
+        },
+        {
+          "allowed_values": ["INFO", "WARN", "ERROR"],
+          "name": "level",
+          "type": "enum"
+        },
+        {
+          "name": "client_id",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "allowed_scopes": ["RESOURCE"],
+      "api_version": "logging/v1",
+      "crn_elements": [
+        "organization",
+        "environment",
+        "cloud-cluster",
+        "connector"
+      ],
+      "display_name": "Connector logs",
+      "full_text_search_fields": ["message", "exception.stacktrace"],
+      "full_text_search_supported": true,
+      "kind": "Source",
+      "max_lookback_days": 3,
+      "name": "connector",
+      "resource_type": "connector",
+      "returned_fields": [
+        {
+          "default_column": true,
+          "name": "timestamp",
+          "type": "timestamp"
+        },
+        {
+          "default_column": true,
+          "name": "level",
+          "type": "enum"
+        },
+        {
+          "default_column": true,
+          "name": "task_id",
+          "type": "string"
+        },
+        {
+          "default_column": true,
+          "name": "message",
+          "type": "string"
+        },
+        {
+          "default_column": true,
+          "name": "exception.stacktrace",
+          "type": "string"
+        },
+        {
+          "default_column": true,
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "default_column": true,
+          "name": "name",
+          "type": "string"
+        }
+      ],
+      "search_fields": [
+        {
+          "allowed_values": ["INFO", "WARN", "ERROR", "FATAL"],
+          "name": "level",
+          "type": "enum"
+        },
+        {
+          "name": "task_id",
+          "type": "string"
+        },
+        {
+          "name": "id",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "kind": "SourceList",
+  "metadata": {
+    "total_size": 2
+  }
+}

@@ -1,0 +1,5 @@
+Error: "severity" is not a search field for "cluster-health" logs
+
+Suggestions:
+    Available search fields: id, event_type, level, client_id.
+    Run `confluent logs source describe cluster-health` for details.

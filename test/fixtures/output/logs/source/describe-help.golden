@@ -1,0 +1,17 @@
+Describe a log source: the scopes it supports, the search fields `confluent logs fetch --search` accepts for it, and the fields each log record carries. Results are always fetched fresh.
+
+Usage:
+  confluent logs source describe <source> [flags]
+
+Examples:
+Describe the "cluster-health" log source:
+
+  $ confluent logs source describe cluster-health
+
+Flags:
+  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, and -vvvv for trace).

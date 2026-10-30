@@ -1,0 +1,4 @@
+Error: invalid `--from` value "2026-10-14T00:00:00"
+
+Suggestions:
+    Use an ISO 8601 UTC timestamp such as 2026-08-20T00:00:00Z.

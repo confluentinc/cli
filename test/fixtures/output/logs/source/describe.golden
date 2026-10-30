@@ -1,0 +1,27 @@
+Log source:        cluster-health
+Display name:      Cluster health events
+Resource:          kafka (lkc- IDs; crn: organization/environment/cloud-cluster/kafka)
+Scopes:            organization, environment, resource
+Max lookback:      3d
+Full-text search:  yes (--search-text over: message)
+
+Search fields (--search field=value):
+  id          string
+  event_type  enum    SERVICE_MAINTENANCE, HEALTH_ALERT, CONFLUENT_STATUS_UPDATED, SERVICE_ISSUE_DETECTED
+  level       enum    INFO, WARN, ERROR
+  client_id   string
+
+Returned fields (each log record):
+  timestamp   timestamp  *  Event time, RFC 3339 UTC.
+  level       enum       *  Severity level: INFO, WARN, ERROR.
+  message     string     *  Human-readable description of the event.
+  event_type  enum       *  Type of cluster health event.
+  id          string        Unique identifier for this log record.
+  crn         string        Confluent Resource Name of the resource the event concerns.
+  source      string        Component or subsystem that generated the event.
+  event_id    string        Event-specific identifier, when provided.
+  status      string        Status associated with the event, when applicable.
+  client_id   string        Kafka client ID, when the event names one.
+  cluster_id  string        lkc- ID the event belongs to.
+
+  * = default column in human output

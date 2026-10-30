@@ -1,0 +1,15 @@
+Discover the log sources you can query with `confluent logs fetch`, including the search fields each one accepts and the fields it returns.
+
+Usage:
+  confluent logs source [command]
+
+Available Commands:
+  describe    Describe a log source.
+  list        List log sources.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, and -vvvv for trace).
+
+Use "confluent logs source [command] --help" for more information about a command.

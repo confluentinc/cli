@@ -1,0 +1,6 @@
+- cluster_id: lkc-123
+  event_type: SERVICE_ISSUE_DETECTED
+  id: evt-101
+  level: ERROR
+  message: Broker lkc-123 unreachable
+  timestamp: "2026-10-14T14:41:08Z"
