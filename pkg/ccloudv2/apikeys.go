@@ -38,7 +38,8 @@ func (c *Client) GetApiKey(id string) (apikeysv2.IamV2ApiKey, *http.Response, er
 		return apiKey, httpResp, nil
 	}
 
-	apiKeys, err := c.ListApiKeys("", "")
+	// Include expired keys: they still exist and can be described, updated and deleted.
+	apiKeys, err := c.ListApiKeys("", "", true)
 	if err != nil {
 		return apiKey, httpResp, err
 	}
@@ -56,13 +57,15 @@ func (c *Client) UpdateApiKey(id string, iamV2ApiKeyUpdate apikeysv2.IamV2ApiKey
 	return c.ApiKeysClient.APIKeysIamV2Api.UpdateIamV2ApiKey(c.apiKeysApiContext(), id).IamV2ApiKeyUpdate(iamV2ApiKeyUpdate).Execute()
 }
 
-func (c *Client) ListApiKeys(owner, resource string) ([]apikeysv2.IamV2ApiKey, error) {
+// ListApiKeys lists API keys, optionally filtered by owner and resource. Expired keys are only included when
+// showExpired is set.
+func (c *Client) ListApiKeys(owner, resource string, showExpired bool) ([]apikeysv2.IamV2ApiKey, error) {
 	var list []apikeysv2.IamV2ApiKey
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, httpResp, err := c.executeListApiKeys(owner, resource, pageToken)
+		page, httpResp, err := c.executeListApiKeys(owner, resource, showExpired, pageToken)
 		if err != nil {
 			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
@@ -76,8 +79,11 @@ func (c *Client) ListApiKeys(owner, resource string) ([]apikeysv2.IamV2ApiKey, e
 	return list, nil
 }
 
-func (c *Client) executeListApiKeys(owner, resource, pageToken string) (apikeysv2.IamV2ApiKeyList, *http.Response, error) {
+func (c *Client) executeListApiKeys(owner, resource string, showExpired bool, pageToken string) (apikeysv2.IamV2ApiKeyList, *http.Response, error) {
 	req := c.ApiKeysClient.APIKeysIamV2Api.ListIamV2ApiKeys(c.apiKeysApiContext()).PageSize(ccloudV2ListPageSize).SpecOwner(owner).SpecResource(resource)
+	if showExpired {
+		req = req.ShowExpired(true)
+	}
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}

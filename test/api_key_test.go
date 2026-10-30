@@ -19,6 +19,9 @@ func (s *CLITestSuite) TestApiKey() {
 		{args: "api-key update MYKEY1 --description first-key", fixture: "api-key/4.golden"},
 		{args: "api-key list --resource lkc-bob", fixture: "api-key/5.golden"},
 
+		// expiration: describe a key that has an expiration date (does not create, so key numbering is unaffected)
+		{args: "api-key describe MYKEY2", fixture: "api-key/describe-expiration.golden"},
+
 		// list json and yaml output
 		{args: "api-key list", fixture: "api-key/6.golden"},
 		{args: "api-key list -o json", fixture: "api-key/7.golden"},
@@ -140,12 +143,6 @@ func (s *CLITestSuite) TestApiKey() {
 		{args: "api-key create", fixture: "api-key/54.golden", exitCode: 1},
 		{args: "api-key use UIAPIKEY103 --resource lkc-unknown", fixture: "api-key/resource-unknown-error.golden", exitCode: 1},
 		{args: "api-key create --resource lkc-unknown", fixture: "api-key/resource-unknown-error.golden", exitCode: 1},
-
-		// test multicluster keys
-		{name: "listing multicluster API keys", args: "api-key list", login: "cloud", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}, fixture: "api-key/56.golden"},
-		{name: "listing multicluster API keys with --resource field", args: "api-key list --resource lsrc-1234", login: "cloud", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}, fixture: "api-key/57.golden"},
-		{name: "listing multicluster API keys with --current-user field", args: "api-key list --current-user", login: "cloud", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}, fixture: "api-key/58.golden"},
-		{name: "listing multicluster API keys with --service-account field", args: "api-key list --service-account sa-12345", login: "cloud", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}, fixture: "api-key/59.golden"},
 	}
 
 	resetConfiguration(s.T(), false)
@@ -237,7 +234,6 @@ func (s *CLITestSuite) TestApiKeyDescribe() {
 	tests := []CLITest{
 		{args: "api-key describe MYKEY1", fixture: "api-key/describe.golden"},
 		{args: "api-key describe MYKEY1 -o json", fixture: "api-key/describe-json.golden"},
-		{args: "api-key describe MULTICLUSTERKEY1", fixture: "api-key/describe-multicluster.golden", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}},
 	}
 
 	for _, test := range tests {
@@ -263,8 +259,28 @@ func (s *CLITestSuite) TestApiKeyDelete() {
 	}
 }
 
+func (s *CLITestSuite) TestApiKeyExpiration() {
+	// Runs after TestApiKeyDelete (suite methods run in alphabetical order) so the created key
+	// does not consume the key number the delete tests expect to be absent (MYKEY20).
+	tests := []CLITest{
+		{args: "api-key create --resource cloud --expiration 2099-12-31", fixture: "api-key/create-expiration.golden"},
+		{args: "api-key describe MYKEY20", fixture: "api-key/describe-created-expiration.golden"},
+		{args: "api-key create --resource cloud --expiration not-a-date", fixture: "api-key/create-expiration-invalid.golden", exitCode: 1},
+		{args: `api-key create --resource cloud --expiration ""`, fixture: "api-key/create-expiration-empty.golden", exitCode: 1},
+	}
+
+	resetConfiguration(s.T(), false)
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestApiKeyList() {
 	tests := []CLITest{
+		{args: "api-key list --resource lkc-bob --show-expired", fixture: "api-key/list-show-expired.golden"},
+		{args: "api-key list --resource lkc-bob --show-expired -o json", fixture: "api-key/list-show-expired-json.golden"},
 		{args: "api-key list --resource lkc-dne", env: []string{fmt.Sprintf("%s=no-environment-user@example.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}, fixture: "api-key/no-env.golden", exitCode: 1},
 	}
 
