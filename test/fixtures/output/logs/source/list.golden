@@ -1,0 +1,5 @@
+       Name      |     Display Name      | Resource  | ID Prefix |             Scopes             | Max Lookback  
+-----------------+-----------------------+-----------+-----------+--------------------------------+---------------
+  cluster-health | Cluster health events | kafka     | lkc       | organization, environment,     | 3d            
+                 |                       |           |           | resource                       |               
+  connector      | Connector logs        | connector | -         | resource                       | 3d            

@@ -1,0 +1,6 @@
+Found 1 log entry for connector on lcc-123:
+
+       Timestamp       | Level | Task ID |            Message             |               Exception Stacktrace               |   ID    |     Name      
+-----------------------+-------+---------+--------------------------------+--------------------------------------------------+---------+---------------
+  2026-10-14T09:12:03Z | ERROR | task-0  | Connection to upstream host    | org.apache.kafka.connect.errors.ConnectException | lcc-123 | az-connector  
+                       |       |         | was lost.                      |                                                  |         |               

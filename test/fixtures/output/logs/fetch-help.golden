@@ -1,0 +1,43 @@
+Fetch logs from a log source, for a single resource, or for a whole environment or Organization when the log source supports it. Run `confluent logs source list` to see the available log sources, and `confluent logs source describe <source>` for the search fields and returned fields of one.
+
+Usage:
+  confluent logs fetch [resource-id] [flags]
+
+Examples:
+Fetch cluster health events for one Kafka cluster from the last hour:
+
+  $ confluent logs fetch lkc-123456 --source cluster-health --since 1h
+
+Fetch only ERROR events of a given type from the last 3 days, newest 100 entries:
+
+  $ confluent logs fetch lkc-123456 --source cluster-health --since 3d --search level=ERROR,event_type=SERVICE_ISSUE_DETECTED --tail 100
+
+Fetch cluster health events for a whole environment:
+
+  $ confluent logs fetch --source cluster-health --environment env-123456 --since 24h
+
+Fetch cluster health events for the whole organization:
+
+  $ confluent logs fetch --source cluster-health --since 24h
+
+Fetch ERROR and WARN entries containing the text "example error" and append them to a file as JSON lines:
+
+  $ confluent logs fetch lcc-123456 --source connector --since 24h --search level=ERROR,level=WARN --search-text "example error" --output-file errors.jsonl
+
+Flags:
+      --source string        REQUIRED: The log source to query, for example "cluster-health". Run "confluent logs source list" for the available log sources.
+      --since string         Relative time window ending now, for example 1h, 24h or 7d. Cannot be combined with --from or --to.
+      --from string          Window start, in ISO 8601 UTC format (for example 2026-08-20T00:00:00Z).
+      --to string            Window end, in ISO 8601 UTC format. Defaults to now when --from is set.
+      --search strings       A comma-separated list of "field=value" search filters, validated against the log source. Repeating a field means OR (for example level=ERROR,level=WARN).
+      --search-text string   Full-text search within log messages, where the log source supports it.
+      --tail int             Return only the most recent N entries (maximum 1000).
+      --output-file string   Append the results to this file as JSON lines.
+      --cluster string       Kafka cluster ID.
+      --environment string   Environment ID.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, and -vvvv for trace).

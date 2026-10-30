@@ -1,0 +1,4 @@
+Error: log source "connector" requires a resource ID
+
+Suggestions:
+    Pass the resource ID as an argument, for example `confluent logs fetch <resource-id> --source connector`.

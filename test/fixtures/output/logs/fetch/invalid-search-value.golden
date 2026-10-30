@@ -1,0 +1,4 @@
+Error: "DEBUG" is not a valid value for "level"
+
+Suggestions:
+    Allowed values: INFO, WARN, ERROR.
