@@ -6,7 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
+	loggingv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/logging/v1"
+
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -64,13 +65,13 @@ func (c *sourceDescribeCommand) describe(cmd *cobra.Command, args []string) erro
 
 // renderSource lays out everything a user needs to build a query and read its results. Fields shown in the default
 // human output of `fetch` are marked with a star and listed first.
-func renderSource(source *ccloudv2.LogSource) string {
+func renderSource(source *loggingv1.LoggingV1Source) string {
 	var b strings.Builder
 
 	resource := source.ResourceType
 	var details []string
-	if source.IdPrefix != "" {
-		details = append(details, source.IdPrefix+"- IDs")
+	if source.GetIdPrefix() != "" {
+		details = append(details, source.GetIdPrefix()+"- IDs")
 	}
 	if len(source.CrnElements) > 0 {
 		details = append(details, "crn: "+strings.Join(source.CrnElements, "/"))
@@ -82,8 +83,8 @@ func renderSource(source *ccloudv2.LogSource) string {
 	fullText := "no"
 	if source.FullTextSearchSupported {
 		fullText = "yes"
-		if len(source.FullTextSearchFields) > 0 {
-			fullText += " (--search-text over: " + strings.Join(source.FullTextSearchFields, ", ") + ")"
+		if len(source.GetFullTextSearchFields()) > 0 {
+			fullText += " (--search-text over: " + strings.Join(source.GetFullTextSearchFields(), ", ") + ")"
 		}
 	}
 
@@ -108,15 +109,15 @@ func renderSource(source *ccloudv2.LogSource) string {
 		b.WriteString("\nSearch fields (--search field=value):\n")
 		for _, field := range source.SearchFields {
 			row := fmt.Sprintf("  %-*s  %-*s", nameWidth, field.Name, typeWidth, field.Type)
-			if len(field.AllowedValues) > 0 {
-				row += "  " + strings.Join(field.AllowedValues, ", ")
+			if len(field.GetAllowedValues()) > 0 {
+				row += "  " + strings.Join(field.GetAllowedValues(), ", ")
 			}
 			b.WriteString(strings.TrimRight(row, " ") + "\n")
 		}
 	}
 
 	if len(source.ReturnedFields) > 0 {
-		var fields []ccloudv2.LogReturnedField
+		var fields []loggingv1.LoggingV1ReturnedFieldDescriptor
 		for _, defaults := range []bool{true, false} {
 			for _, field := range source.ReturnedFields {
 				if field.DefaultColumn == defaults {
@@ -137,7 +138,7 @@ func renderSource(source *ccloudv2.LogSource) string {
 			if field.DefaultColumn {
 				star = "*"
 			}
-			row := fmt.Sprintf("  %-*s  %-*s  %s  %s", nameWidth, field.Name, typeWidth, field.Type, star, field.Description)
+			row := fmt.Sprintf("  %-*s  %-*s  %s  %s", nameWidth, field.Name, typeWidth, field.Type, star, field.GetDescription())
 			b.WriteString(strings.TrimRight(row, " ") + "\n")
 		}
 		b.WriteString("\n  * = default column in human output\n")

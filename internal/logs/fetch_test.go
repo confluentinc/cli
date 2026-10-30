@@ -228,23 +228,23 @@ func TestDashIfEmpty(t *testing.T) {
 }
 
 func TestRenderSource(t *testing.T) {
-	source := &ccloudv2.LogSource{
+	source := &loggingv1.LoggingV1Source{
 		Name:                    "cluster-health",
 		DisplayName:             "Cluster health events",
 		ResourceType:            "kafka",
-		IdPrefix:                "lkc",
+		IdPrefix:                loggingv1.PtrString("lkc"),
 		CrnElements:             []string{"organization", "environment", "cloud-cluster", "kafka"},
 		AllowedScopes:           []string{"ORGANIZATION", "ENVIRONMENT", "RESOURCE"},
 		FullTextSearchSupported: true,
-		FullTextSearchFields:    []string{"message"},
+		FullTextSearchFields:    &[]string{"message"},
 		MaxLookbackDays:         3,
-		SearchFields: []ccloudv2.LogSearchField{
+		SearchFields: []loggingv1.LoggingV1SearchFieldDescriptor{
 			{Name: "id", Type: "string"},
-			{Name: "level", Type: "enum", AllowedValues: []string{"INFO", "WARN", "ERROR"}},
+			{Name: "level", Type: "enum", AllowedValues: &[]string{"INFO", "WARN", "ERROR"}},
 		},
-		ReturnedFields: []ccloudv2.LogReturnedField{
-			{Name: "id", Type: "string", DefaultColumn: false, Description: "Unique identifier."},
-			{Name: "timestamp", Type: "instant", DefaultColumn: true, Description: "Event time."},
+		ReturnedFields: []loggingv1.LoggingV1ReturnedFieldDescriptor{
+			{Name: "id", Type: "string", DefaultColumn: false, Description: loggingv1.PtrString("Unique identifier.")},
+			{Name: "timestamp", Type: "instant", DefaultColumn: true, Description: loggingv1.PtrString("Event time.")},
 			{Name: "level", Type: "enum", DefaultColumn: true},
 		},
 	}
@@ -269,7 +269,7 @@ Returned fields (each log record):
 `
 	require.Equal(t, expected, renderSource(source))
 
-	minimal := renderSource(&ccloudv2.LogSource{Name: "x", DisplayName: "X", ResourceType: "thing", AllowedScopes: []string{"RESOURCE"}})
+	minimal := renderSource(&loggingv1.LoggingV1Source{Name: "x", DisplayName: "X", ResourceType: "thing", AllowedScopes: []string{"RESOURCE"}})
 	require.Contains(t, minimal, "Resource:          thing\n")
 	require.Contains(t, minimal, "Full-text search:  no\n")
 	require.NotContains(t, minimal, "Search fields")
