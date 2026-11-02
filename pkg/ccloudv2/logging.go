@@ -229,11 +229,50 @@ func (c *Client) SearchLogs(request LogsSearchRequest, pageSize int, pageToken s
 		return nil, err
 	}
 
+	return decodeLogsSearchResponse(body)
+}
+
+// decodeLogsSearchResponse decodes JSON numbers without going through float64, so integers above 2^53 survive into
+// the JSON, YAML and JSONL output. Numbers are returned as int64, uint64 or float64 rather than json.Number, because
+// the YAML encoder would print a json.Number as a quoted string.
+func decodeLogsSearchResponse(body []byte) (*LogsSearchResponse, error) {
 	var response LogsSearchResponse
-	if err := json.Unmarshal(body, &response); err != nil {
+	decoder := json.NewDecoder(bytes.NewReader(body))
+	decoder.UseNumber()
+	if err := decoder.Decode(&response); err != nil {
 		return nil, fmt.Errorf("failed to decode logging API response: %w", err)
 	}
+	for _, record := range response.Data {
+		for key, value := range record {
+			record[key] = convertJsonNumbers(value)
+		}
+	}
 	return &response, nil
+}
+
+func convertJsonNumbers(value any) any {
+	switch v := value.(type) {
+	case json.Number:
+		if i, err := strconv.ParseInt(v.String(), 10, 64); err == nil {
+			return i
+		}
+		if u, err := strconv.ParseUint(v.String(), 10, 64); err == nil {
+			return u
+		}
+		if f, err := v.Float64(); err == nil {
+			return f
+		}
+		return v.String()
+	case map[string]any:
+		for key, item := range v {
+			v[key] = convertJsonNumbers(item)
+		}
+	case []any:
+		for i, item := range v {
+			v[i] = convertJsonNumbers(item)
+		}
+	}
+	return value
 }
 
 // newLoggingClient builds the SDK client for the logging API, which is served from its own host rather than the

@@ -2,6 +2,7 @@ package logs
 
 import (
 	"fmt"
+	"math"
 	"slices"
 	"strconv"
 	"strings"
@@ -19,6 +20,9 @@ const (
 
 	maxTail = 1000
 
+	// maxSinceDays is the largest day count whose duration still fits in a time.Duration.
+	maxSinceDays = int(math.MaxInt64 / int64(24*time.Hour))
+
 	searchTextKey = "search_text"
 )
 
@@ -34,7 +38,7 @@ func resolveTimeWindow(since, from, to string, now time.Time) (string, string, e
 		if err != nil {
 			return "", "", err
 		}
-		return now.Add(-d).Format(time.RFC3339), now.Format(time.RFC3339), nil
+		return now.Add(-d).Format(time.RFC3339Nano), now.Format(time.RFC3339Nano), nil
 	}
 
 	if from == "" {
@@ -54,14 +58,14 @@ func resolveTimeWindow(since, from, to string, now time.Time) (string, string, e
 	if end.Before(start) {
 		return "", "", errors.New(toBeforeFromErrorMsg)
 	}
-	return start.Format(time.RFC3339), end.Format(time.RFC3339), nil
+	return start.Format(time.RFC3339Nano), end.Format(time.RFC3339Nano), nil
 }
 
 // parseSince accepts Go durations plus a day suffix, e.g. 90m, 24h, 7d.
 func parseSince(value string) (time.Duration, error) {
 	if days, ok := strings.CutSuffix(value, "d"); ok {
 		n, err := strconv.Atoi(days)
-		if err != nil || n <= 0 {
+		if err != nil || n <= 0 || n > maxSinceDays {
 			return 0, errors.NewErrorWithSuggestions(fmt.Sprintf(invalidSinceErrorMsg, value), invalidSinceSuggestions)
 		}
 		return time.Duration(n) * 24 * time.Hour, nil
