@@ -14,6 +14,7 @@ import (
 
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/kafka"
@@ -65,6 +66,7 @@ func newFetchCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().StringSlice("search", nil, `A comma-separated list of "field=value" search filters, validated against the log source. Repeating a field means OR (for example level=ERROR,level=WARN).`)
 	cmd.Flags().String("search-text", "", "Full-text search within log messages, where the log source supports it.")
 	cmd.Flags().Int("tail", 0, fmt.Sprintf("Return only the most recent N entries (maximum %d).", maxTail))
+	cmd.Flags().Bool("next", false, "Fetch the next page of the previous identical query.")
 	cmd.Flags().String("output-file", "", "Append the results to this file as JSON lines.")
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -78,6 +80,7 @@ func newFetchCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cobra.CheckErr(cmd.MarkFlagRequired("source"))
 	cmd.MarkFlagsMutuallyExclusive("since", "from")
 	cmd.MarkFlagsMutuallyExclusive("since", "to")
+	cmd.MarkFlagsMutuallyExclusive("next", "tail")
 
 	return cmd
 }
@@ -116,6 +119,10 @@ func (c *fetchCommand) fetch(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	tail, err := cmd.Flags().GetInt("tail")
+	if err != nil {
+		return err
+	}
+	next, err := cmd.Flags().GetBool("next")
 	if err != nil {
 		return err
 	}
@@ -163,6 +170,25 @@ func (c *fetchCommand) fetch(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	key, err := queryKey(crn, source.Name, search, since, from, to)
+	if err != nil {
+		return err
+	}
+
+	// --next continues the stored query, from the same window, when the flags match it.
+	pageToken := ""
+	if next {
+		state := c.Context.GetLogsQueryState()
+		if state == nil || state.Key != key {
+			return errors.NewErrorWithSuggestions(noStoredQueryErrorMsg, noStoredQuerySuggestions)
+		}
+		if state.PageToken == "" {
+			output.Println(false, noMorePagesMsg)
+			return nil
+		}
+		pageToken, startTime, endTime = state.PageToken, state.StartTime, state.EndTime
+	}
+
 	pageSize := ccloudv2.LogsPageSize
 	if tail > 0 {
 		pageSize = tail
@@ -175,9 +201,13 @@ func (c *fetchCommand) fetch(cmd *cobra.Command, args []string) error {
 		Sort:      "desc",
 		StartTime: startTime,
 		EndTime:   endTime,
-	}, pageSize, "")
+	}, pageSize, pageToken)
 	if err != nil {
 		return fmt.Errorf("failed to fetch logs: %w", err)
+	}
+
+	if err := c.storeQuery(key, startTime, endTime, tail, logs); err != nil {
+		return err
 	}
 
 	if outputFile != "" {
@@ -189,6 +219,24 @@ func (c *fetchCommand) fetch(cmd *cobra.Command, args []string) error {
 	}
 
 	return printHumanLogs(cmd, source, resourceId, logs.Data)
+}
+
+// storeQuery saves the query and the next page's token, so that `--next` can continue it. --tail asks for just the
+// newest N entries, so it drops the cursor.
+func (c *fetchCommand) storeQuery(key, startTime, endTime string, tail int, logs *ccloudv2.LogsSearchResponse) error {
+	pageToken := ""
+	if tail == 0 && logs.Metadata != nil && logs.Metadata.Next != "" {
+		var err error
+		if pageToken, err = ccloudv2.ExtractPageToken(logs.Metadata.Next); err != nil {
+			return fmt.Errorf("failed to extract page token: %w", err)
+		}
+	}
+
+	state := &config.LogsQueryState{Key: key, PageToken: pageToken, StartTime: startTime, EndTime: endTime}
+	if err := c.Context.SetLogsQueryState(state); err != nil {
+		return fmt.Errorf("failed to store logs query state: %w", err)
+	}
+	return c.Config.Save()
 }
 
 // buildCRN resolves the CRN element values from the command's inputs and the active context.

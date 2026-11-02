@@ -138,6 +138,15 @@ var clusterHealthEvents = []map[string]any{
 	{"id": "evt-033", "timestamp": "2026-10-13T20:15:44Z", "level": "INFO", "message": "Cluster lkc-789 status updated", "event_type": "CONFLUENT_STATUS_UPDATED", "cluster_id": "lkc-789"},
 }
 
+// pagedClusterEvents belong to the one cluster the mock serves in pages of two, to exercise `logs fetch --next`.
+var pagedClusterEvents = []map[string]any{
+	{"id": "evt-203", "timestamp": "2026-10-14T13:05:00Z", "level": "ERROR", "message": "Broker lkc-777 unreachable", "event_type": "SERVICE_ISSUE_DETECTED", "cluster_id": "lkc-777"},
+	{"id": "evt-202", "timestamp": "2026-10-14T12:05:00Z", "level": "WARN", "message": "Broker lkc-777 slow", "event_type": "HEALTH_ALERT", "cluster_id": "lkc-777"},
+	{"id": "evt-201", "timestamp": "2026-10-14T11:05:00Z", "level": "INFO", "message": "Cluster lkc-777 status updated", "event_type": "CONFLUENT_STATUS_UPDATED", "cluster_id": "lkc-777"},
+}
+
+const pagedClusterPageSize = 2
+
 // handleUnifiedLogsSearch serves POST /logs/v1/search requests that name a log source.
 func handleUnifiedLogsSearch(t *testing.T, w http.ResponseWriter, r *http.Request, req unifiedLogsSearchRequest) {
 	// The CLI must send a well-formed, non-empty time window, newest-first ordering and an explicit page size.
@@ -156,10 +165,22 @@ func handleUnifiedLogsSearch(t *testing.T, w http.ResponseWriter, r *http.Reques
 	require.True(t, strings.HasPrefix(req.CRN, "crn://"), req.CRN)
 	require.Contains(t, req.CRN, "/organization=", req.CRN)
 
+	// page_token is the offset of the first record on the page.
+	offset := 0
+	if token := r.URL.Query().Get("page_token"); token != "" {
+		offset, err = strconv.Atoi(token)
+		require.NoError(t, err, "page_token")
+	}
+
 	var data []map[string]any
 
 	switch req.Source {
 	case "cluster-health":
+		if strings.HasSuffix(req.CRN, "/kafka=lkc-777") {
+			pageSize = min(pageSize, pagedClusterPageSize)
+			data = pagedClusterEvents
+			break
+		}
 		// An organization-scoped CRN has no environment element, and an environment-scoped one has no cluster.
 		if strings.Contains(req.CRN, "/kafka=") {
 			require.Contains(t, req.CRN, "/environment=", req.CRN)
@@ -185,12 +206,16 @@ func handleUnifiedLogsSearch(t *testing.T, w http.ResponseWriter, r *http.Reques
 	if data == nil {
 		data = []map[string]any{}
 	}
+	response := map[string]any{"api_version": "v1", "kind": "Logs"}
+	data = data[min(offset, len(data)):]
 	if len(data) > pageSize {
 		data = data[:pageSize]
+		response["metadata"] = map[string]any{"next": fmt.Sprintf("http://%s%s?page_size=%d&page_token=%d", r.Host, r.URL.Path, pageSize, offset+pageSize)}
 	}
+	response["data"] = data
 
 	w.Header().Set("Content-Type", "application/json")
-	require.NoError(t, json.NewEncoder(w).Encode(map[string]any{"data": data, "api_version": "v1", "kind": "Logs"}))
+	require.NoError(t, json.NewEncoder(w).Encode(response))
 }
 
 func searchMatches(search map[string]any, event map[string]any) bool {

@@ -1,6 +1,9 @@
 package logs
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math"
 	"slices"
@@ -268,4 +271,15 @@ func buildCRN(source *loggingv1.LoggingV1Source, scope string, values crnValues)
 	}
 
 	return "crn://confluent.cloud/" + strings.Join(parts, "/"), nil
+}
+
+// queryKey identifies a fetch query for --next. It uses the window as the user gave it (--since, --from, --to)
+// rather than the resolved timestamps, which move with the clock, so repeating the same command matches.
+func queryKey(crn, source string, search map[string]any, since, from, to string) (string, error) {
+	data, err := json.Marshal([]any{crn, source, search, since, from, to})
+	if err != nil {
+		return "", err
+	}
+	sum := sha256.Sum256(data)
+	return hex.EncodeToString(sum[:]), nil
 }

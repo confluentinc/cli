@@ -31,6 +31,7 @@ Flags:
       --search strings       A comma-separated list of "field=value" search filters, validated against the log source. Repeating a field means OR (for example level=ERROR,level=WARN).
       --search-text string   Full-text search within log messages, where the log source supports it.
       --tail int             Return only the most recent N entries (maximum 1000).
+      --next                 Fetch the next page of the previous identical query.
       --output-file string   Append the results to this file as JSON lines.
       --cluster string       Kafka cluster ID.
       --environment string   Environment ID.
