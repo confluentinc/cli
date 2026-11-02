@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	loggingv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/logging/v1"
 
@@ -195,7 +196,7 @@ func (c *Client) newLoggingClient() (*loggingv1.APIClient, context.Context, erro
 	}
 
 	cfg := loggingv1.NewConfiguration()
-	cfg.HTTPClient = NewRetryableHttpClient(c.cfg, false)
+	cfg.HTTPClient = newRetryableHttpClient(c.cfg, false, false)
 	cfg.Servers = loggingv1.ServerConfigurations{{URL: loggingURL}}
 	cfg.UserAgent = c.cfg.Version.UserAgent
 
@@ -212,7 +213,7 @@ func (c *Client) ListLogSources() (*loggingv1.LoggingV1SourceList, error) {
 
 	sources, httpResp, err := client.LogsLoggingV1Api.ListLoggingV1Sources(ctx).Execute()
 	if err != nil {
-		return nil, errors.CatchCCloudV2Error(err, httpResp)
+		return nil, catchLoggingError(err, httpResp)
 	}
 	return &sources, nil
 }
@@ -226,7 +227,31 @@ func (c *Client) DescribeLogSource(name string) (*loggingv1.LoggingV1Source, err
 
 	source, httpResp, err := client.LogsLoggingV1Api.DescribeLoggingV1Source(ctx, name).Execute()
 	if err != nil {
-		return nil, errors.CatchCCloudV2Error(err, httpResp)
+		return nil, catchLoggingError(err, httpResp)
 	}
 	return &source, nil
+}
+
+// catchLoggingError turns a logging API failure into a CLI error. A 429 tells the user how long to wait, from the
+// Retry-After header the API sends.
+func catchLoggingError(err error, httpResp *http.Response) error {
+	if httpResp != nil && httpResp.StatusCode == http.StatusTooManyRequests {
+		return rateLimitError(httpResp.Header.Get("Retry-After"), time.Now())
+	}
+	return errors.CatchCCloudV2Error(err, httpResp)
+}
+
+// rateLimitError reports a 429. Retry-After is either a number of seconds or an HTTP date.
+func rateLimitError(retryAfter string, now time.Time) error {
+	const message = "rate limit exceeded for log queries"
+
+	if seconds, err := strconv.Atoi(strings.TrimSpace(retryAfter)); err == nil && seconds > 0 {
+		return fmt.Errorf("%s. Retry after %ds", message, seconds)
+	}
+	if date, err := http.ParseTime(retryAfter); err == nil {
+		if wait := date.Sub(now); wait > 0 {
+			return fmt.Errorf("%s. Retry after %ds", message, int((wait+time.Second-1)/time.Second))
+		}
+	}
+	return fmt.Errorf("%s. Try again later", message)
 }
