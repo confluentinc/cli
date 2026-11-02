@@ -11,7 +11,10 @@ import (
 	"strconv"
 	"strings"
 
+	loggingv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/logging/v1"
+
 	"github.com/confluentinc/cli/v4/pkg/auth"
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 const (
@@ -138,6 +141,10 @@ func getLoggingRequest(loggingURL string, request LoggingSearchRequest, dataplan
 }
 
 func getLoggingUrl(baseURL string) (string, error) {
+	return getLoggingUrlForPath(baseURL, "/logs/v1/search")
+}
+
+func getLoggingUrlForPath(baseURL, path string) (string, error) {
 	u, err := url.Parse(baseURL)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse platform server URL: %w", err)
@@ -156,7 +163,7 @@ func getLoggingUrl(baseURL string) (string, error) {
 	} else {
 		u.Host = "api.logging." + strings.TrimPrefix(u.Host, "api.")
 	}
-	u.Path = "/logs/v1/search"
+	u.Path = path
 	loggingURL := u.String()
 	return loggingURL, nil
 }
@@ -172,4 +179,40 @@ func getResponseErrorMessage(statusCode int, responseBody []byte, crn string) er
 		return fmt.Errorf("%s\n", errorMsg)
 	}
 	return nil
+}
+
+// newLoggingClient builds the SDK client for the logging API, which is served from its own host rather than the
+// regular Confluent Cloud API URL, and a context carrying the data plane token it authenticates with.
+func (c *Client) newLoggingClient() (*loggingv1.APIClient, context.Context, error) {
+	loggingURL, err := getLoggingUrlForPath(c.cfg.Context().GetPlatformServer(), "")
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get logging API URL: %w", err)
+	}
+
+	dataplaneToken, err := auth.GetDataplaneToken(c.cfg.Context())
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get data plane token: %w", err)
+	}
+
+	cfg := loggingv1.NewConfiguration()
+	cfg.HTTPClient = NewRetryableHttpClient(c.cfg, false)
+	cfg.Servers = loggingv1.ServerConfigurations{{URL: loggingURL}}
+	cfg.UserAgent = c.cfg.Version.UserAgent
+
+	ctx := context.WithValue(context.Background(), loggingv1.ContextAccessToken, dataplaneToken)
+	return loggingv1.NewAPIClient(cfg), ctx, nil
+}
+
+// ListLogSources queries GET /logs/v1/sources.
+func (c *Client) ListLogSources() (*loggingv1.LoggingV1SourceList, error) {
+	client, ctx, err := c.newLoggingClient()
+	if err != nil {
+		return nil, err
+	}
+
+	sources, httpResp, err := client.LogsLoggingV1Api.ListLoggingV1Sources(ctx).Execute()
+	if err != nil {
+		return nil, errors.CatchCCloudV2Error(err, httpResp)
+	}
+	return &sources, nil
 }
