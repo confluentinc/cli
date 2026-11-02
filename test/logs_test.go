@@ -42,6 +42,7 @@ func (s *CLITestSuite) TestLogsSourceDescribe() {
 		{args: "logs source describe cluster-health -o json", fixture: "logs/source/describe-json.golden"},
 		{args: "logs source describe cluster-health -o yaml", fixture: "logs/source/describe-yaml.golden"},
 		{args: "logs source describe connector", fixture: "logs/source/describe-unknown.golden", exitCode: 1},
+		{args: "logs source describe rate-limited", fixture: "logs/source/describe-rate-limited.golden", exitCode: 1},
 		{args: "logs source describe", fixture: "logs/source/describe-missing-arg.golden", exitCode: 1},
 	}
 
