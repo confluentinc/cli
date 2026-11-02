@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
 func (s *CLITestSuite) TestLogsHelp() {
@@ -69,7 +71,7 @@ func (s *CLITestSuite) TestLogsFetch() {
 func (s *CLITestSuite) TestLogsFetchNext() {
 	const query = "logs fetch lkc-777 --source cluster-health --since 24h"
 
-	s.runIntegrationTest(CLITest{login: "cloud", workflow: true, args: query, fixture: "logs/fetch/next-page-1.golden"})
+	s.runIntegrationTest(CLITest{login: "cloud", args: query, fixture: "logs/fetch/next-page-1.golden"})
 	s.runIntegrationTest(CLITest{workflow: true, args: query + " --next", fixture: "logs/fetch/next-page-2.golden"})
 	s.runIntegrationTest(CLITest{workflow: true, args: query + " --next", fixture: "logs/fetch/next-no-more.golden"})
 
@@ -82,8 +84,23 @@ func (s *CLITestSuite) TestLogsFetchNextWithTail() {
 }
 
 func (s *CLITestSuite) TestLogsFetchTailDropsCursor() {
-	s.runIntegrationTest(CLITest{login: "cloud", workflow: true, args: "logs fetch lkc-777 --source cluster-health --since 24h --tail 1", fixture: "logs/fetch/next-tail.golden"})
+	s.runIntegrationTest(CLITest{login: "cloud", args: "logs fetch lkc-777 --source cluster-health --since 24h --tail 1", fixture: "logs/fetch/next-tail.golden"})
 	s.runIntegrationTest(CLITest{workflow: true, args: "logs fetch lkc-777 --source cluster-health --since 24h --next", fixture: "logs/fetch/next-no-more.golden"})
+}
+
+// TestLogsFetchCachesDiscovery checks that a log source is discovered once and then reused, and that a query the
+// cached source rejects triggers one refresh before the error is shown.
+func (s *CLITestSuite) TestLogsFetchCachesDiscovery() {
+	const query = "logs fetch lkc-123 --source cluster-health --since 1h"
+	before := testserver.LogSourceRequests()
+	discoveryRequests := func(t *testing.T, want int64) {
+		require.Equal(t, want, testserver.LogSourceRequests()-before)
+	}
+
+	s.runIntegrationTest(CLITest{login: "cloud", args: query, fixture: "logs/fetch/resource.golden", wantFunc: func(t *testing.T) { discoveryRequests(t, 1) }})
+	s.runIntegrationTest(CLITest{workflow: true, args: query, fixture: "logs/fetch/resource.golden", wantFunc: func(t *testing.T) { discoveryRequests(t, 1) }})
+	s.runIntegrationTest(CLITest{workflow: true, args: query + " --search level=ERROR", fixture: "logs/fetch/resource-level-error.golden", wantFunc: func(t *testing.T) { discoveryRequests(t, 1) }})
+	s.runIntegrationTest(CLITest{workflow: true, args: query + " --search severity=ERROR", fixture: "logs/fetch/unknown-search-field.golden", exitCode: 1, wantFunc: func(t *testing.T) { discoveryRequests(t, 2) }})
 }
 
 func (s *CLITestSuite) TestLogsFetchOutputFile() {
