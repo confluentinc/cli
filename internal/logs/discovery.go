@@ -90,10 +90,36 @@ func withSources(key string, sources []loggingv1.LoggingV1Source, now time.Time)
 	return cache
 }
 
+// loadLogSourceList returns the discovered log sources, from the cache when the full list is
+// fresh, and from the discovery API otherwise.
+func loadLogSourceList(c *pcmd.AuthenticatedCLICommand) ([]loggingv1.LoggingV1Source, error) {
+	key := discoveryCacheKey(c.Context.GetPlatformServer(), c.Context.GetCurrentOrganization())
+	now := time.Now()
+
+	if sources := cachedSources(c.Context.GetLogsDiscoveryCache(), key, now); sources != nil {
+		return sources, nil
+	}
+
+	list, err := c.V2Client.ListLogSources()
+	if err != nil {
+		return nil, err
+	}
+	storeLogSources(c, key, list.Data, now)
+	return list.Data, nil
+}
+
 // storeLogSources saves the full list of log sources. Caching is best effort, so a failed save only gets logged.
 func storeLogSources(c *pcmd.AuthenticatedCLICommand, key string, sources []loggingv1.LoggingV1Source, now time.Time) {
 	c.Context.SetLogsDiscoveryCache(withSources(key, sources, now))
 	if err := c.Config.Save(); err != nil {
 		log.CliLogger.Debugf("Failed to cache log sources: %v", err)
+	}
+}
+
+// storeLogSource saves a log source for later commands. Caching is best effort, so a failed save only gets logged.
+func storeLogSource(c *pcmd.AuthenticatedCLICommand, key string, source *loggingv1.LoggingV1Source, now time.Time) {
+	c.Context.SetLogsDiscoveryCache(withSource(c.Context.GetLogsDiscoveryCache(), key, source, now))
+	if err := c.Config.Save(); err != nil {
+		log.CliLogger.Debugf("Failed to cache log source %q: %v", source.Name, err)
 	}
 }

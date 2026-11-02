@@ -73,3 +73,18 @@ func (s *CLITestSuite) TestLogsSourceListRefreshesDiscovery() {
 	s.runIntegrationTest(CLITest{login: "cloud", args: "logs source list", fixture: "logs/source/list.golden", wantFunc: func(t *testing.T) { discoveryRequests(t, 1) }})
 	s.runIntegrationTest(CLITest{workflow: true, args: "logs source list", fixture: "logs/source/list.golden", wantFunc: func(t *testing.T) { discoveryRequests(t, 2) }})
 }
+
+// TestLogsSourceDescribeRefreshesDiscovery checks that `source describe` always asks the API, and that completion
+// reuses the list `source list` fetched, even after `source describe` cached a single source.
+func (s *CLITestSuite) TestLogsSourceDescribeRefreshesDiscovery() {
+	before := testserver.LogSourceRequests()
+	discoveryRequests := func(t *testing.T, want int64) {
+		require.Equal(t, want, testserver.LogSourceRequests()-before)
+	}
+
+	s.runIntegrationTest(CLITest{login: "cloud", args: "logs source list", fixture: "logs/source/list.golden", wantFunc: func(t *testing.T) { discoveryRequests(t, 1) }})
+	s.runIntegrationTest(CLITest{workflow: true, args: `__complete logs source describe ""`, fixture: "logs/source/describe-autocomplete.golden", wantFunc: func(t *testing.T) { discoveryRequests(t, 1) }})
+	s.runIntegrationTest(CLITest{workflow: true, args: "logs source describe cluster-health", fixture: "logs/source/describe.golden", wantFunc: func(t *testing.T) { discoveryRequests(t, 2) }})
+	s.runIntegrationTest(CLITest{workflow: true, args: `__complete logs source describe ""`, fixture: "logs/source/describe-autocomplete.golden", wantFunc: func(t *testing.T) { discoveryRequests(t, 2) }})
+	s.runIntegrationTest(CLITest{workflow: true, args: "logs source describe cluster-health", fixture: "logs/source/describe.golden", wantFunc: func(t *testing.T) { discoveryRequests(t, 3) }})
+}

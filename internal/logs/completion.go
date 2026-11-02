@@ -14,13 +14,13 @@ func completeSources(c *pcmd.AuthenticatedCLICommand, cmd *cobra.Command, args [
 		return nil
 	}
 
-	sources, err := c.V2Client.ListLogSources()
+	sources, err := loadLogSourceList(c)
 	if err != nil {
 		return nil
 	}
 
-	suggestions := make([]string, len(sources.Data))
-	for i, source := range sources.Data {
+	suggestions := make([]string, len(sources))
+	for i, source := range sources {
 		suggestions[i] = fmt.Sprintf("%s\t%s", source.Name, source.DisplayName)
 	}
 	return suggestions

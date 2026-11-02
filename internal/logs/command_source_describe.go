@@ -3,6 +3,7 @@ package logs
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -21,7 +22,7 @@ func newSourceDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <source>",
 		Short: "Describe a log source.",
-		Long:  "Describe a log source: the scopes it supports, the search fields `confluent logs fetch --search` accepts for it, and the fields each log record carries.",
+		Long:  "Describe a log source: the scopes it supports, the search fields `confluent logs fetch --search` accepts for it, and the fields each log record carries. Results are always fetched fresh.",
 		Args:  cobra.ExactArgs(1),
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -54,6 +55,8 @@ func (c *sourceDescribeCommand) describe(cmd *cobra.Command, args []string) erro
 	if err != nil {
 		return err
 	}
+	// The source is always fetched fresh, and it refreshes the cached entry other logs commands reuse.
+	storeLogSource(c.AuthenticatedCLICommand, discoveryCacheKey(c.Context.GetPlatformServer(), c.Context.GetCurrentOrganization()), source, time.Now())
 
 	if output.GetFormat(cmd).IsSerialized() {
 		return output.SerializedOutputFromJsonTags(cmd, source)

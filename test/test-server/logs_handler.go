@@ -84,6 +84,8 @@ func handleLogsSources(_ *testing.T) http.HandlerFunc {
 // Handler for: "/logs/v1/sources/{name}"
 func handleLogsSource(_ *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		logSourceRequests.Add(1)
+
 		if r.Method != http.MethodGet {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
