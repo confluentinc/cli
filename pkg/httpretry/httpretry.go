@@ -34,7 +34,8 @@ const (
 	Multiplier = 1.6
 	// JitterFraction is the jitter applied to waits (+/-20% for backoff, +0..20% when honoring Retry-After).
 	JitterFraction = 0.2
-	// MaxRetryAfter caps how long we will honor a server-provided Retry-After.
+	// MaxRetryAfter caps how long we will honor a server-provided Retry-After. Jitter is added on top of the
+	// capped value, so the actual wait can reach MaxRetryAfter*(1+JitterFraction).
 	MaxRetryAfter = 60 * time.Second
 	// RequestTimeout is the timeout for each individual attempt (set as http.Client.Timeout, so it covers
 	// connecting, redirects and reading the response body). It is deliberately not an overall deadline: the
@@ -165,7 +166,7 @@ func isTransient(err error) bool {
 //
 // Without a usable Retry-After header the wait is min*Multiplier^attempt, capped at max, with +/-JitterFraction
 // jitter (re-capped at max). On 429/503 with Retry-After, the wait is the server's value (capped at
-// MaxRetryAfter) plus 0..JitterFraction extra, so we never retry earlier than the server asked.
+// MaxRetryAfter) plus 0..JitterFraction extra (so up to 72s), so we never retry earlier than the server asked.
 func Backoff(min, max time.Duration, attempt int, resp *http.Response) time.Duration {
 	if NoWait {
 		return 0

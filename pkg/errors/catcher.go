@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -165,8 +166,9 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 	}
 
 	suggestions := "The request was retried several times and the server is still rate limiting. Reduce the request rate and try again."
-	if retryAfter := r.Header.Get("Retry-After"); retryAfter != "" {
-		suggestions = fmt.Sprintf("The request was retried several times and the server is still rate limiting. Wait %s seconds, reduce the request rate, and try again.", retryAfter)
+	// Retry-After may also be an HTTP-date; only a plain number of seconds can be shown as such.
+	if seconds, parseErr := strconv.Atoi(strings.TrimSpace(r.Header.Get("Retry-After"))); parseErr == nil && seconds > 0 {
+		suggestions = fmt.Sprintf("The request was retried several times and the server is still rate limiting. Wait %d seconds, reduce the request rate, and try again.", seconds)
 	}
 	return NewErrorWithSuggestions(err.Error(), suggestions)
 }
