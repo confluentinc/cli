@@ -25,7 +25,7 @@ func handleCCPMPlugins(t *testing.T) http.HandlerFunc {
 			// Check if this is an error test case
 			if environment == "env-error" && cloud == "" {
 				// This is the error handling test case - return error
-				http.Error(w, "API Error", http.StatusInternalServerError)
+				_ = writeError500(w, "API Error")
 				return
 			}
 
@@ -111,7 +111,7 @@ func handleCCPMPlugins(t *testing.T) http.HandlerFunc {
 			if ok {
 				if envId, ok := environment["id"].(string); ok && envId == "env-error" {
 					// This is the error handling test case - return error
-					http.Error(w, "API Error", http.StatusInternalServerError)
+					_ = writeError500(w, "API Error")
 					return
 				}
 			}
@@ -180,7 +180,7 @@ func handleCCPMPluginId(t *testing.T) http.HandlerFunc {
 			// Check if this is an error test case
 			if environment == "env-error" {
 				// This is the error handling test case - return error
-				http.Error(w, "API Error", http.StatusInternalServerError)
+				_ = writeError500(w, "API Error")
 				return
 			}
 
@@ -233,7 +233,7 @@ func handleCCPMPluginId(t *testing.T) http.HandlerFunc {
 			// Check if this is an error test case
 			if environment == "env-error" {
 				// This is the error handling test case - return error
-				http.Error(w, "API Error", http.StatusInternalServerError)
+				_ = writeError500(w, "API Error")
 				return
 			}
 
@@ -273,7 +273,7 @@ func handleCCPMPluginId(t *testing.T) http.HandlerFunc {
 			// Check if this is an error test case
 			if environment == "env-error" {
 				// This is the error handling test case - return error
-				http.Error(w, "API Error", http.StatusInternalServerError)
+				_ = writeError500(w, "API Error")
 				return
 			}
 
@@ -551,4 +551,11 @@ func handleCCPMUploadFile(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 		}
 	}
+}
+
+// writeError500 writes a 500 with a JSON error body (like the real API) so the SDK can parse it.
+func writeError500(w http.ResponseWriter, detail string) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusInternalServerError)
+	return json.NewEncoder(w).Encode(map[string]any{"errors": []map[string]string{{"detail": detail}}})
 }

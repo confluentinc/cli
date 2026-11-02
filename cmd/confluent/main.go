@@ -9,6 +9,7 @@ import (
 	"github.com/confluentinc/cli/v4/internal"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	_ "github.com/confluentinc/cli/v4/pkg/fips"
+	"github.com/confluentinc/cli/v4/pkg/httpretry"
 	pversion "github.com/confluentinc/cli/v4/pkg/version"
 )
 
@@ -35,6 +36,7 @@ func main() {
 
 	cfg.DisableUpdates = disableUpdates
 	cfg.IsTest = isTest
+	httpretry.NoWait = isTest // integration tests must not sleep between retries
 	cfg.Version = pversion.NewVersion(version, commit, date)
 
 	cmd := internal.NewConfluentCommand(cfg)

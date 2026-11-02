@@ -14,6 +14,9 @@ import (
 const (
 	authTokenRegex        = `^[\w-]*\.[\w-]*\.[\w-]*$`
 	authRefreshTokenRegex = `^(v1\..*)$`
+
+	// tokenExpirySafetyMargin is how long before the "exp" claim a token is treated as expired.
+	tokenExpirySafetyMargin = 60 * time.Second
 )
 
 type ContextState struct {
@@ -52,7 +55,21 @@ func (c *ContextState) DecryptAuthRefreshToken(ctxName string) error {
 	return nil
 }
 
+// IsExpired reports whether the session token should be treated as expired.
+// A token is considered expired once the current time is within
+// tokenExpirySafetyMargin of its "exp" claim, so that a token is not used
+// moments before the server would reject it.
+//
+// A nil state, an unparseable token, or a token without a numeric "exp" claim
+// is NOT treated as expired: we cannot prove expiry, and the only caller
+// (the 401 handler in ccloudv2) uses this to decide whether to attempt a
+// session refresh, so reporting "expired" for opaque tokens would trigger
+// refreshes that cannot be validated.
 func (c *ContextState) IsExpired() bool {
+	return c.isExpiredAt(time.Now())
+}
+
+func (c *ContextState) isExpiredAt(now time.Time) bool {
 	if c == nil {
 		return false
 	}
@@ -72,5 +89,5 @@ func (c *ContextState) IsExpired() bool {
 		return false
 	}
 
-	return float64(time.Now().Unix()) > exp
+	return float64(now.Unix()) >= exp-tokenExpirySafetyMargin.Seconds()
 }

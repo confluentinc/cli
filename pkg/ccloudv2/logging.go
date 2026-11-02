@@ -91,6 +91,11 @@ func (c *Client) SearchConnectorLogs(crn, connectorId, startTime, endTime string
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == http.StatusTooManyRequests {
+		// Retries are exhausted; the shared retry policy hands back the last response rather than an error.
+		return nil, fmt.Errorf("failed to make HTTP request to logging API due to issue connecting to the server, please make sure you adhere to 5 requests per minute per connector rate limit")
+	}
+
 	responseBody, readErr := io.ReadAll(resp.Body)
 	if readErr != nil {
 		return nil, fmt.Errorf("logging API request failed with status %d and failed to read response body: %w", resp.StatusCode, readErr)
