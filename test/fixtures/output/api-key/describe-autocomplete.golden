@@ -12,7 +12,10 @@ MYKEY18
 MYKEY19	human-output
 MYKEY2
 MYKEY20
-MYKEY21	created-and-used
+MYKEY21
+MYKEY22
+MYKEY23
+MYKEY24	created-and-used
 MYKEY3
 MYKEY4	my-cool-app
 MYKEY6	my-ksql-app

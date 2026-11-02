@@ -20,6 +20,9 @@ import (
 type createOut struct {
 	ApiKey    string `human:"API Key" serialized:"api_key"`
 	ApiSecret string `human:"API Secret" serialized:"api_secret"`
+	// Expiration is what the server returned, so it also shows a default the server applied (an
+	// organization's maximum expiration when --expiration was omitted).
+	Expiration string `human:"Expiration,omitempty" serialized:"expiration,omitempty"`
 }
 
 func (c *command) newCreateCommand() *cobra.Command {
@@ -67,7 +70,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 
 	c.addResourceFlag(cmd, false)
 	cmd.Flags().String("description", "", "Description of API key.")
-	cmd.Flags().String("expiration", "", `Expiration date of the API key, in UTC (for example, "2026-12-31"). The key remains valid through the end of this date. If not specified, the key never expires.`)
+	cmd.Flags().String("expiration", "", `Expiration date of the API key, in UTC (for example, "2026-12-31"). The key remains valid through the end of this date. If not specified, the key never expires, unless your organization sets a maximum expiration, in which case the key expires at that maximum.`)
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlagFlink(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Bool("use", false, "Use the created API key for the provided resource.")
@@ -136,8 +139,9 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&createOut{
-		ApiKey:    userKey.Key,
-		ApiSecret: userKey.Secret,
+		ApiKey:     userKey.Key,
+		ApiSecret:  userKey.Secret,
+		Expiration: v2Key.Spec.GetExpiresAt(),
 	})
 	if err := table.Print(); err != nil {
 		return err
@@ -158,7 +162,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-// getExpiration returns the --expiration date, or "" when the flag is omitted (the key never expires).
+// getExpiration returns the --expiration date, or "" when the flag is omitted (the key never expires, or gets
+// the organization's maximum expiration if it has set one).
 // An explicitly empty value (e.g. --expiration "$UNSET_VAR") is rejected like any other invalid date,
 // rather than silently creating a key that never expires; this matches the API, which rejects an empty
 // expires_at.
@@ -173,7 +178,7 @@ func getExpiration(cmd *cobra.Command) (string, error) {
 	if _, err := time.Parse("2006-01-02", expiration); err != nil {
 		return "", errors.NewErrorWithSuggestions(
 			fmt.Sprintf(`invalid expiration date "%s"`, expiration),
-			`Specify the expiration date in UTC (for example, "2026-12-31"), or omit --expiration for a key that never expires.`,
+			`Specify the expiration date in UTC (for example, "2026-12-31"), or omit --expiration to use the default: no expiration, or your organization's maximum expiration if it sets one.`,
 		)
 	}
 	return expiration, nil

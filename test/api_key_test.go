@@ -267,6 +267,15 @@ func (s *CLITestSuite) TestApiKeyExpiration() {
 		{args: "api-key describe MYKEY20", fixture: "api-key/describe-created-expiration.golden"},
 		{args: "api-key create --resource cloud --expiration not-a-date", fixture: "api-key/create-expiration-invalid.golden", exitCode: 1},
 		{args: `api-key create --resource cloud --expiration ""`, fixture: "api-key/create-expiration-empty.golden", exitCode: 1},
+		// The organization sets a maximum expiration: a create without --expiration gets it from the server, and
+		// both create and describe show it.
+		{args: "api-key create --resource cloud --service-account sa-orgmax", fixture: "api-key/create-expiration-org-max.golden"},
+		{args: "api-key describe MYKEY21", fixture: "api-key/describe-expiration-org-max.golden"},
+		{args: "api-key create --resource cloud --service-account sa-orgmax -o json", fixture: "api-key/create-expiration-org-max-json.golden"},
+		// An explicit expiration is sent as is and shown on create.
+		{args: "api-key create --resource cloud --service-account sa-orgmax --expiration 2026-12-31", fixture: "api-key/create-expiration-explicit-org-max.golden"},
+		// An explicit expiration beyond the organization's maximum is rejected by the server, and its message is shown.
+		{args: "api-key create --resource cloud --service-account sa-orgmax --expiration 2099-12-31", fixture: "api-key/create-expiration-over-org-max.golden", exitCode: 1},
 	}
 
 	resetConfiguration(s.T(), false)

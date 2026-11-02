@@ -65,6 +65,13 @@ func init() {
 }
 
 // Handler for: "/iam/v2/api-keys/{id}"
+const (
+	// orgMaxExpirationOwner is an owner whose organization sets a maximum API key expiration.
+	orgMaxExpirationOwner = "sa-orgmax"
+	// orgMaxExpirationDefault is the expiration the server applies to that owner's keys when none is sent.
+	orgMaxExpirationDefault = "2027-01-31"
+)
+
 func handleIamApiKey(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -143,6 +150,18 @@ func handleIamApiKeysCreate(t *testing.T) http.HandlerFunc {
 		}
 
 		apiKey := req
+
+		// Simulates an organization that sets a maximum expiration: the server defaults a create
+		// without an expiration to that maximum instead of rejecting it, and rejects a later date.
+		if req.Spec.Owner.Id == orgMaxExpirationOwner {
+			if req.Spec.ExpiresAt == nil {
+				req.Spec.ExpiresAt = apikeysv2.PtrString(orgMaxExpirationDefault)
+			} else if *req.Spec.ExpiresAt > orgMaxExpirationDefault {
+				w.WriteHeader(http.StatusBadRequest)
+				require.NoError(t, writeErrorJson(w, "API key expiration must be at most 90 day(s) in the future (your organization's maximum)."))
+				return
+			}
+		}
 
 		switch req.Spec.Resource.Get().GetKind() {
 		case "Region":
