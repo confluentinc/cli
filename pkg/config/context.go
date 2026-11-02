@@ -31,6 +31,8 @@ type Context struct {
 	// ActiveGlobalAPIKey is the Global API key chosen via `confluent api-key use`; used as a fallback when no
 	// resource-scoped API key is set on the active cluster.
 	ActiveGlobalAPIKey string `json:"active_global_api_key,omitempty"`
+	// LogsDiscoveryCache holds the log sources `confluent logs` discovered, to save repeated discovery calls.
+	LogsDiscoveryCache *LogsDiscoveryCache `json:"logs_discovery,omitempty"`
 
 	// Deprecated
 	NetrcMachineName       string                            `json:"netrc_machine_name,omitempty"`
@@ -459,6 +461,14 @@ func (c *Context) SetConnectLogsQueryState(state *ConnectLogsQueryState) error {
 
 	ctx.ConnectLogsQueryState = state
 	return nil
+}
+
+func (c *Context) GetLogsDiscoveryCache() *LogsDiscoveryCache {
+	return c.LogsDiscoveryCache
+}
+
+func (c *Context) SetLogsDiscoveryCache(cache *LogsDiscoveryCache) {
+	c.LogsDiscoveryCache = cache
 }
 
 func (c *Context) GetAuthToken() string {

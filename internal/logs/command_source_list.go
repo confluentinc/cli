@@ -3,6 +3,7 @@ package logs
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -28,7 +29,7 @@ func newSourceListCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List log sources.",
-		Long:  "List every log source that `confluent logs fetch` can query.",
+		Long:  "List every log source that `confluent logs fetch` can query. Results are always fetched fresh.",
 		Args:  cobra.NoArgs,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -52,6 +53,8 @@ func (c *sourceListCommand) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	// The list is always fetched fresh, and it refreshes what completion reuses.
+	storeLogSources(c.AuthenticatedCLICommand, discoveryCacheKey(c.Context.GetPlatformServer(), c.Context.GetCurrentOrganization()), sources.Data, time.Now())
 
 	if output.GetFormat(cmd).IsSerialized() {
 		return output.SerializedOutputFromJsonTags(cmd, sources)
