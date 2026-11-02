@@ -11,6 +11,9 @@ import (
 type LogsDiscoveryCache struct {
 	// Key is the platform server and organization the entries were fetched for.
 	Key string `json:"key,omitempty"`
+	// ListedAt is when the full list of log sources was last fetched. It is zero when only single sources are cached,
+	// which is not enough to answer "which log sources exist".
+	ListedAt time.Time `json:"listed_at,omitzero"`
 	// Sources holds each log source by name.
 	Sources map[string]*LogsCachedSource `json:"sources,omitempty"`
 }

@@ -103,6 +103,19 @@ func (s *CLITestSuite) TestLogsFetchCachesDiscovery() {
 	s.runIntegrationTest(CLITest{workflow: true, args: query + " --search severity=ERROR", fixture: "logs/fetch/unknown-search-field.golden", exitCode: 1, wantFunc: func(t *testing.T) { discoveryRequests(t, 2) }})
 }
 
+// TestLogsSourceListRefreshesDiscovery checks that `source list` always asks the API, and that completion then reuses
+// what it fetched.
+func (s *CLITestSuite) TestLogsSourceListRefreshesDiscovery() {
+	before := testserver.LogSourceRequests()
+	discoveryRequests := func(t *testing.T, want int64) {
+		require.Equal(t, want, testserver.LogSourceRequests()-before)
+	}
+
+	s.runIntegrationTest(CLITest{login: "cloud", args: "logs source list", fixture: "logs/source/list.golden", wantFunc: func(t *testing.T) { discoveryRequests(t, 1) }})
+	s.runIntegrationTest(CLITest{workflow: true, args: `__complete logs fetch --source ""`, fixture: "logs/fetch-source-autocomplete.golden", wantFunc: func(t *testing.T) { discoveryRequests(t, 1) }})
+	s.runIntegrationTest(CLITest{workflow: true, args: "logs source list", fixture: "logs/source/list.golden", wantFunc: func(t *testing.T) { discoveryRequests(t, 2) }})
+}
+
 func (s *CLITestSuite) TestLogsFetchOutputFile() {
 	path := filepath.Join(s.T().TempDir(), "logs.jsonl")
 

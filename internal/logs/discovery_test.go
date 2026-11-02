@@ -104,3 +104,26 @@ func TestResolveSource(t *testing.T) {
 	}, needsLevel)
 	require.EqualError(t, err, "unknown source")
 }
+
+func TestCachedSources(t *testing.T) {
+	now := time.Date(2026, 10, 14, 12, 0, 0, 0, time.UTC)
+	key := discoveryCacheKey("https://confluent.cloud", "org-1")
+
+	cache := withSources(key, []loggingv1.LoggingV1Source{*connectorLogs, *clusterHealth}, now.Add(-time.Hour))
+
+	got := cachedSources(cache, key, now)
+	require.Len(t, got, 2)
+	require.Equal(t, "cluster-health", got[0].Name, "sorted by name")
+	require.Equal(t, "connector", got[1].Name)
+
+	require.Nil(t, cachedSources(nil, key, now), "no cache")
+	require.Nil(t, cachedSources(cache, discoveryCacheKey("https://confluent.cloud", "org-2"), now), "other organization")
+	require.Nil(t, cachedSources(cache, key, now.Add(discoveryCacheTTL)), "expired")
+
+	// Single sources alone do not tell which log sources exist.
+	require.Nil(t, cachedSources(withSource(nil, key, clusterHealth, now), key, now), "never listed")
+
+	// A full list replaces whatever was cached before.
+	relisted := withSources(key, []loggingv1.LoggingV1Source{*clusterHealth}, now)
+	require.Len(t, cachedSources(relisted, key, now), 1)
+}
