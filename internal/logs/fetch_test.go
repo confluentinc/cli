@@ -238,3 +238,26 @@ func TestDashIfEmpty(t *testing.T) {
 	require.Equal(t, "-", dashIfEmpty(""))
 	require.Equal(t, "lkc", dashIfEmpty("lkc"))
 }
+
+func TestQueryKey(t *testing.T) {
+	search := map[string]any{"level": []string{"ERROR", "WARN"}, "search_text": "boom"}
+
+	key, err := queryKey("crn://a", "cluster-health", search, "24h", "", "")
+	require.NoError(t, err)
+
+	same, err := queryKey("crn://a", "cluster-health", map[string]any{"search_text": "boom", "level": []string{"ERROR", "WARN"}}, "24h", "", "")
+	require.NoError(t, err)
+	require.Equal(t, key, same)
+
+	for name, other := range map[string][]any{
+		"resource": {"crn://b", "cluster-health", search, "24h", "", ""},
+		"source":   {"crn://a", "connector", search, "24h", "", ""},
+		"search":   {"crn://a", "cluster-health", map[string]any{"level": "ERROR"}, "24h", "", ""},
+		"since":    {"crn://a", "cluster-health", search, "1h", "", ""},
+		"from":     {"crn://a", "cluster-health", search, "", "2026-10-14T00:00:00Z", ""},
+	} {
+		got, err := queryKey(other[0].(string), other[1].(string), other[2].(map[string]any), other[3].(string), other[4].(string), other[5].(string))
+		require.NoError(t, err)
+		require.NotEqual(t, key, got, name)
+	}
+}

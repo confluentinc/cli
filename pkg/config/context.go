@@ -461,6 +461,23 @@ func (c *Context) SetConnectLogsQueryState(state *ConnectLogsQueryState) error {
 	return nil
 }
 
+func (c *Context) GetLogsQueryState() *LogsQueryState {
+	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
+		return ctx.LogsQueryState
+	}
+	return nil
+}
+
+func (c *Context) SetLogsQueryState(state *LogsQueryState) error {
+	ctx := c.GetCurrentEnvironmentContext()
+	if ctx == nil {
+		return errors.New(noEnvError)
+	}
+
+	ctx.LogsQueryState = state
+	return nil
+}
+
 func (c *Context) GetAuthToken() string {
 	if state := c.GetState(); state != nil {
 		return state.AuthToken

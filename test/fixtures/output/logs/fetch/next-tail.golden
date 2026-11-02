@@ -1,0 +1,5 @@
+Found 1 log entry for cluster-health on lkc-777:
+
+       Timestamp       | Level |       Event Type       |          Message            
+-----------------------+-------+------------------------+-----------------------------
+  2026-10-14T13:05:00Z | ERROR | SERVICE_ISSUE_DETECTED | Broker lkc-777 unreachable  

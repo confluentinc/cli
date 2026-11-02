@@ -283,3 +283,17 @@ func TestContext_ResolveKafkaAPIKey_ErrorsWhenClusterSecretMissing(t *testing.T)
 	_, _, err := ctx.ResolveKafkaAPIKey(kcc)
 	require.Error(t, err, "should surface the broken cluster-scoped config rather than fall back to Global")
 }
+
+func TestContext_LogsQueryState(t *testing.T) {
+	ctx := &Context{
+		CurrentEnvironment: "env-1",
+		Environments:       map[string]*EnvironmentContext{"env-1": {}},
+	}
+	require.Nil(t, ctx.GetLogsQueryState())
+
+	state := &LogsQueryState{Key: "abc", PageToken: "2", StartTime: "2026-10-14T00:00:00Z", EndTime: "2026-10-14T12:00:00Z"}
+	require.NoError(t, ctx.SetLogsQueryState(state))
+	require.Equal(t, state, ctx.GetLogsQueryState())
+	// The connect command keeps its own state, untouched.
+	require.Nil(t, ctx.GetConnectLogsQueryState())
+}
