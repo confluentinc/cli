@@ -112,6 +112,11 @@ func handleLogsSources(_ *testing.T) http.HandlerFunc {
 // Handler for: "/logs/v1/sources/{name}"
 func handleLogsSource(_ *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 
 		name := mux.Vars(r)["name"]
