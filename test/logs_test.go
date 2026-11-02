@@ -117,6 +117,19 @@ func (s *CLITestSuite) TestLogsSourceListRefreshesDiscovery() {
 	s.runIntegrationTest(CLITest{workflow: true, args: "logs source list", fixture: "logs/source/list.golden", wantFunc: func(t *testing.T) { discoveryRequests(t, 2) }})
 }
 
+// TestLogsSourceDescribeRefreshesDiscovery checks that `source describe` always asks the API, and that fetch then
+// reuses the source it fetched.
+func (s *CLITestSuite) TestLogsSourceDescribeRefreshesDiscovery() {
+	before := testserver.LogSourceRequests()
+	discoveryRequests := func(t *testing.T, want int64) {
+		require.Equal(t, want, testserver.LogSourceRequests()-before)
+	}
+
+	s.runIntegrationTest(CLITest{login: "cloud", args: "logs source describe cluster-health", fixture: "logs/source/describe.golden", wantFunc: func(t *testing.T) { discoveryRequests(t, 1) }})
+	s.runIntegrationTest(CLITest{workflow: true, args: "logs fetch lkc-123 --source cluster-health --since 1h", fixture: "logs/fetch/resource.golden", wantFunc: func(t *testing.T) { discoveryRequests(t, 1) }})
+	s.runIntegrationTest(CLITest{workflow: true, args: "logs source describe cluster-health", fixture: "logs/source/describe.golden", wantFunc: func(t *testing.T) { discoveryRequests(t, 2) }})
+}
+
 func (s *CLITestSuite) TestLogsFetchOutputFile() {
 	path := filepath.Join(s.T().TempDir(), "logs.jsonl")
 

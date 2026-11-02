@@ -3,6 +3,7 @@ package logs
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -54,6 +55,8 @@ func (c *sourceDescribeCommand) describe(cmd *cobra.Command, args []string) erro
 	if err != nil {
 		return err
 	}
+	// The source is always fetched fresh, and it refreshes what fetch reuses.
+	storeLogSource(c.AuthenticatedCLICommand, discoveryCacheKey(c.Context.GetPlatformServer(), c.Context.GetCurrentOrganization()), source, time.Now())
 
 	if output.GetFormat(cmd).IsSerialized() {
 		return output.SerializedOutputFromJsonTags(cmd, source)
