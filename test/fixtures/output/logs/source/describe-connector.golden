@@ -1,0 +1,22 @@
+Log source:        connector
+Display name:      Connector logs
+Resource:          connector (crn: organization/environment/cloud-cluster/connector)
+Scopes:            resource
+Max lookback:      3d
+Full-text search:  yes (--search-text over: message, exception.stacktrace)
+
+Search fields (--search field=value):
+  level    enum    INFO, WARN, ERROR, FATAL
+  task_id  string
+  id       string
+
+Returned fields (each log record):
+  timestamp             timestamp  *
+  level                 enum       *
+  task_id               string     *
+  message               string     *
+  exception.stacktrace  string     *
+  id                    string     *
+  name                  string     *
+
+  * = default column in human output

@@ -4,6 +4,7 @@ Usage:
   confluent logs source [command]
 
 Available Commands:
+  describe    Describe a log source.
   list        List log sources.
 
 Global Flags:
