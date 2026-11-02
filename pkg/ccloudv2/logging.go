@@ -216,3 +216,17 @@ func (c *Client) ListLogSources() (*loggingv1.LoggingV1SourceList, error) {
 	}
 	return &sources, nil
 }
+
+// DescribeLogSource queries GET /logs/v1/sources/{name}.
+func (c *Client) DescribeLogSource(name string) (*loggingv1.LoggingV1Source, error) {
+	client, ctx, err := c.newLoggingClient()
+	if err != nil {
+		return nil, err
+	}
+
+	source, httpResp, err := client.LogsLoggingV1Api.DescribeLoggingV1Source(ctx, name).Execute()
+	if err != nil {
+		return nil, errors.CatchCCloudV2Error(err, httpResp)
+	}
+	return &source, nil
+}

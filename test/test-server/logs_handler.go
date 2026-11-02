@@ -6,6 +6,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/gorilla/mux"
 )
 
 var logSources = map[string]string{
@@ -91,5 +93,27 @@ func handleLogsSources(_ *testing.T) http.HandlerFunc {
 		}
 
 		_, _ = fmt.Fprintf(w, `{"api_version":"logging/v1","kind":"SourceList","metadata":{"total_size":%d},"data":[%s]}`, len(data), strings.Join(data, ","))
+	}
+}
+
+// Handler for: "/logs/v1/sources/{name}"
+func handleLogsSource(_ *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		name := mux.Vars(r)["name"]
+		source, ok := logSources[name]
+		if !ok {
+			w.WriteHeader(http.StatusNotFound)
+			_, _ = fmt.Fprintf(w, `{"errors":[{"status":"404","detail":"Unknown source: %s"}]}`, name)
+			return
+		}
+
+		_, _ = w.Write([]byte(source))
 	}
 }
