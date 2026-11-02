@@ -20,10 +20,6 @@ data:
       name: cluster-health
       resource_type: kafka
       returned_fields:
-        - default_column: false
-          description: Unique identifier for this log record.
-          name: id
-          type: string
         - default_column: true
           description: Event time, RFC 3339 UTC.
           name: timestamp
@@ -33,8 +29,16 @@ data:
           name: level
           type: enum
         - default_column: true
+          description: Type of cluster health event.
+          name: event_type
+          type: enum
+        - default_column: true
           description: Human-readable description of the event.
           name: message
+          type: string
+        - default_column: false
+          description: Unique identifier for this log record.
+          name: id
           type: string
         - default_column: false
           description: Confluent Resource Name of the resource the event concerns.
@@ -44,10 +48,6 @@ data:
           description: Component or subsystem that generated the event.
           name: source
           type: string
-        - default_column: true
-          description: Type of cluster health event.
-          name: event_type
-          type: enum
         - default_column: false
           description: Event-specific identifier, when provided.
           name: event_id
