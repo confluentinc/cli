@@ -145,23 +145,16 @@ func (c *fetchCommand) fetch(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	source, err := c.V2Client.DescribeLogSource(sourceName)
-	if err != nil {
-		return err
-	}
-
-	if err := validateSearch(source, search); err != nil {
-		return err
-	}
-	if err := validateLookback(source, since); err != nil {
-		return err
-	}
-	if err := validateResourceId(source, resourceId); err != nil {
-		return err
-	}
-
 	scope := scopeFor(resourceId, cmd.Flags().Changed("environment"))
-	if err := validateScope(source, scope, resourceId); err != nil {
+	source, err := resolveSource(
+		func(refresh bool) (*loggingv1.LoggingV1Source, bool, error) {
+			return loadLogSource(c.AuthenticatedCLICommand, sourceName, refresh)
+		},
+		func(source *loggingv1.LoggingV1Source) error {
+			return validateQuery(source, search, since, resourceId, scope)
+		},
+	)
+	if err != nil {
 		return err
 	}
 
