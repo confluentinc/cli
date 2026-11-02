@@ -94,6 +94,13 @@ func handleLogsSource(_ *testing.T) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 
 		name := mux.Vars(r)["name"]
+		if name == "rate-limited" {
+			w.Header().Set("Retry-After", "12")
+			w.WriteHeader(http.StatusTooManyRequests)
+			_, _ = fmt.Fprint(w, `{"errors":[{"status":"429","detail":"Too many source discovery requests. Please see the documentation for current rate limits."}]}`)
+			return
+		}
+
 		source, ok := logSources[name]
 		if !ok {
 			w.WriteHeader(http.StatusNotFound)
