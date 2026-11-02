@@ -5,17 +5,22 @@ import (
 	"fmt"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 )
 
 type unifiedLogsSearchRequest struct {
-	CRN    string         `json:"crn"`
-	Source string         `json:"source"`
-	Search map[string]any `json:"search"`
+	CRN       string         `json:"crn"`
+	Source    string         `json:"source"`
+	Search    map[string]any `json:"search"`
+	Sort      string         `json:"sort"`
+	StartTime string         `json:"start_time"`
+	EndTime   string         `json:"end_time"`
 }
 
 var logSources = map[string]string{
@@ -124,11 +129,31 @@ var clusterHealthEvents = []map[string]any{
 }
 
 // handleUnifiedLogsSearch serves POST /logs/v1/search requests that name a log source.
-func handleUnifiedLogsSearch(t *testing.T, w http.ResponseWriter, req unifiedLogsSearchRequest) {
+func handleUnifiedLogsSearch(t *testing.T, w http.ResponseWriter, r *http.Request, req unifiedLogsSearchRequest) {
+	// The CLI must send a well-formed, non-empty time window, newest-first ordering and an explicit page size.
+	start, err := time.Parse(time.RFC3339Nano, req.StartTime)
+	require.NoError(t, err, "start_time")
+	end, err := time.Parse(time.RFC3339Nano, req.EndTime)
+	require.NoError(t, err, "end_time")
+	require.False(t, end.Before(start), "end_time must not be before start_time")
+	require.Equal(t, "desc", req.Sort)
+
+	pageSize, err := strconv.Atoi(r.URL.Query().Get("page_size"))
+	require.NoError(t, err, "page_size")
+	require.Positive(t, pageSize)
+
+	// The scope of the query shows in which CRN elements are present.
+	require.True(t, strings.HasPrefix(req.CRN, "crn://"), req.CRN)
+	require.Contains(t, req.CRN, "/organization=", req.CRN)
+
 	var data []map[string]any
 
 	switch req.Source {
 	case "cluster-health":
+		// An organization-scoped CRN has no environment element, and an environment-scoped one has no cluster.
+		if strings.Contains(req.CRN, "/kafka=") {
+			require.Contains(t, req.CRN, "/environment=", req.CRN)
+		}
 		for _, event := range clusterHealthEvents {
 			// A resource-scoped CRN ends in kafka=<cluster>; broader scopes match every cluster.
 			if strings.Contains(req.CRN, "/kafka=") && !strings.HasSuffix(req.CRN, "/kafka="+event["cluster_id"].(string)) {
@@ -149,6 +174,9 @@ func handleUnifiedLogsSearch(t *testing.T, w http.ResponseWriter, req unifiedLog
 
 	if data == nil {
 		data = []map[string]any{}
+	}
+	if len(data) > pageSize {
+		data = data[:pageSize]
 	}
 
 	w.Header().Set("Content-Type", "application/json")
