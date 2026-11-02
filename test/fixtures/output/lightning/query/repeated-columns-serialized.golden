@@ -1,0 +1,4 @@
+Error: the result has more than one column named "id"
+
+Suggestions:
+    Give each column a unique name with "AS", or use `-o human`.

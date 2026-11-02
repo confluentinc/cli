@@ -1,0 +1,25 @@
+[
+  {
+    "c_array": ["a", null, "c"],
+    "c_map": {
+      "errors": 0,
+      "latency": 42
+    },
+    "c_int_map": [
+      {
+        "key": 1,
+        "value": "one"
+      },
+      {
+        "key": 2,
+        "value": "two"
+      }
+    ],
+    "c_multiset": {
+      "x": 2
+    },
+    "c_row": ["u-1", 42],
+    "c_empty_array": [],
+    "c_null_array": null
+  }
+]

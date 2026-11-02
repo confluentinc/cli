@@ -1,0 +1,19 @@
+[
+  {
+    "c_boolean": true,
+    "c_tinyint": -7,
+    "c_smallint": 300,
+    "c_integer": 70000,
+    "c_bigint": "9007199254740993",
+    "c_float": 17.45,
+    "c_double": 3.14159,
+    "c_decimal": "149.00",
+    "c_varchar": "hello",
+    "c_varbinary": "x'7f0203'",
+    "c_date": "2026-10-12",
+    "c_time": "13:45:30.123",
+    "c_timestamp": "2026-10-12 13:45:30.123456",
+    "c_timestamp_ltz": "2026-10-12 20:45:30.123456",
+    "c_null": null
+  }
+]

@@ -1,0 +1,1 @@
+Error: failed to read column "id": unsupported result field type "NOT_A_REAL_TYPE": this CLI may be out of date

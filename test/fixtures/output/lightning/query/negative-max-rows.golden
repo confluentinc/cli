@@ -1,0 +1,4 @@
+Error: the `--max-rows` flag must not be negative
+
+Suggestions:
+    Set `--max-rows` to 0 for no limit, or a positive integer.
