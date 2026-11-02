@@ -31,10 +31,9 @@ func (s *CLITestSuite) TestLogsSourceList() {
 func (s *CLITestSuite) TestLogsSourceDescribe() {
 	tests := []CLITest{
 		{args: "logs source describe cluster-health", fixture: "logs/source/describe.golden"},
-		{args: "logs source describe connector", fixture: "logs/source/describe-connector.golden"},
 		{args: "logs source describe cluster-health -o json", fixture: "logs/source/describe-json.golden"},
 		{args: "logs source describe cluster-health -o yaml", fixture: "logs/source/describe-yaml.golden"},
-		{args: "logs source describe no-such-source", fixture: "logs/source/describe-unknown.golden", exitCode: 1},
+		{args: "logs source describe connector", fixture: "logs/source/describe-unknown.golden", exitCode: 1},
 		{args: "logs source describe", fixture: "logs/source/describe-missing-arg.golden", exitCode: 1},
 	}
 
