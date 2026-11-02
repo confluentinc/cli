@@ -1,5 +1,13 @@
 package test
 
+import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	testserver "github.com/confluentinc/cli/v4/test/test-server"
+)
+
 func (s *CLITestSuite) TestLogsHelp() {
 	tests := []CLITest{
 		{args: "logs --help", fixture: "logs/help.golden"},
@@ -53,4 +61,15 @@ func (s *CLITestSuite) TestLogsAutocomplete() {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
+}
+
+// TestLogsSourceListRefreshesDiscovery checks that `source list` always asks the API.
+func (s *CLITestSuite) TestLogsSourceListRefreshesDiscovery() {
+	before := testserver.LogSourceRequests()
+	discoveryRequests := func(t *testing.T, want int64) {
+		require.Equal(t, want, testserver.LogSourceRequests()-before)
+	}
+
+	s.runIntegrationTest(CLITest{login: "cloud", args: "logs source list", fixture: "logs/source/list.golden", wantFunc: func(t *testing.T) { discoveryRequests(t, 1) }})
+	s.runIntegrationTest(CLITest{workflow: true, args: "logs source list", fixture: "logs/source/list.golden", wantFunc: func(t *testing.T) { discoveryRequests(t, 2) }})
 }
