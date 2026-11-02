@@ -232,6 +232,20 @@ func validateLookback(source *loggingv1.LoggingV1Source, since string) error {
 	return nil
 }
 
+// validateQuery checks everything about the query that depends on the log source.
+func validateQuery(source *loggingv1.LoggingV1Source, search map[string]any, since, resourceId, scope string) error {
+	if err := validateSearch(source, search); err != nil {
+		return err
+	}
+	if err := validateLookback(source, since); err != nil {
+		return err
+	}
+	if err := validateResourceId(source, resourceId); err != nil {
+		return err
+	}
+	return validateScope(source, scope, resourceId)
+}
+
 // crnValues carries the values the CRN's elements are built from.
 type crnValues struct {
 	Organization string

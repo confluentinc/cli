@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -84,9 +85,19 @@ var logSources = map[string]string{
 }`,
 }
 
+// logSourceRequests counts the discovery requests, so tests can tell a cached source from a fetched one.
+var logSourceRequests atomic.Int64
+
+// LogSourceRequests returns how many log source discovery requests the test server has served.
+func LogSourceRequests() int64 {
+	return logSourceRequests.Load()
+}
+
 // Handler for: "/logs/v1/sources/{name}"
 func handleLogsSource(_ *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		logSourceRequests.Add(1)
+
 		w.Header().Set("Content-Type", "application/json")
 
 		name := mux.Vars(r)["name"]
