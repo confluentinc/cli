@@ -39,6 +39,7 @@ func (s *CLITestSuite) TestLogsFetch() {
 		// Environment and organization scope
 		{args: "logs fetch --source cluster-health --environment env-596 --since 24h", fixture: "logs/fetch/environment-scope.golden"},
 		{args: "logs fetch --source cluster-health --since 24h", fixture: "logs/fetch/organization-scope.golden"},
+		{args: "logs fetch --source cluster-health --environment env-596 --since 24h --tail 1", fixture: "logs/fetch/environment-scope-tail.golden"},
 
 		// Connector logs: the CRN is built from the connector name
 		{args: "logs fetch lcc-123 --source connector --cluster lkc-123 --since 1h", fixture: "logs/fetch/connector.golden"},

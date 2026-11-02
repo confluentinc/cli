@@ -60,7 +60,7 @@ func handleLogsSearch(t *testing.T) http.HandlerFunc {
 		// Requests from `confluent logs` name a log source and carry an open-ended search map.
 		var unified unifiedLogsSearchRequest
 		if err := json.Unmarshal(body, &unified); err == nil && unified.Source != "" {
-			handleUnifiedLogsSearch(t, w, unified)
+			handleUnifiedLogsSearch(t, w, r, unified)
 			return
 		}
 
