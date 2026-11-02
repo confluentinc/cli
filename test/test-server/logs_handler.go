@@ -41,32 +41,6 @@ var logSources = map[string]string{
   ],
   "max_lookback_days": 3
 }`,
-	"connector": `{
-  "api_version": "logging/v1",
-  "kind": "Source",
-  "name": "connector",
-  "display_name": "Connector logs",
-  "resource_type": "connector",
-  "crn_elements": ["organization", "environment", "cloud-cluster", "connector"],
-  "allowed_scopes": ["RESOURCE"],
-  "search_fields": [
-    {"name": "level", "type": "enum", "allowed_values": ["INFO", "WARN", "ERROR", "FATAL"]},
-    {"name": "task_id", "type": "string"},
-    {"name": "id", "type": "string"}
-  ],
-  "full_text_search_supported": true,
-  "full_text_search_fields": ["message", "exception.stacktrace"],
-  "returned_fields": [
-    {"name": "timestamp", "type": "timestamp", "default_column": true},
-    {"name": "level", "type": "enum", "default_column": true},
-    {"name": "task_id", "type": "string", "default_column": true},
-    {"name": "message", "type": "string", "default_column": true},
-    {"name": "exception.stacktrace", "type": "string", "default_column": true},
-    {"name": "id", "type": "string", "default_column": true},
-    {"name": "name", "type": "string", "default_column": true}
-  ],
-  "max_lookback_days": 3
-}`,
 }
 
 // Handler for: "/logs/v1/sources"
