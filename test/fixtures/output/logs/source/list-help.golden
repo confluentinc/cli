@@ -1,4 +1,4 @@
-List every log source that `confluent logs fetch` can query.
+List every log source that `confluent logs fetch` can query. Results are always fetched fresh.
 
 Usage:
   confluent logs source list [flags]

@@ -1,0 +1,99 @@
+package logs
+
+import (
+	"encoding/json"
+	"slices"
+	"time"
+
+	loggingv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/logging/v1"
+
+	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/log"
+)
+
+// discoveryCacheTTL is how long a discovered log source is reused. A stale entry is harmless, because the server
+// validates every request again and a validation miss refreshes the entry.
+const discoveryCacheTTL = 3 * time.Hour
+
+// discoveryCacheKey ties cached entries to the platform and organization they were fetched for.
+func discoveryCacheKey(platformServer, organizationId string) string {
+	return platformServer + "|" + organizationId
+}
+
+// cachedSource returns the named log source from the cache, or nil when it is missing, expired or belongs to another
+// platform or organization.
+func cachedSource(cache *config.LogsDiscoveryCache, key, name string, now time.Time) *loggingv1.LoggingV1Source {
+	if cache == nil || cache.Key != key {
+		return nil
+	}
+	entry, ok := cache.Sources[name]
+	if !ok || entry == nil || entry.FetchedAt.After(now) || now.Sub(entry.FetchedAt) >= discoveryCacheTTL {
+		return nil
+	}
+
+	var source loggingv1.LoggingV1Source
+	if err := json.Unmarshal(entry.Source, &source); err != nil {
+		return nil
+	}
+	return &source
+}
+
+// withSource returns the cache with the log source added. A cache that belongs to another platform or organization
+// is dropped first.
+func withSource(cache *config.LogsDiscoveryCache, key string, source *loggingv1.LoggingV1Source, now time.Time) *config.LogsDiscoveryCache {
+	if cache == nil || cache.Key != key {
+		cache = &config.LogsDiscoveryCache{Key: key}
+	}
+
+	data, err := json.Marshal(source)
+	if err != nil {
+		return cache
+	}
+	if cache.Sources == nil {
+		cache.Sources = map[string]*config.LogsCachedSource{}
+	}
+	cache.Sources[source.Name] = &config.LogsCachedSource{FetchedAt: now, Source: data}
+	return cache
+}
+
+// cachedSources returns every log source from the cache, or nil when the full list was not fetched recently enough
+// or belongs to another platform or organization.
+func cachedSources(cache *config.LogsDiscoveryCache, key string, now time.Time) []loggingv1.LoggingV1Source {
+	if cache == nil || cache.Key != key || cache.ListedAt.IsZero() || cache.ListedAt.After(now) || now.Sub(cache.ListedAt) >= discoveryCacheTTL {
+		return nil
+	}
+
+	names := make([]string, 0, len(cache.Sources))
+	for name := range cache.Sources {
+		names = append(names, name)
+	}
+	slices.Sort(names)
+
+	sources := make([]loggingv1.LoggingV1Source, 0, len(names))
+	for _, name := range names {
+		source := cachedSource(cache, key, name, now)
+		if source == nil {
+			return nil
+		}
+		sources = append(sources, *source)
+	}
+	return sources
+}
+
+// withSources returns a cache that holds exactly the given log sources, as the full list fetched at now.
+func withSources(key string, sources []loggingv1.LoggingV1Source, now time.Time) *config.LogsDiscoveryCache {
+	cache := &config.LogsDiscoveryCache{Key: key, ListedAt: now}
+	for i := range sources {
+		cache = withSource(cache, key, &sources[i], now)
+	}
+	return cache
+}
+
+// storeLogSources saves the full list of log sources. Caching is best effort, so a failed save only gets logged.
+func storeLogSources(c *pcmd.AuthenticatedCLICommand, key string, sources []loggingv1.LoggingV1Source, now time.Time) {
+	c.Context.SetLogsDiscoveryCache(withSources(key, sources, now))
+	if err := c.Config.Save(); err != nil {
+		log.CliLogger.Debugf("Failed to cache log sources: %v", err)
+	}
+}
