@@ -61,6 +61,7 @@ const (
 	deactivatedUserResourceId        = "sa-6666"
 	auditLogServiceAccountId         = int32(1337)
 	auditLogServiceAccountResourceId = "sa-1337"
+	apiKeyOwnerUserResourceId        = "u-22bbb"
 )
 
 // Handler for: "/api/me"
@@ -425,11 +426,6 @@ func handleLaunchDarkly(t *testing.T) http.HandlerFunc {
 			"auth.rbac.identity_admin.enable":                                  true,
 			"flink.language_service.enable_diagnostics":                        true,
 			"cloud_growth.marketplace_linking_advertisement_experiment.enable": true,
-		}
-
-		val, ok := ldUser.GetCustom("org.resource_id")
-		if ok && val.StringValue() == "multicluster-key-org" {
-			flags["cli.multicluster-api-keys.enable"] = true
 		}
 
 		err = json.NewEncoder(w).Encode(&flags)
