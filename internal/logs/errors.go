@@ -14,6 +14,11 @@ const (
 	invalidTimestampErrorMsg    = "invalid `%s` value \"%s\""
 	invalidTimestampSuggestions = "Use an ISO 8601 UTC timestamp such as 2026-08-20T00:00:00Z."
 
+	noStoredQueryErrorMsg    = "no stored query matches these flags"
+	noStoredQuerySuggestions = "Run the query without `--next` first."
+
+	noMorePagesMsg = "No more pages for this query."
+
 	tailOutOfRangeErrorMsg = "`--tail` must be between 1 and %d"
 
 	invalidSearchErrorMsg         = "invalid `--search` value \"%s\""

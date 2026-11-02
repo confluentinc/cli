@@ -62,6 +62,28 @@ func (s *CLITestSuite) TestLogsFetch() {
 	}
 }
 
+// TestLogsFetchNext walks one query through its pages: the first page stores a cursor, --next continues it, and the
+// last page leaves nothing to continue.
+func (s *CLITestSuite) TestLogsFetchNext() {
+	const query = "logs fetch lkc-777 --source cluster-health --since 24h"
+
+	s.runIntegrationTest(CLITest{login: "cloud", workflow: true, args: query, fixture: "logs/fetch/next-page-1.golden"})
+	s.runIntegrationTest(CLITest{workflow: true, args: query + " --next", fixture: "logs/fetch/next-page-2.golden"})
+	s.runIntegrationTest(CLITest{workflow: true, args: query + " --next", fixture: "logs/fetch/next-no-more.golden"})
+
+	// A different query does not match the stored one.
+	s.runIntegrationTest(CLITest{workflow: true, args: "logs fetch lkc-777 --source cluster-health --since 1h --next", fixture: "logs/fetch/next-no-stored-query.golden", exitCode: 1})
+}
+
+func (s *CLITestSuite) TestLogsFetchNextWithTail() {
+	s.runIntegrationTest(CLITest{login: "cloud", args: "logs fetch lkc-777 --source cluster-health --since 24h --next --tail 1", contains: "[next tail] were all set", exitCode: 1})
+}
+
+func (s *CLITestSuite) TestLogsFetchTailDropsCursor() {
+	s.runIntegrationTest(CLITest{login: "cloud", workflow: true, args: "logs fetch lkc-777 --source cluster-health --since 24h --tail 1", fixture: "logs/fetch/next-tail.golden"})
+	s.runIntegrationTest(CLITest{workflow: true, args: "logs fetch lkc-777 --source cluster-health --since 24h --next", fixture: "logs/fetch/next-no-more.golden"})
+}
+
 func (s *CLITestSuite) TestLogsFetchOutputFile() {
 	path := filepath.Join(s.T().TempDir(), "logs.jsonl")
 
