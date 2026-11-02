@@ -82,57 +82,6 @@ data:
           type: enum
         - name: client_id
           type: string
-    - allowed_scopes:
-        - RESOURCE
-      api_version: logging/v1
-      crn_elements:
-        - organization
-        - environment
-        - cloud-cluster
-        - connector
-      display_name: Connector logs
-      full_text_search_fields:
-        - message
-        - exception.stacktrace
-      full_text_search_supported: true
-      kind: Source
-      max_lookback_days: 3
-      name: connector
-      resource_type: connector
-      returned_fields:
-        - default_column: true
-          name: timestamp
-          type: timestamp
-        - default_column: true
-          name: level
-          type: enum
-        - default_column: true
-          name: task_id
-          type: string
-        - default_column: true
-          name: message
-          type: string
-        - default_column: true
-          name: exception.stacktrace
-          type: string
-        - default_column: true
-          name: id
-          type: string
-        - default_column: true
-          name: name
-          type: string
-      search_fields:
-        - allowed_values:
-            - INFO
-            - WARN
-            - ERROR
-            - FATAL
-          name: level
-          type: enum
-        - name: task_id
-          type: string
-        - name: id
-          type: string
 kind: SourceList
 metadata:
-    total_size: 2
+    total_size: 1
