@@ -52,7 +52,7 @@ func LogSourceRequests() int64 {
 	return logSourceRequests.Load()
 }
 
-// LogSourcesOverride replaces the response of "/logs/v1/sources", so tests can reach the API's error responses and
+// LogSourcesOverride replaces the response of the log source discovery endpoints, so tests can reach the API's error responses and
 // source lists the default mock does not serve.
 type LogSourcesOverride struct {
 	Status int
@@ -62,9 +62,24 @@ type LogSourcesOverride struct {
 
 var logSourcesOverride atomic.Pointer[LogSourcesOverride]
 
-// SetLogSourcesOverride makes "/logs/v1/sources" answer with the given response. A nil override restores the default.
+// SetLogSourcesOverride makes "/logs/v1/sources" and "/logs/v1/sources/{name}" answer with the given response. A nil override restores the default.
 func SetLogSourcesOverride(override *LogSourcesOverride) {
 	logSourcesOverride.Store(override)
+}
+
+// serveLogSourcesOverride answers with the override, if a test set one, and reports whether it did.
+func serveLogSourcesOverride(w http.ResponseWriter) bool {
+	override := logSourcesOverride.Load()
+	if override == nil {
+		return false
+	}
+
+	for key, value := range override.Header {
+		w.Header().Set(key, value)
+	}
+	w.WriteHeader(override.Status)
+	_, _ = fmt.Fprint(w, override.Body)
+	return true
 }
 
 // Handler for: "/logs/v1/sources"
@@ -79,12 +94,7 @@ func handleLogsSources(_ *testing.T) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 
-		if override := logSourcesOverride.Load(); override != nil {
-			for key, value := range override.Header {
-				w.Header().Set(key, value)
-			}
-			w.WriteHeader(override.Status)
-			_, _ = fmt.Fprint(w, override.Body)
+		if serveLogSourcesOverride(w) {
 			return
 		}
 
