@@ -13,8 +13,6 @@ import (
 
 var logSources = map[string]string{
 	"cluster-health": `{
-  "api_version": "logging/v1",
-  "kind": "Source",
   "name": "cluster-health",
   "display_name": "Cluster health events",
   "resource_type": "kafka",
@@ -24,25 +22,25 @@ var logSources = map[string]string{
   "search_fields": [
     {"name": "id", "type": "string"},
     {"name": "event_type", "type": "enum", "allowed_values": ["SERVICE_MAINTENANCE", "HEALTH_ALERT", "CONFLUENT_STATUS_UPDATED", "SERVICE_ISSUE_DETECTED"]},
-    {"name": "level", "type": "enum", "allowed_values": ["INFO", "WARN", "ERROR"]},
-    {"name": "client_id", "type": "string"}
+    {"name": "level", "type": "enum", "allowed_values": ["INFO", "WARN", "ERROR"]}
   ],
   "full_text_search_supported": true,
   "full_text_search_fields": ["message"],
   "returned_fields": [
+    {"name": "id", "type": "string", "default_column": false, "description": "Unique identifier for this log record."},
     {"name": "timestamp", "type": "timestamp", "default_column": true, "description": "Event time, RFC 3339 UTC."},
     {"name": "level", "type": "enum", "default_column": true, "description": "Severity level: INFO, WARN, ERROR."},
-    {"name": "event_type", "type": "enum", "default_column": true, "description": "Type of cluster health event."},
     {"name": "message", "type": "string", "default_column": true, "description": "Human-readable description of the event."},
-    {"name": "id", "type": "string", "default_column": false, "description": "Unique identifier for this log record."},
     {"name": "crn", "type": "string", "default_column": false, "description": "Confluent Resource Name of the resource the event concerns."},
     {"name": "source", "type": "string", "default_column": false, "description": "Component or subsystem that generated the event."},
+    {"name": "event_type", "type": "enum", "default_column": true, "description": "Type of cluster health event."},
     {"name": "event_id", "type": "string", "default_column": false, "description": "Event-specific identifier, when provided."},
     {"name": "status", "type": "string", "default_column": false, "description": "Status associated with the event, when applicable."},
-    {"name": "client_id", "type": "string", "default_column": false, "description": "Kafka client ID, when the event names one."},
-    {"name": "cluster_id", "type": "string", "default_column": false, "description": "lkc- ID the event belongs to."}
+    {"name": "cloud_cluster_id", "type": "string", "default_column": false, "description": "lkc- ID the event belongs to."}
   ],
-  "max_lookback_days": 3
+  "max_lookback_days": 3,
+  "kind": "Source",
+  "api_version": "logging/v1"
 }`,
 }
 
