@@ -56,12 +56,13 @@ func IsCCloudURL(url string, isTest bool) bool {
 }
 
 func NewRetryableHttpClient(cfg *config.Config, unsafeTrace bool) *http.Client {
-	return newRetryableHttpClient(cfg, unsafeTrace, true)
+	return newRetryableHttpClient(cfg, unsafeTrace, false)
 }
 
-// newRetryableHttpClient retries server errors and, when retryRateLimited is set, 429 responses. A caller that wants
-// to tell the user how long to wait leaves 429 responses alone, so that they reach it with their headers.
-func newRetryableHttpClient(cfg *config.Config, unsafeTrace, retryRateLimited bool) *http.Client {
+// newRetryableHttpClient retries server errors and 429 responses. A caller that reports API errors itself sets
+// returnErrorResponses: a 429 then reaches it at once with its Retry-After header, and when the retries for a server
+// error run out, it gets the last response instead of a generic "giving up" error.
+func newRetryableHttpClient(cfg *config.Config, unsafeTrace, returnErrorResponses bool) *http.Client {
 	client := retryablehttp.NewClient()
 	client.Logger = plog.NewLeveledLogger(unsafeTrace)
 	client.CheckRetry = func(_ context.Context, resp *http.Response, err error) (bool, error) {
@@ -84,7 +85,10 @@ func newRetryableHttpClient(cfg *config.Config, unsafeTrace, retryRateLimited bo
 			return true, err
 		}
 
-		return (retryRateLimited && resp.StatusCode == http.StatusTooManyRequests) || resp.StatusCode >= 500, err
+		return (!returnErrorResponses && resp.StatusCode == http.StatusTooManyRequests) || resp.StatusCode >= 500, err
+	}
+	if returnErrorResponses {
+		client.ErrorHandler = retryablehttp.PassthroughErrorHandler
 	}
 
 	return client.StandardClient()
