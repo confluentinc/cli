@@ -54,6 +54,21 @@ func LogSourceRequests() int64 {
 	return logSourceRequests.Load()
 }
 
+// LogSourcesOverride replaces the response of "/logs/v1/sources", so tests can reach the API's error responses and
+// source lists the default mock does not serve.
+type LogSourcesOverride struct {
+	Status int
+	Header map[string]string
+	Body   string
+}
+
+var logSourcesOverride atomic.Pointer[LogSourcesOverride]
+
+// SetLogSourcesOverride makes "/logs/v1/sources" answer with the given response. A nil override restores the default.
+func SetLogSourcesOverride(override *LogSourcesOverride) {
+	logSourcesOverride.Store(override)
+}
+
 // Handler for: "/logs/v1/sources"
 func handleLogsSources(_ *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -65,6 +80,15 @@ func handleLogsSources(_ *testing.T) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
+
+		if override := logSourcesOverride.Load(); override != nil {
+			for key, value := range override.Header {
+				w.Header().Set(key, value)
+			}
+			w.WriteHeader(override.Status)
+			_, _ = fmt.Fprint(w, override.Body)
+			return
+		}
 
 		names := make([]string, 0, len(logSources))
 		for name := range logSources {
