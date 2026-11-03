@@ -1,0 +1,12 @@
+Log source:        cluster-link-insights
+Display name:      Cluster Linking insights
+Resource:          cluster-link (crn: organization/environment/cloud-cluster/cluster-link)
+Scopes:            resource
+Max lookback:      7d
+Full-text search:  no
+
+Returned fields (each log record):
+  timestamp  timestamp  *
+  message    string     *
+
+  * = default column in human output

@@ -42,8 +42,8 @@ func (s *CLITestSuite) TestLogsSourceDescribe() {
 		{args: "logs source describe cluster-health -o json", fixture: "logs/source/describe-json.golden"},
 		{args: "logs source describe cluster-health -o yaml", fixture: "logs/source/describe-yaml.golden"},
 		{args: "logs source describe connector", fixture: "logs/source/describe-unknown.golden", exitCode: 1},
-		{args: "logs source describe rate-limited", fixture: "logs/source/describe-rate-limited.golden", exitCode: 1},
 		{args: "logs source describe", fixture: "logs/source/describe-missing-arg.golden", exitCode: 1},
+		{args: "logs source describe cluster-health connector", fixture: "logs/source/describe-extra-arg.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -133,6 +133,43 @@ func (s *CLITestSuite) TestLogsSourceListResponses() {
 	defer testserver.SetLogSourcesOverride(nil)
 	for _, tt := range tests {
 		testserver.SetLogSourcesOverride(logSourcesResponses[tt.response])
+		tt.test.login = "cloud"
+		s.runIntegrationTest(tt.test)
+	}
+}
+
+func (s *CLITestSuite) TestLogsSourceDescribeNotLoggedIn() {
+	s.runIntegrationTest(CLITest{args: "logs source describe cluster-health", fixture: "logs/source/describe-not-logged-in.golden", exitCode: 1})
+}
+
+// TestLogsSourceDescribeResponses covers the other responses of GET /logs/v1/sources/{name}: a source of another
+// shape, and every error the LLD lists for the endpoint.
+func (s *CLITestSuite) TestLogsSourceDescribeResponses() {
+	responses := map[string]*testserver.LogSourcesOverride{
+		"plain-source": {Status: 200, Body: `{"api_version":"logging/v1","kind":"Source","name":"cluster-link-insights","display_name":"Cluster Linking insights","resource_type":"cluster-link","crn_elements":["organization","environment","cloud-cluster","cluster-link"],"allowed_scopes":["RESOURCE"],"search_fields":[],"full_text_search_supported":false,"returned_fields":[{"name":"timestamp","type":"timestamp","default_column":true},{"name":"message","type":"string","default_column":true}],"max_lookback_days":7}`},
+	}
+	for _, name := range []string{"unauthenticated", "feature-not-enabled", "organization-required", "rate-limited", "rate-limited-no-header", "rate-limited-per-ip", "server-error"} {
+		responses[name] = logSourcesResponses[name]
+	}
+
+	tests := []struct {
+		response string
+		test     CLITest
+	}{
+		{"plain-source", CLITest{args: "logs source describe cluster-link-insights", fixture: "logs/source/describe-plain-source.golden"}},
+		{"plain-source", CLITest{args: "logs source describe cluster-link-insights -o json", fixture: "logs/source/describe-plain-source-json.golden"}},
+		{"unauthenticated", CLITest{args: "logs source describe cluster-health", fixture: "logs/source/describe-unauthenticated.golden", exitCode: 1}},
+		{"feature-not-enabled", CLITest{args: "logs source describe cluster-health", fixture: "logs/source/describe-feature-not-enabled.golden", exitCode: 1}},
+		{"organization-required", CLITest{args: "logs source describe cluster-health", fixture: "logs/source/describe-organization-required.golden", exitCode: 1}},
+		{"rate-limited", CLITest{args: "logs source describe cluster-health", fixture: "logs/source/describe-rate-limited.golden", exitCode: 1}},
+		{"rate-limited-no-header", CLITest{args: "logs source describe cluster-health", fixture: "logs/source/describe-rate-limited-no-header.golden", exitCode: 1}},
+		{"rate-limited-per-ip", CLITest{args: "logs source describe cluster-health", fixture: "logs/source/describe-rate-limited-per-ip.golden", exitCode: 1}},
+		{"server-error", CLITest{args: "logs source describe cluster-health", fixture: "logs/source/describe-server-error.golden", exitCode: 1}},
+	}
+
+	defer testserver.SetLogSourcesOverride(nil)
+	for _, tt := range tests {
+		testserver.SetLogSourcesOverride(responses[tt.response])
 		tt.test.login = "cloud"
 		s.runIntegrationTest(tt.test)
 	}
