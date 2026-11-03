@@ -157,23 +157,6 @@ func catchCCloudBackendUnmarshallingError(err error) error {
 */
 
 func CatchCCloudV2Error(err error, r *http.Response) error {
-	err = catchCCloudV2Error(err, r)
-	if err == nil || r == nil || r.StatusCode != http.StatusTooManyRequests {
-		return err
-	}
-	if _, ok := err.(ErrorWithSuggestions); ok {
-		return err
-	}
-
-	suggestions := "The request was retried several times and the server is still rate limiting. Reduce the request rate and try again."
-	// Retry-After may also be an HTTP-date; only a plain number of seconds can be shown as such.
-	if seconds, parseErr := strconv.Atoi(strings.TrimSpace(r.Header.Get("Retry-After"))); parseErr == nil && seconds > 0 {
-		suggestions = fmt.Sprintf("The request was retried several times and the server is still rate limiting. Wait %d seconds, reduce the request rate, and try again.", seconds)
-	}
-	return NewErrorWithSuggestions(err.Error(), suggestions)
-}
-
-func catchCCloudV2Error(err error, r *http.Response) error {
 	if err == nil || r == nil {
 		return err
 	}
@@ -181,6 +164,16 @@ func catchCCloudV2Error(err error, r *http.Response) error {
 	body, _ := io.ReadAll(r.Body)
 	var resBody ErrorResponseBody
 	_ = json.Unmarshal(body, &resBody)
+	if r.StatusCode == http.StatusTooManyRequests {
+		if len(resBody.Errors) > 0 && resBody.Errors[0].Detail != "" {
+			err = errors.New(strings.TrimSuffix(resBody.Errors[0].Detail, "\n"))
+		}
+		suggestions := "The request was retried several times and the server is still rate limiting. Reduce the request rate and try again."
+		if seconds, parseErr := strconv.Atoi(r.Header.Get("Retry-After")); parseErr == nil {
+			suggestions += fmt.Sprintf(" The server asked to wait %d seconds.", seconds)
+		}
+		return NewErrorWithSuggestions(err.Error(), suggestions)
+	}
 	if len(resBody.Errors) > 0 {
 		detail := resBody.Errors[0].Detail
 		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {

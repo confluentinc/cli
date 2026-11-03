@@ -41,9 +41,6 @@ const (
 	ccloudDevelEnvClientId = "5c63653912b6db32db950445"
 )
 
-// cacheTTL is how long cached feature flags are considered fresh.
-const cacheTTL = time.Hour
-
 // Manager is a global feature flag manager
 var Manager launchDarklyManager
 
@@ -238,12 +235,11 @@ func areCachedFlagsAvailable(ctx *config.Context, user lduser.User, client confi
 		}
 	}
 
-	return isCacheFresh(flags, time.Now())
+	return isCacheFresh(flags)
 }
 
-// isCacheFresh returns true while the cached flags are younger than cacheTTL.
-func isCacheFresh(flags *config.FeatureFlags, now time.Time) bool {
-	return flags.LastUpdateTime+int64(cacheTTL.Seconds()) > now.Unix()
+func isCacheFresh(flags *config.FeatureFlags) bool {
+	return flags.LastUpdateTime+int64(time.Hour.Seconds()) > time.Now().Unix()
 }
 
 func getBase64EncodedUser(user lduser.User) (string, error) {

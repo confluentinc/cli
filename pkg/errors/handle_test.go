@@ -1,7 +1,6 @@
 package errors
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -73,15 +72,21 @@ func TestDisplaySuggestionsMessage(t *testing.T) {
 	require.Equal(t, fmt.Sprintf(wantSuggestionsMsgFormat, suggestion), DisplaySuggestionsMessage(err))
 }
 
-func TestCatchCCloudV2Error_RateLimitedHint(t *testing.T) {
-	r := &http.Response{
-		StatusCode: http.StatusTooManyRequests,
-		Header:     http.Header{"Retry-After": []string{"12"}},
-		Body:       io.NopCloser(strings.NewReader(`{"errors":[{"detail":"Too many requests"}]}`)),
+func TestCatchCCloudV2Error_RateLimited(t *testing.T) {
+	for retryAfter, want := range map[string]string{
+		"12":                            "Reduce the request rate and try again. The server asked to wait 12 seconds.",
+		"Wed, 21 Oct 2026 07:28:00 GMT": "Reduce the request rate and try again.",
+		"":                              "Reduce the request rate and try again.",
+	} {
+		r := &http.Response{
+			StatusCode: http.StatusTooManyRequests,
+			Header:     http.Header{"Retry-After": []string{retryAfter}},
+			Body:       io.NopCloser(strings.NewReader(`{"errors":[{"detail":"Too many requests"}]}`)),
+		}
+		err := CatchCCloudV2Error(fmt.Errorf("429 Too Many Requests"), r)
+		require.EqualError(t, err, "Too many requests")
+		withSuggestions, ok := err.(ErrorWithSuggestions)
+		require.True(t, ok)
+		require.True(t, strings.HasSuffix(withSuggestions.GetSuggestionsMsg(), want), retryAfter)
 	}
-	err := CatchCCloudV2Error(errors.New("429 Too Many Requests"), r)
-	require.EqualError(t, err, "Too many requests")
-	withSuggestions, ok := err.(ErrorWithSuggestions)
-	require.True(t, ok)
-	require.Contains(t, withSuggestions.GetSuggestionsMsg(), "Wait 12 seconds")
 }

@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
+
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
 // CCPM Plugin handlers
@@ -25,7 +27,7 @@ func handleCCPMPlugins(t *testing.T) http.HandlerFunc {
 			// Check if this is an error test case
 			if environment == "env-error" && cloud == "" {
 				// This is the error handling test case - return error
-				_ = writeError500(w, "API Error")
+				_ = writeInternalServerError(w, "API Error")
 				return
 			}
 
@@ -111,7 +113,7 @@ func handleCCPMPlugins(t *testing.T) http.HandlerFunc {
 			if ok {
 				if envId, ok := environment["id"].(string); ok && envId == "env-error" {
 					// This is the error handling test case - return error
-					_ = writeError500(w, "API Error")
+					_ = writeInternalServerError(w, "API Error")
 					return
 				}
 			}
@@ -180,7 +182,7 @@ func handleCCPMPluginId(t *testing.T) http.HandlerFunc {
 			// Check if this is an error test case
 			if environment == "env-error" {
 				// This is the error handling test case - return error
-				_ = writeError500(w, "API Error")
+				_ = writeInternalServerError(w, "API Error")
 				return
 			}
 
@@ -233,7 +235,7 @@ func handleCCPMPluginId(t *testing.T) http.HandlerFunc {
 			// Check if this is an error test case
 			if environment == "env-error" {
 				// This is the error handling test case - return error
-				_ = writeError500(w, "API Error")
+				_ = writeInternalServerError(w, "API Error")
 				return
 			}
 
@@ -273,7 +275,7 @@ func handleCCPMPluginId(t *testing.T) http.HandlerFunc {
 			// Check if this is an error test case
 			if environment == "env-error" {
 				// This is the error handling test case - return error
-				_ = writeError500(w, "API Error")
+				_ = writeInternalServerError(w, "API Error")
 				return
 			}
 
@@ -553,9 +555,8 @@ func handleCCPMUploadFile(t *testing.T) http.HandlerFunc {
 	}
 }
 
-// writeError500 writes a 500 with a JSON error body (like the real API) so the SDK can parse it.
-func writeError500(w http.ResponseWriter, detail string) error {
-	w.Header().Set("Content-Type", "application/json")
+func writeInternalServerError(w http.ResponseWriter, detail string) error {
 	w.WriteHeader(http.StatusInternalServerError)
-	return json.NewEncoder(w).Encode(map[string]any{"errors": []map[string]string{{"detail": detail}}})
+	body := &errors.ErrorResponseBody{Errors: []errors.ErrorDetail{{Detail: detail}}}
+	return json.NewEncoder(w).Encode(body)
 }

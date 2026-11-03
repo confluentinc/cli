@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 
-	"github.com/confluentinc/cli/v4/pkg/httpretry"
+	"github.com/confluentinc/cli/v4/pkg/log"
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
@@ -23,7 +23,7 @@ func NewClient(userAgent string, isTest, unsafeTrace bool) *Client {
 	}
 
 	client := retryablehttp.NewClient()
-	httpretry.Configure(client, unsafeTrace, httpretry.Options{})
+	client.Logger = log.NewLeveledLogger(unsafeTrace)
 
 	return &Client{
 		URL:       url,

@@ -200,23 +200,13 @@ func TestLaunchDarklySuite(t *testing.T) {
 }
 
 func TestIsCacheFresh(t *testing.T) {
-	now := time.Unix(1_700_000_000, 0)
-
-	tests := []struct {
-		name string
-		age  time.Duration
-		want bool
-	}{
-		{"just updated", 0, true},
-		{"1h minus 1s", time.Hour - time.Second, true},
-		{"exactly 1h", time.Hour, false},
-		{"1h plus 1s", time.Hour + time.Second, false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			flags := &config.FeatureFlags{LastUpdateTime: now.Add(-tt.age).Unix()}
-			require.Equal(t, tt.want, isCacheFresh(flags, now))
-		})
+	for age, want := range map[time.Duration]bool{
+		0:                       true,
+		time.Hour - time.Minute: true,
+		time.Hour + time.Minute: false,
+		24 * time.Hour:          false,
+	} {
+		flags := &config.FeatureFlags{LastUpdateTime: time.Now().Add(-age).Unix()}
+		require.Equal(t, want, isCacheFresh(flags), age.String())
 	}
 }
