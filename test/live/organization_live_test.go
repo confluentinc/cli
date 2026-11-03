@@ -5,6 +5,7 @@
 package live
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -13,7 +14,7 @@ func (s *CLILiveTestSuite) TestOrganizationCRUDLive() {
 	state := s.setupTestContext(t)
 
 	// Variables
-	organizationName := uniqueName("organi")
+	organizationName := strings.ReplaceAll(uniqueName("organi"), "-", "_")
 
 	// Cleanup (LIFO — execution is reverse-registration order)
 
@@ -32,7 +33,7 @@ func (s *CLILiveTestSuite) TestOrganizationCRUDLive() {
 		},
 		{
 			Name:         "Update organization name",
-			Args:         "organization update --name " + organizationName + "-updated",
+			Args:         "organization update --name " + organizationName + "_updated",
 			UseStateVars: true,
 			ExitCode:     0,
 		},
@@ -42,7 +43,7 @@ func (s *CLILiveTestSuite) TestOrganizationCRUDLive() {
 			UseStateVars: true,
 			ExitCode:     0,
 			JSONFields: map[string]string{
-				"name": organizationName + "-updated",
+				"name": organizationName + "_updated",
 			},
 		},
 	}
