@@ -7,6 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	loggingv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/logging/v1"
+
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -29,7 +31,7 @@ func newSourceListCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List log sources.",
-		Long:  "List every log source that `confluent logs fetch` can query. Results are always fetched fresh.",
+		Long:  "List the log sources you can query. Results are always fetched fresh.",
 		Args:  cobra.NoArgs,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -37,7 +39,6 @@ func newSourceListCommand(prerunner pcmd.PreRunner) *cobra.Command {
 				Code: "confluent logs source list",
 			},
 		),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
 	c := &sourceListCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
@@ -57,7 +58,11 @@ func (c *sourceListCommand) list(cmd *cobra.Command, _ []string) error {
 	storeLogSources(c.AuthenticatedCLICommand, discoveryCacheKey(c.Context.GetPlatformServer(), c.Context.GetCurrentOrganization()), sources.Data, time.Now())
 
 	if output.GetFormat(cmd).IsSerialized() {
-		return output.SerializedOutputFromJsonTags(cmd, sources)
+		data := sources.Data
+		if data == nil {
+			data = []loggingv1.LoggingV1Source{}
+		}
+		return output.SerializedOutputFromJsonTags(cmd, data)
 	}
 
 	list := output.NewList(cmd)
