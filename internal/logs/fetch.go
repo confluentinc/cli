@@ -29,7 +29,8 @@ const (
 	searchTextKey = "search_text"
 )
 
-// resolveTimeWindow turns --since / --from / --to into absolute RFC 3339 UTC timestamps.
+// resolveTimeWindow turns --since / --from / --to into absolute RFC 3339 UTC timestamps, in whole seconds as the
+// API documents them. A start is rounded down and an explicit end is rounded up, so the window never shrinks.
 func resolveTimeWindow(since, from, to string, now time.Time) (string, string, error) {
 	now = now.UTC()
 
@@ -41,7 +42,7 @@ func resolveTimeWindow(since, from, to string, now time.Time) (string, string, e
 		if err != nil {
 			return "", "", err
 		}
-		return now.Add(-d).Format(time.RFC3339Nano), now.Format(time.RFC3339Nano), nil
+		return formatSecond(now.Add(-d)), formatSecond(now), nil
 	}
 
 	if from == "" {
@@ -61,7 +62,22 @@ func resolveTimeWindow(since, from, to string, now time.Time) (string, string, e
 	if end.Before(start) {
 		return "", "", errors.New(toBeforeFromErrorMsg)
 	}
-	return start.Format(time.RFC3339Nano), end.Format(time.RFC3339Nano), nil
+	if to != "" {
+		end = ceilSecond(end)
+	}
+	return formatSecond(start), formatSecond(end), nil
+}
+
+// formatSecond renders a time in UTC and whole seconds, dropping any fraction.
+func formatSecond(t time.Time) string {
+	return t.UTC().Format(time.RFC3339)
+}
+
+func ceilSecond(t time.Time) time.Time {
+	if t.Nanosecond() == 0 {
+		return t
+	}
+	return t.Truncate(time.Second).Add(time.Second)
 }
 
 // parseSince accepts Go durations plus a day suffix, e.g. 90m, 24h, 7d.

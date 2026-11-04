@@ -172,6 +172,9 @@ func handleUnifiedLogsSearch(t *testing.T, w http.ResponseWriter, r *http.Reques
 	// The CLI must send a well-formed, non-empty time window, newest-first ordering and an explicit page size.
 	start, err := time.Parse(time.RFC3339Nano, req.StartTime)
 	require.NoError(t, err, "start_time")
+	// The API documents RFC 3339 UTC with a Z suffix, and the CLI sends whole seconds.
+	require.True(t, strings.HasSuffix(req.StartTime, "Z") && strings.HasSuffix(req.EndTime, "Z"), "timestamps must be UTC")
+	require.NotContains(t, req.StartTime+req.EndTime, ".", "timestamps must be whole seconds")
 	end, err := time.Parse(time.RFC3339Nano, req.EndTime)
 	require.NoError(t, err, "end_time")
 	require.False(t, end.Before(start), "end_time must not be before start_time")

@@ -1,0 +1,4 @@
+Error: log source "cluster-health" does not support resource scope
+
+Suggestions:
+    Supported scopes: organization.
