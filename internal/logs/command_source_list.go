@@ -1,7 +1,6 @@
 package logs
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -24,7 +23,7 @@ type sourceOut struct {
 	Resource    string `human:"Resource"`
 	IdPrefix    string `human:"ID Prefix"`
 	Scopes      string `human:"Scopes"`
-	MaxLookback string `human:"Max Lookback"`
+	MaxLookback int32  `human:"Max Lookback Days"`
 }
 
 func newSourceListCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -71,26 +70,10 @@ func (c *sourceListCommand) list(cmd *cobra.Command, _ []string) error {
 			Name:        source.Name,
 			DisplayName: source.DisplayName,
 			Resource:    source.ResourceType,
-			IdPrefix:    dashIfEmpty(source.GetIdPrefix()),
-			Scopes:      formatScopes(source.AllowedScopes),
-			MaxLookback: fmt.Sprintf("%dd", source.MaxLookbackDays),
+			IdPrefix:    source.GetIdPrefix(),
+			Scopes:      strings.Join(source.AllowedScopes, ", "),
+			MaxLookback: source.MaxLookbackDays,
 		})
 	}
 	return list.Print()
-}
-
-// formatScopes renders allowed scopes the way users type them, e.g. "organization, environment, resource".
-func formatScopes(scopes []string) string {
-	lower := make([]string, len(scopes))
-	for i, scope := range scopes {
-		lower[i] = strings.ToLower(strings.ReplaceAll(scope, "_", "-"))
-	}
-	return strings.Join(lower, ", ")
-}
-
-func dashIfEmpty(s string) string {
-	if s == "" {
-		return "-"
-	}
-	return s
 }
