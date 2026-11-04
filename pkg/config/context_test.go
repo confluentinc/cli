@@ -286,6 +286,31 @@ func TestContext_ResolveKafkaAPIKey_ErrorsWhenClusterSecretMissing(t *testing.T)
 	require.Error(t, err, "should surface the broken cluster-scoped config rather than fall back to Global")
 }
 
+func TestContext_LogsQueryState(t *testing.T) {
+	ctx := &Context{
+		CurrentEnvironment: "env-1",
+		Environments:       map[string]*EnvironmentContext{"env-1": {}},
+	}
+	require.Nil(t, ctx.GetLogsQueryState())
+
+	state := &LogsQueryState{Key: "abc", PageToken: "2", StartTime: "2026-10-14T00:00:00Z", EndTime: "2026-10-14T12:00:00Z"}
+	require.NoError(t, ctx.SetLogsQueryState(state))
+	require.Equal(t, state, ctx.GetLogsQueryState())
+	// The connect command keeps its own state, untouched.
+	require.Nil(t, ctx.GetConnectLogsQueryState())
+
+	// The state survives being written to and read from the config file.
+	data, err := json.Marshal(ctx.Environments["env-1"])
+	require.NoError(t, err)
+	require.Contains(t, string(data), "logs_state")
+	var loaded EnvironmentContext
+	require.NoError(t, json.Unmarshal(data, &loaded))
+	require.Equal(t, state, loaded.LogsQueryState)
+
+	// Without a current environment there is nowhere to keep it.
+	require.Error(t, (&Context{}).SetLogsQueryState(state))
+}
+
 func TestContext_LogsDiscoveryCache(t *testing.T) {
 	ctx := &Context{}
 	require.Nil(t, ctx.GetLogsDiscoveryCache())
