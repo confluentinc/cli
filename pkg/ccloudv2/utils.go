@@ -59,9 +59,14 @@ func NewRetryableHttpClient(cfg *config.Config, unsafeTrace bool) *http.Client {
 	return newRetryableHttpClient(cfg, unsafeTrace, false)
 }
 
-// newRetryableHttpClient retries server errors and 429 responses. A caller that reports API errors itself sets
-// returnErrorResponses: a 429 then reaches it at once with its Retry-After header, and when the retries for a server
-// error run out, it gets the last response instead of a generic "giving up" error.
+// newRetryableHttpClientReturningErrors is for callers that report API errors themselves: a 429 reaches them at once
+// with its Retry-After header, and when the retries for a server error run out, they get the last response instead of a
+// generic "giving up" error.
+func newRetryableHttpClientReturningErrors(cfg *config.Config, unsafeTrace bool) *http.Client {
+	return newRetryableHttpClient(cfg, unsafeTrace, true)
+}
+
+// newRetryableHttpClient retries server errors and 429 responses, unless returnErrorResponses is set.
 func newRetryableHttpClient(cfg *config.Config, unsafeTrace, returnErrorResponses bool) *http.Client {
 	client := retryablehttp.NewClient()
 	client.Logger = plog.NewLeveledLogger(unsafeTrace)

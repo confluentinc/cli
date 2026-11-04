@@ -34,7 +34,7 @@ func newSourceListCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Args:  cobra.NoArgs,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List the available log sources:",
+				Text: "List the available log sources.",
 				Code: "confluent logs source list",
 			},
 		),

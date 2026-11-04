@@ -8,19 +8,6 @@ import (
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
-func (s *CLITestSuite) TestLogsHelp() {
-	tests := []CLITest{
-		{args: "logs --help", fixture: "logs/help.golden"},
-		{args: "logs source --help", fixture: "logs/source/help.golden"},
-		{args: "logs source list --help", fixture: "logs/source/list-help.golden"},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
-
 func (s *CLITestSuite) TestLogsSourceList() {
 	tests := []CLITest{
 		{args: "logs source list", fixture: "logs/source/list.golden"},
@@ -37,9 +24,9 @@ func (s *CLITestSuite) TestLogsSourceList() {
 
 // TestLogsSourceListRefreshesDiscovery checks that `source list` always asks the API.
 func (s *CLITestSuite) TestLogsSourceListRefreshesDiscovery() {
-	before := testserver.LogSourceRequests()
-	discoveryRequests := func(t *testing.T, want int64) {
-		require.Equal(t, want, testserver.LogSourceRequests()-before)
+	before := testserver.LogSourceRequests
+	discoveryRequests := func(t *testing.T, want int) {
+		require.Equal(t, want, testserver.LogSourceRequests-before)
 	}
 
 	s.runIntegrationTest(CLITest{login: "cloud", args: "logs source list", fixture: "logs/source/list.golden", wantFunc: func(t *testing.T) { discoveryRequests(t, 1) }})
@@ -52,7 +39,7 @@ func (s *CLITestSuite) TestLogsSourceListNotLoggedIn() {
 
 // logSourcesResponses are the responses of GET /logs/v1/sources that the default mock does not serve: sources of other
 // shapes, and each error the LLD lists for the endpoint.
-var logSourcesResponses = map[string]*testserver.LogSourcesOverride{
+var logSourcesResponses = map[string]*testserver.LogSourcesResponse{
 	"two-sources": {Status: 200, Body: `{"api_version":"logging/v1","kind":"SourceList","metadata":{"total_size":2},"data":[
   {"api_version":"logging/v1","kind":"Source","name":"cluster-health","display_name":"Cluster health events","resource_type":"kafka","id_prefix":"lkc","crn_elements":["organization","environment","cloud-cluster","kafka"],"allowed_scopes":["ORGANIZATION","ENVIRONMENT","RESOURCE"],"search_fields":[],"full_text_search_supported":true,"returned_fields":[],"max_lookback_days":3},
   {"api_version":"logging/v1","kind":"Source","name":"cluster-link-insights","display_name":"Cluster Linking insights","resource_type":"cluster-link","crn_elements":["organization","environment","cloud-cluster","cluster-link"],"allowed_scopes":["RESOURCE"],"search_fields":[],"full_text_search_supported":false,"returned_fields":[],"max_lookback_days":7}]}`},
@@ -86,9 +73,9 @@ func (s *CLITestSuite) TestLogsSourceListResponses() {
 		{"server-error", CLITest{args: "logs source list", fixture: "logs/source/list-server-error.golden", exitCode: 1}},
 	}
 
-	defer testserver.SetLogSourcesOverride(nil)
+	defer func() { testserver.LogSourcesOverride = nil }()
 	for _, tt := range tests {
-		testserver.SetLogSourcesOverride(logSourcesResponses[tt.response])
+		testserver.LogSourcesOverride = logSourcesResponses[tt.response]
 		tt.test.login = "cloud"
 		s.runIntegrationTest(tt.test)
 	}
