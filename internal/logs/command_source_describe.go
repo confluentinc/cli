@@ -22,7 +22,7 @@ func newSourceDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <source>",
 		Short: "Describe a log source.",
-		Long:  "Describe a log source: the scopes it supports, the search fields `confluent logs fetch --search` accepts for it, and the fields each log record carries. Results are always fetched fresh.",
+		Long:  "Describe a log source: the scopes it supports, the search fields it accepts, and the fields each log record carries. Results are always fetched fresh.",
 		Args:  cobra.ExactArgs(1),
 		Example: examples.BuildExampleString(
 			examples.Example{
