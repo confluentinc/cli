@@ -1,7 +1,7 @@
 Log source:        cluster-link-insights
 Display name:      Cluster Linking insights
 Resource:          cluster-link (crn: organization/environment/cloud-cluster/cluster-link)
-Scopes:            resource
+Scopes:            RESOURCE
 Max lookback:      7d
 Full-text search:  no
 
