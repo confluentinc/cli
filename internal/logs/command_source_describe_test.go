@@ -8,51 +8,61 @@ import (
 	loggingv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/logging/v1"
 )
 
-func TestRenderSource(t *testing.T) {
-	source := &loggingv1.LoggingV1Source{
-		Name:                    "cluster-health",
-		DisplayName:             "Cluster health events",
-		ResourceType:            "kafka",
-		IdPrefix:                loggingv1.PtrString("lkc"),
-		CrnElements:             []string{"organization", "environment", "cloud-cluster", "kafka"},
-		AllowedScopes:           []string{"ORGANIZATION", "ENVIRONMENT", "RESOURCE"},
-		FullTextSearchSupported: true,
-		FullTextSearchFields:    &[]string{"message"},
-		MaxLookbackDays:         3,
-		SearchFields: []loggingv1.LoggingV1SearchFieldDescriptor{
-			{Name: "id", Type: "string"},
-			{Name: "level", Type: "enum", AllowedValues: &[]string{"INFO", "WARN", "ERROR"}},
-		},
-		ReturnedFields: []loggingv1.LoggingV1ReturnedFieldDescriptor{
-			{Name: "id", Type: "string", DefaultColumn: false, Description: loggingv1.PtrString("Unique identifier.")},
-			{Name: "timestamp", Type: "instant", DefaultColumn: true, Description: loggingv1.PtrString("Event time.")},
-			{Name: "level", Type: "enum", DefaultColumn: true},
-		},
-	}
+var describeTestSource = &loggingv1.LoggingV1Source{
+	Name:                    "cluster-health",
+	DisplayName:             "Cluster health events",
+	ResourceType:            "kafka",
+	IdPrefix:                loggingv1.PtrString("lkc"),
+	CrnElements:             []string{"organization", "environment", "cloud-cluster", "kafka"},
+	AllowedScopes:           []string{"ORGANIZATION", "ENVIRONMENT", "RESOURCE"},
+	FullTextSearchSupported: true,
+	FullTextSearchFields:    &[]string{"message"},
+	MaxLookbackDays:         3,
+	SearchFields: []loggingv1.LoggingV1SearchFieldDescriptor{
+		{Name: "id", Type: "string"},
+		{Name: "level", Type: "enum", AllowedValues: &[]string{"INFO", "WARN", "ERROR"}},
+	},
+	ReturnedFields: []loggingv1.LoggingV1ReturnedFieldDescriptor{
+		{Name: "id", Type: "string", DefaultColumn: false, Description: loggingv1.PtrString("Unique identifier.")},
+		{Name: "timestamp", Type: "instant", DefaultColumn: true, Description: loggingv1.PtrString("Event time.")},
+		{Name: "level", Type: "enum", DefaultColumn: true},
+	},
+}
 
-	expected := `Log source:        cluster-health
-Display name:      Cluster health events
-Resource:          kafka (lkc- IDs; crn: organization/environment/cloud-cluster/kafka)
-Scopes:            ORGANIZATION, ENVIRONMENT, RESOURCE
-Max lookback days: 3
-Full-text search:  yes (--search-text over: message)
+func TestNewSourceDescribeOut(t *testing.T) {
+	require.Equal(t, &sourceDescribeOut{
+		Name:            "cluster-health",
+		DisplayName:     "Cluster health events",
+		Resource:        "kafka",
+		IdPrefix:        "lkc",
+		CrnElements:     "organization/environment/cloud-cluster/kafka",
+		Scopes:          "ORGANIZATION, ENVIRONMENT, RESOURCE",
+		MaxLookbackDays: 3,
+		FullTextSearch:  true,
+		FullTextFields:  "message",
+	}, newSourceDescribeOut(describeTestSource))
 
-Search fields (--search field=value):
-  id     string
-  level  enum    INFO, WARN, ERROR
+	// A source with no ID prefix, CRN elements or full-text search leaves those values empty.
+	minimal := newSourceDescribeOut(&loggingv1.LoggingV1Source{Name: "x", DisplayName: "X", ResourceType: "thing", AllowedScopes: []string{"RESOURCE"}})
+	require.Equal(t, &sourceDescribeOut{Name: "x", DisplayName: "X", Resource: "thing", Scopes: "RESOURCE"}, minimal)
+}
 
-Returned fields (each log record):
-  timestamp  instant  *  Event time.
-  level      enum     *
-  id         string      Unique identifier.
+func TestNewSearchFieldOuts(t *testing.T) {
+	require.Equal(t, []*searchFieldOut{
+		{Name: "id", Type: "string"},
+		{Name: "level", Type: "enum", AllowedValues: "INFO, WARN, ERROR"},
+	}, newSearchFieldOuts(describeTestSource))
 
-  * = default column in human output
-`
-	require.Equal(t, expected, renderSource(source))
+	require.Empty(t, newSearchFieldOuts(&loggingv1.LoggingV1Source{}))
+}
 
-	minimal := renderSource(&loggingv1.LoggingV1Source{Name: "x", DisplayName: "X", ResourceType: "thing", AllowedScopes: []string{"RESOURCE"}})
-	require.Contains(t, minimal, "Resource:          thing\n")
-	require.Contains(t, minimal, "Full-text search:  no\n")
-	require.NotContains(t, minimal, "Search fields")
-	require.NotContains(t, minimal, "Returned fields")
+func TestNewReturnedFieldOuts(t *testing.T) {
+	// The default columns come first, and each group keeps the API's order.
+	require.Equal(t, []*returnedFieldOut{
+		{Name: "timestamp", Type: "instant", Default: true, Description: "Event time."},
+		{Name: "level", Type: "enum", Default: true},
+		{Name: "id", Type: "string", Description: "Unique identifier."},
+	}, newReturnedFieldOuts(describeTestSource))
+
+	require.Empty(t, newReturnedFieldOuts(&loggingv1.LoggingV1Source{}))
 }

@@ -1,8 +1,6 @@
 package logs
 
 import (
-	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -62,90 +60,112 @@ func (c *sourceDescribeCommand) describe(cmd *cobra.Command, args []string) erro
 		return output.SerializedOutputFromJsonTags(cmd, source)
 	}
 
-	output.Print(false, renderSource(source))
+	return printHumanSource(cmd, source)
+}
+
+type sourceDescribeOut struct {
+	Name            string `human:"Name"`
+	DisplayName     string `human:"Display Name"`
+	Resource        string `human:"Resource"`
+	IdPrefix        string `human:"ID Prefix"`
+	CrnElements     string `human:"CRN Elements"`
+	Scopes          string `human:"Scopes"`
+	MaxLookbackDays int32  `human:"Max Lookback Days"`
+	FullTextSearch  bool   `human:"Full-Text Search"`
+	FullTextFields  string `human:"Full-Text Fields"`
+}
+
+type searchFieldOut struct {
+	Name          string `human:"Name"`
+	Type          string `human:"Type"`
+	AllowedValues string `human:"Allowed Values"`
+}
+
+type returnedFieldOut struct {
+	Name        string `human:"Name"`
+	Type        string `human:"Type"`
+	Default     bool   `human:"Default"`
+	Description string `human:"Description"`
+}
+
+// printHumanSource prints everything a user needs to build a query and read its results: the log source, the search
+// fields it accepts, and the fields each record carries. The fields shown in the default human output of `fetch` are
+// marked as Default and listed first.
+func printHumanSource(cmd *cobra.Command, source *loggingv1.LoggingV1Source) error {
+	output.Println(false, "Log Source")
+	table := output.NewTable(cmd)
+	table.Add(newSourceDescribeOut(source))
+	if err := table.Print(); err != nil {
+		return err
+	}
+
+	if searchFields := newSearchFieldOuts(source); len(searchFields) > 0 {
+		output.Println(false, "")
+		output.Println(false, "Search Fields (--search field=value)")
+		list := output.NewList(cmd)
+		list.Sort(false) // keep the order the API returns
+		for _, field := range searchFields {
+			list.Add(field)
+		}
+		if err := list.Print(); err != nil {
+			return err
+		}
+	}
+
+	if returnedFields := newReturnedFieldOuts(source); len(returnedFields) > 0 {
+		output.Println(false, "")
+		output.Println(false, "Returned Fields (each log record)")
+		list := output.NewList(cmd)
+		list.Sort(false) // keep the default columns first
+		for _, field := range returnedFields {
+			list.Add(field)
+		}
+		return list.Print()
+	}
+
 	return nil
 }
 
-// renderSource lays out everything a user needs to build a query and read its results. Fields shown in the default
-// human output of `fetch` are marked with a star and listed first.
-func renderSource(source *loggingv1.LoggingV1Source) string {
-	var b strings.Builder
-
-	resource := source.ResourceType
-	var details []string
-	if source.GetIdPrefix() != "" {
-		details = append(details, source.GetIdPrefix()+"- IDs")
+func newSourceDescribeOut(source *loggingv1.LoggingV1Source) *sourceDescribeOut {
+	return &sourceDescribeOut{
+		Name:            source.Name,
+		DisplayName:     source.DisplayName,
+		Resource:        source.ResourceType,
+		IdPrefix:        source.GetIdPrefix(),
+		CrnElements:     strings.Join(source.CrnElements, "/"),
+		Scopes:          strings.Join(source.AllowedScopes, ", "),
+		MaxLookbackDays: source.MaxLookbackDays,
+		FullTextSearch:  source.FullTextSearchSupported,
+		FullTextFields:  strings.Join(source.GetFullTextSearchFields(), ", "),
 	}
-	if len(source.CrnElements) > 0 {
-		details = append(details, "crn: "+strings.Join(source.CrnElements, "/"))
-	}
-	if len(details) > 0 {
-		resource += " (" + strings.Join(details, "; ") + ")"
-	}
+}
 
-	fullText := "no"
-	if source.FullTextSearchSupported {
-		fullText = "yes"
-		if len(source.GetFullTextSearchFields()) > 0 {
-			fullText += " (--search-text over: " + strings.Join(source.GetFullTextSearchFields(), ", ") + ")"
-		}
+func newSearchFieldOuts(source *loggingv1.LoggingV1Source) []*searchFieldOut {
+	fields := make([]*searchFieldOut, 0, len(source.SearchFields))
+	for _, field := range source.SearchFields {
+		fields = append(fields, &searchFieldOut{
+			Name:          field.Name,
+			Type:          field.Type,
+			AllowedValues: strings.Join(field.GetAllowedValues(), ", "),
+		})
 	}
+	return fields
+}
 
-	const labelWidth = len("Full-text search:") + 2
-	line := func(label, value string) {
-		fmt.Fprintf(&b, "%-*s%s\n", labelWidth, label+":", value)
-	}
-	line("Log source", source.Name)
-	line("Display name", source.DisplayName)
-	line("Resource", resource)
-	line("Scopes", strings.Join(source.AllowedScopes, ", "))
-	line("Max lookback days", strconv.Itoa(int(source.MaxLookbackDays)))
-	line("Full-text search", fullText)
-
-	if len(source.SearchFields) > 0 {
-		nameWidth, typeWidth := 0, 0
-		for _, field := range source.SearchFields {
-			nameWidth = max(nameWidth, len(field.Name))
-			typeWidth = max(typeWidth, len(field.Type))
-		}
-
-		b.WriteString("\nSearch fields (--search field=value):\n")
-		for _, field := range source.SearchFields {
-			row := fmt.Sprintf("  %-*s  %-*s", nameWidth, field.Name, typeWidth, field.Type)
-			if len(field.GetAllowedValues()) > 0 {
-				row += "  " + strings.Join(field.GetAllowedValues(), ", ")
-			}
-			b.WriteString(strings.TrimRight(row, " ") + "\n")
-		}
-	}
-
-	if len(source.ReturnedFields) > 0 {
-		var fields []loggingv1.LoggingV1ReturnedFieldDescriptor
-		for _, defaults := range []bool{true, false} {
-			for _, field := range source.ReturnedFields {
-				if field.DefaultColumn == defaults {
-					fields = append(fields, field)
-				}
+// newReturnedFieldOuts lists the default columns first, then the rest, each group in the order the API returns them.
+func newReturnedFieldOuts(source *loggingv1.LoggingV1Source) []*returnedFieldOut {
+	fields := make([]*returnedFieldOut, 0, len(source.ReturnedFields))
+	for _, defaults := range []bool{true, false} {
+		for _, field := range source.ReturnedFields {
+			if field.DefaultColumn == defaults {
+				fields = append(fields, &returnedFieldOut{
+					Name:        field.Name,
+					Type:        field.Type,
+					Default:     field.DefaultColumn,
+					Description: field.GetDescription(),
+				})
 			}
 		}
-
-		nameWidth, typeWidth := 0, 0
-		for _, field := range fields {
-			nameWidth = max(nameWidth, len(field.Name))
-			typeWidth = max(typeWidth, len(field.Type))
-		}
-
-		b.WriteString("\nReturned fields (each log record):\n")
-		for _, field := range fields {
-			star := " "
-			if field.DefaultColumn {
-				star = "*"
-			}
-			row := fmt.Sprintf("  %-*s  %-*s  %s  %s", nameWidth, field.Name, typeWidth, field.Type, star, field.GetDescription())
-			b.WriteString(strings.TrimRight(row, " ") + "\n")
-		}
-		b.WriteString("\n  * = default column in human output\n")
 	}
-
-	return b.String()
+	return fields
 }
