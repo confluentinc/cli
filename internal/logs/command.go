@@ -8,8 +8,9 @@ import (
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "logs",
-		Short: "Query logs from Confluent Cloud log sources.",
+		Use:         "logs",
+		Short:       "Query logs from Confluent Cloud log sources.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
 	cmd.AddCommand(newSourceCommand(prerunner))

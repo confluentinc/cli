@@ -10,7 +10,7 @@ func newSourceCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "source",
 		Short: "Discover the log sources you can query.",
-		Long:  "Discover the log sources you can query with `confluent logs fetch`, including the search fields each one accepts and the fields it returns.",
+		Long:  "Discover the log sources you can query, including the search fields each one accepts and the fields it returns.",
 	}
 
 	cmd.AddCommand(newSourceListCommand(prerunner))

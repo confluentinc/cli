@@ -1,4 +1,4 @@
-Discover the log sources you can query with `confluent logs fetch`, including the search fields each one accepts and the fields it returns.
+Discover the log sources you can query, including the search fields each one accepts and the fields it returns.
 
 Usage:
   confluent logs source [command]
