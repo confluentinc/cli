@@ -1,13 +1,17 @@
 package testserver
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/require"
 )
 
 var logSources = map[string]string{
@@ -57,9 +61,11 @@ type LogSourcesResponse struct {
 // LogSourcesOverride, when set, is the response of "/logs/v1/sources" and "/logs/v1/sources/{name}". Tests reset it with defer.
 var LogSourcesOverride *LogSourcesResponse
 
-// serveLogSourcesOverride answers with the override, if a test set one, and reports whether it did.
-func serveLogSourcesOverride(w http.ResponseWriter) bool {
-	override := LogSourcesOverride
+// LogsSearchOverride, when set, is the response of "/logs/v1/search" for requests that name a log source. Tests reset it with defer.
+var LogsSearchOverride *LogSourcesResponse
+
+// serveOverride answers with the override, if a test set one, and reports whether it did.
+func serveOverride(w http.ResponseWriter, override *LogSourcesResponse) bool {
 	if override == nil {
 		return false
 	}
@@ -84,7 +90,7 @@ func handleLogsSources(_ *testing.T) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 
-		if serveLogSourcesOverride(w) {
+		if serveOverride(w, LogSourcesOverride) {
 			return
 		}
 
@@ -116,7 +122,7 @@ func handleLogsSource(_ *testing.T) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 
 		name := mux.Vars(r)["name"]
-		if serveLogSourcesOverride(w) {
+		if serveOverride(w, LogSourcesOverride) {
 			return
 		}
 
@@ -129,4 +135,124 @@ func handleLogsSource(_ *testing.T) http.HandlerFunc {
 
 		_, _ = w.Write([]byte(source))
 	}
+}
+
+type unifiedLogsSearchRequest struct {
+	CRN       string         `json:"crn"`
+	Source    string         `json:"source"`
+	Search    map[string]any `json:"search"`
+	Sort      string         `json:"sort"`
+	StartTime string         `json:"start_time"`
+	EndTime   string         `json:"end_time"`
+}
+
+// clusterHealthEvents are the records returned for the cluster-health source, keyed by the cluster they belong to.
+var clusterHealthEvents = []map[string]any{
+	{"id": "evt-101", "timestamp": "2026-10-14T14:41:08Z", "level": "ERROR", "message": "Broker lkc-123 unreachable", "event_type": "SERVICE_ISSUE_DETECTED", "cloud_cluster_id": "lkc-123"},
+	{"id": "evt-087", "timestamp": "2026-10-14T06:02:19Z", "level": "WARN", "message": "Scheduled maintenance window started", "event_type": "SERVICE_MAINTENANCE", "cloud_cluster_id": "lkc-456"},
+	{"id": "evt-033", "timestamp": "2026-10-13T20:15:44Z", "level": "INFO", "message": "Cluster lkc-789 status updated", "event_type": "CONFLUENT_STATUS_UPDATED", "cloud_cluster_id": "lkc-789"},
+}
+
+// pagedClusterEvents belong to the one cluster the mock serves in pages of two, to exercise `logs fetch --next`.
+var pagedClusterEvents = []map[string]any{
+	{"id": "evt-203", "timestamp": "2026-10-14T13:05:00Z", "level": "ERROR", "message": "Broker lkc-777 unreachable", "event_type": "SERVICE_ISSUE_DETECTED", "cloud_cluster_id": "lkc-777"},
+	{"id": "evt-202", "timestamp": "2026-10-14T12:05:00Z", "level": "WARN", "message": "Broker lkc-777 slow", "event_type": "HEALTH_ALERT", "cloud_cluster_id": "lkc-777"},
+	{"id": "evt-201", "timestamp": "2026-10-14T11:05:00Z", "level": "INFO", "message": "Cluster lkc-777 status updated", "event_type": "CONFLUENT_STATUS_UPDATED", "cloud_cluster_id": "lkc-777"},
+}
+
+const pagedClusterPageSize = 2
+
+// handleUnifiedLogsSearch serves POST /logs/v1/search requests that name a log source.
+func handleUnifiedLogsSearch(t *testing.T, w http.ResponseWriter, r *http.Request, req unifiedLogsSearchRequest) {
+	w.Header().Set("Content-Type", "application/json")
+	if serveOverride(w, LogsSearchOverride) {
+		return
+	}
+
+	// The CLI must send a well-formed, non-empty time window, newest-first ordering and an explicit page size.
+	start, err := time.Parse(time.RFC3339Nano, req.StartTime)
+	require.NoError(t, err, "start_time")
+	end, err := time.Parse(time.RFC3339Nano, req.EndTime)
+	require.NoError(t, err, "end_time")
+	require.False(t, end.Before(start), "end_time must not be before start_time")
+	require.Equal(t, "desc", req.Sort)
+
+	pageSize, err := strconv.Atoi(r.URL.Query().Get("page_size"))
+	require.NoError(t, err, "page_size")
+	require.Positive(t, pageSize)
+
+	// The scope of the query shows in which CRN elements are present.
+	require.True(t, strings.HasPrefix(req.CRN, "crn://"), req.CRN)
+	require.Contains(t, req.CRN, "/organization=", req.CRN)
+
+	// page_token is the offset of the first record on the page.
+	offset := 0
+	if token := r.URL.Query().Get("page_token"); token != "" {
+		offset, err = strconv.Atoi(token)
+		require.NoError(t, err, "page_token")
+	}
+
+	var data []map[string]any
+
+	switch req.Source {
+	case "cluster-health":
+		if strings.HasSuffix(req.CRN, "/kafka=lkc-777") {
+			pageSize = min(pageSize, pagedClusterPageSize)
+			data = pagedClusterEvents
+			break
+		}
+		// An organization-scoped CRN has no environment element, and an environment-scoped one has no cluster.
+		if strings.Contains(req.CRN, "/kafka=") {
+			require.Contains(t, req.CRN, "/environment=", req.CRN)
+		}
+		for _, event := range clusterHealthEvents {
+			// A resource-scoped CRN ends in kafka=<cluster>; broader scopes match every cluster.
+			if strings.Contains(req.CRN, "/kafka=") && !strings.HasSuffix(req.CRN, "/kafka="+event["cloud_cluster_id"].(string)) {
+				continue
+			}
+			if !searchMatches(req.Search, event) {
+				continue
+			}
+			data = append(data, event)
+		}
+	}
+
+	if data == nil {
+		data = []map[string]any{}
+	}
+	response := map[string]any{"api_version": "v1", "kind": "Logs"}
+	data = data[min(offset, len(data)):]
+	if len(data) > pageSize {
+		data = data[:pageSize]
+		response["metadata"] = map[string]any{"next": fmt.Sprintf("http://%s%s?page_size=%d&page_token=%d", r.Host, r.URL.Path, pageSize, offset+pageSize)}
+	}
+	response["data"] = data
+
+	w.Header().Set("Content-Type", "application/json")
+	require.NoError(t, json.NewEncoder(w).Encode(response))
+}
+
+func searchMatches(search map[string]any, event map[string]any) bool {
+	for field, want := range search {
+		if field == "search_text" {
+			if !strings.Contains(fmt.Sprint(event["message"]), fmt.Sprint(want)) {
+				return false
+			}
+			continue
+		}
+
+		var wanted []string
+		switch v := want.(type) {
+		case string:
+			wanted = []string{v}
+		case []any:
+			for _, item := range v {
+				wanted = append(wanted, fmt.Sprint(item))
+			}
+		}
+		if !slices.Contains(wanted, fmt.Sprint(event[field])) {
+			return false
+		}
+	}
+	return true
 }

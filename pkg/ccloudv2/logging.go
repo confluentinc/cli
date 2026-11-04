@@ -113,7 +113,7 @@ func (c *Client) SearchConnectorLogs(crn, connectorId, startTime, endTime string
 	return &logsResponse, nil
 }
 
-func getLoggingRequest(loggingURL string, request LoggingSearchRequest, dataplaneToken string, pageSize int, pageToken string) (*http.Request, error) {
+func getLoggingRequest(loggingURL string, request any, dataplaneToken string, pageSize int, pageToken string) (*http.Request, error) {
 	requestBody, err := json.Marshal(request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request body: %w", err)
@@ -254,4 +254,128 @@ func rateLimitError(retryAfter string, now time.Time) error {
 		}
 	}
 	return fmt.Errorf("%s. Try again later", message)
+}
+
+// LogsSearchRequest is the body of POST /logs/v1/search for the unified `confluent logs` commands. Unlike
+// LoggingSearchRequest, it carries the log source and an open-ended search map.
+type LogsSearchRequest struct {
+	CRN       string         `json:"crn"`
+	Source    string         `json:"source,omitempty"`
+	Search    map[string]any `json:"search,omitempty"`
+	Sort      string         `json:"sort,omitempty"`
+	StartTime string         `json:"start_time"`
+	EndTime   string         `json:"end_time"`
+}
+
+// LogsSearchResponse holds log records as generic maps, because each log source declares its own returned fields.
+type LogsSearchResponse struct {
+	Data       []map[string]any `json:"data"`
+	Metadata   *LoggingMetadata `json:"metadata,omitempty"`
+	ApiVersion string           `json:"api_version"`
+	Kind       string           `json:"kind"`
+}
+
+type loggingErrorResponse struct {
+	Errors []struct {
+		Status string `json:"status"`
+		Detail string `json:"detail"`
+	} `json:"errors"`
+}
+
+// SearchLogs queries POST /logs/v1/search for any log source.
+func (c *Client) SearchLogs(request LogsSearchRequest, pageSize int, pageToken string) (*LogsSearchResponse, error) {
+	loggingURL, err := getLoggingUrl(c.cfg.Context().GetPlatformServer())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get logging API URL: %w", err)
+	}
+
+	dataplaneToken, err := auth.GetDataplaneToken(c.cfg.Context())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get data plane token: %w", err)
+	}
+
+	req, err := getLoggingRequest(loggingURL, request, dataplaneToken, pageSize, pageToken)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create logging API request: %w", err)
+	}
+
+	body, err := c.doLoggingRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return decodeLogsSearchResponse(body)
+}
+
+func (c *Client) doLoggingRequest(req *http.Request) ([]byte, error) {
+	resp, err := newRetryableHttpClientReturningErrors(c.cfg, false).Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make HTTP request to logging API: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("logging API request failed with status %d and failed to read response body: %w", resp.StatusCode, err)
+	}
+
+	if resp.StatusCode == http.StatusTooManyRequests {
+		return nil, rateLimitError(resp.Header.Get("Retry-After"), time.Now())
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, loggingStatusError(resp.StatusCode, body)
+	}
+	return body, nil
+}
+
+// loggingStatusError surfaces the API's own error detail, for example "Credentials are required to access this resource.".
+func loggingStatusError(statusCode int, body []byte) error {
+	var errResp loggingErrorResponse
+	if err := json.Unmarshal(body, &errResp); err == nil && len(errResp.Errors) > 0 && errResp.Errors[0].Detail != "" {
+		return fmt.Errorf("%s", errResp.Errors[0].Detail)
+	}
+	return fmt.Errorf("logging API request failed with status %d", statusCode)
+}
+
+// decodeLogsSearchResponse decodes JSON numbers without going through float64, so integers above 2^53 survive into
+// the JSON, YAML and JSONL output. Numbers are returned as int64, uint64 or float64 rather than json.Number, because
+// the YAML encoder would print a json.Number as a quoted string.
+func decodeLogsSearchResponse(body []byte) (*LogsSearchResponse, error) {
+	var response LogsSearchResponse
+	decoder := json.NewDecoder(bytes.NewReader(body))
+	decoder.UseNumber()
+	if err := decoder.Decode(&response); err != nil {
+		return nil, fmt.Errorf("failed to decode logging API response: %w", err)
+	}
+	for _, record := range response.Data {
+		for key, value := range record {
+			record[key] = convertJsonNumbers(value)
+		}
+	}
+	return &response, nil
+}
+
+func convertJsonNumbers(value any) any {
+	switch v := value.(type) {
+	case json.Number:
+		if i, err := strconv.ParseInt(v.String(), 10, 64); err == nil {
+			return i
+		}
+		if u, err := strconv.ParseUint(v.String(), 10, 64); err == nil {
+			return u
+		}
+		if f, err := v.Float64(); err == nil {
+			return f
+		}
+		return v.String()
+	case map[string]any:
+		for key, item := range v {
+			v[key] = convertJsonNumbers(item)
+		}
+	case []any:
+		for i, item := range v {
+			v[i] = convertJsonNumbers(item)
+		}
+	}
+	return value
 }

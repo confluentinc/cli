@@ -1,0 +1,5 @@
+Found 1 log entry for cluster-health on lkc-123:
+
+       Timestamp       | Level |          Message           |       Event Type        
+-----------------------+-------+----------------------------+-------------------------
+  2026-10-14T14:41:08Z | ERROR | Broker lkc-123 unreachable | SERVICE_ISSUE_DETECTED  

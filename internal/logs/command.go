@@ -13,6 +13,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
+	cmd.AddCommand(newFetchCommand(prerunner))
 	cmd.AddCommand(newSourceCommand(prerunner))
 
 	return cmd

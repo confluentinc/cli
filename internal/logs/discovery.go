@@ -131,3 +131,42 @@ func storeLogSource(c *pcmd.AuthenticatedCLICommand, key string, source *logging
 		log.CliLogger.Debugf("Failed to cache log source %q: %v", source.Name, err)
 	}
 }
+
+// loadLogSource returns the named log source from the cache when it is fresh, and from the discovery API otherwise.
+// The second result reports whether it came from the cache. refresh skips the cache.
+func loadLogSource(c *pcmd.AuthenticatedCLICommand, name string, refresh bool) (*loggingv1.LoggingV1Source, bool, error) {
+	key := discoveryCacheKey(c.Context.GetPlatformServer(), c.Context.GetCurrentOrganization())
+	now := time.Now()
+
+	if !refresh {
+		if source := cachedSource(c.Context.GetLogsDiscoveryCache(), key, name, now); source != nil {
+			return source, true, nil
+		}
+	}
+
+	source, err := c.V2Client.DescribeLogSource(name)
+	if err != nil {
+		return nil, false, err
+	}
+	storeLogSource(c, key, source, now)
+	return source, false, nil
+}
+
+// resolveSource loads a log source and validates the query against it. A source that came from the cache may be
+// stale, so when validation rejects it, the source is fetched again and the query is validated once more.
+func resolveSource(load func(refresh bool) (*loggingv1.LoggingV1Source, bool, error), validate func(*loggingv1.LoggingV1Source) error) (*loggingv1.LoggingV1Source, error) {
+	source, cached, err := load(false)
+	if err != nil {
+		return nil, err
+	}
+
+	err = validate(source)
+	if err == nil || !cached {
+		return source, err
+	}
+
+	if source, _, err = load(true); err != nil {
+		return nil, err
+	}
+	return source, validate(source)
+}

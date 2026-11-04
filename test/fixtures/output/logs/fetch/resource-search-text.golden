@@ -1,0 +1,6 @@
+Found 1 log entry for cluster-health on lkc-456:
+
+       Timestamp       | Level |            Message             |     Event Type       
+-----------------------+-------+--------------------------------+----------------------
+  2026-10-14T06:02:19Z | WARN  | Scheduled maintenance window   | SERVICE_MAINTENANCE  
+                       |       | started                        |                      
