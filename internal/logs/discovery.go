@@ -32,8 +32,12 @@ func cachedSource(cache *config.LogsDiscoveryCache, key, name string, now time.T
 		return nil
 	}
 
+	data, err := json.Marshal(entry.Source)
+	if err != nil {
+		return nil
+	}
 	var source loggingv1.LoggingV1Source
-	if err := json.Unmarshal(entry.Source, &source); err != nil {
+	if err := json.Unmarshal(data, &source); err != nil {
 		return nil
 	}
 	return &source
@@ -50,10 +54,14 @@ func withSource(cache *config.LogsDiscoveryCache, key string, source *loggingv1.
 	if err != nil {
 		return cache
 	}
+	var raw map[string]any
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return cache
+	}
 	if cache.Sources == nil {
 		cache.Sources = map[string]*config.LogsCachedSource{}
 	}
-	cache.Sources[source.Name] = &config.LogsCachedSource{FetchedAt: now, Source: data}
+	cache.Sources[source.Name] = &config.LogsCachedSource{FetchedAt: now, Source: raw}
 	return cache
 }
 

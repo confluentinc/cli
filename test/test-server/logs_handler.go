@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"slices"
 	"strings"
-	"sync/atomic"
 	"testing"
 )
 
@@ -42,32 +41,23 @@ var logSources = map[string]string{
 }`,
 }
 
-// logSourceRequests counts the discovery requests, for one source or the list, so tests can tell a cached source from a fetched one.
-var logSourceRequests atomic.Int64
+// LogSourceRequests counts the discovery requests, for one source or the list, so tests can tell a cached source from a fetched one.
+var LogSourceRequests = 0
 
-// LogSourceRequests returns how many log source discovery requests the test server has served.
-func LogSourceRequests() int64 {
-	return logSourceRequests.Load()
-}
-
-// LogSourcesOverride replaces the response of the log source discovery endpoints, so tests can reach the API's error responses and
+// LogSourcesResponse replaces the response of the log source discovery endpoints, so tests can reach the API's error responses and
 // source lists the default mock does not serve.
-type LogSourcesOverride struct {
+type LogSourcesResponse struct {
 	Status int
 	Header map[string]string
 	Body   string
 }
 
-var logSourcesOverride atomic.Pointer[LogSourcesOverride]
-
-// SetLogSourcesOverride makes "/logs/v1/sources" and "/logs/v1/sources/{name}" answer with the given response. A nil override restores the default.
-func SetLogSourcesOverride(override *LogSourcesOverride) {
-	logSourcesOverride.Store(override)
-}
+// LogSourcesOverride, when set, is the response of "/logs/v1/sources" and "/logs/v1/sources/{name}". Tests reset it with defer.
+var LogSourcesOverride *LogSourcesResponse
 
 // serveLogSourcesOverride answers with the override, if a test set one, and reports whether it did.
 func serveLogSourcesOverride(w http.ResponseWriter) bool {
-	override := logSourcesOverride.Load()
+	override := LogSourcesOverride
 	if override == nil {
 		return false
 	}
@@ -83,7 +73,7 @@ func serveLogSourcesOverride(w http.ResponseWriter) bool {
 // Handler for: "/logs/v1/sources"
 func handleLogsSources(_ *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		logSourceRequests.Add(1)
+		LogSourceRequests++
 
 		if r.Method != http.MethodGet {
 			w.WriteHeader(http.StatusMethodNotAllowed)
