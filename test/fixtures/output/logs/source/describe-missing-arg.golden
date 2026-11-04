@@ -3,7 +3,7 @@ Usage:
   confluent logs source describe <source> [flags]
 
 Examples:
-Describe the "cluster-health" log source:
+Describe the "cluster-health" log source.
 
   $ confluent logs source describe cluster-health
 

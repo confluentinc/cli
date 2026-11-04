@@ -34,7 +34,7 @@ func TestRenderSource(t *testing.T) {
 Display name:      Cluster health events
 Resource:          kafka (lkc- IDs; crn: organization/environment/cloud-cluster/kafka)
 Scopes:            ORGANIZATION, ENVIRONMENT, RESOURCE
-Max lookback:      3d
+Max lookback days: 3
 Full-text search:  yes (--search-text over: message)
 
 Search fields (--search field=value):
