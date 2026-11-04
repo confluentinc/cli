@@ -4,7 +4,7 @@ Usage:
   confluent logs source list [flags]
 
 Examples:
-List the available log sources:
+List the available log sources.
 
   $ confluent logs source list
 
