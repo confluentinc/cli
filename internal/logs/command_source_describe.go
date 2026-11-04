@@ -2,6 +2,7 @@ package logs
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -26,11 +27,10 @@ func newSourceDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Describe the "cluster-health" log source:`,
+				Text: `Describe the "cluster-health" log source.`,
 				Code: "confluent logs source describe cluster-health",
 			},
 		),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
 	c := &sourceDescribeCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
@@ -99,7 +99,7 @@ func renderSource(source *loggingv1.LoggingV1Source) string {
 	line("Display name", source.DisplayName)
 	line("Resource", resource)
 	line("Scopes", strings.Join(source.AllowedScopes, ", "))
-	line("Max lookback", fmt.Sprintf("%dd", source.MaxLookbackDays))
+	line("Max lookback days", strconv.Itoa(int(source.MaxLookbackDays)))
 	line("Full-text search", fullText)
 
 	if len(source.SearchFields) > 0 {
