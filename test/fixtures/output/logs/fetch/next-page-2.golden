@@ -1,0 +1,5 @@
+Found 1 log entry for cluster-health on lkc-777:
+
+       Timestamp       | Level |            Message             |        Event Type         
+-----------------------+-------+--------------------------------+---------------------------
+  2026-10-14T11:05:00Z | INFO  | Cluster lkc-777 status updated | CONFLUENT_STATUS_UPDATED  

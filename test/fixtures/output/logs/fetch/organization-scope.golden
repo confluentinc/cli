@@ -1,0 +1,8 @@
+Found 3 log entries for cluster-health:
+
+       Timestamp       | Level |            Message             |        Event Type         
+-----------------------+-------+--------------------------------+---------------------------
+  2026-10-14T14:41:08Z | ERROR | Broker lkc-123 unreachable     | SERVICE_ISSUE_DETECTED    
+  2026-10-14T06:02:19Z | WARN  | Scheduled maintenance window   | SERVICE_MAINTENANCE       
+                       |       | started                        |                           
+  2026-10-13T20:15:44Z | INFO  | Cluster lkc-789 status updated | CONFLUENT_STATUS_UPDATED  

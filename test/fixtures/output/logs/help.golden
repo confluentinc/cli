@@ -4,6 +4,7 @@ Usage:
   confluent logs [command]
 
 Available Commands:
+  fetch       Fetch logs from a log source.
   source      Discover the log sources you can query.
 
 Global Flags:
