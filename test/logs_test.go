@@ -248,7 +248,7 @@ func (s *CLITestSuite) TestLogsFetchOutputFile() {
 		wantFunc: func(t *testing.T) {
 			data, err := os.ReadFile(path)
 			require.NoError(t, err)
-			require.JSONEq(t, `{"cloud_cluster_id":"lkc-123","event_type":"SERVICE_ISSUE_DETECTED","id":"evt-101","level":"ERROR","message":"Broker lkc-123 unreachable","timestamp":"2026-10-14T14:41:08Z"}`, strings.TrimSpace(string(data)))
+			require.JSONEq(t, `{"cloud_cluster_id":"lkc-123","crn":"crn://confluent.cloud/organization=abc-123/environment=env-596/cloud-cluster=lkc-123/kafka=lkc-123","event_id":"4060c2e9-b415-4b0f-a11f-359177689d8c","event_type":"SERVICE_ISSUE_DETECTED","id":"lkc-123","level":"ERROR","message":"Broker lkc-123 unreachable","source":"ClusterHealth","status":"OPEN","timestamp":"2026-10-14T14:41:08.025Z"}`, strings.TrimSpace(string(data)))
 		},
 	})
 }
@@ -321,4 +321,44 @@ func (s *CLITestSuite) TestLogsFetchSourceCapabilities() {
 
 func (s *CLITestSuite) TestLogsFetchToBeforeFrom() {
 	s.runIntegrationTest(CLITest{login: "cloud", args: "logs fetch lkc-123 --source cluster-health --from 2026-10-14T12:00:00Z --to 2026-10-14T00:00:00Z", fixture: "logs/fetch/to-before-from.golden", exitCode: 1})
+}
+
+// TestLogsFetchCRN checks the CRN the CLI builds for each scope, element by element. An organization query has no
+// environment element, and an environment query uses the one from --environment, not the one the login selected.
+func (s *CLITestSuite) TestLogsFetchCRN() {
+	const org = "crn://confluent.cloud/organization=abc-123"
+	crnIs := func(want string) func(t *testing.T) {
+		return func(t *testing.T) { require.Equal(t, want, testserver.LastLogsSearchCRN) }
+	}
+
+	tests := []CLITest{
+		{args: "logs fetch --source cluster-health --since 24h", fixture: "logs/fetch/organization-scope.golden", wantFunc: crnIs(org)},
+		{args: "logs fetch --source cluster-health --environment env-596 --since 24h", fixture: "logs/fetch/environment-scope.golden", wantFunc: crnIs(org + "/environment=env-596")},
+		{args: "logs fetch --source cluster-health --environment env-595 --since 24h", fixture: "logs/fetch/environment-scope.golden", wantFunc: crnIs(org + "/environment=env-595")},
+		{args: "logs fetch lkc-123 --source cluster-health --environment env-595 --since 1h", fixture: "logs/fetch/resource.golden", wantFunc: crnIs(org + "/environment=env-595/cloud-cluster=lkc-123/kafka=lkc-123")},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+// TestLogsFetchNextExhausted checks that JSON and YAML consumers still get valid output after the last page.
+func (s *CLITestSuite) TestLogsFetchNextExhausted() {
+	const query = "logs fetch lkc-777 --source cluster-health --since 24h"
+
+	s.runIntegrationTest(CLITest{login: "cloud", args: query + " --tail 1", fixture: "logs/fetch/next-tail.golden"})
+	s.runIntegrationTest(CLITest{workflow: true, args: query + " --next -o json", fixture: "logs/fetch/next-no-more-json.golden"})
+}
+
+// TestLogsFetchNextAfterFailedWrite checks that a page that could not be written is not skipped: the cursor moves only
+// after the records have been delivered.
+func (s *CLITestSuite) TestLogsFetchNextAfterFailedWrite() {
+	const query = "logs fetch lkc-777 --source cluster-health --since 24h"
+	missing := filepath.Join(s.T().TempDir(), "no-such-dir", "logs.jsonl")
+
+	s.runIntegrationTest(CLITest{login: "cloud", args: query, fixture: "logs/fetch/next-page-1.golden"})
+	s.runIntegrationTest(CLITest{workflow: true, args: query + " --next --output-file " + missing, contains: "failed to open file", exitCode: 1})
+	s.runIntegrationTest(CLITest{workflow: true, args: query + " --next", fixture: "logs/fetch/next-page-2.golden"})
 }

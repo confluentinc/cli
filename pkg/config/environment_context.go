@@ -11,5 +11,4 @@ type EnvironmentContext struct {
 	CurrentFlinkEndpoint          string                 `json:"current_flink_endpoint,omitempty"`
 	CurrentSchemaRegistryEndpoint string                 `json:"current_schema_registry_endpoint,omitempty"`
 	ConnectLogsQueryState         *ConnectLogsQueryState `json:"connect_logs_state,omitempty"`
-	LogsQueryState                *LogsQueryState        `json:"logs_state,omitempty"`
 }
