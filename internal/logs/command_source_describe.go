@@ -98,7 +98,7 @@ func renderSource(source *loggingv1.LoggingV1Source) string {
 	line("Log source", source.Name)
 	line("Display name", source.DisplayName)
 	line("Resource", resource)
-	line("Scopes", formatScopes(source.AllowedScopes))
+	line("Scopes", strings.Join(source.AllowedScopes, ", "))
 	line("Max lookback", fmt.Sprintf("%dd", source.MaxLookbackDays))
 	line("Full-text search", fullText)
 

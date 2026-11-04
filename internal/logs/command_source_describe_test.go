@@ -33,7 +33,7 @@ func TestRenderSource(t *testing.T) {
 	expected := `Log source:        cluster-health
 Display name:      Cluster health events
 Resource:          kafka (lkc- IDs; crn: organization/environment/cloud-cluster/kafka)
-Scopes:            organization, environment, resource
+Scopes:            ORGANIZATION, ENVIRONMENT, RESOURCE
 Max lookback:      3d
 Full-text search:  yes (--search-text over: message)
 
