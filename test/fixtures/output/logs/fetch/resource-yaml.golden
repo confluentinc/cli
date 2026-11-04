@@ -1,6 +1,10 @@
 - cloud_cluster_id: lkc-123
+  crn: crn://confluent.cloud/organization=abc-123/environment=env-596/cloud-cluster=lkc-123/kafka=lkc-123
+  event_id: 4060c2e9-b415-4b0f-a11f-359177689d8c
   event_type: SERVICE_ISSUE_DETECTED
-  id: evt-101
+  id: lkc-123
   level: ERROR
   message: Broker lkc-123 unreachable
-  timestamp: "2026-10-14T14:41:08Z"
+  source: ClusterHealth
+  status: OPEN
+  timestamp: "2026-10-14T14:41:08.025Z"

@@ -287,28 +287,28 @@ func TestContext_ResolveKafkaAPIKey_ErrorsWhenClusterSecretMissing(t *testing.T)
 }
 
 func TestContext_LogsQueryState(t *testing.T) {
-	ctx := &Context{
-		CurrentEnvironment: "env-1",
-		Environments:       map[string]*EnvironmentContext{"env-1": {}},
-	}
+	// An organization-scoped query has no environment, so the state is kept without one.
+	ctx := &Context{}
 	require.Nil(t, ctx.GetLogsQueryState())
 
 	state := &LogsQueryState{Key: "abc", PageToken: "2", StartTime: "2026-10-14T00:00:00Z", EndTime: "2026-10-14T12:00:00Z"}
-	require.NoError(t, ctx.SetLogsQueryState(state))
+	ctx.SetLogsQueryState(state)
 	require.Equal(t, state, ctx.GetLogsQueryState())
 	// The connect command keeps its own state, untouched.
 	require.Nil(t, ctx.GetConnectLogsQueryState())
 
 	// The state survives being written to and read from the config file.
-	data, err := json.Marshal(ctx.Environments["env-1"])
+	data, err := json.Marshal(ctx)
 	require.NoError(t, err)
 	require.Contains(t, string(data), "logs_state")
-	var loaded EnvironmentContext
+	var loaded Context
 	require.NoError(t, json.Unmarshal(data, &loaded))
-	require.Equal(t, state, loaded.LogsQueryState)
+	require.Equal(t, state, loaded.GetLogsQueryState())
 
-	// Without a current environment there is nowhere to keep it.
-	require.Error(t, (&Context{}).SetLogsQueryState(state))
+	// An empty state is left out of the file.
+	data, err = json.Marshal(&Context{})
+	require.NoError(t, err)
+	require.NotContains(t, string(data), "logs_state")
 }
 
 func TestContext_LogsDiscoveryCache(t *testing.T) {

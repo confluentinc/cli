@@ -84,7 +84,7 @@ func TestResolveTimeWindow(t *testing.T) {
 	require.Equal(t, "2026-10-14T14:59:59Z", start)
 	require.Equal(t, "2026-10-14T15:00:00Z", end)
 
-	start, end, err = resolveTimeWindow("", "2026-10-14T10:00:00Z", "2026-10-14T10:00:05Z", now)
+	_, end, err = resolveTimeWindow("", "2026-10-14T10:00:00Z", "2026-10-14T10:00:05Z", now)
 	require.NoError(t, err)
 	require.Equal(t, "2026-10-14T10:00:05Z", end, "a whole-second end is unchanged")
 

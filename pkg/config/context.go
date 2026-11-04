@@ -33,6 +33,9 @@ type Context struct {
 	ActiveGlobalAPIKey string `json:"active_global_api_key,omitempty"`
 	// LogsDiscoveryCache holds the log sources `confluent logs` discovered, to save repeated discovery calls.
 	LogsDiscoveryCache *LogsDiscoveryCache `json:"logs_discovery,omitempty"`
+	// LogsQueryState remembers the last `confluent logs fetch` query, so that `--next` can continue it. It is kept
+	// per login rather than per environment, because an organization-scoped query has no environment.
+	LogsQueryState *LogsQueryState `json:"logs_state,omitempty"`
 
 	// Deprecated
 	NetrcMachineName       string                            `json:"netrc_machine_name,omitempty"`
@@ -464,20 +467,11 @@ func (c *Context) SetConnectLogsQueryState(state *ConnectLogsQueryState) error {
 }
 
 func (c *Context) GetLogsQueryState() *LogsQueryState {
-	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
-		return ctx.LogsQueryState
-	}
-	return nil
+	return c.LogsQueryState
 }
 
-func (c *Context) SetLogsQueryState(state *LogsQueryState) error {
-	ctx := c.GetCurrentEnvironmentContext()
-	if ctx == nil {
-		return errors.New(noEnvError)
-	}
-
-	ctx.LogsQueryState = state
-	return nil
+func (c *Context) SetLogsQueryState(state *LogsQueryState) {
+	c.LogsQueryState = state
 }
 
 func (c *Context) GetLogsDiscoveryCache() *LogsDiscoveryCache {

@@ -61,6 +61,10 @@ type LogSourcesResponse struct {
 // LogSourcesOverride, when set, is the response of "/logs/v1/sources" and "/logs/v1/sources/{name}". Tests reset it with defer.
 var LogSourcesOverride *LogSourcesResponse
 
+// LastLogsSearchCRN is the CRN of the latest search request that named a log source, so tests can check which scope the
+// CLI asked for.
+var LastLogsSearchCRN string
+
 // LogsSearchOverride, when set, is the response of "/logs/v1/search" for requests that name a log source. Tests reset it with defer.
 var LogsSearchOverride *LogSourcesResponse
 
@@ -146,24 +150,43 @@ type unifiedLogsSearchRequest struct {
 	EndTime   string         `json:"end_time"`
 }
 
+// clusterHealthEvent builds a record in the shape the cluster-health source returns: the cluster ID is both the
+// record's id and its cloud_cluster_id, and the CRN names the cluster.
+func clusterHealthEvent(clusterId, eventId, level, eventType, message, status, timestamp string) map[string]any {
+	return map[string]any{
+		"cloud_cluster_id": clusterId,
+		"event_type":       eventType,
+		"event_id":         eventId,
+		"level":            level,
+		"source":           "ClusterHealth",
+		"id":               clusterId,
+		"message":          message,
+		"crn":              "crn://confluent.cloud/organization=abc-123/environment=env-596/cloud-cluster=" + clusterId + "/kafka=" + clusterId,
+		"status":           status,
+		"timestamp":        timestamp,
+	}
+}
+
 // clusterHealthEvents are the records returned for the cluster-health source, keyed by the cluster they belong to.
 var clusterHealthEvents = []map[string]any{
-	{"id": "evt-101", "timestamp": "2026-10-14T14:41:08Z", "level": "ERROR", "message": "Broker lkc-123 unreachable", "event_type": "SERVICE_ISSUE_DETECTED", "cloud_cluster_id": "lkc-123"},
-	{"id": "evt-087", "timestamp": "2026-10-14T06:02:19Z", "level": "WARN", "message": "Scheduled maintenance window started", "event_type": "SERVICE_MAINTENANCE", "cloud_cluster_id": "lkc-456"},
-	{"id": "evt-033", "timestamp": "2026-10-13T20:15:44Z", "level": "INFO", "message": "Cluster lkc-789 status updated", "event_type": "CONFLUENT_STATUS_UPDATED", "cloud_cluster_id": "lkc-789"},
+	clusterHealthEvent("lkc-123", "4060c2e9-b415-4b0f-a11f-359177689d8c", "ERROR", "SERVICE_ISSUE_DETECTED", "Broker lkc-123 unreachable", "OPEN", "2026-10-14T14:41:08.025Z"),
+	clusterHealthEvent("lkc-456", "7c1f6a52-0d3e-4c8b-9a41-2b5e8d9f0a13", "WARN", "SERVICE_MAINTENANCE", "Scheduled maintenance window started", "OPEN", "2026-10-14T06:02:19.310Z"),
+	clusterHealthEvent("lkc-789", "e2b94d17-58aa-4f0c-b6d3-91c7a0e4f825", "INFO", "CONFLUENT_STATUS_UPDATED", "Cluster lkc-789 status updated", "COMPLETED", "2026-10-13T20:15:44.871Z"),
 }
 
 // pagedClusterEvents belong to the one cluster the mock serves in pages of two, to exercise `logs fetch --next`.
 var pagedClusterEvents = []map[string]any{
-	{"id": "evt-203", "timestamp": "2026-10-14T13:05:00Z", "level": "ERROR", "message": "Broker lkc-777 unreachable", "event_type": "SERVICE_ISSUE_DETECTED", "cloud_cluster_id": "lkc-777"},
-	{"id": "evt-202", "timestamp": "2026-10-14T12:05:00Z", "level": "WARN", "message": "Broker lkc-777 slow", "event_type": "HEALTH_ALERT", "cloud_cluster_id": "lkc-777"},
-	{"id": "evt-201", "timestamp": "2026-10-14T11:05:00Z", "level": "INFO", "message": "Cluster lkc-777 status updated", "event_type": "CONFLUENT_STATUS_UPDATED", "cloud_cluster_id": "lkc-777"},
+	clusterHealthEvent("lkc-777", "1d0a3f64-92b7-4e15-8c2a-6f4b7e9d1a30", "ERROR", "SERVICE_ISSUE_DETECTED", "Broker lkc-777 unreachable", "OPEN", "2026-10-14T13:05:00.120Z"),
+	clusterHealthEvent("lkc-777", "5a8e2c91-3f60-47d2-b1c4-0e9a6d7f3b58", "WARN", "HEALTH_ALERT", "Broker lkc-777 slow", "OPEN", "2026-10-14T12:05:00.480Z"),
+	clusterHealthEvent("lkc-777", "9f3b7d20-61c4-4a8e-95d0-3c2e1b8a6f47", "INFO", "CONFLUENT_STATUS_UPDATED", "Cluster lkc-777 status updated", "COMPLETED", "2026-10-14T11:05:00.905Z"),
 }
 
 const pagedClusterPageSize = 2
 
 // handleUnifiedLogsSearch serves POST /logs/v1/search requests that name a log source.
 func handleUnifiedLogsSearch(t *testing.T, w http.ResponseWriter, r *http.Request, req unifiedLogsSearchRequest) {
+	LastLogsSearchCRN = req.CRN
+
 	w.Header().Set("Content-Type", "application/json")
 	if serveOverride(w, LogsSearchOverride) {
 		return

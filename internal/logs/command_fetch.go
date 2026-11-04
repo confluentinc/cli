@@ -169,6 +169,10 @@ func (c *fetchCommand) fetch(cmd *cobra.Command, args []string) error {
 			return errors.NewErrorWithSuggestions(noStoredQueryErrorMsg, noStoredQuerySuggestions)
 		}
 		if state.PageToken == "" {
+			// Nothing is left to fetch. A script that parses the output still gets valid JSON or YAML.
+			if output.GetFormat(cmd).IsSerialized() && outputFile == "" {
+				return output.SerializedOutput(cmd, []map[string]any{})
+			}
 			output.Println(false, noMorePagesMsg)
 			return nil
 		}
@@ -192,37 +196,54 @@ func (c *fetchCommand) fetch(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := c.storeQuery(key, startTime, endTime, tail, logs); err != nil {
+	nextPageToken, err := nextPageToken(tail, logs)
+	if err != nil {
 		return err
 	}
 
+	if err := printLogs(cmd, source, resourceId, outputFile, logs.Data); err != nil {
+		return err
+	}
+
+	// The cursor moves only once the page has reached its destination, so a failed write can be retried.
+	c.storeQuery(key, nextPageToken, startTime, endTime)
+	return nil
+}
+
+// printLogs delivers a page of records to a file, or to stdout as JSON, YAML or a table.
+func printLogs(cmd *cobra.Command, source *loggingv1.LoggingV1Source, resourceId, outputFile string, records []map[string]any) error {
 	if outputFile != "" {
-		return writeLogsToFile(outputFile, logs.Data)
+		return writeLogsToFile(outputFile, records)
 	}
 
 	if output.GetFormat(cmd).IsSerialized() {
-		return output.SerializedOutput(cmd, logs.Data)
+		return output.SerializedOutput(cmd, records)
 	}
 
-	return printHumanLogs(cmd, source, resourceId, logs.Data)
+	return printHumanLogs(cmd, source, resourceId, records)
 }
 
-// storeQuery saves the query and the next page's token, so that `--next` can continue it. --tail asks for just the
-// newest N entries, so it drops the cursor.
-func (c *fetchCommand) storeQuery(key, startTime, endTime string, tail int, logs *ccloudv2.LogsSearchResponse) error {
-	pageToken := ""
-	if tail == 0 && logs.Metadata != nil && logs.Metadata.Next != "" {
-		var err error
-		if pageToken, err = ccloudv2.ExtractPageToken(logs.Metadata.Next); err != nil {
-			return fmt.Errorf("failed to extract page token: %w", err)
-		}
+// nextPageToken reads the next page's token from the response. --tail asks for just the newest N entries, so it
+// drops the cursor.
+func nextPageToken(tail int, logs *ccloudv2.LogsSearchResponse) (string, error) {
+	if tail > 0 || logs.Metadata == nil || logs.Metadata.Next == "" {
+		return "", nil
 	}
 
-	state := &config.LogsQueryState{Key: key, PageToken: pageToken, StartTime: startTime, EndTime: endTime}
-	if err := c.Context.SetLogsQueryState(state); err != nil {
-		return fmt.Errorf("failed to store logs query state: %w", err)
+	pageToken, err := ccloudv2.ExtractPageToken(logs.Metadata.Next)
+	if err != nil {
+		return "", fmt.Errorf("failed to extract page token: %w", err)
 	}
-	return c.Config.Save()
+	return pageToken, nil
+}
+
+// storeQuery saves the query and the next page's token, so that `--next` can continue it. The records were already
+// delivered, so a failed save does not fail the command. It only means `--next` has nothing to continue.
+func (c *fetchCommand) storeQuery(key, pageToken, startTime, endTime string) {
+	c.Context.SetLogsQueryState(&config.LogsQueryState{Key: key, PageToken: pageToken, StartTime: startTime, EndTime: endTime})
+	if err := c.Config.Save(); err != nil {
+		output.ErrPrintf(false, "Warning: could not save the query, so `--next` will not continue it: %v\n", err)
+	}
 }
 
 // buildCRN resolves the CRN element values from the command's inputs and the active context.
