@@ -261,6 +261,8 @@ var logsSearchResponses = map[string]*testserver.LogSourcesResponse{
 	"rate-limited":           {Status: 429, Header: map[string]string{"Retry-After": "12"}, Body: `{"errors":[{"status":"429","detail":"Too many log queries. Please see the documentation for current rate limits."}]}`},
 	"rate-limited-no-header": {Status: 429, Body: `{"errors":[{"status":"429","detail":"Too many log queries. Please see the documentation for current rate limits."}]}`},
 	"server-error":           {Status: 500, Body: `{"errors":[{"status":"500","detail":"Internal server error"}]}`},
+	"validation-error":       {Status: 422, Body: `{"errors":[{"status":"422","detail":"Invalid CRN element environment"}]}`},
+	"unavailable":            {Status: 503, Body: `{"errors":[{"status":"503","detail":"Search is temporarily unavailable"}]}`},
 }
 
 // TestLogsFetchResponses covers the error responses of POST /logs/v1/search, including the wait time of a 429.
@@ -276,6 +278,8 @@ func (s *CLITestSuite) TestLogsFetchResponses() {
 		{"rate-limited", "logs/fetch/rate-limited.golden"},
 		{"rate-limited-no-header", "logs/fetch/rate-limited-no-header.golden"},
 		{"server-error", "logs/fetch/server-error.golden"},
+		{"validation-error", "logs/fetch/validation-error.golden"},
+		{"unavailable", "logs/fetch/unavailable.golden"},
 	}
 
 	defer func() { testserver.LogsSearchOverride = nil }()
@@ -287,4 +291,34 @@ func (s *CLITestSuite) TestLogsFetchResponses() {
 
 func (s *CLITestSuite) TestLogsFetchNotLoggedIn() {
 	s.runIntegrationTest(CLITest{args: "logs fetch lkc-123 --source cluster-health --since 1h", fixture: "logs/fetch/not-logged-in.golden", exitCode: 1})
+}
+
+// clusterHealthVariant is cluster-health as discovery could return it with other capabilities, so the checks that depend
+// on the log source's schema can be reached.
+func clusterHealthVariant(allowedScopes string, fullText bool) *testserver.LogSourcesResponse {
+	return &testserver.LogSourcesResponse{Status: 200, Body: fmt.Sprintf(`{"api_version":"logging/v1","kind":"Source","name":"cluster-health","display_name":"Cluster health events","resource_type":"kafka","id_prefix":"lkc","crn_elements":["organization","environment","cloud-cluster","kafka"],"allowed_scopes":%s,"search_fields":[{"name":"level","type":"enum","allowed_values":["INFO","WARN","ERROR"]}],"full_text_search_supported":%t,"returned_fields":[{"name":"timestamp","type":"timestamp","default_column":true},{"name":"message","type":"string","default_column":true}],"max_lookback_days":3}`, allowedScopes, fullText)}
+}
+
+// TestLogsFetchSourceCapabilities covers the checks that depend on what the log source declares, which the default
+// cluster-health mock cannot reach.
+func (s *CLITestSuite) TestLogsFetchSourceCapabilities() {
+	tests := []struct {
+		source *testserver.LogSourcesResponse
+		test   CLITest
+	}{
+		{clusterHealthVariant(`["ORGANIZATION","ENVIRONMENT","RESOURCE"]`, false), CLITest{args: "logs fetch lkc-123 --source cluster-health --since 1h --search-text latency", fixture: "logs/fetch/search-text-unsupported.golden", exitCode: 1}},
+		{clusterHealthVariant(`["RESOURCE"]`, true), CLITest{args: "logs fetch --source cluster-health --since 1h", fixture: "logs/fetch/resource-id-required.golden", exitCode: 1}},
+		{clusterHealthVariant(`["ORGANIZATION"]`, true), CLITest{args: "logs fetch lkc-123 --source cluster-health --since 1h", fixture: "logs/fetch/resource-scope-unsupported.golden", exitCode: 1}},
+	}
+
+	defer func() { testserver.LogSourcesOverride = nil }()
+	for _, tt := range tests {
+		testserver.LogSourcesOverride = tt.source
+		tt.test.login = "cloud"
+		s.runIntegrationTest(tt.test)
+	}
+}
+
+func (s *CLITestSuite) TestLogsFetchToBeforeFrom() {
+	s.runIntegrationTest(CLITest{login: "cloud", args: "logs fetch lkc-123 --source cluster-health --from 2026-10-14T12:00:00Z --to 2026-10-14T00:00:00Z", fixture: "logs/fetch/to-before-from.golden", exitCode: 1})
 }

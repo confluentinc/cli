@@ -73,16 +73,20 @@ func TestResolveTimeWindow(t *testing.T) {
 	_, _, err = resolveTimeWindow("", "2026-10-14T10:00:00Z", "2026-10-14T09:00:00Z", now)
 	require.EqualError(t, err, "`--to` must not be before `--from`")
 
-	// Fractional seconds in --from and --to are kept.
+	// The API takes whole seconds, so a start is rounded down and an explicit end is rounded up. The window never shrinks.
 	start, end, err = resolveTimeWindow("", "2026-10-14T10:00:00.250Z", "2026-10-14T10:00:00.750Z", now)
 	require.NoError(t, err)
-	require.Equal(t, "2026-10-14T10:00:00.25Z", start)
-	require.Equal(t, "2026-10-14T10:00:00.75Z", end)
+	require.Equal(t, "2026-10-14T10:00:00Z", start)
+	require.Equal(t, "2026-10-14T10:00:01Z", end)
 
 	start, end, err = resolveTimeWindow("500ms", "", "", now)
 	require.NoError(t, err)
-	require.Equal(t, "2026-10-14T14:59:59.5Z", start)
+	require.Equal(t, "2026-10-14T14:59:59Z", start)
 	require.Equal(t, "2026-10-14T15:00:00Z", end)
+
+	start, end, err = resolveTimeWindow("", "2026-10-14T10:00:00Z", "2026-10-14T10:00:05Z", now)
+	require.NoError(t, err)
+	require.Equal(t, "2026-10-14T10:00:05Z", end, "a whole-second end is unchanged")
 
 	// A day count that overflows time.Duration is rejected instead of wrapping around.
 	for _, bad := range []string{"abc", "0h", "-1h", "0d", "xd", "213504d", "106752d", "9223372036854775807d"} {
