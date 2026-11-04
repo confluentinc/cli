@@ -1,12 +1,18 @@
-Log source:        cluster-link-insights
-Display name:      Cluster Linking insights
-Resource:          cluster-link (crn: organization/environment/cloud-cluster/cluster-link)
-Scopes:            RESOURCE
-Max lookback days: 7
-Full-text search:  no
+Log Source
++-------------------+-----------------------------------------------------+
+| Name              | cluster-link-insights                               |
+| Display Name      | Cluster Linking insights                            |
+| Resource          | cluster-link                                        |
+| ID Prefix         |                                                     |
+| CRN Elements      | organization/environment/cloud-cluster/cluster-link |
+| Scopes            | RESOURCE                                            |
+| Max Lookback Days | 7                                                   |
+| Full-Text Search  | false                                               |
+| Full-Text Fields  |                                                     |
++-------------------+-----------------------------------------------------+
 
-Returned fields (each log record):
-  timestamp  timestamp  *
-  message    string     *
-
-  * = default column in human output
+Returned Fields (each log record)
+    Name    |   Type    | Default | Description  
+------------+-----------+---------+--------------
+  timestamp | timestamp | true    |              
+  message   | string    | true    |              
