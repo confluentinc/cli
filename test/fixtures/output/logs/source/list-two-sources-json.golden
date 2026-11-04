@@ -1,41 +1,34 @@
-{
-  "api_version": "logging/v1",
-  "data": [
-    {
-      "allowed_scopes": ["ORGANIZATION", "ENVIRONMENT", "RESOURCE"],
-      "api_version": "logging/v1",
-      "crn_elements": ["organization", "environment", "cloud-cluster", "kafka"],
-      "display_name": "Cluster health events",
-      "full_text_search_supported": true,
-      "id_prefix": "lkc",
-      "kind": "Source",
-      "max_lookback_days": 3,
-      "name": "cluster-health",
-      "resource_type": "kafka",
-      "returned_fields": [],
-      "search_fields": []
-    },
-    {
-      "allowed_scopes": ["RESOURCE"],
-      "api_version": "logging/v1",
-      "crn_elements": [
-        "organization",
-        "environment",
-        "cloud-cluster",
-        "cluster-link"
-      ],
-      "display_name": "Cluster Linking insights",
-      "full_text_search_supported": false,
-      "kind": "Source",
-      "max_lookback_days": 7,
-      "name": "cluster-link-insights",
-      "resource_type": "cluster-link",
-      "returned_fields": [],
-      "search_fields": []
-    }
-  ],
-  "kind": "SourceList",
-  "metadata": {
-    "total_size": 2
+[
+  {
+    "allowed_scopes": ["ORGANIZATION", "ENVIRONMENT", "RESOURCE"],
+    "api_version": "logging/v1",
+    "crn_elements": ["organization", "environment", "cloud-cluster", "kafka"],
+    "display_name": "Cluster health events",
+    "full_text_search_supported": true,
+    "id_prefix": "lkc",
+    "kind": "Source",
+    "max_lookback_days": 3,
+    "name": "cluster-health",
+    "resource_type": "kafka",
+    "returned_fields": [],
+    "search_fields": []
+  },
+  {
+    "allowed_scopes": ["RESOURCE"],
+    "api_version": "logging/v1",
+    "crn_elements": [
+      "organization",
+      "environment",
+      "cloud-cluster",
+      "cluster-link"
+    ],
+    "display_name": "Cluster Linking insights",
+    "full_text_search_supported": false,
+    "kind": "Source",
+    "max_lookback_days": 7,
+    "name": "cluster-link-insights",
+    "resource_type": "cluster-link",
+    "returned_fields": [],
+    "search_fields": []
   }
-}
+]
