@@ -34,6 +34,7 @@ Flags:
       --next                 Fetch the next page of the previous identical query.
       --output-file string   Append the results to this file as JSON lines.
       --environment string   Environment ID.
+      --cluster string       Kafka cluster ID, where the resource type requires it. Defaults to the active Kafka cluster.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

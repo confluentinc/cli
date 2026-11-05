@@ -250,7 +250,8 @@ func handleUnifiedLogsSearch(t *testing.T, w http.ResponseWriter, r *http.Reques
 		}
 	case "connector":
 		for _, record := range connectorLogs {
-			if strings.HasSuffix(req.CRN, "/connector="+record["id"].(string)) && searchMatches(req.Search, record) {
+			// The CRN names the connector, which the connectors mock calls az-connector for lcc-123.
+			if strings.HasSuffix(req.CRN, "/cloud-cluster=lkc-123/connector=az-connector") && searchMatches(req.Search, record) {
 				data = append(data, record)
 			}
 		}
