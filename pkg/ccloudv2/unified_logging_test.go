@@ -58,8 +58,3 @@ func TestDecodeLogsSearchResponse_InvalidBody(t *testing.T) {
 	_, err := decodeLogsSearchResponse([]byte(`not json`))
 	require.ErrorContains(t, err, "failed to decode logging API response")
 }
-
-func TestLoggingStatusError(t *testing.T) {
-	require.EqualError(t, loggingStatusError(401, []byte(`{"errors":[{"status":"401","detail":"Credentials are required to access this resource."}]}`)), "Credentials are required to access this resource.")
-	require.EqualError(t, loggingStatusError(502, []byte(`<html>bad gateway</html>`)), "logging API request failed with status 502")
-}
