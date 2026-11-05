@@ -181,6 +181,13 @@ var pagedClusterEvents = []map[string]any{
 	clusterHealthEvent("lkc-777", "9f3b7d20-61c4-4a8e-95d0-3c2e1b8a6f47", "INFO", "CONFLUENT_STATUS_UPDATED", "Cluster lkc-777 status updated", "COMPLETED", "2026-10-14T11:05:00.905Z"),
 }
 
+// connectorLogs are the records returned for the connector source, in the fields its deployed catalog entry returns. A
+// record has no exception.stacktrace when the log line carries none.
+var connectorLogs = []map[string]any{
+	{"timestamp": "2026-10-14T09:12:03Z", "level": "ERROR", "task_id": "task-0", "message": "Connection to upstream host was lost.", "exception.stacktrace": "org.apache.kafka.connect.errors.ConnectException: Connection to upstream host was lost.", "id": "lcc-123", "name": "my-connector"},
+	{"timestamp": "2026-10-14T08:50:41Z", "level": "WARN", "task_id": "task-1", "message": "Retrying connection, attempt 3 of 5.", "id": "lcc-123", "name": "my-connector"},
+}
+
 const pagedClusterPageSize = 2
 
 // handleUnifiedLogsSearch serves POST /logs/v1/search requests that name a log source.
@@ -240,6 +247,12 @@ func handleUnifiedLogsSearch(t *testing.T, w http.ResponseWriter, r *http.Reques
 				continue
 			}
 			data = append(data, event)
+		}
+	case "connector":
+		for _, record := range connectorLogs {
+			if strings.HasSuffix(req.CRN, "/connector="+record["id"].(string)) && searchMatches(req.Search, record) {
+				data = append(data, record)
+			}
 		}
 	}
 
