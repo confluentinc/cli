@@ -9,6 +9,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	pauth "github.com/confluentinc/cli/v4/pkg/auth"
+
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
@@ -361,4 +363,37 @@ func (s *CLITestSuite) TestLogsFetchNextAfterFailedWrite() {
 	s.runIntegrationTest(CLITest{login: "cloud", args: query, fixture: "logs/fetch/next-page-1.golden"})
 	s.runIntegrationTest(CLITest{workflow: true, args: query + " --next --output-file " + missing, contains: "failed to open file", exitCode: 1})
 	s.runIntegrationTest(CLITest{workflow: true, args: query + " --next", fixture: "logs/fetch/next-page-2.golden"})
+}
+
+// connectorSource is the connector log source as the deployed catalog entry would describe it once discovery is enabled
+// for it: no ID prefix, resource scope only, and a returned-field list synthesized from fieldsToReturn, so every field
+// is a default column and has no description.
+var connectorSource = &testserver.LogSourcesResponse{Status: 200, Body: `{"api_version":"logging/v1","kind":"Source","name":"connector","display_name":"connector","resource_type":"connector","crn_elements":["organization","environment","cloud-cluster","connector"],"allowed_scopes":["RESOURCE"],"search_fields":[{"name":"id","type":"string"},{"name":"level","type":"enum","allowed_values":["INFO","WARN","ERROR","FATAL"]},{"name":"task_id","type":"string"}],"full_text_search_supported":true,"full_text_search_fields":["message","exception.stacktrace"],"returned_fields":[{"name":"timestamp","type":"string","default_column":true},{"name":"level","type":"string","default_column":true},{"name":"task_id","type":"string","default_column":true},{"name":"message","type":"string","default_column":true},{"name":"exception.stacktrace","type":"string","default_column":true},{"name":"id","type":"string","default_column":true},{"name":"name","type":"string","default_column":true}],"max_lookback_days":3}`}
+
+// TestLogsFetchConnector covers the connector log source, in the shape the deployed catalog gives it.
+func (s *CLITestSuite) TestLogsFetchConnector() {
+	testserver.LogSourcesOverride = connectorSource
+	defer func() { testserver.LogSourcesOverride = nil }()
+
+	tests := []CLITest{
+		{args: "logs fetch lcc-123 --source connector --since 24h", fixture: "logs/fetch/connector.golden"},
+		{args: "logs fetch lcc-123 --source connector --since 24h --search level=ERROR --search-text lost", fixture: "logs/fetch/connector-search.golden"},
+		{args: "logs fetch lcc-123 --source connector --since 24h -o json", fixture: "logs/fetch/connector-json.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+// TestLogsFetchSearchOneFlag checks the form the help text shows: several search fields in one comma-separated flag.
+func (s *CLITestSuite) TestLogsFetchSearchOneFlag() {
+	s.runIntegrationTest(CLITest{login: "cloud", args: "logs fetch lkc-123 --source cluster-health --since 3d --search level=ERROR,event_type=SERVICE_ISSUE_DETECTED --tail 100", fixture: "logs/fetch/resource-search-one-flag.golden"})
+}
+
+// TestLogsFetchNoEnvironment covers a user without any environment, so the context cannot supply one.
+func (s *CLITestSuite) TestLogsFetchNoEnvironment() {
+	env := []string{fmt.Sprintf("%s=no-environment-user@example.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
+	s.runIntegrationTest(CLITest{login: "cloud", args: "logs fetch lkc-123 --source cluster-health --since 1h", env: env, fixture: "logs/fetch/no-environment.golden", exitCode: 1})
 }
