@@ -375,10 +375,17 @@ func (s *CLITestSuite) TestLogsFetchConnector() {
 	testserver.LogSourcesOverride = connectorSource
 	defer func() { testserver.LogSourcesOverride = nil }()
 
+	const crn = "crn://confluent.cloud/organization=abc-123/environment=env-596/cloud-cluster=lkc-123/connector=az-connector"
+	crnIs := func(t *testing.T) { require.Equal(t, crn, testserver.LastLogsSearchCRN) }
+
 	tests := []CLITest{
-		{args: "logs fetch lcc-123 --source connector --since 24h", fixture: "logs/fetch/connector.golden"},
-		{args: "logs fetch lcc-123 --source connector --since 24h --search level=ERROR --search-text lost", fixture: "logs/fetch/connector-search.golden"},
-		{args: "logs fetch lcc-123 --source connector --since 24h -o json", fixture: "logs/fetch/connector-json.golden"},
+		{args: "logs fetch lcc-123 --source connector --cluster lkc-123 --since 24h", fixture: "logs/fetch/connector.golden", wantFunc: crnIs},
+		{args: "logs fetch lcc-123 --source connector --cluster lkc-123 --since 24h --search level=ERROR --search-text lost", fixture: "logs/fetch/connector-search.golden", wantFunc: crnIs},
+		{args: "logs fetch lcc-123 --source connector --cluster lkc-123 --since 24h -o json", fixture: "logs/fetch/connector-json.golden", wantFunc: crnIs},
+		// The Kafka cluster defaults to the active one.
+		{args: "logs fetch lcc-123 --source connector --since 24h", useKafka: "lkc-123", fixture: "logs/fetch/connector.golden", wantFunc: crnIs},
+		{args: "logs fetch lcc-123 --source connector --since 24h", fixture: "logs/fetch/connector-no-cluster.golden", exitCode: 1},
+		{args: "logs fetch lcc-999 --source connector --cluster lkc-123 --since 24h", fixture: "logs/fetch/connector-unknown-id.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {

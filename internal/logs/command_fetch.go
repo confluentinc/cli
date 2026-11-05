@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"slices"
 	"strings"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/kafka"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -68,6 +70,8 @@ func newFetchCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("output-file", "", "Append the results to this file as JSON lines.")
 
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().Lookup("cluster").Usage = "Kafka cluster ID, where the resource type requires it. Defaults to the active Kafka cluster."
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("source"))
@@ -260,13 +264,39 @@ func (c *fetchCommand) buildCRN(source *loggingv1.LoggingV1Source, scope, resour
 
 	if scope == scopeResource {
 		values.Leaf = resourceId
-		if source.ResourceType == "kafka" {
+		switch {
+		case source.ResourceType == "kafka":
 			// A Kafka cluster's ID is both its cloud-cluster and its leaf element.
 			values.Cluster = resourceId
+		case slices.Contains(source.CrnElements, "cloud-cluster"):
+			// Any other resource lives in a Kafka cluster, which is the --cluster flag or the active cluster.
+			cluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
+			if err != nil {
+				return "", err
+			}
+			values.Cluster = cluster.ID
+		}
+
+		if source.ResourceType == "connector" {
+			// A connector's CRN names it, not its ID, so the name is looked up the way `confluent connect logs` does.
+			name, err := c.connectorName(resourceId, values.Environment, values.Cluster)
+			if err != nil {
+				return "", err
+			}
+			values.Leaf = name
 		}
 	}
 
 	return buildCRN(source, scope, values)
+}
+
+func (c *fetchCommand) connectorName(connectorId, environmentId, clusterId string) (string, error) {
+	connector, err := c.V2Client.GetConnectorExpansionById(connectorId, environmentId, clusterId)
+	if err != nil {
+		return "", err
+	}
+	info := connector.GetInfo()
+	return info.GetName(), nil
 }
 
 func writeLogsToFile(path string, records []map[string]any) error {
