@@ -34,7 +34,7 @@ Flags:
       --tail int             Return only the most recent N entries (maximum 1000).
       --next                 Fetch the next page of the previous identical query.
       --output-file string   Append the results to this file as JSON lines.
-      --environment string   Environment ID.
+      --environment string   Environment ID. For scoped queries this sets environment scope and has no context default; for ID-required log sources it defaults to the active context.
       --cluster string       Kafka cluster ID, where the resource type requires it. Defaults to the active Kafka cluster.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 

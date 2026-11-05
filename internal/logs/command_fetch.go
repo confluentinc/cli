@@ -70,6 +70,7 @@ func newFetchCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("output-file", "", "Append the results to this file as JSON lines.")
 
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().Lookup("environment").Usage = "Environment ID. For scoped queries this sets environment scope and has no context default; for ID-required log sources it defaults to the active context."
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Lookup("cluster").Usage = "Kafka cluster ID, where the resource type requires it. Defaults to the active Kafka cluster."
 	pcmd.AddOutputFlag(cmd)
