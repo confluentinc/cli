@@ -69,8 +69,10 @@ func (s variantScalar) appendJSON(sb *strings.Builder) {
 		sb.WriteString(renderVariantNumber(s.raw))
 	case VariantCodeDecimal:
 		sb.WriteString(renderVariantNumber(stripTrailingZeros(s.raw)))
-	case VariantCodeString, VariantCodeDate, VariantCodeTime, VariantCodeUuid:
+	case VariantCodeString, VariantCodeDate, VariantCodeUuid:
 		sb.WriteString(jsonQuote(s.raw))
+	case VariantCodeTime:
+		sb.WriteString(jsonQuote(stripTrailingZeros(s.raw)))
 	case VariantCodeTimestamp, VariantCodeTimestampNs:
 		sb.WriteString(jsonQuote(formatVariantTimestamp(s.raw)))
 	case VariantCodeTimestampLtz, VariantCodeTimestampLtzNs:
