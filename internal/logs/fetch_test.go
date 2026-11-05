@@ -192,6 +192,33 @@ func TestBuildCRN(t *testing.T) {
 	require.ErrorContains(t, err, `uses a CRN element "flink-region" that this version of the CLI does not support`)
 }
 
+// TestBuildCRNCloudClusterLeaf covers a source whose CRN ends at the cloud cluster. The last element always takes the
+// resource ID, even when a separate cluster value is set, and the broader scopes stop earlier.
+func TestBuildCRNCloudClusterLeaf(t *testing.T) {
+	source := &loggingv1.LoggingV1Source{
+		Name:        "cluster-source",
+		CrnElements: []string{"organization", "environment", "cloud-cluster"},
+	}
+	values := crnValues{Organization: "org-1", Environment: "env-1", Cluster: "lkc-other", Leaf: "lkc-1"}
+
+	crn, err := buildCRN(source, "RESOURCE", values)
+	require.NoError(t, err)
+	require.Equal(t, "crn://confluent.cloud/organization=org-1/environment=env-1/cloud-cluster=lkc-1", crn)
+
+	crn, err = buildCRN(source, "ENVIRONMENT", values)
+	require.NoError(t, err)
+	require.Equal(t, "crn://confluent.cloud/organization=org-1/environment=env-1", crn)
+
+	crn, err = buildCRN(source, "ORGANIZATION", values)
+	require.NoError(t, err)
+	require.Equal(t, "crn://confluent.cloud/organization=org-1", crn)
+
+	// A source with no element beyond the scope cannot be scoped to it.
+	short := &loggingv1.LoggingV1Source{Name: "org-only", CrnElements: []string{"organization"}}
+	_, err = buildCRN(short, "ORGANIZATION", values)
+	require.ErrorContains(t, err, `does not declare an organization element to scope a query to`)
+}
+
 func TestColumnHeader(t *testing.T) {
 	require.Equal(t, "Timestamp", columnHeader("timestamp"))
 	require.Equal(t, "Event Type", columnHeader("event_type"))
