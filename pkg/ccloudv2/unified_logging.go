@@ -111,36 +111,6 @@ func rateLimitError(retryAfter string, now time.Time) error {
 	return fmt.Errorf("%s. Try again later", message)
 }
 
-// newLogsSearchRequest builds POST /logs/v1/search for a unified query. It is the counterpart of getLoggingRequest in
-// logging.go, which only takes the request type of `confluent connect logs`.
-func newLogsSearchRequest(loggingURL string, request LogsSearchRequest, dataplaneToken string, pageSize int, pageToken string) (*http.Request, error) {
-	requestBody, err := json.Marshal(request)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request body: %w", err)
-	}
-
-	u, err := url.Parse(loggingURL)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse logging URL: %w", err)
-	}
-	query := u.Query()
-	if pageSize > 0 {
-		query.Set("page_size", strconv.Itoa(pageSize))
-	}
-	if pageToken != "" {
-		query.Set("page_token", pageToken)
-	}
-	u.RawQuery = query.Encode()
-
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, u.String(), bytes.NewBuffer(requestBody))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+dataplaneToken)
-	return req, nil
-}
-
 // LogsSearchRequest is the body of POST /logs/v1/search for the unified `confluent logs` commands. Unlike
 // LoggingSearchRequest, it carries the log source and an open-ended search map.
 type LogsSearchRequest struct {
@@ -160,66 +130,48 @@ type LogsSearchResponse struct {
 	Kind       string           `json:"kind"`
 }
 
-type loggingErrorResponse struct {
-	Errors []struct {
-		Status string `json:"status"`
-		Detail string `json:"detail"`
-	} `json:"errors"`
-}
-
 // SearchLogs queries POST /logs/v1/search for any log source.
 func (c *Client) SearchLogs(request LogsSearchRequest, pageSize int, pageToken string) (*LogsSearchResponse, error) {
-	loggingURL, err := getLoggingUrl(c.cfg.Context().GetPlatformServer())
-	if err != nil {
-		return nil, fmt.Errorf("failed to get logging API URL: %w", err)
-	}
-
-	dataplaneToken, err := auth.GetDataplaneToken(c.cfg.Context())
-	if err != nil {
-		return nil, fmt.Errorf("failed to get data plane token: %w", err)
-	}
-
-	req, err := newLogsSearchRequest(loggingURL, request, dataplaneToken, pageSize, pageToken)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create logging API request: %w", err)
-	}
-
-	body, err := c.doLoggingRequest(req)
+	client, ctx, err := c.newLoggingClient()
 	if err != nil {
 		return nil, err
 	}
 
-	return decodeLogsSearchResponse(body)
-}
+	body := loggingv1.LoggingV1SearchRequest{
+		Crn:       request.CRN,
+		StartTime: request.StartTime,
+		EndTime:   request.EndTime,
+	}
+	if request.Source != "" {
+		body.Source = &request.Source
+	}
+	if request.Search != nil {
+		body.Search = &request.Search
+	}
+	if request.Sort != "" {
+		body.Sort = &request.Sort
+	}
 
-func (c *Client) doLoggingRequest(req *http.Request) ([]byte, error) {
-	resp, err := newRetryableHttpClientReturningErrors(c.cfg, false).Do(req)
+	req := client.LogsLoggingV1Api.SearchLoggingV1Logs(ctx).LoggingV1SearchRequest(body)
+	if pageSize > 0 {
+		req = req.PageSize(int32(pageSize))
+	}
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+
+	_, httpResp, err := req.Execute()
 	if err != nil {
-		return nil, fmt.Errorf("failed to make HTTP request to logging API: %w", err)
+		return nil, catchLoggingError(err, httpResp)
 	}
-	defer resp.Body.Close()
 
-	body, err := io.ReadAll(resp.Body)
+	// The SDK decodes JSON numbers as float64, which rounds integers above 2^53. It leaves the response body readable,
+	// so decode it again here to keep them exact.
+	raw, err := io.ReadAll(httpResp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("logging API request failed with status %d and failed to read response body: %w", resp.StatusCode, err)
+		return nil, fmt.Errorf("failed to read logging API response: %w", err)
 	}
-
-	if resp.StatusCode == http.StatusTooManyRequests {
-		return nil, rateLimitError(resp.Header.Get("Retry-After"), time.Now())
-	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, loggingStatusError(resp.StatusCode, body)
-	}
-	return body, nil
-}
-
-// loggingStatusError surfaces the API's own error detail, for example "Credentials are required to access this resource.".
-func loggingStatusError(statusCode int, body []byte) error {
-	var errResp loggingErrorResponse
-	if err := json.Unmarshal(body, &errResp); err == nil && len(errResp.Errors) > 0 && errResp.Errors[0].Detail != "" {
-		return fmt.Errorf("%s", errResp.Errors[0].Detail)
-	}
-	return fmt.Errorf("logging API request failed with status %d", statusCode)
+	return decodeLogsSearchResponse(raw)
 }
 
 // decodeLogsSearchResponse decodes JSON numbers without going through float64, so integers above 2^53 survive into
