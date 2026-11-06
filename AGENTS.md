@@ -135,6 +135,7 @@ Features marked **EA** (Early Access) or **OP** (Open Preview) may break across 
 - `pkg/errors/README.md` — error-message rules.
 - `pkg/output/README.md` — output-formatting rules.
 - `pkg/deletion/README.md` — multi-delete pattern.
+- [`CLIENT_BEHAVIOR.md`](CLIENT_BEHAVIOR.md) — login session lifetime and what the CLI caches, with TTLs.
 
 ---
 
