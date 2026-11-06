@@ -45,7 +45,7 @@ Hostnames vary with a cluster's type and networking, such as public, private lin
 | `raw.githubusercontent.com/confluentinc/examples` | Downloading client configuration templates | `confluent kafka client-config create` | No credentials required |
 | Go module proxy (default `proxy.golang.org`) | Downloading Go plugins (made by the `go` tool) | `confluent plugin install` for Go plugins specifically | Uses the local Go settings (such as `GOPROXY`); requires Go |
 | Docker Hub | Pulling the `confluentinc/confluent-local` image (made by Docker) | `confluent local kafka start` | The CLI talks only to the local Docker daemon, which pulls the image |
-| Cloud storage (AWS, Azure or GCP) | Uploading artifact and plugin files through a presigned URL from the API, on the cloud selected with `--cloud` | Commands like `confluent flink artifact create` and `confluent connect artifact create` | No CLI credentials; authorized by the presigned URL |
+| Cloud storage (AWS, Azure or GCP) | Uploading artifact and plugin files through a presigned URL from the API, on the cloud selected with `--cloud` | Commands like `confluent flink artifact create` and `confluent connect artifact create` | Authorized by the presigned URL (for AWS, also by form fields returned with it) |
 
 ## Notes
 
