@@ -21,7 +21,7 @@ func newSourceDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <source>",
 		Short: "Describe a log source.",
-		Long:  "Describe a log source: the scopes it supports, the search fields it accepts, and the fields each log record carries. Results are always fetched fresh.",
+		Long:  "Describe a log source: the search fields it accepts and the fields each log record carries. Results are always fetched fresh.",
 		Args:  cobra.ExactArgs(1),
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -57,7 +57,11 @@ func (c *sourceDescribeCommand) describe(cmd *cobra.Command, args []string) erro
 	storeLogSource(c.AuthenticatedCLICommand, discoveryCacheKey(c.Context.GetPlatformServer(), c.Context.GetCurrentOrganization()), source, time.Now())
 
 	if output.GetFormat(cmd).IsSerialized() {
-		return output.SerializedOutputFromJsonTags(cmd, source)
+		data, err := sourceJson(*source)
+		if err != nil {
+			return err
+		}
+		return output.SerializedOutputFromJsonTags(cmd, data)
 	}
 
 	return printHumanSource(cmd, source)
@@ -69,7 +73,6 @@ type sourceDescribeOut struct {
 	Resource        string `human:"Resource"`
 	IdPrefix        string `human:"ID Prefix"`
 	CrnElements     string `human:"CRN Elements"`
-	Scopes          string `human:"Scopes"`
 	MaxLookbackDays int32  `human:"Max Lookback Days"`
 	FullTextSearch  bool   `human:"Full-Text Search"`
 	FullTextFields  string `human:"Full-Text Fields"`
@@ -133,7 +136,6 @@ func newSourceDescribeOut(source *loggingv1.LoggingV1Source) *sourceDescribeOut 
 		Resource:        source.ResourceType,
 		IdPrefix:        source.GetIdPrefix(),
 		CrnElements:     strings.Join(source.CrnElements, "/"),
-		Scopes:          strings.Join(source.AllowedScopes, ", "),
 		MaxLookbackDays: source.MaxLookbackDays,
 		FullTextSearch:  source.FullTextSearchSupported,
 		FullTextFields:  strings.Join(source.GetFullTextSearchFields(), ", "),

@@ -1,6 +1,6 @@
 Error: required flag(s) "source" not set
 Usage:
-  confluent logs fetch [resource-id] [flags]
+  confluent logs fetch <resource-id> [flags]
 
 Examples:
 Fetch cluster health events for one Kafka cluster from the last hour.
@@ -10,14 +10,6 @@ Fetch cluster health events for one Kafka cluster from the last hour.
 Fetch only ERROR events of a given type from the last 3 days, newest 100 entries.
 
   $ confluent logs fetch lkc-123456 --source cluster-health --since 3d --search level=ERROR,event_type=SERVICE_ISSUE_DETECTED --tail 100
-
-Fetch cluster health events for a whole environment.
-
-  $ confluent logs fetch --source cluster-health --environment env-123456 --since 24h
-
-Fetch cluster health events for the whole organization.
-
-  $ confluent logs fetch --source cluster-health --since 24h
 
 Fetch ERROR and WARN entries containing the text "latency" and append them to a file as JSON lines.
 
@@ -33,7 +25,7 @@ Flags:
       --tail int             Return only the most recent N entries (maximum 1000).
       --next                 Fetch the next page of the previous identical query.
       --output-file string   Append the results to this file as JSON lines.
-      --environment string   Environment ID. For scoped queries this sets environment scope and has no context default; for ID-required log sources it defaults to the active context.
+      --environment string   Environment ID.
       --cluster string       Kafka cluster ID, where the resource type requires it. Defaults to the active Kafka cluster.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 

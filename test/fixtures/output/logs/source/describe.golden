@@ -5,8 +5,6 @@ Log Source
 | Resource          | kafka                                        |
 | ID Prefix         | lkc                                          |
 | CRN Elements      | organization/environment/cloud-cluster/kafka |
-| Scopes            | ORGANIZATION, ENVIRONMENT,                   |
-|                   | RESOURCE                                     |
 | Max Lookback Days | 3                                            |
 | Full-Text Search  | true                                         |
 | Full-Text Fields  | message                                      |

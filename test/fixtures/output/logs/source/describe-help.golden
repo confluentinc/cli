@@ -1,4 +1,4 @@
-Describe a log source: the scopes it supports, the search fields it accepts, and the fields each log record carries. Results are always fetched fresh.
+Describe a log source: the search fields it accepts and the fields each log record carries. Results are always fetched fresh.
 
 Usage:
   confluent logs source describe <source> [flags]

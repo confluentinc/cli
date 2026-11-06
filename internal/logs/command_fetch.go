@@ -28,10 +28,10 @@ type fetchCommand struct {
 
 func newFetchCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "fetch [resource-id]",
+		Use:   "fetch <resource-id>",
 		Short: "Fetch logs from a log source.",
-		Long:  "Fetch logs from a log source, for a single resource, or for a whole environment or Organization when the log source supports it. Run `confluent logs source list` to see the available log sources, and `confluent logs source describe <source>` for the search fields and returned fields of one.",
-		Args:  cobra.MaximumNArgs(1),
+		Long:  "Fetch logs from a log source for a single resource. Run `confluent logs source list` to see the available log sources, and `confluent logs source describe <source>` for the search fields and returned fields of one.",
+		Args:  cobra.ExactArgs(1),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Fetch cluster health events for one Kafka cluster from the last hour.",
@@ -40,14 +40,6 @@ func newFetchCommand(prerunner pcmd.PreRunner) *cobra.Command {
 			examples.Example{
 				Text: "Fetch only ERROR events of a given type from the last 3 days, newest 100 entries.",
 				Code: "confluent logs fetch lkc-123456 --source cluster-health --since 3d --search level=ERROR,event_type=SERVICE_ISSUE_DETECTED --tail 100",
-			},
-			examples.Example{
-				Text: "Fetch cluster health events for a whole environment.",
-				Code: "confluent logs fetch --source cluster-health --environment env-123456 --since 24h",
-			},
-			examples.Example{
-				Text: "Fetch cluster health events for the whole organization.",
-				Code: "confluent logs fetch --source cluster-health --since 24h",
 			},
 			examples.Example{
 				Text: "Fetch ERROR and WARN entries containing the text \"latency\" and append them to a file as JSON lines.",
@@ -70,7 +62,6 @@ func newFetchCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("output-file", "", "Append the results to this file as JSON lines.")
 
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().Lookup("environment").Usage = "Environment ID. For scoped queries this sets environment scope and has no context default; for ID-required log sources it defaults to the active context."
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Lookup("cluster").Usage = "Kafka cluster ID, where the resource type requires it. Defaults to the active Kafka cluster."
 	pcmd.AddOutputFlag(cmd)
@@ -84,12 +75,9 @@ func newFetchCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *fetchCommand) fetch(cmd *cobra.Command, args []string) error {
-	resourceId := ""
-	if len(args) > 0 {
-		resourceId = args[0]
-		if resourceId == "" {
-			return fmt.Errorf("resource ID cannot be empty")
-		}
+	resourceId := args[0]
+	if resourceId == "" {
+		return fmt.Errorf("resource ID cannot be empty")
 	}
 
 	sourceName, err := cmd.Flags().GetString("source")
@@ -143,20 +131,19 @@ func (c *fetchCommand) fetch(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	scope := scopeFor(resourceId, cmd.Flags().Changed("environment"))
 	source, err := resolveSource(
 		func(refresh bool) (*loggingv1.LoggingV1Source, bool, error) {
 			return loadLogSource(c.AuthenticatedCLICommand, sourceName, refresh)
 		},
 		func(source *loggingv1.LoggingV1Source) error {
-			return validateQuery(source, search, since, resourceId, scope)
+			return validateQuery(source, search, since, resourceId)
 		},
 	)
 	if err != nil {
 		return err
 	}
 
-	crn, err := c.buildCRN(source, scope, resourceId)
+	crn, err := c.buildCRN(source, resourceId)
 	if err != nil {
 		return err
 	}
@@ -252,43 +239,41 @@ func (c *fetchCommand) storeQuery(key, pageToken, startTime, endTime string) {
 }
 
 // buildCRN resolves the CRN element values from the command's inputs and the active context.
-func (c *fetchCommand) buildCRN(source *loggingv1.LoggingV1Source, scope, resourceId string) (string, error) {
-	values := crnValues{Organization: c.Context.GetCurrentOrganization()}
+func (c *fetchCommand) buildCRN(source *loggingv1.LoggingV1Source, resourceId string) (string, error) {
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return "", errors.NewWrapErrorWithSuggestions(err, environmentNotFoundErrorMsg, environmentNotFoundSuggestions)
+	}
 
-	if scope != scopeOrganization {
-		environmentId, err := c.Context.EnvironmentId()
+	values := crnValues{
+		Organization: c.Context.GetCurrentOrganization(),
+		Environment:  environmentId,
+		Leaf:         resourceId,
+	}
+
+	switch {
+	case source.ResourceType == "kafka":
+		// A Kafka cluster's ID is both its cloud-cluster and its leaf element.
+		values.Cluster = resourceId
+	case slices.Contains(source.CrnElements, "cloud-cluster"):
+		// Any other resource lives in a Kafka cluster, which is the --cluster flag or the active cluster.
+		cluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
 		if err != nil {
-			return "", errors.NewWrapErrorWithSuggestions(err, environmentNotFoundErrorMsg, environmentNotFoundSuggestions)
+			return "", err
 		}
-		values.Environment = environmentId
+		values.Cluster = cluster.ID
 	}
 
-	if scope == scopeResource {
-		values.Leaf = resourceId
-		switch {
-		case source.ResourceType == "kafka":
-			// A Kafka cluster's ID is both its cloud-cluster and its leaf element.
-			values.Cluster = resourceId
-		case slices.Contains(source.CrnElements, "cloud-cluster"):
-			// Any other resource lives in a Kafka cluster, which is the --cluster flag or the active cluster.
-			cluster, err := kafka.GetClusterForCommand(c.V2Client, c.Context)
-			if err != nil {
-				return "", err
-			}
-			values.Cluster = cluster.ID
+	if source.ResourceType == "connector" {
+		// A connector's CRN names it, not its ID, so the name is looked up the way `confluent connect logs` does.
+		name, err := c.connectorName(resourceId, values.Environment, values.Cluster)
+		if err != nil {
+			return "", err
 		}
-
-		if source.ResourceType == "connector" {
-			// A connector's CRN names it, not its ID, so the name is looked up the way `confluent connect logs` does.
-			name, err := c.connectorName(resourceId, values.Environment, values.Cluster)
-			if err != nil {
-				return "", err
-			}
-			values.Leaf = name
-		}
+		values.Leaf = name
 	}
 
-	return buildCRN(source, scope, values)
+	return buildCRN(source, values)
 }
 
 func (c *fetchCommand) connectorName(connectorId, environmentId, clusterId string) (string, error) {
