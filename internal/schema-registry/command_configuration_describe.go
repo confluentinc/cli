@@ -73,8 +73,9 @@ func (c *command) configDescribe(cmd *cobra.Command, _ []string) error {
 	}
 
 	out := &configOut{
-		CompatibilityLevel: config.GetCompatibilityLevel(),
-		CompatibilityGroup: config.GetCompatibilityGroup(),
+		CompatibilityLevel:  config.GetCompatibilityLevel(),
+		CompatibilityPolicy: config.GetCompatibilityPolicy(),
+		CompatibilityGroup:  config.GetCompatibilityGroup(),
 	}
 
 	if config.DefaultMetadata.IsSet() {
