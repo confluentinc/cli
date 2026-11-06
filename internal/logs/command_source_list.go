@@ -1,12 +1,10 @@
 package logs
 
 import (
-	"strings"
+	"encoding/json"
 	"time"
 
 	"github.com/spf13/cobra"
-
-	loggingv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/logging/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/examples"
@@ -22,7 +20,6 @@ type sourceOut struct {
 	DisplayName string `human:"Display Name"`
 	Resource    string `human:"Resource"`
 	IdPrefix    string `human:"ID Prefix"`
-	Scopes      string `human:"Scopes"`
 	MaxLookback int32  `human:"Max Lookback Days"`
 }
 
@@ -57,9 +54,13 @@ func (c *sourceListCommand) list(cmd *cobra.Command, _ []string) error {
 	storeLogSources(c.AuthenticatedCLICommand, discoveryCacheKey(c.Context.GetPlatformServer(), c.Context.GetCurrentOrganization()), sources.Data, time.Now())
 
 	if output.GetFormat(cmd).IsSerialized() {
-		data := sources.Data
-		if data == nil {
-			data = []loggingv1.LoggingV1Source{}
+		data := make([]json.RawMessage, 0, len(sources.Data))
+		for _, source := range sources.Data {
+			item, err := sourceJson(source)
+			if err != nil {
+				return err
+			}
+			data = append(data, item)
 		}
 		return output.SerializedOutputFromJsonTags(cmd, data)
 	}
@@ -71,7 +72,6 @@ func (c *sourceListCommand) list(cmd *cobra.Command, _ []string) error {
 			DisplayName: source.DisplayName,
 			Resource:    source.ResourceType,
 			IdPrefix:    source.GetIdPrefix(),
-			Scopes:      strings.Join(source.AllowedScopes, ", "),
 			MaxLookback: source.MaxLookbackDays,
 		})
 	}

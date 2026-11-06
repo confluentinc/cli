@@ -34,12 +34,6 @@ const (
 	invalidSearchValueErrorMsg    = "\"%s\" is not a valid value for \"%s\""
 	invalidSearchValueSuggestions = "Allowed values: %s."
 
-	resourceIdRequiredErrorMsg    = "log source \"%s\" requires a resource ID"
-	resourceIdRequiredSuggestions = "Pass the resource ID as an argument, for example `confluent logs fetch <resource-id> --source %s`."
-
-	unsupportedScopeErrorMsg    = "log source \"%s\" does not support %s scope"
-	unsupportedScopeSuggestions = "Supported scopes: %s."
-
 	resourceIdMismatchErrorMsg    = "resource ID \"%s\" does not match log source \"%s\""
 	resourceIdMismatchSuggestions = "This log source expects IDs starting with \"%s-\"."
 
@@ -48,8 +42,6 @@ const (
 
 	unsupportedCrnElementErrorMsg    = "log source \"%s\" uses a CRN element \"%s\" that this version of the CLI does not support"
 	unsupportedCrnElementSuggestions = "Upgrade the CLI to the latest version."
-
-	missingScopeElementErrorMsg = "log source \"%s\" does not declare an %s element to scope a query to"
 
 	environmentNotFoundErrorMsg    = "environment ID not found"
 	environmentNotFoundSuggestions = "Set an environment with `confluent environment use <env-id>` or specify `--environment`."

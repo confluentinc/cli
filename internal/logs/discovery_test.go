@@ -35,7 +35,7 @@ func TestWithSource(t *testing.T) {
 	key := discoveryCacheKey("https://confluent.cloud", "org-1")
 
 	cache := withSource(nil, key, clusterHealth, now)
-	cache = withSource(cache, key, resourceScopedSource, now)
+	cache = withSource(cache, key, noPrefixSource, now)
 	require.Len(t, cache.Sources, 2)
 
 	// A newer fetch replaces the entry.
@@ -54,7 +54,7 @@ func TestCachedSources(t *testing.T) {
 	now := time.Date(2026, 10, 14, 12, 0, 0, 0, time.UTC)
 	key := discoveryCacheKey("https://confluent.cloud", "org-1")
 
-	cache := withSources(key, []loggingv1.LoggingV1Source{*resourceScopedSource, *clusterHealth}, now.Add(-time.Hour))
+	cache := withSources(key, []loggingv1.LoggingV1Source{*noPrefixSource, *clusterHealth}, now.Add(-time.Hour))
 
 	got := cachedSources(cache, key, now)
 	require.Len(t, got, 2)

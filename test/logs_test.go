@@ -90,8 +90,8 @@ func (s *CLITestSuite) TestLogsSourceListNotLoggedIn() {
 // shapes, and each error the LLD lists for the endpoint.
 var logSourcesResponses = map[string]*testserver.LogSourcesResponse{
 	"two-sources": {Status: 200, Body: `{"api_version":"logging/v1","kind":"SourceList","metadata":{"total_size":2},"data":[
-  {"api_version":"logging/v1","kind":"Source","name":"cluster-health","display_name":"Cluster health events","resource_type":"kafka","id_prefix":"lkc","crn_elements":["organization","environment","cloud-cluster","kafka"],"allowed_scopes":["ORGANIZATION","ENVIRONMENT","RESOURCE"],"search_fields":[],"full_text_search_supported":true,"returned_fields":[],"max_lookback_days":3},
-  {"api_version":"logging/v1","kind":"Source","name":"cluster-link-insights","display_name":"Cluster Linking insights","resource_type":"cluster-link","crn_elements":["organization","environment","cloud-cluster","cluster-link"],"allowed_scopes":["RESOURCE"],"search_fields":[],"full_text_search_supported":false,"returned_fields":[],"max_lookback_days":7}]}`},
+  {"api_version":"logging/v1","kind":"Source","name":"cluster-health","display_name":"Cluster health events","resource_type":"kafka","id_prefix":"lkc","crn_elements":["organization","environment","cloud-cluster","kafka"],"search_fields":[],"full_text_search_supported":true,"returned_fields":[],"max_lookback_days":3},
+  {"api_version":"logging/v1","kind":"Source","name":"cluster-link-insights","display_name":"Cluster Linking insights","resource_type":"cluster-link","crn_elements":["organization","environment","cloud-cluster","cluster-link"],"search_fields":[],"full_text_search_supported":false,"returned_fields":[],"max_lookback_days":7}]}`},
 	"empty":                  {Status: 200, Body: `{"api_version":"logging/v1","kind":"SourceList","metadata":{"total_size":0},"data":[]}`},
 	"unauthenticated":        {Status: 401, Body: `{"errors":[{"status":"401","detail":"Credentials are required to access this resource."}]}`},
 	"feature-not-enabled":    {Status: 403, Body: `{"errors":[{"status":"403","detail":"Feature is not enabled for this organization"}]}`},
@@ -138,7 +138,7 @@ func (s *CLITestSuite) TestLogsSourceDescribeNotLoggedIn() {
 // shape, and every error the LLD lists for the endpoint.
 func (s *CLITestSuite) TestLogsSourceDescribeResponses() {
 	responses := map[string]*testserver.LogSourcesResponse{
-		"plain-source": {Status: 200, Body: `{"api_version":"logging/v1","kind":"Source","name":"cluster-link-insights","display_name":"Cluster Linking insights","resource_type":"cluster-link","crn_elements":["organization","environment","cloud-cluster","cluster-link"],"allowed_scopes":["RESOURCE"],"search_fields":[],"full_text_search_supported":false,"returned_fields":[{"name":"timestamp","type":"timestamp","default_column":true},{"name":"message","type":"string","default_column":true}],"max_lookback_days":7}`},
+		"plain-source": {Status: 200, Body: `{"api_version":"logging/v1","kind":"Source","name":"cluster-link-insights","display_name":"Cluster Linking insights","resource_type":"cluster-link","crn_elements":["organization","environment","cloud-cluster","cluster-link"],"search_fields":[],"full_text_search_supported":false,"returned_fields":[{"name":"timestamp","type":"timestamp","default_column":true},{"name":"message","type":"string","default_column":true}],"max_lookback_days":7}`},
 	}
 	for _, name := range []string{"unauthenticated", "feature-not-enabled", "organization-required", "rate-limited", "rate-limited-no-header", "rate-limited-per-ip", "server-error"} {
 		responses[name] = logSourcesResponses[name]
@@ -169,7 +169,6 @@ func (s *CLITestSuite) TestLogsSourceDescribeResponses() {
 
 func (s *CLITestSuite) TestLogsFetch() {
 	tests := []CLITest{
-		// Resource scope
 		{args: "logs fetch lkc-123 --source cluster-health --since 1h", fixture: "logs/fetch/resource.golden"},
 		{args: "logs fetch lkc-123 --source cluster-health --since 1h -o json", fixture: "logs/fetch/resource-json.golden"},
 		{args: "logs fetch lkc-123 --source cluster-health --since 1h -o yaml", fixture: "logs/fetch/resource-yaml.golden"},
@@ -178,12 +177,8 @@ func (s *CLITestSuite) TestLogsFetch() {
 		{args: "logs fetch lkc-456 --source cluster-health --since 3d --search level=WARN,level=ERROR --search-text maintenance", fixture: "logs/fetch/resource-search-text.golden"},
 		{args: "logs fetch lkc-999 --source cluster-health --since 1h", fixture: "logs/fetch/empty.golden"},
 
-		// Environment and organization scope
-		{args: "logs fetch --source cluster-health --environment env-596 --since 24h", fixture: "logs/fetch/environment-scope.golden"},
-		{args: "logs fetch --source cluster-health --since 24h", fixture: "logs/fetch/organization-scope.golden"},
-		{args: "logs fetch --source cluster-health --environment env-596 --since 24h --tail 1", fixture: "logs/fetch/environment-scope-tail.golden"},
-
 		// Validation errors
+		{args: "logs fetch --source cluster-health --since 1h", fixture: "logs/fetch/missing-resource-id.golden", exitCode: 1},
 		{args: "logs fetch lkc-123 --since 1h", fixture: "logs/fetch/missing-source.golden", exitCode: 1},
 		{args: "logs fetch lkc-123 --source cluster-health", fixture: "logs/fetch/missing-window.golden", exitCode: 1},
 		{args: "logs fetch lkc-123 --source cluster-health --since 1h --from 2026-10-14T00:00:00Z", fixture: "logs/fetch/since-with-from.golden", exitCode: 1},
@@ -297,8 +292,8 @@ func (s *CLITestSuite) TestLogsFetchNotLoggedIn() {
 
 // clusterHealthVariant is cluster-health as discovery could return it with other capabilities, so the checks that depend
 // on the log source's schema can be reached.
-func clusterHealthVariant(allowedScopes string, fullText bool) *testserver.LogSourcesResponse {
-	return &testserver.LogSourcesResponse{Status: 200, Body: fmt.Sprintf(`{"api_version":"logging/v1","kind":"Source","name":"cluster-health","display_name":"Cluster health events","resource_type":"kafka","id_prefix":"lkc","crn_elements":["organization","environment","cloud-cluster","kafka"],"allowed_scopes":%s,"search_fields":[{"name":"level","type":"enum","allowed_values":["INFO","WARN","ERROR"]}],"full_text_search_supported":%t,"returned_fields":[{"name":"timestamp","type":"timestamp","default_column":true},{"name":"message","type":"string","default_column":true}],"max_lookback_days":3}`, allowedScopes, fullText)}
+func clusterHealthVariant(fullText bool) *testserver.LogSourcesResponse {
+	return &testserver.LogSourcesResponse{Status: 200, Body: fmt.Sprintf(`{"api_version":"logging/v1","kind":"Source","name":"cluster-health","display_name":"Cluster health events","resource_type":"kafka","id_prefix":"lkc","crn_elements":["organization","environment","cloud-cluster","kafka"],"search_fields":[{"name":"level","type":"enum","allowed_values":["INFO","WARN","ERROR"]}],"full_text_search_supported":%t,"returned_fields":[{"name":"timestamp","type":"timestamp","default_column":true},{"name":"message","type":"string","default_column":true}],"max_lookback_days":3}`, fullText)}
 }
 
 // TestLogsFetchSourceCapabilities covers the checks that depend on what the log source declares, which the default
@@ -308,9 +303,7 @@ func (s *CLITestSuite) TestLogsFetchSourceCapabilities() {
 		source *testserver.LogSourcesResponse
 		test   CLITest
 	}{
-		{clusterHealthVariant(`["ORGANIZATION","ENVIRONMENT","RESOURCE"]`, false), CLITest{args: "logs fetch lkc-123 --source cluster-health --since 1h --search-text latency", fixture: "logs/fetch/search-text-unsupported.golden", exitCode: 1}},
-		{clusterHealthVariant(`["RESOURCE"]`, true), CLITest{args: "logs fetch --source cluster-health --since 1h", fixture: "logs/fetch/resource-id-required.golden", exitCode: 1}},
-		{clusterHealthVariant(`["ORGANIZATION"]`, true), CLITest{args: "logs fetch lkc-123 --source cluster-health --since 1h", fixture: "logs/fetch/resource-scope-unsupported.golden", exitCode: 1}},
+		{clusterHealthVariant(false), CLITest{args: "logs fetch lkc-123 --source cluster-health --since 1h --search-text latency", fixture: "logs/fetch/search-text-unsupported.golden", exitCode: 1}},
 	}
 
 	defer func() { testserver.LogSourcesOverride = nil }()
@@ -325,8 +318,8 @@ func (s *CLITestSuite) TestLogsFetchToBeforeFrom() {
 	s.runIntegrationTest(CLITest{login: "cloud", args: "logs fetch lkc-123 --source cluster-health --from 2026-10-14T12:00:00Z --to 2026-10-14T00:00:00Z", fixture: "logs/fetch/to-before-from.golden", exitCode: 1})
 }
 
-// TestLogsFetchCRN checks the CRN the CLI builds for each scope, element by element. An organization query has no
-// environment element, and an environment query uses the one from --environment, not the one the login selected.
+// TestLogsFetchCRN checks the CRN the CLI builds, element by element. The environment comes from --environment when it
+// is set, not from the one the login selected.
 func (s *CLITestSuite) TestLogsFetchCRN() {
 	const org = "crn://confluent.cloud/organization=abc-123"
 	crnIs := func(want string) func(t *testing.T) {
@@ -334,9 +327,6 @@ func (s *CLITestSuite) TestLogsFetchCRN() {
 	}
 
 	tests := []CLITest{
-		{args: "logs fetch --source cluster-health --since 24h", fixture: "logs/fetch/organization-scope.golden", wantFunc: crnIs(org)},
-		{args: "logs fetch --source cluster-health --environment env-596 --since 24h", fixture: "logs/fetch/environment-scope.golden", wantFunc: crnIs(org + "/environment=env-596")},
-		{args: "logs fetch --source cluster-health --environment env-595 --since 24h", fixture: "logs/fetch/environment-scope.golden", wantFunc: crnIs(org + "/environment=env-595")},
 		{args: "logs fetch lkc-123 --source cluster-health --environment env-595 --since 1h", fixture: "logs/fetch/resource.golden", wantFunc: crnIs(org + "/environment=env-595/cloud-cluster=lkc-123/kafka=lkc-123")},
 	}
 
@@ -366,9 +356,9 @@ func (s *CLITestSuite) TestLogsFetchNextAfterFailedWrite() {
 }
 
 // connectorSource is the connector log source as the deployed catalog entry would describe it once discovery is enabled
-// for it: no ID prefix, resource scope only, and a returned-field list synthesized from fieldsToReturn, so every field
+// for it: no ID prefix, and a returned-field list synthesized from fieldsToReturn, so every field
 // is a default column and has no description.
-var connectorSource = &testserver.LogSourcesResponse{Status: 200, Body: `{"api_version":"logging/v1","kind":"Source","name":"connector","display_name":"connector","resource_type":"connector","crn_elements":["organization","environment","cloud-cluster","connector"],"allowed_scopes":["RESOURCE"],"search_fields":[{"name":"id","type":"string"},{"name":"level","type":"enum","allowed_values":["INFO","WARN","ERROR","FATAL"]},{"name":"task_id","type":"string"}],"full_text_search_supported":true,"full_text_search_fields":["message","exception.stacktrace"],"returned_fields":[{"name":"timestamp","type":"string","default_column":true},{"name":"level","type":"string","default_column":true},{"name":"task_id","type":"string","default_column":true},{"name":"message","type":"string","default_column":true},{"name":"exception.stacktrace","type":"string","default_column":true},{"name":"id","type":"string","default_column":true},{"name":"name","type":"string","default_column":true}],"max_lookback_days":3}`}
+var connectorSource = &testserver.LogSourcesResponse{Status: 200, Body: `{"api_version":"logging/v1","kind":"Source","name":"connector","display_name":"connector","resource_type":"connector","crn_elements":["organization","environment","cloud-cluster","connector"],"search_fields":[{"name":"id","type":"string"},{"name":"level","type":"enum","allowed_values":["INFO","WARN","ERROR","FATAL"]},{"name":"task_id","type":"string"}],"full_text_search_supported":true,"full_text_search_fields":["message","exception.stacktrace"],"returned_fields":[{"name":"timestamp","type":"string","default_column":true},{"name":"level","type":"string","default_column":true},{"name":"task_id","type":"string","default_column":true},{"name":"message","type":"string","default_column":true},{"name":"exception.stacktrace","type":"string","default_column":true},{"name":"id","type":"string","default_column":true},{"name":"name","type":"string","default_column":true}],"max_lookback_days":3}`}
 
 // TestLogsFetchConnector covers the connector log source, in the shape the deployed catalog gives it.
 func (s *CLITestSuite) TestLogsFetchConnector() {

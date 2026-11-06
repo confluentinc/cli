@@ -21,7 +21,6 @@ var logSources = map[string]string{
   "resource_type": "kafka",
   "id_prefix": "lkc",
   "crn_elements": ["organization", "environment", "cloud-cluster", "kafka"],
-  "allowed_scopes": ["ORGANIZATION", "ENVIRONMENT", "RESOURCE"],
   "search_fields": [
     {"name": "id", "type": "string"},
     {"name": "event_type", "type": "enum", "allowed_values": ["SERVICE_MAINTENANCE", "HEALTH_ALERT", "CONFLUENT_STATUS_UPDATED", "SERVICE_ISSUE_DETECTED"]},
@@ -61,8 +60,8 @@ type LogSourcesResponse struct {
 // LogSourcesOverride, when set, is the response of "/logs/v1/sources" and "/logs/v1/sources/{name}". Tests reset it with defer.
 var LogSourcesOverride *LogSourcesResponse
 
-// LastLogsSearchCRN is the CRN of the latest search request that named a log source, so tests can check which scope the
-// CLI asked for.
+// LastLogsSearchCRN is the CRN of the latest search request that named a log source, so tests can check which CRN the
+// CLI built.
 var LastLogsSearchCRN string
 
 // LogsSearchOverride, when set, is the response of "/logs/v1/search" for requests that name a log source. Tests reset it with defer.
@@ -214,7 +213,7 @@ func handleUnifiedLogsSearch(t *testing.T, w http.ResponseWriter, r *http.Reques
 	require.NoError(t, err, "page_size")
 	require.Positive(t, pageSize)
 
-	// The scope of the query shows in which CRN elements are present.
+	// The CRN names one resource.
 	require.True(t, strings.HasPrefix(req.CRN, "crn://"), req.CRN)
 	require.Contains(t, req.CRN, "/organization=", req.CRN)
 
@@ -234,13 +233,9 @@ func handleUnifiedLogsSearch(t *testing.T, w http.ResponseWriter, r *http.Reques
 			data = pagedClusterEvents
 			break
 		}
-		// An organization-scoped CRN has no environment element, and an environment-scoped one has no cluster.
-		if strings.Contains(req.CRN, "/kafka=") {
-			require.Contains(t, req.CRN, "/environment=", req.CRN)
-		}
 		for _, event := range clusterHealthEvents {
-			// A resource-scoped CRN ends in kafka=<cluster>; broader scopes match every cluster.
-			if strings.Contains(req.CRN, "/kafka=") && !strings.HasSuffix(req.CRN, "/kafka="+event["cloud_cluster_id"].(string)) {
+			// The CRN ends in kafka=<cluster>.
+			if !strings.HasSuffix(req.CRN, "/kafka="+event["cloud_cluster_id"].(string)) {
 				continue
 			}
 			if !searchMatches(req.Search, event) {

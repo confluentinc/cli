@@ -26,7 +26,6 @@ var clusterHealth = &loggingv1.LoggingV1Source{
 	ResourceType:            "kafka",
 	IdPrefix:                loggingv1.PtrString("lkc"),
 	CrnElements:             []string{"organization", "environment", "cloud-cluster", "kafka"},
-	AllowedScopes:           []string{"ORGANIZATION", "ENVIRONMENT", "RESOURCE"},
 	FullTextSearchSupported: true,
 	MaxLookbackDays:         3,
 	SearchFields: []loggingv1.LoggingV1SearchFieldDescriptor{
@@ -35,12 +34,11 @@ var clusterHealth = &loggingv1.LoggingV1Source{
 	},
 }
 
-// resourceScopedSource is a log source that is only queried per resource and declares no ID prefix.
-var resourceScopedSource = &loggingv1.LoggingV1Source{
-	Name:          "resource-source",
-	ResourceType:  "example",
-	CrnElements:   []string{"organization", "environment", "cloud-cluster", "example"},
-	AllowedScopes: []string{"RESOURCE"},
+// noPrefixSource is a log source that declares no ID prefix.
+var noPrefixSource = &loggingv1.LoggingV1Source{
+	Name:         "resource-source",
+	ResourceType: "example",
+	CrnElements:  []string{"organization", "environment", "cloud-cluster", "example"},
 }
 
 func TestResolveTimeWindow(t *testing.T) {
@@ -135,25 +133,10 @@ func TestValidateSearch(t *testing.T) {
 	require.EqualError(t, validateSearch(&noText, map[string]any{"search_text": "x"}), "\"cluster-health\" logs do not support `--search-text`")
 }
 
-func TestScope(t *testing.T) {
-	require.Equal(t, "RESOURCE", scopeFor("lkc-1", false))
-	require.Equal(t, "RESOURCE", scopeFor("lkc-1", true))
-	require.Equal(t, "ENVIRONMENT", scopeFor("", true))
-	require.Equal(t, "ORGANIZATION", scopeFor("", false))
-
-	require.NoError(t, validateScope(clusterHealth, "ORGANIZATION", ""))
-	err := validateScope(resourceScopedSource, "ORGANIZATION", "")
-	require.EqualError(t, err, `log source "resource-source" requires a resource ID`)
-	require.Contains(t, suggestionsOf(err), "confluent logs fetch <resource-id> --source resource-source")
-	err = validateScope(&loggingv1.LoggingV1Source{Name: "x", AllowedScopes: []string{"ENVIRONMENT"}}, "ORGANIZATION", "")
-	require.EqualError(t, err, `log source "x" does not support organization scope`)
-	require.Equal(t, "Supported scopes: environment.", suggestionsOf(err))
-}
-
 func TestValidateResourceId(t *testing.T) {
 	require.NoError(t, validateResourceId(clusterHealth, "lkc-123"))
 	require.NoError(t, validateResourceId(clusterHealth, ""))
-	require.NoError(t, validateResourceId(resourceScopedSource, "anything")) // no id_prefix declared
+	require.NoError(t, validateResourceId(noPrefixSource, "anything")) // no id_prefix declared
 	err := validateResourceId(clusterHealth, "lcc-123")
 	require.EqualError(t, err, `resource ID "lcc-123" does not match log source "cluster-health"`)
 	require.Equal(t, `This log source expects IDs starting with "lkc-".`, suggestionsOf(err))
@@ -171,29 +154,21 @@ func TestValidateLookback(t *testing.T) {
 func TestBuildCRN(t *testing.T) {
 	values := crnValues{Organization: "org-1", Environment: "env-1", Cluster: "lkc-1", Leaf: "lkc-1"}
 
-	crn, err := buildCRN(clusterHealth, "RESOURCE", values)
+	crn, err := buildCRN(clusterHealth, values)
 	require.NoError(t, err)
 	require.Equal(t, "crn://confluent.cloud/organization=org-1/environment=env-1/cloud-cluster=lkc-1/kafka=lkc-1", crn)
 
-	crn, err = buildCRN(clusterHealth, "ENVIRONMENT", values)
-	require.NoError(t, err)
-	require.Equal(t, "crn://confluent.cloud/organization=org-1/environment=env-1", crn)
-
-	crn, err = buildCRN(clusterHealth, "ORGANIZATION", values)
-	require.NoError(t, err)
-	require.Equal(t, "crn://confluent.cloud/organization=org-1", crn)
-
 	values.Cluster, values.Leaf = "lkc-9", "my-resource"
-	crn, err = buildCRN(resourceScopedSource, "RESOURCE", values)
+	crn, err = buildCRN(noPrefixSource, values)
 	require.NoError(t, err)
 	require.Equal(t, "crn://confluent.cloud/organization=org-1/environment=env-1/cloud-cluster=lkc-9/example=my-resource", crn)
 
-	_, err = buildCRN(&loggingv1.LoggingV1Source{Name: "x", CrnElements: []string{"organization", "flink-region", "thing"}}, "RESOURCE", values)
+	_, err = buildCRN(&loggingv1.LoggingV1Source{Name: "x", CrnElements: []string{"organization", "flink-region", "thing"}}, values)
 	require.ErrorContains(t, err, `uses a CRN element "flink-region" that this version of the CLI does not support`)
 }
 
 // TestBuildCRNCloudClusterLeaf covers a source whose CRN ends at the cloud cluster. The last element always takes the
-// resource ID, even when a separate cluster value is set, and the broader scopes stop earlier.
+// resource ID, even when a separate cluster value is set.
 func TestBuildCRNCloudClusterLeaf(t *testing.T) {
 	source := &loggingv1.LoggingV1Source{
 		Name:        "cluster-source",
@@ -201,22 +176,9 @@ func TestBuildCRNCloudClusterLeaf(t *testing.T) {
 	}
 	values := crnValues{Organization: "org-1", Environment: "env-1", Cluster: "lkc-other", Leaf: "lkc-1"}
 
-	crn, err := buildCRN(source, "RESOURCE", values)
+	crn, err := buildCRN(source, values)
 	require.NoError(t, err)
 	require.Equal(t, "crn://confluent.cloud/organization=org-1/environment=env-1/cloud-cluster=lkc-1", crn)
-
-	crn, err = buildCRN(source, "ENVIRONMENT", values)
-	require.NoError(t, err)
-	require.Equal(t, "crn://confluent.cloud/organization=org-1/environment=env-1", crn)
-
-	crn, err = buildCRN(source, "ORGANIZATION", values)
-	require.NoError(t, err)
-	require.Equal(t, "crn://confluent.cloud/organization=org-1", crn)
-
-	// A source with no element beyond the scope cannot be scoped to it.
-	short := &loggingv1.LoggingV1Source{Name: "org-only", CrnElements: []string{"organization"}}
-	_, err = buildCRN(short, "ORGANIZATION", values)
-	require.ErrorContains(t, err, `does not declare an organization element to scope a query to`)
 }
 
 func TestColumnHeader(t *testing.T) {

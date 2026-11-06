@@ -1,6 +1,5 @@
 [
   {
-    "allowed_scopes": ["ORGANIZATION", "ENVIRONMENT", "RESOURCE"],
     "api_version": "logging/v1",
     "crn_elements": ["organization", "environment", "cloud-cluster", "kafka"],
     "display_name": "Cluster health events",
@@ -14,7 +13,6 @@
     "search_fields": []
   },
   {
-    "allowed_scopes": ["RESOURCE"],
     "api_version": "logging/v1",
     "crn_elements": [
       "organization",

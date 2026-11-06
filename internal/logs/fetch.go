@@ -17,10 +17,6 @@ import (
 )
 
 const (
-	scopeOrganization = "ORGANIZATION"
-	scopeEnvironment  = "ENVIRONMENT"
-	scopeResource     = "RESOURCE"
-
 	maxTail = 1000
 
 	// maxSinceDays is the largest day count whose duration still fits in a time.Duration.
@@ -199,31 +195,6 @@ func searchValues(value any) []string {
 	return nil
 }
 
-// scopeFor derives the query scope from the inputs, as the HLD specifies: a resource ID means resource scope,
-// otherwise an explicit --environment means environment scope, otherwise organization scope. The active context's
-// environment is never used to pick the scope.
-func scopeFor(resourceId string, environmentSet bool) string {
-	switch {
-	case resourceId != "":
-		return scopeResource
-	case environmentSet:
-		return scopeEnvironment
-	default:
-		return scopeOrganization
-	}
-}
-
-func validateScope(source *loggingv1.LoggingV1Source, scope, resourceId string) error {
-	if slices.Contains(source.AllowedScopes, scope) {
-		return nil
-	}
-
-	if resourceId == "" && slices.Contains(source.AllowedScopes, scopeResource) {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(resourceIdRequiredErrorMsg, source.Name), fmt.Sprintf(resourceIdRequiredSuggestions, source.Name))
-	}
-	return errors.NewErrorWithSuggestions(fmt.Sprintf(unsupportedScopeErrorMsg, source.Name, strings.ToLower(scope)), fmt.Sprintf(unsupportedScopeSuggestions, strings.ToLower(strings.Join(source.AllowedScopes, ", "))))
-}
-
 func validateResourceId(source *loggingv1.LoggingV1Source, resourceId string) error {
 	if resourceId == "" || source.GetIdPrefix() == "" {
 		return nil
@@ -249,17 +220,14 @@ func validateLookback(source *loggingv1.LoggingV1Source, since string) error {
 }
 
 // validateQuery checks everything about the query that depends on the log source.
-func validateQuery(source *loggingv1.LoggingV1Source, search map[string]any, since, resourceId, scope string) error {
+func validateQuery(source *loggingv1.LoggingV1Source, search map[string]any, since, resourceId string) error {
 	if err := validateSearch(source, search); err != nil {
 		return err
 	}
 	if err := validateLookback(source, since); err != nil {
 		return err
 	}
-	if err := validateResourceId(source, resourceId); err != nil {
-		return err
-	}
-	return validateScope(source, scope, resourceId)
+	return validateResourceId(source, resourceId)
 }
 
 // crnValues carries the values the CRN's elements are built from.
@@ -270,9 +238,9 @@ type crnValues struct {
 	Leaf         string
 }
 
-// buildCRN builds the CRN the API expects. It follows the log source's declared crn_elements in order and stops at
-// the element the requested scope is truncated to, so the same code serves every log source.
-func buildCRN(source *loggingv1.LoggingV1Source, scope string, values crnValues) (string, error) {
+// buildCRN builds the resource's CRN. It follows the log source's declared crn_elements in order, so the same code
+// serves every log source.
+func buildCRN(source *loggingv1.LoggingV1Source, values crnValues) (string, error) {
 	parts := make([]string, 0, len(source.CrnElements))
 	for i, element := range source.CrnElements {
 		var value string
@@ -290,14 +258,6 @@ func buildCRN(source *loggingv1.LoggingV1Source, scope string, values crnValues)
 		}
 
 		parts = append(parts, fmt.Sprintf("%s=%s", element, value))
-
-		if (scope == scopeOrganization && element == "organization") || (scope == scopeEnvironment && element == "environment") {
-			break
-		}
-	}
-
-	if scope != scopeResource && len(parts) == len(source.CrnElements) {
-		return "", fmt.Errorf(missingScopeElementErrorMsg, source.Name, strings.ToLower(scope))
 	}
 
 	return "crn://confluent.cloud/" + strings.Join(parts, "/"), nil

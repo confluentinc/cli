@@ -14,7 +14,6 @@ var describeTestSource = &loggingv1.LoggingV1Source{
 	ResourceType:            "kafka",
 	IdPrefix:                loggingv1.PtrString("lkc"),
 	CrnElements:             []string{"organization", "environment", "cloud-cluster", "kafka"},
-	AllowedScopes:           []string{"ORGANIZATION", "ENVIRONMENT", "RESOURCE"},
 	FullTextSearchSupported: true,
 	FullTextSearchFields:    &[]string{"message"},
 	MaxLookbackDays:         3,
@@ -36,15 +35,14 @@ func TestNewSourceDescribeOut(t *testing.T) {
 		Resource:        "kafka",
 		IdPrefix:        "lkc",
 		CrnElements:     "organization/environment/cloud-cluster/kafka",
-		Scopes:          "ORGANIZATION, ENVIRONMENT, RESOURCE",
 		MaxLookbackDays: 3,
 		FullTextSearch:  true,
 		FullTextFields:  "message",
 	}, newSourceDescribeOut(describeTestSource))
 
 	// A source with no ID prefix, CRN elements or full-text search leaves those values empty.
-	minimal := newSourceDescribeOut(&loggingv1.LoggingV1Source{Name: "x", DisplayName: "X", ResourceType: "thing", AllowedScopes: []string{"RESOURCE"}})
-	require.Equal(t, &sourceDescribeOut{Name: "x", DisplayName: "X", Resource: "thing", Scopes: "RESOURCE"}, minimal)
+	minimal := newSourceDescribeOut(&loggingv1.LoggingV1Source{Name: "x", DisplayName: "X", ResourceType: "thing"})
+	require.Equal(t, &sourceDescribeOut{Name: "x", DisplayName: "X", Resource: "thing"}, minimal)
 }
 
 func TestNewSearchFieldOuts(t *testing.T) {
@@ -65,4 +63,15 @@ func TestNewReturnedFieldOuts(t *testing.T) {
 	}, newReturnedFieldOuts(describeTestSource))
 
 	require.Empty(t, newReturnedFieldOuts(&loggingv1.LoggingV1Source{}))
+}
+
+func TestSourceJsonOmitsAllowedScopes(t *testing.T) {
+	source := *describeTestSource
+	source.AllowedScopes = []string{"ORGANIZATION", "RESOURCE"}
+
+	data, err := sourceJson(source)
+	require.NoError(t, err)
+	require.NotContains(t, string(data), "allowed_scopes")
+	require.Contains(t, string(data), `"name":"cluster-health"`)
+	require.Contains(t, string(data), `"max_lookback_days":3`)
 }
