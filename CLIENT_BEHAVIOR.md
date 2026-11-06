@@ -4,7 +4,7 @@ This document outlines what the CLI caches, the TTL (time to live) of cached dat
 
 The values listed below are current, but subject to change.
 
-## Your login session
+## Your Confluent Cloud login session
 
 When you run `confluent login`, the CLI stores an authentication token and refresh token (both encrypted) on your machine. The authentication token is used by the CLI to run authenticated commands, while the refresh token is used to automatically refresh the login.
 
@@ -20,7 +20,7 @@ When you run `confluent login`, the CLI stores an authentication token and refre
 
   If the refresh token is expired and you logged in via SSO or MFA, the CLI will initiate the browser login flow to re-authenticate. In all other scenarios, if the CLI is unable to refresh your token, you must log in again.
 
-- **Where it's stored.** Tokens (authentication & refresh) are encrypted and stored in the CLI configuration file in your home directory. When logging in with the `--save` flag, username & password are stored in the configuration file (with the password encrypted). On macOS, the username & password are also stored in the keychain.
+- **Where it's stored.** Tokens (authentication & refresh) are encrypted and stored in the CLI configuration file in your home directory. For non-SSO/MFA logins with the `--save` flag, username & password are stored in the configuration file (with the password encrypted). On macOS, the username & password are also stored in the keychain.
 
   Running `confluent logout` removes stored credentials and invalidates the authentication token (for Cloud).
 
@@ -54,6 +54,6 @@ The CLI keeps an entry in its configuration file for each Kafka cluster you've u
 | Cluster display name | Looked up from Confluent Cloud | Yes |
 | Bootstrap server | Looked up from Confluent Cloud | Yes |
 | REST endpoint | Looked up from Confluent Cloud | Yes |
-| API keys and secrets for this cluster (encrypted) | `confluent api-key store` | No (removed) |
+| API keys and (encrypted) secrets for this cluster | `confluent api-key store` | No (removed) |
 | Which stored API key is selected | `confluent api-key use` | No (removed) |
 | When the details were last refreshed | The CLI | Yes |
