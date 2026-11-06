@@ -6,7 +6,7 @@ Usage:
 Available Commands:
   describe    Describe subject versions.
   list        List subjects.
-  update      Update subject compatibility or mode.
+  update      Update subject compatibility, compatibility policy, or mode.
 
 Global Flags:
   -h, --help            Show help for this command.

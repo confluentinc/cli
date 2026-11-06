@@ -11,12 +11,13 @@ import (
 )
 
 type configOut struct {
-	CompatibilityLevel string `human:"Compatibility Level,omitempty" json:"compatibilityLevel" serialized:"compatibility_level,omitempty"`
-	CompatibilityGroup string `human:"Compatibility Group,omitempty" json:"compatibilityGroup" serialized:"compatibility_group,omitempty"`
-	MetadataDefaults   string `human:"Metadata Defaults,omitempty" json:"metadataDefaults" serialized:"metadata_defaults,omitempty"`
-	MetadataOverrides  string `human:"Metadata Overrides,omitempty" json:"metadataOverrides" serialized:"metadata_overrides,omitempty"`
-	RulesetDefaults    string `human:"Ruleset Defaults,omitempty" json:"rulesetDefaults" serialized:"ruleset_defaults,omitempty"`
-	RulesetOverrides   string `human:"Ruleset Overrides,omitempty" json:"rulesetOverrides" serialized:"ruleset_overrides,omitempty"`
+	CompatibilityLevel  string `human:"Compatibility Level,omitempty" json:"compatibilityLevel" serialized:"compatibility_level,omitempty"`
+	CompatibilityPolicy string `human:"Compatibility Policy,omitempty" json:"compatibilityPolicy" serialized:"compatibility_policy,omitempty"`
+	CompatibilityGroup  string `human:"Compatibility Group,omitempty" json:"compatibilityGroup" serialized:"compatibility_group,omitempty"`
+	MetadataDefaults    string `human:"Metadata Defaults,omitempty" json:"metadataDefaults" serialized:"metadata_defaults,omitempty"`
+	MetadataOverrides   string `human:"Metadata Overrides,omitempty" json:"metadataOverrides" serialized:"metadata_overrides,omitempty"`
+	RulesetDefaults     string `human:"Ruleset Defaults,omitempty" json:"rulesetDefaults" serialized:"ruleset_defaults,omitempty"`
+	RulesetOverrides    string `human:"Ruleset Overrides,omitempty" json:"rulesetOverrides" serialized:"ruleset_overrides,omitempty"`
 }
 
 func (c *command) newConfigurationCommand(cfg *config.Config) *cobra.Command {
