@@ -1,0 +1,2 @@
+Deleted consumer group "consumer-group-empty".
+Error: failed to delete consumer-group-1: REST request failed: Bad Request: consumer-group-1 has state STABLE, delete only allowed in state 'empty' or 'dead'.
