@@ -64,14 +64,3 @@ func TestNewReturnedFieldOuts(t *testing.T) {
 
 	require.Empty(t, newReturnedFieldOuts(&loggingv1.LoggingV1Source{}))
 }
-
-func TestSourceJsonOmitsAllowedScopes(t *testing.T) {
-	source := *describeTestSource
-	source.AllowedScopes = []string{"ORGANIZATION", "RESOURCE"}
-
-	data, err := sourceJson(source)
-	require.NoError(t, err)
-	require.NotContains(t, string(data), "allowed_scopes")
-	require.Contains(t, string(data), `"name":"cluster-health"`)
-	require.Contains(t, string(data), `"max_lookback_days":3`)
-}

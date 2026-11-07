@@ -1,7 +1,6 @@
 package logs
 
 import (
-	"encoding/json"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -54,15 +53,7 @@ func (c *sourceListCommand) list(cmd *cobra.Command, _ []string) error {
 	storeLogSources(c.AuthenticatedCLICommand, discoveryCacheKey(c.Context.GetPlatformServer(), c.Context.GetCurrentOrganization()), sources.Data, time.Now())
 
 	if output.GetFormat(cmd).IsSerialized() {
-		data := make([]json.RawMessage, 0, len(sources.Data))
-		for _, source := range sources.Data {
-			item, err := sourceJson(source)
-			if err != nil {
-				return err
-			}
-			data = append(data, item)
-		}
-		return output.SerializedOutputFromJsonTags(cmd, data)
+		return output.SerializedOutputFromJsonTags(cmd, sources.Data)
 	}
 
 	list := output.NewList(cmd)
