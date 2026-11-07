@@ -12,6 +12,7 @@ import (
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/types"
+	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
 const (
@@ -61,6 +62,9 @@ func getWhitelist(cfg *config.Config) map[string]*fieldInfo {
 	}
 	if runtime.GOOS == "windows" {
 		fields = append(fields, "disable_plugins_once_windows")
+	}
+	if utils.IsWSL() {
+		fields = append(fields, "disable_plugins_once_wsl")
 	}
 	if !cfg.DisableUpdates {
 		fields = append(fields, "disable_update_check")
