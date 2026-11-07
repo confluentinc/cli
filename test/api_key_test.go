@@ -266,6 +266,11 @@ func (s *CLITestSuite) TestApiKeyDelete() {
 func (s *CLITestSuite) TestApiKeyList() {
 	tests := []CLITest{
 		{args: "api-key list --resource lkc-dne", env: []string{fmt.Sprintf("%s=no-environment-user@example.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}, fixture: "api-key/no-env.golden", exitCode: 1},
+
+		// --environment filters results client-side by each key's resource environment (APIE-1332)
+		{args: "api-key list --environment env-00000", fixture: "api-key/environment-filter-env-00000.golden"},
+		{args: "api-key list --environment env-11111", fixture: "api-key/environment-filter-env-11111.golden"},
+		{args: "api-key list --environment env-does-not-exist", fixture: "api-key/environment-filter-no-match.golden"},
 	}
 
 	for _, test := range tests {

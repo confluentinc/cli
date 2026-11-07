@@ -55,6 +55,11 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		clusterId = resourceType
 	}
 
+	environment, err := cmd.Flags().GetString("environment")
+	if err != nil {
+		return err
+	}
+
 	serviceAccount, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return err
@@ -127,6 +132,10 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		// Note that if more resource types are added with no logical clusters, then additional logic
 		// needs to be added here to determine the resource type.
 		for _, resource := range resources {
+			if environment != "" && resource.GetEnvironment() != environment {
+				continue
+			}
+
 			list.Add(&out{
 				IsCurrent:    clusterId != "" && apiKey.GetId() == currentKey,
 				Key:          apiKey.GetId(),
