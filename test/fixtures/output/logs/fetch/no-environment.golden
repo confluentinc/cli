@@ -1,0 +1,4 @@
+Error: environment ID not found: no environment found
+
+Suggestions:
+    Set an environment with `confluent environment use <env-id>` or specify `--environment`.

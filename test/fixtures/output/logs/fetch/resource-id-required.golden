@@ -1,0 +1,4 @@
+Error: log source "cluster-health" requires a resource ID
+
+Suggestions:
+    Pass the resource ID as an argument, for example `confluent logs fetch <resource-id> --source cluster-health`.
