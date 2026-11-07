@@ -57,11 +57,7 @@ func (c *sourceDescribeCommand) describe(cmd *cobra.Command, args []string) erro
 	storeLogSource(c.AuthenticatedCLICommand, discoveryCacheKey(c.Context.GetPlatformServer(), c.Context.GetCurrentOrganization()), source, time.Now())
 
 	if output.GetFormat(cmd).IsSerialized() {
-		data, err := sourceJson(*source)
-		if err != nil {
-			return err
-		}
-		return output.SerializedOutputFromJsonTags(cmd, data)
+		return output.SerializedOutputFromJsonTags(cmd, source)
 	}
 
 	return printHumanSource(cmd, source)
