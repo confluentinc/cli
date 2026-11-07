@@ -1,0 +1,18 @@
+Log Source
++-------------------+-----------------------------------------------------+
+| Name              | cluster-link-insights                               |
+| Display Name      | Cluster Linking insights                            |
+| Resource          | cluster-link                                        |
+| ID Prefix         |                                                     |
+| CRN Elements      | organization/environment/cloud-cluster/cluster-link |
+| Scopes            | RESOURCE                                            |
+| Max Lookback Days | 7                                                   |
+| Full-Text Search  | false                                               |
+| Full-Text Fields  |                                                     |
++-------------------+-----------------------------------------------------+
+
+Returned Fields (each log record)
+    Name    |   Type    | Default | Description  
+------------+-----------+---------+--------------
+  timestamp | timestamp | true    |              
+  message   | string    | true    |              
