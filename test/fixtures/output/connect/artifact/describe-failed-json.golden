@@ -2,6 +2,7 @@
   "id": "cfa-failed123",
   "name": "my-failed-artifact",
   "description": "new-failed-artifact",
+  "type": "CUSTOM_SMT",
   "cloud": "AWS",
   "environment": "env-123456",
   "content_format": "JAR",

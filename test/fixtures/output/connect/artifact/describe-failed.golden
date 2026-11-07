@@ -2,6 +2,7 @@
 | ID             | cfa-failed123                  |
 | Name           | my-failed-artifact             |
 | Description    | new-failed-artifact            |
+| Type           | CUSTOM_SMT                     |
 | Cloud          | AWS                            |
 | Environment    | env-123456                     |
 | Content Format | JAR                            |

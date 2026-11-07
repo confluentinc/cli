@@ -1,0 +1,1 @@
+Error: only types allowed for `--type` are "custom_smt", "connect_external_dep", and "custom_smt,connect_external_dep"

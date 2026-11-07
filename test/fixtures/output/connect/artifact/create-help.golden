@@ -13,6 +13,7 @@ Flags:
       --cloud string           REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
       --environment string     Environment ID.
       --description string     Specify the Connect artifact description.
+      --type string            Specify the Connect artifact type as "custom_smt", "connect_external_dep", or "custom_smt,connect_external_dep". (default "custom_smt")
       --context string         CLI context name.
   -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
 
