@@ -69,15 +69,8 @@ func (c *command) environmentUpdate(cmd *cobra.Command, args []string) error {
 		}
 	}
 	if defaultsStatement != "" {
-		defaultsStatementParsedLocal, err := parseDefaultsAsGenericType[LocalAllStatementDefaults1](defaultsStatement, "statement")
-		if err != nil {
+		if defaultsStatementParsed, err = parseStatementDefaults(defaultsStatement); err != nil {
 			return err
-		}
-		if defaultsStatementParsedLocal.Detached != nil {
-			defaultsStatementParsed.Detached = &cmfsdk.StatementDefaults{FlinkConfiguration: defaultsStatementParsedLocal.Detached.FlinkConfiguration}
-		}
-		if defaultsStatementParsedLocal.Interactive != nil {
-			defaultsStatementParsed.Interactive = &cmfsdk.StatementDefaults{FlinkConfiguration: defaultsStatementParsedLocal.Interactive.FlinkConfiguration}
 		}
 	}
 
