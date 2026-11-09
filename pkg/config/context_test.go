@@ -287,7 +287,6 @@ func TestContext_ResolveKafkaAPIKey_ErrorsWhenClusterSecretMissing(t *testing.T)
 }
 
 func TestContext_LogsQueryState(t *testing.T) {
-	// An organization-scoped query has no environment, so the state is kept without one.
 	ctx := &Context{}
 	require.Nil(t, ctx.GetLogsQueryState())
 

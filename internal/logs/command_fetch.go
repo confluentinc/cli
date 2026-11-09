@@ -52,6 +52,9 @@ func newFetchCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.RunE = c.fetch
 
 	cmd.Flags().String("source", "", `The log source to query, for example "cluster-health". Run "confluent logs source list" for the available log sources.`)
+	pcmd.RegisterFlagCompletionFunc(cmd, "source", func(cmd *cobra.Command, args []string) []string {
+		return completeSources(c.AuthenticatedCLICommand, cmd, args)
+	})
 	cmd.Flags().String("since", "", "Relative time window ending now, for example 1h, 24h or 7d. Cannot be combined with --from or --to.")
 	cmd.Flags().String("from", "", "Window start, in ISO 8601 UTC format (for example 2026-08-20T00:00:00Z).")
 	cmd.Flags().String("to", "", "Window end, in ISO 8601 UTC format. Defaults to now when --from is set.")
@@ -77,7 +80,7 @@ func newFetchCommand(prerunner pcmd.PreRunner) *cobra.Command {
 func (c *fetchCommand) fetch(cmd *cobra.Command, args []string) error {
 	resourceId := args[0]
 	if resourceId == "" {
-		return fmt.Errorf("resource ID cannot be empty")
+		return errors.New(emptyResourceIdErrorMsg)
 	}
 
 	sourceName, err := cmd.Flags().GetString("source")
@@ -348,11 +351,7 @@ func printHumanLogs(cmd *cobra.Command, source *loggingv1.LoggingV1Source, resou
 	if len(records) == 1 {
 		noun = "entry"
 	}
-	target := source.Name
-	if resourceId != "" {
-		target += " on " + resourceId
-	}
-	output.Printf(false, "Found %d log %s for %s:\n\n", len(records), noun, target)
+	output.Printf(false, "Found %d log %s for %s on %s:\n\n", len(records), noun, source.Name, resourceId)
 
 	return list.Print()
 }

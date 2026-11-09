@@ -100,7 +100,7 @@ func printHumanSource(cmd *cobra.Command, source *loggingv1.LoggingV1Source) err
 
 	if searchFields := newSearchFieldOuts(source); len(searchFields) > 0 {
 		output.Println(false, "")
-		output.Println(false, "Search Fields (--search field=value)")
+		output.Println(false, "Search Fields")
 		list := output.NewList(cmd)
 		list.Sort(false) // keep the order the API returns
 		for _, field := range searchFields {

@@ -33,8 +33,8 @@ type Context struct {
 	ActiveGlobalAPIKey string `json:"active_global_api_key,omitempty"`
 	// LogsDiscoveryCache holds the log sources `confluent logs` discovered, to save repeated discovery calls.
 	LogsDiscoveryCache *LogsDiscoveryCache `json:"logs_discovery,omitempty"`
-	// LogsQueryState remembers the last `confluent logs fetch` query, so that `--next` can continue it. It is kept
-	// per login rather than per environment, because an organization-scoped query has no environment.
+	// LogsQueryState remembers the last `confluent logs fetch` query, so that `--next` can continue it. The query's
+	// key already includes its CRN, so one state per context is enough.
 	LogsQueryState *LogsQueryState `json:"logs_state,omitempty"`
 
 	// Deprecated

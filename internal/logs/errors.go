@@ -34,6 +34,7 @@ const (
 	invalidSearchValueErrorMsg    = "\"%s\" is not a valid value for \"%s\""
 	invalidSearchValueSuggestions = "Allowed values: %s."
 
+	emptyResourceIdErrorMsg       = "resource ID cannot be empty"
 	resourceIdMismatchErrorMsg    = "resource ID \"%s\" does not match log source \"%s\""
 	resourceIdMismatchSuggestions = "This log source expects IDs starting with \"%s-\"."
 

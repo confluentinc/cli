@@ -48,6 +48,7 @@ func (s *CLITestSuite) TestLogsAutocomplete() {
 	tests := []CLITest{
 		{args: `__complete logs source describe ""`, fixture: "logs/source/describe-autocomplete.golden"},
 		{args: `__complete logs source describe cluster-health ""`, fixture: "logs/source/describe-autocomplete-second-arg.golden"},
+		{args: `__complete logs fetch lkc-123 --source ""`, fixture: "logs/fetch/source-autocomplete.golden"},
 	}
 
 	for _, test := range tests {
