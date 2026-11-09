@@ -1,1 +1,4 @@
-Error: rate limit exceeded for log queries. Retry after 12s
+Error: rate limit exceeded for log queries
+
+Suggestions:
+    Retry after 12s.

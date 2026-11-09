@@ -96,19 +96,23 @@ func catchLoggingError(err error, httpResp *http.Response) error {
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
+const (
+	logsRateLimitErrorMsg         = "rate limit exceeded for log queries"
+	logsRateLimitRetrySuggestions = "Retry after %ds."
+	logsRateLimitLaterSuggestions = "Try again later."
+)
+
 // rateLimitError reports a 429. Retry-After is either a number of seconds or an HTTP date.
 func rateLimitError(retryAfter string, now time.Time) error {
-	const message = "rate limit exceeded for log queries"
-
 	if seconds, err := strconv.Atoi(strings.TrimSpace(retryAfter)); err == nil && seconds > 0 {
-		return fmt.Errorf("%s. Retry after %ds", message, seconds)
+		return errors.NewErrorWithSuggestions(logsRateLimitErrorMsg, fmt.Sprintf(logsRateLimitRetrySuggestions, seconds))
 	}
 	if date, err := http.ParseTime(retryAfter); err == nil {
 		if wait := date.Sub(now); wait > 0 {
-			return fmt.Errorf("%s. Retry after %ds", message, int((wait+time.Second-1)/time.Second))
+			return errors.NewErrorWithSuggestions(logsRateLimitErrorMsg, fmt.Sprintf(logsRateLimitRetrySuggestions, int((wait+time.Second-1)/time.Second)))
 		}
 	}
-	return fmt.Errorf("%s. Try again later", message)
+	return errors.NewErrorWithSuggestions(logsRateLimitErrorMsg, logsRateLimitLaterSuggestions)
 }
 
 // LogsSearchRequest is the body of POST /logs/v1/search for the unified `confluent logs` commands. Unlike

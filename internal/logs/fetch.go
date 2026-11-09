@@ -196,7 +196,7 @@ func searchValues(value any) []string {
 }
 
 func validateResourceId(source *loggingv1.LoggingV1Source, resourceId string) error {
-	if resourceId == "" || source.GetIdPrefix() == "" {
+	if source.GetIdPrefix() == "" {
 		return nil
 	}
 	if !strings.HasPrefix(resourceId, source.GetIdPrefix()+"-") {

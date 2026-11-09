@@ -10,7 +10,7 @@ Log Source
 | Full-Text Fields  | message                                      |
 +-------------------+----------------------------------------------+
 
-Search Fields (--search field=value)
+Search Fields
      Name    |  Type  |         Allowed Values          
 -------------+--------+---------------------------------
   id         | string |                                 

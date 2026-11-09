@@ -135,7 +135,6 @@ func TestValidateSearch(t *testing.T) {
 
 func TestValidateResourceId(t *testing.T) {
 	require.NoError(t, validateResourceId(clusterHealth, "lkc-123"))
-	require.NoError(t, validateResourceId(clusterHealth, ""))
 	require.NoError(t, validateResourceId(noPrefixSource, "anything")) // no id_prefix declared
 	err := validateResourceId(clusterHealth, "lcc-123")
 	require.EqualError(t, err, `resource ID "lcc-123" does not match log source "cluster-health"`)
