@@ -66,6 +66,9 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 				Text: "List the role bindings for the current user with the environment scope and nested scopes:",
 				Code: "confluent iam rbac role-binding list --current-user --environment env-123456 --inclusive",
 			},
+			examples.Example{
+				Text: "To list role bindings for resources with a PREFIXED pattern type, add an asterisk to the end of the resource name. For examples, see https://docs.confluent.io/cloud/current/security/access-control/rbac/manage-role-bindings.html#list-and-delete-role-bindings-for-prefixed-resources.",
+			},
 		)
 	} else {
 		cmd.Example = examples.BuildExampleString(
