@@ -48,7 +48,7 @@ func NewLightningClient(url, userAgent string, unsafeTrace bool, authToken strin
 	cfg := rtcesqlv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
 	cfg.DefaultHeader = map[string]string{lightningSyncOnlyHeader: "true"}
-	cfg.HTTPClient = newLightningHttpClient(unsafeTrace)
+	cfg.HTTPClient = newLightningHttpClient()
 	cfg.Servers = rtcesqlv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
@@ -60,9 +60,9 @@ func NewLightningClient(url, userAgent string, unsafeTrace bool, authToken strin
 }
 
 // newLightningHttpClient retries only throttling and gateway errors; a 500 or a gateway timeout would likely fail again.
-func newLightningHttpClient(unsafeTrace bool) *http.Client {
+func newLightningHttpClient() *http.Client {
 	client := retryablehttp.NewClient()
-	client.Logger = plog.NewLeveledLogger(unsafeTrace)
+	client.Logger = plog.NewLeveledLogger()
 	client.CheckRetry = func(_ context.Context, resp *http.Response, err error) (bool, error) {
 		if resp == nil {
 			return false, err

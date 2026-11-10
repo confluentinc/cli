@@ -38,7 +38,7 @@ func NewMetricsClient(configuration *metricsv2.Configuration, cfg *config.Config
 }
 
 func (c *MetricsClient) context() context.Context {
-	// Metrics queries are POSTs that change nothing, so they're safe to retry like a GET.
+	// Metrics queries are POSTs that change nothing, so they're safe to retry like a GET
 	ctx := httpclient.MarkReadOnly(context.Background())
 
 	dataplaneToken, err := auth.GetDataplaneToken(c.cfg.Context())

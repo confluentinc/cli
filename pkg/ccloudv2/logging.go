@@ -130,7 +130,7 @@ func getLoggingRequest(loggingURL string, request LoggingSearchRequest, dataplan
 	}
 	u.RawQuery = query.Encode()
 
-	// Log searches are POSTs that change nothing, so they're safe to retry like a GET.
+	// Log searches are POSTs that change nothing, so they're safe to retry like a GET
 	req, err := http.NewRequestWithContext(httpclient.MarkReadOnly(context.Background()), http.MethodPost, u.String(), bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create HTTP request: %w", err)

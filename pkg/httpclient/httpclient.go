@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 
+	plog "github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
@@ -83,7 +84,7 @@ func New(cfg Config) *http.Client {
 			Timeout:       cfg.AttemptTimeout,
 			CheckRedirect: cfg.CheckRedirect,
 		},
-		Logger:         nil, // TODO: plog.LeveledLogger once its key/value formatting is fixed
+		Logger:         plog.NewLeveledLogger(),
 		RetryWaitMin:   cfg.RetryWaitMin,
 		RetryWaitMax:   cfg.RetryWaitMax,
 		RetryMax:       cfg.RetryMax,

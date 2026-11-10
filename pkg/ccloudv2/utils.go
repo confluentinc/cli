@@ -57,7 +57,7 @@ func IsCCloudURL(url string, isTest bool) bool {
 
 func NewRetryableHttpClient(cfg *config.Config, unsafeTrace bool) *http.Client {
 	client := retryablehttp.NewClient()
-	client.Logger = plog.NewLeveledLogger(unsafeTrace)
+	client.Logger = plog.NewLeveledLogger()
 	client.CheckRetry = func(_ context.Context, resp *http.Response, err error) (bool, error) {
 		if resp == nil {
 			return false, err

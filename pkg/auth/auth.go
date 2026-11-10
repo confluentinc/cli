@@ -278,7 +278,7 @@ func getAccessTokens(ctx *config.Context) (*accessTokensResponse, error) {
 	}
 	log.CliLogger.UnsafeTracef("%s\n", dump)
 
-	// The exchange only issues tokens and creates nothing, so it's safe to retry like a GET.
+	// The exchange only issues tokens and creates nothing, so it's safe to retry like a GET
 	traced := utils.GetCloudTracedContext() // Adds Trace logs for TRACE and UNSAFE_TRACE levels
 	req = req.WithContext(httpclient.MarkReadOnly(traced))
 	if _, err = s.Do(req, res, nil); err != nil {

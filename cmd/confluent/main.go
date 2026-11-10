@@ -38,7 +38,7 @@ func main() {
 	cfg.IsTest = isTest
 	cfg.Version = pversion.NewVersion(version, commit, date)
 
-	// Retry waits are jittered, so the "retrying in Ns." notices would print random values into the golden files if not silenced.
+	// Retry waits are jittered, so the "retrying in Ns." notices would print random values into the golden files if not silenced
 	if isTest {
 		httpclient.SilenceRetryNotices()
 	}

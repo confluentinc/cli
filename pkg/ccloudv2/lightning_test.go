@@ -332,7 +332,7 @@ func TestIsLightningAsyncRequired(t *testing.T) {
 }
 
 func TestLightningHttpClientRetries(t *testing.T) {
-	roundTripper, ok := newLightningHttpClient(false).Transport.(*retryablehttp.RoundTripper)
+	roundTripper, ok := newLightningHttpClient().Transport.(*retryablehttp.RoundTripper)
 	require.True(t, ok)
 	checkRetry := roundTripper.Client.CheckRetry
 
