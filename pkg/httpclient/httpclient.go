@@ -31,6 +31,7 @@ type Config struct {
 
 	TLSConfig     *tls.Config                                // custom CA and/or client certificate
 	CheckRedirect func(*http.Request, []*http.Request) error // nil follows up to 10 redirects
+	RetryStatus   func(*http.Response) bool                  // replaces the status rules in checkRetry; nil uses them
 
 	// Tests swap these out to control jitter and capture notices; New defaults them to rand.Float64 and stderr
 	random      func() float64

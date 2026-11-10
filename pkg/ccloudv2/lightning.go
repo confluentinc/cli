@@ -13,13 +13,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/go-retryablehttp"
-
 	rtcesqlv1 "github.com/confluentinc/ccloud-sdk-go-v2/rtce-sql/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
-	plog "github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/httpclient"
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
@@ -48,7 +46,7 @@ func NewLightningClient(url, userAgent string, unsafeTrace bool, authToken strin
 	cfg := rtcesqlv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
 	cfg.DefaultHeader = map[string]string{lightningSyncOnlyHeader: "true"}
-	cfg.HTTPClient = newLightningHttpClient()
+	cfg.HTTPClient = httpclient.New(newLightningHttpConfig())
 	cfg.Servers = rtcesqlv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
@@ -59,25 +57,23 @@ func NewLightningClient(url, userAgent string, unsafeTrace bool, authToken strin
 	}
 }
 
-// newLightningHttpClient retries only throttling and gateway errors; a 500 or a gateway timeout would likely fail again.
-func newLightningHttpClient() *http.Client {
-	client := retryablehttp.NewClient()
-	client.Logger = plog.NewLeveledLogger()
-	client.CheckRetry = func(_ context.Context, resp *http.Response, err error) (bool, error) {
-		if resp == nil {
-			return false, err
-		}
-		switch resp.StatusCode {
-		case http.StatusTooManyRequests, http.StatusBadGateway:
-			return true, err
-		case http.StatusServiceUnavailable:
-			return !isLightningGatewayTimeout(resp), err
-		}
-		return false, err
+func newLightningHttpConfig() httpclient.Config {
+	cfg := httpclient.Default
+	cfg.RetryStatus = lightningRetryStatus
+	// Longer than the API gateway's 60s limit, so its error arrives instead of an attempt timeout that would be retried
+	cfg.AttemptTimeout = lightningQueryTimeout
+	return cfg
+}
+
+// lightningRetryStatus retries only throttling and gateway errors; a 500 or a gateway timeout would likely fail again
+func lightningRetryStatus(resp *http.Response) bool {
+	switch resp.StatusCode {
+	case http.StatusTooManyRequests, http.StatusBadGateway:
+		return true
+	case http.StatusServiceUnavailable:
+		return !isLightningGatewayTimeout(resp)
 	}
-	// Return the last response, so the user sees the server's message.
-	client.ErrorHandler = retryablehttp.PassthroughErrorHandler
-	return client.StandardClient()
+	return false
 }
 
 // isLightningGatewayTimeout reports whether a 503 is the API gateway's time limit, leaving the body readable.
@@ -116,7 +112,9 @@ func GetLightningUrl(cfg *config.Config, cloud, region string) (string, error) {
 }
 
 func (c *LightningClient) lightningApiContext() context.Context {
-	return context.WithValue(context.Background(), rtcesqlv1.ContextAccessToken, c.authToken)
+	// A query only reads, so it's safe to retry like a GET
+	ctx := httpclient.MarkReadOnly(context.Background())
+	return context.WithValue(ctx, rtcesqlv1.ContextAccessToken, c.authToken)
 }
 
 // ExecuteQuery runs a SQL query; a positive maxResultRows limits how many rows the server returns.

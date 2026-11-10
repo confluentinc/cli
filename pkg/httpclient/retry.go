@@ -25,6 +25,10 @@ func (cfg Config) checkRetry(ctx context.Context, resp *http.Response, err error
 			// The server rejected the handshake (e.g. our client cert); DefaultRetryPolicy below would retry this case.
 			return false, nil
 		}
+		if dnsErr, ok := errors.AsType[*net.DNSError](err); ok && dnsErr.IsNotFound {
+			// The name doesn't exist, so retrying won't help; DNS timeouts and temporary failures are still retried
+			return false, nil
+		}
 		// Stops on too many redirects, a bad scheme or header, or an untrusted certificate.
 		retry, _ := retryablehttp.DefaultRetryPolicy(ctx, nil, err)
 		return retry && idempotent, nil
@@ -33,6 +37,10 @@ func (cfg Config) checkRetry(ctx context.Context, resp *http.Response, err error
 	retryAfter, hasRetryAfter := parseRetryAfter(resp)
 	if hasRetryAfter && retryAfter > cfg.RetryWaitMax {
 		return false, nil
+	}
+
+	if cfg.RetryStatus != nil {
+		return cfg.RetryStatus(resp), nil
 	}
 
 	switch resp.StatusCode {

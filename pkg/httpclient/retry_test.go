@@ -60,10 +60,37 @@ func TestCheckRetry_Responses(t *testing.T) {
 	}
 }
 
+func TestCheckRetry_RetryStatus(t *testing.T) {
+	cfg := Default
+	cfg.RetryStatus = func(resp *http.Response) bool {
+		return resp.StatusCode == http.StatusInternalServerError || resp.StatusCode == http.StatusTooManyRequests
+	}
+
+	tests := []struct {
+		name string
+		resp *http.Response
+		want bool
+	}{
+		{"500, which the default rules don't retry for a POST", response(http.StatusInternalServerError, ""), true},
+		{"503 with Retry-After, which the default rules retry", response(http.StatusServiceUnavailable, "0"), false},
+		{"429 with Retry-After above max", response(http.StatusTooManyRequests, "31"), false},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			retry, err := cfg.checkRetry(contextWithState(false), test.resp, nil)
+			require.NoError(t, err)
+			require.Equal(t, test.want, retry)
+		})
+	}
+}
+
 func TestCheckRetry_Errors(t *testing.T) {
 	connectionErr := &url.Error{Op: "Get", URL: "https://example.com", Err: &net.OpError{Op: "dial", Err: errors.New("connection refused")}}
 	tlsAlert := &url.Error{Op: "Get", URL: "https://example.com", Err: &net.OpError{Op: "remote error", Err: errors.New("tls: certificate required")}}
 	redirects := &url.Error{Op: "Get", URL: "https://example.com", Err: errors.New("stopped after 10 redirects")}
+	dnsNotFound := &url.Error{Op: "Get", URL: "https://example.com", Err: &net.OpError{Op: "dial", Err: &net.DNSError{Err: "no such host", Name: "example.com", IsNotFound: true}}}
+	dnsTimeout := &url.Error{Op: "Get", URL: "https://example.com", Err: &net.OpError{Op: "dial", Err: &net.DNSError{Err: "i/o timeout", Name: "example.com", IsTimeout: true}}}
 
 	tests := []struct {
 		name               string
@@ -74,6 +101,8 @@ func TestCheckRetry_Errors(t *testing.T) {
 		{"connection error", connectionErr, true, false},
 		{"TLS alert", tlsAlert, false, false},
 		{"too many redirects", redirects, false, false},
+		{"DNS name not found", dnsNotFound, false, false},
+		{"DNS timeout", dnsTimeout, true, false},
 	}
 
 	for _, test := range tests {
