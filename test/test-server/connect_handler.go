@@ -592,14 +592,12 @@ func handleConnectors(t *testing.T) http.HandlerFunc {
 // pages, and paging through more than one page exercises the client's loop.
 const connectorsPageSize = 2
 
-// connectorsPage mimics list-connectors pagination. Without page_size or page_token every connector is
-// returned; otherwise it returns connectorsPageSize connectors, in name order, starting at the offset in
-// page_token, and the token for the next page if any remain.
+// connectorsPage mimics list-connectors pagination. It requires the client to page with page_size=100 and
+// to send back only tokens this server issued, and returns connectorsPageSize connectors, in name order,
+// starting at the offset in page_token, plus the token for the next page if any remain.
 func connectorsPage(t *testing.T, r *http.Request, connectors map[string]connectv1.ConnectV1ConnectorExpansion) (map[string]connectv1.ConnectV1ConnectorExpansion, string) {
 	query := r.URL.Query()
-	if query.Get("page_size") == "" && query.Get("page_token") == "" {
-		return connectors, ""
-	}
+	require.Equal(t, "100", query.Get("page_size"), "the CLI must page through connectors")
 
 	names := slices.Sorted(maps.Keys(connectors))
 	start := 0
@@ -607,6 +605,8 @@ func connectorsPage(t *testing.T, r *http.Request, connectors map[string]connect
 		var err error
 		start, err = strconv.Atoi(token)
 		require.NoError(t, err)
+		require.True(t, start > 0 && start < len(names), "unexpected page_token %q", token)
+		require.Zero(t, start%connectorsPageSize, "unexpected page_token %q", token)
 	}
 	end := min(start+connectorsPageSize, len(names))
 
