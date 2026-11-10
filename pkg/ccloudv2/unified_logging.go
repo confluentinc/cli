@@ -51,7 +51,8 @@ func (c *Client) newLoggingClient() (*loggingv1.APIClient, context.Context, erro
 	}
 
 	cfg := loggingv1.NewConfiguration()
-	cfg.HTTPClient = newRetryableHttpClientReturningErrors(c.cfg, false)
+	cfg.Debug = c.unsafeTrace
+	cfg.HTTPClient = newRetryableHttpClientReturningErrors(c.cfg, c.unsafeTrace)
 	cfg.Servers = loggingv1.ServerConfigurations{{URL: loggingURL}}
 	cfg.UserAgent = c.cfg.Version.UserAgent
 

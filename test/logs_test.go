@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	pauth "github.com/confluentinc/cli/v4/pkg/auth"
-
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
@@ -20,6 +19,7 @@ func (s *CLITestSuite) TestLogsSourceList() {
 		{args: "logs source list -o json", fixture: "logs/source/list-json.golden"},
 		{args: "logs source list -o yaml", fixture: "logs/source/list-yaml.golden"},
 		{args: "logs source list extra", fixture: "logs/source/list-extra-arg.golden", exitCode: 1},
+		{args: "logs source list --unsafe-trace", fixture: "logs/source/list-unsafe-trace.golden", regex: true},
 	}
 
 	for _, test := range tests {
@@ -33,6 +33,7 @@ func (s *CLITestSuite) TestLogsSourceDescribe() {
 		{args: "logs source describe cluster-health", fixture: "logs/source/describe.golden"},
 		{args: "logs source describe cluster-health -o json", fixture: "logs/source/describe-json.golden"},
 		{args: "logs source describe cluster-health -o yaml", fixture: "logs/source/describe-yaml.golden"},
+		{args: "logs source describe cluster-health --unsafe-trace", fixture: "logs/source/describe-unsafe-trace.golden", regex: true},
 		{args: "logs source describe connector", fixture: "logs/source/describe-unknown.golden", exitCode: 1},
 		{args: "logs source describe", fixture: "logs/source/describe-missing-arg.golden", exitCode: 1},
 		{args: "logs source describe cluster-health connector", fixture: "logs/source/describe-extra-arg.golden", exitCode: 1},
@@ -177,6 +178,7 @@ func (s *CLITestSuite) TestLogsFetch() {
 		{args: "logs fetch lkc-123 --source cluster-health --since 3d --search level=ERROR --search event_type=SERVICE_ISSUE_DETECTED --tail 100", fixture: "logs/fetch/resource-search.golden"},
 		{args: "logs fetch lkc-456 --source cluster-health --since 3d --search level=WARN,level=ERROR --search-text maintenance", fixture: "logs/fetch/resource-search-text.golden"},
 		{args: "logs fetch lkc-999 --source cluster-health --since 1h", fixture: "logs/fetch/empty.golden"},
+		{args: "logs fetch lkc-123 --source cluster-health --since 1h --unsafe-trace", fixture: "logs/fetch/resource-unsafe-trace.golden", regex: true},
 
 		// Validation errors
 		{args: "logs fetch --source cluster-health --since 1h", fixture: "logs/fetch/missing-resource-id.golden", exitCode: 1},
