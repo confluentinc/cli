@@ -1,1 +1,5 @@
-Error: failed to query connector logs: failed to make HTTP request to logging API due to issue connecting to the server, please make sure you adhere to 5 requests per minute per connector rate limit
+Error: failed to query connector logs: logging API request failed with status 429
+Request CRN: crn://confluent.cloud/organization=abc-123/environment=env-596/cloud-cluster=lkc-123/connector=az-connector-3
+
+Suggestions:
+    Make sure you adhere to the logging API's rate limit of 5 requests per minute per connector.

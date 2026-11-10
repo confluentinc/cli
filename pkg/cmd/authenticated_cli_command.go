@@ -328,7 +328,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 
 func (c *AuthenticatedCLICommand) GetUsageLimitsClient() *kafkausagelimits.UsageLimitsClient {
 	if c.usageLimitsClient == nil {
-		httpClient := ccloudv2.NewRetryableHttpClient(c.Config, false)
+		httpClient := httpclient.New(httpclient.Default)
 		c.usageLimitsClient = kafkausagelimits.NewUsageLimitsClient(c.Config, httpClient)
 	}
 
