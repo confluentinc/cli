@@ -42,6 +42,7 @@ import (
 	usmv1 "github.com/confluentinc/ccloud-sdk-go-v2/usm/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/httpclient"
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
@@ -92,7 +93,7 @@ type Client struct {
 }
 
 func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
-	httpClient := NewRetryableHttpClient(cfg, unsafeTrace)
+	httpClient := httpclient.New(httpclient.Default)
 
 	url := getServerUrl(cfg.Context().GetPlatformServer())
 	if cfg.IsTest {

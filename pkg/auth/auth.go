@@ -6,7 +6,6 @@ import (
 	"os"
 	"runtime"
 	"strings"
-	"time"
 
 	"github.com/dghubble/sling"
 
@@ -14,6 +13,7 @@ import (
 
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/httpclient"
 	"github.com/confluentinc/cli/v4/pkg/jwt"
 	"github.com/confluentinc/cli/v4/pkg/keychain"
 	"github.com/confluentinc/cli/v4/pkg/log"
@@ -263,8 +263,7 @@ func getAccessTokens(ctx *config.Context) (*accessTokensResponse, error) {
 
 	res := &accessTokensResponse{}
 
-	client := utils.DefaultClient() // Declare a new client so that sling doesn't use the global default
-	client.Timeout = 30 * time.Second
+	client := httpclient.New(httpclient.Default) // Without its own client, sling would use http.DefaultClient
 
 	s := sling.New().Client(client).Add("Content-Type", "application/json").Add("Authorization", "Bearer "+ctx.GetAuthToken()).Post(endpoint).BodyJSON(map[string]any{})
 
@@ -279,7 +278,9 @@ func getAccessTokens(ctx *config.Context) (*accessTokensResponse, error) {
 	}
 	log.CliLogger.UnsafeTracef("%s\n", dump)
 
-	req = req.WithContext(utils.GetCloudTracedContext()) // Adds Trace logs for TRACE and UNSAFE_TRACE levels
+	// The exchange only issues tokens and creates nothing, so it's safe to retry like a GET.
+	traced := utils.GetCloudTracedContext() // Adds Trace logs for TRACE and UNSAFE_TRACE levels
+	req = req.WithContext(httpclient.MarkReadOnly(traced))
 	if _, err = s.Do(req, res, nil); err != nil {
 		return nil, err
 	}

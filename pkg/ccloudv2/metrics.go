@@ -13,6 +13,7 @@ import (
 
 	"github.com/confluentinc/cli/v4/pkg/auth"
 	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/httpclient"
 )
 
 type flatQueryResponse struct {
@@ -37,7 +38,8 @@ func NewMetricsClient(configuration *metricsv2.Configuration, cfg *config.Config
 }
 
 func (c *MetricsClient) context() context.Context {
-	ctx := context.Background()
+	// Metrics queries are POSTs that change nothing, so they're safe to retry like a GET.
+	ctx := httpclient.MarkReadOnly(context.Background())
 
 	dataplaneToken, err := auth.GetDataplaneToken(c.cfg.Context())
 	if err != nil {
@@ -62,7 +64,7 @@ func (c *MetricsClient) MetricsDatasetQueryRaw(dataset string, body []byte) (*me
 	}
 	url := fmt.Sprintf("%s/v2/metrics/%s/query", cfg.Servers[0].URL, dataset)
 
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, url, bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(httpclient.MarkReadOnly(context.Background()), http.MethodPost, url, bytes.NewReader(body))
 	if err != nil {
 		return nil, nil, err
 	}

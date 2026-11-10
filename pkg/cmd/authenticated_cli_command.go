@@ -19,6 +19,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/httpclient"
 	"github.com/confluentinc/cli/v4/pkg/kafkausagelimits"
 	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -180,7 +181,7 @@ func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, e
 
 		configuration := metricsv2.NewConfiguration()
 		configuration.Debug = unsafeTrace
-		configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(c.Config, unsafeTrace)
+		configuration.HTTPClient = httpclient.New(httpclient.Default)
 		configuration.Servers = metricsv2.ServerConfigurations{{URL: url}}
 		configuration.UserAgent = c.Config.Version.UserAgent
 
@@ -440,7 +441,7 @@ func (c *AuthenticatedCLICommand) GetValidSchemaRegistryClusterEndpoint(cmd *cob
 	configuration := srsdk.NewConfiguration()
 	configuration.UserAgent = c.Config.Version.UserAgent
 	configuration.Debug = unsafeTrace
-	configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(c.Config, unsafeTrace)
+	configuration.HTTPClient = httpclient.New(httpclient.Default)
 
 	schemaRegistryApiKey, _ := cmd.Flags().GetString("schema-registry-api-key")
 	schemaRegistryApiSecret, _ := cmd.Flags().GetString("schema-registry-api-secret")
