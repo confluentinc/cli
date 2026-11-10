@@ -10,6 +10,9 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/errors"
 )
 
+// connectNextPageTokenHeader carries the cursor for the next page of a connector list.
+const connectNextPageTokenHeader = "X-Next-Page-Token"
+
 func newConnectClient(httpClient *http.Client, url, userAgent string, unsafeTrace bool) *connectv1.APIClient {
 	cfg := connectv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
@@ -39,9 +42,33 @@ func (c *Client) DeleteConnector(connectorName, environmentId, kafkaClusterId st
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
+// ListConnectorsWithExpansions returns every connector in the cluster. It pages through the list when the
+// organization has pagination enabled; otherwise the server ignores the paging params and returns all
+// connectors in one response without a next-page token.
 func (c *Client) ListConnectorsWithExpansions(environmentId, kafkaClusterId, expand string) (map[string]connectv1.ConnectV1ConnectorExpansion, error) {
-	resp, httpResp, err := c.ConnectClient.ConnectorsConnectV1Api.ListConnectv1ConnectorsWithExpansions(c.connectApiContext(), environmentId, kafkaClusterId).Expand(expand).Execute()
-	return resp, errors.CatchCCloudV2Error(err, httpResp)
+	connectors := make(map[string]connectv1.ConnectV1ConnectorExpansion)
+	pageToken := ""
+	for {
+		req := c.ConnectClient.ConnectorsConnectV1Api.ListConnectv1ConnectorsWithExpansions(c.connectApiContext(), environmentId, kafkaClusterId).Expand(expand).PageSize(ccloudV2ListPageSize)
+		if pageToken != "" {
+			req = req.PageToken(pageToken)
+		}
+		resp, httpResp, err := req.Execute()
+		if err != nil {
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
+		}
+		for name, connector := range resp {
+			connectors[name] = connector
+		}
+		if httpResp == nil {
+			return connectors, nil
+		}
+		// A page may be short or empty while more remain, so stop only when the header is absent.
+		pageToken = httpResp.Header.Get(connectNextPageTokenHeader)
+		if pageToken == "" {
+			return connectors, nil
+		}
+	}
 }
 
 func (c *Client) GetConnectorExpansionById(connectorId, environmentId, kafkaClusterId string) (*connectv1.ConnectV1ConnectorExpansion, error) {

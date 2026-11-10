@@ -191,6 +191,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/configurationcontrol v0.1.1 h1:uZMbJrrK
 github.com/confluentinc/ccloud-sdk-go-v2/configurationcontrol v0.1.1/go.mod h1:Oz3vf2PWfROWH2TRtG3PraH0vorWSPZaN/h+nBFPAAQ=
 github.com/confluentinc/ccloud-sdk-go-v2/connect v0.7.0 h1:ISrVOX9qJ2Sxiu/fGBqqHeaA0SRJQujc8yP7qAZRL3Y=
 github.com/confluentinc/ccloud-sdk-go-v2/connect v0.7.0/go.mod h1:zHG/3DzsnoHC81B1AY9K/8bMX3mxbIp5/nHHdypa//w=
+github.com/confluentinc/ccloud-sdk-go-v2/connect v0.7.1-0.20261110071329-91c6445bc10a h1:f1gj1YOT5Vg3iSo7tGsMY58h97SfRpgnrQYMEz3bRoY=
+github.com/confluentinc/ccloud-sdk-go-v2/connect v0.7.1-0.20261110071329-91c6445bc10a/go.mod h1:2ZfV0R43sezd8iy92vg/1YgzjZRQ31fZFmCNgFruwuM=
 github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin v0.0.9 h1:o1zKZlKbnN9uv+Y8TxwesBRryUl3lEU6lnfndEJigxQ=
 github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin v0.0.9/go.mod h1:TtTcSfm+/JvnfqEKglOZ32LIcsRbdtrQdI+TtcP7fiU=
 github.com/confluentinc/ccloud-sdk-go-v2/endpoint v0.4.0 h1:Pd4oCibpSNfjyBNt9hOQv2EOHjKql1xc7hnU/qs7lvk=
