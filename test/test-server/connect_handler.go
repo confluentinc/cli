@@ -3,8 +3,10 @@ package testserver
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -561,11 +563,16 @@ func handleConnectors(t *testing.T) http.HandlerFunc {
 					Name:   connectv1.PtrString("az-connector-3"),
 				},
 			}
-			err := json.NewEncoder(w).Encode(map[string]connectv1.ConnectV1ConnectorExpansion{
+			connectors := map[string]connectv1.ConnectV1ConnectorExpansion{
 				"az-connector":   firstConnectorExpansion,
 				"az-connector-2": secondConnectorExpansion,
 				"az-connector-3": thirdConnectorExpansion,
-			})
+			}
+			page, nextPageToken := connectorsPage(t, r, connectors)
+			if nextPageToken != "" {
+				w.Header().Set("X-Next-Page-Token", nextPageToken)
+			}
+			err := json.NewEncoder(w).Encode(page)
 			require.NoError(t, err)
 		} else if r.Method == http.MethodPost {
 			var request connectv1.InlineObject
@@ -579,6 +586,38 @@ func handleConnectors(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 		}
 	}
+}
+
+// connectorsPageSize is deliberately smaller than the client's page_size: the server may return short
+// pages, and paging through more than one page exercises the client's loop.
+const connectorsPageSize = 2
+
+// connectorsPage mimics list-connectors pagination. Without page_size or page_token every connector is
+// returned; otherwise it returns connectorsPageSize connectors, in name order, starting at the offset in
+// page_token, and the token for the next page if any remain.
+func connectorsPage(t *testing.T, r *http.Request, connectors map[string]connectv1.ConnectV1ConnectorExpansion) (map[string]connectv1.ConnectV1ConnectorExpansion, string) {
+	query := r.URL.Query()
+	if query.Get("page_size") == "" && query.Get("page_token") == "" {
+		return connectors, ""
+	}
+
+	names := slices.Sorted(maps.Keys(connectors))
+	start := 0
+	if token := query.Get("page_token"); token != "" {
+		var err error
+		start, err = strconv.Atoi(token)
+		require.NoError(t, err)
+	}
+	end := min(start+connectorsPageSize, len(names))
+
+	page := make(map[string]connectv1.ConnectV1ConnectorExpansion)
+	for _, name := range names[start:end] {
+		page[name] = connectors[name]
+	}
+	if end < len(names) {
+		return page, strconv.Itoa(end)
+	}
+	return page, ""
 }
 
 // Handler for: "/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins"
