@@ -32,6 +32,10 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --resource Topic:my-topic --environment env-123456 --cloud-cluster lkc-123456 --kafka-cluster lkc-123456",
 			},
 			examples.Example{
+				Text: `Grant the role "DeveloperRead" to the principal "User:u-123456", in the environment "env-123456" for the Kafka cluster "lkc-123456" on all topics with the prefix "my-topic" (a PREFIXED pattern type):`,
+				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role DeveloperRead --resource Topic:my-topic --prefix --environment env-123456 --cloud-cluster lkc-123456 --kafka-cluster lkc-123456",
+			},
+			examples.Example{
 				Text: `Grant the role "Assigner" to identity pool "User:pool-123456" for a service account resource "ServiceAccount:sa-123456":`,
 				Code: `confluent iam rbac role-binding create --principal User:pool-123456 --role Assigner --resource "ServiceAccount:sa-123456"`,
 			},

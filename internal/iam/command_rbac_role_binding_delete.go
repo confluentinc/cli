@@ -35,6 +35,9 @@ func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 				Text: `Delete the role "UsmClusterAdmin" for the principal "User:u-123456" on the USM Kafka cluster "usmkc-123456" in the environment "env-123456":`,
 				Code: "confluent iam rbac role-binding delete --principal User:u-123456 --role UsmClusterAdmin --environment env-123456 --usm-kafka-cluster usmkc-123456",
 			},
+			examples.Example{
+				Text: "To delete a role binding for resources with a PREFIXED pattern type, use the `--prefix` flag. For examples, see https://docs.confluent.io/cloud/current/security/access-control/rbac/manage-role-bindings.html#list-and-delete-role-bindings-for-prefixed-resources.",
+			},
 		)
 	} else {
 		cmd.Example = examples.BuildExampleString(
