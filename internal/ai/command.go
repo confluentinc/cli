@@ -10,6 +10,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/httpclient"
 	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
@@ -45,6 +46,8 @@ I'm currently in preview and am learning more everyday. Help me improve by ratin
 You can exit the shell at any time with "exit".`
 
 func (c *command) ai(cmd *cobra.Command, _ []string) error {
+	httpclient.SilenceRetryNotices()
+
 	availability, err := c.V2Client.GetAvailability()
 	if err != nil {
 		return err

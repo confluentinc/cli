@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	client "github.com/confluentinc/cli/v4/pkg/flink/app"
 	"github.com/confluentinc/cli/v4/pkg/flink/types"
+	"github.com/confluentinc/cli/v4/pkg/httpclient"
 	"github.com/confluentinc/cli/v4/pkg/jwt"
 	"github.com/confluentinc/cli/v4/pkg/log"
 	ppanic "github.com/confluentinc/cli/v4/pkg/panic-recovery"
@@ -140,6 +141,8 @@ func (c *command) authenticatedOnPrem(authenticated func(*cobra.Command, []strin
 }
 
 func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Command) error {
+	httpclient.SilenceRetryNotices()
+
 	if featureflags.Manager.BoolVariation("cli.flink.internal", c.Context, config.CliLaunchDarklyClient, true, false) {
 		// get config keys and values from flags
 		configKeys, err := cmd.Flags().GetStringSlice("config-key")

@@ -23,7 +23,7 @@ func NewClient(userAgent string, isTest, unsafeTrace bool) *Client {
 	}
 
 	client := retryablehttp.NewClient()
-	client.Logger = log.NewLeveledLogger(unsafeTrace)
+	client.Logger = log.NewLeveledLogger()
 
 	return &Client{
 		URL:       url,

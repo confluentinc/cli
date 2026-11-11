@@ -9,6 +9,7 @@ import (
 	"github.com/confluentinc/cli/v4/internal"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	_ "github.com/confluentinc/cli/v4/pkg/fips"
+	"github.com/confluentinc/cli/v4/pkg/httpclient"
 	pversion "github.com/confluentinc/cli/v4/pkg/version"
 )
 
@@ -36,6 +37,11 @@ func main() {
 	cfg.DisableUpdates = disableUpdates
 	cfg.IsTest = isTest
 	cfg.Version = pversion.NewVersion(version, commit, date)
+
+	// Retry waits are jittered, so the "retrying in Ns." notices would print random values into the golden files if not silenced
+	if isTest {
+		httpclient.SilenceRetryNotices()
+	}
 
 	cmd := internal.NewConfluentCommand(cfg)
 
