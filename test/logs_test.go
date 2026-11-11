@@ -188,6 +188,8 @@ func (s *CLITestSuite) TestLogsFetch() {
 		{args: "logs fetch lkc-123 --source cluster-health --since 30d", fixture: "logs/fetch/since-too-long.golden", exitCode: 1},
 		{args: "logs fetch lkc-123 --source cluster-health --from 2026-10-14T00:00:00 ", fixture: "logs/fetch/from-bad-format.golden", exitCode: 1},
 		{args: "logs fetch lkc-123 --source cluster-health --since 1h --tail 5000", fixture: "logs/fetch/tail-too-large.golden", exitCode: 1},
+		{args: "logs fetch lkc-123 --source cluster-health --since 1h --tail 0", fixture: "logs/fetch/tail-zero.golden", exitCode: 1},
+		{args: "logs fetch lkc-123 --source cluster-health --since 1h --tail -1", fixture: "logs/fetch/tail-negative.golden", exitCode: 1},
 		{args: "logs fetch lkc-123 --source no-such-source --since 1h", fixture: "logs/fetch/unknown-source.golden", exitCode: 1},
 		{args: "logs fetch lkc-123 --source cluster-health --since 1h --search severity=ERROR", fixture: "logs/fetch/unknown-search-field.golden", exitCode: 1},
 		{args: "logs fetch lkc-123 --source cluster-health --since 1h --search level=DEBUG", fixture: "logs/fetch/invalid-search-value.golden", exitCode: 1},
