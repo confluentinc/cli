@@ -120,7 +120,7 @@ func (c *fetchCommand) fetch(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if tail < 0 || tail > maxTail {
+	if cmd.Flags().Changed("tail") && (tail < 1 || tail > maxTail) {
 		return fmt.Errorf(tailOutOfRangeErrorMsg, maxTail)
 	}
 
