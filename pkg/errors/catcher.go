@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -163,6 +164,16 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 	body, _ := io.ReadAll(r.Body)
 	var resBody ErrorResponseBody
 	_ = json.Unmarshal(body, &resBody)
+	if r.StatusCode == http.StatusTooManyRequests {
+		if len(resBody.Errors) > 0 && resBody.Errors[0].Detail != "" {
+			err = errors.New(strings.TrimSuffix(resBody.Errors[0].Detail, "\n"))
+		}
+		suggestions := "The request was retried several times and the server is still rate limiting. Reduce the request rate and try again."
+		if seconds, parseErr := strconv.Atoi(r.Header.Get("Retry-After")); parseErr == nil {
+			suggestions += fmt.Sprintf(" The server asked to wait %d seconds.", seconds)
+		}
+		return NewErrorWithSuggestions(err.Error(), suggestions)
+	}
 	if len(resBody.Errors) > 0 {
 		detail := resBody.Errors[0].Detail
 		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {

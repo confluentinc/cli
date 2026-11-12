@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/confluentinc/cli/v4/pkg/auth/sso"
 	"github.com/confluentinc/cli/v4/pkg/errors"
@@ -140,6 +141,9 @@ func (s *authState) getOAuthToken() error {
 	return s.saveOAuthTokenResponse(data)
 }
 
+// oauthHTTPClient is used for token requests to the OAuth provider; unlike http.DefaultClient it has a timeout.
+var oauthHTTPClient = &http.Client{Timeout: 30 * time.Second}
+
 func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]any, error) {
 	url := s.MFAProviderHost + "/token"
 	log.CliLogger.Debugf("OAuth token request URL: %s", url)
@@ -149,7 +153,7 @@ func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]a
 		return nil, fmt.Errorf("failed to construct oauth token re, errquest: %w", err)
 	}
 	req.Header.Add("content-type", "application/x-www-form-urlencoded")
-	res, err := http.DefaultClient.Do(req)
+	res, err := oauthHTTPClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get oauth token: %w", err)
 	}

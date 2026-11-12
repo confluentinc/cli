@@ -2,11 +2,15 @@ package ccloudv2
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"math/rand/v2"
 	"net/http"
 	"net/url"
 	"slices"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
 
@@ -15,12 +19,19 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/log"
 	plog "github.com/confluentinc/cli/v4/pkg/log"
+	"github.com/confluentinc/cli/v4/pkg/output"
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
 const (
 	pageTokenQueryParameter = "page_token"
 	ccloudV2ListPageSize    = 100
+
+	retryMax       = 5
+	requestTimeout = 30 * time.Second
+	maxRetryAfter  = time.Minute
+	retryJitter    = 0.2
+	longRetryWait  = 5 * time.Second
 )
 
 var (
@@ -56,14 +67,9 @@ func IsCCloudURL(url string, isTest bool) bool {
 }
 
 func NewRetryableHttpClient(cfg *config.Config, unsafeTrace bool) *http.Client {
-	client := retryablehttp.NewClient()
-	client.Logger = plog.NewLeveledLogger(unsafeTrace)
-	client.CheckRetry = func(_ context.Context, resp *http.Response, err error) (bool, error) {
-		if resp == nil {
-			return false, err
-		}
-
-		if resp.StatusCode == http.StatusUnauthorized && cfg.Context().GetState().IsExpired() {
+	client := newRetryableClient(cfg, unsafeTrace)
+	client.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+		if resp != nil && resp.StatusCode == http.StatusUnauthorized && cfg.Context().GetState().IsExpired() {
 			params := &ccloudv1.Params{
 				BaseURL:    cfg.Context().GetPlatformServer(),
 				HttpClient: ccloudv1.BaseClient,
@@ -78,23 +84,69 @@ func NewRetryableHttpClient(cfg *config.Config, unsafeTrace bool) *http.Client {
 			return true, err
 		}
 
-		return resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= 500, err
+		return retryPolicy(ctx, resp, err)
 	}
 
 	return client.StandardClient()
 }
 
 func NewRetryableHttpClientWithRedirect(unsafeTrace bool, checkRedirect func(*http.Request, []*http.Request) error) *http.Client {
-	client := retryablehttp.NewClient()
-	client.Logger = plog.NewLeveledLogger(unsafeTrace)
-	client.CheckRetry = func(_ context.Context, resp *http.Response, err error) (bool, error) {
-		if resp == nil {
-			return false, err
-		}
-		return resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= 500, err
-	}
+	client := newRetryableClient(nil, unsafeTrace)
+	client.CheckRetry = retryPolicy
 	client.HTTPClient.CheckRedirect = checkRedirect
 	return client.StandardClient()
+}
+
+func newRetryableClient(cfg *config.Config, unsafeTrace bool) *retryablehttp.Client {
+	client := retryablehttp.NewClient()
+	client.Logger = plog.NewLeveledLogger(unsafeTrace)
+	client.RetryMax = retryMax
+	client.HTTPClient.Timeout = requestTimeout
+	client.Backoff = retryBackoff
+	client.ErrorHandler = retryablehttp.PassthroughErrorHandler
+
+	// Don't sleep between retries in integration tests
+	if cfg != nil && cfg.IsTest {
+		client.RetryWaitMin, client.RetryWaitMax = 0, 0
+	}
+
+	return client
+}
+
+// Use the library's retry policy (429, 5xx except 501, connection errors), except that a connection error is only
+// retried for idempotent methods, since the server may have already processed the request, and never when the
+// connection was refused, since nothing is listening.
+func retryPolicy(ctx context.Context, resp *http.Response, err error) (bool, error) {
+	if err != nil && (!isIdempotent(err) || errors.Is(err, syscall.ECONNREFUSED)) {
+		return false, err
+	}
+	return retryablehttp.DefaultRetryPolicy(ctx, resp, err)
+}
+
+func isIdempotent(err error) bool {
+	var urlErr *url.Error
+	if !errors.As(err, &urlErr) {
+		return false
+	}
+	return slices.Contains([]string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodDelete, http.MethodOptions}, strings.ToUpper(urlErr.Op))
+}
+
+// Exponential backoff with jitter. A Retry-After wait is capped, and jitter only extends it, so we never retry
+// earlier than the server asked.
+func retryBackoff(minWait, maxWait time.Duration, attempt int, resp *http.Response) time.Duration {
+	wait := retryablehttp.DefaultBackoff(minWait, maxWait, attempt, resp)
+	if resp != nil && resp.Header.Get("Retry-After") != "" {
+		wait = min(wait, maxRetryAfter)
+		wait += time.Duration(rand.Float64() * retryJitter * float64(wait))
+	} else {
+		wait = min(time.Duration(float64(wait)*(1+retryJitter*(2*rand.Float64()-1))), maxWait)
+	}
+
+	if wait > longRetryWait {
+		output.ErrPrintf(false, "Waiting %s before retrying the request.\n", wait.Round(time.Second))
+	}
+
+	return wait
 }
 
 func ToLower(s string) string {
