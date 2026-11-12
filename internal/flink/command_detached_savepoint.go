@@ -37,7 +37,7 @@ func convertSdkDetachedSavepointToLocalSavepoint(sdkSavepoint cmfsdk.Savepoint) 
 		ApiVersion: sdkSavepoint.ApiVersion,
 		Kind:       sdkSavepoint.Kind,
 		Metadata: LocalSavepointMetadata{
-			Name:              *sdkSavepoint.Metadata.Name,
+			Name:              sdkSavepoint.Metadata.GetName(),
 			CreationTimestamp: sdkSavepoint.Metadata.CreationTimestamp,
 			Uid:               sdkSavepoint.Metadata.Uid,
 			Labels:            sdkSavepoint.Metadata.Labels,
