@@ -1,6 +1,7 @@
 package app
 
 import (
+	"crypto/tls"
 	"sync"
 	"time"
 
@@ -47,7 +48,7 @@ func synchronizedTokenRefresh(tokenRefreshFunc func() error) func() error {
 	}
 }
 
-func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc func() error, appOptions types.ApplicationOptions, reportUsageFunc func()) error {
+func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc func() error, appOptions types.ApplicationOptions, reportUsageFunc func(), tlsClientConfig *tls.Config) error {
 	synchronizedTokenRefreshFunc := synchronizedTokenRefresh(tokenRefreshFunc)
 	getAuthToken := func() string {
 		if authErr := synchronizedTokenRefreshFunc(); authErr != nil {
@@ -70,7 +71,7 @@ func StartApp(gatewayClient ccloudv2.GatewayClientInterface, tokenRefreshFunc fu
 
 	// Instantiate LSP
 	handlerCh := make(chan *jsonrpc2.Request) // This is the channel used for the messages received by the language to be passed through to the input controller
-	lspClient, _, err := lsp.NewInitializedLspClient(getAuthToken, appOptions.GetLSPBaseUrl(), appOptions.GetOrganizationId(), appOptions.GetEnvironmentId(), handlerCh)
+	lspClient, _, err := lsp.NewInitializedLspClient(getAuthToken, appOptions.GetLSPBaseUrl(), appOptions.GetOrganizationId(), appOptions.GetEnvironmentId(), tlsClientConfig, handlerCh)
 	if err != nil {
 		log.CliLogger.Errorf("Failed to connect to the language service. Check your network."+
 			" If you're using private networking, you might still be able to submit queries. If that's the case and you"+
