@@ -201,7 +201,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 		configuration := srsdk.NewConfiguration()
 		configuration.UserAgent = c.Config.Version.UserAgent
 		configuration.Debug = unsafeTrace
-		configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(c.Config, unsafeTrace)
+		configuration.HTTPClient = httpclient.New(httpclient.Default)
 
 		schemaRegistryEndpoint, _ := cmd.Flags().GetString("schema-registry-endpoint")
 		schemaRegistryApiKey, _ := cmd.Flags().GetString("schema-registry-api-key")
@@ -244,7 +244,8 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 					return nil, schemaregistry.ErrNotEnabled
 				}
 				for _, urlPrivate := range clusters[0].Spec.PrivateNetworkingConfig.GetRegionalEndpoints() {
-					isCloudEndpointAutoFound = c.validateSchemaRegistryEndpointAndSetClient(clusters[0], schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration)
+					// Private endpoints are usually unreachable from outside their network; try each once
+					isCloudEndpointAutoFound = c.validateSchemaRegistryEndpointAndSetClient(clusters[0], schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration, httpclient.SingleAttempt)
 					if isCloudEndpointAutoFound {
 						err := c.saveToConfig(urlPrivate)
 						if err != nil {
@@ -254,7 +255,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 					}
 				}
 				if !isCloudEndpointAutoFound {
-					isCloudEndpointAutoFound = c.validateSchemaRegistryEndpointAndSetClient(clusters[0], schemaRegistryApiKey, schemaRegistryApiSecret, clusters[0].Spec.GetHttpEndpoint(), *configuration)
+					isCloudEndpointAutoFound = c.validateSchemaRegistryEndpointAndSetClient(clusters[0], schemaRegistryApiKey, schemaRegistryApiSecret, clusters[0].Spec.GetHttpEndpoint(), *configuration, httpclient.Default)
 					if isCloudEndpointAutoFound {
 						err := c.saveToConfig(clusters[0].Spec.GetHttpEndpoint())
 						if err != nil {
@@ -335,26 +336,27 @@ func (c *AuthenticatedCLICommand) GetUsageLimitsClient() *kafkausagelimits.Usage
 	return c.usageLimitsClient
 }
 
-func (c *AuthenticatedCLICommand) validateSchemaRegistryEndpointAndSetClient(cluster srcmv3.SrcmV3Cluster, schemaRegistryApiKey, schemaRegistryApiSecret, url string, configuration srsdk.Configuration) bool {
+func (c *AuthenticatedCLICommand) validateSchemaRegistryEndpointAndSetClient(cluster srcmv3.SrcmV3Cluster, schemaRegistryApiKey, schemaRegistryApiSecret, url string, configuration srsdk.Configuration, validationConfig httpclient.Config) bool {
 	configuration.Servers = srsdk.ServerConfigurations{{URL: url}}
 	configuration.DefaultHeader = map[string]string{"target-sr-cluster": cluster.GetId()}
 
-	if schemaRegistryApiKey != "" && schemaRegistryApiSecret != "" {
-		apiKey := srsdk.BasicAuth{
-			UserName: schemaRegistryApiKey,
-			Password: schemaRegistryApiSecret,
+	newClient := func(configuration *srsdk.Configuration) *schemaregistry.Client {
+		if schemaRegistryApiKey != "" && schemaRegistryApiSecret != "" {
+			return schemaregistry.NewClientWithApiKey(configuration, srsdk.BasicAuth{UserName: schemaRegistryApiKey, Password: schemaRegistryApiSecret})
 		}
-		c.schemaRegistryClient = schemaregistry.NewClientWithApiKey(&configuration, apiKey)
-	} else {
-		c.schemaRegistryClient = schemaregistry.NewClient(&configuration, c.Config)
+		return schemaregistry.NewClient(configuration, c.Config)
 	}
-	_, err := c.schemaRegistryClient.GetTopLevelConfig()
-	if err == nil {
-		return true
-	}
-	log.CliLogger.Infof("Trying endpoint: %s : Failed\n", url)
 
-	return false
+	validationConfiguration := configuration
+	validationConfiguration.HTTPClient = httpclient.New(validationConfig)
+	if _, err := newClient(&validationConfiguration).GetTopLevelConfig(); err != nil {
+		log.CliLogger.Infof("Trying endpoint: %s : Failed\n", url)
+		return false
+	}
+
+	configuration.HTTPClient = httpclient.New(httpclient.Default)
+	c.schemaRegistryClient = newClient(&configuration)
+	return true
 }
 
 func (c *AuthenticatedCLICommand) GetCurrentSchemaRegistryClusterIdAndEndpoint(cmd *cobra.Command) (string, string, error) {
@@ -441,14 +443,14 @@ func (c *AuthenticatedCLICommand) GetValidSchemaRegistryClusterEndpoint(cmd *cob
 	configuration := srsdk.NewConfiguration()
 	configuration.UserAgent = c.Config.Version.UserAgent
 	configuration.Debug = unsafeTrace
-	configuration.HTTPClient = httpclient.New(httpclient.Default)
 
 	schemaRegistryApiKey, _ := cmd.Flags().GetString("schema-registry-api-key")
 	schemaRegistryApiSecret, _ := cmd.Flags().GetString("schema-registry-api-secret")
 	isCloudEndpointAutoFound := false
 	var endpoint string
 	for _, urlPrivate := range cluster.Spec.PrivateNetworkingConfig.GetRegionalEndpoints() {
-		isCloudEndpointAutoFound = c.validateSchemaRegistryEndpointAndSetClient(cluster, schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration)
+		// Private endpoints are usually unreachable from outside their network; try each once
+		isCloudEndpointAutoFound = c.validateSchemaRegistryEndpointAndSetClient(cluster, schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration, httpclient.SingleAttempt)
 		if isCloudEndpointAutoFound {
 			endpoint = urlPrivate
 			err := c.saveToConfig(urlPrivate)
@@ -459,7 +461,7 @@ func (c *AuthenticatedCLICommand) GetValidSchemaRegistryClusterEndpoint(cmd *cob
 		}
 	}
 	if !isCloudEndpointAutoFound {
-		isCloudEndpointAutoFound = c.validateSchemaRegistryEndpointAndSetClient(cluster, schemaRegistryApiKey, schemaRegistryApiSecret, cluster.Spec.GetHttpEndpoint(), *configuration)
+		isCloudEndpointAutoFound = c.validateSchemaRegistryEndpointAndSetClient(cluster, schemaRegistryApiKey, schemaRegistryApiSecret, cluster.Spec.GetHttpEndpoint(), *configuration, httpclient.Default)
 		if isCloudEndpointAutoFound {
 			endpoint = cluster.Spec.GetHttpEndpoint()
 			err := c.saveToConfig(cluster.Spec.GetHttpEndpoint())

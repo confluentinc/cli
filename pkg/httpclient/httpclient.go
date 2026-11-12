@@ -58,6 +58,14 @@ var (
 		TLSHandshakeTimeout: 10 * time.Second,
 	}
 
+	// SingleAttempt is Default without retries, for user-visible requests where a failure has a fallback.
+	SingleAttempt = Config{
+		RetryMax:            0,
+		AttemptTimeout:      60 * time.Second,
+		ConnectTimeout:      10 * time.Second,
+		TLSHandshakeTimeout: 10 * time.Second,
+	}
+
 	// LargeDownload is for Hub plugin archives and the CLI binary. A retry restarts the download.
 	LargeDownload = Config{
 		RetryMax:              4,
