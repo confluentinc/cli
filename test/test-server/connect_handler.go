@@ -177,8 +177,17 @@ func handleConnectArtifacts(t *testing.T) http.HandlerFunc {
 			require.NoError(t, json.NewDecoder(r.Body).Decode(artifact))
 
 			artifact.Spec.Cloud = strings.ToUpper(artifact.Spec.GetCloud())
+			if artifact.Spec.Type == nil {
+				artifact.Spec.SetType("CUSTOM_SMT")
+			}
 
 			switch artifact.Spec.GetDisplayName() {
+			case "my-connect-artifact-ced":
+				artifact.SetId("cfa-ced123")
+				artifact.Spec.SetContentFormat("JAR")
+			case "my-connect-artifact-combined":
+				artifact.SetId("cfa-combined123")
+				artifact.Spec.SetContentFormat("JAR")
 			case "my-connect-artifact-jar":
 				artifact.SetId("cfa-jar123")
 				artifact.Spec.SetContentFormat("JAR")

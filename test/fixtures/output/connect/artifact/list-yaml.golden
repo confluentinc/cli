@@ -1,6 +1,23 @@
+- id: cfa-ced123
+  name: my-connect-artifact-ced
+  description: ""
+  type: CONNECT_EXTERNAL_DEP
+  cloud: AWS
+  environment: env-123456
+  content_format: JAR
+  status: PROCESSING
+- id: cfa-combined123
+  name: my-connect-artifact-combined
+  description: ""
+  type: CUSTOM_SMT,CONNECT_EXTERNAL_DEP
+  cloud: AWS
+  environment: env-123456
+  content_format: JAR
+  status: PROCESSING
 - id: cfa-jar123
   name: my-connect-artifact-jar
   description: new-jar-artifact
+  type: CUSTOM_SMT
   cloud: AWS
   environment: env-123456
   content_format: JAR
@@ -8,6 +25,7 @@
 - id: cfa-zip123
   name: my-connect-artifact-zip
   description: new-zip-artifact
+  type: CUSTOM_SMT
   cloud: AWS
   environment: env-123456
   content_format: ZIP

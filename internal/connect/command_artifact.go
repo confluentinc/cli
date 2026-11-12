@@ -17,6 +17,7 @@ type artifactOut struct {
 	Id            string `human:"ID" serialized:"id"`
 	Name          string `human:"Name" serialized:"name"`
 	Description   string `human:"Description" serialized:"description"`
+	Type          string `human:"Type" serialized:"type"`
 	Cloud         string `human:"Cloud" serialized:"cloud"`
 	Environment   string `human:"Environment" serialized:"environment"`
 	ContentFormat string `human:"Content Format" serialized:"content_format"`
@@ -46,6 +47,7 @@ func convertToArtifactOut(artifact camv1.CamV1ConnectArtifact) *artifactOut {
 		Id:            artifact.GetId(),
 		Name:          artifact.Spec.GetDisplayName(),
 		Description:   artifact.Spec.GetDescription(),
+		Type:          artifact.Spec.GetType(),
 		Cloud:         artifact.Spec.GetCloud(),
 		Environment:   artifact.Spec.GetEnvironment(),
 		ContentFormat: artifact.Spec.GetContentFormat(),
