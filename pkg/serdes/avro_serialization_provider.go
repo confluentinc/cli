@@ -26,7 +26,7 @@ type AvroSerializationProvider struct {
 	mode     string
 }
 
-func (a *AvroSerializationProvider) InitSerializer(srClientUrl, srClusterId, mode string, schemaId int, srAuth SchemaRegistryAuth) error {
+func (a *AvroSerializationProvider) InitSerializer(srClientUrl, srClusterId, kafkaClusterId, mode string, schemaId int, srAuth SchemaRegistryAuth) error {
 	serdeClient, err := initSchemaRegistryClient(srClientUrl, srClusterId, srAuth, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create serializer-specific Schema Registry client: %w", err)
@@ -65,6 +65,8 @@ func (a *AvroSerializationProvider) InitSerializer(srClientUrl, srClusterId, mod
 		serdeConfig.UseLatestVersion = false
 	}
 
+	serdeConfig.SubjectNameStrategyType, serdeConfig.SubjectNameStrategyConfig = subjectStrategy(kafkaClusterId)
+
 	var serdeType serde.Type
 	if mode == "key" {
 		serdeType = serde.KeySerde
@@ -98,8 +100,13 @@ func (a *AvroSerializationProvider) GetSchemaName() string {
 }
 
 func (a *AvroSerializationProvider) Serialize(topic, message string) ([]kafka.Header, []byte, error) {
-	// Step#1: Fetch the schemaInfo based on subject and schema ID
-	schemaObj, err := a.GetSchemaRegistryClient().GetBySubjectAndID(topic+"-"+a.mode, a.schemaId)
+	// Step#1: Ask the configured ckgo strategy for the subject (AssociatedNameStrategy
+	// on cloud, TopicNameStrategy on on-prem), then fetch the schema by subject + id.
+	subject, err := a.ser.SubjectNameStrategy(topic, a.ser.SerdeType, schemaregistry.SchemaInfo{})
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to resolve subject: %w", err)
+	}
+	schemaObj, err := a.GetSchemaRegistryClient().GetBySubjectAndID(subject, a.schemaId)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to serialize message: %w", err)
 	}
