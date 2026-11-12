@@ -117,9 +117,14 @@ func (s *StoreOnPrem) WaitPendingStatement(ctx context.Context, statement types.
 		// Check for failed or cancelled statements
 		statementStatus = updatedStatement.Status
 		if statementStatus != types.COMPLETED && statementStatus != types.RUNNING {
+			failureMessage := updatedStatement.StatusDetail
+			if failureMessage == "" {
+				failureMessage = fmt.Sprintf("the server did not report a failure reason; run `confluent flink statement describe %s` for the full status", statement.StatementName)
+			}
 			return nil, &types.StatementError{
 				Message:        fmt.Sprintf("can't fetch results. Statement phase is: %s", statementStatus),
-				FailureMessage: updatedStatement.StatusDetail,
+				FailureMessage: failureMessage,
+				Suggestion:     "This statement reached a terminal state without producing results. Check the statement definition and run `confluent flink statement describe` for the full status.",
 				StatusCode:     types.StatusCode(err),
 			}
 		}
