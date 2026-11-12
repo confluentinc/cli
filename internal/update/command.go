@@ -19,6 +19,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/form"
+	"github.com/confluentinc/cli/v4/pkg/httpclient"
 	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	pupdate "github.com/confluentinc/cli/v4/pkg/update"
@@ -86,7 +87,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	client := pupdate.NewClient(c.Config.IsTest)
+	client := pupdate.NewClient(c.Config.IsTest, httpclient.Default)
 
 	binaries, err := client.GetBinaries()
 	if err != nil {

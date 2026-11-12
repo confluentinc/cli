@@ -717,7 +717,7 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, _ string) {
 		return
 	}
 
-	client := update.NewClient(r.Config.IsTest)
+	client := update.NewClient(r.Config.IsTest, httpclient.NoRetry)
 
 	binaries, err := client.GetBinaries()
 	if err != nil {
