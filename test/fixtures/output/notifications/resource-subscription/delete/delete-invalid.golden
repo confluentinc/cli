@@ -1,0 +1,4 @@
+Error: notifications resource subscription "invalid" not found
+
+Suggestions:
+    List available notifications resource subscriptions with `confluent notifications resource-subscription list`.
