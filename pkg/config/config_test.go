@@ -276,6 +276,40 @@ func TestConfig_Load(t *testing.T) {
 	}
 }
 
+func TestWslApplyPluginDefault(t *testing.T) {
+	tests := []struct {
+		name                  string
+		isWSL                 bool
+		disablePluginsOnceWSL bool
+		expected              bool
+	}{
+		{
+			name:                  "WSL, default not yet applied",
+			isWSL:                 true,
+			disablePluginsOnceWSL: false,
+			expected:              true,
+		},
+		{
+			name:                  "WSL, default already applied, does not override explicit opt-in",
+			isWSL:                 true,
+			disablePluginsOnceWSL: true,
+			expected:              false,
+		},
+		{
+			name:                  "not WSL",
+			isWSL:                 false,
+			disablePluginsOnceWSL: false,
+			expected:              false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.expected, wslApplyPluginDefault(tt.isWSL, tt.disablePluginsOnceWSL))
+		})
+	}
+}
+
 func TestConfig_Save(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		return
