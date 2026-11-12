@@ -2,6 +2,7 @@ package schemaregistry
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/spf13/cobra"
 
@@ -32,8 +33,12 @@ func (c *command) newExporterCommand(cfg *config.Config) *cobra.Command {
 	return cmd
 }
 
-func addContextTypeFlag(cmd *cobra.Command) {
+func addContextTypeFlag(cloud bool, cmd *cobra.Command) {
 	arr := []string{"auto", "custom", "none"}
+	if cloud {
+		arr = append(arr, "default")
+		slices.Sort(arr)
+	}
 	cmd.Flags().String("context-type", arr[0], fmt.Sprintf(`Exporter context type. One of %s.`, utils.ArrayToCommaDelimitedString(arr, "or")))
 	pcmd.RegisterFlagCompletionFunc(cmd, "context-type", func(_ *cobra.Command, _ []string) []string { return arr })
 }
