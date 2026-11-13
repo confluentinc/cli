@@ -40,16 +40,16 @@ func (c *integrationCommand) list(cmd *cobra.Command, _ []string) error {
 			DisplayName: integration.GetDisplayName(),
 			Description: integration.GetDescription(),
 		}
-		if integration.Target.NotificationsV1SlackTarget != nil {
+		if integration.Target != nil && integration.Target.NotificationsV1SlackTarget != nil {
 			out.SlackTargetWebhookUrl = integration.Target.NotificationsV1SlackTarget.GetWebhookUrl()
 		}
-		if integration.Target.NotificationsV1RoleEmailTarget != nil {
+		if integration.Target != nil && integration.Target.NotificationsV1RoleEmailTarget != nil {
 			out.RoleEmailTargetRoleName = integration.Target.NotificationsV1RoleEmailTarget.GetRoleName()
 		}
-		if integration.Target.NotificationsV1WebhookTarget != nil {
+		if integration.Target != nil && integration.Target.NotificationsV1WebhookTarget != nil {
 			out.WebhookTargetUrl = integration.Target.NotificationsV1WebhookTarget.GetUrl()
 		}
-		if integration.Target.NotificationsV1MsTeamsTarget != nil {
+		if integration.Target != nil && integration.Target.NotificationsV1MsTeamsTarget != nil {
 			out.MsTeamsTargetWebhookUrl = integration.Target.NotificationsV1MsTeamsTarget.GetWebhookUrl()
 		}
 		list.Add(out)
