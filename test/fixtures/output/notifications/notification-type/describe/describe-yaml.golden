@@ -1,0 +1,7 @@
+id: dlz-f3a90de
+display_name: Cluster Shrink
+category: BILLING_LICENSING
+description: Cluster shrink operation is completed
+subscription_priority: REQUIRED
+is_included_in_plan: false
+severity: INFO

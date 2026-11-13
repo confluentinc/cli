@@ -1,0 +1,8 @@
+Updated notifications resource subscription "resource-subscription-1".
++-------------------+------------------------------------------------------------------------------+
+| ID                | dlz-f3a90de                                                                  |
+| Resource          | environment=env-456xy/cloud-cluster=lkc-df123/connector=my_datagen_connector |
+| Resource Type     | CONNECTOR                                                                    |
+| Notification Type | not-abc123                                                                   |
+| Current State     | ENABLED                                                                      |
++-------------------+------------------------------------------------------------------------------+
