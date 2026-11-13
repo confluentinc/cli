@@ -60,7 +60,7 @@ const (
 	FailedToReadPortsSuggestions = "Restart Confluent Local with `confluent local kafka stop` and `confluent local kafka start`"
 
 	// schema-registry commands
-	CompatibilityOrModeErrorMsg = "must pass either `--compatibility` or `--mode` flag"
+	CompatibilityOrModeErrorMsg = "must pass either `--compatibility`, `--compatibility-policy`, or `--mode` flag"
 
 	// auth package
 	NoCredentialsFoundErrorMsg = "no credentials found"

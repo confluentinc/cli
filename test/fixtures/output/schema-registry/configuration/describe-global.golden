@@ -1,9 +1,10 @@
-+---------------------+------------------------------+
-| Compatibility Level | FULL                         |
-| Metadata Defaults   | {                            |
-|                     |   "properties": {            |
-|                     |     "email": "bob@acme.com", |
-|                     |     "owner": "Bob Jones"     |
-|                     |   }                          |
-|                     | }                            |
-+---------------------+------------------------------+
++----------------------+------------------------------+
+| Compatibility Level  | FULL                         |
+| Compatibility Policy | STRICT                       |
+| Metadata Defaults    | {                            |
+|                      |   "properties": {            |
+|                      |     "email": "bob@acme.com", |
+|                      |     "owner": "Bob Jones"     |
+|                      |   }                          |
+|                      | }                            |
++----------------------+------------------------------+
