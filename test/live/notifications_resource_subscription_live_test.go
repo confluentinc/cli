@@ -34,7 +34,7 @@ func (s *CLILiveTestSuite) TestNotificationsResourceSubscriptionCRUDLive() {
 		},
 		{
 			Name:            "Create webhook integration",
-			Args:            "notifications integration create " + prereqIntegrationName + " --kind webhook --url https://webhook.site/00000000-0000-0000-0000-000000000000 -o json",
+			Args:            "notifications integration create " + prereqIntegrationName + " --kind webhook --url https://webhook.site/" + prereqIntegrationName + " -o json",
 			CaptureID:       "integration_id",
 			JSONFieldsExist: []string{"id"},
 		},
