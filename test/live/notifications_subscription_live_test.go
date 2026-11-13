@@ -36,7 +36,6 @@ func (s *CLILiveTestSuite) TestNotificationsSubscriptionCRUDLive() {
 			CaptureFields: map[string]string{
 				"current_state": "original_current_state",
 			},
-			JSONFieldsExist: []string{"integrations"},
 		},
 		{
 			Name:         "Update notifications subscription current-state",

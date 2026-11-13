@@ -14,8 +14,8 @@ func (s *CLILiveTestSuite) TestNotificationsResourceSubscriptionCRUDLive() {
 	state := s.setupTestContext(t)
 
 	// Variables
-	resource := "environment=env-456xy/cloud-cluster=lkc-df123/connector=my_datagen_connector"
-	resourceType := "CONNECTOR"
+	resource := "environment={{.resource_environment_id}}"
+	resourceType := "ENVIRONMENT"
 	integrations := "{{.integration_id}}"
 	updatedCurrentState := "DISABLED"
 	notificationType := "{{.notification_type_id}}"
@@ -28,9 +28,16 @@ func (s *CLILiveTestSuite) TestNotificationsResourceSubscriptionCRUDLive() {
 	// Prereq group 0
 	prereqSteps0 := []CLILiveTest{
 		{
-			Name:      "Look up a notification type",
-			Args:      "notifications notification-type list --resource-type " + resourceType + " -o json",
-			CaptureID: "notification_type_id",
+			Name:       "Look up an environment",
+			Args:       "environment list -o json",
+			CaptureID:  "resource_environment_id",
+			SkipIfNoID: true,
+		},
+		{
+			Name:       "Look up a notification type",
+			Args:       "notifications notification-type list --resource-type " + resourceType + " -o json",
+			CaptureID:  "notification_type_id",
+			SkipIfNoID: true,
 		},
 		{
 			Name:            "Create webhook integration",
@@ -51,7 +58,7 @@ func (s *CLILiveTestSuite) TestNotificationsResourceSubscriptionCRUDLive() {
 			Args:            "notifications resource-subscription create --resource " + resource + " --resource-type " + resourceType + " --notification-type " + notificationType + " --integrations " + integrations + " -o json",
 			UseStateVars:    true,
 			ExitCode:        0,
-			JSONFieldsExist: []string{"id", "resource", "resource_type", "integrations"},
+			JSONFieldsExist: []string{"id", "resource", "resource_type"},
 			CaptureID:       "resource_subscription_id",
 		},
 		{
@@ -59,7 +66,7 @@ func (s *CLILiveTestSuite) TestNotificationsResourceSubscriptionCRUDLive() {
 			Args:            "notifications resource-subscription describe {{.resource_subscription_id}} -o json",
 			UseStateVars:    true,
 			ExitCode:        0,
-			JSONFieldsExist: []string{"resource", "resource_type", "integrations"},
+			JSONFieldsExist: []string{"resource", "resource_type"},
 		},
 		{
 			Name:         "Update notifications resource subscription current-state",

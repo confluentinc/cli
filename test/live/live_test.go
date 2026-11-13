@@ -384,7 +384,15 @@ func (s *CLILiveTestSuite) validateLiveOutput(t *testing.T, step CLILiveTest, ou
 // registerCleanup schedules a CLI delete command to run during test cleanup (even on failure).
 func (s *CLILiveTestSuite) registerCleanup(t *testing.T, deleteArgString string, state *LiveTestState) {
 	t.Cleanup(func() {
-		args := substituteStateVars(t, deleteArgString, state)
+		tmpl, err := template.New("args").Option("missingkey=error").Parse(deleteArgString)
+		require.NoError(t, err, "failed to parse template: %s", deleteArgString)
+		var buf bytes.Buffer
+		if err := tmpl.Execute(&buf, state.All()); err != nil {
+			// A step skipped or failed before capturing the ID, so there's nothing to delete.
+			t.Logf("Cleanup: nothing to clean up for %q: %v", deleteArgString, err)
+			return
+		}
+		args := buf.String()
 		t.Logf("Cleanup: confluent %s", args)
 		// Best-effort cleanup: log but don't fail
 		cmd := exec.Command(s.binPath, shellSplit(args)...)
