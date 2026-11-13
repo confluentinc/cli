@@ -59,17 +59,17 @@ func TestResolveTimeWindow(t *testing.T) {
 	require.Equal(t, "2026-10-14T15:00:00Z", end)
 
 	_, _, err = resolveTimeWindow("1h", "2026-10-14T10:00:00Z", "", now)
-	require.EqualError(t, err, "`--since` cannot be used with `--from` or `--to`")
+	require.EqualError(t, err, "`--since` cannot be used with `--start-time` or `--end-time`")
 
 	_, _, err = resolveTimeWindow("", "", "", now)
-	require.EqualError(t, err, "one of `--since` or `--from` is required")
+	require.EqualError(t, err, "one of `--since` or `--start-time` is required")
 
 	_, _, err = resolveTimeWindow("", "2026-10-14T10:00:00", "", now)
-	require.ErrorContains(t, err, "invalid `--from` value")
+	require.ErrorContains(t, err, "invalid `--start-time` value")
 	require.Contains(t, suggestionsOf(err), "ISO 8601 UTC timestamp")
 
 	_, _, err = resolveTimeWindow("", "2026-10-14T10:00:00Z", "2026-10-14T09:00:00Z", now)
-	require.EqualError(t, err, "`--to` must not be before `--from`")
+	require.EqualError(t, err, "`--end-time` must not be before `--start-time`")
 
 	// The API takes whole seconds, so a start is rounded down and an explicit end is rounded up. The window never shrinks.
 	start, end, err = resolveTimeWindow("", "2026-10-14T10:00:00.250Z", "2026-10-14T10:00:00.750Z", now)

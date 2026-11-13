@@ -174,7 +174,7 @@ func (s *CLITestSuite) TestLogsFetch() {
 		{args: "logs fetch lkc-123 --source cluster-health --since 1h", fixture: "logs/fetch/resource.golden"},
 		{args: "logs fetch lkc-123 --source cluster-health --since 1h -o json", fixture: "logs/fetch/resource-json.golden"},
 		{args: "logs fetch lkc-123 --source cluster-health --since 1h -o yaml", fixture: "logs/fetch/resource-yaml.golden"},
-		{args: "logs fetch lkc-456 --source cluster-health --from 2026-10-14T00:00:00Z --to 2026-10-14T23:59:59Z --environment env-596", fixture: "logs/fetch/resource-from-to.golden"},
+		{args: "logs fetch lkc-456 --source cluster-health --start-time 2026-10-14T00:00:00Z --end-time 2026-10-14T23:59:59Z --environment env-596", fixture: "logs/fetch/resource-from-to.golden"},
 		{args: "logs fetch lkc-123 --source cluster-health --since 3d --search level=ERROR --search event_type=SERVICE_ISSUE_DETECTED --tail 100", fixture: "logs/fetch/resource-search.golden"},
 		{args: "logs fetch lkc-456 --source cluster-health --since 3d --search level=WARN,level=ERROR --search-text maintenance", fixture: "logs/fetch/resource-search-text.golden"},
 		{args: "logs fetch lkc-999 --source cluster-health --since 1h", fixture: "logs/fetch/empty.golden"},
@@ -184,9 +184,9 @@ func (s *CLITestSuite) TestLogsFetch() {
 		{args: "logs fetch --source cluster-health --since 1h", fixture: "logs/fetch/missing-resource-id.golden", exitCode: 1},
 		{args: "logs fetch lkc-123 --since 1h", fixture: "logs/fetch/missing-source.golden", exitCode: 1},
 		{args: "logs fetch lkc-123 --source cluster-health", fixture: "logs/fetch/missing-window.golden", exitCode: 1},
-		{args: "logs fetch lkc-123 --source cluster-health --since 1h --from 2026-10-14T00:00:00Z", fixture: "logs/fetch/since-with-from.golden", exitCode: 1},
+		{args: "logs fetch lkc-123 --source cluster-health --since 1h --start-time 2026-10-14T00:00:00Z", fixture: "logs/fetch/since-with-from.golden", exitCode: 1},
 		{args: "logs fetch lkc-123 --source cluster-health --since 30d", fixture: "logs/fetch/since-too-long.golden", exitCode: 1},
-		{args: "logs fetch lkc-123 --source cluster-health --from 2026-10-14T00:00:00 ", fixture: "logs/fetch/from-bad-format.golden", exitCode: 1},
+		{args: "logs fetch lkc-123 --source cluster-health --start-time 2026-10-14T00:00:00 ", fixture: "logs/fetch/from-bad-format.golden", exitCode: 1},
 		{args: "logs fetch lkc-123 --source cluster-health --since 1h --tail 5000", fixture: "logs/fetch/tail-too-large.golden", exitCode: 1},
 		{args: "logs fetch lkc-123 --source cluster-health --since 1h --tail 0", fixture: "logs/fetch/tail-zero.golden", exitCode: 1},
 		{args: "logs fetch lkc-123 --source cluster-health --since 1h --tail -1", fixture: "logs/fetch/tail-negative.golden", exitCode: 1},
@@ -320,7 +320,7 @@ func (s *CLITestSuite) TestLogsFetchSourceCapabilities() {
 }
 
 func (s *CLITestSuite) TestLogsFetchToBeforeFrom() {
-	s.runIntegrationTest(CLITest{login: "cloud", args: "logs fetch lkc-123 --source cluster-health --from 2026-10-14T12:00:00Z --to 2026-10-14T00:00:00Z", fixture: "logs/fetch/to-before-from.golden", exitCode: 1})
+	s.runIntegrationTest(CLITest{login: "cloud", args: "logs fetch lkc-123 --source cluster-health --start-time 2026-10-14T12:00:00Z --end-time 2026-10-14T00:00:00Z", fixture: "logs/fetch/to-before-from.golden", exitCode: 1})
 }
 
 // TestLogsFetchCRN checks the CRN the CLI builds, element by element. The environment comes from --environment when it

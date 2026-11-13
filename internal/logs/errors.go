@@ -3,10 +3,10 @@ package logs
 // Error messages and suggestions for `confluent logs`. Messages are short, lowercase and unpunctuated; anything
 // the user can do about them goes in the matching suggestions, per pkg/errors/README.md.
 const (
-	sinceWithFromToErrorMsg  = "`--since` cannot be used with `--from` or `--to`"
-	missingWindowErrorMsg    = "one of `--since` or `--from` is required"
-	missingWindowSuggestions = "Use `--since` for a window ending now, for example `--since 1h`, or `--from` for an absolute start time."
-	toBeforeFromErrorMsg     = "`--to` must not be before `--from`"
+	sinceWithFromToErrorMsg  = "`--since` cannot be used with `--start-time` or `--end-time`"
+	missingWindowErrorMsg    = "one of `--since` or `--start-time` is required"
+	missingWindowSuggestions = "Use `--since` for a window ending now, for example `--since 1h`, or `--start-time` for an absolute start time."
+	toBeforeFromErrorMsg     = "`--end-time` must not be before `--start-time`"
 
 	invalidSinceErrorMsg    = "invalid `--since` value \"%s\""
 	invalidSinceSuggestions = "Use a positive duration such as 1h, 24h or 7d."

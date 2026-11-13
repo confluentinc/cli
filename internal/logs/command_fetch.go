@@ -55,9 +55,9 @@ func newFetchCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	pcmd.RegisterFlagCompletionFunc(cmd, "source", func(cmd *cobra.Command, args []string) []string {
 		return completeSources(c.AuthenticatedCLICommand, cmd, args)
 	})
-	cmd.Flags().String("since", "", "Relative time window ending now, for example 1h, 24h or 7d. Cannot be combined with --from or --to.")
-	cmd.Flags().String("from", "", "Window start, in ISO 8601 UTC format (for example 2026-08-20T00:00:00Z).")
-	cmd.Flags().String("to", "", "Window end, in ISO 8601 UTC format. Defaults to now when --from is set.")
+	cmd.Flags().String("since", "", "Relative time window ending now, for example 1h, 24h or 7d. Cannot be combined with --start-time or --end-time.")
+	cmd.Flags().String("start-time", "", "Window start, in ISO 8601 UTC format (for example 2026-08-20T00:00:00Z).")
+	cmd.Flags().String("end-time", "", "Window end, in ISO 8601 UTC format. Defaults to now when --start-time is set.")
 	cmd.Flags().StringSlice("search", nil, `A comma-separated list of "field=value" search filters, validated against the log source. Repeating a field means OR (for example level=ERROR,level=WARN).`)
 	cmd.Flags().String("search-text", "", "Full-text search within log messages, where the log source supports it.")
 	cmd.Flags().Int("tail", 0, fmt.Sprintf("Return only the most recent N entries (maximum %d).", maxTail))
@@ -70,8 +70,8 @@ func newFetchCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("source"))
-	cmd.MarkFlagsMutuallyExclusive("since", "from")
-	cmd.MarkFlagsMutuallyExclusive("since", "to")
+	cmd.MarkFlagsMutuallyExclusive("since", "start-time")
+	cmd.MarkFlagsMutuallyExclusive("since", "end-time")
 	cmd.MarkFlagsMutuallyExclusive("next", "tail")
 
 	return cmd
@@ -91,11 +91,11 @@ func (c *fetchCommand) fetch(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	from, err := cmd.Flags().GetString("from")
+	from, err := cmd.Flags().GetString("start-time")
 	if err != nil {
 		return err
 	}
-	to, err := cmd.Flags().GetString("to")
+	to, err := cmd.Flags().GetString("end-time")
 	if err != nil {
 		return err
 	}
