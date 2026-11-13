@@ -25,6 +25,7 @@ func (s *CLILiveTestSuite) TestNotificationsUserNotificationCRUDLive() {
 			UseStateVars: true,
 			ExitCode:     0,
 			CaptureID:    "user_notification_id",
+			SkipIfNoID:   true,
 		},
 		{
 			Name:         "Describe notifications user notification",

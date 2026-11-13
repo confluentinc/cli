@@ -22,6 +22,7 @@ func (s *CLILiveTestSuite) TestNotificationsNotificationTypeCRUDLive() {
 			UseStateVars: true,
 			ExitCode:     0,
 			CaptureID:    "notification_type_id",
+			SkipIfNoID:   true,
 		},
 		{
 			Name:         "Describe notifications notification type",

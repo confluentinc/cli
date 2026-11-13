@@ -49,6 +49,9 @@ type CLILiveTest struct {
 	WantFunc func(t *testing.T, output string, state *LiveTestState)
 	// CaptureID stores the extracted "id" field from JSON output into state under this key.
 	CaptureID string
+	// SkipIfNoID skips this step and every later step of the test when CaptureID finds no id, for a
+	// resource the test can't create and the account has none of.
+	SkipIfNoID bool
 	// UseStateVars enables {{.key}} template substitution in Args from state.
 	UseStateVars bool
 	// Retries is the number of times to retry on failure (0 means no retry).
@@ -61,9 +64,10 @@ type CLILiveTest struct {
 // LiveTestState is a thread-safe map for passing dynamic values between test steps.
 // Each test gets its own LiveTestState with an isolated homeDir for CLI config.
 type LiveTestState struct {
-	mu      sync.Mutex
-	values  map[string]string
-	homeDir string
+	mu         sync.Mutex
+	values     map[string]string
+	homeDir    string
+	skipReason string
 }
 
 func NewLiveTestState() *LiveTestState {
@@ -80,6 +84,18 @@ func (s *LiveTestState) Get(key string) string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.values[key]
+}
+
+func (s *LiveTestState) setSkipReason(reason string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.skipReason = reason
+}
+
+func (s *LiveTestState) getSkipReason() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.skipReason
 }
 
 func (s *LiveTestState) All() map[string]string {
@@ -207,6 +223,10 @@ func buildCommandEnv(extraEnv []string) []string {
 func (s *CLILiveTestSuite) runLiveCommand(t *testing.T, step CLILiveTest, state *LiveTestState) string {
 	t.Helper()
 
+	if reason := state.getSkipReason(); reason != "" {
+		t.Skip(reason)
+	}
+
 	args := step.Args
 	if step.UseStateVars {
 		args = substituteStateVars(t, args, state)
@@ -238,6 +258,11 @@ func (s *CLILiveTestSuite) runLiveCommand(t *testing.T, step CLILiveTest, state 
 
 	if step.CaptureID != "" {
 		id := extractID(t, output)
+		if id == "" && step.SkipIfNoID {
+			reason := fmt.Sprintf("no id found for %q, so there is nothing to test against", step.CaptureID)
+			state.setSkipReason(reason)
+			t.Skip(reason)
+		}
 		require.NotEmpty(t, id, "failed to extract ID from output for key %q:\n%s", step.CaptureID, output)
 		state.Set(step.CaptureID, id)
 		t.Logf("Captured %s = %s", step.CaptureID, id)
