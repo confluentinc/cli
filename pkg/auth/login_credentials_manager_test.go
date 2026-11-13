@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"testing"
@@ -13,7 +14,9 @@ import (
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 
+	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/mock"
 )
 
@@ -249,4 +252,33 @@ func (suite *LoginCredentialsManagerTestSuite) clearCPEnvVars() {
 
 func TestLoginCredentialsManager(t *testing.T) {
 	suite.Run(t, new(LoginCredentialsManagerTestSuite))
+}
+
+func TestGetPrerunCredentialsFromConfig_HidesTokensBelowUnsafeTrace(t *testing.T) {
+	logged := prerunCredentialsLogsForTest(t, log.TRACE)
+	require.NotContains(t, logged, "session-secret", "the auth token was logged below unsafe trace")
+	require.NotContains(t, logged, "refresh-secret", "the refresh token was logged below unsafe trace")
+}
+
+func TestGetPrerunCredentialsFromConfig_ShowsTokensAtUnsafeTrace(t *testing.T) {
+	logged := prerunCredentialsLogsForTest(t, log.UNSAFE_TRACE)
+	require.Contains(t, logged, "session-secret", "the auth token wasn't logged at unsafe trace")
+	require.Contains(t, logged, "refresh-secret", "the refresh token wasn't logged at unsafe trace")
+}
+
+// prerunCredentialsLogsForTest returns what reading the saved credentials logs at level
+func prerunCredentialsLogsForTest(t *testing.T, level log.Level) string {
+	cfg := config.AuthenticatedCloudConfigMock()
+	cfg.Context().State = &config.ContextState{AuthToken: "session-secret", AuthRefreshToken: "refresh-secret"}
+
+	original := log.CliLogger
+	t.Cleanup(func() { log.CliLogger = original })
+	var buf bytes.Buffer
+	log.CliLogger = log.New(log.ERROR, &buf)
+	log.CliLogger.SetVerbosity(int(level))
+
+	credentials, err := NewLoginCredentialsManager(nil, nil).GetPrerunCredentialsFromConfig(cfg)()
+	require.NoError(t, err)
+	require.Equal(t, "refresh-secret", credentials.AuthRefreshToken)
+	return buf.String()
 }

@@ -1,6 +1,7 @@
 package mfa
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -9,6 +10,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
 func TestNewStateDev(t *testing.T) {
@@ -212,4 +215,35 @@ func TestRefreshOAuthToken(t *testing.T) {
 
 	require.Equal(t, mockIDToken, state.MFAProviderIDToken)
 	require.Equal(t, mockRefreshToken2, state.MFAProviderRefreshToken)
+}
+
+func TestGetOAuthTokenResponse_HidesSecretsBelowUnsafeTrace(t *testing.T) {
+	logged := oauthTokenRequestLogsForTest(t, log.TRACE)
+	require.NotContains(t, logged, "sent-secret", "the request body was logged below unsafe trace")
+	require.NotContains(t, logged, "returned-secret", "the response body was logged below unsafe trace")
+}
+
+func TestGetOAuthTokenResponse_ShowsSecretsAtUnsafeTrace(t *testing.T) {
+	logged := oauthTokenRequestLogsForTest(t, log.UNSAFE_TRACE)
+	require.Contains(t, logged, "sent-secret", "the request body wasn't logged at unsafe trace")
+	require.Contains(t, logged, "returned-secret", "the response body wasn't logged at unsafe trace")
+}
+
+// oauthTokenRequestLogsForTest returns what a token request logs at level; the response is cut off, so its body is logged too
+func oauthTokenRequestLogsForTest(t *testing.T, level log.Level) string {
+	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, _ *http.Request) {
+		_, _ = rw.Write([]byte(`{"refresh_token": "returned-secret`))
+	}))
+	defer server.Close()
+
+	original := log.CliLogger
+	t.Cleanup(func() { log.CliLogger = original })
+	var buf bytes.Buffer
+	log.CliLogger = log.New(log.ERROR, &buf)
+	log.CliLogger.SetVerbosity(int(level))
+
+	state := &authState{MFAProviderHost: server.URL}
+	_, err := state.getOAuthTokenResponse(strings.NewReader("grant_type=refresh_token&refresh_token=sent-secret"))
+	require.Error(t, err)
+	return buf.String()
 }

@@ -144,7 +144,7 @@ func (s *authState) getOAuthToken() error {
 func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]any, error) {
 	url := s.MFAProviderHost + "/token"
 	log.CliLogger.Debugf("OAuth token request URL: %s", url)
-	log.CliLogger.Debug("OAuth token request payload: ", payload)
+	log.CliLogger.UnsafeTrace("OAuth token request payload: ", payload)
 	req, err := http.NewRequest(http.MethodPost, url, payload)
 	if err != nil {
 		return nil, fmt.Errorf("failed to construct oauth token re, errquest: %w", err)
@@ -158,7 +158,7 @@ func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]a
 	errorResponseBody, _ := io.ReadAll(res.Body)
 	var data map[string]any
 	if err := json.Unmarshal(errorResponseBody, &data); err != nil {
-		log.CliLogger.Debugf("Failed oauth token response body: %s", errorResponseBody)
+		log.CliLogger.UnsafeTracef("Failed oauth token response body: %s", errorResponseBody)
 		return nil, fmt.Errorf("failed to unmarshal response body in oauth token request: %w", err)
 	}
 	return data, nil
