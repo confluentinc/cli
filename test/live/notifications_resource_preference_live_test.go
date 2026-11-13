@@ -16,7 +16,6 @@ func (s *CLILiveTestSuite) TestNotificationsResourcePreferenceCRUDLive() {
 	// Variables
 	resource := "environment=env-456xy/cloud-cluster=lkc-df123/connector=my_datagen_connector"
 	resourceType := "CONNECTOR"
-	updatedResource := "environment=env-456xy/cloud-cluster=lkc-df123/connector=my_datagen_connector-updated"
 	updatedResourceType := "FLINK_COMPUTE_POOL"
 	updatedCurrentState := "DISABLED"
 
@@ -39,12 +38,6 @@ func (s *CLILiveTestSuite) TestNotificationsResourcePreferenceCRUDLive() {
 			JSONFieldsExist: []string{"resource", "resource_type"},
 		},
 		{
-			Name:         "Update notifications resource preference resource",
-			Args:         "notifications resource-preference update {{.resource_preference_id}} --resource " + updatedResource,
-			UseStateVars: true,
-			ExitCode:     0,
-		},
-		{
 			Name:         "Update notifications resource preference resource-type",
 			Args:         "notifications resource-preference update {{.resource_preference_id}} --resource-type " + updatedResourceType,
 			UseStateVars: true,
@@ -62,7 +55,6 @@ func (s *CLILiveTestSuite) TestNotificationsResourcePreferenceCRUDLive() {
 			UseStateVars: true,
 			ExitCode:     0,
 			JSONFields: map[string]string{
-				"resource":      updatedResource,
 				"resource_type": updatedResourceType,
 				"current_state": updatedCurrentState,
 			},

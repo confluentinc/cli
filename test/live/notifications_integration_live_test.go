@@ -100,7 +100,7 @@ func (s *CLILiveTestSuite) TestNotificationsIntegrationWebhookTargetCRUDLive() {
 	// Variables
 	integrationName := uniqueName("integr")
 	kindVariant := "webhook"
-	url := "https://my.webhook.url/00000000-0000-0000-0000-000000000000"
+	url := "https://webhook.site/00000000-0000-0000-0000-000000000000"
 	updatedDescription := "updated-live-test-description"
 
 	// Cleanup (LIFO — execution is reverse-registration order)
