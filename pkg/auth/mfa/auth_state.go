@@ -13,6 +13,7 @@ import (
 
 	"github.com/confluentinc/cli/v4/pkg/auth/sso"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/httpclient"
 	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
@@ -149,7 +150,7 @@ func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]a
 		return nil, fmt.Errorf("failed to construct oauth token re, errquest: %w", err)
 	}
 	req.Header.Add("content-type", "application/x-www-form-urlencoded")
-	res, err := http.DefaultClient.Do(req)
+	res, err := httpclient.New(httpclient.Default).Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get oauth token: %w", err)
 	}

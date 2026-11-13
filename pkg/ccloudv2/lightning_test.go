@@ -15,13 +15,13 @@ import (
 	"testing/iotest"
 	"time"
 
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/stretchr/testify/require"
 
 	rtcesqlv1 "github.com/confluentinc/ccloud-sdk-go-v2/rtce-sql/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/httpclient"
 	testserver "github.com/confluentinc/cli/v4/test/test-server"
 )
 
@@ -75,9 +75,10 @@ func newTestLightningClient(server *lightningTestServer) *LightningClient {
 	client := NewLightningClient(server.URL, "test-agent", false, "dataplane-token")
 
 	// Keep retries fast.
-	retryableClient := client.GetConfig().HTTPClient.Transport.(*retryablehttp.RoundTripper).Client
-	retryableClient.RetryWaitMin = time.Millisecond
-	retryableClient.RetryWaitMax = time.Millisecond
+	httpConfig := newLightningHttpConfig()
+	httpConfig.RetryWaitMin = time.Millisecond
+	httpConfig.RetryWaitMax = time.Millisecond
+	client.GetConfig().HTTPClient = httpclient.New(httpConfig)
 
 	return client
 }
@@ -331,11 +332,7 @@ func TestIsLightningAsyncRequired(t *testing.T) {
 	require.False(t, isLightningAsyncRequired(err, httpResp))
 }
 
-func TestLightningHttpClientRetries(t *testing.T) {
-	roundTripper, ok := newLightningHttpClient(false).Transport.(*retryablehttp.RoundTripper)
-	require.True(t, ok)
-	checkRetry := roundTripper.Client.CheckRetry
-
+func TestLightningRetryStatus(t *testing.T) {
 	const gatewayTimeout = `{"errors": [{"status": "503", "code": "service_timeout", "detail": "Process took too long to complete. Try your request again later."}]}`
 	tests := []struct {
 		status int
@@ -356,9 +353,7 @@ func TestLightningHttpClientRetries(t *testing.T) {
 	}
 	for _, test := range tests {
 		resp := &http.Response{StatusCode: test.status, Body: io.NopCloser(strings.NewReader(test.body))}
-		retry, err := checkRetry(context.Background(), resp, nil)
-		require.NoError(t, err)
-		require.Equal(t, test.want, retry, "status %d, body %s", test.status, test.body)
+		require.Equal(t, test.want, lightningRetryStatus(resp), "status %d, body %s", test.status, test.body)
 
 		// The body stays readable.
 		body, err := io.ReadAll(resp.Body)
@@ -368,16 +363,10 @@ func TestLightningHttpClientRetries(t *testing.T) {
 
 	// A 503 with an unreadable body is retried and keeps a readable body.
 	resp := &http.Response{StatusCode: http.StatusServiceUnavailable, Body: io.NopCloser(iotest.ErrReader(errors.New("connection reset")))}
-	retry, err := checkRetry(context.Background(), resp, nil)
-	require.NoError(t, err)
-	require.True(t, retry)
+	require.True(t, lightningRetryStatus(resp))
 	body, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 	require.Empty(t, body)
-
-	retry, err = checkRetry(context.Background(), nil, errors.New("connection refused"))
-	require.False(t, retry)
-	require.Error(t, err)
 }
 
 func TestGetLightningUrl(t *testing.T) {

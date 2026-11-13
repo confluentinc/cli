@@ -173,14 +173,11 @@ func (l *Logger) Flush() {
 	l.buffer = []leveledMessage{}
 }
 
-// Log logs a "msg" and key-value pairs.
-// Example: Log("msg", "hello", "key1", "val1", "key2", "val2")
-func (l *Logger) Log(args ...any) {
+// Log logs a "msg" and key-value pairs at Debug.
+// Example: Log("hello", "key1", "val1", "key2", "val2")
+func (l *Logger) Log(msg string, keysAndValues ...any) {
 	if l.logger.IsDebug() {
-		if args[0] != "msg" {
-			l.logger.Debug(`unexpected logging call, first key should be "msg": ` + fmt.Sprint(args...))
-		}
-		l.logger.Debug(fmt.Sprint(args[1]), args[2:]...)
+		l.logger.Debug(msg, keysAndValues...)
 	}
 }
 

@@ -9,6 +9,7 @@ import (
 
 	"github.com/confluentinc/cli/v4/pkg/ccstructs"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/httpclient"
 	"github.com/confluentinc/cli/v4/pkg/kafkarest"
 )
 
@@ -26,7 +27,7 @@ type KafkaRestClient struct {
 func NewKafkaRestClient(url, clusterId, userAgent, authToken string, unsafeTrace bool) *KafkaRestClient {
 	cfg := kafkarestv3.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClient(nil, unsafeTrace)
+	cfg.HTTPClient = httpclient.New(httpclient.Default)
 	cfg.Servers = kafkarestv3.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

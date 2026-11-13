@@ -2,6 +2,7 @@ package connect
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -14,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
+	perrors "github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
 	"github.com/confluentinc/cli/v4/pkg/kafka"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -180,6 +182,9 @@ func (c *logsCommand) queryLogs(cmd *cobra.Command, args []string) error {
 
 	logs, err := c.V2Client.SearchConnectorLogs(crn, connectorId, startTime, endTime, levels, searchText, lastQueryPageToken)
 	if err != nil {
+		if withSuggestions, ok := errors.AsType[perrors.ErrorWithSuggestions](err); ok {
+			return perrors.NewWrapErrorWithSuggestions(err, "failed to query connector logs", withSuggestions.GetSuggestionsMsg())
+		}
 		return fmt.Errorf("failed to query connector logs: %w", err)
 	}
 

@@ -6,6 +6,7 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
+	"github.com/confluentinc/cli/v4/pkg/httpclient"
 	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
@@ -23,9 +24,9 @@ func NewCCloudClientFactory(userAgent string) CCloudClientFactory {
 }
 
 func (c *CCloudClientFactoryImpl) AnonHTTPClientFactory(baseURL string) *ccloudv1.Client {
-	return ccloudv1.NewClient(&ccloudv1.Params{BaseURL: baseURL, HttpClient: ccloudv1.BaseClient, Logger: log.CliLogger, UserAgent: c.UserAgent})
+	return ccloudv1.NewClient(&ccloudv1.Params{BaseURL: baseURL, HttpClient: httpclient.New(httpclient.Default), Logger: log.CliLogger, UserAgent: c.UserAgent})
 }
 
 func (c *CCloudClientFactoryImpl) JwtHTTPClientFactory(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
-	return ccloudv1.NewClientWithJWT(ctx, jwt, &ccloudv1.Params{BaseURL: baseURL, Logger: log.CliLogger, UserAgent: c.UserAgent})
+	return ccloudv1.NewClientWithJWT(ctx, jwt, &ccloudv1.Params{BaseURL: baseURL, BaseClient: httpclient.New(httpclient.Default), Logger: log.CliLogger, UserAgent: c.UserAgent})
 }

@@ -18,6 +18,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
+	"github.com/confluentinc/cli/v4/pkg/httpclient"
 	"github.com/confluentinc/cli/v4/pkg/kafka"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	"github.com/confluentinc/cli/v4/pkg/schemaregistry"
@@ -325,16 +326,15 @@ func (c *clientConfigCommand) validateSchemaRegistryCredentials(cmd *cobra.Comma
 func fetchConfigFile(configId string) (string, error) {
 	url := fmt.Sprintf(clientConfigUrlFmt, configId)
 
-	resp, err := http.Get(url)
+	resp, err := httpclient.New(httpclient.Default).Get(url)
 	if err != nil {
 		return "", err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("failed to get config file: error code %d", resp.StatusCode)
 	}
-
-	defer resp.Body.Close()
 
 	configFile, err := io.ReadAll(resp.Body)
 	if err != nil {
