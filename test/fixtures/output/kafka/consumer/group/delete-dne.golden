@@ -1,0 +1,4 @@
+Error: consumer group "consumer-group-1234" not found
+
+Suggestions:
+    List available consumer groups with `confluent kafka consumer group list`.

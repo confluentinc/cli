@@ -4,6 +4,7 @@ Usage:
   confluent kafka consumer group [command]
 
 Available Commands:
+  delete      Delete one or more empty Kafka consumer groups.
   describe    Describe a Kafka consumer group.
   lag         View consumer group lag.
   list        List Kafka consumer groups.
