@@ -36,9 +36,8 @@ GOLANG_FIPS=1 make build                                         # FIPS-140 buil
 make test                                                        # unit + integration
 make unit-test                                                   # unit only — fastest signal
 make unit-test UNIT_TEST_ARGS="-run TestApiTestSuite/TestCreateCloudAPIKey"
-make integration-test                                            # rebuilds CLI by default
+make integration-test                                            # always rebuilds the CLI first
 make integration-test INTEGRATION_TEST_ARGS="-run TestCLI/TestKafka"
-make integration-test INTEGRATION_TEST_ARGS="-no-rebuild"        # iterate without rebuild
 make integration-test INTEGRATION_TEST_ARGS="-update"            # regenerate golden files (see Testing rules)
 
 # Live tests against real Confluent Cloud (require credentials):
