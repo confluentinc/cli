@@ -1,4 +1,4 @@
-Error: if any flags in the group [since from] are set none of the others can be; [from since] were all set
+Error: if any flags in the group [since start-time] are set none of the others can be; [since start-time] were all set
 Usage:
   confluent logs fetch <resource-id> [flags]
 
@@ -17,9 +17,9 @@ Fetch ERROR and WARN entries containing the text "latency" and append them to a 
 
 Flags:
       --source string        REQUIRED: The log source to query, for example "cluster-health". Run "confluent logs source list" for the available log sources.
-      --since string         Relative time window ending now, for example 1h, 24h or 7d. Cannot be combined with --from or --to.
-      --from string          Window start, in ISO 8601 UTC format (for example 2026-08-20T00:00:00Z).
-      --to string            Window end, in ISO 8601 UTC format. Defaults to now when --from is set.
+      --since string         Relative time window ending now, for example 1h, 24h or 7d. Cannot be combined with --start-time or --end-time.
+      --start-time string    Window start, in ISO 8601 UTC format (for example 2026-08-20T00:00:00Z).
+      --end-time string      Window end, in ISO 8601 UTC format. Defaults to now when --start-time is set.
       --search strings       A comma-separated list of "field=value" search filters, validated against the log source. Repeating a field means OR (for example level=ERROR,level=WARN).
       --search-text string   Full-text search within log messages, where the log source supports it.
       --tail int             Return only the most recent N entries (maximum 1000).

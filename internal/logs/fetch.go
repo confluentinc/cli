@@ -25,7 +25,7 @@ const (
 	searchTextKey = "search_text"
 )
 
-// resolveTimeWindow turns --since / --from / --to into absolute RFC 3339 UTC timestamps, in whole seconds as the
+// resolveTimeWindow turns --since / --start-time / --end-time into absolute RFC 3339 UTC timestamps, in whole seconds as the
 // API documents them. A start is rounded down and an explicit end is rounded up, so the window never shrinks.
 func resolveTimeWindow(since, from, to string, now time.Time) (string, string, error) {
 	now = now.UTC()
@@ -45,13 +45,13 @@ func resolveTimeWindow(since, from, to string, now time.Time) (string, string, e
 		return "", "", errors.NewErrorWithSuggestions(missingWindowErrorMsg, missingWindowSuggestions)
 	}
 
-	start, err := parseTimestamp("--from", from)
+	start, err := parseTimestamp("--start-time", from)
 	if err != nil {
 		return "", "", err
 	}
 	end := now
 	if to != "" {
-		if end, err = parseTimestamp("--to", to); err != nil {
+		if end, err = parseTimestamp("--end-time", to); err != nil {
 			return "", "", err
 		}
 	}
@@ -263,7 +263,7 @@ func buildCRN(source *loggingv1.LoggingV1Source, values crnValues) (string, erro
 	return "crn://confluent.cloud/" + strings.Join(parts, "/"), nil
 }
 
-// queryKey identifies a fetch query for --next. It uses the window as the user gave it (--since, --from, --to)
+// queryKey identifies a fetch query for --next. It uses the window as the user gave it (--since, --start-time, --end-time)
 // rather than the resolved timestamps, which move with the clock, so repeating the same command matches.
 func queryKey(crn, source string, search map[string]any, since, from, to string) (string, error) {
 	data, err := json.Marshal([]any{crn, source, search, since, from, to})
