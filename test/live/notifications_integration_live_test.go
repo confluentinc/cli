@@ -28,7 +28,7 @@ func (s *CLILiveTestSuite) TestNotificationsIntegrationSlackTargetCRUDLive() {
 			Args:     "notifications integration create " + integrationName + " --kind " + kindVariant + " --webhook-url " + webhookUrl + " -o json",
 			ExitCode: 0,
 			JSONFields: map[string]string{
-				"name": integrationName,
+				"display_name": integrationName,
 			},
 			JSONFieldsExist: []string{"id"},
 			CaptureID:       "integration_id",
@@ -39,7 +39,7 @@ func (s *CLILiveTestSuite) TestNotificationsIntegrationSlackTargetCRUDLive() {
 			UseStateVars: true,
 			ExitCode:     0,
 			JSONFields: map[string]string{
-				"name": integrationName,
+				"display_name": integrationName,
 			},
 		},
 		{
@@ -67,8 +67,8 @@ func (s *CLILiveTestSuite) TestNotificationsIntegrationSlackTargetCRUDLive() {
 			UseStateVars: true,
 			ExitCode:     0,
 			JSONFields: map[string]string{
-				"name":        integrationName + "-updated",
-				"description": updatedDescription,
+				"display_name": integrationName + "-updated",
+				"description":  updatedDescription,
 			},
 		},
 		{
@@ -112,7 +112,7 @@ func (s *CLILiveTestSuite) TestNotificationsIntegrationWebhookTargetCRUDLive() {
 			Args:     "notifications integration create " + integrationName + " --kind " + kindVariant + " --url " + url + " -o json",
 			ExitCode: 0,
 			JSONFields: map[string]string{
-				"name": integrationName,
+				"display_name": integrationName,
 			},
 			JSONFieldsExist: []string{"id"},
 			CaptureID:       "integration_id",
@@ -123,7 +123,7 @@ func (s *CLILiveTestSuite) TestNotificationsIntegrationWebhookTargetCRUDLive() {
 			UseStateVars: true,
 			ExitCode:     0,
 			JSONFields: map[string]string{
-				"name": integrationName,
+				"display_name": integrationName,
 			},
 		},
 		{
@@ -151,8 +151,8 @@ func (s *CLILiveTestSuite) TestNotificationsIntegrationWebhookTargetCRUDLive() {
 			UseStateVars: true,
 			ExitCode:     0,
 			JSONFields: map[string]string{
-				"name":        integrationName + "-updated",
-				"description": updatedDescription,
+				"display_name": integrationName + "-updated",
+				"description":  updatedDescription,
 			},
 		},
 		{
@@ -196,7 +196,7 @@ func (s *CLILiveTestSuite) TestNotificationsIntegrationMsTeamsTargetCRUDLive() {
 			Args:     "notifications integration create " + integrationName + " --kind " + kindVariant + " --webhook-url " + webhookUrl + " -o json",
 			ExitCode: 0,
 			JSONFields: map[string]string{
-				"name": integrationName,
+				"display_name": integrationName,
 			},
 			JSONFieldsExist: []string{"id"},
 			CaptureID:       "integration_id",
@@ -207,7 +207,7 @@ func (s *CLILiveTestSuite) TestNotificationsIntegrationMsTeamsTargetCRUDLive() {
 			UseStateVars: true,
 			ExitCode:     0,
 			JSONFields: map[string]string{
-				"name": integrationName,
+				"display_name": integrationName,
 			},
 		},
 		{
@@ -235,8 +235,8 @@ func (s *CLILiveTestSuite) TestNotificationsIntegrationMsTeamsTargetCRUDLive() {
 			UseStateVars: true,
 			ExitCode:     0,
 			JSONFields: map[string]string{
-				"name":        integrationName + "-updated",
-				"description": updatedDescription,
+				"display_name": integrationName + "-updated",
+				"description":  updatedDescription,
 			},
 		},
 		{
