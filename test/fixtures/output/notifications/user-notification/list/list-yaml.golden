@@ -1,0 +1,16 @@
+- id: dlz-f3a90de
+  recommended_actions_content: Restart the cluster from the Confluent Cloud console.
+  recommended_actions_version: 1
+  resource_crn: crn://confluent.cloud/organization=org-abc/environment=env-xyz/kafka-cluster=lkc-ds23ad
+  resource_display_name: prod-kafka-cluster
+  resource_type: CLUSTER
+  read: false
+  read_at: 2026-01-31T11:00:00Z
+  notification_type_category: BILLING_LICENSING
+  notification_type_description: Cluster shrink operation is completed
+  notification_type_display_name: Cluster Shrink
+  notification_type_is_included_in_plan: false
+  notification_type_severity: INFO
+  notification_type_subscription_priority: REQUIRED
+  severity: CRITICAL
+  received_at: 2026-01-31T10:35:00Z
