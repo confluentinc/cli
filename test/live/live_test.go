@@ -52,6 +52,9 @@ type CLILiveTest struct {
 	// SkipIfNoID skips this step and every later step of the test when CaptureID finds no id, for a
 	// resource the test can't create and the account has none of.
 	SkipIfNoID bool
+	// CaptureFields stores JSON output fields into state, keyed by field name with the state key as
+	// the value. An absent or empty field fails the step.
+	CaptureFields map[string]string
 	// UseStateVars enables {{.key}} template substitution in Args from state.
 	UseStateVars bool
 	// Retries is the number of times to retry on failure (0 means no retry).
@@ -266,6 +269,13 @@ func (s *CLILiveTestSuite) runLiveCommand(t *testing.T, step CLILiveTest, state 
 		require.NotEmpty(t, id, "failed to extract ID from output for key %q:\n%s", step.CaptureID, output)
 		state.Set(step.CaptureID, id)
 		t.Logf("Captured %s = %s", step.CaptureID, id)
+	}
+
+	for field, key := range step.CaptureFields {
+		value := extractJSONField(t, output, field)
+		require.NotEmpty(t, value, "failed to extract field %q from output for key %q:\n%s", field, key, output)
+		state.Set(key, value)
+		t.Logf("Captured %s = %s", key, value)
 	}
 
 	s.validateLiveOutput(t, step, output, state)

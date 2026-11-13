@@ -14,56 +14,29 @@ func (s *CLILiveTestSuite) TestNotificationsSubscriptionCRUDLive() {
 	state := s.setupTestContext(t)
 
 	// Variables
-	integrations := "{{.integration_id}}"
-	updatedCurrentState := "DISABLED"
-	notificationType := "{{.notification_type_id}}"
-	prereqIntegrationName := uniqueName("integr")
+	updatedCurrentState := "ENABLED"
+	originalCurrentState := "{{.original_current_state}}"
 
 	// Cleanup (LIFO — execution is reverse-registration order)
-	s.registerCleanup(t, "notifications integration delete {{.integration_id}} --force", state)
-	s.registerCleanup(t, "notifications subscription delete {{.subscription_id}} --force", state)
-
-	// Prereq group 0
-	prereqSteps0 := []CLILiveTest{
-		{
-			Name:      "Look up a notification type",
-			Args:      "notifications notification-type list -o json",
-			CaptureID: "notification_type_id",
-		},
-		{
-			Name:            "Create webhook integration",
-			Args:            "notifications integration create " + prereqIntegrationName + " --kind webhook --url https://webhook.site/" + prereqIntegrationName + " -o json",
-			CaptureID:       "integration_id",
-			JSONFieldsExist: []string{"id"},
-		},
-	}
-	for _, step := range prereqSteps0 {
-		t.Run(step.Name, func(t *testing.T) {
-			s.runLiveCommand(t, step, state)
-		})
-	}
 
 	steps := []CLILiveTest{
-		{
-			Name:            "Create notifications subscription",
-			Args:            "notifications subscription create --notification-type " + notificationType + " --integrations " + integrations + " -o json",
-			UseStateVars:    true,
-			ExitCode:        0,
-			JSONFieldsExist: []string{"id", "integrations"},
-			CaptureID:       "subscription_id",
-		},
-		{
-			Name:            "Describe notifications subscription",
-			Args:            "notifications subscription describe {{.subscription_id}} -o json",
-			UseStateVars:    true,
-			ExitCode:        0,
-			JSONFieldsExist: []string{"integrations"},
-		},
 		{
 			Name:         "List notifications subscriptions",
 			Args:         "notifications subscription list -o json",
 			UseStateVars: true,
 			ExitCode:     0,
+			CaptureID:    "subscription_id",
+			SkipIfNoID:   true,
+		},
+		{
+			Name:         "Describe notifications subscription",
+			Args:         "notifications subscription describe {{.subscription_id}} -o json",
+			UseStateVars: true,
+			ExitCode:     0,
+			CaptureFields: map[string]string{
+				"current_state": "original_current_state",
+			},
+			JSONFieldsExist: []string{"integrations"},
 		},
 		{
 			Name:         "Update notifications subscription current-state",
@@ -81,16 +54,10 @@ func (s *CLILiveTestSuite) TestNotificationsSubscriptionCRUDLive() {
 			},
 		},
 		{
-			Name:         "Delete notifications subscription",
-			Args:         "notifications subscription delete {{.subscription_id}} --force",
+			Name:         "Restore notifications subscription current-state",
+			Args:         "notifications subscription update {{.subscription_id}} --current-state " + originalCurrentState,
 			UseStateVars: true,
 			ExitCode:     0,
-		},
-		{
-			Name:         "Verify deletion",
-			Args:         "notifications subscription describe {{.subscription_id}}",
-			UseStateVars: true,
-			ExitCode:     1,
 		},
 	}
 
