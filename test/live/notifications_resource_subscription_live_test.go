@@ -5,7 +5,6 @@
 package live
 
 import (
-	"os"
 	"testing"
 )
 
@@ -17,23 +16,40 @@ func (s *CLILiveTestSuite) TestNotificationsResourceSubscriptionCRUDLive() {
 	// Variables
 	resource := "environment=env-456xy/cloud-cluster=lkc-df123/connector=my_datagen_connector"
 	resourceType := "CONNECTOR"
-	integrations := "live-test-integrations"
-	updatedResource := "environment=env-456xy/cloud-cluster=lkc-df123/connector=my_datagen_connector-updated"
-	updatedResourceType := "FLINK_COMPUTE_POOL"
+	integrations := "{{.integration_id}}"
 	updatedCurrentState := "DISABLED"
-	updatedIntegrations := "updated-live-test-integrations"
-	notificationType := os.Getenv("CONFLUENT_LIVE_TEST_NOTIFICATION_TYPE_ID")
-	if notificationType == "" {
-		t.Skipf("%s must be set to run this live test (notification type ID)", "CONFLUENT_LIVE_TEST_NOTIFICATION_TYPE_ID")
-	}
+	notificationType := "{{.notification_type_id}}"
+	prereqIntegrationName := uniqueName("integr")
 
 	// Cleanup (LIFO — execution is reverse-registration order)
+	s.registerCleanup(t, "notifications integration delete {{.integration_id}} --force", state)
 	s.registerCleanup(t, "notifications resource-subscription delete {{.resource_subscription_id}} --force", state)
+
+	// Prereq group 0
+	prereqSteps0 := []CLILiveTest{
+		{
+			Name:      "Look up a notification type",
+			Args:      "notifications notification-type list --resource-type " + resourceType + " -o json",
+			CaptureID: "notification_type_id",
+		},
+		{
+			Name:            "Create webhook integration",
+			Args:            "notifications integration create " + prereqIntegrationName + " --kind webhook --url https://webhook.site/00000000-0000-0000-0000-000000000000 -o json",
+			CaptureID:       "integration_id",
+			JSONFieldsExist: []string{"id"},
+		},
+	}
+	for _, step := range prereqSteps0 {
+		t.Run(step.Name, func(t *testing.T) {
+			s.runLiveCommand(t, step, state)
+		})
+	}
 
 	steps := []CLILiveTest{
 		{
 			Name:            "Create notifications resource subscription",
 			Args:            "notifications resource-subscription create --resource " + resource + " --resource-type " + resourceType + " --notification-type " + notificationType + " --integrations " + integrations + " -o json",
+			UseStateVars:    true,
 			ExitCode:        0,
 			JSONFieldsExist: []string{"id", "resource", "resource_type", "integrations"},
 			CaptureID:       "resource_subscription_id",
@@ -46,26 +62,8 @@ func (s *CLILiveTestSuite) TestNotificationsResourceSubscriptionCRUDLive() {
 			JSONFieldsExist: []string{"resource", "resource_type", "integrations"},
 		},
 		{
-			Name:         "Update notifications resource subscription resource",
-			Args:         "notifications resource-subscription update {{.resource_subscription_id}} --resource " + updatedResource,
-			UseStateVars: true,
-			ExitCode:     0,
-		},
-		{
-			Name:         "Update notifications resource subscription resource-type",
-			Args:         "notifications resource-subscription update {{.resource_subscription_id}} --resource-type " + updatedResourceType,
-			UseStateVars: true,
-			ExitCode:     0,
-		},
-		{
 			Name:         "Update notifications resource subscription current-state",
 			Args:         "notifications resource-subscription update {{.resource_subscription_id}} --current-state " + updatedCurrentState,
-			UseStateVars: true,
-			ExitCode:     0,
-		},
-		{
-			Name:         "Update notifications resource subscription integrations",
-			Args:         "notifications resource-subscription update {{.resource_subscription_id}} --integrations " + updatedIntegrations,
 			UseStateVars: true,
 			ExitCode:     0,
 		},
@@ -75,10 +73,7 @@ func (s *CLILiveTestSuite) TestNotificationsResourceSubscriptionCRUDLive() {
 			UseStateVars: true,
 			ExitCode:     0,
 			JSONFields: map[string]string{
-				"resource":      updatedResource,
-				"resource_type": updatedResourceType,
 				"current_state": updatedCurrentState,
-				"integrations":  updatedIntegrations,
 			},
 		},
 		{

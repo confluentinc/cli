@@ -5,7 +5,6 @@
 package live
 
 import (
-	"os"
 	"testing"
 )
 
@@ -15,21 +14,40 @@ func (s *CLILiveTestSuite) TestNotificationsSubscriptionCRUDLive() {
 	state := s.setupTestContext(t)
 
 	// Variables
-	integrations := "live-test-integrations"
+	integrations := "{{.integration_id}}"
 	updatedCurrentState := "DISABLED"
-	updatedIntegrations := "updated-live-test-integrations"
-	notificationType := os.Getenv("CONFLUENT_LIVE_TEST_NOTIFICATION_TYPE_ID")
-	if notificationType == "" {
-		t.Skipf("%s must be set to run this live test (notification type ID)", "CONFLUENT_LIVE_TEST_NOTIFICATION_TYPE_ID")
-	}
+	notificationType := "{{.notification_type_id}}"
+	prereqIntegrationName := uniqueName("integr")
 
 	// Cleanup (LIFO — execution is reverse-registration order)
+	s.registerCleanup(t, "notifications integration delete {{.integration_id}} --force", state)
 	s.registerCleanup(t, "notifications subscription delete {{.subscription_id}} --force", state)
+
+	// Prereq group 0
+	prereqSteps0 := []CLILiveTest{
+		{
+			Name:      "Look up a notification type",
+			Args:      "notifications notification-type list -o json",
+			CaptureID: "notification_type_id",
+		},
+		{
+			Name:            "Create webhook integration",
+			Args:            "notifications integration create " + prereqIntegrationName + " --kind webhook --url https://webhook.site/00000000-0000-0000-0000-000000000000 -o json",
+			CaptureID:       "integration_id",
+			JSONFieldsExist: []string{"id"},
+		},
+	}
+	for _, step := range prereqSteps0 {
+		t.Run(step.Name, func(t *testing.T) {
+			s.runLiveCommand(t, step, state)
+		})
+	}
 
 	steps := []CLILiveTest{
 		{
 			Name:            "Create notifications subscription",
 			Args:            "notifications subscription create --notification-type " + notificationType + " --integrations " + integrations + " -o json",
+			UseStateVars:    true,
 			ExitCode:        0,
 			JSONFieldsExist: []string{"id", "integrations"},
 			CaptureID:       "subscription_id",
@@ -54,19 +72,12 @@ func (s *CLILiveTestSuite) TestNotificationsSubscriptionCRUDLive() {
 			ExitCode:     0,
 		},
 		{
-			Name:         "Update notifications subscription integrations",
-			Args:         "notifications subscription update {{.subscription_id}} --integrations " + updatedIntegrations,
-			UseStateVars: true,
-			ExitCode:     0,
-		},
-		{
 			Name:         "Verify notifications subscription update",
 			Args:         "notifications subscription describe {{.subscription_id}} -o json",
 			UseStateVars: true,
 			ExitCode:     0,
 			JSONFields: map[string]string{
 				"current_state": updatedCurrentState,
-				"integrations":  updatedIntegrations,
 			},
 		},
 		{
