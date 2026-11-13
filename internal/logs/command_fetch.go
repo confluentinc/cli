@@ -39,7 +39,7 @@ func newFetchCommand(prerunner pcmd.PreRunner) *cobra.Command {
 			},
 			examples.Example{
 				Text: "Fetch only ERROR events of a given type from the last 3 days, newest 100 entries.",
-				Code: "confluent logs fetch lkc-123456 --source cluster-health --since 3d --search level=ERROR,event_type=SERVICE_ISSUE_DETECTED --tail 100",
+				Code: "confluent logs fetch lkc-123456 --source cluster-health --since 3d --search level=ERROR,event_type=SERVICE_MAINTENANCE --tail 100",
 			},
 			examples.Example{
 				Text: "Fetch ERROR and WARN entries containing the text \"latency\" and append them to a file as JSON lines.",
