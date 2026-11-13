@@ -1,7 +1,9 @@
 package config
 
 import (
+	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
@@ -282,4 +284,56 @@ func TestContext_ResolveKafkaAPIKey_ErrorsWhenClusterSecretMissing(t *testing.T)
 
 	_, _, err := ctx.ResolveKafkaAPIKey(kcc)
 	require.Error(t, err, "should surface the broken cluster-scoped config rather than fall back to Global")
+}
+
+func TestContext_LogsQueryState(t *testing.T) {
+	ctx := &Context{}
+	require.Nil(t, ctx.GetLogsQueryState())
+
+	state := &LogsQueryState{Key: "abc", PageToken: "2", StartTime: "2026-10-14T00:00:00Z", EndTime: "2026-10-14T12:00:00Z"}
+	ctx.SetLogsQueryState(state)
+	require.Equal(t, state, ctx.GetLogsQueryState())
+	// The connect command keeps its own state, untouched.
+	require.Nil(t, ctx.GetConnectLogsQueryState())
+
+	// The state survives being written to and read from the config file.
+	data, err := json.Marshal(ctx)
+	require.NoError(t, err)
+	require.Contains(t, string(data), "logs_state")
+	var loaded Context
+	require.NoError(t, json.Unmarshal(data, &loaded))
+	require.Equal(t, state, loaded.GetLogsQueryState())
+
+	// An empty state is left out of the file.
+	data, err = json.Marshal(&Context{})
+	require.NoError(t, err)
+	require.NotContains(t, string(data), "logs_state")
+}
+
+func TestContext_LogsDiscoveryCache(t *testing.T) {
+	ctx := &Context{}
+	require.Nil(t, ctx.GetLogsDiscoveryCache())
+
+	fetchedAt := time.Date(2026, 10, 14, 12, 0, 0, 0, time.UTC)
+	cache := &LogsDiscoveryCache{
+		Key:     "https://confluent.cloud|org-1",
+		Sources: map[string]*LogsCachedSource{"cluster-health": {FetchedAt: fetchedAt, Source: map[string]any{"name": "cluster-health"}}},
+	}
+	ctx.SetLogsDiscoveryCache(cache)
+	require.Equal(t, cache, ctx.GetLogsDiscoveryCache())
+
+	// The cache survives being written to and read from the config file.
+	data, err := json.Marshal(ctx)
+	require.NoError(t, err)
+	var loaded Context
+	require.NoError(t, json.Unmarshal(data, &loaded))
+	require.Equal(t, "https://confluent.cloud|org-1", loaded.GetLogsDiscoveryCache().Key)
+	entry := loaded.GetLogsDiscoveryCache().Sources["cluster-health"]
+	require.True(t, entry.FetchedAt.Equal(fetchedAt))
+	require.Equal(t, map[string]any{"name": "cluster-health"}, entry.Source)
+
+	// An empty cache is left out of the file.
+	data, err = json.Marshal(&Context{})
+	require.NoError(t, err)
+	require.NotContains(t, string(data), "logs_discovery")
 }

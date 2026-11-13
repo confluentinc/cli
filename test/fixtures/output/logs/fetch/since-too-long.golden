@@ -1,0 +1,4 @@
+Error: `--since` exceeds the 3d lookback for "cluster-health"
+
+Suggestions:
+    Use a window of at most 3d.

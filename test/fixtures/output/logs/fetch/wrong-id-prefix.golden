@@ -1,0 +1,4 @@
+Error: resource ID "lcc-123" does not match log source "cluster-health"
+
+Suggestions:
+    This log source expects IDs starting with "lkc-".
