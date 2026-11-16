@@ -51,8 +51,8 @@ type CLILiveTest struct {
 	CaptureID string
 	// UseStateVars enables {{.key}} template substitution in Args from state.
 	UseStateVars bool
-	// Retries is the number of times to retry on failure (0 means no retry).
-	// Useful for steps that may hit eventual consistency delays.
+	// Retries is the number of times to retry on failure or Contains/NotContains/Regex mismatch (0 means no retry).
+	// Useful for steps that may hit eventual consistency delays. Only combine with output checks on read-only commands.
 	Retries int
 	// RetryInterval is the time to wait between retries. Defaults to 5s if Retries > 0.
 	RetryInterval time.Duration
