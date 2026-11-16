@@ -187,6 +187,7 @@ var properNouns = []string{
 	"Connect",
 	"Control Center",
 	"CRL",
+	"Cloud Notifications",
 	"Configuration Control",
 	"Custom Connect Plugin",
 	"Data Encryption Key",
@@ -222,12 +223,16 @@ var properNouns = []string{
 	"Tableflow",
 	"Unified Stream Manager",
 	"USM",
+	"Webhook",
 	"ZooKeeper™",
 	// cli-tfgen:lint-properNouns — DO NOT REMOVE (verified by TestCliTfgenMarkers)
 }
 
 // vocabWords are words that don't appear in the US dictionary, but are Confluent-related words.
 var vocabWords = []string{
+	"24h",
+	"30d",
+	"7d",
 	"a2a",
 	"ack",
 	"acks",
@@ -309,7 +314,9 @@ var vocabWords = []string{
 	"jsonschema",
 	"jwks",
 	"JWT",
+	"eg",
 	"enum",
+	"integrations",
 	"kafka",
 	"kek",
 	"keychain",
@@ -404,6 +411,7 @@ var vocabWords = []string{
 	"vv",
 	"vvv",
 	"vvvv",
+	"webhook",
 	"whitelist",
 	"wikipedia",
 	"workspace",
