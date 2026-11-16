@@ -51,8 +51,8 @@ type CLILiveTest struct {
 	CaptureID string
 	// UseStateVars enables {{.key}} template substitution in Args from state.
 	UseStateVars bool
-	// Retries is the number of times to retry on failure or Contains/NotContains/Regex mismatch (0 means no retry).
-	// Useful for steps that may hit eventual consistency delays. Only combine with output checks on read-only commands.
+	// Retries is the number of times to retry on failure (0 means no retry).
+	// Useful for steps that may hit eventual consistency delays.
 	Retries int
 	// RetryInterval is the time to wait between retries. Defaults to 5s if Retries > 0.
 	RetryInterval time.Duration
@@ -203,7 +203,7 @@ func buildCommandEnv(extraEnv []string) []string {
 
 // runLiveCommand executes a CLILiveTest step, performs template substitution, runs the command,
 // validates output, and captures IDs. If the step has Retries > 0, the command is retried
-// on failure or output mismatch with the specified interval between attempts.
+// on failure with the specified interval between attempts.
 func (s *CLILiveTestSuite) runLiveCommand(t *testing.T, step CLILiveTest, state *LiveTestState) string {
 	t.Helper()
 
@@ -227,7 +227,7 @@ func (s *CLILiveTestSuite) runLiveCommand(t *testing.T, step CLILiveTest, state 
 				time.Sleep(interval)
 			}
 			output, lastErr = s.tryRunRawCommand(args, env, step.Input, step.ExitCode)
-			if lastErr == nil && outputMatches(step, output) {
+			if lastErr == nil {
 				break
 			}
 		}
@@ -291,27 +291,6 @@ func (s *CLILiveTestSuite) tryRunRawCommand(argString string, env []string, inpu
 	}
 
 	return output, nil
-}
-
-// outputMatches reports whether output satisfies the step's Contains, NotContains, and Regex checks,
-// so retries can also wait for eventually consistent list results.
-func outputMatches(step CLILiveTest, output string) bool {
-	for _, c := range step.Contains {
-		if !strings.Contains(output, c) {
-			return false
-		}
-	}
-	for _, nc := range step.NotContains {
-		if strings.Contains(output, nc) {
-			return false
-		}
-	}
-	for _, pattern := range step.Regex {
-		if re, err := regexp.Compile(pattern); err != nil || !re.MatchString(output) {
-			return false
-		}
-	}
-	return true
 }
 
 // validateLiveOutput runs all assertion strategies on the command output.
