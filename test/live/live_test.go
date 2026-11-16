@@ -49,6 +49,12 @@ type CLILiveTest struct {
 	WantFunc func(t *testing.T, output string, state *LiveTestState)
 	// CaptureID stores the extracted "id" field from JSON output into state under this key.
 	CaptureID string
+	// SkipIfNoID skips this step and every later step of the test when CaptureID finds no id, for a
+	// resource the test can't create and the account has none of.
+	SkipIfNoID bool
+	// CaptureFields stores JSON output fields into state, keyed by field name with the state key as
+	// the value. An absent or empty field fails the step.
+	CaptureFields map[string]string
 	// UseStateVars enables {{.key}} template substitution in Args from state.
 	UseStateVars bool
 	// Retries is the number of times to retry on failure (0 means no retry).
@@ -61,9 +67,10 @@ type CLILiveTest struct {
 // LiveTestState is a thread-safe map for passing dynamic values between test steps.
 // Each test gets its own LiveTestState with an isolated homeDir for CLI config.
 type LiveTestState struct {
-	mu      sync.Mutex
-	values  map[string]string
-	homeDir string
+	mu         sync.Mutex
+	values     map[string]string
+	homeDir    string
+	skipReason string
 }
 
 func NewLiveTestState() *LiveTestState {
@@ -80,6 +87,18 @@ func (s *LiveTestState) Get(key string) string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.values[key]
+}
+
+func (s *LiveTestState) setSkipReason(reason string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.skipReason = reason
+}
+
+func (s *LiveTestState) getSkipReason() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.skipReason
 }
 
 func (s *LiveTestState) All() map[string]string {
@@ -207,6 +226,10 @@ func buildCommandEnv(extraEnv []string) []string {
 func (s *CLILiveTestSuite) runLiveCommand(t *testing.T, step CLILiveTest, state *LiveTestState) string {
 	t.Helper()
 
+	if reason := state.getSkipReason(); reason != "" {
+		t.Skip(reason)
+	}
+
 	args := step.Args
 	if step.UseStateVars {
 		args = substituteStateVars(t, args, state)
@@ -238,9 +261,21 @@ func (s *CLILiveTestSuite) runLiveCommand(t *testing.T, step CLILiveTest, state 
 
 	if step.CaptureID != "" {
 		id := extractID(t, output)
+		if id == "" && step.SkipIfNoID {
+			reason := fmt.Sprintf("no id found for %q, so there is nothing to test against", step.CaptureID)
+			state.setSkipReason(reason)
+			t.Skip(reason)
+		}
 		require.NotEmpty(t, id, "failed to extract ID from output for key %q:\n%s", step.CaptureID, output)
 		state.Set(step.CaptureID, id)
 		t.Logf("Captured %s = %s", step.CaptureID, id)
+	}
+
+	for field, key := range step.CaptureFields {
+		value := extractJSONField(t, output, field)
+		require.NotEmpty(t, value, "failed to extract field %q from output for key %q:\n%s", field, key, output)
+		state.Set(key, value)
+		t.Logf("Captured %s = %s", key, value)
 	}
 
 	s.validateLiveOutput(t, step, output, state)
@@ -349,7 +384,15 @@ func (s *CLILiveTestSuite) validateLiveOutput(t *testing.T, step CLILiveTest, ou
 // registerCleanup schedules a CLI delete command to run during test cleanup (even on failure).
 func (s *CLILiveTestSuite) registerCleanup(t *testing.T, deleteArgString string, state *LiveTestState) {
 	t.Cleanup(func() {
-		args := substituteStateVars(t, deleteArgString, state)
+		tmpl, err := template.New("args").Option("missingkey=error").Parse(deleteArgString)
+		require.NoError(t, err, "failed to parse template: %s", deleteArgString)
+		var buf bytes.Buffer
+		if err := tmpl.Execute(&buf, state.All()); err != nil {
+			// A step skipped or failed before capturing the ID, so there's nothing to delete.
+			t.Logf("Cleanup: nothing to clean up for %q: %v", deleteArgString, err)
+			return
+		}
+		args := buf.String()
 		t.Logf("Cleanup: confluent %s", args)
 		// Best-effort cleanup: log but don't fail
 		cmd := exec.Command(s.binPath, shellSplit(args)...)
@@ -378,11 +421,23 @@ func substituteStateVars(t *testing.T, s string, state *LiveTestState) string {
 	return buf.String()
 }
 
-// extractID extracts the "id" field from JSON output.
+// extractID extracts the "id" field from JSON output. A list command's JSON output is a top-level
+// array, so the id comes from its first element.
 func extractID(t *testing.T, output string) string {
 	t.Helper()
 
 	trimmed := strings.TrimSpace(output)
+	var array []map[string]interface{}
+	if err := json.Unmarshal([]byte(trimmed), &array); err == nil {
+		if len(array) == 0 {
+			return ""
+		}
+		if id, ok := array[0]["id"]; ok {
+			return fmt.Sprintf("%v", id)
+		}
+		return ""
+	}
+
 	var parsed map[string]interface{}
 	if err := json.Unmarshal([]byte(trimmed), &parsed); err != nil {
 		// Not JSON — try to extract from table-style output (first column of second line)

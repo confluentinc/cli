@@ -1,0 +1,15 @@
+{
+  "api_version": "notifications/v1",
+  "current_state": "ENABLED",
+  "id": "dlz-f3a90de",
+  "kind": "ResourcePreference",
+  "metadata": {
+    "created_at": "2006-01-02T15:04:05-07:00",
+    "deleted_at": "2006-01-02T15:04:05-07:00",
+    "resource_name": "crn://confluent.cloud/organization=11111111-1111-1111-1111-111111111111/resource-preference=rp-12345",
+    "self": "https://api.confluent.cloud/notifications/v1/resource-preferences/rp-12345",
+    "updated_at": "2006-01-02T15:04:05-07:00"
+  },
+  "resource": "environment=env-456xy/cloud-cluster=lkc-df123/connector=my_datagen_connector",
+  "resource_type": "CONNECTOR"
+}

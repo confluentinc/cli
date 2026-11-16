@@ -229,6 +229,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.2.0 h1:ZHNF2DeqVlNPuKG
 github.com/confluentinc/ccloud-sdk-go-v2/networking-ip v0.2.0/go.mod h1:KTShFBZA7WG8LcxlWjJpoZFdWkJ+uOw3dDuwAHs5eKU=
 github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.3.0 h1:mC0E1nKUt57AxMM4Lpdfd+KA/YZwJVwro9ER+dCUFi8=
 github.com/confluentinc/ccloud-sdk-go-v2/networking-privatelink v0.3.0/go.mod h1:GIHF2cYOUKx+6ycYokr4i8E4cuNBC22xqvO/IhqZ31U=
+github.com/confluentinc/ccloud-sdk-go-v2/notifications v0.1.0 h1:LidTP8SPc9g3Cw56eW73kCbB9JbKZ5iJ0UkgmG6Gn9I=
+github.com/confluentinc/ccloud-sdk-go-v2/notifications v0.1.0/go.mod h1:VpOjD3MKw8uRUNhwBEkEbH1a+JTs50FiNANMh0LYOQ8=
 github.com/confluentinc/ccloud-sdk-go-v2/org v0.15.0 h1:rbtGf2SFWjfXzgi+boRjYbARditK0GIfFPLS1baIy+c=
 github.com/confluentinc/ccloud-sdk-go-v2/org v0.15.0/go.mod h1:VhKDWY80oJi+YPMsE0Wq5e5VBt6kRvl//Ez790tuKO0=
 github.com/confluentinc/ccloud-sdk-go-v2/provider-integration v0.2.0 h1:UN2a+aqYhk95ro+wVLkeB/8W7n+UV2KsE3jNFbbDCSw=
