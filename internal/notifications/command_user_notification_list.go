@@ -104,6 +104,8 @@ func (c *userNotificationCommand) list(cmd *cobra.Command, _ []string) error {
 			NotificationTypeSubscriptionPriority: userNotification.NotificationType.GetSubscriptionPriority(),
 			Severity:                             userNotification.GetSeverity(),
 			ReceivedAt:                           userNotification.ReceivedAt,
+			Actions:                              userNotification.GetActions(),
+			Integrations:                         userNotification.GetIntegrations(),
 		}
 		list.Add(out)
 	}

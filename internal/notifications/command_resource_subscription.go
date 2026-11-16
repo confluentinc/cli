@@ -17,11 +17,12 @@ type resourceSubscriptionCommand struct {
 }
 
 type resourceSubscriptionOut struct {
-	ID               string `human:"ID" serialized:"id"`
-	Resource         string `human:"Resource" serialized:"resource"`
-	ResourceType     string `human:"Resource Type" serialized:"resource_type"`
-	NotificationType string `human:"Notification Type" serialized:"notification_type"`
-	CurrentState     string `human:"Current State" serialized:"current_state"`
+	ID               string   `human:"ID" serialized:"id"`
+	Resource         string   `human:"Resource" serialized:"resource"`
+	ResourceType     string   `human:"Resource Type" serialized:"resource_type"`
+	NotificationType string   `human:"Notification Type" serialized:"notification_type"`
+	CurrentState     string   `human:"Current State" serialized:"current_state"`
+	Integrations     []string `human:"Integrations" serialized:"integrations"`
 }
 
 func newResourceSubscriptionCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command { //nolint:unparam
@@ -48,12 +49,17 @@ func newResourceSubscriptionCommand(cfg *config.Config, prerunner pcmd.PreRunner
 
 func printResourceSubscription(cmd *cobra.Command, resourceSubscription notificationsv1.NotificationsV1ResourceSubscription) error {
 	table := output.NewTable(cmd)
+	integrationsIds := make([]string, 0, len(resourceSubscription.GetIntegrations()))
+	for _, ref := range resourceSubscription.GetIntegrations() {
+		integrationsIds = append(integrationsIds, ref.GetId())
+	}
 	out := &resourceSubscriptionOut{
 		ID:               resourceSubscription.GetId(),
 		Resource:         resourceSubscription.GetResource(),
 		ResourceType:     resourceSubscription.GetResourceType(),
 		NotificationType: resourceSubscription.NotificationType.GetId(),
 		CurrentState:     resourceSubscription.GetCurrentState(),
+		Integrations:     integrationsIds,
 	}
 	table.Add(out)
 	return table.Print()

@@ -4,6 +4,7 @@ package testserver
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -31,8 +32,12 @@ func handleNotificationsV1Integrations(t *testing.T) http.HandlerFunc {
 		case http.MethodPost:
 			integration := readNotificationsV1IntegrationFile(t, "create_slack_target.json")
 
+			body, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			resetNotificationsV1IntegrationVariant(t, body, &integration)
+
 			// Overwrite updated fields using the request body
-			err := json.NewDecoder(r.Body).Decode(&integration)
+			err = json.Unmarshal(body, &integration)
 			require.NoError(t, err)
 
 			err = json.NewEncoder(w).Encode(integration)
@@ -51,7 +56,7 @@ func handleNotificationsV1IntegrationsId(t *testing.T) http.HandlerFunc {
 			case "invalid":
 				w.WriteHeader(http.StatusNotFound)
 			default:
-				integration := readNotificationsV1IntegrationFile(t, "read_created_slack_target.json")
+				integration := readNotificationsV1IntegrationFile(t, "read_created_"+fixtureKindForNotificationsV1Integration(id)+".json")
 
 				err := json.NewEncoder(w).Encode(&integration)
 				require.NoError(t, err)
@@ -61,10 +66,14 @@ func handleNotificationsV1IntegrationsId(t *testing.T) http.HandlerFunc {
 			case "invalid":
 				w.WriteHeader(http.StatusNotFound)
 			default:
-				integration := readNotificationsV1IntegrationFile(t, "read_created_slack_target.json")
+				integration := readNotificationsV1IntegrationFile(t, "read_created_"+fixtureKindForNotificationsV1Integration(id)+".json")
+
+				body, err := io.ReadAll(r.Body)
+				require.NoError(t, err)
+				resetNotificationsV1IntegrationVariant(t, body, &integration)
 
 				// Overwrite updated fields using the request body
-				err := json.NewDecoder(r.Body).Decode(&integration)
+				err = json.Unmarshal(body, &integration)
 				require.NoError(t, err)
 
 				err = json.NewEncoder(w).Encode(integration)
@@ -78,6 +87,36 @@ func handleNotificationsV1IntegrationsId(t *testing.T) http.HandlerFunc {
 				w.WriteHeader(http.StatusNoContent)
 			}
 		}
+	}
+}
+
+// fixtureKindForNotificationsV1Integration returns the oneOf variant fixture the integration tests expect
+// for an id: describe <id>-N reads the Nth variant.
+func fixtureKindForNotificationsV1Integration(id string) string {
+	switch id {
+	case "integration-2":
+		return "role_email_target"
+	case "integration-3":
+		return "user_email_target"
+	case "integration-4":
+		return "webhook_target"
+	case "integration-5":
+		return "ms_teams_target"
+	case "integration-6":
+		return "in_app_target"
+	default:
+		return "slack_target"
+	}
+}
+
+// resetNotificationsV1IntegrationVariant clears the fixture's oneOf variant when the request body sets one.
+// Decoding into a populated oneOf sets only the body's variant and keeps the fixture's, and the SDK
+// marshals whichever non-nil variant it checks first.
+func resetNotificationsV1IntegrationVariant(t *testing.T, body []byte, integration *notificationsv1.NotificationsV1Integration) {
+	req := notificationsv1.NotificationsV1Integration{}
+	require.NoError(t, json.Unmarshal(body, &req))
+	if req.Target != nil {
+		integration.Target = nil
 	}
 }
 

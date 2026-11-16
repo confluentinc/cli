@@ -14,3 +14,28 @@
   notification_type_subscription_priority: REQUIRED
   severity: CRITICAL
   received_at: 2026-01-31T10:35:00Z
+  actions:
+    - identifier: manage_cluster_settings
+      url: https://confluent.cloud/environments/env-xyz/clusters/lkc-ds23ad/settings
+      role: PRIMARY
+  integrations:
+    - apiversion: notifications/v1
+      kind: Integration
+      id: dlz-f3a90de
+      metadata:
+        self: https://api.confluent.cloud/notifications/v1/integrations/i-12345
+        resourcename: crn://confluent.cloud/organization=11111111-1111-1111-1111-111111111111/integration=i-12345
+        createdat: 2006-01-02T15:04:05-07:00
+        updatedat: 2006-01-02T15:04:05-07:00
+        deletedat: 2006-01-02T15:04:05-07:00
+      displayname: Slack integration
+      description: A Slack channel integration
+      target:
+        notificationsv1inapptarget: null
+        notificationsv1msteamstarget: null
+        notificationsv1roleemailtarget: null
+        notificationsv1slacktarget:
+            kind: Slack
+            webhookurl: https://hooks.slack.com/services/T000AAAA0/B000BBBB0/xxxxxxxxxxxxxxxxxxxxxxxx
+        notificationsv1useremailtarget: null
+        notificationsv1webhooktarget: null

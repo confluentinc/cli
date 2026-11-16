@@ -24,8 +24,10 @@ type integrationOut struct {
 	Description             string `human:"Description" serialized:"description"`
 	SlackTargetWebhookUrl   string `human:"Slack Target Webhook URL,omitempty" serialized:"slack_target_webhook_url,omitempty"`
 	RoleEmailTargetRoleName string `human:"Role Email Target Role Name,omitempty" serialized:"role_email_target_role_name,omitempty"`
+	UserEmailTargetUser     string `human:"User Email Target User,omitempty" serialized:"user_email_target_user,omitempty"`
 	WebhookTargetUrl        string `human:"Webhook Target URL,omitempty" serialized:"webhook_target_url,omitempty"`
 	MsTeamsTargetWebhookUrl string `human:"Ms Teams Target Webhook URL,omitempty" serialized:"ms_teams_target_webhook_url,omitempty"`
+	InAppTargetUser         string `human:"In App Target User,omitempty" serialized:"in_app_target_user,omitempty"`
 }
 
 func newIntegrationCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command { //nolint:unparam
@@ -64,11 +66,17 @@ func printIntegration(cmd *cobra.Command, integration notificationsv1.Notificati
 	if integration.Target != nil && integration.Target.NotificationsV1RoleEmailTarget != nil {
 		out.RoleEmailTargetRoleName = integration.Target.NotificationsV1RoleEmailTarget.GetRoleName()
 	}
+	if integration.Target != nil && integration.Target.NotificationsV1UserEmailTarget != nil {
+		out.UserEmailTargetUser = integration.Target.NotificationsV1UserEmailTarget.User.GetId()
+	}
 	if integration.Target != nil && integration.Target.NotificationsV1WebhookTarget != nil {
 		out.WebhookTargetUrl = integration.Target.NotificationsV1WebhookTarget.GetUrl()
 	}
 	if integration.Target != nil && integration.Target.NotificationsV1MsTeamsTarget != nil {
 		out.MsTeamsTargetWebhookUrl = integration.Target.NotificationsV1MsTeamsTarget.GetWebhookUrl()
+	}
+	if integration.Target != nil && integration.Target.NotificationsV1InAppTarget != nil {
+		out.InAppTargetUser = integration.Target.NotificationsV1InAppTarget.User.GetId()
 	}
 	table.Add(out)
 	return table.Print()

@@ -5,4 +5,5 @@ Updated notifications resource subscription "resource-subscription-1".
 | Resource Type     | CONNECTOR                                                                    |
 | Notification Type | not-abc123                                                                   |
 | Current State     | ENABLED                                                                      |
+| Integrations      |                                                                              |
 +-------------------+------------------------------------------------------------------------------+

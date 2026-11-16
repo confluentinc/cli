@@ -35,10 +35,15 @@ func (c *subscriptionCommand) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, subscription := range subscriptions {
+		integrationsIds := make([]string, 0, len(subscription.GetIntegrations()))
+		for _, ref := range subscription.GetIntegrations() {
+			integrationsIds = append(integrationsIds, ref.GetId())
+		}
 		out := &subscriptionOut{
 			ID:               subscription.GetId(),
 			NotificationType: subscription.NotificationType.GetId(),
 			CurrentState:     subscription.GetCurrentState(),
+			Integrations:     integrationsIds,
 		}
 		list.Add(out)
 	}

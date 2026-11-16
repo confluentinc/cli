@@ -4,4 +4,5 @@
 | Resource Type     | ENVIRONMENT                                                                  |
 | Notification Type | notification-type-value                                                      |
 | Current State     | ENABLED                                                                      |
+| Integrations      | val1, val2                                                                   |
 +-------------------+------------------------------------------------------------------------------+

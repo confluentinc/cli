@@ -46,11 +46,17 @@ func (c *integrationCommand) list(cmd *cobra.Command, _ []string) error {
 		if integration.Target != nil && integration.Target.NotificationsV1RoleEmailTarget != nil {
 			out.RoleEmailTargetRoleName = integration.Target.NotificationsV1RoleEmailTarget.GetRoleName()
 		}
+		if integration.Target != nil && integration.Target.NotificationsV1UserEmailTarget != nil {
+			out.UserEmailTargetUser = integration.Target.NotificationsV1UserEmailTarget.User.GetId()
+		}
 		if integration.Target != nil && integration.Target.NotificationsV1WebhookTarget != nil {
 			out.WebhookTargetUrl = integration.Target.NotificationsV1WebhookTarget.GetUrl()
 		}
 		if integration.Target != nil && integration.Target.NotificationsV1MsTeamsTarget != nil {
 			out.MsTeamsTargetWebhookUrl = integration.Target.NotificationsV1MsTeamsTarget.GetWebhookUrl()
+		}
+		if integration.Target != nil && integration.Target.NotificationsV1InAppTarget != nil {
+			out.InAppTargetUser = integration.Target.NotificationsV1InAppTarget.User.GetId()
 		}
 		list.Add(out)
 	}

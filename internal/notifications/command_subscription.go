@@ -17,9 +17,10 @@ type subscriptionCommand struct {
 }
 
 type subscriptionOut struct {
-	ID               string `human:"ID" serialized:"id"`
-	NotificationType string `human:"Notification Type" serialized:"notification_type"`
-	CurrentState     string `human:"Current State" serialized:"current_state"`
+	ID               string   `human:"ID" serialized:"id"`
+	NotificationType string   `human:"Notification Type" serialized:"notification_type"`
+	CurrentState     string   `human:"Current State" serialized:"current_state"`
+	Integrations     []string `human:"Integrations" serialized:"integrations"`
 }
 
 func newSubscriptionCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command { //nolint:unparam
@@ -47,10 +48,15 @@ func newSubscriptionCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra
 
 func printSubscription(cmd *cobra.Command, subscription notificationsv1.NotificationsV1Subscription) error {
 	table := output.NewTable(cmd)
+	integrationsIds := make([]string, 0, len(subscription.GetIntegrations()))
+	for _, ref := range subscription.GetIntegrations() {
+		integrationsIds = append(integrationsIds, ref.GetId())
+	}
 	out := &subscriptionOut{
 		ID:               subscription.GetId(),
 		NotificationType: subscription.NotificationType.GetId(),
 		CurrentState:     subscription.GetCurrentState(),
+		Integrations:     integrationsIds,
 	}
 	table.Add(out)
 	return table.Print()

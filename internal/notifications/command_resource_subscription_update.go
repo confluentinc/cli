@@ -70,11 +70,11 @@ func (c *resourceSubscriptionCommand) update(cmd *cobra.Command, args []string) 
 		updateReq.CurrentState = notificationsv1.PtrString(currentState)
 	}
 
-	integrations, err := cmd.Flags().GetStringSlice("integrations")
-	if err != nil {
-		return err
-	}
-	if len(integrations) > 0 {
+	if cmd.Flags().Changed("integrations") {
+		integrations, err := cmd.Flags().GetStringSlice("integrations")
+		if err != nil {
+			return err
+		}
 		integrationsRefs := make([]notificationsv1.GlobalObjectReference, len(integrations))
 		for i, id := range integrations {
 			integrationsRefs[i] = notificationsv1.GlobalObjectReference{Id: id, Related: "https://confluent.cloud/_", ResourceName: "https://confluent.cloud/_"}
