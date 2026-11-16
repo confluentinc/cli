@@ -53,3 +53,36 @@ func SerializedOutputFromJsonTags(cmd *cobra.Command, v any) error {
 	Print(false, string(pretty.Pretty(data)))
 	return nil
 }
+
+// JsonValue is a value's JSON encoding, printed under its JSON key names in both `-o json` and
+// `-o yaml`. A table row carries an SDK object as a JsonValue because only the row's own tags are
+// rewritten per format: yaml.Marshal ignores a nested SDK struct's `json` tags and would print its
+// Go field names. The row printer also rejects interface-typed fields, so the field can't be `any`.
+type JsonValue json.RawMessage
+
+// FromJsonTags encodes v as a JsonValue. A value that can't be encoded prints as null.
+func FromJsonTags(v any) JsonValue {
+	data, err := json.Marshal(v)
+	if err != nil {
+		return nil
+	}
+	return data
+}
+
+func (v JsonValue) MarshalJSON() ([]byte, error) {
+	if len(v) == 0 {
+		return []byte("null"), nil
+	}
+	return v, nil
+}
+
+func (v JsonValue) MarshalYAML() (any, error) {
+	if len(v) == 0 {
+		return nil, nil
+	}
+	var generic any
+	if err := json.Unmarshal(v, &generic); err != nil {
+		return nil, err
+	}
+	return generic, nil
+}
