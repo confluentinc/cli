@@ -57,6 +57,7 @@ func (s *CLILiveTestSuite) TestKafkaACLCRUDLive() {
 			Name:         "Delete ACL",
 			Args:         "kafka acl delete --allow --service-account {{.sa_id}} --operations read,describe --topic " + topicName + " --force",
 			UseStateVars: true,
+			Retries:      3,
 		},
 		{
 			Name:         "Verify ACL deleted",
