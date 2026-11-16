@@ -18,6 +18,7 @@ func (s *CLILiveTestSuite) TestNotificationsSubscriptionCRUDLive() {
 	originalCurrentState := "{{.original_current_state}}"
 
 	// Cleanup (LIFO — execution is reverse-registration order)
+	s.registerCleanup(t, "notifications subscription update {{.subscription_id}} --current-state "+originalCurrentState, state)
 
 	steps := []CLILiveTest{
 		{
