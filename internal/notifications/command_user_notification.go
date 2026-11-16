@@ -19,24 +19,24 @@ type userNotificationCommand struct {
 }
 
 type userNotificationOut struct {
-	ID                                   string                                              `human:"ID" serialized:"id"`
-	RecommendedActionsContent            string                                              `human:"Recommended Actions Content" serialized:"recommended_actions_content"`
-	RecommendedActionsVersion            int32                                               `human:"Recommended Actions Version" serialized:"recommended_actions_version"`
-	ResourceCrn                          string                                              `human:"Resource Crn" serialized:"resource_crn"`
-	ResourceDisplayName                  string                                              `human:"Resource Display Name" serialized:"resource_display_name"`
-	ResourceType                         string                                              `human:"Resource Type" serialized:"resource_type"`
-	Read                                 bool                                                `human:"Read" serialized:"read"`
-	ReadAt                               *time.Time                                          `human:"Read At" serialized:"read_at"`
-	NotificationTypeCategory             string                                              `human:"Notification Type Category" serialized:"notification_type_category"`
-	NotificationTypeDescription          string                                              `human:"Notification Type Description" serialized:"notification_type_description"`
-	NotificationTypeDisplayName          string                                              `human:"Notification Type Display Name" serialized:"notification_type_display_name"`
-	NotificationTypeIsIncludedInPlan     bool                                                `human:"Notification Type Is Included In Plan" serialized:"notification_type_is_included_in_plan"`
-	NotificationTypeSeverity             string                                              `human:"Notification Type Severity" serialized:"notification_type_severity"`
-	NotificationTypeSubscriptionPriority string                                              `human:"Notification Type Subscription Priority" serialized:"notification_type_subscription_priority"`
-	Severity                             string                                              `human:"Severity" serialized:"severity"`
-	ReceivedAt                           *time.Time                                          `human:"Received At" serialized:"received_at"`
-	Actions                              []notificationsv1.NotificationsV1NotificationAction `human:"-" serialized:"actions"`
-	Integrations                         []notificationsv1.NotificationsV1Integration        `human:"-" serialized:"integrations"`
+	ID                                   string           `human:"ID" serialized:"id"`
+	RecommendedActionsContent            string           `human:"Recommended Actions Content" serialized:"recommended_actions_content"`
+	RecommendedActionsVersion            int32            `human:"Recommended Actions Version" serialized:"recommended_actions_version"`
+	ResourceCrn                          string           `human:"Resource Crn" serialized:"resource_crn"`
+	ResourceDisplayName                  string           `human:"Resource Display Name" serialized:"resource_display_name"`
+	ResourceType                         string           `human:"Resource Type" serialized:"resource_type"`
+	Read                                 bool             `human:"Read" serialized:"read"`
+	ReadAt                               *time.Time       `human:"Read At" serialized:"read_at"`
+	NotificationTypeCategory             string           `human:"Notification Type Category" serialized:"notification_type_category"`
+	NotificationTypeDescription          string           `human:"Notification Type Description" serialized:"notification_type_description"`
+	NotificationTypeDisplayName          string           `human:"Notification Type Display Name" serialized:"notification_type_display_name"`
+	NotificationTypeIsIncludedInPlan     bool             `human:"Notification Type Is Included In Plan" serialized:"notification_type_is_included_in_plan"`
+	NotificationTypeSeverity             string           `human:"Notification Type Severity" serialized:"notification_type_severity"`
+	NotificationTypeSubscriptionPriority string           `human:"Notification Type Subscription Priority" serialized:"notification_type_subscription_priority"`
+	Severity                             string           `human:"Severity" serialized:"severity"`
+	ReceivedAt                           *time.Time       `human:"Received At" serialized:"received_at"`
+	Actions                              output.JsonValue `human:"-" serialized:"actions"`
+	Integrations                         output.JsonValue `human:"-" serialized:"integrations"`
 }
 
 func newUserNotificationCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command { //nolint:unparam
@@ -79,8 +79,8 @@ func printUserNotification(cmd *cobra.Command, userNotification notificationsv1.
 		NotificationTypeSubscriptionPriority: userNotification.NotificationType.GetSubscriptionPriority(),
 		Severity:                             userNotification.GetSeverity(),
 		ReceivedAt:                           userNotification.ReceivedAt,
-		Actions:                              userNotification.GetActions(),
-		Integrations:                         userNotification.GetIntegrations(),
+		Actions:                              output.FromJsonTags(userNotification.GetActions()),
+		Integrations:                         output.FromJsonTags(userNotification.GetIntegrations()),
 	}
 	table.Add(out)
 	return table.Print()
