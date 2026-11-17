@@ -159,6 +159,70 @@ func createEnvironment(name string, namespace string) cmfsdk.Environment {
 	}
 }
 
+// Helper function to create a Flink environment whose deletion, together with everything in it, was requested.
+func createDeletingEnvironment(name string, namespace string) cmfsdk.Environment {
+	environment := createEnvironment(name, namespace)
+	environment.Metadata = &cmfsdk.EnvironmentMetadata{
+		Name:                       name,
+		DeletionRequestedTimestamp: cmfsdk.PtrString("2026-11-17T08:45:00Z"),
+	}
+	return environment
+}
+
+// writeCmfError writes an error response with the body that CMF sends.
+func writeCmfError(t *testing.T, w http.ResponseWriter, status int, message string) {
+	w.WriteHeader(status)
+	// Like CMF, don't escape "&" in messages such as "cascade=true&skipCleanup=true". A map, because the MarshalJSON of
+	// cmfsdk.RestError escapes it whatever the encoder's setting.
+	encoder := json.NewEncoder(w)
+	encoder.SetEscapeHTML(false)
+	require.NoError(t, encoder.Encode(map[string][]map[string]string{"errors": {{"message": message}}}))
+}
+
+// Responds to a delete of the "cascade-test" environment, which still has resources, the way CMF 2.5.0 does for the
+// request's query parameters.
+func handleCascadeTestEnvironmentDelete(t *testing.T, w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	cascade := query.Get("cascade") == "true"
+	force := query.Get("force") == "true"
+
+	resources := &cmfsdk.EnvironmentResourceNames{
+		Applications: &[]string{"orders-app", "payments-app"},
+		Statements:   &[]string{"orders-enrich"},
+		ComputePools: &[]string{"pool-1"},
+		Savepoints: &[]cmfsdk.SavepointReference{{
+			Name:        cmfsdk.PtrString("orders-app-savepoint-1"),
+			Application: cmfsdk.PtrString("orders-app"),
+			Path:        cmfsdk.PtrString("s3://flink-state/savepoints/savepoint-3f2a1b"),
+		}},
+		SecretMappings: &[]string{"kafka-credentials", "registry-credentials"},
+	}
+
+	switch {
+	case query.Get("skipCleanup") == "true" && !cascade:
+		writeCmfError(t, w, http.StatusBadRequest, "Environment 'cascade-test' not deleted: skipCleanup requires cascade. To unblock a cascade deletion that is stuck, send cascade=true&skipCleanup=true.")
+	case cascade && force:
+		w.WriteHeader(http.StatusOK)
+		result := cmfsdk.EnvironmentDeletionResult{
+			Deleted: resources,
+			NotCleanedUp: &[]cmfsdk.KubernetesCleanupFailure{{
+				Kind:      cmfsdk.PtrString("FlinkApplication"),
+				Name:      cmfsdk.PtrString("orders-app"),
+				Namespace: *cmfsdk.NewNullableString(cmfsdk.PtrString("cascade-test-namespace")),
+				Reason:    cmfsdk.PtrString("Its FlinkDeployment was already being deleted, so it might still exist."),
+			}},
+		}
+		require.NoError(t, json.NewEncoder(w).Encode(result))
+	case cascade:
+		w.WriteHeader(http.StatusAccepted)
+		require.NoError(t, json.NewEncoder(w).Encode(cmfsdk.EnvironmentDeletionResult{ToBeDeleted: resources}))
+	case force:
+		writeCmfError(t, w, http.StatusUnprocessableEntity, "Environment 'cascade-test' cannot be deleted with force because it still has 2 applications, 1 statement and 1 compute pool. Add cascade=true to delete everything in it with force.")
+	default:
+		writeCmfError(t, w, http.StatusUnprocessableEntity, "Environment 'cascade-test' cannot be deleted because it still has 2 applications, 1 statement and 1 compute pool. Delete them first, or add cascade=true to delete the environment together with everything in it.")
+	}
+}
+
 // Helper function to create a Flink environment with default application, compute pool and statement.
 func createEnvironmentWithDefaults(name string, namespace string) cmfsdk.Environment {
 	createdTime := time.Date(2025, time.September, 25, 12, 29, 0, 0, time.UTC)
@@ -506,6 +570,7 @@ func handleCmfEnvironments(t *testing.T) http.HandlerFunc {
 				createEnvironment("default", "default-namespace"),
 				createEnvironment("test", "test-namespace"),
 				createEnvironment("update-failure", "update-failure-namespace"),
+				createDeletingEnvironment("deleting", "deleting-namespace"),
 			}
 			environmentPage := map[string]interface{}{
 				"items": []cmfsdk.Environment{},
@@ -568,9 +633,15 @@ func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 		environment := mux.Vars(r)["environment"]
 		switch r.Method {
 		case http.MethodGet:
-			if environment == "default" || environment == "test" || environment == "update-failure" {
+			if environment == "default" || environment == "test" || environment == "update-failure" || environment == "cascade-test" {
 				outputEnvironment := createEnvironment(environment, environment+"-namespace")
 				err := json.NewEncoder(w).Encode(outputEnvironment)
+				require.NoError(t, err)
+				return
+			}
+
+			if environment == "deleting" {
+				err := json.NewEncoder(w).Encode(createDeletingEnvironment(environment, environment+"-namespace"))
 				require.NoError(t, err)
 				return
 			}
@@ -595,7 +666,14 @@ func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 				return
 			}
 
+			if environment == "cascade-test" {
+				handleCascadeTestEnvironmentDelete(t, w, r)
+				return
+			}
+
 			if environment == "default" || environment == "test" {
+				// The tests only delete these environments with --force, which the CLI passes on to CMF.
+				require.Equal(t, "true", r.URL.Query().Get("force"))
 				w.WriteHeader(http.StatusOK)
 				return
 			}

@@ -1,0 +1,5 @@
+Error: failed to delete cascade-test: {"errors":[{"message":"Environment 'cascade-test' cannot be deleted with force because it still has 2 applications, 1 statement and 1 compute pool. Add cascade=true to delete everything in it with force."}]}
+
+Suggestions:
+    To delete the environment and everything in it, add `--cascade`.
+    If an earlier deletion is stuck, use `--cascade --skip-cleanup`, or `--cascade --force` if the Kubernetes cluster is disconnected or decommissioned.
