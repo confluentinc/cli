@@ -1,13 +1,11 @@
 package ksql
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
 	"github.com/dghubble/sling"
 	"github.com/spf13/cobra"
-	"golang.org/x/oauth2"
 
 	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 
@@ -15,6 +13,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/httpclient"
 )
 
 type ksqlCommand struct {
@@ -82,9 +81,8 @@ func (c *ksqlCommand) checkProvisioningFailed(endpoint string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: dataplaneToken})
-
-	slingClient := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(endpoint)
+	client := httpclient.New(newInfoHttpConfig())
+	slingClient := sling.New().Client(client).Base(endpoint).Set("Authorization", "Bearer "+dataplaneToken)
 	var failure map[string]any
 	response, err := slingClient.New().Get("/info").Receive(nil, &failure)
 	if err != nil || response == nil {
@@ -102,6 +100,19 @@ func (c *ksqlCommand) checkProvisioningFailed(endpoint string) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+func newInfoHttpConfig() httpclient.Config {
+	cfg := httpclient.Default
+	// Don't retry a 503: from /info it's usually the answer (error code 50321, ACLs misconfigured), not a transient failure
+	cfg.RetryStatus = func(resp *http.Response) bool {
+		switch resp.StatusCode {
+		case http.StatusRequestTimeout, http.StatusTooManyRequests, http.StatusInternalServerError, http.StatusBadGateway, http.StatusGatewayTimeout:
+			return true
+		}
+		return false
+	}
+	return cfg
 }
 
 func (c *ksqlCommand) validArgs(cmd *cobra.Command, args []string) []string {

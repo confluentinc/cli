@@ -23,6 +23,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/confluentinc/cli/v4/pkg/form"
+	"github.com/confluentinc/cli/v4/pkg/httpclient"
 	"github.com/confluentinc/cli/v4/pkg/jwt"
 	"github.com/confluentinc/cli/v4/pkg/kafka"
 	"github.com/confluentinc/cli/v4/pkg/log"
@@ -401,9 +402,10 @@ func getKafkaRestEndpoint(client *ccloudv2.Client, ctx *config.Context) (string,
 
 func (r *PreRun) createCCloudClient(ctx *config.Context, ver *pversion.Version) *ccloudv1.Client {
 	params := &ccloudv1.Params{
-		BaseURL:   ctx.GetPlatformServer(),
-		Logger:    log.CliLogger,
-		UserAgent: ver.UserAgent,
+		BaseURL:    ctx.GetPlatformServer(),
+		BaseClient: httpclient.New(httpclient.Default),
+		Logger:     log.CliLogger,
+		UserAgent:  ver.UserAgent,
 	}
 
 	return ccloudv1.NewClientWithJWT(context.Background(), ctx.GetAuthToken(), params)
@@ -715,7 +717,7 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, _ string) {
 		return
 	}
 
-	client := update.NewClient(r.Config.IsTest)
+	client := update.NewClient(r.Config.IsTest, httpclient.NoRetry)
 
 	binaries, err := client.GetBinaries()
 	if err != nil {
