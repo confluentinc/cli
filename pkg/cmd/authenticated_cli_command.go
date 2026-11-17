@@ -243,9 +243,11 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient(cmd *cobra.Command) (*
 				if len(clusters) == 0 {
 					return nil, schemaregistry.ErrNotEnabled
 				}
+				// Private endpoints are usually unreachable from outside their network; try each once
+				validationConfig := httpclient.NoRetry
+				validationConfig.AttemptTimeout = httpclient.Default.AttemptTimeout
 				for _, urlPrivate := range clusters[0].Spec.PrivateNetworkingConfig.GetRegionalEndpoints() {
-					// Private endpoints are usually unreachable from outside their network; try each once
-					isCloudEndpointAutoFound = c.validateSchemaRegistryEndpointAndSetClient(clusters[0], schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration, httpclient.SingleAttempt)
+					isCloudEndpointAutoFound = c.validateSchemaRegistryEndpointAndSetClient(clusters[0], schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration, validationConfig)
 					if isCloudEndpointAutoFound {
 						err := c.saveToConfig(urlPrivate)
 						if err != nil {
@@ -448,9 +450,11 @@ func (c *AuthenticatedCLICommand) GetValidSchemaRegistryClusterEndpoint(cmd *cob
 	schemaRegistryApiSecret, _ := cmd.Flags().GetString("schema-registry-api-secret")
 	isCloudEndpointAutoFound := false
 	var endpoint string
+	// Private endpoints are usually unreachable from outside their network; try each once
+	validationConfig := httpclient.NoRetry
+	validationConfig.AttemptTimeout = httpclient.Default.AttemptTimeout
 	for _, urlPrivate := range cluster.Spec.PrivateNetworkingConfig.GetRegionalEndpoints() {
-		// Private endpoints are usually unreachable from outside their network; try each once
-		isCloudEndpointAutoFound = c.validateSchemaRegistryEndpointAndSetClient(cluster, schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration, httpclient.SingleAttempt)
+		isCloudEndpointAutoFound = c.validateSchemaRegistryEndpointAndSetClient(cluster, schemaRegistryApiKey, schemaRegistryApiSecret, urlPrivate, *configuration, validationConfig)
 		if isCloudEndpointAutoFound {
 			endpoint = urlPrivate
 			err := c.saveToConfig(urlPrivate)
