@@ -133,6 +133,13 @@ func (s *CLITestSuite) TestFlinkEnvironmentDelete() {
 		{args: "flink environment delete default test --force", fixture: "flink/environment/delete-success.golden"},
 		// some failures and some successes
 		{args: "flink environment delete default non-existent --force", fixture: "flink/environment/delete-mixed.golden", exitCode: 1},
+		// an environment that still has resources
+		{args: "flink environment delete cascade-test --cascade", input: "y\n", fixture: "flink/environment/delete-cascade.golden"},
+		{args: "flink environment delete cascade-test --cascade --force", fixture: "flink/environment/delete-cascade-force.golden"},
+		{args: "flink environment delete cascade-test", input: "y\n", fixture: "flink/environment/delete-has-resources.golden", exitCode: 1},
+		{args: "flink environment delete cascade-test --force", fixture: "flink/environment/delete-has-resources-force.golden", exitCode: 1},
+		{args: "flink environment delete cascade-test --skip-cleanup", input: "y\n", fixture: "flink/environment/delete-skip-cleanup-without-cascade.golden", exitCode: 1},
+		{args: "flink environment delete cascade-test --skip-cleanup --force", fixture: "flink/environment/delete-skip-cleanup-with-force.golden", exitCode: 1},
 	}
 	runIntegrationTestsWithMultipleAuth(s, tests)
 }
@@ -314,6 +321,8 @@ func (s *CLITestSuite) TestFlinkEnvironmentDescribe() {
 		{args: "flink environment describe default --output json", fixture: "flink/environment/describe-success-json.golden"},
 		{args: "flink environment describe default --output yaml", fixture: "flink/environment/describe-success-yaml.golden"},
 		{args: "flink environment describe defaults-all", fixture: "flink/environment/describe-success-with-defaults.golden"},
+		{args: "flink environment describe deleting", fixture: "flink/environment/describe-deleting.golden"},
+		{args: "flink environment describe deleting --output json", fixture: "flink/environment/describe-deleting-json.golden"},
 		// failure
 		{args: "flink environment describe non-existent", fixture: "flink/environment/describe-non-existent.golden", exitCode: 1},
 		{args: "flink environment describe", fixture: "flink/environment/describe-no-environment.golden", exitCode: 1},

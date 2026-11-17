@@ -13,6 +13,7 @@ type flinkEnvironmentOutput struct {
 	KubernetesNamespace          string `human:"Kubernetes Namespace" serialized:"kubernetes_namespace"`
 	CreatedTime                  string `human:"Created Time" serialized:"created_time"`
 	UpdatedTime                  string `human:"Updated Time" serialized:"updated_time"`
+	DeletionRequestedTime        string `human:"Deletion Requested Time,omitempty" serialized:"deletion_requested_time,omitempty"`
 	FlinkApplicationDefaults     string `human:"Flink Application Defaults,omitempty" serialized:"flink_application_defaults,omitempty"`
 	ComputePoolDefaults          string `human:"Flink Compute Pool Defaults,omitempty" serialized:"flink_compute_pool_defaults,omitempty"`
 	DetachedStatementDefaults    string `human:"Detached Statement Defaults,omitempty" serialized:"detached_statement_defaults,omitempty"`
@@ -65,5 +66,17 @@ func convertSdkEnvironmentToLocalEnvironment(sdkOutputEnvironment cmfsdk.Environ
 		localEnv.StatementDefaults = localDefaults1
 	}
 
+	if timestamp := deletionRequestedTime(sdkOutputEnvironment); timestamp != "" {
+		localEnv.Metadata = &LocalEnvironmentMetadata{DeletionRequestedTimestamp: timestamp}
+	}
+
 	return localEnv
+}
+
+// deletionRequestedTime returns when the deletion of the environment and everything in it was requested, or "" if it wasn't.
+func deletionRequestedTime(environment cmfsdk.Environment) string {
+	if environment.Metadata == nil {
+		return ""
+	}
+	return environment.Metadata.GetDeletionRequestedTimestamp()
 }

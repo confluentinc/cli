@@ -109,6 +109,11 @@ type LocalEnvironment struct {
 	KubernetesNamespace      string                      `json:"kubernetesNamespace" yaml:"kubernetesNamespace"`
 	ComputePoolDefaults      *map[string]interface{}     `json:"computePoolDefaults,omitempty" yaml:"computePoolDefaults,omitempty"`
 	StatementDefaults        *LocalAllStatementDefaults1 `json:"statementDefaults,omitempty" yaml:"statementDefaults,omitempty"`
+	Metadata                 *LocalEnvironmentMetadata   `json:"metadata,omitempty" yaml:"metadata,omitempty"`
+}
+
+type LocalEnvironmentMetadata struct {
+	DeletionRequestedTimestamp string `json:"deletionRequestedTimestamp,omitempty" yaml:"deletionRequestedTimestamp,omitempty"`
 }
 
 type LocalFlinkApplicationInstance struct {

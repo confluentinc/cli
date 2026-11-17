@@ -1,0 +1,5 @@
+Are you sure you want to delete Flink environment "cascade-test"? (y/n): Error: failed to delete cascade-test: {"errors":[{"message":"Environment 'cascade-test' not deleted: skipCleanup requires cascade. To unblock a cascade deletion that is stuck, send cascade=true&skipCleanup=true."}]}
+
+Suggestions:
+    To delete the environment and everything in it, add `--cascade`.
+    If an earlier deletion is stuck, use `--cascade --skip-cleanup`, or `--cascade --force` if the Kubernetes cluster is disconnected or decommissioned.
