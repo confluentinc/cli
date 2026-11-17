@@ -280,6 +280,28 @@ func TestNew_RejectedClientCertificate(t *testing.T) {
 	require.Equal(t, int32(1), connections.Load())
 }
 
+func TestNew_RecordErrorAfterRequestMaybeApplied(t *testing.T) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = io.ReadAll(r.Body)
+		// Hijack takes the connection from the HTTP server, since w can only send valid TLS and this test needs a corrupted record
+		conn, _, _ := w.(http.Hijacker).Hijack()
+		// A record header with the wrong version, as a corrupting proxy might send
+		_, _ = conn.(*tls.Conn).NetConn().Write([]byte{0x17, 0x03, 0x01, 0x00, 0x05, 'h', 'e', 'l', 'l', 'o'})
+		_ = conn.Close()
+	}))
+	t.Cleanup(server.Close)
+	cfg := Default
+	cfg.TLSConfig = server.Client().Transport.(*http.Transport).TLSClientConfig
+
+	_, err := do(t, New(cfg), http.MethodPost, server.URL, "{}")
+	var recordErr tls.RecordHeaderError
+	require.ErrorAs(t, err, &recordErr)
+
+	var retryErr *RetryError
+	require.ErrorAs(t, err, &retryErr)
+	require.True(t, retryErr.MaybeApplied)
+}
+
 func TestNew_TLSConfig(t *testing.T) {
 	server, _ := tlsServer(t, tls.NoClientCert)
 	roots := x509.NewCertPool()

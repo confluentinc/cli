@@ -90,7 +90,8 @@ func notSent(err error) bool {
 		return true
 	}
 
-	if _, ok := errors.AsType[tls.RecordHeaderError](err); ok {
+	// Conn is set only on a pre-handshake record error (later ones can occur while reading the response)
+	if recordErr, ok := errors.AsType[tls.RecordHeaderError](err); ok && recordErr.Conn != nil {
 		return true
 	}
 

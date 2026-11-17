@@ -108,6 +108,9 @@ func TestStateTransport_ResponseWithError(t *testing.T) {
 	require.Empty(t, stdLog.String(), "stateTransport returned a response with its error, so net/http logged to stderr")
 }
 
+// stubConn stands in for the Conn that Go sets only on a first-record error
+type stubConn struct{ net.Conn }
+
 func TestNotSent(t *testing.T) {
 	tests := []struct {
 		name string
@@ -118,7 +121,9 @@ func TestNotSent(t *testing.T) {
 		{"proxy", &net.OpError{Op: "proxyconnect", Err: errors.New("connection refused")}, true},
 		{"TLS alert", &net.OpError{Op: "remote error", Err: errors.New("tls: bad certificate")}, true},
 		{"certificate", &tls.CertificateVerificationError{Err: errors.New("unknown authority")}, true},
-		{"record header", tls.RecordHeaderError{Msg: "first record does not look like a TLS handshake"}, true},
+		{"record header before handshake", tls.RecordHeaderError{Msg: "first record does not look like a TLS handshake", Conn: stubConn{}}, true},
+		{"record header after handshake", tls.RecordHeaderError{Msg: "received record with version 301 when expecting version 303"}, false},
+		{"wrapped record header after handshake", &url.Error{Op: "Post", URL: "https://example.com", Err: tls.RecordHeaderError{Msg: "received record with version 301 when expecting version 303"}}, false},
 		{"handshake timeout", errors.New("net/http: TLS handshake timeout"), true},
 		{"wrapped dial", &url.Error{Op: "Post", URL: "https://example.com", Err: &net.OpError{Op: "dial", Err: errors.New("refused")}}, true},
 		{"read", &net.OpError{Op: "read", Err: errors.New("connection reset by peer")}, false},
