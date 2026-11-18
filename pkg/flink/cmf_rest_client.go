@@ -256,7 +256,7 @@ func (cmfClient *CmfRestClient) CreateEnvironment(ctx context.Context, postEnvir
 }
 
 func (cmfClient *CmfRestClient) DeleteEnvironment(ctx context.Context, environment string) error {
-	httpResp, err := cmfClient.EnvironmentsApi.DeleteEnvironment(ctx, environment).Execute()
+	_, httpResp, err := cmfClient.EnvironmentsApi.DeleteEnvironment(ctx, environment).Execute()
 	return parseSdkError(httpResp, err)
 }
 
