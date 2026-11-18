@@ -11,6 +11,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		Use:         "logs",
 		Short:       "Query logs from Confluent Cloud log sources.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Hidden:      true,
 	}
 
 	cmd.AddCommand(newFetchCommand(prerunner))
