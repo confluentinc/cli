@@ -5,7 +5,7 @@ import (
 	"slices"
 	"time"
 
-	loggingv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/logging/v1"
+	loggingv1 "github.com/confluentinc/ccloud-sdk-go-v2/logging/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"

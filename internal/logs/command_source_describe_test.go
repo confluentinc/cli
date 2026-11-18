@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	loggingv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/logging/v1"
+	loggingv1 "github.com/confluentinc/ccloud-sdk-go-v2/logging/v1"
 )
 
 var describeTestSource = &loggingv1.LoggingV1Source{
