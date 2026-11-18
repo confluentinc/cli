@@ -8,6 +8,7 @@ import (
 	flinkgatewayv1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1"
 
 	flinkerror "github.com/confluentinc/cli/v4/pkg/errors/flink"
+	"github.com/confluentinc/cli/v4/pkg/httpclient"
 	"github.com/confluentinc/cli/v4/pkg/log"
 )
 
@@ -35,7 +36,9 @@ type FlinkGatewayClient struct {
 func NewFlinkGatewayClient(url, userAgent string, unsafeTrace bool, authToken string) *FlinkGatewayClient {
 	cfg := flinkgatewayv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = NewRetryableHttpClientWithRedirect(unsafeTrace, checkRedirect)
+	httpConfig := httpclient.Default
+	httpConfig.CheckRedirect = checkRedirect
+	cfg.HTTPClient = httpclient.New(httpConfig)
 	cfg.Servers = flinkgatewayv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

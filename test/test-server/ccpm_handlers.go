@@ -11,7 +11,16 @@ import (
 	"github.com/stretchr/testify/require"
 
 	ccpmv1 "github.com/confluentinc/ccloud-sdk-go-v2/ccpm/v1"
+
+	"github.com/confluentinc/cli/v4/pkg/errors"
 )
+
+// writeCCPMServerError returns a 500 with a JSON error body, as the real API does
+func writeCCPMServerError(w http.ResponseWriter) error {
+	w.WriteHeader(http.StatusInternalServerError)
+	body := &errors.ErrorResponseBody{Errors: []errors.ErrorDetail{{Detail: "API Error"}}}
+	return json.NewEncoder(w).Encode(body)
+}
 
 // CCPM Plugin handlers
 func handleCCPMPlugins(t *testing.T) http.HandlerFunc {
@@ -25,7 +34,7 @@ func handleCCPMPlugins(t *testing.T) http.HandlerFunc {
 			// Check if this is an error test case
 			if environment == "env-error" && cloud == "" {
 				// This is the error handling test case - return error
-				http.Error(w, "API Error", http.StatusInternalServerError)
+				require.NoError(t, writeCCPMServerError(w))
 				return
 			}
 
@@ -111,7 +120,7 @@ func handleCCPMPlugins(t *testing.T) http.HandlerFunc {
 			if ok {
 				if envId, ok := environment["id"].(string); ok && envId == "env-error" {
 					// This is the error handling test case - return error
-					http.Error(w, "API Error", http.StatusInternalServerError)
+					require.NoError(t, writeCCPMServerError(w))
 					return
 				}
 			}
@@ -180,7 +189,7 @@ func handleCCPMPluginId(t *testing.T) http.HandlerFunc {
 			// Check if this is an error test case
 			if environment == "env-error" {
 				// This is the error handling test case - return error
-				http.Error(w, "API Error", http.StatusInternalServerError)
+				require.NoError(t, writeCCPMServerError(w))
 				return
 			}
 
@@ -233,7 +242,7 @@ func handleCCPMPluginId(t *testing.T) http.HandlerFunc {
 			// Check if this is an error test case
 			if environment == "env-error" {
 				// This is the error handling test case - return error
-				http.Error(w, "API Error", http.StatusInternalServerError)
+				require.NoError(t, writeCCPMServerError(w))
 				return
 			}
 
@@ -273,7 +282,7 @@ func handleCCPMPluginId(t *testing.T) http.HandlerFunc {
 			// Check if this is an error test case
 			if environment == "env-error" {
 				// This is the error handling test case - return error
-				http.Error(w, "API Error", http.StatusInternalServerError)
+				require.NoError(t, writeCCPMServerError(w))
 				return
 			}
 
