@@ -185,6 +185,7 @@ func handleCascadeTestEnvironmentDelete(t *testing.T, w http.ResponseWriter, r *
 	query := r.URL.Query()
 	cascade := query.Get("cascade") == "true"
 	force := query.Get("force") == "true"
+	skipCleanup := query.Get("skipCleanup") == "true"
 
 	resources := &cmfsdk.EnvironmentResourceNames{
 		Applications: &[]string{"orders-app", "payments-app"},
@@ -199,8 +200,10 @@ func handleCascadeTestEnvironmentDelete(t *testing.T, w http.ResponseWriter, r *
 	}
 
 	switch {
-	case query.Get("skipCleanup") == "true" && !cascade:
+	case skipCleanup && !cascade:
 		writeCmfError(t, w, http.StatusBadRequest, "Environment 'cascade-test' not deleted: skipCleanup requires cascade. To unblock a cascade deletion that is stuck, send cascade=true&skipCleanup=true.")
+	case skipCleanup && force:
+		writeCmfError(t, w, http.StatusBadRequest, "Environment 'cascade-test' not deleted: skipCleanup cannot be combined with force.")
 	case cascade && force:
 		w.WriteHeader(http.StatusOK)
 		result := cmfsdk.EnvironmentDeletionResult{
@@ -213,6 +216,11 @@ func handleCascadeTestEnvironmentDelete(t *testing.T, w http.ResponseWriter, r *
 			}},
 		}
 		require.NoError(t, json.NewEncoder(w).Encode(result))
+	case cascade && skipCleanup:
+		// As for a retry of a deletion that is stuck: CMF lists only what is still left.
+		w.WriteHeader(http.StatusAccepted)
+		stuck := &cmfsdk.EnvironmentResourceNames{Statements: &[]string{"orders-enrich"}}
+		require.NoError(t, json.NewEncoder(w).Encode(cmfsdk.EnvironmentDeletionResult{ToBeDeleted: stuck}))
 	case cascade:
 		w.WriteHeader(http.StatusAccepted)
 		require.NoError(t, json.NewEncoder(w).Encode(cmfsdk.EnvironmentDeletionResult{ToBeDeleted: resources}))

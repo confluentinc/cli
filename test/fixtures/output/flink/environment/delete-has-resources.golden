@@ -1,5 +1,6 @@
 Are you sure you want to delete Flink environment "cascade-test"? (y/n): Error: failed to delete cascade-test: {"errors":[{"message":"Environment 'cascade-test' cannot be deleted because it still has 2 applications, 1 statement and 1 compute pool. Delete them first, or add cascade=true to delete the environment together with everything in it."}]}
 
 Suggestions:
-    To delete the environment and everything in it, add `--cascade`.
+    If the environment still has applications, statements or compute pools, add `--cascade` to delete them with it. This requires CMF 2.5.0 or later.
+    The environment's artifacts and catalog objects must always be deleted first.
     If an earlier deletion is stuck, use `--cascade --skip-cleanup`, or `--cascade --force` if the Kubernetes cluster is disconnected or decommissioned.
