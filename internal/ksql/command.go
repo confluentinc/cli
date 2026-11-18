@@ -1,13 +1,11 @@
 package ksql
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
 	"github.com/dghubble/sling"
 	"github.com/spf13/cobra"
-	"golang.org/x/oauth2"
 
 	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 
@@ -15,6 +13,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/config"
+	"github.com/confluentinc/cli/v4/pkg/httpclient"
 )
 
 type ksqlCommand struct {
@@ -50,6 +49,10 @@ func (c *ksqlCommand) formatClusterForDisplayAndList(cluster *ksqlv2.KsqldbcmV2C
 		detailedProcessingLog = cluster.Spec.GetUseDetailedProcessingLog()
 	}
 
+	// The status is only displayed, so an unreachable endpoint gets one try
+	infoConfig := httpclient.NoRetry
+	infoConfig.AttemptTimeout = httpclient.Default.AttemptTimeout
+
 	return &ksqlCluster{
 		Id:                    cluster.GetId(),
 		Name:                  cluster.Spec.GetDisplayName(),
@@ -57,17 +60,17 @@ func (c *ksqlCommand) formatClusterForDisplayAndList(cluster *ksqlv2.KsqldbcmV2C
 		KafkaCluster:          cluster.Spec.KafkaCluster.GetId(),
 		Storage:               cluster.Status.GetStorage(),
 		Endpoint:              cluster.Status.GetHttpEndpoint(),
-		Status:                c.getClusterStatus(cluster),
+		Status:                c.getClusterStatus(cluster, infoConfig),
 		DetailedProcessingLog: detailedProcessingLog,
 	}
 }
 
-func (c *ksqlCommand) getClusterStatus(cluster *ksqlv2.KsqldbcmV2Cluster) string {
+func (c *ksqlCommand) getClusterStatus(cluster *ksqlv2.KsqldbcmV2Cluster, infoConfig httpclient.Config) string {
 	status := cluster.Status.GetPhase()
 	if cluster.Status.GetIsPaused() {
 		status = "PAUSED"
 	} else if status == "PROVISIONED" {
-		provisioningFailed, err := c.checkProvisioningFailed(cluster.Status.GetHttpEndpoint())
+		provisioningFailed, err := c.checkProvisioningFailed(cluster.Status.GetHttpEndpoint(), infoConfig)
 		if err != nil {
 			status = "UNKNOWN"
 		} else if provisioningFailed {
@@ -77,14 +80,13 @@ func (c *ksqlCommand) getClusterStatus(cluster *ksqlv2.KsqldbcmV2Cluster) string
 	return status
 }
 
-func (c *ksqlCommand) checkProvisioningFailed(endpoint string) (bool, error) {
+func (c *ksqlCommand) checkProvisioningFailed(endpoint string, infoConfig httpclient.Config) (bool, error) {
 	dataplaneToken, err := pauth.GetDataplaneToken(c.Context)
 	if err != nil {
 		return false, err
 	}
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: dataplaneToken})
-
-	slingClient := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(endpoint)
+	client := httpclient.New(infoConfig)
+	slingClient := sling.New().Client(client).Base(endpoint).Set("Authorization", "Bearer "+dataplaneToken)
 	var failure map[string]any
 	response, err := slingClient.New().Get("/info").Receive(nil, &failure)
 	if err != nil || response == nil {
@@ -102,6 +104,19 @@ func (c *ksqlCommand) checkProvisioningFailed(endpoint string) (bool, error) {
 		}
 	}
 	return false, nil
+}
+
+func newInfoHttpConfig() httpclient.Config {
+	cfg := httpclient.Default
+	// Don't retry a 503: from /info it's usually the answer (error code 50321, ACLs misconfigured), not a transient failure
+	cfg.RetryStatus = func(resp *http.Response) bool {
+		switch resp.StatusCode {
+		case http.StatusRequestTimeout, http.StatusTooManyRequests, http.StatusInternalServerError, http.StatusBadGateway, http.StatusGatewayTimeout:
+			return true
+		}
+		return false
+	}
+	return cfg
 }
 
 func (c *ksqlCommand) validArgs(cmd *cobra.Command, args []string) []string {
