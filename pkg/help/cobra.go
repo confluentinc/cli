@@ -37,7 +37,7 @@ var templateFuncs = template.FuncMap{
 }
 
 func WriteHelpTemplate(cmd *cobra.Command) error {
-	return tmpl(cmd.OutOrStderr(), cmd.HelpTemplate(), cmd)
+	return tmpl(cmd.OutOrStdout(), cmd.HelpTemplate(), cmd)
 }
 
 // tmpl executes the given template text on data, writing the result to w.
