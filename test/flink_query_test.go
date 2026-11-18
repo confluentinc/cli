@@ -63,6 +63,13 @@ func (s *CLITestSuite) TestFlinkQuery() {
 		// The statement itself fails server-side.
 		{args: `flink query --sql "SELECT * FROM will_fail;" --compute-pool lfcp-123456 --service-account sa-123456`, fixture: "flink/query/failed.golden", regex: true, exitCode: 1},
 
+		// A failed statement yields no rows, so -o json / -o yaml must leave stdout
+		// empty (no stray "[]") and only report the error. The golden holds the
+		// combined stdout+stderr and is anchored with ^, so anything ahead of "Error:"
+		// (such as a "[]" on stdout) fails the match.
+		{args: `flink query --sql "SELECT * FROM will_fail;" --compute-pool lfcp-123456 --service-account sa-123456 -o json`, fixture: "flink/query/failed-serialized.golden", regex: true, exitCode: 1},
+		{args: `flink query --sql "SELECT * FROM will_fail;" --compute-pool lfcp-123456 --service-account sa-123456 -o yaml`, fixture: "flink/query/failed-serialized.golden", regex: true, exitCode: 1},
+
 		// A results-conversion error (not Unbounded, not Canceled) falls through
 		// handleQueryError's generic branch, which leaves settled false — the
 		// deferred cleanup must still announce stopping the still-RUNNING
