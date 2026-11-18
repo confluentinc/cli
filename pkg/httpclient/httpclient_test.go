@@ -98,6 +98,11 @@ func readBody(t *testing.T, resp *http.Response) string {
 	return string(body)
 }
 
+func TestWithDefaults_Jitter(t *testing.T) {
+	require.Equal(t, Default.JitterCoefficient, Config{RetryMax: 1}.withDefaults().JitterCoefficient, "a retrying config without jitter")
+	require.Zero(t, Config{RetryMax: 0}.withDefaults().JitterCoefficient, "a config that never retries")
+}
+
 func TestNew_RetriesUntilSuccess(t *testing.T) {
 	server, attempts := statusServer(t, http.StatusServiceUnavailable, http.StatusBadGateway, http.StatusOK)
 	cfg, _ := fastConfig(Default)

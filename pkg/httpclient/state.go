@@ -36,6 +36,7 @@ func isIdempotent(req *http.Request) bool {
 	case "", http.MethodGet, http.MethodHead, http.MethodOptions, http.MethodTrace, http.MethodPut, http.MethodDelete:
 		return true
 	}
+	// Read idempotentKey to check if a POST/PATCH was marked as idempotent (MarkReadOnly); defaults to false otherwise
 	idempotent, _ := req.Context().Value(idempotentKey{}).(bool)
 	return idempotent
 }
@@ -79,10 +80,17 @@ func (st *state) wrap(err error) error {
 	return &RetryError{Attempts: attempts, Err: err, MaybeApplied: maybeApplied}
 }
 
+// Op values Go sets on a *net.OpError
+const (
+	opDial         = "dial"
+	opProxyConnect = "proxyconnect"
+	opRemoteError  = "remote error"
+)
+
 // notSent reports whether the request failed before reaching the server (DNS, connect, proxy, TLS handshake).
 func notSent(err error) bool {
 	// DNS failures arrive as a dial error.
-	if opErr, ok := errors.AsType[*net.OpError](err); ok && (opErr.Op == "dial" || opErr.Op == "proxyconnect") {
+	if opErr, ok := errors.AsType[*net.OpError](err); ok && (opErr.Op == opDial || opErr.Op == opProxyConnect) {
 		return true
 	}
 

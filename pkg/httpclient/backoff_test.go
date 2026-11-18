@@ -18,11 +18,10 @@ func testConfig(r float64) (Config, *[]string) {
 
 func TestBackoff_Computed(t *testing.T) {
 	tests := []struct {
-		r    float64   // the random param, 0 to 1, with .5 being no jitter
+		r    float64   // the random param, 0 to 1, with 0 being no jitter
 		want []float64 // in ms, each entry is an attempt
 	}{
-		{0, []float64{800, 1280, 2048, 3276.8}},
-		{0.5, []float64{1000, 1600, 2560, 4096}},
+		{0, []float64{1000, 1600, 2560, 4096}},
 		{1, []float64{1200, 1920, 3072, 4915.2}},
 	}
 
@@ -36,8 +35,8 @@ func TestBackoff_Computed(t *testing.T) {
 }
 
 func TestBackoff_JitterAtCap(t *testing.T) {
-	cfg, _ := testConfig(0)
-	require.Equal(t, 24*time.Second, cfg.backoff(time.Second, 30*time.Second, 8, nil))
+	cfg, _ := testConfig(1)
+	require.Equal(t, 30*time.Second, cfg.backoff(time.Second, 30*time.Second, 8, nil))
 }
 
 func TestBackoff_RetryAfter(t *testing.T) {

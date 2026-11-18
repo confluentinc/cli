@@ -27,10 +27,10 @@ func (cfg Config) backoff(waitMin, waitMax time.Duration, attempt int, resp *htt
 	var wait time.Duration
 	if retryAfter, ok := parseRetryAfter(resp); ok {
 		// Never shorter than Retry-After; checkRetry has already stopped on values above waitMax.
-		wait = retryAfter + time.Duration(r*cfg.Jitter*float64(max(retryAfter, waitMin)))
+		wait = retryAfter + time.Duration(r*cfg.JitterCoefficient*float64(max(retryAfter, waitMin)))
 	} else {
 		base := min(float64(waitMin)*math.Pow(growth, float64(attempt)), float64(waitMax))
-		wait = min(time.Duration(base*(1+cfg.Jitter*(2*r-1))), waitMax)
+		wait = min(time.Duration(base*(1+cfg.JitterCoefficient*r)), waitMax)
 	}
 
 	cfg.notice(wait, resp)

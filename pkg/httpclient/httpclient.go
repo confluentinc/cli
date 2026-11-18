@@ -19,10 +19,10 @@ import (
 const growth = 1.6
 
 type Config struct {
-	RetryMax     int           // retries after the first attempt
-	RetryWaitMin time.Duration // first computed wait
-	RetryWaitMax time.Duration // cap on computed waits; longest Retry-After honored
-	Jitter       float64       // plus/minus jitter on computed waits, plus 0 to jitter on Retry-After
+	RetryMax          int           // retries after the first attempt
+	RetryWaitMin      time.Duration // first computed wait
+	RetryWaitMax      time.Duration // cap on computed waits; longest Retry-After honored
+	JitterCoefficient float64       // fraction of each wait added at random (0.2 adds up to 20%)
 
 	AttemptTimeout        time.Duration // one attempt, including reading the body
 	ConnectTimeout        time.Duration // DNS and TCP connect
@@ -44,7 +44,7 @@ var (
 		RetryMax:            4,
 		RetryWaitMin:        1 * time.Second,
 		RetryWaitMax:        30 * time.Second,
-		Jitter:              0.2,
+		JitterCoefficient:   0.2,
 		AttemptTimeout:      60 * time.Second,
 		ConnectTimeout:      10 * time.Second,
 		TLSHandshakeTimeout: 10 * time.Second,
@@ -63,7 +63,7 @@ var (
 		RetryMax:              4,
 		RetryWaitMin:          1 * time.Second,
 		RetryWaitMax:          30 * time.Second,
-		Jitter:                0.2,
+		JitterCoefficient:     0.2,
 		AttemptTimeout:        30 * time.Minute,
 		ConnectTimeout:        10 * time.Second,
 		TLSHandshakeTimeout:   10 * time.Second,
@@ -72,12 +72,7 @@ var (
 )
 
 func New(cfg Config) *http.Client {
-	if cfg.random == nil {
-		cfg.random = rand.Float64
-	}
-	if cfg.printNotice == nil {
-		cfg.printNotice = func(s string) { output.ErrPrintln(false, s) }
-	}
+	cfg = cfg.withDefaults()
 
 	client := &retryablehttp.Client{
 		HTTPClient: &http.Client{
@@ -100,6 +95,21 @@ func New(cfg Config) *http.Client {
 		// Only the inner client follows redirects.
 		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 	}
+}
+
+// withDefaults fills in what a config leaves unset
+func (cfg Config) withDefaults() Config {
+	if cfg.random == nil {
+		cfg.random = rand.Float64
+	}
+	if cfg.printNotice == nil {
+		cfg.printNotice = func(s string) { output.ErrPrintln(false, s) }
+	}
+	// Retries without jitter would let clients retry in lockstep
+	if cfg.RetryMax > 0 && cfg.JitterCoefficient == 0 {
+		cfg.JitterCoefficient = Default.JitterCoefficient
+	}
+	return cfg
 }
 
 func (cfg Config) transport() *http.Transport {

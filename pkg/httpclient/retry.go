@@ -11,9 +11,12 @@ import (
 )
 
 // checkRetry decides whether to retry; RetryMax enforces the count. It never returns an error, so a
-// response is always handed back untouched. POST and PATCH are retried only on 429 and 503 with Retry-After.
+// response is always handed back untouched.
+// Idempotent requests (GET, PUT, DELETE, etc., or a POST marked with MarkReadOnly) can be safely repeated, so
+// they're retried even when the server may have processed them; others only when it says it didn't.
 func (cfg Config) checkRetry(ctx context.Context, resp *http.Response, err error) (bool, error) {
 	st := stateFrom(ctx)
+	// Whether the request is safe to retry, determined by operation
 	idempotent := st != nil && st.idempotent
 
 	if ctx.Err() != nil {
@@ -58,7 +61,7 @@ func (cfg Config) checkRetry(ctx context.Context, resp *http.Response, err error
 // isTLSAlert reports a handshake the server rejected, for example over the client certificate.
 func isTLSAlert(err error) bool {
 	opErr, ok := errors.AsType[*net.OpError](err)
-	return ok && opErr.Op == "remote error"
+	return ok && opErr.Op == opRemoteError
 }
 
 func parseRetryAfter(resp *http.Response) (time.Duration, bool) {
