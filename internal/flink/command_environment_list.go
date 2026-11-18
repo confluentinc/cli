@@ -47,7 +47,7 @@ func (c *command) environmentList(cmd *cobra.Command, _ []string) error {
 		list := output.NewList(cmd)
 		columns := []string{"Name", "CreatedTime", "UpdatedTime", "KubernetesNamespace"}
 		// The column only appears while some environment is being deleted.
-		if slices.ContainsFunc(sdkEnvironments, func(env cmfsdk.Environment) bool { return deletionRequestedTime(env) != "" }) {
+		if slices.ContainsFunc(sdkEnvironments, func(env cmfsdk.Environment) bool { return env.Metadata.GetDeletionRequestedTimestamp() != "" }) {
 			columns = append(columns, "DeletionRequestedTime")
 		}
 		list.Filter(columns)
@@ -57,7 +57,7 @@ func (c *command) environmentList(cmd *cobra.Command, _ []string) error {
 				KubernetesNamespace:   env.KubernetesNamespace,
 				CreatedTime:           env.CreatedTime.String(),
 				UpdatedTime:           env.UpdatedTime.String(),
-				DeletionRequestedTime: deletionRequestedTime(env),
+				DeletionRequestedTime: env.Metadata.GetDeletionRequestedTimestamp(),
 			})
 		}
 		return list.Print()

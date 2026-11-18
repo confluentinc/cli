@@ -66,17 +66,9 @@ func convertSdkEnvironmentToLocalEnvironment(sdkOutputEnvironment cmfsdk.Environ
 		localEnv.StatementDefaults = localDefaults1
 	}
 
-	if timestamp := deletionRequestedTime(sdkOutputEnvironment); timestamp != "" {
+	if timestamp := sdkOutputEnvironment.Metadata.GetDeletionRequestedTimestamp(); timestamp != "" {
 		localEnv.Metadata = &LocalEnvironmentMetadata{DeletionRequestedTimestamp: timestamp}
 	}
 
 	return localEnv
-}
-
-// deletionRequestedTime returns when the deletion of the environment and everything in it was requested, or "" if it wasn't.
-func deletionRequestedTime(environment cmfsdk.Environment) string {
-	if environment.Metadata == nil {
-		return ""
-	}
-	return environment.Metadata.GetDeletionRequestedTimestamp()
 }

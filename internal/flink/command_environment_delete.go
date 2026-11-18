@@ -17,9 +17,13 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
-const environmentCascadeSuggestions = "If the environment still has applications, statements or compute pools, add `--cascade` to delete them with it. This requires CMF 2.5.0 or later.\n" +
-	"The environment's artifacts and catalog objects must always be deleted first.\n" +
-	"If an earlier deletion is stuck, use `--cascade --skip-cleanup`, or `--cascade --force` if the Kubernetes cluster is disconnected or decommissioned."
+const (
+	environmentCascadeSuggestions = "If the environment still has applications, statements or compute pools, add `--cascade` to delete them with it. This requires CMF 2.5.0 or later.\n" +
+		"The environment's artifacts and catalog objects must always be deleted first.\n" +
+		"If an earlier deletion is stuck, use `--cascade --skip-cleanup`, or `--cascade --force` if the Kubernetes cluster is disconnected or decommissioned."
+	environmentForceSuggestions             = "If the Kubernetes cluster is disconnected or decommissioned, add `--force` to delete without requiring it."
+	environmentCascadePermissionSuggestions = "With `--cascade`, you also need permission to delete every application, statement and compute pool in the environment."
+)
 
 func (c *command) newEnvironmentDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -89,12 +93,12 @@ func (c *command) environmentDelete(cmd *cobra.Command, args []string) error {
 		return errors.NewErrorWithSuggestions(err.Error(), suggestions)
 	}
 
-	// Set when CMF refuses a delete or rejects its options, so that the error can point to the flags for CMF's options.
-	suggestCascade := false
+	// The HTTP statuses of CMF's refusals, which tell what flags could resolve them.
+	refusals := map[int]bool{}
 	deleteFunc := func(name string) error {
 		result, status, err := client.DeleteEnvironment(c.createContext(), name, force, cascade, skipCleanup)
 		if err != nil {
-			suggestCascade = suggestCascade || status == http.StatusBadRequest || status == http.StatusUnprocessableEntity
+			refusals[status] = true
 			return err
 		}
 		if cascade {
@@ -105,15 +109,34 @@ func (c *command) environmentDelete(cmd *cobra.Command, args []string) error {
 
 	if cascade {
 		_, err = deletion.DeleteWithoutMessage(cmd, args, deleteFunc)
-		return err
+	} else {
+		_, err = deletion.Delete(cmd, args, deleteFunc, resource.FlinkEnvironment)
 	}
-
-	_, err = deletion.Delete(cmd, args, deleteFunc, resource.FlinkEnvironment)
-	if err != nil && suggestCascade {
-		// Only the suggestions of the returned error itself are shown, not those inside the multierror.
-		return errors.NewErrorWithSuggestions(err.Error(), environmentCascadeSuggestions)
+	if err != nil {
+		if suggestions := environmentDeleteSuggestions(refusals, cascade, force); suggestions != "" {
+			// Only the suggestions of the returned error itself are shown, not those inside the multierror.
+			return errors.NewErrorWithSuggestions(err.Error(), suggestions)
+		}
 	}
 	return err
+}
+
+// environmentDeleteSuggestions points to the flags that could resolve CMF's refusals, judging by their HTTP statuses,
+// because CMF's messages name its query parameters or don't mention the flags at all.
+func environmentDeleteSuggestions(refusals map[int]bool, cascade, force bool) string {
+	var suggestions []string
+	if !cascade && (refusals[http.StatusBadRequest] || refusals[http.StatusUnprocessableEntity]) {
+		suggestions = append(suggestions, environmentCascadeSuggestions)
+	}
+	// A disconnected or decommissioned cluster, or CMF restoring after a restart.
+	if !force && refusals[http.StatusServiceUnavailable] {
+		suggestions = append(suggestions, environmentForceSuggestions)
+	}
+	// CMF answers a missing permission with 401.
+	if cascade && (refusals[http.StatusUnauthorized] || refusals[http.StatusForbidden]) {
+		suggestions = append(suggestions, environmentCascadePermissionSuggestions)
+	}
+	return strings.Join(suggestions, "\n")
 }
 
 // cascadeWarning is added to the confirmation prompt of a delete with --cascade.
@@ -135,7 +158,7 @@ func cascadeWarning(cascade, skipCleanup bool, environments int) string {
 func printCascadeDeletion(name string, status int, result cmfsdk.EnvironmentDeletionResult) {
 	switch status {
 	case http.StatusAccepted:
-		output.Println(false, fmt.Sprintf(`Requested deletion of Flink environment "%s" and everything in it%s. The deletion runs in the background; until it finishes, nothing in "%s" can be created or changed.`, name, formatEnvironmentResources(result.GetToBeDeleted()), name))
+		output.Println(false, fmt.Sprintf("Requested deletion of Flink environment \"%[1]s\" and everything in it%[2]s. The deletion runs in the background; until it finishes, nothing in \"%[1]s\" can be created or changed. To check whether it is still being deleted, run `confluent flink environment describe %[1]s`.", name, formatEnvironmentResources(result.GetToBeDeleted())))
 	case http.StatusOK:
 		deleted := result.GetDeleted()
 		output.Println(false, fmt.Sprintf(`Deleted Flink environment "%s" and everything in it%s.`, name, formatEnvironmentResources(deleted)))

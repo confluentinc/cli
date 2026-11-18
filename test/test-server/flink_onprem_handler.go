@@ -641,7 +641,7 @@ func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 		environment := mux.Vars(r)["environment"]
 		switch r.Method {
 		case http.MethodGet:
-			if environment == "default" || environment == "test" || environment == "update-failure" || environment == "cascade-test" {
+			if environment == "default" || environment == "test" || environment == "update-failure" || environment == "cascade-test" || environment == "disconnected-test" || environment == "forbidden-test" {
 				outputEnvironment := createEnvironment(environment, environment+"-namespace")
 				err := json.NewEncoder(w).Encode(outputEnvironment)
 				require.NoError(t, err)
@@ -676,6 +676,26 @@ func handleCmfEnvironment(t *testing.T) http.HandlerFunc {
 
 			if environment == "cascade-test" {
 				handleCascadeTestEnvironmentDelete(t, w, r)
+				return
+			}
+
+			// An empty environment whose Kubernetes cluster is disconnected: CMF only deletes it with force.
+			if environment == "disconnected-test" {
+				if r.URL.Query().Get("force") == "true" {
+					w.WriteHeader(http.StatusNoContent)
+					return
+				}
+				writeCmfError(t, w, http.StatusServiceUnavailable, "Kubernetes cluster 'disconnected-cluster' is currently DISCONNECTED. Check cluster connectivity and retry. If the cluster has been permanently removed, decommission it and redeploy your resources on another cluster.")
+				return
+			}
+
+			// An environment whose resources the user may not delete: CMF refuses a cascade with an empty 401.
+			if environment == "forbidden-test" {
+				if r.URL.Query().Get("cascade") == "true" {
+					w.WriteHeader(http.StatusUnauthorized)
+					return
+				}
+				w.WriteHeader(http.StatusNoContent)
 				return
 			}
 

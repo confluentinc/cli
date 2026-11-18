@@ -1,0 +1,4 @@
+Are you sure you want to delete Flink environment "forbidden-test"? This also stops its Flink jobs and deletes its applications, statements, compute pools, savepoints and secret mappings. (y/n): Error: failed to delete forbidden-test: 401 Unauthorized
+
+Suggestions:
+    With `--cascade`, you also need permission to delete every application, statement and compute pool in the environment.

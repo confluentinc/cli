@@ -141,6 +141,9 @@ func (s *CLITestSuite) TestFlinkEnvironmentDelete() {
 		{args: "flink environment delete cascade-test --force", fixture: "flink/environment/delete-has-resources-force.golden", exitCode: 1},
 		{args: "flink environment delete cascade-test --skip-cleanup", input: "y\n", fixture: "flink/environment/delete-skip-cleanup-without-cascade.golden", exitCode: 1},
 		{args: "flink environment delete cascade-test --skip-cleanup --force", fixture: "flink/environment/delete-skip-cleanup-with-force.golden", exitCode: 1},
+		// CMF refusals that a flag could resolve
+		{args: "flink environment delete disconnected-test", input: "y\n", fixture: "flink/environment/delete-cluster-disconnected.golden", exitCode: 1},
+		{args: "flink environment delete forbidden-test --cascade", input: "y\n", fixture: "flink/environment/delete-cascade-unauthorized.golden", exitCode: 1},
 	}
 	runIntegrationTestsWithMultipleAuth(s, tests)
 }
