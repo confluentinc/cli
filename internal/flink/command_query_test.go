@@ -314,6 +314,59 @@ func TestQueryStreamers(t *testing.T) {
 	})
 }
 
+// TestEmitResultStreamedPhaseError covers how a streamed (-o json) run ends when
+// the statement's terminal phase is an error: with no rows written, stdout stays
+// empty (no stray "[]"); once rows were written, close() still terminates the
+// array so the output stays parseable; a successful empty run still emits "[]".
+func TestEmitResultStreamedPhaseError(t *testing.T) {
+	const name = "stmt-1"
+	resultWithPhase := func(phase string) *query.Result {
+		return &query.Result{Statement: flinkgatewayv1.SqlV1Statement{
+			Status: &flinkgatewayv1.SqlV1StatementStatus{Phase: phase},
+		}}
+	}
+	emit := func(result *query.Result, s *serialStreamer) error {
+		announceStop := false
+		return (&queryCommand{}).emitResult(name, result, s, 0, false, &announceStop)
+	}
+
+	for _, phase := range []string{"FAILED", "STOPPED", "DELETING"} {
+		t.Run(phase+" with no rows leaves stdout empty", func(t *testing.T) {
+			var buf bytes.Buffer
+			s := newSerialStreamer(&buf, jsonRenderer{})
+			require.NoError(t, s.setColumns(testColumns()))
+
+			err := emit(resultWithPhase(phase), s)
+			require.Error(t, err)
+			require.Empty(t, buf.String())
+		})
+	}
+
+	t.Run("FAILED after rows were written still terminates the array", func(t *testing.T) {
+		var buf bytes.Buffer
+		s := newSerialStreamer(&buf, jsonRenderer{})
+		require.NoError(t, s.setColumns(testColumns()))
+		require.NoError(t, s.writeRows([]types.StatementResultRow{testRow()}))
+
+		err := emit(resultWithPhase("FAILED"), s)
+		require.Error(t, err)
+
+		var got []map[string]any
+		require.NoError(t, json.Unmarshal(buf.Bytes(), &got), buf.String())
+		require.Len(t, got, 1)
+	})
+
+	t.Run("successful run with no rows still emits an empty array", func(t *testing.T) {
+		var buf bytes.Buffer
+		s := newSerialStreamer(&buf, jsonRenderer{})
+		require.NoError(t, s.setColumns(testColumns()))
+
+		err := emit(resultWithPhase("COMPLETED"), s)
+		require.NoError(t, err)
+		require.Equal(t, "[]\n", buf.String())
+	})
+}
+
 // TestPrintHumanTable covers the buffered -o human renderer (json/yaml stream, but
 // the table needs the full row set to align columns, so it stays buffered).
 func TestPrintHumanTable(t *testing.T) {
