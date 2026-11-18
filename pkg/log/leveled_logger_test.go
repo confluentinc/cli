@@ -12,7 +12,9 @@ import (
 
 func TestLeveledLogger(t *testing.T) {
 	const signed = "https://example.com/things?token=secret"
+	const quoted = `https://example.com/things?filter="ready"&token=secret`
 	urlErr := &url.Error{Op: "Get", URL: signed, Err: errors.New("connection reset by peer")}
+	quotedUrlErr := &url.Error{Op: "Get", URL: quoted, Err: errors.New("connection reset by peer")}
 
 	tests := []struct {
 		name  string
@@ -30,7 +32,19 @@ func TestLeveledLogger(t *testing.T) {
 			name:  "error at trace",
 			level: TRACE,
 			log:   func(l LeveledLogger) { l.Error("request failed", "error", urlErr) },
-			want:  `[DEBUG] request failed: error="Get \"https://example.com/things\": connection reset by peer"` + "\n",
+			want:  `[DEBUG] request failed: error="Get \"https://example.com/things"` + "\n",
+		},
+		{
+			name:  "quoted query in url value",
+			level: DEBUG,
+			log:   func(l LeveledLogger) { l.Debug("performing request", "url", quoted) },
+			want:  "[DEBUG] performing request: url=https://example.com/things\n",
+		},
+		{
+			name:  "quoted query in error",
+			level: TRACE,
+			log:   func(l LeveledLogger) { l.Error("request failed", "error", quotedUrlErr) },
+			want:  `[DEBUG] request failed: error="Get \"https://example.com/things"` + "\n",
 		},
 		{
 			name:  "retry description with non-string values",
@@ -38,7 +52,7 @@ func TestLeveledLogger(t *testing.T) {
 			log: func(l LeveledLogger) {
 				l.Debug("retrying request", "request", "GET "+signed+" (status: 503)", "timeout", 1100*time.Millisecond, "remaining", 3)
 			},
-			want: `[DEBUG] retrying request: request="GET https://example.com/things (status: 503)" timeout=1.1s remaining=3` + "\n",
+			want: `[DEBUG] retrying request: request="GET https://example.com/things" timeout=1.1s remaining=3` + "\n",
 		},
 		{
 			name:  "unsafe trace",

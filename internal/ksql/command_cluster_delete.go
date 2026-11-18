@@ -55,7 +55,8 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 		// is UP and provisioning didn't fail. If provisioning failed we can't connect to the ksql server, so we can't delete
 		// the topics.
 		cluster := idToCluster[id]
-		if c.getClusterStatus(&cluster) == "PROVISIONED" {
+		// Retry the status check, since a failed one skips deleting the topics
+		if c.getClusterStatus(&cluster, newInfoHttpConfig()) == "PROVISIONED" {
 			if err := c.deleteTopics(cluster.GetId(), cluster.Status.GetHttpEndpoint()); err != nil {
 				return err
 			}

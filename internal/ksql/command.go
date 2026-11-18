@@ -49,6 +49,10 @@ func (c *ksqlCommand) formatClusterForDisplayAndList(cluster *ksqlv2.KsqldbcmV2C
 		detailedProcessingLog = cluster.Spec.GetUseDetailedProcessingLog()
 	}
 
+	// The status is only displayed, so an unreachable endpoint gets one try
+	infoConfig := httpclient.NoRetry
+	infoConfig.AttemptTimeout = httpclient.Default.AttemptTimeout
+
 	return &ksqlCluster{
 		Id:                    cluster.GetId(),
 		Name:                  cluster.Spec.GetDisplayName(),
@@ -56,17 +60,17 @@ func (c *ksqlCommand) formatClusterForDisplayAndList(cluster *ksqlv2.KsqldbcmV2C
 		KafkaCluster:          cluster.Spec.KafkaCluster.GetId(),
 		Storage:               cluster.Status.GetStorage(),
 		Endpoint:              cluster.Status.GetHttpEndpoint(),
-		Status:                c.getClusterStatus(cluster),
+		Status:                c.getClusterStatus(cluster, infoConfig),
 		DetailedProcessingLog: detailedProcessingLog,
 	}
 }
 
-func (c *ksqlCommand) getClusterStatus(cluster *ksqlv2.KsqldbcmV2Cluster) string {
+func (c *ksqlCommand) getClusterStatus(cluster *ksqlv2.KsqldbcmV2Cluster, infoConfig httpclient.Config) string {
 	status := cluster.Status.GetPhase()
 	if cluster.Status.GetIsPaused() {
 		status = "PAUSED"
 	} else if status == "PROVISIONED" {
-		provisioningFailed, err := c.checkProvisioningFailed(cluster.Status.GetHttpEndpoint())
+		provisioningFailed, err := c.checkProvisioningFailed(cluster.Status.GetHttpEndpoint(), infoConfig)
 		if err != nil {
 			status = "UNKNOWN"
 		} else if provisioningFailed {
@@ -76,12 +80,12 @@ func (c *ksqlCommand) getClusterStatus(cluster *ksqlv2.KsqldbcmV2Cluster) string
 	return status
 }
 
-func (c *ksqlCommand) checkProvisioningFailed(endpoint string) (bool, error) {
+func (c *ksqlCommand) checkProvisioningFailed(endpoint string, infoConfig httpclient.Config) (bool, error) {
 	dataplaneToken, err := pauth.GetDataplaneToken(c.Context)
 	if err != nil {
 		return false, err
 	}
-	client := httpclient.New(newInfoHttpConfig())
+	client := httpclient.New(infoConfig)
 	slingClient := sling.New().Client(client).Base(endpoint).Set("Authorization", "Bearer "+dataplaneToken)
 	var failure map[string]any
 	response, err := slingClient.New().Get("/info").Receive(nil, &failure)

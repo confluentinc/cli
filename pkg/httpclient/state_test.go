@@ -119,7 +119,7 @@ func TestNotSent(t *testing.T) {
 	}{
 		{"dial", &net.OpError{Op: "dial", Err: errors.New("connection refused")}, true},
 		{"proxy", &net.OpError{Op: "proxyconnect", Err: errors.New("connection refused")}, true},
-		{"TLS alert", &net.OpError{Op: "remote error", Err: errors.New("tls: bad certificate")}, true},
+		{"TLS alert", &net.OpError{Op: "remote error", Err: errors.New("tls: bad certificate")}, false},
 		{"certificate", &tls.CertificateVerificationError{Err: errors.New("unknown authority")}, true},
 		{"record header before handshake", tls.RecordHeaderError{Msg: "first record does not look like a TLS handshake", Conn: stubConn{}}, true},
 		{"record header after handshake", tls.RecordHeaderError{Msg: "received record with version 301 when expecting version 303"}, false},

@@ -82,7 +82,7 @@ func (st *state) wrap(err error) error {
 // notSent reports whether the request failed before reaching the server (DNS, connect, proxy, TLS handshake).
 func notSent(err error) bool {
 	// DNS failures arrive as a dial error.
-	if opErr, ok := errors.AsType[*net.OpError](err); ok && (opErr.Op == "dial" || opErr.Op == "proxyconnect" || opErr.Op == "remote error") {
+	if opErr, ok := errors.AsType[*net.OpError](err); ok && (opErr.Op == "dial" || opErr.Op == "proxyconnect") {
 		return true
 	}
 

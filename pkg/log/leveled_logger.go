@@ -18,7 +18,8 @@ func (LeveledLogger) Warn(msg string, keysAndValues ...any)  { logAtDebug(msg, k
 func (LeveledLogger) Info(msg string, keysAndValues ...any)  { logAtDebug(msg, keysAndValues) }
 func (LeveledLogger) Debug(msg string, keysAndValues ...any) { logAtDebug(msg, keysAndValues) }
 
-var urlQuery = regexp.MustCompile(`(https?://[^\s"?#]*)\?[^\s"#]*`)
+// Matches a URL's query and everything after it in the value.
+var urlQuery = regexp.MustCompile(`(https?://[^\s?]*)\?.*`)
 
 func logAtDebug(msg string, keysAndValues []any) {
 	if CliLogger.Level < UNSAFE_TRACE {
