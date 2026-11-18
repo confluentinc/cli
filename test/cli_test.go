@@ -1,6 +1,7 @@
 package test
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"os"
@@ -237,7 +238,7 @@ func copyTestBin(t *testing.T) string {
 	return path
 }
 
-func runCommand(t *testing.T, binaryName string, env []string, argString string, exitCode int, input string) string {
+func prepareCommand(t *testing.T, binaryName string, env []string, argString string, input string) *exec.Cmd {
 	dir, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -262,6 +263,12 @@ func runCommand(t *testing.T, binaryName string, env []string, argString string,
 	cmd.Env = append(os.Environ(), env...)
 	cmd.Stdin = strings.NewReader(input)
 
+	return cmd
+}
+
+func runCommand(t *testing.T, binaryName string, env []string, argString string, exitCode int, input string) string {
+	cmd := prepareCommand(t, binaryName, env, argString, input)
+
 	out, err := cmd.CombinedOutput()
 	if exitCode == 0 {
 		require.NoError(t, err, string(out))
@@ -269,6 +276,24 @@ func runCommand(t *testing.T, binaryName string, env []string, argString string,
 	require.Equal(t, exitCode, cmd.ProcessState.ExitCode(), string(out))
 
 	return string(out)
+}
+
+func runCommandSeparate(t *testing.T, binaryName string, env []string, argString string, exitCode int, input string) (string, string) {
+	cmd := prepareCommand(t, binaryName, env, argString, input)
+
+	var outBuf, errBuf bytes.Buffer
+	cmd.Stdout = &outBuf
+	cmd.Stderr = &errBuf
+
+	err := cmd.Run()
+
+	combinedOut := outBuf.String() + errBuf.String()
+	if exitCode == 0 {
+		require.NoError(t, err, combinedOut)
+	}
+	require.Equal(t, exitCode, cmd.ProcessState.ExitCode(), combinedOut)
+
+	return outBuf.String(), errBuf.String()
 }
 
 func resetConfiguration(t *testing.T, arePluginsEnabled bool) {
