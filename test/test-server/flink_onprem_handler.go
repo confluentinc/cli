@@ -1629,6 +1629,96 @@ func handleCmfStatementExceptions(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for "/cmf/api/v1/environments/{environment}/statements/{stmtName}/events"
+func handleCmfStatementEvents(t *testing.T) http.HandlerFunc {
+	events := createResourceEvents("Statement", "JOB_STATUS", "Statement status changed from PENDING to RUNNING")
+	return handleCmfResourceEvents(t, "stmtName", "test-stmt1", "non-exist-stmt", "Statement not found", events)
+}
+
+// Handler for "/cmf/api/v1/environments/{environment}/compute-pools/{poolName}/events"
+func handleCmfComputePoolEvents(t *testing.T) http.HandlerFunc {
+	events := createResourceEvents("ComputePool", "CLUSTER_STATUS", "Compute pool status changed from PENDING to RUNNING")
+	return handleCmfResourceEvents(t, "poolName", "test-pool", "non-exist-pool", "Compute pool not found", events)
+}
+
+// handleCmfResourceEvents serves the events of a statement or compute pool, named by the route variable nameVar: the
+// given events for the resource existing, a 404 for the resource missing or a missing environment, and no events for
+// any other resource.
+func handleCmfResourceEvents(t *testing.T, nameVar, existing, missing, missingMessage string, events []cmfsdk.ResourceEvent) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handleLoginType(t, r)
+		require.Equal(t, http.MethodGet, r.Method)
+		// The CLI must page in creation order, in which an event keeps its place when it recurs.
+		require.Equal(t, "creationTimestamp,desc", r.URL.Query().Get("sort"))
+
+		vars := mux.Vars(r)
+		if vars["environment"] == "non-exist" {
+			http.Error(w, "Environment not found", http.StatusNotFound)
+			return
+		}
+		if vars[nameVar] == missing {
+			http.Error(w, missingMessage, http.StatusNotFound)
+			return
+		}
+
+		page := []cmfsdk.ResourceEvent{}
+		if vars[nameVar] == existing && r.URL.Query().Get("page") == "0" {
+			page = events
+		}
+		err := json.NewEncoder(w).Encode(cmfsdk.ResourceEventsPage{Items: &page})
+		require.NoError(t, err)
+	}
+}
+
+// createResourceEvents returns a status change and a recurring Kubernetes warning, newest first by creation, as CMF
+// returns them. The warning was created first but recurred last, so the CLI lists it first.
+func createResourceEvents(resourceKind, statusType, statusMessage string) []cmfsdk.ResourceEvent {
+	statusData := cmfsdk.EventDataNewStatusAsEventData(&cmfsdk.EventDataNewStatus{NewStatus: cmfsdk.PtrString("RUNNING")})
+	backOffData := cmfsdk.EventDataReasonMessageAsEventData(&cmfsdk.EventDataReasonMessage{
+		Reason:  cmfsdk.PtrString("BackOff"),
+		Message: cmfsdk.PtrString(`Back-off pulling image "confluentinc/cp-flink-sql:2.0"`),
+	})
+
+	return []cmfsdk.ResourceEvent{
+		{
+			ApiVersion: "cmf.confluent.io/v1",
+			Kind:       "ResourceEvent",
+			Metadata: cmfsdk.ResourceEventMetadata{
+				Name:              cmfsdk.PtrString("7d2f9c1e-4b8a-4e6f-a3d5-1c9b8e7f6a52"),
+				Uid:               cmfsdk.PtrString("7d2f9c1e-4b8a-4e6f-a3d5-1c9b8e7f6a52"),
+				ResourceKind:      cmfsdk.PtrString(resourceKind),
+				CreationTimestamp: cmfsdk.PtrString("2026-11-03T10:16:42.351207Z"),
+				UpdateTimestamp:   cmfsdk.PtrTime(time.Date(2026, time.November, 3, 10, 16, 42, 351207000, time.UTC)),
+			},
+			Status: cmfsdk.ResourceEventStatus{
+				Message:  cmfsdk.PtrString(statusMessage),
+				Type:     cmfsdk.PtrString(statusType),
+				Severity: cmfsdk.PtrString("INFO"),
+				Count:    cmfsdk.PtrInt32(1),
+				Data:     &statusData,
+			},
+		},
+		{
+			ApiVersion: "cmf.confluent.io/v1",
+			Kind:       "ResourceEvent",
+			Metadata: cmfsdk.ResourceEventMetadata{
+				Name:              cmfsdk.PtrString("c4a81f30-9e2d-4b7c-8f15-6d3e2a1b0c97"),
+				Uid:               cmfsdk.PtrString("c4a81f30-9e2d-4b7c-8f15-6d3e2a1b0c97"),
+				ResourceKind:      cmfsdk.PtrString(resourceKind),
+				CreationTimestamp: cmfsdk.PtrString("2026-11-03T10:15:30.123Z"),
+				UpdateTimestamp:   cmfsdk.PtrTime(time.Date(2026, time.November, 3, 10, 20, 5, 0, time.UTC)),
+			},
+			Status: cmfsdk.ResourceEventStatus{
+				Message:  cmfsdk.PtrString(`BackOff: Back-off pulling image "confluentinc/cp-flink-sql:2.0"`),
+				Type:     cmfsdk.PtrString("DEPLOYMENT_EVENT"),
+				Severity: cmfsdk.PtrString("WARNING"),
+				Count:    cmfsdk.PtrInt32(3),
+				Data:     &backOffData,
+			},
+		},
+	}
+}
+
 func handleCmfSystemInformation(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		handleLoginType(t, r)

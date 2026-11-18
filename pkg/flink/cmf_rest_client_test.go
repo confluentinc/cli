@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -87,6 +88,59 @@ func TestListAllPages(t *testing.T) {
 			return nil, wantErr
 		})
 		require.ErrorIs(t, err, wantErr)
+	})
+}
+
+func TestListAllResourceEvents(t *testing.T) {
+	start := time.Date(2026, 11, 3, 10, 0, 0, 0, time.UTC)
+	event := func(uid string, lastOccurrence time.Time) cmfsdk.ResourceEvent {
+		metadata := cmfsdk.ResourceEventMetadata{UpdateTimestamp: &lastOccurrence}
+		if uid != "" {
+			metadata.Uid = &uid
+		}
+		return cmfsdk.ResourceEvent{Metadata: metadata}
+	}
+	// fetchPages serves the given pages, in creation order, then empty pages.
+	fetchPages := func(pages ...[]cmfsdk.ResourceEvent) func(page, size int32) ([]cmfsdk.ResourceEvent, error) {
+		return func(page, _ int32) ([]cmfsdk.ResourceEvent, error) {
+			if int(page) < len(pages) {
+				return pages[page], nil
+			}
+			return []cmfsdk.ResourceEvent{}, nil
+		}
+	}
+	uids := func(events []cmfsdk.ResourceEvent) []string {
+		result := make([]string, len(events))
+		for i, event := range events {
+			result[i] = event.Metadata.GetUid()
+		}
+		return result
+	}
+
+	t.Run("orders by last occurrence, most recent first", func(t *testing.T) {
+		// "old" was created before "new" but has recurred since.
+		events, err := listAllResourceEvents(0, fetchPages(
+			[]cmfsdk.ResourceEvent{event("new", start.Add(time.Minute)), event("old", start.Add(time.Hour))},
+		))
+		require.NoError(t, err)
+		require.Equal(t, []string{"old", "new"}, uids(events))
+	})
+
+	t.Run("keeps an event once when a new event pushes it onto the next page", func(t *testing.T) {
+		events, err := listAllResourceEvents(2, fetchPages(
+			[]cmfsdk.ResourceEvent{event("c", start.Add(3*time.Minute)), event("b", start.Add(2*time.Minute))},
+			[]cmfsdk.ResourceEvent{event("b", start.Add(2*time.Minute)), event("a", start.Add(time.Minute))},
+		))
+		require.NoError(t, err)
+		require.Equal(t, []string{"c", "b", "a"}, uids(events))
+	})
+
+	t.Run("keeps every event without a uid", func(t *testing.T) {
+		events, err := listAllResourceEvents(0, fetchPages(
+			[]cmfsdk.ResourceEvent{event("", start), event("", start)},
+		))
+		require.NoError(t, err)
+		require.Len(t, events, 2)
 	})
 }
 
