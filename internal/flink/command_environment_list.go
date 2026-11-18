@@ -57,7 +57,7 @@ func (c *command) environmentList(cmd *cobra.Command, _ []string) error {
 				KubernetesNamespace:   env.KubernetesNamespace,
 				CreatedTime:           env.CreatedTime.String(),
 				UpdatedTime:           env.UpdatedTime.String(),
-				DeletionRequestedTime: env.Metadata.GetDeletionRequestedTimestamp(),
+				DeletionRequestedTime: formatDeletionRequestedTime(env.Metadata),
 			})
 		}
 		return list.Print()

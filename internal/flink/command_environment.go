@@ -1,6 +1,8 @@
 package flink
 
 import (
+	"time"
+
 	"github.com/spf13/cobra"
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
@@ -71,4 +73,14 @@ func convertSdkEnvironmentToLocalEnvironment(sdkOutputEnvironment cmfsdk.Environ
 	}
 
 	return localEnv
+}
+
+// formatDeletionRequestedTime formats when the environment's deletion was requested the way its created and updated
+// times are shown. CMF's spec types the timestamp as a plain string, so a value that isn't RFC 3339 is shown as it is.
+func formatDeletionRequestedTime(metadata *cmfsdk.EnvironmentMetadata) string {
+	timestamp := metadata.GetDeletionRequestedTimestamp()
+	if t, err := time.Parse(time.RFC3339, timestamp); err == nil {
+		return t.String()
+	}
+	return timestamp
 }
