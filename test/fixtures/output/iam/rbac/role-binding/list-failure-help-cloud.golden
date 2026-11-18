@@ -31,6 +31,8 @@ List the role bindings for the current user with the environment scope and neste
 
   $ confluent iam rbac role-binding list --current-user --environment env-123456 --inclusive
 
+To list role bindings for resources with a PREFIXED pattern type, add an asterisk to the end of the resource name. For examples, see https://docs.confluent.io/cloud/current/security/access-control/rbac/manage-role-bindings.html#list-and-delete-role-bindings-for-prefixed-resources.
+
 Flags:
       --principal string                 Principal ID, which limits role bindings to this principal. If unspecified, list all principals and role bindings.
       --current-user                     List role bindings assigned to the current user.
@@ -45,7 +47,7 @@ Flags:
       --usm-kafka-cluster string         USM Kafka cluster ID, which specifies the USM Kafka cluster scope.
       --usm-connect-cluster string       USM Connect cluster ID, which specifies the USM Connect cluster scope.
       --resource string                  Resource type and identifier using "Prefix:ID" format. If specified with "--role" and no principals, list all principals and role bindings.
-      --inclusive                        List role bindings for specified scopes and nested scopes. Otherwise, list role bindings for the specified scopes. If scopes are unspecified, list role bindings across all scopes. Only applies to Confluent Cloud.
+      --inclusive                        List role bindings for specified scopes and nested scopes. Otherwise, list role bindings for the specified scopes. If scopes are unspecified, list only organization-scoped role bindings.
   -o, --output string                    Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

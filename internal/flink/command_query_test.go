@@ -115,6 +115,13 @@ func TestResolveSQL(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "SELECT 3", sql)
 
+	// A byte order mark at the start of the file is dropped.
+	bomFile := filepath.Join(t.TempDir(), "bom.sql")
+	require.NoError(t, os.WriteFile(bomFile, []byte("\uFEFFSELECT 3"), 0o600))
+	sql, err = resolveSQL(newSQLCmd("", bomFile))
+	require.NoError(t, err)
+	require.Equal(t, "SELECT 3", sql)
+
 	_, err = resolveSQL(newSQLCmd("", "/nonexistent/query.sql"))
 	require.ErrorContains(t, err, "failed to read the SQL statement")
 

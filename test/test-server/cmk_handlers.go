@@ -3,6 +3,7 @@ package testserver
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -221,6 +222,8 @@ func handleCmkCluster(t *testing.T) http.HandlerFunc {
 			handleCmkKafkaDeletionProtectedCluster(t)(w, r)
 		case "lkc-unknown":
 			handleCmkKafkaUnknown(t)(w, r)
+		case "lkc-not-found":
+			handleCmkKafkaNotFound(t)(w, r)
 		case "lkc-unknown-type":
 			handleCmkKafkaUnknownType(t)(w, r)
 		default:
@@ -609,6 +612,15 @@ func handleCmkKafkaDedicatedClusterShrinkMulti(t *testing.T) http.HandlerFunc {
 func handleCmkKafkaUnknown(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
 		err := writeResourceNotFoundError(w)
+		require.NoError(t, err)
+	}
+}
+
+// handleCmkKafkaNotFound returns the 404 that Confluent Cloud returns for an unknown cluster.
+func handleCmkKafkaNotFound(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, err := io.WriteString(w, `{"errors": [{"status": "404", "detail": "Resource Not Found"}]}`)
 		require.NoError(t, err)
 	}
 }

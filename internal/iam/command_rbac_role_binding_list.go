@@ -66,6 +66,9 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 				Text: "List the role bindings for the current user with the environment scope and nested scopes:",
 				Code: "confluent iam rbac role-binding list --current-user --environment env-123456 --inclusive",
 			},
+			examples.Example{
+				Text: "To list role bindings for resources with a PREFIXED pattern type, add an asterisk to the end of the resource name. For examples, see https://docs.confluent.io/cloud/current/security/access-control/rbac/manage-role-bindings.html#list-and-delete-role-bindings-for-prefixed-resources.",
+			},
 		)
 	} else {
 		cmd.Example = examples.BuildExampleString(
@@ -120,7 +123,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("resource", "", `Resource type and identifier using "Prefix:ID" format. If specified with "--role" and no principals, list all principals and role bindings.`)
-	cmd.Flags().Bool("inclusive", false, "List role bindings for specified scopes and nested scopes. Otherwise, list role bindings for the specified scopes. If scopes are unspecified, list role bindings across all scopes. Only applies to Confluent Cloud.")
+	cmd.Flags().Bool("inclusive", false, "List role bindings for specified scopes and nested scopes. Otherwise, list role bindings for the specified scopes. If scopes are unspecified, list only organization-scoped role bindings.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

@@ -129,7 +129,7 @@ func (c *command) statementCreateOnPrem(cmd *cobra.Command, args []string) error
 			if err != nil {
 				return err
 			}
-			if polledStatement.GetStatus().Phase == "PENDING" {
+			if types.PHASE(polledStatement.GetStatus().Phase).IsStarting() {
 				return fmt.Errorf(`statement phase is "%s"`, polledStatement.GetStatus().Phase)
 			}
 			// Update the finalStatement with the completed state

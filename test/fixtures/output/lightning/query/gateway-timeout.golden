@@ -1,0 +1,4 @@
+Error: the query took too long to complete
+
+Suggestions:
+    Narrow the query, for example with a "LIMIT" clause or a more selective "WHERE" clause.

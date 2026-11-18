@@ -193,7 +193,7 @@ func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *config
 			AuthToken:        ctx.GetAuthToken(),
 			AuthRefreshToken: ctx.GetAuthRefreshToken(),
 		}
-		log.CliLogger.Tracef("credentials: %#v", credentials)
+		log.CliLogger.UnsafeTracef("credentials: %#v", credentials)
 
 		return credentials, nil
 	}

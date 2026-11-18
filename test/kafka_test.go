@@ -129,6 +129,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster describe lkc-describe-dedicated-provisioning", fixture: "kafka/cluster-describe-dedicated-provisioning.golden"},
 
 		{args: "kafka cluster describe lkc-unknown", fixture: "kafka/48.golden", exitCode: 1},
+		{args: "kafka cluster describe lkc-not-found", fixture: "kafka/cluster/describe-not-found.golden", exitCode: 1},
 		{args: "kafka cluster describe lkc-unknown-type", fixture: "kafka/describe-unknown-cluster-type.golden"},
 
 		{args: "kafka cluster describe lkc-describe-with-ecku-limits", fixture: "kafka/cluster/describe-basic-with-ecku-limits.golden"},
