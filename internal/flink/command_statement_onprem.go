@@ -22,8 +22,8 @@ type statementOutOnPrem struct {
 	Bounded      bool   `human:"Bounded,omitempty" serialized:"bounded,omitempty"`
 }
 
-// The RequireCloudLogout annotation covers every command below it, the `exception` subtree
-// included: ErrIfMissingRunRequirement walks up from the leaf through each parent.
+// The RequireCloudLogout annotation covers every command below it, the `event` and `exception`
+// subtrees included: ErrIfMissingRunRequirement walks up from the leaf through each parent.
 func (c *command) newStatementCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "statement",
@@ -34,6 +34,7 @@ func (c *command) newStatementCommandOnPrem() *cobra.Command {
 	cmd.AddCommand(c.newStatementCreateCommandOnPrem())
 	cmd.AddCommand(c.newStatementDeleteCommandOnPrem())
 	cmd.AddCommand(c.newStatementDescribeCommandOnPrem())
+	cmd.AddCommand(c.newStatementEventCommandOnPrem())
 	cmd.AddCommand(c.newStatementExceptionCommandOnPrem())
 	cmd.AddCommand(c.newStatementListCommandOnPrem())
 	cmd.AddCommand(c.newStatementRescaleCommandOnPrem())
