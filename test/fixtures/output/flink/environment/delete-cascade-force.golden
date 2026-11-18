@@ -1,0 +1,5 @@
+Deleted Flink environment "cascade-test" and everything in it: 2 applications, 1 statement, 1 compute pool, 1 savepoint and 2 secret mappings.
+Warning: Kubernetes objects of these deleted resources might still exist. Delete them yourself if you still use the cluster:
+    FlinkApplication "orders-app" in namespace "cascade-test-namespace": Its FlinkDeployment was already being deleted, so it might still exist.
+Warning: savepoint files were kept:
+    "orders-app-savepoint-1" of application "orders-app": s3://flink-state/savepoints/savepoint-3f2a1b

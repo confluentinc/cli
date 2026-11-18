@@ -1,0 +1,11 @@
++--------------------------------+-------------------------------+
+| Name                           | deleting                      |
+| Kubernetes Namespace           | deleting-namespace            |
+| Created Time                   | 2024-09-10 23:00:00 +0000 UTC |
+| Updated Time                   | 2024-09-10 23:00:00 +0000 UTC |
+| Deletion Requested Time        | 2026-11-17 08:45:00 +0000 UTC |
+| Flink Application Defaults     | null                          |
+| Flink Compute Pool Defaults    | null                          |
+| Detached Statement Defaults    | null                          |
+| Interactive Statement Defaults | null                          |
++--------------------------------+-------------------------------+

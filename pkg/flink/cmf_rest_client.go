@@ -255,9 +255,15 @@ func (cmfClient *CmfRestClient) CreateEnvironment(ctx context.Context, postEnvir
 	return outputEnvironment, nil
 }
 
-func (cmfClient *CmfRestClient) DeleteEnvironment(ctx context.Context, environment string) error {
-	_, httpResp, err := cmfClient.EnvironmentsApi.DeleteEnvironment(ctx, environment).Execute()
-	return parseSdkError(httpResp, err)
+// DeleteEnvironment also returns the HTTP status of CMF's response: 204 for a plain delete, 202 when CMF has accepted
+// a cascade deletion, and 200 when a cascade deletion with force has finished.
+func (cmfClient *CmfRestClient) DeleteEnvironment(ctx context.Context, environment string, force, cascade, skipCleanup bool) (cmfsdk.EnvironmentDeletionResult, int, error) {
+	result, httpResp, err := cmfClient.EnvironmentsApi.DeleteEnvironment(ctx, environment).Force(force).Cascade(cascade).SkipCleanup(skipCleanup).Execute()
+	status := 0
+	if httpResp != nil {
+		status = httpResp.StatusCode
+	}
+	return result, status, parseSdkError(httpResp, err)
 }
 
 func (cmfClient *CmfRestClient) DescribeEnvironment(ctx context.Context, environment string) (cmfsdk.Environment, error) {
