@@ -33,6 +33,11 @@ func (c *Client) CreateConnectArtifact(createArtifactRequest camv1.CamV1ConnectA
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
+func (c *Client) UpdateConnectArtifact(cloud, environment, id string, updateArtifactRequest camv1.CamV1ConnectArtifactUpdate) (camv1.CamV1ConnectArtifact, error) {
+	resp, httpResp, err := c.ConnectArtifactClient.ConnectArtifactsCamV1Api.UpdateCamV1ConnectArtifact(c.connectArtifactApiContext(), id).SpecCloud(cloud).Environment(environment).CamV1ConnectArtifactUpdate(updateArtifactRequest).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
+
 func (c *Client) ListConnectArtifacts(cloud, env string) ([]camv1.CamV1ConnectArtifact, error) {
 	var list []camv1.CamV1ConnectArtifact
 
