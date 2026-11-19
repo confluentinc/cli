@@ -51,9 +51,10 @@ func fillKeyStoreV2() {
 		Id: apikeysv2.PtrString("MYKEY1"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Resource: &apikeysv2.ObjectReference{
-				Id:         "lkc-bob",
-				ApiVersion: apikeysv2.PtrString("cmk/v2"),
-				Kind:       apikeysv2.PtrString("Cluster"),
+				Id:          "lkc-bob",
+				Environment: apikeysv2.PtrString("env-00000"),
+				ApiVersion:  apikeysv2.PtrString("cmk/v2"),
+				Kind:        apikeysv2.PtrString("Cluster"),
 			},
 			Owner:       &apikeysv2.ObjectReference{Id: "u11"},
 			Description: apikeysv2.PtrString("Example description"),
@@ -64,9 +65,10 @@ func fillKeyStoreV2() {
 		Id: apikeysv2.PtrString("MYKEY2"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Resource: &apikeysv2.ObjectReference{
-				Id:         "lkc-abc",
-				ApiVersion: apikeysv2.PtrString("cmk/v2"),
-				Kind:       apikeysv2.PtrString("Cluster"),
+				Id:          "lkc-abc",
+				Environment: apikeysv2.PtrString("env-11111"),
+				ApiVersion:  apikeysv2.PtrString("cmk/v2"),
+				Kind:        apikeysv2.PtrString("Cluster"),
 			},
 			Owner:       &apikeysv2.ObjectReference{Id: "u-17"},
 			Description: apikeysv2.PtrString(""),
