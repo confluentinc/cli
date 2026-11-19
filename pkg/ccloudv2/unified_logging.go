@@ -12,10 +12,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
+
 	loggingv1 "github.com/confluentinc/ccloud-sdk-go-v2/logging/v1"
 
 	"github.com/confluentinc/cli/v4/pkg/auth"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	plog "github.com/confluentinc/cli/v4/pkg/log"
 )
 
 // This file serves the unified `confluent logs` commands. It sits next to logging.go, which serves `confluent connect
@@ -37,6 +40,26 @@ func getLoggingServerUrl(baseURL string) (string, error) {
 	return u.String(), nil
 }
 
+// newLoggingHttpClient retries server errors only. A 429 is returned at once, so the caller can show its Retry-After
+// header, and when the retries run out the last response is returned, so the user sees the API's own message. It is
+// built here, like newLightningHttpClient, so the shared client in utils.go stays unchanged.
+func newLoggingHttpClient(unsafeTrace bool) *http.Client {
+	return newLoggingRetryableClient(unsafeTrace).StandardClient()
+}
+
+func newLoggingRetryableClient(unsafeTrace bool) *retryablehttp.Client {
+	client := retryablehttp.NewClient()
+	client.Logger = plog.NewLeveledLogger(unsafeTrace)
+	client.CheckRetry = func(_ context.Context, resp *http.Response, err error) (bool, error) {
+		if resp == nil {
+			return false, err
+		}
+		return resp.StatusCode >= http.StatusInternalServerError, err
+	}
+	client.ErrorHandler = retryablehttp.PassthroughErrorHandler
+	return client
+}
+
 // newLoggingClient builds the SDK client for the logging API, which is served from its own host rather than the
 // regular Confluent Cloud API URL, and a context carrying the data plane token it authenticates with.
 func (c *Client) newLoggingClient() (*loggingv1.APIClient, context.Context, error) {
@@ -52,7 +75,7 @@ func (c *Client) newLoggingClient() (*loggingv1.APIClient, context.Context, erro
 
 	cfg := loggingv1.NewConfiguration()
 	cfg.Debug = c.unsafeTrace
-	cfg.HTTPClient = newRetryableHttpClientReturningErrors(c.cfg, c.unsafeTrace)
+	cfg.HTTPClient = newLoggingHttpClient(c.unsafeTrace)
 	cfg.Servers = loggingv1.ServerConfigurations{{URL: loggingURL}}
 	cfg.UserAgent = c.cfg.Version.UserAgent
 

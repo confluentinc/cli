@@ -2,7 +2,10 @@ package ccloudv2
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
+	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -68,4 +71,81 @@ func TestDecodeLogsSearchResponse_PreservesLargeIntegers(t *testing.T) {
 func TestDecodeLogsSearchResponse_InvalidBody(t *testing.T) {
 	_, err := decodeLogsSearchResponse([]byte(`not json`))
 	require.ErrorContains(t, err, "failed to decode logging API response")
+}
+
+// newTestLoggingHttpClient is the logging client with its retry waits shortened, so tests do not sleep.
+func newTestLoggingHttpClient() *http.Client {
+	client := newLoggingRetryableClient(false)
+	client.RetryWaitMin = time.Millisecond
+	client.RetryWaitMax = 2 * time.Millisecond
+	return client.StandardClient()
+}
+
+func TestLoggingHttpClientReturnsRateLimitAtOnce(t *testing.T) {
+	var requests atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		requests.Add(1)
+		w.Header().Set("Retry-After", "12")
+		w.WriteHeader(http.StatusTooManyRequests)
+	}))
+	defer server.Close()
+
+	resp, err := newTestLoggingHttpClient().Get(server.URL)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+	require.Equal(t, http.StatusTooManyRequests, resp.StatusCode)
+	require.Equal(t, "12", resp.Header.Get("Retry-After"))
+	require.EqualValues(t, 1, requests.Load())
+}
+
+func TestLoggingHttpClientRetriesServerErrorThenReturnsLastResponse(t *testing.T) {
+	var requests atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		requests.Add(1)
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte("backend unavailable"))
+	}))
+	defer server.Close()
+
+	resp, err := newTestLoggingHttpClient().Get(server.URL)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+	require.Equal(t, "backend unavailable", string(body))
+	require.Greater(t, requests.Load(), int32(1))
+}
+
+func TestLoggingHttpClientRetriesServerErrorUntilSuccess(t *testing.T) {
+	var requests atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		if requests.Add(1) < 3 {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	resp, err := newTestLoggingHttpClient().Get(server.URL)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+	require.EqualValues(t, 3, requests.Load())
+}
+
+func TestLoggingHttpClientDoesNotRetryClientError(t *testing.T) {
+	var requests atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		requests.Add(1)
+		w.WriteHeader(http.StatusBadRequest)
+	}))
+	defer server.Close()
+
+	resp, err := newTestLoggingHttpClient().Get(server.URL)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+	require.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	require.EqualValues(t, 1, requests.Load())
 }
