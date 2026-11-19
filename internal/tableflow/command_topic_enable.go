@@ -43,6 +43,8 @@ func (c *command) newTopicEnableCommand() *cobra.Command {
 	cmd.Flags().String("provider-integration", "", "Specify the provider integration id.")
 	cmd.Flags().String("bucket-name", "", "Specify the name of the AWS or GCP storage bucket.")
 	cmd.Flags().String("table-formats", "ICEBERG", "Specify the table formats, one of DELTA or ICEBERG.")
+	addTableFormatPropertiesFlags(cmd, false)
+	addFeaturesFlags(cmd)
 	cmd.Flags().String("metadata-column-naming-scheme", "", "Specify the naming scheme for Tableflow's internal metadata columns in the materialized table, one of DEFAULT or PORTABLE. If unset, new Google Cloud topics default to PORTABLE and topics on other clouds default to DEFAULT.")
 	cmd.Flags().String("storage-account-name", "", "Specify the storage account name for Azure Data Lake.")
 	cmd.Flags().String("container-name", "", "Specify the container name for Azure Data Lake.")
@@ -117,6 +119,16 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 	}
 	tableFormatsSlice := []string{tableFormats}
 
+	tableFormatProperties, err := tableFormatPropertiesForCreate(cmd)
+	if err != nil {
+		return err
+	}
+
+	features, err := featureEntries(cmd)
+	if err != nil {
+		return err
+	}
+
 	storageAccountName, err := cmd.Flags().GetString("storage-account-name")
 	if err != nil {
 		return err
@@ -139,6 +151,14 @@ func (c *command) enable(cmd *cobra.Command, args []string) error {
 
 	createTopic.Spec.Config = &tableflowv1.TableflowV1TableFlowTopicConfigsSpec{
 		RetentionMs: tableflowv1.PtrString(retentionMs),
+	}
+
+	if tableFormatProperties != nil {
+		createTopic.Spec.SetTableFormatProperties(tableFormatProperties)
+	}
+
+	if features != nil {
+		createTopic.Spec.Config.SetFeatures(features)
 	}
 
 	if cmd.Flags().Changed("record-failure-strategy") {

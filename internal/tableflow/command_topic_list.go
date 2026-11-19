@@ -44,6 +44,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
+	list.Filter(topicListFields())
 	for _, topic := range topics {
 		storageType, err := getStorageType(topic)
 		if err != nil {
