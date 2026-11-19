@@ -164,6 +164,9 @@ func getLoggingUrl(baseURL string) (string, error) {
 func getResponseErrorMessage(statusCode int, responseBody []byte, crn string) error {
 	if statusCode != http.StatusOK {
 		errorMsg := fmt.Sprintf("logging API request failed with status %d", statusCode)
+		if statusCode == http.StatusTooManyRequests {
+			errorMsg += ", please make sure you adhere to 5 requests per minute per connector rate limit"
+		}
 
 		if len(responseBody) > 0 {
 			errorMsg += fmt.Sprintf("\nResponse body: %s", string(responseBody))
