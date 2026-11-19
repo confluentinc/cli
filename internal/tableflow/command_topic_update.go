@@ -32,6 +32,8 @@ func (c *command) newTopicUpdateCommand() *cobra.Command {
 
 	cmd.Flags().String("retention-ms", "", "Specify the Tableflow table retention time in milliseconds.")
 	cmd.Flags().String("table-formats", "", "Specify the table formats, one of DELTA or ICEBERG.")
+	addTableFormatPropertiesFlags(cmd, true)
+	addFeaturesFlags(cmd)
 	cmd.Flags().String("metadata-column-naming-scheme", "", "Specify the naming scheme for Tableflow's internal metadata columns in the materialized table, one of DEFAULT or PORTABLE.")
 	addErrorHandlingFlags(cmd)
 
@@ -67,6 +69,16 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 	tableFormatsSlice := []string{tableFormats}
 
+	tableFormatProperties, err := tableFormatPropertiesForUpdate(cmd)
+	if err != nil {
+		return err
+	}
+
+	features, err := featureEntries(cmd)
+	if err != nil {
+		return err
+	}
+
 	recordFailureStrategy, err := cmd.Flags().GetString("record-failure-strategy")
 	if err != nil {
 		return err
@@ -101,6 +113,14 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	if cmd.Flags().Changed("table-formats") {
 		topicUpdate.Spec.SetTableFormats(tableFormatsSlice)
+	}
+
+	if tableFormatProperties != nil {
+		topicUpdate.Spec.SetTableFormatProperties(tableFormatProperties)
+	}
+
+	if features != nil {
+		topicUpdate.Spec.Config.SetFeatures(features)
 	}
 
 	if cmd.Flags().Changed("record-failure-strategy") {
