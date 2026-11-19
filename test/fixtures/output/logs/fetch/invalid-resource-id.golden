@@ -1,0 +1,4 @@
+Error: resource ID "lkc-123/environment=env-2" contains an invalid character
+
+Suggestions:
+    A resource ID cannot contain "/" or "=", for example `lkc-123456`.

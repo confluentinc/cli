@@ -195,7 +195,12 @@ func searchValues(value any) []string {
 	return nil
 }
 
+// validateResourceId checks the ID against the log source's ID prefix. It also rejects "/" and "=", which separate and
+// name the elements of the CRN the ID is placed in, so an ID cannot add elements to it.
 func validateResourceId(source *loggingv1.LoggingV1Source, resourceId string) error {
+	if strings.ContainsAny(resourceId, "/=") {
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(invalidResourceIdErrorMsg, resourceId), invalidResourceIdSuggestions)
+	}
 	if source.GetIdPrefix() == "" {
 		return nil
 	}

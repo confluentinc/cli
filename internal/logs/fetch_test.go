@@ -1,6 +1,7 @@
 package logs
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -139,6 +140,15 @@ func TestValidateResourceId(t *testing.T) {
 	err := validateResourceId(clusterHealth, "lcc-123")
 	require.EqualError(t, err, `resource ID "lcc-123" does not match log source "cluster-health"`)
 	require.Equal(t, `This log source expects IDs starting with "lkc-".`, suggestionsOf(err))
+
+	// An ID cannot add elements to the CRN, with or without an id_prefix.
+	for _, id := range []string{"lkc-123/environment=env-2", "lkc-123/", "lkc-123=x", "/lkc-123"} {
+		for _, source := range []*loggingv1.LoggingV1Source{clusterHealth, noPrefixSource} {
+			err := validateResourceId(source, id)
+			require.EqualError(t, err, fmt.Sprintf(`resource ID "%s" contains an invalid character`, id))
+			require.Equal(t, `A resource ID cannot contain "/" or "=", for example `+"`lkc-123456`.", suggestionsOf(err))
+		}
+	}
 }
 
 func TestValidateLookback(t *testing.T) {

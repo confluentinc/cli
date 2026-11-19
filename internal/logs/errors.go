@@ -35,6 +35,8 @@ const (
 	invalidSearchValueSuggestions = "Allowed values: %s."
 
 	emptyResourceIdErrorMsg       = "resource ID cannot be empty"
+	invalidResourceIdErrorMsg     = "resource ID \"%s\" contains an invalid character"
+	invalidResourceIdSuggestions  = "A resource ID cannot contain \"/\" or \"=\", for example `lkc-123456`."
 	resourceIdMismatchErrorMsg    = "resource ID \"%s\" does not match log source \"%s\""
 	resourceIdMismatchSuggestions = "This log source expects IDs starting with \"%s-\"."
 

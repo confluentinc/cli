@@ -195,6 +195,7 @@ func (s *CLITestSuite) TestLogsFetch() {
 		{args: "logs fetch lkc-123 --source cluster-health --since 1h --search level=DEBUG", fixture: "logs/fetch/invalid-search-value.golden", exitCode: 1},
 		{args: "logs fetch lkc-123 --source cluster-health --since 1h --search level", fixture: "logs/fetch/malformed-search.golden", exitCode: 1},
 		{args: "logs fetch lcc-123 --source cluster-health --since 1h", fixture: "logs/fetch/wrong-id-prefix.golden", exitCode: 1},
+		{args: "logs fetch lkc-123/environment=env-2 --source cluster-health --since 1h", fixture: "logs/fetch/invalid-resource-id.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
