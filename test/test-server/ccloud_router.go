@@ -24,6 +24,8 @@ var ccloudHandlers = []route{
 	{"/api/users", handleUsers},
 	{"/ldapi/sdk/eval/{env}/users/{user:[a-zA-Z0-9=\\-\\/]+}", handleLaunchDarkly},
 	{"/logs/v1/search", handleLogsSearch},
+	{"/logs/v1/sources", handleLogsSources},
+	{"/logs/v1/sources/{name}", handleLogsSource},
 	{"/api/usage_limits", handleUsageLimits},
 }
 

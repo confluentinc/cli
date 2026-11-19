@@ -1,0 +1,4 @@
+          Name          |       Display Name       |   Resource   | ID Prefix | Max Lookback Days  
+------------------------+--------------------------+--------------+-----------+--------------------
+  cluster-health        | Cluster health events    | kafka        | lkc       |                 3  
+  cluster-link-insights | Cluster Linking insights | cluster-link |           |                 7  

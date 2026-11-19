@@ -39,6 +39,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.0.0-20250909043602-f80bee0eb280
 	github.com/confluentinc/ccloud-sdk-go-v2/ksql v0.2.0
+	github.com/confluentinc/ccloud-sdk-go-v2/logging v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking v0.14.0
@@ -122,7 +123,7 @@ require (
 	go.uber.org/mock v0.5.2
 	golang.org/x/crypto v0.59.0
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f
-	golang.org/x/oauth2 v0.37.0
+	golang.org/x/oauth2 v0.38.0
 	golang.org/x/term v0.48.0
 	golang.org/x/text v0.44.0
 	google.golang.org/grpc v1.83.2

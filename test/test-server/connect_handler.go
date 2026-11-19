@@ -3,6 +3,7 @@ package testserver
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"maps"
 	"net/http"
 	"slices"
@@ -55,11 +56,21 @@ func handleLogsSearch(t *testing.T) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 
+		body, err := io.ReadAll(r.Body)
+		require.NoError(t, err)
+
+		// Requests from `confluent logs` name a log source and carry an open-ended search map.
+		var unified unifiedLogsSearchRequest
+		if err := json.Unmarshal(body, &unified); err == nil && unified.Source != "" {
+			handleUnifiedLogsSearch(t, w, r, unified)
+			return
+		}
+
 		var req struct {
 			CRN    string              `json:"crn"`
 			Search LoggingSearchParams `json:"search"`
 		}
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		if err := json.Unmarshal(body, &req); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -146,7 +157,7 @@ func handleLogsSearch(t *testing.T) http.HandlerFunc {
 				filteredResponse = response
 			}
 			response = filteredResponse
-			err := json.NewEncoder(w).Encode(response)
+			err = json.NewEncoder(w).Encode(response)
 			require.NoError(t, err)
 			return
 		} else if connectorName == "az-connector-3" {
@@ -163,7 +174,7 @@ func handleLogsSearch(t *testing.T) http.HandlerFunc {
 			Kind:       "LoggingSearchResponse",
 			CRN:        "crn",
 		}
-		err := json.NewEncoder(w).Encode(response)
+		err = json.NewEncoder(w).Encode(response)
 		require.NoError(t, err)
 	}
 }

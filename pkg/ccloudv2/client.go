@@ -47,7 +47,8 @@ import (
 
 // Client represents a Confluent Cloud Client as defined by ccloud-sdk-go-v2
 type Client struct {
-	cfg *config.Config
+	cfg         *config.Config
+	unsafeTrace bool
 
 	AiClient                     *aiv1.APIClient
 	ApiKeysClient                *apikeysv2.APIClient
@@ -102,7 +103,8 @@ func NewClient(cfg *config.Config, unsafeTrace bool) *Client {
 	userAgent := cfg.Version.UserAgent
 
 	return &Client{
-		cfg: cfg,
+		cfg:         cfg,
+		unsafeTrace: unsafeTrace,
 
 		AiClient:                     newAiClient(httpClient, url, userAgent, unsafeTrace),
 		ApiKeysClient:                newApiKeysClient(httpClient, url, userAgent, unsafeTrace),
