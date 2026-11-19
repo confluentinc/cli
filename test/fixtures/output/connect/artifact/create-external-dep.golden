@@ -1,0 +1,10 @@
++----------------+-------------------------+
+| ID             | cfa-ced123              |
+| Name           | my-connect-artifact-ced |
+| Description    |                         |
+| Type           | CONNECT_EXTERNAL_DEP    |
+| Cloud          | AWS                     |
+| Environment    | env-123456              |
+| Content Format | JAR                     |
+| Status         | PROCESSING              |
++----------------+-------------------------+
