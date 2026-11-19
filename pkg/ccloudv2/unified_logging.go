@@ -121,7 +121,7 @@ func catchLoggingError(err error, httpResp *http.Response) error {
 }
 
 const (
-	logsRateLimitErrorMsg         = "rate limit exceeded for log queries"
+	logsRateLimitErrorMsg         = "rate limit exceeded"
 	logsRateLimitRetrySuggestions = "Retry after %ds."
 	logsRateLimitLaterSuggestions = "Try again later."
 )
