@@ -416,6 +416,22 @@ func (s *CLITestSuite) TestFlinkComputePoolListOnPrem() {
 	runIntegrationTestsWithMultipleAuth(s, tests)
 }
 
+func (s *CLITestSuite) TestFlinkComputePoolEventListOnPrem() {
+	tests := []CLITest{
+		// failure scenarios
+		{args: "flink compute-pool event list test-pool", fixture: "flink/compute-pool/event-list-missing-env.golden", exitCode: 1},
+		{args: "flink compute-pool event list test-pool --environment non-exist", fixture: "flink/compute-pool/event-list-non-existent-env.golden", exitCode: 1},
+		{args: "flink compute-pool event list non-exist-pool --environment default", fixture: "flink/compute-pool/event-list-non-existent-compute-pool.golden", exitCode: 1},
+		// success scenarios
+		{args: "flink compute-pool event list test-pool2 --environment default", fixture: "flink/compute-pool/event-list-empty.golden"},
+		{args: "flink compute-pool event list test-pool --environment default", fixture: "flink/compute-pool/event-list-human.golden"},
+		{args: "flink compute-pool event list test-pool --environment default --output json", fixture: "flink/compute-pool/event-list-json.golden"},
+		{args: "flink compute-pool event list test-pool --environment default --output yaml", fixture: "flink/compute-pool/event-list-yaml.golden"},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
 func (s *CLITestSuite) TestFlinkArtifactCreateOnPrem() {
 	tests := []CLITest{
 		// success
@@ -832,6 +848,22 @@ func (s *CLITestSuite) TestFlinkStatementExceptionListOnPrem() {
 		// failure scenarios
 		{args: "flink statement exception list test-stmt1 --environment non-exist", fixture: "flink/statement/list-exceptions-non-exist-env-failure.golden", exitCode: 1},
 		{args: "flink statement exception list invalid-stmt --environment default", fixture: "flink/statement/list-exceptions-invalid-stmt-failure.golden", exitCode: 1},
+	}
+
+	runIntegrationTestsWithMultipleAuth(s, tests)
+}
+
+func (s *CLITestSuite) TestFlinkStatementEventListOnPrem() {
+	tests := []CLITest{
+		// failure scenarios
+		{args: "flink statement event list test-stmt1", fixture: "flink/statement/event-list-missing-env.golden", exitCode: 1},
+		{args: "flink statement event list test-stmt1 --environment non-exist", fixture: "flink/statement/event-list-non-existent-env.golden", exitCode: 1},
+		{args: "flink statement event list non-exist-stmt --environment default", fixture: "flink/statement/event-list-non-existent-statement.golden", exitCode: 1},
+		// success scenarios
+		{args: "flink statement event list test-stmt2 --environment default", fixture: "flink/statement/event-list-empty.golden"},
+		{args: "flink statement event list test-stmt1 --environment default", fixture: "flink/statement/event-list-human.golden"},
+		{args: "flink statement event list test-stmt1 --environment default --output json", fixture: "flink/statement/event-list-json.golden"},
+		{args: "flink statement event list test-stmt1 --environment default --output yaml", fixture: "flink/statement/event-list-yaml.golden"},
 	}
 
 	runIntegrationTestsWithMultipleAuth(s, tests)

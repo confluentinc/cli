@@ -1,0 +1,1 @@
+Error: failed to list events for compute pool "non-exist-pool" in the environment "default": Compute pool not found

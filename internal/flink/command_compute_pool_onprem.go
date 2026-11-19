@@ -28,6 +28,7 @@ func (c *command) newComputePoolCommandOnPrem() *cobra.Command {
 	cmd.AddCommand(c.newComputePoolCreateCommandOnPrem())
 	cmd.AddCommand(c.newComputePoolDeleteCommandOnPrem())
 	cmd.AddCommand(c.newComputePoolDescribeCommandOnPrem())
+	cmd.AddCommand(c.newComputePoolEventCommandOnPrem())
 	cmd.AddCommand(c.newComputePoolListCommandOnPrem())
 
 	return cmd
