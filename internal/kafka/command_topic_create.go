@@ -19,6 +19,11 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/utils"
 )
 
+// confluent.*.association values are JSON strings. These keys are passed to GetMapFromArray as
+// jsonValueKeys, so their values are located by JSON validity, validated as JSON, and stored
+// verbatim (skipping special-character un-escaping).
+var associationConfigs = []string{"confluent.key.association", "confluent.value.association"}
+
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <topic>",
@@ -35,7 +40,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().Uint32("partitions", 0, "Number of topic partitions.")
-	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the topic being created.`)
+	pcmd.AddTopicConfigFlag(cmd)
 	pcmd.AddEndpointFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddDryRunFlag(cmd)
 	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
@@ -54,12 +59,11 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configs, err := cmd.Flags().GetStringSlice("config")
+	configs, err := cmd.Flags().GetStringArray("config")
 	if err != nil {
 		return err
 	}
-
-	configMap, err := properties.ConfigFlagToMap(configs)
+	configMap, err := properties.GetMapFromArray(configs, associationConfigs...)
 	if err != nil {
 		return err
 	}
