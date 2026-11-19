@@ -72,11 +72,17 @@ func (s *CLITestSuite) TestTableflowTopic() {
 		{args: "tableflow topic enable topic-managed --cluster lkc-123456 --storage-type MANAGED --error-handling SKIP", fixture: "tableflow/topic/enable-topic-managed-error-handling-skip.golden"},
 		{args: "tableflow topic enable topic-managed --cluster lkc-123456 --storage-type MANAGED --error-handling LOG --log-target log_topic", fixture: "tableflow/topic/enable-topic-managed-error-handling-log.golden"},
 		{args: "tableflow topic enable topic-managed --cluster lkc-123456 --storage-type MANAGED --metadata-column-naming-scheme PORTABLE", fixture: "tableflow/topic/enable-topic-managed-metadata-column-naming-scheme.golden"},
+		{args: "tableflow topic enable topic-byob --cluster lkc-123456 --storage-type BYOS --provider-integration cspi-stgce89r7 --bucket-name bucket_1 --table-formats ICEBERG --iceberg-format-version 3 --features VARIANT=true --variant-shredding=true", fixture: "tableflow/topic/enable-topic-iceberg-v3.golden"},
+		{args: "tableflow topic enable topic-managed --cluster lkc-123456 --features VARIANT", fixture: "tableflow/topic/enable-topic-features-invalid.golden", exitCode: 1},
+		{args: "tableflow topic enable topic-managed --cluster lkc-123456 --table-formats DELTA --iceberg-format-version 3", fixture: "tableflow/topic/enable-topic-iceberg-version-without-iceberg.golden", exitCode: 1},
 		{args: "tableflow topic update topic-byob --cluster lkc-123456 --retention-ms 432000000", fixture: "tableflow/topic/update-topic.golden"},
 		{args: "tableflow topic update topic-managed --cluster lkc-123456 --error-handling SUSPEND", fixture: "tableflow/topic/update-topic-managed-error-handling-suspend.golden"},
 		{args: "tableflow topic update topic-managed --cluster lkc-123456 --error-handling SKIP", fixture: "tableflow/topic/update-topic-managed-error-handling-skip.golden"},
 		{args: "tableflow topic update topic-managed --cluster lkc-123456 --error-handling LOG --log-target log_topic", fixture: "tableflow/topic/update-topic-managed-error-handling-log.golden"},
 		{args: "tableflow topic update topic-managed --cluster lkc-123456 --metadata-column-naming-scheme PORTABLE", fixture: "tableflow/topic/update-topic-managed-metadata-column-naming-scheme.golden"},
+		{args: "tableflow topic update topic-iceberg-v3 --cluster lkc-123456 --table-formats DELTA --iceberg-format-version 3", fixture: "tableflow/topic/update-topic-iceberg-version-without-iceberg.golden", exitCode: 1},
+		{args: "tableflow topic update topic-iceberg-v2 --cluster lkc-123456 --iceberg-format-version 3", fixture: "tableflow/topic/update-topic-iceberg-format-version.golden"},
+		{args: "tableflow topic update topic-iceberg-v3 --cluster lkc-123456 --features VARIANT=true --variant-shredding", fixture: "tableflow/topic/update-topic-variant-shredding.golden"},
 		{args: "tableflow topic update topic-managed --cluster lkc-123456 --log-target log_topic", fixture: "tableflow/topic/update-topic-managed-no-change.golden"},
 		{args: "tableflow topic update topic-error-log --cluster lkc-123456 --log-target log_topic", fixture: "tableflow/topic/update-topic-error-log.golden"},
 		{args: "tableflow topic disable topic-managed --cluster lkc-123456", input: "y\n", fixture: "tableflow/topic/disable-topic.golden"},
@@ -105,6 +111,8 @@ func (s *CLITestSuite) TestTableflowTopicDescribe() {
 		{args: "tableflow topic describe topic-byob --cluster lkc-123456 --output json", fixture: "tableflow/topic/describe-topic-json.golden"},
 		{args: "tableflow topic describe topic-azure --cluster lkc-123456 --output json", fixture: "tableflow/topic/describe-topic-azure-json.golden"},
 		{args: "tableflow topic describe topic-gcp --cluster lkc-123456 --output json", fixture: "tableflow/topic/describe-topic-gcp-json.golden"},
+		{args: "tableflow topic describe topic-iceberg-v3 --cluster lkc-123456", fixture: "tableflow/topic/describe-topic-iceberg-v3.golden"},
+		{args: "tableflow topic describe topic-iceberg-v3 --cluster lkc-123456 -o json", fixture: "tableflow/topic/describe-topic-iceberg-v3-json.golden"},
 	}
 
 	for _, test := range tests {

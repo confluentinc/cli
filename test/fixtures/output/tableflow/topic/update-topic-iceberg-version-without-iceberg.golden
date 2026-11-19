@@ -1,0 +1,1 @@
+Error: `--iceberg-format-version` requires `--table-formats ICEBERG`

@@ -1,0 +1,24 @@
+{
+  "kafka_cluster": "lkc-123456",
+  "topic_name": "topic-iceberg-v3",
+  "enable_compaction": true,
+  "enable_partitioning": true,
+  "environment": "env-596",
+  "record_failure_strategy": "SKIP",
+  "retention_ms": "604800000",
+  "storage_type": "MANAGED",
+  "suspended": false,
+  "table_formats": "ICEBERG",
+  "iceberg_format_version": 3,
+  "features": {
+    "VARIANT": {
+      "enabled": true,
+      "shredding": {
+        "enabled": false
+      }
+    }
+  },
+  "table_path": "s3://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId",
+  "phase": "RUNNING",
+  "write_mode": "UPSERT"
+}
