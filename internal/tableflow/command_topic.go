@@ -2,6 +2,7 @@ package tableflow
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -44,12 +45,32 @@ type topicOut struct {
 	StorageRegion              string            `human:"Storage Region,omitempty" serialized:"storage_region ,omitempty"`
 	Suspended                  bool              `human:"Suspended" serialized:"suspended"`
 	TableFormats               string            `human:"Table Formats" serialized:"table_formats"`
+	IcebergFormatVersion       int32             `human:"Iceberg Format Version,omitempty" serialized:"iceberg_format_version,omitempty"`
+	Features                   map[string]string `human:"Features,omitempty" serialized:"-"`
+	SerializedFeatures         featuresOut       `human:"-" serialized:"features,omitempty"`
 	TablePath                  string            `human:"Table Path" serialized:"table_path"`
 	Phase                      string            `human:"Phase" serialized:"phase"`
 	CatalogSyncStatus          map[string]string `human:"Catalog Sync Status,omitempty" serialized:"catalog_sync_status,omitempty"`
 	FailingTableFormat         map[string]string `human:"Failing Table Format,omitempty" serialized:"failing_table_format,omitempty"`
 	ErrorMessage               string            `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
 	WriteMode                  string            `human:"Write Mode,omitempty" serialized:"write_mode,omitempty"`
+}
+
+// topicListFields returns the names of the topicOut fields that "tableflow topic list" shows.
+// It leaves out the table feature fields, which only the commands for a single topic show.
+func topicListFields() []string {
+	topicType := reflect.TypeOf(topicOut{})
+
+	fields := make([]string, 0, topicType.NumField())
+	for i := 0; i < topicType.NumField(); i++ {
+		switch name := topicType.Field(i).Name; name {
+		case "IcebergFormatVersion", "Features", "SerializedFeatures":
+		default:
+			fields = append(fields, name)
+		}
+	}
+
+	return fields
 }
 
 func (c *command) newTopicCommand() *cobra.Command {
@@ -207,6 +228,7 @@ func printTopicTable(cmd *cobra.Command, topic tableflowv1.TableflowV1TableflowT
 
 	strStatus := getDescribeCatalogSyncStatuses(topic.Status.GetCatalogSyncStatuses())
 	strFormats := getFailingTableFormats(topic.Status.GetFailingTableFormats())
+	features, serializedFeatures := getFeatures(topic)
 
 	out := &topicOut{
 		KafkaCluster:               topic.GetSpec().KafkaCluster.GetId(),
@@ -214,6 +236,9 @@ func printTopicTable(cmd *cobra.Command, topic tableflowv1.TableflowV1TableflowT
 		EnableCompaction:           topic.GetSpec().Config.GetEnableCompaction(),   // should be read-only & true
 		EnablePartitioning:         topic.GetSpec().Config.GetEnablePartitioning(), // should be read-only & true
 		TableFormats:               strings.Join(topic.Spec.GetTableFormats(), ", "),
+		IcebergFormatVersion:       getIcebergFormatVersion(topic),
+		Features:                   features,
+		SerializedFeatures:         serializedFeatures,
 		Environment:                topic.GetSpec().Environment.GetId(),
 		RetentionMs:                topic.GetSpec().Config.GetRetentionMs(),
 		RecordFailureStrategy:      topic.GetSpec().Config.GetRecordFailureStrategy(),

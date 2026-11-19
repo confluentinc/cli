@@ -121,6 +121,8 @@ func handleTableflowTopicGet(t *testing.T, environmentId, clusterId, display_nam
 			tableflowTopic = getTopicAzure("topic-azure", environmentId, clusterId)
 		case "topic-gcp":
 			tableflowTopic = getTopicGcp("topic-gcp", environmentId, clusterId)
+		case "topic-iceberg-v3":
+			tableflowTopic = getTopicIcebergV3("topic-iceberg-v3", environmentId, clusterId)
 		case "topic-error-log":
 			tableflowTopic = getTopicManaged("topic-error-log", "env-596", "lkc-123456")
 			tableflowTopic.Spec.Config.SetErrorHandling(tableflowv1.TableflowV1TableFlowTopicConfigsSpecErrorHandlingOneOf{
@@ -165,6 +167,10 @@ func handleTableflowTopicUpdate(t *testing.T, display_name string) http.HandlerF
 			tableflowTopic = getTopicAzure("topic-azure", "env-596", "lkc-123456")
 		case "topic-gcp":
 			tableflowTopic = getTopicGcp("topic-gcp", "env-596", "lkc-123456")
+		case "topic-iceberg-v3":
+			tableflowTopic = getTopicIcebergV3("topic-iceberg-v3", "env-596", "lkc-123456")
+		case "topic-iceberg-v2":
+			tableflowTopic = getTopicIcebergV2("topic-iceberg-v2", "env-596", "lkc-123456")
 		case "topic-error-log":
 			tableflowTopic = getTopicManaged("topic-error-log", "env-596", "lkc-123456")
 		}
@@ -179,6 +185,19 @@ func handleTableflowTopicUpdate(t *testing.T, display_name string) http.HandlerF
 
 		if body.Spec.Config.HasErrorHandling() {
 			tableflowTopic.Spec.Config.SetErrorHandling(body.Spec.Config.GetErrorHandling())
+		}
+
+		// Return the ICEBERG entry and the features that the request sends. The CLI sends only these.
+		for _, entry := range body.Spec.GetTableFormatProperties() {
+			if iceberg := entry.TableflowV1IcebergTableFormatProperties; iceberg != nil {
+				tableflowTopic.Spec.SetTableFormatProperties([]tableflowv1.TableflowV1TableflowTopicSpecTableFormatPropertiesOneOf{
+					tableflowv1.TableflowV1IcebergTableFormatPropertiesAsTableflowV1TableflowTopicSpecTableFormatPropertiesOneOf(iceberg),
+				})
+			}
+		}
+
+		if body.Spec.Config.HasFeatures() {
+			tableflowTopic.Spec.Config.SetFeatures(body.Spec.Config.GetFeatures())
 		}
 
 		err = json.NewEncoder(w).Encode(tableflowTopic)
@@ -378,6 +397,71 @@ func getTopicGcp(display_name, environmentId, clusterId string) tableflowv1.Tabl
 			WriteMode: "UPSERT",
 		},
 	}
+}
+
+// getTopicIcebergV3 mimics the API: "table_format_properties" lists every format, DELTA before ICEBERG,
+// and every VARIANT entry in "features" has "shredding".
+func getTopicIcebergV3(display_name, environmentId, clusterId string) tableflowv1.TableflowV1TableflowTopic {
+	return tableflowv1.TableflowV1TableflowTopic{
+		Spec: &tableflowv1.TableflowV1TableflowTopicSpec{
+			DisplayName: tableflowv1.PtrString(display_name),
+			Suspended:   tableflowv1.PtrBool(false),
+			Storage: &tableflowv1.TableflowV1TableflowTopicSpecStorageOneOf{
+				TableflowV1ManagedStorageSpec: &tableflowv1.TableflowV1ManagedStorageSpec{
+					Kind:      "Managed",
+					TablePath: tableflowv1.PtrString("s3://dummy-bucket-name-1//10011010/11101100/org-1/env-2/lkc-3/v1/tableId"),
+				},
+			},
+			Config: &tableflowv1.TableflowV1TableFlowTopicConfigsSpec{
+				EnableCompaction:      tableflowv1.PtrBool(true),
+				EnablePartitioning:    tableflowv1.PtrBool(true),          // read-only property that needs confirmation, assuming constantly true for now
+				RetentionMs:           tableflowv1.PtrString("604800000"), // 7 days to milliseconds
+				RecordFailureStrategy: tableflowv1.PtrString("SKIP"),
+				Features: &[]tableflowv1.TableflowV1TableFlowTopicConfigsSpecFeaturesOneOf{
+					tableflowv1.TableflowV1VariantFeatureAsTableflowV1TableFlowTopicConfigsSpecFeaturesOneOf(&tableflowv1.TableflowV1VariantFeature{
+						Feature:   "VARIANT",
+						Enabled:   true,
+						Shredding: &tableflowv1.TableflowV1VariantShredding{Enabled: tableflowv1.PtrBool(false)},
+					}),
+				},
+			},
+			TableFormats: &[]string{"ICEBERG"},
+			TableFormatProperties: &[]tableflowv1.TableflowV1TableflowTopicSpecTableFormatPropertiesOneOf{
+				tableflowv1.TableflowV1DeltaTableFormatPropertiesAsTableflowV1TableflowTopicSpecTableFormatPropertiesOneOf(&tableflowv1.TableflowV1DeltaTableFormatProperties{
+					Format:  "DELTA",
+					Enabled: false,
+				}),
+				tableflowv1.TableflowV1IcebergTableFormatPropertiesAsTableflowV1TableflowTopicSpecTableFormatPropertiesOneOf(&tableflowv1.TableflowV1IcebergTableFormatProperties{
+					Format:        "ICEBERG",
+					Enabled:       true,
+					FormatVersion: tableflowv1.PtrInt32(3),
+				}),
+			},
+			Environment:  &tableflowv1.GlobalObjectReference{Id: environmentId},
+			KafkaCluster: &tableflowv1.EnvScopedObjectReference{Id: clusterId, Environment: tableflowv1.PtrString(environmentId)},
+		},
+		Status: &tableflowv1.TableflowV1TableflowTopicStatus{
+			Phase:     tableflowv1.PtrString("RUNNING"),
+			WriteMode: "UPSERT",
+		},
+	}
+}
+
+// getTopicIcebergV2 is getTopicIcebergV3 with ICEBERG at format_version 2. VARIANT needs format_version 3, so VARIANT
+// is disabled.
+func getTopicIcebergV2(display_name, environmentId, clusterId string) tableflowv1.TableflowV1TableflowTopic {
+	tableflowTopic := getTopicIcebergV3(display_name, environmentId, clusterId)
+	for _, entry := range tableflowTopic.Spec.GetTableFormatProperties() {
+		if iceberg := entry.TableflowV1IcebergTableFormatProperties; iceberg != nil {
+			iceberg.SetFormatVersion(2)
+		}
+	}
+	for _, entry := range tableflowTopic.Spec.Config.GetFeatures() {
+		if variant := entry.TableflowV1VariantFeature; variant != nil {
+			variant.SetEnabled(false)
+		}
+	}
+	return tableflowTopic
 }
 
 func handleCatalogIntegrationGet(t *testing.T, environmentId, clusterId, id string) http.HandlerFunc {
