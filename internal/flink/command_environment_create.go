@@ -180,6 +180,7 @@ func printEnvironmentOutTable(cmd *cobra.Command, outputEnvironment cmfsdk.Envir
 		InteractiveStatementDefaults: defaultsInteractiveStatementOutput,
 		CreatedTime:                  outputEnvironment.CreatedTime.String(),
 		UpdatedTime:                  outputEnvironment.UpdatedTime.String(),
+		DeletionRequestedTime:        formatDeletionRequestedTime(outputEnvironment.Metadata),
 	})
 	return table.Print()
 }

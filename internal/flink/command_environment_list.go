@@ -1,7 +1,11 @@
 package flink
 
 import (
+	"slices"
+
 	"github.com/spf13/cobra"
+
+	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/output"
@@ -41,13 +45,19 @@ func (c *command) environmentList(cmd *cobra.Command, _ []string) error {
 
 	if output.GetFormat(cmd) == output.Human {
 		list := output.NewList(cmd)
-		list.Filter([]string{"Name", "CreatedTime", "UpdatedTime", "KubernetesNamespace"})
+		columns := []string{"Name", "CreatedTime", "UpdatedTime", "KubernetesNamespace"}
+		// The column only appears while some environment is being deleted.
+		if slices.ContainsFunc(sdkEnvironments, func(env cmfsdk.Environment) bool { return env.Metadata.GetDeletionRequestedTimestamp() != "" }) {
+			columns = append(columns, "DeletionRequestedTime")
+		}
+		list.Filter(columns)
 		for _, env := range sdkEnvironments {
 			list.Add(&flinkEnvironmentOutput{
-				Name:                env.Name,
-				KubernetesNamespace: env.KubernetesNamespace,
-				CreatedTime:         env.CreatedTime.String(),
-				UpdatedTime:         env.UpdatedTime.String(),
+				Name:                  env.Name,
+				KubernetesNamespace:   env.KubernetesNamespace,
+				CreatedTime:           env.CreatedTime.String(),
+				UpdatedTime:           env.UpdatedTime.String(),
+				DeletionRequestedTime: formatDeletionRequestedTime(env.Metadata),
 			})
 		}
 		return list.Print()

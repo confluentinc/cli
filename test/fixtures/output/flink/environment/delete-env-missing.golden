@@ -2,12 +2,27 @@ Error: requires at least 1 arg(s), only received 0
 Usage:
   confluent flink environment delete <name-1> [name-2] ... [name-n] [flags]
 
+Examples:
+Delete Flink environment "my-env" with its applications, statements and compute pools, in the background.
+
+  $ confluent flink environment delete my-env --cascade
+
+Unblock a deletion of Flink environment "my-env" that is stuck.
+
+  $ confluent flink environment delete my-env --cascade --skip-cleanup
+
+Delete Flink environment "my-env" with its applications, statements and compute pools at once, when its Kubernetes cluster is disconnected or decommissioned.
+
+  $ confluent flink environment delete my-env --cascade --force
+
 Flags:
+      --cascade                             Delete the environment's applications, statements, compute pools, savepoints and secret mappings with it, in the background. This stops all its Flink jobs. Requires CMF 2.5.0 or later.
+      --skip-cleanup                        With --cascade, unblock a deletion that is stuck by no longer waiting for Kubernetes cleanup: no final savepoints, a statement's job may keep running, and savepoint files stay in storage. Use only if the deletion is stuck.
+      --force                               Skip the confirmation prompt, and delete from CMF without requiring the Kubernetes cluster. Without --cascade, the environment's Kubernetes objects, such as its service account and secret, are left in its namespace. With --cascade, the deletion happens at once instead of in the background, Kubernetes objects are deleted on a best-effort basis, and savepoint files are kept.
       --url string                          Base URL of the Confluent Manager for Apache Flink (CMF). Environment variable "CONFLUENT_CMF_URL" may be set in place of this flag.
       --client-key-path string              Path to client private key for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_KEY_PATH" may be set in place of this flag.
       --client-cert-path string             Path to client cert to be verified by Confluent Manager for Apache Flink. Include for mTLS authentication. Environment variable "CONFLUENT_CMF_CLIENT_CERT_PATH" may be set in place of this flag.
       --certificate-authority-path string   Path to a PEM-encoded Certificate Authority to verify the Confluent Manager for Apache Flink connection. Environment variable "CONFLUENT_CMF_CERTIFICATE_AUTHORITY_PATH" may be set in place of this flag.
-      --force                               Skip the deletion confirmation prompt.
 
 Global Flags:
   -h, --help            Show help for this command.
