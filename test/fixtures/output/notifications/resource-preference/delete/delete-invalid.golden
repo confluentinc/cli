@@ -1,0 +1,4 @@
+Error: notifications resource preference "invalid" not found
+
+Suggestions:
+    List available notifications resource preferences with `confluent notifications resource-preference list`.

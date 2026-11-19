@@ -1,0 +1,23 @@
+Updated notifications user notification "user-notification-1".
++--------------------------------+-----------------------------------------------------------------------------------------+
+| ID                             | dlz-f3a90de                                                                             |
+| Recommended Actions Content    | Restart the cluster from the                                                            |
+|                                | Confluent Cloud console.                                                                |
+| Recommended Actions Version    | 1                                                                                       |
+| Resource Crn                   | crn://confluent.cloud/organization=org-abc/environment=env-xyz/kafka-cluster=lkc-ds23ad |
+| Resource Display Name          | prod-kafka-cluster                                                                      |
+| Resource Type                  | CLUSTER                                                                                 |
+| Read                           | true                                                                                    |
+| Read At                        | 2026-01-31 11:00:00 +0000 UTC                                                           |
+| Notification Type Category     | BILLING_LICENSING                                                                       |
+| Notification Type Description  | Cluster shrink operation is                                                             |
+|                                | completed                                                                               |
+| Notification Type Display Name | Cluster Shrink                                                                          |
+| Notification Type Is Included  | false                                                                                   |
+| In Plan                        |                                                                                         |
+| Notification Type Severity     | INFO                                                                                    |
+| Notification Type Subscription | REQUIRED                                                                                |
+| Priority                       |                                                                                         |
+| Severity                       | CRITICAL                                                                                |
+| Received At                    | 2026-01-31 10:35:00 +0000 UTC                                                           |
++--------------------------------+-----------------------------------------------------------------------------------------+
