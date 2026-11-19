@@ -200,12 +200,15 @@ func (c *queryCommand) runQuery(cmd *cobra.Command, _ []string) error {
 
 // emitResult finishes output after a successful drain. Streamed formats already
 // wrote rows during Run, so this closes the document and surfaces any terminal-
-// phase error afterward; -o human renders the buffered table. It sets
-// *announceStop on a write failure so the deferred cleanup speaks up.
+// phase error afterward (unless the phase failed before any row was written, in
+// which case stdout stays empty and only the error is returned); -o human renders
+// the buffered table. It sets *announceStop on a write failure so the deferred
+// cleanup speaks up.
 func (c *queryCommand) emitResult(name string, result *query.Result, streamer resultStreamer, maxRows int, humanDefaultCap bool, announceStop *bool) error {
 	// -o human hasn't printed anything yet, so a terminal-phase error (STOPPED/
 	// DELETING) returns before the table. Streamed rows already reached stdout, so
-	// fall through and let close() terminate the document first.
+	// fall through and let close() terminate the document first. If nothing was
+	// streamed there is no document to terminate; see the isOpened check below.
 	phaseErr := phaseError(name, result)
 	if phaseErr != nil && streamer == nil {
 		return phaseErr
@@ -217,6 +220,12 @@ func (c *queryCommand) emitResult(name string, result *query.Result, streamer re
 	isAppendOnly, appendOnlyKnown := warnIfChangelog(result)
 
 	if streamer != nil {
+		// A failed run that wrote no rows has no document to terminate, and close()
+		// would emit a bare "[]" on stdout ahead of the error. A successful empty run
+		// (phaseErr == nil) still falls through to close() and emits "[]".
+		if phaseErr != nil && !streamer.isOpened() {
+			return phaseErr
+		}
 		if err := streamer.close(); err != nil {
 			*announceStop = true
 			return err

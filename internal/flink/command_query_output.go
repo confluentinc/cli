@@ -63,6 +63,7 @@ type resultStreamer interface {
 	setColumns(columns []flinkgatewayv1.ColumnDetails) error
 	writeRows(rows []types.StatementResultRow) error
 	close() error
+	isOpened() bool
 }
 
 func columnNames(columns []flinkgatewayv1.ColumnDetails) []string {
@@ -159,6 +160,10 @@ func (s *serialStreamer) close() error {
 		return err
 	}
 	return s.w.Flush()
+}
+
+func (s *serialStreamer) isOpened() bool {
+	return s.opened
 }
 
 // jsonRowBytes pretty-prints one row object at the given indent, keeping the
