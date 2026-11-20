@@ -48,6 +48,14 @@ func addCompatibilityFlag(cmd *cobra.Command) {
 	})
 }
 
+func addCompatibilityPolicyFlag(cmd *cobra.Command) {
+	policies := []string{"lenient", "logical", "strict"}
+	cmd.Flags().String("compatibility-policy", "", fmt.Sprintf("The compatibility policy for JSON schemas. Can be %s.", utils.ArrayToCommaDelimitedString(policies, "or")))
+	pcmd.RegisterFlagCompletionFunc(cmd, "compatibility-policy", func(_ *cobra.Command, _ []string) []string {
+		return policies
+	})
+}
+
 func addCompatibilityGroupFlag(cmd *cobra.Command) {
 	cmd.Flags().String("compatibility-group", "", "The name of the compatibility group.")
 }

@@ -30,10 +30,10 @@ func handleSRUpdateTopLevelConfig(t *testing.T) http.HandlerFunc {
 			var req srsdk.ConfigUpdateRequest
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			err = json.NewEncoder(w).Encode(srsdk.ConfigUpdateRequest{Compatibility: req.Compatibility})
+			err = json.NewEncoder(w).Encode(srsdk.ConfigUpdateRequest{Compatibility: req.Compatibility, CompatibilityPolicy: req.CompatibilityPolicy})
 			require.NoError(t, err)
 		case http.MethodGet:
-			res := srsdk.Config{CompatibilityLevel: srsdk.PtrString("FULL")}
+			res := srsdk.Config{CompatibilityLevel: srsdk.PtrString("FULL"), CompatibilityPolicy: srsdk.PtrString("STRICT")}
 			metadata := srsdk.Metadata{
 				Properties: &map[string]string{
 					"owner": "Bob Jones",
@@ -443,7 +443,7 @@ func handleSRSubjectConfig(t *testing.T) http.HandlerFunc {
 			var req srsdk.ConfigUpdateRequest
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			err = json.NewEncoder(w).Encode(srsdk.ConfigUpdateRequest{Compatibility: req.Compatibility})
+			err = json.NewEncoder(w).Encode(srsdk.ConfigUpdateRequest{Compatibility: req.Compatibility, CompatibilityPolicy: req.CompatibilityPolicy})
 			require.NoError(t, err)
 		case http.MethodGet:
 			ruleSet := srsdk.RuleSet{
@@ -464,10 +464,11 @@ func handleSRSubjectConfig(t *testing.T) http.HandlerFunc {
 				},
 			}
 			res := srsdk.Config{
-				CompatibilityLevel: srsdk.PtrString("FORWARD"),
-				CompatibilityGroup: srsdk.PtrString("application.version"),
-				DefaultRuleSet:     *srsdk.NewNullableRuleSet(&ruleSet),
-				DefaultMetadata:    *srsdk.NewNullableMetadata(&defaultMetadata),
+				CompatibilityLevel:  srsdk.PtrString("FORWARD"),
+				CompatibilityPolicy: srsdk.PtrString("LENIENT"),
+				CompatibilityGroup:  srsdk.PtrString("application.version"),
+				DefaultRuleSet:      *srsdk.NewNullableRuleSet(&ruleSet),
+				DefaultMetadata:     *srsdk.NewNullableMetadata(&defaultMetadata),
 			}
 			err := json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
