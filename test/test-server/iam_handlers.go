@@ -69,6 +69,13 @@ func init() {
 }
 
 // Handler for: "/iam/v2/api-keys/{id}"
+const (
+	// orgMaxExpirationOwner is an owner whose organization sets a maximum API key expiration.
+	orgMaxExpirationOwner = "sa-orgmax"
+	// orgMaxExpirationDefault is the expiration the server applies to that owner's keys when none is sent.
+	orgMaxExpirationDefault = "2027-01-31"
+)
+
 func handleIamApiKey(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -148,7 +155,19 @@ func handleIamApiKeysCreate(t *testing.T) http.HandlerFunc {
 
 		apiKey := req
 
-		switch req.Spec.Resource.GetKind() {
+		// Simulates an organization that sets a maximum expiration: the server defaults a create
+		// without an expiration to that maximum instead of rejecting it, and rejects a later date.
+		if req.Spec.Owner.Id == orgMaxExpirationOwner {
+			if req.Spec.ExpiresAt == nil {
+				req.Spec.ExpiresAt = apikeysv2.PtrString(orgMaxExpirationDefault)
+			} else if *req.Spec.ExpiresAt > orgMaxExpirationDefault {
+				w.WriteHeader(http.StatusBadRequest)
+				require.NoError(t, writeErrorJson(w, "API key expiration must be at most 90 day(s) in the future (your organization's maximum)."))
+				return
+			}
+		}
+
+		switch req.Spec.Resource.Get().GetKind() {
 		case "Region":
 			apiKey = &apikeysv2.IamV2ApiKey{
 				Id:         apikeysv2.PtrString("FLINKREGIONAPIKEY"),
@@ -160,12 +179,13 @@ func handleIamApiKeysCreate(t *testing.T) http.HandlerFunc {
 			apiKey.Spec = &apikeysv2.IamV2ApiKeySpec{
 				Owner:  req.Spec.Owner,
 				Secret: apikeysv2.PtrString(fmt.Sprintf("MYSECRET%d", keyIndex)),
-				Resource: &apikeysv2.ObjectReference{
-					Id:         req.Spec.Resource.GetId(),
+				Resource: *apikeysv2.NewNullableTypedEnvScopedObjectReference(&apikeysv2.TypedEnvScopedObjectReference{
+					Id:         req.Spec.Resource.Get().GetId(),
 					ApiVersion: apikeysv2.PtrString("cmk/v2"),
-					Kind:       apikeysv2.PtrString(getKind(req.Spec.Resource.GetId())),
-				},
+					Kind:       apikeysv2.PtrString(getKind(req.Spec.Resource.Get().GetId())),
+				}),
 				Description: req.Spec.Description,
+				ExpiresAt:   req.Spec.ExpiresAt,
 			}
 			apiKey.Metadata = &apikeysv2.ObjectMeta{CreatedAt: keyTime}
 			keyIndex++

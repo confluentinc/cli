@@ -228,7 +228,7 @@ func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Clien
 	return resourceType, clusterId, apiKey, nil
 }
 
-func getResourceType(resource apikeysv2.ObjectReference) string {
+func getResourceType(resource apikeysv2.TypedEnvScopedObjectReference) string {
 	switch resource.GetKind() {
 	case "Cloud":
 		return "cloud"
@@ -253,6 +253,6 @@ func getResourceType(resource apikeysv2.ObjectReference) string {
 	return ""
 }
 
-func getResourceApi(resource apikeysv2.ObjectReference) string {
+func getResourceApi(resource apikeysv2.TypedEnvScopedObjectReference) string {
 	return strings.Split(resource.GetApiVersion(), "/")[0]
 }
