@@ -150,7 +150,9 @@ func (l *Logger) append(level Level, message string) {
 
 func (l *Logger) Flush() {
 	for _, lm := range l.buffer {
-		if lm.level < l.Level {
+		// Higher levels are more verbose, so a buffered message is emitted only if the level it
+		// was logged at is now within the threshold.
+		if lm.level > l.Level {
 			continue
 		}
 
