@@ -6,6 +6,7 @@ import (
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -41,7 +42,7 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 	if len(invitations) > 0 {
 		var err error
 		if names, err = userNames(c.V2Client.ListIamUsers); err != nil {
-			output.ErrPrintf(c.Config.EnableColor, "[WARN] Unable to look up user names: %v\n", err)
+			log.CliLogger.Warnf("Unable to look up user names: %v", err)
 		}
 	}
 
