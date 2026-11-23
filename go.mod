@@ -27,7 +27,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.4.1
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.27.0
 	github.com/confluentinc/ccloud-sdk-go-v2/configurationcontrol v0.1.1
-	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.7.0
+	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.8.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect-custom-plugin v0.0.9
 	github.com/confluentinc/ccloud-sdk-go-v2/endpoint v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/flink v0.11.0
@@ -39,6 +39,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.0.0-20250909043602-f80bee0eb280
 	github.com/confluentinc/ccloud-sdk-go-v2/ksql v0.2.0
+	github.com/confluentinc/ccloud-sdk-go-v2/logging v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/networking v0.14.0
@@ -57,7 +58,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/switchover v0.1.2
 	github.com/confluentinc/ccloud-sdk-go-v2/tableflow v0.8.0
 	github.com/confluentinc/ccloud-sdk-go-v2/usm v0.2.0
-	github.com/confluentinc/cmf-sdk-go v0.0.8
+	github.com/confluentinc/cmf-sdk-go v0.0.10
 	github.com/confluentinc/confluent-kafka-go/v2 v2.14.2
 	github.com/confluentinc/go-editor v0.11.0
 	github.com/confluentinc/go-prompt v0.2.40
@@ -107,18 +108,18 @@ require (
 	github.com/sourcegraph/jsonrpc2 v0.2.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.11.1
+	github.com/stretchr/testify v1.12.1
 	github.com/stripe/stripe-go/v76 v76.25.0
 	github.com/swaggest/go-asyncapi v0.8.0
 	github.com/texttheater/golang-levenshtein v1.0.1
 	github.com/tidwall/gjson v1.17.1
 	github.com/tidwall/pretty v1.2.1
 	github.com/tidwall/sjson v1.2.5
-	go.opentelemetry.io/otel v1.45.0
+	go.opentelemetry.io/otel v1.47.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.39.0
-	go.opentelemetry.io/otel/metric v1.45.0
-	go.opentelemetry.io/otel/sdk v1.45.0
-	go.opentelemetry.io/otel/sdk/metric v1.45.0
+	go.opentelemetry.io/otel/metric v1.47.0
+	go.opentelemetry.io/otel/sdk v1.47.0
+	go.opentelemetry.io/otel/sdk/metric v1.47.0
 	go.uber.org/mock v0.5.2
 	golang.org/x/crypto v0.59.0
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f
@@ -281,11 +282,13 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.61.0 // indirect
-	go.opentelemetry.io/otel/trace v1.45.0 // indirect
+	go.opentelemetry.io/otel/log v1.47.0 // indirect
+	go.opentelemetry.io/otel/trace v1.47.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.10.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/mod v0.42.0 // indirect
 	golang.org/x/net v0.62.0 // indirect
-	golang.org/x/oauth2 v0.37.0 // indirect
+	golang.org/x/oauth2 v0.38.0 // indirect
 	golang.org/x/sync v0.25.0 // indirect
 	golang.org/x/sys v0.50.0 // indirect
 	golang.org/x/time v0.14.0 // indirect

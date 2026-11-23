@@ -1,0 +1,1 @@
+(?s)GET /logs/v1/sources/cluster-health HTTP/1\.1\n.*POST /logs/v1/search\?page_size=200 HTTP/1\.1\n.*\{"crn":"crn://confluent\.cloud/organization=abc-123/environment=env-596/cloud-cluster=lkc-123/kafka=lkc-123",.*"source":"cluster-health",.*HTTP/1\.1 200 OK\n.*"message":"Broker lkc-123 unreachable".*Found 1 log entry for cluster-health on lkc-123:

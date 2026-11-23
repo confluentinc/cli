@@ -3,8 +3,11 @@ package testserver
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"maps"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -53,11 +56,21 @@ func handleLogsSearch(t *testing.T) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 
+		body, err := io.ReadAll(r.Body)
+		require.NoError(t, err)
+
+		// Requests from `confluent logs` name a log source and carry an open-ended search map.
+		var unified unifiedLogsSearchRequest
+		if err := json.Unmarshal(body, &unified); err == nil && unified.Source != "" {
+			handleUnifiedLogsSearch(t, w, r, unified)
+			return
+		}
+
 		var req struct {
 			CRN    string              `json:"crn"`
 			Search LoggingSearchParams `json:"search"`
 		}
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		if err := json.Unmarshal(body, &req); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -144,7 +157,7 @@ func handleLogsSearch(t *testing.T) http.HandlerFunc {
 				filteredResponse = response
 			}
 			response = filteredResponse
-			err := json.NewEncoder(w).Encode(response)
+			err = json.NewEncoder(w).Encode(response)
 			require.NoError(t, err)
 			return
 		} else if connectorName == "az-connector-3" {
@@ -161,7 +174,7 @@ func handleLogsSearch(t *testing.T) http.HandlerFunc {
 			Kind:       "LoggingSearchResponse",
 			CRN:        "crn",
 		}
-		err := json.NewEncoder(w).Encode(response)
+		err = json.NewEncoder(w).Encode(response)
 		require.NoError(t, err)
 	}
 }
@@ -561,11 +574,16 @@ func handleConnectors(t *testing.T) http.HandlerFunc {
 					Name:   connectv1.PtrString("az-connector-3"),
 				},
 			}
-			err := json.NewEncoder(w).Encode(map[string]connectv1.ConnectV1ConnectorExpansion{
+			connectors := map[string]connectv1.ConnectV1ConnectorExpansion{
 				"az-connector":   firstConnectorExpansion,
 				"az-connector-2": secondConnectorExpansion,
 				"az-connector-3": thirdConnectorExpansion,
-			})
+			}
+			page, nextPageToken := connectorsPage(t, r, connectors)
+			if nextPageToken != "" {
+				w.Header().Set("X-Next-Page-Token", nextPageToken)
+			}
+			err := json.NewEncoder(w).Encode(page)
 			require.NoError(t, err)
 		} else if r.Method == http.MethodPost {
 			var request connectv1.InlineObject
@@ -579,6 +597,38 @@ func handleConnectors(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 		}
 	}
+}
+
+// connectorsPageSize is deliberately smaller than the client's page_size: the server may return short
+// pages, and paging through more than one page exercises the client's loop.
+const connectorsPageSize = 2
+
+// connectorsPage mimics list-connectors pagination. It requires the client to page with page_size=100 and
+// to send back only tokens this server issued, and returns connectorsPageSize connectors, in name order,
+// starting at the offset in page_token, plus the token for the next page if any remain.
+func connectorsPage(t *testing.T, r *http.Request, connectors map[string]connectv1.ConnectV1ConnectorExpansion) (map[string]connectv1.ConnectV1ConnectorExpansion, string) {
+	query := r.URL.Query()
+	require.Equal(t, "100", query.Get("page_size"), "the CLI must page through connectors")
+
+	names := slices.Sorted(maps.Keys(connectors))
+	start := 0
+	if token := query.Get("page_token"); token != "" {
+		var err error
+		start, err = strconv.Atoi(token)
+		require.NoError(t, err)
+		require.True(t, start > 0 && start < len(names), "unexpected page_token %q", token)
+		require.Zero(t, start%connectorsPageSize, "unexpected page_token %q", token)
+	}
+	end := min(start+connectorsPageSize, len(names))
+
+	page := make(map[string]connectv1.ConnectV1ConnectorExpansion)
+	for _, name := range names[start:end] {
+		page[name] = connectors[name]
+	}
+	if end < len(names) {
+		return page, strconv.Itoa(end)
+	}
+	return page, ""
 }
 
 // Handler for: "/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins"

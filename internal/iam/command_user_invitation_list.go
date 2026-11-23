@@ -3,7 +3,10 @@ package iam
 import (
 	"github.com/spf13/cobra"
 
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
 )
 
@@ -34,12 +37,19 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 		return err
 	}
 
+	// Names are best effort: skip the users request when there is nothing to enrich, and keep listing if it fails
+	var names map[string]string
+	if len(invitations) > 0 {
+		var err error
+		if names, err = userNames(c.V2Client.ListIamUsers); err != nil {
+			log.CliLogger.Warnf("Unable to look up user names: %v", err)
+		}
+	}
+
 	list := output.NewList(cmd)
 	for _, invitation := range invitations {
-		var name string
-		if user, err := c.V2Client.GetIamUser(invitation.User.GetId()); err == nil {
-			name = user.GetFullName()
-		}
+		// Invitations whose user is not found get an empty name
+		name := names[invitation.User.GetId()]
 
 		list.Add(&invitationOut{
 			Id:     invitation.GetId(),
@@ -50,4 +60,18 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 		})
 	}
 	return list.Print()
+}
+
+// userNames maps user IDs to full names. It returns an empty map and the error if the users cannot be listed.
+func userNames(listUsers func() ([]iamv2.IamV2User, error)) (map[string]string, error) {
+	users, err := listUsers()
+	if err != nil {
+		return map[string]string{}, err
+	}
+
+	names := make(map[string]string, len(users))
+	for _, user := range users {
+		names[user.GetId()] = user.GetFullName()
+	}
+	return names, nil
 }

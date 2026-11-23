@@ -51,6 +51,7 @@ func (s *CLILiveTestSuite) TestRBACRoleBindingCRUDLive() {
 			Name:         "Delete role binding",
 			Args:         "iam rbac role-binding delete --principal User:{{.sa_id}} --role EnvironmentAdmin --environment " + envID + " --force",
 			UseStateVars: true,
+			Retries:      5,
 		},
 		{
 			Name:         "Verify role binding deleted",

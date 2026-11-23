@@ -1,0 +1,4 @@
+Error: one of `--since` or `--start-time` is required
+
+Suggestions:
+    Use `--since` for a window ending now, for example `--since 1h`, or `--start-time` for an absolute start time.

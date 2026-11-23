@@ -1,0 +1,19 @@
+[
+  {
+    "exception.stacktrace": "org.apache.kafka.connect.errors.ConnectException: Connection to upstream host was lost.",
+    "id": "lcc-123",
+    "level": "ERROR",
+    "message": "Connection to upstream host was lost.",
+    "name": "my-connector",
+    "task_id": "task-0",
+    "timestamp": "2026-10-14T09:12:03Z"
+  },
+  {
+    "id": "lcc-123",
+    "level": "WARN",
+    "message": "Retrying connection, attempt 3 of 5.",
+    "name": "my-connector",
+    "task_id": "task-1",
+    "timestamp": "2026-10-14T08:50:41Z"
+  }
+]

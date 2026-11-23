@@ -1,0 +1,1 @@
+(?s)GET /logs/v1/sources HTTP/1\.1\n.*HTTP/1\.1 200 OK\n.*"name": "cluster-health".*  cluster-health \| Cluster health events \| kafka    \| lkc       \|[^\n]*

@@ -31,6 +31,11 @@ type Context struct {
 	// ActiveGlobalAPIKey is the Global API key chosen via `confluent api-key use`; used as a fallback when no
 	// resource-scoped API key is set on the active cluster.
 	ActiveGlobalAPIKey string `json:"active_global_api_key,omitempty"`
+	// LogsDiscoveryCache holds the log sources `confluent logs` discovered, to save repeated discovery calls.
+	LogsDiscoveryCache *LogsDiscoveryCache `json:"logs_discovery,omitempty"`
+	// LogsQueryState remembers the last `confluent logs fetch` query, so that `--next` can continue it. The query's
+	// key already includes its CRN, so one state per context is enough.
+	LogsQueryState *LogsQueryState `json:"logs_state,omitempty"`
 
 	// Deprecated
 	NetrcMachineName       string                            `json:"netrc_machine_name,omitempty"`
@@ -43,6 +48,8 @@ type Context struct {
 }
 
 var noEnvError = "no environment found"
+
+const noEnvSuggestions = "If the active environment was deleted, list your environments with `confluent environment list` and select one with `confluent environment use`.\nThis issue may also occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user."
 
 func newContext(name string, platform *Platform, credential *Credential, kafkaClusters map[string]*KafkaClusterConfig, kafka string, kafkaEndpoint string, state *ContextState, config *Config, organizationId, environmentId string, isMFA bool) (*Context, error) {
 	ctx := &Context{
@@ -247,7 +254,7 @@ func (c *Context) EnvironmentId() (string, error) {
 		return id, nil
 	}
 
-	return "", errors.NewErrorWithSuggestions(noEnvError, "This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.")
+	return "", errors.NewErrorWithSuggestions(noEnvError, noEnvSuggestions)
 }
 
 func (c *Context) GetCurrentEnvironment() string {
@@ -459,6 +466,22 @@ func (c *Context) SetConnectLogsQueryState(state *ConnectLogsQueryState) error {
 
 	ctx.ConnectLogsQueryState = state
 	return nil
+}
+
+func (c *Context) GetLogsQueryState() *LogsQueryState {
+	return c.LogsQueryState
+}
+
+func (c *Context) SetLogsQueryState(state *LogsQueryState) {
+	c.LogsQueryState = state
+}
+
+func (c *Context) GetLogsDiscoveryCache() *LogsDiscoveryCache {
+	return c.LogsDiscoveryCache
+}
+
+func (c *Context) SetLogsDiscoveryCache(cache *LogsDiscoveryCache) {
+	c.LogsDiscoveryCache = cache
 }
 
 func (c *Context) GetAuthToken() string {

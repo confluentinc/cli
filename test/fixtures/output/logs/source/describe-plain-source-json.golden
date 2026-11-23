@@ -1,0 +1,28 @@
+{
+  "api_version": "logging/v1",
+  "crn_elements": [
+    "organization",
+    "environment",
+    "cloud-cluster",
+    "cluster-link"
+  ],
+  "display_name": "Cluster Linking insights",
+  "full_text_search_supported": false,
+  "kind": "Source",
+  "max_lookback_days": 7,
+  "name": "cluster-link-insights",
+  "resource_type": "cluster-link",
+  "returned_fields": [
+    {
+      "default_column": true,
+      "name": "timestamp",
+      "type": "timestamp"
+    },
+    {
+      "default_column": true,
+      "name": "message",
+      "type": "string"
+    }
+  ],
+  "search_fields": []
+}
