@@ -13,6 +13,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/httpclient"
 )
 
 // requireRateLimitError checks a 429 error's message and suggestion.
@@ -75,10 +76,10 @@ func TestDecodeLogsSearchResponse_InvalidBody(t *testing.T) {
 
 // newTestLoggingHttpClient is the logging client with its retry waits shortened, so tests do not sleep.
 func newTestLoggingHttpClient() *http.Client {
-	client := newLoggingRetryableClient(false)
-	client.RetryWaitMin = time.Millisecond
-	client.RetryWaitMax = 2 * time.Millisecond
-	return client.StandardClient()
+	cfg := newLoggingHttpConfig()
+	cfg.RetryWaitMin = time.Millisecond
+	cfg.RetryWaitMax = 2 * time.Millisecond
+	return httpclient.New(cfg)
 }
 
 func TestLoggingHttpClientReturnsRateLimitAtOnce(t *testing.T) {

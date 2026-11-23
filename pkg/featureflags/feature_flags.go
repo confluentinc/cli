@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/v4/pkg/auth"
 	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/httpclient"
 	"github.com/confluentinc/cli/v4/pkg/log"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	ppanic "github.com/confluentinc/cli/v4/pkg/panic-recovery"
@@ -73,9 +74,13 @@ func Init(cfg *config.Config) {
 		}
 	}
 
+	httpConfig := httpclient.NoRetry
+	httpConfig.AttemptTimeout = timeout
+	client := httpclient.New(httpConfig)
+
 	Manager = launchDarklyManager{
-		cliClient:    sling.New().Client(&http.Client{Timeout: timeout}).Base(cliBasePath),
-		ccloudClient: sling.New().Client(&http.Client{Timeout: timeout}).Base(ccloudBasePath),
+		cliClient:    sling.New().Client(client).Base(cliBasePath),
+		ccloudClient: sling.New().Client(client).Base(ccloudBasePath),
 		isDisabled:   cfg.DisableFeatureFlags || !cfg.IsCloudLogin(),
 		isTest:       cfg.IsTest,
 		version:      cfg.Version,

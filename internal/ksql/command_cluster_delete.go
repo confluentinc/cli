@@ -1,20 +1,19 @@
 package ksql
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/dghubble/sling"
 	"github.com/spf13/cobra"
-	"golang.org/x/oauth2"
 
 	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 
 	pauth "github.com/confluentinc/cli/v4/pkg/auth"
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/deletion"
+	"github.com/confluentinc/cli/v4/pkg/httpclient"
 	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
@@ -56,7 +55,8 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 		// is UP and provisioning didn't fail. If provisioning failed we can't connect to the ksql server, so we can't delete
 		// the topics.
 		cluster := idToCluster[id]
-		if c.getClusterStatus(&cluster) == "PROVISIONED" {
+		// Retry the status check, since a failed one skips deleting the topics
+		if c.getClusterStatus(&cluster, newInfoHttpConfig()) == "PROVISIONED" {
 			if err := c.deleteTopics(cluster.GetId(), cluster.Status.GetHttpEndpoint()); err != nil {
 				return err
 			}
@@ -74,9 +74,8 @@ func (c *ksqlCommand) deleteTopics(clusterId, endpoint string) error {
 	if err != nil {
 		return err
 	}
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: dataplaneToken})
-
-	client := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(endpoint)
+	httpClient := httpclient.New(httpclient.Default)
+	client := sling.New().Client(httpClient).Base(endpoint).Set("Authorization", "Bearer "+dataplaneToken)
 	request := map[string][]string{"deleteTopicList": {".*"}}
 	response, err := client.Post("/ksql/terminate").BodyJSON(&request).ReceiveSuccess(nil)
 	// this returns a 503
