@@ -34,12 +34,20 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 		return err
 	}
 
+	users, err := c.V2Client.ListIamUsers()
+	if err != nil {
+		return err
+	}
+
+	names := make(map[string]string, len(users))
+	for _, user := range users {
+		names[user.GetId()] = user.GetFullName()
+	}
+
 	list := output.NewList(cmd)
 	for _, invitation := range invitations {
-		var name string
-		if user, err := c.V2Client.GetIamUser(invitation.User.GetId()); err == nil {
-			name = user.GetFullName()
-		}
+		// Invitations whose user is not found get an empty name
+		name := names[invitation.User.GetId()]
 
 		list.Add(&invitationOut{
 			Id:     invitation.GetId(),
