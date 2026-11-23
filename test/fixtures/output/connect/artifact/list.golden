@@ -1,4 +1,6 @@
-      ID     |          Name           |   Description    | Cloud | Environment | Content Format |   Status   | Error Message  
--------------+-------------------------+------------------+-------+-------------+----------------+------------+----------------
-  cfa-jar123 | my-connect-artifact-jar | new-jar-artifact | AWS   | env-123456  | JAR            | READY      |                
-  cfa-zip123 | my-connect-artifact-zip | new-zip-artifact | AWS   | env-123456  | ZIP            | PROCESSING |                
+        ID        |             Name             |   Description    |              Type               | Cloud | Environment | Content Format |   Status   | Error Message  
+------------------+------------------------------+------------------+---------------------------------+-------+-------------+----------------+------------+----------------
+  cfa-ced123      | my-connect-artifact-ced      |                  | CONNECT_EXTERNAL_DEP            | AWS   | env-123456  | JAR            | PROCESSING |                
+  cfa-combined123 | my-connect-artifact-combined |                  | CUSTOM_SMT,CONNECT_EXTERNAL_DEP | AWS   | env-123456  | JAR            | PROCESSING |                
+  cfa-jar123      | my-connect-artifact-jar      | new-jar-artifact | CUSTOM_SMT                      | AWS   | env-123456  | JAR            | READY      |                
+  cfa-zip123      | my-connect-artifact-zip      | new-zip-artifact | CUSTOM_SMT                      | AWS   | env-123456  | ZIP            | PROCESSING |                
