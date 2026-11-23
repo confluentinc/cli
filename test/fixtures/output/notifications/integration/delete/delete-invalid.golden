@@ -1,0 +1,4 @@
+Error: notifications integration "invalid" not found
+
+Suggestions:
+    List available notifications integrations with `confluent notifications integration list`.
