@@ -35,14 +35,20 @@ func NewKafkaClusterContext(ctx *Context, activeKafka string, activeKafkaEndpoin
 }
 
 func newKafkaClusterEnvironmentContext(activeKafka string, activeKafkaEndpoint string, kafkaClusters map[string]*KafkaClusterConfig, ctx *Context) *KafkaClusterContext {
-	return &KafkaClusterContext{
-		EnvContext: true,
-		KafkaEnvContexts: map[string]*KafkaEnvContext{ctx.GetCurrentEnvironment(): {
+	kafkaEnvContexts := map[string]*KafkaEnvContext{}
+	// Without an active environment there is nothing to key the entry by, so don't save one under "".
+	if env := ctx.GetCurrentEnvironment(); env != "" {
+		kafkaEnvContexts[env] = &KafkaEnvContext{
 			ActiveKafkaCluster:         activeKafka,
 			ActiveKafkaClusterEndpoint: activeKafkaEndpoint,
 			KafkaClusterConfigs:        kafkaClusters,
-		}},
-		Context: ctx,
+		}
+	}
+
+	return &KafkaClusterContext{
+		EnvContext:       true,
+		KafkaEnvContexts: kafkaEnvContexts,
+		Context:          ctx,
 	}
 }
 
@@ -170,11 +176,16 @@ func (k *KafkaClusterContext) DeleteApiKey(key string) {
 func (k *KafkaClusterContext) GetCurrentKafkaEnvContext() *KafkaEnvContext {
 	curEnv := k.Context.GetCurrentEnvironment()
 	if k.KafkaEnvContexts[curEnv] == nil {
-		k.KafkaEnvContexts[curEnv] = &KafkaEnvContext{
+		kafkaEnvContext := &KafkaEnvContext{
 			ActiveKafkaCluster:         "",
 			ActiveKafkaClusterEndpoint: "",
 			KafkaClusterConfigs:        map[string]*KafkaClusterConfig{},
 		}
+		if curEnv == "" {
+			// No active environment: return an empty context without saving an entry under "".
+			return kafkaEnvContext
+		}
+		k.KafkaEnvContexts[curEnv] = kafkaEnvContext
 		if err := k.Context.Save(); err != nil {
 			panic(fmt.Sprintf("Unable to save new KafkaEnvContext to config for context '%s' environment '%s'.", k.Context.Name, curEnv))
 		}
@@ -196,10 +207,8 @@ func (k *KafkaClusterContext) Validate() {
 		}
 	} else {
 		if k.KafkaEnvContexts == nil {
+			// Not saved: an empty map is omitted from the JSON, so saving it would rewrite the config on every load.
 			k.KafkaEnvContexts = map[string]*KafkaEnvContext{}
-			if err := k.Context.Save(); err != nil {
-				panic(fmt.Sprintf("Unable to save new KafkaEnvContexts map to config for context '%s'.", k.Context.Name))
-			}
 		}
 		for env, kafkaEnvContexts := range k.KafkaEnvContexts {
 			if kafkaEnvContexts.KafkaClusterConfigs == nil {

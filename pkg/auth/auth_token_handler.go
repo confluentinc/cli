@@ -85,6 +85,11 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 		return token, refreshToken, err
 	}
 
+	// The refresh token failed and there is no password to fall back on, so a login request cannot succeed.
+	if credentials.AuthRefreshToken != "" && credentials.Password == "" {
+		return "", "", fmt.Errorf("the refresh token is invalid or expired and no password is saved")
+	}
+
 	client.HttpClient.Timeout = 30 * time.Second
 	log.CliLogger.Debugf("Making login request for %s for org id %s", credentials.Username, organizationId)
 
