@@ -1,4 +1,5 @@
-    ID    |     Name      |        Email         |  User   |  Status   
-----------+---------------+----------------------+---------+-----------
-  i-11111 | 11 Aaa        | u-11aaa@confluent.io | u-11aaa | VERIFIED  
-  i-22222 | Channing Dong | u-22bbb@confluent.io | u-22bbb | SENT      
+    ID    |  Name  |        Email         |  User   |  Status   
+----------+--------+----------------------+---------+-----------
+  i-11111 | 11 Aaa | u-11aaa@confluent.io | u-11aaa | VERIFIED  
+  i-22222 | 22 Bbb | u-22bbb@confluent.io | u-22bbb | SENT      
+  i-33333 |        | u-dne@confluent.io   | u-dne   | SENT      

@@ -888,6 +888,7 @@ func handleIamInvitations(t *testing.T) http.HandlerFunc {
 			invitationList := &iamv2.IamV2InvitationList{Data: []iamv2.IamV2Invitation{
 				buildIamInvitation("i-11111", "u-11aaa@confluent.io", "u-11aaa", "VERIFIED"),
 				buildIamInvitation("i-22222", "u-22bbb@confluent.io", "u-22bbb", "SENT"),
+				buildIamInvitation("i-33333", "u-dne@confluent.io", "u-dne", "SENT"),
 			}}
 			setPageToken(invitationList, &invitationList.Metadata, r.URL)
 			err := json.NewEncoder(w).Encode(invitationList)
