@@ -198,3 +198,15 @@ func (suite *LaunchDarklyTestSuite) TestContextToLDUser() {
 func TestLaunchDarklySuite(t *testing.T) {
 	suite.Run(t, new(LaunchDarklyTestSuite))
 }
+
+func TestIsCacheFresh(t *testing.T) {
+	for age, want := range map[time.Duration]bool{
+		0:                       true,
+		time.Hour - time.Minute: true,
+		time.Hour + time.Minute: false,
+		24 * time.Hour:          false,
+	} {
+		flags := &config.FeatureFlags{LastUpdateTime: time.Now().Add(-age).Unix()}
+		require.Equal(t, want, isCacheFresh(flags), age.String())
+	}
+}

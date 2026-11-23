@@ -14,6 +14,9 @@ import (
 const (
 	authTokenRegex        = `^[\w-]*\.[\w-]*\.[\w-]*$`
 	authRefreshTokenRegex = `^(v1\..*)$`
+
+	// Treat the token as expired shortly before it is, so it isn't used right as the server starts rejecting it
+	tokenExpiryMargin = 60 * time.Second
 )
 
 type ContextState struct {
@@ -72,5 +75,5 @@ func (c *ContextState) IsExpired() bool {
 		return false
 	}
 
-	return float64(time.Now().Unix()) > exp
+	return float64(time.Now().Unix()) > exp-tokenExpiryMargin.Seconds()
 }

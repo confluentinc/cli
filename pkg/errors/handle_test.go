@@ -2,6 +2,9 @@ package errors
 
 import (
 	"fmt"
+	"io"
+	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -67,4 +70,23 @@ func TestDisplaySuggestionsMessage(t *testing.T) {
 	suggestion := "This is a suggestion"
 	err := NewErrorWithSuggestions("im an error hi", suggestion)
 	require.Equal(t, fmt.Sprintf(wantSuggestionsMsgFormat, suggestion), DisplaySuggestionsMessage(err))
+}
+
+func TestCatchCCloudV2Error_RateLimited(t *testing.T) {
+	for retryAfter, want := range map[string]string{
+		"12":                            "Reduce the request rate and try again. The server asked to wait 12 seconds.",
+		"Wed, 21 Oct 2026 07:28:00 GMT": "Reduce the request rate and try again.",
+		"":                              "Reduce the request rate and try again.",
+	} {
+		r := &http.Response{
+			StatusCode: http.StatusTooManyRequests,
+			Header:     http.Header{"Retry-After": []string{retryAfter}},
+			Body:       io.NopCloser(strings.NewReader(`{"errors":[{"detail":"Too many requests"}]}`)),
+		}
+		err := CatchCCloudV2Error(fmt.Errorf("429 Too Many Requests"), r)
+		require.EqualError(t, err, "Too many requests")
+		withSuggestions, ok := err.(ErrorWithSuggestions)
+		require.True(t, ok)
+		require.True(t, strings.HasSuffix(withSuggestions.GetSuggestionsMsg(), want), retryAfter)
+	}
 }

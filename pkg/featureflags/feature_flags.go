@@ -235,10 +235,10 @@ func areCachedFlagsAvailable(ctx *config.Context, user lduser.User, client confi
 		}
 	}
 
-	return cacheExpired(flags)
+	return isCacheFresh(flags)
 }
 
-func cacheExpired(flags *config.FeatureFlags) bool {
+func isCacheFresh(flags *config.FeatureFlags) bool {
 	return flags.LastUpdateTime+int64(time.Hour.Seconds()) > time.Now().Unix()
 }
 
