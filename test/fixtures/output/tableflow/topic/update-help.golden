@@ -12,6 +12,9 @@ Flags:
       --cluster string                         Kafka cluster ID.
       --retention-ms string                    Specify the Tableflow table retention time in milliseconds.
       --table-formats string                   Specify the table formats, one of DELTA or ICEBERG.
+      --iceberg-format-version int32           Specify the Iceberg format version, 2 or 3. It can be raised but not lowered. Raising it drops the Iceberg snapshot history of the table. It also enables ICEBERG if ICEBERG is disabled.
+      --features strings                       A comma-separated list of table features, in the form NAME=BOOL, for example VARIANT=true.
+      --variant-shredding                      Write VARIANT columns shredded. Requires "--features VARIANT=true". It cannot be disabled after it is enabled.
       --metadata-column-naming-scheme string   Specify the naming scheme for Tableflow's internal metadata columns in the materialized table, one of DEFAULT or PORTABLE.
       --error-handling string                  Specify the error handling strategy, one of SUSPEND, SKIP, or LOG.
       --log-target string                      Specify the target topic for the LOG error handling strategy.
