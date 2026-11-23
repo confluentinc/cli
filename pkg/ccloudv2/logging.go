@@ -12,6 +12,8 @@ import (
 	"strings"
 
 	"github.com/confluentinc/cli/v4/pkg/auth"
+	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/httpclient"
 )
 
 const (
@@ -84,10 +86,10 @@ func (c *Client) SearchConnectorLogs(crn, connectorId, startTime, endTime string
 		return nil, fmt.Errorf("failed to create logging API request: %w", err)
 	}
 
-	httpClient := NewRetryableHttpClient(c.cfg, false)
+	httpClient := httpclient.New(httpclient.Default)
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to make HTTP request to logging API due to issue connecting to the server, please make sure you adhere to 5 requests per minute per connector rate limit")
+		return nil, fmt.Errorf("failed to make HTTP request to logging API: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -128,7 +130,8 @@ func getLoggingRequest(loggingURL string, request LoggingSearchRequest, dataplan
 	}
 	u.RawQuery = query.Encode()
 
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodPost, u.String(), bytes.NewBuffer(requestBody))
+	// Log searches are POSTs that change nothing, so they're safe to retry like a GET
+	req, err := http.NewRequestWithContext(httpclient.MarkReadOnly(context.Background()), http.MethodPost, u.String(), bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
 	}
@@ -169,7 +172,10 @@ func getResponseErrorMessage(statusCode int, responseBody []byte, crn string) er
 			errorMsg += fmt.Sprintf("\nResponse body: %s", string(responseBody))
 		}
 		errorMsg += fmt.Sprintf("\nRequest CRN: %s", crn)
-		return fmt.Errorf("%s\n", errorMsg)
+		if statusCode == http.StatusTooManyRequests {
+			return errors.NewErrorWithSuggestions(errorMsg, "Make sure you adhere to the logging API's rate limit of 5 requests per minute per connector.")
+		}
+		return errors.New(errorMsg)
 	}
 	return nil
 }
