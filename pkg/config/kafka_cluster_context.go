@@ -207,10 +207,8 @@ func (k *KafkaClusterContext) Validate() {
 		}
 	} else {
 		if k.KafkaEnvContexts == nil {
+			// Not saved: an empty map is omitted from the JSON, so saving it would rewrite the config on every load.
 			k.KafkaEnvContexts = map[string]*KafkaEnvContext{}
-			if err := k.Context.Save(); err != nil {
-				panic(fmt.Sprintf("Unable to save new KafkaEnvContexts map to config for context '%s'.", k.Context.Name))
-			}
 		}
 		for env, kafkaEnvContexts := range k.KafkaEnvContexts {
 			if kafkaEnvContexts.KafkaClusterConfigs == nil {

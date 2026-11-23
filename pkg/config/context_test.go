@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -356,4 +357,18 @@ func TestKafkaClusterContext_NoEmptyEnvironmentEntry(t *testing.T) {
 	kcc = newKafkaClusterEnvironmentContext("lkc-1", "", map[string]*KafkaClusterConfig{}, ctx)
 	require.Contains(t, kcc.KafkaEnvContexts, "env-1")
 	require.Equal(t, "lkc-1", kcc.KafkaEnvContexts["env-1"].ActiveKafkaCluster)
+}
+
+func TestKafkaClusterContext_ValidateDoesNotSaveEmptyEnvironmentMap(t *testing.T) {
+	ctx := getBaseContext()
+	ctx.Config.Filename = filepath.Join(t.TempDir(), "config.json")
+
+	// An empty map is omitted from the saved JSON, so it loads back as nil.
+	kcc := ctx.KafkaClusterContext
+	kcc.KafkaEnvContexts = nil
+
+	kcc.Validate()
+
+	require.NotNil(t, kcc.KafkaEnvContexts)
+	require.NoFileExists(t, ctx.Config.Filename)
 }
