@@ -1,0 +1,4 @@
+Are you sure you want to delete Flink environment "disconnected-test"? (y/n): Error: failed to delete disconnected-test: {"errors":[{"message":"Kubernetes cluster 'disconnected-cluster' is currently DISCONNECTED. Check cluster connectivity and retry. If the cluster has been permanently removed, decommission it and redeploy your resources on another cluster."}]}
+
+Suggestions:
+    If the Kubernetes cluster is disconnected or decommissioned, add `--force` to delete without requiring it.

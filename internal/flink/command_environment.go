@@ -1,6 +1,8 @@
 package flink
 
 import (
+	"time"
+
 	"github.com/spf13/cobra"
 
 	cmfsdk "github.com/confluentinc/cmf-sdk-go/v1"
@@ -13,6 +15,7 @@ type flinkEnvironmentOutput struct {
 	KubernetesNamespace          string `human:"Kubernetes Namespace" serialized:"kubernetes_namespace"`
 	CreatedTime                  string `human:"Created Time" serialized:"created_time"`
 	UpdatedTime                  string `human:"Updated Time" serialized:"updated_time"`
+	DeletionRequestedTime        string `human:"Deletion Requested Time,omitempty" serialized:"deletion_requested_time,omitempty"`
 	FlinkApplicationDefaults     string `human:"Flink Application Defaults,omitempty" serialized:"flink_application_defaults,omitempty"`
 	ComputePoolDefaults          string `human:"Flink Compute Pool Defaults,omitempty" serialized:"flink_compute_pool_defaults,omitempty"`
 	DetachedStatementDefaults    string `human:"Detached Statement Defaults,omitempty" serialized:"detached_statement_defaults,omitempty"`
@@ -65,5 +68,19 @@ func convertSdkEnvironmentToLocalEnvironment(sdkOutputEnvironment cmfsdk.Environ
 		localEnv.StatementDefaults = localDefaults1
 	}
 
+	if timestamp := sdkOutputEnvironment.Metadata.GetDeletionRequestedTimestamp(); timestamp != "" {
+		localEnv.Metadata = &LocalEnvironmentMetadata{DeletionRequestedTimestamp: timestamp}
+	}
+
 	return localEnv
+}
+
+// formatDeletionRequestedTime formats when the environment's deletion was requested the way its created and updated
+// times are shown. CMF's spec types the timestamp as a plain string, so a value that isn't RFC 3339 is shown as it is.
+func formatDeletionRequestedTime(metadata *cmfsdk.EnvironmentMetadata) string {
+	timestamp := metadata.GetDeletionRequestedTimestamp()
+	if t, err := time.Parse(time.RFC3339, timestamp); err == nil {
+		return t.String()
+	}
+	return timestamp
 }
