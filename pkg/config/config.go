@@ -78,6 +78,7 @@ type Config struct {
 	DisableFeatureFlags       bool       `json:"disable_feature_flags"`
 	DisablePlugins            bool       `json:"disable_plugins"`
 	DisablePluginsOnceWindows bool       `json:"disable_plugins_once_windows,omitempty"`
+	DisablePluginsOnceWSL     bool       `json:"disable_plugins_once_wsl,omitempty"`
 	DisableUpdateCheck        bool       `json:"disable_update_check"`
 	EnableColor               bool       `json:"enable_color"`
 	LastUpdateCheckAt         *time.Time `json:"last_update_check_at,omitempty"`
@@ -178,6 +179,10 @@ func (c *Config) Load() error {
 	if err != nil {
 		if os.IsNotExist(err) {
 			// Save a default version if none exists yet.
+			if wslApplyPluginDefault(utils.IsWSL(), c.DisablePluginsOnceWSL) {
+				c.DisablePlugins = true
+				c.DisablePluginsOnceWSL = true
+			}
 			if err := c.Save(); err != nil {
 				return fmt.Errorf("unable to save configuration file: %w", err)
 			}
@@ -232,11 +237,22 @@ func (c *Config) Load() error {
 		save = true
 	}
 
+	if wslApplyPluginDefault(utils.IsWSL(), c.DisablePluginsOnceWSL) {
+		c.DisablePlugins = true
+		c.DisablePluginsOnceWSL = true
+		save = true
+	}
+
 	if save {
 		_ = c.Save()
 	}
 
 	return c.Validate()
+}
+
+// wslApplyPluginDefault reports whether the one-time WSL plugin-disable default should be applied now.
+func wslApplyPluginDefault(isWSL, disablePluginsOnceWSL bool) bool {
+	return isWSL && !disablePluginsOnceWSL
 }
 
 // Save writes the CLI config to disk.
