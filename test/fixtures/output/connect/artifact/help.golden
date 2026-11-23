@@ -8,6 +8,7 @@ Available Commands:
   delete      Delete one or more Connect artifacts.
   describe    Describe a Connect artifact.
   list        List Connect artifacts.
+  update      Update a Connect artifact.
 
 Global Flags:
   -h, --help            Show help for this command.
