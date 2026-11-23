@@ -337,3 +337,23 @@ func TestContext_LogsDiscoveryCache(t *testing.T) {
 	require.NoError(t, err)
 	require.NotContains(t, string(data), "logs_discovery")
 }
+
+func TestKafkaClusterContext_NoEmptyEnvironmentEntry(t *testing.T) {
+	ctx := getBaseContext()
+	ctx.SetCurrentEnvironment("")
+
+	// Building a context with no active environment must not save an entry under "".
+	kcc := newKafkaClusterEnvironmentContext("lkc-1", "", map[string]*KafkaClusterConfig{}, ctx)
+	require.NotContains(t, kcc.KafkaEnvContexts, "")
+
+	// Reading the current environment's context must not save one either.
+	ctx.KafkaClusterContext = kcc
+	require.NotNil(t, kcc.GetCurrentKafkaEnvContext())
+	require.NotContains(t, kcc.KafkaEnvContexts, "")
+
+	// An active environment is still saved as before.
+	ctx.SetCurrentEnvironment("env-1")
+	kcc = newKafkaClusterEnvironmentContext("lkc-1", "", map[string]*KafkaClusterConfig{}, ctx)
+	require.Contains(t, kcc.KafkaEnvContexts, "env-1")
+	require.Equal(t, "lkc-1", kcc.KafkaEnvContexts["env-1"].ActiveKafkaCluster)
+}
