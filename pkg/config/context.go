@@ -49,6 +49,8 @@ type Context struct {
 
 var noEnvError = "no environment found"
 
+const noEnvSuggestions = "If the active environment was deleted, list your environments with `confluent environment list` and select one with `confluent environment use`.\nThis issue may also occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user."
+
 func newContext(name string, platform *Platform, credential *Credential, kafkaClusters map[string]*KafkaClusterConfig, kafka string, kafkaEndpoint string, state *ContextState, config *Config, organizationId, environmentId string, isMFA bool) (*Context, error) {
 	ctx := &Context{
 		Name:               name,
@@ -252,7 +254,7 @@ func (c *Context) EnvironmentId() (string, error) {
 		return id, nil
 	}
 
-	return "", errors.NewErrorWithSuggestions(noEnvError, "This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.")
+	return "", errors.NewErrorWithSuggestions(noEnvError, noEnvSuggestions)
 }
 
 func (c *Context) GetCurrentEnvironment() string {
