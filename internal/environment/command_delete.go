@@ -3,12 +3,15 @@
 package environment
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
 	"github.com/confluentinc/cli/v4/pkg/deletion"
 	"github.com/confluentinc/cli/v4/pkg/errors"
+	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
 func (c *environmentCommand) newDeleteCommand() *cobra.Command {
@@ -32,12 +35,22 @@ func (c *environmentCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *environmentCommand) delete(cmd *cobra.Command, args []string) error {
+	names := make(map[string]string)
 	existenceFunc := func(primaryId string) bool {
-		_, err := c.V2Client.GetOrgEnvironment(primaryId)
+		environment, err := c.V2Client.GetOrgEnvironment(primaryId)
+		if err == nil {
+			names[primaryId] = environment.GetDisplayName()
+		}
 		return err == nil
 	}
 
-	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, "environment"); err != nil {
+	if err := resource.ValidatePrefixes("environment", args); err != nil {
+		return err
+	}
+	if err := resource.ValidateArgs(cmd, args, "environment", existenceFunc); err != nil {
+		return err
+	}
+	if err := deletion.ConfirmPrompt(cmd, deletion.DefaultYesNoPromptString(cmd, "environment", promptLabels(args, names), "")); err != nil {
 		return err
 	}
 
@@ -65,4 +78,17 @@ func (c *environmentCommand) clearEnvironmentsFromConfigIfDeleted(deletedIds []s
 		}
 	}
 	return errs.ErrorOrNil()
+}
+
+// promptLabels returns each id followed by its display name, when it has one, so the
+// confirmation prompt can be checked against `confluent environment list`.
+func promptLabels(ids []string, names map[string]string) []string {
+	labels := make([]string, len(ids))
+	for i, id := range ids {
+		labels[i] = id
+		if name := names[id]; name != "" {
+			labels[i] = fmt.Sprintf("%s (%s)", id, name)
+		}
+	}
+	return labels
 }
