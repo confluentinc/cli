@@ -16,6 +16,7 @@ import (
 	neturl "net/url"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -426,6 +427,16 @@ func (cmfClient *CmfRestClient) ListComputePools(ctx context.Context, environmen
 	})
 }
 
+func (cmfClient *CmfRestClient) ListComputePoolEvents(ctx context.Context, environment, computePoolName string, pageSize int32) ([]cmfsdk.ResourceEvent, error) {
+	return listAllResourceEvents(pageSize, func(page, size int32) ([]cmfsdk.ResourceEvent, error) {
+		eventsPage, httpResponse, err := cmfClient.SQLApi.GetComputePoolEvents(ctx, environment, computePoolName).Page(page).Size(size).Sort([]string{resourceEventsCreationOrder}).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list events for compute pool "%s" in the environment "%s": %s`, computePoolName, environment, parsedErr)
+		}
+		return eventsPage.GetItems(), nil
+	})
+}
+
 func (cmfClient *CmfRestClient) CreateStatement(ctx context.Context, environment string, statement cmfsdk.Statement) (cmfsdk.Statement, error) {
 	statementName := statement.Metadata.Name
 	outputStatement, httpResponse, err := cmfClient.SQLApi.CreateStatement(ctx, environment).Statement(statement).Execute()
@@ -480,6 +491,16 @@ func (cmfClient *CmfRestClient) ListStatementExceptions(ctx context.Context, env
 		return cmfsdk.StatementExceptionList{}, fmt.Errorf(`failed to list exceptions for statement "%s" in the environment "%s": %s`, statementName, environment, parsedErr)
 	}
 	return exceptionList, nil
+}
+
+func (cmfClient *CmfRestClient) ListStatementEvents(ctx context.Context, environment, statementName string, pageSize int32) ([]cmfsdk.ResourceEvent, error) {
+	return listAllResourceEvents(pageSize, func(page, size int32) ([]cmfsdk.ResourceEvent, error) {
+		eventsPage, httpResponse, err := cmfClient.SQLApi.GetStatementEvents(ctx, environment, statementName).Page(page).Size(size).Sort([]string{resourceEventsCreationOrder}).Execute()
+		if parsedErr := parseSdkError(httpResponse, err); parsedErr != nil {
+			return nil, fmt.Errorf(`failed to list events for statement "%s" in the environment "%s": %s`, statementName, environment, parsedErr)
+		}
+		return eventsPage.GetItems(), nil
+	})
 }
 
 func (cmfClient *CmfRestClient) GetStatementResults(ctx context.Context, environment, statementName, pageToken string) (cmfsdk.StatementResult, error) {
@@ -942,6 +963,37 @@ func listAllPages[T any](pageSize int32, fetchPage func(page, size int32) ([]T, 
 	}
 
 	return items, nil
+}
+
+// resourceEventsCreationOrder is the sort that listAllResourceEvents needs its pages fetched in.
+const resourceEventsCreationOrder = "creationTimestamp,desc"
+
+// listAllResourceEvents fetches every page of a statement's or compute pool's events and returns them most recently
+// seen first, as the CMF UI shows them. fetchPage must request resourceEventsCreationOrder: an event keeps its place
+// in it when it recurs, whereas sorted by last occurrence it would jump to a page already fetched and be missed. A new
+// event can still push the last event of one page onto the next, so an event seen twice is kept once.
+func listAllResourceEvents(pageSize int32, fetchPage func(page, size int32) ([]cmfsdk.ResourceEvent, error)) ([]cmfsdk.ResourceEvent, error) {
+	events, err := listAllPages(pageSize, fetchPage)
+	if err != nil {
+		return nil, err
+	}
+
+	seen := make(map[string]bool, len(events))
+	unique := make([]cmfsdk.ResourceEvent, 0, len(events))
+	for _, event := range events {
+		if uid := event.Metadata.GetUid(); uid != "" {
+			if seen[uid] {
+				continue
+			}
+			seen[uid] = true
+		}
+		unique = append(unique, event)
+	}
+
+	sort.SliceStable(unique, func(i, j int) bool {
+		return unique[i].Metadata.GetUpdateTimestamp().After(unique[j].Metadata.GetUpdateTimestamp())
+	})
+	return unique, nil
 }
 
 // Creates a rich error message from the HTTP response and the SDK error if possible.

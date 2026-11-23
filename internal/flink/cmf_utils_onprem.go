@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -27,6 +28,59 @@ func addPageSizeFlag(cmd *cobra.Command) {
 
 func getPageSize(cmd *cobra.Command) (int32, error) {
 	return cmd.Flags().GetInt32("page-size")
+}
+
+// resourceEventOut is a row of the events table, with the columns of the CMF UI's "Events log".
+type resourceEventOut struct {
+	Severity        string `human:"Severity" serialized:"severity"`
+	Reason          string `human:"Reason" serialized:"reason"`
+	Message         string `human:"Message" serialized:"message"`
+	Count           int32  `human:"Count" serialized:"count"`
+	FirstOccurrence string `human:"First Occurrence" serialized:"first_occurrence"`
+	LastOccurrence  string `human:"Last Occurrence" serialized:"last_occurrence"`
+}
+
+// printResourceEvents prints the events of a statement or compute pool in the order given: as a table, or as the
+// ResourceEvents that CMF returned.
+func printResourceEvents(cmd *cobra.Command, events []cmfsdk.ResourceEvent) error {
+	if output.GetFormat(cmd) != output.Human {
+		return output.SerializedOutputFromJsonTags(cmd, events)
+	}
+
+	list := output.NewList(cmd)
+	list.Sort(false)
+	for _, event := range events {
+		// The CMF UI's rule: the reason of the Kubernetes event behind it, if any, otherwise the event type.
+		reason := event.Status.GetType()
+		if data := event.Status.Data; data != nil && data.EventDataReasonMessage.GetReason() != "" {
+			reason = data.EventDataReasonMessage.GetReason()
+		}
+
+		var lastOccurrence string
+		if updateTimestamp, ok := event.Metadata.GetUpdateTimestampOk(); ok {
+			lastOccurrence = updateTimestamp.UTC().Format(time.RFC3339)
+		}
+
+		list.Add(&resourceEventOut{
+			Severity:        event.Status.GetSeverity(),
+			Reason:          reason,
+			Message:         event.Status.GetMessage(),
+			Count:           event.Status.GetCount(),
+			FirstOccurrence: formatEventTimestamp(event.Metadata.GetCreationTimestamp()),
+			LastOccurrence:  lastOccurrence,
+		})
+	}
+	return list.Print()
+}
+
+// formatEventTimestamp prints CMF's creationTimestamp to the second, in UTC, as updateTimestamp is printed. A value
+// that doesn't parse is printed as it is.
+func formatEventTimestamp(timestamp string) string {
+	parsed, err := time.Parse(time.RFC3339, timestamp)
+	if err != nil {
+		return timestamp
+	}
+	return parsed.UTC().Format(time.RFC3339)
 }
 
 func (c *command) createContext() context.Context {

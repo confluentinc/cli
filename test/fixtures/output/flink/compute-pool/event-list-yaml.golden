@@ -1,0 +1,31 @@
+- apiVersion: cmf.confluent.io/v1
+  kind: ResourceEvent
+  metadata:
+    creationTimestamp: "2026-11-03T10:15:30.123Z"
+    name: c4a81f30-9e2d-4b7c-8f15-6d3e2a1b0c97
+    resourceKind: ComputePool
+    uid: c4a81f30-9e2d-4b7c-8f15-6d3e2a1b0c97
+    updateTimestamp: "2026-11-03T10:20:05Z"
+  status:
+    count: 3
+    data:
+        message: Back-off pulling image "confluentinc/cp-flink-sql:2.0"
+        reason: BackOff
+    message: 'BackOff: Back-off pulling image "confluentinc/cp-flink-sql:2.0"'
+    severity: WARNING
+    type: DEPLOYMENT_EVENT
+- apiVersion: cmf.confluent.io/v1
+  kind: ResourceEvent
+  metadata:
+    creationTimestamp: "2026-11-03T10:16:42.351207Z"
+    name: 7d2f9c1e-4b8a-4e6f-a3d5-1c9b8e7f6a52
+    resourceKind: ComputePool
+    uid: 7d2f9c1e-4b8a-4e6f-a3d5-1c9b8e7f6a52
+    updateTimestamp: "2026-11-03T10:16:42.351207Z"
+  status:
+    count: 1
+    data:
+        newStatus: RUNNING
+    message: Compute pool status changed from PENDING to RUNNING
+    severity: INFO
+    type: CLUSTER_STATUS
