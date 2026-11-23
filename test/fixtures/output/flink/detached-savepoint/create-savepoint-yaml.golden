@@ -1,0 +1,12 @@
+apiVersion: cmf.confluent.io/v1
+kind: Savepoint
+metadata:
+    name: savepoint1
+    creationTimestamp: 2025-03-12 23:42:00 +0000 UTC
+    uid: id1
+spec:
+    path: abc/def
+    backoffLimit: 10
+    formatType: Canonical
+status:
+    path: abc/def
