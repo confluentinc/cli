@@ -51,6 +51,10 @@ func (c *command) statementRescaleOnPrem(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
+	if err := errIfCfkManaged(resource.FlinkStatement, name, statement.Metadata.GetAnnotations()); err != nil {
+		return err
+	}
+
 	// Construct the statement to rescale with different parallelism
 	statement = cmfsdk.Statement{
 		ApiVersion: statement.GetApiVersion(),

@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
+	"github.com/confluentinc/cli/v4/pkg/resource"
 )
 
 func (c *command) newCatalogUpdateCommand() *cobra.Command {
@@ -39,6 +40,13 @@ func (c *command) catalogUpdate(cmd *cobra.Command, args []string) error {
 	catalogName := sdkCatalog.Metadata.Name
 	if catalogName == "" {
 		return fmt.Errorf("catalog name is required: ensure the resource file contains a non-empty \"metadata.name\" field")
+	}
+
+	// Block the update if the resource is CFK-owned; if unreadable, let the update report it.
+	if existingCatalog, describeErr := client.DescribeCatalog(c.createContext(), catalogName); describeErr == nil {
+		if err := errIfCfkManaged(resource.FlinkCatalog, catalogName, existingCatalog.Metadata.GetAnnotations()); err != nil {
+			return err
+		}
 	}
 
 	if err := client.UpdateCatalog(c.createContext(), catalogName, sdkCatalog); err != nil {

@@ -41,6 +41,17 @@ func (c *command) catalogDatabaseDelete(cmd *cobra.Command, args []string) error
 		return err == nil
 	}
 
+	// Refuse the whole batch if any resource is CFK-owned; unreadable names fall to the check below.
+	for _, name := range args {
+		database, describeErr := client.DescribeDatabase(c.createContext(), catalogName, name)
+		if describeErr != nil {
+			continue
+		}
+		if err := errIfCfkManaged(resource.FlinkDatabase, name, database.Metadata.GetAnnotations()); err != nil {
+			return err
+		}
+	}
+
 	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.FlinkDatabase); err != nil {
 		// We are validating only the existence of the resources (there is no prefix validation).
 		// Thus, we can add some extra context for the error.
