@@ -34,6 +34,17 @@ func (c *command) secretDelete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
+	// Refuse the whole batch if any resource is CFK-owned; unreadable names fall to the check below.
+	for _, name := range args {
+		secret, describeErr := client.DescribeSecret(c.createContext(), name)
+		if describeErr != nil {
+			continue
+		}
+		if err := errIfCfkManaged(resource.FlinkSecret, name, secret.Metadata.GetAnnotations()); err != nil {
+			return err
+		}
+	}
+
 	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.FlinkSecret); err != nil {
 		suggestions := "List available Flink secrets with `confluent flink secret list`."
 		suggestions += "\nCheck that CMF is running and accessible."

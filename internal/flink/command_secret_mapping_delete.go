@@ -42,6 +42,17 @@ func (c *command) secretMappingDelete(cmd *cobra.Command, args []string) error {
 		return err == nil
 	}
 
+	// Refuse the whole batch if any resource is CFK-owned; unreadable names fall to the check below.
+	for _, name := range args {
+		mapping, describeErr := client.DescribeSecretMapping(c.createContext(), environment, name)
+		if describeErr != nil {
+			continue
+		}
+		if err := errIfCfkManaged(resource.FlinkSecretMapping, name, mapping.Metadata.GetAnnotations()); err != nil {
+			return err
+		}
+	}
+
 	if err := deletion.ValidateAndConfirm(cmd, args, existenceFunc, resource.FlinkSecretMapping); err != nil {
 		suggestions := "List available Flink secret mappings with `confluent flink secret-mapping list --environment <envName>`."
 		suggestions += "\nCheck that CMF is running and accessible."
