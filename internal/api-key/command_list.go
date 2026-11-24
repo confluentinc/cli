@@ -7,14 +7,11 @@ import (
 	"github.com/spf13/cobra"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 
 	pcmd "github.com/confluentinc/cli/v4/pkg/cmd"
-	"github.com/confluentinc/cli/v4/pkg/config"
 	"github.com/confluentinc/cli/v4/pkg/errors"
 	"github.com/confluentinc/cli/v4/pkg/examples"
-	"github.com/confluentinc/cli/v4/pkg/featureflags"
 	"github.com/confluentinc/cli/v4/pkg/output"
 	presource "github.com/confluentinc/cli/v4/pkg/resource"
 )
@@ -30,11 +27,16 @@ func (c *command) newListCommand() *cobra.Command {
 				Text: `List the API keys that belong to service account "sa-123456" on cluster "lkc-123456".`,
 				Code: "confluent api-key list --resource lkc-123456 --service-account sa-123456",
 			},
+			examples.Example{
+				Text: "List the API keys, including expired API keys.",
+				Code: "confluent api-key list --show-expired",
+			},
 		),
 	}
 
 	c.addResourceFlag(cmd, false)
 	cmd.Flags().Bool("current-user", false, "Show only API keys belonging to current user.")
+	cmd.Flags().Bool("show-expired", false, "Include expired API keys.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -96,7 +98,12 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	apiKeys, err := c.V2Client.ListApiKeys(serviceAccount, clusterId)
+	showExpired, err := cmd.Flags().GetBool("show-expired")
+	if err != nil {
+		return err
+	}
+
+	apiKeys, err := c.V2Client.ListApiKeys(serviceAccount, clusterId, showExpired)
 	if err != nil {
 		return err
 	}
@@ -115,29 +122,21 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 		ownerId := apiKey.Spec.Owner.GetId()
 		email := c.getEmail(ownerId, auditLogServiceAccountId, resourceIdToUserIdMap, usersMap, serviceAccountsMap)
-		resources := []apikeysv2.ObjectReference{apiKey.Spec.GetResource()}
-
-		multiClusterResources := apiKey.Spec.GetResources()
-
-		// Check if multicluster keys are enabled, and if so check the resources field
-		if featureflags.Manager.BoolVariation("cli.multicluster-api-keys.enable", c.Context, config.CliLaunchDarklyClient, true, false) && len(multiClusterResources) > 0 {
-			resources = multiClusterResources
-		}
+		resource := apiKey.Spec.GetResource()
 
 		// Note that if more resource types are added with no logical clusters, then additional logic
 		// needs to be added here to determine the resource type.
-		for _, resource := range resources {
-			list.Add(&out{
-				IsCurrent:    clusterId != "" && apiKey.GetId() == currentKey,
-				Key:          apiKey.GetId(),
-				Description:  apiKey.Spec.GetDescription(),
-				Owner:        ownerId,
-				OwnerEmail:   email,
-				ResourceType: getResourceType(resource),
-				Resource:     getResourceId(resource.GetId()),
-				Created:      apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
-			})
-		}
+		list.Add(&out{
+			IsCurrent:    clusterId != "" && apiKey.GetId() == currentKey,
+			Key:          apiKey.GetId(),
+			Description:  apiKey.Spec.GetDescription(),
+			Owner:        ownerId,
+			OwnerEmail:   email,
+			ResourceType: getResourceType(resource),
+			Resource:     getResourceId(resource.GetId()),
+			Created:      apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
+			Expiration:   apiKey.Spec.GetExpiresAt(),
+		})
 	}
 	return list.Print()
 }

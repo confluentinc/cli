@@ -5,27 +5,6 @@
   resource_type: kafka
   resource: lkc-bob
   created: "1999-02-24T00:00:00Z"
-- key: MULTICLUSTERKEY1
-  description: works for two clusters
-  owner: u-44ddd
-  owner_email: mhe@confluent.io
-  resource_type: kafka
-  resource: lkc-abc
-  created: "1999-02-24T00:00:00Z"
-- key: MULTICLUSTERKEY2
-  description: works for two clusters but on a different sr cluster
-  owner: u-44ddd
-  owner_email: mhe@confluent.io
-  resource_type: kafka
-  resource: lkc-abc
-  created: "1999-02-24T00:00:00Z"
-- key: MULTICLUSTERKEY3
-  description: works for two clusters and owned by service account
-  owner: sa-12345
-  owner_email: <service account>
-  resource_type: kafka
-  resource: lkc-abc
-  created: "1999-02-24T00:00:00Z"
 - key: MYKEY1
   description: first-key
   owner: u11
@@ -40,6 +19,7 @@
   resource_type: kafka
   resource: lkc-abc
   created: "1999-02-24T00:00:00Z"
+  expiration: "2099-12-31"
 - key: MYKEY3
   description: ""
   owner: u-44ddd
