@@ -19,7 +19,7 @@ import (
 func (c *command) newSubjectUpdateCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "update <subject>",
-		Short:   "Update subject compatibility or mode.",
+		Short:   "Update subject compatibility, compatibility policy, or mode.",
 		Args:    cobra.ExactArgs(1),
 		RunE:    c.subjectUpdate,
 		Example: examples.BuildExampleString(),
@@ -34,6 +34,10 @@ func (c *command) newSubjectUpdateCommand(cfg *config.Config) *cobra.Command {
 		Code: "confluent schema-registry subject update payments --compatibility backward --compatibility-group application.version",
 	}
 	example3 := examples.Example{
+		Text: `Update subject-level compatibility policy for JSON schemas of subject "payments".`,
+		Code: "confluent schema-registry subject update payments --compatibility-policy strict",
+	}
+	example4 := examples.Example{
 		Text: `Update subject-level mode of subject "payments".`,
 		Code: "confluent schema-registry subject update payments --mode readwrite",
 	}
@@ -41,10 +45,12 @@ func (c *command) newSubjectUpdateCommand(cfg *config.Config) *cobra.Command {
 		example1.Code += " " + onPremAuthenticationMsg
 		example2.Code += " " + onPremAuthenticationMsg
 		example3.Code += " " + onPremAuthenticationMsg
+		example4.Code += " " + onPremAuthenticationMsg
 	}
-	cmd.Example = examples.BuildExampleString(example1, example2, example3)
+	cmd.Example = examples.BuildExampleString(example1, example2, example3, example4)
 
 	addCompatibilityFlag(cmd)
+	addCompatibilityPolicyFlag(cmd)
 	addCompatibilityGroupFlag(cmd)
 	addMetadataDefaultsFlag(cmd)
 	addMetadataOverridesFlag(cmd)
@@ -74,16 +80,20 @@ func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	compatibilityPolicy, err := cmd.Flags().GetString("compatibility-policy")
+	if err != nil {
+		return err
+	}
 	mode, err := cmd.Flags().GetString("mode")
 	if err != nil {
 		return err
 	}
 
-	if compatibility != "" && mode != "" {
+	if (compatibility != "" || compatibilityPolicy != "") && mode != "" {
 		return fmt.Errorf(errors.CompatibilityOrModeErrorMsg)
 	}
 
-	if compatibility != "" {
+	if compatibility != "" || compatibilityPolicy != "" {
 		return c.updateCompatibility(cmd, subject, client)
 	}
 
@@ -104,7 +114,12 @@ func (c *command) updateCompatibility(cmd *cobra.Command, subject string, client
 		return catchSchemaNotFoundError(err, subject, "")
 	}
 
-	output.Printf(c.Config.EnableColor, "Successfully updated subject-level compatibility to \"%s\" for subject \"%s\".\n", req.GetCompatibility(), subject)
+	if req.GetCompatibility() != "" {
+		output.Printf(c.Config.EnableColor, "Successfully updated subject-level compatibility to \"%s\" for subject \"%s\".\n", req.GetCompatibility(), subject)
+	}
+	if req.GetCompatibilityPolicy() != "" {
+		output.Printf(c.Config.EnableColor, "Successfully updated subject-level compatibility policy to \"%s\" for subject \"%s\".\n", req.GetCompatibilityPolicy(), subject)
+	}
 	return nil
 }
 

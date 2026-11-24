@@ -1,1 +1,1 @@
-Error: must pass either `--compatibility` or `--mode` flag
+Error: must pass either `--compatibility`, `--compatibility-policy`, or `--mode` flag

@@ -17,7 +17,7 @@ import (
 func (c *command) newClusterUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "update",
-		Short:       "Update global mode or compatibility of Schema Registry.",
+		Short:       "Update global mode, compatibility, or compatibility policy of Schema Registry.",
 		Args:        cobra.NoArgs,
 		RunE:        c.clusterUpdate,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
@@ -31,6 +31,10 @@ func (c *command) newClusterUpdateCommand() *cobra.Command {
 				Code: "confluent schema-registry cluster update --compatibility backward --compatibility-group application.version",
 			},
 			examples.Example{
+				Text: "Update the top-level compatibility policy for JSON schemas of Schema Registry.",
+				Code: "confluent schema-registry cluster update --compatibility-policy strict",
+			},
+			examples.Example{
 				Text: "Update top-level mode of Schema Registry.",
 				Code: "confluent schema-registry cluster update --mode readwrite",
 			},
@@ -38,6 +42,7 @@ func (c *command) newClusterUpdateCommand() *cobra.Command {
 	}
 
 	addCompatibilityFlag(cmd)
+	addCompatibilityPolicyFlag(cmd)
 	addCompatibilityGroupFlag(cmd)
 	addMetadataDefaultsFlag(cmd)
 	addMetadataOverridesFlag(cmd)
@@ -56,7 +61,11 @@ func (c *command) clusterUpdate(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	if compatibility != "" {
+	compatibilityPolicy, err := cmd.Flags().GetString("compatibility-policy")
+	if err != nil {
+		return err
+	}
+	if compatibility != "" || compatibilityPolicy != "" {
 		return c.updateTopLevelCompatibility(cmd)
 	}
 
@@ -87,7 +96,12 @@ func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {
 		return err
 	}
 
-	output.Printf(c.Config.EnableColor, "Successfully updated top-level compatibility to \"%s\".\n", req.GetCompatibility())
+	if req.GetCompatibility() != "" {
+		output.Printf(c.Config.EnableColor, "Successfully updated top-level compatibility to \"%s\".\n", req.GetCompatibility())
+	}
+	if req.GetCompatibilityPolicy() != "" {
+		output.Printf(c.Config.EnableColor, "Successfully updated top-level compatibility policy to \"%s\".\n", req.GetCompatibilityPolicy())
+	}
 	return nil
 }
 
@@ -102,9 +116,18 @@ func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (srsdk.ConfigUpdate
 		return srsdk.ConfigUpdateRequest{}, err
 	}
 
-	req := srsdk.ConfigUpdateRequest{
-		Compatibility:      srsdk.PtrString(strings.ToUpper(compatibility)),
-		CompatibilityGroup: srsdk.PtrString(compatibilityGroup),
+	compatibilityPolicy, err := cmd.Flags().GetString("compatibility-policy")
+	if err != nil {
+		return srsdk.ConfigUpdateRequest{}, err
+	}
+
+	req := srsdk.ConfigUpdateRequest{}
+	if compatibility != "" || compatibilityGroup != "" {
+		req.Compatibility = srsdk.PtrString(strings.ToUpper(compatibility))
+		req.CompatibilityGroup = srsdk.PtrString(compatibilityGroup)
+	}
+	if compatibilityPolicy != "" {
+		req.CompatibilityPolicy = srsdk.PtrString(strings.ToUpper(compatibilityPolicy))
 	}
 
 	metadataDefaults, err := cmd.Flags().GetString("metadata-defaults")
