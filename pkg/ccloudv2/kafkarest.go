@@ -2,8 +2,12 @@ package ccloudv2
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	neturl "net/url"
+	"strings"
 
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
@@ -273,6 +277,19 @@ func (c *KafkaRestClient) GetKafkaConsumerGroup(consumerGroupId string) (kafkare
 	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
+// KafkaConsumerGroupExists reports whether the consumer group exists. Only a 404 counts as "does not exist"; any other
+// failure, such as a 403 for a caller who may delete but not describe the group, is returned as an error.
+func (c *KafkaRestClient) KafkaConsumerGroupExists(consumerGroupId string) (bool, error) {
+	_, httpResp, err := c.ConsumerGroupV3Api.GetKafkaConsumerGroup(c.kafkaRestApiContext(), c.ClusterId, consumerGroupId).Execute()
+	if httpResp != nil && httpResp.StatusCode == http.StatusNotFound {
+		return false, nil
+	}
+	if err != nil {
+		return false, kafkarest.NewError(c.GetUrl(), err, httpResp)
+	}
+	return true, nil
+}
+
 func (c *KafkaRestClient) GetKafkaConsumerGroupLagSummary(consumerGroupId string) (kafkarestv3.ConsumerGroupLagSummaryData, error) {
 	res, httpResp, err := c.ConsumerGroupV3Api.GetKafkaConsumerGroupLagSummary(c.kafkaRestApiContext(), c.ClusterId, consumerGroupId).Execute()
 	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
@@ -364,4 +381,39 @@ func (c *KafkaRestClient) UpdateKafkaTopicPartitionCount(topicName string, updat
 
 func (c *KafkaRestClient) GetKafkaTopic(topicName string) (kafkarestv3.TopicData, *http.Response, error) {
 	return c.TopicV3Api.GetKafkaTopic(c.kafkaRestApiContext(), c.ClusterId, topicName).Execute()
+}
+
+// DeleteKafkaConsumerGroup deletes an empty consumer group. The generated SDK has no method for this operation, so the
+// request is built by hand against the /internal/ route that the Kafka REST service serves for authenticated callers.
+// The service rejects groups that still have active members.
+func (c *KafkaRestClient) DeleteKafkaConsumerGroup(consumerGroupId string) error {
+	url := fmt.Sprintf("%s/kafka/v3/clusters/%s/internal/consumer-groups/%s",
+		strings.TrimSuffix(c.GetUrl(), "/"), neturl.PathEscape(c.ClusterId), neturl.PathEscape(consumerGroupId))
+
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodDelete, url, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Authorization", "Bearer "+c.AuthToken)
+	req.Header.Set("User-Agent", c.GetConfig().UserAgent)
+
+	httpResp, err := c.GetConfig().HTTPClient.Do(req)
+	if err != nil {
+		return kafkarest.NewError(c.GetUrl(), err, httpResp)
+	}
+	defer httpResp.Body.Close()
+
+	if httpResp.StatusCode >= 200 && httpResp.StatusCode < 300 {
+		return nil
+	}
+
+	body, _ := io.ReadAll(httpResp.Body)
+	var restErr kafkarest.V3Error
+	if err := json.Unmarshal(body, &restErr); err == nil && restErr.Message != "" {
+		return fmt.Errorf("REST request failed: %s", restErr.Message)
+	}
+	return errors.NewErrorWithSuggestions(
+		fmt.Sprintf(errors.KafkaRestErrorMsg, httpResp.Request.Method, httpResp.Request.URL, httpResp.Status),
+		errors.InternalServerErrorSuggestions)
 }
