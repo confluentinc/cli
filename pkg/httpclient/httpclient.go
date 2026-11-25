@@ -91,7 +91,7 @@ func New(cfg Config) *http.Client {
 	}
 
 	return &http.Client{
-		Transport: &stateTransport{next: &retryablehttp.RoundTripper{Client: client}},
+		Transport: &userAgentTransport{next: &stateTransport{next: &retryablehttp.RoundTripper{Client: client}}},
 		// Only the inner client follows redirects.
 		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 	}
