@@ -5,7 +5,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/gdamore/tcell/v2"
+	"github.com/gdamore/tcell/v3"
 	"github.com/rivo/tview"
 
 	"github.com/confluentinc/cli/v4/pkg/flink/components"
